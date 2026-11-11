@@ -1,0 +1,5941 @@
+[Deep2Backend] Resolved alias 'F:\models\gguf\library__llama3.2__3b.gguf' -> F:\models\gguf\library__llama3.2__3b.gguf (1 shard)
+[Deep2Backend] Loading model: F:\models\gguf\library__llama3.2__3b.gguf
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+[ModelFit] KV budget caps context: requested=131072 fit=126911 (kv_bytes_per_token=32256)
+HOST_Q8_GEMV_FFN=1
+HOST_Q8_GEMV_ATTN=1
+HOST_Q8_GEMV_SSM_IN=1
+HOST_Q8_GEMV_NUMERIC_FINITE=1
+HOST_Q8_GEMV_BOUNDS_SAFE=1
+HOST_Q8_GEMV_REFERENCE_PARITY=1
+HOST_Q8_GEMV_SAFE=1
+[Deep2Backend] Model loaded: hidden=3072 vocab=128256 layers=28
+MOTD_ACK=1 MOTD_SHA256=3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[Deep2Engine] Loading model from: F:\models\gguf\library__llama3.2__3b.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] MODEL_FIT_ADMITTED model=F:\models\gguf\library__llama3.2__3b.gguf mode=GPU_MULTI devices=2 kv_per_token=32256 max_ctx_est=126911
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\models\gguf)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] ERROR: No tensors parsed (run Parse first)
+[ReverseHotpatch] FAILED at stage 3 (ReverseUnlayer_Index)
+[Deep2Engine] WARNING: ReverseHotpatch failed, attempting raw load
+[Deep2Engine] GGUF architecture: 'llama'  hidden=3072 layers=28 heads=24 kvHeads=8 inter=8192 vocab=128256
+[Deep2Engine] Context length from metadata: 131072 tokens
+[Deep2Engine] Tokenizer loaded: vocab=128256 bos=128000 eos=128009 (Spm::encode)
+[WO_DIAG] GGUF wo.data=000001E74DFDB0E0 rows=3072 cols=3072 type=12(Q4_K) block0 d=0x03F8 dmin=0x0D82 qs[0]=0xC6
+[Deep2Engine] Layer topology: 28 attention, 0 SSM, 0 unknown of 28 total
+[Deep2Engine] KV cache sized for 28 attention layers (SSM layers excluded)
+[Deep2Engine] Using tied embeddings
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=000001E6C0010090  Registered 'blk.0.attn_q.weight': shard=0 offset=0 bytes=5308416  |  registry_size=1  registeredBytes=5308416  zeroOffset=1  maxResidentBytes=536870912
+[ResidencyManager] this=000001E6C0010090  Registered 'blk.11.attn_q.weight': shard=0 offset=0 bytes=5308416  |  registry_size=100  registeredBytes=665739264  zeroOffset=100  maxResidentBytes=536870912
+[ResidencyManager] this=000001E6C0010090  Registered 'blk.22.attn_k.weight': shard=0 offset=0 bytes=1769472  |  registry_size=200  registeredBytes=1319018496  zeroOffset=200  maxResidentBytes=536870912
+[Deep2Engine] ResidencyManager: this=000001E6C0010090  registered=254 tensors  bytes=2011539456  max=536870912
+[Deep2Engine] ThreadPool (loadModel): 16 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF7EF4D58A0 dequant=00007FF7EF4D2710 GetGEMV(12)=00007FF7EF4D58A0 match=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 17 GEMV kernels, 17 dequant kernels
+[KVCache] Lazy pages: layers=28 page=8 virtualMax=126911 heads=8 dim=128
+[KVCache] HOT_BYTES=1835008 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] KV cache: 28 layers x 126911 positions x 8 heads x 128 dim = 27761.78 MB
+[Deep2Engine] Model loaded successfully (255 tensors)
+[Deep2Engine] Host Q8_0 GEMV receipts: SAFE
+
+RawrXD Local Agent
+Model:   F:\models\gguf\library__llama3.2__3b.gguf
+Backend: deep2
+Mode:    code
+Root:    F:\rawrxd
+
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[AGENT] PREFILL_BEGIN prompt_tokens=40
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+[AGENT] PRE_GENERATE calling generate()
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=0
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+[Deep2Engine] Completion plan: ALL_NEEDS_SATISFIED → CALL_GENERATE_STREAM
+[K2_DBG] entry depth=28 tokens=1
+[K2_DBG] after ResetSwitches
+[K2_DBG] after Decide mode=2 arm=TRAMPOLINE_OUTPUT_CACHE
+AUTO_POLICY_ACTIVE=1
+MANUAL_ARM_FORCING=0
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=default_auto
+K2_LIVE_POLICY_REUSE_STEPS=28
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=28 TOKENS=1
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=1548400000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=1 MECH_ENV=trampoline WANTED=1
+[HotPatcher] Registered decoder mode: 0 (patch_978b6525b677aa56)
+[HotPatcher] GENERATE_DECODER_ALG=0
+[LivePath] GENERATE_ALG_MASK=0x00000002 random=0
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=27 all_finite hiddenDim=3072
+[EMBED_DIAG] token=27 rowBytes=2520 first8= 0.017 0.018 0.025 0.012 -0.025 0.008 0.036 0.011
+[DBG-FWD] enter layer=0 seqLen=1 liveSeq=0
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=1 liveSeq=0
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=1 liveSeq=0
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=1 liveSeq=0
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=1 liveSeq=0
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=1 liveSeq=0
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=1 liveSeq=0
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=1 liveSeq=0
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=1 liveSeq=0
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=1 liveSeq=0
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=1 liveSeq=0
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=1 liveSeq=0
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=1 liveSeq=0
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=1 liveSeq=0
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=1 liveSeq=0
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=1 liveSeq=0
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=1 liveSeq=0
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=1 liveSeq=0
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=1 liveSeq=0
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=1 liveSeq=0
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=1 liveSeq=0
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=1 liveSeq=0
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=1 liveSeq=0
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=1 liveSeq=0
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=1 liveSeq=0
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=1 liveSeq=0
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=1 liveSeq=0
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=1 liveSeq=0
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=91 all_finite hiddenDim=3072
+[EMBED_DIAG] token=91 rowBytes=2520 first8= -0.011 -0.004 0.030 0.033 0.001 0.020 0.044 -0.037
+[DBG-FWD] enter layer=0 seqLen=2 liveSeq=1
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=2 liveSeq=1
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=2 liveSeq=1
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=2 liveSeq=1
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=2 liveSeq=1
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=2 liveSeq=1
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=2 liveSeq=1
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=2 liveSeq=1
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=2 liveSeq=1
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=2 liveSeq=1
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=2 liveSeq=1
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=2 liveSeq=1
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=2 liveSeq=1
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=2 liveSeq=1
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=2 liveSeq=1
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=2 liveSeq=1
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=2 liveSeq=1
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=2 liveSeq=1
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=2 liveSeq=1
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=2 liveSeq=1
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=2 liveSeq=1
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=2 liveSeq=1
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=2 liveSeq=1
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=2 liveSeq=1
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=2 liveSeq=1
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=2 liveSeq=1
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=2 liveSeq=1
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=2 liveSeq=1
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=9125 all_finite hiddenDim=3072
+[EMBED_DIAG] token=9125 rowBytes=2520 first8= 0.014 -0.019 -0.006 -0.019 0.037 0.012 0.012 -0.017
+[DBG-FWD] enter layer=0 seqLen=3 liveSeq=2
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=3 liveSeq=2
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=3 liveSeq=2
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=3 liveSeq=2
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=3 liveSeq=2
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=3 liveSeq=2
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=3 liveSeq=2
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=3 liveSeq=2
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=3 liveSeq=2
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=3 liveSeq=2
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=3 liveSeq=2
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=3 liveSeq=2
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=3 liveSeq=2
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=3 liveSeq=2
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=3 liveSeq=2
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=3 liveSeq=2
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=3 liveSeq=2
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=3 liveSeq=2
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=3 liveSeq=2
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=3 liveSeq=2
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=3 liveSeq=2
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=3 liveSeq=2
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=3 liveSeq=2
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=3 liveSeq=2
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=3 liveSeq=2
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=3 liveSeq=2
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=3 liveSeq=2
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=3 liveSeq=2
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=91 all_finite hiddenDim=3072
+[EMBED_DIAG] token=91 rowBytes=2520 first8= -0.011 -0.004 0.030 0.033 0.001 0.020 0.044 -0.037
+[DBG-FWD] enter layer=0 seqLen=4 liveSeq=3
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=4 liveSeq=3
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=4 liveSeq=3
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=4 liveSeq=3
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=4 liveSeq=3
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=4 liveSeq=3
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=4 liveSeq=3
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=4 liveSeq=3
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=4 liveSeq=3
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=4 liveSeq=3
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=4 liveSeq=3
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=4 liveSeq=3
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=4 liveSeq=3
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=4 liveSeq=3
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=4 liveSeq=3
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=4 liveSeq=3
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=4 liveSeq=3
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=4 liveSeq=3
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=4 liveSeq=3
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=4 liveSeq=3
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=4 liveSeq=3
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=4 liveSeq=3
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=4 liveSeq=3
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=4 liveSeq=3
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=4 liveSeq=3
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=4 liveSeq=3
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=4 liveSeq=3
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=4 liveSeq=3
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=397 all_finite hiddenDim=3072
+[EMBED_DIAG] token=397 rowBytes=2520 first8= 0.047 0.021 0.009 0.009 0.032 0.025 0.029 0.012
+[DBG-FWD] enter layer=0 seqLen=5 liveSeq=4
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=5 liveSeq=4
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=5 liveSeq=4
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=5 liveSeq=4
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=5 liveSeq=4
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=5 liveSeq=4
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=5 liveSeq=4
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=5 liveSeq=4
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=5 liveSeq=4
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=5 liveSeq=4
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=5 liveSeq=4
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=5 liveSeq=4
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=5 liveSeq=4
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=5 liveSeq=4
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=5 liveSeq=4
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=5 liveSeq=4
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=5 liveSeq=4
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=5 liveSeq=4
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=5 liveSeq=4
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=5 liveSeq=4
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=5 liveSeq=4
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=5 liveSeq=4
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=5 liveSeq=4
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=5 liveSeq=4
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=5 liveSeq=4
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=5 liveSeq=4
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=5 liveSeq=4
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=5 liveSeq=4
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=2675 all_finite hiddenDim=3072
+[EMBED_DIAG] token=2675 rowBytes=2520 first8= 0.011 0.002 0.026 -0.011 0.018 -0.002 -0.015 0.023
+[DBG-FWD] enter layer=0 seqLen=6 liveSeq=5
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=6 liveSeq=5
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=6 liveSeq=5
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=6 liveSeq=5
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=6 liveSeq=5
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=6 liveSeq=5
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=6 liveSeq=5
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=6 liveSeq=5
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=6 liveSeq=5
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=6 liveSeq=5
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=6 liveSeq=5
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=6 liveSeq=5
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=6 liveSeq=5
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=6 liveSeq=5
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=6 liveSeq=5
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=6 liveSeq=5
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=6 liveSeq=5
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=6 liveSeq=5
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=6 liveSeq=5
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=6 liveSeq=5
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=6 liveSeq=5
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=6 liveSeq=5
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=6 liveSeq=5
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=6 liveSeq=5
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=6 liveSeq=5
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=6 liveSeq=5
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=6 liveSeq=5
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=6 liveSeq=5
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=527 all_finite hiddenDim=3072
+[EMBED_DIAG] token=527 rowBytes=2520 first8= -0.008 0.012 0.023 0.013 -0.015 0.007 -0.003 0.023
+[DBG-FWD] enter layer=0 seqLen=7 liveSeq=6
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=7 liveSeq=6
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=7 liveSeq=6
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=7 liveSeq=6
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=7 liveSeq=6
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=7 liveSeq=6
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=7 liveSeq=6
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=7 liveSeq=6
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=7 liveSeq=6
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=7 liveSeq=6
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=7 liveSeq=6
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=7 liveSeq=6
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=7 liveSeq=6
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=7 liveSeq=6
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=7 liveSeq=6
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=7 liveSeq=6
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=7 liveSeq=6
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=7 liveSeq=6
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=7 liveSeq=6
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=7 liveSeq=6
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=7 liveSeq=6
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=7 liveSeq=6
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=7 liveSeq=6
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=7 liveSeq=6
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=7 liveSeq=6
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=7 liveSeq=6
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=7 liveSeq=6
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=7 liveSeq=6
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=264 all_finite hiddenDim=3072
+[EMBED_DIAG] token=264 rowBytes=2520 first8= -0.002 0.012 -0.019 0.019 -0.031 -0.027 0.000 0.017
+[DBG-FWD] enter layer=0 seqLen=8 liveSeq=7
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=8 liveSeq=7
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=8 liveSeq=7
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=8 liveSeq=7
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=8 liveSeq=7
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=8 liveSeq=7
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=8 liveSeq=7
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=8 liveSeq=7
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=8 liveSeq=7
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=8 liveSeq=7
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=8 liveSeq=7
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=8 liveSeq=7
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=8 liveSeq=7
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=8 liveSeq=7
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=8 liveSeq=7
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=8 liveSeq=7
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=8 liveSeq=7
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=8 liveSeq=7
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=8 liveSeq=7
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=8 liveSeq=7
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=8 liveSeq=7
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=8 liveSeq=7
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=8 liveSeq=7
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=8 liveSeq=7
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=8 liveSeq=7
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=8 liveSeq=7
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=8 liveSeq=7
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=8 liveSeq=7
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=11190 all_finite hiddenDim=3072
+[EMBED_DIAG] token=11190 rowBytes=2520 first8= -0.015 -0.004 0.009 0.024 0.007 -0.014 0.015 -0.008
+[DBG-FWD] enter layer=0 seqLen=9 liveSeq=8
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=9 liveSeq=8
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=9 liveSeq=8
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=9 liveSeq=8
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=9 liveSeq=8
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=9 liveSeq=8
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=9 liveSeq=8
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=9 liveSeq=8
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=9 liveSeq=8
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=9 liveSeq=8
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=9 liveSeq=8
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=9 liveSeq=8
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=9 liveSeq=8
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=9 liveSeq=8
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=9 liveSeq=8
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=9 liveSeq=8
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=9 liveSeq=8
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=9 liveSeq=8
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=9 liveSeq=8
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=9 liveSeq=8
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=9 liveSeq=8
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=9 liveSeq=8
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=9 liveSeq=8
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=9 liveSeq=8
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=9 liveSeq=8
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=9 liveSeq=8
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=9 liveSeq=8
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=9 liveSeq=8
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=18328 all_finite hiddenDim=3072
+[EMBED_DIAG] token=18328 rowBytes=2520 first8= -0.000 -0.024 0.037 0.004 -0.013 -0.007 -0.037 -0.011
+[DBG-FWD] enter layer=0 seqLen=10 liveSeq=9
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=10 liveSeq=9
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=10 liveSeq=9
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=10 liveSeq=9
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=10 liveSeq=9
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=10 liveSeq=9
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=10 liveSeq=9
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=10 liveSeq=9
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=10 liveSeq=9
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=10 liveSeq=9
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=10 liveSeq=9
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=10 liveSeq=9
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=10 liveSeq=9
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=10 liveSeq=9
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=10 liveSeq=9
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=10 liveSeq=9
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=10 liveSeq=9
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=10 liveSeq=9
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=10 liveSeq=9
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=10 liveSeq=9
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=10 liveSeq=9
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=10 liveSeq=9
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=10 liveSeq=9
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=10 liveSeq=9
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=10 liveSeq=9
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=10 liveSeq=9
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=10 liveSeq=9
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=10 liveSeq=9
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=13 all_finite hiddenDim=3072
+[EMBED_DIAG] token=13 rowBytes=2520 first8= 0.007 -0.004 0.029 0.018 -0.027 -0.013 -0.007 -0.007
+[DBG-FWD] enter layer=0 seqLen=11 liveSeq=10
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=11 liveSeq=10
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=11 liveSeq=10
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=11 liveSeq=10
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=11 liveSeq=10
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=11 liveSeq=10
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=11 liveSeq=10
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=11 liveSeq=10
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=11 liveSeq=10
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=11 liveSeq=10
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=11 liveSeq=10
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=11 liveSeq=10
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=11 liveSeq=10
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=11 liveSeq=10
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=11 liveSeq=10
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=11 liveSeq=10
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=11 liveSeq=10
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=11 liveSeq=10
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=11 liveSeq=10
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=11 liveSeq=10
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=11 liveSeq=10
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=11 liveSeq=10
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=11 liveSeq=10
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=11 liveSeq=10
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=11 liveSeq=10
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=11 liveSeq=10
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=11 liveSeq=10
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=11 liveSeq=10
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=11359 all_finite hiddenDim=3072
+[EMBED_DIAG] token=11359 rowBytes=2520 first8= -0.002 -0.000 0.018 0.020 0.007 0.020 -0.011 -0.000
+[DBG-FWD] enter layer=0 seqLen=12 liveSeq=11
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=12 liveSeq=11
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=12 liveSeq=11
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=12 liveSeq=11
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=12 liveSeq=11
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=12 liveSeq=11
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=12 liveSeq=11
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=12 liveSeq=11
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=12 liveSeq=11
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=12 liveSeq=11
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=12 liveSeq=11
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=12 liveSeq=11
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=12 liveSeq=11
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=12 liveSeq=11
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=12 liveSeq=11
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=12 liveSeq=11
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=12 liveSeq=11
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=12 liveSeq=11
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=12 liveSeq=11
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=12 liveSeq=11
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=12 liveSeq=11
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=12 liveSeq=11
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=12 liveSeq=11
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=12 liveSeq=11
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=12 liveSeq=11
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=12 liveSeq=11
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=12 liveSeq=11
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=12 liveSeq=11
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=279 all_finite hiddenDim=3072
+[EMBED_DIAG] token=279 rowBytes=2520 first8= -0.014 0.007 -0.025 0.001 -0.029 -0.003 0.005 0.009
+[DBG-FWD] enter layer=0 seqLen=13 liveSeq=12
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=13 liveSeq=12
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=13 liveSeq=12
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=13 liveSeq=12
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=13 liveSeq=12
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=13 liveSeq=12
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=13 liveSeq=12
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=13 liveSeq=12
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=13 liveSeq=12
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=13 liveSeq=12
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=13 liveSeq=12
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=13 liveSeq=12
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=13 liveSeq=12
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=13 liveSeq=12
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=13 liveSeq=12
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=13 liveSeq=12
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=13 liveSeq=12
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=13 liveSeq=12
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=13 liveSeq=12
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=13 liveSeq=12
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=13 liveSeq=12
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=13 liveSeq=12
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=13 liveSeq=12
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=13 liveSeq=12
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=13 liveSeq=12
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=13 liveSeq=12
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=13 liveSeq=12
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=13 liveSeq=12
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=1217 all_finite hiddenDim=3072
+[EMBED_DIAG] token=1217 rowBytes=2520 first8= -0.013 -0.030 0.029 -0.014 -0.006 0.037 -0.017 0.011
+[DBG-FWD] enter layer=0 seqLen=14 liveSeq=13
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=14 liveSeq=13
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=14 liveSeq=13
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=14 liveSeq=13
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=14 liveSeq=13
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=14 liveSeq=13
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=14 liveSeq=13
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=14 liveSeq=13
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=14 liveSeq=13
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=14 liveSeq=13
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=14 liveSeq=13
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=14 liveSeq=13
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=14 liveSeq=13
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=14 liveSeq=13
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=14 liveSeq=13
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=14 liveSeq=13
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=14 liveSeq=13
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=14 liveSeq=13
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=14 liveSeq=13
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=14 liveSeq=13
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=14 liveSeq=13
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=14 liveSeq=13
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=14 liveSeq=13
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=14 liveSeq=13
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=14 liveSeq=13
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=14 liveSeq=13
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=14 liveSeq=13
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=14 liveSeq=13
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=596 all_finite hiddenDim=3072
+[EMBED_DIAG] token=596 rowBytes=2520 first8= -0.010 -0.035 -0.014 -0.012 -0.016 0.015 -0.017 0.040
+[DBG-FWD] enter layer=0 seqLen=15 liveSeq=14
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=15 liveSeq=14
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=15 liveSeq=14
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=15 liveSeq=14
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=15 liveSeq=14
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=15 liveSeq=14
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=15 liveSeq=14
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=15 liveSeq=14
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=15 liveSeq=14
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=15 liveSeq=14
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=15 liveSeq=14
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=15 liveSeq=14
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=15 liveSeq=14
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=15 liveSeq=14
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=15 liveSeq=14
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=15 liveSeq=14
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=15 liveSeq=14
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=15 liveSeq=14
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=15 liveSeq=14
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=15 liveSeq=14
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=15 liveSeq=14
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=15 liveSeq=14
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=15 liveSeq=14
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=15 liveSeq=14
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=15 liveSeq=14
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=15 liveSeq=14
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=15 liveSeq=14
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=15 liveSeq=14
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=11470 all_finite hiddenDim=3072
+[EMBED_DIAG] token=11470 rowBytes=2520 first8= -0.028 -0.009 0.036 -0.017 -0.050 0.002 0.003 0.030
+[DBG-FWD] enter layer=0 seqLen=16 liveSeq=15
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=16 liveSeq=15
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=16 liveSeq=15
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=16 liveSeq=15
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=16 liveSeq=15
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=16 liveSeq=15
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=16 liveSeq=15
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=16 liveSeq=15
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=16 liveSeq=15
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=16 liveSeq=15
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=16 liveSeq=15
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=16 liveSeq=15
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=16 liveSeq=15
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=16 liveSeq=15
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=16 liveSeq=15
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=16 liveSeq=15
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=16 liveSeq=15
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=16 liveSeq=15
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=16 liveSeq=15
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=16 liveSeq=15
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=16 liveSeq=15
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=16 liveSeq=15
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=16 liveSeq=15
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=16 liveSeq=15
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=16 liveSeq=15
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=16 liveSeq=15
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=16 liveSeq=15
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=16 liveSeq=15
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=6089 all_finite hiddenDim=3072
+[EMBED_DIAG] token=6089 rowBytes=2520 first8= 0.027 -0.007 0.032 -0.012 0.010 0.004 -0.028 0.007
+[DBG-FWD] enter layer=0 seqLen=17 liveSeq=16
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=17 liveSeq=16
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=17 liveSeq=16
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=17 liveSeq=16
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=17 liveSeq=16
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=17 liveSeq=16
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=17 liveSeq=16
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=17 liveSeq=16
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=17 liveSeq=16
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=17 liveSeq=16
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=17 liveSeq=16
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=17 liveSeq=16
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=17 liveSeq=16
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=17 liveSeq=16
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=17 liveSeq=16
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=17 liveSeq=16
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=17 liveSeq=16
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=17 liveSeq=16
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=17 liveSeq=16
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=17 liveSeq=16
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=17 liveSeq=16
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=17 liveSeq=16
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=17 liveSeq=16
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=17 liveSeq=16
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=17 liveSeq=16
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=17 liveSeq=16
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=17 liveSeq=16
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=17 liveSeq=16
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=323 all_finite hiddenDim=3072
+[EMBED_DIAG] token=323 rowBytes=2520 first8= 0.013 0.006 -0.002 0.009 -0.030 -0.012 -0.019 0.009
+[DBG-FWD] enter layer=0 seqLen=18 liveSeq=17
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=18 liveSeq=17
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=18 liveSeq=17
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=18 liveSeq=17
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=18 liveSeq=17
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=18 liveSeq=17
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=18 liveSeq=17
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=18 liveSeq=17
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=18 liveSeq=17
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=18 liveSeq=17
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=18 liveSeq=17
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=18 liveSeq=17
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=18 liveSeq=17
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=18 liveSeq=17
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=18 liveSeq=17
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=18 liveSeq=17
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=18 liveSeq=17
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=18 liveSeq=17
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=18 liveSeq=17
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=18 liveSeq=17
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=18 liveSeq=17
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=18 liveSeq=17
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=18 liveSeq=17
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=18 liveSeq=17
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=18 liveSeq=17
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=18 liveSeq=17
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=18 liveSeq=17
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=18 liveSeq=17
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=3613 all_finite hiddenDim=3072
+[EMBED_DIAG] token=3613 rowBytes=2520 first8= 0.025 0.004 0.008 0.035 0.066 0.012 -0.010 -0.031
+[DBG-FWD] enter layer=0 seqLen=19 liveSeq=18
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=19 liveSeq=18
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=19 liveSeq=18
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=19 liveSeq=18
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=19 liveSeq=18
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=19 liveSeq=18
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=19 liveSeq=18
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=19 liveSeq=18
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=19 liveSeq=18
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=19 liveSeq=18
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=19 liveSeq=18
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=19 liveSeq=18
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=19 liveSeq=18
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=19 liveSeq=18
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=19 liveSeq=18
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=19 liveSeq=18
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=19 liveSeq=18
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=19 liveSeq=18
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=19 liveSeq=18
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=19 liveSeq=18
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=19 liveSeq=18
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=19 liveSeq=18
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=19 liveSeq=18
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=19 liveSeq=18
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=19 liveSeq=18
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=19 liveSeq=18
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=19 liveSeq=18
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=19 liveSeq=18
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=285 all_finite hiddenDim=3072
+[EMBED_DIAG] token=285 rowBytes=2520 first8= -0.003 -0.016 -0.006 -0.011 -0.012 0.027 -0.010 -0.021
+[DBG-FWD] enter layer=0 seqLen=20 liveSeq=19
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=20 liveSeq=19
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=20 liveSeq=19
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=20 liveSeq=19
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=20 liveSeq=19
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=20 liveSeq=19
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=20 liveSeq=19
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=20 liveSeq=19
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=20 liveSeq=19
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=20 liveSeq=19
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=20 liveSeq=19
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=20 liveSeq=19
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=20 liveSeq=19
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=20 liveSeq=19
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=20 liveSeq=19
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=20 liveSeq=19
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=20 liveSeq=19
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=20 liveSeq=19
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=20 liveSeq=19
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=20 liveSeq=19
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=20 liveSeq=19
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=20 liveSeq=19
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=20 liveSeq=19
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=20 liveSeq=19
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=20 liveSeq=19
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=20 liveSeq=19
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=20 liveSeq=19
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=20 liveSeq=19
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=989 all_finite hiddenDim=3072
+[EMBED_DIAG] token=989 rowBytes=2520 first8= -0.025 -0.031 0.019 0.016 0.030 -0.035 -0.002 -0.002
+[DBG-FWD] enter layer=0 seqLen=21 liveSeq=20
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=21 liveSeq=20
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=21 liveSeq=20
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=21 liveSeq=20
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=21 liveSeq=20
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=21 liveSeq=20
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=21 liveSeq=20
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=21 liveSeq=20
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=21 liveSeq=20
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=21 liveSeq=20
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=21 liveSeq=20
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=21 liveSeq=20
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=21 liveSeq=20
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=21 liveSeq=20
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=21 liveSeq=20
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=21 liveSeq=20
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=21 liveSeq=20
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=21 liveSeq=20
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=21 liveSeq=20
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=21 liveSeq=20
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=21 liveSeq=20
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=21 liveSeq=20
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=21 liveSeq=20
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=21 liveSeq=20
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=21 liveSeq=20
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=21 liveSeq=20
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=21 liveSeq=20
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=21 liveSeq=20
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=627 all_finite hiddenDim=3072
+[EMBED_DIAG] token=627 rowBytes=2520 first8= 0.016 -0.002 0.017 0.002 -0.016 -0.006 -0.017 0.008
+[DBG-FWD] enter layer=0 seqLen=22 liveSeq=21
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=22 liveSeq=21
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=22 liveSeq=21
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=22 liveSeq=21
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=22 liveSeq=21
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=22 liveSeq=21
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=22 liveSeq=21
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=22 liveSeq=21
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=22 liveSeq=21
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=22 liveSeq=21
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=22 liveSeq=21
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=22 liveSeq=21
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=22 liveSeq=21
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=22 liveSeq=21
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=22 liveSeq=21
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=22 liveSeq=21
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=22 liveSeq=21
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=22 liveSeq=21
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=22 liveSeq=21
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=22 liveSeq=21
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=22 liveSeq=21
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=22 liveSeq=21
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=22 liveSeq=21
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=22 liveSeq=21
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=22 liveSeq=21
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=22 liveSeq=21
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=22 liveSeq=21
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=22 liveSeq=21
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=27 all_finite hiddenDim=3072
+[EMBED_DIAG] token=27 rowBytes=2520 first8= 0.017 0.018 0.025 0.012 -0.025 0.008 0.036 0.011
+[DBG-FWD] enter layer=0 seqLen=23 liveSeq=22
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=23 liveSeq=22
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=23 liveSeq=22
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=23 liveSeq=22
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=23 liveSeq=22
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=23 liveSeq=22
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=23 liveSeq=22
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=23 liveSeq=22
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=23 liveSeq=22
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=23 liveSeq=22
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=23 liveSeq=22
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=23 liveSeq=22
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=23 liveSeq=22
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=23 liveSeq=22
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=23 liveSeq=22
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=23 liveSeq=22
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=23 liveSeq=22
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=23 liveSeq=22
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=23 liveSeq=22
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=23 liveSeq=22
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=23 liveSeq=22
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=23 liveSeq=22
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=23 liveSeq=22
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=23 liveSeq=22
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=23 liveSeq=22
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=23 liveSeq=22
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=23 liveSeq=22
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=23 liveSeq=22
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=91 all_finite hiddenDim=3072
+[EMBED_DIAG] token=91 rowBytes=2520 first8= -0.011 -0.004 0.030 0.033 0.001 0.020 0.044 -0.037
+[DBG-FWD] enter layer=0 seqLen=24 liveSeq=23
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=24 liveSeq=23
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=24 liveSeq=23
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=24 liveSeq=23
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=24 liveSeq=23
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=24 liveSeq=23
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=24 liveSeq=23
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=24 liveSeq=23
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=24 liveSeq=23
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=24 liveSeq=23
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=24 liveSeq=23
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=24 liveSeq=23
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=24 liveSeq=23
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=24 liveSeq=23
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=24 liveSeq=23
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=24 liveSeq=23
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=24 liveSeq=23
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=24 liveSeq=23
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=24 liveSeq=23
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=24 liveSeq=23
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=24 liveSeq=23
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=24 liveSeq=23
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=24 liveSeq=23
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=24 liveSeq=23
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=24 liveSeq=23
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=24 liveSeq=23
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=24 liveSeq=23
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=24 liveSeq=23
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=882 all_finite hiddenDim=3072
+[EMBED_DIAG] token=882 rowBytes=2520 first8= -0.020 -0.030 -0.010 -0.012 0.016 0.042 -0.000 -0.005
+[DBG-FWD] enter layer=0 seqLen=25 liveSeq=24
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=25 liveSeq=24
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=25 liveSeq=24
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=25 liveSeq=24
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=25 liveSeq=24
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=25 liveSeq=24
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=25 liveSeq=24
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=25 liveSeq=24
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=25 liveSeq=24
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=25 liveSeq=24
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=25 liveSeq=24
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=25 liveSeq=24
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=25 liveSeq=24
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=25 liveSeq=24
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=25 liveSeq=24
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=25 liveSeq=24
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=25 liveSeq=24
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=25 liveSeq=24
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=25 liveSeq=24
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=25 liveSeq=24
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=25 liveSeq=24
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=25 liveSeq=24
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=25 liveSeq=24
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=25 liveSeq=24
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=25 liveSeq=24
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=25 liveSeq=24
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=25 liveSeq=24
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=25 liveSeq=24
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=91 all_finite hiddenDim=3072
+[EMBED_DIAG] token=91 rowBytes=2520 first8= -0.011 -0.004 0.030 0.033 0.001 0.020 0.044 -0.037
+[DBG-FWD] enter layer=0 seqLen=26 liveSeq=25
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=26 liveSeq=25
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=26 liveSeq=25
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=26 liveSeq=25
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=26 liveSeq=25
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=26 liveSeq=25
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=26 liveSeq=25
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=26 liveSeq=25
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=26 liveSeq=25
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=26 liveSeq=25
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=26 liveSeq=25
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=26 liveSeq=25
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=26 liveSeq=25
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=26 liveSeq=25
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=26 liveSeq=25
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=26 liveSeq=25
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=26 liveSeq=25
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=26 liveSeq=25
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=26 liveSeq=25
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=26 liveSeq=25
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=26 liveSeq=25
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=26 liveSeq=25
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=26 liveSeq=25
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=26 liveSeq=25
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=26 liveSeq=25
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=26 liveSeq=25
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=26 liveSeq=25
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=26 liveSeq=25
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=397 all_finite hiddenDim=3072
+[EMBED_DIAG] token=397 rowBytes=2520 first8= 0.047 0.021 0.009 0.009 0.032 0.025 0.029 0.012
+[DBG-FWD] enter layer=0 seqLen=27 liveSeq=26
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=27 liveSeq=26
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=27 liveSeq=26
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=27 liveSeq=26
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=27 liveSeq=26
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=27 liveSeq=26
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=27 liveSeq=26
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=27 liveSeq=26
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=27 liveSeq=26
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=27 liveSeq=26
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=27 liveSeq=26
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=27 liveSeq=26
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=27 liveSeq=26
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=27 liveSeq=26
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=27 liveSeq=26
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=27 liveSeq=26
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=27 liveSeq=26
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=27 liveSeq=26
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=27 liveSeq=26
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=27 liveSeq=26
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=27 liveSeq=26
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=27 liveSeq=26
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=27 liveSeq=26
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=27 liveSeq=26
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=27 liveSeq=26
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=27 liveSeq=26
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=27 liveSeq=26
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=27 liveSeq=26
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=59633 all_finite hiddenDim=3072
+[EMBED_DIAG] token=59633 rowBytes=2520 first8= 0.004 0.011 0.010 0.006 -0.044 -0.021 0.001 0.011
+[DBG-FWD] enter layer=0 seqLen=28 liveSeq=27
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=28 liveSeq=27
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=28 liveSeq=27
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=28 liveSeq=27
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=28 liveSeq=27
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=28 liveSeq=27
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=28 liveSeq=27
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=28 liveSeq=27
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=28 liveSeq=27
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=28 liveSeq=27
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=28 liveSeq=27
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=28 liveSeq=27
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=28 liveSeq=27
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=28 liveSeq=27
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=28 liveSeq=27
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=28 liveSeq=27
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=28 liveSeq=27
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=28 liveSeq=27
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=28 liveSeq=27
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=28 liveSeq=27
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=28 liveSeq=27
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=28 liveSeq=27
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=28 liveSeq=27
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=28 liveSeq=27
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=28 liveSeq=27
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=28 liveSeq=27
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=28 liveSeq=27
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=28 liveSeq=27
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=279 all_finite hiddenDim=3072
+[EMBED_DIAG] token=279 rowBytes=2520 first8= -0.014 0.007 -0.025 0.001 -0.029 -0.003 0.005 0.009
+[DBG-FWD] enter layer=0 seqLen=29 liveSeq=28
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=29 liveSeq=28
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=29 liveSeq=28
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=29 liveSeq=28
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=29 liveSeq=28
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=29 liveSeq=28
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=29 liveSeq=28
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=29 liveSeq=28
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=29 liveSeq=28
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=29 liveSeq=28
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=29 liveSeq=28
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=29 liveSeq=28
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=29 liveSeq=28
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=29 liveSeq=28
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=29 liveSeq=28
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=29 liveSeq=28
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=29 liveSeq=28
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=29 liveSeq=28
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=29 liveSeq=28
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=29 liveSeq=28
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=29 liveSeq=28
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=29 liveSeq=28
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=29 liveSeq=28
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=29 liveSeq=28
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=29 liveSeq=28
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=29 liveSeq=28
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=29 liveSeq=28
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=29 liveSeq=28
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=12827 all_finite hiddenDim=3072
+[EMBED_DIAG] token=12827 rowBytes=2520 first8= -0.019 -0.024 0.025 -0.006 -0.010 0.032 0.008 0.005
+[DBG-FWD] enter layer=0 seqLen=30 liveSeq=29
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=30 liveSeq=29
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=30 liveSeq=29
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=30 liveSeq=29
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=30 liveSeq=29
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=30 liveSeq=29
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=30 liveSeq=29
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=30 liveSeq=29
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=30 liveSeq=29
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=30 liveSeq=29
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=30 liveSeq=29
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=30 liveSeq=29
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=30 liveSeq=29
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=30 liveSeq=29
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=30 liveSeq=29
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=30 liveSeq=29
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=30 liveSeq=29
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=30 liveSeq=29
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=30 liveSeq=29
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=30 liveSeq=29
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=30 liveSeq=29
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=30 liveSeq=29
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=30 liveSeq=29
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=30 liveSeq=29
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=30 liveSeq=29
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=30 liveSeq=29
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=30 liveSeq=29
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=30 liveSeq=29
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=2704 all_finite hiddenDim=3072
+[EMBED_DIAG] token=2704 rowBytes=2520 first8= 0.049 -0.000 -0.002 0.031 -0.011 0.034 0.002 -0.006
+[DBG-FWD] enter layer=0 seqLen=31 liveSeq=30
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=31 liveSeq=30
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=31 liveSeq=30
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=31 liveSeq=30
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=31 liveSeq=30
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=31 liveSeq=30
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=31 liveSeq=30
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=31 liveSeq=30
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=31 liveSeq=30
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=31 liveSeq=30
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=31 liveSeq=30
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=31 liveSeq=30
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=31 liveSeq=30
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=31 liveSeq=30
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=31 liveSeq=30
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=31 liveSeq=30
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=31 liveSeq=30
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=31 liveSeq=30
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=31 liveSeq=30
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=31 liveSeq=30
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=31 liveSeq=30
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=31 liveSeq=30
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=31 liveSeq=30
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=31 liveSeq=30
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=31 liveSeq=30
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=31 liveSeq=30
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=31 liveSeq=30
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=31 liveSeq=30
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=323 all_finite hiddenDim=3072
+[EMBED_DIAG] token=323 rowBytes=2520 first8= 0.013 0.006 -0.002 0.009 -0.030 -0.012 -0.019 0.009
+[DBG-FWD] enter layer=0 seqLen=32 liveSeq=31
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=32 liveSeq=31
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=32 liveSeq=31
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=32 liveSeq=31
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=32 liveSeq=31
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=32 liveSeq=31
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=32 liveSeq=31
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=32 liveSeq=31
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=32 liveSeq=31
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=32 liveSeq=31
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=32 liveSeq=31
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=32 liveSeq=31
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=32 liveSeq=31
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=32 liveSeq=31
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=32 liveSeq=31
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=32 liveSeq=31
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=32 liveSeq=31
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=32 liveSeq=31
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=32 liveSeq=31
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=32 liveSeq=31
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=32 liveSeq=31
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=32 liveSeq=31
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=32 liveSeq=31
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=32 liveSeq=31
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=32 liveSeq=31
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=32 liveSeq=31
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=32 liveSeq=31
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=32 liveSeq=31
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=63179 all_finite hiddenDim=3072
+[EMBED_DIAG] token=63179 rowBytes=2520 first8= 0.016 -0.042 0.021 -0.003 0.041 0.009 -0.029 -0.009
+[DBG-FWD] enter layer=0 seqLen=33 liveSeq=32
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=33 liveSeq=32
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=33 liveSeq=32
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=33 liveSeq=32
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=33 liveSeq=32
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=33 liveSeq=32
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=33 liveSeq=32
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=33 liveSeq=32
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=33 liveSeq=32
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=33 liveSeq=32
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=33 liveSeq=32
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=33 liveSeq=32
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=33 liveSeq=32
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=33 liveSeq=32
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=33 liveSeq=32
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=33 liveSeq=32
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=33 liveSeq=32
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=33 liveSeq=32
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=33 liveSeq=32
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=33 liveSeq=32
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=33 liveSeq=32
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=33 liveSeq=32
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=33 liveSeq=32
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=33 liveSeq=32
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=33 liveSeq=32
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=33 liveSeq=32
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=33 liveSeq=32
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=33 liveSeq=32
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=433 all_finite hiddenDim=3072
+[EMBED_DIAG] token=433 rowBytes=2520 first8= 0.007 0.011 0.001 0.005 -0.016 -0.035 0.010 0.024
+[DBG-FWD] enter layer=0 seqLen=34 liveSeq=33
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=34 liveSeq=33
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=34 liveSeq=33
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=34 liveSeq=33
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=34 liveSeq=33
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=34 liveSeq=33
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=34 liveSeq=33
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=34 liveSeq=33
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=34 liveSeq=33
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=34 liveSeq=33
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=34 liveSeq=33
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=34 liveSeq=33
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=34 liveSeq=33
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=34 liveSeq=33
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=34 liveSeq=33
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=34 liveSeq=33
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=34 liveSeq=33
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=34 liveSeq=33
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=34 liveSeq=33
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=34 liveSeq=33
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=34 liveSeq=33
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=34 liveSeq=33
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=34 liveSeq=33
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=34 liveSeq=33
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=34 liveSeq=33
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=34 liveSeq=33
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=34 liveSeq=33
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=34 liveSeq=33
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=627 all_finite hiddenDim=3072
+[EMBED_DIAG] token=627 rowBytes=2520 first8= 0.016 -0.002 0.017 0.002 -0.016 -0.006 -0.017 0.008
+[DBG-FWD] enter layer=0 seqLen=35 liveSeq=34
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=35 liveSeq=34
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=35 liveSeq=34
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=35 liveSeq=34
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=35 liveSeq=34
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=35 liveSeq=34
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=35 liveSeq=34
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=35 liveSeq=34
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=35 liveSeq=34
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=35 liveSeq=34
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=35 liveSeq=34
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=35 liveSeq=34
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=35 liveSeq=34
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=35 liveSeq=34
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=35 liveSeq=34
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=35 liveSeq=34
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=35 liveSeq=34
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=35 liveSeq=34
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=35 liveSeq=34
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=35 liveSeq=34
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=35 liveSeq=34
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=35 liveSeq=34
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=35 liveSeq=34
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=35 liveSeq=34
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=35 liveSeq=34
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=35 liveSeq=34
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=35 liveSeq=34
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=35 liveSeq=34
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=27 all_finite hiddenDim=3072
+[EMBED_DIAG] token=27 rowBytes=2520 first8= 0.017 0.018 0.025 0.012 -0.025 0.008 0.036 0.011
+[DBG-FWD] enter layer=0 seqLen=36 liveSeq=35
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=36 liveSeq=35
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=36 liveSeq=35
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=36 liveSeq=35
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=36 liveSeq=35
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=36 liveSeq=35
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=36 liveSeq=35
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=36 liveSeq=35
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=36 liveSeq=35
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=36 liveSeq=35
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=36 liveSeq=35
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=36 liveSeq=35
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=36 liveSeq=35
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=36 liveSeq=35
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=36 liveSeq=35
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=36 liveSeq=35
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=36 liveSeq=35
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=36 liveSeq=35
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=36 liveSeq=35
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=36 liveSeq=35
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=36 liveSeq=35
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=36 liveSeq=35
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=36 liveSeq=35
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=36 liveSeq=35
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=36 liveSeq=35
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=36 liveSeq=35
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=36 liveSeq=35
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=36 liveSeq=35
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=91 all_finite hiddenDim=3072
+[EMBED_DIAG] token=91 rowBytes=2520 first8= -0.011 -0.004 0.030 0.033 0.001 0.020 0.044 -0.037
+[DBG-FWD] enter layer=0 seqLen=37 liveSeq=36
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=37 liveSeq=36
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=37 liveSeq=36
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=37 liveSeq=36
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=37 liveSeq=36
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=37 liveSeq=36
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=37 liveSeq=36
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=37 liveSeq=36
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=37 liveSeq=36
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=37 liveSeq=36
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=37 liveSeq=36
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=37 liveSeq=36
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=37 liveSeq=36
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=37 liveSeq=36
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=37 liveSeq=36
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=37 liveSeq=36
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=37 liveSeq=36
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=37 liveSeq=36
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=37 liveSeq=36
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=37 liveSeq=36
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=37 liveSeq=36
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=37 liveSeq=36
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=37 liveSeq=36
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=37 liveSeq=36
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=37 liveSeq=36
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=37 liveSeq=36
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=37 liveSeq=36
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=37 liveSeq=36
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=78191 all_finite hiddenDim=3072
+[EMBED_DIAG] token=78191 rowBytes=2520 first8= 0.016 -0.023 0.016 -0.001 -0.002 -0.020 -0.031 -0.019
+[DBG-FWD] enter layer=0 seqLen=38 liveSeq=37
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=38 liveSeq=37
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=38 liveSeq=37
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=38 liveSeq=37
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=38 liveSeq=37
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=38 liveSeq=37
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=38 liveSeq=37
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=38 liveSeq=37
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=38 liveSeq=37
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=38 liveSeq=37
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=38 liveSeq=37
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=38 liveSeq=37
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=38 liveSeq=37
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=38 liveSeq=37
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=38 liveSeq=37
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=38 liveSeq=37
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=38 liveSeq=37
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=38 liveSeq=37
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=38 liveSeq=37
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=38 liveSeq=37
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=38 liveSeq=37
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=38 liveSeq=37
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=38 liveSeq=37
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=38 liveSeq=37
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=38 liveSeq=37
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=38 liveSeq=37
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=38 liveSeq=37
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=38 liveSeq=37
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=91 all_finite hiddenDim=3072
+[EMBED_DIAG] token=91 rowBytes=2520 first8= -0.011 -0.004 0.030 0.033 0.001 0.020 0.044 -0.037
+[DBG-FWD] enter layer=0 seqLen=39 liveSeq=38
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=39 liveSeq=38
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=39 liveSeq=38
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=39 liveSeq=38
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=39 liveSeq=38
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=39 liveSeq=38
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=39 liveSeq=38
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=39 liveSeq=38
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=39 liveSeq=38
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=39 liveSeq=38
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=39 liveSeq=38
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=39 liveSeq=38
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=39 liveSeq=38
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=39 liveSeq=38
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=39 liveSeq=38
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=39 liveSeq=38
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=39 liveSeq=38
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=39 liveSeq=38
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=39 liveSeq=38
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=39 liveSeq=38
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=39 liveSeq=38
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=39 liveSeq=38
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=39 liveSeq=38
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=39 liveSeq=38
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=39 liveSeq=38
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=39 liveSeq=38
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=39 liveSeq=38
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=39 liveSeq=38
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[EMBED_DIAG] dequant=00007FF7EF4D3470 type=14
+[EMBED_DIAG] token=397 all_finite hiddenDim=3072
+[EMBED_DIAG] token=397 rowBytes=2520 first8= 0.047 0.021 0.009 0.009 0.032 0.025 0.029 0.012
+[DBG-FWD] enter layer=0 seqLen=40 liveSeq=39
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=40 liveSeq=39
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=40 liveSeq=39
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=40 liveSeq=39
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=40 liveSeq=39
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=40 liveSeq=39
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=40 liveSeq=39
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=40 liveSeq=39
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=40 liveSeq=39
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=40 liveSeq=39
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=40 liveSeq=39
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=40 liveSeq=39
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=40 liveSeq=39
+[DBG-FWD] layer=12 rmsnorm ok
+[DBG-FWD] layer=12 attention ok
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=40 liveSeq=39
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=40 liveSeq=39
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=40 liveSeq=39
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=40 liveSeq=39
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=40 liveSeq=39
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=40 liveSeq=39
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=40 liveSeq=39
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=40 liveSeq=39
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=40 liveSeq=39
+[DBG-FWD] layer=21 rmsnorm ok
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=22 seqLen=40 liveSeq=39
+[DBG-FWD] layer=22 rmsnorm ok
+[DBG-FWD] layer=22 attention ok
+[DBG-FWD] layer=22 ffn ok
+[DBG-FWD] layer=22 exit
+[DBG-FWD] enter layer=23 seqLen=40 liveSeq=39
+[DBG-FWD] layer=23 rmsnorm ok
+[DBG-FWD] layer=23 attention ok
+[DBG-FWD] layer=23 ffn ok
+[DBG-FWD] layer=23 exit
+[DBG-FWD] enter layer=24 seqLen=40 liveSeq=39
+[DBG-FWD] layer=24 rmsnorm ok
+[DBG-FWD] layer=24 attention ok
+[DBG-FWD] layer=24 ffn ok
+[DBG-FWD] layer=24 exit
+[DBG-FWD] enter layer=25 seqLen=40 liveSeq=39
+[DBG-FWD] layer=25 rmsnorm ok
+[DBG-FWD] layer=25 attention ok
+[DBG-FWD] layer=25 ffn ok
+[DBG-FWD] layer=25 exit
+[DBG-FWD] enter layer=26 seqLen=40 liveSeq=39
+[DBG-FWD] layer=26 rmsnorm ok
+[DBG-FWD] layer=26 attention ok
+[DBG-FWD] layer=26 ffn ok
+[DBG-FWD] layer=26 exit
+[DBG-FWD] enter layer=27 seqLen=40 liveSeq=39
+[DBG-FWD] layer=27 rmsnorm ok
+[DBG-FWD] layer=27 attention ok
+[DBG-FWD] layer=27 ffn ok
+[DBG-FWD] layer=27 exit
+[Deep2Engine] embedToken: type=14 vocabSize=128256 hiddenDim=3072 data=000001E737B398E0 sizeBytes=323205120
+[KVCache] page grow 8 -> 16 hot (virtualMax=126911 pos=8)
+[KVCache] page grow 16 -> 24 hot (virtualMax=126911 pos=16)
+[KVCache] page grow 24 -> 32 hot (virtualMax=126911 pos=24)
+[KVCache] page grow 32 -> 40 hot (virtualMax=126911 pos=32)
+[AGENT] PREFILL_DONE prompt_tokens=40 prefill_ms=8357.258
+[AGENT] DECODE_BEGIN max_out=1
+[DBG] stateNorm=8.898759e+01 finite=1 pos=40
+[DBG] nonFiniteLogits=0 vocabSize=128256
+[DBG] sampled token=56112 eosId=128009
+[AGENT] TOKEN id=56112 piece=.tolist
+.tolist[Deep2Engine] Generation complete: 1 tokens in 8361.41 ms (E2E 0.12 TPS)
+[Deep2Engine] PREFILL: 40 tok in 8357.26 ms (4.79 tok/s) | DECODE: 1 tok in 4.14 ms (241.48 tok/s)
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=0
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 1120
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 8330.325
+totalEmbedMs       = 11.898
+totalLogitsMs      = 3.004
+totalAttnMs        = 2765.134
+totalFfnMs         = 5477.393
+acquireCount       = 0
+mapCount           = 0
+releaseCount       = 0
+releaseErrorCount  = 0
+tensorAcquireFail  = 0
+mappingErrorCount  = 0
+residencyErrorCount= 0
+staleLeaseCount    = 0
+avgLayerMs         = 7.438
+============================================================
+[live-path] vacuumArmed=0 trampoline=1/1122 cyclone=0/0/0/0 pinball=0 trailbrake=0/0 elastic=0 stream=0 nvmeAbsence=0 plasmaAbsence=0 enhancements=1
+[AGENT] POST_GENERATE generated=1 tokens
+[AGENT] GENERATION_RECEIPT prompt=40 generated=1 completed=1 cancelled=0 stop_reason=16 stop=COMPLETED
+
+RUN_RECEIPT=F:\rawrxd\evidence\rawr_run_agent_smoke_20261020.json
+[StreamEngine] Shutdown
+EXIT_CODE=0

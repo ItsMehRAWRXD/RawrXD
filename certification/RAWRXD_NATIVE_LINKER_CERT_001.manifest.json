@@ -1,0 +1,150 @@
+﻿{
+    "schema":  "rawr.cert.manifest/1",
+    "ladder":  "RAWR_NATIVE_LINKER_CERT_001",
+    "result":  "32 passed, 0 failed",
+    "gates":  [
+                  "L1 undefined symbol rejection",
+                  "L2/L3 import table + Windows execution",
+                  "L4 multiple import DLLs",
+                  "L5 deterministic output",
+                  "L6 global data layout"
+              ],
+    "provenance":  {
+                       "INFERENCE_ENGINE":  "DEEP2",
+                       "AGENT_ENGINE":  "RAWRXD",
+                       "TOOL_AUTHORITY":  "RAWRXD",
+                       "VERIFICATION":  "RAWRXD"
+                   },
+    "source_location":  "_pre_merge_backup/toolchain/from_scratch/phase2_linker (NOT in the live tree)",
+    "source_location_alternates":  [
+                                       ".kilo/worktrees/piranha1-gate2-provenance/_pre_merge_backup/...",
+                                       "F:/RawrXD/_pre_merge_backup/toolchain/from_scratch/phase2_linker"
+                                   ],
+    "build":  {
+                  "generator":  "Ninja",
+                  "compiler":  "MSVC 19.44.35207",
+                  "type":  "Release",
+                  "units":  "16/16, no warnings",
+                  "rebuild_dir":  "\u003cscratch\u003e"
+              },
+    "linker_binary":  {
+                          "sha256":  "14125E7DB1F46ECF027643F41CB638F1866073AB9C4B0FB4FBE2BF8512CE8F90",
+                          "bytes":  69120
+                      },
+    "harness_defect":  {
+                           "file":  "toolchain/from_scratch/phase2_linker/tests/run_linker_cert.ps1",
+                           "line":  22,
+                           "symptom":  "The run aborts at line 206 on the linker\u0027s normal stderr progress output.",
+                           "cause":  "$ErrorActionPreference=\u0027Stop\u0027 promotes the merged stderr ErrorRecord to a terminating error.",
+                           "fix":  "Set $ErrorActionPreference=\u0027Continue\u0027 for the native invocations and assert on the linker\u0027s exit code instead of on the absence of stderr.",
+                           "note":  "Applied to a scratch copy only. The repository was not modified."
+                       },
+    "stale_binaries":  [
+                           {
+                               "path":  "toolchain/from_scratch/phase2_linker/build/rawrxd_link.exe",
+                               "built":  "2026-02-15",
+                               "result":  "FAIL at L1: Failed to read: -subsys"
+                           },
+                           {
+                               "path":  "toolchain/from_scratch/phase2_linker/build_ghost/rawrxd_link.exe",
+                               "built":  "2026-03-20",
+                               "result":  "FAIL at L1: Failed to read: -subsys"
+                           },
+                           {
+                               "path":  "toolchain/from_scratch/phase2_linker/build_gmake/rawrxd_link.exe",
+                               "built":  "2026-02-16",
+                               "result":  "FAIL at L1"
+                           },
+                           {
+                               "path":  "toolchain/from_scratch/phase2_linker/build_new/rawrxd_link.exe",
+                               "built":  "2026-02-16",
+                               "result":  "FAIL at L1"
+                           }
+                       ],
+    "source_hashes":  {
+                          "section_merge.h":  {
+                                                  "sha256":  "C968B243E6765F0A1A3C7079F31EAE6055F67108BED06952E1184C492161B33A",
+                                                  "lines":  89
+                                              },
+                          "import_gen.h":  {
+                                               "sha256":  "AD9F987082D3CCFBF8422AC08BBB41A5F408A5223D2DDDB2346638C2526E1CA5",
+                                               "lines":  111
+                                           },
+                          "export_gen.h":  {
+                                               "sha256":  "7196181EDA3E57E57A741621120476FA876D633EEAB84F8CE668D0A9FB814DA5",
+                                               "lines":  70
+                                           },
+                          "known_imports.h":  {
+                                                  "sha256":  "FED5F068A43D389A6BA64403351565A9A8CAA218353BC4CBE9659A091E4AFBD8",
+                                                  "lines":  9
+                                              },
+                          "tests/run_linker_cert.ps1":  {
+                                                            "sha256":  "2F2BA3B1E973BEE272E62F236E279F450B053EDFB4608B075CE1E426ED783E17",
+                                                            "lines":  324
+                                                        },
+                          "reloc_gen.h":  {
+                                              "sha256":  "764FA7870AA7516A5F5FD4B5029DBD5DE4C653C669E9EFE2F896C910169E05F0",
+                                              "lines":  63
+                                          },
+                          "pe_writer.c":  {
+                                              "sha256":  "22A40F9867D8C15F7BDF1A87500AC97C46514D3704E9910A97358709684CA60B",
+                                              "lines":  472
+                                          },
+                          "CMakeLists.txt":  {
+                                                 "sha256":  "914454EA7D8255BFBEFDCC4950D3DC0226E5FFE0C54325EE10CEB34862EBDB0E",
+                                                 "lines":  45
+                                             },
+                          "export_gen.c":  {
+                                               "sha256":  "4C46F8AA71CF900F1B6954A09E81374CA39E18F9719F68A64ABB92B96BBE9470",
+                                               "lines":  159
+                                           },
+                          "import_gen.c":  {
+                                               "sha256":  "A758D2D7E551B3785132701D4F9566B4DEEF194CE648574564E9C16065F942FE",
+                                               "lines":  569
+                                           },
+                          "entry_stub.c":  {
+                                               "sha256":  "7057E23E169A86B22B9E135FAC9C6B8E0218D21E0074DDF1D57C60348DA33BD6",
+                                               "lines":  79
+                                           },
+                          "known_imports.c":  {
+                                                  "sha256":  "5040893A1B3B4E9C53277A8640B4F13BF9597EFB7EDEF4BD8E47486DBBDDA3F4",
+                                                  "lines":  623
+                                              },
+                          "coff_reader.c":  {
+                                                "sha256":  "BA5A1E38C9506FBE88AC3896D043B1205DC308509C86D096E931213C01C18304",
+                                                "lines":  460
+                                            },
+                          "pe_writer.h":  {
+                                              "sha256":  "96B7462797640920BE63D70688A538334298DEA45904B1B41E5B33389D80CB15",
+                                              "lines":  97
+                                          },
+                          "coff_reader.h":  {
+                                                "sha256":  "B19C32117A9B3FB54D71DE7AEFBECF972AE1AFF7A59426A97A81E6DC1AB58E8B",
+                                                "lines":  130
+                                            },
+                          "tests/make_fixtures.c":  {
+                                                        "sha256":  "4B48BC568F05FA30F32059F2EA1888B33A09D0D97B6365917AD0BFE62FD72A90",
+                                                        "lines":  388
+                                                    },
+                          "section_merge.c":  {
+                                                  "sha256":  "B099C829530E9E588DF194D91B064A06CEBB046ACA5B496AF3CC8B7A4AB83A5F",
+                                                  "lines":  463
+                                              },
+                          "rawrxd_check.c":  {
+                                                 "sha256":  "806C90E3D5D0BB0608203DB9D9E9F829B93A14D33A31158924607C4C63D39E9F",
+                                                 "lines":  160
+                                             },
+                          "reloc_resolver.c":  {
+                                                   "sha256":  "931DDC86E64AAFF5552DA90ED7D4B928F7772EA636D502CF8B38FBD7120FA9A6",
+                                                   "lines":  310
+                                               },
+                          "main.c":  {
+                                         "sha256":  "76F6F4BF69B6FF3BD8AA3EA3C403F31CAB5C5041381BE84C81FE74E284873469",
+                                         "lines":  391
+                                     },
+                          "reloc_gen.c":  {
+                                              "sha256":  "0CA31E96B3CB4F5B3FDD48B77B5581FEC6149F545C86F577189414229657BA05",
+                                              "lines":  148
+                                          }
+                      }
+}

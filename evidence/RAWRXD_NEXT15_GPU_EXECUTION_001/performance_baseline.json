@@ -1,0 +1,11 @@
+{
+  "schema": "RAWRXD_NEXT15_PERFORMANCE_BASELINE_001",
+  "status": "BLOCKED",
+  "reason": "No token generated; decode TPS undefined",
+  "generated_tokens": 0,
+  "queue_submits": 20,
+  "gpu_dispatches": 4,
+  "gpu_layers": 1,
+  "prefill": "FAILED_NONFINITE_INPUT",
+  "decode_tps": null
+}

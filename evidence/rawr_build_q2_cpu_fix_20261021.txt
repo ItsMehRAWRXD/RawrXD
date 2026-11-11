@@ -1,0 +1,21 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  rawrxd_screenpilot_e2e.vcxproj -> F:\rawrxd\~dev\build\Release\rawrxd_screenpilot_e2e.lib
+  QuantKernelRegistry.cpp
+F:\rawrxd\~dev\rawrxd\src\deep2\QuantKernelRegistry.cpp(223,27): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\QuantKernelRegistry.cpp(302,12): warning C4100: 'rows': unreferenced parameter [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\QuantKernelRegistry.cpp(900,17): warning C4189: 'is': local variable is initialized but not referenced [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\QuantKernelRegistry.cpp(203,13): warning C4505: 'Deep2::gemv_q4_k_masm': unreferenced function with internal linkage has been removed [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\QuantKernelRegistry.cpp(217,13): warning C4505: 'Deep2::gemv_q2_k_masm': unreferenced function with internal linkage has been removed [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\QuantKernelRegistry.cpp(238,13): warning C4505: 'Deep2::gemv_q3_k_masm': unreferenced function with internal linkage has been removed [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\QuantKernelRegistry.cpp(250,13): warning C4505: 'Deep2::gemv_q4_0_masm': unreferenced function with internal linkage has been removed [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\QuantKernelRegistry.cpp(262,13): warning C4505: 'Deep2::gemv_q4_1_masm': unreferenced function with internal linkage has been removed [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\QuantKernelRegistry.cpp(274,13): warning C4505: 'Deep2::gemv_q8_0_masm': unreferenced function with internal linkage has been removed [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\QuantKernelRegistry.cpp(286,13): warning C4505: 'Deep2::gemv_q5_k_masm': unreferenced function with internal linkage has been removed [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\QuantKernelRegistry.cpp(298,13): warning C4505: 'Deep2::gemv_q6_k_masm': unreferenced function with internal linkage has been removed [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\QuantKernelRegistry.cpp(309,13): warning C4505: 'Deep2::gemv_f16_masm': unreferenced function with internal linkage has been removed [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\QuantKernelRegistry.cpp(1541,13): warning C4505: 'Deep2::quantize_row_q8_K_avx2': unreferenced function with internal linkage has been removed [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\QuantKernelRegistry.cpp(2058,13): warning C4505: 'Deep2::gemv_q5_k_avx2': unreferenced function with internal linkage has been removed [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\QuantKernelRegistry.cpp(898,1): warning C4702: unreachable code [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+  rawr_monolith.vcxproj -> F:\rawrxd\~dev\build\Release\rawr_monolith.exe
+  Publishing rawr.exe product entry point

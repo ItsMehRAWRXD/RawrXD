@@ -1,0 +1,240 @@
+# Build artifacts
+build/
+build-*/
+build_prod/
+out/
+tmp/
+*.obj
+*.o
+*.lib
+*.exe
+*.dll
+*.pdb
+*.ilk
+*.log
+
+# Certification evidence is deliberately versioned even though *.log is
+# ignored above: it is the run transcript behind a certification record.
+!certification/*.log
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+*.vcxproj
+*.vcxproj.filters
+*.sln
+
+# Qt
+*_autogen/
+moc_*.cpp
+moc_*.cpp.d
+*.qm
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.sdf
+*.opensdf
+
+# IDE
+.vscode/
+.idea/
+.clangd
+
+# OS
+.DS_Store
+Thumbs.db
+
+compile_commands.json
+CMakeSettings.json
+
+.venv/
+ggml_env/
+.exrc
+.cache
+.stablelm
+.gpt-2
+
+src/arm_neon.h
+tests/arm_neon.h
+
+zig-out/
+zig-cache/
+
+*.d
+*.dot
+
+*.sw?
+
+__pycache__/
+
+# Model files
+models/
+models-mnt
+ggml-model-f16.bin
+*.bat
+
+*.gguf
+
+# CMake build directories - machine-specific caches/artifacts must never be tracked
+# (stale absolute paths in committed CMakeCache.txt break CI configure)
+RawrXD-ModelLoader/build/
+RawrXD-ModelLoader/build-arm64/
+build/
+build-*/
+build_ninja/
+
+# ---- evaluation harness artifacts (rebuilt binaries + intermediates) ----
+/_eval_harness/
+_eval_harness/
+
+# ---- machine build trees ----
+build_vs/
+build_fresh/
+build_cmake/
+vs_validation/
+build_agent_esp/
+build_snap_process_guard/
+_build/
+
+# ---- production hardening build trees (local, machine-specific) ----
+build_hardening_cfg/
+build_hardening_tests/
+build_asan_check/
+build-ci/
+build_dbg_url/
+*.pdb
+*.ilk
+
+# CMake machine state inside build trees (nested caches reference absolute
+# generator/compiler paths from the machine that produced them)
+_build/*.cmake
+CMakeFiles/
+
+# ---- local backups ----
+/.backups/
+.backups/
+
+# ---- crash dumps (may contain process memory; keep local) ----
+evidence/crash_dumps/
+
+# ---- large binary parity dumps (keep locally; only summaries are committed) ----
+evidence/PARITY_2026-10-13/
+
+# ---- run logs / core dumps ----
+*.err
+*.stderr
+*.dmp
+.env
+
+# native forward gate build tree
+build_forward_001/
+
+# ---- 2026-10-13 gap audit: diagnostic tensor dumps + bench build trees ----
+# Multi-GB of per-op .bin dumps (gate5/gate6/gate8 trees) and local build
+# outputs; the run transcripts, receipts and comparators ARE committed so
+# every dump remains regenerable from the recorded commands.
+build_gate4/
+build_recert/
+tests/bin/
+evidence/GAP_AUDIT_2026-10-13/gate4_moe_batch/
+evidence/GAP_AUDIT_2026-10-13/gate4_moe_batch.retry/
+evidence/GAP_AUDIT_2026-10-13/gate4_moe_nobatch/
+evidence/GAP_AUDIT_2026-10-13/gate4_tinyllama_cpu/
+evidence/GAP_AUDIT_2026-10-13/gate4_tinyllama_cpu_2tok/
+evidence/GAP_AUDIT_2026-10-13/gate4_tinyllama_cpu_kvf32/
+evidence/GAP_AUDIT_2026-10-13/gate4_tinyllama_gpu/
+evidence/GAP_AUDIT_2026-10-13/gate4_tinyllama_gpu_2tok/
+evidence/GAP_AUDIT_2026-10-13/gate4_tinyllama_gpu_check/
+evidence/GAP_AUDIT_2026-10-13/gate4_tinyllama_gpu_kvf32/
+evidence/GAP_AUDIT_2026-10-13/gate4_ci/*/
+evidence/GAP_AUDIT_2026-10-13/gate5/d2_*/
+evidence/GAP_AUDIT_2026-10-13/gate5/ref/
+evidence/GAP_AUDIT_2026-10-13/gate5/ref_head/
+evidence/GAP_AUDIT_2026-10-13/gate5/ref_long/
+evidence/GAP_AUDIT_2026-10-13/gate6/*/
+evidence/GAP_AUDIT_2026-10-13/gate7/*/
+evidence/GAP_AUDIT_2026-10-13/gate7_decode/ref_chain/
+evidence/GAP_AUDIT_2026-10-13/gate7_probe/nemotron/
+evidence/GAP_AUDIT_2026-10-13/gate7_tps/*/
+evidence/GAP_AUDIT_2026-10-13/gate8_mem/
+evidence/GAP_AUDIT_2026-10-13/gate8_mem3/
+
+# ---- 2026-10-14 one-pipeline run: local ggml build trees + regenerable page
+# dumps (real model tensor bytes) are not repo content; the receipt and the
+# command line that regenerates them ARE committed. ----
+build_audit/
+build_gate_recovery_20261013/
+evidence/deep2_one_pipeline/pages/
+
+# ---- 2026-10-14 cleanup: stray copied dependency tree and local worktrees
+# must never enter the index (one is a mis-pathed build output, the others are
+# nested git repositories). ----
+/F/
+/.worktrees/
+
+# ---- 2026-10-14: regenerable parity/logit dump blobs stay local; the receipts,
+# comparators and run transcripts that regenerate them remain versioned. ----
+*.bin
+
+# ---- 2026-10-15 parity finalization drop: the build tree and the persisted
+# evidence workspace are regenerable outputs, not repo content. The C++ runner,
+# the e2e fixture, the gate and the evidence harness ARE versioned. ----
+/tools/rawrxd_parity_final/build/
+/tools/rawrxd_parity_final/parity_evidence_ws/
+/tools/rawrxd_parity_final/build_asan/
+/tools/rawrxd_parity_final/build_package_asan/
+
+# ---- produced source-drop packages and their staging area (regenerable via
+# scripts/package_production_drop.ps1; the SBOM/report are rebuilt each run) ----
+/_drop/
+_drop/
+build_package_asan/
+
+# ---- 2026-10-15: local machine build trees that slipped past the hyphen rules
+# above (build-*/). These are machine-specific CMake outputs with stale absolute
+# paths, exactly like the trees excluded earlier; they are regenerable and must
+# never be tracked. One of them also carries >100MB generated artifacts. ----
+build_deep2_fix/
+build_ldr_cfg/
+build_production/
+_cert_clean/
+_cert_clean2/
+_cert_clean3/
+_cmake_recovery/
+
+# ---- .NET publish/build outputs for the in-house toolchain (the exe is a
+# 64MB build product; only the C# sources are repo content) ----
+tools/inhouse/bin/
+tools/inhouse/*/bin/
+tools/inhouse/*/obj/
+tools/inhouse/*/*/bin/
+tools/inhouse/*/*/obj/
+
+# ---- vendored upstream reference checkout (nested git repo). The pinned
+# upstream commit is recorded in
+# evidence/deep2_gate_a/ref_llamacpp_commit.txt instead of vendoring it. ----
+/tmp_llama_ref/
+
+# Local build tree (machine-specific, must never be tracked)
+build_ninja/
+
+__run_output*.txt
+build_qt_free/3rdparty/ggml/src/ggml-vulkan/mul_mm.comp.cpp
+
+# ---- 2026-10-19 D1 scaffolding: the local MSVC build tree and the pruned
+# model files are machine artifacts, not source. The pruned model is a
+# multi-GB derivative of a model that is already on disk, and it must never
+# enter the index. The build tree is named with an underscore, which the
+# build-*/ rules above do not cover. ----
+build_msvc/
+*.gguf.pruned
+
+
+
+# The native compiler's build definitions are part of the certified
+# implementation: without them the 160 Stage-1 checks cannot be rebuilt from
+# a checkout. The blanket *.bat rule above would otherwise exclude them.
+!compilers/native_compiler/tools/*.bat

@@ -1,0 +1,98 @@
+
+===== MODEL =====
+path=F:\OllamaModels\Qwen3.5-40B-Claude-4.6-Opus-Deckard-Heretic-Uncensored-Thinking.Q4_K_M.gguf
+architecture=qwen35
+block_count=96
+vocab=248320
+seed_tokens=12
+ingest_ms=81675.1
+bind_ms=0.6
+
+===== EXECUTION: prefill =====
+requested_backend=gpu-first
+ops_total=1059 ops_bound=1059 ops_unbound=0
+weights_resolved=1275 weights_missing=0
+unsupported_operations=0
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+[quant-row8] shader=F:\rawrxd\tools\shaders\quant_dot_row8_q6tile.spv q6_shared=1
+Quant-dot pipeline and permanent descriptor system initialized successfully
+[SHADER_PATH] ops=F:/rawrxd/src/deep2/shaders\deep2_ops.spv q=F:/rawrxd/src/deep2/shaders\deep2_qgemv.spv qb=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch.spv q4r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch4row.spv q8r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch8row.spv qn=F:/rawrxd/src/deep2/shaders\deep2_qgemv_nvfp4.spv am=F:/rawrxd/src/deep2/shaders\deep2_argmax.spv so=F:/rawrxd/src/deep2/shaders\deep2_spec_ops.spv sa=F:/rawrxd/src/deep2/shaders\deep2_spec_attn.spv ac=F:/rawrxd/src/deep2/shaders\deep2_spec_accept.spv gd=F:/rawrxd/src/deep2/shaders\deep2_qwen4exp_gdn.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1 qn=1 gdn=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+prefill_mode=PrefillBatch
+input_tokens=1
+layer_count=96
+total_op_executions=0
+op_executions_per_token=0.00
+op_executions_per_token_per_layer=0.0000
+prefill_shape=NO_EXECUTION_OBSERVED (no receipts emitted)
+prefill_ms=22799.7
+prefill_tps=0.04
+
+===== EXECUTION: dispatch receipts =====
+cpu_operations=0
+gpu_dispatches=1056
+vulkan_tensor_ops=0
+cpu_tensor_ops=0
+host_descriptor_ops=0
+other_backend_ops=0
+ops_without_dispatch_receipt=0
+forced_host_pin=false
+gpu_device=
+gpu_rows=0 cpu_rows=0
+unexplained_fallbacks=0
+cold_start_ms=0.0 steady_kernel_ms=0.000 dispatch_ms=0.000
+backend_submits=1346 backend_waits=1346 upload_bytes=23206904784 download_bytes=24417280
+backend_kernel_ms=1219.649 backend_submit_ms=10.530 backend_wait_ms=1219.649 backend_gpu_ms=247.007
+n===== KV_CACHE =====
+position_counter=1 (not a cache witness)
+kv_blocks=96
+kv_rows_block0=0
+kv_rows_max_over_blocks=1
+kv_resident_bytes=196608
+kv_leading_zero_rows_sampled=0
+prefill_committed_positions=YES (kv rows == tokens)
+
+===== EXECUTION: decode =====
+decode_tokens=1
+decode_ms=1056.7
+decode_tps=0.946
+gpu_dispatches_delta=818
+cpu_operations_delta=0
+matrix_rows_delta=0
+executor_gpu_ops_per_token=818.0 (NOT queue submissions)
+backend_submits_total=2091 backend_waits_total=2091 upload_bytes_total=23228626848 download_bytes_total=48834560
+backend_kernel_ms_total=1497.717 backend_submit_ms_total=20.914 backend_wait_ms_total=1497.717 backend_gpu_ms_total=462.905
+sample=7
+
+===== RESULT =====
+actual_backend=vulkan-gpu
+slowest_operations (by reported tensor size):
+        up: x96 size_total=1671168
+        swiglu: x96 size_total=1671168
+        gate: x96 size_total=1671168
+        resid_in: x96 size_total=491520
+        resid2: x96 size_total=491520
+        resid1: x96 size_total=491520
+        ffn_out: x96 size_total=491520
+        ffn_norm: x96 size_total=491520
+task_tps=0.019
+nEXEC_TRUTH_TRACE=COMPLETE
+GATE_RESIDENCY=PARTIAL
+GATE_EXECUTION=PASS
+GATE_CONTEXT=PARTIAL
+GATE_TOOL=N/A
+GATE_RECOVERY=N/A
+FINAL_VERDICT=PASS
+Released all tensors
+Vulkan resources cleaned up successfully

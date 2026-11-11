@@ -1,0 +1,13 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  rawrxd_screenpilot_e2e.vcxproj -> F:\rawrxd\~dev\build\Release\rawrxd_screenpilot_e2e.lib
+  Deep2Engine.cpp
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.cpp(210,28): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.cpp(856,42): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.cpp(1790,30): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.cpp(1828,30): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.cpp(3484,34): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.cpp(3494,41): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine.cpp(28,13): warning C4505: 'Deep2::rmsnorm': unreferenced function with internal linkage has been removed [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+  rawr_monolith.vcxproj -> F:\rawrxd\~dev\build\Release\rawr_monolith.exe
+  Publishing rawr.exe product entry point

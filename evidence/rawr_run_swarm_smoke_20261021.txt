@@ -1,0 +1,79 @@
+[Deep2Backend] Resolved alias 'F:\models\gguf\library__llama3.2__3b.gguf' -> F:\models\gguf\library__llama3.2__3b.gguf (1 shard)
+[Deep2Backend] Loading model: F:\models\gguf\library__llama3.2__3b.gguf
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+[ModelFit] KV budget caps context: requested=131072 fit=126911 (kv_bytes_per_token=32256)
+[Deep2Engine] ERROR: base buffer allocation failed
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] unloadModel
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=28
+[LIFE] unloadModel FreeTensorData ggufResult (255 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+[LIFE] release MoE
+[LIFE] disableMARS
+[LIFE] release vulkan devices
+[LIFE] stop telemetryController
+[LIFE] release residency/elastic/cache
+[LIFE] reset elasticResidency
+[LIFE] reset residencyManager
+[LIFE] reset residencyCache
+[LIFE] reset globalIndex
+[LIFE] residency/elastic/cache done
+[LIFE] release KV / compressedKV / toroidalKV
+[LIFE] stop threadPool
+[LIFE] release satellite engines
+[LIFE] deallocateBuffers
+[LIFE] remove temp Ollama GGUF
+[LIFE] ~Deep2Engine END
+[Deep2Engine] Loading model from: F:\models\gguf\library__llama3.2__3b.gguf
+Failed to load model via Deep2Engine: F:\models\gguf\library__llama3.2__3b.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+Use --backend ollama for HTTP-based inference instead.
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] MODEL_FIT_ADMITTED model=F:\models\gguf\library__llama3.2__3b.gguf mode=GPU_MULTI devices=2 kv_per_token=32256 max_ctx_est=126911
+Failed to initialize inference backend (deep2).
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\models\gguf)
+For Ollama: confirm a server on http://127.0.0.1:11434 and `ollama list`.
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+For Deep2:  confirm the runtime bridge on http://127.0.0.1:11436.
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] ERROR: No tensors parsed (run Parse first)
+[ReverseHotpatch] FAILED at stage 3 (ReverseUnlayer_Index)
+[Deep2Engine] WARNING: ReverseHotpatch failed, attempting raw load
+[Deep2Engine] GGUF architecture: 'llama'  hidden=3072 layers=28 heads=24 kvHeads=8 inter=8192 vocab=128256
+[Deep2Engine] Context length from metadata: 131072 tokens
+[Deep2Engine] Tokenizer loaded: vocab=128256 bos=128000 eos=128009 (Spm::encode)
+[WO_DIAG] GGUF wo.data=000002343BC7B0E0 rows=3072 cols=3072 type=12(Q4_K) block0 d=0x03F8 dmin=0x0D82 qs[0]=0xC6
+[Deep2Engine] Layer topology: 28 attention, 0 SSM, 0 unknown of 28 total
+[Deep2Engine] KV cache sized for 28 attention layers (SSM layers excluded)
+[Deep2Engine] Using tied embeddings
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=00000233C000F6A0  Registered 'blk.0.attn_q.weight': shard=0 offset=0 bytes=5308416  |  registry_size=1  registeredBytes=5308416  zeroOffset=1  maxResidentBytes=536870912
+[ResidencyManager] this=00000233C000F6A0  Registered 'blk.11.attn_q.weight': shard=0 offset=0 bytes=5308416  |  registry_size=100  registeredBytes=665739264  zeroOffset=100  maxResidentBytes=536870912
+[ResidencyManager] this=00000233C000F6A0  Registered 'blk.22.attn_k.weight': shard=0 offset=0 bytes=1769472  |  registry_size=200  registeredBytes=1319018496  zeroOffset=200  maxResidentBytes=536870912
+[Deep2Engine] ResidencyManager: this=00000233C000F6A0  registered=254 tensors  bytes=2011539456  max=536870912
+[Deep2Engine] ERROR: Failed to re-allocate buffers
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[ResidencyManager] Shutdown complete
+[StreamEngine] Shutdown
+EXIT_CODE=1

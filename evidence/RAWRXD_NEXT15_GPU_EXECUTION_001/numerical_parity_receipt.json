@@ -1,0 +1,10 @@
+{
+  "schema": "RAWRXD_NEXT15_NUMERICAL_PARITY_001",
+  "status": "BLOCKED",
+  "reason": "Production prefill aborted before comparable logits/token output",
+  "model_sha256": "EE1CA8B716933587127F6FEB9FF5A247F1E4460E72DCF6293331B9617F8A8AA2",
+  "cpu_reference": "NOT_RUN",
+  "gpu_reference": "NOT_RUN",
+  "finite_logits": "NOT_RUN",
+  "token_id_parity": "NOT_RUN"
+}

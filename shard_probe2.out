@@ -1,0 +1,2 @@
+SHARD_PROBE_PASS path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf shards=13 tensors=1096 mapped_bytes=621245224864 arch=deepseek2
+SHARD_PROBE_PASS path=F:\OllamaModels\Qwen3.8-Flash-Next-GGUF\Qwen3.8-Flash-Next-AD-IQ1_M-M64\Qwen3.8-Flash-Next-AD-IQ1_M-M64-00001-of-00002.gguf shards=2 tensors=1224 mapped_bytes=84930920928 arch=qwen4exp

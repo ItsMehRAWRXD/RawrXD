@@ -1,0 +1,6 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  rawrxd_screenpilot_e2e.vcxproj -> F:\rawrxd\~dev\build\Release\rawrxd_screenpilot_e2e.lib
+  rawr_run_stream.cpp
+  rawr_monolith.vcxproj -> F:\rawrxd\~dev\build\Release\rawr_monolith.exe
+  Publishing rawr.exe product entry point

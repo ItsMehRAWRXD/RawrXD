@@ -1,0 +1,138 @@
+{
+  "schema": "rawrxd.ide.self_manifest.v1",
+  "generated_utc": "2026-10-24T07:42:29.8826473Z",
+  "repository": "F:\\rawrxd",
+  "source_revision": "31dd6f82dacb2cb8bf211f0a2014e0e4b84f3c48",
+  "policy": "source wiring and runtime health are checked separately; this manifest never certifies model inference",
+  "checks": [
+    {
+      "id": "TAB-DOCUMENTS",
+      "area": "ui-wiring",
+      "status": "PASS",
+      "evidence": "document tabs: symbols present in Win32IDE.h",
+      "next_action": ""
+    },
+    {
+      "id": "TAB-OUTPUT",
+      "area": "ui-wiring",
+      "status": "PASS",
+      "evidence": "output tabs: symbols present in Win32IDE_lifecycle.cpp",
+      "next_action": ""
+    },
+    {
+      "id": "TAB-EXPLORER",
+      "area": "ui-wiring",
+      "status": "PASS",
+      "evidence": "file explorer: symbols present in Win32IDE.h",
+      "next_action": ""
+    },
+    {
+      "id": "TAB-SEARCH",
+      "area": "ui-wiring",
+      "status": "PASS",
+      "evidence": "search: symbols present in Win32IDE.h",
+      "next_action": ""
+    },
+    {
+      "id": "TAB-SCM",
+      "area": "ui-wiring",
+      "status": "PASS",
+      "evidence": "source control: symbols present in Win32IDE.h",
+      "next_action": ""
+    },
+    {
+      "id": "TAB-DEBUG",
+      "area": "ui-wiring",
+      "status": "PASS",
+      "evidence": "debug: symbols present in Win32IDE.h",
+      "next_action": ""
+    },
+    {
+      "id": "TAB-EXTENSIONS",
+      "area": "ui-wiring",
+      "status": "PASS",
+      "evidence": "extensions: symbols present in Win32ExtensionHostBridge.cpp",
+      "next_action": ""
+    },
+    {
+      "id": "TAB-OUTLINE",
+      "area": "ui-wiring",
+      "status": "PASS",
+      "evidence": "outline: symbols present in Win32IDE.h",
+      "next_action": ""
+    },
+    {
+      "id": "TAB-TIMELINE",
+      "area": "ui-wiring",
+      "status": "PASS",
+      "evidence": "timeline: symbols present in Win32IDE.h",
+      "next_action": ""
+    },
+    {
+      "id": "TAB-TERMINAL",
+      "area": "ui-wiring",
+      "status": "PASS",
+      "evidence": "terminal: symbols present in Win32IDE.h",
+      "next_action": ""
+    },
+    {
+      "id": "TAB-AI",
+      "area": "ui-wiring",
+      "status": "PASS",
+      "evidence": "AI chat/model selector: symbols present in Win32IDE.h",
+      "next_action": ""
+    },
+    {
+      "id": "TAB-AUTONOMY",
+      "area": "ui-wiring",
+      "status": "PASS",
+      "evidence": "agentic loop: symbols present in Win32IDE_AgentCommands.cpp",
+      "next_action": ""
+    },
+    {
+      "id": "ROUTE-DEEP2",
+      "area": "provider-wiring",
+      "status": "PASS",
+      "evidence": "Deep2: route selection and execution symbols present",
+      "next_action": ""
+    },
+    {
+      "id": "ROUTE-OLLAMA",
+      "area": "provider-wiring",
+      "status": "PASS",
+      "evidence": "Ollama: route selection and execution symbols present",
+      "next_action": ""
+    },
+    {
+      "id": "ROUTE-KILO",
+      "area": "provider-wiring",
+      "status": "PASS",
+      "evidence": "Kilo: route selection and execution symbols present",
+      "next_action": ""
+    },
+    {
+      "id": "ROUTE-LOCAL",
+      "area": "provider-wiring",
+      "status": "PASS",
+      "evidence": "native local: route selection and execution symbols present",
+      "next_action": ""
+    },
+    {
+      "id": "ROUTE-MENU",
+      "area": "route-menu",
+      "status": "PASS",
+      "evidence": "Generated route menu: all native routes present",
+      "next_action": ""
+    },
+    {
+      "id": "RUNTIME-HEALTH",
+      "area": "runtime",
+      "status": "PASS",
+      "evidence": "executable=F:\\rawrxd\\build_unified_clean\\bin\\RawrXD-Win32IDE-Native.exe sha256=9C9239B1F5A0387E9D33FBB62CA3A2E044111521558C7A4A0F3CD4C9B387FEEE exit=0 output=2026-10-24T03:42:29.781 info security [] audit log open (audit_path=C:\\Users\\Garrett\\AppData\\Local\\RawrXD\\audit\\rawrxd_audit.jsonl) (encrypted=true)\r\n2026-10-24T03:42:29.783 info security [] security runtime initialized (encryption=true) (audit=true) (max_request_bytes=8388608)\r\n2026-10-24T03:42:29.785 info startup [] production runtime initialized (environment=development) (service=rawrxd) (instance=local) (log_level=info) (config_fingerprint=b61a02c92fffee97)\r\nhealthy (ready=true)\r\n[StreamEngine] Shutdown\r\n",
+      "next_action": ""
+    }
+  ],
+  "check_count": 18,
+  "blocked_count": 0,
+  "verdict": "WIRED_AND_HEALTHY"
+}

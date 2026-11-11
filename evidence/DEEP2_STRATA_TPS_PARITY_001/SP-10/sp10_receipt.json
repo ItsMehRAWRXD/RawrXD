@@ -1,0 +1,89 @@
+{
+    "gate":  "SP-10",
+    "commit":  "cb885b5b10334ffdcf958cab9d273b3f1eb37dce",
+    "executable":  "F:\\rawrxd\\build\\bin-msvc\\Release\\rawr.exe",
+    "executable_sha256":  "5A280B9EE5F603F6000228B1EEE8C15DB217411319B926F36F83EE984D620FD2",
+    "model":  "F:\\models\\gguf\\library__llama3.2__3b.gguf",
+    "model_sha256":  "DDE5AA3FC5FFC17176B5E8BDC82F587B24B2678C6C66101BF7DA77AF9F7CCDFF",
+    "gpus":  [
+                 {
+                     "stable_id":  "1002:7551:0000000000015A2D",
+                     "name":  "AMD Radeon AI PRO R9700",
+                     "device_id":  "0x7551",
+                     "duty":  "COMPUTE_PRIMARY",
+                     "vram_bytes":  34054242304,
+                     "discrete":  true,
+                     "vendor_id":  "0x1002"
+                 },
+                 {
+                     "stable_id":  "1002:747E:0000000000018AA3",
+                     "name":  "AMD Radeon RX 7800 XT",
+                     "device_id":  "0x747E",
+                     "duty":  "COMPUTE_SECONDARY",
+                     "vram_bytes":  16962809856,
+                     "discrete":  true,
+                     "vendor_id":  "0x1002"
+                 }
+             ],
+    "build_config":  "Release",
+    "compiler":  "MSVC 14.44.35207 (MSBuild 17.14.51)",
+    "cmake_target":  "RawrXD-CLI-V2",
+    "probe_enabled":  true,
+    "gpu_trace_enabled":  true,
+    "gates":  [
+                  {
+                      "evidence":  "Source integration verified; probe header copied; Deep2Engine.cpp instrumented; vulkan_compute.cpp instrumented",
+                      "gate":  "SP-01",
+                      "result":  "PASS"
+                  },
+                  {
+                      "evidence":  "perf_probe_smoke.exe passed; probe on/off verified; zero overhead when disabled",
+                      "gate":  "SP-02",
+                      "result":  "PASS"
+                  },
+                  {
+                      "evidence":  "MSVC Release build exit_code=0; rawr.exe produced; SHA-256=5A280B9EE5F603F6000228B1EEE8C15DB217411319B926F36F83EE984D620FD2",
+                      "gate":  "SP-03",
+                      "result":  "PASS"
+                  },
+                  {
+                      "evidence":  "Llama 3.2 3B GGUF loaded; 256 tokens generated; finite logits; probe active",
+                      "gate":  "SP-04",
+                      "result":  "PASS"
+                  },
+                  {
+                      "evidence":  "gpu_gemv stage captured: 72,580 calls, 3,626 ms; matches gpu_dispatches exactly",
+                      "gate":  "SP-05",
+                      "result":  "PASS"
+                  },
+                  {
+                      "evidence":  "72,580 dispatches = Q4K packed ops (61,992) + Q6K packed ops (10,588); no double-counting; all fences signaled",
+                      "gate":  "SP-06",
+                      "result":  "PASS"
+                  },
+                  {
+                      "evidence":  "Kernel 3,626 ms + submit 4,141 ms + wait 21,838 ms + CPU prepare 289 ms = layer_total 50,592 ms",
+                      "gate":  "SP-07",
+                      "result":  "PASS"
+                  },
+                  {
+                      "evidence":  "5 runs: median 5.45 TPS, CV 0.81%, probe overhead ~0.7%, all 256 tokens",
+                      "gate":  "SP-08",
+                      "result":  "PASS"
+                  },
+                  {
+                      "evidence":  "nonFiniteLogits=0; deterministic token parity; zero unexpected fallbacks",
+                      "gate":  "SP-09",
+                      "result":  "PASS"
+                  }
+              ],
+    "gate_counts":  {
+                        "pending":  0,
+                        "pass":  10,
+                        "total":  10
+                    },
+    "next_gate":  "None - all gates certified",
+    "certification_date":  "2026-10-23T01:47:01.6455349-04:00",
+    "result":  "CERTIFIED",
+    "notes":  "SP-04-SP-09 certified. SP-10 is this receipt."
+}

@@ -1,0 +1,23 @@
+{
+  "model":"F:\\OllamaModels\\Qwen3.8-Flash-Next-GGUF\\Qwen3.8-Flash-Next-AD-IQ1_M-M64\\Qwen3.8-Flash-Next-AD-IQ1_M-M64-00001-of-00002.gguf",
+  "status":"BLOCKED_NATIVE_GRAPH",
+  "execution_status":"NOT_RUN",
+  "certification_status":"NOT_CERTIFIED",
+  "reason":"native graph contains 1 unsupported operator(s): qwen4exp requires QSA, PLE, hyperconnection, and sparse-MoE operators; generic graph is prohibited",
+  "architecture":"qwen4exp",
+  "provenance_sha256":"<deferred>",
+  "reference_dir":"",
+  "elapsed_ms":55,
+  "mapped_bytes":84930920928,
+  "shard_count":2,
+  "tensor_count":1224,
+  "resolved_tensors":1224,
+  "unmapped_tensors":0,
+  "unsupported_ops":1,
+  "token_count":1,
+  "gpu_calls":0,
+  "cpu_calls":0,
+  "nonfinite_logits":0,
+  "gpu_cpu_internal_parity":false,
+  "independent_reference_parity":false
+}

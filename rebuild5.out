@@ -1,0 +1,375 @@
+CMake is re-running because F:/rawrxd/build/rawrxd_extension_runtime/CMakeFiles/generate.stamp is out-of-date.
+  the file 'F:/rawrxd/extensions/rawrxd_extension_runtime/CMakeLists.txt'
+  is newer than 'F:/rawrxd/build/rawrxd_extension_runtime/CMakeFiles/generate.stamp.depend'
+  result='-1'
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- Î“Â£Ã´ MASM assembler enabled for custom ZLIB compression
+-- 64-bit configuration validated: pointer size = 8
+-- Security hardening ENABLED
+-- MSVC LTO enabled: /GL /LTCG /OPT:REF /OPT:ICF
+-- Î“Ã¤â•£ ZLIB not installed - Using built-in MASM-based compression (BrutalGzip/Deflate)
+--   MASM Compression Engines: BrutalGzip (MASM optimized), Deflate (fallback)
+--   To use native zlib compression:
+--     Option 1: vcpkg install zlib:x64-windows
+--     Option 2: Enable auto-download with -DFETCHCONTENT_ZLIB=ON
+CMake Warning at CMakeLists.txt:405 (message):
+  CURL not found - HTTP client will use fallback.  Set CURL_DIR or install
+  libcurl for full functionality.
+
+
+CMake Warning at CMakeLists.txt:414 (message):
+  ZSTD not found - compression will use passthrough.  Set ZSTD_ROOT or
+  install zstd for full functionality.
+
+
+-- Qt6 not found - native dependency-free build (Qt-dependent targets excluded)
+-- Adding ggml submodule for quantized inference
+-- Warning: ccache not found - consider installing it for faster compilation or disable this warning with GGML_CCACHE=OFF
+-- CMAKE_SYSTEM_PROCESSOR: AMD64
+-- CMAKE_GENERATOR_PLATFORM: x64
+-- GGML_SYSTEM_ARCH: x86
+-- Including CPU backend
+-- x86 detected
+-- Adding CPU backend variant ggml-cpu: /arch:AVX512 GGML_AVX512
+-- Vulkan found
+-- GL_KHR_cooperative_matrix supported by glslc
+-- GL_NV_cooperative_matrix2 supported by glslc
+-- GL_EXT_integer_dot_product supported by glslc
+-- GL_EXT_bfloat16 supported by glslc
+-- Including Vulkan backend
+-- ggml version: 0.9.4
+-- ggml commit:  e92ac95d15-dirty
+-- rawr_run: MSVC security hardening enabled
+-- rawr_fuzz_parsers: fuzz harness enabled (build with RAWRXD_BUILD_FUZZ=ON)
+-- CUDA Toolkit not found - NVIDIA GPU support disabled
+-- ROCm/HIP not found - AMD GPU support disabled
+-- To enable AMD GPU: Install ROCm for Windows and set HIP_PATH
+-- Vulkan found: 1.4.357
+-- Vulkan header: C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h
+-- nlohmann_json: using vendored header at include/nlohmann/json.hpp
+-- rawrxd_production_hardening: production hardening runtime enabled
+-- rawrxd_workflow: dependency-free browser testing & GitHub cloud agents enabled
+-- Adding advanced orchestration modules for AI-native IDE
+-- Qt-dependent orchestration modules EXCLUDED (Qt6 not installed): RawrXDOrchestration, RawrXDGit, RawrXDTerminal, RawrXDPaint
+-- Qt6 not found, skipping RawrXD-QtShell
+-- RawrXD-Win32IDE excluded (Qt6 unavailable or RAWRXD_BUILD_WIN32IDE_QT=OFF)
+-- gguf_universal_probe enabled (any-model GGUF integration)
+-- profiler gate: Vulkan_FOUND=TRUE vulkan_include='C:\VulkanSDK\1.4.357.0/Include'
+-- deep2_token_profiler enabled (ggml + Vulkan SDK)
+-- deep2_parity_trace enabled (Gate 4 dispatch audit; ggml + Vulkan SDK)
+-- deep2_gpu_certify enabled (full-model GPU/CPU logits certification)
+-- deep2_reverse_engineer enabled (native Qwen4Exp contract audit)
+-- deep2_gdn_parity_harness enabled (reference-only GDN contract)
+-- deep2_qwen4exp_operator_harness enabled (PLE/HC/QSA/MoE contracts)
+-- deep2_dynamic_interceptor enabled (real Vulkan topology telemetry)
+-- deep2_qwen4exp_pipeline_probe enabled (physical shader wiring)
+-- deep2_qwen4exp_gdn_probe enabled (real isolated GDN dispatch)
+-- deep2_qwen4exp_operator_probe enabled (PLE/HC/QSA/router GPU dispatch)
+-- deep2_generic_vulkan_quant_probe enabled (canonical IQ2_S/MXFP4 GPU path)
+-- deep2_enterprise_manifest enabled (source-to-parity closure receipt)
+-- deep2_d1_prefill_parity enabled (D1 batched-prefill parity; ggml + Vulkan SDK)
+-- deep2_spec_bench enabled (Speculative verification benchmark; ggml + Vulkan SDK)
+-- [Agentic] HexMag repeat tuner cert: hexmag_repeat_tuner_cert
+-- [Agentic] HexMag IDE E2E cert: hexmag_ide_e2e_cert
+-- [Agentic] HexMag runtime controller cert: hexmag_runtime_controller_cert
+-- deep2_context_scaling enabled (Long-context KV certification; ggml + Vulkan SDK)
+-- deep2_gguf_lifecycle enabled (GGUF lifecycle certification; ggml + Vulkan SDK)
+-- gpu_quant_dot_verify enabled (native Vulkan quant-dot kernel evidence)
+-- gpu_quant_dot_realweights enabled (native Vulkan quant-dot on real GGUF weights)
+-- deep2_fused_lmhead_verify enabled (Fused speculative LM-head certification; ggml + Vulkan SDK)
+-- mamba2_ref_probe enabled (independent Mamba2 block-0 reference)
+-- deep2_agentic_loop enabled (Gate 9 agentic E2E harness)
+-- deep2_agentic_repair enabled (H01/H02 host-driven autonomous repair)
+-- deep2_exec_trace enabled (RAWRXD_EXEC_TRUTH authoritative trace)
+-- deep2_prefill_parity enabled (H11-P1..P4 parity + H11-P6 dispatch profile)
+-- rawrxd_gpu_compute enabled: Deep2::VulkanCompute buildable from the main tree
+-- deep2_engine_lib enabled (static library; rawrxd_deep2_engine executable enabled)
+-- deep2_gpu_decode_roofline enabled (GPU decode bottleneck profiling; ggml + Vulkan SDK)
+-- deep2_uneven_tp_gemv enabled: Vulkan uneven shard diagnostics
+-- QuickJS: enabled (F:/rawrxd/3rdparty/quickjs_ng)
+-- Vulkan headers: C:/VulkanSDK/1.4.357.0/Include
+-- RawrXD-Win32IDE-Native: RichEdit used as a runtime window class only; no import lib found in this SDK
+-- RawrXD-Win32IDE-Native: linked against rawrxd_production_hardening
+-- RawrXD-Win32IDE-Native: linked against rawrxd_security
+CMake Warning at CMakeLists.txt:3424 (message):
+  RawrXD-Win32IDE-Native: rawrxd_production_hardening is not a target; the
+  IDE will start without hardening
+
+
+-- RawrXD-Win32IDE-Native: native dependency-free Win32 IDE enabled
+-- Qt6 not found or version < 6.7.2; skipping RawrXD-AgenticIDE target
+-- RawrXD-ModelLoader configured successfully with Clang C++20
+-- Qt target excluded (Qt6 unavailable): test_ide_main
+-- Qt target excluded (Qt6 unavailable): test_qmainwindow
+-- Qt target excluded (Qt6 unavailable): test_header
+-- Qt target excluded (Qt6 unavailable): bench_deflate_50mb
+-- Qt target excluded (Qt6 unavailable): quant_engine_test
+-- Qt target excluded (Qt6 unavailable): quant_correctness_tests
+-- Qt target excluded (Qt6 unavailable): test_agent_coordinator
+-- Qt target excluded (Qt6 unavailable): test_agent_coordinator_integration
+-- Qt target excluded (Qt6 unavailable): test_gguf_loader
+-- Qt target excluded (Qt6 unavailable): test_gguf_loader_simple
+-- MASM Compiler Suite skipped: cmake/MASMCompiler.cmake not present in this tree
+-- rawrxd_agentic_backend: Deep2 + Ollama unified backend library enabled
+-- q8k parity harness: Q8_K byte-level verification targets enabled
+-- RawrXD-CLI-V2: Unified CLI enabled (output: rawr.exe)
+-- ========================================
+-- RawrXD Project Configuration Summary
+-- ========================================
+-- Qt-dependent targets EXCLUDED (Qt6 not installed): RawrXDOrchestration;RawrXDGit;RawrXDTerminal;RawrXDPaint;RawrXD-Win32IDE;test_ide_main;test_qmainwindow;test_header;bench_deflate_50mb;quant_engine_test;quant_correctness_tests;test_agent_coordinator;test_agent_coordinator_integration;test_gguf_loader;test_gguf_loader_simple
+-- rawrxd_security: hardening library ENABLED (3 sources)
+-- test_deep2_inference enabled (headless Deep2 inference harness)
+-- Configuring done (2.5s)
+-- Generating done (4.3s)
+-- Build files have been written to: F:/rawrxd/build
+MSBuild version 17.14.51+25f168cee for .NET Framework
+Build started 10/22/2026 5:35:09 PM.
+
+     1>Project "F:\rawrxd\build\RawrXD-CLI-V2.vcxproj" on node 1 (default targets).
+     1>Project "F:\rawrxd\build\RawrXD-CLI-V2.vcxproj" (1) is building "F:\rawrxd\build\ZERO_CHECK.vcxproj" (2) on node 1 (default targets).
+     2>PrepareForBuild:
+         Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+       InitializeBuildStatus:
+         Creating "x64\Release\ZERO_CHECK\ZERO_CHECK.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+         Touching "x64\Release\ZERO_CHECK\ZERO_CHECK.tlog\unsuccessfulbuild".
+       PreBuildEvent:
+         Checking File Globs
+         setlocal
+         "C:\Program Files\CMake\bin\cmake.exe" -P F:/rawrxd/build/CMakeFiles/VerifyGlobs.cmake
+         if %errorlevel% neq 0 goto :cmEnd
+         :cmEnd
+         endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+         :cmErrorLevel
+         exit /b %1
+         :cmDone
+         if %errorlevel% neq 0 goto :VCEnd
+         :VCEnd
+       CustomBuild:
+         All outputs are up-to-date.
+       FinalizeBuildStatus:
+         Deleting file "x64\Release\ZERO_CHECK\ZERO_CHECK.tlog\unsuccessfulbuild".
+         Touching "x64\Release\ZERO_CHECK\ZERO_CHECK.tlog\ZERO_CHECK.lastbuildstate".
+     2>Done Building Project "F:\rawrxd\build\ZERO_CHECK.vcxproj" (default targets).
+     1>Project "F:\rawrxd\build\RawrXD-CLI-V2.vcxproj" (1) is building "F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj" (5) on node 4 (default targets).
+     5>PrepareForBuild:
+         Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+     1>Project "F:\rawrxd\build\RawrXD-CLI-V2.vcxproj" (1) is building "F:\rawrxd\build\rawrxd_agentic_backend.vcxproj" (9) on node 2 (default targets).
+     9>PrepareForBuild:
+         Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+       InitializeBuildStatus:
+         Creating "rawrxd_agentic_backend.dir\Release\rawrxd_a.092137E3.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+     5>InitializeBuildStatus:
+         Creating "ggml-base.dir\Release\ggml-base.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+     9>InitializeBuildStatus:
+         Touching "rawrxd_agentic_backend.dir\Release\rawrxd_a.092137E3.tlog\unsuccessfulbuild".
+     5>InitializeBuildStatus:
+         Touching "ggml-base.dir\Release\ggml-base.tlog\unsuccessfulbuild".
+       CustomBuild:
+         All outputs are up-to-date.
+     9>CustomBuild:
+         All outputs are up-to-date.
+     5>ClCompile:
+         All outputs are up-to-date.
+     1>Project "F:\rawrxd\build\RawrXD-CLI-V2.vcxproj" (1) is building "F:\rawrxd\build\deep2_engine_lib.vcxproj" (3) on node 1 (default targets).
+     3>Project "F:\rawrxd\build\deep2_engine_lib.vcxproj" (3) is building "F:\rawrxd\build\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.vcxproj" (10) on node 1 (default targets).
+    10>Project "F:\rawrxd\build\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.vcxproj" (10) is building "F:\rawrxd\build\3rdparty\ggml\src\ggml-vulkan\vulkan-shaders-gen.vcxproj" (11) on node 3 (default targets).
+    11>PrepareForBuild:
+         Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+     5>ClCompile:
+         All outputs are up-to-date.
+    11>InitializeBuildStatus:
+         Creating "x64\Release\vulkan-shaders-gen\vulkan-s.B81B0533.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+     5>ClCompile:
+         All outputs are up-to-date.
+    11>InitializeBuildStatus:
+         Touching "x64\Release\vulkan-shaders-gen\vulkan-s.B81B0533.tlog\unsuccessfulbuild".
+     5>ClCompile:
+         All outputs are up-to-date.
+    11>CustomBuild:
+         "The build of 'F:\rawrxd\build\CMakeFiles\171cec234603ef8bd203659f55843ef0\vulkan-shaders-gen-install.rule' depends on 'F:\RAWRXD\BUILD\3RDPARTY\GGML\SRC\GGML-VULKAN\VULKAN-SHADERS-GEN-PREFIX\SRC\VULKAN-SHADERS-GEN-STAMP\RELEASE\VULKAN-SHADERS-GEN-BUILD' which is produced by the build of 'F:\rawrxd\build\CMakeFiles\171cec234603ef8bd203659f55843ef0\vulkan-shaders-gen-build.rule'. The items cannot be built in parallel."
+         "The build of 'F:\rawrxd\build\CMakeFiles\2018e0b553391ee4649514aeee9ff4f8\vulkan-shaders-gen-complete.rule' depends on 'F:\RAWRXD\BUILD\3RDPARTY\GGML\SRC\GGML-VULKAN\VULKAN-SHADERS-GEN-PREFIX\SRC\VULKAN-SHADERS-GEN-STAMP\RELEASE\VULKAN-SHADERS-GEN-INSTALL' which is produced by the build of 'F:\rawrxd\build\CMakeFiles\171cec234603ef8bd203659f55843ef0\vulkan-shaders-gen-install.rule'. The items cannot be built in parallel."
+         "The build of 'F:\rawrxd\build\CMakeFiles\0dd61f2ae0d214024e0743ed90907021\vulkan-shaders-gen.rule' depends on 'F:\RAWRXD\BUILD\3RDPARTY\GGML\SRC\GGML-VULKAN\CMAKEFILES\RELEASE\VULKAN-SHADERS-GEN-COMPLETE' which is produced by the build of 'F:\rawrxd\build\CMakeFiles\2018e0b553391ee4649514aeee9ff4f8\vulkan-shaders-gen-complete.rule'. The items cannot be built in parallel."
+     9>ClCompile:
+         All outputs are up-to-date.
+     5>Lib:
+         All outputs are up-to-date.
+         ggml-base.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\Release\ggml-base.lib
+     9>Lib:
+         All outputs are up-to-date.
+         rawrxd_agentic_backend.vcxproj -> F:\rawrxd\build\Release\rawrxd_agentic_backend.lib
+     5>FinalizeBuildStatus:
+         Deleting file "ggml-base.dir\Release\ggml-base.tlog\unsuccessfulbuild".
+         Touching "ggml-base.dir\Release\ggml-base.tlog\ggml-base.lastbuildstate".
+     9>FinalizeBuildStatus:
+         Deleting file "rawrxd_agentic_backend.dir\Release\rawrxd_a.092137E3.tlog\unsuccessfulbuild".
+     5>Done Building Project "F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj" (default targets).
+     9>FinalizeBuildStatus:
+         Touching "rawrxd_agentic_backend.dir\Release\rawrxd_a.092137E3.tlog\rawrxd_agentic_backend.lastbuildstate".
+     9>Done Building Project "F:\rawrxd\build\rawrxd_agentic_backend.vcxproj" (default targets).
+     1>Project "F:\rawrxd\build\RawrXD-CLI-V2.vcxproj" (1) is building "F:\rawrxd\build\3rdparty\ggml\src\ggml-cpu.vcxproj" (6) on node 2 (default targets).
+     6>PrepareForBuild:
+         Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+       InitializeBuildStatus:
+         Creating "ggml-cpu.dir\Release\ggml-cpu.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+         Touching "ggml-cpu.dir\Release\ggml-cpu.tlog\unsuccessfulbuild".
+       CustomBuild:
+         All outputs are up-to-date.
+    11>CustomBuild:
+         1>Performing build step for 'vulkan-shaders-gen'
+     6>ClCompile:
+         All outputs are up-to-date.
+         All outputs are up-to-date.
+         All outputs are up-to-date.
+         All outputs are up-to-date.
+         All outputs are up-to-date.
+         All outputs are up-to-date.
+         All outputs are up-to-date.
+       Lib:
+         All outputs are up-to-date.
+         ggml-cpu.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\Release\ggml-cpu.lib
+       FinalizeBuildStatus:
+         Deleting file "ggml-cpu.dir\Release\ggml-cpu.tlog\unsuccessfulbuild".
+         Touching "ggml-cpu.dir\Release\ggml-cpu.tlog\ggml-cpu.lastbuildstate".
+     6>Done Building Project "F:\rawrxd\build\3rdparty\ggml\src\ggml-cpu.vcxproj" (default targets).
+    11>CustomBuild:
+         MSBuild version 17.14.51+25f168cee for .NET Framework
+         
+           vulkan-shaders-gen.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\ggml-vulkan\vulkan-shaders-gen-prefix\src\vulkan-shaders-gen-build\Release\vulkan-shaders-gen.exe
+         Performing install step for 'vulkan-shaders-gen'
+         -- Up-to-date: F:/rawrxd/build/Release/vulkan-shaders-gen.exe
+         Completed 'vulkan-shaders-gen'
+       FinalizeBuildStatus:
+         Deleting file "x64\Release\vulkan-shaders-gen\vulkan-s.B81B0533.tlog\unsuccessfulbuild".
+         Touching "x64\Release\vulkan-shaders-gen\vulkan-s.B81B0533.tlog\vulkan-shaders-gen.lastbuildstate".
+    11>Done Building Project "F:\rawrxd\build\3rdparty\ggml\src\ggml-vulkan\vulkan-shaders-gen.vcxproj" (default targets).
+     1>Project "F:\rawrxd\build\RawrXD-CLI-V2.vcxproj" (1) is building "F:\rawrxd\build\tools\snap_process_guard\snap_process_guard.vcxproj" (8) on node 3 (default targets).
+     8>PrepareForBuild:
+         Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+       InitializeBuildStatus:
+         Creating "snap_process_guard.dir\Release\snap_pro.B7FDA6A3.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+         Touching "snap_process_guard.dir\Release\snap_pro.B7FDA6A3.tlog\unsuccessfulbuild".
+       CustomBuild:
+         All outputs are up-to-date.
+       ClCompile:
+         All outputs are up-to-date.
+       Lib:
+         All outputs are up-to-date.
+         snap_process_guard.vcxproj -> F:\rawrxd\build\tools\snap_process_guard\Release\snap_process_guard.lib
+       FinalizeBuildStatus:
+         Deleting file "snap_process_guard.dir\Release\snap_pro.B7FDA6A3.tlog\unsuccessfulbuild".
+         Touching "snap_process_guard.dir\Release\snap_pro.B7FDA6A3.tlog\snap_process_guard.lastbuildstate".
+     8>Done Building Project "F:\rawrxd\build\tools\snap_process_guard\snap_process_guard.vcxproj" (default targets).
+    10>PrepareForBuild:
+         Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+       InitializeBuildStatus:
+         Creating "ggml-vulkan.dir\Release\ggml-vulkan.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+         Touching "ggml-vulkan.dir\Release\ggml-vulkan.tlog\unsuccessfulbuild".
+       CustomBuild:
+         All outputs are up-to-date.
+       ClCompile:
+         All outputs are up-to-date.
+       Lib:
+         All outputs are up-to-date.
+         ggml-vulkan.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\ggml-vulkan\Release\ggml-vulkan.lib
+       FinalizeBuildStatus:
+         Deleting file "ggml-vulkan.dir\Release\ggml-vulkan.tlog\unsuccessfulbuild".
+         Touching "ggml-vulkan.dir\Release\ggml-vulkan.tlog\ggml-vulkan.lastbuildstate".
+    10>Done Building Project "F:\rawrxd\build\3rdparty\ggml\src\ggml-vulkan\ggml-vulkan.vcxproj" (default targets).
+     1>Project "F:\rawrxd\build\RawrXD-CLI-V2.vcxproj" (1) is building "F:\rawrxd\build\3rdparty\ggml\src\ggml.vcxproj" (4) on node 3 (default targets).
+     4>PrepareForBuild:
+         Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+       InitializeBuildStatus:
+         Creating "ggml.dir\Release\ggml.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+         Touching "ggml.dir\Release\ggml.tlog\unsuccessfulbuild".
+       CustomBuild:
+         All outputs are up-to-date.
+       ClCompile:
+         All outputs are up-to-date.
+       Lib:
+         All outputs are up-to-date.
+         ggml.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\Release\ggml.lib
+       FinalizeBuildStatus:
+         Deleting file "ggml.dir\Release\ggml.tlog\unsuccessfulbuild".
+         Touching "ggml.dir\Release\ggml.tlog\ggml.lastbuildstate".
+     4>Done Building Project "F:\rawrxd\build\3rdparty\ggml\src\ggml.vcxproj" (default targets).
+     3>Project "F:\rawrxd\build\deep2_engine_lib.vcxproj" (3) is building "F:\rawrxd\build\rawrxd_gpu_compute.vcxproj" (7) on node 4 (default targets).
+     7>PrepareForBuild:
+         Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+       InitializeBuildStatus:
+         Creating "rawrxd_gpu_compute.dir\Release\rawrxd_g.78E6AC72.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+         Touching "rawrxd_gpu_compute.dir\Release\rawrxd_g.78E6AC72.tlog\unsuccessfulbuild".
+       CustomBuild:
+         All outputs are up-to-date.
+       ClCompile:
+         All outputs are up-to-date.
+       Lib:
+         All outputs are up-to-date.
+         rawrxd_gpu_compute.vcxproj -> F:\rawrxd\build\Release\rawrxd_gpu_compute.lib
+       FinalizeBuildStatus:
+         Deleting file "rawrxd_gpu_compute.dir\Release\rawrxd_g.78E6AC72.tlog\unsuccessfulbuild".
+         Touching "rawrxd_gpu_compute.dir\Release\rawrxd_g.78E6AC72.tlog\rawrxd_gpu_compute.lastbuildstate".
+     7>Done Building Project "F:\rawrxd\build\rawrxd_gpu_compute.vcxproj" (default targets).
+     3>PrepareForBuild:
+         Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+       InitializeBuildStatus:
+         Creating "deep2_engine_lib.dir\Release\deep2_engine_lib.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+         Touching "deep2_engine_lib.dir\Release\deep2_engine_lib.tlog\unsuccessfulbuild".
+       CustomBuild:
+         All outputs are up-to-date.
+       ClCompile:
+         All outputs are up-to-date.
+       Lib:
+         All outputs are up-to-date.
+         deep2_engine_lib.vcxproj -> F:\rawrxd\build\Release\deep2_engine_lib.lib
+       FinalizeBuildStatus:
+         Deleting file "deep2_engine_lib.dir\Release\deep2_engine_lib.tlog\unsuccessfulbuild".
+         Touching "deep2_engine_lib.dir\Release\deep2_engine_lib.tlog\deep2_engine_lib.lastbuildstate".
+     3>Done Building Project "F:\rawrxd\build\deep2_engine_lib.vcxproj" (default targets).
+     1>PrepareForBuild:
+         Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+       InitializeBuildStatus:
+         Creating "RawrXD-CLI-V2.dir\Release\RawrXD-CLI-V2.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+         Touching "RawrXD-CLI-V2.dir\Release\RawrXD-CLI-V2.tlog\unsuccessfulbuild".
+       CustomBuild:
+         All outputs are up-to-date.
+       ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\HostX64\x64\CL.exe /c /IF:\rawrxd\src /IF:\rawrxd\src\core /IF:\rawrxd\3rdparty\ggml\include /IF:\rawrxd\src\deep2 /IF:\rawrxd\tools\deep2_debugger /IF:\rawrxd\3rdparty\ggml\src /IF:\rawrxd\3rdparty\ggml\src\..\include /IF:\rawrxd\tools\deep2_snap\deep2_snap /IF:\rawrxd\tools\agent_esp\rawrxd_agent_esp /IF:\rawrxd\tools\snap_process_guard /nologo /W4 /WX- /diagnostics:column /O2 /Ob2 /Ot /GL /D _MBCS /D WIN32 /D _WINDOWS /D NDEBUG /D NOMINMAX /D _WIN32_WINNT=0x0A00 /D _CRT_SECURE_NO_WARNINGS /D RAWRXD_HARDENING=1 /D _FORTIFY_SOURCE=2 /D FORTIFY_SOURCE=2 /D HAVE_VULKAN=1 /D "RAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\"" /D GGML_USE_CPU /D GGML_USE_VULKAN /D "CMAKE_INTDIR=\"Release\"" /GF /EHsc /MD /GS /guard:cf /Gy /guard:ehcont /std:c++20 /permissive- /Fo"RawrXD-CLI-V2.dir\Release\\" /Fd"RawrXD-CLI-V2.dir\Release\vc143.pdb" /external:W0 /TP /errorReport:queue  /external:I "C:/VulkanSDK/1.4.357.0/include" /external:I "F:/rawrxd/include" /VOLATILE:ISO /Zc:strictStrings /Zc:throwingNew F:\rawrxd\src\rawrxd_cli_v2.cpp
+         rawrxd_cli_v2.cpp
+     1>F:\rawrxd\src\agentic\ToolCallBridge.h(55,62): warning C4100: 'registry': unreferenced parameter [F:\rawrxd\build\RawrXD-CLI-V2.vcxproj]
+         (compiling source file '../src/rawrxd_cli_v2.cpp')
+         
+     1>F:\rawrxd\src\rawrxd_cli_v2.cpp(661,66): warning C4100: 'args': unreferenced parameter [F:\rawrxd\build\RawrXD-CLI-V2.vcxproj]
+     1>F:\rawrxd\src\rawrxd_cli_v2.cpp(691,27): warning C4189: 'a': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-CLI-V2.vcxproj]
+     1>F:\rawrxd\src\rawrxd_cli_v2.cpp(1287,65): warning C4244: 'argument': conversion from 'int64_t' to 'int', possible loss of data [F:\rawrxd\build\RawrXD-CLI-V2.vcxproj]
+     1>F:\rawrxd\src\rawrxd_cli_v2.cpp(2169,12): warning C4211: nonstandard extension used: redefined extern to static [F:\rawrxd\build\RawrXD-CLI-V2.vcxproj]
+     1>F:\rawrxd\src\rawrxd_cli_v2.cpp(4350,17): warning C4189: 'envKey': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-CLI-V2.vcxproj]
+     1>F:\rawrxd\src\rawrxd_cli_v2.cpp(4400,9): warning C4189: 'code': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-CLI-V2.vcxproj]
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\HostX64\x64\link.exe /OUT:"F:\rawrxd\build\bin-msvc\Release\rawr.exe" /INCREMENTAL:NO /NOLOGO Release\rawrxd_agentic_backend.lib Release\deep2_engine_lib.lib tools\snap_process_guard\Release\snap_process_guard.lib ws2_32.lib winmm.lib "C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib" winhttp.lib Release\rawrxd_gpu_compute.lib "C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib" 3rdparty\ggml\src\Release\ggml.lib "3rdparty\ggml\src\Release\ggml-cpu.lib" "3rdparty\ggml\src\ggml-vulkan\Release\ggml-vulkan.lib" "3rdparty\ggml\src\Release\ggml-base.lib" "C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib" Advapi32.lib Psapi.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /PDB:"F:/rawrxd/build/bin-msvc/Release/rawr.pdb" /SUBSYSTEM:CONSOLE /OPT:REF /OPT:ICF /LTCG /LTCGOUT:"RawrXD-CLI-V2.dir\Release\rawr.iobj" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"F:/rawrxd/build/Release/rawr.lib" /MACHINE:X64 /guard:cf /guard:ehcont  /machine:x64 /HIGHENTROPYVA /guard:cf /LTCG:OFF "RawrXD-CLI-V2.dir\Release\rawrxd_cli_v2.obj"
+         "RawrXD-CLI-V2.dir\Release\qt_elimination.obj"
+         "RawrXD-CLI-V2.dir\Release\project_spec.obj"
+         "RawrXD-CLI-V2.dir\Release\project_state_manager.obj"
+         "RawrXD-CLI-V2.dir\Release\project_wizard.obj"
+         "RawrXD-CLI-V2.dir\Release\project_workflow.obj"
+         RawrXD-CLI-V2.vcxproj -> F:\rawrxd\build\bin-msvc\Release\rawr.exe
+       FinalizeBuildStatus:
+         Deleting file "RawrXD-CLI-V2.dir\Release\RawrXD-CLI-V2.tlog\unsuccessfulbuild".
+         Touching "RawrXD-CLI-V2.dir\Release\RawrXD-CLI-V2.tlog\RawrXD-CLI-V2.lastbuildstate".
+     1>Done Building Project "F:\rawrxd\build\RawrXD-CLI-V2.vcxproj" (default targets).
+
+Build succeeded.
+
+       "F:\rawrxd\build\RawrXD-CLI-V2.vcxproj" (default target) (1) ->
+       (ClCompile target) -> 
+         F:\rawrxd\src\agentic\ToolCallBridge.h(55,62): warning C4100: 'registry': unreferenced parameter [F:\rawrxd\build\RawrXD-CLI-V2.vcxproj]
+         F:\rawrxd\src\rawrxd_cli_v2.cpp(661,66): warning C4100: 'args': unreferenced parameter [F:\rawrxd\build\RawrXD-CLI-V2.vcxproj]
+         F:\rawrxd\src\rawrxd_cli_v2.cpp(691,27): warning C4189: 'a': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-CLI-V2.vcxproj]
+         F:\rawrxd\src\rawrxd_cli_v2.cpp(1287,65): warning C4244: 'argument': conversion from 'int64_t' to 'int', possible loss of data [F:\rawrxd\build\RawrXD-CLI-V2.vcxproj]
+         F:\rawrxd\src\rawrxd_cli_v2.cpp(2169,12): warning C4211: nonstandard extension used: redefined extern to static [F:\rawrxd\build\RawrXD-CLI-V2.vcxproj]
+         F:\rawrxd\src\rawrxd_cli_v2.cpp(4350,17): warning C4189: 'envKey': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-CLI-V2.vcxproj]
+         F:\rawrxd\src\rawrxd_cli_v2.cpp(4400,9): warning C4189: 'code': local variable is initialized but not referenced [F:\rawrxd\build\RawrXD-CLI-V2.vcxproj]
+
+    7 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:48.89

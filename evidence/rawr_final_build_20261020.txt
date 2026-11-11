@@ -1,0 +1,41 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  rawrxd_screenpilot_e2e.vcxproj -> F:\rawrxd\~dev\build\Release\rawrxd_screenpilot_e2e.lib
+  Deep2DualGpuRowSplit.cpp
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp(20,24): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp(28,26): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp(42,24): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp(75,24): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp(143,24): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp(431,34): warning C4267: 'argument': conversion from 'size_t' to 'uint32_t', possible loss of data [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp(433,34): warning C4267: 'argument': conversion from 'size_t' to 'uint32_t', possible loss of data [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp(509,24): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp(581,32): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+  Deep2Engine_GpuForward.cpp
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp(54,29): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp(171,31): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp(179,31): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp(183,31): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp(188,27): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp(320,35): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp(260,15): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp(261,15): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp(544,34): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+  vulkan_compute.cpp
+F:\rawrxd\~dev\rawrxd\src\deep2\vulkan_compute.cpp(565,32): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\vulkan_compute.cpp(747,28): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\vulkan_compute.cpp(750,25): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\vulkan_compute.cpp(2037,30): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\vulkan_compute.cpp(2245,32): warning C4456: declaration of 'lane' hides previous local declaration [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+      F:\rawrxd\~dev\rawrxd\src\deep2\vulkan_compute.cpp(2226,22):
+      see declaration of 'lane'
+  
+F:\rawrxd\~dev\rawrxd\src\deep2\vulkan_compute.cpp(2564,24): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\vulkan_compute.cpp(3369,24): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\vulkan_compute.cpp(6247,43): warning C4100: 'epoch': unreferenced parameter [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+  Generating Code...
+  rawr_monolith.vcxproj -> F:\rawrxd\~dev\build\Release\rawr_monolith.exe
+  Publishing rawr.exe product entry point
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  rawr_deep2_native_primitives_test.vcxproj -> F:\rawrxd\~dev\build\Release\rawr_deep2_native_primitives_test.exe

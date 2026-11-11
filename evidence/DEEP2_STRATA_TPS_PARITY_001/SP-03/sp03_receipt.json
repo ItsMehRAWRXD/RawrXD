@@ -1,0 +1,10 @@
+{
+  "gate": "SP-03",
+  "commit": "cb885b5b10334ffdcf958cab9d273b3f1eb37dce",
+  "branch": "preservation/source-baseline-20261021",
+  "build_exit_code": 0,
+  "executable": "F:\\rawrxd\\build\\bin-msvc\\Release\\rawr.exe",
+  "executable_sha256": "0AE4C7DB997DD62149377C0B9327C5B553D4ADEF52EFCC2A82CF2F0DFE9833AA",
+  "compiler_log": "F:\\rawrxd\\evidence\\DEEP2_STRATA_TPS_PARITY_001\\SP-03\\msvc_release_build.log",
+  "result": "PASS"
+}

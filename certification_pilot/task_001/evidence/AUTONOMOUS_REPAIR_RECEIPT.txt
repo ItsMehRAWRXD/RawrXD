@@ -1,0 +1,10 @@
+﻿[FAIL] R1 inspection : model read the defective file - read tool calls=0
+[FAIL] R2 edit       : model wrote a candidate fix - write tool calls=0
+[FAIL] R3 build      : model invoked a build - bash tool calls=0
+[PASS] R4 test       : model invoked a test/run - run referenced in loop
+[FAIL] R5 self-correction : loop iterated beyond a lucky single shot - dispatched steps=0 observed_failure=False
+[FAIL] R6 indep source: defect gone from on-disk source (harness-read) - source changed and contains a + b
+[FAIL] R7 indep build+run: harness-built binary exits 0 and prints PASS - exit=0
+[FAIL] R8 loop verdict: the loop's independent verification passed - loop exit=0
+model=F:\OllamaModels\Phi-3-mini-4k-instruct-q8_0.gguf defect=sign_flip steps=0 loop_exit=0
+FINAL_VERDICT=FAIL

@@ -1,0 +1,21 @@
+EXIT=2
+STDOUT:
+
+===== MODEL =====
+path=F:\OllamaModels\Qwen3.8-27B-AD-Q4_K_M\Qwen3.8-27B-AD-Q4_K_M.gguf
+architecture=qwen35
+block_count=65
+vocab=248320
+seed_tokens=12
+ingest_ms=56025.6
+bind_ms=0.4
+
+===== EXECUTION: prefill =====
+requested_backend=gpu-first
+ops_total=673 ops_bound=673 ops_unbound=0
+weights_resolved=866 weights_missing=0
+unsupported_operations=0
+PREFILL_FAILED: prefill-batch: residualadd addend missing: attn_proj
+
+STDERR:
+

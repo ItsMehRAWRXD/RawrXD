@@ -1,0 +1,11 @@
+Metric,Value,Unit
+HiddenDim,4096,
+NumLayers,32,
+NumHeads,32,
+UseKVCache,YES,
+UseThreadPool,YES,
+TokensGenerated,100,
+TokensPerSecond,2870.35,tokens/sec
+LatencyPerToken,0.35,ms
+ModelSizeGB,32.49,GB
+TotalParams,8.7,B

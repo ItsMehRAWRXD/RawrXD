@@ -1,0 +1,17 @@
+[
+  {
+    "check": "self_manifest",
+    "exit": 0,
+    "output": "MANIFEST=F:\\rawrxd\\evidence\\rawr_ide_self_manifest.json\nCHECKS=18\nBLOCKED=0\nVERDICT=WIRED_AND_HEALTHY"
+  },
+  {
+    "check": "functional_e2e",
+    "exit": 0,
+    "output": "E2E_RECEIPT=F:\\rawrxd\\evidence\\rawr_ide_functional_e2e.json\nEXECUTED=7 UNAVAILABLE=3 FAILED=0 VERDICT=PARTIAL"
+  },
+  {
+    "check": "native_health",
+    "exit": 0,
+    "output": "2026-10-23T17:23:59.233 info security [] audit log open (audit_path=C:\\Users\\Garrett\\AppData\\Local\\RawrXD\\audit\\rawrxd_audit.jsonl) (encrypted=true)\n2026-10-23T17:23:59.235 info security [] security runtime initialized (encryption=true) (audit=true) (max_request_bytes=8388608)\n2026-10-23T17:23:59.235 info startup [] production runtime initialized (environment=development) (service=rawrxd) (instance=local) (log_level=info) (config_fingerprint=b61a02c92fffee97)\nhealthy (ready=true)\n[StreamEngine] Shutdown"
+  }
+]

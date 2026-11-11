@@ -1,0 +1,99 @@
+{
+  "schema": "rawrxd.next15.v1",
+  "generated": "2026-10-23T01:11:38.0655951Z",
+  "git_sha": "db04b6e82d7b774a6d18d8e8785eb0d588a5800f",
+  "certification": "NOT_CERTIFIED",
+  "benchmark_pause": "preserved",
+  "moves": [
+    {
+      "id": 1,
+      "name": "Snapshot and freeze known-good baseline",
+      "status": "PASS",
+      "evidence": "baseline_snapshot.json"
+    },
+    {
+      "id": 2,
+      "name": "Native HTTP route matrix",
+      "status": "PASS",
+      "evidence": "prior smoke: /health /api/engine/capabilities /v1/chat/completions"
+    },
+    {
+      "id": 3,
+      "name": "Streaming and cancellation",
+      "status": "PENDING",
+      "evidence": "No complete disconnect/cancellation receipt"
+    },
+    {
+      "id": 4,
+      "name": "Gateway authorization",
+      "status": "PASS",
+      "evidence": "tool routes fail closed; loopback default"
+    },
+    {
+      "id": 5,
+      "name": "MASM-to-native integration",
+      "status": "PARTIAL",
+      "evidence": "model profile/load/unload routes wired; GUI E2E pending"
+    },
+    {
+      "id": 6,
+      "name": "Sustained profiling matrix",
+      "status": "PENDING",
+      "evidence": "benchmark receipt required"
+    },
+    {
+      "id": 7,
+      "name": "GPU critical path instrumentation",
+      "status": "PARTIAL",
+      "evidence": "existing counters; ranked receipt pending"
+    },
+    {
+      "id": 8,
+      "name": "Multi-model execution",
+      "status": "PENDING",
+      "evidence": "per-model full-model receipts required"
+    },
+    {
+      "id": 9,
+      "name": "Isolated optimization",
+      "status": "PENDING",
+      "evidence": "A/B receipt required"
+    },
+    {
+      "id": 10,
+      "name": "Dual-GPU scheduling",
+      "status": "PARTIAL",
+      "evidence": "device enumeration observed; fault/recovery matrix pending"
+    },
+    {
+      "id": 11,
+      "name": "Autonomous edit loop",
+      "status": "PARTIAL",
+      "evidence": "bounded agent path exists; full E2E receipt pending"
+    },
+    {
+      "id": 12,
+      "name": "Transactional hotpatch",
+      "status": "PARTIAL",
+      "evidence": "rollback components exist; certification receipt pending"
+    },
+    {
+      "id": 13,
+      "name": "Agent endurance",
+      "status": "PENDING",
+      "evidence": "bounded endurance run not completed"
+    },
+    {
+      "id": 14,
+      "name": "Certification dashboard",
+      "status": "PASS",
+      "evidence": "next15_dashboard.json"
+    },
+    {
+      "id": 15,
+      "name": "Production release certification",
+      "status": "PENDING",
+      "evidence": "blocked by required pending gates"
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "gate": "RAWRXD_GHOST_MODEL_BROWSER_001",
+  "timestamp": "2026-10-23T21:14:29.5386621Z",
+  "executable": "F:\\rawrxd\\build_ide\\bin\\RawrXD-Win32IDE-Native.exe",
+  "executable_sha256": "C0739B3A0FEC397FA8F515D45CC5DA3AC040D624CC8F7C1CF8974D173CCC353F",
+  "build": "Release PASS",
+  "health": {
+    "output": "healthy (ready=true)",
+    "verified_at": "2026-10-23T21:14:35.7307666Z",
+    "exit_code": 0
+  },
+  "ghost_cli": {
+    "help_exit": 2,
+    "output": "ERROR: no model specified.\nusage: rawr run [deep2|ollama|kilo] <model> \"<task>\"\n[StreamEngine] Shutdown"
+  },
+  "modes": [
+    "Disabled",
+    "FollowChat",
+    "AutoLocal",
+    "Independent"
+  ],
+  "model_sources": [
+    "Local GGUF",
+    "Ollama blobs/API",
+    "Kilo configured cloud"
+  ],
+  "cloud_opt_in": "Implemented unchecked by default",
+  "route_override": "Implemented without mutating chat selector",
+  "dropdown_physical_click": "PENDING",
+  "model_inference": "PENDING until model/service is available",
+  "verdict": "GPU_ROUTE_WIRED_BUILD_PASS_PHYSICAL_GENERATION_PENDING",
+  "cli_smoke": {
+    "command": "rawr ghost <model> \"<source prefix>\"",
+    "parser": "PENDING_MODEL_REQUIRED",
+    "observed_help": "CLI rejects --help as unsupported command"
+  },
+  "static_checks": {
+    "unique_control_id": true,
+    "model_combo_count_source": "CB_GETCOUNT/CB_SETITEMDATA",
+    "dropped_state_source": "CB_GETDROPPEDSTATE",
+    "dropped_rect_source": "CB_GETDROPPEDCONTROLRECT",
+    "resize_layout": true,
+    "parent_notifications": true,
+    "route_inventory_sources": [
+      "GGUF",
+      "Ollama blob/API",
+      "Kilo"
+    ]
+  },
+  "gpu_path": {
+    "local_route": "Deep2Bridge",
+    "vulkan_enable": "Deep2Bridge::Initialize -> Deep2Engine::enableVulkan(true)",
+    "dual_gpu_policy": "Existing Deep2DevicePlan policy; RAWRXD_GPU_POLICY=MULTI or DEEP2_GPU_POLICY=MULTI",
+    "cpu_route": "Not used by GhostText local path",
+    "strict_no_silent_route_swap": true
+  },
+  "gpu_smoke": {
+    "build": "PASS",
+    "health": "healthy (ready=true)",
+    "executable_sha256": "B41506F0C722B2BF157510000D70593E1378F6F68FB215BFC69EA032AD7A6745",
+    "physical_generation": "PENDING model-backed GUI test"
+  }
+}

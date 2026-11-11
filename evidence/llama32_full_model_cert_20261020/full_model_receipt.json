@@ -1,0 +1,23 @@
+{
+  "model":"F:\\models\\gguf\\library__llama3.2__3b.gguf",
+  "status":"EXECUTION_PASS_NOT_CERTIFIED",
+  "execution_status":"PASS",
+  "certification_status":"BLOCKED_NO_INDEPENDENT_REFERENCE",
+  "reason":"GPU/CPU comparison passed, but no independent reference logits were supplied",
+  "architecture":"llama",
+  "provenance_sha256":"dde5aa3fc5ffc17176b5e8bdc82f587b24b2678c6c66101bf7da77af9f7ccdff",
+  "reference_dir":"",
+  "elapsed_ms":15714,
+  "mapped_bytes":2019377376,
+  "shard_count":1,
+  "tensor_count":255,
+  "resolved_tensors":255,
+  "unmapped_tensors":0,
+  "unsupported_ops":0,
+  "token_count":1,
+  "gpu_calls":197,
+  "cpu_calls":0,
+  "nonfinite_logits":0,
+  "gpu_cpu_internal_parity":true,
+  "independent_reference_parity":false
+}

@@ -1,0 +1,7 @@
+{
+  "schema": "RAWRXD_NEXT15_007",
+  "config": {"model":"llama3.2-3b-Q2_K.gguf","model_hash":"unknown","git_revision":"unknown","quant":"unknown","backend":"deep2","context":0,"gpu_index":0},
+  "counters": {"gpu_submits":20,"gpu_gemv":4,"gpu_gemm":0,"gpu_layers":1,"cpu_fallbacks":0,"strict_violations":0,"upload_bytes":0,"generated_tokens":0},
+  "stages": {},
+  "gates": {"production_gpu":{"pass":false,"message":"NOT_RUN: independent before/after parity is required"},"runtime_hooks":{"pass":true,"message":"PASS"}}
+}

@@ -1,0 +1,521 @@
+        cache: [],
+        lastSearch: '',
+      },
+      // Built-in extension types the system supports
+      supportedTypes: [
+        { type: 'vsix', desc: 'VS Code Extension Package (.vsix)', icon: '\uD83D\uDCE6', canLoad: true },
+        { type: 'native-dll', desc: 'Native C++ DLL Extension', icon: '\u2699', canLoad: true },
+        { type: 'psm1', desc: 'PowerShell Module Extension', icon: '\uD83D\uDCDC', canLoad: true },
+        { type: 'js', desc: 'QuickJS JavaScript Extension', icon: '\uD83D\uDFE8', canLoad: true },
+        { type: 'theme', desc: 'Color Theme / Icon Theme', icon: '\uD83C\uDFA8', canLoad: true },
+        { type: 'language', desc: 'Language Grammar / Snippets', icon: '\uD83D\uDCDD', canLoad: true },
+        { type: 'lsp', desc: 'Language Server Protocol Provider', icon: '\uD83D\uDD17', canLoad: true },
+        { type: 'debugger', desc: 'Debug Adapter Protocol Provider', icon: '\uD83D\uDC1B', canLoad: true },
+      ],
+      activeTab: 'installed',
+      history: [],
+      maxHistory: 100,
+      // Built-in/bundled extensions that ship with RawrXD
+      bundled: [
+        { id: 'rawrxd.masm-language', name: 'MASM Language Support', type: 'language', version: '1.0.0', publisher: 'RawrXD', enabled: true, builtin: true, desc: 'MASM64 syntax highlighting, snippets, and diagnostics' },
+        { id: 'rawrxd.gguf-inspector', name: 'GGUF Model Inspector', type: 'native-dll', version: '1.0.0', publisher: 'RawrXD', enabled: true, builtin: true, desc: 'GGUF binary inspection, tensor viewer, metadata browser' },
+        { id: 'rawrxd.hotpatch-tools', name: 'Hotpatch Tools', type: 'native-dll', version: '1.0.0', publisher: 'RawrXD', enabled: true, builtin: true, desc: 'Three-layer hotpatching: memory, byte-level, server' },
+        { id: 'rawrxd.agentic-framework', name: 'Agentic Framework', type: 'native-dll', version: '1.0.0', publisher: 'RawrXD', enabled: true, builtin: true, desc: 'Failure detection, puppeteer correction, agentic loop' },
+        { id: 'rawrxd.reverse-engineering', name: 'Reverse Engineering Suite', type: 'native-dll', version: '1.0.0', publisher: 'RawrXD', enabled: true, builtin: true, desc: 'PE analyzer, disassembler, deobfuscator, omega suite' },
+        { id: 'rawrxd.quickjs-host', name: 'QuickJS Extension Host', type: 'js', version: '1.0.0', publisher: 'RawrXD', enabled: true, builtin: true, desc: 'QuickJS-based JavaScript extension runtime' },
+        { id: 'rawrxd.powershell-bridge', name: 'PowerShell Bridge', type: 'psm1', version: '1.0.0', publisher: 'RawrXD', enabled: true, builtin: true, desc: 'PowerShell module lifecycle, craft room, extension manager' },
+        { id: 'rawrxd.vscode-compat', name: 'VS Code API Compatibility', type: 'native-dll', version: '1.0.0', publisher: 'RawrXD', enabled: true, builtin: true, desc: 'vscode.* API shim: commands, window, workspace, languages, debug' },
+        { id: 'rawrxd.theme-dark-plus', name: 'Dark+ (default theme)', type: 'theme', version: '1.0.0', publisher: 'RawrXD', enabled: true, builtin: true, desc: 'VS Code Dark+ compatible color theme' },
+        { id: 'rawrxd.lsp-bridge', name: 'LSP Bridge', type: 'lsp', version: '1.0.0', publisher: 'RawrXD', enabled: true, builtin: true, desc: 'Language Server Protocol routing to Win32IDE LSP server' },
+        { id: 'rawrxd.dap-handler', name: 'DAP Debug Handler', type: 'debugger', version: '1.0.0', publisher: 'RawrXD', enabled: true, builtin: true, desc: 'Debug Adapter Protocol integration for native debugging' },
+        { id: 'rawrxd.polyfill-engine', name: 'Extension Polyfill Engine', type: 'js', version: '1.0.0', publisher: 'RawrXD', enabled: true, builtin: true, desc: 'JS compat layer for VS Code extension APIs' },
+      ],
+      // User-installed extensions (loaded from registry)
+      userExtensions: [],
+
+      getAll: function () {
+        return this.bundled.concat(this.userExtensions);
+      },
+      getEnabled: function () {
+        return this.getAll().filter(function (e) { return e.enabled; });
+      },
+      getByType: function (type) {
+        return this.getAll().filter(function (e) { return e.type === type; });
+      },
+      findById: function (id) {
+        return this.getAll().find(function (e) { return e.id === id; }) || null;
+      },
+      install: function (ext) {
+        if (this.findById(ext.id)) return { success: false, msg: 'Extension already installed: ' + ext.id };
+        ext.enabled = false;
+        ext.builtin = false;
+        this.userExtensions.push(ext);
+        this.history.push({ action: 'install', id: ext.id, time: Date.now() });
+        return { success: true, msg: 'Installed: ' + ext.name + ' (' + ext.id + ')' };
+      },
+      uninstall: function (id) {
+        var idx = -1;
+        for (var i = 0; i < this.userExtensions.length; i++) {
+          if (this.userExtensions[i].id === id) { idx = i; break; }
+        }
+        if (idx === -1) return { success: false, msg: 'Extension not found or is built-in: ' + id };
+        var removed = this.userExtensions.splice(idx, 1)[0];
+        this.history.push({ action: 'uninstall', id: id, time: Date.now() });
+        return { success: true, msg: 'Uninstalled: ' + removed.name };
+      },
+      enable: function (id) {
+        var ext = this.findById(id);
+        if (!ext) return { success: false, msg: 'Extension not found: ' + id };
+        ext.enabled = true;
+        this.history.push({ action: 'enable', id: id, time: Date.now() });
+        return { success: true, msg: 'Enabled: ' + ext.name };
+      },
+      disable: function (id) {
+        var ext = this.findById(id);
+        if (!ext) return { success: false, msg: 'Extension not found: ' + id };
+        if (ext.builtin) return { success: false, msg: 'Cannot disable built-in extension: ' + ext.name };
+        ext.enabled = false;
+        this.history.push({ action: 'disable', id: id, time: Date.now() });
+        return { success: true, msg: 'Disabled: ' + ext.name };
+      },
+    };
+
+    // ======================================================================
+    // PERFORMANCE METRICS (Phase 3: Observability)
+    // ======================================================================
+    function recordMetric(opts) {
+      // opts: { latency, tokens, model, endpoint, success, errorMsg }
+      var entry = {
+        timestamp: Date.now(),
+        latency: opts.latency || 0,
+        tokens: opts.tokens || 0,
+        tps: (opts.tokens > 0 && opts.latency > 0) ? parseFloat((opts.tokens / (opts.latency / 1000)).toFixed(1)) : 0,
+        model: opts.model || 'unknown',
+        endpoint: opts.endpoint || 'unknown',
+        success: opts.success !== false,
+        errorMsg: opts.errorMsg || null,
+      };
+
+      // Push to ring buffer
+      State.perf.history.push(entry);
+      if (State.perf.history.length > State.perf.maxHistory) {
+        State.perf.history.shift();
+      }
+
+      // Update aggregates
+      State.perf.totalRequests++;
+      State.perf.totalTokens += entry.tokens;
+      State.perf.totalLatency += entry.latency;
+
+      // Per-model stats
+      var mKey = entry.model || 'unknown';
+      if (!State.perf.modelStats[mKey]) {
+        State.perf.modelStats[mKey] = { requests: 0, tokens: 0, totalLatency: 0, avgTps: 0, bestTps: 0 };
+      }
+      var ms = State.perf.modelStats[mKey];
+      ms.requests++;
+      ms.tokens += entry.tokens;
+      ms.totalLatency += entry.latency;
+      ms.avgTps = ms.tokens > 0 && ms.totalLatency > 0 ? parseFloat((ms.tokens / (ms.totalLatency / 1000)).toFixed(1)) : 0;
+      if (entry.tps > ms.bestTps) ms.bestTps = entry.tps;
+
+      // Structured log entry
+      logStructured('PERF', 'request_complete', {
+        latency: entry.latency,
+        tokens: entry.tokens,
+        tps: entry.tps,
+        model: entry.model,
+        endpoint: entry.endpoint,
+        success: entry.success,
+      });
+
+      // Update sidebar perf summary if visible
+      updatePerfSidebar();
+    }
+
+    function logStructured(level, event, data) {
+      var entry = {
+        ts: Date.now(),
+        isoTime: new Date().toISOString(),
+        level: level,
+        event: event,
+        data: data || {},
+      };
+      State.perf.structuredLog.push(entry);
+      if (State.perf.structuredLog.length > State.perf.maxLog) {
+        State.perf.structuredLog.shift();
+      }
+    }
+
+    function updatePerfSidebar() {
+      // Update the right sidebar perf mini-stats
+      var avgLat = State.perf.totalRequests > 0 ? Math.round(State.perf.totalLatency / State.perf.totalRequests) : 0;
+      var avgTps = State.perf.totalTokens > 0 && State.perf.totalLatency > 0 ? (State.perf.totalTokens / (State.perf.totalLatency / 1000)).toFixed(1) : '—';
+
+      var elReqs = document.getElementById('perfTotalReqs');
+      var elAvgLat = document.getElementById('perfAvgLatency');
+      var elAvgTps = document.getElementById('perfAvgTps');
+      var elTotalTok = document.getElementById('perfTotalTokens');
+
+      if (elReqs) elReqs.textContent = State.perf.totalRequests;
+      if (elAvgLat) elAvgLat.textContent = avgLat + 'ms';
+      if (elAvgTps) elAvgTps.textContent = avgTps;
+      if (elTotalTok) elTotalTok.textContent = State.perf.totalTokens.toLocaleString();
+    }
+
+    // ======================================================================
+    // CONVERSATION MEMORY (Phase 1: Multi-turn + Persistence)
+    // ======================================================================
+    const DEFAULT_SYSTEM_PROMPT = 'You are RawrXD Assistant, an expert AI collaborator specializing in low-level programming, MASM x64 assembly, reverse engineering, GGUF model operations, and C++20 systems programming. You have deep knowledge of the RawrXD three-layer hotpatching architecture (memory, byte-level, server). Be precise, technical, and concise.';
+
+    const Conversation = {
+      messages: [],           // Array of {role, content, timestamp}
+      systemPrompt: DEFAULT_SYSTEM_PROMPT,
+      maxContextMessages: 40, // Keep last 40 messages (20 exchanges) to prevent token overflow
+
+      addMessage: function (role, content) {
+        this.messages.push({
+          role: role,
+          content: content,
+          timestamp: Date.now()
+        });
+        // Trim old messages to prevent token overflow
+        if (this.messages.length > this.maxContextMessages) {
+          this.messages = this.messages.slice(-this.maxContextMessages);
+        }
+        this.persist();
+        this.updateUI();
+      },
+
+      // Add a raw message object (for tool_calls + tool results in agentic loop)
+      addRaw: function (msg) {
+        msg.timestamp = msg.timestamp || Date.now();
+        this.messages.push(msg);
+        if (this.messages.length > this.maxContextMessages) {
+          this.messages = this.messages.slice(-this.maxContextMessages);
+        }
+        this.persist();
+      },
+
+      // Build OpenAI-compatible messages array for /v1/chat/completions
+      getContextForAPI: function () {
+        var sys = this.systemPrompt;
+        if (State.motd && !State.motd.read) {
+          sys += '\n\n[MOTD GATE] Before any tool call you MUST read_file/read_motd path containing '
+            + State.motd.needle + ' (PassiveRoleNotRoleplay). Tools are blocked until that read succeeds.';
+        }
+        sys += '\n\n[CONTINUE-ENSURE / MULTITASK] When the user says "Please continue ensuring" '
+          + '(short) or the full streamer-agentic phrase: reply with exactly 3 ack lines, spawn ONE '
+          + 'background /api/subagent with the max continue-ensure brief, then stop. Passive coordinator '
+          + 'only — no roleplay. Obey PassiveRoleNotRoleplay MOTD gate before tools.';
+        var context = [{ role: 'system', content: sys }];
+
+        // Build file context block (injected near the end, not at position 2)
+        var fileContextMsg = null;
+        if (State.files.length > 0) {
+          var fileParts = [];
+          State.files.forEach(function (f) {
+            var content = State.fileContents[f.name];
+            if (content) {
+              // Estimate tokens (~4 chars per token) and warn if file is huge
+              var estTokens = Math.ceil(content.length / 4);
+              if (estTokens > State.gen.context * 0.6) {
+                // Truncate to ~60% of context window to leave room for conversation
+                var maxChars = Math.floor(State.gen.context * 0.6 * 4);
+                fileParts.push('--- ' + f.name + ' (truncated to fit context window) ---\n' + content.substring(0, maxChars) + '\n... [truncated, ' + formatBytes(content.length) + ' total]');
+                logDebug('File ' + f.name + ' (~' + estTokens + ' tokens) exceeds context budget, truncated to ~' + Math.floor(maxChars / 4) + ' tokens', 'warn');
+              } else {
+                fileParts.push('--- ' + f.name + ' ---\n' + content);
+              }
+            } else {
+              fileParts.push('[Attached: ' + f.name + ' (' + formatBytes(f.size) + ') — content not yet loaded]');
+            }
+          });
+          if (fileParts.length > 0) {
+            fileContextMsg = {
+              role: 'system',
+              content: 'The user has attached the following files as context. Review them carefully when responding:\n\n' + fileParts.join('\n\n')
+            };
+          }
+        }
+
+        // Add conversation history (all but the last user message)
+        var msgs = this.messages;
+        var insertIdx = msgs.length; // default: append at end
+        // Find the last user message to inject file context right before it
+        for (var i = msgs.length - 1; i >= 0; i--) {
+          if (msgs[i].role === 'user') { insertIdx = i; break; }
+        }
+
+        for (var j = 0; j < msgs.length; j++) {
+          // Inject file context right before the last user message
+          if (j === insertIdx && fileContextMsg) {
+            context.push(fileContextMsg);
+          }
+          // Preserve tool_calls and tool_call_id for agentic loop
+          var msgEntry = { role: msgs[j].role, content: msgs[j].content };
+          if (msgs[j].tool_calls) msgEntry.tool_calls = msgs[j].tool_calls;
+          if (msgs[j].tool_call_id) msgEntry.tool_call_id = msgs[j].tool_call_id;
+          context.push(msgEntry);
+        }
+
+        // If no messages yet but we have file context, add it
+        if (msgs.length === 0 && fileContextMsg) {
+          context.push(fileContextMsg);
+        }
+
+        return context;
+      },
+
+      // Build legacy prompt string for /ask or /api/generate fallback
+      getLegacyPrompt: function (query) {
+        var parts = [];
+
+        // Add recent conversation context (last 6 exchanges = 12 messages)
+        var recent = this.messages.slice(-12);
+        if (recent.length > 0) {
+          parts.push('Previous conversation:');
+          recent.forEach(function (m) {
+            parts.push((m.role === 'user' ? 'User' : 'Assistant') + ': ' + m.content);
+          });
+          parts.push('');
+        }
+
+        // Add file context — placed right before the user question so it's in active context
+        if (State.files.length > 0) {
+          var fileParts = [];
+          State.files.forEach(function (f) {
+            var content = State.fileContents[f.name];
+            if (content) {
+              var estTokens = Math.ceil(content.length / 4);
+              if (estTokens > State.gen.context * 0.6) {
+                var maxChars = Math.floor(State.gen.context * 0.6 * 4);
+                fileParts.push('--- ' + f.name + ' (truncated) ---\n' + content.substring(0, maxChars) + '\n... [truncated]');
+              } else {
+                fileParts.push('--- ' + f.name + ' ---\n' + content);
+              }
+            } else {
+              fileParts.push('[Attached: ' + f.name + ' (' + formatBytes(f.size) + ') — content not loaded]');
+            }
+          });
+          parts.push('The user has attached the following files. Review them carefully:\n' + fileParts.join('\n\n'));
+          parts.push('');
+        }
+
+        parts.push('User question: ' + query);
+        return parts.join('\n');
+      },
+
+      persist: function () {
+        if (!_localStorageAvailable) return; // Bail early if localStorage blocked (file:// in some browsers)
+        try {
+          localStorage.setItem('rawrxd_conversation', JSON.stringify({
+            messages: this.messages,
+            systemPrompt: this.systemPrompt,
+            savedAt: Date.now()
+          }));
+          // Also persist generation settings
+          localStorage.setItem('rawrxd_gen_settings', JSON.stringify(State.gen));
+        } catch (e) {
+          // localStorage full or unavailable — degrade silently
+          logDebug('Persist failed: ' + e.message, 'warn');
+        }
+      },
+
+      load: function () {
+        if (!_localStorageAvailable) return false;
+        try {
+          var saved = localStorage.getItem('rawrxd_conversation');
+          if (saved) {
+            var data = JSON.parse(saved);
+            if (data.messages && Array.isArray(data.messages)) {
+              this.messages = data.messages;
+            }
+            if (data.systemPrompt) {
+              this.systemPrompt = data.systemPrompt;
+            }
+            return this.messages.length > 0;
+          }
+        } catch (e) {
+          logDebug('Load conversation failed: ' + e.message, 'warn');
+        }
+        return false;
+      },
+
+      loadGenSettings: function () {
+        if (!_localStorageAvailable) return false;
+        try {
+          var saved = localStorage.getItem('rawrxd_gen_settings');
+          if (saved) {
+            var data = JSON.parse(saved);
+            if (data.context) State.gen.context = data.context;
+            if (data.maxTokens) State.gen.maxTokens = data.maxTokens;
+            if (data.temperature != null) State.gen.temperature = data.temperature;
+            if (data.stream != null) State.gen.stream = data.stream;
+            if (data.top_p != null) State.gen.top_p = data.top_p;
+            if (data.top_k != null) State.gen.top_k = data.top_k;
+            // Restore tensor bunny hop settings
+            if (data.tensorHop) {
+              if (data.tensorHop.enabled != null) State.gen.tensorHop.enabled = data.tensorHop.enabled;
+              if (data.tensorHop.strategy) State.gen.tensorHop.strategy = data.tensorHop.strategy;
+              if (data.tensorHop.skipRatio != null) State.gen.tensorHop.skipRatio = data.tensorHop.skipRatio;
+              if (data.tensorHop.keepFirst != null) State.gen.tensorHop.keepFirst = data.tensorHop.keepFirst;
+              if (data.tensorHop.keepLast != null) State.gen.tensorHop.keepLast = data.tensorHop.keepLast;
+              if (data.tensorHop.customSkip) State.gen.tensorHop.customSkip = data.tensorHop.customSkip;
+            }
+            if (data.nvmeBunnyHop) {
+              if (!State.gen.nvmeBunnyHop) {
+                State.gen.nvmeBunnyHop = { enabled: false, force: true, unlaidout: true, hotpatchRelive: true, chunkMib: 4 };
+              }
+              if (data.nvmeBunnyHop.enabled != null) State.gen.nvmeBunnyHop.enabled = data.nvmeBunnyHop.enabled;
+              if (data.nvmeBunnyHop.force != null) State.gen.nvmeBunnyHop.force = data.nvmeBunnyHop.force;
+              if (data.nvmeBunnyHop.unlaidout != null) State.gen.nvmeBunnyHop.unlaidout = data.nvmeBunnyHop.unlaidout;
+              if (data.nvmeBunnyHop.hotpatchRelive != null) State.gen.nvmeBunnyHop.hotpatchRelive = data.nvmeBunnyHop.hotpatchRelive;
+              if (data.nvmeBunnyHop.chunkMib != null) State.gen.nvmeBunnyHop.chunkMib = data.nvmeBunnyHop.chunkMib;
+            }
+            // Restore safe decode profile
+            if (data.safeDecodeProfile) {
+              if (data.safeDecodeProfile.enabled != null) State.gen.safeDecodeProfile.enabled = data.safeDecodeProfile.enabled;
+              if (data.safeDecodeProfile.autoClamp != null) State.gen.safeDecodeProfile.autoClamp = data.safeDecodeProfile.autoClamp;
+              if (data.safeDecodeProfile.thresholdB != null) State.gen.safeDecodeProfile.thresholdB = data.safeDecodeProfile.thresholdB;
+              if (data.safeDecodeProfile.safeContext != null) State.gen.safeDecodeProfile.safeContext = data.safeDecodeProfile.safeContext;
+              if (data.safeDecodeProfile.safeMaxTokens != null) State.gen.safeDecodeProfile.safeMaxTokens = data.safeDecodeProfile.safeMaxTokens;
+              if (data.safeDecodeProfile.safeTemperature != null) State.gen.safeDecodeProfile.safeTemperature = data.safeDecodeProfile.safeTemperature;
+              if (data.safeDecodeProfile.safeTopP != null) State.gen.safeDecodeProfile.safeTopP = data.safeDecodeProfile.safeTopP;
+              if (data.safeDecodeProfile.safeTopK != null) State.gen.safeDecodeProfile.safeTopK = data.safeDecodeProfile.safeTopK;
+              if (data.safeDecodeProfile.probeFirst != null) State.gen.safeDecodeProfile.probeFirst = data.safeDecodeProfile.probeFirst;
+              if (data.safeDecodeProfile.disableStreamOnSafe != null) State.gen.safeDecodeProfile.disableStreamOnSafe = data.safeDecodeProfile.disableStreamOnSafe;
+            }
+            return true;
+          }
+        } catch (e) { /* ignore */ }
+        return false;
+      },
+
+      clear: function () {
+        this.messages = [];
+        this.persist();
+        this.updateUI();
+      },
+
+      updateUI: function () {
+        // Update memory count in sidebar
+        var memCount = document.getElementById('memoryCount');
+        if (memCount) memCount.textContent = this.messages.length;
+
+        // Update memory badge in chat header
+        var memBadge = document.getElementById('memoryBadge');
+        var memBadgeText = document.getElementById('memoryBadgeText');
+        if (memBadge && memBadgeText) {
+          if (this.messages.length > 0) {
+            memBadge.style.display = 'flex';
+            memBadgeText.textContent = this.messages.length + ' turns';
+          } else {
+            memBadge.style.display = 'none';
+          }
+        }
+      }
+    };
+
+    // ======================================================================
+    // SAFE JSON PARSING HELPERS
+    // ======================================================================
+    
+    /**
+     * Safely parse JSON from a fetch response.
+     * Handles non-JSON responses (HTML error pages, plain text) gracefully.
+     * @param {Response} res - The fetch Response object
+     * @param {Object} options - Options object
+     * @param {string} options.endpoint - Endpoint name for logging
+     * @param {boolean} options.allowEmpty - Allow empty response body
+     * @returns {Promise<Object>} - Parsed JSON or error object
+     */
+    async function safeJsonResponse(res, options) {
+      options = options || {};
+      var endpoint = options.endpoint || 'unknown';
+      var allowEmpty = options.allowEmpty !== false;
+      
+      // Check content-type before parsing JSON
+      var contentType = res.headers.get('content-type') || '';
+      var isJson = contentType.includes('application/json');
+      
+      if (!res.ok) {
+        // Handle HTTP error (404, 500, etc.)
+        var errorText;
+        try {
+          errorText = isJson ? JSON.stringify(await res.json()) : await res.text();
+        } catch (e) {
+          errorText = 'HTTP ' + res.status;
+        }
+        var errorMsg = isJson ? (errorText.error || errorText.message || 'HTTP ' + res.status) : ('HTTP ' + res.status + ' - Endpoint not found or returned HTML');
+        logDebug('[' + endpoint + '] HTTP error: ' + res.status + ' - ' + (isJson ? errorText : errorText.substring(0, 200)), 'error');
+        return { 
+          __error: true, 
+          status: res.status, 
+          message: errorMsg,
+          raw: errorText.substring ? errorText.substring(0, 500) : errorText
+        };
+      }
+
+      // Parse JSON response safely
+      if (isJson) {
+        try {
+          return await res.json();
+        } catch (e) {
+          logDebug('[' + endpoint + '] JSON parse error: ' + e.message, 'error');
+          return { __error: true, message: 'Invalid JSON response: ' + e.message };
+        }
+      } else {
+        // Not JSON content-type, try to parse anyway or return text
+        var text = await res.text();
+        if (!text || text.trim() === '') {
+          if (allowEmpty) return {};
+          return { __error: true, message: 'Empty response body' };
+        }
+        try {
+          return JSON.parse(text);
+        } catch (e) {
+          logDebug('[' + endpoint + '] Non-JSON response: ' + text.substring(0, 200), 'warn');
+          return { __error: true, message: 'Non-JSON response from server', raw: text.substring(0, 500) };
+        }
+      }
+    }
+
+    /**
+     * Check if a response result is an error from safeJsonResponse
+     * @param {Object} result - Result from safeJsonResponse
+     * @returns {boolean} - True if result is an error
+     */
+    function isJsonError(result) {
+      return result && result.__error === true;
+    }
+
+    // System Prompt UI helpers
+    function toggleSystemPrompt() {
+      var body = document.getElementById('sysPromptBody');
+      var arrow = document.getElementById('sysPromptArrow');
+      body.classList.toggle('open');
+      arrow.classList.toggle('open');
+    }
+
+    function resetSystemPrompt() {
+      Conversation.systemPrompt = DEFAULT_SYSTEM_PROMPT;
+      var input = document.getElementById('systemPromptInput');
+      if (input) input.value = DEFAULT_SYSTEM_PROMPT;
+      Conversation.persist();
+      logDebug('System prompt reset to default', 'info');
+    }
+
+    function clearConversation() {
+      Conversation.clear();
+      clearChat();
+      logDebug('Conversation memory cleared', 'info');
+    }
+
+    // ======================================================================
+    // WIN32IDE BRIDGE — detect running IDE, sync state, launch IDE
+    // Works from both file:// and http:// contexts
+    // ======================================================================
+    var _win32IdeDetected = false;
+    var _win32IdeUrl = 'http://localhost:11435';
+    var _win32IdePollTimer = null;

@@ -1,0 +1,145 @@
+{
+  "data_start": 8399296,
+  "layer": 0,
+  "model": "F:\\rawrxd\\models\\nemotron-3-nano_4b.gguf",
+  "tensor_count": 263,
+  "tensors": [
+    {
+      "data_offset": 8411840,
+      "dims": [
+        1,
+        96
+      ],
+      "elements": 96,
+      "name": "blk.0.ssm_a",
+      "offset": 12544,
+      "stats": {
+        "count": 96,
+        "finite": 96,
+        "max": -1.1478899978101254e-05,
+        "mean": -134.61171541162184,
+        "min": -5569.16259765625
+      },
+      "type": 0,
+      "type_name": "F32"
+    },
+    {
+      "data_offset": 8412224,
+      "dims": [
+        9728
+      ],
+      "elements": 9728,
+      "name": "blk.0.ssm_conv1d.bias",
+      "offset": 12928,
+      "stats": {
+        "count": 9728,
+        "finite": 9728,
+        "max": 16.625,
+        "mean": 0.008838932296859687,
+        "min": -7.0625
+      },
+      "type": 0,
+      "type_name": "F32"
+    },
+    {
+      "data_offset": 8451136,
+      "dims": [
+        4,
+        9728
+      ],
+      "elements": 38912,
+      "name": "blk.0.ssm_conv1d.weight",
+      "offset": 51840,
+      "stats": {
+        "count": 38912,
+        "finite": 38912,
+        "max": 0.6875,
+        "mean": 0.0002539021375698265,
+        "min": -0.55859375
+      },
+      "type": 0,
+      "type_name": "F32"
+    },
+    {
+      "data_offset": 8606784,
+      "dims": [
+        1,
+        96
+      ],
+      "elements": 96,
+      "name": "blk.0.ssm_d",
+      "offset": 207488,
+      "stats": {
+        "count": 96,
+        "finite": 96,
+        "max": 15.8125,
+        "mean": 2.0939047634601593,
+        "min": -0.609375
+      },
+      "type": 0,
+      "type_name": "F32"
+    },
+    {
+      "data_offset": 8607168,
+      "dims": [
+        96
+      ],
+      "elements": 96,
+      "name": "blk.0.ssm_dt.bias",
+      "offset": 207872,
+      "stats": {
+        "count": 96,
+        "finite": 96,
+        "max": 33.5,
+        "mean": -0.16519927978515625,
+        "min": -8.125
+      },
+      "type": 0,
+      "type_name": "F32"
+    },
+    {
+      "data_offset": 8607552,
+      "dims": [
+        3136,
+        17504
+      ],
+      "elements": 54892544,
+      "name": "blk.0.ssm_in.weight",
+      "offset": 208256,
+      "type": 6,
+      "type_name": "Q5_0"
+    },
+    {
+      "data_offset": 46346176,
+      "dims": [
+        960,
+        8
+      ],
+      "elements": 7680,
+      "name": "blk.0.ssm_norm.weight",
+      "offset": 37946880,
+      "stats": {
+        "count": 7680,
+        "finite": 7680,
+        "max": 9.5,
+        "mean": 2.3440535754560794,
+        "min": -0.00238037109375
+      },
+      "type": 0,
+      "type_name": "F32"
+    },
+    {
+      "data_offset": 46376896,
+      "dims": [
+        7680,
+        3136
+      ],
+      "elements": 24084480,
+      "name": "blk.0.ssm_out.weight",
+      "offset": 37977600,
+      "type": 12,
+      "type_name": "Q4_K"
+    }
+  ],
+  "version": 3
+}

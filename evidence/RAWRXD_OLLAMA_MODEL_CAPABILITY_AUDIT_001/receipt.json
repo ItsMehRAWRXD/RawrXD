@@ -1,0 +1,40 @@
+{
+  "gate": "RAWRXD_OLLAMA_MODEL_CAPABILITY_AUDIT_001",
+  "timestamp": "2026-10-23T21:23:13.2739324Z",
+  "endpoint": "http://127.0.0.1:11434/api/show",
+  "models": [
+    {
+      "capabilities": "completion,tools,thinking",
+      "status": "PASS",
+      "model": "qwen3:8b"
+    },
+    {
+      "capabilities": "completion,tools,thinking",
+      "status": "PASS",
+      "model": "nemotron-3.5-lightning:30b"
+    },
+    {
+      "capabilities": "completion,tools",
+      "status": "PASS",
+      "model": "llama3.2:3b"
+    },
+    {
+      "capabilities": "tools,thinking,completion",
+      "status": "PASS",
+      "model": "deepseek-r1:32b"
+    },
+    {
+      "capabilities": "completion,vision,tools,thinking",
+      "status": "PASS",
+      "model": "qwen3.8:27b"
+    },
+    {
+      "capabilities": "completion,tools,thinking",
+      "status": "PASS",
+      "model": "gpt-oss:120b"
+    }
+  ],
+  "copilot_tool_route": "Use models with tools capability",
+  "deepseek_coder_v2_16b": "completion,insert only; do not use for tool-enabled Copilot",
+  "verdict": "TOOL_CAPABLE_MODELS_AVAILABLE"
+}

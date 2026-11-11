@@ -1,0 +1,16 @@
+{
+  "gate": "RAWRXD_MODEL_DROPDOWN_FIX_001",
+  "timestamp": "2026-10-23T20:56:37.6660374Z",
+  "source": "F:\\rawrxd\\src\\win32app\\Win32IDE.cpp",
+  "native_build": "PASS",
+  "unique_control_id": "IDC_COPILOT_MODEL_SELECTOR",
+  "combo_style": "CBS_DROPDOWNLIST|WS_VSCROLL",
+  "route_inventory": "158 local GGUF/blob + 1 Kilo",
+  "combo_count": 159,
+  "dropdown_open": "PASS",
+  "dropped_rect": "queried",
+  "resize_path": "WM_SIZE/MoveWindow preserves compact row with CB_SETMINVISIBLE=12",
+  "route_selection": "wired CBN_SELCHANGE",
+  "inference": "PENDING provider services unavailable",
+  "verdict": "UI_FIXED_PROVIDER_PENDING"
+}

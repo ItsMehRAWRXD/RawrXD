@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RawrXD Enterprise Management Interface</title>
+
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="/src/core/styles/runtime-core.css">
+
+    <!-- Core Runtime (must load first) -->
+    <script src="/src/core/runtime.js"></script>
+
+    <!-- State Management -->
+    <script src="/src/core/state-manager.js"></script>
+
+    <!-- IPC Synchronizer -->
+    <script src="/src/native/ipc-synchronizer.js"></script>
+
+    <!-- Module Registry -->
+    <script src="/src/core/module-registry.js"></script>
+
+    <!-- Feature Flags -->
+    <script src="/src/core/feature-flags.js"></script>
+
+    <!-- Migration Engine -->
+    <script src="/src/core/migration-engine.js"></script>
+
+    <!-- HMR Controller -->
+    <script src="/src/core/hmr-controller.js"></script>
+
+    <!-- Dependency Resolver -->
+    <script src="/src/utils/dependency-resolver.js"></script>
+
+    <!-- Visualizer Core -->
+    <script src="/src/components/visualizer-core.js"></script>
+
+    <!-- Payload Builder -->
+    <script src="/src/engine/payload-builder.js"></script>
+
+    <!-- Session Manager -->
+    <script src="/src/orchestration/session-manager.js"></script>
+
+    <!-- Rollback Daemon -->
+    <script src="/src/orchestration/rollback-daemon.js"></script>
+
+    <!-- Ledger Committer -->
+    <script src="/src/storage/ledger-committer.js"></script>
+
+    <!-- Crash Recovery (loads last, binds global interceptors) -->
+    <script src="/src/telemetry/crash-recovery.js"></script>
+
+    <!-- Panel Bootloader (deferred - loads after DOM) -->
+    <script src="/src/core/panel-bootloader.js" defer></script>
+</head>
+<body>
+    <!-- Toolbar -->
+    <div id="toolbar">
+        <span style="font-weight:600;color:var(--accent-color);font-size:13px;">RawrXD</span>
+        <span style="color:var(--text-muted);font-size:11px;">Enterprise Platform</span>
+        <div style="flex:1"></div>
+        <button class="toolbar-btn" onclick="if(window.RawrRuntime)RawrRuntime.publish('theme:sync',{theme:'dark'})">Theme</button>
+        <button class="toolbar-btn" onclick="if(window.RawrStateManager)RawrStateManager.rollback()">Rollback</button>
+        <button class="toolbar-btn" onclick="if(window.RawrCrashRecovery)console.log(RawrCrashRecovery.getCrashReport())">Diagnostics</button>
+    </div>
+
+    <!-- Breadcrumbs -->
+    <div id="breadcrumbs">
+        <span class="breadcrumb-item">Home</span>
+        <span class="breadcrumb-separator">/</span>
+        <span class="breadcrumb-item" id="status-text">Loading...</span>
+    </div>
+
+    <!-- Main Layout -->
+    <div id="app-wrapper">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar-navigation">
+            <div id="sidebar-header">Navigation</div>
+            <nav id="dynamic-menu-container"></nav>
+        </aside>
+
+        <!-- Viewport Stage -->
+        <main id="viewport-stage">
+            <div id="active-panel-mount">
+                <div class="panel-loading">Initializing Enterprise Platform...</div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Status Bar -->
+    <div id="status-bar">
+        <div class="status-indicator">
+            <span class="status-dot online" id="status-dot"></span>
+            <span id="status-text-bar">System Ready</span>
+        </div>
+        <div style="flex:1"></div>
+        <span id="status-metrics">Panels: <span id="panel-count">0</span></span>
+    </div>
+
+    <!-- Footer -->
+    <div id="footer">
+        <span>RawrXD Enterprise v1.0.0</span>
+        <span id="footer-status">Initializing...</span>
+    </div>
+
+    <!-- Bootstrap -->
+    <script>
+        // Initialize core systems after DOM
+        document.addEventListener('DOMContentLoaded', function() {
+            const runtime = window.RawrRuntime;
+
+            // Register core services
+            runtime.register('Runtime', runtime);
+            runtime.register('StateManager', window.RawrStateManager);
+            runtime.register('IpcSynchronizer', window.RawrIpcSynchronizer);
+            runtime.register('ModuleRegistry', window.RawrModuleRegistry);
+            runtime.register('FeatureFlags', window.RawrFeatureFlagEngine);
+            runtime.register('MigrationEngine', window.RawrMigrationEngine);
+            runtime.register('HmrController', window.RawrHmrController);
+            runtime.register('SessionManager', window.RawrSessionManager);
+            runtime.register('RollbackDaemon', window.RawrRollbackDaemon);
+            runtime.register('LedgerCommitter', window.RawrLedgerCommitter);
+            runtime.register('CrashRecovery', window.RawrCrashRecovery);
+
+            // Initialize state
+            if (window.RawrStateManager) {
+                window.RawrStateManager.initialize({
+                    version: 3,
+                    activePanelId: null,
+                    engineStatus: 'stopped',
+                    engineLastActive: 0,
+                    settings: { theme: 'dark', fontSize: 14 },
+                    securityContext: { activePermissions: ['ipc:telemetry'], isolationLevel: 'high' },
+                    metrics: [],
+                    errors: []
+                });
+            }
+
+            // Run migration pipeline
+            if (window.RawrMigrationEngine) {
+                window.RawrMigrationEngine.processMigrationPipeline();
+            }
+
+            // Subscribe to panel events for status updates
+            runtime.subscribe('panel:mounted', function(data) {
+                const count = document.getElementById('panel-count');
+                if (count) count.textContent = '1';
+                const footer = document.getElementById('footer-status');
+                if (footer) footer.textContent = 'Active: ' + data.meta.title;
+            });
+
+            runtime.subscribe('runtime:error', function(data) {
+                const dot = document.getElementById('status-dot');
+                if (dot) dot.className = 'status-dot error';
+            });
+
+            runtime.isInitialized = true;
+            console.log('[Bootstrap] All systems initialized.');
+        });
+    </script>
+</body>
+</html>

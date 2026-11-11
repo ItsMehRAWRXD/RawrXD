@@ -1,0 +1,7 @@
+{
+  "schema": "RAWRXD_NEXT15_007",
+  "config": {"model":"health-check","model_hash":"unknown","git_revision":"unknown","quant":"unknown","backend":"deep2","context":0,"gpu_index":0},
+  "counters": {"gpu_submits":0,"gpu_gemv":0,"gpu_gemm":0,"gpu_layers":0,"cpu_fallbacks":0,"strict_violations":0,"upload_bytes":0,"generated_tokens":0},
+  "stages": {},
+  "gates": {"production_gpu":{"pass":false,"message":"NOT_RUN: independent before/after parity is required"},"runtime_hooks":{"pass":false,"message":"NOT_RUN: no completed GPU work observed"}}
+}

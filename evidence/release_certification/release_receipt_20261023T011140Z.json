@@ -1,0 +1,59 @@
+{
+  "schema": "RAWR_RELEASE_CERT_001",
+  "generated_utc": "20261023T011140Z",
+  "repo_root": "F:\\rawrxd",
+  "git_head": "usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]\n           [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]\n           [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--no-lazy-fetch]\n           [--no-optional-locks] [--no-advice] [--bare] [--git-dir=<path>]\n           [--work-tree=<path>] [--namespace=<name>] [--config-env=<name>=<envvar>]\n           <command> [<args>]\n\nThese are common Git commands used in various situations:\n\nstart a working area (see also: git help tutorial)\n   clone      Clone a repository into a new directory\n   init       Create an empty Git repository or reinitialize an existing one\n\nwork on the current change (see also: git help everyday)\n   add        Add file contents to the index\n   mv         Move or rename a file, a directory, or a symlink\n   restore    Restore working tree files\n   rm         Remove files from the working tree and from the index\n\nexamine the history and state (see also: git help revisions)\n   bisect     Use binary search to find the commit that introduced a bug\n   diff       Show changes between commits, commit and working tree, etc\n   grep       Print lines matching a pattern\n   log        Show commit logs\n   show       Show various types of objects\n   status     Show the working tree status\n\ngrow, mark and tweak your common history\n   backfill   Download missing objects in a partial clone\n   branch     List, create, or delete branches\n   commit     Record changes to the repository\n   history    EXPERIMENTAL: Rewrite history\n   merge      Join two or more development histories together\n   rebase     Reapply commits on top of another base tip\n   reset      Set `HEAD` or the index to a known state\n   switch     Switch branches\n   tag        Create, list, delete or verify tags\n\ncollaborate (see also: git help workflows)\n   fetch      Download objects and refs from another repository\n   pull       Fetch from and integrate with another repository or a local branch\n   push       Update remote refs along with associated objects\n\n'git help -a' and 'git help -g' list available subcommands and some\nconcept guides. See 'git help <command>' or 'git help <concept>'\nto read about a specific subcommand or concept.\nSee 'git help git' for an overview of the system.",
+  "dirty": true,
+  "tracked_file_count": 40,
+  "file_hashes": {
+    "build\\bin-msvc\\Release\\rawr.exe": "011CD7E80A7DE812501B5ECF4987C9EAD156B010C9CBE230ECDD7E04A439DB60",
+    "CMakeLists.txt": "8D2E93EA22BE1341A32279D4F1BC296D1135DF68CBF5EFF050A23F7B0F09980C",
+    "src\\rawrxd_cli_v2.cpp": "B6C59AD34D4D441FC97AE07C0BD532BAE3DB49E126233AC2AA871FA4B237D88D",
+    "tools\\rawr_blocker_pattern_scanner.ps1": "CACDB5D994C6327AB8BC0137CBB9FD65F56EF24A0AB13281AACE2244EAC1F612"
+  },
+  "gates": {
+    "snapshot": "PASS",
+    "autonomous_edit_loop": "PASS_ROLLBACK_ONLY",
+    "transactional_hotpatch": "PASS",
+    "endurance": "NOT_RUN",
+    "dashboard": "PASS",
+    "clean_release": "PENDING"
+  },
+  "certification": "NOT_CERTIFIED",
+  "reason": "Full-model and release gates require explicit runtime evidence; this receipt never promotes certification.",
+  "existing_gate_ledger": {
+    "baseline_head": "4213f56908",
+    "evidence_root": "evidence/gate5_head_repro_2026-10-14/PARITY_RECEIPTS.txt",
+    "gates": {
+      "G01_freeze_baseline": "PASS",
+      "G02_explicit_cross_device_transfer": "PASS",
+      "G03_independent_device_budgets": "PASS",
+      "G04_concurrent_safe_residency": "PASS (in-flight pinning; best-identical under 1700+6045 evictions)",
+      "G05_native_quant_coverage": "PASS (Q2_K kind5 84B + Q3_K kind6 110B native GPU; cpu_calls=0; bounded parity vs llama.cpp cos .997/.986 0-unexplained; Q4_K bit-identical 4,128,000)",
+      "G06_cross_arch_parity": "PARTIAL (llama/qwen/deepseek2-MoE PASS; nemotron_h FAIL §D)",
+      "G07_deepseek_671B": "BLOCKED (no 671B GGUF on disk)",
+      "G08_full_numerical_correctness": "PARTIAL",
+      "G09_streaming_bf16_nanoquant": "OPEN (nanoquant codec extracted §P11)",
+      "G10_continuous_generation": "PARTIAL",
+      "G11_secondary_gpu_kv": "OPEN",
+      "G12_long_context_1M": "OPEN (modelpluscontext plan captured §N)",
+      "G13_gpu_deck_scheduler": "OPEN (gpu_deck + hardware_pressure extracted)",
+      "G14_speculative": "OPEN",
+      "G15_150tps": "BLOCKED (best ~4.5 TPS)",
+      "G16_ide_server": "BLOCKED (Qt v142/v143 ABI)",
+      "G17_agentic_tool_integrity": "OPEN",
+      "G18_swarm": "OPEN",
+      "G19_endurance": "OPEN",
+      "G20_release_provenance": "OPEN"
+    },
+    "roadmap_phase1": {
+      "01": "PASS",
+      "02": "PASS",
+      "03": "PASS",
+      "04": "PASS",
+      "05": "PASS",
+      "06": "BLOCKED(no V3)"
+    },
+    "resume": "G05 (Q2_K/Q3_K native kernels) then G06/G08 (fix nemotron_h SSM) then KV-offload/context/180-perf/IDE"
+  }
+}

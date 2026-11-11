@@ -1,0 +1,23 @@
+{
+  "model":"F:\\OllamaModels\\_r1_iso\\03_llama32_3b\\llama3.2-3b-Q2_K.gguf",
+  "status":"FAIL_PARITY",
+  "execution_status":"FAIL",
+  "certification_status":"NOT_CERTIFIED",
+  "reason":"GPU output failed finite/internal/reference parity",
+  "architecture":"llama",
+  "provenance_sha256":"ee1ca8b716933587127f6feb9ff5a247f1e4460e72dcf6293331b9617f8a8aa2",
+  "reference_dir":"F:\\rawrxd\\evidence\\deep2_gate_a\\ref_head_full",
+  "elapsed_ms":90913,
+  "mapped_bytes":1363935456,
+  "shard_count":1,
+  "tensor_count":255,
+  "resolved_tensors":255,
+  "unmapped_tensors":0,
+  "unsupported_ops":0,
+  "token_count":21,
+  "gpu_calls":4137,
+  "cpu_calls":0,
+  "nonfinite_logits":0,
+  "gpu_cpu_internal_parity":false,
+  "independent_reference_parity":false
+}

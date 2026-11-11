@@ -1,0 +1,38 @@
+﻿{
+    "schema":  "RAWRXD_FULL_CERTIFICATION_CLOSURE_002",
+    "time_utc":  "2026-10-23T09:27:50.3173263Z",
+    "root":  "F:\\rawrxd",
+    "donor":  "G:\\~dev\\rawrxd",
+    "apply":  false,
+    "files":  [
+                  {
+                      "name":  "deep2_openai_server.cpp",
+                      "source":  "G:\\~dev\\rawrxd\\src\\deep2\\deep2_openai_server.cpp",
+                      "destination":  "F:\\rawrxd\\src\\deep2\\deep2_openai_server.cpp",
+                      "source_hash":  "3FB1258B92AC7ADD0A7D957639241383678FE215ECDD9F7A39E3CA0D6869A616",
+                      "destination_hash":  "3FB1258B92AC7ADD0A7D957639241383678FE215ECDD9F7A39E3CA0D6869A616",
+                      "status":  "ALREADY_IDENTICAL"
+                  },
+                  {
+                      "name":  "deep2_openai_server_main.cpp",
+                      "source":  "G:\\~dev\\rawrxd\\src\\deep2\\deep2_openai_server_main.cpp",
+                      "destination":  "F:\\rawrxd\\src\\deep2\\deep2_openai_server_main.cpp",
+                      "source_hash":  "E51E258C86D39B549E89CF3EDB65D114857A084001849A652FB4AEFB4E5109A2",
+                      "destination_hash":  "E51E258C86D39B549E89CF3EDB65D114857A084001849A652FB4AEFB4E5109A2",
+                      "status":  "ALREADY_IDENTICAL"
+                  }
+              ],
+    "root_cmake":  [
+                       {
+                           "name":  "deep2_openai_server.cpp",
+                           "root_cmake_mentions":  false
+                       },
+                       {
+                           "name":  "deep2_openai_server_main.cpp",
+                           "root_cmake_mentions":  false
+                       }
+                   ],
+    "server_build":  "NOT_TESTED",
+    "inference":  "NOT_TESTED",
+    "ide_connection":  "NOT_TESTED"
+}

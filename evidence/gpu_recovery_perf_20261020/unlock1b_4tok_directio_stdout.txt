@@ -1,0 +1,103 @@
+tokens: 8 185 42 99
+arch=llama blocks=28 embd=3072 vocab=128256 experts=0 used=0
+[gpu] bound ops=395
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+[quant-row8] shader=F:\rawrxd\tools\shaders\quant_dot_row8_q6tile.spv q6_shared=1
+Quant-dot pipeline and permanent descriptor system initialized successfully
+[OPTIMING] position=0 batch_flush_ms=978.762
+[OPTIMING] op=9 count=1 total_ms=186.905 avg_ms=186.9054
+[OPTIMING] op=2 count=196 total_ms=4.873 avg_ms=0.0249
+[OPTIMING] op=3 count=28 total_ms=2.093 avg_ms=0.0747
+[OPTIMING] op=17 count=28 total_ms=0.731 avg_ms=0.0261
+[OPTIMING] op=1 count=57 total_ms=0.559 avg_ms=0.0098
+[OPTIMING] op=8 count=56 total_ms=0.517 avg_ms=0.0092
+[OPTIMING] op=16 count=28 total_ms=0.113 avg_ms=0.0040
+[OPTIMING] op=0 count=1 total_ms=0.023 avg_ms=0.0230
+[gpu] pos=0 token=8 2139.0 ms ops=395
+[OPTIMING] position=1 batch_flush_ms=41.978
+[OPTIMING] op=2 count=196 total_ms=4.755 avg_ms=0.0243
+[OPTIMING] op=9 count=1 total_ms=4.723 avg_ms=4.7225
+[OPTIMING] op=3 count=28 total_ms=2.350 avg_ms=0.0839
+[OPTIMING] op=17 count=28 total_ms=0.713 avg_ms=0.0255
+[OPTIMING] op=8 count=56 total_ms=0.423 avg_ms=0.0076
+[OPTIMING] op=1 count=57 total_ms=0.238 avg_ms=0.0042
+[OPTIMING] op=16 count=28 total_ms=0.079 avg_ms=0.0028
+[OPTIMING] op=0 count=1 total_ms=0.009 avg_ms=0.0088
+[gpu] pos=1 token=185 57.6 ms ops=395
+[OPTIMING] position=2 batch_flush_ms=42.485
+[OPTIMING] op=2 count=196 total_ms=4.762 avg_ms=0.0243
+[OPTIMING] op=9 count=1 total_ms=4.360 avg_ms=4.3598
+[OPTIMING] op=3 count=28 total_ms=2.280 avg_ms=0.0814
+[OPTIMING] op=17 count=28 total_ms=0.698 avg_ms=0.0249
+[OPTIMING] op=8 count=56 total_ms=0.431 avg_ms=0.0077
+[OPTIMING] op=1 count=57 total_ms=0.266 avg_ms=0.0047
+[OPTIMING] op=16 count=28 total_ms=0.070 avg_ms=0.0025
+[OPTIMING] op=0 count=1 total_ms=0.012 avg_ms=0.0123
+[gpu] pos=2 token=42 57.8 ms ops=395
+[OPTIMING] position=3 batch_flush_ms=42.378
+[OPTIMING] op=2 count=196 total_ms=4.916 avg_ms=0.0251
+[OPTIMING] op=9 count=1 total_ms=4.896 avg_ms=4.8961
+[OPTIMING] op=3 count=28 total_ms=2.296 avg_ms=0.0820
+[OPTIMING] op=17 count=28 total_ms=1.039 avg_ms=0.0371
+[OPTIMING] op=8 count=56 total_ms=0.428 avg_ms=0.0076
+[OPTIMING] op=1 count=57 total_ms=0.232 avg_ms=0.0041
+[OPTIMING] op=16 count=28 total_ms=0.075 avg_ms=0.0027
+[OPTIMING] op=0 count=1 total_ms=0.010 avg_ms=0.0097
+[gpu] pos=3 token=99 58.9 ms ops=395
+[gpu] gpu_calls=788 cpu_calls=0 fallback=<none>
+[OPTIMING] position=0 batch_flush_ms=0.000
+[OPTIMING] op=2 count=196 total_ms=1936.146 avg_ms=9.8783
+[OPTIMING] op=9 count=1 total_ms=404.577 avg_ms=404.5771
+[OPTIMING] op=3 count=28 total_ms=2.178 avg_ms=0.0778
+[OPTIMING] op=17 count=28 total_ms=0.913 avg_ms=0.0326
+[OPTIMING] op=8 count=56 total_ms=0.584 avg_ms=0.0104
+[OPTIMING] op=1 count=57 total_ms=0.288 avg_ms=0.0051
+[OPTIMING] op=16 count=28 total_ms=0.108 avg_ms=0.0039
+[OPTIMING] op=0 count=1 total_ms=0.011 avg_ms=0.0105
+[OPTIMING] position=1 batch_flush_ms=0.000
+[OPTIMING] op=2 count=196 total_ms=1876.069 avg_ms=9.5718
+[OPTIMING] op=9 count=1 total_ms=430.319 avg_ms=430.3188
+[OPTIMING] op=3 count=28 total_ms=2.422 avg_ms=0.0865
+[OPTIMING] op=17 count=28 total_ms=0.862 avg_ms=0.0308
+[OPTIMING] op=8 count=56 total_ms=0.568 avg_ms=0.0101
+[OPTIMING] op=1 count=57 total_ms=0.288 avg_ms=0.0051
+[OPTIMING] op=16 count=28 total_ms=0.109 avg_ms=0.0039
+[OPTIMING] op=0 count=1 total_ms=0.019 avg_ms=0.0186
+[OPTIMING] position=2 batch_flush_ms=0.000
+[OPTIMING] op=2 count=196 total_ms=1852.525 avg_ms=9.4517
+[OPTIMING] op=9 count=1 total_ms=388.410 avg_ms=388.4102
+[OPTIMING] op=3 count=28 total_ms=2.614 avg_ms=0.0934
+[OPTIMING] op=17 count=28 total_ms=0.839 avg_ms=0.0300
+[OPTIMING] op=8 count=56 total_ms=0.550 avg_ms=0.0098
+[OPTIMING] op=1 count=57 total_ms=0.278 avg_ms=0.0049
+[OPTIMING] op=16 count=28 total_ms=0.104 avg_ms=0.0037
+[OPTIMING] op=0 count=1 total_ms=0.011 avg_ms=0.0115
+[OPTIMING] position=3 batch_flush_ms=0.000
+[OPTIMING] op=2 count=196 total_ms=1956.489 avg_ms=9.9821
+[OPTIMING] op=9 count=1 total_ms=464.047 avg_ms=464.0473
+[OPTIMING] op=3 count=28 total_ms=2.750 avg_ms=0.0982
+[OPTIMING] op=17 count=28 total_ms=0.905 avg_ms=0.0323
+[OPTIMING] op=8 count=56 total_ms=0.586 avg_ms=0.0105
+[OPTIMING] op=1 count=57 total_ms=0.304 avg_ms=0.0053
+[OPTIMING] op=16 count=28 total_ms=0.120 avg_ms=0.0043
+[OPTIMING] op=0 count=1 total_ms=0.012 avg_ms=0.0121
+[cpu] cpu_calls=788
+pos=0 vocab=128256 finite=128256 gpu_argmax=2 cpu_argmax=2 cos=1.0000000 max_abs=3.099e-06 PASS
+pos=1 vocab=128256 finite=128256 gpu_argmax=8 cpu_argmax=8 cos=0.9994309 max_abs=0.4854 PASS
+pos=2 vocab=128256 finite=128256 gpu_argmax=49358 cpu_argmax=49358 cos=0.9989845 max_abs=0.414 FAIL
+pos=3 vocab=128256 finite=128256 gpu_argmax=65804 cpu_argmax=79468 cos=0.9995291 max_abs=0.3945 FAIL
+VERDICT=PASS_INTERNAL_ONLY
+CERT_STATUS=EXECUTION_PASS_NOT_CERTIFIED
+CERTIFICATION_STATUS=BLOCKED_NO_INDEPENDENT_REFERENCE
+RECEIPT=gpu_certify/full_model_receipt.json
+Released all tensors
+Vulkan resources cleaned up successfully

@@ -1,0 +1,15 @@
+[INGEST_TRACE] begin
+tokens: 1
+[INGEST_TRACE] shard-loader-ready
+[INGEST_TRACE] shard-tensors-ready
+[INGEST_TRACE] tensors-parsed
+[INGEST_TRACE] spec-filled
+[INGEST_TRACE] provenance-ready
+[INGEST_TRACE] tokenizer-ready
+[INGEST_TRACE] arch-detected
+[INGEST_TRACE] graph-built
+[INGEST_TRACE] complete
+CERT_STATUS=BLOCKED_NATIVE_GRAPH
+CERTIFICATION_STATUS=NOT_CERTIFIED
+RECEIPT=F:\rawrxd\evidence\qwen4exp_live_attempt/full_model_receipt.json
+EXIT_CODE=2

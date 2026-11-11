@@ -1,0 +1,65 @@
+BENCHMARK=DEEP2_UNEVEN_TP_GEMV_V4
+DATE_LOCAL=2026-10-19 22:29:27 -04:00
+BENCHMARK_EXE=F:\rawrxd\build_modelroute\bin\Release\deep2_uneven_tp_gemv.exe
+BENCHMARK_EXE_SHA256=2a16ddea93c266a4b83b29328723fd17048b3e44b74c54d9e998c27ece1bbeec
+SHADER_SPV=F:\rawrxd\src\deep2\shaders\deep2_ops.spv
+SHADER_SPV_SHA256=a33063e8ef5f564686daaab49df125df468b54fe530f12b849cb496ca76caaad
+BUILD_COMMAND=cmake --build build_modelroute --config Release --target deep2_uneven_tp_gemv -- /m:4
+BENCHMARK_SOURCE=F:\rawrxd\tools\gpu_profiler\deep2_uneven_tp_gemv.cpp
+BENCHMARK_SOURCE_SHA256=d7fe96f085292952f9301690f687fb533b5d1a243cceaffd8891c9845b05d015
+VULKAN_SOURCE=F:\rawrxd\src\deep2\vulkan_compute.cpp
+VULKAN_SOURCE_SHA256=2d4506b8018c844615fd05f06a976a6d48c0390e9918570d4d942f11230dc694
+VULKAN_HEADER=F:\rawrxd\src\deep2\vulkan_compute.h
+VULKAN_HEADER_SHA256=7b92bdea6a012f5cd08bf41295bb2aaa057d4951274de9836560d02e2e9ceef6
+SHADER_SOURCE=F:\rawrxd\src\deep2\shaders\deep2_ops.comp
+SHADER_SOURCE_SHA256=3be9816ec0edc5ae674a4cd5f67644bc9273d9029c4b124acc47499810c4ecce
+PROFILE_SCRIPT=F:\rawrxd\scripts\profile_deep2_gemv_rga.ps1
+PROFILE_SCRIPT_SHA256=18d1a468c980ded230f4a9a399303f8c6e40f9dc470494498b098cefdf125950
+RGA_VERSION=2.15
+RGA_EXE=C:\Users\Garrett\AppData\Local\RawrXD\tools\RGA-2.15\rga.exe
+RGA_VERSION_OUTPUT=Radeon GPU Analyzer Version: 2.15.0.30
+Radeon GPU Analyzer is a compiler and code analysis tool for OpenCL, DirectX, OpenGL and Vulkan
+
+To view help for Vulkan mode: -h -s vulkan
+To view help for offline Vulkan (GLSL) mode: -h -s vk-offline
+To view help for offline Vulkan (SPIR-V binary) mode: -h -s vk-spv-offline
+To view help for offline Vulkan (SPIR-V text) mode: -h -s vk-spv-txt-offline
+To view help for DirectX 12 mode: -h -s dx12
+To view help for DirectX 11 mode: -h -s dx11
+To view help for DXR mode: -h -s dxr
+To view help for AMDIL mode: -h -s amdil
+To view help for OpenGL mode: -h -s opengl
+To view help for OpenCL Offline mode: -h -s opencl
+To view help for Binary Analysis mode: -h -s bin
+
+To see the current RGA version: --version
+To check for available updates: --updates
+RGA_ARCHIVE_SHA256=1dd6fc63baa3ea00f0c4daf208b6139ca924566dd4305a77da0b6c5e52df2377
+ROWS=1024
+REPETITIONS=30
+LOCAL_ZERO_PAD_MULTIPLE=1
+LOCAL_WIDTH_RANGE=2032..2080
+SPLITS=EVEN_AND_RANK0_PLUS_ONE_RAGGED
+PADDING_METHOD=Benchmark-only: round physical weight-row stride up to PadLocal and zero-fill only the weight tail; input remains logical-width.
+ISA_VARIANT_NOTE=Shader width is a runtime push constant; one ISA output per ASIC covers all widths.
+RGA_MODE=vk-spv-offline; static compiler analysis, not live GPU timing
+RGA_gfx1201_EXIT_CODE=0
+RGA_gfx1201_ISA=F:\rawrxd\evidence\TP_UNEVEN_WIDTH_SWEEP_2026-10-19_FINAL_PAD1_RGA215\gfx1201_deep2_ops.gfx1201_comp.isa
+RGA_gfx1201_ISA_SHA256=86be373ea840ed395dd2e8efc324c4a6215cda11844e83855f244769b64d3ca8
+RGA_gfx1201_STATS=F:\rawrxd\evidence\TP_UNEVEN_WIDTH_SWEEP_2026-10-19_FINAL_PAD1_RGA215\gfx1201_deep2_ops.gfx1201.stats_comp.csv
+RGA_gfx1201_STATS_SHA256=dbe7600ddf6e9c2fc4718926a6605bb19f152b8f94add6f0dbc74c74218af19e
+RGA_gfx1101_EXIT_CODE=0
+RGA_gfx1101_ISA=F:\rawrxd\evidence\TP_UNEVEN_WIDTH_SWEEP_2026-10-19_FINAL_PAD1_RGA215\gfx1101_deep2_ops.gfx1101_comp.isa
+RGA_gfx1101_ISA_SHA256=58281a76346fc11743fa357810f63254dfd736620b6c7c6c9482e2c4a882d37e
+RGA_gfx1101_STATS=F:\rawrxd\evidence\TP_UNEVEN_WIDTH_SWEEP_2026-10-19_FINAL_PAD1_RGA215\gfx1101_deep2_ops.gfx1101.stats_comp.csv
+RGA_gfx1101_STATS_SHA256=8c0f7f8fd71420e65a8780bb71c11a5624f3ace6c42136e370183bacc8bc7579
+COMPETING_PROCESS_BEFORE=0
+BENCHMARK_EXIT_CODE=0
+COMPETING_PROCESS_AFTER=0
+BENCHMARK_LOG=F:\rawrxd\evidence\TP_UNEVEN_WIDTH_SWEEP_2026-10-19_FINAL_PAD1_RGA215\width-sweep.log
+BENCHMARK_LOG_SHA256=74c15358b37913271ab1456e8126474151602e655e753792da894862f0a9b737
+CPU_PARITY_CASES=98/98
+SINGLE_GPU_PARITY_CASES=98/98
+ZERO_PADDED_WEIGHT_TAIL_CASES=98/98
+MICROBENCH_RESULT=PASS
+GATE_10=OPEN

@@ -1,0 +1,19 @@
+﻿{
+    "schema":  "RAWRXD_CERTIFICATION_CAMPAIGN_V1",
+    "model":  "F:\\OllamaModels\\Phi-3-mini-4k-instruct-q8_0.gguf",
+    "count":  1,
+    "passed":  0,
+    "failed":  1,
+    "pass_rate":  0,
+    "results":  [
+                    {
+                        "id":  "task_001",
+                        "defect":  "sign_flip",
+                        "pass":  false,
+                        "exit_code":  1,
+                        "elapsed_ms":  335064,
+                        "receipt":  "F:\\RawrXD\\certification_pilot\\task_001\\evidence\\AUTONOMOUS_REPAIR_RECEIPT.txt"
+                    }
+                ],
+    "completed_utc":  "2026-10-20T23:39:05.0696410Z"
+}

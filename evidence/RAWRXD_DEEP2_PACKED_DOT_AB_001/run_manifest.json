@@ -1,0 +1,12 @@
+﻿{
+    "certificate_id":  "RAWRXD_DEEP2_PACKED_DOT_AB_001",
+    "executable_path":  "F:\\rawrxd\\tmp_build\\modelgenie_ir_executor.exe",
+    "executable_sha256":  "E12E1DA8C5525A60BAF9239C0EE6C083F486F7B8FC6D4BF514FBAEA0E9685FEC",
+    "model_path":  "F:\\rawrxd\\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf",
+    "model_sha256":  "5D33E5F045C7A03351C319AAFC8AFDAD94B69D07BB68F36DC9BB5AF340B343A4",
+    "token_file_sha256":  "5BE2B29CEB55CC0FFDCF7DC81539EE17628F3EDC5E717B4E071BE6A0D0F3B2D9",
+    "reference_path":  "F:\\rawrxd\\evidence\\RAWRXD_REFERENCE_REPRODUCIBILITY_001\\ref_teacher_forced",
+    "count":  20,
+    "default_mode":  "CERTIFIED_VARIANT_A_UNCHANGED",
+    "candidate_mode":  "RAWRXD_PARITY_PACKED_DOT=1"
+}

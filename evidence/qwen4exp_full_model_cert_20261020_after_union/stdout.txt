@@ -1,0 +1,3 @@
+tokens: 1
+arch=qwen4exp blocks=48 embd=2560 vocab=248320 experts=512 used=10
+BIND_FAIL(gpu): graph contains unimplemented operators: Unsupported node: qwen4exp requires QSA, PLE, hyperconnection, and sparse-MoE operators; generic graph is prohibited; 

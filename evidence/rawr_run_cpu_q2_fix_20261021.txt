@@ -1,0 +1,49 @@
+[RAWR_MODEL_RESOLVE] REQUEST=llama3.2:3b PATH=F:\OllamaModels\_r1_iso\03_llama32_3b\llama3.2-3b-Q2_K.gguf
+[RAWR_RUN_ROUTE] MODEL=llama3.2:3b WORKSPACE=F:\rawrxd MODE=STREAM REQUEST_LEN=18
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 16 GEMV kernels, 16 dequant kernels
+[Deep2Engine] GGUF mapped: arch=llama shards=1 tensors=255 layers=28 hidden=3072 heads=24 kv_heads=8 vocab=128256
+ARCH=llama
+HIDDEN=3072
+LAYERS=28
+HEADS=24
+KV_HEADS=8
+HEAD_DIM=128
+GQA_GROUP=3
+FFN_DIM=8192
+ROPE_THETA=500000
+ROPE_SCALING=1
+ROPE_DIM=128
+ROPE_NEOX=1
+RMS_EPS=1e-05
+Q_BIAS=absent
+K_BIAS=absent
+V_BIAS=absent
+TIE_EMBED=1
+GEN_ENTER maxOut=1
+[D2_STATS] stage=pre_norm layer=0 count=3072 nonfinite=0 max_abs=2.7295258 first=0.0492695905
+LINEARW name=blk.0.attn_q.weight rows=3072 cols=3072 type=10
+LINEARW_RESULT=CPU_FALLBACK name=blk.0.attn_q.weight
+[LinearW_DEBUG] name=blk.0.attn_q.weight rows=3072 cols=3072 type=10 outDim=3072
+[Deep2Engine] forward failed: LinearW: non-finite output
+GEN_PREFILL_FORWARD_FAIL p=0
+
+RAWR_RUN_STREAM_001_RECEIPT
+MODEL_RESOLVED=1
+DEEP2_ENGINE=1
+VULKAN_INFERENCE=0
+CPU_DEMO_ENGINE=0
+MODEL_FALLBACK=0
+DEVICE=cpu
+CONTEXT_ADMITTED=1
+CONTEXT_LIMIT=128
+STREAM_CALLBACK=0
+PROMPT_TOKENS=4
+GENERATED_TOKENS=0
+GENERATION_MS=0.000
+DECODE_TPS=0.000
+UNPLANNED_FALLBACKS=0
+STRICT_GPU_VIOLATIONS=0
+GEN_EXIT=1
+RAWR_RUN_STREAM_001=FAIL
+ERROR=generation produced no tokens; inspect engine diagnostics

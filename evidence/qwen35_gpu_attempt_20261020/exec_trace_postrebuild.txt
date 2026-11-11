@@ -1,0 +1,362 @@
+
+===== MODEL =====
+path=F:\OllamaModels\Qwen3.5-40B-Claude-4.6-Opus-Deckard-Heretic-Uncensored-Thinking.Q4_K_M.gguf
+architecture=qwen35
+block_count=96
+vocab=248320
+seed_tokens=12
+ingest_ms=72183.8
+bind_ms=0.6
+qwen_geometry:
+[GEOMETRY] blk.0.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720
+[GEOMETRY] blk.0.attn_norm.weight dims=[5120] type=0 bytes=20480
+[GEOMETRY] blk.0.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800
+[GEOMETRY] blk.0.ffn_down.weight dims=[17408,5120] type=14 bytes=73113600
+[GEOMETRY] blk.0.ffn_gate.weight dims=[5120,17408] type=12 bytes=50135040
+[GEOMETRY] blk.0.ffn_up.weight dims=[5120,17408] type=12 bytes=50135040
+[GEOMETRY] blk.0.post_attention_norm.weight dims=[5120] type=0 bytes=20480
+[GEOMETRY] blk.0.ssm_a dims=[48] type=0 bytes=192
+[GEOMETRY] blk.0.ssm_alpha.weight dims=[5120,48] type=12 bytes=138240
+[GEOMETRY] blk.0.ssm_beta.weight dims=[5120,48] type=12 bytes=138240
+[GEOMETRY] blk.0.ssm_conv1d.weight dims=[4,10240] type=0 bytes=163840
+[GEOMETRY] blk.0.ssm_dt.bias dims=[48] type=0 bytes=192
+[GEOMETRY] blk.0.ssm_norm.weight dims=[128] type=0 bytes=512
+[GEOMETRY] blk.0.ssm_out.weight dims=[6144,5120] type=12 bytes=17694720
+  blk.1.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=1
+  blk.1.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=1
+  blk.1.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=1
+  blk.2.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=2
+  blk.2.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=2
+  blk.2.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=2
+  blk.3.attn_output.weight dims=[6144,5120] type=12 bytes=17694720 block=3
+  blk.3.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=3
+  blk.4.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=4
+  blk.4.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=4
+  blk.4.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=4
+  blk.5.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=5
+  blk.5.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=5
+  blk.5.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=5
+  blk.6.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=6
+  blk.6.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=6
+  blk.6.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=6
+  blk.7.attn_output.weight dims=[6144,5120] type=12 bytes=17694720 block=7
+  blk.7.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=7
+  blk.8.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=8
+  blk.8.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=8
+  blk.8.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=8
+  blk.9.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=9
+  blk.9.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=9
+  blk.9.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=9
+  blk.10.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=10
+  blk.10.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=10
+  blk.10.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=10
+  blk.11.attn_output.weight dims=[6144,5120] type=12 bytes=17694720 block=11
+  blk.11.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=11
+  blk.12.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=12
+  blk.12.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=12
+  blk.12.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=12
+  blk.13.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=13
+  blk.13.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=13
+  blk.13.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=13
+  blk.14.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=14
+  blk.14.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=14
+  blk.14.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=14
+  blk.15.attn_output.weight dims=[6144,5120] type=12 bytes=17694720 block=15
+  blk.15.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=15
+  blk.16.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=16
+  blk.16.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=16
+  blk.16.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=16
+  blk.17.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=17
+  blk.17.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=17
+  blk.17.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=17
+  blk.18.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=18
+  blk.18.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=18
+  blk.18.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=18
+  blk.19.attn_output.weight dims=[6144,5120] type=12 bytes=17694720 block=19
+  blk.19.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=19
+  blk.20.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=20
+  blk.20.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=20
+  blk.20.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=20
+  blk.21.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=21
+  blk.21.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=21
+  blk.21.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=21
+  blk.22.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=22
+  blk.22.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=22
+  blk.22.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=22
+  blk.23.attn_output.weight dims=[6144,5120] type=12 bytes=17694720 block=23
+  blk.23.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=23
+  blk.24.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=24
+  blk.24.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=24
+  blk.24.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=24
+  blk.25.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=25
+  blk.25.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=25
+  blk.25.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=25
+  blk.26.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=26
+  blk.26.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=26
+  blk.26.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=26
+  blk.27.attn_output.weight dims=[6144,5120] type=12 bytes=17694720 block=27
+  blk.27.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=27
+  blk.28.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=28
+  blk.28.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=28
+  blk.28.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=28
+  blk.29.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=29
+  blk.29.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=29
+  blk.29.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=29
+  blk.30.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=30
+  blk.30.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=30
+  blk.30.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=30
+  blk.31.attn_output.weight dims=[6144,5120] type=12 bytes=17694720 block=31
+  blk.31.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=31
+  blk.32.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=32
+  blk.32.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=32
+  blk.32.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=32
+  blk.33.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=33
+  blk.33.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=33
+  blk.33.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=33
+  blk.34.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=34
+  blk.34.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=34
+  blk.34.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=34
+  blk.35.attn_output.weight dims=[6144,5120] type=12 bytes=17694720 block=35
+  blk.35.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=35
+  blk.36.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=36
+  blk.36.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=36
+  blk.36.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=36
+  blk.37.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=37
+  blk.37.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=37
+  blk.37.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=37
+  blk.38.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=38
+  blk.38.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=38
+  blk.38.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=38
+  blk.39.attn_output.weight dims=[6144,5120] type=12 bytes=17694720 block=39
+  blk.39.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=39
+  blk.40.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=40
+  blk.40.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=40
+  blk.40.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=40
+  blk.41.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=41
+  blk.41.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=41
+  blk.41.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=41
+  blk.42.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=42
+  blk.42.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=42
+  blk.42.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=42
+  blk.43.attn_output.weight dims=[6144,5120] type=12 bytes=17694720 block=43
+  blk.43.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=43
+  blk.44.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=44
+  blk.44.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=44
+  blk.44.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=44
+  blk.45.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=45
+  blk.45.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=45
+  blk.45.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=45
+  blk.46.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=46
+  blk.46.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=46
+  blk.46.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=46
+  blk.47.attn_output.weight dims=[6144,5120] type=12 bytes=17694720 block=47
+  blk.47.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=47
+  blk.48.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=48
+  blk.48.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=48
+  blk.48.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=48
+  blk.49.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=49
+  blk.49.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=49
+  blk.49.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=49
+  blk.50.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=50
+  blk.50.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=50
+  blk.50.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=50
+  blk.51.attn_output.weight dims=[6144,5120] type=12 bytes=17694720 block=51
+  blk.51.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=51
+  blk.52.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=52
+  blk.52.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=52
+  blk.52.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=52
+  blk.53.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=53
+  blk.53.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=53
+  blk.53.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=53
+  blk.54.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=54
+  blk.54.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=54
+  blk.54.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=54
+  blk.55.attn_output.weight dims=[6144,5120] type=12 bytes=17694720 block=55
+  blk.55.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=55
+  blk.56.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=56
+  blk.56.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=56
+  blk.56.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=56
+  blk.57.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=57
+  blk.57.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=57
+  blk.57.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=57
+  blk.58.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=58
+  blk.58.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=58
+  blk.58.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=58
+  blk.59.attn_output.weight dims=[6144,5120] type=12 bytes=17694720 block=59
+  blk.59.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=59
+  blk.60.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=60
+  blk.60.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=60
+  blk.60.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=60
+  blk.61.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=61
+  blk.61.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=61
+  blk.61.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=61
+  blk.62.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=62
+  blk.62.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=62
+  blk.62.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=62
+  blk.63.attn_output.weight dims=[6144,5120] type=12 bytes=17694720 block=63
+  blk.63.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=63
+  blk.64.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=64
+  blk.64.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=64
+  blk.64.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=64
+  blk.65.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=65
+  blk.65.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=65
+  blk.65.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=65
+  blk.66.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=66
+  blk.66.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=66
+  blk.66.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=66
+  blk.67.attn_output.weight dims=[6144,5120] type=12 bytes=17694720 block=67
+  blk.67.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=67
+  blk.68.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=68
+  blk.68.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=68
+  blk.68.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=68
+  blk.69.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=69
+  blk.69.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=69
+  blk.69.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=69
+  blk.70.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=70
+  blk.70.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=70
+  blk.70.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=70
+  blk.71.attn_output.weight dims=[6144,5120] type=12 bytes=17694720 block=71
+  blk.71.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=71
+  blk.72.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=72
+  blk.72.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=72
+  blk.72.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=72
+  blk.73.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=73
+  blk.73.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=73
+  blk.73.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=73
+  blk.74.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=74
+  blk.74.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=74
+  blk.74.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=74
+  blk.75.attn_output.weight dims=[6144,5120] type=12 bytes=17694720 block=75
+  blk.75.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=75
+  blk.76.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=76
+  blk.76.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=76
+  blk.76.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=76
+  blk.77.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=77
+  blk.77.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=77
+  blk.77.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=77
+  blk.78.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=78
+  blk.78.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=78
+  blk.78.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=78
+  blk.79.attn_output.weight dims=[6144,5120] type=12 bytes=17694720 block=79
+  blk.79.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=79
+  blk.80.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=80
+  blk.80.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=80
+  blk.80.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=80
+  blk.81.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=81
+  blk.81.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=81
+  blk.81.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=81
+  blk.82.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=82
+  blk.82.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=82
+  blk.82.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=82
+  blk.83.attn_output.weight dims=[6144,5120] type=12 bytes=17694720 block=83
+  blk.83.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=83
+  blk.84.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=84
+  blk.84.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=84
+  blk.84.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=84
+  blk.85.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=85
+  blk.85.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=85
+  blk.85.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=85
+  blk.86.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=86
+  blk.86.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=86
+  blk.86.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=86
+  blk.87.attn_output.weight dims=[6144,5120] type=12 bytes=17694720 block=87
+  blk.87.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=87
+  blk.88.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=88
+  blk.88.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=88
+  blk.88.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=88
+  blk.89.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=89
+  blk.89.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=89
+  blk.89.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=89
+  blk.90.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=90
+  blk.90.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=90
+  blk.90.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=90
+  blk.91.attn_output.weight dims=[6144,5120] type=12 bytes=17694720 block=91
+  blk.91.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=91
+  blk.92.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=92
+  blk.92.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=92
+  blk.92.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=92
+  blk.93.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=93
+  blk.93.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=93
+  blk.93.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=93
+  blk.94.attn_gate.weight dims=[5120,6144] type=12 bytes=17694720 block=94
+  blk.94.attn_qkv.weight dims=[5120,10240] type=13 bytes=36044800 block=94
+  blk.94.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=94
+  blk.95.attn_output.weight dims=[6144,5120] type=12 bytes=17694720 block=95
+  blk.95.post_attention_norm.weight dims=[5120] type=0 bytes=20480 block=95
+
+===== EXECUTION: prefill =====
+requested_backend=gpu-first
+ops_total=1059 ops_bound=1059 ops_unbound=0
+weights_resolved=1275 weights_missing=0
+unsupported_operations=0
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+[quant-row8] shader=F:\rawrxd\tools\shaders\quant_dot_row8_q6tile.spv q6_shared=1
+Quant-dot pipeline and permanent descriptor system initialized successfully
+[SHADER_PATH] ops=F:/rawrxd/src/deep2/shaders\deep2_ops.spv q=F:/rawrxd/src/deep2/shaders\deep2_qgemv.spv qb=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch.spv q4r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch4row.spv q8r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch8row.spv qn=F:/rawrxd/src/deep2/shaders\deep2_qgemv_nvfp4.spv am=F:/rawrxd/src/deep2/shaders\deep2_argmax.spv so=F:/rawrxd/src/deep2/shaders\deep2_spec_ops.spv sa=F:/rawrxd/src/deep2/shaders\deep2_spec_attn.spv ac=F:/rawrxd/src/deep2/shaders\deep2_spec_accept.spv gd=F:/rawrxd/src/deep2/shaders\deep2_qwen4exp_gdn.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1 qn=1 gdn=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+prefill_mode=PrefillBatch
+input_tokens=1
+layer_count=96
+total_op_executions=0
+op_executions_per_token=0.00
+op_executions_per_token_per_layer=0.0000
+prefill_shape=NO_EXECUTION_OBSERVED (no receipts emitted)
+prefill_ms=25038.0
+prefill_tps=0.04
+
+===== EXECUTION: dispatch receipts =====
+cpu_operations=0
+gpu_dispatches=984
+vulkan_tensor_ops=0
+cpu_tensor_ops=0
+host_descriptor_ops=0
+other_backend_ops=0
+ops_without_dispatch_receipt=0
+forced_host_pin=false
+gpu_device=
+gpu_rows=0 cpu_rows=0
+unexplained_fallbacks=0
+cold_start_ms=0.0 steady_kernel_ms=0.000 dispatch_ms=0.000
+n===== KV_CACHE =====
+position_counter=1 (not a cache witness)
+kv_blocks=96
+kv_rows_block0=0
+kv_rows_max_over_blocks=1
+kv_resident_bytes=196608
+kv_leading_zero_rows_sampled=0
+prefill_committed_positions=YES (kv rows == tokens)
+
+===== EXECUTION: decode =====
+decode_tokens=0
+decode_ms=0.0
+decode_tps=0.000
+gpu_dispatches_delta=0
+cpu_operations_delta=0
+matrix_rows_delta=0
+executor_gpu_ops_per_token=0.0 (NOT queue submissions)
+sample=
+
+===== RESULT =====
+actual_backend=NO_DISPATCH_RECEIPT
+slowest_operations (by reported tensor size):
+task_tps=0.010
+nEXEC_TRUTH_TRACE=COMPLETE
+GATE_RESIDENCY=PARTIAL
+GATE_EXECUTION=FAIL
+GATE_CONTEXT=PARTIAL
+GATE_TOOL=N/A
+GATE_RECOVERY=N/A
+FINAL_VERDICT=FAIL
+Released all tensors
+Vulkan resources cleaned up successfully

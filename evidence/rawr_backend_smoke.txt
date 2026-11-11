@@ -1,0 +1,5 @@
+[StreamEngine] Shutdown
+Mode:    auto
+Deep2:   available (http://127.0.0.1:11436)
+Ollama:  available (http://127.0.0.1:11434)
+Active:  deep2-native

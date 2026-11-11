@@ -1,0 +1,43 @@
+{
+  "schema": "RAWRXD_MODEL_SELECTOR_UI_004",
+  "timestamp": "2026-10-23T21:48:27.5730142Z",
+  "git_head": "cb885b5b10334ffdcf958cab9d273b3f1eb37dce",
+  "working_tree_dirty": true,
+  "executable": "F:\\rawrxd\\build_ide\\bin\\RawrXD-Win32IDE-Native.exe",
+  "executable_sha256": "151D0665C0911D3F8A4C7045DABEF9B38AFF043FBFB8216234D1D06CCFB034C3",
+  "chat_selector": {
+    "control_id": 1206,
+    "label": "Chat model:",
+    "x": 95,
+    "y": 35,
+    "width": 200,
+    "height": 24,
+    "item_count_after_discovery": 201,
+    "native_show_dropdown": true,
+    "physical_mouse_opened": true
+  },
+  "ghosttext_selector": {
+    "control_id": 1207,
+    "label": "GhostText model:",
+    "x": 95,
+    "y": 62,
+    "width": 200,
+    "height": 24,
+    "item_count": 204,
+    "native_show_dropdown": true,
+    "physical_mouse_opened": true,
+    "rows": [
+      "GhostText: Off",
+      "GhostText: Follow Chat",
+      "GhostText: Auto Local",
+      "discovered local/blob/Ollama/Kilo entries"
+    ]
+  },
+  "token_slider_control_id": 1209,
+  "layout": {
+    "cloud_consent_y": 89,
+    "max_tokens_caption_y": 110,
+    "overlap_removed": true
+  },
+  "verdict": "SELECTORS_VISIBLE_AND_INTERACTIVE"
+}

@@ -1,0 +1,101 @@
+﻿{
+    "schema":  "rawr.native.c07.cert/1",
+    "gate":  "C07",
+    "suite":  "RAWR_NATIVE_COMPILER_STAGE1",
+    "generated_utc":  "2026-10-22T00:06:50Z",
+    "result":  {
+                   "status":  "NOT_CERTIFIED",
+                   "passed":  6,
+                   "failed":  2,
+                   "total":  8,
+                   "verdict":  "C07 is not certified: the first-party assembler emits invalid instruction encodings"
+               },
+    "build":  {
+                  "script":  "compilers/native_compiler/tools/build_c07_only.bat",
+                  "compiler":  "MSVC 19.44 (vcvars64), /std:c++17 /EHsc /W3 /O2 /GS-",
+                  "units":  [
+                                "tests/c07_e2e_test.cpp",
+                                "rawrstd/src/sys.cpp",
+                                "rawrstd/src/string.cpp",
+                                "rawrstd/src/sha256.cpp",
+                                "src/object/CoffWriter.cpp",
+                                "src/asm/X64Assembler.cpp"
+                            ],
+                  "linker":  "F:\\rawrxd\\_pre_merge_backup\\toolchain\\from_scratch\\phase2_linker\\build\\rawrxd_link.exe",
+                  "linker_sha256":  "B3DF04A3C42D4F36A5175491C4991DD43D2549135FE5E3460995DEA531D9B9E9"
+              },
+    "artifacts":  {
+                      "object":  {
+                                     "path":  "F:\\rawrxd\\compilers\\build\\rawr_stage1/c07_e2e.obj",
+                                     "sha256":  "52260B20BE447B0EA7F615D13DB66809D938DAF7FAE6A14C570A67BCDC6E938E",
+                                     "bytes":  160
+                                 },
+                      "executable":  {
+                                         "path":  "F:\\rawrxd\\compilers\\build\\rawr_stage1/c07_e2e.exe",
+                                         "sha256":  "1FF147566A45ED0FC4FE35BD8CC404AAB564F6D6403218EA9305638C53ACAEB1",
+                                         "bytes":  2048
+                                     },
+                      "fixture_e2e":  {
+                                          "path":  "F:\\rawrxd\\compilers\\build\\rawr_stage1/c07_e2e.asm",
+                                          "bytes":  152
+                                      },
+                      "fixture_arith":  {
+                                            "path":  "F:\\rawrxd\\compilers\\build\\rawr_stage1/c07_arith.asm",
+                                            "bytes":  245
+                                        }
+                  },
+    "exit_codes":  {
+                       "c07_test_exit":  1,
+                       "produced_executable_exit":  "0xC0000005 (access violation)",
+                       "expected_e2e_exit":  42,
+                       "expected_arith_exit":  41
+                   },
+    "defects_closed":  [
+                           {
+                               "id":  "C07-1",
+                               "title":  "the assembly fixture was written with sizeof on a pointer, truncating it to 7 bytes",
+                               "file":  "compilers/native_compiler/tests/c07_e2e_test.cpp",
+                               "function":  "WriteFixture",
+                               "cause":  "sizeof(source) on a const char* is the pointer size, so 7 bytes were written; the assembler then produced an empty .text with no symbols and the linker fell back to its default entry stub",
+                               "fix":  "the length now comes from strlen",
+                               "verification":  "gate assertions 1 and 2"
+                           },
+                           {
+                               "id":  "C07-2",
+                               "title":  "cmd.exe stripped the outer quotes of the link command",
+                               "file":  "compilers/native_compiler/tests/c07_e2e_test.cpp",
+                               "function":  "WrapForCmd",
+                               "cause":  "std::system goes through cmd.exe, which removes the first and last quote of a string that begins and ends with one, so a quoted executable path lost its closing quote",
+                               "fix":  "the whole command is wrapped in one more pair of quotes; paths use backslashes",
+                               "verification":  "gate assertion 3"
+                           }
+                       ],
+    "defects_open":  [
+                         {
+                             "id":  "C07-3",
+                             "title":  "the ALU immediate encodings are wrong",
+                             "file":  "compilers/native_compiler/src/asm/X64Assembler.cpp",
+                             "function":  "EncodeAlu",
+                             "evidence":  "sub rsp,32 emitted as 48 A9 E0 20 00 00 00 (TEST) instead of 48 83 EC 20; add rsp,32 emitted as 48 81 E0 20 00 00 00 (AND) instead of 48 83 C4 20; the ModRM reg field is 4 (AND) where it should be the operation",
+                             "required_fix":  "select the correct opcode and /reg field per mnemonic"
+                         },
+                         {
+                             "id":  "C07-4",
+                             "title":  "mov reg, imm mis-selects the register and mangles the immediate",
+                             "file":  "compilers/native_compiler/src/asm/X64Assembler.cpp",
+                             "function":  "EncodeMov",
+                             "evidence":  "mov ecx,42 emitted as B8 01 2A 00 00 00 instead of B9 2A 00 00 00: opcode 0xB8 (eax) with a stray 0x01 before the immediate",
+                             "required_fix":  "opcode 0xB8+reg and four immediate bytes with nothing in front"
+                         },
+                         {
+                             "id":  "C07-5",
+                             "title":  "call to an external symbol carries no relocation",
+                             "file":  "compilers/native_compiler/src/asm/X64Assembler.cpp",
+                             "function":  "assembleX64File and the call encoding",
+                             "evidence":  "the in-memory section carries relocs=1, but the written object has aux=0 on every symbol, so the relocation is lost; the call is emitted as a direct rel32 (E8 00 00 00 00) where the certified fixture uses the IAT-indirect FF 15",
+                             "required_fix":  "write the relocation entries, and emit the call so the linker can resolve it"
+                         }
+                     ],
+    "report":  "certification/C07_ROOT_CAUSE.md",
+    "log":  "certification/RAWR_NATIVE_C07_CERT_001.log"
+}

@@ -1,0 +1,22 @@
+{
+  "schema": "DEEP2_Q2K_BLOCK_PARITY_RECOVERY_003",
+  "timestamp": "2026-10-23T22:07:31.1977229Z",
+  "source_revision": "cb885b5b10334ffdcf958cab9d273b3f1eb37dce",
+  "model_sha256": "EE1CA8B716933587127F6FEB9FF5A247F1E4460E72DCF6293331B9617F8A8AA2",
+  "tensor": "blk.0.ffn_up.weight",
+  "ggml_type": 10,
+  "rows": 8192,
+  "cols": 3072,
+  "row_bytes": 1008,
+  "block_elements": 256,
+  "block_bytes": 84,
+  "blocks_per_row": 12,
+  "total_blocks": 98304,
+  "storage_contract": "PASS",
+  "selected_shader": "deep2_qgemv",
+  "cpu_reference": "FINITE",
+  "gpu_block_decode": "NOT_RUN",
+  "production_gemv": "FAIL_NONFINITE_OUTPUT",
+  "root_cause": "UNISOLATED",
+  "certification": "BLOCKED"
+}

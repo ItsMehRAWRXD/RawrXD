@@ -1,0 +1,10 @@
+{
+  "FULL_MODEL_CERTIFIER": "F:\\rawrxd\\build\\bin\\Release\\deep2_gpu_certify.exe",
+  "MODEL": "F:\\OllamaModels\\Qwen3.8-Flash-Next-GGUF\\Qwen3.8-Flash-Next-AD-IQ1_M-M64\\Qwen3.8-Flash-Next-AD-IQ1_M-M64-00001-of-00002.gguf",
+  "EXIT_CODE": 1,
+  "TIMED_OUT": false,
+  "ELAPSED_MS": 160813,
+  "STDOUT_BYTES": 255,
+  "STDERR_BYTES": 0,
+  "UTC": "2026-10-21T00:25:58.6734329Z"
+}

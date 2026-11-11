@@ -1,0 +1,684 @@
+
+===== MODEL =====
+path=F:\models\gguf\library__cheetah-stealth-agentic-q5km-full__latest.gguf
+architecture=llama
+block_count=28
+vocab=128256
+seed_tokens=11
+ingest_ms=6306.5
+bind_ms=0.2
+
+===== EXECUTION: prefill =====
+requested_backend=gpu-first
+ops_total=395 ops_bound=395 ops_unbound=0
+weights_resolved=255 weights_missing=0
+unsupported_operations=0
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+[quant-row8] shader=F:\rawrxd\tools\shaders\quant_dot_row8_q6tile.spv q6_shared=1
+Quant-dot pipeline and permanent descriptor system initialized successfully
+[quant] w=blk.0.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.0.attn_q.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=337 gpu=0 cpu=-14.7562 diff=14.7562
+[quant] w=blk.0.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.0.attn_k.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=846 gpu=0 cpu=-16.4532 diff=16.4532
+[quant] w=blk.0.attn_v.weight kind=1 n_in=3072 n_out=1024 n_blk=12 rb=2520 wbytes=2580480 need=2580480
+[GPU-DIVERGE] w=blk.0.attn_v.weight kind=1 n_in=3072 n_out=1024 nan=0 worst_row=911 gpu=0 cpu=-0.727217 diff=0.727217
+[quant] w=blk.0.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.0.attn_output.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=221 gpu=0 cpu=-0.209374 diff=0.209374
+[quant] w=blk.0.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.0.ffn_gate.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=4701 gpu=0 cpu=-2.04338 diff=2.04338
+[quant] w=blk.0.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.0.ffn_up.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=6198 gpu=0 cpu=-1.94249 diff=1.94249
+[quant] w=blk.0.ffn_down.weight kind=1 n_in=8192 n_out=3072 n_blk=32 rb=6720 wbytes=20643840 need=20643840
+[GPU-DIVERGE] w=blk.0.ffn_down.weight kind=1 n_in=8192 n_out=3072 nan=0 worst_row=221 gpu=0 cpu=-0.895896 diff=0.895896
+[quant] w=blk.1.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.1.attn_q.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=847 gpu=0 cpu=-7.76202 diff=7.76202
+[quant] w=blk.1.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.1.attn_k.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=334 gpu=0 cpu=-9.91761 diff=9.91761
+[quant] w=blk.1.attn_v.weight kind=1 n_in=3072 n_out=1024 n_blk=12 rb=2520 wbytes=2580480 need=2580480
+[GPU-DIVERGE] w=blk.1.attn_v.weight kind=1 n_in=3072 n_out=1024 nan=0 worst_row=1000 gpu=0 cpu=1.92151 diff=1.92151
+[quant] w=blk.1.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.1.attn_output.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=221 gpu=0 cpu=1.22614 diff=1.22614
+[quant] w=blk.1.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.1.ffn_gate.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=1419 gpu=0 cpu=13.5165 diff=13.5165
+[quant] w=blk.1.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.1.ffn_up.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=1419 gpu=0 cpu=-28.7599 diff=28.7599
+[quant] w=blk.1.ffn_down.weight kind=1 n_in=8192 n_out=3072 n_blk=32 rb=6720 wbytes=20643840 need=20643840
+[GPU-DIVERGE] w=blk.1.ffn_down.weight kind=1 n_in=8192 n_out=3072 nan=0 worst_row=588 gpu=0 cpu=263.961 diff=263.961
+[quant] w=blk.2.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.2.attn_q.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=1100 gpu=0 cpu=1.91535 diff=1.91535
+[quant] w=blk.2.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.2.attn_k.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=208 gpu=0 cpu=1.7506 diff=1.7506
+[quant] w=blk.2.attn_v.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.2.attn_v.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=136 gpu=0 cpu=-0.211807 diff=0.211807
+[quant] w=blk.2.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.2.attn_output.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=0.263135 diff=0.263135
+[quant] w=blk.2.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.2.ffn_gate.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=1892 gpu=0 cpu=-1.08807 diff=1.08807
+[quant] w=blk.2.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.2.ffn_up.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=3358 gpu=0 cpu=1.3197 diff=1.3197
+[quant] w=blk.2.ffn_down.weight kind=0 n_in=8192 n_out=3072 n_blk=32 rb=4608 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.2.ffn_down.weight kind=0 n_in=8192 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=1.25007 diff=1.25007
+[quant] w=blk.3.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.3.attn_q.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=336 gpu=0 cpu=-1.80213 diff=1.80213
+[quant] w=blk.3.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.3.attn_k.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=339 gpu=0 cpu=2.68879 diff=2.68879
+[quant] w=blk.3.attn_v.weight kind=1 n_in=3072 n_out=1024 n_blk=12 rb=2520 wbytes=2580480 need=2580480
+[GPU-DIVERGE] w=blk.3.attn_v.weight kind=1 n_in=3072 n_out=1024 nan=0 worst_row=1010 gpu=0 cpu=-0.210784 diff=0.210784
+[quant] w=blk.3.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.3.attn_output.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=454 gpu=0 cpu=-0.134187 diff=0.134187
+[quant] w=blk.3.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.3.ffn_gate.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=7792 gpu=0 cpu=2.94611 diff=2.94611
+[quant] w=blk.3.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.3.ffn_up.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=7321 gpu=0 cpu=0.74956 diff=0.74956
+[quant] w=blk.3.ffn_down.weight kind=0 n_in=8192 n_out=3072 n_blk=32 rb=4608 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.3.ffn_down.weight kind=0 n_in=8192 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=1.1865 diff=1.1865
+[quant] w=blk.4.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.4.attn_q.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=974 gpu=0 cpu=1.66657 diff=1.66657
+[quant] w=blk.4.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.4.attn_k.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=85 gpu=0 cpu=2.64831 diff=2.64831
+[quant] w=blk.4.attn_v.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.4.attn_v.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=370 gpu=0 cpu=-0.3777 diff=0.3777
+[quant] w=blk.4.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.4.attn_output.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=454 gpu=0 cpu=-0.187177 diff=0.187177
+[quant] w=blk.4.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.4.ffn_gate.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=1 gpu=0 cpu=0.705722 diff=0.705722
+[quant] w=blk.4.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.4.ffn_up.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=5443 gpu=0 cpu=-1.11702 diff=1.11702
+[quant] w=blk.4.ffn_down.weight kind=1 n_in=8192 n_out=3072 n_blk=32 rb=6720 wbytes=20643840 need=20643840
+[GPU-DIVERGE] w=blk.4.ffn_down.weight kind=1 n_in=8192 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=1.51806 diff=1.51806
+[quant] w=blk.5.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.5.attn_q.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=3020 gpu=0 cpu=-1.78801 diff=1.78801
+[quant] w=blk.5.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.5.attn_k.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=473 gpu=0 cpu=-2.87684 diff=2.87684
+[quant] w=blk.5.attn_v.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.5.attn_v.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=179 gpu=0 cpu=0.609748 diff=0.609748
+[quant] w=blk.5.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.5.attn_output.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=1935 gpu=0 cpu=0.186767 diff=0.186767
+[quant] w=blk.5.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.5.ffn_gate.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=1577 gpu=0 cpu=1.35795 diff=1.35795
+[quant] w=blk.5.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.5.ffn_up.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=3982 gpu=0 cpu=-0.945592 diff=0.945592
+[quant] w=blk.5.ffn_down.weight kind=0 n_in=8192 n_out=3072 n_blk=32 rb=4608 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.5.ffn_down.weight kind=0 n_in=8192 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=1.38573 diff=1.38573
+[quant] w=blk.6.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.6.attn_q.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=3020 gpu=0 cpu=-2.08805 diff=2.08805
+[quant] w=blk.6.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.6.attn_k.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=88 gpu=0 cpu=2.78453 diff=2.78453
+[quant] w=blk.6.attn_v.weight kind=1 n_in=3072 n_out=1024 n_blk=12 rb=2520 wbytes=2580480 need=2580480
+[GPU-DIVERGE] w=blk.6.attn_v.weight kind=1 n_in=3072 n_out=1024 nan=0 worst_row=430 gpu=0 cpu=0.633676 diff=0.633676
+[quant] w=blk.6.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.6.attn_output.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=454 gpu=0 cpu=-0.250522 diff=0.250522
+[quant] w=blk.6.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.6.ffn_gate.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=7533 gpu=0 cpu=1.49909 diff=1.49909
+[quant] w=blk.6.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.6.ffn_up.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=3357 gpu=0 cpu=-1.74078 diff=1.74078
+[quant] w=blk.6.ffn_down.weight kind=0 n_in=8192 n_out=3072 n_blk=32 rb=4608 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.6.ffn_down.weight kind=0 n_in=8192 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=2.11297 diff=2.11297
+[quant] w=blk.7.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.7.attn_q.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=204 gpu=0 cpu=-2.09206 diff=2.09206
+[quant] w=blk.7.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.7.attn_k.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=979 gpu=0 cpu=3.33021 diff=3.33021
+[quant] w=blk.7.attn_v.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.7.attn_v.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=147 gpu=0 cpu=0.826463 diff=0.826463
+[quant] w=blk.7.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.7.attn_output.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=0.472145 diff=0.472145
+[quant] w=blk.7.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.7.ffn_gate.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=3829 gpu=0 cpu=2.07404 diff=2.07404
+[quant] w=blk.7.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.7.ffn_up.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=563 gpu=0 cpu=-1.16144 diff=1.16144
+[quant] w=blk.7.ffn_down.weight kind=1 n_in=8192 n_out=3072 n_blk=32 rb=6720 wbytes=20643840 need=20643840
+[GPU-DIVERGE] w=blk.7.ffn_down.weight kind=1 n_in=8192 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=1.47475 diff=1.47475
+[quant] w=blk.8.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.8.attn_q.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=716 gpu=0 cpu=1.72783 diff=1.72783
+[quant] w=blk.8.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.8.attn_k.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=595 gpu=0 cpu=3.47552 diff=3.47552
+[quant] w=blk.8.attn_v.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.8.attn_v.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=353 gpu=0 cpu=0.941443 diff=0.941443
+[quant] w=blk.8.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.8.attn_output.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=454 gpu=0 cpu=-0.195906 diff=0.195906
+[quant] w=blk.8.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.8.ffn_gate.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=5298 gpu=0 cpu=1.64588 diff=1.64588
+[quant] w=blk.8.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.8.ffn_up.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=7013 gpu=0 cpu=-1.1848 diff=1.1848
+[quant] w=blk.8.ffn_down.weight kind=0 n_in=8192 n_out=3072 n_blk=32 rb=4608 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.8.ffn_down.weight kind=0 n_in=8192 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=1.53603 diff=1.53603
+[quant] w=blk.9.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.9.attn_q.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=2126 gpu=0 cpu=-1.94152 diff=1.94152
+[quant] w=blk.9.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.9.attn_k.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=1017 gpu=0 cpu=3.30141 diff=3.30141
+[quant] w=blk.9.attn_v.weight kind=1 n_in=3072 n_out=1024 n_blk=12 rb=2520 wbytes=2580480 need=2580480
+[GPU-DIVERGE] w=blk.9.attn_v.weight kind=1 n_in=3072 n_out=1024 nan=0 worst_row=263 gpu=0 cpu=-1.14733 diff=1.14733
+[quant] w=blk.9.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.9.attn_output.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=2619 gpu=0 cpu=-0.237864 diff=0.237864
+[quant] w=blk.9.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.9.ffn_gate.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=5871 gpu=0 cpu=0.982939 diff=0.982939
+[quant] w=blk.9.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.9.ffn_up.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=4986 gpu=0 cpu=-1.59539 diff=1.59539
+[quant] w=blk.9.ffn_down.weight kind=0 n_in=8192 n_out=3072 n_blk=32 rb=4608 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.9.ffn_down.weight kind=0 n_in=8192 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=1.19585 diff=1.19585
+[quant] w=blk.10.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.10.attn_q.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=1101 gpu=0 cpu=2.59952 diff=2.59952
+[quant] w=blk.10.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.10.attn_k.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=91 gpu=0 cpu=-3.61488 diff=3.61488
+[quant] w=blk.10.attn_v.weight kind=1 n_in=3072 n_out=1024 n_blk=12 rb=2520 wbytes=2580480 need=2580480
+[GPU-DIVERGE] w=blk.10.attn_v.weight kind=1 n_in=3072 n_out=1024 nan=0 worst_row=398 gpu=0 cpu=1.20471 diff=1.20471
+[quant] w=blk.10.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.10.attn_output.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=0.550486 diff=0.550486
+[quant] w=blk.10.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.10.ffn_gate.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=4530 gpu=0 cpu=-1.65081 diff=1.65081
+[quant] w=blk.10.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.10.ffn_up.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=6464 gpu=0 cpu=1.24047 diff=1.24047
+[quant] w=blk.10.ffn_down.weight kind=1 n_in=8192 n_out=3072 n_blk=32 rb=6720 wbytes=20643840 need=20643840
+[GPU-DIVERGE] w=blk.10.ffn_down.weight kind=1 n_in=8192 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=1.38105 diff=1.38105
+[quant] w=blk.11.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.11.attn_q.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=77 gpu=0 cpu=-2.20689 diff=2.20689
+[quant] w=blk.11.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.11.attn_k.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=343 gpu=0 cpu=3.06749 diff=3.06749
+[quant] w=blk.11.attn_v.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.11.attn_v.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=411 gpu=0 cpu=-1.02053 diff=1.02053
+[quant] w=blk.11.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.11.attn_output.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=1.18153 diff=1.18153
+[quant] w=blk.11.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.11.ffn_gate.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=6458 gpu=0 cpu=1.90519 diff=1.90519
+[quant] w=blk.11.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.11.ffn_up.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=6458 gpu=0 cpu=-1.56591 diff=1.56591
+[quant] w=blk.11.ffn_down.weight kind=0 n_in=8192 n_out=3072 n_blk=32 rb=4608 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.11.ffn_down.weight kind=0 n_in=8192 n_out=3072 nan=0 worst_row=1731 gpu=0 cpu=-0.674876 diff=0.674876
+[quant] w=blk.12.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.12.attn_q.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=2772 gpu=0 cpu=-1.77696 diff=1.77696
+[quant] w=blk.12.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.12.attn_k.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=371 gpu=0 cpu=3.3001 diff=3.3001
+[quant] w=blk.12.attn_v.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.12.attn_v.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=964 gpu=0 cpu=-1.34136 diff=1.34136
+[quant] w=blk.12.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.12.attn_output.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=0.318228 diff=0.318228
+[quant] w=blk.12.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.12.ffn_gate.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=4129 gpu=0 cpu=2.5443 diff=2.5443
+[quant] w=blk.12.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.12.ffn_up.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=4129 gpu=0 cpu=2.11047 diff=2.11047
+[quant] w=blk.12.ffn_down.weight kind=0 n_in=8192 n_out=3072 n_blk=32 rb=4608 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.12.ffn_down.weight kind=0 n_in=8192 n_out=3072 nan=0 worst_row=1731 gpu=0 cpu=-1.08726 diff=1.08726
+[quant] w=blk.13.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.13.attn_q.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=1485 gpu=0 cpu=-1.42522 diff=1.42522
+[quant] w=blk.13.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.13.attn_k.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=496 gpu=0 cpu=3.17427 diff=3.17427
+[quant] w=blk.13.attn_v.weight kind=1 n_in=3072 n_out=1024 n_blk=12 rb=2520 wbytes=2580480 need=2580480
+[GPU-DIVERGE] w=blk.13.attn_v.weight kind=1 n_in=3072 n_out=1024 nan=0 worst_row=697 gpu=0 cpu=-1.18757 diff=1.18757
+[quant] w=blk.13.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.13.attn_output.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=0.990386 diff=0.990386
+[quant] w=blk.13.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.13.ffn_gate.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=5102 gpu=0 cpu=3.51301 diff=3.51301
+[quant] w=blk.13.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.13.ffn_up.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=5102 gpu=0 cpu=-3.09814 diff=3.09814
+[quant] w=blk.13.ffn_down.weight kind=1 n_in=8192 n_out=3072 n_blk=32 rb=6720 wbytes=20643840 need=20643840
+[GPU-DIVERGE] w=blk.13.ffn_down.weight kind=1 n_in=8192 n_out=3072 nan=0 worst_row=1731 gpu=0 cpu=-2.29568 diff=2.29568
+[quant] w=blk.14.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.14.attn_q.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=1230 gpu=0 cpu=-1.61745 diff=1.61745
+[quant] w=blk.14.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.14.attn_k.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=747 gpu=0 cpu=2.73871 diff=2.73871
+[quant] w=blk.14.attn_v.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.14.attn_v.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=183 gpu=0 cpu=1.13355 diff=1.13355
+[quant] w=blk.14.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.14.attn_output.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=0.575695 diff=0.575695
+[quant] w=blk.14.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.14.ffn_gate.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=1528 gpu=0 cpu=1.7059 diff=1.7059
+[quant] w=blk.14.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.14.ffn_up.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=6800 gpu=0 cpu=-1.52999 diff=1.52999
+[quant] w=blk.14.ffn_down.weight kind=0 n_in=8192 n_out=3072 n_blk=32 rb=4608 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.14.ffn_down.weight kind=0 n_in=8192 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=1.35321 diff=1.35321
+[quant] w=blk.15.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.15.attn_q.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=463 gpu=0 cpu=-1.62015 diff=1.62015
+[quant] w=blk.15.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.15.attn_k.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=728 gpu=0 cpu=-2.28754 diff=2.28754
+[quant] w=blk.15.attn_v.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.15.attn_v.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=417 gpu=0 cpu=0.734245 diff=0.734245
+[quant] w=blk.15.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.15.attn_output.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=0.722742 diff=0.722742
+[quant] w=blk.15.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.15.ffn_gate.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=2760 gpu=0 cpu=-1.3776 diff=1.3776
+[quant] w=blk.15.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.15.ffn_up.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=7374 gpu=0 cpu=1.56989 diff=1.56989
+[quant] w=blk.15.ffn_down.weight kind=0 n_in=8192 n_out=3072 n_blk=32 rb=4608 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.15.ffn_down.weight kind=0 n_in=8192 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=1.64597 diff=1.64597
+[quant] w=blk.16.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.16.attn_q.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=1763 gpu=0 cpu=-1.61131 diff=1.61131
+[quant] w=blk.16.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.16.attn_k.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=471 gpu=0 cpu=2.15535 diff=2.15535
+[quant] w=blk.16.attn_v.weight kind=1 n_in=3072 n_out=1024 n_blk=12 rb=2520 wbytes=2580480 need=2580480
+[GPU-DIVERGE] w=blk.16.attn_v.weight kind=1 n_in=3072 n_out=1024 nan=0 worst_row=257 gpu=0 cpu=0.531161 diff=0.531161
+[quant] w=blk.16.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.16.attn_output.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=0.886768 diff=0.886768
+[quant] w=blk.16.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.16.ffn_gate.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=4832 gpu=0 cpu=1.61312 diff=1.61312
+[quant] w=blk.16.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.16.ffn_up.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=4272 gpu=0 cpu=1.18914 diff=1.18914
+[quant] w=blk.16.ffn_down.weight kind=1 n_in=8192 n_out=3072 n_blk=32 rb=6720 wbytes=20643840 need=20643840
+[GPU-DIVERGE] w=blk.16.ffn_down.weight kind=1 n_in=8192 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=1.61529 diff=1.61529
+[quant] w=blk.17.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.17.attn_q.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=2892 gpu=0 cpu=-1.47052 diff=1.47052
+[quant] w=blk.17.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.17.attn_k.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=993 gpu=0 cpu=-2.6148 diff=2.6148
+[quant] w=blk.17.attn_v.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.17.attn_v.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=267 gpu=0 cpu=0.771432 diff=0.771432
+[quant] w=blk.17.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.17.attn_output.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=0.679452 diff=0.679452
+[quant] w=blk.17.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.17.ffn_gate.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=7953 gpu=0 cpu=1.19123 diff=1.19123
+[quant] w=blk.17.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.17.ffn_up.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=3069 gpu=0 cpu=0.846454 diff=0.846454
+[quant] w=blk.17.ffn_down.weight kind=0 n_in=8192 n_out=3072 n_blk=32 rb=4608 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.17.ffn_down.weight kind=0 n_in=8192 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=1.06633 diff=1.06633
+[quant] w=blk.18.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.18.attn_q.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=2765 gpu=0 cpu=-1.85469 diff=1.85469
+[quant] w=blk.18.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.18.attn_k.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=215 gpu=0 cpu=2.92223 diff=2.92223
+[quant] w=blk.18.attn_v.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.18.attn_v.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=269 gpu=0 cpu=-0.625965 diff=0.625965
+[quant] w=blk.18.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.18.attn_output.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=0.79275 diff=0.79275
+[quant] w=blk.18.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.18.ffn_gate.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=2295 gpu=0 cpu=1.394 diff=1.394
+[quant] w=blk.18.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.18.ffn_up.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=7397 gpu=0 cpu=1.14441 diff=1.14441
+[quant] w=blk.18.ffn_down.weight kind=0 n_in=8192 n_out=3072 n_blk=32 rb=4608 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.18.ffn_down.weight kind=0 n_in=8192 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=1.22872 diff=1.22872
+[quant] w=blk.19.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.19.attn_q.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=717 gpu=0 cpu=2.13007 diff=2.13007
+[quant] w=blk.19.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.19.attn_k.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=878 gpu=0 cpu=2.5248 diff=2.5248
+[quant] w=blk.19.attn_v.weight kind=1 n_in=3072 n_out=1024 n_blk=12 rb=2520 wbytes=2580480 need=2580480
+[GPU-DIVERGE] w=blk.19.attn_v.weight kind=1 n_in=3072 n_out=1024 nan=0 worst_row=188 gpu=0 cpu=-0.83541 diff=0.83541
+[quant] w=blk.19.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.19.attn_output.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=0.564983 diff=0.564983
+[quant] w=blk.19.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.19.ffn_gate.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=4465 gpu=0 cpu=-1.56424 diff=1.56424
+[quant] w=blk.19.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.19.ffn_up.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=4465 gpu=0 cpu=-2.26923 diff=2.26923
+[quant] w=blk.19.ffn_down.weight kind=1 n_in=8192 n_out=3072 n_blk=32 rb=6720 wbytes=20643840 need=20643840
+[GPU-DIVERGE] w=blk.19.ffn_down.weight kind=1 n_in=8192 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=0.915234 diff=0.915234
+[quant] w=blk.20.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.20.attn_q.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=1248 gpu=0 cpu=1.82161 diff=1.82161
+[quant] w=blk.20.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.20.attn_k.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=855 gpu=0 cpu=-2.55464 diff=2.55464
+[quant] w=blk.20.attn_v.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.20.attn_v.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=247 gpu=0 cpu=-0.378533 diff=0.378533
+[quant] w=blk.20.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.20.attn_output.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=1731 gpu=0 cpu=-0.741383 diff=0.741383
+[quant] w=blk.20.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.20.ffn_gate.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=5429 gpu=0 cpu=1.40358 diff=1.40358
+[quant] w=blk.20.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.20.ffn_up.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=186 gpu=0 cpu=1.20577 diff=1.20577
+[quant] w=blk.20.ffn_down.weight kind=1 n_in=8192 n_out=3072 n_blk=32 rb=6720 wbytes=20643840 need=20643840
+[GPU-DIVERGE] w=blk.20.ffn_down.weight kind=1 n_in=8192 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=0.902414 diff=0.902414
+[quant] w=blk.21.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.21.attn_q.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=2292 gpu=0 cpu=-2.1977 diff=2.1977
+[quant] w=blk.21.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.21.attn_k.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=216 gpu=0 cpu=2.88189 diff=2.88189
+[quant] w=blk.21.attn_v.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.21.attn_v.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=966 gpu=0 cpu=-0.517537 diff=0.517537
+[quant] w=blk.21.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.21.attn_output.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=1731 gpu=0 cpu=-0.633336 diff=0.633336
+[quant] w=blk.21.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.21.ffn_gate.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=7208 gpu=0 cpu=-1.3759 diff=1.3759
+[quant] w=blk.21.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.21.ffn_up.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=4701 gpu=0 cpu=-1.08464 diff=1.08464
+[quant] w=blk.21.ffn_down.weight kind=0 n_in=8192 n_out=3072 n_blk=32 rb=4608 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.21.ffn_down.weight kind=0 n_in=8192 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=0.473852 diff=0.473852
+[quant] w=blk.22.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.22.attn_q.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=500 gpu=0 cpu=-2.05842 diff=2.05842
+[quant] w=blk.22.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.22.attn_k.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=852 gpu=0 cpu=-2.31555 diff=2.31555
+[quant] w=blk.22.attn_v.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.22.attn_v.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=737 gpu=0 cpu=-0.830719 diff=0.830719
+[quant] w=blk.22.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.22.attn_output.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=1731 gpu=0 cpu=-1.21609 diff=1.21609
+[quant] w=blk.22.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.22.ffn_gate.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=146 gpu=0 cpu=-2.37474 diff=2.37474
+[quant] w=blk.22.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.22.ffn_up.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=6977 gpu=0 cpu=-1.24358 diff=1.24358
+[quant] w=blk.22.ffn_down.weight kind=0 n_in=8192 n_out=3072 n_blk=32 rb=4608 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.22.ffn_down.weight kind=0 n_in=8192 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=0.653526 diff=0.653526
+[quant] w=blk.23.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.23.attn_q.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=2513 gpu=0 cpu=-1.57059 diff=1.57059
+[quant] w=blk.23.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.23.attn_k.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=220 gpu=0 cpu=-2.66532 diff=2.66532
+[quant] w=blk.23.attn_v.weight kind=1 n_in=3072 n_out=1024 n_blk=12 rb=2520 wbytes=2580480 need=2580480
+[GPU-DIVERGE] w=blk.23.attn_v.weight kind=1 n_in=3072 n_out=1024 nan=0 worst_row=44 gpu=0 cpu=0.976743 diff=0.976743
+[quant] w=blk.23.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.23.attn_output.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=1731 gpu=0 cpu=-0.704576 diff=0.704576
+[quant] w=blk.23.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.23.ffn_gate.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=1422 gpu=0 cpu=2.54806 diff=2.54806
+[quant] w=blk.23.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.23.ffn_up.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=834 gpu=0 cpu=-2.02256 diff=2.02256
+[quant] w=blk.23.ffn_down.weight kind=1 n_in=8192 n_out=3072 n_blk=32 rb=6720 wbytes=20643840 need=20643840
+[GPU-DIVERGE] w=blk.23.ffn_down.weight kind=1 n_in=8192 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=0.769963 diff=0.769963
+[quant] w=blk.24.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.24.attn_q.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=625 gpu=0 cpu=1.63731 diff=1.63731
+[quant] w=blk.24.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.24.attn_k.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=606 gpu=0 cpu=-2.53278 diff=2.53278
+[quant] w=blk.24.attn_v.weight kind=1 n_in=3072 n_out=1024 n_blk=12 rb=2520 wbytes=2580480 need=2580480
+[GPU-DIVERGE] w=blk.24.attn_v.weight kind=1 n_in=3072 n_out=1024 nan=0 worst_row=1012 gpu=0 cpu=0.449968 diff=0.449968
+[quant] w=blk.24.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.24.attn_output.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=1731 gpu=0 cpu=-1.13332 diff=1.13332
+[quant] w=blk.24.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.24.ffn_gate.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=5738 gpu=0 cpu=7.03277 diff=7.03277
+[quant] w=blk.24.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.24.ffn_up.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=217 gpu=0 cpu=2.06041 diff=2.06041
+[quant] w=blk.24.ffn_down.weight kind=1 n_in=8192 n_out=3072 n_blk=32 rb=6720 wbytes=20643840 need=20643840
+[GPU-DIVERGE] w=blk.24.ffn_down.weight kind=1 n_in=8192 n_out=3072 nan=0 worst_row=3039 gpu=0 cpu=1.02394 diff=1.02394
+[quant] w=blk.25.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.25.attn_q.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=466 gpu=0 cpu=-1.31392 diff=1.31392
+[quant] w=blk.25.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.25.attn_k.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=360 gpu=0 cpu=-2.08796 diff=2.08796
+[quant] w=blk.25.attn_v.weight kind=1 n_in=3072 n_out=1024 n_blk=12 rb=2520 wbytes=2580480 need=2580480
+[GPU-DIVERGE] w=blk.25.attn_v.weight kind=1 n_in=3072 n_out=1024 nan=0 worst_row=329 gpu=0 cpu=-0.906593 diff=0.906593
+[quant] w=blk.25.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.25.attn_output.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=1731 gpu=0 cpu=-1.57521 diff=1.57521
+[quant] w=blk.25.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.25.ffn_gate.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=6799 gpu=0 cpu=8.84007 diff=8.84007
+[quant] w=blk.25.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.25.ffn_up.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=4807 gpu=0 cpu=2.26318 diff=2.26318
+[quant] w=blk.25.ffn_down.weight kind=1 n_in=8192 n_out=3072 n_blk=32 rb=6720 wbytes=20643840 need=20643840
+[GPU-DIVERGE] w=blk.25.ffn_down.weight kind=1 n_in=8192 n_out=3072 nan=0 worst_row=1731 gpu=0 cpu=5.97136 diff=5.97136
+[quant] w=blk.26.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.26.attn_q.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=2254 gpu=0 cpu=2.30482 diff=2.30482
+[quant] w=blk.26.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.26.attn_k.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=886 gpu=0 cpu=2.53216 diff=2.53216
+[quant] w=blk.26.attn_v.weight kind=1 n_in=3072 n_out=1024 n_blk=12 rb=2520 wbytes=2580480 need=2580480
+[GPU-DIVERGE] w=blk.26.attn_v.weight kind=1 n_in=3072 n_out=1024 nan=0 worst_row=768 gpu=0 cpu=-0.861463 diff=0.861463
+[quant] w=blk.26.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.26.attn_output.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=1731 gpu=0 cpu=0.753787 diff=0.753787
+[quant] w=blk.26.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.26.ffn_gate.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=496 gpu=0 cpu=20.025 diff=20.025
+[quant] w=blk.26.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.26.ffn_up.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=1810 gpu=0 cpu=-2.69006 diff=2.69006
+[quant] w=blk.26.ffn_down.weight kind=1 n_in=8192 n_out=3072 n_blk=32 rb=6720 wbytes=20643840 need=20643840
+[GPU-DIVERGE] w=blk.26.ffn_down.weight kind=1 n_in=8192 n_out=3072 nan=0 worst_row=1895 gpu=0 cpu=-4.95816 diff=4.95816
+[quant] w=blk.27.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.27.attn_q.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=595 gpu=0 cpu=1.13229 diff=1.13229
+[quant] w=blk.27.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[GPU-DIVERGE] w=blk.27.attn_k.weight kind=0 n_in=3072 n_out=1024 nan=0 worst_row=470 gpu=0 cpu=2.3663 diff=2.3663
+[quant] w=blk.27.attn_v.weight kind=1 n_in=3072 n_out=1024 n_blk=12 rb=2520 wbytes=2580480 need=2580480
+[GPU-DIVERGE] w=blk.27.attn_v.weight kind=1 n_in=3072 n_out=1024 nan=0 worst_row=339 gpu=0 cpu=0.767087 diff=0.767087
+[quant] w=blk.27.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[GPU-DIVERGE] w=blk.27.attn_output.weight kind=0 n_in=3072 n_out=3072 nan=0 worst_row=962 gpu=0 cpu=-0.847128 diff=0.847128
+[quant] w=blk.27.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.27.ffn_gate.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=7945 gpu=0 cpu=11.2234 diff=11.2234
+[quant] w=blk.27.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[GPU-DIVERGE] w=blk.27.ffn_up.weight kind=0 n_in=3072 n_out=8192 nan=0 worst_row=3067 gpu=0 cpu=16.3655 diff=16.3655
+[quant] w=blk.27.ffn_down.weight kind=1 n_in=8192 n_out=3072 n_blk=32 rb=6720 wbytes=20643840 need=20643840
+[GPU-DIVERGE] w=blk.27.ffn_down.weight kind=1 n_in=8192 n_out=3072 nan=0 worst_row=1016 gpu=0 cpu=124.747 diff=124.747
+[quant] w=token_embd.weight kind=1 n_in=3072 n_out=128256 n_blk=12 rb=2520 wbytes=323205120 need=323205120
+prefill_mode=PrefillBatch
+input_tokens=1
+layer_count=28
+total_op_executions=0
+op_executions_per_token=0.00
+op_executions_per_token_per_layer=0.0000
+prefill_shape=NO_EXECUTION_OBSERVED (no receipts emitted)
+prefill_ms=4381.0
+prefill_tps=0.23
+
+===== EXECUTION: dispatch receipts =====
+cpu_operations=0
+gpu_dispatches=308
+vulkan_tensor_ops=0
+cpu_tensor_ops=0
+host_descriptor_ops=0
+other_backend_ops=0
+ops_without_dispatch_receipt=0
+forced_host_pin=false
+gpu_device=
+gpu_rows=0 cpu_rows=0
+unexplained_fallbacks=0
+cold_start_ms=0.0 steady_kernel_ms=0.000 dispatch_ms=0.000
+backend_submits=310 backend_waits=310 upload_bytes=2014032048 download_bytes=3609600
+backend_kernel_ms=120.353 backend_submit_ms=1.625 backend_wait_ms=120.353 backend_gpu_ms=22.318
+n===== KV_CACHE =====
+position_counter=1 (not a cache witness)
+kv_blocks=28
+kv_rows_block0=1
+kv_rows_max_over_blocks=1
+kv_resident_bytes=229376
+kv_leading_zero_rows_sampled=0
+prefill_committed_positions=YES (kv rows == tokens)
+
+===== EXECUTION: decode =====
+[quant] w=blk.0.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.0.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.0.attn_v.weight kind=1 n_in=3072 n_out=1024 n_blk=12 rb=2520 wbytes=2580480 need=2580480
+[quant] w=blk.0.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.0.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.0.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.0.ffn_down.weight kind=1 n_in=8192 n_out=3072 n_blk=32 rb=6720 wbytes=20643840 need=20643840
+[quant] w=blk.1.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.1.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.1.attn_v.weight kind=1 n_in=3072 n_out=1024 n_blk=12 rb=2520 wbytes=2580480 need=2580480
+[quant] w=blk.1.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.1.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.1.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.1.ffn_down.weight kind=1 n_in=8192 n_out=3072 n_blk=32 rb=6720 wbytes=20643840 need=20643840
+[quant] w=blk.2.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.2.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.2.attn_v.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.2.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.2.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.2.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.2.ffn_down.weight kind=0 n_in=8192 n_out=3072 n_blk=32 rb=4608 wbytes=14155776 need=14155776
+[quant] w=blk.3.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.3.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.3.attn_v.weight kind=1 n_in=3072 n_out=1024 n_blk=12 rb=2520 wbytes=2580480 need=2580480
+[quant] w=blk.3.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.3.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.3.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.3.ffn_down.weight kind=0 n_in=8192 n_out=3072 n_blk=32 rb=4608 wbytes=14155776 need=14155776
+[quant] w=blk.4.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.4.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.4.attn_v.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.4.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.4.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.4.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.4.ffn_down.weight kind=1 n_in=8192 n_out=3072 n_blk=32 rb=6720 wbytes=20643840 need=20643840
+[quant] w=blk.5.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.5.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.5.attn_v.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.5.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.5.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.5.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.5.ffn_down.weight kind=0 n_in=8192 n_out=3072 n_blk=32 rb=4608 wbytes=14155776 need=14155776
+[quant] w=blk.6.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.6.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.6.attn_v.weight kind=1 n_in=3072 n_out=1024 n_blk=12 rb=2520 wbytes=2580480 need=2580480
+[quant] w=blk.6.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.6.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.6.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.6.ffn_down.weight kind=0 n_in=8192 n_out=3072 n_blk=32 rb=4608 wbytes=14155776 need=14155776
+[quant] w=blk.7.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.7.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.7.attn_v.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.7.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.7.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.7.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.7.ffn_down.weight kind=1 n_in=8192 n_out=3072 n_blk=32 rb=6720 wbytes=20643840 need=20643840
+[quant] w=blk.8.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.8.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.8.attn_v.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.8.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.8.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.8.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.8.ffn_down.weight kind=0 n_in=8192 n_out=3072 n_blk=32 rb=4608 wbytes=14155776 need=14155776
+[quant] w=blk.9.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.9.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.9.attn_v.weight kind=1 n_in=3072 n_out=1024 n_blk=12 rb=2520 wbytes=2580480 need=2580480
+[quant] w=blk.9.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.9.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.9.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.9.ffn_down.weight kind=0 n_in=8192 n_out=3072 n_blk=32 rb=4608 wbytes=14155776 need=14155776
+[quant] w=blk.10.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.10.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.10.attn_v.weight kind=1 n_in=3072 n_out=1024 n_blk=12 rb=2520 wbytes=2580480 need=2580480
+[quant] w=blk.10.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.10.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.10.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.10.ffn_down.weight kind=1 n_in=8192 n_out=3072 n_blk=32 rb=6720 wbytes=20643840 need=20643840
+[quant] w=blk.11.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.11.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.11.attn_v.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.11.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.11.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.11.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.11.ffn_down.weight kind=0 n_in=8192 n_out=3072 n_blk=32 rb=4608 wbytes=14155776 need=14155776
+[quant] w=blk.12.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.12.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.12.attn_v.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.12.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.12.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.12.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.12.ffn_down.weight kind=0 n_in=8192 n_out=3072 n_blk=32 rb=4608 wbytes=14155776 need=14155776
+[quant] w=blk.13.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.13.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.13.attn_v.weight kind=1 n_in=3072 n_out=1024 n_blk=12 rb=2520 wbytes=2580480 need=2580480
+[quant] w=blk.13.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.13.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.13.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.13.ffn_down.weight kind=1 n_in=8192 n_out=3072 n_blk=32 rb=6720 wbytes=20643840 need=20643840
+[quant] w=blk.14.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.14.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.14.attn_v.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.14.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.14.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.14.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.14.ffn_down.weight kind=0 n_in=8192 n_out=3072 n_blk=32 rb=4608 wbytes=14155776 need=14155776
+[quant] w=blk.15.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.15.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.15.attn_v.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.15.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.15.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.15.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.15.ffn_down.weight kind=0 n_in=8192 n_out=3072 n_blk=32 rb=4608 wbytes=14155776 need=14155776
+[quant] w=blk.16.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.16.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.16.attn_v.weight kind=1 n_in=3072 n_out=1024 n_blk=12 rb=2520 wbytes=2580480 need=2580480
+[quant] w=blk.16.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.16.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.16.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.16.ffn_down.weight kind=1 n_in=8192 n_out=3072 n_blk=32 rb=6720 wbytes=20643840 need=20643840
+[quant] w=blk.17.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.17.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.17.attn_v.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.17.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.17.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.17.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.17.ffn_down.weight kind=0 n_in=8192 n_out=3072 n_blk=32 rb=4608 wbytes=14155776 need=14155776
+[quant] w=blk.18.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.18.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.18.attn_v.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.18.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.18.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.18.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.18.ffn_down.weight kind=0 n_in=8192 n_out=3072 n_blk=32 rb=4608 wbytes=14155776 need=14155776
+[quant] w=blk.19.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.19.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.19.attn_v.weight kind=1 n_in=3072 n_out=1024 n_blk=12 rb=2520 wbytes=2580480 need=2580480
+[quant] w=blk.19.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.19.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.19.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.19.ffn_down.weight kind=1 n_in=8192 n_out=3072 n_blk=32 rb=6720 wbytes=20643840 need=20643840
+[quant] w=blk.20.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.20.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.20.attn_v.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.20.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.20.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.20.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.20.ffn_down.weight kind=1 n_in=8192 n_out=3072 n_blk=32 rb=6720 wbytes=20643840 need=20643840
+[quant] w=blk.21.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.21.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.21.attn_v.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.21.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.21.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.21.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.21.ffn_down.weight kind=0 n_in=8192 n_out=3072 n_blk=32 rb=4608 wbytes=14155776 need=14155776
+[quant] w=blk.22.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.22.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.22.attn_v.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.22.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.22.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.22.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.22.ffn_down.weight kind=0 n_in=8192 n_out=3072 n_blk=32 rb=4608 wbytes=14155776 need=14155776
+[quant] w=blk.23.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.23.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.23.attn_v.weight kind=1 n_in=3072 n_out=1024 n_blk=12 rb=2520 wbytes=2580480 need=2580480
+[quant] w=blk.23.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.23.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.23.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.23.ffn_down.weight kind=1 n_in=8192 n_out=3072 n_blk=32 rb=6720 wbytes=20643840 need=20643840
+[quant] w=blk.24.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.24.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.24.attn_v.weight kind=1 n_in=3072 n_out=1024 n_blk=12 rb=2520 wbytes=2580480 need=2580480
+[quant] w=blk.24.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.24.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.24.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.24.ffn_down.weight kind=1 n_in=8192 n_out=3072 n_blk=32 rb=6720 wbytes=20643840 need=20643840
+[quant] w=blk.25.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.25.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.25.attn_v.weight kind=1 n_in=3072 n_out=1024 n_blk=12 rb=2520 wbytes=2580480 need=2580480
+[quant] w=blk.25.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.25.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.25.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.25.ffn_down.weight kind=1 n_in=8192 n_out=3072 n_blk=32 rb=6720 wbytes=20643840 need=20643840
+[quant] w=blk.26.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.26.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.26.attn_v.weight kind=1 n_in=3072 n_out=1024 n_blk=12 rb=2520 wbytes=2580480 need=2580480
+[quant] w=blk.26.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.26.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.26.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.26.ffn_down.weight kind=1 n_in=8192 n_out=3072 n_blk=32 rb=6720 wbytes=20643840 need=20643840
+[quant] w=blk.27.attn_q.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.27.attn_k.weight kind=0 n_in=3072 n_out=1024 n_blk=12 rb=1728 wbytes=1769472 need=1769472
+[quant] w=blk.27.attn_v.weight kind=1 n_in=3072 n_out=1024 n_blk=12 rb=2520 wbytes=2580480 need=2580480
+[quant] w=blk.27.attn_output.weight kind=0 n_in=3072 n_out=3072 n_blk=12 rb=1728 wbytes=5308416 need=5308416
+[quant] w=blk.27.ffn_gate.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.27.ffn_up.weight kind=0 n_in=3072 n_out=8192 n_blk=12 rb=1728 wbytes=14155776 need=14155776
+[quant] w=blk.27.ffn_down.weight kind=1 n_in=8192 n_out=3072 n_blk=32 rb=6720 wbytes=20643840 need=20643840
+[quant] w=token_embd.weight kind=1 n_in=3072 n_out=128256 n_blk=12 rb=2520 wbytes=323205120 need=323205120
+decode_tokens=1
+decode_ms=2854.6
+decode_tps=0.350
+gpu_dispatches_delta=198
+cpu_operations_delta=0
+matrix_rows_delta=0
+executor_gpu_ops_per_token=198.0 (NOT queue submissions)
+backend_submits_total=507 backend_waits_total=507 upload_bytes_total=2017225056 download_bytes_total=7219200
+backend_kernel_ms_total=179.183 backend_submit_ms_total=6.022 backend_wait_ms_total=179.183 backend_gpu_ms_total=47.509
+sample=Question
+
+===== RESULT =====
+actual_backend=vulkan-gpu
+slowest_operations (by reported tensor size):
+        up: x28 size_total=229376
+        swiglu: x28 size_total=229376
+        gate: x28 size_total=229376
+        resid_in: x28 size_total=86016
+        resid2: x28 size_total=86016
+        resid1: x28 size_total=86016
+        q: x28 size_total=86016
+        ffn_out: x28 size_total=86016
+task_tps=0.148
+nEXEC_TRUTH_TRACE=COMPLETE
+GATE_RESIDENCY=PARTIAL
+GATE_EXECUTION=PASS
+GATE_CONTEXT=PARTIAL
+GATE_TOOL=N/A
+GATE_RECOVERY=N/A
+FINAL_VERDICT=PASS
+Released all tensors
+Vulkan resources cleaned up successfully

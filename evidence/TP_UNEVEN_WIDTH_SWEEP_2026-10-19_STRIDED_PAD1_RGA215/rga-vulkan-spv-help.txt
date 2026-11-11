@@ -1,0 +1,72 @@
+
+*** Vulkan Offline mode options ***
+===================================
+
+The Vulkan offline mode is independent of the installed driver and may not provide assembly code and resource usage that reflect the real-life case. To get results that reflect the real-life performance of your code, please use RGA's Vulkan live-driver mode (-s vulkan).
+
+Usage:
+  rga.exe [options] [optional: spv_input_file] 
+
+Notes:
+ * The input file(s) must be specified in one of two ways:
+   1) A single SPIR-V input file provided as "spv_input_file", or
+   2) One or more pipeline stage specific shader files specified by the pipeline stage options (--vert, --tesc, etc.).
+
+ Generic options:
+  -l, --list-asics              List the known GPU codenames, architecture
+                                names and variant names. To target a specific
+                                GPU, use its codename as the argument to the
+                                "-c" command line switch.
+  -c, --asic arg                Which ASIC to target.  Repeatable.
+      --version                 Print version string.
+  -h, --help                    Produce this help message.
+  -a, --analysis arg            Path to output analysis file.
+  -b, --binary arg              Path to ELF binary output file.
+      --isa arg                 Path to output ISA disassembly file(s).
+      --livereg arg             Path to live register analysis output
+                                file(s).
+      --livereg-sgpr arg        Path to live register sgpr analysis output
+                                file(s).
+      --cfg arg                 Path to per-block control flow graph output
+                                file(s).
+      --cfg-i arg               Path to per-instruction control flow graph
+                                output file(s).
+  -s, --source-kind arg         Source platform: dx12 for DirectX 12, dxr for
+                                DXR, dx11 for DirectX 11, vulkan for Vulkan,
+                                opengl for OpenGL, opencl for OpenCL offline
+                                mode and amdil for AMDIL.
+  -u, --updates                 Check for available updates.
+  -v, --verbose                 Print command line strings that RGA uses to
+                                launch external processes.
+      --session-summary arg     Generate an XML session summary file with
+                                decoded ISA, statistics, live register analysis,
+                                and CFG for all compiled shaders.
+      --include-target-metadata
+                                Include target architecture metadata (branch
+                                types, register types, functional groups) in
+                                the session summary file.
+
+ Optimization Level options:
+      --O0  Disable optimizations
+      --O1  Enable minimal optimizations
+
+ Input shader type options:
+      --vert arg  Full path to vertex shader input file.
+      --tesc arg  Full path to tessellation control shader input file.
+      --tese arg  Full path to tessellation evaluation shader input file.
+      --geom arg  Full path to geometry shader input file.
+      --frag arg  Full path to geometry shader input file.
+      --comp arg  Full path to compute shader input file.
+      --mesh arg  Full path to mesh shader input file.
+      --task arg  Full path to task shader input file.
+
+Examples:
+  Compile vertex & fragment shaders for all supported devicesl; extract ISA and statistics:
+    rga.exe -s vk-spv-offline --isa output/isa.txt -a output/stats.csv --vert source/myVertexShader.spv --frag source/myFragmentShader.spv
+  Compile vertex & fragment shaders for gfx1030; extract ISA and statistics:
+    rga.exe -s vk-spv-offline -c gfx1030 --isa output/isa.txt -a output/.csv --vert source/myVertexShader.spv --frag source/myFragmentShader.spv
+  Compile vertex shader for Radeon gfx1034; extract ISA and binaries:
+    rga.exe -s vk-spv-offline -c "gfx1034" --isa output/isa.txt -b output/binary.bin -a output/stats.csv --vert c:\source\myVertexShader.spv
+  Extract ISA for a single SPIR-V file for gfx1034, without specifying the pipeline stages:
+    rga.exe -s vk-spv-offline -c gfx1034 --isa output/program_isa.txt source/program.spv
+

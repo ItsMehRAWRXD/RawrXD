@@ -1,0 +1,522 @@
+[
+  {
+    "block": 0,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 1,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 2,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 3,
+    "kind": "ATTENTION",
+    "has_qkv": false,
+    "has_q": true,
+    "has_ssm": false,
+    "has_out": true
+  },
+  {
+    "block": 4,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 5,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 6,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 7,
+    "kind": "ATTENTION",
+    "has_qkv": false,
+    "has_q": true,
+    "has_ssm": false,
+    "has_out": true
+  },
+  {
+    "block": 8,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 9,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 10,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 11,
+    "kind": "ATTENTION",
+    "has_qkv": false,
+    "has_q": true,
+    "has_ssm": false,
+    "has_out": true
+  },
+  {
+    "block": 12,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 13,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 14,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 15,
+    "kind": "ATTENTION",
+    "has_qkv": false,
+    "has_q": true,
+    "has_ssm": false,
+    "has_out": true
+  },
+  {
+    "block": 16,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 17,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 18,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 19,
+    "kind": "ATTENTION",
+    "has_qkv": false,
+    "has_q": true,
+    "has_ssm": false,
+    "has_out": true
+  },
+  {
+    "block": 20,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 21,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 22,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 23,
+    "kind": "ATTENTION",
+    "has_qkv": false,
+    "has_q": true,
+    "has_ssm": false,
+    "has_out": true
+  },
+  {
+    "block": 24,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 25,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 26,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 27,
+    "kind": "ATTENTION",
+    "has_qkv": false,
+    "has_q": true,
+    "has_ssm": false,
+    "has_out": true
+  },
+  {
+    "block": 28,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 29,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 30,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 31,
+    "kind": "ATTENTION",
+    "has_qkv": false,
+    "has_q": true,
+    "has_ssm": false,
+    "has_out": true
+  },
+  {
+    "block": 32,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 33,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 34,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 35,
+    "kind": "ATTENTION",
+    "has_qkv": false,
+    "has_q": true,
+    "has_ssm": false,
+    "has_out": true
+  },
+  {
+    "block": 36,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 37,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 38,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 39,
+    "kind": "ATTENTION",
+    "has_qkv": false,
+    "has_q": true,
+    "has_ssm": false,
+    "has_out": true
+  },
+  {
+    "block": 40,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 41,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 42,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 43,
+    "kind": "ATTENTION",
+    "has_qkv": false,
+    "has_q": true,
+    "has_ssm": false,
+    "has_out": true
+  },
+  {
+    "block": 44,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 45,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 46,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 47,
+    "kind": "ATTENTION",
+    "has_qkv": false,
+    "has_q": true,
+    "has_ssm": false,
+    "has_out": true
+  },
+  {
+    "block": 48,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 49,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 50,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 51,
+    "kind": "ATTENTION",
+    "has_qkv": false,
+    "has_q": true,
+    "has_ssm": false,
+    "has_out": true
+  },
+  {
+    "block": 52,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 53,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 54,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 55,
+    "kind": "ATTENTION",
+    "has_qkv": false,
+    "has_q": true,
+    "has_ssm": false,
+    "has_out": true
+  },
+  {
+    "block": 56,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 57,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 58,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 59,
+    "kind": "ATTENTION",
+    "has_qkv": false,
+    "has_q": true,
+    "has_ssm": false,
+    "has_out": true
+  },
+  {
+    "block": 60,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 61,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 62,
+    "kind": "GDN",
+    "has_qkv": true,
+    "has_q": false,
+    "has_ssm": true,
+    "has_out": true
+  },
+  {
+    "block": 63,
+    "kind": "ATTENTION",
+    "has_qkv": false,
+    "has_q": true,
+    "has_ssm": false,
+    "has_out": true
+  },
+  {
+    "block": 64,
+    "kind": "ATTENTION",
+    "has_qkv": false,
+    "has_q": true,
+    "has_ssm": false,
+    "has_out": true
+  }
+]

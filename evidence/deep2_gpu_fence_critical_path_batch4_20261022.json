@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "gate": "DEEP2_GPU_FENCE_CRITICAL_PATH_BATCH4_001",
+  "timestamp_utc": "2026-10-23T02:26:24.7244931Z",
+  "execution": {
+    "exit_code": 0,
+    "model": "llama3.2:3b",
+    "device_mode": "dual_gpu",
+    "max_tokens": 2,
+    "trace_lines": 1966,
+    "attributed_records": 1966,
+    "tokens": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "layers": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27
+    ],
+    "zero_unplanned_fallbacks": true,
+    "zero_strict_violations": true
+  },
+  "trace_contract": {
+    "wait_api": "fence",
+    "dependency": "queue_submit_to_fence",
+    "producer_submission": "same_as_submission_id",
+    "gpu_clock": "calibrated_host_ns",
+    "timeline_waits_observed": false
+  },
+  "per_device_kind": [
+    {
+      "device_kind": "0, 1",
+      "submissions": 589,
+      "submit_ms": 9.518,
+      "wait_ms": 135.238,
+      "gpu_ms": 87.691,
+      "gpu_overlap_ms": 87.481,
+      "cpu_wait_residual_ms": 47.757
+    },
+    {
+      "device_kind": "0, 2",
+      "submissions": 1094,
+      "submit_ms": 17.388,
+      "wait_ms": 125.117,
+      "gpu_ms": 33.415,
+      "gpu_overlap_ms": 33.374,
+      "cpu_wait_residual_ms": 91.744
+    },
+    {
+      "device_kind": "2, 1",
+      "submissions": 141,
+      "submit_ms": 2.002,
+      "wait_ms": 34.475,
+      "gpu_ms": 2.942,
+      "gpu_overlap_ms": 2.942,
+      "cpu_wait_residual_ms": 31.533
+    },
+    {
+      "device_kind": "2, 2",
+      "submissions": 142,
+      "submit_ms": 3.794,
+      "wait_ms": 22.089,
+      "gpu_ms": 11.212,
+      "gpu_overlap_ms": 11.212,
+      "cpu_wait_residual_ms": 10.877
+    }
+  ],
+  "interpretation": {
+    "largest_measured_residual": "device=0 kind=2",
+    "largest_residual_ms": 91.744,
+    "residual_definition": "wait interval minus overlap with calibrated GPU interval",
+    "recoverable_bottleneck_proven": false,
+    "cross_device_dependency_proven": false,
+    "optimization_promoted": false
+  },
+  "evidence": {
+    "receipt": "F:\\rawrxd\\evidence\\rawr_gpu_fence_critical_path_batch4_v2_20261022.json",
+    "trace": "F:\\rawrxd\\evidence\\rawr_gpu_fence_critical_path_batch4_v2_20261022.stderr.log",
+    "stdout": "F:\\rawrxd\\evidence\\rawr_gpu_fence_critical_path_batch4_v2_20261022.stdout.log"
+  }
+}

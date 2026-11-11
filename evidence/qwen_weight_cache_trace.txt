@@ -1,0 +1,2113 @@
+
+===== MODEL =====
+path=F:\OllamaModels\Qwen3.8-27B-AD-Q4_K_M\Qwen3.8-27B-AD-Q4_K_M.gguf
+architecture=qwen35
+block_count=65
+vocab=248320
+seed_tokens=12
+ingest_ms=53567.0
+bind_ms=0.4
+
+===== EXECUTION: prefill =====
+requested_backend=gpu-first
+ops_total=721 ops_bound=721 ops_unbound=0
+weights_resolved=866 weights_missing=0
+unsupported_operations=0
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=0 budget=30787869060 cached=0
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=29554000 budget=30787869060 cached=1
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=51180880 budget=30787869060 cached=2
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=51442000 budget=30787869060 cached=3
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[SHADER_PATH] ops=F:/rawrxd/src/deep2/shaders\deep2_ops.spv q=F:/rawrxd/src/deep2/shaders\deep2_qgemv.spv qb=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch.spv q4r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch4row.spv q8r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch8row.spv qn=F:/rawrxd/src/deep2/shaders\deep2_qgemv_nvfp4.spv am=F:/rawrxd/src/deep2/shaders\deep2_argmax.spv so=F:/rawrxd/src/deep2/shaders\deep2_spec_ops.spv sa=F:/rawrxd/src/deep2/shaders\deep2_spec_attn.spv ac=F:/rawrxd/src/deep2/shaders\deep2_spec_accept.spv gd=F:/rawrxd/src/deep2/shaders\deep2_qwen4exp_gdn.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1 qn=1 gdn=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=51703120 budget=30787869060 cached=4
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=73330000 budget=30787869060 cached=5
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=134675792 budget=30787869060 cached=6
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=195951952 budget=30787869060 cached=7
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=8 q8_bytes=74256 packed_bytes=61276160 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=257302368 budget=30787869060 cached=8
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=286793568 budget=30787869060 cached=9
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=308420448 budget=30787869060 cached=10
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=308681568 budget=30787869060 cached=11
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=308942688 budget=30787869060 cached=12
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=330569568 budget=30787869060 cached=13
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=391845728 budget=30787869060 cached=14
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=453121888 budget=30787869060 cached=15
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=8 q8_bytes=74256 packed_bytes=61276160 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=514398048 budget=30787869060 cached=16
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=543889248 budget=30787869060 cached=17
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=565516128 budget=30787869060 cached=18
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=565777248 budget=30787869060 cached=19
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=566038368 budget=30787869060 cached=20
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=587665248 budget=30787869060 cached=21
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=648941408 budget=30787869060 cached=22
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=710217568 budget=30787869060 cached=23
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=8 q8_bytes=74256 packed_bytes=61276160 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=35389440 kind=0 live=771493728 budget=30787869060 cached=24
+[qd-trace t1084] ensure uploading bytes=35389440
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=12288 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=35389440 out_bytes=49152
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=806883168 budget=30787869060 cached=25
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=812453728 budget=30787869060 cached=26
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=25804800 kind=1 live=818024288 budget=30787869060 cached=27
+[qd-trace t1084] ensure uploading bytes=25804800
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=1 q8_bytes=26208 packed_bytes=25804800 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=843829088 budget=30787869060 cached=28
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=905105248 budget=30787869060 cached=29
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=966381408 budget=30787869060 cached=30
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=8 q8_bytes=74256 packed_bytes=61276160 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=1027657568 budget=30787869060 cached=31
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=1057148768 budget=30787869060 cached=32
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=1078775648 budget=30787869060 cached=33
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=1079036768 budget=30787869060 cached=34
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=1079297888 budget=30787869060 cached=35
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=1100924768 budget=30787869060 cached=36
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=1162200928 budget=30787869060 cached=37
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=1223477088 budget=30787869060 cached=38
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=8 q8_bytes=74256 packed_bytes=61276160 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=1284753248 budget=30787869060 cached=39
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=1314244448 budget=30787869060 cached=40
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=1335871328 budget=30787869060 cached=41
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=1336132448 budget=30787869060 cached=42
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=1336393568 budget=30787869060 cached=43
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=1358020448 budget=30787869060 cached=44
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=1419296608 budget=30787869060 cached=45
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=1480572768 budget=30787869060 cached=46
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=8 q8_bytes=74256 packed_bytes=61276160 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=1541848928 budget=30787869060 cached=47
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=1571340128 budget=30787869060 cached=48
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=1592967008 budget=30787869060 cached=49
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=1593228128 budget=30787869060 cached=50
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=1593489248 budget=30787869060 cached=51
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=1615116128 budget=30787869060 cached=52
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=1676392288 budget=30787869060 cached=53
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=1737668448 budget=30787869060 cached=54
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=8 q8_bytes=74256 packed_bytes=61276160 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=35389440 kind=0 live=1798944608 budget=30787869060 cached=55
+[qd-trace t1084] ensure uploading bytes=35389440
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=12288 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=35389440 out_bytes=49152
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=1834334048 budget=30787869060 cached=56
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=1839904608 budget=30787869060 cached=57
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=25804800 kind=1 live=1845475168 budget=30787869060 cached=58
+[qd-trace t1084] ensure uploading bytes=25804800
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=1 q8_bytes=26208 packed_bytes=25804800 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=1871279968 budget=30787869060 cached=59
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=1932556128 budget=30787869060 cached=60
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=1993832288 budget=30787869060 cached=61
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=8 q8_bytes=74256 packed_bytes=61276160 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=2055108448 budget=30787869060 cached=62
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=2084599648 budget=30787869060 cached=63
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=2106226528 budget=30787869060 cached=64
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=2106487648 budget=30787869060 cached=65
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=2106748768 budget=30787869060 cached=66
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=2128375648 budget=30787869060 cached=67
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=2189651808 budget=30787869060 cached=68
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=2250927968 budget=30787869060 cached=69
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=8 q8_bytes=74256 packed_bytes=61276160 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=2312204128 budget=30787869060 cached=70
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=2341695328 budget=30787869060 cached=71
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=2363322208 budget=30787869060 cached=72
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=2363583328 budget=30787869060 cached=73
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=2363844448 budget=30787869060 cached=74
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=2385471328 budget=30787869060 cached=75
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=2446747488 budget=30787869060 cached=76
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=2508023648 budget=30787869060 cached=77
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=8 q8_bytes=74256 packed_bytes=61276160 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=2569299808 budget=30787869060 cached=78
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=2598791008 budget=30787869060 cached=79
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=2620417888 budget=30787869060 cached=80
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=2620679008 budget=30787869060 cached=81
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=2620940128 budget=30787869060 cached=82
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=2642567008 budget=30787869060 cached=83
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=2703843168 budget=30787869060 cached=84
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=2765119328 budget=30787869060 cached=85
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=8 q8_bytes=74256 packed_bytes=61276160 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=35389440 kind=0 live=2826395488 budget=30787869060 cached=86
+[qd-trace t1084] ensure uploading bytes=35389440
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=12288 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=35389440 out_bytes=49152
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=2861784928 budget=30787869060 cached=87
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=2867355488 budget=30787869060 cached=88
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=25804800 kind=1 live=2872926048 budget=30787869060 cached=89
+[qd-trace t1084] ensure uploading bytes=25804800
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=1 q8_bytes=26208 packed_bytes=25804800 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=2898730848 budget=30787869060 cached=90
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=2960007008 budget=30787869060 cached=91
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=3021283168 budget=30787869060 cached=92
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=8 q8_bytes=74256 packed_bytes=61276160 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=3082559328 budget=30787869060 cached=93
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=3112050528 budget=30787869060 cached=94
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=3133677408 budget=30787869060 cached=95
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=3133938528 budget=30787869060 cached=96
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=3134199648 budget=30787869060 cached=97
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=3155826528 budget=30787869060 cached=98
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=3205961568 budget=30787869060 cached=99
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=3256096608 budget=30787869060 cached=100
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=3306231648 budget=30787869060 cached=101
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=3335722848 budget=30787869060 cached=102
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=3357349728 budget=30787869060 cached=103
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=3357610848 budget=30787869060 cached=104
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=3357871968 budget=30787869060 cached=105
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=3379498848 budget=30787869060 cached=106
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=3429633888 budget=30787869060 cached=107
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=3479768928 budget=30787869060 cached=108
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=3529903968 budget=30787869060 cached=109
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=3559395168 budget=30787869060 cached=110
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=3581022048 budget=30787869060 cached=111
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=3581283168 budget=30787869060 cached=112
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=3581544288 budget=30787869060 cached=113
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=3603171168 budget=30787869060 cached=114
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=3653306208 budget=30787869060 cached=115
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=3703441248 budget=30787869060 cached=116
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=35389440 kind=0 live=3753576288 budget=30787869060 cached=117
+[qd-trace t1084] ensure uploading bytes=35389440
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=12288 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=35389440 out_bytes=49152
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=3788965728 budget=30787869060 cached=118
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=3794536288 budget=30787869060 cached=119
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=25804800 kind=1 live=3800106848 budget=30787869060 cached=120
+[qd-trace t1084] ensure uploading bytes=25804800
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=1 q8_bytes=26208 packed_bytes=25804800 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=3825911648 budget=30787869060 cached=121
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=3876046688 budget=30787869060 cached=122
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=3926181728 budget=30787869060 cached=123
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=3976316768 budget=30787869060 cached=124
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=4005807968 budget=30787869060 cached=125
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=4027434848 budget=30787869060 cached=126
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=4027695968 budget=30787869060 cached=127
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=4027957088 budget=30787869060 cached=128
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=4049583968 budget=30787869060 cached=129
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=4099719008 budget=30787869060 cached=130
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=4149854048 budget=30787869060 cached=131
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=4199989088 budget=30787869060 cached=132
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=4229480288 budget=30787869060 cached=133
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=4251107168 budget=30787869060 cached=134
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=4251368288 budget=30787869060 cached=135
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=4251629408 budget=30787869060 cached=136
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=4273256288 budget=30787869060 cached=137
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=4323391328 budget=30787869060 cached=138
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=4373526368 budget=30787869060 cached=139
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=4423661408 budget=30787869060 cached=140
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=4453152608 budget=30787869060 cached=141
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=4474779488 budget=30787869060 cached=142
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=4475040608 budget=30787869060 cached=143
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=4475301728 budget=30787869060 cached=144
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=4496928608 budget=30787869060 cached=145
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=4547063648 budget=30787869060 cached=146
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=4597198688 budget=30787869060 cached=147
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=35389440 kind=0 live=4647333728 budget=30787869060 cached=148
+[qd-trace t1084] ensure uploading bytes=35389440
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=12288 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=35389440 out_bytes=49152
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=4682723168 budget=30787869060 cached=149
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=4688293728 budget=30787869060 cached=150
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=25804800 kind=1 live=4693864288 budget=30787869060 cached=151
+[qd-trace t1084] ensure uploading bytes=25804800
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=1 q8_bytes=26208 packed_bytes=25804800 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=4719669088 budget=30787869060 cached=152
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=4769804128 budget=30787869060 cached=153
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=4819939168 budget=30787869060 cached=154
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=4870074208 budget=30787869060 cached=155
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=4899565408 budget=30787869060 cached=156
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=4921192288 budget=30787869060 cached=157
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=4921453408 budget=30787869060 cached=158
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=4921714528 budget=30787869060 cached=159
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=4943341408 budget=30787869060 cached=160
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=4993476448 budget=30787869060 cached=161
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=5043611488 budget=30787869060 cached=162
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=5093746528 budget=30787869060 cached=163
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=5123237728 budget=30787869060 cached=164
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=5144864608 budget=30787869060 cached=165
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=5145125728 budget=30787869060 cached=166
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=5145386848 budget=30787869060 cached=167
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=5167013728 budget=30787869060 cached=168
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=5217148768 budget=30787869060 cached=169
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=5267283808 budget=30787869060 cached=170
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=5317418848 budget=30787869060 cached=171
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=5346910048 budget=30787869060 cached=172
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=5368536928 budget=30787869060 cached=173
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=5368798048 budget=30787869060 cached=174
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=5369059168 budget=30787869060 cached=175
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=5390686048 budget=30787869060 cached=176
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=5440821088 budget=30787869060 cached=177
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=5490956128 budget=30787869060 cached=178
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=35389440 kind=0 live=5541091168 budget=30787869060 cached=179
+[qd-trace t1084] ensure uploading bytes=35389440
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=12288 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=35389440 out_bytes=49152
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=5576480608 budget=30787869060 cached=180
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=5582051168 budget=30787869060 cached=181
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=25804800 kind=1 live=5587621728 budget=30787869060 cached=182
+[qd-trace t1084] ensure uploading bytes=25804800
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=1 q8_bytes=26208 packed_bytes=25804800 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=5613426528 budget=30787869060 cached=183
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=5663561568 budget=30787869060 cached=184
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=5713696608 budget=30787869060 cached=185
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=5763831648 budget=30787869060 cached=186
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=5793322848 budget=30787869060 cached=187
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=5814949728 budget=30787869060 cached=188
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=5815210848 budget=30787869060 cached=189
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=5815471968 budget=30787869060 cached=190
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=5837098848 budget=30787869060 cached=191
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=5887233888 budget=30787869060 cached=192
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=5937368928 budget=30787869060 cached=193
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=5987503968 budget=30787869060 cached=194
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=6016995168 budget=30787869060 cached=195
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=6038622048 budget=30787869060 cached=196
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=6038883168 budget=30787869060 cached=197
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=6039144288 budget=30787869060 cached=198
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=6060771168 budget=30787869060 cached=199
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=6110906208 budget=30787869060 cached=200
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=6161041248 budget=30787869060 cached=201
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=6211176288 budget=30787869060 cached=202
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=6240667488 budget=30787869060 cached=203
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=6262294368 budget=30787869060 cached=204
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=6262555488 budget=30787869060 cached=205
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=6262816608 budget=30787869060 cached=206
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=6284443488 budget=30787869060 cached=207
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=6334578528 budget=30787869060 cached=208
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=6384713568 budget=30787869060 cached=209
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=35389440 kind=0 live=6434848608 budget=30787869060 cached=210
+[qd-trace t1084] ensure uploading bytes=35389440
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=12288 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=35389440 out_bytes=49152
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=6470238048 budget=30787869060 cached=211
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=6475808608 budget=30787869060 cached=212
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=25804800 kind=1 live=6481379168 budget=30787869060 cached=213
+[qd-trace t1084] ensure uploading bytes=25804800
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=1 q8_bytes=26208 packed_bytes=25804800 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=6507183968 budget=30787869060 cached=214
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=6557319008 budget=30787869060 cached=215
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=6607454048 budget=30787869060 cached=216
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=6657589088 budget=30787869060 cached=217
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=6687080288 budget=30787869060 cached=218
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=6708707168 budget=30787869060 cached=219
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=6708968288 budget=30787869060 cached=220
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=6709229408 budget=30787869060 cached=221
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=6730856288 budget=30787869060 cached=222
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=6780991328 budget=30787869060 cached=223
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=6831126368 budget=30787869060 cached=224
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=6881261408 budget=30787869060 cached=225
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=6910752608 budget=30787869060 cached=226
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=6932379488 budget=30787869060 cached=227
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=6932640608 budget=30787869060 cached=228
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=6932901728 budget=30787869060 cached=229
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=6954528608 budget=30787869060 cached=230
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=7004663648 budget=30787869060 cached=231
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=7054798688 budget=30787869060 cached=232
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=7104933728 budget=30787869060 cached=233
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=7134424928 budget=30787869060 cached=234
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=7156051808 budget=30787869060 cached=235
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=7156312928 budget=30787869060 cached=236
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=7156574048 budget=30787869060 cached=237
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=7178200928 budget=30787869060 cached=238
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=7228335968 budget=30787869060 cached=239
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=7278471008 budget=30787869060 cached=240
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=35389440 kind=0 live=7328606048 budget=30787869060 cached=241
+[qd-trace t1084] ensure uploading bytes=35389440
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=12288 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=35389440 out_bytes=49152
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=7363995488 budget=30787869060 cached=242
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=7369566048 budget=30787869060 cached=243
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=25804800 kind=1 live=7375136608 budget=30787869060 cached=244
+[qd-trace t1084] ensure uploading bytes=25804800
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=1 q8_bytes=26208 packed_bytes=25804800 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=7400941408 budget=30787869060 cached=245
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=7451076448 budget=30787869060 cached=246
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=7501211488 budget=30787869060 cached=247
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=7551346528 budget=30787869060 cached=248
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=7580837728 budget=30787869060 cached=249
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=7602464608 budget=30787869060 cached=250
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=7602725728 budget=30787869060 cached=251
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=7602986848 budget=30787869060 cached=252
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=7624613728 budget=30787869060 cached=253
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=7674748768 budget=30787869060 cached=254
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=7724883808 budget=30787869060 cached=255
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=7775018848 budget=30787869060 cached=256
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=7804510048 budget=30787869060 cached=257
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=7826136928 budget=30787869060 cached=258
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=7826398048 budget=30787869060 cached=259
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=7826659168 budget=30787869060 cached=260
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=7848286048 budget=30787869060 cached=261
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=7898421088 budget=30787869060 cached=262
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=7948556128 budget=30787869060 cached=263
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=7998691168 budget=30787869060 cached=264
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=8028182368 budget=30787869060 cached=265
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=8049809248 budget=30787869060 cached=266
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=8050070368 budget=30787869060 cached=267
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=8050331488 budget=30787869060 cached=268
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=8071958368 budget=30787869060 cached=269
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=8122093408 budget=30787869060 cached=270
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=8172228448 budget=30787869060 cached=271
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=35389440 kind=0 live=8222363488 budget=30787869060 cached=272
+[qd-trace t1084] ensure uploading bytes=35389440
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=12288 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=35389440 out_bytes=49152
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=8257752928 budget=30787869060 cached=273
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=8263323488 budget=30787869060 cached=274
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=25804800 kind=1 live=8268894048 budget=30787869060 cached=275
+[qd-trace t1084] ensure uploading bytes=25804800
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=1 q8_bytes=26208 packed_bytes=25804800 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=8294698848 budget=30787869060 cached=276
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=8344833888 budget=30787869060 cached=277
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=8394968928 budget=30787869060 cached=278
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=8445103968 budget=30787869060 cached=279
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=8474595168 budget=30787869060 cached=280
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=8496222048 budget=30787869060 cached=281
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=8496483168 budget=30787869060 cached=282
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=8496744288 budget=30787869060 cached=283
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=8518371168 budget=30787869060 cached=284
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=8568506208 budget=30787869060 cached=285
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=8618641248 budget=30787869060 cached=286
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=8668776288 budget=30787869060 cached=287
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=8698267488 budget=30787869060 cached=288
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=8719894368 budget=30787869060 cached=289
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=8720155488 budget=30787869060 cached=290
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=8720416608 budget=30787869060 cached=291
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=8742043488 budget=30787869060 cached=292
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=8792178528 budget=30787869060 cached=293
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=8842313568 budget=30787869060 cached=294
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=8892448608 budget=30787869060 cached=295
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=8921939808 budget=30787869060 cached=296
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=8943566688 budget=30787869060 cached=297
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=8943827808 budget=30787869060 cached=298
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=8944088928 budget=30787869060 cached=299
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=8965715808 budget=30787869060 cached=300
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=9015850848 budget=30787869060 cached=301
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=9065985888 budget=30787869060 cached=302
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=35389440 kind=0 live=9116120928 budget=30787869060 cached=303
+[qd-trace t1084] ensure uploading bytes=35389440
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=12288 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=35389440 out_bytes=49152
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=9151510368 budget=30787869060 cached=304
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=9157080928 budget=30787869060 cached=305
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=25804800 kind=1 live=9162651488 budget=30787869060 cached=306
+[qd-trace t1084] ensure uploading bytes=25804800
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=1 q8_bytes=26208 packed_bytes=25804800 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=9188456288 budget=30787869060 cached=307
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=9238591328 budget=30787869060 cached=308
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=9288726368 budget=30787869060 cached=309
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=9338861408 budget=30787869060 cached=310
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=9368352608 budget=30787869060 cached=311
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=9389979488 budget=30787869060 cached=312
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=9390240608 budget=30787869060 cached=313
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=9390501728 budget=30787869060 cached=314
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=9412128608 budget=30787869060 cached=315
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=9462263648 budget=30787869060 cached=316
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=9512398688 budget=30787869060 cached=317
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=9562533728 budget=30787869060 cached=318
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=9592024928 budget=30787869060 cached=319
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=9613651808 budget=30787869060 cached=320
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=9613912928 budget=30787869060 cached=321
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=9614174048 budget=30787869060 cached=322
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=9635800928 budget=30787869060 cached=323
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=9685935968 budget=30787869060 cached=324
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=9736071008 budget=30787869060 cached=325
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=9786206048 budget=30787869060 cached=326
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=9815697248 budget=30787869060 cached=327
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=9837324128 budget=30787869060 cached=328
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=9837585248 budget=30787869060 cached=329
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=9837846368 budget=30787869060 cached=330
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=9859473248 budget=30787869060 cached=331
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=9909608288 budget=30787869060 cached=332
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=9959743328 budget=30787869060 cached=333
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=35389440 kind=0 live=10009878368 budget=30787869060 cached=334
+[qd-trace t1084] ensure uploading bytes=35389440
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=12288 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=35389440 out_bytes=49152
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=10045267808 budget=30787869060 cached=335
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=10050838368 budget=30787869060 cached=336
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=25804800 kind=1 live=10056408928 budget=30787869060 cached=337
+[qd-trace t1084] ensure uploading bytes=25804800
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=1 q8_bytes=26208 packed_bytes=25804800 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=10082213728 budget=30787869060 cached=338
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=10132348768 budget=30787869060 cached=339
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=10182483808 budget=30787869060 cached=340
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=10232618848 budget=30787869060 cached=341
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=10262110048 budget=30787869060 cached=342
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=10283736928 budget=30787869060 cached=343
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=10283998048 budget=30787869060 cached=344
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=10284259168 budget=30787869060 cached=345
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=10305886048 budget=30787869060 cached=346
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=10356021088 budget=30787869060 cached=347
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=10406156128 budget=30787869060 cached=348
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=10456291168 budget=30787869060 cached=349
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=10485782368 budget=30787869060 cached=350
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=10507409248 budget=30787869060 cached=351
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=10507670368 budget=30787869060 cached=352
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=10507931488 budget=30787869060 cached=353
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=10529558368 budget=30787869060 cached=354
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=10579693408 budget=30787869060 cached=355
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=10629828448 budget=30787869060 cached=356
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=10679963488 budget=30787869060 cached=357
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=10709454688 budget=30787869060 cached=358
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=10731081568 budget=30787869060 cached=359
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=10731342688 budget=30787869060 cached=360
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=10731603808 budget=30787869060 cached=361
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=10753230688 budget=30787869060 cached=362
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=10803365728 budget=30787869060 cached=363
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=10853500768 budget=30787869060 cached=364
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=35389440 kind=0 live=10903635808 budget=30787869060 cached=365
+[qd-trace t1084] ensure uploading bytes=35389440
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=12288 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=35389440 out_bytes=49152
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=10939025248 budget=30787869060 cached=366
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=10944595808 budget=30787869060 cached=367
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=25804800 kind=1 live=10950166368 budget=30787869060 cached=368
+[qd-trace t1084] ensure uploading bytes=25804800
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=1 q8_bytes=26208 packed_bytes=25804800 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=10975971168 budget=30787869060 cached=369
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=11026106208 budget=30787869060 cached=370
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=11076241248 budget=30787869060 cached=371
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=11126376288 budget=30787869060 cached=372
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=11155867488 budget=30787869060 cached=373
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=11177494368 budget=30787869060 cached=374
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=11177755488 budget=30787869060 cached=375
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=11178016608 budget=30787869060 cached=376
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=11199643488 budget=30787869060 cached=377
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=11249778528 budget=30787869060 cached=378
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=11299913568 budget=30787869060 cached=379
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=11350048608 budget=30787869060 cached=380
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=11379539808 budget=30787869060 cached=381
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=11401166688 budget=30787869060 cached=382
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=11401427808 budget=30787869060 cached=383
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=11401688928 budget=30787869060 cached=384
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=11423315808 budget=30787869060 cached=385
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=11473450848 budget=30787869060 cached=386
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=11523585888 budget=30787869060 cached=387
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=11573720928 budget=30787869060 cached=388
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=11603212128 budget=30787869060 cached=389
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=11624839008 budget=30787869060 cached=390
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=11625100128 budget=30787869060 cached=391
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=11625361248 budget=30787869060 cached=392
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=11646988128 budget=30787869060 cached=393
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=11697123168 budget=30787869060 cached=394
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=11747258208 budget=30787869060 cached=395
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=35389440 kind=0 live=11797393248 budget=30787869060 cached=396
+[qd-trace t1084] ensure uploading bytes=35389440
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=12288 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=35389440 out_bytes=49152
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=11832782688 budget=30787869060 cached=397
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=11838353248 budget=30787869060 cached=398
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=25804800 kind=1 live=11843923808 budget=30787869060 cached=399
+[qd-trace t1084] ensure uploading bytes=25804800
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=1 q8_bytes=26208 packed_bytes=25804800 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=11869728608 budget=30787869060 cached=400
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=11919863648 budget=30787869060 cached=401
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=11969998688 budget=30787869060 cached=402
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=12020133728 budget=30787869060 cached=403
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=12049624928 budget=30787869060 cached=404
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=12071251808 budget=30787869060 cached=405
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=12071512928 budget=30787869060 cached=406
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=12071774048 budget=30787869060 cached=407
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=12093400928 budget=30787869060 cached=408
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=12154677088 budget=30787869060 cached=409
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=12215953248 budget=30787869060 cached=410
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=8 q8_bytes=74256 packed_bytes=61276160 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=12277229408 budget=30787869060 cached=411
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=12306720608 budget=30787869060 cached=412
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=12328347488 budget=30787869060 cached=413
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=12328608608 budget=30787869060 cached=414
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=12328869728 budget=30787869060 cached=415
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=12350496608 budget=30787869060 cached=416
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=12411772768 budget=30787869060 cached=417
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=12473048928 budget=30787869060 cached=418
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=8 q8_bytes=74256 packed_bytes=61276160 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=12534325088 budget=30787869060 cached=419
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=12563816288 budget=30787869060 cached=420
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=12585443168 budget=30787869060 cached=421
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=12585704288 budget=30787869060 cached=422
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=12585965408 budget=30787869060 cached=423
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=12607592288 budget=30787869060 cached=424
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=12668868448 budget=30787869060 cached=425
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=12730144608 budget=30787869060 cached=426
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=8 q8_bytes=74256 packed_bytes=61276160 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=35389440 kind=0 live=12791420768 budget=30787869060 cached=427
+[qd-trace t1084] ensure uploading bytes=35389440
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=12288 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=35389440 out_bytes=49152
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=12826810208 budget=30787869060 cached=428
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=12832380768 budget=30787869060 cached=429
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=25804800 kind=1 live=12837951328 budget=30787869060 cached=430
+[qd-trace t1084] ensure uploading bytes=25804800
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=1 q8_bytes=26208 packed_bytes=25804800 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=12863756128 budget=30787869060 cached=431
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=12925032288 budget=30787869060 cached=432
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=12986308448 budget=30787869060 cached=433
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=8 q8_bytes=74256 packed_bytes=61276160 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=13047584608 budget=30787869060 cached=434
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=13077075808 budget=30787869060 cached=435
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=13098702688 budget=30787869060 cached=436
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=13098963808 budget=30787869060 cached=437
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=13099224928 budget=30787869060 cached=438
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=13120851808 budget=30787869060 cached=439
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=13182127968 budget=30787869060 cached=440
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=13243404128 budget=30787869060 cached=441
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=8 q8_bytes=74256 packed_bytes=61276160 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=13304680288 budget=30787869060 cached=442
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=13334171488 budget=30787869060 cached=443
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=13355798368 budget=30787869060 cached=444
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=13356059488 budget=30787869060 cached=445
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=13356320608 budget=30787869060 cached=446
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=13377947488 budget=30787869060 cached=447
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=13439223648 budget=30787869060 cached=448
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=13500499808 budget=30787869060 cached=449
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=8 q8_bytes=74256 packed_bytes=61276160 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=13561775968 budget=30787869060 cached=450
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=13591267168 budget=30787869060 cached=451
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=13612894048 budget=30787869060 cached=452
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=13613155168 budget=30787869060 cached=453
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=13613416288 budget=30787869060 cached=454
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=13635043168 budget=30787869060 cached=455
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=13696319328 budget=30787869060 cached=456
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=13757595488 budget=30787869060 cached=457
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=8 q8_bytes=74256 packed_bytes=61276160 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=35389440 kind=0 live=13818871648 budget=30787869060 cached=458
+[qd-trace t1084] ensure uploading bytes=35389440
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=12288 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=35389440 out_bytes=49152
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=13854261088 budget=30787869060 cached=459
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=13859831648 budget=30787869060 cached=460
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=25804800 kind=1 live=13865402208 budget=30787869060 cached=461
+[qd-trace t1084] ensure uploading bytes=25804800
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=1 q8_bytes=26208 packed_bytes=25804800 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=13891207008 budget=30787869060 cached=462
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=13952483168 budget=30787869060 cached=463
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=14013759328 budget=30787869060 cached=464
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=8 q8_bytes=74256 packed_bytes=61276160 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=14075035488 budget=30787869060 cached=465
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=14104526688 budget=30787869060 cached=466
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=14126153568 budget=30787869060 cached=467
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=14126414688 budget=30787869060 cached=468
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=14126675808 budget=30787869060 cached=469
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=14148302688 budget=30787869060 cached=470
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=14209578848 budget=30787869060 cached=471
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=14270855008 budget=30787869060 cached=472
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=8 q8_bytes=74256 packed_bytes=61276160 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=14332131168 budget=30787869060 cached=473
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=14361622368 budget=30787869060 cached=474
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=14383249248 budget=30787869060 cached=475
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=14383510368 budget=30787869060 cached=476
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=14383771488 budget=30787869060 cached=477
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=14405398368 budget=30787869060 cached=478
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=14466674528 budget=30787869060 cached=479
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=14527950688 budget=30787869060 cached=480
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=8 q8_bytes=74256 packed_bytes=61276160 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=29491200 kind=0 live=14589226848 budget=30787869060 cached=481
+[qd-trace t1084] ensure uploading bytes=29491200
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=10240 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=29491200 out_bytes=40960
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=14618718048 budget=30787869060 cached=482
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=6144 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=21626880 out_bytes=24576
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=14640344928 budget=30787869060 cached=483
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=261120 kind=3 live=14640606048 budget=30787869060 cached=484
+[qd-trace t1084] ensure uploading bytes=261120
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=48 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=261120 out_bytes=192
+[qd-trace t1084] ensure enter bytes=21626880 kind=8 live=14640867168 budget=30787869060 cached=485
+[qd-trace t1084] ensure uploading bytes=21626880
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=8 q8_bytes=26208 packed_bytes=21626880 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=14662494048 budget=30787869060 cached=486
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=14723770208 budget=30787869060 cached=487
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=14785046368 budget=30787869060 cached=488
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=8 q8_bytes=74256 packed_bytes=61276160 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=35389440 kind=0 live=14846322528 budget=30787869060 cached=489
+[qd-trace t1084] ensure uploading bytes=35389440
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=12288 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=35389440 out_bytes=49152
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=14881711968 budget=30787869060 cached=490
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=14887282528 budget=30787869060 cached=491
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=25804800 kind=1 live=14892853088 budget=30787869060 cached=492
+[qd-trace t1084] ensure uploading bytes=25804800
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=1 q8_bytes=26208 packed_bytes=25804800 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=14918657888 budget=30787869060 cached=493
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=14979934048 budget=30787869060 cached=494
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=8 q8_bytes=21840 packed_bytes=61276160 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=61276160 kind=8 live=15041210208 budget=30787869060 cached=495
+[qd-trace t1084] ensure uploading bytes=61276160
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=8 q8_bytes=74256 packed_bytes=61276160 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=35389440 kind=0 live=15102486368 budget=30787869060 cached=496
+[qd-trace t1084] ensure uploading bytes=35389440
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=12288 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=35389440 out_bytes=49152
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=15137875808 budget=30787869060 cached=497
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=5570560 kind=3 live=15143446368 budget=30787869060 cached=498
+[qd-trace t1084] ensure uploading bytes=5570560
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=1024 n_in=5120 n_blocks=20 kind=3 q8_bytes=21840 packed_bytes=5570560 out_bytes=4096
+[qd-trace t1084] ensure enter bytes=25804800 kind=1 live=15149016928 budget=30787869060 cached=499
+[qd-trace t1084] ensure uploading bytes=25804800
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=6144 n_blocks=24 kind=1 q8_bytes=26208 packed_bytes=25804800 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=15174821728 budget=30787869060 cached=500
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=15224956768 budget=30787869060 cached=501
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=17408 n_in=5120 n_blocks=20 kind=0 q8_bytes=21840 packed_bytes=50135040 out_bytes=69632
+[qd-trace t1084] ensure enter bytes=50135040 kind=0 live=15275091808 budget=30787869060 cached=502
+[qd-trace t1084] ensure uploading bytes=50135040
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=5120 n_in=17408 n_blocks=68 kind=0 q8_bytes=74256 packed_bytes=50135040 out_bytes=20480
+[qd-trace t1084] ensure enter bytes=1042944000 kind=1 live=15325226848 budget=30787869060 cached=503
+[qd-trace t1084] ensure uploading bytes=1042944000
+[qd-trace t1084] ensure upload done
+[qd-trace t1084] submitted n_out=248320 n_in=5120 n_blocks=20 kind=1 q8_bytes=21840 packed_bytes=1042944000 out_bytes=993280
+prefill_mode=serial ExecuteToken
+input_tokens=1
+layer_count=65
+total_op_executions=721
+op_executions_per_token=721.00
+op_executions_per_token_per_layer=11.0923
+prefill_shape=PER_TOKEN_PER_LAYER (not fused)
+prefill_ms=16997.8
+prefill_tps=0.06
+
+===== EXECUTION: dispatch receipts =====
+cpu_operations=0
+gpu_dispatches=552
+vulkan_tensor_ops=718
+cpu_tensor_ops=0
+host_descriptor_ops=0
+other_backend_ops=0
+ops_without_dispatch_receipt=3
+forced_host_pin=false
+gpu_device=
+gpu_rows=0 cpu_rows=0
+unexplained_fallbacks=0
+cold_start_ms=16997.7 steady_kernel_ms=0.000 dispatch_ms=16997.733
+backend_submits=1008 backend_waits=1008 upload_bytes=16382662480 download_bytes=16846848
+backend_kernel_ms=4617.405 backend_submit_ms=11.931 backend_wait_ms=4617.405 backend_gpu_ms=3911.163
+n===== KV_CACHE =====
+position_counter=1 (not a cache witness)
+kv_blocks=65
+kv_rows_block0=0
+kv_rows_max_over_blocks=1
+kv_resident_bytes=139264
+kv_leading_zero_rows_sampled=0
+prefill_committed_positions=YES (kv rows == tokens)
+
+===== EXECUTION: decode =====
+decode_tokens=0
+decode_ms=0.0
+decode_tps=0.000
+gpu_dispatches_delta=0
+cpu_operations_delta=0
+matrix_rows_delta=0
+executor_gpu_ops_per_token=0.0 (NOT queue submissions)
+backend_submits_total=1008 backend_waits_total=1008 upload_bytes_total=16382662480 download_bytes_total=16846848
+backend_kernel_ms_total=4617.405 backend_submit_ms_total=11.931 backend_wait_ms_total=4617.405 backend_gpu_ms_total=3911.163
+sample=
+
+===== RESULT =====
+actual_backend=vulkan-gpu
+slowest_operations (by reported tensor size):
+        up: x65 size_total=1131520
+        swiglu: x65 size_total=1131520
+        gate: x65 size_total=1131520
+        resid_in: x65 size_total=332800
+        resid2: x65 size_total=332800
+        resid1: x65 size_total=332800
+        ffn_out: x65 size_total=332800
+        ffn_norm: x65 size_total=332800
+task_tps=0.014
+nEXEC_TRUTH_TRACE=COMPLETE
+GATE_RESIDENCY=PARTIAL
+GATE_EXECUTION=PASS
+GATE_CONTEXT=PARTIAL
+GATE_TOOL=N/A
+GATE_RECOVERY=N/A
+FINAL_VERDICT=PASS
+Released all tensors
+Vulkan resources cleaned up successfully

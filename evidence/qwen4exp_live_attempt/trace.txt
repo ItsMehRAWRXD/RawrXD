@@ -1,0 +1,7 @@
+tokens: 1
+[INGEST_TRACE] begin
+[INGEST_TRACE] shard-loader-ready
+[INGEST_TRACE] shard-tensors-ready
+[INGEST_TRACE] tensors-parsed
+[INGEST_TRACE] spec-filled
+EXIT_CODE=-1

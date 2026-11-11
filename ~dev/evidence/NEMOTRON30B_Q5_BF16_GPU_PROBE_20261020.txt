@@ -1,0 +1,125 @@
+[RAWR_MODEL_RESOLVE] REQUEST=nemotron-3.5-lightning:30b PATH=F:\rawrxd\models\nemotron-3.5-lightning-30b-Q4_K_M.gguf
+[RAWR_RUN_ROUTE] MODEL=nemotron-3.5-lightning:30b WORKSPACE=F:\rawrxd MODE=STREAM REQUEST_LEN=6
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 16 GEMV kernels, 16 dequant kernels
+[Deep2Engine] layer 0 SSM bound: in=[10304,2688] out=[2688,4096] state=64 conv=24576
+[Deep2Engine] layer 1 MoE: experts=128 topK=6
+[Deep2Engine] layer 1 PackedNoGateMoE: experts=128 latent=0 shared=1
+[Deep2Engine] layer 2 SSM bound: in=[10304,2688] out=[2688,4096] state=64 conv=24576
+[Deep2Engine] layer 3 MoE: experts=128 topK=6
+[Deep2Engine] layer 3 PackedNoGateMoE: experts=128 latent=0 shared=1
+[Deep2Engine] layer 4 SSM bound: in=[10304,2688] out=[2688,4096] state=64 conv=24576
+[Deep2Engine] layer 6 MoE: experts=128 topK=6
+[Deep2Engine] layer 6 PackedNoGateMoE: experts=128 latent=0 shared=1
+[Deep2Engine] layer 7 SSM bound: in=[10304,2688] out=[2688,4096] state=64 conv=24576
+[Deep2Engine] layer 8 MoE: experts=128 topK=6
+[Deep2Engine] layer 8 PackedNoGateMoE: experts=128 latent=0 shared=1
+[Deep2Engine] layer 9 SSM bound: in=[10304,2688] out=[2688,4096] state=64 conv=24576
+[Deep2Engine] layer 10 MoE: experts=128 topK=6
+[Deep2Engine] layer 10 PackedNoGateMoE: experts=128 latent=0 shared=1
+[Deep2Engine] layer 11 SSM bound: in=[10304,2688] out=[2688,4096] state=64 conv=24576
+[Deep2Engine] layer 13 MoE: experts=128 topK=6
+[Deep2Engine] layer 13 PackedNoGateMoE: experts=128 latent=0 shared=1
+[Deep2Engine] layer 14 SSM bound: in=[10304,2688] out=[2688,4096] state=64 conv=24576
+[Deep2Engine] layer 15 MoE: experts=128 topK=6
+[Deep2Engine] layer 15 PackedNoGateMoE: experts=128 latent=0 shared=1
+[Deep2Engine] layer 16 SSM bound: in=[10304,2688] out=[2688,4096] state=64 conv=24576
+[Deep2Engine] layer 17 MoE: experts=128 topK=6
+[Deep2Engine] layer 17 PackedNoGateMoE: experts=128 latent=0 shared=1
+[Deep2Engine] layer 18 SSM bound: in=[10304,2688] out=[2688,4096] state=64 conv=24576
+[Deep2Engine] layer 20 MoE: experts=128 topK=6
+[Deep2Engine] layer 20 PackedNoGateMoE: experts=128 latent=0 shared=1
+[Deep2Engine] layer 21 SSM bound: in=[10304,2688] out=[2688,4096] state=64 conv=24576
+[Deep2Engine] layer 22 MoE: experts=128 topK=6
+[Deep2Engine] layer 22 PackedNoGateMoE: experts=128 latent=0 shared=1
+[Deep2Engine] layer 23 SSM bound: in=[10304,2688] out=[2688,4096] state=64 conv=24576
+[Deep2Engine] layer 24 MoE: experts=128 topK=6
+[Deep2Engine] layer 24 PackedNoGateMoE: experts=128 latent=0 shared=1
+[Deep2Engine] layer 25 SSM bound: in=[10304,2688] out=[2688,4096] state=64 conv=24576
+[Deep2Engine] layer 27 MoE: experts=128 topK=6
+[Deep2Engine] layer 27 PackedNoGateMoE: experts=128 latent=0 shared=1
+[Deep2Engine] layer 28 SSM bound: in=[10304,2688] out=[2688,4096] state=64 conv=24576
+[Deep2Engine] layer 29 MoE: experts=128 topK=6
+[Deep2Engine] layer 29 PackedNoGateMoE: experts=128 latent=0 shared=1
+[Deep2Engine] layer 30 SSM bound: in=[10304,2688] out=[2688,4096] state=64 conv=24576
+[Deep2Engine] layer 31 MoE: experts=128 topK=6
+[Deep2Engine] layer 31 PackedNoGateMoE: experts=128 latent=0 shared=1
+[Deep2Engine] layer 32 SSM bound: in=[10304,2688] out=[2688,4096] state=64 conv=24576
+[Deep2Engine] layer 34 MoE: experts=128 topK=6
+[Deep2Engine] layer 34 PackedNoGateMoE: experts=128 latent=0 shared=1
+[Deep2Engine] layer 35 SSM bound: in=[10304,2688] out=[2688,4096] state=64 conv=24576
+[Deep2Engine] layer 36 MoE: experts=128 topK=6
+[Deep2Engine] layer 36 PackedNoGateMoE: experts=128 latent=0 shared=1
+[Deep2Engine] layer 37 SSM bound: in=[10304,2688] out=[2688,4096] state=64 conv=24576
+[Deep2Engine] layer 38 MoE: experts=128 topK=6
+[Deep2Engine] layer 38 PackedNoGateMoE: experts=128 latent=0 shared=1
+[Deep2Engine] layer 39 SSM bound: in=[10304,2688] out=[2688,4096] state=64 conv=24576
+[Deep2Engine] layer 40 MoE: experts=128 topK=6
+[Deep2Engine] layer 40 PackedNoGateMoE: experts=128 latent=0 shared=1
+[Deep2Engine] layer 41 SSM bound: in=[10304,2688] out=[2688,4096] state=64 conv=24576
+[Deep2Engine] layer 43 MoE: experts=128 topK=6
+[Deep2Engine] layer 43 PackedNoGateMoE: experts=128 latent=0 shared=1
+[Deep2Engine] layer 44 SSM bound: in=[10304,2688] out=[2688,4096] state=64 conv=24576
+[Deep2Engine] layer 45 MoE: experts=128 topK=6
+[Deep2Engine] layer 45 PackedNoGateMoE: experts=128 latent=0 shared=1
+[Deep2Engine] layer 46 SSM bound: in=[10304,2688] out=[2688,4096] state=64 conv=24576
+[Deep2Engine] layer 47 MoE: experts=128 topK=6
+[Deep2Engine] layer 47 PackedNoGateMoE: experts=128 latent=0 shared=1
+[Deep2Engine] layer 48 SSM bound: in=[10304,2688] out=[2688,4096] state=64 conv=24576
+[Deep2Engine] layer 49 MoE: experts=128 topK=6
+[Deep2Engine] layer 49 PackedNoGateMoE: experts=128 latent=0 shared=1
+[Deep2Engine] layer 50 SSM bound: in=[10304,2688] out=[2688,4096] state=64 conv=24576
+[Deep2Engine] layer 51 MoE: experts=128 topK=6
+[Deep2Engine] layer 51 PackedNoGateMoE: experts=128 latent=0 shared=1
+[Deep2Engine] layer 52 MoE: experts=128 topK=6
+[Deep2Engine] layer 52 PackedNoGateMoE: experts=128 latent=0 shared=1
+[Deep2Engine] MoE bound: experts=128 topk=6 shared=1 moe_layers=24 gating=1 scale=2.5000 norm=1
+[Deep2Engine] GGUF mapped: arch=nemotron_h_moe shards=1 tensors=417 layers=53 hidden=2688 heads=32 kv_heads=2 vocab=131072
+ARCH=nemotron_h_moe
+HIDDEN=2688
+LAYERS=53
+HEADS=32
+KV_HEADS=2
+HEAD_DIM=128
+GQA_GROUP=16
+FFN_DIM=0
+ROPE_THETA=10000
+ROPE_SCALING=1
+ROPE_DIM=84
+ROPE_NEOX=0
+RMS_EPS=1e-05
+Q_BIAS=absent
+K_BIAS=absent
+V_BIAS=absent
+TIE_EMBED=0
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+DEEP2_GPU_CANDIDATE rank=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 discrete=1 localGB=31.86
+[SHADER_PATH] ops=F:\rawrxd\~dev\rawrxd\src\deep2\shaders\deep2_ops.spv q=F:\rawrxd\~dev\rawrxd\src\deep2\shaders\deep2_qgemv.spv qb=F:\rawrxd\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch.spv q4r=F:\rawrxd\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.spv q8r=F:\rawrxd\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.spv am=F:\rawrxd\~dev\rawrxd\src\deep2\shaders\deep2_argmax.spv so=F:\rawrxd\~dev\rawrxd\src\deep2\shaders\deep2_spec_ops.spv sa=F:\rawrxd\~dev\rawrxd\src\deep2\shaders\deep2_spec_attn.spv ac=F:\rawrxd\~dev\rawrxd\src\deep2\shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+DEEP2_GPU_SELECT slot=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551
+DEEP2_DENSE_SLOT slot=0 lo=0 hi=52 speed_weight=1.320
+BATCH9_VULKAN_INIT=DEVICE_BACKED devices=1 plan_active=1
+GEN_ENTER maxOut=1
+GEN_DECODE_LIMIT=1 specActive=0
+RAWR_RUN_STREAM_001_RECEIPT
+MODEL_RESOLVED=1
+DEEP2_ENGINE=1
+VULKAN_INFERENCE=1
+CPU_DEMO_ENGINE=0
+MODEL_FALLBACK=0
+STREAM_CALLBACK=1
+PROMPT_TOKENS=2
+GENERATED_TOKENS=1
+GENERATION_MS=342.486
+DECODE_TPS=2.920
+UNPLANNED_FALLBACKS=0
+STRICT_GPU_VIOLATIONS=0
+GEN_EXIT=0
+RAWR_RUN_STREAM_001=PASS
+病

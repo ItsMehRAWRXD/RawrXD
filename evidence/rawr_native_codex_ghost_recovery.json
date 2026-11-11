@@ -1,0 +1,30 @@
+{
+  "gate": "RAWRXD_NATIVE_CODEX_GHOST_RECOVERY_002",
+  "timestamp": "2026-10-23T21:07:07.4588746Z",
+  "source_revision": "cb885b5b10334ffdcf958cab9d273b3f1eb37dce",
+  "executable": "F:\\rawrxd\\build_ide\\bin\\RawrXD-Win32IDE-Native.exe",
+  "executable_sha256": "DB7541FD0D6DE1994CC4F9713F1AE9DBCA5D96399672B0FAA1F3DA4A6694227F",
+  "qt_free_target": true,
+  "new_sources": [
+    "src/win32app/Win32IDE_GhostText.h",
+    "src/win32app/Win32IDE_GhostText.cpp",
+    "src/win32app/Win32IDE_GhostTextIntegration.cpp",
+    "src/win32app/Win32IDE_CodexCommands.h",
+    "src/win32app/Win32IDE_CodexCommands.cpp"
+  ],
+  "build": "PASS",
+  "native_health": "PASS",
+  "self_manifest_exit": 0,
+  "functional_e2e_exit": 0,
+  "functional_e2e_receipt": "F:\\rawrxd\\evidence\\rawr_ide_functional_e2e.json",
+  "cli_ghost_command": "rawr ghost <model> \"<source prefix>\"",
+  "physical_ide_launch": "SMOKE_LAUNCHED_3S",
+  "stale_completion_rejection": "IMPLEMENTED_GENERATION_AND_SNAPSHOT_CHECK",
+  "provider_inference": "PENDING",
+  "physical_ghost_acceptance": "PENDING",
+  "model_driven_edit_build_test": "PENDING",
+  "verdict": "PARTIAL_NATIVE_IMPLEMENTATION_LOCAL_GHOST_WIRED",
+  "local_route_policy": "LOCAL_ONLY_VALIDATED_GGUF_OR_BLOB",
+  "cloud_routes": "RETAINED_FOR_CHAT_AND_FUTURE_CONNECTIONS",
+  "health_output": "healthy_ready_true"
+}

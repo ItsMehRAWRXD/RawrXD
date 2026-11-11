@@ -1,0 +1,1 @@
+SHARD_PROBE_FAIL path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf reason=GGUF tensor range outside mapped shard: blk.4.ffn_up_exps.weight

@@ -1,0 +1,36 @@
+{
+  "gate": "RAWRXD_FULL_NATIVE_AUDIT_002",
+  "timestamp": "2026-10-23T21:24:05.2202734Z",
+  "worktree": "F:\\rawrxd",
+  "git_revision": "cb885b5b10334ffdcf958cab9d273b3f1eb37dce",
+  "executable": "F:\\rawrxd\\build_ide\\bin\\RawrXD-Win32IDE-Native.exe",
+  "executable_sha256": "1CFBA1358B7C9357DECDBA2D8F2B50B049219F4B29C1458EECE5892307997576",
+  "configuration": "Release",
+  "launch_health": {
+    "status": "PASS",
+    "ready": true,
+    "exit_code": 0
+  },
+  "self_manifest": {
+    "status": "PASS",
+    "checks": 18,
+    "blocked": 0,
+    "receipt": "F:\\rawrxd\\evidence\\rawr_ide_self_manifest.json"
+  },
+  "functional_e2e": {
+    "status": "PARTIAL",
+    "executed": 7,
+    "unavailable": 3,
+    "failed": 0,
+    "receipt": "F:\\rawrxd\\evidence\\rawr_ide_functional_e2e.json"
+  },
+  "ollama": {
+    "endpoint": "http://127.0.0.1:11434",
+    "catalog_count": 41,
+    "status": "REACHABLE"
+  },
+  "ghosttext_gpu": "PENDING_MODEL_BACKED_GUI_RECEIPT",
+  "ghosttext_dual_gpu": "PENDING_MODEL_BACKED_GUI_RECEIPT",
+  "agentic_edit_build_test": "PENDING_PHYSICAL_E2E",
+  "verdict": "PARTIAL_NOT_CERTIFIED"
+}

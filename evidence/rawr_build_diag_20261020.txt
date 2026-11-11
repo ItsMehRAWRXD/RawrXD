@@ -1,0 +1,14 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  rawrxd_screenpilot_e2e.vcxproj -> F:\rawrxd\~dev\build\Release\rawrxd_screenpilot_e2e.lib
+  Deep2Engine_GpuForward.cpp
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp(54,29): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp(171,31): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp(179,31): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp(183,31): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp(188,27): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp(313,35): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp(260,15): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+F:\rawrxd\~dev\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp(261,15): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\~dev\build\rawr_monolith.vcxproj]
+  rawr_monolith.vcxproj -> F:\rawrxd\~dev\build\Release\rawr_monolith.exe
+  Publishing rawr.exe product entry point

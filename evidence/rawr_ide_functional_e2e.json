@@ -1,0 +1,83 @@
+{
+  "schema": "rawrxd.ide.functional_e2e.v1",
+  "generated_utc": "2026-10-23T21:23:59.0286276Z",
+  "repository": "F:\\rawrxd",
+  "source_revision": "cb885b5b10334ffdcf958cab9d273b3f1eb37dce",
+  "checks": [
+    {
+      "id": "E2E-FILE-READ",
+      "area": "file-explorer",
+      "status": "PASS",
+      "evidence": "Disposable source file opened and read.",
+      "next_action": "Verify file explorer selection through the GUI."
+    },
+    {
+      "id": "E2E-EDIT-SAVE",
+      "area": "editor",
+      "status": "PASS",
+      "evidence": "Disposable source edited and saved.",
+      "next_action": "Verify editor typing and save command through the GUI."
+    },
+    {
+      "id": "E2E-SEARCH",
+      "area": "search",
+      "status": "PASS",
+      "evidence": "Known symbol found in saved source.",
+      "next_action": ""
+    },
+    {
+      "id": "E2E-TERMINAL",
+      "area": "terminal",
+      "status": "PASS",
+      "evidence": "Harmless native shell command completed.",
+      "next_action": ""
+    },
+    {
+      "id": "E2E-SCM",
+      "area": "source-control",
+      "status": "PASS",
+      "evidence": "Git status command completed.",
+      "next_action": "Verify controlled change detection through the GUI."
+    },
+    {
+      "id": "E2E-HEALTH",
+      "area": "runtime",
+      "status": "PASS",
+      "evidence": "Native health exit=0",
+      "next_action": ""
+    },
+    {
+      "id": "E2E-PROVIDER-RECEIPT",
+      "area": "providers",
+      "status": "PASS",
+      "evidence": "Provider inference receipt presence.",
+      "next_action": "Run one real prompt through each configured provider."
+    },
+    {
+      "id": "E2E-BROWSER",
+      "area": "browser",
+      "status": "NOT_RUN",
+      "evidence": "Visible WebView2 rendering requires UI automation.",
+      "next_action": "Run the browser surface test and record a screenshot/receipt."
+    },
+    {
+      "id": "E2E-SNAPSHOT",
+      "area": "snapshot",
+      "status": "NOT_RUN",
+      "evidence": "Snapshot recovery requires an actual GUI state transition.",
+      "next_action": "Run capture, mutate, restore, and compare the snapshot."
+    },
+    {
+      "id": "E2E-AGENT",
+      "area": "agentic-loop",
+      "status": "NOT_RUN",
+      "evidence": "Model-driven read/edit/build/test requires an authorized live task.",
+      "next_action": "Run the bounded agent E2E workflow."
+    }
+  ],
+  "executed_count": 7,
+  "unavailable_count": 3,
+  "failed_count": 0,
+  "certification": "NOT_CERTIFIED",
+  "verdict": "PARTIAL"
+}

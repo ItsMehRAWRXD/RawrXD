@@ -1,0 +1,135 @@
+#pragma once
+
+#include <string>
+#include <vector>
+#include <functional>
+#include <mutex>
+#include <atomic>
+#include <chrono>
+#include <memory>
+#include <thread>
+#include <nlohmann/json.hpp>
+
+#include "ToolCallResult.h"
+#include "AgentTranscript.h"
+#include "AgentToolHandlers.h"
+#include "BackendRouter.h"
+#include "WorkspaceToolHost.h"
+#include "tool_core.hpp"
+
+namespace RawrXD {
+namespace Agent {
+
+struct AgentLoopConfig {
+    int maxSteps                = 8;
+    int maxTokensPerRequest     = 8192;
+    std::string model;
+    std::string ollamaBaseUrl;                 // Empty = local Ollama :11434
+    std::string workingDirectory;
+    std::vector<std::string> openFiles;
+    bool dryRun                 = false;
+    bool autoVerify             = true;
+    std::string transcriptPath;
+};
+
+enum class AgentLoopState {
+    Idle,
+    WaitingForModel,
+    ExecutingTool,
+    Verifying,
+    Complete,
+    StepLimitReached,
+    Error
+};
+
+using AgentProgressCallback = std::function<void(int step, int maxSteps,
+                                                  const std::string& status,
+                                                  const std::string& detail)>;
+
+using AgentCompleteCallback = std::function<void(const std::string& finalAnswer,
+                                                  const AgentTranscript& transcript)>;
+
+struct LLMChatRequest {
+    std::vector<nlohmann::json> messages;
+    nlohmann::json tools;
+    std::string model;
+    float temperature         = 0.1f;
+    int maxTokens             = 2048;
+};
+
+struct LLMChatResponse {
+    bool success              = false;
+    std::string content;
+    bool hasToolCall          = false;
+    std::string toolCallId;
+    std::string toolName;
+    nlohmann::json toolArgs;
+    std::string reasoning;
+    int promptTokens          = 0;
+    int completionTokens      = 0;
+    std::string error;
+};
+
+using LLMChatFunction = std::function<LLMChatResponse(const LLMChatRequest&)>;
+
+class BoundedAgentLoop {
+public:
+    BoundedAgentLoop();
+    ~BoundedAgentLoop();
+
+    void Configure(const AgentLoopConfig& config);
+    const AgentLoopConfig& GetConfig() const { return m_config; }
+    void SetLLMBackend(LLMChatFunction backend);
+    void SetProgressCallback(AgentProgressCallback callback);
+    void SetCompleteCallback(AgentCompleteCallback callback);
+
+    std::string Execute(const std::string& userPrompt);
+    void ExecuteAsync(const std::string& userPrompt);
+    void Cancel();
+
+    AgentLoopState GetState() const { return m_state.load(); }
+    int GetCurrentStep() const { return m_currentStep.load(); }
+    const AgentTranscript& GetTranscript() const { return m_transcript; }
+    bool IsRunning() const { return m_state.load() == AgentLoopState::WaitingForModel ||
+                                    m_state.load() == AgentLoopState::ExecutingTool; }
+
+private:
+    std::string RunLoop(const std::string& userPrompt);
+    bool EnsureRuntime();
+    void RegisterRuntimeTools();
+    nlohmann::json BuildToolSchemas() const;
+    void NotifyProgress(const std::string& status, const std::string& detail);
+
+    ToolCallResult DispatchTool(const std::string& name, const nlohmann::json& args);
+
+    nlohmann::json BuildSystemMessage();
+    nlohmann::json BuildUserMessage(const std::string& prompt);
+    nlohmann::json BuildToolResultMessage(const std::string& callId,
+                                          const ToolCallResult& result);
+    nlohmann::json BuildAssistantToolCallMessage(const LLMChatResponse& response);
+
+    static LLMChatResponse NativeChat(const LLMChatRequest& request,
+                                      const std::string& baseUrl);
+
+    std::atomic<AgentLoopState> m_state{AgentLoopState::Idle};
+    std::atomic<int> m_currentStep{0};
+    std::atomic<bool> m_cancelled{false};
+
+    AgentLoopConfig m_config;
+    AgentTranscript m_transcript;
+    LLMChatFunction m_llmBackend;
+    AgentProgressCallback m_progressCallback;
+    AgentCompleteCallback m_completeCallback;
+
+    // Reuse the production router and workspace tool host. This class is an
+    // orchestration layer, not a second inference or filesystem engine.
+    std::unique_ptr<BackendRouter> m_router;
+    std::unique_ptr<rawrxd::tools::Registry> m_registry;
+    std::unique_ptr<WorkspaceToolHost> m_workspaceTools;
+    std::thread m_worker;
+
+    mutable std::mutex m_mutex;
+};
+
+} // namespace Agent
+} // namespace RawrXD

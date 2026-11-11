@@ -1,0 +1,16 @@
+=== OLLAMA_AGENTIC_001 ===
+  candidates: 1   (each is driven through the production agent loop)
+
+  llama3.2:latest                               AGENTIC_FAIL  tools=1 obs=yes token=no mode=native the final answer did not carry the token
+[StreamEngine] Shutdown
+
+  01 MODELS      PASS  1 local model(s) that the sweep measured as servable
+  02 TOOL        PASS  1/1 model(s) executed a tool through the production registry
+  03 OBSERVE     PASS  1/1 model(s) received the tool observation
+  04 VERIFY      FAIL  0/1 model(s) reported the token that only the file holds
+  05 LOOP        PASS  1/1 model(s) completed the agent loop
+  06 COVERAGE    PASS  0 agentic pass, 1 accounted failure(s) of 1 model(s)
+
+Result: 0/1 model(s) are agentic -> OLLAMA_AGENTIC_001_FAIL
+MODEL_PROVIDER=OLLAMA INFERENCE_ENGINE=OLLAMA AGENT_ENGINE=RAWRXD TOOL_AUTHORITY=RAWRXD VERIFICATION=RAWRXD
+REPORT=F:\rawrxd/.rawrxd/evidence/ollama_agentic_sweep.json

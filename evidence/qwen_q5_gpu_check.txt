@@ -1,0 +1,265 @@
+
+===== MODEL =====
+path=F:\OllamaModels\Qwen3.8-27B-AD-Q4_K_M\Qwen3.8-27B-AD-Q4_K_M.gguf
+architecture=qwen35
+block_count=65
+vocab=248320
+seed_tokens=12
+ingest_ms=54239.4
+bind_ms=0.5
+
+===== EXECUTION: prefill =====
+requested_backend=gpu-first
+ops_total=721 ops_bound=721 ops_unbound=0
+weights_resolved=866 weights_missing=0
+unsupported_operations=0
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+[GPU-DIVERGE] w=blk.0.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=5051 gpu=-13.4176 cpu=-0.896456 diff=12.5212
+[SHADER_PATH] ops=F:/rawrxd/src/deep2/shaders\deep2_ops.spv q=F:/rawrxd/src/deep2/shaders\deep2_qgemv.spv qb=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch.spv q4r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch4row.spv q8r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch8row.spv qn=F:/rawrxd/src/deep2/shaders\deep2_qgemv_nvfp4.spv am=F:/rawrxd/src/deep2/shaders\deep2_argmax.spv so=F:/rawrxd/src/deep2/shaders\deep2_spec_ops.spv sa=F:/rawrxd/src/deep2/shaders\deep2_spec_attn.spv ac=F:/rawrxd/src/deep2/shaders\deep2_spec_accept.spv gd=F:/rawrxd/src/deep2/shaders\deep2_qwen4exp_gdn.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1 qn=1 gdn=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+[GPU-DIVERGE] w=blk.0.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=-2.35359 cpu=-3.65332 diff=1.29973
+[GPU-DIVERGE] w=blk.0.ffn_gate.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=1580 gpu=-4.13806 cpu=-1.08936 diff=3.04871
+[GPU-DIVERGE] w=blk.0.ffn_up.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=9903 gpu=-9.0064 cpu=-2.21821 diff=6.78819
+[GPU-DIVERGE] w=blk.0.ffn_down.weight kind=8 n_in=17408 n_out=5120 nan=0 worst_row=3994 gpu=3.28285 cpu=-4.24483 diff=7.52769
+[GPU-DIVERGE] w=blk.1.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=2068 gpu=8.00844 cpu=1.24776 diff=6.76068
+[GPU-DIVERGE] w=blk.1.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=7.67486 cpu=8.45514 diff=0.780272
+[GPU-DIVERGE] w=blk.1.ffn_gate.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=13083 gpu=-2.55881 cpu=0.665927 diff=3.22474
+[GPU-DIVERGE] w=blk.1.ffn_up.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=15962 gpu=-1.71608 cpu=1.68188 diff=3.39796
+[GPU-DIVERGE] w=blk.1.ffn_down.weight kind=8 n_in=17408 n_out=5120 nan=0 worst_row=3994 gpu=8.33897 cpu=4.46925 diff=3.86971
+[GPU-DIVERGE] w=blk.2.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=3325 gpu=-4.54492 cpu=1.50503 diff=6.04995
+[GPU-DIVERGE] w=blk.2.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=-0.910555 cpu=-3.15723 diff=2.24668
+[GPU-DIVERGE] w=blk.2.ffn_gate.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=4124 gpu=2.31204 cpu=-1.58526 diff=3.89731
+[GPU-DIVERGE] w=blk.2.ffn_up.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=8899 gpu=2.05705 cpu=-1.13639 diff=3.19345
+[GPU-DIVERGE] w=blk.2.ffn_down.weight kind=8 n_in=17408 n_out=5120 nan=0 worst_row=3994 gpu=-6.0263 cpu=9.2031 diff=15.2294
+[GPU-DIVERGE] w=blk.3.ffn_gate.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=253 gpu=-0.818798 cpu=1.62382 diff=2.44262
+[GPU-DIVERGE] w=blk.3.ffn_up.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=10988 gpu=3.93668 cpu=1.45212 diff=2.48456
+[GPU-DIVERGE] w=blk.3.ffn_down.weight kind=8 n_in=17408 n_out=5120 nan=0 worst_row=3994 gpu=2.77537 cpu=-0.763761 diff=3.53913
+[GPU-DIVERGE] w=blk.4.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=2593 gpu=-1.66059 cpu=2.77785 diff=4.43844
+[GPU-DIVERGE] w=blk.4.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=2.11592 cpu=0.721426 diff=1.3945
+[GPU-DIVERGE] w=blk.4.ffn_gate.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=4603 gpu=-1.56564 cpu=0.682037 diff=2.24768
+[GPU-DIVERGE] w=blk.4.ffn_up.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=9236 gpu=0.484466 cpu=-1.75717 diff=2.24164
+[GPU-DIVERGE] w=blk.4.ffn_down.weight kind=8 n_in=17408 n_out=5120 nan=0 worst_row=1690 gpu=0.243523 cpu=-0.48791 diff=0.731433
+[GPU-DIVERGE] w=blk.5.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=4463 gpu=-1.14815 cpu=3.90536 diff=5.05351
+[GPU-DIVERGE] w=blk.5.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=1.28334 cpu=2.28913 diff=1.00579
+[GPU-DIVERGE] w=blk.5.ffn_gate.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=6015 gpu=-1.72744 cpu=0.682987 diff=2.41042
+[GPU-DIVERGE] w=blk.5.ffn_up.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=4772 gpu=-0.858196 cpu=1.27209 diff=2.13029
+[GPU-DIVERGE] w=blk.5.ffn_down.weight kind=8 n_in=17408 n_out=5120 nan=0 worst_row=3994 gpu=1.40295 cpu=-0.988033 diff=2.39099
+[GPU-DIVERGE] w=blk.6.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=2562 gpu=-10.5279 cpu=-3.67841 diff=6.84952
+[GPU-DIVERGE] w=blk.6.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=-0.597257 cpu=-1.22614 diff=0.628887
+[GPU-DIVERGE] w=blk.6.ffn_gate.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=13120 gpu=-1.10671 cpu=1.20162 diff=2.30834
+[GPU-DIVERGE] w=blk.6.ffn_up.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=8233 gpu=2.60232 cpu=-0.053435 diff=2.65575
+[GPU-DIVERGE] w=blk.6.ffn_down.weight kind=8 n_in=17408 n_out=5120 nan=0 worst_row=3994 gpu=-5.46074 cpu=-3.26473 diff=2.19601
+[GPU-DIVERGE] w=blk.7.ffn_gate.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=10348 gpu=-1.75351 cpu=0.630796 diff=2.38431
+[GPU-DIVERGE] w=blk.7.ffn_up.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=11302 gpu=0.58969 cpu=-1.82307 diff=2.41276
+[GPU-DIVERGE] w=blk.7.ffn_down.weight kind=8 n_in=17408 n_out=5120 nan=0 worst_row=1801 gpu=0.551233 cpu=-0.27226 diff=0.823492
+[GPU-DIVERGE] w=blk.8.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=1598 gpu=-9.29508 cpu=-3.90058 diff=5.3945
+[GPU-DIVERGE] w=blk.8.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=1.55989 cpu=0.259887 diff=1.3
+[GPU-DIVERGE] w=blk.8.ffn_gate.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=4515 gpu=-1.48857 cpu=0.798326 diff=2.28689
+[GPU-DIVERGE] w=blk.8.ffn_up.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=9962 gpu=2.73707 cpu=0.164859 diff=2.57221
+[GPU-DIVERGE] w=blk.8.ffn_down.weight kind=8 n_in=17408 n_out=5120 nan=0 worst_row=3994 gpu=1.33351 cpu=0.17084 diff=1.16267
+[GPU-DIVERGE] w=blk.9.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=4464 gpu=-9.0767 cpu=-2.75914 diff=6.31755
+[GPU-DIVERGE] w=blk.9.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=1.32076 cpu=0.370999 diff=0.949759
+[GPU-DIVERGE] w=blk.9.ffn_gate.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=16052 gpu=-0.908916 cpu=1.33175 diff=2.24067
+[GPU-DIVERGE] w=blk.9.ffn_up.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=3725 gpu=0.173865 cpu=2.18472 diff=2.01085
+[GPU-DIVERGE] w=blk.9.ffn_down.weight kind=8 n_in=17408 n_out=5120 nan=0 worst_row=3994 gpu=1.4208 cpu=-0.113693 diff=1.53449
+[GPU-DIVERGE] w=blk.10.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=5342 gpu=-6.50551 cpu=0.422546 diff=6.92806
+[GPU-DIVERGE] w=blk.10.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3769 gpu=0.0762765 cpu=-0.116416 diff=0.192692
+[GPU-DIVERGE] w=blk.10.ffn_gate.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=11110 gpu=-1.00542 cpu=1.14211 diff=2.14752
+[GPU-DIVERGE] w=blk.10.ffn_up.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=8982 gpu=1.07589 cpu=-1.00606 diff=2.08195
+[GPU-DIVERGE] w=blk.10.ffn_down.weight kind=8 n_in=17408 n_out=5120 nan=0 worst_row=3994 gpu=-1.00586 cpu=-0.32939 diff=0.676471
+[GPU-DIVERGE] w=blk.11.ffn_gate.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=1885 gpu=-0.643872 cpu=-4.66493 diff=4.02106
+[GPU-DIVERGE] w=blk.11.ffn_up.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=7733 gpu=1.39016 cpu=-1.19457 diff=2.58473
+[GPU-DIVERGE] w=blk.11.ffn_down.weight kind=8 n_in=17408 n_out=5120 nan=0 worst_row=3994 gpu=0.900703 cpu=-0.0550733 diff=0.955777
+[GPU-DIVERGE] w=blk.12.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=1409 gpu=-8.93263 cpu=-2.93612 diff=5.99652
+[GPU-DIVERGE] w=blk.12.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=-0.529762 cpu=0.339511 diff=0.869273
+[GPU-DIVERGE] w=blk.13.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=1227 gpu=-8.94648 cpu=-2.60064 diff=6.34584
+[GPU-DIVERGE] w=blk.13.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3085 gpu=0.0651416 cpu=-0.0622183 diff=0.12736
+[GPU-DIVERGE] w=blk.14.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=4698 gpu=-11.1725 cpu=-4.55389 diff=6.61858
+[GPU-DIVERGE] w=blk.14.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=0.246759 cpu=-0.969256 diff=1.21602
+[GPU-DIVERGE] w=blk.16.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=2962 gpu=-10.9272 cpu=-2.89861 diff=8.0286
+[GPU-DIVERGE] w=blk.16.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=-0.557636 cpu=0.114366 diff=0.672002
+[GPU-DIVERGE] w=blk.17.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=5190 gpu=-8.95279 cpu=-1.42699 diff=7.5258
+[GPU-DIVERGE] w=blk.17.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3456 gpu=-0.508513 cpu=-0.138631 diff=0.369882
+[GPU-DIVERGE] w=blk.18.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=2412 gpu=-9.87053 cpu=-1.70005 diff=8.17048
+[GPU-DIVERGE] w=blk.18.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=0.841718 cpu=-0.106028 diff=0.947746
+[GPU-DIVERGE] w=blk.20.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=2377 gpu=-9.35147 cpu=0.51386 diff=9.86533
+[GPU-DIVERGE] w=blk.20.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=4093 gpu=0.0455628 cpu=-0.221864 diff=0.267427
+[GPU-DIVERGE] w=blk.21.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=958 gpu=-6.57013 cpu=3.15282 diff=9.72295
+[GPU-DIVERGE] w=blk.21.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=1.97745 cpu=0.554697 diff=1.42275
+[GPU-DIVERGE] w=blk.22.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=2544 gpu=-10.7395 cpu=-2.08348 diff=8.65598
+[GPU-DIVERGE] w=blk.22.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=5.04345 cpu=1.74649 diff=3.29696
+[GPU-DIVERGE] w=blk.24.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=1060 gpu=-9.23839 cpu=-1.18851 diff=8.04988
+[GPU-DIVERGE] w=blk.24.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=2631 gpu=-0.272782 cpu=0.204315 diff=0.477097
+[GPU-DIVERGE] w=blk.25.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=2622 gpu=2.25078 cpu=-3.50466 diff=5.75544
+[GPU-DIVERGE] w=blk.25.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=0.276131 cpu=0.112137 diff=0.163994
+[GPU-DIVERGE] w=blk.26.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=4132 gpu=-6.92658 cpu=-1.70022 diff=5.22636
+[GPU-DIVERGE] w=blk.26.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=0.319339 cpu=0.557815 diff=0.238477
+[GPU-DIVERGE] w=blk.28.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=867 gpu=-4.78889 cpu=0.366086 diff=5.15497
+[GPU-DIVERGE] w=blk.28.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=0.901467 cpu=-0.278699 diff=1.18017
+[GPU-DIVERGE] w=blk.29.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=1227 gpu=-4.27465 cpu=1.68658 diff=5.96123
+[GPU-DIVERGE] w=blk.29.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=-0.479217 cpu=-0.0557029 diff=0.423514
+[GPU-DIVERGE] w=blk.30.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=1013 gpu=6.54236 cpu=0.948873 diff=5.59348
+[GPU-DIVERGE] w=blk.30.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=0.338145 cpu=0.532089 diff=0.193944
+[GPU-DIVERGE] w=blk.32.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=1303 gpu=1.9978 cpu=-3.20326 diff=5.20106
+[GPU-DIVERGE] w=blk.32.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=0.0311553 cpu=-0.101729 diff=0.132885
+[GPU-DIVERGE] w=blk.33.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=5174 gpu=-1.59526 cpu=3.70725 diff=5.30251
+[GPU-DIVERGE] w=blk.33.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=732 gpu=0.0664281 cpu=-0.28677 diff=0.353198
+[GPU-DIVERGE] w=blk.34.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=395 gpu=-6.08323 cpu=0.0749496 diff=6.15817
+[GPU-DIVERGE] w=blk.34.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=533 gpu=-0.158346 cpu=0.487104 diff=0.64545
+[GPU-DIVERGE] w=blk.36.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=223 gpu=-4.06179 cpu=2.77479 diff=6.83659
+[GPU-DIVERGE] w=blk.36.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=0.848096 cpu=0.21617 diff=0.631926
+[GPU-DIVERGE] w=blk.37.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=5626 gpu=-1.76805 cpu=5.82819 diff=7.59624
+[GPU-DIVERGE] w=blk.37.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=2.69005 cpu=1.02542 diff=1.66463
+[GPU-DIVERGE] w=blk.38.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=816 gpu=-0.59334 cpu=5.24117 diff=5.83451
+[GPU-DIVERGE] w=blk.38.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=0.00414227 cpu=-0.527981 diff=0.532124
+[GPU-DIVERGE] w=blk.40.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=2828 gpu=-1.77909 cpu=4.44976 diff=6.22886
+[GPU-DIVERGE] w=blk.40.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=0.409391 cpu=-0.960498 diff=1.36989
+[GPU-DIVERGE] w=blk.41.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=1993 gpu=0.024414 cpu=-5.46191 diff=5.48633
+[GPU-DIVERGE] w=blk.41.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=4372 gpu=0.0815724 cpu=-0.0507628 diff=0.132335
+[GPU-DIVERGE] w=blk.42.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=2883 gpu=0.0669533 cpu=-6.18102 diff=6.24797
+[GPU-DIVERGE] w=blk.42.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=1028 gpu=-0.151565 cpu=0.090138 diff=0.241703
+[GPU-DIVERGE] w=blk.44.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=2597 gpu=0.364478 cpu=-5.20104 diff=5.56551
+[GPU-DIVERGE] w=blk.44.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=0.862485 cpu=0.460591 diff=0.401894
+[GPU-DIVERGE] w=blk.45.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=28 gpu=-0.907266 cpu=-7.12895 diff=6.22169
+[GPU-DIVERGE] w=blk.45.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=-0.0260673 cpu=-0.75885 diff=0.732782
+[GPU-DIVERGE] w=blk.46.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=1907 gpu=-0.792162 cpu=-6.79194 diff=5.99978
+[GPU-DIVERGE] w=blk.46.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=0.630207 cpu=1.29124 diff=0.661033
+[GPU-DIVERGE] w=blk.48.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=5204 gpu=-6.43442 cpu=-1.32252 diff=5.11189
+[GPU-DIVERGE] w=blk.48.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=2805 gpu=0.0720615 cpu=-0.141066 diff=0.213128
+[GPU-DIVERGE] w=blk.49.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=3159 gpu=-2.52554 cpu=-9.38752 diff=6.86198
+[GPU-DIVERGE] w=blk.49.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3627 gpu=0.115482 cpu=-0.181555 diff=0.297038
+[GPU-DIVERGE] w=blk.50.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=44 gpu=-7.23839 cpu=-1.00053 diff=6.23786
+[GPU-DIVERGE] w=blk.50.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=1.24225 cpu=0.782251 diff=0.46
+[GPU-DIVERGE] w=blk.52.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=4086 gpu=-1.52043 cpu=6.01804 diff=7.53846
+[GPU-DIVERGE] w=blk.52.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=0.419661 cpu=-0.318481 diff=0.738142
+[GPU-DIVERGE] w=blk.52.ffn_gate.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=13667 gpu=-6.21831 cpu=-0.28507 diff=5.93324
+[GPU-DIVERGE] w=blk.52.ffn_up.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=12469 gpu=3.2478 cpu=-1.46763 diff=4.71543
+[GPU-DIVERGE] w=blk.52.ffn_down.weight kind=8 n_in=17408 n_out=5120 nan=0 worst_row=3835 gpu=1.20239 cpu=-0.999717 diff=2.2021
+[GPU-DIVERGE] w=blk.53.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=3967 gpu=-2.63603 cpu=5.57575 diff=8.21178
+[GPU-DIVERGE] w=blk.53.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=2.80814 cpu=0.680329 diff=2.12781
+[GPU-DIVERGE] w=blk.53.ffn_gate.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=14924 gpu=-7.43246 cpu=-1.68023 diff=5.75223
+[GPU-DIVERGE] w=blk.53.ffn_up.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=4283 gpu=3.42076 cpu=-0.723882 diff=4.14465
+[GPU-DIVERGE] w=blk.53.ffn_down.weight kind=8 n_in=17408 n_out=5120 nan=0 worst_row=3994 gpu=-1.05 cpu=1.40669 diff=2.45669
+[GPU-DIVERGE] w=blk.54.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=720 gpu=6.03157 cpu=-1.7019 diff=7.73347
+[GPU-DIVERGE] w=blk.54.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=2504 gpu=0.167842 cpu=-0.443549 diff=0.611391
+[GPU-DIVERGE] w=blk.54.ffn_gate.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=9779 gpu=18.6435 cpu=10.2248 diff=8.41873
+[GPU-DIVERGE] w=blk.54.ffn_up.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=11865 gpu=-5.3613 cpu=0.13722 diff=5.49852
+[GPU-DIVERGE] w=blk.54.ffn_down.weight kind=8 n_in=17408 n_out=5120 nan=0 worst_row=3994 gpu=14.6403 cpu=12.1958 diff=2.44456
+[GPU-DIVERGE] w=blk.55.ffn_gate.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=4162 gpu=-8.62988 cpu=-2.54982 diff=6.08006
+[GPU-DIVERGE] w=blk.55.ffn_up.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=12758 gpu=0.95178 cpu=-4.15988 diff=5.11166
+[GPU-DIVERGE] w=blk.55.ffn_down.weight kind=8 n_in=17408 n_out=5120 nan=0 worst_row=3994 gpu=8.34116 cpu=5.71754 diff=2.62362
+[GPU-DIVERGE] w=blk.56.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=3182 gpu=-2.34977 cpu=3.49563 diff=5.8454
+[GPU-DIVERGE] w=blk.56.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=2.80974 cpu=1.77096 diff=1.03878
+[GPU-DIVERGE] w=blk.56.ffn_gate.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=6798 gpu=-6.66545 cpu=-0.449333 diff=6.21611
+[GPU-DIVERGE] w=blk.56.ffn_up.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=1173 gpu=1.05772 cpu=-3.15211 diff=4.20983
+[GPU-DIVERGE] w=blk.56.ffn_down.weight kind=8 n_in=17408 n_out=5120 nan=0 worst_row=3804 gpu=0.473887 cpu=-1.09516 diff=1.56904
+[GPU-DIVERGE] w=blk.57.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=1145 gpu=-3.28744 cpu=3.95879 diff=7.24623
+[GPU-DIVERGE] w=blk.57.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=2.63001 cpu=0.304748 diff=2.32526
+[GPU-DIVERGE] w=blk.57.ffn_gate.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=9233 gpu=-6.19151 cpu=-0.121291 diff=6.07022
+[GPU-DIVERGE] w=blk.57.ffn_up.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=5663 gpu=4.67409 cpu=-0.0180222 diff=4.69211
+[GPU-DIVERGE] w=blk.57.ffn_down.weight kind=8 n_in=17408 n_out=5120 nan=0 worst_row=1776 gpu=0.537665 cpu=-0.978094 diff=1.51576
+[GPU-DIVERGE] w=blk.58.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=4032 gpu=-3.41818 cpu=3.12229 diff=6.54047
+[GPU-DIVERGE] w=blk.58.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=258 gpu=0.18531 cpu=-0.421542 diff=0.606852
+[GPU-DIVERGE] w=blk.58.ffn_gate.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=13749 gpu=-2.46788 cpu=4.06684 diff=6.53472
+[GPU-DIVERGE] w=blk.58.ffn_up.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=9080 gpu=-1.86718 cpu=3.45813 diff=5.32531
+[GPU-DIVERGE] w=blk.58.ffn_down.weight kind=8 n_in=17408 n_out=5120 nan=0 worst_row=3994 gpu=-30.7583 cpu=-21.9692 diff=8.78912
+[GPU-DIVERGE] w=blk.59.ffn_gate.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=12519 gpu=-4.81507 cpu=1.6777 diff=6.49277
+[GPU-DIVERGE] w=blk.59.ffn_up.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=15058 gpu=-4.0768 cpu=3.27443 diff=7.35123
+[GPU-DIVERGE] w=blk.59.ffn_down.weight kind=8 n_in=17408 n_out=5120 nan=0 worst_row=3163 gpu=2.40584 cpu=-0.402942 diff=2.80878
+[GPU-DIVERGE] w=blk.60.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=1265 gpu=-4.79536 cpu=2.31053 diff=7.10589
+[GPU-DIVERGE] w=blk.60.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=-0.63693 cpu=-2.49426 diff=1.85733
+[GPU-DIVERGE] w=blk.60.ffn_gate.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=341 gpu=-6.24001 cpu=1.44094 diff=7.68094
+[GPU-DIVERGE] w=blk.60.ffn_up.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=15974 gpu=-6.21264 cpu=0.876328 diff=7.08897
+[GPU-DIVERGE] w=blk.60.ffn_down.weight kind=8 n_in=17408 n_out=5120 nan=0 worst_row=3994 gpu=13.9146 cpu=6.45859 diff=7.45597
+[GPU-DIVERGE] w=blk.61.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=287 gpu=-5.42112 cpu=2.04465 diff=7.46577
+[GPU-DIVERGE] w=blk.61.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=1.17012 cpu=-0.763805 diff=1.93392
+[GPU-DIVERGE] w=blk.61.ffn_gate.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=15838 gpu=-3.70874 cpu=4.24455 diff=7.9533
+[GPU-DIVERGE] w=blk.61.ffn_up.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=9695 gpu=-7.71449 cpu=1.32928 diff=9.04377
+[GPU-DIVERGE] w=blk.61.ffn_down.weight kind=8 n_in=17408 n_out=5120 nan=0 worst_row=970 gpu=2.97035 cpu=-2.50494 diff=5.47529
+[GPU-DIVERGE] w=blk.62.attn_gate.weight kind=8 n_in=5120 n_out=6144 nan=0 worst_row=721 gpu=-5.66444 cpu=3.61423 diff=9.27868
+[GPU-DIVERGE] w=blk.62.ssm_out.weight kind=8 n_in=6144 n_out=5120 nan=0 worst_row=3994 gpu=-2.32833 cpu=-7.01416 diff=4.68583
+[GPU-DIVERGE] w=blk.62.ffn_gate.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=12191 gpu=-4.48832 cpu=3.4781 diff=7.96642
+[GPU-DIVERGE] w=blk.62.ffn_up.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=13813 gpu=15.5872 cpu=4.07702 diff=11.5102
+[GPU-DIVERGE] w=blk.62.ffn_down.weight kind=8 n_in=17408 n_out=5120 nan=0 worst_row=3994 gpu=-82.1586 cpu=-34.2132 diff=47.9454
+[GPU-DIVERGE] w=blk.63.ffn_gate.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=3028 gpu=27.8342 cpu=10.3825 diff=17.4517
+[GPU-DIVERGE] w=blk.63.ffn_up.weight kind=8 n_in=5120 n_out=17408 nan=0 worst_row=6844 gpu=50.5765 cpu=24.7735 diff=25.803
+[GPU-DIVERGE] w=blk.63.ffn_down.weight kind=8 n_in=17408 n_out=5120 nan=0 worst_row=3994 gpu=279.765 cpu=212.06 diff=67.7045
+prefill_mode=serial ExecuteToken
+input_tokens=1
+layer_count=65
+total_op_executions=721
+op_executions_per_token=721.00
+op_executions_per_token_per_layer=11.0923
+prefill_shape=PER_TOKEN_PER_LAYER (not fused)
+prefill_ms=46307.0
+prefill_tps=0.02
+
+===== EXECUTION: dispatch receipts =====
+cpu_operations=0
+gpu_dispatches=552
+vulkan_tensor_ops=718
+cpu_tensor_ops=0
+host_descriptor_ops=0
+other_backend_ops=0
+ops_without_dispatch_receipt=3
+forced_host_pin=false
+gpu_device=
+gpu_rows=0 cpu_rows=0
+unexplained_fallbacks=0
+cold_start_ms=46306.9 steady_kernel_ms=0.000 dispatch_ms=46306.941
+backend_submits=1008 backend_waits=1008 upload_bytes=16382662480 download_bytes=16846848
+backend_kernel_ms=4549.913 backend_submit_ms=10.864 backend_wait_ms=4549.913 backend_gpu_ms=3840.972
+n===== KV_CACHE =====
+position_counter=1 (not a cache witness)
+kv_blocks=65
+kv_rows_block0=0
+kv_rows_max_over_blocks=1
+kv_resident_bytes=139264
+kv_leading_zero_rows_sampled=0
+prefill_committed_positions=YES (kv rows == tokens)
+
+===== EXECUTION: decode =====
+decode_tokens=0
+decode_ms=0.0
+decode_tps=0.000
+gpu_dispatches_delta=0
+cpu_operations_delta=0
+matrix_rows_delta=0
+executor_gpu_ops_per_token=0.0 (NOT queue submissions)
+backend_submits_total=1008 backend_waits_total=1008 upload_bytes_total=16382662480 download_bytes_total=16846848
+backend_kernel_ms_total=4549.913 backend_submit_ms_total=10.864 backend_wait_ms_total=4549.913 backend_gpu_ms_total=3840.972
+sample=
+
+===== RESULT =====
+actual_backend=vulkan-gpu
+slowest_operations (by reported tensor size):
+        up: x65 size_total=1131520
+        swiglu: x65 size_total=1131520
+        gate: x65 size_total=1131520
+        resid_in: x65 size_total=332800
+        resid2: x65 size_total=332800
+        resid1: x65 size_total=332800
+        ffn_out: x65 size_total=332800
+        ffn_norm: x65 size_total=332800
+task_tps=0.010
+nEXEC_TRUTH_TRACE=COMPLETE
+GATE_RESIDENCY=PARTIAL
+GATE_EXECUTION=PASS
+GATE_CONTEXT=PARTIAL
+GATE_TOOL=N/A
+GATE_RECOVERY=N/A
+FINAL_VERDICT=PASS
+Released all tensors
+Vulkan resources cleaned up successfully

@@ -1,0 +1,83 @@
+{
+  "schema": "rawrxd.sustained-profile-matrix.v1",
+  "generated_utc": "2026-10-23T01:11:41.9190105Z",
+  "model": "F:\\models\\gguf\\library__n4-tiny-oracle__latest.gguf",
+  "benchmark": "F:\\rawrxd\\build\\bin-msvc\\Release\\rawr.exe",
+  "runs": 2,
+  "launched": false,
+  "certification": "NOT_CERTIFIED",
+  "records": [
+    {
+      "tokens": 8,
+      "mode": "single",
+      "runs": 2,
+      "status": "PLANNED",
+      "exit_code": null,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "tokens": 8,
+      "mode": "dual",
+      "runs": 2,
+      "status": "PLANNED",
+      "exit_code": null,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "tokens": 32,
+      "mode": "single",
+      "runs": 2,
+      "status": "PLANNED",
+      "exit_code": null,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "tokens": 32,
+      "mode": "dual",
+      "runs": 2,
+      "status": "PLANNED",
+      "exit_code": null,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "tokens": 128,
+      "mode": "single",
+      "runs": 2,
+      "status": "PLANNED",
+      "exit_code": null,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "tokens": 128,
+      "mode": "dual",
+      "runs": 2,
+      "status": "PLANNED",
+      "exit_code": null,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "tokens": 256,
+      "mode": "single",
+      "runs": 2,
+      "status": "PLANNED",
+      "exit_code": null,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "tokens": 256,
+      "mode": "dual",
+      "runs": 2,
+      "status": "PLANNED",
+      "exit_code": null,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

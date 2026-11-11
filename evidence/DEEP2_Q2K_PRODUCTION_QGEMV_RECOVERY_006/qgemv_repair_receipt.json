@@ -1,0 +1,16 @@
+{
+  "schema": "DEEP2_Q2K_PRODUCTION_QGEMV_RECOVERY_006",
+  "source_revision": "cb885b5b10334ffdcf958cab9d273b3f1eb37dce",
+  "model": "F:\\ollamamodels\\_r1_iso\\03_llama32_3b\\llama3.2-3b-Q2_K.gguf",
+  "q2k_shader_source": "src/deep2/shaders/deep2_qgemv.comp",
+  "q2k_shader_artifact": "src/deep2/shaders/deep2_qgemv.spv",
+  "q2k_layout_fix": "scales/qs offsets corrected to canonical scales[16]|qs[64]|d|dmin layout; GLSL reserved identifier renamed",
+  "production_ffn_up_finite": true,
+  "production_ffn_act_finite": true,
+  "production_fatal_present": false,
+  "generation": "NOT_COMPLETED_DIAGNOSTIC_ABORT",
+  "full_model_parity": "NOT_RUN",
+  "decode_tps": "NOT_RUN",
+  "certification": "NOT_CERTIFIED",
+  "note": "Bounded production trace reached finite FFN_UP_0 and FFN_ACT_0 after shader correction; long stage-digest run was aborted before generation receipt."
+}

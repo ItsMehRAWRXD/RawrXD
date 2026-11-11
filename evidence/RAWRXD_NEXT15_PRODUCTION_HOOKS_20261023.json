@@ -1,0 +1,15 @@
+{
+  "schema": "RAWRXD_NEXT15_PRODUCTION_HOOKS_001",
+  "timestamp": "2026-10-23T21:52:11.2710231Z",
+  "source_revision": "cb885b5b10334ffdcf958cab9d273b3f1eb37dce",
+  "executable": "F:\\rawrxd\\build_ide\\bin\\RawrXD-Win32IDE-Native.exe",
+  "executable_sha256": "3C26E29AA595B9F505E4EF57F6B1D572E3D87BB555B60DF90BE23FF4BC8D3531",
+  "build": "PASS",
+  "health_check": "PASS",
+  "receipt_emission": "PASS",
+  "runtime_hook_wiring": "PASS",
+  "production_gpu_execution": "NOT_RUN",
+  "independent_parity": "NOT_RUN",
+  "cpu_fallback_runtime": "NOT_RUN",
+  "note": "Health probe proves launch registration and receipt emission only; GPU gates remain fail-closed until model inference."
+}

@@ -1,0 +1,67 @@
+[Deep2Backend] Resolved alias 'phi3-mini-Q2_K.gguf' -> G:\~dev\rawrxd\models\phi3-mini-Q2_K.gguf (1 shard)
+[Deep2Backend] Loading model: G:\~dev\rawrxd\models\phi3-mini-Q2_K.gguf
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+[ModelFit] KV budget caps context: requested=131072 fit=41680 (kv_bytes_per_token=110592)
+HOST_Q8_GEMV_FFN=1
+HOST_Q8_GEMV_ATTN=1
+HOST_Q8_GEMV_SSM_IN=1
+HOST_Q8_GEMV_NUMERIC_FINITE=1
+HOST_Q8_GEMV_BOUNDS_SAFE=1
+HOST_Q8_GEMV_REFERENCE_PARITY=1
+HOST_Q8_GEMV_SAFE=1
+[Deep2Backend] Model loaded: hidden=3072 vocab=32064 layers=32
+[Deep2Engine] Loading model from: G:\~dev\rawrxd\models\phi3-mini-Q2_K.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] MODEL_FIT_ADMITTED model=G:\~dev\rawrxd\models\phi3-mini-Q2_K.gguf mode=GPU_MULTI devices=2 kv_per_token=110592 max_ctx_est=41680
+[Deep2Engine] Multi-shard detected: NO (1 files in G:\~dev\rawrxd\models)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] ERROR: No tensors parsed (run Parse first)
+[ReverseHotpatch] FAILED at stage 3 (ReverseUnlayer_Index)
+[Deep2Engine] WARNING: ReverseHotpatch failed, attempting raw load
+[Deep2Engine] GGUF architecture: 'phi3'  hidden=3072 layers=32 heads=32 kvHeads=32 inter=8192 vocab=32064
+[Deep2Engine] Context length from metadata: 131072 tokens
+[Deep2Engine] Tokenizer loaded: vocab=32064 bos=1 eos=32000 (Spm::encode)
+[WO_DIAG] GGUF wo.data=000002502C5CBFE0 rows=3072 cols=3072 type=11(other) — skipping float interpretation
+[Deep2Engine] Layer topology: 32 attention, 0 SSM, 0 unknown of 32 total
+[Deep2Engine] KV cache sized for 32 attention layers (SSM layers excluded)
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=0000024FC9293D00  Registered 'blk.0.attn_output.weight': shard=0 offset=0 bytes=4055040  |  registry_size=1  registeredBytes=4055040  zeroOffset=1  maxResidentBytes=536870912
+[ResidencyManager] this=0000024FC9293D00  Registered 'blk.19.ffn_down.weight': shard=0 offset=0 bytes=10813440  |  registry_size=100  registeredBytes=628162560  zeroOffset=100  maxResidentBytes=536870912
+[Deep2Engine] ResidencyManager: this=0000024FC9293D00  registered=163 tensors  bytes=1118194176  max=536870912
+[Deep2Engine] ThreadPool (loadModel): 16 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF6A26B7F80 dequant=00007FF6A26B4DF0 GetGEMV(12)=00007FF6A26B7F80 match=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 17 GEMV kernels, 17 dequant kernels
+[KVCache] Lazy pages: layers=32 page=8 virtualMax=41680 heads=32 dim=96
+[KVCache] HOT_BYTES=6291456 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] KV cache: 32 layers x 41680 positions x 32 heads x 96 dim = 31260.00 MB
+[Deep2Engine] Model loaded successfully (197 tensors)
+[Deep2Engine] Host Q8_0 GEMV receipts: SAFE
+
+RawrXD Local Agent
+Model:   phi3-mini-Q2_K.gguf
+Backend: deep2
+Mode:    code
+Root:    G:\VSC0de
+
+DENIED: MOTD_NOT_FOUND
+[StreamEngine] Shutdown

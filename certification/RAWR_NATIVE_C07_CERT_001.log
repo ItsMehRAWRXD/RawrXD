@@ -1,0 +1,31 @@
+﻿C07 End-to-end native toolchain certification============================================  [PASS] both assembly fixtures were written and are not empty
+  [PASS] the first-party assembler produced a COFF object
+c07_e2e_test.exe : [linker] phase 1 complete: 1 object file(s) loaded
+At line:7 char:6
++ $o = & "$OUT\c07_e2e_test.exe" $OUT $LINKER 2>&1
++      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([linker] phase ... file(s) loaded:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[linker] phase 2 complete: 3 merged section(s), next RVA=0x4000
+[linker] phase 2.5 complete: 1 DLL(s), 1 symbol(s), 1 thunk(s)
+[reloc] Applied 1 relocations, 0 errors
+[linker] phase 3 complete: relocation errors=0
+[pe_writer] F:\rawrxd\compilers\build\rawr_stage1\c07_e2e.exe: 2048 bytes, 2 sections, entry=0x1000, base=0x140000000
+[linker] phase 4 complete: F:\rawrxd\compilers\build\rawr_stage1\c07_e2e.exe written successfully
+[linker] all phases complete (exit 0)
+  [PASS] the native linker produced an executable
+exit code -1073741819
+  [FAIL] the executable ran and exited with 42  --  [PASS] the arithmetic program assembled
+[linker] phase 1 complete: 1 object file(s) loaded
+[linker] phase 2 complete: 3 merged section(s), next RVA=0x4000
+[linker] phase 2.5 complete: 1 DLL(s), 1 symbol(s), 1 thunk(s)
+[reloc] Applied 1 relocations, 0 errors
+[linker] phase 3 complete: relocation errors=0
+[pe_writer] F:\rawrxd\compilers\build\rawr_stage1\c07_arith.exe: 2048 bytes, 2 sections, entry=0x1000, base=0x140000000
+[linker] phase 4 complete: F:\rawrxd\compilers\build\rawr_stage1\c07_arith.exe written successfully
+[linker] all phases complete (exit 0)
+exit code -1073741819
+  [FAIL] the arithmetic program produced 41  --  [PASS] the assembler rejects an unknown instruction
+  [PASS] the assembler rejects a truncated operand
+--------------------------------------------C07 result: 6 passed, 2 failed

@@ -1,0 +1,14 @@
+{
+  "schema": "RAWR_DAILY_AGENT_001",
+  "started_utc": "2026-10-23T00:56:56.0781768Z",
+  "finished_utc": "2026-10-23T00:56:58.5616595Z",
+  "model": "llama3.2:3b",
+  "workspace": "F:\\rawrxd\\~dev\\src\\deep2",
+  "device": "cpu",
+  "timeout_seconds": 120,
+  "timed_out": false,
+  "exit_code": 0,
+  "stdout": "F:\\rawrxd\\~dev\\evidence\\daily-agent\\agent_20261022_205656.stdout.log",
+  "stderr": "F:\\rawrxd\\~dev\\evidence\\daily-agent\\agent_20261022_205656.stderr.log",
+  "rawr": "F:\\rawrxd\\~dev\\build\\Release\\rawr.exe"
+}

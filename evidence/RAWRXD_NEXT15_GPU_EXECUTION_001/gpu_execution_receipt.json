@@ -1,0 +1,22 @@
+{
+  "schema": "RAWRXD_NEXT15_GPU_EXECUTION_001",
+  "source_revision": "cb885b5b10334ffdcf958cab9d273b3f1eb37dce",
+  "executable_sha256": "231B20B00A0F5BCD766A6C6C422BF8207D622EB5C9CE5D418D7B99445A690954",
+  "model_path": "F:\\ollamamodels\\_r1_iso\\03_llama32_3b\\llama3.2-3b-Q2_K.gguf",
+  "model_sha256": "EE1CA8B716933587127F6FEB9FF5A247F1E4460E72DCF6293331B9617F8A8AA2",
+  "backend": "deep2",
+  "gpu_policy": "SINGLE",
+  "selected_gpu": "AMD Radeon AI PRO R9700",
+  "vulkan_initialized": true,
+  "gpu_queue_submits": 20,
+  "gpu_kernel_dispatches": 4,
+  "gpu_forward_ops": 4,
+  "gpu_layer_completions": 1,
+  "cpu_fallbacks": 0,
+  "strict_gpu_violations": 0,
+  "generated_tokens": 0,
+  "execution": "BLOCKED",
+  "failure": "layer 0 prefill nonfinite FFN input: blk.0.ffn_down.weight",
+  "parity": "NOT_RUN",
+  "performance": "NOT_RUN"
+}
