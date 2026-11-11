@@ -1,0 +1,107 @@
+RC4 DISPATCH FIRST-FAILURE CLASSIFICATION
+ASOF_UTC=2026-11-10T06:41:00Z
+RC4_SHA=78E187AA9A4C95A4282A862A2D76E8B24DCD03BF6F57E036B2C463FB22418596
+PROMOTE=0
+TIP_CLIMB=HOLD
+G15=NOT_ESTABLISHED
+NO_REBUILD=1
+SOURCE=sealed receipts + read-only wiring inspection
+NOTE=TOKEN_SURVIVED / RESPONSE_END are NOT tool-execution proof.
+
+================================================================================
+WORKFLOW A — Computer Use GUI E2E
+================================================================================
+MODEL_SELECTED=bigdaddyg-productivity-local:latest
+OLLAMA_RETURN_SHAPE=ORDINARY_CHAT_PROSE
+  evidence: COMPUTER_USE_GUI_E2E_RECEIPT.txt L24-L28
+  "Model returned prose only; tool-request prompt did not produce tool calls"
+  No computer_use.* lines in logs\chat_runtime.log
+  BACKEND_REQUEST_END success=1 RESPONSE_END bytes=1161
+
+PARSER_HIT=NO (no structured tool_calls / no TOOL: computer_use.* observed)
+REGISTRY_LOOKUP=NOT_REACHED
+DISPATCH_INVOKED=NO
+APPROVAL=NOT_RUN
+EXECUTION=NOT_RUN
+CONTINUATION=NOT_RUN (single chat generation completed; no tool loop)
+
+PRODUCT_WIRING_NOTE=
+  Win32IDE_ComputerUse.cpp registers computer_use.* onto a PRIVATE static
+  Registry s_cuReg (m_computerUseRegistry). EnsureComputerUseReady is used for
+  Stop/Clear cancel and for the Agent Tools MessageBox list merge, but sealed
+  CU E2E path used WM_COPYDATA CHIN + BN_CLICKED id=1204 HandleCopilotSend —
+  i.e. chat Send path, not a demonstrated agent-tool loop against the live
+  session registry. Even if the model had emitted tool calls, CU tools are not
+  shown as attached to the same Registry used by the agent session executor.
+
+FIRST_FAILURE_CLASS=AGENT_MODE_NOT_ACTIVE
+  (primary for this sealed run: chat Send path → ordinary prose; tool loop never entered)
+SECONDARY_CLASS=REGISTRY_NOT_WIRED_TO_SESSION
+  (integration defect: orphan s_cuReg vs live agent Registry — blocks CU even after agent mode)
+TERTIARY_OBSERVATION=MODEL_TOOL_CALL_GENERATION
+  (prose-only response; do NOT attribute as sole root cause until agent-mode+tools
+   request schema is proven offered on the live path)
+
+================================================================================
+WORKFLOW B — Agent repair @ OLLAMA_AGENT_READ
+================================================================================
+MODEL_SELECTED=llama3.2:3b
+SCOPE=packaged deep2_agentic_loop.exe (SHA 6F858F02…) via Test-AgentWorkflow.ps1
+  NOTE: this is the packaged agent subprocess, not the Win32IDE GUI dispatch path
+
+OLLAMA_RETURN_SHAPE=TEXTUAL_TOOL_PROTOCOL (TOOL write …)
+  evidence: agent_repair_001\agent.stdout.log steps 1..8
+  Each step: TOOL=write exit=-1 valid=0 observation=126
+  Harness reply forces: next reply MUST be exactly TOOL read bug.cpp
+
+PARSER_HIT=YES (TOOL=write parsed eight times)
+REGISTRY_LOOKUP=YES (write recognized; gate applied)
+DISPATCH_INVOKED=YES (write attempted)
+APPROVAL/GATE=YES (read-before-write rejected; exit=-1 valid=0)
+EXECUTION=NO (write not applied; source SHA unchanged)
+CONTINUATION=YES (loop continued 8 steps with same wrong tool)
+
+FIRST_FAILURE_CLASS=MODEL_TOOL_CALL_GENERATION
+  Model repeatedly selected write instead of required read.
+  Parser/registry/dispatch/continuation for the textual TOOL protocol are working
+  enough to reject illegal write; the missing transition is correct tool selection
+  (read bug.cpp), not registry miss for read.
+
+DOWNSTREAM_NOT_CREDITED=
+  OLLAMA_AGENT_EDIT=FAIL (blocked by READ failure)
+  OLLAMA_AGENT_BUILD_TEST=FAIL
+  source_changed=false
+
+PRODUCT_DEFECT_CONFIRMED_BLOCKING_REPAIR=0 (per AGENT_REPAIR_RECEIPT)
+  Protocol noncompliance on agent harness/model loop; RC5 NOT_AUTHORIZED.
+
+================================================================================
+SHARED BOUNDARY HYPOTHESIS
+================================================================================
+NOT the same first-failure class:
+  A) IDE CU path never entered an agent tool-dispatch loop (chat Send + orphan CU registry)
+  B) Packaged agent loop DID dispatch tools, but model chose the wrong tool (write≠read)
+
+Shared theme: "tool use desired" ≠ "tool use observed correctly", but the break
+points differ. Do not collapse both into a single model blame or a single registry
+blame without path-specific receipts.
+
+HIGHEST-VALUE NEXT LIVE PROBES (no rebuild):
+  1) On RC4 IDE: activate true agent mode (not Copilot/chat Send), confirm tools[] /
+     tool schema is present on the outbound Ollama request, then require a
+     computer_use.find_window call. Record AGENT_MODE=ACTIVE + request JSON redacted.
+  2) If agent mode+schema PASS but still no CU dispatch: prove whether session
+     Registry includes computer_use.* or only s_cuReg (REGISTRY_NOT_WIRED_TO_SESSION).
+  3) For repair: retry harness with a tool-capable model or stricter system constraint;
+     sealed llama3.2:3b run already proves parser/gate path — first failure remains
+     MODEL_TOOL_CALL_GENERATION until a read is emitted.
+
+================================================================================
+TRANSITION MATRIX (required future outcomes — NOT current PASS)
+================================================================================
+Computer Use: AGENT_MODE → TOOL_CALL_PARSED → REGISTRY → APPROVAL → FIND/SHOT/MOUSE → GUI_STATE
+Agent repair: AGENT_MODE → READ_FILE_DISPATCH → BUG_CPP_READBACK → EDIT → BUILD_EXIT_0 → REPAIR_VERIFIED
+
+CURRENT:
+  Computer Use stops before TOOL_CALL_PARSED (agent/chat boundary)
+  Agent repair stops at correct READ generation (write loop / OLLAMA_AGENT_READ)

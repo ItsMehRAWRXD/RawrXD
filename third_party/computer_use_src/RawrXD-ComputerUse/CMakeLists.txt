@@ -1,0 +1,16 @@
+cmake_minimum_required(VERSION 3.20)
+project(RawrXDComputerUse LANGUAGES CXX)
+if(NOT WIN32)
+  message(FATAL_ERROR "Windows-only native Win32 component")
+endif()
+add_library(rawrxd_computer_use STATIC
+  src/computer_use/ComputerUse.cpp
+  src/computer_use/ScreenCapture.cpp)
+target_compile_features(rawrxd_computer_use PUBLIC cxx_std_20)
+target_include_directories(rawrxd_computer_use PUBLIC src/computer_use)
+target_compile_definitions(rawrxd_computer_use PRIVATE UNICODE _UNICODE WIN32_LEAN_AND_MEAN)
+target_link_libraries(rawrxd_computer_use PUBLIC user32 gdi32)
+add_executable(rawrxd_computer_use_tests tests/ComputerUseTests.cpp)
+target_link_libraries(rawrxd_computer_use_tests PRIVATE rawrxd_computer_use)
+enable_testing()
+add_test(NAME policy_smoke COMMAND rawrxd_computer_use_tests)

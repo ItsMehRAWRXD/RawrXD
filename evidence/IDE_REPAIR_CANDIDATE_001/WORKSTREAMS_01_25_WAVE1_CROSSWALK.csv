@@ -1,0 +1,26 @@
+ws,workstream,priority,wave1_touch,notes
+01,Release lineage,Critical,indirect,New candidate SHA after Wave1; RC4 immutable
+02,Chat input,Critical,direct_cu_path,Send works; must not remain text-only for agent tools
+03,Chat sessions,Critical,direct,Session ownership must bind tools
+04,AgentSession,Critical,direct_critical,Session-owned Registry; attach CU + file tools
+05,Agent loop,Critical,direct_critical,Bounded tool-use loop vs Copilot text chat
+06,Tool protocol,Critical,direct_critical,Emit/parse/validate required TOOL read
+07,File tools,Critical,direct_critical,read before write; workspace files
+08,Computer use,Critical,direct_critical,End orphan s_cuReg; live dispatcher
+09,Cancellation,Critical,adjacent,Mid-CU cancel NOT_RUN until tools attach
+10,Integrated terminal,High,blocked_after,After Wave1 integrated
+11,Build system,High,blocked_after,Needs tool-read to edit path
+12,Problems panel,High,blocked_after,
+13,Editor,High,blocked_after,
+14,Multi-panel UI,High,blocked_after,
+15,Ollama,Critical,direct_protocol,Model must emit required tool form
+16,Deep2Engine,High,later_wave3,
+17,Multi-GPU,High,later_wave3,
+18,Context system,High,later,
+19,Agent orchestration,Critical,direct_after_04_07,Wave2
+20,Extension host,High,later_wave4,
+21,Persistence,High,adjacent,G11 PASS on RC4; re-prove on new SHA
+22,Security,Critical,direct_cu_approval,Approval NOT_RUN until dispatch lives
+23,Reliability,Critical,after_tools_live,
+24,Packaging,High,after_integrated_sha,
+25,Certification,Critical,final,G15 / Issue49 product-final / Layer10
