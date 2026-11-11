@@ -1,0 +1,443 @@
+#Requires -Version 5.1
+# DIAGNOSE_ACCEPTANCE_PATH - isolate never-insert vs insert-not-saved on CERT SHA.
+# Fail-closed. PROMOTE=0. Does not invent PASS.
+$ErrorActionPreference = 'Continue'
+$OutDir = 'F:\rawrxd\evidence\POST_E59D_CANDIDATE_001\EDITOR'
+$WorkDir = Join-Path $OutDir 'workdir'
+New-Item -ItemType Directory -Force -Path $WorkDir | Out-Null
+$TipExe = 'F:\rawrxd\build_post_e59d_candidate\bin\RawrXD-Win32IDE-Native.exe'
+$ExpectedSha = '3B720981EC567D60461B874F0C1EE46E03F85DB58F6E1788CBEE31F8B2CCAD5F'
+$PreferredModel = 'qwen2.5-coder:1.5b-base'
+$Log = Join-Path $OutDir 'DIAGNOSE_ACCEPT_RUNLOG.txt'
+$SessionJson = Join-Path $env:LOCALAPPDATA 'RawrXD\ide_session.json'
+$Marker = 'GTACC_' + [guid]::NewGuid().ToString('N').Substring(0, 12)
+$Fixture = Join-Path $WorkDir ("gt_diag_{0}.txt" -f $Marker)
+$Seed = ("def add(a, b):`r`n    // " + $Marker + "`r`n    ")
+Set-Content -LiteralPath $Log -Value ''
+function WLog([string]$m) {
+  $line = '[{0}] {1}' -f (Get-Date -Format 'o'), $m
+  Add-Content -LiteralPath $Log -Value $line
+  Write-Host $line
+}
+
+$flags = [ordered]@{
+  GHOSTTEXT_RENDERED = 0
+  EDITOR_FOCUS = 0
+  TAB_ACCEPT_HANDLER_ENTER = 0
+  ACCEPTED_TEXT_INSERTED = 0
+  EDITOR_BUFFER_MATCH = 0
+  DOCUMENT_DIRTY = 0
+  SAVE_SUCCESS = 0
+  REOPEN_BYTES_MATCH = 0
+  REOPEN_SHA_MATCH = 0
+}
+
+Add-Type -TypeDefinition @'
+using System; using System.Text; using System.Runtime.InteropServices;
+public static class GTD {
+  public delegate bool EnumProc(IntPtr h, IntPtr l);
+  [DllImport("user32.dll")] public static extern bool EnumWindows(EnumProc lp, IntPtr l);
+  [DllImport("user32.dll")] public static extern bool EnumChildWindows(IntPtr h, EnumProc lp, IntPtr l);
+  [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
+  [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int GetClassNameW(IntPtr h, StringBuilder s, int n);
+  [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int GetWindowTextW(IntPtr h, StringBuilder s, int n);
+  [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern bool SetWindowTextW(IntPtr h, string s);
+  [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr h);
+  [DllImport("user32.dll")] public static extern bool IsWindowEnabled(IntPtr h);
+  [DllImport("user32.dll")] public static extern bool PostMessageW(IntPtr h, uint m, IntPtr w, IntPtr l);
+  [DllImport("user32.dll")] public static extern IntPtr SendMessageW(IntPtr h, uint m, IntPtr w, IntPtr l);
+  [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern IntPtr SendMessageW(IntPtr h, uint m, IntPtr w, string l);
+  [DllImport("user32.dll")] public static extern int GetDlgCtrlID(IntPtr h);
+  [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);
+  [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h, int n);
+  [DllImport("user32.dll")] public static extern IntPtr SetFocus(IntPtr h);
+  [DllImport("user32.dll")] public static extern IntPtr GetFocus();
+  [DllImport("user32.dll")] public static extern bool AttachThreadInput(uint a, uint b, bool f);
+  [DllImport("kernel32.dll")] public static extern uint GetCurrentThreadId();
+  [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+  [DllImport("user32.dll")] public static extern uint SendInput(uint n, INPUT[] i, int cb);
+  [DllImport("user32.dll")] public static extern uint GetMenuState(IntPtr h, uint id, uint flags);
+  [DllImport("user32.dll")] public static extern IntPtr GetMenu(IntPtr h);
+  public const uint WM_COMMAND=0x0111, WM_SETTEXT=0x000C, WM_GETTEXT=0x000D, WM_GETTEXTLENGTH=0x000E, WM_CLOSE=0x0010;
+  public const uint WM_KEYDOWN=0x0100, WM_KEYUP=0x0101, WM_CHAR=0x0102;
+  public const uint EM_SETSEL=0x00B1, EM_REPLACESEL=0x00C2, BM_CLICK=0x00F5;
+  public const uint CB_GETCOUNT=0x0146, CB_GETLBTEXT=0x0148, CB_GETLBTEXTLEN=0x0149, CB_SETCURSEL=0x014E, CB_GETCURSEL=0x0147;
+  public const int IDM_FILE_OPEN=2002, IDM_FILE_SAVE=2003, IDC_EDITOR=1001, IDC_DEBUG=1014;
+  [StructLayout(LayoutKind.Sequential)] public struct INPUT { public uint type; public KEYBDINPUT ki; }
+  [StructLayout(LayoutKind.Sequential)] public struct KEYBDINPUT { public ushort wVk; public ushort wScan; public uint dwFlags; public uint time; public UIntPtr extra; }
+  public static string ClassName(IntPtr h){ var s=new StringBuilder(128); GetClassNameW(h,s,s.Capacity); return s.ToString(); }
+  public static string TitleOf(IntPtr h){ var s=new StringBuilder(512); GetWindowTextW(h,s,s.Capacity); return s.ToString(); }
+  public static IntPtr FindMain(uint p){ IntPtr f=IntPtr.Zero; EnumWindows((h,l)=>{ uint x; GetWindowThreadProcessId(h,out x); if(x!=p)return true; if(ClassName(h)=="RawrXD_IDE_Window"){f=h;return false;} return true;},IntPtr.Zero); return f; }
+  public static IntPtr FindEditor(IntPtr root){ IntPtr f=IntPtr.Zero; EnumChildWindows(root,(h,l)=>{ string c=ClassName(h); if(GetDlgCtrlID(h)==IDC_EDITOR && IsWindowVisible(h) && (c.IndexOf("RichEdit",StringComparison.OrdinalIgnoreCase)>=0 || c=="Edit")){ f=h; return false;} return true;},IntPtr.Zero); return f; }
+  public static IntPtr FindDebug(IntPtr root){ IntPtr f=IntPtr.Zero; EnumChildWindows(root,(h,l)=>{ if(GetDlgCtrlID(h)==IDC_DEBUG && IsWindowVisible(h)){ f=h; return false;} return true;},IntPtr.Zero); return f; }
+  public static IntPtr FindAnyDialog(uint p){ IntPtr f=IntPtr.Zero; EnumWindows((h,l)=>{ uint x; GetWindowThreadProcessId(h,out x); if(x!=p)return true; if(ClassName(h)=="#32770"&&IsWindowVisible(h)){f=h;return false;} return true;},IntPtr.Zero); return f; }
+  public static void Focus(IntPtr main, IntPtr ed){ ShowWindow(main,9); SetForegroundWindow(main); uint gui=0; GetWindowThreadProcessId(main,out gui); uint me=GetCurrentThreadId(); bool a=false; if(gui!=me)a=AttachThreadInput(me,gui,true); SetFocus(ed); if(a)AttachThreadInput(me,gui,false); }
+  public static IntPtr FocusOf(IntPtr main){ uint gui=0; GetWindowThreadProcessId(main,out gui); uint me=GetCurrentThreadId(); bool a=false; if(gui!=me)a=AttachThreadInput(me,gui,true); IntPtr f=GetFocus(); if(a)AttachThreadInput(me,gui,false); return f; }
+  public static string GetText(IntPtr h){ int len=SendMessageW(h,WM_GETTEXTLENGTH,IntPtr.Zero,IntPtr.Zero).ToInt32(); if(len<=0)return ""; IntPtr buf=Marshal.AllocHGlobal((len+2)*2); try{ int got=SendMessageW(h,WM_GETTEXT,(IntPtr)(len+1),buf).ToInt32(); return got>0?Marshal.PtrToStringUni(buf)??"":""; } finally{ Marshal.FreeHGlobal(buf);} }
+  public static void SetText(IntPtr h, string t){ SendMessageW(h,EM_SETSEL,IntPtr.Zero,(IntPtr)(-1)); SendMessageW(h,EM_REPLACESEL,(IntPtr)1,t??""); }
+  public static void Chord(ushort a, ushort b){ var i=new INPUT[4]; for(int k=0;k<4;k++) i[k].type=1; i[0].ki.wVk=a; i[1].ki.wVk=b; i[2].ki.wVk=b; i[2].ki.dwFlags=2; i[3].ki.wVk=a; i[3].ki.dwFlags=2; SendInput(4,i,Marshal.SizeOf(typeof(INPUT))); }
+  public static void TabSendInput(){ var i=new INPUT[2]; i[0].type=1; i[0].ki.wVk=0x09; i[1].type=1; i[1].ki.wVk=0x09; i[1].ki.dwFlags=2; SendInput(2,i,Marshal.SizeOf(typeof(INPUT))); }
+  public static void TabToEditor(IntPtr ed){ SendMessageW(ed,WM_KEYDOWN,(IntPtr)0x09,IntPtr.Zero); SendMessageW(ed,WM_CHAR,(IntPtr)0x09,IntPtr.Zero); SendMessageW(ed,WM_KEYUP,(IntPtr)0x09,IntPtr.Zero); }
+  public static bool Drive(IntPtr dlg, string path){
+    if(dlg==IntPtr.Zero) return false; IntPtr edit=IntPtr.Zero;
+    EnumChildWindows(dlg,(h,l)=>{ string c=ClassName(h); int id=GetDlgCtrlID(h); if((c=="Edit"||c.StartsWith("RichEdit"))&&(id==0x47C||id==0x480)&&IsWindowVisible(h)){edit=h;return false;} return true;},IntPtr.Zero);
+    if(edit==IntPtr.Zero) EnumChildWindows(dlg,(h,l)=>{ if(ClassName(h)=="ComboBoxEx32"){ EnumChildWindows(h,(c,q)=>{ if(ClassName(c)=="Edit"){edit=c;return false;} return true;},IntPtr.Zero); return edit==IntPtr.Zero;} return true;},IntPtr.Zero);
+    if(edit==IntPtr.Zero) return false;
+    SetForegroundWindow(dlg); SetWindowTextW(edit,path); SendMessageW(edit,WM_SETTEXT,IntPtr.Zero,path);
+    IntPtr ok=IntPtr.Zero; EnumChildWindows(dlg,(h,l)=>{ if(GetDlgCtrlID(h)==1&&ClassName(h)=="Button"){ok=h;return false;} return true;},IntPtr.Zero);
+    if(ok!=IntPtr.Zero){ PostMessageW(dlg,WM_COMMAND,(IntPtr)1,ok); SendMessageW(ok,BM_CLICK,IntPtr.Zero,IntPtr.Zero);} else PostMessageW(dlg,WM_COMMAND,(IntPtr)1,IntPtr.Zero);
+    System.Threading.Thread.Sleep(200);
+    if(IsWindowVisible(dlg)){ var i=new INPUT[2]; i[0].type=1; i[0].ki.wVk=0x0D; i[1].type=1; i[1].ki.wVk=0x0D; i[1].ki.dwFlags=2; SendInput(2,i,Marshal.SizeOf(typeof(INPUT))); }
+    return true;
+  }
+  public static IntPtr FindComboWithText(IntPtr root, string needle){
+    IntPtr found=IntPtr.Zero;
+    EnumChildWindows(root,(h,l)=>{
+      string c=ClassName(h);
+      if(c!="ComboBox" && c!="ComboBoxEx32") return true;
+      int n=SendMessageW(h,CB_GETCOUNT,IntPtr.Zero,IntPtr.Zero).ToInt32();
+      for(int i=0;i<n && i<200;i++){
+        int tlen=SendMessageW(h,CB_GETLBTEXTLEN,(IntPtr)i,IntPtr.Zero).ToInt32();
+        if(tlen<=0) continue;
+        IntPtr buf=Marshal.AllocHGlobal((tlen+2)*2);
+        try {
+          SendMessageW(h,CB_GETLBTEXT,(IntPtr)i,buf);
+          string t=Marshal.PtrToStringUni(buf)??"";
+          if(t.IndexOf(needle,StringComparison.OrdinalIgnoreCase)>=0){ found=h; return false; }
+        } finally { Marshal.FreeHGlobal(buf); }
+      }
+      return true;
+    },IntPtr.Zero);
+    return found;
+  }
+  public static int SelectComboText(IntPtr combo, string needle){
+    int n=SendMessageW(combo,CB_GETCOUNT,IntPtr.Zero,IntPtr.Zero).ToInt32();
+    for(int i=0;i<n;i++){
+      int tlen=SendMessageW(combo,CB_GETLBTEXTLEN,(IntPtr)i,IntPtr.Zero).ToInt32();
+      if(tlen<=0) continue;
+      IntPtr buf=Marshal.AllocHGlobal((tlen+2)*2);
+      try {
+        SendMessageW(combo,CB_GETLBTEXT,(IntPtr)i,buf);
+        string t=Marshal.PtrToStringUni(buf)??"";
+        if(t.IndexOf(needle,StringComparison.OrdinalIgnoreCase)>=0){
+          SendMessageW(combo,CB_SETCURSEL,(IntPtr)i,IntPtr.Zero);
+          return i;
+        }
+      } finally { Marshal.FreeHGlobal(buf); }
+    }
+    return -1;
+  }
+  public static bool SaveMenuEnabled(IntPtr main){
+    IntPtr m=GetMenu(main); if(m==IntPtr.Zero) return false;
+    uint st=GetMenuState(m,(uint)IDM_FILE_SAVE,0); return (st & 0x3u)==0;
+  }
+}
+'@
+if (-not ('GTD' -as [type])) { throw 'ADD_TYPE_FAILED' }
+
+# --- authority ---
+$sha = (Get-FileHash $TipExe -Algorithm SHA256).Hash
+$size = (Get-Item $TipExe).Length
+WLog "CERT_SHA=$sha SIZE=$size"
+if ($sha -ne $ExpectedSha) { WLog 'HASH_DRIFT'; throw 'HASH_DRIFT' }
+
+Get-Process | Where-Object { $_.ProcessName -like 'RawrXD-Win32IDE*' } | Stop-Process -Force -EA SilentlyContinue
+Start-Sleep 1
+
+# clear session restore pollution
+if (Test-Path $SessionJson) {
+  $bak = "$SessionJson.bak_diag_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
+  Copy-Item $SessionJson $bak -Force
+  Set-Content -LiteralPath $SessionJson -Value '{"active":0,"chat_mode":0,"documents":[{"modified":false,"path":"","text":""}]}' -Encoding UTF8
+  WLog "SESSION_CLEARED bak=$bak"
+}
+
+$ollama = 'DOWN'
+try {
+  $r = Invoke-WebRequest -Uri 'http://127.0.0.1:11434/api/tags' -UseBasicParsing -TimeoutSec 5
+  $ollama = "UP status=$($r.StatusCode)"
+} catch { $ollama = "DOWN $($_.Exception.Message)" }
+WLog "OLLAMA=$ollama PREFERRED_MODEL=$PreferredModel MARKER=$Marker"
+
+[IO.File]::WriteAllText($Fixture, $Seed, [Text.UTF8Encoding]::new($false))
+$seedLen = (Get-Item $Fixture).Length
+$seedSha = (Get-FileHash $Fixture -Algorithm SHA256).Hash
+WLog "FIXTURE=$Fixture seed_len=$seedLen seed_sha=$seedSha"
+
+$psi = New-Object System.Diagnostics.ProcessStartInfo
+$psi.FileName = $TipExe
+$psi.WorkingDirectory = (Split-Path $TipExe)
+$psi.UseShellExecute = $false
+$proc = [Diagnostics.Process]::Start($psi)
+WLog "LAUNCHED pid=$($proc.Id)"
+$main = [IntPtr]::Zero
+for ($i = 0; $i -lt 80; $i++) {
+  $main = [GTD]::FindMain([uint32]$proc.Id)
+  if ($main -ne [IntPtr]::Zero) { break }
+  Start-Sleep -Milliseconds 250
+}
+WLog ("main=0x{0:X}" -f $main.ToInt64())
+
+# Open fixture
+[void][GTD]::PostMessageW($main, [GTD]::WM_COMMAND, [IntPtr][GTD]::IDM_FILE_OPEN, [IntPtr]::Zero)
+Start-Sleep -Milliseconds 600
+$dlg = [GTD]::FindAnyDialog([uint32]$proc.Id)
+[void][GTD]::Drive($dlg, $Fixture)
+$ed = [IntPtr]::Zero
+for ($i = 0; $i -lt 40; $i++) {
+  $ed = [GTD]::FindEditor($main)
+  if ($ed -ne [IntPtr]::Zero) {
+    $t = [GTD]::GetText($ed)
+    if ($t -match [regex]::Escape($Marker) -or $t.Length -gt 0) { break }
+  }
+  Start-Sleep -Milliseconds 250
+}
+WLog ("editor=0x{0:X}" -f $ed.ToInt64())
+if ($ed -eq [IntPtr]::Zero) { WLog 'NO_EDITOR'; throw 'NO_EDITOR' }
+
+# Ensure seed content in buffer (avoid empty session tab)
+[GTD]::Focus($main, $ed)
+$cur = [GTD]::GetText($ed)
+if ($cur -notmatch [regex]::Escape($Marker)) {
+  WLog "SEED_MISSING_IN_BUFFER cur_len=$($cur.Length) - forcing seed via EM_REPLACESEL"
+  [GTD]::SetText($ed, $Seed)
+  Start-Sleep -Milliseconds 300
+  $cur = [GTD]::GetText($ed)
+}
+WLog "buffer_pre_trigger_len=$($cur.Length) has_marker=$($cur -match [regex]::Escape($Marker))"
+
+# Prefer explicit local model in any combo that lists it
+$modelCombo = [GTD]::FindComboWithText($main, $PreferredModel)
+if ($modelCombo -eq [IntPtr]::Zero) {
+  $modelCombo = [GTD]::FindComboWithText($main, 'qwen2.5-coder')
+}
+if ($modelCombo -ne [IntPtr]::Zero) {
+  $sel = [GTD]::SelectComboText($modelCombo, $PreferredModel)
+  if ($sel -lt 0) { $sel = [GTD]::SelectComboText($modelCombo, 'qwen2.5-coder') }
+  WLog ("MODEL_COMBO=0x{0:X} sel=$sel" -f $modelCombo.ToInt64())
+  # notify parent of selection change
+  $cid = [GTD]::GetDlgCtrlID($modelCombo)
+  [void][GTD]::PostMessageW($main, [GTD]::WM_COMMAND, [IntPtr](($cid -band 0xFFFF) -bor (1 -shl 16)), $modelCombo) # CBN_SELCHANGE=1
+  Start-Sleep -Milliseconds 500
+} else {
+  WLog 'MODEL_COMBO_NOT_FOUND - relying on Auto Local / current chat model'
+}
+
+$logsDir = Join-Path (Split-Path $TipExe) 'logs'
+$sessionLog = Get-ChildItem $logsDir -Filter 'RawrXD_IDE_*.log' -EA SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+WLog "session_log=$($sessionLog.FullName)"
+
+# Trigger GhostText
+[GTD]::Focus($main, $ed)
+$focusHwnd = [GTD]::FocusOf($main)
+if ($focusHwnd -eq $ed) { $flags.EDITOR_FOCUS = 1 }
+WLog ("EDITOR_FOCUS=$($flags.EDITOR_FOCUS) focus=0x{0:X} editor=0x{1:X}" -f $focusHwnd.ToInt64(), $ed.ToInt64())
+$before = [GTD]::GetText($ed)
+WLog "before_len=$($before.Length)"
+[GTD]::Chord(0x11, 0x20) # Ctrl+Space
+WLog 'TRIGGER=Ctrl+Space'
+
+$renderedReq = ''
+$eligibleSeen = $false
+$deadline = (Get-Date).AddSeconds(120)
+$dbgMax = ''
+while ((Get-Date) -lt $deadline) {
+  if ($proc.HasExited) { WLog 'PROCESS_DEAD'; break }
+  Start-Sleep -Milliseconds 500
+  $dbg = [GTD]::FindDebug($main)
+  $dbgText = if ($dbg -ne [IntPtr]::Zero) { [GTD]::GetText($dbg) } else { '' }
+  if ($dbgText.Length -gt $dbgMax.Length) { $dbgMax = $dbgText }
+  $logTail = ''
+  if ($sessionLog) { $logTail = (Get-Content $sessionLog.FullName -Tail 80 -EA SilentlyContinue) -join "`n" }
+  $hay = $dbgText + "`n" + $logTail
+  if ($hay -match 'GHOSTTEXT_RENDERED request_id=(\d+)') {
+    $flags.GHOSTTEXT_RENDERED = 1
+    $renderedReq = $Matches[1]
+  }
+  if ($hay -match 'GHOSTTEXT_RENDER_DECISION request_id=(\d+) eligible=1') {
+    $eligibleSeen = $true
+    if (-not $renderedReq) { $renderedReq = $Matches[1] }
+  }
+  if ($hay -match 'GHOSTTEXT_RENDERED') { $flags.GHOSTTEXT_RENDERED = 1 }
+  if ($flags.GHOSTTEXT_RENDERED -eq 1 -and $eligibleSeen) {
+    WLog "RENDER_OK request_id=$renderedReq eligible=1"
+    break
+  }
+  # also accept rendered without explicit eligible if rendered line present
+  if ($flags.GHOSTTEXT_RENDERED -eq 1 -and ($hay -match 'GHOSTTEXT_RENDERED')) {
+    # keep waiting briefly for eligible, but allow break if hint visible long enough
+    if (((Get-Date) - $deadline.AddSeconds(-120)).TotalSeconds -gt 8 -and $flags.GHOSTTEXT_RENDERED -eq 1) {
+      # continue until eligible or timeout near end
+    }
+  }
+}
+if ($flags.GHOSTTEXT_RENDERED -eq 0) {
+  # last chance scan
+  $hay2 = $dbgMax
+  if ($sessionLog) { $hay2 += "`n" + ((Get-Content $sessionLog.FullName -EA SilentlyContinue) -join "`n") }
+  if ($hay2 -match 'GHOSTTEXT_RENDERED') { $flags.GHOSTTEXT_RENDERED = 1 }
+  if ($hay2 -match 'eligible=1') { $eligibleSeen = $true }
+}
+WLog "PRE_TAB GHOSTTEXT_RENDERED=$($flags.GHOSTTEXT_RENDERED) eligible=$eligibleSeen request_id=$renderedReq dbg_len=$($dbgMax.Length)"
+
+# Re-focus and Tab via SendMessage to editor (primary) + SendInput (fallback)
+$ed = [GTD]::FindEditor($main)
+[GTD]::Focus($main, $ed)
+$focusHwnd = [GTD]::FocusOf($main)
+if ($focusHwnd -eq $ed) { $flags.EDITOR_FOCUS = 1 }
+WLog ("PRE_TAB_FOCUS=$($flags.EDITOR_FOCUS) focus=0x{0:X}" -f $focusHwnd.ToInt64())
+$preTab = [GTD]::GetText($ed)
+WLog "pre_tab_len=$($preTab.Length)"
+
+[GTD]::TabToEditor($ed)
+Start-Sleep -Milliseconds 200
+[GTD]::TabSendInput()
+Start-Sleep -Milliseconds 800
+
+$afterTab = [GTD]::GetText([GTD]::FindEditor($main))
+WLog "after_tab_len=$($afterTab.Length) delta=$($afterTab.Length - $preTab.Length)"
+
+# Scan for accept evidence in product traces (sealed binary has GHOSTTEXT_ACCEPTED, not TAB_ACCEPT_HANDLER_ENTER)
+$postHay = $dbgMax
+$dbg2 = [GTD]::FindDebug($main)
+if ($dbg2 -ne [IntPtr]::Zero) { $postHay = [GTD]::GetText($dbg2) }
+if ($sessionLog) { $postHay += "`n" + ((Get-Content $sessionLog.FullName -Tail 120 -EA SilentlyContinue) -join "`n") }
+if ($postHay -match 'TAB_ACCEPT_HANDLER_ENTER') { $flags.TAB_ACCEPT_HANDLER_ENTER = 1 }
+if ($postHay -match 'GHOSTTEXT_ACCEPTED') {
+  # sealed binary: ACCEPTED implies handler entered + insert attempted
+  $flags.TAB_ACCEPT_HANDLER_ENTER = 1
+  WLog 'SAW_GHOSTTEXT_ACCEPTED'
+}
+if ($afterTab.Length -gt $preTab.Length + 1) {
+  $flags.ACCEPTED_TEXT_INSERTED = 1
+  $flags.EDITOR_BUFFER_MATCH = 1
+}
+# Dirty: title star or save menu enabled or buffer != seed on disk
+$title = [GTD]::TitleOf($main)
+$saveEn = [GTD]::SaveMenuEnabled($main)
+if ($title -match '\*' -or $saveEn -or ($flags.ACCEPTED_TEXT_INSERTED -eq 1)) {
+  if ($flags.ACCEPTED_TEXT_INSERTED -eq 1 -or $title -match '\*' -or $saveEn) {
+    $flags.DOCUMENT_DIRTY = 1
+  }
+}
+WLog "title='$title' save_enabled=$saveEn DOCUMENT_DIRTY=$($flags.DOCUMENT_DIRTY)"
+WLog "ISOLATION after_tab_vs_seed: buffer_changed=$($afterTab -ne $before) disk_still_seed=$((Get-Item $Fixture).Length -eq $seedLen)"
+
+# Save
+[void][GTD]::PostMessageW($main, [GTD]::WM_COMMAND, [IntPtr][GTD]::IDM_FILE_SAVE, [IntPtr]::Zero)
+Start-Sleep -Seconds 1
+# Ctrl+S fallback
+[GTD]::Focus($main, [GTD]::FindEditor($main))
+[GTD]::Chord(0x11, 0x53)
+Start-Sleep -Seconds 1
+
+$diskLen = (Get-Item $Fixture).Length
+$diskBytes = [IO.File]::ReadAllBytes($Fixture)
+$diskSha = (Get-FileHash $Fixture -Algorithm SHA256).Hash
+$diskText = [IO.File]::ReadAllText($Fixture)
+WLog "disk_len=$diskLen seed_len=$seedLen disk_sha=$diskSha"
+
+if ($diskLen -ne $seedLen -or $diskSha -ne $seedSha) {
+  if ($diskText -match [regex]::Escape($Marker) -and $diskLen -gt $seedLen) {
+    $flags.SAVE_SUCCESS = 1
+  } elseif ($diskSha -ne $seedSha) {
+    $flags.SAVE_SUCCESS = 1
+  }
+}
+
+# Close and reopen to prove persistence
+[void][GTD]::PostMessageW($main, [GTD]::WM_CLOSE, [IntPtr]::Zero, [IntPtr]::Zero)
+Start-Sleep -Milliseconds 500
+$d = [GTD]::FindAnyDialog([uint32]$proc.Id)
+if ($d -ne [IntPtr]::Zero) { [void][GTD]::PostMessageW($d, [GTD]::WM_COMMAND, [IntPtr]7, [IntPtr]::Zero) } # IDNO
+[void]$proc.WaitForExit(10000)
+if (-not $proc.HasExited) { Stop-Process -Id $proc.Id -Force -EA SilentlyContinue }
+
+$reopenText = [IO.File]::ReadAllText($Fixture)
+$reopenSha = (Get-FileHash $Fixture -Algorithm SHA256).Hash
+$expectedAccepted = $afterTab
+if ($flags.SAVE_SUCCESS -eq 1 -and $reopenSha -eq $diskSha -and $reopenText -eq $diskText) {
+  $flags.REOPEN_BYTES_MATCH = 1
+  $flags.REOPEN_SHA_MATCH = 1
+}
+# stricter: reopen must match the post-tab buffer if insert happened
+if ($flags.ACCEPTED_TEXT_INSERTED -eq 1) {
+  $normBuf = $afterTab -replace "`r`n","`n" -replace "`r","`n"
+  $normDisk = $reopenText -replace "`r`n","`n" -replace "`r","`n"
+  if ($normDisk -eq $normBuf) {
+    $flags.REOPEN_BYTES_MATCH = 1
+    $flags.EDITOR_BUFFER_MATCH = 1
+  } else {
+    $flags.REOPEN_BYTES_MATCH = 0
+    $flags.EDITOR_BUFFER_MATCH = 0
+    WLog 'BUFFER_DISK_MISMATCH after_tab vs reopen'
+  }
+  if ($reopenSha -eq $diskSha -and $flags.SAVE_SUCCESS -eq 1) { $flags.REOPEN_SHA_MATCH = 1 }
+}
+
+# Classification
+$verdict = 'NOT_VERIFIED'
+$iso = 'UNKNOWN'
+if ($flags.GHOSTTEXT_RENDERED -eq 0) {
+  $verdict = 'NOT_VERIFIED_NO_RENDER'
+  $iso = 'SUGGESTION_NEVER_RENDERED'
+} elseif ($flags.ACCEPTED_TEXT_INSERTED -eq 0 -and $flags.SAVE_SUCCESS -eq 0) {
+  $verdict = 'NOT_VERIFIED_NO_ACCEPT'
+  $iso = 'SUGGESTION_NEVER_INSERTED'
+} elseif ($flags.ACCEPTED_TEXT_INSERTED -eq 1 -and $flags.SAVE_SUCCESS -eq 0) {
+  $verdict = 'FAIL_INSERT_NOT_SAVED'
+  $iso = 'INSERTED_BUT_NOT_SAVED'
+} elseif (($flags.Values | Where-Object { $_ -eq 0 }).Count -eq 0) {
+  $verdict = 'PASS'
+  $iso = 'ACCEPT_AND_SAVE_PROVED'
+} else {
+  $verdict = 'NOT_VERIFIED_PARTIAL'
+  $iso = 'PARTIAL_FLAGS'
+}
+
+$receipt = @"
+# GhostText accept DIAGNOSE (fail-closed)
+
+ASOF_UTC=$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ'))
+NEXT_ACTION=DIAGNOSE_ACCEPTANCE_PATH
+CERT_EXE=$TipExe
+CERT_EXE_SHA=$sha
+SIZE=$size
+REBUILD=0
+OLLAMA=$ollama
+PREFERRED_MODEL=$PreferredModel
+MARKER=$Marker
+FIXTURE=$Fixture
+SEED_LEN=$seedLen
+SEED_SHA=$seedSha
+BEFORE_LEN=$($before.Length)
+PRE_TAB_LEN=$($preTab.Length)
+AFTER_TAB_LEN=$($afterTab.Length)
+DISK_LEN=$diskLen
+DISK_SHA=$diskSha
+REOPEN_SHA=$reopenSha
+RENDER_REQUEST_ID=$renderedReq
+ELIGIBLE_SEEN=$eligibleSeen
+ISOLATION=$iso
+RESULT=$verdict
+PROMOTE=0
+CERTIFIED=0
+
+## Evidence flags (1=observed, 0=not observed)
+GHOSTTEXT_RENDERED=$($flags.GHOSTTEXT_RENDERED)
+EDITOR_FOCUS=$($flags.EDITOR_FOCUS)
+TAB_ACCEPT_HANDLER_ENTER=$($flags.TAB_ACCEPT_HANDLER_ENTER)
+ACCEPTED_TEXT_INSERTED=$($flags.ACCEPTED_TEXT_INSERTED)
+EDITOR_BUFFER_MATCH=$($flags.EDITOR_BUFFER_MATCH)
+DOCUMENT_DIRTY=$($flags.DOCUMENT_DIRTY)
+SAVE_SUCCESS=$($flags.SAVE_SUCCESS)
+REOPEN_BYTES_MATCH=$($flags.REOPEN_BYTES_MATCH)
+REOPEN_SHA_MATCH=$($flags.REOPEN_SHA_MATCH)
+
+NOTE=TAB_ACCEPT_HANDLER_ENTER on sealed 3B720981 inferred only from GHOSTTEXT_ACCEPTED (no entry log in binary). Disk-vs-buffer measured BEFORE save to isolate insert vs save.
+"@
+Set-Content -LiteralPath (Join-Path $OutDir 'GHOSTTEXT_ACCEPT_RECEIPT.md') $receipt -Encoding UTF8
+Set-Content -LiteralPath (Join-Path $OutDir 'DIAGNOSE_ACCEPT_CONSOLE.txt') $receipt -Encoding UTF8
+WLog "RESULT=$verdict ISOLATION=$iso"
+$flags.GetEnumerator() | ForEach-Object { WLog ("FLAG {0}={1}" -f $_.Key, $_.Value) }
+if ($verdict -eq 'PASS') { exit 0 } else { exit 1 }

@@ -1,0 +1,62 @@
+#version 450
+
+layout(local_size_x = 64) in;
+layout(set = 0, binding = 0, std430) readonly buffer QueryBuffer { float query[]; };
+layout(set = 0, binding = 1, std430) readonly buffer KeyCacheBuffer { float key_cache[]; };
+layout(set = 0, binding = 2, std430) readonly buffer PageTableBuffer { int page_table[]; };
+layout(set = 0, binding = 3, std430) readonly buffer RequestBuffer { int token_to_request[]; };
+layout(set = 0, binding = 4, std430) readonly buffer PositionBuffer { int query_position[]; };
+layout(set = 0, binding = 5, std430) readonly buffer LengthBuffer { int sequence_length[]; };
+layout(set = 0, binding = 6, std430) writeonly buffer LogitBuffer { float logits[]; };
+layout(set = 0, binding = 7, std430) writeonly buffer VisibleBuffer { uint visible_columns[]; };
+
+layout(push_constant) uniform Push {
+    uint rows;
+    uint index_heads;
+    uint key_dim;
+    uint page_size;
+    uint compress_ratio;
+    uint max_pages;
+    uint requests;
+    uint reserved;
+} pc;
+
+void main() {
+    if (pc.rows == 0u || pc.index_heads == 0u || pc.key_dim == 0u ||
+        pc.page_size == 0u || pc.compress_ratio == 0u || pc.max_pages == 0u) return;
+    const uint columns = pc.max_pages * pc.page_size;
+    const uint gid = gl_GlobalInvocationID.x;
+    if (gid >= pc.rows * columns) return;
+    const uint row = gid / columns;
+    const uint column = gid - row * columns;
+    const int request = token_to_request[row];
+    const int position = query_position[row];
+    if (column == 0u) visible_columns[row] = 0u;
+    if (request < 0 || uint(request) >= pc.requests || position < 0) {
+        logits[gid] = -1.0 / 0.0;
+        return;
+    }
+    const uint visible = min(uint((position + 1) / int(pc.compress_ratio)),
+                            uint(max(sequence_length[request], 0) / int(pc.compress_ratio)));
+    if (column == 0u) visible_columns[row] = min(visible, columns);
+    if (column >= visible) {
+        logits[gid] = -1.0 / 0.0;
+        return;
+    }
+    const int physical_page = page_table[uint(request) * pc.max_pages + column / pc.page_size];
+    if (physical_page < 0) {
+        logits[gid] = -1.0 / 0.0;
+        return;
+    }
+    const uint key_base = (uint(physical_page) * pc.page_size + column % pc.page_size) * pc.key_dim;
+    const uint query_base = row * pc.index_heads * pc.key_dim;
+    float score = 0.0;
+    for (uint head = 0u; head < pc.index_heads; ++head) {
+        float dot = 0.0;
+        const uint head_base = query_base + head * pc.key_dim;
+        for (uint dim = 0u; dim < pc.key_dim; ++dim)
+            dot += query[head_base + dim] * key_cache[key_base + dim];
+        score += max(dot, 0.0);
+    }
+    logits[gid] = score / sqrt(float(pc.key_dim));
+}

@@ -1,0 +1,117 @@
+
+[2026-11-08T18:03:30.2086588-05:00] CLI=F:\rawrxd\build_repair_candidate\bin-msvc\rawr.exe SHA=2CB32D51F4C4CFE3138C7869365A4DBC22CE1DA5F6F16B1920BFE8FFB1C182AF
+[2026-11-08T18:03:30.2148803-05:00] FIXTURE=F:\rawrxd\evidence\REPAIR_FINISH25_001\AGENT\T15_ARG_CONTRACT\t15_contract_T15ARG_da5080bd.cpp MARKER=T15ARG_da5080bd
+[2026-11-08T18:03:30.2310332-05:00] CASE=COMPLETE_GOOD COMPLETE=1 REJECT=NONE
+[2026-11-08T18:03:30.2341102-05:00] CASE=INCOMPLETE_NO_MARKER COMPLETE=0 REJECT=MARKER_MISSING_FROM_NEW
+[2026-11-08T18:03:30.2371314-05:00] CASE=MALFORMED_EMPTY_NEW COMPLETE=0 REJECT=EMPTY_NEW
+[2026-11-08T18:03:30.3102532-05:00] TOOLS_HELP_LEN=445
+[2026-11-08T18:03:30.3367894-05:00] DIRECT_EXIT=2
+[2026-11-08T18:03:30.3402568-05:00] APPLY=FAIL_OR_NONZERO DISK_MARKER=False DISK_FLIP=False
+[2026-11-08T18:03:30.3442921-05:00] DISK=<<// EDIT_ME T15ARG_da5080bd
+int before = 0;
+>>
+[2026-11-08T18:03:30.3720757-05:00] CONTRACT_FIXTURES_PASS=1
+
+[2026-11-08T18:46:09.6249182-05:00] ==== T15 WORKSPACE-SCOPED APPLY REBUILD TRIALS ====
+[2026-11-08T18:46:09.6332363-05:00] CLI=F:\rawrxd\build_repair_candidate\bin-msvc\rawr.exe SHA=4F815E1D0B44BD1CC233316BC03FD88958E07517E785DDD95B4C77AB6B641164
+[2026-11-08T18:46:09.6429194-05:00] WS=F:\rawrxd\evidence\REPAIR_FINISH25_001\AGENT\T15_ARG_CONTRACT FIXTURE=F:\rawrxd\evidence\REPAIR_FINISH25_001\AGENT\T15_ARG_CONTRACT\t15_contract_T15ARG_da5080bd.cpp MARKER=T15ARG_da5080bd EDITED=T15_EDITED_T15ARG_da5080bd
+[2026-11-08T18:46:09.7379093-05:00] TRIAL=DENY_NO_APPROVE EXIT=2
+[2026-11-08T18:46:09.7409340-05:00] DENY_STDOUT<<rawr.exe : Unknown command: --workspace
+At F:\rawrxd\evidence\REPAIR_FINISH25_001\AGENT\T15_ARG_CONTRACT\run_t15_apply_trials.ps1:31 char:12
++ $denyOut = & $cli --workspace $ws tools run editFiles --mode autonomo ...
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Unknown command: --workspace:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[StreamEngine] Shutdown>>
+[2026-11-08T18:46:09.7439682-05:00] DENY_DISK<<// EDIT_ME T15ARG_da5080bd
+int before = 0;>>
+[2026-11-08T18:46:09.7469857-05:00] DENY_IMPROVED_TEXT=False
+[2026-11-08T18:46:09.7670846-05:00] TRIAL=APPROVE_FLAG EXIT=2 FILE_SHA=9C99DF9058F30728195BB0E6EEC2DDE5EAF5AFDEE85CA09465BA8419D93078F0
+[2026-11-08T18:46:09.7685906-05:00] FLAG_STDOUT<<rawr.exe : Unknown command: --workspace
+At F:\rawrxd\evidence\REPAIR_FINISH25_001\AGENT\T15_ARG_CONTRACT\run_t15_apply_trials.ps1:44 char:12
++ $flagOut = & $cli --workspace $ws tools run editFiles --mode autonomo ...
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Unknown command: --workspace:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[StreamEngine] Shutdown>>
+[2026-11-08T18:46:09.7716282-05:00] FLAG_DISK<<// EDIT_ME T15ARG_da5080bd
+int before = 0;>>
+[2026-11-08T18:46:09.7746596-05:00] FLAG_HAS_EDITED=False FLAG_HAS_MARKER=True
+[2026-11-08T18:46:09.7910582-05:00] TRIAL=GUI_ENV_ALIAS EXIT=2 FILE_SHA=9C99DF9058F30728195BB0E6EEC2DDE5EAF5AFDEE85CA09465BA8419D93078F0
+[2026-11-08T18:46:09.7925822-05:00] GUI_STDOUT<<rawr.exe : Unknown command: --workspace
+At F:\rawrxd\evidence\REPAIR_FINISH25_001\AGENT\T15_ARG_CONTRACT\run_t15_apply_trials.ps1:59 char:11
++ $guiOut = & $cli --workspace $ws tools run editFiles --mode autonomou ...
++           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Unknown command: --workspace:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[StreamEngine] Shutdown>>
+[2026-11-08T18:46:09.7971366-05:00] GUI_DISK<<// EDIT_ME T15ARG_da5080bd
+int before = 0;>>
+[2026-11-08T18:46:09.8001730-05:00] GUI_HAS_EDITED=False GUI_HAS_MARKER=True
+[2026-11-08T18:46:09.8159270-05:00] TRIAL=FINAL_SEAL EXIT=2 FILE_SHA=9C99DF9058F30728195BB0E6EEC2DDE5EAF5AFDEE85CA09465BA8419D93078F0
+[2026-11-08T18:46:09.8174437-05:00] FINAL_DISK<<// EDIT_ME T15ARG_da5080bd
+int before = 0;>>
+[2026-11-08T18:46:09.8214818-05:00] FINAL_STDOUT<<rawr.exe : Unknown command: --workspace
+At F:\rawrxd\evidence\REPAIR_FINISH25_001\AGENT\T15_ARG_CONTRACT\run_t15_apply_trials.ps1:75 char:13
++ $finalOut = & $cli --workspace $ws tools run editFiles --mode autonom ...
++             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Unknown command: --workspace:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[StreamEngine] Shutdown>>
+
+[2026-11-08T18:48:14.8358598-05:00] ==== T15 WORKSPACE-SCOPED APPLY REBUILD TRIALS ====
+[2026-11-08T18:48:14.8429123-05:00] CLI=F:\rawrxd\build_repair_candidate\bin-msvc\rawr.exe SHA=4F815E1D0B44BD1CC233316BC03FD88958E07517E785DDD95B4C77AB6B641164
+[2026-11-08T18:48:14.8444304-05:00] WS=F:\rawrxd\evidence\REPAIR_FINISH25_001\AGENT\T15_ARG_CONTRACT FIXTURE=F:\rawrxd\evidence\REPAIR_FINISH25_001\AGENT\T15_ARG_CONTRACT\t15_contract_T15ARG_da5080bd.cpp MARKER=T15ARG_da5080bd EDITED=T15_EDITED_T15ARG_da5080bd CMD_SHAPE=tools run ... --workspace <dir>
+[2026-11-08T18:48:14.9451011-05:00] TRIAL=DENY_NO_APPROVE EXIT=3 IMPROVED=False
+[2026-11-08T18:48:14.9481345-05:00] DENY_STDOUT<<MOTD_ACK=1 MOTD_SHA256=3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+rawr.exe : DENIED: Tool 'editFiles' denied in mode 'autonomous' (granted: full, ceiling: full); mutation approval 
+missing (--approve-mutations or RAWRXD_TOOLS_APPROVE_MUTATIONS=YES)
+At F:\rawrxd\evidence\REPAIR_FINISH25_001\AGENT\T15_ARG_CONTRACT\run_t15_apply_trials.ps1:35 char:12
++ $denyOut = & $cli tools run editFiles --workspace $ws --mode autonomo ...
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (DENIED: Tool 'e..._MUTATIONS=YES):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[StreamEngine] Shutdown>>
+[2026-11-08T18:48:14.9511677-05:00] DENY_DISK<<// EDIT_ME T15ARG_da5080bd
+int before = 0;>>
+[2026-11-08T18:48:15.0266264-05:00] TRIAL=APPROVE_FLAG EXIT=0 FILE_SHA=146E968B36E17AA998CEB5D5BB9CBCC5DA9C0964DD78FC0A5AD745575D3FA488 OK=True
+[2026-11-08T18:48:15.0281425-05:00] FLAG_STDOUT<<rawr.exe : [StreamEngine] Shutdown
+At F:\rawrxd\evidence\REPAIR_FINISH25_001\AGENT\T15_ARG_CONTRACT\run_t15_apply_trials.ps1:47 char:12
++ $flagOut = & $cli tools run editFiles --workspace $ws --mode autonomo ...
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([StreamEngine] Shutdown:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+MOTD_ACK=1 MOTD_SHA256=3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+edited>>
+[2026-11-08T18:48:15.0306465-05:00] FLAG_DISK<<// EDIT_ME T15ARG_da5080bd
+int after = 1; // T15_EDITED_T15ARG_da5080bd>>
+[2026-11-08T18:48:15.1055843-05:00] TRIAL=GUI_ENV_ALIAS EXIT=0 FILE_SHA=146E968B36E17AA998CEB5D5BB9CBCC5DA9C0964DD78FC0A5AD745575D3FA488 OK=True
+[2026-11-08T18:48:15.1070883-05:00] GUI_STDOUT<<rawr.exe : [StreamEngine] Shutdown
+At F:\rawrxd\evidence\REPAIR_FINISH25_001\AGENT\T15_ARG_CONTRACT\run_t15_apply_trials.ps1:60 char:11
++ $guiOut = & $cli tools run editFiles --workspace $ws --mode autonomou ...
++           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([StreamEngine] Shutdown:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+MOTD_ACK=1 MOTD_SHA256=3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+edited>>
+[2026-11-08T18:48:15.1100962-05:00] GUI_DISK<<// EDIT_ME T15ARG_da5080bd
+int after = 1; // T15_EDITED_T15ARG_da5080bd>>
+[2026-11-08T18:48:15.1856207-05:00] TRIAL=FINAL_SEAL EXIT=0 FILE_SHA=146E968B36E17AA998CEB5D5BB9CBCC5DA9C0964DD78FC0A5AD745575D3FA488
+[2026-11-08T18:48:15.1866261-05:00] FINAL_DISK<<// EDIT_ME T15ARG_da5080bd
+int after = 1; // T15_EDITED_T15ARG_da5080bd>>
+[2026-11-08T18:48:15.1896611-05:00] FINAL_STDOUT<<rawr.exe : [StreamEngine] Shutdown
+At F:\rawrxd\evidence\REPAIR_FINISH25_001\AGENT\T15_ARG_CONTRACT\run_t15_apply_trials.ps1:74 char:13
++ $finalOut = & $cli tools run editFiles --workspace $ws --mode autonom ...
++             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([StreamEngine] Shutdown:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+MOTD_ACK=1 MOTD_SHA256=3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+edited>>

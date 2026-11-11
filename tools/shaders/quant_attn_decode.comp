@@ -1,0 +1,73 @@
+#version 450
+// DEEP2_VULKAN_SUBMIT_OPT_001: GQA decode attention (one head / workgroup).
+// Scores computed once in shared memory, then applied to all V lanes — matches
+// host SoftmaxVec(per-head) so lanes share identical weights.
+// a=Q [heads*headDim], b=K [seq*kvDim], c=V [seq*kvDim], d=out
+layout(local_size_x = 64) in;
+
+layout(set=0, binding=0, std430) readonly buffer A0 { float a[]; };
+layout(set=0, binding=1, std430) readonly buffer B0 { float b[]; };
+layout(set=0, binding=2, std430) readonly buffer C0 { float c[]; };
+layout(set=0, binding=3, std430) writeonly buffer D0 { float d[]; };
+
+layout(push_constant) uniform Push {
+    uint headDim;
+    uint heads;
+    uint kvHeads;
+    uint seqLen;
+    uint kvDim;
+    uint _pad0;
+    float scale;
+    float _pad1;
+} pc;
+
+shared float sh_score[256];
+shared float sh_max;
+shared float sh_denom;
+
+void main() {
+    uint lid = gl_LocalInvocationID.x;
+    uint h = gl_WorkGroupID.x;
+    if (h >= pc.heads || pc.kvHeads == 0u || (pc.heads % pc.kvHeads) != 0u)
+        return;
+    if (pc.seqLen == 0u || pc.headDim == 0u || pc.headDim > 256u) return;
+
+    uint group = pc.heads / pc.kvHeads;
+    uint kh = h / group;
+    uint qb = h * pc.headDim;
+
+    // Phase 1: QK scores into shared (thread 0 walks seq; others idle).
+    // Single-threaded score pass avoids lane-wise float non-associativity.
+    if (lid == 0u) {
+        float maxScore = -3.402823466e+38;
+        for (uint t = 0u; t < pc.seqLen; ++t) {
+            uint kb = t * pc.kvDim + kh * pc.headDim;
+            float s = 0.0;
+            for (uint j = 0u; j < pc.headDim; ++j)
+                s += a[qb + j] * b[kb + j];
+            s *= pc.scale;
+            sh_score[t] = s;
+            maxScore = max(maxScore, s);
+        }
+        sh_max = maxScore;
+        float denom = 0.0;
+        for (uint t = 0u; t < pc.seqLen; ++t) {
+            float e = exp(sh_score[t] - maxScore);
+            sh_score[t] = e;
+            denom += e;
+        }
+        sh_denom = denom;
+    }
+    barrier();
+
+    float inv = sh_denom > 0.0 ? 1.0 / sh_denom : 0.0;
+    // Phase 2: each thread owns one (or more) output dims of this head.
+    for (uint od = lid; od < pc.headDim; od += 64u) {
+        float numer = 0.0;
+        for (uint t = 0u; t < pc.seqLen; ++t) {
+            uint kb = t * pc.kvDim + kh * pc.headDim;
+            numer += sh_score[t] * c[kb + od];
+        }
+        d[qb + od] = numer * inv;
+    }
+}

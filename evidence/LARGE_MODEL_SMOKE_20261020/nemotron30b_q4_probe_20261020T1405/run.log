@@ -1,0 +1,40 @@
+device-pin requested index=0
+BENCH model=F:\rawrxd\models\nemotron-3.5-lightning-30b-Q4_K_M.gguf decode=2 runs=1 backend=vulkan-native
+prompt tokens: 4: 1 4019 1058 1032
+ingesting F:\rawrxd\models\nemotron-3.5-lightning-30b-Q4_K_M.gguf ...
+arch=nemotron_h_moe blocks=53 embd=2688 heads=32 kv=32 rope_dim=84 experts=128 used=6
+bound ops=266 (bind 99871.9 ms)
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Pinning to requested device index 0
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+  prefill pos=0 token=1 (1668.9 ms)
+  prefill pos=1 token=4019 (279.6 ms)
+  prefill pos=2 token=1058 (281.5 ms)
+  prefill pos=3 token=1032 (279.6 ms)
+RUN1: logits_finite=yes gpu_complete=yes
+RUN1: bind_ms=99871.9 prefill_ms=2509.7 decode_ms=282.4 e2e_ms=2792.1
+RUN1: PREFILL_TPS=1.594 DECODE_TPS=3.541 STEADY_DECODE_TPS=0.000 E2E_TPS=1.433
+RUN1: first_decode_ms=282.4 tokens_in=4 tokens_out=2
+RUN1: gpu_calls=375 cpu_calls=0 fallback=<none> submits=380 waits=380 kernel_ms=1331.8 wait_ms=1331.8
+RUN1: per_token submits=76.0 waits=76.0 gpu_ms=1255.1 submit_ms=7.3 wait_ms=1331.8
+RUN1: ACCOUNT positions=5 decode_forward_passes=1 prefill_submits_per_pos=79.8 decode_submits_per_fwd=61.0
+RUN1: gpu_time_share=45.0% of the measured window (gpu 1255.1 ms of prefill+decode 2792.1 ms)
+RUN1: BOUNDARY bind_ms=99871.9 (model load+bind, excluded from TPS)
+RUN1: BOUNDARY prefill wall=2509.7 ms gpu=1005.7 ms host_wait=1077.2 ms submit=6.2 ms submits=319
+RUN1: BOUNDARY decode wall=282.4 ms gpu=249.4 ms host_wait=254.7 ms submit=1.1 ms submits=61
+RUN1: BOUNDARY decode gpu_share=88.3% wall; unaccounted(host+queue)=27.8 ms; kernel_ms is a HOST-WAIT alias, gpu_ms is device timeline
+RUN1: device_bytes_peak=1010.0 MB device_bytes_live=1010.0 MB weight_cache_hits=300 misses=75 upload=1014.5 MB
+RUN1: ram_peak=22292.5 MB ram_cur=1439.8 MB
+RUN1 GENSTREAM: 74792 99703
+RUN1 VERDICT: PASS
+Released all tensors
+Vulkan resources cleaned up successfully

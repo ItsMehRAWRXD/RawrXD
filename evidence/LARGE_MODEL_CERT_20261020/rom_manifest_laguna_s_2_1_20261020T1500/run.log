@@ -1,0 +1,9 @@
+FILE    F:\OllamaModels\blobs\sha256-948255a146c07678678183af4cb1234a124e945e48c85c2006598ef4696552c8
+ARCH    laguna
+GGUF    version 3, 814 tensors, data start 3734272, 96031829760 bytes
+
+MANIFEST  entries=814 bound=814 unbound=0
+DTYPE_CROSSCHECK inconsistent=0 unknown=0
+DTYPES BF16=24 F32=287 Q4_K=117 Q8_0=386
+
+VERDICT=BOUND_ALL

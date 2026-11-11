@@ -1,0 +1,4 @@
+#include "streaming/streaming.hpp"
+#include <iostream>
+#include <string>
+int main(int argc,char**argv){try{kg::stream::Config c;std::string out="generated/streaming/chunks.json";double x=0,z=0;for(int i=1;i<argc;++i){std::string a=argv[i];if(i+1>=argc)throw std::invalid_argument("missing value for "+a);std::string v=argv[++i];if(a=="--seed")c.seed=std::stoull(v);else if(a=="--x")x=std::stod(v);else if(a=="--z")z=std::stod(v);else if(a=="--radius")c.activeRadius=std::stoi(v);else if(a=="--out")out=v;else throw std::invalid_argument("unknown option "+a);}c.cacheLimit=std::max(128,(2*c.activeRadius+1)*(2*c.activeRadius+1));kg::stream::ChunkStreamer s(c);s.update(x,z);kg::stream::exportChunkManifest(s,out);auto st=s.stats();std::cout<<"STREAMING_PASS chunks="<<st.resident<<" generated="<<st.generated<<" manifest="<<out<<'\n';return 0;}catch(const std::exception& e){std::cerr<<"STREAMING_FAIL "<<e.what()<<'\n';return 1;}}

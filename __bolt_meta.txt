@@ -1,0 +1,51 @@
+Magic: b'GGUF', Version: 3
+Tensors: 843, Metadata: 51
+  general.architecture = nemotron_h_moe
+  general.type = model
+  general.sampling.top_p = 0.949999988079071
+  general.sampling.temp = 1.0
+  general.name = Hf Packed 6226
+  general.version = 6226
+  general.basename = hf-packed
+  general.size_label = 345x8.1B
+  nemotron_h_moe.block_count = 88
+  nemotron_h_moe.context_length = 262144
+  nemotron_h_moe.embedding_length = 4096
+  nemotron_h_moe.feed_forward_length = [array type=5 len=88]
+  nemotron_h_moe.attention.head_count = 32
+  nemotron_h_moe.attention.head_count_kv = [array type=5 len=88]
+  nemotron_h_moe.attention.layer_norm_rms_epsilon = 9.999999747378752e-06
+  nemotron_h_moe.attention.layer_norm_epsilon = 9.999999747378752e-06
+  nemotron_h_moe.expert_count = 496
+  nemotron_h_moe.expert_group_count = 1
+  nemotron_h_moe.expert_group_used_count = 1
+  nemotron_h_moe.expert_gating_func = 2
+  general.file_type = 19
+  nemotron_h_moe.vocab_size = 131072
+  nemotron_h_moe.rope.dimension_count = 128
+  nemotron_h_moe.ssm.conv_kernel = 4
+  nemotron_h_moe.ssm.state_size = 128
+  nemotron_h_moe.ssm.group_count = 8
+  nemotron_h_moe.ssm.inner_size = 8192
+  nemotron_h_moe.ssm.time_step_rank = 128
+  nemotron_h_moe.rope.scaling.finetuned = False
+  nemotron_h_moe.attention.key_length = 128
+  nemotron_h_moe.attention.value_length = 128
+  nemotron_h_moe.expert_feed_forward_length = [array type=5 len=88]
+  nemotron_h_moe.expert_used_count = [array type=5 len=88]
+  nemotron_h_moe.expert_shared_feed_forward_length = 5376
+  nemotron_h_moe.expert_shared_count = 1
+  nemotron_h_moe.expert_weights_norm = True
+  nemotron_h_moe.expert_weights_scale = 5.0
+  nemotron_h_moe.moe_latent_size = 1024
+  general.quantization_version = 2
+  tokenizer.ggml.model = gpt2
+  tokenizer.ggml.pre = pixtral
+Traceback (most recent call last):
+  File "F:\rawrxd\__inspect_bolt.py", line 57, in <module>
+    print(f'  {key} = {val}')
+    ~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Garrett\AppData\Local\Programs\Python\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u0100' in position 16845: character maps to <undefined>

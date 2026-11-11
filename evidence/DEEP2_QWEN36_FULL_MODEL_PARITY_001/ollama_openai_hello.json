@@ -1,0 +1,22 @@
+{
+  "id": "cmpl-314",
+  "object": "text_completion",
+  "created": 1793373305,
+  "model": "qwen36-reference-local",
+  "system_fingerprint": "fp_ollama",
+  "choices": [
+    {
+      "text": "Here's",
+      "index": 0,
+      "finish_reason": "length"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 11,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "completion_tokens": 2,
+    "total_tokens": 13
+  }
+}

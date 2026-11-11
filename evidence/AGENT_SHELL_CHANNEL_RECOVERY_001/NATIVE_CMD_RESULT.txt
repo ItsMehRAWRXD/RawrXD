@@ -1,0 +1,24 @@
+ASOF_UTC=2026-11-02T14:50:00Z
+GATE=AGENT_SHELL_CHANNEL_RECOVERY_001
+CHANNEL=NATIVE_WINDOWS_OUTSIDE_CURSOR
+OPERATOR=Garrett
+HOST_PROMPT=PS C:\Users\Garrett>
+COMMAND=cmd.exe /d /c "echo HELLO & exit /b 0"
+
+STDOUT=
+HELLO
+
+EXIT_CODE=0
+ELAPSED_MS=NOT_REPORTED_BY_OPERATOR
+RESULT=PASS
+CLASS=OBSERVED
+
+SIDE_OBSERVATION=
+PowerShell profile load FAIL (ExecutionPolicy): 
+C:\Users\Garrett\OneDrive\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1
+UnauthorizedAccess / PSSecurityException — scripts disabled.
+Does NOT block native cmd.exe probe (cmd still printed HELLO).
+
+DECISION_BOUNDARY=
+NATIVE_PASS + PARENT_FAIL => Cursor parent Agent Shell launch/stdout/lifecycle/env defect (host cmd OK).
+SHELL_NE_PRODUCT_CERT=1

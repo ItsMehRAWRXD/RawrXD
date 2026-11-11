@@ -1,0 +1,50 @@
+# T15 Edit Disk Verification (prior + residual close pointer)
+
+ASOF_UTC=2026-11-08T22:42:00Z
+GATE=FINISH_25_T15_DISK_VERIFY
+PATH=F:\rawrxd\evidence\POST_E59D_CANDIDATE_001\AGENT\workdir\t15_edit_T15_7bb4df317c.cpp
+CLI_SCOPE=rawr.exe (not Win32IDE CERT SHA certification)
+
+## Prior PowerShell check (sealed 2026-11-03)
+
+```
+MARKER_PRESENT=False
+BEFORE_EQUALS_ONE=True
+SHA256=0072479256D2F56220995BD21727CC30220E445AF1792145947084D96EE9CCB1
+LEN=44
+```
+
+On-disk contents (verbatim):
+
+```
+// EDIT_ME T15_7bb4df317c
+int before = 1;
+```
+
+Expected `T15_EDITED_T15_7bb4df317c` **absent**. `before = 1` still present.
+
+## Residual close (2026-11-08)
+
+```
+T15_EDIT_ARGUMENT_AND_CONTENT_ISOLATION=CLOSED
+ROOT_CAUSE=MODEL_EDIT_ARGS_PARTIAL_OR_MANGLED
+PRODUCT_DEFECT=NOT_PROVEN
+REBUILD=HELD
+authority=AGENT\T15_EDIT_ARGUMENT_AND_CONTENT_ISOLATION.md
+```
+
+Prior disk FAIL retained (not rewritten to PASS). Isolation proved product writes marker when args request it.
+
+## Disposition
+
+```
+T15_READFILE_E2E=PASS
+T15_EDITFILES_TOOL_EXECUTION=PASS
+T15_EDITFILES_DISK_CONTENT=FAIL
+T15_EDIT_CONTENT=FAIL_ISOLATED
+T15_TIMEOUT=PASS
+WIN32IDE_CERTIFIED=0
+WIN32IDE_PROMOTE=0
+REBUILD=HELD
+PRODUCT_DEFECT=NOT_PROVEN
+```

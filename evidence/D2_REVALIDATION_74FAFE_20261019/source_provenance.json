@@ -1,0 +1,46 @@
+{
+  "CapturedAt": "2026-10-19T23:43:27.7993639-04:00",
+  "D2Worktree": "F:\\rawrxd\\.worktrees\\codex-d2-revalidate-74fafe",
+  "D2BaseCommit": "74fafe258498749cbd22d443752f8cc792ac31f9",
+  "ExternalWorktree": "F:\\wt_ide1",
+  "ExternalCommit": "cbcb92df878e9bb8e0cefe19666043ff31ab1159",
+  "ExternalShaderPathsClean": true,
+  "Files": [
+    {
+      "Repository": "D2",
+      "Commit": "74fafe258498749cbd22d443752f8cc792ac31f9",
+      "Path": "src/deep2/runtime_graph_executor.cpp",
+      "Sha256": "333EC671FCEDDABDDEF2457A2082657C04B8EA4BC42506BFDB6FA2E5EC4557B9"
+    },
+    {
+      "Repository": "D2",
+      "Commit": "74fafe258498749cbd22d443752f8cc792ac31f9",
+      "Path": "src/deep2/quant_dot_dispatch.cpp",
+      "Sha256": "AEFCA9415A60419AA9B06962C77525D2AE111493A6F3C81B651E6E36AFA5F1D4"
+    },
+    {
+      "Repository": "D2",
+      "Commit": "74fafe258498749cbd22d443752f8cc792ac31f9",
+      "Path": "src/vulkan_compute.cpp",
+      "Sha256": "017E8ECBE11D23ECC37AB8C486109BEEFD9284B7E32F027E607B663F5C08E230"
+    },
+    {
+      "Repository": "D2",
+      "Commit": "74fafe258498749cbd22d443752f8cc792ac31f9",
+      "Path": "tools/deep2_bench_tps.cpp",
+      "Sha256": "4A0BCF33B444070F5DC76576D128FC42B019D37E4682521F947E9888509F79F6"
+    },
+    {
+      "Repository": "Q6 optimization checkout",
+      "Commit": "cbcb92df878e9bb8e0cefe19666043ff31ab1159",
+      "Path": "rawrxd/src/deep2/shaders/deep2_qgemv_batch8row.comp",
+      "Sha256": "039A69322ED920C8F982376142A6771676C6D2D289906FE90CBE7DDA3C69473E"
+    },
+    {
+      "Repository": "Q6 optimization checkout",
+      "Commit": "cbcb92df878e9bb8e0cefe19666043ff31ab1159",
+      "Path": "rawrxd/src/deep2/shaders/deep2_qgemv_batch8row.spv",
+      "Sha256": "72B16D1FFDA01A1DECEED6CC1C84E228E6673034E958C9FC7AB9FC33CFCA3E0B"
+    }
+  ]
+}

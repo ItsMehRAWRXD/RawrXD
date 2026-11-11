@@ -1,0 +1,36 @@
+#version 460
+#extension GL_KHR_shader_subgroup_arithmetic : enable
+layout(local_size_x=256) in;
+
+// Compute-tail reference: aggressive independent accumulators and manual unroll.
+layout(set=0,binding=0,std430) readonly buffer W { float w[]; };
+layout(set=0,binding=1,std430) readonly buffer X { float x[]; };
+layout(set=0,binding=2,std430) writeonly buffer Y { float y[]; };
+
+layout(push_constant) uniform PC { uint rows; uint cols; } pc;
+shared float sgSum[8];
+
+void main(){
+    uint row=gl_WorkGroupID.x;
+    if(row>=pc.rows) return;
+    uint lid=gl_LocalInvocationID.x;
+
+    float a0=0.0,a1=0.0,a2=0.0,a3=0.0;
+    for(uint c=lid;c<pc.cols;c+=1024u){
+        uint c0=c,c1=c+256u,c2=c+512u,c3=c+768u;
+        if(c0<pc.cols)a0+=w[row*pc.cols+c0]*x[c0];
+        if(c1<pc.cols)a1+=w[row*pc.cols+c1]*x[c1];
+        if(c2<pc.cols)a2+=w[row*pc.cols+c2]*x[c2];
+        if(c3<pc.cols)a3+=w[row*pc.cols+c3]*x[c3];
+    }
+
+    float s=subgroupAdd(a0+a1+a2+a3);
+    if(subgroupElect())sgSum[gl_SubgroupID]=s;
+    barrier();
+    if(gl_SubgroupID==0u){
+        float v=gl_SubgroupInvocationID<gl_NumSubgroups ?
+                sgSum[gl_SubgroupInvocationID] : 0.0;
+        float total=subgroupAdd(v);
+        if(subgroupElect())y[row]=total;
+    }
+}

@@ -1,0 +1,9 @@
+FILE    F:\rawrxd\models\nemotron-3.5-lightning-30b-Q4_K_M.gguf
+ARCH    nemotron_h_moe
+GGUF    version 3, 417 tensors, data start 7896320, 25430738944 bytes
+
+MANIFEST  entries=417 bound=417 unbound=0
+DTYPE_CROSSCHECK inconsistent=0 unknown=0
+DTYPES BF16=1 F32=243 Q4_K=31 Q5_0=116 Q8_0=26
+
+VERDICT=BOUND_ALL

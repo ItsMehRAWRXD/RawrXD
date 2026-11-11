@@ -1,0 +1,13 @@
+GATE=DEEP2_GGUF_LIFECYCLE_001
+MODEL=F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+LOAD_PASSED=1
+GENERATE_PASSED=0
+CANCEL_PASSED=0
+UNLOAD_PASSED=0
+RELOAD_PASSED=0
+CORRUPTED_REJECTED=0
+ERRORS=1
+ERROR=G2: Prefill failed: prefill-batch: force_cpu pinned; use ExecuteToken
+WARNINGS=1
+WARNING=Memory tracking at after load - using engine-reported stats
+VERDICT=FAIL
