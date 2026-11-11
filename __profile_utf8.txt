@@ -1,0 +1,957 @@
+﻿[ProductionBenchmark] Model: D:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+[ProductionBenchmark] Output: D:\rawrxd\__profile.json
+[Deep2Engine] Initializing production inference engine...
+  Hidden Dim: 4096
+  Num Layers: 32
+  Num Heads: 32
+  Max Seq Len: 2048
+  Use ThreadPool: YES
+  Use KV Cache: YES
+  Use RoPE: YES
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+  ThreadPool: 16 threads (auto-detected)
+[KVCache] Initializing: layers=32 maxSeqLen=2048 numHeads=32 headDim=128
+[KVCache] Formula: layers * maxSeqLen * numHeads * headDim * 2(K+V) * sizeof(float)
+[KVCache]        = 32 * 2048 * 32 * 128 * 2 * 4
+[KVCache]        = 2147483648 bytes (K=1073741824 + V=1073741824)
+[KVCache] Total cache size: 2048.00 MB
+[KVCache] Initialization complete
+[Deep2Engine] WARNING: Failed to initialize HotPatcher
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 21 GEMV kernels, 6 dequant kernels
+[Deep2Engine] Initialization complete
+[Deep2Engine] Loading model from: D:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+[Deep2Engine] Multi-shard detected: NO (1 files in D:\rawrxd\models)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] === Stage 4: ReverseCompute_Graph ===
+[ReverseHotpatch] === Stage 5: ReverseHotpatch_Next ===
+[ReverseHotpatch] === Stage 6: ReverseHop_Verify ===
+[ReverseHotpatch] === Stage 7: ReverseHop_Commit ===
+[ReverseHotpatch] All 7 stages completed. Repairs: 0  Corruptions: 0
+[Deep2Engine] Tokenizer loaded: 32000 tokens from GGUF
+[WO_DIAG] GGUF wo.data=0000022B48750000 rows=2048 cols=2048 type=12 first16=[0.000000,-1785805239221549574689652736.000000,-308738064260312421560745984.000000,-0.000000] min=-1785805239221549574689652736.000000 max=1066737671864320.000000 nz=16
+[KVCache] Initializing: layers=22 maxSeqLen=2048 numHeads=32 headDim=64
+[KVCache] Formula: layers * maxSeqLen * numHeads * headDim * 2(K+V) * sizeof(float)
+[KVCache]        = 22 * 2048 * 32 * 64 * 2 * 4
+[KVCache]        = 738197504 bytes (K=369098752 + V=369098752)
+[KVCache] Total cache size: 704.00 MB
+[KVCache] Initialization complete
+[Deep2Engine] Model loaded successfully (201 tensors)
+[ProductionBenchmark] Model loaded in 999.76 ms
+[ProductionBenchmark] === SINGLE-TOKEN PROFILE RUN ===
+[Deep2Engine] Production profiling enabled
+[Deep2Engine] embedToken: type=12 vocabSize=32000 hiddenDim=2048 data=0000022B44E60000 sizeBytes=36864000
+[B3_STATE] phase=PROMPT_EMBED pos=0 size=2048 norm=4.430777231e-01 min=-3.938341141e-02 max=4.229271412e-02 nonfinite=0
+[Deep2Engine] Layer 0 weights: wq.data=0000022B48990000 type=12 wk.data=0000022B48700000 wv.data=0000022B48BD0000 wo.data=0000022B48750000 wqkv.data=0000000000000000
+[Deep2Engine] Layer 0 weights: attnNorm.data=0000022AFF630000 ffnNorm.data=0000022AFF740000
+[B3_STATE] phase=PROMPT_FINAL pos=0 size=2048 norm=1.755892495e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=1 size=2048 norm=5.090715795e-01 min=-5.524492264e-02 max=6.305718422e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=1 size=2048 norm=1.755892495e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=2 size=2048 norm=4.524516090e-01 min=-4.214340448e-02 max=6.449759007e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=2 size=2048 norm=1.755892499e+03 min=-4.007689819e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=3 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=3 size=2048 norm=1.755892492e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=4 size=2048 norm=4.934275075e-01 min=-3.986406326e-02 max=5.615121126e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=4 size=2048 norm=1.755892513e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=5 size=2048 norm=4.212411440e-01 min=-4.662322998e-02 max=5.039459467e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=5 size=2048 norm=1.755892488e+03 min=-4.007689514e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=6 size=2048 norm=4.620087641e-01 min=-6.068229675e-02 max=5.107247829e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=6 size=2048 norm=1.755892500e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=7 size=2048 norm=4.668510434e-01 min=-4.052495956e-02 max=5.136781931e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=7 size=2048 norm=1.755892519e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=8 size=2048 norm=4.463175270e-01 min=-4.962730408e-02 max=4.359263182e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=8 size=2048 norm=1.755892485e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=9 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=9 size=2048 norm=1.755892501e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=10 size=2048 norm=4.828997673e-01 min=-4.202699661e-02 max=6.337726116e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=10 size=2048 norm=1.755892505e+03 min=-4.007689209e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=11 size=2048 norm=4.894952584e-01 min=-4.393458366e-02 max=5.754303932e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=11 size=2048 norm=1.755892511e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=12 size=2048 norm=4.740873939e-01 min=-6.939411163e-02 max=4.913580418e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=12 size=2048 norm=1.755892507e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=13 size=2048 norm=4.914745620e-01 min=-5.371284485e-02 max=6.994277239e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=13 size=2048 norm=1.755892503e+03 min=-4.007689819e+02 max=7.520582581e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=14 size=2048 norm=4.494880347e-01 min=-5.734777451e-02 max=3.960818052e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=14 size=2048 norm=1.755892486e+03 min=-4.007689209e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=15 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=15 size=2048 norm=1.755892493e+03 min=-4.007689209e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=16 size=2048 norm=4.280821849e-01 min=-4.188805819e-02 max=5.380672216e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=16 size=2048 norm=1.755892498e+03 min=-4.007689209e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=17 size=2048 norm=4.740873939e-01 min=-6.939411163e-02 max=4.913580418e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=17 size=2048 norm=1.755892486e+03 min=-4.007689209e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=18 size=2048 norm=4.967580692e-01 min=-7.185745239e-02 max=4.816573858e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=18 size=2048 norm=1.755892513e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=19 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=19 size=2048 norm=1.755892500e+03 min=-4.007689209e+02 max=7.520580292e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=20 size=2048 norm=5.042576488e-01 min=-5.551528931e-02 max=4.488086700e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=20 size=2048 norm=1.755892514e+03 min=-4.007689819e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=21 size=2048 norm=4.212411440e-01 min=-4.662322998e-02 max=5.039459467e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=21 size=2048 norm=1.755892494e+03 min=-4.007689514e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=22 size=2048 norm=4.732898749e-01 min=-4.575204849e-02 max=6.654286385e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=22 size=2048 norm=1.755892510e+03 min=-4.007689209e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=23 size=2048 norm=4.469883900e-01 min=-3.737068176e-02 max=4.847824574e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=23 size=2048 norm=1.755892498e+03 min=-4.007689209e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=24 size=2048 norm=4.335684979e-01 min=-4.400968552e-02 max=8.135068417e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=24 size=2048 norm=1.755892525e+03 min=-4.007689819e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=25 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=25 size=2048 norm=1.755892510e+03 min=-4.007689819e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=26 size=2048 norm=4.740873939e-01 min=-6.939411163e-02 max=4.913580418e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=26 size=2048 norm=1.755892505e+03 min=-4.007689514e+02 max=7.520580292e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=27 size=2048 norm=4.867257071e-01 min=-4.103565216e-02 max=6.045031548e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=27 size=2048 norm=1.755892516e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=28 size=2048 norm=4.524516090e-01 min=-4.214340448e-02 max=6.449759007e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=28 size=2048 norm=1.755892497e+03 min=-4.007689514e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=29 size=2048 norm=4.894952584e-01 min=-4.393458366e-02 max=5.754303932e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=29 size=2048 norm=1.755892503e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=30 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=30 size=2048 norm=1.755892519e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=31 size=2048 norm=4.371422937e-01 min=-4.109948874e-02 max=5.253958702e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=31 size=2048 norm=1.755892525e+03 min=-4.007689819e+02 max=7.520580292e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=32 size=2048 norm=5.090715795e-01 min=-5.524492264e-02 max=6.305718422e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=32 size=2048 norm=1.755892508e+03 min=-4.007689819e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=33 size=2048 norm=4.524516090e-01 min=-4.214340448e-02 max=6.449759007e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=33 size=2048 norm=1.755892507e+03 min=-4.007689209e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=34 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=34 size=2048 norm=1.755892517e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=35 size=2048 norm=4.574485635e-01 min=-5.701732635e-02 max=5.850273371e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=35 size=2048 norm=1.755892512e+03 min=-4.007689209e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=36 size=2048 norm=4.408993958e-01 min=-4.922175407e-02 max=6.203627586e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=36 size=2048 norm=1.755892510e+03 min=-4.007689819e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=37 size=2048 norm=4.753220926e-01 min=-3.936839104e-02 max=4.916077852e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=37 size=2048 norm=1.755892511e+03 min=-4.007689514e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=38 size=2048 norm=4.464848108e-01 min=-5.170011520e-02 max=6.435453892e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=38 size=2048 norm=1.755892516e+03 min=-4.007689209e+02 max=7.520580292e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=39 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=39 size=2048 norm=1.755892517e+03 min=-4.007689209e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=40 size=2048 norm=4.497459062e-01 min=-3.451681137e-02 max=5.670779943e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=40 size=2048 norm=1.755892514e+03 min=-4.007689209e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=41 size=2048 norm=4.740873939e-01 min=-6.939411163e-02 max=4.913580418e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=41 size=2048 norm=1.755892508e+03 min=-4.007689514e+02 max=7.520580292e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=42 size=2048 norm=4.937133259e-01 min=-4.539155960e-02 max=5.115616322e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=42 size=2048 norm=1.755892511e+03 min=-4.007689819e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=43 size=2048 norm=3.592358303e-01 min=-3.463697433e-02 max=7.466793060e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=43 size=2048 norm=1.755892534e+03 min=-4.007689514e+02 max=7.520580292e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=44 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=44 size=2048 norm=1.755892504e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[Deep2Engine] Generation complete: 0 tokens in 4772.34 ms (0.00 TPS)
+
+============================================================
+FORWARD PASS TIMING BREAKDOWN
+============================================================
+Embedding:        1.399 ms
+Attention total:  699.750 ms
+FFN total:        4064.436 ms
+Final norm:       0.000 ms
+LM head:          0.000 ms
+Logits compute:   0.000 ms
+Total forward:    0.000 ms
+Total layers:     0.000 ms
+
+Per-layer timing:
+  Layer  0: 371.605 ms (avg 8.258 ms over 45 calls)
+  Layer  1: 320.957 ms (avg 7.132 ms over 45 calls)
+  Layer  2: 106.731 ms (avg 2.372 ms over 45 calls)
+  Layer  3: 96.238 ms (avg 2.139 ms over 45 calls)
+  Layer  4: 370.895 ms (avg 8.242 ms over 45 calls)
+  Layer  5: 93.435 ms (avg 2.076 ms over 45 calls)
+  Layer  6: 93.053 ms (avg 2.068 ms over 45 calls)
+  Layer  7: 361.962 ms (avg 8.044 ms over 45 calls)
+  Layer  8: 333.616 ms (avg 7.414 ms over 45 calls)
+  Layer  9: 352.360 ms (avg 7.830 ms over 45 calls)
+  Layer 10: 112.421 ms (avg 2.498 ms over 45 calls)
+  Layer 11: 96.878 ms (avg 2.153 ms over 45 calls)
+  Layer 12: 347.696 ms (avg 7.727 ms over 45 calls)
+  Layer 13: 100.365 ms (avg 2.230 ms over 45 calls)
+  Layer 14: 100.950 ms (avg 2.243 ms over 45 calls)
+  Layer 15: 345.711 ms (avg 7.682 ms over 45 calls)
+  Layer 16: 107.688 ms (avg 2.393 ms over 45 calls)
+  Layer 17: 84.362 ms (avg 1.875 ms over 45 calls)
+  Layer 18: 393.752 ms (avg 8.750 ms over 45 calls)
+  Layer 19: 107.824 ms (avg 2.396 ms over 45 calls)
+  Layer 20: 368.300 ms (avg 8.184 ms over 45 calls)
+  Layer 21: 101.838 ms (avg 2.263 ms over 45 calls)
+============================================================
+[B3_STATE] phase=PROMPT_EMBED pos=0 size=2048 norm=4.430777231e-01 min=-3.938341141e-02 max=4.229271412e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=0 size=2048 norm=1.755892495e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=1 size=2048 norm=5.090715795e-01 min=-5.524492264e-02 max=6.305718422e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=1 size=2048 norm=1.755892495e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=2 size=2048 norm=4.524516090e-01 min=-4.214340448e-02 max=6.449759007e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=2 size=2048 norm=1.755892499e+03 min=-4.007689819e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=3 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=3 size=2048 norm=1.755892492e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=4 size=2048 norm=4.934275075e-01 min=-3.986406326e-02 max=5.615121126e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=4 size=2048 norm=1.755892513e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=5 size=2048 norm=4.212411440e-01 min=-4.662322998e-02 max=5.039459467e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=5 size=2048 norm=1.755892488e+03 min=-4.007689514e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=6 size=2048 norm=4.620087641e-01 min=-6.068229675e-02 max=5.107247829e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=6 size=2048 norm=1.755892500e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=7 size=2048 norm=4.668510434e-01 min=-4.052495956e-02 max=5.136781931e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=7 size=2048 norm=1.755892519e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=8 size=2048 norm=4.463175270e-01 min=-4.962730408e-02 max=4.359263182e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=8 size=2048 norm=1.755892485e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=9 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=9 size=2048 norm=1.755892501e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=10 size=2048 norm=4.828997673e-01 min=-4.202699661e-02 max=6.337726116e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=10 size=2048 norm=1.755892505e+03 min=-4.007689209e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=11 size=2048 norm=4.894952584e-01 min=-4.393458366e-02 max=5.754303932e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=11 size=2048 norm=1.755892511e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=12 size=2048 norm=4.740873939e-01 min=-6.939411163e-02 max=4.913580418e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=12 size=2048 norm=1.755892507e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=13 size=2048 norm=4.914745620e-01 min=-5.371284485e-02 max=6.994277239e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=13 size=2048 norm=1.755892503e+03 min=-4.007689819e+02 max=7.520582581e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=14 size=2048 norm=4.494880347e-01 min=-5.734777451e-02 max=3.960818052e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=14 size=2048 norm=1.755892486e+03 min=-4.007689209e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=15 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=15 size=2048 norm=1.755892493e+03 min=-4.007689209e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=16 size=2048 norm=4.280821849e-01 min=-4.188805819e-02 max=5.380672216e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=16 size=2048 norm=1.755892498e+03 min=-4.007689209e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=17 size=2048 norm=4.740873939e-01 min=-6.939411163e-02 max=4.913580418e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=17 size=2048 norm=1.755892486e+03 min=-4.007689209e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=18 size=2048 norm=4.967580692e-01 min=-7.185745239e-02 max=4.816573858e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=18 size=2048 norm=1.755892513e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=19 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=19 size=2048 norm=1.755892500e+03 min=-4.007689209e+02 max=7.520580292e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=20 size=2048 norm=5.042576488e-01 min=-5.551528931e-02 max=4.488086700e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=20 size=2048 norm=1.755892514e+03 min=-4.007689819e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=21 size=2048 norm=4.212411440e-01 min=-4.662322998e-02 max=5.039459467e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=21 size=2048 norm=1.755892494e+03 min=-4.007689514e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=22 size=2048 norm=4.732898749e-01 min=-4.575204849e-02 max=6.654286385e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=22 size=2048 norm=1.755892510e+03 min=-4.007689209e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=23 size=2048 norm=4.469883900e-01 min=-3.737068176e-02 max=4.847824574e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=23 size=2048 norm=1.755892498e+03 min=-4.007689209e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=24 size=2048 norm=4.335684979e-01 min=-4.400968552e-02 max=8.135068417e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=24 size=2048 norm=1.755892525e+03 min=-4.007689819e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=25 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=25 size=2048 norm=1.755892510e+03 min=-4.007689819e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=26 size=2048 norm=4.740873939e-01 min=-6.939411163e-02 max=4.913580418e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=26 size=2048 norm=1.755892505e+03 min=-4.007689514e+02 max=7.520580292e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=27 size=2048 norm=4.867257071e-01 min=-4.103565216e-02 max=6.045031548e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=27 size=2048 norm=1.755892516e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=28 size=2048 norm=4.524516090e-01 min=-4.214340448e-02 max=6.449759007e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=28 size=2048 norm=1.755892497e+03 min=-4.007689514e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=29 size=2048 norm=4.894952584e-01 min=-4.393458366e-02 max=5.754303932e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=29 size=2048 norm=1.755892503e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=30 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=30 size=2048 norm=1.755892519e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=31 size=2048 norm=4.371422937e-01 min=-4.109948874e-02 max=5.253958702e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=31 size=2048 norm=1.755892525e+03 min=-4.007689819e+02 max=7.520580292e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=32 size=2048 norm=5.090715795e-01 min=-5.524492264e-02 max=6.305718422e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=32 size=2048 norm=1.755892508e+03 min=-4.007689819e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=33 size=2048 norm=4.524516090e-01 min=-4.214340448e-02 max=6.449759007e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=33 size=2048 norm=1.755892507e+03 min=-4.007689209e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=34 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=34 size=2048 norm=1.755892517e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=35 size=2048 norm=4.574485635e-01 min=-5.701732635e-02 max=5.850273371e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=35 size=2048 norm=1.755892512e+03 min=-4.007689209e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=36 size=2048 norm=4.408993958e-01 min=-4.922175407e-02 max=6.203627586e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=36 size=2048 norm=1.755892510e+03 min=-4.007689819e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=37 size=2048 norm=4.753220926e-01 min=-3.936839104e-02 max=4.916077852e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=37 size=2048 norm=1.755892511e+03 min=-4.007689514e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=38 size=2048 norm=4.464848108e-01 min=-5.170011520e-02 max=6.435453892e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=38 size=2048 norm=1.755892516e+03 min=-4.007689209e+02 max=7.520580292e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=39 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=39 size=2048 norm=1.755892517e+03 min=-4.007689209e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=40 size=2048 norm=4.497459062e-01 min=-3.451681137e-02 max=5.670779943e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=40 size=2048 norm=1.755892514e+03 min=-4.007689209e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=41 size=2048 norm=4.740873939e-01 min=-6.939411163e-02 max=4.913580418e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=41 size=2048 norm=1.755892508e+03 min=-4.007689514e+02 max=7.520580292e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=42 size=2048 norm=4.937133259e-01 min=-4.539155960e-02 max=5.115616322e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=42 size=2048 norm=1.755892511e+03 min=-4.007689819e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=43 size=2048 norm=3.592358303e-01 min=-3.463697433e-02 max=7.466793060e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=43 size=2048 norm=1.755892534e+03 min=-4.007689514e+02 max=7.520580292e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=44 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=44 size=2048 norm=1.755892504e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[Deep2Engine] computeLogits: hiddenState norm=84.208511 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000022B41B10000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=19536 logit=    9.918983 text='angles'
+  [ 1] id=23832 logit=    9.096601 text='ΓûüGemeins'
+  [ 2] id=29491 logit=    9.089121 text='Γûüc├¡'
+  [ 3] id=23652 logit=    8.554680 text='itore'
+  [ 4] id=30900 logit=    8.133650 text='µÿƒ'
+  [ 5] id=13983 logit=    8.047583 text='╤é╨╛╨╜'
+  [ 6] id=24227 logit=    7.984977 text='icha'
+  [ 7] id=28987 logit=    7.855517 text='Γûüdrums'
+  [ 8] id= 4995 logit=    7.809191 text='inder'
+  [ 9] id=22275 logit=    7.676658 text='Γûüredund'
+[Deep2Engine] Sampler selected token: 19536
+[Deep2Engine] Generation complete: 1 tokens in 4902.65 ms (0.20 TPS)
+
+============================================================
+FORWARD PASS TIMING BREAKDOWN
+============================================================
+Embedding:        1.152 ms
+Attention total:  664.267 ms
+FFN total:        4189.510 ms
+Final norm:       0.000 ms
+LM head:          0.000 ms
+Logits compute:   37.331 ms
+Total forward:    104.867 ms
+Total layers:     0.000 ms
+
+Per-layer timing:
+  Layer  0: 390.222 ms (avg 8.483 ms over 46 calls)
+  Layer  1: 361.729 ms (avg 7.864 ms over 46 calls)
+  Layer  2: 94.570 ms (avg 2.056 ms over 46 calls)
+  Layer  3: 95.525 ms (avg 2.077 ms over 46 calls)
+  Layer  4: 434.395 ms (avg 9.443 ms over 46 calls)
+  Layer  5: 86.600 ms (avg 1.883 ms over 46 calls)
+  Layer  6: 92.685 ms (avg 2.015 ms over 46 calls)
+  Layer  7: 366.423 ms (avg 7.966 ms over 46 calls)
+  Layer  8: 384.175 ms (avg 8.352 ms over 46 calls)
+  Layer  9: 363.880 ms (avg 7.910 ms over 46 calls)
+  Layer 10: 89.149 ms (avg 1.938 ms over 46 calls)
+  Layer 11: 86.199 ms (avg 1.874 ms over 46 calls)
+  Layer 12: 367.343 ms (avg 7.986 ms over 46 calls)
+  Layer 13: 90.966 ms (avg 1.978 ms over 46 calls)
+  Layer 14: 82.955 ms (avg 1.803 ms over 46 calls)
+  Layer 15: 354.948 ms (avg 7.716 ms over 46 calls)
+  Layer 16: 96.473 ms (avg 2.097 ms over 46 calls)
+  Layer 17: 99.385 ms (avg 2.161 ms over 46 calls)
+  Layer 18: 366.622 ms (avg 7.970 ms over 46 calls)
+  Layer 19: 104.750 ms (avg 2.277 ms over 46 calls)
+  Layer 20: 361.294 ms (avg 7.854 ms over 46 calls)
+  Layer 21: 87.276 ms (avg 1.897 ms over 46 calls)
+============================================================
+[Deep2Engine] Production profiling disabled
+
+[ProductionBenchmark] === PROFILE SUMMARY ===
+{
+  "summary": {
+    "num_tokens_profiled": 1,
+    "avg_latency_ms": 146.783,
+    "avg_tps": 6.813,
+  },
+  "avg_phases_us": {
+    "embed": 25,
+    "attn_norm": 1,
+    "qkv_proj": 0,
+    "rope": 1,
+    "kv_store": 0,
+    "attn_compute": 84,
+    "attn_out_proj": 167,
+    "attn_residual": 0,
+    "ffn_norm": 1,
+    "ffn_gate": 398,
+    "ffn_up": 419,
+    "ffn_swiglu": 1,
+    "ffn_down": 421,
+    "ffn_residual": 0,
+    "final_norm": 0,
+    "logits": 37331,
+    "sampling": 4557,
+    "total": 146783
+  },
+  "avg_quant_us": {
+    "q4_0": 0,
+    "q4_1": 0,
+    "q4_k": 36585,
+    "q5_0": 0,
+    "q5_1": 0,
+    "q5_k": 0,
+    "q6_k": 103461,
+    "q8_0": 0,
+    "q2_k": 0,
+    "q3_k": 0,
+    "fp16": 0,
+    "fp32": 0,
+    "other": 0
+  },
+  "bottleneck": {
+    "phase": "logits",
+    "avg_us": 37331,
+    "pct_of_total": 25.433
+  },
+  "dominant_quant": {
+    "type": "q6_k",
+    "avg_us": 103461,
+    "pct_of_total": 70.486
+  },
+  "profiles": [
+    {
+  "timestamp_ns": 67647791668400,
+  "token_index": 0,
+  "seq_length": 45,
+  "model_name": "loaded",
+  "quant_bits": 0,
+  "hidden_dim": 2048,
+  "num_layers": 22,
+  "num_heads": 32,
+  "latency_ms": 146.783,
+  "tokens_per_second": 6.813,
+  "phases_us": {
+    "embed": 25,
+    "attn_norm": 1,
+    "qkv_proj": 0,
+    "rope": 1,
+    "kv_store": 0,
+    "attn_compute": 84,
+    "attn_out_proj": 167,
+    "attn_residual": 0,
+    "ffn_norm": 1,
+    "ffn_gate": 398,
+    "ffn_up": 419,
+    "ffn_swiglu": 1,
+    "ffn_down": 421,
+    "ffn_residual": 0,
+    "final_norm": 0,
+    "logits": 37331,
+    "sampling": 4557,
+    "total": 146783
+  },
+  "quant_us": {
+    "q4_0": 0,
+    "q4_1": 0,
+    "q4_k": 36585,
+    "q5_0": 0,
+    "q5_1": 0,
+    "q5_k": 0,
+    "q6_k": 103461,
+    "q8_0": 0,
+    "q2_k": 0,
+    "q3_k": 0,
+    "fp16": 0,
+    "fp32": 0,
+    "other": 0
+  }
+}
+
+  ]
+}
+
+[ProductionBenchmark] === END PROFILE ===
+
+[ProductionBenchmark] === 10-TOKEN DECODE BASELINE ===
+[B3_STATE] phase=PROMPT_EMBED pos=0 size=2048 norm=4.430777231e-01 min=-3.938341141e-02 max=4.229271412e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=0 size=2048 norm=1.755892495e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=1 size=2048 norm=5.090715795e-01 min=-5.524492264e-02 max=6.305718422e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=1 size=2048 norm=1.755892486e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=2 size=2048 norm=4.524516090e-01 min=-4.214340448e-02 max=6.449759007e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=2 size=2048 norm=1.755892494e+03 min=-4.007689819e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=3 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=3 size=2048 norm=1.755892516e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=4 size=2048 norm=4.934275075e-01 min=-3.986406326e-02 max=5.615121126e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=4 size=2048 norm=1.755892494e+03 min=-4.007689209e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=5 size=2048 norm=4.212411440e-01 min=-4.662322998e-02 max=5.039459467e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=5 size=2048 norm=1.755892493e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=6 size=2048 norm=4.620087641e-01 min=-6.068229675e-02 max=5.107247829e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=6 size=2048 norm=1.755892515e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=7 size=2048 norm=4.668510434e-01 min=-4.052495956e-02 max=5.136781931e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=7 size=2048 norm=1.755892504e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=8 size=2048 norm=4.463175270e-01 min=-4.962730408e-02 max=4.359263182e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=8 size=2048 norm=1.755892524e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=9 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=9 size=2048 norm=1.755892508e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=10 size=2048 norm=4.828997673e-01 min=-4.202699661e-02 max=6.337726116e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=10 size=2048 norm=1.755892515e+03 min=-4.007689209e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=11 size=2048 norm=4.894952584e-01 min=-4.393458366e-02 max=5.754303932e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=11 size=2048 norm=1.755892499e+03 min=-4.007689209e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=12 size=2048 norm=4.740873939e-01 min=-6.939411163e-02 max=4.913580418e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=12 size=2048 norm=1.755892518e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=13 size=2048 norm=4.914745620e-01 min=-5.371284485e-02 max=6.994277239e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=13 size=2048 norm=1.755892516e+03 min=-4.007689209e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=14 size=2048 norm=4.494880347e-01 min=-5.734777451e-02 max=3.960818052e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=14 size=2048 norm=1.755892511e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=15 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=15 size=2048 norm=1.755892520e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=16 size=2048 norm=4.280821849e-01 min=-4.188805819e-02 max=5.380672216e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=16 size=2048 norm=1.755892480e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=17 size=2048 norm=4.740873939e-01 min=-6.939411163e-02 max=4.913580418e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=17 size=2048 norm=1.755892528e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=18 size=2048 norm=4.967580692e-01 min=-7.185745239e-02 max=4.816573858e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=18 size=2048 norm=1.755892517e+03 min=-4.007689819e+02 max=7.520580292e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=19 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=19 size=2048 norm=1.755892499e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=20 size=2048 norm=5.042576488e-01 min=-5.551528931e-02 max=4.488086700e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=20 size=2048 norm=1.755892505e+03 min=-4.007689209e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=21 size=2048 norm=4.212411440e-01 min=-4.662322998e-02 max=5.039459467e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=21 size=2048 norm=1.755892506e+03 min=-4.007689209e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=22 size=2048 norm=4.732898749e-01 min=-4.575204849e-02 max=6.654286385e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=22 size=2048 norm=1.755892519e+03 min=-4.007689514e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=23 size=2048 norm=4.469883900e-01 min=-3.737068176e-02 max=4.847824574e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=23 size=2048 norm=1.755892508e+03 min=-4.007689819e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=24 size=2048 norm=4.335684979e-01 min=-4.400968552e-02 max=8.135068417e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=24 size=2048 norm=1.755892496e+03 min=-4.007689819e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=25 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=25 size=2048 norm=1.755892498e+03 min=-4.007689209e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=26 size=2048 norm=4.740873939e-01 min=-6.939411163e-02 max=4.913580418e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=26 size=2048 norm=1.755892501e+03 min=-4.007689209e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=27 size=2048 norm=4.867257071e-01 min=-4.103565216e-02 max=6.045031548e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=27 size=2048 norm=1.755892496e+03 min=-4.007689209e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=28 size=2048 norm=4.524516090e-01 min=-4.214340448e-02 max=6.449759007e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=28 size=2048 norm=1.755892495e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=29 size=2048 norm=4.894952584e-01 min=-4.393458366e-02 max=5.754303932e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=29 size=2048 norm=1.755892510e+03 min=-4.007689209e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=30 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=30 size=2048 norm=1.755892527e+03 min=-4.007689514e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=31 size=2048 norm=4.371422937e-01 min=-4.109948874e-02 max=5.253958702e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=31 size=2048 norm=1.755892500e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=32 size=2048 norm=5.090715795e-01 min=-5.524492264e-02 max=6.305718422e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=32 size=2048 norm=1.755892486e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=33 size=2048 norm=4.524516090e-01 min=-4.214340448e-02 max=6.449759007e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=33 size=2048 norm=1.755892495e+03 min=-4.007689819e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=34 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=34 size=2048 norm=1.755892489e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=35 size=2048 norm=4.574485635e-01 min=-5.701732635e-02 max=5.850273371e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=35 size=2048 norm=1.755892500e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=36 size=2048 norm=4.408993958e-01 min=-4.922175407e-02 max=6.203627586e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=36 size=2048 norm=1.755892520e+03 min=-4.007689514e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=37 size=2048 norm=4.753220926e-01 min=-3.936839104e-02 max=4.916077852e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=37 size=2048 norm=1.755892517e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=38 size=2048 norm=4.464848108e-01 min=-5.170011520e-02 max=6.435453892e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=38 size=2048 norm=1.755892513e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=39 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=39 size=2048 norm=1.755892496e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=40 size=2048 norm=4.497459062e-01 min=-3.451681137e-02 max=5.670779943e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=40 size=2048 norm=1.755892503e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=41 size=2048 norm=4.740873939e-01 min=-6.939411163e-02 max=4.913580418e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=41 size=2048 norm=1.755892514e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=42 size=2048 norm=4.937133259e-01 min=-4.539155960e-02 max=5.115616322e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=42 size=2048 norm=1.755892518e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=43 size=2048 norm=3.592358303e-01 min=-3.463697433e-02 max=7.466793060e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=43 size=2048 norm=1.755892493e+03 min=-4.007689514e+02 max=7.520580292e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=44 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=44 size=2048 norm=1.755892505e+03 min=-4.007689514e+02 max=7.520580292e+01 nonfinite=0
+[Deep2Engine] Generation complete: 0 tokens in 4776.63 ms (0.00 TPS)
+
+============================================================
+FORWARD PASS TIMING BREAKDOWN
+============================================================
+Embedding:        1.106 ms
+Attention total:  620.739 ms
+FFN total:        4149.225 ms
+Final norm:       0.000 ms
+LM head:          0.000 ms
+Logits compute:   0.000 ms
+Total forward:    0.000 ms
+Total layers:     0.000 ms
+
+Per-layer timing:
+  Layer  0: 372.620 ms (avg 8.280 ms over 45 calls)
+  Layer  1: 351.319 ms (avg 7.807 ms over 45 calls)
+  Layer  2: 82.015 ms (avg 1.823 ms over 45 calls)
+  Layer  3: 85.933 ms (avg 1.910 ms over 45 calls)
+  Layer  4: 363.966 ms (avg 8.088 ms over 45 calls)
+  Layer  5: 95.690 ms (avg 2.126 ms over 45 calls)
+  Layer  6: 88.393 ms (avg 1.964 ms over 45 calls)
+  Layer  7: 351.413 ms (avg 7.809 ms over 45 calls)
+  Layer  8: 362.209 ms (avg 8.049 ms over 45 calls)
+  Layer  9: 382.900 ms (avg 8.509 ms over 45 calls)
+  Layer 10: 85.107 ms (avg 1.891 ms over 45 calls)
+  Layer 11: 73.145 ms (avg 1.625 ms over 45 calls)
+  Layer 12: 397.189 ms (avg 8.826 ms over 45 calls)
+  Layer 13: 101.652 ms (avg 2.259 ms over 45 calls)
+  Layer 14: 110.995 ms (avg 2.467 ms over 45 calls)
+  Layer 15: 389.135 ms (avg 8.647 ms over 45 calls)
+  Layer 16: 86.576 ms (avg 1.924 ms over 45 calls)
+  Layer 17: 84.277 ms (avg 1.873 ms over 45 calls)
+  Layer 18: 382.641 ms (avg 8.503 ms over 45 calls)
+  Layer 19: 93.311 ms (avg 2.074 ms over 45 calls)
+  Layer 20: 349.371 ms (avg 7.764 ms over 45 calls)
+  Layer 21: 83.736 ms (avg 1.861 ms over 45 calls)
+============================================================
+[B3_STATE] phase=PROMPT_EMBED pos=0 size=2048 norm=4.430777231e-01 min=-3.938341141e-02 max=4.229271412e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=0 size=2048 norm=1.755892495e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=1 size=2048 norm=5.090715795e-01 min=-5.524492264e-02 max=6.305718422e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=1 size=2048 norm=1.755892495e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=2 size=2048 norm=4.524516090e-01 min=-4.214340448e-02 max=6.449759007e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=2 size=2048 norm=1.755892499e+03 min=-4.007689819e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=3 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=3 size=2048 norm=1.755892492e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=4 size=2048 norm=4.934275075e-01 min=-3.986406326e-02 max=5.615121126e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=4 size=2048 norm=1.755892513e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=5 size=2048 norm=4.212411440e-01 min=-4.662322998e-02 max=5.039459467e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=5 size=2048 norm=1.755892488e+03 min=-4.007689514e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=6 size=2048 norm=4.620087641e-01 min=-6.068229675e-02 max=5.107247829e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=6 size=2048 norm=1.755892500e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=7 size=2048 norm=4.668510434e-01 min=-4.052495956e-02 max=5.136781931e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=7 size=2048 norm=1.755892519e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=8 size=2048 norm=4.463175270e-01 min=-4.962730408e-02 max=4.359263182e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=8 size=2048 norm=1.755892485e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=9 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=9 size=2048 norm=1.755892501e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=10 size=2048 norm=4.828997673e-01 min=-4.202699661e-02 max=6.337726116e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=10 size=2048 norm=1.755892505e+03 min=-4.007689209e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=11 size=2048 norm=4.894952584e-01 min=-4.393458366e-02 max=5.754303932e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=11 size=2048 norm=1.755892511e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=12 size=2048 norm=4.740873939e-01 min=-6.939411163e-02 max=4.913580418e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=12 size=2048 norm=1.755892507e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=13 size=2048 norm=4.914745620e-01 min=-5.371284485e-02 max=6.994277239e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=13 size=2048 norm=1.755892503e+03 min=-4.007689819e+02 max=7.520582581e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=14 size=2048 norm=4.494880347e-01 min=-5.734777451e-02 max=3.960818052e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=14 size=2048 norm=1.755892486e+03 min=-4.007689209e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=15 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=15 size=2048 norm=1.755892493e+03 min=-4.007689209e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=16 size=2048 norm=4.280821849e-01 min=-4.188805819e-02 max=5.380672216e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=16 size=2048 norm=1.755892498e+03 min=-4.007689209e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=17 size=2048 norm=4.740873939e-01 min=-6.939411163e-02 max=4.913580418e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=17 size=2048 norm=1.755892486e+03 min=-4.007689209e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=18 size=2048 norm=4.967580692e-01 min=-7.185745239e-02 max=4.816573858e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=18 size=2048 norm=1.755892513e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=19 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=19 size=2048 norm=1.755892500e+03 min=-4.007689209e+02 max=7.520580292e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=20 size=2048 norm=5.042576488e-01 min=-5.551528931e-02 max=4.488086700e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=20 size=2048 norm=1.755892514e+03 min=-4.007689819e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=21 size=2048 norm=4.212411440e-01 min=-4.662322998e-02 max=5.039459467e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=21 size=2048 norm=1.755892494e+03 min=-4.007689514e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=22 size=2048 norm=4.732898749e-01 min=-4.575204849e-02 max=6.654286385e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=22 size=2048 norm=1.755892510e+03 min=-4.007689209e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=23 size=2048 norm=4.469883900e-01 min=-3.737068176e-02 max=4.847824574e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=23 size=2048 norm=1.755892498e+03 min=-4.007689209e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=24 size=2048 norm=4.335684979e-01 min=-4.400968552e-02 max=8.135068417e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=24 size=2048 norm=1.755892525e+03 min=-4.007689819e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=25 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=25 size=2048 norm=1.755892510e+03 min=-4.007689819e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=26 size=2048 norm=4.740873939e-01 min=-6.939411163e-02 max=4.913580418e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=26 size=2048 norm=1.755892505e+03 min=-4.007689514e+02 max=7.520580292e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=27 size=2048 norm=4.867257071e-01 min=-4.103565216e-02 max=6.045031548e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=27 size=2048 norm=1.755892516e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=28 size=2048 norm=4.524516090e-01 min=-4.214340448e-02 max=6.449759007e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=28 size=2048 norm=1.755892497e+03 min=-4.007689514e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=29 size=2048 norm=4.894952584e-01 min=-4.393458366e-02 max=5.754303932e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=29 size=2048 norm=1.755892503e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=30 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=30 size=2048 norm=1.755892519e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=31 size=2048 norm=4.371422937e-01 min=-4.109948874e-02 max=5.253958702e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=31 size=2048 norm=1.755892525e+03 min=-4.007689819e+02 max=7.520580292e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=32 size=2048 norm=5.090715795e-01 min=-5.524492264e-02 max=6.305718422e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=32 size=2048 norm=1.755892508e+03 min=-4.007689819e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=33 size=2048 norm=4.524516090e-01 min=-4.214340448e-02 max=6.449759007e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=33 size=2048 norm=1.755892507e+03 min=-4.007689209e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=34 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=34 size=2048 norm=1.755892517e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=35 size=2048 norm=4.574485635e-01 min=-5.701732635e-02 max=5.850273371e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=35 size=2048 norm=1.755892512e+03 min=-4.007689209e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=36 size=2048 norm=4.408993958e-01 min=-4.922175407e-02 max=6.203627586e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=36 size=2048 norm=1.755892510e+03 min=-4.007689819e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=37 size=2048 norm=4.753220926e-01 min=-3.936839104e-02 max=4.916077852e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=37 size=2048 norm=1.755892511e+03 min=-4.007689514e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=38 size=2048 norm=4.464848108e-01 min=-5.170011520e-02 max=6.435453892e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=38 size=2048 norm=1.755892516e+03 min=-4.007689209e+02 max=7.520580292e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=39 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=39 size=2048 norm=1.755892517e+03 min=-4.007689209e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=40 size=2048 norm=4.497459062e-01 min=-3.451681137e-02 max=5.670779943e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=40 size=2048 norm=1.755892514e+03 min=-4.007689209e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=41 size=2048 norm=4.740873939e-01 min=-6.939411163e-02 max=4.913580418e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=41 size=2048 norm=1.755892508e+03 min=-4.007689514e+02 max=7.520580292e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=42 size=2048 norm=4.937133259e-01 min=-4.539155960e-02 max=5.115616322e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=42 size=2048 norm=1.755892511e+03 min=-4.007689819e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=43 size=2048 norm=3.592358303e-01 min=-3.463697433e-02 max=7.466793060e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=43 size=2048 norm=1.755892534e+03 min=-4.007689514e+02 max=7.520580292e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=44 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=44 size=2048 norm=1.755892504e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[Deep2Engine] computeLogits: hiddenState norm=84.208511 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000022B41B10000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=19536 logit=    9.918983 text='angles'
+  [ 1] id=23832 logit=    9.096601 text='ΓûüGemeins'
+  [ 2] id=29491 logit=    9.089121 text='Γûüc├¡'
+  [ 3] id=23652 logit=    8.554680 text='itore'
+  [ 4] id=30900 logit=    8.133650 text='µÿƒ'
+  [ 5] id=13983 logit=    8.047583 text='╤é╨╛╨╜'
+  [ 6] id=24227 logit=    7.984977 text='icha'
+  [ 7] id=28987 logit=    7.855517 text='Γûüdrums'
+  [ 8] id= 4995 logit=    7.809191 text='inder'
+  [ 9] id=22275 logit=    7.676658 text='Γûüredund'
+[Deep2Engine] Sampler selected token: 12171
+[Deep2Engine] Generation complete: 1 tokens in 4804.84 ms (0.21 TPS)
+
+============================================================
+FORWARD PASS TIMING BREAKDOWN
+============================================================
+Embedding:        1.146 ms
+Attention total:  625.398 ms
+FFN total:        4140.931 ms
+Final norm:       0.000 ms
+LM head:          0.000 ms
+Logits compute:   28.539 ms
+Total forward:    99.104 ms
+Total layers:     0.000 ms
+
+Per-layer timing:
+  Layer  0: 323.561 ms (avg 7.034 ms over 46 calls)
+  Layer  1: 382.149 ms (avg 8.308 ms over 46 calls)
+  Layer  2: 90.535 ms (avg 1.968 ms over 46 calls)
+  Layer  3: 83.141 ms (avg 1.807 ms over 46 calls)
+  Layer  4: 363.635 ms (avg 7.905 ms over 46 calls)
+  Layer  5: 89.538 ms (avg 1.946 ms over 46 calls)
+  Layer  6: 94.726 ms (avg 2.059 ms over 46 calls)
+  Layer  7: 357.639 ms (avg 7.775 ms over 46 calls)
+  Layer  8: 348.078 ms (avg 7.567 ms over 46 calls)
+  Layer  9: 377.872 ms (avg 8.215 ms over 46 calls)
+  Layer 10: 93.044 ms (avg 2.023 ms over 46 calls)
+  Layer 11: 84.517 ms (avg 1.837 ms over 46 calls)
+  Layer 12: 365.238 ms (avg 7.940 ms over 46 calls)
+  Layer 13: 101.162 ms (avg 2.199 ms over 46 calls)
+  Layer 14: 91.940 ms (avg 1.999 ms over 46 calls)
+  Layer 15: 411.869 ms (avg 8.954 ms over 46 calls)
+  Layer 16: 101.122 ms (avg 2.198 ms over 46 calls)
+  Layer 17: 83.273 ms (avg 1.810 ms over 46 calls)
+  Layer 18: 360.343 ms (avg 7.834 ms over 46 calls)
+  Layer 19: 108.189 ms (avg 2.352 ms over 46 calls)
+  Layer 20: 370.634 ms (avg 8.057 ms over 46 calls)
+  Layer 21: 88.004 ms (avg 1.913 ms over 46 calls)
+============================================================
+[B3_STATE] phase=PROMPT_EMBED pos=0 size=2048 norm=4.430777231e-01 min=-3.938341141e-02 max=4.229271412e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=0 size=2048 norm=1.755892495e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=1 size=2048 norm=5.090715795e-01 min=-5.524492264e-02 max=6.305718422e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=1 size=2048 norm=1.755892486e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=2 size=2048 norm=4.524516090e-01 min=-4.214340448e-02 max=6.449759007e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=2 size=2048 norm=1.755892494e+03 min=-4.007689819e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=3 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=3 size=2048 norm=1.755892516e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=4 size=2048 norm=4.934275075e-01 min=-3.986406326e-02 max=5.615121126e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=4 size=2048 norm=1.755892494e+03 min=-4.007689209e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=5 size=2048 norm=4.212411440e-01 min=-4.662322998e-02 max=5.039459467e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=5 size=2048 norm=1.755892493e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=6 size=2048 norm=4.620087641e-01 min=-6.068229675e-02 max=5.107247829e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=6 size=2048 norm=1.755892515e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=7 size=2048 norm=4.668510434e-01 min=-4.052495956e-02 max=5.136781931e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=7 size=2048 norm=1.755892504e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=8 size=2048 norm=4.463175270e-01 min=-4.962730408e-02 max=4.359263182e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=8 size=2048 norm=1.755892524e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=9 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=9 size=2048 norm=1.755892508e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=10 size=2048 norm=4.828997673e-01 min=-4.202699661e-02 max=6.337726116e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=10 size=2048 norm=1.755892515e+03 min=-4.007689209e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=11 size=2048 norm=4.894952584e-01 min=-4.393458366e-02 max=5.754303932e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=11 size=2048 norm=1.755892499e+03 min=-4.007689209e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=12 size=2048 norm=4.740873939e-01 min=-6.939411163e-02 max=4.913580418e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=12 size=2048 norm=1.755892518e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=13 size=2048 norm=4.914745620e-01 min=-5.371284485e-02 max=6.994277239e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=13 size=2048 norm=1.755892516e+03 min=-4.007689209e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=14 size=2048 norm=4.494880347e-01 min=-5.734777451e-02 max=3.960818052e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=14 size=2048 norm=1.755892511e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=15 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=15 size=2048 norm=1.755892520e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=16 size=2048 norm=4.280821849e-01 min=-4.188805819e-02 max=5.380672216e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=16 size=2048 norm=1.755892480e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=17 size=2048 norm=4.740873939e-01 min=-6.939411163e-02 max=4.913580418e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=17 size=2048 norm=1.755892528e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=18 size=2048 norm=4.967580692e-01 min=-7.185745239e-02 max=4.816573858e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=18 size=2048 norm=1.755892517e+03 min=-4.007689819e+02 max=7.520580292e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=19 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=19 size=2048 norm=1.755892499e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=20 size=2048 norm=5.042576488e-01 min=-5.551528931e-02 max=4.488086700e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=20 size=2048 norm=1.755892505e+03 min=-4.007689209e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=21 size=2048 norm=4.212411440e-01 min=-4.662322998e-02 max=5.039459467e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=21 size=2048 norm=1.755892506e+03 min=-4.007689209e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=22 size=2048 norm=4.732898749e-01 min=-4.575204849e-02 max=6.654286385e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=22 size=2048 norm=1.755892519e+03 min=-4.007689514e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=23 size=2048 norm=4.469883900e-01 min=-3.737068176e-02 max=4.847824574e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=23 size=2048 norm=1.755892508e+03 min=-4.007689819e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=24 size=2048 norm=4.335684979e-01 min=-4.400968552e-02 max=8.135068417e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=24 size=2048 norm=1.755892496e+03 min=-4.007689819e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=25 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=25 size=2048 norm=1.755892498e+03 min=-4.007689209e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=26 size=2048 norm=4.740873939e-01 min=-6.939411163e-02 max=4.913580418e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=26 size=2048 norm=1.755892501e+03 min=-4.007689209e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=27 size=2048 norm=4.867257071e-01 min=-4.103565216e-02 max=6.045031548e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=27 size=2048 norm=1.755892496e+03 min=-4.007689209e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=28 size=2048 norm=4.524516090e-01 min=-4.214340448e-02 max=6.449759007e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=28 size=2048 norm=1.755892495e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=29 size=2048 norm=4.894952584e-01 min=-4.393458366e-02 max=5.754303932e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=29 size=2048 norm=1.755892510e+03 min=-4.007689209e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=30 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=30 size=2048 norm=1.755892527e+03 min=-4.007689514e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=31 size=2048 norm=4.371422937e-01 min=-4.109948874e-02 max=5.253958702e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=31 size=2048 norm=1.755892500e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=32 size=2048 norm=5.090715795e-01 min=-5.524492264e-02 max=6.305718422e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=32 size=2048 norm=1.755892486e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=33 size=2048 norm=4.524516090e-01 min=-4.214340448e-02 max=6.449759007e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=33 size=2048 norm=1.755892495e+03 min=-4.007689819e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=34 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=34 size=2048 norm=1.755892489e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=35 size=2048 norm=4.574485635e-01 min=-5.701732635e-02 max=5.850273371e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=35 size=2048 norm=1.755892500e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=36 size=2048 norm=4.408993958e-01 min=-4.922175407e-02 max=6.203627586e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=36 size=2048 norm=1.755892520e+03 min=-4.007689514e+02 max=7.520581055e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=37 size=2048 norm=4.753220926e-01 min=-3.936839104e-02 max=4.916077852e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=37 size=2048 norm=1.755892517e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=38 size=2048 norm=4.464848108e-01 min=-5.170011520e-02 max=6.435453892e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=38 size=2048 norm=1.755892513e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=39 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=39 size=2048 norm=1.755892496e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=40 size=2048 norm=4.497459062e-01 min=-3.451681137e-02 max=5.670779943e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=40 size=2048 norm=1.755892503e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=41 size=2048 norm=4.740873939e-01 min=-6.939411163e-02 max=4.913580418e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=41 size=2048 norm=1.755892514e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=42 size=2048 norm=4.937133259e-01 min=-4.539155960e-02 max=5.115616322e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=42 size=2048 norm=1.755892518e+03 min=-4.007689819e+02 max=7.520581818e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=43 size=2048 norm=3.592358303e-01 min=-3.463697433e-02 max=7.466793060e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=43 size=2048 norm=1.755892493e+03 min=-4.007689514e+02 max=7.520580292e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=44 size=2048 norm=4.015177386e-04 min=-1.502037048e-05 max=1.811981201e-05 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=44 size=2048 norm=1.755892505e+03 min=-4.007689514e+02 max=7.520580292e+01 nonfinite=0
+[B3_STATE] phase=PROMPT_EMBED pos=45 size=2048 norm=6.692079367e-01 min=-5.452394485e-02 max=4.735851288e-02 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL pos=45 size=2048 norm=1.755892510e+03 min=-4.007689514e+02 max=7.520581818e+01 nonfinite=0
+[Deep2Engine] computeLogits: hiddenState norm=84.208519 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000022B41B10000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=19536 logit=    9.918983 text='angles'
+  [ 1] id=23832 logit=    9.096602 text='ΓûüGemeins'
+  [ 2] id=29491 logit=    9.089121 text='Γûüc├¡'
+  [ 3] id=23652 logit=    8.554682 text='itore'
+  [ 4] id=30900 logit=    8.133650 text='µÿƒ'
+  [ 5] id=13983 logit=    8.047582 text='╤é╨╛╨╜'
+  [ 6] id=24227 logit=    7.984979 text='icha'
+  [ 7] id=28987 logit=    7.855517 text='Γûüdrums'
+  [ 8] id= 4995 logit=    7.809191 text='inder'
+  [ 9] id=22275 logit=    7.676657 text='Γûüredund'
+[Deep2Engine] Sampler selected token: 15959
+[Deep2Engine] computeLogits: hiddenState norm=84.208504 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000022B41B10000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=19536 logit=    9.918983 text='angles'
+  [ 1] id=23832 logit=    9.096601 text='ΓûüGemeins'
+  [ 2] id=29491 logit=    9.089121 text='Γûüc├¡'
+  [ 3] id=23652 logit=    8.554680 text='itore'
+  [ 4] id=30900 logit=    8.133651 text='µÿƒ'
+  [ 5] id=13983 logit=    8.047583 text='╤é╨╛╨╜'
+  [ 6] id=24227 logit=    7.984978 text='icha'
+  [ 7] id=28987 logit=    7.855517 text='Γûüdrums'
+  [ 8] id= 4995 logit=    7.809190 text='inder'
+  [ 9] id=22275 logit=    7.676657 text='Γûüredund'
+[Deep2Engine] Sampler selected token: 19536
+[Deep2Engine] computeLogits: hiddenState norm=84.208504 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000022B41B10000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=19536 logit=    9.918983 text='angles'
+  [ 1] id=23832 logit=    9.096602 text='ΓûüGemeins'
+  [ 2] id=29491 logit=    9.089121 text='Γûüc├¡'
+  [ 3] id=23652 logit=    8.554680 text='itore'
+  [ 4] id=30900 logit=    8.133650 text='µÿƒ'
+  [ 5] id=13983 logit=    8.047582 text='╤é╨╛╨╜'
+  [ 6] id=24227 logit=    7.984977 text='icha'
+  [ 7] id=28987 logit=    7.855518 text='Γûüdrums'
+  [ 8] id= 4995 logit=    7.809190 text='inder'
+  [ 9] id=22275 logit=    7.676658 text='Γûüredund'
+[Deep2Engine] Sampler selected token: 29491
+[Deep2Engine] computeLogits: hiddenState norm=84.208519 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000022B41B10000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=19536 logit=    9.918983 text='angles'
+  [ 1] id=23832 logit=    9.096602 text='ΓûüGemeins'
+  [ 2] id=29491 logit=    9.089121 text='Γûüc├¡'
+  [ 3] id=23652 logit=    8.554681 text='itore'
+  [ 4] id=30900 logit=    8.133650 text='µÿƒ'
+  [ 5] id=13983 logit=    8.047582 text='╤é╨╛╨╜'
+  [ 6] id=24227 logit=    7.984977 text='icha'
+  [ 7] id=28987 logit=    7.855517 text='Γûüdrums'
+  [ 8] id= 4995 logit=    7.809191 text='inder'
+  [ 9] id=22275 logit=    7.676657 text='Γûüredund'
+[Deep2Engine] Sampler selected token: 19536
+[Deep2Engine] computeLogits: hiddenState norm=84.208511 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000022B41B10000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=19536 logit=    9.918983 text='angles'
+  [ 1] id=23832 logit=    9.096601 text='ΓûüGemeins'
+  [ 2] id=29491 logit=    9.089121 text='Γûüc├¡'
+  [ 3] id=23652 logit=    8.554680 text='itore'
+  [ 4] id=30900 logit=    8.133650 text='µÿƒ'
+  [ 5] id=13983 logit=    8.047583 text='╤é╨╛╨╜'
+  [ 6] id=24227 logit=    7.984977 text='icha'
+  [ 7] id=28987 logit=    7.855517 text='Γûüdrums'
+  [ 8] id= 4995 logit=    7.809190 text='inder'
+  [ 9] id=22275 logit=    7.676657 text='Γûüredund'
+[Deep2Engine] Sampler selected token: 17350
+[Deep2Engine] computeLogits: hiddenState norm=84.208511 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000022B41B10000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=19536 logit=    9.918983 text='angles'
+  [ 1] id=23832 logit=    9.096601 text='ΓûüGemeins'
+  [ 2] id=29491 logit=    9.089121 text='Γûüc├¡'
+  [ 3] id=23652 logit=    8.554681 text='itore'
+  [ 4] id=30900 logit=    8.133650 text='µÿƒ'
+  [ 5] id=13983 logit=    8.047582 text='╤é╨╛╨╜'
+  [ 6] id=24227 logit=    7.984977 text='icha'
+  [ 7] id=28987 logit=    7.855518 text='Γûüdrums'
+  [ 8] id= 4995 logit=    7.809191 text='inder'
+  [ 9] id=22275 logit=    7.676657 text='Γûüredund'
+[Deep2Engine] Sampler selected token: 30900
+[Deep2Engine] computeLogits: hiddenState norm=84.208504 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000022B41B10000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=19536 logit=    9.918983 text='angles'
+  [ 1] id=23832 logit=    9.096602 text='ΓûüGemeins'
+  [ 2] id=29491 logit=    9.089121 text='Γûüc├¡'
+  [ 3] id=23652 logit=    8.554680 text='itore'
+  [ 4] id=30900 logit=    8.133650 text='µÿƒ'
+  [ 5] id=13983 logit=    8.047582 text='╤é╨╛╨╜'
+  [ 6] id=24227 logit=    7.984977 text='icha'
+  [ 7] id=28987 logit=    7.855517 text='Γûüdrums'
+  [ 8] id= 4995 logit=    7.809191 text='inder'
+  [ 9] id=22275 logit=    7.676657 text='Γûüredund'
+[Deep2Engine] Sampler selected token: 23832
+[Deep2Engine] computeLogits: hiddenState norm=84.208511 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000022B41B10000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=19536 logit=    9.918983 text='angles'
+  [ 1] id=23832 logit=    9.096601 text='ΓûüGemeins'
+  [ 2] id=29491 logit=    9.089121 text='Γûüc├¡'
+  [ 3] id=23652 logit=    8.554681 text='itore'
+  [ 4] id=30900 logit=    8.133650 text='µÿƒ'
+  [ 5] id=13983 logit=    8.047582 text='╤é╨╛╨╜'
+  [ 6] id=24227 logit=    7.984978 text='icha'
+  [ 7] id=28987 logit=    7.855517 text='Γûüdrums'
+  [ 8] id= 4995 logit=    7.809191 text='inder'
+  [ 9] id=22275 logit=    7.676657 text='Γûüredund'
+[Deep2Engine] Sampler selected token: 29491
+[Deep2Engine] computeLogits: hiddenState norm=84.208511 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=0000022B41B10000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=19536 logit=    9.918983 text='angles'
+  [ 1] id=23832 logit=    9.096601 text='ΓûüGemeins'
+  [ 2] id=29491 logit=    9.089121 text='Γûüc├¡'
+  [ 3] id=23652 logit=    8.554681 text='itore'
+  [ 4] id=30900 logit=    8.133650 text='µÿƒ'
+  [ 5] id=13983 logit=    8.047581 text='╤é╨╛╨╜'
+  [ 6] id=24227 logit=    7.984978 text='icha'
+  [ 7] id=28987 logit=    7.855517 text='Γûüdrums'
+  [ 8] id= 4995 logit=    7.809191 text='inder'
+  [ 9] id=22275 logit=    7.676657 text='Γûüredund'
+[Deep2Engine] Sampler selected token: 29491
+[Deep2Engine] Generation complete: 9 tokens in 6016.95 ms (1.50 TPS)
+
+============================================================
+FORWARD PASS TIMING BREAKDOWN
+============================================================
+Embedding:        1.188 ms
+Attention total:  800.169 ms
+FFN total:        4875.543 ms
+Final norm:       0.000 ms
+LM head:          0.000 ms
+Logits compute:   307.591 ms
+Total forward:    910.207 ms
+Total layers:     0.000 ms
+
+Per-layer timing:
+  Layer  0: 447.735 ms (avg 8.141 ms over 55 calls)
+  Layer  1: 405.689 ms (avg 7.376 ms over 55 calls)
+  Layer  2: 117.831 ms (avg 2.142 ms over 55 calls)
+  Layer  3: 111.557 ms (avg 2.028 ms over 55 calls)
+  Layer  4: 447.491 ms (avg 8.136 ms over 55 calls)
+  Layer  5: 120.009 ms (avg 2.182 ms over 55 calls)
+  Layer  6: 109.221 ms (avg 1.986 ms over 55 calls)
+  Layer  7: 390.514 ms (avg 7.100 ms over 55 calls)
+  Layer  8: 498.465 ms (avg 9.063 ms over 55 calls)
+  Layer  9: 413.674 ms (avg 7.521 ms over 55 calls)
+  Layer 10: 105.403 ms (avg 1.916 ms over 55 calls)
+  Layer 11: 99.797 ms (avg 1.814 ms over 55 calls)
+  Layer 12: 479.250 ms (avg 8.714 ms over 55 calls)
+  Layer 13: 110.202 ms (avg 2.004 ms over 55 calls)
+  Layer 14: 109.130 ms (avg 1.984 ms over 55 calls)
+  Layer 15: 449.442 ms (avg 8.172 ms over 55 calls)
+  Layer 16: 112.314 ms (avg 2.042 ms over 55 calls)
+  Layer 17: 103.699 ms (avg 1.885 ms over 55 calls)
+  Layer 18: 410.850 ms (avg 7.470 ms over 55 calls)
+  Layer 19: 100.854 ms (avg 1.834 ms over 55 calls)
+  Layer 20: 421.592 ms (avg 7.665 ms over 55 calls)
+  Layer 21: 115.375 ms (avg 2.098 ms over 55 calls)
+============================================================
+[ProductionBenchmark] Complete. Results written to D:\rawrxd\__profile.json
+[ThreadPool] Shutdown complete

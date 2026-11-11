@@ -1,0 +1,16 @@
+[23:39:06.279] PID=24196 CRT_ENTRY_REACHED
+[23:39:06.282] PID=24196 STATIC_INIT_COMPLETE_OK
+[Prometheus] bind() failed on port 9090 (WSA=10048); exporter will continue in degraded mode.
+[Prometheus] bind() failed on port 9091 (WSA=10048); exporter will continue in degraded mode.
+[23:39:06.293] PID=24196 INIT_0_WINMAIN_ENTRY_REACHED
+[Prometheus] Listening on port 9092 for /metrics...
+[RawrXD][GPU] Loaded ggml-vulkan.dll for Vulkan backend detection
+ggml_vulkan: Found 2 Vulkan devices:
+ggml_vulkan: 0 = AMD Radeon AI PRO R9700 (AMD proprietary driver) | uma: 0 | fp16: 1 | bf16: 1 | warp size: 64 | shared memory: 32768 | int dot: 1 | matrix cores: KHR_coopmat
+ggml_vulkan: 1 = AMD Radeon(TM) Graphics (AMD proprietary driver) | uma: 1 | fp16: 1 | bf16: 0 | warp size: 32 | shared memory: 32768 | int dot: 1 | matrix cores: none
+[RawrXD][GPU] Vulkan locked: AMD Radeon AI PRO R9700 (31704 MiB free / 32624 MiB total) across 2 device(s)
+[PIPELINE MODE] gpu
+[PIPELINE ACTIVE] runLocalInferencePipeline entered
+[Measurement] invalid session measurement (ttft_ms=0.0 decode_tps=0.00 e2e_tps=0.00)
+[PIPELINE TRACE] wrote trace JSON
+[PIPELINE DONE] runLocalInferencePipeline ok

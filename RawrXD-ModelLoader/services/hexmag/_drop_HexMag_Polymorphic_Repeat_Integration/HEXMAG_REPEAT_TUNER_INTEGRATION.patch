@@ -1,0 +1,901 @@
+--- a/src/agentic/rawrxd_agentic_runtime_all.cpp
++++ b/src/agentic/rawrxd_agentic_runtime_all.cpp
+@@ -30,6 +30,7 @@
+ #include <cerrno>
+ #include <charconv>
+ #include <condition_variable>
++#include <cstring>
+ #include <concepts>
+ #include <cstdint>
+ #include <cstdio>
+@@ -75,6 +76,7 @@
+ #endif
+ 
+ #include "../models/ModelCatalog.hpp"
++#include "HexMagRepeatTunerBridge.hpp"
+ 
+ #ifndef RAWRXD_DEEP2_ENGINE_TYPE
+ #define RAWRXD_DEEP2_ENGINE_TYPE Deep2::Deep2Engine
+@@ -984,6 +986,21 @@
+     { engine.generateText(prompt, maxTokens) } -> std::convertible_to<std::string>;
+ };
+ 
++template <typename T>
++concept HasSetTemperature = requires(T& engine, float value) {
++    engine.setTemperature(value);
++};
++
++template <typename T>
++concept HasSetTopP = requires(T& engine, float value) {
++    engine.setTopP(value);
++};
++
++template <typename T>
++concept HasSetSampling = requires(T& engine, float temperature, float topP) {
++    engine.setSampling(temperature, topP);
++};
++
+ static_assert(
+     HasGenerateStreamStringCallback<Deep2> ||
+     HasGenerateStreamViewCallback<Deep2> ||
+@@ -1048,6 +1065,11 @@
+                HasGenerateText<Deep2>;
+     }
+ 
++    bool applySampling(float temperature, float topP) {
++        if (!engine_) return false;
++        return applySamplingImpl(*engine_, temperature, topP);
++    }
++
+     std::string generate(const std::string& prompt, int maxTokens,
+                          const std::function<bool(std::string_view)>& onChunk) {
+         if (!engine_) throw std::runtime_error("Deep2 engine is unavailable");
+@@ -1056,6 +1078,25 @@
+ 
+ private:
+     std::unique_ptr<Deep2> engine_;
++
++    template <typename Engine>
++    static bool applySamplingImpl(Engine& engine, float temperature, float topP) {
++        if constexpr (HasSetSampling<Engine>) {
++            engine.setSampling(temperature, topP);
++            return true;
++        } else {
++            bool applied = false;
++            if constexpr (HasSetTemperature<Engine>) {
++                engine.setTemperature(temperature);
++                applied = true;
++            }
++            if constexpr (HasSetTopP<Engine>) {
++                engine.setTopP(topP);
++                applied = true;
++            }
++            return applied;
++        }
++    }
+ 
+     template <typename Engine>
+     static std::unique_ptr<Engine> createEngine(const std::string& path) {
+@@ -1945,6 +1986,9 @@
+     const GgufMetadata& metadata() const { return metadata_; }
+     TemplateFamily templateFamily() const { return chatTemplate_.family(); }
+     bool trueStreaming() const { return deep2_.trueStreaming(); }
++    bool applySampling(float temperature, float topP) {
++        return deep2_.applySampling(temperature, topP);
++    }
+ 
+     // TOKENIZER-PARITY / AGENT-FIRST-TOKEN: dump exact bytes at Agentic→Deep2 boundary
+     static void dumpPromptForTokenizerCert(const std::string& prompt) {
+@@ -2103,8 +2147,11 @@
+ struct AgentConfig {
+     int maxSteps = 16;
+     int maxTokensPerTurn = 2048;
++    int verifierMaxTokens = 192;
++    std::uint32_t repeatMaxAttempts = 6;
+     bool streamToConsole = true;
+     bool saveTranscript = true;
++    bool verifyFinalAnswers = true;
+ };
+ 
+ struct AgentResult {
+@@ -2121,23 +2168,54 @@
+         : inference_(inference), tools_(tools), config_(config) {}
+ 
+     AgentResult execute(const std::string& task) {
++        hexmag::RepeatSession repeat(hexmag::requestHash(task), config_.repeatMaxAttempts);
++        if (!repeat.valid()) {
++            return AgentResult{false, false, 0, {},
++                "HEXMAG repeat tuner initialization/invariant failure"};
++        }
++
+         std::vector<ChatMessage> messages;
+-        messages.push_back({Role::System, systemPrompt(), {}, {}});
++        messages.push_back({Role::System, systemPrompt() + "\n\n" + repeat.directive(), {}, {}});
+         messages.push_back({Role::User, task, {}, {}});
+         const auto toolDefinitions = tools_.definitions();
+         std::set<std::string> previousCallFingerprints;
+         AgentTranscript transcript;
+ 
+         for (int step = 1; step <= config_.maxSteps; ++step) {
++            const bool nativeSampling =
++                inference_.applySampling(repeat.temperature(), repeat.topP());
++
++            std::printf(
++                "[HEXMAG] step=%d attempt=%u generation_id=%llu fingerprint=%llu "
++                "strategy=%s specialist=%s temp=%.3f top_p=%.3f native_sampling=%d "
++                "blocking_passes=%u weight_delta=%u\n",
++                step,
++                repeat.attempt(),
++                static_cast<unsigned long long>(repeat.generationId()),
++                static_cast<unsigned long long>(repeat.fingerprint()),
++                hexmag::strategyName(repeat.profile().strategy),
++                hexmag::specialistName(repeat.profile().specialist),
++                static_cast<double>(repeat.temperature()),
++                static_cast<double>(repeat.topP()),
++                nativeSampling ? 1 : 0,
++                repeat.profile().blockingPasses,
++                hexmag::HexMag_Tuner_WeightDelta());
++            std::fflush(stdout);
++
+             TranscriptStep record;
+             record.step = step;
+             record.timestamp = isoTimeNow();
+             std::string response;
+             const auto inferStart = std::chrono::steady_clock::now();
+             try {
+-                response = inference_.ChatStream(messages, toolDefinitions, config_.maxTokensPerTurn,
++                // With the verifier enabled, do not emit candidate text before it clears
++                // all blocking passes. This makes unsupported_claim_emission fail-closed.
++                response = inference_.ChatStream(
++                    messages, toolDefinitions, config_.maxTokensPerTurn,
+                     [&](const StreamEvent& event) {
+-                        if (event.kind == StreamEvent::Kind::Text && config_.streamToConsole) {
++                        if (event.kind == StreamEvent::Kind::Text &&
++                            config_.streamToConsole &&
++                            !config_.verifyFinalAnswers) {
+                             std::cout << event.text << std::flush;
+                         }
+                         return true;
+@@ -2149,53 +2227,137 @@
+             }
+             catch (...) {
+                 persistTranscript(transcript);
+-                return AgentResult{false, false, step, {}, "non-std exception during inference"};
++                return AgentResult{false, false, step, {},
++                    "non-std exception during inference"};
+             }
+             const auto inferEnd = std::chrono::steady_clock::now();
+-            record.inferenceMs = static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(inferEnd - inferStart).count());
++            record.inferenceMs = static_cast<std::uint64_t>(
++                std::chrono::duration_cast<std::chrono::milliseconds>(
++                    inferEnd - inferStart).count());
+             record.modelResponse = response;
+-            if (config_.streamToConsole) std::cout << "\n";
++            if (config_.streamToConsole && !config_.verifyFinalAnswers)
++                std::cout << "\n";
+ 
+             const auto calls = ToolCallParser::parse(response);
+             record.toolCalls = calls;
++
+             if (calls.empty()) {
++                if (trim(response).empty()) {
++                    transcript.add(std::move(record));
++                    persistTranscript(transcript);
++                    if (!advanceRepeat(
++                            repeat,
++                            hexmag::HX_FAIL_WRONG | hexmag::HX_FAIL_STAGNATION,
++                            messages,
++                            "model produced an empty response")) {
++                        return exhaustedResult(step);
++                    }
++                    continue;
++                }
++
++                if (config_.verifyFinalAnswers) {
++                    const Verification verdict =
++                        verifyFinalCandidate(task, response, transcript, repeat);
++                    if (!verdict.pass) {
++                        transcript.add(std::move(record));
++                        persistTranscript(transcript);
++                        const std::uint32_t mask =
++                            verdict.failureMask == 0
++                                ? static_cast<std::uint32_t>(hexmag::HX_FAIL_WRONG)
++                                : verdict.failureMask;
++                        if (!advanceRepeat(repeat, mask, messages, verdict.reason)) {
++                            return exhaustedResult(step);
++                        }
++                        continue;
++                    }
++                }
++
+                 transcript.add(std::move(record));
+                 persistTranscript(transcript);
+-                if (trim(response).empty()) {
+-                    return AgentResult{false, false, step, {},
+-                        "model produced an empty response (no tools, no final answer)"};
++                if (config_.streamToConsole && config_.verifyFinalAnswers) {
++                    std::cout << response << "\n";
+                 }
+                 return AgentResult{true, false, step, response, {}};
+             }
+ 
+             messages.push_back({Role::Assistant, response, {}, {}});
+             const auto toolStart = std::chrono::steady_clock::now();
++            std::uint32_t failureMask = 0;
++
+             for (const auto& call : calls) {
+-                const std::string fingerprint = call.name + "\n" + call.argumentsJson;
++                const std::string fingerprint =
++                    call.name + "\n" + call.argumentsJson;
+                 if (!previousCallFingerprints.insert(fingerprint).second) {
+-                    const ToolResult loopResult{false, call.name, "identical tool call repeated; change strategy before retrying", -2};
++                    const ToolResult loopResult{
++                        false,
++                        call.name,
++                        "identical tool call repeated; change strategy before retrying",
++                        -2};
+                     record.toolResults.push_back(loopResult);
+-                    messages.push_back({Role::Tool, loopResult.toJson(), call.name, call.id});
++                    messages.push_back(
++                        {Role::Tool, loopResult.toJson(), call.name, call.id});
++                    failureMask |=
++                        hexmag::HX_FAIL_STAGNATION | hexmag::HX_FAIL_WRONG;
+                     continue;
+                 }
++
+                 ToolResult result = tools_.dispatch(call);
+                 record.toolResults.push_back(result);
+-                messages.push_back({Role::Tool, result.toJson(), call.name, call.id});
+-            }
++                messages.push_back(
++                    {Role::Tool, result.toJson(), call.name, call.id});
++
++                if (!result.success) {
++                    failureMask |= hexmag::HX_FAIL_WRONG;
++                    if (result.error == "schema_validation" ||
++                        result.error == "unknown_tool" ||
++                        result.exitCode != 0) {
++                        failureMask |= hexmag::HX_FAIL_TEST;
++                    }
++                    const std::string evidence = lower(result.output + " " + result.error);
++                    if (evidence.find("contradict") != std::string::npos) {
++                        failureMask |= hexmag::HX_FAIL_CONTRADICTION;
++                    }
++                    if (evidence.find("counterexample") != std::string::npos) {
++                        failureMask |= hexmag::HX_FAIL_COUNTEREXAMPLE;
++                    }
++                }
++            }
++
+             const auto toolEnd = std::chrono::steady_clock::now();
+-            record.toolMs = static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(toolEnd - toolStart).count());
++            record.toolMs = static_cast<std::uint64_t>(
++                std::chrono::duration_cast<std::chrono::milliseconds>(
++                    toolEnd - toolStart).count());
+             transcript.add(std::move(record));
+-            // Persist after every tool round so schema rejects survive a later crash.
+             persistTranscript(transcript);
++
++            if (failureMask != 0) {
++                if (!advanceRepeat(
++                        repeat,
++                        failureMask,
++                        messages,
++                        "tool/build/test evidence rejected the current generation")) {
++                    return exhaustedResult(step);
++                }
++            }
++
+             std::printf("[AGENT_STEP] completed=%d next_inference=%d\n",
+                         step, step < config_.maxSteps ? 1 : 0);
+             std::fflush(stdout);
+         }
++
+         persistTranscript(transcript);
+-        return AgentResult{false, true, config_.maxSteps, {}, "agent reached configured step limit"};
++        return AgentResult{
++            false, true, config_.maxSteps, {},
++            "agent reached configured step limit"};
+     }
+ 
+ private:
++    struct Verification {
++        bool pass = false;
++        std::uint32_t failureMask = 0;
++        std::string reason;
++    };
++
+     NativeInferenceClient& inference_;
+     ToolRegistry& tools_;
+     AgentConfig config_;
+@@ -2215,14 +2377,186 @@
+                "appropriate, and retry with a changed strategy. "
+                "Prefer narrow, correct edits over unrelated changes. "
+                "Do not repeatedly issue an identical failed tool call. "
++               "Unsupported factual completion claims are forbidden. "
+                "When finished, provide the concise final result and the validation "
+                "you performed.";
++    }
++
++    static std::uint32_t classifyVerifierFailure(std::string_view verdictText) {
++        const std::string v = lower(std::string(verdictText));
++        std::uint32_t mask = 0;
++        if (v.find("missing_info") != std::string::npos ||
++            v.find("missing information") != std::string::npos ||
++            v.find("insufficient_information") != std::string::npos) {
++            mask |= hexmag::HX_FAIL_MISSING_INFO;
++        }
++        if (v.find("unsupported") != std::string::npos ||
++            v.find("halluc") != std::string::npos ||
++            v.find("assumption") != std::string::npos) {
++            mask |= hexmag::HX_FAIL_UNSUPPORTED;
++        }
++        if (v.find("contradiction") != std::string::npos ||
++            v.find("contradict") != std::string::npos) {
++            mask |= hexmag::HX_FAIL_CONTRADICTION;
++        }
++        if (v.find("counterexample") != std::string::npos) {
++            mask |= hexmag::HX_FAIL_COUNTEREXAMPLE;
++        }
++        if (v.find("test") != std::string::npos ||
++            v.find("compile") != std::string::npos ||
++            v.find("runtime") != std::string::npos) {
++            mask |= hexmag::HX_FAIL_TEST;
++        }
++        if (v.find("stagnation") != std::string::npos ||
++            v.find("duplicate") != std::string::npos ||
++            v.find("repeat") != std::string::npos) {
++            mask |= hexmag::HX_FAIL_STAGNATION;
++        }
++        if (mask == 0) mask = hexmag::HX_FAIL_WRONG;
++        return mask | hexmag::HX_FAIL_WRONG;
++    }
++
++    Verification verifyFinalCandidate(
++        const std::string& task,
++        const std::string& candidate,
++        const AgentTranscript& transcript,
++        hexmag::RepeatSession& repeat) {
++
++        Verification aggregate;
++        aggregate.pass = true;
++        std::ostringstream reasons;
++
++        std::string evidence = transcript.toJson();
++        constexpr std::size_t kMaxEvidenceBytes = 24 * 1024;
++        if (evidence.size() > kMaxEvidenceBytes) {
++            evidence =
++                "[...older transcript truncated...]" +
++                evidence.substr(evidence.size() - kMaxEvidenceBytes);
++        }
++
++        const std::uint32_t passes =
++            std::max<std::uint32_t>(1, repeat.profile().blockingPasses);
++
++        // Evidence verification must be conservative. Use native deterministic
++        // controls when Deep2 exposes setters; otherwise the verifier prompt still
++        // forbids confidence-as-evidence, but the log truthfully reports no native setter.
++        const bool verifierNativeSampling = inference_.applySampling(0.0f, 0.80f);
++        std::printf("[HEXMAG_VERIFY] passes=%u native_sampling=%d\n",
++                    passes, verifierNativeSampling ? 1 : 0);
++
++        for (std::uint32_t pass = 0; pass < passes; ++pass) {
++            std::vector<ChatMessage> verifierMessages;
++            verifierMessages.push_back({
++                Role::System,
++                "You are RawrXD's blocking correctness verifier. "
++                "Judge only against the supplied task and observed transcript/tool evidence. "
++                "Confidence is not evidence. Unsupported claims fail. "
++                "Return exactly one line: "
++                "VERDICT=PASS or VERDICT=FAIL KIND=<WRONG|UNSUPPORTED|TEST|"
++                "CONTRADICTION|COUNTEREXAMPLE|STAGNATION|MISSING_INFO> REASON=<short reason>.",
++                {}, {}
++            });
++
++            std::ostringstream prompt;
++            prompt << "PASS_INDEX=" << pass + 1 << "/" << passes << "\n"
++                   << "GENERATION_ID=" << repeat.generationId() << "\n"
++                   << "TASK:\n" << task << "\n\n"
++                   << "CANDIDATE_FINAL:\n" << candidate << "\n\n"
++                   << "OBSERVED_TRANSCRIPT:\n" << evidence;
++            verifierMessages.push_back({Role::User, prompt.str(), {}, {}});
++
++            std::string verdict;
++            try {
++                verdict = inference_.ChatSync(
++                    verifierMessages, {}, config_.verifierMaxTokens);
++            } catch (const std::exception& ex) {
++                aggregate.pass = false;
++                aggregate.failureMask |=
++                    hexmag::HX_FAIL_WRONG | hexmag::HX_FAIL_UNSUPPORTED;
++                reasons << "verifier_exception=" << ex.what() << "; ";
++                continue;
++            }
++
++            const std::string normalized = lower(trim(verdict));
++            const bool explicitPass =
++                normalized.find("verdict=pass") != std::string::npos;
++            const bool explicitFail =
++                normalized.find("verdict=fail") != std::string::npos;
++
++            std::printf("[HEXMAG_VERIFY] pass=%u explicit_pass=%d explicit_fail=%d\n",
++                        pass + 1, explicitPass ? 1 : 0, explicitFail ? 1 : 0);
++
++            if (!explicitPass || explicitFail) {
++                aggregate.pass = false;
++                aggregate.failureMask |= classifyVerifierFailure(verdict);
++                reasons << "pass" << pass + 1 << "=" << trim(verdict) << "; ";
++            }
++        }
++
++        // Restore active generation sampling after deterministic verifier passes.
++        inference_.applySampling(repeat.temperature(), repeat.topP());
++
++        if (aggregate.pass) {
++            aggregate.reason = "all blocking verifier passes accepted candidate";
++        } else {
++            aggregate.reason = reasons.str();
++            if (aggregate.reason.empty())
++                aggregate.reason = "blocking verifier rejected candidate";
++        }
++        return aggregate;
++    }
++
++    bool advanceRepeat(
++        hexmag::RepeatSession& repeat,
++        std::uint32_t failureMask,
++        std::vector<ChatMessage>& messages,
++        const std::string& reason) {
++
++        const auto oldGeneration = repeat.generationId();
++        if (!repeat.advance(failureMask)) return false;
++
++        // Mutate the active system contract in-place. generation_id and mutation_nonce
++        // change the actual prompt bytes, so even a greedy backend does not receive the
++        // identical generation request after a rejection.
++        messages.front().content =
++            systemPrompt() + "\n\n" + repeat.directive();
++
++        std::ostringstream observation;
++        observation << "Previous generation " << oldGeneration
++                    << " was rejected. failure_mask=0x"
++                    << std::hex << failureMask << std::dec
++                    << ". " << reason
++                    << "\nDo not repeat the rejected answer. Continue using the new "
++                       "HEXMAG_REPEAT_PROFILE.";
++        messages.push_back({Role::User, observation.str(), {}, {}});
++
++        std::printf(
++            "[HEXMAG_MUTATE] old_generation_id=%llu new_generation_id=%llu "
++            "attempt=%u strategy=%s failure_mask=0x%X\n",
++            static_cast<unsigned long long>(oldGeneration),
++            static_cast<unsigned long long>(repeat.generationId()),
++            repeat.attempt(),
++            hexmag::strategyName(repeat.profile().strategy),
++            failureMask);
++        std::fflush(stdout);
++        return true;
++    }
++
++    static AgentResult exhaustedResult(int step) {
++        return AgentResult{
++            false,
++            false,
++            step,
++            {},
++            "INSUFFICIENT_INFORMATION: HexMag repeat budget exhausted without a "
++            "verified answer; fake success is forbidden"};
+     }
+ 
+     void persistTranscript(const AgentTranscript& transcript) const {
+         if (!config_.saveTranscript) return;
+         try {
+-            const fs::path path = fs::current_path() / "RAWRXD_AGENT_TRANSCRIPT.json";
++            const fs::path path =
++                fs::current_path() / "RAWRXD_AGENT_TRANSCRIPT.json";
+             writeWholeFile(path, transcript.toJson());
+         }
+         catch (...) {}
+--- a/src/asm/RawrXD_HexMag_RepeatTuner.asm
++++ b/src/asm/RawrXD_HexMag_RepeatTuner.asm
+@@ -157,6 +157,7 @@
+     test    rcx, rcx
+     jz      @fp_zero
+     push    rbx
++    sub     rsp, 20h                    ; Win64 shadow space; stack remains call-aligned
+     mov     rbx, rcx
+     mov     eax, 2166136261
+     mov     ecx, DWORD PTR [rbx].HX_GEN_PROFILE.strategy
+@@ -181,6 +182,7 @@
+     call    hx_fp_mix
+     mov     ecx, DWORD PTR [rbx].HX_GEN_PROFILE.mutation_nonce
+     call    hx_fp_mix
++    add     rsp, 20h
+     pop     rbx
+     ret
+ @fp_zero:
+@@ -267,6 +269,7 @@
+ hx_unique PROC
+     push    rbx
+     push    rsi
++    sub     rsp, 28h                    ; 20h shadow + 8-byte alignment for nested calls
+     mov     ebx, 64
+ @uq_loop:
+     mov     rcx, rdi
+@@ -293,6 +296,7 @@
+     call    hx_seen_add
+     xor     eax, eax
+ @uq_done:
++    add     rsp, 28h
+     pop     rsi
+     pop     rbx
+     ret
+@@ -422,7 +426,7 @@
+ 
+ @af_miss:
+     test    ecx, HX_FAIL_MISSING_INFO
+-    jz      @af_done
++    jz      @af_wrong
+     ; evidence-guard: do NOT increase creativity
+     mov     DWORD PTR [rdi].HX_GEN_PROFILE.strategy, HX_STRAT_EVIDENCE_GUARD
+     mov     DWORD PTR [rdi].HX_GEN_PROFILE.specialist, HX_SPEC_EPISTEMIC
+@@ -431,8 +435,41 @@
+     mov     DWORD PTR [rdi].HX_GEN_PROFILE.candidate_count, 1
+     mov     eax, DWORD PTR [rdi].HX_GEN_PROFILE.counterexample_budget
+     cmp     eax, 2
++    jae     @af_wrong
++    mov     DWORD PTR [rdi].HX_GEN_PROFILE.counterexample_budget, 2
++
++@af_wrong:
++    ; Generic verifier WRONG is a real mutation signal, not "rerun same generation".
++    ; If a more specific failure bit was supplied, keep that specialist's strategy.
++    test    ecx, HX_FAIL_WRONG
++    jz      @af_done
++    test    ecx, 003Fh                  ; any specific bit CONTRADICTION..MISSING_INFO?
++    jnz     @af_done
++    mov     DWORD PTR [rdi].HX_GEN_PROFILE.strategy, HX_STRAT_REVERSE
++    mov     DWORD PTR [rdi].HX_GEN_PROFILE.specialist, HX_SPEC_FALSIFIER
++    mov     eax, DWORD PTR [rdi].HX_GEN_PROFILE.temp_milli
++    cmp     eax, 260
++    jbe     @af_wrong_t
++    mov     eax, 260
++@af_wrong_t:
++    mov     DWORD PTR [rdi].HX_GEN_PROFILE.temp_milli, eax
++    mov     eax, DWORD PTR [rdi].HX_GEN_PROFILE.candidate_count
++    cmp     eax, 2
++    jae     @af_wrong_c
++    mov     eax, 2
++@af_wrong_c:
++    mov     DWORD PTR [rdi].HX_GEN_PROFILE.candidate_count, eax
++    mov     eax, DWORD PTR [rdi].HX_GEN_PROFILE.reverse_depth
++    cmp     eax, 2
++    jae     @af_wrong_r
++    mov     eax, 2
++@af_wrong_r:
++    mov     DWORD PTR [rdi].HX_GEN_PROFILE.reverse_depth, eax
++    mov     eax, DWORD PTR [rdi].HX_GEN_PROFILE.invariant_budget
++    cmp     eax, 2
+     jae     @af_done
+-    mov     DWORD PTR [rdi].HX_GEN_PROFILE.counterexample_budget, 2
++    mov     DWORD PTR [rdi].HX_GEN_PROFILE.invariant_budget, 2
++
+ @af_done:
+     ; Always enforce Q_BLOCKING + 3 passes on repeats
+     mov     DWORD PTR [rdi].HX_GEN_PROFILE.blocking_passes, 3
+--- /dev/null
++++ b/src/agentic/HexMagRepeatTunerBridge.hpp
+@@ -0,0 +1,232 @@
++#pragma once
++// HexMagRepeatTunerBridge.hpp
++// C++ ABI bridge for RawrXD_HexMag_RepeatTuner.asm.
++// The MASM implementation owns one global state block. HexMagRepeatSession therefore
++// holds a process-local mutex for the entire request, enforcing Q_BLOCKING and preventing
++// concurrent agent requests from clobbering g_Tuner.
++
++#include <algorithm>
++#include <atomic>
++#include <cstdint>
++#include <iomanip>
++#include <mutex>
++#include <sstream>
++#include <string>
++#include <string_view>
++
++namespace rawrxd::agentic::hexmag {
++
++enum Strategy : std::uint32_t {
++    HX_STRAT_DIRECT = 0,
++    HX_STRAT_DECOMPOSE = 1,
++    HX_STRAT_REVERSE = 2,
++    HX_STRAT_COUNTEREXAMPLE = 3,
++    HX_STRAT_INVARIANT = 4,
++    HX_STRAT_REPAIR = 5,
++    HX_STRAT_EVIDENCE_GUARD = 6,
++};
++
++enum Specialist : std::uint32_t {
++    HX_SPEC_GENERALIST = 0,
++    HX_SPEC_PLANNER = 1,
++    HX_SPEC_FALSIFIER = 2,
++    HX_SPEC_BOUNDARY = 3,
++    HX_SPEC_CONSISTENCY = 4,
++    HX_SPEC_RESOLVER = 5,
++    HX_SPEC_ASSUMPTION_BREAKER = 6,
++    HX_SPEC_TEST_DRIVEN = 7,
++    HX_SPEC_ALT_DERIVATION = 8,
++    HX_SPEC_EPISTEMIC = 9,
++};
++
++enum Failure : std::uint32_t {
++    HX_FAIL_CONTRADICTION = 0x0001u,
++    HX_FAIL_COUNTEREXAMPLE = 0x0002u,
++    HX_FAIL_UNSUPPORTED = 0x0004u,
++    HX_FAIL_TEST = 0x0008u,
++    HX_FAIL_STAGNATION = 0x0010u,
++    HX_FAIL_MISSING_INFO = 0x0020u,
++    HX_FAIL_WRONG = 0x0040u,
++};
++
++inline constexpr std::uint32_t HX_QUEUE_Q_BLOCKING = 1u;
++
++struct GenProfile {
++    std::uint32_t strategy = 0;
++    std::uint32_t specialist = 0;
++    std::uint32_t tempMilli = 0;
++    std::uint32_t topPMilli = 0;
++    std::uint32_t candidateCount = 0;
++    std::uint32_t reverseDepth = 0;
++    std::uint32_t counterexampleBudget = 0;
++    std::uint32_t invariantBudget = 0;
++    std::uint32_t blockingPasses = 0;
++    std::uint32_t queuePolicy = 0;
++    std::uint32_t mutationNonce = 0;
++    std::uint32_t pad0 = 0;
++};
++static_assert(sizeof(GenProfile) == 48, "HX_GEN_PROFILE ABI drift");
++
++extern "C" {
++std::uint32_t HexMag_Tuner_Init(std::uint32_t maxAttempts);
++std::uint32_t HexMag_Tuner_Reset(std::uint64_t requestIdHash);
++std::uint64_t HexMag_Tuner_Initial(std::uint64_t requestIdHash, GenProfile* out);
++std::uint64_t HexMag_Tuner_Next(std::uint64_t requestIdHash,
++                                std::uint32_t failKindMask,
++                                std::uint32_t attempt,
++                                GenProfile* out);
++std::uint64_t HexMag_Tuner_Fingerprint(const GenProfile* profile);
++std::uint64_t HexMag_Tuner_GenerationId();
++std::uint32_t HexMag_Tuner_GetProfile(GenProfile* out);
++std::uint32_t HexMag_Tuner_WeightDelta();
++std::uint32_t HexMag_Tuner_Attempt();
++std::uint32_t HexMag_Tuner_Strategy();
++}
++
++inline const char* strategyName(std::uint32_t strategy) {
++    switch (strategy) {
++    case HX_STRAT_DIRECT: return "direct";
++    case HX_STRAT_DECOMPOSE: return "decompose";
++    case HX_STRAT_REVERSE: return "reverse";
++    case HX_STRAT_COUNTEREXAMPLE: return "counterexample";
++    case HX_STRAT_INVARIANT: return "invariant";
++    case HX_STRAT_REPAIR: return "repair";
++    case HX_STRAT_EVIDENCE_GUARD: return "evidence_guard";
++    default: return "unknown";
++    }
++}
++
++inline const char* specialistName(std::uint32_t specialist) {
++    switch (specialist) {
++    case HX_SPEC_GENERALIST: return "generalist";
++    case HX_SPEC_PLANNER: return "planner";
++    case HX_SPEC_FALSIFIER: return "falsifier";
++    case HX_SPEC_BOUNDARY: return "boundary";
++    case HX_SPEC_CONSISTENCY: return "consistency";
++    case HX_SPEC_RESOLVER: return "resolver";
++    case HX_SPEC_ASSUMPTION_BREAKER: return "assumption_breaker";
++    case HX_SPEC_TEST_DRIVEN: return "test_driven";
++    case HX_SPEC_ALT_DERIVATION: return "alternate_derivation";
++    case HX_SPEC_EPISTEMIC: return "epistemic";
++    default: return "unknown";
++    }
++}
++
++inline std::uint64_t requestHash(std::string_view task) {
++    // FNV-1a plus a monotonic salt so identical tasks in the same process are distinct requests.
++    std::uint64_t h = 14695981039346656037ull;
++    for (unsigned char c : task) {
++        h ^= static_cast<std::uint64_t>(c);
++        h *= 1099511628211ull;
++    }
++    static std::atomic<std::uint64_t> sequence{1};
++    const std::uint64_t salt = sequence.fetch_add(1, std::memory_order_relaxed);
++    h ^= salt + 0x9E3779B97F4A7C15ull + (h << 6) + (h >> 2);
++    return h ? h : 1ull;
++}
++
++inline std::mutex& globalQueueMutex() {
++    static std::mutex m;
++    return m;
++}
++
++class RepeatSession final {
++public:
++    explicit RepeatSession(std::uint64_t requestIdHash, std::uint32_t maxAttempts = 6)
++        : queueLock_(globalQueueMutex()), requestIdHash_(requestIdHash) {
++        if (maxAttempts == 0) maxAttempts = 6;
++        maxAttempts_ = maxAttempts;
++        if (HexMag_Tuner_Init(maxAttempts_) != 0) return;
++        fingerprint_ = HexMag_Tuner_Initial(requestIdHash_, &profile_);
++        generationId_ = HexMag_Tuner_GenerationId();
++        valid_ = fingerprint_ != 0 &&
++                 generationId_ != 0 &&
++                 profile_.blockingPasses == 3 &&
++                 profile_.queuePolicy == HX_QUEUE_Q_BLOCKING &&
++                 HexMag_Tuner_WeightDelta() == 0;
++    }
++
++    bool valid() const { return valid_; }
++    std::uint32_t attempt() const { return attempt_; }
++    std::uint32_t maxAttempts() const { return maxAttempts_; }
++    std::uint64_t fingerprint() const { return fingerprint_; }
++    std::uint64_t generationId() const { return generationId_; }
++    const GenProfile& profile() const { return profile_; }
++
++    bool advance(std::uint32_t failureMask) {
++        if (!valid_) return false;
++        const std::uint64_t oldFingerprint = fingerprint_;
++        const std::uint64_t oldGeneration = generationId_;
++        ++attempt_;
++        fingerprint_ = HexMag_Tuner_Next(requestIdHash_, failureMask, attempt_, &profile_);
++        generationId_ = HexMag_Tuner_GenerationId();
++        if (fingerprint_ == 0) {
++            valid_ = false; // exhausted
++            return false;
++        }
++        const bool invariantOk =
++            fingerprint_ != oldFingerprint &&
++            generationId_ != oldGeneration &&
++            profile_.blockingPasses == 3 &&
++            profile_.queuePolicy == HX_QUEUE_Q_BLOCKING &&
++            HexMag_Tuner_WeightDelta() == 0;
++        valid_ = invariantOk;
++        return valid_;
++    }
++
++    std::string directive() const {
++        std::ostringstream out;
++        out << "HEXMAG_REPEAT_PROFILE"
++            << " generation_id=0x" << std::hex << generationId_ << std::dec
++            << " attempt=" << attempt_
++            << " strategy=" << strategyName(profile_.strategy)
++            << " specialist=" << specialistName(profile_.specialist)
++            << " mutation_nonce=" << profile_.mutationNonce
++            << " candidates=" << std::max<std::uint32_t>(1, profile_.candidateCount)
++            << " reverse_depth=" << profile_.reverseDepth
++            << " counterexample_budget=" << profile_.counterexampleBudget
++            << " invariant_budget=" << profile_.invariantBudget
++            << " blocking_passes=" << profile_.blockingPasses
++            << ". Treat this generation as distinct from every prior attempt. "
++               "Do not repeat a rejected answer or identical failed tool call. ";
++        switch (profile_.strategy) {
++        case HX_STRAT_DECOMPOSE:
++            out << "Decompose the problem and solve the smallest verified subproblem first.";
++            break;
++        case HX_STRAT_REVERSE:
++            out << "Work backward from required invariants; actively search for unsupported assumptions.";
++            break;
++        case HX_STRAT_COUNTEREXAMPLE:
++            out << "Try to falsify the current approach with boundary cases before proceeding.";
++            break;
++        case HX_STRAT_INVARIANT:
++            out << "Reconcile contradictions against explicit invariants and tool evidence.";
++            break;
++        case HX_STRAT_REPAIR:
++            out << "Use the failing build/test/tool observation as the authority and make a targeted repair.";
++            break;
++        case HX_STRAT_EVIDENCE_GUARD:
++            out << "Do not invent missing facts. Use only supplied/tool evidence; if evidence is insufficient, say so.";
++            break;
++        default:
++            out << "Proceed directly but ground every factual completion claim in observed evidence.";
++            break;
++        }
++        return out.str();
++    }
++
++    float temperature() const { return static_cast<float>(profile_.tempMilli) / 1000.0f; }
++    float topP() const { return static_cast<float>(profile_.topPMilli) / 1000.0f; }
++
++private:
++    std::unique_lock<std::mutex> queueLock_;
++    std::uint64_t requestIdHash_ = 0;
++    std::uint32_t maxAttempts_ = 6;
++    std::uint32_t attempt_ = 0;
++    GenProfile profile_{};
++    std::uint64_t fingerprint_ = 0;
++    std::uint64_t generationId_ = 0;
++    bool valid_ = false;
++};
++
++} // namespace rawrxd::agentic::hexmag
+--- /dev/null
++++ b/tests/hexmag_repeat_tuner_cert.cpp
+@@ -0,0 +1,79 @@
++#include "HexMagRepeatTunerBridge.hpp"
++
++#include <cstdint>
++#include <cstdio>
++#include <set>
++
++using namespace rawrxd::agentic::hexmag;
++
++static int fail(const char* what) {
++    std::fprintf(stderr, "[FAIL] %s\n", what);
++    return 1;
++}
++
++int main() {
++    RepeatSession session(0xA55A1234DEADBEEFull, 6);
++    if (!session.valid()) return fail("initial session invalid");
++    if (session.fingerprint() == 0) return fail("initial fingerprint zero");
++    if (session.generationId() == 0) return fail("initial generation_id zero");
++    if (session.profile().blockingPasses != 3) return fail("blocking_passes != 3");
++    if (session.profile().queuePolicy != HX_QUEUE_Q_BLOCKING) return fail("queue_policy != Q_BLOCKING");
++    if (HexMag_Tuner_WeightDelta() != 0) return fail("persistent weight delta nonzero");
++
++    std::set<std::uint64_t> fingerprints{session.fingerprint()};
++    std::set<std::uint64_t> generations{session.generationId()};
++
++    const auto advanceAndCheck = [&](std::uint32_t mask, std::uint32_t expectedStrategy) -> bool {
++        if (!session.advance(mask)) return false;
++        if (!fingerprints.insert(session.fingerprint()).second) return false;
++        if (!generations.insert(session.generationId()).second) return false;
++        if (session.profile().blockingPasses != 3) return false;
++        if (session.profile().queuePolicy != HX_QUEUE_Q_BLOCKING) return false;
++        if (HexMag_Tuner_WeightDelta() != 0) return false;
++        if (session.profile().strategy != expectedStrategy) return false;
++        return true;
++    };
++
++    // Generic verifier WRONG must trigger a real alternate reasoning strategy.
++    if (!advanceAndCheck(HX_FAIL_WRONG, HX_STRAT_REVERSE))
++        return fail("generic WRONG did not mutate to reverse/falsifier");
++
++    // Build/test failures must use the repair specialist.
++    if (!advanceAndCheck(HX_FAIL_WRONG | HX_FAIL_TEST, HX_STRAT_REPAIR))
++        return fail("TEST did not mutate to repair");
++
++    // Unsupported claims must trigger reverse assumption-breaking.
++    if (!advanceAndCheck(HX_FAIL_WRONG | HX_FAIL_UNSUPPORTED, HX_STRAT_REVERSE))
++        return fail("UNSUPPORTED did not mutate to reverse");
++
++    // Missing information must fail closed with evidence guard and temp=0.
++    if (!advanceAndCheck(HX_FAIL_WRONG | HX_FAIL_MISSING_INFO, HX_STRAT_EVIDENCE_GUARD))
++        return fail("MISSING_INFO did not mutate to evidence guard");
++    if (session.profile().tempMilli != 0)
++        return fail("MISSING_INFO temperature was not zero");
++    if (session.profile().candidateCount != 1)
++        return fail("MISSING_INFO candidate_count was not one");
++
++    // One final retry remains for maxAttempts=6 (initial + attempts 1..5).
++    if (!session.advance(HX_FAIL_WRONG | HX_FAIL_STAGNATION))
++        return fail("final allowed retry unexpectedly exhausted");
++    if (!fingerprints.insert(session.fingerprint()).second)
++        return fail("final fingerprint duplicated");
++    if (!generations.insert(session.generationId()).second)
++        return fail("final generation_id duplicated");
++
++    // Attempt 6 must exhaust: never fake success.
++    if (session.advance(HX_FAIL_WRONG))
++        return fail("retry exhaustion did not fail closed");
++
++    std::printf(
++        "HEXMAG_POLYMORPHIC_REPEAT_TUNER_001=PASS\n"
++        "unique_fingerprints=%zu\n"
++        "unique_generation_ids=%zu\n"
++        "blocking_passes=3\n"
++        "queue_policy=Q_BLOCKING\n"
++        "persistent_weight_delta_bytes=0\n"
++        "exhaustion=INSUFFICIENT_INFORMATION\n",
++        fingerprints.size(), generations.size());
++    return 0;
++}

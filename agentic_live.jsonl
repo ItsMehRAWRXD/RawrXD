@@ -1,0 +1,39 @@
+{"ts_ns":1792033147239104900,"seq":1,"request":1,"agent":0,"kind":"model_load","value":0,"message":"qwen2.5-coder_1.5b-base.gguf"}
+{"ts_ns":1792033147239108400,"seq":2,"request":1,"agent":0,"kind":"tokenizer_check","value":0,"message":"round_trip=FAIL"}
+{"ts_ns":1792033147239108500,"seq":3,"request":1,"agent":0,"kind":"prefill_start","value":0,"message":"ctx=137"}
+{"ts_ns":1792033147239108600,"seq":4,"request":1,"agent":0,"kind":"prefill_end","value":151750,"message":"duration_ms=151750"}
+{"ts_ns":1792033147239108700,"seq":5,"request":1,"agent":0,"kind":"token_generated","value":34,"message":"TOOL read"}
+{"ts_ns":1792033147239108700,"seq":6,"request":1,"agent":0,"kind":"snap_stop","value":0,"message":"unknown verb"}
+{"ts_ns":1792033147239108800,"seq":7,"request":1,"agent":0,"kind":"test_result","value":1,"message":"FAIL expected 150"}
+{"ts_ns":1792033147239108900,"seq":8,"request":1,"agent":0,"kind":"finished","value":0,"message":"FINAL_VERDICT=FAIL"}
+{"ts_ns":1792034829524084400,"seq":1,"request":1,"agent":0,"kind":"model_load","value":0,"message":"demo.gguf"}
+{"ts_ns":1792034829524086700,"seq":2,"request":1,"agent":0,"kind":"tokenizer_check","value":0,"message":"PASS"}
+{"ts_ns":1792034829524088400,"seq":3,"request":1,"agent":0,"kind":"prefill_start","value":0,"message":"tokens=100 ctx=101"}
+{"ts_ns":1792034829556405200,"seq":4,"request":1,"agent":0,"kind":"prefill_end","value":32,"message":"elapsed_ms=32.292300"}
+{"ts_ns":1792034829556409900,"seq":5,"request":1,"agent":0,"kind":"token_generated","value":1000,"message":"token"}
+{"ts_ns":1792034829587623400,"seq":6,"request":1,"agent":0,"kind":"heartbeat","value":0,"message":"{\"request\":1,\"agent\":0,\"phase\":\"decode\",\"generated\":1,\"prefill_tokens\":100,\"context\":101,\"rolling_tps\":32.078,\"decode_tps\":32.078,\"prefill_tps\":3096.713,\"task_tps\":15.747,\"ttft_ms\":32.329,\"prefill_ms\":32.292,\"decode_ms\":31.174,\"task_ms\":63.503,\"gpu_dispatches\":0,\"cpu_fallbacks\":0,\"tool_calls\":0,\"failures\":0,\"stalled\":false}"}
+{"ts_ns":1792034829587626800,"seq":7,"request":1,"agent":0,"kind":"token_generated","value":1001,"message":"token"}
+{"ts_ns":1792034829619475800,"seq":8,"request":1,"agent":0,"kind":"token_generated","value":1002,"message":"token"}
+{"ts_ns":1792034829650815600,"seq":9,"request":1,"agent":0,"kind":"token_generated","value":1003,"message":"token"}
+{"ts_ns":1792034829682302000,"seq":10,"request":1,"agent":0,"kind":"token_generated","value":1004,"message":"token"}
+{"ts_ns":1792034829713802100,"seq":11,"request":1,"agent":0,"kind":"token_generated","value":1005,"message":"token"}
+{"ts_ns":1792034829776640800,"seq":12,"request":1,"agent":0,"kind":"heartbeat","value":0,"message":"{\"request\":1,\"agent\":0,\"phase\":\"decode\",\"generated\":6,\"prefill_tokens\":100,\"context\":101,\"rolling_tps\":27.538,\"decode_tps\":27.538,\"prefill_tps\":3096.713,\"task_tps\":23.980,\"ttft_ms\":32.329,\"prefill_ms\":32.292,\"decode_ms\":217.880,\"task_ms\":250.209,\"gpu_dispatches\":0,\"cpu_fallbacks\":0,\"tool_calls\":0,\"failures\":0,\"stalled\":false}"}
+{"ts_ns":1792034829776672600,"seq":13,"request":1,"agent":0,"kind":"token_generated","value":1006,"message":"token"}
+{"ts_ns":1792034829815959500,"seq":14,"request":1,"agent":0,"kind":"token_generated","value":1007,"message":"token"}
+{"ts_ns":1792034829856785400,"seq":15,"request":1,"agent":0,"kind":"token_generated","value":1008,"message":"token"}
+{"ts_ns":1792034829887950900,"seq":16,"request":1,"agent":0,"kind":"token_generated","value":1009,"message":"token"}
+{"ts_ns":1792034829918678100,"seq":17,"request":1,"agent":0,"kind":"token_generated","value":1010,"message":"token"}
+{"ts_ns":1792034829949973700,"seq":18,"request":1,"agent":0,"kind":"heartbeat","value":0,"message":"{\"request\":1,\"agent\":0,\"phase\":\"decode\",\"generated\":11,\"prefill_tokens\":100,\"context\":101,\"rolling_tps\":27.952,\"decode_tps\":27.952,\"prefill_tps\":3096.713,\"task_tps\":25.830,\"ttft_ms\":32.329,\"prefill_ms\":32.292,\"decode_ms\":393.527,\"task_ms\":425.856,\"gpu_dispatches\":0,\"cpu_fallbacks\":0,\"tool_calls\":0,\"failures\":0,\"stalled\":false}"}
+{"ts_ns":1792034829949977400,"seq":19,"request":1,"agent":0,"kind":"token_generated","value":1011,"message":"token"}
+{"ts_ns":1792034829980935000,"seq":20,"request":1,"agent":0,"kind":"token_generated","value":1012,"message":"token"}
+{"ts_ns":1792034830012017300,"seq":21,"request":1,"agent":0,"kind":"token_generated","value":1013,"message":"token"}
+{"ts_ns":1792034830042499600,"seq":22,"request":1,"agent":0,"kind":"token_generated","value":1014,"message":"token"}
+{"ts_ns":1792034830073379900,"seq":23,"request":1,"agent":0,"kind":"snap_stop","value":0,"message":"tool_ready"}
+{"ts_ns":1792034830073388300,"seq":24,"request":1,"agent":0,"kind":"tool_start","value":0,"message":"read test.cpp"}
+{"ts_ns":1792034830073388400,"seq":25,"request":1,"agent":0,"kind":"tool_result","value":0,"message":"read completed"}
+{"ts_ns":1792034830073388700,"seq":26,"request":1,"agent":0,"kind":"agent_step","value":0,"message":"cl test.cpp"}
+{"ts_ns":1792034830073389500,"seq":27,"request":1,"agent":0,"kind":"build_result","value":0,"message":"PASS"}
+{"ts_ns":1792034830073389700,"seq":28,"request":1,"agent":0,"kind":"agent_step","value":0,"message":"test.exe"}
+{"ts_ns":1792034830073390000,"seq":29,"request":1,"agent":0,"kind":"test_result","value":0,"message":"PASS"}
+{"ts_ns":1792034830073422100,"seq":30,"request":1,"agent":0,"kind":"heartbeat","value":0,"message":"{\"request\":1,\"agent\":0,\"phase\":\"done\",\"generated\":15,\"prefill_tokens\":100,\"context\":101,\"rolling_tps\":0.000,\"decode_tps\":29.015,\"prefill_tps\":3096.713,\"task_tps\":27.307,\"ttft_ms\":32.329,\"prefill_ms\":32.292,\"decode_ms\":516.976,\"task_ms\":549.311,\"gpu_dispatches\":0,\"cpu_fallbacks\":0,\"tool_calls\":1,\"failures\":0,\"stalled\":false}"}
+{"ts_ns":1792034830073422500,"seq":31,"request":1,"agent":0,"kind":"finished","value":0,"message":"PASS"}

@@ -1,0 +1,41 @@
+{
+  "checks": [
+    {
+      "check": "inference_backend",
+      "detail": "no response from 127.0.0.1:8080",
+      "status": "FAIL"
+    },
+    {
+      "check": "cmake_available",
+      "detail": "cmake version 4.4.2",
+      "status": "PASS"
+    },
+    {
+      "check": "git_available",
+      "detail": "local-30b-backend\n",
+      "status": "PASS"
+    },
+    {
+      "check": "tool_registry",
+      "detail": "7 tools registered",
+      "status": "PASS"
+    },
+    {
+      "check": "workspace_path_scoping",
+      "detail": "path traversal rejected: ERROR: file outside workspace or not found: ..\\..\\Windows\\System32\\drivers\\etc\\hosts",
+      "status": "PASS"
+    },
+    {
+      "check": "mode_permission_enforcement",
+      "detail": "ask mode was denied write_file as expected",
+      "status": "PASS"
+    },
+    {
+      "check": "workspace_writable",
+      "detail": "evidence/ is writable",
+      "status": "PASS"
+    }
+  ],
+  "failures": 1,
+  "verdict": "FAIL"
+}
