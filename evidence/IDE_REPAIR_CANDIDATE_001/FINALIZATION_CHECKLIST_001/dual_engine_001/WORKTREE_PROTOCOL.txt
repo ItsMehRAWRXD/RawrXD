@@ -1,0 +1,91 @@
+DUAL_ENGINE_WORKTREE_PROTOCOL_001
+ASOF_UTC=2026-11-10T15:20:00Z
+PROMOTE=0
+CERTIFIED=0
+ISOLATED_GIT_WORKTREES_REQUIRED=1
+NO_SIMULTANEOUS_WRITE_SAME_TREE=1
+
+# Purpose
+Create two isolated Git worktrees so STRATA (primary coding) and Ollama
+qwen3:8b (secondary review/baseline) never write the same tree at once.
+
+# Names / roles
+WORKTREE_A_NAME=strata-agent
+WORKTREE_A_ROLE=PRIMARY_CODING
+WORKTREE_A_ENGINE=STRATA
+WORKTREE_B_NAME=ollama-review
+WORKTREE_B_ROLE=SECONDARY_REVIEW_BASELINE
+WORKTREE_B_ENGINE=OLLAMA_QWEN3_8B
+
+# Recommended physical roots (adjust only with explicit operator ack)
+REPO_ROOT=F:\rawrxd
+WORKTREE_ROOT=F:\rawrxd\.worktrees\dual_engine_001
+PATH_STRATA=%WORKTREE_ROOT%\strata-agent
+PATH_OLLAMA=%WORKTREE_ROOT%\ollama-review
+BRANCH_STRATA=dual/strata-agent
+BRANCH_OLLAMA=dual/ollama-review
+
+# Evidence placeholders only (NOT live git worktrees)
+PLACEHOLDER_STRATA=
+  F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\FINALIZATION_CHECKLIST_001\dual_engine_001\worktree_placeholders\strata-agent\
+PLACEHOLDER_OLLAMA=
+  F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\FINALIZATION_CHECKLIST_001\dual_engine_001\worktree_placeholders\ollama-review\
+
+# Preconditions (fail-closed)
+1. Run from a clean operator shell; do not start either agent until both trees exist.
+2. Confirm REPO_ROOT is a Git repository: git -C REPO_ROOT rev-parse --is-inside-work-tree
+3. Refuse if PATH_STRATA or PATH_OLLAMA already exists and is dirty / unexpected.
+4. Refuse simultaneous checkout of the same branch into both trees.
+5. Never point both engines at REPO_ROOT main working tree for writes.
+
+# Create (PowerShell; operator-run; no mass rebuild)
+# Prefer the helper: scripts\New-DualEngineWorktrees.ps1 -Confirm
+# Manual equivalent:
+
+  $Repo = "F:\rawrxd"
+  $Root = "F:\rawrxd\.worktrees\dual_engine_001"
+  New-Item -ItemType Directory -Force -Path $Root | Out-Null
+  git -C $Repo worktree add -b dual/strata-agent  "$Root\strata-agent"
+  git -C $Repo worktree add -b dual/ollama-review "$Root\ollama-review"
+  git -C $Repo worktree list
+
+# Verify isolation
+  git -C "$Root\strata-agent"  rev-parse --show-toplevel
+  git -C "$Root\ollama-review" rev-parse --show-toplevel
+  # Must print two distinct paths; must not equal REPO_ROOT for write sessions.
+
+# Session binding
+STRATA_SESSION:
+  cwd = PATH_STRATA
+  write_allowed = PATH_STRATA only
+  engine = STRATA
+  tools = Read/Edit/Build/Test/Rollback/Git within PATH_STRATA
+
+OLLAMA_SESSION:
+  cwd = PATH_OLLAMA
+  write_allowed = PATH_OLLAMA only (review patches); prefer read-only until review gate
+  engine = Ollama qwen3:8b via existing ollama_local route
+  tools = Read (+ optional patch propose); no concurrent write with STRATA on same files via shared root
+
+# Handoff between engines
+1. STRATA finishes a gated unit of work; commits or stashes only in strata-agent.
+2. Orchestrator merges/cherry-picks or copies a review pack into ollama-review (never live dual-write).
+3. Ollama reviews; emits critique receipt under dual_engine_001 evidence (not self-PASS).
+4. Harness verifies on a designated verify tree / disposable fixture (see GATE_ORDER.txt).
+
+# Teardown (optional; operator)
+  git -C F:\rawrxd worktree remove F:\rawrxd\.worktrees\dual_engine_001\strata-agent
+  git -C F:\rawrxd worktree remove F:\rawrxd\.worktrees\dual_engine_001\ollama-review
+  # Delete branches only if unused: dual/strata-agent dual/ollama-review
+
+# Forbidden
+- Two agents editing F:\rawrxd (main tree) at once
+- Sharing one worktree with two writers
+- Treating placeholder dirs as live worktrees
+- Using model text as certification that isolation held
+
+LAW=SAME_TREE_DUAL_WRITE=FORBIDDEN
+LAW=PLACEHOLDER != LIVE_WORKTREE
+LAW=WORKTREE_CREATED != GATE_PASS
+
+NEXT_AFTER_WORKTREES=STRATA_STRUCTURED_TOOL_ROUNDTRIP

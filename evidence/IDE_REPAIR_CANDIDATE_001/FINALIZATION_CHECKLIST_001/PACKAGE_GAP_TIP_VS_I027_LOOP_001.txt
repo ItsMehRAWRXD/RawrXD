@@ -1,0 +1,44 @@
+PACKAGE_GAP_TIP_VS_I027_LOOP_001
+ASOF_UTC=2026-11-10T18:25:40Z
+OWNER=P09_PACKAGE_BIND_PREP
+PROMOTE=0
+SUPERSEDE=0
+CONTROLLING=D015
+I027_AUTO_TRANSFER=0
+NO_SILENT_COPY=1
+
+================================================================================
+PACKAGE_GAP (FOUND)
+================================================================================
+TIP_IDE_SHA_PREFIX=AC9B245A
+TIP_LOOP_SHA_PREFIX=928A90F0
+TIP_HAS_INITIALPATH_REPAIR=1
+TIP_HAS_I027_LOOP_UTF8_SANITIZE=0
+
+I027_H022_HARDENED_LOOP_SHA_PREFIX=7774E846
+I027_H022_HARDENED_LOOP_SHA256=7774E846CE748DA97590FE63E859DFDDA82756546C5F32F588BBACB69BDC2563
+I027_LOOP_SOURCE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_AC7DC1D4_7774E846_001\bin\deep2_agentic_loop.exe
+
+GAP_STATEMENT=
+  Live tip package (AC9B245A + 928A90F0) carries tip initialPath repair on the IDE,
+  but does NOT carry I027/H022 loop UTF-8 / 0x97 sanitize unless LOOP == 7774E846.
+  Beside-tip loop is measured 928A90F0 (G-track / pre-harden).
+
+LAW=
+  Do NOT silently copy 7774E846 over tip loop without:
+    (1) recording a NEW package identity (IDE_AC9B245A+LOOP_7774E846), and
+    (2) leaving D015 CONTROLLING (SUPERSEDE=0), and
+    (3) PROMOTE=0 CERTIFIED=0 RELEASE=HELD.
+  Copying 7774 does NOT inherit I027 11/11, does NOT supersede D015, and does NOT
+  make RELEASE_PACKAGE_TIP_SHA frozen.
+
+COPY_7774E846_EXECUTED=N
+USER_PATH_SAFE=0
+USER_PATH_REASON=Live RawrXD-Win32IDE-Native-Ext on tip bin path (PIDs 28380,37092).
+TIP_PACKAGE_CANDIDATE_RECORDED=0
+NEXT_IF_COPY_ALLOWED=
+  1) Confirm tip Ext + loop not running / user-path safe.
+  2) Backup tip loop 928A90F0 aside (immutable).
+  3) Copy 7774E846 loop beside tip; rehash.
+  4) Write TIP_PACKAGE_CANDIDATE with IDE=AC9B245A LOOP=7774E846; PROMOTE=0 SUPERSEDE=0.
+  5) Remeasure Issue49/T080/GUI on that NEW pair before any freeze promotion review.

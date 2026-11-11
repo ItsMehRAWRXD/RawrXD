@@ -1,0 +1,37 @@
+{
+  "tested_utc": "2026-11-10T04:55:32.0991231Z",
+  "ide_sha256": "4DE06F9F0D7C4FA59926A1BD89041DB7FE75DE0332DBA783A968D3B4105D8BE6",
+  "package": "F:\\rawrxd\\release\\RawrXD-4DE06F9F-rc1",
+  "tests": [
+    {
+      "name": "original-payload-integrity",
+      "status": "PASS"
+    },
+    {
+      "name": "same-length-payload-corruption",
+      "status": "PASS"
+    },
+    {
+      "name": "binary-identity-mismatch",
+      "status": "PASS"
+    },
+    {
+      "name": "omitted-required-sidecar",
+      "status": "PASS"
+    },
+    {
+      "name": "manifest-path-escape",
+      "status": "PASS"
+    },
+    {
+      "name": "duplicate-manifest-entry",
+      "status": "PASS"
+    },
+    {
+      "name": "restored-fixture-integrity",
+      "status": "PASS"
+    }
+  ],
+  "result": "PASS",
+  "test_count": 7
+}

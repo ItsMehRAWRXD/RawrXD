@@ -1,0 +1,1 @@
+{"model":"qwen3:8b","stream":false,"think":false,"options":{"temperature":0.2,"num_predict":64,"num_ctx":4096},"messages":[{"role":"system","content":"Reply with exactly one line: TOOL read bug.cpp"},{"role":"user","content":"Start now. First tokens must be TOOL read bug.cpp"}]}

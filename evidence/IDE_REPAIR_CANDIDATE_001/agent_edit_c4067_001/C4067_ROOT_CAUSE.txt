@@ -1,0 +1,57 @@
+IDE_REPAIR_CANDIDATE_001 / agent_edit_c4067_001 / C4067_ROOT_CAUSE
+ASOF_UTC=2026-11-10T08:00:00Z
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD MATURITY=82%_ESTIMATE
+MEASURED_COMPLETION_PERCENT=NOT_ESTABLISHED
+RC4_IMMUTABLE=1 RC4_SHA=78E187AA9A4C95A4282A862A2D76E8B24DCD03BF6F57E036B2C463FB22418596
+
+CONTROLLING_PRIOR_FAIL=
+  EVIDENCE=agent_read_rc5_002_nano
+  MODEL=nemotron-3-nano:4b
+  IDE_SHA256=089B9C72923B7C4A04658B216C375FBEA7AA5BB5F0C05E720F75D17514A4AB8A
+  LOOP_SHA256=F33D14A78191B1FB5C3833AC489247133FE5794AC24C28D0636D0895CA499316
+  OLLAMA_AGENT_READ=PASS
+  FIRST_FAILURE=EDIT_COMPILE
+  DIAGNOSTIC=bug.cpp(1): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+  TREATED_AS=error C2220 (/WX)
+  WRITE_DISPOSITION=rolled_back (before==after SHA 1a43ed1e...)
+  REJECTED_PAYLOAD_PERSISTED=0  (gap: txn kept before.bin only)
+
+ROOT_CAUSE_CLASS=MODEL_WRITE_PAYLOAD_NO_REAL_NEWLINE_AFTER_INCLUDE
+REPRO=
+  A) single physical line: "#include <cstdio> int add..."
+     hex: 23...3E 20 69 6E 74 ...  => C4067
+  B) literal escape text: "#include <cstdio>\nint add..." (0x5C 0x6E)
+     hex: 23...3E 5C 6E 69 6E 74 ... => C4067
+  C) real 0x0A after include => no C4067
+
+DIFF_SUMMARY_PRIOR_FAIL=
+  BEFORE (fixture):
+    #include <cstdio>\n
+    int add(int a, int b) { return a - b; }\n
+    int main() { std::printf("AGENT_RESULT=%d\\n", add(2, 3)); return 0; }\n
+  AFTER (reconstructed; exact bytes not sealed — rolled back w/o after_rejected.bin):
+    either one-line include+code OR include followed by literal \\n tokens
+  NET: intentional `a - b` -> `a + b` never landed; disk unchanged.
+
+PRODUCT_FIX=
+  tools/deep2_agentic_loop.cpp:
+    - NormalizeWriteEscapes: literal \\n/\\r/\\t -> real controls when escape-shaped
+    - AuditCppIncludeLines: reject tokens after #include (C4067-class) pre-compile
+    - PersistRejected: after_rejected.bin + rejected_diff.txt on audit/compile fail
+    - system prompt: require REAL 0x0A; keep #include alone
+  tools/release/Test-AgentWorkflow.ps1:
+    - drain WaitForExit; ExitCode null fallback to OLLAMA_AGENT_VERDICT marker
+    - task text: forbid literal \\n; keep #include alone
+  NOTE: prior rc5b_qwen3 loop stdout was EDIT/BUILD/TEST PASS on F33D14A7 but
+        harness JSON verdict FAIL due to process_exit=$null (harness bug).
+
+SHA_INHERITANCE=
+  DO_NOT_TRANSFER qwen3 READ PASS from loop 6F858F02 onto other binaries
+  DO_NOT_CLAIM RC5 Ext 089B9C72 inherits 6F858 READ
+  NEW_LOOP_SHA after rebuild must re-prove READ->EDIT->BUILD->TEST
+
+REINJECTION_CONTINUATION=
+  After TOOL read observation reinjected as user "Tool result:..." messages continue
+  After failed write, feedback includes compile/audit error; model may retry write
+  After finish+committed, loop breaks; no further continuation required
+  Steps 4-8 on nano run: invalid_tool_format retries then can_continue=false

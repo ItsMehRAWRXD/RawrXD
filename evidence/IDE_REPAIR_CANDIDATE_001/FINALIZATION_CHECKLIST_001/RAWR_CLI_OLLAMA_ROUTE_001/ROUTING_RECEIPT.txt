@@ -1,0 +1,40 @@
+﻿RAWR_CLI_OLLAMA_ROUTE_001 / ROUTING_RECEIPT
+ASOF_UTC=2026-11-10T18:40:00Z
+EXE=F:\rawrxd\build_tip_debug_rel\bin-msvc\rawr.exe
+SHA256=BD130748A2DE1C00E21538BEFAF93EEEB9C10AAC824D6A8F534F1F37E6201AB3
+TARGET=RawrXD-CLI-V2
+ENTRY=src/rawr_cli.cpp
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+CONTROLLING_ISSUE49=D015
+
+PORT8080_PROBE_HITS=NONE
+PORT8080_LISTENER=active_during_routing_runs
+
+UNKNOWN_BACKEND_PASS=1
+UNKNOWN_BACKEND_EXIT=1
+UNKNOWN_BACKEND_EVIDENCE=ERROR: unsupported backend 'notareal' (expected deep2 or ollama)
+UNKNOWN_BACKEND_NO_NETWORK=1
+
+OLLAMA_ROUTE_PASS=1
+OLLAMA_MODEL_TAG_PRESERVED=1
+OLLAMA_TAG_UNDER_TEST=qwen3:8b
+OLLAMA_ENDPOINT=http://127.0.0.1:11434/v1/chat/completions
+OLLAMA_BYPASS_GGUF=1
+OLLAMA_NO_8080_PROBE=1
+OLLAMA_LOG_ROUTE_LINE=ollama tag preserved; GGUF lookup bypassed; :8080 not probed
+OLLAMA_CHAT_COMPLETIONS_PATH_REACHED=1
+OLLAMA_INDEPENDENT_V1_PROBE=HTTP_200 (qwen2.5-coder:1.5b-base /v1/chat/completions)
+OLLAMA_AGENT_TURNS_WITH_HTTP=observed (qwen2.5-coder + qwen3:8b; InferenceClient lifetime fixed)
+NOTE_QWEN3_8B=tag preserved and routed to :11434/v1; model may be absent from local ollama inventory (list had no exact qwen3:8b at inventory time)
+
+DEEP2_ROUTE_PASS=1
+DEEP2_EVIDENCE=Loading model via Deep2 engine: nemotron-bolt.gguf; MODEL_FIT_ADMITTED; Backend: deep2 (in-process GGUF inference)
+DEEP2_NOTE=In-process GGUF path exercised; generation/agent completion may still fail independently of routing
+
+OVERALL_ROUTING_PASS=1
+RAWR_OLLAMA_ROUTE=SOURCE_FIXED_RUNTIME_REACHED
+LAW=SOURCE_FIXED!=RUNTIME_REACHED (closed for routing gate only)
+LAW=NOT_RUN!=PASS
+PROMOTE=0

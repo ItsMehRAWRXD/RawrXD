@@ -1,0 +1,19 @@
+T080_REJECT_UIA_HMENU_MISDIAGNOSIS_001
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+CONTROLLING=D015
+LIVE_TIP=8EE30F97…
+
+REJECTED_CLAIM=T080 blocked on missing HMENU / need RICHEDIT_CLASSA UIA rediscovery
+EVIDENCE_CONTRADICTION=
+  T080_FIXTURE_BUILD_ROUTE_001 already TITLE_OK BUFFER_OK
+  DOCUMENT_EDITOR_ID=1001 class=RICHEDIT50W wm=55 vis=True
+  PROBLEMS_OK rows=1 id=1312
+REAL_REMAINING_FAIL=CLICK_TO_LINE no caret/sel change; SURVIVE metric; CL CIM miss (receipt proves cl)
+
+REJECTED_SPRAWL=
+  pytest/pywinauto master cert inventing CERTIFIED=1 / PROMOTE N/N
+  GHA auto-promote/tag on matrix success
+  T15 before IDM_AI_* wired (3020=GIT_STATUS)
+  Extension E2E as next daily-driver invent without tip evidence

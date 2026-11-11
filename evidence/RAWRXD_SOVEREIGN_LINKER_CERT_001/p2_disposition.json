@@ -1,0 +1,21 @@
+﻿{
+  "schema": "RAWRXD_SOVEREIGN_LINKER_CERT_001_P2",
+  "P0_CORPUS": "19/19 PASS_REPORTED",
+  "P2_FRESH_CORPUS": "PASS_REPORTED",
+  "P2_EXECUTED_SHA256": "08f4f4f26f40e1156857908862dae266d70ea910c3600af094565bdc26896436",
+  "P2_RECEIPT_HASH_MATCH": "PASS_REPORTED",
+  "P2_CLEAN_PROVENANCE": "PENDING_ISOLATED_SCRIPT_READY",
+  "P2_ISOLATED_REBUILD_SCRIPT": "p2_isolated_rebuild.ps1",
+  "P2_NATIVE_OBJECTS": "INVENTORY_PARTIAL_HOST_IO_CONTENTION",
+  "P2_NATIVE_CONTRACT": "DRAFT_OPEN",
+  "P2_NATIVE_CONTRACT_DOC": "NATIVE_OBJECT_CONTRACT.md",
+  "ENTRY_STUB": "CLOSED",
+  "WINDOWS_RUNTIME_CERT": 0,
+  "FIVE_OS_CERTIFIED": false,
+  "PROMOTE": 0,
+  "next": [
+    "Re-run inventory_explicit.bat when host idle",
+    "Run p2_isolated_rebuild.ps1; compare SHA to 08f4f4f2 and explain diffs",
+    "Do not reopen entry stub"
+  ]
+}

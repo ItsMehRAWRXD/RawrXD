@@ -1,0 +1,55 @@
+DEEP2_8080_HANG_DIAG_001
+ASOF_UTC=2026-11-10T19:38:34Z
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+CONTROLLING=D015
+LAW=NOT_RUN!=PASS
+LAW=CLEARING_8080_ALONE!=P04_PASS
+RELATED=DEEP2_SERVICE_AVAIL_001 (prior gen hang context)
+RELATED_GEN=DEEP2_OPENAI_SERVER_GEN_001 (tip :11436 remasure; separate path)
+
+GOAL=Diagnose prior :8080 hang owner separately from tip deep2_openai_server :11436 generation remasure.
+
+NOW_2026-11-10T19:38Z=
+  Get-NetTCPConnection -LocalPort 8080 = NO_LISTENER
+  netstat :8080 = empty
+  llama-server processes = NONE
+  deep2_openai_server = PID 9744 on :11436 only (path F:\rawrxd\build_deep2_openai_001\bin\deep2_openai_server.exe)
+  ollama = PID 32192 (unrelated to :8080)
+  OWNER_CLASS=NOTHING_LISTENING
+  ZOMBIE_LLAMA_SERVER=0
+  DEEP2_FALLBACK_ON_8080=0
+
+PRIOR_CONTEXT_DEEP2_SERVICE_AVAIL_001=
+  SERVE_USED=F:\rawrxd\tmp_llama-cpp-cpu\llama-server.exe
+  NOT_deep2_openai_server
+  RUN_1_PID=22504 port=8080 HEALTH/MODELS=PASS GEN=FAIL client_timeout_120s
+  RUN_2_PID=24116 port=8080 -ngl 0 GEN=FAIL client_timeout_180s CPU_DELTA=0
+  STOP=PID_SCOPED path+PID only; IDE left alive
+
+PRIOR_STDERR_PROOF=_p04_llama_server_stderr2.txt=
+  main: server is listening on http://127.0.0.1:8080
+  GET /health 200
+  GET /v1/models 200
+  slot update_slots: prompt done, n_tokens = 23, batch.n_tokens = 23
+  srv stop: cancel task, id_task = 0
+  POST /v1/chat/completions 200 (after client cancel)
+  slot update_slots: prompt done, n_tokens = 2 ( /completion )
+  srv stop: cancel task, id_task = 5
+  POST /completion 200 (after client cancel)
+  PATTERN=prompt_done then decode stall until client cancel; not a live zombie now
+
+SAFE_PROCESS_POLICY=
+  NO_WILDCARD_KILL_IDE=1
+  NO_Name_star_kills=1
+  PATH_PID_SCOPED_STOPS_ONLY=1
+  NO_STOP_REQUIRED_NOW=1 (nothing on 8080)
+
+NOT_CLAIMED=
+  P04_PASS_VIA_8080_CLEAR=0
+  8080_CLEAR_EQUALS_GEN_PASS=0
+  PROMOTE=0
+
+DISPOSITION=8080_NOW_NO_LISTENER_PRIOR_WAS_LLAMA_SERVER_DECODE_STALL
+PROMOTE=0

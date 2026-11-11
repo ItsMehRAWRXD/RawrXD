@@ -1,0 +1,8 @@
+﻿{
+  "args": "{\"config\":\"Debug\",\"dir\":\"evidence/IDE_REPAIR_CANDIDATE_001/FINALIZATION_CHECKLIST_001/RAWR_CLI_OLLAMA_ROUTE_001/agent_loop_fixture\"}",
+  "denied": false,
+  "exit_code": 0,
+  "ok": true,
+  "output": "Test project F:/rawrxd/evidence/IDE_REPAIR_CANDIDATE_001/FINALIZATION_CHECKLIST_001/RAWR_CLI_OLLAMA_ROUTE_001/agent_loop_fixture/build\n    Start 1: off_by_one\n1/1 Test #1: off_by_one .......................   Passed    0.03 sec\n\n100% tests passed out of 1\n\nTotal Test time (real) =   0.05 sec\n",
+  "tool": "run_tests"
+}

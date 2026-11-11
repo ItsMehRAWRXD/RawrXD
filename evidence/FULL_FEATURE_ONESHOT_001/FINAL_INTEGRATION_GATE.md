@@ -1,0 +1,41 @@
+# FINAL_INTEGRATION_GATE — FULL_FEATURE_ONESHOT_001
+
+ASOF_UTC=2026-11-09T10:32:00Z
+PROMOTE=0
+CERTIFIED=0
+PRODUCT_PASS=0
+INVENT_PASS=0
+TIP_FIX=0
+
+```
+FINAL_INTEGRATION=NOT_RUN
+CONTROLLING_TIP_SHA256=1F6005131BA855B994C6D05009A7052781D289EFF197E7F5E709C947B0F53E04
+MERGED_FINAL_CANDIDATE=TIP_EXT_HOST_007
+SINGLE_CANDIDATE_SHA_REGRESSION=NOT_RUN
+FROZEN_A4F_UNTOUCHED=1
+T10_9C91_UNTOUCHED=1
+```
+
+## Conjunction for PRODUCT_PASS (not met)
+
+| Gate | Status on chosen tip 1F60… |
+|------|----------------------------|
+| T10 Recovery | NOT_RUN on 1F60 (prior 9C91 frozen ≠ this SHA) |
+| ExtensionHost EXT_LOAD | NOT_RUN on 1F60 |
+| Native chat Ctrl+Enter | NOT_RUN on 1F60 |
+| Terminal ConPTY | NOT_RUN on 1F60 |
+| Output GUI E2E | **PASS** (IDE_PANELS_GUI_RECEIPT) |
+| Problems GUI E2E | **PASS** items=3 clear+click |
+| Debug console / WFDE | NOT_RUN on 1F60 |
+| Four-panel 1–17 | **NOT_RUN** (shell stall) |
+| Deep2/Vulkan | PARTIAL / not remeasured |
+| Packaging full RC | NOT_RUN on 1F60 (RC002 was 633AB ≠ A4F) |
+| Finish-25 current | see FINISH25_MATRIX |
+
+```
+PRODUCT_PASS=0
+CERTIFIED=0
+NOT_RUN≠PASS
+NO_CROSS_SHA_PASS_INHERITANCE=1
+PROMOTE=0
+```

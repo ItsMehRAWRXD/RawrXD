@@ -1,0 +1,18 @@
+﻿MOTD first: Read g:\~dev\.cursor\rules\PassiveRoleNotRoleplay.mdc
+
+AUDIT TRACK D â€” Hidden-gap H61â€“H120 + master register merge prep. Workspace F:\rawrxd.
+H61â€“H72 AgentSession; H73â€“H90 inference/Ollama/Deep2/GPU; H91â€“H106 security/release; H107â€“H120 product-completion.
+
+Status each: CONFIRMED / UNVERIFIED / INVESTIGATE / N_A_OUT_OF_SCOPE (justify multi-platform compiler gates vs Windows daily-driver).
+Cross-link Issue #49 product-final scenario, #50 ladder, #57 groups, PRs #75â€“79.
+
+Also draft merge rules for later master register:
+- Deduplicate vs Finish-25, oneshot gates, PR acceptance receipts under evidence\PR7*_ACCEPTANCE_001
+- No arithmetic 78+120+45
+- Only evidence-backed â†’ CONFIRMED blockers
+
+Write:
+F:\rawrxd\evidence\HIDDEN_GAP_AUDIT_001\HIDDEN_GAPS_H61_H120.md
+F:\rawrxd\evidence\HIDDEN_GAP_AUDIT_001\DEDUPE_RULES.md
+
+PROMOTE=0 CERTIFIED=0. CC79 controlling A4F immutable. No shortcuts. No invented PASS.

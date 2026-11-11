@@ -1,0 +1,91 @@
+AGENT_HTTP200_FAIL_DIAG_001
+ASOF_UTC=2026-11-10T15:25:00Z
+CANDIDATE=G issue49_candidate_D56FE6DD_928A90F0_001
+TIP_IDE_SHA256=D56FE6DD5FADF45F1E475740BFBC348415DDE0B44C33D2790B93E5B9EA023635
+LOOP_SHA256_PRE=928A90F00D646A39B082559FFA88BEC046362609EC69BAA16C0E6C3DE34E7D8C
+PROMOTE=0
+LoadTensorSlice_REOPENED=0
+AgentSession_Flush_REOPENED=0
+
+CLASSIFICATION=(B) JSON serialize fail on next Ollama request
+NOT_A=empty/non-TOOL content (step1 TOOL read + step2 TOOL write both parsed)
+NOT_C=protocol reject (ParseAction accepted write; verify rolled back on C4100)
+NOT_D=process kill of loop (caught C++ exception; VERDICT FAIL exit 1)
+NOT_E=WinHTTP prompt truncation (payload_bytes logged complete; GUI OUTPUT_SAMPLE ~1266-char window only)
+
+EXACT_FAILURE_STRING=
+[ollama step 3] request exception=[json.exception.type_error.316] invalid UTF-8 byte at index 321: 0x97
+
+CONTROLLING_TRANSCRIPT_SOURCE=
+bin/.rawrxd/ledger/agent_session.json conversation[assistant] (021 ledger; fuller than OUTPUT_SAMPLE)
+
+POST_RESPONSE_RECV_THROUGH_VERDICT (excerpt):
+[ollama] RESPONSE_RECV http=200 body_bytes=335 elapsed_ms=98
+[ollama step 1] response_bytes=17
+[ollama step 1] response=TOOL read bug.cpp
+[ollama step 1] TOOL=read exit=0 valid=1 observation=492
+[ollama step 2] RESPONSE_RECV http=200 body_bytes=861
+[ollama step 2] response_bytes=510
+[ollama step 2] response=TOOL write bug.cpp @@... undeclared_fn(int a, int b) { return a; } ... add() still a-b ...@@
+[ollama] write_body_bytes=486
+[ollama step 2] TOOL=write exit=1 valid=1 observation=376
+[ollama step 2] result=write rolled back: ... C4100 'b': unreferenced parameter ... Hint: C4100 unused parameter under /WX <0x97> either use ...
+[ollama step 3] request_messages=6
+[ollama step 3] request exception=[json.exception.type_error.316] invalid UTF-8 byte at index 321: 0x97
+OLLAMA_AGENT_READ PASS
+OLLAMA_AGENT_EDIT FAIL
+OLLAMA_AGENT_VERDICT FAIL
+
+ROOT_CAUSE:
+1) deep2_agentic_loop.cpp C4100/C2660 reinjection hints used Unicode em-dash U+2014.
+2) Frozen LOOP binary 928A90F0 was built without /utf-8; MSVC embedded CP1252 0x97 for that em-dash in the string pool (verified: BYTE_BEFORE_EITHER=0x97 in exe).
+3) After HTTP 200 write-rollback, host appended that hint into messages[] and called nlohmann::json::dump() for step 3 => type_error.316 => loop break => OLLAMA_AGENT_VERDICT FAIL.
+4) GUI OUTPUT_SAMPLE truncates near first RESPONSE_RECV (~1200 chars); does not prove payload truncation. ollama_runtime.log only shows OLLAMA_REUSE; real transcript is UI/loop stdout / agent_session ledger.
+
+RESPONSE_BODY_EXCERPT (~340B class, step1):
+http=200 body_bytes=335..344; extracted message.content = "TOOL read bug.cpp" (17 bytes). Larger step2 body_bytes=861 with full TOOL write.
+
+OLLAMA_REPRO_qwen3_8b (curl /api/chat, think=false, num_predict=64):
+HTTP~200 BODY_BYTES=340 content_len=17 tool_calls=False
+message.content="TOOL read bug.cpp"
+raw_head={"model":"qwen3:8b",...,"message":{"role":"assistant","content":"TOOL read bug.cpp"},"done":true,"done_reason":"stop",...}
+NOTE: ~340-byte HTTP 200 bodies are normal for short TOOL replies; FAIL was not empty content on step1.
+
+RECOMMENDED_FIX (localized):
+1) Replace runtime-reinjected em-dashes in write-reject/rollback hints with ASCII "--".
+2) Compile deep2_agentic_loop with MSVC /utf-8 so future UTF-8 punctuation stays UTF-8.
+3) Sanitize message content to valid UTF-8 before body.dump() so a stray CP1252 byte cannot abort the agent after a successful HTTP 200 tool step.
+
+FIX_APPLIED=Y
+SOURCE_EDITED=F:\rawrxd\tools\deep2_agentic_loop.cpp ; F:\rawrxd\CMakeLists.txt (/utf-8)
+LOOP_SHA256_POST=7774E846CE748DA97590FE63E859DFDDA82756546C5F32F588BBACB69BDC2563
+POST_FIX_BINARY_CHECK=C4100 hint BYTE_AFTER_WX_SPACE=0x2D (ASCII hyphen), not 0x97
+IDE_TIP_UNCHANGED=D56FE6DD (frozen; only loop sibling replaced)
+S_13_STATUS=PASS_SECOND_EDIT (022 remasure)
+NO_BROAD_REWRITE=1
+NO_LoadTensorSlice=1
+NO_Flush_reopen=1
+PROMOTE=0
+CERTIFIED=0
+
+REMEASURE_022=
+RECEIPT=issue49_gui_ollama_qwen3_022/ISSUE49_PRODUCT_FINAL_74AA_RECEIPT.txt
+HARNESS_EXIT=0
+LOOP_SHA256=7774E846CE748DA97590FE63E859DFDDA82756546C5F32F588BBACB69BDC2563
+TYPE_ERROR_316=0
+ISSUE49_VERDICT=PASS_MEASURED
+REQUIRED_PASS_HITS=11/11
+S_13_SECOND_EDIT=PASS_SECOND_EDIT
+S13_PASS=1
+SOURCE_EDITED=1
+ROLLBACK_THEN_COMMIT=1
+WRITE_COMMIT_COUNT=5 WRITE_ROLLBACK_COUNT=5
+OUTPUT_SAMPLE_KEY=
+  [ollama step 3] TOOL=write exit=0 ... write committed ... after_sha256=6fcf3ee0...
+  [ollama step 4] response=TOOL finish
+  INDEPENDENT_RUN exit=0 marker=PASS output=AGENT_RESULT=5
+  OLLAMA_AGENT_READ PASS / EDIT PASS / BUILD_TEST PASS
+PRODUCT_PASS=1
+ACCEPTED=1
+PROMOTE=0
+NOTE=Controlling historical Issue49 D 015 remains separate authority until explicit promote review; this diag does not merge daily-driver 9FDE seals.

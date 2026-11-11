@@ -1,0 +1,11 @@
+{"ts_ns":1793209803513837500,"seq":1,"request":72468578176300,"agent":1,"kind":"agent_step","value":0,"message":"cli_run_start"}
+{"ts_ns":1793209803513840000,"seq":2,"request":72468578176300,"agent":1,"kind":"model_load","value":0,"message":"qwen3:8b"}
+{"ts_ns":1793209803514566300,"seq":3,"request":72468578176300,"agent":1,"kind":"agent_step","value":0,"message":"phase=PREFLIGHT"}
+{"ts_ns":1793209803516375600,"seq":4,"request":72468578176300,"agent":1,"kind":"agent_step","value":0,"message":"phase=PLANNING"}
+{"ts_ns":1793209803516378200,"seq":5,"request":72468578176300,"agent":1,"kind":"agent_step","value":0,"message":"inference_start"}
+{"ts_ns":1793209803516378400,"seq":6,"request":72468578176300,"agent":1,"kind":"agent_step","value":0,"message":"phase=WORKING"}
+{"ts_ns":1793209803643077300,"seq":7,"request":72468578176300,"agent":1,"kind":"heartbeat","value":0,"message":"source=ollama prompt_eval_count=1053 eval_count=8 total_duration_ns=124972600 load_duration_ns=10245800 prompt_eval_duration_ns=28201000 eval_duration_ns=79486000 eval_tps=100.646654757"}
+{"ts_ns":1793209803643087000,"seq":8,"request":72468578176300,"agent":1,"kind":"token_generated","value":0,"message":"completion"}
+{"ts_ns":1793209803648351900,"seq":9,"request":72468578176300,"agent":1,"kind":"agent_step","value":0,"message":"phase=COMPLETED"}
+{"ts_ns":1793209803648375500,"seq":10,"request":72468578176300,"agent":1,"kind":"heartbeat","value":0,"message":"{\"request\":72468578176300,\"agent\":1,\"phase\":\"done\",\"generated\":1,\"prefill_tokens\":0,\"context\":0,\"rolling_tps\":0.000,\"decode_tps\":189.836,\"prefill_tps\":0.000,\"task_tps\":7.434,\"ttft_ms\":129.247,\"prefill_ms\":0.000,\"decode_ms\":5.268,\"task_ms\":134.515,\"gpu_dispatches\":0,\"cpu_fallbacks\":0,\"tool_calls\":0,\"failures\":0,\"stalled\":false,\"active\":false,\"slow\":false}"}
+{"ts_ns":1793209803648376100,"seq":11,"request":72468578176300,"agent":1,"kind":"finished","value":0,"message":"PASS"}

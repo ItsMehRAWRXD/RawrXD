@@ -1,0 +1,23 @@
+# EXT_SMOKE absorbed into oneshot Track B
+
+ASOF_UTC=2026-11-09T08:45:30Z
+PROMOTE=0
+CERTIFIED=0
+INVENT_PASS=0
+
+```
+AUTHORITY=F:\rawrxd\evidence\FULL_FEATURE_EXTENSIONHOST_001\EXT_SMOKE_RECEIPT.md
+EXT_LOAD_001=F:\rawrxd\evidence\FULL_FEATURE_EXTENSIONHOST_001\EXT_LOAD_001.md
+TIP_SHA=272199BE27AF3959D44C741C4F0337E9833291FB73346389167CC62000C189B8
+FROZEN_A4F_UNTOUCHED=1
+LAUNCH=PASS
+LIFECYCLE_EXIT=PASS
+EXT_LOAD=NOT_RUN
+VSIX=NOT_RUN
+ACTIVATE=NOT_RUN
+COMMAND=NOT_RUN
+FAULT=NOT_RUN
+```
+
+Do not re-run identical smoke unless repairing after a new tip wire.
+Track B next: wire `JSExtensionHost::initialize` + real `loadVSIX` into a new tip candidate (never overwrite A4F), then re-exercise gates 2–4,6.

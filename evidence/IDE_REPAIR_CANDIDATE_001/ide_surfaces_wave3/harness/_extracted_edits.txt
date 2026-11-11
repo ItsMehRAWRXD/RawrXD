@@ -1,0 +1,83 @@
+==== LINE 14 TOOL=StrReplace ====
+---OLD---
+# S14 reopen
+$p2 = Start-Process -FilePath $TipExe -ArgumentList @($BrokenCpp) -PassThru -WindowStyle Normal
+---NEW---
+# S14 reopen — restore broken fixture env (S7 set FixedCpp on parent only;
+# a new Start-Process would otherwise inherit clean twin → S16 FAIL_ITEMS=0).
+$env:RAWRXD_PROBLEMS_FIXTURE = $BrokenCpp
+$p2 = Start-Process -FilePath $TipExe -ArgumentList @($BrokenCpp) -PassThru -WindowStyle Normal
+==== LINE 16 TOOL=StrReplace ====
+---OLD---
+# S14 reopen
+$p2 = Start-Process -FilePath $TipExe -ArgumentList @($BrokenCpp) -PassThru -WindowStyle Normal
+---NEW---
+# S14 reopen — restore broken fixture env (S7 set FixedCpp on parent only;
+# a new Start-Process would otherwise inherit clean twin → S16 FAIL_ITEMS=0).
+$env:RAWRXD_PROBLEMS_FIXTURE = $BrokenCpp
+$p2 = Start-Process -FilePath $TipExe -ArgumentList @($BrokenCpp) -PassThru -WindowStyle Normal
+==== LINE 44 TOOL=StrReplace ====
+---OLD---
+# S9-S10 Debug path: real IDs from Win32IDE_CommandIDs.h
+# IDM_TOOLS_DEBUG_START=5060, IDM_TOOLS_DEBUG_STOP=5061.
+# Do NOT post 4001 (IDM_HELP_ABOUT — modal MessageBox) or 2028 (VIEW_SIDEBAR).
+$dbgPosted = 0
+foreach ($cmd in @(5060, 5061, 2103, 2104, 2105, 2107)) {
+  [void][FP117]::SendMessageW($main, 0x0111, [IntPtr]$cmd, [IntPtr]::Zero)
+  $dbgPosted++
+  Start-Sleep -Milliseconds 200
+}
+Mark '09_DEBUG_CMDS_POSTED' "COUNT=$dbgPosted"
+# Allow WaitForDebugEvent BP settle + journal write under RAWRXD_LOG_DIR
+Start-Sleep 4
+$aliveAfterDbg = (-not $p.HasExited) -and [FP117]::IsWindow($main)
+Mark '10_DEBUG_IDE_ALIVE' $(if ($aliveAfterDbg) { 'PASS' } else { 'FAIL' })
+$wfdePath = Join-Path $LogDir 'WFDE_BP_HIT_RECEIPT.txt'
+$wfdeOk = $false
+if (Test-Path -LiteralPath $wfdePath) {
+  $wfdeTxt = Get-Content -LiteralPath $wfdePath -Raw -EA SilentlyContinue
+  if ($wfdeTxt -match 'WFDE_BP_HIT=1' -and $wfdeTxt -match 'WaitForDebugEvent') { $wfdeOk = $true }
+  Log "WFDE_RECEIPT_PATH=$wfdePath"
+  Log ("WFDE_RECEIPT_BODY=" + (($wfdeTxt -replace "`r|`n",'|').Substring(0, [Math]::Min(240, $wfdeTxt.Length))))
+}
+Mark '11_DEBUG_BP_HIT' $(if ($wfdeOk) { 'PASS' } else { 'NOT_RUN_NO_WFDE_RECEIPT_THIS_SHA' })
+# S09 effect: cmds posted AND IDE alive AND WFDE BP hit (not mere COUNT=).
+if ($dbgPosted -ge 1 -and $aliveAfterDbg -and $wfdeOk) {
+  Mark '09_DEBUG_CMDS_POSTED' "PASS_COUNT=$dbgPosted"
+}
+---NEW---
+# S9-S11 Debug path: START first, wait for real WFDE BP receipt, then STOP/step.
+# Immediate 5060→5061 race prevented WaitForDebugEvent break_site settle (S11).
+# Do NOT post 4001 (IDM_HELP_ABOUT — modal MessageBox) or 2028 (VIEW_SIDEBAR).
+$wfdePath = Join-Path $LogDir 'WFDE_BP_HIT_RECEIPT.txt'
+Remove-Item -LiteralPath $wfdePath -Force -EA SilentlyContinue
+$dbgPosted = 0
+[void][FP117]::SendMessageW($main, 0x0111, [IntPtr]5060, [IntPtr]::Zero)
+$dbgPosted++
+$wfdeOk = $false
+$wfdeTxt = ''
+for ($w = 0; $w -lt 20; $w++) {
+  Start-Sleep 1
+  if ($p.HasExited) { break }
+  if (Test-Path -LiteralPath $wfdePath) {
+    $wfdeTxt = Get-Content -LiteralPath $wfdePath -Raw -EA SilentlyContinue
+    if ($wfdeTxt -match 'WFDE_BP_HIT=1' -and $wfdeTxt -match 'WaitForDebugEvent') {
+      $wfdeOk = $true
+      Log "WFDE_HIT_AT_w=$w"
+      break
+    }
+  }
+}
+foreach ($cmd in @(5061, 2103, 2104, 2105, 2107)) {
+  [void][FP117]::SendMessageW($main, 0x0111, [IntPtr]$cmd, [IntPtr]::Zero)
+  $dbgPosted++
+  Start-Sleep -Milliseconds 200
+}
+Mark '09_DEBUG_CMDS_POSTED' $(if ($wfdeOk) { "PASS_COUNT=$dbgPosted" } else { "COUNT=$dbgPosted" })
+$aliveAfterDbg = (-not $p.HasExited) -and [FP117]::IsWindow($main)
+Mark '10_DEBUG_IDE_ALIVE' $(if ($aliveAfterDbg) { 'PASS' } else { 'FAIL' })
+if ($wfdeTxt) {
+  Log "WFDE_RECEIPT_PATH=$wfdePath"
+  Log ("WFDE_RECEIPT_BODY=" + (($wfdeTxt -replace "`r|`n",'|').Substring(0, [Math]::Min(240, $wfdeTxt.Length))))
+}
+Mark '11_DEBUG_BP_HIT' $(if ($wfdeOk) { 'PASS' } else { 'NOT_RUN_NO_WFDE_RECEIPT_THIS_SHA' })

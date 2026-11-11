@@ -1,0 +1,33 @@
+RC4_RUNTIME_001 / AGENT_REPAIR_WORKFLOW
+UTC=2026-11-10T06:35:00Z
+EXE_PATH=F:\rawrxd\release\RawrXD-readiness-rc4\RawrXD-Win32IDE-Native-Ext.exe
+EXE_SHA256=78E187AA9A4C95A4282A862A2D76E8B24DCD03BF6F57E036B2C463FB22418596
+AGENT_EXE=F:\rawrxd\release\RawrXD-readiness-rc4\deep2_agentic_loop.exe
+AGENT_SHA256=6F858F02CB9A52226D5822A96B7ED0D27592CCA0B443337ACF28EA3D2E7C0BDE
+HARNESS=F:\rawrxd\tools\release\Test-AgentWorkflow.ps1
+EVIDENCE_DIR=F:\rawrxd\evidence\IDE_RELEASE_READINESS_001\rc4_runtime_001\agent_repair_001
+MODEL=llama3.2:3b
+SCOPE=Packaged agent subprocess against RC4 SHA (GUI IDE dispatch separate)
+
+VERDICT=FAIL
+FIRST_FAILING_TRANSITION=OLLAMA_AGENT_READ
+DETAIL=
+  Required first tool: TOOL read bug.cpp
+  Observed steps 1..8: TOOL=write exit=-1 valid=0 (read-before-write gate)
+  OLLAMA_AGENT_READ FAIL
+  OLLAMA_AGENT_EDIT FAIL
+  OLLAMA_AGENT_BUILD_TEST FAIL
+  source_changed=false
+  before/after SHA256 unchanged:
+    1A43ED1E463BA61A50C0A3CEB76A3E868D3700B65C7D5202799CCB86EAB0CAFE
+
+REPRODUCES_PRIOR_A53E_FAILURE=1
+PRODUCT_DEFECT_CONFIRMED_BLOCKING_REPAIR=0
+RC5_STARTED=0
+NOTE=
+  Failure is agent/model protocol noncompliance on packaged deep2_agentic_loop,
+  not a confirmed RC4 IDE binary defect requiring source fix / RC5 candidate.
+  NO_RC5 per gate policy until repair is blocked by confirmed product defect.
+
+PROMOTE=0
+TIP_CLIMB=HOLD

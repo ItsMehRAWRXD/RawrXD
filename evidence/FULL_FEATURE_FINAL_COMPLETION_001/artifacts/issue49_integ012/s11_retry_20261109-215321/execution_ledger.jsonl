@@ -1,0 +1,8 @@
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"TOOL_CALL","entry":1,"payload":{"step":1,"tool":"read","target":"bug.cpp","observation_bytes":172,"exit_code":0,"valid":true,"timestamp":1794279223495}}
+{"type":"RETRY","entry":2,"payload":{"attempt":2,"reason":"invalid_tool_format","can_continue":true,"timestamp":1794279232528}}
+{"type":"TOOL_CALL","entry":3,"payload":{"step":3,"tool":"build","target":"","observation_bytes":188,"exit_code":0,"valid":true,"timestamp":1794279235722}}
+{"type":"RETRY","entry":4,"payload":{"attempt":4,"reason":"invalid_tool_format","can_continue":true,"timestamp":1794279245406}}
+{"type":"TOOL_CALL","entry":5,"payload":{"step":5,"tool":"test","target":"","observation_bytes":199,"exit_code":0,"valid":true,"timestamp":1794279247086}}
+{"type":"TOOL_CALL","entry":6,"payload":{"step":6,"tool":"finish","target":"","observation_bytes":37,"exit_code":0,"valid":false,"timestamp":1794279250887}}
+{"type":"RETRY","entry":7,"payload":{"attempt":7,"reason":"invalid_tool_format","can_continue":true,"timestamp":1794279258828}}

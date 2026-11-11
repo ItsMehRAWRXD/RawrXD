@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "started_utc": "2026-11-10T04:53:33.3193210Z",
+  "package": "F:\\rawrxd\\release\\RawrXD-4DE06F9F-rc1",
+  "ide_sha256": "4DE06F9F0D7C4FA59926A1BD89041DB7FE75DE0332DBA783A968D3B4105D8BE6",
+  "deep2_sha256": "7109EFC429C62EB04537E818DE122014D234F392FE98736E89873993F7220B09",
+  "model": "F:\\rawrxd\\models\\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+  "model_sha256": "9FECC3B3CD76BBA89D504F29B616EEDF7DA85B96540E490CA5824D3F7D2776A0",
+  "scope": "Backend subprocess and local HTTP probes; IDE integration requires separate UI evidence.",
+  "vulkan_inventory": "WARNING: [Loader Message] Code 0 : Removing layer VK_LAYER_AMD_switchable_graphics (C:\\Windows\\System32\\DriverStore\\FileRepository\\u0204441.inf_amd64_6b4094d04428c23d\\B025930\\amd-vulkan64.json) because it is a duplicate of VK_LAYER_AMD_switchable_graphics (C:\\WINDOWS\\System32\\DriverStore\\FileRepository\\amdvlk.inf_amd64_865a9c4fff871fca\\amd-vulkan64.json)\r\nWARNING: [Loader Message] Code 0 : Layer VK_LAYER_OBS_HOOK uses API version 1.3 which is older than the application specified API version of 1.4. May cause issues.\r\n==========\r\nVULKANINFO\r\n==========\r\n\r\nVulkan Instance Version: 1.4.357\r\n\r\n\r\nInstance Extensions: count = 14\r\n-------------------------------\r\nVK_EXT_debug_report                    : extension revision 10\r\nVK_EXT_debug_utils                     : extension revision 2\r\nVK_EXT_swapchain_colorspace            : extension revision 5\r\nVK_KHR_device_group_creation           : extension revision 1\r\nVK_KHR_external_fence_capabilities     : extension revision 1\r\nVK_KHR_external_memory_capabilities    : extension revision 1\r\nVK_KHR_external_semaphore_capabilities : extension revision 1\r\nVK_KHR_get_physical_device_properties2 : extension revision 2\r\nVK_KHR_get_surface_capabilities2       : extension revision 1\r\nVK_KHR_portability_enumeration         : extension revision 1\r\nVK_KHR_surface                         : extension revision 25\r\nVK_KHR_surface_maintenance1            : extension revision 1\r\nVK_KHR_win32_surface                   : extension revision 6\r\nVK_LUNARG_direct_driver_loading        : extension revision 1\r\n\r\nInstance Layers: count = 14\r\n---------------------------\r\nVK_LAYER_AMD_switchable_graphics  AMD switchable graphics layer                                                                                     1.4.359  version 1\r\nVK_LAYER_EOS_Overlay              Vulkan overlay layer for Epic Online Services                                                                     1.2.136  version 1\r\nVK_LAYER_KHRONOS_profiles         Khronos Profiles layer                                                                                            1.4.357  version 1\r\nVK_LAYER_KHRONOS_shader_object    Khronos Shader object layer                                                                                       1.4.357  version 1\r\nVK_LAYER_KHRONOS_synchronization2 Khronos Synchronization2 layer                                                                                    1.4.357  version 1\r\nVK_LAYER_KHRONOS_validation       Khronos Validation Layer                                                                                          1.4.357  version 1\r\nVK_LAYER_LUNARG_api_dump          LunarG API dump layer                                                                                             1.4.357  version 2\r\nVK_LAYER_LUNARG_crash_diagnostic  Crash Diagnostic Layer is a crash/hang debugging tool that helps determines GPU progress in a Vulkan application. 1.4.357  version 1\r\nVK_LAYER_LUNARG_gfxreconstruct    GFXReconstruct Capture Layer Version 1.0.5                                                                        1.4.357  version 4194309\r\nVK_LAYER_LUNARG_monitor           Execution Monitoring Layer                                                                                        1.4.357  version 1\r\nVK_LAYER_LUNARG_screenshot        LunarG image capture layer                                                                                        1.4.357  version 1\r\nVK_LAYER_OBS_HOOK                 Open Broadcaster Software hook                                                                                    1.3.216  version 1\r\nVK_LAYER_VALVE_steam_fossilize    Steam Pipeline Caching Layer                                                                                      1.4.303  version 1\r\nVK_LAYER_VALVE_steam_overlay      Steam Overlay Layer                                                                                               1.3.207  version 1\r\n\r\nDevices:\r\n========\r\nGPU0:\r\n\tapiVersion         = 1.4.359\r\n\tdriverVersion      = 2.0.416\r\n\tvendorID           = 0x1002\r\n\tdeviceID           = 0x7551\r\n\tdeviceType         = PHYSICAL_DEVICE_TYPE_DISCRETE_GPU\r\n\tdeviceName         = AMD Radeon AI PRO R9700\r\n\tdriverID           = DRIVER_ID_AMD_PROPRIETARY\r\n\tdriverName         = AMD proprietary driver\r\n\tdriverInfo         = 26.10.1 (LLPC)\r\n\tconformanceVersion = 1.4.3.3\r\n\tdeviceUUID         = 00000000-0300-0000-0000-000000000000\r\n\tdriverUUID         = 414d442d-5749-4e2d-4452-560000000000\r\nGPU1:\r\n\tapiVersion         = 1.2.359\r\n\tdriverVersion      = 26.2.99\r\n\tvendorID           = 0x1002\r\n\tdeviceID           = 0x7551\r\n\tdeviceType         = PHYSICAL_DEVICE_TYPE_DISCRETE_GPU\r\n\tdeviceName         = Microsoft Direct3D12 (AMD Radeon AI PRO R9700)\r\n\tdriverID           = DRIVER_ID_MESA_DOZEN\r\n\tdriverName         = Dozen\r\n\tdriverInfo         = Mesa 26.3.0-devel (git-e3fc7749c6)\r\n\tconformanceVersion = 0.0.0.0\r\n\tdeviceUUID         = 2b3353ca-781b-983c-a534-fc54830c4093\r\n\tdriverUUID         = d941c901-b939-48e6-5ff5-e1e90f346d5c\r\nGPU2:\r\n\tapiVersion         = 1.4.315\r\n\tdriverVersion      = 2.0.353\r\n\tvendorID           = 0x1002\r\n\tdeviceID           = 0x13c0\r\n\tdeviceType         = PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU\r\n\tdeviceName         = AMD Radeon(TM) Graphics\r\n\tdriverID           = DRIVER_ID_AMD_PROPRIETARY\r\n\tdriverName         = AMD proprietary driver\r\n\tdriverInfo         = 25.10.42 (AMD proprietary shader compiler)\r\n\tconformanceVersion = 1.4.0.0\r\n\tdeviceUUID         = 00000000-7f00-0000-0000-000000000000\r\n\tdriverUUID         = 414d442d-5749-4e2d-4452-560000000000\r\nGPU3:\r\n\tapiVersion         = 1.2.359\r\n\tdriverVersion      = 26.2.99\r\n\tvendorID           = 0x1002\r\n\tdeviceID           = 0x13c0\r\n\tdeviceType         = PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU\r\n\tdeviceName         = Microsoft Direct3D12 (AMD Radeon(TM) Graphics)\r\n\tdriverID           = DRIVER_ID_MESA_DOZEN\r\n\tdriverName         = Dozen\r\n\tdriverInfo         = Mesa 26.3.0-devel (git-e3fc7749c6)\r\n\tconformanceVersion = 0.0.0.0\r\n\tdeviceUUID         = f4b195bf-dda3-ddb8-8ab5-49cbda54d356\r\n\tdriverUUID         = d941c901-b939-48e6-5ff5-e1e90f346d5c\r\nGPU4:\r\n\tapiVersion         = 1.4.359\r\n\tdriverVersion      = 2.0.416\r\n\tvendorID           = 0x1002\r\n\tdeviceID           = 0x747e\r\n\tdeviceType         = PHYSICAL_DEVICE_TYPE_DISCRETE_GPU\r\n\tdeviceName         = AMD Radeon RX 7800 XT\r\n\tdriverID           = DRIVER_ID_AMD_PROPRIETARY\r\n\tdriverName         = AMD proprietary driver\r\n\tdriverInfo         = 26.10.1 (LLPC)\r\n\tconformanceVersion = 1.4.3.3\r\n\tdeviceUUID         = 00000000-0700-0000-0000-000000000000\r\n\tdriverUUID         = 414d442d-5749-4e2d-4452-560000000000\r\nGPU5:\r\n\tapiVersion         = 1.2.359\r\n\tdriverVersion      = 26.2.99\r\n\tvendorID           = 0x1002\r\n\tdeviceID           = 0x747e\r\n\tdeviceType         = PHYSICAL_DEVICE_TYPE_DISCRETE_GPU\r\n\tdeviceName         = Microsoft Direct3D12 (AMD Radeon RX 7800 XT)\r\n\tdriverID           = DRIVER_ID_MESA_DOZEN\r\n\tdriverName         = Dozen\r\n\tdriverInfo         = Mesa 26.3.0-devel (git-e3fc7749c6)\r\n\tconformanceVersion = 0.0.0.0\r\n\tdeviceUUID         = 76f7e6fd-ff59-7a1b-b065-54ec81e97ed0\r\n\tdriverUUID         = d941c901-b939-48e6-5ff5-e1e90f346d5c\r\nGPU6:\r\n\tapiVersion         = 1.2.359\r\n\tdriverVersion      = 26.2.99\r\n\tvendorID           = 0x1414\r\n\tdeviceID           = 0x008c\r\n\tdeviceType         = PHYSICAL_DEVICE_TYPE_CPU\r\n\tdeviceName         = Microsoft Direct3D12 (Microsoft Basic Render Driver)\r\n\tdriverID           = DRIVER_ID_MESA_DOZEN\r\n\tdriverName         = Dozen\r\n\tdriverInfo         = Mesa 26.3.0-devel (git-e3fc7749c6)\r\n\tconformanceVersion = 0.0.0.0\r\n\tdeviceUUID         = cbf97468-ccff-654e-83d8-6647a64581c2\r\n\tdriverUUID         = d941c901-b939-48e6-5ff5-e1e90f346d5c\r\n",
+  "deep2_gpu": {
+    "status": "PASS",
+    "exited": true,
+    "exit_code": 0,
+    "process_id": 22644,
+    "elapsed_seconds": 12.479,
+    "generated_tokens": 16,
+    "gpu_dispatches_at_first_token": 3720,
+    "cpu_calls_at_first_token": 0,
+    "stdout": "F:\\rawrxd\\evidence\\IDE_RELEASE_READINESS_001\\backends_001\\deep2-gpu.stdout.log",
+    "stderr": "F:\\rawrxd\\evidence\\IDE_RELEASE_READINESS_001\\backends_001\\deep2-gpu.stderr.log"
+  },
+  "deep2_cpu": {
+    "status": "PASS",
+    "exited": true,
+    "exit_code": 0,
+    "process_id": 43060,
+    "elapsed_seconds": 19.179,
+    "generated_tokens": 16,
+    "gpu_dispatches_at_first_token": 0,
+    "cpu_calls_at_first_token": 3720,
+    "stdout": "F:\\rawrxd\\evidence\\IDE_RELEASE_READINESS_001\\backends_001\\deep2-cpu.stdout.log",
+    "stderr": "F:\\rawrxd\\evidence\\IDE_RELEASE_READINESS_001\\backends_001\\deep2-cpu.stderr.log"
+  },
+  "ollama": {
+    "status": "PASS",
+    "model": "llama3.2:3b",
+    "generated_tokens": 2,
+    "response": "READY",
+    "total_duration_ns": 4843015600,
+    "eval_duration_ns": 76291000
+  },
+  "ollama_running": [
+    {
+      "name": "llama3.2:3b",
+      "model": "llama3.2:3b",
+      "size": 2324021902,
+      "digest": "a80c4f17acd55265feec403c7aef86be0c25983ab279d83f3bcd3abbcb5b8b72",
+      "details": {
+        "parent_model": "",
+        "format": "gguf",
+        "family": "llama",
+        "families": [
+          "llama"
+        ],
+        "parameter_size": "3.2B",
+        "quantization_level": "Q4_K_M"
+      },
+      "expires_at": "2026-11-09T23:59:11.3022689-05:00",
+      "size_vram": 2324021902,
+      "context_length": 2048,
+      "runner": "llamacpp"
+    }
+  ],
+  "finished_utc": "2026-11-10T04:54:11.3187907Z"
+}

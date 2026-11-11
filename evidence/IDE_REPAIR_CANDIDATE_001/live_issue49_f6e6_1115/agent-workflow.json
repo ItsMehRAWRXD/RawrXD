@@ -1,0 +1,17 @@
+﻿{
+    "tested_utc":  "2026-11-10T12:12:24.9750257Z",
+    "scope":  "Packaged agent subprocess; GUI dispatch requires separate evidence.",
+    "ide_sha256":  "F6E6C06714B917D45E728D14FEA65C1EEDF8B3D6CEC610C9F469FAAAEE6B2293",
+    "agent_sha256":  "F14435ED9663D23ED06046B6607306C1320D57B7520F24A8064F6A82CEE9C1BB",
+    "model":  "bigdaddyg-productivity-local:latest",
+    "process_id":  17732,
+    "process_exit":  -1,
+    "timed_out":  false,
+    "source_changed":  false,
+    "source_after_sha256":  "1A43ED1E463BA61A50C0A3CEB76A3E868D3700B65C7D5202799CCB86EAB0CAFE",
+    "independent_run_exit":  -1,
+    "independent_run_output":  "",
+    "verdict":  "FAIL",
+    "stdout":  "F:\\rawrxd\\evidence\\IDE_REPAIR_CANDIDATE_001\\live_issue49_f6e6_1115\\agent.stdout.log",
+    "stderr":  "F:\\rawrxd\\evidence\\IDE_REPAIR_CANDIDATE_001\\live_issue49_f6e6_1115\\agent.stderr.log"
+}

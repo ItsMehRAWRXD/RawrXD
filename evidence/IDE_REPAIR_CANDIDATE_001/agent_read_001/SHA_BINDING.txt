@@ -1,0 +1,34 @@
+IDE_REPAIR_CANDIDATE_001 / agent_read_001 / SHA_BINDING
+ASOF_UTC=2026-11-10T07:45:00Z
+MOTD_ACK=1
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+INVENT_PASS=0
+
+OLLAMA_AGENT_READ=PASS
+MODEL=qwen3:8b
+LOOP_EXE=F:\rawrxd\release\RawrXD-readiness-rc4\deep2_agentic_loop.exe
+LOOP_SHA256=6F858F02CB9A52226D5822A96B7ED0D27592CCA0B443337ACF28EA3D2E7C0BDE
+IDE_SHA256=78E187AA9A4C95A4282A862A2D76E8B24DCD03BF6F57E036B2C463FB22418596
+
+BINDING=
+  READ_PASS is bound ONLY to LOOP_SHA256=6F858F02CB9A52226D5822A96B7ED0D27592CCA0B443337ACF28EA3D2E7C0BDE
+  (packaged RC4 deep2_agentic_loop baseline used for agent_read_001).
+
+NON_INHERIT=
+  Do NOT claim RC5 Ext SHA256=089B9C72… inherits this READ.
+  Do NOT claim Loop SHA256=F33D14A7… inherits this READ.
+  No cross-binary READ inheritance without independent re-run evidence.
+
+REPAIR_SOURCE_NOTE=
+  Repair source already landed on repair/ide-wave1-agent-tool-20261110 @ 674ec00ade5
+  (other worker). This commit is RECEIPTS-ONLY; does not conflict with that repair branch.
+
+PUBLISH=
+  BRANCH=upload/computer-use-20261110
+  SCOPE=text receipts from agent_read_001 only
+  SKIPPED=before.bin bug.exe bug.obj
+  NO_GITATTRIBUTES_LFS=1
+  NO_RC4_FORCE_PUSH=1
+  LOCAL_PRIOR_BLOCKED=upload/repair-candidate-20261110 @ 554f85900c (LFS budget)

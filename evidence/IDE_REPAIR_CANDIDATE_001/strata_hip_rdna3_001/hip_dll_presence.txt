@@ -1,0 +1,5 @@
+﻿PRESENT amdhip64_7.dll size=16399360
+PRESENT amd_comgr.dll size=124121600
+PRESENT rocm_kpack.dll size=181248
+PRESENT strata.exe size=162981888
+PRESENT strata-device.exe size=109568

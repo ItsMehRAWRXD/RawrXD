@@ -1,0 +1,6 @@
+TOOL_PREFIX_EMITTED=1
+TOOL_CALLS=1
+SNAP_OUT_SAMPLES:
+[step 1] TOOL read_motd ->  ; observation 3327 bytes; SNAP dispatch transition 95.5425 ms
+RESULT_REINJECTION step=1 tool=read_motd target= observation_bytes=3327 status=PASS
+[SNAP OUT RAW] bytes=14 text="TOOL read_motd"

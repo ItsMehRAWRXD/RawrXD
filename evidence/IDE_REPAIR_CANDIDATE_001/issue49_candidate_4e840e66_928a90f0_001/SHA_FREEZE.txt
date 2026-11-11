@@ -1,0 +1,23 @@
+ISSUE49_SHA_FREEZE
+CREATED=2026-11-10 08:56:52
+BUILD_DIR=F:\rawrxd\build_tip_ext_host_001
+BUILD=PASS
+BUILD_EXIT=0
+CONFIG=RelWithDebInfo
+BOUNDED_TARGETS=RawrXD-Win32IDE-Native-Ext deep2_agentic_loop
+NINJA_J=2
+ORPHANS_CLEARED=Y
+IDE_PATH=F:\rawrxd\build_tip_ext_host_001\bin\RawrXD-Win32IDE-Native-Ext.exe
+LOOP_PATH=F:\rawrxd\build_tip_ext_host_001\bin\deep2_agentic_loop.exe
+IDE_SHA256=4e840e665c0ec2afa440aa8f7c18644bd964468d10fb9f0d4252d63e5137cdef
+LOOP_SHA256=928a90f00d646a39b082559ffa88bec046362609ec69baa16c0e6c3de34e7d8c
+IDE8=4e840e66
+LOOP8=928a90f0
+FREEZE_DIR=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_4e840e66_928a90f0_001
+NO_INHERIT_PASS=1
+NO_CROSS_SHA=1
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+CONTROLLING_HISTORICAL=issue49_candidate_401071_5bac_001
+NOTE=New SHA has its own measured score only; do not inherit PASS from 015/5BAC/401071

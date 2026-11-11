@@ -1,0 +1,113 @@
+# RawrXD Binary Authority Matrix — 2026-10-28
+
+## Authority
+
+```ini
+PRODUCT_EXE=G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin\RawrXD-Win32IDE.exe
+EXPECTED_SHA256=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+REBUILD_THIS_DISPATCH=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+PRODUCT_CERTIFIED=0
+GHOSTTEXT_SCOPE=WITNESS_ONLY
+```
+
+The frozen product was executed directly. No build-tree executable was used
+for this matrix, and the frozen file hash matched before and after each run.
+
+## Inputs
+
+| Model | Path | SHA-256 | Size |
+|---|---|---|---:|
+| TinyLlama | `G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf` | `9FECC3B3CD76BBA89D504F29B616EEDF7DA85B96540E490CA5824D3F7D2776A0` | 668,788,096 |
+| Gemma3 | `G:\~dev\rawrxd\models\gemma3-1b-Q2_K.gguf` | `ADBD048B1738782BC13819C08C3A14F7FBE9633B13E84D04DE96B57E106C6E08` | 699,066,720 |
+
+## Exact test
+
+```text
+RawrXD-Win32IDE.exe --headless --local --no-server --model <model> --prompt "Say hi in one word." --max-tokens 16 --backend local --verbose
+Environment: RAWRXD_HEADLESS=1
+Working directory: G:\~dev\rawrxd\evidence\TIP_FREEZE_001\bin
+```
+
+Raw process streams are preserved in this directory as `<Model>.stdout.txt`
+and `<Model>.stderr.txt`.
+
+## Results
+
+### TinyLlama
+
+```ini
+EXECUTABLE_SHA256_BEFORE=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+EXECUTABLE_SHA256_AFTER=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+EXIT_CODE=0
+MODEL_OPEN=PASS
+SESSION_ENTER=PASS
+GENERATED_TOKENS=16
+TOKENS_COMMITTED=16
+PRODUCT_E2E_MARKER=PASS
+RAW_STDOUT=TinyLlama.stdout.txt
+RAW_STDERR=TinyLlama.stderr.txt
+```
+
+TinyLlama satisfies the frozen-product generation and exit-code gates for this
+run. Numerical correctness, semantic quality, and performance remain separate
+gates.
+
+### Gemma3
+
+```ini
+EXECUTABLE_SHA256_BEFORE=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+EXECUTABLE_SHA256_AFTER=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+EXIT_CODE=-1
+MODEL_OPEN=PASS
+SESSION_ENTER=PASS
+GENERATED_TOKENS=NOT_OBSERVED
+TOKENS_COMMITTED=NOT_OBSERVED
+PRODUCT_E2E=NOT_PASS
+RAW_STDOUT=Gemma3.stdout.txt
+RAW_STDERR=Gemma3.stderr.txt
+```
+
+Gemma3 reaches model load and session admission but does not reach a generated
+or committed token in the captured run. It is not cross-family certified.
+
+### Gemma3 bounded retry
+
+The initial Gemma3 observation above was preserved unchanged. A second run was
+performed against the same frozen executable and the same model, in a separate
+evidence directory, with no rebuild or binary substitution:
+
+```ini
+EVIDENCE_DIR=Gemma3_retry_20261028_134100
+EXECUTABLE_SHA256_BEFORE=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+EXECUTABLE_SHA256_AFTER=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+MODEL_SHA256=ADBD048B1738782BC13819C08C3A14F7FBE9633B13E84D04DE96B57E106C6E08
+EXIT_CODE=0
+MODEL_OPEN=PASS
+SESSION_ENTER=PASS
+GENERATED_TOKENS=16
+TOKENS_COMMITTED=16
+PRODUCT_OPEN_PASS=1
+PRODUCT_PASS=1
+CLEAN_EXIT=1
+CRASH_OBSERVED=0
+STDOUT_SHA256=3D0758EE94749A26B879014280A36B8DD91F4560E401C40DA33C82AD0A18AA17
+STDERR_SHA256=C3D9405BA7DC8BFE18BE13A90A297340A8B0CACFB0766DDFC6B5E80DABC36DD4
+DECODE_TPS_REPORTED=0.532262
+```
+
+The retry closes the product-generation gate for Gemma3 for this exact run.
+It does not certify numerical parity, semantic quality, or performance.
+
+## Disposition
+
+```ini
+TINYLLAMA_PRODUCT_GENERATION=PASS_FOR_THIS_RUN
+GEMMA3_PRODUCT_GENERATION=PASS_ON_RETRY_INITIAL_RUN_INCOMPLETE
+SAME_BINARY_SHA=PASS
+CROSS_FAMILY_GENERATION_MATRIX=PASS_TINYLLAMA_AND_GEMMA3
+NUMERICAL_CORRECTNESS=NOT_VERIFIED
+PERFORMANCE=NOT_VERIFIED
+PROMOTE=0
+```

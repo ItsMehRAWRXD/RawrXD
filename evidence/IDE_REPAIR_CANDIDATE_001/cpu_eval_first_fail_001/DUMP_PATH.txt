@@ -1,0 +1,14 @@
+﻿DUMP_PATH=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\cpu_eval_first_fail_001\stack_capture_001\dumps\bridge_lifecycle_test.exe_261110_085703.dmp
+DUMP_BYTES=1535424757
+DUMP_TOOL=procdump64.exe
+DUMP_ARGS=-accepteula -e -ma -x
+DUMP_EXCEPTION_COMMENT=Unhandled exception: C0000409
+ANALYZER=cdb.exe
+ANALYZER_PATH=C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2611.4001.0_x64__8wekyb3d8bbwe\amd64\cdb.exe
+ANALYZER_VERSION=10.0.29680.1004 AMD64
+REPRO_EXE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\cpu_eval_first_fail_001\stack_capture_001\bridge_lifecycle_test.exe
+REPRO_EXE_SHA256=0C1B3B992DBEF778D9F70041F5C03AFA7B5B1F038DF0A9B6659CCCB5C64F6C08
+REPRO_PDB=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\cpu_eval_first_fail_001\stack_capture_001\bridge_lifecycle_test.pdb
+REPRO_SOURCE=copied_from_bridge_phase_013
+MODEL=F:\rawrxd\models\qwen2.5-coder_1.5b-base.gguf
+CAPTURE_UTC=2026-11-10T14:03:07.3125516Z

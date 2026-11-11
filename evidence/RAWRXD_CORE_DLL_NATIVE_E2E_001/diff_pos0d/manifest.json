@@ -1,0 +1,4892 @@
+[
+  {
+    "index": 0,
+    "op_name": "Linear_Output",
+    "op_id": 0,
+    "layer_idx": 4294967295,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 1,
+    "op_name": "RMSNorm_Output",
+    "op_id": 1,
+    "layer_idx": 0,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 2,
+    "op_name": "MlaDecompress_Input",
+    "op_id": 2,
+    "layer_idx": 0,
+    "position": 0,
+    "tensor_type": "input",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 3,
+    "op_name": "MLA_kv_latent",
+    "op_id": 0,
+    "layer_idx": 0,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [512],
+    "num_elements": 512
+  },
+  {
+    "index": 4,
+    "op_name": "MLA_k_rope_raw",
+    "op_id": 0,
+    "layer_idx": 0,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 5,
+    "op_name": "MLA_k_rope",
+    "op_id": 0,
+    "layer_idx": 0,
+    "position": 0,
+    "tensor_type": "k_rope",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 6,
+    "op_name": "MLA_expanded",
+    "op_id": 0,
+    "layer_idx": 0,
+    "position": 0,
+    "tensor_type": "expanded_KV",
+    "shape": [4096],
+    "num_elements": 4096
+  },
+  {
+    "index": 7,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 2,
+    "layer_idx": 0,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [1, 512],
+    "num_elements": 512
+  },
+  {
+    "index": 8,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 2,
+    "layer_idx": 0,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [1, 64],
+    "num_elements": 64
+  },
+  {
+    "index": 9,
+    "op_name": "MlaDecompress_Output",
+    "op_id": 2,
+    "layer_idx": 0,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [5120],
+    "num_elements": 5120
+  },
+  {
+    "index": 10,
+    "op_name": "Linear_Output",
+    "op_id": 3,
+    "layer_idx": 0,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [3072],
+    "num_elements": 3072
+  },
+  {
+    "index": 11,
+    "op_name": "Attention_Output",
+    "op_id": 4,
+    "layer_idx": 0,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 12,
+    "op_name": "Linear_Output",
+    "op_id": 5,
+    "layer_idx": 0,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 13,
+    "op_name": "Output",
+    "op_id": 6,
+    "layer_idx": 0,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 14,
+    "op_name": "RMSNorm_Output",
+    "op_id": 7,
+    "layer_idx": 0,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 15,
+    "op_name": "Linear_Output",
+    "op_id": 8,
+    "layer_idx": 0,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [10944],
+    "num_elements": 10944
+  },
+  {
+    "index": 16,
+    "op_name": "Linear_Output",
+    "op_id": 9,
+    "layer_idx": 0,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [10944],
+    "num_elements": 10944
+  },
+  {
+    "index": 17,
+    "op_name": "Linear_Output",
+    "op_id": 10,
+    "layer_idx": 0,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 18,
+    "op_name": "Output",
+    "op_id": 11,
+    "layer_idx": 0,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 19,
+    "op_name": "RMSNorm_Output",
+    "op_id": 12,
+    "layer_idx": 1,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 20,
+    "op_name": "MlaDecompress_Input",
+    "op_id": 13,
+    "layer_idx": 1,
+    "position": 0,
+    "tensor_type": "input",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 21,
+    "op_name": "MLA_kv_latent",
+    "op_id": 0,
+    "layer_idx": 1,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [512],
+    "num_elements": 512
+  },
+  {
+    "index": 22,
+    "op_name": "MLA_k_rope_raw",
+    "op_id": 0,
+    "layer_idx": 1,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 23,
+    "op_name": "MLA_k_rope",
+    "op_id": 0,
+    "layer_idx": 1,
+    "position": 0,
+    "tensor_type": "k_rope",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 24,
+    "op_name": "MLA_expanded",
+    "op_id": 0,
+    "layer_idx": 1,
+    "position": 0,
+    "tensor_type": "expanded_KV",
+    "shape": [4096],
+    "num_elements": 4096
+  },
+  {
+    "index": 25,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 13,
+    "layer_idx": 1,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [1, 512],
+    "num_elements": 512
+  },
+  {
+    "index": 26,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 13,
+    "layer_idx": 1,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [1, 64],
+    "num_elements": 64
+  },
+  {
+    "index": 27,
+    "op_name": "MlaDecompress_Output",
+    "op_id": 13,
+    "layer_idx": 1,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [5120],
+    "num_elements": 5120
+  },
+  {
+    "index": 28,
+    "op_name": "Linear_Output",
+    "op_id": 14,
+    "layer_idx": 1,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [3072],
+    "num_elements": 3072
+  },
+  {
+    "index": 29,
+    "op_name": "Attention_Output",
+    "op_id": 15,
+    "layer_idx": 1,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 30,
+    "op_name": "Linear_Output",
+    "op_id": 16,
+    "layer_idx": 1,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 31,
+    "op_name": "Output",
+    "op_id": 17,
+    "layer_idx": 1,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 32,
+    "op_name": "RMSNorm_Output",
+    "op_id": 18,
+    "layer_idx": 1,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 33,
+    "op_name": "Output",
+    "op_id": 19,
+    "layer_idx": 1,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 34,
+    "op_name": "MoE_TopK",
+    "op_id": 20,
+    "layer_idx": 1,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [12],
+    "num_elements": 12
+  },
+  {
+    "index": 35,
+    "op_name": "MoE_Output",
+    "op_id": 21,
+    "layer_idx": 1,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 36,
+    "op_name": "Output",
+    "op_id": 22,
+    "layer_idx": 1,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 37,
+    "op_name": "RMSNorm_Output",
+    "op_id": 23,
+    "layer_idx": 2,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 38,
+    "op_name": "MlaDecompress_Input",
+    "op_id": 24,
+    "layer_idx": 2,
+    "position": 0,
+    "tensor_type": "input",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 39,
+    "op_name": "MLA_kv_latent",
+    "op_id": 0,
+    "layer_idx": 2,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [512],
+    "num_elements": 512
+  },
+  {
+    "index": 40,
+    "op_name": "MLA_k_rope_raw",
+    "op_id": 0,
+    "layer_idx": 2,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 41,
+    "op_name": "MLA_k_rope",
+    "op_id": 0,
+    "layer_idx": 2,
+    "position": 0,
+    "tensor_type": "k_rope",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 42,
+    "op_name": "MLA_expanded",
+    "op_id": 0,
+    "layer_idx": 2,
+    "position": 0,
+    "tensor_type": "expanded_KV",
+    "shape": [4096],
+    "num_elements": 4096
+  },
+  {
+    "index": 43,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 24,
+    "layer_idx": 2,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [1, 512],
+    "num_elements": 512
+  },
+  {
+    "index": 44,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 24,
+    "layer_idx": 2,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [1, 64],
+    "num_elements": 64
+  },
+  {
+    "index": 45,
+    "op_name": "MlaDecompress_Output",
+    "op_id": 24,
+    "layer_idx": 2,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [5120],
+    "num_elements": 5120
+  },
+  {
+    "index": 46,
+    "op_name": "Linear_Output",
+    "op_id": 25,
+    "layer_idx": 2,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [3072],
+    "num_elements": 3072
+  },
+  {
+    "index": 47,
+    "op_name": "Attention_Output",
+    "op_id": 26,
+    "layer_idx": 2,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 48,
+    "op_name": "Linear_Output",
+    "op_id": 27,
+    "layer_idx": 2,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 49,
+    "op_name": "Output",
+    "op_id": 28,
+    "layer_idx": 2,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 50,
+    "op_name": "RMSNorm_Output",
+    "op_id": 29,
+    "layer_idx": 2,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 51,
+    "op_name": "Output",
+    "op_id": 30,
+    "layer_idx": 2,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 52,
+    "op_name": "MoE_TopK",
+    "op_id": 31,
+    "layer_idx": 2,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [12],
+    "num_elements": 12
+  },
+  {
+    "index": 53,
+    "op_name": "MoE_Output",
+    "op_id": 32,
+    "layer_idx": 2,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 54,
+    "op_name": "Output",
+    "op_id": 33,
+    "layer_idx": 2,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 55,
+    "op_name": "RMSNorm_Output",
+    "op_id": 34,
+    "layer_idx": 3,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 56,
+    "op_name": "MlaDecompress_Input",
+    "op_id": 35,
+    "layer_idx": 3,
+    "position": 0,
+    "tensor_type": "input",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 57,
+    "op_name": "MLA_kv_latent",
+    "op_id": 0,
+    "layer_idx": 3,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [512],
+    "num_elements": 512
+  },
+  {
+    "index": 58,
+    "op_name": "MLA_k_rope_raw",
+    "op_id": 0,
+    "layer_idx": 3,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 59,
+    "op_name": "MLA_k_rope",
+    "op_id": 0,
+    "layer_idx": 3,
+    "position": 0,
+    "tensor_type": "k_rope",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 60,
+    "op_name": "MLA_expanded",
+    "op_id": 0,
+    "layer_idx": 3,
+    "position": 0,
+    "tensor_type": "expanded_KV",
+    "shape": [4096],
+    "num_elements": 4096
+  },
+  {
+    "index": 61,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 35,
+    "layer_idx": 3,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [1, 512],
+    "num_elements": 512
+  },
+  {
+    "index": 62,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 35,
+    "layer_idx": 3,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [1, 64],
+    "num_elements": 64
+  },
+  {
+    "index": 63,
+    "op_name": "MlaDecompress_Output",
+    "op_id": 35,
+    "layer_idx": 3,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [5120],
+    "num_elements": 5120
+  },
+  {
+    "index": 64,
+    "op_name": "Linear_Output",
+    "op_id": 36,
+    "layer_idx": 3,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [3072],
+    "num_elements": 3072
+  },
+  {
+    "index": 65,
+    "op_name": "Attention_Output",
+    "op_id": 37,
+    "layer_idx": 3,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 66,
+    "op_name": "Linear_Output",
+    "op_id": 38,
+    "layer_idx": 3,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 67,
+    "op_name": "Output",
+    "op_id": 39,
+    "layer_idx": 3,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 68,
+    "op_name": "RMSNorm_Output",
+    "op_id": 40,
+    "layer_idx": 3,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 69,
+    "op_name": "Output",
+    "op_id": 41,
+    "layer_idx": 3,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 70,
+    "op_name": "MoE_TopK",
+    "op_id": 42,
+    "layer_idx": 3,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [12],
+    "num_elements": 12
+  },
+  {
+    "index": 71,
+    "op_name": "MoE_Output",
+    "op_id": 43,
+    "layer_idx": 3,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 72,
+    "op_name": "Output",
+    "op_id": 44,
+    "layer_idx": 3,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 73,
+    "op_name": "RMSNorm_Output",
+    "op_id": 45,
+    "layer_idx": 4,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 74,
+    "op_name": "MlaDecompress_Input",
+    "op_id": 46,
+    "layer_idx": 4,
+    "position": 0,
+    "tensor_type": "input",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 75,
+    "op_name": "MLA_kv_latent",
+    "op_id": 0,
+    "layer_idx": 4,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [512],
+    "num_elements": 512
+  },
+  {
+    "index": 76,
+    "op_name": "MLA_k_rope_raw",
+    "op_id": 0,
+    "layer_idx": 4,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 77,
+    "op_name": "MLA_k_rope",
+    "op_id": 0,
+    "layer_idx": 4,
+    "position": 0,
+    "tensor_type": "k_rope",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 78,
+    "op_name": "MLA_expanded",
+    "op_id": 0,
+    "layer_idx": 4,
+    "position": 0,
+    "tensor_type": "expanded_KV",
+    "shape": [4096],
+    "num_elements": 4096
+  },
+  {
+    "index": 79,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 46,
+    "layer_idx": 4,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [1, 512],
+    "num_elements": 512
+  },
+  {
+    "index": 80,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 46,
+    "layer_idx": 4,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [1, 64],
+    "num_elements": 64
+  },
+  {
+    "index": 81,
+    "op_name": "MlaDecompress_Output",
+    "op_id": 46,
+    "layer_idx": 4,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [5120],
+    "num_elements": 5120
+  },
+  {
+    "index": 82,
+    "op_name": "Linear_Output",
+    "op_id": 47,
+    "layer_idx": 4,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [3072],
+    "num_elements": 3072
+  },
+  {
+    "index": 83,
+    "op_name": "Attention_Output",
+    "op_id": 48,
+    "layer_idx": 4,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 84,
+    "op_name": "Linear_Output",
+    "op_id": 49,
+    "layer_idx": 4,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 85,
+    "op_name": "Output",
+    "op_id": 50,
+    "layer_idx": 4,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 86,
+    "op_name": "RMSNorm_Output",
+    "op_id": 51,
+    "layer_idx": 4,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 87,
+    "op_name": "Output",
+    "op_id": 52,
+    "layer_idx": 4,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 88,
+    "op_name": "MoE_TopK",
+    "op_id": 53,
+    "layer_idx": 4,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [12],
+    "num_elements": 12
+  },
+  {
+    "index": 89,
+    "op_name": "MoE_Output",
+    "op_id": 54,
+    "layer_idx": 4,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 90,
+    "op_name": "Output",
+    "op_id": 55,
+    "layer_idx": 4,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 91,
+    "op_name": "RMSNorm_Output",
+    "op_id": 56,
+    "layer_idx": 5,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 92,
+    "op_name": "MlaDecompress_Input",
+    "op_id": 57,
+    "layer_idx": 5,
+    "position": 0,
+    "tensor_type": "input",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 93,
+    "op_name": "MLA_kv_latent",
+    "op_id": 0,
+    "layer_idx": 5,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [512],
+    "num_elements": 512
+  },
+  {
+    "index": 94,
+    "op_name": "MLA_k_rope_raw",
+    "op_id": 0,
+    "layer_idx": 5,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 95,
+    "op_name": "MLA_k_rope",
+    "op_id": 0,
+    "layer_idx": 5,
+    "position": 0,
+    "tensor_type": "k_rope",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 96,
+    "op_name": "MLA_expanded",
+    "op_id": 0,
+    "layer_idx": 5,
+    "position": 0,
+    "tensor_type": "expanded_KV",
+    "shape": [4096],
+    "num_elements": 4096
+  },
+  {
+    "index": 97,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 57,
+    "layer_idx": 5,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [1, 512],
+    "num_elements": 512
+  },
+  {
+    "index": 98,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 57,
+    "layer_idx": 5,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [1, 64],
+    "num_elements": 64
+  },
+  {
+    "index": 99,
+    "op_name": "MlaDecompress_Output",
+    "op_id": 57,
+    "layer_idx": 5,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [5120],
+    "num_elements": 5120
+  },
+  {
+    "index": 100,
+    "op_name": "Linear_Output",
+    "op_id": 58,
+    "layer_idx": 5,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [3072],
+    "num_elements": 3072
+  },
+  {
+    "index": 101,
+    "op_name": "Attention_Output",
+    "op_id": 59,
+    "layer_idx": 5,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 102,
+    "op_name": "Linear_Output",
+    "op_id": 60,
+    "layer_idx": 5,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 103,
+    "op_name": "Output",
+    "op_id": 61,
+    "layer_idx": 5,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 104,
+    "op_name": "RMSNorm_Output",
+    "op_id": 62,
+    "layer_idx": 5,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 105,
+    "op_name": "Output",
+    "op_id": 63,
+    "layer_idx": 5,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 106,
+    "op_name": "MoE_TopK",
+    "op_id": 64,
+    "layer_idx": 5,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [12],
+    "num_elements": 12
+  },
+  {
+    "index": 107,
+    "op_name": "MoE_Output",
+    "op_id": 65,
+    "layer_idx": 5,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 108,
+    "op_name": "Output",
+    "op_id": 66,
+    "layer_idx": 5,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 109,
+    "op_name": "RMSNorm_Output",
+    "op_id": 67,
+    "layer_idx": 6,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 110,
+    "op_name": "MlaDecompress_Input",
+    "op_id": 68,
+    "layer_idx": 6,
+    "position": 0,
+    "tensor_type": "input",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 111,
+    "op_name": "MLA_kv_latent",
+    "op_id": 0,
+    "layer_idx": 6,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [512],
+    "num_elements": 512
+  },
+  {
+    "index": 112,
+    "op_name": "MLA_k_rope_raw",
+    "op_id": 0,
+    "layer_idx": 6,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 113,
+    "op_name": "MLA_k_rope",
+    "op_id": 0,
+    "layer_idx": 6,
+    "position": 0,
+    "tensor_type": "k_rope",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 114,
+    "op_name": "MLA_expanded",
+    "op_id": 0,
+    "layer_idx": 6,
+    "position": 0,
+    "tensor_type": "expanded_KV",
+    "shape": [4096],
+    "num_elements": 4096
+  },
+  {
+    "index": 115,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 68,
+    "layer_idx": 6,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [1, 512],
+    "num_elements": 512
+  },
+  {
+    "index": 116,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 68,
+    "layer_idx": 6,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [1, 64],
+    "num_elements": 64
+  },
+  {
+    "index": 117,
+    "op_name": "MlaDecompress_Output",
+    "op_id": 68,
+    "layer_idx": 6,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [5120],
+    "num_elements": 5120
+  },
+  {
+    "index": 118,
+    "op_name": "Linear_Output",
+    "op_id": 69,
+    "layer_idx": 6,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [3072],
+    "num_elements": 3072
+  },
+  {
+    "index": 119,
+    "op_name": "Attention_Output",
+    "op_id": 70,
+    "layer_idx": 6,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 120,
+    "op_name": "Linear_Output",
+    "op_id": 71,
+    "layer_idx": 6,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 121,
+    "op_name": "Output",
+    "op_id": 72,
+    "layer_idx": 6,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 122,
+    "op_name": "RMSNorm_Output",
+    "op_id": 73,
+    "layer_idx": 6,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 123,
+    "op_name": "Output",
+    "op_id": 74,
+    "layer_idx": 6,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 124,
+    "op_name": "MoE_TopK",
+    "op_id": 75,
+    "layer_idx": 6,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [12],
+    "num_elements": 12
+  },
+  {
+    "index": 125,
+    "op_name": "MoE_Output",
+    "op_id": 76,
+    "layer_idx": 6,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 126,
+    "op_name": "Output",
+    "op_id": 77,
+    "layer_idx": 6,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 127,
+    "op_name": "RMSNorm_Output",
+    "op_id": 78,
+    "layer_idx": 7,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 128,
+    "op_name": "MlaDecompress_Input",
+    "op_id": 79,
+    "layer_idx": 7,
+    "position": 0,
+    "tensor_type": "input",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 129,
+    "op_name": "MLA_kv_latent",
+    "op_id": 0,
+    "layer_idx": 7,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [512],
+    "num_elements": 512
+  },
+  {
+    "index": 130,
+    "op_name": "MLA_k_rope_raw",
+    "op_id": 0,
+    "layer_idx": 7,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 131,
+    "op_name": "MLA_k_rope",
+    "op_id": 0,
+    "layer_idx": 7,
+    "position": 0,
+    "tensor_type": "k_rope",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 132,
+    "op_name": "MLA_expanded",
+    "op_id": 0,
+    "layer_idx": 7,
+    "position": 0,
+    "tensor_type": "expanded_KV",
+    "shape": [4096],
+    "num_elements": 4096
+  },
+  {
+    "index": 133,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 79,
+    "layer_idx": 7,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [1, 512],
+    "num_elements": 512
+  },
+  {
+    "index": 134,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 79,
+    "layer_idx": 7,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [1, 64],
+    "num_elements": 64
+  },
+  {
+    "index": 135,
+    "op_name": "MlaDecompress_Output",
+    "op_id": 79,
+    "layer_idx": 7,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [5120],
+    "num_elements": 5120
+  },
+  {
+    "index": 136,
+    "op_name": "Linear_Output",
+    "op_id": 80,
+    "layer_idx": 7,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [3072],
+    "num_elements": 3072
+  },
+  {
+    "index": 137,
+    "op_name": "Attention_Output",
+    "op_id": 81,
+    "layer_idx": 7,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 138,
+    "op_name": "Linear_Output",
+    "op_id": 82,
+    "layer_idx": 7,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 139,
+    "op_name": "Output",
+    "op_id": 83,
+    "layer_idx": 7,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 140,
+    "op_name": "RMSNorm_Output",
+    "op_id": 84,
+    "layer_idx": 7,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 141,
+    "op_name": "Output",
+    "op_id": 85,
+    "layer_idx": 7,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 142,
+    "op_name": "MoE_TopK",
+    "op_id": 86,
+    "layer_idx": 7,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [12],
+    "num_elements": 12
+  },
+  {
+    "index": 143,
+    "op_name": "MoE_Output",
+    "op_id": 87,
+    "layer_idx": 7,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 144,
+    "op_name": "Output",
+    "op_id": 88,
+    "layer_idx": 7,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 145,
+    "op_name": "RMSNorm_Output",
+    "op_id": 89,
+    "layer_idx": 8,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 146,
+    "op_name": "MlaDecompress_Input",
+    "op_id": 90,
+    "layer_idx": 8,
+    "position": 0,
+    "tensor_type": "input",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 147,
+    "op_name": "MLA_kv_latent",
+    "op_id": 0,
+    "layer_idx": 8,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [512],
+    "num_elements": 512
+  },
+  {
+    "index": 148,
+    "op_name": "MLA_k_rope_raw",
+    "op_id": 0,
+    "layer_idx": 8,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 149,
+    "op_name": "MLA_k_rope",
+    "op_id": 0,
+    "layer_idx": 8,
+    "position": 0,
+    "tensor_type": "k_rope",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 150,
+    "op_name": "MLA_expanded",
+    "op_id": 0,
+    "layer_idx": 8,
+    "position": 0,
+    "tensor_type": "expanded_KV",
+    "shape": [4096],
+    "num_elements": 4096
+  },
+  {
+    "index": 151,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 90,
+    "layer_idx": 8,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [1, 512],
+    "num_elements": 512
+  },
+  {
+    "index": 152,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 90,
+    "layer_idx": 8,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [1, 64],
+    "num_elements": 64
+  },
+  {
+    "index": 153,
+    "op_name": "MlaDecompress_Output",
+    "op_id": 90,
+    "layer_idx": 8,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [5120],
+    "num_elements": 5120
+  },
+  {
+    "index": 154,
+    "op_name": "Linear_Output",
+    "op_id": 91,
+    "layer_idx": 8,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [3072],
+    "num_elements": 3072
+  },
+  {
+    "index": 155,
+    "op_name": "Attention_Output",
+    "op_id": 92,
+    "layer_idx": 8,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 156,
+    "op_name": "Linear_Output",
+    "op_id": 93,
+    "layer_idx": 8,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 157,
+    "op_name": "Output",
+    "op_id": 94,
+    "layer_idx": 8,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 158,
+    "op_name": "RMSNorm_Output",
+    "op_id": 95,
+    "layer_idx": 8,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 159,
+    "op_name": "Output",
+    "op_id": 96,
+    "layer_idx": 8,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 160,
+    "op_name": "MoE_TopK",
+    "op_id": 97,
+    "layer_idx": 8,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [12],
+    "num_elements": 12
+  },
+  {
+    "index": 161,
+    "op_name": "MoE_Output",
+    "op_id": 98,
+    "layer_idx": 8,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 162,
+    "op_name": "Output",
+    "op_id": 99,
+    "layer_idx": 8,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 163,
+    "op_name": "RMSNorm_Output",
+    "op_id": 100,
+    "layer_idx": 9,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 164,
+    "op_name": "MlaDecompress_Input",
+    "op_id": 101,
+    "layer_idx": 9,
+    "position": 0,
+    "tensor_type": "input",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 165,
+    "op_name": "MLA_kv_latent",
+    "op_id": 0,
+    "layer_idx": 9,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [512],
+    "num_elements": 512
+  },
+  {
+    "index": 166,
+    "op_name": "MLA_k_rope_raw",
+    "op_id": 0,
+    "layer_idx": 9,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 167,
+    "op_name": "MLA_k_rope",
+    "op_id": 0,
+    "layer_idx": 9,
+    "position": 0,
+    "tensor_type": "k_rope",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 168,
+    "op_name": "MLA_expanded",
+    "op_id": 0,
+    "layer_idx": 9,
+    "position": 0,
+    "tensor_type": "expanded_KV",
+    "shape": [4096],
+    "num_elements": 4096
+  },
+  {
+    "index": 169,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 101,
+    "layer_idx": 9,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [1, 512],
+    "num_elements": 512
+  },
+  {
+    "index": 170,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 101,
+    "layer_idx": 9,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [1, 64],
+    "num_elements": 64
+  },
+  {
+    "index": 171,
+    "op_name": "MlaDecompress_Output",
+    "op_id": 101,
+    "layer_idx": 9,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [5120],
+    "num_elements": 5120
+  },
+  {
+    "index": 172,
+    "op_name": "Linear_Output",
+    "op_id": 102,
+    "layer_idx": 9,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [3072],
+    "num_elements": 3072
+  },
+  {
+    "index": 173,
+    "op_name": "Attention_Output",
+    "op_id": 103,
+    "layer_idx": 9,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 174,
+    "op_name": "Linear_Output",
+    "op_id": 104,
+    "layer_idx": 9,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 175,
+    "op_name": "Output",
+    "op_id": 105,
+    "layer_idx": 9,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 176,
+    "op_name": "RMSNorm_Output",
+    "op_id": 106,
+    "layer_idx": 9,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 177,
+    "op_name": "Output",
+    "op_id": 107,
+    "layer_idx": 9,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 178,
+    "op_name": "MoE_TopK",
+    "op_id": 108,
+    "layer_idx": 9,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [12],
+    "num_elements": 12
+  },
+  {
+    "index": 179,
+    "op_name": "MoE_Output",
+    "op_id": 109,
+    "layer_idx": 9,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 180,
+    "op_name": "Output",
+    "op_id": 110,
+    "layer_idx": 9,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 181,
+    "op_name": "RMSNorm_Output",
+    "op_id": 111,
+    "layer_idx": 10,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 182,
+    "op_name": "MlaDecompress_Input",
+    "op_id": 112,
+    "layer_idx": 10,
+    "position": 0,
+    "tensor_type": "input",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 183,
+    "op_name": "MLA_kv_latent",
+    "op_id": 0,
+    "layer_idx": 10,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [512],
+    "num_elements": 512
+  },
+  {
+    "index": 184,
+    "op_name": "MLA_k_rope_raw",
+    "op_id": 0,
+    "layer_idx": 10,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 185,
+    "op_name": "MLA_k_rope",
+    "op_id": 0,
+    "layer_idx": 10,
+    "position": 0,
+    "tensor_type": "k_rope",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 186,
+    "op_name": "MLA_expanded",
+    "op_id": 0,
+    "layer_idx": 10,
+    "position": 0,
+    "tensor_type": "expanded_KV",
+    "shape": [4096],
+    "num_elements": 4096
+  },
+  {
+    "index": 187,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 112,
+    "layer_idx": 10,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [1, 512],
+    "num_elements": 512
+  },
+  {
+    "index": 188,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 112,
+    "layer_idx": 10,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [1, 64],
+    "num_elements": 64
+  },
+  {
+    "index": 189,
+    "op_name": "MlaDecompress_Output",
+    "op_id": 112,
+    "layer_idx": 10,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [5120],
+    "num_elements": 5120
+  },
+  {
+    "index": 190,
+    "op_name": "Linear_Output",
+    "op_id": 113,
+    "layer_idx": 10,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [3072],
+    "num_elements": 3072
+  },
+  {
+    "index": 191,
+    "op_name": "Attention_Output",
+    "op_id": 114,
+    "layer_idx": 10,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 192,
+    "op_name": "Linear_Output",
+    "op_id": 115,
+    "layer_idx": 10,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 193,
+    "op_name": "Output",
+    "op_id": 116,
+    "layer_idx": 10,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 194,
+    "op_name": "RMSNorm_Output",
+    "op_id": 117,
+    "layer_idx": 10,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 195,
+    "op_name": "Output",
+    "op_id": 118,
+    "layer_idx": 10,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 196,
+    "op_name": "MoE_TopK",
+    "op_id": 119,
+    "layer_idx": 10,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [12],
+    "num_elements": 12
+  },
+  {
+    "index": 197,
+    "op_name": "MoE_Output",
+    "op_id": 120,
+    "layer_idx": 10,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 198,
+    "op_name": "Output",
+    "op_id": 121,
+    "layer_idx": 10,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 199,
+    "op_name": "RMSNorm_Output",
+    "op_id": 122,
+    "layer_idx": 11,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 200,
+    "op_name": "MlaDecompress_Input",
+    "op_id": 123,
+    "layer_idx": 11,
+    "position": 0,
+    "tensor_type": "input",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 201,
+    "op_name": "MLA_kv_latent",
+    "op_id": 0,
+    "layer_idx": 11,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [512],
+    "num_elements": 512
+  },
+  {
+    "index": 202,
+    "op_name": "MLA_k_rope_raw",
+    "op_id": 0,
+    "layer_idx": 11,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 203,
+    "op_name": "MLA_k_rope",
+    "op_id": 0,
+    "layer_idx": 11,
+    "position": 0,
+    "tensor_type": "k_rope",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 204,
+    "op_name": "MLA_expanded",
+    "op_id": 0,
+    "layer_idx": 11,
+    "position": 0,
+    "tensor_type": "expanded_KV",
+    "shape": [4096],
+    "num_elements": 4096
+  },
+  {
+    "index": 205,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 123,
+    "layer_idx": 11,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [1, 512],
+    "num_elements": 512
+  },
+  {
+    "index": 206,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 123,
+    "layer_idx": 11,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [1, 64],
+    "num_elements": 64
+  },
+  {
+    "index": 207,
+    "op_name": "MlaDecompress_Output",
+    "op_id": 123,
+    "layer_idx": 11,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [5120],
+    "num_elements": 5120
+  },
+  {
+    "index": 208,
+    "op_name": "Linear_Output",
+    "op_id": 124,
+    "layer_idx": 11,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [3072],
+    "num_elements": 3072
+  },
+  {
+    "index": 209,
+    "op_name": "Attention_Output",
+    "op_id": 125,
+    "layer_idx": 11,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 210,
+    "op_name": "Linear_Output",
+    "op_id": 126,
+    "layer_idx": 11,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 211,
+    "op_name": "Output",
+    "op_id": 127,
+    "layer_idx": 11,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 212,
+    "op_name": "RMSNorm_Output",
+    "op_id": 128,
+    "layer_idx": 11,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 213,
+    "op_name": "Output",
+    "op_id": 129,
+    "layer_idx": 11,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 214,
+    "op_name": "MoE_TopK",
+    "op_id": 130,
+    "layer_idx": 11,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [12],
+    "num_elements": 12
+  },
+  {
+    "index": 215,
+    "op_name": "MoE_Output",
+    "op_id": 131,
+    "layer_idx": 11,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 216,
+    "op_name": "Output",
+    "op_id": 132,
+    "layer_idx": 11,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 217,
+    "op_name": "RMSNorm_Output",
+    "op_id": 133,
+    "layer_idx": 12,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 218,
+    "op_name": "MlaDecompress_Input",
+    "op_id": 134,
+    "layer_idx": 12,
+    "position": 0,
+    "tensor_type": "input",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 219,
+    "op_name": "MLA_kv_latent",
+    "op_id": 0,
+    "layer_idx": 12,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [512],
+    "num_elements": 512
+  },
+  {
+    "index": 220,
+    "op_name": "MLA_k_rope_raw",
+    "op_id": 0,
+    "layer_idx": 12,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 221,
+    "op_name": "MLA_k_rope",
+    "op_id": 0,
+    "layer_idx": 12,
+    "position": 0,
+    "tensor_type": "k_rope",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 222,
+    "op_name": "MLA_expanded",
+    "op_id": 0,
+    "layer_idx": 12,
+    "position": 0,
+    "tensor_type": "expanded_KV",
+    "shape": [4096],
+    "num_elements": 4096
+  },
+  {
+    "index": 223,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 134,
+    "layer_idx": 12,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [1, 512],
+    "num_elements": 512
+  },
+  {
+    "index": 224,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 134,
+    "layer_idx": 12,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [1, 64],
+    "num_elements": 64
+  },
+  {
+    "index": 225,
+    "op_name": "MlaDecompress_Output",
+    "op_id": 134,
+    "layer_idx": 12,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [5120],
+    "num_elements": 5120
+  },
+  {
+    "index": 226,
+    "op_name": "Linear_Output",
+    "op_id": 135,
+    "layer_idx": 12,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [3072],
+    "num_elements": 3072
+  },
+  {
+    "index": 227,
+    "op_name": "Attention_Output",
+    "op_id": 136,
+    "layer_idx": 12,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 228,
+    "op_name": "Linear_Output",
+    "op_id": 137,
+    "layer_idx": 12,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 229,
+    "op_name": "Output",
+    "op_id": 138,
+    "layer_idx": 12,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 230,
+    "op_name": "RMSNorm_Output",
+    "op_id": 139,
+    "layer_idx": 12,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 231,
+    "op_name": "Output",
+    "op_id": 140,
+    "layer_idx": 12,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 232,
+    "op_name": "MoE_TopK",
+    "op_id": 141,
+    "layer_idx": 12,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [12],
+    "num_elements": 12
+  },
+  {
+    "index": 233,
+    "op_name": "MoE_Output",
+    "op_id": 142,
+    "layer_idx": 12,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 234,
+    "op_name": "Output",
+    "op_id": 143,
+    "layer_idx": 12,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 235,
+    "op_name": "RMSNorm_Output",
+    "op_id": 144,
+    "layer_idx": 13,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 236,
+    "op_name": "MlaDecompress_Input",
+    "op_id": 145,
+    "layer_idx": 13,
+    "position": 0,
+    "tensor_type": "input",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 237,
+    "op_name": "MLA_kv_latent",
+    "op_id": 0,
+    "layer_idx": 13,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [512],
+    "num_elements": 512
+  },
+  {
+    "index": 238,
+    "op_name": "MLA_k_rope_raw",
+    "op_id": 0,
+    "layer_idx": 13,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 239,
+    "op_name": "MLA_k_rope",
+    "op_id": 0,
+    "layer_idx": 13,
+    "position": 0,
+    "tensor_type": "k_rope",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 240,
+    "op_name": "MLA_expanded",
+    "op_id": 0,
+    "layer_idx": 13,
+    "position": 0,
+    "tensor_type": "expanded_KV",
+    "shape": [4096],
+    "num_elements": 4096
+  },
+  {
+    "index": 241,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 145,
+    "layer_idx": 13,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [1, 512],
+    "num_elements": 512
+  },
+  {
+    "index": 242,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 145,
+    "layer_idx": 13,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [1, 64],
+    "num_elements": 64
+  },
+  {
+    "index": 243,
+    "op_name": "MlaDecompress_Output",
+    "op_id": 145,
+    "layer_idx": 13,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [5120],
+    "num_elements": 5120
+  },
+  {
+    "index": 244,
+    "op_name": "Linear_Output",
+    "op_id": 146,
+    "layer_idx": 13,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [3072],
+    "num_elements": 3072
+  },
+  {
+    "index": 245,
+    "op_name": "Attention_Output",
+    "op_id": 147,
+    "layer_idx": 13,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 246,
+    "op_name": "Linear_Output",
+    "op_id": 148,
+    "layer_idx": 13,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 247,
+    "op_name": "Output",
+    "op_id": 149,
+    "layer_idx": 13,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 248,
+    "op_name": "RMSNorm_Output",
+    "op_id": 150,
+    "layer_idx": 13,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 249,
+    "op_name": "Output",
+    "op_id": 151,
+    "layer_idx": 13,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 250,
+    "op_name": "MoE_TopK",
+    "op_id": 152,
+    "layer_idx": 13,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [12],
+    "num_elements": 12
+  },
+  {
+    "index": 251,
+    "op_name": "MoE_Output",
+    "op_id": 153,
+    "layer_idx": 13,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 252,
+    "op_name": "Output",
+    "op_id": 154,
+    "layer_idx": 13,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 253,
+    "op_name": "RMSNorm_Output",
+    "op_id": 155,
+    "layer_idx": 14,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 254,
+    "op_name": "MlaDecompress_Input",
+    "op_id": 156,
+    "layer_idx": 14,
+    "position": 0,
+    "tensor_type": "input",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 255,
+    "op_name": "MLA_kv_latent",
+    "op_id": 0,
+    "layer_idx": 14,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [512],
+    "num_elements": 512
+  },
+  {
+    "index": 256,
+    "op_name": "MLA_k_rope_raw",
+    "op_id": 0,
+    "layer_idx": 14,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 257,
+    "op_name": "MLA_k_rope",
+    "op_id": 0,
+    "layer_idx": 14,
+    "position": 0,
+    "tensor_type": "k_rope",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 258,
+    "op_name": "MLA_expanded",
+    "op_id": 0,
+    "layer_idx": 14,
+    "position": 0,
+    "tensor_type": "expanded_KV",
+    "shape": [4096],
+    "num_elements": 4096
+  },
+  {
+    "index": 259,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 156,
+    "layer_idx": 14,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [1, 512],
+    "num_elements": 512
+  },
+  {
+    "index": 260,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 156,
+    "layer_idx": 14,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [1, 64],
+    "num_elements": 64
+  },
+  {
+    "index": 261,
+    "op_name": "MlaDecompress_Output",
+    "op_id": 156,
+    "layer_idx": 14,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [5120],
+    "num_elements": 5120
+  },
+  {
+    "index": 262,
+    "op_name": "Linear_Output",
+    "op_id": 157,
+    "layer_idx": 14,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [3072],
+    "num_elements": 3072
+  },
+  {
+    "index": 263,
+    "op_name": "Attention_Output",
+    "op_id": 158,
+    "layer_idx": 14,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 264,
+    "op_name": "Linear_Output",
+    "op_id": 159,
+    "layer_idx": 14,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 265,
+    "op_name": "Output",
+    "op_id": 160,
+    "layer_idx": 14,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 266,
+    "op_name": "RMSNorm_Output",
+    "op_id": 161,
+    "layer_idx": 14,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 267,
+    "op_name": "Output",
+    "op_id": 162,
+    "layer_idx": 14,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 268,
+    "op_name": "MoE_TopK",
+    "op_id": 163,
+    "layer_idx": 14,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [12],
+    "num_elements": 12
+  },
+  {
+    "index": 269,
+    "op_name": "MoE_Output",
+    "op_id": 164,
+    "layer_idx": 14,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 270,
+    "op_name": "Output",
+    "op_id": 165,
+    "layer_idx": 14,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 271,
+    "op_name": "RMSNorm_Output",
+    "op_id": 166,
+    "layer_idx": 15,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 272,
+    "op_name": "MlaDecompress_Input",
+    "op_id": 167,
+    "layer_idx": 15,
+    "position": 0,
+    "tensor_type": "input",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 273,
+    "op_name": "MLA_kv_latent",
+    "op_id": 0,
+    "layer_idx": 15,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [512],
+    "num_elements": 512
+  },
+  {
+    "index": 274,
+    "op_name": "MLA_k_rope_raw",
+    "op_id": 0,
+    "layer_idx": 15,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 275,
+    "op_name": "MLA_k_rope",
+    "op_id": 0,
+    "layer_idx": 15,
+    "position": 0,
+    "tensor_type": "k_rope",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 276,
+    "op_name": "MLA_expanded",
+    "op_id": 0,
+    "layer_idx": 15,
+    "position": 0,
+    "tensor_type": "expanded_KV",
+    "shape": [4096],
+    "num_elements": 4096
+  },
+  {
+    "index": 277,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 167,
+    "layer_idx": 15,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [1, 512],
+    "num_elements": 512
+  },
+  {
+    "index": 278,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 167,
+    "layer_idx": 15,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [1, 64],
+    "num_elements": 64
+  },
+  {
+    "index": 279,
+    "op_name": "MlaDecompress_Output",
+    "op_id": 167,
+    "layer_idx": 15,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [5120],
+    "num_elements": 5120
+  },
+  {
+    "index": 280,
+    "op_name": "Linear_Output",
+    "op_id": 168,
+    "layer_idx": 15,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [3072],
+    "num_elements": 3072
+  },
+  {
+    "index": 281,
+    "op_name": "Attention_Output",
+    "op_id": 169,
+    "layer_idx": 15,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 282,
+    "op_name": "Linear_Output",
+    "op_id": 170,
+    "layer_idx": 15,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 283,
+    "op_name": "Output",
+    "op_id": 171,
+    "layer_idx": 15,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 284,
+    "op_name": "RMSNorm_Output",
+    "op_id": 172,
+    "layer_idx": 15,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 285,
+    "op_name": "Output",
+    "op_id": 173,
+    "layer_idx": 15,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 286,
+    "op_name": "MoE_TopK",
+    "op_id": 174,
+    "layer_idx": 15,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [12],
+    "num_elements": 12
+  },
+  {
+    "index": 287,
+    "op_name": "MoE_Output",
+    "op_id": 175,
+    "layer_idx": 15,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 288,
+    "op_name": "Output",
+    "op_id": 176,
+    "layer_idx": 15,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 289,
+    "op_name": "RMSNorm_Output",
+    "op_id": 177,
+    "layer_idx": 16,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 290,
+    "op_name": "MlaDecompress_Input",
+    "op_id": 178,
+    "layer_idx": 16,
+    "position": 0,
+    "tensor_type": "input",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 291,
+    "op_name": "MLA_kv_latent",
+    "op_id": 0,
+    "layer_idx": 16,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [512],
+    "num_elements": 512
+  },
+  {
+    "index": 292,
+    "op_name": "MLA_k_rope_raw",
+    "op_id": 0,
+    "layer_idx": 16,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 293,
+    "op_name": "MLA_k_rope",
+    "op_id": 0,
+    "layer_idx": 16,
+    "position": 0,
+    "tensor_type": "k_rope",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 294,
+    "op_name": "MLA_expanded",
+    "op_id": 0,
+    "layer_idx": 16,
+    "position": 0,
+    "tensor_type": "expanded_KV",
+    "shape": [4096],
+    "num_elements": 4096
+  },
+  {
+    "index": 295,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 178,
+    "layer_idx": 16,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [1, 512],
+    "num_elements": 512
+  },
+  {
+    "index": 296,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 178,
+    "layer_idx": 16,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [1, 64],
+    "num_elements": 64
+  },
+  {
+    "index": 297,
+    "op_name": "MlaDecompress_Output",
+    "op_id": 178,
+    "layer_idx": 16,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [5120],
+    "num_elements": 5120
+  },
+  {
+    "index": 298,
+    "op_name": "Linear_Output",
+    "op_id": 179,
+    "layer_idx": 16,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [3072],
+    "num_elements": 3072
+  },
+  {
+    "index": 299,
+    "op_name": "Attention_Output",
+    "op_id": 180,
+    "layer_idx": 16,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 300,
+    "op_name": "Linear_Output",
+    "op_id": 181,
+    "layer_idx": 16,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 301,
+    "op_name": "Output",
+    "op_id": 182,
+    "layer_idx": 16,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 302,
+    "op_name": "RMSNorm_Output",
+    "op_id": 183,
+    "layer_idx": 16,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 303,
+    "op_name": "Output",
+    "op_id": 184,
+    "layer_idx": 16,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 304,
+    "op_name": "MoE_TopK",
+    "op_id": 185,
+    "layer_idx": 16,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [12],
+    "num_elements": 12
+  },
+  {
+    "index": 305,
+    "op_name": "MoE_Output",
+    "op_id": 186,
+    "layer_idx": 16,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 306,
+    "op_name": "Output",
+    "op_id": 187,
+    "layer_idx": 16,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 307,
+    "op_name": "RMSNorm_Output",
+    "op_id": 188,
+    "layer_idx": 17,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 308,
+    "op_name": "MlaDecompress_Input",
+    "op_id": 189,
+    "layer_idx": 17,
+    "position": 0,
+    "tensor_type": "input",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 309,
+    "op_name": "MLA_kv_latent",
+    "op_id": 0,
+    "layer_idx": 17,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [512],
+    "num_elements": 512
+  },
+  {
+    "index": 310,
+    "op_name": "MLA_k_rope_raw",
+    "op_id": 0,
+    "layer_idx": 17,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 311,
+    "op_name": "MLA_k_rope",
+    "op_id": 0,
+    "layer_idx": 17,
+    "position": 0,
+    "tensor_type": "k_rope",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 312,
+    "op_name": "MLA_expanded",
+    "op_id": 0,
+    "layer_idx": 17,
+    "position": 0,
+    "tensor_type": "expanded_KV",
+    "shape": [4096],
+    "num_elements": 4096
+  },
+  {
+    "index": 313,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 189,
+    "layer_idx": 17,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [1, 512],
+    "num_elements": 512
+  },
+  {
+    "index": 314,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 189,
+    "layer_idx": 17,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [1, 64],
+    "num_elements": 64
+  },
+  {
+    "index": 315,
+    "op_name": "MlaDecompress_Output",
+    "op_id": 189,
+    "layer_idx": 17,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [5120],
+    "num_elements": 5120
+  },
+  {
+    "index": 316,
+    "op_name": "Linear_Output",
+    "op_id": 190,
+    "layer_idx": 17,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [3072],
+    "num_elements": 3072
+  },
+  {
+    "index": 317,
+    "op_name": "Attention_Output",
+    "op_id": 191,
+    "layer_idx": 17,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 318,
+    "op_name": "Linear_Output",
+    "op_id": 192,
+    "layer_idx": 17,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 319,
+    "op_name": "Output",
+    "op_id": 193,
+    "layer_idx": 17,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 320,
+    "op_name": "RMSNorm_Output",
+    "op_id": 194,
+    "layer_idx": 17,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 321,
+    "op_name": "Output",
+    "op_id": 195,
+    "layer_idx": 17,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 322,
+    "op_name": "MoE_TopK",
+    "op_id": 196,
+    "layer_idx": 17,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [12],
+    "num_elements": 12
+  },
+  {
+    "index": 323,
+    "op_name": "MoE_Output",
+    "op_id": 197,
+    "layer_idx": 17,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 324,
+    "op_name": "Output",
+    "op_id": 198,
+    "layer_idx": 17,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 325,
+    "op_name": "RMSNorm_Output",
+    "op_id": 199,
+    "layer_idx": 18,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 326,
+    "op_name": "MlaDecompress_Input",
+    "op_id": 200,
+    "layer_idx": 18,
+    "position": 0,
+    "tensor_type": "input",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 327,
+    "op_name": "MLA_kv_latent",
+    "op_id": 0,
+    "layer_idx": 18,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [512],
+    "num_elements": 512
+  },
+  {
+    "index": 328,
+    "op_name": "MLA_k_rope_raw",
+    "op_id": 0,
+    "layer_idx": 18,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 329,
+    "op_name": "MLA_k_rope",
+    "op_id": 0,
+    "layer_idx": 18,
+    "position": 0,
+    "tensor_type": "k_rope",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 330,
+    "op_name": "MLA_expanded",
+    "op_id": 0,
+    "layer_idx": 18,
+    "position": 0,
+    "tensor_type": "expanded_KV",
+    "shape": [4096],
+    "num_elements": 4096
+  },
+  {
+    "index": 331,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 200,
+    "layer_idx": 18,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [1, 512],
+    "num_elements": 512
+  },
+  {
+    "index": 332,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 200,
+    "layer_idx": 18,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [1, 64],
+    "num_elements": 64
+  },
+  {
+    "index": 333,
+    "op_name": "MlaDecompress_Output",
+    "op_id": 200,
+    "layer_idx": 18,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [5120],
+    "num_elements": 5120
+  },
+  {
+    "index": 334,
+    "op_name": "Linear_Output",
+    "op_id": 201,
+    "layer_idx": 18,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [3072],
+    "num_elements": 3072
+  },
+  {
+    "index": 335,
+    "op_name": "Attention_Output",
+    "op_id": 202,
+    "layer_idx": 18,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 336,
+    "op_name": "Linear_Output",
+    "op_id": 203,
+    "layer_idx": 18,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 337,
+    "op_name": "Output",
+    "op_id": 204,
+    "layer_idx": 18,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 338,
+    "op_name": "RMSNorm_Output",
+    "op_id": 205,
+    "layer_idx": 18,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 339,
+    "op_name": "Output",
+    "op_id": 206,
+    "layer_idx": 18,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 340,
+    "op_name": "MoE_TopK",
+    "op_id": 207,
+    "layer_idx": 18,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [12],
+    "num_elements": 12
+  },
+  {
+    "index": 341,
+    "op_name": "MoE_Output",
+    "op_id": 208,
+    "layer_idx": 18,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 342,
+    "op_name": "Output",
+    "op_id": 209,
+    "layer_idx": 18,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 343,
+    "op_name": "RMSNorm_Output",
+    "op_id": 210,
+    "layer_idx": 19,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 344,
+    "op_name": "MlaDecompress_Input",
+    "op_id": 211,
+    "layer_idx": 19,
+    "position": 0,
+    "tensor_type": "input",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 345,
+    "op_name": "MLA_kv_latent",
+    "op_id": 0,
+    "layer_idx": 19,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [512],
+    "num_elements": 512
+  },
+  {
+    "index": 346,
+    "op_name": "MLA_k_rope_raw",
+    "op_id": 0,
+    "layer_idx": 19,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 347,
+    "op_name": "MLA_k_rope",
+    "op_id": 0,
+    "layer_idx": 19,
+    "position": 0,
+    "tensor_type": "k_rope",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 348,
+    "op_name": "MLA_expanded",
+    "op_id": 0,
+    "layer_idx": 19,
+    "position": 0,
+    "tensor_type": "expanded_KV",
+    "shape": [4096],
+    "num_elements": 4096
+  },
+  {
+    "index": 349,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 211,
+    "layer_idx": 19,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [1, 512],
+    "num_elements": 512
+  },
+  {
+    "index": 350,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 211,
+    "layer_idx": 19,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [1, 64],
+    "num_elements": 64
+  },
+  {
+    "index": 351,
+    "op_name": "MlaDecompress_Output",
+    "op_id": 211,
+    "layer_idx": 19,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [5120],
+    "num_elements": 5120
+  },
+  {
+    "index": 352,
+    "op_name": "Linear_Output",
+    "op_id": 212,
+    "layer_idx": 19,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [3072],
+    "num_elements": 3072
+  },
+  {
+    "index": 353,
+    "op_name": "Attention_Output",
+    "op_id": 213,
+    "layer_idx": 19,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 354,
+    "op_name": "Linear_Output",
+    "op_id": 214,
+    "layer_idx": 19,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 355,
+    "op_name": "Output",
+    "op_id": 215,
+    "layer_idx": 19,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 356,
+    "op_name": "RMSNorm_Output",
+    "op_id": 216,
+    "layer_idx": 19,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 357,
+    "op_name": "Output",
+    "op_id": 217,
+    "layer_idx": 19,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 358,
+    "op_name": "MoE_TopK",
+    "op_id": 218,
+    "layer_idx": 19,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [12],
+    "num_elements": 12
+  },
+  {
+    "index": 359,
+    "op_name": "MoE_Output",
+    "op_id": 219,
+    "layer_idx": 19,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 360,
+    "op_name": "Output",
+    "op_id": 220,
+    "layer_idx": 19,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 361,
+    "op_name": "RMSNorm_Output",
+    "op_id": 221,
+    "layer_idx": 20,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 362,
+    "op_name": "MlaDecompress_Input",
+    "op_id": 222,
+    "layer_idx": 20,
+    "position": 0,
+    "tensor_type": "input",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 363,
+    "op_name": "MLA_kv_latent",
+    "op_id": 0,
+    "layer_idx": 20,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [512],
+    "num_elements": 512
+  },
+  {
+    "index": 364,
+    "op_name": "MLA_k_rope_raw",
+    "op_id": 0,
+    "layer_idx": 20,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 365,
+    "op_name": "MLA_k_rope",
+    "op_id": 0,
+    "layer_idx": 20,
+    "position": 0,
+    "tensor_type": "k_rope",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 366,
+    "op_name": "MLA_expanded",
+    "op_id": 0,
+    "layer_idx": 20,
+    "position": 0,
+    "tensor_type": "expanded_KV",
+    "shape": [4096],
+    "num_elements": 4096
+  },
+  {
+    "index": 367,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 222,
+    "layer_idx": 20,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [1, 512],
+    "num_elements": 512
+  },
+  {
+    "index": 368,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 222,
+    "layer_idx": 20,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [1, 64],
+    "num_elements": 64
+  },
+  {
+    "index": 369,
+    "op_name": "MlaDecompress_Output",
+    "op_id": 222,
+    "layer_idx": 20,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [5120],
+    "num_elements": 5120
+  },
+  {
+    "index": 370,
+    "op_name": "Linear_Output",
+    "op_id": 223,
+    "layer_idx": 20,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [3072],
+    "num_elements": 3072
+  },
+  {
+    "index": 371,
+    "op_name": "Attention_Output",
+    "op_id": 224,
+    "layer_idx": 20,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 372,
+    "op_name": "Linear_Output",
+    "op_id": 225,
+    "layer_idx": 20,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 373,
+    "op_name": "Output",
+    "op_id": 226,
+    "layer_idx": 20,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 374,
+    "op_name": "RMSNorm_Output",
+    "op_id": 227,
+    "layer_idx": 20,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 375,
+    "op_name": "Output",
+    "op_id": 228,
+    "layer_idx": 20,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 376,
+    "op_name": "MoE_TopK",
+    "op_id": 229,
+    "layer_idx": 20,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [12],
+    "num_elements": 12
+  },
+  {
+    "index": 377,
+    "op_name": "MoE_Output",
+    "op_id": 230,
+    "layer_idx": 20,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 378,
+    "op_name": "Output",
+    "op_id": 231,
+    "layer_idx": 20,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 379,
+    "op_name": "RMSNorm_Output",
+    "op_id": 232,
+    "layer_idx": 21,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 380,
+    "op_name": "MlaDecompress_Input",
+    "op_id": 233,
+    "layer_idx": 21,
+    "position": 0,
+    "tensor_type": "input",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 381,
+    "op_name": "MLA_kv_latent",
+    "op_id": 0,
+    "layer_idx": 21,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [512],
+    "num_elements": 512
+  },
+  {
+    "index": 382,
+    "op_name": "MLA_k_rope_raw",
+    "op_id": 0,
+    "layer_idx": 21,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 383,
+    "op_name": "MLA_k_rope",
+    "op_id": 0,
+    "layer_idx": 21,
+    "position": 0,
+    "tensor_type": "k_rope",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 384,
+    "op_name": "MLA_expanded",
+    "op_id": 0,
+    "layer_idx": 21,
+    "position": 0,
+    "tensor_type": "expanded_KV",
+    "shape": [4096],
+    "num_elements": 4096
+  },
+  {
+    "index": 385,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 233,
+    "layer_idx": 21,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [1, 512],
+    "num_elements": 512
+  },
+  {
+    "index": 386,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 233,
+    "layer_idx": 21,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [1, 64],
+    "num_elements": 64
+  },
+  {
+    "index": 387,
+    "op_name": "MlaDecompress_Output",
+    "op_id": 233,
+    "layer_idx": 21,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [5120],
+    "num_elements": 5120
+  },
+  {
+    "index": 388,
+    "op_name": "Linear_Output",
+    "op_id": 234,
+    "layer_idx": 21,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [3072],
+    "num_elements": 3072
+  },
+  {
+    "index": 389,
+    "op_name": "Attention_Output",
+    "op_id": 235,
+    "layer_idx": 21,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 390,
+    "op_name": "Linear_Output",
+    "op_id": 236,
+    "layer_idx": 21,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 391,
+    "op_name": "Output",
+    "op_id": 237,
+    "layer_idx": 21,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 392,
+    "op_name": "RMSNorm_Output",
+    "op_id": 238,
+    "layer_idx": 21,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 393,
+    "op_name": "Output",
+    "op_id": 239,
+    "layer_idx": 21,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 394,
+    "op_name": "MoE_TopK",
+    "op_id": 240,
+    "layer_idx": 21,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [12],
+    "num_elements": 12
+  },
+  {
+    "index": 395,
+    "op_name": "MoE_Output",
+    "op_id": 241,
+    "layer_idx": 21,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 396,
+    "op_name": "Output",
+    "op_id": 242,
+    "layer_idx": 21,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 397,
+    "op_name": "RMSNorm_Output",
+    "op_id": 243,
+    "layer_idx": 22,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 398,
+    "op_name": "MlaDecompress_Input",
+    "op_id": 244,
+    "layer_idx": 22,
+    "position": 0,
+    "tensor_type": "input",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 399,
+    "op_name": "MLA_kv_latent",
+    "op_id": 0,
+    "layer_idx": 22,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [512],
+    "num_elements": 512
+  },
+  {
+    "index": 400,
+    "op_name": "MLA_k_rope_raw",
+    "op_id": 0,
+    "layer_idx": 22,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 401,
+    "op_name": "MLA_k_rope",
+    "op_id": 0,
+    "layer_idx": 22,
+    "position": 0,
+    "tensor_type": "k_rope",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 402,
+    "op_name": "MLA_expanded",
+    "op_id": 0,
+    "layer_idx": 22,
+    "position": 0,
+    "tensor_type": "expanded_KV",
+    "shape": [4096],
+    "num_elements": 4096
+  },
+  {
+    "index": 403,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 244,
+    "layer_idx": 22,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [1, 512],
+    "num_elements": 512
+  },
+  {
+    "index": 404,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 244,
+    "layer_idx": 22,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [1, 64],
+    "num_elements": 64
+  },
+  {
+    "index": 405,
+    "op_name": "MlaDecompress_Output",
+    "op_id": 244,
+    "layer_idx": 22,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [5120],
+    "num_elements": 5120
+  },
+  {
+    "index": 406,
+    "op_name": "Linear_Output",
+    "op_id": 245,
+    "layer_idx": 22,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [3072],
+    "num_elements": 3072
+  },
+  {
+    "index": 407,
+    "op_name": "Attention_Output",
+    "op_id": 246,
+    "layer_idx": 22,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 408,
+    "op_name": "Linear_Output",
+    "op_id": 247,
+    "layer_idx": 22,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 409,
+    "op_name": "Output",
+    "op_id": 248,
+    "layer_idx": 22,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 410,
+    "op_name": "RMSNorm_Output",
+    "op_id": 249,
+    "layer_idx": 22,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 411,
+    "op_name": "Output",
+    "op_id": 250,
+    "layer_idx": 22,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 412,
+    "op_name": "MoE_TopK",
+    "op_id": 251,
+    "layer_idx": 22,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [12],
+    "num_elements": 12
+  },
+  {
+    "index": 413,
+    "op_name": "MoE_Output",
+    "op_id": 252,
+    "layer_idx": 22,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 414,
+    "op_name": "Output",
+    "op_id": 253,
+    "layer_idx": 22,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 415,
+    "op_name": "RMSNorm_Output",
+    "op_id": 254,
+    "layer_idx": 23,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 416,
+    "op_name": "MlaDecompress_Input",
+    "op_id": 255,
+    "layer_idx": 23,
+    "position": 0,
+    "tensor_type": "input",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 417,
+    "op_name": "MLA_kv_latent",
+    "op_id": 0,
+    "layer_idx": 23,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [512],
+    "num_elements": 512
+  },
+  {
+    "index": 418,
+    "op_name": "MLA_k_rope_raw",
+    "op_id": 0,
+    "layer_idx": 23,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 419,
+    "op_name": "MLA_k_rope",
+    "op_id": 0,
+    "layer_idx": 23,
+    "position": 0,
+    "tensor_type": "k_rope",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 420,
+    "op_name": "MLA_expanded",
+    "op_id": 0,
+    "layer_idx": 23,
+    "position": 0,
+    "tensor_type": "expanded_KV",
+    "shape": [4096],
+    "num_elements": 4096
+  },
+  {
+    "index": 421,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 255,
+    "layer_idx": 23,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [1, 512],
+    "num_elements": 512
+  },
+  {
+    "index": 422,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 255,
+    "layer_idx": 23,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [1, 64],
+    "num_elements": 64
+  },
+  {
+    "index": 423,
+    "op_name": "MlaDecompress_Output",
+    "op_id": 255,
+    "layer_idx": 23,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [5120],
+    "num_elements": 5120
+  },
+  {
+    "index": 424,
+    "op_name": "Linear_Output",
+    "op_id": 256,
+    "layer_idx": 23,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [3072],
+    "num_elements": 3072
+  },
+  {
+    "index": 425,
+    "op_name": "Attention_Output",
+    "op_id": 257,
+    "layer_idx": 23,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 426,
+    "op_name": "Linear_Output",
+    "op_id": 258,
+    "layer_idx": 23,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 427,
+    "op_name": "Output",
+    "op_id": 259,
+    "layer_idx": 23,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 428,
+    "op_name": "RMSNorm_Output",
+    "op_id": 260,
+    "layer_idx": 23,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 429,
+    "op_name": "Output",
+    "op_id": 261,
+    "layer_idx": 23,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 430,
+    "op_name": "MoE_TopK",
+    "op_id": 262,
+    "layer_idx": 23,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [12],
+    "num_elements": 12
+  },
+  {
+    "index": 431,
+    "op_name": "MoE_Output",
+    "op_id": 263,
+    "layer_idx": 23,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 432,
+    "op_name": "Output",
+    "op_id": 264,
+    "layer_idx": 23,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 433,
+    "op_name": "RMSNorm_Output",
+    "op_id": 265,
+    "layer_idx": 24,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 434,
+    "op_name": "MlaDecompress_Input",
+    "op_id": 266,
+    "layer_idx": 24,
+    "position": 0,
+    "tensor_type": "input",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 435,
+    "op_name": "MLA_kv_latent",
+    "op_id": 0,
+    "layer_idx": 24,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [512],
+    "num_elements": 512
+  },
+  {
+    "index": 436,
+    "op_name": "MLA_k_rope_raw",
+    "op_id": 0,
+    "layer_idx": 24,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 437,
+    "op_name": "MLA_k_rope",
+    "op_id": 0,
+    "layer_idx": 24,
+    "position": 0,
+    "tensor_type": "k_rope",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 438,
+    "op_name": "MLA_expanded",
+    "op_id": 0,
+    "layer_idx": 24,
+    "position": 0,
+    "tensor_type": "expanded_KV",
+    "shape": [4096],
+    "num_elements": 4096
+  },
+  {
+    "index": 439,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 266,
+    "layer_idx": 24,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [1, 512],
+    "num_elements": 512
+  },
+  {
+    "index": 440,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 266,
+    "layer_idx": 24,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [1, 64],
+    "num_elements": 64
+  },
+  {
+    "index": 441,
+    "op_name": "MlaDecompress_Output",
+    "op_id": 266,
+    "layer_idx": 24,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [5120],
+    "num_elements": 5120
+  },
+  {
+    "index": 442,
+    "op_name": "Linear_Output",
+    "op_id": 267,
+    "layer_idx": 24,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [3072],
+    "num_elements": 3072
+  },
+  {
+    "index": 443,
+    "op_name": "Attention_Output",
+    "op_id": 268,
+    "layer_idx": 24,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 444,
+    "op_name": "Linear_Output",
+    "op_id": 269,
+    "layer_idx": 24,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 445,
+    "op_name": "Output",
+    "op_id": 270,
+    "layer_idx": 24,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 446,
+    "op_name": "RMSNorm_Output",
+    "op_id": 271,
+    "layer_idx": 24,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 447,
+    "op_name": "Output",
+    "op_id": 272,
+    "layer_idx": 24,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 448,
+    "op_name": "MoE_TopK",
+    "op_id": 273,
+    "layer_idx": 24,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [12],
+    "num_elements": 12
+  },
+  {
+    "index": 449,
+    "op_name": "MoE_Output",
+    "op_id": 274,
+    "layer_idx": 24,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 450,
+    "op_name": "Output",
+    "op_id": 275,
+    "layer_idx": 24,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 451,
+    "op_name": "RMSNorm_Output",
+    "op_id": 276,
+    "layer_idx": 25,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 452,
+    "op_name": "MlaDecompress_Input",
+    "op_id": 277,
+    "layer_idx": 25,
+    "position": 0,
+    "tensor_type": "input",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 453,
+    "op_name": "MLA_kv_latent",
+    "op_id": 0,
+    "layer_idx": 25,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [512],
+    "num_elements": 512
+  },
+  {
+    "index": 454,
+    "op_name": "MLA_k_rope_raw",
+    "op_id": 0,
+    "layer_idx": 25,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 455,
+    "op_name": "MLA_k_rope",
+    "op_id": 0,
+    "layer_idx": 25,
+    "position": 0,
+    "tensor_type": "k_rope",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 456,
+    "op_name": "MLA_expanded",
+    "op_id": 0,
+    "layer_idx": 25,
+    "position": 0,
+    "tensor_type": "expanded_KV",
+    "shape": [4096],
+    "num_elements": 4096
+  },
+  {
+    "index": 457,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 277,
+    "layer_idx": 25,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [1, 512],
+    "num_elements": 512
+  },
+  {
+    "index": 458,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 277,
+    "layer_idx": 25,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [1, 64],
+    "num_elements": 64
+  },
+  {
+    "index": 459,
+    "op_name": "MlaDecompress_Output",
+    "op_id": 277,
+    "layer_idx": 25,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [5120],
+    "num_elements": 5120
+  },
+  {
+    "index": 460,
+    "op_name": "Linear_Output",
+    "op_id": 278,
+    "layer_idx": 25,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [3072],
+    "num_elements": 3072
+  },
+  {
+    "index": 461,
+    "op_name": "Attention_Output",
+    "op_id": 279,
+    "layer_idx": 25,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 462,
+    "op_name": "Linear_Output",
+    "op_id": 280,
+    "layer_idx": 25,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 463,
+    "op_name": "Output",
+    "op_id": 281,
+    "layer_idx": 25,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 464,
+    "op_name": "RMSNorm_Output",
+    "op_id": 282,
+    "layer_idx": 25,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 465,
+    "op_name": "Output",
+    "op_id": 283,
+    "layer_idx": 25,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 466,
+    "op_name": "MoE_TopK",
+    "op_id": 284,
+    "layer_idx": 25,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [12],
+    "num_elements": 12
+  },
+  {
+    "index": 467,
+    "op_name": "MoE_Output",
+    "op_id": 285,
+    "layer_idx": 25,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 468,
+    "op_name": "Output",
+    "op_id": 286,
+    "layer_idx": 25,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 469,
+    "op_name": "RMSNorm_Output",
+    "op_id": 287,
+    "layer_idx": 26,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 470,
+    "op_name": "MlaDecompress_Input",
+    "op_id": 288,
+    "layer_idx": 26,
+    "position": 0,
+    "tensor_type": "input",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 471,
+    "op_name": "MLA_kv_latent",
+    "op_id": 0,
+    "layer_idx": 26,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [512],
+    "num_elements": 512
+  },
+  {
+    "index": 472,
+    "op_name": "MLA_k_rope_raw",
+    "op_id": 0,
+    "layer_idx": 26,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 473,
+    "op_name": "MLA_k_rope",
+    "op_id": 0,
+    "layer_idx": 26,
+    "position": 0,
+    "tensor_type": "k_rope",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 474,
+    "op_name": "MLA_expanded",
+    "op_id": 0,
+    "layer_idx": 26,
+    "position": 0,
+    "tensor_type": "expanded_KV",
+    "shape": [4096],
+    "num_elements": 4096
+  },
+  {
+    "index": 475,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 288,
+    "layer_idx": 26,
+    "position": 0,
+    "tensor_type": "kv_latent",
+    "shape": [1, 512],
+    "num_elements": 512
+  },
+  {
+    "index": 476,
+    "op_name": "MLA_CacheKV_Prefix",
+    "op_id": 288,
+    "layer_idx": 26,
+    "position": 0,
+    "tensor_type": "k_rope_raw",
+    "shape": [1, 64],
+    "num_elements": 64
+  },
+  {
+    "index": 477,
+    "op_name": "MlaDecompress_Output",
+    "op_id": 288,
+    "layer_idx": 26,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [5120],
+    "num_elements": 5120
+  },
+  {
+    "index": 478,
+    "op_name": "Linear_Output",
+    "op_id": 289,
+    "layer_idx": 26,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [3072],
+    "num_elements": 3072
+  },
+  {
+    "index": 479,
+    "op_name": "Attention_Output",
+    "op_id": 290,
+    "layer_idx": 26,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 480,
+    "op_name": "Linear_Output",
+    "op_id": 291,
+    "layer_idx": 26,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 481,
+    "op_name": "Output",
+    "op_id": 292,
+    "layer_idx": 26,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 482,
+    "op_name": "RMSNorm_Output",
+    "op_id": 293,
+    "layer_idx": 26,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 483,
+    "op_name": "Output",
+    "op_id": 294,
+    "layer_idx": 26,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [64],
+    "num_elements": 64
+  },
+  {
+    "index": 484,
+    "op_name": "MoE_TopK",
+    "op_id": 295,
+    "layer_idx": 26,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [12],
+    "num_elements": 12
+  },
+  {
+    "index": 485,
+    "op_name": "MoE_Output",
+    "op_id": 296,
+    "layer_idx": 26,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 486,
+    "op_name": "Output",
+    "op_id": 297,
+    "layer_idx": 26,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 487,
+    "op_name": "RMSNorm_Output",
+    "op_id": 298,
+    "layer_idx": 4294967295,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [2048],
+    "num_elements": 2048
+  },
+  {
+    "index": 488,
+    "op_name": "Output",
+    "op_id": 299,
+    "layer_idx": 4294967295,
+    "position": 0,
+    "tensor_type": "output",
+    "shape": [102400],
+    "num_elements": 102400
+  }
+]

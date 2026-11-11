@@ -1,0 +1,90 @@
+DEEP2_OPENAI_SERVER_TIP_WIRE_001
+ASOF_UTC=2026-11-10T19:27:38Z
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+CONTROLLING=D015
+TIP_CLIMB=HOLD
+LAW=NOT_RUN!=PASS
+LAW=SOURCE_WIRED!=RUNTIME_REACHED!=TOKEN_SURVIVED!=PERFORMANCE_PASS
+LAW=HEALTH_MODELS_PASS!=GENERATION_PASS
+P04_STATUS=PARTIAL
+GENERATION_PASS=0
+P04_PASS=0
+
+GOAL=Bring orphan Deep2 OpenAI server sources onto LIVE tip; real CMake add_executable; build; brief LISTEN+/health proof. Fail-closed.
+
+DIFF_ORPHAN_VS_TIP=
+  ORPHAN=F:\rawrxd\.kilo\worktrees\thorn-measure\src\deep2\
+  TIP_HEADER=F:\rawrxd\src\deep2\deep2_openai_server.h KEPT (UTF-16 BOM; text-identical to orphan ASCII header)
+  TIP_HEADER_SHA256=4C881D1EAF20B51FD7F8D21D1ED54705462034203F25B3E37F21AACA5E0C9EB3
+  COPIED_ONLY=
+    deep2_openai_server.cpp
+    deep2_openai_server_main.cpp
+    test_api_server.cpp
+  NO_WHOLESALE_TREE_COPY=1
+  TIP_COMPAT_PATCH=
+    ChatTemplate initFromGGUF/isInitialized -> initFromMetadata + getType()!=NONE
+    main.cpp +#include <thread>/<chrono>
+    server.cpp +#include <optional>/<thread>
+
+CMAKE=
+  FILE=F:\rawrxd\CMakeLists.txt
+  TARGET=deep2_openai_server
+    SOURCES=src/deep2/deep2_openai_server_main.cpp + deep2_openai_server.cpp
+    LINK=deep2_engine_lib + nlohmann_json::nlohmann_json + ws2_32
+    GUARD=EXISTS sources AND TARGET deep2_engine_lib (RAWRXD_BUILD_DEEP2_ENGINE=ON)
+  TARGET=test_api_server
+    SOURCES=src/deep2/test_api_server.cpp
+    LINK=ws2_32
+  NINJA_RULES=
+    build deep2_openai_server: phony bin\deep2_openai_server.exe
+    build test_api_server: phony bin\test_api_server.exe
+
+BUILD=
+  HELPER=vcvars64 + cmake/ninja
+  BAT=FINALIZATION_CHECKLIST_001\_p04_build_deep2_openai.bat
+  LOG=FINALIZATION_CHECKLIST_001\_p04_build_deep2_openai.log
+  BUILD_DIR=F:\rawrxd\build_deep2_openai_001
+  FLAGS=-DCMAKE_BUILD_TYPE=Release -DRAWRXD_BUILD_DEEP2_ENGINE=ON -DRAWRXD_BUILD_WIN32IDE=OFF
+  CONFIGURE_EC=0
+  BUILD_TEST_API_EC=0
+  BUILD_OPENAI_EC=0
+
+EXE=
+  PATH=F:\rawrxd\build_deep2_openai_001\bin\deep2_openai_server.exe
+  SHA256=FA42C75BA6762BF0C0248D23718D4535E028B3010B5F9CFD3BA52FE02CBAA97B
+  LEN=2001920
+  TEST_API_PATH=F:\rawrxd\build_deep2_openai_001\bin\test_api_server.exe
+  TEST_API_SHA256=B3336CB02AD705889D6FADEE1859E412D965514842ECB89D10A05457A0818A77
+  TEST_API_LEN=70144
+
+SMOKE_LISTEN=
+  CMD=deep2_openai_server.exe --model tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf --port 11436
+  MODEL=F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+  PID=33780
+  STOP=PID_SCOPED_ONLY (no Name=* kill)
+  STDERR_LISTEN_MARKER=1 (D2LOAD_S08_LISTEN_PASS / Server listening on http://127.0.0.1:11436)
+  GET_/health=HTTP_200 {"status":"ok","model_loaded":true,"model_id":"tinyllama-1.1b-chat-v1.0.Q4_K_M"}
+  GET_/v1/models=HTTP_200 id=tinyllama-1.1b-chat-v1.0.Q4_K_M
+  POST_/v1/chat/completions=NOT_RUN
+  ARTIFACTS=
+    _p04_openai_smoke2.txt
+    _p04_openai_serve_stderr2.txt
+    _p04_openai_exe_sha.txt
+    _p04_test_api_exe_sha.txt
+
+OPEN_REMAINS=
+  GENERATION_E2E_NOT_PROVED=1
+  PRIOR_LLAMA_SERVER_8080_GEN_HANG=OPEN (separate; DEEP2_SERVICE_AVAIL_001)
+  FULL_PRODUCT_OPEN_SESSION_TOKEN_CONJUNCTION=NOT_MET
+
+NOT_CLAIMED=
+  P04_PASS=0
+  GENERATION_PASS=0
+  PROMOTE=0
+  CERTIFIED=0
+  RELEASE=HELD
+
+DISPOSITION=P04_PARTIAL_TIP_WIRED_LISTEN_HEALTH
+PROMOTE=0

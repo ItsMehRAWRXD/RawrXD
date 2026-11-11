@@ -1,0 +1,75 @@
+Test project F:/rawrxd/build_ide
+      Start  1: deep2_gpu_code31_pnp_probe
+ 1/31 Test  #1: deep2_gpu_code31_pnp_probe .........   Passed    0.03 sec
+      Start  2: deep2_gdn_reference_contract
+ 2/31 Test  #2: deep2_gdn_reference_contract .......   Passed    0.01 sec
+      Start  3: deep2_qwen4exp_operator_contract
+ 3/31 Test  #3: deep2_qwen4exp_operator_contract ...   Passed    0.02 sec
+      Start  4: deep2_vulkan_gdn_dispatch
+ 4/31 Test  #4: deep2_vulkan_gdn_dispatch ..........   Passed    1.49 sec
+      Start  5: deep2_h11_prefill_parity
+ 5/31 Test  #5: deep2_h11_prefill_parity ...........***Skipped   0.01 sec
+      Start  6: agentic-resilience
+ 6/31 Test  #6: agentic-resilience .................   Passed    0.31 sec
+      Start  7: workspace_path_policy_smoke
+ 7/31 Test  #7: workspace_path_policy_smoke ........   Passed    0.02 sec
+      Start  8: native_tool_protocol_smoke
+ 8/31 Test  #8: native_tool_protocol_smoke .........   Passed    0.01 sec
+      Start  9: cursor_parity_registry_smoke
+ 9/31 Test  #9: cursor_parity_registry_smoke .......   Passed    0.04 sec
+      Start 10: q8k_edge_tests
+10/31 Test #10: q8k_edge_tests .....................   Passed    0.01 sec
+      Start 11: q8k_byte_parity
+11/31 Test #11: q8k_byte_parity ....................   Passed    0.01 sec
+      Start 12: quant_parity_cert
+12/31 Test #12: quant_parity_cert ..................   Passed    0.01 sec
+      Start 13: kquant_dot_parity
+13/31 Test #13: kquant_dot_parity ..................   Passed    0.01 sec
+      Start 14: gate2_manifest_consistency
+14/31 Test #14: gate2_manifest_consistency .........   Passed    0.64 sec
+      Start 15: rawr_reap_cli_contract
+15/31 Test #15: rawr_reap_cli_contract .............   Passed    0.01 sec
+      Start 16: rawr_reap_expert_layout
+16/31 Test #16: rawr_reap_expert_layout ............   Passed    0.01 sec
+      Start 17: rawr_reap_runtime_plan
+17/31 Test #17: rawr_reap_runtime_plan .............   Passed    0.01 sec
+      Start 18: rawr_tensor_residency_budget
+18/31 Test #18: rawr_tensor_residency_budget .......   Passed    0.01 sec
+      Start 19: hexmag_reap_live_fail_closed
+19/31 Test #19: hexmag_reap_live_fail_closed .......   Passed    0.01 sec
+      Start 20: reap_moe_transform
+20/31 Test #20: reap_moe_transform .................   Passed    0.02 sec
+      Start 21: deep2_mla_lifecycle_test
+21/31 Test #21: deep2_mla_lifecycle_test ...........   Passed    0.01 sec
+      Start 22: reap-floor-audit-smoke
+22/31 Test #22: reap-floor-audit-smoke .............   Passed    0.01 sec
+      Start 23: hardening_security
+23/31 Test #23: hardening_security .................   Passed    0.07 sec
+      Start 24: hardening_model_loader
+24/31 Test #24: hardening_model_loader .............   Passed    0.10 sec
+      Start 25: deep2_snap_test
+25/31 Test #25: deep2_snap_test ....................   Passed    0.01 sec
+      Start 26: snap_process_guard_test
+26/31 Test #26: snap_process_guard_test ............   Passed    0.90 sec
+      Start 27: flight_recorder_smoke_test
+27/31 Test #27: flight_recorder_smoke_test .........   Passed    0.20 sec
+      Start 28: rawr_run_self_test
+28/31 Test #28: rawr_run_self_test .................   Passed    0.02 sec
+      Start 29: rawr_fuzz_parsers
+29/31 Test #29: rawr_fuzz_parsers ..................   Passed    0.16 sec
+      Start 30: rawrxd_production_hardening
+30/31 Test #30: rawrxd_production_hardening ........   Passed    0.07 sec
+      Start 31: agent_esp_test
+31/31 Test #31: agent_esp_test .....................   Passed    0.01 sec
+
+100% tests passed out of 31
+
+Label Time Summary:
+hardening    =   0.18 sec*proc (2 tests)
+models       =   0.10 sec*proc (1 test)
+security     =   0.18 sec*proc (2 tests)
+
+Total Test time (real) =   4.26 sec
+
+The following tests did not run:
+	  5 - deep2_h11_prefill_parity (Skipped)

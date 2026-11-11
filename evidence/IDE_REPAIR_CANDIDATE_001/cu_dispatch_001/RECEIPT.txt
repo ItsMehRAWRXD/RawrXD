@@ -1,0 +1,18 @@
+IDE_REPAIR_CANDIDATE_001 / cu_dispatch_001
+ASOF_UTC=2026-11-10T07:28:39.2709253Z
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD MATURITY=82%
+VERIFY_EXE=F:\rawrxd\release\RawrXD-readiness-rc5\rawrxd_computer_use_ide_verify.exe
+VERIFY_SHA256=FD6E932C59C630ECE4096595AA2C8ECD0461BDEB84B78F1A0380F779A5FDDD81
+EXIT=1
+REGISTRY_REGISTER=PASS agent_tools_registered (>=8 computer_use.*)
+APPROVAL_DEFAULT_DENY=PASS agent_tool_approval_deny
+POLICY_LAUNCH_DENY=PASS agent_tool_policy_deny_launch
+CANCEL=PASS bridge_cancel
+FIRST_FAILURE_CLASS=CU_GUI_OWN_WINDOW_DISPATCH_FAIL
+FIRST_FAILURE_STEP=screenshot_own_window
+FOLLOW_ON_FAIL=find_own_window;mouse_own_window;type_own_window
+NOTE=Live Registry bind + default-deny proven; interactive HWND capture/find failed in this session (not fabricated PASS).
+IDE_SHA256=089B9C72923B7C4A04658B216C375FBEA7AA5BB5F0C05E720F75D17514A4AB8A
+LOOP_SHA256=F33D14A78191B1FB5C3833AC489247133FE5794AC24C28D0636D0895CA499316
+PACKAGE=F:\rawrxd\release\RawrXD-readiness-rc5
+CLI_RAWR_CU=ABSENT (packaged rawr.exe tools list has no computer_use.*; CU_STR=NO)

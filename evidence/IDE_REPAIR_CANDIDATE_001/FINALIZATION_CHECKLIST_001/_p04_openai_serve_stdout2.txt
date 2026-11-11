@@ -1,0 +1,65 @@
+[Deep2Engine] Loading model from: F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Auto dual-GPU: GPU0=AMD Radeon AI PRO R9700 (32479 MB) GPU1=AMD Radeon(TM) Graphics (2021 MB)
+[Deep2Engine] MODEL_FIT_ADMITTED model=F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf mode=GPU_MULTI devices=2 kv_per_token=6336 max_ctx_est=18446744073709532481
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\rawrxd\models)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] ERROR: No tensors parsed (run Parse first)
+[ReverseHotpatch] FAILED at stage 3 (ReverseUnlayer_Index)
+[Deep2Engine] WARNING: ReverseHotpatch failed, attempting raw load
+[Deep2Engine] GGUF architecture: 'llama'  hidden=2048 layers=22 heads=32 kvHeads=4 inter=5632 vocab=32000
+[Deep2Engine] Context length from metadata: 2048 tokens
+[Deep2Engine] Tokenizer loaded: vocab=32000 bos=1 eos=2 (Spm::encode)
+[Deep2Engine] Layer topology: 22 attention, 0 SSM, 0 unknown of 22 total
+[Deep2Engine] KV cache sized for 22 attention layers (SSM layers excluded)
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=0000024B3B4AF510  Registered 'blk.0.attn_q.weight': shard=0 offset=0 bytes=2359296  |  registry_size=1  registeredBytes=2359296  zeroOffset=1  maxResidentBytes=536870912
+[ResidencyManager] this=0000024B3B4AF510  Registered 'blk.11.attn_q.weight': shard=0 offset=0 bytes=2359296  |  registry_size=100  registeredBytes=293691392  zeroOffset=100  maxResidentBytes=536870912
+[ResidencyManager] this=0000024B3B4AF510  Registered 'output.weight': shard=0 offset=0 bytes=53760000  |  registry_size=200  registeredBytes=667070464  zeroOffset=200  maxResidentBytes=536870912
+[Deep2Engine] ResidencyManager: this=0000024B3B4AF510  registered=201 tensors  bytes=667078656  max=536870912
+[Deep2Engine] Auto dual-GPU: GPU0=AMD Radeon AI PRO R9700 (32479 MB) GPU1=AMD Radeon(TM) Graphics (2021 MB)
+[Deep2Engine] ThreadPool (loadModel): 8 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF60CA9F2A0 dequant=00007FF60CAA1EA0 GetGEMV(12)=00007FF60CA9F2A0 match=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 19 GEMV kernels, 19 dequant kernels
+[KVCache] Lazy pages: layers=22 page=8 virtualMax=2048 heads=4 dim=64
+[KVCache] HOT_BYTES=360448 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] KV cache: 22 layers x 2048 positions x 4 heads x 64 dim = 88.00 MB
+[Deep2Engine] Model loaded successfully (201 tensors)
+[Deep2Engine] Auto dual-GPU: GPU0=AMD Radeon AI PRO R9700 (32479 MB) GPU1=AMD Radeon(TM) Graphics (2021 MB)
+DEEP2_DEVICE_COUNT_DETECTED=3
+DEEP2_DEVICE_COUNT_OPENED=2
+DEEP2_COMPUTE_BACKEND=DUAL_SOVEREIGN
+DEEP2_EXEC_PATH=DUAL_SOVEREIGN
+SHARED_WEIGHT_ARENA=0
+CROSS_GPU_WEIGHT_COPY=0
+CROSS_LANE_SYNC=DEPENDENCIES_ONLY
+DEEP2_EXEC_MODE=5
+DEEP2_GPU_POLICY=6
+DEEP2_PLAN_REASON=auto_dual_gpu_detected
+DEEP2_PRIMARY_INDEX=0
+DEEP2_PRIMARY_STABLE_ID=1002:7551:00000000000161CA
+DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_VENDOR=AMD
+DEEP2_DEVICE_0_STABLE_ID=1002:7551:00000000000161CA
+DEEP2_DEVICE_0_VRAM_BYTES=34057322496
+DEEP2_DEVICE_0_SCORE=4294967295
+DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
+DEEP2_DEVICE_0_PROBLEM_CODE=0
+DEEP2_DEVICE_0_HEALTHY=1
+DEEP2_DEVICE_0_RESET_ATTEMPTED=0
+DEEP2_DEVICE_0_RESET_OK=0
+DEEP2_DEVICE_0_RESET_SKIPPED=0
+DEEP2_DEVICE_0_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_0_ACCESS_DENIED=0
+DEEP2_DEVICE_0_INSTANCE_ID=PCI\VEN_1002&DEV_7551&SUBSYS_E4991DA2&REV_C0\6&8916A45&0&00000009
+DEEP2_DEVICE_1_NAME=AMD Radeon(TM) Graphics
+DEEP2_DEVICE_1_VENDOR=AMD
+DEEP2_DEVICE_1_STABLE_ID=1002:13C0:000000000001BC10
+DEEP2_DEVICE_1_VRAM_BYTES=211997081

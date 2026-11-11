@@ -1,0 +1,72 @@
+AGENT_RESULT_REMEASURE_001
+GATE=B1-04_SHORT_NATIVE_GENERATION_REMEASURE
+ASOF_LOCAL=2026-11-10T14:52:00-05:00
+OWNER=B1_04_REMEASURE_WORKER
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+CONTROLLING_ISSUE49=D015
+LAW=NOT_RUN!=PASS
+NO_INVENT_PASS=1
+
+# Tip CLI under test
+EXE=F:\rawrxd\build_tip_debug_rel\bin-msvc\rawr.exe
+EXE_SHA256=ECE828A8AFE3E12B162C40E8BCF33601B8ED80F1463765C5A9D405E04DD2FB24
+EXE_SIZE=6839808
+EXE_MTIME=2026-11-10T14:15:00-05:00
+SHA_MATCHES_PRIOR_ECE828A8=1
+
+# Invoke note (tip CLI argv reality)
+# Literal preferred form:
+#   rawr.exe run qwen3:8b "Say exactly: AGENT_RESULT=5" --max-tokens=16
+# treats the quoted prompt as MODE (positional0) → ERROR unknown mode → EXIT=1.
+# Tip product form (rawr_cli.cpp cmdRun): --goal TEXT; ollama tag needs --backend ollama.
+# --max-tokens is an unknown flag and is swallowed; --approve-mutations not required.
+CMD_LITERAL_ATTEMPT=rawr.exe run qwen3:8b "Say exactly: AGENT_RESULT=5" --max-tokens=16
+CMD_LITERAL_EXIT=1
+CMD_LITERAL_STDOUT=ERROR: unknown mode 'Say exactly: AGENT_RESULT=5'. Run `rawr modes` to list them.
+CMD_PRODUCT=rawr.exe run qwen3:8b --backend ollama --mode ask --goal "Say exactly: AGENT_RESULT=5" --max-tokens=16
+CMD_VIA=cmd.exe + _b104_remeasure.cmd (avoid PowerShell quoting)
+WORKING_DIR_IMPLICIT=F:\rawrxd (CLI Workspace root)
+
+# Capture
+EXIT=0
+STDOUT_FILE=_remeasure_stdout.txt
+STDERR_FILE=_remeasure_stderr.txt
+STDOUT_SAMPLE=<<EOF
+RawrXD Local Agent
+Model:    qwen3:8b
+Backend:  ollama (backup)
+Endpoint: http://127.0.0.1:11434/v1/chat/completions
+Route:    ollama tag preserved; GGUF lookup bypassed; :8080 not probed
+Mode:     ask - Answer and explain without changing anything
+...
+=== Run summary ===
+turns=10 tool_calls=0 denied=0
+
+Summary: AGENT_RESULT=5
+EOF
+
+STDERR_SAMPLE=<<EOF
+[14:52:27.666] run: agent produced FINAL answer at turn 10
+...
+[StreamEngine] Shutdown
+EOF
+
+# Disposition
+AGENT_RESULT_SUBSTRING_FOUND=1
+AGENT_RESULT_LINE=Summary: AGENT_RESULT=5
+STATUS=PASS
+PASS_CRITERION=output contains AGENT_RESULT=5 (or clear substring)
+BACKEND=ollama
+MODEL=qwen3:8b
+MODE=ask
+TURNS=10
+TOOL_CALLS=0
+PATH_PID_SCOPED=1
+NO_NAME_STAR_IDE_KILLS=1
+
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+CONTROLLING=D015

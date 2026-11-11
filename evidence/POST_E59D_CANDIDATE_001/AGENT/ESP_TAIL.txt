@@ -1,0 +1,80 @@
+﻿{"ts_ns":1793343719866449200,"seq":10,"request":5559317683100,"agent":1,"kind":"tool_result","value":0,"message":"TOOL_RESULT id=rawr-call-0-0 name=readFile target=F:\\rawrxd\\tmp_build\\agent_multimodel_20261030\\nemotron_nano_4b.cpp status=PASS duration_ms=0 PASS"}
+{"ts_ns":1793343720577965800,"seq":11,"request":5559317683100,"agent":1,"kind":"heartbeat","value":0,"message":"source=ollama prompt_eval_count=897 eval_count=95 total_duration_ns=707020200 load_duration_ns=7518600 prompt_eval_duration_ns=77089000 eval_duration_ns=616959000 eval_tps=153.981058709"}
+{"ts_ns":1793343720577984300,"seq":12,"request":5559317683100,"agent":1,"kind":"tool_start","value":0,"message":"TOOL_START id=rawr-call-1-0 name=editFiles target=F:\\rawrxd\\tmp_build\\agent_multimodel_20261030\\nemotron_nano_4b.cpp"}
+{"ts_ns":1793343720581253600,"seq":13,"request":5559317683100,"agent":1,"kind":"tool_result","value":1,"message":"TOOL_RESULT id=rawr-call-1-0 name=editFiles target=F:\\rawrxd\\tmp_build\\agent_multimodel_20261030\\nemotron_nano_4b.cpp status=FAIL duration_ms=3 FAIL"}
+{"ts_ns":1793343720582533100,"seq":14,"request":5559317683100,"agent":1,"kind":"error","value":0,"message":"model_output_invalid"}
+{"ts_ns":1793343720583729100,"seq":15,"request":5559317683100,"agent":1,"kind":"error","value":1,"message":"inference_failed"}
+{"ts_ns":1793343720583760000,"seq":16,"request":5559317683100,"agent":1,"kind":"heartbeat","value":0,"message":"{\"request\":5559317683100,\"agent\":1,\"phase\":\"error\",\"generated\":0,\"prefill_tokens\":0,\"context\":0,\"rolling_tps\":0.000,\"decode_tps\":0.000,\"prefill_tps\":0.000,\"task_tps\":0.000,\"ttft_ms\":-1.000,\"prefill_ms\":0.000,\"decode_ms\":0.000,\"task_ms\":23078.766,\"gpu_dispatches\":0,\"cpu_fallbacks\":0,\"tool_calls\":2,\"failures\":2,\"stalled\":false,\"active\":false,\"slow\":false}"}
+{"ts_ns":1793343720583760700,"seq":17,"request":5559317683100,"agent":1,"kind":"finished","value":1,"message":"FAIL"}
+{"ts_ns":1793343868304746000,"seq":1,"request":5730117463500,"agent":1,"kind":"agent_step","value":0,"message":"cli_run_start"}
+{"ts_ns":1793343868304747500,"seq":2,"request":5730117463500,"agent":1,"kind":"model_load","value":0,"message":"qwen2.5-coder:1.5b-base"}
+{"ts_ns":1793343868305550400,"seq":3,"request":5730117463500,"agent":1,"kind":"agent_step","value":0,"message":"phase=PREFLIGHT"}
+{"ts_ns":1793343868307522900,"seq":4,"request":5730117463500,"agent":1,"kind":"agent_step","value":0,"message":"phase=PLANNING"}
+{"ts_ns":1793343868307531400,"seq":5,"request":5730117463500,"agent":1,"kind":"agent_step","value":0,"message":"inference_start"}
+{"ts_ns":1793343868307531600,"seq":6,"request":5730117463500,"agent":1,"kind":"agent_step","value":0,"message":"phase=WORKING"}
+{"ts_ns":1793343868317748600,"seq":7,"request":5730117463500,"agent":1,"kind":"agent_step","value":0,"message":"phase=BLOCKED"}
+{"ts_ns":1793343868317750900,"seq":8,"request":5730117463500,"agent":1,"kind":"error","value":1,"message":"model_tools_unsupported"}
+{"ts_ns":1793343868317771000,"seq":9,"request":5730117463500,"agent":1,"kind":"heartbeat","value":0,"message":"{\"request\":5730117463500,\"agent\":1,\"phase\":\"error\",\"generated\":0,\"prefill_tokens\":0,\"context\":0,\"rolling_tps\":0.000,\"decode_tps\":0.000,\"prefill_tps\":0.000,\"task_tps\":0.000,\"ttft_ms\":-1.000,\"prefill_ms\":0.000,\"decode_ms\":0.000,\"task_ms\":13.004,\"gpu_dispatches\":0,\"cpu_fallbacks\":0,\"tool_calls\":0,\"failures\":0,\"stalled\":false,\"active\":false,\"slow\":false}"}
+{"ts_ns":1793343868317771600,"seq":10,"request":5730117463500,"agent":1,"kind":"finished","value":1,"message":"FAIL"}
+{"ts_ns":1793343902427522600,"seq":1,"request":5764240240100,"agent":1,"kind":"agent_step","value":0,"message":"cli_run_start"}
+{"ts_ns":1793343902427524100,"seq":2,"request":5764240240100,"agent":1,"kind":"model_load","value":0,"message":"gemma3:4b"}
+{"ts_ns":1793343902428000500,"seq":3,"request":5764240240100,"agent":1,"kind":"agent_step","value":0,"message":"phase=PREFLIGHT"}
+{"ts_ns":1793343902429835600,"seq":4,"request":5764240240100,"agent":1,"kind":"agent_step","value":0,"message":"phase=PLANNING"}
+{"ts_ns":1793343902429840000,"seq":5,"request":5764240240100,"agent":1,"kind":"agent_step","value":0,"message":"inference_start"}
+{"ts_ns":1793343902429840200,"seq":6,"request":5764240240100,"agent":1,"kind":"agent_step","value":0,"message":"phase=WORKING"}
+{"ts_ns":1793343902439762000,"seq":7,"request":5764240240100,"agent":1,"kind":"agent_step","value":0,"message":"phase=BLOCKED"}
+{"ts_ns":1793343902439764300,"seq":8,"request":5764240240100,"agent":1,"kind":"error","value":1,"message":"model_tools_unsupported"}
+{"ts_ns":1793343902439784600,"seq":9,"request":5764240240100,"agent":1,"kind":"heartbeat","value":0,"message":"{\"request\":5764240240100,\"agent\":1,\"phase\":\"error\",\"generated\":0,\"prefill_tokens\":0,\"context\":0,\"rolling_tps\":0.000,\"decode_tps\":0.000,\"prefill_tps\":0.000,\"task_tps\":0.000,\"ttft_ms\":-1.000,\"prefill_ms\":0.000,\"decode_ms\":0.000,\"task_ms\":12.241,\"gpu_dispatches\":0,\"cpu_fallbacks\":0,\"tool_calls\":0,\"failures\":0,\"stalled\":false,\"active\":false,\"slow\":false}"}
+{"ts_ns":1793343902439785100,"seq":10,"request":5764240240100,"agent":1,"kind":"finished","value":1,"message":"FAIL"}
+{"ts_ns":1793343961893696500,"seq":1,"request":5823706414000,"agent":1,"kind":"agent_step","value":0,"message":"cli_run_start"}
+{"ts_ns":1793343961893697900,"seq":2,"request":5823706414000,"agent":1,"kind":"model_load","value":0,"message":"qwen3:8b"}
+{"ts_ns":1793343961894150400,"seq":3,"request":5823706414000,"agent":1,"kind":"agent_step","value":0,"message":"phase=PREFLIGHT"}
+{"ts_ns":1793343961896025100,"seq":4,"request":5823706414000,"agent":1,"kind":"agent_step","value":0,"message":"phase=PLANNING"}
+{"ts_ns":1793343961896030200,"seq":5,"request":5823706414000,"agent":1,"kind":"agent_step","value":0,"message":"inference_start"}
+{"ts_ns":1793343961896030400,"seq":6,"request":5823706414000,"agent":1,"kind":"agent_step","value":0,"message":"phase=WORKING"}
+{"ts_ns":1793343970523771600,"seq":7,"request":5823706414000,"agent":1,"kind":"heartbeat","value":0,"message":"source=ollama prompt_eval_count=471 eval_count=49 total_duration_ns=8626763600 load_duration_ns=7951150300 prompt_eval_duration_ns=164134000 eval_duration_ns=508960000 eval_tps=96.2747563659"}
+{"ts_ns":1793343970523775400,"seq":8,"request":5823706414000,"agent":1,"kind":"agent_step","value":0,"message":"tool_calls_received"}
+{"ts_ns":1793343970523787600,"seq":9,"request":5823706414000,"agent":1,"kind":"tool_start","value":0,"message":"TOOL_START id=rawr-call-0-0 name=readFile target=F:\\rawrxd\\tmp_build\\agent_multimodel_20261030\\qwen3_8b.cpp"}
+{"ts_ns":1793343970524037200,"seq":10,"request":5823706414000,"agent":1,"kind":"tool_result","value":0,"message":"TOOL_RESULT id=rawr-call-0-0 name=readFile target=F:\\rawrxd\\tmp_build\\agent_multimodel_20261030\\qwen3_8b.cpp status=PASS duration_ms=0 PASS"}
+{"ts_ns":1793343971227642200,"seq":11,"request":5823706414000,"agent":1,"kind":"heartbeat","value":0,"message":"source=ollama prompt_eval_count=544 eval_count=63 total_duration_ns=698644400 load_duration_ns=5079700 prompt_eval_duration_ns=33679000 eval_duration_ns=657389000 eval_tps=95.8336692582"}
+{"ts_ns":1793343971227656400,"seq":12,"request":5823706414000,"agent":1,"kind":"tool_start","value":0,"message":"TOOL_START id=rawr-call-1-0 name=editFiles target=F:\\rawrxd\\tmp_build\\agent_multimodel_20261030\\qwen3_8b.cpp"}
+{"ts_ns":1793343971234002100,"seq":13,"request":5823706414000,"agent":1,"kind":"tool_result","value":0,"message":"TOOL_RESULT id=rawr-call-1-0 name=editFiles target=F:\\rawrxd\\tmp_build\\agent_multimodel_20261030\\qwen3_8b.cpp status=PASS duration_ms=6 PASS"}
+{"ts_ns":1793343971236187700,"seq":14,"request":5823706414000,"agent":1,"kind":"file_changed","value":0,"message":"F:\\rawrxd\\tmp_build\\agent_multimodel_20261030\\qwen3_8b.cpp"}
+{"ts_ns":1793343971780273200,"seq":15,"request":5823706414000,"agent":1,"kind":"heartbeat","value":0,"message":"source=ollama prompt_eval_count=620 eval_count=48 total_duration_ns=543318300 load_duration_ns=6922600 prompt_eval_duration_ns=34237000 eval_duration_ns=499119000 eval_tps=96.1694505719"}
+{"ts_ns":1793343971780287900,"seq":16,"request":5823706414000,"agent":1,"kind":"tool_start","value":0,"message":"TOOL_START id=rawr-call-2-0 name=readFile target=F:\\rawrxd\\tmp_build\\agent_multimodel_20261030\\qwen3_8b.cpp"}
+{"ts_ns":1793343971780613700,"seq":17,"request":5823706414000,"agent":1,"kind":"tool_result","value":0,"message":"TOOL_RESULT id=rawr-call-2-0 name=readFile target=F:\\rawrxd\\tmp_build\\agent_multimodel_20261030\\qwen3_8b.cpp status=PASS duration_ms=0 PASS"}
+{"ts_ns":1793343972339563900,"seq":18,"request":5823706414000,"agent":1,"kind":"heartbeat","value":0,"message":"source=ollama prompt_eval_count=693 eval_count=49 total_duration_ns=555281500 load_duration_ns=6160100 prompt_eval_duration_ns=35001000 eval_duration_ns=509966000 eval_tps=96.0848370284"}
+{"ts_ns":1793343972339572300,"seq":19,"request":5823706414000,"agent":1,"kind":"token_generated","value":0,"message":"completion"}
+{"ts_ns":1793343972346610200,"seq":20,"request":5823706414000,"agent":1,"kind":"agent_step","value":0,"message":"phase=COMPLETED"}
+{"ts_ns":1793343972346633200,"seq":21,"request":5823706414000,"agent":1,"kind":"heartbeat","value":0,"message":"{\"request\":5823706414000,\"agent\":1,\"phase\":\"done\",\"generated\":1,\"prefill_tokens\":0,\"context\":0,\"rolling_tps\":0.000,\"decode_tps\":142.017,\"prefill_tps\":0.000,\"task_tps\":0.096,\"ttft_ms\":10445.874,\"prefill_ms\":0.000,\"decode_ms\":7.041,\"task_ms\":10452.915,\"gpu_dispatches\":0,\"cpu_fallbacks\":0,\"tool_calls\":3,\"failures\":0,\"stalled\":false,\"active\":false,\"slow\":false}"}
+{"ts_ns":1793343972346633600,"seq":22,"request":5823706414000,"agent":1,"kind":"finished","value":0,"message":"PASS"}
+{"ts_ns":1793347811304109700,"seq":1,"request":9673116827300,"agent":1,"kind":"agent_step","value":0,"message":"cli_run_start"}
+{"ts_ns":1793347811304114200,"seq":2,"request":9673116827300,"agent":1,"kind":"model_load","value":0,"message":"bigdaddyg-productivity-local:latest"}
+{"ts_ns":1793347811304608300,"seq":3,"request":9673116827300,"agent":1,"kind":"agent_step","value":0,"message":"phase=PREFLIGHT"}
+{"ts_ns":1793347811306538800,"seq":4,"request":9673116827300,"agent":1,"kind":"agent_step","value":0,"message":"phase=PLANNING"}
+{"ts_ns":1793347811306540800,"seq":5,"request":9673116827300,"agent":1,"kind":"agent_step","value":0,"message":"inference_start"}
+{"ts_ns":1793347811306540900,"seq":6,"request":9673116827300,"agent":1,"kind":"agent_step","value":0,"message":"phase=WORKING"}
+{"ts_ns":1793347811313289000,"seq":7,"request":9673116827300,"agent":1,"kind":"token_generated","value":0,"message":"completion"}
+{"ts_ns":1793347811317973900,"seq":8,"request":9673116827300,"agent":1,"kind":"agent_step","value":0,"message":"phase=COMPLETED"}
+{"ts_ns":1793347811317998900,"seq":9,"request":9673116827300,"agent":1,"kind":"heartbeat","value":0,"message":"{\"request\":9673116827300,\"agent\":1,\"phase\":\"done\",\"generated\":1,\"prefill_tokens\":0,\"context\":0,\"rolling_tps\":0.000,\"decode_tps\":213.288,\"prefill_tps\":0.000,\"task_tps\":72.137,\"ttft_ms\":9.174,\"prefill_ms\":0.000,\"decode_ms\":4.689,\"task_ms\":13.863,\"gpu_dispatches\":0,\"cpu_fallbacks\":0,\"tool_calls\":0,\"failures\":0,\"stalled\":false,\"active\":false,\"slow\":false}"}
+{"ts_ns":1793347811317999300,"seq":10,"request":9673116827300,"agent":1,"kind":"finished","value":0,"message":"PASS"}
+{"ts_ns":1793672857557525300,"seq":1,"request":5529509742300,"agent":1,"kind":"agent_step","value":0,"message":"cli_run_start"}
+{"ts_ns":1793672857557527400,"seq":2,"request":5529509742300,"agent":1,"kind":"model_load","value":0,"message":"bigdaddyg-productivity-local:latest"}
+{"ts_ns":1793672857561958100,"seq":3,"request":5529509742300,"agent":1,"kind":"agent_step","value":0,"message":"phase=PREFLIGHT"}
+{"ts_ns":1793672857563786100,"seq":4,"request":5529509742300,"agent":1,"kind":"agent_step","value":0,"message":"phase=PLANNING"}
+{"ts_ns":1793672857563788000,"seq":5,"request":5529509742300,"agent":1,"kind":"agent_step","value":0,"message":"inference_start"}
+{"ts_ns":1793672857563788200,"seq":6,"request":5529509742300,"agent":1,"kind":"agent_step","value":0,"message":"phase=WORKING"}
+{"ts_ns":1793672857574473400,"seq":7,"request":5529509742300,"agent":1,"kind":"token_generated","value":0,"message":"completion"}
+{"ts_ns":1793672857579167400,"seq":8,"request":5529509742300,"agent":1,"kind":"agent_step","value":0,"message":"phase=COMPLETED"}
+{"ts_ns":1793672857579190200,"seq":9,"request":5529509742300,"agent":1,"kind":"heartbeat","value":0,"message":"{\"request\":5529509742300,\"agent\":1,\"phase\":\"done\",\"generated\":1,\"prefill_tokens\":0,\"context\":0,\"rolling_tps\":0.000,\"decode_tps\":212.911,\"prefill_tps\":0.000,\"task_tps\":46.206,\"ttft_ms\":16.946,\"prefill_ms\":0.000,\"decode_ms\":4.697,\"task_ms\":21.642,\"gpu_dispatches\":0,\"cpu_fallbacks\":0,\"tool_calls\":0,\"failures\":0,\"stalled\":false,\"active\":false,\"slow\":false}"}
+{"ts_ns":1793672857579190600,"seq":10,"request":5529509742300,"agent":1,"kind":"finished","value":0,"message":"PASS"}
+{"ts_ns":1793717854103519800,"seq":1,"request":50526055736800,"agent":1,"kind":"agent_step","value":0,"message":"cli_run_start"}
+{"ts_ns":1793717854103521700,"seq":2,"request":50526055736800,"agent":1,"kind":"model_load","value":0,"message":"bigdaddyg-productivity-local:latest"}
+{"ts_ns":1793717854107953900,"seq":3,"request":50526055736800,"agent":1,"kind":"agent_step","value":0,"message":"phase=PREFLIGHT"}
+{"ts_ns":1793717854111084500,"seq":4,"request":50526055736800,"agent":1,"kind":"agent_step","value":0,"message":"phase=PLANNING"}
+{"ts_ns":1793717854111087400,"seq":5,"request":50526055736800,"agent":1,"kind":"agent_step","value":0,"message":"inference_start"}
+{"ts_ns":1793717854111087600,"seq":6,"request":50526055736800,"agent":1,"kind":"agent_step","value":0,"message":"phase=WORKING"}
+{"ts_ns":1793717854124591300,"seq":7,"request":50526055736800,"agent":1,"kind":"agent_step","value":0,"message":"phase=BLOCKED"}
+{"ts_ns":1793717854124593700,"seq":8,"request":50526055736800,"agent":1,"kind":"error","value":1,"message":"model_tools_unsupported"}
+{"ts_ns":1793717854124617100,"seq":9,"request":50526055736800,"agent":1,"kind":"heartbeat","value":0,"message":"{\"request\":50526055736800,\"agent\":1,\"phase\":\"error\",\"generated\":0,\"prefill_tokens\":0,\"context\":0,\"rolling_tps\":0.000,\"decode_tps\":0.000,\"prefill_tps\":0.000,\"task_tps\":0.000,\"ttft_ms\":-1.000,\"prefill_ms\":0.000,\"decode_ms\":0.000,\"task_ms\":21.073,\"gpu_dispatches\":0,\"cpu_fallbacks\":0,\"tool_calls\":0,\"failures\":0,\"stalled\":false,\"active\":false,\"slow\":false}"}
+{"ts_ns":1793717854124617700,"seq":10,"request":50526055736800,"agent":1,"kind":"finished","value":1,"message":"FAIL"}

@@ -1,0 +1,2 @@
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"RETRY","entry":1,"payload":{"attempt":0,"reason":"invalid_tool_format","can_continue":true,"timestamp":1794255062588}}

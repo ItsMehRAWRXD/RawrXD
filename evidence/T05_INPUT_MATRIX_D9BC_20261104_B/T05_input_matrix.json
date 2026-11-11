@@ -1,0 +1,56 @@
+﻿[
+    {
+        "Phase":  "before",
+        "Hwnd":  "0x30BF0",
+        "Focus":  "focus=0x170C38;active=0x170C38;capture=0x0",
+        "Text":  "",
+        "Length":  0,
+        "Modify":  0,
+        "UIA":  ""
+    },
+    {
+        "Phase":  "keyboard_X",
+        "Hwnd":  "0x30BF0",
+        "Focus":  "focus=0x30BF0;active=0x170C38;capture=0x0",
+        "Text":  "",
+        "Length":  0,
+        "Modify":  0,
+        "UIA":  ""
+    },
+    {
+        "Phase":  "paste_ctrlv",
+        "Hwnd":  "0x30BF0",
+        "Focus":  "focus=0x30BF0;active=0x170C38;capture=0x0",
+        "Text":  "",
+        "Length":  7,
+        "Modify":  1,
+        "UIA":  ""
+    },
+    {
+        "Phase":  "wm_char",
+        "Hwnd":  "0x30BF0",
+        "Focus":  "focus=0x30BF0;active=0x170C38;capture=0x0",
+        "Text":  "",
+        "Length":  8,
+        "Modify":  1,
+        "UIA":  ""
+    },
+    {
+        "Phase":  "wm_settext_control_return_1",
+        "Hwnd":  "0x30BF0",
+        "Focus":  "focus=0x30BF0;active=0x170C38;capture=0x0",
+        "Text":  "",
+        "Length":  1,
+        "Modify":  0,
+        "UIA":  ""
+    },
+    {
+        "Phase":  "em_replacesel_return_1",
+        "Hwnd":  "0x30BF0",
+        "Focus":  "focus=0x30BF0;active=0x170C38;capture=0x0",
+        "Text":  "",
+        "Length":  2,
+        "Modify":  1,
+        "UIA":  ""
+    }
+]

@@ -1,0 +1,8 @@
+﻿{
+    "Gate":  "T05",
+    "Result":  "NOT_VERIFIED",
+    "CandidateSHA256":  "D9BC51AD59808ED381AF405350DC4F042C3AE6E30943DD81D9620382B9A2FBEB",
+    "PID":  17328,
+    "Error":  "Control not found in PID 17328",
+    "TimestampUtc":  "2026-11-04T13:48:03.9961362Z"
+}

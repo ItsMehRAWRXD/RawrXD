@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "kind": "branch-tip",
+  "original_branch": "upload/repair-candidate-20261110",
+  "original_commit": "a5daf6594107b190a2f7a6982ffb089c7e89f217",
+  "worktree": null,
+  "publication": "Source snapshot on a new branch; original history is preserved locally.",
+  "lfs_status": "Remote account budget exceeded; locally available text payloads materialized as regular Git blobs.",
+  "exclusions_receipt": "Local evidence/GITHUB_BRANCH_SYNC_001/86884389/exclusions-batches.jsonl",
+  "release_certification": "NOT_CLAIMED"
+}

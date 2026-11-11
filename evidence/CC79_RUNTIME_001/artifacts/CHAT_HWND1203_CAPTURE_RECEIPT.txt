@@ -1,0 +1,27 @@
+﻿EXACTLY_ONCE=NOT_VERIFIED
+DISPATCH_VISIBLE=PRESENT tags=1
+HWND_1203_CAPTURE_KIND=SCORED_EDIT id=1203 score=180
+HWND_1203_HWND=0x5A0F04
+HAS_WELCOME=0
+HAS_AI=1
+HAS_USER=1
+HAS_PROBE_TEXT=0
+IS_DEBUG_CONTENT=0
+TRANSCRIPT_INSERT_ON_TIP=0
+TRANSCRIPT_INSERT_JOURNAL_LINES=0
+INPUT_EVENT_BUTTON_CLICK=1
+CHAT_SEND_ATTEMPT=1
+CHAT_SEND_ARMED=1
+UI_UPDATE_COMPLETE=1
+BLOCKERS=BLOCKED_NEEDS_TIP_INSTRUMENT,FULL_CHAIN_1_1_UNPROVEN,NO_REBUILD_H57_HOLD
+NEXT_ACTION=Visible tags captured; still need TRANSCRIPT_INSERT tip instrument when H57 idle (no rebuild now)
+TIP_SHA=F5F4807E4738F500397AA5ACEBC8BE095806DF19C71FF959083512C73A16BA15
+SESSION_ID=eo1203_sess_20261109-102342
+RUN_ID=eo1203_run_20261109-102342
+VISIBLE_PATH=F:\rawrxd\evidence\CC79_RUNTIME_001\candidates\tip_cc79_integ_002_eo_hwnd1203\hwnd1203_transcript_20261109-102342.txt
+ENUM_PATH=F:\rawrxd\evidence\CC79_RUNTIME_001\candidates\tip_cc79_integ_002_eo_hwnd1203\hwnd1203_enum_20261109-102342.txt
+RUNTIME_COPY=F:\rawrxd\evidence\CC79_RUNTIME_001\artifacts\chat_hwnd1203_runtime_20261109-102342.log
+VISIBLE_SAMPLE=> User: [dispatch_id=1] RXD_ONCE_8592e16be596451f8fcab65734392729      AI:   Greetings! I'm BigDaddyG Productivity Mode, ready to assist you with your questions and tasks. Please feel free to ask me anything, and I'll do my best to provide concise and actionable responses.  To better serve you, I'd like to clarify a few things:  1. When answering questions, I'll always try to lead with the direct 
+PROMOTE=0
+ENGINEERING_MATURITY=82%_UNCHANGED
+NO_DEBUG_OUTPUT_ISSUE49_PASS=1

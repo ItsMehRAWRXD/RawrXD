@@ -1,0 +1,19 @@
+[0/2] Re-checking globbed directories...
+[1/7] Performing build step for 'vulkan-shaders-gen'
+ninja: no work to do.
+[2/7] Performing install step for 'vulkan-shaders-gen'
+-- Up-to-date: F:/rawrxd/build_tip_debug_rel/RelWithDebInfo/vulkan-shaders-gen.exe
+[3/7] Completed 'vulkan-shaders-gen'
+[4/7] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_lifecycle.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+[5/7] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_VSCodeUI.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1067): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1068): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1196): warning C4189: 'btnFilter': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1190): warning C4189: 'btnPause': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1184): warning C4189: 'btnClear': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1369): warning C4100: 'wParam': unreferenced parameter
+[6/7] Linking CXX executable bin\RawrXD-Win32IDE-Native-Ext.exe

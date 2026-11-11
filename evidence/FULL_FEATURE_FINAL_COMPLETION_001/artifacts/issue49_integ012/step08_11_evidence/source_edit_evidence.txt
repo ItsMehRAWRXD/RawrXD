@@ -1,0 +1,4 @@
+SOURCE_EDITED=0
+PROJECT_SHA_BEFORE=1429C3CBD630AB69BF17FD97533F4BB2C629C5A373D513EF2E3CB365F1B9A250
+PROJECT_SHA_AFTER=1429C3CBD630AB69BF17FD97533F4BB2C629C5A373D513EF2E3CB365F1B9A250
+CONTENT_AFTER=/* Issue #49 product-final fixture: intentional arity bug for agent fix loop. */ ||  || int undeclared_fn(int a) { return a; } ||  || int main() { ||  ||   return undeclared_fn(1, 2); ||  || } ||  ||  ||  || 

@@ -1,0 +1,18 @@
+{
+  "kimi": {
+    "mla_product_seal": true,
+    "gpu_certified": false,
+    "receipt": "F:\\rawrxd\\evidence\\unified_plan_start_20261026\\kimi_replay_final_receipt.json",
+    "complete": true,
+    "metrics": 480,
+    "generated": 1,
+    "exit": 0,
+    "calibration_complete": false
+  },
+  "minimax": {
+    "receipt_complete": false,
+    "exit": 4,
+    "architecture_guard": true,
+    "receipt": "F:\\rawrxd\\evidence\\unified_plan_start_20261026\\minimax_replay_final.txt"
+  }
+}

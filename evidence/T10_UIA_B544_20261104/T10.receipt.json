@@ -1,0 +1,17 @@
+﻿{
+    "Gate":  "T10",
+    "Result":  "PASS",
+    "CandidateSHA256":  "B54422C4E082D19BEEB46E135FBE5D37D9AD9D202D87321C1B1BA3D326493909",
+    "PIDBefore":  18140,
+    "PIDAfter":  21004,
+    "Marker":  "RAWRXD_T10_B544_EDITOR_MARKER_20261104",
+    "EditorMarkerObserved":  true,
+    "AutosaveMarkerObserved":  true,
+    "HardKillConfirmed":  true,
+    "RecoveredEditorMarkerObserved":  true,
+    "RecoveredSessionMarkerObserved":  true,
+    "RecoveredEditorTextLength":  38,
+    "RecoveredSessionTextLength":  23503,
+    "SessionPath":  "C:\\Users\\Garrett\\AppData\\Local\\RawrXD\\ide_session.json",
+    "TimestampUtc":  "2026-11-04T14:05:41.9243612Z"
+}

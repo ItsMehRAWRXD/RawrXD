@@ -1,0 +1,55 @@
+H01_H16_MATRIX
+ASOF_UTC=2026-11-10T15:15:00Z
+OWNER=I_T_P_H_B07B08
+VOCAB=PASS|FAIL|NOT_VERIFIED|SEALED_STANDALONE|HISTORICAL
+PROMOTE=0
+CERTIFIED=0
+NO_INVENT_PASS=1
+NO_CROSS_SHA_INHERIT=1
+LAW=CHECKLIST_H_ID != HISTORICAL_H_ID (namespace collision)
+LAW=H_ROW != AUTOMATIC_DEFECT
+LAW=NOT_RUN != PASS
+LAW=PRIOR_CONFIRMED_OTHER_SHA != TIP_PASS
+
+# Finalization H01-H16 are reliability audit targets (checklist §8).
+# Historical register H01-H120 under HIDDEN_GAP_AUDIT_001 uses DIFFERENT meanings for same labels.
+# Reconcile via CROSSWALK only; do not inherit PASS/CONFIRMED across namespaces or SHAs.
+
+HISTORICAL_REGISTER=
+  AUTHORITY=F:\rawrxd\evidence\HIDDEN_GAP_AUDIT_001\MASTER_HIDDEN_GAP_REGISTER.md
+  WAVE5_OVERLAY=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\hidden_gap_wave5\HIDDEN_GAP_REGISTER.txt
+  PRIOR_CONFIRMED_OTHER_SHA=H01,H04,H16,H27,H51,H57,H87,H113
+  TIP_OVERLAY_NOTE=D93F-era rows mostly BLOCKED_BY_LAUNCH / UNVERIFIED; H_CONFIRMED_REPROVED_ON_D93F=0
+
+TIP_ISSUE49_IDE_SHA256=D56FE6DD5FADF45F1E475740BFBC348415DDE0B44C33D2790B93E5B9EA023635
+SEALED_RELATED=
+  AGENTSESSION_FLUSH_UTF8=CLOSED_ON_G PATH=issue49_candidate_D56FE6DD_928A90F0_001\agentsession_flush_utf8_001\POST_FIX_DISPOSITION.txt
+  CPU_LIFECYCLE=PASS_requests=3 PATH=cpu_eval_first_fail_001\CONTROLLING_DISPOSITION.txt
+
+# ID | FINALIZATION_REQUIREMENT | STATUS | HISTORICAL_CROSSWALK | EVIDENCE_PATHS | NOTE
+H01 | No stale callbacks after session destruction | NOT_VERIFIED | hist H18 msgs-after-cancel INVESTIGATE; hist H16 stale HWND CONFIRMED other-SHA | HIDDEN_GAP_AUDIT_001\MASTER_HIDDEN_GAP_REGISTER.md; tip006 OUTPUT seal | Tip session-destruction callback sweep NOT_RUN
+H02 | No use-after-free during cancellation | NOT_VERIFIED | hist H17/H29 cancel/lifecycle leads | DAILY_DRIVER_9FDE ITEM_7_CANCEL=PASS is HISTORICAL surface only | Cancel PASS != UAF proof
+H03 | No invalid UTF-8/UTF-16 conversion crashes | HISTORICAL | AgentSession Flush nlohmann type_error.316 CLOSED_ON_G; hist H32 unicode diag UNVERIFIED | agentsession_flush_utf8_001\POST_FIX_DISPOSITION.txt; MASTER_DISPOSITION.txt | Specific Flush UTF-8 crash sealed on G; broad conversion matrix NOT_VERIFIED on tip
+H04 | No duplicate tool execution on retries | NOT_VERIFIED | hist H57/H72 agent tool family; exactly-once markers SOURCE_WIRED | hidden_gap_wave5\HIDDEN_GAP_REGISTER.txt MARK_exactly_once=1 | Runtime duplicate-dispatch proof NOT_RUN on tip
+H05 | No lost edits during concurrent file ops | NOT_VERIFIED | hist multi-file edit NB02 PARTIAL | hidden_gap_wave5 NB02 | Tip concurrent edit integrity NOT_RUN
+H06 | No deadlocks UI/model/build threads | NOT_VERIFIED | hist H24 UI deadlock UNVERIFIED | MASTER_HIDDEN_GAP_REGISTER.md H24 | No tip deadlock campaign
+H07 | No unbounded queues/logs/memory growth | NOT_VERIFIED | — | — | No tip growth receipt
+H08 | No unintended execution outside authorized workspaces | NOT_VERIFIED | hist H91 path traversal INVESTIGATE; CU default-deny PASS (verify harness) | hidden_gap_wave5 CU_POLICY_DEFAULT_DENY=PASS | CU policy PASS != full workspace boundary E2E on tip IDE
+H09 | No misleading success receipts after partial failure | NOT_VERIFIED | ISSUE49 partial 8/11 / aborted 021 | issue49_gui_ollama_qwen3_021\_aborted_partial_001\; SWARM_LAUNCH_001.txt | Fail-closed holds; tip misleading-receipt audit NOT_RUN
+H10 | No accidental fallback to development stubs | NOT_VERIFIED | hist H03 stub INVESTIGATE; FEATURE_FICTION_STRINGS=0 on D93F binary scan | hidden_gap_wave5 CHECKLIST_06 | String absence != live stub-free product path on tip
+H11 | No unhandled model/provider disconnects | NOT_VERIFIED | hist H73-H90 model/GPU family | STRATA_DUAL_ENGINE_PILOT_001.txt; ollama host up | Disconnect/recovery matrix NOT_RUN
+H12 | No unsafe process termination / orphaned workers | NOT_VERIFIED | hist H29 child-survives-cancel; W6 ORPHAN_IDE_PROCS=0 host extract smoke | release_cert_wave6\CLEAN_MACHINE_CHECKLIST.txt | Host extract orphan check != tip IDE agent/build tree proof
+H13 | No silent corruption during rollback/recovery | NOT_VERIFIED | Issue49 WRITE_ROLLBACK without commit (G track note) | MASTER_DISPOSITION / issue49 G receipts | Rollback integrity NOT sealed as PASS
+H14 | No cross-session tool-result contamination | NOT_VERIFIED | hist H73/H86 multi-session leads | hidden_gap_wave5 CHECKLIST_11 | Tip multi-session isolation NOT_RUN
+H15 | No dependency on undocumented environment variables | NOT_VERIFIED | hist H08/H27 VS_UNICODE CONFIRMED other-SHA; CLEAN_MACHINE no RAWRXD_* shortcuts unchecked | MASTER_HIDDEN_GAP_REGISTER.md H27; CLEAN_MACHINE_CHECKLIST.txt | Tip env-dependency audit NOT_RUN
+H16 | No unresolved release-critical compiler/linker deps | HISTORICAL | hist H01 Core TU CONFIRMED other-SHA; hist H09 optional symbols; I57 B06/B11 related | HIDDEN_GAP_AUDIT_001\MASTER_HIDDEN_GAP_REGISTER.md H01; CERTIFICATION_LADDER_MAP.md B07/B08/B11 | Historical build-admission leads remain; tip release linker conjunction NOT_VERIFIED — not auto FAIL this wave
+
+SCOREBOARD_H=
+  TOTAL=16
+  PASS=0
+  FAIL=0
+  NOT_VERIFIED=14
+  SEALED_STANDALONE=0
+  HISTORICAL=2
+  CERTIFIED=0
+  PROMOTE=0

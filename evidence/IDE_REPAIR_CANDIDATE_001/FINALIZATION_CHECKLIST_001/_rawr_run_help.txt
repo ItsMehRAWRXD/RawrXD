@@ -1,0 +1,3 @@
+ERROR: model not found inside workspace: --help
+Run `rawr models` to list loadable GGUF files.
+[StreamEngine] Shutdown

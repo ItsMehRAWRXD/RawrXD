@@ -1,0 +1,19 @@
+﻿{
+  "acceptance": {
+    "agent_turns": 1,
+    "build_passed": false,
+    "crash_free_exit": false,
+    "final_ledger_present": true,
+    "source_edit_performed": false,
+    "tests_passed": false,
+    "tool_calls": 0,
+    "tool_calls_succeeded": 0
+  },
+  "agent_mode": "code",
+  "agent_turns": 1,
+  "build_results": [],
+  "checkpoints": [],
+  "commits": [],
+  "conversation": [
+    {
+      "content": "bug.cpp has TWO separate defects. Follow this exact order - do not fix both in one write: STEP A: Fix ONLY the compile error around undeclared_fn. Keep add() exactly as \"return a - b;\". Do not rewrite the whole file to a simplified version. Then build/test. STEP B: After the tool result shows compile success but AGENT_RESULT is not 5 (or the write was rolled back for wrong out

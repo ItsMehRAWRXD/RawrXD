@@ -1,0 +1,13 @@
+{
+  "model": "qwen36-reference-local",
+  "response": " nghĩa của",
+  "done": true,
+  "done_reason": "length",
+  "context": null,
+  "eval_count": 2,
+  "eval_duration": 12372000,
+  "prompt_eval_count": 2,
+  "prompt_eval_duration": 11113000,
+  "load_duration": 35175871100,
+  "elapsed_ms": 35276.523
+}

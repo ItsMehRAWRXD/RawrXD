@@ -1,0 +1,71 @@
+Inference engines, GPU integration, and performance
+The CPU lifecycle and standalone STRATA/GFX1201 inference successes should remain sealed.
+
+Remaining integration requirements:
+ID	Requirement	Current gap
+I01	Native Deep2 inference	Final IDE integration acceptance
+I02	STRATA routing	IDE-to-STRATA generation
+I03	GFX1201 device selection	Explicit device/backend correctness
+I04	Dual-GPU operation	Isolation and resource allocation
+I05	Ollama coexistence	No port, environment, or model conflicts
+I06	Model switching	No stale session or wrong model
+I07	Streaming output	Correct tokens, completion, cancellation
+I08	CPU/GPU fallback	Predictable recovery without crash
+I09	Quantized model formats	Supported-format compatibility matrix
+I10	Context management	Correct limits, truncation, KV-cache handling
+I11	Large context	Validate claimed 1,048,576-token target
+I12	Sustained performance	Repeated TPS, latency, memory benchmarks
+I13	Parallel agents	Prove desired concurrency under load
+I14	Tool-call compatibility	Structured calls through each supported provider
+
+The 1M-token context and high-concurrency targets are substantial performance objectives. They should be separated from minimum daily-driver readiness unless explicitly required by the release specification.
+6. Terminal, PowerShell, build, and debugging
+ID	Requirement	Remaining proof
+T01	Integrated PowerShell	Real commands execute inside pane
+T02	ANSI/VT rendering	No raw escape sequences or corrupted output
+T03	Terminal input/history	Correct keyboard and command behavior
+T04	Process lifecycle	No hung shells or orphaned children
+T05	Build Project	Compile, link, run, report results
+T06	Build cancellation	Safe process-tree termination
+T07	Problems parsing	Accurate file, line, severity
+T08	Click-to-line	Final same-SHA verification
+T09	Debugger integration	Launch, attach, breakpoints, stack inspection
+T10	Output-pane streaming	No dropped or duplicated output
+T11	Concurrent terminal/build	No UI deadlocks or output mixing
+T12	Exit-code propagation	Accurate success/failure reporting
+
+7. Git, projects, persistence, and deployment
+ID	Requirement	Remaining proof
+P01	Open/create projects	Real workspace lifecycle
+P02	Git status and diffs	Accurate working-tree representation
+P03	Git stage/commit	Correct file selection and commit
+P04	Git rollback	Safe recovery without unrelated file loss
+P05	Branch operations	Correct branch and worktree behavior
+P06	Repository integrity	No unintended changes to sealed baselines
+P07	Settings persistence	Restore theme, models, panels, preferences
+P08	Clean installation	No hidden developer-machine dependencies
+P09	Portable packaging	Required binaries, libraries, assets included
+P10	Fresh clone build	Reproducible toolchain and dependencies
+P11	Clean-machine execution	No manually prepared state
+P12	CI reproducibility	Automated acceptance with retained artifacts
+
+8. Hidden reliability and security gaps
+These are important because a feature can appear to work during a demonstration while remaining unsafe or unreliable under real usage.
+ID	Finalization requirement
+H01	No stale callbacks after session destruction
+H02	No use-after-free during cancellation
+H03	No invalid UTF-8/UTF-16 conversion crashes
+H04	No duplicate tool execution on retries
+H05	No lost edits during concurrent file operations
+H06	No deadlocks between UI, model, and build threads
+H07	No unbounded queues, logs, or memory growth
+H08	No unintended execution outside authorized workspaces
+H09	No misleading success receipts after partial failure
+H10	No accidental fallback to development stubs
+H11	No unhandled model/provider disconnects
+H12	No unsafe process termination or orphaned workers
+H13	No silent corruption during rollback or recovery
+H14	No cross-session tool-result contamination
+H15	No dependency on undocumented environment variables
+H16	No unresolved release-critical compiler/linker dependencies
+</user_query>

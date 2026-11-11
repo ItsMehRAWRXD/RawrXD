@@ -1,0 +1,1 @@
+usage: deep2_agentic_loop.exe --model <gguf|model-id> [--provider deep2|ollama] [--task text-or-file] [--workdir D] [--target-file f] [--expected-source text] [--max-steps N] [--max-new N] [--max-wall-time-sec N] [--batched-prefill 0|1] [--prefill-chunk N] [--cpu] [--toktest]

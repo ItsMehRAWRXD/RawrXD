@@ -1,0 +1,25 @@
+RAWRXD_SOVEREIGN_LINKER_CERT_001
+TIMESTAMP=2026-10-27
+LINKER=F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\bin\rawrxd_link_corpus.exe
+LINKER_SHA256=37f7d354288c11772c0420a5278cb5499fd3a512857dba21e55265bc84669cca
+
+CORPUS_19_19             = PASS (17 positive + 2 negative)
+MULTI_OBJECT_LINKING     = PASS (03/04/05/07/08/18)
+NEGATIVE_UNRESOLVED      = PASS (06 link_fail)
+NEGATIVE_COMPILE_FAIL    = PASS (19)
+BSS_AND_DATA             = PASS (09/10/13)
+WINDOWS_RUNTIME_SMOKE    = PASS (prior PE exit-42 + corpus runtimes)
+
+WINDOWS_RUNTIME_CERT     = 0
+FIVE_OS_CERTIFIED        = FALSE
+PROMOTE                  = 0
+TIP_CLIMB                = HOLD
+
+NOTE: Freestanding exit-code corpus (not full CRT/DLL/TLS five_os claim).
+      Six JSON artifacts emitted beside this receipt.
+      Entry-stub issue remains closed; not reopened.
+
+LINKER_FIXES_THIS_TURN:
+  - Fail link on reloc/unresolved errors (main.c)
+  - Skip undefined symbols in global table; prefer defined matches
+  - Materialize BSS with characteristics + zero-fill (section_merge.c)

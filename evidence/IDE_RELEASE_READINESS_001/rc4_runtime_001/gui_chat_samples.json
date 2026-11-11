@@ -1,0 +1,242 @@
+﻿[
+    {
+        "sec":  5,
+        "outLen":  0,
+        "inLen":  0,
+        "alive":  true,
+        "ollama":  2,
+        "tail":  ""
+    },
+    {
+        "sec":  10,
+        "outLen":  0,
+        "inLen":  0,
+        "alive":  true,
+        "ollama":  2,
+        "tail":  ""
+    },
+    {
+        "sec":  15,
+        "outLen":  0,
+        "inLen":  0,
+        "alive":  true,
+        "ollama":  2,
+        "tail":  ""
+    },
+    {
+        "sec":  20,
+        "outLen":  0,
+        "inLen":  0,
+        "alive":  true,
+        "ollama":  1,
+        "tail":  ""
+    },
+    {
+        "sec":  25,
+        "outLen":  0,
+        "inLen":  0,
+        "alive":  true,
+        "ollama":  2,
+        "tail":  ""
+    },
+    {
+        "sec":  30,
+        "outLen":  0,
+        "inLen":  0,
+        "alive":  true,
+        "ollama":  1,
+        "tail":  ""
+    },
+    {
+        "sec":  35,
+        "outLen":  0,
+        "inLen":  0,
+        "alive":  true,
+        "ollama":  2,
+        "tail":  ""
+    },
+    {
+        "sec":  40,
+        "outLen":  0,
+        "inLen":  0,
+        "alive":  true,
+        "ollama":  2,
+        "tail":  ""
+    },
+    {
+        "sec":  45,
+        "outLen":  0,
+        "inLen":  0,
+        "alive":  true,
+        "ollama":  2,
+        "tail":  ""
+    },
+    {
+        "sec":  50,
+        "outLen":  0,
+        "inLen":  0,
+        "alive":  true,
+        "ollama":  1,
+        "tail":  ""
+    },
+    {
+        "sec":  55,
+        "outLen":  0,
+        "inLen":  0,
+        "alive":  true,
+        "ollama":  2,
+        "tail":  ""
+    },
+    {
+        "sec":  60,
+        "outLen":  0,
+        "inLen":  0,
+        "alive":  true,
+        "ollama":  2,
+        "tail":  ""
+    },
+    {
+        "sec":  65,
+        "outLen":  0,
+        "inLen":  0,
+        "alive":  true,
+        "ollama":  2,
+        "tail":  ""
+    },
+    {
+        "sec":  70,
+        "outLen":  0,
+        "inLen":  0,
+        "alive":  true,
+        "ollama":  1,
+        "tail":  ""
+    },
+    {
+        "sec":  75,
+        "outLen":  0,
+        "inLen":  0,
+        "alive":  true,
+        "ollama":  0,
+        "tail":  ""
+    },
+    {
+        "sec":  80,
+        "outLen":  0,
+        "inLen":  0,
+        "alive":  true,
+        "ollama":  0,
+        "tail":  ""
+    },
+    {
+        "sec":  85,
+        "outLen":  0,
+        "inLen":  0,
+        "alive":  true,
+        "ollama":  0,
+        "tail":  ""
+    },
+    {
+        "sec":  90,
+        "outLen":  0,
+        "inLen":  0,
+        "alive":  true,
+        "ollama":  0,
+        "tail":  ""
+    },
+    {
+        "sec":  95,
+        "outLen":  0,
+        "inLen":  0,
+        "alive":  true,
+        "ollama":  0,
+        "tail":  ""
+    },
+    {
+        "sec":  100,
+        "outLen":  0,
+        "inLen":  0,
+        "alive":  true,
+        "ollama":  0,
+        "tail":  ""
+    },
+    {
+        "sec":  105,
+        "outLen":  0,
+        "inLen":  0,
+        "alive":  true,
+        "ollama":  0,
+        "tail":  ""
+    },
+    {
+        "sec":  110,
+        "outLen":  0,
+        "inLen":  0,
+        "alive":  true,
+        "ollama":  0,
+        "tail":  ""
+    },
+    {
+        "sec":  115,
+        "outLen":  0,
+        "inLen":  0,
+        "alive":  true,
+        "ollama":  0,
+        "tail":  ""
+    },
+    {
+        "sec":  120,
+        "outLen":  0,
+        "inLen":  0,
+        "alive":  true,
+        "ollama":  0,
+        "tail":  ""
+    },
+    {
+        "sec":  125,
+        "outLen":  0,
+        "inLen":  0,
+        "alive":  true,
+        "ollama":  0,
+        "tail":  ""
+    },
+    {
+        "sec":  130,
+        "outLen":  0,
+        "inLen":  0,
+        "alive":  true,
+        "ollama":  0,
+        "tail":  ""
+    },
+    {
+        "sec":  135,
+        "outLen":  0,
+        "inLen":  0,
+        "alive":  true,
+        "ollama":  0,
+        "tail":  ""
+    },
+    {
+        "sec":  140,
+        "outLen":  0,
+        "inLen":  0,
+        "alive":  true,
+        "ollama":  0,
+        "tail":  ""
+    },
+    {
+        "sec":  145,
+        "outLen":  0,
+        "inLen":  0,
+        "alive":  true,
+        "ollama":  0,
+        "tail":  ""
+    },
+    {
+        "sec":  150,
+        "outLen":  0,
+        "inLen":  0,
+        "alive":  true,
+        "ollama":  0,
+        "tail":  ""
+    }
+]

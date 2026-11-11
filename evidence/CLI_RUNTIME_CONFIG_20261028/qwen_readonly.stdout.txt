@@ -1,0 +1,13 @@
+
+RawrXD Local Agent
+Model:   qwen3:8b
+Backend: ollama
+Mode:    autonomous
+Root:    F:\rawrxd
+
+{
+  "exact_source_contents": "int main(){return 0;}",
+  "tool_name_used": "readFile",
+  "was_file_modified": false,
+  "final_result": "RAWRXD_AGENT_READ_PASS"
+}

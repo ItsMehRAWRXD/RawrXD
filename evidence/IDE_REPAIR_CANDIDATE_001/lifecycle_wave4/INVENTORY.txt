@@ -1,0 +1,31 @@
+WAVE4_INVENTORY
+ASOF_UTC=2026-11-10T09:55:00Z
+OWNER=lifecycle_wave4
+PROMOTE=0
+
+SURFACES=
+  EXT_LOAD_UNLOAD=Win32IDE_ExtHostWire.cpp + JSExtensionHost; CLI --ext-dir/--ext-cmd/--ext-quit
+  CANCEL_IN_FLIGHT=HandleCopilotStop (IDC_COPILOT_STOP_BTN 1210) cancel_requested/ack; IDM_AGENTIC_LOOP_CANCEL 4107 (AgentCommands — not edited)
+  MODEL_SWITCH=chat model combo id=1206 SelectModel + Send 1204
+  WORKSPACE_PERSIST=ide_session.json via saveIdeSession/loadIdeSession (FileOps); --user-data-dir -> RAWRXD_USER_DATA_DIR
+  CRASH_RECOVERY=kill Ext mid-chat + relaunch same userdata; orphan process check
+
+SOURCE_GAPS_CLOSED_IN_TREE=
+  1) ideSessionPath ignored NativeProfile / RAWRXD_USER_DATA_DIR (fixed FileOps)
+  2) --user-data-dir CLI unbound (fixed main_win32 applyUserDataDirFromCmdLine)
+  3) Ext receipt path hardcoded (fixed env RAWRXD_EXT_RUNTIME_RECEIPT)
+
+BASELINE_PRE_REBUILD=
+  SHA=6E59E91A2D23A3BC666345DF5168F66DDCAC1FD1C25F46A64E33773EC78A4C4C
+  EXT_SMOKE=PASS FORCE_KILL=0 (logs/ext_baseline_6E59.txt)
+  NOTE=historical_for_that_SHA_only; not inherited onto successor
+
+SUCCESSOR_BUILD=
+  SHA=6B05C04F95669DE1F64A4C76A83D38516D3D9AEB6EBA1D238F4D5F4730483713
+  BUILD=build_tip_debug_rel Release target RawrXD-Win32IDE-Native-Ext
+  RC5B_UNTOUCHED=1
+
+FIRST_FAILURE_CLASS_SUCCESSOR=
+  CreateWindowExA / WindowProc onCreate path → EXIT=0xC000041D (STATUS_FATAL_USER_CALLBACK_EXCEPTION)
+  startup_trace stops after RegisterClassExA succeeded; no CreateWindowExA succeeded
+  Blocks EXT/CAN/MSW/PER runtime on successor; REC-01 still measured PASS once

@@ -1,0 +1,16 @@
+LAUNCH_PROBE_START
+ASOF=Mon 11/09/2026  8:20:20.14
+SHA256 hash of F:\rawrxd\evidence\FULL_FEATURE_FINAL_COMPLETION_001\candidates\tip_final_integ_005\RawrXD-Win32IDE-Native-Ext.exe:
+27e2263e44f681c3fe0eab19a8fc8228c10668b8a1742a15bb19e8f6e66c3ffc
+CertUtil: -hashfile command completed successfully.
+STARTING=F:\rawrxd\evidence\FULL_FEATURE_FINAL_COMPLETION_001\candidates\tip_final_integ_005\RawrXD-Win32IDE-Native-Ext.exe
+
+Image Name                     PID Session Name        Session#    Mem Usage
+========================= ======== ================ =========== ============
+RawrXD-Win32IDE-Native-Ex    45344 Console                    1     32,780 K
+EXIT_EARLY=
+
+Image Name                     PID Session Name        Session#    Mem Usage
+========================= ======== ================ =========== ============
+RawrXD-Win32IDE-Native-Ex    45344 Console                    1     30,220 K
+LAUNCH_PROBE_END

@@ -1,0 +1,106 @@
+DUAL_ENGINE_ARCHITECTURE_001
+ASOF_UTC=2026-11-10T15:20:00Z
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+MODEL_CANNOT_SELF_CERTIFY=1
+NO_INVENT_PASS=1
+OLLAMA_UNTOUCHED=1
+
+# Engines
+PRIMARY_CODING=STRATA
+PRIMARY_MODEL_CANDIDATE=STRATA_QWEN36_35B
+SECONDARY_REVIEW_BASELINE=OLLAMA_QWEN3_8B
+DEEP2_BACKEND=RETAINED_NOT_REMOVED
+
+# Orchestrator roles (product harness owns acceptance)
+ROLE_ORCHESTRATOR=
+  Owns worktree assignment, gate sequencing, and disposition receipts.
+  Never accepts model self-claims as PASS.
+  Emits PROMOTE=0 unless independent harness conjunction passes.
+
+ROLE_STRATA_PRIMARY=
+  Coding agent on isolated worktree strata-agent only.
+  Proposes edits, tool calls, and build commands.
+  Must prove structured tool protocol before any Issue49 claim.
+
+ROLE_OLLAMA_SECONDARY=
+  Review / baseline agent on isolated worktree ollama-review only.
+  Reads diffs, critiques, and provides baseline behavior vs primary.
+  Does not write the same tree as STRATA simultaneously.
+  Existing Ollama path remains diagnostic owner for S_13 until STRATA tools proven.
+
+ROLE_HARNESS=
+  Deterministic owner of build/test acceptance.
+  Sole authority for PASS / FAIL / NOT_RUN / PROMOTE.
+  Examples (cite, do not mutate sealed receipts):
+    F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\harness\Invoke-Issue49Live74aa.ps1
+
+# Tool authority (shared product surface; engines are clients)
+SHARED_TOOL_AUTHORITY=Read_Edit_Build_Test_Rollback_Git
+TOOL_EXECUTION_OWNER=IDE_AGENT_RUNTIME_PLUS_HARNESS
+MODEL_OUTPUT != TOOL_EFFECT
+TOOL_EFFECT != HARNESS_PASS
+
+# Promotion control
+PROMOTE_IF=
+  STRATA_TOOL_ROUNDTRIP_PASS
+  && DISPOSABLE_ISSUE49_FIXTURE_PASS
+  && OLLAMA_REVIEW_COMPLETE
+  && HARNESS_VERIFY_PASS
+  && NO_SELF_CERTIFICATION
+PROMOTE=0 until that conjunction is independently evidenced
+TIP_CLIMB=HOLD
+
+# Sealed separate (do not reopen as FAIL / do not inherit as dual-engine PASS)
+SEALED_SEPARATE=
+  ISSUE49_CONTROLLING=D_015_10_OF_11
+  DAILY_DRIVER_9FDE_ITEMS_5_10=SEALED
+  STRATA_GFX1201_STANDALONE=PASS_REPORTED (GPU/API only; != IDE agent PASS)
+S_13=OPEN
+S_13_OWNER=OLLAMA_PATH_DIAGNOSTIC_UNTIL_STRATA_TOOL_PROTOCOL_PROVEN
+
+# Isolation law
+ISOLATED_GIT_WORKTREES_REQUIRED=1
+NO_SIMULTANEOUS_WRITE_SAME_TREE=1
+STRATA_TREE != OLLAMA_TREE
+HANDOFF_TO_AGENT != DONE
+
+# Existing multi-provider routing (cite only; do not break Ollama)
+CITED_ROUTING_PATHS=
+  F:\rawrxd\config\chat_model_routes.json
+    schema_version=1 routes: local_gguf (LocalFile), ollama_local (Ollama), kilo_free (KiloFree)
+  F:\rawrxd\scripts\generate_chat_route_menu.py
+    generates ChatRouteMenu from JSON; KINDS=LocalFile|Ollama|KiloFree
+  F:\rawrxd\build\generated\GeneratedChatRouteMenu.h
+    RouteKind::{LocalFile,Ollama,KiloFree}; runtime ollama-http for ollama_local
+  F:\rawrxd\RawrXD-ModelLoader\src\backend\ollama_client.h
+  F:\rawrxd\RawrXD-ModelLoader\src\backend\ollama_client.cpp
+    OllamaClient chat/generate/tags HTTP client — leave intact
+  F:\rawrxd\RawrXD-ModelLoader\src\win32app\Win32IDE_AgenticBridge.h
+  F:\rawrxd\RawrXD-ModelLoader\src\win32app\Win32IDE_AgenticBridge.cpp
+    AgenticBridge::SetOllamaServer — Ollama bridge surface
+  F:\rawrxd\RawrXD-ModelLoader\src\win32app\Win32IDE.h
+    m_ollamaBaseUrl / m_ollamaModelOverride — IDE Ollama override fields
+
+# Wiring plan (minimal; planning only)
+WIRING_PLAN=
+  1. Keep ollama_local route + OllamaClient as secondary baseline path.
+  2. Add STRATA route descriptor only after tool_roundtrip harness exists
+     (do not remove/rename ollama_local; do not change Ollama defaults).
+  3. Orchestrator selects engine by worktree + route id; harness verifies.
+  4. Dual writes only via separate git worktrees (see WORKTREE_PROTOCOL.txt).
+  5. Gate order fixed in GATE_ORDER.txt; no skip / no self-cert shortcut.
+
+# Parent pilot receipt (planning authority; != PASS)
+PARENT_PILOT=
+  F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\FINALIZATION_CHECKLIST_001\STRATA_DUAL_ENGINE_PILOT_001.txt
+
+LAW=STRATA_GPU_PASS != IDE_AGENT_PASS
+LAW=OPENAI_CHAT_COMPAT != TOOL_CALL_COMPAT
+LAW=LARGER_MODEL != S13_PASS
+LAW=9FDE_PASS != ISSUE49_PASS
+LAW=NOT_RUN != PASS
+LAW=MODEL_CLAIM != HARNESS_PASS
+
+NEXT_EXECUTABLE_GATE=STRATA_STRUCTURED_TOOL_ROUNDTRIP
