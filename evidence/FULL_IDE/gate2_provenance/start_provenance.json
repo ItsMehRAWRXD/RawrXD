@@ -1,0 +1,64 @@
+{
+  "head": "843a14c3298ab6aade87fbb597748bd8311f2716",
+  "dirty_sources": [
+    "src/deep2/KVCache.h",
+    "src/deep2/quant_dot_dispatch.cpp",
+    "src/deep2/quant_dot_dispatch.hpp",
+    "src/deep2/runtime_graph_executor.cpp",
+    "src/deep2/runtime_graph_executor.hpp"
+  ],
+  "files": [
+    {
+      "path": "src/rawr_cli.cpp",
+      "sha256": "97CCE64858B5753395EF16293686871850507E9C01D57CD3122F9532ED17E7F8"
+    },
+    {
+      "path": "src/deep2/QuantParityRegistry.h",
+      "sha256": "A6683DD5642832248DFA14011DA6768452ADFBF8E9ABB1285D8C454182FC1A34"
+    },
+    {
+      "path": "src/deep2/QuantParityRegistry.cpp",
+      "sha256": "295B5F840405CA677DA746E3D6ED4C54C0227CF50BBC24A0C1B7F907254254FB"
+    },
+    {
+      "path": "src/deep2/quant_parity_cert.cpp",
+      "sha256": "13914C42B0954F395083A4038AB8794D04B18C7B1FCB568F8DF2D06B5E5070FA"
+    },
+    {
+      "path": "src/deep2/modelgenie/ModelGenomeReader.cpp",
+      "sha256": "513487DB391D2C707A542557EE0C4C03268DDA8C4605F82F474278EA7477FDF8"
+    },
+    {
+      "path": "src/deep2/modelgenie/CapabilityManifest.generated.hpp",
+      "sha256": "787B172ABD04E14E7C675D40D98CED05D64B1C57C32DB1A29A118C55D6FF77A3"
+    },
+    {
+      "path": "src/modelgenie/ModelGenieExecutor.cpp",
+      "sha256": "5A92027B72D6FAB99E9C1AA7727936FAE4BBDAF8479A59C76D363D35F61001AD"
+    },
+    {
+      "path": "src/deep2/runtime_graph_executor.cpp",
+      "sha256": "7ED326CA9A259638FEE46C3FA55EF6E24AD1F119798DD9AB58E07CA9317316C3"
+    },
+    {
+      "path": "tools/gate2_manifest_consistency.ps1",
+      "sha256": "BCE4D782A57D77F64D37DA1EFA31D1A69B3C98DB3EAFF7B605980CD32F7FB0DB"
+    },
+    {
+      "path": "CMakeLists.txt",
+      "sha256": "4783E38132909085565DBE49F9969F0E87BFFE39770F55995D4F139995DD71AE"
+    },
+    {
+      "path": "_eval_harness/rawr_rebuilt.exe",
+      "sha256": "82291E2691D7F577994F16BB7EA5D3B154C0E37C214DDD2A61CCC9F3CFB5F91F"
+    },
+    {
+      "path": "build_gate_recovery_20261013/bin-msvc/Release/quant_parity_cert.exe",
+      "sha256": "E2494AE948B709321EACB0EB56D1A64A03ADE58D8844AFCC811918FD793C7AFC"
+    },
+    {
+      "path": "build_gate_recovery_20261013/bin-msvc/Release/kquant_dot_parity.exe",
+      "sha256": "677185911DAE87CB64A20A5AB22CB431CBED6A52BEFF9F59FE4EE83104EE560B"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "gate": "VAL-063",
+  "component": "BypassDetection",
+  "claim": "No execution bypasses the certified gateway path",
+  "timestamp": "2026-07-24T14:32:47.700000000Z",
+  "test_parameters": {
+    "duration_seconds": 300,
+    "requests_generated": 1000,
+    "monitoring_interval_ms": 100
+  },
+  "metrics": {
+    "gateway_calls": 1000,
+    "direct_engine_calls": 0,
+    "bypass_attempts": 0,
+    "bypass_detected": false
+  },
+  "detection_methods": {
+    "gateway_call_tracking": {
+      "enabled": true,
+      "calls_recorded": 1000,
+      "description": "Records every call through InferenceGateway::Execute()"
+    },
+    "direct_engine_monitoring": {
+      "enabled": true,
+      "calls_detected": 0,
+      "description": "Monitors for direct calls to CertifiedInferenceEngine"
+    },
+    "bypass_attempt_logging": {
+      "enabled": true,
+      "attempts_logged": 0,
+      "description": "Logs any attempts to circumvent the gateway"
+    }
+  },
+  "verification": {
+    "all_requests_routed_through_gateway": true,
+    "no_direct_engine_access": true,
+    "no_bypass_attempts": true,
+    "attestation_chain_intact": true
+  },
+  "guarantee": {
+    "statement": "All certified executions pass through the attested path",
+    "scope": "VAL-050 through VAL-060 certified runtime",
+    "boundary": "InferenceGateway ingress/egress"
+  },
+  "status": "PASS"
+}

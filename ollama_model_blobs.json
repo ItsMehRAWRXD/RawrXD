@@ -1,0 +1,242 @@
+﻿[
+    {
+        "name":  "deepseek-r1:32b",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-6150cb382311b69f09cc0f9a1b69fc029cbd742b66bb8ec531aa5ecf5c613e93",
+        "blobSize":  19851335552,
+        "state":  "LOCAL_GGUF"
+    },
+    {
+        "name":  "bluehawana/deepseek-v4-flash:iq2_m-ctx128k",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-764636b03a41d573e71eea419a8992a8960778355b2d832117cf014a5d231f21",
+        "blobSize":  103999401280,
+        "state":  "LOCAL_GGUF"
+    },
+    {
+        "name":  "minimax-m3:cloud",
+        "blob":  null,
+        "blobSize":  0,
+        "state":  "NO_LOCAL_BLOB"
+    },
+    {
+        "name":  "n4-tiny-oracle:latest",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-da3087fb14aede55fde6eb81a0e55e886810e43509ec82ecdc7aa5d62a03b556",
+        "blobSize":  637699456,
+        "state":  "LOCAL_GGUF"
+    },
+    {
+        "name":  "qwen2.5-coder:1.5b-base",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-6a77366395772462c84f0c4d226ac404674327cbe78c01e4391cc7e0c698851e",
+        "blobSize":  986048512,
+        "state":  "LOCAL_GGUF"
+    },
+    {
+        "name":  "bluehawana/deepseek-v4-flash:iq2_m",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-764636b03a41d573e71eea419a8992a8960778355b2d832117cf014a5d231f21",
+        "blobSize":  103999401280,
+        "state":  "LOCAL_GGUF"
+    },
+    {
+        "name":  "nemotron-3-nano:4b",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-527db2cf6c705d8fabb95693d038d9c06b4a2b0b8b0a4bbdbd01212d37242970",
+        "blobSize":  2837586496,
+        "state":  "LOCAL_GGUF"
+    },
+    {
+        "name":  "pdurugyan/qwen3.5-9b-deepseek-v4-flash-Q4_K_M-v_2:latest",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-9be227448d319e6a7acca8056b71bf7d9a2c6b2811986e6658a9dedc208d0ada",
+        "blobSize":  5629105408,
+        "state":  "LOCAL_GGUF"
+    },
+    {
+        "name":  "deepseek-v4.1-flash:cloud",
+        "blob":  null,
+        "blobSize":  0,
+        "state":  "NO_LOCAL_BLOB"
+    },
+    {
+        "name":  "deepseek-v4-flash:cloud",
+        "blob":  null,
+        "blobSize":  0,
+        "state":  "NO_LOCAL_BLOB"
+    },
+    {
+        "name":  "glm-5.3-flash:cloud",
+        "blob":  null,
+        "blobSize":  0,
+        "state":  "NO_LOCAL_BLOB"
+    },
+    {
+        "name":  "glm-5.3:cloud",
+        "blob":  null,
+        "blobSize":  0,
+        "state":  "NO_LOCAL_BLOB"
+    },
+    {
+        "name":  "nemotron-3.5-lightning:30b",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-5c19f6282f4fc51cb114cb6c876d70ca2fc3b9cf0fbd0a018d9908f4fe1f63b3",
+        "blobSize":  25430738944,
+        "state":  "LOCAL_GGUF"
+    },
+    {
+        "name":  "gpt-oss:120b",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-6be6d66a3f546d8c19b130dc41dc24b2fc159f84ffbc76a0ee0676205083cf5a",
+        "blobSize":  65369799840,
+        "state":  "LOCAL_GGUF"
+    },
+    {
+        "name":  "gpt-oss:latest",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-e7b273f9636059a689e3ddcab3716e4f65abe0143ac978e46673ad0e52d09efb",
+        "blobSize":  13793422144,
+        "state":  "LOCAL_GGUF"
+    },
+    {
+        "name":  "deepseek-coder-v2:16b",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-5ff0abeeac1d2dbdd5455c0b49ba3b29a9ce3c1fb181b2eef2e948689d55d046",
+        "blobSize":  8905109984,
+        "state":  "LOCAL_GGUF"
+    },
+    {
+        "name":  "kiminoto/T0.0.1:latest",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-dec52a44569a2a25341c4e4d3fee25846eed4f6f0b936278e3a3c900bb99d37c",
+        "blobSize":  6594462816,
+        "state":  "LOCAL_GGUF"
+    },
+    {
+        "name":  "starcoder2:15b",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-dc5deb763c383b81460256a0ac7e40b320c3b01632727ea407e386002588d417",
+        "blobSize":  9065400160,
+        "state":  "LOCAL_GGUF"
+    },
+    {
+        "name":  "ornith-1.5:35b",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-aaeb640f98a892980ef54876024293cc8d6987a86523aa1b947ffa9274ef800a",
+        "blobSize":  21713462848,
+        "state":  "LOCAL_GGUF"
+    },
+    {
+        "name":  "gemma3:latest",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-aeda25e63ebd698fab8638ffb778e68bed908b960d39d0becc650fa981609d25",
+        "blobSize":  3338792448,
+        "state":  "LOCAL_GGUF"
+    },
+    {
+        "name":  "bigdaddygnative:latest",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-d39f8ddb7e54a04ea9dd83a5b1d01e4c88c12e4e2eedba85381a7ef1e341929a",
+        "blobSize":  25463410912,
+        "state":  "LOCAL_GGUF"
+    },
+    {
+        "name":  "bigdaddyglocal:latest",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-d39f8ddb7e54a04ea9dd83a5b1d01e4c88c12e4e2eedba85381a7ef1e341929a",
+        "blobSize":  25463410912,
+        "state":  "LOCAL_GGUF"
+    },
+    {
+        "name":  "deepseek-v4-flash:0731-cloud",
+        "blob":  null,
+        "blobSize":  0,
+        "state":  "NO_LOCAL_BLOB"
+    },
+    {
+        "name":  "deepseek-r1:70b",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-4cd576d9aa16961244012223abf01445567b061f1814b57dfef699e4cf8df339",
+        "blobSize":  42520395616,
+        "state":  "LOCAL_GGUF"
+    },
+    {
+        "name":  "gpt-oss:20b",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-e7b273f9636059a689e3ddcab3716e4f65abe0143ac978e46673ad0e52d09efb",
+        "blobSize":  13793422144,
+        "state":  "LOCAL_GGUF"
+    },
+    {
+        "name":  "laguna-s-2.1:Q4_K_M",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-948255a146c07678678183af4cb1234a124e945e48c85c2006598ef4696552c8",
+        "blobSize":  96031829760,
+        "state":  "LOCAL_GGUF"
+    },
+    {
+        "name":  "qwen3-next:80b",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-8476acca2ca7dc4dd86ad2e069cb270fdbd44287d9ff3006d86e9a54cc19acd1",
+        "blobSize":  50351320736,
+        "state":  "LOCAL_GGUF"
+    },
+    {
+        "name":  "blackgrg26/WORMGPT-14:latest",
+        "blob":  null,
+        "blobSize":  0,
+        "state":  "NO_LOCAL_BLOB"
+    },
+    {
+        "name":  "llama3.1:8b",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-667b0c1932bc6ffc593ed1d03f895bf2dc8dc6df21db3042284a6f4416b06a29",
+        "blobSize":  4920738944,
+        "state":  "LOCAL_GGUF"
+    },
+    {
+        "name":  "qwen3:8b",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-a3de86cd1c132c822487ededd47a324c50491393e6565cd14bafa40d0b8e686f",
+        "blobSize":  5225374496,
+        "state":  "LOCAL_GGUF"
+    },
+    {
+        "name":  "gemma3:4b",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-aeda25e63ebd698fab8638ffb778e68bed908b960d39d0becc650fa981609d25",
+        "blobSize":  3338792448,
+        "state":  "LOCAL_GGUF"
+    },
+    {
+        "name":  "llama3.2:3b",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-dde5aa3fc5ffc17176b5e8bdc82f587b24b2678c6c66101bf7da77af9f7ccdff",
+        "blobSize":  2019377376,
+        "state":  "LOCAL_GGUF"
+    },
+    {
+        "name":  "bigdaddyg-productivity-local:latest",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-d39f8ddb7e54a04ea9dd83a5b1d01e4c88c12e4e2eedba85381a7ef1e341929a",
+        "blobSize":  25463410912,
+        "state":  "LOCAL_GGUF"
+    },
+    {
+        "name":  "bigdaddyg-productivity-native:latest",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-d39f8ddb7e54a04ea9dd83a5b1d01e4c88c12e4e2eedba85381a7ef1e341929a",
+        "blobSize":  25463410912,
+        "state":  "LOCAL_GGUF"
+    },
+    {
+        "name":  "granite3.3:8b",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-77bcee066a76dcdd10d0d123c87e32c8ec2c74e31b6ffd87ebee49c9ac215dca",
+        "blobSize":  4942873344,
+        "state":  "LOCAL_GGUF"
+    },
+    {
+        "name":  "qwen3.8:27b",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-f5f1dd8920d417aac2718b0bda3403da274301efdd6760b4f0f4b864ff2ad57d",
+        "blobSize":  16810714464,
+        "state":  "LOCAL_GGUF"
+    },
+    {
+        "name":  "qwen35-40b-heretic-q8:latest",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-09c9fefcf64d16494a50e74923035fabb94023584a338075058c1b7c12dc83df",
+        "blobSize":  2176177120,
+        "state":  "LOCAL_GGUF"
+    },
+    {
+        "name":  "glm-5.2:cloud",
+        "blob":  null,
+        "blobSize":  0,
+        "state":  "NO_LOCAL_BLOB"
+    },
+    {
+        "name":  "kimi-k2.6:cloud",
+        "blob":  null,
+        "blobSize":  0,
+        "state":  "NO_LOCAL_BLOB"
+    },
+    {
+        "name":  "llama3.2:latest",
+        "blob":  "F:\\OllamaModels\\blobs\\sha256-dde5aa3fc5ffc17176b5e8bdc82f587b24b2678c6c66101bf7da77af9f7ccdff",
+        "blobSize":  2019377376,
+        "state":  "LOCAL_GGUF"
+    }
+]

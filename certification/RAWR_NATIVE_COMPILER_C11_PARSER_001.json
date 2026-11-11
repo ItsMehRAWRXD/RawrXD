@@ -1,0 +1,413 @@
+﻿{
+    "schema":  "rawrxd.certification.receipt/1",
+    "milestone":  "RAWR_NATIVE_COMPILER_C11_PARSER_001",
+    "generated_utc":  "2026-10-22T04:04:08Z",
+    "acceptance":  {
+                       "RAWR_NATIVE_COMPILER_STAGE1":  "PASS",
+                       "C01-C08":  "161/161",
+                       "C09":  "6/6",
+                       "C10":  "44/44",
+                       "C11":  "29/29",
+                       "S2":  "21/21",
+                       "TOTAL":  "261/261",
+                       "SOURCE_TRACKED":  "YES",
+                       "CLEAN_GIT_ARCHIVE_BUILD":  "PASS",
+                       "EXTERNAL_COMPILER_USED_FOR_TEST_HARNESS":  "documented"
+                   },
+    "audit":  {
+                  "question":  "what could be reused before new parsing logic was written",
+                  "examined":  [
+                                   {
+                                       "path":  "compilers/native_compiler/tools/recovered_c/c_compiler_minimal.c",
+                                       "finding":  "the shape of the solution: a token array driving a recursive descent parser, with a generic node and a child list",
+                                       "reusable":  "the architecture only",
+                                       "limits":  "the expression grammar handles the addition and the subtraction of two numbers only, and the tree has five node kinds"
+                                   },
+                                   {
+                                       "path":  "the rest of the repository",
+                                       "finding":  "no other parser implementation of C exists in the tree",
+                                       "reusable":  "nothing",
+                                       "limits":  "the AST files under src\\core are for a Rust and a graph engine, not for C"
+                                   }
+                               ],
+                  "conclusion":  "no parsing logic was reusable, so the parser was written against the certified C10 token stream"
+              },
+    "design":  {
+                   "syntax_only":  "the tree records what was written down; the semantic analysis decides what it means",
+                   "spans":  "every node carries the file, the byte range, the line and the column it came from",
+                   "ownership":  "the nodes live in an arena that the tree owns; a pointer to a node stays valid for as long as the tree does, and nothing is freed while the tree is built",
+                   "precedence":  "one table drives the expression grammar, so the precedence and the associativity of every operator live in one place",
+                   "declarators":  "a declarator is a chain of constructors, which is what tells an array of pointers apart from a pointer to an array",
+                   "recovery":  "a syntax error is reported with its line and its column, and the parser carries on so that the rest of the file is still parsed"
+               },
+    "gates":  [
+                  {
+                      "id":  "01",
+                      "name":  "translation units and functions",
+                      "checks":  2
+                  },
+                  {
+                      "id":  "02",
+                      "name":  "local and global declarations",
+                      "checks":  3
+                  },
+                  {
+                      "id":  "03",
+                      "name":  "expression precedence and associativity",
+                      "checks":  5
+                  },
+                  {
+                      "id":  "04",
+                      "name":  "assignments and compound assignments",
+                      "checks":  2
+                  },
+                  {
+                      "id":  "05",
+                      "name":  "blocks and lexical scopes",
+                      "checks":  1
+                  },
+                  {
+                      "id":  "06",
+                      "name":  "if and else",
+                      "checks":  2
+                  },
+                  {
+                      "id":  "07",
+                      "name":  "while, do and for",
+                      "checks":  3
+                  },
+                  {
+                      "id":  "08",
+                      "name":  "break, continue and return",
+                      "checks":  1
+                  },
+                  {
+                      "id":  "09",
+                      "name":  "calls, pointers, arrays and structs",
+                      "checks":  4
+                  },
+                  {
+                      "id":  "10",
+                      "name":  "a deterministic tree and useful syntax diagnostics",
+                      "checks":  6
+                  }
+              ],
+    "defects_found":  [
+                          {
+                              "where":  "the token stream",
+                              "defect":  "the stream holds no end of file token, because the lexer stops when the input ends",
+                              "effect":  "every loop that waited for an end of file token waited for ever, and a missing brace hung the parser",
+                              "fix":  "the parser tests the end of the stream itself"
+                          },
+                          {
+                              "where":  "the tree printer",
+                              "defect":  "the printer wrote the node and never walked its children",
+                              "effect":  "every tree came out as a single line",
+                              "fix":  "the printer walks the children of a node after writing it"
+                          },
+                          {
+                              "where":  "the declarator",
+                              "defect":  "the prefix pointers of a declarator were read and thrown away",
+                              "effect":  "int *p and int p produced the same tree, and an array of pointers could not be told from a pointer to an array",
+                              "fix":  "each pointer is a step of the declarator chain, and the order of the steps is the order the type is built"
+                          },
+                          {
+                              "where":  "the parameter list",
+                              "defect":  "a parameter without a name, as in int f(void), was an error",
+                              "effect":  "the common shape of a function that takes nothing was rejected",
+                              "fix":  "the name of a parameter is optional"
+                          }
+                      ],
+    "source_revision":  {
+                            "branch":  "preservation/source-baseline-20261021",
+                            "commit":  "b2e56ed602b4798d11c97dc1c87e808a0e652733",
+                            "parser_sources":  [
+                                                   {
+                                                       "path":  "compilers/native_compiler/src/frontend/AST.h",
+                                                       "bytes":  5681,
+                                                       "sha256_normalized":  "2b80cddeb6991553d986c0ebfa38d98fd347e364ed160ac28705463901f13aa6"
+                                                   },
+                                                   {
+                                                       "path":  "compilers/native_compiler/src/frontend/AST.cpp",
+                                                       "bytes":  14874,
+                                                       "sha256_normalized":  "b0f0333f23ddf3f31a3f1796a0c0ddb18f256bbd5de826c4838a49eaf9a588ff"
+                                                   },
+                                                   {
+                                                       "path":  "compilers/native_compiler/src/frontend/Parser.h",
+                                                       "bytes":  5092,
+                                                       "sha256_normalized":  "a2dcd57e2a13e67d93f3f07ffa262b38674b804868a108a99887437a1722fe7c"
+                                                   },
+                                                   {
+                                                       "path":  "compilers/native_compiler/src/frontend/Parser.cpp",
+                                                       "bytes":  47780,
+                                                       "sha256_normalized":  "7c66a0a0071dff524a829b9ba6c41bc869275d627970283eba947ec0cf7cc17e"
+                                                   },
+                                                   {
+                                                       "path":  "compilers/native_compiler/tests/c11_parser_test.cpp",
+                                                       "bytes":  21052,
+                                                       "sha256_normalized":  "2bbd23ce4f3dd69b02791634e0301f93def5e25bef1e3ecc0d498a2fbf953cbf"
+                                                   }
+                                               ],
+                            "certified_sources":  [
+                                                      {
+                                                          "path":  "compilers/native_compiler/source abd4ee1eada4dda194d3e0636a231f7265d9c54ba87ee2cf49497fa94e0ca39b rawrstd/include/rawrstd/algo.h[2]",
+                                                          "bytes":  2227,
+                                                          "sha256_normalized":  "abd4ee1eada4dda194d3e0636a231f7265d9c54ba87ee2cf49497fa94e0ca39b"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 6caea2ecb387a3705a32a5942cf3190e72c1c371a48c6ff5ddf943ef794561d7 rawrstd/include/rawrstd/base.h[2]",
+                                                          "bytes":  1406,
+                                                          "sha256_normalized":  "6caea2ecb387a3705a32a5942cf3190e72c1c371a48c6ff5ddf943ef794561d7"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source a0aae21218d672be2a0880dbaa83e24a470e6e3cdb8220a2298bd1d50b13dcc7 rawrstd/include/rawrstd/map.h[2]",
+                                                          "bytes":  6289,
+                                                          "sha256_normalized":  "a0aae21218d672be2a0880dbaa83e24a470e6e3cdb8220a2298bd1d50b13dcc7"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 00d18f4a02ff82bad55aa5d268b89825278a18240c515e19946556855174de62 rawrstd/include/rawrstd/sha256.h[2]",
+                                                          "bytes":  799,
+                                                          "sha256_normalized":  "00d18f4a02ff82bad55aa5d268b89825278a18240c515e19946556855174de62"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source d0ad9e4f931ae31c4ff5bcf0d1083f820545350bbc410fcc8d21a475f8315207 rawrstd/include/rawrstd/string.h[2]",
+                                                          "bytes":  5621,
+                                                          "sha256_normalized":  "d0ad9e4f931ae31c4ff5bcf0d1083f820545350bbc410fcc8d21a475f8315207"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source a01ce39135bc4c9367c24747601619757d1f57464e15969edcf0f494dd4631fe rawrstd/include/rawrstd/sys.h[2]",
+                                                          "bytes":  3195,
+                                                          "sha256_normalized":  "a01ce39135bc4c9367c24747601619757d1f57464e15969edcf0f494dd4631fe"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 8dfde36bfffd3e5700aef3dd5e9d51409ed91d04bf8e8039b57724bec7a20616 rawrstd/include/rawrstd/vector.h[2]",
+                                                          "bytes":  4619,
+                                                          "sha256_normalized":  "8dfde36bfffd3e5700aef3dd5e9d51409ed91d04bf8e8039b57724bec7a20616"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source a937fb330246433691048e6e72e93303f39ec3ba9fbf7becca73423683922def rawrstd/src/sha256.cpp[2]",
+                                                          "bytes":  4270,
+                                                          "sha256_normalized":  "a937fb330246433691048e6e72e93303f39ec3ba9fbf7becca73423683922def"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 8f58f9a8f29129d245cf1d910bc4b8a7ae6483ac250bff19cee4c445dc7c0bbf rawrstd/src/string.cpp[2]",
+                                                          "bytes":  4579,
+                                                          "sha256_normalized":  "8f58f9a8f29129d245cf1d910bc4b8a7ae6483ac250bff19cee4c445dc7c0bbf"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 221460260ada282bde8eb23ef30f915123190b15146b3ba651e525f7d8c55d82 rawrstd/src/sys.cpp[2]",
+                                                          "bytes":  7700,
+                                                          "sha256_normalized":  "221460260ada282bde8eb23ef30f915123190b15146b3ba651e525f7d8c55d82"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 11fa310c40ec0ecebc5309b55b03d8739eb256a9ea95145afbd514b1ccbc77f3 src/asm/X64Assembler.cpp[2]",
+                                                          "bytes":  46247,
+                                                          "sha256_normalized":  "11fa310c40ec0ecebc5309b55b03d8739eb256a9ea95145afbd514b1ccbc77f3"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 6b6af9de5d1e3280abb15af0895a473ddb3467186234d14cb9233990d85e4523 src/asm/X64Assembler.h[2]",
+                                                          "bytes":  3173,
+                                                          "sha256_normalized":  "6b6af9de5d1e3280abb15af0895a473ddb3467186234d14cb9233990d85e4523"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 12a20c11649f7d7216309902ea93fe443cea0064b5d5ade12154f1e2fe23b02f src/common/Diagnostics.cpp[2]",
+                                                          "bytes":  3223,
+                                                          "sha256_normalized":  "12a20c11649f7d7216309902ea93fe443cea0064b5d5ade12154f1e2fe23b02f"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source ac655f03af0d4f57eb50f949f205816e87e6c3f63cc4b96559638de8896c47f5 src/common/Diagnostics.h[2]",
+                                                          "bytes":  2942,
+                                                          "sha256_normalized":  "ac655f03af0d4f57eb50f949f205816e87e6c3f63cc4b96559638de8896c47f5"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 41d184eeff171d9410286d34a7f8135682281ae36c2ad9934c8c715fa9c02a39 src/common/SourceManager.cpp[2]",
+                                                          "bytes":  4970,
+                                                          "sha256_normalized":  "41d184eeff171d9410286d34a7f8135682281ae36c2ad9934c8c715fa9c02a39"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 7d3fc6e67af369d1c6a4abe5642aab9020d23ffed82dfe5f7bb0b4c6ba5d30f6 src/common/SourceManager.h[2]",
+                                                          "bytes":  2840,
+                                                          "sha256_normalized":  "7d3fc6e67af369d1c6a4abe5642aab9020d23ffed82dfe5f7bb0b4c6ba5d30f6"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source c27b4704a019919ecd595559d1667bafdd0b352def6241c7664ab0ffbc484750 src/common/Types.h[2]",
+                                                          "bytes":  830,
+                                                          "sha256_normalized":  "c27b4704a019919ecd595559d1667bafdd0b352def6241c7664ab0ffbc484750"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source b0f0333f23ddf3f31a3f1796a0c0ddb18f256bbd5de826c4838a49eaf9a588ff src/frontend/AST.cpp[2]",
+                                                          "bytes":  14874,
+                                                          "sha256_normalized":  "b0f0333f23ddf3f31a3f1796a0c0ddb18f256bbd5de826c4838a49eaf9a588ff"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 2b80cddeb6991553d986c0ebfa38d98fd347e364ed160ac28705463901f13aa6 src/frontend/AST.h[2]",
+                                                          "bytes":  5681,
+                                                          "sha256_normalized":  "2b80cddeb6991553d986c0ebfa38d98fd347e364ed160ac28705463901f13aa6"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 207872d33e3898d09ef72f96107245749504f39069a82819649274b86bd94619 src/frontend/c_stage2.cpp[2]",
+                                                          "bytes":  34123,
+                                                          "sha256_normalized":  "207872d33e3898d09ef72f96107245749504f39069a82819649274b86bd94619"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 37f64d53150c206dc866d087e2d6a61c56996300dcf49aedd849f76785aab400 src/frontend/c_stage2.h[2]",
+                                                          "bytes":  642,
+                                                          "sha256_normalized":  "37f64d53150c206dc866d087e2d6a61c56996300dcf49aedd849f76785aab400"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source bb7ebb2a3365350a0ab203e3a4bba796b181a3ca653bb30a3893d7da7ace6922 src/frontend/Lexer.cpp[2]",
+                                                          "bytes":  26835,
+                                                          "sha256_normalized":  "bb7ebb2a3365350a0ab203e3a4bba796b181a3ca653bb30a3893d7da7ace6922"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 699c5d5953d6533be838840d0a4db353b09a663ddfbead8f871f748d379a7c9a src/frontend/Lexer.h[2]",
+                                                          "bytes":  2372,
+                                                          "sha256_normalized":  "699c5d5953d6533be838840d0a4db353b09a663ddfbead8f871f748d379a7c9a"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 7c66a0a0071dff524a829b9ba6c41bc869275d627970283eba947ec0cf7cc17e src/frontend/Parser.cpp[2]",
+                                                          "bytes":  47780,
+                                                          "sha256_normalized":  "7c66a0a0071dff524a829b9ba6c41bc869275d627970283eba947ec0cf7cc17e"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source a2dcd57e2a13e67d93f3f07ffa262b38674b804868a108a99887437a1722fe7c src/frontend/Parser.h[2]",
+                                                          "bytes":  5092,
+                                                          "sha256_normalized":  "a2dcd57e2a13e67d93f3f07ffa262b38674b804868a108a99887437a1722fe7c"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 83d7b7a37b6beb5028b6fbea4c2a801ace51decea614c2168bfccbd00740ac73 src/frontend/Preprocessor.cpp[2]",
+                                                          "bytes":  49944,
+                                                          "sha256_normalized":  "83d7b7a37b6beb5028b6fbea4c2a801ace51decea614c2168bfccbd00740ac73"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source fc150c0dc511f2f770337c9e9536f1a07267d64659b5ac513d0c97e31a7be1e9 src/frontend/Preprocessor.h[2]",
+                                                          "bytes":  6924,
+                                                          "sha256_normalized":  "fc150c0dc511f2f770337c9e9536f1a07267d64659b5ac513d0c97e31a7be1e9"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source ba481acd417c42cf63b6372f2f4b632da0dab737158dc518ca6772e1a6136f8a src/frontend/Token.cpp[2]",
+                                                          "bytes":  6691,
+                                                          "sha256_normalized":  "ba481acd417c42cf63b6372f2f4b632da0dab737158dc518ca6772e1a6136f8a"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source a961ce497d4b6c3e02cc53b9869f71e89af2d08ebb4e4071ede11ecd54010709 src/frontend/Token.h[2]",
+                                                          "bytes":  4912,
+                                                          "sha256_normalized":  "a961ce497d4b6c3e02cc53b9869f71e89af2d08ebb4e4071ede11ecd54010709"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 3f4df8f32370ffb1ee246d65572164862d0bfbfa0fed5a78fea78438c55eeefd src/object/CoffWriter.cpp[2]",
+                                                          "bytes":  11060,
+                                                          "sha256_normalized":  "3f4df8f32370ffb1ee246d65572164862d0bfbfa0fed5a78fea78438c55eeefd"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 2f2ce4a5f000258f98bc29dd0e44f8055914a6d6dbfa69d64c0936ce0b71769a src/object/CoffWriter.h[2]",
+                                                          "bytes":  4594,
+                                                          "sha256_normalized":  "2f2ce4a5f000258f98bc29dd0e44f8055914a6d6dbfa69d64c0936ce0b71769a"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source d0260dfd633b8b8052b68ffafe41680beb9db262cd6527233c44ba7c3c1a6df9 tests/c01_lexer_test.cpp[2]",
+                                                          "bytes":  18143,
+                                                          "sha256_normalized":  "d0260dfd633b8b8052b68ffafe41680beb9db262cd6527233c44ba7c3c1a6df9"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source ba692cc72a5912328de478bc441879941c8a42199c8eeabaf6da31df0f0ddfee tests/c02_coff_writer_test.cpp[2]",
+                                                          "bytes":  6855,
+                                                          "sha256_normalized":  "ba692cc72a5912328de478bc441879941c8a42199c8eeabaf6da31df0f0ddfee"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 1f764a8b9ac0bfddd515be407603a59c235f7fcab370d11ca602a1cc9d530ef3 tests/c03_e2e_test.cpp[2]",
+                                                          "bytes":  7613,
+                                                          "sha256_normalized":  "1f764a8b9ac0bfddd515be407603a59c235f7fcab370d11ca602a1cc9d530ef3"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 10cedb60428b20553f92ba933da019d63e680942acde18162f8afa0712905b48 tests/c04_multi_object_test.cpp[2]",
+                                                          "bytes":  7850,
+                                                          "sha256_normalized":  "10cedb60428b20553f92ba933da019d63e680942acde18162f8afa0712905b48"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 61a94a29ba35b616fa649ec0aaafa5683d858b37029073f481f275f6ce22a808 tests/c05_reloc_import_test.cpp[2]",
+                                                          "bytes":  8690,
+                                                          "sha256_normalized":  "61a94a29ba35b616fa649ec0aaafa5683d858b37029073f481f275f6ce22a808"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 28f87308854199b9cc96cada8bea6f059f06e68fe795418be3144c66afef3b31 tests/c06_dll_test.cpp[2]",
+                                                          "bytes":  16458,
+                                                          "sha256_normalized":  "28f87308854199b9cc96cada8bea6f059f06e68fe795418be3144c66afef3b31"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 8c813e47b24937a7c27490d0775fa144e0b3c9bf69f3fea595d1a3094b098761 tests/c07_e2e_test.cpp[2]",
+                                                          "bytes":  20820,
+                                                          "sha256_normalized":  "8c813e47b24937a7c27490d0775fa144e0b3c9bf69f3fea595d1a3094b098761"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 9ddde2f76fd7f842b4fba150a0234928e8f0d7fe1368b665067ab5bfdce9eb53 tests/c07_probe.cpp[2]",
+                                                          "bytes":  6874,
+                                                          "sha256_normalized":  "9ddde2f76fd7f842b4fba150a0234928e8f0d7fe1368b665067ab5bfdce9eb53"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 5bb9e9cb183457be4b081540bda6b207fcf1e395bec45a99e9f2fa57ace9c47c tests/c08_negative_test.cpp[2]",
+                                                          "bytes":  9847,
+                                                          "sha256_normalized":  "5bb9e9cb183457be4b081540bda6b207fcf1e395bec45a99e9f2fa57ace9c47c"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 7453073fd2430969162c40e8c361411b97df62613323522d5505b8ccf8ba1f79 tests/c09_provenance_test.cpp[2]",
+                                                          "bytes":  15360,
+                                                          "sha256_normalized":  "7453073fd2430969162c40e8c361411b97df62613323522d5505b8ccf8ba1f79"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 73006af5870d397c25833d0fcdc54e3cda917bc40fd3ce0f6a1f2437d3a62559 tests/c10_preprocessor_test.cpp[2]",
+                                                          "bytes":  11429,
+                                                          "sha256_normalized":  "73006af5870d397c25833d0fcdc54e3cda917bc40fd3ce0f6a1f2437d3a62559"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 2bbd23ce4f3dd69b02791634e0301f93def5e25bef1e3ecc0d498a2fbf953cbf tests/c11_parser_test.cpp[2]",
+                                                          "bytes":  21052,
+                                                          "sha256_normalized":  "2bbd23ce4f3dd69b02791634e0301f93def5e25bef1e3ecc0d498a2fbf953cbf"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 36815ea49d51c95cf19281680fa845326d47e3c2201fc7edbd6d280cab4a6bc9 tests/call_export.cpp[2]",
+                                                          "bytes":  1135,
+                                                          "sha256_normalized":  "36815ea49d51c95cf19281680fa845326d47e3c2201fc7edbd6d280cab4a6bc9"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 5a6d50040959b569237ae15da4986fc32c0e5615265dd0915a97f4826caad941 tests/probe_exports.cpp[2]",
+                                                          "bytes":  4188,
+                                                          "sha256_normalized":  "5a6d50040959b569237ae15da4986fc32c0e5615265dd0915a97f4826caad941"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 3c04b99917d3d8de6a36275810f815c9b54e95f219938ebee0a88bea33b26993 tests/rawrstd_test.cpp[2]",
+                                                          "bytes":  3777,
+                                                          "sha256_normalized":  "3c04b99917d3d8de6a36275810f815c9b54e95f219938ebee0a88bea33b26993"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 5d265ef884b7f91d2ce35af404683de332fad71058f14bdb991e3837112d5033 tests/s2_pipeline_test.cpp[2]",
+                                                          "bytes":  14601,
+                                                          "sha256_normalized":  "5d265ef884b7f91d2ce35af404683de332fad71058f14bdb991e3837112d5033"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 4f474ee91de59fa74c6b45834b4a97e272c8aeba6c5d6d184f5ebe1776699752 tools/dbglaunch.c[2]",
+                                                          "bytes":  4884,
+                                                          "sha256_normalized":  "4f474ee91de59fa74c6b45834b4a97e272c8aeba6c5d6d184f5ebe1776699752"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 745f5ca4fc75d8294869dc2dd51011f70059227693dd6de9e5ab251fe56db0ad tools/rawr_asm.cpp[2]",
+                                                          "bytes":  1032,
+                                                          "sha256_normalized":  "745f5ca4fc75d8294869dc2dd51011f70059227693dd6de9e5ab251fe56db0ad"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 08fd506057589817be004d301ebc2cf064fef588d1aa130bcca9165c6d398b7e tools/rawr_c.cpp[2]",
+                                                          "bytes":  913,
+                                                          "sha256_normalized":  "08fd506057589817be004d301ebc2cf064fef588d1aa130bcca9165c6d398b7e"
+                                                      },
+                                                      {
+                                                          "path":  "compilers/native_compiler/source 852408a029b16ba6cfa8872ce9e67169f79f56347452103cdb549a8bbb240210 tools/recovered_c/c_compiler_minimal.c[2]",
+                                                          "bytes":  30752,
+                                                          "sha256_normalized":  "852408a029b16ba6cfa8872ce9e67169f79f56347452103cdb549a8bbb240210"
+                                                      }
+                                                  ]
+                        },
+    "scope":  {
+                  "proves":  "that C source passes through the certified preprocessor and the parser and produces a deterministic tree with source spans and syntax diagnostics",
+                  "does_not_prove":  "that C source compiles to an executable. The tree is syntax; the types are not resolved, there is no intermediate representation and there is no code generation. The stage 2 pipeline that does produce executables is a separate front end, and the two are not yet joined."
+              }
+}

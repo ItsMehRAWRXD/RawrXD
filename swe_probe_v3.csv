@@ -1,0 +1,2 @@
+task_id,status,elapsed_ms,fuzzy_patch_score,patch_jaccard_similarity,emitted_patch_lines,gold_patch_lines,context_bytes_injected,gold_hunk_count,retry_attempts,api_error_class
+rawrxd-001,FAILED,244009.12,0.0000,0.0000,0,0,0,2,0,timeout

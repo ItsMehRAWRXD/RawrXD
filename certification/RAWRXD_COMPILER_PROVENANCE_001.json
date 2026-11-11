@@ -1,0 +1,72 @@
+﻿{
+    "schema":  "rawr.compiler.provenance/1",
+    "generated_utc":  "2026-10-21T20:25:45Z",
+    "recovered_from":  {
+                           "ref":  "origin/ci/win32ide-link-msbuild",
+                           "ref_sha":  "2a4c014a3463e396e943a8b67c64a282ea1ea4ec",
+                           "fetched":  true
+                       },
+    "components":  [
+                       {
+                           "id":  "C01",
+                           "name":  "lexer",
+                           "path":  "Full Source/src/RawrXD_Lexer.h,.cpp",
+                           "bytes":  8125,
+                           "state":  "SOURCE RECOVERED, NOT BUILDABLE",
+                           "detail":  "A real lexer: RawrXD::Lexer with Token and a 13-kind TokenType. Its includes RawrXD_Win32_Foundation.h and KeywordHashTable.h exist only under .kilo/worktrees/thorn-measure/, not in the live tree, and it is wired into no build target."
+                       },
+                       {
+                           "id":  "C02",
+                           "name":  "MASM lexer",
+                           "path":  "Full Source/src/RawrXD_Lexer_MASM.cpp,.h and RawrXD_Lexer_AVX2.asm",
+                           "state":  "SOURCE RECOVERED, NOT BUILDABLE",
+                           "detail":  "Same missing dependencies."
+                       },
+                       {
+                           "id":  "C03",
+                           "name":  "C++ compiler",
+                           "path":  "Full Source/src/compiler/compiler_cpp_real.cpp",
+                           "lines":  505,
+                           "state":  "SOURCE RECOVERED, NOT A NATIVE FRONT END",
+                           "detail":  "It is an integration wrapper: it locates cl.exe in the MSVC toolchain and spawns it with CreateProcessA. It contains no parser, no AST and no code generation. Its own header says \u0027Replaces: src/compiler/cpp_compiler.h (no implementation)\u0027."
+                       },
+                       {
+                           "id":  "C04",
+                           "name":  "compiler assembly sources",
+                           "path":  "Full Source/src/rawrxd_compiler_masm64.asm, rawrxd_compiler_test.asm",
+                           "state":  "SOURCE RECOVERED, NOT BUILDABLE"
+                       }
+                   ],
+    "verdict":  {
+                    "source_backed_compiler_path":  "BLOCKED",
+                    "reason":  "No source-backed path from .cpp to .obj exists in the tracked tree. The recovered C++ compiler delegates to an external toolchain, and the recovered lexer\u0027s dependencies are absent from the live tree.",
+                    "not_classified_as_working":  true
+                },
+    "minimum_implementation_contract":  [
+                                            "A lexer that tokenises C++ source into a token stream, with the 13 token kinds the recovered RawrXD::Lexer already defines.",
+                                            "Its dependencies RawrXD_Win32_Foundation.h and KeywordHashTable.h must be present in the live tree and tracked.",
+                                            "A parser producing an AST from that token stream.",
+                                            "An intermediate representation that the existing phase2_linker can consume, or a COFF/PE object writer that emits what rawrxd_link already reads.",
+                                            "A build target that compiles the front end, so the path is reproducible from tracked source.",
+                                            "The acceptance test is unchanged and already exists: a .cpp compiles to a .obj, rawrxd_link links it, and Windows loads the result and it exits with the expected code. That is RAWR_NATIVE_LINKER_CERT_001 gate L3."
+                                        ],
+    "earlier_certificate_reconciliation":  {
+                                               "claim":  "an earlier session reported C01 at 97/97 and C03 at 7/7 (compiler to Windows execution)",
+                                               "findings":  [
+                                                                "No artifact in the tree reports 97 passed. The only gate named RC-01 is rc01_test.cpp, which certifies NativeProcess, NativeTimer, NativeJson, NativeSettings and NativeWidget, declares 53 record() calls, and is not a lexer test.",
+                                                                "No artifact in the tree reports a 7/7 compiler-to-Windows certificate.",
+                                                                "The recovered compiler is a wrapper around an external toolchain, so a 7/7 execution certificate would have exercised that wrapper and the external compiler, not a native front end.",
+                                                                "The reports and the prebuilt binaries describe capability that the tracked tree cannot reproduce."
+                                                            ],
+                                               "conclusion":  "The two findings coexist: the earlier certificates exercised a different worktree, an untracked implementation, or prebuilt artifacts. They do not establish that the production tree contains a reproducible compiler. The source-backed compiler path is recorded as BLOCKED."
+                                           },
+    "crucible":  {
+                     "status":  "SOURCE RECOVERED, NOT BUILDABLE",
+                     "paths":  [
+                                   "Full Source/src/modules/crucible_engine.cpp (75749 bytes)",
+                                   "Full Source/src/modules/crucible_engine.h (14480 bytes)",
+                                   "Full Source/src/win32app/Win32IDE_CruciblePanel.cpp (16456 bytes)"
+                               ],
+                     "note":  "Crucible was recorded as UNVERIFIED in the earlier audit because no directory or symbol matched in either tree. It exists on origin/ci/win32ide-link-msbuild, and the three sources are now tracked."
+                 }
+}
