@@ -1,0 +1,104 @@
+{
+  "counts": {
+    "available": 9,
+    "declared_unimplemented": 1,
+    "not_required": 0
+  },
+  "gate_binding_source": "src/modelgenie/ModelGenieExecutor.cpp",
+  "gate_source": "src/deep2/QuantParityRegistry.cpp:QuantParityRegistry::GatePrimitive",
+  "generator": "quant_parity_cert --manifest",
+  "primitive_count": 10,
+  "primitives": [
+    {
+      "available": true,
+      "gate_verdict": "available",
+      "implementation_required": true,
+      "kernel_present": true,
+      "name": "RmsNormFwd",
+      "registration_source": "ModelGenieExecutor.cpp:RmsNormFwd dispatch",
+      "status": "bound"
+    },
+    {
+      "available": true,
+      "gate_verdict": "available",
+      "implementation_required": true,
+      "kernel_present": true,
+      "name": "LinearFwd",
+      "registration_source": "ModelGenieExecutor.cpp:LinearFwd dispatch",
+      "status": "bound"
+    },
+    {
+      "available": false,
+      "gate_verdict": "required_unimplemented",
+      "implementation_required": true,
+      "kernel_present": false,
+      "name": "MatMulFwd",
+      "registration_source": "ModelGenieExecutor.cpp:MatMulFwd dispatch returns false; no graph producer emits it (Universal::Op::MatMul lowered to OpKind::Unsupported)",
+      "status": "declared_unimplemented"
+    },
+    {
+      "available": true,
+      "gate_verdict": "available",
+      "implementation_required": true,
+      "kernel_present": true,
+      "name": "AttentionFwd",
+      "registration_source": "ModelGenieExecutor.cpp:AttentionFwd dispatch",
+      "status": "bound"
+    },
+    {
+      "available": true,
+      "gate_verdict": "available",
+      "implementation_required": true,
+      "kernel_present": true,
+      "name": "MlaDecompressFwd",
+      "registration_source": "ModelGenieExecutor.cpp:MlaDecompressFwd dispatch",
+      "status": "bound"
+    },
+    {
+      "available": true,
+      "gate_verdict": "available",
+      "implementation_required": true,
+      "kernel_present": true,
+      "name": "RouterFwd",
+      "registration_source": "ModelGenieExecutor.cpp:RouterFwd dispatch (via LinearFwd)",
+      "status": "bound"
+    },
+    {
+      "available": true,
+      "gate_verdict": "available",
+      "implementation_required": true,
+      "kernel_present": true,
+      "name": "TopKFwd",
+      "registration_source": "ModelGenieExecutor.cpp:TopKFwd dispatch",
+      "status": "bound"
+    },
+    {
+      "available": true,
+      "gate_verdict": "available",
+      "implementation_required": true,
+      "kernel_present": true,
+      "name": "MoEExecuteFwd",
+      "registration_source": "ModelGenieExecutor.cpp:MoEExecuteFwd dispatch",
+      "status": "bound"
+    },
+    {
+      "available": true,
+      "gate_verdict": "available",
+      "implementation_required": true,
+      "kernel_present": true,
+      "name": "ResidualAddFwd",
+      "registration_source": "ModelGenieExecutor.cpp:ResidualAddFwd dispatch",
+      "status": "bound"
+    },
+    {
+      "available": true,
+      "gate_verdict": "available",
+      "implementation_required": true,
+      "kernel_present": true,
+      "name": "LMHeadFwd",
+      "registration_source": "ModelGenieExecutor.cpp:LMHeadFwd dispatch",
+      "status": "bound"
+    }
+  ],
+  "schema": "RAWRXD_PRIMITIVE_MANIFEST/1.0"
+}

@@ -1,0 +1,68 @@
+{
+  "Failed": 4,
+  "Timestamp": "2026-07-29 00:41:40",
+  "Passed": 6,
+  "Gates": [
+    {
+      "Gate": 1,
+      "Name": "Binary Availability",
+      "Status": "PASS",
+      "Details": "All executables present"
+    },
+    {
+      "Gate": 2,
+      "Name": "Dual GPU Detection",
+      "Status": "PASS",
+      "Details": "2 AMD GPUs detected"
+    },
+    {
+      "Gate": 3,
+      "Name": "Integration Tests",
+      "Status": "WARN",
+      "Details": "Exit code: -1073741819"
+    },
+    {
+      "Gate": 4,
+      "Name": "System Memory",
+      "Status": "PASS",
+      "Details": " GB RAM detected"
+    },
+    {
+      "Gate": 5,
+      "Name": "Disk Space",
+      "Status": "PASS",
+      "Details": " GB free on D:"
+    },
+    {
+      "Gate": 6,
+      "Name": "Vulkan Runtime",
+      "Status": "PASS",
+      "Details": "Vulkan loader present"
+    },
+    {
+      "Gate": 7,
+      "Name": "GPU VRAM",
+      "Status": "WARN",
+      "Details": "4.5GB total VRAM"
+    },
+    {
+      "Gate": 8,
+      "Name": "CPU Detection",
+      "Status": "PASS",
+      "Details": "AMD Ryzen 7 7800X3D detected"
+    },
+    {
+      "Gate": 9,
+      "Name": "PS Modules",
+      "Status": "WARN",
+      "Details": "No RawrXD modules found"
+    },
+    {
+      "Gate": 10,
+      "Name": "Ring Smoke Test",
+      "Status": "WARN",
+      "Details": "Execution error or timeout"
+    }
+  ],
+  "Total": 10
+}
