@@ -302,6 +302,24 @@ struct RunOutcome {
     std::vector<ToolResult> results;
 };
 
+// GROUNDING GATE (runAgentLoop): a final answer that asserts repository or file
+// facts must rest on at least one real execution. Without this the loop accepted
+// a git_status request answered from the model's own weights -- it reported
+// "3 untracked files" with zero tool calls and completed=true, which is a
+// fabricated answer indistinguishable from a verified one.
+static bool assertsRepoFacts(const std::string& text) {
+    static const char* cues[] = {
+        "untracked", "staged", "committed", "git status", "repository contains",
+        "repo contains", "source files", "matching files", "files reference",
+        "i checked", "i searched", "i read the file", "according to the file",
+        "the file contains", "found in the repo"
+    };
+    std::string low = toLower(text);
+    for (const char* c : cues)
+        if (low.find(c) != std::string::npos) return true;
+    return false;
+}
+
 static RunOutcome runAgentLoop(std::function<InferenceResult(const std::vector<json>&, int)> completeFn,
                                ToolRegistry& reg, const Workspace& ws, const ModeProfile& mode,
                                const std::string& goal, int maxTurns = 12,
@@ -326,6 +344,7 @@ static RunOutcome runAgentLoop(std::function<InferenceResult(const std::vector<j
 
     std::string digest, pendingAssistant;
     std::vector<json> recent;
+    int groundingStrikes = 0;
     static const size_t MAX_DIGEST = 2400;
 
     auto rebuild = [&]() {
@@ -635,7 +654,51 @@ static RunOutcome runAgentLoop(std::function<InferenceResult(const std::vector<j
         planExhausted = (!haveNext && haveFinal == false && !ro.results.empty());
 
         if (finalObj && !planExhausted) {
-            ro.summary = finalObj->value("summary", std::string());
+            // GROUNDING GATE: a final answer must carry substance and, when it
+            // asserts repository or file facts, rest on at least one real
+            // execution. Without this the loop accepted a git_status request
+            // answered from the model's own weights ("3 untracked files",
+            // tool_calls=0, completed=true). The first version of this gate only
+            // rejected forbidden claims, which an EMPTY summary then satisfied.
+            // Both a vacuous and an ungrounded completion are indistinguishable
+            // from a verified one, so both are rejected here.
+            std::string proposed;
+            if (finalObj->contains("summary") && (*finalObj)["summary"].is_string())
+                proposed = (*finalObj)["summary"].get<std::string>();
+
+            const bool vacuous = proposed.empty();
+            const bool ungrounded =
+                !vacuous && ro.results.empty() && assertsRepoFacts(proposed);
+
+            if (groundingStrikes < 3 && (vacuous || ungrounded)) {
+                ++groundingStrikes;
+                logLine(std::string("run: final answer rejected (") +
+                        (vacuous ? "empty_summary" : "no_tool_receipt") + ") strike " +
+                        std::to_string(groundingStrikes));
+                commit(vacuous
+                           ? std::string("Your last reply had an empty \"summary\" field, so "
+                                         "it answers nothing. Reply with a tool_call JSON for "
+                                         "the tool that gathers the evidence (git_status, "
+                                         "list_repo, read_file or search_text), or with a "
+                                         "final_answer whose \"summary\" states the result.")
+                           : std::string("You answered with repository or file facts but no "
+                                         "tool was executed, so those facts are unverified and "
+                                         "cannot be presented as findings. Reply with a "
+                                         "tool_call JSON for the tool that would produce the "
+                                         "evidence (git_status, list_repo, read_file or "
+                                         "search_text). Do not answer from memory."));
+                continue;
+            }
+
+            if (vacuous) {
+                // Strikes exhausted and still no substance: fail closed rather
+                // than report an empty answer as a completed run.
+                logLine("run: final answer still empty after grounding strikes; "
+                        "failing closed");
+                break;
+            }
+
+            ro.summary = proposed;
             ro.findings =
                 finalObj->contains("findings") ? (*finalObj)["findings"].dump(2) : "[]";
             ro.nextActions = finalObj->contains("next_actions")

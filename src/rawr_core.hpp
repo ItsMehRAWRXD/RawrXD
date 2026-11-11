@@ -424,6 +424,7 @@ struct InferenceResult {
 class InferenceClient {
 public:
     void setModel(const std::string& m) { model_ = m; }
+    const std::string& model() const { return model_; }
     void setEndpoint(int port, const std::string& host = "127.0.0.1",
                      const std::string& path = "/v1/chat/completions");
     void setTimeout(int ms) { timeoutMs_ = ms; }
