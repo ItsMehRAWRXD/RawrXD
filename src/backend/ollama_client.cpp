@@ -372,6 +372,36 @@ void ConfigureWinHttpTimeouts(HINTERNET session, int timeout_seconds) {
     WinHttpSetTimeouts(session, timeout_ms, timeout_ms, timeout_ms, timeout_ms);
 }
 
+// Map a WinHTTP failure code to a stable token.  Callers log this verbatim so
+// a timeout can be told apart from a refused connection or an empty body.
+std::string DescribeWinHttpError(DWORD code) {
+    switch (code) {
+        case 0: return "";
+        case ERROR_WINHTTP_TIMEOUT: return "HTTP_TIMEOUT";
+        case ERROR_WINHTTP_CANNOT_CONNECT: return "HTTP_CANNOT_CONNECT";
+        case ERROR_WINHTTP_CONNECTION_ERROR: return "HTTP_CONNECTION_ERROR";
+        case ERROR_WINHTTP_NAME_NOT_RESOLVED: return "HTTP_NAME_NOT_RESOLVED";
+        case ERROR_WINHTTP_SECURE_FAILURE: return "HTTP_SECURE_FAILURE";
+        case ERROR_WINHTTP_INVALID_URL: return "HTTP_INVALID_URL";
+        case ERROR_WINHTTP_OPERATION_CANCELLED: return "CANCELLED";
+        case ERROR_WINHTTP_SHUTDOWN: return "CANCELLED";
+        default: return "WINHTTP_" + std::to_string(code);
+    }
+}
+
+// Query the HTTP status line after a successful WinHttpReceiveResponse.
+int QueryWinHttpStatus(HINTERNET request) {
+    DWORD status = 0;
+    DWORD size = sizeof(status);
+    if (WinHttpQueryHeaders(request,
+                             WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+                             WINHTTP_HEADER_NAME_BY_INDEX, &status, &size,
+                             WINHTTP_NO_HEADER_INDEX)) {
+        return static_cast<int>(status);
+    }
+    return 0;
+}
+
 } // namespace
 
 std::string OllamaClient::makeGetRequest(const std::string& endpoint) {

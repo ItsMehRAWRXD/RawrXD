@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <richedit.h>
 #include "Win32IDE_Types.h"
+#include <algorithm>
 
 // ---------------------------------------------------------------------------
 // Document tab strip (VS Code style). IDC_DOC_TABS identifies the control in
@@ -1002,7 +1003,6 @@ private:
     std::vector<GGUFInfo> listGGUFModels() const;
 
     // GGUF Reader (Batch 5 M06)
-    bool loadGGUFModel(const std::string& modelPath);
     void unloadGGUFModel();
 
     // Model Benchmarking (Batch 5 M05)

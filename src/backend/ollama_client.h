@@ -84,6 +84,17 @@ struct OllamaResponse {
     uint64_t     eval_count          = 0;
     uint64_t     eval_duration       = 0;
 
+    // Transport diagnostics for the most recent HTTP exchange that produced
+    // this response.  `http_status` is 0 when no status line was received
+    // (connection failure or timeout).  `transport_error` is a stable,
+    // non-empty token (for example HTTP_TIMEOUT, HTTP_CANNOT_CONNECT,
+    // EMPTY_RESPONSE) whenever the exchange did not yield a usable body, and
+    // empty on a clean 2xx response.  Callers must not collapse these into a
+    // bare boolean success flag: a cancelled request, a transport timeout, an
+    // upstream model error, and an empty completion are distinct outcomes.
+    int          http_status    = 0;
+    std::string  transport_error;
+
     static OllamaResponse Ok(const std::string& text, uint64_t ptok = 0, uint64_t ctok = 0);
     static OllamaResponse Error(const std::string& msg);};
 
@@ -131,17 +142,28 @@ public:
 
     // ---- Configuration ----
     void setTimeoutSeconds(int seconds) { m_timeout_seconds = seconds; }
+    int  timeoutSeconds() const { return m_timeout_seconds; }
 
     // Interrupt the active WinHTTP request, if one is in flight.  This is
     // intentionally transport-level cancellation: a callback flag alone
     // cannot unblock a synchronous WinHttpReadData call.
     void cancelActiveRequest() noexcept;
 
+    // Diagnostics from the most recent HTTP exchange.  `lastHttpStatus()` is
+    // 0 when no status line was received; `lastError()` is empty only for a
+    // clean response that carried a body.
+    int lastHttpStatus() const { return m_last_http_status; }
+    const std::string& lastError() const { return m_last_error; }
+
 private:
     std::string m_base_url;
     int         m_timeout_seconds;
     mutable std::mutex m_active_request_mutex;
     void* m_active_request = nullptr;
+    // Written by the HTTP helpers on the calling thread and read back by
+    // generateSync/chatSync immediately after the exchange completes.
+    int         m_last_http_status = 0;
+    std::string m_last_error;
 
     // JSON builders
     std::string createGenerateRequestJson(const OllamaGenerateRequest& req);
