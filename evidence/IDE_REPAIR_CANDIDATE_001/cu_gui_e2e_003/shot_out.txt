@@ -1,0 +1,10 @@
+cmd : [StreamEngine] Shutdown
+At C:\Users\Garrett\AppData\Local\Temp\ps-script-9e1718df-1540-4622-a0cc-224e2c755e54.ps1:135 char:12
++ $shotOut = cmd /c "set RAWRXD_PARENT_PID=$npid&& set RAWRXD_CU_ALLOW_ ...
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([StreamEngine] Shutdown:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+MOTD_ACK=1 MOTD_SHA256=3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+action=0 success=1 error=0 target_pid=26896 message=BMP captured to local temporary file screenshot=C:\Users\Garrett\AppData\Local\Temp\RXD2013.tmp hwnd=25755834
+
