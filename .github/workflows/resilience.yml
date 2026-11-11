@@ -1,0 +1,89 @@
+name: Agentic Resilience (dependency-free)
+
+# Targeted workflow for the three subsystems that differentiate RawrXD from
+# competing IDEs. It is deliberately isolated from the Qt/Win32 build so it is
+# fast and reliable: it configures, compiles, and runs with no Qt6, no GPU,
+# no network access, and no Python services.
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+      - feature/**
+      - feat/**
+      - bugfix/**
+      - hotfix/**
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref && github.ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  resilience-tests:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Add MSBuild
+        uses: microsoft/setup-msbuild@v1.3
+
+      - name: Configure (CMake, tests only, no Qt)
+        shell: pwsh
+        run: |
+          cmake -B build-resilience -A x64 `
+                -DRAWRXD_BUILD_TESTS=ON -DENABLE_VULKAN=OFF -DGGML_VULKAN=OFF `
+                -DUSE_ZLIB_FETCHCONTENT=OFF
+          if ($LASTEXITCODE -ne 0) { throw "CMake configure failed" }
+
+      - name: Build agentic-resilience-tests
+        shell: pwsh
+        run: |
+          cmake --build build-resilience --config Release --target agentic-resilience-tests
+          if ($LASTEXITCODE -ne 0) { throw "Build failed" }
+
+      - name: Run agentic resilience tests
+        shell: pwsh
+        run: |
+          ctest --test-dir build-resilience -C Release -R agentic-resilience --output-on-failure
+          if ($LASTEXITCODE -ne 0) { throw "Tests failed" }
+
+      - name: Verify no Qt dependency in the new subsystems
+        shell: pwsh
+        run: |
+          # These modules must stay dependency-free: pure C++20 standard library.
+          # NOTE: -CaseSensitive is REQUIRED. Select-String is case-insensitive by
+          # default, which makes '#include <Q[A-Z]' match the stdlib <queue> include
+          # and fails the check on perfectly valid code.
+          $pattern = 'QObject|QString|QJson|QByteArray|#include <Q[A-Z]'
+          $targets = @(
+            "src\agent\adaptive_retry.hpp",
+            "src\agent\adaptive_retry.cpp",
+            "src\agent\delegated_agents.hpp",
+            "src\agent\delegated_agents.cpp",
+            "src\agentic\conflict_resolution.hpp",
+            "src\agentic\conflict_resolution.cpp",
+            "tests\agentic_resilience_test.cpp"
+          )
+          $found = $false
+          foreach ($t in $targets) {
+            if (Test-Path $t) {
+              $hits = Select-String -Path $t -Pattern $pattern -CaseSensitive -AllMatches
+              if ($hits) {
+                Write-Host "Qt dependency found in ${t}:"
+                $hits | ForEach-Object { Write-Host "  $($_.LineNumber): $($_.Line)" }
+                $found = $true
+              }
+            }
+          }
+          if ($found) { throw "Qt dependency detected in dependency-free modules" }
+          Write-Host "OK: agentic resilience subsystems are Qt-free (pure C++20)."
