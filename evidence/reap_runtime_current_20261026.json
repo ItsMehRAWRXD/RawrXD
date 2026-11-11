@@ -1,0 +1,154 @@
+{
+  "schema": "RAWRXD_REAP_RUNTIME_CURRENT_001",
+  "timestamp_utc": "2026-10-26T18:40:00Z",
+  "source_root": "F:/rawrxd",
+  "branch": "fix/deep2-multimodel-safety-20261025",
+  "source_base_commit": "9fa781fe811d391359f999f121bfdebe8eaf3aa0",
+  "working_tree_dirty": true,
+  "provenance": {
+    "replay_corpus": {
+      "path": "F:/rawrxd/evidence/reap_calibration/moe_two.jsonl",
+      "size_bytes": 34,
+      "sha256": "97475EFE56F89D426363DAB11D8120DDB33FFC0375DC8E9FE6E2F2E2048E8EBD"
+    },
+    "rawr_reap": {
+      "path": "F:/rawrxd/build_reap/bin-msvc/rawr-reap.exe",
+      "size_bytes": 874496,
+      "sha256": "6FBA203452D0F045E0E38EAF642E69487AABED321A30B0E7245727A0F101CF05"
+    },
+    "replay": {
+      "path": "F:/rawrxd/build_reap/bin-msvc/rawr-reap-replay.exe",
+      "size_bytes": 1988608,
+      "sha256": "D6BAFED2427AFED0E1E6C641114CD0B01EE0254F080C19EF1AD48D7FE6745C30"
+    }
+  },
+  "build": {
+    "command": "cmake --build F:/rawrxd/build_reap --config Release --target deep2_engine_lib rawr-reap-replay rawr-reap --parallel 8",
+    "exit_code": 0,
+    "result": "PASS_INCREMENTAL_NO_WORK"
+  },
+  "ctest": {
+    "command": "ctest --test-dir F:/rawrxd/build_reap -C Release --output-on-failure",
+    "exit_code": 0,
+    "total": 18,
+    "passed": 17,
+    "skipped": 1,
+    "failed": 0,
+    "skipped_tests": ["deep2_h11_prefill_parity"],
+    "skip_reason": "No model fixture was available to that test"
+  },
+  "family_runtime": [
+    {
+      "family": "Kimi K2",
+      "model": "F:/OllamaModels/Kimi-K2-Instruct-0905-GGUF/Q4_K_M/Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf",
+      "model_first_shard_bytes": 46304135840,
+      "model_hash": "EB48051961B59B420E182552965B7AA141D16C99488C69CCC9DE1327E96F5639",
+      "model_hash_status": "CAPTURED_SHA256",
+      "receipt": "F:/rawrxd/tmp_build/reap_kimi_currenthash_one_token_20261026.json",
+      "exit_code": 0,
+      "generated_tokens": 1,
+      "token_ids": [102810],
+      "continuous_decode_pass": true,
+      "complete": true,
+      "route_metrics": 480,
+      "response": " Crus",
+      "gpu_real_forward": false,
+      "reference_parity_pass": false,
+      "calibration_complete": false,
+      "certification": "CALIBRATED_UNSEALED"
+    },
+    {
+      "family": "DeepSeek R1",
+      "model": "F:/OllamaModels/DeepSeek-R1-Q4_K_M-COMPLETE/DeepSeek-R1-Q4_K_M-00001-of-00011.gguf",
+      "model_first_shard_bytes": 38765709664,
+      "model_hash": "9D22DD4035FA90197F547670C6B70DB458CAF998EECC08DCF9FEA65F30DFC76F",
+      "model_hash_status": "CAPTURED_SHA256",
+      "receipt": "F:/rawrxd/tmp_build/reap_deepseek_currenthash_one_token_20261026.json",
+      "exit_code": 0,
+      "generated_tokens": 1,
+      "token_ids": [55320],
+      "continuous_decode_pass": true,
+      "complete": true,
+      "route_metrics": 464,
+      "response": " Coalition",
+      "gpu_real_forward": false,
+      "reference_parity_pass": false,
+      "calibration_complete": false,
+      "certification": "CALIBRATED_UNSEALED"
+    },
+    {
+      "family": "MiniMax M2.7",
+      "model": "F:/OllamaModels/MiniMax-M2.7-Q4_K_M/MiniMax-M2.7-Q4_K_M/MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf",
+      "model_first_shard_bytes": 49386414912,
+      "model_hash": "68C284BE6A929843C8CB774861D0A6665DB87DE7FEC2A4367D2357BC94B05B2A",
+      "model_hash_status": "CAPTURED_SHA256",
+      "receipt": "F:/rawrxd/tmp_build/reap_minimax_utf8_guard_183921250.json",
+      "exit_code": 0,
+      "generated_tokens": 2,
+      "token_ids": [636, 765],
+      "continuous_decode_pass": true,
+      "complete": true,
+      "route_metrics": 930,
+      "response": "��",
+      "response_utf8_valid": false,
+      "output_utf8_valid": false,
+      "gpu_real_forward": false,
+      "reference_parity_pass": false,
+      "calibration_complete": false,
+      "certification": "CALIBRATED_UNSEALED",
+      "correctness_note": "The two token pieces form invalid UTF-8; this run is execution evidence, not correctness evidence."
+    }
+  ],
+  "reap_plan_attempt": {
+    "family": "MiniMax M2.7",
+    "command": "rawr-reap reap <MiniMax-first-shard> --target-size 30GiB --active-experts 8 --expert-budget 20GiB --quality-floor 0.70 --calibration reap_minimax_currenthash_two_token_20261026.json --authorize-rewrite",
+    "receipt": "F:/rawrxd/tmp_build/reap_minimax_reap_receipt_183717505.json",
+    "exit_code": 4,
+    "status": "BLOCKED",
+    "reason": "REAP_REWRITE_NOT_AUTHORIZED_BY_REFERENCE_PARITY",
+    "shards": 3,
+    "tensors": 809,
+    "expert_tensors": 186,
+    "layer_count": 62,
+    "moe_layer_count": 62,
+    "target_bytes": 32212254720,
+    "active_experts": 8,
+    "expert_budget_bytes": 21474836480,
+    "selection_manifest_written": false,
+    "transformation_enabled": false,
+    "write_allowed": false,
+    "gguf_rewrite_complete": false,
+    "reduced_model_reload_pass": false,
+    "output_files": 0
+  },
+  "reap_plan": {
+    "command": "rawr-reap plan <MiniMax-first-shard> --size 30GiB",
+    "exit_code": 4,
+    "shards": 3,
+    "tensors": 809,
+    "expert_tensors": 186,
+    "logical_experts": 15872,
+    "target_bytes": 32212254720,
+    "fits_unmodified": false,
+    "pruning_candidate": true,
+    "selection": "PRUNING_CANDIDATE_REQUIRES_CALIBRATION_MASK",
+    "writable_output": false
+  },
+  "admission_fix": {
+    "logical_context_preserved": true,
+    "resident_hidden_state_initial_slots": 4096,
+    "prior_failure": "Resident hidden-state allocation used the full 262144-token logical context and failed before Kimi admission.",
+    "current_kimi_load": "PASS",
+    "verified": true
+  },
+  "verdict": {
+    "multi_family_cpu_execution_smoke": "PASS",
+    "continuous_decode": "PASS_FOR_OBSERVED_RUNS",
+    "model_output_validity": "NOT_CERTIFIED; MiniMax two-token output was invalid UTF-8",
+    "gpu_inference": "NOT_CERTIFIED",
+    "reference_parity": "NOT_CERTIFIED",
+    "calibration": "NOT_CERTIFIED",
+    "reap_rewrite": "BLOCKED_FAIL_CLOSED",
+    "reap_end_to_end": "NOT_CERTIFIED"
+  }
+}

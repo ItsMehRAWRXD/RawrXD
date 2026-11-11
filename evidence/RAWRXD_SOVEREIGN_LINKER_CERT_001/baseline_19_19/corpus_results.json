@@ -1,0 +1,150 @@
+﻿{
+    "schema":  "RAWRXD_SOVEREIGN_LINKER_CERT_001",
+    "generated_utc":  "2026-10-27T08:48:59.3857080Z",
+    "linker":  "F:\\rawrxd\\evidence\\RAWRXD_SOVEREIGN_LINKER_CERT_001\\bin\\rawrxd_link_corpus.exe",
+    "linker_sha256":  "37f7d354288c11772c0420a5278cb5499fd3a512857dba21e55265bc84669cca",
+    "total_tests":  19,
+    "pass":  19,
+    "fail":  0,
+    "corpus_19_19":  true,
+    "WINDOWS_RUNTIME_SMOKE":  "PASS",
+    "WINDOWS_RUNTIME_CERT":  0,
+    "FIVE_OS_CERTIFIED":  false,
+    "PROMOTE":  0,
+    "TIP_CLIMB":  "HOLD",
+    "tests":  [
+                  {
+                      "test":  "01_minimal_return_zero",
+                      "type":  "pos",
+                      "expected":  "0",
+                      "actual":  "exit=0",
+                      "result":  "PASS"
+                  },
+                  {
+                      "test":  "02_exit_sentinel",
+                      "type":  "pos",
+                      "expected":  "42",
+                      "actual":  "exit=42",
+                      "result":  "PASS"
+                  },
+                  {
+                      "test":  "03_multi_tu_linking",
+                      "type":  "pos",
+                      "expected":  "42",
+                      "actual":  "exit=42",
+                      "result":  "PASS"
+                  },
+                  {
+                      "test":  "04_static_library",
+                      "type":  "pos",
+                      "expected":  "42",
+                      "actual":  "exit=42",
+                      "result":  "PASS"
+                  },
+                  {
+                      "test":  "05_shared_library",
+                      "type":  "pos",
+                      "expected":  "42",
+                      "actual":  "exit=42",
+                      "result":  "PASS"
+                  },
+                  {
+                      "test":  "06_undefined_symbol",
+                      "type":  "neg_link",
+                      "expected":  "link_fail",
+                      "actual":  "link_fail",
+                      "result":  "PASS"
+                  },
+                  {
+                      "test":  "07_relocation",
+                      "type":  "pos",
+                      "expected":  "100",
+                      "actual":  "exit=100",
+                      "result":  "PASS"
+                  },
+                  {
+                      "test":  "08_cross_ref",
+                      "type":  "pos",
+                      "expected":  "42",
+                      "actual":  "exit=42",
+                      "result":  "PASS"
+                  },
+                  {
+                      "test":  "09_global_init",
+                      "type":  "pos",
+                      "expected":  "42",
+                      "actual":  "exit=42",
+                      "result":  "PASS"
+                  },
+                  {
+                      "test":  "10_bss_zero",
+                      "type":  "pos",
+                      "expected":  "42",
+                      "actual":  "exit=42",
+                      "result":  "PASS"
+                  },
+                  {
+                      "test":  "11_nested_calls",
+                      "type":  "pos",
+                      "expected":  "42",
+                      "actual":  "exit=42",
+                      "result":  "PASS"
+                  },
+                  {
+                      "test":  "12_rodata_len",
+                      "type":  "pos",
+                      "expected":  "5",
+                      "actual":  "exit=5",
+                      "result":  "PASS"
+                  },
+                  {
+                      "test":  "13_data_roundtrip",
+                      "type":  "pos",
+                      "expected":  "0",
+                      "actual":  "exit=0",
+                      "result":  "PASS"
+                  },
+                  {
+                      "test":  "14_fixed_argc",
+                      "type":  "pos",
+                      "expected":  "3",
+                      "actual":  "exit=3",
+                      "result":  "PASS"
+                  },
+                  {
+                      "test":  "15_branch_table",
+                      "type":  "pos",
+                      "expected":  "42",
+                      "actual":  "exit=42",
+                      "result":  "PASS"
+                  },
+                  {
+                      "test":  "16_debug_release",
+                      "type":  "pos_var",
+                      "expected":  "42",
+                      "actual":  "exit=42,exit=42",
+                      "result":  "PASS"
+                  },
+                  {
+                      "test":  "17_optimization",
+                      "type":  "pos",
+                      "expected":  "4950",
+                      "actual":  "exit=4950",
+                      "result":  "PASS"
+                  },
+                  {
+                      "test":  "18_incremental_rebuild",
+                      "type":  "pos",
+                      "expected":  "7",
+                      "actual":  "exit=7",
+                      "result":  "PASS"
+                  },
+                  {
+                      "test":  "19_deliberate_compiler_fail",
+                      "type":  "neg_compile",
+                      "expected":  "compile_fail",
+                      "actual":  "compile_fail",
+                      "result":  "PASS"
+                  }
+              ]
+}

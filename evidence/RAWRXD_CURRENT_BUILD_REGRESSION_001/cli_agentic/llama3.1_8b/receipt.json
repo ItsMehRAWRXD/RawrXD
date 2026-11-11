@@ -1,0 +1,32 @@
+﻿{
+    "schema":  "RAWRXD_AGENTIC_MODEL_READINESS_001",
+    "model":  "llama3.1:8b",
+    "workspace_root":  "F:\\rawrxd",
+    "fixture":  "F:\\rawrxd\\evidence\\RAWRXD_CURRENT_BUILD_REGRESSION_001\\cli_agentic\\llama3.1_8b\\fixture.cpp",
+    "capabilities":  [
+                         "completion",
+                         "tools"
+                     ],
+    "family":  "llama",
+    "parameter_size":  "8.0B",
+    "real_model_inference":  true,
+    "motd_gate":  true,
+    "read_tool":  true,
+    "edit_tool":  false,
+    "readback_tool":  false,
+    "file_changed_count":  1,
+    "diff_verified":  false,
+    "synthetic_success":  0,
+    "status":  "FAIL",
+    "exit_code":  1,
+    "elapsed_ms":  11138,
+    "tool_names":  [
+                       "writeFile",
+                       "readFile",
+                       "editFiles"
+                   ],
+    "tool_failure_count":  1,
+    "before_sha256":  "10E1BEF74A8CA32ADD5C7A64BCCA08F187122B81FF5912E2B48D7F8AD3A982DA",
+    "after_sha256":  "A4EA372DF3475AB16CBFD321FCF9FD50376D4ABE8F1C6A33318B39E3929482C8",
+    "timestamp_utc":  "2026-10-30T08:03:49.8860699Z"
+}

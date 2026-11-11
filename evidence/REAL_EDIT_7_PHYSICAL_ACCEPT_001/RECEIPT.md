@@ -1,0 +1,28 @@
+﻿# REAL_EDIT_7_PHYSICAL_ACCEPT_001 â€” Tests 01-06
+
+ASOF_UTC=2026-11-03T06:07:12Z
+COMMIT=dace16621672f3bfff9af5522b839eda4006b266
+CANDIDATE_EXE=F:\rawrxd\build_repair_candidate\bin\RawrXD-Win32IDE-Native.exe
+CANDIDATE_SHA256=AAC1055721044DDFA2905964E0CE24047C7D0AEB32848BB3B9F0078ABB9C81E3
+CANDIDATE_SHA_MATCH=1
+PROMOTE=0
+CERTIFIED=0
+INVENT_PASS=0
+DISPOSITION=PHYSICAL_01_06_PASS
+ATOMIC_SAVE_IN_SOURCE=NOT_EQUIVALENT (direct std::ofstream binary trunc; not ReplaceFile/MoveFileEx atomic replace)
+PHYSICAL_EDITOR_ACCEPTANCE=01_06_PASS; TESTS_07_15_PENDING
+MILESTONE_EDIT_SAVEAS_REOPEN_SHA=PASS
+DISK_SHA256=4856B257551F3DBDD935BF3D174AC9BB75B14DF551E7D0FC63C23C388A47FAA9
+
+| # | Test | Result |
+|---:|------|--------|
+| 01 | Keyboard edit activates Save | PASS |
+| 02 | Paste activates Save | PASS |
+| 03 | Untitled document saves successfully | PASS |
+| 04 | Save As dialog completes without process loss | PASS |
+| 05 | Saved file exists and bytes match | PASS |
+| 06 | Reopen matches expected SHA-256 | PASS |
+
+FAIL_CLOSED_LAW=NOT_RUN!=PASS
+RUNLOG=F:\rawrxd\evidence\REAL_EDIT_7_PHYSICAL_ACCEPT_001\RUNLOG.txt
+WORKDIR=F:\rawrxd\evidence\REAL_EDIT_7_PHYSICAL_ACCEPT_001\workdir

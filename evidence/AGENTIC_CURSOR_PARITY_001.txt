@@ -1,0 +1,45 @@
+SCHEMA=AGENTIC_CURSOR_PARITY_001
+GOAL=RawrXD / Deep2 agentic + autonomous tool surface ≥ Cursor Agent tool parity
+PROMOTE=0
+TIP_CLIMB=HOLD
+FABRICATE_FORBIDDEN=1
+LAW=SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+
+=== CURSOR CORE TOOLS ===
+Cursor tool       | RawrXD canonical     | Alias            | Status
+------------------|----------------------|------------------|------------------
+Read              | readFile             | Read             | SOURCE_WIRED
+Grep              | textSearch           | Grep             | SOURCE_WIRED (+pattern→needle)
+Glob              | fileSearch           | Glob             | SOURCE_WIRED
+StrReplace        | editFiles            | StrReplace       | SOURCE_WIRED (+old_string/new_string)
+Write             | writeFile (new)      | Write            | SOURCE_WIRED
+Delete            | deleteFile (new)     | Delete           | SOURCE_WIRED
+Shell             | runInTerminal (NEW)  | Shell            | SOURCE_WIRED (was schema-only gap)
+Task / Multitask  | Cursor Task + rules  | n/a              | Cursor host; Deep /api/subagent
+MCP / dynamic     | GetDynamicTools path | n/a              | Cursor host only (not claimed)
+WebSearch/Fetch   | —                    | —                | OPEN (not claimed)
+TodoWrite         | —                    | —                | OPEN (not claimed)
+AwaitShell        | —                    | —                | OPEN (not claimed)
+
+=== SURPASS (RawrXD advantages; not Cursor defaults) ===
+MOTD fail-closed per turn     | MotdAuthorization + read_motd     | SOURCE_WIRED
+Mode permission gate          | AgentMode PermissionGate          | SOURCE_WIRED
+Certified build/test evidence | WorkspaceToolHost RunBuild/Tests  | SOURCE_WIRED (API)
+Self-repair loop              | SelfRepairLoop                    | SOURCE_WIRED
+Local Deep2 + Ollama backends | BackendRouter                     | SOURCE_WIRED
+Atomic ReplaceFileW writes    | write_atomic                      | SOURCE_WIRED
+
+=== FILES ===
+F:\rawrxd\src\agentic\tool_core.hpp          (runInTerminal, writeFile, deleteFile, aliases)
+F:\rawrxd\src\agentic\ToolCallBridge.h       (schemas + ConvertArgs Cursor arg remap)
+
+=== NEXT RUNTIME GATES (do not invent PASS) ===
+1) Rebuild rawrxd_agentic_backend / deep2_agentic_loop with vcvars
+2) Unit/smoke: register_workspace_tools → call Shell/Read/Grep/StrReplace aliases
+3) E2E: one agentic turn with read_motd then Cursor-named tools
+4) Task parity remains Cursor Multitask / Deep subagent — product loop must not fake Task
+
+RUNTIME_REACHED=0
+TOKEN_SURVIVED=0
+PERFORMANCE_PASS=0
+NOT_RUN!=PASS

@@ -1,0 +1,98 @@
+r9700-stack
+Copyright 2026 Brian Vargyas
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+================================================================================
+THIRD-PARTY COMPONENTS
+================================================================================
+
+Not everything in this repository is covered by the Apache-2.0 licence above.
+The items below are third-party work under their own terms. If you intend to
+reuse this project, read this section: two of these are used with the authors'
+permission for THIS project, and that permission does not transfer to you.
+
+--------------------------------------------------------------------------------
+1. Device-side LRU expert cache kernels  -- Apache-2.0, compatible
+--------------------------------------------------------------------------------
+    kernels/third_party/davetha/
+
+    Vendored unmodified from https://github.com/davetha/r9700-lru-expert-cache
+    (commit 3743f13). Copyright the r9700-lru-expert-cache authors, licensed
+    under the Apache License 2.0. Its own LICENSE and NOTICE are preserved in
+    that directory.
+
+    This one carries the same licence as this project, so it passes on to you
+    normally.
+
+--------------------------------------------------------------------------------
+2. MXFP4 x FP8 GEMM  -- Apache-2.0 since 2026-09-22 (was listed as derived)
+--------------------------------------------------------------------------------
+    kernels/r9k_moe_mxfp4a8.hip, kernels/r9k_gemm_fp8.hip,
+    r9700_vllm/kernels/moe.py
+
+    These were previously carved out as derived from libr4d by StillDeadcode
+    (https://codeberg.org/StillDeadcode/libr4d). An audit on 2026-09-22 found
+    that nothing in them is authored content we took:
+
+      * kMag, the folded-unpack table, is GENERATED, not written. Run
+        `tools/gen_kmag.py --check`: all 16 rows follow from the OCP e2m1 and
+        e4m3 specifications plus one rounding convention.
+      * the unpack's masks and shifts follow from the MXFP4 packing and the two
+        format definitions; the v_perm selectors follow from V_PERM_B32's own
+        semantics and from de-interleaving nibble-packed elements.
+      * the fragment-order weight layout is FORCED by the gfx12 WMMA builtin --
+        any correct implementation produces identical bytes.
+      * in-block split-K through LDS is a textbook technique.
+      * r9k_gemm_fp8.hip contains no folded code at all (it is fp8 x fp8, with
+        nothing to unpack).
+
+    What libr4d arrived at first is the folded-exponent *method* -- fold the
+    block exponent into the e4m3 operand, carry 2^(Wref-127) to the epilogue.
+    A method is not copyrightable expression. The audit establishing that, and
+    the generator that reproduces the table, are in notes/independence.md and
+    tools/gen_kmag.py.
+
+    Headers and SPDX identifiers on these files were corrected accordingly.
+
+--------------------------------------------------------------------------------
+3. Chat template, copied verbatim  -- NOT Apache-2.0
+--------------------------------------------------------------------------------
+    serve/templates/qwen-fixed-v22.3.jinja
+
+    Copied unmodified from GGZ14/vllm-mxfp4
+    (https://github.com/GGZ14/vllm-mxfp4, commit 92eed82). Worth about +14%
+    speculative-decoding acceptance over the checkpoint's own template.
+
+    vllm-mxfp4 ships no licence file. The author confirmed by DM on 2026-09-21
+    that our use is fine, with credit. As above: permission for this project,
+    not a licence, not sublicensed.
+
+--------------------------------------------------------------------------------
+4. Ideas and integration approaches  -- no code copied
+--------------------------------------------------------------------------------
+    Several techniques were learned from GGZ14/vllm-mxfp4 (NVFP4 -> MXFP4
+    requantisation at load, merging the GDN in_proj pair, converting fp8 dense
+    layers to MXFP4) and implemented independently here. Ideas are not
+    copyrightable and nothing is carved out on their account.
+
+--------------------------------------------------------------------------------
+5. Runtime dependencies  -- not redistributed
+--------------------------------------------------------------------------------
+    vLLM, ROCm, PyTorch and Triton are used unmodified at runtime and are not
+    included here.
+
+    libr4d's binary (r4d.so) is NOT redistributed by this repository
+    (.gitignore excludes *.so) and, since 2026-09-22, is NOT USED AT ALL by the
+    default configuration: paged attention and the 2-rank all-reduce are both
+    our own kernels. Verified by moving r4d.so aside and serving without it.
+    R9K_PAGED_ATTN=r4d and R9K_AR_IMPL=r4d still select libr4d's versions for
+    A/B comparison, if you have that library.
+
+    So the ONLY libr4d exposure left in this repository is the derived GEMM
+    source in item 2 above -- a licensing question, not a runtime dependency.
+
+See CREDITS.md for the third-party components, and notes/independence.md for the
+provenance of the kernels -- what was replaced with original work, what each
+piece is measurably worth, and which constants are generated from published
+format specifications rather than authored.

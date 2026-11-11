@@ -1,0 +1,108 @@
+AttentionFwd: layerIdx=0, position=1, capture_scores=1, kvCache=000000EC390EBA50
+KV_CACHE_CAPTURE: layerIdx=0, position=1, seq_len=2
+AttentionFwd: layerIdx=1, position=1, capture_scores=1, kvCache=000000EC390EBA50
+KV_CACHE_CAPTURE: layerIdx=1, position=1, seq_len=2
+AttentionFwd: layerIdx=2, position=1, capture_scores=1, kvCache=000000EC390EBA50
+KV_CACHE_CAPTURE: layerIdx=2, position=1, seq_len=2
+AttentionFwd: layerIdx=3, position=1, capture_scores=1, kvCache=000000EC390EBA50
+KV_CACHE_CAPTURE: layerIdx=3, position=1, seq_len=2
+AttentionFwd: layerIdx=4, position=1, capture_scores=1, kvCache=000000EC390EBA50
+KV_CACHE_CAPTURE: layerIdx=4, position=1, seq_len=2
+AttentionFwd: layerIdx=5, position=1, capture_scores=1, kvCache=000000EC390EBA50
+KV_CACHE_CAPTURE: layerIdx=5, position=1, seq_len=2
+AttentionFwd: layerIdx=6, position=1, capture_scores=1, kvCache=000000EC390EBA50
+KV_CACHE_CAPTURE: layerIdx=6, position=1, seq_len=2
+AttentionFwd: layerIdx=7, position=1, capture_scores=1, kvCache=000000EC390EBA50
+KV_CACHE_CAPTURE: layerIdx=7, position=1, seq_len=2
+AttentionFwd: layerIdx=8, position=1, capture_scores=1, kvCache=000000EC390EBA50
+KV_CACHE_CAPTURE: layerIdx=8, position=1, seq_len=2
+AttentionFwd: layerIdx=9, position=1, capture_scores=1, kvCache=000000EC390EBA50
+KV_CACHE_CAPTURE: layerIdx=9, position=1, seq_len=2
+AttentionFwd: layerIdx=10, position=1, capture_scores=1, kvCache=000000EC390EBA50
+KV_CACHE_CAPTURE: layerIdx=10, position=1, seq_len=2
+AttentionFwd: layerIdx=11, position=1, capture_scores=1, kvCache=000000EC390EBA50
+KV_CACHE_CAPTURE: layerIdx=11, position=1, seq_len=2
+AttentionFwd: layerIdx=12, position=1, capture_scores=1, kvCache=000000EC390EBA50
+KV_CACHE_CAPTURE: layerIdx=12, position=1, seq_len=2
+AttentionFwd: layerIdx=13, position=1, capture_scores=1, kvCache=000000EC390EBA50
+KV_CACHE_CAPTURE: layerIdx=13, position=1, seq_len=2
+AttentionFwd: layerIdx=14, position=1, capture_scores=1, kvCache=000000EC390EBA50
+KV_CACHE_CAPTURE: layerIdx=14, position=1, seq_len=2
+AttentionFwd: layerIdx=15, position=1, capture_scores=1, kvCache=000000EC390EBA50
+KV_CACHE_CAPTURE: layerIdx=15, position=1, seq_len=2
+AttentionFwd: layerIdx=16, position=1, capture_scores=1, kvCache=000000EC390EBA50
+KV_CACHE_CAPTURE: layerIdx=16, position=1, seq_len=2
+AttentionFwd: layerIdx=17, position=1, capture_scores=1, kvCache=000000EC390EBA50
+KV_CACHE_CAPTURE: layerIdx=17, position=1, seq_len=2
+AttentionFwd: layerIdx=18, position=1, capture_scores=1, kvCache=000000EC390EBA50
+KV_CACHE_CAPTURE: layerIdx=18, position=1, seq_len=2
+AttentionFwd: layerIdx=19, position=1, capture_scores=1, kvCache=000000EC390EBA50
+KV_CACHE_CAPTURE: layerIdx=19, position=1, seq_len=2
+AttentionFwd: layerIdx=20, position=1, capture_scores=1, kvCache=000000EC390EBA50
+KV_CACHE_CAPTURE: layerIdx=20, position=1, seq_len=2
+AttentionFwd: layerIdx=21, position=1, capture_scores=1, kvCache=000000EC390EBA50
+KV_CACHE_CAPTURE: layerIdx=21, position=1, seq_len=2
+AttentionFwd: layerIdx=22, position=1, capture_scores=1, kvCache=000000EC390EBA50
+KV_CACHE_CAPTURE: layerIdx=22, position=1, seq_len=2
+AttentionFwd: layerIdx=23, position=1, capture_scores=1, kvCache=000000EC390EBA50
+KV_CACHE_CAPTURE: layerIdx=23, position=1, seq_len=2
+AttentionFwd: layerIdx=24, position=1, capture_scores=1, kvCache=000000EC390EBA50
+KV_CACHE_CAPTURE: layerIdx=24, position=1, seq_len=2
+AttentionFwd: layerIdx=25, position=1, capture_scores=1, kvCache=000000EC390EBA50
+KV_CACHE_CAPTURE: layerIdx=25, position=1, seq_len=2
+AttentionFwd: layerIdx=26, position=1, capture_scores=1, kvCache=000000EC390EBA50
+KV_CACHE_CAPTURE: layerIdx=26, position=1, seq_len=2
+AttentionFwd: layerIdx=0, position=2, capture_scores=0, kvCache=000000EC390EBA50
+NO_KV_CACHE_CAPTURE: capture_scores=0, kvCache=000000EC390EBA50
+AttentionFwd: layerIdx=1, position=2, capture_scores=0, kvCache=000000EC390EBA50
+NO_KV_CACHE_CAPTURE: capture_scores=0, kvCache=000000EC390EBA50
+AttentionFwd: layerIdx=2, position=2, capture_scores=0, kvCache=000000EC390EBA50
+NO_KV_CACHE_CAPTURE: capture_scores=0, kvCache=000000EC390EBA50
+AttentionFwd: layerIdx=3, position=2, capture_scores=0, kvCache=000000EC390EBA50
+NO_KV_CACHE_CAPTURE: capture_scores=0, kvCache=000000EC390EBA50
+AttentionFwd: layerIdx=4, position=2, capture_scores=0, kvCache=000000EC390EBA50
+NO_KV_CACHE_CAPTURE: capture_scores=0, kvCache=000000EC390EBA50
+AttentionFwd: layerIdx=5, position=2, capture_scores=0, kvCache=000000EC390EBA50
+NO_KV_CACHE_CAPTURE: capture_scores=0, kvCache=000000EC390EBA50
+AttentionFwd: layerIdx=6, position=2, capture_scores=0, kvCache=000000EC390EBA50
+NO_KV_CACHE_CAPTURE: capture_scores=0, kvCache=000000EC390EBA50
+AttentionFwd: layerIdx=7, position=2, capture_scores=0, kvCache=000000EC390EBA50
+NO_KV_CACHE_CAPTURE: capture_scores=0, kvCache=000000EC390EBA50
+AttentionFwd: layerIdx=8, position=2, capture_scores=0, kvCache=000000EC390EBA50
+NO_KV_CACHE_CAPTURE: capture_scores=0, kvCache=000000EC390EBA50
+AttentionFwd: layerIdx=9, position=2, capture_scores=0, kvCache=000000EC390EBA50
+NO_KV_CACHE_CAPTURE: capture_scores=0, kvCache=000000EC390EBA50
+AttentionFwd: layerIdx=10, position=2, capture_scores=0, kvCache=000000EC390EBA50
+NO_KV_CACHE_CAPTURE: capture_scores=0, kvCache=000000EC390EBA50
+AttentionFwd: layerIdx=11, position=2, capture_scores=0, kvCache=000000EC390EBA50
+NO_KV_CACHE_CAPTURE: capture_scores=0, kvCache=000000EC390EBA50
+AttentionFwd: layerIdx=12, position=2, capture_scores=0, kvCache=000000EC390EBA50
+NO_KV_CACHE_CAPTURE: capture_scores=0, kvCache=000000EC390EBA50
+AttentionFwd: layerIdx=13, position=2, capture_scores=0, kvCache=000000EC390EBA50
+NO_KV_CACHE_CAPTURE: capture_scores=0, kvCache=000000EC390EBA50
+AttentionFwd: layerIdx=14, position=2, capture_scores=0, kvCache=000000EC390EBA50
+NO_KV_CACHE_CAPTURE: capture_scores=0, kvCache=000000EC390EBA50
+AttentionFwd: layerIdx=15, position=2, capture_scores=0, kvCache=000000EC390EBA50
+NO_KV_CACHE_CAPTURE: capture_scores=0, kvCache=000000EC390EBA50
+AttentionFwd: layerIdx=16, position=2, capture_scores=0, kvCache=000000EC390EBA50
+NO_KV_CACHE_CAPTURE: capture_scores=0, kvCache=000000EC390EBA50
+AttentionFwd: layerIdx=17, position=2, capture_scores=0, kvCache=000000EC390EBA50
+NO_KV_CACHE_CAPTURE: capture_scores=0, kvCache=000000EC390EBA50
+AttentionFwd: layerIdx=18, position=2, capture_scores=0, kvCache=000000EC390EBA50
+NO_KV_CACHE_CAPTURE: capture_scores=0, kvCache=000000EC390EBA50
+AttentionFwd: layerIdx=19, position=2, capture_scores=0, kvCache=000000EC390EBA50
+NO_KV_CACHE_CAPTURE: capture_scores=0, kvCache=000000EC390EBA50
+AttentionFwd: layerIdx=20, position=2, capture_scores=0, kvCache=000000EC390EBA50
+NO_KV_CACHE_CAPTURE: capture_scores=0, kvCache=000000EC390EBA50
+AttentionFwd: layerIdx=21, position=2, capture_scores=0, kvCache=000000EC390EBA50
+NO_KV_CACHE_CAPTURE: capture_scores=0, kvCache=000000EC390EBA50
+AttentionFwd: layerIdx=22, position=2, capture_scores=0, kvCache=000000EC390EBA50
+NO_KV_CACHE_CAPTURE: capture_scores=0, kvCache=000000EC390EBA50
+AttentionFwd: layerIdx=23, position=2, capture_scores=0, kvCache=000000EC390EBA50
+NO_KV_CACHE_CAPTURE: capture_scores=0, kvCache=000000EC390EBA50
+AttentionFwd: layerIdx=24, position=2, capture_scores=0, kvCache=000000EC390EBA50
+NO_KV_CACHE_CAPTURE: capture_scores=0, kvCache=000000EC390EBA50
+AttentionFwd: layerIdx=25, position=2, capture_scores=0, kvCache=000000EC390EBA50
+NO_KV_CACHE_CAPTURE: capture_scores=0, kvCache=000000EC390EBA50
+AttentionFwd: layerIdx=26, position=2, capture_scores=0, kvCache=000000EC390EBA50
+NO_KV_CACHE_CAPTURE: capture_scores=0, kvCache=000000EC390EBA50

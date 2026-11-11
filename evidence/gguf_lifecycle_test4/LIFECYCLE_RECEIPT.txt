@@ -1,0 +1,17 @@
+GATE=DEEP2_GGUF_LIFECYCLE_001
+MODEL=F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+LOAD_PASSED=1
+GENERATE_PASSED=1
+CANCEL_PASSED=1
+UNLOAD_PASSED=1
+RELOAD_PASSED=1
+CORRUPTED_REJECTED=1
+ERRORS=1
+ERROR=EXCEPTION: remove: The process cannot access the file because it is being used by another process.: "F:\rawrxd\evidence\gguf_lifecycle_test4/corrupted_test.gguf"
+WARNINGS=5
+WARNING=Memory tracking at after load - using engine-reported stats
+WARNING=Memory tracking at after generate - using engine-reported stats
+WARNING=Memory tracking at after cancel - using engine-reported stats
+WARNING=Memory tracking at after unload - using engine-reported stats
+WARNING=Memory tracking at after reload - using engine-reported stats
+VERDICT=FAIL

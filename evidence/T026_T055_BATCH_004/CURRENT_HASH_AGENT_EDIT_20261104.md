@@ -1,0 +1,49 @@
+# Current CLI-hash autonomous `editFiles` receipt
+
+This receipt is independent of the older `POST_E59D_CANDIDATE_001` failure
+receipt. It does not alter or replace the frozen Win32 IDE certification
+artifacts.
+
+```ini
+ASOF_LOCAL=2026-11-04
+SCOPE=CLI_ONLY
+BINARY=F:\rawrxd\build_repair_candidate\bin-msvc\rawr.exe
+BINARY_SIZE=5020160
+BINARY_SHA256=706D52A24E4A688DFA0A74C20404CD49B8990AEB21815F830296D6C52FCB5847
+SOURCE_HEAD_AT_CAPTURE=0ccc8250d529ba69d957a2315fc4bebc83d90e91
+MODEL=qwen3:8b
+BACKEND=ollama
+MODE=autonomous
+MOTD_ACK=1
+MOTD_SHA256=3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+REQUEST_ID=106015259793300
+EXIT_CODE=0
+FINAL_MARKER=RAWRXD_CURRENT_AGENT_EDIT_PASS
+TOOL_CALLS=1
+TOOL=editFiles
+TOOL_RESULT=PASS
+FILE_CHANGED_EVENT=PASS
+```
+
+## Disk proof
+
+```ini
+TARGET=evidence/T015_CLI_TOOL/current_hash_agent_fixture.txt
+BEFORE_CONTENT=AGENT_CURRENT_OLD
+AFTER_CONTENT=AGENT_CURRENT_NEW
+BEFORE_SHA256=5D784BA8CFCD1390852ABA79044154397FCBE1B0F4EA102F72C2BEC17840CD0D
+AFTER_SHA256=0EE365C9DCF2E2A008A0358AE4FC3696562059703AF75D0C50CAE6404969FE83
+DISK_PERSISTENCE=PASS
+```
+
+The command used `--esp=all`, and the captured stream contains the real
+`tool_calls_received`, `TOOL_START ... name=editFiles`, `TOOL_RESULT ...
+status=PASS`, `file_changed`, and `finished ... PASS` events. The fixture was
+read back after process exit for the after-content and after-hash values.
+
+```ini
+T015_AUTONOMOUS_EDIT_CURRENT_CLI_HASH=PASS
+WIN32IDE_CERTIFICATION=UNCHANGED
+PROMOTE=0
+CERTIFIED=0
+```

@@ -1,0 +1,2 @@
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"LEDGER_END","entry":1,"payload":{"total_entries":1}}

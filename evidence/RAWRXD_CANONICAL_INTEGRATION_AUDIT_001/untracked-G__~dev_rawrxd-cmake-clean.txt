@@ -1,0 +1,16 @@
+﻿COUNT=14
+TRUNCATED=0
+MM CMakeLists.txt
+M  src/win32app/AgentHttp.cpp
+M  src/win32app/AgentRunLoop.cpp
+A  src/win32app/AgentSession.cpp
+AM src/win32app/AgentSession.hpp
+A  src/win32app/AgentSessionKill.cpp
+A  src/win32app/AgentSessionProof.cpp
+A  src/win32app/AgentSessionRestore.cpp
+MM src/win32app/AgentToolExec.cpp
+MM src/win32app/AgentToolShell.cpp
+ M src/win32app/Win32IDE.cpp
+MM src/win32app/main_win32.cpp
+?? src/win32app/AgentSessionBar.cpp
+?? src/win32app/AgentSessionGuiProof.cpp

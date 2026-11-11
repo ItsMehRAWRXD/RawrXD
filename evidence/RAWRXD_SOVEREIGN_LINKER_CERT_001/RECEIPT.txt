@@ -1,0 +1,19 @@
+﻿RAWRXD_SOVEREIGN_LINKER_CERT_001
+
+P0_CORPUS               = 19/19 PASS_REPORTED
+P2_FRESH_CORPUS         = PASS_REPORTED
+P2_EXECUTED_SHA256      = 08f4f4f26f40e1156857908862dae266d70ea910c3600af094565bdc26896436
+P2_RECEIPT_HASH_MATCH   = PASS_REPORTED
+
+P2_CLEAN_PROVENANCE     = PENDING (isolated rebuild script ready: p2_isolated_rebuild.ps1; does not clean main dirty tree)
+P2_NATIVE_OBJECTS       = INVENTORY_PARTIAL (host I/O stall on recursive CMakeFiles walk; scripts ready: inventory_explicit.bat)
+P2_NATIVE_CONTRACT      = DRAFT_OPEN (NATIVE_OBJECT_CONTRACT.md updated with classes + fail-closed law)
+
+ENTRY_STUB              = CLOSED
+WINDOWS_RUNTIME_CERT    = 0
+FIVE_OS_CERTIFIED       = FALSE
+PROMOTE                 = 0
+
+AUTHORITATIVE_CORPUS_SHA = 08f4f4f26f40e1156857908862dae266d70ea910c3600af094565bdc26896436
+BASELINE_SHA256         = 37f7d354288c11772c0420a5278cb5499fd3a512857dba21e55265bc84669cca
+P1_SHA256               = c173610b31158fc0bf410d49b71efdbb9a8102add58f963056ec6e4f055d4225

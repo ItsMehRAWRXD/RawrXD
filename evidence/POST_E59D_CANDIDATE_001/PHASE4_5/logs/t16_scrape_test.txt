@@ -1,0 +1,161 @@
+﻿gt_stale_GTSTALE_f76d15f607e5.txt  -  workdir
+TITLE:gt_stale_GTSTALE_f76d15f607e5.txt  -  workdir
+Gear
+TITLE:Gear
+[]
+TITLE:[]
+()
+TITLE:()
+<>
+TITLE:<>
+>
+TITLE:>
+++
+TITLE:++
+*
+TITLE:*
+@
+TITLE:@
+Sidebar
+TITLE:Sidebar
+New
+TITLE:New
+Folder
+TITLE:Folder
+Refresh
+TITLE:Refresh
+Collapse
+TITLE:Collapse
+Regex
+TITLE:Regex
+Case
+TITLE:Case
+Whole
+TITLE:Whole
+Include:
+TITLE:Include:
+*.ps1,*.cpp
+TITLE:*.ps1,*.cpp
+Exclude:
+TITLE:Exclude:
+node_modules,bin
+TITLE:node_modules,bin
+Stage
+TITLE:Stage
+Unstage
+TITLE:Unstage
+Commit
+TITLE:Commit
+Sync
+TITLE:Sync
+Message:
+TITLE:Message:
+Start
+TITLE:Start
+Stop
+TITLE:Stop
+PowerShell Script
+Variables:
+TITLE:Variables:
+Model routes ready: 189 local model(s), Kilo free cloud route available
+All Messages
+Native IDE test run started (workspace=F:\rawrxd, dir=F:\rawrxd\evidence\POST_E59D_CANDIDATE_001\PHASE4_5\mini_workspace\build).
+
+[09:55:00] [2026-11-03 09:55:00] [SYSTEM] === RawrXD IDE Logging Initialized ===[09:55:00] [2026-11-03 09:55:00] [SYSTEM] Log file: logs\RawrXD_IDE_20261103_095500.log[09:55:00] [2026-11-03 09:55:00] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=1[09:55:00] [2026-11-03 09:55:00] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=1[09:55:00] [GhostText] native controller READY
+[09:55:00] [GhostText] attached input surfaces=7
+[09:55:00] [2026-11-03 09:55:00] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1[09:55:03] [2026-11-03 09:55:03] [INFO] [EDITOR_CHANGE] code=768 suppressed=0 active=1[09:55:03] [2026-11-03 09:55:03] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1[09:55:03] [RAWRXD_BUILD_START]
+[09:55:03] **********************************************************************
+[09:55:03] ** Visual Studio 2022 Developer Command Prompt v17.14.39
+** Copyright (c) 2025 Microsoft Corporation
+**********************************************************************
+[09:55:04] [vcvarsall.bat] Environment initialized for: 'x64'
+[09:55:04] [1/1] C:\WINDOWS\system32\cmd.exe /C "cd /D F:\rawrxd\evidence\POST_E59D_CANDIDATE_001\PHASE4_5\mini_workspace\build && "C:\Program Files\CMake\bin\cmake.exe" -DRESULT_FILE=F:/rawrxd/evidence/POST_E59D_CANDIDATE_001/PHASE4_5/mini_workspace/build/P45_BUILD_[09:55:04] RESULT.txt -P F:/rawrxd/evidence/POST_E59D_CANDIDATE_001/PHASE4_5/mini_workspace/write_build_result.cmake"
+-- PHASE4_MINI_BUILD_OK
+[09:55:04] [RAWRXD_BUILD_RESULT] EXIT=0
+[09:55:05] [RAWRXD_TEST_START]
+[09:55:05] Test project F:/rawrxd/evidence/POST_E59D_CANDIDATE_001/PHASE4_5/mini_workspace/build
+[09:55:05]     Start 1: phase4_mini_smoke
+[09:55:05] 1/1 Test #1: phase4_mini_smoke ................   Passed    0.02 sec
+[09:55:05] 
+[09:55:05] 100% tests passed out of 1
+
+Total Test time (real) =   0.02 sec
+[09:55:05] [RAWRXD_TEST_RESULT] EXIT=0
+
+New Chat
+TITLE:New Chat
+X
+TITLE:X
+Restore
+TITLE:Restore
+Rollback
+TITLE:Rollback
+AI Sessions
+TITLE:AI Sessions
+Model:
+TITLE:Model:
+Local models / Ollama / bigdaddyg-productivity-local:latest
+GhostText model:
+TITLE:GhostText model:
+GhostText: Auto Local
+Allow cloud GhostText for this session
+TITLE:Allow cloud GhostText for this session
+Max tokens:
+TITLE:Max tokens:
+4096
+TITLE:4096
+4096
+Context:
+TITLE:Context:
+64K (pending model admission)
+TITLE:64K (pending model admission)
+64K
+Reasoning:
+TITLE:Reasoning:
+Instant (no reasoning)
+Allow web browsing (WinHTTP)
+TITLE:Allow web browsing (WinHTTP)
+Welcome to RawrXD AI Chat!
+
+Select a model and type a message to begin.
+
+Send
+TITLE:Send
+Clear
+TITLE:Clear
+Stop
+TITLE:Stop
+PowerShell Console
+TITLE:PowerShell Console
+Clear
+TITLE:Clear
+Stop
+TITLE:Stop
+History
+TITLE:History
+Restart
+TITLE:Restart
+Load RawrXD
+TITLE:Load RawrXD
+[PowerShell session started]
+
+  RawrXD Integrated PowerShell Console
+
+
+PowerShell Version: 5.1.26100.9818
+
+Edition: Desktop
+
+
+Type commands below or click 'Load RawrXD' to access RawrXD.ps1 functions
+
+Commands:
+  - Enter: Execute command
+  - Up/Down: Navigate history
+  - Ctrl+L: Clear console
+  - Ctrl+`: Toggle panel
+
+PS> 
+Execute
+TITLE:Execute
+P

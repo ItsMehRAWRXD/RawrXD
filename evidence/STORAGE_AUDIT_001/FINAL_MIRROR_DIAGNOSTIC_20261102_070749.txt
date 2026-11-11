@@ -1,0 +1,44 @@
+﻿FINAL_MIRROR_RECOVERY — DIAGNOSTIC ONLY
+ASOF_UTC=2026-11-02T12:05:20Z
+REPO=F:\rawrxd
+MODE=NO_PUSH
+PROMOTE=0
+CERTIFIED=0
+
+=== COMMIT IDS ===
+LOCAL_HEAD=a5ae60efecac790598e2e46d9e499eb8ac7287af
+LOCAL_BRANCH=fix/deep2-multimodel-safety-20261025
+ORIGIN_HEAD_DEFAULT=033a8acb55d46d2fc22a84428e81f3167a0c3897 (remote default HEAD; not this branch)
+ORIGIN_BRANCH=a5ae60efecac790598e2e46d9e499eb8ac7287af refs/heads/fix/deep2-multimodel-safety-20261025
+FINAL_HEAD_DEFAULT=b57a9880825e81dd44c218da23f920629afeafc3 (refs/heads/main)
+FINAL_BRANCH=a5ae60efecac790598e2e46d9e499eb8ac7287af refs/heads/fix/deep2-multimodel-safety-20261025
+
+LOCAL_EQUALS_ORIGIN_BRANCH=True
+LOCAL_EQUALS_FINAL_BRANCH=True
+COMMITS_AHEAD_OF_FINAL=0
+OBJECTS_IN_PUSH_RANGE=0
+
+=== TRANSPORT ===
+remote.final.url=https://github.com/ItsMehRAWRXD/RawrXD-IDE-Final.git
+Implied_refspec=HEAD:refs/heads/fix/deep2-multimodel-safety-20261025
+http.postBuffer=524288000 (already elevated; NOT changed this diagnostic)
+
+=== LOCAL REPO PRESSURE ===
+count-objects size=12.19 GiB loose; size-pack=2.74 GiB; packs=18
+garbage=5 size-garbage=4.06 GiB (tmp_pack_* / tmp_obj_* — consistent with interrupted prior push packing)
+status_short_lines=696 (unrelated dirty/untracked; not staged)
+
+=== CONNECTIVITY ===
+ls-remote to final and origin both succeeded (hashes retrieved)
+Bottleneck class for prior 180s client timeout: LOCAL_PACK_OR_TRANSFER of large unique history on first push of this branch tip; client Wait-Job 180s expired while server-side ref update appears to have completed
+
+=== VERDICT ===
+FINAL=SYNCED_FOR_BRANCH (timeout did NOT leave final behind)
+ORIGIN=SYNCED
+CAUSE=CLIENT_TIMEOUT_AFTER_OR_DURING_SUCCESSFUL_REF_UPDATE — final already at a5ae60efec
+RECOMMENDED_RECOVERY=NONE_REQUIRED for this tip; do not re-push; do not force-push; do not raise postBuffer further
+OPTIONAL_LATER=When authorized, git prune / remove tmp_pack garbage only (no repack/history rewrite unless separately approved)
+STORAGE_BATCH1=INDEPENDENT_COMPLETE (400 GiB F: dummy already deleted)
+PUSH_RETRY=NOT_PERFORMED
+FORCE_PUSH=NOT_DONE
+REPACK=NOT_DONE

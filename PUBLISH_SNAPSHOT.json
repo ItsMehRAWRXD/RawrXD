@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "kind": "branch-tip",
+  "original_branch": "release/freeze-001",
+  "original_commit": "b7db735b7644d4c9df57cef75a6e4c28c590dccf",
+  "worktree": null,
+  "publication": "Source snapshot on a new branch; original history is preserved locally.",
+  "lfs_status": "Remote account budget exceeded; locally available text payloads materialized as regular Git blobs.",
+  "exclusions_receipt": "Local evidence/GITHUB_BRANCH_SYNC_001/583de580/exclusions-batches.jsonl",
+  "release_certification": "NOT_CLAIMED"
+}

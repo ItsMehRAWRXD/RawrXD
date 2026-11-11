@@ -1,0 +1,11 @@
+BENCH model=F:\OllamaModels\DeepSeek-R1-Q4_K_M-COMPLETE\DeepSeek-R1-Q4_K_M-00001-of-00011.gguf decode=2 runs=1 backend=cpu-pinned prefill=serial ExecuteToken wide_dot_batch=0
+prompt tokens: 2: 1 185
+ingesting F:\OllamaModels\DeepSeek-R1-Q4_K_M-COMPLETE\DeepSeek-R1-Q4_K_M-00001-of-00011.gguf ...
+[MOE_KEYS_DIAG] Scanning 47 metadata keys for expert/moe keys
+[MOE_KEYS_DIAG]   deepseek2.expert_count = 256
+[MOE_KEYS_DIAG]   deepseek2.expert_feed_forward_length = 2048
+[MOE_KEYS_DIAG]   deepseek2.expert_gating_func = 2
+[MOE_KEYS_DIAG]   deepseek2.expert_shared_count = 1
+[MOE_KEYS_DIAG]   deepseek2.expert_used_count = 8
+[MOE_KEYS_DIAG]   deepseek2.expert_weights_norm = 1
+[MOE_KEYS_DIAG]   deepseek2.expert_weights_scale = 2.5
