@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "kind": "branch-tip",
+  "original_branch": "upload/w6-release-cert-text-20261110",
+  "original_commit": "6c51204cbe83140ea8376882bb194f230bd87c5f",
+  "worktree": null,
+  "publication": "Source snapshot on a new branch; original history is preserved locally.",
+  "lfs_status": "Remote account budget exceeded; locally available text payloads materialized as regular Git blobs.",
+  "exclusions_receipt": "Local evidence/GITHUB_BRANCH_SYNC_001/583de580/exclusions-batches.jsonl",
+  "release_certification": "NOT_CLAIMED"
+}
