@@ -1,0 +1,137 @@
+{
+  "certificate_id": "RAWRXD_NEMOTRON_GEOMETRY_001",
+  "date": "2026-10-11",
+  "verdict": "PASS",
+  "what": "The correct Mamba2 SSM geometry for the Nemotron 3.5 Lightning 30B blob at F:\\models\\nemotron-3.5-lightning-30b.gguf, derived from the file and verified self-consistent.",
+  "geometry": {
+    "hidden": 2688,
+    "blocks": 53,
+    "vocab": 131072,
+    "context_length": 1048576,
+    "attn_heads": 32,
+    "attn_head_dim": 128,
+    "attn_kv_heads": null,
+    "rope_dim": 84,
+    "ssmInRows": 10304,
+    "ssmDtRank": 64,
+    "ssmHeads": 64,
+    "ssmConvK": 4,
+    "ssmConvDim": 6144,
+    "ssmInner": 4096,
+    "ssmGroupState": 1024,
+    "ssmGroups": 8,
+    "ssmState": 128,
+    "ssmHeadDim": 64,
+    "moe_expert_count": 128,
+    "moe_expert_used": 6,
+    "moe_expert_ffn": 1856,
+    "moe_shared_expert_ffn": 3712,
+    "nextn_predict_layers": 1
+  },
+  "ssm_in_projection_layout": {
+    "total_rows": 10304,
+    "segments": [
+      {
+        "name": "z (gate)",
+        "offset": 0,
+        "size": 4096
+      },
+      {
+        "name": "x",
+        "offset": 4096,
+        "size": 4096
+      },
+      {
+        "name": "B",
+        "offset": 8192,
+        "size": 1024
+      },
+      {
+        "name": "C",
+        "offset": 9216,
+        "size": 1024
+      },
+      {
+        "name": "dt",
+        "offset": 10240,
+        "size": 64
+      }
+    ],
+    "cross_check": "The existing NemotronHMamba2Step.hpp assumes z = I, xBC = I + inner where I is the inner size, then B = xBC + I and C = xBC + I + GS. That is NOT this layout. In this blob x occupies its own inner-sized region at offset inner, not the start of xBC. Applying the existing offsets here would silently read B from x territory and dt from the wrong place."
+  },
+  "conv1d_layout": {
+    "channels": 6144,
+    "composition": "x (4096) + B (1024) + C (1024)",
+    "kernel": 4,
+    "cross_check": "convDim is not an independent parameter here. It equals inner + 2*groupState."
+  },
+  "self_consistency_checks": [
+    {
+      "check": "ssm_in rows == 2*inner + 2*groupState + heads",
+      "got": 10304,
+      "expected": 10304,
+      "result": "PASS"
+    },
+    {
+      "check": "conv1d channels == inner + 2*groupState",
+      "got": 6144,
+      "expected": 6144,
+      "result": "PASS"
+    },
+    {
+      "check": "ssm_conv1d.bias == convDim",
+      "got": 6144,
+      "expected": 6144,
+      "result": "PASS"
+    },
+    {
+      "check": "ssm_dt.bias == heads",
+      "got": 64,
+      "expected": 64,
+      "result": "PASS"
+    },
+    {
+      "check": "ssm_out ne0 == inner",
+      "got": 4096,
+      "expected": 4096,
+      "result": "PASS"
+    },
+    {
+      "check": "ssm_norm max dim == inner/groups (512)",
+      "got": 512,
+      "expected": 512,
+      "result": "PASS"
+    },
+    {
+      "check": "ssm_norm min dim == groups (8)",
+      "got": 8,
+      "expected": 8,
+      "result": "PASS"
+    },
+    {
+      "check": "heads * headDim == inner",
+      "got": 4096,
+      "expected": 4096,
+      "result": "PASS"
+    },
+    {
+      "check": "groupState == (convDim - inner)/2",
+      "got": 1024,
+      "expected": 1024,
+      "result": "PASS"
+    },
+    {
+      "check": "state == groupState / groups",
+      "got": 128,
+      "expected": 128,
+      "result": "PASS"
+    }
+  ],
+  "checks_passed": "10 of 10",
+  "why_this_matters": "This is the geometry any Nemotron-H implementation must use for this blob. The untracked src/deep2 NemotronHGeometry.hpp encodes a different geometry (heads 96, headDim 80, inner 7680, convDim 9728, inRows 17504) whose gate fails against this file, so it cannot be adapted by changing a constant or two. The ssm_in projection offsets differ structurally, not just in size.",
+  "not_claimed": [
+    "No Nemotron inference was run.",
+    "No tensor values were evaluated. Only dimensions and metadata were read.",
+    "This certifies the geometry, not any kernel. A correct Mamba2 step still has to be written and verified against a reference for this layout."
+  ]
+}
