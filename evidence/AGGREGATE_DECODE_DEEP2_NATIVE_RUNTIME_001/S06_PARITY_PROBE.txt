@@ -1,0 +1,44 @@
+# AGGREGATE_DECODE_DEEP2_NATIVE_RUNTIME_001 — S06 GPU vs CPU parity probe
+
+## Method
+- Same model (qwen2 Q4_K/Q6_K blob 6a77366395772462c...), same prompt, greedy (temp=0), --tokens 8.
+- GPU run: default policy (Vulkan enabled).  CPU run: RAWRXD_GPU_POLICY=CPU + DEEP2_GPU_POLICY=CPU.
+
+## Result — DISAGREEMENT (parity NOT established)
+- GPU cold-leg token IDs : 63666, 98469, 97040, 94239  (piece of 63666 = " america")  — varied
+- CPU cold-leg token IDs : 64787, 64787, 64787, 64787  (piece of 64787 = " madrid")   — repeated
+- First token differs: GPU=63666 vs CPU=64787.
+- nonFiniteLogits=0 on BOTH paths (neither is NaN; both are finite but different).
+
+## Interpretation (careful, not overclaimed)
+- OUTPUT_PARITY = NOT_VERIFIED / FAIL: GPU and CPU logits diverge enough to change the argmax.
+- The CPU "reference" is itself suspect: it emits the SAME token every step (64787 ×4),
+  which is degenerate for a coherent model. This suggests the CPU Q4_K path may not be
+  advancing KV/position correctly (a CPU-path bug), OR the model/quant behaves oddly on CPU.
+- The GPU path produces varied, plausible tokens and 0 fallbacks, so it is NOT obviously the
+  broken side — but a single GPU-vs-CPU diff cannot declare either correct.
+
+## CPU path internal check (RAWRXD_GPU_POLICY=CPU, --tokens 6)
+- PREFILL_DONE prompt_tokens=9
+- pos advances: 9,10,11,12,13,14  (KV/position IS advancing)
+- stateNorm varies: 153.4, 141.8, 148.9, 151.8, 153.9, 154.3  (hidden state IS changing)
+- BUT argmax token constant: 64787 " madrid" at EVERY position.
+- => Red flag: CPU logits do not track the changing hidden state (likely a CPU-path
+  logits/final-norm buffer bug), OR the model has an extreme argmax bias on CPU.
+- The GPU path DOES vary tokens per step (63666, 98469, 97040, 94239) — consistent with
+  logits tracking state. So the CPU "reference" is the suspect side, not obviously the GPU.
+
+## What is needed to close parity (next session)
+1. A trusted third-party reference (llama.cpp / Ollama) on the SAME GGUF + prompt + greedy.
+2. Per-layer hidden/logit comparison (GPU vs CPU) at layer 0 and final, within tolerance.
+3. Confirm CPU path advances positions (pos= increments) and KV cache; fix if degenerate.
+4. Then declare OUTPUT_PARITY = PASS/FAIL against the trusted reference.
+
+## Disposition (unchanged)
+- GPU_EXECUTION_DEMONSTRATED = 1
+- GPU_FALLBACKS_REPORTED = 0
+- OUTPUT_PARITY = NOT_VERIFIED (now: observed DISAGREEMENT, needs third-party reference)
+- MULTI_SESSION_GPU = DEMONSTRATED (3.74 TPS aggregate, 4 streams, 0 fallback, nonFinite=0)
+- CERTIFIED = 0
+- PROMOTE = 0
+- TIP_CLIMB = HOLD
