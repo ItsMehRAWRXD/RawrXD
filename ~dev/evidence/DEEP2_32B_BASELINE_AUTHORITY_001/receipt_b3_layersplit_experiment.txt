@@ -1,0 +1,40 @@
+GATE=DEEP2_32B_BASELINE_AUTHORITY_001
+RECEIPT_DATE=2026-09-18T02:10:00
+RUN_MODE=Lane experiment — DEEP2_DENSE_EXEC=LAYER_SPLIT (Batch9 resident lane)
+COMMIT_TAG=B3_KVSIZE_FIX2
+MODEL=Qwen2.5-Coder-32B-Instruct-Q4_K_M.gguf
+MODEL_SHA256=8e2fd78ff55e7cdf577fda257bac2776feb7d73d922613caf35468073807e815
+GPU0=AMD Radeon AI PRO R9700 (layers 0-31)
+GPU1=AMD Radeon RX 7800 XT (layers 32-63)
+WARMUP_TOKENS=32
+MEASURED_TOKENS=64
+GENERATED=64
+GENERATION_MS=11444.934
+DECODE_TPS_ENGINE=5.591994   ← highest engine TPS of any lane/batch to date
+DECODE_TPS_QPC=4.225305
+DENSE_ROW_WALL_PCT=1.904 (dual-row bypassed except lmHead)
+DUAL_ROW_SPLIT_OPS=64 (lmHead only, 1/token)
+UNPLANNED_FALLBACKS=0
+STRICT_GPU_VIOLATIONS=0
+RESIDENT_REUSE=1
+BOUNDED_UPLOADS=0 (slot1 churn: SLOT1_UPLOAD_DELTA=88)
+VERDICT=HOLD (gate requires dual-row witnesses + bounded uploads; informational for lane comparison)
+
+BATCH 3 CHANGES (all build clean, zero violations):
+  1. EnsureForwardArena kvLayers param: K/V sized to each split slot's layer
+     range (32 layers, not 64) — reclaims ~1.06GB device-local VRAM/slot.
+  2. kvLayerBase_ layer-relative addressing in AppendKV/DispatchAttnDecode:
+     absolute layer N maps to cache slot N - rangeLo[slot].
+  3. ForwardArenaReserveBytes mirrors the sizing for budget computation.
+
+FINDINGS:
+  - 64T LAYER_SPLIT pre-fix: ENGINE=5.574 QPC=4.213
+  - 64T LAYER_SPLIT post-fix: ENGINE=5.592 QPC=4.225
+  - 256T LAYER_SPLIT pre-fix: QPC=3.913 (churn-dominated steady state)
+  - Remaining churn: 7800 XT weight budget ~1GB short of 32 layers +
+    lmHead 1.55GB slice (dual-row lmHead re-admits per token, evicting
+    layer weights). NEXT BATCH: lmHead placement (single-GPU on R9700 or
+    VRAM-weighted split), timeline-semaphore download overlap.
+  - Resident lane already implements checklist #3,#5,#6,#7,#8,#9,#10
+    (device RMSNorm, QKV overlap, device RoPE/attn/SwiGLU/residual,
+    packed Q4_K direct GEMV, per-layer fused cmd buffers, prefetch).
