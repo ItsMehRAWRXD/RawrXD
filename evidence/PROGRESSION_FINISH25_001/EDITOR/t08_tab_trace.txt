@@ -1391,3 +1391,6 @@ addDocumentTab path= vectors=1 tabctrl=1 id=1030 hwnd=789220
 addDocumentTab path= vectors=1 tabctrl=1 id=1030 hwnd=592740
 addDocumentTab path= vectors=1 tabctrl=1 id=1030 hwnd=28642094
 addDocumentTab path=F:\rawrxd\evidence\IDE_RELEASE_READINESS_001\bottom_panels_20261111\project_probe_001\panel_probe.cpp vectors=2 tabctrl=2 id=1030 hwnd=28642094
+addDocumentTab path= vectors=1 tabctrl=1 id=1030 hwnd=64358962
+addDocumentTab path= vectors=1 tabctrl=1 id=1030 hwnd=64358962
+addDocumentTab path= vectors=1 tabctrl=1 id=1030 hwnd=39128224

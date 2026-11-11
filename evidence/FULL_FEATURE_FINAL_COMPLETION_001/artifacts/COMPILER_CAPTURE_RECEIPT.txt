@@ -152,3 +152,7 @@ STDOUT_LINE 0){ Write-Error ('Native IDE build failed with exit code ' + $rc) }
 STDOUT_LINE  : Native IDE build failed with exit code 2
 STDOUT_LINE     + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
 STDOUT_LINE     + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException
+PROCESS_EXIT pid=38040 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=7300 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success

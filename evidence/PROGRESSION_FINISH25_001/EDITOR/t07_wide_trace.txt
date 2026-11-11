@@ -2527,3 +2527,17 @@ decoder_wide has_4F60=0 len=53
 after_live_setw has_4F60=0 len=56
 decoder_wide has_4F60=0 len=54
 after_live_setw has_4F60=0 len=57
+decoder_wide has_4F60=0 len=20
+after_live_setw has_4F60=0 len=20
+decoder_wide has_4F60=0 len=20
+after_live_setw has_4F60=0 len=20
+decoder_wide has_4F60=0 len=20
+after_live_setw has_4F60=0 len=20
+decoder_wide has_4F60=0 len=8
+after_live_setw has_4F60=0 len=8
+decoder_wide has_4F60=0 len=20
+after_live_setw has_4F60=0 len=20
+decoder_wide has_4F60=0 len=20
+after_live_setw has_4F60=0 len=20
+decoder_wide has_4F60=0 len=20
+after_live_setw has_4F60=0 len=20

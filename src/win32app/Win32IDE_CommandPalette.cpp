@@ -10,8 +10,6 @@
 
 #pragma comment(lib, "comctl32.lib")
 
-namespace Win32IDE {
-
 // ============================================================================
 // SINGLETON INSTANCE
 // ============================================================================
@@ -948,5 +946,3 @@ bool RegisterCommandPaletteHotkeys(HWND hwnd) {
     // For now, we handle it in the message loop via CommandPaletteHandleKey
     return true;
 }
-
-} // namespace Win32IDE

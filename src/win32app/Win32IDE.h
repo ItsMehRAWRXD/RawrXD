@@ -2,6 +2,7 @@
 
 #include <windows.h>
 #include <richedit.h>
+#include "Win32IDE_Types.h"
 
 // ---------------------------------------------------------------------------
 // Document tab strip (VS Code style). IDC_DOC_TABS identifies the control in
@@ -316,97 +317,9 @@ struct IDETheme {
     bool darkMode;
 };
 
-struct CodeSnippet {
-    std::string name;
-    std::string description;
-    std::string code;
-    std::string trigger;
-    std::vector<std::string> placeholders;
-};
-
-struct ModuleInfo {
-    std::string name;
-    std::string version;
-    std::string description;
-    std::string path;
-    bool loaded;
-};
-
-struct TerminalPane {
-    int id;
-    HWND hwnd;
-    HWND input = nullptr;
-    HWND execute = nullptr;
-    HWND stop = nullptr;
-    HWND clear = nullptr;
-    std::unique_ptr<Win32TerminalManager> manager;
-    std::string name;
-    Win32TerminalManager::ShellType shellType;
-    bool isActive;
-    RECT bounds;
-    // Carry incomplete terminal lines across ConPTY/pipe chunks so MSVC
-    // diagnostics are not dropped when a line is split mid-callback.
-    std::string diagCarry;
-};
-
-struct GitStatus {
-    std::string branch;
-    int ahead;
-    int behind;
-    int modified;
-    int added;
-    int deleted;
-    int untracked;
-    bool hasChanges;
-    std::string lastCommit;
-    std::string lastCommitMessage;
-};
-
-struct GitFile {
-    std::string path;
-    char status;  // M=modified, A=added, D=deleted, ?=untracked
-    bool staged;
-};
-
-struct FileExplorerItem {
-    std::string name;
-    std::string fullPath;
-    bool isDirectory;
-    bool isModelFile;
-    size_t fileSize;
-    HTREEITEM hTreeItem;
-    std::vector<FileExplorerItem> children;
-};
-
-struct Breakpoint {
-    std::string file;
-    int line;
-    bool enabled;
-    std::string condition;
-    int hitCount;
-};
-
-struct StackFrame {
-    std::string function;
-    std::string file;
-    int line;
-    std::map<std::string, std::string> locals;
-};
-
-struct Variable {
-    std::string name;
-    std::string value;
-    std::string type;
-    bool expanded;
-    std::vector<Variable> children;
-};
-
-struct WatchItem {
-    std::string expression;
-    std::string value;
-    std::string type;
-    bool enabled;
-};
+// Types CodeSnippet, ModuleInfo, TerminalPane, GitStatus, GitFile,
+// FileExplorerItem, Breakpoint, StackFrame, Variable, WatchItem are
+// defined in Win32IDE_Types.h and included above.
 
 namespace vscode { class VSCodeExtensionAPI; }
 
@@ -1061,6 +974,11 @@ private:
     int dpiScale(int value) const;
 
     // Task Runner (Batch 4 P05)
+    struct TaskRunnerEntry {
+        std::string label;
+        std::string command;
+        std::vector<std::string> args;
+    };
     void showTaskRunnerDialog();
     std::vector<TaskRunnerEntry> getTaskRunnerTasks() const;
     void runSelectedTask(int index);
@@ -1090,8 +1008,6 @@ private:
     // Model Benchmarking (Batch 5 M05)
     void runModelBenchmark(const std::string& modelName);
     std::vector<BenchmarkResult> getBenchmarkResults() const;
-
-    // VRAM Bridge (Batch 5 M04)
     void updateVRAMInfo();
     VRAMInfo getVRAMInfo() const;
     void setGPULayerOffload(int layers);
@@ -1153,6 +1069,7 @@ private:
     bool m_callStackSymbolsInitialized = false;
     bool m_debugWatchFormatInitialized = false;
 
+    public:
     // Collaboration (Batch 6 C01)
     void showCollabPanel();
 
@@ -2089,6 +2006,7 @@ private:
 
     bool m_staticAnalysisPanelInitialized = false;
 
+    private:
     // AI/Agent features (Batch 3)
     bool m_securityScansInitialized = false;
     bool m_agentHistoryInitialized = false;
@@ -2109,15 +2027,6 @@ public:
                        const std::string& newContent,
                        int line, int column);
     bool undoLastAgentEdit();
-
-    // Prompt Template Manager
-    void ShowPromptTemplateManager();
-
-    // Agentic Browser / Terminal Command Generation
-    bool initAgenticBrowser();
-    void showAgenticBrowser();
-    void hideAgenticBrowser();
-    bool isAgenticBrowserVisible() const;
 
     // Profiling
     bool m_profilingActive;
@@ -2214,15 +2123,8 @@ public:
     };
     std::vector<TerminalTabInfo> m_terminalTabs;
     int m_activeTerminalTab = -1;
-
-    // Task Runner (Batch 4 P05)
-    struct TaskRunnerEntry {
-        std::string label;
-        std::string command;
-        std::vector<std::string> args;
-    };
     std::vector<TaskRunnerEntry> m_taskRunnerTasks;
-    
+
     // Source Control View (extends existing Git)
     HWND m_hwndSCMFileList = nullptr;
     HWND m_hwndSCMToolbar = nullptr;
