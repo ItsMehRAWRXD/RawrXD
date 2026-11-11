@@ -1,0 +1,61 @@
+{
+    "schema_version":  1,
+    "package_status":  "RELEASE_CANDIDATE",
+    "created_utc":  "2026-11-10T05:22:43.8419662Z",
+    "ide_sha256":  "78E187AA9A4C95A4282A862A2D76E8B24DCD03BF6F57E036B2C463FB22418596",
+    "deep2_agentic_loop_sha256":  "6F858F02CB9A52226D5822A96B7ED0D27592CCA0B443337ACF28EA3D2E7C0BDE",
+    "source_package":  "F:\\rawrxd\\evidence\\IDE_RELEASE_READINESS_001\\candidate_source_004",
+    "packaging_note":  "Computer Use integrated into new candidate; 4DE0 package untouched",
+    "freeze_control":  "DEFERRED_NON_BLOCKING",
+    "promote":  0,
+    "tip_climb":  "HOLD",
+    "certified_4de0_untouched":  true,
+    "computer_use":  "SOURCE_WIRED",
+    "files":  [
+                  {
+                      "path":  "deep2_agentic_loop.exe",
+                      "size_bytes":  63356416,
+                      "sha256":  "6F858F02CB9A52226D5822A96B7ED0D27592CCA0B443337ACF28EA3D2E7C0BDE"
+                  },
+                  {
+                      "path":  "msvcp140.dll",
+                      "size_bytes":  557728,
+                      "sha256":  "0F885B509A685D2BBFA652FED26B5FB31D88FBDAB0A978C641D1C7B8AA460AA9"
+                  },
+                  {
+                      "path":  "RawrXD-Win32IDE-Native-Ext.exe",
+                      "size_bytes":  6550016,
+                      "sha256":  "78E187AA9A4C95A4282A862A2D76E8B24DCD03BF6F57E036B2C463FB22418596"
+                  },
+                  {
+                      "path":  "README.md",
+                      "size_bytes":  3069,
+                      "sha256":  "B621C2BBBEBAFF48D042736C2A9D785B549ECE266271ADD8FB01DCC084987469"
+                  },
+                  {
+                      "path":  "ReleaseHash.ps1",
+                      "size_bytes":  723,
+                      "sha256":  "A0120F620AB07D721E036C47030D6CCB2DBAD62073878B31BBA14A867CA729CC"
+                  },
+                  {
+                      "path":  "Start-RawrXD.ps1",
+                      "size_bytes":  1207,
+                      "sha256":  "0F25B50DF706B876DECEF80D7B92306BB9648B72C3CFCD48E57409B24A0ECD23"
+                  },
+                  {
+                      "path":  "vcruntime140.dll",
+                      "size_bytes":  124544,
+                      "sha256":  "D5E4D9A3E835FA679450145D6A7D94E36573A509317111904D9B3712C30D9066"
+                  },
+                  {
+                      "path":  "vcruntime140_1.dll",
+                      "size_bytes":  49792,
+                      "sha256":  "1F2D41C4AA5DB0BC33EBF7B66D72943A817D7CE6CBE880502A9403823633093F"
+                  },
+                  {
+                      "path":  "Verify-PortableRelease.ps1",
+                      "size_bytes":  1775,
+                      "sha256":  "FE1BD2405686E302C810CAA3C548BB6762AC1190675C03BCACCFAE8C3958C89B"
+                  }
+              ]
+}

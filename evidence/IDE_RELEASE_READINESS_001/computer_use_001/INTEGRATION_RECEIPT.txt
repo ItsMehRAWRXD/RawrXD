@@ -1,0 +1,37 @@
+GATE=COMPUTER_USE_INTEGRATION_001
+STATUS=SOURCE_WIRED_AND_LINKED
+ASOF_UTC=2026-11-10T05:25:00Z
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+VEND_PATH=F:\rawrxd\src\computer_use\
+DROP_PATH=F:\rawrxd\third_party\computer_use_src\RawrXD-ComputerUse\
+CMAKE=add_subdirectory(src/computer_use); link rawrxd_computer_use into Native + Native-Ext
+DEFINE=RAWRXD_HAS_COMPUTER_USE=1
+IDE_TU=src/win32app/Win32IDE_ComputerUse.cpp
+CANCEL_WIRE=
+  onAgentStop -> cancelComputerUse
+  onDeep2Cancel -> cancelComputerUse
+  onAgenticLoopCancel -> cancelComputerUse
+  clearCopilotChat -> cancelComputerUse
+TOOLS_REGISTERED=
+  computer_use.screenshot (ReadOnly, own-PID allowlist default)
+  computer_use.find_window
+  computer_use.inspect
+  computer_use.click (Execute, approval + policy)
+  computer_use.type
+  computer_use.key
+  computer_use.scroll
+  computer_use.launch
+POLICY_DEFAULT=deny mouse/type/keyboard/launch; allow screenshots+inspection for allowlisted PIDs
+APPROVAL=AgentAdapter required; Registry Risk::Execute requires approval callback
+SAFETY_BYPASS=0
+
+CANDIDATE_EXE=F:\rawrxd\release\RawrXD-readiness-rc4\RawrXD-Win32IDE-Native-Ext.exe
+CANDIDATE_SHA256=78E187AA9A4C95A4282A862A2D76E8B24DCD03BF6F57E036B2C463FB22418596
+STRING_PROBE_computer_use.screenshot=HIT
+CERTIFIED_4DE0_UNTOUCHED=1
+
+RUNTIME_REACHED_STANDALONE=1
+RUNTIME_REACHED_IDE_GUI=NOT_RUN
+TOKEN_SURVIVED=NOT_RUN

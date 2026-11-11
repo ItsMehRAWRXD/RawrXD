@@ -1,0 +1,11 @@
+agent_read_001 / ORPHAN_BRANCH_PUSH
+ASOF_UTC=2026-11-10T07:45:00Z
+TARGET_BRANCH=upload/computer-use-20261110
+PRIOR_LOCAL_COMMIT=554f85900c (upload/repair-candidate-20261110; origin push BLOCKED by LFS)
+REMOTE=origin (https://github.com/ItsMehRAWRXD/RawrXD.git)
+SCOPE=text receipts only (NO .gitattributes LFS; skip before.bin/bug.exe/bug.obj)
+REPAIR_SOURCE=repair/ide-wave1-agent-tool-20261110 @ 674ec00ade5 (receipts-only; no conflict)
+SHA_BINDING=READ_PASS bound to loop 6F858F02… only; no RC5 Ext 089B9C72… / Loop F33D14A7… inherit
+GIT_LFS_SKIP_PUSH=1
+NO_RC4_FORCE_PUSH=1
+PROMOTE=0
