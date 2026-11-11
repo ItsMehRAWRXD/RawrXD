@@ -1,0 +1,30 @@
+#version 460
+// Batch 18: compressed-KV MLA gather+dot source kernel.
+layout(local_size_x = 128) in;
+layout(set=0,binding=0,std430) readonly buffer Q { float q[]; } query;
+layout(set=0,binding=1,std430) readonly buffer KV { float kv[]; } compressedKv;
+layout(set=0,binding=2,std430) writeonly buffer S { float score[]; } scores;
+layout(push_constant) uniform PC {
+    uint context;
+    uint rank;
+    uint head;
+    uint kvStride;
+} pc;
+shared float reduceBuf[128];
+
+void main() {
+    uint token = gl_WorkGroupID.x;
+    if (token >= pc.context) return;
+    uint lid = gl_LocalInvocationID.x;
+    float s = 0.0;
+    uint base = token * pc.kvStride;
+    for (uint i=lid; i<pc.rank; i+=128u)
+        s += query.q[pc.head * pc.rank + i] * compressedKv.kv[base + i];
+    reduceBuf[lid] = s;
+    barrier();
+    for (uint stride=64u; stride>0u; stride>>=1u) {
+        if (lid < stride) reduceBuf[lid] += reduceBuf[lid+stride];
+        barrier();
+    }
+    if (lid == 0u) scores.score[pc.head * pc.context + token] = reduceBuf[0];
+}
