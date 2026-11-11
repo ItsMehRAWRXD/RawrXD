@@ -1,0 +1,6 @@
+  [loop] pc=0/767 kind=0 blk=-1 a='<token_id>' b='' out='token_embd.weight' bSlot=-1
+  [loop] pc=1/767 kind=11 blk=0 a='<hidden>' b='' out='resid_in' bSlot=-1
+  [loop] pc=2/767 kind=1 blk=0 a='<hidden>' b='blk.0.attn_norm.weight' out='attn_norm' bSlot=3
+  [loop] pc=3/767 kind=10 blk=0 a='attn_norm' b='blk.0.ssm_in.weight' out='ssm_out' bSlot=9
+  [loop] pc=4/767 kind=2 blk=0 a='ssm_out' b='blk.0.ssm_out.weight' out='ssm_proj' bSlot=11
+  [loop] pc=5/767 kind=2 blk=0 a='attn_norm' b='' out='q' bSlot=-1

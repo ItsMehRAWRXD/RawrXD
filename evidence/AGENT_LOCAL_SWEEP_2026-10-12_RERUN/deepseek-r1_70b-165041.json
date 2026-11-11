@@ -1,0 +1,20 @@
+{
+  "Model": "deepseek-r1:70b",
+  "StartedAt": "2026-10-12T16:50:08.8650752-04:00",
+  "KeepAlive": 0,
+  "Cold": true,
+  "Before": {
+    "CommittedGB": 46.33,
+    "LimitGB": 65.41,
+    "AvailableGB": 24.47
+  },
+  "PeakCommittedGB": 66.13,
+  "HttpStatus": 500,
+  "ErrorBody": "Response status code does not indicate success: 500 (Internal Server Error).",
+  "After": {
+    "CommittedGB": 46.27,
+    "LimitGB": 65.42,
+    "AvailableGB": 21.8
+  },
+  "Classification": "RUNTIME_FAILURE"
+}

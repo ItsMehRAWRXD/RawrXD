@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "kind": "branch-tip",
+  "original_branch": "codex/gate16-18-audit",
+  "original_commit": "93fe08748cdd6c517fe10f809047dee0344cb3f3",
+  "worktree": null,
+  "publication": "Source snapshot on a new branch; original history is preserved locally.",
+  "lfs_status": "Remote account budget exceeded; locally available text payloads materialized as regular Git blobs.",
+  "exclusions_receipt": "Local evidence/GITHUB_BRANCH_SYNC_001/b9e61221/exclusions.json",
+  "release_certification": "NOT_CLAIMED"
+}

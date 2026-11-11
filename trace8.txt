@@ -1,0 +1,590 @@
+=== RAWRXD_DEEP2_REAL_MODEL_GENERATION_001 ===
+model : F:\rawrxd\models\nemotron-3.5-lightning-30b-Q4_K_M.gguf
+prompt: "def add(a, b):
+    return a + b
+
+# Multiply two numbers
+def multiply(a, b):"
+tokens: 1  path: GPU-first
+
+--- [P] real-weight provenance ---
+  gguf_path      : F:\rawrxd\models\nemotron-3.5-lightning-30b-Q4_K_M.gguf
+  sha256         : 5c19f6282f4fc51cb114cb6c876d70ca2fc3b9cf0fbd0a018d9908f4fe1f63b3
+  file_bytes     : 25430738944 (25.43 GB)
+  architecture   : nemotron_h_moe
+  model_name     : Ga_Nvidia_Nemotron_3_5_Nano_Bf16_07292026_Vv0.1
+  tensor_count   : 417
+  token_vocab    : 131072 tokens, 269443 merges
+  tensor_inventory: F32x243 Q5_0x116 Q8_0x26 Q4_Kx31 ?x1
+  [PASS] SHA-256 of the real model file computed
+  [PASS] tensor inventory recorded
+  [PASS] architecture derived from the model's own metadata
+  [PASS] tokenizer read from the model
+
+--- [1] runtime graph binding ---
+  ops_total=271 ops_bound=271 ops_unbound=0 weights_resolved=417
+  [PASS] graph binds to real kernels (fail-closed otherwise)
+  [PASS] no unimplemented operators left unbound
+
+--- [2] tokenizer round-trip ---
+  [PASS] prompt encodes
+  prompt -> 26 tokens: 3149 2229 8897 1044 1289 4244 1010 1260 3004 1261 1867 1289 1010 1010 1035 15131 65975 2295 8091 1010 3149 55884 8897 1044 1289 4244 
+  round-trip: "def add(a, b):
+    return a + b
+
+# Multiply two numbers
+def multiply(a, b):"
+  [PASS] prompt produced token ids
+  [PASS] decode(encode(prompt)) == prompt
+
+--- [3] chat template ---
+  template: {% macro render_extra_keys(json_dict, handled_keys) %}
+    {%- if json_dict is mapping %}
+        {%- for json_key in json_dict if json_key not in handled_keys %}
+            {%- if json_dict[json_key] is mapping or (json_dict[json_key] is sequence and json_dict[json_key] is not string) %}
+                {{- '\n<' ~ json_key ~ '>' ~ (json_dict[json_key] | tojson | safe) ~ '</' ~ json_key ~ '>' }}
+            {%- else %}
+                {{-'\n<' ~ json_key ~ '>' ~ (json_dict[json_key] | string) ~ '</' ~ json_key ~ '>' }}
+            {%- endif %}
+        {%- endfor %}
+    {%- endif %}
+{% endmacro %}
+{%- set enable_thinking = enable_thinking if enable_thinking is defined else True %}
+{%- set medium_effort = medium_effort if medium_effort is defined else False %}
+{%- set truncate_history_thinking = truncate_history_thinking if truncate_history_thinking is defined else True %}
+{%- set ns = namespace(last_user_idx = -1) %}
+{%- set loop_messages = messages %}
+{%- for m in loop_messages %}
+  {%- if m["role"] == "user" %}
+    {%- set ns.last_user_idx = loop.index0 %}
+  {%- endif %}
+{%- endfor %}
+{%- if messages[0]["role"] == "system" %}
+    {%- set system_message = messages[0]["content"] %}
+    {%- set loop_messages = messages[1:] %}
+{%- else %}
+    {%- set system_message = "" %}
+    {%- set loop_messages = messages %}
+{%- endif %}
+{%- if not tools is defined %}
+    {%- set tools = [] %}
+{%- endif %}
+{%- set ns = namespace(last_user_idx = -1) %}
+{%- for m in loop_messages %}
+  {%- if m["role"] == "user" %}
+    {%- set ns.last_user_idx = loop.index0 %}
+  {%- endif %}
+{%- endfor %}
+{%- if system_message is defined %}
+    {{- "<|im_start|>system\n" + system_message }}
+{%- else %}
+    {%- if tools is iterable and tools | length > 0 %}
+        {{- "<|im_start|>system\n" }}
+    {%- endif %}
+{%- endif %}
+{%- if tools is iterable and tools | length > 0 %}
+    {%- if system_message is defined and system_message | length > 0 %}
+        {{- "\n\n" }}
+    {%- endif %}
+    {{- "# Tools\n\nYou have access to the following functions:\n\n" }}
+    {{- "<tools>" }}
+    {%- for tool in tools %}
+        {%- if tool.function is defined %}
+            {%- set tool = tool.function %}
+        {%- endif %}
+        {{- "\n<function>\n<name>" ~ tool.name ~ "</name>" }}
+        {%- if tool.description is defined %}
+            {{- '\n<description>' ~ (tool.description | trim) ~ '</description>' }}
+        {%- endif %}
+        {{- '\n<parameters>' }}
+        {%- if tool.parameters is defined and tool.parameters is mapping and tool.parameters.properties is defined and tool.parameters.properties is mapping %}
+            {%- for param_name, param_fields in tool.parameters.properties|items %}
+                {{- '\n<parameter>' }}
+                {{- '\n<name>' ~ param_name ~ '</name>' }}
+                {%- if param_fields.type is defined %}
+                    {{- '\n<type>' ~ (param_fields.type | string) ~ '</type>' }}
+                {%- endif %}
+                {%- if param_fields.description is defined %}
+                    {{- '\n<description>' ~ (param_fields.description | trim) ~ '</description>' }}
+                {%- endif %}
+                {%- if param_fields.enum is defined %}
+                    {{- '\n<enum>' ~ (param_fields.enum | tojson | safe) ~ '</enum>' }}
+                {%- endif %}
+                {%- set handled_keys = ['name', 'type', 'description', 'enum'] %}
+                {{- render_extra_keys(param_fields, handled_keys) }}
+                {{- '\n</parameter>' }}
+            {%- endfor %}
+        {%- endif %}
+        {% set handled_keys = ['type', 'properties', 'required'] %}
+        {{- render_extra_keys(tool.parameters, handled_keys) }}
+        {%- if tool.parameters is defined and tool.parameters.required is defined %}
+            {{- '\n<required>' ~ (tool.parameters.required | tojson | safe) ~ '</required>' }}
+        {%- endif %}
+        {{- '\n</parameters>' }}
+        {%- set handled_keys = ['type', 'name', 'description', 'parameters'] %}
+        {{- render_extra_keys(tool, handled_keys) }}
+        {{- '\n</function>' }}
+    {%- endfor %}
+    {{- "\n</tools>" }}
+    {{- '\n\nIf you choose to call a function ONLY reply in the following format with NO suffix:\n\n<tool_call>\n<function=example_function_name>\n<parameter=example_parameter_1>\nvalue_1\n</parameter>\n<parameter=example_parameter_2>\nThis is the value for the second parameter\nthat can span\nmultiple lines\n</parameter>\n</function>\n</tool_call>\n\n<IMPORTANT>\nReminder:\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\n- Required parameters MUST be specified\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\n</IMPORTANT>' }}
+{%- endif %}
+{%- if system_message is defined %}
+    {{- '<|im_end|>\n' }}
+{%- else %}
+    {%- if tools is iterable and tools | length > 0 %}
+        {{- '<|im_end|>\n' }}
+    {%- endif %}
+{%- endif %}
+{%- for message in loop_messages %}
+    {%- if message.role == "assistant" %}
+        {%- if message.reasoning_content is defined and message.reasoning_content is string and message.reasoning_content | trim | length > 0 %}
+            {%- set content = "<think>\n" ~ message.reasoning_content ~ "</think>" ~ (message.content | default('', true)) %}
+        {%- else %}
+            {%- set content = message.content | default('', true) %}
+            {%- if content is string -%}
+                {%- if '<think>' not in content and '</think>' not in content -%}
+                    {%- set content = "<think></think>" ~ content -%}
+                {%- endif -%}
+            {%- else -%}
+                {%- set content = content -%}
+            {%- endif -%}
+        {%- endif %}
+        {%- if message.tool_calls is defined and message.tool_calls is iterable and message.tool_calls | length > 0 %}
+            {{- '<|im_start|>assistant\n' }}
+                {%- set include_content = not (truncate_history_thinking and loop.index0 < ns.last_user_idx) %}
+                {%- if content is string and content | trim | length > 0 %}
+                    {%- if include_content %}
+                        {{- (content | trim) ~ '\n' -}}
+                    {%- else %}
+                        {%- set c = (content | string) %}
+                        {%- if '</think>' in c %}
+                            {%- set c = c.split('</think>')[-1] %}
+                        {%- elif '<think>' in c %}
+                            {%- set c = c.split('<think>')[0] %}
+                        {%- endif %}
+                        {%- set c = "<think></think>" ~ c %}
+                        {%- if c | length > 0 %}
+                            {{- c ~ '\n' -}}
+                        {%- endif %}
+                    {%- endif %}
+                {%- else %}
+                    {{- "<think></think>" -}}
+                {%- endif %}
+                {%- for tool_call in message.tool_calls %}
+                    {%- if tool_call.function is defined %}
+                        {%- set tool_call = tool_call.function %}
+                    {%- endif %}
+                    {{- '<tool_call>\n<function=' ~ tool_call.name ~ '>\n' -}}
+                        {%- if tool_call.arguments is defined %}
+                            {%- for args_name, args_value in tool_call.arguments|items %}
+                                {{- '<parameter=' ~ args_name ~ '>\n' -}}
+                                    {%- set args_value = args_value | tojson | safe if args_value is mapping or (args_value is sequence and args_value is not string) else args_value | string %}
+                                {{- args_value ~ '\n</parameter>\n' -}}
+                            {%- endfor %}
+                        {%- endif %}
+                    {{- '</function>\n</tool_call>\n' -}}
+                {%- endfor %}
+                {{- '<|im_end|>\n' }}
+        {%- else %}
+            {%- if not (truncate_history_thinking and loop.index0 < ns.last_user_idx) %}
+                {{- '<|im_start|>assistant\n' ~ (content | default('', true) | string | trim) ~ '<|im_end|>\n' }}
+            {%- else %}
+                {%- set c = (content | default('', true) | string) %}
+                {%- if '<think>' in c and '</think>' in c %}
+                    {%- set c = "<think></think>" ~ c.split('</think>')[-1] %}
+                {%- endif %}
+                {%- set c = c | trim %}
+                {%- if c | length > 0 %}
+                    {{- '<|im_start|>assistant\n' ~ c ~ '<|im_end|>\n' }}
+                {%- else %}
+                    {{- '<|im_start|>assistant\n<|im_end|>\n' }}
+                {%- endif %}
+            {%- endif %}
+        {%- endif %}
+    {%- elif message.role == "user" or message.role == "system" %}
+        {{- '<|im_start|>' + message.role + '\n' }}
+        {%- set content = message.content | string %}
+        {%- if message.role == "user" and loop.index0 == ns.last_user_idx and medium_effort %}
+            {{- content + '\n\n{reasoning effort: efficient}' }}
+        {%- else %}
+            {{- content }}
+        {%- endif %}
+        {{- '<|im_end|>\n' }}
+    {%- elif message.role == "tool" %}
+        {%- if loop.previtem and loop.previtem.role != "tool" %}
+            {{- '<|im_start|>user\n' }}
+        {%- endif %}
+        {{- '<tool_response>\n' }}
+        {{- message.content }}
+        {{- '\n</tool_response>\n' }}
+        {%- if not loop.last and loop.nextitem.role != "tool" %}
+            {{- '<|im_end|>\n' }}
+        {%- elif loop.last %}
+            {{- '<|im_end|>\n' }}
+        {%- endif %}
+    {%- else %}
+        {{- '<|im_start|>' + message.role + '\n' + message.content + '<|im_end|>\n' }}
+    {%- endif %}
+{%- endfor %}
+{%- if add_generation_prompt %}
+    {%- if enable_thinking %}
+        {{- '<|im_start|>assistant\n<think>\n' }}
+    {%- else %}
+        {{- '<|im_start|>assistant\n<think></think>' }}
+    {%- endif %}
+{%- endif %}
+  [PASS] model ships a chat template
+
+--- [4] per-position parity (GPU vs independent reference) ---
+  [token] pos=0 token=1 cache_sizes=0,0,...
+  [emb] token=1 n_in=2688 vocab=131072 row_stride=1848 bytes=1848 type=6 dims=[2688,1]
+  [emb] dequant got=2688 want=2688 type_size_needed
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+Allocated buffer 0 with 6193152 bytes
+Allocated buffer 1 with 17472 bytes
+Allocated buffer 2 with 10752 bytes
+Allocated buffer 3 with 6193152 bytes
+Allocated buffer 4 with 17472 bytes
+Allocated buffer 5 with 10752 bytes
+Allocated buffer 6 with 6193152 bytes
+Allocated buffer 7 with 17472 bytes
+Allocated buffer 8 with 10752 bytes
+Allocated buffer 9 with 6193152 bytes
+Allocated buffer 10 with 17472 bytes
+Allocated buffer 11 with 10752 bytes
+Allocated buffer 12 with 6193152 bytes
+Allocated buffer 13 with 17472 bytes
+Allocated buffer 14 with 10752 bytes
+Allocated buffer 15 with 6193152 bytes
+Allocated buffer 16 with 17472 bytes
+Allocated buffer 17 with 10752 bytes
+Allocated buffer 18 with 6193152 bytes
+Allocated buffer 19 with 17472 bytes
+Allocated buffer 20 with 10752 bytes
+Allocated buffer 21 with 6193152 bytes
+Allocated buffer 22 with 17472 bytes
+Allocated buffer 23 with 10752 bytes
+Allocated buffer 24 with 6193152 bytes
+Allocated buffer 25 with 17472 bytes
+Allocated buffer 26 with 10752 bytes
+Allocated buffer 27 with 6193152 bytes
+Allocated buffer 28 with 17472 bytes
+Allocated buffer 29 with 10752 bytes
+Allocated buffer 30 with 6193152 bytes
+Allocated buffer 31 with 17472 bytes
+Allocated buffer 32 with 10752 bytes
+Allocated buffer 33 with 6193152 bytes
+Allocated buffer 34 with 17472 bytes
+Allocated buffer 35 with 10752 bytes
+Allocated buffer 36 with 6193152 bytes
+Allocated buffer 37 with 17472 bytes
+Allocated buffer 38 with 10752 bytes
+Allocated buffer 39 with 6193152 bytes
+Allocated buffer 40 with 17472 bytes
+Allocated buffer 41 with 10752 bytes
+Allocated buffer 42 with 6193152 bytes
+Allocated buffer 43 with 17472 bytes
+Allocated buffer 44 with 10752 bytes
+Allocated buffer 45 with 6193152 bytes
+Allocated buffer 46 with 17472 bytes
+Allocated buffer 47 with 10752 bytes
+Allocated buffer 48 with 6193152 bytes
+Allocated buffer 49 with 17472 bytes
+Allocated buffer 50 with 10752 bytes
+Allocated buffer 51 with 6193152 bytes
+Allocated buffer 52 with 17472 bytes
+Allocated buffer 53 with 10752 bytes
+Allocated buffer 54 with 6193152 bytes
+Allocated buffer 55 with 17472 bytes
+Allocated buffer 56 with 10752 bytes
+Allocated buffer 57 with 6193152 bytes
+Allocated buffer 58 with 17472 bytes
+Allocated buffer 59 with 10752 bytes
+Allocated buffer 60 with 6193152 bytes
+Allocated buffer 61 with 17472 bytes
+Allocated buffer 62 with 10752 bytes
+Allocated buffer 63 with 6193152 bytes
+Allocated buffer 64 with 17472 bytes
+Allocated buffer 65 with 10752 bytes
+Allocated buffer 66 with 6193152 bytes
+Allocated buffer 67 with 17472 bytes
+Allocated buffer 68 with 10752 bytes
+Allocated buffer 69 with 6193152 bytes
+Allocated buffer 70 with 17472 bytes
+Allocated buffer 71 with 10752 bytes
+Allocated buffer 72 with 6193152 bytes
+Allocated buffer 73 with 17472 bytes
+Allocated buffer 74 with 10752 bytes
+Allocated buffer 75 with 6193152 bytes
+Allocated buffer 76 with 17472 bytes
+Allocated buffer 77 with 10752 bytes
+Allocated buffer 78 with 6193152 bytes
+Allocated buffer 79 with 17472 bytes
+Allocated buffer 80 with 10752 bytes
+Allocated buffer 81 with 6193152 bytes
+Allocated buffer 82 with 17472 bytes
+Allocated buffer 83 with 10752 bytes
+Allocated buffer 84 with 6193152 bytes
+Allocated buffer 85 with 17472 bytes
+Allocated buffer 86 with 10752 bytes
+Allocated buffer 87 with 6193152 bytes
+Allocated buffer 88 with 17472 bytes
+Allocated buffer 89 with 10752 bytes
+  [token] pos=0 token=1 cache_sizes=0,0,...
+  [emb] token=1 n_in=2688 vocab=131072 row_stride=1848 bytes=1848 type=6 dims=[2688,1]
+  [emb] dequant got=2688 want=2688 type_size_needed
+Allocated buffer 90 with 6193152 bytes
+Allocated buffer 91 with 17472 bytes
+Allocated buffer 92 with 10752 bytes
+Allocated buffer 93 with 6193152 bytes
+Allocated buffer 94 with 17472 bytes
+Allocated buffer 95 with 10752 bytes
+Allocated buffer 96 with 6193152 bytes
+Allocated buffer 97 with 17472 bytes
+Allocated buffer 98 with 10752 bytes
+Allocated buffer 99 with 6193152 bytes
+Allocated buffer 100 with 17472 bytes
+Allocated buffer 101 with 10752 bytes
+Allocated buffer 102 with 6193152 bytes
+Allocated buffer 103 with 17472 bytes
+Allocated buffer 104 with 10752 bytes
+Allocated buffer 105 with 6193152 bytes
+Allocated buffer 106 with 17472 bytes
+Allocated buffer 107 with 10752 bytes
+Allocated buffer 108 with 6193152 bytes
+Allocated buffer 109 with 17472 bytes
+Allocated buffer 110 with 10752 bytes
+Allocated buffer 111 with 6193152 bytes
+Allocated buffer 112 with 17472 bytes
+Allocated buffer 113 with 10752 bytes
+Allocated buffer 114 with 6193152 bytes
+Allocated buffer 115 with 17472 bytes
+Allocated buffer 116 with 10752 bytes
+Allocated buffer 117 with 6193152 bytes
+Allocated buffer 118 with 17472 bytes
+Allocated buffer 119 with 10752 bytes
+Allocated buffer 120 with 6193152 bytes
+Allocated buffer 121 with 17472 bytes
+Allocated buffer 122 with 10752 bytes
+Allocated buffer 123 with 6193152 bytes
+Allocated buffer 124 with 17472 bytes
+Allocated buffer 125 with 10752 bytes
+Allocated buffer 126 with 6193152 bytes
+Allocated buffer 127 with 17472 bytes
+Allocated buffer 128 with 10752 bytes
+Allocated buffer 129 with 6193152 bytes
+Allocated buffer 130 with 17472 bytes
+Allocated buffer 131 with 10752 bytes
+Allocated buffer 132 with 6193152 bytes
+Allocated buffer 133 with 17472 bytes
+Allocated buffer 134 with 10752 bytes
+Allocated buffer 135 with 6193152 bytes
+Allocated buffer 136 with 17472 bytes
+Allocated buffer 137 with 10752 bytes
+Allocated buffer 138 with 6193152 bytes
+Allocated buffer 139 with 17472 bytes
+Allocated buffer 140 with 10752 bytes
+Allocated buffer 141 with 6193152 bytes
+Allocated buffer 142 with 17472 bytes
+Allocated buffer 143 with 10752 bytes
+Allocated buffer 144 with 6193152 bytes
+Allocated buffer 145 with 17472 bytes
+Allocated buffer 146 with 10752 bytes
+Allocated buffer 147 with 6193152 bytes
+Allocated buffer 148 with 17472 bytes
+Allocated buffer 149 with 10752 bytes
+Allocated buffer 150 with 6193152 bytes
+Allocated buffer 151 with 17472 bytes
+Allocated buffer 152 with 10752 bytes
+Allocated buffer 153 with 6193152 bytes
+Allocated buffer 154 with 17472 bytes
+Allocated buffer 155 with 10752 bytes
+Allocated buffer 156 with 6193152 bytes
+Allocated buffer 157 with 17472 bytes
+Allocated buffer 158 with 10752 bytes
+Allocated buffer 159 with 6193152 bytes
+Allocated buffer 160 with 17472 bytes
+Allocated buffer 161 with 10752 bytes
+Allocated buffer 162 with 6193152 bytes
+Allocated buffer 163 with 17472 bytes
+Allocated buffer 164 with 10752 bytes
+Allocated buffer 165 with 6193152 bytes
+Allocated buffer 166 with 17472 bytes
+Allocated buffer 167 with 10752 bytes
+Allocated buffer 168 with 6193152 bytes
+Allocated buffer 169 with 17472 bytes
+Allocated buffer 170 with 10752 bytes
+Allocated buffer 171 with 6193152 bytes
+Allocated buffer 172 with 17472 bytes
+Allocated buffer 173 with 10752 bytes
+Allocated buffer 174 with 6193152 bytes
+Allocated buffer 175 with 17472 bytes
+Allocated buffer 176 with 10752 bytes
+Allocated buffer 177 with 6193152 bytes
+Allocated buffer 178 with 17472 bytes
+Allocated buffer 179 with 10752 bytes
+  [PASS] both paths execute every decode position
+  [PASS] logits finite at every position
+  positions=1  worst cosine=1.0000000000  worst rel=0.000e+00  worst max_abs=0.000e+00
+  [PASS] cosine >= 0.999999 at EVERY position
+  [PASS] relative error <= 1e-4 at EVERY position
+  [PASS] max absolute error <= 1e-4 at EVERY position
+  [PASS] argmax token matches at EVERY position
+  gpu tokens: 4330
+  ref tokens: 4330
+  [logit stats] pos=0 argmax=4330 min=-12.6758 max=11.8588 mean=-0.7120 std=2.6052
+    top5: [4330]=11.8588 [5228]=10.6265 [17778]=10.5086 [6020]=10.1359 [45932]=10.0976
+
+--- [5] generated text ---
+  step 1 -> token 4330
+  generated text: " intern"
+  prompt + text : "def add(a, b):
+    return a + b
+
+# Multiply two numbers
+def multiply(a, b): intern"
+
+--- [6] repeat generation (independent run) ---
+  [token] pos=0 token=1 cache_sizes=0,0,...
+  [emb] token=1 n_in=2688 vocab=131072 row_stride=1848 bytes=1848 type=6 dims=[2688,1]
+  [emb] dequant got=2688 want=2688 type_size_needed
+Allocated buffer 180 with 6193152 bytes
+Allocated buffer 181 with 17472 bytes
+Allocated buffer 182 with 10752 bytes
+Allocated buffer 183 with 6193152 bytes
+Allocated buffer 184 with 17472 bytes
+Allocated buffer 185 with 10752 bytes
+Allocated buffer 186 with 6193152 bytes
+Allocated buffer 187 with 17472 bytes
+Allocated buffer 188 with 10752 bytes
+Allocated buffer 189 with 6193152 bytes
+Allocated buffer 190 with 17472 bytes
+Allocated buffer 191 with 10752 bytes
+Allocated buffer 192 with 6193152 bytes
+Allocated buffer 193 with 17472 bytes
+Allocated buffer 194 with 10752 bytes
+Quant-dot descriptor allocation failed
+Allocated buffer 195 with 6193152 bytes
+Allocated buffer 196 with 17472 bytes
+Allocated buffer 197 with 10752 bytes
+Quant-dot descriptor allocation failed
+Allocated buffer 198 with 6193152 bytes
+Allocated buffer 199 with 17472 bytes
+Allocated buffer 200 with 10752 bytes
+Quant-dot descriptor allocation failed
+Allocated buffer 201 with 6193152 bytes
+Allocated buffer 202 with 17472 bytes
+Allocated buffer 203 with 10752 bytes
+Quant-dot descriptor allocation failed
+Allocated buffer 204 with 6193152 bytes
+Allocated buffer 205 with 17472 bytes
+Allocated buffer 206 with 10752 bytes
+Quant-dot descriptor allocation failed
+Allocated buffer 207 with 6193152 bytes
+Allocated buffer 208 with 17472 bytes
+Allocated buffer 209 with 10752 bytes
+Quant-dot descriptor allocation failed
+Allocated buffer 210 with 6193152 bytes
+Allocated buffer 211 with 17472 bytes
+Allocated buffer 212 with 10752 bytes
+Quant-dot descriptor allocation failed
+Allocated buffer 213 with 6193152 bytes
+Allocated buffer 214 with 17472 bytes
+Allocated buffer 215 with 10752 bytes
+Quant-dot descriptor allocation failed
+Allocated buffer 216 with 6193152 bytes
+Allocated buffer 217 with 17472 bytes
+Allocated buffer 218 with 10752 bytes
+Quant-dot descriptor allocation failed
+Allocated buffer 219 with 6193152 bytes
+Allocated buffer 220 with 17472 bytes
+Allocated buffer 221 with 10752 bytes
+Quant-dot descriptor allocation failed
+Allocated buffer 222 with 6193152 bytes
+Allocated buffer 223 with 17472 bytes
+Allocated buffer 224 with 10752 bytes
+Quant-dot descriptor allocation failed
+Allocated buffer 225 with 6193152 bytes
+Allocated buffer 226 with 17472 bytes
+Allocated buffer 227 with 10752 bytes
+Quant-dot descriptor allocation failed
+Allocated buffer 228 with 6193152 bytes
+Allocated buffer 229 with 17472 bytes
+Allocated buffer 230 with 10752 bytes
+Quant-dot descriptor allocation failed
+Allocated buffer 231 with 6193152 bytes
+Allocated buffer 232 with 17472 bytes
+Allocated buffer 233 with 10752 bytes
+Quant-dot descriptor allocation failed
+Allocated buffer 234 with 6193152 bytes
+Allocated buffer 235 with 17472 bytes
+Allocated buffer 236 with 10752 bytes
+Quant-dot descriptor allocation failed
+Allocated buffer 237 with 6193152 bytes
+Allocated buffer 238 with 17472 bytes
+Allocated buffer 239 with 10752 bytes
+Quant-dot descriptor allocation failed
+Allocated buffer 240 with 6193152 bytes
+Allocated buffer 241 with 17472 bytes
+Allocated buffer 242 with 10752 bytes
+Quant-dot descriptor allocation failed
+Allocated buffer 243 with 6193152 bytes
+Allocated buffer 244 with 17472 bytes
+Allocated buffer 245 with 10752 bytes
+Quant-dot descriptor allocation failed
+Allocated buffer 246 with 6193152 bytes
+Allocated buffer 247 with 17472 bytes
+Allocated buffer 248 with 10752 bytes
+Quant-dot descriptor allocation failed
+Allocated buffer 249 with 6193152 bytes
+Allocated buffer 250 with 17472 bytes
+Allocated buffer 251 with 10752 bytes
+Quant-dot descriptor allocation failed
+Allocated buffer 252 with 6193152 bytes
+Allocated buffer 253 with 17472 bytes
+Allocated buffer 254 with 10752 bytes
+Quant-dot descriptor allocation failed
+Allocated buffer 255 with 6193152 bytes
+Allocated buffer 256 with 17472 bytes
+Allocated buffer 257 with 10752 bytes
+Quant-dot descriptor allocation failed
+Allocated buffer 258 with 6193152 bytes
+Allocated buffer 259 with 17472 bytes
+Allocated buffer 260 with 10752 bytes
+Quant-dot descriptor allocation failed
+Allocated buffer 261 with 6193152 bytes
+Allocated buffer 262 with 17472 bytes
+Allocated buffer 263 with 10752 bytes
+Quant-dot descriptor allocation failed
+Allocated buffer 264 with 6193152 bytes
+Allocated buffer 265 with 17472 bytes
+Allocated buffer 266 with 10752 bytes
+Quant-dot descriptor allocation failed
+Allocated buffer 267 with 6193152 bytes
+Allocated buffer 268 with 17472 bytes
+Allocated buffer 269 with 10752 bytes
+Quant-dot descriptor allocation failed
+  [FAIL] repeat generation produces identical token ids
+  repeat text  : ""
+  [FAIL] repeat generation produces identical text
+
+--- receipts ---
+  gpu_calls=30 cpu_calls=45 fallback='<none>'
+  dispatch_ms=0.000 cold_start_ms=0.000
+
+=== 16 passed, 2 failed ===
+VERDICT=FAIL
+Released all tensors
+Vulkan resources cleaned up successfully
