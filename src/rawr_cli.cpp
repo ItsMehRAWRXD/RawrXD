@@ -28,6 +28,7 @@
 #include <csignal>
 #include <cctype>
 #include <functional>
+#include <memory>
 #include <regex>
 
 using namespace rawr;
@@ -446,6 +447,26 @@ static RunOutcome runAgentLoop(std::function<InferenceResult(const std::vector<j
             break;
         }
 
+        // ask mode: a plain-prose reply IS the answer. The coding-agent contract
+        // (one JSON object per turn) does not apply, so a correct prose answer
+        // must not fall through to the repair orchestrator (which re-prompts for
+        // a source file and returns completed=false with an empty summary).
+        if (std::getenv("RAWRXD_HTTP_DEBUG")) {
+            logLine("turn-debug: mode=" + std::string(mode.name) +
+                    " askMode=" + (askMode ? "1" : "0") +
+                    " content_bytes=" + std::to_string(r.content.size()) +
+                    " pendingTool=" + (modelHasPendingTool ? "1" : "0") +
+                    " final=" + (modelHasFinal ? "1" : "0") +
+                    " objects=" + std::to_string(objects.size()));
+        }
+        if (askMode && !modelHasPendingTool && !modelHasFinal) {
+            ro.summary = r.content;
+            ro.completed = true;
+            logLine("run: ask mode answer accepted at turn " + std::to_string(turn) +
+                    " chars=" + std::to_string(r.content.size()));
+            break;
+        }
+
         if (!modelHasPendingTool && !modelHasFinal) {
             std::string fbTool;
             json fbArgs = json::object();
@@ -781,29 +802,34 @@ static int cmdRun(const std::vector<std::string>& args) {
     bool useLocalDeep2 = (backend == "deep2");
 
     std::function<InferenceResult(const std::vector<json>&, int)> completeFn;
-    Deep2Engine localEngine;   // lives for whole cmdRun (Deep2 path)
+    // Constructed only for the deep2 route. Building it unconditionally probed
+    // Vulkan and emitted engine lifecycle traces on stdout, which corrupted
+    // --json output for the ollama route.
+    std::unique_ptr<Deep2Engine> localEngine;
     InferenceClient httpClient; // lives for whole cmdRun (HTTP/Ollama path)
     // NOTE: completeFn must not capture temporaries — both backends above stay
     // in function scope so agent-loop callbacks remain valid.
 
     if (useLocalDeep2) {
+        localEngine = std::make_unique<Deep2Engine>();
         // Load the model through Deep2Engine (in-process GGUF inference).
         if (!g_json) {
             out("Loading model via Deep2 engine: " + model);
         }
-        if (!localEngine.loadModel(modelPath)) {
+        if (!localEngine->loadModel(modelPath)) {
             out("ERROR: Deep2Engine failed to load model: " + model);
             out("Falling back to HTTP backend on 127.0.0.1:8080...");
             useLocalDeep2 = false;
+            localEngine.reset();
         } else {
             if (!g_json) {
                 out("Deep2 model loaded: " + model +
-                    "  hidden=" + std::to_string(localEngine.getConfig().hiddenDim) +
-                    "  vocab=" + std::to_string(localEngine.getModelWeights().vocabSize));
+                    "  hidden=" + std::to_string(localEngine->getConfig().hiddenDim) +
+                    "  vocab=" + std::to_string(localEngine->getModelWeights().vocabSize));
             }
             completeFn = [&localEngine, modelPath](const std::vector<json>& msgs,
                                                    int maxTokens) {
-                return deep2Complete(localEngine, msgs, maxTokens, modelPath);
+                return deep2Complete(*localEngine, msgs, maxTokens, modelPath);
             };
         }
     }
@@ -846,21 +872,6 @@ static int cmdRun(const std::vector<std::string>& args) {
         completeFn = [&httpClient](const std::vector<json>& msgs, int maxTokens) {
             return httpClient.complete(msgs, maxTokens);
         };
-
-        if (!g_json) {
-            out("RawrXD Local Agent");
-            out("Model:    " + model);
-            out("Backend:  " + backend + (backend == "deep2" ? " (primary)" : " (backup)"));
-            out("Mode:     " + std::string(mode->name) + " - " +
-                std::string(mode->description));
-            out("Root:     " + ws.root());
-            out("Edits:    " + std::string(mode->sourceEditsAllowed ? "allowed by policy"
-                                                                    : "denied"));
-            out("Execute:  " + std::string(mode->executeByDefault ? "allowed by policy"
-                                                                  : "denied by default"));
-            out("Tools:    " + std::to_string(reg.size()) + " registered");
-            out("");
-        }
     } else {
         if (!g_json) {
             out("RawrXD Local Agent (Deep2 backend)");
@@ -934,8 +945,8 @@ static int cmdRun(const std::vector<std::string>& args) {
     if (useLocalDeep2 && std::string(mode->name) == "ask") {
         std::fprintf(stderr, "ASK_PATH=generateChat max_tokens=%d\n", g_run_max_tokens);
         std::string text =
-            localEngine.generateChat(goal, ASK_SYSTEM_PROMPT,
-                                     static_cast<size_t>(g_run_max_tokens));
+            localEngine->generateChat(goal, ASK_SYSTEM_PROMPT,
+                                      static_cast<size_t>(g_run_max_tokens));
         const bool agent5 =
             text.find("AGENT_RESULT=5") != std::string::npos ||
             text.find("AGENT_RESULT = 5") != std::string::npos;

@@ -785,8 +785,20 @@ InferenceResult InferenceClient::complete(const std::vector<json>& messages,
                                           int maxTokens, double temperature) {
     InferenceResult out;
     json payload;
-    payload["model"] = model_;
-    payload["messages"] = messages;
+    payload["model"] = sanitizeUtf8(model_);
+    // Sanitize every message at the serialization boundary. A single stray
+    // CP1252 byte anywhere in the conversation (system banner, tool output,
+    // task text) used to throw type_error.316 out of payload.dump() and
+    // abort the run with exit code 42 instead of reaching the backend.
+    json cleanMessages = messages;
+    for (auto& m : cleanMessages) {
+        if (!m.is_object()) continue;
+        for (const char* key : {"role", "content", "name"}) {
+            if (m.contains(key) && m[key].is_string())
+                m[key] = sanitizeUtf8(m[key].get<std::string>());
+        }
+    }
+    payload["messages"] = std::move(cleanMessages);
     payload["max_tokens"] = maxTokens;
     payload["temperature"] = temperature;
     payload["stream"] = false;
@@ -794,7 +806,18 @@ InferenceResult InferenceClient::complete(const std::vector<json>& messages,
     for (int attempt = 1; attempt <= 3; ++attempt) {
         long status = 0;
         std::string err;
-        std::string raw = httpPost(path_, payload.dump(), &status, err);
+        const std::string body = payload.dump();
+        std::string raw = httpPost(path_, body, &status, err);
+        if (std::getenv("RAWRXD_HTTP_DEBUG")) {
+            std::fprintf(stderr,
+                         "[http-debug] POST %s:%d%s model=%s body_bytes=%zu "
+                         "status=%ld response_bytes=%zu err=%s\n",
+                         "127.0.0.1", port_, path_.c_str(), model_.c_str(),
+                         body.size(), status, raw.size(), err.c_str());
+            if (!raw.empty())
+                std::fprintf(stderr, "[http-debug] response=%s\n",
+                             truncateForLedger(raw, 2000).c_str());
+        }
         if (raw.empty()) {
             out.error = "HTTP transport failure (attempt " + std::to_string(attempt) +
                         "): " + err;

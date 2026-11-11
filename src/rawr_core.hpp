@@ -68,6 +68,55 @@ inline std::string truncateForLedger(const std::string& s, size_t limit) {
            "\n...[truncated " + std::to_string(s.size() - limit) + " bytes]";
 }
 
+/// @brief Replace bytes that are not valid UTF-8 with U+FFFD.
+///
+/// nlohmann::json rejects any string containing invalid UTF-8 with
+/// type_error.316 while serializing, which previously surfaced as
+/// "unhandled exception: [json.exception.type_error.316] invalid UTF-8 byte"
+/// and aborted the whole agent run before a single request was sent.
+/// Agent text is assembled from workspace files and CLI arguments that are
+/// frequently CP1252 (0x97 em dash, 0x93/0x94 smart quotes), so the HTTP
+/// boundary must normalize instead of aborting.
+inline std::string sanitizeUtf8(const std::string& s) {
+    std::string out;
+    out.reserve(s.size());
+    const size_t n = s.size();
+    size_t i = 0;
+    while (i < n) {
+        const unsigned char c = static_cast<unsigned char>(s[i]);
+        size_t len = 0;
+        if (c < 0x80) len = 1;
+        else if ((c & 0xE0) == 0xC0) len = 2;
+        else if ((c & 0xF0) == 0xE0) len = 3;
+        else if ((c & 0xF8) == 0xF0) len = 4;
+        else { out += "\xEF\xBF\xBD"; ++i; continue; }
+
+        bool valid = (i + len <= n);
+        if (valid) {
+            for (size_t k = 1; k < len; ++k) {
+                if ((static_cast<unsigned char>(s[i + k]) & 0xC0) != 0x80) { valid = false; break; }
+            }
+        }
+        if (valid) {
+            const unsigned char c1 = (len > 1) ? static_cast<unsigned char>(s[i + 1]) : 0;
+            if (len == 2 && c < 0xC2) valid = false;                          // overlong
+            else if (len == 3 && c == 0xE0 && c1 < 0xA0) valid = false;       // overlong
+            else if (len == 3 && c == 0xED && c1 >= 0xA0) valid = false;      // surrogate
+            else if (len == 4 && c == 0xF0 && c1 < 0x90) valid = false;       // overlong
+            else if (len == 4 && c > 0xF4) valid = false;                     // > U+10FFFF
+            else if (len == 4 && c == 0xF4 && c1 >= 0x90) valid = false;      // > U+10FFFF
+        }
+        if (valid) {
+            out.append(s, i, len);
+            i += len;
+        } else {
+            out += "\xEF\xBF\xBD";
+            ++i;
+        }
+    }
+    return out;
+}
+
 inline void logLine(const std::string& msg) {
     SYSTEMTIME st;
     GetLocalTime(&st);
