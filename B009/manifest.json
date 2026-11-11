@@ -1,0 +1,91 @@
+{
+  "b009_version": "1.2.0",
+  "timestamp": "2026-08-10T00:30:00Z",
+  "project": "RawrXD Inference Engine",
+  "parent_baseline": "B008",
+  "parent_manifest": "B008/manifest.json",
+  "parent_report": "B008/B008-REPORT.md",
+  "scope": "Batched Prefill / Layer-Outer Execution",
+  "description": "Restructure Forward() to process all prompt tokens per layer (layer-outer) instead of token-sequentially (token-outer). Tests the temporal weight locality hypothesis.",
+  "toolchain": {
+    "cmake": "4.2.0",
+    "ninja": "1.13.2",
+    "msvc": "14.51.36231 (VS2022 Enterprise)",
+    "generator": "Ninja",
+    "build_type": "Release"
+  },
+  "certification": {
+    "status": "INVALIDATED",
+    "reason": "Correctness bug discovered in ForwardBatch() residual/RMSNorm ordering. Fix applied 2026-08-10. Revalidation required.",
+    "original_correctness": "INVALIDATED",
+    "reference_equivalence": "INVALIDATED",
+    "t1_decode_regression": "INVALIDATED",
+    "layer_outer_execution": "PENDING_REVALIDATION"
+  },
+  "gates": {
+    "b009_architecture_change": {
+      "status": "PASS",
+      "description": "Restructure token loop from T*L to L*T within Forward() for T>1"
+    },
+    "b009_kv_cache_integrity": {
+      "status": "PASS",
+      "description": "KV-cache writes remain correct after batching"
+    },
+    "b009_streaming_parity": {
+      "status": "PASS",
+      "description": "B004 streaming integration still PASSes"
+    },
+    "b009_numerical_equivalence": {
+      "status": "PENDING",
+      "description": "Generated token 108 == 108 (B008 baseline) — REQUIRES REVALIDATION after residual fix"
+    },
+    "b009_residual_bug_fix": {
+      "status": "PASS",
+      "description": "Fixed: residual must be saved BEFORE RMSNorm, not after. Fix applied 2026-08-10."
+    },
+    "b009_performance_hypothesis": {
+      "status": "INVALIDATED",
+      "description": "Previous +8.32% result obtained from buggy/pre-delegation implementation. NOT A VALID CERTIFIED RESULT."
+    }
+  },
+  "performance_results": {
+    "status": "INVALIDATED",
+    "previous_b008_prefill_ms": 12381.83,
+    "previous_b009_prefill_ms": 13412.31,
+    "previous_delta_ms": 1030.48,
+    "previous_regression_pct": 8.32,
+    "conclusion": "PREVIOUS RESULT INVALIDATED. Performance measurement deferred until corrected implementation passes numerical equivalence.",
+    "note": "The +8.32% result came from an implementation that either delegated to Forward() or had the residual bug. It is not a valid certified result for the corrected ForwardBatch()."
+  },
+  "baseline_reference": {
+    "prefill_tokens": 3,
+    "layers": 28,
+    "layer_executions_sequential": 84,
+    "layer_executions_batched": 28,
+    "theoretical_speedup": 3.0,
+    "actual_speedup": "N/A — previous result invalidated",
+    "b008_prefill_ms": 12381.83,
+    "b008_decode_ms": 4448.29
+  },
+  "artifacts": {
+    "manifest": "B009/manifest.json",
+    "report": "B009/B009-REPORT.md",
+    "validator": "B009/build/validate.ps1",
+    "performance_delta": "B009/performance/b009_vs_b007.json",
+    "test_executable": "B009/artifacts/b004_cpu.exe",
+    "test_log": "B009/logs/b009_test_run3.log",
+    "corrected_implementation": "src/rawrxd_transformer_forwardbatch.cpp",
+    "corrected_manifest": "tests/b009/b009a_evidence_manifest.h"
+  },
+  "notes": [
+    "B009 original certification INVALIDATED due to correctness bug in ForwardBatch()",
+    "Root cause: residual captured after RMSNorm rather than before",
+    "Fix implemented 2026-08-10 in src/rawrxd_transformer_forwardbatch.cpp",
+    "T=1 and T=3 verified after fix (max_diff=0.000000)",
+    "Full revalidation required across all lengths {1, 3, 10, 32, 128}",
+    "Previous +8.32% performance result is INVALIDATED / superseded",
+    "B008 remains the sole numerical oracle until B009 is re-certified",
+    "B010/B011/B012 must not inherit a faulty batched reference",
+    "Freeze condition: reproducible PASS across all test lengths"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "tokens_plain": 128,
+  "tokens_spec": 128,
+  "token_matches": 128,
+  "plain_decode_wall_ms": 31219.6,
+  "spec_decode_wall_ms": 32107.7,
+  "plain_tps": 4.1,
+  "spec_tps": 3.99,
+  "proposed": 12,
+  "accepted": 0,
+  "rejected": 3,
+  "chains": 3,
+  "same_binary": true,
+  "isolation_plain": true,
+  "isolation_spec": true,
+  "plain_exit": 0,
+  "spec_exit": 0
+}
