@@ -1,0 +1,15 @@
+{
+  "contract_sha256": "e469293657100225f80321f499ec29cf4bed8c2536c5ed204fb1e5d1a14cb7c6",
+  "head": "843a14c3298ab6aade87fbb597748bd8311f2716",
+  "pre_processes": {
+    "ProcessId": 26016,
+    "Name": "deep2_strata_bench.exe",
+    "CommandLine": "\"F:\\rawrxd\\tools\\deep2_strata_bench.exe\" --model F:\\rawrxd\\models\\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf --prefill 8 --generate 64 --spec 64 --draft-k 4 --repeat-prompt --gpu --outdir F:\\rawrxd\\evidence\\GAP_AUDIT_2026-10-13\\gate7_tps\\strata --tag gate7_run2_repeat"
+  },
+  "runs": [],
+  "sha256": {
+    "F:\\rawrxd\\src\\deep2\\runtime_graph_executor.cpp": "7ed326ca9a259638fee46c3fa55ef6e24ad1f119798dd9ab58e07ca9317316c3",
+    "F:\\rawrxd\\tools\\deep2_parity_trace.exe": "330f918e3d3e630b7dcb3c06c6f4e3d2be6905309ef0b89d35ece578b445f00d",
+    "F:\\rawrxd\\tmp_llama-clone\\build\\bin\\Release\\llama_dump_logits_teacher_forced.exe": "729ef976e756434eed2bcf6b170fa1eda669117711d860935a88efb009d7bdd8"
+  }
+}

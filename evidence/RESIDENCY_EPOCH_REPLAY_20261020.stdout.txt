@@ -1,0 +1,15 @@
+COMMAND=cmake --build build_streamer_contract --config Release --target deep2_weight_streamer_test --parallel 2
+EXIT_CODE=0
+COMMAND=ctest --test-dir build_streamer_contract -C Release -R deep2_weight_streamer_contract --output-on-failure
+EXIT_CODE=0
+RESULT=1/1 passed
+REPLAY_REQUESTS=4
+REPLAY_TRANSFERS=3
+REPLAY_CACHE_HITS=1
+REPLAY_EVICTIONS=2
+REPLAY_STATUS=PASS
+COMMAND=cmake --build build --config Release --target deep2_engine_lib --parallel 2
+EXIT_CODE=0
+GPU_BENCHMARK=NOT_RUN
+DUAL_GPU=BLOCKED_CODE_43
+PERFORMANCE=NOT_RUN
