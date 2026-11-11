@@ -1,0 +1,94 @@
+// ============================================================================
+// quant_dot_dispatch.hpp — Updated Receipt and BackendStats (P0-A, P1)
+// ============================================================================
+
+struct Receipt {
+    bool     used_gpu = false;
+    int      kind = 0;
+    uint32_t rows = 0;
+    uint32_t cols = 0;
+    uint32_t batch = 1;
+    uint64_t gpu_ns = 0;
+    uint64_t host_ns = 0;
+    uint64_t submit_ns = 0;
+    int      fallback_reason = 0;
+    int      cpu_fallback_rows = 0;
+
+    // P0-A: Real timing breakdown
+    double   gpu_ms = 0;
+    double   host_wait_ms = 0;
+    double   submit_cpu_ms = 0;
+
+    // P1: Residency
+    uint64_t total_device_weight_bytes = 0;
+    uint64_t cache_device_bytes = 0;
+};
+
+struct CacheStats {
+    uint64_t hits = 0;
+    uint64_t misses = 0;
+    uint64_t evictions = 0;
+    uint64_t prefetches = 0;
+    uint64_t prefetch_hits = 0;
+    uint64_t upload_bytes = 0;
+    uint64_t download_bytes = 0;
+    uint64_t device_bytes_live = 0;
+    uint64_t device_bytes_peak = 0;
+    uint64_t submits = 0;
+    uint64_t waits = 0;
+
+    // P0-A: Real timing
+    double kernel_ms = 0;         // Legacy: host_wait_ms + submit_cpu_ms
+    double submit_ms = 0;
+    double wait_ms = 0;
+    double gpu_ms = 0;            // Real GPU time
+    double host_wait_ms = 0;      // CPU fence wait
+    double submit_cpu_ms = 0;     // CPU submission overhead
+
+    // P1: Residency
+    uint64_t total_device_weight_bytes = 0;
+    uint64_t cache_device_bytes = 0;
+
+    // Residency safety
+    uint64_t pinned = 0;
+    uint64_t leases = 0;
+    uint64_t retired_pending = 0;
+    uint64_t retired_reaped = 0;
+    uint64_t budget_overrides = 0;
+    uint64_t epoch = 0;
+    uint64_t completed_epoch = 0;
+};
+
+struct BackendStats {
+    uint64_t buffer_allocations = 0;
+    uint64_t descriptor_allocations = 0;
+    uint64_t descriptor_reuses = 0;
+    uint64_t descriptor_alloc_attempts = 0;
+    uint64_t descriptor_alloc_failures = 0;
+    uint64_t descriptor_pool_creates = 0;
+    uint64_t descriptor_pool_resets = 0;
+    uint64_t descriptor_sets_in_flight = 0;
+    uint64_t descriptor_sets_peak = 0;
+
+    uint64_t submits = 0;
+    uint64_t waits = 0;
+    uint64_t upload_bytes = 0;
+    uint64_t download_bytes = 0;
+
+    // P0-A: Real timing
+    double gpu_ms = 0;
+    double host_wait_ms = 0;
+    double submit_cpu_ms = 0;
+
+    // Legacy
+    double kernel_ms = 0;
+    double wait_ms = 0;
+    double submit_ms = 0;
+
+    // P1: Residency
+    uint64_t total_device_weight_bytes = 0;
+    uint64_t cache_device_bytes = 0;
+    uint64_t weight_cache_hits = 0;
+    uint64_t weight_cache_misses = 0;
+    uint64_t weight_cache_evictions = 0;
+};

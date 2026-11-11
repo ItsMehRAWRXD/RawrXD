@@ -1,0 +1,34 @@
+D1_MODEL path=F:/rawrxd/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf bytes=668788096
+D1_MODEL_SHA256 9fecc3b3cd76bba89d504f29b616eedf7da85b96540e490ca5824d3f7d2776a0
+D1_MODEL_SPEC arch=llama vocab=32000 blocks=22 embd=2048 gpu_quant_capable=156
+D1_RELEVANT_TENSOR name=output.weight type=14 dims0=2048 dims1=32000 bytes=53760000
+D1_RELEVANT_TENSOR name=token_embd.weight type=12 dims0=2048 dims1=32000 bytes=36864000
+D1_INPUT_TOKEN_IDS 14 51 88 125 162 199 236 273 310 347 384 421 458 495 532 569 606 643 680 717 754 791 828 865 902 939 976 1013 1050 1087 1124 1161 1198 1235 1272 1309 1346 1383 1420 1457 1494 1531 1568 1605 1642 1679 1716 1753 1790 1827 1864 1901 1938 1975 2012 2049 2086 2123 2160 2197 2234 2271 2308 2345 2382 2419 2456 2493 2530 2567 2604 2641 2678 2715 2752 2789 2826 2863 2900 2937 2974 3011 3048 3085 3122 3159 3196 3233 3270 3307 3344 3381 3418 3455 3492 3529 3566 3603 3640 3677 3714 3751 3788 3825 3862 3899 3936 3973 4010 4047 4084 4121 4158 4195 4232 4269 4306 4343 4380 4417 4454 4491 4528 4565 4602 4639 4676 4713 4750
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+D1_SERIAL_DONE tokens=129 logits_per_position=32000 full_vocab=YES gpu_calls=19995 cpu_fallback_calls=0 elapsed_ms=80400.446
+D1_LENGTH=1 verdict=PASS full_vocab=YES per_position_logits=BIT_EXACT logits_positions=1/1 logits_floats=32000 max_abs=0 kv_payload=BIT_EXACT kv_floats=11264 kv_max_abs=0 state=MATCH position=0 last_token=14 committed_kv=1 gpu_only=YES grouped_work=YES gpu_calls=243 cpu_calls=0 batch_submissions=88 batch_dots=154 lmhead_batch_submissions=0 lmhead_batch_positions=0 vulkan_submit_delta=89 vulkan_wait_delta=89 elapsed_ms=529.577
+D1_CONTINUATION length=1 logits=BIT_EXACT max_abs=0 all_block_kv=BIT_EXACT kv_floats=11264 kv_max_abs=0 state=PASS cpu_calls=0
+D1_LENGTH=2 verdict=PASS full_vocab=YES per_position_logits=BIT_EXACT logits_positions=2/2 logits_floats=64000 max_abs=0 kv_payload=BIT_EXACT kv_floats=22528 kv_max_abs=0 state=MATCH position=1 last_token=51 committed_kv=2 gpu_only=YES grouped_work=YES gpu_calls=398 cpu_calls=0 batch_submissions=88 batch_dots=308 lmhead_batch_submissions=0 lmhead_batch_positions=0 vulkan_submit_delta=90 vulkan_wait_delta=90 elapsed_ms=698.824
+D1_CONTINUATION length=2 logits=BIT_EXACT max_abs=0 all_block_kv=BIT_EXACT kv_floats=11264 kv_max_abs=0 state=PASS cpu_calls=0
+D1_LENGTH=8 verdict=PASS full_vocab=YES per_position_logits=BIT_EXACT logits_positions=8/8 logits_floats=256000 max_abs=0 kv_payload=BIT_EXACT kv_floats=90112 kv_max_abs=0 state=MATCH position=7 last_token=273 committed_kv=8 gpu_only=YES grouped_work=YES gpu_calls=1328 cpu_calls=0 batch_submissions=88 batch_dots=1232 lmhead_batch_submissions=0 lmhead_batch_positions=0 vulkan_submit_delta=96 vulkan_wait_delta=96 elapsed_ms=1851.456
+D1_CONTINUATION length=8 logits=BIT_EXACT max_abs=0 all_block_kv=BIT_EXACT kv_floats=11264 kv_max_abs=0 state=PASS cpu_calls=0
+D1_LENGTH=32 verdict=PASS full_vocab=YES per_position_logits=BIT_EXACT logits_positions=32/32 logits_floats=1024000 max_abs=0 kv_payload=BIT_EXACT kv_floats=360448 kv_max_abs=0 state=MATCH position=31 last_token=1161 committed_kv=32 gpu_only=YES grouped_work=YES gpu_calls=5114 cpu_calls=0 batch_submissions=154 batch_dots=4928 lmhead_batch_submissions=0 lmhead_batch_positions=0 vulkan_submit_delta=186 vulkan_wait_delta=186 elapsed_ms=6047.285
+D1_CONTINUATION length=32 logits=BIT_EXACT max_abs=0 all_block_kv=BIT_EXACT kv_floats=11264 kv_max_abs=0 state=PASS cpu_calls=0
+D1_LENGTH=128 verdict=PASS full_vocab=YES per_position_logits=BIT_EXACT logits_positions=128/128 logits_floats=4096000 max_abs=0 kv_payload=BIT_EXACT kv_floats=1441792 kv_max_abs=0 state=MATCH position=127 last_token=4713 committed_kv=128 gpu_only=YES grouped_work=YES gpu_calls=20456 cpu_calls=0 batch_submissions=616 batch_dots=19712 lmhead_batch_submissions=0 lmhead_batch_positions=0 vulkan_submit_delta=744 vulkan_wait_delta=744 elapsed_ms=27811.074
+D1_CONTINUATION length=128 logits=BIT_EXACT max_abs=0 all_block_kv=BIT_EXACT kv_floats=11264 kv_max_abs=0 state=PASS cpu_calls=0
+D1_MATRIX totals_lengths=5 logits_floats=5472000 kv_floats=1926144 batch_submissions=1034 batch_dots=26334 backend_process_totals_submits=13286 backend_process_totals_waits=13286 serial_cpu_fallback_calls=0
+D1_MATRIX_VERDICT=PASS failures=0
+Released all tensors
+Vulkan resources cleaned up successfully

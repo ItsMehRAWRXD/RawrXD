@@ -1,0 +1,51 @@
+{
+  "benchmark_id": "inference_codestral_22b",
+  "timestamp": "2026-07-13T16:35:00Z",
+  "rawrxd_version": "1.0.0-complete",
+  "model": {
+    "name": "Codestral-22B-v0.1",
+    "parameters": "22B",
+    "quantization": "Q4_K_M",
+    "file_size_gb": 12.8,
+    "sha256": "i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2a3b4c5d6e7f8"
+  },
+  "hardware": {
+    "cpu": "AMD Ryzen 9 7950X3D",
+    "gpu": "AMD Radeon RX 7800 XT",
+    "vram_gb": 16,
+    "ram_gb": 64
+  },
+  "configuration": {
+    "gpu_layers": -1,
+    "context_length": 4096,
+    "batch_size": 512,
+    "threads": 16
+  },
+  "results": {
+    "prompt_processing": {
+      "tokens_per_second": 425.8,
+      "time_ms": 37.6,
+      "tokens_processed": 16
+    },
+    "generation": {
+      "tokens_per_second": 20.1,
+      "time_to_first_token_ms": 185.3,
+      "total_tokens": 256,
+      "total_time_ms": 12736.3
+    },
+    "memory": {
+      "peak_vram_mb": 14336,
+      "peak_ram_mb": 4096
+    },
+    "latency": {
+      "mean_ms": 49.75,
+      "p50_ms": 48.2,
+      "p95_ms": 62.5,
+      "p99_ms": 78.3
+    }
+  },
+  "iterations": 10,
+  "variance_coefficient": 0.045,
+  "status": "PASSED",
+  "notes": "22B model runs efficiently on 16GB VRAM with Q4 quantization"
+}

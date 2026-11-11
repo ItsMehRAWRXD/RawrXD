@@ -1,0 +1,35 @@
+#version 460
+// Batch 24: target-side greedy verifier for a speculative token window.
+layout(local_size_x=256) in;
+layout(set=0,binding=0,std430) readonly buffer L { float logits[]; };
+layout(set=0,binding=1,std430) readonly buffer D { int draft[]; };
+layout(set=0,binding=2,std430) buffer O { uint accepted; uint mismatch; } outv;
+layout(push_constant) uniform PC { uint vocab; uint width; } pc;
+
+shared float bestV[256];
+shared uint bestI[256];
+
+void main() {
+    uint step=gl_WorkGroupID.x;
+    if(step>=pc.width) return;
+    uint lid=gl_LocalInvocationID.x;
+    float bv=-3.402823e38;
+    uint bi=0u;
+    uint base=step*pc.vocab;
+    for(uint i=lid;i<pc.vocab;i+=256u) {
+        float v=logits[base+i];
+        if(v>bv) { bv=v; bi=i; }
+    }
+    bestV[lid]=bv; bestI[lid]=bi; barrier();
+    for(uint stride=128u;stride>0u;stride>>=1u) {
+        if(lid<stride && bestV[lid+stride]>bestV[lid]) {
+            bestV[lid]=bestV[lid+stride];
+            bestI[lid]=bestI[lid+stride];
+        }
+        barrier();
+    }
+    if(lid==0u && outv.mismatch==0u) {
+        if(int(bestI[0])==draft[step]) atomicAdd(outv.accepted,1u);
+        else outv.mismatch=1u;
+    }
+}

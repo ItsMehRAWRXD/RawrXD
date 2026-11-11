@@ -1,0 +1,45 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  1>Checking Build System
+  Building Custom Rule F:/rawrxd/.worktrees/codex-d2-revalidate-74fafe/3rdparty/ggml/src/CMakeLists.txt
+  ggml.c
+  ggml.cpp
+  ggml-alloc.c
+  ggml-quants.c
+  Generating Code...
+  ggml-backend.cpp
+  ggml-opt.cpp
+  ggml-threading.cpp
+  gguf.cpp
+  Generating Code...
+     Creating library F:/rawrxd/.build_d2_revalidate_74fafe/ggml/src/Release/ggml-base.lib and object F:/rawrxd/.build_d2_revalidate_74fafe/ggml/src/Release/ggml-base.exp
+  ggml-base.vcxproj -> F:\rawrxd\.build_d2_revalidate_74fafe\ggml\bin\Release\ggml-base.dll
+  Building Custom Rule F:/rawrxd/.worktrees/codex-d2-revalidate-74fafe/3rdparty/ggml/src/CMakeLists.txt
+  ggml-cpu.c
+  ggml-cpu.cpp
+  repack.cpp
+  hbm.cpp
+  traits.cpp
+  amx.cpp
+  mmq.cpp
+  binary-ops.cpp
+  unary-ops.cpp
+  vec.cpp
+  ops.cpp
+  Generating Code...
+  quants.c
+  quants.c
+  repack.cpp
+     Creating library F:/rawrxd/.build_d2_revalidate_74fafe/ggml/src/Release/ggml-cpu.lib and object F:/rawrxd/.build_d2_revalidate_74fafe/ggml/src/Release/ggml-cpu.exp
+  ggml-cpu.vcxproj -> F:\rawrxd\.build_d2_revalidate_74fafe\ggml\bin\Release\ggml-cpu.dll
+  Building Custom Rule F:/rawrxd/.worktrees/codex-d2-revalidate-74fafe/3rdparty/ggml/src/CMakeLists.txt
+  ggml-backend-reg.cpp
+     Creating library F:/rawrxd/.build_d2_revalidate_74fafe/ggml/src/Release/ggml.lib and object F:/rawrxd/.build_d2_revalidate_74fafe/ggml/src/Release/ggml.exp
+  ggml.vcxproj -> F:\rawrxd\.build_d2_revalidate_74fafe\ggml\bin\Release\ggml.dll
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  ggml-base.vcxproj -> F:\rawrxd\.build_d2_revalidate_74fafe\ggml\bin\Release\ggml-base.dll
+  ggml-cpu.vcxproj -> F:\rawrxd\.build_d2_revalidate_74fafe\ggml\bin\Release\ggml-cpu.dll
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  ggml-base.vcxproj -> F:\rawrxd\.build_d2_revalidate_74fafe\ggml\bin\Release\ggml-base.dll

@@ -1,0 +1,10 @@
+{
+  "Model": "qwen2.5-coder:1.5b-base",
+  "StartedAt": "2026-10-12T16:19:12.3331254-04:00",
+  "Plan": "load-on-demand check -> short self-directed generation -> parse -> evidence write",
+  "Status": "ok",
+  "LatencySec": 0.9,
+  "EvalCount": 199,
+  "Tps": 212.7,
+  "Preview": "Step 1: Define the benchmarking goals and objectives - Identify the specific use cases and performance metrics to be measured - Determine the target GPU architecture and compute capabilities - Establish the benchmarking framework and tools to be used Step 2: Collect benchmarking data - Gather a diverse set of benchmarking data from various sources, including public benchmarks, industry reports, an"
+}
