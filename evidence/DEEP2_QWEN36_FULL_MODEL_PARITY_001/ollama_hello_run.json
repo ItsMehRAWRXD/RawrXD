@@ -1,0 +1,11 @@
+{
+  "model": "qwen36-reference-local",
+  "response": ",\n\n",
+  "done": true,
+  "done_reason": "length",
+  "eval_count": 2,
+  "eval_duration": 12644000,
+  "prompt_eval_count": 1,
+  "prompt_eval_duration": 17555000,
+  "load_duration": 9328900
+}

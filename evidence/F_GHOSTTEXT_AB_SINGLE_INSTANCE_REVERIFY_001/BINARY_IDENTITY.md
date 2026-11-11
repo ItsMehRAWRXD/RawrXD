@@ -1,0 +1,10 @@
+# Binary identity
+
+```ini
+CANDIDATE_EXE=F:\rawrxd\build_ghosttext_boundary\bin\RawrXD-Win32IDE-Native.exe
+CANDIDATE_SHA256=707B5AAA4FF9297BEDEA2C26720E4EE95AF80CBD119C311A70515A5BAC9C41CA
+HASH_VERIFIED=PASS
+PRODUCTION_BINARY_MODIFIED=0
+```
+
+The hash was verified before and after the physical run.

@@ -1,0 +1,28 @@
+tokens: 1 185
+arch=phi3 blocks=32 embd=3072 vocab=32064 experts=0 used=0
+[gpu] bound ops=195
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+[gpu] pos=0 token=1 3550.1 ms ops=195
+[gpu] pos=1 token=185 237.2 ms ops=195
+[gpu] gpu_calls=130 cpu_calls=0 fallback=<none>
+[cpu] cpu_calls=130
+pos=0 vocab=32064 finite=32064 gpu_argmax=18189 cpu_argmax=18189 cos=0.9998969 max_abs=0.3235 PASS
+pos=1 vocab=32064 finite=32064 gpu_argmax=18189 cpu_argmax=18189 cos=0.9998785 max_abs=0.3622 PASS
+VERDICT=PASS_INTERNAL_ONLY
+CERT_STATUS=EXECUTION_PASS_NOT_CERTIFIED
+CERTIFICATION_STATUS=BLOCKED_NO_INDEPENDENT_REFERENCE
+RECEIPT=F:\rawrxd\evidence\DUAL_GPU_FORWARD_20261028\gpu_certify/full_model_receipt.json
+Released all tensors
+Vulkan resources cleaned up successfully

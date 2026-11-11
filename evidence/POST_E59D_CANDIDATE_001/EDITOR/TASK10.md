@@ -1,0 +1,41 @@
+﻿# T10 Hard-Kill Session Retest
+
+ASOF_UTC=2026-11-08T22:30:25Z
+CERT_EXE_SHA=3B720981EC567D60461B874F0C1EE46E03F85DB58F6E1788CBEE31F8B2CCAD5F
+ACTUAL_SHA=3B720981EC567D60461B874F0C1EE46E03F85DB58F6E1788CBEE31F8B2CCAD5F
+SHA_MATCH=1
+RESULT=PASS
+
+## Scope (clarified)
+
+```
+SCOPE=HARD_KILL_UNSAVED_NE_WM_CLOSE
+IN_SCOPE=Stop-Process -Force while dirty buffer holds unique marker; prove marker survives into ide_session.json and restores on relaunch
+OUT_OF_SCOPE=External-file conflict prompt; WM_CLOSE cold-restore (covered by sealed T09 PASS)
+PRIOR_FAIL_CLASS=FAIL_SESSION_ONLY_ON_WM_CLOSE
+```
+
+## Evidence
+
+```
+PREKILL_MARKER_IN_EDITOR=True
+DIRTY_MENU=True
+MARKER_IN_SESSION_AFTER_KILL=True
+SESSION_LEN_AFTER_KILL=1473
+RESTORED_AFTER_RELAUNCH=True
+PRODUCT_DEFECT=NOT_PROVEN
+```
+
+Sealed EXE contains FILE_SAFETY / unsaved-buffer checkpoint strings; hard-kill path exercised successfully on same SHA.
+
+```
+REBUILD=HELD
+PROMOTE=0
+CERTIFIED=0
+INVENT_PASS=0
+FAIL_CLOSED=NOT_RUN!=PASS
+```
+
+RUNLOG=`EDITOR\RUNLOG_T17_T07_T08_T10.txt`
+HARNESS=`EDITOR\finish25_t17_t07_t08_t10.ps1`
+SESSION_SNAPSHOT=`EDITOR\ide_session_t10_after_kill.json`

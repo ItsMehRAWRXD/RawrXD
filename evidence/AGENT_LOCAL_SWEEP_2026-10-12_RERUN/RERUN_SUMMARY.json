@@ -1,0 +1,165 @@
+[
+  {
+    "Model": "deepseek-r1:32b",
+    "StartedAt": "2026-10-12T16:49:22.1243930-04:00",
+    "KeepAlive": 0,
+    "Cold": true,
+    "Before": {
+      "CommittedGB": 46.33,
+      "LimitGB": 65.41,
+      "AvailableGB": 32.88
+    },
+    "PeakCommittedGB": 46.3,
+    "HttpStatus": 500,
+    "ErrorBody": "Response status code does not indicate success: 500 (Internal Server Error).",
+    "After": {
+      "CommittedGB": 46.23,
+      "LimitGB": 65.41,
+      "AvailableGB": 25.48
+    },
+    "Classification": "RUNTIME_FAILURE"
+  },
+  {
+    "Model": "deepseek-r1:70b",
+    "StartedAt": "2026-10-12T16:50:08.8650752-04:00",
+    "KeepAlive": 0,
+    "Cold": true,
+    "Before": {
+      "CommittedGB": 46.33,
+      "LimitGB": 65.41,
+      "AvailableGB": 24.47
+    },
+    "PeakCommittedGB": 66.13,
+    "HttpStatus": 500,
+    "ErrorBody": "Response status code does not indicate success: 500 (Internal Server Error).",
+    "After": {
+      "CommittedGB": 46.27,
+      "LimitGB": 65.42,
+      "AvailableGB": 21.8
+    },
+    "Classification": "RUNTIME_FAILURE"
+  },
+  {
+    "Model": "qwen3-next:80b",
+    "StartedAt": "2026-10-12T16:50:44.1748666-04:00",
+    "KeepAlive": 0,
+    "Cold": true,
+    "Before": {
+      "CommittedGB": 46.51,
+      "LimitGB": 65.42,
+      "AvailableGB": 20.73
+    },
+    "PeakCommittedGB": 67.08,
+    "HttpStatus": 500,
+    "ErrorBody": "Response status code does not indicate success: 500 (Internal Server Error).",
+    "After": {
+      "CommittedGB": 46.65,
+      "LimitGB": 65.42,
+      "AvailableGB": 15.42
+    },
+    "Classification": "RUNTIME_FAILURE"
+  },
+  {
+    "Model": "gpt-oss:120b",
+    "StartedAt": "2026-10-12T16:51:19.1614830-04:00",
+    "KeepAlive": 0,
+    "Cold": true,
+    "Before": {
+      "CommittedGB": 46.77,
+      "LimitGB": 65.42,
+      "AvailableGB": 14.5
+    },
+    "PeakCommittedGB": 62.42,
+    "HttpStatus": 500,
+    "ErrorBody": "Response status code does not indicate success: 500 (Internal Server Error).",
+    "After": {
+      "CommittedGB": 45.49,
+      "LimitGB": 65.42,
+      "AvailableGB": 17.13
+    },
+    "Classification": "RUNTIME_FAILURE"
+  },
+  {
+    "Model": "kiminoto/T0.0.1:latest",
+    "StartedAt": "2026-10-12T16:52:03.4876543-04:00",
+    "KeepAlive": 0,
+    "Cold": true,
+    "Before": {
+      "CommittedGB": 45.26,
+      "LimitGB": 65.42,
+      "AvailableGB": 16.3
+    },
+    "PeakCommittedGB": 56.94,
+    "Status": "PASS",
+    "LatencySec": 16.0,
+    "Tokens": 128,
+    "Tps": 8.0,
+    "Preview": "",
+    "After": {
+      "CommittedGB": 55.93,
+      "LimitGB": 65.42,
+      "AvailableGB": 13.14
+    },
+    "Classification": "PASS"
+  },
+  {
+    "Model": "laguna-s-2.1:Q4_K_M",
+    "StartedAt": "2026-10-12T16:52:25.8867188-04:00",
+    "KeepAlive": 0,
+    "Cold": true,
+    "Before": {
+      "CommittedGB": 43.79,
+      "LimitGB": 65.42,
+      "AvailableGB": 13.48
+    },
+    "PeakCommittedGB": 44.89,
+    "HttpStatus": 500,
+    "ErrorBody": "Response status code does not indicate success: 500 (Internal Server Error).",
+    "After": {
+      "CommittedGB": 44.25,
+      "LimitGB": 65.42,
+      "AvailableGB": 11.69
+    },
+    "Classification": "RUNTIME_FAILURE"
+  },
+  {
+    "Model": "bluehawana/deepseek-v4-flash:iq2_m",
+    "StartedAt": "2026-10-12T16:52:57.7923589-04:00",
+    "KeepAlive": 0,
+    "Cold": true,
+    "Before": {
+      "CommittedGB": 44.39,
+      "LimitGB": 65.42,
+      "AvailableGB": 10.72
+    },
+    "PeakCommittedGB": 66.58,
+    "HttpStatus": 500,
+    "ErrorBody": "Response status code does not indicate success: 500 (Internal Server Error).",
+    "After": {
+      "CommittedGB": 44.35,
+      "LimitGB": 65.63,
+      "AvailableGB": 31.75
+    },
+    "Classification": "RUNTIME_FAILURE"
+  },
+  {
+    "Model": "bluehawana/deepseek-v4-flash:iq2_m-ctx128k",
+    "StartedAt": "2026-10-12T16:53:42.4410030-04:00",
+    "KeepAlive": 0,
+    "Cold": true,
+    "Before": {
+      "CommittedGB": 44.24,
+      "LimitGB": 65.63,
+      "AvailableGB": 30.33
+    },
+    "PeakCommittedGB": 45.21,
+    "HttpStatus": 500,
+    "ErrorBody": "Response status code does not indicate success: 500 (Internal Server Error).",
+    "After": {
+      "CommittedGB": 44.0,
+      "LimitGB": 65.87,
+      "AvailableGB": 21.14
+    },
+    "Classification": "RUNTIME_FAILURE"
+  }
+]

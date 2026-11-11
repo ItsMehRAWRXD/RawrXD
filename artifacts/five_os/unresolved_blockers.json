@@ -1,0 +1,87 @@
+{
+  "schema": "RAWRXD_FIVE_OS_UNRESOLVED_BLOCKERS",
+  "version": "1.0",
+  "generated_utc": "2026-10-27T07:45:00Z",
+  "repository": "F:\\rawrxd",
+  "commit": "7e2d3bf58b",
+  "blockers": [
+    {
+      "id": "BLK-001",
+      "category": "MISSING_SOURCE",
+      "severity": "P0",
+      "title": "Tri-format emitter headers missing",
+      "description": "sovereign_emit_formats.hpp, sovereign_target_manifest.hpp, sovereign_lab_blob_io.hpp referenced in 42+ documentation locations but do NOT exist anywhere in the repository",
+      "affected_targets": ["Linux", "macOS", "Android", "iOS"],
+      "required_action": "Recover from authoritative source or implement against defined contract in SOVEREIGN_TRI_FORMAT_SAFE_SPEC.md",
+      "status": "OPEN"
+    },
+    {
+      "id": "BLK-002",
+      "category": "MISSING_SOURCE",
+      "severity": "P0",
+      "title": "Phase 2 linker not integrated",
+      "description": "toolchain/from_scratch/phase2_linker/ exists only in _pre_merge_backup/, not integrated into main CMake build graph",
+      "affected_targets": ["Linux", "macOS", "Android", "iOS"],
+      "required_action": "Audit phase2_linker code, verify interfaces/dependencies, integrate into CMake build",
+      "status": "OPEN"
+    },
+    {
+      "id": "BLK-003",
+      "category": "ENVIRONMENT",
+      "severity": "P0",
+      "title": "No Linux toolchain on host",
+      "description": "WSL2 not installed, no Clang cross-compiler, no Linux sysroot",
+      "affected_targets": ["Linux"],
+      "required_action": "Install WSL2 or Linux VM with GCC/Clang and lld",
+      "status": "BLOCKED_BY_ENVIRONMENT"
+    },
+    {
+      "id": "BLK-004",
+      "category": "ENVIRONMENT",
+      "severity": "P0",
+      "title": "No Android NDK",
+      "description": "ANDROID_NDK not set, no NDK installed on this Windows host",
+      "affected_targets": ["Android"],
+      "required_action": "Install Android NDK, set ANDROID_NDK environment variable",
+      "status": "BLOCKED_BY_ENVIRONMENT"
+    },
+    {
+      "id": "BLK-005",
+      "category": "ENVIRONMENT",
+      "severity": "P0",
+      "title": "No macOS/Xcode toolchain",
+      "description": "No macOS host, no Xcode, no ld64, no codesign, no iOS SDK",
+      "affected_targets": ["macOS", "iOS"],
+      "required_action": "Provision macOS build host with Xcode and iOS SDK",
+      "status": "BLOCKED_BY_ENVIRONMENT"
+    },
+    {
+      "id": "BLK-006",
+      "category": "PERFORMANCE",
+      "severity": "P1",
+      "title": "Qwen3 CPU inference throughput",
+      "description": "0.060 TPS (~16.6s per token) - proves path works but not production-ready",
+      "affected_targets": ["Windows"],
+      "required_action": "Optimize kernel, consider quantization tuning, batch processing",
+      "status": "OPEN"
+    },
+    {
+      "id": "BLK-007",
+      "category": "VERIFICATION",
+      "severity": "P1",
+      "title": "Independent numerical reference parity",
+      "description": "Qwen3 logits not yet compared against independent reference (llama.cpp or equivalent)",
+      "affected_targets": ["Windows"],
+      "required_action": "Run Qwen3 8B through reference implementation, compare logits and token IDs",
+      "status": "OPEN"
+    }
+  ],
+  "summary": {
+    "total_blockers": 7,
+    "source_level": 2,
+    "environment_level": 3,
+    "performance_level": 1,
+    "verification_level": 1,
+    "five_os_certified": false
+  }
+}

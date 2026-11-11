@@ -1,0 +1,15 @@
+
+RawrXD Local Agent
+Model:   qwen3:8b
+Backend: ollama
+Mode:    autonomous
+Root:    F:\rawrxd
+
+Counting to one million slowly is a task that requires patience and focus. Here's how you can do it:
+
+1. Start with the number 1.
+2. Increment the number by 1 each time.
+3. Take a moment to breathe and focus on the number you're counting to.
+4. Repeat this process until you reach one million.
+
+This is a mental exercise that can be done without any tools. If you need help with anything else, feel free to ask!

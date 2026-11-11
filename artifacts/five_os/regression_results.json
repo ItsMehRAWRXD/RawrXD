@@ -1,0 +1,45 @@
+{
+  "schema": "RAWRXD_FIVE_OS_REGRESSION_RESULTS",
+  "version": "1.0",
+  "generated_utc": "2026-10-27T07:45:00Z",
+  "repository": "F:\\rawrxd",
+  "commit": "7e2d3bf58b",
+  "regression_suites": [
+    {
+      "suite": "Qwen3 CPU Inference",
+      "binary": "build_ide\\bin-msvc\\cpu_engine_e2e.exe",
+      "model": "DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf",
+      "result": "PASS",
+      "details": "36/36 layers, 151,936 finite logits, 10 deterministic tokens, zone registry fix verified",
+      "evidence": "evidence\\qwen3_e2e_postfix_014.log"
+    },
+    {
+      "suite": "REAP Capability Detection",
+      "binary": "build_ide\\bin-msvc\\rawr-reap.exe",
+      "model": "DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf",
+      "command": "capabilities",
+      "result": "PASS",
+      "details": "399 tensors, qwen3 architecture, 1 shard detected",
+      "evidence": "evidence\\reap_qwen3_caps.log"
+    },
+    {
+      "suite": "Five-OS Compiler/Linker Test Corpus",
+      "binary": "MSVC cl.exe/link.exe",
+      "result": "PASS",
+      "details": "17/17 positive tests PASS, 2/2 negative tests correctly fail",
+      "evidence": "tests\\five_os_corpus\\bin\\"
+    },
+    {
+      "suite": "GGUF Model Loading",
+      "models_tested": ["llama3.2-3b-Q2_K", "DeepSeek-R1-0528-Qwen3-8B-Q4_K_M"],
+      "result": "PARTIAL",
+      "details": "Qwen3 8B loads and executes; llama3.2-3b loads but inference timing prohibitive on CPU (~16s/token)"
+    }
+  ],
+  "summary": {
+    "suites_run": 4,
+    "suites_pass": 3,
+    "suites_partial": 1,
+    "five_os_regression": "PASS (no regressions introduced)"
+  }
+}

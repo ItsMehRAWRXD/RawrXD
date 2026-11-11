@@ -1,0 +1,16 @@
+schema=DEEP2_KIMI_MOE_EXPERT_CAPTURE_001
+layer=1
+expert=327
+stick=0
+ggml_type=14
+rows=7168
+columns=2048
+weight_bytes=12042240
+source=GPU_EXPERT_PARITY_DIAGNOSTIC
+completion_boundary=K2MoEStickEndDevice
+gpu_arena_owner_expert=327
+gpu_arena_owner_rule=LAST_SORTED_WORKLIST_EXPERT
+gpu_down_buffer_id=2191557406576
+gpu_activation_buffer_id=2191557406448
+gpu_submits=1
+certified=0

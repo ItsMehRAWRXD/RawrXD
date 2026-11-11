@@ -1,0 +1,20 @@
+=== MEMORY ===
+TotalVisibleMB=63094.3
+FreePhysicalMB=39402.4
+TotalVirtualMB=126582.3
+FreeVirtualMB=91211.2
+=== PAGEFILE ===
+
+
+Name              : C:\pagefile.sys
+AllocatedBaseSize : 63488
+CurrentUsage      : 84
+PeakUsage         : 96
+
+
+
+
+=== DISK C ===
+UsedGB=431.46 FreeGB=496.61
+=== DISK F ===
+UsedGB=3242.57 FreeGB=483.32

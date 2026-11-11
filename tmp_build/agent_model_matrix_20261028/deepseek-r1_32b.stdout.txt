@@ -1,0 +1,7 @@
+
+RawrXD Local Agent
+Model:   deepseek-r1:32b
+Backend: ollama
+Mode:    autonomous
+Root:    F:\rawrxd
+

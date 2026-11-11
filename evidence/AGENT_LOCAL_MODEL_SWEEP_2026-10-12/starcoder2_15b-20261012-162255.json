@@ -1,0 +1,10 @@
+{
+  "Model": "starcoder2:15b",
+  "StartedAt": "2026-10-12T16:22:55.1616314-04:00",
+  "Plan": "load-on-demand check -> short self-directed generation -> parse -> evidence write",
+  "Status": "ok",
+  "LatencySec": 30.6,
+  "EvalCount": 1,
+  "Tps": 0.0,
+  "Preview": ""
+}

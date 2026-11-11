@@ -1,0 +1,84 @@
+﻿{
+    "schema":  "DEEP2_KIMI_OFFLINE_GATE_001/v1",
+    "started_utc":  "2026-10-27T23:58:04.2608687Z",
+    "finished_utc":  "2026-10-27T23:58:06.9180633Z",
+    "repo_commit":  "499001b2af2c57cf2d0a14f633f97664571e41c9",
+    "status":  "PASS_OFFLINE_ONLY",
+    "certified":  false,
+    "gpu_numerical_parity":  "NOT_CERTIFIED",
+    "release_promote":  0,
+    "steps":  [
+                  {
+                      "name":  "test_k2_gpu_moe_vector_parity.py",
+                      "exit_code":  0,
+                      "sha256":  "26963B7F18121BA05AA17782426A35F88955A15BB3ABA361F78EC320EF7F3F1E",
+                      "output":  "python.exe : ......\r\nAt F:\\rawrxd\\tools\\run_kimi_parity_offline.ps1:55 char:22\r\n+         try { $out = \u0026 $py.Source $path 2\u003e\u00261 | Out-String }\r\n+                      ~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (......:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n----------------------------------------------------------------------\r\nRan 6 tests in 0.390s\r\n\r\nOK"
+                  },
+                  {
+                      "name":  "test_audit_rawrxd_25_gates.py",
+                      "exit_code":  0,
+                      "sha256":  "4CE5F3EA1CB8905807C647D58739CE850DE11520836C3B2E8BF594DE70F67432",
+                      "output":  "python.exe : ..........\r\nAt F:\\rawrxd\\tools\\run_kimi_parity_offline.ps1:55 char:22\r\n+         try { $out = \u0026 $py.Source $path 2\u003e\u00261 | Out-String }\r\n+                      ~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (..........:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n----------------------------------------------------------------------\r\nRan 10 tests in 0.028s\r\n\r\nOK"
+                  },
+                  {
+                      "name":  "test_k2_q6k_scalar_oracle.py",
+                      "exit_code":  0,
+                      "sha256":  "1D5085F96C6A618CE7657A1F0C4CDDBC1B8448471BF38B3C9108B9DDD1DC73E0",
+                      "output":  "python.exe : .........\r\nAt F:\\rawrxd\\tools\\run_kimi_parity_offline.ps1:55 char:22\r\n+         try { $out = \u0026 $py.Source $path 2\u003e\u00261 | Out-String }\r\n+                      ~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (.........:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n----------------------------------------------------------------------\r\nRan 9 tests in 0.065s\r\n\r\nOK"
+                  },
+                  {
+                      "name":  "test_k2_ggml_quant_layout.py",
+                      "exit_code":  0,
+                      "sha256":  "881D3EEACB661930E3E138728F5C6D03346FEF78F390D799BE0F02CF73801ADE",
+                      "output":  "python.exe : ....\r\nAt F:\\rawrxd\\tools\\run_kimi_parity_offline.ps1:55 char:22\r\n+         try { $out = \u0026 $py.Source $path 2\u003e\u00261 | Out-String }\r\n+                      ~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (....:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n----------------------------------------------------------------------\r\nRan 4 tests in 0.008s\r\n\r\nOK"
+                  },
+                  {
+                      "name":  "test_k2_q4k_scalar_oracle.py",
+                      "exit_code":  0,
+                      "sha256":  "A60C8876D8A9F940AD3F28E6518C0ACBAA898DF730FC5BB1A1122F1DE620C157",
+                      "output":  "python.exe : ..........\r\nAt F:\\rawrxd\\tools\\run_kimi_parity_offline.ps1:55 char:22\r\n+         try { $out = \u0026 $py.Source $path 2\u003e\u00261 | Out-String }\r\n+                      ~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (..........:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n----------------------------------------------------------------------\r\nRan 10 tests in 0.065s\r\n\r\nOK"
+                  },
+                  {
+                      "name":  "test_k2_scalar_expert_oracle.py",
+                      "exit_code":  0,
+                      "sha256":  "F50E961BC8B44D3E9221D1C05E3FB49D90AD0B34FA57083CC218E5E2C9A92D52",
+                      "output":  "python.exe : .......\r\nAt F:\\rawrxd\\tools\\run_kimi_parity_offline.ps1:55 char:22\r\n+         try { $out = \u0026 $py.Source $path 2\u003e\u00261 | Out-String }\r\n+                      ~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (.......:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n----------------------------------------------------------------------\r\nRan 7 tests in 0.229s\r\n\r\nOK\r\nPASS_DIAGNOSTIC\r\nERROR"
+                  },
+                  {
+                      "name":  "test_k2_scalar_input_audit.py",
+                      "exit_code":  0,
+                      "sha256":  "EBDC4546F169DC2F582B3D3E37F4FFFC77024268BBC71E673407A23FAFE2DFB7",
+                      "output":  "python.exe : ......\r\nAt F:\\rawrxd\\tools\\run_kimi_parity_offline.ps1:55 char:22\r\n+         try { $out = \u0026 $py.Source $path 2\u003e\u00261 | Out-String }\r\n+                      ~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (......:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n----------------------------------------------------------------------\r\nRan 6 tests in 0.185s\r\n\r\nOK\r\nERROR: refusing to overwrite receipt"
+                  },
+                  {
+                      "name":  "test_k2_moe_capture_audit.py",
+                      "exit_code":  0,
+                      "sha256":  "2B9DEC175F6C311051A2D195ADDE7C495B736EA121CA8CB538686ACEEE40EBB2",
+                      "output":  "python.exe : .......\r\nAt F:\\rawrxd\\tools\\run_kimi_parity_offline.ps1:55 char:22\r\n+         try { $out = \u0026 $py.Source $path 2\u003e\u00261 | Out-String }\r\n+                      ~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (.......:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n----------------------------------------------------------------------\r\nRan 7 tests in 0.029s\r\n\r\nOK"
+                  },
+                  {
+                      "name":  "test_k2_stick_partial_repeatability.py",
+                      "exit_code":  0,
+                      "sha256":  "461B9E41AC55D6CC56F318A1A4F3FD6ECB09A3ADC99FB7F9D88F2D47DA82DB4F",
+                      "output":  "python.exe : .........\r\nAt F:\\rawrxd\\tools\\run_kimi_parity_offline.ps1:55 char:22\r\n+         try { $out = \u0026 $py.Source $path 2\u003e\u00261 | Out-String }\r\n+                      ~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (.........:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n----------------------------------------------------------------------\r\nRan 9 tests in 0.040s\r\n\r\nOK\r\nPASS_DIAGNOSTIC\r\nERROR"
+                  },
+                  {
+                      "name":  "test_k2_fused_parity_safety.py",
+                      "exit_code":  0,
+                      "sha256":  "617A15DA8794DB53E8A1005FB4CC416361318EAEB44D67FBAA602D555AA55510",
+                      "output":  "python.exe : ......\r\nAt F:\\rawrxd\\tools\\run_kimi_parity_offline.ps1:55 char:22\r\n+         try { $out = \u0026 $py.Source $path 2\u003e\u00261 | Out-String }\r\n+                      ~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (......:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n----------------------------------------------------------------------\r\nRan 6 tests in 0.001s\r\n\r\nOK"
+                  },
+                  {
+                      "name":  "msvc_capture_compile",
+                      "exit_code":  0,
+                      "source_sha256":  "0CEF94A35446A54AFB47FD0B7F096A6C151138654EEBDE097618A93F453B802B",
+                      "output":  "test_k2_moe_parity_capture.cpp"
+                  },
+                  {
+                      "name":  "msvc_capture_smoke",
+                      "exit_code":  0,
+                      "executable_sha256":  "C191BE3985B535425AE5D243155147A7E16C86FC8F0CB5E85222E0C3A836CA1B",
+                      "output":  "PASS"
+                  }
+              ]
+}
