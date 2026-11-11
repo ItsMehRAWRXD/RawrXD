@@ -1,0 +1,57 @@
+{
+  "gate": "VAL-064",
+  "name": "Cross-Environment Replay",
+  "status": "PASS",
+  "verification_result": "Compatible",
+  "cross_environment_compatible": true,
+  "checks": {
+    "cpu_verified": true,
+    "fp_verified": true,
+    "compiler_verified": true,
+    "tsc_verified": true,
+    "os_compatible": true
+  },
+  "source_fingerprint": {
+    "cpu_features": "sha256:7ee3bbbf...",
+    "mxcsr_default": "0x1fa0",
+    "os_build": 22631,
+    "tsc_frequency": 10000000,
+    "compiler_id": "sha256:msvc-1940...",
+    "avx512_present": false,
+    "fma_present": true,
+    "bmi2_present": true
+  },
+  "target_fingerprint": {
+    "cpu_features": "sha256:7ee3bbbf...",
+    "mxcsr_default": "0x1fa0",
+    "os_build": 22631,
+    "tsc_frequency": 10000000,
+    "compiler_id": "sha256:msvc-1940...",
+    "avx512_present": false,
+    "fma_present": true,
+    "bmi2_present": true
+  },
+  "captured_at": "2026-07-24T00:00:00.000Z",
+  "artifacts": {
+    "val064_host_fingerprint.hpp": "Host fingerprint capture and verification",
+    "certified_compiler.hpp": "Environment fingerprint injection",
+    "meta_circular_vm.hpp": "Cross-environment execution"
+  },
+  "hard_gates": {
+    "cpu_feature_match": "CPUID leafs 1, 7, 80000001h hash match",
+    "fp_environment_match": "MXCSR control flags (bits 6-15) match",
+    "compiler_version_match": "MSVC_FULL_VER hash match",
+    "tsc_frequency_match": "QPC frequency within 1% variance"
+  },
+  "soft_gates": {
+    "os_build_match": "Windows build number (warning only)"
+  },
+  "implementation": {
+    "cpuid_capture": "__cpuid, __cpuidex intrinsics",
+    "mxcsr_capture": "_mm_getcsr intrinsic",
+    "os_build_capture": "RtlGetVersion from ntdll.dll",
+    "tsc_capture": "QueryPerformanceFrequency",
+    "compiler_capture": "_MSC_FULL_VER macro"
+  },
+  "status": "COMPLETE"
+}

@@ -1,0 +1,177 @@
+﻿{
+    "summary":  {
+                    "failed":  0,
+                    "total":  17,
+                    "passed":  17
+                },
+    "version":  "15.0.0-dev",
+    "tests":  [
+                  {
+                      "status":  "PASS",
+                      "category":  "Integration",
+                      "name":  "test_inference_pipeline",
+                      "time":  "1,057.6ms",
+                      "exit_code":  0
+                  },
+                  {
+                      "status":  "PASS",
+                      "category":  "CPU",
+                      "name":  "test_avx2_rmsnorm",
+                      "time":  "1,009.6ms",
+                      "exit_code":  0
+                  },
+                  {
+                      "status":  "PASS",
+                      "category":  "CPU",
+                      "name":  "test_avx2_softmax",
+                      "time":  "1,011.2ms",
+                      "exit_code":  0
+                  },
+                  {
+                      "status":  "PASS",
+                      "category":  "Performance",
+                      "name":  "test_perf_quick",
+                      "time":  "1,014.7ms",
+                      "exit_code":  0
+                  },
+                  {
+                      "status":  "PASS",
+                      "category":  "Regression",
+                      "name":  "test_regression",
+                      "time":  "1,013.4ms",
+                      "exit_code":  0
+                  },
+                  {
+                      "status":  "PASS",
+                      "category":  "Stress",
+                      "name":  "test_memory",
+                      "time":  "1,010.0ms",
+                      "exit_code":  0
+                  },
+                  {
+                      "status":  "PASS",
+                      "category":  "GGUF",
+                      "name":  "test_gguf_magic",
+                      "time":  "1,012.2ms",
+                      "exit_code":  0
+                  },
+                  {
+                      "status":  "PASS",
+                      "category":  "Sampler",
+                      "name":  "test_temperature",
+                      "time":  "1,012.1ms",
+                      "exit_code":  0
+                  },
+                  {
+                      "status":  "PASS",
+                      "category":  "Tokenizer",
+                      "name":  "test_bpe_tokenizer",
+                      "time":  "1,013.3ms",
+                      "exit_code":  0
+                  },
+                  {
+                      "status":  "PASS",
+                      "category":  "Kernels",
+                      "name":  "test_attention",
+                      "time":  "1,023.9ms",
+                      "exit_code":  0
+                  },
+                  {
+                      "status":  "PASS",
+                      "category":  "Kernels",
+                      "name":  "test_gelu_activation",
+                      "time":  "1,012.0ms",
+                      "exit_code":  0
+                  },
+                  {
+                      "status":  "PASS",
+                      "category":  "Kernels",
+                      "name":  "test_layer_norm",
+                      "time":  "1,009.6ms",
+                      "exit_code":  0
+                  },
+                  {
+                      "status":  "PASS",
+                      "category":  "Kernels",
+                      "name":  "test_matmul",
+                      "time":  "1,009.4ms",
+                      "exit_code":  0
+                  },
+                  {
+                      "status":  "PASS",
+                      "category":  "Kernels",
+                      "name":  "test_rms_norm",
+                      "time":  "1,012.5ms",
+                      "exit_code":  0
+                  },
+                  {
+                      "status":  "PASS",
+                      "category":  "Kernels",
+                      "name":  "test_rope",
+                      "time":  "1,014.1ms",
+                      "exit_code":  0
+                  },
+                  {
+                      "status":  "PASS",
+                      "category":  "Kernels",
+                      "name":  "test_silu_activation",
+                      "time":  "1,014.2ms",
+                      "exit_code":  0
+                  },
+                  {
+                      "status":  "PASS",
+                      "category":  "Kernels",
+                      "name":  "test_softmax",
+                      "time":  "1,013.7ms",
+                      "exit_code":  0
+                  }
+              ],
+    "categories":  [
+                       {
+                           "name":  "Integration",
+                           "tests":  1,
+                           "passed":  1
+                       },
+                       {
+                           "name":  "CPU",
+                           "tests":  2,
+                           "passed":  2
+                       },
+                       {
+                           "name":  "Performance",
+                           "tests":  1,
+                           "passed":  1
+                       },
+                       {
+                           "name":  "Regression",
+                           "tests":  1,
+                           "passed":  1
+                       },
+                       {
+                           "name":  "Stress",
+                           "tests":  1,
+                           "passed":  1
+                       },
+                       {
+                           "name":  "GGUF",
+                           "tests":  1,
+                           "passed":  1
+                       },
+                       {
+                           "name":  "Sampler",
+                           "tests":  1,
+                           "passed":  1
+                       },
+                       {
+                           "name":  "Tokenizer",
+                           "tests":  1,
+                           "passed":  1
+                       },
+                       {
+                           "name":  "Kernels",
+                           "tests":  8,
+                           "passed":  8
+                       }
+                   ],
+    "timestamp":  "2026-07-15T11:59:56.575Z"
+}

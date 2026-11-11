@@ -1,0 +1,39 @@
+[geom] architecture=deepseek2 embedding_length=2048 head_count=16 head_count_kv=16 key_length=192 value_length=128 kv_lora_rank=512 blocks=27
+[geom]   blk.0.attn_q.weight          dims=[2048,3072]
+[geom]   blk.0.attn_kv_a_mqa.weight   dims=[2048,576]
+[geom]   blk.0.attn_kv_b.weight       dims=[512,4096]
+[geom]   blk.0.attn_output.weight     dims=[2048,2048]
+[TRACE] generation_begin (prompt_len=8 tokens=3 mode=certification)
+[geom] architecture=deepseek2 embedding_length=2048 head_count=16 head_count_kv=16 key_length=192 value_length=128 kv_lora_rank=512 blocks=27
+[geom]   blk.0.attn_q.weight          dims=[2048,3072]
+[geom]   blk.0.attn_kv_a_mqa.weight   dims=[2048,576]
+[geom]   blk.0.attn_kv_b.weight       dims=[512,4096]
+[geom]   blk.0.attn_output.weight     dims=[2048,2048]
+[TRACE] forward_0_begin
+[attn-scores] block=0 pos=0 scale=0.114721387 s0=1.000000
+[TRACE] forward_0_end (ok=1, 1990.1 ms)
+[attn-scores] block=0 pos=0 scale=0.114721387 s0=1.000000
+[TRACE] step 0 ok (gpu 1990.1 ms)
+[attn-scores] block=0 pos=1 scale=0.114721387 s0=0.236431 s1=0.763569
+[attn-scores] block=0 pos=1 scale=0.114721387 s0=0.236431 s1=0.763569
+[TRACE] step 1 ok (gpu 1116.7 ms)
+[attn-scores] block=0 pos=2 scale=0.114721387 s0=0.086273 s1=0.551206 s2=0.362521
+[attn-scores] block=0 pos=2 scale=0.114721387 s0=0.086273 s1=0.551206 s2=0.362521
+[TRACE] step 2 ok (gpu 977.6 ms)
+[TRACE] repeat_begin
+[TRACE] repeat_bind_begin (state reset: fresh executor + rebind)
+[geom] architecture=deepseek2 embedding_length=2048 head_count=16 head_count_kv=16 key_length=192 value_length=128 kv_lora_rank=512 blocks=27
+[geom]   blk.0.attn_q.weight          dims=[2048,3072]
+[geom]   blk.0.attn_kv_a_mqa.weight   dims=[2048,576]
+[geom]   blk.0.attn_kv_b.weight       dims=[512,4096]
+[geom]   blk.0.attn_output.weight     dims=[2048,2048]
+[TRACE] repeat_bind_end (ok)
+[TRACE] repeat_forward_0_begin
+[attn-scores] block=0 pos=0 scale=0.114721387 s0=1.000000
+[TRACE] repeat_forward_0_end (ok)
+[TRACE] repeat step 0 ok
+[attn-scores] block=0 pos=1 scale=0.114721387 s0=0.236431 s1=0.763569
+[TRACE] repeat step 1 ok
+[attn-scores] block=0 pos=2 scale=0.114721387 s0=0.086273 s1=0.551206 s2=0.362521
+[TRACE] repeat step 2 ok
+[TRACE] repeat_done

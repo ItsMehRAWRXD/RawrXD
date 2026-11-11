@@ -1,0 +1,1236 @@
+=============================================================================
+RAWRXD_MODELGENIE_TEACHER_FORCED_DECODE
+=============================================================================
+
+GGUF: F:\rawrxd\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf
+Evidence: F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001
+Teacher-forced tokens: 1 185 16 15 15 15 15 15 15 15 12 384 2 16 24 207 71955 1392 13 1002 6 95 3882 124 2 16 146 24 151 384 37 1827 253 16 24 92 1024 1827 253 16 24 92 12 22 738 30840 4399 4633 15 23 0 626 726 1628 2285 966 6 4 0 82 10 113 4647 1075 2 
+[ABI Reader] sizeof(OperationIR)=156 sizeof(ModelGenome)=440
+Original canonical hash: a1f2399df984ea69
+
+=== Teacher-forced decode (65 tokens) ===
+
+--- Step 0 (position 0), input token: 1 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF1C4060 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=185 max_val=5.976785
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF1C4060 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF1C4060 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=185 max_val=5.976785
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos0.bin
+Predicted token: 185, Logits finite: 1, Ops: 300/300
+
+--- Step 1 (position 1), input token: 185 ---
+[IR] Starting execution of 300 operations
+[DUMP] Wrote 2048 floats to layer0_pos1_rmsnorm_output.bin
+[DUMP] Wrote 3072 floats to layer0_pos1_k_new.bin
+[STATS] K_new: min=-4.694054 max=16.992382 mean=0.067392 var=2.892570 stddev=1.700756
+[DUMP] Wrote 3072 floats to layer0_pos1_k_cached_after_write.bin
+[STATS] K_cached_after_write: min=-4.699358 max=16.992353 mean=0.088313 var=2.889313 stddev=1.699798
+[DUMP] Wrote 3072 floats to layer0_pos1_q_before_rope.bin
+[DUMP] Wrote 3072 floats to layer0_pos1_q_before_rope.bin
+[STATS] Q_before_RoPE: min=-7.294725 max=17.030977 mean=-0.007007 var=2.812822 stddev=1.677147
+[DUMP] Wrote 128 floats to layer0_pos1_k_rope_raw_cached.bin
+[STATS] K_rope_raw_cached: min=-4.699358 max=16.992353 mean=0.222082 var=8.275674 stddev=2.876747
+[DUMP] Wrote 3072 floats to layer0_pos1_q.bin
+[DUMP] Wrote 192 floats to layer0_pos1_k.bin
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[STATS] Attention_Scores_L0P1: empty
+[SOFTMAX] Softmax_Weights_L0P1: empty
+[DUMP] Wrote 2048 floats to layer0_pos1_attn_output.bin
+[STATS] Attention_Output_L0P1: min=-0.400429 max=0.388624 mean=-0.001143 var=0.001295 stddev=0.035981
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF31A040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=185 max_val=7.911716
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF31A040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF31A040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=185 max_val=7.911716
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos1.bin
+Predicted token: 185, Logits finite: 1, Ops: 300/300
+
+--- Step 2 (position 2), input token: 16 ---
+[IR] Starting execution of 300 operations
+[DUMP] Wrote 192 floats to layer0_pos2_k.bin
+[STATS] K_pos2: min=-4.367257 max=17.208939 mean=0.022551 var=2.898133 stddev=1.702391
+[STATS] Attention_Scores_L0P2: empty
+[SOFTMAX] Softmax_Weights_L0P2: empty
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF352020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=13 max_val=10.829660
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF352020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF352020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=13 max_val=10.829660
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos2.bin
+Predicted token: 13, Logits finite: 1, Ops: 300/300
+
+--- Step 3 (position 3), input token: 15 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF352020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=13 max_val=10.932614
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF352020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF352020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=13 max_val=10.932614
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos3.bin
+Predicted token: 13, Logits finite: 1, Ops: 300/300
+
+--- Step 4 (position 4), input token: 15 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF352020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=4 max_val=9.028745
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF352020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF352020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=4 max_val=9.028745
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos4.bin
+Predicted token: 4, Logits finite: 1, Ops: 300/300
+
+--- Step 5 (position 5), input token: 15 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF394040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=15 max_val=9.183338
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF394040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF394040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=15 max_val=9.183338
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos5.bin
+Predicted token: 15, Logits finite: 1, Ops: 300/300
+
+--- Step 6 (position 6), input token: 15 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF3D6020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=15 max_val=11.264739
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF3D6020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF3D6020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=15 max_val=11.264739
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos6.bin
+Predicted token: 15, Logits finite: 1, Ops: 300/300
+
+--- Step 7 (position 7), input token: 15 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF394040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=15 max_val=13.563139
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF394040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF394040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=15 max_val=13.563139
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos7.bin
+Predicted token: 15, Logits finite: 1, Ops: 300/300
+
+--- Step 8 (position 8), input token: 15 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF42B0E0 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=15 max_val=11.574302
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF42B0E0 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF42B0E0 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=15 max_val=11.574302
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos8.bin
+Predicted token: 15, Logits finite: 1, Ops: 300/300
+
+--- Step 9 (position 9), input token: 15 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF394040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=15 max_val=13.614787
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF394040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF394040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=15 max_val=13.614787
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos9.bin
+Predicted token: 15, Logits finite: 1, Ops: 300/300
+
+--- Step 10 (position 10), input token: 12 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF43F020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=24 max_val=9.759635
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF43F020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF43F020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=24 max_val=9.759635
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos10.bin
+Predicted token: 24, Logits finite: 1, Ops: 300/300
+
+--- Step 11 (position 11), input token: 384 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF3DB060 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=12 max_val=17.444321
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF3DB060 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF3DB060 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=12 max_val=17.444321
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos11.bin
+Predicted token: 12, Logits finite: 1, Ops: 300/300
+
+--- Step 12 (position 12), input token: 2 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF122080 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=16 max_val=11.647930
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF122080 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF122080 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=16 max_val=11.647930
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos12.bin
+Predicted token: 16, Logits finite: 1, Ops: 300/300
+
+--- Step 13 (position 13), input token: 16 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF4401C0 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=15 max_val=14.298379
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF4401C0 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF4401C0 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=15 max_val=14.298379
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos13.bin
+Predicted token: 15, Logits finite: 1, Ops: 300/300
+
+--- Step 14 (position 14), input token: 24 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF45A020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=15 max_val=12.818486
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF45A020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF45A020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=15 max_val=12.818486
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos14.bin
+Predicted token: 15, Logits finite: 1, Ops: 300/300
+
+--- Step 15 (position 15), input token: 207 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF2CE020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=15 max_val=10.270201
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF2CE020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF2CE020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=15 max_val=10.270201
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos15.bin
+Predicted token: 15, Logits finite: 1, Ops: 300/300
+
+--- Step 16 (position 16), input token: 71955 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF393020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=26644 max_val=23.475588
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF393020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF393020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=26644 max_val=23.475588
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos16.bin
+Predicted token: 26644, Logits finite: 1, Ops: 300/300
+
+--- Step 17 (position 17), input token: 1392 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF4BF180 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=12 max_val=15.955540
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF4BF180 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF4BF180 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=12 max_val=15.955540
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos17.bin
+Predicted token: 12, Logits finite: 1, Ops: 300/300
+
+--- Step 18 (position 18), input token: 13 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF459040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=185 max_val=14.204688
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF459040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF459040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=185 max_val=14.204688
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos18.bin
+Predicted token: 185, Logits finite: 1, Ops: 300/300
+
+--- Step 19 (position 19), input token: 1002 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF28C0C0 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=317 max_val=22.017590
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF28C0C0 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF28C0C0 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=317 max_val=22.017590
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos19.bin
+Predicted token: 317, Logits finite: 1, Ops: 300/300
+
+--- Step 20 (position 20), input token: 6 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF310040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=647 max_val=18.131142
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF310040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF310040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=647 max_val=18.131142
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos20.bin
+Predicted token: 647, Logits finite: 1, Ops: 300/300
+
+--- Step 21 (position 21), input token: 95 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF459040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=82 max_val=8.808641
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF459040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF459040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=82 max_val=8.808641
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos21.bin
+Predicted token: 82, Logits finite: 1, Ops: 300/300
+
+--- Step 22 (position 22), input token: 3882 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF4BE180 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=1218 max_val=10.733457
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF4BE180 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF4BE180 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=1218 max_val=10.733457
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos22.bin
+Predicted token: 1218, Logits finite: 1, Ops: 300/300
+
+--- Step 23 (position 23), input token: 124 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF28C0C0 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=101 max_val=29.739523
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF28C0C0 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF28C0C0 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=101 max_val=29.739523
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos23.bin
+Predicted token: 101, Logits finite: 1, Ops: 300/300
+
+--- Step 24 (position 24), input token: 2 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF28C0C0 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=16 max_val=10.870207
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF28C0C0 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF28C0C0 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=16 max_val=10.870207
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos24.bin
+Predicted token: 16, Logits finite: 1, Ops: 300/300
+
+--- Step 25 (position 25), input token: 16 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF459040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=24 max_val=15.139280
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF459040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF459040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=24 max_val=15.139280
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos25.bin
+Predicted token: 24, Logits finite: 1, Ops: 300/300
+
+--- Step 26 (position 26), input token: 146 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF49B020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=94 max_val=20.344891
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF49B020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF49B020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=94 max_val=20.344891
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos26.bin
+Predicted token: 94, Logits finite: 1, Ops: 300/300
+
+--- Step 27 (position 27), input token: 24 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF28C0C0 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=26 max_val=11.838598
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF28C0C0 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF28C0C0 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=26 max_val=11.838598
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos27.bin
+Predicted token: 26, Logits finite: 1, Ops: 300/300
+
+--- Step 28 (position 28), input token: 151 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF393020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=101 max_val=18.913773
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF393020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF393020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=101 max_val=18.913773
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos28.bin
+Predicted token: 101, Logits finite: 1, Ops: 300/300
+
+--- Step 29 (position 29), input token: 384 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF2CE020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=2 max_val=14.245272
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF2CE020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF2CE020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=2 max_val=14.245272
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos29.bin
+Predicted token: 2, Logits finite: 1, Ops: 300/300
+
+--- Step 30 (position 30), input token: 37 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF2CE020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=13 max_val=10.591615
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF2CE020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF2CE020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=13 max_val=10.591615
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos30.bin
+Predicted token: 13, Logits finite: 1, Ops: 300/300
+
+--- Step 31 (position 31), input token: 1827 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF310040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=13 max_val=5.776237
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF310040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF310040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=13 max_val=5.776237
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos31.bin
+Predicted token: 13, Logits finite: 1, Ops: 300/300
+
+--- Step 32 (position 32), input token: 253 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF145020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=254 max_val=9.392962
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF145020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF145020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=254 max_val=9.392962
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos32.bin
+Predicted token: 254, Logits finite: 1, Ops: 300/300
+
+--- Step 33 (position 33), input token: 16 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF145020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=24 max_val=10.448370
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF145020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF145020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=24 max_val=10.448370
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos33.bin
+Predicted token: 24, Logits finite: 1, Ops: 300/300
+
+--- Step 34 (position 34), input token: 24 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF187040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=24 max_val=7.955059
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF187040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF187040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=24 max_val=7.955059
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos34.bin
+Predicted token: 24, Logits finite: 1, Ops: 300/300
+
+--- Step 35 (position 35), input token: 92 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF310040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=16 max_val=7.687804
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF310040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF310040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=16 max_val=7.687804
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos35.bin
+Predicted token: 16, Logits finite: 1, Ops: 300/300
+
+--- Step 36 (position 36), input token: 1024 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF36B120 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=253 max_val=7.345796
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF36B120 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF36B120 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=253 max_val=7.345796
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos36.bin
+Predicted token: 253, Logits finite: 1, Ops: 300/300
+
+--- Step 37 (position 37), input token: 1827 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF3DB060 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=253 max_val=8.591696
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF3DB060 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF3DB060 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=253 max_val=8.591696
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos37.bin
+Predicted token: 253, Logits finite: 1, Ops: 300/300
+
+--- Step 38 (position 38), input token: 253 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF28C0C0 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=16 max_val=9.994202
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF28C0C0 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF28C0C0 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=16 max_val=9.994202
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos38.bin
+Predicted token: 16, Logits finite: 1, Ops: 300/300
+
+--- Step 39 (position 39), input token: 16 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF28C0C0 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=24 max_val=12.270391
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF28C0C0 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF28C0C0 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=24 max_val=12.270391
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos39.bin
+Predicted token: 24, Logits finite: 1, Ops: 300/300
+
+--- Step 40 (position 40), input token: 24 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF187040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=92 max_val=9.678856
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF187040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF187040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=92 max_val=9.678856
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos40.bin
+Predicted token: 92, Logits finite: 1, Ops: 300/300
+
+--- Step 41 (position 41), input token: 92 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF187040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=384 max_val=7.925667
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF187040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF187040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=384 max_val=7.925667
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos41.bin
+Predicted token: 384, Logits finite: 1, Ops: 300/300
+
+--- Step 42 (position 42), input token: 12 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF187040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=384 max_val=8.511575
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF187040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF187040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=384 max_val=8.511575
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos42.bin
+Predicted token: 384, Logits finite: 1, Ops: 300/300
+
+--- Step 43 (position 43), input token: 22 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF187040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=16 max_val=8.470759
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF187040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF187040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=16 max_val=8.470759
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos43.bin
+Predicted token: 16, Logits finite: 1, Ops: 300/300
+
+--- Step 44 (position 44), input token: 738 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF2F1180 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=16 max_val=9.140720
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF2F1180 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF2F1180 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=16 max_val=9.140720
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos44.bin
+Predicted token: 16, Logits finite: 1, Ops: 300/300
+
+--- Step 45 (position 45), input token: 30840 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF2CE020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=13 max_val=8.394014
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF2CE020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF2CE020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=13 max_val=8.394014
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos45.bin
+Predicted token: 13, Logits finite: 1, Ops: 300/300
+
+--- Step 46 (position 46), input token: 4399 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF49A020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=4526 max_val=12.046058
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF49A020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF49A020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=4526 max_val=12.046058
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos46.bin
+Predicted token: 4526, Logits finite: 1, Ops: 300/300
+
+--- Step 47 (position 47), input token: 4633 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF145020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=255 max_val=10.277817
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF145020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF145020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=255 max_val=10.277817
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos47.bin
+Predicted token: 255, Logits finite: 1, Ops: 300/300
+
+--- Step 48 (position 48), input token: 15 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF145020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=6399 max_val=12.457904
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF145020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF145020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=6399 max_val=12.457904
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos48.bin
+Predicted token: 6399, Logits finite: 1, Ops: 300/300
+
+--- Step 49 (position 49), input token: 23 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF187040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=68 max_val=10.336920
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF187040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF187040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=68 max_val=10.336920
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos49.bin
+Predicted token: 68, Logits finite: 1, Ops: 300/300
+
+--- Step 50 (position 50), input token: 0 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF352020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=950 max_val=10.690804
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF352020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF352020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=950 max_val=10.690804
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos50.bin
+Predicted token: 950, Logits finite: 1, Ops: 300/300
+
+--- Step 51 (position 51), input token: 626 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF2CE020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=185 max_val=7.808614
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF2CE020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF2CE020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=185 max_val=7.808614
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos51.bin
+Predicted token: 185, Logits finite: 1, Ops: 300/300
+
+--- Step 52 (position 52), input token: 726 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF49A020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=185 max_val=6.325251
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF49A020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF49A020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=185 max_val=6.325251
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos52.bin
+Predicted token: 185, Logits finite: 1, Ops: 300/300
+
+--- Step 53 (position 53), input token: 1628 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF310040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=207 max_val=6.114553
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF310040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF310040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=207 max_val=6.114553
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos53.bin
+Predicted token: 207, Logits finite: 1, Ops: 300/300
+
+--- Step 54 (position 54), input token: 2285 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF2CE020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=2506 max_val=9.798350
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF2CE020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF2CE020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=2506 max_val=9.798350
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos54.bin
+Predicted token: 2506, Logits finite: 1, Ops: 300/300
+
+--- Step 55 (position 55), input token: 966 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF145020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=207 max_val=7.550593
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF145020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF145020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=207 max_val=7.550593
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos55.bin
+Predicted token: 207, Logits finite: 1, Ops: 300/300
+
+--- Step 56 (position 56), input token: 6 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF3D5020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=82 max_val=7.375899
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF3D5020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF3D5020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=82 max_val=7.375899
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos56.bin
+Predicted token: 82, Logits finite: 1, Ops: 300/300
+
+--- Step 57 (position 57), input token: 4 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF3D5020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=185 max_val=6.378711
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF3D5020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF3D5020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=185 max_val=6.378711
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos57.bin
+Predicted token: 185, Logits finite: 1, Ops: 300/300
+
+--- Step 58 (position 58), input token: 0 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF333180 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=185 max_val=7.126047
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF333180 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF333180 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=185 max_val=7.126047
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos58.bin
+Predicted token: 185, Logits finite: 1, Ops: 300/300
+
+--- Step 59 (position 59), input token: 82 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF103040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=0 max_val=6.893262
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF103040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF103040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=0 max_val=6.893262
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos59.bin
+Predicted token: 0, Logits finite: 1, Ops: 300/300
+
+--- Step 60 (position 60), input token: 10 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF103040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=0 max_val=6.428281
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF103040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF103040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=0 max_val=6.428281
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos60.bin
+Predicted token: 0, Logits finite: 1, Ops: 300/300
+
+--- Step 61 (position 61), input token: 113 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF145020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=207 max_val=5.819060
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF145020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF145020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=207 max_val=5.819060
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos61.bin
+Predicted token: 207, Logits finite: 1, Ops: 300/300
+
+--- Step 62 (position 62), input token: 4647 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF145020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=90 max_val=7.377553
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF145020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF145020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=90 max_val=7.377553
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos62.bin
+Predicted token: 90, Logits finite: 1, Ops: 300/300
+
+--- Step 63 (position 63), input token: 1075 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF145020 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=209 max_val=21.537422
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF145020 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF145020 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=209 max_val=21.537422
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos63.bin
+Predicted token: 209, Logits finite: 1, Ops: 300/300
+
+--- Step 64 (position 64), input token: 2 ---
+[IR] Starting execution of 300 operations
+[IR] Progress: 50/300 ops visited, 50 dispatched, 0 skipped
+[IR] Progress: 100/300 ops visited, 100 dispatched, 0 skipped
+[IR] Progress: 150/300 ops visited, 150 dispatched, 0 skipped
+[IR] Progress: 200/300 ops visited, 200 dispatched, 0 skipped
+[IR] Progress: 250/300 ops visited, 250 dispatched, 0 skipped
+[LMHEAD_WRITE] op=299 output_id=299 ptr=000001FFAF103040 elements=102400
+[LMHEAD_WRITE] finite=1 argmax=16 max_val=9.536677
+[IR] Progress: 300/300 ops visited, 300 dispatched, 0 skipped
+[IR] Execution complete: visited=300 dispatched=300 skipped=0
+[LMHEAD_READ] requested=299 ptr=000001FFAF103040 elements=102400
+[LMHEAD_READ] requested=14000 ptr=0000000000000000 elements=0
+[LMHEAD_AUTHORITY] op=299 output_id=299 ptr=000001FFAF103040 elements=102400
+[LMHEAD_AUTHORITY] PASS: argmax=16 max_val=9.536677
+Saved logits to F:\rawrxd\evidence\RAWRXD_CORE_DLL_NATIVE_E2E_001\native_tf_logits_pos64.bin
+Predicted token: 16, Logits finite: 1, Ops: 300/300
+
+=============================================================================
+TEACHER_FORCED_DECODE=PASS
+TOKENS_PROCESSED=65
+=============================================================================

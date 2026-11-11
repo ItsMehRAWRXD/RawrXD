@@ -1,0 +1,17 @@
+{
+  "schema": "RAWRXD_AGENT_E2E_001",
+  "binary": "F:\\rawrxd\\build_msvc\\bin-msvc\\rawr.exe",
+  "model": "llama3.2:3b",
+  "backend": "ollama",
+  "workspace": "F:\\rawrxd\\evidence\\agent_fixture",
+  "motd_ack": true,
+  "process_reached_agent_loop": true,
+  "tool_call_observed": false,
+  "file_modified": false,
+  "build_observed": false,
+  "test_observed": false,
+  "rollback_observed": false,
+  "result": "FAIL",
+  "failure": "Unknown error after MOTD acknowledgement; no tool call or file mutation; bounded process terminated.",
+  "fixture_original": "RAWRXD_AGENT_FIXTURE_ORIGINAL"
+}
