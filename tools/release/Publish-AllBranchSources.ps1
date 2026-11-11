@@ -7,6 +7,7 @@ param([string]$Repository = 'F:\rawrxd',
       [switch]$SkipBranches,
       [switch]$RootWorktreeOnly,
       [switch]$IncludeIgnoredSources,
+      [switch]$CaptureInitializingWorktrees,
       [string]$ResumePlanPath,
       [string[]]$ExcludeWorktrees = @(),
       [string[]]$CompletedLabels = @())
@@ -100,7 +101,8 @@ foreach ($block in $worktreeBlocks) {
     $directory = $Matches[1].TrimEnd("`r")
     if ($RootWorktreeOnly -and [IO.Path]::GetFullPath($directory) -ne $root) { continue }
     if (@($ExcludeWorktrees | Where-Object { [IO.Path]::GetFullPath($_) -eq [IO.Path]::GetFullPath($directory) }).Count) { continue }
-    if ($block -match '(?m)^locked initializing\r?$') {
+    $initializing = $block -match '(?m)^locked initializing\r?$'
+    if ($initializing -and -not $CaptureInitializingWorktrees) {
         $failures.Add([pscustomobject]@{Worktree = $directory; Error = 'worktree initialization incomplete; no snapshot attempted'}); continue
     }
     if (-not (Test-Path -LiteralPath $directory -PathType Container)) {
@@ -108,21 +110,30 @@ foreach ($block in $worktreeBlocks) {
     }
     try {
         $head = (Invoke-Git $directory @('rev-parse', 'HEAD')).Trim()
+        $scanIndex = ''
+        if ($initializing) {
+            # A half-created checkout has no meaningful ordinary index. Read
+            # against its baseline using our own index, without changing locks.
+            $scanIndex = Join-Path $out ('initializing-index-' + [Guid]::NewGuid().ToString('N'))
+            $null = Invoke-Git $directory @('read-tree', $head) $null $scanIndex
+        }
         $label = 'detached-' + $head.Substring(0, 12)
         if ($block -match '(?m)^branch refs/heads/(.+)\r?$') { $label = $Matches[1].TrimEnd("`r") }
         Write-Output ('INVENTORY_START ' + $label)
-        $changed = (Invoke-Git $directory @('diff', '--no-ext-diff', '--name-only', '--no-renames', '-z', 'HEAD')) +
-                   (Invoke-Git $directory @('ls-files', '--others', '--exclude-standard', '-z'))
+        $changed = (Invoke-Git $directory @('diff', '--no-ext-diff', '--name-only', '--no-renames', '-z', 'HEAD') $null $scanIndex) +
+                   (Invoke-Git $directory @('ls-files', '--others', '--exclude-standard', '-z') $null $scanIndex)
         if ($IncludeIgnoredSources) {
             $changed += Invoke-Git $directory @('ls-files', '--others', '--ignored', '--exclude-standard', '-z', '--',
                 ':(glob)**/*.bat', ':(glob)**/*.cmd', ':(glob)**/*.cpp', ':(glob)**/*.c',
                 ':(glob)**/*.h', ':(glob)**/*.hpp', ':(glob)**/*.ps1', ':(glob)**/*.py',
                 ':(glob)**/*.md', ':(glob)**/*.asm', ':(glob)**/*.cs', ':(glob)**/*.rs',
-                ':(glob)**/*.ts', ':(glob)**/*.js', ':(glob)evidence/**/*.log')
+                ':(glob)**/*.ts', ':(glob)**/*.js', ':(glob)evidence/**/*.log') $null $scanIndex
         }
         $paths = @($changed.Split([char]0, [StringSplitOptions]::RemoveEmptyEntries) | Sort-Object -Unique)
         $eligible = [Collections.Generic.List[string]]::new()
         foreach ($path in $paths) {
+            # Missing files can be an unfinished checkout, not user deletions.
+            if ($initializing -and -not [IO.File]::Exists((Join-Path $directory $path))) { continue }
             $reason = Exclusion-Reason $path
             if ($reason) { $exclusions.Add([pscustomobject]@{Scope = $label; Path = $path; Reason = $reason}); continue }
             $absolute = Join-Path $directory $path
@@ -131,7 +142,7 @@ foreach ($block in $worktreeBlocks) {
             }
             $eligible.Add($path)
         }
-        $staged = Invoke-Git $directory @('diff', '--cached', '--name-only', '-z')
+        $staged = if ($initializing) { '' } else { Invoke-Git $directory @('diff', '--cached', '--name-only', '-z') }
         if ($staged) {
             $stagedTree = (Invoke-Git $directory @('write-tree')).Trim()
             $plans.Add([pscustomobject]@{Label = 'staged/' + $label; Tree = $stagedTree; OriginalCommit = $head; Worktree = $directory; Kind = 'staged-index'})
@@ -145,7 +156,8 @@ foreach ($block in $worktreeBlocks) {
             $addArguments += @('--pathspec-from-file=-', '--pathspec-file-nul')
             $null = Invoke-Git $directory $addArguments $pathBytes $index
             $tree = (Invoke-Git $directory @('write-tree') $null $index).Trim()
-            $plans.Add([pscustomobject]@{Label = 'worktree/' + $label; Tree = $tree; OriginalCommit = $head; Worktree = $directory; Kind = 'working-files'; ChangedPaths = $eligible.Count})
+            $kind = if ($initializing) { 'initializing-present-files-overlay' } else { 'working-files' }
+            $plans.Add([pscustomobject]@{Label = 'worktree/' + $label; Tree = $tree; OriginalCommit = $head; Worktree = $directory; Kind = $kind; ChangedPaths = $eligible.Count})
         }
         Write-Output ('INVENTORIED ' + $label + ' changed=' + $paths.Count + ' publishable=' + $eligible.Count)
     } catch { $failures.Add([pscustomobject]@{Worktree = $directory; Error = $_.Exception.Message}) }
@@ -283,6 +295,7 @@ try {
         $metadataText = [ordered]@{schema_version = 1; kind = $plan.Kind; original_branch = $plan.Label;
             original_commit = $plan.OriginalCommit; worktree = $plan.Worktree;
             publication = 'Source snapshot on a new branch; original history is preserved locally.';
+            initializing_checkout_policy = 'For initializing-present-files-overlay, absent files are retained from baseline; deletion intent cannot be verified.';
             lfs_status = 'Remote account budget exceeded; locally available text payloads materialized as regular Git blobs.';
             exclusions_receipt = 'Local evidence/GITHUB_BRANCH_SYNC_001/' + $run + '/exclusions-batches.jsonl';
             release_certification = 'NOT_CLAIMED'} | ConvertTo-Json -Depth 5
