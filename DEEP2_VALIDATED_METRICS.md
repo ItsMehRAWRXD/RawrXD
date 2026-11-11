@@ -238,3 +238,52 @@ RECEIPT evidence/strata_bench_001/strata_bench_strata_001.json
 *Addendum Version: 1.0*
 *Date: 2026-11-11*
 *Status: throughput observed; correctness open*
+
+---
+
+## Addendum 2 — Cross-architecture norm comparison (2026-11-11)
+
+The first addendum reported `hidden state norm explosion ~1.6e2` for gemma3-1b.
+Running a second architecture through the same engine shows that figure was a
+property of the model's shape, not evidence of a numerical fault.
+
+| Model | hidden | Norm range | RMS (norm / sqrt(hidden)) |
+|-------|--------|------------|---------------------------|
+| gemma3-1b-Q2_K | 1152 | 132 - 167 | ~4.7 |
+| llama3.2-3b-Q2_K | 3072 | 79 - 91 | ~1.5 |
+
+Both are healthy magnitudes for an unnormalized residual stream. The engine's
+soft gate compared the raw L2 norm against a flat `100.0`, which passes
+llama3.2 and flags gemma3 purely because `sqrt(3072) > sqrt(1152)`. The gate now
+compares the RMS, which is architecture independent, and reports `hidden` and
+`norm` alongside it. After the change gemma3 emits zero warnings.
+
+### Correctness is still open, and this is the real signal
+
+The norm gate was a diagnostic. Output remains wrong on both architectures:
+
+```
+gemma3-1b-Q2_K    [ask] AGENT_RESULT_5=0   (expected AGENT_RESULT_5)
+llama3.2-3b-Q2_K  first sampled token "<<"  (expected "DEEP2")
+```
+
+llama3.2 is the more useful case: its hidden-state norm is healthy (RMS ~1.5),
+so the residual stream is not diverging, yet the sampled token is still wrong.
+That points away from the norm and dequantization-scale hypothesis in Addendum 1
+and toward the logits path: `lm_head` application, the tied-embedding lookup, or
+sampling, rather than accumulation blow-up.
+
+Supporting counters from the same runs:
+
+```
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_REAL_GPU_FORWARD=0
+HOST_FORWARD_LAYER_CALLS=0
+```
+
+All forward work is on the host path, so the defect is in the CPU kernels or the
+logits stage, not in the Vulkan dispatch.
+
+*Addendum 2 Version: 1.0*
+*Date: 2026-11-11*
+*Status: norm gate corrected; logits-path defect open*
