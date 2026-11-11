@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "kind": "working-files",
+  "original_branch": "worktree/recovery/unit1-build-ci",
+  "original_commit": "47af78d4a7929c20aeb38e73019b9385fc9cfce1",
+  "worktree": "F:/rawrxd/.worktrees/recon-preservation",
+  "publication": "Source snapshot on a new branch; original history is preserved locally.",
+  "lfs_status": "Remote account budget exceeded; locally available text payloads materialized as regular Git blobs.",
+  "exclusions_receipt": "Local evidence/GITHUB_BRANCH_SYNC_001/583de580/exclusions-batches.jsonl",
+  "release_certification": "NOT_CLAIMED"
+}
