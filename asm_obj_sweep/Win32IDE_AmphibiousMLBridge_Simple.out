@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\Win32IDE_AmphibiousMLBridge_Simple.asm
+D:\rawrxd\Win32IDE_AmphibiousMLBridge_Simple.asm(90) : error A2008:syntax error : .
+D:\rawrxd\Win32IDE_AmphibiousMLBridge_Simple.asm(90) : error A2088:END directive required at end of file
+D:\rawrxd\Win32IDE_AmphibiousMLBridge_Simple.asm(21) : error A2206:missing operator in expression
+D:\rawrxd\Win32IDE_AmphibiousMLBridge_Simple.asm(22) : error A2206:missing operator in expression
+D:\rawrxd\Win32IDE_AmphibiousMLBridge_Simple.asm(52) : error A2206:missing operator in expression
+D:\rawrxd\Win32IDE_AmphibiousMLBridge_Simple.asm(59) : error A2206:missing operator in expression

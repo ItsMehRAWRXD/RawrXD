@@ -1,0 +1,17 @@
+ Assembling: D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\lsp\status.asm
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\lsp\status.asm(11) : error A2008:syntax error : CreateWindowEx
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\lsp\status.asm(18) : error A2008:syntax error : SetTimer
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\lsp\status.asm(20) : error A2008:syntax error : LOG_INFO
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\lsp\status.asm(33) : error A2008:syntax error : if
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\lsp\status.asm(35) : error A2008:syntax error : SetWindowText
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\lsp\status.asm(37) : error A2008:syntax error : elseif
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\lsp\status.asm(39) : error A2008:syntax error : SetWindowText
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\lsp\status.asm(41) : error A2008:syntax error : elseif
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\lsp\status.asm(43) : error A2008:syntax error : SetWindowText
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\lsp\status.asm(45) : error A2008:syntax error : .
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\lsp\status.asm(47) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\lsp\status.asm(49) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\lsp\status.asm(50) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\lsp\status.asm(34) : error A2009:syntax error in expression
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\lsp\status.asm(38) : error A2009:syntax error in expression
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\lsp\status.asm(42) : error A2009:syntax error in expression

@@ -1,0 +1,14 @@
+﻿P1_PRODUCT_PATH_SMOKE / Scenario 1
+==================================
+exe=G:\rawrxd-p1-promote\build-win32ide-p1\bin\RawrXD-Win32IDE.exe
+sha256=D7BD2FFBD23BDFD6DDE2553F05BD1CD7ED38998555D3784603534496F7B24091
+sha_match_frozen=True
+process_started=1
+pid=7612
+window_visible=True
+window_title=Error
+window_class=#32770
+HEXMAG_BACKEND_MASM=False
+HEXMAG_LINKED_1=False
+stderr_file=evidence\P1_PRODUCT_PATH_SMOKE\s01_stderr.txt
+result=PARTIAL_WINDOW_NO_DIAG

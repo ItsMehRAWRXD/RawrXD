@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\src\RawrXD_Workstation_Bypass.asm
+D:\rawrxd\src\RawrXD_Workstation_Bypass.asm(31) : error A2008:syntax error : Aggressive_Q2K_Dequant
+D:\rawrxd\src\RawrXD_Workstation_Bypass.asm(35) : error A2008:syntax error : Aggressive_Q2K_Dequant
+D:\rawrxd\src\RawrXD_Workstation_Bypass.asm(14) : error A2006:undefined symbol : SwarmD_Aggressive_Q2K_Dequant
+D:\rawrxd\src\RawrXD_Workstation_Bypass.asm(9) : error A2206:missing operator in expression

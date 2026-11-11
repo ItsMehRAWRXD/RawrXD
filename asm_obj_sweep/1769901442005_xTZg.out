@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_HTTP_Router.asm\1769901442005_xTZg.asm
+D:\rawrxd\history\all_versions\src\RawrXD_HTTP_Router.asm\1769901442005_xTZg.asm(19) : error A2005:symbol redefinition : WSADATA
+D:\rawrxd\history\all_versions\src\RawrXD_HTTP_Router.asm\1769901442005_xTZg.asm(37) : error A2070:invalid instruction operands

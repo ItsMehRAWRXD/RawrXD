@@ -1,0 +1,8025 @@
+{
+  "version": "15.0.4",
+  "release_date": "2026-07-15T21:52:20.443811",
+  "artifacts": [
+    "release\\RawrXD-v15.0.4.zip"
+  ],
+  "validation": {
+    "tests_passed": 31,
+    "tests_total": 31,
+    "pass_rate": 100.0,
+    "ci_stages": 7,
+    "ci_stages_passed": 7
+  },
+  "performance": {
+    "matmul_gops": 4.37,
+    "softmax_mops": 614.4,
+    "rmsnorm_mops": 409.6
+  },
+  "files": [
+    {
+      "path": "ci_pipeline.py",
+      "size": 10681
+    },
+    {
+      "path": "ci_report.json",
+      "size": 661
+    },
+    {
+      "path": "LICENSE",
+      "size": 30
+    },
+    {
+      "path": "RawrXD.exe",
+      "size": 586240
+    },
+    {
+      "path": "README.md",
+      "size": 6230
+    },
+    {
+      "path": "validation_report.html",
+      "size": 9305
+    },
+    {
+      "path": "version.h",
+      "size": 541
+    },
+    {
+      "path": "docs\\2T_MODEL_HARDWARE_ANALYSIS.md",
+      "size": 12644
+    },
+    {
+      "path": "docs\\ABI_Fix_Summary.md",
+      "size": 3654
+    },
+    {
+      "path": "docs\\ACTUAL_IMPLEMENTATION_STATUS.md",
+      "size": 8157
+    },
+    {
+      "path": "docs\\advanced_inference.md",
+      "size": 8616
+    },
+    {
+      "path": "docs\\AGENTIC_AND_MODEL_LOADING_AUDIT.md",
+      "size": 8272
+    },
+    {
+      "path": "docs\\AGENTIC_AUDIT_STUBS_AND_WIRING.md",
+      "size": 7875
+    },
+    {
+      "path": "docs\\AGENTIC_BROWSER_LAYER.md",
+      "size": 2457
+    },
+    {
+      "path": "docs\\AGENTIC_MODE_SWITCHER_IMPLEMENTATION.md",
+      "size": 5261
+    },
+    {
+      "path": "docs\\AGENTIC_ORCHESTRATOR_ONE_ROOF.md",
+      "size": 2105
+    },
+    {
+      "path": "docs\\AGENTIC_PIPELINE_AUDIT.md",
+      "size": 6206
+    },
+    {
+      "path": "docs\\AGENTIC_PLANNING_ORCHESTRATOR.md",
+      "size": 1664
+    },
+    {
+      "path": "docs\\AGENTIC_POLICY_STATE_SCHEMA.md",
+      "size": 2742
+    },
+    {
+      "path": "docs\\AGENTIC_REALITY_AUDIT_2026-03-07.md",
+      "size": 3187
+    },
+    {
+      "path": "docs\\AGENTIC_REALITY_AUDIT_AUTO.md",
+      "size": 27772
+    },
+    {
+      "path": "docs\\AGENTIC_REALITY_MANIFEST.json",
+      "size": 3510108
+    },
+    {
+      "path": "docs\\AGENT_AUTONOMY_ELECTRON.md",
+      "size": 1871
+    },
+    {
+      "path": "docs\\AGENT_COMPLETION_PROTOCOL.md",
+      "size": 4470
+    },
+    {
+      "path": "docs\\AGENT_EXECUTION_KERNEL_PROMPT.md",
+      "size": 2501
+    },
+    {
+      "path": "docs\\AGENT_TASKS_1_1_1_1_1.md",
+      "size": 13470
+    },
+    {
+      "path": "docs\\AITK_INSTRUCTIONS.md",
+      "size": 1035
+    },
+    {
+      "path": "docs\\AI_CONTROL_BRIDGE.md",
+      "size": 7323
+    },
+    {
+      "path": "docs\\AMPHIBIOUS_HYBRID_INTEGRATION.md",
+      "size": 3029
+    },
+    {
+      "path": "docs\\ANALYSIS_AND_AUDIT_QUICKSTART.md",
+      "size": 4321
+    },
+    {
+      "path": "docs\\ANALYSIS_QUICKSTART.md",
+      "size": 3766
+    },
+    {
+      "path": "docs\\API.md",
+      "size": 9390
+    },
+    {
+      "path": "docs\\API_KEY_INTEGRATION.md",
+      "size": 7526
+    },
+    {
+      "path": "docs\\API_REFERENCE.md",
+      "size": 8467
+    },
+    {
+      "path": "docs\\API_REFERENCE_PHASE2.md",
+      "size": 18161
+    },
+    {
+      "path": "docs\\ARCHITECTURAL_PRESSURE_POINTS.md",
+      "size": 18095
+    },
+    {
+      "path": "docs\\ARCHITECTURE.md",
+      "size": 10553
+    },
+    {
+      "path": "docs\\ARCHITECTURE_VALIDATOR.md",
+      "size": 5779
+    },
+    {
+      "path": "docs\\ASM_PASS_THROUGH_AUDIT_REPORT.md",
+      "size": 16897
+    },
+    {
+      "path": "docs\\ASSESSMENT_FINISH_USABLE.md",
+      "size": 8862
+    },
+    {
+      "path": "docs\\ASYNC_BRIDGE_ARCHITECTURE.md",
+      "size": 8423
+    },
+    {
+      "path": "docs\\ASYNC_BRIDGE_INTEGRATION.md",
+      "size": 6362
+    },
+    {
+      "path": "docs\\AUDIT_100_PERCENT_RAW RXD.md",
+      "size": 10923
+    },
+    {
+      "path": "docs\\AUDIT_100_PERCENT_WORKING_ONLY.md",
+      "size": 10414
+    },
+    {
+      "path": "docs\\AUTONOMOUS_AGENT_ELECTRON.md",
+      "size": 4741
+    },
+    {
+      "path": "docs\\AVX512_FP8_KERNEL_SUMMARY.md",
+      "size": 7940
+    },
+    {
+      "path": "docs\\BATCH01_RUNTIME_SURFACE.md",
+      "size": 2547
+    },
+    {
+      "path": "docs\\BAYESIAN_LITE_HYPOTHESES.md",
+      "size": 848
+    },
+    {
+      "path": "docs\\BENCHMARKING_CRITICAL_GAPS.md",
+      "size": 7760
+    },
+    {
+      "path": "docs\\BENCHMARK_KERNEL_VARIANTS.md",
+      "size": 1658
+    },
+    {
+      "path": "docs\\BGZIPXD_WASM.md",
+      "size": 1882
+    },
+    {
+      "path": "docs\\BOTTLENECK_IMPLEMENTATION_SUMMARY.md",
+      "size": 5941
+    },
+    {
+      "path": "docs\\BRIDGE_GAP_AUDIT.md",
+      "size": 10529
+    },
+    {
+      "path": "docs\\BRUTAL-GZIP.md",
+      "size": 500
+    },
+    {
+      "path": "docs\\BRUTAL-NEON.md",
+      "size": 490
+    },
+    {
+      "path": "docs\\Build.md",
+      "size": 7435
+    },
+    {
+      "path": "docs\\BUILD_AUTOMATION_STATUS.md",
+      "size": 6295
+    },
+    {
+      "path": "docs\\BUILD_DEPENDENCIES.md",
+      "size": 4478
+    },
+    {
+      "path": "docs\\BUILD_HOST_MATRIX.md",
+      "size": 3276
+    },
+    {
+      "path": "docs\\BUILD_VS2022_NINJA.md",
+      "size": 2157
+    },
+    {
+      "path": "docs\\CHANGELOG.md",
+      "size": 19483
+    },
+    {
+      "path": "docs\\CI_CD_GUIDE.md",
+      "size": 7789
+    },
+    {
+      "path": "docs\\CLI_GUI_WIN32_QT_MASM_AUDIT.md",
+      "size": 10084
+    },
+    {
+      "path": "docs\\CLI_REFERENCE.md",
+      "size": 8227
+    },
+    {
+      "path": "docs\\CODE_TRANSFORMER.md",
+      "size": 8338
+    },
+    {
+      "path": "docs\\COMMAND_HANDLER_MAP.md",
+      "size": 7978
+    },
+    {
+      "path": "docs\\COMMAND_LEGACY_ID_AUDIT.md",
+      "size": 16677
+    },
+    {
+      "path": "docs\\COMMAND_MAP.md",
+      "size": 58706
+    },
+    {
+      "path": "docs\\COMMAND_RANGE_BASELINE.json",
+      "size": 79
+    },
+    {
+      "path": "docs\\COMMAND_RANGE_POLICY_REPORT.md",
+      "size": 108
+    },
+    {
+      "path": "docs\\COMPATIBILITY_MATRIX.md",
+      "size": 5099
+    },
+    {
+      "path": "docs\\COMPETITIVE_STANDARD_CURSOR_VSCODE_COPILOT.md",
+      "size": 8828
+    },
+    {
+      "path": "docs\\COMPILER_BOOTSTRAP_SURFACE.md",
+      "size": 3054
+    },
+    {
+      "path": "docs\\COMPILER_VERSIONS_SUMMARY.md",
+      "size": 14190
+    },
+    {
+      "path": "docs\\configuration.md",
+      "size": 4411
+    },
+    {
+      "path": "docs\\CONNECTION_TROUBLESHOOTING.md",
+      "size": 2277
+    },
+    {
+      "path": "docs\\CONTEXT_CORRECTNESS_MODEL.md",
+      "size": 6599
+    },
+    {
+      "path": "docs\\CONTINUE_FORWARD.md",
+      "size": 4302
+    },
+    {
+      "path": "docs\\COPILOT_VERSIONS_COMPARISON.md",
+      "size": 6101
+    },
+    {
+      "path": "docs\\CoreRuntime_Architecture.md",
+      "size": 7202
+    },
+    {
+      "path": "docs\\CREDIT_BASED_FLOW_CONTROL_SUMMARY.md",
+      "size": 8851
+    },
+    {
+      "path": "docs\\CRITICAL_GAPS_ADDRESSED.md",
+      "size": 10803
+    },
+    {
+      "path": "docs\\CROSS_STACK_AUTONOMOUS_CONTRACT.md",
+      "size": 2227
+    },
+    {
+      "path": "docs\\CURSOR_COPILOT_SHELL_SPEC.md",
+      "size": 3936
+    },
+    {
+      "path": "docs\\CURSOR_GITHUB_PARITY_SPEC.md",
+      "size": 10975
+    },
+    {
+      "path": "docs\\DEBT_LOG.md",
+      "size": 3366
+    },
+    {
+      "path": "docs\\DELIVERY_INDEX.md",
+      "size": 11422
+    },
+    {
+      "path": "docs\\DEPLOYMENT_GUIDE.md",
+      "size": 12090
+    },
+    {
+      "path": "docs\\DEPLOYMENT_ORCHESTRATOR.md",
+      "size": 9248
+    },
+    {
+      "path": "docs\\DEPLOYMENT_STATUS_UPDATE.md",
+      "size": 1668
+    },
+    {
+      "path": "docs\\DESKTOP_COPILOT_COMPLETE_SUMMARY.md",
+      "size": 16162
+    },
+    {
+      "path": "docs\\DESKTOP_COPILOT_CUSTOMIZATION_GUIDE.md",
+      "size": 16971
+    },
+    {
+      "path": "docs\\DESKTOP_COPILOT_QUICK_REFERENCE.md",
+      "size": 9304
+    },
+    {
+      "path": "docs\\DISASM_PROVIDER_ABSTRACTION.md",
+      "size": 642
+    },
+    {
+      "path": "docs\\DOCUMENTATION_COMPLETE.md",
+      "size": 5403
+    },
+    {
+      "path": "docs\\DOCUMENTATION_INDEX.md",
+      "size": 6922
+    },
+    {
+      "path": "docs\\ELECTRON_WASM_CHAT.md",
+      "size": 1728
+    },
+    {
+      "path": "docs\\EMPIRICAL_TELEMETRY_TRACE.md",
+      "size": 1949
+    },
+    {
+      "path": "docs\\ENHANCED_CHATBOT_COMPLETE_GUIDE.md",
+      "size": 12584
+    },
+    {
+      "path": "docs\\ENHANCED_COPILOT_DELIVERY.md",
+      "size": 11941
+    },
+    {
+      "path": "docs\\ENHANCED_COPILOT_FEATURES_GUIDE.md",
+      "size": 10717
+    },
+    {
+      "path": "docs\\ENHANCED_COPILOT_QUICK_START.md",
+      "size": 5309
+    },
+    {
+      "path": "docs\\ENHANCED_IDE_FEATURES.md",
+      "size": 9430
+    },
+    {
+      "path": "docs\\ENHANCEMENT_15_PRODUCT_READY_7.md",
+      "size": 8558
+    },
+    {
+      "path": "docs\\ENTERPRISE_COMPLIANCE_BUNDLE.md",
+      "size": 1023
+    },
+    {
+      "path": "docs\\ENTERPRISE_FEATURES_WITHOUT_BACKING.md",
+      "size": 4556
+    },
+    {
+      "path": "docs\\ENTERPRISE_LICENSE_PRODUCTION.md",
+      "size": 1192
+    },
+    {
+      "path": "docs\\ENTRY_POINTS_MAP.md",
+      "size": 10128
+    },
+    {
+      "path": "docs\\EXECUTION_SCHEDULER_INTEGRATION_REPORT.md",
+      "size": 5148
+    },
+    {
+      "path": "docs\\EXECUTIVE_AUDIT_REPORT.md",
+      "size": 14724
+    },
+    {
+      "path": "docs\\EXECUTIVE_DECISION.md",
+      "size": 2009
+    },
+    {
+      "path": "docs\\EXECUTIVE_DECISION_SPRINT_01.md",
+      "size": 3856
+    },
+    {
+      "path": "docs\\EXPERT_HEATMAP_WIN32_IDE_SPEC.md",
+      "size": 6981
+    },
+    {
+      "path": "docs\\EXPERT_HEATMAP_WIN32_UI_OUTLINE.md",
+      "size": 2882
+    },
+    {
+      "path": "docs\\EXTENSION_GRAVEYARD_CONSOLIDATION.md",
+      "size": 5519
+    },
+    {
+      "path": "docs\\FAQ.md",
+      "size": 5916
+    },
+    {
+      "path": "docs\\FEATURE_PARITY_NOW_VS_THEN.md",
+      "size": 6500
+    },
+    {
+      "path": "docs\\FINAL_COMPLETION_SUMMARY.md",
+      "size": 13950
+    },
+    {
+      "path": "docs\\FINAL_DELIVERY_SUMMARY.md",
+      "size": 17494
+    },
+    {
+      "path": "docs\\FINAL_EXECUTIVE_DECISION.md",
+      "size": 7081
+    },
+    {
+      "path": "docs\\FINAL_PRODUCTION_DECISION.md",
+      "size": 3405
+    },
+    {
+      "path": "docs\\fine_tuning.md",
+      "size": 9273
+    },
+    {
+      "path": "docs\\FINISH_STARTED_FIRST.md",
+      "size": 7437
+    },
+    {
+      "path": "docs\\FIX_QtShell_Build_Errors.md",
+      "size": 6945
+    },
+    {
+      "path": "docs\\FORMAL_PASS_FAIL_AUDIT.md",
+      "size": 9072
+    },
+    {
+      "path": "docs\\FOUNDATION_STATUS.md",
+      "size": 3286
+    },
+    {
+      "path": "docs\\FP8_Kernel_Call_Boundary_Spec.md",
+      "size": 9044
+    },
+    {
+      "path": "docs\\FP8_SAMPLING_VERIFIER_SUMMARY.md",
+      "size": 7953
+    },
+    {
+      "path": "docs\\FROM_SCRATCH_POLICY.md",
+      "size": 3218
+    },
+    {
+      "path": "docs\\FULL_AGENTIC_IDE.md",
+      "size": 4098
+    },
+    {
+      "path": "docs\\FULL_AUDIT_MASTER.md",
+      "size": 4065
+    },
+    {
+      "path": "docs\\FULL_PARITY_AUDIT.md",
+      "size": 7473
+    },
+    {
+      "path": "docs\\FULL_SOURCE_DIAGNOSTICS_AUDIT_2026-03-20.md",
+      "size": 7414
+    },
+    {
+      "path": "docs\\FUSED_DECODE_FP8_SUMMARY.md",
+      "size": 9869
+    },
+    {
+      "path": "docs\\FUSED_FP8_KERNEL_SUMMARY.md",
+      "size": 11218
+    },
+    {
+      "path": "docs\\GAP_REMEDIATION_MANIFEST.md",
+      "size": 3707
+    },
+    {
+      "path": "docs\\GAP_VS_CURSOR_VSCODE_COPILOT.md",
+      "size": 9817
+    },
+    {
+      "path": "docs\\GENESIS_P0_FREEZE.md",
+      "size": 5826
+    },
+    {
+      "path": "docs\\getting_started.md",
+      "size": 4163
+    },
+    {
+      "path": "docs\\gguf.md",
+      "size": 41317
+    },
+    {
+      "path": "docs\\GGUF_PRODUCTION_DEPTH.md",
+      "size": 1418
+    },
+    {
+      "path": "docs\\GGUF_TENSOR_OFFSETS.md",
+      "size": 2906
+    },
+    {
+      "path": "docs\\GGUF_UNIFIED_MEMORY.md",
+      "size": 2406
+    },
+    {
+      "path": "docs\\GPU_DISCOVERY_VRAM_TABLE.md",
+      "size": 656
+    },
+    {
+      "path": "docs\\GPU_POLICY_MATRIX.md",
+      "size": 1202
+    },
+    {
+      "path": "docs\\hardware_spoof_implementation.md",
+      "size": 6059
+    },
+    {
+      "path": "docs\\HETEROGENEOUS_GPU_POLICY.md",
+      "size": 797
+    },
+    {
+      "path": "docs\\HEXMAG-CI-WORKFLOW.md",
+      "size": 1607
+    },
+    {
+      "path": "docs\\IDE_ARCHITECTURE_AUDIT.md",
+      "size": 9778
+    },
+    {
+      "path": "docs\\IDE_AS_ONE.md",
+      "size": 2916
+    },
+    {
+      "path": "docs\\IDE_CHATBOT_GUIDE.md",
+      "size": 7110
+    },
+    {
+      "path": "docs\\IDE_CLI_GUI_AUDIT_AND_PHASES.md",
+      "size": 12903
+    },
+    {
+      "path": "docs\\IDE_CLI_GUI_FULL_IMPLEMENTATION_SUMMARY.md",
+      "size": 18047
+    },
+    {
+      "path": "docs\\IDE_CLI_GUI_IMPLEMENTATION_COMPLETE.md",
+      "size": 7693
+    },
+    {
+      "path": "docs\\IDE_CODEBASE_INVENTORY.md",
+      "size": 2094
+    },
+    {
+      "path": "docs\\IDE_COMPARISON_TOP17_AUDIT.md",
+      "size": 7347
+    },
+    {
+      "path": "docs\\IDE_DOCUMENTATION_INDEX.md",
+      "size": 3070
+    },
+    {
+      "path": "docs\\IDE_ENHANCEMENT_BUILD_STATUS.md",
+      "size": 4984
+    },
+    {
+      "path": "docs\\IDE_FEATURE_MATRIX.md",
+      "size": 36242
+    },
+    {
+      "path": "docs\\IDE_FINALIZATION_BATCH_AUDIT.md",
+      "size": 29390
+    },
+    {
+      "path": "docs\\IDE_FULL_AUDIT_COMPILED_SOURCES_AND_PORTS.md",
+      "size": 27090
+    },
+    {
+      "path": "docs\\IDE_INTEGRATION_REFERENCE.md",
+      "size": 8475
+    },
+    {
+      "path": "docs\\IDE_LAUNCH_AUDIT_FINDINGS.md",
+      "size": 3568
+    },
+    {
+      "path": "docs\\IDE_MASTER_PROGRESS.md",
+      "size": 6087
+    },
+    {
+      "path": "docs\\IDE_NOT_CAPABLE_AUDIT.md",
+      "size": 10034
+    },
+    {
+      "path": "docs\\IDE_SOURCE_FIX_SCOPE.md",
+      "size": 3243
+    },
+    {
+      "path": "docs\\IDE_STRATEGIC_PILLARS.md",
+      "size": 4771
+    },
+    {
+      "path": "docs\\index.md",
+      "size": 535
+    },
+    {
+      "path": "docs\\INFERENCE_FACADE_CONTRACT.md",
+      "size": 1725
+    },
+    {
+      "path": "docs\\INFERENCE_PATH_MATRIX.md",
+      "size": 5531
+    },
+    {
+      "path": "docs\\INSTRUCTION_LOADER_IMPLEMENTATION.md",
+      "size": 5131
+    },
+    {
+      "path": "docs\\INTEGRATED_RUNTIME.md",
+      "size": 5186
+    },
+    {
+      "path": "docs\\IntegrationResults.json",
+      "size": 4398
+    },
+    {
+      "path": "docs\\INTEGRATION_COMPLETE_SUMMARY.md",
+      "size": 12812
+    },
+    {
+      "path": "docs\\INTEGRATION_SUMMARY.md",
+      "size": 9716
+    },
+    {
+      "path": "docs\\INTERPRETABILITY_PANEL_DELIVERY.md",
+      "size": 11089
+    },
+    {
+      "path": "docs\\INTERPRETABILITY_PANEL_GUIDE.md",
+      "size": 18994
+    },
+    {
+      "path": "docs\\INTERPRETABILITY_PANEL_TESTING.md",
+      "size": 17855
+    },
+    {
+      "path": "docs\\IRC_MIRC_IDE_BRIDGE.md",
+      "size": 8357
+    },
+    {
+      "path": "docs\\KERNEL_INTEGRATION_COMPLETE.md",
+      "size": 5999
+    },
+    {
+      "path": "docs\\kernel_sweep_results.json",
+      "size": 663
+    },
+    {
+      "path": "docs\\KNOWLEDGE_BASE_FINAL_AUDIT.md",
+      "size": 7026
+    },
+    {
+      "path": "docs\\LAUNCH_AND_CLI.md",
+      "size": 2885
+    },
+    {
+      "path": "docs\\LICENSE_CRYPTO_PRODUCTION.md",
+      "size": 754
+    },
+    {
+      "path": "docs\\LLM_Memory_10_Original_Solutions_2026.md",
+      "size": 6245
+    },
+    {
+      "path": "docs\\loader_architecture.md",
+      "size": 12748
+    },
+    {
+      "path": "docs\\LOCALHOST_COMMUNICATION_MAP.md",
+      "size": 6322
+    },
+    {
+      "path": "docs\\LOCAL_AGENTIC_AUTONOMOUS_NO_KEY.md",
+      "size": 2173
+    },
+    {
+      "path": "docs\\LOCAL_INFERENCE_PARITY_SPEC.md",
+      "size": 12416
+    },
+    {
+      "path": "docs\\LOCAL_MODEL_CHAT_AGENTIC_CHECKLIST.md",
+      "size": 4124
+    },
+    {
+      "path": "docs\\LOCAL_PARITY_NO_API_KEY_SPEC.md",
+      "size": 9893
+    },
+    {
+      "path": "docs\\LOCAL_UNIVERSAL_ACCESS.md",
+      "size": 2163
+    },
+    {
+      "path": "docs\\LOGGING_AND_QUEUE_AUDIT.md",
+      "size": 2620
+    },
+    {
+      "path": "docs\\LoRA_Kernel_Integration.md",
+      "size": 3568
+    },
+    {
+      "path": "docs\\MAC_LINUX_WRAPPER.md",
+      "size": 2146
+    },
+    {
+      "path": "docs\\MAINFRAME_GGUF_BUILD_REALITY_CHECK.md",
+      "size": 3230
+    },
+    {
+      "path": "docs\\MASM_SECURITY_INTEGRATION.md",
+      "size": 5385
+    },
+    {
+      "path": "docs\\MASM_SELF_COMPILING_COMPILER_COMPLETE.md",
+      "size": 11372
+    },
+    {
+      "path": "docs\\MASM_x64_Cpp20_ARCHITECTURE_DRAWING.md",
+      "size": 8924
+    },
+    {
+      "path": "docs\\MINIMALISTIC_7_ENHANCEMENTS.md",
+      "size": 20784
+    },
+    {
+      "path": "docs\\MMF-CHATAPP-INTEGRATION.md",
+      "size": 9753
+    },
+    {
+      "path": "docs\\MMF-COMPLETE-SUMMARY.md",
+      "size": 11851
+    },
+    {
+      "path": "docs\\MMF-DOCUMENTATION-INDEX.md",
+      "size": 9731
+    },
+    {
+      "path": "docs\\MMF-QUICK-REFERENCE.md",
+      "size": 6355
+    },
+    {
+      "path": "docs\\MMF-QUICKSTART.md",
+      "size": 6834
+    },
+    {
+      "path": "docs\\MMF-SYSTEM.md",
+      "size": 10728
+    },
+    {
+      "path": "docs\\MODEL_OPERATIONS_BRIDGE_IMPLEMENTATION.md",
+      "size": 10680
+    },
+    {
+      "path": "docs\\MONOLITHIC_MASM64_BUILD.md",
+      "size": 2800
+    },
+    {
+      "path": "docs\\MultiArch_Decoder_Phased_Approach.md",
+      "size": 10539
+    },
+    {
+      "path": "docs\\MultiArch_Decoder_v2_Implementation.md",
+      "size": 11038
+    },
+    {
+      "path": "docs\\multi_model_serving.md",
+      "size": 7850
+    },
+    {
+      "path": "docs\\NativePluginSystem.md",
+      "size": 8930
+    },
+    {
+      "path": "docs\\NATURAL_LANGUAGE_ASSISTANT_GUIDE.md",
+      "size": 15487
+    },
+    {
+      "path": "docs\\NEXT_7_GAP_IDS.md",
+      "size": 3550
+    },
+    {
+      "path": "docs\\NEXT_STEPS_CoreRuntime_Implementation.md",
+      "size": 6260
+    },
+    {
+      "path": "docs\\NEXUS_IMPLEMENTATION_COMPLETE.md",
+      "size": 8256
+    },
+    {
+      "path": "docs\\NON_DEP_BUILD_TITAN_KERNELS.md",
+      "size": 4155
+    },
+    {
+      "path": "docs\\NON_OPERATIONAL_FEATURES.md",
+      "size": 2513
+    },
+    {
+      "path": "docs\\OVERDRIVE_150_KERNEL_TRACE.md",
+      "size": 1395
+    },
+    {
+      "path": "docs\\PARITY_VALIDATION_PROOF_PACK.md",
+      "size": 8386
+    },
+    {
+      "path": "docs\\PE64_IAT_FABRICATOR_v224.md",
+      "size": 4976
+    },
+    {
+      "path": "docs\\PERFORMANCE_BASELINE_SECURE.md",
+      "size": 4515
+    },
+    {
+      "path": "docs\\PHASE1_BUILD_GUIDE.md",
+      "size": 11306
+    },
+    {
+      "path": "docs\\PHASE1_COMPLETION_REPORT.md",
+      "size": 7863
+    },
+    {
+      "path": "docs\\PHASE1_FOUNDATION.md",
+      "size": 15571
+    },
+    {
+      "path": "docs\\PHASE21_CMAKE_INTEGRATION.md",
+      "size": 5897
+    },
+    {
+      "path": "docs\\Phase21_Implementation_Summary.md",
+      "size": 4239
+    },
+    {
+      "path": "docs\\Phase22_Implementation_Summary.md",
+      "size": 3237
+    },
+    {
+      "path": "docs\\Phase23_Implementation_Summary.md",
+      "size": 6022
+    },
+    {
+      "path": "docs\\Phase23_Swarm_Protocol.md",
+      "size": 10054
+    },
+    {
+      "path": "docs\\Phase24_Implementation_Summary.md",
+      "size": 8550
+    },
+    {
+      "path": "docs\\Phase25_Implementation_Summary.md",
+      "size": 10074
+    },
+    {
+      "path": "docs\\Phase26_Integration_Test_Plan.md",
+      "size": 6953
+    },
+    {
+      "path": "docs\\Phase26_Summary.md",
+      "size": 4818
+    },
+    {
+      "path": "docs\\PHASE28_BENCHMARK_MATRIX.md",
+      "size": 2150
+    },
+    {
+      "path": "docs\\PHASE2_API_REFERENCE.md",
+      "size": 22169
+    },
+    {
+      "path": "docs\\PHASE2_ARCHITECTURE.md",
+      "size": 15831
+    },
+    {
+      "path": "docs\\PHASE2_BUILD_GUIDE.md",
+      "size": 11527
+    },
+    {
+      "path": "docs\\PHASE2_COMPLETE_DELIVERY.md",
+      "size": 20919
+    },
+    {
+      "path": "docs\\PHASE2_DELIVERABLES.md",
+      "size": 14642
+    },
+    {
+      "path": "docs\\PHASE2_IMPLEMENTATION_COMPLETE.md",
+      "size": 16053
+    },
+    {
+      "path": "docs\\Phase3_RAG_Dispatcher_Implementation.md",
+      "size": 5084
+    },
+    {
+      "path": "docs\\phase3_track3_gpu_tensor_upload.md",
+      "size": 5374
+    },
+    {
+      "path": "docs\\phase4c_inference_rcu_integration.md",
+      "size": 4777
+    },
+    {
+      "path": "docs\\PHASE5_API_REFERENCE.md",
+      "size": 13236
+    },
+    {
+      "path": "docs\\PHASE5_ARCHITECTURE.md",
+      "size": 18162
+    },
+    {
+      "path": "docs\\PHASE5_BUILD_GUIDE.md",
+      "size": 10395
+    },
+    {
+      "path": "docs\\PHASE5_COMPLETION_SUMMARY.md",
+      "size": 6842
+    },
+    {
+      "path": "docs\\PHASE5_IMPLEMENTATION_COMPLETE.md",
+      "size": 14482
+    },
+    {
+      "path": "docs\\phase5_win32ide_integration.md",
+      "size": 3650
+    },
+    {
+      "path": "docs\\PHASE6_6_COMPLETION_SUMMARY.md",
+      "size": 7572
+    },
+    {
+      "path": "docs\\PHASE6_COMPLETION_SUMMARY.md",
+      "size": 6661
+    },
+    {
+      "path": "docs\\Phase8_Completion_Summary.md",
+      "size": 6039
+    },
+    {
+      "path": "docs\\Phase8_Current_State.md",
+      "size": 3418
+    },
+    {
+      "path": "docs\\Phase8_Progress_Summary.md",
+      "size": 6996
+    },
+    {
+      "path": "docs\\phaseD1_flashattention_integration_plan.md",
+      "size": 12193
+    },
+    {
+      "path": "docs\\PHASE_12_SHARD_ROUTER_BLUEPRINT.md",
+      "size": 1911
+    },
+    {
+      "path": "docs\\PHASE_13_17_SUMMARY.md",
+      "size": 6104
+    },
+    {
+      "path": "docs\\PHASE_16_DEPLOYMENT_COMPLETE.md",
+      "size": 2035
+    },
+    {
+      "path": "docs\\PHASE_16_PRODUCTION_DEPLOYMENT.md",
+      "size": 2844
+    },
+    {
+      "path": "docs\\PHASE_17A_BUG_HUNT_COMPLETE.md",
+      "size": 4385
+    },
+    {
+      "path": "docs\\PHASE_17B_CODEBASE_AUDIT.md",
+      "size": 9280
+    },
+    {
+      "path": "docs\\PHASE_17D_PRODUCTION_HARDENING.md",
+      "size": 4212
+    },
+    {
+      "path": "docs\\PHASE_17_IMPLEMENTATION.md",
+      "size": 2903
+    },
+    {
+      "path": "docs\\PHASE_17_PLANNING.md",
+      "size": 10380
+    },
+    {
+      "path": "docs\\PHASE_17_SMOKETEST_REPORT.md",
+      "size": 7009
+    },
+    {
+      "path": "docs\\PHASE_1_EXECUTIVE_REPORT.md",
+      "size": 2837
+    },
+    {
+      "path": "docs\\PHASE_1_STAGING_REPORT.md",
+      "size": 1849
+    },
+    {
+      "path": "docs\\PHASE_2_CANARY_STATUS.md",
+      "size": 2657
+    },
+    {
+      "path": "docs\\Phase_B2_Architecture.md",
+      "size": 8405
+    },
+    {
+      "path": "docs\\Phase_B2_Completion_Report.md",
+      "size": 8464
+    },
+    {
+      "path": "docs\\PHASE_C1_COMPLETION.md",
+      "size": 10229
+    },
+    {
+      "path": "docs\\PHASE_C2_ADAPTIVE_SCHEDULER.md",
+      "size": 20583
+    },
+    {
+      "path": "docs\\PHASE_C2_BATCH2_SEG_INTEGRATION.md",
+      "size": 15078
+    },
+    {
+      "path": "docs\\PHASE_C2_BATCH3_BENCHMARKS.md",
+      "size": 16683
+    },
+    {
+      "path": "docs\\PHASE_C2_BATCH4_MULTI_OBJECTIVE.md",
+      "size": 16177
+    },
+    {
+      "path": "docs\\PHASE_C2_BATCH5_DISTRIBUTED.md",
+      "size": 18075
+    },
+    {
+      "path": "docs\\PHASE_C2_COMPLETION.md",
+      "size": 10529
+    },
+    {
+      "path": "docs\\PHASE_C3_PREDICTIVE_ANALYTICS.md",
+      "size": 10867
+    },
+    {
+      "path": "docs\\PHASE_C4_COMPLETION.md",
+      "size": 13321
+    },
+    {
+      "path": "docs\\PHASE_C4_OSCILLATION_DAMPENING.md",
+      "size": 7415
+    },
+    {
+      "path": "docs\\PHASE_C4_ROLLBACK_ENGINE.md",
+      "size": 9123
+    },
+    {
+      "path": "docs\\PHASE_C4_SAFETY_GATE.md",
+      "size": 8471
+    },
+    {
+      "path": "docs\\PHASE_C4_STABILITY_ENVELOPE.md",
+      "size": 15652
+    },
+    {
+      "path": "docs\\PHASE_D4_BATCH2_BENCHMARK_FRAMEWORK.md",
+      "size": 8327
+    },
+    {
+      "path": "docs\\PHASE_D4_BATCH3_SECURITY_LAYER.md",
+      "size": 11428
+    },
+    {
+      "path": "docs\\PHASE_D4_BATCH4_OBSERVABILITY.md",
+      "size": 14158
+    },
+    {
+      "path": "docs\\PHASE_D4_BATCH5_QUALIFICATION.md",
+      "size": 14168
+    },
+    {
+      "path": "docs\\PHASE_D4_COMPLETION_SUMMARY.md",
+      "size": 8429
+    },
+    {
+      "path": "docs\\PHASE_D5_REFINED_BENCHMARK_SPEC.md",
+      "size": 10065
+    },
+    {
+      "path": "docs\\PHASE_D5_REFINED_COMPLETION_SUMMARY.md",
+      "size": 6085
+    },
+    {
+      "path": "docs\\PHASE_D5_VERIFICATION_PERFORMANCE.md",
+      "size": 9288
+    },
+    {
+      "path": "docs\\PHASE_E_VALIDATION.md",
+      "size": 10896
+    },
+    {
+      "path": "docs\\PHASE_F1_PRODUCTION_RELEASE.md",
+      "size": 9358
+    },
+    {
+      "path": "docs\\PHASE_V2_COMPLETE.md",
+      "size": 13744
+    },
+    {
+      "path": "docs\\PHASE_V3_COMPLETE.md",
+      "size": 15648
+    },
+    {
+      "path": "docs\\PHASE_V4_COMPLETE.md",
+      "size": 15010
+    },
+    {
+      "path": "docs\\PHASE_V5_COMPLETE.md",
+      "size": 16229
+    },
+    {
+      "path": "docs\\PHASE_X2_LSP_LIVE.md",
+      "size": 4114
+    },
+    {
+      "path": "docs\\PHASE_X3_AGENT_LOOP.md",
+      "size": 2493
+    },
+    {
+      "path": "docs\\PHASE_X4_GGUF_HOTPATCH.md",
+      "size": 5809
+    },
+    {
+      "path": "docs\\PHASE_X5_DISTRIBUTED_SWARM.md",
+      "size": 4045
+    },
+    {
+      "path": "docs\\PHASE_Z_COMPLETE.md",
+      "size": 17106
+    },
+    {
+      "path": "docs\\PMASSA_BYE_OLLAMA.md",
+      "size": 1523
+    },
+    {
+      "path": "docs\\POLISH_NOTES.md",
+      "size": 5160
+    },
+    {
+      "path": "docs\\POWERSHELL_DEPLOYMENT_SCaffold.md",
+      "size": 556
+    },
+    {
+      "path": "docs\\POWERSHELL_INMEMORY_CSHARP.md",
+      "size": 3022
+    },
+    {
+      "path": "docs\\PRODUCTION_COMPONENTS_INTEGRATION.md",
+      "size": 12884
+    },
+    {
+      "path": "docs\\PRODUCTION_CONFIGURATION_GUIDE.md",
+      "size": 13253
+    },
+    {
+      "path": "docs\\PRODUCTION_GATE_AUDIT.md",
+      "size": 12703
+    },
+    {
+      "path": "docs\\production_guide.md",
+      "size": 7966
+    },
+    {
+      "path": "docs\\PRODUCTION_READINESS_AUDIT.md",
+      "size": 9802
+    },
+    {
+      "path": "docs\\PRODUCTION_RELEASE_READY.md",
+      "size": 6375
+    },
+    {
+      "path": "docs\\PRODUCTION_SCAFFOLD_PLAN.md",
+      "size": 1678
+    },
+    {
+      "path": "docs\\PRODUCTION_STATUS_REPORT.md",
+      "size": 5668
+    },
+    {
+      "path": "docs\\PROJECT_KNOWLEDGE_STORE.md",
+      "size": 824
+    },
+    {
+      "path": "docs\\PROJECT_VALUATION_ESTIMATE.md",
+      "size": 4873
+    },
+    {
+      "path": "docs\\PROMPT_REVERSE_ENGINEER_IDE_LAUNCH_AUDIT.md",
+      "size": 6652
+    },
+    {
+      "path": "docs\\PURE_X64_MASM_COMPLETION.md",
+      "size": 7363
+    },
+    {
+      "path": "docs\\Q4_Q8_DEQUANTIZATION_ROADMAP.md",
+      "size": 9715
+    },
+    {
+      "path": "docs\\QT_TO_WIN32_IDE_AUDIT.md",
+      "size": 5871
+    },
+    {
+      "path": "docs\\QT_TO_WIN32_PARITY_AUDIT.md",
+      "size": 12304
+    },
+    {
+      "path": "docs\\QUADBUFFER_DELIVERABLES.md",
+      "size": 12884
+    },
+    {
+      "path": "docs\\QUADBUFFER_DOCUMENTATION_INDEX.md",
+      "size": 14925
+    },
+    {
+      "path": "docs\\QUADBUFFER_IMPLEMENTATION_SUMMARY.md",
+      "size": 14252
+    },
+    {
+      "path": "docs\\QUADBUFFER_INTEGRATION.md",
+      "size": 22466
+    },
+    {
+      "path": "docs\\QUADBUFFER_PHASE5_INTEGRATION.md",
+      "size": 14860
+    },
+    {
+      "path": "docs\\QUADBUFFER_README.md",
+      "size": 10049
+    },
+    {
+      "path": "docs\\QuickStart.md",
+      "size": 2907
+    },
+    {
+      "path": "docs\\RAG_EXECUTIVE_DECISION.md",
+      "size": 3964
+    },
+    {
+      "path": "docs\\RAG_Implementation_Final_Verification.md",
+      "size": 4328
+    },
+    {
+      "path": "docs\\RAG_Integration_Complete_Summary.md",
+      "size": 11505
+    },
+    {
+      "path": "docs\\RAG_MASM_INTEGRATION.md",
+      "size": 12292
+    },
+    {
+      "path": "docs\\RAG_VALIDATION_CHECKLIST.md",
+      "size": 8399
+    },
+    {
+      "path": "docs\\RAG_VALIDATION_REPORT.md",
+      "size": 13660
+    },
+    {
+      "path": "docs\\RAWRXDA_BRANCH_INTEGRATION.md",
+      "size": 6810
+    },
+    {
+      "path": "docs\\RAWRXD_COMPETITIVE_STANDARD.md",
+      "size": 10892
+    },
+    {
+      "path": "docs\\RAWRXD_IDE_DIRECTORY_COMPLETION_AUDIT.md",
+      "size": 11909
+    },
+    {
+      "path": "docs\\RAWRXD_IDE_DOCUMENTARY_OVERVIEW.md",
+      "size": 8827
+    },
+    {
+      "path": "docs\\rawrxd_nexus_implementation.md",
+      "size": 16181
+    },
+    {
+      "path": "docs\\RAWRXD_V27_TECHNICAL_ARCHITECTURE.md",
+      "size": 2089
+    },
+    {
+      "path": "docs\\RAWRXD_VS_CURSOR_DEFENSIBLE.md",
+      "size": 10421
+    },
+    {
+      "path": "docs\\README.md",
+      "size": 3757
+    },
+    {
+      "path": "docs\\README_BeaconDebugger.md",
+      "size": 7098
+    },
+    {
+      "path": "docs\\README_Phase21.md",
+      "size": 5700
+    },
+    {
+      "path": "docs\\real_implementation_complete.md",
+      "size": 3818
+    },
+    {
+      "path": "docs\\REGISTER_RESIDENCY_PIPELINE.md",
+      "size": 5367
+    },
+    {
+      "path": "docs\\REGISTRY_ALIGNMENT.md",
+      "size": 5068
+    },
+    {
+      "path": "docs\\RELEASE_NOTES.md",
+      "size": 3603
+    },
+    {
+      "path": "docs\\RELEASE_VALIDATION_REPORT_v7.4.0.0.md",
+      "size": 3227
+    },
+    {
+      "path": "docs\\REPOSITORY_ROOT.md",
+      "size": 709
+    },
+    {
+      "path": "docs\\REVERSE_ENGINEERED_FINE_PRINT.md",
+      "size": 10211
+    },
+    {
+      "path": "docs\\REVERSE_ENGINEERING_BOOT_AND_MINIMAL_KERNEL.md",
+      "size": 7633
+    },
+    {
+      "path": "docs\\REVERSE_ENGINEERING_DECOMPILATION_AND_X64.md",
+      "size": 8354
+    },
+    {
+      "path": "docs\\REVERSE_ENGINEERING_GAME_DEVELOPMENT.md",
+      "size": 6297
+    },
+    {
+      "path": "docs\\REVERSE_ENGINEERING_GUIDE.md",
+      "size": 15578
+    },
+    {
+      "path": "docs\\REVERSE_ENGINEERING_PORTABLE_X64_LOADER.md",
+      "size": 6853
+    },
+    {
+      "path": "docs\\REVERSE_ENGINEERING_SOURCE_DIGESTION_AND_ALIGNMENT.md",
+      "size": 6090
+    },
+    {
+      "path": "docs\\REVERSE_ENGINEERING_TOOLKIT.md",
+      "size": 12996
+    },
+    {
+      "path": "docs\\RE_MVP_SYMBOLS_XREFS.md",
+      "size": 699
+    },
+    {
+      "path": "docs\\RoslynIntegrationSummary.md",
+      "size": 3258
+    },
+    {
+      "path": "docs\\RUNTIME_BOOTSTRAP_AND_VALIDATION.md",
+      "size": 6876
+    },
+    {
+      "path": "docs\\RXUC_60_LANGUAGES_ROADMAP.md",
+      "size": 5775
+    },
+    {
+      "path": "docs\\SAPPHIRE_RAPIDS_VALIDATION.md",
+      "size": 3459
+    },
+    {
+      "path": "docs\\SCAFFOLD_MARKERS_CLARIFICATION.md",
+      "size": 3961
+    },
+    {
+      "path": "docs\\SCAFFOLD_MARKERS_STATUS.md",
+      "size": 6379
+    },
+    {
+      "path": "docs\\SCAFFOLD_MASM_CONVERSION_MAP.md",
+      "size": 7939
+    },
+    {
+      "path": "docs\\SECURITY_API_REFERENCE.md",
+      "size": 11374
+    },
+    {
+      "path": "docs\\SECURITY_HARDENING_GUIDE.md",
+      "size": 12275
+    },
+    {
+      "path": "docs\\SEMANTIC_API_REFERENCE.md",
+      "size": 6961
+    },
+    {
+      "path": "docs\\SEMANTIC_SEARCH_ARCHITECTURE.md",
+      "size": 4863
+    },
+    {
+      "path": "docs\\SESSION_COMPLETION_REPORT.md",
+      "size": 6585
+    },
+    {
+      "path": "docs\\smoke_test_complete.md",
+      "size": 6436
+    },
+    {
+      "path": "docs\\SOVEREIGN_ASM_KERNELS_SUMMARY.md",
+      "size": 6931
+    },
+    {
+      "path": "docs\\SOVEREIGN_BUILD_GUIDE.md",
+      "size": 6464
+    },
+    {
+      "path": "docs\\SOVEREIGN_CLOUD_BRIDGE_SPEC.md",
+      "size": 4938
+    },
+    {
+      "path": "docs\\SOVEREIGN_CONTRIBUTOR_COVENANT.md",
+      "size": 4723
+    },
+    {
+      "path": "docs\\SOVEREIGN_COPILOT_BACKLOG.md",
+      "size": 7974
+    },
+    {
+      "path": "docs\\SOVEREIGN_EDITOR_IPC_PROTOCOL.md",
+      "size": 6332
+    },
+    {
+      "path": "docs\\SOVEREIGN_EMISSION_LAYER.md",
+      "size": 3604
+    },
+    {
+      "path": "docs\\SOVEREIGN_ENTERPRISE_TOOLCHAIN_LAYERS.md",
+      "size": 4825
+    },
+    {
+      "path": "docs\\SOVEREIGN_FORGE_MASM.md",
+      "size": 3103
+    },
+    {
+      "path": "docs\\SOVEREIGN_GLOBAL_USE_CONTRACT.md",
+      "size": 4074
+    },
+    {
+      "path": "docs\\SOVEREIGN_GUIDE.md",
+      "size": 1738
+    },
+    {
+      "path": "docs\\SOVEREIGN_IDE_COMPLETION_CHECKLIST.md",
+      "size": 9732
+    },
+    {
+      "path": "docs\\SOVEREIGN_INTEGRATION_CHECKLIST.md",
+      "size": 21857
+    },
+    {
+      "path": "docs\\SOVEREIGN_INTERNAL_RESOLVER_STRATEGY.md",
+      "size": 5137
+    },
+    {
+      "path": "docs\\SOVEREIGN_LAB_SYNTHESIS_GETTING_STARTED.md",
+      "size": 4761
+    },
+    {
+      "path": "docs\\SOVEREIGN_LOADER_PATTERN_GLOSSARY.md",
+      "size": 5763
+    },
+    {
+      "path": "docs\\SOVEREIGN_MASTER_TEMPLATE_v224.md",
+      "size": 8023
+    },
+    {
+      "path": "docs\\SOVEREIGN_MMF_PROTOCOL_V1.md",
+      "size": 6976
+    },
+    {
+      "path": "docs\\SOVEREIGN_PE_MICRO_BUILDER_BLUEPRINT.md",
+      "size": 7493
+    },
+    {
+      "path": "docs\\SOVEREIGN_PRODUCTION_SCOPE_AND_ROADMAP.md",
+      "size": 16389
+    },
+    {
+      "path": "docs\\SOVEREIGN_RUNTIME_GUIDE.md",
+      "size": 10642
+    },
+    {
+      "path": "docs\\SOVEREIGN_RUNTIME_SPEC.md",
+      "size": 10453
+    },
+    {
+      "path": "docs\\SOVEREIGN_SHUTDOWN_DROPIN_TEMPLATE.asm",
+      "size": 2912
+    },
+    {
+      "path": "docs\\SOVEREIGN_SYMBOL_REGISTRY_DCE.md",
+      "size": 1899
+    },
+    {
+      "path": "docs\\SOVEREIGN_TIER_G_REQUIREMENTS.md",
+      "size": 2462
+    },
+    {
+      "path": "docs\\SOVEREIGN_TOOLCHAIN_LAB_ARCHITECTURE.md",
+      "size": 7043
+    },
+    {
+      "path": "docs\\SOVEREIGN_TRI_FORMAT_SAFE_SPEC.md",
+      "size": 8402
+    },
+    {
+      "path": "docs\\SOVEREIGN_v14.5_ATTESTATION.md",
+      "size": 2396
+    },
+    {
+      "path": "docs\\SPRINT_01_COMPLETION_REPORT.md",
+      "size": 3211
+    },
+    {
+      "path": "docs\\SPRINT_02_EXECUTIVE_DECISION.md",
+      "size": 6521
+    },
+    {
+      "path": "docs\\STATUS3_RELEASE.md",
+      "size": 2298
+    },
+    {
+      "path": "docs\\STAT_TRACK.md",
+      "size": 207
+    },
+    {
+      "path": "docs\\stub_elimination_report.md",
+      "size": 11222
+    },
+    {
+      "path": "docs\\SubsystemWiringGuide.md",
+      "size": 4200
+    },
+    {
+      "path": "docs\\SUPPORT_POLICY.md",
+      "size": 8702
+    },
+    {
+      "path": "docs\\SWARM_BATCHES_INTEGRATION.md",
+      "size": 9474
+    },
+    {
+      "path": "docs\\SymbolGovernance_Manifesto.md",
+      "size": 6965
+    },
+    {
+      "path": "docs\\TASK_BACKLOG_PRODUCTION_AGENTIC_RUNTIME_BATCH1.md",
+      "size": 6016
+    },
+    {
+      "path": "docs\\TelemetrySystem.md",
+      "size": 8802
+    },
+    {
+      "path": "docs\\TODO_20_COMPLETION_SUMMARY.md",
+      "size": 3073
+    },
+    {
+      "path": "docs\\TODO_MANAGER_QUICK_REFERENCE.md",
+      "size": 6712
+    },
+    {
+      "path": "docs\\TODO_MANIFEST.md",
+      "size": 3202
+    },
+    {
+      "path": "docs\\TODO_MODULE_USAGE_EXAMPLES.md",
+      "size": 9055
+    },
+    {
+      "path": "docs\\TOP50_READINESS_PASSTHRU.md",
+      "size": 9570
+    },
+    {
+      "path": "docs\\TOP_25_AI_IDE_FEATURES_AUDIT.md",
+      "size": 7392
+    },
+    {
+      "path": "docs\\TOP_25_AI_IDE_LSP_EDITOR_FEATURES.md",
+      "size": 7391
+    },
+    {
+      "path": "docs\\TOP_50_GAP_ANALYSIS.md",
+      "size": 11364
+    },
+    {
+      "path": "docs\\Troubleshooting.md",
+      "size": 9767
+    },
+    {
+      "path": "docs\\TROUBLESHOOTING_GUIDE.md",
+      "size": 14755
+    },
+    {
+      "path": "docs\\TURNKEY_GAP_CLOSURES.md",
+      "size": 7483
+    },
+    {
+      "path": "docs\\UN-TURNKEY.md",
+      "size": 9961
+    },
+    {
+      "path": "docs\\UNIFIED_MEMORY_EXECUTOR.md",
+      "size": 9143
+    },
+    {
+      "path": "docs\\UNIVERSAL_ACCESS_DESIGN.md",
+      "size": 0
+    },
+    {
+      "path": "docs\\UNIVERSAL_COMPILER.md",
+      "size": 7394
+    },
+    {
+      "path": "docs\\UNIVERSAL_PLATFORM_GAP_MATRIX.md",
+      "size": 9121
+    },
+    {
+      "path": "docs\\UNLINKED_SYMBOLS_RESOLUTION.md",
+      "size": 14606
+    },
+    {
+      "path": "docs\\UNLINKED_SYMBOL_BATCH_01.md",
+      "size": 1370
+    },
+    {
+      "path": "docs\\USAGE_GUIDE.md",
+      "size": 13010
+    },
+    {
+      "path": "docs\\USER_GUIDE.md",
+      "size": 7710
+    },
+    {
+      "path": "docs\\V23_SWARM_SHARDING_MANIFEST.md",
+      "size": 1329
+    },
+    {
+      "path": "docs\\validation_and_inference_fix.md",
+      "size": 4739
+    },
+    {
+      "path": "docs\\VOICE_ASSISTANT_COMPLETE_GUIDE.md",
+      "size": 8444
+    },
+    {
+      "path": "docs\\VOICE_ASSISTANT_DELIVERY.md",
+      "size": 8041
+    },
+    {
+      "path": "docs\\VOICE_ASSISTANT_GUIDE.md",
+      "size": 9476
+    },
+    {
+      "path": "docs\\VOICE_ASSISTANT_INTEGRATION.md",
+      "size": 8227
+    },
+    {
+      "path": "docs\\VOICE_ASSISTANT_QUICK_REF.md",
+      "size": 4336
+    },
+    {
+      "path": "docs\\VOICE_ASSISTANT_START_HERE.md",
+      "size": 9522
+    },
+    {
+      "path": "docs\\VOICE_ASSISTANT_STATUS.md",
+      "size": 11581
+    },
+    {
+      "path": "docs\\VOICE_ASSISTANT_SYSTEM_SUMMARY.md",
+      "size": 9694
+    },
+    {
+      "path": "docs\\VSCODE_BLANK_WINDOW_FIX.md",
+      "size": 7759
+    },
+    {
+      "path": "docs\\VSCODE_LOGS_AND_FREEZE.md",
+      "size": 3253
+    },
+    {
+      "path": "docs\\VULKAN_INTEGRATION.md",
+      "size": 4206
+    },
+    {
+      "path": "docs\\WEBVIEW2_CHROMIUM_STDERR.md",
+      "size": 2895
+    },
+    {
+      "path": "docs\\WIN32IDE_CPP_AUDIT.md",
+      "size": 12064
+    },
+    {
+      "path": "docs\\WIN32IDE_CPP_FULL_AUDIT.md",
+      "size": 12370
+    },
+    {
+      "path": "docs\\Win32IDE_GhostCode_Removal.md",
+      "size": 7986
+    },
+    {
+      "path": "docs\\WIN32IDE_LINK_CLOSURE.md",
+      "size": 3475
+    },
+    {
+      "path": "docs\\WIN32_IDE_CPP_AUDIT_QT_CONVERSION.md",
+      "size": 12656
+    },
+    {
+      "path": "docs\\WIN32_IDE_FEATURES_AUDIT.md",
+      "size": 10926
+    },
+    {
+      "path": "docs\\WIN32_IDE_FULL_DIR_AUDIT.md",
+      "size": 12590
+    },
+    {
+      "path": "docs\\WIN32_IDE_WIRING_MANIFEST.md",
+      "size": 7198
+    },
+    {
+      "path": "docs\\WIN32_IDE_WONT_LAUNCH.md",
+      "size": 2303
+    },
+    {
+      "path": "docs\\WIRES_TO_FINISH.md",
+      "size": 8279
+    },
+    {
+      "path": "tests\\ab_secure_benchmark.cpp",
+      "size": 11264
+    },
+    {
+      "path": "tests\\AdaptiveSchedulingTest.cpp",
+      "size": 6593
+    },
+    {
+      "path": "tests\\adaptive_policy_engine_test.cpp",
+      "size": 18567
+    },
+    {
+      "path": "tests\\AgentBridge_Harness.cpp",
+      "size": 6884
+    },
+    {
+      "path": "tests\\AgentBridge_Harness.exe",
+      "size": 145959
+    },
+    {
+      "path": "tests\\AgenticEngineMock.cpp",
+      "size": 8685
+    },
+    {
+      "path": "tests\\agentic_orchestrator_failure_smoke_test.cpp",
+      "size": 17528
+    },
+    {
+      "path": "tests\\agentic_repair_stress_test.cpp",
+      "size": 7218
+    },
+    {
+      "path": "tests\\analyze_coverage.py",
+      "size": 6986
+    },
+    {
+      "path": "tests\\api_gateway_tests.cpp",
+      "size": 5479
+    },
+    {
+      "path": "tests\\asm_diagnostic.cpp",
+      "size": 3344
+    },
+    {
+      "path": "tests\\ast_scope_awareness_test.cpp",
+      "size": 16194
+    },
+    {
+      "path": "tests\\attention_avx2_test.cpp",
+      "size": 14118
+    },
+    {
+      "path": "tests\\attention_contract_test.cpp",
+      "size": 13749
+    },
+    {
+      "path": "tests\\attention_optimization_test.cpp",
+      "size": 20433
+    },
+    {
+      "path": "tests\\attention_optimization_test.exe",
+      "size": 165008
+    },
+    {
+      "path": "tests\\attention_test.cpp",
+      "size": 7241
+    },
+    {
+      "path": "tests\\attention_test.exe",
+      "size": 107447
+    },
+    {
+      "path": "tests\\autonomy_smoke_test.cpp",
+      "size": 2048
+    },
+    {
+      "path": "tests\\benchmark_autoregressive.cpp",
+      "size": 14159
+    },
+    {
+      "path": "tests\\benchmark_autoregressive.exe",
+      "size": 81734
+    },
+    {
+      "path": "tests\\benchmark_coldburst.cpp",
+      "size": 2017
+    },
+    {
+      "path": "tests\\benchmark_completions.cpp",
+      "size": 1176
+    },
+    {
+      "path": "tests\\benchmark_completions_full.cpp",
+      "size": 3071
+    },
+    {
+      "path": "tests\\benchmark_fused_decode_fp8.cpp",
+      "size": 6895
+    },
+    {
+      "path": "tests\\benchmark_ioring_performance.cpp",
+      "size": 2162
+    },
+    {
+      "path": "tests\\benchmark_kernel.cpp",
+      "size": 12569
+    },
+    {
+      "path": "tests\\benchmark_phase22_production.cpp",
+      "size": 14243
+    },
+    {
+      "path": "tests\\benchmark_phase22_production.exe",
+      "size": 185992
+    },
+    {
+      "path": "tests\\benchmark_production_verification.cpp",
+      "size": 15604
+    },
+    {
+      "path": "tests\\benchmark_profile.cpp",
+      "size": 14256
+    },
+    {
+      "path": "tests\\benchmark_profile.exe",
+      "size": 88757
+    },
+    {
+      "path": "tests\\benchmark_zerocopy_microbench.cpp",
+      "size": 12206
+    },
+    {
+      "path": "tests\\bench_compact_zlib.cpp",
+      "size": 6607
+    },
+    {
+      "path": "tests\\bench_deflate_50mb.cpp",
+      "size": 1478
+    },
+    {
+      "path": "tests\\bench_deflate_brutal.cpp",
+      "size": 1354
+    },
+    {
+      "path": "tests\\bench_deflate_brutal_arm64.cpp",
+      "size": 1288
+    },
+    {
+      "path": "tests\\bench_deflate_brutal_speed.cpp",
+      "size": 888
+    },
+    {
+      "path": "tests\\bench_deflate_masm.cpp",
+      "size": 3173
+    },
+    {
+      "path": "tests\\bench_deflate_neon.cpp",
+      "size": 1283
+    },
+    {
+      "path": "tests\\bench_deflate_qt.cpp",
+      "size": 2369
+    },
+    {
+      "path": "tests\\bench_deflate_std.cpp",
+      "size": 2198
+    },
+    {
+      "path": "tests\\bench_flash_all_quant.cpp",
+      "size": 3343
+    },
+    {
+      "path": "tests\\bench_flash_asm_final.cpp",
+      "size": 6530
+    },
+    {
+      "path": "tests\\bench_flash_asm_puppeteer.cpp",
+      "size": 9665
+    },
+    {
+      "path": "tests\\bench_flash_asm_puppeteer_x3.cpp",
+      "size": 4355
+    },
+    {
+      "path": "tests\\bench_flash_attn.cpp",
+      "size": 4627
+    },
+    {
+      "path": "tests\\bench_q2k_vs_q4k_e2e.cpp",
+      "size": 9257
+    },
+    {
+      "path": "tests\\bench_q4_0_end2end.cpp",
+      "size": 3290
+    },
+    {
+      "path": "tests\\bench_q8_0_end2end.cpp",
+      "size": 2815
+    },
+    {
+      "path": "tests\\bench_vector_search.cpp",
+      "size": 2530
+    },
+    {
+      "path": "tests\\build_benchmark.bat",
+      "size": 3493
+    },
+    {
+      "path": "tests\\build_correctness_harness.bat",
+      "size": 815
+    },
+    {
+      "path": "tests\\build_tests.bat",
+      "size": 1255
+    },
+    {
+      "path": "tests\\cache_manager_tests.cpp",
+      "size": 5266
+    },
+    {
+      "path": "tests\\check_attn_shapes.py",
+      "size": 347
+    },
+    {
+      "path": "tests\\check_block.py",
+      "size": 1184
+    },
+    {
+      "path": "tests\\check_offset.py",
+      "size": 1245
+    },
+    {
+      "path": "tests\\check_shapes.py",
+      "size": 470
+    },
+    {
+      "path": "tests\\check_types.py",
+      "size": 603
+    },
+    {
+      "path": "tests\\ci.yml",
+      "size": 8936
+    },
+    {
+      "path": "tests\\CMakeCache.txt",
+      "size": 4270
+    },
+    {
+      "path": "tests\\CMakeLists.txt",
+      "size": 21363
+    },
+    {
+      "path": "tests\\CMakeLists.txt.conflict_backup",
+      "size": 22539
+    },
+    {
+      "path": "tests\\CMakeLists.txt.new",
+      "size": 12892
+    },
+    {
+      "path": "tests\\code_review_tests.cpp",
+      "size": 4223
+    },
+    {
+      "path": "tests\\compare_results.py",
+      "size": 9923
+    },
+    {
+      "path": "tests\\compression_abi_test.cpp",
+      "size": 10074
+    },
+    {
+      "path": "tests\\compression_abi_test.exe",
+      "size": 183398
+    },
+    {
+      "path": "tests\\compression_codec_test.cpp",
+      "size": 14254
+    },
+    {
+      "path": "tests\\compression_codec_test.exe",
+      "size": 332772
+    },
+    {
+      "path": "tests\\compression_engine_test.cpp",
+      "size": 12685
+    },
+    {
+      "path": "tests\\compression_engine_test.exe",
+      "size": 166519
+    },
+    {
+      "path": "tests\\config_manager_tests.cpp",
+      "size": 4600
+    },
+    {
+      "path": "tests\\ConsensusChaosMonkey.cpp",
+      "size": 1995
+    },
+    {
+      "path": "tests\\contract_test.cpp",
+      "size": 13889
+    },
+    {
+      "path": "tests\\CTestTestfile.cmake",
+      "size": 10349
+    },
+    {
+      "path": "tests\\dashboard.html",
+      "size": 15356
+    },
+    {
+      "path": "tests\\dashboard_live.html",
+      "size": 17547
+    },
+    {
+      "path": "tests\\dashboard_server.py",
+      "size": 15715
+    },
+    {
+      "path": "tests\\debug_offsets.py",
+      "size": 649
+    },
+    {
+      "path": "tests\\debug_params.cpp",
+      "size": 856
+    },
+    {
+      "path": "tests\\debug_size.cpp",
+      "size": 1638
+    },
+    {
+      "path": "tests\\dependency_manager_tests.cpp",
+      "size": 4385
+    },
+    {
+      "path": "tests\\dequant_debug.cpp",
+      "size": 2954
+    },
+    {
+      "path": "tests\\dequant_minimal.cpp",
+      "size": 1334
+    },
+    {
+      "path": "tests\\dequant_q4_0_benchmark.cpp",
+      "size": 13971
+    },
+    {
+      "path": "tests\\direct_benchmark.cpp",
+      "size": 3934
+    },
+    {
+      "path": "tests\\embedding_lookup.cpp",
+      "size": 11863
+    },
+    {
+      "path": "tests\\embedding_lookup.exe",
+      "size": 149635
+    },
+    {
+      "path": "tests\\embedding_lookup_v2.cpp",
+      "size": 10389
+    },
+    {
+      "path": "tests\\embedding_lookup_v2.exe",
+      "size": 134626
+    },
+    {
+      "path": "tests\\escalate_to_swarm_verification.cpp",
+      "size": 10506
+    },
+    {
+      "path": "tests\\exotic_spec_bench.cpp",
+      "size": 3519
+    },
+    {
+      "path": "tests\\export_results.ps1",
+      "size": 5028
+    },
+    {
+      "path": "tests\\export_results.py",
+      "size": 8308
+    },
+    {
+      "path": "tests\\extract_reference.py",
+      "size": 5673
+    },
+    {
+      "path": "tests\\extract_reference_direct.py",
+      "size": 4209
+    },
+    {
+      "path": "tests\\FabricStressTester.cpp",
+      "size": 755
+    },
+    {
+      "path": "tests\\fast_spec_bridge_smoke.cpp",
+      "size": 6491
+    },
+    {
+      "path": "tests\\fast_spec_test.exe",
+      "size": 107969
+    },
+    {
+      "path": "tests\\fast_spec_throughput_bench.cpp",
+      "size": 6608
+    },
+    {
+      "path": "tests\\feature_demo.cpp",
+      "size": 5245
+    },
+    {
+      "path": "tests\\feature_flags_tests.cpp",
+      "size": 5940
+    },
+    {
+      "path": "tests\\ffi_validation.py",
+      "size": 5184
+    },
+    {
+      "path": "tests\\ffn_optimization_test.cpp",
+      "size": 20047
+    },
+    {
+      "path": "tests\\ffn_optimization_test.exe",
+      "size": 162728
+    },
+    {
+      "path": "tests\\ffn_test.cpp",
+      "size": 7604
+    },
+    {
+      "path": "tests\\ffn_test.exe",
+      "size": 108209
+    },
+    {
+      "path": "tests\\final_benchmark.cpp",
+      "size": 4052
+    },
+    {
+      "path": "tests\\final_integration_test.cpp",
+      "size": 8569
+    },
+    {
+      "path": "tests\\find_tensor_data.cpp",
+      "size": 7792
+    },
+    {
+      "path": "tests\\find_tensor_data.exe",
+      "size": 139505
+    },
+    {
+      "path": "tests\\fix_tool_registry_test.ps1",
+      "size": 1998
+    },
+    {
+      "path": "tests\\fix_tool_registry_test2.ps1",
+      "size": 4332
+    },
+    {
+      "path": "tests\\fp8_scalar_vs_avx2_bench.cpp",
+      "size": 4590
+    },
+    {
+      "path": "tests\\FRAMEWORK_COMPLETE.md",
+      "size": 8379
+    },
+    {
+      "path": "tests\\Full-Manifestation-Tests.ps1",
+      "size": 17775
+    },
+    {
+      "path": "tests\\full_inference_test.cpp",
+      "size": 8756
+    },
+    {
+      "path": "tests\\full_inference_test.exe",
+      "size": 171019
+    },
+    {
+      "path": "tests\\fused_gemm_validator_test.cpp",
+      "size": 14334
+    },
+    {
+      "path": "tests\\fused_quant_gemm_test.cpp",
+      "size": 12692
+    },
+    {
+      "path": "tests\\fused_quant_gemm_test.exe",
+      "size": 389540
+    },
+    {
+      "path": "tests\\fuzz_test_agentic_file_operations.cpp",
+      "size": 10314
+    },
+    {
+      "path": "tests\\gate10_sampling.py",
+      "size": 12943
+    },
+    {
+      "path": "tests\\gate11_full_integration.py",
+      "size": 18046
+    },
+    {
+      "path": "tests\\gate12_streaming_load.py",
+      "size": 13224
+    },
+    {
+      "path": "tests\\gate13_memory_mapped.py",
+      "size": 11919
+    },
+    {
+      "path": "tests\\gate14_progress_callbacks.py",
+      "size": 11707
+    },
+    {
+      "path": "tests\\gate15_production_ready.py",
+      "size": 7699
+    },
+    {
+      "path": "tests\\gate16_multi_model.py",
+      "size": 11321
+    },
+    {
+      "path": "tests\\gate17_error_recovery.py",
+      "size": 13544
+    },
+    {
+      "path": "tests\\gate18_performance_bench.py",
+      "size": 11857
+    },
+    {
+      "path": "tests\\gate19_integration_tests.py",
+      "size": 13425
+    },
+    {
+      "path": "tests\\gate1_gguf_validation.py",
+      "size": 5544
+    },
+    {
+      "path": "tests\\gate20_documentation.py",
+      "size": 10567
+    },
+    {
+      "path": "tests\\gate2_quantization_validation.py",
+      "size": 6023
+    },
+    {
+      "path": "tests\\gate3_embedding_lookup.py",
+      "size": 5983
+    },
+    {
+      "path": "tests\\gate4_gpu_inference.py",
+      "size": 10076
+    },
+    {
+      "path": "tests\\gate5_transformer_layer.py",
+      "size": 18256
+    },
+    {
+      "path": "tests\\gate6_multi_layer.py",
+      "size": 16140
+    },
+    {
+      "path": "tests\\gate6_multi_layer_fast.py",
+      "size": 16256
+    },
+    {
+      "path": "tests\\gate7_token_generation.py",
+      "size": 17876
+    },
+    {
+      "path": "tests\\gate7_token_gen_simple.py",
+      "size": 13255
+    },
+    {
+      "path": "tests\\gate8_kv_cache.py",
+      "size": 16787
+    },
+    {
+      "path": "tests\\gate9_autoregressive_gen.py",
+      "size": 21227
+    },
+    {
+      "path": "tests\\gemm_output_projection_test.cpp",
+      "size": 14363
+    },
+    {
+      "path": "tests\\gemm_output_projection_test.exe",
+      "size": 150026
+    },
+    {
+      "path": "tests\\generate_html_report.py",
+      "size": 11479
+    },
+    {
+      "path": "tests\\generate_report.bat",
+      "size": 5011
+    },
+    {
+      "path": "tests\\gguf_inference_cli.cpp",
+      "size": 8187
+    },
+    {
+      "path": "tests\\gguf_link_impl.cpp",
+      "size": 847
+    },
+    {
+      "path": "tests\\gguf_link_production.cpp",
+      "size": 503
+    },
+    {
+      "path": "tests\\gguf_link_stubs.cpp",
+      "size": 1307
+    },
+    {
+      "path": "tests\\gguf_loader_real.cpp",
+      "size": 10089
+    },
+    {
+      "path": "tests\\gguf_loader_real.obj",
+      "size": 47338
+    },
+    {
+      "path": "tests\\gguf_loader_standalone.cpp",
+      "size": 13399
+    },
+    {
+      "path": "tests\\gguf_loader_standalone.exe",
+      "size": 129034
+    },
+    {
+      "path": "tests\\gguf_loader_test.cpp",
+      "size": 3599
+    },
+    {
+      "path": "tests\\gguf_loader_test.exe",
+      "size": 418968
+    },
+    {
+      "path": "tests\\gguf_loader_test.obj",
+      "size": 203400
+    },
+    {
+      "path": "tests\\ghost_text_runtime_smoke.cpp",
+      "size": 14354
+    },
+    {
+      "path": "tests\\harness_sovereign_thermal.cpp",
+      "size": 43626
+    },
+    {
+      "path": "tests\\harness_vram_budget.cpp",
+      "size": 13457
+    },
+    {
+      "path": "tests\\hazard_corpus.json",
+      "size": 2046
+    },
+    {
+      "path": "tests\\header_only_integration.hpp",
+      "size": 5206
+    },
+    {
+      "path": "tests\\INDEX.md",
+      "size": 4704
+    },
+    {
+      "path": "tests\\inference_correctness_harness.cpp",
+      "size": 17920
+    },
+    {
+      "path": "tests\\inference_correctness_harness.obj",
+      "size": 1199339
+    },
+    {
+      "path": "tests\\inference_retry_shim_smoke.cpp",
+      "size": 2518
+    },
+    {
+      "path": "tests\\inference_runtime_validation.cpp",
+      "size": 6961
+    },
+    {
+      "path": "tests\\InfinitePerfectionEngine_SmokeTest.cpp",
+      "size": 22566
+    },
+    {
+      "path": "tests\\InfinitePerfectionEngine_SmokeTest.py",
+      "size": 10410
+    },
+    {
+      "path": "tests\\integration_test.cpp",
+      "size": 8776
+    },
+    {
+      "path": "tests\\integration_test.exe",
+      "size": 161749
+    },
+    {
+      "path": "tests\\integration_tests.cpp",
+      "size": 8611
+    },
+    {
+      "path": "tests\\integration_test_suite.cpp",
+      "size": 11228
+    },
+    {
+      "path": "tests\\integration_truth_test.cpp",
+      "size": 24140
+    },
+    {
+      "path": "tests\\kernel_integration_test.cpp",
+      "size": 11377
+    },
+    {
+      "path": "tests\\kernel_registry_test.cpp",
+      "size": 14266
+    },
+    {
+      "path": "tests\\kv_cache_credit_bridge_test.cpp",
+      "size": 5835
+    },
+    {
+      "path": "tests\\L4_1_1_Decode.cpp",
+      "size": 26351
+    },
+    {
+      "path": "tests\\L4_1_1_Decode.exe",
+      "size": 113598
+    },
+    {
+      "path": "tests\\L4_1_2_Reference_Extractor.cpp",
+      "size": 8577
+    },
+    {
+      "path": "tests\\L4_1_2_Reference_Extractor.exe",
+      "size": 72672
+    },
+    {
+      "path": "tests\\L4_1_2_Reference_Extractor_v2.cpp",
+      "size": 8329
+    },
+    {
+      "path": "tests\\L4_1_2_Reference_Extractor_v2.exe",
+      "size": 70849
+    },
+    {
+      "path": "tests\\L4_1_2_Reference_Validation.cpp",
+      "size": 7367
+    },
+    {
+      "path": "tests\\L4_1_2_Reference_Validation.exe",
+      "size": 81934
+    },
+    {
+      "path": "tests\\L4_1_Discover_v4.cpp",
+      "size": 14234
+    },
+    {
+      "path": "tests\\L4_1_Discover_v4.exe",
+      "size": 91142
+    },
+    {
+      "path": "tests\\L4_2_0_Validate.cpp",
+      "size": 8659
+    },
+    {
+      "path": "tests\\L4_2_0_Validate.exe",
+      "size": 114869
+    },
+    {
+      "path": "tests\\L4_2_1_AVX2_Test.cpp",
+      "size": 1987
+    },
+    {
+      "path": "tests\\L4_2_1_AVX2_Test.exe",
+      "size": 122745
+    },
+    {
+      "path": "tests\\L4_2_1_Test.cpp",
+      "size": 2933
+    },
+    {
+      "path": "tests\\L4_2_1_Test.exe",
+      "size": 115546
+    },
+    {
+      "path": "tests\\L4_2_2_5_Test.cpp",
+      "size": 9855
+    },
+    {
+      "path": "tests\\L4_2_2_5_Test.exe",
+      "size": 96675
+    },
+    {
+      "path": "tests\\L4_2_2_Validate.cpp",
+      "size": 7533
+    },
+    {
+      "path": "tests\\L4_2_2_Validate.exe",
+      "size": 75958
+    },
+    {
+      "path": "tests\\l4_contract_test.cpp",
+      "size": 5380
+    },
+    {
+      "path": "tests\\l4_contract_test.exe",
+      "size": 324345
+    },
+    {
+      "path": "tests\\license_validation_suite.cpp",
+      "size": 19698
+    },
+    {
+      "path": "tests\\llamacpp_token_42.bin",
+      "size": 16384
+    },
+    {
+      "path": "tests\\LoadSimulator.cpp",
+      "size": 1086
+    },
+    {
+      "path": "tests\\main.cpp",
+      "size": 500
+    },
+    {
+      "path": "tests\\masm_security_integration_test.cpp",
+      "size": 10235
+    },
+    {
+      "path": "tests\\metrics_collector_tests.cpp",
+      "size": 6452
+    },
+    {
+      "path": "tests\\minimal_test.cpp",
+      "size": 1098
+    },
+    {
+      "path": "tests\\minimal_tokenizer_test.cpp",
+      "size": 6892
+    },
+    {
+      "path": "tests\\minimal_tokenizer_test.exe",
+      "size": 121548
+    },
+    {
+      "path": "tests\\MiniMonacoIntegrationTest.cpp",
+      "size": 4621
+    },
+    {
+      "path": "tests\\mmf_diagnostic.cpp",
+      "size": 8145
+    },
+    {
+      "path": "tests\\model_registry_test.cpp",
+      "size": 450
+    },
+    {
+      "path": "tests\\moe_grouped_gemm_bench.cpp",
+      "size": 14020
+    },
+    {
+      "path": "tests\\NodeFailureEmulator.cpp",
+      "size": 1453
+    },
+    {
+      "path": "tests\\notification_service_tests.cpp",
+      "size": 6436
+    },
+    {
+      "path": "tests\\nvme_temp_diagnostic.cpp",
+      "size": 3073
+    },
+    {
+      "path": "tests\\nvme_thermal_reader.cpp",
+      "size": 2238
+    },
+    {
+      "path": "tests\\nvme_thermal_sidecar_clean.cpp",
+      "size": 23764
+    },
+    {
+      "path": "tests\\nvme_thermal_sidecar_cpp.cpp",
+      "size": 4982
+    },
+    {
+      "path": "tests\\output_projection_test.cpp",
+      "size": 5556
+    },
+    {
+      "path": "tests\\output_projection_test.exe",
+      "size": 152163
+    },
+    {
+      "path": "tests\\performance_tests.cpp",
+      "size": 8694
+    },
+    {
+      "path": "tests\\perf_results.json",
+      "size": 747
+    },
+    {
+      "path": "tests\\pester.config.json",
+      "size": 1383
+    },
+    {
+      "path": "tests\\PHASE_15_BASELINE.md",
+      "size": 3514
+    },
+    {
+      "path": "tests\\PHASE_16_PROFILING.md",
+      "size": 4742
+    },
+    {
+      "path": "tests\\PHASE_17_OPTIMIZATION.md",
+      "size": 2574
+    },
+    {
+      "path": "tests\\PHASE_SUMMARY.md",
+      "size": 5811
+    },
+    {
+      "path": "tests\\pipeline_3stage_flow_control.cpp",
+      "size": 9528
+    },
+    {
+      "path": "tests\\pipeline_adaptive_governor_v2.cpp",
+      "size": 12568
+    },
+    {
+      "path": "tests\\pipeline_adaptive_speculation_governor.cpp",
+      "size": 14549
+    },
+    {
+      "path": "tests\\pipeline_dashboard.cpp",
+      "size": 16666
+    },
+    {
+      "path": "tests\\pipeline_end_to_end_fp8.cpp",
+      "size": 13146
+    },
+    {
+      "path": "tests\\pipeline_fp8_avx2_credit.cpp",
+      "size": 7144
+    },
+    {
+      "path": "tests\\pipeline_fp8_avx2_credit_fixed.cpp",
+      "size": 10078
+    },
+    {
+      "path": "tests\\pipeline_fp8_avx2_hardened.cpp",
+      "size": 19708
+    },
+    {
+      "path": "tests\\pipeline_fp8_avx2_integration.cpp",
+      "size": 12225
+    },
+    {
+      "path": "tests\\pipeline_fp8_avx2_stable.cpp",
+      "size": 5996
+    },
+    {
+      "path": "tests\\pipeline_fp8_avx2_sync.cpp",
+      "size": 9009
+    },
+    {
+      "path": "tests\\pipeline_fp8_avx2_windowed.cpp",
+      "size": 11411
+    },
+    {
+      "path": "tests\\pipeline_fp8_nonblocking.cpp",
+      "size": 17654
+    },
+    {
+      "path": "tests\\pipeline_hardened_with_decoder.cpp",
+      "size": 9726
+    },
+    {
+      "path": "tests\\pipeline_hybrid_credit_governor.cpp",
+      "size": 12989
+    },
+    {
+      "path": "tests\\plugin_manager_tests.cpp",
+      "size": 3430
+    },
+    {
+      "path": "tests\\production_features_test.cpp",
+      "size": 12645
+    },
+    {
+      "path": "tests\\production_validation_suite.ps1",
+      "size": 11565
+    },
+    {
+      "path": "tests\\q4_fusion_test.cpp",
+      "size": 10672
+    },
+    {
+      "path": "tests\\q4_fusion_test.exe",
+      "size": 169004
+    },
+    {
+      "path": "tests\\q4_k_m_vs_q4_0_bench.cpp",
+      "size": 15359
+    },
+    {
+      "path": "tests\\q4_k_m_vs_q4_0_bench.exe",
+      "size": 180584
+    },
+    {
+      "path": "tests\\qkv_optimization_test.cpp",
+      "size": 15318
+    },
+    {
+      "path": "tests\\qkv_optimization_test.exe",
+      "size": 152522
+    },
+    {
+      "path": "tests\\qkv_projection_test.cpp",
+      "size": 11620
+    },
+    {
+      "path": "tests\\qkv_projection_test.exe",
+      "size": 139241
+    },
+    {
+      "path": "tests\\quantization_guard_test.cpp",
+      "size": 14607
+    },
+    {
+      "path": "tests\\quantization_guard_test.exe",
+      "size": 377535
+    },
+    {
+      "path": "tests\\quant_correctness_tests.cpp",
+      "size": 561
+    },
+    {
+      "path": "tests\\quant_engine_smoke.cpp",
+      "size": 428
+    },
+    {
+      "path": "tests\\quant_scalar_smoke.cpp",
+      "size": 3599
+    },
+    {
+      "path": "tests\\QUICK_REFERENCE.md",
+      "size": 3591
+    },
+    {
+      "path": "tests\\RawRamXD_Test.cpp",
+      "size": 9857
+    },
+    {
+      "path": "tests\\RawrXD.Autonomy.Tests.ps1",
+      "size": 696
+    },
+    {
+      "path": "tests\\RawrXD.ModelLoader.Tests.ps1",
+      "size": 798
+    },
+    {
+      "path": "tests\\RawrXD.Scaffolds.Tests.ps1",
+      "size": 1215
+    },
+    {
+      "path": "tests\\RawrXD.Win32Deployment.Tests.ps1",
+      "size": 458
+    },
+    {
+      "path": "tests\\rawrxd_ffi_minimal.cpp",
+      "size": 3031
+    },
+    {
+      "path": "tests\\RawrXD_L4_1_Discover.cpp",
+      "size": 14759
+    },
+    {
+      "path": "tests\\RawrXD_L4_1_Discover.exe",
+      "size": 76694
+    },
+    {
+      "path": "tests\\RawrXD_L4_1_Discover_v2.exe",
+      "size": 76891
+    },
+    {
+      "path": "tests\\RawrXD_L4_1_Discover_v3.exe",
+      "size": 78427
+    },
+    {
+      "path": "tests\\rawrxd_token_42.bin",
+      "size": 16384
+    },
+    {
+      "path": "tests\\README.md",
+      "size": 8618
+    },
+    {
+      "path": "tests\\README_MMF_DIAGNOSTIC.md",
+      "size": 1121
+    },
+    {
+      "path": "tests\\read_nvme_temps.ps1",
+      "size": 1156
+    },
+    {
+      "path": "tests\\real_gguf_tensor_parser.py",
+      "size": 14508
+    },
+    {
+      "path": "tests\\real_time_completion_engine_test_impl.cpp",
+      "size": 8244
+    },
+    {
+      "path": "tests\\rmsnorm_test.cpp",
+      "size": 10025
+    },
+    {
+      "path": "tests\\rmsnorm_test.exe",
+      "size": 135702
+    },
+    {
+      "path": "tests\\rope_test.cpp",
+      "size": 11593
+    },
+    {
+      "path": "tests\\rope_test.exe",
+      "size": 142358
+    },
+    {
+      "path": "tests\\runtime_validation.cpp",
+      "size": 11017
+    },
+    {
+      "path": "tests\\runtime_validation.exe",
+      "size": 728202
+    },
+    {
+      "path": "tests\\runtime_validation.obj",
+      "size": 546415
+    },
+    {
+      "path": "tests\\run_all.py",
+      "size": 10359
+    },
+    {
+      "path": "tests\\run_all_gates.py",
+      "size": 4289
+    },
+    {
+      "path": "tests\\run_all_tests.py",
+      "size": 8770
+    },
+    {
+      "path": "tests\\run_parallel.py",
+      "size": 7767
+    },
+    {
+      "path": "tests\\run_performance.bat",
+      "size": 506
+    },
+    {
+      "path": "tests\\run_regression.bat",
+      "size": 499
+    },
+    {
+      "path": "tests\\run_stress.bat",
+      "size": 479
+    },
+    {
+      "path": "tests\\run_validation.bat",
+      "size": 2308
+    },
+    {
+      "path": "tests\\rust_scope_test_final.cpp",
+      "size": 11418
+    },
+    {
+      "path": "tests\\rust_scope_test_link.cpp",
+      "size": 7049
+    },
+    {
+      "path": "tests\\rust_scope_test_unified.cpp",
+      "size": 6960
+    },
+    {
+      "path": "tests\\rust_scope_verification_test.cpp",
+      "size": 7315
+    },
+    {
+      "path": "tests\\sampling_test.cpp",
+      "size": 8647
+    },
+    {
+      "path": "tests\\sampling_test.exe",
+      "size": 198789
+    },
+    {
+      "path": "tests\\sandboxed_terminal_test.cpp",
+      "size": 385
+    },
+    {
+      "path": "tests\\search_engine_tests.cpp",
+      "size": 5182
+    },
+    {
+      "path": "tests\\seg_integration_test.cpp",
+      "size": 12349
+    },
+    {
+      "path": "tests\\seg_telemetry_pipeline_test.cpp",
+      "size": 6471
+    },
+    {
+      "path": "tests\\semantic_diff_analyzer_test.cpp",
+      "size": 402
+    },
+    {
+      "path": "tests\\SentinelStressTest.cpp",
+      "size": 2292
+    },
+    {
+      "path": "tests\\setup_test_framework.bat",
+      "size": 1190
+    },
+    {
+      "path": "tests\\singularity_spec_bench.cpp",
+      "size": 2782
+    },
+    {
+      "path": "tests\\singularity_v2_bench.cpp",
+      "size": 3323
+    },
+    {
+      "path": "tests\\smoke_core.cpp",
+      "size": 3808
+    },
+    {
+      "path": "tests\\smoke_minimal.cpp",
+      "size": 3815
+    },
+    {
+      "path": "tests\\smoke_split_answers_toggle.cpp",
+      "size": 2333
+    },
+    {
+      "path": "tests\\smoke_test.cpp",
+      "size": 8627
+    },
+    {
+      "path": "tests\\smoke_test_gpu_batching.cpp",
+      "size": 10061
+    },
+    {
+      "path": "tests\\smoke_test_minimal.cpp",
+      "size": 8146
+    },
+    {
+      "path": "tests\\smoke_test_minimal.exe",
+      "size": 653039
+    },
+    {
+      "path": "tests\\smoke_test_minimal.obj",
+      "size": 110506
+    },
+    {
+      "path": "tests\\smoke_test_rag.cpp",
+      "size": 11909
+    },
+    {
+      "path": "tests\\smoke_test_results.json",
+      "size": 848
+    },
+    {
+      "path": "tests\\smoke_test_v2.cpp",
+      "size": 11839
+    },
+    {
+      "path": "tests\\smoke_test_v2.obj",
+      "size": 590635
+    },
+    {
+      "path": "tests\\SovereignBenchmarkTest.cpp",
+      "size": 11994
+    },
+    {
+      "path": "tests\\SovereignIntegrationTest.cpp",
+      "size": 2398
+    },
+    {
+      "path": "tests\\SovereignSystemQualification.cpp",
+      "size": 24848
+    },
+    {
+      "path": "tests\\sovereign_header_tests.cpp",
+      "size": 5458
+    },
+    {
+      "path": "tests\\stress_test.cpp",
+      "size": 12596
+    },
+    {
+      "path": "tests\\stress_test_cot_dll.py",
+      "size": 24598
+    },
+    {
+      "path": "tests\\stress_test_simple.cpp",
+      "size": 13440
+    },
+    {
+      "path": "tests\\stress_test_simple.exe",
+      "size": 504356
+    },
+    {
+      "path": "tests\\subsystem_integration_test.cpp",
+      "size": 8468
+    },
+    {
+      "path": "tests\\SwarmFeedbackLoopTest.cpp",
+      "size": 8598
+    },
+    {
+      "path": "tests\\swarm_scheduler_rawr_loader_link_stub.cpp",
+      "size": 897
+    },
+    {
+      "path": "tests\\tensor_data_start.cpp",
+      "size": 5572
+    },
+    {
+      "path": "tests\\tensor_data_start.exe",
+      "size": 108612
+    },
+    {
+      "path": "tests\\tensor_data_validation.cpp",
+      "size": 10120
+    },
+    {
+      "path": "tests\\tensor_data_validation.exe",
+      "size": 144047
+    },
+    {
+      "path": "tests\\tensor_offset_diagnostic.cpp",
+      "size": 3519
+    },
+    {
+      "path": "tests\\tensor_offset_diagnostic.exe",
+      "size": 75469
+    },
+    {
+      "path": "tests\\tensor_profiler_test.cpp",
+      "size": 14823
+    },
+    {
+      "path": "tests\\tensor_raw_inspection.cpp",
+      "size": 3805
+    },
+    {
+      "path": "tests\\tensor_raw_inspection.exe",
+      "size": 79198
+    },
+    {
+      "path": "tests\\tensor_validation.cpp",
+      "size": 11328
+    },
+    {
+      "path": "tests\\tensor_validation.exe",
+      "size": 153170
+    },
+    {
+      "path": "tests\\tensor_validator.cpp",
+      "size": 12026
+    },
+    {
+      "path": "tests\\tensor_validator.exe",
+      "size": 222328
+    },
+    {
+      "path": "tests\\test-arange.cpp",
+      "size": 2627
+    },
+    {
+      "path": "tests\\test-backend-ops.cpp",
+      "size": 322530
+    },
+    {
+      "path": "tests\\test-cont.c",
+      "size": 5183
+    },
+    {
+      "path": "tests\\test-conv-transpose-1d.cpp",
+      "size": 573975
+    },
+    {
+      "path": "tests\\test-conv-transpose.c",
+      "size": 8458
+    },
+    {
+      "path": "tests\\test-conv1d-dw-c1.cpp",
+      "size": 7222
+    },
+    {
+      "path": "tests\\test-conv1d-dw-c2.cpp",
+      "size": 7158
+    },
+    {
+      "path": "tests\\test-conv1d.cpp",
+      "size": 9334
+    },
+    {
+      "path": "tests\\test-conv2d-dw.cpp",
+      "size": 5930
+    },
+    {
+      "path": "tests\\test-conv2d.cpp",
+      "size": 16184
+    },
+    {
+      "path": "tests\\test-customop.c",
+      "size": 9908
+    },
+    {
+      "path": "tests\\test-dup.c",
+      "size": 4363
+    },
+    {
+      "path": "tests\\test-interpolate.cpp",
+      "size": 4992
+    },
+    {
+      "path": "tests\\Test-MASM-NASM-Parity.ps1",
+      "size": 3014
+    },
+    {
+      "path": "tests\\test-opt.cpp",
+      "size": 40317
+    },
+    {
+      "path": "tests\\test-pad-reflect-1d.cpp",
+      "size": 6905
+    },
+    {
+      "path": "tests\\test-pool.c",
+      "size": 9006
+    },
+    {
+      "path": "tests\\test-quantize-fns.cpp",
+      "size": 7183
+    },
+    {
+      "path": "tests\\test-quantize-perf.cpp",
+      "size": 13880
+    },
+    {
+      "path": "tests\\test-rel-pos.c",
+      "size": 3133
+    },
+    {
+      "path": "tests\\test-roll.cpp",
+      "size": 4246
+    },
+    {
+      "path": "tests\\test-timestep_embedding.cpp",
+      "size": 5868
+    },
+    {
+      "path": "tests\\Test-UniversalCompiler.ps1",
+      "size": 21134
+    },
+    {
+      "path": "tests\\Test-VSIXLoaderAgentic.ps1",
+      "size": 7325
+    },
+    {
+      "path": "tests\\TESTING_COMPLETE.md",
+      "size": 5075
+    },
+    {
+      "path": "tests\\test_70b_load.cpp",
+      "size": 7753
+    },
+    {
+      "path": "tests\\test_adaptive_credit_governor.cpp",
+      "size": 6390
+    },
+    {
+      "path": "tests\\test_agentic_file_operations.cpp",
+      "size": 7916
+    },
+    {
+      "path": "tests\\test_agentic_mini_pc_800b.cpp",
+      "size": 15750
+    },
+    {
+      "path": "tests\\test_agent_coordinator.cpp",
+      "size": 740
+    },
+    {
+      "path": "tests\\test_agent_coordinator_integration.cpp",
+      "size": 436
+    },
+    {
+      "path": "tests\\test_agent_workflow_orchestrator.cpp",
+      "size": 6247
+    },
+    {
+      "path": "tests\\test_ai_completions.cpp",
+      "size": 4863
+    },
+    {
+      "path": "tests\\test_ai_integration.cpp",
+      "size": 5594
+    },
+    {
+      "path": "tests\\test_ai_merge_resolver.cpp",
+      "size": 341
+    },
+    {
+      "path": "tests\\test_asm_pyre.cpp",
+      "size": 7415
+    },
+    {
+      "path": "tests\\test_ast_scope_awareness.cpp",
+      "size": 14089
+    },
+    {
+      "path": "tests\\test_attention.cpp",
+      "size": 9839
+    },
+    {
+      "path": "tests\\test_autonomous_pipeline.cpp",
+      "size": 1707
+    },
+    {
+      "path": "tests\\test_batch_scheduler.cpp",
+      "size": 9484
+    },
+    {
+      "path": "tests\\test_completion_ranking_kernel.cpp",
+      "size": 14897
+    },
+    {
+      "path": "tests\\test_config.hpp",
+      "size": 2801
+    },
+    {
+      "path": "tests\\test_config.tmp",
+      "size": 71
+    },
+    {
+      "path": "tests\\test_context_decision_harness.cpp",
+      "size": 5357
+    },
+    {
+      "path": "tests\\test_cot_multi_mode.cpp",
+      "size": 15348
+    },
+    {
+      "path": "tests\\test_credit_based_flow_control.cpp",
+      "size": 11476
+    },
+    {
+      "path": "tests\\test_credit_governor.cpp",
+      "size": 8432
+    },
+    {
+      "path": "tests\\test_deflate_masm.cpp",
+      "size": 973
+    },
+    {
+      "path": "tests\\test_disk_recovery_agent.cpp",
+      "size": 6776
+    },
+    {
+      "path": "tests\\test_dispatch_ipc.cpp",
+      "size": 2851
+    },
+    {
+      "path": "tests\\test_dynamic_loader.cpp",
+      "size": 4655
+    },
+    {
+      "path": "tests\\test_engine_revolver.cpp",
+      "size": 1088
+    },
+    {
+      "path": "tests\\test_enhanced_streaming_gguf_loader.cpp",
+      "size": 10462
+    },
+    {
+      "path": "tests\\test_enterprise_license_regression.cpp",
+      "size": 9718
+    },
+    {
+      "path": "tests\\TEST_EXECUTION_GUIDE.md",
+      "size": 13925
+    },
+    {
+      "path": "tests\\test_extension_host.cpp",
+      "size": 10025
+    },
+    {
+      "path": "tests\\test_file.cpp",
+      "size": 652
+    },
+    {
+      "path": "tests\\test_file.exe",
+      "size": 58572
+    },
+    {
+      "path": "tests\\test_file_creation_probe.txt",
+      "size": 5
+    },
+    {
+      "path": "tests\\test_fp8_avx512.cpp",
+      "size": 10182
+    },
+    {
+      "path": "tests\\test_fp8_quantization.cpp",
+      "size": 12005
+    },
+    {
+      "path": "tests\\test_fp8_sampling_hook.cpp",
+      "size": 9077
+    },
+    {
+      "path": "tests\\test_fp8_verifier.cpp",
+      "size": 5463
+    },
+    {
+      "path": "tests\\test_fused_fp8_quantizer.cpp",
+      "size": 9006
+    },
+    {
+      "path": "tests\\test_gguf_integration.cpp",
+      "size": 3534
+    },
+    {
+      "path": "tests\\test_gguf_loader.cpp",
+      "size": 6688
+    },
+    {
+      "path": "tests\\test_gguf_loader_production.cpp",
+      "size": 4644
+    },
+    {
+      "path": "tests\\test_gguf_loader_simple.cpp",
+      "size": 2455
+    },
+    {
+      "path": "tests\\test_gpu_detection.cpp",
+      "size": 12233
+    },
+    {
+      "path": "tests\\test_gpu_hybrid.cpp",
+      "size": 5531
+    },
+    {
+      "path": "tests\\test_gpu_upload_d3d12.cpp",
+      "size": 11844
+    },
+    {
+      "path": "tests\\test_graph_runner_forward.cpp",
+      "size": 2659
+    },
+    {
+      "path": "tests\\test_graph_runner_individual.cpp",
+      "size": 4657
+    },
+    {
+      "path": "tests\\test_graph_runner_simple.cpp",
+      "size": 1726
+    },
+    {
+      "path": "tests\\test_graph_runner_v2.cpp",
+      "size": 8018
+    },
+    {
+      "path": "tests\\test_graph_runner_v2_final.cpp",
+      "size": 6186
+    },
+    {
+      "path": "tests\\test_gui_components.cpp",
+      "size": 7263
+    },
+    {
+      "path": "tests\\test_hotpatch.cpp",
+      "size": 6938
+    },
+    {
+      "path": "tests\\test_hotpatch_tools_smoke.cpp",
+      "size": 8805
+    },
+    {
+      "path": "tests\\test_instructions_provider.cpp",
+      "size": 20032
+    },
+    {
+      "path": "tests\\test_int4kv_bridge_integration.cpp",
+      "size": 6544
+    },
+    {
+      "path": "tests\\test_integration_pipeline.cpp",
+      "size": 13387
+    },
+    {
+      "path": "tests\\test_ioring_loader.cpp",
+      "size": 2424
+    },
+    {
+      "path": "tests\\test_iq2m_dequant_kernel.cpp",
+      "size": 11928
+    },
+    {
+      "path": "tests\\test_kernel_registry.cpp",
+      "size": 12490
+    },
+    {
+      "path": "tests\\test_kernel_registry_simple.cpp",
+      "size": 2808
+    },
+    {
+      "path": "tests\\test_kv_cache.cpp",
+      "size": 9307
+    },
+    {
+      "path": "tests\\test_kv_cache_ownership.cpp",
+      "size": 8422
+    },
+    {
+      "path": "tests\\test_llm_connectivity.cpp",
+      "size": 21581
+    },
+    {
+      "path": "tests\\test_main.cpp",
+      "size": 365
+    },
+    {
+      "path": "tests\\test_mapped_window_streamer.cpp",
+      "size": 6204
+    },
+    {
+      "path": "tests\\test_marketplace_installer.asm",
+      "size": 20732
+    },
+    {
+      "path": "tests\\test_masm_backend.cpp",
+      "size": 7761
+    },
+    {
+      "path": "tests\\test_milestone3_integration.cpp",
+      "size": 8646
+    },
+    {
+      "path": "tests\\test_model_basic.cpp",
+      "size": 6539
+    },
+    {
+      "path": "tests\\test_model_loader_streamer_smoke.cpp",
+      "size": 17338
+    },
+    {
+      "path": "tests\\test_model_loading_integration.cpp",
+      "size": 12144
+    },
+    {
+      "path": "tests\\test_moe_batched_down_project.cpp",
+      "size": 3340
+    },
+    {
+      "path": "tests\\test_moe_down_project_policy.cpp",
+      "size": 1820
+    },
+    {
+      "path": "tests\\test_moe_mixture_reference.cpp",
+      "size": 5382
+    },
+    {
+      "path": "tests\\test_moe_pack_hud_metrics.cpp",
+      "size": 1335
+    },
+    {
+      "path": "tests\\test_moe_plan_row_mixture_pack_cache.cpp",
+      "size": 4360
+    },
+    {
+      "path": "tests\\test_multifile_rollback.cpp",
+      "size": 2089
+    },
+    {
+      "path": "tests\\test_nvme_temp.cpp",
+      "size": 617
+    },
+    {
+      "path": "tests\\test_nvme_temp_simple.cpp",
+      "size": 1285
+    },
+    {
+      "path": "tests\\test_obsring_performance.cpp",
+      "size": 11190
+    },
+    {
+      "path": "tests\\test_phase1_unified_smoke.cpp",
+      "size": 12047
+    },
+    {
+      "path": "tests\\test_pipeline_integration.cpp",
+      "size": 12003
+    },
+    {
+      "path": "tests\\test_production_regression.cpp",
+      "size": 27002
+    },
+    {
+      "path": "tests\\test_qt_ai_integration.cpp",
+      "size": 9602
+    },
+    {
+      "path": "tests\\test_quantized_real_model.cpp",
+      "size": 7654
+    },
+    {
+      "path": "tests\\test_real_model.cpp",
+      "size": 5898
+    },
+    {
+      "path": "tests\\test_real_model.exe",
+      "size": 861695
+    },
+    {
+      "path": "tests\\test_real_model.obj",
+      "size": 153773
+    },
+    {
+      "path": "tests\\test_real_model_loader.cpp",
+      "size": 14976
+    },
+    {
+      "path": "tests\\test_rust_parser_integration.cpp",
+      "size": 21507
+    },
+    {
+      "path": "tests\\test_rust_scope.cpp",
+      "size": 7385
+    },
+    {
+      "path": "tests\\test_sampler.cpp",
+      "size": 11018
+    },
+    {
+      "path": "tests\\test_sandboxed_terminal.cpp",
+      "size": 324
+    },
+    {
+      "path": "tests\\test_self_refactor_ooda.cpp",
+      "size": 24271
+    },
+    {
+      "path": "tests\\test_semantic_diff_analyzer.cpp",
+      "size": 431
+    },
+    {
+      "path": "tests\\test_semantic_lsp_completion.cpp",
+      "size": 18045
+    },
+    {
+      "path": "tests\\test_softmax_abi.cpp",
+      "size": 2267
+    },
+    {
+      "path": "tests\\test_sovereign_compose_lab.cpp",
+      "size": 13134
+    },
+    {
+      "path": "tests\\test_sovereign_global_dce.cpp",
+      "size": 3602
+    },
+    {
+      "path": "tests\\test_sovereign_pager_smoke.cpp",
+      "size": 793
+    },
+    {
+      "path": "tests\\test_sovereign_rel32_validate.cpp",
+      "size": 2119
+    },
+    {
+      "path": "tests\\test_speculative_decoder.cpp",
+      "size": 11772
+    },
+    {
+      "path": "tests\\test_speculative_pipeline.cpp",
+      "size": 10498
+    },
+    {
+      "path": "tests\\test_streaming_gguf_loader.cpp",
+      "size": 6778
+    },
+    {
+      "path": "tests\\test_suite.json",
+      "size": 7517
+    },
+    {
+      "path": "tests\\test_swarm_expert_heatmap_stress.cpp",
+      "size": 8213
+    },
+    {
+      "path": "tests\\test_swarm_scheduler_pin.cpp",
+      "size": 7265
+    },
+    {
+      "path": "tests\\test_symbol_index_bridge.cpp",
+      "size": 7790
+    },
+    {
+      "path": "tests\\test_tensor.cpp",
+      "size": 8600
+    },
+    {
+      "path": "tests\\test_thermal_system.cpp",
+      "size": 7064
+    },
+    {
+      "path": "tests\\test_thermal_tools.cpp",
+      "size": 6407
+    },
+    {
+      "path": "tests\\test_titan_dispatch.cpp",
+      "size": 16704
+    },
+    {
+      "path": "tests\\test_tokenizer.cpp",
+      "size": 10290
+    },
+    {
+      "path": "tests\\test_token_pipeline.cpp",
+      "size": 10307
+    },
+    {
+      "path": "tests\\test_tool_registry.cpp",
+      "size": 19964
+    },
+    {
+      "path": "tests\\test_unified_execution_abi.cpp",
+      "size": 13995
+    },
+    {
+      "path": "tests\\test_voice_assistant_rag.cpp",
+      "size": 15260
+    },
+    {
+      "path": "tests\\test_voice_processor.cpp",
+      "size": 408
+    },
+    {
+      "path": "tests\\test_workflow_persistence.cpp",
+      "size": 19337
+    },
+    {
+      "path": "tests\\test_workflow_persistence_enhanced.cpp",
+      "size": 13475
+    },
+    {
+      "path": "tests\\test_zero_retention_manager.cpp",
+      "size": 8452
+    },
+    {
+      "path": "tests\\tokenizer_test.cpp",
+      "size": 7708
+    },
+    {
+      "path": "tests\\tokenizer_test.exe",
+      "size": 278411
+    },
+    {
+      "path": "tests\\tokenizer_whitespace_test.cpp",
+      "size": 10694
+    },
+    {
+      "path": "tests\\token_pipeline_fixed.cpp",
+      "size": 6653
+    },
+    {
+      "path": "tests\\tool_registry_full_impl.cpp",
+      "size": 19356
+    },
+    {
+      "path": "tests\\tps_measurement_harness.cpp",
+      "size": 4772
+    },
+    {
+      "path": "tests\\tps_measurement_simple.cpp",
+      "size": 4904
+    },
+    {
+      "path": "tests\\tps_minimal.cpp",
+      "size": 4435
+    },
+    {
+      "path": "tests\\tps_with_speculative.cpp",
+      "size": 8097
+    },
+    {
+      "path": "tests\\unified_integration_verification.cpp",
+      "size": 10870
+    },
+    {
+      "path": "tests\\validate_escalate_to_swarm.ps1",
+      "size": 4702
+    },
+    {
+      "path": "tests\\validate_lsp_codelens.cpp",
+      "size": 1025
+    },
+    {
+      "path": "tests\\VALIDATION_FRAMEWORK.md",
+      "size": 2122
+    },
+    {
+      "path": "tests\\VALIDATION_SUMMARY.md",
+      "size": 14985
+    },
+    {
+      "path": "tests\\vc140.pdb",
+      "size": 503808
+    },
+    {
+      "path": "tests\\verify_consistency.cpp",
+      "size": 1744
+    },
+    {
+      "path": "tests\\verify_dequant_fix.cpp",
+      "size": 2601
+    },
+    {
+      "path": "tests\\vocabulary_extraction.cpp",
+      "size": 6352
+    },
+    {
+      "path": "tests\\vocabulary_extraction.exe",
+      "size": 159856
+    },
+    {
+      "path": "tests\\voice_processor_test.cpp",
+      "size": 427
+    },
+    {
+      "path": "tests\\vram_audit.cpp",
+      "size": 6492
+    },
+    {
+      "path": "tests\\watch_and_test.py",
+      "size": 6998
+    },
+    {
+      "path": "tests\\workflow_engine_tests.cpp",
+      "size": 4577
+    },
+    {
+      "path": "tests\\zero_retention_manager_test.cpp",
+      "size": 2405
+    },
+    {
+      "path": "docs\\advanced\\API_Reference.md",
+      "size": 12237
+    },
+    {
+      "path": "docs\\advanced\\Custom_Extensions_Guide.md",
+      "size": 18542
+    },
+    {
+      "path": "docs\\advanced\\Distributed_Execution_Guide.md",
+      "size": 17625
+    },
+    {
+      "path": "docs\\advanced\\Performance_Optimization_Guide.md",
+      "size": 15913
+    },
+    {
+      "path": "docs\\advanced\\Security_Hardening_Guide.md",
+      "size": 13988
+    },
+    {
+      "path": "docs\\advanced\\Troubleshooting_Guide.md",
+      "size": 11838
+    },
+    {
+      "path": "docs\\api\\APIDocumentationGenerator.hpp",
+      "size": 4923
+    },
+    {
+      "path": "docs\\api\\API_REFERENCE.md",
+      "size": 4532
+    },
+    {
+      "path": "docs\\api\\API_Reference_Agentic.md",
+      "size": 18416
+    },
+    {
+      "path": "docs\\api\\API_Reference_AI.md",
+      "size": 16883
+    },
+    {
+      "path": "docs\\api\\API_Reference_Binary.md",
+      "size": 15166
+    },
+    {
+      "path": "docs\\api\\API_Reference_Core.md",
+      "size": 16861
+    },
+    {
+      "path": "docs\\api\\API_Reference_Index.md",
+      "size": 5226
+    },
+    {
+      "path": "docs\\api\\API_Reference_MoE.md",
+      "size": 18183
+    },
+    {
+      "path": "docs\\api\\API_Reference_SEG.md",
+      "size": 17072
+    },
+    {
+      "path": "docs\\api\\openapi.yaml",
+      "size": 12158
+    },
+    {
+      "path": "docs\\api\\REST_API_Reference.md",
+      "size": 2843
+    },
+    {
+      "path": "docs\\api\\WebSocket_API.md",
+      "size": 2737
+    },
+    {
+      "path": "docs\\architecture\\Data_Flow_Architecture.md",
+      "size": 2615
+    },
+    {
+      "path": "docs\\architecture\\system-overview.md",
+      "size": 13345
+    },
+    {
+      "path": "docs\\architecture\\System_Architecture.md",
+      "size": 6692
+    },
+    {
+      "path": "docs\\architecture\\system_overview.md",
+      "size": 18371
+    },
+    {
+      "path": "docs\\archive\\2-LINE-OFFSET-FIX.md",
+      "size": 4491
+    },
+    {
+      "path": "docs\\archive\\ACTION_REPORT_2.md",
+      "size": 1619
+    },
+    {
+      "path": "docs\\archive\\ADVANCED_FEATURES_ARCHITECTURE.md",
+      "size": 35542
+    },
+    {
+      "path": "docs\\archive\\ADVANCED_FEATURES_EXECUTIVE_SUMMARY.md",
+      "size": 14715
+    },
+    {
+      "path": "docs\\archive\\ADVANCED_FEATURES_INDEX.md",
+      "size": 20865
+    },
+    {
+      "path": "docs\\archive\\AGENTIC-FIXES-SUCCESS-REPORT.md",
+      "size": 6346
+    },
+    {
+      "path": "docs\\archive\\AGENTIC-TEST-RESULTS.md",
+      "size": 5519
+    },
+    {
+      "path": "docs\\archive\\AGENTIC_IMPLEMENTATION_SUMMARY.md",
+      "size": 3629
+    },
+    {
+      "path": "docs\\archive\\AGENTIC_INTEGRATION_COMPLETE.md",
+      "size": 18513
+    },
+    {
+      "path": "docs\\archive\\AGENTIC_LOOPS_FULL_IMPLEMENTATION.md",
+      "size": 15973
+    },
+    {
+      "path": "docs\\archive\\AGENTIC_LOOPS_INTEGRATION_GUIDE.md",
+      "size": 12899
+    },
+    {
+      "path": "docs\\archive\\AGENTIC_LOOPS_QUICK_REFERENCE.md",
+      "size": 9230
+    },
+    {
+      "path": "docs\\archive\\AGENTIC_WEB_PROJECTS.md",
+      "size": 7862
+    },
+    {
+      "path": "docs\\archive\\AGENT_COORDINATOR_TESTS_BUILD_REPORT.md",
+      "size": 6726
+    },
+    {
+      "path": "docs\\archive\\AGENT_IMPLEMENTATION_SUMMARY.md",
+      "size": 1463
+    },
+    {
+      "path": "docs\\archive\\AGENT_TOOL_REGISTRY_IMPLEMENTATION_COMPLETE.md",
+      "size": 13508
+    },
+    {
+      "path": "docs\\archive\\AI_COMPLETION_MEMORY_CONVERSION_PLAN.md",
+      "size": 3593
+    },
+    {
+      "path": "docs\\archive\\ANALYSIS_COMPLETE.md",
+      "size": 9997
+    },
+    {
+      "path": "docs\\archive\\ANALYSIS_INDEX.md",
+      "size": 11035
+    },
+    {
+      "path": "docs\\archive\\ARCHITECTURE-EDITOR.md",
+      "size": 9811
+    },
+    {
+      "path": "docs\\archive\\ARCHITECTURE.md",
+      "size": 19072
+    },
+    {
+      "path": "docs\\archive\\ARTIFACT_VERIFICATION.md",
+      "size": 9547
+    },
+    {
+      "path": "docs\\archive\\AUDIT_DOCUMENTATION_INDEX.md",
+      "size": 11368
+    },
+    {
+      "path": "docs\\archive\\AUDIT_EXECUTIVE_SUMMARY.md",
+      "size": 9360
+    },
+    {
+      "path": "docs\\archive\\AUDIT_FINAL_CONCLUSIONS.md",
+      "size": 2999
+    },
+    {
+      "path": "docs\\archive\\AUDIT_FINDINGS_SUMMARY.md",
+      "size": 7114
+    },
+    {
+      "path": "docs\\archive\\AUDIT_INDEX.md",
+      "size": 11715
+    },
+    {
+      "path": "docs\\archive\\AUTONOMOUS-AGENT-GUIDE.md",
+      "size": 11551
+    },
+    {
+      "path": "docs\\archive\\AUTONOMOUS_AGENT_IMPLEMENTATION_ROADMAP.md",
+      "size": 14680
+    },
+    {
+      "path": "docs\\archive\\BEFORE_AFTER_COMPARISON.md",
+      "size": 13592
+    },
+    {
+      "path": "docs\\archive\\BEFORE_AFTER_TRANSFORMATION.md",
+      "size": 9796
+    },
+    {
+      "path": "docs\\archive\\BENCHMARKING_FRAMEWORK.md",
+      "size": 24959
+    },
+    {
+      "path": "docs\\archive\\BENCHMARKS.md",
+      "size": 3417
+    },
+    {
+      "path": "docs\\archive\\BENCHMARK_IDE_INTEGRATION.md",
+      "size": 11925
+    },
+    {
+      "path": "docs\\archive\\BENCHMARK_IMPLEMENTATION_SUMMARY.md",
+      "size": 12638
+    },
+    {
+      "path": "docs\\archive\\BENCHMARK_README.md",
+      "size": 14399
+    },
+    {
+      "path": "docs\\archive\\BENCHMARK_SUITE.md",
+      "size": 10373
+    },
+    {
+      "path": "docs\\archive\\BENCHMARK_UI_REFERENCE.md",
+      "size": 16415
+    },
+    {
+      "path": "docs\\archive\\BOTTLENECK_10_TEST_FIXTURE_FIX.md",
+      "size": 7939
+    },
+    {
+      "path": "docs\\archive\\BOTTLENECK_9_STATUS_CACHE_FIX.md",
+      "size": 8468
+    },
+    {
+      "path": "docs\\archive\\BOTTLENECK_AUDIT_REPORT.md",
+      "size": 30279
+    },
+    {
+      "path": "docs\\archive\\BOTTLENECK_QUICK_REFERENCE.md",
+      "size": 5814
+    },
+    {
+      "path": "docs\\archive\\BPE_ALGORITHM_REVERSE_ENGINEERED.md",
+      "size": 15519
+    },
+    {
+      "path": "docs\\archive\\BUILD_COMPLETE.md",
+      "size": 6189
+    },
+    {
+      "path": "docs\\archive\\BUILD_COMPLETE_FINAL.md",
+      "size": 9477
+    },
+    {
+      "path": "docs\\archive\\BUILD_COMPLETE_LATEST.md",
+      "size": 17257
+    },
+    {
+      "path": "docs\\archive\\BUILD_COMPLETION_SUMMARY.md",
+      "size": 12105
+    },
+    {
+      "path": "docs\\archive\\BUILD_SUCCESS_REPORT.md",
+      "size": 14959
+    },
+    {
+      "path": "docs\\archive\\BUILD_VICTORY_SUMMARY.md",
+      "size": 11028
+    },
+    {
+      "path": "docs\\archive\\CALL_TO_ACTION.md",
+      "size": 4456
+    },
+    {
+      "path": "docs\\archive\\CHAT-APP-DELIVERY.md",
+      "size": 16891
+    },
+    {
+      "path": "docs\\archive\\CHAT-APP-IMPLEMENTATION.md",
+      "size": 14110
+    },
+    {
+      "path": "docs\\archive\\CHAT-APP-MANIFEST.md",
+      "size": 13720
+    },
+    {
+      "path": "docs\\archive\\CHAT-APP-QUICKSTART.md",
+      "size": 8078
+    },
+    {
+      "path": "docs\\archive\\CHAT-APP-README.md",
+      "size": 6053
+    },
+    {
+      "path": "docs\\archive\\CHAT-INPUT-POSITIONING-FIXES.md",
+      "size": 5621
+    },
+    {
+      "path": "docs\\archive\\CLANG-BUILD-GUIDE.md",
+      "size": 7362
+    },
+    {
+      "path": "docs\\archive\\CLI_QUICK_REFERENCE.md",
+      "size": 8960
+    },
+    {
+      "path": "docs\\archive\\CLOSED_LOOP_COMPLETE.md",
+      "size": 7300
+    },
+    {
+      "path": "docs\\archive\\CODE_REVIEW_FIXES_APPLIED.md",
+      "size": 10503
+    },
+    {
+      "path": "docs\\archive\\COMMAND_MAPPING_REFERENCE.md",
+      "size": 15070
+    },
+    {
+      "path": "docs\\archive\\COMPETITIVE_ANALYSIS.md",
+      "size": 9499
+    },
+    {
+      "path": "docs\\archive\\COMPETITIVE_SYSTEMS_COMPLETE.md",
+      "size": 5739
+    },
+    {
+      "path": "docs\\archive\\COMPILER_INTEGRATION_COMPLETE.md",
+      "size": 11234
+    },
+    {
+      "path": "docs\\archive\\COMPLETE_AGENTIC_SYSTEM_ARCHITECTURE.md",
+      "size": 13662
+    },
+    {
+      "path": "docs\\archive\\COMPLETE_STATUS.md",
+      "size": 8720
+    },
+    {
+      "path": "docs\\archive\\COMPLETION-REPORT.md",
+      "size": 11264
+    },
+    {
+      "path": "docs\\archive\\COMPLETION_STATUS.md",
+      "size": 5906
+    },
+    {
+      "path": "docs\\archive\\COMPONENT_ARCHITECTURE.md",
+      "size": 17705
+    },
+    {
+      "path": "docs\\archive\\COMPREHENSIVE_AUDIT_REPORT.md",
+      "size": 41389
+    },
+    {
+      "path": "docs\\archive\\COMPREHENSIVE_DEPENDENCY_AUDIT.md",
+      "size": 8979
+    },
+    {
+      "path": "docs\\archive\\CONTEXT_DRAWING_ENGINE_ARCHITECTURE.md",
+      "size": 34302
+    },
+    {
+      "path": "docs\\archive\\CONTEXT_DRAWING_ENGINE_DELIVERY_COMPLETE.md",
+      "size": 12541
+    },
+    {
+      "path": "docs\\archive\\CONTEXT_DRAWING_ENGINE_DELIVERY_SUMMARY.md",
+      "size": 16884
+    },
+    {
+      "path": "docs\\archive\\CONTEXT_DRAWING_ENGINE_GUIDE.md",
+      "size": 12334
+    },
+    {
+      "path": "docs\\archive\\CONTEXT_DRAWING_ENGINE_INTEGRATION_GUIDE.md",
+      "size": 15222
+    },
+    {
+      "path": "docs\\archive\\CONTEXT_DRAWING_INDEX.md",
+      "size": 14146
+    },
+    {
+      "path": "docs\\archive\\CONTEXT_DRAWING_QUICK_REFERENCE.md",
+      "size": 8684
+    },
+    {
+      "path": "docs\\archive\\CONTEXT_DRAWING_VISUAL_SUMMARY.md",
+      "size": 25178
+    },
+    {
+      "path": "docs\\archive\\COPILOT_AUTOMATION_COMPLETE.md",
+      "size": 8506
+    },
+    {
+      "path": "docs\\archive\\COPILOT_INSTRUCTIONS_AUTOMATION.md",
+      "size": 8804
+    },
+    {
+      "path": "docs\\archive\\COPILOT_INSTRUCTIONS_GENERATED.md",
+      "size": 4559
+    },
+    {
+      "path": "docs\\archive\\COUNT-PROPERTY-FIXES-v3.0.7.0.md",
+      "size": 6051
+    },
+    {
+      "path": "docs\\archive\\CRITICAL_FIXES_APPLIED.md",
+      "size": 5138
+    },
+    {
+      "path": "docs\\archive\\CRITICAL_MISSING_FEATURES_FIX_GUIDE.md",
+      "size": 10354
+    },
+    {
+      "path": "docs\\archive\\CURSOR-STYLE-IDE-GUIDE.md",
+      "size": 15819
+    },
+    {
+      "path": "docs\\archive\\DELIVERY_COMPLETE.md",
+      "size": 8417
+    },
+    {
+      "path": "docs\\archive\\DELIVERY_COMPLETE_LLM.md",
+      "size": 13886
+    },
+    {
+      "path": "docs\\archive\\DELIVERY_SUMMARY.md",
+      "size": 10807
+    },
+    {
+      "path": "docs\\archive\\DEPENDENCY_REMOVAL_PHASE1_PLAN.md",
+      "size": 6810
+    },
+    {
+      "path": "docs\\archive\\DEPLOYMENT_INSTRUCTIONS.md",
+      "size": 12862
+    },
+    {
+      "path": "docs\\archive\\DIAGNOSTIC_SUMMARY.md",
+      "size": 7137
+    },
+    {
+      "path": "docs\\archive\\DIRECT_MEMORY_VERIFICATION.md",
+      "size": 10896
+    },
+    {
+      "path": "docs\\archive\\DOCS_INDEX.md",
+      "size": 2392
+    },
+    {
+      "path": "docs\\archive\\DOCUMENTATION_INDEX.md",
+      "size": 9605
+    },
+    {
+      "path": "docs\\archive\\ENHANCEMENT-COMPLETION-REPORT.md",
+      "size": 13340
+    },
+    {
+      "path": "docs\\archive\\ENTERPRISE_COMPLETION_REPORT.md",
+      "size": 13118
+    },
+    {
+      "path": "docs\\archive\\EXECUTE_SHIPPING_NOW.md",
+      "size": 8131
+    },
+    {
+      "path": "docs\\archive\\EXECUTIVE_PACKAGE.md",
+      "size": 8544
+    },
+    {
+      "path": "docs\\archive\\EXECUTIVE_SUMMARY.md",
+      "size": 10321
+    },
+    {
+      "path": "docs\\archive\\EXTERNAL_USER_GUIDE.md",
+      "size": 9522
+    },
+    {
+      "path": "docs\\archive\\FAILURE_INTELLIGENCE.md",
+      "size": 14997
+    },
+    {
+      "path": "docs\\archive\\FEATURES_SUMMARY.md",
+      "size": 8575
+    },
+    {
+      "path": "docs\\archive\\FEATURE_COMPLETE_QUICK_REF.md",
+      "size": 14978
+    },
+    {
+      "path": "docs\\archive\\FEATURE_ENHANCEMENTS_COMPLETE.md",
+      "size": 16056
+    },
+    {
+      "path": "docs\\archive\\FEATURE_PARITY_CLI_WIN32.md",
+      "size": 12012
+    },
+    {
+      "path": "docs\\archive\\FEATURE_PARITY_COMPLETE.md",
+      "size": 13683
+    },
+    {
+      "path": "docs\\archive\\FEATURE_PARITY_INDEX.md",
+      "size": 8376
+    },
+    {
+      "path": "docs\\archive\\FILE-OPENING-FIX-REPORT.md",
+      "size": 7061
+    },
+    {
+      "path": "docs\\archive\\FILE_INVENTORY.md",
+      "size": 9545
+    },
+    {
+      "path": "docs\\archive\\FILE_MANIFEST_AND_ARCHITECTURE.md",
+      "size": 18547
+    },
+    {
+      "path": "docs\\archive\\FINAL-AGENTIC-SUMMARY.md",
+      "size": 8129
+    },
+    {
+      "path": "docs\\archive\\FINAL-COUNT-PROPERTY-FIXES-v3.0.8.0.md",
+      "size": 6355
+    },
+    {
+      "path": "docs\\archive\\FINAL_COMPLETION_REPORT.md",
+      "size": 12595
+    },
+    {
+      "path": "docs\\archive\\FINAL_DELIVERY_SUMMARY.md",
+      "size": 13670
+    },
+    {
+      "path": "docs\\archive\\FINAL_DEPLOYMENT_REPORT.md",
+      "size": 16009
+    },
+    {
+      "path": "docs\\archive\\FINAL_PRODUCTION_READINESS_REPORT.md",
+      "size": 13182
+    },
+    {
+      "path": "docs\\archive\\FINAL_SHIPPING_STATUS.md",
+      "size": 8893
+    },
+    {
+      "path": "docs\\archive\\FINAL_STATUS_REPORT.md",
+      "size": 10426
+    },
+    {
+      "path": "docs\\archive\\FINAL_VERIFICATION_REPORT.md",
+      "size": 11525
+    },
+    {
+      "path": "docs\\archive\\FLOATING-PANEL-ARCHITECTURE.md",
+      "size": 18703
+    },
+    {
+      "path": "docs\\archive\\FLOATING-PANEL-IMPLEMENTATION.md",
+      "size": 6956
+    },
+    {
+      "path": "docs\\archive\\FLOATING-PANEL-README.md",
+      "size": 9765
+    },
+    {
+      "path": "docs\\archive\\GGML_VULKAN_WARNINGS_IMPLEMENTATION.md",
+      "size": 4841
+    },
+    {
+      "path": "docs\\archive\\GGML_WARNINGS_COMPLETE.md",
+      "size": 7033
+    },
+    {
+      "path": "docs\\archive\\GGML_WARNINGS_SUMMARY.md",
+      "size": 7164
+    },
+    {
+      "path": "docs\\archive\\GGML_WARNINGS_SUPPRESSION.md",
+      "size": 6582
+    },
+    {
+      "path": "docs\\archive\\GGUFLOADER_LINKING_FIX_SUMMARY.md",
+      "size": 6412
+    },
+    {
+      "path": "docs\\archive\\GGUF_DOCUMENTATION_INDEX.md",
+      "size": 10645
+    },
+    {
+      "path": "docs\\archive\\GGUF_INTEGRATION_COMPLETE.md",
+      "size": 15447
+    },
+    {
+      "path": "docs\\archive\\GGUF_INTEGRATION_TESTING.md",
+      "size": 8217
+    },
+    {
+      "path": "docs\\archive\\GGUF_PROJECT_SUMMARY.md",
+      "size": 11458
+    },
+    {
+      "path": "docs\\archive\\GGUF_QUICK_REFERENCE.md",
+      "size": 6893
+    },
+    {
+      "path": "docs\\archive\\GGUF_SERVER_README.md",
+      "size": 8664
+    },
+    {
+      "path": "docs\\archive\\GITHUB_PUSH_SUMMARY.md",
+      "size": 99
+    },
+    {
+      "path": "docs\\archive\\GPU_EXECUTION_COMPLETE.md",
+      "size": 10144
+    },
+    {
+      "path": "docs\\archive\\GPU_INTEGRATION_GUIDE.md",
+      "size": 10841
+    },
+    {
+      "path": "docs\\archive\\HEADLESS-AGENTIC-TEST-RESULTS.md",
+      "size": 6395
+    },
+    {
+      "path": "docs\\archive\\HONEST_ASSESSMENT.md",
+      "size": 9450
+    },
+    {
+      "path": "docs\\archive\\HONEST_STATUS_REPORT.md",
+      "size": 18519
+    },
+    {
+      "path": "docs\\archive\\HOTPATCH_EXECUTIVE_SUMMARY.md",
+      "size": 9690
+    },
+    {
+      "path": "docs\\archive\\HOTPATCH_INTEGRATION_COMPLETE.md",
+      "size": 8889
+    },
+    {
+      "path": "docs\\archive\\HOTPATCH_SYSTEMS_FINAL_REPORT.md",
+      "size": 15109
+    },
+    {
+      "path": "docs\\archive\\HOT_PATCHING_DESIGN.md",
+      "size": 11837
+    },
+    {
+      "path": "docs\\archive\\HOT_PATCHING_IMPROVEMENTS.md",
+      "size": 10760
+    },
+    {
+      "path": "docs\\archive\\HYGIENE_AND_TEMPLATES.md",
+      "size": 15691
+    },
+    {
+      "path": "docs\\archive\\IDE-COPILOT-INTEGRATION.md",
+      "size": 5295
+    },
+    {
+      "path": "docs\\archive\\IDE-ENHANCEMENTS-COMPLETE.md",
+      "size": 9769
+    },
+    {
+      "path": "docs\\archive\\IDE-QUICK-REFERENCE.md",
+      "size": 9200
+    },
+    {
+      "path": "docs\\archive\\IDE_FEATURE_AUDIT.md",
+      "size": 20623
+    },
+    {
+      "path": "docs\\archive\\IDE_GAP_ANALYSIS_VS_VSCODE_COPILOT.md",
+      "size": 12849
+    },
+    {
+      "path": "docs\\archive\\IDE_INSTRUCTIONS.md",
+      "size": 2020
+    },
+    {
+      "path": "docs\\archive\\IDE_INTEGRATION_GUIDE.md",
+      "size": 9929
+    },
+    {
+      "path": "docs\\archive\\IDE_INTERNAL_LOGIC_IMPLEMENTATION.md",
+      "size": 11127
+    },
+    {
+      "path": "docs\\archive\\IDE_MENU_WIRING_COMPLETE.md",
+      "size": 9552
+    },
+    {
+      "path": "docs\\archive\\IDE_QUICK_REFERENCE.md",
+      "size": 7993
+    },
+    {
+      "path": "docs\\archive\\IMPLEMENTATION-SUMMARY.md",
+      "size": 17839
+    },
+    {
+      "path": "docs\\archive\\IMPLEMENTATION_CHECKLIST.md",
+      "size": 15844
+    },
+    {
+      "path": "docs\\archive\\IMPLEMENTATION_COMPLETE.md",
+      "size": 15021
+    },
+    {
+      "path": "docs\\archive\\IMPLEMENTATION_COMPLETE_SUMMARY.md",
+      "size": 12716
+    },
+    {
+      "path": "docs\\archive\\IMPLEMENTATION_COMPLETION_SUMMARY.md",
+      "size": 12536
+    },
+    {
+      "path": "docs\\archive\\IMPLEMENTATION_PLAN.md",
+      "size": 10071
+    },
+    {
+      "path": "docs\\archive\\IMPLEMENTATION_PROGRESS.md",
+      "size": 6292
+    },
+    {
+      "path": "docs\\archive\\IMPLEMENTATION_ROADMAP.md",
+      "size": 7987
+    },
+    {
+      "path": "docs\\archive\\IMPLEMENTATION_ROADMAP_BRIEF.md",
+      "size": 2912
+    },
+    {
+      "path": "docs\\archive\\IMPLEMENTATION_ROADMAP_DETAILED.md",
+      "size": 8203
+    },
+    {
+      "path": "docs\\archive\\IMPLEMENTATION_ROADMAP_REAL.md",
+      "size": 13131
+    },
+    {
+      "path": "docs\\archive\\IMPLEMENTATION_SUMMARY.md",
+      "size": 12223
+    },
+    {
+      "path": "docs\\archive\\IMPLEMENTATION_SUMMARY_COMPLETE.md",
+      "size": 16356
+    },
+    {
+      "path": "docs\\archive\\IMPLEMENTATION_SYSTEMS_COMPLETE.md",
+      "size": 9514
+    },
+    {
+      "path": "docs\\archive\\IMPLEMENTATION_TEMPLATES.md",
+      "size": 21427
+    },
+    {
+      "path": "docs\\archive\\IMPLEMENTATION_VERIFICATION.md",
+      "size": 13486
+    },
+    {
+      "path": "docs\\archive\\IMPLEMENTATION_VERIFICATION_CHECKLIST.md",
+      "size": 8600
+    },
+    {
+      "path": "docs\\archive\\INDEX.md",
+      "size": 8260
+    },
+    {
+      "path": "docs\\archive\\INDEX_LLM_IMPLEMENTATION.md",
+      "size": 13072
+    },
+    {
+      "path": "docs\\archive\\INFERENCE_ENGINE_REFACTORING.md",
+      "size": 10040
+    },
+    {
+      "path": "docs\\archive\\INFERENCE_ENGINE_USAGE_GUIDE.md",
+      "size": 12653
+    },
+    {
+      "path": "docs\\archive\\INTEGRATION-GUIDE.md",
+      "size": 13751
+    },
+    {
+      "path": "docs\\archive\\INTEGRATION_BUILD_GUIDE.md",
+      "size": 12446
+    },
+    {
+      "path": "docs\\archive\\INTEGRATION_DEPLOYMENT_GUIDE.md",
+      "size": 16592
+    },
+    {
+      "path": "docs\\archive\\INTEGRATION_GUIDE.md",
+      "size": 7858
+    },
+    {
+      "path": "docs\\archive\\INTEGRATION_REPORT.md",
+      "size": 1231
+    },
+    {
+      "path": "docs\\archive\\INTERNAL_ARCHITECTURE_GUIDE.md",
+      "size": 9462
+    },
+    {
+      "path": "docs\\archive\\INTERNAL_LOGIC_IMPLEMENTATION.md",
+      "size": 9549
+    },
+    {
+      "path": "docs\\archive\\INTERNAL_LOGIC_IMPLEMENTATION_COMPLETE.md",
+      "size": 16004
+    },
+    {
+      "path": "docs\\archive\\INTERPRETABILITY_PANEL_DELIVERY_COMPLETE.md",
+      "size": 13010
+    },
+    {
+      "path": "docs\\archive\\INTERPRETABILITY_PANEL_INTEGRATION_COMPLETE.md",
+      "size": 19711
+    },
+    {
+      "path": "docs\\archive\\LLM_CONNECTIVITY_COMPLETE.md",
+      "size": 15774
+    },
+    {
+      "path": "docs\\archive\\LLM_IMPLEMENTATION_QUICKSTART.md",
+      "size": 15426
+    },
+    {
+      "path": "docs\\archive\\LLM_ROUTER.md",
+      "size": 9457
+    },
+    {
+      "path": "docs\\archive\\MAINTENANCE_GUIDE.md",
+      "size": 7980
+    },
+    {
+      "path": "docs\\archive\\MAINWINDOW_IMPLEMENTATION_EXECUTIVE_SUMMARY.md",
+      "size": 10533
+    },
+    {
+      "path": "docs\\archive\\MAINWINDOW_IMPLEMENTATION_QUICK_START.md",
+      "size": 13087
+    },
+    {
+      "path": "docs\\archive\\MAINWINDOW_STUB_IMPLEMENTATION_PROGRESS.md",
+      "size": 14279
+    },
+    {
+      "path": "docs\\archive\\MARKETING_LAUNCH_COMPLETE.md",
+      "size": 11837
+    },
+    {
+      "path": "docs\\archive\\MARKETPLACE-LOADING.md",
+      "size": 893
+    },
+    {
+      "path": "docs\\archive\\MASM_COMPILER_FINAL_DELIVERY_REPORT.md",
+      "size": 20249
+    },
+    {
+      "path": "docs\\archive\\MASM_COMPILER_SUITE_COMPLETE.md",
+      "size": 21718
+    },
+    {
+      "path": "docs\\archive\\MASM_GPU_REVERSE_ENGINEERING_PLAN.md",
+      "size": 13982
+    },
+    {
+      "path": "docs\\archive\\MISSING-FEATURES-FROM-PS1.md",
+      "size": 12189
+    },
+    {
+      "path": "docs\\archive\\MISSING_FEATURES_AUDIT.md",
+      "size": 11653
+    },
+    {
+      "path": "docs\\archive\\MISSING_FEATURES_SUMMARY.md",
+      "size": 8222
+    },
+    {
+      "path": "docs\\archive\\MMF-DELIVERY-SUMMARY.md",
+      "size": 14117
+    },
+    {
+      "path": "docs\\archive\\MMF-README.md",
+      "size": 11326
+    },
+    {
+      "path": "docs\\archive\\MMF-STATUS.md",
+      "size": 11043
+    },
+    {
+      "path": "docs\\archive\\MODEL-DROPDOWN-POPUP-FIXES.md",
+      "size": 5073
+    },
+    {
+      "path": "docs\\archive\\MODELTRAINER_COMPLETION_REPORT.md",
+      "size": 11961
+    },
+    {
+      "path": "docs\\archive\\MODELTRAINER_ENHANCEMENTS_IMPLEMENTATION.md",
+      "size": 13998
+    },
+    {
+      "path": "docs\\archive\\MODELTRAINER_ENHANCEMENTS_QUICK_REFERENCE.md",
+      "size": 5516
+    },
+    {
+      "path": "docs\\archive\\MODELTRAINER_FILE_STRUCTURE.md",
+      "size": 11734
+    },
+    {
+      "path": "docs\\archive\\MODELTRAINER_INTEGRATION_GUIDE.md",
+      "size": 9386
+    },
+    {
+      "path": "docs\\archive\\MODEL_TRAINER_INTEGRATION_GUIDE.md",
+      "size": 15930
+    },
+    {
+      "path": "docs\\archive\\MODEL_TRAINER_REFERENCE.md",
+      "size": 9946
+    },
+    {
+      "path": "docs\\archive\\MODEL_TRAINER_SUMMARY.md",
+      "size": 7206
+    },
+    {
+      "path": "docs\\archive\\MOMENT_OF_TRUTH.md",
+      "size": 7352
+    },
+    {
+      "path": "docs\\archive\\Multi-Component-Integration-FAILURE-Analysis.md",
+      "size": 7309
+    },
+    {
+      "path": "docs\\archive\\NEXT_STEPS.md",
+      "size": 10695
+    },
+    {
+      "path": "docs\\archive\\OVERCLOCKING.md",
+      "size": 3651
+    },
+    {
+      "path": "docs\\archive\\OVERCLOCK_GOVERNOR_ENHANCEMENTS.md",
+      "size": 10400
+    },
+    {
+      "path": "docs\\archive\\OVERCLOCK_GOVERNOR_ENHANCEMENTS_INDEX.md",
+      "size": 12104
+    },
+    {
+      "path": "docs\\archive\\OVERCLOCK_GOVERNOR_ENHANCEMENTS_MANIFEST.md",
+      "size": 9103
+    },
+    {
+      "path": "docs\\archive\\OVERCLOCK_GOVERNOR_QUICK_REFERENCE.md",
+      "size": 5736
+    },
+    {
+      "path": "docs\\archive\\PHASE1-COMPLETE.md",
+      "size": 11330
+    },
+    {
+      "path": "docs\\archive\\PHASE1_COMPLETION_SUMMARY.md",
+      "size": 3811
+    },
+    {
+      "path": "docs\\archive\\PHASE2_FINAL_COMPLETION_CERTIFICATE.md",
+      "size": 10486
+    },
+    {
+      "path": "docs\\archive\\PHASE2_STATUS_REPORT.md",
+      "size": 8756
+    },
+    {
+      "path": "docs\\archive\\PHASE6-COMPLETE.md",
+      "size": 6375
+    },
+    {
+      "path": "docs\\archive\\PHASE_1_2_COMPLETION_REPORT.md",
+      "size": 10527
+    },
+    {
+      "path": "docs\\archive\\PHASE_1_COMPLETE.md",
+      "size": 12310
+    },
+    {
+      "path": "docs\\archive\\PHASE_1_DELIVERY_REPORT.md",
+      "size": 14858
+    },
+    {
+      "path": "docs\\archive\\PHASE_1_PROGRESS_SUMMARY.md",
+      "size": 10729
+    },
+    {
+      "path": "docs\\archive\\PHASE_1_TASK_1_2_COMPLETION.md",
+      "size": 12234
+    },
+    {
+      "path": "docs\\archive\\PHASE_1_TASK_1_COMPLETION.md",
+      "size": 8573
+    },
+    {
+      "path": "docs\\archive\\PHASE_2_IMPLEMENTATION_PLAN.md",
+      "size": 11243
+    },
+    {
+      "path": "docs\\archive\\PHASE_2_KICKOFF.md",
+      "size": 8638
+    },
+    {
+      "path": "docs\\archive\\PHASE_2_START.md",
+      "size": 9315
+    },
+    {
+      "path": "docs\\archive\\PHASE_3_BUILD_STATUS.md",
+      "size": 9242
+    },
+    {
+      "path": "docs\\archive\\PHASE_3_DELIVERY_REPORT.md",
+      "size": 13945
+    },
+    {
+      "path": "docs\\archive\\PHASE_3_QUICK_REFERENCE.md",
+      "size": 13062
+    },
+    {
+      "path": "docs\\archive\\PHASE_3_STATUS_HANDOFF.md",
+      "size": 15558
+    },
+    {
+      "path": "docs\\archive\\PHASE_3_SUMMARY.md",
+      "size": 13297
+    },
+    {
+      "path": "docs\\archive\\PHASE_4_AGENTIC_ENHANCEMENTS.md",
+      "size": 12076
+    },
+    {
+      "path": "docs\\archive\\PHASE_4_SUMMARY.md",
+      "size": 2131
+    },
+    {
+      "path": "docs\\archive\\PHASE_C_COMPLETION_REPORT.md",
+      "size": 17523
+    },
+    {
+      "path": "docs\\archive\\PHASE_C_DATA_PERSISTENCE.md",
+      "size": 18963
+    },
+    {
+      "path": "docs\\archive\\PHASE_C_QUICK_REFERENCE.md",
+      "size": 10175
+    },
+    {
+      "path": "docs\\archive\\PHASE_IMPLEMENTATION_COMPLETE.md",
+      "size": 12342
+    },
+    {
+      "path": "docs\\archive\\POLICY_ENGINE.md",
+      "size": 14802
+    },
+    {
+      "path": "docs\\archive\\POPUP-ELIMINATION-SUCCESS-REPORT.md",
+      "size": 7453
+    },
+    {
+      "path": "docs\\archive\\PRE_EXISTING_FIXES_SUMMARY.md",
+      "size": 7171
+    },
+    {
+      "path": "docs\\archive\\PRIMARY-SIDEBAR-GUIDE.md",
+      "size": 18822
+    },
+    {
+      "path": "docs\\archive\\PRODUCTION_BUILD_SUCCESS.md",
+      "size": 12335
+    },
+    {
+      "path": "docs\\archive\\PRODUCTION_COMPONENTS_COMPLETE.md",
+      "size": 6851
+    },
+    {
+      "path": "docs\\archive\\PRODUCTION_DEPLOYMENT_ROADMAP.md",
+      "size": 14597
+    },
+    {
+      "path": "docs\\archive\\PRODUCTION_FEATURES_COMPLETE.md",
+      "size": 12506
+    },
+    {
+      "path": "docs\\archive\\PRODUCTION_IMPLEMENTATION_GUIDE.md",
+      "size": 15488
+    },
+    {
+      "path": "docs\\archive\\PRODUCTION_READINESS_ASSESSMENT.md",
+      "size": 9430
+    },
+    {
+      "path": "docs\\archive\\PRODUCTION_READINESS_REPORT.md",
+      "size": 10643
+    },
+    {
+      "path": "docs\\archive\\PRODUCTION_VALIDATION_COMPLETE.md",
+      "size": 17215
+    },
+    {
+      "path": "docs\\archive\\PROJECT_STATUS_REPORT.md",
+      "size": 10467
+    },
+    {
+      "path": "docs\\archive\\QUICK-REFERENCE.md",
+      "size": 7955
+    },
+    {
+      "path": "docs\\archive\\QUICK-START-CLANG.md",
+      "size": 962
+    },
+    {
+      "path": "docs\\archive\\QUICKREF.md",
+      "size": 6097
+    },
+    {
+      "path": "docs\\archive\\QUICKSTART.md",
+      "size": 9924
+    },
+    {
+      "path": "docs\\archive\\QUICKSTART_GUIDE.md",
+      "size": 3132
+    },
+    {
+      "path": "docs\\archive\\QUICK_REFERENCE.md",
+      "size": 4108
+    },
+    {
+      "path": "docs\\archive\\QUICK_REFERENCE_CARD.md",
+      "size": 14579
+    },
+    {
+      "path": "docs\\archive\\QUICK_START.md",
+      "size": 4260
+    },
+    {
+      "path": "docs\\archive\\QUICK_START_GUIDE.md",
+      "size": 4861
+    },
+    {
+      "path": "docs\\archive\\QUICK_WINS_IMPLEMENTATION_GUIDE.md",
+      "size": 30117
+    },
+    {
+      "path": "docs\\archive\\RawrXD-Complete-Analysis-Report.md",
+      "size": 9638
+    },
+    {
+      "path": "docs\\archive\\RawrXD-Complete-Testing-Summary.md",
+      "size": 8862
+    },
+    {
+      "path": "docs\\archive\\RawrXD-Comprehensive-Test-Plan.md",
+      "size": 27537
+    },
+    {
+      "path": "docs\\archive\\RawrXD-Fixes-SUCCESS-REPORT.md",
+      "size": 9411
+    },
+    {
+      "path": "docs\\archive\\README-Autonomy.md",
+      "size": 1885
+    },
+    {
+      "path": "docs\\archive\\README-Win32IDE.md",
+      "size": 1630
+    },
+    {
+      "path": "docs\\archive\\README.monaco_gen.md",
+      "size": 746
+    },
+    {
+      "path": "docs\\archive\\README_CI_CD_INDEX.md",
+      "size": 10116
+    },
+    {
+      "path": "docs\\archive\\README_DOCUMENTATION_INDEX.md",
+      "size": 15827
+    },
+    {
+      "path": "docs\\archive\\README_MARKETING.md",
+      "size": 10938
+    },
+    {
+      "path": "docs\\archive\\README_MISSING_FEATURES.md",
+      "size": 11938
+    },
+    {
+      "path": "docs\\archive\\README_MODELTRAINER.md",
+      "size": 10433
+    },
+    {
+      "path": "docs\\archive\\README_release.md",
+      "size": 7607
+    },
+    {
+      "path": "docs\\archive\\READY_TO_SHIP.md",
+      "size": 6124
+    },
+    {
+      "path": "docs\\archive\\REAL_FINAL_STATUS.md",
+      "size": 10839
+    },
+    {
+      "path": "docs\\archive\\REAL_IMPLEMENTATION_COMPLETE.md",
+      "size": 5679
+    },
+    {
+      "path": "docs\\archive\\REFACTORING_COMPLETE_SUMMARY.md",
+      "size": 11401
+    },
+    {
+      "path": "docs\\archive\\RELEASE_v0.1.0_MVP.md",
+      "size": 5249
+    },
+    {
+      "path": "docs\\archive\\REVERSE_ENGINEERING_COMPLETE.md",
+      "size": 577
+    },
+    {
+      "path": "docs\\archive\\REVERSE_ENGINEERING_SUITE.md",
+      "size": 17631
+    },
+    {
+      "path": "docs\\archive\\SCAFFOLDING_COMPLETION_REPORT.md",
+      "size": 8991
+    },
+    {
+      "path": "docs\\archive\\SCAFFOLD_ARCHITECTURE.md",
+      "size": 11055
+    },
+    {
+      "path": "docs\\archive\\SCAFFOLD_COMPLETION.md",
+      "size": 9904
+    },
+    {
+      "path": "docs\\archive\\SCAFFOLD_REPORT.md",
+      "size": 10570
+    },
+    {
+      "path": "docs\\archive\\SCALAR_FIXES_COMPLETE.md",
+      "size": 10660
+    },
+    {
+      "path": "docs\\archive\\SCALAR_FIXES_QUICK_REFERENCE.md",
+      "size": 5953
+    },
+    {
+      "path": "docs\\archive\\SECURITY-SETTINGS-FIX-REPORT.md",
+      "size": 4740
+    },
+    {
+      "path": "docs\\archive\\SESSION_COMPLETION_SUMMARY.md",
+      "size": 6746
+    },
+    {
+      "path": "docs\\archive\\SESSION_DELIVERABLES.md",
+      "size": 6759
+    },
+    {
+      "path": "docs\\archive\\SESSION_SUMMARY.md",
+      "size": 12350
+    },
+    {
+      "path": "docs\\archive\\SETUP.md",
+      "size": 8493
+    },
+    {
+      "path": "docs\\archive\\SHIPPING_CHECKLIST.md",
+      "size": 7414
+    },
+    {
+      "path": "docs\\archive\\SHIP_NOW.md",
+      "size": 6356
+    },
+    {
+      "path": "docs\\archive\\SOURCE_CODE_AUDIT_COMPLETE.md",
+      "size": 28209
+    },
+    {
+      "path": "docs\\archive\\START_HERE.md",
+      "size": 15174
+    },
+    {
+      "path": "docs\\archive\\STATUS_IMPLEMENTATION_COMPLETE.md",
+      "size": 9256
+    },
+    {
+      "path": "docs\\archive\\STRATEGIC_ROADMAP.md",
+      "size": 8918
+    },
+    {
+      "path": "docs\\archive\\STRATEGIC_TECHNICAL_ANALYSIS.md",
+      "size": 25294
+    },
+    {
+      "path": "docs\\archive\\STREAMING_COMPLETIONS.md",
+      "size": 10641
+    },
+    {
+      "path": "docs\\archive\\STUB_AUDIT_INDEX.md",
+      "size": 10284
+    },
+    {
+      "path": "docs\\archive\\STUB_DETAILED_TECHNICAL_ANALYSIS.md",
+      "size": 21634
+    },
+    {
+      "path": "docs\\archive\\STUB_ELIMINATION_CHANGE_INDEX.md",
+      "size": 9569
+    },
+    {
+      "path": "docs\\archive\\STUB_ELIMINATION_COMPLETE_REPORT.md",
+      "size": 10582
+    },
+    {
+      "path": "docs\\archive\\STUB_ELIMINATION_FINAL_SUMMARY.md",
+      "size": 7864
+    },
+    {
+      "path": "docs\\archive\\STUB_ELIMINATION_IMPLEMENTATION_PLAN.md",
+      "size": 13735
+    },
+    {
+      "path": "docs\\archive\\STUB_ELIMINATION_VERIFICATION_CHECKLIST.md",
+      "size": 8289
+    },
+    {
+      "path": "docs\\archive\\STUB_FUNCTIONS_AUDIT_REPORT.md",
+      "size": 21396
+    },
+    {
+      "path": "docs\\archive\\STUB_IMPLEMENTATION_ANALYSIS.md",
+      "size": 13170
+    },
+    {
+      "path": "docs\\archive\\STUB_QUICK_REFERENCE.md",
+      "size": 11044
+    },
+    {
+      "path": "docs\\archive\\TERMINAL_EDITOR_UPDATES.md",
+      "size": 10148
+    },
+    {
+      "path": "docs\\archive\\TERMINAL_INTEGRATION_QUICK_REF.md",
+      "size": 5219
+    },
+    {
+      "path": "docs\\archive\\TERMINAL_INVOCATION_INTEGRATION.md",
+      "size": 13355
+    },
+    {
+      "path": "docs\\archive\\TERMINAL_INVOCATION_SUMMARY.md",
+      "size": 10121
+    },
+    {
+      "path": "docs\\archive\\TEST_CONFIGURATION.md",
+      "size": 3688
+    },
+    {
+      "path": "docs\\archive\\TEST_NOW.md",
+      "size": 3298
+    },
+    {
+      "path": "docs\\archive\\TEST_SUITE_COMPLETE.md",
+      "size": 15575
+    },
+    {
+      "path": "docs\\archive\\TEST_SUITE_COMPLETE_GUIDE.md",
+      "size": 6744
+    },
+    {
+      "path": "docs\\archive\\TEST_SUITE_README.md",
+      "size": 3789
+    },
+    {
+      "path": "docs\\archive\\TOOL_REGISTRY_COMPLETION_REPORT.md",
+      "size": 14026
+    },
+    {
+      "path": "docs\\archive\\TOOL_REGISTRY_IMPLEMENTATION.md",
+      "size": 12406
+    },
+    {
+      "path": "docs\\archive\\TOOL_REGISTRY_INDEX.md",
+      "size": 16513
+    },
+    {
+      "path": "docs\\archive\\TOOL_REGISTRY_QUICK_REFERENCE.md",
+      "size": 10025
+    },
+    {
+      "path": "docs\\archive\\TOP_3_BOTTLENECKS_IMPLEMENTATION_GUIDE.md",
+      "size": 44190
+    },
+    {
+      "path": "docs\\archive\\TOP_8_PRODUCTION_READINESS.md",
+      "size": 27925
+    },
+    {
+      "path": "docs\\archive\\TOP_P_SAMPLING_TECHNICAL_GUIDE.md",
+      "size": 15160
+    },
+    {
+      "path": "docs\\archive\\transformer_validation_report.md",
+      "size": 6278
+    },
+    {
+      "path": "docs\\archive\\VALUATION_EVALUATION.md",
+      "size": 19033
+    },
+    {
+      "path": "docs\\archive\\VERIFICATION_CHECKLIST.md",
+      "size": 10247
+    },
+    {
+      "path": "docs\\archive\\VERIFICATION_PACKAGE_COMPLETE.md",
+      "size": 11995
+    },
+    {
+      "path": "docs\\archive\\VISUAL_SUMMARY.md",
+      "size": 20929
+    },
+    {
+      "path": "docs\\archive\\VULKAN_COMPUTE_PRODUCTION_OPTIMIZED.md",
+      "size": 11918
+    },
+    {
+      "path": "docs\\archive\\WEEK2_MEMORY_MANAGEMENT_PLAN.md",
+      "size": 6045
+    },
+    {
+      "path": "docs\\archive\\WHAT_WE_SHIPPED.md",
+      "size": 8769
+    },
+    {
+      "path": "docs\\archive\\WHY_THIS_EXISTS.md",
+      "size": 10182
+    },
+    {
+      "path": "docs\\autonomous\\AUTONOMOUS_OPERATIONS.md",
+      "size": 13189
+    },
+    {
+      "path": "docs\\best_practices\\Analysis_Best_Practices.md",
+      "size": 1597
+    },
+    {
+      "path": "docs\\best_practices\\Security_Best_Practices.md",
+      "size": 1400
+    },
+    {
+      "path": "docs\\changelog\\Version_History.md",
+      "size": 1568
+    },
+    {
+      "path": "docs\\contributing\\CONTRIBUTING.md",
+      "size": 9374
+    },
+    {
+      "path": "docs\\contributing\\Contribution_Guide.md",
+      "size": 1570
+    },
+    {
+      "path": "docs\\convergence\\EVIDENCE_DASHBOARD.md",
+      "size": 8597
+    },
+    {
+      "path": "docs\\convergence\\STABLE_SDK.md",
+      "size": 12534
+    },
+    {
+      "path": "docs\\core\\SovereignABI_Layer.md",
+      "size": 2666
+    },
+    {
+      "path": "docs\\core\\SovereignABI_Reference.md",
+      "size": 12716
+    },
+    {
+      "path": "docs\\core\\SovereignConcurrency_Model.md",
+      "size": 2863
+    },
+    {
+      "path": "docs\\core\\SovereignEvent_System.md",
+      "size": 2866
+    },
+    {
+      "path": "docs\\core\\SovereignKernel_Manual.md",
+      "size": 11080
+    },
+    {
+      "path": "docs\\core\\SovereignMemory_Model.md",
+      "size": 5385
+    },
+    {
+      "path": "docs\\core\\SovereignMoE_System.md",
+      "size": 9160
+    },
+    {
+      "path": "docs\\core\\SovereignRuntimeTheory.md",
+      "size": 15666
+    },
+    {
+      "path": "docs\\core\\SovereignSEG_Engine.md",
+      "size": 10344
+    },
+    {
+      "path": "docs\\deck\\metrics-deck.template.html",
+      "size": 8411
+    },
+    {
+      "path": "docs\\deck\\rawrxd-strategic-deck.html",
+      "size": 8295
+    },
+    {
+      "path": "docs\\deck\\sample-metrics.json",
+      "size": 2399
+    },
+    {
+      "path": "docs\\deployment\\Dockerfile",
+      "size": 2254
+    },
+    {
+      "path": "docs\\deployment\\Production_Deployment.md",
+      "size": 3242
+    },
+    {
+      "path": "docs\\deployment\\Scaling_Guide.md",
+      "size": 2547
+    },
+    {
+      "path": "docs\\developer\\EXTENSION_DEVELOPMENT_GUIDE.md",
+      "size": 18495
+    },
+    {
+      "path": "docs\\developer\\PLUGIN_DEVELOPMENT_GUIDE.md",
+      "size": 12112
+    },
+    {
+      "path": "docs\\ecosystem\\PLUGIN_DEVELOPMENT.md",
+      "size": 11962
+    },
+    {
+      "path": "docs\\engineering\\ArchitectureDecisionRecords.md",
+      "size": 10562
+    },
+    {
+      "path": "docs\\engineering\\Code_Quality.md",
+      "size": 1533
+    },
+    {
+      "path": "docs\\engineering\\CodingStandards.md",
+      "size": 16386
+    },
+    {
+      "path": "docs\\engineering\\Debugging_Guide.md",
+      "size": 1998
+    },
+    {
+      "path": "docs\\engineering\\DevelopmentEnvironmentSetup.md",
+      "size": 10505
+    },
+    {
+      "path": "docs\\engineering\\Engineering_BinaryRewriter.md",
+      "size": 6747
+    },
+    {
+      "path": "docs\\engineering\\Engineering_Decompiler.md",
+      "size": 6543
+    },
+    {
+      "path": "docs\\engineering\\Engineering_Refactorer.md",
+      "size": 8145
+    },
+    {
+      "path": "docs\\engineering\\Engineering_RuntimeOptimizer.md",
+      "size": 8612
+    },
+    {
+      "path": "docs\\engineering\\Performance_Optimization.md",
+      "size": 2115
+    },
+    {
+      "path": "docs\\engineering\\ReleaseProcess.md",
+      "size": 9900
+    },
+    {
+      "path": "docs\\enterprise\\SECURITY_ARCHITECTURE.md",
+      "size": 15373
+    },
+    {
+      "path": "docs\\examples\\Analysis_Examples.md",
+      "size": 3518
+    },
+    {
+      "path": "docs\\examples\\Plugin_Examples.md",
+      "size": 3798
+    },
+    {
+      "path": "docs\\examples\\Scripting_Examples.md",
+      "size": 5042
+    },
+    {
+      "path": "docs\\faq\\FAQ.md",
+      "size": 10315
+    },
+    {
+      "path": "docs\\faq\\Frequently_Asked_Questions.md",
+      "size": 3560
+    },
+    {
+      "path": "docs\\glossary\\Technical_Glossary.md",
+      "size": 5337
+    },
+    {
+      "path": "docs\\gpu\\GPUStack_Documentation.md",
+      "size": 13844
+    },
+    {
+      "path": "docs\\gpu\\GPUStack_Implementation_Summary.md",
+      "size": 9465
+    },
+    {
+      "path": "docs\\guides\\GETTING_STARTED.md",
+      "size": 3353
+    },
+    {
+      "path": "docs\\guides\\installation.md",
+      "size": 4895
+    },
+    {
+      "path": "docs\\ide\\IDE_Architecture.md",
+      "size": 2385
+    },
+    {
+      "path": "docs\\ide\\IDE_Customization.md",
+      "size": 1375
+    },
+    {
+      "path": "docs\\ide\\IDE_UserGuide.md",
+      "size": 16063
+    },
+    {
+      "path": "docs\\integration\\API_Integration.md",
+      "size": 1914
+    },
+    {
+      "path": "docs\\integration\\API_REFERENCE_COMPLETE.md",
+      "size": 11287
+    },
+    {
+      "path": "docs\\integration\\Batch_Integration_Points.md",
+      "size": 16589
+    },
+    {
+      "path": "docs\\integration\\CI_CD_Integration.md",
+      "size": 2031
+    },
+    {
+      "path": "docs\\integration\\Database_Integration.md",
+      "size": 2280
+    },
+    {
+      "path": "docs\\integration\\Data_Flow_Specifications.md",
+      "size": 17524
+    },
+    {
+      "path": "docs\\integration\\Deployment_Guide.md",
+      "size": 14877
+    },
+    {
+      "path": "docs\\integration\\IDE_Integration.md",
+      "size": 1760
+    },
+    {
+      "path": "docs\\integration\\Integration_Architecture.md",
+      "size": 18663
+    },
+    {
+      "path": "docs\\integration\\PROJECT_COMPLETION_REPORT.md",
+      "size": 8789
+    },
+    {
+      "path": "docs\\integration\\Testing_and_Validation.md",
+      "size": 18887
+    },
+    {
+      "path": "docs\\intelligent\\INTELLIGENT_OPERATIONS.md",
+      "size": 10350
+    },
+    {
+      "path": "docs\\inventory\\ide_inventory_paths.txt",
+      "size": 62043
+    },
+    {
+      "path": "docs\\inventory\\README.md",
+      "size": 679
+    },
+    {
+      "path": "docs\\legal\\License_Terms.md",
+      "size": 1557
+    },
+    {
+      "path": "docs\\meta\\META_SYSTEM_ARCHITECTURE.md",
+      "size": 12594
+    },
+    {
+      "path": "docs\\metacognition\\META_COGNITIVE_ARCHITECTURE.md",
+      "size": 13655
+    },
+    {
+      "path": "docs\\migration\\Migration_Guide.md",
+      "size": 1297
+    },
+    {
+      "path": "docs\\migration\\Upgrade_Guide.md",
+      "size": 1495
+    },
+    {
+      "path": "docs\\ml\\RESEARCH_GUIDE.md",
+      "size": 14775
+    },
+    {
+      "path": "docs\\moe\\MoE_Development_Guide.md",
+      "size": 1760
+    },
+    {
+      "path": "docs\\moe\\MoE_Expert_Registry.md",
+      "size": 17012
+    },
+    {
+      "path": "docs\\moe\\MoE_Governor_Implementation.md",
+      "size": 12294
+    },
+    {
+      "path": "docs\\operations\\OPERATIONS_RUNBOOK.md",
+      "size": 11875
+    },
+    {
+      "path": "docs\\operations\\PLATFORM_OPERATIONS.md",
+      "size": 12794
+    },
+    {
+      "path": "docs\\operations\\PRODUCTION_READINESS.md",
+      "size": 12222
+    },
+    {
+      "path": "docs\\operations\\Runbook.md",
+      "size": 10064
+    },
+    {
+      "path": "docs\\phase_q1_documentation_generator\\doc_generator.ps1",
+      "size": 21266
+    },
+    {
+      "path": "docs\\phase_q2_sdk_manager\\sdk_manager.ps1",
+      "size": 15349
+    },
+    {
+      "path": "docs\\phase_q3_api_reference\\api_reference.ps1",
+      "size": 24313
+    },
+    {
+      "path": "docs\\quantum\\QUANTUM_READY_ARCHITECTURE.md",
+      "size": 12147
+    },
+    {
+      "path": "docs\\reference\\Command_Line_Reference.md",
+      "size": 11118
+    },
+    {
+      "path": "docs\\reference\\Command_Reference.md",
+      "size": 2903
+    },
+    {
+      "path": "docs\\reference\\Configuration_Reference.md",
+      "size": 2341
+    },
+    {
+      "path": "docs\\reference\\Error_Codes.md",
+      "size": 4393
+    },
+    {
+      "path": "docs\\reference\\Glossary.md",
+      "size": 10465
+    },
+    {
+      "path": "docs\\releases\\CHANGELOG.md",
+      "size": 3808
+    },
+    {
+      "path": "docs\\roadmap\\Future_Plans.md",
+      "size": 1397
+    },
+    {
+      "path": "docs\\runbooks\\high-latency.md",
+      "size": 4657
+    },
+    {
+      "path": "docs\\runbooks\\incident-response.md",
+      "size": 9386
+    },
+    {
+      "path": "docs\\runbooks\\incident_response.md",
+      "size": 9308
+    },
+    {
+      "path": "docs\\runbooks\\stability-degradation.md",
+      "size": 4587
+    },
+    {
+      "path": "docs\\runtime\\Auto_Governor_Subsystem.md",
+      "size": 15227
+    },
+    {
+      "path": "docs\\runtime\\Model_Factory_Subsystem.md",
+      "size": 15407
+    },
+    {
+      "path": "docs\\runtime\\MoE_Governor_Subsystem.md",
+      "size": 14842
+    },
+    {
+      "path": "docs\\runtime\\Stress_Tester_Subsystem.md",
+      "size": 16084
+    },
+    {
+      "path": "docs\\sdk\\SDK_Agentic_API.md",
+      "size": 12712
+    },
+    {
+      "path": "docs\\sdk\\SDK_AI_API.md",
+      "size": 18220
+    },
+    {
+      "path": "docs\\sdk\\SDK_Binary_API.md",
+      "size": 15266
+    },
+    {
+      "path": "docs\\sdk\\SDK_Core_API.md",
+      "size": 21982
+    },
+    {
+      "path": "docs\\sdk\\SDK_Extension_Guide.md",
+      "size": 1938
+    },
+    {
+      "path": "docs\\sdk\\SDK_Integration_Guide.md",
+      "size": 17159
+    },
+    {
+      "path": "docs\\sdk\\SDK_Overview.md",
+      "size": 17669
+    },
+    {
+      "path": "docs\\sdk\\SDK_Plugin_API.md",
+      "size": 3096
+    },
+    {
+      "path": "docs\\sdk\\SDK_Scripting_API.md",
+      "size": 1880
+    },
+    {
+      "path": "docs\\sdk\\SDK_Testing_Framework.md",
+      "size": 2071
+    },
+    {
+      "path": "docs\\security\\DORKS_VULN_RESEARCH_AND_WAF_REFERENCE.md",
+      "size": 9518
+    },
+    {
+      "path": "docs\\security\\DORK_SCANNER_USAGE.md",
+      "size": 4210
+    },
+    {
+      "path": "docs\\security\\PHASES.md",
+      "size": 3739
+    },
+    {
+      "path": "docs\\security\\PHP_DORK_AND_SECURE_QUERY_AUDIT.md",
+      "size": 9565
+    },
+    {
+      "path": "docs\\security\\Security_Hardening.md",
+      "size": 2312
+    },
+    {
+      "path": "docs\\security\\UNIVERSAL_DORKER.md",
+      "size": 4349
+    },
+    {
+      "path": "docs\\security\\Vulnerability_Management.md",
+      "size": 1435
+    },
+    {
+      "path": "docs\\seg\\SEG_Node_Catalog.md",
+      "size": 15464
+    },
+    {
+      "path": "docs\\seg\\SEG_Programming_Guide.md",
+      "size": 1422
+    },
+    {
+      "path": "docs\\status\\current_missing_to_finish.md",
+      "size": 1120
+    },
+    {
+      "path": "docs\\status\\day01_baseline_integrity_reconciliation.md",
+      "size": 3634
+    },
+    {
+      "path": "docs\\status\\day01_critical_path_ownership.md",
+      "size": 1486
+    },
+    {
+      "path": "docs\\subsystems\\Batch01_CoreKernel.md",
+      "size": 10408
+    },
+    {
+      "path": "docs\\subsystems\\Batch02_ABI.md",
+      "size": 12488
+    },
+    {
+      "path": "docs\\subsystems\\Batch03_BackendGlue.md",
+      "size": 5649
+    },
+    {
+      "path": "docs\\subsystems\\Batch04_SEGEngine.md",
+      "size": 7893
+    },
+    {
+      "path": "docs\\subsystems\\Batch05_MoERouter.md",
+      "size": 8583
+    },
+    {
+      "path": "docs\\subsystems\\Batch06_ConfigSubsystem.md",
+      "size": 6938
+    },
+    {
+      "path": "docs\\subsystems\\Batch07_TelemetrySubsystem.md",
+      "size": 6689
+    },
+    {
+      "path": "docs\\subsystems\\Batch08_LoggingSubsystem.md",
+      "size": 7192
+    },
+    {
+      "path": "docs\\subsystems\\Batch09_ErrorSubsystem.md",
+      "size": 7563
+    },
+    {
+      "path": "docs\\subsystems\\Batch10_BinaryLoader.md",
+      "size": 8797
+    },
+    {
+      "path": "docs\\subsystems\\Batch11_CFGReconstruction.md",
+      "size": 7502
+    },
+    {
+      "path": "docs\\subsystems\\Batch12_DataFlowAnalysis.md",
+      "size": 8491
+    },
+    {
+      "path": "docs\\subsystems\\Batch13_SymbolicExecution.md",
+      "size": 8811
+    },
+    {
+      "path": "docs\\subsystems\\Batch14_FunctionReconstruction.md",
+      "size": 10916
+    },
+    {
+      "path": "docs\\subsystems\\Batch15_TypeInference.md",
+      "size": 9400
+    },
+    {
+      "path": "docs\\subsystems\\Batch16_DebuggerSubsystem.md",
+      "size": 8263
+    },
+    {
+      "path": "docs\\subsystems\\Batch17_Disassembler.md",
+      "size": 10207
+    },
+    {
+      "path": "docs\\subsystems\\Batch18_EmulationSubsystem.md",
+      "size": 12243
+    },
+    {
+      "path": "docs\\subsystems\\Batch19_ProtocolFuzzer.md",
+      "size": 10292
+    },
+    {
+      "path": "docs\\subsystems\\Batch20_StaticAnalyzer.md",
+      "size": 11607
+    },
+    {
+      "path": "docs\\subsystems\\Batch21_BinaryPatternScanner.md",
+      "size": 10557
+    },
+    {
+      "path": "docs\\subsystems\\Batch22_ControlFlowNormalizer.md",
+      "size": 9683
+    },
+    {
+      "path": "docs\\subsystems\\Batch23_BinaryDiffEngine.md",
+      "size": 9800
+    },
+    {
+      "path": "docs\\subsystems\\Batch24_FeatureExtractor.md",
+      "size": 9904
+    },
+    {
+      "path": "docs\\subsystems\\Batch25_EntropyAnalyzer.md",
+      "size": 8927
+    },
+    {
+      "path": "docs\\subsystems\\Batch26_StringExtractor.md",
+      "size": 10995
+    },
+    {
+      "path": "docs\\subsystems\\Batch27_ResourceAnalyzer.md",
+      "size": 10033
+    },
+    {
+      "path": "docs\\subsystems\\Batch28_ImportExportAnalyzer.md",
+      "size": 8861
+    },
+    {
+      "path": "docs\\subsystems\\Batch29_PackerDetector.md",
+      "size": 9225
+    },
+    {
+      "path": "docs\\subsystems\\Batch30_Unpacker.md",
+      "size": 9598
+    },
+    {
+      "path": "docs\\subsystems\\Batch31_MalwareScanner.md",
+      "size": 9059
+    },
+    {
+      "path": "docs\\subsystems\\Batch32_MalwareBehaviorEngine.md",
+      "size": 8008
+    },
+    {
+      "path": "docs\\subsystems\\Batch33_CryptoAnalyzer.md",
+      "size": 9171
+    },
+    {
+      "path": "docs\\subsystems\\Batch34_ProtocolAnalyzer.md",
+      "size": 8524
+    },
+    {
+      "path": "docs\\subsystems\\Batch35_ProtocolStateMachine.md",
+      "size": 8097
+    },
+    {
+      "path": "docs\\subsystems\\Batch36_ExploitSurfaceMapper.md",
+      "size": 9403
+    },
+    {
+      "path": "docs\\subsystems\\Batch37_MalwareAnalysis.md",
+      "size": 7758
+    },
+    {
+      "path": "docs\\subsystems\\Batch38_FirmwareAnalysis.md",
+      "size": 7607
+    },
+    {
+      "path": "docs\\subsystems\\Batch39_NetworkProtocolAnalysis.md",
+      "size": 6282
+    },
+    {
+      "path": "docs\\subsystems\\Batch40_ExploitDevelopment.md",
+      "size": 7981
+    },
+    {
+      "path": "docs\\subsystems\\Batch41_ExploitAutogenerator.md",
+      "size": 25055
+    },
+    {
+      "path": "docs\\subsystems\\Batch42_ThreatIntelligence.md",
+      "size": 24947
+    },
+    {
+      "path": "docs\\subsystems\\Batch43_BinaryRewriter.md",
+      "size": 27339
+    },
+    {
+      "path": "docs\\subsystems\\Batch44_HypervisorAnalysis.md",
+      "size": 26282
+    },
+    {
+      "path": "docs\\subsystems\\Batch45_KernelExploitLab.md",
+      "size": 30555
+    },
+    {
+      "path": "docs\\subsystems\\Batch46_Decompiler.md",
+      "size": 35045
+    },
+    {
+      "path": "docs\\subsystems\\Batch47_Refactorer.md",
+      "size": 31966
+    },
+    {
+      "path": "docs\\subsystems\\Batch48_RuntimeOptimizer.md",
+      "size": 31641
+    },
+    {
+      "path": "docs\\subsystems\\Batch49_AgenticSurfaces.md",
+      "size": 37931
+    },
+    {
+      "path": "docs\\training\\admin_training.md",
+      "size": 10832
+    },
+    {
+      "path": "docs\\training\\Advanced_Tutorials.md",
+      "size": 2880
+    },
+    {
+      "path": "docs\\training\\Certification_Program.md",
+      "size": 2078
+    },
+    {
+      "path": "docs\\training\\Module01_Getting_Started.md",
+      "size": 6684
+    },
+    {
+      "path": "docs\\training\\Module02_Code_Analysis.md",
+      "size": 7752
+    },
+    {
+      "path": "docs\\training\\Module03_Developer_CoreFeatures.md",
+      "size": 10630
+    },
+    {
+      "path": "docs\\training\\Module04_Developer_AdvancedEditing.md",
+      "size": 9617
+    },
+    {
+      "path": "docs\\training\\Module05_Developer_Debugging.md",
+      "size": 9661
+    },
+    {
+      "path": "docs\\training\\Module06_Developer_BuildSystems.md",
+      "size": 10549
+    },
+    {
+      "path": "docs\\training\\Module07_Developer_VersionControlAdvanced.md",
+      "size": 9071
+    },
+    {
+      "path": "docs\\training\\Module08_Developer_Extensions.md",
+      "size": 9458
+    },
+    {
+      "path": "docs\\training\\Module09_Advanced_BinaryAnalysis.md",
+      "size": 8305
+    },
+    {
+      "path": "docs\\training\\Module10_Advanced_AIIntegration.md",
+      "size": 7751
+    },
+    {
+      "path": "docs\\training\\Module11_Expert_ExtensionDevelopment.md",
+      "size": 13524
+    },
+    {
+      "path": "docs\\training\\Module12_Expert_SDKIntegration.md",
+      "size": 14130
+    },
+    {
+      "path": "docs\\training\\Module13_Expert_PerformanceOptimization.md",
+      "size": 9306
+    },
+    {
+      "path": "docs\\training\\Module14_Expert_Security.md",
+      "size": 7419
+    },
+    {
+      "path": "docs\\training\\Module15_Expert_FinalProject.md",
+      "size": 14389
+    },
+    {
+      "path": "docs\\training\\OnboardingGuide.md",
+      "size": 9543
+    },
+    {
+      "path": "docs\\training\\Training_Curriculum_Index.md",
+      "size": 5769
+    },
+    {
+      "path": "docs\\training\\Training_Curriculum_Overview.md",
+      "size": 6347
+    },
+    {
+      "path": "docs\\training\\TutorialLibrary.md",
+      "size": 19817
+    },
+    {
+      "path": "docs\\troubleshooting\\Common_Issues.md",
+      "size": 3009
+    },
+    {
+      "path": "docs\\troubleshooting\\Diagnostic_Tools.md",
+      "size": 2643
+    },
+    {
+      "path": "docs\\troubleshooting\\TroubleshootingGuide.md",
+      "size": 13431
+    },
+    {
+      "path": "docs\\troubleshooting\\Troubleshooting_Guide.md",
+      "size": 10398
+    },
+    {
+      "path": "docs\\universal\\UNIVERSAL_INTEGRATION.md",
+      "size": 12818
+    },
+    {
+      "path": "docs\\vision\\VISION_MODELS.md",
+      "size": 13420
+    },
+    {
+      "path": "docs\\whitepapers\\Research_Publications.md",
+      "size": 1598
+    },
+    {
+      "path": "docs\\whitepapers\\Technical_Whitepaper.md",
+      "size": 1619
+    },
+    {
+      "path": "docs\\deployment\\kubernetes\\deployment.yaml",
+      "size": 10549
+    },
+    {
+      "path": "docs\\security\\examples\\java\\CartQueryProcessor.java",
+      "size": 1946
+    },
+    {
+      "path": "docs\\security\\examples\\java\\RawrXD_SecureQueryProcessor.java",
+      "size": 8614
+    },
+    {
+      "path": "docs\\security\\examples\\java\\SearchResultReverser.java",
+      "size": 2173
+    },
+    {
+      "path": "docs\\security\\examples\\java\\UniversalPhpDorker.java",
+      "size": 1953
+    },
+    {
+      "path": "docs\\security\\examples\\java\\UrlHotpatcher.java",
+      "size": 1407
+    },
+    {
+      "path": "docs\\security\\examples\\java\\XorObfuscator.java",
+      "size": 1484
+    },
+    {
+      "path": "tests\\asm\\CMakeLists.txt",
+      "size": 3570
+    },
+    {
+      "path": "tests\\asm\\run_tests.ps1",
+      "size": 4556
+    },
+    {
+      "path": "tests\\asm\\test_sovereign_kernels.cpp",
+      "size": 20925
+    },
+    {
+      "path": "tests\\audio\\PhaseV4_AudioEngine.Tests.ps1",
+      "size": 6424
+    },
+    {
+      "path": "tests\\autonomy\\stability_validator_smoke_test.cpp",
+      "size": 16448
+    },
+    {
+      "path": "tests\\benchmark\\benchmark_inference.cpp",
+      "size": 12855
+    },
+    {
+      "path": "tests\\CMakeFiles\\cmake.check_cache",
+      "size": 86
+    },
+    {
+      "path": "tests\\CMakeFiles\\CMakeConfigureLog.yaml",
+      "size": 272
+    },
+    {
+      "path": "tests\\core\\ApplicationIntegrationTest.cpp",
+      "size": 13567
+    },
+    {
+      "path": "tests\\core_runtime\\test_gguf_loader.cpp",
+      "size": 457
+    },
+    {
+      "path": "tests\\core_runtime\\test_gguf_production.cpp",
+      "size": 13176
+    },
+    {
+      "path": "tests\\core_runtime\\test_inference_loop.cpp",
+      "size": 6119
+    },
+    {
+      "path": "tests\\core_runtime\\test_memory_pool.cpp",
+      "size": 459
+    },
+    {
+      "path": "tests\\core_runtime\\test_task_graph.cpp",
+      "size": 451
+    },
+    {
+      "path": "tests\\cpu\\test_avx2_rmsnorm.c",
+      "size": 2503
+    },
+    {
+      "path": "tests\\cpu\\test_avx2_softmax.c",
+      "size": 2369
+    },
+    {
+      "path": "tests\\decoder_corpus\\generate_corpus.py",
+      "size": 23505
+    },
+    {
+      "path": "tests\\decoder_corpus\\test_harness.cpp",
+      "size": 17757
+    },
+    {
+      "path": "tests\\emergent\\emergent_patterns_smoke_test.cpp",
+      "size": 16652
+    },
+    {
+      "path": "tests\\fixtures\\invalid_patches.json",
+      "size": 3440
+    },
+    {
+      "path": "tests\\fixtures\\valid_patch.json",
+      "size": 1346
+    },
+    {
+      "path": "tests\\fuzz\\fuzz_assembler.c",
+      "size": 13563
+    },
+    {
+      "path": "tests\\gguf\\test_gguf_magic.c",
+      "size": 1274
+    },
+    {
+      "path": "tests\\gpu\\bench_q4k_q8_1.cpp",
+      "size": 15118
+    },
+    {
+      "path": "tests\\gpu\\CMakeLists.txt",
+      "size": 3124
+    },
+    {
+      "path": "tests\\gpu\\q4k_dequant_parity_test.c",
+      "size": 7982
+    },
+    {
+      "path": "tests\\gpu\\test_q4k_q8_1.cpp",
+      "size": 29145
+    },
+    {
+      "path": "tests\\gpu\\test_tile_gemm.cpp",
+      "size": 20251
+    },
+    {
+      "path": "tests\\include\\test_framework.h",
+      "size": 6119
+    },
+    {
+      "path": "tests\\inference\\test_continuous_batcher.cpp",
+      "size": 3122
+    },
+    {
+      "path": "tests\\inference\\test_dynamic_batcher.cpp",
+      "size": 3516
+    },
+    {
+      "path": "tests\\inference\\test_kv_cache_ownership.cpp",
+      "size": 9661
+    },
+    {
+      "path": "tests\\inference\\test_prefix_cache.cpp",
+      "size": 4447
+    },
+    {
+      "path": "tests\\inference\\test_speculative_pipeline.cpp",
+      "size": 2412
+    },
+    {
+      "path": "tests\\inference_validation\\build_and_run.bat",
+      "size": 868
+    },
+    {
+      "path": "tests\\inference_validation\\CMakeLists.txt",
+      "size": 1215
+    },
+    {
+      "path": "tests\\inference_validation\\generate_reference_data.py",
+      "size": 8788
+    },
+    {
+      "path": "tests\\inference_validation\\INTEGRATION_GUIDE.md",
+      "size": 6573
+    },
+    {
+      "path": "tests\\inference_validation\\numerical_equivalence_harness.cpp",
+      "size": 18209
+    },
+    {
+      "path": "tests\\inference_validation\\QUICK_VALIDATION.md",
+      "size": 2615
+    },
+    {
+      "path": "tests\\inference_validation\\README.md",
+      "size": 5305
+    },
+    {
+      "path": "tests\\inference_validation\\test_validation_smoke.cpp",
+      "size": 4342
+    },
+    {
+      "path": "tests\\inference_validation\\VALIDATION_SMOKE_REPORT.md",
+      "size": 2902
+    },
+    {
+      "path": "tests\\integration\\ExtensionScheduler_Integration_Test.cpp",
+      "size": 12776
+    },
+    {
+      "path": "tests\\integration\\INTEGRATION_TEST_REPORT.md",
+      "size": 3132
+    },
+    {
+      "path": "tests\\integration\\rbac_integration.tests.ps1",
+      "size": 4444
+    },
+    {
+      "path": "tests\\integration\\security_integration.tests.ps1",
+      "size": 9783
+    },
+    {
+      "path": "tests\\integration\\soak_test_cot.py",
+      "size": 12785
+    },
+    {
+      "path": "tests\\integration\\SovereignIntegrationTests.cs",
+      "size": 13235
+    },
+    {
+      "path": "tests\\integration\\test_ast_scope_awareness.cpp",
+      "size": 10462
+    },
+    {
+      "path": "tests\\integration\\test_binary_validation.c",
+      "size": 6303
+    },
+    {
+      "path": "tests\\integration\\test_cot_bridge.py",
+      "size": 15057
+    },
+    {
+      "path": "tests\\integration\\test_inference_e2e.c",
+      "size": 12215
+    },
+    {
+      "path": "tests\\integration\\test_inference_pipeline.c",
+      "size": 17044
+    },
+    {
+      "path": "tests\\integration\\test_phase2_integration.cpp",
+      "size": 292
+    },
+    {
+      "path": "tests\\integration\\test_pipeline.c",
+      "size": 18135
+    },
+    {
+      "path": "tests\\integration\\test_rawrxd_e2e.c",
+      "size": 11950
+    },
+    {
+      "path": "tests\\integration\\test_sovereign_fp8.cpp",
+      "size": 11237
+    },
+    {
+      "path": "tests\\kernels\\rebuild_and_test.ps1",
+      "size": 955
+    },
+    {
+      "path": "tests\\kernels\\test_attention.c",
+      "size": 3342
+    },
+    {
+      "path": "tests\\kernels\\test_gelu_activation.c",
+      "size": 2407
+    },
+    {
+      "path": "tests\\kernels\\test_layer_norm.c",
+      "size": 3624
+    },
+    {
+      "path": "tests\\kernels\\test_matmul.c",
+      "size": 2215
+    },
+    {
+      "path": "tests\\kernels\\test_matmul.exe",
+      "size": 54818
+    },
+    {
+      "path": "tests\\kernels\\test_matmul_avx2.exe",
+      "size": 54818
+    },
+    {
+      "path": "tests\\kernels\\test_rmsnorm_avx2.c",
+      "size": 9925
+    },
+    {
+      "path": "tests\\kernels\\test_rmsnorm_avx2.exe",
+      "size": 63506
+    },
+    {
+      "path": "tests\\kernels\\test_rms_norm.c",
+      "size": 2872
+    },
+    {
+      "path": "tests\\kernels\\test_rope.c",
+      "size": 3597
+    },
+    {
+      "path": "tests\\kernels\\test_silu_activation.c",
+      "size": 5336
+    },
+    {
+      "path": "tests\\kernels\\test_softmax.c",
+      "size": 5315
+    },
+    {
+      "path": "tests\\kernels\\test_softmax_avx2.c",
+      "size": 8059
+    },
+    {
+      "path": "tests\\kernels\\test_softmax_avx2.exe",
+      "size": 62202
+    },
+    {
+      "path": "tests\\kernels\\VALIDATION_REPORT.md",
+      "size": 2363
+    },
+    {
+      "path": "tests\\masm\\comprehensive_test.asm",
+      "size": 5709
+    },
+    {
+      "path": "tests\\masm\\factorial.asm",
+      "size": 1838
+    },
+    {
+      "path": "tests\\masm\\hello.asm",
+      "size": 1639
+    },
+    {
+      "path": "tests\\masm\\writers_test.cpp",
+      "size": 2020
+    },
+    {
+      "path": "tests\\native\\CMakeLists.txt",
+      "size": 666
+    },
+    {
+      "path": "tests\\native\\test_gguf_loader.cpp",
+      "size": 830
+    },
+    {
+      "path": "tests\\native\\test_metrics_server.cpp",
+      "size": 1028
+    },
+    {
+      "path": "tests\\native\\test_quantization.cpp",
+      "size": 1174
+    },
+    {
+      "path": "tests\\performance\\ATTENTION_OPTIMIZATION_ANALYSIS.md",
+      "size": 3048
+    },
+    {
+      "path": "tests\\performance\\AVX512_OPTIMIZATION_REPORT.md",
+      "size": 2290
+    },
+    {
+      "path": "tests\\performance\\benchmark_quick.c",
+      "size": 4204
+    },
+    {
+      "path": "tests\\performance\\benchmark_runner.c",
+      "size": 8132
+    },
+    {
+      "path": "tests\\performance\\dashboard.py",
+      "size": 15415
+    },
+    {
+      "path": "tests\\performance\\optimization_analyzer.py",
+      "size": 10050
+    },
+    {
+      "path": "tests\\performance\\PERFORMANCE_REPORT.md",
+      "size": 2106
+    },
+    {
+      "path": "tests\\performance\\perf_attention.c",
+      "size": 10001
+    },
+    {
+      "path": "tests\\performance\\perf_common.h",
+      "size": 4999
+    },
+    {
+      "path": "tests\\performance\\perf_matmul.c",
+      "size": 7542
+    },
+    {
+      "path": "tests\\performance\\perf_quick.c",
+      "size": 6036
+    },
+    {
+      "path": "tests\\performance\\perf_results.json",
+      "size": 2244
+    },
+    {
+      "path": "tests\\performance\\profiler.c",
+      "size": 8958
+    },
+    {
+      "path": "tests\\performance\\profiler_avx512.c",
+      "size": 10290
+    },
+    {
+      "path": "tests\\performance\\PROFILER_REPORT.md",
+      "size": 2468
+    },
+    {
+      "path": "tests\\performance\\test_basic_profiler.cpp",
+      "size": 859
+    },
+    {
+      "path": "tests\\performance\\test_batch3_profiler_smoke.cpp",
+      "size": 10483
+    },
+    {
+      "path": "tests\\performance\\test_phase2_performance.cpp",
+      "size": 324
+    },
+    {
+      "path": "tests\\quantization\\test_q8_quantize.c",
+      "size": 9825
+    },
+    {
+      "path": "tests\\quantization\\test_q8_simple.c",
+      "size": 2217
+    },
+    {
+      "path": "tests\\rawramxd\\build_fabric_test.bat",
+      "size": 1497
+    },
+    {
+      "path": "tests\\rawramxd\\overcapacity_real_benchmark.cpp",
+      "size": 17717
+    },
+    {
+      "path": "tests\\rawramxd\\test_gpu_fabric.cpp",
+      "size": 8950
+    },
+    {
+      "path": "tests\\regression\\sovereign_baseline_regression.cpp",
+      "size": 12280
+    },
+    {
+      "path": "tests\\regression\\test_regression.c",
+      "size": 8692
+    },
+    {
+      "path": "tests\\regression\\test_regression.exe",
+      "size": 61270
+    },
+    {
+      "path": "tests\\reports\\latest.json",
+      "size": 6506
+    },
+    {
+      "path": "tests\\reports\\parallel_report_20260715_145744.json",
+      "size": 17944
+    },
+    {
+      "path": "tests\\reports\\parallel_report_20260715_145809.json",
+      "size": 17943
+    },
+    {
+      "path": "tests\\reports\\parallel_report_20260715_145905.json",
+      "size": 17941
+    },
+    {
+      "path": "tests\\reports\\report_20260715_120013.json",
+      "size": 6506
+    },
+    {
+      "path": "tests\\reports\\report_20260715_120031.json",
+      "size": 6506
+    },
+    {
+      "path": "tests\\reports\\test_output.txt",
+      "size": 895
+    },
+    {
+      "path": "tests\\reports\\unified_report.json",
+      "size": 716
+    },
+    {
+      "path": "tests\\sampler\\test_temperature.c",
+      "size": 3274
+    },
+    {
+      "path": "tests\\sanitizer\\sanitizer_tests.c",
+      "size": 9280
+    },
+    {
+      "path": "tests\\scheduler\\adaptive_scheduler_smoke_test.cpp",
+      "size": 20451
+    },
+    {
+      "path": "tests\\scripts\\run_tests.ps1",
+      "size": 11996
+    },
+    {
+      "path": "tests\\smoke\\build_target_with_retry.cmake",
+      "size": 2427
+    },
+    {
+      "path": "tests\\smoke\\hotpatch_smoke.tests.ps1",
+      "size": 5445
+    },
+    {
+      "path": "tests\\smoke\\ide_autonomy_shield_stubs.cpp",
+      "size": 596
+    },
+    {
+      "path": "tests\\smoke\\test_consumer_hardware_enabler.cpp",
+      "size": 10657
+    },
+    {
+      "path": "tests\\smoke\\test_extreme_memory_optimizer.cpp",
+      "size": 1164
+    },
+    {
+      "path": "tests\\smoke\\test_fast_forward_controller.cpp",
+      "size": 9214
+    },
+    {
+      "path": "tests\\smoke\\test_ide_model_autonomy.cpp",
+      "size": 2406
+    },
+    {
+      "path": "tests\\smoke\\test_monaco_bridge.cpp",
+      "size": 4303
+    },
+    {
+      "path": "tests\\smoke\\test_quality_corrector.cpp",
+      "size": 16952
+    },
+    {
+      "path": "tests\\smoke\\test_stream_transformer.cpp",
+      "size": 26281
+    },
+    {
+      "path": "tests\\smoke\\win32ide_high_pressure_ui.ps1",
+      "size": 5563
+    },
+    {
+      "path": "tests\\smoke_e2e\\.gitignore",
+      "size": 78
+    },
+    {
+      "path": "tests\\smoke_e2e\\0_SmokeTestCoordinator.ps1",
+      "size": 20647
+    },
+    {
+      "path": "tests\\smoke_e2e\\1_DeferredInitVerification.ps1",
+      "size": 8300
+    },
+    {
+      "path": "tests\\smoke_e2e\\2_SubclassKeyboardTrapping.ps1",
+      "size": 15075
+    },
+    {
+      "path": "tests\\smoke_e2e\\3_IpcFrameConstraining.ps1",
+      "size": 9249
+    },
+    {
+      "path": "tests\\smoke_e2e\\4_BidirectionalHostIpc.ps1",
+      "size": 687
+    },
+    {
+      "path": "tests\\smoke_e2e\\4_CrossProcessIpc.ps1",
+      "size": 741
+    },
+    {
+      "path": "tests\\smoke_e2e\\4_ExtensionHostBridge.ps1",
+      "size": 812
+    },
+    {
+      "path": "tests\\smoke_e2e\\4_ExtensionHostIntegration.ps1",
+      "size": 456
+    },
+    {
+      "path": "tests\\smoke_e2e\\4_LiveExtensionIpc.ps1",
+      "size": 8480
+    },
+    {
+      "path": "tests\\smoke_e2e\\4_LiveHostIpcValidation.ps1",
+      "size": 6676
+    },
+    {
+      "path": "tests\\smoke_e2e\\4_LiveIpcHostTraffic.ps1",
+      "size": 499
+    },
+    {
+      "path": "tests\\smoke_e2e\\4_LiveIpcInterconnected.ps1",
+      "size": 864
+    },
+    {
+      "path": "tests\\smoke_e2e\\4_LiveIpcInterconnectedness.ps1",
+      "size": 429
+    },
+    {
+      "path": "tests\\smoke_e2e\\4_XProcIpcValidation.ps1",
+      "size": 358
+    },
+    {
+      "path": "tests\\smoke_e2e\\5_CopilotChatSendReceive.ps1",
+      "size": 8283
+    },
+    {
+      "path": "tests\\smoke_e2e\\README.md",
+      "size": 7402
+    },
+    {
+      "path": "tests\\smoke_e2e\\_test_dotsource.ps1",
+      "size": 237
+    },
+    {
+      "path": "tests\\smoke_e2e\\_test_ipc_quick.ps1",
+      "size": 795
+    },
+    {
+      "path": "tests\\smoke_e2e\\_test_ipc_reasm.ps1",
+      "size": 450
+    },
+    {
+      "path": "tests\\soak\\build_soak_test.bat",
+      "size": 1859
+    },
+    {
+      "path": "tests\\soak\\main.cpp",
+      "size": 6344
+    },
+    {
+      "path": "tests\\soak\\soak_test_harness.cpp",
+      "size": 24147
+    },
+    {
+      "path": "tests\\soak\\soak_test_harness.hpp",
+      "size": 9677
+    },
+    {
+      "path": "tests\\soak\\test_soak.c",
+      "size": 7728
+    },
+    {
+      "path": "tests\\src\\test_framework.c",
+      "size": 11542
+    },
+    {
+      "path": "tests\\streaming\\build_v2.bat",
+      "size": 499
+    },
+    {
+      "path": "tests\\streaming\\build_v2_clean.bat",
+      "size": 1137
+    },
+    {
+      "path": "tests\\streaming\\build_v2_manual.bat",
+      "size": 949
+    },
+    {
+      "path": "tests\\streaming\\check_env.bat",
+      "size": 116
+    },
+    {
+      "path": "tests\\streaming\\sovereign_streamer_fingerprint_test.cpp",
+      "size": 24104
+    },
+    {
+      "path": "tests\\stress\\build_tests.bat",
+      "size": 622
+    },
+    {
+      "path": "tests\\stress\\run_stress_tests.bat",
+      "size": 2595
+    },
+    {
+      "path": "tests\\stress\\STRESS_TEST_REPORT.md",
+      "size": 1933
+    },
+    {
+      "path": "tests\\stress\\test_fuzz.c",
+      "size": 11884
+    },
+    {
+      "path": "tests\\stress\\test_memory.c",
+      "size": 8011
+    },
+    {
+      "path": "tests\\stress\\test_soak.c",
+      "size": 8851
+    },
+    {
+      "path": "tests\\stress\\test_stress_kernels.c",
+      "size": 6315
+    },
+    {
+      "path": "tests\\stubs\\agent_tool_registry_stub.cpp",
+      "size": 399
+    },
+    {
+      "path": "tests\\stubs\\ollama_client_stub.cpp",
+      "size": 320
+    },
+    {
+      "path": "tests\\tokenizer\\test_bpe_tokenizer.c",
+      "size": 2519
+    },
+    {
+      "path": "tests\\training\\test_checkpoint.cpp",
+      "size": 3584
+    },
+    {
+      "path": "tests\\training\\test_dataset.cpp",
+      "size": 4646
+    },
+    {
+      "path": "tests\\training\\test_lora.cpp",
+      "size": 2763
+    },
+    {
+      "path": "tests\\unit\\CMakeLists.txt",
+      "size": 1397
+    },
+    {
+      "path": "tests\\unit\\compliance_checker.tests.ps1",
+      "size": 5205
+    },
+    {
+      "path": "tests\\unit\\distributed_trainer_test_impl.cpp",
+      "size": 476
+    },
+    {
+      "path": "tests\\unit\\hardware_backend_selector_test_impl.cpp",
+      "size": 908
+    },
+    {
+      "path": "tests\\unit\\patch_registry.tests.ps1",
+      "size": 7587
+    },
+    {
+      "path": "tests\\unit\\rbac_manager.tests.ps1",
+      "size": 7272
+    },
+    {
+      "path": "tests\\unit\\security_manager_test_impl.cpp",
+      "size": 6343
+    },
+    {
+      "path": "tests\\unit\\test_additional_components.cpp",
+      "size": 906
+    },
+    {
+      "path": "tests\\unit\\test_assembler.c",
+      "size": 11219
+    },
+    {
+      "path": "tests\\unit\\test_distributed_trainer.cpp",
+      "size": 1196
+    },
+    {
+      "path": "tests\\unit\\test_linker.c",
+      "size": 14006
+    },
+    {
+      "path": "tests\\unit\\test_security_manager.cpp",
+      "size": 4773
+    },
+    {
+      "path": "tests\\unit\\test_xss_sanitizer.cpp",
+      "size": 8868
+    },
+    {
+      "path": "tests\\validation\\build_logits_comparison.bat",
+      "size": 694
+    },
+    {
+      "path": "tests\\validation\\build_q4_validation.bat",
+      "size": 454
+    },
+    {
+      "path": "tests\\validation\\build_validator.bat",
+      "size": 760
+    },
+    {
+      "path": "tests\\validation\\logits_comparison.cpp",
+      "size": 14238
+    },
+    {
+      "path": "tests\\validation\\q4_0_validation.cpp",
+      "size": 11000
+    },
+    {
+      "path": "tests\\validation\\README.md",
+      "size": 5396
+    },
+    {
+      "path": "tests\\validation\\real_model_validator.cpp",
+      "size": 12696
+    },
+    {
+      "path": "tests\\validation\\run_phase6_validation.ps1",
+      "size": 7484
+    },
+    {
+      "path": "tests\\validation\\test_ggml_integration.cpp",
+      "size": 13563
+    },
+    {
+      "path": "tests\\validation\\validation_stubs.cpp",
+      "size": 4856
+    },
+    {
+      "path": "tests\\win32app\\test_extension_host.cpp",
+      "size": 9378
+    },
+    {
+      "path": "tests\\__pycache__\\gate15_production_ready.cpython-312.pyc",
+      "size": 11202
+    },
+    {
+      "path": "tests\\__pycache__\\gate5_transformer_layer.cpython-312.pyc",
+      "size": 24018
+    },
+    {
+      "path": "tests\\__pycache__\\gate7_token_generation.cpython-312.pyc",
+      "size": 26429
+    },
+    {
+      "path": "tests\\__pycache__\\gate9_autoregressive_gen.cpython-312.pyc",
+      "size": 29745
+    },
+    {
+      "path": "tests\\__pycache__\\real_gguf_tensor_parser.cpython-312.pyc",
+      "size": 19039
+    },
+    {
+      "path": "tests\\CMakeFiles\\4.2.0\\CMakeSystem.cmake",
+      "size": 395
+    },
+    {
+      "path": "tests\\CMakeFiles\\4.2.0\\VCTargetsPath.vcxproj",
+      "size": 1255
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\adds_x0_x0_0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\add_x0_sp_0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\add_x0_x1_x2.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\adrp_x0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\adr_x0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\ands_x0_x1_x2.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\and_x0_x1_x2.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\asr_x0_x1_1.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\b.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\beq.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\bl.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\blr_x0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\bne.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\brk.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\brk_0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\br_x0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\cbnz_x0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\cbz_x0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\cmn_x0_0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\cmp_x0_0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\dmb_ish.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\dsb_ish.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\eor_x0_x1_x2.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\hvc_0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\isb.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\ldp_x0_x1_sp.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\ldrb_w0_sp.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\ldrh_w0_sp.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\ldrsb_x0_sp.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\ldrsw_x0_sp.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\ldr_x0_sp.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\lsl_x0_x1_1.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\lsr_x0_x1_1.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\manifest.txt",
+      "size": 215
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\movk.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\movk_x0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\movn_x0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\movz.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\movz_x0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\movz_x1_1.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\mrs_x0_cntpct.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\msr_cntpct_x0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\nop.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\orr_x0_x1_x2.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\ret.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\ret_x0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\sev.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\sevl.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\smc_0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\stp_x0_x1_sp.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\str_x0_sp.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\subs_x0_x0_0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\sub_x0_sp_0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\sub_x0_x1_x2.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\svc_0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\tbnz_x0_0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\tbz_x0_0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\tst_x1_x2.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\wfe.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\wfi.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\arm64\\yield.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\malformed\\all_ones.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\malformed\\all_zeros.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\malformed\\alternating.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\malformed\\invalid_prefix.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\malformed\\overlong.bin",
+      "size": 16
+    },
+    {
+      "path": "tests\\decoder_corpus\\malformed\\truncated_1.bin",
+      "size": 1
+    },
+    {
+      "path": "tests\\decoder_corpus\\malformed\\truncated_2.bin",
+      "size": 2
+    },
+    {
+      "path": "tests\\decoder_corpus\\malformed\\truncated_3.bin",
+      "size": 3
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\addiu_v0_v1_1.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\addi_v0_v1_1.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\addu_v0_v1_v2.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\add_v0_v1_v2.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\andi_v0_v1_0xFF.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\and_v0_v1_v2.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\beq_v0_v1.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\bgezal_v0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\bgez_v0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\bgtz_v0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\blez_v0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\bltzal_v0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\bltz_v0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\bne_v0_v1.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\break_0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\divu_a0_a1.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\div_a0_a1.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\ehb.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\eret.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\j.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\jal.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\jalr_ra.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\jr.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\jr_ra.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\lbu_v0_0_sp.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\lb_v0_0_sp.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\lhu_v0_0_sp.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\lh_v0_0_sp.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\ll_v0_0_sp.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\lui.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\lui_v0_0x1234.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\lwl_v0_0_sp.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\lwr_v0_0_sp.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\lw_v0_0_sp.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\mfc0_v0_status.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\mfhi_v0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\mflo_v0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\mtc0_v0_status.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\mthi_a0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\mtlo_a0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\multu_a0_a1.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\mult_a0_a1.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\nop.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\nor_v0_v1_v2.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\ori.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\ori_v0_v1_0xFF.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\or_v0_v1_v2.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\pause.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\sb_v0_0_sp.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\sc_v0_0_sp.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\sh_v0_0_sp.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\sllv_v0_v1_v2.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\sll_v0_v1_1.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\sltiu_v0_v1_1.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\slti_v0_v1_1.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\sltu_v0_v1_v2.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\slt_v0_v1_v2.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\srav_v0_v1_v2.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\sra_v0_v1_1.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\srlv_v0_v1_v2.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\srl_v0_v1_1.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\ssnop.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\subu_v0_v1_v2.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\sub_v0_v1_v2.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\swl_v0_0_sp.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\swr_v0_0_sp.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\sw_v0_0_sp.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\sync.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\syscall.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\tlbp.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\tlbr.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\tlbwi.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\tlbwr.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\xori_v0_v1_0xFF.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\mips\\xor_v0_v1_v2.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\addi_x5_x6_1.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\add_x5_x6_x7.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\andi_x5_x6_1.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\and_x5_x6_x7.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\auipc_x5_0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\beq_x5_x6.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\bgeu_x5_x6.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\bge_x5_x6.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\bltu_x5_x6.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\blt_x5_x6.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\bne_x5_x6.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\csrrci_x5_1_cycle.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\csrrc_x5_x6_cycle.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\csrrsi_x5_1_cycle.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\csrrs_x5_x6_cycle.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\csrrwi_x5_1_cycle.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\csrrw_x5_x6_cycle.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\c_addi16sp.bin",
+      "size": 2
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\c_addi4spn_x8.bin",
+      "size": 2
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\c_addi_x5_1.bin",
+      "size": 2
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\c_add_x5_x6.bin",
+      "size": 2
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\c_andi_x8_1.bin",
+      "size": 2
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\c_and_x8_x9.bin",
+      "size": 2
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\c_beqz_x8.bin",
+      "size": 2
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\c_bnez_x8.bin",
+      "size": 2
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\c_j.bin",
+      "size": 2
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\c_jal.bin",
+      "size": 2
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\c_jalr_x5.bin",
+      "size": 2
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\c_jr_x5.bin",
+      "size": 2
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\c_li_x5_1.bin",
+      "size": 2
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\c_lui_x5_1.bin",
+      "size": 2
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\c_lwsp_x5_0.bin",
+      "size": 2
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\c_lw_x8_0_x10.bin",
+      "size": 2
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\c_mv_x5_x6.bin",
+      "size": 2
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\c_nop.bin",
+      "size": 2
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\c_or_x8_x9.bin",
+      "size": 2
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\c_slli_x5_1.bin",
+      "size": 2
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\c_srai_x8_1.bin",
+      "size": 2
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\c_srli_x8_1.bin",
+      "size": 2
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\c_sub_x8_x9.bin",
+      "size": 2
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\c_swsp_x5_0.bin",
+      "size": 2
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\c_sw_x8_0_x10.bin",
+      "size": 2
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\c_xor_x8_x9.bin",
+      "size": 2
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\divu_x5_x6_x7.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\div_x5_x6_x7.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\ebreak.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\ecall.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\fence.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\fence_i.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\jal.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\jalr_x5_x6.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\jal_x1.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\lbu_x5_0_x6.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\lb_x5_0_x6.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\lhu_x5_0_x6.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\lh_x5_0_x6.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\li_x5_0.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\lui_x5_0x12345.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\lw_x5_0_x6.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\mret.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\mulhsu_x5_x6_x7.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\mulhu_x5_x6_x7.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\mulh_x5_x6_x7.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\mul_x5_x6_x7.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\nop.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\ori_x5_x6_1.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\or_x5_x6_x7.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\remu_x5_x6_x7.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\rem_x5_x6_x7.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\sb_x5_0_x6.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\sh_x5_0_x6.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\slli_x5_x6_1.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\sll_x5_x6_x7.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\sltiu_x5_x6_1.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\slti_x5_x6_1.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\sltu_x5_x6_x7.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\slt_x5_x6_x7.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\srai_x5_x6_1.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\sra_x5_x6_x7.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\sret.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\srli_x5_x6_1.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\srl_x5_x6_x7.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\sub_x5_x6_x7.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\sw_x5_0_x6.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\uret.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\wfi.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\xori_x5_x6_1.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\decoder_corpus\\riscv\\xor_x5_x6_x7.bin",
+      "size": 4
+    },
+    {
+      "path": "tests\\inference_validation\\fixtures\\prompts.json",
+      "size": 1833
+    },
+    {
+      "path": "tests\\inference_validation\\harness\\reference_loader.cpp",
+      "size": 3692
+    },
+    {
+      "path": "tests\\inference_validation\\harness\\reference_loader.hpp",
+      "size": 1632
+    },
+    {
+      "path": "tests\\inference_validation\\harness\\runtime_hooks.hpp",
+      "size": 5722
+    },
+    {
+      "path": "tests\\inference_validation\\harness\\tensor_compare.cpp",
+      "size": 4318
+    },
+    {
+      "path": "tests\\inference_validation\\harness\\tensor_compare.hpp",
+      "size": 1532
+    },
+    {
+      "path": "tests\\inference_validation\\harness\\tolerance_config.hpp",
+      "size": 2106
+    },
+    {
+      "path": "tests\\inference_validation\\harness\\validation_runner.cpp",
+      "size": 4602
+    },
+    {
+      "path": "tests\\inference_validation\\hidden_state\\layer_snapshot.hpp",
+      "size": 1386
+    },
+    {
+      "path": "tests\\inference_validation\\logits\\logits_compare.cpp",
+      "size": 3492
+    },
+    {
+      "path": "tests\\inference_validation\\logits\\logits_compare.hpp",
+      "size": 1621
+    },
+    {
+      "path": "tests\\inference_validation\\sampling\\deterministic_rng.hpp",
+      "size": 1682
+    },
+    {
+      "path": "tests\\inference_validation\\scripts\\generate_reference_data.py",
+      "size": 6221
+    },
+    {
+      "path": "tests\\inference_validation\\tokenizer\\tokenizer_regression.hpp",
+      "size": 1503
+    },
+    {
+      "path": "tests\\smoke_e2e\\logs\\.gitkeep",
+      "size": 0
+    },
+    {
+      "path": "tests\\smoke_e2e\\modules\\IpcFramingHelper.ps1",
+      "size": 15222
+    },
+    {
+      "path": "tests\\smoke_e2e\\modules\\IpcFramingHelper.psm1",
+      "size": 457
+    },
+    {
+      "path": "tests\\smoke_e2e\\modules\\SmokeDiagnostics.ps1",
+      "size": 4441
+    },
+    {
+      "path": "tests\\smoke_e2e\\tools\\Build-RawrXDIpcPing.ps1",
+      "size": 1635
+    },
+    {
+      "path": "tests\\smoke_e2e\\tools\\RawrXDIpcPing.cpp",
+      "size": 1421
+    }
+  ]
+}

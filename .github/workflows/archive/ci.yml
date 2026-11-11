@@ -1,0 +1,75 @@
+name: HexMag Swarm & IDE Build Test
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - dev
+      - feature/**
+      - feat/**
+      - bugfix/**
+      - hotfix/**
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Add MSBuild
+        uses: microsoft/setup-msbuild@v1.3
+
+      - name: Install NASM
+        run: |
+          choco install nasm -y
+          $env:PATH += ";C:\Program Files\NASM"
+
+      # NOTE: Qt installation removed — Sovereign IDE is Qt-free.
+      # All UI is rendered via Direct2D (Win32) or React (frontend).
+      # See SOVEREIGN_HANDOFF.md §7 Architecture Philosophy.
+
+      - name: Clean build folder
+        shell: pwsh
+        run: |
+          if (Test-Path .\build) {
+            Write-Host "Removing existing build folder to avoid stale CMake cache..."
+            Remove-Item .\build -Recurse -Force -ErrorAction SilentlyContinue
+          }
+
+      - name: Build Win32 IDE
+        run: .\scripts\build.ps1 -Config Release -A x64
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        working-directory: services
+        run: pip install -r requirements.txt
+
+      - name: Start HexMag Test Swarm (background on port 8001)
+        working-directory: services/hexmag
+        shell: pwsh
+        run: |
+          Start-Process python -ArgumentList "hexmag_engine.py --port 8001" -NoNewWindow
+          do {
+            Start-Sleep -Seconds 1
+            $r = try { (Invoke-WebRequest http://localhost:8001/health -TimeoutSec 5 -ErrorAction Stop).StatusCode } catch { 0 }
+          } while ($r -ne 200)
+
+      - name: Smoke-test /ask and /agent endpoints
+        working-directory: services
+        shell: pwsh
+        run: python test_smoke.py
+
+      - name: Kill test swarm
+        if: always()
+        shell: pwsh
+        run: |
+          Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue

@@ -1,0 +1,14 @@
+ Assembling: D:\rawrxd\history\all_versions\src\rawrxd_kernels.asm\1769993267092_R5Q3.asm
+D:\rawrxd\history\all_versions\src\rawrxd_kernels.asm\1769993267092_R5Q3.asm(6) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\rawrxd_kernels.asm\1769993267092_R5Q3.asm(32) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\rawrxd_kernels.asm\1769993267092_R5Q3.asm(34) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\rawrxd_kernels.asm\1769993267092_R5Q3.asm(90) : error A2008:syntax error : zmm1
+D:\rawrxd\history\all_versions\src\rawrxd_kernels.asm\1769993267092_R5Q3.asm(89) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\rawrxd_kernels.asm\1769993267092_R5Q3.asm(122) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\rawrxd_kernels.asm\1769993267092_R5Q3.asm(124) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\rawrxd_kernels.asm\1769993267092_R5Q3.asm(174) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\rawrxd_kernels.asm\1769993267092_R5Q3.asm(177) : error A2026:constant expected
+D:\rawrxd\history\all_versions\src\rawrxd_kernels.asm\1769993267092_R5Q3.asm(178) : error A2026:constant expected
+D:\rawrxd\history\all_versions\src\rawrxd_kernels.asm\1769993267092_R5Q3.asm(189) : error A2026:constant expected
+D:\rawrxd\history\all_versions\src\rawrxd_kernels.asm\1769993267092_R5Q3.asm(190) : error A2026:constant expected
+D:\rawrxd\history\all_versions\src\rawrxd_kernels.asm\1769993267092_R5Q3.asm(215) : error A2206:missing operator in expression

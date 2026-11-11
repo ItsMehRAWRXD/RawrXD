@@ -1,0 +1,9 @@
+ Assembling: D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_RawrXDLoops.asm
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_RawrXDLoops.asm(5) : error A2008:syntax error : frame
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_RawrXDLoops.asm(111) : error A2008:syntax error : g_rcChannelRack
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_RawrXDLoops.asm(112) : error A2008:syntax error : g_rcPianoRoll
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_RawrXDLoops.asm(113) : error A2008:syntax error : g_rcPlaylist
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_RawrXDLoops.asm(114) : error A2008:syntax error : g_rcMixer
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_RawrXDLoops.asm(115) : error A2008:syntax error : g_rcBrowser
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_RawrXDLoops.asm(600) : error A2008:syntax error : size
+D:\rawrxd\history\runoff\part_0015\d__RawrXDLoops_RawrXDLoops.asm(606) : fatal error A1010:unmatched block nesting : VirtualAlloc

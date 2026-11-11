@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(9) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(10) : error A2008:syntax error : ALIGN
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(69) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(111) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(136) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(152) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(205) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(210) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(217) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(223) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(229) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(285) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(289) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(325) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(326) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(331) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(332) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(431) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(432) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(433) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(434) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(490) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(492) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(494) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(512) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(513) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(518) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(519) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(552) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(579) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(591) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(596) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(601) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(603) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(608) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(613) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(617) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(621) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(625) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(695) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(696) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(697) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(698) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(807) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(833) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(844) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(887) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(890) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(937) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(942) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(944) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(946) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(948) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(950) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(955) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(1010) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(1016) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(1018) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(1020) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(1022) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(1024) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(1026) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(1031) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(1037) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(1038) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(1150) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(1152) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(1154) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(1156) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(1201) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(1203) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(1205) : error A2221:Missing Frame in proc, no unwind code will be generated.
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(1207) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(1251) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(1313) : error A2008:syntax error : ALIGN
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(227) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(252) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(350) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(382) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(391) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(459) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(476) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(578) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(586) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(593) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(598) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(630) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(761) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(832) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(840) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(857) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(871) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(881) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(883) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(894) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(907) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(954) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(1030) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(1113) : error A2006:undefined symbol : QueryPerformanceFrequency
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(1162) : error A2006:undefined symbol : GetVersion
+D:\rawrxd\history\all_versions\gpu_dma_complete_reverse_engineered.asm\1769586987138_YxLq.asm(1163) : fatal error A1012:error count exceeds 100; stopping assembly

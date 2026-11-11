@@ -1,0 +1,10 @@
+ Assembling: D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_semantic_highlighting.asm
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_semantic_highlighting.asm(12) : error A2008:syntax error : SendMessage
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_semantic_highlighting.asm(15) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_semantic_highlighting.asm(18) : error A2008:syntax error : ,
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_semantic_highlighting.asm(20) : error A2008:syntax error : LOG_INFO
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_semantic_highlighting.asm(29) : error A2008:syntax error : SendMessage
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_semantic_highlighting.asm(31) : error A2008:syntax error : SendMessage
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_semantic_highlighting.asm(33) : error A2008:syntax error : SendMessage
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_semantic_highlighting.asm(23) : warning A6004:procedure argument or local not referenced : hSci
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_semantic_highlighting.asm(37) : warning A6004:procedure argument or local not referenced : hSci

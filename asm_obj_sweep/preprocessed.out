@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\src\agentic\preprocessed.asm
+D:\rawrxd\src\agentic\preprocessed.asm(1) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\src\agentic\preprocessed.asm(3) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\src\agentic\preprocessed.asm(5) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\src\agentic\preprocessed.asm(6) : error A2088:END directive required at end of file

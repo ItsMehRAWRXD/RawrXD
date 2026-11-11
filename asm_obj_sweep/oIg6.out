@@ -1,0 +1,22 @@
+ Assembling: D:\rawrxd\history\-1a8c2372\oIg6.asm
+D:\rawrxd\history\-1a8c2372\oIg6.asm(97) : error A2006:undefined symbol : BinaryAnalysis_ParseELFSections
+D:\rawrxd\history\-1a8c2372\oIg6.asm(104) : error A2006:undefined symbol : BinaryAnalysis_ParsePESections
+D:\rawrxd\history\-1a8c2372\oIg6.asm(110) : error A2006:undefined symbol : BinaryAnalysis_DisassembleCode
+D:\rawrxd\history\-1a8c2372\oIg6.asm(114) : error A2006:undefined symbol : BinaryAnalysis_GeneratePseudoC
+D:\rawrxd\history\-1a8c2372\oIg6.asm(183) : error A2006:undefined symbol : Bytecode_ParsePythonPyc
+D:\rawrxd\history\-1a8c2372\oIg6.asm(190) : error A2006:undefined symbol : Bytecode_ParseJavaClass
+D:\rawrxd\history\-1a8c2372\oIg6.asm(194) : error A2006:undefined symbol : Bytecode_ReconstructCFG
+D:\rawrxd\history\-1a8c2372\oIg6.asm(199) : error A2006:undefined symbol : Bytecode_GenerateSource
+D:\rawrxd\history\-1a8c2372\oIg6.asm(250) : error A2006:undefined symbol : Network_StartCapture
+D:\rawrxd\history\-1a8c2372\oIg6.asm(259) : error A2006:undefined symbol : Network_CapturePacket
+D:\rawrxd\history\-1a8c2372\oIg6.asm(265) : error A2006:undefined symbol : Network_AnalyzePacket
+D:\rawrxd\history\-1a8c2372\oIg6.asm(277) : error A2006:undefined symbol : Network_ParsePackets
+D:\rawrxd\history\-1a8c2372\oIg6.asm(280) : error A2006:undefined symbol : Network_DetectAnomalies
+D:\rawrxd\history\-1a8c2372\oIg6.asm(290) : error A2006:undefined symbol : Network_CloseCapture
+D:\rawrxd\history\-1a8c2372\oIg6.asm(339) : error A2006:undefined symbol : Fuzz_AnalyzeParameters
+D:\rawrxd\history\-1a8c2372\oIg6.asm(351) : error A2006:undefined symbol : Fuzz_GenerateTestCase
+D:\rawrxd\history\-1a8c2372\oIg6.asm(364) : error A2006:undefined symbol : Fuzz_CreateHarness
+D:\rawrxd\history\-1a8c2372\oIg6.asm(414) : error A2006:undefined symbol : Exploit_CreateTemplate
+D:\rawrxd\history\-1a8c2372\oIg6.asm(420) : error A2006:undefined symbol : Exploit_Customize
+D:\rawrxd\history\-1a8c2372\oIg6.asm(425) : error A2006:undefined symbol : Exploit_AddPayload
+D:\rawrxd\history\-1a8c2372\oIg6.asm(436) : error A2006:undefined symbol : Exploit_AddDisclaimer

@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\history\all_versions\src\thermal\masm\SovereignThermalDemo.asm\1769493537133_Bk9P.asm
+D:\rawrxd\history\all_versions\src\thermal\masm\SovereignThermalDemo.asm\1769493537133_Bk9P.asm(451) : error A2006:undefined symbol : g_StartTime

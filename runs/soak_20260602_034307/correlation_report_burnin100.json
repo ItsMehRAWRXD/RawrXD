@@ -1,0 +1,84 @@
+{
+  "GeneratedUtc": "2026-06-02T07:54:44.7293485Z",
+  "MetricsCsvPath": "d:\\rawrxd-ci-bootstrap\\runs\\soak_20260602_034307\\sidecar_metrics.csv",
+  "GateLogPath": "d:\\rawrxd-ci-bootstrap\\runs\\soak_20260602_034307\\gate.log",
+  "BurnInSamples": 100,
+  "Overall": {
+    "SamplesTotal": 1811,
+    "SamplesRawTotal": 1911,
+    "BurnInSamplesExcluded": 100,
+    "CompletionEventsTotal": 282,
+    "MaxFillOverall": 1,
+    "TotalBackpressureEvents": 0,
+    "TotalBackpressureDelta": 0,
+    "TotalDroppedDelta": 0,
+    "SaturationThreshold": 48,
+    "SaturationSampleCount": 0,
+    "SaturationBackpressureEvents": 0
+  },
+  "PerBin": [
+    {
+      "FillBin": "0-15",
+      "SampleCount": 1811,
+      "AvgFill": 0.003,
+      "MaxFill": 1,
+      "BackpressureEvents": 0,
+      "BackpressureDeltaSum": 0,
+      "DroppedDeltaSum": 0,
+      "AvgBackpressureDeltaPerSample": 0.0,
+      "CompletionEvents": 282,
+      "AvgLatencyMs": 160.5745,
+      "P95LatencyMs": 250.0,
+      "StdDevLatencyMs": 73.9887
+    },
+    {
+      "FillBin": "16-31",
+      "SampleCount": 0,
+      "AvgFill": 0,
+      "MaxFill": 0,
+      "BackpressureEvents": 0,
+      "BackpressureDeltaSum": 0,
+      "DroppedDeltaSum": 0,
+      "AvgBackpressureDeltaPerSample": 0,
+      "CompletionEvents": 0,
+      "AvgLatencyMs": 0,
+      "P95LatencyMs": 0,
+      "StdDevLatencyMs": 0
+    },
+    {
+      "FillBin": "32-47",
+      "SampleCount": 0,
+      "AvgFill": 0,
+      "MaxFill": 0,
+      "BackpressureEvents": 0,
+      "BackpressureDeltaSum": 0,
+      "DroppedDeltaSum": 0,
+      "AvgBackpressureDeltaPerSample": 0,
+      "CompletionEvents": 0,
+      "AvgLatencyMs": 0,
+      "P95LatencyMs": 0,
+      "StdDevLatencyMs": 0
+    },
+    {
+      "FillBin": "48-64",
+      "SampleCount": 0,
+      "AvgFill": 0,
+      "MaxFill": 0,
+      "BackpressureEvents": 0,
+      "BackpressureDeltaSum": 0,
+      "DroppedDeltaSum": 0,
+      "AvgBackpressureDeltaPerSample": 0,
+      "CompletionEvents": 0,
+      "AvgLatencyMs": 0,
+      "P95LatencyMs": 0,
+      "StdDevLatencyMs": 0
+    }
+  ],
+  "GateSummary": {
+    "PassLine": "1716/2000",
+    "CancelRecovered": "284",
+    "AvgInferenceMs": "1.47",
+    "P95InferenceMs": "0",
+    "GatePassed": true
+  }
+}

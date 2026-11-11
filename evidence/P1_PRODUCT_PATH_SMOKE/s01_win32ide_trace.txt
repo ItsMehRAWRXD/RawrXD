@@ -1,0 +1,4 @@
+[Win32IDE_Core] createWindow() ENTER
+[Win32IDE_Core] About to call IDEConfig::getInstance()
+[Win32IDE_Core] IDEConfig::getInstance() returned
+[Win32IDE_Core] Configuration loading complete

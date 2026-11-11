@@ -1,0 +1,11 @@
+ Assembling: D:\rawrxd\history\all_versions\src\thermal\masm\pocket_lab.asm\1769495273528_DlhT.asm
+D:\rawrxd\history\all_versions\src\thermal\masm\pocket_lab.asm\1769495273528_DlhT.asm(4) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\thermal\masm\pocket_lab.asm\1769495273528_DlhT.asm(23) : error A2008:syntax error : length
+D:\rawrxd\history\all_versions\src\thermal\masm\pocket_lab.asm\1769495273528_DlhT.asm(30) : error A2008:syntax error : length
+D:\rawrxd\history\all_versions\src\thermal\masm\pocket_lab.asm\1769495273528_DlhT.asm(140) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\thermal\masm\pocket_lab.asm\1769495273528_DlhT.asm(211) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\thermal\masm\pocket_lab.asm\1769495273528_DlhT.asm(236) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\thermal\masm\pocket_lab.asm\1769495273528_DlhT.asm(278) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\thermal\masm\pocket_lab.asm\1769495273528_DlhT.asm(303) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\thermal\masm\pocket_lab.asm\1769495273528_DlhT.asm(330) : warning A6004:procedure argument or local not referenced : lba
+D:\rawrxd\history\all_versions\src\thermal\masm\pocket_lab.asm\1769495273528_DlhT.asm(330) : error A2220:Missing .ENDPROLOG

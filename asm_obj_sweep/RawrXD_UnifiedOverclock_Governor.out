@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\src\asm\RawrXD_UnifiedOverclock_Governor.asm
+D:\rawrxd\src\asm\RawrXD_UnifiedOverclock_Governor.asm(948) : error A2044:invalid character in file
+D:\rawrxd\src\asm\RawrXD_UnifiedOverclock_Governor.asm(956) : fatal error A1010:unmatched block nesting : Titan_ShutdownDMA

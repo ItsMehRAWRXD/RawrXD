@@ -1,0 +1,14 @@
+ Assembling: D:\rawrxd\src\agentic\Part2.asm
+D:\rawrxd\src\agentic\Part2.asm(3) : error A2034:must be in segment block : Emitter_EmitByte
+D:\rawrxd\src\agentic\Part2.asm(4) : error A2034:must be in segment block
+D:\rawrxd\src\agentic\Part2.asm(5) : error A2034:must be in segment block
+D:\rawrxd\src\agentic\Part2.asm(6) : error A2034:must be in segment block
+D:\rawrxd\src\agentic\Part2.asm(7) : error A2034:must be in segment block
+D:\rawrxd\src\agentic\Part2.asm(9) : error A2034:must be in segment block
+D:\rawrxd\src\agentic\Part2.asm(10) : error A2034:must be in segment block
+D:\rawrxd\src\agentic\Part2.asm(11) : error A2034:must be in segment block
+D:\rawrxd\src\agentic\Part2.asm(12) : error A2034:must be in segment block
+D:\rawrxd\src\agentic\Part2.asm(14) : error A2034:must be in segment block
+D:\rawrxd\src\agentic\Part2.asm(15) : error A2034:must be in segment block
+D:\rawrxd\src\agentic\Part2.asm(16) : error A2034:must be in segment block
+D:\rawrxd\src\agentic\Part2.asm(17) : fatal error A1010:unmatched block nesting : Emitter_EmitByte

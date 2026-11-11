@@ -1,0 +1,19 @@
+{
+  "tool": "ghost-engine-inference",
+  "identity": "com.rawrxd.ghostengine",
+  "executable": "Sovereign_Model_Streamer.dll",
+  "runtime_limits": {
+    "network_access": false,
+    "max_memory_mb": 128,
+    "max_cpu_percent": 30,
+    "max_execution_seconds": 0,
+    "allow_child_processes": false
+  },
+  "capability_allowlist": {
+    "fs": ["read:./models/**", "write:./cache/**"],
+    "ipc": ["propose_patch", "telemetry_emit"],
+    "env": ["RAWRXD_PIPE_NAME", "TEMP"]
+  },
+  "manifest_version": "1.0.0",
+  "expected_hash": "SHA256_PLACEHOLDER_GHOSTENGINE"
+}

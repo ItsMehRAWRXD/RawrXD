@@ -1,0 +1,145 @@
+// ============================================================================
+// RawrXD_IDE_Menu.rc - Menu Resources for AI Integration
+// ============================================================================
+
+#include <Windows.h>
+#include "resource.h"
+
+// ============================================================================
+// Accelerator Table
+// ============================================================================
+IDR_MAINACCEL ACCELERATORS
+BEGIN
+    // File operations
+    "S",        IDM_FILE_SAVE,          VIRTKEY, CONTROL
+    "O",        IDM_FILE_OPEN,          VIRTKEY, CONTROL
+    "N",        IDM_FILE_NEW,           VIRTKEY, CONTROL
+    VK_F5,      IDM_BUILD_RUN,          VIRTKEY
+    
+    // AI operations
+    VK_CANCEL,  IDM_AI_STOP_GENERATION, VIRTKEY, CONTROL   // Ctrl+Break
+    VK_SPACE,   IDM_AI_SHOW_COMPLETION, VIRTKEY, CONTROL   // Ctrl+Space
+    VK_TAB,     IDM_AI_ACCEPT_COMPLETION, VIRTKEY           // Tab (when ghost showing)
+    VK_ESCAPE,  IDM_AI_DISMISS_COMPLETION, VIRTKEY          // Esc (when ghost showing)
+    
+    // Edit operations
+    "Z",        IDM_EDIT_UNDO,          VIRTKEY, CONTROL
+    "Y",        IDM_EDIT_REDO,          VIRTKEY, CONTROL
+    "X",        IDM_EDIT_CUT,           VIRTKEY, CONTROL
+    "C",        IDM_EDIT_COPY,          VIRTKEY, CONTROL
+    "V",        IDM_EDIT_PASTE,         VIRTKEY, CONTROL
+    "F",        IDM_EDIT_FIND,          VIRTKEY, CONTROL
+    "H",        IDM_EDIT_REPLACE,       VIRTKEY, CONTROL
+    VK_F3,      IDM_EDIT_FIND_NEXT,     VIRTKEY
+END
+
+// ============================================================================
+// Main Menu
+// ============================================================================
+IDR_MAINMENU MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New\tCtrl+N",              IDM_FILE_NEW
+        MENUITEM "&Open...\tCtrl+O",           IDM_FILE_OPEN
+        MENUITEM "&Save\tCtrl+S",               IDM_FILE_SAVE
+        MENUITEM "Save &As...",                IDM_FILE_SAVEAS
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit\tAlt+F4",               IDM_FILE_EXIT
+    END
+    
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Undo\tCtrl+Z",                IDM_EDIT_UNDO
+        MENUITEM "&Redo\tCtrl+Y",               IDM_EDIT_REDO
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t\tCtrl+X",                 IDM_EDIT_CUT
+        MENUITEM "&Copy\tCtrl+C",               IDM_EDIT_COPY
+        MENUITEM "&Paste\tCtrl+V",              IDM_EDIT_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "&Find...\tCtrl+F",             IDM_EDIT_FIND
+        MENUITEM "R&eplace...\tCtrl+H",          IDM_EDIT_REPLACE
+        MENUITEM "Find &Next\tF3",              IDM_EDIT_FIND_NEXT
+    END
+    
+    POPUP "&AI"
+    BEGIN
+        MENUITEM "Show Com&pletion\tCtrl+Space", IDM_AI_SHOW_COMPLETION
+        MENUITEM "&Accept Completion\tTab",       IDM_AI_ACCEPT_COMPLETION
+        MENUITEM "&Dismiss Completion\tEsc",     IDM_AI_DISMISS_COMPLETION
+        MENUITEM SEPARATOR
+        MENUITEM "&Stop Generation\tCtrl+Break", IDM_AI_STOP_GENERATION
+        MENUITEM SEPARATOR
+        MENUITEM "&Preferences...",             IDM_AI_PREFERENCES
+    END
+    
+    POPUP "&Build"
+    BEGIN
+        MENUITEM "&Build\tF7",                   IDM_BUILD_BUILD
+        MENUITEM "&Run\tF5",                    IDM_BUILD_RUN
+        MENUITEM "Build && Run\tCtrl+F5",      IDM_BUILD_BUILD_AND_RUN
+        MENUITEM SEPARATOR
+        MENUITEM "&Clean",                      IDM_BUILD_CLEAN
+    END
+    
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Terminal",                   IDM_VIEW_TERMINAL
+        MENUITEM "&Git Panel",                   IDM_VIEW_GIT
+        MENUITEM "&LSP Diagnostics",             IDM_VIEW_LSP_DIAGNOSTICS
+        MENUITEM SEPARATOR
+        MENUITEM "&Status Bar",                  IDM_VIEW_STATUSBAR
+        MENUITEM "&Toolbar",                     IDM_VIEW_TOOLBAR
+    END
+    
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About RawrXD IDE...",         IDM_HELP_ABOUT
+    END
+END
+
+// ============================================================================
+// String Table
+// ============================================================================
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE           "RawrXD IDE"
+    IDS_GHOST_TEXT_ACCEPT   "Press Tab to accept completion"
+    IDS_GHOST_TEXT_DISMISS  "Press Esc to dismiss"
+    IDS_AI_GENERATING       "AI: Generating..."
+    IDS_AI_READY            "AI: Ready"
+    IDS_AI_CANCELLED        "AI: Cancelled"
+    IDS_AI_ERROR            "AI: Error"
+END
+
+// ============================================================================
+// Version Info
+// ============================================================================
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION     1,0,0,0
+PRODUCTVERSION  1,0,0,0
+FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
+FILEFLAGS       0x0L
+FILEOS          VOS_NT_WINDOWS32
+FILETYPE        VFT_APP
+FILESUBTYPE     0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904E4"
+        BEGIN
+            VALUE "CompanyName",      "RawrXD"
+            VALUE "FileDescription",  "RawrXD IDE"
+            VALUE "FileVersion",      "1.0.0.0"
+            VALUE "InternalName",     "RawrXD_IDE"
+            VALUE "LegalCopyright",   "Copyright (C) 2026"
+            VALUE "OriginalFilename", "RawrXD_IDE.exe"
+            VALUE "ProductName",      "RawrXD IDE"
+            VALUE "ProductVersion",   "1.0.0.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252
+    END
+END

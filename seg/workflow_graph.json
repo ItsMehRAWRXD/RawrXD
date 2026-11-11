@@ -1,0 +1,47 @@
+{
+  "id": 1783938873072,
+  "name": "ExportGraph",
+  "nodes": [
+    {
+      "id": 1,
+      "name": "RunUnityCycle",
+      "type": 0,
+      "state": 0,
+      "dependencies": [],
+      "outputs": [2, 3]
+    },
+    {
+      "id": 2,
+      "name": "RunIntegrationCycle",
+      "type": 0,
+      "state": 0,
+      "dependencies": [1],
+      "outputs": [3]
+    },
+    {
+      "id": 3,
+      "name": "Telemetry_AutoDiscovery",
+      "type": 4,
+      "state": 0,
+      "dependencies": [2, 1],
+      "outputs": []
+    }
+  ],
+  "edges": [
+    {
+      "id": 1,
+      "sourceId": 1,
+      "targetId": 2
+    },
+    {
+      "id": 2,
+      "sourceId": 2,
+      "targetId": 3
+    },
+    {
+      "id": 3,
+      "sourceId": 1,
+      "targetId": 3
+    }
+  ]
+}

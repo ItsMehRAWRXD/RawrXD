@@ -1,0 +1,14 @@
+ Assembling: D:\rawrxd\WinMain_Integration_Example.asm
+D:\rawrxd\WinMain_Integration_Example.asm(146) : error A2008:syntax error : .
+D:\rawrxd\WinMain_Integration_Example.asm(371) : error A2008:syntax error : WinMain
+D:\rawrxd\WinMain_Integration_Example.asm(371) : error A2088:END directive required at end of file
+D:\rawrxd\WinMain_Integration_Example.asm(66) : error A2206:missing operator in expression
+D:\rawrxd\WinMain_Integration_Example.asm(67) : error A2206:missing operator in expression
+D:\rawrxd\WinMain_Integration_Example.asm(68) : error A2006:undefined symbol : IDE_CreateMainWindow
+D:\rawrxd\WinMain_Integration_Example.asm(71) : error A2006:undefined symbol : WindowCreateFailed
+D:\rawrxd\WinMain_Integration_Example.asm(80) : error A2006:undefined symbol : IDE_SetupAccelerators
+D:\rawrxd\WinMain_Integration_Example.asm(84) : error A2206:missing operator in expression
+D:\rawrxd\WinMain_Integration_Example.asm(93) : error A2006:undefined symbol : ShowWindow
+D:\rawrxd\WinMain_Integration_Example.asm(97) : error A2006:undefined symbol : UpdateWindow
+D:\rawrxd\WinMain_Integration_Example.asm(128) : error A2006:undefined symbol : IDE_MessageLoop
+D:\rawrxd\WinMain_Integration_Example.asm(149) : error A2006:undefined symbol : MessageBoxA

@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769976187603_HatE.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769976187603_HatE.asm(800) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769976187603_HatE.asm(828) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769976187603_HatE.asm(832) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769976187603_HatE.asm(576) : error A2022:instruction operands must be the same size

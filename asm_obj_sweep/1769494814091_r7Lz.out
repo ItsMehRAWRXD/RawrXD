@@ -1,0 +1,16 @@
+ Assembling: D:\rawrxd\history\all_versions\src\thermal\masm\SovereignThermalDemoHUD.asm\1769494814091_r7Lz.asm
+D:\rawrxd\history\all_versions\src\thermal\masm\SovereignThermalDemoHUD.asm\1769494814091_r7Lz.asm(70) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\thermal\masm\SovereignThermalDemoHUD.asm\1769494814091_r7Lz.asm(71) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\thermal\masm\SovereignThermalDemoHUD.asm\1769494814091_r7Lz.asm(72) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\thermal\masm\SovereignThermalDemoHUD.asm\1769494814091_r7Lz.asm(73) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\thermal\masm\SovereignThermalDemoHUD.asm\1769494814091_r7Lz.asm(74) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\thermal\masm\SovereignThermalDemoHUD.asm\1769494814091_r7Lz.asm(75) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\thermal\masm\SovereignThermalDemoHUD.asm\1769494814091_r7Lz.asm(76) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\thermal\masm\SovereignThermalDemoHUD.asm\1769494814091_r7Lz.asm(77) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\thermal\masm\SovereignThermalDemoHUD.asm\1769494814091_r7Lz.asm(78) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\thermal\masm\SovereignThermalDemoHUD.asm\1769494814091_r7Lz.asm(236) : error A2006:undefined symbol : COL_TEXT
+D:\rawrxd\history\all_versions\src\thermal\masm\SovereignThermalDemoHUD.asm\1769494814091_r7Lz.asm(391) : error A2006:undefined symbol : COL_BAR_SAFE
+D:\rawrxd\history\all_versions\src\thermal\masm\SovereignThermalDemoHUD.asm\1769494814091_r7Lz.asm(395) : error A2006:undefined symbol : COL_BAR_WARN
+D:\rawrxd\history\all_versions\src\thermal\masm\SovereignThermalDemoHUD.asm\1769494814091_r7Lz.asm(399) : error A2006:undefined symbol : COL_BAR_CRIT
+D:\rawrxd\history\all_versions\src\thermal\masm\SovereignThermalDemoHUD.asm\1769494814091_r7Lz.asm(403) : error A2006:undefined symbol : COL_BACKGROUND
+D:\rawrxd\history\all_versions\src\thermal\masm\SovereignThermalDemoHUD.asm\1769494814091_r7Lz.asm(449) : error A2006:undefined symbol : COL_BACKGROUND

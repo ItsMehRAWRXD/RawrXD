@@ -1,0 +1,25 @@
+ Assembling: D:\rawrxd\history\runoff\part_0007\d__lazy init ide_RawrXD-Kernels.asm
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_RawrXD-Kernels.asm(26) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_RawrXD-Kernels.asm(47) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_RawrXD-Kernels.asm(51) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_RawrXD-Kernels.asm(83) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_RawrXD-Kernels.asm(89) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_RawrXD-Kernels.asm(104) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_RawrXD-Kernels.asm(108) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_RawrXD-Kernels.asm(136) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_RawrXD-Kernels.asm(147) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_RawrXD-Kernels.asm(28) : error A2006:undefined symbol : done
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_RawrXD-Kernels.asm(35) : error A2006:undefined symbol : skip_char
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_RawrXD-Kernels.asm(37) : error A2006:undefined symbol : skip_char
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_RawrXD-Kernels.asm(39) : error A2006:undefined symbol : skip_char
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_RawrXD-Kernels.asm(41) : error A2006:undefined symbol : skip_char
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_RawrXD-Kernels.asm(49) : error A2006:undefined symbol : token_loop
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_RawrXD-Kernels.asm(85) : error A2006:undefined symbol : done
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_RawrXD-Kernels.asm(91) : error A2006:undefined symbol : next_row
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_RawrXD-Kernels.asm(95) : error A2026:constant expected
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_RawrXD-Kernels.asm(96) : error A2026:constant expected
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_RawrXD-Kernels.asm(99) : error A2026:constant expected
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_RawrXD-Kernels.asm(102) : error A2006:undefined symbol : inner_loop
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_RawrXD-Kernels.asm(106) : error A2006:undefined symbol : outer_loop
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_RawrXD-Kernels.asm(138) : error A2006:undefined symbol : done
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_RawrXD-Kernels.asm(145) : error A2006:undefined symbol : svd_loop

@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\-1bd49878\20nX.asm
+D:\rawrxd\history\-1bd49878\20nX.asm(6) : error A2008:syntax error : BITS
+D:\rawrxd\history\-1bd49878\20nX.asm(7) : error A2008:syntax error : DEFAULT
+D:\rawrxd\history\-1bd49878\20nX.asm(13) : error A2008:syntax error : struc
+D:\rawrxd\history\-1bd49878\20nX.asm(14) : error A2008:syntax error : .
+D:\rawrxd\history\-1bd49878\20nX.asm(15) : error A2008:syntax error : .
+D:\rawrxd\history\-1bd49878\20nX.asm(16) : error A2008:syntax error : .
+D:\rawrxd\history\-1bd49878\20nX.asm(17) : error A2008:syntax error : .
+D:\rawrxd\history\-1bd49878\20nX.asm(18) : error A2008:syntax error : .
+D:\rawrxd\history\-1bd49878\20nX.asm(19) : error A2008:syntax error : .
+D:\rawrxd\history\-1bd49878\20nX.asm(20) : error A2008:syntax error : .
+D:\rawrxd\history\-1bd49878\20nX.asm(21) : error A2008:syntax error : .
+D:\rawrxd\history\-1bd49878\20nX.asm(22) : error A2008:syntax error : .
+D:\rawrxd\history\-1bd49878\20nX.asm(23) : error A2008:syntax error : .
+D:\rawrxd\history\-1bd49878\20nX.asm(24) : error A2008:syntax error : .
+D:\rawrxd\history\-1bd49878\20nX.asm(25) : error A2008:syntax error : .
+D:\rawrxd\history\-1bd49878\20nX.asm(26) : error A2008:syntax error : .
+D:\rawrxd\history\-1bd49878\20nX.asm(27) : error A2008:syntax error : .
+D:\rawrxd\history\-1bd49878\20nX.asm(28) : error A2008:syntax error : .
+D:\rawrxd\history\-1bd49878\20nX.asm(29) : error A2008:syntax error : endstruc
+D:\rawrxd\history\-1bd49878\20nX.asm(42) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\-1bd49878\20nX.asm(43) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\-1bd49878\20nX.asm(44) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\-1bd49878\20nX.asm(45) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\-1bd49878\20nX.asm(46) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\-1bd49878\20nX.asm(47) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\-1bd49878\20nX.asm(48) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\-1bd49878\20nX.asm(49) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\-1bd49878\20nX.asm(50) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\-1bd49878\20nX.asm(51) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\-1bd49878\20nX.asm(57) : error A2008:syntax error : struc
+D:\rawrxd\history\-1bd49878\20nX.asm(58) : error A2008:syntax error : .
+D:\rawrxd\history\-1bd49878\20nX.asm(59) : error A2008:syntax error : .
+D:\rawrxd\history\-1bd49878\20nX.asm(60) : error A2008:syntax error : .
+D:\rawrxd\history\-1bd49878\20nX.asm(61) : error A2008:syntax error : .
+D:\rawrxd\history\-1bd49878\20nX.asm(62) : error A2008:syntax error : .
+D:\rawrxd\history\-1bd49878\20nX.asm(63) : error A2008:syntax error : .
+D:\rawrxd\history\-1bd49878\20nX.asm(64) : error A2008:syntax error : .
+D:\rawrxd\history\-1bd49878\20nX.asm(65) : error A2008:syntax error : .
+D:\rawrxd\history\-1bd49878\20nX.asm(66) : error A2008:syntax error : .
+D:\rawrxd\history\-1bd49878\20nX.asm(67) : error A2008:syntax error : .
+D:\rawrxd\history\-1bd49878\20nX.asm(68) : error A2008:syntax error : .
+D:\rawrxd\history\-1bd49878\20nX.asm(69) : error A2008:syntax error : endstruc
+D:\rawrxd\history\-1bd49878\20nX.asm(71) : error A2008:syntax error : section
+D:\rawrxd\history\-1bd49878\20nX.asm(74) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(75) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(76) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(77) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(78) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(79) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(82) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(83) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(85) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(86) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(88) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(89) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(91) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(92) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(94) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(95) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(97) : error A2008:syntax error : section
+D:\rawrxd\history\-1bd49878\20nX.asm(100) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(101) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(104) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(105) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(107) : error A2008:syntax error : section
+D:\rawrxd\history\-1bd49878\20nX.asm(113) : error A2008:syntax error : global
+D:\rawrxd\history\-1bd49878\20nX.asm(114) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(115) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(116) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(117) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(120) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(121) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(124) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(127) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(130) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(132) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(133) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(134) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(140) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(141) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(142) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(145) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(146) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(147) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\-1bd49878\20nX.asm(148) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(151) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(152) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(153) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\-1bd49878\20nX.asm(154) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(157) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(158) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(159) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\-1bd49878\20nX.asm(160) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(163) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(164) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(165) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\-1bd49878\20nX.asm(166) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(169) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(170) : error A2034:must be in segment block
+D:\rawrxd\history\-1bd49878\20nX.asm(171) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\-1bd49878\20nX.asm(172) : fatal error A1012:error count exceeds 100; stopping assembly

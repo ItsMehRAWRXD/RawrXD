@@ -1,0 +1,74 @@
+ Assembling: D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(11) : error A2008:syntax error : WIN64
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(12) : error A2008:syntax error : rbp
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(13) : error A2008:syntax error : rbp
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(38) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(39) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(40) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(41) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(51) : error A2008:syntax error : HANDLE
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(56) : error A2008:syntax error : BOOL
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(57) : error A2008:syntax error : BOOL
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(58) : error A2008:syntax error : BOOL
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(68) : error A2008:syntax error : BOOL
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(69) : error A2008:syntax error : BOOL
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(70) : error A2008:syntax error : BOOL
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(82) : error A2008:syntax error : BOOL
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(92) : error A2008:syntax error : BOOL
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(94) : error A2008:syntax error : BOOL
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(95) : error A2008:syntax error : BOOL
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(96) : error A2008:syntax error : BOOL
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(109) : error A2179:structure improperly initialized
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(109) : error A2008:syntax error : in structure
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(110) : error A2179:structure improperly initialized
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(110) : error A2008:syntax error : in structure
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(227) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(367) : error A2084:constant value too large
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(418) : error A2084:constant value too large
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(471) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(477) : error A2001:immediate operand not allowed
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(478) : error A2001:immediate operand not allowed
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(482) : error A2001:immediate operand not allowed
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(486) : error A2001:immediate operand not allowed
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(488) : error A2001:immediate operand not allowed
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(490) : error A2001:immediate operand not allowed
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(496) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(497) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(520) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(533) : error A2001:immediate operand not allowed
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(537) : error A2001:immediate operand not allowed
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(541) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(542) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(566) : error A2001:immediate operand not allowed
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(567) : error A2001:immediate operand not allowed
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(568) : error A2001:immediate operand not allowed
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(569) : error A2001:immediate operand not allowed
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(570) : error A2001:immediate operand not allowed
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(571) : error A2001:immediate operand not allowed
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(575) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(576) : error A2001:immediate operand not allowed
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(612) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(613) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(489) : error A2006:undefined symbol : reverse_engine_ok
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(501) : error A2006:undefined symbol : audit_integrated
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(524) : error A2006:undefined symbol : FORMULA_413_MULTIPLY
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(527) : error A2006:undefined symbol : FORMULA_413_DIVIDE
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(530) : error A2006:undefined symbol : FORMULA_413_ADD
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(536) : error A2006:undefined symbol : FORMULA_FINALIZE_CONST
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(546) : error A2006:undefined symbol : formula_applied
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(574) : error A2006:undefined symbol : audit_enabled
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(577) : error A2006:undefined symbol : formula_413_applied
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(578) : error A2006:undefined symbol : static_final_applied
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(579) : error A2006:undefined symbol : marv_enabled
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(593) : error A2006:undefined symbol : inference_ready
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(637) : error A2006:undefined symbol : CreateDirectoryA
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(651) : error A2006:undefined symbol : GetFileAttributesA
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(696) : error A2006:undefined symbol : strcpy
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(701) : error A2006:undefined symbol : strcat
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(773) : error A2006:undefined symbol : GENERIC_READ
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(774) : error A2006:undefined symbol : FILE_SHARE_READ
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(776) : error A2006:undefined symbol : OPEN_EXISTING
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(777) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(779) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(787) : error A2006:undefined symbol : GetFileSizeEx
+D:\rawrxd\reconstructed\Everything\BigDaddyG-40GB-Torrent\BigDaddyG\Deploy.asm(790) : error A2006:undefined symbol : CloseHandle

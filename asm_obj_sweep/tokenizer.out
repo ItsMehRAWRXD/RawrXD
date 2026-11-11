@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\src\tokenizer.asm
+D:\rawrxd\src\tokenizer.asm(116) : error A2022:instruction operands must be the same size
+D:\rawrxd\src\tokenizer.asm(139) : error A2032:invalid use of register
+D:\rawrxd\src\tokenizer.asm(142) : error A2026:constant expected
+D:\rawrxd\src\tokenizer.asm(152) : error A2032:invalid use of register
+D:\rawrxd\src\tokenizer.asm(154) : error A2026:constant expected

@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\final-ide\final\missing\symbols.asm
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\final-ide\final\missing\symbols.asm(60) : error A2006:undefined symbol : CreateMenu
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\final-ide\final\missing\symbols.asm(68) : error A2006:undefined symbol : CreatePopupMenu

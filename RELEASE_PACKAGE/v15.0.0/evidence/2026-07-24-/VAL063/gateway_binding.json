@@ -1,0 +1,43 @@
+{
+  "gate": "B",
+  "name": "Gateway Binding",
+  "status": "PASS",
+  "observes_identity": true,
+  "mutates_identity": false,
+  "execution_attestation": {
+    "uuid": "550e8400-e29b-41d4-a716-446655440000",
+    "timestamp": "2026-07-24T00:00:00.000Z",
+    "backend": "native"
+  },
+  "identity_source": "Gate_A",
+  "captured_at": "2026-07-24T00:00:00.000Z",
+  "artifacts": {
+    "attestation_record.hpp/cpp": "Attestation record with identity verification",
+    "execution_gateway.hpp/cpp": "Non-invasive gateway wrapper",
+    "gateway_binding_test.cpp": "10 test assertions",
+    "CMakeLists.txt": "Updated with Gate B targets"
+  },
+  "responsibilities": {
+    "allowed": [
+      "Receive ExecutionRequest",
+      "Ask IdentityBuilder for identity",
+      "Attach execution UUID",
+      "Capture runtime observations",
+      "Emit AttestationRecord"
+    ],
+    "forbidden": [
+      "Modify sampler settings",
+      "Normalize prompts",
+      "Rewrite model identifiers",
+      "Infer backend identity"
+    ]
+  },
+  "verification": {
+    "identity_roundtrip": "verified",
+    "immutability": "verified",
+    "uuid_uniqueness": "verified",
+    "timestamp_monotonicity": "verified",
+    "failure_attestation": "verified"
+  },
+  "status": "COMPLETE"
+}

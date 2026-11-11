@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\-1bd1bafa\olvE.asm
+D:\rawrxd\history\-1bd1bafa\olvE.asm(2742) : error A2005:symbol redefinition : StringCopy
+D:\rawrxd\history\-1bd1bafa\olvE.asm(2754) : fatal error A1010:unmatched block nesting : StringCopy

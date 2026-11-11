@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD\pifabric\stats.asm
+D:\rawrxd\reconstructed\RawrXD\pifabric\stats.asm(2) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\pifabric\stats.asm(3) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\pifabric\stats.asm(41) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\pifabric\stats.asm(42) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\pifabric\stats.asm(44) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\pifabric\stats.asm(45) : error A2070:invalid instruction operands

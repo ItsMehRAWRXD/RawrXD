@@ -1,0 +1,107 @@
+{
+  "version": "1.0.0",
+  "timestamp": "2026-07-15 13:17:24",
+  "model": "model.gguf",
+  "rawrxd_version": "14.7.3",
+  "llama_cpp_version": "b1559",
+  "summary": {
+    "total_tests": 7,
+    "passed": 0,
+    "failed": 0,
+    "success_rate": 0.00,
+    "total_time_ms": 2.00
+  },
+  "results": {
+    "(null)": {
+      "passed": false,
+      "elements": 0,
+      "max_error": 0.0000000000e+00,
+      "mean_error": 0.0000000000e+00,
+      "rms_error": 0.0000000000e+00,
+      "max_relative_error": 0.0000000000e+00,
+      "tolerance_max": 0.0000000000e+00,
+      "tolerance_mean": 0.0000000000e+00,
+      "nan_count": 0,
+      "inf_count": 0,
+      "mismatches": 0
+    },
+    "(null)": {
+      "passed": false,
+      "elements": 0,
+      "max_error": 0.0000000000e+00,
+      "mean_error": 0.0000000000e+00,
+      "rms_error": 0.0000000000e+00,
+      "max_relative_error": 0.0000000000e+00,
+      "tolerance_max": 0.0000000000e+00,
+      "tolerance_mean": 0.0000000000e+00,
+      "nan_count": 0,
+      "inf_count": 0,
+      "mismatches": 0
+    },
+    "(null)": {
+      "passed": false,
+      "elements": 0,
+      "max_error": 0.0000000000e+00,
+      "mean_error": 0.0000000000e+00,
+      "rms_error": 0.0000000000e+00,
+      "max_relative_error": 0.0000000000e+00,
+      "tolerance_max": 0.0000000000e+00,
+      "tolerance_mean": 0.0000000000e+00,
+      "nan_count": 0,
+      "inf_count": 0,
+      "mismatches": 0
+    },
+    "(null)": {
+      "passed": false,
+      "elements": 0,
+      "max_error": 0.0000000000e+00,
+      "mean_error": 0.0000000000e+00,
+      "rms_error": 0.0000000000e+00,
+      "max_relative_error": 0.0000000000e+00,
+      "tolerance_max": 0.0000000000e+00,
+      "tolerance_mean": 0.0000000000e+00,
+      "nan_count": 0,
+      "inf_count": 0,
+      "mismatches": 0
+    },
+    "(null)": {
+      "passed": false,
+      "elements": 0,
+      "max_error": 0.0000000000e+00,
+      "mean_error": 0.0000000000e+00,
+      "rms_error": 0.0000000000e+00,
+      "max_relative_error": 0.0000000000e+00,
+      "tolerance_max": 0.0000000000e+00,
+      "tolerance_mean": 0.0000000000e+00,
+      "nan_count": 0,
+      "inf_count": 0,
+      "mismatches": 0
+    },
+    "(null)": {
+      "passed": false,
+      "elements": 0,
+      "max_error": 0.0000000000e+00,
+      "mean_error": 0.0000000000e+00,
+      "rms_error": 0.0000000000e+00,
+      "max_relative_error": 0.0000000000e+00,
+      "tolerance_max": 0.0000000000e+00,
+      "tolerance_mean": 0.0000000000e+00,
+      "nan_count": 0,
+      "inf_count": 0,
+      "mismatches": 0
+    },
+    "(null)": {
+      "passed": false,
+      "elements": 0,
+      "max_error": 0.0000000000e+00,
+      "mean_error": 0.0000000000e+00,
+      "rms_error": 0.0000000000e+00,
+      "max_relative_error": 0.0000000000e+00,
+      "tolerance_max": 0.0000000000e+00,
+      "tolerance_mean": 0.0000000000e+00,
+      "nan_count": 0,
+      "inf_count": 0,
+      "mismatches": 0
+    }
+  }
+}

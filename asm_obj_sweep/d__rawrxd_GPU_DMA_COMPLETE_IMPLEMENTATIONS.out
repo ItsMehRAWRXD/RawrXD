@@ -1,0 +1,14 @@
+ Assembling: D:\rawrxd\history\runoff\part_0009\d__rawrxd_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(109) : error A2008:syntax error : ptr
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(110) : warning A6006:structure contains no members
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(118) : error A2008:syntax error : size
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(192) : error A2008:syntax error : size
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(213) : error A2008:syntax error : size
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(247) : error A2008:syntax error : Lock
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(1435) : error A2008:syntax error : Lock
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(1486) : error A2008:syntax error : Lock
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(1495) : error A2008:syntax error : Lock
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(1521) : error A2008:syntax error : Lock
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(1535) : error A2008:syntax error : Lock
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(517) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0009\d__rawrxd_GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm(648) : error A2081:missing operand after unary operator

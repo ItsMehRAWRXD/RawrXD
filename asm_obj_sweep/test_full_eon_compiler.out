@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(4) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(6) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(7) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(8) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(9) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(36) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(37) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(38) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(39) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(40) : error A2041:string or text literal too long
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(41) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(42) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(43) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(44) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(45) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(46) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(47) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(48) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(49) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(50) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(51) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(53) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(54) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(55) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(56) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(57) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(58) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(59) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(60) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(61) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(62) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(63) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(64) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(65) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(66) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(67) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(68) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(69) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(70) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(71) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(72) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(73) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(75) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(76) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(77) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(80) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(81) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(82) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(83) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(86) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(88) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(89) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(91) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(92) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(93) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(96) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(97) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(98) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(99) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(100) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(101) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(102) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(103) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(104) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(105) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(106) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(107) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(108) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(109) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(110) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(111) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(112) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(114) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(115) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(117) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(118) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(119) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(122) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(125) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(128) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(131) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(134) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(136) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(137) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(139) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(140) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(141) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(144) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(147) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(150) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(153) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(155) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(156) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(158) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(159) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(160) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(163) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(166) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(169) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(172) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\test_full_eon_compiler.asm(174) : fatal error A1012:error count exceeds 100; stopping assembly

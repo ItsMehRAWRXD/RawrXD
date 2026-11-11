@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_rawrxd_feature_harness.asm
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_rawrxd_feature_harness.asm(653) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_rawrxd_feature_harness.asm(662) : error A2006:undefined symbol : GetFileSize
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_rawrxd_feature_harness.asm(674) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_rawrxd_feature_harness.asm(685) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_rawrxd_feature_harness.asm(749) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_rawrxd_feature_harness.asm(754) : error A2006:undefined symbol : CloseHandle

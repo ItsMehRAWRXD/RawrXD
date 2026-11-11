@@ -1,0 +1,27 @@
+{
+  "model": "Deep2",
+  "context_size": 32768,
+  "backend": "Vulkan/HIP",
+  "prompt_tokens": 512,
+  "generated_tokens": 128,
+  "tokens_per_second": 825.0,
+  "first_token_latency_ms": 85.0,
+  "total_latency_ms": 155.0,
+  "kv_cache_verified": true,
+  "stream_contract": "PASS",
+  "memory_residency_mb": 8192,
+  "gpu_device_0": "AMD Radeon AI PRO R9700",
+  "gpu_device_1": "AMD Radeon RX 7800 XT",
+  "vram_usage_mb": 6144,
+  "inference_chain": {
+    "gguf_loader": "PASS",
+    "tokenizer": "PASS",
+    "embedding": "PASS",
+    "forward_pass": "PASS",
+    "kv_cache": "PASS",
+    "sampler": "PASS",
+    "streaming": "PASS",
+    "telemetry": "PASS"
+  },
+  "validation_timestamp": "2026-07-30T16:23:12.394473"
+}

@@ -1,0 +1,156 @@
+# Build artifacts
+build/
+**/build/
+build_*/
+**/build_*/
+build-*/
+**/build-*/
+build-arm64/
+**/build-arm64/
+# Source tree exception: sovereign coordination primitive lives under build/
+!src/sovereign/build/
+!src/sovereign/build/**
+bin/
+lib/
+obj/
+*.o
+*.a
+*.so
+*.dll
+*.exe
+*.dylib
+*.obj
+
+# CMake
+CMakeFiles/
+**/CMakeFiles/
+CMakeCache.txt
+**/CMakeCache.txt
+cmake_install.cmake
+**/cmake_install.cmake
+Makefile
+**/Makefile
+compile_commands.json
+**/compile_commands.json
+
+# Visual Studio
+.vs/
+*.vcxproj
+*.vcxproj.filters
+*.sln
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.bak
+
+# Wine rawrxd-space prefix (Mac/Linux wrapper)
+.rawrxd/
+*.clean
+
+# Wine rawrxd-space prefix (Mac/Linux wrapper)
+.rawrxd/
+wrapper/rawrxd-space.env
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+
+# Dependencies
+node_modules/
+package-lock.json
+
+# Generated IDE
+out/rawrxd-ide/node_modules/
+out/rawrxd-ide/dist/
+out/rawrxd-ide/.vite/
+
+# Models (large, user-provided)
+models/*.gguf
+models/*.bin
+*.gguf
+*.bin
+*.sqlite
+*.zip
+
+# ─── PATCH FIREWALL: Sovereign Data Plane ───
+# Critical for preventing VS Code patch-storm freeze.
+# DO NOT TRACK THESE MODEL DIRECTORIES.
+OllamaModels/
+blobs/
+F:/OllamaModels/
+*.sqlite3
+
+# Temp
+tmp/
+temp/
+*.tmp
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+
+# Local only
+*.local
+secrets.txt
+
+# Nested repos (not submodules)
+itsmehrawrxd-master/
+
+# Non-IDE directories (extracted/cached/external)
+OrganizedPiProject/
+Cursor_Source_Extracted/
+Extracted_Chat_Agent_Features/
+Cursor_Reverse_Engineered_Fork/
+Fixed_Reverse_Engineered/
+Consolidated_Modules_*/
+*.exe.WebView2/
+build_universal/
+
+# ═══════════════════════════════════════════════════════════════
+# Bloat Prevention (March 2026 cleanup)
+# ═══════════════════════════════════════════════════════════════
+
+# Distribution archives (keep only clean releases)
+/**/*.zip.part*
+/**/*.7z
+/**/*.rar
+RawrXD-v*.zip
+!dist/release/**/RawrXD-*-clean.zip
+
+# Large data outputs
+ipc_results.csv
+/**/*.csv
+!tests/**/*.csv
+
+# Generated code artifacts
+auto_generated_methods/*.json
+Powershield_Audit_Report.json
+RefactorSuggestions.json
+
+# Model/cache blobs
+**/blobs/
+**/*.safetensors
+
+# Additional build dirs and large files
+build_smoke_verify/
+build_ninja/
+build_ninja3/
+build_smoke_verify2/
+*.map
+
+
+# Large scan/report files (>100MB)
+**/todo-scan-*.json
+**/Powershield_Audit_Report.json

@@ -1,0 +1,21 @@
+{
+  "GeneratedUtc": "2026-06-02T07:50:42.5950199Z",
+  "MatrixPath": "d:\\rawrxd-ci-bootstrap\\sovereign_experiment_matrix.smoke.json",
+  "DryRun": false,
+  "Results": {
+    "Experiment": "smoke_baseline",
+    "RequestCount": 20,
+    "CancelPercent": 15,
+    "Seed": 42,
+    "GatePassed": true,
+    "GateAvgMs": 9.33,
+    "GateP95Ms": 168.0,
+    "DominantBin": "0-15",
+    "DominantBinStdDevMs": 102.8607,
+    "DominantBinAvgLatencyMs": 109.3333,
+    "BackpressureEvents": 0,
+    "MaxFillOverall": 0,
+    "RunDir": "D:\\rawrxd-ci-bootstrap\\runs\\soak_20260602_035039",
+    "Status": "OK"
+  }
+}

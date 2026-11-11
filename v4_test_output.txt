@@ -1,0 +1,4 @@
+[verbose] Initializing execution gateway...
+[verbose] Gateway ready
+[verbose] Running inference with model: d:\rawrxd\src\codestral22b.gguf
+[verbose] Prompt: Hello

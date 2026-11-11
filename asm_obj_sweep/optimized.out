@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\final-ide\gpu\model\loader\optimized.asm
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\final-ide\gpu\model\loader\optimized.asm(112) : error A2006:undefined symbol : gpu_prefetch_stats
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\final-ide\gpu\model\loader\optimized.asm(484) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\masm\final-ide\gpu\model\loader\optimized.asm(591) : error A2206:missing operator in expression

@@ -1,0 +1,29 @@
+ Assembling: D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618225530_iwvE.asm
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618225530_iwvE.asm(38) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618225530_iwvE.asm(188) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618225530_iwvE.asm(251) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618225530_iwvE.asm(258) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618225530_iwvE.asm(262) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618225530_iwvE.asm(268) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618225530_iwvE.asm(270) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618225530_iwvE.asm(272) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618225530_iwvE.asm(274) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618225530_iwvE.asm(276) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618225530_iwvE.asm(277) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618225530_iwvE.asm(150) : error A2006:undefined symbol : JsonSuffix
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618225530_iwvE.asm(238) : error A2006:undefined symbol : raw
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618225530_iwvE.asm(245) : error A2006:undefined symbol : p_start
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618225530_iwvE.asm(247) : error A2006:undefined symbol : j_start
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618225530_iwvE.asm(249) : error A2006:undefined symbol : c_start
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618225530_iwvE.asm(250) : error A2006:undefined symbol : raw
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618225530_iwvE.asm(254) : error A2006:undefined symbol : ps
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618225530_iwvE.asm(256) : error A2006:undefined symbol : py
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618225530_iwvE.asm(257) : error A2006:undefined symbol : raw
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618225530_iwvE.asm(260) : error A2006:undefined symbol : js
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618225530_iwvE.asm(261) : error A2006:undefined symbol : raw
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618225530_iwvE.asm(265) : error A2006:undefined symbol : cpp
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618225530_iwvE.asm(266) : error A2006:undefined symbol : raw
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618225530_iwvE.asm(269) : error A2006:undefined symbol : copy
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618225530_iwvE.asm(271) : error A2006:undefined symbol : copy
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618225530_iwvE.asm(273) : error A2006:undefined symbol : copy
+D:\rawrxd\history\all_versions\tools\RawrXD_AuditAnything.asm\1769618225530_iwvE.asm(275) : error A2006:undefined symbol : copy

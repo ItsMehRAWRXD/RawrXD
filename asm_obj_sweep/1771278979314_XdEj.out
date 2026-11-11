@@ -1,0 +1,78 @@
+ Assembling: D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(11) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(12) : error A2008:syntax error : .
+
+***********
+ASCII build
+***********
+
+C:\masm32\include\windows.inc(9750) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(10183) : error A2008:syntax error : frame
+C:\masm32\include\windows.inc(16333) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(18862) : error A2008:syntax error : Frame
+C:\masm32\include\windows.inc(24749) : error A2042:statement too complex
+C:\masm32\include\winextra.inc(11052) : error A2026:constant expected
+C:\masm32\include\winextra.inc(11053) : error A2026:constant expected
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(598) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(604) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(607) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(615) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(617) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(624) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(710) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(717) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(725) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(731) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(737) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(743) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(747) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(748) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(752) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(753) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(757) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(758) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(759) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(768) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(773) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(828) : error A2008:syntax error : esi
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(829) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(830) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(831) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(833) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(858) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(859) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(866) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(869) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(871) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(874) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(879) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(880) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(881) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(882) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(883) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(884) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(908) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(910) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(917) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(931) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(942) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(947) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(949) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(951) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(953) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(954) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(955) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(956) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(957) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(960) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(981) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(983) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(985) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(986) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(987) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(988) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(991) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(997) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(998) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(1003) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\OmegaPolyglot_v5.asm\1771278979314_XdEj.asm(1006) : fatal error A1010:unmatched block nesting : ParsePE

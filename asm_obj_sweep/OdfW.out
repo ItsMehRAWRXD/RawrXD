@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\-2217020c\OdfW.asm
+D:\rawrxd\history\-2217020c\OdfW.asm(245) : error A2006:undefined symbol : event_set_done
+D:\rawrxd\history\-2217020c\OdfW.asm(277) : error A2006:undefined symbol : event_reset_done
+D:\rawrxd\history\-2217020c\OdfW.asm(351) : error A2006:undefined symbol : event_destroy_done

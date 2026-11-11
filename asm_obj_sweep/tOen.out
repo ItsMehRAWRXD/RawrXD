@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\-104768b5\tOen.asm
+D:\rawrxd\history\-104768b5\tOen.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\-104768b5\tOen.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\-104768b5\tOen.asm(11) : fatal error A1000:cannot open file : \masm32\include\windows.inc

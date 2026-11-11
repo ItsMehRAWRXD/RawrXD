@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD\QUICFS.asm
+D:\rawrxd\reconstructed\RawrXD\QUICFS.asm(21) : error A2005:symbol redefinition : GENERIC_WRITE
+D:\rawrxd\reconstructed\RawrXD\QUICFS.asm(116) : error A2084:constant value too large

@@ -1,0 +1,107 @@
+{
+  "name": "Deep2 Production Runtime",
+  "version": "1.0.0",
+  "description": "Complete Deep2 inference runtime with GPU acceleration",
+  "backend": {
+    "primary": {
+      "name": "Deep2 Native",
+      "url": "http://127.0.0.1:11436",
+      "priority": 100,
+      "type": "local",
+      "streaming": true,
+      "gpu": true,
+      "phases": [10, 11, 12]
+    },
+    "secondary": {
+      "name": "RawrXD",
+      "url": "http://127.0.0.1:8080",
+      "priority": 50,
+      "type": "local",
+      "streaming": true,
+      "gpu": true
+    },
+    "fallback": {
+      "name": "Ollama",
+      "url": "http://127.0.0.1:11434",
+      "priority": 10,
+      "type": "external",
+      "streaming": true,
+      "gpu": false
+    }
+  },
+  "gpu": {
+    "devices": [
+      {
+        "name": "Radeon RX 9700 AI PRO",
+        "vram": "32GB",
+        "backend": "Vulkan",
+        "priority": 1,
+        "roles": ["attention", "embeddings", "large_tensors"]
+      },
+      {
+        "name": "Radeon RX 7800 XT",
+        "vram": "16GB",
+        "backend": "Vulkan",
+        "priority": 2,
+        "roles": ["draft_model", "speculative", "kv_overflow"]
+      }
+    ],
+    "total_vram": "48GB",
+    "scheduler": "multi_gpu_round_robin"
+  },
+  "phases": {
+    "10": {
+      "name": "Speculative Decoding",
+      "status": "production",
+      "components": ["draft_model", "target_model", "token_acceptor", "rollback_engine"],
+      "speedup": 2.4
+    },
+    "11": {
+      "name": "Flash Attention v2",
+      "status": "production",
+      "components": ["flash_attn_v2", "vulkan_kernel", "rocm_kernel"],
+      "memory_savings": "50%"
+    },
+    "12": {
+      "name": "Extreme Compression",
+      "status": "production",
+      "components": ["nf4_decoder", "q4_k_decoder", "tensor_packer", "residency_manager"],
+      "compression_ratio": 5.8
+    }
+  },
+  "api": {
+    "version": "v1",
+    "endpoints": [
+      "/api/version",
+      "/api/health",
+      "/api/status",
+      "/api/backends",
+      "/api/models",
+      "/api/models/scan",
+      "/api/models/load",
+      "/api/models/unload",
+      "/api/inference",
+      "/api/inference/stream",
+      "/api/phases",
+      "/api/phases/status",
+      "/api/phases/refresh",
+      "/api/telemetry",
+      "/api/telemetry/tps",
+      "/api/telemetry/vram"
+    ]
+  },
+  "certification": {
+    "tests": [
+      "phase10_speculative",
+      "phase11_flash_attention",
+      "phase12_compression",
+      "gpu_memory_residency",
+      "backend_switch",
+      "streaming_contract",
+      "kv_cache_integrity",
+      "recovery_harness"
+    ],
+    "required_pass": 8,
+    "timeout_ms": 300000
+  }
+}

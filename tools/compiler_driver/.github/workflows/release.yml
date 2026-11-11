@@ -1,0 +1,45 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Build
+      shell: cmd
+      run: build.bat
+      
+    - name: Run Tests
+      shell: cmd
+      run: |
+        cd tests
+        smoke_test.bat
+        
+    - name: Package Release
+      shell: powershell
+      run: |
+        $version = $env:GITHUB_REF -replace 'refs/tags/v', ''
+        New-Item -ItemType Directory -Force -Path "release"
+        Copy-Item -Path "bin\*" -Destination "release\bin\" -Recurse -Force
+        Copy-Item -Path "include\*" -Destination "release\include\" -Recurse -Force
+        Copy-Item -Path "src\*" -Destination "release\src\" -Recurse -Force
+        Copy-Item -Path "examples\*" -Destination "release\examples\" -Recurse -Force
+        Copy-Item -Path "tests\*" -Destination "release\tests\" -Recurse -Force
+        Copy-Item -Path "docs\*" -Destination "release\docs\" -Recurse -Force
+        Copy-Item -Path "README.md", "LICENSE", "CHANGELOG.md" -Destination "release\" -Force
+        Compress-Archive -Path "release\*" -DestinationPath "rawrxd-compiler-v$version.zip" -Force
+        
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: rawrxd-compiler-*.zip
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

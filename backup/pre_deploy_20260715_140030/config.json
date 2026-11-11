@@ -1,0 +1,12 @@
+{
+  "api": {
+    "port": 11435,
+    "host": "localhost"
+  },
+  "sovereign": {
+    "beacon_name": "SOVEREIGN_BEACON_V1",
+    "cmd_event_name": "SOVEREIGN_CMD_EVENT",
+    "resp_event_name": "SOVEREIGN_RESP_EVENT",
+    "shmem_size": 65536
+  }
+}

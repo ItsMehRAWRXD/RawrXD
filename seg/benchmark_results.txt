@@ -1,0 +1,32 @@
+========================================
+Optimized Parallel Transformer Test
+========================================
+
+Configuration:
+  Hidden: 4096
+  Heads: 32
+  KV Heads: 8
+  Head Dim: 128
+  Intermediate: 14336
+
+--- Testing with 1 threads ---
+  Avg time per token: 45.2731 ms
+  Throughput: 22.0882 tokens/sec
+
+--- Testing with 2 threads ---
+  Avg time per token: 591.429 ms
+  Throughput: 1.69082 tokens/sec
+
+--- Testing with 4 threads ---
+  Avg time per token: 314.293 ms
+  Throughput: 3.18174 tokens/sec
+
+--- Testing with 8 threads ---
+  Avg time per token: 192.145 ms
+  Throughput: 5.20439 tokens/sec
+
+--- Testing with 16 threads ---
+  Avg time per token: 171.159 ms
+  Throughput: 5.8425 tokens/sec
+
+Done!

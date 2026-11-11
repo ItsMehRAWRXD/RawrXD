@@ -1,0 +1,19 @@
+ Assembling: D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_watch.asm\1769491854941_Qc05.asm
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_watch.asm\1769491854941_Qc05.asm(20) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_watch.asm\1769491854941_Qc05.asm(21) : error A2008:syntax error : CreateFileA
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_watch.asm\1769491854941_Qc05.asm(22) : warning A4000:cannot modify READONLY segment
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_watch.asm\1769491854941_Qc05.asm(29) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_watch.asm\1769491854941_Qc05.asm(38) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_watch.asm\1769491854941_Qc05.asm(55) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_watch.asm\1769491854941_Qc05.asm(61) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_watch.asm\1769491854941_Qc05.asm(64) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_watch.asm\1769491854941_Qc05.asm(65) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_watch.asm\1769491854941_Qc05.asm(24) : error A2006:undefined symbol : sleep_retry
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_watch.asm\1769491854941_Qc05.asm(33) : error A2006:undefined symbol : send
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_watch.asm\1769491854941_Qc05.asm(36) : error A2006:undefined symbol : sendloop
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_watch.asm\1769491854941_Qc05.asm(44) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_watch.asm\1769491854941_Qc05.asm(52) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_watch.asm\1769491854941_Qc05.asm(58) : error A2006:undefined symbol : WriteConsoleA
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_watch.asm\1769491854941_Qc05.asm(60) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_watch.asm\1769491854941_Qc05.asm(62) : error A2006:undefined symbol : loop_connect
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_client_watch.asm\1769491854941_Qc05.asm(66) : error A2006:undefined symbol : loop_connect

@@ -1,0 +1,16 @@
+ Assembling: D:\rawrxd\history\-221890d0\Fx8l.asm
+D:\rawrxd\history\-221890d0\Fx8l.asm(11) : error A2008:syntax error : WIN64
+D:\rawrxd\history\-221890d0\Fx8l.asm(12) : error A2008:syntax error : FRAME
+D:\rawrxd\history\-221890d0\Fx8l.asm(90) : error A2008:syntax error : size
+D:\rawrxd\history\-221890d0\Fx8l.asm(104) : error A2008:syntax error : size
+D:\rawrxd\history\-221890d0\Fx8l.asm(105) : error A2008:syntax error : type
+D:\rawrxd\history\-221890d0\Fx8l.asm(120) : error A2008:syntax error : size
+D:\rawrxd\history\-221890d0\Fx8l.asm(146) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\-221890d0\Fx8l.asm(153) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\-221890d0\Fx8l.asm(314) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-221890d0\Fx8l.asm(430) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-221890d0\Fx8l.asm(512) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-221890d0\Fx8l.asm(673) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-221890d0\Fx8l.asm(841) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-221890d0\Fx8l.asm(873) : error A2006:undefined symbol : DMA_STATUS_SUCCESS
+D:\rawrxd\history\-221890d0\Fx8l.asm(880) : error A2006:undefined symbol : DMA_STATUS_SUCCESS

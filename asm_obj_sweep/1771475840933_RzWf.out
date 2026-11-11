@@ -1,0 +1,25 @@
+ Assembling: D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771475840933_RzWf.asm
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771475840933_RzWf.asm(106) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771475840933_RzWf.asm(108) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771475840933_RzWf.asm(117) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771475840933_RzWf.asm(122) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771475840933_RzWf.asm(134) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771475840933_RzWf.asm(147) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771475840933_RzWf.asm(161) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771475840933_RzWf.asm(163) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771475840933_RzWf.asm(177) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771475840933_RzWf.asm(184) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771475840933_RzWf.asm(187) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771475840933_RzWf.asm(96) : error A2006:undefined symbol : g_pLogits
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771475840933_RzWf.asm(97) : error A2006:undefined symbol : g_VocabSize
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771475840933_RzWf.asm(115) : error A2006:undefined symbol : g_pLogits
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771475840933_RzWf.asm(116) : error A2006:undefined symbol : g_VocabSize
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771475840933_RzWf.asm(171) : error A2006:undefined symbol : g_pLogits
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771475840933_RzWf.asm(172) : error A2006:undefined symbol : g_VocabSize
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771475840933_RzWf.asm(200) : error A2006:undefined symbol : g_pRingBuffer
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771475840933_RzWf.asm(205) : error A2006:undefined symbol : g_BufferIndex
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771475840933_RzWf.asm(211) : error A2006:undefined symbol : g_BufferIndex
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771475840933_RzWf.asm(212) : error A2006:undefined symbol : g_BufferIndex
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771475840933_RzWf.asm(285) : error A2006:undefined symbol : g_pInputBuffer
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771475840933_RzWf.asm(294) : error A2006:undefined symbol : g_pPromptString
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_NoHTTP.asm\1771475840933_RzWf.asm(344) : warning A6004:procedure argument or local not referenced : pszPrompt

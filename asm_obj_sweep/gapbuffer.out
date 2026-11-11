@@ -1,0 +1,58 @@
+ Assembling: D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(17) : error A2006:undefined symbol : HANDLE
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(17) : error A2195:parameter or local cannot have void type
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(20) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(22) : error A2008:syntax error : if
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(23) : error A2008:syntax error : LOG_ERROR
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(26) : error A2008:syntax error : .
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(29) : error A2008:syntax error : HeapAlloc
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(31) : error A2008:syntax error : if
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(32) : error A2008:syntax error : LOG_ERROR
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(34) : error A2008:syntax error : .
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(46) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(48) : error A2008:syntax error : if
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(49) : error A2008:syntax error : LOG_ERROR
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(51) : error A2008:syntax error : .
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(54) : error A2008:syntax error : HeapAlloc
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(56) : error A2008:syntax error : if
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(57) : error A2008:syntax error : LOG_ERROR
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(59) : error A2008:syntax error : .
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(64) : error A2008:syntax error : InitializeCriticalSection
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(66) : error A2008:syntax error : LOG_INFO
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(78) : error A2008:syntax error : .
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(79) : error A2008:syntax error : LOG_ERROR
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(83) : error A2008:syntax error : .
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(86) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(89) : error A2044:invalid character in file
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(90) : error A2008:syntax error : ,
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(91) : error A2008:syntax error : .
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(96) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(99) : error A2070:invalid instruction operands
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(102) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(103) : error A2070:invalid instruction operands
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(105) : error A2008:syntax error : .
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(107) : error A2008:syntax error : ,
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(108) : error A2008:syntax error : if
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(109) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(111) : error A2008:syntax error : .
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(112) : error A2008:syntax error : .
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(117) : error A2008:syntax error : RtlCopyMemory
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(130) : error A2008:syntax error : ,
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(132) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(134) : error A2008:syntax error : LOG_DEBUG
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(142) : error A2008:syntax error : length
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(143) : error A2008:syntax error : if
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(144) : error A2008:syntax error : LOG_ERROR
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(147) : error A2008:syntax error : .
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(149) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(152) : error A2044:invalid character in file
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(153) : error A2008:syntax error : ,
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(154) : error A2008:syntax error : .
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(161) : error A2008:syntax error : if
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(162) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(163) : error A2008:syntax error : LOG_ERROR
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(166) : error A2008:syntax error : .
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(176) : error A2008:syntax error : ,
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(178) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(180) : error A2008:syntax error : Deleted %lld bytes at position %lld
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\text\gapbuffer.asm(183) : fatal error A1010:unmatched block nesting : GapBuffer_Delete

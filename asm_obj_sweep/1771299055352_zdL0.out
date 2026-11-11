@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\history\all_versions\Ship\masm_cli_x64.asm\1771299055352_zdL0.asm
+D:\rawrxd\history\all_versions\Ship\masm_cli_x64.asm\1771299055352_zdL0.asm(6) : fatal error A1000:cannot open file : \masm32\include64\windows.inc

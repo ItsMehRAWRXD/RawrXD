@@ -1,0 +1,55 @@
+# RawrXD IDE Platform - CMake Build
+# Builds: RawrXDGateway.exe, RawrXD-Win32IDE.exe, rawrxd.exe
+# Usage: cmake -P CMakeLists.ide.txt
+
+cmake_minimum_required(VERSION 3.20)
+project(RawrXDPlatform VERSION 1.0.0 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Windows-specific settings
+if(WIN32)
+    add_definitions(-D_WIN32_WINNT=0x0A00)
+    add_definitions(-DWIN32_LEAN_AND_MEAN)
+    add_definitions(-DNOMINMAX)
+endif()
+
+# Include directories
+include_directories(
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/gateway
+    ${CMAKE_SOURCE_DIR}/workspace
+    ${CMAKE_SOURCE_DIR}/agent
+    ${CMAKE_SOURCE_DIR}/tools
+    ${CMAKE_SOURCE_DIR}/model
+    ${CMAKE_SOURCE_DIR}/ide
+    ${CMAKE_SOURCE_DIR}/cli
+)
+
+# ============================================
+# RawrXDGateway.exe - HTTP API Server (Phase 1)
+# ============================================
+add_executable(RawrXDGateway
+    gateway/RawrXDGateway.cpp
+)
+
+target_link_libraries(RawrXDGateway
+    ws2_32
+)
+
+if(MSVC)
+    target_compile_options(RawrXDGateway PRIVATE /W4 /WX-)
+endif()
+
+# ============================================
+# Installation
+# ============================================
+install(TARGETS RawrXDGateway
+    RUNTIME DESTINATION bin
+)
+
+# Print configuration
+message(STATUS "RawrXD IDE Platform Configuration")
+message(STATUS "  Gateway: RawrXDGateway.exe (port 11435)")
+message(STATUS "  Build with: cmake --build . --target RawrXDGateway")

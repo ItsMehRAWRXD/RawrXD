@@ -1,0 +1,60 @@
+{
+  "run": {
+    "path": ".",
+    "excludePath": [
+      "tests/fixtures/**",
+      "tests/results/**",
+      "tests/coverage/**"
+    ],
+    "exit": true,
+    "passThru": false
+  },
+  "output": {
+    "verbosity": "Detailed",
+    "stackTraceVerbosity": "Filtered",
+    "ciFormat": "Auto"
+  },
+  "testResult": {
+    "enabled": true,
+    "outputPath": "tests/results/test-results.xml",
+    "outputFormat": "NUnitXml",
+    "testSuiteName": "RawrXD Tests",
+    "testSuiteNameFormat": "ParentChild"
+  },
+  "codeCoverage": {
+    "enabled": false,
+    "outputPath": "tests/coverage/coverage.xml",
+    "outputFormat": "JaCoCo",
+    "outputEncoding": "UTF8",
+    "path": [
+      "security/**/*.ps1",
+      "monitoring/**/*.ps1"
+    ],
+    "excludePath": [
+      "tests/**/*.ps1",
+      "**/setup_*.ps1"
+    ],
+    "coveragePercentTarget": 80,
+    "useBreakpoints": false
+  },
+  "testDrive": {
+    "enabled": true,
+    "teardown": true
+  },
+  "testRegistry": {
+    "enabled": true,
+    "teardown": true
+  },
+  "should": {
+    "errorAction": "Continue"
+  },
+  "debug": {
+    "enterTestSessionBreakpoint": false,
+    "exitTestSessionBreakpoint": false,
+    "enterTestCaseBreakpoint": false,
+    "exitTestCaseBreakpoint": false,
+    "enterTestBreakOnError": false,
+    "exitTestBreakOnError": false,
+    "breakOnFirstError": false
+  }
+}

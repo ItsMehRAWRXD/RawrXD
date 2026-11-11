@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1771286381725_u1Nv.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1771286381725_u1Nv.asm(458) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1771286381725_u1Nv.asm(445) : error A2082:cannot mix 16- and 32-bit registers

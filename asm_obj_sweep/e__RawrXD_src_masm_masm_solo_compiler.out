@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(13) : error A2008:syntax error : bits
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(14) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(16) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(17) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(18) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(116) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(117) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(118) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(119) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(120) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(121) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(122) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(123) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(125) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(126) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(127) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(128) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(129) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(130) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(131) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(132) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(133) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(136) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(137) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(138) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(139) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(140) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(141) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(142) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(143) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(146) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(147) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(148) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(149) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(150) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(153) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(154) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(155) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(156) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(159) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(160) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(161) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(162) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(163) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(164) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(165) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(166) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(167) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(168) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(171) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(172) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(173) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(174) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(175) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(176) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(177) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(178) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(180) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(182) : error A2008:syntax error : g_input_filename
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(183) : error A2008:syntax error : g_output_filename
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(184) : error A2008:syntax error : g_current_stage
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(185) : error A2008:syntax error : g_error_code
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(186) : error A2008:syntax error : g_error_line
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(187) : error A2008:syntax error : g_error_column
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(190) : error A2008:syntax error : g_source_buffer
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(191) : error A2008:syntax error : g_source_size
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(192) : error A2008:syntax error : g_source_pos
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(193) : error A2008:syntax error : g_current_line
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(194) : error A2008:syntax error : g_current_column
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(197) : error A2008:syntax error : g_tokens
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(198) : error A2008:syntax error : g_token_count
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(199) : error A2008:syntax error : g_current_token
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(202) : error A2008:syntax error : g_ast_nodes
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(203) : error A2008:syntax error : g_ast_node_count
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(204) : error A2008:syntax error : g_ast_root
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(207) : error A2008:syntax error : g_symbols
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(208) : error A2008:syntax error : g_symbol_count
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(209) : error A2008:syntax error : g_current_section
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(210) : error A2008:syntax error : g_current_offset
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(213) : error A2008:syntax error : g_machine_code
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(214) : error A2008:syntax error : g_machine_code_size
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(215) : error A2008:syntax error : g_relocation_count
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(216) : error A2008:syntax error : g_relocations
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(219) : error A2008:syntax error : g_pe_buffer
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(220) : error A2008:syntax error : g_pe_size
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(221) : error A2008:syntax error : g_entry_point_rva
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(224) : error A2008:syntax error : g_temp_buffer
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(225) : error A2008:syntax error : g_line_buffer
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(226) : error A2008:syntax error : g_identifier_buffer
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(228) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(229) : error A2008:syntax error : global
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(230) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(231) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(232) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(233) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(234) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(235) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(236) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(237) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(238) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_src_masm_masm_solo_compiler.asm(239) : fatal error A1012:error count exceeds 100; stopping assembly

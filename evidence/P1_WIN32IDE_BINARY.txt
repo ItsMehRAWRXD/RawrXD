@@ -1,0 +1,34 @@
+﻿P1_WIN32IDE_BINARY
+==================
+branch=promote/hexmag-p1-ide-product
+tip=b91641016b397d4e78e21dd6f34fd76177d464e6
+exe=build-win32ide-p1\bin\RawrXD-Win32IDE.exe
+sha256=D7BD2FFBD23BDFD6DDE2553F05BD1CD7ED38998555D3784603534496F7B24091
+size_bytes=318010880
+HEXMAG_IDE_E2E_001=PASS
+controller_rewrite=0
+
+CMAKE_ISOLATION
+---------------
+RAWRXD_BUILD_WIN32IDE=ON
+RAWRXD_BUILD_RAWRENGINE=OFF
+RAWRXD_BUILD_GOLD=OFF
+generator=Ninja
+config=Release
+
+LINK_SYMBOLS_VERIFIED (RawrXD-Win32IDE.map)
+-------------------------------------------
+HexMag_Init=RawrXD_HexMag_Swarm.asm.obj
+HexMag_Tuner_Init=RawrXD_HexMag_RepeatTuner.asm.obj
+HexMag_Tuner_Next=RawrXD_HexMag_RepeatTuner.asm.obj
+HexMag_Tuner_GenerationId=RawrXD_HexMag_RepeatTuner.asm.obj
+HexMag_Tuner_Strategy=RawrXD_HexMag_RepeatTuner.asm.obj
+hexmag_runtime_controller.cpp.obj=linked
+hexmag_ide_link_probe.cpp.obj=linked
+Win32IDE_HexMag.cpp.obj=linked
+
+HOST_NOTES
+----------
+SDK=10.0.26100.0 (host lacked 10.0.22621.0; shims/CMake prefer installed kit)
+gitignore=un-ignored src/sovereign/build/ so BuildStateGraph is trackable
+RawrEngine=isolated (not built); missing historical RawrEngine TUs not resurrected

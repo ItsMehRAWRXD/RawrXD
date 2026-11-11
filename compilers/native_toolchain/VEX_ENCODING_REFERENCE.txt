@@ -1,0 +1,157 @@
+/*
+ * VEX Prefix Encoding Reference for RawrXD Native Assembler
+ * 
+ * VEX prefixes are 2-byte or 3-byte sequences that extend the x86 instruction
+ * set to support 256-bit AVX/AVX2 operations.
+ */
+
+/* ============================================================================
+ * VEX PREFIX FORMAT
+ * ============================================================================
+
+2-BYTE VEX (C5 xx):
+  Byte 0: 0xC5
+  Byte 1: R v1 v0 L v3 v2 v1 v0
+    - R (bit 7): Inverted REX.R (1 = no extension, 0 = extend modrm.reg)
+    - v1v0 (bits 6:3): Inverted source register specifier
+    - L (bit 2): Vector length (0 = 128-bit, 1 = 256-bit)
+    - v3v2v1v0 (bits 1:0 + implied): Opcode map select
+      00 = 0F (standard SSE)
+      01 = 0F38
+      10 = 0F3A
+
+3-BYTE VEX (C4 xx xx):
+  Byte 0: 0xC4
+  Byte 1: R X B m-mmmm
+    - R (bit 7): Inverted REX.R
+    - X (bit 6): Inverted REX.X
+    - B (bit 5): Inverted REX.B
+    - m-mmmm (bits 4:0): Opcode map
+      00001 = 0F
+      00010 = 0F38
+      00011 = 0F3A
+  Byte 2: W v3 v2 v1 v0 L v3 v2 v1 v0
+    - W (bit 7): REX.W equivalent
+    - v3v2v1v0 (bits 6:3): Inverted source register
+    - L (bit 2): Vector length
+    - v3v2v1v0 (bits 1:0): Opcode map select
+
+/* ============================================================================
+ * COMMON VEX ENCODINGS
+ * ============================================================================
+
+C5 F8 xx - 2-byte VEX, 128-bit, no source reg, 0F map
+C5 FC xx - 2-byte VEX, 256-bit, no source reg, 0F map
+C5 F9 xx - 2-byte VEX, 128-bit, source reg 0, 0F map
+C5 FD xx - 2-byte VEX, 256-bit, source reg 0, 0F map
+
+C4 E2 xx xx - 3-byte VEX, X=1, B=1, 0F38 map
+C4 E3 xx xx - 3-byte VEX, X=1, B=1, 0F3A map
+
+/* ============================================================================
+ * REGISTER ENCODING IN VEX
+ * ============================================================================
+
+VEX.vvvv (inverted): 
+  1111 = no source register (common for 2-operand instructions)
+  1110 = xmm0/ymm0
+  1101 = xmm1/ymm1
+  ...
+  1000 = xmm7/ymm7
+
+For 3-operand AVX instructions:
+  - First operand: ModRM.reg (destination)
+  - Second operand: VEX.vvvv (source 1)
+  - Third operand: ModRM.r/m (source 2)
+
+/* ============================================================================
+ * EXAMPLE ENCODINGS
+ * ============================================================================
+
+vpxor ymm0, ymm1, ymm2:
+  C5 F5 EF C2
+  - C5 = 2-byte VEX
+  - F5 = 1111 0101 (R=1, v=1111, L=0, pp=01 for 66)
+  - Wait, that's wrong. Let me recalculate...
+
+Actually for vpxor (66 0F EF):
+  - 2-byte VEX can't encode 66 prefix
+  - Must use 3-byte: C4 E1 75 EF
+  - C4 = 3-byte VEX start
+  - E1 = 1110 0001 (R=1, X=1, B=1, m-mmmm=00001 for 0F)
+  - 75 = 0111 0101 (W=0, v=1111, L=1, pp=01 for 66)
+  - EF = opcode
+
+For vxorps (no 66 prefix):
+  C5 F4 57 C2 = vxorps ymm0, ymm1, ymm2
+  - C5 = 2-byte VEX
+  - F4 = 1111 0100 (R=1, v=1110=ymm1 inverted, L=1, pp=00)
+  - 57 = opcode
+  - C2 = ModRM (11 000 010 = reg=ymm0, rm=ymm2)
+
+/* ============================================================================
+ * INSTRUCTION MAPPING
+ * ============================================================================
+
+SSE:        0F xx              -> VEX: C5 F0 xx (128-bit) or C5 F4 xx (256-bit)
+SSE + 66:   66 0F xx           -> VEX: C4 E1 70 xx (128) or C4 E1 74 xx (256)
+SSE + F3:   F3 0F xx           -> VEX: C5 FA xx (128) or C5 FE xx (256)
+SSE + F2:   F2 0F xx           -> VEX: C5 FB xx (128) or C5 FF xx (256)
+
+0F38:       0F 38 xx           -> VEX: C4 E2 70 xx (128) or C4 E2 74 xx (256)
+0F3A:       0F 3A xx           -> VEX: C4 E3 70 xx (128) or C4 E3 74 xx (256)
+
+/* ============================================================================
+ * OPERAND TYPE DEFINITIONS NEEDED
+ * ============================================================================
+
+Add to operand type enum:
+  OP_YMM      - 256-bit YMM register
+  OP_MEM256   - 256-bit memory operand
+  OP_ZMM      - 512-bit ZMM register (AVX-512)
+  OP_MEM512   - 512-bit memory operand (AVX-512)
+
+/* ============================================================================
+ * MODRM ENCODING FOR VEX
+ * ============================================================================
+
+Same as standard x86 ModRM:
+  mod (2 bits) | reg (3 bits) | r/m (3 bits)
+
+For register-register:
+  mod = 11 (binary)
+  reg = destination register
+  r/m = source register
+
+For register-memory:
+  mod = 00, 01, or 10 (depending on displacement)
+  reg = destination register
+  r/m = base register (usually 100 = SIB follows)
+
+/* ============================================================================
+ * IMPLEMENTATION NOTES
+ * ============================================================================
+
+1. The assembler already handles ModRM encoding - just need to pass the right
+   parameters in the instruction table.
+
+2. VEX prefix bytes must be emitted BEFORE the opcode in the instruction stream.
+
+3. For 2-byte VEX (C5 xx), the assembler needs to:
+   - Emit 0xC5
+   - Calculate second byte based on R, vvvv, L, and pp
+   - Then emit opcode and ModRM
+
+4. For 3-byte VEX (C4 xx xx), the assembler needs to:
+   - Emit 0xC4
+   - Calculate second byte (R, X, B, m-mmmm)
+   - Calculate third byte (W, vvvv, L, pp)
+   - Then emit opcode and ModRM
+
+5. The 'needs_modrm' flag in InstructionEncoding should still be set to 1
+   for VEX instructions that need ModRM.
+
+6. The 'prefix' field in InstructionEncoding can be repurposed or extended to
+   indicate VEX encoding type (0 = none, 1 = 2-byte VEX, 2 = 3-byte VEX).
+
+*/

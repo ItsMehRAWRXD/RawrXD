@@ -1,0 +1,24 @@
+ Assembling: D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_beacon_integration.asm
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_beacon_integration.asm(37) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_beacon_integration.asm(69) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_beacon_integration.asm(98) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_beacon_integration.asm(125) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_beacon_integration.asm(36) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_beacon_integration.asm(43) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_beacon_integration.asm(50) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_beacon_integration.asm(58) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_beacon_integration.asm(68) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_beacon_integration.asm(75) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_beacon_integration.asm(81) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_beacon_integration.asm(88) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_beacon_integration.asm(97) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_beacon_integration.asm(104) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_beacon_integration.asm(115) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_beacon_integration.asm(124) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_beacon_integration.asm(131) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_beacon_integration.asm(142) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_beacon_integration.asm(149) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_beacon_integration.asm(36) : error A2156:constant value out of range
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_beacon_integration.asm(151) : warning A4025:ENDP found before .ENDPROLOG : Win32IDE_IsBeaconInitialized
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_beacon_integration.asm(151) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_asm_beacon_integration.asm(151) : error A2220:Missing .ENDPROLOG

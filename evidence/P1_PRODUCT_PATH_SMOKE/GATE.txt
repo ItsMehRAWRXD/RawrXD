@@ -1,0 +1,73 @@
+P1_PRODUCT_PATH_SMOKE
+=====================
+date=2026-08-29
+exe=build-win32ide-p1\bin\RawrXD-Win32IDE.exe
+sha256=D7BD2FFBD23BDFD6DDE2553F05BD1CD7ED38998555D3784603534496F7B24091
+sha_match_frozen=True
+non_authority_edits=quarantined (not in EXE)
+
+SCENARIO RESULTS
+----------------
+1 Launch IDE          FAIL
+2 Load GGUF           BLOCKED_BY_S1
+3 Normal Copilot send BLOCKED_BY_S1
+4 HexMag FINAL        BLOCKED_BY_S1
+5 NEED_INPUT continue BLOCKED_BY_S1
+6 Denied FINAL        BLOCKED_BY_S1
+7 GGUF fallback       BLOCKED_BY_S1
+8 Lifecycle           BLOCKED_BY_S1
+
+OVERALL=FAIL
+
+S1 FAILING PREDICATE (localized)
+--------------------------------
+UI: MessageBoxW title=Error text="Failed to initialize IDE"
+    (main_win32.cpp quick-phase abort after runPhase returns false)
+
+abort_phase=createWindow
+
+ide_startup.log (exe cwd = bin/):
+  ... creating_ide_instance phase_done
+  createWindow phase_start
+  createWindow_start
+  (no createWindow_ok / createWindow_FAILED line observed before MessageBox)
+
+win32ide_trace.log last lines:
+  [Win32IDE_Core] createWindow() ENTER
+  [Win32IDE_Core] About to call IDEConfig::getInstance()
+  [Win32IDE_Core] IDEConfig::getInstance() returned
+  [Win32IDE_Core] Configuration loading complete
+  *** never reaches ***
+  [Win32IDE_Core] Initializing SettingsManager
+
+Interpretation (frozen sources at tip that built this EXE):
+  Crash/SEH between end of configuration scope and
+  fileTrace("Initializing SettingsManager") — most likely during
+  config-block scope-exit destructors (after Deep2Discovery /
+  AgenticAutonomousConfig sync) or immediately entering the
+  SettingsManager block before its fileTrace. createWindowWithSEH
+  returns false → MessageBox.
+
+Artifacts:
+  evidence/P1_PRODUCT_PATH_SMOKE/s01_ide_startup.log
+  evidence/P1_PRODUCT_PATH_SMOKE/s01_win32ide_trace.log
+  evidence/P1_PRODUCT_PATH_SMOKE/s01_dialogs.txt
+  evidence/P1_PRODUCT_PATH_SMOKE/s01_launch.txt (earlier partial)
+
+HEXMAG link diagnostic on stderr/ODS:
+  Not confirmed this run (GUI subsystem; ODS listener empty).
+  Map symbols for HexMag_* remain verified at binary gate.
+
+NEXT (per P1 sequence)
+----------------------
+minimal targeted fix for createWindow abort predicate
+  → rebuild RawrXD-Win32IDE
+  → freeze NEW SHA (invalidate D7BD2FFB… as P1 candidate)
+  → rerun smoke 1–8
+
+DO_NOT
+------
+fold UNCOMMITTED_OUTSIDE_P1 HexMag/ASM edits unless they directly fix this predicate
+resurrect RawrEngine
+rewrite HexMag controller
+open P1 PR while smoke FAIL

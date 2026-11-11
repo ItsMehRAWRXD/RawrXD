@@ -1,0 +1,43 @@
+ Assembling: D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(162) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(220) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(226) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(230) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(235) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(273) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(318) : error A2008:syntax error : .
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(89) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(124) : error A2006:undefined symbol : RenderFail
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(141) : error A2022:instruction operands must be the same size
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(142) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(143) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(152) : error A2006:undefined symbol : RenderComplete
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(165) : error A2006:undefined symbol : RenderComplete
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(168) : error A2006:undefined symbol : RenderComplete
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(202) : error A2006:undefined symbol : SkipCursorRender
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(224) : error A2006:undefined symbol : LineRenderLoop
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(228) : error A2006:undefined symbol : RenderDone
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(231) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(275) : error A2006:undefined symbol : LineRenderDone
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(278) : error A2006:undefined symbol : LineRenderDone
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(280) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(284) : error A2006:undefined symbol : LineRenderDone
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(286) : error A2006:undefined symbol : LineRenderDone
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(288) : error A2006:undefined symbol : LineRenderDone
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(300) : error A2022:instruction operands must be the same size
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(307) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(308) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(309) : error A2009:syntax error in expression
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(316) : error A2006:undefined symbol : CharLoop
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(339) : warning A4025:ENDP found before .ENDPROLOG : DisplayIntegration_SetBufferAndCursor
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(339) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(339) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(353) : warning A4025:ENDP found before .ENDPROLOG : DisplayIntegration_GetWindowHandle
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(353) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(353) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(367) : warning A4025:ENDP found before .ENDPROLOG : DisplayIntegration_SetScrollOffset
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(367) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(367) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(382) : warning A4025:ENDP found before .ENDPROLOG : DisplayIntegration_GetScrollOffset
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(382) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\RawrXD_TextEditor_DisplayIntegration.asm(382) : error A2220:Missing .ENDPROLOG

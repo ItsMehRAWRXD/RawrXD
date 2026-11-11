@@ -1,0 +1,26 @@
+ Assembling: D:\rawrxd\external\rawr_infra\Source\Encoders\RawrXD_PE_Generator.asm
+D:\rawrxd\external\rawr_infra\Source\Encoders\RawrXD_PE_Generator.asm(758) : error A2070:invalid instruction operands
+D:\rawrxd\external\rawr_infra\Source\Encoders\RawrXD_PE_Generator.asm(901) : error A2070:invalid instruction operands
+D:\rawrxd\external\rawr_infra\Source\Encoders\RawrXD_PE_Generator.asm(279) : error A2006:undefined symbol : GetProcessHeap
+D:\rawrxd\external\rawr_infra\Source\Encoders\RawrXD_PE_Generator.asm(288) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\external\rawr_infra\Source\Encoders\RawrXD_PE_Generator.asm(337) : error A2006:undefined symbol : HeapReAlloc
+D:\rawrxd\external\rawr_infra\Source\Encoders\RawrXD_PE_Generator.asm(421) : error A2206:missing operator in expression
+D:\rawrxd\external\rawr_infra\Source\Encoders\RawrXD_PE_Generator.asm(500) : error A2206:missing operator in expression
+D:\rawrxd\external\rawr_infra\Source\Encoders\RawrXD_PE_Generator.asm(503) : error A2206:missing operator in expression
+D:\rawrxd\external\rawr_infra\Source\Encoders\RawrXD_PE_Generator.asm(511) : error A2206:missing operator in expression
+D:\rawrxd\external\rawr_infra\Source\Encoders\RawrXD_PE_Generator.asm(515) : error A2206:missing operator in expression
+D:\rawrxd\external\rawr_infra\Source\Encoders\RawrXD_PE_Generator.asm(786) : error A2098:invalid operand for OFFSET
+D:\rawrxd\external\rawr_infra\Source\Encoders\RawrXD_PE_Generator.asm(859) : error A2006:undefined symbol : printf
+D:\rawrxd\external\rawr_infra\Source\Encoders\RawrXD_PE_Generator.asm(888) : error A2022:instruction operands must be the same size
+D:\rawrxd\external\rawr_infra\Source\Encoders\RawrXD_PE_Generator.asm(895) : error A2022:instruction operands must be the same size
+D:\rawrxd\external\rawr_infra\Source\Encoders\RawrXD_PE_Generator.asm(899) : error A2206:missing operator in expression
+D:\rawrxd\external\rawr_infra\Source\Encoders\RawrXD_PE_Generator.asm(978) : error A2006:undefined symbol : printf
+D:\rawrxd\external\rawr_infra\Source\Encoders\RawrXD_PE_Generator.asm(991) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\external\rawr_infra\Source\Encoders\RawrXD_PE_Generator.asm(1004) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\external\rawr_infra\Source\Encoders\RawrXD_PE_Generator.asm(1008) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\external\rawr_infra\Source\Encoders\RawrXD_PE_Generator.asm(1012) : error A2006:undefined symbol : printf
+D:\rawrxd\external\rawr_infra\Source\Encoders\RawrXD_PE_Generator.asm(1019) : error A2006:undefined symbol : printf
+D:\rawrxd\external\rawr_infra\Source\Encoders\RawrXD_PE_Generator.asm(1041) : error A2006:undefined symbol : GetCommandLineA
+D:\rawrxd\external\rawr_infra\Source\Encoders\RawrXD_PE_Generator.asm(1092) : error A2006:undefined symbol : printf
+D:\rawrxd\external\rawr_infra\Source\Encoders\RawrXD_PE_Generator.asm(153) : error A2206:missing operator in expression
+D:\rawrxd\external\rawr_infra\Source\Encoders\RawrXD_PE_Generator.asm(1028) : warning A6004:procedure argument or local not referenced : temp_filename

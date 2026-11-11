@@ -1,0 +1,8 @@
+HEXMAG_RUNTIME_CONTROLLER_001
+status=PASS
+controller_owns_sequencing=1
+controller_owns_truth=0
+FINALIZE_POLICY_owns_final_authority=1
+FINAL_GATES_UNCHANGED=1
+W0_SOLVE_UNCHANGED=1
+MASM_CLIENT_SEMANTICS_UNCHANGED=1

@@ -1,0 +1,71 @@
+#version 450
+#extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
+
+// RMS Normalization in FP16
+// output = input / sqrt(mean(x^2) + eps) * weight
+// Optimized for RDNA3
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(set = 0, binding = 0) readonly buffer InputBuffer {
+    float16_t data[];
+} input_buffer;
+
+layout(set = 0, binding = 1) readonly buffer WeightBuffer {
+    float16_t data[];
+} weight_buffer;
+
+layout(set = 0, binding = 2) writeonly buffer OutputBuffer {
+    float16_t data[];
+} output_buffer;
+
+layout(push_constant) uniform PushConstants {
+    uint size;
+    float eps;
+} params;
+
+shared float16_t shared_sum[256];
+
+void main() {
+    uint global_id = gl_GlobalInvocationID.x;
+    uint local_id = gl_LocalInvocationID.x;
+    
+    // Calculate sum of squares for this row
+    float16_t local_sum = float16_t(0.0);
+    
+    // Each thread processes multiple elements
+    uint elements_per_thread = (params.size + gl_WorkGroupSize.x - 1) / gl_WorkGroupSize.x;
+    uint start_idx = global_id * elements_per_thread;
+    
+    for (uint i = 0; i < elements_per_thread; i++) {
+        uint idx = start_idx + i;
+        if (idx < params.size) {
+            float16_t val = input_buffer.data[idx];
+            local_sum += val * val;
+        }
+    }
+    
+    shared_sum[local_id] = local_sum;
+    barrier();
+    
+    // Parallel reduction
+    for (uint stride = gl_WorkGroupSize.x / 2; stride > 0; stride >>= 1) {
+        if (local_id < stride) {
+            shared_sum[local_id] += shared_sum[local_id + stride];
+        }
+        barrier();
+    }
+    
+    // Calculate RMS
+    float16_t mean = shared_sum[0] / float16_t(params.size);
+    float16_t rms = sqrt(mean + float16_t(params.eps));
+    
+    // Normalize and apply weight
+    for (uint i = 0; i < elements_per_thread; i++) {
+        uint idx = start_idx + i;
+        if (idx < params.size) {
+            float16_t normalized = input_buffer.data[idx] / rms;
+            output_buffer.data[idx] = normalized * weight_buffer.data[idx];
+        }
+    }
+}

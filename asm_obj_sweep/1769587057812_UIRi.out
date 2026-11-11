@@ -1,0 +1,18 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769587057812_UIRi.asm
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769587057812_UIRi.asm(9) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769587057812_UIRi.asm(10) : error A2008:syntax error : ALIGN
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769587057812_UIRi.asm(99) : error A2008:syntax error : ALIGN
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769587057812_UIRi.asm(100) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769587057812_UIRi.asm(101) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769587057812_UIRi.asm(102) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769587057812_UIRi.asm(103) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769587057812_UIRi.asm(104) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769587057812_UIRi.asm(105) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769587057812_UIRi.asm(106) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769587057812_UIRi.asm(107) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769587057812_UIRi.asm(108) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769587057812_UIRi.asm(109) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769587057812_UIRi.asm(110) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769587057812_UIRi.asm(111) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769587057812_UIRi.asm(112) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\agentic\gpu_dma_complete_production.asm\1769587057812_UIRi.asm(113) : fatal error A1010:unmatched block nesting : MEMORY_PATCH

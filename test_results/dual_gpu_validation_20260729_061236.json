@@ -1,0 +1,87 @@
+{
+  "Timestamp": "2026-07-29 06:12:36",
+  "Duration": 0.4850024,
+  "Summary": {
+    "Failed": 3,
+    "Passed": 6,
+    "Total": 9
+  },
+  "Results": [
+    {
+      "TestName": "Dual GPU Detection",
+      "Passed": false,
+      "Message": "Primary: found, Secondary: MISSING",
+      "Duration": 0.8391
+    },
+    {
+      "TestName": "VRAM Allocation",
+      "Passed": false,
+      "Message": "VRAM: Primary=4GB, Secondary=0GB",
+      "Duration": 0.1547
+    },
+    {
+      "TestName": "Layer Distribution",
+      "Passed": true,
+      "Message": "Layers: Primary=22 (70%), Secondary=10 (30%)",
+      "Duration": 1.3848
+    },
+    {
+      "TestName": "Thermal Failover",
+      "Passed": true,
+      "Message": "Temps: Primary=68°C, Secondary=72°C (Threshold=85°C)",
+      "Duration": 0.2975
+    },
+    {
+      "TestName": "Memory Bandwidth",
+      "Passed": true,
+      "Message": "Bandwidth: Primary=889 GB/s, Secondary=596 GB/s",
+      "Duration": 4.2723
+    },
+    {
+      "TestName": "Compute Capability",
+      "Passed": false,
+      "Message": "Compute Score: Primary=8, Secondary=0",
+      "Duration": 3.8648
+    },
+    {
+      "TestName": "Load Balancing",
+      "Passed": true,
+      "Message": "Load Distribution: Primary=70%, Secondary=30%",
+      "Duration": 0.8459
+    },
+    {
+      "TestName": "Driver Version",
+      "Passed": true,
+      "Message": "Drivers: Primary=32.0.31035.1003, Secondary=N/A",
+      "Duration": 0.4145
+    },
+    {
+      "TestName": "GPU Status",
+      "Passed": true,
+      "Message": "All GPUs reporting OK status",
+      "Duration": 0.027
+    }
+  ],
+  "GPUs": [
+    {
+      "Name": "AMD Radeon AI PRO R9700",
+      "DeviceID": "PCI\\VEN_1002&DEV_7551&SUBSYS_E4991DA2&REV_C0\\6&3B388BA5&0&00000009",
+      "VRAM_GB": 4.0,
+      "DriverVersion": "32.0.31035.1003",
+      "IsPrimary": true,
+      "IsSecondary": false,
+      "IsIntegrated": false,
+      "Status": "OK"
+    },
+    {
+      "Name": "AMD Radeon(TM) Graphics",
+      "DeviceID": "PCI\\VEN_1002&DEV_164E&SUBSYS_88771043&REV_CB\\4&1EBE6A9C&0&0041",
+      "VRAM_GB": 0.5,
+      "DriverVersion": "32.0.21045.1000",
+      "IsPrimary": false,
+      "IsSecondary": false,
+      "IsIntegrated": true,
+      "Status": "OK"
+    }
+  ]
+}

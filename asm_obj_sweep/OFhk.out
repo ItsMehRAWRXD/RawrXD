@@ -1,0 +1,46 @@
+ Assembling: D:\rawrxd\history\-1bd1bafa\OFhk.asm
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(2765) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(2767) : error A2046:missing single or double quotation mark in string
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(2770) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(2772) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(2774) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(2776) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(2778) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(2780) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(2782) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(2797) : error A2005:symbol redefinition : szTaskProposalComp
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(2797) : error A2088:END directive required at end of file
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(957) : error A2006:undefined symbol : GENERIC_WRITE
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(960) : error A2006:undefined symbol : CREATE_ALWAYS
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(961) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(963) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(965) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(975) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(988) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(995) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(1042) : error A2006:undefined symbol : GENERIC_READ
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(1045) : error A2006:undefined symbol : OPEN_EXISTING
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(1048) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(1050) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(1060) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(1073) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(1080) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(1288) : error A2006:undefined symbol : ApplyComponentStyle
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(1292) : error A2006:undefined symbol : UpdateComponentAppearance
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(1299) : error A2006:undefined symbol : StartStyleAnimation
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(1356) : error A2006:undefined symbol : ParseAnimationJson
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(1451) : error A2006:undefined symbol : ParseLayoutJson
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(1465) : error A2006:undefined symbol : ApplyLayoutProperties
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(1469) : error A2006:undefined symbol : RecalculateLayout
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(1585) : error A2006:undefined symbol : szJsonStart
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(1662) : error A2006:undefined symbol : UpdateAnimation
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(1672) : error A2006:undefined symbol : RequestRedraw
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(1753) : error A2006:undefined symbol : IID_ID2D1Factory
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(1754) : error A2006:undefined symbol : D2D1_FACTORY_TYPE_SINGLE_THREADED
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(1760) : error A2006:undefined symbol : IID_IDWriteFactory
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(1761) : error A2006:undefined symbol : DWRITE_FACTORY_TYPE_SHARED
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(1920) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(2602) : error A2006:undefined symbol : UpdateComponentAppearance
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(2714) : error A2006:undefined symbol : szWKey
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(2724) : error A2006:undefined symbol : szHKey
+D:\rawrxd\history\-1bd1bafa\OFhk.asm(2734) : error A2006:undefined symbol : szStyleKey

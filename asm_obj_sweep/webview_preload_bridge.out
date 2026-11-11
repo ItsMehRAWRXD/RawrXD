@@ -1,0 +1,24 @@
+ Assembling: D:\rawrxd\src\asm\webview_preload_bridge.asm
+D:\rawrxd\src\asm\webview_preload_bridge.asm(96) : error A2041:string or text literal too long
+D:\rawrxd\src\asm\webview_preload_bridge.asm(101) : error A2039:line too long
+D:\rawrxd\src\asm\webview_preload_bridge.asm(321) : error A2008:syntax error : ,
+D:\rawrxd\src\asm\webview_preload_bridge.asm(374) : error A2008:syntax error : jmp
+D:\rawrxd\src\asm\webview_preload_bridge.asm(390) : error A2070:invalid instruction operands
+D:\rawrxd\src\asm\webview_preload_bridge.asm(422) : error A2008:syntax error : ,
+D:\rawrxd\src\asm\webview_preload_bridge.asm(473) : error A2008:syntax error : ,
+D:\rawrxd\src\asm\webview_preload_bridge.asm(496) : error A2008:syntax error : ,
+D:\rawrxd\src\asm\webview_preload_bridge.asm(511) : error A2041:string or text literal too long
+D:\rawrxd\src\asm\webview_preload_bridge.asm(526) : error A2008:syntax error : >
+D:\rawrxd\src\asm\webview_preload_bridge.asm(146) : error A2006:undefined symbol : IID_ICoreWebView2
+D:\rawrxd\src\asm\webview_preload_bridge.asm(228) : error A2006:undefined symbol : HostObjectVtable
+D:\rawrxd\src\asm\webview_preload_bridge.asm(247) : error A2006:undefined symbol : szInjectScript
+D:\rawrxd\src\asm\webview_preload_bridge.asm(291) : error A2006:undefined symbol : IID_IDispatch
+D:\rawrxd\src\asm\webview_preload_bridge.asm(293) : error A2006:undefined symbol : IID_ICoreWebView2
+D:\rawrxd\src\asm\webview_preload_bridge.asm(297) : error A2006:undefined symbol : E_NOINTERFACE
+D:\rawrxd\src\asm\webview_preload_bridge.asm(417) : error A2006:undefined symbol : WM_COPYDATA
+D:\rawrxd\src\asm\webview_preload_bridge.asm(420) : error A2006:undefined symbol : COPYDATASTRUCT
+D:\rawrxd\src\asm\webview_preload_bridge.asm(421) : error A2006:undefined symbol : COPYDATASTRUCT
+D:\rawrxd\src\asm\webview_preload_bridge.asm(424) : error A2006:undefined symbol : COPYDATASTRUCT
+D:\rawrxd\src\asm\webview_preload_bridge.asm(425) : error A2006:undefined symbol : SendMessageA
+D:\rawrxd\src\asm\webview_preload_bridge.asm(454) : error A2006:undefined symbol : E_NOINTERFACE
+D:\rawrxd\src\asm\webview_preload_bridge.asm(528) : error A2006:undefined symbol : WebMessageHandler_Invoke

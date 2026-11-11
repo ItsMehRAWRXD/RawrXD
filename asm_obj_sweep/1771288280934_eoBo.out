@@ -1,0 +1,107 @@
+ Assembling: D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(10) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(11) : error A2008:syntax error : .
+
+***********
+ASCII build
+***********
+
+C:\masm32\include\windows.inc(9750) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(10183) : error A2008:syntax error : frame
+C:\masm32\include\windows.inc(16333) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(18862) : error A2008:syntax error : Frame
+C:\masm32\include\windows.inc(24749) : error A2042:statement too complex
+C:\masm32\include\winextra.inc(11052) : error A2026:constant expected
+C:\masm32\include\winextra.inc(11053) : error A2026:constant expected
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(185) : error A2179:structure improperly initialized
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(185) : error A2008:syntax error : in structure
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(206) : error A2179:structure improperly initialized
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(206) : error A2008:syntax error : in structure
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(240) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(242) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(245) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(250) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(276) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(303) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(304) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(306) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(311) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(314) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(317) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(318) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(330) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(364) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(365) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(378) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(382) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(393) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(394) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(418) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(425) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(438) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(460) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(519) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(669) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(674) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(711) : error A2005:symbol redefinition : hFile
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(716) : error A2008:syntax error : strlen
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(719) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(754) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(763) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1060) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1104) : error A2001:immediate operand not allowed
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1114) : error A2001:immediate operand not allowed
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1115) : error A2001:immediate operand not allowed
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1116) : error A2001:immediate operand not allowed
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1117) : error A2001:immediate operand not allowed
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1159) : error A2001:immediate operand not allowed
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1163) : error A2001:immediate operand not allowed
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1166) : error A2001:immediate operand not allowed
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1218) : error A2008:syntax error : integer
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1546) : error A2008:syntax error : pushad
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1558) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1564) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1568) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1582) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1611) : error A2008:syntax error : popad
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1615) : error A2008:syntax error : popad
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1619) : error A2008:syntax error : popad
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1623) : error A2008:syntax error : popad
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1628) : error A2008:syntax error : popad
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1651) : error A2005:symbol redefinition : hFile
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1653) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1659) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1660) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1669) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1758) : error A2005:symbol redefinition : hFile
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1759) : error A2008:syntax error : integer
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1762) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1771) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1782) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1804) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1807) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1816) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1817) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1819) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1842) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1845) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1859) : error A2008:syntax error
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1877) : error A2008:syntax error : strcat
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1879) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1888) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1892) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1917) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1943) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1951) : error A2008:syntax error : pushad
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1952) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1954) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1955) : error A2008:syntax error : popad
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1964) : error A2008:syntax error : pushad
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1969) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1971) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1972) : error A2008:syntax error : popad
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1982) : error A2008:syntax error : pushad
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1983) : error A2008:syntax error : invoke
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1984) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1985) : error A2008:syntax error : popad
+D:\rawrxd\history\all_versions\src\dumpbin_final_backup.asm\1771288280934_eoBo.asm(1989) : fatal error A1012:error count exceeds 100; stopping assembly

@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\src\agentic\Extreme_Cut.asm
+D:\rawrxd\src\agentic\Extreme_Cut.asm(441) : fatal error A1010:unmatched block nesting : PeWriter_WriteSectionHeader

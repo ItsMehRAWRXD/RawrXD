@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_NativeHost.asm\1769909620980_XFve.asm
+D:\rawrxd\history\all_versions\src\RawrXD_NativeHost.asm\1769909620980_XFve.asm(245) : error A2006:undefined symbol : __imp_wsprintfA
+D:\rawrxd\history\all_versions\src\RawrXD_NativeHost.asm\1769909620980_XFve.asm(575) : error A2006:undefined symbol : __imp_wsprintfA
+D:\rawrxd\history\all_versions\src\RawrXD_NativeHost.asm\1769909620980_XFve.asm(599) : error A2006:undefined symbol : __imp_wsprintfA
+D:\rawrxd\history\all_versions\src\RawrXD_NativeHost.asm\1769909620980_XFve.asm(682) : error A2006:undefined symbol : __imp_wsprintfA
+D:\rawrxd\history\all_versions\src\RawrXD_NativeHost.asm\1769909620980_XFve.asm(689) : error A2006:undefined symbol : __imp_wsprintfA
+D:\rawrxd\history\all_versions\src\RawrXD_NativeHost.asm\1769909620980_XFve.asm(713) : error A2006:undefined symbol : __imp_wsprintfA

@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\SelfTest_All.asm
+D:\rawrxd\SelfTest_All.asm(129) : error A2006:undefined symbol : rawr_heap_alloc
+D:\rawrxd\SelfTest_All.asm(170) : error A2032:invalid use of register
+D:\rawrxd\SelfTest_All.asm(191) : error A2006:undefined symbol : rawr_heap_free

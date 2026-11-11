@@ -1,0 +1,34 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(37) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(43) : error A2008:syntax error : VirtualAlloc
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(48) : error A2008:syntax error : VirtualAlloc
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(58) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(61) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(86) : error A2008:syntax error : IF
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(88) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(95) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(98) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(105) : error A2008:syntax error : IF
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(110) : error A2008:syntax error : IF
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(112) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(117) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(119) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(121) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(133) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(138) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(139) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(140) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(145) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(150) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(163) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(165) : error A2008:syntax error : CommandLineToArgvW
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(174) : error A2008:syntax error : WideCharToMultiByte
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(181) : error A2008:syntax error : wcstoull
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(187) : error A2008:syntax error : wcstoull
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(200) : error A2008:syntax error : ExitProcess
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(203) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(204) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(206) : warning A6001:no return from procedure
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(39) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(154) : warning A6004:procedure argument or local not referenced : bufPos
+D:\rawrxd\reconstructed\RawrXD-tools\rawrxd\slice.asm(154) : warning A6004:procedure argument or local not referenced : linePos

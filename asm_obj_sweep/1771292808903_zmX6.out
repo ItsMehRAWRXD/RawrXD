@@ -1,0 +1,108 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(156) : error A2008:syntax error : label
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(188) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(217) : error A2008:syntax error : dword
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(262) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(328) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2144) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(363) : error A2006:undefined symbol : process_handle
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(577) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(847) : error A2006:undefined symbol : FONT_WIDTH
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(856) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(860) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(863) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(917) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(930) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(937) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(992) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(1003) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(1075) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(1112) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(1150) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(1251) : error A2006:undefined symbol : CreatePipe
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(1341) : error A2006:undefined symbol : CreatePipe
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(1427) : error A2006:undefined symbol : AlignedAlloc64
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(1431) : error A2006:undefined symbol : BufferCreate
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(1490) : error A2006:undefined symbol : CreatePipe
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(1499) : error A2006:undefined symbol : CreatePipe
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(1888) : error A2006:undefined symbol : RtlMoveMemory
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(1988) : error A2006:undefined symbol : RtlMoveMemory
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2125) : error A2006:undefined symbol : CreateSolidBrush
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2145) : error A2006:undefined symbol : RoundRect
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2151) : error A2006:undefined symbol : SetDCPenColor
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2222) : error A2006:undefined symbol : CreateSolidBrush
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2236) : error A2006:undefined symbol : FillRect
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2285) : error A2006:undefined symbol : CreatePen
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2299) : error A2006:undefined symbol : MoveToEx
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2324) : error A2006:undefined symbol : LineTo
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2523) : error A2006:undefined symbol : RtlCompareMemory
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(396) : warning A4025:ENDP found before .ENDPROLOG : LSPInitialize
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(396) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(424) : warning A4025:ENDP found before .ENDPROLOG : LSPParseCapabilities
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(424) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(489) : warning A4025:ENDP found before .ENDPROLOG : LSPSendInitialize
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(556) : warning A4025:ENDP found before .ENDPROLOG : LSPTextDocumentDidOpen
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(693) : warning A4025:ENDP found before .ENDPROLOG : LSPCompletion
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(782) : warning A4025:ENDP found before .ENDPROLOG : IntelliSenseRenderPopup
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(805) : warning A4025:ENDP found before .ENDPROLOG : IntelliSenseApplyCompletion
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(891) : warning A4025:ENDP found before .ENDPROLOG : DiagnosticsRenderSquiggles
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(1231) : warning A4025:ENDP found before .ENDPROLOG : GitGetStatus
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(1470) : warning A4025:ENDP found before .ENDPROLOG : EnterpriseEditorCreate
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(1554) : warning A4025:ENDP found before .ENDPROLOG : LaunchServerProcess
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(1580) : warning A4025:ENDP found before .ENDPROLOG : JSONCreate
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(1651) : warning A4025:ENDP found before .ENDPROLOG : JSONAddString
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(1735) : warning A4025:ENDP found before .ENDPROLOG : JSONAddInt
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(1782) : warning A4025:ENDP found before .ENDPROLOG : JSONAddObject
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(1802) : warning A4025:ENDP found before .ENDPROLOG : JSONToString
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(1820) : warning A4025:ENDP found before .ENDPROLOG : JSONDestroy
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(1845) : warning A4025:ENDP found before .ENDPROLOG : PipeWrite
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(1898) : warning A4025:ENDP found before .ENDPROLOG : LSPWaitResponse
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(1999) : warning A4025:ENDP found before .ENDPROLOG : LSPWaitResponseById
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2111) : warning A4025:ENDP found before .ENDPROLOG : ParseCompletionItems
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2167) : warning A4025:ENDP found before .ENDPROLOG : DrawPopupBackground
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2206) : warning A4025:ENDP found before .ENDPROLOG : RenderCompletionItem
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2267) : warning A4025:ENDP found before .ENDPROLOG : RenderCompletionItemSelected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2343) : warning A4025:ENDP found before .ENDPROLOG : DrawWavyLine
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2408) : warning A4025:ENDP found before .ENDPROLOG : ExecuteCommand
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2467) : warning A4025:ENDP found before .ENDPROLOG : ParseGitStatus
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2490) : warning A4025:ENDP found before .ENDPROLOG : LineColToScreen
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2542) : warning A4025:ENDP found before .ENDPROLOG : StrStrA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2542) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2542) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2558) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2559) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2560) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2561) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2562) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2563) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2564) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2565) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2566) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2567) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2568) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2569) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2570) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2571) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2572) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2573) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2574) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2577) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2578) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2581) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2582) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2583) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2586) : error A2016:expression expected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2587) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2588) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2591) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2592) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2593) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2594) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2595) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2596) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2597) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2600) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2603) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2604) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2605) : error A2084:constant value too large
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771292808903_zmX6.ASM(2606) : error A2084:constant value too large

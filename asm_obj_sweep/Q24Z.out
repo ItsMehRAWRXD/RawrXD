@@ -1,0 +1,89 @@
+ Assembling: D:\rawrxd\history\-11ccb48b\Q24Z.asm
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(59) : error A2008:syntax error : type
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(78) : error A2008:syntax error : type
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(270) : error A2006:undefined symbol : WNDCLASSEXA
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(270) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(300) : error A2006:undefined symbol : WNDCLASSEXA
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(300) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(330) : error A2006:undefined symbol : WNDCLASSEXA
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(330) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(512) : error A2008:syntax error : name
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(584) : error A2008:syntax error : name
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(900) : error A2008:syntax error : name
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(234) : error A2005:symbol redefinition : create_model_from_template
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(235) : error A2005:symbol redefinition : reverse_engineer_model
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(274) : error A2006:undefined symbol : cbSize
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(275) : error A2006:undefined symbol : style
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(277) : error A2006:undefined symbol : lpfnWndProc
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(278) : error A2006:undefined symbol : cbClsExtra
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(279) : error A2006:undefined symbol : cbWndExtra
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(280) : error A2006:undefined symbol : hInstance
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(281) : error A2006:undefined symbol : hIcon
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(282) : error A2006:undefined symbol : hCursor
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(283) : error A2006:undefined symbol : hbrBackground
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(284) : error A2006:undefined symbol : lpszMenuName
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(286) : error A2006:undefined symbol : lpszClassName
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(287) : error A2006:undefined symbol : hIconSm
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(304) : error A2006:undefined symbol : cbSize
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(305) : error A2006:undefined symbol : style
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(307) : error A2006:undefined symbol : lpfnWndProc
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(308) : error A2006:undefined symbol : cbClsExtra
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(309) : error A2006:undefined symbol : cbWndExtra
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(310) : error A2006:undefined symbol : hInstance
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(311) : error A2006:undefined symbol : hIcon
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(312) : error A2006:undefined symbol : hCursor
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(313) : error A2006:undefined symbol : hbrBackground
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(314) : error A2006:undefined symbol : lpszMenuName
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(316) : error A2006:undefined symbol : lpszClassName
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(317) : error A2006:undefined symbol : hIconSm
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(334) : error A2006:undefined symbol : cbSize
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(335) : error A2006:undefined symbol : style
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(337) : error A2006:undefined symbol : lpfnWndProc
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(338) : error A2006:undefined symbol : cbClsExtra
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(339) : error A2006:undefined symbol : cbWndExtra
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(340) : error A2006:undefined symbol : hInstance
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(341) : error A2006:undefined symbol : hIcon
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(342) : error A2006:undefined symbol : hCursor
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(343) : error A2006:undefined symbol : hbrBackground
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(344) : error A2006:undefined symbol : lpszMenuName
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(346) : error A2006:undefined symbol : lpszClassName
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(347) : error A2006:undefined symbol : hIconSm
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(441) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(465) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(508) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(534) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(589) : error A2006:undefined symbol : GetTickCount
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(616) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(651) : error A2006:undefined symbol : GetTickCount
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(682) : error A2006:undefined symbol : hwnd
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(684) : error A2006:undefined symbol : szListViewClass
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(685) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(692) : error A2006:undefined symbol : hwnd_dataset_list
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(705) : error A2006:undefined symbol : hwnd
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(707) : error A2006:undefined symbol : szListViewClass
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(708) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(715) : error A2006:undefined symbol : hwnd_model_list
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(728) : error A2006:undefined symbol : hwnd
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(730) : error A2006:undefined symbol : szListViewClass
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(731) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(738) : error A2006:undefined symbol : hwnd_experiment_list
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(751) : error A2006:undefined symbol : hwnd
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(754) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(761) : error A2006:undefined symbol : hwnd_metrics_chart
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(774) : error A2006:undefined symbol : hwnd
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(777) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(784) : error A2006:undefined symbol : hwnd_resource_chart
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(797) : error A2006:undefined symbol : hwnd
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(799) : error A2006:undefined symbol : szListViewClass
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(800) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(807) : error A2006:undefined symbol : hwnd_hyperparam_grid
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(984) : error A2006:undefined symbol : Sleep
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(1052) : error A2006:undefined symbol : WM_CREATE
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(1054) : error A2006:undefined symbol : WM_COMMAND
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(1056) : error A2006:undefined symbol : WM_DESTROY
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(1059) : error A2006:undefined symbol : DefWindowProcA
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(1063) : error A2006:undefined symbol : hwnd
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(1092) : error A2006:undefined symbol : WM_PAINT
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(1095) : error A2006:undefined symbol : DefWindowProcA
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(1113) : error A2006:undefined symbol : WM_PAINT
+D:\rawrxd\history\-11ccb48b\Q24Z.asm(1116) : error A2006:undefined symbol : DefWindowProcA

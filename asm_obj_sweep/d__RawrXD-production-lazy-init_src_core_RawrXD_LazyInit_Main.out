@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD_LazyInit_Main.asm
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD_LazyInit_Main.asm(261) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD_LazyInit_Main.asm(590) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD_LazyInit_Main.asm(656) : error A2008:syntax error : ,
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD_LazyInit_Main.asm(705) : error A2005:symbol redefinition : t1_stream_chunk
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_core_RawrXD_LazyInit_Main.asm(717) : fatal error A1010:unmatched block nesting : t1_stream_chunk

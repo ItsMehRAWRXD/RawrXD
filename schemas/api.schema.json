@@ -1,0 +1,278 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://rawrxd.ai/schemas/api.schema.json",
+  "title": "RawrXD API Request/Response Schema",
+  "description": "Schema for validating RawrXD API requests and responses",
+  "definitions": {
+    "chat_message": {
+      "type": "object",
+      "required": ["role", "content"],
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": ["system", "user", "assistant", "tool"]
+        },
+        "content": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "tool_calls": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/tool_call"
+          }
+        },
+        "tool_call_id": {
+          "type": "string"
+        }
+      }
+    },
+    "tool_call": {
+      "type": "object",
+      "required": ["id", "type", "function"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["function"]
+        },
+        "function": {
+          "type": "object",
+          "required": ["name", "arguments"],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "arguments": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "tool": {
+      "type": "object",
+      "required": ["type", "function"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["function"]
+        },
+        "function": {
+          "type": "object",
+          "required": ["name", "description"],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "parameters": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "usage_stats": {
+      "type": "object",
+      "properties": {
+        "prompt_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "completion_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total_tokens": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "chat_completion_request": {
+    "type": "object",
+    "required": ["messages"],
+    "properties": {
+      "model": {
+        "type": "string"
+      },
+      "messages": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/chat_message"
+        },
+        "minItems": 1
+      },
+      "tools": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/tool"
+        }
+      },
+      "temperature": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 2
+      },
+      "top_p": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "top_k": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "max_tokens": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "stream": {
+        "type": "boolean",
+        "default": false
+      },
+      "stop": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "presence_penalty": {
+        "type": "number",
+        "minimum": -2,
+        "maximum": 2
+      },
+      "frequency_penalty": {
+        "type": "number",
+        "minimum": -2,
+        "maximum": 2
+      },
+      "repeat_penalty": {
+        "type": "number",
+        "minimum": 1
+      },
+      "seed": {
+        "type": "integer"
+      }
+    }
+  },
+  "chat_completion_response": {
+    "type": "object",
+    "required": ["id", "object", "created", "model", "choices"],
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "object": {
+        "type": "string",
+        "enum": ["chat.completion"]
+      },
+      "created": {
+        "type": "integer"
+      },
+      "model": {
+        "type": "string"
+      },
+      "choices": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["index", "message", "finish_reason"],
+          "properties": {
+            "index": {
+              "type": "integer"
+            },
+            "message": {
+              "$ref": "#/definitions/chat_message"
+            },
+            "finish_reason": {
+              "type": "string",
+              "enum": ["stop", "length", "tool_calls", "content_filter", "null"]
+            }
+          }
+        }
+      },
+      "usage": {
+        "$ref": "#/definitions/usage_stats"
+      }
+    }
+  },
+  "embedding_request": {
+    "type": "object",
+    "required": ["input"],
+    "properties": {
+      "model": {
+        "type": "string"
+      },
+      "input": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "encoding_format": {
+        "type": "string",
+        "enum": ["float", "base64"],
+        "default": "float"
+      },
+      "dimensions": {
+        "type": "integer",
+        "minimum": 1
+      }
+    }
+  },
+  "model_list_response": {
+    "type": "object",
+    "required": ["object", "data"],
+    "properties": {
+      "object": {
+        "type": "string",
+        "enum": ["list"]
+      },
+      "data": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["id", "object"],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "object": {
+              "type": "string",
+              "enum": ["model"]
+            },
+            "created": {
+              "type": "integer"
+            },
+            "owned_by": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

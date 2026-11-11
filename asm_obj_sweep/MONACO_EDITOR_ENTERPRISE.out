@@ -1,0 +1,36 @@
+ Assembling: D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(8) : error A2008:syntax error : WIN64
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(104) : error A2008:syntax error : label
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(165) : error A2008:syntax error : dword
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(283) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(327) : error A2006:undefined symbol : LSPParseCapabilities
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(331) : error A2006:undefined symbol : LSPSendInitialized
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(721) : error A2006:undefined symbol : LineColToScreen
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(727) : error A2006:undefined symbol : FONT_WIDTH
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(736) : error A2206:missing operator in expression
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(740) : error A2206:missing operator in expression
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(743) : error A2206:missing operator in expression
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(903) : error A2006:undefined symbol : AlignedAlloc64
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(907) : error A2006:undefined symbol : BufferCreate
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(918) : error A2006:undefined symbol : IntelliSenseInit
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(922) : error A2006:undefined symbol : DiagnosticsInit
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(926) : error A2006:undefined symbol : DAPInit
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(931) : error A2006:undefined symbol : GitInit
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(938) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(344) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(409) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(476) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(484) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(573) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(662) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(685) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(771) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(792) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(809) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(817) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(825) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(834) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(864) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(875) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(884) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM(946) : error A2220:Missing .ENDPROLOG

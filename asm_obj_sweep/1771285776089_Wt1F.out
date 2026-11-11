@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\all_versions\src\extension_host\RawrXD_ExtensionHost.asm\1771285776089_Wt1F.asm
+D:\rawrxd\history\all_versions\src\extension_host\RawrXD_ExtensionHost.asm\1771285776089_Wt1F.asm(17) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\extension_host\RawrXD_ExtensionHost.asm\1771285776089_Wt1F.asm(18) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\extension_host\RawrXD_ExtensionHost.asm\1771285776089_Wt1F.asm(19) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\extension_host\RawrXD_ExtensionHost.asm\1771285776089_Wt1F.asm(21) : error A2008:syntax error : frame
+D:\rawrxd\history\all_versions\src\extension_host\RawrXD_ExtensionHost.asm\1771285776089_Wt1F.asm(28) : fatal error A1000:cannot open file : user32.inc

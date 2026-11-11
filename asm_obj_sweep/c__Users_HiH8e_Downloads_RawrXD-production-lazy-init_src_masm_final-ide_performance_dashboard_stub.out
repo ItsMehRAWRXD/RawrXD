@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_performance_dashboard_stub.asm
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_performance_dashboard_stub.asm(19) : error A2008:syntax error : rbx
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_performance_dashboard_stub.asm(28) : fatal error A1010:unmatched block nesting : PerformanceDashboard_NotifyConfigChange

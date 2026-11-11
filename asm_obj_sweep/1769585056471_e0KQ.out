@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(16) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(17) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(18) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(234) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(797) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(798) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(799) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(800) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(801) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(802) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(803) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(804) : error A2023:instruction operand must have size
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(895) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(896) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(897) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(898) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(899) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(900) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(901) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(902) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(485) : error A2006:undefined symbol : RingBuffer
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(502) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(510) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(511) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(512) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(515) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(522) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(532) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(535) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(537) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(545) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(552) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(555) : error A2006:undefined symbol : BufferLock
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(593) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(598) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(604) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(628) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(629) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(656) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(657) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(690) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(694) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(699) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(703) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(706) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(709) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(711) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(751) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(755) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(830) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(833) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(836) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(880) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(883) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(923) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(926) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(929) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(978) : error A2006:undefined symbol : Engines
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(982) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(983) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(984) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(987) : error A2006:undefined symbol : EngineLock
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(996) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1011) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1028) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1041) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1087) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1091) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1113) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1143) : error A2006:undefined symbol : EngineLock
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1147) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1150) : error A2006:undefined symbol : EngineLock
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1181) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1184) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1187) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1207) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1208) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1209) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1215) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1216) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1217) : error A2081:missing operand after unary operator
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1223) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1226) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1229) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1235) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1239) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1244) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1245) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1246) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1248) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1297) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1298) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1302) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1306) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1314) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1316) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1320) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1324) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1325) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1333) : error A2006:undefined symbol : PatchLock
+D:\rawrxd\history\all_versions\src\agentic\Titan_Streaming_Orchestrator.asm\1769585056471_e0KQ.asm(1367) : fatal error A1012:error count exceeds 100; stopping assembly

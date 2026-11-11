@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\RawrXD\DualEngineStreamer.asm
+D:\rawrxd\reconstructed\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\RawrXD\DualEngineStreamer.asm(5) : fatal error A1000:cannot open file : masm_hotpatch.inc
