@@ -3897,6 +3897,37 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_AgenticLoopBridge.cpp
         src/win32app/Win32IDE_GhostText.cpp
         src/win32app/Win32IDE_GhostTextIntegration.cpp
+        # Batch 1: Core Editor Features (15 features)
+        src/win32app/Win32IDE_SyntaxHighlight.cpp
+        src/win32app/Win32IDE_MultiCursor.cpp
+        src/win32app/Win32IDE_Minimap.cpp
+        src/win32app/Win32IDE_Breadcrumbs.cpp
+        src/win32app/Win32IDE_OutlinePanel.cpp
+        src/win32app/Win32IDE_DiffView.cpp
+        src/win32app/Win32IDE_CommandPalette.cpp
+        src/win32app/Win32IDE_QuickOpen.cpp
+        src/win32app/Win32IDE_CodeCompletion.cpp
+        src/win32app/Win32IDE_InlineCompletion.cpp
+        src/win32app/Win32IDE_GoToSymbol.cpp
+        src/win32app/Win32IDE_ReferencesPanel.cpp
+        src/win32app/Win32IDE_SemanticIndex.cpp
+        src/win32app/Win32IDE_RenamePreview.cpp
+        src/win32app/Win32IDE_HoverTooltips.cpp
+        # Batch 2: LSP/Language Features (15 features)
+        src/win32app/Win32IDE_LSPClient.cpp
+        src/win32app/Win32IDE_LSPClient_Additions.cpp
+        src/win32app/AdvancedLSPClient.cpp
+        src/win32app/Win32IDE_LSPServer.cpp
+        src/win32app/Win32IDE_LanguagePlugin.cpp
+        src/win32app/Win32IDE_SnippetEngine.cpp
+        src/win32app/Win32IDE_SemanticTokens.cpp
+        src/win32app/Win32IDE_CodeActions.cpp
+        src/win32app/Win32IDE_GoToSymbol.cpp
+        src/win32app/Win32IDE_OutlinePanel.cpp
+        src/win32app/OutlinePanel.h
+        src/win32app/Win32IDE_SemanticIndex.cpp
+        src/win32app/Win32IDE_SemanticPanel.cpp
+        src/win32app/RawrXD_SymbolEngine.cpp
         # AgentSession provides session lifecycle, ledger, and turn recording.
         src/agentic/AgentSession.cpp
         # Dedicated GhostText Ollama requests must use the shared WinHTTP

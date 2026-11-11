@@ -117,8 +117,29 @@
 #include <thread>
 #include <mutex>
 #include <atomic>
+#include <condition_variable>
+#include <chrono>
 #include <functional>
+#include <sstream>
+#include "nlohmann/json.hpp"
 #include "IDELogger.h"
+
+// ---------------------------------------------------------------------------
+// Streaming log macro used by Minimap and other Tier-1 cosmetic TUs.
+// Matches the LOG_INFO pattern but supports << streaming.
+// ---------------------------------------------------------------------------
+struct RawrXDLogStream {
+    std::ostringstream ss;
+    const char* tag;
+    ~RawrXDLogStream() {
+        std::string msg = std::string(tag) + ": " + ss.str();
+        LOG_INFO(msg);
+    }
+};
+#ifndef RAWRXD_LOG_INFO
+#define RAWRXD_LOG_INFO(tag) RawrXDLogStream{tag}
+#endif
+
 #include "Win32TerminalManager.h"
 #include "TransparentRenderer.h"
 #include "gguf_loader.h"
@@ -286,6 +307,10 @@ struct IDETheme {
     COLORREF operatorColor;
     COLORREF selectionColor;
     COLORREF lineNumberColor;
+    COLORREF typeColor;
+    COLORREF preprocessorColor;
+    COLORREF functionColor;
+    COLORREF accentColor;
     std::string fontName;
     int fontSize;
     bool darkMode;
@@ -393,6 +418,81 @@ public:
         Info = 1,
         Warning = 2,
         Error = 3
+    };
+
+    // -----------------------------------------------------------------------
+    // Shared editor model types. Declared at class scope (before first use)
+    // because the editor/declaration sections below reference them.
+    // -----------------------------------------------------------------------
+    enum class TokenType {
+        Default, Keyword, BuiltinType, String, Comment, Number, Preprocessor, Operator, Function, Bracket
+    };
+    struct SyntaxToken {
+        int start = 0;
+        int length = 0;
+        TokenType type = TokenType::Default;
+    };
+    struct BreadcrumbItem {
+        std::string name;
+        std::string path;
+        int line = 0;
+    };
+
+    // Symbol kind constants (LSP-compatible) used by OutlinePanel and symbol index
+    enum SymbolKind {
+        SK_File = 1,
+        SK_Module = 2,
+        SK_Namespace = 3,
+        SK_Package = 4,
+        SK_Class = 5,
+        SK_Method = 6,
+        SK_Property = 7,
+        SK_Field = 8,
+        SK_Constructor = 9,
+        SK_Enum = 10,
+        SK_Interface = 11,
+        SK_Function = 12,
+        SK_Variable = 13,
+        SK_Constant = 14,
+        SK_String = 15,
+        SK_Number = 16,
+        SK_Boolean = 17,
+        SK_Array = 18,
+        SK_Object = 19,
+        SK_Key = 20,
+        SK_Null = 21,
+        SK_EnumMember = 22,
+        SK_Struct = 23,
+        SK_Event = 24,
+        SK_Operator = 25,
+        SK_TypeParameter = 26
+    };
+
+    struct WorkspaceSymbol {
+        std::string name;
+        std::string kind;
+        std::string filePath;
+        int line = 0;
+        int column = 0;
+    };
+    struct OutlineSymbol {
+        std::string name;
+        std::string kind;
+        int line = 0;
+        int column = 0;
+        std::vector<OutlineSymbol> children;
+    };
+
+    enum class SyntaxLanguage {
+        None = 0, Cpp, Python, JavaScript, PowerShell, JSON, Markdown, Assembly, Unknown
+    };
+
+    // Editor surface lines currently visible in the scrolled viewport.
+    struct VisibleLineRange {
+        int firstLine = 0;
+        int lastLine = 0;
+        int lineCount = 0;
+        int lineHeight = 16;
     };
 
     Win32IDE(HINSTANCE hInstance);
@@ -529,6 +629,8 @@ public:
     HWND getToolbar() const { return m_hwndToolbar; }
     HWND getSidebar() const { return m_hwndSidebar; }
     HWND getEditor() const { return m_hwndEditor; }
+    HWND m_hwndEditor = nullptr;
+    VisibleLineRange getVisibleEditorLines() const;
     HWND getStatusBar() const { return m_hwndStatusBar; }
     const IDESettings& getSettings() const { return m_settings; }
     IDESettings& getSettingsMut() { return m_settings; }
@@ -914,10 +1016,223 @@ private:
     void clearClipboardHistory();
 
     // Minimap
+    public:
     void createMinimap();
     void updateMinimap();
     void scrollToMinimapPosition(int y);
     void toggleMinimap();
+    void paintMinimap(HDC hdc, RECT& rc);
+    void minimapHitTest(int mouseY, int& outLine);
+    bool m_minimapHighlightCursor = true;
+    bool m_minimapDragging = false;
+    HFONT m_editorFont = nullptr;
+
+    // Syntax Highlighting (Tree-sitter based)
+    void toggleSyntaxHighlighting();
+    void updateSyntaxHighlighting();
+    void applySyntaxHighlighting(const std::vector<SyntaxToken>& tokens);
+    void initSyntaxColorizer();
+    void applySyntaxColoring();
+    void applySyntaxColoringForRange(int startChar, int endChar);
+    void applySyntaxColoringForVisibleRange();
+    void onEditorContentChanged();
+    static void CALLBACK SyntaxColorTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
+    COLORREF getTokenColor(TokenType type) const;
+    SyntaxLanguage detectLanguageFromExtension(const std::string& filePath) const;
+    bool isKeyword(const std::string& word, SyntaxLanguage lang) const;
+    bool isBuiltinType(const std::string& word, SyntaxLanguage lang) const;
+    std::vector<SyntaxToken> tokenizeLine(const std::string& line, int lineStartOffset, SyntaxLanguage lang);
+    std::vector<SyntaxToken> tokenizeDocument(const std::string& text, SyntaxLanguage lang);
+    SyntaxLanguage getCurrentSyntaxLanguage() const;
+    void setSyntaxLanguage(SyntaxLanguage lang);
+    void triggerGhostTextCompletion();
+
+    // Syntax coloring timer constants
+    static constexpr int SYNTAX_COLOR_TIMER_ID = 1001;
+    static constexpr int SYNTAX_COLOR_DELAY_MS = 150;
+
+    // Multi-Cursor Editing
+    void initMultiCursor();
+    bool isMultiCursorActive() const;
+    void multiCursorInsertText(const std::string& text);
+    void multiCursorBackspace();
+    void multiCursorDelete();
+    void paintMultiCursorIndicators(HDC hdc);
+    bool handleMultiCursorKeyDown(WPARAM vk, bool ctrl, bool shift, bool alt);
+    bool handleMultiCursorChar(WPARAM ch);
+    bool handleMultiCursorClick(int charPos, bool altHeld);
+    void updateMultiCursorStatusBar();
+    void clearSecondaryCursors();
+    void addCursorAtPosition(int charPos);
+    void addCursorAbove();
+    void addCursorBelow();
+    void selectNextOccurrence();
+    void selectAllOccurrences();
+    int getMultiCursorCount() const;
+
+    // Breadcrumbs
+    static constexpr int IDM_T1_BREADCRUMBS_TOGGLE = 12020;
+    static constexpr int IDC_BREADCRUMB_BAR = 9825;
+    void createBreadcrumbBar(HWND hwndParent);
+    void updateBreadcrumbs();
+    void updateBreadcrumbsOnCursorMove();
+    void updateBreadcrumbsForCursor(int line, int column);
+    void onBreadcrumbClick(int index);
+    void paintBreadcrumbs(HDC hdc, RECT& rc);
+    static LRESULT CALLBACK BreadcrumbProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    std::vector<BreadcrumbItem> m_breadcrumbPath;
+    std::vector<RECT> m_breadcrumbRects;
+    int m_breadcrumbHeight = 22;
+    HFONT m_breadcrumbFont = nullptr;
+    HWND m_hwndBreadcrumbs = nullptr;
+
+    // Outline View (code structure) - enhanced
+    std::vector<OutlineSymbol> m_outlineSymbols;
+    std::string m_outlineFilter;
+    bool m_outlineSortByName = false;
+    void initOutlinePanel();
+    void refreshOutlineFromLSP();
+    void setOutlineFilter(const std::string& filter);
+    void setOutlineSortOrder(bool byName);
+    void filterOutlineView(const std::string& filter);
+    void sortOutlineView(bool byName);
+    void renderOutlineIcons(HDC hdc, int kind, RECT iconRect);
+    std::string outlineKindToString(int kind) const;
+    COLORREF outlineKindColor(int kind) const;
+    static constexpr int IDM_TIER2_OUTLINE_REFRESH = 11730;
+    static constexpr int IDM_TIER2_OUTLINE_FILTER = 11731;
+    static constexpr int IDM_TIER2_OUTLINE_SORT = 11732;
+
+    // Diff Viewer
+    struct DiffViewHunk {
+        int lineNumber;
+        std::string content;
+        bool isAdded;
+        bool isRemoved;
+    };
+    struct DiffViewState {
+        std::vector<DiffViewHunk> hunks;
+        int currentHunk;
+        bool isValid;
+    };
+    void initGitDiffViewer();
+    void shutdownGitDiffViewer();
+    void closeGitDiffViewer();
+    void initDiffView();
+    void shutdownDiffView();
+    void openDiffView(const std::string& leftContent, const std::string& rightContent, const std::string& leftTitle, const std::string& rightTitle);
+    void closeDiffView();
+    DiffViewState m_diffState;
+
+    // Command Palette (Ctrl+Shift+P)
+    struct CommandPaletteItem {
+        int id;
+        std::string name;
+        std::string shortcut;
+        std::string category;
+    };
+    void showCommandPalette();
+    void hideCommandPalette();
+    void filterCommandPalette(const std::string& query);
+    void executeCommandFromPalette(int index);
+    void buildCommandRegistry();
+    void showFuzzyCommandPalette();
+    void fuzzyFilterCommandPalette(const std::string& query);
+    static LRESULT CALLBACK CommandPaletteProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK CommandPaletteInputProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    // Command palette UI handles and data
+    HWND m_hwndCommandPalette = nullptr;
+    HWND m_hwndCommandPaletteInput = nullptr;
+    HWND m_hwndCommandPaletteList = nullptr;
+    bool m_commandPaletteVisible;
+    WNDPROC m_oldCommandPaletteInputProc = nullptr;
+    std::vector<CommandPaletteItem> m_commandRegistry;
+    std::vector<CommandPaletteItem> m_filteredCommands;
+    std::vector<int> m_commandPaletteFilteredIndices;
+    std::unordered_map<int, std::function<void()>> m_commandHandlers;
+
+    // Quick Open (fuzzy file picker)
+    void showQuickOpenPicker();
+    void hideQuickOpenPicker();
+    bool isQuickOpenPickerVisible() const;
+    HWND m_hwndQuickOpen = nullptr;
+    HWND m_hwndQuickOpenInput = nullptr;
+    bool m_quickOpenVisible = false;
+
+    // Code Completion (LSP-driven)
+    void triggerCodeCompletion();
+    void showCodeCompletions(int position);
+    void hideCodeCompletions();
+    bool isCodeCompletionVisible() const;
+    HWND m_hwndCodeCompletion = nullptr;
+    bool m_codeCompletionVisible = false;
+
+    // Inline/Ghost Completion
+    void initInlineCompletion();
+    void shutdownInlineCompletion();
+    void acceptInlineCompletion();
+    void dismissInlineCompletion();
+    bool isInlineCompletionVisible() const;
+
+    // Go to Symbol (Ctrl+Shift+O)
+    void showGoToSymbolPicker();
+    void hideGoToSymbolPicker();
+    bool isGoToSymbolPickerVisible() const;
+    HWND m_hwndGoToSymbol = nullptr;
+    bool m_goToSymbolVisible = false;
+
+    // Find All References
+    void showReferencesPanel();
+    void hideReferencesPanel();
+    void populateReferences(const std::vector<std::string>& references);
+    HWND m_hwndReferencesPanel = nullptr;
+    bool m_referencesPanelVisible = false;
+
+    // Semantic Index / Workspace Symbols
+    void showSemanticIndex();
+    void hideSemanticIndex();
+    void shutdownSemanticIndex();
+    void initSemanticIndex();
+    bool handleSemanticIndexCommand(int commandId);
+    bool m_semanticIndexInitialized = false;
+
+    // Rename Refactoring Preview
+    struct RenameChange {
+        std::string filePath;
+        int line;
+        int column;
+        std::string oldName;
+        std::string newName;
+        bool isModified;
+    };
+    struct RenamePreviewState {
+        std::vector<RenameChange> changes;
+        int selectedIndex;
+        bool isValid;
+    };
+    void initRenamePreview();
+    void shutdownRenamePreview();
+    void showRenamePreview(const std::string& oldName, const std::string& newName, const std::string& filePath, int line, int column);
+    void closeRenamePreview();
+    void renderRenamePreviewItem(HDC hdc, RECT itemRect, const RenameChange& change);
+    static LRESULT CALLBACK RenamePreviewProc(HWND, UINT, WPARAM, LPARAM);
+    RenamePreviewState m_renamePreview;
+
+    // Hover Tooltips
+    struct HoverTooltipState {
+        std::string content;
+        int line;
+        int column;
+        bool isValid;
+    };
+    void initHoverTooltip();
+    void initHoverTooltips();
+    void shutdownHoverTooltip();
+    void shutdownHoverTooltips();
+    void showHoverTooltip(int screenX, int screenY, const std::string& content);
+    void dismissHoverTooltip();
+    static LRESULT CALLBACK HoverTooltipProc(HWND, UINT, WPARAM, LPARAM);
+    HoverTooltipState m_hoverState;
 
     // Performance profiling
     void startProfiling();
@@ -933,29 +1248,6 @@ private:
     void showModuleBrowser();
     void importModule();
     void exportModule();
-
-    // Command Palette (Ctrl+Shift+P)
-    struct CommandPaletteItem {
-        int id;
-        std::string name;
-        std::string shortcut;
-        std::string category;
-    };
-    void showCommandPalette();
-    void hideCommandPalette();
-    void filterCommandPalette(const std::string& query);
-    void executeCommandFromPalette(int index);
-    void buildCommandRegistry();
-    static LRESULT CALLBACK CommandPaletteProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    // Command palette UI handles and data
-    HWND m_hwndCommandPalette = nullptr;
-    HWND m_hwndCommandPaletteInput = nullptr;
-    HWND m_hwndCommandPaletteList = nullptr;
-    bool m_commandPaletteVisible;
-    std::vector<CommandPaletteItem> m_commandRegistry;
-    std::vector<CommandPaletteItem> m_filteredCommands;
-    std::vector<int> m_commandPaletteFilteredIndices; // maps listbox index -> registry index
-    std::unordered_map<int, std::function<void()>> m_commandHandlers;
 
     // Utility
     std::string getWindowText(HWND hwnd);
@@ -1211,7 +1503,6 @@ private:
 
     HINSTANCE m_hInstance = nullptr;
     HWND m_hwndMain = nullptr;
-    HWND m_hwndEditor = nullptr;
     HWND m_hwndEditorBreadcrumb = nullptr;
     HWND m_hwndCommandInput = nullptr;
     HWND m_hwndStatusBar = nullptr;
@@ -1250,6 +1541,10 @@ private:
     std::vector<std::string> m_openDocuments;
     std::vector<DocumentBuffer> m_documentBuffers;
     int m_activeDocument = -1;
+    std::vector<DocumentBuffer> m_editorTabs;
+    int m_activeTabIndex = -1;
+    HWND m_hwndTabBar = nullptr;
+    bool m_ghostTextEnabled = false;
 
     // Per-pane terminal managers replace the previous single manager
     std::string m_currentFile;
@@ -1304,7 +1599,6 @@ private:
     IDETheme m_currentTheme;
     std::map<std::string, IDETheme> m_themes;
     HBRUSH m_backgroundBrush = nullptr;
-    HFONT m_editorFont = nullptr;
 
     // Code snippets
     std::vector<CodeSnippet> m_codeSnippets;
@@ -1327,6 +1621,259 @@ private:
     int m_minimapWidth;
     std::vector<std::string> m_minimapLines;
     std::vector<int> m_minimapLineStarts;
+    int m_minimapScrollY = 0;
+    int m_minimapTotalLines = 0;
+    HFONT m_minimapFont = nullptr;
+    RECT m_minimapViewRect = {};
+    // Minimap enhanced (cursor highlight)
+    void initMinimapEnhanced();
+    void paintMinimapEnhanced(HDC hdc, const RECT& rect);
+
+    // Batch 1 editor state (members declared alongside their public API above)
+
+    // Multi-Cursor state
+    struct MultiCursorState {
+        int position;
+        bool isActive;
+        bool isPrimary;
+    };
+    std::vector<MultiCursorState> m_multiCursors;
+    bool m_multiCursorActive = false;
+    int m_primaryCursorIndex = 0;
+    bool m_multiCursorAltHeld = false;
+
+    // Syntax Highlighting state
+    bool m_syntaxHighlightingEnabled = true;
+    bool m_syntaxColoringEnabled = true;
+    bool m_syntaxDirty = false;
+    bool m_inBlockComment = false;
+    SyntaxLanguage m_syntaxLanguage = SyntaxLanguage::None;
+    std::vector<SyntaxToken> m_syntaxTokens;
+
+    // Inline/Ghost Completion state
+    bool m_inlineCompletionEnabled = true;
+    std::string m_inlineCompletionText;
+    bool m_inlineCompletionVisible = false;
+
+    // Diff View state
+    HWND m_hwndDiffView = nullptr;
+    HWND m_hwndDiffLeft = nullptr;
+    HWND m_hwndDiffRight = nullptr;
+
+    // Semantic Index state
+    std::vector<WorkspaceSymbol> m_workspaceSymbols;
+    std::unordered_map<std::string, std::vector<WorkspaceSymbol>> m_symbolMap;
+
+    // Rename Preview state
+    HWND m_hwndRenamePreview = nullptr;
+
+    // Hover Tooltip state
+    HWND m_hwndHoverTooltip = nullptr;
+
+    // ===========================================================================
+    // Batch 2: LSP / Language Support (Win32IDE_LSPClient*.cpp, Win32IDE_LSPServer.cpp,
+    // Win32IDE_LanguagePlugin.cpp, Win32IDE_SnippetEngine.cpp, Win32IDE_SemanticTokens.cpp,
+    // Win32IDE_CodeActions.cpp, RawrXD_SymbolEngine.cpp)
+    // ===========================================================================
+public:
+    enum class LSPLanguage {
+        Cpp = 0, Python = 1, TypeScript = 2, JavaScript = 3, Rust = 4, Go = 5,
+        Java = 6, CSharp = 7, Ruby = 8, PHP = 9, Swift = 10, Kotlin = 11, Unknown = 12
+    };
+    enum class LSPServerState { Stopped = 0, Starting = 1, Running = 2, Stopping = 3, Error = 4 };
+
+    struct LSPLocation {
+        std::string uri;
+        int line = 0;
+        int character = 0;
+    };
+    struct LSPDiagnostic {
+        std::string range;
+        int severity = 1;
+        std::string message;
+    };
+    struct LSPHoverInfo {
+        std::string contents;
+        std::string range;
+    };
+    struct LSPCompletionItem {
+        std::string label;
+        std::string kind;
+        std::string detail;
+        std::string documentation;
+        std::string insertText;
+    };
+    struct LSPSignatureHelpInfo {
+        std::vector<std::string> signatures;
+        int activeSignature = 0;
+        int activeParameter = 0;
+    };
+    struct LSPWorkspaceEdit {
+        struct TextEdit {
+            std::string range;
+            std::string newText;
+        };
+        std::vector<TextEdit> edits;
+        std::string uri;
+    };
+    struct LSPServerConfig {
+        LSPLanguage language = LSPLanguage::Cpp;
+        std::string name;
+        std::string executablePath;
+        std::vector<std::string> args;
+        bool enabled = true;
+        int initTimeoutMs = 15000;
+    };
+    struct LSPServerStateInfo {
+        LSPLanguage language = LSPLanguage::Cpp;
+        LSPServerState state = LSPServerState::Stopped;
+        int processId = 0;
+        int lastError = 0;
+    };
+
+    void initLSPClient();
+    void shutdownLSPClient();
+    bool startLSPServer(LSPLanguage lang);
+    void stopLSPServer(LSPLanguage lang);
+    void restartLSPServer(LSPLanguage lang);
+    void startAllLSPServers();
+    void stopAllLSPServers();
+    LSPServerState getLSPServerState(LSPLanguage lang) const;
+    int sendLSPRequest(LSPLanguage lang, const std::string& method, const nlohmann::json& params);
+    void sendLSPNotification(LSPLanguage lang, const std::string& method, const nlohmann::json& params);
+    nlohmann::json readLSPResponse(LSPLanguage lang, int requestId, int timeoutMs = 5000);
+    bool sendInitialize(LSPLanguage lang);
+    void sendInitialized(LSPLanguage lang);
+    void sendShutdown(LSPLanguage lang);
+    void sendExit(LSPLanguage lang);
+    void sendDidOpen(LSPLanguage lang, const std::string& uri, const std::string& languageId, const std::string& content);
+    void sendDidChange(LSPLanguage lang, const std::string& uri, const std::string& content);
+    void sendDidClose(LSPLanguage lang, const std::string& uri);
+    void sendDidSave(LSPLanguage lang, const std::string& uri);
+    std::vector<LSPLocation> lspGotoDefinition(const std::string& uri, int line, int character);
+    std::vector<LSPLocation> lspFindReferences(const std::string& uri, int line, int character);
+    LSPWorkspaceEdit lspRenameSymbol(const std::string& uri, int line, int character, const std::string& newName);
+    LSPHoverInfo lspHover(const std::string& uri, int line, int character);
+    std::vector<LSPCompletionItem> lspCompletion(const std::string& uri, int line, int character);
+    LSPSignatureHelpInfo lspSignatureHelp(const std::string& uri, int line, int character, int triggerKind = 1);
+    std::vector<LSPLocation> lspImplementation(const std::string& uri, int line, int character);
+    std::vector<LSPLocation> lspTypeDefinition(const std::string& uri, int line, int character);
+    bool applyWorkspaceEdit(const LSPWorkspaceEdit& edit);
+    std::vector<LSPDiagnostic> getDiagnosticsForFile(const std::string& uri) const;
+    std::vector<std::pair<std::string, std::vector<LSPDiagnostic>>> getAllDiagnostics() const;
+
+    void initLSPServer();
+    void shutdownLSPServer();
+    bool handleLSPServerCommand(int commandId);
+    void cmdLSPServerStart();
+    void cmdLSPServerStop();
+    void cmdLSPServerReindex();
+    void cmdLSPServerStatus();
+    void cmdLSPServerStats();
+    void cmdLSPServerPublishDiagnostics();
+    void cmdLSPServerConfig();
+    void cmdLSPServerExportSymbols();
+    void cmdLSPServerLaunchStdio();
+    void forwardToLSPServer(const std::string& method, const nlohmann::json& params);
+    void notifyLSPServerDidOpen(const std::string& uri, const std::string& languageId, const std::string& content);
+    void notifyLSPServerDidChange(const std::string& uri, const std::string& content);
+    void notifyLSPServerDidClose(const std::string& uri);
+
+    void initLanguagePlugin();
+    void shutdownLanguagePlugin();
+    void loadLanguagePlugins();
+    void unloadLanguagePlugins();
+    bool isLanguagePluginLoaded(const std::string& language) const;
+    std::string getLanguagePluginVersion(const std::string& language) const;
+    void setLanguagePluginEnabled(const std::string& language, bool enabled);
+    bool isLanguagePluginEnabled(const std::string& language) const;
+
+    void initSnippetEngine();
+    void shutdownSnippetEngine();
+    void insertSnippetWithTabStops(const std::string& snippetBody);
+    bool snippetNextField();
+    bool snippetPrevField();
+    void selectCurrentSnippetField();
+    void endSnippetSession();
+    bool isSnippetSessionActive() const;
+    bool handleSnippetTab(bool shiftHeld);
+    int findSnippetByTrigger(const std::string& trigger, const std::string& language);
+    std::vector<std::pair<std::string, std::string>> getSnippetCompletions(const std::string& prefix, const std::string& language);
+    bool tryExpandSnippetAtCursor();
+
+    void initSemanticTokens();
+    void shutdownSemanticTokens();
+    void updateSemanticTokens();
+    void clearSemanticTokens();
+    void requestSemanticTokens(LSPLanguage lang, const std::string& uri);
+    void onSemanticTokensReceived(LSPLanguage lang, const std::string& uri, const nlohmann::json& payload);
+
+    void initCodeActions();
+    void shutdownCodeActions();
+    void showCodeActions();
+    void hideCodeActions();
+    bool isCodeActionsVisible() const;
+    void requestCodeActions(int line, int column);
+    void applyCodeAction(int actionIndex);
+    void handleCodeActionResponse(const nlohmann::json& response);
+
+    void initSymbolEngine();
+    void shutdownSymbolEngine();
+    bool indexSymbolFile(const std::string& filePath);
+    std::vector<WorkspaceSymbol> queryWorkspaceSymbols(const std::string& query, int limit = 100) const;
+
+private:
+    bool m_lspInitialized = false;
+    bool m_lspServerInitialized = false;
+    std::unordered_map<int, LSPServerConfig> m_lspConfigs;
+    std::unordered_map<int, LSPServerState> m_lspStates;
+    std::unordered_map<int, HANDLE> m_lspProcesses;
+    std::unordered_map<int, HANDLE> m_lspStdinWrite;
+    std::unordered_map<int, HANDLE> m_lspStdoutRead;
+    std::unordered_map<int, std::thread> m_lspReaderThreads;
+    std::unordered_map<int, std::mutex> m_lspMutexes;
+    std::unordered_map<int, std::atomic_bool> m_lspShutdownFlags;
+    std::unordered_map<int, int> m_lspNextRequestIds;
+    std::unordered_map<int, std::unordered_map<int, std::string>> m_lspPendingRequests;
+    std::unordered_map<int, std::unordered_map<int, nlohmann::json>> m_lspResponses;
+    std::unordered_map<int, std::condition_variable> m_lspCvMutexes;
+    std::unordered_map<int, std::condition_variable> m_lspCvs;
+    std::unordered_map<int, std::unordered_map<std::string, std::vector<LSPDiagnostic>>> m_lspDiagnostics;
+    std::unordered_map<std::string, std::string> m_lspOpenedUris;
+    std::mutex m_lspDiagnosticsMutex;
+
+    bool m_languagePluginInitialized = false;
+    std::map<std::string, std::string> m_languagePluginVersions;
+    std::map<std::string, bool> m_languagePluginEnabled;
+
+    bool m_snippetEngineInitialized = false;
+    struct SnippetDef {
+        std::string trigger;
+        std::string body;
+        std::string language;
+        std::string description;
+    };
+    std::vector<SnippetDef> m_snippetDefs;
+    bool m_snippetSessionActive = false;
+    int m_snippetCurrentField = -1;
+    std::vector<std::pair<int, int>> m_snippetFieldRanges;
+
+    bool m_semanticTokensInitialized = false;
+    std::unordered_map<std::string, std::vector<SyntaxToken>> m_semanticTokensByUri;
+
+    bool m_codeActionsInitialized = false;
+    bool m_codeActionsVisible = false;
+    HWND m_hwndCodeActions = nullptr;
+    std::vector<LSPWorkspaceEdit> m_pendingCodeActions;
+
+    bool m_symbolEngineInitialized = false;
+    std::vector<WorkspaceSymbol> m_symbolIndex;
+    std::unordered_map<std::string, std::vector<size_t>> m_symbolNameIndex;
+
+public:
+    void lspDiagnosticsToAnnotations(const std::string& uri);
+    std::string editorUriForCurrentFile() const;
+    void applyLspRenameToEditor(const LSPWorkspaceEdit& edit);
 
     // Profiling
     bool m_profilingActive;
