@@ -1,0 +1,19 @@
+# Final verdict
+
+```ini
+CANDIDATE_BUILD=PASS
+BINARY_SHA256=707B5AAA4FF9297BEDEA2C26720E4EE95AF80CBD119C311A70515A5BAC9C41CA
+SINGLE_INSTANCE=PASS
+REQUEST_A_CANCEL=PASS
+REQUEST_A_LATE_REJECTION=PASS_OBSERVED
+REQUEST_B_SUCCESS=FAIL
+STALE_AB_RACE=NOT_VERIFIED
+GUI_QWEN_SELECTION=PASS_OBSERVED
+EXPLICIT_QWEN_DISPATCH=NOT_VERIFIED
+CLEAN_SHUTDOWN=PASS
+GATE_6=OPEN
+PROMOTE=0
+CERTIFIED=0
+```
+
+The run is evidence of cancellation and stale-response rejection. A fresh candidate attempt visibly selected `qwen3:8b`, but did not produce a valid GhostText dispatch, so effective Qwen routing and the combined A/B race remain uncertified.

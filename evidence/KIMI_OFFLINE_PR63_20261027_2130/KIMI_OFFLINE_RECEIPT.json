@@ -1,0 +1,120 @@
+﻿{
+    "schema":  "DEEP2_KIMI_OFFLINE_GATE_001/v1",
+    "started_utc":  "2026-10-28T01:28:48.0164590Z",
+    "finished_utc":  "2026-10-28T01:28:54.0587678Z",
+    "repo_commit":  "fd8d2d51924d51d300d2a2efd6d2e8ae10fa5538",
+    "status":  "FAIL",
+    "certified":  false,
+    "gpu_numerical_parity":  "NOT_CERTIFIED",
+    "release_promote":  0,
+    "steps":  [
+                  {
+                      "name":  "test_k2_gpu_moe_vector_parity.py",
+                      "exit_code":  0,
+                      "sha256":  "26963B7F18121BA05AA17782426A35F88955A15BB3ABA361F78EC320EF7F3F1E",
+                      "output":  "python.exe : ......\r\nAt F:\\rawrxd_pr63\\tools\\run_kimi_parity_offline.ps1:61 char:22\r\n+         try { $out = \u0026 $py.Source $path 2\u003e\u00261 | Out-String }\r\n+                      ~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (......:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n----------------------------------------------------------------------\r\nRan 6 tests in 0.420s\r\n\r\nOK"
+                  },
+                  {
+                      "name":  "test_audit_rawrxd_25_gates.py",
+                      "exit_code":  0,
+                      "sha256":  "4CE5F3EA1CB8905807C647D58739CE850DE11520836C3B2E8BF594DE70F67432",
+                      "output":  "python.exe : ..........\r\nAt F:\\rawrxd_pr63\\tools\\run_kimi_parity_offline.ps1:61 char:22\r\n+         try { $out = \u0026 $py.Source $path 2\u003e\u00261 | Out-String }\r\n+                      ~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (..........:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n----------------------------------------------------------------------\r\nRan 10 tests in 0.105s\r\n\r\nOK"
+                  },
+                  {
+                      "name":  "test_k2_q6k_scalar_oracle.py",
+                      "exit_code":  0,
+                      "sha256":  "1D5085F96C6A618CE7657A1F0C4CDDBC1B8448471BF38B3C9108B9DDD1DC73E0",
+                      "output":  "python.exe : .........\r\nAt F:\\rawrxd_pr63\\tools\\run_kimi_parity_offline.ps1:61 char:22\r\n+         try { $out = \u0026 $py.Source $path 2\u003e\u00261 | Out-String }\r\n+                      ~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (.........:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n----------------------------------------------------------------------\r\nRan 9 tests in 0.076s\r\n\r\nOK"
+                  },
+                  {
+                      "name":  "test_k2_ggml_quant_layout.py",
+                      "exit_code":  0,
+                      "sha256":  "881D3EEACB661930E3E138728F5C6D03346FEF78F390D799BE0F02CF73801ADE",
+                      "output":  "python.exe : ....\r\nAt F:\\rawrxd_pr63\\tools\\run_kimi_parity_offline.ps1:61 char:22\r\n+         try { $out = \u0026 $py.Source $path 2\u003e\u00261 | Out-String }\r\n+                      ~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (....:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n----------------------------------------------------------------------\r\nRan 4 tests in 0.008s\r\n\r\nOK"
+                  },
+                  {
+                      "name":  "test_k2_q4k_scalar_oracle.py",
+                      "exit_code":  0,
+                      "sha256":  "A60C8876D8A9F940AD3F28E6518C0ACBAA898DF730FC5BB1A1122F1DE620C157",
+                      "output":  "python.exe : ..........\r\nAt F:\\rawrxd_pr63\\tools\\run_kimi_parity_offline.ps1:61 char:22\r\n+         try { $out = \u0026 $py.Source $path 2\u003e\u00261 | Out-String }\r\n+                      ~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (..........:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n----------------------------------------------------------------------\r\nRan 10 tests in 0.074s\r\n\r\nOK"
+                  },
+                  {
+                      "name":  "test_k2_scalar_expert_oracle.py",
+                      "exit_code":  0,
+                      "sha256":  "F50E961BC8B44D3E9221D1C05E3FB49D90AD0B34FA57083CC218E5E2C9A92D52",
+                      "output":  "python.exe : .......\r\nAt F:\\rawrxd_pr63\\tools\\run_kimi_parity_offline.ps1:61 char:22\r\n+         try { $out = \u0026 $py.Source $path 2\u003e\u00261 | Out-String }\r\n+                      ~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (.......:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n----------------------------------------------------------------------\r\nRan 7 tests in 0.234s\r\n\r\nOK\r\nPASS_DIAGNOSTIC\r\nERROR"
+                  },
+                  {
+                      "name":  "test_k2_scalar_input_audit.py",
+                      "exit_code":  0,
+                      "sha256":  "EBDC4546F169DC2F582B3D3E37F4FFFC77024268BBC71E673407A23FAFE2DFB7",
+                      "output":  "python.exe : ......\r\nAt F:\\rawrxd_pr63\\tools\\run_kimi_parity_offline.ps1:61 char:22\r\n+         try { $out = \u0026 $py.Source $path 2\u003e\u00261 | Out-String }\r\n+                      ~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (......:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n----------------------------------------------------------------------\r\nRan 6 tests in 0.183s\r\n\r\nOK\r\nERROR: refusing to overwrite receipt"
+                  },
+                  {
+                      "name":  "test_k2_moe_capture_audit.py",
+                      "exit_code":  0,
+                      "sha256":  "2B9DEC175F6C311051A2D195ADDE7C495B736EA121CA8CB538686ACEEE40EBB2",
+                      "output":  "python.exe : .......\r\nAt F:\\rawrxd_pr63\\tools\\run_kimi_parity_offline.ps1:61 char:22\r\n+         try { $out = \u0026 $py.Source $path 2\u003e\u00261 | Out-String }\r\n+                      ~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (.......:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n----------------------------------------------------------------------\r\nRan 7 tests in 0.048s\r\n\r\nOK"
+                  },
+                  {
+                      "name":  "test_k2_stick_partial_repeatability.py",
+                      "exit_code":  0,
+                      "sha256":  "461B9E41AC55D6CC56F318A1A4F3FD6ECB09A3ADC99FB7F9D88F2D47DA82DB4F",
+                      "output":  "python.exe : .........\r\nAt F:\\rawrxd_pr63\\tools\\run_kimi_parity_offline.ps1:61 char:22\r\n+         try { $out = \u0026 $py.Source $path 2\u003e\u00261 | Out-String }\r\n+                      ~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (.........:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n----------------------------------------------------------------------\r\nRan 9 tests in 0.057s\r\n\r\nOK\r\nPASS_DIAGNOSTIC\r\nERROR"
+                  },
+                  {
+                      "name":  "test_k2_aggregate_vector_audit.py",
+                      "exit_code":  0,
+                      "sha256":  "AD765A4AF817B7B3F0F0CE82FE2AA9F4E4B3D6778E1F6C666FD38BF9230A3BDF",
+                      "output":  "python.exe : ...............\r\nAt F:\\rawrxd_pr63\\tools\\run_kimi_parity_offline.ps1:61 char:22\r\n+         try { $out = \u0026 $py.Source $path 2\u003e\u00261 | Out-String }\r\n+                      ~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (...............:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n----------------------------------------------------------------------\r\nRan 15 tests in 0.068s\r\n\r\nOK\r\nFAIL\r\nPASS_DIAGNOSTIC\r\nERROR: refusing to overwrite receipt"
+                  },
+                  {
+                      "name":  "test_k2_single_expert_aggregate_oracle.py",
+                      "exit_code":  0,
+                      "sha256":  "5A748C7883D22EFE8C05E00818E6EB513214360876960DEE99B0B948C5F78874",
+                      "output":  "python.exe : ...............\r\nAt F:\\rawrxd_pr63\\tools\\run_kimi_parity_offline.ps1:61 char:22\r\n+         try { $out = \u0026 $py.Source $path 2\u003e\u00261 | Out-String }\r\n+                      ~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (...............:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n----------------------------------------------------------------------\r\nRan 15 tests in 0.840s\r\n\r\nOK\r\nPASS_DIAGNOSTIC\r\nERROR: refusing to overwrite existing receipt\r\nERROR"
+                  },
+                  {
+                      "name":  "test_k2_provisional_stage_oracle_audit.py",
+                      "exit_code":  0,
+                      "sha256":  "B93353D777E36E71BCF54F62E99F3C688DF859D67A1A77A4E16FF5032147297D",
+                      "output":  "python.exe : ............\r\nAt F:\\rawrxd_pr63\\tools\\run_kimi_parity_offline.ps1:61 char:22\r\n+         try { $out = \u0026 $py.Source $path 2\u003e\u00261 | Out-String }\r\n+                      ~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (............:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n----------------------------------------------------------------------\r\nRan 12 tests in 0.594s\r\n\r\nOK\r\nPASS_DIAGNOSTIC\r\nERROR: refusing to overwrite prior receipt"
+                  },
+                  {
+                      "name":  "test_k2_all_expert_aggregate_oracle.py",
+                      "exit_code":  1,
+                      "sha256":  "8351AABDC217E0E6C2A134E006D578B88C35CD7ED6264437E556FD85389FD2E5",
+                      "output":  "python.exe : .E......\r\nAt F:\\rawrxd_pr63\\tools\\run_kimi_parity_offline.ps1:61 char:22\r\n+         try { $out = \u0026 $py.Source $path 2\u003e\u00261 | Out-String }\r\n+                      ~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (.E......:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n======================================================================\r\nERROR: test_duplicate_route_refused (__main__.AllExpertAggregateOracleTests.test_duplicate_route_refused)\r\n----------------------------------------------------------------------\r\nTraceback (most recent call last):\r\n  File \"F:\\rawrxd_pr63\\tools\\test_k2_all_expert_aggregate_oracle.py\", line 93, in test_duplicate_route_refused\r\n    m, inp = fixture(d, routes=((44, 0.5), (44, 0.5)))\r\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"F:\\rawrxd_pr63\\tools\\test_k2_all_expert_aggregate_oracle.py\", line 28, in fixture\r\n    file.rename(scalar_dir / name)\r\n  File \"C:\\Users\\Garrett\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\Lib\\pathlib.py\", line 1363, \r\nin rename\r\n    os.rename(self, target)\r\nFileExistsError: [WinError 183] Cannot create a file when that file already exists: \r\n\u0027C:\\\\Users\\\\Garrett\\\\AppData\\\\Local\\\\Temp\\\\tmpff7gb0sk\\\\temporary_44\\\\k2_l1_e44_s0_scalar_inputs.down_q6k.bin\u0027 -\u003e \r\n\u0027C:\\\\Users\\\\Garrett\\\\AppData\\\\Local\\\\Temp\\\\tmpff7gb0sk\\\\scalars\\\\k2_l2_e44_s0_scalar_inputs.down_q6k.bin\u0027\r\n\r\n----------------------------------------------------------------------\r\nRan 8 tests in 0.815s\r\n\r\nFAILED (errors=1)\r\nPASS_DIAGNOSTIC\r\nERROR: refusing to overwrite prior receipt"
+                  },
+                  {
+                      "name":  "test_k2_aggregate_batch_audit.py",
+                      "exit_code":  0,
+                      "sha256":  "7860EE026EB08E0B2B6FDA635A6AFA865E37C30F2510C339A93E60F8B4E7E7CF",
+                      "output":  "python.exe : ..........\r\nAt F:\\rawrxd_pr63\\tools\\run_kimi_parity_offline.ps1:61 char:22\r\n+         try { $out = \u0026 $py.Source $path 2\u003e\u00261 | Out-String }\r\n+                      ~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (..........:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n----------------------------------------------------------------------\r\nRan 10 tests in 0.034s\r\n\r\nOK\r\nPASS_DIAGNOSTIC\r\nERROR: refusing to overwrite existing receipt\r\nERROR"
+                  },
+                  {
+                      "name":  "test_k2_fused_parity_safety.py",
+                      "exit_code":  0,
+                      "sha256":  "617A15DA8794DB53E8A1005FB4CC416361318EAEB44D67FBAA602D555AA55510",
+                      "output":  "python.exe : ......\r\nAt F:\\rawrxd_pr63\\tools\\run_kimi_parity_offline.ps1:61 char:22\r\n+         try { $out = \u0026 $py.Source $path 2\u003e\u00261 | Out-String }\r\n+                      ~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (......:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n----------------------------------------------------------------------\r\nRan 6 tests in 0.024s\r\n\r\nOK"
+                  },
+                  {
+                      "name":  "test_k2_postfence_parity_safety.py",
+                      "exit_code":  0,
+                      "sha256":  "0226EE329D215A8AEA58EC3149E3D6C4EE80B9BE4992D559784AFFC4CBC1C504",
+                      "output":  "python.exe : .........\r\nAt F:\\rawrxd_pr63\\tools\\run_kimi_parity_offline.ps1:61 char:22\r\n+         try { $out = \u0026 $py.Source $path 2\u003e\u00261 | Out-String }\r\n+                      ~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (.........:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n----------------------------------------------------------------------\r\nRan 9 tests in 0.000s\r\n\r\nOK"
+                  },
+                  {
+                      "name":  "msvc_capture_compile",
+                      "exit_code":  0,
+                      "source_sha256":  "86858B0EAA834C72AFC8FC06A3635D3C45C71E45EAB123540BE952316D01B433",
+                      "output":  "test_k2_moe_parity_capture.cpp"
+                  },
+                  {
+                      "name":  "msvc_capture_smoke",
+                      "exit_code":  0,
+                      "executable_sha256":  "060C27D5A8CB54890DACDEA784EEAA6BD24928E3B5BE7131B882E5D55C2E70ED",
+                      "output":  "PASS"
+                  }
+              ]
+}

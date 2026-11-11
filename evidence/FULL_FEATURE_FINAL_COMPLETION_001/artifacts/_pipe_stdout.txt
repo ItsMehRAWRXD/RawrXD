@@ -1,0 +1,9 @@
+[RAWRXD_PROBLEMS_FIXTURE_START] 
+broken_multi.cpp
+F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(3): error C2065: 'y': undeclared identifier
+F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(4): error C2660: 'undeclared_fn': function does not take 2 arguments
+F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(1): note: see declaration of 'undeclared_fn'
+F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(4): note: while trying to match the argument list '(int, int)'
+F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(5): error C2440: 'initializing': cannot convert from 'const char [5]' to 'float'
+F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(5): note: There is no context in which this conversion is possible
+[RAWRXD_PROBLEMS_FIXTURE_RESULT] EXIT=0 

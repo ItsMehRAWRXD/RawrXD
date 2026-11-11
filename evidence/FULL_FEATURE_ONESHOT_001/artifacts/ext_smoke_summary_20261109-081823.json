@@ -1,0 +1,14 @@
+{
+    "init":  "1",
+    "activate":  "1",
+    "cmd":  "1",
+    "reload":  "1",
+    "runlog":  "F:\\rawrxd\\evidence\\FULL_FEATURE_EXTENSIONHOST_001\\logs\\ext_smoke_run_20261109-081823.txt",
+    "promote":  0,
+    "tip_sha":  "27E2263E44F681C3FE0EAB19A8FC8228C10668B8A1742A15BB19E8F6E66C3FFC",
+    "load":  "1",
+    "malformed_fault":  "1",
+    "a4f_untouched":  true,
+    "deactivate":  "1",
+    "ext_load":  "PASS"
+}

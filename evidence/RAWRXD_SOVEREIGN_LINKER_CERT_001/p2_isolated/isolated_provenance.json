@@ -1,0 +1,156 @@
+﻿{
+    "schema":  "RAWRXD_SOVEREIGN_LINKER_P2_ISOLATED_PROVENANCE",
+    "generated_utc":  "2026-10-27T10:06:00.3757301Z",
+    "method":  "isolated_source_snapshot_rebuild",
+    "note":  "Copies linker sources+corpus into evidence; does not clean main dirty worktree.",
+    "git_head":  "99f02e078cb068bf663860b2d30caf6513da0d4c",
+    "main_tree_dirty":  false,
+    "compiler_banner":  "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64 | Copyright (C) Microsoft Corporation.  All rights reserved.",
+    "linker_build":  "cl /c /O2 units; link console (no /LTCG)",
+    "linker_path":  "F:\\rawrxd\\evidence\\RAWRXD_SOVEREIGN_LINKER_CERT_001\\p2_isolated\\bin\\rawrxd_link_isolated.exe",
+    "linker_sha256":  "bc1f3d6b27fa4fd4122e95a56f2b5fb1c1b4b69c2cfa8502d2dec6509d235dbc",
+    "corpus_executed_sha_reference":  "08f4f4f26f40e1156857908862dae266d70ea910c3600af094565bdc26896436",
+    "hash_differs_from_corpus_executed":  true,
+    "hash_diff_interpretation":  "Expected if flags/LTCG/path differ; investigate only if isolated corpus fails or source hashes diverge from intent.",
+    "source_file_sha256":  [
+                               {
+                                   "file":  "main.c",
+                                   "sha256":  "3e056444e87a85d4d572ee90402d0a68005ea44d0a2ec3cc4e49211a65215005"
+                               },
+                               {
+                                   "file":  "pe_writer.c",
+                                   "sha256":  "ae458bc3f9bceabcc36c74ecf12fa17a792251f8216f343434c2afe468ad667a"
+                               },
+                               {
+                                   "file":  "pe_writer.h",
+                                   "sha256":  "5864de69727660ba6b68ea9524b883072741eaf4646def7e0c528eae5a724504"
+                               },
+                               {
+                                   "file":  "entry_stub.c",
+                                   "sha256":  "e1ac6c773b87fdb097077fb3c3e412f5458149e13289c76172fb3ae4ffb577be"
+                               },
+                               {
+                                   "file":  "coff_reader.c",
+                                   "sha256":  "4820afe34fe54c69b974baa7f213fa6a652010193ef4d9393734db23d28a1704"
+                               },
+                               {
+                                   "file":  "coff_reader.h",
+                                   "sha256":  "5cd2ab6f8e0d0fea84bc763bb203ebc47a28dd86fe7fa39645694bc4343bcc98"
+                               },
+                               {
+                                   "file":  "section_merge.c",
+                                   "sha256":  "9425dea873de6db81bd508136cec6fa7a4f95b9718a794178aa0faf80147d30b"
+                               },
+                               {
+                                   "file":  "section_merge.h",
+                                   "sha256":  "0f55092fa8617cc54d201df85b94fb9f80e62a275cc31d1d45fc31f16ebe740a"
+                               },
+                               {
+                                   "file":  "reloc_resolver.c",
+                                   "sha256":  "e92325d9ce0a3ed753014e614e5af4adaaec7a8b91765d35176691d68d9d0d3c"
+                               }
+                           ],
+    "corpus_pass":  19,
+    "corpus_fail":  0,
+    "corpus_19_19":  true,
+    "tests":  [
+                  {
+                      "test":  "01_minimal_return_zero",
+                      "result":  "PASS",
+                      "actual":  "exit=0"
+                  },
+                  {
+                      "test":  "02_exit_sentinel",
+                      "result":  "PASS",
+                      "actual":  "exit=42"
+                  },
+                  {
+                      "test":  "03_multi_tu_linking",
+                      "result":  "PASS",
+                      "actual":  "exit=42"
+                  },
+                  {
+                      "test":  "04_static_library",
+                      "result":  "PASS",
+                      "actual":  "exit=42"
+                  },
+                  {
+                      "test":  "05_shared_library",
+                      "result":  "PASS",
+                      "actual":  "exit=42"
+                  },
+                  {
+                      "test":  "06_undefined_symbol",
+                      "result":  "PASS",
+                      "actual":  "link_fail"
+                  },
+                  {
+                      "test":  "07_relocation",
+                      "result":  "PASS",
+                      "actual":  "exit=100"
+                  },
+                  {
+                      "test":  "08_cross_ref",
+                      "result":  "PASS",
+                      "actual":  "exit=42"
+                  },
+                  {
+                      "test":  "09_global_init",
+                      "result":  "PASS",
+                      "actual":  "exit=42"
+                  },
+                  {
+                      "test":  "10_bss_zero",
+                      "result":  "PASS",
+                      "actual":  "exit=42"
+                  },
+                  {
+                      "test":  "11_nested_calls",
+                      "result":  "PASS",
+                      "actual":  "exit=42"
+                  },
+                  {
+                      "test":  "12_rodata_len",
+                      "result":  "PASS",
+                      "actual":  "exit=5"
+                  },
+                  {
+                      "test":  "13_data_roundtrip",
+                      "result":  "PASS",
+                      "actual":  "exit=0"
+                  },
+                  {
+                      "test":  "14_fixed_argc",
+                      "result":  "PASS",
+                      "actual":  "exit=3"
+                  },
+                  {
+                      "test":  "15_branch_table",
+                      "result":  "PASS",
+                      "actual":  "exit=42"
+                  },
+                  {
+                      "test":  "16_debug_release",
+                      "result":  "PASS",
+                      "actual":  "exit=42,exit=42"
+                  },
+                  {
+                      "test":  "17_optimization",
+                      "result":  "PASS",
+                      "actual":  "exit=4950"
+                  },
+                  {
+                      "test":  "18_incremental_rebuild",
+                      "result":  "PASS",
+                      "actual":  "exit=7"
+                  },
+                  {
+                      "test":  "19_deliberate_compiler_fail",
+                      "result":  "PASS",
+                      "actual":  "compile_fail"
+                  }
+              ],
+    "WINDOWS_RUNTIME_CERT":  0,
+    "PROMOTE":  0,
+    "ENTRY_STUB":  "CLOSED"
+}

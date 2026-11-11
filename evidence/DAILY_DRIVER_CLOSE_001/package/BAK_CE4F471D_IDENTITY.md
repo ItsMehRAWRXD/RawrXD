@@ -1,0 +1,5 @@
+﻿# Misnamed bak correction
+OLD_NAME=RawrXD-Win32IDE-Native.exe.9C910599.bak
+CONTENT_SHA=CE4F471DD31E835B0EFFFC0E757C35F07FC81B86A5269654271E7121AE7C1187
+NEW_NAME=RawrXD-Win32IDE-Native.exe.CE4F471D.bak
+NOTE=Filename previously implied 9C910599 tip; content SHA is CE4F471D. Do not restore as 9C91.

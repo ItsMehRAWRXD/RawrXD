@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "kind": "branch-tip",
+  "original_branch": "evidence/oneshot-integ-20261109",
+  "original_commit": "c9b9db50e15329b2d8831c38900f9826b248b9d0",
+  "worktree": null,
+  "publication": "Source snapshot on a new branch; original history is preserved locally.",
+  "lfs_status": "Remote account budget exceeded; locally available text payloads materialized as regular Git blobs.",
+  "exclusions_receipt": "Local evidence/GITHUB_BRANCH_SYNC_001/b9e61221/exclusions.json",
+  "release_certification": "NOT_CLAIMED"
+}

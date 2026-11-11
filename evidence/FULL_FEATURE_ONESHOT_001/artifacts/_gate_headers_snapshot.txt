@@ -1,0 +1,331 @@
+﻿===== EXTENSIONHOST_GATE.md =====
+# EXTENSIONHOST_GATE â€” FULL_FEATURE_ONESHOT_001
+
+ASOF_UTC=2026-11-09T10:03:00Z
+PROMOTE=0
+CERTIFIED=0
+PRODUCT_PASS=0
+INVENT_PASS=0
+
+## Controlling tip (merged)
+
+```
+TIP_SHA=EA5D9B6979E8A60DD6899CCA23B3762CA48695234A18965534E4C1E7732442AE
+TIP_PATH=package\tip_final_004\RawrXD-Win32IDE-Native-Ext.exe
+EXT_LOAD=PASS
+INIT_OK=1
+LOAD_OK=1
+ACTIVATE_OK=1
+CMD_OK=1
+DEACTIVATE_OK=1
+RELOAD_OK=1
+FAULT_ISOLATED_MALFORMED=1
+PROCESS_ALIVE=1
+EXTENSION_ID=rawrxd.ext-hello
+SUMMARY=artifacts\ext_smoke_summary_20261109-050214.json
+VERIFY_LOG=artifacts\verify004_ext.txt
+FROZEN_A4F_UNTOUCHED=1
+```
+
+## Prior sealed (do not inherit onto other SHAs)
+
+```
+PRIOR_TIP002_SHA=8D8999CD722B3ED46E3E74D437C6ADF6CA4513E9C01128E02F9F0BF4BB579EAD
+PRIOR_TIP002_EXT_LOAD=PASS
+TIP_FINAL_003_E973_EXT_LOAD=FAIL
+```
+
+## Law
+
+```
+SOURCE_WIRED â†’ RUNTIME_REACHED â†’ ACTIVATE_PASS â†’ CMD_PASS â†’ EXT_LOAD=PASS
+NO_CROSS_SHA_PASS_INHERITANCE=1
+NOT_RUN â‰  PASS
+PROMOTE=0
+```
+===== NATIVE_EDITOR_CHAT_GATE.md =====
+# NATIVE_EDITOR_CHAT_GATE â€” FULL_FEATURE_ONESHOT_001
+
+ASOF_UTC=2026-11-09T11:30:00Z
+PROMOTE=0
+CERTIFIED=0
+PRODUCT_PASS=0
+INVENT_PASS=0
+NO_CROSS_SHA_PASS_INHERITANCE=1
+
+## Controlling AIM 7/7 (UNCHANGED)
+
+```
+CHAT_CTRL_ENTER_SEND=PASS
+CHAT_CTRL_ENTER_SOURCE_WIRED=1
+TIP_SHA256=CC79F6CDD08F5ECEBB672290CC96F7FEEEA0DA6AB6F8B596E5826C3EA22940C4
+TIP_PATH=package\tip_final_005\RawrXD-Win32IDE-Native-Ext.exe
+# prior EA5D tip_final_004 receipt also sealed â€” do not mutate
+PASS_COUNT=7/7
+ENTER_NEWLINE=PASS
+SHIFT_ENTER_NEWLINE=PASS
+CTRL_ENTER_ONE_SEND=PASS
+SEND_BUTTON_ONE_SEND=PASS
+EMPTY_CTRL_ENTER_NO_SEND=PASS
+HELD_CTRL_ENTER_NO_DUP=PASS
+MULTILINE_UNICODE=PASS
+HARNESS=artifacts\chat_ctrl_enter_verify_e973.ps1
+RECEIPT=artifacts\CHAT_CTRL_ENTER_RECEIPT_TIP005.txt
+FROZEN_A4F_UNTOUCHED=1
+```
+
+## Chat transcript 17-series (supporting â€” fail-closed)
+
+```
+FULL_17_TRANSCRIPT_ARTIFACT=ABSENT
+SAMPLE_USER_LINES=10
+REPORTED_ENTRIES=17
+SAMPLE_VS_REPORTED=MISMATCH
+PROB_POLL_T5=17_NE_CHAT_ENTRIES
+CHAT_SEND_ATTEMPT_COUNT=3
+DISPATCH_IDS_FOR_17_SERIES=ABSENT
+EXACTLY_ONCE_DELIVERY=NOT_VERIFIED
+BACKEND_RESPONSE=NOT_VERIFIED
+CHAT_FULL_ACCEPTANCE=NOT_VERIFIED
+IRREDUCIBLE_LOG_GAP_PRE_INSTRUMENT=1
+```
+
+Authority: `CHAT_TRANSCRIPT_SUPPORTING.md` + `artifacts\CHAT_TRANSCRIPT_17_RECONCILE.md`.
+
+Does **not** alter EA5D/CC79 controlling acceptance. AIM 7/7 â‰  17-series proof.
+
+===== TERMINAL_GATE.md =====
+# TERMINAL_GATE â€” FULL_FEATURE_ONESHOT_001
+
+ASOF_UTC=2026-11-09T10:22:00Z
+PROMOTE=0
+CERTIFIED=0
+PRODUCT_PASS=0
+INVENT_PASS=0
+
+```
+TERMINAL=PASS
+TRANSPORT=ConPTY (CreatePseudoConsole)
+CONPTY_PRODUCT_WIRED=1
+PRODUCT_TERM_SMOKE=PASS
+ALIVE_ECHO=PASS
+OUT_LEN=286
+CONTROLLING_TIP_SHA256=CC79F6CDD08F5ECEBB672290CC96F7FEEEA0DA6AB6F8B596E5826C3EA22940C4
+TIP=tip_final_005
+PRIOR_EA5D_TERMINAL=PASS (not inherited; remeasured on CC79)
+FROZEN_A4F_UNTOUCHED=1
+T10_9C91_UNTOUCHED=1
+PROMOTE=0
+```
+
+## Measured this resume (controlling tip only)
+
+| Step | Result | Evidence |
+|------|--------|----------|
+| tip_final_005 SHA | CC79â€¦ | Get-FileHash |
+| `--term-smoke --term-quit` | EXIT=0 CONPTY+ALIVE | artifacts\term_smoke_receipt_TIP005.txt |
+| Fresh-install RC term-smoke | PASS EXIT=0 | artifacts\PACKAGING_RECEIPT_TIP005.txt |
+
+```
+NOT_RUN â‰  PASS
+NO_CROSS_SHA_PASS_INHERITANCE=1
+PROMOTE=0
+```
+===== OUTPUT_PANEL_GATE.md =====
+# OUTPUT_PANEL_GATE â€” FULL_FEATURE_ONESHOT_001
+
+ASOF_UTC=2026-11-09T11:57:00Z
+PROMOTE=0
+CERTIFIED=0
+PRODUCT_PASS=0
+INVENT_PASS=0
+TIP_FIX=0
+CC79_UNREPLACED=1
+
+```
+TIP_SHA=5A71CA26FEF42E927A53208A374FEF8BC4FD9D3F4BF6998C596FE2026CE80211
+TIP_PATH=package\tip_final_006\RawrXD-Win32IDE-Native-Ext.exe
+OUTPUT_HWND=FAIL
+OUTPUT_ID1604_BUILD_LEN=-1
+CHAT_CONTAMINATED=0
+BUILD_OUTPUT_MSVC_HITS=3
+FROZEN_A4F_UNTOUCHED=1
+NO_CROSS_SHA_PASS_INHERITANCE=1
+```
+
+## Remeasure 2026-11-09T06:55 (id 1604)
+
+| Layer | Result | Evidence |
+|-------|--------|----------|
+| SHA | **MATCH** 5A71CA26â€¦ | tip_final_006_sha / receipt |
+| Select Build tab4 | True | runlog |
+| IdLen(1604) | **-1** for full 90s poll | never found |
+| IdLen(1012) | -1 | output edits not enumerable by ID on this image |
+| BUILD_LINE_SAMPLE (id1604) | empty | |
+| `> User:` contamination | **0** | chat rejected correctly |
+| MSVC in ConPTY capture log | **3** | BUILD_OUTPUT_MSVC_HITS â€” not HWND |
+
+```
+OUTPUT_HWND=FAIL
+BLOCKER=Build HWND id 1604 not bound/enumerable on tip006; ConPTYâ‰ Output HWND PASS
+NEXT=rebuild tip with SetWindowLongPtr(GWLP_ID) (staged in Win32IDE.cpp; new SHA)
+PROMOTE=0
+```
+===== PROBLEMS_PANEL_GATE.md =====
+# PROBLEMS_PANEL_GATE â€” FULL_FEATURE_ONESHOT_001
+
+ASOF_UTC=2026-11-09T11:57:00Z
+PROMOTE=0
+CERTIFIED=0
+PRODUCT_PASS=0
+INVENT_PASS=0
+TIP_FIX=0
+CC79_UNREPLACED=1
+
+```
+TIP_SHA=5A71CA26FEF42E927A53208A374FEF8BC4FD9D3F4BF6998C596FE2026CE80211
+TIP_PATH=package\tip_final_006\RawrXD-Win32IDE-Native-Ext.exe
+PROBLEMS_HWND=PASS
+PROBLEMS_ID1312_ITEMS=3
+PROBLEMS_ID1312_PEAK=3
+CLICK_TO_LINE=POSTED_NM_DBLCLK
+PROBLEMS_FIXTURE_LAUNCH=1
+BUILD_OUTPUT_MSVC_HITS=3
+T080_PRESERVED=1
+FROZEN_A4F_UNTOUCHED=1
+NO_CROSS_SHA_PASS_INHERITANCE=1
+```
+
+## Remeasure 2026-11-09T06:55
+
+| Layer | Result | Evidence |
+|-------|--------|----------|
+| Fixture launch | **1** | receipt |
+| MSVC hits | **3** | receipt |
+| List items | **3** (stable through poll) | EARLY_CLICK + POLL peak=3 |
+| Click-to-line | **POSTED_NM_DBLCLK** at tâ‰ˆ1s before exit race | runlog EARLY_CLICK_TO_LINE |
+| MAIN_GONE | avoided for Problems seal | items held for 90s |
+
+```
+PROBLEMS_HWND=PASS
+CLICK_TO_LINE=POSTED_NM_DBLCLK
+PROMOTE=0
+```
+===== DEBUG_CONSOLE_GATE.md =====
+# DEBUG_CONSOLE_GATE â€” FULL_FEATURE_ONESHOT_001
+
+ASOF_UTC=2026-11-09T10:34:00Z
+PROMOTE=0
+CERTIFIED=0
+PRODUCT_PASS=0
+INVENT_PASS=0
+FINAL_CANDIDATE_SHA256=EA5D9B6979E8A60DD6899CCA23B3762CA48695234A18965534E4C1E7732442AE
+
+```
+DEBUG_CONSOLE=NOT_RUN
+DEBUG_ON_CONTROLLING_TIP_EA5D=0
+BACKEND_OTHER_SHA=WAITFORDEBUGEVENT (tip_debug_001)
+SESSION_REAL_OTHER_SHA=1
+MOCK_PASS_FORBIDDEN=1
+CONTROLLING_TIP_EA5D_HAS_WAITFORDEBUGEVENT=0
+CONTROLLING_TIP_EA5D_HAS_DBGENG=0
+MERGED_INTO_TIP_FINAL_004=0
+FROZEN_A4F_UNTOUCHED=1
+PROMOTE=0
+```
+
+## Measured this resume
+
+| Probe | Result | Evidence |
+|-------|--------|----------|
+| EA5D WaitForDebugEvent strings | **0** | ASCII probe tip_final_004 Ext |
+| EA5D IDebugClient / DbgEng | **0** | ASCII probe |
+| tip_debug_001 debug_backend_verify | VERIFY_RC=0 BP/STEP/VAR/CONTINUE | `artifacts/debug_backend_verify_rerun_20261109.txt` |
+| tip_debug_001 SHA | 7F8EB407â€¦ | â‰  EA5D |
+| GUI Debug Console HWND E2E on EA5D | **NOT_RUN** | panel tab exists (count=4) but backend absent |
+
+## Disposition
+
+```
+DEBUG_CONSOLE=NOT_RUN   # controlling tip EA5D â€” no native debugger backend strings
+OTHER_SHA_BACKEND_PASS â‰  CONTROLLING_TIP_PASS
+NO_CROSS_SHA_PASS_INHERITANCE=1
+MOCK_UI_NE_PASS=1
+INVENT_PASS=0
+PROMOTE=0
+```
+===== MASTER_STATUS.md =====
+# MASTER_STATUS â€” RawrXD Win32IDE v1.0 completion
+
+ASOF_UTC=2026-11-09T10:52:00Z
+MOTD_ACK=1
+PROMOTE=0
+CERTIFIED=0
+PRODUCT_PASS=0
+PRODUCT_COMPLETE=0
+INVENT_PASS=0
+NO_CROSS_SHA_PASS_INHERITANCE=1
+
+| Field | Value |
+|-------|-------|
+| Current source commit | UNVERIFIED_AT_PROBE (bounded rev-parse pending; avoid hung git status) |
+| Current executable | `F:\rawrxd\package\tip_final_005\RawrXD-Win32IDE-Native-Ext.exe` |
+| Current EXE SHA-256 | `CC79F6CDD08F5ECEBB672290CC96F7FEEEA0DA6AB6F8B596E5826C3EA22940C4` |
+| Frozen slim baseline | `A4F083DFB9CCD1F78036E1CDCDCA9AF881EF10B3E34170B68C4610D51AC6EF4E` (IMMUTABLE) |
+| Finish-25 historical | 19/25 |
+| Finish-25 current | **4/25** |
+| Autonomous coding | NOT_RUN |
+| Local model integration | PARTIAL / NOT_RUN (Deep2 PARTIAL; Ollama NOT_RUN) |
+| ExtensionHost | PASS on CC79 (fixture); full ecosystem CERT pending |
+| Build/link/run (IDE HWND) | **FAIL** â€” Build Project id=3014 terminates process exit=-1 |
+| Reliability | PARTIAL |
+| Clean deployment | PARTIAL_STAGE_ONLY |
+| Certification | 0 |
+| Promotion | 0 |
+| Next action | Fix Build Project survival â†’ Output Build lines HWND â†’ Problems GUI on staged tip; then four-panel on same SHA |
+
+## PR track (not merge-authorized)
+
+- #77 P0 IDE product path â€” OPEN CONFLICTING
+- #78 P1 AgentSession â€” OPEN CONFLICTING
+- #79 P2 ExtensionHost â€” OPEN CONFLICTING
+
+Authority: `BASELINE_RECONCILIATION_001.md` Â· `NEXT_ACTIONS_RESUME.md` Â· `POST_E59D_CANDIDATE_001\NEXT_ACTION.md`
+===== EA5D_CC79_LINEAGE.md =====
+# EA5D_CC79_LINEAGE
+
+ASOF_UTC=2026-11-09T11:13:00Z
+PROMOTE=0
+CERTIFIED=0
+PRODUCT_PASS=0
+INVENT_PASS=0
+
+```
+ACTIVE_ACCEPTANCE=EA5D
+ACTIVE_SHA=EA5D9B6979E8A60DD6899CCA23B3762CA48695234A18965534E4C1E7732442AE
+PRIOR_CONTROLLING_TIP=CC79
+LINEAGE_RECONCILIATION=PENDING
+IDLE_FOUR_PANEL_PROBE=ABORTED_SUPERSEDED
+FROZEN_A4F_UNTOUCHED=1
+NO_CROSS_SHA_PASS_INHERITANCE=1
+NO_HISTORICAL_19_25_INHERIT=1
+MASM_PE_WRITER=SEPARATE_TRACK  # must not delay v1.0 unless autonomous loop depends on it
+```
+
+## Ordered milestones (no feature expansion until measured)
+
+1. **EA5D HWND receipt (next valid)** â€” same SHA: native Build output lines + Problems items>0 + click-to-line  
+2. Debug UI on that SHA â€” BP / step / continue / stop  
+3. Four-panel integration 1â€“17 on that SHA  
+4. **Lineage reconciliation** â€” EA5D vs CC79 before advancing controlling tip  
+5. Autonomous E2E â€” broken C++ project â†’ inspect/repair/compile/run/test (decisive capability)  
+6. Final certification â€” Finish-25 / regression / endurance / packaging on exact release EXE  
+
+Autonomous E2E â‰  sole release gate; reliability + packaging still required after it.
+
+## Law
+
+```
+ACTIVE_ACCEPTANCE â‰  PRIOR_CONTROLLING_TIP REPLACED
+PARTIAL_HWND â‰  LINEAGE_RECONCILED â‰  PROMOTE â‰  PRODUCT_PASS â‰  CERTIFIED
+```

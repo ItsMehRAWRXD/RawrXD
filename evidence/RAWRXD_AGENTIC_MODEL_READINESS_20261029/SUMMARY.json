@@ -1,0 +1,180 @@
+﻿{
+    "schema":  "RAWRXD_AGENTIC_MODEL_READINESS_001",
+    "cli":  "F:\\rawrxd\\build_ide\\bin-msvc\\rawr.exe",
+    "cli_sha256":  "AE8A178F8942FDFD510EBD15BD242392273DDAD87971EC291A4BAD470DA568CA",
+    "timestamp_utc":  "2026-10-29T06:13:48.8758915Z",
+    "requested_models":  [
+                             "qwen3:8b"
+                         ],
+    "results":  [
+                    {
+                        "schema":  "RAWRXD_AGENTIC_MODEL_READINESS_001",
+                        "model":  "flint:latest",
+                        "workspace_root":  "F:\\rawrxd",
+                        "fixture":  "F:\\rawrxd\\evidence\\RAWRXD_AGENTIC_MODEL_READINESS_20261029\\flint_latest\\fixture.cpp",
+                        "capabilities":  [
+                                             "completion",
+                                             "tools",
+                                             "thinking"
+                                         ],
+                        "family":  "flint",
+                        "parameter_size":  "39.8B",
+                        "real_model_inference":  true,
+                        "motd_gate":  true,
+                        "read_tool":  true,
+                        "edit_tool":  true,
+                        "readback_tool":  true,
+                        "file_changed_count":  1,
+                        "diff_verified":  true,
+                        "synthetic_success":  0,
+                        "status":  "PASS",
+                        "exit_code":  0,
+                        "elapsed_ms":  47821,
+                        "tool_names":  [
+                                           "readFile",
+                                           "editFiles",
+                                           "readFile"
+                                       ],
+                        "tool_failure_count":  0,
+                        "before_sha256":  "10E1BEF74A8CA32ADD5C7A64BCCA08F187122B81FF5912E2B48D7F8AD3A982DA",
+                        "after_sha256":  "3B026FF0DE8EED9AFF1242BA58C86DBBC4F4D6D0DB8D58654767D71F2E2CC534",
+                        "timestamp_utc":  "2026-10-29T05:58:52.0300258Z"
+                    },
+                    {
+                        "schema":  "RAWRXD_AGENTIC_MODEL_READINESS_001",
+                        "model":  "nemotron-3.5-bolt:latest",
+                        "workspace_root":  "F:\\rawrxd",
+                        "fixture":  "F:\\rawrxd\\evidence\\RAWRXD_AGENTIC_MODEL_READINESS_20261029\\nemotron-3.5-bolt_latest\\fixture.cpp",
+                        "capabilities":  [
+                                             "completion",
+                                             "vision",
+                                             "tools",
+                                             "thinking"
+                                         ],
+                        "family":  "nemotron_h_moe",
+                        "parameter_size":  "74.0B",
+                        "real_model_inference":  true,
+                        "motd_gate":  true,
+                        "read_tool":  true,
+                        "edit_tool":  true,
+                        "readback_tool":  true,
+                        "file_changed_count":  1,
+                        "diff_verified":  true,
+                        "synthetic_success":  0,
+                        "status":  "PASS",
+                        "exit_code":  0,
+                        "elapsed_ms":  53296,
+                        "tool_names":  [
+                                           "readFile",
+                                           "editFiles",
+                                           "readFile"
+                                       ],
+                        "tool_failure_count":  0,
+                        "before_sha256":  "10E1BEF74A8CA32ADD5C7A64BCCA08F187122B81FF5912E2B48D7F8AD3A982DA",
+                        "after_sha256":  "3B026FF0DE8EED9AFF1242BA58C86DBBC4F4D6D0DB8D58654767D71F2E2CC534",
+                        "timestamp_utc":  "2026-10-29T05:57:10.8521341Z"
+                    },
+                    {
+                        "schema":  "RAWRXD_AGENTIC_MODEL_READINESS_001",
+                        "model":  "nemotron-3.5-lightning:30b",
+                        "workspace_root":  "F:\\rawrxd",
+                        "fixture":  "F:\\rawrxd\\evidence\\RAWRXD_AGENTIC_MODEL_READINESS_20261029\\nemotron-3.5-lightning_30b\\fixture.cpp",
+                        "capabilities":  [
+                                             "completion",
+                                             "tools",
+                                             "thinking"
+                                         ],
+                        "family":  "nemotron_h_moe",
+                        "parameter_size":  "32.9B",
+                        "real_model_inference":  true,
+                        "motd_gate":  true,
+                        "read_tool":  true,
+                        "edit_tool":  true,
+                        "readback_tool":  true,
+                        "file_changed_count":  1,
+                        "diff_verified":  true,
+                        "synthetic_success":  0,
+                        "status":  "PASS",
+                        "exit_code":  0,
+                        "elapsed_ms":  53180,
+                        "tool_names":  [
+                                           "readFile",
+                                           "editFiles",
+                                           "readFile"
+                                       ],
+                        "tool_failure_count":  0,
+                        "before_sha256":  "10E1BEF74A8CA32ADD5C7A64BCCA08F187122B81FF5912E2B48D7F8AD3A982DA",
+                        "after_sha256":  "3B026FF0DE8EED9AFF1242BA58C86DBBC4F4D6D0DB8D58654767D71F2E2CC534",
+                        "timestamp_utc":  "2026-10-29T05:58:04.1140054Z"
+                    },
+                    {
+                        "schema":  "RAWRXD_AGENTIC_MODEL_READINESS_001",
+                        "model":  "nemotron-3-nano:4b",
+                        "workspace_root":  "F:\\rawrxd",
+                        "fixture":  "F:\\rawrxd\\evidence\\RAWRXD_AGENTIC_MODEL_READINESS_20261029\\nemotron-3-nano_4b\\fixture.cpp",
+                        "capabilities":  [
+                                             "completion",
+                                             "tools",
+                                             "thinking"
+                                         ],
+                        "family":  "nemotron_h",
+                        "parameter_size":  "4.0B",
+                        "real_model_inference":  true,
+                        "motd_gate":  true,
+                        "read_tool":  true,
+                        "edit_tool":  true,
+                        "readback_tool":  true,
+                        "file_changed_count":  1,
+                        "diff_verified":  true,
+                        "synthetic_success":  0,
+                        "status":  "PASS",
+                        "exit_code":  0,
+                        "elapsed_ms":  14191,
+                        "tool_names":  [
+                                           "readFile",
+                                           "editFiles",
+                                           "readFile"
+                                       ],
+                        "tool_failure_count":  0,
+                        "before_sha256":  "10E1BEF74A8CA32ADD5C7A64BCCA08F187122B81FF5912E2B48D7F8AD3A982DA",
+                        "after_sha256":  "3B026FF0DE8EED9AFF1242BA58C86DBBC4F4D6D0DB8D58654767D71F2E2CC534",
+                        "timestamp_utc":  "2026-10-29T05:56:17.4168968Z"
+                    },
+                    {
+                        "schema":  "RAWRXD_AGENTIC_MODEL_READINESS_001",
+                        "model":  "qwen3:8b",
+                        "workspace_root":  "F:\\rawrxd",
+                        "fixture":  "F:\\rawrxd\\evidence\\RAWRXD_AGENTIC_MODEL_READINESS_20261029\\qwen3_8b\\fixture.cpp",
+                        "capabilities":  [
+                                             "completion",
+                                             "tools",
+                                             "thinking"
+                                         ],
+                        "family":  "qwen3",
+                        "parameter_size":  "8.2B",
+                        "real_model_inference":  true,
+                        "motd_gate":  true,
+                        "read_tool":  true,
+                        "edit_tool":  true,
+                        "readback_tool":  true,
+                        "file_changed_count":  1,
+                        "diff_verified":  true,
+                        "synthetic_success":  0,
+                        "status":  "PASS",
+                        "exit_code":  0,
+                        "elapsed_ms":  12169,
+                        "tool_names":  [
+                                           "readFile",
+                                           "editFiles",
+                                           "readFile"
+                                       ],
+                        "tool_failure_count":  0,
+                        "before_sha256":  "10E1BEF74A8CA32ADD5C7A64BCCA08F187122B81FF5912E2B48D7F8AD3A982DA",
+                        "after_sha256":  "3B026FF0DE8EED9AFF1242BA58C86DBBC4F4D6D0DB8D58654767D71F2E2CC534",
+                        "timestamp_utc":  "2026-10-29T06:13:48.8485755Z"
+                    }
+                ],
+    "pass":  5,
+    "nonpass":  0,
+    "promotion":  "DISABLED"
+}

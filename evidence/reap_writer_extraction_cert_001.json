@@ -1,0 +1,242 @@
+{
+  "schema": "reap.writer_extraction_cert_001.v1",
+  "certification_date": "2026-10-26T04:39:00Z",
+  "repository": "F:\\rawrxd",
+  "git": {
+    "branch": "fix/deep2-multimodel-safety-20261025",
+    "head_commit": "cee5039457",
+    "head_message": "feat(reap): add MoE topology feasibility report",
+    "working_tree_modified": true,
+    "modified_files": [
+      "CMakeLists.txt",
+      "src/cpu_inference_engine.h",
+      "src/cpu_inference_engine_impl.cpp",
+      "src/deep2/Deep2Engine.cpp",
+      "src/deep2/Deep2Engine_missing_members.cpp",
+      "src/deep2/K2NativeStreamGate.cpp",
+      "src/deep2/K2NativeStreamGate.hpp",
+      "src/deep2/ReapMoETransformer.cpp",
+      "src/streaming_gguf_loader.cpp",
+      "src/streaming_gguf_loader.h"
+    ],
+    "untracked": ["WorldForge_Drop3/"]
+  },
+  "model": {
+    "path": "F:\\OllamaModels\\Kimi-K2-Instruct-0905-GGUF\\Q4_K_M",
+    "format": "gguf_v3_split",
+    "shard_pattern": "Kimi-K2-Instruct-0905-Q4_K_M-000NN-of-00013.gguf",
+    "shard_count": 13,
+    "shards": [
+      {"shard": 1, "file": "Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf", "bytes": 46304135840, "sha256": "EB48051961B59B420E182552965B7AA141D16C99488C69CCC9DE1327E96F5639"},
+      {"shard": 2, "file": "Kimi-K2-Instruct-0905-Q4_K_M-00002-of-00013.gguf", "bytes": 49211448320, "sha256": "ACD4BD970882053DD1E821921AC4D0D82E9A861933FDE71843D80838AE9865F2"},
+      {"shard": 3, "file": "Kimi-K2-Instruct-0905-Q4_K_M-00003-of-00013.gguf", "bytes": 49548961120, "sha256": "124C30F2497AB21FF8AFF10F3FC6B242275C8C74D4F72E2B4FA1AC5E617214BD"},
+      {"shard": 4, "file": "Kimi-K2-Instruct-0905-Q4_K_M-00004-of-00013.gguf", "bytes": 47810262080, "sha256": "9FDCC5C90B957296AD2604C3FBAA20D0A77148D8B7A039123FA102CD43F05995"},
+      {"shard": 5, "file": "Kimi-K2-Instruct-0905-Q4_K_M-00005-of-00013.gguf", "bytes": 46366024896, "sha256": "8DE3B5AA17B21C5668466BC24009D32D070BBC6A071A370CF05051E5F8175B6C"},
+      {"shard": 6, "file": "Kimi-K2-Instruct-0905-Q4_K_M-00006-of-00013.gguf", "bytes": 47758122080, "sha256": "27CC3200C7B9284CBD6710DD489E08C0F932082D430DDBA45CFEB075E42B4030"},
+      {"shard": 7, "file": "Kimi-K2-Instruct-0905-Q4_K_M-00007-of-00013.gguf", "bytes": 47810262080, "sha256": "6CA510F1D5DE709D69D53908EF100B39BBD08A4E6A7D91D7E2725EDDA3966BC6"},
+      {"shard": 8, "file": "Kimi-K2-Instruct-0905-Q4_K_M-00008-of-00013.gguf", "bytes": 49548961120, "sha256": "268A0CE2AC8BB2E1807E84AC7F898E846866319EA74F00FAA9D6EDAD932F613B"},
+      {"shard": 9, "file": "Kimi-K2-Instruct-0905-Q4_K_M-00009-of-00013.gguf", "bytes": 47819351232, "sha256": "97A85DCB82EB8C42DFCCA52130573D87867BC92E0E6B4F376ED2EBC6AA5F1AC2"},
+      {"shard": 10, "file": "Kimi-K2-Instruct-0905-Q4_K_M-00010-of-00013.gguf", "bytes": 49548961120, "sha256": "C3B2388676C3B91BB1DD880D38B871658068FBB07EC8F9BBEB75F17A3CB1EE62"},
+      {"shard": 11, "file": "Kimi-K2-Instruct-0905-Q4_K_M-00011-of-00013.gguf", "bytes": 47758122080, "sha256": "7F40E472F71EE6CCC160CB71B2DF1BB22A9F97095FAEBC05127FB701EE72D235"},
+      {"shard": 12, "file": "Kimi-K2-Instruct-0905-Q4_K_M-00012-of-00013.gguf", "bytes": 47533978560, "sha256": "D9E2732D52702FA510C4371CFE1BA13911CDE0FBE877025C5BFAF62A2DB7C27D"},
+      {"shard": 13, "file": "Kimi-K2-Instruct-0905-Q4_K_M-00013-of-00013.gguf", "bytes": 44226634336, "sha256": "5DDFA1832CB1E514CF6A0B4140B9875D2188DCC2ADAB6E08ADA9D285B4115DD5"}
+    ],
+    "original_shards_preserved": true,
+    "shard_hashes_verified": true
+  },
+  "tools": {
+    "rawr_reap_exe": {"bytes": 799232, "sha256": "F8B5C7225CA96A1491BE5D0CC4C95E4A72549509556EF8506C8BB56FF595FD48"},
+    "reap_ref_extract_exe": {"bytes": 67584, "sha256": "C8F38D368099BA420B0FCF45DF5275F795F2AFB33B53B5A2C55F4C79907AFD45"},
+    "reap_cert_parity_exe": {"bytes": 155648, "sha256": "AC0C918B05BD5F57D7369E0DFCAD8795C5FF523E6426D3F5C6BC14E8E8730AE5"},
+    "reap_floor_audit_exe": {"bytes": 91648, "sha256": "C52E61DD5F5E213D3DC231D879DA93211AAE3F149C03DE03252FB589AE1733F1"}
+  },
+  "source_files": {
+    "reap_transformer": "src/deep2/ReapMoETransformer.cpp",
+    "reference_extractor": "src/reap/reap_ref_extract.cpp",
+    "cert_parity_test": "src/reap/reap_cert_parity.cpp",
+    "tensor_enumerator": "src/reap/reap_tensor_enum.cpp",
+    "floor_auditor": "src/reap/reap_floor.cpp",
+    "cmake_integration": "CMakeLists.txt"
+  },
+  "geometry_audit": {
+    "packed_expert_tensors": 180,
+    "expert_related_tensors": 480,
+    "moe_layers": 60,
+    "experts_per_layer": 384,
+    "expert_dimension": "dims.back()",
+    "expert_slices_contiguous": true,
+    "stride_formula": "bytes / dims.back()",
+    "gate_projection": {"dims": [7168, 2048, 384], "quantization": "Q4_K", "bytes_per_expert": 8257536, "total_bytes": 3170893824},
+    "up_projection": {"dims": [7168, 2048, 384], "quantization": "Q4_K", "bytes_per_expert": 8257536, "total_bytes": 3170893824},
+    "down_projection": {"dims": [2048, 7168, 384], "quantization": "Q6_K", "bytes_per_expert": 12042240, "total_bytes": 4624220160},
+    "router_input": {"dims": [7168, 384], "quantization": "F32", "bytes_per_expert": 28672, "total_bytes": 11010048},
+    "router_bias": {"dims": [384], "quantization": "F32", "bytes_per_expert": 4, "total_bytes": 1536},
+    "shared_experts": {"copied_as_is": true, "not_sliced": true, "count": 180}
+  },
+  "byte_parity_tests": {
+    "description": "Production writer extraction logic compared against independent GGUF reference extractor on real Kimi K2 shard 1 tensors",
+    "test_cases": [
+      {
+        "tensor": "blk.1.ffn_gate_exps.weight",
+        "quantization": "Q4_K",
+        "dims": [7168, 2048, 384],
+        "expert_index": 0,
+        "stride_bytes": 8257536,
+        "extracted_bytes": 8257536,
+        "file_offset": 6643672576,
+        "data_start_offset": 6911082,
+        "absolute_offset": 6650589856,
+        "reference_sha256": "A0FA41381E14E09B730F59B8620A2F885F7E6ACB2CFB5C43D2DADB539240D18E",
+        "production_sha256": "A0FA41381E14E09B730F59B8620A2F885F7E6ACB2CFB5C43D2DADB539240D18E",
+        "byte_parity": "PASS"
+      },
+      {
+        "tensor": "blk.1.ffn_down_exps.weight",
+        "quantization": "Q6_K",
+        "dims": [2048, 7168, 384],
+        "expert_index": 192,
+        "stride_bytes": 12042240,
+        "extracted_bytes": 12042240,
+        "file_offset": 2007410176,
+        "data_start_offset": 6911082,
+        "absolute_offset": 4326437536,
+        "reference_sha256": "2B9E6BBFCC44CCE24A3CDAA7D2DC4204EAEA6B9EFE3D81B9729C89E8AC2B9F88",
+        "production_sha256": "2B9E6BBFCC44CCE24A3CDAA7D2DC4204EAEA6B9EFE3D81B9729C89E8AC2B9F88",
+        "byte_parity": "PASS"
+      },
+      {
+        "tensor": "blk.1.ffn_up_exps.weight",
+        "quantization": "Q4_K",
+        "dims": [7168, 2048, 384],
+        "expert_index": 383,
+        "stride_bytes": 8257536,
+        "extracted_bytes": 8257536,
+        "file_offset": 9835697664,
+        "data_start_offset": 6911082,
+        "absolute_offset": 13005251232,
+        "reference_sha256": "944EAD0D7CD29CD2D638E02D17859E2A8193371F35D036EE5DB02312CEB4BED7",
+        "production_sha256": "944EAD0D7CD29CD2D638E02D17859E2A8193371F35D036EE5DB02312CEB4BED7",
+        "byte_parity": "PASS"
+      }
+    ],
+    "all_tests_passed": true,
+    "extraction_offset_defect_resolved": true,
+    "defect_description": "Independent reference extractor originally sought to relative GGUF tensor offset instead of absolute file offset. Fixed by computing dataStart (aligned start of tensor-data region) and using absoluteOffset = dataStart + tensorOffset + expertIndex * expertStride."
+  },
+  "negative_tests": [
+    {
+      "test": "missing_tensor_name",
+      "input": "nonexistent_tensor.weight",
+      "expected": "error_exit",
+      "actual": "error_exit",
+      "result": "PASS",
+      "no_output_written": true
+    },
+    {
+      "test": "invalid_expert_index",
+      "input": "expert_index=384, expert_dim=384",
+      "expected": "error_exit",
+      "actual": "error_exit",
+      "result": "PASS",
+      "no_output_written": true
+    },
+    {
+      "test": "boundary_last_valid_expert",
+      "input": "expert_index=383, expert_dim=384",
+      "expected": "success_exit",
+      "actual": "success_exit",
+      "result": "PASS",
+      "bytes_written": 8257536,
+      "sha256": "99AC3EF286FEEBF47F0FA7B0BEE4BC2D15AC507BCC7B8DB8AD38F3F8077560FC"
+    },
+    {
+      "test": "missing_gguf_file",
+      "input": "nonexistent.gguf",
+      "expected": "error_exit",
+      "actual": "error_exit",
+      "result": "PASS",
+      "no_output_written": true
+    }
+  ],
+  "full_inventory": {
+    "source": "evidence/reap_kimi_k2_full_inventory.json",
+    "tsv_source": "evidence/kimi_k2_full_inventory.tsv",
+    "total_logical_tensors": 1096,
+    "shard_count": 13,
+    "duplicate_tensors": false,
+    "overlapping_ranges": false,
+    "total_bytes": 621238241280,
+    "packed_expert_bytes": 612907352064,
+    "nonexpert_bytes": 8330889216,
+    "family_breakdown": {
+      "expert_gate": {"count": 60, "bytes": 190253629440},
+      "expert_up": {"count": 60, "bytes": 190253629440},
+      "expert_down": {"count": 60, "bytes": 232400093184},
+      "router_input": {"count": 60, "bytes": 660602880},
+      "router_bias": {"count": 60, "bytes": 92160},
+      "shared_expert": {"count": 180, "bytes": 1933639680},
+      "attention_k": {"count": 183, "bytes": 539564032},
+      "attention_q": {"count": 183, "bytes": 1025783808},
+      "attention_v": {"count": 61, "bytes": 271843328},
+      "attention_output": {"count": 61, "bytes": 2014838784},
+      "attention_norm": {"count": 61, "bytes": 1748992},
+      "ffn_norm": {"count": 61, "bytes": 1748992},
+      "embedding": {"count": 1, "bytes": 660602880},
+      "output_head": {"count": 1, "bytes": 963379200},
+      "output_norm": {"count": 1, "bytes": 28672},
+      "other": {"count": 3, "bytes": 257015808}
+    },
+    "packed_vs_broader_expert_count": {
+      "packed_projection_tensors": 180,
+      "broader_expert_related_tensors": 480,
+      "explanation": "180 packed projection tensors (gate/up/down × 60 layers). 480 broader expert-related tensors includes 180 packed + 60 router_input + 60 router_bias + 180 shared_expert (copied as-is, not sliced)."
+    }
+  },
+  "structural_floor": {
+    "source": "evidence/reap_kimi_k2_floor_reconciliation.json",
+    "nonexpert_bytes": 8330889216,
+    "one_expert_slice_bytes": 1596112896,
+    "one_expert_tensor_floor_bytes": 9927002112,
+    "floor_gib": 9.24,
+    "previous_estimate_bytes": 9933985696,
+    "previous_estimate_gib": 9.25,
+    "difference_bytes": 6983584,
+    "difference_explanation": "GGUF metadata and alignment overhead not included in floor auditor (metadata_and_alignment_overhead_included=false). Difference is 0.07% of previous estimate.",
+    "metadata_and_alignment_overhead_included": false,
+    "target_bytes": 32212254720,
+    "target_gib": 30.0,
+    "scenarios": {
+      "1_expert": {"bytes": 9927002112, "within_target": true, "topk_feasible": false},
+      "2_experts": {"bytes": 11523115008, "within_target": true, "topk_feasible": false},
+      "4_experts": {"bytes": 14715340800, "within_target": true, "topk_feasible": false},
+      "8_experts": {"bytes": 21099792384, "within_target": true, "topk_feasible": true},
+      "16_experts": {"bytes": 33868695552, "within_target": false, "topk_feasible": true},
+      "32_experts": {"bytes": 59406501888, "within_target": false, "topk_feasible": true},
+      "64_experts": {"bytes": 110482114560, "within_target": false, "topk_feasible": true}
+    },
+    "recommended_configuration": "8 experts per layer (top-k=8 feasible, 19.65 GiB within 30 GiB target)"
+  },
+  "certification_result": {
+    "extraction_geometry_verified": true,
+    "independent_byte_parity": "PASS",
+    "negative_input_rejection": "PASS",
+    "full_inventory_complete": true,
+    "structural_floor_reconciled": true,
+    "overall_status": "PASS",
+    "caveats": [
+      "Extraction certification does not imply rewrite authorization",
+      "Extraction certification does not imply quality preservation",
+      "Independent-reference parity (REAP_REFERENCE_PARITY_001) remains incomplete",
+      "Calibration certification remains incomplete",
+      "Production rewrite admission remains DENIED"
+    ]
+  },
+  "admission_status": {
+    "transformable": false,
+    "quality_preservation_certified": false,
+    "rewrite_authorized": false,
+    "evaluate_admission_implementation": "hard_coded_all_false_fail_closed",
+    "admission_decision": "DENIED",
+    "reason": "Independent-reference parity, calibration, selection certification, and quality evidence not yet complete"
+  }
+}

@@ -1,0 +1,34 @@
+=== RawrXD CPU Engine End-to-End Test ===
+Model: F:\OllamaModels\DeepSeek-R1-0528-Qwen3-8B-GGUF\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf
+Prompt: "The capital of France is"
+
+[1/5] Loading model...
+
+📊 Zone Assignment Summary:
+   embedding: 1 tensors, 333 MB
+   layers_0: 80 tensors, 823 MB
+   layers_1: 80 tensors, 796 MB
+   layers_2: 80 tensors, 783 MB
+   layers_3: 80 tensors, 809 MB
+   layers_4: 40 tensors, 431 MB
+   output_head: 38 tensors, 810 MB
+
+✅ GGUF Model opened in streaming mode
+   File: F:\OllamaModels\DeepSeek-R1-0528-Qwen3-8B-GGUF\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf
+   Tensors: 399
+   Zones: 7
+   Memory (header+index): ~0 MB
+  Load time: 9625.3 ms
+  Vocab size: 151936
+  Embedding dim: 4096
+  Layers: 36
+  Heads: 4
+
+[2/5] Tokenizing prompt...
+  Token count: 9
+  Token IDs: 785,220,65063,220,1055,220,49000,220,285
+  Detokenize check: "The capital of France is"
+
+[3/5] Running prefill forward pass...
+❌ Tensor not found: blk.0.attn_norm.weight
+FAIL: Forward pass returned empty logits

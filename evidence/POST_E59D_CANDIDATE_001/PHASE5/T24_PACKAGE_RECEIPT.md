@@ -1,0 +1,42 @@
+# T24 Packaging — Candidate artifact (no invented installer)
+
+ASOF_UTC=2026-11-08T22:41:00Z
+GATE=FINISH_25_T24
+CERT_EXE_SHA=3B720981EC567D60461B874F0C1EE46E03F85DB58F6E1788CBEE31F8B2CCAD5F
+REBUILD=HELD
+PROMOTE=0
+CERTIFIED=0
+
+## Created
+
+| Artifact | Path |
+|----------|------|
+| Payload zip | `PHASE5\T24_PACKAGE\RawrXD-Win32IDE-Native-3B720981-candidate.zip` |
+| Zip SHA-256 | `551E6344EFE0FDC4CF3EE8A995508DBE0F697C0CF126F384926C18102CCF0317` |
+| Manifest | `PHASE5\T24_PACKAGE\MANIFEST.json` |
+
+## Verified
+
+```
+SHA_MATCH=1
+EXTRACT_SHA_MATCH=1
+COLD_LAUNCH_ALIVE_AT_5S=1
+INVENT_INSTALLER=0
+```
+
+## Gaps (fail-closed)
+
+```
+NO_PRODUCT_INSTALLER_ARTIFACT
+NO_OFFICIAL_DIST_CHANNEL_PACKAGE_BOUND_TO_3B720981
+```
+
+## Disposition
+
+```
+T24=CANDIDATE_PACKAGE_PASS
+T24_INSTALLER=NOT_RUN
+T24_FULL_DEPLOYMENT_SCRIPT_E2E=NOT_RUN
+```
+
+Candidate package+manifest+SHA closed without inventing an installer. Official installer remains a documented gap, not a PASS.
