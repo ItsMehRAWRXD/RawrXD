@@ -1,0 +1,244 @@
+name: Sovereign Substrate CI
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'src/intent/**'
+      - 'src/guardrails/**'
+      - 'src/hotpatch/**'
+      - 'src/kernel/**'
+      - 'src/memory/**'
+      - 'src/controlplane/**'
+      - 'src/security/**'
+      - 'src/tools/**'
+      - 'tests/**'
+      - 'demo/**'
+      - 'CMakeLists.txt'
+  pull_request:
+    branches: [ main ]
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake ninja-build g++-11
+    
+    - name: Configure CMake
+      run: |
+        cmake -B ${{github.workspace}}/build \
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
+          -DRAWR_BUILD_TESTS=ON \
+          -DRAWR_BUILD_DEMO=ON \
+          -DRAWR_SECURITY_HARDENING=ON \
+          -DRAWR_MODEL_ADAPTER=ON \
+          -DRAWR_PERSISTENCE=ON \
+          -DRAWR_TELEMETRY=ON \
+          -G Ninja
+    
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --parallel $(nproc)
+    
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      run: ctest --output-on-failure --parallel $(nproc)
+    
+    - name: Run Demo
+      working-directory: ${{github.workspace}}/build
+      run: ./demo/demo_sovereign_substrate --scenario all
+    
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results-linux
+        path: ${{github.workspace}}/build/Testing/
+
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup MSVC
+      uses: microsoft/setup-msbuild@v1.1
+    
+    - name: Configure CMake
+      run: |
+        cmake -B ${{github.workspace}}/build `
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} `
+          -DRAWR_BUILD_TESTS=ON `
+          -DRAWR_BUILD_DEMO=ON `
+          -DRAWR_SECURITY_HARDENING=ON `
+          -DRAWR_MODEL_ADAPTER=ON `
+          -DRAWR_PERSISTENCE=ON `
+          -DRAWR_TELEMETRY=ON `
+          -G "Visual Studio 17 2022" -A x64
+    
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --parallel
+    
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      run: ctest -C ${{env.BUILD_TYPE}} --output-on-failure
+    
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results-windows
+        path: ${{github.workspace}}/build/Testing/
+
+  build-macos:
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Configure CMake
+      run: |
+        cmake -B ${{github.workspace}}/build \
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
+          -DRAWR_BUILD_TESTS=ON \
+          -DRAWR_BUILD_DEMO=ON \
+          -DRAWR_SECURITY_HARDENING=ON \
+          -DRAWR_MODEL_ADAPTER=ON \
+          -DRAWR_PERSISTENCE=ON \
+          -DRAWR_TELEMETRY=ON
+    
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --parallel $(sysctl -n hw.ncpu)
+    
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      run: ctest --output-on-failure --parallel $(sysctl -n hw.ncpu)
+
+  code-coverage:
+    runs-on: ubuntu-latest
+    needs: build-linux
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake ninja-build g++-11 lcov
+    
+    - name: Configure with Coverage
+      run: |
+        cmake -B ${{github.workspace}}/build \
+          -DCMAKE_BUILD_TYPE=Debug \
+          -DRAWR_BUILD_TESTS=ON \
+          -DRAWR_ENABLE_COVERAGE=ON \
+          -G Ninja
+    
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --parallel $(nproc)
+    
+    - name: Test with Coverage
+      working-directory: ${{github.workspace}}/build
+      run: |
+        ctest --output-on-failure
+        lcov --capture --directory . --output-file coverage.info
+        lcov --remove coverage.info '/usr/*' --output-file coverage.info
+        lcov --list coverage.info
+    
+    - name: Upload Coverage
+      uses: codecov/codecov-action@v3
+      with:
+        files: ${{github.workspace}}/build/coverage.info
+        fail_ci_if_error: true
+
+  static-analysis:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake ninja-build clang-tidy cppcheck
+    
+    - name: Configure
+      run: |
+        cmake -B ${{github.workspace}}/build \
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
+          -DCMAKE_CXX_CLANG_TIDY="clang-tidy" \
+          -G Ninja
+    
+    - name: Run Cppcheck
+      run: |
+        cppcheck --enable=all --error-exitcode=1 \
+          --suppress=missingIncludeSystem \
+          -I ${{github.workspace}}/src \
+          ${{github.workspace}}/src 2>&1 | tee cppcheck-report.txt
+    
+    - name: Upload Analysis Results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: static-analysis-results
+        path: cppcheck-report.txt
+
+  performance-benchmark:
+    runs-on: ubuntu-latest
+    needs: build-linux
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake ninja-build g++-11
+    
+    - name: Configure
+      run: |
+        cmake -B ${{github.workspace}}/build \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DRAWR_BUILD_TESTS=ON \
+          -G Ninja
+    
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --parallel $(nproc)
+    
+    - name: Run Benchmarks
+      working-directory: ${{github.workspace}}/build
+      run: |
+        ./tests/test_performance --benchmark_format=json > benchmark-results.json
+    
+    - name: Upload Benchmark Results
+      uses: actions/upload-artifact@v3
+      with:
+        name: benchmark-results
+        path: ${{github.workspace}}/build/benchmark-results.json
+
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Run Trivy Security Scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+    
+    - name: Upload Security Results
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'

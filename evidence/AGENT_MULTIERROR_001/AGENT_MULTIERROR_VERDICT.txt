@@ -1,0 +1,24 @@
+﻿AGENT-MULTIERROR-001
+authority=NOT_CERTIFIED
+baseline_commit=d7651c5f0
+date=2026-08-29T07:49:22.6539093-04:00
+model=F:\~dev\tinyllama_fresh.gguf
+model_sha256=DA3087FB14AEDE55FDE6EB81A0E55E886810E43509EC82ECDC7AA5D62A03B556
+agent_exe=F:\~dev\rawrxd\build-ninja\bin\RawrXD-Agentic.exe
+agent_sha256=D9493B1D203CD3BB746E32926CF60DB796F645F3FAB56DE474E13070F525AAEB
+scripted_action_selection=NO
+ollama_daemon=NONE
+
+RUN1:
+  tool_calls=0
+  model_used_tools=False
+  verify_ok=False
+  stdout=
+  agent_exit=0
+  elapsed_ms=736378
+
+RUN2=SKIPPED
+
+PASS_CONDITION=model independently repairs multiple unrelated compile/runtime defects from build feedback, reaches clean build, executes calc_ok 14, reproduces from fresh fixture without scripted patch knowledge.
+
+VERDICT=INCOMPLETE_OR_FAIL

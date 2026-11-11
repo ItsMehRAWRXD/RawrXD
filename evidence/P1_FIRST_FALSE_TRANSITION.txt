@@ -1,0 +1,55 @@
+P1_FIRST_FALSE_TRANSITION
+=========================
+date=2026-08-29
+frozen_sha=0C621350800531C82ED76CA43DC6B90960FAB8CD013777EF62ADE9A81826DC6B
+frozen_archive=F:\~dev\rawrxd\evidence\frozen\P1_0C621350800531C82ED76CA43DC6B90960FAB8CD013777EF62ADE9A81826DC6B\
+frozen_archive_sha_match=PASS
+candidate_sha=66409884CF4E843664B40FB89208C1C569EE9A2409FE6BB50E89C774CDC063A5
+candidate_exe=F:\~dev\rawrxd\build-win32ide-p1\bin\RawrXD-Win32IDE.exe
+sha_freeze_record=KEPT (frozen pack not rewritten; candidate separate)
+
+CANDIDATE RESULTS
+-----------------
+1 Launch / selftest = PASS  (--selftest exit 0)
+2 GGUF load         = NOT TESTED (auto-load deferred/contained; not product-path cert)
+3 Copilot UI        = NOT TESTED
+4 FINAL             = NOT TESTED
+5 NEED_INPUT        = NOT TESTED
+6 deny              = NOT TESTED
+7 fallback          = NOT TESTED
+8 lifecycle         = PASS  (launch→alive→kill ×2)
+
+P1-A SELFTEST_CONTRACT
+----------------------
+runFileOpenHeadlessProbe():
+  empty args → HANDLER_ERROR
+  temp path  → OK
+SELFTEST_EXIT=0
+telemetry file.open attempts=2 ok=1 error=1 lastStatus=0
+
+P1-B GUI ROOT (localized then repaired)
+---------------------------------------
+FIRST_FALSE was:
+  createWindow_ok → P1_post_create_00 → pumpMessages #1
+  → msg=0x80c9 (WM_APP+201) second delivery → uncaught 0xE06D7363
+
+WM_APP+201 = session/download model auto-load (loadGGUFModel /
+loadModelForInference) while EngineManager still null during createWindow pump.
+Session path: %APPDATA%\RawrXD\session.json → tinyllama Q4_K_M.gguf
+
+REPAIR (candidate):
+  - defer WM_APP+201 until m_engineManager set (m_pendingApp201ModelLoad)
+  - setEngineManager flushes pending PostMessage
+  - try/catch contain remaining load exceptions
+  Files: Win32IDE_Core.cpp, Win32IDE.h
+
+After repair log shows:
+  P1_post_create_00..07_filewatcher_ok
+  FATAL_LINES=0
+  GUI alive ≥8s
+
+DO_NOT_CHASE_YET = Deep2 / generator parity
+NEXT = scenario 2 real GGUF load cert → Copilot → FINAL/NEED_INPUT/deny/fallback
+THEN freeze candidate as new product-path pack / rewrite P1_WIN32IDE_BINARY.txt
+
+PROMOTE / MERGE = still BLOCKED until 2–7 pass

@@ -1,0 +1,20 @@
+# rawrxd.repo
+# Phase H.2 Batch 4/5: YUM/DNF Repository Configuration
+# Installation: sudo cp rawrxd.repo /etc/yum.repos.d/
+
+[rawrxd]
+name=RawrXD Sovereign AI Runtime - $basearch
+baseurl=https://yum.rawrxd.ai/stable/$basearch
+enabled=1
+gpgcheck=1
+gpgkey=https://yum.rawrxd.ai/rawrxd-pubkey.gpg
+repo_gpgcheck=1
+metadata_expire=7d
+skip_if_unavailable=False
+
+[rawrxd-source]
+name=RawrXD Sovereign AI Runtime - Source
+baseurl=https://yum.rawrxd.ai/stable/source
+enabled=0
+gpgcheck=1
+gpgkey=https://yum.rawrxd.ai/rawrxd-pubkey.gpg

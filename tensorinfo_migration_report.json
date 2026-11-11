@@ -1,0 +1,1122 @@
+{
+  "mode": "audit",
+  "source_files": [
+    {
+      "path": ".archive/reconstructed/temp/RawrXD-agentic-ide-production/RawrXD-ModelLoader/include/gguf/loader.h",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 9
+    },
+    {
+      "path": ".archive/reconstructed/temp/RawrXD-agentic-ide-production/RawrXD-ModelLoader/src/gguf/loader.cpp",
+      "classification": "legacy_direct",
+      "identifiers": 3
+    },
+    {
+      "path": ".archive/reconstructed/temp/RawrXD-agentic-ide-production/RawrXD-ModelLoader/src/Memory/streaming/gguf/memory/manager.h",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": ".archive/reconstructed/temp/RawrXD-agentic-ide-production/RawrXD-ModelLoader/src/qtapp/gguf/loader.h",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 9
+    },
+    {
+      "path": ".archive/reconstructed/temp/RawrXD-agentic-ide-production/src/ModelMetadataParser.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 3
+    },
+    {
+      "path": ".archive/reconstructed/temp/RawrXD-q8-wire/RawrXD-ModelLoader/include/gguf/loader.h",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 9
+    },
+    {
+      "path": ".archive/reconstructed/temp/RawrXD-q8-wire/RawrXD-ModelLoader/include/streaming/gguf/loader.h",
+      "classification": "legacy_direct",
+      "identifiers": 3
+    },
+    {
+      "path": ".archive/reconstructed/temp/RawrXD-q8-wire/RawrXD-ModelLoader/src/gguf/loader.cpp",
+      "classification": "legacy_direct",
+      "identifiers": 3
+    },
+    {
+      "path": ".archive/reconstructed/temp/RawrXD-q8-wire/RawrXD-ModelLoader/src/qtapp/analyze/gguf.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 3
+    },
+    {
+      "path": ".archive/reconstructed/temp/RawrXD-q8-wire/RawrXD-ModelLoader/src/qtapp/model/memory/hotpatch.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": ".archive/reconstructed/temp/RawrXD-q8-wire/RawrXD-ModelLoader/src/qtapp/model/memory/hotpatch.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 2
+    },
+    {
+      "path": ".archive/reconstructed/temp/RawrXD-q8-wire/RawrXD-ModelLoader/src/streaming/gguf/loader.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 5
+    },
+    {
+      "path": ".archive/reconstructed/temp/RawrXD-q8-wire/RawrXD-ModelLoader/src/streaming/gguf/loader.h",
+      "classification": "legacy_direct",
+      "identifiers": 3
+    },
+    {
+      "path": ".archive/reconstructed/temp/RawrXD-q8-wire/RawrXD-ModelLoader/src/win32app/Win32IDE.h",
+      "classification": "legacy_direct",
+      "identifiers": 1
+    },
+    {
+      "path": ".archive/reconstructed/temp/RawrXD-q8-wire/RawrXD-ModelLoader/tests/test/gguf/loader.cpp",
+      "classification": "legacy_direct",
+      "identifiers": 2
+    },
+    {
+      "path": ".batch3_backup_20261011T024120993Z/GGUFLoader.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 7
+    },
+    {
+      "path": "asm/GGUF_MASM_Adapter.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 3
+    },
+    {
+      "path": "asm/GGUF_MASM_Adapter.h",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "benchmark/test_real_ministral.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 4
+    },
+    {
+      "path": "deploy/tests/test_gguf_loader.cpp",
+      "classification": "legacy_direct",
+      "identifiers": 2
+    },
+    {
+      "path": "evidence/ModelGenieSourceRecoveryFull/tools/rawrxd_modelgenie_token0_execution.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 3
+    },
+    {
+      "path": "extract_gguf.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 4
+    },
+    {
+      "path": "Full Source/include/gguf_loader.h",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 9
+    },
+    {
+      "path": "Full Source/include/streaming_gguf_loader.h",
+      "classification": "legacy_direct",
+      "identifiers": 3
+    },
+    {
+      "path": "Full Source/preprocessed.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 13
+    },
+    {
+      "path": "Full Source/RawrXD-ModelLoader/src/gguf_loader.cpp",
+      "classification": "legacy_direct",
+      "identifiers": 3
+    },
+    {
+      "path": "Full Source/RawrXD-ModelLoader/src/streaming_gguf_loader.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 5
+    },
+    {
+      "path": "Full Source/RawrXD-ModelLoader/src/win32app/Win32IDE.h",
+      "classification": "legacy_direct",
+      "identifiers": 1
+    },
+    {
+      "path": "Full Source/Ship/Win32_IDE_Complete.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 46
+    },
+    {
+      "path": "Full Source/src/agentic/agent_tool_quantize.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "Full Source/src/backup_include/include/gguf_core.h",
+      "classification": "engine_direct",
+      "identifiers": 2
+    },
+    {
+      "path": "Full Source/src/backup_include/include/gguf_loader.h",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 9
+    },
+    {
+      "path": "Full Source/src/backup_include/include/model_memory_hotpatch.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 2
+    },
+    {
+      "path": "Full Source/src/backup_include/include/streaming_gguf_loader.h",
+      "classification": "legacy_direct",
+      "identifiers": 5
+    },
+    {
+      "path": "Full Source/src/direct_io/gguf_burstzone_patcher.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 5
+    },
+    {
+      "path": "Full Source/src/engine/common_types.h",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "Full Source/src/engine/gguf_core.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 2
+    },
+    {
+      "path": "Full Source/src/engine/gguf_core.h",
+      "classification": "engine_direct",
+      "identifiers": 2
+    },
+    {
+      "path": "Full Source/src/engine/sovereign_engines.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 10
+    },
+    {
+      "path": "Full Source/src/gguf_loader.cpp",
+      "classification": "legacy_direct",
+      "identifiers": 4
+    },
+    {
+      "path": "Full Source/src/gguf_loader.h",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 9
+    },
+    {
+      "path": "Full Source/src/gguf_parser.cpp",
+      "classification": "legacy_direct",
+      "identifiers": 1
+    },
+    {
+      "path": "Full Source/src/gguf_robust_tools.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 2
+    },
+    {
+      "path": "Full Source/src/RawrXD_Interfaces.h",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 4
+    },
+    {
+      "path": "Full Source/src/streaming_gguf_loader.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 5
+    },
+    {
+      "path": "Full Source/src/streaming_gguf_loader.h",
+      "classification": "legacy_direct",
+      "identifiers": 3
+    },
+    {
+      "path": "Full Source/src/win32app/Win32IDE.h",
+      "classification": "legacy_direct",
+      "identifiers": 1
+    },
+    {
+      "path": "Full Source/tests/test_gguf_loader.cpp",
+      "classification": "legacy_direct",
+      "identifiers": 2
+    },
+    {
+      "path": "include/gguf_loader.h",
+      "classification": "legacy_header",
+      "identifiers": 9
+    },
+    {
+      "path": "include/streaming_gguf_loader.h",
+      "classification": "legacy_direct",
+      "identifiers": 3
+    },
+    {
+      "path": "list_gguf_tensors.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 3
+    },
+    {
+      "path": "preprocessed.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 13
+    },
+    {
+      "path": "RawrXD-ModelLoader/src/gguf_loader.cpp",
+      "classification": "legacy_direct",
+      "identifiers": 3
+    },
+    {
+      "path": "RawrXD-ModelLoader/src/streaming_gguf_loader.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 5
+    },
+    {
+      "path": "RawrXD-ModelLoader/src/win32app/Win32IDE.h",
+      "classification": "legacy_direct",
+      "identifiers": 1
+    },
+    {
+      "path": "Ship/gguf_loader.h",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 6
+    },
+    {
+      "path": "sovereign_cli_phase8.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 6
+    },
+    {
+      "path": "sovereign_cli_phase9.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 7
+    },
+    {
+      "path": "src/agentic/agent_tool_quantize.cpp",
+      "classification": "legacy_direct",
+      "identifiers": 1
+    },
+    {
+      "path": "src/autocomplete.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 2
+    },
+    {
+      "path": "src/cli/gguf_validator.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 2
+    },
+    {
+      "path": "src/cli/hotpatch_model_manager.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "src/cli/SovereignCLI_Simple.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "src/core/gguf_d3d12_bridge_stub.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "src/core/gguf_d3d12_bridge_stub.h",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 2
+    },
+    {
+      "path": "src/core/lora_hotswap_manager.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 9
+    },
+    {
+      "path": "src/core/model_loader_chunked_bridge.cpp",
+      "classification": "legacy_direct",
+      "identifiers": 1
+    },
+    {
+      "path": "src/core/streaming_loader.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 5
+    },
+    {
+      "path": "src/core/streaming_loader.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 7
+    },
+    {
+      "path": "src/core/test_mapped_gguf.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 2
+    },
+    {
+      "path": "src/deep2/deep2_k2_logits_vwa_lineage_001.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "src/deep2/deep2_vwa_ir_e2e_001.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 2
+    },
+    {
+      "path": "src/deep2/Deep2IDEIntegration.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "src/deep2/DeepSeekMoELoader.cpp",
+      "classification": "legacy_direct",
+      "identifiers": 2
+    },
+    {
+      "path": "src/deep2/DualGPUHook.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "src/deep2/DualGPUHook.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 2
+    },
+    {
+      "path": "src/deep2/FfnInterInferFix.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 3
+    },
+    {
+      "path": "src/deep2/GGUFAlignment.h",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 3
+    },
+    {
+      "path": "src/deep2/GGUFLoader.cpp",
+      "classification": "legacy_direct",
+      "identifiers": 3
+    },
+    {
+      "path": "src/deep2/GGUFLoader.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 7
+    },
+    {
+      "path": "src/deep2/GGUFLoader_Fixed.cpp",
+      "classification": "legacy_direct",
+      "identifiers": 3
+    },
+    {
+      "path": "src/deep2/GGUFLoaderMMap.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 2
+    },
+    {
+      "path": "src/deep2/GGUFLoaderMMap.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 2
+    },
+    {
+      "path": "src/deep2/IOCPGGUFLoader.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 4
+    },
+    {
+      "path": "src/deep2/IOCPGGUFLoader.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 3
+    },
+    {
+      "path": "src/deep2/k2_probe_safe.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 3
+    },
+    {
+      "path": "src/deep2/lavapath/Gemma4SchemaBind.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "src/deep2/lavapath/GgufStaticResidency.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 2
+    },
+    {
+      "path": "src/deep2/lavapath/TensorNameTypeBinding_One.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 5
+    },
+    {
+      "path": "src/deep2/layer_harness.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "src/deep2/ModelLoader.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 3
+    },
+    {
+      "path": "src/deep2/ModelLoader.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 4
+    },
+    {
+      "path": "src/deep2/ModelOpenCompat.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 7
+    },
+    {
+      "path": "src/deep2/MoEArchitectureParser.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 3
+    },
+    {
+      "path": "src/deep2/MoEArchitectureParser.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 3
+    },
+    {
+      "path": "src/deep2/MoEWeightsLoader.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 2
+    },
+    {
+      "path": "src/deep2/MoEWeightsLoader.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 2
+    },
+    {
+      "path": "src/deep2/production/Deep2ProductionRuntime.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 4
+    },
+    {
+      "path": "src/deep2/qwen35_attn_contract.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "src/deep2/ReverseHotpatchEngine.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 6
+    },
+    {
+      "path": "src/deep2/ReverseHotpatchEngine.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "src/deep2/ReverseTensorRecovery.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "src/deep2/test_embed_q4k_token.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "src/deep2/test_gguf_alignment_diagnostic.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 2
+    },
+    {
+      "path": "src/deep2/test_l10_gate_same_operand.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 2
+    },
+    {
+      "path": "src/deep2/test_q4_0_gemv_certification.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "src/deep2/test_q4k_gemv_parity.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 5
+    },
+    {
+      "path": "src/deep2/test_q_elemdiff.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "src/deep2/test_quant_coverage_001.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "src/deep2/test_v_proj_parity.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "src/deep2/vwa_poc_1_001.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "src/engine/common_types.h",
+      "classification": "engine_header",
+      "identifiers": 1
+    },
+    {
+      "path": "src/engine/gguf_core.cpp",
+      "classification": "legacy_direct",
+      "identifiers": 3
+    },
+    {
+      "path": "src/engine/gguf_core.h",
+      "classification": "engine_direct",
+      "identifiers": 2
+    },
+    {
+      "path": "src/engine/sovereign_engines.cpp",
+      "classification": "legacy_direct",
+      "identifiers": 10
+    },
+    {
+      "path": "src/gguf/gguf_loader_minimal.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 4
+    },
+    {
+      "path": "src/gguf_d3d12_bridge.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "src/gguf_loader.cpp",
+      "classification": "legacy_direct",
+      "identifiers": 3
+    },
+    {
+      "path": "src/gguf_loader_fixed.h",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 9
+    },
+    {
+      "path": "src/GGUFLoader.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 4
+    },
+    {
+      "path": "src/GGUFLoader.h",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 3
+    },
+    {
+      "path": "src/GodModule.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 5
+    },
+    {
+      "path": "src/hotpatch_playback.h",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 7
+    },
+    {
+      "path": "src/inference/gguf_d3d12_bridge_impl.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "src/inference/gpu_dispatch_gate.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 6
+    },
+    {
+      "path": "src/inference/model_loader.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 4
+    },
+    {
+      "path": "src/inference/model_loader.h",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 5
+    },
+    {
+      "path": "src/inference/rawr_monolith_v2.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 4
+    },
+    {
+      "path": "src/model/GGUFLoader_Fixed.cpp",
+      "classification": "legacy_direct",
+      "identifiers": 2
+    },
+    {
+      "path": "src/model/GGUFLoader_Fixed.h",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 3
+    },
+    {
+      "path": "src/model/model_context.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 13
+    },
+    {
+      "path": "src/model/model_context.h",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 6
+    },
+    {
+      "path": "src/model/ModelLoader.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 5
+    },
+    {
+      "path": "src/model/ModelLoader.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 6
+    },
+    {
+      "path": "src/nevm/nevm_replay_harness.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "src/prometheus/prometheus_architecture.h",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 2
+    },
+    {
+      "path": "src/qtapp/gguf_loader.h",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 9
+    },
+    {
+      "path": "src/qtapp/model_memory_hotpatch.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "src/qtapp/model_memory_hotpatch.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 2
+    },
+    {
+      "path": "src/qtapp/streaming_gguf_loader.h",
+      "classification": "legacy_direct",
+      "identifiers": 3
+    },
+    {
+      "path": "src/quantization/gguf_loader.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 4
+    },
+    {
+      "path": "src/quantization/gguf_loader.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 4
+    },
+    {
+      "path": "src/RawrXD_Final_Unified.cpp",
+      "classification": "legacy_direct",
+      "identifiers": 3
+    },
+    {
+      "path": "src/RawrXD_Final_Unified.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 6
+    },
+    {
+      "path": "src/RawrXD_Final_Unified_Part2.cpp",
+      "classification": "legacy_direct",
+      "identifiers": 5
+    },
+    {
+      "path": "src/RawrXD_Interfaces.h",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 4
+    },
+    {
+      "path": "src/reverse/ComponentProbe.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 4
+    },
+    {
+      "path": "src/runtime/gguf_weight_loader.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "src/runtime/gguf_weight_loader.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "src/SovereignAutoEngine.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 4
+    },
+    {
+      "path": "src/speculative/gguf_loader_strict.h",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 4
+    },
+    {
+      "path": "src/speculative/rawr_gguf_parser.h",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 3
+    },
+    {
+      "path": "src/speculative/rawr_monolith_v2.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 5
+    },
+    {
+      "path": "src/speculative/rawr_unified_inference.h",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 3
+    },
+    {
+      "path": "src/streaming_gguf_loader.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 5
+    },
+    {
+      "path": "src/streaming_model_loader_unlimited.hpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 2
+    },
+    {
+      "path": "src/tensor_extractor.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 5
+    },
+    {
+      "path": "src/tensor_loader.cpp",
+      "classification": "legacy_direct",
+      "identifiers": 4
+    },
+    {
+      "path": "src/test_tensor_extraction.cpp",
+      "classification": "legacy_direct",
+      "identifiers": 4
+    },
+    {
+      "path": "src/test_tensor_extraction_complete.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 5
+    },
+    {
+      "path": "src/test_tensor_extraction_final.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 4
+    },
+    {
+      "path": "src/tests/MultiFormat_EquivalenceTest.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 2
+    },
+    {
+      "path": "src/tests/quantization_validator.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 2
+    },
+    {
+      "path": "src/tests/test_unified_inference.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "src/tools/RawrXD_StreamabilityBenchmark.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "src/validation/gates/VAL002_ModelLoadingGate.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 2
+    },
+    {
+      "path": "src/win32app/RawrXD_GUI_Minimal.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "src/win32app/Win32IDE_temp.h",
+      "classification": "legacy_direct",
+      "identifiers": 1
+    },
+    {
+      "path": "src/win32app/Win32IDE_TensorMetadata.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "test_gguf_light.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 4
+    },
+    {
+      "path": "tests/embedding_lookup.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 2
+    },
+    {
+      "path": "tests/embedding_lookup_v2.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 2
+    },
+    {
+      "path": "tests/find_tensor_data.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 3
+    },
+    {
+      "path": "tests/kimi_k2_probe.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 3
+    },
+    {
+      "path": "tests/L4_1_1_Decode.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 6
+    },
+    {
+      "path": "tests/L4_1_Discover_v4.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 6
+    },
+    {
+      "path": "tests/qkv_projection_test.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 2
+    },
+    {
+      "path": "tests/RawrXD_L4_1_Discover.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 5
+    },
+    {
+      "path": "tests/rmsnorm_test.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 2
+    },
+    {
+      "path": "tests/rope_test.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 2
+    },
+    {
+      "path": "tests/tensor_data_validation.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 2
+    },
+    {
+      "path": "tests/tensor_validation.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 3
+    },
+    {
+      "path": "tests/tensor_validator.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 3
+    },
+    {
+      "path": "tests/test_gguf.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 1
+    },
+    {
+      "path": "tests/vulkan_real_tensor_gemm_test.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 5
+    },
+    {
+      "path": "tools/gguf_inspector.cpp",
+      "classification": "UNRESOLVED_INDIRECT",
+      "identifiers": 5
+    }
+  ],
+  "proposed_edits": [
+    ".archive/reconstructed/temp/RawrXD-agentic-ide-production/RawrXD-ModelLoader/src/gguf/loader.cpp",
+    ".archive/reconstructed/temp/RawrXD-q8-wire/RawrXD-ModelLoader/include/streaming/gguf/loader.h",
+    ".archive/reconstructed/temp/RawrXD-q8-wire/RawrXD-ModelLoader/src/gguf/loader.cpp",
+    ".archive/reconstructed/temp/RawrXD-q8-wire/RawrXD-ModelLoader/src/streaming/gguf/loader.h",
+    ".archive/reconstructed/temp/RawrXD-q8-wire/RawrXD-ModelLoader/src/win32app/Win32IDE.h",
+    ".archive/reconstructed/temp/RawrXD-q8-wire/RawrXD-ModelLoader/tests/test/gguf/loader.cpp",
+    "deploy/tests/test_gguf_loader.cpp",
+    "Full Source/include/streaming_gguf_loader.h",
+    "Full Source/RawrXD-ModelLoader/src/gguf_loader.cpp",
+    "Full Source/RawrXD-ModelLoader/src/win32app/Win32IDE.h",
+    "Full Source/src/backup_include/include/streaming_gguf_loader.h",
+    "Full Source/src/gguf_loader.cpp",
+    "Full Source/src/gguf_parser.cpp",
+    "Full Source/src/streaming_gguf_loader.h",
+    "Full Source/src/win32app/Win32IDE.h",
+    "Full Source/tests/test_gguf_loader.cpp",
+    "include/gguf_loader.h",
+    "include/streaming_gguf_loader.h",
+    "RawrXD-ModelLoader/src/gguf_loader.cpp",
+    "RawrXD-ModelLoader/src/win32app/Win32IDE.h",
+    "src/agentic/agent_tool_quantize.cpp",
+    "src/core/model_loader_chunked_bridge.cpp",
+    "src/deep2/DeepSeekMoELoader.cpp",
+    "src/deep2/GGUFLoader.cpp",
+    "src/deep2/GGUFLoader_Fixed.cpp",
+    "src/engine/gguf_core.cpp",
+    "src/engine/sovereign_engines.cpp",
+    "src/gguf_loader.cpp",
+    "src/model/GGUFLoader_Fixed.cpp",
+    "src/qtapp/streaming_gguf_loader.h",
+    "src/RawrXD_Final_Unified.cpp",
+    "src/RawrXD_Final_Unified_Part2.cpp",
+    "src/tensor_loader.cpp",
+    "src/test_tensor_extraction.cpp",
+    "src/win32app/Win32IDE_temp.h"
+  ],
+  "hazards": [
+    ".archive/reconstructed/temp/RawrXD-agentic-ide-production/RawrXD-ModelLoader/include/gguf/loader.h",
+    ".archive/reconstructed/temp/RawrXD-agentic-ide-production/RawrXD-ModelLoader/src/Memory/streaming/gguf/memory/manager.h",
+    ".archive/reconstructed/temp/RawrXD-agentic-ide-production/RawrXD-ModelLoader/src/qtapp/gguf/loader.h",
+    ".archive/reconstructed/temp/RawrXD-agentic-ide-production/src/ModelMetadataParser.cpp",
+    ".archive/reconstructed/temp/RawrXD-q8-wire/RawrXD-ModelLoader/include/gguf/loader.h",
+    ".archive/reconstructed/temp/RawrXD-q8-wire/RawrXD-ModelLoader/src/qtapp/analyze/gguf.cpp",
+    ".archive/reconstructed/temp/RawrXD-q8-wire/RawrXD-ModelLoader/src/qtapp/model/memory/hotpatch.cpp",
+    ".archive/reconstructed/temp/RawrXD-q8-wire/RawrXD-ModelLoader/src/qtapp/model/memory/hotpatch.hpp",
+    ".archive/reconstructed/temp/RawrXD-q8-wire/RawrXD-ModelLoader/src/streaming/gguf/loader.cpp",
+    ".batch3_backup_20261011T024120993Z/GGUFLoader.hpp",
+    "Full Source/RawrXD-ModelLoader/src/streaming_gguf_loader.cpp",
+    "Full Source/Ship/Win32_IDE_Complete.cpp",
+    "Full Source/include/gguf_loader.h",
+    "Full Source/preprocessed.cpp",
+    "Full Source/src/RawrXD_Interfaces.h",
+    "Full Source/src/agentic/agent_tool_quantize.cpp",
+    "Full Source/src/backup_include/include/gguf_loader.h",
+    "Full Source/src/backup_include/include/model_memory_hotpatch.hpp",
+    "Full Source/src/direct_io/gguf_burstzone_patcher.cpp",
+    "Full Source/src/engine/common_types.h",
+    "Full Source/src/engine/gguf_core.cpp",
+    "Full Source/src/engine/sovereign_engines.cpp",
+    "Full Source/src/gguf_loader.h",
+    "Full Source/src/gguf_robust_tools.hpp",
+    "Full Source/src/streaming_gguf_loader.cpp",
+    "RawrXD-ModelLoader/src/streaming_gguf_loader.cpp",
+    "Ship/gguf_loader.h",
+    "asm/GGUF_MASM_Adapter.cpp",
+    "asm/GGUF_MASM_Adapter.h",
+    "benchmark/test_real_ministral.cpp",
+    "evidence/ModelGenieSourceRecoveryFull/tools/rawrxd_modelgenie_token0_execution.cpp",
+    "extract_gguf.cpp",
+    "list_gguf_tensors.cpp",
+    "preprocessed.cpp",
+    "sovereign_cli_phase8.cpp",
+    "sovereign_cli_phase9.cpp",
+    "src/GGUFLoader.cpp",
+    "src/GGUFLoader.h",
+    "src/GodModule.hpp",
+    "src/RawrXD_Final_Unified.hpp",
+    "src/RawrXD_Interfaces.h",
+    "src/SovereignAutoEngine.hpp",
+    "src/autocomplete.cpp",
+    "src/cli/SovereignCLI_Simple.cpp",
+    "src/cli/gguf_validator.hpp",
+    "src/cli/hotpatch_model_manager.hpp",
+    "src/core/gguf_d3d12_bridge_stub.cpp",
+    "src/core/gguf_d3d12_bridge_stub.h",
+    "src/core/lora_hotswap_manager.cpp",
+    "src/core/streaming_loader.cpp",
+    "src/core/streaming_loader.hpp",
+    "src/core/test_mapped_gguf.cpp",
+    "src/deep2/Deep2IDEIntegration.cpp",
+    "src/deep2/DualGPUHook.cpp",
+    "src/deep2/DualGPUHook.hpp",
+    "src/deep2/FfnInterInferFix.hpp",
+    "src/deep2/GGUFAlignment.h",
+    "src/deep2/GGUFLoader.hpp",
+    "src/deep2/GGUFLoaderMMap.cpp",
+    "src/deep2/GGUFLoaderMMap.hpp",
+    "src/deep2/IOCPGGUFLoader.cpp",
+    "src/deep2/IOCPGGUFLoader.hpp",
+    "src/deep2/MoEArchitectureParser.cpp",
+    "src/deep2/MoEArchitectureParser.hpp",
+    "src/deep2/MoEWeightsLoader.cpp",
+    "src/deep2/MoEWeightsLoader.hpp",
+    "src/deep2/ModelLoader.cpp",
+    "src/deep2/ModelLoader.hpp",
+    "src/deep2/ModelOpenCompat.hpp",
+    "src/deep2/ReverseHotpatchEngine.cpp",
+    "src/deep2/ReverseHotpatchEngine.hpp",
+    "src/deep2/ReverseTensorRecovery.hpp",
+    "src/deep2/deep2_k2_logits_vwa_lineage_001.cpp",
+    "src/deep2/deep2_vwa_ir_e2e_001.cpp",
+    "src/deep2/k2_probe_safe.cpp",
+    "src/deep2/lavapath/Gemma4SchemaBind.hpp",
+    "src/deep2/lavapath/GgufStaticResidency.cpp",
+    "src/deep2/lavapath/TensorNameTypeBinding_One.hpp",
+    "src/deep2/layer_harness.cpp",
+    "src/deep2/production/Deep2ProductionRuntime.hpp",
+    "src/deep2/qwen35_attn_contract.cpp",
+    "src/deep2/test_embed_q4k_token.cpp",
+    "src/deep2/test_gguf_alignment_diagnostic.cpp",
+    "src/deep2/test_l10_gate_same_operand.cpp",
+    "src/deep2/test_q4_0_gemv_certification.cpp",
+    "src/deep2/test_q4k_gemv_parity.cpp",
+    "src/deep2/test_q_elemdiff.cpp",
+    "src/deep2/test_quant_coverage_001.cpp",
+    "src/deep2/test_v_proj_parity.cpp",
+    "src/deep2/vwa_poc_1_001.cpp",
+    "src/gguf/gguf_loader_minimal.cpp",
+    "src/gguf_d3d12_bridge.cpp",
+    "src/gguf_loader_fixed.h",
+    "src/hotpatch_playback.h",
+    "src/inference/gguf_d3d12_bridge_impl.cpp",
+    "src/inference/gpu_dispatch_gate.cpp",
+    "src/inference/model_loader.cpp",
+    "src/inference/model_loader.h",
+    "src/inference/rawr_monolith_v2.cpp",
+    "src/model/GGUFLoader_Fixed.h",
+    "src/model/ModelLoader.cpp",
+    "src/model/ModelLoader.hpp",
+    "src/model/model_context.cpp",
+    "src/model/model_context.h",
+    "src/nevm/nevm_replay_harness.hpp",
+    "src/prometheus/prometheus_architecture.h",
+    "src/qtapp/gguf_loader.h",
+    "src/qtapp/model_memory_hotpatch.cpp",
+    "src/qtapp/model_memory_hotpatch.hpp",
+    "src/quantization/gguf_loader.cpp",
+    "src/quantization/gguf_loader.hpp",
+    "src/reverse/ComponentProbe.hpp",
+    "src/runtime/gguf_weight_loader.cpp",
+    "src/runtime/gguf_weight_loader.hpp",
+    "src/speculative/gguf_loader_strict.h",
+    "src/speculative/rawr_gguf_parser.h",
+    "src/speculative/rawr_monolith_v2.cpp",
+    "src/speculative/rawr_unified_inference.h",
+    "src/streaming_gguf_loader.cpp",
+    "src/streaming_model_loader_unlimited.hpp",
+    "src/tensor_extractor.cpp",
+    "src/test_tensor_extraction_complete.cpp",
+    "src/test_tensor_extraction_final.cpp",
+    "src/tests/MultiFormat_EquivalenceTest.cpp",
+    "src/tests/quantization_validator.cpp",
+    "src/tests/test_unified_inference.cpp",
+    "src/tools/RawrXD_StreamabilityBenchmark.cpp",
+    "src/validation/gates/VAL002_ModelLoadingGate.cpp",
+    "src/win32app/RawrXD_GUI_Minimal.cpp",
+    "src/win32app/Win32IDE_TensorMetadata.cpp",
+    "test_gguf_light.cpp",
+    "tests/L4_1_1_Decode.cpp",
+    "tests/L4_1_Discover_v4.cpp",
+    "tests/RawrXD_L4_1_Discover.cpp",
+    "tests/embedding_lookup.cpp",
+    "tests/embedding_lookup_v2.cpp",
+    "tests/find_tensor_data.cpp",
+    "tests/kimi_k2_probe.cpp",
+    "tests/qkv_projection_test.cpp",
+    "tests/rmsnorm_test.cpp",
+    "tests/rope_test.cpp",
+    "tests/tensor_data_validation.cpp",
+    "tests/tensor_validation.cpp",
+    "tests/tensor_validator.cpp",
+    "tests/test_gguf.cpp",
+    "tests/vulkan_real_tensor_gemm_test.cpp",
+    "tools/gguf_inspector.cpp"
+  ],
+  "status": "BLOCKED"
+}

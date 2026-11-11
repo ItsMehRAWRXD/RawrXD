@@ -1,0 +1,166 @@
+# Authority disposition — 2026-08-29
+
+## Encoding
+
+```text
+P1_UI_ENCODING_001
+  result                 = historical PASS 11/11
+  certified_exe_sha256   = 69880927CDF9C888B103C0734C3AAD7ADE4DABB91F70F39B252168C1A013524C
+  certified_build        = build-p1-filter2 (not present on F:/D:)
+  transferable_to_current= NO
+
+P1_UI_ENCODING_002
+  GATE                   = PASS
+  exe_sha256             = E3F3BAA4EFE70159CF1BF51BE9B12F8680BBE359FCB0F890A849C977D0391A55
+  FIRST_FALSE_TRANSITION = none
+  UTF8_LATIN_EXACT       = PASS
+  STATUSBAR_EXISTS_AT_PROBE = PASS
+  STATUSBAR_IS_UNICODE   = YES
+  STATUSBAR_EXACT        = PASS
+  evidence               = evidence/P1_UI_ENCODING_002/GATE.txt
+```
+
+Valid statement:
+
+> Unicode boundary **certified** on product binary SHA E3F3BAA4… (RichEdit + Unicode status bar). Status-bar lifecycle ordered before encoding probe.
+
+Do not cite missing `IDE_SYSTEMATIC_FIX/DISPOSITION.txt` or old `GATE.txt` as local evidence.
+
+## Product-claim hierarchy (frozen)
+
+```text
+1. P1_UI_ENCODING_002
+   PASS on E3F3BAA4… (RichEdit + status bar lifecycle)
+   ↓ unblocks product-runtime claims that depend on UI encoding
+
+2. RAWRXD_ACCELERATION_001
+   SPEC FROZEN / NOT EXECUTED
+   subordinate to live GGUF + REAL_SPEEDUP
+
+3. MODEL_0DAY / UNSTATIC_MODEL_HYPOTHESIS
+   OPEN RESEARCH — not certification authority
+   KnownOptimization ≠ RuntimeDiscovery ≠ CertifiedHotpatch
+```
+
+Research must not wash out remaining product gates (live GGUF / REAL_SPEEDUP).
+
+Immediate eng target after encoding: live GGUF open/stream + REAL_SPEEDUP.
+
+## Valuation priority (frozen)
+
+```text
+P1_UI_ENCODING_002 PASS/FROZEN on current product SHA
+        ↓
+RAWRXD_ACCELERATION_001 / TinyLlama  (SPEC frozen)
+        ↓
+REAL_SPEEDUP > 1.00×   (external wall only)
+        ↓
+remove dominant wall overhead (instrument hybrid rounds)
+        ↓
+2× target
+        ↓
+ACCELERATION_001 / 7B
+        ↓
+RAWRXD_OVERSIZE_001
+```
+
+## Reverse Auto Expert / Unstatic primitives
+
+```text
+≠  = DifferenceEngine   (DESIRED ≠ OBSERVED → Δ → correct → remeasure)
+VRAM → ReverseQuantPlan
+latency/speedup → LatencyIntent / ReverseSpeedupSolver
+work budget → ReverseWorkPlan   (MODEL_SIZE ≠ WORK_REQUIRED → ΔWORK)
+
+UNSTATIC_MODEL_HYPOTHESIS = OPEN RESEARCH
+  KnownOptimization ≠ RuntimeDiscovery ≠ CertifiedHotpatch
+```
+
+`≠` is discoverable optimization space, not boolean failure.
+Product gates (encoding) remain orthogonal and blocking.
+
+## Valuation mark (2026-08-29 evening) — execution-substrate frame
+
+**Freeze id:** `VALUATION_AUTHORITY_2026-08-29`  
+**File:** `evidence/VALUATION_AUTHORITY_2026-08-29.txt`
+
+```text
+CENTRAL_PRE_MONEY      ≈ $35M
+FUNDABLE_RANGE         = $25M–$45M
+TECHNICAL_IP_RANGE     = $10M–$18M
+NEXT_PROOF_BAND        = $40M–$75M
+UNSTATIC_PREMIUM       = NOT YET EARNED
+```
+
+Blocking discounts:
+
+```text
+P1_UI_ENCODING_002               = PASS (E3F3BAA4…)
+P1_IDE_EXEC_POLICY_LIVE_GGUF_001 = FAIL  ← blocking
+REAL_SPEEDUP > 1.00×             = NOT PROVEN
+COMMERCIAL_TRACTION              = NOT ESTABLISHED
+```
+
+Mark remains ≈ $35M until live GGUF PASS + REAL_SPEEDUP > 1 (ladder).
+
+Promotion ladder (no skip):
+
+```text
+$35M → encoding PASS → live GGUF PASS → REAL_SPEEDUP>1
+    → $40M–$75M → certified unknown discovery → reproduce/generalize
+    → second compounded discovery → Unstatic premium defensible
+```
+
+Older `VALUATION_TECHNICAL_2026-08-29` AGENT-E2E ranges ($90M–$145M) =
+**historical / non-transferable** while product gates FAIL.
+
+Practical rule: **NO NEW VALUATION PREMIUM** unless evidence advances the
+promotion ladder. Architecture/stubs/hypotheses → technical confidence only.
+Detail: `evidence/VALUATION_EXECUTION_SUBSTRATE_2026-08-29/`
+
+## NUCOLD / reverse load (research contract)
+
+```text
+NuColdHotpatch.hpp        ControllerHotPatch + classifier
+ReverseLoadLifecycle.hpp  L0..L3 AcquireModel (cold = exception)
+NUCOLD_HOTPATCH_001       SPEC + P1 harness (generation RCU preserved)
+
+NORMAL_SELECTION = L3/L2 ; L0 = first materialization only
+UNSTATIC_PREMIUM still NOT YET EARNED (valuation unchanged)
+```
+
+```text
+REAL_SPEEDUP > 1.00×
+  ⇔ CANDIDATE_WALL < BASELINE_WALL
+  requires NET_TIME_SAVED > 0
+  WORK_AVOIDED > 0 alone is NOT sufficient
+
+contract = src/deep2/execution_policy/SpeedupAttribution.hpp
+ladder   = R0..R10 in evidence/RAWRXD_ACCELERATION_001/SPEC.txt
+```
+
+HexMag / Unstatic objective: maximize **net wall contribution** (fewer necessary ops with proof cheaper than avoided work), not TPS theater.
+
+## Execution policy apply (2026-08-29)
+
+```text
+P1_IDE_EXEC_POLICY_APPLY_001 = PASS
+  evidence = evidence/P1_IDE_EXEC_POLICY_APPLY_001/GATE.txt
+  scope    = Elastic enforcement seam (plan → stamp → observe)
+  OBSERVED_PLACEMENT_MATCHES_PLAN = PASS
+
+LIVE_GGUF_PRODUCT_PATH         = NOT YET CERTIFIED
+P1_IDE_EXEC_POLICY_LIVE_GGUF_001
+  status   = FAIL (FIRST_FALSE=GGUF_OPEN, SEH 0xE06D7363 on tinyllama_fresh.gguf)
+  evidence = evidence/P1_IDE_EXEC_POLICY_LIVE_GGUF_001/GATE.txt
+```
+
+Valid statement (APPLY_001):
+
+> IDE load enforces the user-owned ExecutionPolicy onto Elastic residency; observed placement stamps match the derived plan.
+
+Do **not** claim:
+
+> Every live GGUF loaded by the IDE is placed according to policy.
+
+until `P1_IDE_EXEC_POLICY_LIVE_GGUF_001 = PASS` on a real GGUF tensor census + generation.

@@ -1,0 +1,29 @@
+BATCH2_ATTN_LADDER_NUM
+abs_eps=1e-6
+bitwise=NOT_REQUIRED
+
+Q_PRE_ROPE_0       gate=PASS    n=2048 exact=309 bitdiff=1739 max_abs=1.490116e-07 mean=5.834750e-09 rms=1.011875e-08 gt1e-6=0 gt1e-5=0 gt1e-4=0 first=0 largest=1264 fnvD=ced1abe971861249 fnvL=8d53927ede5ddb3f
+K_PRE_ROPE_0       gate=PASS    n=256 exact=38 bitdiff=218 max_abs=8.940697e-08 mean=1.176886e-08 rms=1.794657e-08 gt1e-6=0 gt1e-5=0 gt1e-4=0 first=0 largest=156 fnvD=d61547179ccaf150 fnvL=f065873c7d34fcfd
+V_0                gate=FAIL    n=256 exact=0 bitdiff=256 max_abs=2.733915e-01 mean=9.770222e-03 rms=2.534332e-02 gt1e-6=256 gt1e-5=255 gt1e-4=253 first=0 largest=12 fnvD=df87f6368ddea59a fnvL=c4b61c29e407b2d5
+Q_POST_ROPE_0      gate=FAIL    n=2048 exact=0 bitdiff=2048 max_abs=1.350177e+01 mean=4.782793e-01 rms=9.532769e-01 gt1e-6=2048 gt1e-5=2048 gt1e-4=2048 first=0 largest=428 fnvD=ced1abe971861249 fnvL=28abd12532dca8fc
+K_POST_ROPE_0      gate=FAIL    n=256 exact=0 bitdiff=256 max_abs=1.387879e+01 mean=1.788367e+00 rms=2.490173e+00 gt1e-6=256 gt1e-5=256 gt1e-4=256 first=0 largest=174 fnvD=d61547179ccaf150 fnvL=62d045190ff5b683
+ATTN_OUT_0         gate=FAIL    n=2048 exact=0 bitdiff=2048 max_abs=1.551839e-01 mean=4.565278e-03 rms=7.991891e-03 gt1e-6=2047 gt1e-5=2045 gt1e-4=2014 first=0 largest=2014 fnvD=df79848741598588 fnvL=4f5895ae61378ea0
+FFN_INP_0          gate=FAIL    n=2048 exact=0 bitdiff=2048 max_abs=1.963333e-01 mean=5.208956e-03 rms=1.061958e-02 gt1e-6=2048 gt1e-5=2046 gt1e-4=2014 first=0 largest=2014 fnvD=8f22ae0c3c778c2b fnvL=519194ff62c0dacf
+FFN_NORM_0         gate=FAIL    n=2048 exact=0 bitdiff=2048 max_abs=2.650330e+00 mean=5.355435e-02 rms=1.206800e-01 gt1e-6=2048 gt1e-5=2048 gt1e-4=2046 first=0 largest=1447 fnvD=278df3b5e3410f6c fnvL=ed47d300a6ca6505
+FFN_UP_0           MISSING
+FFN_ACT_0          MISSING
+FFN_DOWN_0         gate=FAIL    n=2048 exact=0 bitdiff=2048 max_abs=1.851765e-01 mean=1.678494e-02 rms=2.181001e-02 gt1e-6=2048 gt1e-5=2047 gt1e-4=2038 first=0 largest=411 fnvD=99af247fcc8dac96 fnvL=2da5f09c868a8204
+POST_FFN_0         gate=FAIL    n=2048 exact=0 bitdiff=2048 max_abs=3.766259e-01 mean=1.888957e-02 rms=2.732656e-02 gt1e-6=2048 gt1e-5=2048 gt1e-4=2042 first=0 largest=2014 fnvD=3adc14eb5fb5ea66 fnvL=2d3b6de73d8d9dce
+LAYER_OUT_0        MISSING
+LAYER_OUT_1        MISSING
+LAYER_OUT_2        MISSING
+LAYER_OUT_21       MISSING
+PROMPT_FINAL_NORM  MISSING
+
+first_material_FAIL=V_0
+first_INSPECT=NONE
+
+Q_PRE_ROPE_NUMERICAL=PASS @ 1e-6 (frozen)
+Q_PRE_ROPE_BITWISE=OPEN
+STRICT_BITWISE_PARITY=OPEN
+decision_rule: <=1e-6 PASS; <=1e-5 INSPECT; >1e-5 FAIL/STOP

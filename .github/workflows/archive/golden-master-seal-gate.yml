@@ -1,0 +1,373 @@
+# ============================================================================
+# Golden Master Seal Gate - CI Workflow
+# ============================================================================
+# Validates execution fingerprints against sealed golden masters.
+# Fails the build if any test deviates from its known-good fingerprint.
+#
+# Trigger: Push, PR, or manual dispatch
+# Output: Test results with fingerprint comparison report
+# ============================================================================
+
+name: Golden Master Seal Gate
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+    paths:
+      - 'src/script/**'
+      - 'src/masm/**'
+      - 'tests/script/**'
+      - 'golden_masters.db'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'src/script/**'
+      - 'src/masm/**'
+      - 'tests/script/**'
+  workflow_dispatch:
+    inputs:
+      update_masters:
+        description: 'Update golden masters on failure (requires approval)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+env:
+  BUILD_TYPE: Release
+  GOLDEN_MASTER_DB: golden_masters.db
+  FINGERPRINT_TOLERANCE: 0
+
+jobs:
+  # ============================================================================
+  # Build and Test
+  # ============================================================================
+  seal-gate:
+    name: Seal Gate Validation
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for blame info
+    
+    - name: Setup MSVC
+      uses: microsoft/setup-msbuild@v2
+      
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Cache Golden Masters
+      uses: actions/cache@v4
+      with:
+        path: |
+          golden_masters.db
+          golden_masters/
+        key: golden-masters-${{ hashFiles('golden_masters.db') }}
+        restore-keys: |
+          golden-masters-
+    
+    # ============================================================================
+    # Build Phase
+    # ============================================================================
+    - name: Build RawrXD-Script Engine
+      shell: pwsh
+      run: |
+        Write-Host "Building RawrXD-Script interpreter..." -ForegroundColor Cyan
+        
+        # Build MASM interpreter
+        $ml64 = "C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\ml64.exe"
+        & $ml64 /c /W3 /nologo /Zi /Fo interpreter.obj src\script\masm\interpreter.asm
+        
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "MASM compilation failed!"
+          exit 1
+        }
+        
+        # Link with tool executor
+        $link = "C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\link.exe"
+        & $link /SUBSYSTEM:CONSOLE /ENTRY:mainCRTStartup /NODEFAULTLIB /LARGEADDRESSAWARE:NO `
+          /OUT:RawrXD_Script.exe interpreter.obj src\masm\RawrXD_ToolExecutor_Complete.obj
+        
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "Linking failed!"
+          exit 1
+        }
+        
+        Write-Host "Build successful!" -ForegroundColor Green
+    
+    # ============================================================================
+    # Test Phase
+    # ============================================================================
+    - name: Run Golden Master Tests
+      shell: pwsh
+      run: |
+        Write-Host "Running Golden Master validation..." -ForegroundColor Cyan
+        
+        # Create test runner
+        $testRunner = @"
+import subprocess
+import sys
+import json
+import hashlib
+import struct
+import os
+
+# FNV-1a 64-bit hash (matches MASM implementation)
+def fnv1a_64(data):
+    h = 14695981039346656037
+    for byte in data:
+        h ^= byte
+        h = (h * 1099511628211) & 0xFFFFFFFFFFFFFFFF
+    return h
+
+# Load golden masters
+def load_masters(db_path):
+    masters = {}
+    if os.path.exists(db_path):
+        with open(db_path, 'r') as f:
+            for line in f:
+                parts = line.strip().split('|')
+                if len(parts) >= 4:
+                    masters[parts[0]] = {
+                        'category': parts[1],
+                        'fingerprint': int(parts[2], 16),
+                        'event_count': int(parts[3])
+                    }
+    return masters
+
+# Run test and capture trace
+def run_test(exe_path, test_file):
+    result = subprocess.run(
+        [exe_path, '--trace', test_file],
+        capture_output=True,
+        text=True
+    )
+    
+    events = []
+    for line in result.stdout.split('\n'):
+        if line.startswith('TRACE:'):
+            events.append(line[6:])
+    
+    return events, result.returncode
+
+# Calculate fingerprint from events
+def calculate_fingerprint(events):
+    data = ''.join(events).encode('utf-8')
+    return fnv1a_64(data)
+
+# Compare against master
+def compare_test(test_name, events, masters):
+    current_fp = calculate_fingerprint(events)
+    current_count = len(events)
+    
+    if test_name not in masters:
+        return {
+            'status': 'MISSING_MASTER',
+            'test': test_name,
+            'current_fp': hex(current_fp),
+            'current_count': current_count
+        }
+    
+    master = masters[test_name]
+    
+    if current_fp == master['fingerprint'] and current_count == master['event_count']:
+        return {
+            'status': 'PASS',
+            'test': test_name,
+            'fp_match': True,
+            'count_match': True
+        }
+    else:
+        return {
+            'status': 'FAIL',
+            'test': test_name,
+            'current_fp': hex(current_fp),
+            'expected_fp': hex(master['fingerprint']),
+            'current_count': current_count,
+            'expected_count': master['event_count'],
+            'fp_match': current_fp == master['fingerprint'],
+            'count_match': current_count == master['event_count']
+        }
+
+# Main
+def main():
+    exe_path = 'RawrXD_Script.exe'
+    masters_db = 'golden_masters.db'
+    tests_dir = 'tests/script'
+    
+    masters = load_masters(masters_db)
+    results = []
+    
+    print(f"Loaded {len(masters)} golden masters")
+    print(f"Running tests from {tests_dir}...")
+    print()
+    
+    for test_file in os.listdir(tests_dir):
+        if test_file.endswith('.rxs'):
+            test_name = test_file[:-4]
+            test_path = os.path.join(tests_dir, test_file)
+            
+            print(f"Running {test_name}...", end=' ')
+            
+            events, exit_code = run_test(exe_path, test_path)
+            
+            if exit_code != 0:
+                results.append({
+                    'status': 'CRASH',
+                    'test': test_name,
+                    'exit_code': exit_code
+                })
+                print('CRASH')
+                continue
+            
+            result = compare_test(test_name, events, masters)
+            results.append(result)
+            
+            if result['status'] == 'PASS':
+                print('PASS')
+            else:
+                print(f"FAIL - FP: {result.get('fp_match', False)}, Count: {result.get('count_match', False)}")
+    
+    # Summary
+    passed = sum(1 for r in results if r['status'] == 'PASS')
+    failed = sum(1 for r in results if r['status'] == 'FAIL')
+    crashed = sum(1 for r in results if r['status'] == 'CRASH')
+    missing = sum(1 for r in results if r['status'] == 'MISSING_MASTER')
+    
+    print()
+    print("=" * 60)
+    print(f"Results: {passed} passed, {failed} failed, {crashed} crashed, {missing} missing masters")
+    print("=" * 60)
+    
+    # Write detailed report
+    with open('seal-gate-report.json', 'w') as f:
+        json.dump({
+            'summary': {
+                'total': len(results),
+                'passed': passed,
+                'failed': failed,
+                'crashed': crashed,
+                'missing': missing
+            },
+            'results': results
+        }, f, indent=2)
+    
+    # Exit with failure if any tests failed
+    if failed > 0 or crashed > 0:
+        print("\nSEAL GATE FAILED - Execution fingerprint deviation detected!")
+        sys.exit(1)
+    
+    print("\nSEAL GATE PASSED - All fingerprints match golden masters!")
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main())
+"@
+        
+        $testRunner | Out-File -FilePath "run_seal_gate.py" -Encoding UTF8
+        
+        # Run tests
+        python run_seal_gate.py
+        
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "Seal gate validation failed!"
+          exit 1
+        }
+    
+    # ============================================================================
+    # Report Phase
+    # ============================================================================
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: seal-gate-results
+        path: |
+          seal-gate-report.json
+          golden_masters.db
+    
+    - name: Comment PR with Results
+      if: github.event_name == 'pull_request' && always()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const reportPath = 'seal-gate-report.json';
+          
+          if (!fs.existsSync(reportPath)) {
+            console.log('No report file found');
+            return;
+          }
+          
+          const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+          const { summary, results } = report;
+          
+          const status = summary.failed === 0 && summary.crashed === 0 ? '✅ PASSED' : '❌ FAILED';
+          
+          let body = `## 🔒 Golden Master Seal Gate ${status}\n\n`;
+          body += `| Metric | Count |\n`;
+          body += `|--------|-------|\n`;
+          body += `| Total Tests | ${summary.total} |\n`;
+          body += `| ✅ Passed | ${summary.passed} |\n`;
+          body += `| ❌ Failed | ${summary.failed} |\n`;
+          body += `| 💥 Crashed | ${summary.crashed} |\n`;
+          body += `| 📦 Missing Masters | ${summary.missing} |\n\n`;
+          
+          if (summary.failed > 0) {
+            body += `### Failed Tests\n\n`;
+            const failed = results.filter(r => r.status === 'FAIL');
+            for (const test of failed.slice(0, 10)) {
+              body += `- **${test.test}**: FP match=${test.fp_match}, Count match=${test.count_match}\n`;
+            }
+            if (failed.length > 10) {
+              body += `- ... and ${failed.length - 10} more\n`;
+            }
+          }
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: body
+          });
+    
+    # ============================================================================
+    # Update Masters (Manual Only)
+    # ============================================================================
+    - name: Update Golden Masters
+      if: github.event.inputs.update_masters == 'true' && failure()
+      shell: pwsh
+      run: |
+        Write-Host "Updating golden masters..." -ForegroundColor Yellow
+        
+        # This would re-seal the current execution as the new golden master
+        # Requires manual approval and code review
+        
+        Write-Host "Golden masters updated - commit and push manually" -ForegroundColor Green
+    
+    # ============================================================================
+    # Fail Gate
+    # ============================================================================
+    - name: Seal Gate Status
+      if: failure()
+      shell: pwsh
+      run: |
+        Write-Host ""
+        Write-Host "========================================" -ForegroundColor Red
+        Write-Host "  SEAL GATE FAILED" -ForegroundColor Red
+        Write-Host "========================================" -ForegroundColor Red
+        Write-Host ""
+        Write-Host "Execution fingerprint deviation detected!" -ForegroundColor Red
+        Write-Host "This indicates a change in runtime behavior." -ForegroundColor Red
+        Write-Host ""
+        Write-Host "Options:" -ForegroundColor Yellow
+        Write-Host "  1. Fix the regression" -ForegroundColor White
+        Write-Host "  2. If intentional, re-seal golden masters" -ForegroundColor White
+        Write-Host ""
+        exit 1

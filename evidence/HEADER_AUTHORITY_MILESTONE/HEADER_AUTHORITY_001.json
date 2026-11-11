@@ -1,0 +1,55 @@
+{
+  "gate": "RAWRXD_MODELGENIE_HEADER_AUTHORITY_001",
+  "archive_date": "2026-10-07",
+  "status": "CERTIFIED_PASS",
+  "frozen_evidence_recovered": 1,
+  "modelgenome_recovered": 1,
+  "generated_headers": 8,
+  "generated_headers_compile": 1,
+  "runtime_proof": {
+    "rom_open": 1,
+    "rom_path": "G:\\~dev\\rawrxd\\models\\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf",
+    "rom_bytes": 10364416768,
+    "tensors_expected": 377,
+    "tensors_bound": 377,
+    "tensors_missing": 0,
+    "blocks_expected": 27,
+    "blocks_authority_pass": 27,
+    "source_tensor_authority": "PASS",
+    "stub_paths": 0,
+    "zero_fill_fallbacks": 0,
+    "synthetic_outputs": 0
+  },
+  "boundary": {
+    "proven": [
+      "frozen evidence → ModelGenome.hpp → eight generated headers → compiled C++ runtime",
+      "ROM mapping and tensor binding",
+      "all 27 BlockGenome tensor operands verified by source authority gate"
+    ],
+    "not_proven": [
+      "numerical correctness of logits",
+      "forward pass produces finite values beyond Block 0",
+      "quant decode numerical parity",
+      "MatMul numerical parity",
+      "MLA numerics",
+      "MoE numerics"
+    ],
+    "numerical_execution_verdict": "UNPROVEN",
+    "cause_of_nonfinite": "UNRESOLVED",
+    "first_numerical_failure": "BLOCK_1 (scalar RMSNorm sum=-nan at Block 1)",
+    "token0_emitted": 0
+  },
+  "next_phase": "NUMERICAL_BOUNDARY_ISOLATION",
+  "ladder": [
+    "first-nonfinite boundary",
+    "quant reference parity",
+    "MatMul reference parity",
+    "RMSNorm parity",
+    "MLA numerics",
+    "MoE numerics",
+    "final norm + LM head",
+    "LOGITS_FINITE=1",
+    "TOKEN0_EMITTED=1",
+    "VERDICT=PASS_EXECUTABLE"
+  ]
+}

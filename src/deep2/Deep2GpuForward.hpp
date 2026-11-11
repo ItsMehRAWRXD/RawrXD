@@ -1,0 +1,108 @@
+// Deep2GpuForward.hpp — STREAMER_GPU_FORWARD_OPS_001 + RESIDENT_DECODE_001
+#pragma once
+#include <cstdint>
+#include <cstdio>
+
+namespace Deep2 {
+
+struct GpuForwardCounters {
+    uint64_t rmsNormOps = 0;
+    uint64_t qkvOps = 0;
+    uint64_t ropeOps = 0;
+    uint64_t attnScoreOps = 0;
+    uint64_t softmaxOps = 0;
+    uint64_t attnValueOps = 0;
+    uint64_t oProjOps = 0;
+    uint64_t residualOps = 0;
+    uint64_t ffnNormOps = 0;
+    uint64_t ffnActOps = 0;
+    uint64_t ffnResidualOps = 0;
+    uint64_t forwardLayers = 0;
+    uint64_t forwardSlot[8]{};
+    uint64_t hostSyncBoundaries = 0;
+    uint64_t hostMaterializations = 0;
+    uint64_t ownershipTransfers = 0;
+    uint64_t intraSlotHostTransfers = 0;
+    uint64_t liveDecodeResidentTokens = 0;
+    uint64_t liveDecodeTokens = 0;
+    uint64_t hostForwardLayerCalls = 0;
+    uint64_t plannedCpuLayerCalls = 0;
+    uint64_t gpuLayersLastToken = 0;
+    uint64_t layerSubmits = 0;
+    uint64_t opSubmits = 0;
+    uint64_t q4kPackedOps = 0;
+    uint64_t q6kPackedOps = 0;
+    uint64_t q2kPackedOps = 0;
+    uint64_t cpuF32Expands = 0;
+};
+
+inline bool Deep2GpuForward_Resident(const GpuForwardCounters& c) noexcept {
+    return c.forwardLayers > 0 && c.rmsNormOps > 0 && c.qkvOps > 0 &&
+           c.ropeOps > 0 && c.attnScoreOps > 0 && c.residualOps > 0 &&
+           c.ffnActOps > 0 && c.hostForwardLayerCalls == 0;
+}
+
+inline bool Deep2GpuForward_IsReal(const GpuForwardCounters& c, uint64_t) noexcept {
+    return Deep2GpuForward_Resident(c) && c.hostMaterializations == 0;
+}
+
+inline void Deep2GpuForward_Emit(FILE* f, const GpuForwardCounters& c, uint64_t cpuFb) noexcept {
+    auto emit = [&](FILE* o) {
+        if (!o) return;
+        fprintf(o, "DEEP2_GPU_RMSNORM_OPS=%llu\n", (unsigned long long)c.rmsNormOps);
+        fprintf(o, "DEEP2_GPU_QKV_OPS=%llu\n", (unsigned long long)c.qkvOps);
+        fprintf(o, "DEEP2_GPU_ROPE_OPS=%llu\n", (unsigned long long)c.ropeOps);
+        fprintf(o, "DEEP2_GPU_ATTN_SCORE_OPS=%llu\n", (unsigned long long)c.attnScoreOps);
+        fprintf(o, "DEEP2_GPU_SOFTMAX_OPS=%llu\n", (unsigned long long)c.softmaxOps);
+        fprintf(o, "DEEP2_GPU_ATTN_VALUE_OPS=%llu\n", (unsigned long long)c.attnValueOps);
+        fprintf(o, "DEEP2_GPU_O_PROJ_OPS=%llu\n", (unsigned long long)c.oProjOps);
+        fprintf(o, "DEEP2_GPU_RESIDUAL_OPS=%llu\n", (unsigned long long)c.residualOps);
+        fprintf(o, "DEEP2_GPU_FFN_NORM_OPS=%llu\n", (unsigned long long)c.ffnNormOps);
+        fprintf(o, "DEEP2_GPU_FFN_ACT_OPS=%llu\n", (unsigned long long)c.ffnActOps);
+        fprintf(o, "DEEP2_GPU_FFN_RESIDUAL_OPS=%llu\n", (unsigned long long)c.ffnResidualOps);
+        fprintf(o, "DEEP2_GPU_FORWARD_LAYERS=%llu\n", (unsigned long long)c.forwardLayers);
+        fprintf(o, "DEEP2_GPU_FORWARD_SLOT_0=%llu\n", (unsigned long long)c.forwardSlot[0]);
+        fprintf(o, "DEEP2_GPU_FORWARD_SLOT_1=%llu\n", (unsigned long long)c.forwardSlot[1]);
+        fprintf(o, "DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=%llu\n",
+                (unsigned long long)c.hostSyncBoundaries);
+        fprintf(o, "DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=%llu\n",
+                (unsigned long long)c.hostMaterializations);
+        fprintf(o, "DEEP2_GPU_OWNERSHIP_TRANSFERS=%llu\n",
+                (unsigned long long)c.ownershipTransfers);
+        fprintf(o, "DEEP2_INTRA_SLOT_HOST_TRANSFERS=%llu\n",
+                (unsigned long long)c.intraSlotHostTransfers);
+        fprintf(o, "LIVE_DECODE_RESIDENT_FORWARD=%u\n",
+                c.liveDecodeResidentTokens > 0 ? 1u : 0u);
+        fprintf(o, "TOKENS_DECODED=%llu\n", (unsigned long long)c.liveDecodeTokens);
+        fprintf(o, "GPU_FORWARD_LAYERS_PER_TOKEN=%llu\n",
+                (unsigned long long)c.gpuLayersLastToken);
+        fprintf(o, "HOST_FORWARD_LAYER_CALLS=%llu\n",
+                (unsigned long long)c.hostForwardLayerCalls);
+        fprintf(o, "PLANNED_CPU_LAYER_CALLS=%llu\n",
+                (unsigned long long)c.plannedCpuLayerCalls);
+        fprintf(o, "DEEP2_GPU_RESIDENT_FORWARD=%u\n",
+                Deep2GpuForward_Resident(c) ? 1u : 0u);
+        fprintf(o, "DEEP2_GPU_FORWARD_FALLBACKS=%llu\n",
+                (unsigned long long)c.hostForwardLayerCalls);
+        fprintf(o, "DEEP2_GPU_LAYER_SUBMITS=%llu\n",
+                (unsigned long long)c.layerSubmits);
+        fprintf(o, "DEEP2_GPU_OP_SUBMITS=%llu\n",
+                (unsigned long long)c.opSubmits);
+        fprintf(o, "DEEP2_GPU_HOST_SYNC=%llu\n",
+                (unsigned long long)c.hostSyncBoundaries);
+        fprintf(o, "DEEP2_REAL_GPU_FORWARD=%u\n",
+                Deep2GpuForward_IsReal(c, cpuFb) ? 1u : 0u);
+        fprintf(o, "DEEP2_GPU_Q4K_PACKED_OPS=%llu\n",
+                (unsigned long long)c.q4kPackedOps);
+        fprintf(o, "DEEP2_GPU_Q6K_PACKED_OPS=%llu\n",
+                (unsigned long long)c.q6kPackedOps);
+        fprintf(o, "DEEP2_GPU_Q2K_PACKED_OPS=%llu\n",
+                (unsigned long long)c.q2kPackedOps);
+        fprintf(o, "DEEP2_GPU_CPU_F32_EXPANDS=%llu\n",
+                (unsigned long long)c.cpuF32Expands);
+    };
+    emit(stdout);
+    if (f && f != stdout) emit(f);
+}
+
+} // namespace Deep2

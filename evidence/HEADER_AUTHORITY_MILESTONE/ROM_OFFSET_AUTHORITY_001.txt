@@ -1,0 +1,121 @@
+RAWRXD_ROM_OFFSET_AUTHORITY_001
+ARCHIVE DATE: 2026-10-07
+STATUS: CERTIFIED - ROOT CAUSE IDENTIFIED AS STALE DATA-START OFFSET
+
+=============================================================================
+ROOT CAUSE IDENTIFICATION
+=============================================================================
+
+The nonfinite values were NOT caused by:
+  - Corrupted GGUF file
+  - NaN values in the official model
+  - Wrong tensor identity
+  - Quant decode errors
+
+The nonfinite values WERE caused by:
+  - STALE DATA-START OFFSET in the runtime
+  - Runtime used kDataStart=3972000 instead of kDataStart=3996416
+  - This caused all tensor reads to be off by 24416 bytes
+
+=============================================================================
+ADDRESS VERIFICATION
+=============================================================================
+
+For blk.0.attn_norm.weight with relative offset 289996800:
+
+A = 289996800 (relative offset treated as absolute)
+   -> 13 NaN values (unrelated tensor data)
+
+B = 293968800 (old dataStart 3972000 + relative)
+   -> 13 NaN values (CORRECT tensor, WRONG address due to stale base)
+
+C = 293993216 (authoritative dataStart 3996416 + relative)
+   -> 0 nonfinite, MIN=0.219727, MAX=7.625 (CORRECT tensor, CORRECT address)
+
+The runtime was reading from B instead of C.
+
+=============================================================================
+EVIDENCE CHAIN
+=============================================================================
+
+1. Original corrupted GGUF at address B: 13 NaN values
+2. Original corrupted GGUF at address C: 0 nonfinite, finite values
+3. Runtime with old kDataStart=3972000: reads from B, sees NaNs
+4. Runtime with new kDataStart=3996416: reads from C, all finite
+5. Official BF16 source weights: all finite
+6. Conclusion: GGUF file is correct, runtime offset was wrong
+
+=============================================================================
+CORRECTION APPLIED
+=============================================================================
+
+CODE CHANGE:
+  OLD: uint64_t absoluteOffset = rom.fileOffset;
+  NEW: uint64_t absoluteOffset = Generated::ModelConfig::kDataStart + rom.fileOffset;
+
+HEADER CHANGE:
+  ModelConfig.generated.hpp now contains:
+    static constexpr uint64_t kDataStart = 3996416ULL;
+
+RESULT:
+  [BindTensor] name=blk.0.attn_norm.weight
+              dataOffset=289996800
+              kDataStart=3996416
+              absoluteOffset=293993216
+
+=============================================================================
+POST-CORRECTION BOUNDARY MAP
+=============================================================================
+
+BLOCK_0_INPUT:              FINITE (2048/2048)
+BLOCK_0_ATTN_NORM_WEIGHT:   FINITE (0/2048, MIN=0.219727, MAX=7.625)
+BLOCK_0_POST_ATTN_NORM:     FINITE (0/2048, MIN=-2.8833, MAX=7.20233)
+BLOCK_0_POST_Q:             FINITE (0/2048)
+BLOCK_0_POST_MLA:           STUB (zeros)
+BLOCK_0_POST_ATTN_OUTPUT:   STUB (zeros)
+BLOCK_0_POST_ATTN_RESIDUAL: FINITE
+BLOCK_0_FFN_NORM_WEIGHT:    FINITE (0/2048, MIN=0.0161133, MAX=0.474609)
+BLOCK_0_POST_FFN_NORM:      FINITE (0/2048, MIN=-0.137395, MAX=0.785905)
+BLOCK_0_POST_FFN_GATE_UP:   FINITE
+BLOCK_0_POST_FFN_DOWN:      FINITE
+BLOCK_0_POST_FFN_RESIDUAL:  FINITE
+BLOCK_0_BLOCK_OUTPUT:       FINITE
+
+BLOCKS 1-26:                ALL FINITE (POST_ATTN_NORM 0/2048 nonfinite)
+
+LOGITS_FINITE=1
+VERDICT=PASS_EXECUTABLE_PARTIAL_MODEL_MATH
+
+=============================================================================
+DIAGNOSTIC REPAIR STATUS
+=============================================================================
+
+The diagnostic repair was applied to the WRONG address (B instead of C).
+The original GGUF file is CORRECT at the authoritative address C.
+
+DIAGNOSTIC_REPAIRED_GGUF=NOT_NEEDED
+SOURCE_MODEL_MODIFIED=0
+CORRECTED_OFFSET=1
+
+The original GGUF file should be used with the corrected runtime offset.
+
+=============================================================================
+NEXT STEPS
+=============================================================================
+
+1. Update ModelGenie evidence with correct kDataStart=3996416
+2. Regenerate 8 headers with correct data start
+3. Re-run all authority gates
+4. Continue numerical closure:
+   - Implement proper MLA attention (currently stub)
+   - Implement proper MoE FFN (currently skipped)
+   - Verify token-0 emission
+
+=============================================================================
+EVIDENCE FILES
+=============================================================================
+
+  evidence\HEADER_AUTHORITY_MILESTONE\ROM_OFFSET_AUTHORITY_001.txt
+  evidence\HEADER_AUTHORITY_MILESTONE\ROM_OFFSET_AUTHORITY_001.json
+  evidence\HEADER_AUTHORITY_MILESTONE\address_verification.log
+  evidence\HEADER_AUTHORITY_MILESTONE\token0_rebuilt.log

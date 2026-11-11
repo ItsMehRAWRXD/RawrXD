@@ -1,0 +1,30 @@
+#version 450
+// gemv_q8.comp — ggml dequantize_row_q8_0 fused dot
+layout(local_size_x = 64) in;
+layout(binding = 0) readonly buffer W { uint packed[]; };
+layout(binding = 1) readonly buffer In { float x[]; };
+layout(binding = 2) writeonly buffer Out { float y[]; };
+layout(push_constant) uniform PC { uint rows; uint cols; } pc;
+uint u8(uint off) {
+  uint w = packed[off >> 2];
+  return (w >> ((off & 3u) * 8u)) & 0xFFu;
+}
+float f16(uint h) { return unpackHalf2x16(h).x; }
+int i8(uint b) { return int(b) - ((b >= 128u) ? 256 : 0); }
+void main() {
+  uint row = gl_GlobalInvocationID.x;
+  if (row >= pc.rows) return;
+  uint nblk = (pc.cols + 31u) / 32u;
+  uint rowOff = row * nblk * 34u;
+  float sum = 0.0;
+  for (uint b = 0u; b < nblk; ++b) {
+    uint blk = rowOff + b * 34u;
+    float d = f16(u8(blk) | (u8(blk + 1u) << 8));
+    uint elem = b * 32u;
+    for (uint j = 0u; j < 32u; ++j) {
+      uint a = elem + j;
+      if (a < pc.cols) sum += d * float(i8(u8(blk + 2u + j))) * x[a];
+    }
+  }
+  y[row] = sum;
+}

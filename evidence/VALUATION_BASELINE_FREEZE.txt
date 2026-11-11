@@ -1,0 +1,71 @@
+RAWRXD TECHNICAL / STRATEGIC VALUATION BASELINE FREEZE
+======================================================
+date=2026-08-29
+canonical_repo=F:\~dev\rawrxd
+git_commit=3f2a6758839da153f7e3359f76321ef3620b571c
+authority=WORKING_INTERNAL_BASELINE (not a formal financial appraisal)
+
+POLICY
+------
+Freeze valuation until NEW RUNTIME EVIDENCE changes it.
+Do NOT move the number from additional source discovery alone.
+Runtime proof moves the number.
+
+CURRENT COMBINED DEEP2 + IDE STATE
+----------------------------------
+range=$100M–$130M
+working_midpoint=~$115M
+conservative_floor=$100M
+defensible_upside_boundary=$130M (before next certified gates)
+
+LADDER (working midpoints)
+--------------------------
+current_combined_Deep2_plus_IDE             ~$115M
+fresh_Win32IDE_+_all_7_P0_smokes            ~$130M
++_clean_lifecycle_+_trusted_parity          ~$140M
++_autonomous_IDE_E2E_+_release_package_cert $150M+
++_benchmark_dualGPU_advantage_+_commercial  potentially materially higher
+
+WHY ~$115M NOW
+--------------
+- Deep2 generation path proven (load→tokenize→forward→logits→sample→generate)
+- STREAMER-CERT-001=CERTIFIED
+- IDE audit: many items are implemented-but-uncertified / incompletely wired
+  (GhostText RichEdit path, BuildRunner→ProblemsAggregator, native editor primary)
+- Discount is proof + productization, not missing core invention
+
+SUPPRESSING FACTORS (execution-risk discounts)
+----------------------------------------------
+1. No fresh current IDE binary (RAWRXD_BUILD_WIN32IDE default OFF)
+2. Editor/completion consolidation still needed
+3. Cohesive IDE feedback loop uncertified from real executable
+4. Agent integration ship-path triage incomplete
+5. Productization (install/first-run/clean-machine/release cert) behind core eng
+6. LIFECYCLE-CERT-001=OPEN_WITH_REPRO (0xC0000409 after "[TEST] Returning 0")
+7. PARITY-CERT-001=AWAITING_TRUSTED_GOLDEN / NOT_CERTIFIED
+
+WORKSTREAM SEPARATION
+---------------------
+A) IDE integration proof — fresh Win32IDE + 7 P0 smokes (asymmetric next IDE event)
+B) Deep2 lifecycle/parity proof — teardown localization only; NO inference/tokenizer/
+   kernel/streamer/parity math changes while lifecycle is localized
+
+NEXT ASYMMETRIC EVENTS THAT MAY MOVE VALUATION
+----------------------------------------------
+1. Fresh Win32IDE launch + 7 P0 smokes PASS  → midpoint ~$130M
+2. Clean lifecycle + trusted parity CERTIFIED → midpoint ~$140M
+3. Autonomous IDE E2E + release/package cert  → $150M+
+
+VERDICT
+-------
+VALUATION_BASELINE=FROZEN_AT_115M_MIDPOINT
+movement_rule=runtime_proof_only
+
+RUNTIME_EVIDENCE_SINCE_FREEZE
+-----------------------------
+LIFECYCLE-CERT-001=CERTIFIED (5x TinyLlama construct/load/generate/unload/destroy EXIT=0)
+  defect=VirtualAlloc tensors freed with _aligned_free in unloadModel
+  independent_of_parity=YES
+  does_NOT_alone_move_midpoint — ladder requires lifecycle + trusted parity for ~$140M
+PARITY-CERT-001=AWAITING_TRUSTED_GOLDEN (GOLDEN_DUMP_CONTRACT.txt frozen; no synthetic fill)
+valuation_midpoint=still ~$115M

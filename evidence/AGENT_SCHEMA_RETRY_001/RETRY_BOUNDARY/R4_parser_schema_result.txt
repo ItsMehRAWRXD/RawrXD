@@ -1,0 +1,6 @@
+parsed_tool_calls=1
+second_args={"path":"main.c"}
+second_schema_valid=1
+second_dispatched=1
+second_bare_key_class=0
+second_result={"ok":true,"tool":"read_file","exit_code":0,"dispatched":true,"output":"#include <stdio.h>\nint main(void) {\n    int x = DOES_NOT_EXIST;\n    printf(\"hello from b01 %d\\n\", x);\n    return 0;\n}\r\n"}

@@ -1,0 +1,48 @@
+BATCH2_ATTN_OUT_LOC + O_PROJ gate (2026-08-29)
+================================================
+authority dumps: BATCH2_ATTN_OUT_LOC
+ids=[1,21521,9312] pos=0
+
+GATE 1 — ATTN_PRE_O_0
+----------------------
+llama src: kqv_out-0 (attn_out src[1]) ne=[2048,3,1]
+deep2: ATTN_PRE_O_0 before LinearW(wo)
+
+ATTN_PRE_O_0 deep2 vs llama
+  shape=2048
+  max_abs=6.139278e-06
+  max_rel=4.04e-03
+  first_bad=29
+  buckets: <1e-6=1760  <1e-5=288  <1e-4=0  >=1e-4=0
+  PASS/FAIL=INSPECT  (≤1e-5; not FAIL)
+
+deep2 PRE_O vs GQA_expand(V)     = PASS max_abs=0 (exact)
+llama PRE_O vs GQA_expand(V_l)   = INSPECT max_abs=6.14e-06
+  → same delta as deep2↔llama PRE_O
+  → Deep2 concat/layout CLOSED; llama kqv_out ≈ expand(V) within INSPECT
+
+decision: do NOT stop for pre-O layout bug; O_PROJ input certified for GEMV work
+  (X frozen = deep2 ATTN_PRE_O_0)
+
+GATE 2 — O_PROJ GEMV (BATCH2_O_PROJ_GEMV_001)
+---------------------------------------------
+X = deep2 ATTN_PRE_O_0
+W = blk.0.attn_output.weight  type=Q4_K(12) rows=2048 cols=2048 size=2359296
+Y = ATTN_OUT_0
+
+prod Q4_K×Q8_K vs deep2 Y  = PASS max_abs=0
+prod Q4_K×Q8_K vs llama Y  = FAIL max_abs=8.446909e-05
+  rows_gt_1e-5 = 88/2048
+  worst_row = 485
+  pattern = MANY_TINY_FP_DIFFS (0 elems ≥1e-4)
+
+A/B note: ad-hoc FP32 dequant scalar in harness was INVALID layout
+  (do not use that scalar gap). Production path == Deep2 ATTN_OUT.
+  Discriminator vs llama remains Q8_K mul_mat / zen4 q4_K_8x8 accum parity.
+
+STOP / NEXT
+-----------
+first_live_fail = O_PROJ / blk.0.attn_output Q4_K×Q8_K vs llama CPU mul_mat
+do_not_reopen = TOKENIZER Q K V softmax AV GQA PRE_O layout
+next = accumulation/kernel-path parity on wo only
+  (same W raw GGUF bytes; same frozen X; match llama Y @ ≤1e-6 or document ≤1e-5 INSPECT policy)

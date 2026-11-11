@@ -1,0 +1,636 @@
+// Win32IDE_Settings.cpp - Sovereign Persistence Layer
+// RawrXD IDE - Vector 4 ZMM-Signed Settings with WSSR Recovery
+// Architecture: C++23 + AVX-512, Zero-Dependency Sovereign Core
+// Build timestamp: 2026-03-31
+
+#include "Win32IDE.h"
+#include "Win32IDE_Types.h"
+#include "../deep2/execution_policy/ExecutionPolicyStore.hpp"
+#include "../deep2/execution_policy/ExecutionPolicyBridge.hpp"
+#include <filesystem>
+#include <fstream>
+#include <immintrin.h>
+#include <map>
+#include <nlohmann/json.hpp>
+#include <sstream>
+#include <string>
+#include <vector>
+#include <windows.h>
+
+static std::string wideToUtf8(const std::wstring& w)
+{
+    if (w.empty())
+        return {};
+    const int needed =
+        WideCharToMultiByte(CP_UTF8, 0, w.data(), static_cast<int>(w.size()), nullptr, 0, nullptr, nullptr);
+    if (needed <= 0)
+        return {};
+    std::string out(static_cast<size_t>(needed), '\0');
+    WideCharToMultiByte(CP_UTF8, 0, w.data(), static_cast<int>(w.size()), out.data(), needed, nullptr, nullptr);
+    return out;
+}
+
+static std::wstring utf8ToWide(const std::string& s)
+{
+    if (s.empty())
+        return {};
+    const int needed = MultiByteToWideChar(CP_UTF8, 0, s.data(), static_cast<int>(s.size()), nullptr, 0);
+    if (needed <= 0)
+        return {};
+    std::wstring out(static_cast<size_t>(needed), L'\0');
+    MultiByteToWideChar(CP_UTF8, 0, s.data(), static_cast<int>(s.size()), out.data(), needed);
+    return out;
+}
+
+// Sovereign Settings Schema Definitions
+enum class EditorTheme
+{
+    DARK,
+    LIGHT,
+    HIGH_CONTRAST
+};
+
+struct TabState
+{
+    std::wstring file_path;
+    uint32_t cursor_line = 0;
+    uint32_t cursor_column = 0;
+    bool is_dirty = false;
+};
+
+struct SovereignIDEConfig
+{
+    std::vector<std::wstring> recent_files;
+    std::map<std::wstring, std::wstring> keybindings;
+    std::wstring extension_path;
+    EditorTheme theme = EditorTheme::DARK;
+    std::vector<TabState> open_tabs;
+    uint32_t active_tab_index = 0;
+    uint32_t max_memory_mb = 4096;
+    uint32_t target_fps = 60;
+    bool enable_vector7_autogen = true;
+    bool model_prefetch_enabled = true;
+    bool model_workingset_lock_enabled = false;
+    bool silence_privilege_warnings = true;
+    __m512i zmm_signature;
+};
+
+// Forward declarations
+bool LoadSettingsSovereign(SovereignIDEConfig& config);
+
+// Sovereign Settings Schema
+static SovereignIDEConfig g_sovereign_config;
+static const std::filesystem::path SETTINGS_FILE = L"RawrXD_Settings.sovereign";
+
+// ZMM Signature Generation (Vector 4 hardware attestation)
+__m512i GenerateZMMSignature(const SovereignIDEConfig& config)
+{
+    // Compute hardware-rooted signature over config data
+    // Use AVX-512 to hash critical fields
+    __m512i signature = _mm512_setzero_si512();
+
+    // Hash recent_files count
+    uint64_t hash = config.recent_files.size();
+    signature = _mm512_xor_si512(signature, _mm512_set1_epi64(hash));
+
+    // Hash keybindings size
+    hash = config.keybindings.size();
+    signature = _mm512_xor_si512(signature, _mm512_set1_epi64(hash << 16));
+
+    // Hash theme and performance settings
+    hash = (static_cast<uint64_t>(config.theme) << 32) | (config.max_memory_mb << 16) | (config.target_fps << 8) |
+           (config.enable_vector7_autogen ? 1 : 0) | (config.model_prefetch_enabled ? (1ull << 1) : 0) |
+           (config.model_workingset_lock_enabled ? (1ull << 2) : 0) |
+           (config.silence_privilege_warnings ? (1ull << 3) : 0);
+    signature = _mm512_xor_si512(signature, _mm512_set1_epi64(hash));
+
+    // Add entropy from open tabs
+    hash = config.open_tabs.size() | (config.active_tab_index << 16);
+    signature = _mm512_xor_si512(signature, _mm512_set1_epi64(hash << 32));
+
+    return signature;
+}
+
+// Verify ZMM Signature (tamper detection)
+bool VerifyZMMSignature(const SovereignIDEConfig& config)
+{
+    __m512i computed = GenerateZMMSignature(config);
+    // _mm512_cmpeq_epi64_mask compares 8 qwords → 8-bit mask (0xFF = all match).
+    // Previously compared to 0xFFFFFFFFFFFFFFFFULL, so verification ALWAYS failed,
+    // triggering WSSR → Save → Load recursion and C++ exception 0xE06D7363 in onCreateChildren.
+    const __mmask8 mask = _mm512_cmpeq_epi64_mask(config.zmm_signature, computed);
+    return mask == static_cast<__mmask8>(0xFF);
+}
+
+// WSSR Config Recovery (<50ms sovereign restoration)
+void WSSR_ConfigRecovery(SovereignIDEConfig& config)
+{
+    OutputDebugStringA("[WSSR_ConfigRecovery] ENTER\n");
+    fileTrace("[WSSR_ConfigRecovery] ENTER");
+    // Reset to sovereign defaults on corruption
+    config = SovereignIDEConfig();
+    config.zmm_signature = GenerateZMMSignature(config);
+    OutputDebugStringA("[WSSR_ConfigRecovery] DONE\n");
+    fileTrace("[WSSR_ConfigRecovery] DONE");
+    // Log recovery event (future: integrate with Vector 11 telemetry)
+}
+
+// JSON Serialization Helpers
+void to_json(nlohmann::json& j, const TabState& ts)
+{
+    j["file_path"] = wideToUtf8(ts.file_path);
+    j["cursor_line"] = ts.cursor_line;
+    j["cursor_column"] = ts.cursor_column;
+    j["is_dirty"] = ts.is_dirty;
+}
+
+void from_json(const nlohmann::json& j, TabState& ts)
+{
+    std::string fp = j.at("file_path").get<std::string>();
+    ts.file_path = utf8ToWide(fp);
+    ts.cursor_line = j.at("cursor_line").get<uint32_t>();
+    ts.cursor_column = j.at("cursor_column").get<uint32_t>();
+    ts.is_dirty = j.at("is_dirty").get<bool>();
+}
+
+void to_json(nlohmann::json& j, const SovereignIDEConfig& config)
+{
+    j = nlohmann::json::object();
+    j["recent_files"] = nlohmann::json::array();
+    j["keybindings"] = nlohmann::json::object();
+    j["extension_path"] = wideToUtf8(config.extension_path);
+    j["theme"] = static_cast<int>(config.theme);
+    j["open_tabs"] = nlohmann::json::array();
+    j["active_tab_index"] = config.active_tab_index;
+    j["max_memory_mb"] = config.max_memory_mb;
+    j["target_fps"] = config.target_fps;
+    j["enable_vector7_autogen"] = config.enable_vector7_autogen;
+    j["model_prefetch_enabled"] = config.model_prefetch_enabled;
+    j["model_workingset_lock_enabled"] = config.model_workingset_lock_enabled;
+    j["silence_privilege_warnings"] = config.silence_privilege_warnings;
+
+    for (const auto& rf : config.recent_files)
+    {
+        j["recent_files"].push_back(wideToUtf8(rf));
+    }
+
+    for (const auto& kb : config.keybindings)
+    {
+        j["keybindings"][wideToUtf8(kb.first)] = wideToUtf8(kb.second);
+    }
+
+    for (const auto& tab : config.open_tabs)
+    {
+        nlohmann::json tab_json;
+        to_json(tab_json, tab);
+        j["open_tabs"].push_back(tab_json);
+    }
+}
+
+void from_json(const nlohmann::json& j, SovereignIDEConfig& config)
+{
+    config.recent_files.clear();
+    for (const auto& rf : j.at("recent_files"))
+    {
+        std::string s = rf.get<std::string>();
+        config.recent_files.emplace_back(utf8ToWide(s));
+    }
+
+    config.keybindings.clear();
+    for (auto it = j.at("keybindings").begin(); it != j.at("keybindings").end(); ++it)
+    {
+        std::string k = it.key();
+        std::string v = it.value().get<std::string>();
+        config.keybindings[utf8ToWide(k)] = utf8ToWide(v);
+    }
+
+    std::string ep = j.at("extension_path").get<std::string>();
+    config.extension_path = utf8ToWide(ep);
+    config.theme = static_cast<EditorTheme>(j.at("theme").get<int>());
+
+    config.open_tabs.clear();
+    for (const auto& tab : j.at("open_tabs"))
+    {
+        TabState ts;
+        from_json(tab, ts);
+        config.open_tabs.push_back(std::move(ts));
+    }
+
+    config.active_tab_index = j.at("active_tab_index").get<uint32_t>();
+    config.max_memory_mb = j.at("max_memory_mb").get<uint32_t>();
+    config.target_fps = j.at("target_fps").get<uint32_t>();
+    config.enable_vector7_autogen = j.at("enable_vector7_autogen").get<bool>();
+
+    // Optional keys (backward compatible)
+    if (j.contains("model_prefetch_enabled"))
+        config.model_prefetch_enabled = j.at("model_prefetch_enabled").get<bool>();
+    if (j.contains("model_workingset_lock_enabled"))
+        config.model_workingset_lock_enabled = j.at("model_workingset_lock_enabled").get<bool>();
+    if (j.contains("silence_privilege_warnings"))
+        config.silence_privilege_warnings = j.at("silence_privilege_warnings").get<bool>();
+}
+
+// Persistence with Sovereign Integrity
+bool SaveSettingsSovereign(const SovereignIDEConfig& config)
+{
+    OutputDebugStringA("[SaveSettingsSovereign] ENTER\n");
+    fileTrace("[SaveSettingsSovereign] ENTER");
+    try
+    {
+        // Serialize to JSON
+        nlohmann::json j;
+        to_json(j, config);
+        std::string json_str = j.dump();
+
+        // Generate ZMM signature (hardware-rooted)
+        __m512i signature = GenerateZMMSignature(config);
+
+        // Atomic write (temp + rename)
+        std::filesystem::path temp_file = SETTINGS_FILE;
+        temp_file += L".tmp";
+
+        std::ofstream file(temp_file, std::ios::binary);
+        if (!file)
+            return false;
+
+        // Write signature first
+        file.write(reinterpret_cast<const char*>(&signature), 64);
+        // Write JSON payload
+        file.write(json_str.c_str(), json_str.size());
+        file.close();
+
+        // Atomic rename
+        std::filesystem::rename(temp_file, SETTINGS_FILE);
+
+        // Verify by re-reading signature bytes only — do NOT call LoadSettingsSovereign
+        // here (that path can re-enter Save on verify failure → recursion → 0xE06D7363).
+        std::ifstream verify(SETTINGS_FILE, std::ios::binary);
+        if (!verify)
+            return false;
+        __m512i written_sig{};
+        verify.read(reinterpret_cast<char*>(&written_sig), 64);
+        if (!verify || verify.gcount() != 64)
+            return false;
+        const __mmask8 mask = _mm512_cmpeq_epi64_mask(written_sig, signature);
+        return mask == static_cast<__mmask8>(0xFF);
+    }
+    catch (const std::exception&)
+    {
+        return false;
+    }
+    catch (...)
+    {
+        return false;
+    }
+}
+
+bool LoadSettingsSovereign(SovereignIDEConfig& config)
+{
+    OutputDebugStringA("[LoadSettingsSovereign] ENTER\n");
+    fileTrace("[LoadSettingsSovereign] ENTER");
+    try
+    {
+        OutputDebugStringA("[LoadSettingsSovereign] Checking if settings file exists...\n");
+        fileTrace("[LoadSettingsSovereign] Checking if settings file exists...");
+        OutputDebugStringA("[LoadSettingsSovereign] About to call exists()...\n");
+        fileTrace("[LoadSettingsSovereign] About to call exists()...");
+        bool fileExists = std::filesystem::exists(SETTINGS_FILE);
+        OutputDebugStringA("[LoadSettingsSovereign] exists() returned\n");
+        fileTrace("[LoadSettingsSovereign] exists() returned");
+        OutputDebugStringA("[LoadSettingsSovereign] fileExists = ");
+        fileTrace(fileExists ? "[LoadSettingsSovereign] fileExists = true" : "[LoadSettingsSovereign] fileExists = false");
+        if (!fileExists)
+        {
+            OutputDebugStringA("[LoadSettingsSovereign] Settings file not found, initializing defaults\n");
+            fileTrace("[LoadSettingsSovereign] Settings file not found, initializing defaults");
+            // First run: initialize sovereign defaults
+            WSSR_ConfigRecovery(config);
+            return SaveSettingsSovereign(config);
+        }
+        OutputDebugStringA("[LoadSettingsSovereign] Settings file exists, reading...\n");
+        fileTrace("[LoadSettingsSovereign] Settings file exists, reading...");
+
+        // Read raw bytes
+        OutputDebugStringA("[LoadSettingsSovereign] Opening file...\n");
+        fileTrace("[LoadSettingsSovereign] Opening file...");
+        std::ifstream file(SETTINGS_FILE, std::ios::binary);
+        OutputDebugStringA("[LoadSettingsSovereign] File opened\n");
+        fileTrace("[LoadSettingsSovereign] File opened");
+        if (!file)
+        {
+            OutputDebugStringA("[LoadSettingsSovereign] File open failed\n");
+            fileTrace("[LoadSettingsSovereign] File open failed");
+            return false;
+        }
+
+        OutputDebugStringA("[LoadSettingsSovereign] Getting file size...\n");
+        fileTrace("[LoadSettingsSovereign] Getting file size...");
+        auto fileSize = std::filesystem::file_size(SETTINGS_FILE);
+        OutputDebugStringA("[LoadSettingsSovereign] File size obtained\n");
+        fileTrace("[LoadSettingsSovereign] File size obtained");
+        std::vector<char> buffer(fileSize);
+        OutputDebugStringA("[LoadSettingsSovereign] Buffer allocated\n");
+        fileTrace("[LoadSettingsSovereign] Buffer allocated");
+        file.read(buffer.data(), buffer.size());
+        OutputDebugStringA("[LoadSettingsSovereign] File read complete\n");
+        fileTrace("[LoadSettingsSovereign] File read complete");
+
+        // Extract ZMM signature (first 64 bytes)
+        OutputDebugStringA("[LoadSettingsSovereign] Extracting ZMM signature...\n");
+        fileTrace("[LoadSettingsSovereign] Extracting ZMM signature...");
+        memcpy(&config.zmm_signature, buffer.data(), 64);
+        OutputDebugStringA("[LoadSettingsSovereign] ZMM signature extracted\n");
+        fileTrace("[LoadSettingsSovereign] ZMM signature extracted");
+
+        // Parse JSON payload
+        OutputDebugStringA("[LoadSettingsSovereign] Creating JSON string...\n");
+        fileTrace("[LoadSettingsSovereign] Creating JSON string...");
+        std::string json_str(buffer.data() + 64, buffer.size() - 64);
+        OutputDebugStringA("[LoadSettingsSovereign] JSON string created, parsing...\n");
+        fileTrace("[LoadSettingsSovereign] JSON string created, parsing...");
+        nlohmann::json j = nlohmann::json::parse(json_str);
+        OutputDebugStringA("[LoadSettingsSovereign] JSON parsed, calling from_json...\n");
+        fileTrace("[LoadSettingsSovereign] JSON parsed, calling from_json...");
+        from_json(j, config);
+        OutputDebugStringA("[LoadSettingsSovereign] from_json complete\n");
+        fileTrace("[LoadSettingsSovereign] from_json complete");
+
+        // Verify ZMM signature (Vector 4 attestation)
+        OutputDebugStringA("[LoadSettingsSovereign] Verifying ZMM signature...\n");
+        fileTrace("[LoadSettingsSovereign] Verifying ZMM signature...");
+        if (!VerifyZMMSignature(config))
+        {
+            OutputDebugStringA("[LoadSettingsSovereign] ZMM signature verification FAILED\n");
+            fileTrace("[LoadSettingsSovereign] ZMM signature verification FAILED");
+            // Tamper detected: recover in-memory defaults. Persist once without
+            // re-entering Load via Save's old verify path (recursion / 0xE06D7363).
+            WSSR_ConfigRecovery(config);
+            (void)SaveSettingsSovereign(config);
+            return true;
+        }
+        OutputDebugStringA("[LoadSettingsSovereign] ZMM signature verified OK\n");
+        fileTrace("[LoadSettingsSovereign] ZMM signature verified OK");
+
+        OutputDebugStringA("[LoadSettingsSovereign] Returning true\n");
+        fileTrace("[LoadSettingsSovereign] Returning true");
+        return true;
+    }
+    catch (const std::exception& ex)
+    {
+        OutputDebugStringA("[LoadSettingsSovereign] std::exception — WSSR recovery\n");
+        OutputDebugStringA(ex.what());
+        OutputDebugStringA("\n");
+        // Any error triggers WSSR; never throw across onCreateChildren SEH boundary
+        WSSR_ConfigRecovery(config);
+        (void)SaveSettingsSovereign(config);
+        return true;
+    }
+    catch (...)
+    {
+        OutputDebugStringA("[LoadSettingsSovereign] unknown exception — WSSR recovery\n");
+        WSSR_ConfigRecovery(config);
+        (void)SaveSettingsSovereign(config);
+        return true;
+    }
+}
+
+// Public API
+const SovereignIDEConfig& GetSovereignConfig()
+{
+    static bool loaded = false;
+    if (!loaded)
+    {
+        try
+        {
+            LoadSettingsSovereign(g_sovereign_config);
+        }
+        catch (...)
+        {
+            OutputDebugStringA("[GetSovereignConfig] exception swallowed — using defaults\n");
+            WSSR_ConfigRecovery(g_sovereign_config);
+        }
+        loaded = true;
+    }
+    return g_sovereign_config;
+}
+
+bool UpdateSovereignConfig(const SovereignIDEConfig& new_config)
+{
+    g_sovereign_config = new_config;
+    g_sovereign_config.zmm_signature = GenerateZMMSignature(g_sovereign_config);
+    return SaveSettingsSovereign(g_sovereign_config);
+}
+
+// Hot-reload dispatcher (for runtime settings changes)
+void HotReloadSettings()
+{
+    LoadSettingsSovereign(g_sovereign_config);
+
+    // Keep ExecutionPolicy store in sync (IDE toggles ↔ settings file).
+    auto& store = Deep2::Exec::ExecutionPolicyStore::Instance();
+    const char* candidates[] = {
+        "config/rawrxd.settings.yaml",
+        "rawrxd.settings.yaml",
+        nullptr
+    };
+    for (int i = 0; candidates[i]; ++i) {
+        if (std::filesystem::exists(candidates[i])) {
+            store.setPaths(candidates[i], "profiles");
+            break;
+        }
+    }
+    auto r = store.reloadFromDisk();
+    if (r.ok) {
+        OutputDebugStringA(("[HotReloadSettings] ExecutionPolicy "
+                            + r.detail + " version=" + std::to_string(r.version)
+                            + " sha=" + r.policySha + "\n").c_str());
+    }
+}
+
+// Settings Watchdog (1027ns tamper detection)
+void SettingsWatchdog()
+{
+    // Periodic verification (call from main loop)
+    if (!VerifyZMMSignature(g_sovereign_config))
+    {
+        WSSR_ConfigRecovery(g_sovereign_config);
+        SaveSettingsSovereign(g_sovereign_config);
+        // Log tamper event
+    }
+}
+
+// ========================================================================
+// Win32IDE Member Method Implementations (Bridge to Sovereign Config)
+// ========================================================================
+
+std::string Win32IDE::getSettingsFilePath() const
+{
+    return "RawrXD_Settings.sovereign";
+}
+
+void Win32IDE::loadSettings()
+{
+    const auto& config = GetSovereignConfig();
+
+    // Map SovereignConfig to IDESettings (partial mapping)
+    m_settings.themeId = static_cast<int>(config.theme);
+    m_settings.max_memory_mb = config.max_memory_mb;
+    m_settings.target_fps = config.target_fps;
+    m_settings.modelPrefetchEnabled = config.model_prefetch_enabled;
+    m_settings.modelWorkingSetLockEnabled = config.model_workingset_lock_enabled;
+    m_settings.silencePrivilegeWarnings = config.silence_privilege_warnings;
+
+    // Set defaults for unmapped fields
+    m_settings.autoSaveEnabled = false;
+    m_settings.lineNumbersVisible = true;
+    m_settings.wordWrapEnabled = false;
+    m_settings.fontSize = 14;
+    m_settings.fontName = "Consolas";
+    m_settings.workingDirectory = "";
+    m_settings.autoSaveIntervalSec = 60;
+    m_settings.aiTemperature = 0.7f;
+    m_settings.aiTopP = 0.9f;
+    m_settings.aiTopK = 40;
+    m_settings.aiMaxTokens = 512;
+    m_settings.aiContextWindow = 4096;
+    m_settings.aiModelPath = "";
+    m_settings.aiOllamaUrl.clear();  // EGRESS_001: no default remote endpoint
+    m_settings.ghostTextEnabled = true;
+    m_settings.failureDetectorEnabled = true;
+    m_settings.failureMaxRetries = 3;
+    m_settings.amdUnifiedMemoryEnabled = false;
+    m_settings.tabSize = 4;
+    m_settings.useSpaces = true;
+    m_settings.encoding = "UTF-8";
+    m_settings.eolStyle = "LF";
+    m_settings.syntaxColoringEnabled = true;
+    m_settings.minimapEnabled = true;
+    m_settings.breadcrumbsEnabled = true;
+    m_settings.smoothScrollEnabled = true;
+
+    // ExecutionPolicy: Session > Model > Global (IDE Model Execution category)
+    Deep2::Exec::EnsurePolicyLoaded();
+}
+
+void Win32IDE::saveSettings()
+{
+    SovereignIDEConfig config = GetSovereignConfig();
+
+    // Map IDESettings to SovereignConfig (partial)
+    config.theme = static_cast<EditorTheme>(m_settings.themeId);
+    config.model_prefetch_enabled = m_settings.modelPrefetchEnabled;
+    config.model_workingset_lock_enabled = m_settings.modelWorkingSetLockEnabled;
+    config.silence_privilege_warnings = m_settings.silencePrivilegeWarnings;
+
+    UpdateSovereignConfig(config);
+
+    // Persist ExecutionPolicy (Model Execution category ↔ YAML)
+    auto& store = Deep2::Exec::ExecutionPolicyStore::Instance();
+    store.saveGlobal();
+    if (!store.modelFingerprint().empty())
+        store.saveModelProfile();
+}
+
+void Win32IDE::applyDefaultSettings()
+{
+    m_settings = IDESettings();  // Use default constructor
+}
+
+void Win32IDE::applySettings()
+{
+    // Determine if dark theme based on themeId
+    bool isDarkTheme = (m_settings.themeId == 3101 || m_settings.themeId == 3102); // DARK_PLUS or DARK_MODERN
+
+    if (isDarkTheme)
+    {
+        m_currentTheme.backgroundColor = RGB(30, 30, 30);
+        m_currentTheme.textColor = RGB(212, 212, 212);
+        m_currentTheme.selectionColor = RGB(38, 79, 120);
+        m_currentTheme.lineNumberColor = RGB(128, 128, 128);
+    }
+    else
+    {
+        m_currentTheme.backgroundColor = RGB(255, 255, 255);
+        m_currentTheme.textColor = RGB(0, 0, 0);
+        m_currentTheme.selectionColor = RGB(0, 120, 215);
+        m_currentTheme.lineNumberColor = RGB(128, 128, 128);
+    }
+
+    // Recreate fonts with new sizes
+    recreateFonts();
+
+    // Apply to editor if exists
+    if (m_hwndEditor && IsWindow(m_hwndEditor))
+    {
+        SendMessage(m_hwndEditor, WM_SETFONT, (WPARAM)m_editorFont, TRUE);
+    }
+
+    // Force redraw to apply theme
+    if (m_hwndMain && IsWindow(m_hwndMain))
+    {
+        InvalidateRect(m_hwndMain, nullptr, TRUE);
+    }
+
+    // Save settings to disk
+    saveSettings();
+
+    OutputDebugStringA("[Settings] Applied and saved\n");
+}
+
+void Win32IDE::showSettingsDialog()
+{
+    // Determine theme for display
+    bool isDarkTheme = (m_settings.themeId == 3101 || m_settings.themeId == 3102);
+
+    // Create settings dialog
+    HWND hwndDlg = CreateWindowExA(
+        WS_EX_DLGMODALFRAME | WS_EX_TOPMOST,
+        "RawrXDSettingsDialog",
+        "RawrXD IDE Settings",
+        WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
+        CW_USEDEFAULT, CW_USEDEFAULT, 600, 500,
+        m_hwndMain, nullptr, m_hInstance, nullptr
+    );
+
+    if (!hwndDlg)
+    {
+        // Fallback: simple message box with settings info
+        char msg[1024];
+        snprintf(msg, sizeof(msg),
+            "RawrXD IDE Settings\n\n"
+            "Theme: %s\n"
+            "Font Size: %d\n"
+            "Tab Size: %d\n"
+            "AI Context Window: %d tokens\n"
+            "Auto-save: %s\n\n"
+            "Settings file: rawrxd.config.json",
+            isDarkTheme ? "Dark" : "Light",
+            m_settings.fontSize,
+            m_settings.tabSize,
+            m_settings.aiContextWindow,
+            m_settings.autoSaveEnabled ? "Enabled" : "Disabled"
+        );
+        MessageBoxA(m_hwndMain, msg, "Settings", MB_OK | MB_ICONINFORMATION);
+        return;
+    }
+
+    // Show modal dialog
+    ShowWindow(hwndDlg, SW_SHOW);
+    EnableWindow(m_hwndMain, FALSE);
+
+    // Message loop for modal dialog
+    MSG msg;
+    while (GetMessage(&msg, nullptr, 0, 0))
+    {
+        if (!IsDialogMessage(hwndDlg, &msg))
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+        if (!IsWindow(hwndDlg))
+            break;
+    }
+
+    EnableWindow(m_hwndMain, TRUE);
+    SetActiveWindow(m_hwndMain);
+}

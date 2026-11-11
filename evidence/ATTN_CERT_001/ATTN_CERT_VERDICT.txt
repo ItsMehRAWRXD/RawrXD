@@ -1,0 +1,30 @@
+ATTN-CERT-001 VERDICT
+=====================
+status=NOT_CERTIFIED
+candidate=CANDIDATE_PASS
+scope=MHA_GQA_ONLY
+streamer_touched=NO
+lifecycle_status=CANDIDATE_PASS (unchanged; not promoted)
+inference_math_changed=NO
+
+harness=deep2_attn_cert
+model=F:\~dev\tinyllama_fresh.gguf
+exit=0
+
+cases=
+  one_token  PASS (digest frames present)
+  multi_token PASS (frames=216; KV monotonic)
+
+observation_fix=
+  root_cause was enable(false) clearing frames before snapshot
+  B3_TraceState proved Q/K/V already executed (stdout)
+  digest-only sink repaired; deep2cert_bridge NOT re-enabled
+  evidence: OBSERVATION_GAP.txt + first_run_frames.txt
+
+telemetry_separate=
+  ResidencyCounters remain 0 despite executed forward — TELEMETRY defect
+  not treated as ATTN arithmetic failure
+
+authority=
+  CANDIDATE_PASS != CERTIFIED
+  promotion requires explicit authority review

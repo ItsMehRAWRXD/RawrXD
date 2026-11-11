@@ -1,0 +1,13 @@
+RawrXD Hotpatch Certification Baseline
+=======================================
+Executable: D:\rawrxd\build-hotpatch-test\bin\hotpatch_stress_test.exe
+SHA256:     (see build output — run Get-FileHash to verify)
+Tests:      187
+Passed:     187
+Failed:     0
+Exit code:  0
+Build dir:  build-hotpatch-test
+Generator:  Ninja
+Vulkan:     OFF
+Certification: HP-CERT-001
+Date:        2026-08-27
