@@ -1,0 +1,20 @@
+UTC gate 002: MASM-separated provider applied; CMake placement still failing
+
+The delivered gate resolves the ABI conflict the audit identified: the MASM
+telemetry interface (1-arg UTC_LogEvent, volatile uint64_t* counter) is kept
+intact in its own header (src/core/utc_asm_abi.h), and the C++ event recorder
+operates under its own namespace with the 2-arg logger and atomic counters.
+The applicator check reported UTC_SOURCE_INTEGRATION_CHECK and applied the
+source set plus certification tests (utc_provider_cert.cpp,
+utc_abi_compile.cpp).
+
+CMakeLists.txt is reverted to HEAD again: the applicator placed the source
+reference at line 10303, which fails configure (the same location as the
+earlier failed attempt). The 235-error baseline is therefore unchanged and
+the UTC gate remains UNWIRED - the placement needs to go inside the existing
+target_sources(rawrxd PRIVATE ...) list, not at that location.
+
+Committed here: the corrected provider sources and the ABI separation, which
+are verified by the drop (GCC Release, clang strict, ASan/UBSan, 8-thread
+8001-event test, C++/MASM declaration separation) - not yet by an MSVC
+application build.
