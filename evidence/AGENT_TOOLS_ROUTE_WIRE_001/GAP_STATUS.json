@@ -1,0 +1,55 @@
+{
+  "evidence_id": "AGENT_TOOLS_ROUTE_WIRE_001",
+  "scope": "F:\\rawrxd",
+  "owned_gaps": [5, 9],
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "AgentCommands_hits_SecurityGate": true,
+  "gap5_fragmented_tool_registry_ssot": {
+    "status": "CLOSED_SOURCE_WIRED",
+    "ssot": "rawrxd::tools::Registry + ToolCallBridge + IdeSsot::DispatchTool",
+    "ide_entry": "Win32IDE::dispatchAgentTool",
+    "AgentCommands_path": "onAgentExecuteCommand -> ensureAgentToolSsotReady -> ExecuteAgentCommand -> DispatchToolLine/dispatchAgentTool -> IdeSsot::DispatchTool -> ToolCallBridge::ExecuteToolCall (SecurityGate+Approval BEFORE registry->call)",
+    "adapters": "tool_core::canonicalize_tool_name (AgentToolRegistry/rawr_core/Cursor aliases)",
+    "legacy_bypass_blocked": "AgenticBridge::SpawnPowerShellProcess returns false (BYPASS_BLOCKED)",
+    "fail_closed_without_gate": true,
+    "runtime_probe": "PASS 13/13 agent_commands_security_probe",
+    "PROOF_DENY_ON_ESCAPE": true,
+    "note": "SOURCE_WIRED + adversarial DispatchTool mirror PASS; full IDE UI E2E agent turn not claimed"
+  },
+  "gap9_backend_router_model_path": {
+    "status": "CLOSED_SOURCE_WIRED",
+    "was": "AgenticBridge model turns via CPUInferenceEngine::Ask only",
+    "now": "AgenticBridge::Initialize creates BackendRouter; ExecuteAgentCommand/StartAgentLoop use ChatViaBackendRouter; CPUInferenceEngine retained for /load only",
+    "selection_log": "BACKEND_ROUTER_SELECTED via BackendRouter::ChatSync LogRouterSelection",
+    "compile": "BackendRouter.obj + Win32IDE_AgenticBridge.obj produced",
+    "note": "Live Ollama/Deep2 token smoke not claimed in this packet (NOT_RUN != PASS)"
+  },
+  "compile_proof": {
+    "rawrxd_agentic_backend": "Release lib rebuilt",
+    "tu_obj_dir": "F:\\rawrxd\\evidence\\AGENT_TOOLS_ROUTE_WIRE_001\\tu_obj",
+    "objects": [
+      "BackendRouter.obj",
+      "Win32IDE_AgentToolSsot.obj",
+      "Win32IDE_AgenticBridge.obj",
+      "Win32IDE_AgentCommands.obj",
+      "Win32IDE_ComputerUse.obj"
+    ]
+  },
+  "adversarial_probe": {
+    "exe": "F:\\rawrxd\\evidence\\AGENT_TOOLS_ROUTE_WIRE_001\\agent_commands_security_probe.exe",
+    "results": "F:\\rawrxd\\evidence\\AGENT_TOOLS_ROUTE_WIRE_001\\ADVERSARIAL_AGENTCOMMANDS_PROBE_RESULTS.json",
+    "pass": 13,
+    "fail": 0,
+    "PROOF_DENY_ON_ESCAPE": true,
+    "AgentCommands_hits_SecurityGate": true
+  },
+  "laws": {
+    "CERTIFIED": 0,
+    "PROMOTE": 0,
+    "TIP_CLIMB": "HOLD",
+    "SOURCE_WIRED_NE_RUNTIME_REACHED": true,
+    "NOT_RUN_NE_PASS": true
+  }
+}

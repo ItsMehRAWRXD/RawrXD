@@ -1,0 +1,37 @@
+{
+  "evidence_id": "AGENT_SECURITY_WIRE_001",
+  "scope": "F:\\rawrxd",
+  "owned_gaps": [3, 4],
+  "gap3_ExtensionSandboxManager_always_allow": {
+    "status": "CLOSED_SOURCE_WIRED",
+    "was": "IsPathAllowed/IsCommandAllowed always returned true",
+    "now": "Fail-closed policy: workspace roots required; deny lists; dangerous command patterns; traversal/UNC/System32 blocked",
+    "runtime_probe": "PASS (adversarial harness)",
+    "PROOF_DENY_ON_ESCAPE": true
+  },
+  "gap4_approval_on_dispatch_choke": {
+    "status": "CLOSED_SOURCE_WIRED",
+    "was": "ConsentPrompt demo MessageBox only; not on tool dispatch",
+    "now": "ToolCallBridge::ExecuteToolCall invokes SecurityGate before mutate/shell; Win32IDE_ComputerUse wires ExtensionSandboxManager + RequestToolConsent/ApprovalCallback",
+    "fail_closed_without_gate": true,
+    "note": "SOURCE_WIRED on IDE ToolCallBridge path; full IDE E2E agent turn not claimed"
+  },
+  "audit": {
+    "path": "F:\\rawrxd\\evidence\\AGENT_SECURITY_WIRE_001\\security_audit.jsonl",
+    "sample": "F:\\rawrxd\\evidence\\AGENT_SECURITY_WIRE_001\\AUDIT_SAMPLE.jsonl"
+  },
+  "adversarial_probe": {
+    "exe": "F:\\rawrxd\\evidence\\AGENT_SECURITY_WIRE_001\\agent_security_adversarial_probe.exe",
+    "results": "F:\\rawrxd\\evidence\\AGENT_SECURITY_WIRE_001\\ADVERSARIAL_PROBE_RESULTS.json",
+    "pass": 16,
+    "fail": 0,
+    "PROOF_DENY_ON_ESCAPE": true
+  },
+  "laws": {
+    "CERTIFIED": 0,
+    "PROMOTE": 0,
+    "TIP_CLIMB": "HOLD",
+    "SOURCE_WIRED_NE_RUNTIME_REACHED": true,
+    "NOT_RUN_NE_PASS": true
+  }
+}

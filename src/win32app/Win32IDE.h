@@ -1,9 +1,33 @@
 #pragma once
 
+// Class forward (must precede AgenticBridge / Autonomy / LoopBridge includes).
+#ifndef RAWRXD_WIN32IDE_CLASS_FWD
+#define RAWRXD_WIN32IDE_CLASS_FWD
+class Win32IDE;
+#endif
+class Win32IDE_AgentExecutor;
+
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef _WINSOCKAPI_
+#define _WINSOCKAPI_
+#endif
+#include <winsock2.h>
 #include <windows.h>
 #include <richedit.h>
 #include "Win32IDE_Types.h"
+#include "Win32IDE_LanguagePlugin.h"
+
+// Forward declarations for peek overlay (definition in Win32IDE_PeekOverlay.cpp)
+class PeekOverlayWindow;
+struct PeekOverlayWindowDeleter {
+    void operator()(PeekOverlayWindow*) noexcept;
+};
+#include "AnnotationOverlay.h"
+namespace RawrXD { namespace LSPServer { class RawrXDLSPServer; } }
 #include <algorithm>
+#include <array>
 
 // ---------------------------------------------------------------------------
 // Document tab strip (VS Code style). IDC_DOC_TABS identifies the control in
@@ -20,6 +44,24 @@
 #endif
 #ifndef DOC_TAB_HEIGHT
 #define DOC_TAB_HEIGHT 26
+#endif
+
+#ifndef IDC_TERMTAB_BAR
+#define IDC_TERMTAB_BAR 9300
+#define IDC_TERMTAB_ADD_BTN 9301
+#define IDC_TERMTAB_PROFILE 9302
+#define IDC_TERMTAB_FIRST 9310
+#endif
+#ifndef IDM_LSP_SERVER_START
+#define IDM_LSP_SERVER_START            9200
+#define IDM_LSP_SERVER_STOP             9201
+#define IDM_LSP_SERVER_STATUS           9202
+#define IDM_LSP_SERVER_REINDEX          9203
+#define IDM_LSP_SERVER_STATS            9204
+#define IDM_LSP_SERVER_PUBLISH_DIAG     9205
+#define IDM_LSP_SERVER_CONFIG           9206
+#define IDM_LSP_SERVER_EXPORT_SYMBOLS   9207
+#define IDM_LSP_SERVER_LAUNCH_STDIO     9208
 #endif
 
 // Activity-bar IDs are shared by the VS Code-style UI implementation and the
@@ -125,6 +167,7 @@
 #include <sstream>
 #include "nlohmann/json.hpp"
 #include "IDELogger.h"
+#include "IDEPlugin.h"
 
 // ---------------------------------------------------------------------------
 // Streaming log macro used by Minimap and other Tier-1 cosmetic TUs.
@@ -132,14 +175,34 @@
 // ---------------------------------------------------------------------------
 struct RawrXDLogStream {
     std::ostringstream ss;
-    const char* tag;
+    std::string tag;
+    explicit RawrXDLogStream(const char* t) : tag(t ? t : "") {}
+    RawrXDLogStream(RawrXDLogStream&& other) noexcept
+        : ss(std::move(other.ss)), tag(std::move(other.tag)) {}
+    RawrXDLogStream(const RawrXDLogStream&) = delete;
+    RawrXDLogStream& operator=(const RawrXDLogStream&) = delete;
+    template <typename T>
+    RawrXDLogStream& operator<<(const T& value) {
+        ss << value;
+        return *this;
+    }
     ~RawrXDLogStream() {
-        std::string msg = std::string(tag) + ": " + ss.str();
-        LOG_INFO(msg);
+        if (ss.tellp() > 0) {
+            const std::string msg = tag + ": " + ss.str();
+            LOG_INFO(msg);
+        } else {
+            LOG_INFO(tag);
+        }
     }
 };
 #ifndef RAWRXD_LOG_INFO
-#define RAWRXD_LOG_INFO(tag) RawrXDLogStream{tag}
+#define RAWRXD_LOG_INFO(tag) RawrXDLogStream(tag)
+#endif
+#ifndef RAWRXD_IDE_LABEL_BREADCRUMB_BAR
+#define RAWRXD_IDE_LABEL_BREADCRUMB_BAR "RawrXD.BreadcrumbBar"
+#endif
+#ifndef RAWRXD_IDE_LABEL_MAIN_WINDOW
+#define RAWRXD_IDE_LABEL_MAIN_WINDOW "RawrXD.MainWindow"
 #endif
 
 #include "Win32TerminalManager.h"
@@ -148,6 +211,7 @@ struct RawrXDLogStream {
 #include "streaming_gguf_loader.h"
 #include "cpu_inference_engine.h"
 #include "Win32IDE_AgenticBridge.h"
+#include "Win32IDE_AgentExecutor.h"
 #include "Win32IDE_Autonomy.h"
 #include "Win32IDE_AgenticLoopBridge.h"
 #include "agent_esp.hpp"
@@ -160,6 +224,9 @@ class Deep2Bridge;
 namespace RawrXD {
 namespace Agent {
 class AgentSession;
+class ToolCallBridge;
+struct ToolCall;
+struct ToolResultMessage;
 }
 }
 
@@ -385,7 +452,10 @@ public:
     struct BreadcrumbItem {
         std::string name;
         std::string path;
+        std::string label;       // display text (filename / symbol)
+        std::string symbolKind;  // "file" | "class" | "method" | ...
         int line = 0;
+        int column = 0;
     };
 
     // Symbol kind constants (LSP-compatible) used by OutlinePanel and symbol index
@@ -427,9 +497,12 @@ public:
     };
     struct OutlineSymbol {
         std::string name;
-        std::string kind;
+        int kind = 0;              // LSP SymbolKind integer
+        std::string detail;
         int line = 0;
         int column = 0;
+        int endLine = 0;
+        bool expanded = true;
         std::vector<OutlineSymbol> children;
     };
 
@@ -459,10 +532,15 @@ public:
     // Test agent access
     HWND getMainWindow() const { return m_hwndMain; }
     void runNativeCodexPrompt(const std::string& prompt);
-    void requestNativeGhostText(const std::string& prompt,
-                                std::function<void(const std::string&, bool, bool)> callback);
+    // Returns a non-blocking, idempotent cancel handle for the dispatched
+    // GhostText request. An empty handle means no transport was started.
+    NativeGhostTextController::RequestCancel requestNativeGhostText(
+        const std::string& prompt,
+        NativeGhostTextController::RequestCallback callback);
     void appendNativeDebugOutput(const std::string& text, bool error = false);
     bool openDocumentPath(const std::string& path);
+    void openFile();
+    void openFile(const std::string& filePath);
     // Argv/fixture open must wait until finishSession loadEditorSession completes;
     // early openDocumentPath is overwritten by sticky session (broken_multi drift).
     void queueInitialDocumentPath(const std::string& path);
@@ -485,6 +563,10 @@ public:
     bool isAgentModeActive() const;
     void setAgentModeActive(bool active);
     rawrxd::tools::Registry* agentToolsRegistry();
+    RawrXD::Agent::ToolCallBridge* agentToolCallBridge();
+    bool ensureAgentToolSsotReady();
+    // Single IDE DispatchTool choke point (ToolCallBridge SSOT).
+    RawrXD::Agent::ToolResultMessage dispatchAgentTool(const RawrXD::Agent::ToolCall& call);
     bool m_computerUseToolsRegistered = false;
     void* m_computerUseRegistry = nullptr; // bound to session registry (not orphan-only)
     // Session-owned tools registry + ToolCallBridge (lifetime = IDE session).
@@ -503,17 +585,26 @@ public:
     void onDeep2ModelInfo();
     void onDeep2Configure();
 
-    // Agentic Loop Bridge (connects to deep2_agentic_loop.exe)
-    std::unique_ptr<AgenticLoopBridge> m_agenticLoopBridge;
+    // Agentic Loop Bridge � NON-OWNING. Owned by AgenticBridge (gap 8 SSOT).
+    // Observers may call through this pointer; construction/destruction is
+    // exclusively AgenticBridge::EnsureLoopTransport / ~AgenticBridge.
+    AgenticLoopBridge* m_agenticLoopBridge = nullptr;
+    // Product executor entry (never always-true stub).
+    std::unique_ptr<Win32IDE_AgentExecutor> m_agentExecutor;
     // Chat session receiving the canonical CLI agent's streamed stdout/stderr.
     // Keeping the origin session explicit prevents a later chat-tab switch
     // from attaching agent output to the wrong conversation.
     int m_agenticChatSessionId = 0;
-    // Product AgentSession (rawrxd_agentic_backend) — opaque holder; typed in .cpp.
+    // Product AgentSession (rawrxd_agentic_backend) � opaque holder; typed in .cpp.
     // H01: must be linked + constructed on Native-Ext path (not CLI-only).
     std::unique_ptr<void, void(*)(void*)> m_productAgentSession{
         nullptr, &RawrxdProductAgentSessionDeleterNoop};
     uint64_t m_productAgentSessionId = 0;
+    // TaskLedger SSOT: PersistentTaskBacklog (opaque; typed in AgentCommands.cpp).
+    std::unique_ptr<void, void(*)(void*)> m_productTaskBacklog{
+        nullptr, &RawrxdProductAgentSessionDeleterNoop};
+    std::string m_productTaskId;
+    bool m_productTaskResumed = false;
     void initializeAgenticLoopBridge();
     void onAgenticLoopRunTask();
     void onAgenticLoopCancel();
@@ -522,6 +613,9 @@ public:
     bool ensureProductAgentSession(const std::string& modelIdentity,
                                    const std::string& workspaceRoot,
                                    const std::string& task);
+    bool ensureProductTaskLedger(const std::string& workspaceRoot,
+                                 const std::string& task,
+                                 const std::string& modelIdentity);
 
     // Autonomy Framework Controls
     std::unique_ptr<AutonomyManager> m_autonomyManager; // high-level autonomous orchestrator
@@ -573,8 +667,19 @@ public:
         std::string eolStyle = "LF";
         bool syntaxColoringEnabled = true;
         bool minimapEnabled = true;
+        bool breadcrumbsEnabled = true;
         bool localServerEnabled = false;
         int localServerPort = 11435;
+    };
+    // Appearance settings used by Settings/Themes TUs (Batch17 link unblock).
+    struct AppearanceSettings {
+        std::string themeName;
+        float uiScale = 1.0f;
+        std::string fontFamily = "Consolas";
+        int editorFontSizePt = 14;
+        bool ligatures = false;
+        int tabSize = 4;
+        bool insertSpaces = true;
     };
     HWND getToolbar() const { return m_hwndToolbar; }
     HWND getSidebar() const { return m_hwndSidebar; }
@@ -593,7 +698,7 @@ public:
     void onInferenceCompletePublic(const std::string& fullResponse) {
         onInferenceComplete(fullResponse);
     }
-    // ConPTY diagnostic ingest (anonymous free fn) → Problems model.
+    // ConPTY diagnostic ingest (anonymous free fn) ? Problems model.
     void addProblemPublic(const std::string& file, int line, int col,
                           const std::string& msg, int severity) {
         addProblem(file, line, col, msg, severity);
@@ -603,6 +708,14 @@ public:
 
 private:
     IDESettings m_settings;
+    AppearanceSettings m_appearance;
+    void loadSettings();
+    void saveSettings();
+    void applySettings();
+    void applyDefaultSettings();
+    void showSettingsDialog();
+    void showSettingsGUI();
+    std::string getSettingsFilePath() const;
     // Window procedure
     static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     friend void sehCallOnCreateLifecycle(Win32IDE* ide, HWND hwnd);
@@ -649,7 +762,6 @@ private:
 
     // File operations (9 features)
     void newFile();
-    void openFile();
     void openFileDialog();
     // Loads a file by path into the editor and registers it as the active
     // document. Used by the document tabs (which must switch buffers without
@@ -668,6 +780,9 @@ private:
     void clearRecentFiles();
     void saveIdeSession();
     void loadIdeSession();
+    // panel.height / visible / tab — product ide_session.json (P08)
+    void saveSessionPanelState(nlohmann::json& session);
+    void restoreSessionPanelState(const nlohmann::json& session);
     void persistActiveDocumentBuffer();
     void reclaimDocumentTabControlId();
     // File safety runs on the main window's WM_TIMER dispatch. It detects an
@@ -884,6 +999,11 @@ private:
     void gitPush();
     void gitPull();
     void gitStageFile(const std::string& filePath);
+    void gitStage(const std::string& file);
+    void gitBranch(const std::string& name);
+    void gitStash();
+    void gitCherryPick(const std::string& commit);
+    void gitStatus();
     void gitUnstageFile(const std::string& filePath);
     void showGitPanel();
     void refreshGitPanel();
@@ -896,7 +1016,7 @@ private:
     // Menu Command System (25 features)
     void handleFileCommand(int commandId);
     void handleEditCommand(int commandId);
-    // IDM_AI_EDIT=2060 — deterministic T15 repair or optional model edit.
+    // IDM_AI_EDIT=2060 � deterministic T15 repair or optional model edit.
     void triggerAIEdit();
     void applyAIEdit();
     void showAIChat();
@@ -919,7 +1039,9 @@ private:
     // Theme and customization
     void loadTheme(const std::string& themeName);
     void saveTheme(const std::string& themeName);
+    void initThemes();
     void applyTheme();
+    void applyTheme(const std::string& themeName);
     void showThemeEditor();
     void resetToDefaultTheme();
 
@@ -936,7 +1058,8 @@ private:
     void showPowerShellDocs();
     void searchHelp(const std::string& query);
 
-    // Enhanced output panel
+    // Enhanced output panel (public for AutonomousLoop/DAP)
+public:
     void createOutputTabs();
     void addOutputTab(const std::string& name);
     void appendToOutput(const std::string& text, const std::string& tabName = "General", OutputSeverity severity = OutputSeverity::Info);
@@ -981,6 +1104,7 @@ private:
         std::vector<std::string> args;
     };
     void showTaskRunnerDialog();
+public:
     std::vector<TaskRunnerEntry> getTaskRunnerTasks() const;
     void runSelectedTask(int index);
 
@@ -1042,13 +1166,99 @@ private:
     bool isAnnotationOverlayVisible() const;
     void addAnnotationOverlayItem(int line, const std::string& message, OutputSeverity severity);
 
+    // Voice Assistant (Batch 6 C04)
+    void initVoiceAssistant();
+    void startVoiceListening();
+    void stopVoiceListening();
+    bool isVoiceListening() const;
+
+    // FileSystem Events / Incremental Indexing (Batch 6 R04)
+    void initFileSystemWatcher();
+    bool fileNeedsReindex(const std::string& filePath);
+    void removeWatchedFile(const std::string& filePath);
+
+    // Agent Inline Annotations (Win32IDE_Annotations.cpp)
+    enum class AnnotationSeverity {
+        Hint = 0,
+        Info = 1,
+        Warning = 2,
+        Error = 3,
+        Suggestion = 4
+    };
+    enum class AnnotationActionType {
+        None = 0,
+        JumpToLine,
+        ApplyFix,
+        AskAgent,
+        OpenFile,
+        RunCommand,
+        Suppress
+    };
+    struct AnnotationAction {
+        AnnotationActionType type = AnnotationActionType::None;
+        std::string label;
+        int targetLine = 0;
+        std::string targetFile;
+        std::string fixContent;
+        int fixStartLine = 0;
+        int fixEndLine = 0;
+        std::string agentPrompt;
+        std::string commandId;
+    };
+    struct InlineAnnotation {
+        int line = 0;
+        int column = 0;
+        AnnotationSeverity severity = AnnotationSeverity::Info;
+        std::string text;
+        std::string source;
+        COLORREF color = 0;
+        bool visible = true;
+        std::vector<AnnotationAction> actions;
+    };
+    void addAnnotation(int line, AnnotationSeverity severity, const std::string& text, const std::string& source = "agent");
+    void addAnnotationWithAction(int line, AnnotationSeverity severity, const std::string& text,
+                                 const AnnotationAction& action, const std::string& source = "agent");
+    void removeAnnotations(int line, const std::string& source = "");
+    void clearAllAnnotations(const std::string& source = "");
+    void paintAnnotations(HDC hdc, RECT& rc);
+    void paintAnnotationGutterIcons(HDC hdc, RECT& gutterRC);
+    void updateAnnotationPositions(int fromLine, int lineDelta);
+    std::vector<InlineAnnotation> getAnnotationsForLine(int line) const;
+    std::string getAnnotationTooltip(int line) const;
+    void toggleAnnotationVisibility(const std::string& source);
+    COLORREF getAnnotationColor(AnnotationSeverity severity) const;
+    int getAnnotationGutterIconWidth() const;
+    static LRESULT CALLBACK AnnotationOverlayProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    void clearAnnotationsForCurrentFile();
+    void storeAnnotationsForTab();
+    void restoreAnnotationsForTab();
+    void executeAnnotationAction(const InlineAnnotation& annotation);
+    void onAnnotationClicked(int line, int clickX, int clickY);
+    void showAnnotationActionMenu(HWND hwndParent, int x, int y, const std::vector<InlineAnnotation>& annotations);
+    void saveSessionAnnotations(nlohmann::json& session);
+    void restoreSessionAnnotations(const nlohmann::json& session);
+
     // Call Stack Symbols (Batch 6 D02)
     void initCallStackSymbols();
     bool handleCallStackCommand(int commandId);
+    void cmdCallStackCapture();
+    void cmdCallStackShowDialog();
+    void cmdCallStackCopy();
+    void cmdCallStackResolve();
 
     // Debug Watch Format (Batch 6 D02)
     void initDebugWatchFormat();
     bool handleDebugWatchFormatCommand(int commandId);
+    void cmdDbgWatchShow();
+    void cmdDbgWatchAdd();
+    void cmdDbgWatchFormatHex();
+    void cmdDbgWatchFormatDec();
+    void cmdDbgWatchFormatBin();
+    void cmdDbgWatchFormatStruct();
+    void cmdDbgWatchClear();
+    // DAP evaluate request — out-params result/type; returns false if unavailable.
+    bool evaluateWatchExpression(const std::string& expression, int frameId,
+                                 std::string& result, std::string& type);
 
     // Call Stack command IDs
     static constexpr int IDM_CALLSTACK_CAPTURE = 15001;
@@ -1165,6 +1375,7 @@ private:
     void toggleSyntaxHighlighting();
     void updateSyntaxHighlighting();
     void applySyntaxHighlighting(const std::vector<SyntaxToken>& tokens);
+    void applySyntaxHighlighting(const std::vector<IDEPlugin::SyntaxToken>& tokens);
     void initSyntaxColorizer();
     void applySyntaxColoring();
     void applySyntaxColoringForRange(int startChar, int endChar);
@@ -1239,16 +1450,41 @@ private:
 
     // Diff Viewer
     struct DiffViewHunk {
-        int lineNumber;
+        enum Type { Equal = 0, Added, Removed, Modified };
+        Type type = Equal;
+        int leftStart = 0;
+        int rightStart = 0;
+        int leftCount = 0;
+        int rightCount = 0;
+        std::string leftText;
+        std::string rightText;
+        // Legacy fields retained for older call sites
+        int lineNumber = 0;
         std::string content;
-        bool isAdded;
-        bool isRemoved;
+        bool isAdded = false;
+        bool isRemoved = false;
     };
     struct DiffViewState {
         std::vector<DiffViewHunk> hunks;
-        int currentHunk;
-        bool isValid;
+        int currentHunk = -1;
+        bool isValid = false;
+        bool visible = false;
+        bool inlineMode = false;
+        int scrollPos = 0;
+        std::string leftTitle;
+        std::string rightTitle;
+        std::vector<std::string> leftLines;
+        std::vector<std::string> rightLines;
+        HFONT hFont = nullptr;
     };
+    static constexpr int IDC_DIFF_PANEL = 9901;
+    static constexpr int IDC_DIFF_TOOLBAR = 9902;
+    static constexpr int IDC_DIFF_PREV_BTN = 9903;
+    static constexpr int IDC_DIFF_NEXT_BTN = 9904;
+    static constexpr int IDC_DIFF_INLINE_BTN = 9905;
+    static constexpr int IDC_DIFF_CLOSE_BTN = 9906;
+    static constexpr int IDC_DIFF_LEFT = 9907;
+    static constexpr int IDC_DIFF_RIGHT = 9908;
     void initGitDiffViewer();
     void shutdownGitDiffViewer();
     void closeGitDiffViewer();
@@ -1256,7 +1492,15 @@ private:
     void shutdownDiffView();
     void openDiffView(const std::string& leftContent, const std::string& rightContent, const std::string& leftTitle, const std::string& rightTitle);
     void closeDiffView();
+    void computeDiffHunks();
+    void diffNavigateHunk(int direction);
+    void toggleDiffInlineMode();
+    void renderDiffPanel(HWND hwnd, HDC hdc, bool isRight);
+    void openGitDiffForCurrentFile();
+    static LRESULT CALLBACK DiffPanelProc(HWND, UINT, WPARAM, LPARAM);
     DiffViewState m_diffState;
+    HWND m_hwndDiffPanel = nullptr;
+    HWND m_hwndDiffToolbar = nullptr;
 
     // Command Palette (Ctrl+Shift+P)
     struct CommandPaletteItem {
@@ -1294,12 +1538,34 @@ private:
     bool m_quickOpenVisible = false;
 
     // Code Completion (LSP-driven)
+    struct HybridCompletionItem {
+        std::string label;
+        std::string insertText;
+        std::string detail;
+        std::string documentation;
+        int kind = 0;
+        int sortOrder = 0;
+        std::string source;
+        float confidence = 0.0f;
+    };
     void triggerCodeCompletion();
     void showCodeCompletions(int position);
     void hideCodeCompletions();
     bool isCodeCompletionVisible() const;
+    void createCompletionPopup();
+    void showCompletionPopup();
+    void hideCompletionPopup();
+    void onCompletionReady(LPARAM lParam);
+    void acceptCompletion();
+    bool handleCompletionKeyDown(WPARAM vk);
+    void updateCompletionFilter();
+    void updateCompletionDetail();
+    bool shouldAutoTriggerCompletion(wchar_t ch);
+    bool isCompletionPopupVisible() const;
+    static LRESULT CALLBACK CompletionPopupProc(HWND, UINT, WPARAM, LPARAM);
     HWND m_hwndCodeCompletion = nullptr;
     bool m_codeCompletionVisible = false;
+    std::vector<HybridCompletionItem> m_completionItems;
 
     // Inline/Ghost Completion
     void initInlineCompletion();
@@ -1310,17 +1576,59 @@ private:
 
     // Go to Symbol (Ctrl+Shift+O)
     void showGoToSymbolPicker();
+    void showGoToWorkspaceSymbolPicker();
     void hideGoToSymbolPicker();
     bool isGoToSymbolPickerVisible() const;
+    void populateSymbolPickerData();
+    void refreshWorkspaceSymbolPickerResults(const std::string& queryUtf8);
+    void jumpToWorkspaceSymbolPickerResult(const std::string& filePath, uint32_t line1Based);
+    void navigateToLine(int line);
+    void navigateToFileLine(const std::string& filePath, uint32_t line1Based);
     HWND m_hwndGoToSymbol = nullptr;
     bool m_goToSymbolVisible = false;
 
     // Find All References
+    struct ReferenceLocation {
+        std::string filePath;
+        int line = 0;
+        int column = 0;
+        std::string contextLine;
+        std::string lineText;
+        std::string matchText;
+    };
+    struct ReferenceGroup {
+        std::string filePath;
+        std::vector<ReferenceLocation> refs;
+        bool expanded = true;
+    };
+    struct ReferencePanelState {
+        std::string symbolName;
+        int totalCount = 0;
+        bool visible = false;
+        HFONT hFont = nullptr;
+        HWND hwndPanel = nullptr;
+        HWND hwndTree = nullptr;
+        HWND hwndCountLabel = nullptr;
+        std::vector<ReferenceGroup> groups;
+    };
+    static constexpr int IDC_REFS_PANEL = 9920;
+    static constexpr int IDC_REFS_TREE = 9921;
+    static constexpr int IDC_REFS_COUNT_LABEL = 9922;
+    static constexpr int IDC_REFS_CLOSE_BTN = 9923;
+    void initReferencesPanel();
+    void shutdownReferencesPanel();
     void showReferencesPanel();
     void hideReferencesPanel();
+    void showReferences(const std::string& symbolName, const std::vector<ReferenceLocation>& refs);
+    void closeReferencesPanel();
     void populateReferences(const std::vector<std::string>& references);
+    void populateReferencesTree();
+    void navigateToReference(int groupIndex, int refIndex);
+    void renderReferencesPanel(HDC hdc, RECT rc);
+    static LRESULT CALLBACK ReferencesPanelProc(HWND, UINT, WPARAM, LPARAM);
     HWND m_hwndReferencesPanel = nullptr;
     bool m_referencesPanelVisible = false;
+    ReferencePanelState m_refsState;
 
     // Semantic Index / Workspace Symbols
     void showSemanticIndex();
@@ -1333,21 +1641,38 @@ private:
     // Rename Refactoring Preview
     struct RenameChange {
         std::string filePath;
-        int line;
-        int column;
+        int line = 0;
+        int column = 0;
         std::string oldName;
         std::string newName;
-        bool isModified;
+        std::string oldText;
+        std::string newText;
+        std::string contextLine;
+        bool isModified = false;
+        bool selected = true;
     };
     struct RenamePreviewState {
         std::vector<RenameChange> changes;
-        int selectedIndex;
-        bool isValid;
+        int selectedIndex = -1;
+        bool isValid = false;
+        bool visible = false;
+        std::string oldName;
+        std::string newName;
+        HFONT hFont = nullptr;
+        HWND hwndPanel = nullptr;
+        HWND hwndList = nullptr;
     };
+    static constexpr int IDC_RENAME_PREVIEW = 9930;
+    static constexpr int IDC_RENAME_INPUT = 9931;
+    static constexpr int IDC_RENAME_CHECKLIST = 9932;
+    static constexpr int IDC_RENAME_APPLY_BTN = 9933;
+    static constexpr int IDC_RENAME_CANCEL_BTN = 9934;
     void initRenamePreview();
     void shutdownRenamePreview();
     void showRenamePreview(const std::string& oldName, const std::string& newName, const std::string& filePath, int line, int column);
+    void showRenamePreview(const std::string& oldName, const std::string& newName, const std::vector<RenameChange>& changes);
     void closeRenamePreview();
+    void applySelectedRenames();
     void renderRenamePreviewItem(HDC hdc, RECT itemRect, const RenameChange& change);
     static LRESULT CALLBACK RenamePreviewProc(HWND, UINT, WPARAM, LPARAM);
     RenamePreviewState m_renamePreview;
@@ -1355,16 +1680,27 @@ private:
     // Hover Tooltips
     struct HoverTooltipState {
         std::string content;
-        int line;
-        int column;
-        bool isValid;
+        int line = 0;
+        int column = 0;
+        bool isValid = false;
+        bool visible = false;
+        bool pending = false;
+        HFONT hFont = nullptr;
+        HFONT hBoldFont = nullptr;
+        HWND hwndPopup = nullptr;
+        POINT screenPos = {};
     };
+    static constexpr UINT_PTR HOVER_TIMER_ID = 0x484F56; // 'HOV'
     void initHoverTooltip();
     void initHoverTooltips();
     void shutdownHoverTooltip();
     void shutdownHoverTooltips();
+    void onEditorMouseHover(int x, int y);
+    void onHoverTimer();
+    void onHoverReady(const std::string& content, int line, int col);
     void showHoverTooltip(int screenX, int screenY, const std::string& content);
     void dismissHoverTooltip();
+    void renderHoverContent(HDC hdc, RECT rc, const std::string& content);
     static LRESULT CALLBACK HoverTooltipProc(HWND, UINT, WPARAM, LPARAM);
     HoverTooltipState m_hoverState;
 
@@ -1464,7 +1800,9 @@ private:
     void newFileInExplorer();
     void newFolderInExplorer();
     void deleteItemInExplorer();
+    void deleteItemInExplorer(const std::string& path);
     void renameItemInExplorer();
+    void renameItemInExplorer(const std::string& path);
     void revealInExplorer(const std::string& filePath);
     void handleExplorerContextMenu(POINT pt);
     static LRESULT CALLBACK ExplorerTreeProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -1765,18 +2103,10 @@ private:
 
     // Batch 1 editor state (members declared alongside their public API above)
 
-    // Multi-Cursor state
-    struct MultiCursorState {
-        int position;
-        bool isActive;
-        bool isPrimary;
-    };
-    std::vector<MultiCursorState> m_multiCursors;
-    bool m_multiCursorActive = false;
-    int m_primaryCursorIndex = 0;
-    bool m_multiCursorAltHeld = false;
+    // Multi-cursor state is owned by Win32IDE_MultiCursor.cpp (file-static
+    // MultiCursorState with nested Cursor). No duplicate declaration here.
 
-    // Syntax Highlighting state
+    // ===========================================================================
     bool m_syntaxHighlightingEnabled = true;
     bool m_syntaxColoringEnabled = true;
     bool m_syntaxDirty = false;
@@ -1811,44 +2141,137 @@ private:
     // ===========================================================================
 public:
     enum class LSPLanguage {
-        Cpp = 0, Python = 1, TypeScript = 2, JavaScript = 3, Rust = 4, Go = 5,
-        Java = 6, CSharp = 7, Ruby = 8, PHP = 9, Swift = 10, Kotlin = 11, Unknown = 12
+        Cpp = 0, CPP = Cpp, Python = 1, TypeScript = 2, JavaScript = 3, Rust = 4, Go = 5,
+        Java = 6, CSharp = 7, Ruby = 8, PHP = 9, Swift = 10, Kotlin = 11, Unknown = 12,
+        Count = 13
     };
-    enum class LSPServerState { Stopped = 0, Starting = 1, Running = 2, Stopping = 3, Error = 4 };
+    LSPLanguage detectLanguageForFile(const std::string& filePath) const;
+    std::string lspLanguageId(LSPLanguage lang) const;
+    std::string lspLanguageString(LSPLanguage lang) const;
+    LSPLanguage lspLanguageFromString(const std::string& name) const;
+    std::string getLSPStatusString() const;
+    std::string getLSPConfigFilePath() const;
+    std::string getSessionFilePath() const;
+    void handleLSPStatusEndpoint(SOCKET client);
+    void handleLSPDiagnosticsEndpoint(SOCKET client);
+    std::string getSyntaxLanguageName() const;
+    std::string buildLanguageAwarePrompt(const std::string& basePrompt) const;
+    void cmdLSPFormatDocument();
+    void cmdLSPGotoDefinition();
+    void cmdLSPFindReferences();
+    void cmdLSPRenameSymbol();
+    void cmdLSPHoverInfo();
 
+    std::wstring utf8ToWide(const std::string& utf8) const;
+    std::string showInputDialog(const std::string& title, const std::string& prompt, const std::string& defaultValue);
+    void addTab(const std::string& filePath, const std::string& displayName = "");
+    void setActiveTab(int index);
+    int findTabByPath(const std::string& filePath) const;
+    std::string uriToFilePath(const std::string& uri) const;
+    std::string filePathToUri(const std::string& filePath) const;
+    std::pair<int, int> getCursorPosition() const;
+    std::vector<HybridCompletionItem> requestHybridCompletion(
+        const std::string& filePath, int line, int column);
+    enum class LSPServerState {
+        Stopped = 0, Starting = 1, Running = 2, Stopping = 3, ShuttingDown = 3, Error = 4
+    };
+
+    struct LSPRangePos {
+        int line = 0;
+        int character = 0;
+    };
+    struct LSPRange {
+        LSPRangePos start;
+        LSPRangePos end;
+    };
     struct LSPLocation {
         std::string uri;
         int line = 0;
         int character = 0;
+        LSPRange range{};
     };
+
+    // Peek Overlay — Definition/References Overlay (Win32IDE_PeekOverlay.cpp)
+    void initPeekOverlay();
+    void shutdownPeekOverlay();
+    void showPeekDefinition(int line, int col);
+    void showPeekReferences(int line, int col);
+    void showPeekOverlayWithItems(const std::vector<PeekItem>& items, int triggerLine, int triggerCol);
+    std::vector<PeekItem> buildPeekItemsFromLspLocations(const std::vector<LSPLocation>& locations, PeekItemType type,
+                                                        int contextLinesBefore = 3, int contextLinesAfter = 3);
+    std::vector<PeekItem> findDefinitionsAt(int line, int col);
+    std::vector<PeekItem> findReferencesAt(int line, int col);
+    void handlePeekOverlayKey(UINT vk, bool ctrl, bool alt, bool shift);
+    bool isPeekOverlayActive() const;
+    void postPeekFinishFromOverlay(bool navigate, const std::string& filePath, uint32_t line1Based);
+    static constexpr UINT WM_RAWRXD_PEEK_FINISH = WM_USER + 520;
+    std::unique_ptr<PeekOverlayWindow, PeekOverlayWindowDeleter> m_peekOverlayWindow;
+    bool m_peekOverlayActive = false;
+    bool m_peekDeferredNavigate = false;
+    std::string m_peekDeferredFile;
+    uint32_t m_peekDeferredLine = 0;
+
+    struct LSPSymbolLocation {
+        std::string uri;
+        LSPRange range;
+    };
+    struct LSPSymbolInfo {
+        std::string name;
+        int kind = 0;
+        std::string detail;
+        std::string containerName;
+        LSPSymbolLocation location;
+    };
+    std::vector<LSPSymbolInfo> lspDocumentSymbols(const std::string& uri);
+    std::vector<LSPSymbolInfo> lspWorkspaceSymbols(const std::string& query);
     struct LSPDiagnostic {
-        std::string range;
+        LSPRange range{};
         int severity = 1;
         std::string message;
+        std::string source;
+        std::string code;
     };
     struct LSPHoverInfo {
         std::string contents;
-        std::string range;
+        LSPRange range{};
+        bool valid = false;
     };
     struct LSPCompletionItem {
         std::string label;
-        std::string kind;
+        int kind = 0;
         std::string detail;
         std::string documentation;
         std::string insertText;
+        bool isSnippet = false;
     };
     struct LSPSignatureHelpInfo {
         std::vector<std::string> signatures;
         int activeSignature = 0;
         int activeParameter = 0;
+        std::string activeSignatureLabel;
+        std::string activeDocumentation;
+        bool valid = false;
     };
     struct LSPWorkspaceEdit {
         struct TextEdit {
-            std::string range;
+            LSPRange range{};
             std::string newText;
+            std::string rangeText;
+        };
+        struct ResourceOperation {
+            enum class Type { Create, Rename, Delete };
+            Type type = Type::Create;
+            std::string uri;
+            std::string newUri;
+            bool overwrite = false;
+            bool ignoreIfExists = false;
+            bool recursive = false;
+            bool ignoreIfNotExists = false;
         };
         std::vector<TextEdit> edits;
         std::string uri;
+        std::map<std::string, std::vector<TextEdit>> changes;
+        std::vector<ResourceOperation> resourceOperations;
     };
     struct LSPServerConfig {
         LSPLanguage language = LSPLanguage::Cpp;
@@ -1857,6 +2280,7 @@ public:
         std::vector<std::string> args;
         bool enabled = true;
         int initTimeoutMs = 15000;
+        std::string rootUri;
     };
     struct LSPServerStateInfo {
         LSPLanguage language = LSPLanguage::Cpp;
@@ -1872,6 +2296,17 @@ public:
     void restartLSPServer(LSPLanguage lang);
     void startAllLSPServers();
     void stopAllLSPServers();
+    void loadLSPConfig();
+    void saveLSPConfig();
+    void lspReaderThread(LSPLanguage lang);
+    static int64_t currentEpochMs();
+    std::string getLSPStatsString() const;
+    std::string getLSPDiagnosticsSummary() const;
+    void onDiagnosticsReceived(const std::string& uri, const std::vector<LSPDiagnostic>& diagnostics);
+    void displayDiagnosticsAsAnnotations(const std::string& uri);
+    void refreshProblemsView();
+    void clearDiagnostics(const std::string& uri);
+    void clearAllDiagnostics();
     LSPServerState getLSPServerState(LSPLanguage lang) const;
     int sendLSPRequest(LSPLanguage lang, const std::string& method, const nlohmann::json& params);
     void sendLSPNotification(LSPLanguage lang, const std::string& method, const nlohmann::json& params);
@@ -1892,7 +2327,36 @@ public:
     LSPSignatureHelpInfo lspSignatureHelp(const std::string& uri, int line, int character, int triggerKind = 1);
     std::vector<LSPLocation> lspImplementation(const std::string& uri, int line, int character);
     std::vector<LSPLocation> lspTypeDefinition(const std::string& uri, int line, int character);
+    struct LSPInlayHint {
+        LSPRangePos position;
+        std::string label;
+        std::string kind;
+        std::string tooltip;
+        bool paddingLeft = false;
+        bool paddingRight = false;
+    };
+    struct LSPCodeAction {
+        std::string title;
+        std::string kind;
+        bool isPreferred = false;
+        bool hasEdit = false;
+        nlohmann::json edit;
+        std::string command;
+    };
+    std::vector<LSPWorkspaceEdit::TextEdit> lspRangeFormatting(
+        const std::string& filePath, int startLine, int startChar, int endLine, int endChar);
+    std::vector<LSPInlayHint> lspInlayHints(const std::string& uri, int startLine, int endLine);
+    std::vector<LSPCodeAction> lspCodeActions(const std::string& uri, int line, int startChar, int endChar,
+                                              const std::vector<std::string>& diagnosticCodes);
     bool applyWorkspaceEdit(const LSPWorkspaceEdit& edit);
+    bool applyWorkspaceEdit(const nlohmann::json& editJson);
+    void cmdLSPFormatRange();
+    void cmdLSPDocumentSymbols();
+    void cmdLSPWorkspaceSymbols();
+    void cmdLSPImplementation();
+    void cmdLSPTypeDefinition();
+    void cmdLSPInlayHints();
+    void cmdLSPCodeActions();
     std::vector<LSPDiagnostic> getDiagnosticsForFile(const std::string& uri) const;
     std::vector<std::pair<std::string, std::vector<LSPDiagnostic>>> getAllDiagnostics() const;
 
@@ -1910,7 +2374,7 @@ public:
     void cmdLSPServerLaunchStdio();
     void forwardToLSPServer(const std::string& method, const nlohmann::json& params);
     void notifyLSPServerDidOpen(const std::string& uri, const std::string& languageId, const std::string& content);
-    void notifyLSPServerDidChange(const std::string& uri, const std::string& content);
+    void notifyLSPServerDidChange(const std::string& uri, const std::string& content, int version = 1);
     void notifyLSPServerDidClose(const std::string& uri);
 
     void initLanguagePlugin();
@@ -1921,6 +2385,12 @@ public:
     std::string getLanguagePluginVersion(const std::string& language) const;
     void setLanguagePluginEnabled(const std::string& language, bool enabled);
     bool isLanguagePluginEnabled(const std::string& language) const;
+    void updateDiagnostics();
+    void clearDiagnostics();
+    void addDiagnostic(const IDEPlugin::Diagnostic& diagnostic);
+    bool initializeLanguageServer(const std::string& filename);
+    std::vector<std::string> getSupportedLanguages() const;
+    std::string getEditorText() const { return getEditorTextUtf8ForFile(); }
 
     void initSnippetEngine();
     void shutdownSnippetEngine();
@@ -1931,54 +2401,165 @@ public:
     void endSnippetSession();
     bool isSnippetSessionActive() const;
     bool handleSnippetTab(bool shiftHeld);
+    void loadSnippetsFromJson(const std::string& filePath, const std::string& language);
+    void loadBuiltInSnippets();
+    void loadUserSnippetFiles();
     int findSnippetByTrigger(const std::string& trigger, const std::string& language);
     std::vector<std::pair<std::string, std::string>> getSnippetCompletions(const std::string& prefix, const std::string& language);
     bool tryExpandSnippetAtCursor();
 
+    struct SemanticToken {
+        int line = 0;
+        int character = 0;
+        int length = 0;
+        int tokenType = 0;
+        int tokenModifiers = 0;
+    };
+    struct SemanticTokensLegend {
+        std::vector<std::string> tokenTypes;
+        std::vector<std::string> tokenModifiers;
+    };
+    COLORREF getTokenColor(int tokenType, int tokenModifiers, const SemanticTokensLegend& legend) const;
+    struct SemanticTokensResult {
+        std::string resultId;
+        std::vector<SemanticToken> tokens;
+        bool valid = false;
+    };
     void initSemanticTokens();
     void shutdownSemanticTokens();
     void updateSemanticTokens();
     void clearSemanticTokens();
     void requestSemanticTokens(LSPLanguage lang, const std::string& uri);
     void onSemanticTokensReceived(LSPLanguage lang, const std::string& uri, const nlohmann::json& payload);
+    SemanticTokensLegend getSemanticTokensLegend(LSPLanguage lang);
+    SemanticTokensResult lspSemanticTokensFull(const std::string& uri);
+    SemanticTokensResult lspSemanticTokensRange(const std::string& uri, int startLine, int startChar,
+                                                int endLine, int endChar);
+    SemanticTokensResult lspSemanticTokensDelta(const std::string& uri, const std::string& previousResultId);
+    void applySemanticTokens(const std::vector<SemanticToken>& tokens, const SemanticTokensLegend& legend);
+    void renderSemanticTokens(HDC hdc, int firstLine, int lastLine);
+    void cmdRefreshSemanticTokens();
+    void cmdToggleSemanticHighlighting();
 
+    struct CodeAction {
+        std::string title;
+        std::string kind;
+        bool isFromLSP = false;
+        std::string lspEditJson;
+    };
     void initCodeActions();
     void shutdownCodeActions();
     void showCodeActions();
+    void showCodeActions(int line, int character);
     void hideCodeActions();
     bool isCodeActionsVisible() const;
     void requestCodeActions(int line, int column);
     void applyCodeAction(int actionIndex);
+    void applyCodeAction(const CodeAction& action);
     void handleCodeActionResponse(const nlohmann::json& response);
+    void applyTextEdit(const LSPWorkspaceEdit::TextEdit& edit);
+    void cmdFixAllDiagnostics();
+    void cmdOrganizeImports();
+    void executeLSPCommand(const std::string& command, const nlohmann::json& arguments);
+    void handleLSPServerStatusEndpoint(SOCKET client);
 
     void initSymbolEngine();
     void shutdownSymbolEngine();
     bool indexSymbolFile(const std::string& filePath);
     std::vector<WorkspaceSymbol> queryWorkspaceSymbols(const std::string& query, int limit = 100) const;
 
+    // Semantic Code Intelligence panel (Win32IDE_SemanticPanel.cpp)
+    void initSemanticPanel();
+    void handleSemanticCommand(int commandId);
+    bool getEditorCursorFileLineCol(std::string& outFile, uint32_t& outLine1Based, uint32_t& outCol) const;
+    void cmdSemGoToDefinition();
+    void cmdSemFindReferences();
+    void cmdSemFindImplementations();
+    void cmdSemTypeHierarchy();
+    void cmdSemCallGraph();
+    void cmdSemSearchSymbols();
+    void cmdSemFileSymbols();
+    void cmdSemFindUnused();
+    void cmdSemIndexFile();
+    void cmdSemRebuildIndex();
+    void cmdSemSaveIndex();
+    void cmdSemLoadIndex();
+    void cmdSemShowStats();
+
 private:
+    struct LSPServerStatus {
+        LSPLanguage language = LSPLanguage::Cpp;
+        LSPServerState state = LSPServerState::Stopped;
+        HANDLE hProcess = nullptr;
+        HANDLE hStdinWrite = nullptr;
+        HANDLE hStdoutRead = nullptr;
+        int pid = 0;
+        int requestIdCounter = 1;
+        bool initialized = false;
+        std::string lastError;
+        int64_t startedEpochMs = 0;
+        int requestCount = 0;
+        int notificationCount = 0;
+    };
+    struct LSPClientStats {
+        uint64_t totalDefinitionRequests = 0;
+        uint64_t totalReferenceRequests = 0;
+        uint64_t totalRenameRequests = 0;
+        uint64_t totalHoverRequests = 0;
+        uint64_t totalCompletionRequests = 0;
+        uint64_t totalSignatureRequests = 0;
+        uint64_t totalDiagnosticsReceived = 0;
+        uint64_t totalServerRestarts = 0;
+        uint64_t totalFormattingRequests = 0;
+        uint64_t totalDocumentSymbolRequests = 0;
+        uint64_t totalWorkspaceSymbolRequests = 0;
+        uint64_t totalImplementationRequests = 0;
+        uint64_t totalTypeDefinitionRequests = 0;
+        uint64_t totalInlayHintRequests = 0;
+        uint64_t totalCodeActionRequests = 0;
+        uint64_t totalSemanticTokensRequests = 0;
+    };
     bool m_lspInitialized = false;
     bool m_lspServerInitialized = false;
-    std::unordered_map<int, LSPServerConfig> m_lspConfigs;
+    // Opaque owning ptr (complete type only in LSPServer TU)
+    RawrXD::LSPServer::RawrXDLSPServer* m_lspServer = nullptr;
+    std::array<LSPServerStatus, static_cast<size_t>(LSPLanguage::Count)> m_lspStatuses{};
+    LSPClientStats m_lspStats{};
+    std::array<LSPServerConfig, static_cast<size_t>(LSPLanguage::Count)> m_lspConfigs{};
     std::unordered_map<int, LSPServerState> m_lspStates;
     std::unordered_map<int, HANDLE> m_lspProcesses;
     std::unordered_map<int, HANDLE> m_lspStdinWrite;
     std::unordered_map<int, HANDLE> m_lspStdoutRead;
-    std::unordered_map<int, std::thread> m_lspReaderThreads;
+    std::vector<std::thread> m_lspReaderThreads;
     std::unordered_map<int, std::mutex> m_lspMutexes;
     std::unordered_map<int, std::atomic_bool> m_lspShutdownFlags;
     std::unordered_map<int, int> m_lspNextRequestIds;
     std::unordered_map<int, std::unordered_map<int, std::string>> m_lspPendingRequests;
+    std::unordered_map<int, nlohmann::json> m_lspPendingResponses;
     std::unordered_map<int, std::unordered_map<int, nlohmann::json>> m_lspResponses;
     std::unordered_map<int, std::condition_variable> m_lspCvMutexes;
     std::unordered_map<int, std::condition_variable> m_lspCvs;
-    std::unordered_map<int, std::unordered_map<std::string, std::vector<LSPDiagnostic>>> m_lspDiagnostics;
+    std::unordered_map<std::string, std::vector<LSPDiagnostic>> m_lspDiagnostics;
     std::unordered_map<std::string, std::string> m_lspOpenedUris;
     std::mutex m_lspDiagnosticsMutex;
+    std::mutex m_lspMutex;
+    std::mutex m_lspResponseMutex;
+    std::condition_variable m_lspResponseCV;
+    std::unique_ptr<RawrXD::UI::AnnotationOverlay> m_lspDiagnosticOverlay;
+    std::unique_ptr<RawrXD::UI::AnnotationOverlay> m_annotationOverlay;
+
+    // Agent Inline Annotations state
+    std::vector<InlineAnnotation> m_annotations;
+    bool m_annotationsVisible = true;
+    HWND m_hwndAnnotationOverlay = nullptr;
+    HWND m_hwndLineNumbers = nullptr;
+    HFONT m_annotationFont = nullptr;
+    std::map<std::string, std::vector<InlineAnnotation>> m_annotationCache;
 
     bool m_languagePluginInitialized = false;
     std::map<std::string, std::string> m_languagePluginVersions;
     std::map<std::string, bool> m_languagePluginEnabled;
+    LanguagePluginManager* m_languageManager = nullptr;
 
     bool m_snippetEngineInitialized = false;
     struct SnippetDef {
@@ -1994,6 +2575,12 @@ private:
 
     bool m_semanticTokensInitialized = false;
     std::unordered_map<std::string, std::vector<SyntaxToken>> m_semanticTokensByUri;
+    std::vector<SemanticToken> m_semanticTokens;
+    SemanticTokensLegend m_semanticTokensLegend;
+    bool m_semanticTokensValid = false;
+    bool m_semanticHighlightingEnabled = true;
+
+    bool m_semanticPanelInitialized = false;
 
     bool m_codeActionsInitialized = false;
     bool m_codeActionsVisible = false;
@@ -2021,12 +2608,14 @@ public:
     void initSecurityScans();
     void runSecurityScan(const std::string& filePath);
 
-    // Agent History / Undo Stack
+    // Agent History / Undo Stack (AF05 � restore file bytes on undo)
     void pushAgentEdit(const std::string& filePath,
                        const std::string& oldContent,
                        const std::string& newContent,
                        int line, int column);
     bool undoLastAgentEdit();
+    void snapshotAgentFileBytes(const std::string& filePath);
+    bool recordAgentFileMutation(const std::string& filePath);
 
     // Profiling
     bool m_profilingActive;
@@ -2098,14 +2687,43 @@ public:
     HWND m_hwndSearchReplace = nullptr;
     HWND m_hwndSearchInclude = nullptr;
     HWND m_hwndSearchExclude = nullptr;
+    void createSearchPanel();
+    void performSearch();
+    void searchDirectory(const std::string& dir, const char* query, int depth,
+                         bool caseSensitive, bool useRegex, bool wholeWord,
+                         const std::string& includeFilter,
+                         const std::string& excludeFilter);
+    void performSearchReplace(bool replaceAll);
     HWND m_hwndSearchStatus = nullptr;
     std::vector<std::string> m_searchResults;
     bool m_searchInProgress;
 
     // Problems Panel (Batch 4 P07)
+    void createProblemsPanel();
+    // BATCH17_LINK_UNBLOCK decls
+    void addWorkspaceRoot(const std::string& path, const std::string& name = std::string());
+    void removeWorkspaceRoot(const std::string& path);
+    std::vector<std::string> listWorkspaceRoots() const;
+    void ShowCompilerOutput();
+    void navigateToError(const std::string& file, int line);
+    void loadMonacoThemes();
+    void showShortcutEditor();
+    void initStatusBar();
+    void updateStatusBar();
     HWND m_hwndProblemsPanel = nullptr;
+    HWND m_hwndTerminal = nullptr; // compiler/terminal output pane (may be null)
 
     // Terminal Tabs (Batch 4 P06)
+    void initTerminalTabs();
+    void shutdownTerminalTabs();
+    void createTerminalTabBar(HWND hwndParent);
+    void createTerminalTab(const std::string& profile);
+    void closeTerminalTab(int index);
+    void switchTerminalTab(int index);
+    void renameTerminalTab(int index, const std::string& name);
+    void updateTerminalTabBar();
+    static LRESULT CALLBACK TermTabBarProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK TerminalInputSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
     HWND m_hwndTermTabBar = nullptr;
     struct TerminalTabInfo {
         std::string profile;
@@ -2253,7 +2871,7 @@ public:
     std::shared_ptr<std::atomic_bool> m_modelDiscoveryCancel =
         std::make_shared<std::atomic_bool>(false);
     std::atomic_bool m_modelDiscoveryRunning{false};
-    // Blocks COMCTL model-combo rebuilds for the whole chat Send→Stop/complete
+    // Blocks COMCTL model-combo rebuilds for the whole chat Send?Stop/complete
     // window. Discovery WM_APP+106 can otherwise race invalidateNativeGhostText
     // + CB_RESETCONTENT into Request A and APPCRASH in comctl32 (0xC000041D).
     std::atomic_bool m_blockModelDiscoveryUi{false};
@@ -2277,7 +2895,7 @@ public:
     // AI Chat Panel
     HWND m_hwndAIChatPanel = nullptr;
 
-    // Suppress TCN_SELCHANGE→switchChatSession while TabCtrl_DeleteAllItems /
+    // Suppress TCN_SELCHANGE?switchChatSession while TabCtrl_DeleteAllItems /
     // InsertItem run; nested rebuilds AV in comctl32 during Request A.
     bool m_updatingChatSessionTabs = false;
     static LRESULT CALLBACK SecondarySidebarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -2297,6 +2915,10 @@ public:
     HWND m_hwndPanelKillTerminalBtn = nullptr;
     HWND m_hwndPanelMaximizeBtn = nullptr;
     HWND m_hwndPanelCloseBtn = nullptr;
+    // Stable panel-body HWNDs (IDs 1302/1303) for P07 VisId probes.
+    // Distinct from peer m_terminalPanes / legacy m_outputWindows strip.
+    HWND m_hwndPanelTerminal = nullptr;
+    HWND m_hwndPanelOutput = nullptr;
     HWND m_hwndProblemsListView = nullptr;
     PanelTab m_activePanelTab = PanelTab::Terminal;
     bool m_panelVisible = true;
@@ -2361,11 +2983,13 @@ public:
     void togglePanel();                  // Ctrl+J
     void ensurePanelVisible();           // show-only four-panel dock
     void layoutBottomDock();             // re-entrancy-safe IDC_PANEL_CONTAINER geometry
+    void ensurePanelTabBodies();         // create-if-missing 1302/1303/1312/1305
     void maximizePanel();
     void restorePanel();
     
     void switchPanelTab(PanelTab tab);
     void addProblem(const std::string& file, int line, int col, const std::string& msg, int severity);
+    void addProblem(const std::string& file, int line, const std::string& message, OutputSeverity severity);
     void clearProblems();
     void goToProblem(int index);
     

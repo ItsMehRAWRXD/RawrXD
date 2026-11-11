@@ -1,0 +1,100 @@
+{
+  "schema": "rawrxd.acceptance_contract/v1",
+  "artifact_kind": "plan",
+  "note": "Machine-readable release contract. Plan artifact only: not a build artifact, not committed, no generated binaries. Status values are updated only from captured evidence receipts.",
+  "release": {
+    "status": "HELD",
+    "certified": 0,
+    "promote": 0
+  },
+  "gates": [
+    {
+      "id": 1,
+      "name": "Source integrity and recovery",
+      "priority": "P0",
+      "status": "IN_PROGRESS",
+      "owner": "ghosttext-worker",
+      "exit": "Every required translation unit exists with provenance; CMake source declarations reconciled to real files; duplicate declarations/types resolved; include dependencies validated. No placeholder reconstruction."
+    },
+    {
+      "id": 2,
+      "name": "Complete native build",
+      "priority": "P0",
+      "status": "BLOCKED",
+      "depends_on": [1],
+      "exit": "Clean CMake configure; 0 compiler errors; 0 linker errors; RawrXD-Win32IDE-Native.exe produced; clean rebuild reproduces. Release x64 and Debug x64."
+    },
+    {
+      "id": 3,
+      "name": "GhostText and inference reliability",
+      "priority": "P1",
+      "status": "IN_PROGRESS",
+      "owner": "ghosttext-worker",
+      "exit": "Three changed TUs compile; transport cancellation releases the HTTP request; CANCELLED/HTTP_TIMEOUT/HTTP_CANNOT_CONNECT/EMPTY_RESPONSE/SUCCESS independently tested; model routing fixed; repeated requests stable; stale response cannot overwrite."
+    },
+    {
+      "id": 4,
+      "name": "IDE functionality",
+      "priority": "P1",
+      "status": "PENDING",
+      "depends_on": [2],
+      "exit": "Editor, LSP, agent chat, git, terminal, search, debugger, extensions, model management each have a reproducible runtime test and evidence receipt."
+    },
+    {
+      "id": 5,
+      "name": "Agent and tool architecture",
+      "priority": "P2",
+      "status": "AUDIT_COMPLETE",
+      "depends_on": [2],
+      "exit": "AgentSession authoritative execution ledger; structured tool results; persistent task state; cancellation propagation; explicit approval gates; untrusted-content labeling; secret redaction; fail-closed sandbox."
+    },
+    {
+      "id": 6,
+      "name": "Strata and GPU inference",
+      "priority": "P2",
+      "status": "PENDING",
+      "exit": "Current-revision rebuild; cold/warm inference; repeated TPS; GPU memory and KV-cache verification; cancellation/shutdown; IDE-to-inference E2E; no silent CPU fallback."
+    },
+    {
+      "id": 7,
+      "name": "Security, performance, enterprise",
+      "priority": "P2",
+      "status": "PENDING",
+      "exit": "Sandbox enforcement, secret handling, crash recovery, memory-leak and long-run stress, offline/air-gapped operation, reproducible dependency inventory."
+    },
+    {
+      "id": 8,
+      "name": "Release engineering",
+      "priority": "P3",
+      "status": "PENDING",
+      "exit": "Audited commits; generated artifacts excluded; signed/verifiable artifacts; install/upgrade/rollback tested; docs and release notes."
+    }
+  ],
+  "metrics": {
+    "required_sources_missing": null,
+    "duplicate_declarations": null,
+    "compiler_errors": null,
+    "linker_errors": null,
+    "native_executable": null,
+    "ghosttext_transport_tests": null,
+    "ghosttext_model_routing": null,
+    "ide_startup": null,
+    "critical_subsystem_tests": null,
+    "security_acceptance": null,
+    "strata_current_revision": null,
+    "unreviewed_changes": 0,
+    "evidence_receipts": "INCOMPLETE"
+  },
+  "workstreams": {
+    "ghosttext_recovery_verify": {
+      "owner": "ses_e34f4f1ecffe0lfrw9HPhGDNkx",
+      "agent": "code",
+      "state": "running"
+    },
+    "agent_architecture_audit": {
+      "owner": "ses_e34f42b41ffeWlLYJWwEL7Jqd8",
+      "agent": "explore",
+      "state": "completed"
+    }
+  }
+}

@@ -94,8 +94,8 @@ private:
     std::vector<OllamaModelInfo> m_models;
     std::string m_currentModel;
 
-    // Ollama client
-    std::unique_ptr<Backend::NativeClient> m_ollamaClient;
+    // Ollama client (product Backend::OllamaClient)
+    std::unique_ptr<Backend::OllamaClient> m_ollamaClient;
     std::thread m_generationThread;
     std::mutex m_messagesMutex;
 
@@ -129,7 +129,7 @@ private:
 static ChatWindow* g_pChatWindow = nullptr;
 
 ChatWindow::ChatWindow() {
-    m_ollamaClient = std::make_unique<Backend::NativeClient>("");
+    m_ollamaClient = std::make_unique<Backend::OllamaClient>("http://127.0.0.1:11434");
 }
 
 ChatWindow::~ChatWindow() {
@@ -510,27 +510,29 @@ void ChatWindow::GenerateResponse(const std::string& userMessage) {
         req.messages.push_back({"user", userMessage});
 
         std::string accumulated;
-        auto onChunk = [this, &accumulated](const std::string& chunk) {
-            accumulated += chunk;
-            AppendToLastMessage(chunk);
+        auto onChunk = [this, &accumulated](const Backend::OllamaResponse& chunk) {
+            const std::string& text = !chunk.message.empty() ? chunk.message : chunk.response;
+            if (text.empty()) return;
+            accumulated += text;
+            AppendToLastMessage(text);
         };
 
         auto onError = [this](const std::string& error) {
             UpdateStatus("Error: " + error);
         };
 
-        auto onComplete = [this](const Backend::NativeInferenceResponse& response) {
+        auto onComplete = [this](const Backend::OllamaResponse& response) {
             m_isGenerating = false;
             EnableWindow(m_hBtnSend, TRUE);
             EnableWindow(m_hBtnCancel, FALSE);
 
-            if (response.error) {
-                UpdateStatus("Error: " + response.error_message);
+            if (!response.transport_error.empty()) {
+                UpdateStatus("Error: " + response.transport_error);
             } else {
                 std::stringstream ss;
                 ss << "Done - " << response.eval_count << " tokens";
                 UpdateStatus(ss.str());
-            };
+            }
         };
 
         m_ollamaClient->chat(req, onChunk, onError, onComplete);
@@ -689,7 +691,7 @@ std::string ChatWindow::EscapeRichText(const std::string& text) {
 
 void ChatWindow::CancelGeneration() {
     if (m_ollamaClient) {
-        m_ollamaClient->cancelStream();
+        m_ollamaClient->cancelActiveRequest();
     }
     m_isGenerating = false;
     EnableWindow(m_hBtnSend, TRUE);

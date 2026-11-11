@@ -274,6 +274,20 @@ void Win32IDE::showCodeActions(int line, int character) {
 // EXECUTE LSP COMMAND
 // ============================================================================
 
+void Win32IDE::applyCodeAction(const CodeAction& action) {
+    if (action.lspEditJson.empty()) {
+        appendToOutput("[CodeAction] No edit payload on action: " + action.title, "General", OutputSeverity::Warning);
+        return;
+    }
+    try {
+        json editJson = json::parse(action.lspEditJson);
+        applyWorkspaceEdit(editJson);
+        appendToOutput("[CodeAction] Applied: " + action.title, "General", OutputSeverity::Info);
+    } catch (...) {
+        appendToOutput("[CodeAction] Failed to apply: " + action.title, "General", OutputSeverity::Error);
+    }
+}
+
 void Win32IDE::executeLSPCommand(const std::string& command, const json& arguments) {
     if (m_currentFile.empty()) return;
 

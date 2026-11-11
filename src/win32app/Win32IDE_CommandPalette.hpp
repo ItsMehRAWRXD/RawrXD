@@ -28,12 +28,6 @@
 #include <cstdint>
 
 // Forward declarations
-namespace Win32IDE {
-    struct SearchResult;
-    class ISearchProvider;
-    class CommandPalette;
-}
-
 namespace RawrXD {
     struct ThemeColors;  // From theme system
 }
@@ -41,8 +35,6 @@ namespace RawrXD {
 // ============================================================================
 // SEARCH RESULT — Universal result type for all providers
 // ============================================================================
-
-namespace Win32IDE {
 
 enum class ResultIcon : int {
     None = -1,
@@ -263,6 +255,7 @@ public:
     
     // Access to singleton for global hotkey handling
     static CommandPalette* GetInstance();
+    HWND GetParentHwnd() const { return m_hwndParent; }
     
 private:
     // Window handles
@@ -336,7 +329,5 @@ bool CommandPaletteHandleKey(UINT vk, bool ctrl, bool shift);
 
 // Global hotkey registration
 bool RegisterCommandPaletteHotkeys(HWND hwnd);
-
-} // namespace Win32IDE
 
 #endif // RAWRXD_WIN32IDE_COMMAND_PALETTE_HPP

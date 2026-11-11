@@ -1,0 +1,390 @@
+{
+  "audit_id": "UPPER_TIER_MASTER_001_BATCH_26_AUDIT",
+  "title": "Finish-25 reconcile matrix — Upper-Tier Batch 26",
+  "asof_utc": "2026-11-11T17:45:00Z",
+  "authority": "F:\\rawrxd",
+  "batch": 26,
+  "scope": "Finish-25 reconciliation against BATCH_25 held residuals; reproducibility / independent E2E / certification readiness inventory",
+  "mode": "READ_ONLY",
+  "native_rebuild": "NOT_RUN",
+  "implementation_edits": 0,
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "UPPER_TIER": 0,
+  "INVENT_PASS": 0,
+  "NO_CROSS_SHA_PASS_INHERITANCE": 1,
+  "LAW": [
+    "NOT_RUN!=PASS",
+    "SOURCE_WIRED!=RUNTIME_REACHED!=TOKEN_SURVIVED!=PERFORMANCE_PASS",
+    "RECEIPT_PASS!=CERTIFIED",
+    "SLIM_PASS!=FINISH25_CURRENT!=CERTIFIED!=PROMOTE",
+    "STALE_RECEIPT!=AUTHORITY",
+    "BATCH25_HELD_CITE!=THIS_AUDIT_PASS"
+  ],
+  "batch25_held_cite": {
+    "present": true,
+    "source_audit": "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\BATCH_25_AUDIT\\RELEASE_READINESS_GAP_MATRIX.json",
+    "source_md": "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\BATCH_25_AUDIT\\RELEASE_READINESS_GAP_MATRIX.md",
+    "tracker_batch_25": {
+      "path": "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\TRACKER.json",
+      "status": "GAP_MATRIX_LANDED",
+      "finish25_remaining": ["T05", "T07", "T08", "T18", "T19", "T25"]
+    },
+    "finish_25_held_status": {
+      "controlling_FINISH_25_PASS": 19,
+      "controlling_FINISH_25_REMAINING": 6,
+      "controlling_remaining_ids": ["T05", "T07", "T08", "T18", "T19", "T25"],
+      "T25_status": "HELD",
+      "T24_status": "HELD_PARTIAL",
+      "CERTIFIED": 0,
+      "PROMOTE": 0,
+      "notes_from_batch25": [
+        "T05 formal PASS on marker SHA 0F054F01 does NOT inherit to controlling Finish-25 count (NO_CROSS_SHA_PASS_INHERITANCE).",
+        "T18/T19 GUI soak receipts with pass=true are not Finish-25 formal credit; backlog still lists T18/T19 remaining.",
+        "FINISH_25_PASS=19 ≠ CERTIFIED ≠ PROMOTE.",
+        "T25 HELD — TRACKER hotpatch.T25=HELD; mandatory certification conjunction incomplete."
+      ]
+    },
+    "held_gates_cited": ["T05", "T07", "T08", "T18", "T19", "T25"]
+  },
+  "tracker_snapshot": {
+    "path": "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\TRACKER.json",
+    "CERTIFIED": 0,
+    "PROMOTE": 0,
+    "native_exe": "ABSENT",
+    "ROUTING_E2E": "NOT_CERTIFIED",
+    "T25": "HELD",
+    "REBUILD": "FAIL",
+    "batch_25_audit_folder": "PRESENT",
+    "batch_25_audit_status": "GAP_MATRIX_LANDED",
+    "batch_26_audit_folder": "PRESENT",
+    "release_readiness_pct": 58
+  },
+  "finish25_scoreboard_layers": {
+    "historical_POST_E59D": {
+      "FINISH_25_PASS": 19,
+      "FINISH_25_REMAINING": 6,
+      "remaining": ["T05", "T07", "T08", "T18", "T19", "T25"],
+      "candidate_sha": "3B720981EC567D60461B874F0C1EE46E03F85DB58F6E1788CBEE31F8B2CCAD5F",
+      "authority": "POST_E59D_CANDIDATE_001/FINISH_25_BACKLOG.md",
+      "asof": "2026-11-08T22:50:00Z",
+      "note": "Controlling historical arithmetic; cited by BATCH_25 finish_25_held_status; not production certification."
+    },
+    "batch25_release_readiness": {
+      "authority": "UPPER_TIER_MASTER_001/BATCH_25_AUDIT/RELEASE_READINESS_GAP_MATRIX.json",
+      "controlling_remaining_ids": ["T05", "T07", "T08", "T18", "T19", "T25"],
+      "batch_25_milestone_accepted": false,
+      "dimensions_runtime_pass": 0,
+      "note": "Batch 26 reconciles Finish-25 from this held set; does not close any gate."
+    },
+    "slim_A4F_daily_driver": {
+      "SLIM_DAILY_DRIVER_ACCEPTANCE": "PASS",
+      "FULL_FEATURE_DAILY_DRIVER": "FAIL",
+      "FINISH_25_HISTORICAL": "19/25",
+      "FINISH_25_COUNT_UNCHANGED": "19/25",
+      "frozen_package_sha": "A4F083DFB9CCD1F78036E1CDCDCA9AF881EF10B3E34170B68C4610D51AC6EF4E",
+      "authority": "DAILY_DRIVER_CLOSE_001/GATE_BOARD.md",
+      "claims_on_A4F": ["T05_PASS", "T07_PASS", "T08_PASS", "T10_PASS", "T17_PASS", "T18_T19_PASS_N12"],
+      "note": "Slim acceptance does not rewrite Finish-25 historical 19/25 and does not equal CERTIFIED."
+    },
+    "oneshot_EA5D": {
+      "FINISH25_HISTORICAL": "19/25",
+      "FINISH25_CURRENT": "4/25",
+      "current_pass_items": ["T10", "T16_EXT_EA5D", "T17_TERMINAL_EA5D", "T20_CHAT_7of7"],
+      "candidate_sha": "EA5D9B6979E8A60DD6899CCA23B3762CA48695234A18965534E4C1E7732442AE",
+      "authority": "FULL_FEATURE_ONESHOT_001/FINISH25_MATRIX.md"
+    },
+    "progression_55BE": {
+      "FINISH_25_PASS": 19,
+      "T07": "FAIL",
+      "T08": "FAIL",
+      "authority": "PROGRESSION_FINISH25_001/DISPOSITION.md"
+    },
+    "tip_lane_20261110": {
+      "note": "Multiple tip SHAs exercised; no single binding certification SHA.",
+      "shas_observed": [
+        "0F054F01380BA745F760A973E894A6809BBD777FCA871108CDC61AB029CA2F8E",
+        "07F9C519B2952C07F7A776A920E28233C81B97F59E7DE00191389E45D1A7E066",
+        "A4903E6FF683099D88A0F081AF24B4F713FFAB6B311D57BCD3DD79C9B22C0C31",
+        "6609F3C0D5E9FD81AF3F0141C81EED15645B63B7E34EF9D9AB5F6C625EC7E173",
+        "BBA0724D3B50CA91A51D750B31E132A69F881B639C4A2C641D9193A305473CA8"
+      ]
+    }
+  },
+  "held_gate_reconcile": [
+    {
+      "gate": "T05",
+      "batch25_status": "HELD_IN_CONTROLLING_REMAINING",
+      "batch25_cite": "BATCH_25_AUDIT finish_25_held_status.controlling_remaining_ids includes T05",
+      "title": "Cancellation / recovery",
+      "historical_ssot": "NOT_RUN / BATCH1 Cancel FAIL (POST_E59D)",
+      "latest_controlling_claim": "PASS_5_OF_5_ON_0F054F01",
+      "latest_receipts": [
+        "F:\\rawrxd\\evidence\\T05_ACCEPTANCE_FINAL_20261110_104338\\run1\\T05.receipt.json",
+        "F:\\rawrxd\\evidence\\T05_ACCEPTANCE_FINAL_20261110_104338\\run5\\T05.receipt.json",
+        "F:\\rawrxd\\evidence\\IDE_REPAIR_CANDIDATE_001\\FINALIZATION_CHECKLIST_001\\STANDING_DISPOSITION_20261110_1215.txt"
+      ],
+      "sha": "0F054F01380BA745F760A973E894A6809BBD777FCA871108CDC61AB029CA2F8E",
+      "runtime_reached": true,
+      "finish25_formal_credit": 0,
+      "certified_credit": 0,
+      "reconcile": "BATCH_25 explicitly: tip formal PASS on 0F054F01 does not inherit into controlling Finish-25 remaining list.",
+      "residuals": [
+        "Faulting-stack / clean-exit-vs-exception still OPEN (STANDING_DISPOSITION)",
+        "Historical POST_E59D still lists T05 as remaining/NOT_RUN",
+        "A4F slim T05 PASS is a different SHA — no cross-SHA inheritance"
+      ],
+      "blocks_certified": true
+    },
+    {
+      "gate": "T07",
+      "batch25_status": "HELD_IN_CONTROLLING_REMAINING",
+      "batch25_cite": "BATCH_25_AUDIT finish_25_held_status.controlling_remaining_ids includes T07",
+      "title": "Binary / unicode open (Phase2)",
+      "historical_ssot": "FAIL (product defects proven)",
+      "latest_controlling_claim": "PROGRESSION_FAIL; SLIM_A4F_CLAIMS_PASS",
+      "latest_receipts": [
+        "F:\\rawrxd\\evidence\\POST_E59D_CANDIDATE_001\\FINISH_25_BACKLOG.md",
+        "F:\\rawrxd\\evidence\\PROGRESSION_FINISH25_001\\DISPOSITION.md",
+        "F:\\rawrxd\\evidence\\DAILY_DRIVER_CLOSE_001\\GATE_BOARD.md"
+      ],
+      "sha_progression": "55BE19B7D594118C9C803D8D7DA3B127E33C0C8C82A62BD50E4956D0AC2298A3",
+      "runtime_reached": "mixed_layer",
+      "finish25_formal_credit": 0,
+      "certified_credit": 0,
+      "reconcile": "BATCH_25 holds T07 in remaining six. Progression: BINARY=REJECTED / UNICODE_OPEN=FAIL — not credited. Slim A4F claims PASS on different SHA — conflict under no-cross-SHA law.",
+      "residuals": [
+        "Controlling Finish-25 arithmetic unchanged at 19/25",
+        "Cross-SHA slim PASS must not rewrite remaining list"
+      ],
+      "blocks_certified": true
+    },
+    {
+      "gate": "T08",
+      "batch25_status": "HELD_IN_CONTROLLING_REMAINING",
+      "batch25_cite": "BATCH_25_AUDIT finish_25_held_status.controlling_remaining_ids includes T08",
+      "title": "Tab control / multi-tab (Phase2)",
+      "historical_ssot": "FAIL_TABCTRL_STUCK_AT_1",
+      "latest_controlling_claim": "PROGRESSION_FAIL; SLIM_A4F_CLAIMS_PASS",
+      "latest_receipts": [
+        "F:\\rawrxd\\evidence\\POST_E59D_CANDIDATE_001\\FINISH_25_BACKLOG.md",
+        "F:\\rawrxd\\evidence\\PROGRESSION_FINISH25_001\\DISPOSITION.md",
+        "F:\\rawrxd\\evidence\\DAILY_DRIVER_CLOSE_001\\GATE_BOARD.md"
+      ],
+      "sha_progression": "55BE19B7D594118C9C803D8D7DA3B127E33C0C8C82A62BD50E4956D0AC2298A3",
+      "runtime_reached": "mixed_layer",
+      "finish25_formal_credit": 0,
+      "certified_credit": 0,
+      "reconcile": "BATCH_25 holds T08 in remaining six. Progression harness FAIL despite product tabctrl=11 — not sealed PASS. Slim A4F PASS claim conflicts under no-cross-SHA law.",
+      "residuals": [
+        "Harness vs product count mismatch unresolved for formal credit",
+        "Same cross-SHA conflict pattern as T07"
+      ],
+      "blocks_certified": true
+    },
+    {
+      "gate": "T18",
+      "batch25_status": "HELD_IN_CONTROLLING_REMAINING",
+      "batch25_cite": "BATCH_25_AUDIT finish_25_held_status + soak dimension FINISH25_T18_T19=HELD",
+      "title": "GUI endurance / stability (with T19)",
+      "historical_ssot": "BLOCKED / remaining (POST_E59D Phase4)",
+      "latest_controlling_claim": "SOAK_PASS_SHORT_N10_ON_BBA0724D",
+      "latest_receipts": [
+        "F:\\rawrxd\\evidence\\T18_T19_GUI_SOAK_20261110_161833\\T18_T19_soak_receipt_20261110_161833.json",
+        "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\BATCH_25_AUDIT\\RELEASE_READINESS_GAP_MATRIX.json"
+      ],
+      "sha": "BBA0724D3B50CA91A51D750B31E132A69F881B639C4A2C641D9193A305473CA8",
+      "runtime_reached": true,
+      "finish25_formal_credit": 0,
+      "certified_credit": 0,
+      "reconcile": "BATCH_25: soak receipt pass=true ≠ Finish-25 formal credit; T18 remains in controlling remaining.",
+      "residuals": [
+        "Latest soak ~143s / 10 iterations — not long-duration release soak",
+        "memory_end_mb and memory_growth_mb null on latest receipt",
+        "Oneshot layer still lists T18 NOT_RUN — do not invent oneshot PASS",
+        "A4F slim T18/T19 PASS is different SHA"
+      ],
+      "blocks_certified": true
+    },
+    {
+      "gate": "T19",
+      "batch25_status": "HELD_IN_CONTROLLING_REMAINING",
+      "batch25_cite": "BATCH_25_AUDIT finish_25_held_status + soak dimension FINISH25_T18_T19=HELD",
+      "title": "GUI memory / hang soak (paired with T18)",
+      "historical_ssot": "BLOCKED / remaining (POST_E59D Phase4)",
+      "latest_controlling_claim": "SOAK_PASS_SHORT_N10_ON_BBA0724D",
+      "latest_receipts": [
+        "F:\\rawrxd\\evidence\\T18_T19_GUI_SOAK_20261110_161833\\T18_T19_soak_receipt_20261110_161833.json",
+        "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\BATCH_25_AUDIT\\RELEASE_READINESS_GAP_MATRIX.json"
+      ],
+      "sha": "BBA0724D3B50CA91A51D750B31E132A69F881B639C4A2C641D9193A305473CA8",
+      "runtime_reached": true,
+      "finish25_formal_credit": 0,
+      "certified_credit": 0,
+      "reconcile": "BATCH_25 pairs T19 with T18 held status; short soak candidate only.",
+      "residuals": [
+        "Paired receipt only; no independent T19 certification seal",
+        "Same short-soak / null growth residuals as T18"
+      ],
+      "blocks_certified": true
+    },
+    {
+      "gate": "T25",
+      "batch25_status": "HELD",
+      "batch25_cite": "BATCH_25_AUDIT finish_25_held_status.T25.status=HELD; controlling_blockers T25_HELD",
+      "title": "Final certification",
+      "historical_ssot": "CERTIFIED=0 (POST_E59D Phase5)",
+      "latest_controlling_claim": "HELD",
+      "latest_receipts": [
+        "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\TRACKER.json",
+        "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\BATCH_25_AUDIT\\RELEASE_READINESS_GAP_MATRIX.json",
+        "F:\\rawrxd\\evidence\\POST_E59D_CANDIDATE_001\\FINISH_25_BACKLOG.md",
+        "F:\\rawrxd\\evidence\\FULL_FEATURE_ONESHOT_001\\FINISH25_MATRIX.md"
+      ],
+      "sha": null,
+      "runtime_reached": false,
+      "finish25_formal_credit": 0,
+      "certified_credit": 0,
+      "reconcile": "BATCH_25 + TRACKER: T25=HELD; CERTIFIED=0; PROMOTE=0. Certification conjunction never sealed.",
+      "residuals": [
+        "No CERTIFIED=1 seal under UPPER_TIER_MASTER_001",
+        "Depends on Batch 17 G1 native exe + closure of remaining five + release readiness conjunction",
+        "T25_B544 Nov-04 reconciliation partially STALE vs 2026-11-10 tip receipts"
+      ],
+      "blocks_certified": true
+    }
+  ],
+  "adjacent_batch25_context": {
+    "T24": {
+      "batch25_status": "HELD_PARTIAL",
+      "candidate_package": "CANDIDATE_PACKAGE_PASS",
+      "installer": "NOT_RUN",
+      "latest_deployment_pass": false,
+      "missing_deps": ["vulkan-1.dll", "ggml.dll", "msvcp140.dll", "vcruntime140.dll"],
+      "note": "Cited by BATCH_25; not in controlling remaining-six list (T24 already counted as candidate package PASS historically) but still blocks release/cert path."
+    },
+    "G1_NATIVE_LINK": {
+      "batch25_status": "FAIL",
+      "note": "build_win32ide\\Release\\RawrXD-Win32IDE-Native.exe ABSENT — Batch 25/26 product-path acceptance blocked"
+    },
+    "CLEAN_MACHINE_INDEPENDENT": {
+      "batch25_status": "NOT_VERIFIED",
+      "VERDICT": "HOST_NOT_INDEPENDENT",
+      "DISTINCT_VM": 0
+    }
+  },
+  "conflicting_or_stale_receipts": [
+    {
+      "id": "CONFLICT_FINISH25_ARITHMETIC_VS_SLIM_CLAIMS",
+      "paths": [
+        "POST_E59D_CANDIDATE_001/FINISH_25_BACKLOG.md",
+        "DAILY_DRIVER_CLOSE_001/GATE_BOARD.md",
+        "UPPER_TIER_MASTER_001/BATCH_25_AUDIT/RELEASE_READINESS_GAP_MATRIX.json"
+      ],
+      "conflict": "BATCH_25/historical remaining includes T05/T07/T08/T18/T19/T25 while A4F GATE_BOARD claims T05/T07/T08/T18/T19 PASS on slim SHA; count deliberately unchanged 19/25 — dual narrative unresolved for CERTIFIED bind.",
+      "authority": "UNRESOLVED_SSOT"
+    },
+    {
+      "id": "CONFLICT_MULTI_SHA_GATE_PASSES",
+      "conflict": "T05@0F054F01, T18/T19/T24@BBA0724D, slim@A4F083DF, oneshot@EA5D, progression@55BE19B7, historical@3B720981 — no single authoritative candidate SHA.",
+      "authority": "BLOCKS_CERTIFIED"
+    },
+    {
+      "id": "CONFLICT_T24_CANDIDATE_PASS_VS_DEPLOY_FAIL",
+      "paths": [
+        "BATCH_25_AUDIT/RELEASE_READINESS_GAP_MATRIX.json",
+        "T24_DEPLOYMENT_20261110_164348/T24_deployment_receipt_20261110_164348.json"
+      ],
+      "conflict": "BATCH_25 cites historical T24 CANDIDATE_PACKAGE_PASS vs latest deployment pass=false missing deps.",
+      "authority": "LATEST_DEPLOY_FAIL_CONTROLS_FOR_CERT"
+    },
+    {
+      "id": "STALE_ONESHOT_T18_T19_NOT_RUN",
+      "path": "FULL_FEATURE_ONESHOT_001/FINISH25_MATRIX.md",
+      "conflict": "ONESHOT lists T18/T19 NOT_RUN; later soak receipts exist; BATCH_25 still holds Finish-25 credit — do not invent oneshot or Finish-25 PASS.",
+      "authority": "LAYER_STALE_RELATIVE_TO_TIP"
+    },
+    {
+      "id": "STALE_T25_B544_INVENTORY",
+      "path": "F:\\rawrxd\\evidence\\T25_B544_CERTIFICATION_RECONCILIATION_20261104.md",
+      "conflict": "Claims T080 not runtime-verified and T18/T19 receipts absent; superseded by 2026-11-10 tip receipts; BATCH_25 still holds T25.",
+      "authority": "STALE"
+    }
+  ],
+  "reproducibility": {
+    "status": "NOT_ESTABLISHED",
+    "twin_rebuild_compare": "NOT_RUN_OR_UNVERIFIED",
+    "clean_clone_build": "NOT_VERIFIED",
+    "ci_reproducibility": "NOT_VERIFIED",
+    "single_authoritative_sha": "ABSENT",
+    "native_exe_tracker": "ABSENT",
+    "blocks_certified": true
+  },
+  "independent_e2e": {
+    "status": "NOT_ESTABLISHED",
+    "clean_machine": "SMOKE_OR_PARTIAL_ONLY",
+    "host_independent": 0,
+    "batch25_cite": "CLEAN_MACHINE_INDEPENDENT NOT_VERIFIED / HOST_NOT_INDEPENDENT",
+    "held_out_agent_tasks": "NOT_SEALED_FOR_CERT",
+    "blocks_certified": true
+  },
+  "certification_blockers": [
+    {
+      "priority": 1,
+      "blocker": "BATCH_25 controlling Finish-25 remaining six still open: T05/T07/T08/T18/T19/T25",
+      "required": "Close on one frozen tip SHA with formal Finish-25 credit — no cross-SHA inheritance"
+    },
+    {
+      "priority": 2,
+      "blocker": "No single authoritative candidate SHA binding mandatory gates",
+      "required": "Freeze one SHA; re-run held gates against that SHA only"
+    },
+    {
+      "priority": 3,
+      "blocker": "T25 HELD — certification conjunction never sealed (BATCH_25 + TRACKER)",
+      "required": "Reconciled evidence package with CERTIFIED conjunction — not claimed by this audit"
+    },
+    {
+      "priority": 4,
+      "blocker": "T24 latest deployment FAIL (missing runtime DLLs) — BATCH_25 packaging/deploy cite",
+      "required": "Package dependency closure + redeploy receipt pass=true"
+    },
+    {
+      "priority": 5,
+      "blocker": "Independent E2E / clean-machine / twin-rebuild reproducibility not established",
+      "required": "DISTINCT_VM=1 independent host E2E + reproducible build SHA compare"
+    },
+    {
+      "priority": 6,
+      "blocker": "Upstream holds: native_exe ABSENT, REBUILD FAIL, ROUTING_E2E NOT_CERTIFIED, Batch17 G1 open",
+      "required": "Close Batch17 native build path before product-path revalidation"
+    },
+    {
+      "priority": 7,
+      "blocker": "Finish-25 SSOT multi-layer conflict (historical / BATCH_25 held / slim A4F / oneshot / tip)",
+      "required": "Explicit SSOT reconcile without inventing PASS"
+    }
+  ],
+  "certification_readiness": {
+    "CERTIFIED": 0,
+    "PROMOTE": 0,
+    "TIP_CLIMB": "HOLD",
+    "ready": false,
+    "verdict": "NOT_CERTIFICATION_READY",
+    "summary": "BATCH_25 present and cites controlling Finish-25 remaining T05/T07/T08/T18/T19/T25 with T25=HELD. Tip-lane candidate receipts exist for some gates on divergent SHAs, but formal Finish-25 credit and CERTIFIED conjunction remain closed. CERTIFIED=0 PROMOTE=0."
+  },
+  "rollup": {
+    "batch25_held_gates_cited": 6,
+    "batch25_held_gates_closed_this_audit": 0,
+    "this_audit_runtime_cells_executed": 0,
+    "native_rebuild": "NOT_RUN",
+    "implementation_edits": 0,
+    "CERTIFIED": 0,
+    "PROMOTE": 0
+  },
+  "deliverables": {
+    "json": "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\BATCH_26_AUDIT\\FINISH25_RECONCILE_MATRIX.json",
+    "md": "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\BATCH_26_AUDIT\\FINISH25_RECONCILE_MATRIX.md"
+  }
+}

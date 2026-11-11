@@ -1,0 +1,78 @@
+
+  Checking File Globs
+  ggml-base.vcxproj -> F:\rawrxd\build_win32ide\3rdparty\ggml\src\Release\ggml-base.lib
+  ggml-cpu.vcxproj -> F:\rawrxd\build_win32ide\3rdparty\ggml\src\Release\ggml-cpu.lib
+  1>Performing build step for 'vulkan-shaders-gen'
+  MSBuild version 17.14.51+25f168cee for .NET Framework
+  
+    vulkan-shaders-gen.vcxproj -> F:\rawrxd\build_win32ide\3rdparty\ggml\src\ggml-vulkan\vulkan-shaders-gen-prefix\src\vulkan-shaders-gen-build\Release\vulkan-shaders-gen.exe
+  Performing install step for 'vulkan-shaders-gen'
+  -- Up-to-date: F:/rawrxd/build_win32ide/Release/vulkan-shaders-gen.exe
+  Completed 'vulkan-shaders-gen'
+  ggml-vulkan.vcxproj -> F:\rawrxd\build_win32ide\3rdparty\ggml\src\ggml-vulkan\Release\ggml-vulkan.lib
+  ggml.vcxproj -> F:\rawrxd\build_win32ide\3rdparty\ggml\src\Release\ggml.lib
+  rawrxd_computer_use.vcxproj -> F:\rawrxd\build_win32ide\src\computer_use\Release\rawrxd_computer_use.lib
+  rawrxd_production_hardening.vcxproj -> F:\rawrxd\build_win32ide\src\production\Release\rawrxd_production_hardening.lib
+  rawrxd_security.vcxproj -> F:\rawrxd\build_win32ide\Release\rawrxd_security.lib
+  Win32IDE.cpp
+F:\rawrxd\src\tokenizer\qwen3_tokenizer.hpp(133,20): warning C4189: 'end': local variable is initialized but not referenced [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE.cpp')
+  
+F:\rawrxd\src\native_agent.hpp(246,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE.cpp')
+  
+F:\rawrxd\src\agentic\tool_core.hpp(97,13): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning. [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE.cpp')
+  
+F:\rawrxd\src\agentic\ToolCallBridge.h(58,62): warning C4100: 'registry': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE.cpp')
+  
+F:\rawrxd\src\snap\rawrxd_snap_detectors.hpp(5,9): warning C4005: 'WIN32_LEAN_AND_MEAN': macro redefinition [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE.cpp')
+      F:\rawrxd\src\snap\rawrxd_snap_detectors.hpp(5,9):
+      'WIN32_LEAN_AND_MEAN' previously declared on the command line
+  
+F:\rawrxd\src\deep2\Tokenizer.hpp(66,24): warning C4100: 'token': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE.cpp')
+  
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77,40): warning C4458: declaration of 'expertId' hides class member [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE.cpp')
+      F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46,14):
+      see declaration of 'Deep2::GlobalTensorRef::expertId'
+  
+F:\rawrxd\src\deep2\ModelFit.hpp(613,22): warning C4189: 'cpuLayers': local variable is initialized but not referenced [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE.cpp')
+  
+F:\rawrxd\src\win32app\Win32IDE.cpp(1645,36): warning C4101: 'e': unreferenced local variable [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE.cpp(3403,34): warning C4100: 'hwnd': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE.cpp(4906,14): warning C4244: 'initializing': conversion from 'LRESULT' to 'LONG', possible loss of data [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE.cpp(5977,29): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE.cpp(5986,29): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE.cpp(6006,29): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE.cpp(6019,29): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE.cpp(7334,10): warning C4189: 'hwndCommitBtn': local variable is initialized but not referenced [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE.cpp(7337,10): warning C4189: 'hwndCancelBtn': local variable is initialized but not referenced [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+     Creating library F:/rawrxd/build_win32ide/Release/RawrXD-Win32IDE-Native.lib and object F:/rawrxd/build_win32ide/Release/RawrXD-Win32IDE-Native.exp
+Win32IDE.obj : error LNK2001: unresolved external symbol "public: void __cdecl Win32IDE::refreshFileExplorer(void)" (?refreshFileExplorer@Win32IDE@@QEAAXXZ) [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE.obj : error LNK2001: unresolved external symbol "public: void __cdecl Win32IDE::addProblem(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,int,int,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,int)" (?addProblem@Win32IDE@@QEAAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HH0H@Z) [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE.obj : error LNK2001: unresolved external symbol "private: bool __cdecl Win32IDE::loadGGUFModel(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?loadGGUFModel@Win32IDE@@AEAA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z) [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_Commands.obj : error LNK2001: unresolved external symbol "public: void __cdecl Win32IDE::clearProblems(void)" (?clearProblems@Win32IDE@@QEAAXXZ) [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_Commands.obj : error LNK2001: unresolved external symbol "public: void __cdecl Win32IDE::toggleMinimap(void)" (?toggleMinimap@Win32IDE@@QEAAXXZ) [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_Commands.obj : error LNK2001: unresolved external symbol "private: void __cdecl Win32IDE::gitPull(void)" (?gitPull@Win32IDE@@AEAAXXZ) [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_Commands.obj : error LNK2001: unresolved external symbol "private: void __cdecl Win32IDE::gitPush(void)" (?gitPush@Win32IDE@@AEAAXXZ) [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_AgenticBridge.obj : error LNK2001: unresolved external symbol "public: enum RawrXD::Agent::BackendKind __cdecl RawrXD::Agent::BackendRouter::GetActiveBackendKind(void)const " (?GetActiveBackendKind@BackendRouter@Agent@RawrXD@@QEBA?AW4BackendKind@23@XZ) [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_AgenticBridge.obj : error LNK2001: unresolved external symbol "public: struct RawrXD::Agent::InferenceResult __cdecl RawrXD::Agent::BackendRouter::ChatSync(class std::vector<struct RawrXD::Agent::ChatMessage,class std::allocator<struct RawrXD::Agent::ChatMessage> > const &,class nlohmann::json_abi_v3_11_3::basic_json<class std::map,class std::vector,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >,bool,__int64,unsigned __int64,double,class std::allocator,struct nlohmann::json_abi_v3_11_3::adl_serializer,class std::vector<unsigned char,class std::allocator<unsigned char> >,void> const &,struct RawrXD::Agent::BackendRouter::FailoverInfo *)" (?ChatSync@BackendRouter@Agent@RawrXD@@QEAA?AUInferenceResult@23@AEBV?$vector@UChatMessage@Agent@RawrXD@@V?$allocator@UChatMessage@Agent@RawrXD@@@std@@@std@@AEBV?$basic_json@Vmap@std@@Vvector@2@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@_N_J_KNVallocator@2@Uadl_serializer@json_abi_v3_11_3@nlohmann@@V?$vector@EV?$allocator@E@std@@@2@X@json_abi_v3_11_3@nlohmann@@PEAUFailoverInfo@123@@Z) [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_AgenticBridge.obj : error LNK2001: unresolved external symbol "public: bool __cdecl RawrXD::Agent::BackendRouter::Initialize(struct RawrXD::Agent::RouterConfig const &)" (?Initialize@BackendRouter@Agent@RawrXD@@QEAA_NAEBURouterConfig@23@@Z) [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_AgenticBridge.obj : error LNK2001: unresolved external symbol "public: __cdecl RawrXD::Agent::BackendRouter::~BackendRouter(void)" (??1BackendRouter@Agent@RawrXD@@QEAA@XZ) [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_AgenticBridge.obj : error LNK2001: unresolved external symbol "public: __cdecl RawrXD::Agent::BackendRouter::BackendRouter(void)" (??0BackendRouter@Agent@RawrXD@@QEAA@XZ) [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_AgentCommands.obj : error LNK2001: unresolved external symbol "public: void __cdecl RawrXD::Agent::PersistentTaskBacklog::Flush(void)const " (?Flush@PersistentTaskBacklog@Agent@RawrXD@@QEBAXXZ) [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_AgentCommands.obj : error LNK2001: unresolved external symbol "public: void __cdecl RawrXD::Agent::PersistentTaskBacklog::MarkTaskReverted(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?MarkTaskReverted@PersistentTaskBacklog@Agent@RawrXD@@QEAAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@0@Z) [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_AgentCommands.obj : error LNK2001: unresolved external symbol "public: void __cdecl RawrXD::Agent::PersistentTaskBacklog::MarkTaskFailed(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?MarkTaskFailed@PersistentTaskBacklog@Agent@RawrXD@@QEAAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@0@Z) [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_AgentCommands.obj : error LNK2001: unresolved external symbol "public: void __cdecl RawrXD::Agent::PersistentTaskBacklog::MarkTaskCompleted(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?MarkTaskCompleted@PersistentTaskBacklog@Agent@RawrXD@@QEAAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@0@Z) [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_AgentCommands.obj : error LNK2001: unresolved external symbol "public: void __cdecl RawrXD::Agent::PersistentTaskBacklog::MarkTaskStarted(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?MarkTaskStarted@PersistentTaskBacklog@Agent@RawrXD@@QEAAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z) [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_AgentCommands.obj : error LNK2001: unresolved external symbol "public: void __cdecl RawrXD::Agent::PersistentTaskBacklog::UpdateTask(struct RawrXD::Agent::PersistentTask const &)" (?UpdateTask@PersistentTaskBacklog@Agent@RawrXD@@QEAAXAEBUPersistentTask@23@@Z) [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_AgentCommands.obj : error LNK2001: unresolved external symbol "public: class std::optional<struct RawrXD::Agent::PersistentTask> __cdecl RawrXD::Agent::PersistentTaskBacklog::GetTask(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)const " (?GetTask@PersistentTaskBacklog@Agent@RawrXD@@QEBA?AV?$optional@UPersistentTask@Agent@RawrXD@@@std@@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@5@@Z) [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_AgentCommands.obj : error LNK2001: unresolved external symbol "public: class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > __cdecl RawrXD::Agent::PersistentTaskBacklog::AddTask(struct RawrXD::Agent::PersistentTask const &)" (?AddTask@PersistentTaskBacklog@Agent@RawrXD@@QEAA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AEBUPersistentTask@23@@Z) [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_AgentCommands.obj : error LNK2001: unresolved external symbol "public: __cdecl RawrXD::Agent::PersistentTaskBacklog::PersistentTaskBacklog(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (??0PersistentTaskBacklog@Agent@RawrXD@@QEAA@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z) [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_AgentToolSsot.obj : error LNK2001: unresolved external symbol "public: bool __cdecl rawr::live::Sink::emit(struct rawr::live::Event,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > *)" (?emit@Sink@live@rawr@@QEAA_NUEvent@23@PEAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z) [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\build_win32ide\bin\Release\RawrXD-Win32IDE-Native.exe : fatal error LNK1120: 22 unresolved externals [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]

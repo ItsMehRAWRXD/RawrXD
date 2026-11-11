@@ -1,0 +1,22 @@
+{
+  "disposition_id": "AGENT_SECURITY_WIRE_001_DISPOSITION",
+  "recorded_at": "2026-11-11T15:46:00Z",
+  "authority": "coordinator_ack_user_disposition",
+  "gaps_3_4": "CLOSED",
+  "security_enforcement": "TEST-PASSED",
+  "certification": "NOT_GRANTED",
+  "promotion": "NOT_AUTHORIZED",
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "laws": {
+    "SOURCE_WIRED_NE_RUNTIME_REACHED": true,
+    "NOT_RUN_NE_PASS": true,
+    "ADVERSARIAL_PROBE_PASS_NE_CERTIFIED": true
+  },
+  "notes": [
+    "Gaps 3 and 4 CLOSED on reported ToolCallBridge + ComputerUse path.",
+    "Adversarial probe 16/16 PASS does not authorize CERTIFIED or PROMOTE.",
+    "Independent pre-cert verification recorded in INDEPENDENT_PRECERT_VERIFY_001.json."
+  ]
+}

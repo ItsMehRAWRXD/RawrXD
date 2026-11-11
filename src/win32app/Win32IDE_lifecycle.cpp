@@ -473,6 +473,24 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
                     return 0;
                 }
                 const int command = static_cast<int>(LOWORD(wParam));
+                // PowerShell panel controls live in a child panel, but some
+                // Windows message paths notify the frame instead of the
+                // panel subclass.  Handle those IDs here before the legacy
+                // 7100 terminal-pane decoder; otherwise IDC_PS_BTN_EXECUTE
+                // can be misreported as an unsupported command.
+                switch (command) {
+                case 5610: // IDC_PS_BTN_EXECUTE
+                    ide->executePowerShellInput();
+                    return 0;
+                case 5611: // IDC_PS_BTN_CLEAR
+                    ide->clearPowerShellConsole();
+                    return 0;
+                case 5612: // IDC_PS_BTN_STOP
+                    ide->stopPowerShellExecution();
+                    return 0;
+                default:
+                    break;
+                }
                 const int paneId = (command >= 7100) ? (command - 7100) / 10 : -1;
                 TerminalPane* pane = (paneId > 0) ? ide->findTerminalPane(paneId) : nullptr;
                 const int action = (command >= 7100) ? (command - 7100) % 10 : 0;
@@ -576,9 +594,18 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
                         }
                     }
                 }
-            } else if (nmhdr->idFrom == kPanelTabsId &&
-                       nmhdr->code == TCN_SELCHANGE) {
-                const int selected = TabCtrl_GetCurSel(nmhdr->hwndFrom);
+            } else if ((nmhdr->idFrom == kPanelTabsId ||
+                        (ide->m_hwndPanelTabs &&
+                         nmhdr->hwndFrom == ide->m_hwndPanelTabs)) &&
+                       (nmhdr->code == TCN_SELCHANGE ||
+                        static_cast<int>(nmhdr->code) ==
+                            static_cast<int>(TCN_SELCHANGE))) {
+                // Accept hwndFrom match too: cross-process harness NMHDR may
+                // deliver idFrom unevenly while hwndFrom/tabs HWND is correct.
+                HWND tabs = (nmhdr->hwndFrom && IsWindow(nmhdr->hwndFrom))
+                    ? nmhdr->hwndFrom
+                    : ide->m_hwndPanelTabs;
+                const int selected = TabCtrl_GetCurSel(tabs);
                 if (selected >= 0 && selected <= 3) {
                     ide->switchPanelTab(static_cast<Win32IDE::PanelTab>(selected));
                 }
@@ -1176,29 +1203,61 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         appendToOutput(diagnostic + "\n", "Debug", OutputSeverity::Info);
         return;
     }
+    // Panel tab strip / Problems list BEFORE hwndCtl early-return.
+    // Harness posts WM_COMMAND 1301 with lParam=tabs HWND; prior path hit
+    // default:return inside the hwndCtl BN_CLICKED switch and never showed
+    // Problems/Debug/Terminal/Output bodies (P07 ABSENT/HIDDEN).
+    if (id == kPanelTabsId) {
+        if (m_hwndPanelTabs && IsWindow(m_hwndPanelTabs)) {
+            int idx = (int)TabCtrl_GetCurSel(m_hwndPanelTabs);
+            if (idx < 0) idx = 0;
+            if (idx > 3) idx = 3;
+            switchPanelTab(static_cast<PanelTab>(idx));
+        }
+        return;
+    }
+    if (id == kPanelProblemsListId) {
+        switchPanelTab(PanelTab::Problems);
+        int idx = -1;
+        if (m_hwndProblemsListView && IsWindow(m_hwndProblemsListView)) {
+            idx = (int)ListView_GetNextItem(m_hwndProblemsListView, -1, LVNI_SELECTED);
+            if (idx < 0 && ListView_GetItemCount(m_hwndProblemsListView) > 0)
+                idx = 0;
+        }
+        {
+            std::ofstream crumb("F:\\rawrxd\\evidence\\B12_NAVIGATE_LATEST.log",
+                                std::ios::trunc);
+            if (crumb) crumb << "wm_command_1312=1 idx=" << idx << "\n";
+        }
+        if (idx >= 0) goToProblem(idx);
+        return;
+    }
+    // B12 harness: goToProblem(index) via lParam (int-only; cross-process safe).
+    if (id == 1399) {
+        const int idx = static_cast<int>(reinterpret_cast<intptr_t>(hwndCtl));
+        {
+            std::ofstream crumb("F:\\rawrxd\\evidence\\B12_NAVIGATE_LATEST.log",
+                                std::ios::trunc);
+            if (crumb) crumb << "wm_command_1399=1 idx=" << idx << "\n";
+        }
+        goToProblem(idx);
+        return;
+    }
     if (hwndCtl) {
-        // Bulk editor updates (opening/reloading a file, restoring a tab, or
-        // creating a new buffer) intentionally suppress dirty tracking.  They
-        // must not be forwarded to GhostText: doing so starts an asynchronous
-        // completion against a transient buffer before the file identity and
-        // tab state are committed.  User edits continue through the normal
-        // notification path below.
+        // Bulk editor updates suppress dirty tracking — do not forward to GhostText.
         if (hwndCtl == m_hwndEditor) {
             logInfo("[EDITOR_CHANGE] code=" + std::to_string(codeNotify) +
                     " suppressed=" + std::to_string(m_suppressEditorDirty ? 1 : 0) +
                     " active=" + std::to_string(m_activeDocument));
             if (codeNotify == EN_CHANGE && !m_suppressEditorDirty) {
                 m_fileModified = true;
-                if (m_activeDocument >= 0 && m_activeDocument < static_cast<int>(m_documentBuffers.size())) {
+                if (m_activeDocument >= 0 &&
+                    m_activeDocument < static_cast<int>(m_documentBuffers.size())) {
                     auto& buffer = m_documentBuffers[static_cast<size_t>(m_activeDocument)];
-                    // EM_GETTEXTEX (not GetWindowTextW) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â T08 buffer sync.
                     buffer.text = getEditorTextUtf8ForFile();
                     buffer.modified = true;
                 }
                 updateTitleBarText();
-                // Menu state is not refreshed by the RichEdit notification
-                // itself.  Refresh it here so Save becomes immediately
-                // available after keyboard input or paste.
                 updateMenuEnableStates();
                 notifyGhostTextInputChanged(hwndCtl);
             }
@@ -1220,48 +1279,6 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
             return;
         default: return;
         }
-    }
-    // B12 harness: goToProblem(index) via lParam (int-only; cross-process safe).
-    // WindowProc passes raw lParam as hwndCtl ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â reinterpret as problem index.
-    // (Mirrored from Win32IDE_Core.cpp case 1399; Core TU is not in Native-Ext.)
-    if (id == 1399) {
-        const int idx = static_cast<int>(reinterpret_cast<intptr_t>(hwndCtl));
-        {
-            std::ofstream crumb("F:\\rawrxd\\evidence\\B12_NAVIGATE_LATEST.log",
-                                std::ios::trunc);
-            if (crumb) crumb << "wm_command_1399=1 idx=" << idx << "\n";
-        }
-        goToProblem(idx);
-        return;
-    }
-        // Panel tab strip: SetCurSel + WM_COMMAND 1301 (VisId / harness).
-    if (id == kPanelTabsId) {
-        if (m_hwndPanelTabs && IsWindow(m_hwndPanelTabs)) {
-            int idx = (int)TabCtrl_GetCurSel(m_hwndPanelTabs);
-            if (idx < 0) idx = 0;
-            if (idx > 3) idx = 3;
-            switchPanelTab(static_cast<PanelTab>(idx));
-        }
-        return;
-    }
-    // B12: pointer-free activate via WM_COMMAND 1312 (cross-process safe).
-    // Must switchPanelTab(Problems) first — prior path only goToProblem'd and
-    // left ListView WS_VISIBLE=0 (DOCK prove PROBLEMS_1312_VISIBLE=False).
-    if (id == kPanelProblemsListId) {
-        switchPanelTab(PanelTab::Problems);
-        int idx = -1;
-        if (m_hwndProblemsListView && IsWindow(m_hwndProblemsListView)) {
-            idx = (int)ListView_GetNextItem(m_hwndProblemsListView, -1, LVNI_SELECTED);
-            if (idx < 0 && ListView_GetItemCount(m_hwndProblemsListView) > 0)
-                idx = 0;
-        }
-        {
-            std::ofstream crumb("F:\\rawrxd\\evidence\\B12_NAVIGATE_LATEST.log",
-                                std::ios::trunc);
-            if (crumb) crumb << "wm_command_1312=1 idx=" << idx << "\n";
-        }
-        if (idx >= 0) goToProblem(idx);
-        return;
     }
     // Debugger panel IDs (Win32IDE_Debugger.cpp 2100-2108) + TERMINAL_LIST 4010.
     // Core TU is not in Native-Ext ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â mirror keep-alive handlers (no modal).
@@ -1814,27 +1831,38 @@ void Win32IDE::onSize(int width, int height)
             if (m_hwndPanelToolbar && IsWindow(m_hwndPanelToolbar)) {
                 MoveWindow(m_hwndPanelToolbar, std::max(0, width - 200), 0, 200, 24, TRUE);
             }
+            const int panelBodyH = std::max(0, bottomHeight - 26);
+            if (m_hwndPanelTerminal && IsWindow(m_hwndPanelTerminal)) {
+                MoveWindow(m_hwndPanelTerminal, 0, 26, std::max(0, width),
+                           panelBodyH, TRUE);
+                ShowWindow(m_hwndPanelTerminal, onTerminalTab ? SW_SHOW : SW_HIDE);
+            }
+            if (m_hwndPanelOutput && IsWindow(m_hwndPanelOutput)) {
+                MoveWindow(m_hwndPanelOutput, 0, 26, std::max(0, width),
+                           panelBodyH, TRUE);
+                ShowWindow(m_hwndPanelOutput, onOutputTab ? SW_SHOW : SW_HIDE);
+            }
             if (m_hwndProblemsListView && IsWindow(m_hwndProblemsListView)) {
                 MoveWindow(m_hwndProblemsListView, 0, 26, std::max(0, width),
-                           std::max(0, bottomHeight - 26), TRUE);
+                           panelBodyH, TRUE);
                 ShowWindow(m_hwndProblemsListView, onProblemsTab ? SW_SHOW : SW_HIDE);
             }
             if (m_hwndDebugConsole && IsWindow(m_hwndDebugConsole)) {
                 MoveWindow(m_hwndDebugConsole, 0, 26, std::max(0, width),
-                           std::max(0, bottomHeight - 26), TRUE);
+                           panelBodyH, TRUE);
                 ShowWindow(m_hwndDebugConsole, onDebugTab ? SW_SHOW : SW_HIDE);
             }
         }
     }
 
-    // Output RichEdit bodies: only the active channel, only in the dock body.
+    // Legacy Output RichEdit bodies: only when four-panel dock is off.
+    // When panelDockWanted, Output tab owns m_hwndPanelOutput (1303).
     if (!m_outputWindows.empty()) {
         for (const auto& output : m_outputWindows) {
             if (!output.second || !IsWindow(output.second)) continue;
             MoveWindow(output.second, 0, outputTop, width, outputHeight, TRUE);
             const bool showOut =
-                ((panelDockWanted && onOutputTab) || showLegacyOutputStrip) &&
-                output.first == m_activeOutputTab;
+                showLegacyOutputStrip && output.first == m_activeOutputTab;
             if (showOut) {
                 SetWindowPos(output.second, HWND_TOP, 0, 0, 0, 0,
                              SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
@@ -1854,38 +1882,22 @@ void Win32IDE::onSize(int width, int height)
         }
         if (m_hwndCommandInput) ShowWindow(m_hwndCommandInput, SW_HIDE);
         if (m_hwndDebuggerContainer) ShowWindow(m_hwndDebuggerContainer, SW_HIDE);
-        if (onTerminalTab) {
-            layoutTerminalPanes(width, bodyTop, bodyH);
-            for (auto& pane : m_terminalPanes) {
-                if (pane.hwnd && IsWindow(pane.hwnd)) {
-                    SetWindowPos(pane.hwnd, HWND_TOP, 0, 0, 0, 0,
-                                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
-                }
-                if (pane.input && IsWindow(pane.input)) {
-                    SetWindowPos(pane.input, HWND_TOP, 0, 0, 0, 0,
-                                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
-                }
-                if (pane.execute && IsWindow(pane.execute)) {
-                    SetWindowPos(pane.execute, HWND_TOP, 0, 0, 0, 0,
-                                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
-                }
-                if (pane.stop && IsWindow(pane.stop)) {
-                    SetWindowPos(pane.stop, HWND_TOP, 0, 0, 0, 0,
-                                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
-                }
-                if (pane.clear && IsWindow(pane.clear)) {
-                    SetWindowPos(pane.clear, HWND_TOP, 0, 0, 0, 0,
-                                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
-                }
-            }
-        } else {
-            for (auto& pane : m_terminalPanes) {
-                if (pane.hwnd) ShowWindow(pane.hwnd, SW_HIDE);
-                if (pane.input) ShowWindow(pane.input, SW_HIDE);
-                if (pane.execute) ShowWindow(pane.execute, SW_HIDE);
-                if (pane.stop) ShowWindow(pane.stop, SW_HIDE);
-                if (pane.clear) ShowWindow(pane.clear, SW_HIDE);
-            }
+        // Four-panel Terminal tab owns m_hwndPanelTerminal (1302). Keep peer
+        // m_terminalPanes hidden so they cannot cover the VisId body.
+        for (auto& pane : m_terminalPanes) {
+            if (pane.hwnd) ShowWindow(pane.hwnd, SW_HIDE);
+            if (pane.input) ShowWindow(pane.input, SW_HIDE);
+            if (pane.execute) ShowWindow(pane.execute, SW_HIDE);
+            if (pane.stop) ShowWindow(pane.stop, SW_HIDE);
+            if (pane.clear) ShowWindow(pane.clear, SW_HIDE);
+        }
+        if (m_hwndPanelTerminal && IsWindow(m_hwndPanelTerminal) && onTerminalTab) {
+            SetWindowPos(m_hwndPanelTerminal, HWND_TOP, 0, 0, 0, 0,
+                         SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+        }
+        if (m_hwndPanelOutput && IsWindow(m_hwndPanelOutput) && onOutputTab) {
+            SetWindowPos(m_hwndPanelOutput, HWND_TOP, 0, 0, 0, 0,
+                         SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
         }
         // Tabs + toolbar above body siblings so they stay visible.
         if (m_hwndPanelTabs && IsWindow(m_hwndPanelTabs)) {

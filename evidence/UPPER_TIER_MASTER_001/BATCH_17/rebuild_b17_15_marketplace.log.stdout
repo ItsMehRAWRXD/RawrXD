@@ -1,0 +1,21 @@
+
+  Checking File Globs
+  ggml-base.vcxproj -> F:\rawrxd\build_win32ide\3rdparty\ggml\src\Release\ggml-base.lib
+  ggml-cpu.vcxproj -> F:\rawrxd\build_win32ide\3rdparty\ggml\src\Release\ggml-cpu.lib
+  1>Performing build step for 'vulkan-shaders-gen'
+  MSBuild version 17.14.51+25f168cee for .NET Framework
+  
+    vulkan-shaders-gen.vcxproj -> F:\rawrxd\build_win32ide\3rdparty\ggml\src\ggml-vulkan\vulkan-shaders-gen-prefix\src\vulkan-shaders-gen-build\Release\vulkan-shaders-gen.exe
+  Performing install step for 'vulkan-shaders-gen'
+  -- Up-to-date: F:/rawrxd/build_win32ide/Release/vulkan-shaders-gen.exe
+  Completed 'vulkan-shaders-gen'
+  ggml-vulkan.vcxproj -> F:\rawrxd\build_win32ide\3rdparty\ggml\src\ggml-vulkan\Release\ggml-vulkan.lib
+  ggml.vcxproj -> F:\rawrxd\build_win32ide\3rdparty\ggml\src\Release\ggml.lib
+  rawrxd_agentic_backend.vcxproj -> F:\rawrxd\build_win32ide\Release\rawrxd_agentic_backend.lib
+  rawrxd_computer_use.vcxproj -> F:\rawrxd\build_win32ide\src\computer_use\Release\rawrxd_computer_use.lib
+  rawrxd_production_hardening.vcxproj -> F:\rawrxd\build_win32ide\src\production\Release\rawrxd_production_hardening.lib
+  rawrxd_security.vcxproj -> F:\rawrxd\build_win32ide\Release\rawrxd_security.lib
+     Creating library F:/rawrxd/build_win32ide/Release/RawrXD-Win32IDE-Native.lib and object F:/rawrxd/build_win32ide/Release/RawrXD-Win32IDE-Native.exp
+  Generating code
+  Finished generating code
+  RawrXD-Win32IDE-Native.vcxproj -> F:\rawrxd\build_win32ide\bin\Release\RawrXD-Win32IDE-Native.exe

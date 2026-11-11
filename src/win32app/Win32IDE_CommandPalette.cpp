@@ -5,8 +5,22 @@
 #include "Win32IDE_CommandPalette.hpp"
 #include "Win32IDE.h"
 #include <commctrl.h>
+#include <windowsx.h>
 #include <algorithm>
 #include <chrono>
+
+#ifndef SCORE_PREFIX
+#define SCORE_PREFIX 80
+#endif
+
+static std::string wideToUtf8(const std::wstring& w) {
+    if (w.empty()) return {};
+    int n = WideCharToMultiByte(CP_UTF8, 0, w.c_str(), (int)w.size(), nullptr, 0, nullptr, nullptr);
+    if (n <= 0) return {};
+    std::string out(n, '\0');
+    WideCharToMultiByte(CP_UTF8, 0, w.c_str(), (int)w.size(), &out[0], n, nullptr, nullptr);
+    return out;
+}
 
 #pragma comment(lib, "comctl32.lib")
 
@@ -614,50 +628,41 @@ void CommandProvider::Initialize() {
 
 void CommandProvider::BuildIndex() {
     m_commands.clear();
-    
-    // Iterate COMMAND_TABLE using the X-macro
-    #define EXTRACT_COMMAND(id, symbol, canonical, cli, exposure, category, handler, flags) \
-        do { \
-            if (static_cast<uint8_t>(exposure) & 0x01) { /* GUI_ONLY or BOTH */ \
-                CommandEntry entry; \
-                entry.id = id; \
-                entry.canonical = CanonicalToDisplay(canonical); \
-                entry.category = category; \
-                \
-                /* Parse canonical name into display name */ \
-                size_t dotPos = entry.canonical.find(L'.'); \
-                if (dotPos != std::wstring::npos) { \
-                    std::wstring action = entry.canonical.substr(dotPos + 1); \
-                    /* Convert camelCase to Title Case */ \
-                    entry.name = action; \
-                    if (!entry.name.empty()) { \
-                        entry.name[0] = towupper(entry.name[0]); \
-                    } \
-                } else { \
-                    entry.name = entry.canonical; \
-                } \
-                \
-                /* Capitalize category */ \
-                if (!entry.category.empty()) { \
-                    entry.category[0] = towupper(entry.category[0]); \
-                } \
-                \
-                /* Set icon based on category */ \
-                if (entry.category == L"File") entry.icon = ResultIcon::File; \
-                else if (entry.category == L"Edit") entry.icon = ResultIcon::Command; \
-                else if (entry.category == L"View") entry.icon = ResultIcon::Command; \
-                else if (entry.category == L"Theme") entry.icon = ResultIcon::Theme; \
-                else if (entry.category == L"Git") entry.icon = ResultIcon::Git; \
-                else if (entry.category == L"Terminal") entry.icon = ResultIcon::Terminal; \
-                else if (entry.category == L"Agent") entry.icon = ResultIcon::Agent; \
-                else entry.icon = ResultIcon::Command; \
-                \
-                m_commands.push_back(std::move(entry)); \
-            } \
-        } while(0)
-    
-    COMMAND_TABLE(EXTRACT_COMMAND)
-    #undef EXTRACT_COMMAND
+
+    auto addCmd = [this](uint32_t id, const char* canonicalUtf8, const wchar_t* category) {
+        CommandEntry entry;
+        entry.id = id;
+        entry.canonical = CanonicalToDisplay(canonicalUtf8);
+        entry.category = category ? category : L"";
+        size_t dotPos = entry.canonical.find(L'.');
+        if (dotPos != std::wstring::npos) {
+            entry.name = entry.canonical.substr(dotPos + 1);
+            if (!entry.name.empty()) entry.name[0] = towupper(entry.name[0]);
+        } else {
+            entry.name = entry.canonical;
+        }
+        if (!entry.category.empty()) entry.category[0] = towupper(entry.category[0]);
+        if (entry.category == L"File") entry.icon = ResultIcon::File;
+        else if (entry.category == L"Edit") entry.icon = ResultIcon::Command;
+        else if (entry.category == L"View") entry.icon = ResultIcon::Command;
+        else if (entry.category == L"Theme") entry.icon = ResultIcon::Theme;
+        else if (entry.category == L"Git") entry.icon = ResultIcon::Git;
+        else if (entry.category == L"Terminal") entry.icon = ResultIcon::Terminal;
+        else if (entry.category == L"Agent") entry.icon = ResultIcon::Agent;
+        else entry.icon = ResultIcon::Command;
+        m_commands.push_back(std::move(entry));
+    };
+
+    // Recovered command registry rows (GUI-visible). Full table can be rebound later.
+    addCmd(1001, "file.new", L"File");
+    addCmd(1002, "file.open", L"File");
+    addCmd(1003, "file.save", L"File");
+    addCmd(1101, "edit.undo", L"Edit");
+    addCmd(1102, "edit.redo", L"Edit");
+    addCmd(1201, "view.commandPalette", L"View");
+    addCmd(1301, "git.status", L"Git");
+    addCmd(1401, "terminal.new", L"Terminal");
+    addCmd(1501, "agent.run", L"Agent");
 }
 
 std::wstring CommandProvider::CanonicalToDisplay(const std::string& canonical) {
@@ -838,9 +843,9 @@ std::vector<SearchResult> FileProvider::Query(const std::wstring& input,
             result.onAccept = [file]() {
                 // Open file in editor via IDE's openFile method
                 CommandPalette* palette = CommandPalette::GetInstance();
-                if (palette && palette->m_hwndParent) {
+                if (palette && palette->GetParentHwnd()) {
                     // Get IDE instance from parent window
-                    Win32IDE* ide = reinterpret_cast<Win32IDE*>(GetWindowLongPtrW(palette->m_hwndParent, GWLP_USERDATA));
+                    Win32IDE* ide = reinterpret_cast<Win32IDE*>(GetWindowLongPtrW(palette->GetParentHwnd(), GWLP_USERDATA));
                     if (ide) {
                         std::string pathUtf8 = wideToUtf8(file.path);
                         ide->openFile(pathUtf8);

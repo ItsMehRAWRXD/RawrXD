@@ -13,11 +13,11 @@ extern "C" bool Guard_VerifyCanary(void* ptr) {
 }
 
 extern "C" void Guard_InfectPage(void* page) {
-    LOG_WARN("[Guard] Page marked for audit.");
+    LOG_WARNING("[Guard] Page marked for audit.");
 }
 
 } // namespace RawrXD::Safety::Memory
 
 void Win32IDE::initHeapHardening() {
-    appendToOutput("[HeapHardening] Heap hardening initialized.\n", "Output", OutputSeverity::Info);
+    appendToOutput("[HeapHardening] Heap hardening initialized.\n", "Output", Win32IDE::OutputSeverity::Info);
 }

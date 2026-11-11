@@ -8,10 +8,12 @@
 #include "ModelConnection.h"
 #include "IDELogger.h"
 #include "agentic/AgentSession.h"
+#include "agentic/PersistentTaskBacklog.h"
 #if defined(RAWRXD_HAS_COMPUTER_USE)
 #include "agentic/tool_core.hpp"
 #endif
 #include <commctrl.h>
+#include <commdlg.h>
 #include <sstream>
 #include <cstdlib>
 #include <cstring>
@@ -144,10 +146,12 @@ void Win32IDE::initializeAgenticBridge() {
             }
         });
         
-        // Initialize with default framework path
+        // Gap 5/9: bind ToolCallBridge SSOT + SecurityGate before any agent command.
+        ensureAgentToolSsotReady();
         if (m_agenticBridge->Initialize("", "bigdaddyg-personalized-agentic:latest")) {
-            LOG_INFO("Legacy Agentic Bridge initialized successfully; autonomous tasks use AgenticLoopBridge");
-            appendToOutput(" Agentic Framework initialized\n", "Output", OutputSeverity::Info);
+            LOG_INFO("Agentic Bridge initialized (BackendRouter + ToolCallBridge SSOT/SecurityGate)");
+            appendToOutput(" Agentic Framework initialized (SSOT+BackendRouter)\n",
+                           "Output", OutputSeverity::Info);
         } else {
             LOG_ERROR("Failed to initialize Agentic Bridge");
             appendToOutput(" Failed to initialize Agentic Framework\n", "Errors", OutputSeverity::Error);
@@ -247,12 +251,16 @@ void Win32IDE::onAgentExecuteCommand() {
         }
         
         std::string command(input);
-        appendToOutput(" Executing Agent Command: " + command + "\n", "Output", OutputSeverity::Info);
+        // Gap 5 residual close: AgentCommands never bypasses SecurityGate —
+        // ensure SSOT bridge (sandbox+consent) before ExecuteAgentCommand.
+        ensureAgentToolSsotReady();
+        appendToOutput(" Executing Agent Command (SSOT/SecurityGate): " + command + "\n",
+                       "Output", OutputSeverity::Info);
         m_agentStepTimeline.addChip("agent", command);
         m_agentStepTimeline.beginThought();
         if (m_hwndMain) SetTimer(m_hwndMain, IDT_AGENT_THOUGHT, 250, nullptr);
         
-        // Execute in background
+        // Execute in background — tools route via dispatchAgentTool → ExecuteToolCall.
         std::thread([this, command]() {
             AgentResponse response = m_agenticBridge->ExecuteAgentCommand(command);
             
@@ -781,7 +789,7 @@ void Win32IDE::onAgentStop() {
     bool stoppedSomething = false;
     if (m_agenticLoopBridge) {
         // Map9: reap even when IsRunning raced false with a live child.
-        m_agenticLoopBridge->Cancel();
+        if (m_agenticBridge) m_agenticBridge->CancelAutonomousTask(); else if (m_agenticLoopBridge) m_agenticLoopBridge->Cancel();
         m_agenticChatSessionId = 0;
         stoppedSomething = true;
         appendToOutput(" Agentic task cancelled\n", "Output", OutputSeverity::Warning);
@@ -1099,6 +1107,58 @@ void Win32IDE::onDeep2Configure() {
 // ============================================================================
 
 // Initialize the Agentic Loop Bridge
+bool Win32IDE::ensureProductTaskLedger(const std::string& workspaceRoot,
+                                       const std::string& task,
+                                       const std::string& modelIdentity)
+{
+    using RawrXD::Agent::PersistentTaskBacklog;
+    using RawrXD::Agent::PersistentTask;
+    using RawrXD::Agent::TaskStatus;
+    using RawrXD::Agent::TaskPriority;
+    auto deleter = [](void* p) {
+        delete static_cast<PersistentTaskBacklog*>(p);
+    };
+    std::filesystem::path storage = workspaceRoot.empty()
+        ? std::filesystem::path(".rawrxd") / "tasks"
+        : std::filesystem::path(workspaceRoot) / ".rawrxd" / "tasks";
+    if (!m_productTaskBacklog) {
+        m_productTaskBacklog = std::unique_ptr<void, void(*)(void*)>(
+            new PersistentTaskBacklog(storage.string()), deleter);
+    }
+    auto* backlog = static_cast<PersistentTaskBacklog*>(m_productTaskBacklog.get());
+    if (!backlog) return false;
+    m_productTaskResumed = false;
+
+    // Resume only when explicitly requested (crash recovery / RAWRXD_RESUME_TASK_ID).
+    // Do not auto-hijack every new turn onto a leftover InProgress row.
+    const char* resumeEnv = std::getenv("RAWRXD_RESUME_TASK_ID");
+    std::string resumeId = (resumeEnv && *resumeEnv) ? resumeEnv : std::string();
+    if (!resumeId.empty()) {
+        auto existing = backlog->GetTask(resumeId);
+        if (existing) {
+            m_productTaskId = resumeId;
+            m_productTaskResumed = true;
+            backlog->MarkTaskStarted(resumeId);
+            appendToOutput("[TaskLedger] resumed id=" + resumeId + "\n",
+                           "Output", OutputSeverity::Info);
+            return true;
+        }
+    }
+
+    PersistentTask t;
+    t.title = "ide-agent-turn";
+    t.description = task;
+    t.priority = TaskPriority::High;
+    t.status = TaskStatus::Pending;
+    t.active_model = modelIdentity;
+    t.active_backend = "ide";
+    m_productTaskId = backlog->AddTask(t);
+    backlog->MarkTaskStarted(m_productTaskId);
+    appendToOutput("[TaskLedger] created id=" + m_productTaskId + "\n",
+                   "Output", OutputSeverity::Info);
+    return !m_productTaskId.empty();
+}
+
 bool Win32IDE::ensureProductAgentSession(const std::string& modelIdentity,
                                          const std::string& workspaceRoot,
                                          const std::string& task)
@@ -1118,9 +1178,15 @@ bool Win32IDE::ensureProductAgentSession(const std::string& modelIdentity,
     auto* session = static_cast<AgentSession*>(m_productAgentSession.get());
     if (!session) return false;
 
+    if (!ensureProductTaskLedger(workspaceRoot, task, modelIdentity)) {
+        appendToOutput("[TaskLedger] ensure failed\n", "Errors", OutputSeverity::Error);
+        return false;
+    }
+
     ++m_productAgentSessionId;
-    const std::string taskId =
-        "ide-agent-" + std::to_string(m_productAgentSessionId);
+    const std::string taskId = m_productTaskId.empty()
+        ? ("ide-agent-" + std::to_string(m_productAgentSessionId))
+        : m_productTaskId;
     session->SetTaskId(taskId);
     session->SetModelIdentity(modelIdentity);
     session->SetWorkspaceRoot(workspaceRoot);
@@ -1142,8 +1208,16 @@ bool Win32IDE::ensureProductAgentSession(const std::string& modelIdentity,
         }
         if (!ledger.empty()) session->SetLedgerPath(ledger.string());
     }
-    session->AppendUserMessage(task);
-    session->RecordAgentTurn();
+    // Resume path: reload prior ledger only when TaskLedger resume was explicit.
+    if (m_productTaskResumed && session->LoadFromDisk()) {
+        session->AppendUserMessage(std::string("[resume] ") + task);
+        session->RecordAgentTurn();
+        appendToOutput("[AgentSession] ledger resumed from disk\n",
+                       "Output", OutputSeverity::Info);
+    } else {
+        session->AppendUserMessage(task);
+        session->RecordAgentTurn();
+    }
 
     // Bind CU / workspace tools onto the same session-owned Registry the
     // ToolCallBridge and agent loop consumers share (not orphan s_cuReg).
@@ -1167,7 +1241,8 @@ bool Win32IDE::ensureProductAgentSession(const std::string& modelIdentity,
                << " task_id=" << taskId
                << " session_identity=" << m_productAgentSessionId
                << " model=" << modelIdentity
-               << " workspace=" << workspaceRoot;
+               << " workspace=" << workspaceRoot
+               << " task_ledger=1";
             if (isAgentModeActive()) ev << " AGENT_MODE=ACTIVE";
             if (agentToolsRegistry()) {
                 ev << " session_registry=1";
@@ -1181,16 +1256,26 @@ bool Win32IDE::ensureProductAgentSession(const std::string& modelIdentity,
 }
 
 void Win32IDE::initializeAgenticLoopBridge() {
-    LOG_INFO("Initializing Agentic Loop Bridge");
-    
-    if (!m_agenticLoopBridge) {
-        m_agenticLoopBridge = std::make_unique<AgenticLoopBridge>(this);
-        
-        // Connect ESP bus
+    // Gap 8: AgenticBridge is sole owner; LoopBridge is process transport only.
+    LOG_INFO("Initializing Agentic Loop Bridge via AgenticBridge facade");
+    if (!m_agenticBridge) {
+        initializeAgenticBridge();
+    }
+    if (!m_agenticBridge) {
+        LOG_ERROR("AgenticBridge facade unavailable; cannot adopt LoopBridge");
+        return;
+    }
+    m_agenticBridge->EnsureLoopTransport();
+    m_agenticLoopBridge = m_agenticBridge->LoopTransport();
+    if (m_agenticLoopBridge) {
         m_agenticLoopBridge->SetESPBus(&m_espBus, m_espRequestId++);
-        
-        LOG_INFO("Agentic Loop Bridge initialized");
-        appendToOutput(" Agentic Loop Bridge initialized\n", "Output", OutputSeverity::Info);
+        if (!m_agentExecutor) {
+            m_agentExecutor = std::make_unique<Win32IDE_AgentExecutor>();
+            m_agentExecutor->Bind(this, m_agenticBridge.get());
+            m_agentExecutor->Initialize();
+        }
+        LOG_INFO("Agentic Loop Bridge adopted under AgenticBridge");
+        appendToOutput(" Agentic Loop Bridge initialized (owned by AgenticBridge)\n", "Output", OutputSeverity::Info);
     }
 }
 
@@ -1683,9 +1768,15 @@ void Win32IDE::onAgenticLoopRunTask() {
             m_inferenceRunning.store(false, std::memory_order_release);
             return;
         }
-        
+        // Seed undo before-bytes for the known target so first write has a snapshot.
+        if (!config.targetFile.empty()) {
+            std::filesystem::path seed =
+                std::filesystem::path(workDirStr) / config.targetFile;
+            snapshotAgentFileBytes(seed.string());
+        }
+
         // Start the task
-        const bool started = m_agenticLoopBridge->StartTask(config,
+        const bool started = m_agenticBridge->StartAutonomousTask(config,
             [this](const std::string& progressMsg) {
                 // Progress callback - runs on worker thread, post to UI
                 PostMessageA(m_hwndMain, WM_APP + 103, 0, (LPARAM)new std::string(progressMsg));
@@ -1839,13 +1930,27 @@ void Win32IDE::onAgenticLoopCancel() {
     }
     
     // Map9: always Cancel/reap — IsRunning may be false while child still lives.
-    m_agenticLoopBridge->Cancel();
+    if (m_agenticBridge) m_agenticBridge->CancelAutonomousTask(); else if (m_agenticLoopBridge) m_agenticLoopBridge->Cancel();
     m_agenticChatSessionId = 0;
     disarmAgentThoughtTimer();
     m_agentStepTimeline.closeThoughtIfOpen();
     m_agentStepTimeline.addChip("stopped", "agentic cancelled");
     if (m_hwndCopilotStopBtn) EnableWindow(m_hwndCopilotStopBtn, FALSE);
     m_inferenceRunning.store(false, std::memory_order_release);
+    if (m_productAgentSession) {
+        auto* session = static_cast<RawrXD::Agent::AgentSession*>(
+            m_productAgentSession.get());
+        session->SetTermination(RawrXD::Agent::TerminationReason::Cancelled, 1);
+        session->SetVerdict("CANCELLED");
+        session->Flush();
+    }
+    if (m_productTaskBacklog && !m_productTaskId.empty()) {
+        auto* backlog = static_cast<RawrXD::Agent::PersistentTaskBacklog*>(
+            m_productTaskBacklog.get());
+        backlog->MarkTaskReverted(m_productTaskId, "agentic cancelled");
+        appendToOutput("[TaskLedger] cancelled id=" + m_productTaskId + "\n",
+                       "Output", OutputSeverity::Warning);
+    }
     appendToOutput(" Agentic task cancelled\n", "Output", OutputSeverity::Warning);
     if (m_hwndStatusBar) {
         const char* status = "Agentic task cancelled";
@@ -1953,14 +2058,39 @@ LRESULT Win32IDE::handleAgenticLoopToolResult(WPARAM wParam, LPARAM lParam) {
             // Model-originated TOOL write must mark durable source edit in the
             // AgentSession ledger (Issue #49 step 10). HOST_SEED write remains
             // forbidden elsewhere; this path only records loop-emitted writes.
-            if (result->success &&
-                (result->toolName == "write" || result->toolName == "write_file" ||
-                 result->toolName == "edit_file" || result->toolName == "apply_edit")) {
+            const bool isRead =
+                result->toolName == "read" || result->toolName == "read_file" ||
+                result->toolName == "readFile";
+            const bool isWrite =
+                result->toolName == "write" || result->toolName == "write_file" ||
+                result->toolName == "writeFile" || result->toolName == "edit_file" ||
+                result->toolName == "editFiles" || result->toolName == "apply_edit";
+            if (result->success && !result->target.empty() && isRead) {
+                snapshotAgentFileBytes(result->target);
+            }
+            if (result->success && isWrite) {
                 const std::string modPath = result->target.empty() ? std::string("bug.cpp")
                                                                    : result->target;
                 session->RecordFileModified(modPath);
+                recordAgentFileMutation(modPath);
             }
             session->RecordAgentTurn();
+        }
+        if (m_productTaskBacklog && !m_productTaskId.empty()) {
+            auto* backlog = static_cast<RawrXD::Agent::PersistentTaskBacklog*>(
+                m_productTaskBacklog.get());
+            auto task = backlog->GetTask(m_productTaskId);
+            if (task) {
+                RawrXD::Agent::TaskStep step;
+                step.action = result->toolName;
+                step.output = result->output.size() > 2048
+                    ? result->output.substr(0, 2048) : result->output;
+                step.success = result->success;
+                step.timestamp = RawrXD::Agent::AgentSession::NowUnix();
+                if (!result->target.empty()) step.changed_files.push_back(result->target);
+                task->steps.push_back(step);
+                backlog->UpdateTask(*task);
+            }
         }
         if (m_agenticChatSessionId != 0) {
             handleCopilotUiUpdate(m_agenticChatSessionId,
@@ -2012,6 +2142,19 @@ LRESULT Win32IDE::handleAgenticLoopComplete(WPARAM wParam, LPARAM lParam) {
             } catch (...) {
                 LOG_ERROR("AgentSession ledger update failed (unknown)");
             }
+        }
+        if (m_productTaskBacklog && !m_productTaskId.empty()) {
+            auto* backlog = static_cast<RawrXD::Agent::PersistentTaskBacklog*>(
+                m_productTaskBacklog.get());
+            if (success) {
+                backlog->MarkTaskCompleted(m_productTaskId, *summary);
+            } else {
+                backlog->MarkTaskFailed(m_productTaskId, *summary);
+            }
+            appendToOutput(
+                std::string("[TaskLedger] ") + (success ? "completed" : "failed") +
+                " id=" + m_productTaskId + "\n",
+                "Output", success ? OutputSeverity::Info : OutputSeverity::Error);
         }
         if (m_agenticChatSessionId != 0) {
             const int sessionId = m_agenticChatSessionId;

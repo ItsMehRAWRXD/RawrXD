@@ -23,38 +23,15 @@
 
 using json = nlohmann::json;
 
-// ============================================================================
-// SEMANTIC TOKEN STRUCTURES
-// ============================================================================
-
-struct SemanticToken {
-    int line;
-    int character;
-    int length;
-    int tokenType;
-    int tokenModifiers;
-};
-
-struct SemanticTokensLegend {
-    std::vector<std::string> tokenTypes;
-    std::vector<std::string> tokenModifiers;
-};
-
-struct SemanticTokensResult {
-    std::string resultId;
-    std::vector<SemanticToken> tokens;
-    bool valid;
-};
-
-// Static legend cache
-static std::map<LSPLanguage, SemanticTokensLegend> s_legends;
+// Static legend cache (nested Win32IDE semantic-token types)
+static std::map<Win32IDE::LSPLanguage, Win32IDE::SemanticTokensLegend> s_legends;
 static std::mutex s_legendMutex;
 
 // ============================================================================
 // SEMANTIC TOKENS IMPLEMENTATION
 // ============================================================================
 
-SemanticTokensLegend Win32IDE::getSemanticTokensLegend(LSPLanguage lang) {
+Win32IDE::SemanticTokensLegend Win32IDE::getSemanticTokensLegend(LSPLanguage lang) {
     std::lock_guard<std::mutex> lock(s_legendMutex);
     
     auto it = s_legends.find(lang);
@@ -86,7 +63,7 @@ SemanticTokensLegend Win32IDE::getSemanticTokensLegend(LSPLanguage lang) {
     return legend;
 }
 
-SemanticTokensResult Win32IDE::lspSemanticTokensFull(const std::string& uri) {
+Win32IDE::SemanticTokensResult Win32IDE::lspSemanticTokensFull(const std::string& uri) {
     SemanticTokensResult result;
     result.valid = false;
 
@@ -150,7 +127,7 @@ SemanticTokensResult Win32IDE::lspSemanticTokensFull(const std::string& uri) {
     return result;
 }
 
-SemanticTokensResult Win32IDE::lspSemanticTokensRange(const std::string& uri, int startLine, int startChar,
+Win32IDE::SemanticTokensResult Win32IDE::lspSemanticTokensRange(const std::string& uri, int startLine, int startChar,
                                                        int endLine, int endChar) {
     SemanticTokensResult result;
     result.valid = false;
@@ -222,7 +199,7 @@ SemanticTokensResult Win32IDE::lspSemanticTokensRange(const std::string& uri, in
 // SEMANTIC TOKEN COLOR MAPPING
 // ============================================================================
 
-static COLORREF getTokenColor(int tokenType, int tokenModifiers, const SemanticTokensLegend& legend) {
+static COLORREF getTokenColor(int tokenType, int tokenModifiers, const Win32IDE::SemanticTokensLegend& legend) {
     // VS Code dark theme colors
     static const COLORREF colors[] = {
         RGB(206, 145, 120),   // namespace - orange
@@ -274,7 +251,7 @@ void Win32IDE::applySemanticTokens(const std::vector<SemanticToken>& tokens, con
     // Invalidate editor to trigger repaint
     InvalidateRect(m_hwndEditor, nullptr, FALSE);
 
-    LOG_INFO("[SemanticTokens] Applied " << tokens.size() << " semantic tokens");
+    LOG_INFO("[SemanticTokens] Applied " + std::to_string(tokens.size()) + " semantic tokens");
 }
 
 void Win32IDE::clearSemanticTokens() {
@@ -372,7 +349,7 @@ void Win32IDE::cmdToggleSemanticHighlighting() {
 // SEMANTIC TOKENS DELTA (Incremental Updates)
 // ============================================================================
 
-SemanticTokensResult Win32IDE::lspSemanticTokensDelta(const std::string& uri, const std::string& previousResultId) {
+Win32IDE::SemanticTokensResult Win32IDE::lspSemanticTokensDelta(const std::string& uri, const std::string& previousResultId) {
     SemanticTokensResult result;
     result.valid = false;
 

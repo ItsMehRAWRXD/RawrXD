@@ -1,0 +1,23 @@
+**********************************************************************
+** Visual Studio 2022 Developer Command Prompt v17.14.39
+** Copyright (c) 2025 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  deep2_n03_session_isolation.cpp
+F:\rawrxd\src\deep2\Tokenizer.hpp(66,24): warning C4100: 'token': unreferenced parameter [F:\rawrxd\build\deep2_n03_session_isolation.vcxproj]
+  (compiling source file '../tests/deep2_n03_session_isolation.cpp')
+  
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77,40): warning C4458: declaration of 'expertId' hides class member [F:\rawrxd\build\deep2_n03_session_isolation.vcxproj]
+  (compiling source file '../tests/deep2_n03_session_isolation.cpp')
+      F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46,14):
+      see declaration of 'Deep2::GlobalTensorRef::expertId'
+  
+F:\rawrxd\src\deep2\ModelFit.hpp(613,22): warning C4189: 'cpuLayers': local variable is initialized but not referenced [F:\rawrxd\build\deep2_n03_session_isolation.vcxproj]
+  (compiling source file '../tests/deep2_n03_session_isolation.cpp')
+  
+  Generating code
+  Finished generating code
+  deep2_n03_session_isolation.vcxproj -> F:\rawrxd\build\tests\Release\deep2_n03_session_isolation.exe
+N03_BUILD_EXIT=0

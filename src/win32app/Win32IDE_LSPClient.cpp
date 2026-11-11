@@ -1,4 +1,4 @@
-// ============================================================================
+﻿// ============================================================================
 // Win32IDE_LSPClient.cpp — Phase 9A: LSP Client Bridge
 // ============================================================================
 // Minimal Language Server Protocol integration for three languages:
@@ -2117,14 +2117,15 @@ void Win32IDE::handleLSPStatusEndpoint(SOCKET client)
 //   Returns structured SemanticToken vector for the editor to apply highlighting.
 // ============================================================================
 
-std::vector<Win32IDE::SemanticToken> Win32IDE::lspSemanticTokensFull(const std::string& uri)
+#if 0 // DUP_lspSemanticTokensFull BATCH17_DUP_DISABLE
+Win32IDE::SemanticTokensResult Win32IDE::lspSemanticTokensFull(const std::string& uri)
 {
-    std::vector<SemanticToken> tokens;
+    SemanticTokensResult resultOut;
 
     LSPLanguage lang = detectLanguageForFile(uriToFilePath(uri));
     if (lang >= LSPLanguage::Count || m_lspStatuses[(size_t)lang].state != LSPServerState::Running)
     {
-        return tokens;
+        return resultOut;
     }
 
     // Check server capability for semantic tokens
@@ -2133,21 +2134,21 @@ std::vector<Win32IDE::SemanticToken> Win32IDE::lspSemanticTokensFull(const std::
 
     int id = sendLSPRequest(lang, "textDocument/semanticTokens/full", params);
     if (id < 0)
-        return tokens;
+        return resultOut;
 
     nlohmann::json resp = readLSPResponse(lang, id, 10000);  // semantic tokens can be slow
     if (!resp.contains("result") || resp["result"].is_null())
-        return tokens;
+        return resultOut;
 
     const auto& result = resp["result"];
     if (!result.contains("data") || !result["data"].is_array())
-        return tokens;
+        return resultOut;
 
     const auto& data = result["data"];
     if (data.size() % 5 != 0)
     {
         fprintf(stderr, "[LSP] Semantic tokens data array size not multiple of 5: %zu\n", data.size());
-        return tokens;
+        return resultOut;
     }
 
     // Decode the delta-encoded token stream
@@ -2174,27 +2175,20 @@ std::vector<Win32IDE::SemanticToken> Win32IDE::lspSemanticTokensFull(const std::
 
         SemanticToken tok;
         tok.line = currentLine;
-        tok.startChar = currentChar;
+        tok.character = currentChar;
         tok.length = length;
         tok.tokenType = tokenType;
-        tok.modifiers = tokenModifiers;
+        tok.tokenModifiers = tokenModifiers;
 
-        // Map type index to name string
-        if (tokenType >= 0 && tokenType < s_numSemanticTokenTypes)
-        {
-            tok.typeName = s_semanticTokenTypes[tokenType];
-        }
-        else
-        {
-            tok.typeName = "unknown";
-        }
-
-        tokens.push_back(tok);
+        resultOut.tokens.push_back(tok);
     }
 
-    fprintf(stderr, "[LSP] Semantic tokens: %zu tokens for %s\n", tokens.size(), uri.c_str());
-    return tokens;
+    resultOut.valid = true;
+    fprintf(stderr, "[LSP] Semantic tokens: %zu tokens for %s\n",
+            resultOut.tokens.size(), uri.c_str());
+    return resultOut;
 }
+#endif // DUP_lspSemanticTokensFull
 
 void Win32IDE::handleLSPDiagnosticsEndpoint(SOCKET client)
 {
@@ -2231,4 +2225,10 @@ void Win32IDE::handleLSPDiagnosticsEndpoint(SOCKET client)
                        "Content-Length: " +
                        std::to_string(body.size()) + "\r\n\r\n" + body;
     send(client, resp.c_str(), (int)resp.size(), 0);
+}
+
+int64_t Win32IDE::currentEpochMs()
+{
+    using namespace std::chrono;
+    return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 }

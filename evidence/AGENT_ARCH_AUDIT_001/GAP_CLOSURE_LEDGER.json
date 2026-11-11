@@ -1,0 +1,39 @@
+{
+  "audit_id": "AGENT_ARCH_AUDIT_001",
+  "closure_batch": "AGENT_LEDGER_WIRE_001",
+  "date": "2026-11-11",
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "gaps_closed_this_batch": [
+    {
+      "rank": 7,
+      "gap": "AgentHistory undo does not restore file bytes",
+      "status": "CLOSED_SOURCE_AND_SMOKE",
+      "SOURCE_WIRED": true,
+      "RUNTIME_REACHED": true,
+      "RUNTIME_NOTE": "Smoke proves undo restores prior bytes via AgentEditHistory; IDE adapter + AgentCommands write/edit recording wired; full IDE exe E2E NOT_RUN",
+      "evidence": [
+        "F:\\rawrxd\\evidence\\AGENT_LEDGER_WIRE_001\\UNDO_PROOF.txt",
+        "F:\\rawrxd\\evidence\\AGENT_LEDGER_WIRE_001\\GAP_STATUS.json"
+      ]
+    },
+    {
+      "rank": 10,
+      "gap": "AgentSession/PersistentTaskBacklog not proven as IDE product ledger RUNTIME_REACHED",
+      "status": "CLOSED_SOURCE_AND_SMOKE_BEST_EFFORT",
+      "SOURCE_WIRED": true,
+      "RUNTIME_REACHED": true,
+      "RUNTIME_NOTE": "AgentCommands create/update/resume/cancel wired to PersistentTaskBacklog+AgentSession; smoke proves disk round-trip; full IDE exe agent-turn RUNTIME NOT_RUN",
+      "evidence": [
+        "F:\\rawrxd\\evidence\\AGENT_LEDGER_WIRE_001\\LEDGER_PROOF.txt",
+        "F:\\rawrxd\\evidence\\AGENT_LEDGER_WIRE_001\\GAP_STATUS.json"
+      ]
+    }
+  ],
+  "explicitly_not_owned": [
+    "PlanningLoop/Executor stub replacement beyond ledger API calls",
+    "Sandbox/ToolRegistry SSOT/BackendRouter",
+    "UI compile clusters"
+  ]
+}

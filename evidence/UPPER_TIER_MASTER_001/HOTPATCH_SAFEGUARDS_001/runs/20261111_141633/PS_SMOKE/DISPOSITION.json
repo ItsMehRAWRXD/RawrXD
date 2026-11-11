@@ -1,0 +1,32 @@
+{
+    "disposition_id":  "BATCH_17_PS_SMOKE_HARNESS",
+    "cite":  [
+                 "POWERSHELL_ROUTING_REPAIR_001",
+                 "Win32IDE_lifecycle.cpp WM_COMMAND 5610/5611/5612 before 7100"
+             ],
+    "acceptance":  [
+                       "5610_Execute",
+                       "5611_Clear",
+                       "5612_Stop",
+                       "legacy_7100_isolation"
+                   ],
+    "RUNTIME_SMOKE":  "HELD",
+    "CERTIFIED":  0,
+    "PROMOTE":  0,
+    "TIP_CLIMB":  "HOLD",
+    "laws":  {
+                 "SOURCE_PATCH_NE_RUNTIME_PASS":  true,
+                 "NOT_RUN_NE_PASS":  true,
+                 "EXE_ABSENT_NE_LAUNCH":  true
+             },
+    "updated_at":  "2026-11-11T19:18:15Z",
+    "EXE_ABSENT":  0,
+    "ExePath":  "F:\\rawrxd\\build_win32ide\\bin\\Release\\RawrXD-Win32IDE-Native.exe",
+    "5611":  "OBSERVED_SHRINK",
+    "5612":  "POSTED",
+    "SHA256":  "D1B17F66C5BD951BADD51FEE31326EAAE758B1E3F605E761AB4D82D255A32ABF",
+    "RESULT":  "RUNTIME_EXERCISED_UNPROMOTED",
+    "PRODUCT_PASS":  0,
+    "LAUNCH":  "ATTEMPTED",
+    "5610":  "OBSERVED_OUTPUT"
+}

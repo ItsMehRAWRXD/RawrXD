@@ -156,3 +156,191 @@ PROCESS_EXIT pid=38040 exit=0 disposition=success transport=1 stdout_bytes=0 std
 BUILD_RESULT=success
 PROCESS_EXIT pid=7300 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
 BUILD_RESULT=success
+PROCESS_EXIT pid=49444 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=70536 exit=1 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=100100 exit=1 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=177472 exit=1 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=121764 exit=1 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=131472 exit=1 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=118132 exit=1 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=112172 exit=1 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=102616 exit=1 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=65340 exit=1 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=85112 exit=1 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=8292 exit=1 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=46864 exit=1 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=184304 exit=1 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=102692 exit=1 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=57288 exit=1 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=51464 exit=1 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=131884 exit=1 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=120100 exit=1 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+STDOUT_LINE [RAWRXD_PROBLEMS_FIXTURE_START]
+PROCESS_EXIT pid=50672 exit=0 disposition=success transport=1 stdout_bytes=886 stderr_bytes=0
+BUILD_RESULT=success
+STDOUT_LINE broken_multi.cpp
+STDOUT_LINE broken_multi.cpp
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(3): error C2065: 'y': undeclared identifier
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp line=3 sev=0 msg=C2065: 'y': undeclared identifier
+PROBLEM_ADDED
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(3): error C2065: 'y': undeclared identifier
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp line=3 sev=0 msg=C2065: 'y': undeclared identifier
+PROBLEM_ADDED
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(4): error C2660: 'undeclared_fn': function does not take 2 arguments
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp line=4 sev=0 msg=C2660: 'undeclared_fn': function does not take 2 arguments
+PROBLEM_ADDED
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(1): note: see declaration of 'undeclared_fn'
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(4): note: while trying to match the argument list '(int, int)'
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(4): error C2660: 'undeclared_fn': function does not take 2 arguments
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp line=4 sev=0 msg=C2660: 'undeclared_fn': function does not take 2 arguments
+PROBLEM_ADDED
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(1): note: see declaration of 'undeclared_fn'
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(4): note: while trying to match the argument list '(int, int)'
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(5): error C2440: 'initializing': cannot convert from 'const char [5]' to 'float'
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp line=5 sev=0 msg=C2440: 'initializing': cannot convert from 'const char [5]' to 'float'
+PROBLEM_ADDED
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(5): note: There is no context in which this conversion is possible
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(5): error C2440: 'initializing': cannot convert from 'const char [5]' to 'float'
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp line=5 sev=0 msg=C2440: 'initializing': cannot convert from 'const char [5]' to 'float'
+PROBLEM_ADDED
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(5): note: There is no context in which this conversion is possible
+STDOUT_LINE [RAWRXD_PROBLEMS_FIXTURE_RESULT] DONE
+STDOUT_LINE [RAWRXD_PROBLEMS_FIXTURE_RESULT] DONE
+STDOUT_LINE [RAWRXD_PROBLEMS_FIXTURE_START]
+STDOUT_LINE broken_multi.cpp
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(3): error C2065: 'y': undeclared identifier
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp line=3 sev=0 msg=C2065: 'y': undeclared identifier
+PROBLEM_ADDED
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(4): error C2660: 'undeclared_fn': function does not take 2 arguments
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp line=4 sev=0 msg=C2660: 'undeclared_fn': function does not take 2 arguments
+PROBLEM_ADDED
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(1): note: see declaration of 'undeclared_fn'
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(4): note: while trying to match the argument list '(int, int)'
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(5): error C2440: 'initializing': cannot convert from 'const char [5]' to 'float'
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp line=5 sev=0 msg=C2440: 'initializing': cannot convert from 'const char [5]' to 'float'
+PROBLEM_ADDED
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(5): note: There is no context in which this conversion is possible
+STDOUT_LINE [RAWRXD_PROBLEMS_FIXTURE_RESULT] DONE
+PROCESS_EXIT pid=142940 exit=0 disposition=success transport=1 stdout_bytes=886 stderr_bytes=0
+BUILD_RESULT=success
+STDOUT_LINE [RAWRXD_PROBLEMS_FIXTURE_START]
+STDOUT_LINE broken_multi.cpp
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(3): error C2065: 'y': undeclared identifier
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp line=3 sev=0 msg=C2065: 'y': undeclared identifier
+PROBLEM_ADDED
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(4): error C2660: 'undeclared_fn': function does not take 2 arguments
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp line=4 sev=0 msg=C2660: 'undeclared_fn': function does not take 2 arguments
+PROBLEM_ADDED
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(1): note: see declaration of 'undeclared_fn'
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(4): note: while trying to match the argument list '(int, int)'
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(5): error C2440: 'initializing': cannot convert from 'const char [5]' to 'float'
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp line=5 sev=0 msg=C2440: 'initializing': cannot convert from 'const char [5]' to 'float'
+PROBLEM_ADDED
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(5): note: There is no context in which this conversion is possible
+STDOUT_LINE [RAWRXD_PROBLEMS_FIXTURE_RESULT] DONE
+PROCESS_EXIT pid=66224 exit=0 disposition=success transport=1 stdout_bytes=886 stderr_bytes=0
+BUILD_RESULT=success
+STDOUT_LINE [RAWRXD_PROBLEMS_FIXTURE_START]
+STDOUT_LINE broken_multi.cpp
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(3): error C2065: 'y': undeclared identifier
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp line=3 sev=0 msg=C2065: 'y': undeclared identifier
+PROBLEM_ADDED
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(4): error C2660: 'undeclared_fn': function does not take 2 arguments
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp line=4 sev=0 msg=C2660: 'undeclared_fn': function does not take 2 arguments
+PROBLEM_ADDED
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(1): note: see declaration of 'undeclared_fn'
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(4): note: while trying to match the argument list '(int, int)'
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(5): error C2440: 'initializing': cannot convert from 'const char [5]' to 'float'
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp line=5 sev=0 msg=C2440: 'initializing': cannot convert from 'const char [5]' to 'float'
+PROBLEM_ADDED
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(5): note: There is no context in which this conversion is possible
+STDOUT_LINE [RAWRXD_PROBLEMS_FIXTURE_RESULT] DONE
+PROCESS_EXIT pid=120768 exit=0 disposition=success transport=1 stdout_bytes=886 stderr_bytes=0
+BUILD_RESULT=success
+STDOUT_LINE [RAWRXD_PROBLEMS_FIXTURE_START]
+STDOUT_LINE broken_multi.cpp
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(3): error C2065: 'y': undeclared identifier
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp line=3 sev=0 msg=C2065: 'y': undeclared identifier
+PROBLEM_ADDED
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(4): error C2660: 'undeclared_fn': function does not take 2 arguments
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp line=4 sev=0 msg=C2660: 'undeclared_fn': function does not take 2 arguments
+PROBLEM_ADDED
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(1): note: see declaration of 'undeclared_fn'
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(4): note: while trying to match the argument list '(int, int)'
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(5): error C2440: 'initializing': cannot convert from 'const char [5]' to 'float'
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp line=5 sev=0 msg=C2440: 'initializing': cannot convert from 'const char [5]' to 'float'
+PROBLEM_ADDED
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(5): note: There is no context in which this conversion is possible
+STDOUT_LINE [RAWRXD_PROBLEMS_FIXTURE_RESULT] DONE
+PROCESS_EXIT pid=106844 exit=0 disposition=success transport=1 stdout_bytes=886 stderr_bytes=0
+BUILD_RESULT=success
+STDOUT_LINE [RAWRXD_PROBLEMS_FIXTURE_START]
+STDOUT_LINE broken_multi.cpp
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(3): error C2065: 'y': undeclared identifier
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp line=3 sev=0 msg=C2065: 'y': undeclared identifier
+PROBLEM_ADDED
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(4): error C2660: 'undeclared_fn': function does not take 2 arguments
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp line=4 sev=0 msg=C2660: 'undeclared_fn': function does not take 2 arguments
+PROBLEM_ADDED
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(1): note: see declaration of 'undeclared_fn'
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(4): note: while trying to match the argument list '(int, int)'
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(5): error C2440: 'initializing': cannot convert from 'const char [5]' to 'float'
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp line=5 sev=0 msg=C2440: 'initializing': cannot convert from 'const char [5]' to 'float'
+PROBLEM_ADDED
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(5): note: There is no context in which this conversion is possible
+STDOUT_LINE [RAWRXD_PROBLEMS_FIXTURE_RESULT] DONE
+PROCESS_EXIT pid=160620 exit=0 disposition=success transport=1 stdout_bytes=886 stderr_bytes=0
+BUILD_RESULT=success
+STDOUT_LINE [RAWRXD_PROBLEMS_FIXTURE_START]
+STDOUT_LINE broken_multi.cpp
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(3): error C2065: 'y': undeclared identifier
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp line=3 sev=0 msg=C2065: 'y': undeclared identifier
+PROBLEM_ADDED
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(4): error C2660: 'undeclared_fn': function does not take 2 arguments
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp line=4 sev=0 msg=C2660: 'undeclared_fn': function does not take 2 arguments
+PROBLEM_ADDED
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(1): note: see declaration of 'undeclared_fn'
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(4): note: while trying to match the argument list '(int, int)'
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(5): error C2440: 'initializing': cannot convert from 'const char [5]' to 'float'
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp line=5 sev=0 msg=C2440: 'initializing': cannot convert from 'const char [5]' to 'float'
+PROBLEM_ADDED
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(5): note: There is no context in which this conversion is possible
+STDOUT_LINE [RAWRXD_PROBLEMS_FIXTURE_RESULT] DONE
+PROCESS_EXIT pid=67076 exit=0 disposition=success transport=1 stdout_bytes=886 stderr_bytes=0
+BUILD_RESULT=success
+STDOUT_LINE [RAWRXD_PROBLEMS_FIXTURE_START]
+STDOUT_LINE broken_multi.cpp
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(3): error C2065: 'y': undeclared identifier
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp line=3 sev=0 msg=C2065: 'y': undeclared identifier
+PROBLEM_ADDED
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(4): error C2660: 'undeclared_fn': function does not take 2 arguments
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp line=4 sev=0 msg=C2660: 'undeclared_fn': function does not take 2 arguments
+PROBLEM_ADDED
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(1): note: see declaration of 'undeclared_fn'
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(4): note: while trying to match the argument list '(int, int)'
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(5): error C2440: 'initializing': cannot convert from 'const char [5]' to 'float'
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp line=5 sev=0 msg=C2440: 'initializing': cannot convert from 'const char [5]' to 'float'
+PROBLEM_ADDED
+STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cpp(5): note: There is no context in which this conversion is possible
+STDOUT_LINE [RAWRXD_PROBLEMS_FIXTURE_RESULT] DONE
+PROCESS_EXIT pid=135660 exit=0 disposition=success transport=1 stdout_bytes=886 stderr_bytes=0
+BUILD_RESULT=success

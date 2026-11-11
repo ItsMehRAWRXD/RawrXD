@@ -1,0 +1,4 @@
+=== N02 LINKAGE ===
+TLOG=F:\rawrxd\build\deep2_n02_numerical_correctness.dir\Release\deep2_n0.040B2DC3.tlog\link.read.1.tlog
+F:\RAWRXD\BUILD\RELEASE\DEEP2_ENGINE_LIB.LIB
+STATIC_LINK_TO_deep2_engine_lib=1

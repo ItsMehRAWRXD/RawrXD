@@ -675,6 +675,13 @@ namespace Deep2
         /// Direct KV access for parity capture (per-layer K/V snapshots).
         Deep2::KVCache *getKVCache() const { return kvCache.get(); }
 
+        /// Last-layer hidden-state buffer (diagnostics, parity, tree search).
+        /// The buffer holds one hidden state per processed position.
+        const float *getHiddenStates() const { return hiddenStates; }
+
+        /// Human-readable KV geometry receipt for certification tests/CLI.
+        std::string kvGeometryReceipt() const;
+
         /// Reset KV + hidden state without unloading weights (parity runs need
         /// this between the serial and batched legs).
         void resetInferenceState();

@@ -1,0 +1,75 @@
+{
+  "evidence_id": "AGENT_RUNTIME_WIRE_001",
+  "authority": "F:\\rawrxd",
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "laws": {
+    "SOURCE_WIRED_NE_RUNTIME_REACHED": true,
+    "NOT_RUN_NE_PASS": true
+  },
+  "gaps": {
+    "1_PlanningLoop_AF02": {
+      "capability": "PlanningLoop",
+      "SOURCE_WIRED": true,
+      "RUNTIME_REACHED": false,
+      "proof_paths": [
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AutonomousLoop.cpp",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AutonomousLoop.h",
+        "F:\\rawrxd\\CMakeLists.txt (Win32IDE_AutonomousLoop.cpp in RawrXD-Win32IDE-Native sources)",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgentExecutor.cpp (taskName plan|autonomous -> AutonomousLoop::run)"
+      ],
+      "notes": "AutonomousLoop.cpp implemented as Win32IDE AF02 SSOT. PlanExecutor intentionally NOT CMake-included (polluted includes / missing AgenticAutonomousLoop.h). RUNTIME_REACHED not claimed — no live agent E2E executed this turn."
+    },
+    "2_AgentExecutor_stub": {
+      "capability": "AgentExecutor",
+      "SOURCE_WIRED": true,
+      "RUNTIME_REACHED": false,
+      "proof_paths": [
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgentExecutor.cpp",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgentExecutor.h",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgentCommands.cpp (m_agentExecutor Bind/Initialize on LoopBridge adopt)"
+      ],
+      "notes": "ExecuteAgentTask no longer always returns true. Dispatches ask/command/loop/plan/autonomous/tool via AgenticBridge + AutonomousLoop; unknown task returns false. RUNTIME_REACHED false — not exercised under live IDE process this turn."
+    },
+    "6_StateMachine_SSOT": {
+      "capability": "StateMachine",
+      "SOURCE_WIRED": true,
+      "RUNTIME_REACHED": false,
+      "proof_paths": [
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgentExecutionFSM.h",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgentExecutionFSM.cpp",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgenticBridge.cpp (StartAutonomousTask/Cancel FSM transitions)",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AutonomousLoop.cpp (Pending/Running/Waiting/Done/Error)",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgentExecutor.cpp (executor FSM transitions)",
+        "F:\\rawrxd\\evidence\\AGENT_RUNTIME_WIRE_001\\obj\\Win32IDE_AgentExecutionFSM.obj"
+      ],
+      "notes": "ProductAgentFSM() is the SSOT transition table (pending/running/waiting/done/error). UI AgentStepTimeline remains observer-only. FSM TU compiled to obj. RUNTIME_REACHED false — no live turn observed through FSM."
+    },
+    "8_Bridge_single_owner": {
+      "capability": "AgenticBridge",
+      "SOURCE_WIRED": true,
+      "RUNTIME_REACHED": false,
+      "proof_paths": [
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgenticBridge.h (owns m_loopTransport)",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgenticBridge.cpp (EnsureLoopTransport/StartAutonomousTask)",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE.h (m_agenticLoopBridge non-owning observer)",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgentCommands.cpp (initializeAgenticLoopBridge adopts via facade; StartAutonomousTask)"
+      ],
+      "notes": "AgenticBridge is sole owner of AgenticLoopBridge process transport. IDE holds non-owning observer pointer. Dual silent drivers collapsed at construction/start/cancel. RUNTIME_REACHED false."
+    }
+  },
+  "do_not_touch_respected": [
+    "ExtensionSandboxManager / ConsentPrompt",
+    "ToolRegistry SSOT merge internals",
+    "AgentHistory file restore",
+    "Breadcrumbs/MultiCursor/CommandPalette/RenamePreview/Minimap compile clusters"
+  ],
+  "closed_count_source_wired": 4,
+  "closed_count_runtime_reached": 0,
+  "remaining_blockers": [
+    "Full RawrXD-Win32IDE-Native link not completed this turn (include-graph / other-worker TU clusters)",
+    "RUNTIME_REACHED requires live agent turn through facade+FSM+AutonomousLoop or LoopBridge transport",
+    "PlanExecutor remains out of product CMake (not SSOT; polluted includes)"
+  ]
+}

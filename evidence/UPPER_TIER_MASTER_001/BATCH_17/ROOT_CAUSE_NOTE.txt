@@ -1,0 +1,12 @@
+ASOF=2026-11-11T17:37:00Z
+FOR=63513ece sole builder
+PARENT_INTERRUPT_POLICY=STOP — do not interrupt mid-edit; rebuild_b17_02.log may be stale vs tip sources
+CERTIFIED=0 PROMOTE=0 EXE=ABSENT
+
+CONFIRMED ON TIP:
+- Win32IDE.h has OutputSeverity, appendToOutput, m_settings, loadSettings/saveSettings, m_themes, m_currentTheme, m_annotationOverlay, m_hwndProblemsPanel
+- Win32IDE_Settings.cpp tip no longer has illegal out-of-line m_settings def (log C2761 may be stale)
+- m_appearance is USED in Settings.cpp + Themes.cpp but NOT found as a Win32IDE.h member — ADD AppearanceSettings (or similar) struct + m_appearance member fields matching cpp usage:
+  themeName, uiScale, fontFamily, editorFontSizePt, ligatures, tabSize, insertSpaces
+
+CONTINUE: finish header decls you were applying, then FULL rebuild to new log (rebuild_b17_03), then link+SHA+PS smoke.

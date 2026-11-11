@@ -16,6 +16,18 @@ void CliTrace(const char* stage) noexcept {
         std::fflush(stderr);
     }
 }
+void LogRouterSelection(BackendKind kind, BackendMode mode, const char* stage) noexcept {
+    const char* dir = std::getenv("RAWRXD_LOG_DIR");
+    const std::string path = (dir && *dir)
+        ? std::string(dir) + "\\chat_runtime.log"
+        : std::string("chat_runtime.log");
+    if (FILE* f = std::fopen(path.c_str(), "a")) {
+        std::fprintf(f,
+            "BACKEND_ROUTER_SELECTED kind=%s mode=%s stage=%s\n",
+            BackendName(kind), BackendModeName(mode), stage ? stage : "");
+        std::fclose(f);
+    }
+}
 }
 
 BackendRouter::BackendRouter() = default;
@@ -302,6 +314,7 @@ InferenceResult BackendRouter::ChatSync(
 
     RouteToBackend(selected, backend->GetConfig().model);
     CliTrace(selected == BackendKind::Ollama ? "ChatSync:ollama" : "ChatSync:deep2");
+    LogRouterSelection(selected, m_mode.load(), "ChatSync");
     InferenceResult result = backend->ChatSync(messages, tools);
     CliTrace("ChatSync:return");
     return result;

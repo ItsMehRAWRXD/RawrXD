@@ -154,15 +154,17 @@ inline void write_atomic(const fs::path& p,const std::string& content){
 // Cursor-parity aliases: models / prompts that emit Cursor tool names
 // resolve to the same native handlers (fail-closed if unregistered).
 inline const char* canonicalize_tool_name(const std::string& name){
+  // Cursor + AgentToolRegistry + rawr_core aliases → workspace SSOT names.
   if(name=="Read"||name=="read_file") return "readFile";
-  if(name=="Grep"||name=="grep"||name=="search_text") return "textSearch";
+  if(name=="Grep"||name=="grep"||name=="search_text"||name=="search_code") return "textSearch";
   if(name=="Glob"||name=="glob"||name=="find_files") return "fileSearch";
-  if(name=="StrReplace"||name=="str_replace"||name=="search_replace") return "editFiles";
+  if(name=="StrReplace"||name=="str_replace"||name=="search_replace"||name=="replace_in_file") return "editFiles";
   if(name=="Write"||name=="write_file") return "writeFile";
   if(name=="Delete"||name=="delete_file") return "deleteFile";
-  if(name=="Shell"||name=="run_terminal_cmd"||name=="bash") return "runInTerminal";
-  if(name=="LSDir"||name=="list_dir") return "listDirectory";
-  return nullptr; // keep original
+  if(name=="Shell"||name=="run_terminal_cmd"||name=="bash"||name=="execute_command"||name=="run_command") return "runInTerminal";
+  if(name=="LSDir"||name=="list_dir"||name=="list_directory") return "listDirectory";
+  if(name=="create_file") return "createFile";
+  return nullptr; // keep original (already canonical or unknown)
 }
 
 inline void register_workspace_tools(Registry& reg,fs::path root){

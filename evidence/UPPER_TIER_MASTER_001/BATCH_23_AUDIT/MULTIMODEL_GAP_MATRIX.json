@@ -1,0 +1,264 @@
+{
+  "audit_id": "UPPER_TIER_MASTER_001/BATCH_23_AUDIT/MULTIMODEL_GAP_MATRIX",
+  "asof_utc": "2026-11-11T17:40:00Z",
+  "scope": "READ_ONLY inventory of multi-model routing, capability registry, concurrency, context, fallback for Upper-Tier Batch 23 prep",
+  "primary_tree": "F:\\rawrxd",
+  "cross_check_tree": "G:\\~dev\\rawrxd",
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "UPPER_TIER": 0,
+  "native_rebuild": "NOT_PERFORMED",
+  "win32ide_edits": "NONE",
+  "estimates_unchanged": true,
+  "tracker_estimates_cited": {
+    "engineering_completeness_pct": 82,
+    "release_readiness_pct": 58,
+    "ai_ide_parity_pct": 69,
+    "traditional_ide_parity_pct": 63
+  },
+  "law": {
+    "SOURCE_WIRED_NEQ_RUNTIME_REACHED": true,
+    "NOT_RUN_NEQ_PASS": true,
+    "NO_INVENT_PASS": true,
+    "candidate_matrix_neq_tip_promote": true,
+    "SAFEGUARD_HARNESS_PASS_NEQ_ROUTING_E2E": true
+  },
+  "controlling_blocker": {
+    "id": "HOTPATCH_SAFEGUARDS_001",
+    "ROUTING_E2E": "NOT_CERTIFIED",
+    "BLOCKED_ON_BATCH17_EXE": 1,
+    "REBUILD": "FAIL",
+    "SAFEGUARD_HARNESS": "PASS (unit/smoke only)",
+    "path": "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\HOTPATCH_SAFEGUARDS_001",
+    "controlling_run": "runs/20261111_122954",
+    "note": "Harness PASS (launcher hash, validator rejects, GhostText request-id uniqueness smoke, model-select/cancel smoke, log redact) is NOT product ROUTING_E2E. ROUTING_E2E remains NOT_CERTIFIED until Batch 17 produces a new IDE EXE SHA with correlated Ollama identity evidence."
+  },
+  "tree_delta": {
+    "F_Win32IDE_routing_epoch_hotpatch": false,
+    "G_Win32IDE_routing_epoch_hotpatch": true,
+    "F_symbols_absent": [
+      "Win32IDE::setOllamaModelOverride",
+      "Win32IDE::invalidateGhostTextRequests",
+      "m_ghostTextRoutingEpoch",
+      "m_ghostTextNextRequestId"
+    ],
+    "G_symbols_present": [
+      "G:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_GhostText.cpp (setOllamaModelOverride bumps epoch + invalidate)",
+      "G:\\~dev\\rawrxd\\src\\win32app\\Win32IDE.h (m_ghostTextRoutingEpoch / m_ghostTextNextRequestId)",
+      "G:\\~dev\\rawrxd\\src\\win32app\\Win32IDE.cpp onModelSelectionChanged -> setOllamaModelOverride"
+    ],
+    "F_GhostText_controller_generation_fence": true,
+    "note": "HOTPATCH_SAFEGUARDS_001 RECEIPT cites Win32IDE routing-epoch wires; those symbols are SOURCE_WIRED on G cross-check, not found on F authority win32app this audit. F retains NativeGhostTextController generation/request_id fencing only."
+  },
+  "provider_paths": {
+    "GhostText": [
+      "F:\\rawrxd\\src\\win32app\\Win32IDE_GhostText.cpp",
+      "F:\\rawrxd\\src\\win32app\\Win32IDE_GhostText.h",
+      "F:\\rawrxd\\src\\win32app\\Win32IDE_GhostTextIntegration.cpp"
+    ],
+    "Ollama": [
+      "F:\\rawrxd\\src\\backend\\ollama_client.cpp",
+      "F:\\rawrxd\\src\\backend\\ollama_client.h",
+      "F:\\rawrxd\\src\\win32app\\Win32IDE_OllamaClient.h",
+      "F:\\rawrxd\\src\\win32app\\Win32IDE_ChatPanel_Ollama.cpp",
+      "F:\\rawrxd\\src\\agentic\\OllamaBackend (via BackendRouter)",
+      "F:\\rawrxd\\src\\deep2\\aggregate_decode\\AggregateDecodeOllamaBackend.cpp"
+    ],
+    "GGUF": [
+      "F:\\rawrxd\\src\\win32app\\Win32IDE_GGUF_Reader.cpp",
+      "F:\\rawrxd\\src\\win32app\\Win32IDE_GGUFInspector.cpp",
+      "F:\\rawrxd\\src\\win32app\\gguf_loader.h",
+      "F:\\rawrxd\\src\\streaming_gguf_loader.cpp",
+      "ChatModelEntry::Source::LocalFile (native GGUF catalog row)"
+    ],
+    "Deep2": [
+      "F:\\rawrxd\\src\\win32app\\Win32IDE_Deep2Bridge.cpp",
+      "F:\\rawrxd\\src\\win32app\\Win32IDE_Deep2Bridge.h",
+      "F:\\rawrxd\\src\\deep2\\Deep2Engine.cpp",
+      "F:\\rawrxd\\src\\Deep2Engine.h",
+      "F:\\rawrxd\\src\\agentic\\Deep2Backend (via BackendRouter)",
+      "F:\\rawrxd\\src\\deep2\\aggregate_decode\\AggregateDecodeDeep2Backend.cpp"
+    ]
+  },
+  "capabilities": [
+    {
+      "capability": "multimodel_catalog_and_selection",
+      "path": "F:\\rawrxd\\src\\win32app\\Win32IDE.h (ChatModelEntry/ModelDiscoveryPayload); Win32IDE_ModelDiscovery.cpp; Win32IDE.cpp model combo / onModelSelectionChanged",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "ChatModelEntry carries Source{LocalFile,Ollama,KiloFree} + breadcrumb/identifier only — not a full capability registry (no tools/ctx/vision/FIM/agent caps per model).",
+        "ModelDiscoveryPayload fences catalog updates by generationID and merges Ollama-first then GGUF — SOURCE_WIRED.",
+        "F lacks Win32IDE routing-epoch invalidation on model select (present on G hotpatch). Model switch stale-request fencing at IDE level is therefore TREE_DELTA incomplete on F.",
+        "Product multi-model switch E2E NOT_RUN this audit; ROUTING_E2E=NOT_CERTIFIED blocked on Batch17 exe (HOTPATCH_SAFEGUARDS_001).",
+        "Prior sealed receipts (RAWRXD_ROUTING_HOTPATCH_001) mark agent_model_routing/ghosttext_routing UNVERIFIED for historical EXE SHA only — cannot certify newer source."
+      ]
+    },
+    {
+      "capability": "capability_registry",
+      "path": "F:\\rawrxd\\src\\universal_model_router.cpp (model_registry); Win32IDE_ModelManager.*; AGENT_ARCH_AUDIT_001/CAPABILITY_MATRIX.json; no ModelCapabilityRegistry found",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "No dedicated product ModelCapabilityRegistry (tools/context/modality/provider SLA) wired into Win32IDE tip path.",
+        "UniversalModelRouter.registerModel is a thin ModelConfig map (local/cloud/OpenRouter env) — parallel surface, not IDE SSOT.",
+        "ModelManager::Instance is Load/Unload/List/SetActive only — no capability metadata.",
+        "AGENT_ARCH CAPABILITY_MATRIX inventories agent tool/AF claims, not per-model inference capability routing.",
+        "runtime_reached=0 — registry completeness NOT measured on tip EXE (native_exe ABSENT)."
+      ]
+    },
+    {
+      "capability": "ghosttext_provider_routing",
+      "path": "F:\\rawrxd\\src\\win32app\\Win32IDE_GhostTextIntegration.cpp; Win32IDE_GhostText.cpp",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "FollowChat / Independent / AutoLocal modes SOURCE_WIRED.",
+        "AutoLocal: if chat is Ollama → use selected chat model; if chat is native GGUF or cloud → first available Ollama row (never invent ID).",
+        "Cloud GhostText (KiloFree) requires m_allowCloudGhostText session consent else CLOUD_CONSENT_REQUIRED reject.",
+        "Ollama GhostText uses Backend::OllamaClient + num_ctx from m_currentContextTokens; non-Ollama shares generateResponseAsync chat lane.",
+        "Multiple NativeGhostTextController instances per input surface (editor + chat/PS/command/search/SCM/debugger/ext/find/replace).",
+        "Controller generation/request_id STALE disposition SOURCE_WIRED on F; IDE-level routingEpoch hotpatch absent on F (G has it).",
+        "F_GHOSTTEXT_CANCEL_ROUTING_CLOSURE_001: CANCELLATION=FAIL; STALE_FENCING=NOT_VERIFIED; MODEL_ROUTING=BINARY_UNVERIFIED; PROMOTE=0 — cited, not re-run.",
+        "This audit NOT_RUN GhostText product E2E → runtime_reached=0."
+      ]
+    },
+    {
+      "capability": "ollama_provider_path",
+      "path": "F:\\rawrxd\\src\\backend\\ollama_client.*; Win32IDE_ChatPanel_Ollama.cpp; agentic BackendRouter OllamaBackend; AggregateDecodeOllamaBackend",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "WinHTTP Ollama client supports generate/chat + options map (num_ctx etc.) — SOURCE_WIRED.",
+        "BackendRouter fallback_endpoint default http://127.0.0.1:11434; Deep2 primary 11436.",
+        "Historical CLI/GUI Ollama route receipts exist under IDE_REPAIR_CANDIDATE / POST_E59D — candidate/historical only; tip Batch17 EXE ABSENT.",
+        "AggregateDecode OllamaHttp backend is decode/perf surface, not tip IDE routing cert.",
+        "This audit did not hit live Ollama against a Batch17 SHA (NOT_RUN)."
+      ]
+    },
+    {
+      "capability": "gguf_native_provider_path",
+      "path": "F:\\rawrxd\\src\\win32app\\Win32IDE_GGUF_*; gguf_loader.h; streaming_gguf_loader.*; ChatModelEntry::LocalFile",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "GGUF discovery/read/inspect surfaces present on F.",
+        "GhostText AutoLocal does NOT drive GhostText through native GGUF when chat is LocalFile — falls to first Ollama (explicit policy).",
+        "Native GGUF chat/completion path shares generateResponseAsync; concurrency with GhostText Ollama on shared resources not E2E-proven.",
+        "No tip EXE load+token E2E this audit (NOT_RUN)."
+      ]
+    },
+    {
+      "capability": "deep2_provider_path",
+      "path": "F:\\rawrxd\\src\\win32app\\Win32IDE_Deep2Bridge.*; deep2\\Deep2Engine*; agentic Deep2Backend; AggregateDecodeDeep2Backend",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "Deep2Bridge API (Initialize/LoadModel/GenerateStream/Cancel) SOURCE_WIRED; inspected Deep2Bridge.cpp logs CPU fallback mode when Deep2Engine not linked.",
+        "BackendRouter Auto: Deep2 first, Ollama fallback on health fail; Deep2-only mode = explicit failure (no silent fallback).",
+        "allow_cloud_fallback=false by RouterConfig law — no paid cloud failover.",
+        "Deep2 product path ≠ AggregateDecode benchmark path; scoreboard/promote gates remain PROMOTE=0 elsewhere.",
+        "Product Deep2↔Ollama failover E2E on tip EXE NOT_RUN / blocked by Batch17."
+      ]
+    },
+    {
+      "capability": "backend_router_fallback_policy",
+      "path": "F:\\rawrxd\\src\\agentic\\BackendRouter.h; BackendRouter.cpp",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "Modes: Auto / Deep2 / Ollama / Manual — documented + implemented SelectBackendForRequest.",
+        "Failover rules: start-failure may retry once on backup with full context; mid-stream failure STOP — NEVER splice two models.",
+        "Tool side-effects not replayed by router after failover (agent layer owns retry).",
+        "AgenticBridge StartAgentLoop historically ChatViaBackendRouter(initialPrompt) only — not a multi-provider agent tool loop acceptance.",
+        "Router product runtime on tip Native IDE NOT_RUN (exe ABSENT)."
+      ]
+    },
+    {
+      "capability": "concurrency_and_inflight_fencing",
+      "path": "GhostText multi-controller; HOTPATCH smoke 8x256 IDs; AggregateDecode concurrent flag; m_activeInferenceGeneration",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "Multiple GhostText controllers intentionally isolate per HWND surface — SOURCE_WIRED design.",
+        "Shared Ollama server means concurrent GhostText+chat+agent can contend; no product concurrency suite PASS on tip.",
+        "HOTPATCH_SAFEGUARDS smoke proves unique request_id under concurrent allocations in harness EXE only — not IDE process ROUTING_E2E.",
+        "G routingEpoch drops stale after model-select; F missing that IDE wire this audit.",
+        "AggregateDecode AggregateResult.concurrent is decode harness metrics — not IDE multimodel cert.",
+        "runtime_reached=0 for tip concurrent multimodel (NOT_RUN)."
+      ]
+    },
+    {
+      "capability": "context_window_and_budget",
+      "path": "Win32IDE_GhostTextIntegration (m_currentContextTokens -> num_ctx); Deep2Bridge context default; OllamaGenerateRequest.options",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "GhostText Ollama path sets request.options[num_ctx] from m_currentContextTokens — SOURCE_WIRED.",
+        "Reasoning mode UI policies reserve generation budget client-side (Instant disables reasoning) — policy not E2E-certified.",
+        "Deep2Bridge reports default context fallback 8192 when CPU fallback / unloaded — invent-thin default ≠ measured model n_ctx.",
+        "No per-model capability registry field for context_length driving router selection.",
+        "Cross-provider context continuity on failover (Deep2→Ollama full history) claimed in RouterConfig.retry_from_complete_context — tip NOT_RUN."
+      ]
+    },
+    {
+      "capability": "routing_e2e_certification_gate",
+      "path": "UPPER_TIER_MASTER_001/HOTPATCH_SAFEGUARDS_001; RAWRXD_ROUTING_HOTPATCH_001; TRACKER.json native_exe=ABSENT",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "ROUTING_E2E=NOT_CERTIFIED; BLOCKED_ON_BATCH17_EXE=1 — controlling law for Batch 23.",
+        "SAFEGUARD_HARNESS PASS != ROUTING_E2E PASS.",
+        "PREVIOUS_CANDIDATE_CANNOT_CERTIFY_NEWER_SOURCE documented — historical launch receipts not transferable.",
+        "TRACKER estimates frozen until new runtime acceptance; this audit does not change them.",
+        "This audit: NOT_RUN all product routing cells; CERTIFIED=0; PROMOTE=0."
+      ]
+    }
+  ],
+  "prior_runtime_authority_not_revalidated_this_audit": [
+    {
+      "id": "HOTPATCH_SAFEGUARDS_001",
+      "disposition": "HARNESS_PASS_SMOKE; ROUTING_E2E=NOT_CERTIFIED; BLOCKED_ON_BATCH17_EXE=1",
+      "path": "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\HOTPATCH_SAFEGUARDS_001"
+    },
+    {
+      "id": "RAWRXD_ROUTING_HOTPATCH_001",
+      "disposition": "historical launch receipts; agent_model_routing/ghosttext_routing UNVERIFIED; PROMOTE=0",
+      "path": "F:\\rawrxd\\evidence\\RAWRXD_ROUTING_HOTPATCH_001",
+      "this_audit": "NOT_RUN — cited only; previous candidate cannot certify newer source"
+    },
+    {
+      "id": "F_GHOSTTEXT_CANCEL_ROUTING_CLOSURE_001",
+      "disposition": "CANCELLATION=FAIL; STALE_FENCING=NOT_VERIFIED; MODEL_ROUTING=BINARY_UNVERIFIED; PROMOTE=0",
+      "path": "F:\\rawrxd\\evidence\\F_GHOSTTEXT_CANCEL_ROUTING_CLOSURE_001\\FINAL_VERDICT.md"
+    },
+    {
+      "id": "POST_E59D_CANDIDATE_001/MODEL_ROUTE",
+      "disposition": "candidate model-route harness artifacts — not tip Batch17 SHA cert",
+      "path": "F:\\rawrxd\\evidence\\POST_E59D_CANDIDATE_001\\MODEL_ROUTE"
+    }
+  ],
+  "summary_counts": {
+    "capabilities_inventoried": 10,
+    "source_wired_1": 10,
+    "runtime_reached_1": 0,
+    "runtime_reached_0": 10,
+    "CERTIFIED": 0,
+    "PROMOTE": 0
+  },
+  "batch_23_prep_blockers": [
+    "ROUTING_E2E=NOT_CERTIFIED blocked on Batch17 native EXE (HOTPATCH_SAFEGUARDS_001).",
+    "F authority missing G hotpatch IDE routing-epoch / setOllamaModelOverride symbols — absorb/port gap before F tip can claim same fencing.",
+    "No product ModelCapabilityRegistry; ChatModelEntry is identity-only.",
+    "GhostText AutoLocal never routes completions through native GGUF — Ollama-first policy when chat is LocalFile/cloud.",
+    "All product multimodel/concurrency/context/fallback cells this audit: NOT_RUN (NOT_RUN != PASS)."
+  ],
+  "next_executable_gates_not_run": [
+    "Batch17 clean native rebuild → new EXE SHA",
+    "Hash-locked launch + full routing evidence matrix (GhostText + chat + agent model select) with Ollama identity bind",
+    "Decide F absorb of G routing-epoch hotpatch vs G-authority product path",
+    "Define/implement ModelCapabilityRegistry or explicitly HOLD as OPEN gap",
+    "Re-run cancel/stale A/B + Deep2→Ollama failover suite on new SHA with PROMOTE=0"
+  ]
+}

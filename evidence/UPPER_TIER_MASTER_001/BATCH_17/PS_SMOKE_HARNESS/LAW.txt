@@ -1,0 +1,33 @@
+BATCH_17_PS_SMOKE_HARNESS LAW
+ASOF_UTC=2026-11-11
+
+AUTHORITY
+  POWERSHELL_ROUTING_REPAIR_001\DISPOSITION.json
+  Win32IDE_lifecycle.cpp — WM_COMMAND 5610/5611/5612 before legacy 7100 decoder
+  UPPER_TIER_MASTER_001\BATCH_18_AUDIT\GUI_INTERACTIVE_GAP_MATRIX.md gate P06
+
+CONTROLS
+  5610 = IDC_PS_BTN_EXECUTE -> executePowerShellInput
+  5611 = IDC_PS_BTN_CLEAR   -> clearPowerShellConsole
+  5612 = IDC_PS_BTN_STOP    -> stopPowerShellExecution
+
+SEALS (prep)
+  CERTIFIED=0
+  PROMOTE=0
+  TIP_CLIMB=HOLD
+  RUNTIME_SMOKE=HELD
+
+LAWS
+  SOURCE_PATCH != RUNTIME_PASS
+  NOT_RUN != PASS
+  EXE_ABSENT => LAUNCH=SKIPPED (do not start IDE)
+  Prior ONESHOT PS receipts != Batch-17 tip SHA acceptance
+
+USAGE
+  Fail-closed probe (no launch if missing):
+    powershell -NoProfile -File Invoke-PsExecuteClearStopSmoke.ps1 -ExePath <path>
+  Real tip smoke (only after Batch-17 exe exists):
+    powershell -NoProfile -File Invoke-PsExecuteClearStopSmoke.ps1 -ExePath <tip.exe> -AllowLaunch
+
+DEFAULT_EXE
+  F:\rawrxd\build_win32ide\Release\RawrXD-Win32IDE-Native.exe

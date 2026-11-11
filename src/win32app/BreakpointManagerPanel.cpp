@@ -96,45 +96,39 @@ bool BreakpointManagerPanel::Create(HWND hwndParent, HINSTANCE hInstance, int x,
     ListView_SetExtendedListViewStyle(m_hwndListView,
         LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_DOUBLEBUFFER);
 
-    // Setup columns
-    LVCOLUMN lvc = {};
+    // Setup columns (explicit wide APIs — project default is ANSI)
+    LVCOLUMNW lvc = {};
     lvc.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
 
-    // Enabled column (checkbox)
     lvc.iSubItem = COL_ENABLED;
     lvc.pszText = (LPWSTR)L"";
     lvc.cx = 30;
-    ListView_InsertColumn(m_hwndListView, COL_ENABLED, &lvc);
+    SendMessageW(m_hwndListView, LVM_INSERTCOLUMNW, COL_ENABLED, (LPARAM)&lvc);
 
-    // File column
     lvc.iSubItem = COL_FILE;
     lvc.pszText = (LPWSTR)L"File";
     lvc.cx = 200;
-    ListView_InsertColumn(m_hwndListView, COL_FILE, &lvc);
+    SendMessageW(m_hwndListView, LVM_INSERTCOLUMNW, COL_FILE, (LPARAM)&lvc);
 
-    // Line column
     lvc.iSubItem = COL_LINE;
     lvc.pszText = (LPWSTR)L"Line";
     lvc.cx = 50;
-    ListView_InsertColumn(m_hwndListView, COL_LINE, &lvc);
+    SendMessageW(m_hwndListView, LVM_INSERTCOLUMNW, COL_LINE, (LPARAM)&lvc);
 
-    // Condition column
     lvc.iSubItem = COL_CONDITION;
     lvc.pszText = (LPWSTR)L"Condition";
     lvc.cx = 150;
-    ListView_InsertColumn(m_hwndListView, COL_CONDITION, &lvc);
+    SendMessageW(m_hwndListView, LVM_INSERTCOLUMNW, COL_CONDITION, (LPARAM)&lvc);
 
-    // Hit count column
     lvc.iSubItem = COL_HITCOUNT;
     lvc.pszText = (LPWSTR)L"Hits";
     lvc.cx = 50;
-    ListView_InsertColumn(m_hwndListView, COL_HITCOUNT, &lvc);
+    SendMessageW(m_hwndListView, LVM_INSERTCOLUMNW, COL_HITCOUNT, (LPARAM)&lvc);
 
-    // Address column
     lvc.iSubItem = COL_ADDRESS;
     lvc.pszText = (LPWSTR)L"Address";
     lvc.cx = 100;
-    ListView_InsertColumn(m_hwndListView, COL_ADDRESS, &lvc);
+    SendMessageW(m_hwndListView, LVM_INSERTCOLUMNW, COL_ADDRESS, (LPARAM)&lvc);
 
     return true;
 }
@@ -293,7 +287,7 @@ void BreakpointManagerPanel::SetBreakpoints(const std::vector<BreakpointInfo>& b
 //=============================================================================
 
 int BreakpointManagerPanel::AddListViewItem(const BreakpointInfo& bp) {
-    LVITEM lvi = {};
+    LVITEMW lvi = {};
     lvi.mask = LVIF_TEXT | LVIF_PARAM;
     lvi.iItem = ListView_GetItemCount(m_hwndListView);
     lvi.lParam = bp.id;
@@ -302,7 +296,7 @@ int BreakpointManagerPanel::AddListViewItem(const BreakpointInfo& bp) {
     static std::wstring s_enabledText;
     s_enabledText = bp.enabled ? L"\u2611" : L"\u2610";
     lvi.pszText = const_cast<LPWSTR>(s_enabledText.c_str());
-    int index = ListView_InsertItem(m_hwndListView, &lvi);
+    int index = (int)SendMessageW(m_hwndListView, LVM_INSERTITEMW, 0, (LPARAM)&lvi);
 
     if (index >= 0) {
         UpdateListViewItem(index, bp);
@@ -312,42 +306,49 @@ int BreakpointManagerPanel::AddListViewItem(const BreakpointInfo& bp) {
 }
 
 void BreakpointManagerPanel::UpdateListViewItem(int index, const BreakpointInfo& bp) {
+    auto setSubItemTextW = [this](int item, int subItem, LPWSTR text) {
+        LVITEMW lvi = {};
+        lvi.iSubItem = subItem;
+        lvi.pszText = text;
+        SendMessageW(m_hwndListView, LVM_SETITEMTEXTW, (WPARAM)item, (LPARAM)&lvi);
+    };
+
     // Enabled
     std::wstring enabledText = bp.enabled ? L"\u2611" : L"\u2610";
-    ListView_SetItemText(m_hwndListView, index, COL_ENABLED, const_cast<LPWSTR>(enabledText.c_str()));
+    setSubItemTextW(index, COL_ENABLED, const_cast<LPWSTR>(enabledText.c_str()));
 
     // File
-    ListView_SetItemText(m_hwndListView, index, COL_FILE, const_cast<LPWSTR>(bp.fileName.c_str()));
+    setSubItemTextW(index, COL_FILE, const_cast<LPWSTR>(bp.fileName.c_str()));
 
     // Line
     wchar_t lineText[32];
     swprintf_s(lineText, L"%d", bp.line);
-    ListView_SetItemText(m_hwndListView, index, COL_LINE, lineText);
+    setSubItemTextW(index, COL_LINE, lineText);
 
     // Condition
     std::wstring conditionWide(bp.condition.begin(), bp.condition.end());
-    ListView_SetItemText(m_hwndListView, index, COL_CONDITION, const_cast<LPWSTR>(conditionWide.c_str()));
+    setSubItemTextW(index, COL_CONDITION, const_cast<LPWSTR>(conditionWide.c_str()));
 
     // Hit count
     wchar_t hitText[32];
     swprintf_s(hitText, L"%d", bp.hitCount);
-    ListView_SetItemText(m_hwndListView, index, COL_HITCOUNT, hitText);
+    setSubItemTextW(index, COL_HITCOUNT, hitText);
 
     // Address
     if (bp.address != 0) {
         wchar_t addrText[32];
         swprintf_s(addrText, L"0x%016llX", bp.address);
-        ListView_SetItemText(m_hwndListView, index, COL_ADDRESS, addrText);
+        setSubItemTextW(index, COL_ADDRESS, addrText);
     } else {
-        ListView_SetItemText(m_hwndListView, index, COL_ADDRESS, (LPWSTR)L"");
+        setSubItemTextW(index, COL_ADDRESS, const_cast<LPWSTR>(L""));
     }
 
     // Update lParam
-    LVITEM lvi = {};
+    LVITEMW lvi = {};
     lvi.mask = LVIF_PARAM;
     lvi.iItem = index;
     lvi.lParam = bp.id;
-    ListView_SetItem(m_hwndListView, &lvi);
+    SendMessageW(m_hwndListView, LVM_SETITEMW, 0, (LPARAM)&lvi);
 }
 
 int BreakpointManagerPanel::FindBreakpointIndex(int breakpointId) const {
@@ -421,18 +422,18 @@ void BreakpointManagerPanel::ShowContextMenu(int itemIndex, POINT pt) {
         const auto& bp = m_breakpoints[itemIndex];
 
         // Enable/Disable
-        AppendMenu(hMenu, MF_STRING, 1, bp.enabled ? L"&Disable" : L"&Enable");
-        AppendMenu(hMenu, MF_STRING, 2, L"&Delete");
-        AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
-        AppendMenu(hMenu, MF_STRING, 3, L"&Edit Condition...");
-        AppendMenu(hMenu, MF_STRING, 4, L"&Go to Source");
-        AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
+        AppendMenuW(hMenu, MF_STRING, 1, bp.enabled ? L"&Disable" : L"&Enable");
+        AppendMenuW(hMenu, MF_STRING, 2, L"&Delete");
+        AppendMenuW(hMenu, MF_SEPARATOR, 0, NULL);
+        AppendMenuW(hMenu, MF_STRING, 3, L"&Edit Condition...");
+        AppendMenuW(hMenu, MF_STRING, 4, L"&Go to Source");
+        AppendMenuW(hMenu, MF_SEPARATOR, 0, NULL);
     }
 
-    AppendMenu(hMenu, MF_STRING, 10, L"Enable &All");
-    AppendMenu(hMenu, MF_STRING, 11, L"Disable A&ll");
-    AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
-    AppendMenu(hMenu, MF_STRING, 12, L"&Delete All");
+    AppendMenuW(hMenu, MF_STRING, 10, L"Enable &All");
+    AppendMenuW(hMenu, MF_STRING, 11, L"Disable A&ll");
+    AppendMenuW(hMenu, MF_SEPARATOR, 0, NULL);
+    AppendMenuW(hMenu, MF_STRING, 12, L"&Delete All");
 
     // Show menu
     int cmd = TrackPopupMenu(hMenu, TPM_RETURNCMD | TPM_LEFTALIGN, pt.x, pt.y, 0, m_hwnd, NULL);

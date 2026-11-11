@@ -10,6 +10,22 @@
 #include <iomanip>
 #include <commdlg.h>
 
+#ifndef IDM_SEM_GO_TO_DEF
+#define IDM_SEM_GO_TO_DEF      9300
+#define IDM_SEM_FIND_REFS      9301
+#define IDM_SEM_FIND_IMPLS     9302
+#define IDM_SEM_TYPE_HIERARCHY 9303
+#define IDM_SEM_CALL_GRAPH     9304
+#define IDM_SEM_SEARCH_SYMBOLS 9305
+#define IDM_SEM_FILE_SYMBOLS   9306
+#define IDM_SEM_UNUSED         9307
+#define IDM_SEM_INDEX_FILE     9308
+#define IDM_SEM_REBUILD_INDEX  9309
+#define IDM_SEM_SAVE_INDEX     9310
+#define IDM_SEM_LOAD_INDEX     9311
+#define IDM_SEM_STATS          9312
+#endif
+
 // ============================================================================
 // Initialization
 // ============================================================================
@@ -64,6 +80,17 @@ bool Win32IDE::getEditorCursorFileLineCol(std::string& outFile, uint32_t& outLin
     return true;
 }
 
+void Win32IDE::navigateToLine(int line)
+{
+    if (!m_hwndEditor || line < 1) return;
+    const int idx = (int)SendMessageA(m_hwndEditor, EM_LINEINDEX, (WPARAM)(line - 1), 0);
+    if (idx < 0) return;
+    CHARRANGE cr{};
+    cr.cpMin = idx;
+    cr.cpMax = idx;
+    SendMessageA(m_hwndEditor, EM_EXSETSEL, 0, (LPARAM)&cr);
+    SendMessageA(m_hwndEditor, EM_SCROLLCARET, 0, 0);
+}
 void Win32IDE::navigateToFileLine(const std::string& filePath, uint32_t line1Based) {
     if (filePath.empty() || line1Based == 0) return;
     if (!m_currentFile.empty() && m_currentFile != filePath)
@@ -200,7 +227,7 @@ void Win32IDE::cmdSemCallGraph() {
 
 void Win32IDE::cmdSemSearchSymbols() {
     auto& sci = SemanticCodeIntelligence::instance();
-    auto results = sci.searchSymbols("", SymbolKind::Unknown, 50);
+    auto results = sci.searchSymbols("", ::SymbolKind::Unknown, 50);
 
     if (results.empty()) {
         appendToOutput("[Semantic] No symbols in index. Index some files first.\n");

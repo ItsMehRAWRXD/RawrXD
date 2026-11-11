@@ -1,0 +1,29 @@
+{
+  "receipt_id": "BATCH_17_NATIVE_LINK_001",
+  "asof": "2026-11-11T18:42:10Z",
+  "actor": "batch17_sole_fixer",
+  "goal": "RawrXD-Win32IDE-Native.exe link + SHA-256 + PS Execute/Clear/Stop smoke",
+  "EXE_PATH": "F:\\rawrxd\\build_win32ide\\bin\\Release\\RawrXD-Win32IDE-Native.exe",
+  "SHA256": "A5441B5D042A6B8949082759D978C3705B8C409867EB9231C17576A9A570E326",
+  "SIZE_BYTES": 2178048,
+  "LAST_WRITE": "2026-11-11T13:40:24.6556320-05:00",
+  "BUILD": {
+    "rebuild": "rebuild_b17_11",
+    "BAT_DONE_EC": 0,
+    "log": "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\BATCH_17\\rebuild_b17_11.log.batout"
+  },
+  "PS_SMOKE": {
+    "result": "RUNTIME_EXERCISED_UNPROMOTED",
+    "5610_Execute": "OBSERVED_OUTPUT",
+    "5611_Clear": "OBSERVED_SHRINK",
+    "5612_Stop": "POSTED",
+    "RUNTIME_SMOKE": "HELD",
+    "receipt": "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\BATCH_17\\PS_SMOKE_HARNESS\\PS_SMOKE_RECEIPT.txt",
+    "runlog": "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\BATCH_17\\PS_SMOKE_HARNESS\\ps_smoke_run_20261111-134137.txt"
+  },
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "PRODUCT_PASS": 0,
+  "G1_NATIVE_LINK": "PASS_EXE_PRESENT_UNPROMOTED"
+}

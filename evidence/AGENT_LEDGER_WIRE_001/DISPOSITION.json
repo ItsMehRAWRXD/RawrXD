@@ -1,0 +1,9 @@
+{
+  "disposition_id": "AGENT_LEDGER_WIRE_001_DISPOSITION",
+  "gaps_7_10": "CLOSED",
+  "level": "SOURCE_PLUS_SMOKE",
+  "full_ide_agent_turn_e2e": "NOT_RUN",
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "note": "Component smoke RUNTIME_REACHED != full IDE E2E certification. Undo/ledger closure does not compensate for AgentCommands SecurityGate bypass (gaps 5/9)."
+}

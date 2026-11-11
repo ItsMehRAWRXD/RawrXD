@@ -1,0 +1,39 @@
+{
+  "run_id": "20261111_141349",
+  "asof_utc": "2026-11-11T19:13:55Z",
+  "exe_path": "F:\\rawrxd\\build_win32ide\\bin\\Release\\RawrXD-Win32IDE-Native.exe",
+  "exe_sha256": "D1B17F66C5BD951BADD51FEE31326EAAE758B1E3F605E761AB4D82D255A32ABF",
+  "SHA_MATCH": 1,
+  "PRIOR_TIP_SUPERSEDED": "16D85B1CF7651CA6F43FBC60B99F352A96BBB6C7C00C85ED777F941C8911CE4B",
+  "BLOCKED_ON_BATCH17_EXE": 0,
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "ROUTING_E2E": "NOT_CERTIFIED",
+  "launch_smoke": {
+    "tool": "tools/hotpatch/Start-RawrXDAcceptance.ps1",
+    "HASH_OK": 1,
+    "alive": true,
+    "pid": 75964,
+    "receipt": "routing_20261111_141350/launch-receipt.json",
+    "agent_model_routing": "UNVERIFIED",
+    "ghosttext_routing": "UNVERIFIED",
+    "cancellation_recovery": "UNVERIFIED",
+    "RESULT": "LAUNCH_ALIVE_ROUTING_UNVERIFIED"
+  },
+  "safeguard_harness": {
+    "tool": "tools/hotpatch/Test-HotpatchSafeguards.ps1",
+    "run": "runs/20261111_141355",
+    "exit": 1,
+    "FAIL_COUNT": 2,
+    "note": "launcher+validator PASS; ghosttext_smoke_compile FAIL (atomic include path); harness FAIL != tip launch smoke"
+  },
+  "ollama_identity_matrix": "NOT_COLLECTED",
+  "validator_routing_evidence": "NOT_SUBMITTED",
+  "laws": {
+    "LAUNCH_ALIVE_NE_ROUTING_E2E_PASS": true,
+    "UNVERIFIED_NE_PASS": true,
+    "NOT_RUN_NE_PASS": true,
+    "HARNESS_UNIT_NE_ROUTING_E2E": true
+  }
+}

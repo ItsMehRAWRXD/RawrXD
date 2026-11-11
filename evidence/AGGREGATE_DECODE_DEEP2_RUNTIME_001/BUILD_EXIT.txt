@@ -1,0 +1,9 @@
+BUILD_EXIT=0
+SINGLE_BUILD=0
+MULTI_BUILD=0
+SINGLE_SMOKE_EXIT=0
+MULTI_SMOKE_EXIT=0
+COMPILER=MSVC_14.44.35207
+LINKED=deep2_engine_lib
+AGGREGATE_DECODE_USE_DEEP2=1
+EXES=F:\rawrxd\build\bin\aggregate_decode_single_smoke.exe;F:\rawrxd\build\bin\aggregate_decode_multi_smoke.exe

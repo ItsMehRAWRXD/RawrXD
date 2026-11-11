@@ -1,0 +1,47 @@
+{
+  "receipt_id": "N02_NUMERICAL_CORRECTNESS",
+  "batch_id": "DEEP2_NATIVE_CORRECTNESS_BATCH_001",
+  "status": "PASS",
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "timestamp": "2026-11-11T17:30:58Z",
+  "gguf": "F:\\ollamamodels\\n4-tiny-oracle.gguf",
+  "depends_on": "N01_PASS",
+  "attention_geometry_nan": {
+    "exe": "F:\\rawrxd\\build\\tests\\Release\\deep2_attention_geometry_nan_regression.exe",
+    "sha256": "C937E258FFF8BCDE9DF325E0A7BF486C3E72C0FF10A44252B879E937E3AB5E5A",
+    "exit": 0,
+    "ATTN_FINITE_VALID": 1,
+    "ATTN_NAN_REJECTED": 1,
+    "evidence": "ATTN_GEOMETRY_NAN.txt",
+    "linked_tip_lib": 1
+  },
+  "geometry_reconciliation_product_path": {
+    "from_n01_smoke": "GEOMETRY_FROM_N01_SMOKE.txt",
+    "ATTN_GEOMETRY_RECONCILED": "headDim=64 qHeads=32 kvHeads=4",
+    "KV_CACHE_CONFIGURED": "layers=22 positions=2048 kvHeads=4 headDim=64",
+    "HOST_Q8_GEMV_NUMERIC_FINITE": 1
+  },
+  "prefill_logit_kv_parity": {
+    "harness": "deep2_n02_numerical_correctness.exe",
+    "sha256": "91A5FE9040B3BF59DE123D05EB7C254CF555969CC949C69C60FE737C1E739BC7",
+    "exit": 0,
+    "verdict": "PASS",
+    "PREFILL_PARITY_MAX_REL": 0,
+    "reference": "serial_prefill vs batched_prefill on same loaded tip Deep2Engine (H11 surface)",
+    "evidence": "TOKEN_LOGIT_COMPARE.txt"
+  },
+  "token_id_compare": {
+    "prompt": "Hi",
+    "max_tokens": 8,
+    "TOKEN_IDS_A": [4664, 4664, 4664, 4664, 4664, 4664, 4664, 4664],
+    "TOKEN_IDS_B": [4664, 4664, 4664, 4664, 4664, 4664, 4664, 4664],
+    "TOKEN_ID_MATCH": 1,
+    "note": "greedy temp=0 dual-run determinism on same GGUF; not an external oracle promotion"
+  },
+  "hashes": "HASHES.txt",
+  "linkage": "LINKAGE.txt",
+  "lib_note": "Tip deep2_engine_lib advanced during N02 rebuild vs N01 sealed 4AB07EFC...; N01 smokes remain sealed to N01 HASHES; N02 harness links tip lib",
+  "win32ide_untouched": 1
+}

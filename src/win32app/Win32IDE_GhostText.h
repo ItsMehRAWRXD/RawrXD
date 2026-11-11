@@ -8,8 +8,28 @@
 
 class NativeGhostTextController {
 public:
-    using Request = std::function<void(const std::string&,
-        std::function<void(const std::string&, bool, bool)>)>;
+    // Result of one asynchronous completion attempt.  `success` is only true
+    // when the transport produced a non-empty body for the *current* request;
+    // cancellation, transport failure, and an empty model answer are reported
+    // separately through `failureReason` so they are never collapsed into a
+    // single boolean.
+    struct Response {
+        std::string text;
+        bool success = false;
+        bool done = false;
+        std::string failureReason;   // empty when success; otherwise CANCELLED,
+                                     // HTTP_TIMEOUT, HTTP_CANNOT_CONNECT,
+                                     // EMPTY_RESPONSE, EMPTY_OUTPUT, ...
+        unsigned int httpStatus = 0; // 0 when no status line was received
+        uint64_t elapsedMs = 0;      // transport wall time measured by the backend
+    };
+    // Cancellation is idempotent and non-blocking: the returned handle asks the
+    // transport owner to release the specific in-flight request.  The controller
+    // never sees the backend/client type.
+    using RequestCancel = std::function<void()>;
+    using RequestCallback = std::function<void(const Response&)>;
+    using Request = std::function<RequestCancel(
+        const std::string&, RequestCallback)>;
     using Trace = std::function<void(const std::string&)>;
 
     NativeGhostTextController() = default;
@@ -51,6 +71,10 @@ private:
     UINT_PTR m_timer = 0;
     bool m_requestPending = false;
     uint64_t m_requestId = 0;
+    // Cancel handle for the request currently in flight.  Empty when idle.
+    // Cleared on completion, on supersede/dismiss, and on detach.  Invoking it
+    // is safe to repeat and must not block the UI thread.
+    RequestCancel m_cancelActive;
     // A per-attachment identity fences callbacks that outlive a controller
     // detach/rebind. Stale completions are discarded without dereferencing
     // the old object.

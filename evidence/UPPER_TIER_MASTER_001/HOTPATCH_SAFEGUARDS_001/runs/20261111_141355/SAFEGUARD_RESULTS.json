@@ -1,0 +1,43 @@
+{
+    "launcher_hash_mismatch_reject":  {
+                                          "detail":  "expected reject on sha=0000000000000000000000000000000000000000000000000000000000000000 actual=D1B17F66C5BD951BADD51FEE31326EAAE758B1E3F605E761AB4D82D255A32ABF",
+                                          "ok":  true
+                                      },
+    "launcher_hash_match_accept":  {
+                                       "detail":  "sha=D1B17F66C5BD951BADD51FEE31326EAAE758B1E3F605E761AB4D82D255A32ABF",
+                                       "ok":  true
+                                   },
+    "validator_rejects_incomplete":  {
+                                         "detail":  "exit=1",
+                                         "ok":  true
+                                     },
+    "validator_rejects_stale":  {
+                                    "detail":  "exit=1",
+                                    "ok":  true
+                                },
+    "validator_rejects_sha_mismatch":  {
+                                           "detail":  "exit=1",
+                                           "ok":  true
+                                       },
+    "validator_rejects_duplicate_request_id":  {
+                                                   "detail":  "exit=1",
+                                                   "ok":  true
+                                               },
+    "ghosttext_smoke_compile":  {
+                                    "detail":  "cl_exit=2",
+                                    "ok":  false
+                                },
+    "ghosttext_smoke_runtime":  {
+                                    "detail":  "compile failed",
+                                    "ok":  false
+                                },
+    "previous_candidate_law_documented":  {
+                                              "detail":  "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\HOTPATCH_SAFEGUARDS_001\\PREVIOUS_CANDIDATE_CANNOT_CERTIFY_NEWER_SOURCE.md",
+                                              "ok":  true
+                                          },
+    "ROUTING_E2E":  "NOT_CERTIFIED",
+    "BLOCKED_ON_BATCH17_EXE":  true,
+    "CERTIFIED":  0,
+    "PROMOTE":  0,
+    "FAIL_COUNT":  2
+}

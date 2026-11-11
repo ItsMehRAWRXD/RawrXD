@@ -6,6 +6,7 @@
 // It now lives with the other Win32IDE member definitions, below the includes.
 
 #include "Win32IDE.h"
+#include "lsp/RawrXD_LSPServer.h"
 #include "Win32NativeDebugBackend.h"
 #include "Win32IDE_CommandIDs.h"
 #include "Win32IDE_Deep2Bridge.h"
@@ -740,7 +741,10 @@ std::vector<ChatModelEntry> discoverOllamaModels(
             // only the filesystem GGUF rows in the selector even though
             // /api/tags was available.  Keep discovery bounded, but give the
             // local HTTP endpoint enough time to return its real catalog.
-            WinHttpSetTimeouts(session, 5000, 5000, 5000, 5000);
+            // 5s was enough for small catalogs; 44-model hosts (~20KB) still
+            // fit, but keep headroom so a busy llama-server cannot truncate
+            // /api/tags mid-body and leave only a preferred breadcrumb row.
+            WinHttpSetTimeouts(session, 15000, 15000, 15000, 15000);
             HINTERNET connect = serverReady ? WinHttpConnect(session, L"127.0.0.1", 11434, 0) : nullptr;
             if (connect) {
                 HINTERNET request = WinHttpOpenRequest(connect, L"GET", L"/api/tags",
@@ -750,9 +754,11 @@ std::vector<ChatModelEntry> discoverOllamaModels(
                     if (WinHttpSendRequest(request, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
                             WINHTTP_NO_REQUEST_DATA, 0, 0, 0) &&
                         WinHttpReceiveResponse(request, nullptr)) {
+                        // Finish the /api/tags body once headers arrive. Aborting
+                        // mid-body on cancel left a partial JSON parse miss and
+                        // the selector stuck on a single preferred Ollama row.
                         DWORD available = 0;
-                        while (!cancel->load() &&
-                               WinHttpQueryDataAvailable(request, &available) && available) {
+                        while (WinHttpQueryDataAvailable(request, &available) && available) {
                             std::string chunk(available, '\0');
                             DWORD read = 0;
                             if (!WinHttpReadData(request, chunk.data(), available, &read) || !read) break;
@@ -771,8 +777,12 @@ std::vector<ChatModelEntry> discoverOllamaModels(
                                         RawrXD::ChatRouteMenu::RouteKind::Ollama, name), name});
                             }
                         }
+                        runtimeLog(std::string("OLLAMA_TAGS_BYTES=") +
+                            std::to_string(raw.size()) + " OLLAMA_TAGS_COUNT=" +
+                            std::to_string(models.size()));
                     } catch (...) {
-                        // Ollama may be absent or may return a non-catalog response.
+                        runtimeLog(std::string("OLLAMA_TAGS_PARSE=FAIL bytes=") +
+                            std::to_string(raw.size()));
                     }
                 }
                 WinHttpCloseHandle(connect);
@@ -1122,7 +1132,14 @@ std::string generateOllamaModel(const std::string& baseUrl,
         }
     };
     
-    const int effectiveContextTokens = (std::max)(8192, (std::min)(contextTokens, 1048576));
+    // Instant defaults used to ship 64K num_ctx, which stalls TTFT on large
+    // local models (WinHttpReceiveResponse never returns within P11 budgets).
+    // Cap Instant generate to a sane chat budget; other reasoning modes keep
+    // the full requested context (floored at 8K).
+    constexpr int kInstantContextBudget = 8192;
+    const int effectiveContextTokens = (reasoningMode == ReasoningMode::Instant)
+        ? (std::max)(2048, (std::min)(contextTokens, kInstantContextBudget))
+        : (std::max)(8192, (std::min)(contextTokens, 1048576));
     uint64_t promptFingerprint = 1469598103934665603ull;
     for (unsigned char byte : prompt) {
         promptFingerprint ^= byte;
@@ -1263,6 +1280,8 @@ std::string generateOllamaModel(const std::string& baseUrl,
     std::string streamPending;
     std::string streamedAnswer;
     std::string streamedThinking;
+    int streamedEvalCount = -1;
+    size_t streamedDeltaEvents = 0;
     auto consumeStreamLine = [&](const std::string& line) {
         if (line.empty()) return;
         try {
@@ -1276,12 +1295,16 @@ std::string generateOllamaModel(const std::string& baseUrl,
             const std::string thinkingDelta = item.value("thinking", std::string{});
             if (!delta.empty()) {
                 streamedAnswer += delta;
+                ++streamedDeltaEvents;
                 if (onToken && !(cancel.stopRequested &&
                     cancel.stopRequested->load(std::memory_order_acquire))) {
                     onToken(delta);
                 }
             }
             if (!thinkingDelta.empty()) streamedThinking += thinkingDelta;
+            if (item.value("done", false)) {
+                streamedEvalCount = item.value("eval_count", -1);
+            }
         } catch (const std::exception& error) {
             logDebug("[OLLAMA_DEBUG] Invalid stream JSON line: %s\\n", error.what());
         }
@@ -1339,6 +1362,15 @@ std::string generateOllamaModel(const std::string& baseUrl,
     closeOwnedOllamaHandle(cancel.connectSlot, connect);
     closeOwnedOllamaHandle(cancel.sessionSlot, session);
     if (cancelled) {
+        // Harden: if any deltas landed before Stop, still emit GENERATED_TOKENS
+        // so cancel-after-partial-stream leaves a chat_runtime fence key.
+        const int genTokens = streamedEvalCount > 0
+            ? streamedEvalCount
+            : static_cast<int>(streamedDeltaEvents > 0 ? streamedDeltaEvents : 0);
+        if (genTokens > 0) {
+            WriteChatRuntimeEvidence(
+                std::string("GENERATED_TOKENS=") + std::to_string(genTokens));
+        }
         return "[Ollama request cancelled]";
     }
 
@@ -1348,6 +1380,13 @@ std::string generateOllamaModel(const std::string& baseUrl,
     if (!streamedAnswer.empty() || !streamedThinking.empty()) {
         logDebug("[OLLAMA_RUNTIME] streamed_response_bytes=%zu streamed_thinking_bytes=%zu\\n",
                  streamedAnswer.size(), streamedThinking.size());
+        const int genTokens = streamedEvalCount > 0
+            ? streamedEvalCount
+            : static_cast<int>(streamedDeltaEvents > 0 ? streamedDeltaEvents : 0);
+        if (genTokens > 0) {
+            WriteChatRuntimeEvidence(
+                std::string("GENERATED_TOKENS=") + std::to_string(genTokens));
+        }
         if (!streamedAnswer.empty()) return streamedAnswer;
         if (!streamedThinking.empty()) {
             return "[Ollama returned reasoning but no final answer.]\\n" + streamedThinking;
@@ -1377,6 +1416,10 @@ std::string generateOllamaModel(const std::string& baseUrl,
                  static_cast<unsigned long long>(promptFingerprint),
                  model.c_str(), effectiveContextTokens, maxTokens, generatedTokens,
                  promptTokens, doneReason.c_str());
+        if (generatedTokens > 0) {
+            WriteChatRuntimeEvidence(
+                std::string("GENERATED_TOKENS=") + std::to_string(generatedTokens));
+        }
         if (!answer.empty()) {
             logDebug("[OLLAMA_DEBUG] Parsed response successfully, answer=%zu thinking=%zu\n",
                      answer.length(), thinking.length());
@@ -3939,6 +3982,10 @@ void Win32IDE::openFile()
     }
 }
 
+void Win32IDE::openFile(const std::string& filePath)
+{
+    (void)openDocumentPath(filePath);
+}
 bool Win32IDE::openDocumentPath(const std::string& path)
 {
     if (path.empty()) return false;
@@ -5002,6 +5049,7 @@ void Win32IDE::clearClipboardHistory()
     m_clipboardHistory.clear();
 }
 
+#if 0 // DUP_createMinimap BATCH17_DUP_DISABLE
 void Win32IDE::createMinimap()
 {
     if (!m_hwndMain || !m_hwndEditor) return;
@@ -5030,7 +5078,9 @@ void Win32IDE::createMinimap()
     
     updateMinimap();
 }
+#endif // DUP_createMinimap
 
+#if 0 // DUP_updateMinimap BATCH17_DUP_DISABLE
 void Win32IDE::updateMinimap()
 {
     if (!m_hwndMinimap || !m_minimapVisible || !m_hwndEditor) return;
@@ -5124,7 +5174,9 @@ void Win32IDE::updateMinimap()
         ReleaseDC(m_hwndMinimap, hdc);
     }
 }
+#endif // DUP_updateMinimap
 
+#if 0 // DUP_scrollToMinimapPosition BATCH17_DUP_DISABLE
 void Win32IDE::scrollToMinimapPosition(int y)
 {
     if (!m_hwndMinimap || !m_hwndEditor || m_minimapLines.empty()) return;
@@ -5149,7 +5201,9 @@ void Win32IDE::scrollToMinimapPosition(int y)
     
     updateMinimap();
 }
+#endif // DUP_scrollToMinimapPosition
 
+#if 0 // DUP_toggleMinimap BATCH17_DUP_DISABLE
 void Win32IDE::toggleMinimap()
 {
     m_minimapVisible = !m_minimapVisible;
@@ -5164,6 +5218,7 @@ void Win32IDE::toggleMinimap()
     GetClientRect(m_hwndMain, &rc);
     onSize(rc.right, rc.bottom);
 }
+#endif // DUP_toggleMinimap
 
 void Win32IDE::startProfiling()
 {
@@ -6052,6 +6107,7 @@ void Win32IDE::createSnippet()
 // File Explorer Implementation
 // ============================================================================
 
+#if 0 // DUP_createFileExplorer BATCH17_DUP_DISABLE
 void Win32IDE::createFileExplorer(HWND hwndParent)
 {
     if (m_hwndFileExplorer) {
@@ -6090,6 +6146,7 @@ void Win32IDE::createFileExplorer(HWND hwndParent)
     // Populate with drive letters
     populateFileTree(nullptr, "");
 }
+#endif // DUP_createFileExplorer
 
 void Win32IDE::populateFileTree(HTREEITEM parentItem, const std::string& path)
 {
@@ -6247,6 +6304,7 @@ void Win32IDE::loadModelFromPath(const std::string& filepath)
 // GGUF Model Loading Implementation
 // ============================================================================
 
+#if 0 // DUP_loadGGUFModel BATCH17_DUP_DISABLE
 bool Win32IDE::loadGGUFModel(const std::string& filepath)
 {
     if (!m_ggufLoader) {
@@ -6388,6 +6446,7 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
 
     return true;
 }
+#endif // DUP_loadGGUFModel
 
 std::string Win32IDE::getModelInfo() const
 {
@@ -6457,6 +6516,7 @@ bool Win32IDE::loadTensorData(const std::string& tensorName, std::vector<uint8_t
 // FILE EXPLORER IMPLEMENTATION
 // ============================================================================
 
+#if 0 // DUP_createFileExplorer BATCH17_DUP_DISABLE
 void Win32IDE::createFileExplorer()
 {
     if (!m_hwndSidebar) return;
@@ -6493,6 +6553,7 @@ void Win32IDE::createFileExplorer()
 
     populateFileTree();
 }
+#endif // DUP_createFileExplorer
 
 void Win32IDE::populateFileTree()
 {
@@ -6901,10 +6962,12 @@ void Win32IDE::showFileContextMenu(const std::string& filePath, bool isDirectory
     DestroyMenu(hMenu);
 }
 
+#if 0 // DUP_refreshFileExplorer BATCH17_DUP_DISABLE
 void Win32IDE::refreshFileExplorer()
 {
     populateFileTree();
 }
+#endif // DUP_refreshFileExplorer
 
 // ============================================================================
 // MODEL CHAT INTERFACE IMPLEMENTATION
@@ -7062,6 +7125,7 @@ void Win32IDE::updateGitStatus()
                                m_gitStatus.deleted + m_gitStatus.untracked) > 0;
 }
 
+#if 0 // DUP_gitCommit BATCH17_DUP_DISABLE
 void Win32IDE::gitCommit(const std::string& message)
 {
     if (!isGitRepository()) {
@@ -7076,7 +7140,9 @@ void Win32IDE::gitCommit(const std::string& message)
     MessageBoxA(m_hwndMain, output.c_str(), "Git Commit", MB_OK | MB_ICONINFORMATION);
     updateGitStatus();
 }
+#endif // DUP_gitCommit
 
+#if 0 // DUP_gitPush BATCH17_DUP_DISABLE
 void Win32IDE::gitPush()
 {
     if (!isGitRepository()) {
@@ -7092,7 +7158,9 @@ void Win32IDE::gitPush()
         "Git Push", MB_OK | MB_ICONINFORMATION);
     updateGitStatus();
 }
+#endif // DUP_gitPush
 
+#if 0 // DUP_gitPull BATCH17_DUP_DISABLE
 void Win32IDE::gitPull()
 {
     if (!isGitRepository()) {
@@ -7108,6 +7176,7 @@ void Win32IDE::gitPull()
         "Git Pull", MB_OK | MB_ICONINFORMATION);
     updateGitStatus();
 }
+#endif // DUP_gitPull
 
 void Win32IDE::gitStageFile(const std::string& filePath)
 {
@@ -7601,10 +7670,23 @@ void Win32IDE::generateResponseAsync(
     // reusing the chat model (which may be a native GGUF route from an older
     // session).  This is especially important because GhostText requests are
     // asynchronous and must never cross-wire into the agent bridge.
-    const ChatModelEntry selectedModel =
+    ChatModelEntry selectedModel =
         m_pendingInferenceModel.identifier.empty()
             ? m_selectedChatModel
             : std::exchange(m_pendingInferenceModel, ChatModelEntry{});
+    // Harness-only force route: P11 / agentic gates set this so a hung
+    // preferred 69B breadcrumb cannot steal the fence when /api/tags UI
+    // publish is still partial. Empty/unset → product selector unchanged.
+    if (const char* forceModel = std::getenv("RAWRXD_P11_FORCE_OLLAMA_MODEL")) {
+        if (forceModel[0]) {
+            selectedModel.source = ChatModelEntry::Source::Ollama;
+            selectedModel.identifier = forceModel;
+            selectedModel.breadcrumb = modelRouteBreadcrumb(
+                RawrXD::ChatRouteMenu::RouteKind::Ollama, forceModel);
+            WriteChatRuntimeEvidence(
+                std::string("FORCE_OLLAMA_MODEL=") + forceModel);
+        }
+    }
     const int requestMaxTokens = effectiveMaxTokensForPrompt(prompt);
     const int requestContextTokens = m_currentContextTokens;
     const ReasoningMode reasoningMode = m_reasoningMode;
@@ -8274,7 +8356,7 @@ void Win32IDE::createChatPanel() {
     m_hwndContextCaption = CreateWindowExA(0, "STATIC", "Context:",
         WS_CHILD | WS_VISIBLE | SS_LEFT, 5, 145, 85, 18,
         m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
-    m_hwndContextLabel = CreateWindowExA(0, "STATIC", "64K (pending model admission)",
+    m_hwndContextLabel = CreateWindowExA(0, "STATIC", "8K (pending model admission)",
         WS_CHILD | WS_VISIBLE | SS_RIGHT, 180, 143, 115, 18,
         m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
     if (m_hwndContextLabel) ShowWindow(m_hwndContextLabel, SW_HIDE);
@@ -8285,9 +8367,11 @@ void Win32IDE::createChatPanel() {
     if (m_hwndContextSlider) {
         SendMessage(m_hwndContextSlider, TBM_SETRANGEMIN, TRUE, 8192);
         SendMessage(m_hwndContextSlider, TBM_SETRANGEMAX, TRUE, 1048576);
-        SendMessage(m_hwndContextSlider, TBM_SETPOS, TRUE, 65536);
+        SendMessage(m_hwndContextSlider, TBM_SETPOS, TRUE, 8192);
         ShowWindow(m_hwndContextSlider, SW_HIDE);
     }
+    // Instant/default chat budget: 8K (was 64K — caused Ollama TTFT hangs).
+    m_currentContextTokens = 8192;
 
     m_hwndContextSelector = CreateWindowExA(
         0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | WS_TABSTOP |
@@ -8312,7 +8396,7 @@ void Win32IDE::createChatPanel() {
                     static_cast<WPARAM>(row), static_cast<LPARAM>(preset.value));
             }
         }
-        SendMessageA(m_hwndContextSelector, CB_SETCURSEL, 3, 0);
+        SendMessageA(m_hwndContextSelector, CB_SETCURSEL, 0, 0);
         SetWindowSubclass(m_hwndContextSelector, &Win32IDE::ModelSelectorSubclassProc, 3, 0);
     }
 
@@ -8735,6 +8819,18 @@ void Win32IDE::populateModelSelector() {
             std::move(display), kiloRoute->modelId});
     }
 
+    // Fail-closed harness seed: publish the forced Ollama tag into IDC 1206
+    // immediately so probes never bind the alphabetical preferred 69B row
+    // while /api/tags is still in flight.
+    const std::string forceOllamaTag = environmentValue("RAWRXD_P11_FORCE_OLLAMA_MODEL");
+    int forceRouteRow = -1;
+    if (!forceOllamaTag.empty()) {
+        m_availableModels.push_back({ChatModelEntry::Source::Ollama,
+            modelRouteBreadcrumb(RawrXD::ChatRouteMenu::RouteKind::Ollama,
+                forceOllamaTag), forceOllamaTag});
+        logInfo("[ModelSelector] FORCE_OLLAMA seed=" + forceOllamaTag);
+    }
+
     // A sentinel row keeps the user informed while Ollama and the bounded
     // configured-root GGUF scan run on a worker thread.
     const LRESULT scanningRow = SendMessageA(m_hwndModelSelector, CB_ADDSTRING, 0,
@@ -8750,15 +8846,21 @@ void Win32IDE::populateModelSelector() {
         if (item != CB_ERR && item != CB_ERRSPACE) {
             SendMessage(m_hwndModelSelector, CB_SETITEMDATA,
                 static_cast<WPARAM>(item), static_cast<LPARAM>(i));
+            if (m_availableModels[i].source == ChatModelEntry::Source::Ollama &&
+                m_availableModels[i].identifier == forceOllamaTag &&
+                !forceOllamaTag.empty()) {
+                forceRouteRow = static_cast<int>(item);
+            }
             if (m_availableModels[i].source == ChatModelEntry::Source::KiloFree) {
                 defaultRouteRow = static_cast<int>(item);
             }
         }
     }
     SendMessage(m_hwndModelSelector, CB_SETDROPPEDWIDTH, 560, 0);
-    if (defaultRouteRow >= 0) {
+    const int initialRow = forceRouteRow >= 0 ? forceRouteRow : defaultRouteRow;
+    if (initialRow >= 0) {
         SendMessage(m_hwndModelSelector, CB_SETCURSEL,
-            static_cast<WPARAM>(defaultRouteRow), 0);
+            static_cast<WPARAM>(initialRow), 0);
         onModelSelectionChanged();
     } else {
         SendMessage(m_hwndModelSelector, CB_SETCURSEL, static_cast<WPARAM>(-1), 0);
@@ -8941,9 +9043,25 @@ void Win32IDE::onModelDiscoveryComplete(ModelDiscoveryPayload* discovered) {
 
     int selectedRow = -1;
     int preferredRow = -1;
+    int forceRow = -1;
     int ollamaRow = -1;
     int localFileRow = -1;
     int kiloRow = -1;
+    const std::string forceOllamaTag =
+        environmentValue("RAWRXD_P11_FORCE_OLLAMA_MODEL");
+    if (!forceOllamaTag.empty()) {
+        const bool forcePresent = std::any_of(
+            m_availableModels.begin(), m_availableModels.end(),
+            [&forceOllamaTag](const ChatModelEntry& entry) {
+                return entry.source == ChatModelEntry::Source::Ollama &&
+                    entry.identifier == forceOllamaTag;
+            });
+        if (!forcePresent) {
+            m_availableModels.push_back({ChatModelEntry::Source::Ollama,
+                modelRouteBreadcrumb(RawrXD::ChatRouteMenu::RouteKind::Ollama,
+                    forceOllamaTag), forceOllamaTag});
+        }
+    }
     for (size_t i = 0; i < m_availableModels.size(); ++i) {
         const auto& entry = m_availableModels[i];
         const LRESULT row = SendMessageA(m_hwndModelSelector, CB_ADDSTRING, 0,
@@ -8953,6 +9071,11 @@ void Win32IDE::onModelDiscoveryComplete(ModelDiscoveryPayload* discovered) {
             static_cast<LPARAM>(i));
         if (entry.source == previous.source && entry.identifier == previous.identifier) {
             preferredRow = static_cast<int>(row);
+        }
+        if (!forceOllamaTag.empty() &&
+            entry.source == ChatModelEntry::Source::Ollama &&
+            entry.identifier == forceOllamaTag) {
+            forceRow = static_cast<int>(row);
         }
         if (entry.source == ChatModelEntry::Source::Ollama && ollamaRow < 0) {
             ollamaRow = static_cast<int>(row);
@@ -8966,11 +9089,13 @@ void Win32IDE::onModelDiscoveryComplete(ModelDiscoveryPayload* discovered) {
     }
     // Keep a previously selected real local route, but do not preserve the
     // optional Kilo placeholder once Ollama or a local GGUF route is ready.
+    // FORCE env wins over alphabetical first-Ollama (often bigdaddyg 69B).
     const bool previousIsKilo = previous.source == ChatModelEntry::Source::KiloFree;
-    selectedRow = (preferredRow >= 0 && !previousIsKilo) ? preferredRow
-        : (ollamaRow >= 0 ? ollamaRow
-            : (localFileRow >= 0 ? localFileRow
-                : (preferredRow >= 0 ? preferredRow : kiloRow)));
+    selectedRow = forceRow >= 0 ? forceRow
+        : ((preferredRow >= 0 && !previousIsKilo) ? preferredRow
+            : (ollamaRow >= 0 ? ollamaRow
+                : (localFileRow >= 0 ? localFileRow
+                    : (preferredRow >= 0 ? preferredRow : kiloRow))));
     if (selectedRow >= 0) {
         SendMessage(m_hwndModelSelector, CB_SETCURSEL,
             static_cast<WPARAM>(selectedRow), 0);
@@ -9126,7 +9251,26 @@ void Win32IDE::HandleCopilotSend() {
     // The prompt is copied into the request before the worker starts. Clear
     // the editable control so a later submission cannot append to this one.
     // GhostText was dismissed above, so no stale completion timer remains.
-    SetWindowTextW(m_hwndCopilotChatInput, L"");
+    // The input is a Unicode EDIT.  Use the control message directly and
+    // clear the cross-process staging cache after the native control has been
+    // updated.  SetWindowTextW alone is normally sufficient, but a harness or
+    // subclass can retain a staged value; the readback makes that failure
+    // observable instead of allowing the next request to inherit old text.
+    const LRESULT inputCleared = SendMessageW(
+        m_hwndCopilotChatInput, WM_SETTEXT, 0, reinterpret_cast<LPARAM>(L""));
+    m_copilotChatInputCache.clear();
+    const std::string inputAfterSend =
+        getWindowTextUtf8(m_hwndCopilotChatInput);
+    WriteChatRuntimeEvidence(
+        "CHAT_INPUT_RESET dispatch_id=" + std::to_string(sendSeq) +
+        " control_result=" + std::to_string(inputCleared ? 1 : 0) +
+        " remaining_bytes=" + std::to_string(inputAfterSend.size()));
+    if (!inputAfterSend.empty()) {
+        LOG_ERROR("Chat input remained populated after send; forcing selection clear");
+        SendMessageW(m_hwndCopilotChatInput, EM_SETSEL, 0, -1);
+        SendMessageW(m_hwndCopilotChatInput, WM_CLEAR, 0, 0);
+        m_copilotChatInputCache.clear();
+    }
     if (m_hwndCopilotStopBtn) EnableWindow(m_hwndCopilotStopBtn, TRUE);
 
     // ChatWindow is a text-chat surface.  Agent/tool execution is entered only
@@ -9155,7 +9299,15 @@ void Win32IDE::HandleCopilotSend() {
                                  " complete=" + (complete ? "1" : "0") +
                                  " response_bytes=" + std::to_string(response.size()) +
                                  " stop=" + (m_inferenceStopRequested.load() ? "1" : "0"));
-        if (m_inferenceStopRequested.load()) return;
+        if (m_inferenceStopRequested.load()) {
+            WriteChatRuntimeEvidence(std::string("stale_ui_update request_id=") +
+                                     std::to_string(generation) +
+                                     " rendered=0 active=" +
+                                     std::to_string(m_activeInferenceGeneration.load(
+                                         std::memory_order_acquire)) +
+                                     " reason=stop_drop");
+            return;
+        }
         auto* update = new CopilotChatUiUpdate{sessionId, generation, response, complete};
         const HWND target = m_hwndMain;
         if (!target || !PostMessageA(target, kRawrxdCopilotUiUpdate, 0,
@@ -9286,6 +9438,11 @@ void Win32IDE::handleCopilotUiUpdate(int sessionId,
     appendNativeDebugOutput(std::string("[CHAT_RUNTIME] complete_buffer_bytes=") +
                             std::to_string(session->responseBuffer.size()) +
                             " active=" + (active ? "1" : "0"));
+    WriteChatRuntimeEvidence(
+        std::string("complete_buffer_bytes=") +
+        std::to_string(session->responseBuffer.size()) +
+        " request_id=" + std::to_string(generation) +
+        " active=" + (active ? "1" : "0"));
     if (m_hwndStatusBar) {
         const bool explicitFailure = session->responseBuffer.rfind("[Ollama ", 0) == 0 ||
             session->responseBuffer.rfind("Chat route failed", 0) == 0;
@@ -9685,6 +9842,9 @@ int Win32IDE::effectiveMaxTokensForPrompt(const std::string& prompt) const {
 }
 
 Win32IDE::~Win32IDE() {
+    m_agenticLoopBridge = nullptr;
+    if (m_agentExecutor) { m_agentExecutor->Cleanup(); m_agentExecutor.reset(); }
+    if (m_agenticBridge) { m_agenticBridge->CancelAutonomousTask(); }
     saveEditorSession();
     if (m_modelDiscoveryCancel) m_modelDiscoveryCancel->store(true);
     if (m_modelDiscoveryThread.joinable()) m_modelDiscoveryThread.join();

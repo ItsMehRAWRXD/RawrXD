@@ -1,0 +1,268 @@
+{
+  "audit_id": "UPPER_TIER_MASTER_001/BATCH_21_AUDIT/LANG_DEBUG_GAP_MATRIX",
+  "asof_utc": "2026-11-11T17:45:00Z",
+  "title": "Language + Debug (LSP/DAP) gap matrix — Upper-Tier Batch 21",
+  "scope": "READ_ONLY inventory of LSP runtime + navigation/refactor + diagnostics + DAP debug for Upper-Tier Batch 21 prep",
+  "primary_tree": "F:\\rawrxd",
+  "cross_check_tree": "G:\\~dev\\rawrxd",
+  "mode": "READ_ONLY",
+  "no_source_edits": true,
+  "no_build_win32ide": true,
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "UPPER_TIER": 0,
+  "successor_of_stalled_agent": "4f6b99c7-f414-4f3c-a0ae-1da6026017d4",
+  "law": {
+    "SOURCE_WIRED_NEQ_RUNTIME_REACHED": true,
+    "NOT_RUN_NEQ_PASS": true,
+    "NO_INVENT_PASS": true,
+    "candidate_matrix_neq_tip_promote": true,
+    "build_win32ide_owner": "Batch17 sole owner 63513ece — this audit did NOT run build_win32ide"
+  },
+  "hard_blocker": {
+    "id": "BATCH17_G1_NO_LINKED_NATIVE_EXE",
+    "exe_path": "F:\\rawrxd\\build_win32ide\\Release\\RawrXD-Win32IDE-Native.exe",
+    "present": false,
+    "note": "Product-path LSP/DAP runtime acceptance blocked until Batch17 links Native exe"
+  },
+  "tree_delta": {
+    "F_LSPClient_LSPServer_Semantic_Hover_Rename_CodeCompletion": "SOURCE_IN_CMAKE_NATIVE",
+    "F_PeekOverlay_cpp": "SOURCE_ON_DISK_NOT_IN_F_CMAKE_NATIVE",
+    "G_PeekOverlay_PeekView": "IN_CMAKE",
+    "F_DAPServer_Debugger_NativeDebugBackend_BreakpointManager": "SOURCE_IN_CMAKE_NATIVE",
+    "G_DAPIntegrationBridge_DapAdapterSpawn_DapServiceProduct": "ON_DISK_G_ABSENT_F_NOT_IN_G_TIP_CMAKE",
+    "G_NativeDebugPanel": "IN_G_CMAKE_ABSENT_F",
+    "F_LSPServer_stubs_cpp": "ON_DISK_NOT_IN_CMAKE (real Win32IDE_LSPServer.cpp listed; stubs empty no-ops)",
+    "F_Win32NativeDebugBackend": "IN_F_CMAKE; ABSENT_G_win32app",
+    "G_AsmSemantic": "IN_G_CMAKE; ABSENT_F",
+    "note": "F is Batch21 authority for linked native LSP/DAPServer surface except PeekOverlay CMake gap; G DAP product bridge TUs are candidate-only (COMPLETION_007/017) — present on disk, not tip-CMake members"
+  },
+  "prior_runtime_authority_not_revalidated_this_audit": [
+    {
+      "id": "AGENT_RUNTIME_VALIDATION_001",
+      "disposition": "G1=FAIL no Native exe; probe_lsp.cpp failed compile (agent_esp.hpp); RUNTIME_REACHED orch 0/4",
+      "path": "F:\\rawrxd\\evidence\\AGENT_RUNTIME_VALIDATION_001\\DISPOSITION.json"
+    },
+    {
+      "id": "BATCH_17_G1_HANDOFF",
+      "disposition": "LSPServer restored to CMake; semantic/symbol/peek in Batch17 ask; CERTIFIED=0 PROMOTE=0",
+      "path": "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\BATCH_17\\G1_HANDOFF.txt"
+    },
+    {
+      "id": "PROD_AUDIT_BATCH5_001_DEBUGGER_LSP_FILELINE",
+      "disposition": "Historical: Qt LSP out of Native scope; Debugger UI attach flag != WaitForDebugEvent; Unverified on Native",
+      "path": "F:\\rawrxd\\evidence\\PROD_AUDIT_BATCH5_001\\DEBUGGER_LSP_FILELINE.md",
+      "note": "Superseded in part by later Win32IDE_LSPClient + Win32NativeDebugBackend — still NOT tip Batch17 PASS"
+    },
+    {
+      "id": "IDE_REPAIR_CANDIDATE_001_debug_probe_ec811_bind",
+      "disposition": "Prior candidate SESSION_REAL=1 launch/step/continue; DEBUG_BP_HIT_EVIDENCE=0; DebugActiveProcess_IN_EXE=0; PRODUCT_PASS=0 PROMOTE=0",
+      "path": "F:\\rawrxd\\evidence\\IDE_REPAIR_CANDIDATE_001\\debug_probe_ec811_bind\\DEBUG_SESSION_REAL_TIP002_RECEIPT.txt",
+      "this_audit": "NOT_RUN — sealed candidate cited only; not tip build_win32ide SHA"
+    },
+    {
+      "id": "DAP_BRIDGE_PRODUCT_WIRE_001",
+      "disposition": "G candidate SOURCE_WIRED DAPIntegrationBridge+DapServiceProduct; INVENT_DAP_PASS=0 PROMOTE=0; not tip CMake member",
+      "path": "G:\\~dev\\rawrxd\\evidence\\WIN32IDE_CONTINUOUS_COMPLETION_017\\DAP_BRIDGE_PRODUCT_WIRE_001\\RECEIPT.md"
+    },
+    {
+      "id": "COMMAND_PALETTE_DAP_SPAWN_PRODUCT_WIRE_001",
+      "disposition": "G candidate Win32IDE_DapAdapterSpawn+DapServiceProduct linked fail-closed; INVENT_DAP_PASS=0",
+      "path": "G:\\~dev\\rawrxd\\evidence\\WIN32IDE_CONTINUOUS_COMPLETION_007\\COMMAND_PALETTE_DAP_SPAWN_PRODUCT_WIRE_001\\RECEIPT.md"
+    },
+    {
+      "id": "BREAKPOINT_FOLLOWON_REPROVE_5BB7_001",
+      "disposition": "SOURCE_WIRED=1 RUNTIME_REACHED=1 RUNTIME_SURVIVAL_PASS=0; host crash IDM_DBGWATCH_SHOW; INVENT_BP_PANEL_PASS=0",
+      "path": "G:\\~dev\\rawrxd\\evidence\\BREAKPOINT_FOLLOWON_REPROVE_5BB7_001\\SUMMARY.txt"
+    }
+  ],
+  "capabilities": [
+    {
+      "capability": "lsp_completion",
+      "path": "F:\\rawrxd\\src\\win32app\\Win32IDE_LSPClient.cpp (lspCompletion / textDocument/completion); Win32IDE_CodeCompletion.cpp (hybrid popup); CMake RAWRXD_NATIVE",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "JSON-RPC completion + hybrid popup SOURCE_WIRED in F native CMake.",
+        "Requires running language server (m_lspStatuses Running); no Batch21 live completion E2E.",
+        "probe_lsp.cpp historically failed to compile — not a runtime PASS.",
+        "This audit NOT_RUN (NOT_RUN != PASS)."
+      ]
+    },
+    {
+      "capability": "lsp_hover",
+      "path": "F:\\rawrxd\\src\\win32app\\Win32IDE_LSPClient.cpp (lspHover / cmdLSPHoverInfo); Win32IDE_HoverTooltips.cpp (onHoverTimer → lspHover)",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "Hover tooltip UI calls real lspHover when LSP running.",
+        "No tip Native exe to exercise mouse-hover → publish contents.",
+        "runtime_reached=0 this audit."
+      ]
+    },
+    {
+      "capability": "lsp_goto_definition",
+      "path": "F:\\rawrxd\\src\\win32app\\Win32IDE_LSPClient.cpp (cmdLSPGotoDefinition / lspGotoDefinition); Win32IDE_GoToSymbol.cpp in CMake",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "Goto definition requests LSP then showPeekOverlayWithItems — depends on peek overlay symbols.",
+        "F CMake omits Win32IDE_PeekOverlay.cpp while G includes it — goto→peek path incomplete on F until Batch17 reconciles.",
+        "No runtime goto E2E this audit."
+      ]
+    },
+    {
+      "capability": "lsp_find_references",
+      "path": "F:\\rawrxd\\src\\win32app\\Win32IDE_LSPClient.cpp (cmdLSPFindReferences / lspFindReferences); Win32IDE_ReferencesPanel.cpp in CMake",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "References request + panel SOURCE_WIRED; peek overlay path same PeekOverlay CMake gap as goto.",
+        "cmdSemFindReferences on SemanticPanel is parallel surface — not certified.",
+        "runtime_reached=0."
+      ]
+    },
+    {
+      "capability": "lsp_rename",
+      "path": "F:\\rawrxd\\src\\win32app\\Win32IDE_LSPClient.cpp (cmdLSPRenameSymbol / lspRenameSymbol / applyWorkspaceEdit); Win32IDE_RenamePreview.cpp in CMake",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "Rename → WorkspaceEdit apply is SOURCE_WIRED.",
+        "No multi-file rename E2E on tip Native; empty edit treated as soft no-op message.",
+        "RenamePreview TU present — product interactive preview path NOT_RUN."
+      ]
+    },
+    {
+      "capability": "lsp_semantic_tokens",
+      "path": "F:\\rawrxd\\src\\win32app\\Win32IDE_SemanticTokens.cpp (semanticTokens/full|range); Win32IDE_LSPClient.cpp; Win32IDE_SemanticPanel.cpp; SemanticIndex.cpp — all in F CMake",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "LSP 3.16 semantic token request/parse SOURCE_WIRED; G1 handoff fixed SemanticTokens type nesting for compile.",
+        "Highlighting application on live editor NOT proven without linked exe.",
+        "G has Win32IDE_AsmSemantic.cpp in CMake — F lacks that TU."
+      ]
+    },
+    {
+      "capability": "lsp_diagnostics",
+      "path": "F:\\rawrxd\\src\\win32app\\Win32IDE_LSPClient.cpp (textDocument/publishDiagnostics); Win32IDE_LSPServer.cpp cmdLSPServerPublishDiagnostics; problems_aggregator.cpp",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "Client notification handler + server publish command SOURCE_WIRED; stubs file empty no-ops NOT in CMake.",
+        "Problems aggregator restored for G1 — live diagnostic squiggle/panel E2E NOT_RUN.",
+        "Do not invent PASS from notification parse alone."
+      ]
+    },
+    {
+      "capability": "lsp_peek",
+      "path": "F:\\rawrxd\\src\\win32app\\Win32IDE_PeekOverlay.cpp (on disk); callers in Win32IDE_LSPClient.cpp / PeekOverlay APIs; G:\\~dev\\rawrxd also Win32IDE_PeekView.cpp in CMake",
+      "source_wired": 0,
+      "runtime_reached": 0,
+      "gaps": [
+        "F RAWRXD_NATIVE CMake list inspected 2026-11-11: Win32IDE_PeekOverlay.cpp ABSENT (G CMake includes PeekOverlay + PeekView).",
+        "Goto/refs command paths call showPeekOverlayWithItems — product wire incomplete on F without PeekOverlay TU membership.",
+        "Batch17 G1_HANDOFF asks for peek in link+smoke — still OPEN.",
+        "source_wired=0 on F tip path; runtime_reached=0."
+      ]
+    },
+    {
+      "capability": "dap_launch",
+      "path": "F:\\rawrxd\\src\\win32app\\Win32IDE_DAPServer.cpp (handleLaunch → startDebugging); Win32NativeDebugBackend.cpp launch; Win32IDE_DebuggerIntegration.cpp StartDebugging",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "DAP launch delegates to parent IDE startDebugging; Native backend uses CreateProcess DEBUG_ONLY_THIS_PROCESS on prior candidates.",
+        "handleLaunch always sendResponse success + 'Program launched via DAP' even if parent thin — invent-thin risk.",
+        "Prior tip-ext candidate SESSION_REAL != tip build_win32ide; this audit NOT_RUN.",
+        "G DAPIntegrationBridge / Win32IDE_DapServiceProduct on disk only (not G tip CMake); absent on F."
+      ]
+    },
+    {
+      "capability": "dap_attach",
+      "path": "F:\\rawrxd\\src\\win32app\\Win32IDE_DAPServer.cpp handleAttach",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "handleAttach requires processId then calls startDebugging() — NOT DebugActiveProcess attach path.",
+        "Prior DEBUG_SESSION_REAL receipt: DebugActiveProcess_IN_EXE=0.",
+        "Attach is SOURCE_PRESENT but semantically invent-thin vs true DAP attach.",
+        "runtime_reached=0 this audit."
+      ]
+    },
+    {
+      "capability": "dap_breakpoints",
+      "path": "F:\\rawrxd\\src\\win32app\\Win32IDE_DAPServer.cpp handleSetBreakpoints; BreakpointManagerPanel.cpp; Win32NativeDebugBackend deferred BPs",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "setBreakpoints → m_parentIDE->setBreakpoint; response marks verified=true unconditionally.",
+        "Prior candidate DEBUG_BP_HIT_EVIDENCE=0; G BREAKPOINT_FOLLOWON RUNTIME_SURVIVAL_PASS=0.",
+        "Exception breakpoints stored/ack verified without engine wire.",
+        "No tip BP hit E2E this audit."
+      ]
+    },
+    {
+      "capability": "dap_step_continue",
+      "path": "F:\\rawrxd\\src\\win32app\\Win32IDE_DAPServer.cpp (continue/next/stepIn/stepOut); Win32NativeDebugBackend step*/continueExecution; DebuggerIntegration",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "Step/continue fail-closed when !isDebugActive; otherwise delegate to IDE/backend.",
+        "Prior candidate measured DEBUG_STEP/CONTINUE true on non-Batch17 SHA — not revalidated; != tip CERTIFIED.",
+        "This audit NOT_RUN."
+      ]
+    },
+    {
+      "capability": "dap_variables_scopes_stack",
+      "path": "F:\\rawrxd\\src\\win32app\\Win32IDE_DAPServer.cpp handleVariables/handleScopes/handleStackTrace; Win32IDE_DebugWatchFormat.cpp",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "handleVariables returns empty array even when isDebugActive (comment: populate later).",
+        "handleStackTrace invents synthetic main/program.cpp frame when no session; cursor-based single frame when active — not full native stack unwind proof.",
+        "Scopes emit Locals/Registers refs without filling variables.",
+        "DebugWatchFormat can add sample watches (demo) — != product var PASS.",
+        "Prior DEBUG_VARS_ID6043_PEAK=4 on candidate UI — not DAP variables protocol cert; PROMOTE=0."
+      ]
+    }
+  ],
+  "summary_counts": {
+    "capabilities_inventoried": 13,
+    "source_wired_1": 12,
+    "source_wired_0": 1,
+    "runtime_reached_1": 0,
+    "runtime_reached_0": 13,
+    "CERTIFIED": 0,
+    "PROMOTE": 0
+  },
+  "batch_21_prep_blockers": [
+    "RawrXD-Win32IDE-Native.exe absent under build_win32ide/Release (Batch17 G1).",
+    "F PeekOverlay.cpp not in native CMake — peek/goto/refs overlay product path incomplete vs G.",
+    "DAP attach is startDebugging masquerade; variables empty; stack invent-thin when idle.",
+    "G DAPIntegrationBridge / Win32IDE_DapAdapterSpawn / Win32IDE_DapServiceProduct on disk but not tip CMake; absent on F.",
+    "Prior candidate debug SESSION_REAL / BP SOURCE_WIRED must not be promoted to tip CERTIFIED.",
+    "This audit is source inventory only: NOT_RUN on all runtime cells."
+  ],
+  "next_executable_gates_not_run": [
+    "Batch17 sole-owner clean link of RawrXD-Win32IDE-Native.exe (no parallel build_win32ide)",
+    "Add or confirm PeekOverlay.cpp in F RAWRXD_NATIVE then smoke peek/goto/refs",
+    "LSP E2E: start server → completion/hover/goto/refs/rename/semantic/diagnostics with live JSON-RPC",
+    "DAP E2E: launch → setBreakpoints → BP hit → step/continue → real variables/scopes/stack; attach via DebugActiveProcess or hold OPEN",
+    "Decide F absorb of G DAPIntegrationBridge vs F DAPServer+NativeDebugBackend-only; decide whether G DAP product TUs enter tip CMake"
+  ],
+  "verification_this_audit": {
+    "native_exe_present": false,
+    "f_peekoverlay_in_cmake": false,
+    "g_peekoverlay_in_cmake": true,
+    "f_lspclient_in_cmake": true,
+    "f_dapserver_in_cmake": true,
+    "g_dapintegrationbridge_on_disk": true,
+    "g_dapintegrationbridge_in_tip_cmake": false,
+    "g_dap_adapter_spawn_on_disk": true,
+    "f_dap_adapter_spawn_on_disk": false,
+    "runtime_cells_executed": 0
+  }
+}

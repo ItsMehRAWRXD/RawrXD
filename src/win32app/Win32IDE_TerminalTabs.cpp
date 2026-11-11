@@ -7,20 +7,7 @@
 #include <sstream>
 #include <windows.h>
 
-struct TerminalTabInfo {
-    std::string profile;
-    std::string title;
-    bool active = false;
-    HWND hwndContent = nullptr;
-    HWND hwndTabButton = nullptr;
-    HWND hwndInput = nullptr;
-    HANDLE hProcess = nullptr;
-    HANDLE hWritePipe = nullptr;
-    HANDLE hReadPipe = nullptr;
-    WNDPROC origInputProc = nullptr;
-    std::vector<std::string> commandHistory;
-    int historyIndex = 0;
-};
+static DWORD WINAPI TerminalReaderThread(LPVOID param);
 
 void Win32IDE::initTerminalTabs() {
     m_terminalTabs.clear();
@@ -241,7 +228,7 @@ void Win32IDE::createTerminalTab(const std::string& profile) {
         std::string msg = "[" + profile + "] Shell not found or failed to start.\r\n"
                          "Executable: " + std::string(shellExe) + "\r\n"
                          "Type commands below — they will be executed via CreateProcess.\r\n";
-        CHARRANGEA cr = {-1, -1};
+        CHARRANGE cr = {-1, -1};
         SendMessageA(tab.hwndContent, EM_EXSETSEL, 0, (LPARAM)&cr);
         SendMessageA(tab.hwndContent, EM_REPLACESEL, FALSE, (LPARAM)msg.c_str());
     }
@@ -269,7 +256,7 @@ static DWORD WINAPI TerminalReaderThread(LPVOID param) {
         buffer[safeBytes] = '\0';
 
         if (IsWindow(hwndOut)) {
-            CHARRANGEA cr = {-1, -1};
+            CHARRANGE cr = {-1, -1};
             SendMessageA(hwndOut, EM_EXSETSEL, 0, (LPARAM)&cr);
             SendMessageA(hwndOut, EM_REPLACESEL, FALSE, (LPARAM)buffer);
             SendMessageA(hwndOut, WM_VSCROLL, SB_BOTTOM, 0);
@@ -328,7 +315,7 @@ LRESULT CALLBACK Win32IDE::TerminalInputSubclassProc(HWND hwnd, UINT msg, WPARAM
                     CloseHandle(hWriteP);
 
                     std::string echo = "> " + std::string(cmd) + "\r\n";
-                    CHARRANGEA cr = {-1, -1};
+                    CHARRANGE cr = {-1, -1};
                     SendMessageA(tab.hwndContent, EM_EXSETSEL, 0, (LPARAM)&cr);
                     SendMessageA(tab.hwndContent, EM_REPLACESEL, FALSE, (LPARAM)echo.c_str());
 
@@ -350,7 +337,7 @@ LRESULT CALLBACK Win32IDE::TerminalInputSubclassProc(HWND hwnd, UINT msg, WPARAM
                 } else {
                     if (hWriteP) CloseHandle(hWriteP);
                     std::string err = "[Error] Failed to execute: " + std::string(cmd) + "\r\n";
-                    CHARRANGEA cr = {-1, -1};
+                    CHARRANGE cr = {-1, -1};
                     SendMessageA(tab.hwndContent, EM_EXSETSEL, 0, (LPARAM)&cr);
                     SendMessageA(tab.hwndContent, EM_REPLACESEL, FALSE, (LPARAM)err.c_str());
                 }
@@ -361,9 +348,8 @@ LRESULT CALLBACK Win32IDE::TerminalInputSubclassProc(HWND hwnd, UINT msg, WPARAM
     }
 
     if (msg == WM_KEYDOWN && (wParam == VK_UP || wParam == VK_DOWN)) {
-        int tabIdx = (int)(LONG_PTR)GetPropA(hwnd, "TAB_IDX");
-        if (tabIdx >= 0 && tabIdx < (int)m_terminalTabs.size()) {
-            auto& tab = m_terminalTabs[tabIdx];
+        if (ide && tabIdx >= 0 && tabIdx < (int)ide->m_terminalTabs.size()) {
+            auto& tab = ide->m_terminalTabs[tabIdx];
 
             if (wParam == VK_UP) {
                 if (!tab.commandHistory.empty()) {
@@ -377,7 +363,7 @@ LRESULT CALLBACK Win32IDE::TerminalInputSubclassProc(HWND hwnd, UINT msg, WPARAM
                     tab.historyIndex++;
                     SetWindowTextA(hwnd, tab.commandHistory[tab.historyIndex].c_str());
                 } else {
-                    tab.historyIndex = tab.commandHistory.size();
+                    tab.historyIndex = (int)tab.commandHistory.size();
                     SetWindowTextA(hwnd, "");
                 }
             }

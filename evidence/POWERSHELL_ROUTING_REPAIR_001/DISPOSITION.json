@@ -1,0 +1,25 @@
+{
+  "disposition_id": "POWERSHELL_ROUTING_REPAIR_001",
+  "updated_at": "2026-11-11T17:09:00Z",
+  "ROOT_CAUSE": "FOUND",
+  "PATCH": "SOURCE_APPLIED",
+  "REBUILD": "FAIL",
+  "RUNTIME_SMOKE": "HELD",
+  "POWERSHELL_ROUTING": "NOT_VERIFIED",
+  "KNOWN_PANEL_BINARY": "UNCHANGED",
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "laws": {
+    "SOURCE_PATCH_NE_RUNTIME_PASS": true,
+    "NOT_RUN_NE_PASS": true
+  },
+  "sessions": {
+    "01": {"objective": "LSP compile", "status": "OPEN"},
+    "02": {"objective": "Semantic-token compile", "status": "OPEN"},
+    "03": {"objective": "Symbol and peek-overlay compile", "status": "OPEN"},
+    "04": {"objective": "Autonomous-loop compile", "status": "OPEN"},
+    "05": {"objective": "Native rebuild + PowerShell smoke 5610-5612", "status": "OPEN"}
+  },
+  "acceptance_runtime": ["5610_Execute", "5611_Clear", "5612_Stop", "legacy_7100_isolation", "dock_regression"],
+  "preserve": "Existing panel launch candidate evidence intact; do not credit source patch as runtime PASS"
+}

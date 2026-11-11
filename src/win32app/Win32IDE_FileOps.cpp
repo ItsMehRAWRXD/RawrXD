@@ -1047,6 +1047,39 @@ static std::string ideSessionPath() {
     return (dir / "ide_session.json").string();
 }
 
+void Win32IDE::saveSessionPanelState(nlohmann::json& session) {
+    nlohmann::json panel;
+    panel["visible"] = m_panelVisible;
+    panel["height"] = m_panelHeight;
+    panel["maximized"] = m_panelMaximized;
+    panel["activeTab"] = static_cast<int>(m_activePanelTab);
+    panel["sidebarVisible"] = m_sidebarVisible;
+    panel["sidebarWidth"] = m_sidebarWidth;
+    panel["sidebarView"] = static_cast<int>(m_currentSidebarView);
+    session["panel"] = std::move(panel);
+}
+
+void Win32IDE::restoreSessionPanelState(const nlohmann::json& session) {
+    if (!session.contains("panel") || !session["panel"].is_object()) return;
+    const auto& panel = session["panel"];
+    m_panelVisible = panel.value("visible", true);
+    const int h = panel.value("height", 250);
+    m_panelHeight = (std::max)(160, (std::min)(420, h > 0 ? h : 250));
+    m_panelMaximized = panel.value("maximized", false);
+    const int tabIdx = panel.value("activeTab", 0);
+    if (tabIdx >= 0 && tabIdx <= 3) {
+        m_activePanelTab = static_cast<PanelTab>(tabIdx);
+    }
+    m_sidebarVisible = panel.value("sidebarVisible", true);
+    m_sidebarWidth = panel.value("sidebarWidth", 240);
+    m_currentSidebarView = static_cast<SidebarView>(panel.value("sidebarView", 0));
+    if (m_hwndMain) {
+        RECT rc{};
+        GetClientRect(m_hwndMain, &rc);
+        SendMessage(m_hwndMain, WM_SIZE, SIZE_RESTORED, MAKELPARAM(rc.right, rc.bottom));
+    }
+}
+
 void Win32IDE::saveIdeSession() {
     persistActiveDocumentBuffer();
 
@@ -1128,6 +1161,19 @@ void Win32IDE::saveIdeSession() {
     }
     root["chat"] = std::move(chat);
 
+    // P08: persist bottom-dock panel.height/visible/tab so WM_CLOSE → relaunch
+    // restores the dragged dock height. Win32IDE_Session.cpp helpers are not
+    // in the Native link set — inline the product panel block here.
+    root["panel"] = nlohmann::json{
+        {"visible", m_panelVisible},
+        {"height", m_panelHeight},
+        {"maximized", m_panelMaximized},
+        {"activeTab", static_cast<int>(m_activePanelTab)},
+        {"sidebarVisible", m_sidebarVisible},
+        {"sidebarWidth", m_sidebarWidth},
+        {"sidebarView", static_cast<int>(m_currentSidebarView)}
+    };
+
     // Chat/agent transcript bytes may be non-UTF-8 (Ollama). Default dump() is
     // strict and throws type_error.316 from dump_escaped; uncaught -> terminate
     // -> abort -> 0xC0000409 (G021: saveIdeSession on WM_CLOSE / session persist).
@@ -1191,6 +1237,29 @@ void Win32IDE::loadIdeSession() {
     const bool skipChatRestore = false;
     try {
         nlohmann::json root = nlohmann::json::parse(serialized);
+
+        // P08: restore panel.height FIRST — document/chat restore can throw into
+        // the outer catch and previously skipped dock height (HLoad stuck 250).
+        if (root.contains("panel") && root["panel"].is_object()) {
+            const auto& panel = root["panel"];
+            m_panelVisible = panel.value("visible", true);
+            m_panelHeight = panel.value("height", m_panelHeight);
+            if (m_panelHeight < 160) m_panelHeight = 160;
+            if (m_panelHeight > 420) m_panelHeight = 420;
+            m_panelMaximized = panel.value("maximized", false);
+            const int tabIdx = panel.value("activeTab", static_cast<int>(m_activePanelTab));
+            if (tabIdx >= 0 && tabIdx <= 3) {
+                m_activePanelTab = static_cast<PanelTab>(tabIdx);
+            }
+            m_sidebarVisible = panel.value("sidebarVisible", m_sidebarVisible);
+            m_sidebarWidth = panel.value("sidebarWidth", m_sidebarWidth);
+            // Apply dock geometry synchronously so relaunch probes (HLoad)
+            // do not sample the createPanel default 250 before posted WM_SIZE.
+            if (m_hwndPanelContainer && IsWindow(m_hwndPanelContainer) &&
+                m_hwndMain && IsWindow(m_hwndMain)) {
+                layoutBottomDock();
+            }
+        }
 
         const auto modelFromJson = [](const nlohmann::json& value) {
             ChatModelEntry model;
@@ -1275,6 +1344,8 @@ void Win32IDE::loadIdeSession() {
         updateDocumentTabs();
         if (m_openDocuments.empty()) {
             addDocumentTab(std::string());
+            // Still restore dock height/visibility for P08 even with empty docs.
+            restoreSessionPanelState(root);
             return;
         }
         if (root.contains("chat_mode")) {
@@ -1372,6 +1443,7 @@ void Win32IDE::loadIdeSession() {
             m_activeDocument = active;
             m_pendingSessionEditorMaterialize = true;
         }
+
     } catch (...) {
         // A corrupt canonical snapshot must not block IDE launch. The atomic
         // writer leaves a recoverable temp snapshot for the next start.

@@ -1,0 +1,24 @@
+N04_CONCURRENCY_ARCHITECTURE
+CERTIFIED=0 PROMOTE=0 TIP_CLIMB=HOLD
+TIMESTAMP=2026-11-11T12:41:03.1106513-05:00
+
+=== PRODUCT_SHARED_ENGINE_PATH ===
+file=F:\rawrxd\src\deep2\aggregate_decode\AggregateDecodeDeep2Backend.hpp
+L6:#include <mutex>
+L28:std::unique_ptr<Deep2::Deep2Engine> engine_;
+L29:std::mutex decode_mu_;
+file=F:\rawrxd\src\deep2\aggregate_decode\AggregateDecodeDeep2Backend.cpp
+L62:std::lock_guard<std::mutex> lock(decode_mu_);
+L73:auto gr = engine_->generateStream(
+
+MUTEX_REMOVED=0
+SHARED_ENGINE_MT_SAFE=0
+OVERLAP_STRATEGY=mutex_serialize_decode_on_single_Deep2Engine
+TRUE_PARALLEL_GPU_AGGREGATE=0
+CONTINUOUS_BATCHING_PRODUCT_PATH=NOT_CLAIMED
+
+=== ISOLATED_ENGINE_PATH (N03) ===
+N03_SESSION_ISOLATION_PASS=1
+ISOLATED_ENGINES_KEEP_DISTINCT_KV=1
+DECODE_MUTEX_FOR_GPU_SAFETY=1
+NOTE=mutex-serialized multi ? true parallel decode

@@ -4,15 +4,15 @@
 #include <string>
 
 void Win32IDE::initVoiceAssistant() {
-    appendToOutput("[VoiceAssistant] Voice assistant initialized.\n", "Output", OutputSeverity::Info);
+    appendToOutput("[VoiceAssistant] Voice assistant initialized.\n", "Output", Win32IDE::OutputSeverity::Info);
 }
 
 void Win32IDE::startVoiceListening() {
-    appendToOutput("[VoiceAssistant] Listening...\n", "Output", OutputSeverity::Info);
+    appendToOutput("[VoiceAssistant] Listening...\n", "Output", Win32IDE::OutputSeverity::Info);
 }
 
 void Win32IDE::stopVoiceListening() {
-    appendToOutput("[VoiceAssistant] Stopped listening.\n", "Output", OutputSeverity::Info);
+    appendToOutput("[VoiceAssistant] Stopped listening.\n", "Output", Win32IDE::OutputSeverity::Info);
 }
 
 bool Win32IDE::isVoiceListening() const {

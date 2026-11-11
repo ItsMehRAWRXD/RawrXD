@@ -1,0 +1,69 @@
+BATCH18_P07_HWND_VIS_FIX_RECEIPT
+ASOF_UTC=2026-11-11T19:43:05Z
+TIP_SHA=F3E02D641EABDE5D81AD248305D548A44A22FDF2F8AC810D83893AC827C8739C
+EXE=F:\rawrxd\build_win32ide\bin\Release\RawrXD-Win32IDE-Native.exe
+CERTIFIED=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+PRODUCT_PASS=0
+NO_INVENT_PASS=1
+
+## Blocker (pre-fix)
+P07_HWND_VISIBILITY_INCOMPLETE on tip D1B17F66…
+Terminal/Output ABSENT (no IDC 1302/1303 bodies)
+ProblemsList/DebugConsole HIDDEN after TCM_SETCURSEL + WM_COMMAND 1301
+Root cause: (1) createPanel never created 1302/1303
+(2) WM_COMMAND 1301 with lParam=tabs HWND hit hwndCtl BN_CLICKED
+    default:return before switchPanelTab
+(3) Aggressive SWP_SHOWWINDOW|SWP_FRAMECHANGED + GWL_STYLE on
+    ListView faulted 0xC000041D when selecting Problems
+
+## Code paths changed
+1. F:\rawrxd\src\win32app\Win32IDE.h
+   - m_hwndPanelTerminal / m_hwndPanelOutput
+   - ensurePanelTabBodies()
+
+2. F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp
+   - createPanel → ensurePanelTabBodies() (1302/1303/1312/1305)
+   - ensurePanelTabBodies() create-if-missing
+   - switchPanelTab ShowWindow/create-if-missing exclusive bodies
+   - layoutBottomDock sizes 1302/1303
+   - showBody = ShowWindow only (no GWL_STYLE / SWP_SHOWWINDOW /
+     SWP_FRAMECHANGED — ListView crash path)
+
+3. F:\rawrxd\src\win32app\Win32IDE_lifecycle.cpp
+   - WM_COMMAND 1301 / 1312 handled BEFORE hwndCtl early-return
+   - onSize sizes/shows panel Terminal/Output/Problems/Debug
+   - legacy m_outputWindows / m_terminalPanes stay hidden under
+     four-panel dock (VisId bodies own the surface)
+   - PowerShell 5610/5611/5612 path UNCHANGED (still before 7100)
+
+## Smoke (controlling)
+SCRIPT=Invoke-Batch18FirstGuiSmokes.ps1 -AllowLaunch
+RUNLOG=F:\rawrxd\evidence\UPPER_TIER_MASTER_001\BATCH_18_AUDIT\gui_first_smoke_run_20261111-144255.txt
+RECEIPT=F:\rawrxd\evidence\UPPER_TIER_MASTER_001\BATCH_18_AUDIT\GUI_FIRST_SMOKE_RECEIPT.txt
+
+P07=RUNTIME_REACHED_4TAB_CYCLE
+STALL_COUNT=0
+EARLY_EXIT=False
+PANEL_TAB_COUNT=4
+VIS_PROOF=
+  sel=0 Terminal=VISIBLE Output=HIDDEN ProblemsList=HIDDEN DebugConsole=HIDDEN
+  sel=1 Terminal=HIDDEN Output=VISIBLE ProblemsList=HIDDEN DebugConsole=HIDDEN
+  sel=2 Terminal=HIDDEN Output=HIDDEN ProblemsList=VISIBLE DebugConsole=HIDDEN
+  sel=3 Terminal=HIDDEN Output=HIDDEN ProblemsList=HIDDEN DebugConsole=VISIBLE
+  (3 full cycles; exclusive VISIBLE matches selected tab)
+
+FOLLOWUP_NOTE=
+  Invoke-Batch18GuiGatesFollowup.ps1 observed 1302/1303/1312/1305 HWND
+  present at startup (ABSENT cleared) then process exited during
+  external ShowWindow/maximize force-show (tabCount=0) — separate from
+  tab-select VisId proof above. CERTIFIED=0 PROMOTE=0.
+
+## Disposition
+SOURCE_WIRED=1
+RUNTIME_REACHED=1 (4-tab exclusive HWND VISIBLE on tip SHA)
+PRODUCT_RUNTIME_PASS=0
+CERTIFIED=0
+PROMOTE=0
+NEXT=do not invent PRODUCT_PASS; P08/P09/P11 remain open

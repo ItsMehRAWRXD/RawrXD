@@ -1,6 +1,7 @@
 // NativePluginManager.h — Native Plugin Manager (Batch 5 X07)
 #pragma once
 
+#include <windows.h>
 #include <string>
 #include <vector>
 #include <map>
@@ -15,5 +16,5 @@ public:
 
 private:
     NativePluginManager() = default;
-    std::map<std::string, void*> loadedPlugins_;
+    std::map<std::string, HMODULE> loadedPlugins_;
 };

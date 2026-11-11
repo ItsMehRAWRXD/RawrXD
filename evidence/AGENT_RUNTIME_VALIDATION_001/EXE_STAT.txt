@@ -1,0 +1,6 @@
+exe_found=1
+searched=F:\rawrxd\build_win32ide/**/RawrXD-Win32IDE-Native.exe
+path=F:\rawrxd\build_win32ide\bin\Release\RawrXD-Win32IDE-Native.exe
+timestamp=2026-11-11T18:40:24.6556320Z
+size_bytes=2178048
+note=G1 link PASS (EXIT=0, exe exists). CERTIFIED=0 PROMOTE=0. Runtime G2-G4 still BLOCKED.

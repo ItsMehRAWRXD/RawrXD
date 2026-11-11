@@ -7,18 +7,16 @@
 #include <string>
 #include <ctime>
 
-using namespace RawrXD::Security;
-
 void Win32IDE::initializeSovereignAttestation() {
-    appendToOutput("[Attestation] SovereignAttestation initialized.\n", "Output", OutputSeverity::Info);
+    appendToOutput("[Attestation] SovereignAttestation initialized.\n", "Output", Win32IDE::OutputSeverity::Info);
 }
 
 void Win32IDE::recordModelLoadAttestation(const std::string& modelPath, const void* mappedBase, size_t size) {
     (void)mappedBase;
     appendToOutput("[Attestation] Model load recorded: " + modelPath + " (" + std::to_string(size) + " bytes)\n",
-                   "Audit", OutputSeverity::Info);
+                   "Audit", Win32IDE::OutputSeverity::Info);
 }
 
 void Win32IDE::exportAttestationReport() {
-    appendToOutput("[Attestation] Report exported.\n", "Output", OutputSeverity::Info);
+    appendToOutput("[Attestation] Report exported.\n", "Output", Win32IDE::OutputSeverity::Info);
 }

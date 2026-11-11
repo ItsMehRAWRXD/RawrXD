@@ -1,0 +1,284 @@
+**********************************************************************
+** Visual Studio 2022 Developer Command Prompt v17.14.39
+** Copyright (c) 2025 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- aggregate_decode: USE_DEEP2 requested; awaiting parent deep2_engine_lib link
+-- Î“Â£Ã´ MASM assembler enabled for custom ZLIB compression
+-- 64-bit configuration validated: pointer size = 8
+-- Security hardening ENABLED
+-- MSVC LTO enabled: /GL /LTCG /OPT:REF /OPT:ICF
+-- Î“Ã¤â•£ ZLIB not installed - Using built-in MASM-based compression (BrutalGzip/Deflate)
+--   MASM Compression Engines: BrutalGzip (MASM optimized), Deflate (fallback)
+--   To use native zlib compression:
+--     Option 1: vcpkg install zlib:x64-windows
+--     Option 2: Enable auto-download with -DFETCHCONTENT_ZLIB=ON
+CMake Warning at CMakeLists.txt:447 (message):
+  CURL not found - HTTP client will use fallback.  Set CURL_DIR or install
+  libcurl for full functionality.
+
+
+CMake Warning at CMakeLists.txt:456 (message):
+  ZSTD not found - compression will use passthrough.  Set ZSTD_ROOT or
+  install zstd for full functionality.
+
+
+-- Qt6 not found - native dependency-free build (Qt-dependent targets excluded)
+-- Adding ggml submodule for quantized inference
+-- Warning: ccache not found - consider installing it for faster compilation or disable this warning with GGML_CCACHE=OFF
+-- CMAKE_SYSTEM_PROCESSOR: AMD64
+-- CMAKE_GENERATOR_PLATFORM: x64
+-- GGML_SYSTEM_ARCH: x86
+-- Including CPU backend
+-- x86 detected
+-- Adding CPU backend variant ggml-cpu: /arch:AVX512 GGML_AVX512
+-- Vulkan found
+-- GL_KHR_cooperative_matrix supported by glslc
+-- GL_NV_cooperative_matrix2 supported by glslc
+-- GL_EXT_integer_dot_product supported by glslc
+-- GL_EXT_bfloat16 supported by glslc
+-- Including Vulkan backend
+-- ggml version: 0.9.4
+-- ggml commit:  b44c20f019
+-- rawr_run: MSVC security hardening enabled
+-- rawr_fuzz_parsers: fuzz harness enabled (build with RAWRXD_BUILD_FUZZ=ON)
+-- CUDA Toolkit not found - NVIDIA GPU support disabled
+-- ROCm/HIP not found - AMD GPU support disabled
+-- To enable AMD GPU: Install ROCm for Windows and set HIP_PATH
+-- Vulkan found: 1.4.357
+-- Vulkan header: C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h
+-- nlohmann_json: using vendored header at include/nlohmann/json.hpp
+-- rawrxd_production_hardening: production hardening runtime enabled
+-- rawrxd_workflow: dependency-free browser testing & GitHub cloud agents enabled
+-- Adding advanced orchestration modules for AI-native IDE
+-- Qt-dependent orchestration modules EXCLUDED (Qt6 not installed): RawrXDOrchestration, RawrXDGit, RawrXDTerminal, RawrXDPaint
+-- Qt6 not found, skipping RawrXD-QtShell
+-- RawrXD-Win32IDE excluded (Qt6 unavailable or RAWRXD_BUILD_WIN32IDE_QT=OFF)
+-- gguf_universal_probe enabled (any-model GGUF integration)
+-- profiler gate: Vulkan_FOUND=TRUE vulkan_include='C:\VulkanSDK\1.4.357.0/Include'
+-- deep2_token_profiler enabled (ggml + Vulkan SDK)
+-- deep2_parity_trace enabled (Gate 4 dispatch audit; ggml + Vulkan SDK)
+-- deep2_bench_tps enabled (production timing witness)
+-- deep2_gpu_certify enabled (full-model GPU/CPU logits certification)
+-- deep2_dualgpu_forward enabled (split-device dispatch witness)
+-- deep2_reverse_engineer enabled (native Qwen4Exp contract audit)
+-- deep2_gdn_parity_harness enabled (reference-only GDN contract)
+-- deep2_qwen4exp_operator_harness enabled (PLE/HC/QSA/MoE contracts)
+-- deep2_dynamic_interceptor enabled (real Vulkan topology telemetry)
+-- deep2_qwen4exp_pipeline_probe enabled (physical shader wiring)
+-- deep2_qwen4exp_gdn_probe enabled (real isolated GDN dispatch)
+-- deep2_enterprise_manifest enabled (source-to-parity closure receipt)
+-- deep2_d1_prefill_parity enabled (D1 batched-prefill parity; ggml + Vulkan SDK)
+-- deep2_spec_bench enabled (Speculative verification benchmark; ggml + Vulkan SDK)
+-- HexMag cert targets EXCLUDED: required sources not found
+-- deep2_context_scaling enabled (Long-context KV certification; ggml + Vulkan SDK)
+-- deep2_gguf_lifecycle enabled (GGUF lifecycle certification; ggml + Vulkan SDK)
+-- gpu_quant_dot_verify enabled (native Vulkan quant-dot kernel evidence)
+-- gpu_quant_dot_realweights enabled (native Vulkan quant-dot on real GGUF weights)
+-- deep2_fused_lmhead_verify enabled (Fused speculative LM-head certification; ggml + Vulkan SDK)
+-- q6k_row_differential_test enabled (Q6_K row-level differential test)
+-- mamba2_ref_probe enabled (independent Mamba2 block-0 reference)
+-- deep2_agentic_loop enabled (Gate 9 agentic E2E harness)
+-- agentic_loop_bridge_recovery_smoke enabled
+-- deep2_agentic_repair enabled (H01/H02 host-driven autonomous repair)
+-- deep2_prefill_parity enabled (H11-P1..P4 parity + H11-P6 dispatch profile)
+-- rawrxd_gpu_compute enabled: Deep2::VulkanCompute buildable from the main tree
+-- deep2_vulkan_gdn_dispatch_probe enabled (class-level stateful GDN dispatch)
+-- deep2_engine_lib enabled (static library; rawrxd_deep2_engine executable enabled)
+-- aggregate_decode: AGGREGATE_DECODE_USE_DEEP2=1 linked deep2_engine_lib
+-- deep2_openai_server enabled (OpenAI HTTP on :11436)
+-- test_api_server enabled (stub HTTP on :11436)
+-- deep2_gpu_decode_roofline enabled (GPU decode bottleneck profiling; ggml + Vulkan SDK)
+-- deep2_uneven_tp_gemv enabled: Vulkan uneven shard diagnostics
+-- RawrXD-Win32IDE-Native: RichEdit used as a runtime window class only; no import lib found in this SDK
+-- RawrXD-Win32IDE-Native: linked against rawrxd_production_hardening
+-- RawrXD-Win32IDE-Native: linked against rawrxd_security
+-- RawrXD-Win32IDE-Native: linked rawrxd_computer_use
+-- RawrXD-Win32IDE-Native: native dependency-free Win32 IDE enabled
+-- RawrXD-Win32IDE-Native-Ext: linked rawrxd_computer_use
+-- RawrXD-Win32IDE-Native-Ext: AgentSession compiled into Ext (Issue #49 H57)
+-- RawrXD-Win32IDE-Native-Ext: tip_ext ExtensionHost target enabled (QuickJS=F:/rawrxd/3rdparty/quickjs_ng)
+-- Qt6 not found or version < 6.7.2; skipping RawrXD-AgenticIDE target
+-- RawrXD-ModelLoader configured successfully with Clang C++20
+-- Qt target excluded (Qt6 unavailable): test_ide_main
+-- Qt target excluded (Qt6 unavailable): test_qmainwindow
+-- Qt target excluded (Qt6 unavailable): test_header
+-- Qt target excluded (Qt6 unavailable): bench_deflate_50mb
+-- Qt target excluded (Qt6 unavailable): quant_engine_test
+-- Qt target excluded (Qt6 unavailable): quant_correctness_tests
+-- Qt target excluded (Qt6 unavailable): test_agent_coordinator
+-- Qt target excluded (Qt6 unavailable): test_agent_coordinator_integration
+-- Qt target excluded (Qt6 unavailable): test_gguf_loader
+-- Qt target excluded (Qt6 unavailable): test_gguf_loader_simple
+-- MASM Compiler Suite skipped: cmake/MASMCompiler.cmake not present in this tree
+-- rawrxd_agentic_backend: Deep2 + Ollama unified backend library enabled
+-- RawrXD-Win32IDE-Native-Ext: POST-link rawrxd_agentic_backend (AgentSession H01)
+-- q8k parity harness: Q8_K byte-level verification targets enabled
+-- RawrXD-CLI-V2: entry=src/rawr_cli.cpp (Ollama route SOURCE_FIXED, output: rawr.exe)
+-- ========================================
+-- RawrXD Project Configuration Summary
+-- ========================================
+-- Qt-dependent targets EXCLUDED (Qt6 not installed): RawrXDOrchestration;RawrXDGit;RawrXDTerminal;RawrXDPaint;RawrXD-Win32IDE;test_ide_main;test_qmainwindow;test_header;bench_deflate_50mb;quant_engine_test;quant_correctness_tests;test_agent_coordinator;test_agent_coordinator_integration;test_gguf_loader;test_gguf_loader_simple
+-- rawrxd_security: hardening library ENABLED (3 sources)
+-- test_deep2_inference enabled (headless Deep2 inference harness)
+-- Configuring done (2.7s)
+-- Generating done (4.5s)
+-- Build files have been written to: F:/rawrxd/build
+CMAKE_EXIT=0
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  Checking File Globs
+  ggml.c
+  ggml.cpp
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(77,13): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(92,13): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(145,13): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(151,16): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(156,14): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(161,13): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(166,13): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(203,15): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(272,13): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(277,15): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(298,15): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml.cpp')
+  
+  ggml-alloc.c
+  ggml-quants.c
+  ggml-backend.cpp
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(92,13): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-backend.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(145,13): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-backend.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(151,16): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-backend.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(156,14): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-backend.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(161,13): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-backend.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(166,13): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-backend.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(272,13): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-backend.cpp')
+  
+  ggml-opt.cpp
+F:\rawrxd\3rdparty\ggml\src\ggml-opt.cpp(24,27): warning C4245: 'initializing': conversion from 'int' to 'size_t', signed/unsigned mismatch [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+F:\rawrxd\3rdparty\ggml\src\ggml-opt.cpp(25,27): warning C4245: 'initializing': conversion from 'int' to 'size_t', signed/unsigned mismatch [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+F:\rawrxd\3rdparty\ggml\src\ggml-opt.cpp(669,24): warning C4457: declaration of 'loss' hides function parameter [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+      F:\rawrxd\3rdparty\ggml\src\ggml-opt.cpp(657,62):
+      see declaration of 'loss'
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(77,13): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(92,13): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(145,13): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(151,16): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(156,14): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(161,13): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(166,13): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(203,15): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(272,13): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(277,15): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(298,15): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+  ggml-threading.cpp
+  gguf.cpp
+F:\rawrxd\3rdparty\ggml\src\gguf.cpp(276,23): warning C4245: 'initializing': conversion from 'int' to 'uint64_t', signed/unsigned mismatch [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+F:\rawrxd\3rdparty\ggml\src\gguf.cpp(526,29): warning C4245: 'initializing': conversion from 'int' to 'uint32_t', signed/unsigned mismatch [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(77,13): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/gguf.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(92,13): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/gguf.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(145,13): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/gguf.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(151,16): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/gguf.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(156,14): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/gguf.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(161,13): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/gguf.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(166,13): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/gguf.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(203,15): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/gguf.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(272,13): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/gguf.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(277,15): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/gguf.cpp')
+  
+F:\rawrxd\3rdparty\ggml\src\ggml-impl.h(298,15): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\build\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/gguf.cpp')
+  
+  ggml-base.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\Release\ggml-base.lib
+  ggml-cpu.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\Release\ggml-cpu.lib
+  1>Performing build step for 'vulkan-shaders-gen'
+  MSBuild version 17.14.51+25f168cee for .NET Framework
+  
+    vulkan-shaders-gen.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\ggml-vulkan\vulkan-shaders-gen-prefix\src\vulkan-shaders-gen-build\Release\vulkan-shaders-gen.exe
+  Performing install step for 'vulkan-shaders-gen'
+  -- Up-to-date: F:/rawrxd/build/Release/vulkan-shaders-gen.exe
+  Completed 'vulkan-shaders-gen'
+  ggml-vulkan.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\ggml-vulkan\Release\ggml-vulkan.lib
+  ggml.vcxproj -> F:\rawrxd\build\3rdparty\ggml\src\Release\ggml.lib
+  rawrxd_gpu_compute.vcxproj -> F:\rawrxd\build\Release\rawrxd_gpu_compute.lib
+  deep2_engine_lib.vcxproj -> F:\rawrxd\build\Release\deep2_engine_lib.lib
+  Building Custom Rule F:/rawrxd/CMakeLists.txt
+  deep2_n03_session_isolation.cpp
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(787,5): error MSB6006: "CL.exe" exited with code -1. [F:\rawrxd\build\deep2_n03_session_isolation.vcxproj]
+N03_BUILD_EXIT=-1

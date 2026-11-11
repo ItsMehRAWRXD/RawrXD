@@ -1,0 +1,23 @@
+{
+    "HASH_OK":  1,
+    "TIP_CLIMB":  "HOLD",
+    "SHA_MATCH_REQUESTED_TIP":  1,
+    "PROMOTE":  0,
+    "requested_tip_sha":  "C25B157053A590E4BA02A418502A9EF356EE8C386764BB8873B1BD6A098DED5A",
+    "REQUESTED_TIP_EXE_ON_DISK":  1,
+    "asof_utc":  "2026-11-11T19:32:58.6668882Z",
+    "next_gate":  "OLLAMA_IDENTITY_MATRIX_ON_LIVE_C25B_THEN_ROUTING_E2E",
+    "live_exe_sha256":  "C25B157053A590E4BA02A418502A9EF356EE8C386764BB8873B1BD6A098DED5A",
+    "CERTIFIED":  0,
+    "live_exe_bytes":  2182656,
+    "note":  "Collab rewire linked; tip rebound D191-\u003eC25B; HASH_OK only; ROUTING_E2E NOT_CERTIFIED",
+    "agent_model_routing":  "UNVERIFIED",
+    "live_tip_bind_probe":  "HASH_OK_LIVE_TIP",
+    "tip_bind_requested":  "HASH_OK_LIVE_TIP",
+    "ghosttext_routing":  "UNVERIFIED",
+    "VERDICT":  "TIP_REBOUND_LIVE_C25B_COLLAB_SOURCE_WIRED_ROUTING_UNVERIFIED",
+    "cancellation_recovery":  "UNVERIFIED",
+    "ROUTING_SMOKE":  "TIP_BOUND_C25B_ROUTING_UNVERIFIED",
+    "controlling_run":  "runs/20261111_143251",
+    "ROUTING_E2E":  "NOT_CERTIFIED"
+}

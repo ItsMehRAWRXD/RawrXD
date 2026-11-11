@@ -1,0 +1,85 @@
+
+  Checking File Globs
+  ggml-base.vcxproj -> F:\rawrxd\build_win32ide\3rdparty\ggml\src\Release\ggml-base.lib
+  ggml-cpu.vcxproj -> F:\rawrxd\build_win32ide\3rdparty\ggml\src\Release\ggml-cpu.lib
+  1>Performing build step for 'vulkan-shaders-gen'
+  MSBuild version 17.14.51+25f168cee for .NET Framework
+  
+    vulkan-shaders-gen.vcxproj -> F:\rawrxd\build_win32ide\3rdparty\ggml\src\ggml-vulkan\vulkan-shaders-gen-prefix\src\vulkan-shaders-gen-build\Release\vulkan-shaders-gen.exe
+  Performing install step for 'vulkan-shaders-gen'
+  -- Up-to-date: F:/rawrxd/build_win32ide/Release/vulkan-shaders-gen.exe
+  Completed 'vulkan-shaders-gen'
+  ggml-vulkan.vcxproj -> F:\rawrxd\build_win32ide\3rdparty\ggml\src\ggml-vulkan\Release\ggml-vulkan.lib
+  ggml.vcxproj -> F:\rawrxd\build_win32ide\3rdparty\ggml\src\Release\ggml.lib
+  rawrxd_computer_use.vcxproj -> F:\rawrxd\build_win32ide\src\computer_use\Release\rawrxd_computer_use.lib
+  rawrxd_production_hardening.vcxproj -> F:\rawrxd\build_win32ide\src\production\Release\rawrxd_production_hardening.lib
+  rawrxd_security.vcxproj -> F:\rawrxd\build_win32ide\Release\rawrxd_security.lib
+  Win32IDE_LinkGapHelpers.cpp
+F:\rawrxd\src\tokenizer\qwen3_tokenizer.hpp(133,20): warning C4189: 'end': local variable is initialized but not referenced [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_LinkGapHelpers.cpp')
+  
+F:\rawrxd\src\native_agent.hpp(246,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_LinkGapHelpers.cpp')
+  
+F:\rawrxd\src\agentic\tool_core.hpp(97,13): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning. [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_LinkGapHelpers.cpp')
+  
+F:\rawrxd\src\agentic\ToolCallBridge.h(58,62): warning C4100: 'registry': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_LinkGapHelpers.cpp')
+  
+F:\rawrxd\src\snap\rawrxd_snap_detectors.hpp(5,9): warning C4005: 'WIN32_LEAN_AND_MEAN': macro redefinition [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_LinkGapHelpers.cpp')
+      F:\rawrxd\src\snap\rawrxd_snap_detectors.hpp(5,9):
+      'WIN32_LEAN_AND_MEAN' previously declared on the command line
+  
+  Win32IDE_PeekOverlay.cpp
+F:\rawrxd\src\tokenizer\qwen3_tokenizer.hpp(133,20): warning C4189: 'end': local variable is initialized but not referenced [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_PeekOverlay.cpp')
+  
+F:\rawrxd\src\native_agent.hpp(246,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_PeekOverlay.cpp')
+  
+F:\rawrxd\src\agentic\tool_core.hpp(97,13): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning. [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_PeekOverlay.cpp')
+  
+F:\rawrxd\src\agentic\ToolCallBridge.h(58,62): warning C4100: 'registry': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_PeekOverlay.cpp')
+  
+F:\rawrxd\src\snap\rawrxd_snap_detectors.hpp(5,9): warning C4005: 'WIN32_LEAN_AND_MEAN': macro redefinition [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_PeekOverlay.cpp')
+      F:\rawrxd\src\snap\rawrxd_snap_detectors.hpp(5,9):
+      'WIN32_LEAN_AND_MEAN' previously declared on the command line
+  
+F:\rawrxd\src\win32app\Win32IDE_PeekOverlay.cpp(461,72): warning C4100: 'shift': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_PeekOverlay.cpp(461,62): warning C4100: 'alt': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_PeekOverlay.cpp(461,51): warning C4100: 'ctrl': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  RawrXD_LSPServer.cpp
+  semantic_code_intelligence.cpp
+  BackendRouter.cpp
+  PersistentTaskBacklog.cpp
+  RawrSwarmEvents.cpp
+F:\rawrxd\src\agentic\RawrSwarmEvents.cpp(11,9): warning C4005: 'WIN32_LEAN_AND_MEAN': macro redefinition [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+      F:\rawrxd\src\agentic\RawrSwarmEvents.cpp(11,9):
+      'WIN32_LEAN_AND_MEAN' previously declared on the command line
+  
+  RawrXD_SymbolEngine.cpp
+Win32IDE_Sidebar.obj : error LNK2005: "public: void __cdecl Win32IDE::refreshFileExplorer(void)" (?refreshFileExplorer@Win32IDE@@QEAAXXZ) already defined in Win32IDE.obj [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_Sidebar.obj : error LNK2005: "public: void __cdecl Win32IDE::createFileExplorer(void)" (?createFileExplorer@Win32IDE@@QEAAXXZ) already defined in Win32IDE.obj [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_Minimap.obj : error LNK2005: "public: void __cdecl Win32IDE::toggleMinimap(void)" (?toggleMinimap@Win32IDE@@QEAAXXZ) already defined in Win32IDE.obj [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_Minimap.obj : error LNK2005: "public: void __cdecl Win32IDE::scrollToMinimapPosition(int)" (?scrollToMinimapPosition@Win32IDE@@QEAAXH@Z) already defined in Win32IDE.obj [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_Minimap.obj : error LNK2005: "public: void __cdecl Win32IDE::updateMinimap(void)" (?updateMinimap@Win32IDE@@QEAAXXZ) already defined in Win32IDE.obj [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_Minimap.obj : error LNK2005: "public: void __cdecl Win32IDE::createMinimap(void)" (?createMinimap@Win32IDE@@QEAAXXZ) already defined in Win32IDE.obj [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_PeekOverlay.obj : error LNK2005: "public: class std::vector<struct PeekItem,class std::allocator<struct PeekItem> > __cdecl Win32IDE::buildPeekItemsFromLspLocations(class std::vector<struct Win32IDE::LSPLocation,class std::allocator<struct Win32IDE::LSPLocation> > const &,enum PeekItemType,int,int)" (?buildPeekItemsFromLspLocations@Win32IDE@@QEAA?AV?$vector@UPeekItem@@V?$allocator@UPeekItem@@@std@@@std@@AEBV?$vector@ULSPLocation@Win32IDE@@V?$allocator@ULSPLocation@Win32IDE@@@std@@@3@W4PeekItemType@@HH@Z) already defined in Win32IDE_LinkGapHelpers.obj [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_PeekOverlay.obj : error LNK2005: "public: void __cdecl Win32IDE::showPeekOverlayWithItems(class std::vector<struct PeekItem,class std::allocator<struct PeekItem> > const &,int,int)" (?showPeekOverlayWithItems@Win32IDE@@QEAAXAEBV?$vector@UPeekItem@@V?$allocator@UPeekItem@@@std@@@std@@HH@Z) already defined in Win32IDE_LinkGapHelpers.obj [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_SemanticTokens.obj : error LNK2005: "public: struct Win32IDE::SemanticTokensResult __cdecl Win32IDE::lspSemanticTokensFull(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?lspSemanticTokensFull@Win32IDE@@QEAA?AUSemanticTokensResult@1@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z) already defined in Win32IDE_LSPClient.obj [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_TaskRunner.obj : error LNK2005: "public: void __cdecl Win32IDE::runSelectedTask(int)" (?runSelectedTask@Win32IDE@@QEAAXH@Z) already defined in Win32IDE_LinkGapHelpers.obj [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_ProblemsPanel.obj : error LNK2005: "public: void __cdecl Win32IDE::clearProblems(void)" (?clearProblems@Win32IDE@@QEAAXXZ) already defined in Win32IDE_VSCodeUI.obj [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_ProblemsPanel.obj : error LNK2005: "public: void __cdecl Win32IDE::addProblem(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,int,int,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,int)" (?addProblem@Win32IDE@@QEAAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HH0H@Z) already defined in Win32IDE_VSCodeUI.obj [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_Git.obj : error LNK2005: "private: void __cdecl Win32IDE::gitPull(void)" (?gitPull@Win32IDE@@AEAAXXZ) already defined in Win32IDE.obj [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_Git.obj : error LNK2005: "private: void __cdecl Win32IDE::gitPush(void)" (?gitPush@Win32IDE@@AEAAXXZ) already defined in Win32IDE.obj [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_Git.obj : error LNK2005: "private: void __cdecl Win32IDE::gitCommit(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?gitCommit@Win32IDE@@AEAAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z) already defined in Win32IDE.obj [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+Win32IDE_GGUF_Reader.obj : error LNK2005: "private: bool __cdecl Win32IDE::loadGGUFModel(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?loadGGUFModel@Win32IDE@@AEAA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z) already defined in Win32IDE.obj [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+     Creating library F:/rawrxd/build_win32ide/Release/RawrXD-Win32IDE-Native.lib and object F:/rawrxd/build_win32ide/Release/RawrXD-Win32IDE-Native.exp
+BackendRouter.obj : error LNK2001: unresolved external symbol "public: __cdecl RawrXD::Agent::OllamaBackend::OllamaBackend(void)" (??0OllamaBackend@Agent@RawrXD@@QEAA@XZ) [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+BackendRouter.obj : error LNK2001: unresolved external symbol "public: __cdecl RawrXD::Agent::Deep2Backend::Deep2Backend(void)" (??0Deep2Backend@Agent@RawrXD@@QEAA@XZ) [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\build_win32ide\bin\Release\RawrXD-Win32IDE-Native.exe : fatal error LNK1120: 2 unresolved externals [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]

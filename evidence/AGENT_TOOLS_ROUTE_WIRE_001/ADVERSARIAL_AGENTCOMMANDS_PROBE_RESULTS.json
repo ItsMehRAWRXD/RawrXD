@@ -1,0 +1,25 @@
+{
+  "probe_id": "AGENT_TOOLS_ROUTE_WIRE_001_AGENTCOMMANDS",
+  "entry": "IdeSsot::DispatchTool / dispatchAgentTool mirror",
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "cases": [
+    {"id":"deny_shell_system32","tool":"runInTerminal","expectDeny":true,"denied":true,"ok":true,"detail":"DENIED: command denied by sandbox"},
+    {"id":"deny_shell_format","tool":"runInTerminal","expectDeny":true,"denied":true,"ok":true,"detail":"DENIED: command denied by sandbox"},
+    {"id":"deny_shell_del_s","tool":"runInTerminal","expectDeny":true,"denied":true,"ok":true,"detail":"DENIED: command denied by sandbox"},
+    {"id":"deny_write_windows","tool":"writeFile","expectDeny":true,"denied":true,"ok":true,"detail":"DENIED: path not allowed by sandbox"},
+    {"id":"deny_write_program_files","tool":"writeFile","expectDeny":true,"denied":true,"ok":true,"detail":"DENIED: path not allowed by sandbox"},
+    {"id":"deny_edit_traversal","tool":"editFiles","expectDeny":true,"denied":true,"ok":true,"detail":"DENIED: path not allowed by sandbox"},
+    {"id":"deny_delete_system32","tool":"deleteFile","expectDeny":true,"denied":true,"ok":true,"detail":"DENIED: path not allowed by sandbox"},
+    {"id":"deny_shell_encoded_ps","tool":"runInTerminal","expectDeny":true,"denied":true,"ok":true,"detail":"DENIED: command denied by sandbox"},
+    {"id":"deny_shell_unc","tool":"runInTerminal","expectDeny":true,"denied":true,"ok":true,"detail":"DENIED: command denied by sandbox"},
+    {"id":"deny_mutate_no_consent","tool":"writeFile","expectDeny":true,"denied":true,"ok":true,"detail":"approval required"},
+    {"id":"allow_read_workspace","tool":"readFile","expectDeny":false,"denied":false,"ok":true,"detail":"cmake_minimum_required(VERSION 3.20)\nproject(RawrXD-ModelLoader VERSION 1.0.13)\n\n# DEEP2_GPU_CODE31_RESET_001 — inject VK lost / Win32 code 31; assert reset seq.\nif(EXISTS \"${CMAKE_SOURCE_DIR}/tools/deep2_gpu_code31_reset_smoke.cpp\" A"},
+    {"id":"deny_gate_missing_simulate","tool":"runInTerminal","expectDeny":true,"denied":true,"ok":true,"detail":"approval required"},
+    {"id":"deny_security_gate_missing","tool":"runInTerminal","expectDeny":true,"denied":true,"ok":true,"detail":"DENIED: security gate not configured"}
+  ],
+  "pass":13,
+  "fail":0,
+  "PROOF_DENY_ON_ESCAPE":true,
+  "AgentCommands_hits_SecurityGate": true
+}

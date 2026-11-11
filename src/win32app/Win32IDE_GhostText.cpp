@@ -5,7 +5,9 @@
 #include <atomic>
 #include <chrono>
 #include <climits>
+#include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <memory>
 #include <thread>
 #include <utility>
@@ -67,8 +69,7 @@ struct Result {
     std::shared_ptr<void> requestIdentity;
     uint64_t requestId;
     uint64_t generation;
-    std::string text;
-    bool success;
+    NativeGhostTextController::Response response;
 };
 std::atomic<uint64_t> g_nextGhostRequestId{1};
 
@@ -115,6 +116,13 @@ bool NativeGhostTextController::attach(HWND host, HWND editor, Request request,
 }
 
 void NativeGhostTextController::detach() {
+    // Cancel any in-flight transport request before the attachment (and its
+    // identity) goes away.  Idempotent and non-blocking, same as dismiss().
+    if (m_cancelActive) {
+        RequestCancel cancel = std::move(m_cancelActive);
+        m_cancelActive = nullptr;
+        cancel();
+    }
     if (m_editor && m_timer) KillTimer(m_editor, m_timer);
     if (m_editor && m_originalProc) {
         SetWindowLongPtrW(m_editor, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(m_originalProc));
@@ -139,7 +147,29 @@ std::string NativeGhostTextController::editorText() const {
 }
 
 void NativeGhostTextController::onEditorChanged() {
-    m_snapshot = editorText();
+    std::string text;
+    if (!readEditorTextUtf8(m_editor, text)) {
+        // A transient read failure is not a document change. Treating it as
+        // one would wipe a valid snapshot and cancel in-flight work.
+        if (m_trace) m_trace("GHOSTTEXT_EDITOR_READ_FAILED");
+        return;
+    }
+    if (text == m_snapshot) {
+        // Redundant EN_CHANGE (caret/selection, font, buffer-limit, or a
+        // programmatic set of identical text) must not invalidate a valid
+        // in-flight request or a visible hint. Only re-arm the debounce when
+        // nothing is pending and no hint is showing.
+        if (m_trace) {
+            m_trace("GHOSTTEXT_CHANGE_REDUNDANT bytes=" +
+                    std::to_string(text.size()));
+        }
+        if (!m_requestPending && m_completion.empty() && !m_timer &&
+            m_editor && !text.empty()) {
+            m_timer = SetTimer(m_editor, kGhostTimer, 250, nullptr);
+        }
+        return;
+    }
+    m_snapshot = std::move(text);
     dismiss();
     if (m_editor && !m_snapshot.empty()) {
         m_timer = SetTimer(m_editor, kGhostTimer, 250, nullptr);
@@ -147,7 +177,8 @@ void NativeGhostTextController::onEditorChanged() {
 }
 
 void NativeGhostTextController::triggerCompletion() {
-    m_snapshot = editorText();
+    std::string text = editorText();
+    if (!text.empty()) m_snapshot = std::move(text);
     dismiss();
     if (!m_editor || m_snapshot.empty()) return;
     requestCompletion();
@@ -164,29 +195,61 @@ void NativeGhostTextController::requestCompletion() {
         ? "Complete the following code. Return only the text to append at the current caret. Do not repeat the existing document prefix and do not use markdown:\n"
         : m_promptPrefix + " Return only the text to append at the current caret; do not repeat the existing document prefix and do not use markdown:\n") + m_snapshot;
     auto accumulated = std::make_shared<std::string>();
+
+    long cursor = -1;
+    CHARRANGE selection{};
+    if (m_editor && SendMessageA(m_editor, EM_EXGETSEL, 0,
+                                 reinterpret_cast<LPARAM>(&selection)) != 0) {
+        cursor = selection.cpMax;
+    }
+
     m_requestPending = true;
     m_requestId = requestId;
     if (m_trace) {
         m_trace("GHOSTTEXT_TRIGGER request_id=" + std::to_string(requestId) +
                 " generation=" + std::to_string(generation) +
+                " editor_hwnd=" +
+                std::to_string(reinterpret_cast<uintptr_t>(m_editor)) +
+                " cursor=" + std::to_string(cursor) +
                 " editor_bytes=" + std::to_string(m_snapshot.size()));
-        m_trace("GHOSTTEXT_REQUEST_SENT request_id=" + std::to_string(requestId));
+        m_trace("GHOSTTEXT_REQUEST_SENT request_id=" + std::to_string(requestId) +
+                " generation=" + std::to_string(generation) +
+                " editor_bytes=" + std::to_string(m_snapshot.size()));
     }
-    m_request(prompt, [owner, host, requestIdentity, requestId, generation, accumulated](
-        const std::string& response, bool done, bool success) {
-        if (success && !response.empty()) *accumulated += response;
-        if (!done || !host) return;
-        applyGhostTextTestDelay(requestId);
-        // Do not touch the controller here: the provider may finish after a
-        // model switch, editor detach, or IDE teardown.  Locking the identity
-        // proves the attachment still exists; handleMessage performs the
-        // second identity check on the UI thread before rendering.
-        auto identity = requestIdentity.lock();
-        if (!identity) return;
-        auto* result = new Result{owner, std::move(identity), requestId,
-                                  generation, *accumulated, success};
-        if (!PostMessageA(host, kGhostResult, 0, reinterpret_cast<LPARAM>(result))) delete result;
-    });
+
+    // The backend returns a cancellation handle synchronously (it hands the
+    // actual work to a worker).  Storing it lets dismiss()/detach() release the
+    // exact in-flight transport request without blocking the UI thread.
+    m_cancelActive = m_request(
+        prompt,
+        [owner, host, requestIdentity, requestId, generation, accumulated](
+            const NativeGhostTextController::Response& response) {
+            if (response.success && !response.text.empty()) {
+                *accumulated += response.text;
+            }
+            if (!response.done || !host) return;
+            applyGhostTextTestDelay(requestId);
+            // Do not touch the controller here: the provider may finish after
+            // a model switch, editor detach, or IDE teardown.  Locking the
+            // identity proves the attachment still exists; handleMessage
+            // performs the second identity check on the UI thread before
+            // rendering.
+            auto identity = requestIdentity.lock();
+            if (!identity) return;
+            NativeGhostTextController::Response finalResponse = response;
+            finalResponse.text = *accumulated;
+            auto* result = new Result{owner, std::move(identity), requestId,
+                                      generation, std::move(finalResponse)};
+            if (!PostMessageA(host, kGhostResult, 0,
+                              reinterpret_cast<LPARAM>(result))) {
+                delete result;
+            }
+        });
+    // A backend that rejects synchronously (disabled route, no model, revoked
+    // consent) may have already posted its result before returning here. That
+    // message is handled after this method returns, so the cancel handle stored
+    // above is still correct: it is cleared in handleMessage when the result
+    // for this request is consumed.
 }
 
 void NativeGhostTextController::showCompletion(const std::string& completion, uint64_t generation) {
@@ -266,6 +329,15 @@ void NativeGhostTextController::dismiss() {
     }
     ++m_generation;
     m_requestPending = false;
+    // Release the exact in-flight transport request.  The handle is moved out
+    // and cleared first, so repeated dismiss()/detach() calls are idempotent and
+    // cannot double-cancel.  The handle is non-blocking: it closes the WinHTTP
+    // handle that unblocks the worker, it never joins it.
+    if (m_cancelActive) {
+        RequestCancel cancel = std::move(m_cancelActive);
+        m_cancelActive = nullptr;
+        cancel();
+    }
     if (m_editor && m_timer) {
         KillTimer(m_editor, m_timer);
         m_timer = 0;
@@ -315,34 +387,52 @@ bool NativeGhostTextController::handleMessage(UINT message, WPARAM wParam, LPARA
     // A late completion from request A must not clear the pending state of a
     // newer request B. Otherwise Escape can no longer invalidate B and the
     // controller falsely appears idle while B is still in flight.
-    if (requestCurrent) m_requestPending = false;
+    if (requestCurrent) {
+        m_requestPending = false;
+        // The transport for this request has finished (or was cancelled). Drop
+        // the cancel handle so a later dismiss() cannot touch a dead request.
+        m_cancelActive = nullptr;
+    }
     const bool identityCurrent = result->requestIdentity &&
         result->requestIdentity == m_requestIdentity;
     const bool generationCurrent = result->generation == m_generation;
     const bool snapshotCurrent = editorText() == m_snapshot;
+
+    // Classify the outcome explicitly. A cancelled request, a transport
+    // timeout/refusal, and an empty model answer are different results and must
+    // never collapse into a bare success=false.
+    const char* disposition = "ELIGIBLE";
+    if (!identityCurrent) disposition = "SUPERSEDED";
+    else if (!requestCurrent) disposition = "SUPERSEDED";
+    else if (!pendingCurrent) disposition = "CANCELLED";
+    else if (!result->response.success) disposition = "TRANSPORT_FAILED";
+    else if (result->response.text.empty()) disposition = "EMPTY";
+    else if (!generationCurrent || !snapshotCurrent) disposition = "STALE";
+    const bool eligible = std::strcmp(disposition, "ELIGIBLE") == 0;
+
     if (m_trace) {
         m_trace(std::string("GHOSTTEXT_RESPONSE_RECEIVED request_id=") +
                 std::to_string(result->requestId) +
-                " success=" + (result->success ? "1" : "0") +
-                " response_bytes=" + std::to_string(result->text.size()) +
-                " generated_tokens=N/A" +
+                " disposition=" + disposition +
+                " success=" + (result->response.success ? "1" : "0") +
+                " response_bytes=" + std::to_string(result->response.text.size()) +
+                " failure_reason=" +
+                    (result->response.failureReason.empty()
+                         ? "NONE" : result->response.failureReason) +
+                " http_status=" + std::to_string(result->response.httpStatus) +
+                " elapsed_ms=" + std::to_string(result->response.elapsedMs) +
                 " request_current=" + (requestCurrent ? "1" : "0") +
                 " pending_current=" + (pendingCurrent ? "1" : "0") +
                 " generation_current=" + (generationCurrent ? "1" : "0") +
                 " identity_current=" + (identityCurrent ? "1" : "0") +
                 " snapshot_current=" + (snapshotCurrent ? "1" : "0"));
     }
-    if (m_trace) {
+    if (eligible) {
+        showCompletion(result->response.text, result->generation);
+    } else if (m_trace) {
         m_trace("GHOSTTEXT_RENDER_DECISION request_id=" +
                 std::to_string(result->requestId) +
-                " eligible=" +
-                 ((result->success && pendingCurrent && identityCurrent &&
-                   generationCurrent && snapshotCurrent && !result->text.empty())
-                      ? "1" : "0"));
-    }
-    if (result->success && pendingCurrent && identityCurrent &&
-        generationCurrent && snapshotCurrent && !result->text.empty()) {
-        showCompletion(result->text, result->generation);
+                " eligible=0 reason=" + disposition);
     }
     return true;
 }

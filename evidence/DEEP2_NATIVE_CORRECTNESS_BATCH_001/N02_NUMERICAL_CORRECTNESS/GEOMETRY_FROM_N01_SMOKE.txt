@@ -1,0 +1,3 @@
+[Deep2Engine] ATTN_GEOMETRY_RECONCILED headDim=64 qHeads=32 kvHeads=4
+HOST_Q8_GEMV_NUMERIC_FINITE=1
+[Deep2Engine] KV_CACHE_CONFIGURED reason=loadModel layers=22 positions=2048 kvHeads=4 headDim=64

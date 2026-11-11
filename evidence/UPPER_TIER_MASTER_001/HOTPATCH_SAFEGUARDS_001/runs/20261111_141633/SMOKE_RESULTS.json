@@ -1,0 +1,49 @@
+{
+    "exe_sha256":  "DA52DCB69494B8580D3FB4400B06022DD7D1C7BF52F3D11A91FBE438DFC085DE",
+    "asof_utc":  "2026-11-11T19:22:58Z",
+    "run_id":  "20261111_141633",
+    "ollama_identity_matrix":  "NOT_COLLECTED",
+    "PROMOTE":  0,
+    "PRIOR_TIP_SUPERSEDED":  "16D85B1CF7651CA6F43FBC60B99F352A96BBB6C7C00C85ED777F941C8911CE4B",
+    "TIP_CLIMB":  "HOLD",
+    "validator_routing_evidence":  "NOT_SUBMITTED",
+    "SHA_MATCH":  1,
+    "BLOCKED_ON_BATCH17_EXE":  0,
+    "launch_smoke":  {
+                         "tool":  "tools/hotpatch/Start-RawrXDAcceptance.ps1",
+                         "ghosttext_routing":  "UNVERIFIED",
+                         "ExpectedSha256":  "D1B17F66C5BD951BADD51FEE31326EAAE758B1E3F605E761AB4D82D255A32ABF",
+                         "agent_model_routing":  "UNVERIFIED",
+                         "alive":  true,
+                         "cancellation_recovery":  "UNVERIFIED",
+                         "receipt":  "routing_20261111_141634/launch-receipt.json",
+                         "RESULT":  "LAUNCH_ALIVE_ROUTING_UNVERIFIED",
+                         "pid":  125576,
+                         "HASH_OK":  1
+                     },
+    "exe_path":  "F:\\rawrxd\\build_win32ide\\bin\\Release\\RawrXD-Win32IDE-Native.exe",
+    "ps_smoke":  {
+                     "tool":  "BATCH_17/PS_SMOKE_HARNESS/Invoke-PsExecuteClearStopSmoke.ps1",
+                     "5610_Execute":  "OBSERVED_OUTPUT",
+                     "RUNTIME_SMOKE":  "HELD",
+                     "runlog":  "PS_SMOKE/ps_smoke_run_20261111-141805.txt",
+                     "5611_Clear":  "OBSERVED_SHRINK",
+                     "sha256":  "DA52DCB69494B8580D3FB4400B06022DD7D1C7BF52F3D11A91FBE438DFC085DE",
+                     "5612_Stop":  "POSTED",
+                     "PRODUCT_PASS":  0,
+                     "RESULT":  "RUNTIME_EXERCISED_UNPROMOTED",
+                     "receipt":  "PS_SMOKE/PS_SMOKE_RECEIPT.txt"
+                 },
+    "ROUTING_E2E":  "NOT_CERTIFIED",
+    "CERTIFIED":  0,
+    "laws":  {
+                 "PS_EXERCISED_NE_PRODUCT_PASS":  true,
+                 "LAUNCH_ALIVE_NE_ROUTING_E2E_PASS":  true,
+                 "NOT_RUN_NE_PASS":  true,
+                 "PRIOR_16D85_REJECT_NE_LIVE_D1B17_SMOKE":  true,
+                 "UNVERIFIED_NE_PASS":  true
+             },
+    "live_tip_after_smoke":  "DA52DCB69494B8580D3FB4400B06022DD7D1C7BF52F3D11A91FBE438DFC085DE",
+    "LIVE_TIP_SUPERSEDED_AFTER_SMOKE":  1,
+    "SUPERSEDE_SOURCE":  "B17_15_MARKETPLACE_RELINK"
+}

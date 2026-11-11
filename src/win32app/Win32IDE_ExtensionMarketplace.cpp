@@ -1,6 +1,6 @@
 // Win32IDE_ExtensionMarketplace.cpp — Extension Marketplace (Batch 5 X01)
 // Discover, install, update, disable extensions
-#include "extension_package_local.hpp"
+#include "marketplace/extension_package_local.hpp"
 
 namespace RawrXD::IDE {
 

@@ -13,7 +13,10 @@
 #include <commctrl.h>
 #include <windows.h>
 
-
+// TerminalPane embeds Win32TerminalManager by value and names its nested
+// ShellType enum, so this header must be self-sufficient: subsystem TUs include
+// Win32IDE_Types.h directly (without pulling in the full Win32IDE class).
+#include "Win32TerminalManager.h"
 
 #include <cstdint>
 #include <functional>
@@ -21,13 +24,29 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <utility>
+#include <vector>
 
 
-// Required for TerminalPane::ShellType and Win32TerminalManager ptr
-#include "Win32TerminalManager.h"
-
-// Required for AgentFailureType used in FailureClassification / FailureIntelligenceRecord
-#include "../agent/agentic_failure_detector.hpp"
+// =============================================================================
+// Agent Failure Type — used by FailureClassification / FailureIntelligenceRecord
+// =============================================================================
+enum class AgentFailureType {
+    None,
+    EmptyResponse,
+    TokenLimitExceeded,
+    ContextWindowOverflow,
+    InvalidToolCall,
+    ToolExecutionFailed,
+    CompilationError,
+    RuntimeError,
+    SecurityViolation,
+    PolicyViolation,
+    Timeout,
+    NetworkError,
+    ModelError,
+    Unknown
+};
 
 // =============================================================================
 // Basic IDE / editor structures
@@ -72,11 +91,18 @@ struct TerminalPane
 {
     int id;
     HWND hwnd;
+    HWND input = nullptr;
+    HWND execute = nullptr;
+    HWND stop = nullptr;
+    HWND clear = nullptr;
     std::unique_ptr<Win32TerminalManager> manager;
     std::string name;
     Win32TerminalManager::ShellType shellType;
     bool isActive;
     RECT bounds;
+    // Carry incomplete terminal lines across ConPTY/pipe chunks so MSVC
+    // diagnostics are not dropped when a line is split mid-callback.
+    std::string diagCarry;
 };
 
 // =============================================================================

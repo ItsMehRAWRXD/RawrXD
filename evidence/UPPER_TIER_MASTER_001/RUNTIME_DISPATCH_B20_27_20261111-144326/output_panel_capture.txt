@@ -1,0 +1,34 @@
+﻿2026-11-11T14:45:14.7336750-05:00 OUT id=1012 len=699
+2026-11-11T14:45:14.7422634-05:00 OUT id=1014 len=604
+2026-11-11T14:45:14.7482189-05:00 OUT id=1303 len=52
+CTRL_1012
+Output ready. Select a channel to view build, tool, and runtime messages.
+=== Agent Status ===
+Ready (BackendRouter mode=auto)
+Available Agent Tools (session registry):
+
+ computer_use.click
+ computer_use.find_window
+ computer_use.inspect
+ computer_use.key
+ computer_use.launch
+ computer_use.screenshot
+ computer_use.scroll
+ computer_use.type
+
+These tools can be invoked by the agent to perform tasks.
+Example: TOOL:shell:{"cmd":"Get-Process"}
+CU E2E: set RAWRXD_AGENT_MODE=ACTIVE and use Run Agentic Task (not Copilot text-only Send).
+
+ ComputerUse cancelled
+ Agentic Loop Bridge initialized (owned by AgenticBridge)
+ Agentic Loop Status: Idle
+Synthetic command probe deferred
+
+====
+CTRL_1014
+[14:45:01] [2026-11-11 14:45:01] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=1[14:45:01] [2026-11-11 14:45:01] [INFO] [EDITOR_CHANGE] code=256 suppressed=0 active=1[14:45:01] [2026-11-11 14:45:01] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=1[14:45:01] [2026-11-11 14:45:01] [INFO] [EDITOR_CHANGE] code=768 suppressed=0 active=1[14:45:01] [2026-11-11 14:45:01] [INFO] [EDITOR_CHANGE] code=512 suppressed=0 active=1[14:45:01] [2026-11-11 14:45:01] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1[14:45:13] [2026-11-11 14:45:13] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=1
+====
+CTRL_1303
+Output ready. Build and tool messages appear here.
+

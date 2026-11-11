@@ -23,6 +23,10 @@ static const COLORREF HOVER_PARAM          = RGB(220, 220, 170);
 static const int HOVER_MAX_WIDTH  = 520;
 static const int HOVER_MAX_HEIGHT = 320;
 static const int HOVER_PADDING    = 10;
+static const UINT HOVER_TIMER_DELAY = 400;
+#ifndef WM_HOVER_READY
+#define WM_HOVER_READY (WM_APP + 710)
+#endif
 
 // ── Registered window class for hover popup ────────────────────────────────
 static bool s_hoverClassRegistered = false;
@@ -110,7 +114,7 @@ void Win32IDE::onHoverTimer() {
         if (!hover.contents.empty()) {
             PostMessageA(m_hwndMain, WM_HOVER_READY, 0, 0);
             // Store content for UI thread
-            std::lock_guard<std::mutex> lock(m_lspMutex);
+            std::lock_guard<std::mutex> lock(m_lspMutexes[0]);
             m_hoverState.content = hover.contents;
         } else {
             m_hoverState.pending = false;

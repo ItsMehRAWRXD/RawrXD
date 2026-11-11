@@ -19,7 +19,8 @@ bool NativePluginManager::LoadPlugin(const std::string& pluginPath) {
 bool NativePluginManager::UnloadPlugin(const std::string& pluginId) {
     auto it = loadedPlugins_.find(pluginId);
     if (it != loadedPlugins_.end()) {
-        FreeLibrary(it->second);
+        HMODULE mod = reinterpret_cast<HMODULE>(it->second);
+        if (mod) FreeLibrary(mod);
         loadedPlugins_.erase(it);
         return true;
     }

@@ -1,0 +1,48 @@
+{
+  "audit_id": "AGENT_ARCH_AUDIT_001",
+  "closure_id": "GAP_CLOSURE_ORCH",
+  "note": "Additive closure status for gaps 1/2/6/8. Does NOT erase CAPABILITY_MATRIX.json.",
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "updated_capabilities": {
+    "PlanningLoop": {
+      "source_wired": true,
+      "runtime_reached": false,
+      "gap_ranks_closed_source": [1],
+      "chosen_ssot": "Win32IDE_AutonomousLoop",
+      "plan_executor_cmake": false,
+      "evidence": "AGENT_RUNTIME_WIRE_001"
+    },
+    "AgentExecutor": {
+      "source_wired": true,
+      "runtime_reached": false,
+      "gap_ranks_closed_source": [2],
+      "always_true_stub_removed": true,
+      "evidence": "AGENT_RUNTIME_WIRE_001"
+    },
+    "StateMachine": {
+      "source_wired": true,
+      "runtime_reached": false,
+      "gap_ranks_closed_source": [6],
+      "ssot": "RawrXD::ProductAgentFSM / Win32IDE_AgentExecutionFSM",
+      "ui_timeline_is_ssot": false,
+      "evidence": "AGENT_RUNTIME_WIRE_001"
+    },
+    "AgenticBridge": {
+      "source_wired": true,
+      "runtime_reached": false,
+      "gap_ranks_closed_source": [8],
+      "single_owner": "AgenticBridge",
+      "process_transport": "AgenticLoopBridge (owned by AgenticBridge::m_loopTransport)",
+      "ide_observer": "Win32IDE::m_agenticLoopBridge (non-owning)",
+      "evidence": "AGENT_RUNTIME_WIRE_001"
+    }
+  },
+  "untouched_owned_by_other_workers": [
+    "SecurityBoundary (sandbox/consent)",
+    "ToolCalling SSOT merge internals",
+    "AgentHistory_TaskLedger restore bytes",
+    "native editor compile clusters"
+  ]
+}

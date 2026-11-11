@@ -1,0 +1,16 @@
+{
+  "status_id": "S01_SESSION_STATUS",
+  "updated_at": "2026-11-11T17:51:00Z",
+  "S01": "VERIFIED_BATCH_RECEIPTS",
+  "BATCH_PASS": 1,
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "reason": "N01-N05 receipts sealed PASS with CERTIFIED=0; historical AGGREGATE_DECODE preserved; Win32IDE untouched",
+  "items": {"N01": "PASS", "N02": "PASS", "N03": "PASS", "N04": "PASS", "N05": "PASS"},
+  "laws": {
+    "NOT_RUN_NE_PASS": true,
+    "RECEIPT_PASS_NE_CERTIFIED": true,
+    "NOT_VERIFIED_NE_PASS": true
+  }
+}

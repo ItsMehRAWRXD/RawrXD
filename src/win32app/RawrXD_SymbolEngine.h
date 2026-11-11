@@ -58,6 +58,9 @@ enum class SymbolKind : int {
 // ============================================================================
 // Symbol — AST node
 // ============================================================================
+class Symbol;
+using SymbolPtr = std::shared_ptr<Symbol>;
+
 class Symbol {
 public:
     UINT64 id = 0;
@@ -75,8 +78,6 @@ public:
     bool IsContainer() const;
 };
 
-using SymbolPtr = std::shared_ptr<Symbol>;
-
 // ============================================================================
 // SymbolDatabase — persistent symbol index
 // ============================================================================
@@ -85,7 +86,9 @@ public:
     std::vector<SymbolPtr> SearchWorkspace(std::wstring_view query, int maxResults) const;
     SymbolPtr FindById(UINT64 id) const;
     std::vector<SymbolPtr> GetSymbolsAtLine(std::wstring_view uri, UINT line) const;
+    std::vector<SymbolPtr> GetContextSymbols(std::wstring_view uri, const Range& range, int maxDepth) const;
     void IndexDocument(std::wstring_view uri, SymbolPtr root);
+    void RemoveDocument(std::wstring_view uri);
     SymbolPtr GetDocumentRoot(std::wstring_view uri) const;
     void removeFromWorkspaceIndex(const SymbolPtr& sym);
     void Clear();
@@ -95,7 +98,7 @@ private:
     void removeDocumentLocked(std::wstring_view uri);
     void indexSymbolRecursive(const SymbolPtr& sym, const std::wstring& docUri);
 
-    std::shared_mutex mutex_;
+    mutable std::shared_mutex mutex_;
     std::map<std::wstring, SymbolPtr> documentRoots_;
     std::map<std::wstring, std::vector<SymbolPtr>> workspaceIndex_;
     std::map<UINT64, SymbolPtr> idIndex_;

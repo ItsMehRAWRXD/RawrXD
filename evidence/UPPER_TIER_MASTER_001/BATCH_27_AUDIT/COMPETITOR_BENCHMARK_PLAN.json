@@ -1,0 +1,459 @@
+{
+  "plan_id": "UPPER_TIER_MASTER_001_BATCH_27_AUDIT_COMPETITOR_BENCHMARK_PLAN",
+  "title": "Competitor benchmark acceptance matrix plan — Upper-Tier §12 / Batch 27",
+  "mode": "READ_ONLY_PLAN",
+  "asof_utc": "2026-11-11T17:39:00Z",
+  "authority": {
+    "master_plan": "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\_tmp_master_plan_extract.txt",
+    "section": 12,
+    "section_name": "Upper-tier benchmark acceptance matrix",
+    "batch": {
+      "id": 27,
+      "workstreams": [
+        "Competitor benchmark suite",
+        "Performance tuning",
+        "Reliability tuning",
+        "Usability validation",
+        "Parity audit"
+      ],
+      "required_milestone": "Upper-tier status evaluated",
+      "note": "Plan/prep only — evaluation not executed this packet"
+    },
+    "tracker": "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\TRACKER.json",
+    "prior_audits": [
+      "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\BATCH_19_AUDIT\\INFERENCE_GAP_MATRIX.json",
+      "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\BATCH_20_AUDIT\\AGENT_RELIABILITY_GAP_MATRIX.json",
+      "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\BATCH_22_AUDIT\\EXTENSION_HOST_GAP_MATRIX.json",
+      "F:\\rawrxd\\evidence\\AGENT_RUNTIME_VALIDATION_001\\DISPOSITION.json"
+    ]
+  },
+  "laws": {
+    "CERTIFIED": 0,
+    "PROMOTE": 0,
+    "UPPER_TIER": 0,
+    "TIP_CLIMB": "HOLD",
+    "STUB_ACCEPTANCE": "FORBIDDEN",
+    "SOURCE_WIRED_NE_RUNTIME_REACHED": true,
+    "NOT_RUN_NE_PASS": true,
+    "NO_INVENT_SCORES": true,
+    "NO_INVENT_PASS": true,
+    "COMPETITIVE_PARITY": "BENCHMARK_REQUIRED",
+    "CANDIDATE_PASS_NE_RELEASE_CERTIFICATION": true,
+    "PERCENT_ESTIMATES_NE_UPPER_TIER": true
+  },
+  "estimates_unchanged": {
+    "note": "Cited from TRACKER.json; this plan does not raise %",
+    "engineering_completeness_pct": 82,
+    "release_readiness_pct": 58,
+    "ai_ide_parity_pct": 69,
+    "traditional_ide_parity_pct": 63
+  },
+  "controlling_blockers": [
+    {
+      "id": "G1_NATIVE_EXE_ABSENT",
+      "status": "FAIL",
+      "note": "RawrXD-Win32IDE-Native.exe absent under build_win32ide/Release; TRACKER native_exe=ABSENT; BLOCKED_ON_BATCH17_EXE=1",
+      "evidence": [
+        "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\TRACKER.json",
+        "F:\\rawrxd\\evidence\\AGENT_RUNTIME_VALIDATION_001\\DISPOSITION.json",
+        "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\HOTPATCH_SAFEGUARDS_001\\RECEIPT.json"
+      ]
+    },
+    {
+      "id": "BATCHES_17_26_PREREQ",
+      "status": "OPEN",
+      "note": "Batch 27 competitor evaluation presupposes Batch 17–26 product-path milestones; TRACKER batches_17_27=PLANNED; P01–P20 OPEN_CRITICAL_PATH"
+    },
+    {
+      "id": "BENCHMARK_SUITE_NOT_EXECUTED",
+      "status": "NOT_RUN",
+      "note": "No sealed comparative measurement packet exists; this artifact is the plan only"
+    }
+  ],
+  "competitor_set_plan": {
+    "note": "Defined comparison set for future equivalent-hardware runs — not executed; no scores invented",
+    "ai_native_ides": [
+      "Cursor",
+      "GitHub Copilot / VS Code agent surfaces (as available on equivalent tasks)",
+      "Other explicitly licensed AI IDE under test (TBD before run)"
+    ],
+    "traditional_ides": [
+      "Visual Studio Code (stable)",
+      "Visual Studio 2022 (native C++/debug baseline where applicable)"
+    ],
+    "rawrxd_subject": "Tip-linked RawrXD-Win32IDE-Native.exe SHA (ABSENT today) + Deep2 headless where row allows headless"
+  },
+  "hardware_notes": {
+    "status": "REQUIRED_FIXTURE_SPEC_NOT_MEASURED",
+    "fairness_law": "Same machine, same OS build, same thermal/power profile, same network isolation policy for offline-first rows",
+    "host_os": "Windows 10/11 x64 (match release-target SKU)",
+    "cpu": "Record model, core/thread count, base/boost MHz at run start",
+    "ram": "Record installed + free at run start; hold constant across competitors",
+    "gpu": {
+      "required_for_inference_gpu_rows": true,
+      "record": ["vendor", "model", "VRAM_GiB", "driver_version", "API_backend (CPU|Vulkan|CUDA|ROCm)"],
+      "note": "CPU-only inference rows must still record GPU present/absent to avoid silent backend switch"
+    },
+    "storage": "Record drive type (NVMe/SATA) and free space; clean-machine release row uses separate image/VM",
+    "display": "Record DPI / multi-monitor layout for editing/LSP/debug usability rows",
+    "isolation": "Offline-first: disable mandatory cloud auth for RawrXD local-first claims; competitors may use their default online paths but must be labeled ONLINE vs OFFLINE"
+  },
+  "shared_fixtures": {
+    "held_out_repos": {
+      "required": true,
+      "status": "FIXTURE_ABSENT_AS_SEALED_SUITE",
+      "note": "Need version-pinned held-out repositories with independent oracle (build/test scripts); AGENT_E2E_001 fixture ≠ held-out multi-repo suite",
+      "cite": "BATCH_20_AUDIT task_success_rates"
+    },
+    "critical_workflow_reliability_suite": {
+      "required": true,
+      "status": "ABSENT_SEALED",
+      "target_acceptance": ">=99% pass on defined critical workflows (proposed; unmeasured)",
+      "cite": "master plan §6 / §12 agent reliability"
+    },
+    "editing_suite": {
+      "required": true,
+      "status": "NOT_DEFINED_AS_BATCH27_PACKET",
+      "covers": ["open/save", "multi-file", "search/replace", "undo/redo", "encoding", "crash recovery", "zero data-loss"]
+    },
+    "lsp_latency_harness": {
+      "required": true,
+      "status": "NOT_RUN_ON_PRODUCT_TIP",
+      "covers": ["completion", "hover", "goto-def", "refs", "rename", "diagnostics invalidate", "crash recovery"]
+    },
+    "debug_e2e_fixture": {
+      "required": true,
+      "status": "NOT_RUN_ON_PRODUCT_TIP",
+      "covers": ["launch", "attach", "breakpoint", "step", "locals/watch", "terminate"]
+    },
+    "inference_oracle": {
+      "required": true,
+      "status": "PARTIAL_INTERNAL_ONLY",
+      "note": "N01/N02 sealed candidate receipts exist; external oracle / GPU cert ladder NOT promoted; N03–N05 OPEN",
+      "cite": "BATCH_19_AUDIT"
+    },
+    "concurrency_stress": {
+      "required": true,
+      "status": "NOT_RUN_TRUE_PARALLEL",
+      "note": "Mutex-serialized multi ≠ true parallel aggregate; N04/N05 receipt dirs absent"
+    },
+    "extension_compat_suite": {
+      "required": true,
+      "status": "RUNTIME_REACHED_0",
+      "note": "Batch 22: 10/10 source_wired inventory; 0/10 runtime_reached this audit; VS Code activate() unproven",
+      "cite": "BATCH_22_AUDIT"
+    },
+    "soak_crash_recovery": {
+      "required": true,
+      "status": "PARTIAL_HISTORICAL_GUI_SOAK",
+      "note": "T18/T19 soak receipts are endurance/memory oriented — not Batch 27 comparative stability pass"
+    },
+    "clean_machine_install": {
+      "required": true,
+      "status": "NOT_RUN",
+      "covers": ["clean install", "launch smoke", "upgrade", "uninstall", "SHA-256 manifest", "signed artifacts"]
+    },
+    "authoritative_candidate_sha": {
+      "required": true,
+      "status": "ABSENT",
+      "note": "P16 one authoritative release candidate unresolved; previous candidate cannot certify newer source"
+    }
+  },
+  "matrix": [
+    {
+      "id": "BM_AUTONOMOUS_CODING",
+      "benchmark": "Autonomous coding",
+      "master_plan_required_result": "Held-out repository tasks with independently verified success",
+      "measurable_workflow": "Inspect→plan→multi-file edit→build→test→verify on held-out repos; independent oracle rejects model-claimed success",
+      "proposed_acceptance": "Task success measured and reported per repo; no fabricated tool execution; builds/tests verified outside model claims",
+      "depends_on_batches": [17, 20, 26],
+      "p_ids": ["P05", "P15"],
+      "fixtures_required": [
+        "held_out_repos",
+        "critical_workflow_reliability_suite",
+        "authoritative_candidate_sha"
+      ],
+      "hardware_notes": "Same host as competitors; record wall-clock per task; offline-capable path labeled",
+      "score_status": "NOT_MEASURED",
+      "score": null,
+      "BLOCKED_ON": [
+        "G1_NATIVE_EXE_ABSENT",
+        "BATCH_20_AGENT_LOOP_NOT_ACCEPTED",
+        "HELD_OUT_REPO_SUITE_ABSENT",
+        "INDEPENDENT_ORACLE_ABSENT_AS_SEALED_SUITE"
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\BATCH_20_AUDIT\\AGENT_RELIABILITY_GAP_MATRIX.json",
+        "F:\\rawrxd\\evidence\\AGENT_RUNTIME_VALIDATION_001\\DISPOSITION.json"
+      ],
+      "disposition": "PLAN_ONLY; NOT_RUN; CERTIFIED=0"
+    },
+    {
+      "id": "BM_AGENT_RELIABILITY",
+      "benchmark": "Agent reliability",
+      "master_plan_required_result": ">=99% critical workflow pass rate",
+      "measurable_workflow": "Repeatable critical-workflow reliability suite: tool dispatch, cancel/stale, atomic edit/rollback, exactly-once, bounds, fault injection",
+      "proposed_acceptance": ">=99% on sealed suite with zero known data-loss defects (proposed threshold; unmeasured)",
+      "depends_on_batches": [17, 20, 25],
+      "p_ids": ["P11", "P15"],
+      "fixtures_required": [
+        "critical_workflow_reliability_suite"
+      ],
+      "hardware_notes": "Soak + fault-injection on same SHA; multi-agent stress on recorded core count",
+      "score_status": "NOT_MEASURED",
+      "score": null,
+      "prior_estimate_pct_cited_not_benchmark": 48,
+      "BLOCKED_ON": [
+        "G1_NATIVE_EXE_ABSENT",
+        "RELIABILITY_SUITE_ABSENT_SEALED",
+        "BATCH_20_RUNTIME_PASS_0_OF_6",
+        "CANCEL_RECOVERY_RUNTIME_PASS_0"
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\BATCH_20_AUDIT\\DISPOSITION.txt",
+        "F:\\rawrxd\\evidence\\BATCH1_CANCEL_RECOVERY_001\\DISPOSITION.md"
+      ],
+      "disposition": "PLAN_ONLY; RATES_UNMEASURED; NOT_RUN; CERTIFIED=0"
+    },
+    {
+      "id": "BM_EDITING",
+      "benchmark": "Editing",
+      "master_plan_required_result": "Core editing suite passes without data loss",
+      "measurable_workflow": "Open/save/multi-file/search-replace/undo/encoding/external-change/crash-recovery suite vs traditional IDE baseline",
+      "proposed_acceptance": "Core editing suite PASS with zero data-loss defects on product tip SHA",
+      "depends_on_batches": [17, 18, 24],
+      "p_ids": ["P07", "P08", "P10"],
+      "fixtures_required": [
+        "editing_suite",
+        "authoritative_candidate_sha"
+      ],
+      "hardware_notes": "Record DPI/monitor layout; large-file sample included",
+      "score_status": "NOT_MEASURED",
+      "score": null,
+      "BLOCKED_ON": [
+        "G1_NATIVE_EXE_ABSENT",
+        "BATCH_18_GUI_INTERACTIVE_ACCEPTANCE_NOT_SEALED_FOR_B27",
+        "EDITING_SUITE_PACKET_ABSENT"
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\TRACKER.json",
+        "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\_tmp_master_plan_extract.txt"
+      ],
+      "disposition": "PLAN_ONLY; NOT_RUN; CERTIFIED=0"
+    },
+    {
+      "id": "BM_LSP",
+      "benchmark": "LSP",
+      "master_plan_required_result": "Correctness and latency competitive with established IDEs",
+      "measurable_workflow": "Completion/hover/goto/refs/rename/diagnostics on pinned workspace; latency p50/p95 vs VS Code/VS",
+      "proposed_acceptance": "Correctness suite PASS; latency reported comparatively (no invented competitiveness claim until measured)",
+      "depends_on_batches": [17, 21],
+      "p_ids": ["P01", "P02", "P03", "P04"],
+      "fixtures_required": [
+        "lsp_latency_harness",
+        "authoritative_candidate_sha"
+      ],
+      "hardware_notes": "Warm vs cold index separately; pin workspace size; same CPU governor",
+      "score_status": "NOT_MEASURED",
+      "score": null,
+      "BLOCKED_ON": [
+        "G1_NATIVE_EXE_ABSENT",
+        "P01_P04_LSP_COMPILATION_CRITICAL_PATH_OPEN",
+        "LSP_RUNTIME_ACCEPTANCE_NOT_SEALED"
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\TRACKER.json",
+        "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\BATCH_17\\G1_HANDOFF.txt"
+      ],
+      "disposition": "PLAN_ONLY; NOT_RUN; CERTIFIED=0"
+    },
+    {
+      "id": "BM_DEBUGGING",
+      "benchmark": "Debugging",
+      "master_plan_required_result": "Real launch/attach/breakpoint/inspection workflow passes",
+      "measurable_workflow": "Launch→breakpoint→step→locals/watch→continue→terminate on real native app; attach path separate",
+      "proposed_acceptance": "E2E debug workflow PASS on product tip; language nav remains correct during session",
+      "depends_on_batches": [17, 21],
+      "p_ids": ["P01", "P09"],
+      "fixtures_required": [
+        "debug_e2e_fixture",
+        "authoritative_candidate_sha"
+      ],
+      "hardware_notes": "Same debugger symbol path policy; record Debug vs Release fixture",
+      "score_status": "NOT_MEASURED",
+      "score": null,
+      "BLOCKED_ON": [
+        "G1_NATIVE_EXE_ABSENT",
+        "BATCH_21_LANGUAGE_DEBUG_ACCEPTANCE_NOT_SEALED",
+        "DEBUG_E2E_FIXTURE_NOT_RUN_ON_TIP"
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\_tmp_master_plan_extract.txt"
+      ],
+      "disposition": "PLAN_ONLY; NOT_RUN; CERTIFIED=0"
+    },
+    {
+      "id": "BM_INFERENCE",
+      "benchmark": "Inference",
+      "master_plan_required_result": "Accuracy parity plus measured throughput/latency",
+      "measurable_workflow": "Load→prefill→decode→stream→unload; TTFT/TPS/memory; numerical oracle; single + multi session",
+      "proposed_acceptance": "Finite logits; non-stub tokens; measured TPS/TTFT; external/oracle parity criteria sealed before UPPER_TIER claim",
+      "depends_on_batches": [19, 23],
+      "p_ids": ["P13", "P14"],
+      "fixtures_required": [
+        "inference_oracle",
+        "concurrency_stress"
+      ],
+      "hardware_notes": "Record CPU/GPU/VRAM/driver/backend; CPU-fallback must not silently change semantics; pin model SHA/quant",
+      "score_status": "NOT_MEASURED",
+      "score": null,
+      "candidate_receipts_cited_not_certified": ["N01", "N02"],
+      "BLOCKED_ON": [
+        "N03_SESSION_ISOLATION_RECEIPT_ABSENT",
+        "N04_TRUE_PARALLEL_OPEN",
+        "N05_E2E_STRESS_OPEN",
+        "P13_STILL_OPEN",
+        "EXTERNAL_ORACLE_PROMOTE_0"
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\BATCH_19_AUDIT\\INFERENCE_GAP_MATRIX.json",
+        "F:\\rawrxd\\evidence\\DEEP2_NATIVE_CORRECTNESS_BATCH_001\\N01_CLEAN_TIP_REBUILD\\RECEIPT.json",
+        "F:\\rawrxd\\evidence\\DEEP2_NATIVE_CORRECTNESS_BATCH_001\\N02_NUMERICAL_CORRECTNESS\\RECEIPT.json"
+      ],
+      "disposition": "PLAN_ONLY; PARTIAL_CANDIDATE_RECEIPTS_CITED; CERTIFIED=0; PROMOTE=0"
+    },
+    {
+      "id": "BM_CONCURRENCY",
+      "benchmark": "Concurrency",
+      "master_plan_required_result": "Stable multi-session and multi-agent stress tests",
+      "measurable_workflow": "Concurrent model sessions + parallel agents with isolation; no deadlock/data-loss; fairness metrics",
+      "proposed_acceptance": "Stress suite PASS with recorded max sessions/agents; true-parallel decode proven or explicitly labeled serialized",
+      "depends_on_batches": [19, 20, 23, 25],
+      "p_ids": ["P13", "P14", "P15"],
+      "fixtures_required": [
+        "concurrency_stress",
+        "critical_workflow_reliability_suite"
+      ],
+      "hardware_notes": "Pin thread count; record mutex vs true-parallel; thermal soak duration defined pre-run",
+      "score_status": "NOT_MEASURED",
+      "score": null,
+      "BLOCKED_ON": [
+        "N04_TRUE_PARALLEL_OPEN",
+        "N05_E2E_STRESS_OPEN",
+        "G1_NATIVE_EXE_ABSENT",
+        "MULTI_AGENT_STRESS_SUITE_ABSENT_SEALED"
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\BATCH_19_AUDIT\\INFERENCE_GAP_MATRIX.json",
+        "F:\\rawrxd\\evidence\\AGGREGATE_DECODE_DEEP2_RUNTIME_001\\DISPOSITION.json"
+      ],
+      "disposition": "PLAN_ONLY; MUTEX_SERIALIZED_MULTI_NE_TRUE_PARALLEL; NOT_RUN; CERTIFIED=0"
+    },
+    {
+      "id": "BM_EXTENSIONS",
+      "benchmark": "Extensions",
+      "master_plan_required_result": "Supported API contract passes compatibility suite",
+      "measurable_workflow": "Discover→install/load→activate→command→isolate/crash-contain→disable/uninstall on declared API contract",
+      "proposed_acceptance": "Declared RawrXD extension API suite PASS; VS Code marketplace compat only if explicitly implemented and tested (currently claim-level)",
+      "depends_on_batches": [17, 22],
+      "p_ids": ["P12"],
+      "fixtures_required": [
+        "extension_compat_suite",
+        "authoritative_candidate_sha"
+      ],
+      "hardware_notes": "Side-by-side IDE + ExtensionHost binaries on same SHA; record host_pid!=0",
+      "score_status": "NOT_MEASURED",
+      "score": null,
+      "BLOCKED_ON": [
+        "G1_NATIVE_EXE_ABSENT",
+        "BATCH_22_RUNTIME_REACHED_0_OF_10",
+        "VSCODE_JS_ACTIVATE_UNPROVEN",
+        "F_PRODUCT_EXTENSION_RUNTIME_ABSENT_OR_STUB"
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\BATCH_22_AUDIT\\EXTENSION_HOST_GAP_MATRIX.json",
+        "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\BATCH_22_AUDIT\\DISPOSITION.txt"
+      ],
+      "disposition": "PLAN_ONLY; SOURCE_INVENTORY_ONLY; NOT_RUN; CERTIFIED=0"
+    },
+    {
+      "id": "BM_STABILITY",
+      "benchmark": "Stability",
+      "master_plan_required_result": "Extended soak and crash-recovery testing",
+      "measurable_workflow": "Long-duration soak + crash/restart recovery + leak checks across editor/agent/inference",
+      "proposed_acceptance": "Defined soak duration PASS; crash recovery restores workspace/task state; no critical leak on recorded counters",
+      "depends_on_batches": [18, 25, 26],
+      "p_ids": ["P10", "P11", "P18"],
+      "fixtures_required": [
+        "soak_crash_recovery",
+        "authoritative_candidate_sha"
+      ],
+      "hardware_notes": "Fixed soak wall-clock; record WorkingSet/private bytes; same power plan",
+      "score_status": "NOT_MEASURED",
+      "score": null,
+      "BLOCKED_ON": [
+        "G1_NATIVE_EXE_ABSENT",
+        "BATCH_25_RELEASE_CANDIDATE_ACCEPTANCE_NOT_SEALED",
+        "COMPARATIVE_SOAK_PACKET_ABSENT"
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\TRACKER.json",
+        "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\BATCH_20_AUDIT\\AGENT_RELIABILITY_GAP_MATRIX.json"
+      ],
+      "disposition": "PLAN_ONLY; HISTORICAL_SOAK_NE_B27_PASS; NOT_RUN; CERTIFIED=0"
+    },
+    {
+      "id": "BM_RELEASE",
+      "benchmark": "Release",
+      "master_plan_required_result": "Reproducible clean-machine installation and operation",
+      "measurable_workflow": "Clean-machine install→launch smoke→core workflows→upgrade/uninstall; SHA-256 manifest; Finish-25 / CERTIFIED conjunction",
+      "proposed_acceptance": "Clean-machine PASS + single authoritative SHA + CERTIFIED=1 only after evidence (currently CERTIFIED=0)",
+      "depends_on_batches": [25, 26],
+      "p_ids": ["P16", "P17", "P18", "P19", "P20"],
+      "fixtures_required": [
+        "clean_machine_install",
+        "authoritative_candidate_sha"
+      ],
+      "hardware_notes": "Separate clean VM/image; no developer-machine contamination; record Windows SKU/build",
+      "score_status": "NOT_MEASURED",
+      "score": null,
+      "BLOCKED_ON": [
+        "G1_NATIVE_EXE_ABSENT",
+        "P16_AUTHORITATIVE_SHA_UNRESOLVED",
+        "P17_PACKAGING_RUNTIME_DEPS_OPEN",
+        "P18_FINISH25_HELD",
+        "T25_HELD",
+        "CERTIFIED_0",
+        "PROMOTE_0"
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\TRACKER.json",
+        "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\HOTPATCH_SAFEGUARDS_001\\RECEIPT.json"
+      ],
+      "disposition": "PLAN_ONLY; NOT_RUN; CERTIFIED=0; PROMOTE=0"
+    }
+  ],
+  "rollup": {
+    "rows": 10,
+    "rows_measured": 0,
+    "rows_score_null": 10,
+    "rows_blocked": 10,
+    "UPPER_TIER": 0,
+    "UPPER_TIER_CLAIMED": false,
+    "CERTIFIED": 0,
+    "PROMOTE": 0,
+    "batch_27_milestone": "NOT_EVALUATED",
+    "shared_hard_blocker": "G1_NATIVE_EXE_ABSENT / BATCH_17",
+    "next_executable_gates": [
+      "Batch 17 G1: produce linked RawrXD-Win32IDE-Native.exe (exit 0, size+SHA)",
+      "Seal Batch 18–26 product-path acceptances without inventing PASS",
+      "Materialize held-out repos + critical-workflow reliability suite fixtures",
+      "Define competitor versions + hardware lockfile before any comparative run",
+      "Execute matrix rows on one authoritative SHA; record scores only from runs",
+      "Keep CERTIFIED=0 PROMOTE=0 UPPER_TIER=0 until all 8 dimensions + §12 matrix verified"
+    ]
+  },
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "UPPER_TIER": 0
+}

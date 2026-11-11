@@ -1,0 +1,85 @@
+﻿id=0 cls=ToolbarWindow32 vis=True txt= rect=348,391-1608,417
+id=1018 cls=Static vis=True txt=Untitled  -  Workspace rect=768,393-1188,415
+id=1024 cls=Button vis=True txt=Gear rect=1554,393-1602,415
+id=1030 cls=SysTabControl32 vis=True txt= rect=348,431-1608,457
+id=1100 cls=Static vis=True txt= rect=348,391-396,991
+id=1101 cls=Button vis=True txt=[] rect=348,391-396,439
+id=1102 cls=Button vis=True txt=() rect=348,439-396,487
+id=1103 cls=Button vis=True txt=<> rect=348,487-396,535
+id=1104 cls=Button vis=True txt=> rect=348,535-396,583
+id=1105 cls=Button vis=True txt=++ rect=348,583-396,631
+id=1106 cls=Button vis=True txt=* rect=348,895-396,943
+id=1107 cls=Button vis=True txt=@ rect=348,943-396,991
+id=0 cls=Static vis=True txt=File Explorer rect=348,391-648,791
+id=1004 cls=msctls_statusbar32 vis=True txt= rect=348,1106-1608,1128
+id=1300 cls=Static vis=False txt= rect=348,391-1148,641
+id=1301 cls=SysTabControl32 vis=False txt= rect=348,391-748,415
+id=1306 cls=Static vis=False txt= rect=748,391-948,415
+id=1307 cls=Button vis=False txt=+ rect=748,391-772,413
+id=1308 cls=Button vis=False txt=|| rect=774,391-798,413
+id=1309 cls=Button vis=False txt=X rect=800,391-824,413
+id=1310 cls=Button vis=False txt=^ rect=878,391-902,413
+id=1311 cls=Button vis=False txt=x rect=904,391-928,413
+id=1302 cls=RichEdit20A vis=False txt= rect=348,417-1148,641
+id=1303 cls=RichEdit20A vis=False txt= rect=348,417-1148,641
+id=1312 cls=SysListView32 vis=False txt= rect=348,417-1148,641
+id=0 cls=SysHeader32 vis=False txt= rect=350,419-1146,438
+id=1305 cls=RichEdit20A vis=False txt= rect=348,417-1148,641
+id=1200 cls=Static vis=True txt= rect=348,391-648,991
+id=1208 cls=SysTabControl32 vis=True txt= rect=355,396-545,423
+id=1 cls=msctls_updown32 vis=True txt= rect=505,397-545,417
+id=1209 cls=Button vis=True txt=New Chat rect=548,396-640,423
+id=1214 cls=Button vis=True txt=X rect=350,393-375,420
+id=1215 cls=Button vis=True txt=Restore rect=350,393-395,420
+id=1216 cls=Button vis=True txt=Rollback rect=350,393-414,420
+id=0 cls=Static vis=True txt=AI Sessions rect=355,427-645,449
+id=0 cls=Static vis=True txt=Model: rect=355,428-440,446
+id=1206 cls=ComboBox vis=True txt= rect=445,428-645,454
+id=0 cls=Static vis=True txt=GhostText model: rect=355,455-440,473
+id=1211 cls=ComboBox vis=True txt= rect=445,455-645,481
+id=1212 cls=Button vis=True txt=Allow cloud GhostText for this session rect=355,482-640,500
+id=0 cls=Static vis=True txt=Max tokens: rect=355,503-440,521
+id=0 cls=Static vis=False txt=4096 rect=595,501-645,519
+id=1219 cls=ComboBox vis=True txt= rect=445,521-645,547
+id=0 cls=Static vis=True txt=Context: rect=355,538-440,556
+id=0 cls=Static vis=False txt=64K (pending model admission) rect=530,536-645,554
+id=1220 cls=ComboBox vis=True txt= rect=445,556-645,582
+id=0 cls=Static vis=True txt=Reasoning: rect=355,583-440,601
+id=1217 cls=ComboBox vis=True txt= rect=445,581-645,607
+id=1218 cls=Button vis=True txt=Allow web browsing (WinHTTP) rect=355,610-645,628
+id=1225 cls=ListBox vis=True txt= rect=355,633-645,721
+id=1203 cls=Edit vis=True txt= rect=355,726-645,828
+id=1202 cls=Edit vis=True txt= rect=355,833-645,893
+id=1204 cls=Button vis=True txt=Send rect=355,896-447,926
+id=1205 cls=Button vis=True txt=Clear rect=449,896-541,926
+id=1210 cls=Button vis=True txt=Stop rect=543,896-640,926
+id=1001 cls=RICHEDIT50W vis=True txt= rect=348,391-748,691
+id=0 cls=Edit vis=False txt= rect=348,415-1608,591
+id=0 cls=Static vis=True txt=Untitled  >  (workspace) rect=348,391-748,415
+id=0 cls=Static vis=False txt= rect=348,391-348,411
+id=0 cls=Static vis=False txt= rect=348,391-348,411
+id=1005 cls=SysTabControl32 vis=False txt= rect=348,391-1458,415
+id=1017 cls=ComboBox vis=False txt= rect=1463,393-1603,417
+id=1012 cls=RichEdit20A vis=False txt= rect=348,415-1608,591
+id=1013 cls=RichEdit20A vis=False txt= rect=348,415-1608,591
+id=1014 cls=RichEdit20A vis=False txt= rect=348,415-1608,591
+id=1015 cls=RichEdit20A vis=False txt= rect=348,415-1608,591
+id=1604 cls=RichEdit20A vis=False txt= rect=348,415-1608,591
+id=1605 cls=RichEdit20A vis=False txt= rect=348,415-1608,591
+id=1606 cls=RichEdit20A vis=False txt= rect=348,415-1608,591
+id=1607 cls=RichEdit20A vis=False txt= rect=348,415-1608,591
+id=1608 cls=RichEdit20A vis=False txt= rect=348,415-1608,591
+id=1609 cls=RichEdit20A vis=False txt= rect=348,415-1608,591
+id=1610 cls=RichEdit20A vis=False txt= rect=348,415-1608,591
+id=1611 cls=RichEdit20A vis=False txt= rect=348,415-1608,591
+id=1016 cls=Static vis=True txt= rect=348,391-1608,395
+id=5600 cls=Static vis=False txt=PowerShell Console rect=348,391-1148,641
+id=5611 cls=Button vis=False txt=Clear rect=356,399-446,424
+id=5612 cls=Button vis=False txt=Stop rect=451,399-541,424
+id=5613 cls=Button vis=False txt=History rect=546,399-636,424
+id=5614 cls=Button vis=False txt=Restart rect=641,399-731,424
+id=5615 cls=Button vis=False txt=Load RawrXD rect=736,399-856,424
+id=5601 cls=RICHEDIT50W vis=False txt= rect=356,429-1146,584
+id=5602 cls=Edit vis=False txt= rect=356,589-1046,614
+id=5610 cls=Button vis=False txt=Execute rect=1051,589-1141,614
+id=5604 cls=Static vis=False txt=PowerShell: Active | 5.1.26100.9818 rect=356,619-1146,639

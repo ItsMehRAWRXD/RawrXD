@@ -1,0 +1,23 @@
+{
+  "batch_id": "DEEP2_NATIVE_CORRECTNESS_BATCH_001",
+  "order": ["N01", "N02", "N03", "N04", "N05"],
+  "separate_receipt_per_item": true,
+  "preserve_historical": "AGGREGATE_DECODE_DEEP2_RUNTIME_001",
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "items": {
+    "N01": {"name": "Clean source rebuild", "receipt": "N01_CLEAN_TIP_REBUILD/", "status": "PASS"},
+    "N02": {"name": "Numerical correctness", "receipt": "N02_NUMERICAL_CORRECTNESS/", "status": "PASS"},
+    "N03": {"name": "Session isolation", "receipt": "N03_SESSION_ISOLATION/", "status": "PASS"},
+    "N04": {"name": "Concurrency architecture", "receipt": "N04_CONCURRENCY_ARCHITECTURE/", "status": "PASS"},
+    "N05": {"name": "E2E stress acceptance", "receipt": "N05_E2E_STRESS/", "status": "PASS"}
+  },
+  "batch_complete": 1,
+  "notes": [
+    "N01 tip rebuild sealed against lib 4AB07EFC...; historical AGGREGATE_DECODE_DEEP2_RUNTIME_001 preserved as RUNTIME_REACHED only",
+    "mutex-serialized multi ≠ true parallel decode",
+    "CONTINUOUS_BATCHING_PRODUCT_PATH=NOT_CLAIMED",
+    "NOT a full certification; CERTIFIED=0 PROMOTE=0"
+  ]
+}

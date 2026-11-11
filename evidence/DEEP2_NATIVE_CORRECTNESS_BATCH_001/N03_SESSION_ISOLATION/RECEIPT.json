@@ -1,0 +1,35 @@
+{
+  "receipt_id": "N03_SESSION_ISOLATION",
+  "batch_id": "DEEP2_NATIVE_CORRECTNESS_BATCH_001",
+  "status": "PASS",
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "timestamp": "2026-11-11T17:38:54Z",
+  "gguf": "F:\\ollamamodels\\n4-tiny-oracle.gguf",
+  "depends_on": "N02_PASS",
+  "harness": {
+    "exe": "F:\\rawrxd\\build\\tests\\Release\\deep2_n03_session_isolation.exe",
+    "sha256": "AF80F8591CF3F6538BE4C895983004847D5D75952DDCEB7441B24DDD0D15A314",
+    "source": "F:\\rawrxd\\tests\\deep2_n03_session_isolation.cpp",
+    "exit": 0
+  },
+  "proofs": {
+    "distinct_KV_ptrs": 1,
+    "SEQ_OUTPUTS_OK": 1,
+    "SEQ_TOKENS_A": [18160, 25206, 7324, 19271, 1117, 22940],
+    "SEQ_TOKENS_B": [22847, 13287, 22847, 10884, 4254, 8846],
+    "KV_LEN_A": 8,
+    "KV_LEN_B": 9,
+    "INTERLEAVE_OK": 1,
+    "INTERLEAVE_TOKENS_A": 6,
+    "INTERLEAVE_TOKENS_B": 6,
+    "CANCEL_ISOLATED": 1,
+    "TOKENS_A_AFTER_CANCEL": 1,
+    "TOKENS_B_ALIVE": 8,
+    "SESSION_ISOLATION_PASS": 1
+  },
+  "architecture_note": "Two Deep2Engine instances keep independent KV. Decode mutex serializes GPU for safety (mutex-serialized ≠ true parallel).",
+  "evidence": ["RUN.txt", "BUILD_LOG3.txt", "HASHES.txt", "LINKAGE.txt"],
+  "win32ide_untouched": 1
+}

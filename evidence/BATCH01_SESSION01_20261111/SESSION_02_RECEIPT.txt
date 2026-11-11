@@ -1,0 +1,67 @@
+BATCH=DEEP2_NATIVE_CORRECTNESS_001
+SESSION=02
+SESSION_TITLE=PERSISTENT_KV_AUTOREGRESSIVE_DECODE
+
+SOURCE_COMMIT=b44c20f01912ad142d38aa6f156a0fa203b685e4
+SOURCE_TREE=7aa77825cd6ac98032e05351de2c0c1abe780dbf
+WORKTREE=F:\rawrxd
+WORKTREE_DIRTY=1
+WORKTREE_NOTE=Shared worktree; includes unrelated in-flight changes from other agents.
+
+MODEL_PATH=F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+MODEL_SHA256=9FECC3B3CD76BBA89D504F29B616EEDF7DA85B96540E490CA5824D3F7D2776A0
+MODEL_METADATA=llama hidden=2048 layers=22 heads=32 kvHeads=4 headDim=64 vocab=32000 ctx=2048
+
+COMPILER=MSVC 14.44.35207 (Visual Studio 2022 Build Tools, x64)
+CMAKE_GENERATOR=Visual Studio 17 2022
+CMAKE_CONFIGURATION=Release
+
+S02_EXE=build\tests\Release\deep2_persistent_kv_smoke.exe
+S02_EXE_SHA256=7FA22F82FFCE823C6A30FBCE451E5E14F3CDE0B5F36321CC5DF09306587F2DFE
+S02_EXE_BYTES=1602048
+
+S02=PASS
+S02_EXIT=0
+S02_LANE=CPU (RAWR_REAP_CPU_ONLY=1)
+S02_GEOMETRY=ATTN_GEOMETRY_RECONCILED headDim=64 qHeads=32 kvHeads=4
+S02_KV_CACHE=KV_CACHE_CONFIGURED reason=loadModel layers=22 positions=2048 kvHeads=4 headDim=64
+
+S02_PROMPT=The capital of France is
+S02_PROMPT_TOKENS=5
+S02_GENERATED_TOKENS=8
+S02_TOKEN_IDS=263 4272 393 756 1063 528 10501 491
+S02_FIRST_KV_LEN=5
+S02_LAST_KV_LEN=12
+S02_FINAL_KV_LEN=12
+S02_KV_ADVANCE=STRICT_ONE_PER_TOKEN
+S02_PREFILL_END=PROMPT_LEN
+S02_FIRST_TOKEN_NO_ADVANCE=1
+
+S02_RESET_ISOLATION=PASS
+S02_REPRODUCIBLE_IDS=PASS
+S02_BATCHED_PREFILL_PARITY=PASS
+S02_PROMPT_ISOLATION=PASS
+S02_KV_CAPACITY=ENFORCED
+S02_FAILURES=0
+
+S03_MULTI_TOKEN_CORRECTNESS=NOT_VERIFIED
+S04_STREAMING_SAMPLING_CANCEL=NOT_VERIFIED
+S05_CPU_VULKAN_E2E=NOT_VERIFIED
+
+REGRESSIONS=0
+STUB_PATHS=0
+BACKEND_SUBSTITUTION=0
+
+BATCH_PASS=0
+CERTIFIED=0
+PROMOTE=0
+
+NOTES=
+- S02 exercises the production Deep2Engine::generate() path on real TinyLlama GGUF.
+- KV length at the first generated token equals prompt length; each subsequent token advances it by exactly one. Final KV length is promptLen + generated - 1.
+- Repeated identical requests reset KV and reproduce the same token IDs.
+- Serial and batched prefill produce identical token IDs.
+- A different prompt does not inherit previous tokens.
+- KVCache capacity is enforced at the API boundary.
+- This does not close Batch 1. S03-S05 remain NOT_VERIFIED.
+- GPU correctness remains held from S01.

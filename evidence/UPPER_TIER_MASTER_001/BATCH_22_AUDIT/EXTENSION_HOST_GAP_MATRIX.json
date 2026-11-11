@@ -1,0 +1,204 @@
+{
+  "audit_id": "UPPER_TIER_MASTER_001/BATCH_22_AUDIT/EXTENSION_HOST_GAP_MATRIX",
+  "asof_utc": "2026-11-11T17:20:00Z",
+  "scope": "READ_ONLY inventory of Extension Host for Upper-Tier Batch 22 prep",
+  "primary_tree": "F:\\rawrxd",
+  "cross_check_tree": "G:\\~dev\\rawrxd",
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "law": {
+    "SOURCE_WIRED_NEQ_RUNTIME_REACHED": true,
+    "NOT_RUN_NEQ_PASS": true,
+    "NO_INVENT_PASS": true,
+    "candidate_matrix_neq_tip_promote": true
+  },
+  "tree_delta": {
+    "F_win32app_extension_surface": "PARTIAL_STUB",
+    "G_win32app_extension_surface": "BROADER_SOURCE_WIRED",
+    "F_ProductExtensionRuntime": false,
+    "G_ProductExtensionRuntime": true,
+    "F_ExtensionHostWorker_main": false,
+    "G_ExtensionHostWorker_main": true,
+    "F_ExtensionHost_cpp": "minimal Start/Stop/LoadExtension stub (Batch 5 X04)",
+    "G_ExtensionHost_cpp": "full lifecycle + FEATURE_FICTION fail-closed ActivateExtension",
+    "note": "Batch 22 prep authority for product path is G cross-check; F lacks ProductExtensionRuntime and worker entrypoint."
+  },
+  "prior_runtime_authority_not_revalidated_this_audit": [
+    {
+      "id": "EXTENSION_RUNTIME_MATRIX_001",
+      "disposition": "FAIL/BLOCKED historical (product_thin host_pid:0)",
+      "path": "G:\\~dev\\rawrxd\\evidence\\EXTENSION_RUNTIME_MATRIX_001\\MATRIX.md"
+    },
+    {
+      "id": "EXTENSION_RUNTIME_MATRIX_002",
+      "disposition": "candidate PASS=6/6; PROMOTE=0 CERTIFIED=0; tip748B not absorbed",
+      "path": "G:\\~dev\\rawrxd\\evidence\\EXTENSION_RUNTIME_MATRIX_002\\MATRIX.md",
+      "this_audit": "NOT_RUN — sealed candidate evidence cited only; not re-executed"
+    },
+    {
+      "id": "G_EXTENSIONHOST_COMMAND_HANG_REPRO_001",
+      "disposition": "EXTENSIONHOST_REACHED=0",
+      "path": "G:\\~dev\\rawrxd\\evidence\\G_EXTENSIONHOST_COMMAND_HANG_REPRO_001\\EXTENSIONHOST_REACHABILITY.md"
+    }
+  ],
+  "capabilities": [
+    {
+      "capability": "api_surface_vscode_compat_header",
+      "path": "G:\\~dev\\rawrxd\\src\\win32app\\ExtensionAPI_VSCode.h (+ .cpp); F:\\rawrxd\\src\\win32app\\ExtensionAPI_VSCode.h (+ .cpp)",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "Header claims 'Minimal but functional API surface for real VS Code extensions' — claim ≠ certified runtime.",
+        "Surface covers Uri/Workspace/Window/Commands/Languages/Environment/ExtensionContext only; no vscode.extensions, vscode.debug, vscode.tasks, vscode.scm, vscode.notebooks, vscode.lm, full proposed API.",
+        "G ExtensionHost_VSCodeAPIs.cpp ExecuteCommand/Register*/FireActivationEvent/Telemetry return FEATURE_FICTION FAIL_CLOSED before real dispatch.",
+        "ExtensionAPI_VSCode_Dispatcher.cpp Dispatch is FEATURE_FICTION FAIL_CLOSED (cout stubs unreachable after early return).",
+        "WorkspaceAPI::SaveAll marked FEATURE_FICTION FAIL_CLOSED in ExtensionAPI_VSCode.cpp.",
+        "This audit did not execute API E2E → runtime_reached=0 (NOT_RUN != PASS)."
+      ]
+    },
+    {
+      "capability": "manifest_package_json_parse",
+      "path": "G:\\~dev\\rawrxd\\src\\win32app\\ExtensionHost.cpp; ExtensionHost_Discovery.cpp; ProductExtensionRuntime_Manifest.cpp; ExtensionManifestLoader.cpp; F:\\rawrxd\\src\\win32app\\ExtensionManifestLoader.cpp",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "G ExtensionHost::LoadExtension parses package.json/extension.json: name/displayName/version/publisher/description/activationEvents/contributes.commands.",
+        "ProductExtensionRuntime_Manifest LoadManifestPath supports directory or package.json; VSIX extract returns vsix_extract_unsupported FAIL_CLOSED.",
+        "ExtensionHost_Discovery ValidateManifest checks name/version/activationEvents/engines.rawrxd; VSIX extract explicitly not implemented (INTEG_004 cite).",
+        "F ExtensionManifestLoader.cpp marked FEATURE_FICTION FAIL_CLOSED Load.",
+        "F ExtensionHost.cpp LoadExtension is stub returning running flag only — no manifest parse on F product stub.",
+        "This audit NOT_RUN against live /api/extensions/load-vsix."
+      ]
+    },
+    {
+      "capability": "activation_lifecycle",
+      "path": "G:\\~dev\\rawrxd\\src\\win32app\\ProductExtensionRuntime_Activate.cpp; ExtensionHost.cpp ActivateExtension; ExtensionHost_VSCodeAPIs.cpp FireActivationEvent",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "Product path: Activate → SpawnHostUnlocked → CreateProcessA(RawrXD-ExtensionHost.exe --extension-id/--extension-path).",
+        "Missing host EXE ⇒ host_pid stays 0 (fail-closed; no invent PID).",
+        "G ExtensionHost::ActivateExtension fail-closed without StartExtensionProcess success.",
+        "FireActivationEvent FEATURE_FICTION FAIL_CLOSED — activationEvents from manifest are stored but event broadcast invent-PASS held.",
+        "ExtensionHostWorker_main WinMain only waits on Local\\RawrXD_ExtensionHost_Stop — no JS/activate() invoke, no IPC handshake, no readiness signal in inspected G source.",
+        "Recent command-surface repro: EXTENSIONHOST_REACHED=0 (G_EXTENSIONHOST_COMMAND_HANG_REPRO_001).",
+        "MATRIX_002 candidate activation PASS is not tip promote and not revalidated this audit."
+      ]
+    },
+    {
+      "capability": "process_isolation",
+      "path": "G:\\~dev\\rawrxd\\src\\win32app\\ExtensionHost_MASM_ProcessBroker.asm; ExtensionHostProcess.cpp; ExtensionInstance.cpp; ProductExtensionRuntime_Host.cpp",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "MASM_CreateIsolatedProcess implements Job Object memory limit + CREATE_SUSPENDED pattern (source present).",
+        "ExtensionHostProcess/ExtensionInstance call MASM_CreateIsolatedProcess — parallel host stack, not proven as tip product path.",
+        "ProductExtensionRuntime_Host SpawnHostUnlocked uses plain CreateProcessA CREATE_NO_WINDOW — no Job Object assignment on product spawn path inspected.",
+        "Worker has no parent readiness handshake; kill uses TerminateProcess; stop event not signaled by inspected product Host path.",
+        "F tree lacks ExtensionHostWorker_main and ProductExtensionRuntime_Host — isolation product path absent on F.",
+        "No process-isolation runtime exercise in this audit (NOT_RUN)."
+      ]
+    },
+    {
+      "capability": "sandbox_permissions",
+      "path": "G:\\~dev\\rawrxd\\src\\win32app\\ExtensionSandboxManager.{h,cpp}; F:\\rawrxd\\src\\win32app\\ExtensionSandboxManager.{h,cpp}; ExtensionSecurityCheck.cpp",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "Sandbox manager is in-process allowlist (read/write paths + network flag); fail-closed default ValidateRequest.",
+        "No OS AppContainer / LowBox / restricted token / filesystem filter enforcement observed.",
+        "Not wired into ProductExtensionRuntime spawn path (product host does not consult sandbox grants).",
+        "ExtensionSecurityCheck.cpp FEATURE_FICTION FAIL_CLOSED main — not a runtime cert harness PASS.",
+        "PermissionType::ExecuteProcess enumerated but ValidateRequest returns false (deny) without grant API for execute.",
+        "runtime_reached=0 this audit."
+      ]
+    },
+    {
+      "capability": "sample_extensions_inventory",
+      "path": "G:\\~dev\\rawrxd\\extensions\\*; G:\\~dev\\rawrxd\\plugins\\hello_world\\*; F:\\rawrxd\\extensions\\README_EXTENSION.md",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "G samples/clients: rawrxd-vscode (engines.vscode ^1.80), rawrxd-lsp-client (^1.85), copilot-throttle; JS copies of Amazon Q / GitHub Copilot under extensions/js/.",
+        "plugins/hello_world is plugin JSON+CPP — not a VS Code package.json extension fixture for host activate E2E.",
+        "F extensions/ has README_EXTENSION.md (poshllm) only — no package.json sample tree found on F this audit.",
+        "Sample extensions declare engines.vscode and @types/vscode; they target real VS Code host, not proven against RawrXD ExtensionHost activate()/API.",
+        "No sample activate E2E run this audit."
+      ]
+    },
+    {
+      "capability": "vscode_compatibility_claims_vs_reality",
+      "path": "ExtensionAPI_VSCode.h comment; extensions/*/package.json engines.vscode; EXTENSION_RUNTIME_MATRIX_*; G_EXTENSIONHOST_*",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "CLAIM: 'VS Code Extension API Compatibility' / 'functional API surface for real VS Code extensions'.",
+        "REALITY: C++ singleton façade ≠ Node/Electron vscode module; no require('vscode') host for .js main entries.",
+        "CLAIM (extensions): engines.vscode ^1.80/^1.85 imply marketplace VS Code compatibility.",
+        "REALITY: RawrXD host worker does not load extension.js / call activate(context); product spawn is placeholder process wait.",
+        "CLAIM residual in UI/docs: VS Code-like panel/parity language elsewhere ≠ ExtensionHost API completeness.",
+        "MATRIX_002 proves product_extension_runtime HTTP lifecycle cells on a candidate — not full VS Code API parity, not tip promote.",
+        "Command-surface hang/repro evidence shows EXTENSIONHOST_REACHED=0 for menu path — compatibility not runtime-proven on tip."
+      ]
+    },
+    {
+      "capability": "product_http_api_extensions_routes",
+      "path": "G:\\~dev\\rawrxd\\src\\win32app\\ProductExtensionRuntime_Api.cpp; Win32IDE_LocalServer.cpp; HeadlessIDE_GuiRoutes.cpp / ToolRoutes.cpp",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "HandleRoute wires scan/list/installed/load-vsix/activate/enable/disable/host/status/host/kill.",
+        "host/logs returns empty logs invent-thin JSON (not a log pipeline PASS).",
+        "F lacks ProductExtensionRuntime — F cannot claim same product route wiring without G/candidate absorb.",
+        "Historical MATRIX_001 product_thin FAIL; MATRIX_002 candidate PASS; tip absorb PROMOTE=0.",
+        "This audit did not hit LocalServer routes (NOT_RUN)."
+      ]
+    },
+    {
+      "capability": "extension_host_worker_binary",
+      "path": "G:\\~dev\\rawrxd\\src\\win32app\\ExtensionHostWorker_main.cpp → RawrXD-ExtensionHost.exe",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "Source entrypoint exists on G; absent on F win32app.",
+        "Worker is stop-event wait loop only — not an extension script host.",
+        "Candidate builds under rawrxd-ext-candidate-clean produced RawrXD-ExtensionHost.exe (evidence cites); tip deployment/absorb not certified.",
+        "G_EXTENSIONHOST_RUNTIME_E2E / hang repro: child not observed on attempted surfaces → runtime_reached=0 for this Batch 22 prep."
+      ]
+    },
+    {
+      "capability": "ipc_bridge_and_command_dispatch",
+      "path": "G:\\~dev\\rawrxd\\src\\win32app\\ExtensionHostIpcBridge.*; ExtensionIPCChannel.*; ExtensionInstance.cpp; Win32IDE_HandleExtensionCommand.cpp",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "IPC channel + instance message loop exist in source; APIDispatcher Dispatch FEATURE_FICTION FAIL_CLOSED.",
+        "ExtensionHost::ExecuteCommand FEATURE_FICTION FAIL_CLOSED.",
+        "GUI handleExtensionCommand / IDM_EXT_* historically FEATURE_FICTION or product-wire partial; hang root shows top-level Commands menu ≠ leaf activate route.",
+        "No IPC request/response captured in recent reachability evidence."
+      ]
+    }
+  ],
+  "summary_counts": {
+    "capabilities_inventoried": 10,
+    "source_wired_1": 10,
+    "runtime_reached_1": 0,
+    "runtime_reached_0": 10,
+    "CERTIFIED": 0,
+    "PROMOTE": 0
+  },
+  "batch_22_prep_blockers": [
+    "F tree missing ProductExtensionRuntime + ExtensionHostWorker_main (product path lives on G/candidate).",
+    "VS Code compatibility is claim/header/engines field — not a Node vscode module host with activate().",
+    "Sandbox is allowlist metadata, not OS isolation on product CreateProcessA path.",
+    "Sealed MATRIX_002 candidate PASS must not be treated as tip CERTIFIED/PROMOTE.",
+    "This audit is source inventory only: NOT_RUN on all runtime cells."
+  ],
+  "next_executable_gates_not_run": [
+    "Build/deploy tip-coherent RawrXD-Win32IDE.exe + RawrXD-ExtensionHost.exe side-by-side",
+    "Re-run EXT matrix cells against tip binary (discovery→activate→host_pid→kill) with PROMOTE=0",
+    "Prove or explicitly hold VS Code JS activate(context) — currently worker cannot",
+    "Decide F absorb of G ProductExtensionRuntime surface vs continue G-authority only"
+  ]
+}

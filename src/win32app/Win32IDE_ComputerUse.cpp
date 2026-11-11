@@ -3,8 +3,11 @@
 #include "IDELogger.h"
 #if defined(RAWRXD_HAS_COMPUTER_USE)
 #include "ComputerUseBridge.h"
+#include "ExtensionSandboxManager.h"
+#include "ConsentPrompt.h"
 #include "agentic/tool_core.hpp"
 #include "agentic/ToolCallBridge.h"
+#include "agentic/IdeToolDispatchSsot.hpp"
 #include <fstream>
 #endif
 
@@ -63,11 +66,7 @@ bool Win32IDE::stageCopilotChatInputUtf8(const std::string& utf8) {
 }
 
 rawrxd::tools::Registry* Win32IDE::agentToolsRegistry() {
-#if defined(RAWRXD_HAS_COMPUTER_USE)
     return static_cast<rawrxd::tools::Registry*>(m_agentToolsRegistry.get());
-#else
-    return nullptr;
-#endif
 }
 
 void Win32IDE::ensureComputerUseReady() {
@@ -97,12 +96,53 @@ void Win32IDE::ensureComputerUseReady() {
         }
         cu.RegisterTools(*reg);
         auto* bridge = new RawrXD::Agent::ToolCallBridge();
-        bridge->SetRegistry(reg);
-        if (!ws.empty()) bridge->SetWorkspaceRoot(ws);
+        // Gap 5 SSOT: ToolCallBridge + Registry (adapters register into SSOT).
+        RawrXD::Agent::IdeSsot::BindBridge(*bridge, reg, ws);
+
+        // AF04/AF06: wire sandbox + consent into ToolCallBridge choke point.
+        auto& sb = ExtensionSandbox::ExtensionSandboxManager::Instance();
+        sb.ClearPolicy();
+        if (!ws.empty()) sb.AddWorkspaceRoot(ws);
+        sb.AddDeniedPathPrefix("C:\\Windows");
+        sb.AddDeniedPathPrefix("C:\\Program Files");
+        sb.SetAuditLogPath(
+            "F:\\rawrxd\\evidence\\AGENT_SECURITY_WIRE_001\\security_audit.jsonl");
+        bridge->SetSecurityGate(
+            [](const rawrxd::tools::Tool& t, const rawrxd::tools::Request& r,
+               std::string& denyReason) -> bool {
+                auto& gate = ExtensionSandbox::ExtensionSandboxManager::Instance();
+                std::string pathArg, cmdArg;
+                auto itP = r.args.find("path");
+                if (itP != r.args.end()) pathArg = itP->second;
+                auto itC = r.args.find("command");
+                if (itC != r.args.end()) cmdArg = itC->second;
+                else {
+                    auto itCmd = r.args.find("cmd");
+                    if (itCmd != r.args.end()) cmdArg = itCmd->second;
+                }
+                return gate.CheckPathAndCommand(t.name, pathArg, cmdArg, denyReason);
+            });
+        bridge->SetApprovalCallback(
+            [](const rawrxd::tools::Tool& t, const rawrxd::tools::Request& r) -> bool {
+                if (t.risk == rawrxd::tools::Risk::ReadOnly) return true;
+                ConsentRiskTier ct = ConsentRiskTier::Confirm;
+                if (t.name == "deleteFile" || t.name == "Delete")
+                    ct = ConsentRiskTier::Block;
+                std::string detail;
+                auto it = r.args.find("command");
+                if (it != r.args.end()) detail = it->second;
+                else {
+                    auto itP = r.args.find("path");
+                    if (itP != r.args.end()) detail = itP->second;
+                }
+                return RequestToolConsent(NULL, ct, t.name, detail);
+            });
+
         m_agentToolCallBridge = {bridge, &DeleteToolBridge};
         m_computerUseRegistry = reg;
         m_computerUseToolsRegistered = true;
-        CuEvidence("AGENT_TOOLS_REGISTRY_BOUND computer_use=1 orphan_static=0");
+        CuEvidence("AGENT_TOOLS_REGISTRY_BOUND computer_use=1 orphan_static=0 ssot=ToolCallBridge");
+        CuEvidence("SECURITY_GATE_WIRED sandbox=1 consent=1 promote=0");
         CuEvidence("TOOL_SCHEMA_READY computer_use.find_window=1 "
                    "computer_use.screenshot=1");
         LOG_INFO("ComputerUse bound to session Registry + ToolCallBridge");

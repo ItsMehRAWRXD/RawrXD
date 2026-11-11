@@ -1,0 +1,10 @@
+{
+    "RESULT":  "TIP_BOUND_ROUTING_UNVERIFIED",
+    "PROMOTE":  0,
+    "agent_model_routing":  "UNVERIFIED",
+    "cancellation_recovery":  "UNVERIFIED",
+    "CERTIFIED":  0,
+    "ghosttext_routing":  "UNVERIFIED",
+    "HASH_OK":  1,
+    "sha256":  "8BC5BF3ECB399C99DEF7891F1B95FD5FDE3238069850F05AD0D0B31EC8141AC1"
+}

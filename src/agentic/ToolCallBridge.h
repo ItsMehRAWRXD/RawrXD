@@ -87,6 +87,11 @@ struct ToolResultMessage {
 class ToolCallBridge {
 public:
     using ApprovalCallback = std::function<bool(const rawrxd::tools::Tool&, const rawrxd::tools::Request&)>;
+    // Fail-closed security gate invoked BEFORE mutate/shell execute.
+    // Return false + denyReason to block; must not stub always-true.
+    using SecurityGateCallback = std::function<bool(const rawrxd::tools::Tool&,
+                                                    const rawrxd::tools::Request&,
+                                                    std::string& denyReason)>;
 
     ToolCallBridge() {
         // Issue #49: keep absorb markers reachable in Ext link set even when
@@ -154,6 +159,7 @@ public:
     }
 
     void SetApprovalCallback(ApprovalCallback cb) { m_approval = cb; }
+    void SetSecurityGate(SecurityGateCallback cb) { m_securityGate = std::move(cb); }
 
     void SetEventJournal(std::shared_ptr<AgentEventJournal> journal) {
         std::lock_guard<std::mutex> lock(m_turnMutex);
@@ -183,6 +189,7 @@ private:
     rawrxd::tools::Registry* m_registry = nullptr;
     std::filesystem::path m_workspaceRoot;
     ApprovalCallback m_approval;
+    SecurityGateCallback m_securityGate;
     rawrxd::agentic::MotdAuthorization m_motdAuthorization;
     ToolCallExactlyOnceGuard m_exactlyOnce;
     const char* m_exactlyOnceRejectMarker = nullptr;
@@ -374,6 +381,28 @@ inline ToolResultMessage ToolCallBridge::ExecuteToolCall(const ToolCall& call) {
     }
 
     rawrxd::tools::Request req = ConvertArgs(call);
+
+    // AF04/AF06 choke point: path/command + risk approval BEFORE mutate/shell.
+    {
+        rawrxd::tools::Tool probe;
+        if (!m_registry->find(req.name, probe)) {
+            result_msg.content = "Error: unknown tool";
+            return result_msg;
+        }
+        if (m_securityGate) {
+            std::string denyReason;
+            if (!m_securityGate(probe, req, denyReason)) {
+                result_msg.content = "DENIED: " + denyReason;
+                result_msg.success = false;
+                return result_msg;
+            }
+        } else if (probe.risk != rawrxd::tools::Risk::ReadOnly) {
+            // Fail closed when security gate not wired for mutate/shell.
+            result_msg.content = "DENIED: security gate not configured";
+            result_msg.success = false;
+            return result_msg;
+        }
+    }
 
     // Use registered approval callback or default deny for write/execute
     auto approve = m_approval;

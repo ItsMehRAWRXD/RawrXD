@@ -1,0 +1,44 @@
+# AGGREGATE_DECODE_DEEP2_NATIVE_RUNTIME_001 — Single-session receipt
+
+- REPOSITORY: RawrXD (F:\rawrxd)
+- BRANCH: upload/ide-fixes-20261111
+- BUILD: F:\rawrxd\build (Visual Studio 17 2022, Release, AGGREGATE_DECODE_USE_DEEP2=ON)
+- BINARY: F:\rawrxd\build\bin\aggregate_decode_single_smoke.exe
+- LINKED: deep2_engine_lib (AGGREGATE_DECODE_USE_DEEP2=1) → DEEP2_LINKED=1
+- MODEL: n4-tiny-oracle:latest (llama, hidden=2048, layers=22, heads=32, kvHeads=4, inter=5632, vocab=32000, Q4_0)
+- MODEL_PATH: F:\OllamaModels\blobs\sha256-da3087fb14aede55fde6eb81a0e55e886810e43509ec82ecdc7aa5d62a03b556
+- HOST HW: AMD Radeon AI PRO R9700 (primary), RX 7800 XT, integrated GPU (secondary)
+- PROMPT TOKENS: 10 (counted by engine)
+- GENERATED TOKENS (cold leg, max 4): 4 — real token IDs, greedy, nonFiniteLogits=0
+- GENERATED TOKENS (warm leg, max 16): 16 — real token IDs, greedy, nonFiniteLogits=0
+
+## Observed result
+- BACKEND=DEEP2  BACKEND_LABEL=DEEP2_ENGINE
+- RUNTIME_REACHED=1  deep2_runtime_reached=1  GENERATED_TOKENS=16
+- WALL_NS=34715783100
+- AGGREGATE_DECODE_TPS_SINGLE=0.460885
+- COLD: 4 tok / 18591.50 ms → 0.22 TPS (E2E)
+- WARM: 16 tok / 34709.52 ms → 0.46 TPS (E2E)
+- DECODE (warm): 16 tok / 19919.18 ms → 0.80 tok/s (decode-only)
+
+## Key structural finding
+- All real-GPU forward counters are ZERO:
+  DEEP2_REAL_GPU_FORWARD=0, DEEP2_GPU_FORWARD_LAYERS=0, DEEP2_GPU_RMSNORM_OPS=0,
+  DEEP2_GPU_QKV_OPS=0, DEEP2_GPU_ATTN_SCORE_OPS=0, DEEP2_GPU_FFN_ACT_OPS=0, ...
+- The actual forward runs on CPU: Q4_0 LinearW calls=3850, 33798 ms; avgLayerMs≈62 ms.
+- Prefill is ~14 s for 10 tokens → the CPU GEMV path dominates.
+- Conclusion: native Deep2 aggregate decode now RUNS end-to-end (RUNTIME_REACHED=1),
+  but at ~0.46 TPS because the real forward is CPU Q4_0 GEMV, not GPU.
+
+## Certification disposition
+- SOURCE_WIRED=1
+- RUNTIME_REACHED=1   (native engine executes real tokens)
+- CERTIFIED=0         (throughput not at target; GPU forward path not exercised)
+- PROMOTE=0
+- TIP_CLIMB=HOLD
+
+## Implication for the 37-38 TPS question
+- The 37-40 TPS figures (39.95 single / 29.87 multi) are from the Ollama HTTP backend.
+- Native Deep2 aggregate decode is a SEPARATE path: now runtime-reached, but ~0.46 TPS.
+- Native Deep2 is NOT a 37-38 TPS path on this hardware/model yet. The GPU forward path
+  must be exercised to close the performance gap (DEEP2_REAL_GPU_FORWARD currently 0).

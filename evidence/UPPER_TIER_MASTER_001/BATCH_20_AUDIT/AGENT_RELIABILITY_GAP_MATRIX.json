@@ -1,0 +1,305 @@
+{
+  "audit_id": "UPPER_TIER_MASTER_001_BATCH_20_AUDIT",
+  "title": "Agent reliability gap matrix — Upper-Tier §6 / Batch 20",
+  "scope_primary": "F:\\rawrxd",
+  "audited_at": "2026-11-11T17:15:00Z",
+  "mode": "READ_ONLY",
+  "section": {
+    "id": 6,
+    "name": "Agentic reliability — highest-priority competitive gap",
+    "target": "99%+ reliability on defined critical-workflow suite",
+    "prior_estimate_pct": 48
+  },
+  "batch": {
+    "id": 20,
+    "workstreams": [
+      "Tool dispatch",
+      "Autonomous edits",
+      "Build/test loop",
+      "Rollback",
+      "Cancellation"
+    ],
+    "required_milestone": "Agent loop accepted",
+    "depends_on": "Batch 17 native build unblocked (G1)"
+  },
+  "laws": {
+    "CERTIFIED": 0,
+    "PROMOTE": 0,
+    "UPPER_TIER": 0,
+    "TIP_CLIMB": "HOLD",
+    "STUB_ACCEPTANCE": "FORBIDDEN",
+    "SOURCE_WIRED_NE_RUNTIME_REACHED": true,
+    "NOT_RUN_NE_PASS": true,
+    "CANDIDATE_PASS_NE_RELEASE_CERTIFICATION": true
+  },
+  "controlling_blockers": [
+    {
+      "id": "G1_NATIVE_LINK",
+      "status": "FAIL",
+      "note": "RawrXD-Win32IDE-Native.exe not present under build_win32ide/Release; Batch 20 product-path runtime acceptance blocked",
+      "evidence": "F:\\rawrxd\\evidence\\AGENT_RUNTIME_VALIDATION_001\\DISPOSITION.json"
+    },
+    {
+      "id": "BATCH17_PREREQ",
+      "status": "OPEN",
+      "note": "Immediate priority remains Batch 17 restore full native build before measurable Batch 20 agent-loop acceptance"
+    }
+  ],
+  "dimensions": [
+    {
+      "id": "tool_dispatch_fallthrough",
+      "name": "Tool dispatch fallthrough / unsupported-command handling",
+      "section6_bullets": [
+        "Eliminate incorrect tool dispatch",
+        "Eliminate unsupported-command fallthrough",
+        "Recover safely from nonexistent tools",
+        "Handle malformed model tool-call responses / invalid args"
+      ],
+      "paths": [
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgentToolSsot.cpp",
+        "F:\\rawrxd\\src\\agentic\\IdeToolDispatchSsot.hpp",
+        "F:\\rawrxd\\src\\agentic\\ToolCallBridge.h",
+        "F:\\rawrxd\\src\\agentic\\tool_core.hpp",
+        "F:\\rawrxd\\src\\rawr_core.cpp"
+      ],
+      "source_wired": true,
+      "runtime_reached": "unknown",
+      "product_runtime_pass": false,
+      "findings": [
+        "IDE choke IdeSsot::DispatchTool → ToolCallBridge::ExecuteToolCall is SOURCE_WIRED; unknown tools return Error: unknown tool (no silent success).",
+        "canonicalize_tool_name maps Cursor/legacy aliases; unmapped names keep original and fail closed if unregistered.",
+        "rawr_core::ToolRegistry::dispatch returns ERROR for unknown tools and denies missing mode caps (CLI/core path).",
+        "Multiple historical registries still exist (rawr_core, agentic tool_core, ComputerUse); SSOT claimed for IDE AgentCommands path only.",
+        "AgenticBridge::StartAgentLoop does not integrate tool dispatch — repeats ChatViaBackendRouter(initialPrompt) only (not a real tool loop).",
+        "Win32IDE_AgentExecutor still historically stubbed in architecture audit; product path is AgentCommands/SSOT, not AgentExecutor."
+      ],
+      "gaps": [
+        "No Batch-20 product E2E proving unsupported tool names never fall through to wrong handler on linked Native IDE.",
+        "Malformed JSON / invalid UTF-8 tool-call recovery not measured on product tip this audit.",
+        "Parallel registry surfaces remain consolidation risk outside IdeSsot path.",
+        "AgenticBridge StartAgentLoop is not an accepted agent tool loop."
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\evidence\\AGENT_TOOLS_ROUTE_WIRE_001\\GAP_STATUS.json",
+        "F:\\rawrxd\\evidence\\AGENT_ARCH_AUDIT_001\\GAP_CLOSURE_TOOLS.json",
+        "F:\\rawrxd\\evidence\\AGENT_ARCH_AUDIT_001\\CAPABILITY_MATRIX.json"
+      ],
+      "disposition": "SOURCE_WIRED_PARTIAL; RUNTIME_ACCEPTANCE=NOT_RUN; CERTIFIED=0"
+    },
+    {
+      "id": "cancel_stale_callback",
+      "name": "Cancel / stale callback fencing",
+      "section6_bullets": [
+        "Support cancellation at every execution stage",
+        "Prevent stale callbacks after cancellation",
+        "Prevent use-after-free in asynchronous operations",
+        "Handle tool/model timeouts without deadlocking"
+      ],
+      "paths": [
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgenticLoopBridge.cpp",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgentCommands.cpp",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_GhostText.cpp",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_GhostTextIntegration.cpp",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE.h (m_activeInferenceGeneration)"
+      ],
+      "source_wired": true,
+      "runtime_reached": true,
+      "product_runtime_pass": false,
+      "findings": [
+        "AgenticLoopBridge: m_cancelRequested + CompleteTask completionSent fence; joins reader before disposing handles to avoid stale reader races.",
+        "GhostText: generation/request_id stale fencing SOURCE_IMPLEMENTED (STALE disposition on mismatch).",
+        "Inference generation atomics present on Win32IDE for stream/cancel correlation.",
+        "BATCH1_CANCEL_RECOVERY_001: CANCEL_HTTP_SOURCE_WIRED=1 but RUNTIME_PASS=0 — process crashed before Stop/Request B; Gates 04–08 FAIL.",
+        "F_GHOSTTEXT_CANCEL_ROUTING_CLOSURE_001: CANCELLATION=FAIL; STALE_FENCING=NOT_VERIFIED on measured candidate."
+      ],
+      "gaps": [
+        "Cancel-at-every-stage not proven end-to-end on current Batch-17 rebuild candidate (exe absent).",
+        "Stale-callback suite (agent tool callbacks + GhostText + chat) not jointly accepted.",
+        "Prior cancel recovery crash ≠ PASS; must re-run after stable Native build.",
+        "Tool timeout / model disconnect deadlock suite NOT_RUN for Batch 20 milestone."
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\evidence\\BATCH1_CANCEL_RECOVERY_001\\DISPOSITION.md",
+        "F:\\rawrxd\\evidence\\F_GHOSTTEXT_CANCEL_ROUTING_CLOSURE_001\\FINAL_VERDICT.md",
+        "F:\\rawrxd\\evidence\\AGENT_RUNTIME_VALIDATION_001\\DISPOSITION.json"
+      ],
+      "disposition": "SOURCE_WIRED; RUNTIME_REACHED_ON_PRIOR_CANDIDATES; RUNTIME_PASS=0; CERTIFIED=0"
+    },
+    {
+      "id": "atomic_edit_rollback",
+      "name": "Atomic edit / rollback / partial-file integrity",
+      "section6_bullets": [
+        "Prevent partial-file corruption during failed edits",
+        "Atomic edits with rollback",
+        "Transactional multi-file operations",
+        "Preserve user changes during autonomous edits",
+        "Detect conflicts between concurrent agents"
+      ],
+      "paths": [
+        "F:\\rawrxd\\src\\agentic\\tool_core.hpp (write_atomic)",
+        "F:\\rawrxd\\src\\agentic\\AgentEditHistory.h",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgentHistory.cpp",
+        "F:\\rawrxd\\src\\agentic\\multi_file_transaction.h",
+        "F:\\rawrxd\\src\\rawr_core.cpp (edit_files)"
+      ],
+      "source_wired": "partial",
+      "runtime_reached": "unknown",
+      "product_runtime_pass": false,
+      "findings": [
+        "tool_core::write_atomic uses temp + ReplaceFileW/rename with tmp cleanup on failure — strong single-file atomic write on agentic registry path.",
+        "AgentEditHistory::undoLast restores prior file bytes via temp rename; Win32IDE_AgentHistory records snapshots via recordAgentFileMutation (wired from AgentCommands).",
+        "FEATURE_GAP_REGISTER still marks AF05 ❌ — register lags source; treat as unverified acceptance, not sealed restore.",
+        "rawr_core edit_files writes via ofstream trunc in-place — NOT write_atomic (partial-write risk on that CLI/core surface).",
+        "multi_file_transaction.* present as source design; NOT listed in primary F:\\rawrxd\\CMakeLists.txt product sources (found only under ~dev mirror CMake).",
+        "Preserve-user-changes / concurrent-agent conflict detection not evidenced as product SSOT."
+      ],
+      "gaps": [
+        "Transactional multi-file commit/rollback not product-wired on F:\\rawrxd CMake tip.",
+        "Dual write paths (atomic tool_core vs non-atomic rawr_core edit_files) — fallthrough risk by which registry executes.",
+        "No Batch-20 runtime proof of zero data-loss under failed mid-edit / cancel-during-write.",
+        "AF05 undo stack acceptance not sealed on linked Native IDE."
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\FEATURE_GAP_REGISTER.md",
+        "F:\\rawrxd\\evidence\\AGENT_ARCH_AUDIT_001\\CAPABILITY_MATRIX.json",
+        "F:\\rawrxd\\src\\agentic\\tool_core.hpp",
+        "F:\\rawrxd\\src\\agentic\\AgentEditHistory.h"
+      ],
+      "disposition": "PARTIAL_SOURCE; MULTI_FILE_TX=NOT_PRODUCT_WIRED; RUNTIME_PASS=NOT_RUN; CERTIFIED=0"
+    },
+    {
+      "id": "duplicate_tool_exec",
+      "name": "Duplicate tool execution on retries / exactly-once",
+      "section6_bullets": [
+        "Prevent duplicate tool execution on retries"
+      ],
+      "paths": [
+        "F:\\rawrxd\\src\\agentic\\ToolCallExactlyOnceGuard.hpp",
+        "F:\\rawrxd\\src\\agentic\\ToolCallBridge.h",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgentCommands.cpp"
+      ],
+      "source_wired": true,
+      "runtime_reached": "partial",
+      "product_runtime_pass": false,
+      "findings": [
+        "ToolCallExactlyOnceGuard fail-closed dedupes tool_call_id within a turn; Duplicate → EXACTLY_ONCE_DUP without re-exec.",
+        "Empty tool_call_id rejected (RejectEmptyId).",
+        "AgentCommands emits AGENT_DISPATCH_BUSY exactly_once fencing when AgenticLoopBridge already owns dispatch.",
+        "CHAT_EXACTLY_ONCE_001: EXACTLY_ONCE=NOT_VERIFIED — incomplete response chains / process death; not proven duplicate, also not proven once."
+      ],
+      "gaps": [
+        "Per-turn tool_call_id dedupe ≠ cross-retry / cross-turn idempotency for side-effecting tools.",
+        "Product UI E2E exactly-once conjunction not completed on a single SHA.",
+        "Retry paths in Qt/agentic_executor / iterative reasoning stacks may bypass ToolCallBridge guard if not routed through SSOT."
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\evidence\\FULL_FEATURE_FINAL_COMPLETION_001\\artifacts\\CHAT_EXACTLY_ONCE_001\\DISPOSITION.md",
+        "F:\\rawrxd\\src\\agentic\\ToolCallExactlyOnceGuard.hpp",
+        "F:\\rawrxd\\evidence\\AGENT_TOOLS_ROUTE_WIRE_001\\GAP_STATUS.json"
+      ],
+      "disposition": "SOURCE_WIRED; RUNTIME_VERIFICATION=NOT_VERIFIED; CERTIFIED=0"
+    },
+    {
+      "id": "infinite_loop_bounds",
+      "name": "Infinite agent loop bounds (steps / retries / budgets)",
+      "section6_bullets": [
+        "Detect infinite agent loops",
+        "Enforce bounded retries, token budgets, and time budgets"
+      ],
+      "paths": [
+        "F:\\rawrxd\\src\\agentic\\BoundedAgentLoop.h",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgenticBridge.cpp",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgenticLoopBridge.h",
+        "F:\\rawrxd\\src\\agentic\\AgenticChatSession.h",
+        "F:\\rawrxd\\src\\agentic\\react_tool_loop.h",
+        "F:\\rawrxd\\src\\agentic\\agent_loop.hpp"
+      ],
+      "source_wired": "partial",
+      "runtime_reached": "unknown",
+      "product_runtime_pass": false,
+      "findings": [
+        "BoundedAgentLoop.h defines maxSteps default 8 + Cancel + StepLimitReached — header-only; no BoundedAgentLoop.cpp; not in F:\\rawrxd\\CMakeLists.txt.",
+        "AgenticBridge::StartAgentLoop(maxIterations default 10) bounds iterations but does not run tools — weak bound only.",
+        "AgenticLoopBridge Config maxRetries=2 forwarded to child --max-retries.",
+        "Scattered caps exist (AgenticChatSession m_maxToolIterations=10, react_tool_loop maxIterations=15, agent_loop.hpp maxIterations=100) without single product SSOT budget authority.",
+        "Token/time budget enforcement for agent turns not proven as unified gate on Win32IDE product path."
+      ],
+      "gaps": [
+        "No single authoritative bounded product agent loop accepted for Batch 20 milestone.",
+        "BoundedAgentLoop not product-linked.",
+        "Infinite-loop detection beyond step counters (oscillation / no-progress) not evidenced.",
+        "Unified token+time budget SSOT for agent sessions NOT_RUN."
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\src\\agentic\\BoundedAgentLoop.h",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgenticBridge.cpp",
+        "F:\\rawrxd\\evidence\\AGENT_ARCH_AUDIT_001\\CAPABILITY_MATRIX.json"
+      ],
+      "disposition": "BOUNDS_FRAGMENTED; PRODUCT_SSOT_LOOP=ABSENT_OR_UNVERIFIED; CERTIFIED=0"
+    },
+    {
+      "id": "task_success_rates",
+      "name": "Evidence of task-success rates / reliability suite",
+      "section6_bullets": [
+        "Measure actual task-success rates on held-out repositories",
+        "Verify build/test results independently of model claims",
+        "Run stress / fault-injection / soak tests",
+        "Acceptance: ≥99% on critical-workflow reliability suite"
+      ],
+      "paths": [
+        "F:\\rawrxd\\evidence\\AGENT_E2E_001",
+        "F:\\rawrxd\\evidence\\AGENT_E2E_002",
+        "F:\\rawrxd\\evidence\\BATCH1_CANCEL_RECOVERY_001",
+        "F:\\rawrxd\\evidence\\T18_T19_GUI_SOAK_*",
+        "F:\\rawrxd\\evidence\\HIDDEN_GAP_AUDIT_001",
+        "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\TRACKER.json"
+      ],
+      "source_wired": false,
+      "runtime_reached": "partial_fixture_only",
+      "product_runtime_pass": false,
+      "findings": [
+        "AGENT_E2E_001 reports CANDIDATE_PASS / SUCCESS on autofix loop fixture — authority NOT_CERTIFIED; not a held-out multi-repo rate.",
+        "No sealed metric artifact found measuring critical-workflow pass rate toward 99% target for §6.",
+        "TRACKER.json retains ai_ide_parity_pct=69 / engineering_completeness_pct=82 estimates unchanged until new runtime acceptance; agentic reliability prior estimate 48%.",
+        "GUI soak receipts exist (T18/T19) but are endurance/memory oriented — not agent task-success rates.",
+        "Fault-injection for agent tool/cancel paths repeatedly marked ABSENT/INVESTIGATE in hidden-gap audits.",
+        "Independent build/test verification separate from model claims is required by §6 but not sealed as Batch-20 suite."
+      ],
+      "gaps": [
+        "Defined repeatable critical-workflow reliability suite ABSENT as sealed Batch-20 acceptance packet.",
+        "Held-out repository task-success rate NOT_MEASURED.",
+        "99% threshold unmet and unmeasured (NOT_RUN ≠ PASS).",
+        "Broader autonomous task-success rates not measured separately as required."
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\evidence\\AGENT_E2E_001\\AGENT-E2E-001.lock.json",
+        "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\TRACKER.json",
+        "F:\\rawrxd\\evidence\\HIDDEN_GAP_AUDIT_001\\HIDDEN_GAPS_H01_H60.md",
+        "F:\\rawrxd\\evidence\\POST_E59D_CANDIDATE_001\\VALUATION_2026_11_08.md"
+      ],
+      "disposition": "NO_RELIABILITY_SUITE_PASS; RATES_UNMEASURED; CERTIFIED=0"
+    }
+  ],
+  "rollup": {
+    "dimensions_audited": 6,
+    "dimensions_runtime_pass": 0,
+    "dimensions_source_wired_true": 3,
+    "dimensions_source_wired_partial": 2,
+    "dimensions_source_wired_false": 1,
+    "batch_20_milestone": "NOT_ACCEPTED",
+    "agent_loop_accepted": false,
+    "section6_target_met": false,
+    "next_gates": [
+      "Batch 17 G1: produce linked RawrXD-Win32IDE-Native.exe (exit 0, size+SHA)",
+      "On that SHA: exercise IdeSsot unknown-tool + alias dispatch (no fallthrough)",
+      "Cancel→stale-callback suite (agent + GhostText + chat) RUNTIME_PASS",
+      "Atomic single-file + multi-file rollback fault injection (zero data-loss)",
+      "Exactly-once tool_call_id under retry/stress on product path",
+      "Product bounded agent loop SSOT (replace StartAgentLoop stub-loop)",
+      "Define and run critical-workflow reliability suite; record measured rates (no invented 99%)"
+    ]
+  },
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "UPPER_TIER": 0
+}

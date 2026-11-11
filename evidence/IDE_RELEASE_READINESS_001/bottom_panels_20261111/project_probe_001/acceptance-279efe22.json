@@ -1,0 +1,18 @@
+{
+  "scope": "Exact user-identified IDE executable, real scratch CMake project, UI-driven Build Project",
+  "ide_path": "F:\\rawrxd\\evidence\\IDE_RELEASE_READINESS_001\\bottom_panels_20261111\\RawrXD-PanelFixed.exe",
+  "ide_sha256": "A3BB65AD6794FE92F9693F44D07A0CF1F333817512DC27526B3D6E8FB9CF36B9",
+  "tested_utc": "2026-11-11T17:06:06.0286523Z",
+  "compiler": "MSVC 19.44",
+  "expected_compile_result": "C2065 missing_panel_probe_symbol at panel_probe.cpp:2",
+  "problems_population": "PASS",
+  "problems_navigation": "PASS: Output recorded navigateToFileLine to panel_probe.cpp:2",
+  "build_channel": "PASS: captured compiler command and C2065 diagnostic in HWND channel 1604",
+  "terminal_rendering": "PASS: real PowerShell prompt observed in same-SHA user instance",
+  "debug_log_rendering": "PASS: real runtime/GhostText messages visible in same-SHA user instance",
+  "debug_session_start": "FAIL: Start/Stop hidden after switching to Run and Debug",
+  "native_debug_events": "NOT_RUN",
+  "product_build_acceptance": "NOT_CLAIMED",
+  "certification": "NOT_CLAIMED",
+  "original_executable_modified": false
+}

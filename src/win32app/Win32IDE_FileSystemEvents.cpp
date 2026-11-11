@@ -15,7 +15,7 @@ struct FileWatchInfo {
 static std::map<std::string, FileWatchInfo> g_watchedFiles;
 
 void Win32IDE::initFileSystemWatcher() {
-    appendToOutput("[FileSystemEvents] Incremental indexer initialized.\n", "Output", OutputSeverity::Info);
+    appendToOutput("[FileSystemEvents] Incremental indexer initialized.\n", "Output", Win32IDE::OutputSeverity::Info);
 }
 
 bool Win32IDE::fileNeedsReindex(const std::string& filePath) {

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+﻿cmake_minimum_required(VERSION 3.20)
 project(RawrXD-ModelLoader VERSION 1.0.13)
 
 # DEEP2_GPU_CODE31_RESET_001 — inject VK lost / Win32 code 31; assert reset seq.
@@ -31,6 +31,15 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/gpu_code31_reset_probe.cpp" AND
     enable_testing()
     add_test(NAME deep2_gpu_code31_pnp_probe
              COMMAND deep2_gpu_code31_pnp_probe)
+endif()
+
+# AGGREGATE_DECODE_E2E_001 — single/multi aggregate decode smokes (Ollama live;
+# Deep2Engine optional via AGGREGATE_DECODE_USE_DEEP2). CERTIFIED=0 PROMOTE=0.
+# Deep2 link applied after deep2_engine_lib (see AGGREGATE_DECODE_DEEP2 block).
+option(AGGREGATE_DECODE_USE_DEEP2
+    "Link aggregate_decode smokes to deep2_engine_lib" ON)
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/aggregate_decode/CMakeLists.txt")
+    add_subdirectory(tools/aggregate_decode)
 endif()
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_rom_roundtrip.cpp")
@@ -1515,7 +1524,7 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE_QT AND Qt6_FOUND)
                 src/win32app/main_win32.cpp
                 src/win32app/Win32IDE.cpp
                 src/win32app/Win32IDE.h
-                src/win32app/Win32IDE_Sidebar.cpp
+        # BATCH17_LNK2005_ISOLATION: src/win32app/Win32IDE_Sidebar.cpp
                 src/win32app/Win32IDE_VSCodeUI.cpp
                 src/win32app/Win32IDE_PowerShellPanel.cpp
                 src/win32app/Win32IDE_PowerShell.cpp
@@ -3637,6 +3646,17 @@ message(STATUS "deep2_engine_lib enabled (static library; rawrxd_deep2_engine ex
     endif()
 endif()
 
+# AGGREGATE_DECODE_DEEP2_RUNTIME_001 — wire Deep2 after engine lib exists.
+# Subdir configures before deep2_engine_lib; late link closes the residual.
+# CERTIFIED=0 PROMOTE=0; SOURCE_WIRED != RUNTIME_REACHED until smoke.
+if(TARGET aggregate_decode_lib AND TARGET deep2_engine_lib AND AGGREGATE_DECODE_USE_DEEP2)
+    target_compile_definitions(aggregate_decode_lib PUBLIC AGGREGATE_DECODE_USE_DEEP2=1)
+    target_link_libraries(aggregate_decode_lib PUBLIC deep2_engine_lib)
+    message(STATUS "aggregate_decode: AGGREGATE_DECODE_USE_DEEP2=1 linked deep2_engine_lib")
+elseif(TARGET aggregate_decode_lib AND AGGREGATE_DECODE_USE_DEEP2)
+    message(WARNING "aggregate_decode: USE_DEEP2=ON but deep2_engine_lib missing")
+endif()
+
 # ---------------------------------------------------------------------------
 # Deep2 OpenAI-compatible HTTP server (documented native port 11436).
 # Sources recovered from orphan worktree onto tip; fail-closed if engine lib
@@ -3890,6 +3910,7 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32NativeDebugBackend.cpp
         src/win32app/Win32IDE_AgenticBridge.cpp
         src/win32app/Win32IDE_AgentCommands.cpp
+        src/win32app/Win32IDE_AgentToolSsot.cpp
         src/win32app/Win32IDE_ComputerUse.cpp
         src/win32app/Win32IDE_AgentStepTimeline.cpp
         src/win32app/Win32IDE_Autonomy.cpp
@@ -3907,6 +3928,12 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_CommandPalette.cpp
         src/win32app/Win32IDE_QuickOpen.cpp
         src/win32app/Win32IDE_CodeCompletion.cpp
+        src/win32app/Win32IDE_CompletionHelpers.cpp
+        src/win32app/Win32IDE_ProblemsHelpers.cpp
+        src/win32app/Win32IDE_Annotations.cpp
+        src/win32app/Win32IDE_LinkGapHelpers.cpp
+        src/win32app/Win32IDE_PeekOverlay.cpp
+        src/win32app/Win32IDE_MissingActions.cpp
         src/win32app/Win32IDE_InlineCompletion.cpp
         src/win32app/Win32IDE_GoToSymbol.cpp
         src/win32app/Win32IDE_ReferencesPanel.cpp
@@ -3918,14 +3945,17 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_LSPClient_Additions.cpp
         src/win32app/AdvancedLSPClient.cpp
         src/win32app/Win32IDE_LSPServer.cpp
+        src/lsp/RawrXD_LSPServer.cpp
+        src/core/semantic_code_intelligence.cpp
+        # BATCH17_USE_AGENTIC_LIB: src/agentic/BackendRouter.cpp
+        # BATCH17_USE_AGENTIC_LIB: src/agentic/PersistentTaskBacklog.cpp
+        # BATCH17_USE_AGENTIC_LIB: src/agentic/RawrSwarmEvents.cpp
         src/win32app/Win32IDE_LanguagePlugin.cpp
         src/win32app/Win32IDE_SnippetEngine.cpp
         src/win32app/Win32IDE_SemanticTokens.cpp
         src/win32app/Win32IDE_CodeActions.cpp
-        src/win32app/Win32IDE_GoToSymbol.cpp
-        src/win32app/Win32IDE_OutlinePanel.cpp
+        src/core/problems_aggregator.cpp
         src/win32app/OutlinePanel.h
-        src/win32app/Win32IDE_SemanticIndex.cpp
         src/win32app/Win32IDE_SemanticPanel.cpp
         src/win32app/RawrXD_SymbolEngine.cpp
         # Batch 3: AI/Agent Features (15 features)
@@ -3938,9 +3968,12 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/ConsentPrompt.h
         src/win32app/Win32IDE_AgentExecutor.cpp
         src/win32app/Win32IDE_AgentExecutor.h
+        src/win32app/Win32IDE_AutonomousLoop.cpp
+        src/win32app/Win32IDE_AutonomousLoop.h
+        src/win32app/Win32IDE_AgentExecutionFSM.cpp
+        src/win32app/Win32IDE_AgentExecutionFSM.h
         src/win32app/Win32IDE_PromptTemplates.cpp
         src/win32app/Win32IDE_StaticAnalysisPanel.cpp
-        src/win32app/Win32IDE_AgentStepTimeline.cpp
         src/win32app/Win32IDE_AgentStepTimeline.h
         src/win32app/DialogBoxWithInput.cpp
         src/win32app/DialogBoxWithInput.h
@@ -3959,7 +3992,6 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/core/static_analysis_engine.cpp
         # Batch 4: Project/Workspace/Git/Terminal/Themes (15 features)
         src/win32app/Win32IDE_Project.cpp
-        src/win32app/Win32IDE_Sidebar.cpp
         src/win32app/Win32IDE_SearchPanel.cpp
         src/win32app/Win32IDE_TaskRunner.cpp
         src/win32app/Win32IDE_TerminalTabs.cpp
@@ -3975,12 +4007,12 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_StatusBarActions.cpp
         src/win32app/Win32IDE_SettingsGUI.cpp
         # Batch 5: Extensions/Inference/ModelMgmt (15 features)
+        # BATCH17_REWIRE: ExtensionMarketplace + src/marketplace/extension_package_local (SOURCE_WIRED limited)
         src/win32app/Win32IDE_ExtensionMarketplace.cpp
+        src/marketplace/extension_package_local.cpp
         src/win32app/ExtensionAPI_VSCode.cpp
         src/win32app/ExtensionAPI_VSCode_Dispatcher.cpp
         src/win32app/ExtensionAPI_VSCode_Internal.h
-        src/win32app/ExtensionSandboxManager.cpp
-        src/win32app/ExtensionSandboxManager.h
         src/win32app/ExtensionHost.cpp
         src/win32app/ExtensionHost.h
         src/win32app/ExtensionManifestLoader.cpp
@@ -4006,16 +4038,22 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/BreakpointPropertiesDialog.cpp
         src/win32app/Win32IDE_CallStackSymbols.cpp
         src/win32app/Win32IDE_DebugWatchFormat.cpp
-        src/win32app/Win32IDE_DebuggerIntegration.cpp
-        src/win32app/Win32IDE_DebuggerIntegration.hpp
+        # BATCH17_ISOLATION FAIL_CLOSED: DebuggerIntegration — CallStackIntegration.hpp/CallStackPanel.h/DapService.{hpp,cpp} ABSENT on F tip (G-only); deps not in Native sources
+        # BATCH17_ISOLATION: src/win32app/Win32IDE_DebuggerIntegration.cpp
+        # BATCH17_ISOLATION: src/win32app/Win32IDE_DebuggerIntegration.hpp
         src/win32app/Win32IDE_DAPServer.cpp
         src/win32app/Win32IDE_DAPServer.h
         src/win32app/Win32IDE_MemoryView.cpp
+        # BATCH17_COLLAB_REWIRE: product headers in include/collab (NOT namespaced src/collab/*.h)
         src/win32app/Win32IDE_Collab.cpp
+        src/collab/websocket_hub.cpp
+        src/collab/crdt_buffer.cpp
+        src/collab/cursor_widget.cpp
         src/win32app/AnnotationOverlay.cpp
         src/win32app/AnnotationOverlay.h
         src/win32app/Win32IDE_AnnotationOverlay.cpp
         src/win32app/Win32IDE_AnnotationOverlay.h
+        # BATCH17_REWIRE: Voice/FSEvents/Heap/Attestation — header decls present; LOG_WARNING via IDELogger
         src/win32app/Win32IDE_VoiceAssistantPanel.cpp
         src/win32app/ScreenPilotModelHub.cpp
         src/win32app/ScreenPilotModelHub.h
@@ -4030,7 +4068,6 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_Attestation.cpp
         src/win32app/Win32IDE_LicenseCreator.cpp
         src/win32app/Win32IDE_CrashReporter.cpp
-        src/win32app/Win32IDE_SecurityScans.cpp
         src/win32app/Win32IDE_SecurityDashboard.cpp
         src/win32app/Win32IDE_Telemetry.cpp
         src/win32app/Win32IDE_AirgappedEnterprise.cpp
@@ -4040,10 +4077,10 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_IOCPFileWatcher.cpp
         src/win32app/Win32IDE_PageFaultHandler.cpp
         # AgentSession provides session lifecycle, ledger, and turn recording.
-        src/agentic/AgentSession.cpp
+        # BATCH17_USE_AGENTIC_LIB: src/agentic/AgentSession.cpp
         # Dedicated GhostText Ollama requests must use the shared WinHTTP
         # client while remaining independent of the chat inference lane.
-        src/backend/ollama_client.cpp
+        # BATCH17_USE_AGENTIC_LIB: src/backend/ollama_client.cpp
         # Lifecycle methods declared in Win32IDE.h but defined in their own
         # translation unit (createWindow/showWindow/runMessageLoop/onSize/
         # editor surface/Ollama bridge + the WindowProc dispatch chain).
@@ -4095,6 +4132,8 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         )
         target_compile_definitions(RawrXD-Win32IDE-Native PRIVATE
             NOMINMAX
+            WIN32_LEAN_AND_MEAN
+            _WINSOCKAPI_
             _WIN32_WINNT=0x0A00
             _CRT_SECURE_NO_WARNINGS
             _MBCS
@@ -4125,7 +4164,7 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
             message(STATUS "RawrXD-Win32IDE-Native: RichEdit used as a runtime window class only; no import lib found in this SDK")
         endif()
         target_link_libraries(RawrXD-Win32IDE-Native PRIVATE
-            comctl32 comdlg32 winhttp
+            comctl32 comdlg32 winhttp ws2_32
             ${RAWRXD_RICHEDIT_LIBS}
             shell32 user32 gdi32
             ole32 oleaut32 uuid advapi32 d3d11 dxgi d3dcompiler
@@ -4232,6 +4271,38 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
         )
         add_dependencies(debug_backend_verify debuggee_fixture)
+
+        # ------------------------------------------------------------------
+        # Product ExtensionHost worker (BATCH_22) — NOT Native-Ext OUTPUT_NAME,
+        # NOT SmokeE2EIPC EXCLUDE_FROM_ALL companion. Link-safe: kernel32 only.
+        # Side-by-side with RawrXD-Win32IDE-Native.exe as RawrXD-ExtensionHost.exe.
+        # ------------------------------------------------------------------
+        if(EXISTS "${CMAKE_SOURCE_DIR}/src/win32app/ExtensionHostWorker_main.cpp")
+            add_executable(RawrXD-ExtensionHost WIN32
+                src/win32app/ExtensionHostWorker_main.cpp
+            )
+            set_target_properties(RawrXD-ExtensionHost PROPERTIES
+                OUTPUT_NAME "RawrXD-ExtensionHost"
+                RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+                CXX_STANDARD 20
+                CXX_STANDARD_REQUIRED ON
+                WIN32_EXECUTABLE TRUE
+            )
+            target_link_libraries(RawrXD-ExtensionHost PRIVATE kernel32)
+            if(MSVC)
+                target_compile_options(RawrXD-ExtensionHost PRIVATE /EHsc $<$<CONFIG:Release>:/O2>)
+            endif()
+            add_dependencies(RawrXD-Win32IDE-Native RawrXD-ExtensionHost)
+            add_custom_command(TARGET RawrXD-Win32IDE-Native POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "$<TARGET_FILE:RawrXD-ExtensionHost>"
+                    "$<TARGET_FILE_DIR:RawrXD-Win32IDE-Native>/RawrXD-ExtensionHost.exe"
+                COMMENT "Deploying product RawrXD-ExtensionHost.exe beside Native"
+            )
+            message(STATUS "RawrXD-ExtensionHost: product worker target enabled (ExtensionHostWorker_main)")
+        else()
+            message(WARNING "RawrXD-ExtensionHost SKIPPED: ExtensionHostWorker_main.cpp absent")
+        endif()
 
         # ------------------------------------------------------------------
         # tip_ext_host_001 lane — separate full-feature ExtensionHost target.
@@ -5250,7 +5321,7 @@ add_executable(RawrXD-TestRunner
     src/win32app/Win32IDE_FileOps.cpp
     src/win32app/Win32IDE_PowerShell.cpp
     src/win32app/Win32IDE_PowerShellPanel.cpp
-    src/win32app/Win32IDE_Sidebar.cpp
+        # BATCH17_LNK2005_ISOLATION: src/win32app/Win32IDE_Sidebar.cpp
     src/win32app/Win32IDE_VSCodeUI.cpp
     src/win32app/Win32IDE_AgenticBridge.cpp
     src/win32app/Win32IDE_AgentCommands.cpp
@@ -5847,8 +5918,13 @@ else()
 endif()
     message(STATUS "rawrxd_agentic_backend: Deep2 + Ollama unified backend library enabled")
 
-# H01 / Issue #49: Native-Ext is created BEFORE this library. Link here after
+# H01 / Issue #49: Native(-Ext) is created BEFORE this library. Link here after
 # add_library(rawrxd_agentic_backend) so TARGET exists (early if(TARGET) is always false).
+if(TARGET RawrXD-Win32IDE-Native)
+    target_link_libraries(RawrXD-Win32IDE-Native PRIVATE rawrxd_agentic_backend)
+    target_compile_definitions(RawrXD-Win32IDE-Native PRIVATE RAWRXD_HAS_AGENT_SESSION=1)
+    message(STATUS "RawrXD-Win32IDE-Native: POST-link rawrxd_agentic_backend")
+endif()
 if(TARGET RawrXD-Win32IDE-Native-Ext)
     target_link_libraries(RawrXD-Win32IDE-Native-Ext PRIVATE rawrxd_agentic_backend)
     target_compile_definitions(RawrXD-Win32IDE-Native-Ext PRIVATE RAWRXD_HAS_AGENT_SESSION=1)
@@ -5876,6 +5952,28 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/agentic/workspace_path_policy_smoke.cpp")
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
     enable_testing()
     add_test(NAME workspace_path_policy_smoke COMMAND workspace_path_policy_smoke)
+endif()
+
+# Gap 7+10: AgentEditHistory undo byte restore + AgentSession/TaskLedger disk RT.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/agentic/agent_ledger_undo_smoke.cpp")
+    add_executable(agent_ledger_undo_smoke
+        tests/agentic/agent_ledger_undo_smoke.cpp)
+    target_link_libraries(agent_ledger_undo_smoke PRIVATE rawrxd_agentic_backend)
+    target_include_directories(agent_ledger_undo_smoke PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include)
+    target_compile_features(agent_ledger_undo_smoke PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(agent_ledger_undo_smoke PRIVATE /EHsc /W4)
+        target_compile_definitions(agent_ledger_undo_smoke PRIVATE
+            NOMINMAX _WIN32_WINNT=0x0A00 _CRT_SECURE_NO_WARNINGS)
+    else()
+        target_compile_options(agent_ledger_undo_smoke PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+    set_target_properties(agent_ledger_undo_smoke PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    enable_testing()
+    add_test(NAME agent_ledger_undo_smoke COMMAND agent_ledger_undo_smoke)
 endif()
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/agentic/native_tool_protocol_smoke.cpp")
@@ -6614,6 +6712,94 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/test_deep2_inference.cpp" AND TARGET deep2_engine
     message(STATUS "test_deep2_inference enabled (headless Deep2 inference harness)")
 else()
     message(STATUS "test_deep2_inference EXCLUDED: source or deep2_engine_lib unavailable")
+endif()
+
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2_attention_geometry_nan_regression.cpp" AND TARGET deep2_engine_lib)
+    add_executable(deep2_attention_geometry_nan_regression
+        tests/deep2_attention_geometry_nan_regression.cpp)
+    target_include_directories(deep2_attention_geometry_nan_regression PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2 ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(deep2_attention_geometry_nan_regression PRIVATE deep2_engine_lib)
+    target_compile_features(deep2_attention_geometry_nan_regression PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(deep2_attention_geometry_nan_regression PRIVATE /EHsc)
+        target_compile_definitions(deep2_attention_geometry_nan_regression PRIVATE
+            NOMINMAX _CRT_SECURE_NO_WARNINGS)
+    endif()
+    set_target_properties(deep2_attention_geometry_nan_regression PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests/$<CONFIG>")
+    add_test(NAME deep2_attention_geometry_nan_regression
+        COMMAND deep2_attention_geometry_nan_regression)
+endif()
+
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2_persistent_kv_smoke.cpp" AND TARGET deep2_engine_lib)
+    add_executable(deep2_persistent_kv_smoke
+        tests/deep2_persistent_kv_smoke.cpp)
+    target_include_directories(deep2_persistent_kv_smoke PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2 ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(deep2_persistent_kv_smoke PRIVATE deep2_engine_lib)
+    target_compile_features(deep2_persistent_kv_smoke PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(deep2_persistent_kv_smoke PRIVATE /EHsc)
+        target_compile_definitions(deep2_persistent_kv_smoke PRIVATE
+            NOMINMAX _CRT_SECURE_NO_WARNINGS)
+    endif()
+    set_target_properties(deep2_persistent_kv_smoke PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests/$<CONFIG>")
+    add_test(NAME deep2_persistent_kv_smoke
+        COMMAND deep2_persistent_kv_smoke)
+endif()
+
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2_multitoken_decode_parity.cpp" AND TARGET deep2_engine_lib)
+    add_executable(deep2_multitoken_decode_parity
+        tests/deep2_multitoken_decode_parity.cpp)
+    target_include_directories(deep2_multitoken_decode_parity PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2 ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(deep2_multitoken_decode_parity PRIVATE deep2_engine_lib)
+    target_compile_features(deep2_multitoken_decode_parity PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(deep2_multitoken_decode_parity PRIVATE /EHsc)
+        target_compile_definitions(deep2_multitoken_decode_parity PRIVATE
+            NOMINMAX _CRT_SECURE_NO_WARNINGS)
+    endif()
+    set_target_properties(deep2_multitoken_decode_parity PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests/$<CONFIG>")
+    add_test(NAME deep2_multitoken_decode_parity
+        COMMAND deep2_multitoken_decode_parity)
+endif()
+
+# N02 numerical correctness (tip Deep2Engine + real GGUF; CERTIFIED=0).
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2_n02_numerical_correctness.cpp" AND TARGET deep2_engine_lib)
+    add_executable(deep2_n02_numerical_correctness
+        tests/deep2_n02_numerical_correctness.cpp)
+    target_include_directories(deep2_n02_numerical_correctness PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2 ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(deep2_n02_numerical_correctness PRIVATE deep2_engine_lib)
+    target_compile_features(deep2_n02_numerical_correctness PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(deep2_n02_numerical_correctness PRIVATE /EHsc)
+        target_compile_definitions(deep2_n02_numerical_correctness PRIVATE
+            NOMINMAX _CRT_SECURE_NO_WARNINGS)
+    endif()
+    set_target_properties(deep2_n02_numerical_correctness PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests/$<CONFIG>")
+endif()
+
+# N03 session isolation (≥2 Deep2Engine instances; CERTIFIED=0).
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2_n03_session_isolation.cpp" AND TARGET deep2_engine_lib)
+    add_executable(deep2_n03_session_isolation
+        tests/deep2_n03_session_isolation.cpp)
+    target_include_directories(deep2_n03_session_isolation PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2 ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(deep2_n03_session_isolation PRIVATE deep2_engine_lib)
+    target_compile_features(deep2_n03_session_isolation PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(deep2_n03_session_isolation PRIVATE /EHsc)
+        target_compile_definitions(deep2_n03_session_isolation PRIVATE
+            NOMINMAX _CRT_SECURE_NO_WARNINGS)
+    endif()
+    set_target_properties(deep2_n03_session_isolation PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests/$<CONFIG>")
 endif()
 
 # ============================================================

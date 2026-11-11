@@ -1,3 +1,7 @@
+#include "Win32IDE.h"
+#include "IDELogger.h"
+#include <nlohmann/json.hpp>
+
 // ============================================================================
 // Win32IDE_LSPClient_Additions.cpp — NEW LSP Features Implementation
 // ============================================================================

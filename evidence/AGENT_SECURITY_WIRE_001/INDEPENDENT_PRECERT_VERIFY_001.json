@@ -1,0 +1,58 @@
+{
+  "verify_id": "INDEPENDENT_PRECERT_VERIFY_001",
+  "purpose": "Pre-CERTIFIED/PROMOTE independent checks requested by coordinator",
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "overall": "NOT_READY_FOR_CERT",
+  "checks": [
+    {
+      "id": 1,
+      "name": "Evidence matches source revision",
+      "result": "PASS_CONTEMPORANEOUS",
+      "detail": "SHA256-16 of live sources align with same-session write window as probe.exe (2026-11-11 ~10:41-10:46). No separate git commit seal recorded.",
+      "hashes_sha256_16": {
+        "ExtensionSandboxManager.cpp": "ACF9E4415FBC6157",
+        "ExtensionSandboxManager.h": "354D05D233AE9A89",
+        "ToolCallBridge.h": "9A3FE0E01D62DFEB",
+        "Win32IDE_ComputerUse.cpp": "826B5E926BE83C20",
+        "agent_security_adversarial_probe.cpp": "D64B4B054177262E"
+      },
+      "residual": "No git blob/commit provenance file in evidence pack yet."
+    },
+    {
+      "id": 2,
+      "name": "SecurityGate cannot be bypassed via alternate tool-call entry points",
+      "result": "FAIL_OPEN_BYPASS_PATHS",
+      "detail": "Gate is on ToolCallBridge::ExecuteToolCall (+ ComputerUse bind). Win32IDE_AgentCommands.cpp has no IsPathAllowed/IsCommandAllowed/ExecuteToolCall hits. Additional CreateProcess surfaces (AgenticBridge, AgenticLoopBridge, TerminalTabs, TaskRunner, PowerShell) are outside this choke.",
+      "blocks_cert": true,
+      "owner_followup": "15fcb1bd-fcce-4b6c-bad9-f2ee1c9c09b2 gaps 5+9 AgentCommands→ToolCallBridge"
+    },
+    {
+      "id": 3,
+      "name": "Consent approval cannot override path/command DENY",
+      "result": "PASS_ON_GATED_API",
+      "detail": "ExtensionSandboxManager::GateToolDispatch calls CheckPathAndCommand before RequestRiskApproval. ToolCallBridge runs m_securityGate before registry call/approval. Consent cannot resurrect a DENY on that API.",
+      "residual": "Only holds for callers that use GateToolDispatch / SecurityGate; bypass paths in check 2 are out of scope of this PASS."
+    },
+    {
+      "id": 4,
+      "name": "Missing, malformed, and stale policy fail closed",
+      "result": "PARTIAL",
+      "detail": "Missing policy (empty roots) fail-closed proven in probe (policy_missing_path/cmd). No dedicated malformed-policy parser test and no stale-policy TTL/expiry semantics found in ExtensionSandboxManager.",
+      "blocks_cert": true
+    },
+    {
+      "id": 5,
+      "name": "Audit records capture denied and approved attempts",
+      "result": "PASS_SAMPLE",
+      "detail": "AUDIT_SAMPLE.jsonl DENY=11 ALLOW=1; security_audit.jsonl DENY=15 ALLOW=2. Both decision classes present.",
+      "residual": "Sample is probe-driven; full IDE interactive approve/deny trail not claimed RUNTIME_REACHED."
+    }
+  ],
+  "disposition_locked": {
+    "gaps_3_4": "CLOSED",
+    "security_enforcement": "TEST-PASSED",
+    "certification": "NOT_GRANTED",
+    "promotion": "NOT_AUTHORIZED"
+  }
+}

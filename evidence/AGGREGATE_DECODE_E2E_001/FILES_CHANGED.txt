@@ -1,0 +1,14 @@
+F:\rawrxd\src\deep2\aggregate_decode\AggregateDecodeTypes.hpp
+F:\rawrxd\src\deep2\aggregate_decode\IAggregateDecodeBackend.hpp
+F:\rawrxd\src\deep2\aggregate_decode\AggregateDecodeSession.hpp
+F:\rawrxd\src\deep2\aggregate_decode\AggregateDecodeSession.cpp
+F:\rawrxd\src\deep2\aggregate_decode\AggregateDecodeMultiSession.hpp
+F:\rawrxd\src\deep2\aggregate_decode\AggregateDecodeMultiSession.cpp
+F:\rawrxd\src\deep2\aggregate_decode\AggregateDecodeOllamaBackend.hpp
+F:\rawrxd\src\deep2\aggregate_decode\AggregateDecodeOllamaBackend.cpp
+F:\rawrxd\src\deep2\aggregate_decode\AggregateDecodeDeep2Backend.hpp
+F:\rawrxd\src\deep2\aggregate_decode\AggregateDecodeDeep2Backend.cpp
+F:\rawrxd\tools\aggregate_decode_single_smoke.cpp
+F:\rawrxd\tools\aggregate_decode_multi_smoke.cpp
+F:\rawrxd\tools\aggregate_decode\CMakeLists.txt
+F:\rawrxd\CMakeLists.txt

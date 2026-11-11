@@ -1,0 +1,20 @@
+{
+  "milestone_id": "AGENT_RUNTIME_VALIDATION_001",
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "prerequisite": "AGENT_RUNTIME_WIRE_001 gaps 1/2/6/8 SOURCE_WIRED only",
+  "gates": [
+    {"id": "G1", "name": "Native IDE full link", "required": "RawrXD-Win32IDE-Native links; exe exists; not mere .obj compile", "status": "PASS", "exe_path": "F:\\rawrxd\\build_win32ide\\bin\\Release\\RawrXD-Win32IDE-Native.exe", "build_exit": 0, "evidence_log": "F:\\rawrxd\\build_ghosttext_verify_obj\\native_fix_r25b.log"},
+    {"id": "G2", "name": "Autonomous task production entry", "required": "StartAutonomousTask starts live task", "status": "BLOCKED"},
+    {"id": "G3", "name": "FSM transitions runtime", "required": "pending→running→done verified; waiting/error exercised", "status": "BLOCKED"},
+    {"id": "G4", "name": "Live agent E2E", "required": "End-to-end agent run completes with evidence", "status": "BLOCKED"},
+    {"id": "G5", "name": "PlanExecutor exclusion", "required": "Outside SSOT; no accidental CMake/dep authority", "status": "PASS"},
+    {"id": "G6", "name": "Evidence/matrix reconcile", "required": "Additive closure only; CAPABILITY_MATRIX.json intact; independent runtime proofs", "status": "PASS"}
+  ],
+  "priority_order": [
+    "Live agent E2E via StartAutonomousTask + FSM evidence (G2-G4)",
+    "Certification only after G1-G5"
+  ],
+  "updated": "G1 link+exe PASS on r25b; CERTIFIED=0 PROMOTE=0; G2-G4 remain BLOCKED (SOURCE_WIRED != RUNTIME_REACHED)"
+}

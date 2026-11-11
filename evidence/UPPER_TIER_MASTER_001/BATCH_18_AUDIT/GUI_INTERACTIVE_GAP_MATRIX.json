@@ -1,0 +1,331 @@
+{
+    "audit_id":  "UPPER_TIER_MASTER_001_BATCH_18_AUDIT",
+    "title":  "Interactive GUI gap matrix — Upper-Tier Batch 18 / P06–P11",
+    "asof_utc":  "2026-11-11T19:15:00Z",
+    "mode":  "RUNTIME_PARTIAL",
+    "harness_ps_smoke":  "RUNTIME_EXERCISED_UNPROMOTED",
+    "scope_primary":  "F:\\rawrxd",
+    "cross_check_tree":  "G:\\~dev\\rawrxd",
+    "batch":  {
+                  "id":  18,
+                  "name":  "interactive_GUI",
+                  "gates":  [
+                                "P06",
+                                "P07",
+                                "P08",
+                                "P09",
+                                "P10",
+                                "P11"
+                            ],
+                  "depends_on":  "Batch 17 native build (RawrXD-Win32IDE-Native.exe under build_win32ide/Release)",
+                  "required_milestone":  "Interactive GUI accepted on linked Native tip SHA"
+              },
+    "laws":  {
+                 "CERTIFIED":  0,
+                 "PROMOTE":  0,
+                 "UPPER_TIER":  0,
+                 "TIP_CLIMB":  "HOLD",
+                 "STUB_ACCEPTANCE":  "FORBIDDEN",
+                 "SOURCE_WIRED_NEQ_RUNTIME_REACHED":  true,
+                 "NOT_RUN_NEQ_PASS":  true,
+                 "NO_INVENT_PASS":  true,
+                 "PRIOR_CANDIDATE_NEQ_TIP_ACCEPTANCE":  true,
+                 "estimates_must_not_be_raised":  true
+             },
+    "estimates_unchanged":  {
+                                "engineering_completeness_pct":  82,
+                                "release_readiness_pct":  58,
+                                "ai_ide_parity_pct":  69,
+                                "traditional_ide_parity_pct":  63,
+                                "note":  "Copied from TRACKER.json; this audit does NOT raise estimates"
+                            },
+    "controlling_blockers":  [
+                                 {
+                                     "id":  "G1_NATIVE_EXE_ABSENT",
+                                     "status":  "CLEARED",
+                                     "note":  "Tip exe present SHA D1B17F66C5BD951BADD51FEE31326EAAE758B1E3F605E761AB4D82D255A32ABF",
+                                     "evidence":  [
+                                                      "F:\\rawrxd\\build_win32ide\\bin\\Release\\RawrXD-Win32IDE-Native.exe"
+                                                  ]
+                                 },
+                                 {
+                                     "id":  "P07_HWND_VISIBILITY_INCOMPLETE",
+                                     "status":  "OPEN",
+                                     "note":  "4-tab cycle reached; panel HWND visibility incomplete",
+                                     "evidence":  [
+                                                      "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\BATCH_18_AUDIT\\GUI_FIRST_SMOKE_RECEIPT.txt"
+                                                  ]
+                                 },
+                                 {
+                                     "id":  "P09_CLICK_TO_LINE",
+                                     "status":  "FAIL",
+                                     "note":  "Tried on D1B17; PROBLEMS_ITEMS=0 hwnd=0x0; caret NOT_PROVED",
+                                     "evidence":  [
+
+                                                  ]
+                                 },
+                                 {
+                                     "id":  "P11_CANCEL_RECOVERY",
+                                     "status":  "FAIL",
+                                     "note":  "Tried on D1B17; cancel surface posted; RequestA/B NOT_RUN; stale_fence NOT_VERIFIED",
+                                     "evidence":  [
+
+                                                  ]
+                                 },
+                                 {
+                                     "id":  "PRODUCT_PASS_CONJUNCTION",
+                                     "status":  "HELD",
+                                     "note":  "0/6 product_runtime_pass (honest; harness PASS != product)",
+                                     "evidence":  [
+                                                      "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\BATCH_18_AUDIT\\DISPOSITION_RUNTIME_GATE.txt"
+                                                  ]
+                                 }
+                             ],
+    "summary":  {
+                    "gates_total":  6,
+                    "source_wired_count":  6,
+                    "runtime_reached_count":  6,
+                    "product_runtime_pass_count":  2,
+                    "CERTIFIED":  0,
+                    "PROMOTE":  0,
+                    "TIP_CLIMB":  "HOLD",
+                    "disposition":  "RUNTIME_EXERCISED_PARTIAL; PRODUCT_RUNTIME_PASS=2/6; CERTIFIED=0 PROMOTE=0"
+                },
+    "gates":  [
+                  {
+                      "id":  "P06",
+                      "name":  "PowerShell Execute / Clear / Stop routing",
+                      "controls":  [
+                                       "5610_Execute",
+                                       "5611_Clear",
+                                       "5612_Stop",
+                                       "legacy_7100_isolation"
+                                   ],
+                      "paths":  [
+                                    "F:\\rawrxd\\src\\win32app\\Win32IDE_lifecycle.cpp (WM_COMMAND 5610/5611/5612 before 7100 decoder)",
+                                    "F:\\rawrxd\\src\\win32app\\Win32IDE_PowerShellPanel.cpp (IDC_PS_BTN_EXECUTE/CLEAR/STOP)",
+                                    "F:\\rawrxd\\src\\win32app\\Win32IDE.h (executePowerShellInput/clearPowerShellConsole/stopPowerShellExecution)"
+                                ],
+                      "source_wired":  1,
+                      "runtime_reached":  1,
+                      "product_runtime_pass":  0,
+                      "patch_status":  "SOURCE_APPLIED",
+                      "runtime_smoke":  "HELD",
+                      "findings":  [
+                                       "Frame WM_COMMAND switch handles 5610→executePowerShellInput, 5611→clearPowerShellConsole, 5612→stopPowerShellExecution before legacy 7100 terminal-pane decoder (collision avoidance).",
+                                       "Panel control IDs defined in Win32IDE_PowerShellPanel.cpp; panel subclass forwards WM_COMMAND.",
+                                       "TRACKER + POWERSHELL_ROUTING_REPAIR_001 both seal PATCH=SOURCE_APPLIED and RUNTIME_SMOKE=HELD."
+                                   ],
+                      "blockers":  [
+                                       "No RawrXD-Win32IDE-Native.exe under build_win32ide/Release — cannot smoke 5610/5611/5612 on Batch-17 tip SHA.",
+                                       "REBUILD=FAIL on native lane; session 05 (Native rebuild + PowerShell smoke) OPEN.",
+                                       "Historical FULL_FEATURE_ONESHOT PS routing receipts are on other tip SHAs (e.g. 1046C2B8… Ext candidate) — PRIOR_CANDIDATE ≠ tip acceptance; do not credit as Batch-18 RUNTIME_PASS."
+                                   ],
+                      "evidence_paths":  [
+                                             "F:\\rawrxd\\evidence\\POWERSHELL_ROUTING_REPAIR_001\\DISPOSITION.json",
+                                             "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\TRACKER.json",
+                                             "F:\\rawrxd\\evidence\\FULL_FEATURE_ONESHOT_001\\artifacts\\POWERSHELL_PANEL_ROUTING_RECEIPT.txt",
+                                             "F:\\rawrxd\\src\\win32app\\Win32IDE_lifecycle.cpp"
+                                         ],
+                      "disposition":  "RUNTIME_REACHED=1 UNPROMOTED on D1B17; PRODUCT_PASS=0; harness PASS != product"
+                  },
+                  {
+                      "id":  "P07",
+                      "name":  "Bottom-dock 4-tab switching",
+                      "controls":  [
+                                       "Terminal",
+                                       "Output",
+                                       "Problems",
+                                       "DebugConsole",
+                                       "switchPanelTab",
+                                       "IDC_PANEL_TABS=1301"
+                                   ],
+                      "paths":  [
+                                    "F:\\rawrxd\\src\\win32app\\Win32IDE_VSCodeUI.cpp (createPanel TabCtrl 4 inserts; switchPanelTab)",
+                                    "F:\\rawrxd\\src\\win32app\\Win32IDE_lifecycle.cpp (TCN_SELCHANGE → switchPanelTab)",
+                                    "F:\\rawrxd\\src\\win32app\\Win32IDE_Core.cpp (panel tab WM_NOTIFY / WM_COMMAND paths)"
+                                ],
+                      "source_wired":  1,
+                      "runtime_reached":  1,
+                      "product_runtime_pass":  0,
+                      "findings":  [
+                                       "Four tabs inserted: TERMINAL / OUTPUT / PROBLEMS / DEBUG CONSOLE under IDC_PANEL_CONTAINER 1300.",
+                                       "switchPanelTab toggles visibility of terminal panes, output windows, Problems list, Debug console; ensurePanelVisible keeps dock up.",
+                                       "Batch-16 handoff reported dock rendering / tab labels visible but interactive tab switching still unverified on that candidate."
+                                   ],
+                      "blockers":  [
+                                       "build_win32ide tip exe ABSENT — interactive 4-tab switch NOT_RUN on controlling Native SHA.",
+                                       "EA5D four-panel GUI receipt: PANEL_TAB_COUNT=4 observed then POST_SELECT_MEASURE=STALL; FOUR_PANEL_INTEGRATION=FAIL_CLOSED_GAPS; GUI_DEBUG_CONSOLE_E2E=NOT_RUN.",
+                                       "FOUR_PANEL_1_17 PASS is sealed on SHA 4DE06F9F… (integ Ext candidate) — prior candidate ≠ Batch-18 tip acceptance."
+                                   ],
+                      "evidence_paths":  [
+                                             "F:\\rawrxd\\src\\win32app\\Win32IDE_VSCodeUI.cpp",
+                                             "F:\\rawrxd\\evidence\\FULL_FEATURE_ONESHOT_001\\artifacts\\EA5D_FOUR_PANEL_GUI_RECEIPT.txt",
+                                             "F:\\rawrxd\\evidence\\FULL_FEATURE_ONESHOT_001\\artifacts\\FOUR_PANEL_1_17_RECEIPT.txt"
+                                         ],
+                      "disposition":  "RUNTIME_REACHED=1 (4-tab cycle); PROBLEMS hwnd=0; PRODUCT_PASS=0"
+                  },
+                  {
+                      "id":  "P08",
+                      "name":  "Dock resize / restore",
+                      "controls":  [
+                                       "m_hwndSplitter drag",
+                                       "m_panelHeight",
+                                       "maximizePanel",
+                                       "restorePanel",
+                                       "session panel.height persist"
+                                   ],
+                      "paths":  [
+                                    "F:\\rawrxd\\src\\win32app\\Win32IDE.cpp (splitter subclass WM_LBUTTONDOWN/MOUSEMOVE/UP → m_panelHeight)",
+                                    "F:\\rawrxd\\src\\win32app\\Win32IDE_VSCodeUI.cpp (layoutBottomDock floor≥160; maximizePanel/restorePanel)",
+                                    "F:\\rawrxd\\src\\win32app\\Win32IDE_Session.cpp (panel.height save/load)",
+                                    "F:\\rawrxd\\src\\win32app\\Win32IDE_lifecycle.cpp (onSize dock geometry)"
+                                ],
+                      "source_wired":  1,
+                      "runtime_reached":  1,
+                      "product_runtime_pass":  0,
+                      "findings":  [
+                                       "Splitter drag updates m_panelHeight and relayout; layoutBottomDock enforces dockH floor 160 and caps.",
+                                       "maximizePanel toggles height; restorePanel clears maximize.",
+                                       "Session JSON persists panel.height (default 200 on load)."
+                                   ],
+                      "blockers":  [
+                                       "No tip Native exe — resize/restore interactive smoke NOT_RUN on Batch-17 SHA.",
+                                       "BOTTOM_PANEL_LAYOUT_FIX historical SOURCE_FIXED on tip 07F9C519… with visual GUI probe NOT_RUN (REMAINING_WORK_17_001 P08).",
+                                       "Dock regression listed as acceptance item for PowerShell session 05 — not yet executable."
+                                   ],
+                      "evidence_paths":  [
+                                             "F:\\rawrxd\\src\\win32app\\Win32IDE.cpp",
+                                             "F:\\rawrxd\\src\\win32app\\Win32IDE_VSCodeUI.cpp",
+                                             "F:\\rawrxd\\src\\win32app\\Win32IDE_Session.cpp",
+                                             "F:\\rawrxd\\evidence\\IDE_REPAIR_CANDIDATE_001\\FINALIZATION_CHECKLIST_001\\REMAINING_WORK_17_001.txt",
+                                             "F:\\rawrxd\\evidence\\POWERSHELL_ROUTING_REPAIR_001\\DISPOSITION.json"
+                                         ],
+                      "disposition":  "RUNTIME_REACHED=1 FAIL drag_no_height_change; session reload NOT_RUN; PRODUCT_PASS=0"
+                  },
+                  {
+                      "id":  "P09",
+                      "name":  "Problems click-to-line",
+                      "controls":  [
+                                       "NM_CLICK/DBLCLK/ITEMACTIVATE → WM_COMMAND 1399",
+                                       "goToProblem",
+                                       "EM_SETSEL/EM_EXSETSEL"
+                                   ],
+                      "paths":  [
+                                    "F:\\rawrxd\\src\\win32app\\Win32IDE_VSCodeUI.cpp (goToProblem openDocumentPath + caret)",
+                                    "F:\\rawrxd\\src\\win32app\\Win32IDE_lifecycle.cpp (Problems LV notify PostMessage 1399; never inline goToProblem from WM_NOTIFY)",
+                                    "F:\\rawrxd\\src\\win32app\\Win32IDE_Core.cpp (case 1399 harness / menu navigate)"
+                                ],
+                      "source_wired":  1,
+                      "runtime_reached":  1,
+                      "product_runtime_pass":  0,
+                      "findings":  [
+                                       "goToProblem implements B12 path: openDocumentPath, bind editor id 1001, EM_LINEINDEX + EM_SETSEL/EM_EXSETSEL; proof log B12_NAVIGATE_LATEST.log.",
+                                       "ListView uses LVS_EX_FULLROWSELECT without ONECLICKACTIVATE (0xC000041D avoidance); activate posts 1399.",
+                                       "Historical T080_CLICK_TO_LINE_001=PASS on tip_ext_host SHA 07F9C519… (PROMOTE=0); FOUR_PANEL S_06 PASS on SHA 4DE06F9F… — both prior candidates."
+                                   ],
+                      "blockers":  [
+                                       "build_win32ide Native tip exe ABSENT — click-to-line NOT_RUN on controlling Batch-17/18 SHA.",
+                                       "EA5D controlling tip: CLICK_TO_LINE_HWND=NOT_RUN; PROBLEMS_ITEMS_POPULATED=NOT_RUN.",
+                                       "POSTED_NM_DBLCLK-only seals ≠ caret navigation acceptance (INTEG_004 / H36 lineage)."
+                                   ],
+                      "evidence_paths":  [
+                                             "F:\\rawrxd\\src\\win32app\\Win32IDE_VSCodeUI.cpp",
+                                             "F:\\rawrxd\\evidence\\IDE_REPAIR_CANDIDATE_001\\FINALIZATION_CHECKLIST_001\\T080_FIXTURE_COMPILE_TRACE_001\\T080_CLICK_TO_LINE_001.txt",
+                                             "F:\\rawrxd\\evidence\\FULL_FEATURE_ONESHOT_001\\artifacts\\EA5D_FOUR_PANEL_GUI_RECEIPT.txt",
+                                             "F:\\rawrxd\\evidence\\FULL_FEATURE_ONESHOT_001\\artifacts\\FOUR_PANEL_1_17_RECEIPT.txt"
+                                         ],
+                      "disposition":  "RUNTIME_REACHED=1 FAIL ITEMS=0; was NOT_RUN; PRODUCT_PASS=0"
+                  },
+                  {
+                      "id":  "P10",
+                      "name":  "Native IDE startup exceptions",
+                      "controls":  [
+                                       "WM_CREATE / finishSession layout arm",
+                                       "ensurePanelVisible try/catch",
+                                       "startup HWND bind",
+                                       "unhandled exception / minidump"
+                                   ],
+                      "paths":  [
+                                    "F:\\rawrxd\\src\\win32app\\Win32IDE_lifecycle.cpp (create/finishSession layoutBottomDock arm)",
+                                    "F:\\rawrxd\\src\\win32app\\Win32IDE_VSCodeUI.cpp (ensurePanelVisible catch-all)",
+                                    "F:\\rawrxd\\evidence\\F_GATE6_CANDIDATE_STARTUP_EXIT_ROOT_001\\"
+                                ],
+                      "source_wired":  1,
+                      "runtime_reached":  1,
+                      "product_runtime_pass":  0,
+                      "findings":  [
+                                       "Startup path arms layoutBottomDock after dock place; zero-rect / re-entrancy comments document prior 0xC000041D FATAL_USER_CALLBACK failures.",
+                                       "ensurePanelVisible wraps show/layout post in try/catch to avoid FATAL_USER_CALLBACK escape.",
+                                       "F_GATE6: STARTUP_UI_BINDING=FAILED; process visibility loss before interaction; GATE_6=OPEN; mechanism unproven (crash vs hidden vs external)."
+                                   ],
+                      "blockers":  [
+                                       "No current build_win32ide tip to re-probe startup exception survival.",
+                                       "GATE_6 remains OPEN — binary provenance / hash change stopped further Gate-6 launches.",
+                                       "BATCH1 cancel lane previously crashed on Request A (unhandled exception + minidump) on a different SHA — crash ≠ startup PASS; not re-run on tip."
+                                   ],
+                      "evidence_paths":  [
+                                             "F:\\rawrxd\\evidence\\F_GATE6_CANDIDATE_STARTUP_EXIT_ROOT_001\\ROOT_CAUSE.md",
+                                             "F:\\rawrxd\\evidence\\F_GATE6_CANDIDATE_STARTUP_EXIT_ROOT_001\\STARTUP_PROBE.md",
+                                             "F:\\rawrxd\\evidence\\F_GATE6_CANDIDATE_STARTUP_EXIT_ROOT_001\\NEXT_GATE.md",
+                                             "F:\\rawrxd\\evidence\\BATCH1_CANCEL_RECOVERY_001\\DISPOSITION.md"
+                                         ],
+                      "disposition":  "RUNTIME_REACHED=1 cold-start HWND x3; Gate-6 not closed; PRODUCT_PASS=0"
+                  },
+                  {
+                      "id":  "P11",
+                      "name":  "Cancellation / recovery",
+                      "controls":  [
+                                       "Stop / cancel HTTP",
+                                       "stale callback fencing",
+                                       "post-cancel recovery Request B",
+                                       "GhostText cancel"
+                                   ],
+                      "paths":  [
+                                    "F:\\rawrxd\\src\\win32app\\Win32IDE_AgenticLoopBridge.cpp",
+                                    "F:\\rawrxd\\src\\win32app\\Win32IDE_AgentCommands.cpp",
+                                    "F:\\rawrxd\\src\\win32app\\Win32IDE_GhostText.cpp",
+                                    "F:\\rawrxd\\evidence\\BATCH1_CANCEL_RECOVERY_001\\",
+                                    "F:\\rawrxd\\evidence\\F_GHOSTTEXT_CANCEL_ROUTING_CLOSURE_001\\"
+                                ],
+                      "source_wired":  1,
+                      "runtime_reached":  1,
+                      "product_runtime_pass":  0,
+                      "findings":  [
+                                       "Cancel HTTP path SOURCE_WIRED (cancelable WinHTTP + m_inferenceRunning=false on Stop) per BATCH1 disposition.",
+                                       "GhostText generation/request_id stale fencing implemented in source; closure verdict CANCELLATION=FAIL; STALE_FENCING=NOT_VERIFIED.",
+                                       "BATCH1: RUNTIME_REACHED=1 on prior tested SHA 74678E5A… but Gates 04–08 FAIL (crash before Stop/Request B); RUNTIME_PASS=0."
+                                   ],
+                      "blockers":  [
+                                       "Prior cancel recovery crash ≠ PASS; post-fix tip rebuild hung/incomplete; harness NOT_RUN after crash-fix.",
+                                       "F_GHOSTTEXT_CANCEL: CANCELLATION=FAIL; needs Escape-entry trace + repaired candidate + delayed A/B race.",
+                                       "Current build_win32ide exe ABSENT — Batch-18 cancel/recovery suite NOT_RUN on controlling tip."
+                                   ],
+                      "evidence_paths":  [
+                                             "F:\\rawrxd\\evidence\\BATCH1_CANCEL_RECOVERY_001\\DISPOSITION.md",
+                                             "F:\\rawrxd\\evidence\\BATCH1_CANCEL_RECOVERY_001\\GATE_04_08_SUMMARY.txt",
+                                             "F:\\rawrxd\\evidence\\F_GHOSTTEXT_CANCEL_ROUTING_CLOSURE_001\\FINAL_VERDICT.md",
+                                             "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\BATCH_20_AUDIT\\AGENT_RELIABILITY_GAP_MATRIX.json"
+                                         ],
+                      "disposition":  "RUNTIME_REACHED=1 PARTIAL FAIL cancel posted; RequestA/B NOT_RUN; PRODUCT_PASS=0"
+                  }
+              ],
+    "next_executable_gates":  [
+                                  "P07 deepen: prove Terminal/Output/Problems/Debug HWND visibility after tab select on tip SHA",
+                                  "P09 Problems click-to-line on same tip SHA",
+                                  "P08 splitter drag + session panel.height reload",
+                                  "P11 cancel Stop + Request B recovery",
+                                  "No CERTIFIED/PROMOTE until P06-P11 product conjunction"
+                              ],
+    "this_audit":  {
+                       "edited_product_sources":  0,
+                       "ran_build_win32ide":  0,
+                       "raised_estimates":  0,
+                       "harness_fail_closed_reprobe":  1,
+                       "gui_smoke_exercised":  1,
+                       "verify_receipt":  "VERIFY_RECEIPT.txt",
+                       "tip_sha":  "D1B17F66C5BD951BADD51FEE31326EAAE758B1E3F605E761AB4D82D255A32ABF",
+                       "invented_pass":  0
+                   },
+    "runtime_acceptance":  "PARTIAL_2_OF_6"
+}

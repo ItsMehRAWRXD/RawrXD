@@ -1,0 +1,10 @@
+﻿Get-FileHash : The file 'F:\rawrxd\build_win32ide\bin\Release\RawrXD-Win32IDE-Native.exe' cannot be read: The process 
+cannot access the file 'F:\rawrxd\build_win32ide\bin\Release\RawrXD-Win32IDE-Native.exe' because it is being used by 
+another process.
+At F:\rawrxd\tools\hotpatch\Start-RawrXDAcceptance.ps1:13 char:12
++ $actual = (Get-FileHash -LiteralPath $ExePath -Algorithm SHA256).Hash
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ReadError: (F:\rawrxd\build...2IDE-Native.exe:PSObject) [Write-Error], WriteErrorExcepti 
+   on
+    + FullyQualifiedErrorId : FileReadError,Get-FileHash
+ 

@@ -1,0 +1,223 @@
+
+  Checking File Globs
+  ggml-base.vcxproj -> F:\rawrxd\build_win32ide\3rdparty\ggml\src\Release\ggml-base.lib
+  ggml-cpu.vcxproj -> F:\rawrxd\build_win32ide\3rdparty\ggml\src\Release\ggml-cpu.lib
+  1>Performing build step for 'vulkan-shaders-gen'
+  MSBuild version 17.14.51+25f168cee for .NET Framework
+  
+    vulkan-shaders-gen.vcxproj -> F:\rawrxd\build_win32ide\3rdparty\ggml\src\ggml-vulkan\vulkan-shaders-gen-prefix\src\vulkan-shaders-gen-build\Release\vulkan-shaders-gen.exe
+  Performing install step for 'vulkan-shaders-gen'
+  -- Up-to-date: F:/rawrxd/build_win32ide/Release/vulkan-shaders-gen.exe
+  Completed 'vulkan-shaders-gen'
+  ggml-vulkan.vcxproj -> F:\rawrxd\build_win32ide\3rdparty\ggml\src\ggml-vulkan\Release\ggml-vulkan.lib
+  ggml.vcxproj -> F:\rawrxd\build_win32ide\3rdparty\ggml\src\Release\ggml.lib
+  rawrxd_agentic_backend.vcxproj -> F:\rawrxd\build_win32ide\Release\rawrxd_agentic_backend.lib
+  Building Custom Rule F:/rawrxd/src/computer_use/CMakeLists.txt
+  ComputerUse.cpp
+  ScreenCapture.cpp
+  ComputerUseBridge.cpp
+F:\rawrxd\src\agentic\tool_core.hpp(97,13): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning. [F:\rawrxd\build_win32ide\src\computer_use\rawrxd_computer_use.vcxproj]
+  (compiling source file '../../../src/computer_use/ComputerUseBridge.cpp')
+  
+F:\rawrxd\src\computer_use\ComputerUseBridge.cpp(68,35): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\build_win32ide\src\computer_use\rawrxd_computer_use.vcxproj]
+F:\rawrxd\src\computer_use\ComputerUseBridge.cpp(74,33): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\rawrxd\build_win32ide\src\computer_use\rawrxd_computer_use.vcxproj]
+  ComputerUseParse.cpp
+F:\rawrxd\src\agentic\tool_core.hpp(97,13): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning. [F:\rawrxd\build_win32ide\src\computer_use\rawrxd_computer_use.vcxproj]
+  (compiling source file '../../../src/computer_use/ComputerUseParse.cpp')
+  
+  rawrxd_computer_use.vcxproj -> F:\rawrxd\build_win32ide\src\computer_use\Release\rawrxd_computer_use.lib
+  Building Custom Rule F:/rawrxd/src/production/CMakeLists.txt
+  SovereignProductionConfig.cpp
+  SovereignObservability.cpp
+  SovereignReliabilityFaultTolerance.cpp
+  SovereignSecurityHardening.cpp
+  ProductionRuntime.cpp
+  rawrxd_production_hardening.vcxproj -> F:\rawrxd\build_win32ide\src\production\Release\rawrxd_production_hardening.lib
+  Building Custom Rule F:/rawrxd/CMakeLists.txt
+  input_sanitizer.cpp
+  secure_buffer.cpp
+  crash_handler.cpp
+  rawrxd_security.vcxproj -> F:\rawrxd\build_win32ide\Release\rawrxd_security.lib
+  Building Custom Rule F:/rawrxd/CMakeLists.txt
+  Win32IDE_MenuHandlers.cpp
+F:\rawrxd\src\tokenizer\qwen3_tokenizer.hpp(133,20): warning C4189: 'end': local variable is initialized but not referenced [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_MenuHandlers.cpp')
+  
+F:\rawrxd\src\native_agent.hpp(246,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_MenuHandlers.cpp')
+  
+F:\rawrxd\src\agentic\tool_core.hpp(97,13): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning. [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_MenuHandlers.cpp')
+  
+F:\rawrxd\src\agentic\ToolCallBridge.h(58,62): warning C4100: 'registry': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_MenuHandlers.cpp')
+  
+F:\rawrxd\src\snap\rawrxd_snap_detectors.hpp(5,9): warning C4005: 'WIN32_LEAN_AND_MEAN': macro redefinition [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_MenuHandlers.cpp')
+      F:\rawrxd\src\snap\rawrxd_snap_detectors.hpp(5,9):
+      'WIN32_LEAN_AND_MEAN' previously declared on the command line
+  
+  main_win32.cpp
+F:\rawrxd\src\tokenizer\qwen3_tokenizer.hpp(133,20): warning C4189: 'end': local variable is initialized but not referenced [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/main_win32.cpp')
+  
+F:\rawrxd\src\native_agent.hpp(246,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/main_win32.cpp')
+  
+F:\rawrxd\src\agentic\tool_core.hpp(97,13): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning. [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/main_win32.cpp')
+  
+F:\rawrxd\src\agentic\ToolCallBridge.h(58,62): warning C4100: 'registry': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/main_win32.cpp')
+  
+F:\rawrxd\src\snap\rawrxd_snap_detectors.hpp(5,9): warning C4005: 'WIN32_LEAN_AND_MEAN': macro redefinition [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/main_win32.cpp')
+      F:\rawrxd\src\snap\rawrxd_snap_detectors.hpp(5,9):
+      'WIN32_LEAN_AND_MEAN' previously declared on the command line
+  
+F:\rawrxd\src\win32app\main_win32.cpp(182,87): warning C4100: 'nCmdShow': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\main_win32.cpp(182,51): warning C4100: 'hPrevInstance': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  Win32IDE.cpp
+F:\rawrxd\src\tokenizer\qwen3_tokenizer.hpp(133,20): warning C4189: 'end': local variable is initialized but not referenced [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE.cpp')
+  
+F:\rawrxd\src\native_agent.hpp(246,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE.cpp')
+  
+F:\rawrxd\src\agentic\tool_core.hpp(97,13): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning. [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE.cpp')
+  
+F:\rawrxd\src\agentic\ToolCallBridge.h(58,62): warning C4100: 'registry': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE.cpp')
+  
+F:\rawrxd\src\snap\rawrxd_snap_detectors.hpp(5,9): warning C4005: 'WIN32_LEAN_AND_MEAN': macro redefinition [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE.cpp')
+      F:\rawrxd\src\snap\rawrxd_snap_detectors.hpp(5,9):
+      'WIN32_LEAN_AND_MEAN' previously declared on the command line
+  
+F:\rawrxd\src\deep2\Tokenizer.hpp(66,24): warning C4100: 'token': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE.cpp')
+  
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77,40): warning C4458: declaration of 'expertId' hides class member [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE.cpp')
+      F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46,14):
+      see declaration of 'Deep2::GlobalTensorRef::expertId'
+  
+F:\rawrxd\src\deep2\ModelFit.hpp(613,22): warning C4189: 'cpuLayers': local variable is initialized but not referenced [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE.cpp')
+  
+F:\rawrxd\src\win32app\Win32IDE.cpp(1645,36): warning C4101: 'e': unreferenced local variable [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE.cpp(3403,34): warning C4100: 'hwnd': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE.cpp(4906,14): warning C4244: 'initializing': conversion from 'LRESULT' to 'LONG', possible loss of data [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE.cpp(5977,29): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE.cpp(5986,29): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE.cpp(6006,29): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE.cpp(6019,29): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE.cpp(7334,10): warning C4189: 'hwndCommitBtn': local variable is initialized but not referenced [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE.cpp(7337,10): warning C4189: 'hwndCancelBtn': local variable is initialized but not referenced [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  Win32IDE_VSCodeUI.cpp
+F:\rawrxd\src\tokenizer\qwen3_tokenizer.hpp(133,20): warning C4189: 'end': local variable is initialized but not referenced [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_VSCodeUI.cpp')
+  
+F:\rawrxd\src\native_agent.hpp(246,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_VSCodeUI.cpp')
+  
+F:\rawrxd\src\agentic\tool_core.hpp(97,13): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning. [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_VSCodeUI.cpp')
+  
+F:\rawrxd\src\agentic\ToolCallBridge.h(58,62): warning C4100: 'registry': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_VSCodeUI.cpp')
+  
+F:\rawrxd\src\snap\rawrxd_snap_detectors.hpp(5,9): warning C4005: 'WIN32_LEAN_AND_MEAN': macro redefinition [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_VSCodeUI.cpp')
+      F:\rawrxd\src\snap\rawrxd_snap_detectors.hpp(5,9):
+      'WIN32_LEAN_AND_MEAN' previously declared on the command line
+  
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1324,19): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1325,19): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1453,10): warning C4189: 'btnFilter': local variable is initialized but not referenced [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1447,10): warning C4189: 'btnPause': local variable is initialized but not referenced [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1441,10): warning C4189: 'btnClear': local variable is initialized but not referenced [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_VSCodeUI.cpp(1626,41): warning C4100: 'wParam': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  Win32IDE_PowerShellPanel.cpp
+F:\rawrxd\src\tokenizer\qwen3_tokenizer.hpp(133,20): warning C4189: 'end': local variable is initialized but not referenced [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_PowerShellPanel.cpp')
+  
+F:\rawrxd\src\native_agent.hpp(246,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_PowerShellPanel.cpp')
+  
+F:\rawrxd\src\agentic\tool_core.hpp(97,13): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning. [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_PowerShellPanel.cpp')
+  
+F:\rawrxd\src\agentic\ToolCallBridge.h(58,62): warning C4100: 'registry': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_PowerShellPanel.cpp')
+  
+F:\rawrxd\src\snap\rawrxd_snap_detectors.hpp(5,9): warning C4005: 'WIN32_LEAN_AND_MEAN': macro redefinition [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_PowerShellPanel.cpp')
+      F:\rawrxd\src\snap\rawrxd_snap_detectors.hpp(5,9):
+      'WIN32_LEAN_AND_MEAN' previously declared on the command line
+  
+F:\rawrxd\src\win32app\Win32IDE_PowerShellPanel.cpp(497,42): warning C4100: 'width': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_PowerShellPanel.cpp(741,63): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  Win32IDE_PowerShell.cpp
+F:\rawrxd\src\tokenizer\qwen3_tokenizer.hpp(133,20): warning C4189: 'end': local variable is initialized but not referenced [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_PowerShell.cpp')
+  
+F:\rawrxd\src\native_agent.hpp(246,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_PowerShell.cpp')
+  
+F:\rawrxd\src\agentic\tool_core.hpp(97,13): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning. [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_PowerShell.cpp')
+  
+F:\rawrxd\src\agentic\ToolCallBridge.h(58,62): warning C4100: 'registry': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_PowerShell.cpp')
+  
+F:\rawrxd\src\snap\rawrxd_snap_detectors.hpp(5,9): warning C4005: 'WIN32_LEAN_AND_MEAN': macro redefinition [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_PowerShell.cpp')
+      F:\rawrxd\src\snap\rawrxd_snap_detectors.hpp(5,9):
+      'WIN32_LEAN_AND_MEAN' previously declared on the command line
+  
+F:\rawrxd\src\win32app\Win32IDE_PowerShell.cpp(656,60): warning C4100: 'eventName': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  Win32IDE_Logger.cpp
+F:\rawrxd\src\tokenizer\qwen3_tokenizer.hpp(133,20): warning C4189: 'end': local variable is initialized but not referenced [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_Logger.cpp')
+  
+F:\rawrxd\src\native_agent.hpp(246,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_Logger.cpp')
+  
+F:\rawrxd\src\agentic\tool_core.hpp(97,13): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning. [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_Logger.cpp')
+  
+F:\rawrxd\src\agentic\ToolCallBridge.h(58,62): warning C4100: 'registry': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_Logger.cpp')
+  
+F:\rawrxd\src\snap\rawrxd_snap_detectors.hpp(5,9): warning C4005: 'WIN32_LEAN_AND_MEAN': macro redefinition [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_Logger.cpp')
+      F:\rawrxd\src\snap\rawrxd_snap_detectors.hpp(5,9):
+      'WIN32_LEAN_AND_MEAN' previously declared on the command line
+  
+  Win32TerminalManager.cpp
+  Win32IDE_FileOps.cpp
+F:\rawrxd\src\tokenizer\qwen3_tokenizer.hpp(133,20): warning C4189: 'end': local variable is initialized but not referenced [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_FileOps.cpp')
+  
+F:\rawrxd\src\native_agent.hpp(246,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_FileOps.cpp')
+  
+F:\rawrxd\src\agentic\tool_core.hpp(97,13): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning. [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_FileOps.cpp')
+  
+F:\rawrxd\src\agentic\ToolCallBridge.h(58,62): warning C4100: 'registry': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_FileOps.cpp')
+  
+F:\rawrxd\src\snap\rawrxd_snap_detectors.hpp(5,9): warning C4005: 'WIN32_LEAN_AND_MEAN': macro redefinition [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_FileOps.cpp')
+      F:\rawrxd\src\snap\rawrxd_snap_detectors.hpp(5,9):
+      'WIN32_LEAN_AND_MEAN' previously declared on the command line
+  
+F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(366,42): warning C4244: 'argument': conversion from 'const LRESULT' to 'int', possible loss of data [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(369,62): warning C4244: 'argument': conversion from 'const LRESULT' to 'int', possible loss of data [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(1293,47): warning C4456: declaration of 'restored' hides previous local declaration [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+      F:\rawrxd\src\win32app\Win32IDE_FileOps.cpp(1238,16):
+      see declaration of 'restored'
+  

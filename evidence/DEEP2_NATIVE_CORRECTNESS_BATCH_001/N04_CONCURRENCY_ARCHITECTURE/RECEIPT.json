@@ -1,0 +1,35 @@
+{
+  "receipt_id": "N04_CONCURRENCY_ARCHITECTURE",
+  "batch_id": "DEEP2_NATIVE_CORRECTNESS_BATCH_001",
+  "status": "PASS",
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "timestamp": "2026-11-11T17:51:00Z",
+  "depends_on": "N03_PASS",
+  "architecture": {
+    "product_shared_engine": "AggregateDecodeDeep2Backend",
+    "MUTEX_REMOVED": 0,
+    "SHARED_ENGINE_MT_SAFE": 0,
+    "OVERLAP_STRATEGY": "mutex_serialize_decode_on_single_Deep2Engine",
+    "TRUE_PARALLEL_GPU_AGGREGATE": 0,
+    "CONTINUOUS_BATCHING_PRODUCT_PATH": "NOT_CLAIMED"
+  },
+  "overlap_streams4": {
+    "exe": "F:\\rawrxd\\build\\bin\\aggregate_decode_multi_smoke.exe",
+    "sha256": "84688D03F59F504333B492D98F65957535266EF73A3B5BBFC2950F5EDFCB546B",
+    "STREAMS": 4,
+    "GENERATED_TOKENS": 16,
+    "AGGREGATE_DECODE_TPS_MULTI": 0.1599,
+    "FAIRNESS_RATIO": 0.921433,
+    "ALL_SESSIONS_WORKED": 1,
+    "RUNTIME_REACHED": 1,
+    "deep2_runtime_reached": 1
+  },
+  "isolated_engine_path_cite": "N03_SESSION_ISOLATION PASS (distinct KV; mutex for GPU safety)",
+  "evidence": ["ARCHITECTURE.txt", "OVERLAP_STREAMS4.txt", "HASHES.txt", "LINKAGE.txt"],
+  "preserve_historical": "AGGREGATE_DECODE_DEEP2_RUNTIME_001",
+  "historical_disposition_sha256": "8C712A0F087108C05315E5349122D33C4EA19F4219C0754755CB6635039641AA",
+  "win32ide_untouched": 1,
+  "note": "PASS documents mutex-serialized concurrency architecture and exercised 4-stream overlap. Does not claim true parallel GPU aggregate or continuous batching."
+}

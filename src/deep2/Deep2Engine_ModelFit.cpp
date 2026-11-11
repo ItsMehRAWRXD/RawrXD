@@ -742,9 +742,10 @@ bool Deep2Engine::forwardLayerBatched(size_t layer, ActivationBatch& batch,
             const size_t groupedHead = g.groupSize ? h / g.groupSize : h;
             const size_t kvHead =
                 (g.groupSize && groupedHead < numKVHeads) ? groupedHead : h;
-            AttentionWithCache(qAll.data() + j * H + h * headDim,
-                               *kvCache, layer, kvHead,
-                               attn.row(j) + h * headDim, visibleForRow);
+            if (!AttentionWithCache(qAll.data() + j * H + h * headDim,
+                                    *kvCache, layer, kvHead,
+                                    attn.row(j) + h * headDim, visibleForRow))
+                return false;
         }
     }
     for (size_t j = 0; j < B; ++j)

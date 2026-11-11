@@ -1,0 +1,30 @@
+﻿  Win32IDE_VoiceAssistantPanel.cpp
+  (compiling source file '../src/win32app/Win32IDE_VoiceAssistantPanel.cpp')
+  (compiling source file '../src/win32app/Win32IDE_VoiceAssistantPanel.cpp')
+F:\rawrxd\src\agentic\tool_core.hpp(97,13): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning. [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_VoiceAssistantPanel.cpp')
+  (compiling source file '../src/win32app/Win32IDE_VoiceAssistantPanel.cpp')
+  (compiling source file '../src/win32app/Win32IDE_VoiceAssistantPanel.cpp')
+  Win32IDE_FileSystemEvents.cpp
+  (compiling source file '../src/win32app/Win32IDE_FileSystemEvents.cpp')
+  (compiling source file '../src/win32app/Win32IDE_FileSystemEvents.cpp')
+F:\rawrxd\src\agentic\tool_core.hpp(97,13): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning. [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_FileSystemEvents.cpp')
+  (compiling source file '../src/win32app/Win32IDE_FileSystemEvents.cpp')
+  (compiling source file '../src/win32app/Win32IDE_FileSystemEvents.cpp')
+  Win32IDE_HeapHardening.cpp
+  (compiling source file '../src/win32app/Win32IDE_HeapHardening.cpp')
+  (compiling source file '../src/win32app/Win32IDE_HeapHardening.cpp')
+F:\rawrxd\src\agentic\tool_core.hpp(97,13): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning. [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_HeapHardening.cpp')
+  (compiling source file '../src/win32app/Win32IDE_HeapHardening.cpp')
+  (compiling source file '../src/win32app/Win32IDE_HeapHardening.cpp')
+F:\rawrxd\src\win32app\Win32IDE_HeapHardening.cpp(11,42): warning C4100: 'ptr': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\src\win32app\Win32IDE_HeapHardening.cpp(15,40): warning C4100: 'page': unreferenced parameter [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  Win32IDE_Attestation.cpp
+  (compiling source file '../src/win32app/Win32IDE_Attestation.cpp')
+  (compiling source file '../src/win32app/Win32IDE_Attestation.cpp')
+F:\rawrxd\src\agentic\tool_core.hpp(97,13): warning C4996: 'std::filesystem::u8path': warning STL4021: The std::filesystem::u8path() overloads are deprecated in C++20. The constructors of std::filesystem::path provide equivalent functionality via construction from u8string, u8string_view, or iterators with value_type char8_t. You can define _SILENCE_CXX20_U8PATH_DEPRECATION_WARNING or _SILENCE_ALL_CXX20_DEPRECATION_WARNINGS to suppress this warning. [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../src/win32app/Win32IDE_Attestation.cpp')
+  (compiling source file '../src/win32app/Win32IDE_Attestation.cpp')
+  (compiling source file '../src/win32app/Win32IDE_Attestation.cpp')

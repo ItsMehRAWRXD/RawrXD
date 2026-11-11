@@ -100,8 +100,14 @@ OllamaResponse OllamaClient::generateSync(const OllamaGenerateRequest& request) 
     
     std::string json = createGenerateRequestJson(sync_req);
     std::string response = makePostRequest("/api/generate", json);
-    
-    return parseResponse(response);
+
+    OllamaResponse parsed = parseResponse(response);
+    // Carry the transport outcome so callers can tell a timeout, a refused
+    // connection, and an empty model answer apart.  parseResponse only sees the
+    // body, so the status/error recorded by the HTTP helper is attached here.
+    parsed.http_status = m_last_http_status;
+    parsed.transport_error = m_last_error;
+    return parsed;
 }
 
 OllamaResponse OllamaClient::chatSync(const OllamaChatRequest& request) {
@@ -120,7 +126,10 @@ OllamaResponse OllamaClient::chatSync(const OllamaChatRequest& request) {
         std::fflush(stderr);
     }
     
-    return parseResponse(response);
+    OllamaResponse parsed = parseResponse(response);
+    parsed.http_status = m_last_http_status;
+    parsed.transport_error = m_last_error;
+    return parsed;
 }
 
 bool OllamaClient::generate(const OllamaGenerateRequest& request,
@@ -488,15 +497,22 @@ std::string OllamaClient::makeGetRequest(const std::string& endpoint) {
 }
 
 std::string OllamaClient::makePostRequest(const std::string& endpoint, const std::string& json_body) {
+    // Reset per-exchange diagnostics.  Every early return below must leave a
+    // meaningful transport_error so the caller never mistakes a failure for an
+    // empty completion.
+    m_last_http_status = 0;
+    m_last_error.clear();
+
     HINTERNET hSession = WinHttpOpen(L"RawrXD/1.0",
                                      WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
                                      WINHTTP_NO_PROXY_NAME,
                                      WINHTTP_NO_PROXY_BYPASS, 0);
-    if (!hSession) return "";
+    if (!hSession) { m_last_error = "HTTP_SESSION_OPEN_FAILED"; return ""; }
 
     std::wstring host;
     INTERNET_PORT port = INTERNET_DEFAULT_HTTP_PORT;
     if (!CrackOllamaBaseUrl(m_base_url, host, port)) {
+        m_last_error = "HTTP_INVALID_URL";
         WinHttpCloseHandle(hSession);
         return "";
     }
@@ -504,6 +520,8 @@ std::string OllamaClient::makePostRequest(const std::string& endpoint, const std
 
     HINTERNET hConnect = WinHttpConnect(hSession, host.c_str(), port, 0);
     if (!hConnect) {
+        m_last_error = DescribeWinHttpError(GetLastError());
+        if (m_last_error.empty()) m_last_error = "HTTP_CONNECT_FAILED";
         WinHttpCloseHandle(hSession);
         return "";
     }
@@ -513,6 +531,8 @@ std::string OllamaClient::makePostRequest(const std::string& endpoint, const std
                                            NULL, WINHTTP_NO_REFERER,
                                            WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
     if (!hRequest) {
+        m_last_error = DescribeWinHttpError(GetLastError());
+        if (m_last_error.empty()) m_last_error = "HTTP_OPEN_REQUEST_FAILED";
         WinHttpCloseHandle(hConnect);
         WinHttpCloseHandle(hSession);
         return "";
@@ -546,6 +566,7 @@ std::string OllamaClient::makePostRequest(const std::string& endpoint, const std
         bResults = WinHttpReceiveResponse(hRequest, NULL);
         
         if (bResults) {
+            m_last_http_status = QueryWinHttpStatus(hRequest);
             DWORD dwSize = 0;
             DWORD dwDownloaded = 0;
             
@@ -557,12 +578,34 @@ std::string OllamaClient::makePostRequest(const std::string& endpoint, const std
                     
                     if (WinHttpReadData(hRequest, (LPVOID)pszOutBuffer, dwSize, &dwDownloaded)) {
                         response.append(pszOutBuffer, dwDownloaded);
+                    } else {
+                        m_last_error = DescribeWinHttpError(GetLastError());
                     }
                     
                     delete[] pszOutBuffer;
+                } else if (dwSize == 0) {
+                    // QueryDataAvailable failed; surface the transport error.
+                    const std::string readError = DescribeWinHttpError(GetLastError());
+                    if (!readError.empty()) m_last_error = readError;
                 }
             } while (dwSize > 0);
+        } else {
+            m_last_error = DescribeWinHttpError(GetLastError());
+            if (m_last_error.empty()) m_last_error = "HTTP_RECEIVE_FAILED";
         }
+    } else {
+        m_last_error = DescribeWinHttpError(GetLastError());
+        if (m_last_error.empty()) m_last_error = "HTTP_SEND_FAILED";
+    }
+
+    // A syntactically valid non-2xx response still counts as an HTTP error, and
+    // an empty body is an explicit, distinct outcome from a transport failure.
+    if (!m_last_error.empty()) {
+        // keep the most specific transport error
+    } else if (m_last_http_status != 0 && (m_last_http_status < 200 || m_last_http_status >= 300)) {
+        m_last_error = "HTTP_STATUS_" + std::to_string(m_last_http_status);
+    } else if (response.empty()) {
+        m_last_error = "EMPTY_RESPONSE";
     }
     
     TraceOllamaExchange(endpoint.c_str(), json_body, response);
@@ -583,6 +626,8 @@ bool OllamaClient::makeStreamingPostRequest(const std::string& endpoint,
     OllamaResponse resp;
     resp.response = makePostRequest(endpoint, json_body);
     resp.done = true;
+    resp.http_status = m_last_http_status;
+    resp.transport_error = m_last_error;
     
     if (on_chunk) on_chunk(resp);
     if (on_complete) on_complete(resp);

@@ -182,7 +182,10 @@ bool Deep2Engine::safeForwardLayer(size_t layer, float* input, float* output, si
         forwardLayer(layer, input, output, seqLen);
         return true;
     }
-    __except ((exceptionInfo = GetExceptionInformation()), EXCEPTION_EXECUTE_HANDLER)
+    __except ((exceptionInfo = GetExceptionInformation()),
+              GetExceptionCode() == 0xE06D7363UL
+                  ? EXCEPTION_CONTINUE_SEARCH
+                  : EXCEPTION_EXECUTE_HANDLER)
     {
         const DWORD code = GetExceptionCode();
         const void* address = (exceptionInfo && exceptionInfo->ExceptionRecord)

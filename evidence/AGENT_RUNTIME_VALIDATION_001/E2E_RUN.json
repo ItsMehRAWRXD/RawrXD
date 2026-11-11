@@ -1,0 +1,11 @@
+{
+  "gate": "G4",
+  "status": "BLOCKED",
+  "reason": "G1 Native IDE full link not achieved; no RawrXD-Win32IDE-Native.exe",
+  "RUNTIME_REACHED": 0,
+  "tokens": null,
+  "tools": null,
+  "exit": null,
+  "CERTIFIED": 0,
+  "PROMOTE": 0
+}

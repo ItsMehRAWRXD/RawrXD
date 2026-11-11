@@ -1,20 +1,9 @@
 // Win32IDE_Quantum.cpp — Quantization Selector (Batch 5 M02)
-// Q4_K_M, Q5_K_M, Q8_0 quantization schemes
 #include "Win32IDE.h"
 #include <windows.h>
 #include <string>
 
-enum class QuantizationType {
-    Q4_K_M,
-    Q5_K_M,
-    Q8_0,
-    Q4_0,
-    Q5_0,
-    Q6_K,
-    Unknown
-};
-
-static QuantizationType g_selectedQuant = QuantizationType::Q4_K_M;
+static Win32IDE::QuantizationType g_selectedQuant = Win32IDE::QuantizationType::Q4_K_M;
 
 void Win32IDE::setQuantization(QuantizationType quant) {
     g_selectedQuant = quant;
@@ -31,6 +20,6 @@ void Win32IDE::setQuantization(QuantizationType quant) {
     appendToOutput("[Quantum] Quantization set to: " + name + "\n", "Output", OutputSeverity::Info);
 }
 
-QuantizationType Win32IDE::getQuantization() const {
+Win32IDE::QuantizationType Win32IDE::getQuantization() const {
     return g_selectedQuant;
 }

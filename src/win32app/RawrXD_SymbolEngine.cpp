@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "RawrXD_SymbolEngine.h"
 
 #include <cstdio>
@@ -56,7 +57,7 @@ void SymbolDatabase::IndexDocument(std::wstring_view uri, SymbolPtr root)
         return;
     std::wstring doc(uri);
     root->sourceUri = doc;
-    std::unique_lock lock(mutex_);
+    std::unique_lock<std::shared_mutex> lock(mutex_);
     removeDocumentLocked(uri);
     documentRoots_[doc] = root;
     indexSymbolRecursive(root, doc);
@@ -64,13 +65,13 @@ void SymbolDatabase::IndexDocument(std::wstring_view uri, SymbolPtr root)
 
 void SymbolDatabase::RemoveDocument(std::wstring_view uri)
 {
-    std::unique_lock lock(mutex_);
+    std::unique_lock<std::shared_mutex> lock(mutex_);
     removeDocumentLocked(uri);
 }
 
 SymbolPtr SymbolDatabase::GetDocumentRoot(std::wstring_view uri) const
 {
-    std::shared_lock lock(mutex_);
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     return getDocumentRootLocked(uri);
 }
 
@@ -105,7 +106,7 @@ void SymbolDatabase::removeFromWorkspaceIndex(const SymbolPtr& sym)
 
 std::vector<SymbolPtr> SymbolDatabase::SearchWorkspace(std::wstring_view query, int maxResults) const
 {
-    std::shared_lock lock(mutex_);
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     std::vector<SymbolPtr> results;
     if (maxResults <= 0)
         return results;
@@ -134,14 +135,14 @@ std::vector<SymbolPtr> SymbolDatabase::SearchWorkspace(std::wstring_view query, 
 
 SymbolPtr SymbolDatabase::FindById(UINT64 id) const
 {
-    std::shared_lock lock(mutex_);
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     auto it = idIndex_.find(id);
     return (it != idIndex_.end()) ? it->second : nullptr;
 }
 
 std::vector<SymbolPtr> SymbolDatabase::GetSymbolsAtLine(std::wstring_view uri, UINT line) const
 {
-    std::shared_lock lock(mutex_);
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     std::vector<SymbolPtr> result;
     auto root = getDocumentRootLocked(uri);
     if (!root)
@@ -162,7 +163,7 @@ std::vector<SymbolPtr> SymbolDatabase::GetSymbolsAtLine(std::wstring_view uri, U
 
 void SymbolDatabase::Clear()
 {
-    std::unique_lock lock(mutex_);
+    std::unique_lock<std::shared_mutex> lock(mutex_);
     documentRoots_.clear();
     workspaceIndex_.clear();
     idIndex_.clear();
@@ -171,7 +172,7 @@ void SymbolDatabase::Clear()
 
 std::vector<SymbolPtr> SymbolDatabase::GetContextSymbols(std::wstring_view uri, const Range& range, int maxDepth) const
 {
-    std::shared_lock lock(mutex_);
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     std::vector<SymbolPtr> ctx;
     auto root = getDocumentRootLocked(uri);
     if (!root || maxDepth <= 0)
@@ -801,8 +802,8 @@ std::string RawrXDSymbolHost::WorkspaceSymbolLspResultUtf8(std::string_view quer
 
 RawrXDSymbolHost& GlobalSymbolHost()
 {
-    static RawrXDSymbolHost s_host;
-    return s_host;
+    static RawrXDSymbolHost g_symbolHost;
+    return g_symbolHost;
 }
 
 SymbolDatabase& GlobalSymbolDatabase()
@@ -822,3 +823,11 @@ void IndexFileAsync(std::wstring uri, std::string content)
 }
 
 }  // namespace RawrXD::SymbolEngine
+
+bool RawrXD::SymbolEngine::Symbol::IsContainer() const {
+    return !children.empty();
+}
+
+std::wstring RawrXD::SymbolEngine::Symbol::ToAIContext() const {
+    return name;
+}

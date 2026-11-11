@@ -1,0 +1,89 @@
+{
+  "receipt_id": "N01_CLEAN_TIP_REBUILD",
+  "batch_id": "DEEP2_NATIVE_CORRECTNESS_BATCH_001",
+  "status": "PASS",
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "timestamp": "2026-11-11T17:24:49Z",
+  "compiler": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Tools\\MSVC\\14.44.35207\\bin\\Hostx64\\x64\\cl.exe",
+  "toolset": "14.44.35207",
+  "vcvars": "amd64",
+  "kvcache_churn_resolution": {
+    "issue": "Historical tip rebuild failed: KVCache.cpp accessed missing/private members; AggregateDecode linked stale Release lib via BuildProjectReferences=false",
+    "fix": "Public accessors numLayers()/maxSeqLen()/isInitialized() on Deep2::KVCache; Deep2Engine uses isInitialized(); forced rebuild of Deep2Engine.obj+KVCache.obj then deep2_engine_lib + both smokes with BuildProjectReferences=true",
+    "first_attempt_error": "C2248 Deep2::KVCache::initialized private + C2064 (mid-churn); resolved on tip before successful rebuild"
+  },
+  "build": {
+    "LIB_BUILD_EXIT": 0,
+    "SINGLE_SMOKE_BUILD_EXIT": 0,
+    "MULTI_SMOKE_BUILD_EXIT": 0,
+    "AGGREGATE_DECODE_USE_DEEP2": 1,
+    "stale_lib_fallback": 0
+  },
+  "hashes_sha256": {
+    "deep2_engine_lib.lib": "4AB07EFC5954F7A91A64FFBEBFAE8E7B56431745CA64C55D1AFEFBE5937CB659",
+    "aggregate_decode_single_smoke.exe": "A472C057C15A9B6AC33D939976190368E42964D2F8DD61103FFBB48AAA8F634D",
+    "aggregate_decode_multi_smoke.exe": "84688D03F59F504333B492D98F65957535266EF73A3B5BBFC2950F5EDFCB546B",
+    "prior_stale_lib_session_start": "FB836068BE0B74985D914734DD81C6E645090E948C1EC9C80A4203E1F24882A9",
+    "lib_ne_stale": 1
+  },
+  "linkage": {
+    "lib_type": "STATIC",
+    "single_link_tlog": "F:\\rawrxd\\build\\tools\\aggregate_decode\\aggregate_decode_single_smoke.dir\\Release\\aggregat.C4B9BE15.tlog\\link.read.1.tlog",
+    "multi_link_tlog": "F:\\rawrxd\\build\\tools\\aggregate_decode\\aggregate_decode_multi_smoke.dir\\Release\\aggregat.B120C341.tlog\\link.read.1.tlog",
+    "tlog_contains": "F:\\RAWRXD\\BUILD\\RELEASE\\DEEP2_ENGINE_LIB.LIB",
+    "exe_mtime_after_lib": 1,
+    "dumpbin_dependents": "CRT/Vulkan/WinHTTP only (expected for static link)",
+    "symbol_proof": "dumpbin /LINKERMEMBER includes ?isInitialized@KVCache@Deep2 and Deep2Engine symbols"
+  },
+  "smokes": {
+    "gguf": "F:\\ollamamodels\\n4-tiny-oracle.gguf",
+    "single": {
+      "exit": 0,
+      "BACKEND": "DEEP2",
+      "BACKEND_LABEL": "DEEP2_ENGINE",
+      "GENERATED_TOKENS": 8,
+      "AGGREGATE_DECODE_TPS_SINGLE": 0.280010,
+      "WALL_NS": 28570422100,
+      "SOURCE_WIRED": 1,
+      "RUNTIME_REACHED": 1,
+      "deep2_runtime_reached": 1
+    },
+    "multi": {
+      "exit": 0,
+      "BACKEND": "DEEP2",
+      "STREAMS": 2,
+      "CONCURRENT": 1,
+      "GENERATED_TOKENS": 12,
+      "AGGREGATE_DECODE_TPS_MULTI": 0.179261,
+      "ALL_SESSIONS_WORKED": 1,
+      "BOTH_LANES": 1,
+      "FAIRNESS_RATIO": 0.969333,
+      "SOURCE_WIRED": 1,
+      "RUNTIME_REACHED": 1,
+      "deep2_runtime_reached": 1,
+      "note": "mutex-serialized multi ≠ true parallel decode"
+    }
+  },
+  "compare_to_historical_AGGREGATE_DECODE_DEEP2_RUNTIME_001": {
+    "preserved": 1,
+    "overwrite": 0,
+    "historical_label": "DEEP2_RUNTIME_REACHED PASS_REPORTED only — not full certification",
+    "historical_single_tps": 0.279799,
+    "n01_single_tps": 0.280010,
+    "historical_multi_tps": 0.187053,
+    "n01_multi_tps": 0.179261,
+    "baseline_only": 1,
+    "claim_certification": 0
+  },
+  "artifacts": [
+    "RECEIPT.json",
+    "BUILD_LOG.txt",
+    "HASHES.txt",
+    "SMOKE_SINGLE.txt",
+    "SMOKE_MULTI.txt",
+    "LINKAGE.txt"
+  ],
+  "win32ide_untouched": 1
+}

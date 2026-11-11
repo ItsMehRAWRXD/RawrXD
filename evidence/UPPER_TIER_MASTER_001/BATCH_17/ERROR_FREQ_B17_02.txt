@@ -1,0 +1,27 @@
+ASOF=2026-11-11T17:35:00Z
+TOTAL_ERROR_C_LINES≈460
+EXE=ABSENT
+STRATEGY=fix highest-frequency undeclared identifiers first; then member decls; isolate optional panels only with documented CMake exclude
+
+TOP_FILE_ERROR_COUNTS:
+62 C2065 Win32IDE_Settings.cpp
+28 C2065 Win32IDE_Themes.cpp
+19 C2672 Win32IDE_Settings.cpp
+18 C2065 Win32IDE_TerminalTabs.cpp
+17 C2065 Win32IDE_MemoryView.cpp
+16 C2653 Win32IDE_MemoryView.cpp
+16 C2664 BreakpointPropertiesDialog.cpp
+15 C2065 Win32IDE_AnnotationOverlay.cpp
+14 C2440 BreakpointManagerPanel.cpp
+14 C3861 Win32IDE_DebugWatchFormat.cpp
+11 C2065 Win32IDE_ProblemsPanel.cpp
+10 C3861 Win32IDE_CompilerPanel.cpp
+
+LIKELY_ROOT_CAUSE_FAMILIES:
+1) Missing Win32IDE.h members / OutputSeverity / appendToOutput / theme-settings symbols
+2) Nested vs freestanding type mismatches (Benchmark/VRAM — finish if still open)
+3) Debug/Breakpoint panel API signature drift
+4) Optional Voice/Attestation/Heap — isolate only after P01-P06 preserved
+
+KEEP: PowerShell 5610 patch; no navigateToLine duplicate; real LSPServer.cpp
+CERTIFIED=0 PROMOTE=0

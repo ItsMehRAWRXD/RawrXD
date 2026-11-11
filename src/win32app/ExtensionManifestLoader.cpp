@@ -32,8 +32,14 @@ ExtensionManifest ExtensionManifestLoader::Load(const std::string& manifestPath)
 }
 
 void ExtensionManifestLoader::ApplyManifestToSandbox(const ExtensionManifest& manifest) {
-    // Apply manifest restrictions to sandbox
-    (void)manifest;
+    auto& sb = ExtensionSandbox::ExtensionSandboxManager::Instance();
+    // Fail-closed: manifest paths become the only allowed roots/prefixes.
+    // Empty manifest does NOT clear an already-configured IDE workspace policy.
+    for (const auto& p : manifest.requestedReadPaths) sb.AddWorkspaceRoot(p);
+    for (const auto& p : manifest.requestedWritePaths) sb.AddWorkspaceRoot(p);
+    sb.AddDeniedPathPrefix("C:\\Windows");
+    sb.AddDeniedPathPrefix("C:\\Program Files");
+    (void)manifest.id;
 }
 
 }

@@ -1,8 +1,14 @@
 #pragma once
 
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef _WINSOCKAPI_
+#define _WINSOCKAPI_
+#endif
+#include <winsock2.h>
 #include <windows.h>
 
-// Undefine Windows ERROR macro
 #ifdef ERROR
 #undef ERROR
 #endif
@@ -15,17 +21,20 @@
 #include <atomic>
 #include "../native_agent.hpp"
 #include "../cpu_inference_engine.h"
+#include "../agentic/BackendRouter.h"
+#include "../agentic/ToolCallBridge.h"
+#include "Win32IDE_AgentExecutionFSM.h"
+#include "Win32IDE_AgenticLoopBridge.h"
 
-// Forward declaration
 class Win32IDE;
 
-// Agent response types
 enum class AgentResponseType {
     TOOL_CALL,
     ANSWER,
     AGENT_ERROR,
     THINKING
-};// Agent response structure
+};
+
 struct AgentResponse {
     AgentResponseType type;
     std::string content;
@@ -34,72 +43,80 @@ struct AgentResponse {
     std::string rawOutput;
 };
 
-// Agentic Framework Bridge for Win32IDE
-// Integrates PowerShell-based agentic framework with C++ IDE
+// Model turns → BackendRouter; tools → ToolCallBridge SSOT (SecurityGate).
 class AgenticBridge {
 public:
     AgenticBridge(Win32IDE* ide);
     ~AgenticBridge();
 
-    // Core agent operations
     bool Initialize(const std::string& frameworkPath, const std::string& modelName = "");
     bool IsInitialized() const { return m_initialized; }
-    
-    // Execute single agent command
+
     AgentResponse ExecuteAgentCommand(const std::string& prompt);
-    
-    // Start multi-turn agent loop
     bool StartAgentLoop(const std::string& initialPrompt, int maxIterations = 10);
     void StopAgentLoop();
-    bool IsAgentLoopRunning() const { return m_agentLoopRunning; }
-    
-    // Get agent capabilities
+    bool IsAgentLoopRunning() const;
+
+    // Unified runtime owner: AgenticLoopBridge is the sole process transport.
+    void EnsureLoopTransport();
+    AgenticLoopBridge* LoopTransport();
+    const AgenticLoopBridge* LoopTransport() const;
+    bool StartAutonomousTask(
+        const AgenticLoopBridge::TaskConfig& config,
+        AgenticLoopBridge::ProgressCallback progress,
+        AgenticLoopBridge::ToolCallback toolCb,
+        AgenticLoopBridge::CompleteCallback completeCb);
+    void CancelAutonomousTask();
+    bool IsAutonomousRunning() const;
+
     std::vector<std::string> GetAvailableTools();
     std::string GetAgentStatus();
-    
-    // Configuration
+
     void SetModel(const std::string& modelName);
     void SetOllamaServer(const std::string& serverUrl);
     std::string GetCurrentModel() const { return m_modelName; }
-    
-    // Output callback
+    RawrXD::Agent::BackendRouter* GetBackendRouter() { return m_router.get(); }
+
     using OutputCallback = std::function<void(const std::string&, const std::string&)>;
     void SetOutputCallback(OutputCallback callback);
 
-private:
-   // Native Integration
-    std::unique_ptr<RawrXD::CPUInferenceEngine> m_nativeEngine;
-    std::unique_ptr<RawrXD::NativeAgent> m_nativeAgent;
+    // Shared execution FSM (SSOT) — UI timeline observes, does not own.
+    RawrXD::AgentExecutionFSM& ExecutionFSM() { return RawrXD::ProductAgentFSM(); }
 
-    // PowerShell process management
+private:
+    std::unique_ptr<RawrXD::CPUInferenceEngine> m_nativeEngine; // /load only
+    std::unique_ptr<RawrXD::NativeAgent> m_nativeAgent;         // slash meta only
+    std::unique_ptr<RawrXD::Agent::BackendRouter> m_router;      // gap 9 model path
+    std::unique_ptr<AgenticLoopBridge> m_loopTransport;
+
     bool SpawnPowerShellProcess(const std::string& scriptPath, const std::string& arguments);
     bool ReadProcessOutput(std::string& output, DWORD timeoutMs = 5000);
     void KillPowerShellProcess();
-    
-    // Response parsing
+
     AgentResponse ParseAgentResponse(const std::string& rawOutput);
     bool IsToolCall(const std::string& line);
     bool IsAnswer(const std::string& line);
-    
-    // Path resolution
+    AgentResponse ChatViaBackendRouter(const std::string& prompt);
+    AgentResponse DispatchToolLine(const std::string& line);
+
     std::string ResolveFrameworkPath();
     std::string ResolveToolsModulePath();
-    
+
     Win32IDE* m_ide;
     bool m_initialized;
     std::atomic<bool> m_agentLoopRunning{false};
-    
+
     std::string m_frameworkPath;
     std::string m_toolsModulePath;
     std::string m_modelName;
     std::string m_ollamaServer;
-    
+
     HANDLE m_hProcess;
     HANDLE m_hStdoutRead;
     HANDLE m_hStdoutWrite;
     HANDLE m_hStdinRead;
     HANDLE m_hStdinWrite;
-    
+
     OutputCallback m_outputCallback;
     std::thread m_agentThread;
 };

@@ -1,15 +1,49 @@
 #include "Win32IDE.h"
 #include <richedit.h>
+#include <chrono>
+#include <memory>
+#include <fstream>
+#include <cstdlib>
 #include "../backend/ollama_client.h"
+
+namespace {
+// GhostText inference runs on the shared Ollama server, so a superseded
+// request must be released quickly rather than holding the model for the chat
+// lane's multi-minute budget.  The transport still reports HTTP_TIMEOUT if a
+// genuinely slow model exceeds this; that is a distinct, logged outcome from
+// cancellation.
+constexpr int kGhostTextTimeoutSeconds = 180;
+
+void AppendGhostRuntimeEvidence(const std::string& line)
+{
+    const char* configured = std::getenv("RAWRXD_LOG_DIR");
+    const std::string path = (configured && *configured)
+        ? std::string(configured) + "\\chat_runtime.log"
+        : std::string("chat_runtime.log");
+    std::ofstream out(path, std::ios::app);
+    if (out) out << line << std::endl;
+}
+
+std::atomic<uint64_t> g_nextGhostRuntimeRequest{1};
+}
 
 void Win32IDE::initializeNativeGhostText() {
     if (!m_hwndMain || !m_hwndEditor) return;
     const NativeGhostTextController::Request request =
         [this](const std::string& prompt,
-               std::function<void(const std::string&, bool, bool)> callback) {
+               NativeGhostTextController::RequestCallback callback)
+        -> NativeGhostTextController::RequestCancel {
+            auto reject = [callback](const char* reason)
+                -> NativeGhostTextController::RequestCancel {
+                NativeGhostTextController::Response response;
+                response.done = true;
+                response.success = false;
+                response.failureReason = reason;
+                if (callback) callback(response);
+                return {};
+            };
             if (m_ghostTextMode == GhostTextMode::Disabled) {
-                callback("", true, false);
-                return;
+                return reject("DISABLED");
             }
             ChatModelEntry route;
             if (m_ghostTextMode == GhostTextMode::Independent) {
@@ -26,8 +60,7 @@ void Win32IDE::initializeNativeGhostText() {
                     });
                 if (found == m_availableModels.end()) {
                     logWarning("GhostText", "Selected GhostText model is no longer available; request rejected.");
-                    callback("", true, false);
-                    return;
+                    return reject("MODEL_UNAVAILABLE");
                 }
                 route = *found;
             } else if (m_ghostTextMode == GhostTextMode::FollowChat) {
@@ -57,21 +90,20 @@ void Win32IDE::initializeNativeGhostText() {
             }
             if (route.identifier.empty()) {
                 logWarning("GhostText", "No eligible GhostText model route is available.");
-                callback("", true, false);
-                return;
+                return reject("NO_ROUTE");
             }
             if (route.source == ChatModelEntry::Source::KiloFree && !m_allowCloudGhostText) {
                 logWarning("GhostText", "Cloud route selected but session cloud consent is disabled.");
-                callback("", true, false);
-                return;
+                return reject("CLOUD_CONSENT_REQUIRED");
             }
             m_pendingInferenceModel = route;
             const char* backend = route.source == ChatModelEntry::Source::Ollama
                 ? "ollama" : (route.source == ChatModelEntry::Source::LocalFile
                     ? "native" : "cloud");
             logInfo("GhostText inference route: " + route.identifier +
-                    " backend=" + backend);
-            requestNativeGhostText(prompt, std::move(callback));
+                    " backend=" + backend +
+                    " timeout_ms=" + std::to_string(kGhostTextTimeoutSeconds));
+            return requestNativeGhostText(prompt, std::move(callback));
         };
 
     if (!m_ghostText) m_ghostText = std::make_unique<NativeGhostTextController>();
@@ -180,45 +212,125 @@ void Win32IDE::runNativeCodexPrompt(const std::string& prompt) {
     });
 }
 
-void Win32IDE::requestNativeGhostText(
+NativeGhostTextController::RequestCancel Win32IDE::requestNativeGhostText(
     const std::string& prompt,
-    std::function<void(const std::string&, bool, bool)> callback)
+    NativeGhostTextController::RequestCallback callback)
 {
     // GhostText requests are independently fenced by the controller. Allow a
     // newer request to run while an older one is still in flight; the older
     // response is discarded by generation/identity checks on the UI thread.
-    const ChatModelEntry ghostRoute =
-        std::exchange(m_pendingInferenceModel, ChatModelEntry{});
+    //
+    // Only consume m_pendingInferenceModel for the Ollama branch. The
+    // non-Ollama path (native GGUF/cloud) adapts generateResponseAsync, which
+    // reads m_pendingInferenceModel to consume the resolved route; exchanging
+    // it here would discard the route and force fallback to m_selectedChatModel.
+    ChatModelEntry ghostRoute = m_pendingInferenceModel;
     if (ghostRoute.source == ChatModelEntry::Source::Ollama &&
         !ghostRoute.identifier.empty()) {
+        m_pendingInferenceModel = ChatModelEntry{};
         const std::string baseUrl = m_ollamaBaseUrl;
         const int maxTokens = effectiveMaxTokensForPrompt(prompt);
         const int contextTokens = m_currentContextTokens;
         const ReasoningMode reasoningMode = m_reasoningMode;
-        std::thread([baseUrl, model = ghostRoute.identifier, prompt,
-                     maxTokens, contextTokens, reasoningMode,
+        const uint64_t requestId =
+            g_nextGhostRuntimeRequest.fetch_add(1, std::memory_order_relaxed);
+        // One client per request gives request-specific cancellation: closing
+        // this request's WinHTTP handle cannot disturb a newer request that is
+        // using a different client. The worker holds a strong reference so the
+        // client always outlives the detached thread; the cancel handle holds
+        // only a weak reference and is a no-op once the worker finishes.
+        auto client = std::make_shared<RawrXD::Backend::OllamaClient>(baseUrl);
+        client->setTimeoutSeconds(kGhostTextTimeoutSeconds);
+        std::weak_ptr<RawrXD::Backend::OllamaClient> weakClient = client;
+        std::thread([model = ghostRoute.identifier, prompt,
+                     maxTokens, contextTokens, reasoningMode, client,
+                     requestId,
                      callback = std::move(callback)]() mutable {
+            const auto start = std::chrono::steady_clock::now();
+            auto elapsedMs = [&]() -> uint64_t {
+                return static_cast<uint64_t>(
+                    std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::steady_clock::now() - start).count());
+            };
             try {
                 (void)reasoningMode;
+                AppendGhostRuntimeEvidence(
+                    "GHOSTTEXT_RUNTIME request_started request_id=" +
+                    std::to_string(requestId) + " model=" + model +
+                    " backend=ollama");
                 RawrXD::Backend::OllamaGenerateRequest request;
                 request.model = model;
                 request.prompt = prompt;
                 request.stream = false;
                 request.options["num_predict"] = std::to_string(maxTokens);
                 request.options["num_ctx"] = std::to_string(contextTokens);
-                RawrXD::Backend::OllamaClient client(baseUrl);
-                client.setTimeoutSeconds(120);
-                const RawrXD::Backend::OllamaResponse result = client.generateSync(request);
+                const RawrXD::Backend::OllamaResponse result =
+                    client->generateSync(request);
                 const std::string response = result.response.empty()
                     ? result.message : result.response;
-                if (callback) callback(response, true, !response.empty());
+
+                NativeGhostTextController::Response gr;
+                gr.done = true;
+                gr.httpStatus = static_cast<unsigned int>(result.http_status);
+                gr.elapsedMs = elapsedMs();
+                if (!response.empty()) {
+                    gr.success = true;
+                    gr.text = response;
+                } else {
+                    gr.success = false;
+                    // Preserve the transport/model distinction instead of
+                    // collapsing every empty result into a bare failure.
+                    if (!result.transport_error.empty()) {
+                        gr.failureReason = result.transport_error;
+                    } else if (result.done_reason == "error") {
+                        gr.failureReason = "MODEL_ERROR";
+                    } else {
+                        gr.failureReason = "EMPTY_OUTPUT";
+                    }
+                }
+                if (callback) callback(gr);
+                AppendGhostRuntimeEvidence(
+                    "GHOSTTEXT_RUNTIME response request_id=" +
+                    std::to_string(requestId) + " model=" + model +
+                    " success=" + (gr.success ? "1" : "0"));
             } catch (...) {
-                if (callback) callback("", true, false);
+                NativeGhostTextController::Response gr;
+                gr.done = true;
+                gr.elapsedMs = elapsedMs();
+                gr.failureReason = "EXCEPTION";
+                if (callback) callback(gr);
+                AppendGhostRuntimeEvidence(
+                    "GHOSTTEXT_RUNTIME response request_id=" +
+                    std::to_string(requestId) + " model=" + model +
+                    " success=0");
             }
         }).detach();
-        return;
+
+        // Non-blocking: cancelActiveRequest() only closes the WinHTTP handle
+        // that unblocks the worker's synchronous receive. It never joins the
+        // worker, so the UI thread is not held while inference unwinds.
+        return [weakClient]() {
+            if (auto locked = weakClient.lock()) locked->cancelActiveRequest();
+        };
     }
-    generateResponseAsync(prompt, std::move(callback));
+
+    // Non-Ollama routes (native GGUF / cloud) share the chat inference lane,
+    // which has its own generation-based admission. Adapt its 3-argument
+    // callback to the GhostText response contract.
+    generateResponseAsync(prompt,
+        [callback = std::move(callback)](
+            const std::string& text, bool done, bool success) mutable {
+            NativeGhostTextController::Response gr;
+            gr.done = done;
+            gr.text = text;
+            gr.success = success && !text.empty();
+            if (!gr.success) {
+                gr.failureReason = text.empty()
+                    ? "INFERENCE_UNAVAILABLE" : "INFERENCE_FAILED";
+            }
+            if (callback) callback(gr);
+        });
+    return {};
 }
 
 void Win32IDE::appendNativeDebugOutput(const std::string& text, bool error)

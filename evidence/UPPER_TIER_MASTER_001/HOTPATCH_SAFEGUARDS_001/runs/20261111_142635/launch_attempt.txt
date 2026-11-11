@@ -1,0 +1,15 @@
+﻿powershell.exe : HASH MISMATCH expected=DA52DCB69494B8580D3FB4400B06022DD7D1C7BF52F3D11A91FBE438DFC085DE 
+At line:12 char:10
++   $out = & powershell -NoProfile -ExecutionPolicy Bypass -File 'F:\ra ...
++          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (HASH MISMATCH e...FBE438DFC085DE :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+actual=89DC78FDC7F5506AC38DB379237F280A03971F53CD5F75254CB428646CD8F072
+At F:\rawrxd\.cursor\skills\rawrxd-computer-use-hotpatch\scripts\Start-RawrXDAcceptance.ps1:12 char:30
++ ... expected) { throw "HASH MISMATCH expected=$expected actual=$actual" } ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : OperationStopped: (HASH MISMATCH e...CB428646CD8F072:String) [], RuntimeException
+    + FullyQualifiedErrorId : HASH MISMATCH expected=DA52DCB69494B8580D3FB4400B06022DD7D1C7BF52F3D11A91FBE438DFC085DE  
+   actual=89DC78FDC7F5506AC38DB379237F280A03971F53CD5F75254CB428646CD8F072
+ 

@@ -1,0 +1,1647 @@
+[Deep2Engine] Initializing production inference engine...
+  Hidden Dim: 4096
+  Num Layers: 32
+  Num Heads: 32
+  Num KV Heads: 32
+  Head Dim: 128
+  Max Seq Len: 0
+  Use ThreadPool: YES
+  Use KV Cache: YES
+  Use RoPE: YES
+  ThreadPool: 32 threads (auto-detected)
+[Deep2Engine] KV_CACHE_DEFERRED reason=initialize (model not bound)
+[flight] Recorder started: _flight.jsonl
+[HotPatcher] Initialized - The Bottle is ready (with safety systems)
+[Deep2Engine] HotPatcher initialized - The Bottle is ready
+[QuantKernelRegistry] Q4_K GEMV=00007FF7CCEDD280 dequant=00007FF7CCEDFE80 GetGEMV(12)=00007FF7CCEDD280 match=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 19 GEMV kernels, 19 dequant kernels
+[Deep2Engine] Telemetry controller initialized (PCIe stall + bandwidth + residency)
+[Deep2Engine] ENHANCEMENT STACK: ON
+ELASTIC_DYNAMIC warm=2304MB staged=288MB hot=4608MB la=2 ramAvail=30663MB vram=32479MB L=32 pressure=0
+FREETOKEN_WITNESS_LIVE=1
+FREETOKEN_WITNESS_ACTIVE_ZONES=8
+FREETOKEN_WITNESS_READY_ZONES=0
+FREETOKEN_WITNESS_OVERWRITES=0
+FREETOKEN_WITNESS_HITS=0
+FREETOKEN_WITNESS_MISSES=0
+FREETOKEN_WITNESS_STICK_RPM_0=0
+FREETOKEN_WITNESS_STICK_RPM_1=0
+FUTURE_CONSUMERS=0
+FUTURE_PAGES=0
+FUTURE_POOL_GROWS=0
+FUTURE_GENERATION=0
+FUTURE_GENERATE_BEGIN=0
+FUTURE_CONSUMER_HITS=0
+FUTURE_CONSUMER_MISSES=0
+FUTURE_PREFETCH_HITS=0
+FUTURE_PREFETCH_LATE=0
+FUTURE_STALL_NS=0
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+[MOE_KEYS_DIAG] Scanning 19 metadata keys for expert/moe keys
+[MOE_KEYS_DIAG] Scanning 19 metadata keys for expert/moe keys
+[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=32000\n[REAP_TOKENIZER] merges=61249\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\n[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=32000\n[REAP_TOKENIZER] merges=61249\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\nVK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+[ElasticResidencyManager] GhostCache enabled: capacity=16384 entries
+[ElasticResidencyManager] Scheduler thread started
+[ElasticResidencyManager] Initialized: warmCompressed=2304 MB, warmStaged=288 MB, hot=4608 MB, lookahead=2
+[Deep2Engine] ElasticResidencyManager DYNAMIC warm=2304 staged=288 hot=4608 la=2
+[Deep2Engine] CycloneScheduler armed for live generate
+[Deep2Engine] Residency telemetry: ENABLED
+[Deep2Engine] Medusa speculative decoding: ENABLED
+[Deep2Engine] NU fused packing: ENABLED
+[Deep2Engine] Warmup scheduler: ENABLED
+[Deep2Engine] Compressed KV cache: ENABLED (Q8_0)
+[Deep2Engine] NVMe streaming: ENABLED
+[Deep2Engine] Sliding window: ENABLED (size=4096)
+[Deep2Engine] Chamber (SM0-DSP) initialized
+[Deep2Engine] Chamber: ENABLED
+[Deep2Engine] PlasmaGovernor initialized
+[Deep2Engine] PlasmaGovernor: ENABLED
+[Deep2Engine] SovereignOutOfCoreRuntime initialized from ExecutionPolicy (ram=42949672960 vram=12884901888)
+[Deep2Engine] SovereignOutOfCoreRuntime: ENABLED
+[MARS] Initialized: GPU0=32.00 GB, GPU1=16.00 GB
+[Deep2Engine] MARS enabled: GPU0=32.00 GB, GPU1=16.00 GB
+[Deep2Engine] Initializing VAL-000 advanced features...
+[Deep2Engine] Medusa decoder initialized (4 heads)
+[Deep2Engine] NU Fused Packer initialized
+[NVMeStream] defer: empty path (await shard dir)
+[Deep2Engine] NVMe defer until openK2ShardDirectory
+[SlidingWindow] Initialized: window=4096, overlap=512, chunk=2048
+[Deep2Engine] Sliding window initialized (size=4096)
+[Deep2Engine] Advanced features initialization complete
+[Deep2Engine] STACK vk=0 mars=1 elastic=1 cyclone=1 medusa=1 nu=1 warmup=1 ckv=1 nvme=1 slide=1 chamber=1 torus=0 plasma=1 sov=1 prefetch=1 devices=0
+[Deep2Engine] Initialization complete
+[Deep2Engine] Loading model from: F:\ollamamodels\n4-tiny-oracle.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] MODEL_FIT_ADMITTED model=F:\ollamamodels\n4-tiny-oracle.gguf mode=GPU_SINGLE devices=1 kv_per_token=6336 max_ctx_est=18446744073709532481
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\ollamamodels)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] ERROR: No tensors parsed (run Parse first)
+[ReverseHotpatch] FAILED at stage 3 (ReverseUnlayer_Index)
+[Deep2Engine] WARNING: ReverseHotpatch failed, attempting raw load
+[Deep2Engine] GGUF architecture: 'llama'  hidden=2048 layers=22 heads=32 kvHeads=4 inter=5632 vocab=32000
+[Deep2Engine] Context length from metadata: 2048 tokens
+[Deep2Engine] Tokenizer loaded: vocab=32000 bos=1 eos=2 (Spm::encode)
+[Deep2Engine] Layer topology: 22 attention, 0 SSM, 0 unknown of 22 total
+[Deep2Engine] KV cache sized for 22 attention layers (SSM layers excluded)
+[Deep2Engine] HEADDIM_SYNC_POST_BIND config.headDim=64 modelWeights.headDim=64 kvHeads=4
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=0000020F37017310  Registered 'blk.0.attn_q.weight': shard=0 offset=0 bytes=2359296  |  registry_size=1  registeredBytes=2359296  zeroOffset=1  maxResidentBytes=536870912
+[ResidencyManager] this=0000020F37017310  Registered 'blk.11.attn_q.weight': shard=0 offset=0 bytes=2359296  |  registry_size=100  registeredBytes=275038208  zeroOffset=100  maxResidentBytes=536870912
+[ResidencyManager] this=0000020F37017310  Registered 'output.weight': shard=0 offset=0 bytes=53760000  |  registry_size=200  registeredBytes=635981824  zeroOffset=200  maxResidentBytes=536870912
+[Deep2Engine] ResidencyManager: this=0000020F37017310  registered=201 tensors  bytes=635990016  max=536870912
+[Deep2Engine] ElasticResidencyManager: registered all tensors
+[Deep2Engine] ATTN_GEOMETRY_RECONCILED headDim=64 qHeads=32 kvHeads=4
+[KVCache] Lazy pages: layers=22 page=8 virtualMax=2048 heads=4 dim=64
+[KVCache] HOT_BYTES=360448 (not layers*maxSeq*heads)
+[KVCache] Initialization comVK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+[SHADER_PATH] ops=F:/rawrxd/src/deep2/shaders\deep2_ops.spv q=F:/rawrxd/src/deep2/shaders\deep2_qgemv.spv qb=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch.spv q4r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch4row.spv q8r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch8row.spv qn=F:/rawrxd/src/deep2/shaders\deep2_qgemv_nvfp4.spv am=F:/rawrxd/src/deep2/shaders\deep2_argmax.spv so=F:/rawrxd/src/deep2/shaders\deep2_spec_ops.spv sa=F:/rawrxd/src/deep2/shaders\deep2_spec_attn.spv ac=F:/rawrxd/src/deep2/shaders\deep2_spec_accept.spv gd=F:/rawrxd/src/deep2/shaders\deep2_qwen4exp_gdn.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1 qn=1 gdn=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+PIN_BUDGET_FINAL stick=0 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+HOST_Q8_GEMV_FFN=1
+HOST_Q8_GEMV_ATTN=1
+HOST_Q8_GEMV_SSM_IN=1
+HOST_Q8_GEMV_NUMERIC_FINITE=1
+HOST_Q8_GEMV_BOUNDS_SAFE=1
+HOST_Q8_GEMV_REFERENCE_PARITY=1
+HOST_Q8_GEMV_SAFE=1
+plete
+[Deep2Engine] KV_CACHE_CONFIGURED reason=loadModel layers=22 positions=2048 kvHeads=4 headDim=64
+[Deep2Engine] Model loaded successfully (201 tensors)
+DEEP2_DEVICE_COUNT_DETECTED=3
+DEEP2_DEVICE_COUNT_OPENED=1
+DEEP2_COMPUTE_BACKEND=GPU
+DEEP2_EXEC_PATH=SINGLE_GPU
+DEEP2_EXEC_MODE=1
+DEEP2_GPU_POLICY=0
+DEEP2_PLAN_REASON=auto_best_compute
+DEEP2_PRIMARY_INDEX=0
+DEEP2_PRIMARY_STABLE_ID=1002:7551:000000000001679E
+DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_VENDOR=AMD
+DEEP2_DEVICE_0_STABLE_ID=1002:7551:000000000001679E
+DEEP2_DEVICE_0_VRAM_BYTES=34057322496
+DEEP2_DEVICE_0_SCORE=4294967295
+DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
+DEEP2_DEVICE_0_PROBLEM_CODE=0
+DEEP2_DEVICE_0_HEALTHY=1
+DEEP2_DEVICE_0_RESET_ATTEMPTED=0
+DEEP2_DEVICE_0_RESET_OK=0
+DEEP2_DEVICE_0_RESET_SKIPPED=0
+DEEP2_DEVICE_0_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_0_ACCESS_DENIED=0
+DEEP2_DEVICE_0_INSTANCE_ID=PCI\VEN_1002&DEV_7551&SUBSYS_E4991DA2&REV_C0\6&8916A45&0&00000009
+DEEP2_DEVICE_1_NAME=AMD Radeon(TM) Graphics
+DEEP2_DEVICE_1_VENDOR=AMD
+DEEP2_DEVICE_1_STABLE_ID=1002:13C0:000000000001C126
+DEEP2_DEVICE_1_VRAM_BYTES=2119970816
+DEEP2_DEVICE_1_SCORE=4294967295
+DEEP2_DEVICE_1_DUTY=DETECTED/UNUSED
+DEEP2_DEVICE_1_PROBLEM_CODE=0
+DEEP2_DEVICE_1_HEALTHY=1
+DEEP2_DEVICE_1_RESET_ATTEMPTED=0
+DEEP2_DEVICE_1_RESET_OK=0
+DEEP2_DEVICE_1_RESET_SKIPPED=0
+DEEP2_DEVICE_1_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_1_ACCESS_DENIED=0
+DEEP2_DEVICE_1_INSTANCE_ID=PCI\VEN_1002&DEV_13C0&SUBSYS_364E1849&REV_E5\4&16012499&0&0041
+DEEP2_DEVICE_2_NAME=AMD Radeon RX 7800 XT
+DEEP2_DEVICE_2_VENDOR=AMD
+DEEP2_DEVICE_2_STABLE_ID=1002:747E:00000000000194B5
+DEEP2_DEVICE_2_VRAM_BYTES=16962633728
+DEEP2_DEVICE_2_SCORE=4294967295
+DEEP2_DEVICE_2_DUTY=DETECTED/UNUSED
+DEEP2_DEVICE_2_PROBLEM_CODE=0
+DEEP2_DEVICE_2_HEALTHY=1
+DEEP2_DEVICE_2_RESET_ATTEMPTED=0
+DEEP2_DEVICE_2_RESET_OK=0
+DEEP2_DEVICE_2_RESET_SKIPPED=0
+DEEP2_DEVICE_2_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_2_ACCESS_DENIED=0
+DEEP2_DEVICE_2_INSTANCE_ID=PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2E27FDA8&0&0000000B
+[Deep2Engine] Vulkan single-GPU open: AMD Radeon AI PRO R9700 (needle=AMD Radeon AI PRO R9700)
+[Deep2Engine] DUALSTICK_BIND vc0=1 vc1=0 devices=1
+[Deep2Engine] Host Q8_0 GEMV receipts: SAFE
+[Deep2Engine] Initializing production inference engine...
+  Hidden Dim: 4096
+  Num Layers: 32
+  Num Heads: 32
+  Num KV Heads: 32
+  Head Dim: 128
+  Max Seq Len: 0
+  Use ThreadPool: YES
+  Use KV Cache: YES
+  Use RoPE: YES
+  ThreadPool: 32 threads (auto-detected)
+[Deep2Engine] KV_CACHE_DEFERRED reason=initialize (model not bound)
+[flight] Recorder started: _flight.jsonl
+[Deep2Engine] HotPatcher initialized - The Bottle is ready
+[Deep2Engine] Telemetry controller initialized (PCIe stall + bandwidth + residency)
+[Deep2Engine] ENHANCEMENT STACK: ON
+ELASTIC_DYNAMIC warm=2304MB staged=288MB hot=4608MB la=2 ramAvail=29949MB vram=32479MB L=32 pressure=0
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+[MOE_KEYS_DIAG] Scanning 19 metadata keys for expert/moe keys
+[MOE_KEYS_DIAG] Scanning 19 metadata keys for expert/moe keys
+[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=32000\n[REAP_TOKENIZER] merges=61249\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\n[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=32000\n[REAP_TOKENIZER] merges=61249\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\nVK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+[ElasticResidencyManager] GhostCache enabled: capacity=16384 entries
+[ElasticResidencyManager] Initialized: warmCompressed=2304 MB, warmStaged=288 MB, hot=4608 MB, lookahead=2
+[Deep2Engine] ElasticResidencyManager DYNAMIC warm=2304 staged=288 hot=4608 la=2
+[Deep2Engine] CycloneScheduler armed for live generate
+[Deep2Engine] Residency telemetry: ENABLED
+[Deep2Engine] Medusa speculative decoding: ENABLED
+[Deep2Engine] NU fused packing: ENABLED
+[Deep2Engine] Warmup scheduler: ENABLED
+[Deep2Engine] Compressed KV cache: ENABLED (Q8_0)
+[Deep2Engine] NVMe streaming: ENABLED
+[Deep2Engine] Sliding window: ENABLED (size=4096)
+[ElasticResidencyManager] Scheduler thread started
+[Deep2Engine] Chamber (SM0-DSP) initialized
+[Deep2Engine] Chamber: ENABLED
+[Deep2Engine] PlasmaGovernor initialized
+[Deep2Engine] PlasmaGovernor: ENABLED
+[Deep2Engine] SovereignOutOfCoreRuntime initialized from ExecutionPolicy (ram=42949672960 vram=12884901888)
+[Deep2Engine] SovereignOutOfCoreRuntime: ENABLED
+[MARS] Initialized: GPU0=32.00 GB, GPU1=16.00 GB
+[Deep2Engine] MARS enabled: GPU0=32.00 GB, GPU1=16.00 GB
+[Deep2Engine] Initializing VAL-000 advanced features...
+[Deep2Engine] Medusa decoder initialized (4 heads)
+[Deep2Engine] NU Fused Packer initialized
+[NVMeStream] defer: empty path (await shard dir)
+[Deep2Engine] NVMe defer until openK2ShardDirectory
+[SlidingWindow] Initialized: window=4096, overlap=512, chunk=2048
+[Deep2Engine] Sliding window initialized (size=4096)
+[Deep2Engine] Advanced features initialization complete
+[Deep2Engine] STACK vk=0 mars=1 elastic=1 cyclone=1 medusa=1 nu=1 warmup=1 ckv=1 nvme=1 slide=1 chamber=1 torus=0 plasma=1 sov=1 prefetch=1 devices=0
+[Deep2Engine] Initialization complete
+[Deep2Engine] Loading model from: F:\ollamamodels\n4-tiny-oracle.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] MODEL_FIT_ADMITTED model=F:\ollamamodels\n4-tiny-oracle.gguf mode=GPU_SINGLE devices=1 kv_per_token=6336 max_ctx_est=18446744073709532481
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\ollamamodels)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] ERROR: No tensors parsed (run Parse first)
+[ReverseHotpatch] FAILED at stage 3 (ReverseUnlayer_Index)
+[Deep2Engine] WARNING: ReverseHotpatch failed, attempting raw load
+[Deep2Engine] GGUF architecture: 'llama'  hidden=2048 layers=22 heads=32 kvHeads=4 inter=5632 vocab=32000
+[Deep2Engine] Context length from metadata: 2048 tokens
+[Deep2Engine] Tokenizer loaded: vocab=32000 bos=1 eos=2 (Spm::encode)
+[Deep2Engine] Layer topology: 22 attention, 0 SSM, 0 unknown of 22 total
+[Deep2Engine] KV cache sized for 22 attention layers (SSM layers excluded)
+[Deep2Engine] HEADDIM_SYNC_POST_BIND config.headDim=64 modelWeights.headDim=64 kvHeads=4
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=0000024FF4DD9400  Registered 'blk.0.attn_q.weight': shard=0 offset=0 bytes=2359296  |  registry_size=1  registeredBytes=2359296  zeroOffset=1  maxResidentBytes=536870912
+[ResidencyManager] this=0000024FF4DD9400  Registered 'blk.11.attn_q.weight': shard=0 offset=0 bytes=2359296  |  registry_size=100  registeredBytes=275038208  zeroOffset=100  maxResidentBytes=536870912
+[ResidencyManager] this=0000024FF4DD9400  Registered 'output.weight': shard=0 offset=0 bytes=53760000  |  registry_size=200  registeredBytes=635981824  zeroOffset=200  maxResidentBytes=536870912
+[Deep2Engine] ResidencyManager: this=0000024FF4DD9400  registered=201 tensors  bytes=635990016  max=536870912
+[Deep2Engine] ElasticResidencyManager: registered all tensors
+[Deep2Engine] ATTN_GEOMETRY_RECONCILED headDim=64 qHeads=32 kvHeads=4
+[KVCache] Lazy pages: layers=22 page=8 virtualMax=2048 heads=4 dim=64
+[KVCache] HOT_BYTES=360448 (not layers*maxSeq*heads)
+[KVCache] Initialization comVK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+[SHADER_PATH] ops=F:/rawrxd/src/deep2/shaders\deep2_ops.spv q=F:/rawrxd/src/deep2/shaders\deep2_qgemv.spv qb=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch.spv q4r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch4row.spv q8r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch8row.spv qn=F:/rawrxd/src/deep2/shaders\deep2_qgemv_nvfp4.spv am=F:/rawrxd/src/deep2/shaders\deep2_argmax.spv so=F:/rawrxd/src/deep2/shaders\deep2_spec_ops.spv sa=F:/rawrxd/src/deep2/shaders\deep2_spec_attn.spv ac=F:/rawrxd/src/deep2/shaders\deep2_spec_accept.spv gd=F:/rawrxd/src/deep2/shaders\deep2_qwen4exp_gdn.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1 qn=1 gdn=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+PIN_BUDGET_FINAL stick=0 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+HOST_Q8_GEMV_FFN=1
+HOST_Q8_GEMV_ATTN=1
+HOST_Q8_GEMV_SSM_IN=1
+HOST_Q8_GEMV_NUMERIC_FINITE=1
+HOST_Q8_GEMV_BOUNDS_SAFE=1
+HOST_Q8_GEMV_REFERENCE_PARITY=1
+HOST_Q8_GEMV_SAFE=1
+plete
+[Deep2Engine] KV_CACHE_CONFIGURED reason=loadModel layers=22 positions=2048 kvHeads=4 headDim=64
+[Deep2Engine] Model loaded successfully (201 tensors)
+DEEP2_DEVICE_COUNT_DETECTED=3
+DEEP2_DEVICE_COUNT_OPENED=1
+DEEP2_COMPUTE_BACKEND=GPU
+DEEP2_EXEC_PATH=SINGLE_GPU
+DEEP2_EXEC_MODE=1
+DEEP2_GPU_POLICY=0
+DEEP2_PLAN_REASON=auto_best_compute
+DEEP2_PRIMARY_INDEX=0
+DEEP2_PRIMARY_STABLE_ID=1002:7551:000000000001679E
+DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_VENDOR=AMD
+DEEP2_DEVICE_0_STABLE_ID=1002:7551:000000000001679E
+DEEP2_DEVICE_0_VRAM_BYTES=34057322496
+DEEP2_DEVICE_0_SCORE=4294967295
+DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
+DEEP2_DEVICE_0_PROBLEM_CODE=0
+DEEP2_DEVICE_0_HEALTHY=1
+DEEP2_DEVICE_0_RESET_ATTEMPTED=0
+DEEP2_DEVICE_0_RESET_OK=0
+DEEP2_DEVICE_0_RESET_SKIPPED=0
+DEEP2_DEVICE_0_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_0_ACCESS_DENIED=0
+DEEP2_DEVICE_0_INSTANCE_ID=PCI\VEN_1002&DEV_7551&SUBSYS_E4991DA2&REV_C0\6&8916A45&0&00000009
+DEEP2_DEVICE_1_NAME=AMD Radeon(TM) Graphics
+DEEP2_DEVICE_1_VENDOR=AMD
+DEEP2_DEVICE_1_STABLE_ID=1002:13C0:000000000001C126
+DEEP2_DEVICE_1_VRAM_BYTES=2119970816
+DEEP2_DEVICE_1_SCORE=4294967295
+DEEP2_DEVICE_1_DUTY=DETECTED/UNUSED
+DEEP2_DEVICE_1_PROBLEM_CODE=0
+DEEP2_DEVICE_1_HEALTHY=1
+DEEP2_DEVICE_1_RESET_ATTEMPTED=0
+DEEP2_DEVICE_1_RESET_OK=0
+DEEP2_DEVICE_1_RESET_SKIPPED=0
+DEEP2_DEVICE_1_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_1_ACCESS_DENIED=0
+DEEP2_DEVICE_1_INSTANCE_ID=PCI\VEN_1002&DEV_13C0&SUBSYS_364E1849&REV_E5\4&16012499&0&0041
+DEEP2_DEVICE_2_NAME=AMD Radeon RX 7800 XT
+DEEP2_DEVICE_2_VENDOR=AMD
+DEEP2_DEVICE_2_STABLE_ID=1002:747E:00000000000194B5
+DEEP2_DEVICE_2_VRAM_BYTES=16962633728
+DEEP2_DEVICE_2_SCORE=4294967295
+DEEP2_DEVICE_2_DUTY=DETECTED/UNUSED
+DEEP2_DEVICE_2_PROBLEM_CODE=0
+DEEP2_DEVICE_2_HEALTHY=1
+DEEP2_DEVICE_2_RESET_ATTEMPTED=0
+DEEP2_DEVICE_2_RESET_OK=0
+DEEP2_DEVICE_2_RESET_SKIPPED=0
+DEEP2_DEVICE_2_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_2_ACCESS_DENIED=0
+DEEP2_DEVICE_2_INSTANCE_ID=PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2E27FDA8&0&0000000B
+[Deep2Engine] Vulkan single-GPU open: AMD Radeon AI PRO R9700 (needle=AMD Radeon AI PRO R9700)
+[Deep2Engine] DUALSTICK_BIND vc0=1 vc1=0 devices=1
+[Deep2Engine] Host Q8_0 GEMV receipts: SAFE
+KV_PTR_A=0000020F37025930 KV_PTR_B=0000024FF56476B0 DISTINCT=1
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[AGENT] PREFILL_BEGIN prompt_tokens=3
+[AGENT] PRE_GENERATE calling generate()
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=0
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+[Deep2Engine] Completion plan: ALL_NEEDS_SATISFIED → CALL_GENERATE_STREAM
+[K2_DBG] entry depth=22 tokens=6
+[K2_DBG] after ResetSwitches
+[K2_DBG] after Decide mode=2 arm=TRAMPOLINE_OUTPUT_CACHE
+AUTO_POLICY_ACTIVE=1
+MANUAL_ARM_FORCING=0
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=default_auto
+K2_LIVE_POLICY_REUSE_STEPS=132
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=22 TOKENS=6
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=1216600000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=(unset) MECH_ENV=trampoline WANTED=0
+[Deep2Engine] embedToken: type=2 vocabSize=32000 hiddenDim=2048 data=0000020F0F056580 sizeBytes=36864000 rows=32000 cols=2048
+[AGENT] PREFILL_DONE prompt_tokens=3 prefill_ms=4386.811
+[AGENT] DECODE_BEGIN max_out=6
+[DBG] stateNorm=8.558757e+01 finite=1 pos=3
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=18160 eosId=2
+[AGENT] TOKEN id=18160 piece= campion
+[DBG] stateNorm=8.607493e+01 finite=1 pos=4
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=25206 eosId=2
+[DBG] stateNorm=8.677788e+01 finite=1 pos=5
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=7324 eosId=2
+[DBG] stateNorm=8.667485e+01 finite=1 pos=6
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=19271 eosId=2
+[DBG] stateNorm=8.652782e+01 finite=1 pos=7
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1117 eosId=2
+[DBG] stateNorm=8.662822e+01 finite=1 pos=8
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=22940 eosId=2
+[Deep2Engine] Generation complete: 6 tokens in 11143.19 ms (E2E 0.54 TPS)
+[Deep2Engine] PREFILL: 3 tok in 4386.81 ms (0.68 tok/s) | DECODE: 6 tok in 6756.36 ms (0.89 tok/s)
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=6
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+
+============================================================
+LINEARW CALL BREAKDOWN BY QUANTIZATION TYPE
+============================================================
+  Q4_0      calls=    1232  ms=   10774.455  MACs=    7751073792  ms/MAC=0.000001
+  IQ2_XS    calls=       6  ms=     151.270  MACs=     393216000  ms/MAC=0.000000
+  TOTAL     calls=       0  ms=   10925.725  MACs=    8144289792
+
+============================================================
+TOP 20 LINEARW CALLS BY CUMULATIVE TIME (ms)
+============================================================
+  TENSOR                                      CALLS           MS           MACs      MS/CALL
+============================================================
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 176
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 10957.726
+totalEmbedMs       = 14.440
+totalLogitsMs      = 151.369
+totalAttnMs        = 2888.228
+totalFfnMs         = 7965.569
+acquireCount       = 0
+mapCount           = 0
+releaseCount       = 0
+releaseErrorCount  = 0
+tensorAcquireFail  = 0
+mappingErrorCount  = 0
+residencyErrorCount= 0
+staleLeaseCount    = 0
+avgLayerMs         = 62.260
+============================================================
+
+=== ElasticResidencyManager Telemetry ===
+NVMe read time:        0 us
+RAM stage time:        0 us
+RAM?VRAM upload time:  0 us
+GPU wait time:         14349 us
+GPU compute time:      0 us
+Prefetch hits:         0
+Prefetch misses:       0
+Prefetch hit rate:     0.00%  (B011 ref ~79.96%)
+VRAM eviction time:    0 us
+CPU fallback time:     0 us
+State race blocks:     0
+Compute efficiency:    0.0000
+G04 lease pins issued:  8
+G04 stale leases rej:   0
+G04 evict lease skips:  0
+G04 evictions deferred: 0
+RAWRXD_TICKLATCH_001 warmup_accepted=1 prefetch_requests=0 prefetch_deferred_before_warmup=0
+B011_FETCH_COST_FRAME  hit=0.00%  io_ref~77.6%  map_ref~99.7%  metric=fetch_not_fit
+FREETOKEN_WITNESS_LIVE=1
+FREETOKEN_WITNESS_ACTIVE_ZONES=8
+FREETOKEN_WITNESS_READY_ZONES=0
+FREETOKEN_WITNESS_OVERWRITES=0
+FREETOKEN_WITNESS_HITS=0
+FREETOKEN_WITNESS_MISSES=0
+FREETOKEN_WITNESS_STICK_RPM_0=0
+FREETOKEN_WITNESS_STICK_RPM_1=0
+Memory: warmCompressed=35/2304 MB, warmStaged=0/288 MB, hot=0/4608 MB
+==========================================
+
+[Deep2Engine] Telemetry health: VRAM_BW_SATURATED
+[AGENT] POST_GENERATE generated=6 tokens
+[AGENT] GENERATION_RECEIPT prompt=3 generated=6 completed=1 cancelled=0 stop_reason=16 stop=COMPLETED
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[AGENT] PREFILL_BEGIN prompt_tokens=4
+[AGENT] PRE_GENERATE calling generate()
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=0
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+[Deep2Engine] Completion plan: ALL_NEEDS_SATISFIED → CALL_GENERATE_STREAM
+[K2_DBG] entry depth=22 tokens=6
+[K2_DBG] after ResetSwitches
+[K2_DBG] after Decide mode=2 arm=TRAMPOLINE_OUTPUT_CACHE
+AUTO_POLICY_ACTIVE=1
+MANUAL_ARM_FORCING=0
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=default_auto
+K2_LIVE_POLICY_REUSE_STEPS=132
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=22 TOKENS=6
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=1216600000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=(unset) MECH_ENV=trampoline WANTED=0
+[AGENT] PREFILL_DONE prompt_tokens=4 prefill_ms=5677.257
+[AGENT] DECODE_BEGIN max_out=6
+[DBG] stateNorm=8.662532e+01 finite=1 pos=4
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=22847 eosId=2
+[AGENT] TOKEN id=22847 piece= pr\xC3\xA9sente
+[DBG] stateNorm=8.663261e+01 finite=1 pos=5
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=13287 eosId=2
+[DBG] stateNorm=8.704476e+01 finite=1 pos=6
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=22847 eosId=2
+[DBG] stateNorm=8.660114e+01 finite=1 pos=7
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=10884 eosId=2
+[DBG] stateNorm=8.671190e+01 finite=1 pos=8
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=4254 eosId=2
+[KVCache] page grow 8 -> 16 hot (virtualMax=2048 pos=8)
+[DBG] stateNorm=8.648438e+01 finite=1 pos=9
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=8846 eosId=2
+[Deep2Engine] Generation complete: 6 tokens in 12763.93 ms (E2E 0.47 TPS)
+[Deep2Engine] PREFILL: 4 tok in 5677.26 ms (0.70 tok/s) | DECODE: 6 tok in 7086.65 ms (0.85 tok/s)
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=6
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+
+============================================================
+LINEARW CALL BREAKDOWN BY QUANTIZATION TYPE
+============================================================
+  Q4_0      calls=    1386  ms=   12348.371  MACs=    8719958016  ms/MAC=0.000001
+  IQ2_XS    calls=       6  ms=     152.666  MACs=     393216000  ms/MAC=0.000000
+  TOTAL     calls=       0  ms=   12501.037  MACs=    9113174016
+
+============================================================
+TOP 20 LINEARW CALLS BY CUMULATIVE TIME (ms)
+============================================================
+  TENSOR                                      CALLS           MS           MACs      MS/CALL
+============================================================
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 198
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 12575.004
+totalEmbedMs       = 11.769
+totalLogitsMs      = 152.739
+totalAttnMs        = 3316.278
+totalFfnMs         = 9130.003
+acquireCount       = 0
+mapCount           = 0
+releaseCount       = 0
+releaseErrorCount  = 0
+tensorAcquireFail  = 0
+mappingErrorCount  = 0
+residencyErrorCount= 0
+staleLeaseCount    = 0
+avgLayerMs         = 63.510
+============================================================
+
+=== ElasticResidencyManager Telemetry ===
+NVMe read time:        0 us
+RAM stage time:        0 us
+RAM?VRAM upload time:  0 us
+GPU wait time:         11737 us
+GPU compute time:      0 us
+Prefetch hits:         0
+Prefetch misses:       0
+Prefetch hit rate:     0.00%  (B011 ref ~79.96%)
+VRAM eviction time:    0 us
+CPU fallback time:     0 us
+State race blocks:     0
+Compute efficiency:    0.0000
+G04 lease pins issued:  9
+G04 stale leases rej:   0
+G04 evict lease skips:  0
+G04 evictions deferred: 0
+RAWRXD_TICKLATCH_001 warmup_accepted=1 prefetch_requests=0 prefetch_deferred_before_warmup=0
+B011_FETCH_COST_FRAME  hit=0.00%  io_ref~77.6%  map_ref~99.7%  metric=fetch_not_fit
+FREETOKEN_WITNESS_LIVE=1
+FREETOKEN_WITNESS_ACTIVE_ZONES=8
+FREETOKEN_WITNESS_READY_ZONES=0
+FREETOKEN_WITNESS_OVERWRITES=0
+FREETOKEN_WITNESS_HITS=0
+FREETOKEN_WITNESS_MISSES=0
+FREETOKEN_WITNESS_STICK_RPM_0=0
+FREETOKEN_WITNESS_STICK_RPM_1=0
+Memory: warmCompressed=35/2304 MB, warmStaged=0/288 MB, hot=0/4608 MB
+==========================================
+
+[Deep2Engine] Telemetry health: VRAM_BW_SATURATED
+[AGENT] POST_GENERATE generated=6 tokens
+[AGENT] GENERATION_RECEIPT prompt=4 generated=6 completed=1 cancelled=0 stop_reason=16 stop=COMPLETED
+SEQ_TOKENS_A=18160,25206,7324,19271,1117,22940
+SEQ_TOKENS_B=22847,13287,22847,10884,4254,8846
+SEQ_OUTPUTS_OK=1 KV_LEN_A=8 KV_LEN_B=9
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[AGENT] PREFILL_BEGIN prompt_tokens=5
+[AGENT] PRE_GENERATE calling generate()
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=6
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+[Deep2Engine] Completion plan: ALL_NEEDS_SATISFIED → CALL_GENERATE_STREAM
+[K2_DBG] entry depth=22 tokens=6
+[K2_DBG] after ResetSwitches
+[K2_DBG] after Decide mode=2 arm=TRAMPOLINE_OUTPUT_CACHE
+AUTO_POLICY_ACTIVE=1
+MANUAL_ARM_FORCING=0
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=default_auto
+K2_LIVE_POLICY_REUSE_STEPS=132
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=22 TOKENS=6
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=1216600000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=(unset) MECH_ENV=trampoline WANTED=0
+[AGENT] PREFILL_DONE prompt_tokens=5 prefill_ms=6862.831
+[AGENT] DECODE_BEGIN max_out=6
+[DBG] stateNorm=8.634214e+01 finite=1 pos=5
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=18133 eosId=2
+[AGENT] TOKEN id=18133 piece=elsk
+[DBG] stateNorm=8.682799e+01 finite=1 pos=6
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=19271 eosId=2
+[DBG] stateNorm=8.654933e+01 finite=1 pos=7
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=24892 eosId=2
+[DBG] stateNorm=8.572801e+01 finite=1 pos=8
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=19271 eosId=2
+[KVCache] page grow 8 -> 16 hot (virtualMax=2048 pos=8)
+[DBG] stateNorm=8.623093e+01 finite=1 pos=9
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=2335 eosId=2
+[DBG] stateNorm=8.611314e+01 finite=1 pos=10
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=5860 eosId=2
+[Deep2Engine] Generation complete: 6 tokens in 13765.50 ms (E2E 0.44 TPS)
+[Deep2Engine] PREFILL: 5 tok in 6862.83 ms (0.73 tok/s) | DECODE: 6 tok in 6902.64 ms (0.87 tok/s)
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=6
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+
+============================================================
+LINEARW CALL BREAKDOWN BY QUANTIZATION TYPE
+============================================================
+  Q4_0      calls=    1540  ms=   13396.794  MACs=    9688842240  ms/MAC=0.000001
+  IQ2_XS    calls=       6  ms=     129.054  MACs=     393216000  ms/MAC=0.000000
+  TOTAL     calls=       0  ms=   13525.848  MACs=   10082058240
+
+============================================================
+TOP 20 LINEARW CALLS BY CUMULATIVE TIME (ms)
+============================================================
+  TENSOR                                      CALLS           MS           MACs      MS/CALL
+============================================================
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 220
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 13612.880
+totalEmbedMs       = 0.038
+totalLogitsMs      = 129.091
+totalAttnMs        = 3601.265
+totalFfnMs         = 9886.611
+acquireCount       = 0
+mapCount           = 0
+releaseCount       = 0
+releaseErrorCount  = 0
+tensorAcquireFail  = 0
+mappingErrorCount  = 0
+residencyErrorCount= 0
+staleLeaseCount    = 0
+avgLayerMs         = 61.877
+============================================================
+
+=== ElasticResidencyManager Telemetry ===
+NVMe read time:        0 us
+RAM stage time:        0 us
+RAM?VRAM upload time:  0 us
+GPU wait time:         14349 us
+GPU compute time:      0 us
+Prefetch hits:         0
+Prefetch misses:       0
+Prefetch hit rate:     0.00%  (B011 ref ~79.96%)
+VRAM eviction time:    0 us
+CPU fallback time:     0 us
+State race blocks:     0
+Compute efficiency:    0.0000
+G04 lease pins issued:  18
+G04 stale leases rej:   0
+G04 evict lease skips:  0
+G04 evictions deferred: 0
+RAWRXD_TICKLATCH_001 warmup_accepted=1 prefetch_requests=0 prefetch_deferred_before_warmup=0
+B011_FETCH_COST_FRAME  hit=0.00%  io_ref~77.6%  map_ref~99.7%  metric=fetch_not_fit
+FREETOKEN_WITNESS_LIVE=1
+FREETOKEN_WITNESS_ACTIVE_ZONES=8
+FREETOKEN_WITNESS_READY_ZONES=0
+FREETOKEN_WITNESS_OVERWRITES=0
+FREETOKEN_WITNESS_HITS=0
+FREETOKEN_WITNESS_MISSES=0
+FREETOKEN_WITNESS_STICK_RPM_0=0
+FREETOKEN_WITNESS_STICK_RPM_1=0
+Memory: warmCompressed=35/2304 MB, warmStaged=0/288 MB, hot=0/4608 MB
+==========================================
+
+[Deep2Engine] Telemetry health: VRAM_BW_SATURATED
+[AGENT] POST_GENERATE generated=6 tokens
+[AGENT] GENERATION_RECEIPT prompt=5 generated=6 completed=1 cancelled=0 stop_reason=16 stop=COMPLETED
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[AGENT] PREFILL_BEGIN prompt_tokens=6
+[AGENT] PRE_GENERATE calling generate()
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=6
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+[Deep2Engine] Completion plan: ALL_NEEDS_SATISFIED → CALL_GENERATE_STREAM
+[K2_DBG] entry depth=22 tokens=6
+[K2_DBG] after ResetSwitches
+[K2_DBG] after Decide mode=2 arm=TRAMPOLINE_OUTPUT_CACHE
+AUTO_POLICY_ACTIVE=1
+MANUAL_ARM_FORCING=0
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=default_auto
+K2_LIVE_POLICY_REUSE_STEPS=132
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=22 TOKENS=6
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=1216600000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=(unset) MECH_ENV=trampoline WANTED=0
+[AGENT] PREFILL_DONE prompt_tokens=6 prefill_ms=8634.747
+[AGENT] DECODE_BEGIN max_out=6
+[DBG] stateNorm=8.688068e+01 finite=1 pos=6
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1328 eosId=2
+[AGENT] TOKEN id=1328 piece=ward
+[DBG] stateNorm=8.612707e+01 finite=1 pos=7
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=25471 eosId=2
+[DBG] stateNorm=8.541339e+01 finite=1 pos=8
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=21075 eosId=2
+[DBG] stateNorm=8.644722e+01 finite=1 pos=9
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=18996 eosId=2
+[DBG] stateNorm=8.594311e+01 finite=1 pos=10
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=2389 eosId=2
+[DBG] stateNorm=8.675692e+01 finite=1 pos=11
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=4254 eosId=2
+[Deep2Engine] Generation complete: 6 tokens in 15868.01 ms (E2E 0.38 TPS)
+[Deep2Engine] PREFILL: 6 tok in 8634.75 ms (0.69 tok/s) | DECODE: 6 tok in 7233.24 ms (0.83 tok/s)
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=6
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+
+============================================================
+LINEARW CALL BREAKDOWN BY QUANTIZATION TYPE
+============================================================
+  Q4_0      calls=    1694  ms=   15407.933  MACs=   10657726464  ms/MAC=0.000001
+  IQ2_XS    calls=       6  ms=     142.162  MACs=     393216000  ms/MAC=0.000000
+  TOTAL     calls=       0  ms=   15550.095  MACs=   11050942464
+
+============================================================
+TOP 20 LINEARW CALLS BY CUMULATIVE TIME (ms)
+============================================================
+  TENSOR                                      CALLS           MS           MACs      MS/CALL
+============================================================
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 242
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 15695.229
+totalEmbedMs       = 0.048
+totalLogitsMs      = 142.209
+totalAttnMs        = 4169.789
+totalFfnMs         = 11362.555
+acquireCount       = 0
+mapCount           = 0
+releaseCount       = 0
+releaseErrorCount  = 0
+tensorAcquireFail  = 0
+mappingErrorCount  = 0
+residencyErrorCount= 0
+staleLeaseCount    = 0
+avgLayerMs         = 64.856
+============================================================
+
+=== ElasticResidencyManager Telemetry ===
+NVMe read time:        0 us
+RAM stage time:        0 us
+RAM?VRAM upload time:  0 us
+GPU wait time:         11737 us
+GPU compute time:      0 us
+Prefetch hits:         0
+Prefetch misses:       0
+Prefetch hit rate:     0.00%  (B011 ref ~79.96%)
+VRAM eviction time:    0 us
+CPU fallback time:     0 us
+State race blocks:     0
+Compute efficiency:    0.0000
+G04 lease pins issued:  20
+G04 stale leases rej:   0
+G04 evict lease skips:  0
+G04 evictions deferred: 0
+RAWRXD_TICKLATCH_001 warmup_accepted=1 prefetch_requests=0 prefetch_deferred_before_warmup=0
+B011_FETCH_COST_FRAME  hit=0.00%  io_ref~77.6%  map_ref~99.7%  metric=fetch_not_fit
+FREETOKEN_WITNESS_LIVE=1
+FREETOKEN_WITNESS_ACTIVE_ZONES=8
+FREETOKEN_WITNESS_READY_ZONES=0
+FREETOKEN_WITNESS_OVERWRITES=0
+FREETOKEN_WITNESS_HITS=0
+FREETOKEN_WITNESS_MISSES=0
+FREETOKEN_WITNESS_STICK_RPM_0=0
+FREETOKEN_WITNESS_STICK_RPM_1=0
+Memory: warmCompressed=35/2304 MB, warmStaged=0/288 MB, hot=0/4608 MB
+==========================================
+
+[Deep2Engine] Telemetry health: VRAM_BW_SATURATED
+[AGENT] POST_GENERATE generated=6 tokens
+[AGENT] GENERATION_RECEIPT prompt=6 generated=6 completed=1 cancelled=0 stop_reason=16 stop=COMPLETED
+INTERLEAVE_TOKENS_A=6 INTERLEAVE_TOKENS_B=6 INTERLEAVE_OK=1
+NOTE=decode_mutex_serializes_GPU_isolated_engines_keep_distinct_KV
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[AGENT] PREFILL_BEGIN prompt_tokens=5
+[AGENT] PRE_GENERATE calling generate()
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=6
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+[Deep2Engine] Completion plan: ALL_NEEDS_SATISFIED → CALL_GENERATE_STREAM
+[K2_DBG] entry depth=22 tokens=32
+[K2_DBG] after ResetSwitches
+[K2_DBG] after Decide mode=2 arm=TRAMPOLINE_OUTPUT_CACHE
+AUTO_POLICY_ACTIVE=1
+MANUAL_ARM_FORCING=0
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=default_auto
+K2_LIVE_POLICY_REUSE_STEPS=704
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=22 TOKENS=32
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=1216600000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=(unset) MECH_ENV=trampoline WANTED=0
+[AGENT] PREFILL_DONE prompt_tokens=5 prefill_ms=6643.238
+[AGENT] DECODE_BEGIN max_out=32
+[DBG] stateNorm=8.694501e+01 finite=1 pos=5
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=635 eosId=2
+[AGENT] TOKEN id=635 piece=ally
+[Deep2Engine] CANCEL requested at decode step 1 (gen=1)
+[Deep2Engine] Generation complete: 1 tokens in 6665.09 ms (E2E 0.15 TPS)
+[Deep2Engine] PREFILL: 5 tok in 6643.24 ms (0.75 tok/s) | DECODE: 1 tok in 21.82 ms (45.82 tok/s)
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=1
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+
+============================================================
+LINEARW CALL BREAKDOWN BY QUANTIZATION TYPE
+============================================================
+  Q4_0      calls=     770  ms=    6520.086  MACs=    4844421120  ms/MAC=0.000001
+  IQ2_XS    calls=       1  ms=      21.624  MACs=      65536000  ms/MAC=0.000000
+  TOTAL     calls=       0  ms=    6541.710  MACs=    4909957120
+
+============================================================
+TOP 20 LINEARW CALLS BY CUMULATIVE TIME (ms)
+============================================================
+  TENSOR                                      CALLS           MS           MACs      MS/CALL
+============================================================
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 110
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 6631.985
+totalEmbedMs       = 0.036
+totalLogitsMs      = 21.631
+totalAttnMs        = 1759.680
+totalFfnMs         = 4804.008
+acquireCount       = 0
+mapCount           = 0
+releaseCount       = 0
+releaseErrorCount  = 0
+tensorAcquireFail  = 0
+mappingErrorCount  = 0
+residencyErrorCount= 0
+staleLeaseCount    = 0
+avgLayerMs         = 60.291
+============================================================
+
+=== ElasticResidencyManager Telemetry ===
+NVMe read time:        0 us
+RAM stage time:        0 us
+RAM?VRAM upload time:  0 us
+GPU wait time:         14349 us
+GPU compute time:      0 us
+Prefetch hits:         0
+Prefetch misses:       0
+Prefetch hit rate:     0.00%  (B011 ref ~79.96%)
+VRAM eviction time:    0 us
+CPU fallback time:     0 us
+State race blocks:     0
+Compute efficiency:    0.0000
+G04 lease pins issued:  23
+G04 stale leases rej:   0
+G04 evict lease skips:  0
+G04 evictions deferred: 0
+RAWRXD_TICKLATCH_001 warmup_accepted=1 prefetch_requests=0 prefetch_deferred_before_warmup=0
+B011_FETCH_COST_FRAME  hit=0.00%  io_ref~77.6%  map_ref~99.7%  metric=fetch_not_fit
+FREETOKEN_WITNESS_LIVE=1
+FREETOKEN_WITNESS_ACTIVE_ZONES=8
+FREETOKEN_WITNESS_READY_ZONES=0
+FREETOKEN_WITNESS_OVERWRITES=0
+FREETOKEN_WITNESS_HITS=0
+FREETOKEN_WITNESS_MISSES=0
+FREETOKEN_WITNESS_STICK_RPM_0=0
+FREETOKEN_WITNESS_STICK_RPM_1=0
+Memory: warmCompressed=35/2304 MB, warmStaged=0/288 MB, hot=0/4608 MB
+==========================================
+
+[Deep2Engine] Telemetry health: VRAM_BW_SATURATED
+[AGENT] POST_GENERATE generated=1 tokens
+[AGENT] GENERATION_RECEIPT prompt=5 generated=1 completed=0 cancelled=1 stop_reason=13 stop=CANCELLED
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[AGENT] PREFILL_BEGIN prompt_tokens=4
+[AGENT] PRE_GENERATE calling generate()
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=6
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+[Deep2Engine] Completion plan: ALL_NEEDS_SATISFIED → CALL_GENERATE_STREAM
+[K2_DBG] entry depth=22 tokens=8
+[K2_DBG] after ResetSwitches
+[K2_DBG] after Decide mode=2 arm=TRAMPOLINE_OUTPUT_CACHE
+AUTO_POLICY_ACTIVE=1
+MANUAL_ARM_FORCING=0
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=default_auto
+K2_LIVE_POLICY_REUSE_STEPS=176
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=22 TOKENS=8
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=1216600000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=(unset) MECH_ENV=trampoline WANTED=0
+[AGENT] PREFILL_DONE prompt_tokens=4 prefill_ms=6006.906
+[AGENT] DECODE_BEGIN max_out=8
+[DBG] stateNorm=8.644415e+01 finite=1 pos=4
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=1209 eosId=2
+[AGENT] TOKEN id=1209 piece= pass
+[DBG] stateNorm=8.621380e+01 finite=1 pos=5
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=21051 eosId=2
+[DBG] stateNorm=8.596899e+01 finite=1 pos=6
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=21051 eosId=2
+[DBG] stateNorm=8.567934e+01 finite=1 pos=7
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=21051 eosId=2
+[DBG] stateNorm=8.612883e+01 finite=1 pos=8
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=26529 eosId=2
+[DBG] stateNorm=8.568207e+01 finite=1 pos=9
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=7817 eosId=2
+[DBG] stateNorm=8.478942e+01 finite=1 pos=10
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=8588 eosId=2
+[DBG] stateNorm=8.515748e+01 finite=1 pos=11
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[DBG] sampled token=13041 eosId=2
+[Deep2Engine] Generation complete: 8 tokens in 15764.17 ms (E2E 0.51 TPS)
+[Deep2Engine] PREFILL: 4 tok in 6006.91 ms (0.67 tok/s) | DECODE: 8 tok in 9757.24 ms (0.82 tok/s)
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=8
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+
+============================================================
+LINEARW CALL BREAKDOWN BY QUANTIZATION TYPE
+============================================================
+  Q4_0      calls=    1694  ms=   15278.165  MACs=   10657726464  ms/MAC=0.000001
+  IQ2_XS    calls=       8  ms=     182.262  MACs=     524288000  ms/MAC=0.000000
+  TOTAL     calls=       0  ms=   15460.426  MACs=   11182014464
+
+============================================================
+TOP 20 LINEARW CALLS BY CUMULATIVE TIME (ms)
+============================================================
+  TENSOR                                      CALLS           MS           MACs      MS/CALL
+============================================================
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 242
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 15553.486
+totalEmbedMs       = 0.030
+totalLogitsMs      = 182.309
+totalAttnMs        = 4118.581
+totalFfnMs         = 11279.072
+acquireCount       = 0
+mapCount           = 0
+releaseCount       = 0
+releaseErrorCount  = 0
+tensorAcquireFail  = 0
+mappingErrorCount  = 0
+residencyErrorCount= 0
+staleLeaseCount    = 0
+avgLayerMs         = 64.271
+============================================================
+
+=== ElasticResidencyManager Telemetry ===
+NVMe read time:        0 us
+RAM stage time:        0 us
+RAM?VRAM upload time:  0 us
+GPU wait time:         11737 us
+GPU compute time:      0 us
+Prefetch hits:         0
+Prefetch misses:       0
+Prefetch hit rate:     0.00%  (B011 ref ~79.96%)
+VRAM eviction time:    0 us
+CPU fallback time:     0 us
+State race blocks:     0
+Compute efficiency:    0.0000
+G04 lease pins issued:  31
+G04 stale leases rej:   0
+G04 evict lease skips:  0
+G04 evictions deferred: 0
+RAWRXD_TICKLATCH_001 warmup_accepted=1 prefetch_requests=0 prefetch_deferred_before_warmup=0
+B011_FETCH_COST_FRAME  hit=0.00%  io_ref~77.6%  map_ref~99.7%  metric=fetch_not_fit
+FREETOKEN_WITNESS_LIVE=1
+FREETOKEN_WITNESS_ACTIVE_ZONES=8
+FREETOKEN_WITNESS_READY_ZONES=0
+FREETOKEN_WITNESS_OVERWRITES=0
+FREETOKEN_WITNESS_HITS=0
+FREETOKEN_WITNESS_MISSES=0
+FREETOKEN_WITNESS_STICK_RPM_0=0
+FREETOKEN_WITNESS_STICK_RPM_1=0
+Memory: warmCompressed=35/2304 MB, warmStaged=0/288 MB, hot=0/4608 MB
+==========================================
+
+[Deep2Engine] Telemetry health: VRAM_BW_SATURATED
+[AGENT] POST_GENERATE generated=8 tokens
+[AGENT] GENERATION_RECEIPT prompt=4 generated=8 completed=1 cancelled=0 stop_reason=16 stop=COMPLETED
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] unloadModel
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=22
+[LIFE] unloadModel FreeTensorData ggufResult (201 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+[LIFE] release MoE
+[LIFE] disableMARS
+[LIFE] release vulkan devices
+[LIFE] stop telemetryController
+[LIFE] release residency/elastic/cache
+[LIFE] reset elasticResidency
+[LIFE] reset residencyManager
+[LIFE] reset residencyCache
+[LIFE] reset globalIndex
+[LIFE] residency/elastic/cache done
+[LIFE] release KV / compressedKV / toroidalKV
+[LIFE] stop threadPool
+[LIFE] release satellite engines
+[LIFE] deallocateBuffers
+[LIFE] remove temp Ollama GGUF
+[LIFE] ~Deep2Engine END
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] unloadModel
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=22
+[LIFE] unloadModel FreeTensorData ggufResult (201 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+[LIFE] release MoE
+[LIFE] disableMARS
+[LIFE] release vulkan devices
+[LIFE] stop telemetryController
+[LIFE] release residency/elastic/cache
+[LIFE] reset elasticResidency
+[LIFE] reset residencyManager
+[LIFE] reset residencyCache
+[LIFE] reset globalIndex
+[LIFE] residency/elastic/cache done
+[LIFE] release KV / compressedKV / toroidalKV
+[LIFE] stop threadPool
+[LIFE] release satellite engines
+[LIFE] deallocateBuffers
+[LIFE] remove temp Ollama GGUF
+[LIFE] ~Deep2Engine END
+[StreamEngine] Shutdown
+CANCEL_A=1 TOKENS_A_AFTER_CANCEL=1 TOKENS_B_ALIVE=8 CANCEL_ISOLATED=1
+SESSION_ISOLATION_PASS=1
+CERTIFIED=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[MARS] Shutdown complete. Total allocated: 0.00 MB, Total freed: 0.00 MB
+[Deep2Engine] MARS disabled
+[ElasticResidencyManager] Scheduler thread exiting
+[ElasticResidencyManager] Shutdown complete
+[ResidencyManager] Shutdown complete
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[MARS] Shutdown complete. Total allocated: 0.00 MB, Total freed: 0.00 MB
+[Deep2Engine] MARS disabled
+[ElasticResidencyManager] Scheduler thread exiting
+[ElasticResidencyManager] Shutdown complete
+[ResidencyManager] Shutdown complete

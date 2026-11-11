@@ -1,0 +1,109 @@
+G1_HANDOFF — AGENT_RUNTIME_VALIDATION_001 worker → Batch17 sole owner 63513ece
+Written: 2026-11-11T12:15-05:00
+CERTIFIED=0  PROMOTE=0  TIP_CLIMB=HOLD
+BUILD_OWNER: Batch17 worker 63513ece (PowerShell+LSP+semantic+symbol+peek+autonomous → link+smoke)
+THIS_WORKER: STOPPED — no further edits to RawrXD-Win32IDE-Native / build_win32ide
+
+================================================================================
+EXE STATUS
+================================================================================
+RawrXD-Win32IDE-Native.exe: NOT PRESENT under F:\rawrxd\build_win32ide\Release\
+G1 status: FAIL (no linked exe; do not invent PASS)
+Authoritative prior fail log: F:\rawrxd\evidence\AGENT_RUNTIME_VALIDATION_001\g1_build6.log
+Self-inflicted C2535 log: F:\rawrxd\evidence\AGENT_RUNTIME_VALIDATION_001\g1_build7.log
+Incomplete mid-flight logs: g1_build8.log / early g1_build9.log (do not treat as PASS)
+
+================================================================================
+FIRST REMAINING ERROR (at last complete error inventory)
+================================================================================
+From g1_build6.log (last full error-bearing compile before header churn):
+  F:\rawrxd\src\win32app\Win32IDE_Annotations.cpp(527,30): error C3861: 'findTabByPath': identifier not found
+
+Note: After subsequent header reconcile, Win32IDE.h now declares findTabByPath/setActiveTab/addTab
+(and LinkGapHelpers.cpp implements them via findDocumentTab/addDocumentTab/switchDocumentTab).
+That family may already be cleared — Batch17 must rebuild to confirm.
+
+From g1_build7.log (self-inflicted; FIXED in tree before handoff):
+  Win32IDE.h C2535 duplicate Win32IDE::navigateToLine / navigateToFileLine
+  Current tree: SINGLE canonical decls at Win32IDE.h ~1524-1525 (no duplicate).
+  Do NOT re-add navigateToLine/navigateToFileLine under SemanticPanel block.
+
+g1_build9.log appended CLEAN REBUILD then BAT_DONE EC=-1 with no captured error C lines in that
+incomplete/truncated run — treat as NOT_RUN / incomplete, not as green.
+
+================================================================================
+FILES CHANGED BY THIS WORKER (uncommitted local fixes to preserve)
+================================================================================
+CMake / sources:
+  F:\rawrxd\CMakeLists.txt
+    - Restored src/win32app/Win32IDE_LSPServer.cpp (removed LSPServer_stubs from native sources)
+    - Added WIN32_LEAN_AND_MEAN + _WINSOCKAPI_ to RawrXD-Win32IDE-Native compile defs (earlier)
+    - Added src/core/problems_aggregator.cpp (earlier)
+
+Headers / types:
+  F:\rawrxd\src\win32app\Win32IDE.h
+    - WIN32_LEAN_AND_MEAN / _WINSOCKAPI_ / winsock2 before windows.h
+    - LSPDiagnostic/LSPWorkspaceEdit/TextEdit reconcile; m_lspDiagnostics map type
+    - Batch2 decls: lspLanguageId, cmdLSPFormatDocument, utf8ToWide, showInputDialog,
+      addTab/setActiveTab/findTabByPath, SemanticToken types, CodeAction, applyTextEdit, etc.
+    - Semantic panel decls: initSemanticPanel, handleSemanticCommand, getEditorCursorFileLineCol,
+      cmdSem* (WITHOUT redeclaring navigateToLine/navigateToFileLine — keep @1524 only)
+    - Members: m_semanticTokens / m_semanticTokensLegend / m_semanticTokensValid /
+      m_semanticPanelInitialized; m_lspServer raw ptr; m_languageManager raw ptr
+  F:\rawrxd\src\win32app\IDEPlugin.h                          (NEW — IDEPlugin::* types)
+  F:\rawrxd\src\core\problems_aggregator.hpp/.cpp             (restored from ~dev mirror)
+  F:\rawrxd\src\core\json_util.hpp                            (NEW — Themes loader helper)
+  F:\rawrxd\include\lsp\RawrXD_LSPServer.h
+    - Replaced illegal `namespace nlohmann { class json; }` with #include nlohmann/json.hpp
+
+TU fixes (real wiring, not empty stubs for product paths):
+  F:\rawrxd\src\win32app\Win32IDE_LSPServer.cpp
+    - handleLSPServerStatusEndpoint(SOCKET) aligned with header; real source restored in CMake
+  F:\rawrxd\src\win32app\Win32IDE_LSPServer_stubs.cpp
+    - STILL ON DISK but NOT in CMake native sources — Batch17 may delete if unused
+  F:\rawrxd\src\win32app\Win32IDE_ChatWindow.cpp
+    - Backend::NativeClient → Backend::OllamaClient
+    - Stream/complete callbacks use Backend::OllamaResponse
+    - cancelStream → cancelActiveRequest
+  F:\rawrxd\src\win32app\Win32IDE_AutonomousAgent.cpp
+    - Qualified AutonomousAgent::AutonomousAgent::{Initialize,Instance}
+  F:\rawrxd\src\win32app\AutonomousAgent.cpp
+    - Real Initialize/Instance/Start/IsRunning state (mutex + atomic), not empty comment stubs
+  F:\rawrxd\src\win32app\Win32IDE_AutonomousLoop.cpp
+    - OutputSeverity::Info → Win32IDE::OutputSeverity::Info
+  F:\rawrxd\src\win32app\Win32IDE_PromptTemplates.cpp
+    - #include "DialogBoxWithInput.h"
+  F:\rawrxd\src\win32app\Win32IDE_SemanticTokens.cpp
+    - Nested Win32IDE::SemanticTokens* types; getTokenColor takes Win32IDE::SemanticTokensLegend
+  F:\rawrxd\src\win32app\Win32IDE_SemanticPanel.cpp
+    - IDM_SEM_* local defines (9300–9312)
+  F:\rawrxd\src\win32app\Win32IDE_LinkGapHelpers.cpp
+    - (already present / in CMake) utf8ToWide, showInputDialog, addTab/setActiveTab/findTabByPath,
+      cmdLSPFormatDocument — verify still in RAWRXD_NATIVE_IDE_SOURCES
+
+Evidence (do not treat as certification):
+  F:\rawrxd\evidence\AGENT_RUNTIME_VALIDATION_001\*
+  F:\rawrxd\evidence\AGENT_ARCH_AUDIT_001\GAP_CLOSURE_ORCH_RUNTIME.json (additive only)
+  CAPABILITY_MATRIX.json NOT mutated
+
+================================================================================
+GATES (honest)
+================================================================================
+G1 Native IDE full link: FAIL (no exe)
+G2 StartAutonomousTask: BLOCKED on G1
+G3 FSM runtime: BLOCKED on G1
+G4 Live E2E: BLOCKED on G1
+G5 PlanExecutor exclusion: PASS (not in CMake/vcxproj) — prior evidence
+G6 Evidence reconcile: partial artifacts present; re-verify after Batch17 link
+
+================================================================================
+BATCH17 ASK
+================================================================================
+1. Own F:\rawrxd\build_win32ide exclusively — do not race other workers.
+2. Rebuild Release x64 RawrXD-Win32IDE-Native with VS2022 BuildTools 14.44.35207.
+3. First confirm C2535 navigate duplicates stay gone; then fix next real error family only.
+4. Delete Win32IDE_LSPServer_stubs.cpp if unused; keep real Win32IDE_LSPServer.cpp.
+5. G1 PASS only when exe exists with size+timestamp + exit 0; then G2–G4.
+6. CERTIFIED=0 PROMOTE=0 until higher gate law says otherwise.
+
+END HANDOFF

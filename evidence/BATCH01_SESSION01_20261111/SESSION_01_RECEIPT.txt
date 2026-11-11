@@ -1,0 +1,82 @@
+BATCH=DEEP2_NATIVE_CORRECTNESS_001
+SESSION=01
+SESSION_TITLE=ATTENTION_GEOMETRY_AND_NAN_FAIL_CLOSED
+
+SOURCE_COMMIT=b44c20f01912ad142d38aa6f156a0fa203b685e4
+SOURCE_TREE=7aa77825cd6ac98032e05351de2c0c1abe780dbf
+WORKTREE=F:\rawrxd
+WORKTREE_DIRTY=1
+WORKTREE_DIRTY_ENTRIES=174
+WORKTREE_NOTE=Shared worktree; includes unrelated in-flight changes from other agents. Deep2 files changed for S01: src/Deep2Engine.h, src/deep2/Deep2Engine.cpp, src/deep2/Deep2Engine_ModelFit.cpp, src/deep2/KVCache.cpp, src/deep2/KVCache.h, test_deep2_inference.cpp, tests/deep2_attention_geometry_nan_regression.cpp, CMakeLists.txt.
+
+MODEL_PATH=F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+MODEL_SHA256=9FECC3B3CD76BBA89D504F29B616EEDF7DA85B96540E490CA5824D3F7D2776A0
+MODEL_METADATA=llama hidden=2048 layers=22 heads=32 kvHeads=4 headDim=64 vocab=32000 ctx=2048
+
+COMPILER=MSVC 14.44.35207 (Visual Studio 2022 Build Tools, x64)
+CMAKE_GENERATOR=Visual Studio 17 2022
+CMAKE_CONFIGURATION=Release
+
+DEEP2_LIBRARY_LABEL=deep2_engine_lib.lib
+DEEP2_LIBRARY_SHA256=1EAD752E9EF0DC6B9E70FE4ACF375D987259143A883371282F8DB69092964BAE
+DEEP2_LIBRARY_BYTES=535600992
+
+CPU_TEST_EXE=build\tests\Release\test_deep2_inference.exe
+CPU_TEST_EXE_SHA256=58C59271A725899C7D69CBD80439A995DCB566F5804E45E4E32EF2FBAE180E1C
+CPU_TEST_EXE_BYTES=1884160
+
+REGRESSION_EXE=build\tests\Release\deep2_attention_geometry_nan_regression.exe
+REGRESSION_EXE_SHA256=C937E258FFF8BCDE9DF325E0A7BF486C3E72C0FF10A44252B879E937E3AB5E5A
+REGRESSION_EXE_BYTES=23040
+
+S01_GEOMETRY_NAN=PASS
+S01_GEOMETRY_RECEIPT=KV_GEOMETRY valid=1 layers=22 positions=2048 kvHeads=4 headDim=64 weightHeads=32 weightKVHeads=4 weightHeadDim=64 currentLen=0 detail=ok
+S01_GEOMETRY_RECONCILED=ATTN_GEOMETRY_RECONCILED headDim=64 qHeads=32 kvHeads=4
+S01_KV_CACHE_CONFIGURED=KV_CACHE_CONFIGURED reason=loadModel layers=22 positions=2048 kvHeads=4 headDim=64
+S01_REGRESSION_EXIT=0
+S01_REGRESSION_OUTPUT=ATTN_FINITE_VALID=1 ATTN_NAN_REJECTED=1
+
+CPU_RUNTIME_REACHED=1
+CPU_LANE_ENFORCED=RAWR_REAP_CPU_ONLY=1
+CPU_GENERATED_TOKENS=128
+CPU_GENERATION_RECEIPTS=64+32+32
+CPU_STOP_REASON=COMPLETED
+CPU_EXIT=0
+CPU_KV_GEOMETRY_VALID=1
+CPU_FINITE_LOGITS=1
+CPU_DEEP2_NUMERIC_ABORT=0
+CPU_ATTN_DIAG_FAILURE=0
+CPU_HOST_FORWARD_LAYER_CALLS=0
+CPU_REAL_GPU_FORWARD=0
+CPU_OUTPUT_SAMPLE=located on the River Seine, and its iconic landmarks include the Eiffel Tower, the Arc de Triomphe, and the Louvre Museum.
+
+VULKAN_RUNTIME_REACHED=1
+VULKAN_REAL_GPU_FORWARD=1
+VULKAN_GENERATED_TOKENS=128
+VULKAN_GENERATION_RECEIPTS=64+32+32
+VULKAN_EXIT=0
+VULKAN_KV_GEOMETRY_VALID=1
+VULKAN_FINITE_LOGITS=1
+VULKAN_DEEP2_NUMERIC_ABORT=0
+VULKAN_ATTN_DIAG_FAILURE=0
+VULKAN_CORRECTNESS=NOT_VERIFIED
+VULKAN_CORRECTNESS_NOTE=GPU path produced finite tokens but greedy output diverged from CPU and was semantically invalid (for example: " FO-they face of theater\""). This is a GPU numerical/correctness defect, not an S01 geometry fault. It is held for S03/S05 and must not be counted as a Vulkan PASS.
+
+S02_PERSISTENT_KV=NOT_VERIFIED
+S03_MULTI_TOKEN_CORRECTNESS=NOT_VERIFIED
+S04_STREAMING_SAMPLING_CANCEL=NOT_VERIFIED
+S05_CPU_VULKAN_E2E=NOT_VERIFIED
+
+REGRESSIONS=0
+STUB_PATHS=0
+BACKEND_SUBSTITUTION=0
+
+BATCH_PASS=0
+CERTIFIED=0
+PROMOTE=0
+
+NOTES=
+- Session 01 is accepted for its stated scope: weight-derived attention geometry, single authoritative KV configuration, and fail-closed non-finite/zero-state handling, proven on real TinyLlama GGUF through the CPU lane.
+- The GPU lane reaches real Vulkan execution but does not yet produce correct tokens. It is explicitly not promoted.
+- The earlier nondeterministic GPU zero-hidden state is now caught by the zero-norm gate and would be reported as FORWARD_FAULT rather than COMPLETED; the final GPU run completed without hitting that gate, but output correctness remains unverified.
+- This receipt does not close Batch 1. S02-S05 remain NOT_VERIFIED.

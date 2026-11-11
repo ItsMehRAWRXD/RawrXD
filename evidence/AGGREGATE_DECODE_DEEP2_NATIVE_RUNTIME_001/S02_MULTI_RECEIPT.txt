@@ -1,0 +1,36 @@
+# AGGREGATE_DECODE_DEEP2_NATIVE_RUNTIME_001 — Multi-session receipt
+
+- BINARY: F:\rawrxd\build\bin\aggregate_decode_multi_smoke.exe (deep2_engine_lib linked)
+- LINKED: DEEP2_LINKED=1  (AGGREGATE_DECODE_USE_DEEP2=1)
+- MODEL: n4-tiny-oracle:latest (llama, Q4_0), same GGUF blob as S01
+- STREAMS: 4  TOKENS PER STREAM: 8
+
+## Observed result
+- BACKEND=DEEP2  BACKEND_LABEL=DEEP2_ENGINE
+- GENERATED_TOKENS=32   (4 streams x 8)
+- AGGREGATE_DECODE_TPS_MULTI=0.258928
+- AVG_STREAM_TPS=0.260540
+- WORST_STREAM_TPS=0.238162
+- BEST_STREAM_TPS=0.283378
+- FAIRNESS_RATIO=0.840438
+- ALL_SESSIONS_WORKED=1  BOTH_LANES=1
+- AGGREGATE_GE_MAX_STREAM=0  (aggregate wall < best per-stream wall, as expected)
+- RUNTIME_REACHED=1  deep2_runtime_reached=1
+- CERTIFIED=0  PROMOTE=0
+
+## Finding
+- Native Deep2 multi-session aggregate decode executes real tokens (32 generated,
+  greedy, non-finite logits absent), all 4 sessions worked.
+- But throughput is ~0.26 TPS aggregate — CPU GEMV path, not GPU.
+- DEEP2_COMPUTE_BACKEND=GPU is reported at open, but the actual per-token forward
+  is CPU Q4_0 LinearW (DEEP2_REAL_GPU_FORWARD=0 in single-session run).
+
+## Certification disposition
+- RUNTIME_REACHED=1 (native path proven for multi-session)
+- CERTIFIED=0 (throughput target not met; GPU forward not exercised)
+- PROMOTE=0  TIP_CLIMB=HOLD
+
+## Comparison to earlier Ollama figures
+- Ollama single=39.95 TPS, multi=29.87 TPS (HTTP backend)
+- Native Deep2 single=0.46 TPS, multi=0.26 TPS (CPU GEMV)
+- The 37-40 TPS was Ollama. Native Deep2 is a separate, now-runtime-reached path.

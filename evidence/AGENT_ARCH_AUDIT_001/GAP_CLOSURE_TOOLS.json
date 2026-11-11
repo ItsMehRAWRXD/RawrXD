@@ -1,0 +1,33 @@
+{
+  "audit_id": "AGENT_ARCH_AUDIT_001",
+  "closure_packet": "AGENT_TOOLS_ROUTE_WIRE_001",
+  "gaps": {
+    "5": {
+      "name": "Fragmented ToolRegistry -> SSOT dispatch",
+      "status": "CLOSED_SOURCE_WIRED",
+      "AgentCommands_hits_SecurityGate": true,
+      "ssot": "IdeSsot::DispatchTool / ToolCallBridge::ExecuteToolCall",
+      "evidence": "F:\\rawrxd\\evidence\\AGENT_TOOLS_ROUTE_WIRE_001\\GAP_STATUS.json"
+    },
+    "9": {
+      "name": "IDE agent model path via BackendRouter/Ollama",
+      "status": "CLOSED_SOURCE_WIRED",
+      "cpu_inference_engine_as_agent_turn_ssot": false,
+      "router": "AgenticBridge::ChatViaBackendRouter -> BackendRouter::ChatSync",
+      "evidence": "F:\\rawrxd\\evidence\\AGENT_TOOLS_ROUTE_WIRE_001\\ROUTING_PROOF.txt"
+    }
+  },
+  "adversarial": {
+    "results": "F:\\rawrxd\\evidence\\AGENT_TOOLS_ROUTE_WIRE_001\\ADVERSARIAL_AGENTCOMMANDS_PROBE_RESULTS.json",
+    "pass": 13,
+    "fail": 0,
+    "PROOF_DENY_ON_ESCAPE": true
+  },
+  "laws": {
+    "CERTIFIED": 0,
+    "PROMOTE": 0,
+    "TIP_CLIMB": "HOLD",
+    "SOURCE_WIRED_NE_RUNTIME_REACHED": true,
+    "NOT_RUN_NE_PASS": true
+  }
+}

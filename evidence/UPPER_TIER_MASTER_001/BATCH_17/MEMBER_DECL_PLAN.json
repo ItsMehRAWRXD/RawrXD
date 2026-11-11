@@ -1,0 +1,331 @@
+{
+  "asof": "2026-11-11T17:39:00Z",
+  "batch": "BATCH_17",
+  "builder": "63513ece",
+  "assist": "read_only_member_decl_plan",
+  "certified": 0,
+  "promote": 0,
+  "tip_climb": "HOLD",
+  "exe": "ABSENT",
+  "inputs": [
+    "ERROR_FREQ_B17_02.txt",
+    "err_settings.txt",
+    "err_themes.txt",
+    "err_termtabs.txt",
+    "err_memview.txt",
+    "err_problems.txt",
+    "rebuild_b17_02.log",
+    "F:/rawrxd/src/win32app/Win32IDE.h"
+  ],
+  "parent_already_added": [
+    {
+      "name": "AppearanceSettings",
+      "kind": "nested_struct",
+      "header": "Win32IDE.h",
+      "approx_line": 675,
+      "fields_from_cpp_usage": [
+        "themeName:std::string",
+        "uiScale:float",
+        "fontFamily:std::string",
+        "editorFontSizePt:int",
+        "ligatures:bool",
+        "tabSize:int",
+        "insertSpaces:bool"
+      ],
+      "action": "DO_NOT_READD"
+    },
+    {
+      "name": "m_appearance",
+      "kind": "member",
+      "type": "AppearanceSettings",
+      "approx_line": 711,
+      "action": "DO_NOT_READD"
+    }
+  ],
+  "already_declared": [
+    {
+      "name": "OutputSeverity",
+      "kind": "nested_enum_class",
+      "approx_line": 397,
+      "enumerators": ["Debug", "Info", "Warning", "Error"],
+      "action": "DO_NOT_READD",
+      "err_cascade_note": "C2653/C2065 in Settings/Themes/Problems/Annotation often cascade"
+    },
+    {
+      "name": "appendToOutput",
+      "kind": "method",
+      "approx_line": 1053,
+      "signature": "void appendToOutput(const std::string& text, const std::string& tabName = \"General\", OutputSeverity severity = OutputSeverity::Info)",
+      "action": "DO_NOT_READD"
+    },
+    {
+      "name": "IDESettings",
+      "kind": "nested_struct",
+      "approx_line": 646,
+      "action": "DO_NOT_READD"
+    },
+    {
+      "name": "m_settings",
+      "kind": "member",
+      "type": "IDESettings",
+      "approx_line": 710,
+      "storage": "non_static_instance_member",
+      "action": "DO_NOT_OUT_OF_LINE_DEFINE",
+      "c2761_note": "err_settings C2761 if Win32IDE::IDESettings Win32IDE::m_settings appears in .cpp"
+    },
+    {
+      "name": "loadSettings",
+      "kind": "method",
+      "approx_line": 712,
+      "signature": "void loadSettings()",
+      "action": "VERIFY_PRESENT_THEN_SKIP",
+      "log_note": "rebuild C2039 may be stale/cascade vs current header"
+    },
+    {
+      "name": "saveSettings",
+      "kind": "method",
+      "approx_line": 713,
+      "signature": "void saveSettings()",
+      "action": "VERIFY_PRESENT_THEN_SKIP"
+    },
+    {
+      "name": "IDETheme",
+      "kind": "freestanding_struct",
+      "approx_line": 369,
+      "action": "DO_NOT_READD"
+    },
+    {
+      "name": "m_currentTheme",
+      "kind": "member",
+      "type": "IDETheme",
+      "approx_line": 2031,
+      "action": "DO_NOT_READD"
+    },
+    {
+      "name": "m_themes",
+      "kind": "member",
+      "type": "std::map<std::string, IDETheme>",
+      "approx_line": 2032,
+      "action": "DO_NOT_READD"
+    },
+    {
+      "name": "applyTheme",
+      "kind": "method_zero_arg",
+      "approx_line": 1033,
+      "signature": "void applyTheme()",
+      "defined_in": "Win32IDE.cpp",
+      "action": "KEEP_AND_ADD_STRING_OVERLOAD"
+    },
+    {
+      "name": "m_annotationOverlay",
+      "kind": "member",
+      "type": "std::unique_ptr<RawrXD::UI::AnnotationOverlay>",
+      "approx_line": 2519,
+      "action": "DO_NOT_READD"
+    },
+    {
+      "name": "initAnnotationOverlay",
+      "kind": "method",
+      "approx_line": 1150,
+      "signature": "void initAnnotationOverlay()",
+      "action": "DO_NOT_READD"
+    },
+    {
+      "name": "showAnnotationOverlay",
+      "kind": "method",
+      "approx_line": 1151,
+      "action": "DO_NOT_READD"
+    },
+    {
+      "name": "hideAnnotationOverlay",
+      "kind": "method",
+      "approx_line": 1152,
+      "action": "DO_NOT_READD"
+    },
+    {
+      "name": "isAnnotationOverlayVisible",
+      "kind": "method",
+      "approx_line": 1153,
+      "signature": "bool isAnnotationOverlayVisible() const",
+      "action": "DO_NOT_READD"
+    },
+    {
+      "name": "addAnnotationOverlayItem",
+      "kind": "method",
+      "approx_line": 1154,
+      "signature": "void addAnnotationOverlayItem(int line, const std::string& message, OutputSeverity severity)",
+      "action": "DO_NOT_READD"
+    },
+    {
+      "name": "m_hwndProblemsPanel",
+      "kind": "member",
+      "type": "HWND",
+      "approx_line": 2661,
+      "action": "DO_NOT_READD"
+    },
+    {
+      "name": "clearProblems",
+      "kind": "method",
+      "approx_line": 2945,
+      "signature": "void clearProblems()",
+      "action": "DO_NOT_READD"
+    },
+    {
+      "name": "addProblem_header_form",
+      "kind": "method",
+      "approx_line": 2944,
+      "signature": "void addProblem(const std::string& file, int line, int col, const std::string& msg, int severity)",
+      "action": "KEEP_FOR_addProblemPublic",
+      "mismatch": "ProblemsPanel.cpp defines different arity/types"
+    },
+    {
+      "name": "m_hwndMain",
+      "kind": "member",
+      "approx_line": 1937,
+      "action": "DO_NOT_READD"
+    },
+    {
+      "name": "m_hInstance",
+      "kind": "member",
+      "approx_line": 1936,
+      "action": "DO_NOT_READD"
+    },
+    {
+      "name": "m_hwndEditor",
+      "kind": "member",
+      "approx_line": 677,
+      "action": "DO_NOT_READD"
+    },
+    {
+      "name": "m_terminalTabs",
+      "kind": "member",
+      "approx_line": 2689,
+      "action": "DO_NOT_READD"
+    },
+    {
+      "name": "IDC_TERMTAB_FIRST",
+      "kind": "macro",
+      "approx_line": 53,
+      "value": 9310,
+      "action": "DO_NOT_READD",
+      "err_note": "undeclared in err_termtabs => include/parse cascade"
+    }
+  ],
+  "must_add_declarations": [
+    {
+      "priority": 1,
+      "name": "initThemes",
+      "tu": "Win32IDE_Themes.cpp",
+      "usage_line": 91,
+      "suggested_signature": "void initThemes();",
+      "already_declared_elsewhere": false,
+      "depends_on": ["m_currentTheme", "m_appearance", "m_themes", "appendToOutput", "OutputSeverity"]
+    },
+    {
+      "priority": 1,
+      "name": "applyTheme_string",
+      "tu": "Win32IDE_Themes.cpp",
+      "usage_line": 122,
+      "suggested_signature": "void applyTheme(const std::string& themeName);",
+      "already_declared_elsewhere": "partial_zero_arg_only",
+      "conflict": "C2511 vs existing void applyTheme()",
+      "resolution": "add_overload_keep_zero_arg"
+    },
+    {
+      "priority": 1,
+      "name": "createProblemsPanel",
+      "tu": "Win32IDE_ProblemsPanel.cpp",
+      "usage_line": 52,
+      "suggested_signature": "void createProblemsPanel();",
+      "already_declared_elsewhere": false,
+      "nearby": "m_hwndProblemsPanel / updateProblemsPanel"
+    },
+    {
+      "priority": 1,
+      "name": "addProblem_problems_panel_form",
+      "tu": "Win32IDE_ProblemsPanel.cpp",
+      "usage_line": 87,
+      "suggested_signature": "void addProblem(const std::string& file, int line, const std::string& message, OutputSeverity severity);",
+      "already_declared_elsewhere": "different_signature_at_L2944",
+      "resolution_options": [
+        "add_overload_matching_cpp",
+        "change_cpp_to_match_header_five_arg_int_severity"
+      ],
+      "error": "C2511"
+    }
+  ],
+  "non_member_blockers": [
+    {
+      "priority": 1,
+      "id": "memview_namespace_typo",
+      "file": "Win32IDE_MemoryView.cpp",
+      "line": 30,
+      "current": "namespace Raw rXD {",
+      "fix": "namespace RawrXD {",
+      "cascades": ["g_memoryViewer", "g_viewerMutex", "MemoryViewer", "RawrXD"],
+      "win32ide_h_change": false
+    },
+    {
+      "priority": 2,
+      "id": "termtabs_richedit_chargange",
+      "file": "Win32IDE_TerminalTabs.cpp",
+      "symbols": ["CHARRANGE", "CHARRANGEA", "TerminalReaderThread"],
+      "note": "file-local thread + richedit types; not Win32IDE members",
+      "win32ide_h_change": false
+    },
+    {
+      "priority": 2,
+      "id": "annotation_item_rect_vs_screenRect",
+      "file": "AnnotationOverlay.cpp / AnnotationOverlay.h",
+      "header_field": "screenRect",
+      "log_field": "rect",
+      "current_cpp_uses": "screenRect",
+      "action": "verify_stale_log_or_rename_remaining_rect",
+      "win32ide_h_change": false
+    },
+    {
+      "priority": 2,
+      "id": "annotation_m_agentBridgeReady_attr",
+      "file": "AnnotationOverlay.h",
+      "owner_class": "RawrXD::UI::AnnotationOverlay",
+      "approx_line": 145,
+      "log_error": "C2039 not a member of Win32IDE",
+      "action": "treat_as_cascade_unless_repro",
+      "win32ide_h_change": false
+    },
+    {
+      "priority": 2,
+      "id": "settings_no_out_of_line_m_settings",
+      "file": "Win32IDE_Settings.cpp",
+      "action": "ensure_no_Win32IDE::IDESettings_Win32IDE::m_settings_definition",
+      "error_if_present": "C2761"
+    }
+  ],
+  "secondary_missing_methods_defer": [
+    {"tu": "Win32IDE_Project.cpp", "names": ["addWorkspaceRoot", "removeWorkspaceRoot", "listWorkspaceRoots"]},
+    {"tu": "Win32IDE_CompilerPanel.cpp", "names": ["ShowCompilerOutput", "navigateToError"]},
+    {"tu": "Win32IDE_Git.cpp", "names": ["gitStage", "gitBranch", "gitStash", "gitCherryPick", "gitStatus"]},
+    {"tu": "Win32IDE_MonacoThemes.cpp", "names": ["loadMonacoThemes"]},
+    {"tu": "Win32IDE_ShortcutEditor.cpp", "names": ["showShortcutEditor"]},
+    {"tu": "Win32IDE_StatusBarActions.cpp", "names": ["initStatusBar", "updateStatusBar"], "note": "grep_existing_status_bar_apis_before_add"},
+    {"tu": "Win32IDE_SettingsGUI.cpp", "names": ["showSettingsGUI"], "note": "vs showSettingsDialog"},
+    {"tu": "Win32IDE_CallStackSymbols.cpp", "names": ["cmdCallStackCapture", "cmdCallStackShowDialog", "cmdCallStackCopy", "cmdCallStackResolve"]},
+    {"tu": "Win32IDE_DebugWatchFormat.cpp", "names": ["cmdDbgWatchShow", "cmdDbgWatchAdd", "cmdDbgWatchFormatHex", "cmdDbgWatchFormatDec", "cmdDbgWatchFormatBin", "cmdDbgWatchFormatStruct", "cmdDbgWatchClear"]},
+    {"tu": "Win32IDE_DAPServer.cpp", "names": ["evaluateWatchExpression"]}
+  ],
+  "minimal_header_patch_sketch": [
+    "void initThemes();",
+    "void applyTheme(const std::string& themeName);",
+    "void createProblemsPanel();",
+    "void addProblem(const std::string& file, int line, const std::string& message, OutputSeverity severity); // optional overload"
+  ],
+  "disposition": {
+    "plan_only": 1,
+    "source_edit_by_assist": 0,
+    "cmake_edit_by_assist": 0,
+    "build_run_by_assist": 0,
+    "certified": 0,
+    "promote": 0,
+    "claim_of_fix": false
+  }
+}

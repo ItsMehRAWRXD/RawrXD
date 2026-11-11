@@ -1,0 +1,290 @@
+{
+  "audit_id": "UPPER_TIER_MASTER_001/BATCH_24_AUDIT/EDITOR_DAILYDRIVER_GAP_MATRIX",
+  "asof_utc": "2026-11-11T17:41:00Z",
+  "mode": "READ_ONLY",
+  "scope": "READ_ONLY inventory of editor completeness, workspace persistence, accessibility, themes, performance for Upper-Tier Batch 24 (daily-driver acceptance prep)",
+  "primary_tree": "F:\\rawrxd",
+  "master_plan_section": 7,
+  "win32ide_edits": "NONE",
+  "native_rebuild": "NOT_PERFORMED",
+  "estimates_unchanged": true,
+  "tracker_estimates_cited": {
+    "traditional_ide_parity_pct": 63,
+    "engineering_completeness_pct": 82,
+    "release_readiness_pct": 58,
+    "ai_ide_parity_pct": 69
+  },
+  "batch": {
+    "id": 24,
+    "workstreams": [
+      "Editor completeness",
+      "Workspace persistence",
+      "Accessibility",
+      "Themes",
+      "Performance"
+    ],
+    "required_milestone": "Daily-driver acceptance",
+    "depends_on": "Batch 17 native build unblocked (G1)"
+  },
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "UPPER_TIER": 0,
+  "law": {
+    "SOURCE_WIRED_NEQ_RUNTIME_REACHED": true,
+    "NOT_RUN_NEQ_PASS": true,
+    "NO_INVENT_PASS": true,
+    "HISTORICAL_SEAL_NEQ_TIP_PROMOTE": true,
+    "SLIM_A4F_NEQ_FULL_FEATURE_DAILY_DRIVER": true,
+    "build_ide_bin_alt_neq_batch17_release_seal": true
+  },
+  "controlling_blockers": [
+    {
+      "id": "G1_NATIVE_LINK",
+      "status": "FAIL",
+      "note": "RawrXD-Win32IDE-Native.exe ABSENT under build_win32ide/Release; Batch 24 product-path runtime acceptance blocked",
+      "observed_alt": "build_ide\\bin\\RawrXD-Win32IDE-Native.exe PRESENT (1825280 bytes, 2026-11-10T15:23:18 local) — not Batch-17 Release link seal",
+      "evidence": "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\BATCH_17\\G1_HANDOFF.txt"
+    },
+    {
+      "id": "BATCH17_PREREQ",
+      "status": "OPEN",
+      "note": "Immediate priority remains Batch 17 restore full native build before measurable Batch 24 daily-driver acceptance"
+    }
+  ],
+  "tree_delta": {
+    "F_build_win32ide_native_exe": "ABSENT",
+    "F_build_ide_bin_native_exe": "PRESENT_ALT_NOT_SEAL",
+    "F_applyTheme_named": "Win32IDE_Themes.cpp — editor EM_SETBKGNDCOLOR + InvalidateRect only",
+    "F_applyTheme_brush": "Win32IDE.cpp applyTheme() recreates m_backgroundBrush; lifecycle handleThemeControlColor present",
+    "F_MonacoThemes": "loadMonacoThemes empty body",
+    "F_IOCPFileWatcher": "log-only init/start/stop stubs",
+    "F_PerfTelemetry": "MessageBox with Count/Min/Max/Mean cycles all 0",
+    "F_Tier3Cosmetics_cpp": "ABSENT (call sites in Core; CodeActions cites Win32IDE_Tier3Cosmetics.cpp)",
+    "F_IAccessible_UIA": "NO matches under src/win32app",
+    "note": "Historical slim A4F and candidate theme/dock seals are cited only; not tip absorb; this audit NOT_RUN on tip binary."
+  },
+  "prior_runtime_authority_not_revalidated_this_audit": [
+    {
+      "id": "DAILY_DRIVER_CLOSE_001",
+      "disposition": "SLIM_DAILY_DRIVER_ACCEPTANCE=PASS; FULL_FEATURE_DAILY_DRIVER=FAIL; PROMOTE=0 CERTIFIED=0",
+      "path": "F:\\rawrxd\\evidence\\DAILY_DRIVER_CLOSE_001\\DAILY_DRIVER_FREEZE.md",
+      "this_audit": "NOT_RUN — sealed slim SHA A4F083DF cited only; ≠ tip promote"
+    },
+    {
+      "id": "G01_G12_MATRIX",
+      "disposition": "PASS=0 FAIL=0 NOT_VERIFIED=12 on tip G D56FE6DD",
+      "path": "F:\\rawrxd\\evidence\\IDE_REPAIR_CANDIDATE_001\\FINALIZATION_CHECKLIST_001\\G01_G12_MATRIX.txt",
+      "this_audit": "NOT_RUN — checklist cited; no tip remasure"
+    },
+    {
+      "id": "DAILY_DRIVER_THEME_DOCK_SEAL",
+      "disposition": "SOURCE fixes on SHA 74AA; PROCESS_ALIVE_8S=False; PROMOTE=0",
+      "path": "F:\\rawrxd\\evidence\\IDE_REPAIR_CANDIDATE_001\\DAILY_DRIVER_THEME_DOCK_SEAL.txt",
+      "this_audit": "NOT_RUN — PRESENT_SOURCE_FIX != RUNTIME_ACCEPTED"
+    },
+    {
+      "id": "editor_focus_runtime_20261102",
+      "disposition": "EDITOR_PHYSICAL_FOCUS=NOT_VERIFIED_OVERLAY_INTERCEPTED",
+      "path": "F:\\rawrxd\\evidence\\editor_focus_runtime_20261102.md"
+    },
+    {
+      "id": "RAWRXD_DAILY_DRIVER_DOCK_001",
+      "disposition": "Historical dock/PowerShell smoke on SHA 8F2F78F3…; different binary",
+      "path": "F:\\rawrxd\\evidence\\RAWRXD_DAILY_DRIVER_DOCK_001.md"
+    }
+  ],
+  "capabilities": [
+    {
+      "cluster": "editor_completeness",
+      "capability": "core_editing_open_save_tabs_undo",
+      "path": "F:\\rawrxd\\src\\win32app\\Win32IDE_FileOps.cpp; Win32IDE_Commands.cpp; Win32IDE.cpp; Win32IDE_Session.cpp; LinkGapHelpers (findDocumentTab/addDocumentTab)",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "Open/save/save-as and document buffer paths are SOURCE_WIRED on F.",
+        "Tab helpers historically gapped (findTabByPath C3861 in G1_HANDOFF); decls/helpers present now but tip link NOT proven.",
+        "Split editor groups surface thinner than VS Code editor-group model — Session/Core tab APIs exist; split-group E2E NOT_RUN.",
+        "This audit did not execute open/save/undo on tip Native EXE (ABSENT under build_win32ide/Release) → runtime_reached=0."
+      ]
+    },
+    {
+      "cluster": "editor_completeness",
+      "capability": "find_replace_regex_workspace_search",
+      "path": "F:\\rawrxd\\src\\win32app\\Win32IDE_SearchPanel.cpp; Win32IDE_Commands.cpp",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "SearchPanel declares plain+regex find-in-files with ReplaceAll/filters (std::regex ECMAScript).",
+        "Product E2E replace-across-files on tip binary NOT_RUN.",
+        "No Batch-24 acceptance receipt binding SearchPanel to current tip SHA."
+      ]
+    },
+    {
+      "cluster": "editor_completeness",
+      "capability": "multi_cursor_and_column_selection",
+      "path": "F:\\rawrxd\\src\\win32app\\Win32IDE_MultiCursor.cpp; Win32IDE_Types.h",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "MultiCursorEngineState implements Alt+Click/Ctrl+D/Ctrl+Alt+Up-Down/Ctrl+Shift+L/Esc sync typing claims in source.",
+        "No rectangular/column-selection implementation hits found under win32app Win32IDE* this audit.",
+        "Runtime multi-caret exercise on tip EXE NOT_RUN."
+      ]
+    },
+    {
+      "cluster": "editor_completeness",
+      "capability": "folding_brackets_indent_format",
+      "path": "F:\\rawrxd\\src\\win32app\\Win32IDE_Types.h (foldedRegions); Win32IDE_Core.cpp initTier3Cosmetics call sites; Win32IDE_CodeActions.cpp cite",
+      "source_wired": 0,
+      "runtime_reached": 0,
+      "gaps": [
+        "foldedRegions field exists on document type; no toggleFold/foldRegion implementation usage beyond the field.",
+        "initTier3Cosmetics/initTier3Polish/handleTier3CosmeticsTimer called from Core — Win32IDE_Tier3Cosmetics.cpp ABSENT on F (CodeActions comment expects it).",
+        "Bracket matching / auto-indent / smart format as Tier-3 cosmetics are call-wired without implementation TU → SOURCE_WIRED=0 for this cluster.",
+        "runtime_reached=0 (NOT_RUN)."
+      ]
+    },
+    {
+      "cluster": "editor_completeness",
+      "capability": "syntax_and_semantic_highlight",
+      "path": "F:\\rawrxd\\src\\win32app\\Win32IDE_SyntaxHighlight.cpp; Win32IDE_SemanticTokens.cpp; Win32IDE_SemanticIndex.cpp; Win32IDE_LSPClient.cpp",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "Syntax + semantic token/index sources present; SemanticIndex contains placeholder current_file.cpp residual.",
+        "LSP/semantic tip runtime acceptance blocked on missing Batch-17 Release Native EXE.",
+        "This audit NOT_RUN."
+      ]
+    },
+    {
+      "cluster": "editor_completeness",
+      "capability": "navigation_chrome_minimap_outline_palette_snippets",
+      "path": "F:\\rawrxd\\src\\win32app\\Win32IDE_Minimap.cpp; Win32IDE_Breadcrumbs.cpp; Win32IDE_OutlinePanel.cpp; Win32IDE_CommandPalette.cpp; Win32IDE_ShortcutEditor.cpp; Win32IDE_SnippetEngine.cpp",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "Minimap/Breadcrumbs/Outline/CommandPalette/ShortcutEditor/SnippetEngine TUs present on F.",
+        "Bookmark/navigation-history completeness not sealed as Batch-24 product path.",
+        "No tip HWND/visual acceptance this audit (NOT_RUN)."
+      ]
+    },
+    {
+      "cluster": "editor_completeness",
+      "capability": "large_file_encoding_line_endings",
+      "path": "F:\\rawrxd\\src\\win32app\\Win32IDE_FileOps.cpp (UTF-16 SETTEXTEX / encoding paths); Core Tier-3 encoding comments",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "FileOps has explicit Unicode/UTF-16 editor load/save care (EM_GETTEXTEX CP 1200).",
+        "Large-file performance budget and line-ending preservation suite NOT measured on tip.",
+        "runtime_reached=0."
+      ]
+    },
+    {
+      "cluster": "workspace_persistence",
+      "capability": "external_watch_autosave_crash_recovery",
+      "path": "F:\\rawrxd\\src\\win32app\\Win32IDE_IOCPFileWatcher.cpp; Win32IDE_FileOps.cpp (m_fileSafetyAutosave*); Win32IDE_Core.cpp editor.autoSave; AgenticLoopBridge SNAP recovery",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "IOCPFileWatcher init/start/stop are log-only stubs (no IOCP/ReadDirectoryChangesW body in inspected TU).",
+        "editor.autoSave config + file-safety autosave guards SOURCE_WIRED; tip crash/unsaved recovery E2E NOT_RUN.",
+        "AgenticLoopBridge StartupRecovery is agent SNAP path — not editor unsaved-buffer crash recovery certification.",
+        "host_persistence_test.cpp is Extension host notepad placeholder — not IDE workspace persistence."
+      ]
+    },
+    {
+      "cluster": "workspace_persistence",
+      "capability": "workspace_session_and_layout_persistence",
+      "path": "F:\\rawrxd\\src\\win32app\\Win32IDE_FileOps.cpp saveIdeSession/loadIdeSession; Win32IDE_lifecycle.cpp; Win32IDE_Session.cpp; NativeProfilePath.h",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "ide_session.json persists active doc buffers (modified text) + chat sessions/checkpoints atomically.",
+        "G021 historical: saveIdeSession UTF-8 type_error.316 → abort 0xC0000409; sanitize fallback now writes documents=[] stub on type_error — fail-soft ≠ full persist PASS.",
+        "Session JSON does not serialize dock/sidebar/panel visibility, split layout geometry, or theme as inspected — G11 panel persistence still NOT_VERIFIED on tip G matrix.",
+        "loadIdeSession deferred past WM_CREATE for crash avoidance; tip restart restore NOT_RUN this audit.",
+        "Slim A4F freeze ≠ full-feature workspace restore certification."
+      ]
+    },
+    {
+      "cluster": "accessibility",
+      "capability": "keyboard_focus_and_screen_reader",
+      "path": "F:\\rawrxd\\src\\win32app\\Win32IDE.cpp / Commands / CommandPalette SetFocus paths; editor_focus_runtime_20261102.md; G12 matrix",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "Keyboard SetFocus / focus-restoration source paths exist; no IAccessible / UIAutomation / WM_GETOBJECT / NotifyWinEvent matches under src/win32app this audit.",
+        "Screen-reader support = ABSENT at API level (claim gap vs §7 requirement).",
+        "G12=NOT_VERIFIED on tip G; 2026-11-02 focus probe EDITOR_PHYSICAL_FOCUS=NOT_VERIFIED_OVERLAY_INTERCEPTED.",
+        "This audit NOT_RUN focus traversal editor/chat/problems/terminal."
+      ]
+    },
+    {
+      "cluster": "themes",
+      "capability": "theme_propagation_brush_recreate_dpi",
+      "path": "F:\\rawrxd\\src\\win32app\\Win32IDE_Themes.cpp; Win32IDE.cpp applyTheme(); Win32IDE_lifecycle.cpp handleThemeControlColor; Win32IDE_MonacoThemes.cpp; Core WM_DPICHANGED references",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "Dual applyTheme paths: named Themes.cpp (editor colors) vs Win32IDE.cpp brush recreate + lifecycle CTLCOLOR helper.",
+        "loadMonacoThemes() empty body — Monaco-compatible theme table not populated.",
+        "G01–G03/G07–G09 theme/DPI cells NOT_VERIFIED on tip G; theme repair SHA 37E64080 binary ABSENT in G matrix notes.",
+        "Historical 9FDE/74AA theme-dock seals ≠ tip CERTIFIED; DAILY_DRIVER_THEME_DOCK_SEAL PROCESS_ALIVE_8S=False.",
+        "High-DPI / mixed-DPI / multi-monitor acceptance NOT_RUN this audit."
+      ]
+    },
+    {
+      "cluster": "themes",
+      "capability": "dock_layout_panels_chrome",
+      "path": "F:\\rawrxd\\src\\win32app\\Win32IDE_ProblemsPanel.cpp; Win32IDE_PowerShellPanel.cpp; Win32IDE_TerminalTabs.cpp; Win32IDE_ChatWindow.cpp; Win32TerminalManager.*",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "Bottom dock / Problems / PowerShell / Terminal tabs / Chat panel sources present.",
+        "G04–G06/G10 four-panel+dock+Problems click-to-line NOT_VERIFIED on tip G; F6E6 17/17 and 9FDE items are historical other-SHA only.",
+        "No white/fallback dark-mode surface matrix on current tip (NOT_RUN).",
+        "Reliable WM_CLOSE/reopen layout on tip blocked by missing build_win32ide Native EXE."
+      ]
+    },
+    {
+      "cluster": "performance",
+      "capability": "editor_ui_performance_telemetry",
+      "path": "F:\\rawrxd\\src\\win32app\\Win32IDE_PerfTelemetry.cpp; Win32IDE_IOCPFileWatcher.cpp; §11 Performance (startup/indexing)",
+      "source_wired": 1,
+      "runtime_reached": 0,
+      "gaps": [
+        "PerfTelemetry show report hardcodes Count/Min/Max/Mean=0 — invent-thin display, not measured counters.",
+        "IOCPFileWatcher claims 'Indexing/model loading don't block UI' but body is log stubs — UI-thread non-blocking not proven.",
+        "Large-repo indexing / startup latency / large-file editor perf suite NOT_RUN.",
+        "No Batch-24 PERFORMANCE_PASS artifact generated this audit (NOT_RUN ≠ PASS)."
+      ]
+    }
+  ],
+  "summary_counts": {
+    "capabilities_inventoried": 13,
+    "source_wired_1": 12,
+    "source_wired_0": 1,
+    "runtime_reached_1": 0,
+    "runtime_reached_0": 13,
+    "CERTIFIED": 0,
+    "PROMOTE": 0
+  },
+  "batch_24_prep_blockers": [
+    "Tip Batch-17 Release Native EXE absent — all runtime cells blocked.",
+    "Win32IDE_Tier3Cosmetics.cpp missing while Core calls initTier3Cosmetics — fold/bracket/indent cosmetics SOURCE_WIRED=0.",
+    "No UIA/IAccessible screen-reader surface under win32app.",
+    "Workspace session persists docs+chat; dock/layout/theme restore incomplete vs G11 obligation.",
+    "PerfTelemetry + IOCPFileWatcher are invent-thin / log stubs.",
+    "Do not promote slim A4F or historical 9FDE/74AA/F6E6 seals to tip CERTIFIED.",
+    "build_ide\\bin alt EXE PRESENT ≠ Batch-17 Release seal."
+  ],
+  "next_executable_gates_not_run": [
+    "Batch 17 clean link of RawrXD-Win32IDE-Native.exe under build_win32ide/Release",
+    "Remeasure G01–G12 on that tip SHA (theme/dock/focus/persist) with PROMOTE=0",
+    "Land or explicitly HOLD Tier3Cosmetics TU (fold/bracket/indent)",
+    "Decide screen-reader scope: implement MSAA/UIA vs document OUT_OF_SCOPE for daily-driver min",
+    "Replace PerfTelemetry zero-report with real counters; prove large-file + non-blocking index path"
+  ]
+}

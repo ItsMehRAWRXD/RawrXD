@@ -1,0 +1,342 @@
+{
+  "audit_id": "UPPER_TIER_MASTER_001_BATCH_19_AUDIT",
+  "title": "Inference gap matrix — Upper-Tier Batch 19 (Deep2 attention/token/single/multi/numerical)",
+  "scope_primary": "F:\\rawrxd",
+  "mode": "READ_ONLY",
+  "audited_at": "2026-11-11T17:38:00Z",
+  "win32ide_edited": 0,
+  "batch17_build_touched": 0,
+  "sealed_receipts_rewritten": 0,
+  "laws": {
+    "CERTIFIED": 0,
+    "PROMOTE": 0,
+    "UPPER_TIER": 0,
+    "TIP_CLIMB": "HOLD",
+    "STUB_ACCEPTANCE": "FORBIDDEN",
+    "SOURCE_WIRED_NE_RUNTIME_REACHED": true,
+    "RUNTIME_REACHED_NE_CERTIFIED": true,
+    "NOT_RUN_NE_PASS": true,
+    "IN_PROGRESS_NE_PASS": true,
+    "DEEP2_RUNTIME_REACHED_NE_CERTIFIED": true,
+    "MUTEX_SERIALIZED_MULTI_NE_TRUE_PARALLEL": true,
+    "N_RECEIPT_PASS_NE_P13_CLOSED": true,
+    "NO_INVENT_PASS": true,
+    "NO_RAISE_TRACKER_PCT": true
+  },
+  "estimates_unchanged": {
+    "note": "Cited from UPPER_TIER_MASTER_001/TRACKER.json; this audit does not raise %",
+    "engineering_completeness_pct": 82,
+    "release_readiness_pct": 58,
+    "ai_ide_parity_pct": 69,
+    "traditional_ide_parity_pct": 63,
+    "aggregate_decode_milestone_completion_estimate_pct": 84
+  },
+  "batch": {
+    "id": 19,
+    "focus": [
+      "attention",
+      "token",
+      "single",
+      "multi",
+      "numerical"
+    ],
+    "authority_batch": "DEEP2_NATIVE_CORRECTNESS_BATCH_001",
+    "historical_preserve": "AGGREGATE_DECODE_DEEP2_RUNTIME_001",
+    "prior_e2e_ollama_path": "AGGREGATE_DECODE_E2E_001"
+  },
+  "p_mapping": [
+    {
+      "id": "P13",
+      "name": "Deep2 correctness+performance",
+      "source": "IDE_REPAIR_CANDIDATE_001/FINALIZATION_CHECKLIST_001/REMAINING_WORK_17_001.txt",
+      "status_cited": "OPEN",
+      "batch19_relation": "Primary critical-path owner for N01–N05 correctness/performance ladder",
+      "closed_by_this_audit": false,
+      "note": "N01/N02 sealed receipt status=PASS is candidate evidence only; CERTIFIED=0; P13 remains OPEN"
+    },
+    {
+      "id": "P14",
+      "name": "STRATA readiness audit",
+      "source": "IDE_REPAIR_CANDIDATE_001/FINALIZATION_CHECKLIST_001/REMAINING_WORK_17_001.txt",
+      "status_cited": "OPEN",
+      "batch19_relation": "Adjacent dual-engine/STRATA readiness; not satisfied by Deep2 aggregate/N0x receipts",
+      "closed_by_this_audit": false,
+      "note": "STRATA pilot receipts elsewhere ≠ IDE E2E; out of Deep2 N01–N05 closure set"
+    }
+  ],
+  "controlling_blockers": [
+    {
+      "id": "N03_SESSION_ISOLATION_FAIL",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "note": "N03 RUNTIME_REACHED via RUN.txt but SESSION_ISOLATION_PASS=0 (OUTPUTS_OK=0; TOKENS_B empty; concurrent engine B hit B3_ABORT 0xC0000005). RECEIPT.json still absent. FAIL != PASS; IN_PROGRESS != PASS",
+      "evidence": [
+        "F:\\rawrxd\\evidence\\DEEP2_NATIVE_CORRECTNESS_BATCH_001\\N03_SESSION_ISOLATION\\RUN.txt",
+        "F:\\rawrxd\\evidence\\DEEP2_NATIVE_CORRECTNESS_BATCH_001\\N03_SESSION_ISOLATION\\BUILD_LOG2.txt",
+        "F:\\rawrxd\\evidence\\DEEP2_NATIVE_CORRECTNESS_BATCH_001\\BATCH_PLAN.json"
+      ]
+    },
+    {
+      "id": "N04_TRUE_PARALLEL_OPEN",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "note": "AggregateDecodeDeep2Backend serializes decode via decode_mu_; multi smokes report CONCURRENT=1 / mutex — RUNTIME_REACHED ≠ true parallel aggregate",
+      "evidence": [
+        "F:\\rawrxd\\src\\deep2\\aggregate_decode\\AggregateDecodeDeep2Backend.cpp",
+        "F:\\rawrxd\\evidence\\AGGREGATE_DECODE_DEEP2_RUNTIME_001\\DISPOSITION.json",
+        "F:\\rawrxd\\evidence\\DEEP2_NATIVE_CORRECTNESS_BATCH_001\\N01_CLEAN_TIP_REBUILD\\RECEIPT.json"
+      ]
+    },
+    {
+      "id": "N05_E2E_STRESS_OPEN",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "note": "N05_E2E_STRESS/ receipt directory absent; sustained throughput / stress acceptance NOT_RUN",
+      "evidence": [
+        "F:\\rawrxd\\evidence\\DEEP2_NATIVE_CORRECTNESS_BATCH_001\\BATCH_PLAN.json",
+        "F:\\rawrxd\\evidence\\AGGREGATE_DECODE_DEEP2_RUNTIME_001\\MILESTONE_ACK.json"
+      ]
+    },
+    {
+      "id": "P13_STILL_OPEN",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "note": "Partial N01/N02 candidate PASSes do not close P13 Deep2 correctness+performance"
+    },
+    {
+      "id": "P14_STILL_OPEN",
+      "severity": "MED",
+      "status": "OPEN",
+      "note": "STRATA readiness audit remains OPEN; not rewritten or closed by Batch 19 Deep2 audit"
+    },
+    {
+      "id": "BATCH17_G1_OUT_OF_SCOPE",
+      "severity": "CONTEXT",
+      "status": "NOTED_NOT_FOUGHT",
+      "note": "Upper-Tier Batch 17 native IDE rebuild remains a separate product-path blocker; this audit did not touch Win32IDE or fight Batch17 build. Deep2 aggregate/N0x path is independent headless evidence."
+    }
+  ],
+  "dimensions": [
+    {
+      "id": "N01",
+      "name": "Clean tip rebuild (single+multi Deep2 aggregate smokes)",
+      "maps_to": ["P13", "single", "multi", "token"],
+      "plan_status": "PASS",
+      "receipt_dir": "F:\\rawrxd\\evidence\\DEEP2_NATIVE_CORRECTNESS_BATCH_001\\N01_CLEAN_TIP_REBUILD\\",
+      "receipt_status_cited": "PASS",
+      "source_wired": true,
+      "runtime_reached": true,
+      "product_runtime_pass": false,
+      "certified": 0,
+      "promote": 0,
+      "findings": [
+        "Sealed N01 RECEIPT.json reports LIB/SINGLE/MULTI build exits 0; AGGREGATE_DECODE_USE_DEEP2=1; BACKEND=DEEP2; GENERATED_TOKENS single=8 multi=12.",
+        "Single TPS 0.280010; multi TPS 0.179261; ALL_SESSIONS_WORKED=1; FAIRNESS_RATIO=0.969333; note mutex-serialized multi ≠ true parallel.",
+        "Compared to historical AGGREGATE_DECODE_DEEP2_RUNTIME_001 without overwrite (historical single 0.279799 / multi 0.187053); baseline_only=1; claim_certification=0.",
+        "win32ide_untouched=1 on sealed receipt."
+      ],
+      "gaps": [
+        "RECEIPT status=PASS ≠ CERTIFIED/PROMOTE.",
+        "Does not prove session isolation (N03), MT-safe shared engine (N04), or E2E stress (N05).",
+        "S01_STATUS.json (NOT_VERIFIED @ 17:04Z) is stale relative to sealed N01 @ 17:24Z — coordinator status ≠ receipt authority."
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\evidence\\DEEP2_NATIVE_CORRECTNESS_BATCH_001\\N01_CLEAN_TIP_REBUILD\\RECEIPT.json",
+        "F:\\rawrxd\\evidence\\DEEP2_NATIVE_CORRECTNESS_BATCH_001\\N01_CLEAN_TIP_REBUILD\\SMOKE_SINGLE.txt",
+        "F:\\rawrxd\\evidence\\DEEP2_NATIVE_CORRECTNESS_BATCH_001\\N01_CLEAN_TIP_REBUILD\\SMOKE_MULTI.txt",
+        "F:\\rawrxd\\evidence\\AGGREGATE_DECODE_DEEP2_RUNTIME_001\\GAP_STATUS.json"
+      ],
+      "disposition": "SOURCE_WIRED; RUNTIME_REACHED; RECEIPT_PASS_CITED; CERTIFIED=0; PROMOTE=0"
+    },
+    {
+      "id": "N02",
+      "name": "Numerical correctness (attention geometry/NaN + token/logit)",
+      "maps_to": ["P13", "attention", "token", "numerical"],
+      "plan_status": "PASS",
+      "receipt_dir": "F:\\rawrxd\\evidence\\DEEP2_NATIVE_CORRECTNESS_BATCH_001\\N02_NUMERICAL_CORRECTNESS\\",
+      "receipt_status_cited": "PASS",
+      "source_wired": true,
+      "runtime_reached": true,
+      "product_runtime_pass": false,
+      "certified": 0,
+      "promote": 0,
+      "findings": [
+        "Attention geometry NaN harness exit 0: ATTN_FINITE_VALID=1 ATTN_NAN_REJECTED=1 (ATTN_GEOMETRY_NAN.txt).",
+        "Geometry from N01 smoke: headDim=64 qHeads=32 kvHeads=4; KV layers=22 positions=2048; HOST_Q8_GEMV_NUMERIC_FINITE=1.",
+        "Prefill parity harness verdict PASS: PREFILL_PARITY_MAX_REL=0; TOKEN_ID_MATCH=1 on greedy dual-run (not external oracle promotion).",
+        "Tip deep2_engine_lib advanced during N02 vs sealed N01 lib hash; N01 smokes remain sealed to N01 HASHES."
+      ],
+      "gaps": [
+        "Internal serial vs batched prefill + greedy determinism ≠ external numerical oracle / GPU cert ladder.",
+        "Does not close P13 performance half or N03–N05.",
+        "CERTIFIED=0 PROMOTE=0 TIP_CLIMB=HOLD on sealed receipt."
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\evidence\\DEEP2_NATIVE_CORRECTNESS_BATCH_001\\N02_NUMERICAL_CORRECTNESS\\RECEIPT.json",
+        "F:\\rawrxd\\evidence\\DEEP2_NATIVE_CORRECTNESS_BATCH_001\\N02_NUMERICAL_CORRECTNESS\\ATTN_GEOMETRY_NAN.txt",
+        "F:\\rawrxd\\evidence\\DEEP2_NATIVE_CORRECTNESS_BATCH_001\\N02_NUMERICAL_CORRECTNESS\\TOKEN_LOGIT_COMPARE.txt",
+        "F:\\rawrxd\\evidence\\DEEP2_NATIVE_CORRECTNESS_BATCH_001\\N02_NUMERICAL_CORRECTNESS\\GEOMETRY_FROM_N01_SMOKE.txt"
+      ],
+      "disposition": "SOURCE_WIRED; RUNTIME_REACHED; RECEIPT_PASS_CITED; ORACLE_PROMOTE=0; CERTIFIED=0"
+    },
+    {
+      "id": "N03",
+      "name": "Session isolation",
+      "maps_to": ["P13", "multi", "token"],
+      "plan_status": "IN_PROGRESS",
+      "receipt_dir": "F:\\rawrxd\\evidence\\DEEP2_NATIVE_CORRECTNESS_BATCH_001\\N03_SESSION_ISOLATION\\",
+      "receipt_status_cited": "ABSENT",
+      "source_wired": true,
+      "runtime_reached": true,
+      "product_runtime_pass": false,
+      "session_isolation_pass_cited": 0,
+      "certified": 0,
+      "promote": 0,
+      "findings": [
+        "Harness SOURCE_WIRED: tests/deep2_n03_session_isolation.cpp (two Deep2Engine instances; KV ptr distinctness; concurrent greedy; cancel isolation).",
+        "BUILD_LOG2.txt: N03_BUILD_EXIT=0 → deep2_n03_session_isolation.exe; HASHES/LINKAGE cite EXE SHA256 DE2A3530… and tip lib 1EAD752E…",
+        "RUN.txt RUNTIME_REACHED: KV_PTR DISTINCT=1; CANCEL_ISOLATED=1; CANCEL_A=1 TOKENS_A_AFTER_CANCEL=1 TOKENS_B_ALIVE=8.",
+        "RUN.txt FAIL: SESSION_ISOLATION_PASS=0; OUTPUTS_OK=0; TOKENS_B empty after concurrent phase; engine B shows B3_ABORT forwardLayer exception code=0xC0000005 / FORWARD_FAULT generated=0.",
+        "No RECEIPT.json sealed — plan remains IN_PROGRESS."
+      ],
+      "gaps": [
+        "RUNTIME_REACHED ≠ PASS; SESSION_ISOLATION_PASS=0 cited from RUN.txt.",
+        "Concurrent dual-engine decode not isolation-accepted; Access Violation on peer engine blocks OUTPUTS_OK.",
+        "Shared-engine AggregateDecode mutex path remains a different N04 surface.",
+        "MILESTONE_ACK SESSION_ISOLATION / KV_CACHE_ISOLATION remain unverified for certification."
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\evidence\\DEEP2_NATIVE_CORRECTNESS_BATCH_001\\BATCH_PLAN.json",
+        "F:\\rawrxd\\evidence\\DEEP2_NATIVE_CORRECTNESS_BATCH_001\\N03_SESSION_ISOLATION\\RUN.txt",
+        "F:\\rawrxd\\evidence\\DEEP2_NATIVE_CORRECTNESS_BATCH_001\\N03_SESSION_ISOLATION\\BUILD_LOG2.txt",
+        "F:\\rawrxd\\evidence\\DEEP2_NATIVE_CORRECTNESS_BATCH_001\\N03_SESSION_ISOLATION\\HASHES.txt",
+        "F:\\rawrxd\\tests\\deep2_n03_session_isolation.cpp",
+        "F:\\rawrxd\\evidence\\AGGREGATE_DECODE_DEEP2_RUNTIME_001\\MILESTONE_ACK.json"
+      ],
+      "disposition": "SOURCE_WIRED; RUNTIME_REACHED; SESSION_ISOLATION_PASS=0; RECEIPT_ABSENT; CERTIFIED=0"
+    },
+    {
+      "id": "N04",
+      "name": "Concurrency architecture",
+      "maps_to": ["P13", "multi"],
+      "plan_status": "OPEN",
+      "receipt_dir": "F:\\rawrxd\\evidence\\DEEP2_NATIVE_CORRECTNESS_BATCH_001\\N04_CONCURRENCY_ARCHITECTURE\\",
+      "receipt_status_cited": "ABSENT",
+      "source_wired": "partial",
+      "runtime_reached": false,
+      "product_runtime_pass": false,
+      "certified": 0,
+      "promote": 0,
+      "findings": [
+        "AggregateDecodeDeep2Backend.cpp lock_guard(decode_mu_) around generateStream — SOURCE_WIRED serialization, not MT-safe shared-engine decode.",
+        "Historical + N01 multi dispositions explicitly: mutex / CONCURRENT=1; MUTEX_SERIALIZED_MULTI_NE_TRUE_PARALLEL_GPU_AGGREGATE.",
+        "MILESTONE_ACK NOT_VERIFIED includes TRUE_PARALLEL_DECODE and THREAD_SAFE_SHARED_ENGINE."
+      ],
+      "gaps": [
+        "N04 receipt directory absent — OPEN / NOT_RUN.",
+        "Removing mutex or proving engine-level MT safety is residual optional_next on AGGREGATE_DECODE_DEEP2_RUNTIME_001 DISPOSITION — not claimed done.",
+        "Dual-engine N03 (if later PASSed) would not by itself prove shared-engine parallel aggregate TPS."
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\src\\deep2\\aggregate_decode\\AggregateDecodeDeep2Backend.cpp",
+        "F:\\rawrxd\\src\\deep2\\aggregate_decode\\AggregateDecodeDeep2Backend.hpp",
+        "F:\\rawrxd\\evidence\\AGGREGATE_DECODE_DEEP2_RUNTIME_001\\DISPOSITION.json",
+        "F:\\rawrxd\\evidence\\DEEP2_NATIVE_CORRECTNESS_BATCH_001\\BATCH_PLAN.json"
+      ],
+      "disposition": "SOURCE_PARTIAL_SERIALIZATION; TRUE_PARALLEL=NOT_RUN; CERTIFIED=0"
+    },
+    {
+      "id": "N05",
+      "name": "E2E stress acceptance",
+      "maps_to": ["P13", "single", "multi"],
+      "plan_status": "OPEN",
+      "receipt_dir": "F:\\rawrxd\\evidence\\DEEP2_NATIVE_CORRECTNESS_BATCH_001\\N05_E2E_STRESS\\",
+      "receipt_status_cited": "ABSENT",
+      "source_wired": false,
+      "runtime_reached": false,
+      "product_runtime_pass": false,
+      "certified": 0,
+      "promote": 0,
+      "findings": [
+        "BATCH_PLAN lists N05_E2E_STRESS/ as OPEN.",
+        "MILESTONE_ACK lists SUSTAINED_THROUGHPUT as NOT_VERIFIED.",
+        "Existing single/multi smokes are short GENERATED_TOKENS (8/12) baseline-only — not stress acceptance."
+      ],
+      "gaps": [
+        "No harness receipt directory found this audit.",
+        "NOT_RUN ≠ PASS; no invented stress metrics."
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\evidence\\DEEP2_NATIVE_CORRECTNESS_BATCH_001\\BATCH_PLAN.json",
+        "F:\\rawrxd\\evidence\\AGGREGATE_DECODE_DEEP2_RUNTIME_001\\MILESTONE_ACK.json"
+      ],
+      "disposition": "NOT_RUN; CERTIFIED=0"
+    },
+    {
+      "id": "AGGREGATE_DECODE_HISTORICAL",
+      "name": "Historical Deep2 aggregate decode runtime (preserved)",
+      "maps_to": ["P13", "single", "multi", "token"],
+      "plan_status": "PRESERVE",
+      "receipt_dir": "F:\\rawrxd\\evidence\\AGGREGATE_DECODE_DEEP2_RUNTIME_001\\",
+      "receipt_status_cited": "DEEP2_RUNTIME_REACHED PASS_REPORTED (not full certification)",
+      "source_wired": true,
+      "runtime_reached": true,
+      "product_runtime_pass": false,
+      "certified": 0,
+      "promote": 0,
+      "findings": [
+        "GAP_STATUS/DISPOSITION: deep2_runtime_reached=1; HTTP_fallback=0; stub_tokens=0; single TPS 0.279799; multi TPS 0.187053.",
+        "MILESTONE_ACK: do_not_relabel_as_full_certification=true; next_batch N01–N05; performance_baseline_only.",
+        "AGGREGATE_DECODE_E2E_001 preserved Ollama HTTP path separately; Deep2 residual closed via AGGREGATE_DECODE_DEEP2_RUNTIME_001 citation (not rewritten here)."
+      ],
+      "gaps": [
+        "Historical RUNTIME_REACHED ≠ CERTIFIED.",
+        "SUMMARY notes prior tip rebuild KVCache churn / BuildProjectReferences=false stale-lib risk — addressed as N01 scope, not reopened here."
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\evidence\\AGGREGATE_DECODE_DEEP2_RUNTIME_001\\DISPOSITION.json",
+        "F:\\rawrxd\\evidence\\AGGREGATE_DECODE_DEEP2_RUNTIME_001\\GAP_STATUS.json",
+        "F:\\rawrxd\\evidence\\AGGREGATE_DECODE_DEEP2_RUNTIME_001\\MILESTONE_ACK.json",
+        "F:\\rawrxd\\evidence\\AGGREGATE_DECODE_E2E_001\\DISPOSITION.json"
+      ],
+      "disposition": "PRESERVED_HISTORICAL; RUNTIME_REACHED; CERTIFIED=0; NOT_REWRITTEN"
+    },
+    {
+      "id": "P14_STRATA_READINESS",
+      "name": "P14 STRATA readiness (Batch 19 adjacency)",
+      "maps_to": ["P14"],
+      "plan_status": "OPEN",
+      "receipt_dir": "F:\\rawrxd\\evidence\\IDE_REPAIR_CANDIDATE_001\\FINALIZATION_CHECKLIST_001\\",
+      "receipt_status_cited": "P14=OPEN",
+      "source_wired": "external_to_deep2_n0x",
+      "runtime_reached": "not_assessed_as_batch19_closure",
+      "product_runtime_pass": false,
+      "certified": 0,
+      "promote": 0,
+      "findings": [
+        "REMAINING_WORK_17_001 cites P14=OPEN STRATA readiness audit.",
+        "STRATA pilot / dual_engine materials exist under FINALIZATION_CHECKLIST_001 but law STRATA_GPU_PASS != IDE_E2E_PASS / Issue49."
+      ],
+      "gaps": [
+        "Batch 19 Deep2 N01–N05 do not close P14.",
+        "This audit did not re-run STRATA pilots; no invent PASS."
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\evidence\\IDE_REPAIR_CANDIDATE_001\\FINALIZATION_CHECKLIST_001\\REMAINING_WORK_17_001.txt"
+      ],
+      "disposition": "OPEN; OUT_OF_N0X_CLOSURE; CERTIFIED=0"
+    }
+  ],
+  "rollup": {
+    "items_mapped": ["N01", "N02", "N03", "N04", "N05", "P13", "P14"],
+    "receipt_pass_cited": ["N01", "N02"],
+    "runtime_reached_cited": ["N01", "N02", "N03", "AGGREGATE_DECODE_DEEP2_RUNTIME_001"],
+    "runtime_pass": 0,
+    "not_run_or_open_or_fail": ["N03_FAIL", "N04_OPEN", "N05_OPEN", "P13_OPEN", "P14_OPEN"],
+    "batch19_milestone": "NOT_ACCEPTED",
+    "certified": 0,
+    "promote": 0,
+    "upper_tier": 0,
+    "next_executable_gate": "Fix dual-engine concurrent decode AV (N03 SESSION_ISOLATION_PASS=0) and seal RECEIPT without inventing PASS; then N04 shared-engine mutex residual; then N05 stress — CERTIFIED=0 PROMOTE=0; no Win32IDE / Batch17 fight"
+  }
+}

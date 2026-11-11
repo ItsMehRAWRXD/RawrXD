@@ -1,0 +1,17 @@
+﻿BATCH18_GUI_FOLLOWUP_RECEIPT
+ASOF_UTC=2026-11-11T20:53:18Z
+TIP_SHA=B53884F5E41530708054D4E110260D503AF8A27FDCF6BCF55324E15F687FA3A5
+TIP_SHA_END=B53884F5E41530708054D4E110260D503AF8A27FDCF6BCF55324E15F687FA3A5
+SHA_BOUND=True
+P07=PASS
+P07_NOTE=TAB_COUNT=4 notify_TCN_SELCHANGE panes_vis_observed bodies=1302/1303/1312/1305 cycles=3 maps=tab=0 cur=0 container=True tabs=True terminal=True(0xBD0ED8) output=False(0x460EDC) problems=False(0x1520EF2) debug=False(0x1150F34) | tab=1 cur=1 container=True tabs=True terminal=False(0xBD0ED8) output=True(0x460EDC) problems=False(0x1520EF2) debug=False(0x1150F34) | tab=2 cur=2 container=True tabs=True terminal=False(0xBD0ED8) output=False(0x460EDC) problems=True(0x1520EF2) debug=False(0x1150F34) | tab=3 cur=3 container=True tabs=True terminal=False(0xBD0ED8) output=False(0x460EDC) problems=False(0x1520EF2) debug=True(0x1150F34)
+P08=PASS
+P08_NOTE=drag_observed+session_reload_match H0=344 H1=420 H2=404 HSave=420 HLoad=420
+P08_SESSION_RELOAD=PASS_HEIGHT_MATCH
+P09=PASS
+P09_NOTE=items=3 posted_1399 caret_line=2
+P11=FAIL
+P11_NOTE=UI_ALIVE_AFTER_A_STOP_B but inference_completion_and_stale_fence=NOT_VERIFIED (no token/response proof)
+CERTIFIED=0
+PROMOTE=0
+RUNLOG=F:\rawrxd\evidence\UPPER_TIER_MASTER_001\BATCH_18_AUDIT\RUNTIME_EVIDENCE\gui_followup_20261111-155255.txt

@@ -158,8 +158,8 @@ void Win32IDE::showRenamePreview(const std::string& oldName, const std::string& 
         ListView_InsertItem(m_renamePreview.hwndList, &lvi);
 
         // Line number - use wide string for Unicode build
-        wchar_t lineStr[16];
-        swprintf(lineStr, 16, L"%d", change.line + 1);
+        char lineStr[16];
+        sprintf_s(lineStr, "%d", change.line + 1);
         ListView_SetItemText(m_renamePreview.hwndList, i, 1, lineStr);
 
         // Context with highlighted old → new
@@ -171,7 +171,10 @@ void Win32IDE::showRenamePreview(const std::string& oldName, const std::string& 
             context = context.substr(0, pos) + L"[" + oldTextW + L" → " +
                       newTextW + L"]" + context.substr(pos + oldTextW.size());
         }
-        ListView_SetItemText(m_renamePreview.hwndList, i, 2, (wchar_t*)context.c_str());
+        {
+            std::string contextA(context.begin(), context.end());
+            ListView_SetItemText(m_renamePreview.hwndList, i, 2, const_cast<char*>(contextA.c_str()));
+        }
 
         // Check by default
         if (change.selected)

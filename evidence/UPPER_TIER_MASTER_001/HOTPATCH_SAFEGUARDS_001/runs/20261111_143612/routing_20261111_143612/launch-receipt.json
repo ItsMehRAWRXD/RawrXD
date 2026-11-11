@@ -1,0 +1,14 @@
+{
+    "timestamp":  "2026-11-11T14:36:16.0329091-05:00",
+    "executable":  "F:\\rawrxd\\build_win32ide\\bin\\Release\\RawrXD-Win32IDE-Native.exe",
+    "sha256":  "8BC5BF3ECB399C99DEF7891F1B95FD5FDE3238069850F05AD0D0B31EC8141AC1",
+    "pid":  86984,
+    "alive":  true,
+    "agent_model_routing":  "UNVERIFIED",
+    "ghosttext_routing":  "UNVERIFIED",
+    "cancellation_recovery":  "UNVERIFIED",
+    "PROMOTE":  0,
+    "CERTIFIED":  0,
+    "T25":  "HELD",
+    "ROUTING_E2E":  "NOT_CERTIFIED"
+}

@@ -1,0 +1,54 @@
+﻿2026-11-11T15:50:57.5127777-05:00 TIP_SHA=B53884F5E41530708054D4E110260D503AF8A27FDCF6BCF55324E15F687FA3A5 EXPECTED=B53884F5E41530708054D4E110260D503AF8A27FDCF6BCF55324E15F687FA3A5 MATCH=True
+2026-11-11T15:50:57.6792540-05:00 OLLAMA_UP=1 STATUS=200
+2026-11-11T15:50:58.8034462-05:00 FORCE_OLLAMA_MODEL=n4-tiny-oracle:latest
+2026-11-11T15:50:58.8709084-05:00 PID=89996 RUN_ID=b18_p11_20261111-155057 LOGDIR=F:\rawrxd\evidence\UPPER_TIER_MASTER_001\BATCH_18_AUDIT\RUNTIME_EVIDENCE\p11_run_20261111-155057
+2026-11-11T15:51:00.9654897-05:00 MAIN=0x1E90AC0
+2026-11-11T15:51:02.8218148-05:00 MODEL_COMBO_OK=True COUNT=144
+2026-11-11T15:51:02.8257591-05:00 MODEL_SAMPLE=Cloud models / Kilo / Auto (free) | Local models / Ollama / bigdaddyg-productivity-local:latest | Local models / Ollama / bigdaddyg-productivity-native:latest | Local models / Ollama / bigdaddyglocal:latest | Local models / Ollama / bigdaddygnative:latest | Local models / Ollama / blackgrg26/WORMGPT-14:latest | Local models / Ollama / bluehawana/deepseek-v4-flash:iq2_m | Local models / Ollama / bluehawana/deepseek-v4-flash:iq2_m-ctx128k | Local models / Ollama / deepseek-coder-v2:16b | Local models / Ollama / deepseek-r1:32b | Local models / Ollama / deepseek-r1:70b | Local models / Ollama / deepseek-v4-flash:0731-cloud
+2026-11-11T15:51:02.8346981-05:00 MODEL_SELECTED=Local models / Ollama / n4-tiny-oracle:latest
+2026-11-11T15:51:04.2642125-05:00 CHIN_A=True
+2026-11-11T15:51:04.5997000-05:00 STARTED_A=True
+2026-11-11T15:51:04.8944433-05:00 A_STREAMED_UI=True
+2026-11-11T15:51:06.5306004-05:00 CANCEL_REQ=True CANCEL_ACK=True STALE_EARLY=True
+2026-11-11T15:51:06.5375151-05:00 CHIN_B=True
+2026-11-11T15:51:06.8586373-05:00 STARTED_B=True
+2026-11-11T15:51:07.1252901-05:00 END_B=True
+2026-11-11T15:51:08.4889635-05:00 TOKEN_HIT=True MARKER_B_HIT=True UI_UPDATE=True GEN_TOKENS=True(329) COMPLETE_BUF=True(116) STALE_DROP=True END_B=True RESP_END_B=True ALIVE=True SEND_ATTEMPTS=2 REJECT_BLANK=4 BACKEND_ENDS=2
+2026-11-11T15:51:08.4945624-05:00 CHAT_OUT_LEN=1384 SNIP=Welcome to RawrXD AI Chat!
+
+Select a model and type a message to begin.
+
+AI: Fencing is a sport that requires a lot of skill, strength, and endurance. It is a sport that requires a lot of patience, discipline, and focus. It is a sport that requires a lot of mental toughness, as well. Fencing is a sport that requires a lot of mental toughness, as well.
+
+Fencing is a sport that requires a lot of
+2026-11-11T15:51:16.5276647-05:00 BATCH18_P11_TOKEN_PROBE_RECEIPT
+ASOF_UTC=2026-11-11T20:51:16Z
+TIP_SHA=B53884F5E41530708054D4E110260D503AF8A27FDCF6BCF55324E15F687FA3A5
+TIP_SHA_END=B53884F5E41530708054D4E110260D503AF8A27FDCF6BCF55324E15F687FA3A5
+SHA_BOUND=True
+OLLAMA_UP=1
+MODEL_SELECTED=Local models / Ollama / n4-tiny-oracle:latest
+STARTED_A=True
+CANCEL_REQ=True
+CANCEL_ACK=True
+STARTED_B=True
+TOKEN_HIT=True
+MARKER_B_HIT=True
+UI_UPDATE=True
+GEN_TOKENS=True
+GEN_TOKENS_VALUE=329
+COMPLETE_BUF=True
+COMPLETE_BUF_VALUE=116
+STALE_UI_UPDATE=True
+RESP_END_B=True
+STREAMED_ONLY_NO_GEN_TOKENS=False
+A_STREAMED_UI=True
+INFERENCE_COMPLETION_AND_STALE_FENCE=VERIFIED
+P11=PASS
+P11_NOTE=A_STOP_B fence verified model=Local models / Ollama / n4-tiny-oracle:latest GEN_TOKENS=329 COMPLETE_BUF=116 STALE_DROP=1 tokenHit=True markerB=True
+CERTIFIED=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+RUNLOG=F:\rawrxd\evidence\UPPER_TIER_MASTER_001\BATCH_18_AUDIT\RUNTIME_EVIDENCE\p11_token_probe_20261111-155057.txt
+CHATLOG=F:\rawrxd\evidence\UPPER_TIER_MASTER_001\BATCH_18_AUDIT\RUNTIME_EVIDENCE\p11_run_20261111-155057\chat_runtime.log
+OLLAMA_DEBUG=F:\rawrxd\evidence\UPPER_TIER_MASTER_001\BATCH_18_AUDIT\RUNTIME_EVIDENCE\p11_run_20261111-155057\ollama_debug.log

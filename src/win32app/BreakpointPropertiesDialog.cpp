@@ -113,15 +113,15 @@ void BreakpointPropertiesDialog::InitializeDialog(HWND hwndDlg, BreakpointInfo* 
 
     // Set dialog title
     std::wstring title = L"Breakpoint Properties - " + pbp->fileName + L":" + std::to_wstring(pbp->line);
-    SetWindowText(hwndDlg, title.c_str());
+    SetWindowTextW(hwndDlg, title.c_str());
 
     // Set location text
     std::wstring location = pbp->filePath + L":" + std::to_wstring(pbp->line);
-    SetDlgItemText(hwndDlg, IDC_LOCATION, location.c_str());
+    SetDlgItemTextW(hwndDlg, IDC_LOCATION, location.c_str());
 
     // Set condition
     std::wstring conditionWide(pbp->condition.begin(), pbp->condition.end());
-    SetDlgItemText(hwndDlg, IDC_CONDITION, conditionWide.c_str());
+    SetDlgItemTextW(hwndDlg, IDC_CONDITION, conditionWide.c_str());
 
     // Setup hit condition combo
     HWND hwndHitCond = GetDlgItem(hwndDlg, IDC_HIT_CONDITION);
@@ -164,7 +164,7 @@ void BreakpointPropertiesDialog::SaveChanges(HWND hwndDlg, BreakpointInfo* pbp) 
 
     // Save condition
     wchar_t conditionBuf[256] = {};
-    GetDlgItemText(hwndDlg, IDC_CONDITION, conditionBuf, 256);
+    GetDlgItemTextW(hwndDlg, IDC_CONDITION, conditionBuf, 256);
     pbp->condition = std::string(conditionBuf, conditionBuf + wcslen(conditionBuf));
 
     // Save hit condition

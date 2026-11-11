@@ -1,0 +1,2031 @@
+[TEST] Headless Deep2 Inference
+  Model: F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+  Prompt: The capital of France is
+[Deep2Engine] Initializing production inference engine...
+  Hidden Dim: 4096
+  Num Layers: 32
+  Num Heads: 32
+  Num KV Heads: 32
+  Head Dim: 128
+  Max Seq Len: 0
+  Use ThreadPool: NO
+  Use KV Cache: YES
+  Use RoPE: YES
+[KVCache] Allocating: layers=32 seq=0 kv_heads=32 headDim=128
+[KVCache] Lazy pages: layers=32 page=1 virtualMax=1 heads=32 dim=128
+[KVCache] HOT_BYTES=1048576 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[KVCache] Allocating: layers=32 seq=0 kv_heads=32 headDim=128
+[KVCache] Lazy pages: layers=32 page=1 virtualMax=1 heads=32 dim=128
+[KVCache] HOT_BYTES=1048576 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[flight] Recorder started: F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf_flight.jsonl
+[HotPatcher] Initialized - The Bottle is ready (with safety systems)
+[Deep2Engine] HotPatcher initialized - The Bottle is ready
+[QuantKernelRegistry] Q4_K GEMV=00007FF69A7D24B0 dequant=00007FF69A7D50B0 GetGEMV(12)=00007FF69A7D24B0 match=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 19 GEMV kernels, 19 dequant kernels
+[Deep2Engine] Telemetry controller initialized (PCIe stall + bandwidth + residency)
+[Deep2Engine] ENHANCEMENT STACK: ON
+ELASTIC_DYNAMIC warm=2304MB staged=288MB hot=4608MB la=2 ramAvail=31655MB vram=32479MB L=32 pressure=0
+FREETOKEN_WITNESS_LIVE=1
+FREETOKEN_WITNESS_ACTIVE_ZONES=8
+FREETOKEN_WITNESS_READY_ZONES=0
+FREETOKEN_WITNESS_OVERWRITES=0
+FREETOKEN_WITNESS_HITS=0
+FREETOKEN_WITNESS_MISSES=0
+FREETOKEN_WITNESS_STICK_RPM_0=0
+FREETOKEN_WITNESS_STICK_RPM_1=0
+FUTURE_CONSUMERS=0
+FUTURE_PAGES=0
+FUTURE_POOL_GROWS=0
+FUTURE_GENERATION=0
+FUTURE_GENERATE_BEGIN=0
+FUTURE_CONSUMER_HITS=0
+FUTURE_CONSUMER_MISSES=0
+FUTURE_PREFETCH_HITS=0
+FUTURE_PREFETCH_LATE=0
+FUTURE_STALL_NS=0
+[ElasticResidencyManager] GhostCache enabled: capacity=16384 entries
+[ElasticResidencyManager] Scheduler thread started
+[ElasticResidencyManager] Initialized: warmCompressed=2304 MB, warmStaged=288 MB, hot=4608 MB, lookahead=2
+[Deep2Engine] ElasticResidencyManager DYNAMIC warm=2304 staged=288 hot=4608 la=2
+[Deep2Engine] CycloneScheduler armed for live generate
+[Deep2Engine] Residency telemetry: ENABLED
+[Deep2Engine] Medusa speculative decoding: ENABLED
+[Deep2Engine] NU fused packing: ENABLED
+[Deep2Engine] Warmup scheduler: ENABLED
+[Deep2Engine] Compressed KV cache: ENABLED (Q8_0)
+[Deep2Engine] NVMe streaming: ENABLED
+[Deep2Engine] Sliding window: ENABLED (size=4096)
+[Deep2Engine] Chamber (SM0-DSP) initialized
+[Deep2Engine] Chamber: ENABLED
+[Deep2Engine] PlasmaGovernor initialized
+[Deep2Engine] PlasmaGovernor: ENABLED
+[Deep2Engine] SovereignOutOfCoreRuntime initialized from ExecutionPolicy (ram=42949672960 vram=12884901888)
+[Deep2Engine] SovereignOutOfCoreRuntime: ENABLED
+[MARS] Initialized: GPU0=32.00 GB, GPU1=16.00 GB
+[Deep2Engine] MARS enabled: GPU0=32.00 GB, GPU1=16.00 GB
+[Deep2Engine] Initializing VAL-000 advanced features...
+[Deep2Engine] Medusa decoder initialized (4 heads)
+[Deep2Engine] NU Fused Packer initialized
+[CompressedKVCache] Initialized: 1150 MB compressed (vs 4096 MB F32, 3.6x ratio)
+[Deep2Engine] Compressed KV cache initialized (Q8_0)
+[NVMeStream] Mapped F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf (0.62 GB)
+[NVMeStream] Max resident: 4.00 GB
+[Deep2Engine] NVMe streaming initialized
+[SlidingWindow] Initialized: window=4096, overlap=512, chunk=2048
+[Deep2Engine] Sliding window initialized (size=4096)
+[Deep2Engine] Advanced features initialization complete
+[Deep2Engine] STACK vk=0 mars=1 elastic=1 cyclone=1 medusa=1 nu=1 warmup=1 ckv=1 nvme=1 slide=1 chamber=1 torus=0 plasma=1 sov=1 prefetch=1 devices=0
+[Deep2Engine] Initialization complete
+  initialize(): OK
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+[MOE_KEYS_DIAG] Scanning 19 metadata keys for expert/moe keys
+[MOE_KEYS_DIAG] Scanning 19 metadata keys for expert/moe keys
+[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=32000\n[REAP_TOKENIZER] merges=61249\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\n[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=32000\n[REAP_TOKENIZER] merges=61249\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\nVK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+[Deep2Engine] Loading model from: F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] MODEL_FIT_ADMITTED model=F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf mode=GPU_SINGLE devices=1 kv_per_token=6336 max_ctx_est=18446744073709532481
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\rawrxd\models)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] ERROR: No tensors parsed (run Parse first)
+[ReverseHotpatch] FAILED at stage 3 (ReverseUnlayer_Index)
+[Deep2Engine] WARNING: ReverseHotpatch failed, attempting raw load
+[Deep2Engine] GGUF architecture: 'llama'  hidden=2048 layers=22 heads=32 kvHeads=4 inter=5632 vocab=32000
+[Deep2Engine] Context length from metadata: 2048 tokens
+[Deep2Engine] Tokenizer loaded: vocab=32000 bos=1 eos=2 (Spm::encode)
+[Deep2Engine] Layer topology: 22 attention, 0 SSM, 0 unknown of 22 total
+[Deep2Engine] KV cache sized for 22 attention layers (SSM layers excluded)
+[Deep2Engine] HEADDIM_SYNC_POST_BIND config.headDim=64 modelWeights.headDim=64 kvHeads=4
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=000001F39E412590  Registered 'blk.0.attn_q.weight': shard=0 offset=0 bytes=2359296  |  registry_size=1  registeredBytes=2359296  zeroOffset=1  maxResidentBytes=536870912
+[ResidencyManager] this=000001F39E412590  Registered 'blk.11.attn_q.weight': shard=0 offset=0 bytes=2359296  |  registry_size=100  registeredBytes=293691392  zeroOffset=100  maxResidentBytes=536870912
+[ResidencyManager] this=000001F39E412590  Registered 'output.weight': shard=0 offset=0 bytes=53760000  |  registry_size=200  registeredBytes=667070464  zeroOffset=200  maxResidentBytes=536870912
+[Deep2Engine] ResidencyManager: this=000001F39E412590  registered=201 tensors  bytes=667078656  max=536870912
+[Deep2Engine] ElasticResidencyManager: registered all tensors
+[KVCache] Lazy pages: layers=22 page=8 virtualMax=2048 heads=4 dim=64
+[KVCache] HOT_BYTES=360448 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] KV cache: 22 layers x 2048 positions x 4 heads x 64 dim = 88.00 MB
+[Deep2Engine] Model loaded successfully (201 tensors)
+DEEP2_DEVICE_COUNT_DETECTED=3
+DEEP2_DEVICE_COUNT_OPENED=1
+DEEP2_COMPUTE_BACKEND=GPU
+DEEP2_EXEC_PATH=SINGLE_GPU
+DEEP2_EXEC_MODE=1
+DEEP2_GPU_POLICY=0
+DEEP2_PLAN_REASON=auto_best_compute
+DEEP2_PRIMARY_INDEX=0
+DEEP2_PRIMARY_STABLE_ID=1002:7551:000000000001679E
+DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_VENDOR=AMD
+DEEP2_DEVICE_0_STABLE_ID=1002:7551:000000000001679E
+DEEP2_DEVICE_0_VRAM_BYTES=34057322496
+DEEP2_DEVICE_0_SCORE=4294967295
+DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
+DEEP2_DEVICE_0_PROBLEM_CODE=0
+DEEP2_DEVICE_0_HEALTHY=1
+DEEP2_DEVICE_0_RESET_ATTEMPTED=0
+DEEP2_DEVICE_0_RESET_OK=0
+DEEP2_DEVICE_0_RESET_SKIPPED=0
+DEEP2_DEVICE_0_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_0_ACCESS_DENIED=0
+DEEP2_DEVICE_0_INSTANCE_ID=PCI\VEN_1002&DEV_7551&SUBSYS_E4991DA2&REV_C0\6&8916A45&0&00000009
+DEEP2_DEVICE_1_NAME=AMD Radeon(TM) Graphics
+DEEP2_DEVICE_1_VENDOR=AMD
+DEEP2_DEVICE_1_STABLE_ID=1002:13C0:000000000001C126
+DEEP2_DEVICE_1_VRAM_BYTES=2119970816
+DEEP2_DEVICE_1_SCORE=4294967295
+DEEP2_DEVICE_1_DUTY=DETECTED/UNUSED
+DEEP2_DEVICE_1_PROBLEM_CODE=0
+DEEP2_DEVICE_1_HEALTHY=1
+DEEP2_DEVICE_1_RESET_ATTEMPTED=0
+DEEP2_DEVICE_1_RESET_OK=0
+DEEP2_DEVICE_1_RESET_SKIPPED=0
+DEEP2_DEVICE_1_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_1_ACCESS_DENIED=0
+DEEP2_DEVICE_1_INSTANCE_ID=PCI\VEN_1002&DEV_13C0&SUBSYS_364E1849&REV_E5\4&16012499&0&0041
+DEEP2_DEVICE_2_NAME=AMD Radeon RX 7800 XT
+DEEP2_DEVICE_2_VENDOR=AMD
+DEEP2_DEVICE_2_STABLE_ID=1002:747E:00000000000194B5
+DEEP2_DEVICE_2_VRAM_BYTES=16962633728
+DEEP2_DEVICE_2_SCORE=4294967295
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.61
+[SHADER_PATH] ops=F:/rawrxd/src/deep2/shaders\deep2_ops.spv q=F:/rawrxd/src/deep2/shaders\deep2_qgemv.spv qb=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch.spv q4r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch4row.spv q8r=F:/rawrxd/src/deep2/shaders\deep2_qgemv_batch8row.spv qn=F:/rawrxd/src/deep2/shaders\deep2_qgemv_nvfp4.spv am=F:/rawrxd/src/deep2/shaders\deep2_argmax.spv so=F:/rawrxd/src/deep2/shaders\deep2_spec_ops.spv sa=F:/rawrxd/src/deep2/shaders\deep2_spec_attn.spv ac=F:/rawrxd/src/deep2/shaders\deep2_spec_accept.spv gd=F:/rawrxd/src/deep2/shaders\deep2_qwen4exp_gdn.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1 qn=1 gdn=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+PIN_BUDGET_FINAL stick=0 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+HOST_Q8_GEMV_FFN=1
+HOST_Q8_GEMV_ATTN=1
+HOST_Q8_GEMV_SSM_IN=1
+HOST_Q8_GEMV_NUMERIC_FINITE=1
+HOST_Q8_GEMV_BOUNDS_SAFE=1
+HOST_Q8_GEMV_REFERENCE_PARITY=1
+HOST_Q8_GEMV_SAFE=1
+DEEP2_DEVICE_2_DUTY=DETECTED/UNUSED
+DEEP2_DEVICE_2_PROBLEM_CODE=0
+DEEP2_DEVICE_2_HEALTHY=1
+DEEP2_DEVICE_2_RESET_ATTEMPTED=0
+DEEP2_DEVICE_2_RESET_OK=0
+DEEP2_DEVICE_2_RESET_SKIPPED=0
+DEEP2_DEVICE_2_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_2_ACCESS_DENIED=0
+DEEP2_DEVICE_2_INSTANCE_ID=PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2E27FDA8&0&0000000B
+[Deep2Engine] Vulkan single-GPU open: AMD Radeon AI PRO R9700 (needle=AMD Radeon AI PRO R9700)
+[Deep2Engine] DUALSTICK_BIND vc0=1 vc1=0 devices=1
+[Deep2Engine] Host Q8_0 GEMV receipts: SAFE
+  loadModel(): OK
+  Architecture: llama
+  Layers: 22
+  Hidden dim: 2048
+  Heads: 32
+  KV Heads: 4
+  Vocab size: 32000
+  Context length: 2048
+[GREEDY] enabled=0 temperature=0.7000 topK=40
+  Sampling: temperature=0.7 topP=0.9 topK=40 (non-greedy)
+  Generating...
+[GREEDY] enabled=0 temperature=0.8000 topK=40
+[AGENT] PREFILL_BEGIN prompt_tokens=5
+[AGENT] PRE_GENERATE calling generate()
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=0
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+[Deep2Engine] Completion plan: ALL_NEEDS_SATISFIED → CALL_GENERATE_STREAM
+[K2_DBG] entry depth=22 tokens=64
+[K2_DBG] after ResetSwitches
+[K2_DBG] after Decide mode=2 arm=TRAMPOLINE_OUTPUT_CACHE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+AUTO_POLICY_ACTIVE=1
+MANUAL_ARM_FORCING=0
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=default_auto
+K2_LIVE_POLICY_REUSE_STEPS=1408
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=22 TOKENS=64
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=1216600000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=(unset) MECH_ENV=trampoline WANTED=0
+[Deep2Engine] embedToken: type=12 vocabSize=32000 hiddenDim=2048 data=000001F4361E6580 sizeBytes=36864000 rows=32000 cols=2048
+[AGENT] PREFILL_DONE prompt_tokens=5 prefill_ms=735.780
+[AGENT] DECODE_BEGIN max_out=64
+[DBG] stateNorm=8.618588e+01 finite=1 pos=5
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  306 logit=   13.523794 text=' I'
+  [ 1] id=  383 logit=   12.783348 text=' F'
+  [ 2] id=18322 logit=   12.562676 text=' FO'
+  [ 3] id=  319 logit=   12.441281 text=' A'
+  [ 4] id=  263 logit=   11.592964 text=' a'
+  [ 5] id=  315 logit=   11.495206 text=' C'
+  [ 6] id= 6058 logit=   11.440753 text=' NOT'
+  [ 7] id= 6093 logit=   11.220941 text=' THE'
+  [ 8] id=17900 logit=   11.164811 text=' LA'
+  [ 9] id= 2672 logit=   11.147049 text=' IN'
+[Deep2Engine] Sampler selected token: 383
+[DBG] sampled token=383 eosId=2
+[AGENT] TOKEN id=383 piece= F
+[DBG] stateNorm=8.547729e+01 finite=1 pos=6
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29896 logit=    8.175914 text='1'
+  [ 1] id=29871 logit=    7.961102 text=' '
+  [ 2] id=29900 logit=    7.692080 text='0'
+  [ 3] id=   13 logit=    7.638333 text='
+'
+  [ 4] id=29906 logit=    7.563139 text='2'
+  [ 5] id=29941 logit=    7.390760 text='3'
+  [ 6] id=29985 logit=    7.357030 text='^'
+  [ 7] id=29945 logit=    7.226155 text='5'
+  [ 8] id=  453 logit=    7.175268 text='ill'
+  [ 9] id=29947 logit=    7.126356 text='8'
+[Deep2Engine] Sampler selected token: 29899
+[DBG] sampled token=29899 eosId=2
+[DBG] stateNorm=7.541844e+01 finite=1 pos=7
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=19562 logit=   11.006829 text='they'
+  [ 1] id= 1552 logit=   10.099259 text='the'
+  [ 2] id= 5747 logit=    9.647485 text='that'
+  [ 3] id= 8256 logit=    9.447807 text='when'
+  [ 4] id=  262 logit=    9.195344 text='in'
+  [ 5] id= 2541 logit=    9.042631 text='with'
+  [ 6] id=29305 logit=    9.029545 text='until'
+  [ 7] id=  294 logit=    8.917328 text='as'
+  [ 8] id=29906 logit=    8.868063 text='2'
+  [ 9] id=  392 logit=    8.679415 text='and'
+[Deep2Engine] Sampler selected token: 5485
+[DBG] sampled token=5485 eosId=2
+[DBG] stateNorm=8.631117e+01 finite=1 pos=8
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  598 logit=    8.126806 text='are'
+  [ 1] id= 1617 logit=    8.099995 text='ron'
+  [ 2] id= 3097 logit=    7.820723 text='ability'
+  [ 3] id= 1351 logit=    7.414904 text='ave'
+  [ 4] id=29959 logit=    7.387983 text='м'
+  [ 5] id=14805 logit=    7.190171 text='uper'
+  [ 6] id= 2415 logit=    7.000723 text='mit'
+  [ 7] id= 5171 logit=    6.971390 text='itter'
+  [ 8] id= 2237 logit=    6.953518 text='ше'
+  [ 9] id= 2841 logit=    6.842246 text='cle'
+[Deep2Engine] Sampler selected token: 1738
+[DBG] sampled token=1738 eosId=2
+[KVCache] page grow 8 -> 16 hot (virtualMax=2048 pos=8)
+[DBG] stateNorm=7.605280e+01 finite=1 pos=9
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  450 logit=    8.267563 text=' The'
+  [ 1] id=   13 logit=    8.036654 text='
+'
+  [ 2] id=  910 logit=    7.811769 text=' This'
+  [ 3] id= 1738 logit=    7.608292 text=' !'
+  [ 4] id= 1126 logit=    7.583105 text=' And'
+  [ 5] id=  869 logit=    7.570534 text=' .'
+  [ 6] id= 1094 logit=    7.565542 text=' As'
+  [ 7] id=  512 logit=    7.307225 text=' In'
+  [ 8] id=  319 logit=    6.996188 text=' A'
+  [ 9] id=29871 logit=    6.795973 text=' '
+[Deep2Engine] Sampler selected token: 29909
+[DBG] sampled token=29909 eosId=2
+[DBG] stateNorm=7.433021e+01 finite=1 pos=10
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 3193 logit=    6.472344 text='pril'
+  [ 1] id=16986 logit=    6.291871 text='maz'
+  [ 2] id=29889 logit=    6.287374 text='.'
+  [ 3] id=29892 logit=    6.274204 text=','
+  [ 4] id= 1328 logit=    6.212841 text='ward'
+  [ 5] id=  655 logit=    5.803954 text='ma'
+  [ 6] id=  322 logit=    5.792947 text=' and'
+  [ 7] id=  304 logit=    5.567310 text=' to'
+  [ 8] id=  716 logit=    5.565589 text=' new'
+  [ 9] id= 2935 logit=    5.518967 text='wards'
+[Deep2Engine] Sampler selected token: 1328
+[DBG] sampled token=1328 eosId=2
+[DBG] stateNorm=7.623568e+01 finite=1 pos=11
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  310 logit=   10.043377 text=' of'
+  [ 1] id=29889 logit=    9.778713 text='.'
+  [ 2] id=29892 logit=    8.775911 text=','
+  [ 3] id=  292 logit=    7.967233 text='ing'
+  [ 4] id=  261 logit=    7.618025 text='er'
+  [ 5] id=  278 logit=    7.530903 text=' the'
+  [ 6] id=  264 logit=    7.430428 text='en'
+  [ 7] id=29973 logit=    7.387228 text='?'
+  [ 8] id=  297 logit=    7.381319 text=' in'
+  [ 9] id= 1328 logit=    7.300047 text='ward'
+[Deep2Engine] Sampler selected token: 29889
+[DBG] sampled token=29889 eosId=2
+[DBG] stateNorm=7.626851e+01 finite=1 pos=12
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=   13 logit=   10.413010 text='
+'
+  [ 1] id=    2 logit=    8.183794 text='</s>'
+  [ 2] id=  306 logit=    7.859297 text=' I'
+  [ 3] id= 2180 logit=    7.500544 text=' At'
+  [ 4] id=  450 logit=    7.334645 text=' The'
+  [ 5] id=29871 logit=    7.297645 text=' '
+  [ 6] id=  518 logit=    7.221817 text=' ['
+  [ 7] id=  512 logit=    7.179265 text=' In'
+  [ 8] id=  319 logit=    7.082663 text=' A'
+  [ 9] id= 1334 logit=    6.991529 text=' We'
+[Deep2Engine] Sampler selected token: 4587
+[DBG] sampled token=4587 eosId=2
+[DBG] stateNorm=7.896467e+01 finite=1 pos=13
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 3236 logit=    8.761593 text=' course'
+  [ 1] id=  450 logit=    8.697793 text=' The'
+  [ 2] id= 6237 logit=    8.518736 text=' Coun'
+  [ 3] id= 6325 logit=    8.447305 text=' Cour'
+  [ 4] id=  315 logit=    7.848058 text=' C'
+  [ 5] id=  607 logit=    7.788025 text=' which'
+  [ 6] id=  278 logit=    7.730815 text=' the'
+  [ 7] id=29899 logit=    6.718653 text='-'
+  [ 8] id=  825 logit=    6.622653 text=' what'
+  [ 9] id= 4634 logit=    6.589018 text=' Life'
+[Deep2Engine] Sampler selected token: 2994
+[DBG] sampled token=2994 eosId=2
+[DBG] stateNorm=8.358853e+01 finite=1 pos=14
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 2674 logit=   12.170160 text='rel'
+  [ 1] id=22653 logit=   12.080044 text='inth'
+  [ 2] id=  276 logit=   12.011984 text='re'
+  [ 3] id= 4776 logit=   11.817242 text='tex'
+  [ 4] id=29890 logit=   11.798621 text='b'
+  [ 5] id=  265 logit=   11.778021 text='on'
+  [ 6] id=23445 logit=   11.707177 text='relation'
+  [ 7] id=29878 logit=   11.581971 text='r'
+  [ 8] id= 3636 logit=   11.330490 text='respond'
+  [ 9] id=29875 logit=   11.118300 text='i'
+[Deep2Engine] Sampler selected token: 13364
+[DBG] sampled token=13364 eosId=2
+[DBG] stateNorm=7.852764e+01 finite=1 pos=15
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29889 logit=    9.736668 text='.'
+  [ 1] id=29892 logit=    9.119658 text=','
+  [ 2] id=  322 logit=    8.409278 text=' and'
+  [ 3] id=  338 logit=    8.362463 text=' is'
+  [ 4] id=  310 logit=    8.313222 text=' of'
+  [ 5] id=  471 logit=    8.296495 text=' was'
+  [ 6] id=  411 logit=    7.861104 text=' with'
+  [ 7] id=  393 logit=    7.838612 text=' that'
+  [ 8] id=   13 logit=    7.825326 text='
+'
+  [ 9] id=  491 logit=    7.753841 text=' by'
+[Deep2Engine] Sampler selected token: 29889
+[DBG] sampled token=29889 eosId=2
+[DBG] stateNorm=7.968406e+01 finite=1 pos=16
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=   13 logit=    9.875456 text='
+'
+  [ 1] id=29871 logit=    7.766341 text=' '
+  [ 2] id=  450 logit=    7.472092 text=' The'
+  [ 3] id=  306 logit=    7.233973 text=' I'
+  [ 4] id=  319 logit=    6.958990 text=' A'
+  [ 5] id=    2 logit=    6.954885 text='</s>'
+  [ 6] id=  512 logit=    6.790823 text=' In'
+  [ 7] id=  739 logit=    6.345418 text=' It'
+  [ 8] id=  910 logit=    6.318641 text=' This'
+  [ 9] id= 1126 logit=    6.177549 text=' And'
+[Deep2Engine] Sampler selected token: 13
+[DBG] sampled token=13 eosId=2
+[KVCache] page grow 16 -> 24 hot (virtualMax=2048 pos=16)
+[DBG] stateNorm=8.380248e+01 finite=1 pos=17
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=   13 logit=   12.100311 text='
+'
+  [ 1] id=29889 logit=   10.244412 text='.'
+  [ 2] id=  272 logit=    9.629957 text='or'
+  [ 3] id=  392 logit=    9.518257 text='and'
+  [ 4] id= 1576 logit=    9.487837 text='The'
+  [ 5] id=  517 logit=    9.431971 text='to'
+  [ 6] id=29871 logit=    9.420529 text=' '
+  [ 7] id=  797 logit=    9.329443 text='In'
+  [ 8] id=29909 logit=    9.268525 text='A'
+  [ 9] id= 8941 logit=    9.214199 text='into'
+[Deep2Engine] Sampler selected token: 1576
+[DBG] sampled token=1576 eosId=2
+[DBG] stateNorm=7.755269e+01 finite=1 pos=18
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 6064 logit=    8.770475 text='atre'
+  [ 1] id=  381 logit=    6.994279 text='ir'
+  [ 2] id=  706 logit=    5.880291 text='ory'
+  [ 3] id= 1494 logit=    5.876321 text=' following'
+  [ 4] id= 9324 logit=    5.621735 text=' strength'
+  [ 5] id= 5434 logit=    5.491055 text=' future'
+  [ 6] id=16367 logit=    5.426143 text=' Future'
+  [ 7] id=  937 logit=    5.399967 text=' first'
+  [ 8] id= 5645 logit=    5.265315 text=' measure'
+  [ 9] id= 6297 logit=    5.215316 text=' role'
+[Deep2Engine] Sampler selected token: 381
+[DBG] sampled token=381 eosId=2
+[DBG] stateNorm=8.513517e+01 finite=1 pos=19
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 8966 logit=   11.646746 text='rig'
+  [ 1] id=  265 logit=   11.232563 text='on'
+  [ 2] id=15227 logit=    9.344603 text='regular'
+  [ 3] id= 8927 logit=    9.277746 text='onic'
+  [ 4] id=  273 logit=    9.056290 text='an'
+  [ 5] id=28259 logit=    8.997856 text='oning'
+  [ 6] id=29878 logit=    8.823339 text='r'
+  [ 7] id=  690 logit=    8.581244 text='res'
+  [ 8] id= 6506 logit=    8.435349 text='replace'
+  [ 9] id=  787 logit=    8.417842 text='ons'
+[Deep2Engine] Sampler selected token: 15227
+[DBG] sampled token=15227 eosId=2
+[DBG] stateNorm=7.403160e+01 finite=1 pos=20
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29879 logit=    8.676321 text='s'
+  [ 1] id=29889 logit=    7.543967 text='.'
+  [ 2] id= 1907 logit=    7.001891 text='ities'
+  [ 3] id=  275 logit=    6.845933 text='is'
+  [ 4] id=  368 logit=    6.742399 text='ly'
+  [ 5] id=29892 logit=    6.375658 text=','
+  [ 6] id=20330 logit=    6.370607 text=' customers'
+  [ 7] id= 4160 logit=    6.368708 text=' users'
+  [ 8] id=  537 logit=    6.339030 text='ity'
+  [ 9] id=  652 logit=    6.035566 text=' di'
+[Deep2Engine] Sampler selected token: 29879
+[DBG] sampled token=29879 eosId=2
+[DBG] stateNorm=8.532787e+01 finite=1 pos=21
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  267 logit=    8.496627 text='es'
+  [ 1] id= 7807 logit=    7.996592 text='elling'
+  [ 2] id=  392 logit=    7.890227 text='and'
+  [ 3] id= 5789 logit=    7.718003 text='embly'
+  [ 4] id=15114 logit=    7.433540 text='yll'
+  [ 5] id= 1036 logit=    7.171086 text='ays'
+  [ 6] id=  482 logit=    7.113981 text='age'
+  [ 7] id=  333 logit=    7.047466 text='id'
+  [ 8] id=  433 logit=    7.009452 text='la'
+  [ 9] id=29891 logit=    6.980824 text='y'
+[Deep2Engine] Sampler selected token: 619
+[DBG] sampled token=619 eosId=2
+[DBG] stateNorm=8.421359e+01 finite=1 pos=22
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1503 logit=   11.688816 text='ars'
+  [ 1] id=  279 logit=   11.573790 text='ar'
+  [ 2] id=11614 logit=   10.981418 text='abilities'
+  [ 3] id= 3097 logit=   10.812813 text='ability'
+  [ 4] id= 1182 logit=   10.318540 text='br'
+  [ 5] id= 1717 logit=   10.243164 text='ken'
+  [ 6] id=  519 logit=    9.732461 text='able'
+  [ 7] id= 7002 logit=    9.710564 text='asion'
+  [ 8] id= 1201 logit=    9.470703 text='very'
+  [ 9] id=  369 logit=    9.272221 text='ver'
+[Deep2Engine] Sampler selected token: 279
+[DBG] sampled token=279 eosId=2
+[DBG] stateNorm=8.334219e+01 finite=1 pos=23
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1150 logit=   11.535149 text='riv'
+  [ 1] id= 2386 logit=   10.064071 text='ena'
+  [ 2] id= 8844 logit=    9.810301 text='bitr'
+  [ 3] id=15081 logit=    9.655544 text='rival'
+  [ 4] id= 9102 logit=    9.400900 text='rog'
+  [ 5] id= 2168 logit=    9.306833 text='med'
+  [ 6] id=26165 logit=    8.758707 text='oused'
+  [ 7] id= 6332 logit=    8.655128 text='cade'
+  [ 8] id= 3881 logit=    8.523314 text='range'
+  [ 9] id= 4089 logit=    8.505547 text='bor'
+[Deep2Engine] Sampler selected token: 1050
+[DBG] sampled token=1050 eosId=2
+[DBG] stateNorm=8.321070e+01 finite=1 pos=24
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 3192 logit=   11.541368 text='ged'
+  [ 1] id=29883 logit=   11.492741 text='c'
+  [ 2] id= 2764 logit=   10.782673 text='cur'
+  [ 3] id=  873 logit=   10.771412 text='ely'
+  [ 4] id= 3460 logit=   10.488403 text='ging'
+  [ 5] id=  333 logit=   10.170243 text='id'
+  [ 6] id= 9429 logit=   10.035884 text='iw'
+  [ 7] id= 5743 logit=    9.981532 text='gers'
+  [ 8] id=  277 logit=    9.600874 text='it'
+  [ 9] id=  374 logit=    9.517189 text='ri'
+[Deep2Engine] Sampler selected token: 265
+[DBG] sampled token=265 eosId=2
+[KVCache] page grow 24 -> 32 hot (virtualMax=2048 pos=24)
+[DBG] stateNorm=7.817398e+01 finite=1 pos=25
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 5410 logit=    9.875810 text='etime'
+  [ 1] id=  368 logit=    7.949993 text='ly'
+  [ 2] id=  291 logit=    7.617461 text='ion'
+  [ 3] id=  406 logit=    7.542708 text='ere'
+  [ 4] id=  263 logit=    7.488475 text=' a'
+  [ 5] id=  487 logit=    7.150506 text='ore'
+  [ 6] id= 1359 logit=    6.795383 text='load'
+  [ 7] id=  278 logit=    6.692367 text=' the'
+  [ 8] id=29899 logit=    6.656152 text='-'
+  [ 9] id=  621 logit=    6.599086 text='eth'
+[Deep2Engine] Sampler selected token: 5410
+[DBG] sampled token=5410 eosId=2
+[DBG] stateNorm=7.545280e+01 finite=1 pos=26
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29889 logit=    8.159292 text='.'
+  [ 1] id= 8028 logit=    7.270958 text='zone'
+  [ 2] id=   13 logit=    7.083370 text='
+'
+  [ 3] id=29871 logit=    6.823914 text=' '
+  [ 4] id=29892 logit=    6.627236 text=','
+  [ 5] id=29897 logit=    6.609672 text=')'
+  [ 6] id=  363 logit=    6.559932 text=' for'
+  [ 7] id=29901 logit=    6.537015 text=':'
+  [ 8] id=  449 logit=    6.487988 text='out'
+  [ 9] id=  338 logit=    6.477951 text=' is'
+[Deep2Engine] Sampler selected token: 29889
+[DBG] sampled token=29889 eosId=2
+[DBG] stateNorm=8.079071e+01 finite=1 pos=27
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=   13 logit=    9.987726 text='
+'
+  [ 1] id=29871 logit=    8.475501 text=' '
+  [ 2] id=  450 logit=    8.046989 text=' The'
+  [ 3] id=    2 logit=    7.813798 text='</s>'
+  [ 4] id=  306 logit=    7.536670 text=' I'
+  [ 5] id=  319 logit=    7.055967 text=' A'
+  [ 6] id=  512 logit=    6.745723 text=' In'
+  [ 7] id=16564 logit=    6.651251 text=' Based'
+  [ 8] id=  910 logit=    6.574214 text=' This'
+  [ 9] id=  739 logit=    6.436502 text=' It'
+[Deep2Engine] Sampler selected token: 13
+[DBG] sampled token=13 eosId=2
+[DBG] stateNorm=7.670801e+01 finite=1 pos=28
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=   13 logit=   10.031895 text='
+'
+  [ 1] id= 1552 logit=    9.011698 text='the'
+  [ 2] id= 1576 logit=    8.971481 text='The'
+  [ 3] id=  797 logit=    8.936160 text='In'
+  [ 4] id=  392 logit=    8.873351 text='and'
+  [ 5] id=29909 logit=    8.738679 text='A'
+  [ 6] id=  974 logit=    8.738201 text='of'
+  [ 7] id=  517 logit=    8.473949 text='to'
+  [ 8] id=29874 logit=    8.434987 text='a'
+  [ 9] id=29889 logit=    8.203118 text='.'
+[Deep2Engine] Sampler selected token: 29874
+[DBG] sampled token=29874 eosId=2
+[DBG] stateNorm=7.958015e+01 finite=1 pos=29
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29889 logit=    6.427159 text='.'
+  [ 1] id=29892 logit=    6.261125 text=','
+  [ 2] id= 2822 logit=    5.917621 text=' href'
+  [ 3] id=29871 logit=    5.856182 text=' '
+  [ 4] id=29897 logit=    5.610482 text=')'
+  [ 5] id=  328 logit=    5.278559 text='ad'
+  [ 6] id=   13 logit=    5.235447 text='
+'
+  [ 7] id=  271 logit=    5.212092 text='at'
+  [ 8] id=  287 logit=    5.190187 text='ed'
+  [ 9] id=  716 logit=    5.180161 text=' new'
+[Deep2Engine] Sampler selected token: 387
+[DBG] sampled token=387 eosId=2
+[DBG] stateNorm=8.439242e+01 finite=1 pos=30
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1253 logit=   14.011755 text='ress'
+  [ 1] id= 3174 logit=   12.821901 text='gs'
+  [ 2] id=  300 logit=   12.134262 text='et'
+  [ 3] id= 1727 logit=   11.668404 text='reg'
+  [ 4] id=  538 logit=   10.730133 text='ard'
+  [ 5] id= 7925 logit=   10.435166 text='ads'
+  [ 6] id=29887 logit=   10.418328 text='g'
+  [ 7] id=  328 logit=   10.406552 text='ad'
+  [ 8] id= 3163 logit=   10.391382 text='ards'
+  [ 9] id=  492 logit=   10.169861 text='li'
+[Deep2Engine] Sampler selected token: 1253
+[DBG] sampled token=1253 eosId=2
+[DBG] stateNorm=7.503115e+01 finite=1 pos=31
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  441 logit=    9.477289 text='ort'
+  [ 1] id=  761 logit=    9.015740 text='elf'
+  [ 2] id=  431 logit=    8.786333 text='ub'
+  [ 3] id=29886 logit=    8.752137 text='p'
+  [ 4] id=29877 logit=    8.511717 text='o'
+  [ 5] id=  893 logit=    8.497030 text='ss'
+  [ 6] id=14889 logit=    8.415223 text='upp'
+  [ 7] id=  326 logit=    8.167625 text='im'
+  [ 8] id= 2842 logit=    8.101671 text='earch'
+  [ 9] id=  987 logit=    8.008183 text='uch'
+[Deep2Engine] Sampler selected token: 711
+[DBG] sampled token=711 eosId=2
+[DBG] stateNorm=8.417763e+01 finite=1 pos=32
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 3473 logit=   12.985888 text='lig'
+  [ 1] id=16604 logit=   12.861451 text='viously'
+  [ 2] id= 1557 logit=   12.249842 text='sc'
+  [ 3] id=17843 logit=   11.444300 text='liv'
+  [ 4] id= 2366 logit=   10.822746 text='vious'
+  [ 5] id=28378 logit=   10.517073 text='liqu'
+  [ 6] id= 2408 logit=   10.418012 text='tain'
+  [ 7] id= 4984 logit=   10.085137 text='struct'
+  [ 8] id= 3304 logit=    9.960517 text='ama'
+  [ 9] id= 2170 logit=    9.785923 text='sole'
+[Deep2Engine] Sampler selected token: 16604
+[DBG] sampled token=16604 eosId=2
+[KVCache] page grow 32 -> 40 hot (virtualMax=2048 pos=32)
+[DBG] stateNorm=7.673099e+01 finite=1 pos=33
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29892 logit=    9.123692 text=','
+  [ 1] id=29889 logit=    8.725787 text='.'
+  [ 2] id=  727 logit=    7.831006 text=' there'
+  [ 3] id=  306 logit=    7.825469 text=' I'
+  [ 4] id=  372 logit=    7.249649 text=' it'
+  [ 5] id=  591 logit=    7.247960 text=' we'
+  [ 6] id=  491 logit=    7.095592 text=' by'
+  [ 7] id=  278 logit=    6.991286 text=' the'
+  [ 8] id=  304 logit=    6.877222 text=' to'
+  [ 9] id=  366 logit=    6.846405 text=' you'
+[Deep2Engine] Sampler selected token: 29889
+[DBG] sampled token=29889 eosId=2
+[DBG] stateNorm=8.280603e+01 finite=1 pos=34
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=   13 logit=   10.086899 text='
+'
+  [ 1] id=29871 logit=    8.508679 text=' '
+  [ 2] id=  450 logit=    7.971406 text=' The'
+  [ 3] id=    2 logit=    7.790306 text='</s>'
+  [ 4] id=  306 logit=    7.500897 text=' I'
+  [ 5] id=  319 logit=    7.112552 text=' A'
+  [ 6] id=  512 logit=    6.844487 text=' In'
+  [ 7] id=16564 logit=    6.766921 text=' Based'
+  [ 8] id= 1222 logit=    6.510424 text=' Ex'
+  [ 9] id=  910 logit=    6.411608 text=' This'
+[Deep2Engine] Sampler selected token: 13
+[DBG] sampled token=13 eosId=2
+[DBG] stateNorm=7.993299e+01 finite=1 pos=35
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  974 logit=   10.448320 text='of'
+  [ 1] id= 1552 logit=   10.113381 text='the'
+  [ 2] id=  517 logit=    9.831754 text='to'
+  [ 3] id= 1576 logit=    9.655052 text='The'
+  [ 4] id=  797 logit=    9.630588 text='In'
+  [ 5] id=  392 logit=    9.549919 text='and'
+  [ 6] id=29909 logit=    9.501921 text='A'
+  [ 7] id=29874 logit=    9.302324 text='a'
+  [ 8] id= 5205 logit=    9.285566 text='system'
+  [ 9] id=13555 logit=    8.987600 text='After'
+[Deep2Engine] Sampler selected token: 974
+[DBG] sampled token=974 eosId=2
+[DBG] stateNorm=7.892878e+01 finite=1 pos=36
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  571 logit=    8.329649 text='fer'
+  [ 1] id= 3236 logit=    8.053601 text=' course'
+  [ 2] id= 5611 logit=    7.992132 text='icial'
+  [ 3] id=  278 logit=    7.914086 text=' the'
+  [ 4] id=  607 logit=    6.728628 text=' which'
+  [ 5] id=  625 logit=    6.664412 text='ice'
+  [ 6] id=  414 logit=    6.473303 text='ers'
+  [ 7] id=  359 logit=    6.449977 text='os'
+  [ 8] id=  599 logit=    6.447840 text=' all'
+  [ 9] id=29879 logit=    6.367257 text='s'
+[Deep2Engine] Sampler selected token: 3629
+[DBG] sampled token=3629 eosId=2
+[DBG] stateNorm=8.302287e+01 finite=1 pos=37
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=20860 logit=   10.186410 text='agle'
+  [ 1] id=  621 logit=    9.824982 text='eth'
+  [ 2] id=  271 logit=    9.555867 text='at'
+  [ 3] id=12483 logit=    9.465275 text='aver'
+  [ 4] id=  550 logit=    9.443363 text='ans'
+  [ 5] id= 1300 logit=    9.439476 text='aut'
+  [ 6] id=  384 logit=    9.407410 text='ck'
+  [ 7] id=29834 logit=    9.403474 text='zos'
+  [ 8] id=  744 logit=    9.214062 text='ale'
+  [ 9] id=  278 logit=    9.209538 text=' the'
+[Deep2Engine] Sampler selected token: 4937
+[DBG] sampled token=4937 eosId=2
+[DBG] stateNorm=7.162804e+01 finite=1 pos=38
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29889 logit=    7.412092 text='.'
+  [ 1] id=   13 logit=    7.086227 text='
+'
+  [ 2] id=  719 logit=    6.551009 text='ry'
+  [ 3] id=  304 logit=    6.192504 text=' to'
+  [ 4] id=29892 logit=    6.124062 text=','
+  [ 5] id=  393 logit=    6.051919 text=' that'
+  [ 6] id=  284 logit=    6.033305 text='al'
+  [ 7] id=29901 logit=    5.795817 text=':'
+  [ 8] id= 1463 logit=    5.749623 text='ased'
+  [ 9] id=29881 logit=    5.736895 text='d'
+[Deep2Engine] Sampler selected token: 29992
+[DBG] sampled token=29992 eosId=2
+[DBG] stateNorm=7.964967e+01 finite=1 pos=39
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  392 logit=   10.984426 text='and'
+  [ 1] id=29900 logit=   10.697583 text='0'
+  [ 2] id=   13 logit=   10.594897 text='
+'
+  [ 3] id=29906 logit=   10.064810 text='2'
+  [ 4] id=29896 logit=   10.033701 text='1'
+  [ 5] id=29879 logit=    9.406285 text='s'
+  [ 6] id=29941 logit=    9.386992 text='3'
+  [ 7] id=  354 logit=    9.224236 text='he'
+  [ 8] id=29945 logit=    9.174742 text='5'
+  [ 9] id=29885 logit=    9.173582 text='m'
+[Deep2Engine] Sampler selected token: 29883
+[DBG] sampled token=29883 eosId=2
+[DBG] stateNorm=8.457591e+01 finite=1 pos=40
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  582 logit=    9.171787 text='ru'
+  [ 1] id= 1309 logit=    9.145723 text='oun'
+  [ 2] id=12896 logit=    8.961185 text='ulture'
+  [ 3] id=  473 logit=    8.960495 text='our'
+  [ 4] id= 6448 logit=    8.890288 text='bd'
+  [ 5] id=22282 logit=    8.713865 text='rack'
+  [ 6] id=  798 logit=    8.633968 text='row'
+  [ 7] id= 6735 logit=    8.480450 text='annot'
+  [ 8] id=  499 logit=    8.455055 text='ult'
+  [ 9] id=  719 logit=    8.322390 text='ry'
+[Deep2Engine] Sampler selected token: 2572
+[DBG] sampled token=2572 eosId=2
+[KVCache] page grow 40 -> 48 hot (virtualMax=2048 pos=40)
+[DBG] stateNorm=8.496442e+01 finite=1 pos=41
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  567 logit=    9.549624 text='ps'
+  [ 1] id=  265 logit=    8.877018 text='on'
+  [ 2] id=29892 logit=    8.537544 text=','
+  [ 3] id=  322 logit=    8.510204 text=' and'
+  [ 4] id=  393 logit=    8.260491 text=' that'
+  [ 5] id=29889 logit=    8.149521 text='.'
+  [ 6] id=  273 logit=    8.105526 text='an'
+  [ 7] id=  310 logit=    7.947659 text=' of'
+  [ 8] id= 2450 logit=    7.710124 text='ification'
+  [ 9] id=  475 logit=    7.690784 text='ain'
+[Deep2Engine] Sampler selected token: 567
+[DBG] sampled token=567 eosId=2
+[DBG] stateNorm=8.651966e+01 finite=1 pos=42
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 6742 logit=   13.608473 text='ued'
+  [ 1] id= 3376 logit=   12.190853 text='ych'
+  [ 2] id=20778 logit=   11.134724 text='sb'
+  [ 3] id=  845 logit=   10.271215 text='sh'
+  [ 4] id=29879 logit=    9.924614 text='s'
+  [ 5] id= 1519 logit=    9.402380 text='ql'
+  [ 6] id=21935 logit=    9.015053 text='sr'
+  [ 7] id= 2774 logit=    8.832014 text='sw'
+  [ 8] id=29886 logit=    8.544927 text='p'
+  [ 9] id=29877 logit=    8.523603 text='o'
+[Deep2Engine] Sampler selected token: 6742
+[DBG] sampled token=6742 eosId=2
+[DBG] stateNorm=8.744492e+01 finite=1 pos=43
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 5598 logit=   11.721462 text='efined'
+  [ 1] id= 1389 logit=   11.137758 text='ef'
+  [ 2] id=16433 logit=   10.646508 text='ependant'
+  [ 3] id=13032 logit=   10.020951 text='edeut'
+  [ 4] id= 1690 logit=    9.733602 text='én'
+  [ 5] id=  774 logit=    9.235004 text='eb'
+  [ 6] id=11271 logit=    9.211443 text='ienst'
+  [ 7] id= 4463 logit=    9.143262 text='ocument'
+  [ 8] id= 1022 logit=    9.027271 text='ep'
+  [ 9] id=  804 logit=    8.936258 text='ank'
+[Deep2Engine] Sampler selected token: 1690
+[DBG] sampled token=1690 eosId=2
+[DBG] stateNorm=8.721187e+01 finite=1 pos=44
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 3702 logit=    9.116825 text='vironment'
+  [ 1] id= 3024 logit=    8.284092 text='viron'
+  [ 2] id=  277 logit=    7.817839 text='it'
+  [ 3] id= 1181 logit=    7.684157 text='fo'
+  [ 4] id=16464 logit=    7.675883 text=' anglais'
+  [ 5] id=20744 logit=    7.542615 text=' effet'
+  [ 6] id=  484 logit=    7.397177 text='ne'
+  [ 7] id=24407 logit=    7.388835 text=' dernière'
+  [ 8] id=29308 logit=    7.369577 text='hanced'
+  [ 9] id=22916 logit=    7.368681 text=' haut'
+[Deep2Engine] Sampler selected token: 17355
+[DBG] sampled token=17355 eosId=2
+[DBG] stateNorm=8.674781e+01 finite=1 pos=45
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29871 logit=    7.668724 text=' '
+  [ 1] id=  316 logit=    7.369291 text=' de'
+  [ 2] id= 3720 logit=    6.983643 text=' ú'
+  [ 3] id=11006 logit=    6.948381 text=' después'
+  [ 4] id=29892 logit=    6.939682 text=','
+  [ 5] id= 4366 logit=    6.840414 text='light'
+  [ 6] id=29883 logit=    6.712810 text='c'
+  [ 7] id=17666 logit=    6.601880 text=' tarde'
+  [ 8] id=  274 logit=    6.488422 text=' c'
+  [ 9] id=29881 logit=    6.472289 text='d'
+[Deep2Engine] Sampler selected token: 19102
+[DBG] sampled token=19102 eosId=2
+[DBG] stateNorm=8.613587e+01 finite=1 pos=46
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  316 logit=   10.912868 text=' de'
+  [ 1] id=29879 logit=    8.817767 text='s'
+  [ 2] id=29889 logit=    8.469122 text='.'
+  [ 3] id=  712 logit=    8.369100 text=' que'
+  [ 4] id=29892 logit=    8.247933 text=','
+  [ 5] id=  633 logit=    7.732548 text=' ab'
+  [ 6] id= 1986 logit=    7.700043 text=' como'
+  [ 7] id=  263 logit=    7.545158 text=' a'
+  [ 8] id=  628 logit=    7.542444 text=' del'
+  [ 9] id=  443 logit=    7.437578 text=' un'
+[Deep2Engine] Sampler selected token: 316
+[DBG] sampled token=316 eosId=2
+[DBG] stateNorm=8.664129e+01 finite=1 pos=47
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  455 logit=    9.046936 text='ci'
+  [ 1] id= 1338 logit=    9.021654 text='als'
+  [ 2] id= 1555 logit=    8.420914 text='vol'
+  [ 3] id=14373 logit=    8.229937 text='ferred'
+  [ 4] id=  955 logit=    8.212835 text='vel'
+  [ 5] id=  609 logit=    8.123290 text='ont'
+  [ 6] id=10255 logit=    8.118797 text=' Leon'
+  [ 7] id=11292 logit=    7.994249 text='vised'
+  [ 8] id= 2142 logit=    7.794522 text='af'
+  [ 9] id=26029 logit=    7.768595 text='human'
+[Deep2Engine] Sampler selected token: 273
+[DBG] sampled token=273 eosId=2
+[DBG] stateNorm=7.687571e+01 finite=1 pos=48
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  856 logit=    9.759171 text='...'
+  [ 1] id=29901 logit=    7.869467 text=':'
+  [ 2] id=  310 logit=    7.647009 text=' of'
+  [ 3] id=29889 logit=    7.635148 text='.'
+  [ 4] id=   13 logit=    7.616618 text='
+'
+  [ 5] id=29892 logit=    7.608555 text=','
+  [ 6] id= 2023 logit=    7.554730 text=' ...'
+  [ 7] id=  338 logit=    7.101665 text=' is'
+  [ 8] id=  869 logit=    6.918230 text=' .'
+  [ 9] id=30098 logit=    6.845155 text='…'
+[Deep2Engine] Sampler selected token: 313
+[DBG] sampled token=313 eosId=2
+[KVCache] page grow 48 -> 56 hot (virtualMax=2048 pos=48)
+[DBG] stateNorm=8.891311e+01 finite=1 pos=49
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  348 logit=    9.528140 text='un'
+  [ 1] id=11410 logit=    9.214040 text='...)'
+  [ 2] id=29896 logit=    8.568212 text='1'
+  [ 3] id=  271 logit=    8.464540 text='at'
+  [ 4] id= 3707 logit=    8.157831 text='now'
+  [ 5] id=29906 logit=    8.126496 text='2'
+  [ 6] id=29879 logit=    7.937785 text='s'
+  [ 7] id= 3552 logit=    7.914759 text='(('
+  [ 8] id= 1201 logit=    7.868826 text='very'
+  [ 9] id= 1251 logit=    7.863778 text='ho'
+[Deep2Engine] Sampler selected token: 272
+[DBG] sampled token=272 eosId=2
+[DBG] stateNorm=7.529260e+01 finite=1 pos=50
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  927 logit=    8.584339 text='ange'
+  [ 1] id= 2966 logit=    8.114365 text='bit'
+  [ 2] id=28514 logit=    7.837106 text='lando'
+  [ 3] id=15554 logit=    7.342414 text='chestra'
+  [ 4] id= 7606 logit=    7.060039 text='atory'
+  [ 5] id= 2788 logit=    6.723729 text=' similar'
+  [ 6] id=  713 logit=    6.698659 text='ian'
+  [ 7] id=  574 logit=    6.392825 text='ang'
+  [ 8] id=  273 logit=    6.292379 text='an'
+  [ 9] id=  600 logit=    6.249890 text='ff'
+[Deep2Engine] Sampler selected token: 778
+[DBG] sampled token=778 eosId=2
+[DBG] stateNorm=7.601035e+01 finite=1 pos=51
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29883 logit=    7.763174 text='c'
+  [ 1] id=25009 logit=    7.674083 text='pecially'
+  [ 2] id=29876 logit=    6.590552 text='n'
+  [ 3] id=17143 logit=    6.494048 text='hed'
+  [ 4] id= 8971 logit=    6.302472 text='nap'
+  [ 5] id= 9795 logit=    6.108711 text='ped'
+  [ 6] id= 1760 logit=    5.909179 text='cent'
+  [ 7] id= 5666 logit=    5.819166 text='arc'
+  [ 8] id=29889 logit=    5.721348 text='.'
+  [ 9] id= 4515 logit=    5.689585 text='nes'
+[Deep2Engine] Sampler selected token: 1993
+[DBG] sampled token=1993 eosId=2
+[DBG] stateNorm=8.034376e+01 finite=1 pos=52
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  278 logit=    9.268120 text=' the'
+  [ 1] id=29889 logit=    9.162861 text='.'
+  [ 2] id=  267 logit=    8.723386 text='es'
+  [ 3] id=28990 logit=    8.082987 text='making'
+  [ 4] id=29899 logit=    7.952705 text='-'
+  [ 5] id=29874 logit=    7.943172 text='a'
+  [ 6] id=28107 logit=    7.844471 text='maker'
+  [ 7] id=29871 logit=    7.766806 text=' '
+  [ 8] id=  322 logit=    7.682352 text=' and'
+  [ 9] id=29892 logit=    7.593895 text=','
+[Deep2Engine] Sampler selected token: 278
+[DBG] sampled token=278 eosId=2
+[DBG] stateNorm=7.095425e+01 finite=1 pos=53
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1008 logit=    8.060319 text='ater'
+  [ 1] id=  615 logit=    7.226907 text='ft'
+  [ 2] id=17728 logit=    6.961719 text='guard'
+  [ 3] id=  271 logit=    6.656986 text='at'
+  [ 4] id=  941 logit=    6.530602 text='ta'
+  [ 5] id=10412 logit=    6.411588 text='aters'
+  [ 6] id=29873 logit=    6.384199 text='t'
+  [ 7] id= 8141 logit=    6.225710 text='atr'
+  [ 8] id=13161 logit=    6.110624 text='tan'
+  [ 9] id= 3186 logit=    5.532432 text=' world'
+[Deep2Engine] Sampler selected token: 615
+[DBG] sampled token=615 eosId=2
+[DBG] stateNorm=8.252939e+01 finite=1 pos=54
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  459 logit=    8.493980 text='op'
+  [ 1] id=29885 logit=    8.451054 text='m'
+  [ 2] id=29889 logit=    8.378224 text='.'
+  [ 3] id=29888 logit=    7.925001 text='f'
+  [ 4] id=  278 logit=    7.890729 text=' the'
+  [ 5] id=  603 logit=    7.479398 text='ime'
+  [ 6] id=  540 logit=    7.252489 text=' he'
+  [ 7] id=29874 logit=    7.139635 text='a'
+  [ 8] id=29899 logit=    7.122074 text='-'
+  [ 9] id=15464 logit=    6.963315 text='rade'
+[Deep2Engine] Sampler selected token: 29892
+[DBG] sampled token=29892 eosId=2
+[DBG] stateNorm=7.672066e+01 finite=1 pos=55
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  322 logit=    7.718329 text=' and'
+  [ 1] id=  541 logit=    6.992669 text=' but'
+  [ 2] id=  297 logit=    6.585838 text=' in'
+  [ 3] id=  470 logit=    6.443141 text=' or'
+  [ 4] id=  408 logit=    6.374748 text=' as'
+  [ 5] id=  607 logit=    6.348995 text=' which'
+  [ 6] id=29871 logit=    6.276546 text=' '
+  [ 7] id=  278 logit=    6.065755 text=' the'
+  [ 8] id=   13 logit=    6.054626 text='
+'
+  [ 9] id=  411 logit=    5.973104 text=' with'
+[Deep2Engine] Sampler selected token: 8778
+[DBG] sampled token=8778 eosId=2
+[DBG] stateNorm=8.230845e+01 finite=1 pos=56
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  520 logit=    8.356845 text='ost'
+  [ 1] id=10034 logit=    8.335065 text=' Dep'
+  [ 2] id=27345 logit=    7.524744 text='Pod'
+  [ 3] id= 2047 logit=    7.524422 text=' »'
+  [ 4] id=13117 logit=    7.385116 text='Kit'
+  [ 5] id=16898 logit=    7.336955 text='omorphic'
+  [ 6] id=11506 logit=    7.198050 text='coming'
+  [ 7] id= 6115 logit=    6.848273 text='wood'
+  [ 8] id= 3826 logit=    6.742417 text=' Dec'
+  [ 9] id=19415 logit=    6.742318 text='boy'
+[Deep2Engine] Sampler selected token: 5741
+[DBG] sampled token=5741 eosId=2
+[KVCache] page grow 56 -> 64 hot (virtualMax=2048 pos=56)
+[DBG] stateNorm=8.407459e+01 finite=1 pos=57
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29874 logit=   14.189854 text='a'
+  [ 1] id=  335 logit=   13.821351 text='ig'
+  [ 2] id=  277 logit=   13.327825 text='it'
+  [ 3] id=19627 logit=   13.275564 text='alia'
+  [ 4] id= 1821 logit=   12.765827 text='ible'
+  [ 5] id=14981 logit=   12.619698 text='ibly'
+  [ 6] id= 1111 logit=   12.513109 text='co'
+  [ 7] id= 1080 logit=   12.221601 text='ions'
+  [ 8] id=17259 logit=   12.145962 text='itors'
+  [ 9] id= 2798 logit=   11.915043 text='count'
+[Deep2Engine] Sampler selected token: 277
+[DBG] sampled token=277 eosId=2
+[DBG] stateNorm=7.415296e+01 finite=1 pos=58
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 4983 logit=    8.698967 text='iner'
+  [ 1] id= 1311 logit=    8.515128 text='self'
+  [ 2] id= 7844 logit=    8.099731 text='unes'
+  [ 3] id=  338 logit=    7.622028 text=' is'
+  [ 4] id=29889 logit=    7.480246 text='.'
+  [ 5] id=  701 logit=    7.208591 text=' up'
+  [ 6] id=  714 logit=    7.187305 text=' out'
+  [ 7] id=29915 logit=    7.174837 text='''
+  [ 8] id= 1004 logit=    7.149883 text='me'
+  [ 9] id=  508 logit=    6.780664 text=' can'
+[Deep2Engine] Sampler selected token: 29899
+[DBG] sampled token=29899 eosId=2
+[DBG] stateNorm=7.665691e+01 finite=1 pos=59
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  261 logit=    8.320875 text='er'
+  [ 1] id=  262 logit=    8.168894 text='in'
+  [ 2] id=29874 logit=    7.442830 text='a'
+  [ 3] id=  449 logit=    7.328542 text='out'
+  [ 4] id=  263 logit=    7.102211 text=' a'
+  [ 5] id=29871 logit=    7.086043 text=' '
+  [ 6] id=  786 logit=    7.058007 text='up'
+  [ 7] id=   13 logit=    7.029670 text='
+'
+  [ 8] id=  797 logit=    6.796884 text='In'
+  [ 9] id=  577 logit=    6.650652 text=' so'
+[Deep2Engine] Sampler selected token: 29874
+[DBG] sampled token=29874 eosId=2
+[DBG] stateNorm=8.052942e+01 finite=1 pos=60
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29889 logit=    6.669561 text='.'
+  [ 1] id= 2822 logit=    6.436713 text=' href'
+  [ 2] id=29892 logit=    6.433936 text=','
+  [ 3] id=29897 logit=    6.382116 text=')'
+  [ 4] id=29871 logit=    6.117392 text=' '
+  [ 5] id=30181 logit=    6.072940 text='€'
+  [ 6] id=12135 logit=    5.919468 text='ustral'
+  [ 7] id=   13 logit=    5.701435 text='
+'
+  [ 8] id= 1472 logit=    5.607771 text=' long'
+  [ 9] id=  322 logit=    5.516096 text=' and'
+[Deep2Engine] Sampler selected token: 29940
+[DBG] sampled token=29940 eosId=2
+[DBG] stateNorm=8.460125e+01 finite=1 pos=61
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1310 logit=    9.324155 text='ever'
+  [ 1] id=  272 logit=    8.984314 text='or'
+  [ 2] id= 1535 logit=    8.694191 text='ature'
+  [ 3] id= 9345 logit=    8.450657 text='ike'
+  [ 4] id= 2072 logit=    8.318017 text='orth'
+  [ 5] id=  625 logit=    8.200814 text='ice'
+  [ 6] id=29979 logit=    8.066304 text='Y'
+  [ 7] id= 1161 logit=    7.976718 text='ash'
+  [ 8] id=  387 logit=    7.793413 text='eg'
+  [ 9] id=  860 logit=    7.758567 text='ick'
+[Deep2Engine] Sampler selected token: 860
+[DBG] sampled token=860 eosId=2
+[DBG] stateNorm=8.088666e+01 finite=1 pos=62
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1847 logit=    8.278829 text='ling'
+  [ 1] id=  280 logit=    7.751334 text='le'
+  [ 2] id= 1691 logit=    7.689273 text='ets'
+  [ 3] id=  537 logit=    7.509441 text='ity'
+  [ 4] id=  814 logit=    7.424481 text='ert'
+  [ 5] id=29899 logit=    7.344240 text='-'
+  [ 6] id=  414 logit=    7.305631 text='ers'
+  [ 7] id=  786 logit=    7.217448 text='up'
+  [ 8] id= 1358 logit=    7.195425 text='ler'
+  [ 9] id=  310 logit=    7.073849 text=' of'
+[Deep2Engine] Sampler selected token: 29899
+[DBG] sampled token=29899 eosId=2
+[DBG] stateNorm=7.634851e+01 finite=1 pos=63
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  261 logit=    8.432347 text='er'
+  [ 1] id=  262 logit=    8.310047 text='in'
+  [ 2] id= 3538 logit=    8.063499 text='wise'
+  [ 3] id=  449 logit=    7.574096 text='out'
+  [ 4] id=  797 logit=    7.457310 text='In'
+  [ 5] id=  263 logit=    6.957163 text=' a'
+  [ 6] id=  714 logit=    6.948342 text=' out'
+  [ 7] id=  278 logit=    6.918222 text=' the'
+  [ 8] id= 3744 logit=    6.764322 text='Out'
+  [ 9] id=29871 logit=    6.696832 text=' '
+[Deep2Engine] Sampler selected token: 3538
+[DBG] sampled token=3538 eosId=2
+[DBG] stateNorm=7.296755e+01 finite=1 pos=64
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29889 logit=    7.878184 text='.'
+  [ 1] id=29892 logit=    7.595627 text=','
+  [ 2] id=   13 logit=    7.259366 text='
+'
+  [ 3] id=29901 logit=    6.987935 text=':'
+  [ 4] id=  304 logit=    6.825277 text=' to'
+  [ 5] id=29991 logit=    6.720922 text='!'
+  [ 6] id=  322 logit=    6.523131 text=' and'
+  [ 7] id=  393 logit=    6.319093 text=' that'
+  [ 8] id=  363 logit=    6.008290 text=' for'
+  [ 9] id=  297 logit=    5.916743 text=' in'
+[Deep2Engine] Sampler selected token: 2750
+[DBG] sampled token=2750 eosId=2
+[KVCache] page grow 64 -> 72 hot (virtualMax=2048 pos=64)
+[DBG] stateNorm=8.044001e+01 finite=1 pos=65
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  607 logit=    8.627233 text=' which'
+  [ 1] id=  372 logit=    7.844329 text=' it'
+  [ 2] id= 1009 logit=    7.779334 text=' their'
+  [ 3] id=  278 logit=    7.635089 text=' the'
+  [ 4] id=  670 logit=    7.624137 text=' his'
+  [ 5] id=  697 logit=    7.524310 text=' one'
+  [ 6] id=  590 logit=    7.426116 text=' my'
+  [ 7] id=  263 logit=    7.164226 text=' a'
+  [ 8] id=  596 logit=    6.887483 text=' your'
+  [ 9] id=29889 logit=    6.732824 text='.'
+[Deep2Engine] Sampler selected token: 372
+[DBG] sampled token=372 eosId=2
+[DBG] stateNorm=7.824931e+01 finite=1 pos=66
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29915 logit=    9.386640 text='''
+  [ 1] id=  338 logit=    8.588870 text=' is'
+  [ 2] id=  714 logit=    8.144968 text=' out'
+  [ 3] id= 1122 logit=    8.088442 text=' may'
+  [ 4] id= 1017 logit=    8.077760 text='ty'
+  [ 5] id=29882 logit=    8.018907 text='h'
+  [ 6] id= 1311 logit=    8.002815 text='self'
+  [ 7] id=  471 logit=    7.977394 text=' was'
+  [ 8] id=  508 logit=    7.886184 text=' can'
+  [ 9] id=29889 logit=    7.727577 text='.'
+[Deep2Engine] Sampler selected token: 338
+[DBG] sampled token=338 eosId=2
+[DBG] stateNorm=7.490025e+01 finite=1 pos=67
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  263 logit=    8.629275 text=' a'
+  [ 1] id=  278 logit=    8.435987 text=' the'
+  [ 2] id=  385 logit=    7.900816 text=' an'
+  [ 3] id=  451 logit=    7.789978 text=' not'
+  [ 4] id=  297 logit=    7.717362 text=' in'
+  [ 5] id=  393 logit=    7.495252 text=' that'
+  [ 6] id=  697 logit=    7.378769 text=' one'
+  [ 7] id=29885 logit=    7.364508 text='m'
+  [ 8] id=  363 logit=    7.233904 text=' for'
+  [ 9] id=  304 logit=    7.201385 text=' to'
+[Deep2Engine] Sampler selected token: 20365
+[DBG] sampled token=20365 eosId=2
+[DBG] stateNorm=7.219792e+01 finite=1 pos=68
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  322 logit=    8.810711 text=' and'
+  [ 1] id=29892 logit=    8.706141 text=','
+  [ 2] id=29899 logit=    8.359555 text='-'
+  [ 3] id=29871 logit=    7.923232 text=' '
+  [ 4] id=  304 logit=    7.912824 text=' to'
+  [ 5] id=  470 logit=    7.667272 text=' or'
+  [ 6] id=  297 logit=    7.388510 text=' in'
+  [ 7] id=  373 logit=    7.172391 text=' on'
+  [ 8] id=  310 logit=    7.152431 text=' of'
+  [ 9] id=  491 logit=    7.143744 text=' by'
+[Deep2Engine] Sampler selected token: 8967
+[DBG] sampled token=8967 eosId=2
+[Deep2Engine] Generation complete: 64 tokens in 5820.62 ms (E2E 11.00 TPS)
+[Deep2Engine] PREFILL: 5 tok in 735.78 ms (6.80 tok/s) | DECODE: 64 tok in 5084.83 ms (12.59 tok/s)
+DEEP2_GPU_RMSNORM_OPS=1496
+DEEP2_GPU_QKV_OPS=4488
+DEEP2_GPU_ROPE_OPS=1496
+DEEP2_GPU_ATTN_SCORE_OPS=1496
+DEEP2_GPU_SOFTMAX_OPS=1496
+DEEP2_GPU_ATTN_VALUE_OPS=1496
+DEEP2_GPU_O_PROJ_OPS=1496
+DEEP2_GPU_RESIDUAL_OPS=1496
+DEEP2_GPU_FFN_NORM_OPS=1496
+DEEP2_GPU_FFN_ACT_OPS=1496
+DEEP2_GPU_FFN_RESIDUAL_OPS=1496
+DEEP2_GPU_FORWARD_LAYERS=1496
+DEEP2_GPU_FORWARD_SLOT_0=1496
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=136
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=1
+TOKENS_DECODED=68
+GPU_FORWARD_LAYERS_PER_TOKEN=22
+DEEP2_GPU_FORWARD_FALLBACKS=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=1
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=10472
+DEEP2_GPU_HOST_SYNC=136
+DEEP2_REAL_GPU_FORWARD=1
+DEEP2_GPU_Q4K_PACKED_OPS=9112
+DEEP2_GPU_Q6K_PACKED_OPS=1424
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+
+============================================================
+LINEARW CALL BREAKDOWN BY QUANTIZATION TYPE
+============================================================
+  IQ2_XS    calls=      64  ms=     772.053  MACs=    4194304000  ms/MAC=0.000000
+  TOTAL     calls=       0  ms=     772.053  MACs=    4194304000
+
+============================================================
+TOP 20 LINEARW CALLS BY CUMULATIVE TIME (ms)
+============================================================
+  TENSOR                                      CALLS           MS           MACs      MS/CALL
+============================================================
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 0
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 0.000
+totalEmbedMs       = 14.732
+totalLogitsMs      = 772.656
+[AGENT] GENERATION_RECEIPT prompt=5 generated=64 completed=1 cancelled=0 stop_reason=16 stop=COMPLETED
+totalAttnMs        = 0.000
+totalFfnMs         = 0.000
+acquireCount       = 0
+mapCount           = 0
+releaseCount       = 0
+releaseErrorCount  = 0
+tensorAcquireFail  = 0
+mappingErrorCount  = 0
+residencyErrorCount= 0
+staleLeaseCount    = 0
+============================================================
+
+=== ElasticResidencyManager Telemetry ===
+NVMe read time:        0 us
+RAM stage time:        0 us
+RAM?VRAM upload time:  0 us
+GPU wait time:         14588 us
+GPU compute time:      0 us
+Prefetch hits:         0
+Prefetch misses:       0
+Prefetch hit rate:     0.00%  (B011 ref ~79.96%)
+VRAM eviction time:    0 us
+CPU fallback time:     0 us
+State race blocks:     0
+Compute efficiency:    0.0000
+G04 lease pins issued:  68
+G04 stale leases rej:   0
+G04 evict lease skips:  0
+G04 evictions deferred: 0
+RAWRXD_TICKLATCH_001 warmup_accepted=1 prefetch_requests=0 prefetch_deferred_before_warmup=0
+B011_FETCH_COST_FRAME  hit=0.00%  io_ref~77.6%  map_ref~99.7%  metric=fetch_not_fit
+FREETOKEN_WITNESS_LIVE=1
+FREETOKEN_WITNESS_ACTIVE_ZONES=8
+FREETOKEN_WITNESS_READY_ZONES=0
+FREETOKEN_WITNESS_OVERWRITES=0
+FREETOKEN_WITNESS_HITS=0
+FREETOKEN_WITNESS_MISSES=0
+FREETOKEN_WITNESS_STICK_RPM_0=0
+FREETOKEN_WITNESS_STICK_RPM_1=0
+Memory: warmCompressed=35/2304 MB, warmStaged=0/288 MB, hot=0/4608 MB
+==========================================
+
+[Deep2Engine] Telemetry health: VRAM_BW_SATURATED
+[AGENT] POST_GENERATE generated=64 tokens
+  Generation completed in 5859.42 ms
+  Output:  F-ledge !Award. Of Corpus.
+Theirregulars liarmeronetime.
+aegressobviously.
+ofBecker@crampsuedén día luego dean (orces match theft, Home Visit-aNick-wise against it is heavily reported
+
+[TEST] Greedy mode (temperature=0)
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[GREEDY] enabled=0 temperature=0.8000 topK=40
+[AGENT] PREFILL_BEGIN prompt_tokens=5
+[AGENT] PRE_GENERATE calling generate()
+DEEP2_GPU_RMSNORM_OPS=1496
+DEEP2_GPU_QKV_OPS=4488
+DEEP2_GPU_ROPE_OPS=1496
+DEEP2_GPU_ATTN_SCORE_OPS=1496
+DEEP2_GPU_SOFTMAX_OPS=1496
+DEEP2_GPU_ATTN_VALUE_OPS=1496
+DEEP2_GPU_O_PROJ_OPS=1496
+DEEP2_GPU_RESIDUAL_OPS=1496
+DEEP2_GPU_FFN_NORM_OPS=1496
+DEEP2_GPU_FFN_ACT_OPS=1496
+DEEP2_GPU_FFN_RESIDUAL_OPS=1496
+DEEP2_GPU_FORWARD_LAYERS=1496
+DEEP2_GPU_FORWARD_SLOT_0=1496
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=136
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=1
+TOKENS_DECODED=68
+GPU_FORWARD_LAYERS_PER_TOKEN=22
+DEEP2_GPU_FORWARD_FALLBACKS=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=1
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=10472
+DEEP2_GPU_HOST_SYNC=136
+DEEP2_REAL_GPU_FORWARD=1
+DEEP2_GPU_Q4K_PACKED_OPS=9112
+DEEP2_GPU_Q6K_PACKED_OPS=1424
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+[Deep2Engine] Completion plan: ALL_NEEDS_SATISFIED → CALL_GENERATE_STREAM
+[K2_DBG] entry depth=22 tokens=32
+[K2_DBG] after ResetSwitches
+[K2_DBG] after Decide mode=2 arm=TRAMPOLINE_OUTPUT_CACHE
+AUTO_POLICY_ACTIVE=1
+MANUAL_ARM_FORCING=0
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=default_auto
+K2_LIVE_POLICY_REUSE_STEPS=704
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=22 TOKENS=32
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=1216600000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=(unset) MECH_ENV=trampoline WANTED=0
+[AGENT] PREFILL_DONE prompt_tokens=5 prefill_ms=283.326
+[AGENT] DECODE_BEGIN max_out=32
+[DBG] stateNorm=8.618588e+01 finite=1 pos=5
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  306 logit=   13.523794 text=' I'
+  [ 1] id=  383 logit=   12.783348 text=' F'
+  [ 2] id=18322 logit=   12.562676 text=' FO'
+  [ 3] id=  319 logit=   12.441281 text=' A'
+  [ 4] id=  263 logit=   11.592964 text=' a'
+  [ 5] id=  315 logit=   11.495206 text=' C'
+  [ 6] id= 6058 logit=   11.440753 text=' NOT'
+  [ 7] id= 6093 logit=   11.220941 text=' THE'
+  [ 8] id=17900 logit=   11.164811 text=' LA'
+  [ 9] id= 2672 logit=   11.147049 text=' IN'
+[Deep2Engine] Sampler selected token: 18322
+[DBG] sampled token=18322 eosId=2
+[AGENT] TOKEN id=18322 piece= FO
+[DBG] stateNorm=8.221173e+01 finite=1 pos=6
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 5265 logit=    8.672906 text='LI'
+  [ 1] id=29900 logit=    8.321783 text='0'
+  [ 2] id=29906 logit=    8.111488 text='2'
+  [ 3] id=29896 logit=    8.076619 text='1'
+  [ 4] id=29877 logit=    7.870340 text='o'
+  [ 5] id=29941 logit=    7.659344 text='3'
+  [ 6] id=29871 logit=    7.253835 text=' '
+  [ 7] id=29946 logit=    7.240579 text='4'
+  [ 8] id=29892 logit=    7.186729 text=','
+  [ 9] id=27888 logit=    7.167803 text='LIC'
+[Deep2Engine] Sampler selected token: 29900
+[DBG] sampled token=29900 eosId=2
+[DBG] stateNorm=6.905703e+01 finite=1 pos=7
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29889 logit=   11.207345 text='.'
+  [ 1] id=29892 logit=   10.027407 text=','
+  [ 2] id=29900 logit=    9.845843 text='0'
+  [ 3] id=29896 logit=    9.476034 text='1'
+  [ 4] id=29906 logit=    9.432751 text='2'
+  [ 5] id=29901 logit=    9.333431 text=':'
+  [ 6] id=29941 logit=    9.286930 text='3'
+  [ 7] id=29945 logit=    9.278485 text='5'
+  [ 8] id=  322 logit=    9.227535 text=' and'
+  [ 9] id=29946 logit=    9.149897 text='4'
+[Deep2Engine] Sampler selected token: 470
+[DBG] sampled token=470 eosId=2
+[DBG] stateNorm=8.278655e+01 finite=1 pos=8
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  738 logit=    9.688910 text=' any'
+  [ 1] id=  470 logit=    9.465855 text=' or'
+  [ 2] id= 1048 logit=    8.759301 text=' about'
+  [ 3] id=  278 logit=    8.706921 text=' the'
+  [ 4] id=  491 logit=    8.657255 text=' by'
+  [ 5] id= 2788 logit=    8.618143 text=' similar'
+  [ 6] id=  263 logit=    8.552664 text=' a'
+  [ 7] id= 1716 logit=    8.283675 text=' both'
+  [ 8] id=  916 logit=    8.227447 text=' other'
+  [ 9] id=  515 logit=    7.934438 text=' from'
+[Deep2Engine] Sampler selected token: 471
+[DBG] sampled token=471 eosId=2
+[DBG] stateNorm=8.651062e+01 finite=1 pos=9
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29013 logit=    8.876450 text='fog'
+  [ 1] id=25512 logit=    8.533604 text='==='
+  [ 2] id=24754 logit=    8.224410 text=' salv'
+  [ 3] id=31671 logit=    7.702692 text='ץ'
+  [ 4] id=16340 logit=    7.673751 text=' Sunday'
+  [ 5] id= 4356 logit=    7.501141 text=' ord'
+  [ 6] id=11899 logit=    7.426015 text=' poi'
+  [ 7] id= 3515 logit=    7.382904 text=' frame'
+  [ 8] id=15132 logit=    7.351899 text='чин'
+  [ 9] id=14628 logit=    7.241920 text='ök'
+[Deep2Engine] Sampler selected token: 3119
+[DBG] sampled token=3119 eosId=2
+[DBG] stateNorm=8.166472e+01 finite=1 pos=10
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29891 logit=    8.048566 text='y'
+  [ 1] id=  453 logit=    7.863122 text='ill'
+  [ 2] id=29985 logit=    7.813521 text='^'
+  [ 3] id= 1191 logit=    7.484421 text='arg'
+  [ 4] id=29871 logit=    7.279028 text=' '
+  [ 5] id=  895 logit=    7.195506 text='ise'
+  [ 6] id= 6090 logit=    7.149129 text='ills'
+  [ 7] id=   13 logit=    7.120047 text='
+'
+  [ 8] id= 2700 logit=    7.110991 text='ilder'
+  [ 9] id=29892 logit=    6.986432 text=','
+[Deep2Engine] Sampler selected token: 309
+[DBG] sampled token=309 eosId=2
+[DBG] stateNorm=8.678114e+01 finite=1 pos=11
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1397 logit=   10.131435 text='leg'
+  [ 1] id=  283 logit=    9.789077 text='ou'
+  [ 2] id=14174 logit=    9.368993 text='osc'
+  [ 3] id=12018 logit=    9.291069 text='legal'
+  [ 4] id=  359 logit=    9.226547 text='os'
+  [ 5] id=  309 logit=    8.999428 text='il'
+  [ 6] id=  381 logit=    8.803434 text='ir'
+  [ 7] id=  495 logit=    8.693390 text='ber'
+  [ 8] id=29885 logit=    8.419201 text='m'
+  [ 9] id= 1607 logit=    8.404687 text='ife'
+[Deep2Engine] Sampler selected token: 14174
+[DBG] sampled token=14174 eosId=2
+[DBG] stateNorm=8.659233e+01 finite=1 pos=12
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  453 logit=    9.376401 text='ill'
+  [ 1] id=29889 logit=    9.146184 text='.'
+  [ 2] id=  497 logit=    8.409456 text='all'
+  [ 3] id=  790 logit=    8.256725 text='iss'
+  [ 4] id=29892 logit=    8.088611 text=','
+  [ 5] id=29899 logit=    7.561694 text='-'
+  [ 6] id=  542 logit=    7.385237 text='oc'
+  [ 7] id= 2029 logit=    7.365713 text='loc'
+  [ 8] id= 2234 logit=    7.317930 text='ails'
+  [ 9] id=29876 logit=    7.314355 text='n'
+[Deep2Engine] Sampler selected token: 497
+[DBG] sampled token=497 eosId=2
+[DBG] stateNorm=8.210841e+01 finite=1 pos=13
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  388 logit=    8.969961 text='ay'
+  [ 1] id=  645 logit=    7.939246 text='ll'
+  [ 2] id=  278 logit=    7.701032 text=' the'
+  [ 3] id=  566 logit=    7.611931 text='ud'
+  [ 4] id= 1607 logit=    7.608751 text='ife'
+  [ 5] id=29889 logit=    7.605185 text='.'
+  [ 6] id= 1524 logit=    7.374387 text='iter'
+  [ 7] id=29892 logit=    7.318146 text=','
+  [ 8] id= 1242 logit=    7.208949 text='ows'
+  [ 9] id= 1151 logit=    7.182220 text='ude'
+[Deep2Engine] Sampler selected token: 3242
+[DBG] sampled token=3242 eosId=2
+[DBG] stateNorm=8.090946e+01 finite=1 pos=14
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29889 logit=    8.891126 text='.'
+  [ 1] id=29892 logit=    8.877235 text=','
+  [ 2] id=  386 logit=    8.594328 text='th'
+  [ 3] id= 3242 logit=    8.102425 text='most'
+  [ 4] id=29885 logit=    7.711109 text='m'
+  [ 5] id=  723 logit=    7.510537 text=' would'
+  [ 6] id= 1918 logit=    7.481753 text='thing'
+  [ 7] id=   13 logit=    7.478530 text='
+'
+  [ 8] id=  650 logit=    7.289371 text='one'
+  [ 9] id=29936 logit=    7.248127 text=';'
+[Deep2Engine] Sampler selected token: 10325
+[DBG] sampled token=10325 eosId=2
+[DBG] stateNorm=8.052267e+01 finite=1 pos=15
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29889 logit=   10.270677 text='.'
+  [ 1] id=29892 logit=    9.638914 text=','
+  [ 2] id=  491 logit=    9.285063 text=' by'
+  [ 3] id=  322 logit=    9.033612 text=' and'
+  [ 4] id= 5492 logit=    8.531424 text=' released'
+  [ 5] id=29973 logit=    8.509728 text='?'
+  [ 6] id= 8429 logit=    8.456589 text=' formed'
+  [ 7] id=16692 logit=    8.262280 text=' acquired'
+  [ 8] id= 5764 logit=    8.234859 text=' closed'
+  [ 9] id=  337 logit=    8.205487 text=' re'
+[Deep2Engine] Sampler selected token: 20050
+[DBG] sampled token=20050 eosId=2
+[DBG] stateNorm=7.990844e+01 finite=1 pos=16
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  411 logit=    7.900296 text=' with'
+  [ 1] id=29871 logit=    7.876552 text=' '
+  [ 2] id= 1253 logit=    7.760697 text='ress'
+  [ 3] id=29872 logit=    7.628782 text='e'
+  [ 4] id=  263 logit=    7.622407 text=' a'
+  [ 5] id= 1790 logit=    7.535468 text=' another'
+  [ 6] id=  491 logit=    7.519334 text=' by'
+  [ 7] id=  393 logit=    7.460768 text=' that'
+  [ 8] id= 9977 logit=    7.374916 text='esc'
+  [ 9] id=  278 logit=    7.173335 text=' the'
+[Deep2Engine] Sampler selected token: 776
+[DBG] sampled token=776 eosId=2
+[DBG] stateNorm=6.741411e+01 finite=1 pos=17
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=10475 logit=   12.606160 text='ership'
+  [ 1] id=  414 logit=    8.610490 text='ers'
+  [ 2] id=  292 logit=    7.899663 text='ing'
+  [ 3] id=29879 logit=    7.348423 text='s'
+  [ 4] id=   13 logit=    7.301323 text='
+'
+  [ 5] id= 3527 logit=    7.300674 text='ship'
+  [ 6] id=29892 logit=    7.241591 text=','
+  [ 7] id=29889 logit=    6.706211 text='.'
+  [ 8] id=  473 logit=    6.631362 text='our'
+  [ 9] id=  322 logit=    6.499599 text=' and'
+[Deep2Engine] Sampler selected token: 10475
+[DBG] sampled token=10475 eosId=2
+[DBG] stateNorm=7.937670e+01 finite=1 pos=18
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  310 logit=    8.158134 text=' of'
+  [ 1] id=29889 logit=    7.921505 text='.'
+  [ 2] id=  322 logit=    7.575381 text=' and'
+  [ 3] id=  338 logit=    7.522844 text=' is'
+  [ 4] id=29892 logit=    7.190795 text=','
+  [ 5] id=  471 logit=    6.858054 text=' was'
+  [ 6] id=  674 logit=    6.538351 text=' will'
+  [ 7] id=28648 logit=    6.259796 text=' procedures'
+  [ 8] id=  470 logit=    6.240423 text=' or'
+  [ 9] id=  393 logit=    6.215382 text=' that'
+[Deep2Engine] Sampler selected token: 12790
+[DBG] sampled token=12790 eosId=2
+[DBG] stateNorm=7.794591e+01 finite=1 pos=19
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29892 logit=    7.587230 text=','
+  [ 1] id= 9620 logit=    7.501134 text=' Rail'
+  [ 2] id=29889 logit=    7.298867 text='.'
+  [ 3] id=  310 logit=    7.228796 text=' of'
+  [ 4] id=  322 logit=    7.036345 text=' and'
+  [ 5] id=  292 logit=    7.031151 text='ing'
+  [ 6] id=  297 logit=    6.734652 text=' in'
+  [ 7] id=29915 logit=    6.656509 text='''
+  [ 8] id=  338 logit=    6.548096 text=' is'
+  [ 9] id=  975 logit=    6.430714 text=' over'
+[Deep2Engine] Sampler selected token: 322
+[DBG] sampled token=322 eosId=2
+[DBG] stateNorm=6.787977e+01 finite=1 pos=20
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29871 logit=    6.579315 text=' '
+  [ 1] id=  278 logit=    6.252748 text=' the'
+  [ 2] id=  263 logit=    6.181928 text=' a'
+  [ 3] id=  313 logit=    6.094118 text=' ('
+  [ 4] id=  306 logit=    5.833838 text=' I'
+  [ 5] id=  297 logit=    5.694703 text=' in'
+  [ 6] id=  591 logit=    5.478308 text=' we'
+  [ 7] id=  599 logit=    5.440996 text=' all'
+  [ 8] id=  884 logit=    5.425550 text=' also'
+  [ 9] id=  304 logit=    5.328326 text=' to'
+[Deep2Engine] Sampler selected token: 278
+[DBG] sampled token=278 eosId=2
+[DBG] stateNorm=7.194248e+01 finite=1 pos=21
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1008 logit=    7.925520 text='ater'
+  [ 1] id=  615 logit=    7.825595 text='ft'
+  [ 2] id=  941 logit=    6.444337 text='ta'
+  [ 3] id=  272 logit=    6.080044 text='or'
+  [ 4] id=10412 logit=    6.070513 text='aters'
+  [ 5] id= 8141 logit=    5.896745 text='atr'
+  [ 6] id=  271 logit=    5.743490 text='at'
+  [ 7] id= 1021 logit=    5.681826 text=' same'
+  [ 8] id=  937 logit=    5.426301 text=' first'
+  [ 9] id= 2498 logit=    5.309097 text=' general'
+[Deep2Engine] Sampler selected token: 615
+[DBG] sampled token=615 eosId=2
+[DBG] stateNorm=8.359564e+01 finite=1 pos=22
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29889 logit=    9.731007 text='.'
+  [ 1] id=29899 logit=    8.806528 text='-'
+  [ 2] id=29874 logit=    8.590366 text='a'
+  [ 3] id=29885 logit=    8.532257 text='m'
+  [ 4] id=29875 logit=    8.429651 text='i'
+  [ 5] id=29888 logit=    8.107552 text='f'
+  [ 6] id=  540 logit=    7.708977 text=' he'
+  [ 7] id=  354 logit=    7.640547 text='he'
+  [ 8] id=29879 logit=    7.541878 text='s'
+  [ 9] id=29873 logit=    7.522614 text='t'
+[Deep2Engine] Sampler selected token: 29889
+[DBG] sampled token=29889 eosId=2
+[DBG] stateNorm=8.009762e+01 finite=1 pos=23
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=   13 logit=    9.966925 text='
+'
+  [ 1] id=29871 logit=    8.281118 text=' '
+  [ 2] id=  450 logit=    7.838008 text=' The'
+  [ 3] id=    2 logit=    7.710776 text='</s>'
+  [ 4] id=  306 logit=    7.548265 text=' I'
+  [ 5] id=  319 logit=    7.072110 text=' A'
+  [ 6] id=  512 logit=    6.640058 text=' In'
+  [ 7] id=  910 logit=    6.566128 text=' This'
+  [ 8] id=16564 logit=    6.468000 text=' Based'
+  [ 9] id=  739 logit=    6.300108 text=' It'
+[Deep2Engine] Sampler selected token: 13
+[DBG] sampled token=13 eosId=2
+[DBG] stateNorm=7.779261e+01 finite=1 pos=24
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=   13 logit=   10.464497 text='
+'
+  [ 1] id=  797 logit=    9.090170 text='In'
+  [ 2] id= 1576 logit=    9.012873 text='The'
+  [ 3] id=  392 logit=    8.968897 text='and'
+  [ 4] id=29909 logit=    8.879690 text='A'
+  [ 5] id= 1552 logit=    8.744388 text='the'
+  [ 6] id=  974 logit=    8.624683 text='of'
+  [ 7] id=  517 logit=    8.541658 text='to'
+  [ 8] id=29874 logit=    8.396128 text='a'
+  [ 9] id=29889 logit=    8.392038 text='.'
+[Deep2Engine] Sampler selected token: 13
+[DBG] sampled token=13 eosId=2
+[DBG] stateNorm=7.790100e+01 finite=1 pos=25
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=   13 logit=   10.520241 text='
+'
+  [ 1] id=  797 logit=    9.085020 text='In'
+  [ 2] id= 1576 logit=    9.019561 text='The'
+  [ 3] id=29909 logit=    8.884727 text='A'
+  [ 4] id=  392 logit=    8.867992 text='and'
+  [ 5] id= 1552 logit=    8.622800 text='the'
+  [ 6] id=29889 logit=    8.472012 text='.'
+  [ 7] id=  517 logit=    8.444801 text='to'
+  [ 8] id=  974 logit=    8.387981 text='of'
+  [ 9] id=29874 logit=    8.328551 text='a'
+[Deep2Engine] Sampler selected token: 262
+[DBG] sampled token=262 eosId=2
+[DBG] stateNorm=7.733234e+01 finite=1 pos=26
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=18980 logit=    8.634813 text='dependent'
+  [ 1] id=18925 logit=    7.951549 text='finite'
+  [ 2] id= 2763 logit=    7.728558 text='come'
+  [ 3] id= 1037 logit=    7.669064 text='cre'
+  [ 4] id= 4951 logit=    7.649942 text='fin'
+  [ 5] id= 1028 logit=    7.595339 text='sp'
+  [ 6] id= 6609 logit=    7.391917 text='ches'
+  [ 7] id=  278 logit=    7.322194 text=' the'
+  [ 8] id=  509 logit=    7.184860 text='tr'
+  [ 9] id=  695 logit=    7.119618 text='cl'
+[Deep2Engine] Sampler selected token: 18980
+[DBG] sampled token=18980 eosId=2
+[DBG] stateNorm=7.485113e+01 finite=1 pos=27
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29892 logit=    8.791672 text=','
+  [ 1] id=  322 logit=    8.398877 text=' and'
+  [ 2] id=  310 logit=    7.818748 text=' of'
+  [ 3] id=29889 logit=    7.606309 text='.'
+  [ 4] id=  304 logit=    7.572813 text=' to'
+  [ 5] id=29899 logit=    7.558260 text='-'
+  [ 6] id=29871 logit=    7.486392 text=' '
+  [ 7] id=  373 logit=    7.333511 text=' on'
+  [ 8] id=  297 logit=    7.298664 text=' in'
+  [ 9] id=  470 logit=    7.251656 text=' or'
+[Deep2Engine] Sampler selected token: 322
+[DBG] sampled token=322 eosId=2
+[DBG] stateNorm=7.033597e+01 finite=1 pos=28
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29871 logit=    6.620774 text=' '
+  [ 1] id=  307 logit=    6.330687 text='ro'
+  [ 2] id=  278 logit=    6.258497 text=' the'
+  [ 3] id=  263 logit=    6.137544 text=' a'
+  [ 4] id=  276 logit=    5.549773 text='re'
+  [ 5] id=  306 logit=    5.309676 text=' I'
+  [ 6] id=  313 logit=    5.192686 text=' ('
+  [ 7] id=  515 logit=    5.144067 text=' from'
+  [ 8] id=  297 logit=    5.135896 text=' in'
+  [ 9] id=  272 logit=    5.115778 text='or'
+[Deep2Engine] Sampler selected token: 10972
+[DBG] sampled token=10972 eosId=2
+[DBG] stateNorm=8.084765e+01 finite=1 pos=29
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  297 logit=    9.176676 text=' in'
+  [ 1] id=  322 logit=    8.763759 text=' and'
+  [ 2] id=  278 logit=    7.681352 text=' the'
+  [ 3] id=  701 logit=    7.610902 text=' up'
+  [ 4] id=  515 logit=    7.577175 text=' from'
+  [ 5] id=  372 logit=    7.496655 text=' it'
+  [ 6] id=29892 logit=    7.475014 text=','
+  [ 7] id=  263 logit=    7.277069 text=' a'
+  [ 8] id=  491 logit=    7.220479 text=' by'
+  [ 9] id=29889 logit=    7.116440 text='.'
+[Deep2Engine] Sampler selected token: 5844
+[DBG] sampled token=5844 eosId=2
+[DBG] stateNorm=7.963868e+01 finite=1 pos=30
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 7154 logit=    8.848826 text='ilde'
+  [ 1] id= 3173 logit=    8.643117 text='ias'
+  [ 2] id= 9532 logit=    8.490138 text='ieu'
+  [ 3] id=29889 logit=    8.450191 text='.'
+  [ 4] id=19217 logit=    8.246719 text='ematic'
+  [ 5] id=  322 logit=    7.987741 text=' and'
+  [ 6] id=29879 logit=    7.937388 text='s'
+  [ 7] id=29892 logit=    7.519971 text=','
+  [ 8] id= 2810 logit=    7.438732 text='lete'
+  [ 9] id=25949 logit=    7.351954 text='ilda'
+[Deep2Engine] Sampler selected token: 2922
+[DBG] sampled token=2922 eosId=2
+[DBG] stateNorm=8.650574e+01 finite=1 pos=31
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 2153 logit=   12.132153 text='ters'
+  [ 1] id= 5582 logit=   10.047910 text='isse'
+  [ 2] id=  414 logit=    9.294787 text='ers'
+  [ 3] id=11669 logit=    8.759398 text='rices'
+  [ 4] id=  509 logit=    8.488776 text='tr'
+  [ 5] id=  861 logit=    8.056616 text='ix'
+  [ 6] id=29889 logit=    8.051908 text='.'
+  [ 7] id= 8205 logit=    8.036912 text='lab'
+  [ 8] id=  371 logit=    7.769938 text='te'
+  [ 9] id=17357 logit=    7.742910 text='plotlib'
+[Deep2Engine] Sampler selected token: 371
+[DBG] sampled token=371 eosId=2
+[DBG] stateNorm=8.641968e+01 finite=1 pos=32
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 9733 logit=   11.287790 text='aching'
+  [ 1] id=  621 logit=   10.827831 text='eth'
+  [ 2] id= 2232 logit=   10.826154 text='ams'
+  [ 3] id= 6387 logit=   10.461220 text='chni'
+  [ 4] id= 2795 logit=    9.627160 text='amed'
+  [ 5] id=11500 logit=    9.393777 text='aming'
+  [ 6] id=29874 logit=    9.378126 text='a'
+  [ 7] id=14520 logit=    9.235895 text='aches'
+  [ 8] id=  496 logit=    9.215744 text='ach'
+  [ 9] id=29882 logit=    9.214417 text='h'
+[Deep2Engine] Sampler selected token: 6387
+[DBG] sampled token=6387 eosId=2
+[DBG] stateNorm=8.655260e+01 finite=1 pos=33
+[DBG] nonFiniteLogits=0 vocabSize=32000
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1912 logit=   10.164235 text='ques'
+  [ 1] id=17851 logit=    9.255207 text='qué'
+  [ 2] id=  802 logit=    9.237998 text='que'
+  [ 3] id=  271 logit=    8.386217 text='at'
+  [ 4] id= 2004 logit=    8.312518 text='eme'
+  [ 5] id=12621 logit=    8.119923 text='quet'
+  [ 6] id=  342 logit=    7.758598 text='est'
+  [ 7] id= 3002 logit=    7.629968 text='ology'
+  [ 8] id= 4778 logit=    7.619998 text='esto'
+  [ 9] id= 2986 logit=    7.504369 text='pped'
+[Deep2Engine] Sampler selected token: 17851
+[DBG] sampled token=17851 eosId=2
+[GPU] endSubmitWait stage=queue_submit vk=-4
+DEEP2_GPU_DEVICE_LOST mark=1 code=-4 phase=device_lost
+DEEP2_GPU_DEVICE_LOST mark=2 code=-4 phase=device_lost
+[B3_ABORT] forwardLayer exception at layer=0 code=0xE06D7363 instruction=00007FF8FA59569A fault=00000029F60FB9D0 stopping generation
+[AGENT] POST_GENERATE generated=29 tokens
+[B3_ABORT] decode gpu/cpu forward fail
+[AGENT] GENERATION_RECEIPT prompt=5 generated=29 completed=1 cancelled=0 stop_reason=16 stop=COMPLETED
+  Greedy output:  FO0 or was possiloscallmost recently facedownership Light and theft.
+
+independent and learned mathmattechniqué
+
+[TEST] Streaming generation
+[GREEDY] enabled=0 temperature=0.7000 topK=40
+[AGENT] PREFILL_BEGIN prompt_tokens=5
+[AGENT] PRE_GENERATE calling generate()
+DEEP2_GPU_RMSNORM_OPS=726
+DEEP2_GPU_QKV_OPS=2178
+DEEP2_GPU_ROPE_OPS=726
+DEEP2_GPU_ATTN_SCORE_OPS=726
+DEEP2_GPU_SOFTMAX_OPS=726
+DEEP2_GPU_ATTN_VALUE_OPS=726
+DEEP2_GPU_O_PROJ_OPS=726
+DEEP2_GPU_RESIDUAL_OPS=726
+DEEP2_GPU_FFN_NORM_OPS=726
+DEEP2_GPU_FFN_ACT_OPS=726
+DEEP2_GPU_FFN_RESIDUAL_OPS=726
+DEEP2_GPU_FORWARD_LAYERS=726
+DEEP2_GPU_FORWARD_SLOT_0=726
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=66
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=1
+TOKENS_DECODED=33
+GPU_FORWARD_LAYERS_PER_TOKEN=22
+DEEP2_GPU_FORWARD_FALLBACKS=1
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=5082
+DEEP2_GPU_HOST_SYNC=66
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=4422
+DEEP2_GPU_Q6K_PACKED_OPS=689
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+[Deep2Engine] Completion plan: ALL_NEEDS_SATISFIED → CALL_GENERATE_STREAM
+[K2_DBG] entry depth=22 tokens=32
+[K2_DBG] after ResetSwitches
+[K2_DBG] after Decide mode=2 arm=TRAMPOLINE_OUTPUT_CACHE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+AUTO_POLICY_ACTIVE=1
+MANUAL_ARM_FORCING=0
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=default_auto
+K2_LIVE_POLICY_REUSE_STEPS=704
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=22 TOKENS=32
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=1216600000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=(unset) MECH_ENV=trampoline WANTED=0
+[B3_ABORT] forwardLayer exception at layer=0 code=0xE06D7363 instruction=00007FF8FA59569A fault=00000029F60FBAA0 stopping generation
+[AGENT] POST_GENERATE generated=0 tokens
+[B3_ABORT] prefill gpu/cpu forward fail pos=0
+[AGENT] GENERATION_RECEIPT prompt=5 generated=0 completed=0 cancelled=0 stop_reason=11 stop=FORWARD_FAULT
+  Stream completed: NO
+FAIL: Streaming did not generate tokens
+  Stream tokens: 0
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] unloadModel
+  Streamed text: 
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=22
+[LIFE] unloadModel FreeTensorData ggufResult (201 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+[LIFE] release MoE
+[LIFE] disableMARS
+[LIFE] release vulkan devices
+[LIFE] stop telemetryController
+[LIFE] release residency/elastic/cache
+[LIFE] reset elasticResidency
+[LIFE] reset residencyManager
+[LIFE] reset residencyCache
+[LIFE] reset globalIndex
+[LIFE] residency/elastic/cache done
+[LIFE] release KV / compressedKV / toroidalKV
+[LIFE] stop threadPool
+[LIFE] release satellite engines
+[LIFE] deallocateBuffers
+[LIFE] remove temp Ollama GGUF
+[LIFE] ~Deep2Engine END
+[StreamEngine] Shutdown
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[MARS] Shutdown complete. Total allocated: 0.00 MB, Total freed: 0.00 MB
+[Deep2Engine] MARS disabled
+[ElasticResidencyManager] Scheduler thread exiting
+[ElasticResidencyManager] Shutdown complete
+[ResidencyManager] Shutdown complete

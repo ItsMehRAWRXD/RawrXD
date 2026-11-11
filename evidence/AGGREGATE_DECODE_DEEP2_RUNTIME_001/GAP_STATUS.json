@@ -1,0 +1,43 @@
+{
+  "gate": "AGGREGATE_DECODE_DEEP2_RUNTIME_001",
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "gguf": "F:\\ollamamodels\\n4-tiny-oracle.gguf",
+  "gguf_provenance": "hardlink to ollama blob sha256-da3087fb14aede55fde6eb81a0e55e886810e43509ec82ecdc7aa5d62a03b556 (n4-tiny-oracle:latest model layer)",
+  "compiler": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Tools\\MSVC\\14.44.35207\\bin\\Hostx64\\x64\\cl.exe",
+  "link": {
+    "AGGREGATE_DECODE_USE_DEEP2": 1,
+    "deep2_engine_lib": 1,
+    "HTTP_fallback": 0
+  },
+  "single": {
+    "BACKEND": "DEEP2",
+    "BACKEND_LABEL": "DEEP2_ENGINE",
+    "SOURCE_WIRED": 1,
+    "RUNTIME_REACHED": 1,
+    "deep2_runtime_reached": 1,
+    "GENERATED_TOKENS": 8,
+    "AGGREGATE_DECODE_TPS_SINGLE": 0.279799,
+    "exit_code": 0
+  },
+  "multi": {
+    "BACKEND": "DEEP2",
+    "BACKEND_LABEL": "DEEP2_ENGINE",
+    "SOURCE_WIRED": 1,
+    "RUNTIME_REACHED": 1,
+    "deep2_runtime_reached": 1,
+    "STREAMS": 2,
+    "CONCURRENT": 1,
+    "GENERATED_TOKENS": 12,
+    "AGGREGATE_DECODE_TPS_MULTI": 0.187053,
+    "ALL_SESSIONS_WORKED": 1,
+    "BOTH_LANES": 1,
+    "FAIRNESS_RATIO": 0.995340,
+    "note": "Deep2Backend serializes decode via mutex (engine not multi-thread safe); streams>=2 still exercised with real tokens",
+    "exit_code": 0
+  },
+  "BUILD_EXIT": 0,
+  "blockers": [],
+  "notes": "Residual from AGGREGATE_DECODE_E2E_001 closed: Deep2Engine GGUF path RUNTIME_REACHED with GENERATED_TOKENS>0; no Ollama HTTP fallback; no stub tokens. CERTIFIED=0 PROMOTE=0."
+}

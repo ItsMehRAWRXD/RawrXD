@@ -16,8 +16,8 @@
 #include <algorithm>
 #include <set>
 
-// ─── Cursor state container ─────────────────────────────────────────
-struct MultiCursorState {
+// ─── Cursor state container (file-local; distinct from any class nested type) ─
+struct MultiCursorEngineState {
     struct Cursor {
         int charPos;        // Character position in the document (absolute)
         int anchorPos;      // Selection anchor (-1 if no selection)
@@ -63,7 +63,7 @@ struct MultiCursorState {
     int count() const { return (int)cursors.size(); }
 };
 
-static MultiCursorState g_multiCursor;
+static MultiCursorEngineState g_multiCursor;
 
 // ─── Initialize multi-cursor system ─────────────────────────────────
 void Win32IDE::initMultiCursor() {
@@ -80,7 +80,7 @@ void Win32IDE::clearSecondaryCursors() {
     if (!g_multiCursor.active) return;
 
     // Keep only the primary cursor
-    MultiCursorState::Cursor primary;
+    MultiCursorEngineState::Cursor primary;
     primary.charPos = -1;
     for (auto& c : g_multiCursor.cursors) {
         if (c.primary) { primary = c; break; }

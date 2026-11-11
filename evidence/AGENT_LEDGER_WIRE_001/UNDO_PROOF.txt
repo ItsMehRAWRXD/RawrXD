@@ -1,0 +1,49 @@
+AGENT_LEDGER_WIRE_001 / GAP 7 — AgentHistory undo restores file bytes
+======================================================================
+DATE: 2026-11-11
+CERTIFIED=0
+PROMOTE=0
+NOT_RUN != PASS
+
+CLAIM
+  Win32IDE::undoLastAgentEdit must restore prior file content from stored
+  before/after snapshots (not merely pop the in-memory stack).
+
+IMPLEMENTATION
+  SSOT core: src/agentic/AgentEditHistory.h
+    - AgentEditSnapshot { filePath, oldContent, newContent }
+    - AgentEditHistory::push / undoLast
+    - undoLast writes oldContent bytes to filePath (atomic tmp+rename)
+  IDE adapter: src/win32app/Win32IDE_AgentHistory.cpp
+    - pushAgentEdit records before_bytes / after_bytes
+    - undoLastAgentEdit calls AgentEditHistory::undoLast then refreshes editor
+    - snapshotAgentFileBytes / recordAgentFileMutation for tool-path wiring
+  Product path wire: src/win32app/Win32IDE_AgentCommands.cpp
+    - read tools → snapshotAgentFileBytes(target)
+    - write/edit tools → recordAgentFileMutation(target)
+    - targetFile seeded before StartTask for first-write before-bytes
+
+SMOKE RUNTIME (translation-unit / unit surface)
+  Target: agent_ledger_undo_smoke
+  Binary: F:\rawrxd\build\bin\Release\agent_ledger_undo_smoke.exe
+  Command: agent_ledger_undo_smoke.exe
+  Exit: 0
+  Observed:
+    PASS write_prior
+    PASS write_after
+    PASS history_recorded
+    PASS undo_last
+    PASS read_restored
+    PASS undo_restored_prior_bytes
+    PASS history_popped
+    FAIL_COUNT=0
+    RUNTIME_REACHED=1
+    CERTIFIED=0
+    PROMOTE=0
+
+DISPOSITION
+  GAP7_SOURCE_WIRED=1
+  GAP7_RUNTIME_REACHED=1 (smoke / AgentEditHistory SSOT)
+  GAP7_IDE_EXE_E2E=NOT_RUN (full Win32IDE exe not exercised this turn)
+  CERTIFIED=0
+  PROMOTE=0

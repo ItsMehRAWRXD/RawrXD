@@ -1,0 +1,15 @@
+F:\rawrxd\src\win32app\ExtensionSandboxManager.h
+F:\rawrxd\src\win32app\ExtensionSandboxManager.cpp
+F:\rawrxd\src\win32app\ConsentPrompt.h
+F:\rawrxd\src\win32app\Win32IDE_ConsentPrompt.cpp
+F:\rawrxd\src\win32app\Win32IDE_ComputerUse.cpp
+F:\rawrxd\src\win32app\ExtensionManifestLoader.cpp
+F:\rawrxd\src\agentic\ToolCallBridge.h
+F:\rawrxd\tools\agent_security_adversarial_probe.cpp
+F:\rawrxd\tools\build_agent_security_probe.bat
+F:\rawrxd\evidence\AGENT_SECURITY_WIRE_001\GAP_STATUS.json
+F:\rawrxd\evidence\AGENT_SECURITY_WIRE_001\ADVERSARIAL_PROBE_RESULTS.json
+F:\rawrxd\evidence\AGENT_SECURITY_WIRE_001\AUDIT_SAMPLE.jsonl
+F:\rawrxd\evidence\AGENT_SECURITY_WIRE_001\FILES_CHANGED.txt
+F:\rawrxd\evidence\AGENT_SECURITY_WIRE_001\security_audit.jsonl
+F:\rawrxd\evidence\AGENT_ARCH_AUDIT_001\GAP_CLOSURE_SECURITY.json

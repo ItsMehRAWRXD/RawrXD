@@ -1,0 +1,11 @@
+﻿F:\rawrxd\src\agentic\IdeToolDispatchSsot.hpp
+F:\rawrxd\src\win32app\Win32IDE_AgentToolSsot.cpp
+F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.h
+F:\rawrxd\src\win32app\Win32IDE_AgenticBridge.cpp
+F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp
+F:\rawrxd\src\win32app\Win32IDE_ComputerUse.cpp
+F:\rawrxd\src\win32app\Win32IDE.h
+F:\rawrxd\src\agentic\BackendRouter.cpp
+F:\rawrxd\src\agentic\tool_core.hpp
+F:\rawrxd\CMakeLists.txt
+F:\rawrxd\tools\agent_commands_security_probe.cpp

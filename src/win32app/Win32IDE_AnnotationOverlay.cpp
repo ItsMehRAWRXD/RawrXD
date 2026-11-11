@@ -1,5 +1,6 @@
 // Win32IDE_AnnotationOverlay.cpp — Annotation Overlay (Batch 6 C02)
 // Code comments and inline discussions
+#include "Win32IDE.h"
 #include "AnnotationOverlay.h"
 
 namespace RawrXD {
@@ -14,7 +15,7 @@ void Win32IDE::initAnnotationOverlay() {
     if (m_hwndEditor && m_annotationOverlay) {
         m_annotationOverlay->Initialize(m_hwndEditor);
     }
-    appendToOutput("[AnnotationOverlay] Diagnostic overlay initialized.\n", "Output", OutputSeverity::Info);
+    appendToOutput("[AnnotationOverlay] Diagnostic overlay initialized.\n", "Output", Win32IDE::OutputSeverity::Info);
 }
 
 void Win32IDE::showAnnotationOverlay() {

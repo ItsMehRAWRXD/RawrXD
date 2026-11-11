@@ -1,0 +1,18 @@
+{
+  "disposition_id": "AGENT_TOOLS_ROUTE_WIRE_001_DISPOSITION",
+  "gaps_5_9": "CLOSED_SOURCE_WIRED",
+  "AgentCommands_hits_SecurityGate": true,
+  "adversarial_agentcommands_probe": "13/13 PASS",
+  "PROOF_DENY_ON_ESCAPE": true,
+  "full_ide_ui_e2e": "NOT_RUN",
+  "live_ollama_token_smoke": "NOT_RUN",
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "compile_evidence": {
+    "authoritative": "direct_cl_exe tu_obj/",
+    "msbuild_selectedfiles_exit_neg1": "SUPERSEDED_EXECUTION_NOISE",
+    "see": "MSBUILD_SUPERSEDED_NOTE.json"
+  },
+  "note": "SOURCE_WIRED + AgentCommands probe != CERTIFIED. Single execution boundary claimed for IDE agent tool path; full product E2E remains AGENT_RUNTIME_VALIDATION_001. Superseded MSBuild -1 is not a TU compile failure."
+}
+

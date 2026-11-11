@@ -1,0 +1,255 @@
+{
+  "audit_id": "UPPER_TIER_MASTER_001_BATCH_25_AUDIT",
+  "title": "Release readiness gap matrix — Upper-Tier Batch 25",
+  "scope_primary": "F:\\rawrxd",
+  "audited_at": "2026-11-11T17:36:00Z",
+  "mode": "READ_ONLY",
+  "native_rebuild": "NOT_RUN",
+  "section": {
+    "name": "Release readiness — security / fault injection / soak / packaging / clean-machine",
+    "prior_estimate_pct": 58,
+    "tracker_field": "estimates_unchanged_until_new_runtime_acceptance.release_readiness_pct"
+  },
+  "batch": {
+    "id": 25,
+    "workstreams": [
+      "Security",
+      "Fault injection",
+      "Soak",
+      "Packaging",
+      "Clean-machine"
+    ],
+    "required_milestone": "Release readiness conjunction accepted",
+    "depends_on": "Batch 17 native build unblocked (G1); Finish-25 residual + T24/T25 closure"
+  },
+  "laws": {
+    "CERTIFIED": 0,
+    "PROMOTE": 0,
+    "UPPER_TIER": 0,
+    "TIP_CLIMB": "HOLD",
+    "STUB_ACCEPTANCE": "FORBIDDEN",
+    "SOURCE_WIRED_NE_RUNTIME_REACHED": true,
+    "NOT_RUN_NE_PASS": true,
+    "CANDIDATE_PASS_NE_RELEASE_CERTIFICATION": true,
+    "ADVERSARIAL_PROBE_PASS_NE_CERTIFIED": true,
+    "NO_CROSS_SHA_PASS_INHERITANCE": true
+  },
+  "finish_25_held_status": {
+    "controlling_FINISH_25_PASS": 19,
+    "controlling_FINISH_25_REMAINING": 6,
+    "controlling_remaining_ids": ["T05", "T07", "T08", "T18", "T19", "T25"],
+    "authority": "F:\\rawrxd\\evidence\\POST_E59D_CANDIDATE_001\\FINISH_25_BACKLOG.md",
+    "progression_disposition": "F:\\rawrxd\\evidence\\PROGRESSION_FINISH25_001\\DISPOSITION.md",
+    "T24": {
+      "status": "HELD_PARTIAL",
+      "candidate_package": "CANDIDATE_PACKAGE_PASS",
+      "installer": "NOT_RUN",
+      "full_deployment_e2e": "NOT_RUN",
+      "latest_deployment_receipt_pass": false,
+      "notes": [
+        "PHASE5 T24_PACKAGE_RECEIPT: zip+manifest+SHA sealed for baseline 3B720981; INVENT_INSTALLER=0",
+        "T24_INSTALLER_GAP CONFIRMED (MAKENSIS absent historically; PRODUCT_INSTALLER_ARTIFACT_FOUND=0)",
+        "T24_DEPLOYMENT_20261110_164348: pass=false — missing vulkan-1.dll, ggml.dll, msvcp140.dll, vcruntime140.dll"
+      ],
+      "evidence": [
+        "F:\\rawrxd\\evidence\\POST_E59D_CANDIDATE_001\\PHASE5\\T24_PACKAGE_RECEIPT.md",
+        "F:\\rawrxd\\evidence\\POST_E59D_CANDIDATE_001\\PHASE5\\T24_INSTALLER_GAP.md",
+        "F:\\rawrxd\\evidence\\T24_DEPLOYMENT_20261110_164348\\T24_deployment_receipt_20261110_164348.json"
+      ]
+    },
+    "T25": {
+      "status": "HELD",
+      "CERTIFIED": 0,
+      "PROMOTE": 0,
+      "notes": [
+        "UPPER_TIER_MASTER_001 TRACKER.json hotpatch.T25=HELD",
+        "FINISH_25_BACKLOG Phase5: T25 CERTIFIED=0",
+        "ONESHOT FINISH25_MATRIX: T25 CERTIFIED=0 held",
+        "T05_FORMAL_PASS_0F054F01: T25=HELD"
+      ],
+      "evidence": [
+        "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\TRACKER.json",
+        "F:\\rawrxd\\evidence\\POST_E59D_CANDIDATE_001\\FINISH_25_BACKLOG.md",
+        "F:\\rawrxd\\evidence\\FULL_FEATURE_ONESHOT_001\\FINISH25_MATRIX.md"
+      ]
+    },
+    "notes": [
+      "T05 formal PASS on marker SHA 0F054F01 does NOT inherit to controlling Finish-25 count (NO_CROSS_SHA_PASS_INHERITANCE).",
+      "T18/T19 GUI soak receipts with pass=true are not Finish-25 formal credit; backlog still lists T18/T19 remaining.",
+      "FINISH_25_PASS=19 ≠ CERTIFIED ≠ PROMOTE."
+    ]
+  },
+  "controlling_blockers": [
+    {
+      "id": "G1_NATIVE_LINK",
+      "status": "FAIL",
+      "note": "build_win32ide\\Release\\RawrXD-Win32IDE-Native.exe ABSENT; Batch 25 product-path runtime acceptance blocked pending Batch 17",
+      "observed_alt": "build_ide\\bin\\RawrXD-Win32IDE-Native.exe PRESENT (1825280 bytes, 2026-11-10T20:23:18Z) — not Batch-17 Release link seal"
+    },
+    {
+      "id": "T25_HELD",
+      "status": "HELD",
+      "note": "Mandatory certification conjunction incomplete; CERTIFIED=0"
+    },
+    {
+      "id": "T24_INSTALLER_AND_DEPS",
+      "status": "OPEN",
+      "note": "Installer NOT_RUN; latest dist deployment fails closed on undeclared/missing runtime DLLs"
+    },
+    {
+      "id": "CLEAN_MACHINE_INDEPENDENT",
+      "status": "NOT_VERIFIED",
+      "note": "W6 VERDICT=HOST_NOT_INDEPENDENT; DISTINCT_VM=0; product-path smokes NOT_RUN"
+    }
+  ],
+  "dimensions": [
+    {
+      "id": "security",
+      "name": "Security sandbox / approval choke / adversarial deny",
+      "source_wired": true,
+      "runtime_reached": "probe_only",
+      "product_runtime_pass": false,
+      "findings": [
+        "AGENT_SECURITY_WIRE_001: gaps 3/4 CLOSED; adversarial probe 16/16 PASS; PROOF_DENY_ON_ESCAPE=true",
+        "ExtensionSandboxManager fail-closed IsPathAllowed/IsCommandAllowed; GateToolDispatch before consent",
+        "ToolCallBridge + ComputerUse bind SetSecurityGate / RequestToolConsent SOURCE_WIRED",
+        "INDEPENDENT_PRECERT_VERIFY_001 overall=NOT_READY_FOR_CERT; check2 FAIL_OPEN_BYPASS_PATHS (AgentCommands / CreateProcess surfaces outside choke)",
+        "STABILITY_SECURITY_GATE oneshot: MALFORMED_VSIX_CONFIG=PASS; STABILITY_SECURITY=PARTIAL; PRODUCT_CANCEL_HWND=NOT_RUN"
+      ],
+      "gaps": [
+        "Adversarial probe PASS ≠ CERTIFIED; product IDE agent-turn security E2E NOT_RUN on Batch-17 tip",
+        "Bypass paths outside ToolCallBridge choke block pre-cert",
+        "Extension sandbox not OS AppContainer / Job-enforced on all product spawn paths (Batch 22 cross-cite)"
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\evidence\\AGENT_SECURITY_WIRE_001\\DISPOSITION.json",
+        "F:\\rawrxd\\evidence\\AGENT_SECURITY_WIRE_001\\ADVERSARIAL_PROBE_RESULTS.json",
+        "F:\\rawrxd\\evidence\\AGENT_SECURITY_WIRE_001\\INDEPENDENT_PRECERT_VERIFY_001.json",
+        "F:\\rawrxd\\evidence\\AGENT_ARCH_AUDIT_001\\GAP_CLOSURE_SECURITY.json",
+        "F:\\rawrxd\\evidence\\FULL_FEATURE_ONESHOT_001\\STABILITY_SECURITY_GATE.md"
+      ],
+      "disposition": "SOURCE_WIRED + PROBE_PASS; PRODUCT_RUNTIME_ACCEPTANCE=NOT_RUN; CERTIFIED=0"
+    },
+    {
+      "id": "fault_injection",
+      "name": "Fault injection / chaos / recovery under injected failure",
+      "source_wired": "partial",
+      "runtime_reached": false,
+      "product_runtime_pass": false,
+      "findings": [
+        "Hidden-gap register: H74 Ollama fault-injection ABSENT; many W3/W4 FI rows UNVERIFIED/ABSENT",
+        "Batch 20 next-gate explicitly requires atomic multi-file rollback fault injection (zero data-loss) — not sealed",
+        "Malformed extension stress: FAULT_ISOLATED=1 PROCESS_ALIVE=1 (oneshot) — narrow EXT isolation only",
+        "STRATA HIP tooling exposes --ple-delay-us fault injection — GPU lane, not IDE release conjunction",
+        "Cancel stress 4/4 PASS on oneshot stress SHA ≠ full FI suite; PRODUCT_CANCEL_HWND=NOT_RUN"
+      ],
+      "gaps": [
+        "No sealed product fault-injection suite covering model disconnect, tool failure, disk-full, mid-edit crash, duplicate dispatch",
+        "Rollback / data-loss FI NOT_RUN on controlling tip",
+        "Chaos artifacts cited historically ≠ Batch 25 runtime PASS"
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\evidence\\HIDDEN_GAP_AUDIT_001\\MASTER_HIDDEN_GAP_REGISTER.md",
+        "F:\\rawrxd\\evidence\\UPPER_TIER_MASTER_001\\BATCH_20_AUDIT\\AGENT_RELIABILITY_GAP_MATRIX.json",
+        "F:\\rawrxd\\evidence\\FULL_FEATURE_ONESHOT_001\\artifacts\\STABILITY_SECURITY_RECEIPT.txt"
+      ],
+      "disposition": "MOSTLY_ABSENT; NOT_RUN != PASS; CERTIFIED=0"
+    },
+    {
+      "id": "soak",
+      "name": "Soak / endurance / stability under sustained load",
+      "source_wired": true,
+      "runtime_reached": true,
+      "product_runtime_pass": false,
+      "findings": [
+        "T18_T19_GUI_SOAK_20261110_161833: schema RAWRXD_T18_T19_GUI_ENDURANCE_SOAK_001; pass=true; 10/10 iterations; hangs=0 crashes=0 oom=0; duration~143s; SHA BBA0724D…",
+        "FINISH_25_BACKLOG controlling: T18/T19 still BLOCKED / remaining — soak receipt ≠ Finish-25 formal credit",
+        "STABILITY_SECURITY: LAUNCH_CLOSE=PARTIAL (7/8); STABILITY_SECURITY=PARTIAL",
+        "GUI soak is endurance/memory oriented — not agent task-success rates (Batch 20 cross-cite)"
+      ],
+      "gaps": [
+        "Finish-25 T18/T19 not closed on controlling baseline",
+        "Long-duration / multi-hour soak NOT_RUN",
+        "Soak on Batch-17 Release tip NOT_RUN (exe absent)",
+        "This audit did not re-execute soak (NOT_RUN revalidation)"
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\evidence\\T18_T19_GUI_SOAK_20261110_161833\\T18_T19_soak_receipt_20261110_161833.json",
+        "F:\\rawrxd\\evidence\\POST_E59D_CANDIDATE_001\\FINISH_25_BACKLOG.md",
+        "F:\\rawrxd\\evidence\\FULL_FEATURE_ONESHOT_001\\artifacts\\STABILITY_SECURITY_RECEIPT.txt"
+      ],
+      "disposition": "HISTORICAL_SOAK_PASS_CANDIDATE; FINISH25_T18_T19=HELD; CERTIFIED=0"
+    },
+    {
+      "id": "packaging",
+      "name": "Packaging / installer / portable dist / dependency completeness",
+      "source_wired": true,
+      "runtime_reached": "partial",
+      "product_runtime_pass": false,
+      "findings": [
+        "T24 candidate zip PRESENT: PHASE5\\T24_PACKAGE\\RawrXD-Win32IDE-Native-3B720981-candidate.zip; CANDIDATE_PACKAGE_PASS sealed",
+        "dist\\RawrXD-14.7.3-Windows-x64.zip PRESENT (804765 bytes)",
+        "T24_INSTALLER=NOT_RUN; NO_PRODUCT_INSTALLER_ARTIFACT; OFFICIAL_DIST_CHANNEL_PACKAGE_BOUND=0",
+        "Latest T24 deployment verification pass=false on missing deps (vulkan-1, ggml, CRT DLLs)",
+        "P09 portable packaging: HISTORICAL integrity-only (PASS_INTEGRITY_ONLY) — full portable conjunction NOT_VERIFIED"
+      ],
+      "gaps": [
+        "Product NSIS/installer binary absent — cannot invent installer PASS",
+        "Undeclared DLL / dependency completeness FAIL on latest deploy receipt (H98 clean-machine undeclared DLLs UNVERIFIED)",
+        "Package tip SHA not coexistent with Finish-25 + daily-driver controlling seals"
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\evidence\\POST_E59D_CANDIDATE_001\\PHASE5\\T24_PACKAGE_RECEIPT.md",
+        "F:\\rawrxd\\evidence\\POST_E59D_CANDIDATE_001\\PHASE5\\T24_INSTALLER_GAP.md",
+        "F:\\rawrxd\\evidence\\T24_DEPLOYMENT_20261110_164348\\T24_deployment_receipt_20261110_164348.json",
+        "F:\\rawrxd\\evidence\\IDE_REPAIR_CANDIDATE_001\\FINALIZATION_CHECKLIST_001\\P01_P12_MATRIX.txt"
+      ],
+      "disposition": "CANDIDATE_PACKAGE_PASS; INSTALLER=NOT_RUN; DEPLOY_DEPS=FAIL; CERTIFIED=0"
+    },
+    {
+      "id": "clean_machine",
+      "name": "Clean-machine / independent VM reproducibility",
+      "source_wired": true,
+      "runtime_reached": "host_only",
+      "product_runtime_pass": false,
+      "findings": [
+        "release_cert_wave6 CLEAN_MACHINE_CHECKLIST: integrity + launch probe + rollback rehash completed on clean extract",
+        "VERDICT=HOST_NOT_INDEPENDENT; CLASS=HOST_NOT_INDEPENDENT; DISTINCT_VM=0",
+        "IDE main HWND observation NOT sealed; open-project / chat / agent / edit→build→test = NOT_RUN or POINTER only",
+        "P08/P11 NOT_VERIFIED; G15 independent release readiness NOT_ESTABLISHED (RC4 delta)",
+        "HIDDEN_GAP H98 clean-machine audit ABSENT historically"
+      ],
+      "gaps": [
+        "Independent distinct-VM certification NOT_RUN",
+        "Builder-host PASS must not be copied as clean-machine PASS (fail-closed already recorded)",
+        "Product-path smokes on clean machine remain open",
+        "This audit did not execute clean-machine (NOT_RUN)"
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\evidence\\IDE_REPAIR_CANDIDATE_001\\release_cert_wave6\\CLEAN_MACHINE_CHECKLIST.txt",
+        "F:\\rawrxd\\evidence\\IDE_REPAIR_CANDIDATE_001\\FINALIZATION_CHECKLIST_001\\P01_P12_MATRIX.txt",
+        "F:\\rawrxd\\evidence\\IDE_RELEASE_READINESS_001\\G01_G15_RC4_DELTA.txt",
+        "F:\\rawrxd\\evidence\\RELEASE_FREEZE_001\\RELEASE_SCOPE_FREEZE.md"
+      ],
+      "disposition": "HOST_PARTIAL; INDEPENDENT_VM=NOT_RUN; CERTIFIED=0"
+    }
+  ],
+  "rollup": {
+    "dimensions_audited": 5,
+    "dimensions_runtime_pass": 0,
+    "batch_25_milestone_accepted": false,
+    "release_readiness_pct_estimate_unchanged": 58,
+    "estimates_unchanged": true,
+    "this_audit_runtime_cells_executed": 0,
+    "implementation_dispatch": "HELD_PENDING_BATCH_17_AND_FINISH25_T24_T25"
+  },
+  "next_gates_ordered": [
+    "Batch 17 G1 — linked RawrXD-Win32IDE-Native.exe under build_win32ide\\Release (exit 0, size + SHA-256)",
+    "Close Finish-25 residuals affecting release (T05/T07/T08/T18/T19) on one frozen tip SHA — no cross-SHA inherit",
+    "Security: close ToolCallBridge bypass paths; product agent-turn adversarial E2E; CERTIFIED remains 0 until conjunction",
+    "Fault-injection suite: model disconnect, tool deny/fail, atomic rollback data-loss, cancel HWND — measure only",
+    "Soak: re-run T18/T19 endurance on tip; long soak optional after short PASS; Finish-25 credit only if formal gate accepts",
+    "Packaging: bind official dist to tip SHA; fix undeclared DLL set; installer remains NOT_RUN until artifact exists",
+    "Clean-machine: DISTINCT_VM=1 independent checklist + product-path smokes; then T25 conjunction evaluation — PROMOTE=0 until then"
+  ]
+}

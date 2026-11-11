@@ -1,0 +1,16 @@
+﻿{
+  "exe_sha256": "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+  "evidence_timestamp": "2026-11-11T19:13:55.1957520Z",
+  "agent": [
+    {"request_id":"same","gui_model":"m1","resolved_model":"m1","ollama_model":"m1","exact_output":true},
+    {"request_id":"same","gui_model":"m2","resolved_model":"m2","ollama_model":"m2","exact_output":true}
+  ],
+  "ghosttext": [
+    {"request_id":"g1","gui_model":"m1","resolved_model":"m1","ollama_model":"m1","exact_output":true},
+    {"request_id":"g2","gui_model":"m2","resolved_model":"m2","ollama_model":"m2","exact_output":true}
+  ],
+  "cancel_recovery_pass": true,
+  "no_stale_output": true,
+  "PROMOTE": 0,
+  "CERTIFIED": 0
+}

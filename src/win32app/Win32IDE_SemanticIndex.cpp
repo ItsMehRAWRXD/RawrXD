@@ -488,13 +488,13 @@ void Win32IDE::initSemanticIndex() {
 
     // Set up callbacks for indexing progress
     sci.setProgressCallback([](const char* filePath, uint32_t pct, void* userData) {
-        LOG_INFO_FMT("Indexing %s: %u%% complete", filePath, pct);
+        LOG_INFO(std::string("Indexing: ") + (filePath ? filePath : "") + " " + std::to_string(pct) + "%");
     }, nullptr);
 
     sci.setCompleteCallback([](uint64_t symbolCount, uint64_t refCount, void* userData) {
-        LOG_INFO_FMT("Indexing complete: %llu symbols, %llu references", 
-                     static_cast<unsigned long long>(symbolCount), 
-                     static_cast<unsigned long long>(refCount));
+        LOG_INFO(std::string("Indexing complete: ") + std::to_string(symbolCount) + " symbols, " + std::to_string(refCount) + " references");
+
+
     }, nullptr);
 
     LOG_INFO("Semantic Code Intelligence initialized");

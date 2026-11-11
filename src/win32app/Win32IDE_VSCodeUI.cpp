@@ -1,4 +1,4 @@
-// Win32IDE_VSCodeUI.cpp - VS Code-like UI Components Implementation
+﻿// Win32IDE_VSCodeUI.cpp - VS Code-like UI Components Implementation
 // Activity Bar, Secondary Sidebar, Panel (Terminal/Output/Problems/Debug Console), Enhanced Status Bar
 
 #include "Win32IDE.h"
@@ -608,7 +608,11 @@ void Win32IDE::createPanel(HWND hwndParent)
 {
     m_panelVisible = true;
     m_panelMaximized = false;
-    m_panelHeight = 250;
+    // Keep a previously restored session height (loadIdeSession may run before
+    // a late createPanel); only seed default when unset/collapsed.
+    if (m_panelHeight < 160) {
+        m_panelHeight = 250;
+    }
     m_activePanelTab = PanelTab::Terminal;
     m_errorCount = 0;
     m_warningCount = 0;
@@ -696,69 +700,11 @@ void Win32IDE::createPanel(HWND hwndParent)
         156, 0, 24, 22,
         m_hwndPanelToolbar, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_PANEL_BTN_CLOSE)), m_hInstance, nullptr);
     
-    // Create Problems list view
-    m_hwndProblemsListView = CreateWindowExA(
-        WS_EX_CLIENTEDGE, WC_LISTVIEWA, "",
-        WS_CHILD | LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS,
-        0, 26, 800, m_panelHeight - 26,
-        m_hwndPanelContainer, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_PANEL_PROBLEMS_LIST)), m_hInstance, nullptr);
-    // Full-row select so any-column click selects the row. No ONECLICKACTIVATE:
-    // that re-enters LVN_ITEMACTIVATE under LVM_SETITEMSTATE → 0xC000041D.
-    if (m_hwndProblemsListView) {
-        ListView_SetExtendedListViewStyle(
-            m_hwndProblemsListView,
-            LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
-    }
-
-    // Add columns to Problems list
-    LVCOLUMNA lvc = { 0 };
-    lvc.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
-    
-    lvc.pszText = const_cast<char*>("Severity");
-    lvc.cx = 70;
-    lvc.iSubItem = 0;
-    ListView_InsertColumn(m_hwndProblemsListView, 0, &lvc);
-    
-    lvc.pszText = const_cast<char*>("Message");
-    lvc.cx = 400;
-    lvc.iSubItem = 1;
-    ListView_InsertColumn(m_hwndProblemsListView, 1, &lvc);
-    
-    lvc.pszText = const_cast<char*>("File");
-    lvc.cx = 200;
-    lvc.iSubItem = 2;
-    ListView_InsertColumn(m_hwndProblemsListView, 2, &lvc);
-    
-    lvc.pszText = const_cast<char*>("Line");
-    lvc.cx = 60;
-    lvc.iSubItem = 3;
-    ListView_InsertColumn(m_hwndProblemsListView, 3, &lvc);
-    
-    // Initially show terminal, hide problems list
-    ShowWindow(m_hwndProblemsListView, SW_HIDE);
-
-    // The tab must own a real debug-console surface from startup.  Previously
-    // only the tab label existed; switching to DEBUG CONSOLE therefore showed
-    // an empty shell with no HWND to paint or receive themed output.
-    m_hwndDebugConsole = CreateWindowExA(
-        WS_EX_CLIENTEDGE, RICHEDIT_CLASSA, "",
-        WS_CHILD | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY,
-        0, 26, 800, m_panelHeight - 26,
-        m_hwndPanelContainer,
-        reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_PANEL_DEBUG_CONSOLE)),
-        m_hInstance, nullptr);
-    if (!m_hwndDebugConsole) {
-        m_hwndDebugConsole = CreateWindowExA(
-            WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VSCROLL |
-            ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY,
-            0, 26, 800, m_panelHeight - 26, m_hwndPanelContainer,
-            reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_PANEL_DEBUG_CONSOLE)),
-            m_hInstance, nullptr);
-    }
-    if (m_hwndDebugConsole) {
-        appendText(m_hwndDebugConsole, "Debug Console ready. Start a debug session to see debugger output.\r\n");
-        ShowWindow(m_hwndDebugConsole, SW_HIDE);
-    }
+    // Create all four panel-body HWNDs (1302/1303/1312/1305) so VisId probes
+    // never see ABSENT after createPanel. Bodies start hidden; switchPanelTab
+    // ShowWindow/create-if-missing owns visibility. Do not call switchPanelTab
+    // here — createPanel can run under WM_CREATE / TabCtrl_InsertItem depth.
+    ensurePanelTabBodies();
 }
 
 void Win32IDE::togglePanel()
@@ -834,6 +780,12 @@ void Win32IDE::layoutBottomDock()
         MoveWindow(m_hwndPanelToolbar, (std::max)(0, width - 200), 0, 200, 24, TRUE);
     }
     const int bodyH = (std::max)(1, dockH - 26);
+    if (m_hwndPanelTerminal && IsWindow(m_hwndPanelTerminal)) {
+        MoveWindow(m_hwndPanelTerminal, 0, 26, width, bodyH, TRUE);
+    }
+    if (m_hwndPanelOutput && IsWindow(m_hwndPanelOutput)) {
+        MoveWindow(m_hwndPanelOutput, 0, 26, width, bodyH, TRUE);
+    }
     if (m_hwndProblemsListView && IsWindow(m_hwndProblemsListView)) {
         MoveWindow(m_hwndProblemsListView, 0, 26, width, bodyH, TRUE);
     }
@@ -898,17 +850,26 @@ void Win32IDE::ensurePanelVisible()
 
 void Win32IDE::maximizePanel()
 {
+    // File-local: Win32IDE.h was locked by concurrent rebuild; keep P08
+    // unmaximize restore without a new member.
+    static int s_heightBeforeMaximize = 0;
     m_panelMaximized = !m_panelMaximized;
     
     if (m_panelMaximized) {
-        // Store original height and maximize
+        if (s_heightBeforeMaximize < 160) {
+            s_heightBeforeMaximize =
+                (m_panelHeight >= 160) ? m_panelHeight : 250;
+        }
         RECT rect;
         GetClientRect(m_hwndMain, &rect);
         m_panelHeight = rect.bottom - 100; // Leave some space for toolbar/status
         SetWindowTextA(m_hwndPanelMaximizeBtn, "v");
     } else {
-        // Restore to default height
-        m_panelHeight = 250;
+        // Never hardcode 250 — that wiped dragged dock height (P08).
+        m_panelHeight = (s_heightBeforeMaximize >= 160)
+            ? s_heightBeforeMaximize
+            : 250;
+        s_heightBeforeMaximize = 0;
         SetWindowTextA(m_hwndPanelMaximizeBtn, "^");
     }
     
@@ -925,52 +886,151 @@ void Win32IDE::restorePanel()
     }
 }
 
+void Win32IDE::ensurePanelTabBodies()
+{
+    // Create-if-missing stable VisId bodies under IDC_PANEL_CONTAINER.
+    // No onSize / TabCtrl_InsertItem — safe during createPanel + switchPanelTab.
+    if (!m_hwndPanelContainer || !IsWindow(m_hwndPanelContainer)) {
+        return;
+    }
+    const int bodyH = (std::max)(1, m_panelHeight - 26);
+    auto makeEdit = [&](HWND& slot, int ctrlId, const char* seed) {
+        if (slot && IsWindow(slot)) {
+            return;
+        }
+        slot = CreateWindowExA(
+            WS_EX_CLIENTEDGE, RICHEDIT_CLASSA, "",
+            WS_CHILD | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY,
+            0, 26, 800, bodyH, m_hwndPanelContainer,
+            reinterpret_cast<HMENU>(static_cast<UINT_PTR>(ctrlId)),
+            m_hInstance, nullptr);
+        if (!slot) {
+            slot = CreateWindowExA(
+                WS_EX_CLIENTEDGE, "EDIT", "",
+                WS_CHILD | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY,
+                0, 26, 800, bodyH, m_hwndPanelContainer,
+                reinterpret_cast<HMENU>(static_cast<UINT_PTR>(ctrlId)),
+                m_hInstance, nullptr);
+        }
+        if (slot) {
+            if (seed && seed[0]) {
+                appendText(slot, seed);
+            }
+            ShowWindow(slot, SW_HIDE);
+        }
+    };
+
+    makeEdit(m_hwndPanelTerminal, IDC_PANEL_TERMINAL,
+             "Terminal ready. Select this tab or use Terminal menu to run a shell.\r\n");
+    makeEdit(m_hwndPanelOutput, IDC_PANEL_OUTPUT,
+             "Output ready. Build and tool messages appear here.\r\n");
+
+    if (!m_hwndProblemsListView || !IsWindow(m_hwndProblemsListView)) {
+        m_hwndProblemsListView = CreateWindowExA(
+            WS_EX_CLIENTEDGE, WC_LISTVIEWA, "",
+            WS_CHILD | LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS,
+            0, 26, 800, bodyH, m_hwndPanelContainer,
+            reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_PANEL_PROBLEMS_LIST)),
+            m_hInstance, nullptr);
+        if (m_hwndProblemsListView) {
+            ListView_SetExtendedListViewStyle(
+                m_hwndProblemsListView, LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
+            LVCOLUMNA lvc = { 0 };
+            lvc.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
+            lvc.pszText = const_cast<char*>("Severity");
+            lvc.cx = 70; lvc.iSubItem = 0;
+            ListView_InsertColumn(m_hwndProblemsListView, 0, &lvc);
+            lvc.pszText = const_cast<char*>("Message");
+            lvc.cx = 400; lvc.iSubItem = 1;
+            ListView_InsertColumn(m_hwndProblemsListView, 1, &lvc);
+            lvc.pszText = const_cast<char*>("File");
+            lvc.cx = 200; lvc.iSubItem = 2;
+            ListView_InsertColumn(m_hwndProblemsListView, 2, &lvc);
+            lvc.pszText = const_cast<char*>("Line");
+            lvc.cx = 60; lvc.iSubItem = 3;
+            ListView_InsertColumn(m_hwndProblemsListView, 3, &lvc);
+            ShowWindow(m_hwndProblemsListView, SW_HIDE);
+        }
+    }
+
+    makeEdit(m_hwndDebugConsole, IDC_PANEL_DEBUG_CONSOLE,
+             "Debug Console ready. Start a debug session to see debugger output.\r\n");
+}
+
 void Win32IDE::switchPanelTab(PanelTab tab)
 {
     // TabCtrl_InsertItem during createPanel can raise TCN_SELCHANGE into this
-    // path; never re-enter and never call onSize here (WM_CREATE stack death).
+    // path; never re-enter ensurePanelVisible/createPanel (WM_CREATE stack
+    // death). Exclusive ShowWindow MUST still run on re-entry — early-return
+    // that only set m_activePanelTab left 1302 WS_VISIBLE stuck True while
+    // 1303/1312/1305 stayed hidden (Batch18 P07 HWND_VIS exclusive FAIL).
     static thread_local int s_switchDepth = 0;
-    if (s_switchDepth > 0) {
-        m_activePanelTab = tab;
-        return;
-    }
+    const bool reentered = (s_switchDepth > 0);
     ++s_switchDepth;
 
     m_activePanelTab = tab;
-    // Keep the docked panel surface up so Problems/Debug HWND vis probes
-    // (G7 four-panel) are not fail-closed by a prior togglePanel(hide) or by
-    // the exclusive PowerShell dock re-hiding IDC_PANEL_CONTAINER after Build.
-    ensurePanelVisible();
+    if (!reentered) {
+        ensurePanelVisible();
+        if (m_hwndMain && IsWindow(m_hwndMain) &&
+            (!m_hwndPanelContainer || !IsWindow(m_hwndPanelContainer))) {
+            createPanel(m_hwndMain);
+            ensurePanelVisible();
+        }
+        ensurePanelTabBodies();
+    }
 
     const bool showTerminal = (tab == PanelTab::Terminal);
     const bool showOutput = (tab == PanelTab::Output);
     const bool showProblems = (tab == PanelTab::Problems);
     const bool showDebugConsole = (tab == PanelTab::DebugConsole);
 
+    // ShowWindow only — no SetWindowLongPtr GWL_STYLE, no SWP_SHOWWINDOW,
+    // no SWP_FRAMECHANGED. Those re-enter comctl32 ListView paint/notify and
+    // fault as 0xC000041D when selecting PROBLEMS (Batch18 P07 crash on sel=2).
+    auto showBody = [](HWND hwnd, bool show) {
+        if (!hwnd || !IsWindow(hwnd)) return;
+        ShowWindow(hwnd, show ? SW_SHOW : SW_HIDE);
+        if (show) {
+            BringWindowToTop(hwnd);
+        }
+    };
+
+    showBody(m_hwndPanelTerminal, showTerminal);
+    showBody(m_hwndPanelOutput, showOutput);
+    showBody(m_hwndProblemsListView, showProblems);
+    showBody(m_hwndDebugConsole, showDebugConsole);
+
+    // Peer legacy panes stay hidden so they cannot cover 1302/1303 VisId bodies.
     for (auto& pane : m_terminalPanes) {
-        if (pane.hwnd) ShowWindow(pane.hwnd, showTerminal ? SW_SHOW : SW_HIDE);
-        if (pane.input) ShowWindow(pane.input, showTerminal ? SW_SHOW : SW_HIDE);
-        if (pane.execute) ShowWindow(pane.execute, showTerminal ? SW_SHOW : SW_HIDE);
-        if (pane.stop) ShowWindow(pane.stop, showTerminal ? SW_SHOW : SW_HIDE);
-        if (pane.clear) ShowWindow(pane.clear, showTerminal ? SW_SHOW : SW_HIDE);
+        if (pane.hwnd) ShowWindow(pane.hwnd, SW_HIDE);
+        if (pane.input) ShowWindow(pane.input, SW_HIDE);
+        if (pane.execute) ShowWindow(pane.execute, SW_HIDE);
+        if (pane.stop) ShowWindow(pane.stop, SW_HIDE);
+        if (pane.clear) ShowWindow(pane.clear, SW_HIDE);
     }
-
     for (auto& kv : m_outputWindows) {
-        const bool show = showOutput && (kv.first == m_activeOutputTab);
-        ShowWindow(kv.second, show ? SW_SHOW : SW_HIDE);
+        if (kv.second) ShowWindow(kv.second, SW_HIDE);
     }
 
-    if (m_hwndProblemsListView && IsWindow(m_hwndProblemsListView))
-        ShowWindow(m_hwndProblemsListView, showProblems ? SW_SHOW : SW_HIDE);
-    if (m_hwndDebugConsole && IsWindow(m_hwndDebugConsole))
-        ShowWindow(m_hwndDebugConsole, showDebugConsole ? SW_SHOW : SW_HIDE);
-
-    if (m_hwndPanelTabs && IsWindow(m_hwndPanelTabs))
-        TabCtrl_SetCurSel(m_hwndPanelTabs, static_cast<int>(tab));
-
-    if (m_hwndPanelNewTerminalBtn) EnableWindow(m_hwndPanelNewTerminalBtn, showTerminal);
-    if (m_hwndPanelSplitTerminalBtn) EnableWindow(m_hwndPanelSplitTerminalBtn, showTerminal);
-    if (m_hwndPanelKillTerminalBtn) EnableWindow(m_hwndPanelKillTerminalBtn, showTerminal);
+    if (!reentered) {
+        // Geometry via posted WM_SIZE only — sync layoutBottomDock here
+        // previously faulted on the WM_COMMAND/show path (0xC000041D).
+        if (m_hwndMain && IsWindow(m_hwndMain)) {
+            RECT rc{};
+            if (GetClientRect(m_hwndMain, &rc) && rc.right > 0 && rc.bottom > 0) {
+                PostMessageA(m_hwndMain, WM_SIZE, SIZE_RESTORED,
+                             MAKELPARAM(rc.right, rc.bottom));
+            }
+        }
+        if (m_hwndPanelTabs && IsWindow(m_hwndPanelTabs))
+            TabCtrl_SetCurSel(m_hwndPanelTabs, static_cast<int>(tab));
+        if (m_hwndPanelNewTerminalBtn)
+            EnableWindow(m_hwndPanelNewTerminalBtn, showTerminal);
+        if (m_hwndPanelSplitTerminalBtn)
+            EnableWindow(m_hwndPanelSplitTerminalBtn, showTerminal);
+        if (m_hwndPanelKillTerminalBtn)
+            EnableWindow(m_hwndPanelKillTerminalBtn, showTerminal);
+    }
 
     --s_switchDepth;
 }
@@ -998,6 +1058,7 @@ void Win32IDE::updatePanelContent()
     TabCtrl_SetItem(m_hwndPanelTabs, 2, &tie);
 }
 
+#if 0 // DUP_addProblem BATCH17_DUP_DISABLE
 void Win32IDE::addProblem(const std::string& file, int line, int col, const std::string& msg, int severity)
 {
     ProblemItem problem;
@@ -1062,7 +1123,9 @@ void Win32IDE::addProblem(const std::string& file, int line, int col, const std:
     updatePanelContent();
     updateEnhancedStatusBar();
 }
+#endif // DUP_addProblem
 
+#if 0 // DUP_clearProblems BATCH17_DUP_DISABLE
 void Win32IDE::clearProblems()
 {
     // Free heap-allocated problem strings before deleting items.
@@ -1088,6 +1151,7 @@ void Win32IDE::clearProblems()
     updatePanelContent();
     updateEnhancedStatusBar();
 }
+#endif // DUP_clearProblems
 
 void cleanupVSCodeUIStrings()
 {

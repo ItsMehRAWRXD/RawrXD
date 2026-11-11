@@ -1,0 +1,1 @@
+FULL_LOG=F:\rawrxd\build_ghosttext_verify_obj\native_fix_r25b.log

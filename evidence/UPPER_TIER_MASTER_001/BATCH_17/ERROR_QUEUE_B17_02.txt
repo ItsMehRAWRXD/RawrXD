@@ -1,0 +1,25 @@
+ASOF=2026-11-11T17:33:00Z
+SOURCE_LOG=rebuild_b17_02.log
+EXE=ABSENT
+CERTIFIED=0 PROMOTE=0
+
+CLASSIFICATION (fix or correctly isolate — no accidental feature deletion of P01-P06):
+
+P_CRITICAL_CORE (keep wired for Batch17):
+- LSP / Semantic / Symbol / Peek / AutonomousAgent / PowerShell 5610 — do not regress
+
+TYPE_NESTING (may already be mid-fix by 63513ece):
+- BenchmarkResult / VRAMInfo nested vs freestanding — align to Win32IDE::*
+
+MISSING_MEMBER / UNDECLARED (current log tail):
+- Win32IDE_AnnotationOverlay.cpp: m_annotationOverlay undeclared
+- Win32IDE_VoiceAssistantPanel.cpp: initVoiceAssistant/startVoiceListening/stopVoiceListening/isVoiceListening not members; OutputSeverity/appendToOutput unresolved
+- Win32IDE_FileSystemEvents.cpp: initFileSystemWatcher/fileNeedsReindex/removeWatchedFile not members; OutputSeverity/appendToOutput
+- Win32IDE_HeapHardening.cpp: LOG_WARN not found
+- Win32IDE_Attestation.cpp: RawrXD::Security namespace missing
+
+ISOLATION_POLICY:
+- If Voice/FS/Attestation/Heap are non-critical for P01-P06 link, prefer header decls + minimal real wiring OR CMake EXCLUDE with FAIL_CLOSED stubs documented in BATCH_17 evidence — do NOT silently delete product paths that are already SOURCE_WIRED for critical gates.
+- Prefer adding missing decls/members over removing TUs when the TU is required by CMake for the native target.
+
+NEXT: rebuild → link exe → SHA-256 → PS Execute/Clear/Stop smoke on that SHA only.

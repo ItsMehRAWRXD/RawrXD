@@ -1,0 +1,71 @@
+{
+  "receipt_id": "N05_E2E_STRESS",
+  "batch_id": "DEEP2_NATIVE_CORRECTNESS_BATCH_001",
+  "status": "PASS",
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "timestamp": "2026-11-11T17:49:00Z",
+  "depends_on": "N04_PASS",
+  "gguf": "F:\\ollamamodels\\n4-tiny-oracle.gguf",
+  "tokens_per_stream": 4,
+  "architecture_note": "Product path = single Deep2Engine + decode mutex. Mutex-serialized multi ≠ true parallel. Cancel isolation proven in N03 on isolated engines.",
+  "stress": {
+    "S1": {
+      "sessions": 1,
+      "exit": 0,
+      "GENERATED_TOKENS": 4,
+      "AGGREGATE_DECODE_TPS_SINGLE": 0.168974,
+      "WALL_NS": 23672228200,
+      "RUNTIME_REACHED": 1,
+      "evidence": "STRESS_S1.txt"
+    },
+    "S2": {
+      "sessions": 2,
+      "exit": 0,
+      "GENERATED_TOKENS": 8,
+      "AGGREGATE_DECODE_TPS_MULTI": 0.162607,
+      "AVG_STREAM_TPS": 0.162691,
+      "WORST_STREAM_TPS": 0.159226,
+      "BEST_STREAM_TPS": 0.166156,
+      "FAIRNESS_RATIO": 0.958291,
+      "WORST_FIRST_TOKEN_MS": 20830.981,
+      "ALL_SESSIONS_WORKED": 1,
+      "RUNTIME_REACHED": 1,
+      "evidence": "STRESS_S2.txt"
+    },
+    "S4": {
+      "sessions": 4,
+      "exit": 0,
+      "GENERATED_TOKENS": 16,
+      "AGGREGATE_DECODE_TPS_MULTI": 0.170842,
+      "AVG_STREAM_TPS": 0.170930,
+      "WORST_STREAM_TPS": 0.164883,
+      "BEST_STREAM_TPS": 0.174735,
+      "FAIRNESS_RATIO": 0.943618,
+      "WORST_FIRST_TOKEN_MS": 20029.900,
+      "ALL_SESSIONS_WORKED": 1,
+      "RUNTIME_REACHED": 1,
+      "evidence": "STRESS_S4.txt"
+    },
+    "S8": {
+      "sessions": 8,
+      "exit": 0,
+      "GENERATED_TOKENS": 32,
+      "AGGREGATE_DECODE_TPS_MULTI": 0.169664,
+      "AVG_STREAM_TPS": 0.169775,
+      "WORST_STREAM_TPS": 0.160821,
+      "BEST_STREAM_TPS": 0.174518,
+      "FAIRNESS_RATIO": 0.921519,
+      "WORST_FIRST_TOKEN_MS": 20781.364,
+      "ALL_SESSIONS_WORKED": 1,
+      "RUNTIME_REACHED": 1,
+      "evidence": "STRESS_S8.txt"
+    }
+  },
+  "errors": 0,
+  "all_exits_zero": 1,
+  "historical_AGGREGATE_DECODE_DEEP2_RUNTIME_001_preserved": 1,
+  "evidence": ["METRICS.txt", "STRESS_S1.txt", "STRESS_S2.txt", "STRESS_S4.txt", "STRESS_S8.txt", "HASHES.txt"],
+  "win32ide_untouched": 1
+}

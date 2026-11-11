@@ -1,0 +1,73 @@
+{
+  "milestone_id": "AGENT_RUNTIME_VALIDATION_001",
+  "authority": "F:\\rawrxd",
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "laws": {
+    "SOURCE_WIRED_NE_RUNTIME_REACHED": true,
+    "NOT_RUN_NE_PASS": true
+  },
+  "gates": [
+    {
+      "id": "G1",
+      "name": "Native IDE full link",
+      "status": "PASS",
+      "exe_path": "F:\\rawrxd\\build_win32ide\\bin\\Release\\RawrXD-Win32IDE-Native.exe",
+      "exe_size_bytes": 2178048,
+      "build_exit": 0,
+      "evidence": [
+        "F:\\rawrxd\\build_ghosttext_verify_obj\\native_fix_r25b.log",
+        "F:\\rawrxd\\evidence\\NATIVE_BUILD_ERROR_FIX_001\\BUILD_EXIT_CODE.txt",
+        "F:\\rawrxd\\evidence\\NATIVE_BUILD_ERROR_FIX_001\\EXE_STAT.txt",
+        "F:\\rawrxd\\evidence\\AGENT_RUNTIME_VALIDATION_001\\BUILD_EXIT_CODE.txt",
+        "F:\\rawrxd\\evidence\\AGENT_RUNTIME_VALIDATION_001\\EXE_STAT.txt"
+      ],
+      "notes": "RawrXD-Win32IDE-Native Release x64 linked EXIT=0; exe exists at bin/Release. CERTIFIED=0 PROMOTE=0."
+    },
+    {
+      "id": "G2",
+      "name": "Autonomous task production entry",
+      "status": "NOT_RUN",
+      "blocker": null,
+      "notes": "G1 link cleared. StartAutonomousTask runtime not yet exercised. NOT_RUN!=PASS."
+    },
+    {
+      "id": "G3",
+      "name": "FSM transitions runtime",
+      "status": "NOT_RUN",
+      "blocker": null,
+      "notes": "FSM_TRACE.jsonl STATUS=NOT_RUN; ProductAgentFSM SOURCE_WIRED only."
+    },
+    {
+      "id": "G4",
+      "name": "Live agent E2E",
+      "status": "NOT_RUN",
+      "blocker": null,
+      "RUNTIME_REACHED": 0,
+      "notes": "E2E not run after link PASS. SOURCE_WIRED != RUNTIME_REACHED."
+    },
+    {
+      "id": "G5",
+      "name": "PlanExecutor exclusion",
+      "status": "PASS",
+      "evidence": [
+        "F:\\rawrxd\\evidence\\AGENT_RUNTIME_VALIDATION_001\\PLANEXECUTOR_EXCLUSION.txt"
+      ],
+      "notes": "Win32IDE_PlanExecutor.cpp exists on disk but zero CMakeLists.txt hits and zero RawrXD-Win32IDE-Native.vcxproj hits. SSOT remains AutonomousLoop."
+    },
+    {
+      "id": "G6",
+      "name": "Evidence/matrix reconcile",
+      "status": "PASS",
+      "notes": "PROMOTION_GATES.json G1 refreshed to PASS. CAPABILITY_MATRIX.json not mutated. CERTIFIED=0 PROMOTE=0."
+    }
+  ],
+  "locked_disposition": {
+    "gaps_1_2_6_8": "SOURCE_WIRED",
+    "RUNTIME_REACHED": "0/4",
+    "CERTIFIED": 0,
+    "PROMOTE": 0
+  },
+  "top_failing_tus_g1": []
+}

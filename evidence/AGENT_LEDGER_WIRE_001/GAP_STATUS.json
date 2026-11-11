@@ -1,0 +1,37 @@
+{
+  "evidence_id": "AGENT_LEDGER_WIRE_001",
+  "date": "2026-11-11",
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "laws": {
+    "SOURCE_WIRED_NE_RUNTIME_REACHED": true,
+    "NOT_RUN_NE_PASS": true
+  },
+  "owned_gaps": {
+    "7": {
+      "name": "AgentHistory_undo_restores_file_bytes",
+      "SOURCE_WIRED": true,
+      "RUNTIME_REACHED": true,
+      "RUNTIME_SCOPE": "agent_ledger_undo_smoke + AgentEditHistory SSOT; IDE exe E2E NOT_RUN",
+      "smoke_exit": 0,
+      "CERTIFIED": 0
+    },
+    "10": {
+      "name": "AgentSession_TaskLedger_IDE_product_path",
+      "SOURCE_WIRED": true,
+      "RUNTIME_REACHED": true,
+      "RUNTIME_SCOPE": "best-effort: smoke disk RT for AgentSession+PersistentTaskBacklog; create/update/resume/cancel wired in AgentCommands; full IDE exe turn NOT_RUN",
+      "smoke_exit": 0,
+      "CERTIFIED": 0
+    }
+  },
+  "smoke": {
+    "target": "agent_ledger_undo_smoke",
+    "binary": "F:\\rawrxd\\build\\bin\\Release\\agent_ledger_undo_smoke.exe",
+    "FAIL_COUNT": 0,
+    "SOURCE_WIRED": 1,
+    "RUNTIME_REACHED": 1,
+    "CERTIFIED": 0,
+    "PROMOTE": 0
+  }
+}

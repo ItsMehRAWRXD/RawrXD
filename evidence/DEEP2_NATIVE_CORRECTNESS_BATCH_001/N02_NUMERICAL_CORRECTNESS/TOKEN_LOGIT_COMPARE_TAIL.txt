@@ -1,0 +1,100 @@
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 176
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 11500.552
+totalEmbedMs       = 0.008
+totalLogitsMs      = 188.968
+totalAttnMs        = 3090.102
+totalFfnMs         = 8295.628
+acquireCount       = 0
+mapCount           = 0
+releaseCount       = 0
+releaseErrorCount  = 0
+tensorAcquireFail  = 0
+mappingErrorCount  = 0
+residencyErrorCount= 0
+staleLeaseCount    = 0
+avgLayerMs         = 65.344
+============================================================
+
+=== ElasticResidencyManager Telemetry ===
+NVMe read time:        0 us
+RAM stage time:        0 us
+RAM?VRAM upload time:  0 us
+GPU wait time:         44876 us
+GPU compute time:      0 us
+Prefetch hits:         0
+Prefetch misses:       0
+Prefetch hit rate:     0.00%  (B011 ref ~79.96%)
+VRAM eviction time:    0 us
+CPU fallback time:     0 us
+State race blocks:     0
+Compute efficiency:    0.0000
+G04 lease pins issued:  19
+G04 stale leases rej:   0
+G04 evict lease skips:  0
+G04 evictions deferred: 0
+RAWRXD_TICKLATCH_001 warmup_accepted=1 prefetch_requests=0 prefetch_deferred_before_warmup=0
+B011_FETCH_COST_FRAME  hit=0.00%  io_ref~77.6%  map_ref~99.7%  metric=fetch_not_fit
+FREETOKEN_WITNESS_LIVE=1
+FREETOKEN_WITNESS_ACTIVE_ZONES=8
+FREETOKEN_WITNESS_READY_ZONES=0
+FREETOKEN_WITNESS_OVERWRITES=0
+FREETOKEN_WITNESS_HITS=0
+FREETOKEN_WITNESS_MISSES=0
+FREETOKEN_WITNESS_STICK_RPM_0=0
+FREETOKEN_WITNESS_STICK_RPM_1=0
+Memory: warmCompressed=35/2304 MB, warmStaged=0/288 MB, hot=0/4608 MB
+==========================================
+
+[Deep2Engine] Telemetry health: VRAM_BW_SATURATED
+[AGENT] POST_GENERATE generated=8 tokens
+[AGENT] GENERATION_RECEIPT prompt=1 generated=8 completed=1 cancelled=0 stop_reason=16 stop=COMPLETED
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] unloadModel
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=22
+[LIFE] unloadModel FreeTensorData ggufResult (201 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+[LIFE] release MoE
+[LIFE] disableMARS
+[LIFE] release vulkan devices
+[LIFE] stop telemetryController
+[LIFE] release residency/elastic/cache
+[LIFE] reset elasticResidency
+[LIFE] reset residencyManager
+[LIFE] reset residencyCache
+[LIFE] reset globalIndex
+[LIFE] residency/elastic/cache done
+[LIFE] release KV / compressedKV / toroidalKV
+[LIFE] stop threadPool
+[LIFE] release satellite engines
+[LIFE] deallocateBuffers
+[LIFE] remove temp Ollama GGUF
+[LIFE] ~Deep2Engine END
+[StreamEngine] Shutdown
+TOKEN_IDS_A=4664,4664,4664,4664,4664,4664,4664,4664
+TOKEN_IDS_B=4664,4664,4664,4664,4664,4664,4664,4664
+TOKEN_ID_MATCH=1 GENERATED=8 PREFILL_PARITY_OK=1
+CERTIFIED=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[MARS] Shutdown complete. Total allocated: 0.00 MB, Total freed: 0.00 MB
+[Deep2Engine] MARS disabled
+[ElasticResidencyManager] Scheduler thread exiting
+[ElasticResidencyManager] Shutdown complete
+[ResidencyManager] Shutdown complete

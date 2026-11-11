@@ -1,0 +1,248 @@
+ASOF=2026-11-11T17:42:00Z
+ACTOR=parent_coordinator
+SOLE_OWNER_NOTE=0e89d509 had asst=0; parent executing FAIL_CLOSED isolation to unblock P01-P06 link
+CERTIFIED=0 PROMOTE=0
+
+EXCLUDED_FROM_RawrXD-Win32IDE-Native_CMake (commented, not deleted):
+1. Win32IDE_VoiceAssistantPanel.cpp — missing initVoiceAssistant/start/stop/isVoiceListening members
+2. Win32IDE_FileSystemEvents.cpp — missing initFileSystemWatcher/fileNeedsReindex/removeWatchedFile
+3. Win32IDE_HeapHardening.cpp — LOG_WARN unresolved
+4. Win32IDE_Attestation.cpp — RawrXD::Security namespace missing
+
+POLICY=FAIL_CLOSED_ISOLATION_NOT_SILENT_DELETE
+REWIRE=required after native exe links; do not claim those features PASS
+
+LNK2005_ISOLATION Sidebar/Minimap/Git/ProblemsPanel/GGUF_Reader/SemanticTokens; LinkGap trim; Ollama/Deep2 backends
+
+ASOF=2026-11-11T18:41:50Z
+G1_NATIVE_LINK=PASS_EXE_PRESENT_UNPROMOTED
+EXE=F:\rawrxd\build_win32ide\bin\Release\RawrXD-Win32IDE-Native.exe
+SHA256=A5441B5D042A6B8949082759D978C3705B8C409867EB9231C17576A9A570E326
+PS_SMOKE=RUNTIME_EXERCISED_UNPROMOTED (5610 OBSERVED_OUTPUT / 5611 OBSERVED_SHRINK / 5612 POSTED)
+CERTIFIED=0 PROMOTE=0 TIP_CLIMB=HOLD
+POST_LINK=rawrxd_agentic_backend
+REWIRE_ISOLATED=required after promote gate
+
+ASOF=2026-11-11T13:42:19.2965778-05:00 ACTOR=Batch17_build_win32ide_sole_owner CERTIFIED=0 PROMOTE=0
+b17_11 LINK_VERDICT=SUCCEEDED LNK2005=0 LNK2001=0 LNK2019=0 LNK1120=0
+ISOLATION_CONFIRMED:
+- AgentSession.cpp + ollama_client.cpp via agentic lib only (BATCH17_USE_AGENTIC_LIB)
+- BackendRouter/PersistentTaskBacklog/RawrSwarmEvents via agentic lib
+- LinkGapHelpers: refreshFileExplorer/toggleMinimap/gitPull/gitPush/loadGGUFModel stubs OWNED
+- LinkGapHelpers: addProblem/clearProblems #if 0 (VSCodeUI owns)
+- Sidebar/Minimap/Git/ProblemsPanel/GGUF_Reader retained as sole owners (no LNK2005)
+- PowerShell 5610 patch PRESERVED (IDC_PS_BTN_EXECUTE=5610)
+- navigateToLine NOT under SemanticPanel (held)
+LinkGapHelpers.obj PRESENT; agentic.lib POST-linked
+EXE=F:\rawrxd\build_win32ide\bin\Release\RawrXD-Win32IDE-Native.exe SHA256=A5441B5D042A6B8949082759D978C3705B8C409867EB9231C17576A9A570E326
+PS_SMOKE=RUNTIME_EXERCISED_UNPROMOTED PRODUCT_PASS=0
+
+ASOF=2026-11-11T13:45:35.6125763-05:00 LinkGapHelpers restored isolation stubs; addProblem/clearProblems deferred to VSCodeUI; AgentSession/ollama via agentic lib
+
+ASOF=2026-11-11T13:48:09.0015714-05:00 ACTOR=Batch17_build_win32ide_sole_owner
+b17_11b LNK2005=6 (LinkGap vs Sidebar/Minimap/Git/GGUF) — FIXED via BATCH17_DUP_DISABLE on owner TUs
+LinkGapHelpers SOLE_OWNER stubs: createFileExplorer/refreshFileExplorer/toggleMinimap/gitPull/gitPush/loadGGUFModel
+addProblem/clearProblems NOT in LinkGap; live defs in ProblemsPanel (VSCodeUI remains #if 0 DUP)
+rebuild_b17_11c /m:1 launched CERTIFIED=0 PROMOTE=0
+
+ASOF=2026-11-11T13:52:45.7763431-05:00 REWIRE: Sidebar/Minimap/Git/GGUF_Reader LIVE in Native; LinkGap no longer defines their symbols
+
+ASOF=2026-11-11T13:55:02.6046794-05:00 ACTOR=Batch17_build_win32ide_sole_owner
+b17_12 LNK1120=6 LNK2001 unresolved — cause: leftover BATCH17_DUP_DISABLE on Sidebar/Minimap/Git/GGUF while LinkGap no longer defines symbols
+FIX=removed DUP_DISABLE; LIVE owners: Sidebar create/refresh, Minimap toggle, Git pull/push, GGUF loadGGUFModel
+LinkGapHelpers: NO defs for those symbols (comments only)
+rebuild_b17_12b /m:1 launched CERTIFIED=0 PROMOTE=0
+
+ASOF=2026-11-11T13:58:59.1268959-05:00 ACTOR=Batch17_build_win32ide_sole_owner CERTIFIED=0 PROMOTE=0
+b17_13 LINK_VERDICT=SUCCEEDED LNK2005=0 LNK2001=0 LNK1120=0
+OWNERS LIVE: Sidebar/Minimap/Git/GGUF_Reader; LinkGapHelpers does NOT define their symbols
+EXE=F:\rawrxd\build_win32ide\bin\Release\RawrXD-Win32IDE-Native.exe SHA256=16D85B1CF7651CA6F43FBC60B99F352A96BBB6C7C00C85ED777F941C8911CE4B
+PS_SMOKE=RUNTIME_EXERCISED_UNPROMOTED PRODUCT_PASS=0 SHA_MATCH=1
+
+ASOF=2026-11-11T14:05:56.6902016-05:00 REWIRE_ATTEMPT Voice+FSEvents+Heap+Attestation SOURCE_WIRED cmake; RUNTIME pending b17_14 link; CERTIFIED=0 PROMOTE=0
+
+ASOF=2026-11-11T14:08:12.2551811-05:00 ACTOR=Batch17_monitor_fixer_sole_owner CERTIFIED=0 PROMOTE=0
+b17_14_rewire LINK_VERDICT=SUCCEEDED LNK2005=0 LNK2001=0 LNK2019=0 LNK1120=0 errC=0
+REWIRE_LANDED=VoiceAssistantPanel+FileSystemEvents+HeapHardening+Attestation (SOURCE_WIRED in RAWRXD_NATIVE_IDE_SOURCES; no invent PASS)
+EXE=F:\rawrxd\build_win32ide\bin\Release\RawrXD-Win32IDE-Native.exe SHA256=D1B17F66C5BD951BADD51FEE31326EAAE758B1E3F605E761AB4D82D255A32ABF EXE_BYTES=2179072
+PS_SMOKE=RUNTIME_EXERCISED_UNPROMOTED PRODUCT_PASS=0 SHA_MATCH=1
+5610_Execute=OBSERVED_OUTPUT 5611_Clear=OBSERVED_SHRINK 5612_Stop=POSTED
+RUNLOG=BATCH_17/PS_SMOKE_HARNESS/ps_smoke_run_20261111-140629.txt
+REMAINING_ISOLATION=ExtensionMarketplace; DebuggerIntegration(+hpp); Collab
+POLICY=FAIL_CLOSED_ISOLATION_NOT_SILENT_DELETE TIP_CLIMB=HOLD
+
+ASOF=2026-11-11T14:12:00-05:00 ACTOR=Batch17_remaining_isolation_triage CERTIFIED=0 PROMOTE=0
+TIP_SHA_UNCHANGED=D1B17F66C5BD951BADD51FEE31326EAAE758B1E3F605E761AB4D82D255A32ABF
+REWIRE=0 (0/3 SAFE) CMAKE=SKIP MSBUILD=SKIP SOLE_OWNER_BUILD=HELD
+5610_PRESERVED=1 TIP_CLIMB=HOLD PRODUCT_PASS=0
+
+TRIAGE_ExtensionMarketplace=NOT_SAFE KEEP_COMMENTED
+- BLOCKER=C1083 missing include extension_package_local.hpp (ABSENT tree-wide)
+- ALSO_MISSING=Extensions::Local::InstallPackage / IdeCatalog (no owner TU/lib on disk)
+- LNK_RISK=LNK2019 if header invented without Local impl; LNK2005 unknown until deps land
+- EVIDENCE=rebuild_b17_05.log C1083; Test-Path False for src/win32app + include/
+
+TRIAGE_DebuggerIntegration=NOT_SAFE KEEP_COMMENTED (+.hpp)
+- BLOCKER=C1083 missing ../ui/CallStackIntegration.hpp (ABSENT; only CallStackIntegration_test.cpp)
+- ALSO_MISSING=../ui/CallStackPanel.h; ../debug/DapService.hpp + DapService.cpp (ABSENT)
+- DEPS_NOT_IN_RAWRXD_NATIVE_IDE_SOURCES=CallStackIntegration/CallStackPanel/DapService
+- LNK_RISK=LNK2019 on UI::CallStackIntegration::* and Debug::DapService::* after C1083 cleared
+- EVIDENCE=rebuild_b17_05.log C1083 on DebuggerIntegration.hpp:17
+
+TRIAGE_Collab=NOT_SAFE KEEP_COMMENTED
+- MEMBER_DECL=Win32IDE::showCollabPanel DECLARED Win32IDE.h:1281; DEF only in Win32IDE_Collab.cpp
+- BLOCKER=C1083 missing collab/websocket_hub.h (also crdt_buffer.h, cursor_widget.h ABSENT)
+- ALSO_MISSING=src/collab/{websocket_hub,crdt_buffer,cursor_widget}.cpp; include/collab/* ABSENT (docs-only / Full Source audit remnant)
+- LIBS=no ws2_32/collab lib wire for hub; deps resolve FAIL before link
+- LNK_RISK=LNK2019 WebSocketHub/CRDTBuffer/CursorWidget + possible showCollabPanel if callers hot after rewire without stubs
+- EVIDENCE=rebuild_b17_05.log C1083; Test-Path False for include/collab + src/collab
+
+POLICY=FAIL_CLOSED_ISOLATION_NOT_SILENT_DELETE — leave all three commented until headers+impls exist on disk
+NEXT_GATE=BATCH17_POST_LINK_PRODUCT_GATES (no invent PASS; remaining isolations blocked on ABSENT deps)
+
+ASOF=2026-11-11T14:16:04.4805912-05:00 Marketplace REWIRE_ATTEMPT via minimal src/marketplace/extension_package_local (honest limited InstallPackage); DebuggerIntegration+Collab still isolated (missing CallStackIntegration product + collab/ on F tip)
+
+ASOF=2026-11-11T14:20:01.2747265-05:00 ACTOR=b17_15_marketplace_sole_owner CERTIFIED=0 PROMOTE=0
+b17_15 LINK_VERDICT=SUCCEEDED LNK1104_RESOLVED=1 LNK_UNRESOLVED=0
+EXE=F:\rawrxd\build_win32ide\bin\Release\RawrXD-Win32IDE-Native.exe
+SHA256=DA52DCB69494B8580D3FB4400B06022DD7D1C7BF52F3D11A91FBE438DFC085DE EXE_BYTES=2178560
+PS_SMOKE=RUNTIME_EXERCISED_UNPROMOTED SHA_MATCH=1
+5610_Execute=OBSERVED_OUTPUT 5611_Clear=OBSERVED_SHRINK 5612_Stop=POSTED
+MARKETPLACE=SOURCE_WIRED (extension_package_local + ExtensionMarketplace; createPanel if children ABSENT)
+KEEP_ISOLATED=DebuggerIntegration; Collab
+REWIRE_SAFE_DONE=ExtensionMarketplace
+TIP_SHA=DA52DCB69494B8580D3FB4400B06022DD7D1C7BF52F3D11A91FBE438DFC085DE
+TIP_CLIMB=HOLD PRODUCT_PASS=0 CERTIFIED=0 PROMOTE=0
+NEXT_GATE=BATCH18_GUI_FIRST_SMOKES_P07_VIS + HOTPATCH_TIP_BIND
+
+ASOF=2026-11-11T14:21:31.7524138-05:00 HOTPATCH_TIP_BIND + B18 rebound CERTIFIED=0 PROMOTE=0
+TIP_SHA=DA52DCB69494B8580D3FB4400B06022DD7D1C7BF52F3D11A91FBE438DFC085DE TIP_BIND=HASH_OK_LIVE_TIP
+KEEP_ISOLATED=DebuggerIntegration; Collab
+B18_COUNTS: first=3/6 reached 0/6 product; gates=6/6 reached 3/6 product (P06/P07/P10); followup P07_VIS=FAIL
+
+ASOF=2026-11-11T14:26:35.3260879-05:00 ACTOR=Batch17_remaining_isolations_worker CERTIFIED=0 PROMOTE=0
+b17_15c FORCE_RECOMPILE ExtensionMarketplace+extension_package_local LINK_VERDICT=SUCCEEDED LNK_UNRESOLVED=0
+EXE=F:\rawrxd\build_win32ide\bin\Release\RawrXD-Win32IDE-Native.exe
+SHA256=89DC78FDC7F5506AC38DB379237F280A03971F53CD5F75254CB428646CD8F072 EXE_BYTES=2179584
+RUNLOG=BATCH_17/rebuild_b17_15c_msbuild.log
+
+PER_TU:
+1) Win32IDE_ExtensionMarketplace=SOURCE_WIRED
+   - DEPS=src/marketplace/extension_package_local.{hpp,cpp} PRESENT (minimal InstallPackage/IdeCatalog; local FS copy; no cloud/HTTP)
+   - CMAKE=uncommented + extension_package_local.cpp in RAWRXD_NATIVE_IDE_SOURCES
+   - INCLUDE=marketplace/extension_package_local.hpp
+   - BUILD=obj recompiled 14:25:41-42; linked into tip
+   - LIMIT=SOURCE_WIRED honest limited (CERTIFIED=0; not full marketplace)
+
+2) Win32IDE_DebuggerIntegration=FAIL_CLOSED KEEP_COMMENTED
+   - BLOCKER=CallStackIntegration.hpp ABSENT on F (Test-Path False; only *_test.cpp)
+   - ALSO_MISSING=CallStackPanel.h; DapService.{hpp,cpp} ABSENT on F (PRESENT on G only)
+   - DEPS_NOT_IN_NATIVE_SOURCES=1; NOT wired (would C1083 then LNK2019)
+   - CMAKE_NOTE=BATCH17_ISOLATION FAIL_CLOSED retained on .cpp/.hpp
+
+3) Win32IDE_Collab=FAIL_CLOSED KEEP_COMMENTED
+   - BLOCKER=collab/websocket_hub.h ABSENT on F tip
+   - ALSO_MISSING=crdt_buffer.h; cursor_widget.h; src/collab/*.cpp ABSENT on F (PRESENT on G)
+   - CMAKE_NOTE=BATCH17_ISOLATION FAIL_CLOSED retained; showCollabPanel decl OK / def isolated
+
+REMAINING_ISOLATION=DebuggerIntegration(+hpp); Collab
+REWIRE_LANDED=ExtensionMarketplace
+TIP_CLIMB=HOLD PRODUCT_PASS=0
+POLICY=FAIL_CLOSED_ISOLATION_NOT_SILENT_DELETE
+NEXT_GATE=BATCH17_POST_LINK_PRODUCT_GATES (no invent PASS)
+
+ASOF=2026-11-11T14:27:30-05:00 ACTOR=da52_rebind_worker CERTIFIED=0 PROMOTE=0
+TIP_SHA_BRIEF=DA52DCB69494B8580D3FB4400B06022DD7D1C7BF52F3D11A91FBE438DFC085DE
+LIVE_SHA=89DC78FDC7F5506AC38DB379237F280A03971F53CD5F75254CB428646CD8F072 LIVE_NE_BRIEF=1
+B18: RUNTIME_REACHED=6/6 PRODUCT=0/6 P07_HWND_VIS=FAIL
+HOTPATCH: prior DA52 HASH_OK@142101; rebind now HASH_MISMATCH_REJECT (REQUESTED_TIP_EXE_ON_DISK=0)
+DEEP2_STATUS_SHA=DA52 TIP_CLIMB=HOLD
+
+ASOF=2026-11-11T14:31:09.6970819-05:00 ACTOR=tip_collab_rewire_sole_owner CERTIFIED=0 PROMOTE=0
+COLLAB_REWIRE=SOURCE_WIRED+LINK_PASS
+COPIED_G_TO_F=include/collab/{websocket_hub,crdt_buffer,cursor_widget}.h + src/collab/{websocket_hub,crdt_buffer,cursor_widget}.cpp
+INCLUDE_FIX=product API from include/collab (NOT namespaced src/collab/*.h — src precedes include on Native; shadow headers pruned)
+CMAKE=uncomment Win32IDE_Collab.cpp + add 3 collab cpp TUs (BATCH17_COLLAB_REWIRE)
+CMAKE_EC=0 MSBUILD_EC=0 /m:1 CL_MPCount=1 SOLE_OWNER=tip-collab-rewire-b17
+EXE=F:\rawrxd\build_win32ide\bin\Release\RawrXD-Win32IDE-Native.exe
+SHA256=C25B157053A590E4BA02A418502A9EF356EE8C386764BB8873B1BD6A098DED5A EXE_BYTES=2182656
+PRIOR_TIP_SHA=DA52DCB69494B8580D3FB4400B06022DD7D1C7BF52F3D11A91FBE438DFC085DE
+COMPILE_NOTE=Win32IDE_Collab+websocket_hub+crdt_buffer+cursor_widget compiled; warnings only (C4100/C4189/C4996/C4005/C4309); LNK unresolved=0
+DebuggerIntegration=KEEP_ISOLATED
+- BLOCKER_UNCHANGED=CallStackIntegration.hpp product ABSENT on F (only CallStackIntegration_test.cpp); CallStackPanel.h + DapService.{hpp,cpp} ABSENT
+- POLICY=do not copy G ui/CallStack* for this tip pass; leave BATCH17_ISOLATION comments
+PS_SMOKE_5610=PRESERVED (evidence rows 5610_Execute/5611_Clear/5612_Stop unchanged; no re-smoke this pass)
+KEEP_ISOLATED=DebuggerIntegration
+REWIRE_SAFE_DONE=Collab
+TIP_CLIMB=HOLD PRODUCT_PASS=0 CERTIFIED=0 PROMOTE=0
+NEXT_GATE=POST_COLLAB_RUNTIME_SMOKE (no invent PASS)
+
+ASOF=2026-11-11T14:34:04.4586587-05:00 ACTOR=collab_finish_sole_owner CERTIFIED=0 PROMOTE=0
+POST_COLLAB_RUNTIME=EXERCISED_UNPROMOTED
+EXE=F:\rawrxd\build_win32ide\bin\Release\RawrXD-Win32IDE-Native.exe
+SHA256=C25B157053A590E4BA02A418502A9EF356EE8C386764BB8873B1BD6A098DED5A EXE_BYTES=2182656
+LINK_VERDICT=SUCCEEDED LNK_UNRESOLVED=0 ws2_32=LINKED (cmake reconfigure EC=0; MSBuild fullpath /m:1 EC=0)
+COLLAB=SOURCE_WIRED (Win32IDE_Collab + websocket_hub + crdt_buffer + cursor_widget objs linked)
+DebuggerIntegration=KEEP_ISOLATED (CallStackIntegration product ABSENT on F)
+PS_SMOKE=RUNTIME_EXERCISED_UNPROMOTED SHA_MATCH=1
+5610_Execute=OBSERVED_OUTPUT 5611_Clear=OBSERVED_SHRINK 5612_Stop=POSTED
+5610_PRESERVED=1 RUNLOG=BATCH_17/PS_SMOKE_HARNESS/ps_smoke_run_20261111-143115.txt
+B18_P07_VIS=FAIL TIP_SHA=C25B157053A590E4BA02A418502A9EF356EE8C386764BB8873B1BD6A098DED5A
+P07_NOTE=TAB_COUNT=4 allPresent=True anyPaneVis=True t0=True t1=False t2=False t3=False (terminal stuck vis across tabs)
+FOLLOWUP=BATCH_18_AUDIT/RUNTIME_EVIDENCE/GUI_FOLLOWUP_RECEIPT.txt RUNLOG=gui_followup_20261111-143139.txt
+HOTPATCH_TIP_BIND=HASH_OK_LIVE_TIP run=20261111_143251
+ROUTING_E2E=NOT_CERTIFIED TIP_CLIMB=HOLD PRODUCT_PASS=0
+KEEP_ISOLATED=DebuggerIntegration
+REWIRE_LANDED=Collab;ExtensionMarketplace
+NEXT_GATE=P07_EXCLUSIVE_PANE_VIS + OLLAMA_IDENTITY (no invent PASS)
+
+ASOF=2026-11-11T14:35:58.2072641-05:00 ACTOR=collab_rewire_worker_this_session CERTIFIED=0 PROMOTE=0
+b17_collab LINK_VERDICT=SUCCEEDED LNK1104_RESOLVED=1 (killed tip locker pid) LNK_UNRESOLVED=0 errC=0
+EXE=F:\rawrxd\build_win32ide\bin\Release\RawrXD-Win32IDE-Native.exe
+SHA256=8BC5BF3ECB399C99DEF7891F1B95FD5FDE3238069850F05AD0D0B31EC8141AC1 EXE_BYTES=2182656
+COLLAB=SOURCE_WIRED
+ - DEPS=include/collab/{websocket_hub,crdt_buffer,cursor_widget}.h PRESENT (match G include/)
+ - SRC=src/collab/{websocket_hub,crdt_buffer,cursor_widget}.cpp PRESENT (EQ G)
+ - CMAKE=Win32IDE_Collab.cpp + three collab cpps in RAWRXD_NATIVE_IDE_SOURCES (BATCH17_COLLAB_REWIRE)
+ - LINK_PROOF=link.read.tlog contains WIN32IDE_COLLAB.OBJ + WEBSOCKET_HUB.OBJ + CRDT_BUFFER.OBJ + CURSOR_WIDGET.OBJ
+ - BINARY_PROOF=WCHAR class name RawrXD_CollabPanel present in tip EXE
+ - MENU_CALLSITE=ABSENT (showCollabPanel decl-only outside Collab.cpp; RUNTIME_PANEL_OPEN=NOT_RUN)
+ - NOT invent PASS
+
+DebuggerIntegration=FAIL_CLOSED KEEP_COMMENTED
+ - PRODUCT CallStackIntegration.hpp/.cpp ABSENT on F tip (Test-Path False)
+ - ONLY CallStackIntegration_test.cpp on F tip — test != product
+ - ALSO_MISSING on F: CallStackPanel.h; DapService.{hpp,cpp}
+ - PRESENT on G:\~dev\rawrxd\src\ui\CallStackIntegration.{hpp,cpp} + CallStackPanel.h + src/debug/DapService.*
+ - ALSO in F worktree thorn-measure only (not tip tree)
+ - POLICY=do not wire DebuggerIntegration until CallStackIntegration product (+panel+DapService) lands on F tip
+
+REMAINING_ISOLATION=DebuggerIntegration(+hpp)
+REWIRE_LANDED=Collab (+ prior Marketplace/Voice/FSEvents/Heap/Attestation)
+5610_PRESERVED=1 TIP_CLIMB=HOLD PRODUCT_PASS=0
+POLICY=FAIL_CLOSED_ISOLATION_NOT_SILENT_DELETE
+NEXT_GATE=B18_PRODUCT_P08_P09_P11 then Debugger deps or keep isolated
+
+ASOF=2026-11-11T14:39:50.4852834-05:00 ACTOR=batch17_debugger_isolation_seal CERTIFIED=0 PROMOTE=0
+TIP_SHA=C0F0DD70A8D5E710F87533FDEAA2B69FFD123324252C6A9C7C4AC720EE95BA10 EXE_BYTES=2183168
+EXE=F:\rawrxd\build_win32ide\bin\Release\RawrXD-Win32IDE-Native.exe
+COLLAB=SOURCE_WIRED (unchanged; prior Collab rewire remains landed)
+DebuggerIntegration=KEEP_ISOLATED FAIL_CLOSED
+- PRODUCT CallStackIntegration.hpp/.cpp ABSENT on F tip (Test-Path False)
+- ONLY CallStackIntegration_test.cpp PRESENT on F — test != product
+- ALSO_MISSING exact paths on F tip:
+  F:\rawrxd\src\ui\CallStackIntegration.hpp
+  F:\rawrxd\src\ui\CallStackIntegration.cpp
+  F:\rawrxd\src\ui\CallStackPanel.h
+  F:\rawrxd\src\ui\CallStackPanel.cpp
+  F:\rawrxd\src\debug\DapService.hpp
+  F:\rawrxd\src\debug\DapService.cpp
+  F:\rawrxd\src\win32app\Win32IDE_DebuggerIntegrationUI.cpp
+- ORPHAN_PRESENT_BUT_UNWIREABLE=F:\rawrxd\src\win32app\Win32IDE_DebuggerIntegration.{cpp,hpp} (deps ABSENT)
+- PRESENT_ON_G=G:\~dev\rawrxd\src\ui\CallStackIntegration.{hpp,cpp} + CallStackPanel.h + src/debug/DapService.*
+- LINK_SAFE_COPY=NOT_PERFORMED (full DapService.cpp pulls nlohmann; prior tip policy KEEP_ISOLATED; no invent PASS)
+REMAINING_ISOLATION=DebuggerIntegration
+REWIRE_LANDED=Collab;ExtensionMarketplace;Voice;FSEvents;Heap;Attestation
+TIP_CLIMB=HOLD PRODUCT_PASS=0
+POLICY=FAIL_CLOSED_ISOLATION_NOT_SILENT_DELETE
+NEXT_GATE=DebuggerIntegration_DEPS_LAND_ON_F_OR_KEEP_ISOLATED

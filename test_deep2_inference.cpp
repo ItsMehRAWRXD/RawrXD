@@ -65,6 +65,27 @@ int main(int argc, char* argv[])
     std::cout << "  Vocab size: " << meta.vocabSize << std::endl;
     std::cout << "  Context length: " << meta.maxPositionEmbeddings << std::endl;
 
+    // ── S01 geometry receipt: weight-derived KV geometry must match ──
+    {
+        const auto &mw = engine.getModelWeights();
+        const auto *kv = engine.getKVCache();
+        if (!kv)
+        {
+            std::cerr << "FAIL: KV cache missing after load" << std::endl;
+            return 1;
+        }
+        if (kv->headDimSize() != mw.headDim || kv->headCount() != mw.numKVHeads)
+        {
+            std::cerr << "FAIL: KV geometry does not match model weights: "
+                      << "cacheDim=" << kv->headDimSize()
+                      << " weightDim=" << mw.headDim
+                      << " cacheKVHeads=" << kv->headCount()
+                      << " weightKVHeads=" << mw.numKVHeads << std::endl;
+            return 1;
+        }
+        std::cout << "  " << engine.kvGeometryReceipt() << std::endl;
+    }
+
     // ── Configure sampling (non-greedy) ────────────────────────
     Deep2::GenerationOptions opts;
     opts.maxTokens = 64;
@@ -136,6 +157,20 @@ int main(int argc, char* argv[])
     {
         std::cerr << "FAIL: Streaming did not generate tokens" << std::endl;
         return 1;
+    }
+    // generateStream() reports success through its completed/generated fields
+    // and does not necessarily write m_generationStop; generate() does.  Accept
+    // NONE for a completed stream, but never accept a fault reason.
+    {
+        const auto stop = engine.generationStopReason();
+        if (stop != Deep2::Deep2Engine::GenerationStopReason::COMPLETED &&
+            stop != Deep2::Deep2Engine::GenerationStopReason::NONE)
+        {
+            std::cerr << "FAIL: generation stop reason="
+                      << Deep2::Deep2Engine::GenerationStopReasonName(stop)
+                      << std::endl;
+            return 1;
+        }
     }
 
     std::cout << "\n[PASS] All Deep2 inference tests passed" << std::endl;

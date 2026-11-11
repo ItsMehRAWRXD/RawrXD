@@ -1,4 +1,5 @@
 #include "Win32IDE.h"
+#include "DialogBoxWithInput.h"
 #include "../core/prompt_template_engine.h"
 
 #include <filesystem>

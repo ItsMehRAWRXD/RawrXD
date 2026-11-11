@@ -49,7 +49,7 @@ using namespace RawrXD::LSPServer;
 void Win32IDE::initLSPServer() {
     if (m_lspServer) return;  // Already created
 
-    m_lspServer = std::make_unique<RawrXDLSPServer>();
+    m_lspServer = new RawrXDLSPServer();
 
     // Configure with workspace root
     ServerConfig config;
@@ -80,7 +80,8 @@ void Win32IDE::shutdownLSPServer() {
     if (!m_lspServer) return;
 
     m_lspServer->stop();
-    m_lspServer.reset();
+    delete m_lspServer;
+    m_lspServer = nullptr;
 
     LOG_INFO("LSP Server shut down");
     (void)0;
