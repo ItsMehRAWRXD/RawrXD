@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "kind": "working-files",
+  "original_branch": "worktree/detached-f68bebfa24ae",
+  "original_commit": "f68bebfa24ae9f727675ee13605320a168e48bf0",
+  "worktree": "F:/rawrxd-pr18-audit",
+  "publication": "Source snapshot on a new branch; original history is preserved locally.",
+  "lfs_status": "Remote account budget exceeded; locally available text payloads materialized as regular Git blobs.",
+  "exclusions_receipt": "Local evidence/GITHUB_BRANCH_SYNC_001/583de580/exclusions-batches.jsonl",
+  "release_certification": "NOT_CLAIMED"
+}
