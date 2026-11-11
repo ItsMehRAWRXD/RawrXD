@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "kind": "branch-tip",
+  "original_branch": "integration/cert-reconciliation-20261025",
+  "original_commit": "033a8acb55d46d2fc22a84428e81f3167a0c3897",
+  "worktree": null,
+  "publication": "Source snapshot on a new branch; original history is preserved locally.",
+  "lfs_status": "Remote account budget exceeded; locally available text payloads materialized as regular Git blobs.",
+  "exclusions_receipt": "Local evidence/GITHUB_BRANCH_SYNC_001/583de580/exclusions-batches.jsonl",
+  "release_certification": "NOT_CLAIMED"
+}
