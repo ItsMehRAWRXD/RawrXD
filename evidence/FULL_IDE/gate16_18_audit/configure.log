@@ -1,0 +1,145 @@
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- The C compiler identification is MSVC 19.44.35228.0
+-- The CXX compiler identification is MSVC 19.44.35228.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- The ASM_MASM compiler identification is MSVC
+-- Found assembler: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/ml64.exe
+-- Î“Â£Ã´ MASM assembler enabled for custom ZLIB compression
+-- 64-bit configuration validated: pointer size = 8
+-- Security hardening ENABLED
+-- MSVC LTO enabled: /GL /LTCG /OPT:REF /OPT:ICF
+-- Î“Ã¤â•£ ZLIB not installed - Using built-in MASM-based compression (BrutalGzip/Deflate)
+--   MASM Compression Engines: BrutalGzip (MASM optimized), Deflate (fallback)
+--   To use native zlib compression:
+--     Option 1: vcpkg install zlib:x64-windows
+--     Option 2: Enable auto-download with -DFETCHCONTENT_ZLIB=ON
+CMake Warning at CMakeLists.txt:377 (message):
+  CURL not found - HTTP client will use fallback.  Set CURL_DIR or install
+  libcurl for full functionality.
+
+
+-- Qt6 not found - native dependency-free build (Qt-dependent targets excluded)
+CMake Warning at CMakeLists.txt:386 (message):
+  ZSTD not found - compression will use passthrough.  Set ZSTD_ROOT or
+  install zstd for full functionality.
+
+
+CMake Warning at CMakeLists.txt:538 (message):
+  ggml submodule not found - quantized inference will use fallback
+
+
+-- CUDA Toolkit not found - NVIDIA GPU support disabled
+-- ROCm/HIP not found - AMD GPU support disabled
+CMake Warning at CMakeLists.txt:637 (message):
+  ========================================
+
+-- To enable AMD GPU: Install ROCm for Windows and set HIP_PATH
+
+CMake Warning at CMakeLists.txt:638 (message):
+  NO GPU BACKEND DETECTED
+
+
+CMake Warning at CMakeLists.txt:639 (message):
+  Application will run in CPU-only mode
+
+
+CMake Warning at CMakeLists.txt:640 (message):
+  ========================================
+
+
+CMake Warning at CMakeLists.txt:641 (message):
+  Detected GPU: Run 'Get-WmiObject Win32_VideoController | Select Name'
+
+
+CMake Warning at CMakeLists.txt:642 (message):
+  For NVIDIA: Install CUDA Toolkit from developer.nvidia.com
+
+
+CMake Warning at CMakeLists.txt:643 (message):
+  For AMD: Install ROCm for Windows from rocm.docs.amd.com
+
+
+CMake Warning at CMakeLists.txt:644 (message):
+  ========================================
+
+
+-- nlohmann_json: using vendored header at include/nlohmann/json.hpp
+-- rawrxd_production_hardening: production hardening runtime enabled
+-- rawrxd_workflow: dependency-free browser testing & GitHub cloud agents enabled
+-- Adding advanced orchestration modules for AI-native IDE
+-- Qt-dependent orchestration modules EXCLUDED (Qt6 not installed): RawrXDOrchestration, RawrXDGit, RawrXDTerminal, RawrXDPaint
+-- Qt6 not found, skipping RawrXD-QtShell
+-- RawrXD-Win32IDE excluded (Qt6 unavailable or RAWRXD_BUILD_WIN32IDE_QT=OFF)
+-- gguf_universal_probe enabled (any-model GGUF integration)
+-- profiler gate: Vulkan_FOUND=TRUE vulkan_include='C:\VulkanSDK\1.4.357.0/Include'
+-- deep2_token_profiler enabled (ggml + Vulkan SDK)
+-- deep2_parity_trace enabled (Gate 4 dispatch audit; ggml + Vulkan SDK)
+-- deep2_d1_prefill_parity enabled (D1 batched-prefill parity; ggml + Vulkan SDK)
+-- deep2_spec_bench enabled (Speculative verification benchmark; ggml + Vulkan SDK)
+-- HexMag cert targets EXCLUDED: required sources not found
+-- deep2_context_scaling enabled (Long-context KV certification; ggml + Vulkan SDK)
+-- deep2_gguf_lifecycle enabled (GGUF lifecycle certification; ggml + Vulkan SDK)
+-- gpu_quant_dot_verify enabled (native Vulkan quant-dot kernel evidence)
+-- gpu_quant_dot_realweights enabled (native Vulkan quant-dot on real GGUF weights)
+-- deep2_fused_lmhead_verify enabled (Fused speculative LM-head certification; ggml + Vulkan SDK)
+-- mamba2_ref_probe enabled (independent Mamba2 block-0 reference)
+-- deep2_agentic_loop enabled (Gate 9 agentic E2E harness)
+-- deep2_agentic_repair enabled (H01/H02 host-driven autonomous repair)
+-- deep2_exec_trace enabled (RAWRXD_EXEC_TRUTH authoritative trace)
+-- deep2_prefill_parity enabled (H11-P1..P4 parity + H11-P6 dispatch profile)
+-- rawrxd_gpu_compute enabled: Deep2::VulkanCompute buildable from the main tree
+-- deep2_engine_lib enabled (static library; rawrxd_deep2_engine executable enabled)
+-- deep2_gpu_decode_roofline enabled (GPU decode bottleneck profiling; ggml + Vulkan SDK)
+-- RawrXD-Win32IDE-Native: RichEdit used as a runtime window class only; no import lib found in this SDK
+-- RawrXD-Win32IDE-Native: linked against rawrxd_production_hardening
+-- RawrXD-Win32IDE-Native: linked against rawrxd_security
+CMake Warning at CMakeLists.txt:2934 (message):
+  RawrXD-Win32IDE-Native: rawrxd_production_hardening is not a target; the
+  IDE will start without hardening
+
+
+-- RawrXD-Win32IDE-Native: native dependency-free Win32 IDE enabled
+-- Vulkan disabled via ENABLE_VULKAN=OFF; skipping find_package
+-- Qt6 not found or version < 6.7.2; skipping RawrXD-AgenticIDE target
+-- RawrXD-ModelLoader configured successfully with Clang C++20
+-- Qt target excluded (Qt6 unavailable): test_ide_main
+-- Qt target excluded (Qt6 unavailable): test_qmainwindow
+-- Qt target excluded (Qt6 unavailable): test_header
+-- Qt target excluded (Qt6 unavailable): bench_deflate_50mb
+-- Qt target excluded (Qt6 unavailable): quant_engine_test
+-- Qt target excluded (Qt6 unavailable): quant_correctness_tests
+-- Qt target excluded (Qt6 unavailable): test_agent_coordinator
+-- Qt target excluded (Qt6 unavailable): test_agent_coordinator_integration
+-- Qt target excluded (Qt6 unavailable): test_gguf_loader
+-- Qt target excluded (Qt6 unavailable): test_gguf_loader_simple
+-- MASM Compiler Suite skipped: cmake/MASMCompiler.cmake not present in this tree
+-- rawrxd_agentic_backend: Deep2 + Ollama unified backend library enabled
+-- q8k parity harness: Q8_K byte-level verification targets enabled
+-- RawrXD-CLI-V2: Unified CLI enabled (output: rawr.exe)
+-- ========================================
+-- RawrXD Project Configuration Summary
+-- ========================================
+-- Qt-dependent targets EXCLUDED (Qt6 not installed): RawrXDOrchestration;RawrXDGit;RawrXDTerminal;RawrXDPaint;RawrXD-Win32IDE;test_ide_main;test_qmainwindow;test_header;bench_deflate_50mb;quant_engine_test;quant_correctness_tests;test_agent_coordinator;test_agent_coordinator_integration;test_gguf_loader;test_gguf_loader_simple
+-- rawrxd_security: hardening library ENABLED (3 sources)
+-- test_deep2_inference EXCLUDED: source or deep2_engine_lib unavailable
+-- Configuring done (4.5s)
+CMake Error at CMakeLists.txt:2125 (add_executable):
+  Cannot find source file:
+
+    F:/rawrxd/.worktrees/codex-gate16-18-audit/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+
+
+CMake Error at CMakeLists.txt:2125 (add_executable):
+  No SOURCES given to target: deep2_fused_lmhead_verify
+
+
+CMake Generate step failed.  Build files cannot be regenerated correctly.

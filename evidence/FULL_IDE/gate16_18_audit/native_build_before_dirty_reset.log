@@ -1,0 +1,1338 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  1>Checking Build System
+  Building Custom Rule F:/rawrxd/.worktrees/codex-gate16-18-audit/CMakeLists.txt
+  Building Custom Rule F:/rawrxd/.worktrees/codex-gate16-18-audit/3rdparty/ggml/src/CMakeLists.txt
+  ggml.c
+  SovereignProductionConfig.cpp
+  input_sanitizer.cpp
+  ggml.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(77,13): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(92,13): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(145,13): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(151,16): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(156,14): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(161,13): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(166,13): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(203,15): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(272,13): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(277,15): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(298,15): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml.cpp')
+  
+  ggml-alloc.c
+  ggml-quants.c
+  ggml-backend.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(92,13): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-backend.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(145,13): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-backend.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(151,16): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-backend.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(156,14): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-backend.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(161,13): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-backend.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(166,13): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-backend.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(272,13): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-backend.cpp')
+  
+  ggml-opt.cpp
+  secure_buffer.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-opt.cpp(24,27): warning C4245: 'initializing': conversion from 'int' to 'size_t', signed/unsigned mismatch [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-opt.cpp(25,27): warning C4245: 'initializing': conversion from 'int' to 'size_t', signed/unsigned mismatch [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-opt.cpp(669,24): warning C4457: declaration of 'loss' hides function parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-opt.cpp(657,62):
+      see declaration of 'loss'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(77,13): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(92,13): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(145,13): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(151,16): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(156,14): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(161,13): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(166,13): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(203,15): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(272,13): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(277,15): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(298,15): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-opt.cpp')
+  
+  ggml-threading.cpp
+  crash_handler.cpp
+  gguf.cpp
+  SovereignObservability.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\gguf.cpp(276,23): warning C4245: 'initializing': conversion from 'int' to 'uint64_t', signed/unsigned mismatch [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\gguf.cpp(526,29): warning C4245: 'initializing': conversion from 'int' to 'uint32_t', signed/unsigned mismatch [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(77,13): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/gguf.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(92,13): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/gguf.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(145,13): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/gguf.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(151,16): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/gguf.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(156,14): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/gguf.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(161,13): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/gguf.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(166,13): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/gguf.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(203,15): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/gguf.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(272,13): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/gguf.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(277,15): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/gguf.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(298,15): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-base.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/gguf.cpp')
+  
+  ggml-base.vcxproj -> F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\Release\ggml-base.lib
+  Building Custom Rule F:/rawrxd/.worktrees/codex-gate16-18-audit/3rdparty/ggml/src/CMakeLists.txt
+  ggml-cpu.c
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\ggml-cpu.c(114,76): warning C4100: 'mo': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\ggml-cpu.c(121,65): warning C4100: 'mo': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\ggml-cpu.c(128,80): warning C4100: 'mo': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\ggml-cpu.c(138,46): warning C4100: 'mo': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\ggml-cpu.c(453,42): warning C4324: 'ggml_threadpool': structure was padded due to alignment specifier [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\ggml-cpu.c(454,49): warning C4324: 'ggml_threadpool': structure was padded due to alignment specifier [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\ggml-cpu.c(455,46): warning C4324: 'ggml_threadpool': structure was padded due to alignment specifier [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\ggml-cpu.c(2447,44): warning C4245: '=': conversion from 'int' to 'DWORD', signed/unsigned mismatch [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  ggml-cpu.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\ggml-cpu.cpp(44,49): warning C4456: declaration of 'bufts' hides previous local declaration [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\ggml-cpu.cpp(43,52):
+      see declaration of 'bufts'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\ggml-cpu.cpp(518,43): warning C4456: declaration of 'features' hides previous local declaration [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\ggml-cpu.cpp(515,46):
+      see declaration of 'features'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(77,13): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-cpu/ggml-cpu.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(92,13): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-cpu/ggml-cpu.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(145,13): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-cpu/ggml-cpu.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(151,16): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-cpu/ggml-cpu.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(156,14): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-cpu/ggml-cpu.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(161,13): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-cpu/ggml-cpu.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(166,13): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-cpu/ggml-cpu.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(203,15): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-cpu/ggml-cpu.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(272,13): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-cpu/ggml-cpu.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(277,15): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-cpu/ggml-cpu.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(298,15): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../3rdparty/ggml/src/ggml-cpu/ggml-cpu.cpp')
+  
+  rawrxd_security.vcxproj -> F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\Release\rawrxd_security.lib
+  repack.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(77,13): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/repack.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(92,13): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/repack.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(145,13): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/repack.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(151,16): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/repack.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(156,14): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/repack.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(161,13): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/repack.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(166,13): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/repack.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(203,15): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/repack.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(272,13): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/repack.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(277,15): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/repack.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(298,15): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/repack.cpp')
+  
+  hbm.cpp
+  traits.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(77,13): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/traits.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(92,13): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/traits.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(145,13): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/traits.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(151,16): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/traits.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(156,14): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/traits.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(161,13): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/traits.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(166,13): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/traits.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(203,15): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/traits.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(272,13): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/traits.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(277,15): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/traits.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(298,15): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/traits.cpp')
+  
+  amx.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(77,13): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/amx/amx.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(92,13): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/amx/amx.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(145,13): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/amx/amx.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(151,16): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/amx/amx.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(156,14): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/amx/amx.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(161,13): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/amx/amx.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(166,13): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/amx/amx.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(203,15): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/amx/amx.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(272,13): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/amx/amx.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(277,15): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/amx/amx.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(298,15): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/amx/amx.cpp')
+  
+  mmq.cpp
+  SovereignReliabilityFaultTolerance.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-common.h(180,16): warning C4201: nonstandard extension used: nameless struct/union [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/amx/mmq.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-common.h(208,16): warning C4201: nonstandard extension used: nameless struct/union [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/amx/mmq.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-common.h(229,16): warning C4201: nonstandard extension used: nameless struct/union [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/amx/mmq.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-common.h(270,16): warning C4201: nonstandard extension used: nameless struct/union [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/amx/mmq.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-common.h(297,16): warning C4201: nonstandard extension used: nameless struct/union [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/amx/mmq.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-common.h(314,16): warning C4201: nonstandard extension used: nameless struct/union [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/amx/mmq.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(77,13): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/amx/mmq.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(92,13): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/amx/mmq.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(145,13): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/amx/mmq.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(151,16): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/amx/mmq.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(156,14): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/amx/mmq.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(161,13): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/amx/mmq.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(166,13): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/amx/mmq.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(203,15): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/amx/mmq.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(272,13): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/amx/mmq.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(277,15): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/amx/mmq.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(298,15): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/amx/mmq.cpp')
+  
+  binary-ops.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(77,13): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/binary-ops.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(92,13): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/binary-ops.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(145,13): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/binary-ops.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(151,16): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/binary-ops.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(156,14): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/binary-ops.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(161,13): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/binary-ops.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(166,13): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/binary-ops.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(203,15): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/binary-ops.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(272,13): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/binary-ops.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(277,15): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/binary-ops.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(298,15): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/binary-ops.cpp')
+  
+  unary-ops.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(77,13): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/unary-ops.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(92,13): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/unary-ops.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(145,13): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/unary-ops.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(151,16): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/unary-ops.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(161,13): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/unary-ops.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(166,13): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/unary-ops.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(203,15): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/unary-ops.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(272,13): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/unary-ops.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(277,15): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/unary-ops.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(298,15): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/unary-ops.cpp')
+  
+  vec.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(77,13): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/vec.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(92,13): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/vec.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(145,13): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/vec.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(151,16): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/vec.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(156,14): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/vec.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(161,13): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/vec.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(166,13): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/vec.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(203,15): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/vec.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(272,13): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/vec.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(277,15): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/vec.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(298,15): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/vec.cpp')
+  
+  ops.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\ops.cpp(6618,28): warning C4456: declaration of 'batch_n' hides previous local declaration [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\ops.cpp(6599,19):
+      see declaration of 'batch_n'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\ops.cpp(6671,27): warning C4456: declaration of 'batch_n' hides previous local declaration [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\ops.cpp(6599,19):
+      see declaration of 'batch_n'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\ops.cpp(5786,41): warning C4456: declaration of 'src' hides previous local declaration [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\ops.cpp(5764,21):
+      see declaration of 'src'
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\ops.cpp(5786,41):
+      the template instantiation context (the oldest one first) is
+          F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\ops.cpp(5807,17):
+          see reference to function template instantiation 'void ggml_compute_forward_rope_flt<ggml_fp16_t>(const ggml_compute_params *,ggml_tensor *,const bool)' being compiled
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\ops.cpp(5787,29): warning C4456: declaration of 'dst_data' hides previous local declaration [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\ops.cpp(5765,21):
+      see declaration of 'dst_data'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(77,13): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/ops.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(92,13): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/ops.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(145,13): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/ops.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(161,13): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/ops.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(166,13): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/ops.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(203,15): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/ops.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(272,13): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/ops.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(277,15): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/ops.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(298,15): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/ops.cpp')
+  
+  quants.c
+  quants.c
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\arch\x86\quants.c(873,65): warning C4310: cast truncates constant value [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  repack.cpp
+  SovereignSecurityHardening.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(338,24): warning C4456: declaration of 'v0' hides previous local declaration [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(305,20):
+      see declaration of 'v0'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(339,24): warning C4456: declaration of 'v1' hides previous local declaration [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(306,20):
+      see declaration of 'v1'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(340,24): warning C4456: declaration of 'v2' hides previous local declaration [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(307,20):
+      see declaration of 'v2'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(341,24): warning C4456: declaration of 'v3' hides previous local declaration [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(308,20):
+      see declaration of 'v3'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(344,24): warning C4456: declaration of 'abs0' hides previous local declaration [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(312,20):
+      see declaration of 'abs0'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(345,24): warning C4456: declaration of 'abs1' hides previous local declaration [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(313,20):
+      see declaration of 'abs1'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(346,24): warning C4456: declaration of 'abs2' hides previous local declaration [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(314,20):
+      see declaration of 'abs2'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(347,24): warning C4456: declaration of 'abs3' hides previous local declaration [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(315,20):
+      see declaration of 'abs3'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(434,18): warning C4457: declaration of 'k' hides function parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-cpu\arch\x86\repack.cpp(290,97):
+      see declaration of 'k'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(77,13): warning C4505: 'ggml_are_same_layout': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/arch/x86/repack.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(92,13): warning C4505: 'ggml_op_is_empty': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/arch/x86/repack.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(145,13): warning C4505: 'ggml_set_op_params': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/arch/x86/repack.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(151,16): warning C4505: 'ggml_get_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/arch/x86/repack.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(156,14): warning C4505: 'ggml_get_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/arch/x86/repack.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(161,13): warning C4505: 'ggml_set_op_params_i32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/arch/x86/repack.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(166,13): warning C4505: 'ggml_set_op_params_f32': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/arch/x86/repack.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(203,15): warning C4505: 'ggml_bitset_size': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/arch/x86/repack.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(272,13): warning C4505: 'ggml_hash_contains': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/arch/x86/repack.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(277,15): warning C4505: 'ggml_hash_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/arch/x86/repack.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\3rdparty\ggml\src\ggml-impl.h(298,15): warning C4505: 'ggml_hash_find_or_insert': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\ggml-cpu.vcxproj]
+  (compiling source file '../../../../../../../3rdparty/ggml/src/ggml-cpu/arch/x86/repack.cpp')
+  
+  ggml-cpu.vcxproj -> F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\Release\ggml-cpu.lib
+  Building Custom Rule F:/rawrxd/.worktrees/codex-gate16-18-audit/3rdparty/ggml/src/CMakeLists.txt
+  ggml-backend-reg.cpp
+  ggml.vcxproj -> F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\Release\ggml.lib
+  Building Custom Rule F:/rawrxd/.worktrees/codex-gate16-18-audit/CMakeLists.txt
+  vulkan_compute.cpp
+  ProductionRuntime.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\vulkan_compute.cpp(2283,32): warning C4456: declaration of 'lane' hides previous local declaration [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\rawrxd_gpu_compute.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\vulkan_compute.cpp(2264,22):
+      see declaration of 'lane'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\vulkan_compute.cpp(6299,43): warning C4100: 'epoch': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\rawrxd_gpu_compute.vcxproj]
+  streaming_gguf_loader.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\streaming_gguf_loader.cpp(317,75): warning C4100: 'max_memory_mb': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\rawrxd_gpu_compute.vcxproj]
+  gguf_loader.cpp
+  rawrxd_production_hardening.vcxproj -> F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\src\production\Release\rawrxd_production_hardening.lib
+  gguf_vocab_resolver.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\gguf_vocab_resolver.cpp(166,47): warning C4100: 'metadata': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\rawrxd_gpu_compute.vcxproj]
+  rawrxd_gpu_compute.vcxproj -> F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\Release\rawrxd_gpu_compute.lib
+  Building Custom Rule F:/rawrxd/.worktrees/codex-gate16-18-audit/CMakeLists.txt
+  Deep2Engine.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Tokenizer.hpp(66,24): warning C4100: 'token': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  (compiling source file '../../../../src/deep2/Deep2Engine.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\K2GlobalTensorIndex.hpp(77,40): warning C4458: declaration of 'expertId' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  (compiling source file '../../../../src/deep2/Deep2Engine.cpp')
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\K2GlobalTensorIndex.hpp(46,14):
+      see declaration of 'Deep2::GlobalTensorRef::expertId'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\ModelFit.hpp(591,22): warning C4189: 'cpuLayers': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  (compiling source file '../../../../src/deep2/Deep2Engine.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\telemetry\DoubleBufferedHistogram.hpp(130,40): warning C4324: 'DoubleBufferedHistogram': structure was padded due to alignment specifier [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  (compiling source file '../../../../src/deep2/Deep2Engine.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\telemetry\LockFreeLatencyTracker.hpp(99,1): warning C4324: 'rawrxd::telemetry::LockFreeLatencyTracker<65536>': structure was padded due to alignment specifier [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  (compiling source file '../../../../src/deep2/Deep2Engine.cpp')
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\telemetry\LockFreeLatencyTracker.hpp(99,1):
+      the template instantiation context (the oldest one first) is
+          F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Telemetry.hpp(60,46):
+          see reference to class template instantiation 'rawrxd::telemetry::LockFreeLatencyTracker<65536>' being compiled
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\telemetry\LockFreeLatencyTracker.hpp(101,51): warning C4324: 'rawrxd::telemetry::LockFreeLatencyTracker<65536>': structure was padded due to alignment specifier [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  (compiling source file '../../../../src/deep2/Deep2Engine.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(918,31): warning C4310: cast truncates constant value [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(919,31): warning C4310: cast truncates constant value [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(1806,12): warning C4458: declaration of 'vocabSize' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1053,16):
+      see declaration of 'Deep2::Deep2Engine::vocabSize'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(1809,12): warning C4458: declaration of 'headDim' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1047,16):
+      see declaration of 'Deep2::Deep2Engine::headDim'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(1813,12): warning C4458: declaration of 'ffnDim' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1052,16):
+      see declaration of 'Deep2::Deep2Engine::ffnDim'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(1841,16): warning C4458: declaration of 'numHeads' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1045,16):
+      see declaration of 'Deep2::Deep2Engine::numHeads'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(1810,12): warning C4189: 'kvHeads': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(2262,36): warning C4244: '=': conversion from 'const uint32_t' to 'float', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(3284,16): warning C4456: declaration of 'attnLayers' hides previous local declaration [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(2837,12):
+      see declaration of 'attnLayers'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(3743,62): warning C4458: declaration of 'weightSize' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(979,16):
+      see declaration of 'Deep2::Deep2Engine::weightSize'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(3895,16): warning C4458: declaration of 'hiddenDim' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1044,16):
+      see declaration of 'Deep2::Deep2Engine::hiddenDim'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(3908,16): warning C4458: declaration of 'hiddenDim' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1044,16):
+      see declaration of 'Deep2::Deep2Engine::hiddenDim'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(3944,16): warning C4458: declaration of 'hiddenDim' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1044,16):
+      see declaration of 'Deep2::Deep2Engine::hiddenDim'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(3976,16): warning C4458: declaration of 'hiddenDim' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1044,16):
+      see declaration of 'Deep2::Deep2Engine::hiddenDim'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(4502,56): warning C4458: declaration of 'headDim' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1047,16):
+      see declaration of 'Deep2::Deep2Engine::headDim'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(4502,72): warning C4458: declaration of 'numHeads' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1045,16):
+      see declaration of 'Deep2::Deep2Engine::numHeads'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(4502,89): warning C4458: declaration of 'numKVHeads' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1046,16):
+      see declaration of 'Deep2::Deep2Engine::numKVHeads'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(4715,15): warning C4189: 'scale': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(4714,15): warning C4189: 'diff': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(5021,31): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(5348,54): warning C4244: 'argument': conversion from 'uint64_t' to 'double', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(6194,58): warning C4474: 'fprintf' : too many arguments passed for format string [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(6194,58):
+      placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(6241,62): warning C4474: 'fprintf' : too many arguments passed for format string [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(6241,62):
+      placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(6311,31): warning C4244: 'argument': conversion from 'uint64_t' to 'unsigned int', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(6415,62): warning C4474: 'fprintf' : too many arguments passed for format string [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(6415,62):
+      placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(6507,23): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(6191,42): warning C4101: 'ex': unreferenced local variable [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(6238,46): warning C4101: 'ex': unreferenced local variable [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(6366,46): warning C4101: 'ex': unreferenced local variable [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(6412,46): warning C4101: 'ex': unreferenced local variable [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(7108,35): warning C4244: 'argument': conversion from 'uint64_t' to 'unsigned int', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(7119,12): warning C4458: declaration of 'hiddenDim' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1044,16):
+      see declaration of 'Deep2::Deep2Engine::hiddenDim'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(7437,31): warning C4244: 'argument': conversion from 'uint64_t' to 'unsigned int', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(7456,12): warning C4458: declaration of 'hiddenDim' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1044,16):
+      see declaration of 'Deep2::Deep2Engine::hiddenDim'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(7457,12): warning C4458: declaration of 'numHeads' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1045,16):
+      see declaration of 'Deep2::Deep2Engine::numHeads'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(7458,12): warning C4458: declaration of 'numKVHeads' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1046,16):
+      see declaration of 'Deep2::Deep2Engine::numKVHeads'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(7459,12): warning C4458: declaration of 'headDim' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1047,16):
+      see declaration of 'Deep2::Deep2Engine::headDim'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(7483,22): warning C4456: declaration of 'headDim' hides previous local declaration [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(7459,12):
+      see declaration of 'headDim'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(7484,22): warning C4456: declaration of 'numHeads' hides previous local declaration [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(7457,12):
+      see declaration of 'numHeads'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(8138,20): warning C4458: declaration of 'numLayers' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1054,16):
+      see declaration of 'Deep2::Deep2Engine::numLayers'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(7547,21): warning C4189: 'scale': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(7545,22): warning C4189: 'attnOutSize': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(7592,34): warning C4189: 'Q_h': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(7599,38): warning C4189: 'K_t': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(7647,30): warning C4189: 'V_h': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(7646,30): warning C4189: 'K_h': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(7645,30): warning C4189: 'Q_h': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(7724,16): warning C4189: 'q': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(8355,12): warning C4458: declaration of 'hiddenDim' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1044,16):
+      see declaration of 'Deep2::Deep2Engine::hiddenDim'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(8385,12): warning C4458: declaration of 'ffnDim' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1052,16):
+      see declaration of 'Deep2::Deep2Engine::ffnDim'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(8474,12): warning C4458: declaration of 'hiddenDim' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1044,16):
+      see declaration of 'Deep2::Deep2Engine::hiddenDim'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(8551,18): warning C4458: declaration of 'headDim' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1047,16):
+      see declaration of 'Deep2::Deep2Engine::headDim'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(8550,18): warning C4189: 'headsPerGroup': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(8804,12): warning C4458: declaration of 'hiddenDim' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1044,16):
+      see declaration of 'Deep2::Deep2Engine::hiddenDim'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(8967,109): warning C4458: declaration of 'hiddenDim' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1044,16):
+      see declaration of 'Deep2::Deep2Engine::hiddenDim'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(8979,12): warning C4458: declaration of 'ffnDim' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1052,16):
+      see declaration of 'Deep2::Deep2Engine::ffnDim'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(9004,12): warning C4189: 'rowBytes': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(9027,12): warning C4458: declaration of 'hiddenDim' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1044,16):
+      see declaration of 'Deep2::Deep2Engine::hiddenDim'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(9054,16): warning C4458: declaration of 'ffnDim' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1052,16):
+      see declaration of 'Deep2::Deep2Engine::ffnDim'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(9148,66): warning C4458: declaration of 'logits' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(985,16):
+      see declaration of 'Deep2::Deep2Engine::logits'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(9192,43): warning C4458: declaration of 'logits' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(985,16):
+      see declaration of 'Deep2::Deep2Engine::logits'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(10040,16): warning C4458: declaration of 'headDim' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1047,16):
+      see declaration of 'Deep2::Deep2Engine::headDim'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(10041,16): warning C4458: declaration of 'numHeads' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1045,16):
+      see declaration of 'Deep2::Deep2Engine::numHeads'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(10042,16): warning C4458: declaration of 'numLayers' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1054,16):
+      see declaration of 'Deep2::Deep2Engine::numLayers'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(10303,99): warning C4100: 'outDim': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(11114,110): warning C4100: 'seqLen': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(666,13): warning C4505: 'Deep2::fp32GEMV': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(711,13): warning C4505: 'Deep2::q4kGEMV': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(835,13): warning C4505: 'Deep2::dequantizeQ5KBlock': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(866,13): warning C4505: 'Deep2::q5kGEMV': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(1105,13): warning C4505: 'Deep2::q2kGEMV': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(1193,13): warning C4505: 'Deep2::q3kGEMV': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(1257,13): warning C4505: 'Deep2::q4_1GEMV': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(1323,13): warning C4505: 'Deep2::q5_0GEMV': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(1390,13): warning C4505: 'Deep2::q5_1GEMV': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(1449,13): warning C4505: 'Deep2::q8kGEMV': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(1496,13): warning C4505: 'Deep2::fp16GEMV': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(4630,13): warning C4505: 'Deep2::`anonymous-namespace'::Q6KAsmEnabled': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(4653,13): warning C4505: 'Deep2::`anonymous-namespace'::ValidateQ6KAsm': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(5590,14): warning C4505: 'Deep2::`anonymous-namespace'::B3_MinValue': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(5595,14): warning C4505: 'Deep2::`anonymous-namespace'::B3_MaxValue': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine.cpp(10527,12): warning C4505: 'Deep2::GetToolCallLimit_Patched': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  Deep2CLIBridge.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Tokenizer.hpp(66,24): warning C4100: 'token': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  (compiling source file '../../../../src/deep2/Deep2CLIBridge.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\K2GlobalTensorIndex.hpp(77,40): warning C4458: declaration of 'expertId' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  (compiling source file '../../../../src/deep2/Deep2CLIBridge.cpp')
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\K2GlobalTensorIndex.hpp(46,14):
+      see declaration of 'Deep2::GlobalTensorRef::expertId'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\ModelFit.hpp(591,22): warning C4189: 'cpuLayers': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  (compiling source file '../../../../src/deep2/Deep2CLIBridge.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2CLIBridge.cpp(36,38): warning C4267: 'return': conversion from 'size_t' to 'unsigned int', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2CLIBridge.cpp(41,44): warning C4267: 'return': conversion from 'size_t' to 'unsigned int', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  AgentOrchestrator.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Tokenizer.hpp(66,24): warning C4100: 'token': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  (compiling source file '../../../../src/agentic/AgentOrchestrator.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\K2GlobalTensorIndex.hpp(77,40): warning C4458: declaration of 'expertId' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  (compiling source file '../../../../src/agentic/AgentOrchestrator.cpp')
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\K2GlobalTensorIndex.hpp(46,14):
+      see declaration of 'Deep2::GlobalTensorRef::expertId'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\ModelFit.hpp(591,22): warning C4189: 'cpuLayers': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  (compiling source file '../../../../src/agentic/AgentOrchestrator.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(159,56): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(186,56): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(210,56): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(233,56): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(221,48): warning C4100: 'r': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(256,56): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(244,48): warning C4100: 'r': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(406,68): warning C4244: '=': conversion from '_Rep' to 'double', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(406,68): warning C4244:         with [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(406,68): warning C4244:         [ [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(406,68): warning C4244:             _Rep=__int64 [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(406,68): warning C4244:         ] [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(414,69): warning C4244: '=': conversion from '_Rep' to 'double', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(414,69): warning C4244:         with [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(414,69): warning C4244:         [ [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(414,69): warning C4244:             _Rep=__int64 [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(414,69): warning C4244:         ] [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(424,68): warning C4244: '=': conversion from '_Rep' to 'double', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(424,68): warning C4244:         with [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(424,68): warning C4244:         [ [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(424,68): warning C4244:             _Rep=__int64 [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(424,68): warning C4244:         ] [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(442,64): warning C4244: '=': conversion from '_Rep' to 'double', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(442,64): warning C4244:         with [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(442,64): warning C4244:         [ [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(442,64): warning C4244:             _Rep=__int64 [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(442,64): warning C4244:         ] [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(458,61): warning C4244: '=': conversion from '_Rep' to 'double', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(458,61): warning C4244:         with [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(458,61): warning C4244:         [ [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(458,61): warning C4244:             _Rep=__int64 [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\agentic\AgentOrchestrator.cpp(458,61): warning C4244:         ] [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  tool_call_parser.cpp
+  Deep2Log.cpp
+  Deep2Engine_ModelFit.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Tokenizer.hpp(66,24): warning C4100: 'token': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  (compiling source file '../../../../src/deep2/Deep2Engine_ModelFit.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\K2GlobalTensorIndex.hpp(77,40): warning C4458: declaration of 'expertId' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  (compiling source file '../../../../src/deep2/Deep2Engine_ModelFit.cpp')
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\K2GlobalTensorIndex.hpp(46,14):
+      see declaration of 'Deep2::GlobalTensorRef::expertId'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\ModelFit.hpp(591,22): warning C4189: 'cpuLayers': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  (compiling source file '../../../../src/deep2/Deep2Engine_ModelFit.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine_ModelFit.cpp(518,18): warning C4458: declaration of 'numHeads' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1045,16):
+      see declaration of 'Deep2::Deep2Engine::numHeads'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine_ModelFit.cpp(519,18): warning C4458: declaration of 'numKVHeads' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1046,16):
+      see declaration of 'Deep2::Deep2Engine::numKVHeads'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine_ModelFit.cpp(520,18): warning C4458: declaration of 'headDim' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1047,16):
+      see declaration of 'Deep2::Deep2Engine::headDim'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine_ModelFit.cpp(803,18): warning C4458: declaration of 'headDim' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(1047,16):
+      see declaration of 'Deep2::Deep2Engine::headDim'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Deep2Engine_ModelFit.cpp(833,24): warning C4458: declaration of 'logits' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\Deep2Engine.h(985,16):
+      see declaration of 'Deep2::Deep2Engine::logits'
+  
+  ChatTemplate.cpp
+  vulkan_compute_engine_adapter.cpp
+  engine_subsystems.cpp
+  KVCache.cpp
+  CompressedKVCache.cpp
+  NVMeStream.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\NVMeStream.cpp(91,16): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\NVMeStream.cpp(119,16): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\NVMeStream.cpp(127,16): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\NVMeStream.cpp(137,16): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\NVMeStream.cpp(147,16): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  ResidencyManager.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\ResidencyManager.cpp(603,16): warning C4189: 'hFile': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\ResidencyManager.cpp(604,16): warning C4189: 'hMapping': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  VwaResolveBlocks.cpp
+  CycloneScheduler.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\CycloneScheduler.cpp(436,51): warning C4100: 'sequenceNumber': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\CycloneScheduler.cpp(435,60): warning C4100: 'tensorName': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  SlidingWindowEngine.cpp
+  WarmupScheduler.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\WarmupScheduler.cpp(52,74): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\WarmupScheduler.cpp(63,83): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\WarmupScheduler.cpp(163,59): warning C4100: 'expertId': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\WarmupScheduler.cpp(163,46): warning C4100: 'layerId': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  MARS.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\MARS.cpp(499,55): warning C4100: 'priority': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  QuantKernelRegistry.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\QuantKernelRegistry_K.h(391,20): warning C4189: 'q8i': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  (compiling source file '../../../../src/deep2/QuantKernelRegistry.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\QuantKernelRegistry_K.h(351,20): warning C4189: 'hm': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  (compiling source file '../../../../src/deep2/QuantKernelRegistry.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\QuantKernelRegistry_K.h(350,20): warning C4189: 'q4': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  (compiling source file '../../../../src/deep2/QuantKernelRegistry.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\QuantKernelRegistry.cpp(290,12): warning C4100: 'rows': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\QuantKernelRegistry_K.h(508,14): warning C4505: 'vec_dot_kquant': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  (compiling source file '../../../../src/deep2/QuantKernelRegistry.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\QuantKernelRegistry.cpp(191,13): warning C4505: 'Deep2::gemv_q4_k_masm': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\QuantKernelRegistry.cpp(205,13): warning C4505: 'Deep2::gemv_q2_k_masm': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\QuantKernelRegistry.cpp(226,13): warning C4505: 'Deep2::gemv_q3_k_masm': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\QuantKernelRegistry.cpp(238,13): warning C4505: 'Deep2::gemv_q4_0_masm': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\QuantKernelRegistry.cpp(262,13): warning C4505: 'Deep2::gemv_q8_0_masm': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\QuantKernelRegistry.cpp(274,13): warning C4505: 'Deep2::gemv_q5_k_masm': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\QuantKernelRegistry.cpp(1056,13): warning C4505: 'Deep2::gemv_f16_avx512': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\QuantKernelRegistry.cpp(1084,13): warning C4505: 'Deep2::gemv_q4_k_avx512': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\QuantKernelRegistry.cpp(1094,13): warning C4505: 'Deep2::gemv_q8_0_avx512': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\QuantKernelRegistry.cpp(1177,13): warning C4505: 'Deep2::gemv_f16_avx2': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\QuantKernelRegistry.cpp(1262,13): warning C4505: 'Deep2::gemv_q4_k_avx2': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  MoEWeightsLoader.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\MoEWeightsLoader.cpp(385,18): warning C4189: 'cursorBeforeValue': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  Compiling...
+  MoERouter.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\MoERouter.cpp(72,50): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\MoERouter.cpp(196,12): warning C4189: 'numTokens': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\MoERouter.cpp(341,70): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  MoEWeightProxy.cpp
+  NUFusedPacker.cpp
+  RouterPrefetchTelemetry.cpp
+  HotPatcher.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\HotPatcher.cpp(761,12): warning C4566: character represented by universal-character-name '\u2554' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\HotPatcher.cpp(761,12): warning C4566: character represented by universal-character-name '\u2550' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\HotPatcher.cpp(761,12): warning C4566: character represented by universal-character-name '\u2557' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\HotPatcher.cpp(762,12): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\HotPatcher.cpp(763,12): warning C4566: character represented by universal-character-name '\u2560' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\HotPatcher.cpp(763,12): warning C4566: character represented by universal-character-name '\u2550' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\HotPatcher.cpp(763,12): warning C4566: character represented by universal-character-name '\u2563' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\HotPatcher.cpp(778,12): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\HotPatcher.cpp(779,12): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\HotPatcher.cpp(780,12): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\HotPatcher.cpp(781,12): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\HotPatcher.cpp(782,12): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\HotPatcher.cpp(783,12): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\HotPatcher.cpp(785,12): warning C4566: character represented by universal-character-name '\u255A' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\HotPatcher.cpp(785,12): warning C4566: character represented by universal-character-name '\u2550' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\HotPatcher.cpp(785,12): warning C4566: character represented by universal-character-name '\u255D' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  ReverseHotpatchEngine.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\ReverseHotpatchEngine.cpp(539,44): warning C4840: non-portable use of class 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>' as an argument to a variadic function [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\ReverseHotpatchEngine.cpp(539,44):
+      'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string' is non-trivial
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(716,5):
+      see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string'
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\ReverseHotpatchEngine.cpp(539,44):
+      the constructor and destructor will not be called; a bitwise copy of the class will be passed as the argument
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(541,7):
+      see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\ReverseHotpatchEngine.cpp(538,20): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 2 has type 'std::string' [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\ReverseHotpatchEngine.cpp(817,47): warning C4100: 'files': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\ReverseHotpatchEngine.cpp(164,13): warning C4505: 'Deep2::unBlock_gguf_q2k': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\ReverseHotpatchEngine.cpp(198,13): warning C4505: 'Deep2::unBlock_gguf_q3k': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\ReverseHotpatchEngine.cpp(236,13): warning C4505: 'Deep2::unBlock_gguf_q4k': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\ReverseHotpatchEngine.cpp(294,13): warning C4505: 'Deep2::unBlock_gguf_q5k': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\ReverseHotpatchEngine.cpp(350,13): warning C4505: 'Deep2::unBlock_gguf_q6k': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\ReverseHotpatchEngine.cpp(396,13): warning C4505: 'Deep2::unBlock_gguf_tensor_data': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  BP16Streamer.cpp
+  SovereignOutOfCoreRuntime.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\SovereignOutOfCoreRuntime.cpp(141,81): warning C4100: 'output': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\SovereignOutOfCoreRuntime.cpp(141,50): warning C4100: 'id': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\SovereignOutOfCoreRuntime.cpp(147,126): warning C4100: 'output': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\SovereignOutOfCoreRuntime.cpp(147,93): warning C4100: 'size': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\SovereignOutOfCoreRuntime.cpp(147,73): warning C4100: 'offset': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\SovereignOutOfCoreRuntime.cpp(147,55): warning C4100: 'id': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\SovereignOutOfCoreRuntime.cpp(152,108): warning C4100: 'size': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\SovereignOutOfCoreRuntime.cpp(152,90): warning C4100: 'data': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\SovereignOutOfCoreRuntime.cpp(152,70): warning C4100: 'offset': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\SovereignOutOfCoreRuntime.cpp(152,52): warning C4100: 'id': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  OutOfCoreRuntime.cpp
+  Chamber.cpp
+  PlasmaGovernor.cpp
+  K2GlobalTensorIndex.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\K2GlobalTensorIndex.hpp(77,40): warning C4458: declaration of 'expertId' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  (compiling source file '../../../../src/deep2/K2GlobalTensorIndex.cpp')
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\K2GlobalTensorIndex.hpp(46,14):
+      see declaration of 'Deep2::GlobalTensorRef::expertId'
+  
+  K2GpuStreamCopy.cpp
+  K2MLA_GpuGemv.cpp
+  K2ShardIo.cpp
+  AttnCertProbe.cpp
+  SsmCertProbe.cpp
+  MlaCertProbe.cpp
+  Deep2DeviceManager.cpp
+  Deep2MultiGpuLayerPlan.cpp
+  Compiling...
+  ElasticDynamicBudget.cpp
+  ElasticResidencyManager.cpp
+  Deep2LivePath.cpp
+  FusedLiveController.cpp
+  K2LivePolicy.cpp
+  DualGPUHook.cpp
+  GhostCache.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\GhostCache.cpp(93,62): warning C4100: 'layerIndex': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  TrailBrake.cpp
+  FreeTokenMicroZone.cpp
+  FutureConsumerSpace.cpp
+  ExecutionPolicy.cpp
+  ExecutionPolicyApply.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Tokenizer.hpp(66,24): warning C4100: 'token': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  (compiling source file '../../../../src/deep2/execution_policy/ExecutionPolicyApply.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\K2GlobalTensorIndex.hpp(77,40): warning C4458: declaration of 'expertId' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  (compiling source file '../../../../src/deep2/execution_policy/ExecutionPolicyApply.cpp')
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\K2GlobalTensorIndex.hpp(46,14):
+      see declaration of 'Deep2::GlobalTensorRef::expertId'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\ModelFit.hpp(591,22): warning C4189: 'cpuLayers': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  (compiling source file '../../../../src/deep2/execution_policy/ExecutionPolicyApply.cpp')
+  
+  ExecutionPolicyStore.cpp
+  PlacementPlan.cpp
+  ollama_blob_parser.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\ollama_blob_parser.cpp(62,26): warning C4099: 'rawrxd::ollama::OllamaBlobParser::Impl': type name first seen using 'class' now seen using 'struct' [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\ollama_blob_parser.h(201,11):
+      see declaration of 'rawrxd::ollama::OllamaBlobParser::Impl'
+  
+  Deep2Engine_missing_members.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Tokenizer.hpp(66,24): warning C4100: 'token': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  (compiling source file '../../../../src/deep2/Deep2Engine_missing_members.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\K2GlobalTensorIndex.hpp(77,40): warning C4458: declaration of 'expertId' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  (compiling source file '../../../../src/deep2/Deep2Engine_missing_members.cpp')
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\K2GlobalTensorIndex.hpp(46,14):
+      see declaration of 'Deep2::GlobalTensorRef::expertId'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\ModelFit.hpp(591,22): warning C4189: 'cpuLayers': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  (compiling source file '../../../../src/deep2/Deep2Engine_missing_members.cpp')
+  
+  advanced_sampler.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\sampling\advanced_sampler.cpp(240,62): warning C4100: 'context': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\sampling\advanced_sampler.cpp(271,69): warning C4100: 'context': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\sampling\advanced_sampler.cpp(419,64): warning C4100: 'context': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  KimiK2Config.cpp
+  ReverseTensorRecovery.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\ReverseTensorRecovery.cpp(59,18): warning C4100: 'graph': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\ReverseTensorRecovery.cpp(90,59): warning C4100: 'graph': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  VRAMManager.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\mars\VRAMManager.cpp(394,52): warning C4100: 'priority': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  Compiling...
+  K2MLA_FusedQ4KT.cpp
+  K2MLA_QaCritical.cpp
+  K2MLA_QPathDevice.cpp
+  Deep2LivePath_Gate.cpp
+  K2BraidExecutionPolicy.cpp
+  asm_stubs.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\asm_stubs.cpp(157,69): warning C4100: 'scales': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\asm_stubs.cpp(194,66): warning C4100: 'scales': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\asm_stubs.cpp(157,13): warning C4505: 'Dequant_NVFP4_AVX2': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\asm_stubs.cpp(194,13): warning C4505: 'NVFP4_GEMV_AVX2': unreferenced function with internal linkage has been removed [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  K2LogitsLineage.cpp
+  GpuTransfer_Emit.cpp
+  MoEEliminate.cpp
+  engine_link_supplement.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\K2GlobalTensorIndex.hpp(77,40): warning C4458: declaration of 'expertId' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  (compiling source file '../../../../src/deep2/engine_link_supplement.cpp')
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\K2GlobalTensorIndex.hpp(46,14):
+      see declaration of 'Deep2::GlobalTensorRef::expertId'
+  
+  DualStickStreamWindow.cpp
+  DualStickStreamWindow_Acquire.cpp
+  DualStickStreamWindow_Emit.cpp
+  Deep2LivePath_Mech.cpp
+  Deep2LivePath_Pinball.cpp
+  Deep2LivePath_Thermal.cpp
+  Deep2LivePath_MechEnd.cpp
+  K2LivePolicy_Apply.cpp
+  Deep2MultiGpu_CostCut.cpp
+  K2GpuStreamCopy_Overlap.cpp
+  Compiling...
+  K2C1C9.cpp
+  StreamerParity_Post.cpp
+  StreamEngine.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\StreamEngine.cpp(83,16): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\StreamEngine.cpp(207,16): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\StreamEngine.cpp(354,12): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\StreamEngine.cpp(445,12): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\StreamEngine.cpp(454,12): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\StreamEngine.cpp(478,12): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\StreamEngine.cpp(579,12): warning C4566: character represented by universal-character-name '\u2192' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\StreamEngine.cpp(625,12): warning C4566: character represented by universal-character-name '\u2554' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\StreamEngine.cpp(625,12): warning C4566: character represented by universal-character-name '\u2550' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\StreamEngine.cpp(625,12): warning C4566: character represented by universal-character-name '\u2557' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\StreamEngine.cpp(626,12): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\StreamEngine.cpp(627,12): warning C4566: character represented by universal-character-name '\u2560' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\StreamEngine.cpp(627,12): warning C4566: character represented by universal-character-name '\u2550' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\StreamEngine.cpp(627,12): warning C4566: character represented by universal-character-name '\u2563' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\StreamEngine.cpp(628,12): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\StreamEngine.cpp(629,12): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\StreamEngine.cpp(630,12): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\StreamEngine.cpp(631,12): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\StreamEngine.cpp(632,12): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\StreamEngine.cpp(633,12): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\StreamEngine.cpp(634,12): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\StreamEngine.cpp(635,12): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\StreamEngine.cpp(636,12): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\StreamEngine.cpp(637,12): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\StreamEngine.cpp(638,12): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\StreamEngine.cpp(639,12): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\StreamEngine.cpp(640,12): warning C4566: character represented by universal-character-name '\u2551' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\StreamEngine.cpp(641,12): warning C4566: character represented by universal-character-name '\u255A' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\StreamEngine.cpp(641,12): warning C4566: character represented by universal-character-name '\u2550' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\StreamEngine.cpp(641,12): warning C4566: character represented by universal-character-name '\u255D' cannot be represented in the current code page (1252) [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  vulkan_compute_adapter_fused.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\vulkan_compute_adapter_fused.cpp(197,41): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\vulkan_compute_adapter_fused.cpp(197,31): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\vulkan_compute_adapter_fused.cpp(198,40): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\vulkan_compute_adapter_fused.cpp(198,29): warning C4267: 'initializing': conversion from 'size_t' to 'const uint32_t', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\vulkan_compute_adapter_fused.cpp(252,52): warning C4100: 'cacheKey': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\vulkan_compute_adapter_fused.cpp(751,63): warning C4100: 'cacheKey': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\deep2_engine_lib.vcxproj]
+  HotPatcherSafety.cpp
+  FreeTokenFutureCompletion.cpp
+  deep2_engine_lib.vcxproj -> F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\Release\deep2_engine_lib.lib
+  Building Custom Rule F:/rawrxd/.worktrees/codex-gate16-18-audit/CMakeLists.txt
+  main_win32.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/main_win32.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\main_win32.cpp(68,87): warning C4100: 'nCmdShow': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\main_win32.cpp(68,72): warning C4100: 'lpCmdLine': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\main_win32.cpp(68,51): warning C4100: 'hPrevInstance': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  Win32IDE.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Tokenizer.hpp(66,24): warning C4100: 'token': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\K2GlobalTensorIndex.hpp(77,40): warning C4458: declaration of 'expertId' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE.cpp')
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\K2GlobalTensorIndex.hpp(46,14):
+      see declaration of 'Deep2::GlobalTensorRef::expertId'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\ModelFit.hpp(591,22): warning C4189: 'cpuLayers': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE.cpp(333,36): warning C4101: 'e': unreferenced local variable [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE.cpp(2562,17): warning C4244: 'initializing': conversion from 'LRESULT' to 'LONG', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE.cpp(2644,9): warning C4189: 'result': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE.cpp(2919,14): warning C4244: 'initializing': conversion from 'LRESULT' to 'LONG', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE.cpp(3126,32): warning C4456: declaration of 'line' hides previous local declaration [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE.cpp(3073,17):
+      see declaration of 'line'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE.cpp(3946,29): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE.cpp(3955,29): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE.cpp(3975,29): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE.cpp(3988,29): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE.cpp(5189,10): warning C4189: 'hwndCommitBtn': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE.cpp(5192,10): warning C4189: 'hwndCancelBtn': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE.cpp(5412,70): warning C4100: 'type': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  Win32IDE_Sidebar.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_Sidebar.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_Sidebar.cpp(300,14): warning C4189: 'hwndBtn': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_Sidebar.cpp(675,42): warning C4101: 'e': unreferenced local variable [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_Sidebar.cpp(985,64): warning C4100: 'wholeWord': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  Win32IDE_VSCodeUI.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_VSCodeUI.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_VSCodeUI.cpp(365,15): warning C4189: 'pThis': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_VSCodeUI.cpp(660,19): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_VSCodeUI.cpp(783,19): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_VSCodeUI.cpp(784,19): warning C4244: 'initializing': conversion from 'LRESULT' to 'int', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_VSCodeUI.cpp(912,10): warning C4189: 'btnFilter': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_VSCodeUI.cpp(906,10): warning C4189: 'btnPause': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_VSCodeUI.cpp(900,10): warning C4189: 'btnClear': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_VSCodeUI.cpp(1024,41): warning C4100: 'wParam': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  Win32IDE_PowerShellPanel.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_PowerShellPanel.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_PowerShellPanel.cpp(328,42): warning C4100: 'width': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_PowerShellPanel.cpp(436,63): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  Win32IDE_PowerShell.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_PowerShell.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_PowerShell.cpp(602,60): warning C4100: 'eventName': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  Win32IDE_Logger.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_Logger.cpp')
+  
+  Win32TerminalManager.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32TerminalManager.cpp(127,53): warning C4267: 'argument': conversion from 'size_t' to 'DWORD', possible loss of data [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  Win32IDE_FileOps.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_FileOps.cpp')
+  
+  Win32IDE_Commands.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_Commands.cpp')
+  
+  Win32IDE_Debugger.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_Debugger.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_Debugger.cpp(75,10): warning C4189: 'btnStepOver': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_Debugger.cpp(65,10): warning C4189: 'btnContinue': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_Debugger.cpp(85,10): warning C4189: 'btnStepInto': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_Debugger.cpp(95,10): warning C4189: 'btnStepOut': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_Debugger.cpp(105,10): warning C4189: 'btnStop': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  Win32IDE_AgenticBridge.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_AgenticBridge.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_AgenticBridge.cpp(33,51): warning C4100: 'frameworkPath': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_AgenticBridge.cpp(258,66): warning C4100: 'timeoutMs': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  Win32IDE_AgentCommands.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_AgentCommands.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Tokenizer.hpp(66,24): warning C4100: 'token': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_AgentCommands.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\K2GlobalTensorIndex.hpp(77,40): warning C4458: declaration of 'expertId' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_AgentCommands.cpp')
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\K2GlobalTensorIndex.hpp(46,14):
+      see declaration of 'Deep2::GlobalTensorRef::expertId'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\ModelFit.hpp(591,22): warning C4189: 'cpuLayers': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_AgentCommands.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\ModelConnection.h(407,79): warning C4245: 'argument': conversion from 'int' to 'DWORD', signed/unsigned mismatch [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_AgentCommands.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_AgentCommands.cpp(26,66): warning C4245: 'argument': conversion from 'int' to 'WPARAM', signed/unsigned mismatch [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_AgentCommands.cpp(226,10): warning C4189: 'hwndCancel': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_AgentCommands.cpp(224,10): warning C4189: 'hwndOk': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_AgentCommands.cpp(237,18): warning C4189: 'sender': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_AgentCommands.cpp(353,66): warning C4245: 'argument': conversion from 'int' to 'WPARAM', signed/unsigned mismatch [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_AgentCommands.cpp(563,10): warning C4189: 'hwndCancel': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_AgentCommands.cpp(561,10): warning C4189: 'hwndOk': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_AgentCommands.cpp(752,52): warning C4100: 'wParam': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_AgentCommands.cpp(762,54): warning C4100: 'wParam': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  Win32IDE_Autonomy.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_Autonomy.cpp')
+  
+  Win32IDE_Deep2Bridge.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\Tokenizer.hpp(66,24): warning C4100: 'token': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_Deep2Bridge.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\K2GlobalTensorIndex.hpp(77,40): warning C4458: declaration of 'expertId' hides class member [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_Deep2Bridge.cpp')
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\K2GlobalTensorIndex.hpp(46,14):
+      see declaration of 'Deep2::GlobalTensorRef::expertId'
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\deep2\ModelFit.hpp(591,22): warning C4189: 'cpuLayers': local variable is initialized but not referenced [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_Deep2Bridge.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_Deep2Bridge.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_Deep2Bridge.cpp(365,71): warning C4100: 'token': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_Deep2Bridge.cpp(365,43): warning C4100: 'tokenId': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  Win32IDE_AgenticLoopBridge.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_AgenticLoopBridge.cpp')
+  
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\win32app\Win32IDE_AgenticLoopBridge.cpp(410,52): warning C4100: 'pid': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  Win32IDE_lifecycle.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_lifecycle.cpp')
+  
+  TransparentRenderer.cpp
+  gguf_loader.cpp
+  GGUFLoader.cpp
+  Compiling...
+  gguf_vocab_resolver.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\gguf_vocab_resolver.cpp(166,47): warning C4100: 'metadata': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  streaming_gguf_loader.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\streaming_gguf_loader.cpp(317,75): warning C4100: 'max_memory_mb': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  cpu_inference_engine_impl.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\cpu_inference_engine_impl.cpp(41,66): warning C4100: 'n': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\cpu_inference_engine_impl.cpp(579,28): warning C4456: declaration of 'v' hides previous local declaration [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+      F:\rawrxd\.worktrees\codex-gate16-18-audit\src\cpu_inference_engine_impl.cpp(483,38):
+      see declaration of 'v'
+  
+  ErrorReporter.cpp
+  Diagnostics.cpp
+  VulkanRenderer.cpp
+  Generating code
+  Finished generating code
+  RawrXD-Win32IDE-Native.vcxproj -> F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\bin\Release\RawrXD-Win32IDE-Native.exe

@@ -1,0 +1,4 @@
+2026-10-19T20:24:05.377 info security [] audit log open (audit_path=C:\Users\Garrett\AppData\Local\RawrXD\audit\rawrxd_audit.jsonl) (encrypted=true)
+2026-10-19T20:24:05.378 info security [] security runtime initialized (encryption=true) (audit=true) (max_request_bytes=8388608)
+2026-10-19T20:24:05.378 info startup [] production runtime initialized (environment=development) (service=rawrxd) (instance=local) (log_level=info) (config_fingerprint=b61a02c92fffee97)
+{"status":"healthy","components":[{"name":"security.hardening","status":"healthy","detail":"audit chain verified over the last 59 record(s)","checked_at_ms":1792455845389,"duration_ms":1},{"name":"runtime.production","status":"healthy","detail":"recovered_errors=0","checked_at_ms":1792455845389,"duration_ms":0}]}

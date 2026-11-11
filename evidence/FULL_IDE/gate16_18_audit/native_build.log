@@ -1,0 +1,14 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  rawrxd_security.vcxproj -> F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\Release\rawrxd_security.lib
+  ggml-base.vcxproj -> F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\Release\ggml-base.lib
+  rawrxd_production_hardening.vcxproj -> F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\src\production\Release\rawrxd_production_hardening.lib
+  ggml-cpu.vcxproj -> F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\Release\ggml-cpu.lib
+  ggml.vcxproj -> F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\3rdparty\ggml\src\Release\ggml.lib
+  rawrxd_gpu_compute.vcxproj -> F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\Release\rawrxd_gpu_compute.lib
+  deep2_engine_lib.vcxproj -> F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\Release\deep2_engine_lib.lib
+  Win32IDE_lifecycle.cpp
+F:\rawrxd\.worktrees\codex-gate16-18-audit\src\native_agent.hpp(157,52): warning C4100: 'query': unreferenced parameter [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]
+  (compiling source file '../../../../src/win32app/Win32IDE_lifecycle.cpp')
+  
+LINK : fatal error LNK1104: cannot open file 'F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\bin\Release\RawrXD-Win32IDE-Native.exe' [F:\rawrxd\.worktrees\codex-gate16-18-audit\evidence\FULL_IDE\gate16_18_audit\build_native\RawrXD-Win32IDE-Native.vcxproj]

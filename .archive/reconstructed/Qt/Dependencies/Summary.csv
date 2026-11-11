@@ -1,0 +1,52 @@
+File,Total Dependencies,Qt Includes,Qt Containers,Qt Logging,Signals/Slots,Qt Threading,Qt File I/O,Other Qt,Line Numbers With Dependencies,Priority
+security_manager.cpp,100+,0,0,80+,6,0,1,13,36-82; 123-160; 175-214; 459-487; 520-575; 596-659; 682-753; 777-815; 843-893; 903-947,CRITICAL
+model_router_adapter.cpp,65+,0,2,60+,10,2,2,1,11; 16; 59; 69; 70; 75; 85; 93; 101; 117; 129; 137-162; 176-250; 261-625; 365; 456-458; 498; 588,CRITICAL
+model_trainer.cpp,50+,0,0,50+,8,1,5,1,25; 39-65; 83-202; 90-92; 217; 231-338; 251; 273; 300; 387-794; 765; 770,CRITICAL
+plan_orchestrator.cpp,30+,0,1,20+,5,0,2,2,23; 37; 43; 49; 62; 63; 84; 89; 95; 118-151; 264-380; 385; 400,HIGH
+model_router_widget.cpp,30+,0,0,20+,8,0,0,2,9; 17; 22; 283; 401; 420; 434; 443; 449; 491-551,HIGH
+performance_monitor.cpp,40+,0,8,20+,4,0,1,7,114-377; 225; 241; 255; 285; 292; 327; 380; 381; 412; 413; 464; 476; 522; 539; 540; 616; 659; 671,HIGH
+lsp_client.cpp,45+,0,3,20+,6,0,2,14,45; 49; 57; 103; 130; 136; 157; 177; 329; 388-602; 471; 584; 607; 609,HIGH
+model_registry.cpp,20+,0,3,10+,3,0,2,2,37; 64; 67; 172; 202; 223; 227; 285-346; 420; 441; 468,HIGH
+multi_file_search.cpp,20+,0,1,0,2,5,2,10,8; 118; 218; 261; 315; 372; 373; 403; 424; 426; 429; 461,MEDIUM
+profiler.cpp,25+,0,0,15+,3,0,1,6,23; 41; 47; 57; 59; 75; 86; 122; 229; 233; 336; 338; 345; 351; 365-368,MEDIUM
+intelligent_codebase_engine.h,23,0,13,0,0,0,1,9,14; 17; 36; 72; 97-101; 103-105; 108,MEDIUM
+metrics_dashboard.cpp,10+,0,1,3,0,0,3,3,253; 354; 364; 372,MEDIUM
+metrics_dashboard.h,5,0,5,0,0,0,0,0,124; 125; 128-130,MEDIUM
+model_interface.h,5,0,5,0,1,0,0,0,24; 74; 80; 157; 199,MEDIUM
+model_interface.cpp,3,0,3,0,1,0,0,0,90; 94; 105,MEDIUM
+lsp_client.h,6,0,6,0,1,0,0,0,131; 142; 157; 192; 193; 202,MEDIUM
+model_router_adapter.h,1,0,1,0,1,0,0,0,126,LOW
+model_registry.h,3,0,3,0,1,0,0,0,63; 125; 145,LOW
+intelligent_codebase_engine.cpp,2,0,2,0,0,0,0,0,854; 855,LOW
+model_trainer.h,1,0,0,0,1,1,0,0,162; 303,LOW
+observability_dashboard.cpp,5,0,0,1,1,0,1,2,344; 346; 380,LOW
+observability_dashboard.h,1,0,0,0,1,0,0,0,75,LOW
+training_dialog.cpp,15+,0,0,0,2,0,6,7,284; 308; 317; 328; 337; 362; 369; 384; 385; 399; 401; 429; 435,MEDIUM
+training_dialog.h,2,0,0,0,2,0,0,0,39; 41,LOW
+training_progress_dock.h,2,0,2,0,1,0,0,0,47; 103; 104,LOW
+todo_manager.h,3,0,0,0,1,0,0,2,23; 24; 25; 27; 34; 36,LOW
+todo_manager.cpp,4,0,1,2,1,0,0,0,16; 66; 94; 126; 200; 243,LOW
+todo_dock.h,1,0,0,0,1,0,0,0,16,LOW
+todo_dock.cpp,2,0,1,0,1,0,0,0,48; 101,LOW
+terminal_pool.h,1,0,0,0,1,0,0,0,27,LOW
+terminal_pool.cpp,1,0,0,0,1,0,0,0,92; 93,LOW
+tokenizer_selector.cpp,5,0,0,0,3,0,2,0,241; 247; 285; 293; 370; 283; 302,LOW
+tokenizer_selector.h,1,0,0,0,1,0,0,0,Not specified,LOW
+planning_agent.h,2,0,1,0,1,0,0,0,22; 34,LOW
+planning_agent.cpp,4,0,1,2,3,0,0,0,13; 17; 21; 46; 54; 71; 112,LOW
+ollama_proxy.cpp,15+,0,0,12+,3,0,0,2,11; 22; 40; 69; 74; 81; 88; 114; 115; 127; 153; 162; 163; 171; 177; 190; 191,MEDIUM
+universal_model_router.cpp,10+,0,0,0,6,0,2,2,19; 24; 30; 65; 67; 75; 87; 122; 146; 163; 172; 181; 239,MEDIUM
+zero_day_agentic_engine.cpp,8,0,0,0,4,0,0,4,61; 95; 97; 106,LOW
+model_router_console.cpp,8,0,1,3,0,0,2,2,23; 28; 167; 172; 174; 191; 303,LOW
+model_router_console.h,1,0,1,0,0,0,0,0,95,LOW
+security_manager.h,1,0,0,0,1,0,0,0,Not specified,LOW
+agentic_observability.cpp,5,0,0,0,0,0,0,5,135; 164; 183; 202; 258,LOW
+agentic_error_handler.cpp,1,0,0,0,0,0,0,1,510,LOW
+gguf_api_server.cpp,2,0,0,0,0,0,0,2,47; 238,LOW
+scalar_server.cpp,8,0,0,6,0,0,0,2,25; 30; 34; 42; 56; 167,LOW
+tool_registry.cpp,3,0,0,0,0,0,0,3,1046; 1122; 1248,LOW
+telemetry.cpp,1,0,0,0,0,0,1,0,78,LOW
+QtReplacements.hpp,4,4,0,0,0,0,0,0,327; 330; 333; 336,REFERENCE
+QtReplacements_New.hpp,6,6,0,0,0,0,0,0,262; 265; 268; 271; 313; 328; 332,REFERENCE
+QtReplacements_Old.hpp,6,6,0,0,0,0,0,0,187; 190; 193; 196; 246; 263,REFERENCE
+QtGUIStubs.hpp,50+,50+,0,0,0,0,0,0,299; 368-387,REFERENCE

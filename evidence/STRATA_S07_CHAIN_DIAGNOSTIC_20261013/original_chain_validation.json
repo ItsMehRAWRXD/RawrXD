@@ -1,0 +1,21 @@
+{
+  "valid": true,
+  "baseline_tokens": 128,
+  "prefill_tokens": 32,
+  "target_decode_forward_calls": 128,
+  "min_ngram": 3,
+  "counts": {
+    "proposed": 4,
+    "accepted": 0,
+    "rejected": 1,
+    "discarded": 3,
+    "verified": 1,
+    "chains": 1
+  },
+  "errors": [],
+  "notes": [
+    "Diagnostic trace alignment is valid; this does not certify acceleration, KV contents, or runtime measurement provenance."
+  ],
+  "trace": "F:\\rawrxd\\evidence\\STRATA_S07_CHAIN_DIAGNOSTIC_20261013\\spec_chain_original_chain.json",
+  "baseline": "F:\\rawrxd\\evidence\\STRATA_S07_20261013_RECOVERY\\s07_plain128_checked_final.log"
+}
