@@ -1,0 +1,105 @@
+[SMOKE] start model=D:\rawrxd\gemma3-1b-Q2_K.gguf max_tokens=128 timeout_ms=120000
+[SMOKE] trace_path=C:\Users\Garrett\AppData\Local\Temp\rawrxd_smoke_trace.json
+[SMOKE] post-embedding checkpoint reached (model loaded). load_only=0 cpu_only=0 skip_gpu=0
+[CPUInferenceEngine] Loading model: D:\rawrxd\gemma3-1b-Q2_K.gguf
+[CPUInferenceEngine] Stage: initialize backend (GPU will be attempted first, with CPU fallback)
+Selected GPU: AMD Radeon AI PRO R9700
+[RawrXD] Stage: loader.Load
+[RawrXD] Loading model from: D:\rawrxd\gemma3-1b-Q2_K.gguf
+[RawrXD] ⚡ INITIALIZING SOVEREIGN NEURAL HIVE-MIND SYSTEMS...
+[RawrXD] Policy bypass interceptor disabled: runtime binary patching is not permitted
+[RawrXD] ⚡ Speculative Swarm: Ready for 20x model chaining (600B+ aggregate)
+[RawrXD] ⚡ AVX-512 VPOPCNT: Ready for 0.8-bit weight reconstruction
+[RawrXD][BACKEND] backend=gpu-only result=ok reason=gpu preflight passed
+[RawrXD] ⚡ SOVEREIGN APERTURE: Reserved 666 MB placeholder window (zero commit)
+[VMM] SeLockMemoryPrivilege not held; Large Pages disabled (falling back).
+[RawrXD] Stage: parse_header_metadata
+[RawrXD] MapViewOfFile3 MEM_REPLACE_PLACEHOLDER failed (Error: 487) for size 666 MB
+[RawrXD] Legacy Window 0-0 GB: Mapped 666 MB (call #1)
+[DEBUG] Scalar key: gemma3.attention.head_count, type: 4, value: 4
+[DEBUG] Scalar key: gemma3.attention.head_count_kv, type: 4, value: 1
+[DEBUG] Scalar key: gemma3.attention.key_length, type: 4, value: 256
+[DEBUG] Scalar key: gemma3.attention.sliding_window, type: 4, value: 512
+[DEBUG] Scalar key: gemma3.attention.value_length, type: 4, value: 256
+[DEBUG] Scalar key: gemma3.block_count, type: 4, value: 26
+[DEBUG] Scalar key: gemma3.context_length, type: 4, value: 32768
+[DEBUG] Scalar key: gemma3.embedding_length, type: 4, value: 1152
+[DEBUG] Scalar key: gemma3.feed_forward_length, type: 4, value: 6912
+[DEBUG] String key: general.architecture, value length: 6
+[DEBUG] String key: tokenizer.chat_template, value length: 1375
+[DEBUG] Scalar key: tokenizer.ggml.bos_token_id, type: 4, value: 2
+[DEBUG] Scalar key: tokenizer.ggml.eos_token_id, type: 4, value: 1
+[DEBUG] String key: tokenizer.ggml.model, value length: 5
+[DEBUG] Scalar key: tokenizer.ggml.padding_token_id, type: 4, value: 0
+[DEBUG] String key: tokenizer.ggml.pre, value length: 7
+[DEBUG] tokenizer.ggml.tokens: atype=8, Alen=262144
+[DEBUG] Reserved 262144 for vocab
+[DEBUG] Scalar key: tokenizer.ggml.unknown_token_id, type: 4, value: 3
+[DEBUG] Scalar key: general.quantization_version, type: 4, value: 2
+[DEBUG] Scalar key: general.file_type, type: 4, value: 10
+[DEBUG] Fallback: set vocab_size to vocab.size() = 262144
+[DEBUG] Final: vocab_size=262144, vocab.size()=262144
+[RawrXD] Stage: parse_tensor_index tensor_count=340
+[RawrXD] Stage: tensor_materialization mode=lazy tensor_count=340 indexed_storage=0.64 GB
+[RawrXD] Data starts at offset 15785312
+[RawrXD] Stage: build_tensor_lookup_map
+[RawrXD] Model loaded successfully. VRAM used: 0.00 GB
+[RawrXD] Config: dim=1152, layers=26, heads=4, kv_heads=1, vocab=262144, ctx=32768, experts=0, experts_used=0
+[RawrXD] Tensor names in model (340 total):
+  [  0] type=0 dims=1152 blk.21.attn_norm.weight
+  [  1] type=2 dims=1152 1024 blk.0.attn_q.weight
+  [  2] type=0 dims=1152 blk.25.post_attention_norm.weight
+  [  3] type=2 dims=1152 6912 blk.10.ffn_gate.weight
+  [  4] type=11 dims=1024 1152 blk.6.attn_output.weight
+  [  5] type=0 dims=1152 output_norm.weight
+  [  6] type=11 dims=1024 1152 blk.2.attn_output.weight
+  [  7] type=0 dims=1152 blk.2.ffn_norm.weight
+  [  8] type=0 dims=1152 blk.19.ffn_norm.weight
+  [  9] type=2 dims=1152 6912 blk.1.ffn_up.weight
+  [ 10] type=6 dims=1152 256 blk.23.attn_v.weight
+  [ 11] type=0 dims=256 blk.1.attn_k_norm.weight
+  [ 12] type=11 dims=6912 1152 blk.22.ffn_down.weight
+  [ 13] type=11 dims=1024 1152 blk.19.attn_output.weight
+  [ 14] type=8 dims=1152 262144 token_embd.weight
+  [ 15] type=0 dims=1152 blk.0.post_ffw_norm.weight
+  ... (324 more)
+[RawrXD] Page pre-touch thread launched (666 MB in background)
+[RawrXD] Config: dim=1152 layers=26 heads=4 kv_heads=1 vocab=262144 hidden=6912 ctx=2048
+[RawrXD] Stage: tokenizer.Load
+[RawrXD] Page pre-touch complete: 666 MB model pages resident
+[Tokenizer] Loaded 262144 vocabulary entries from GGUF
+[RawrXD] Stage: transformer.Initialize
+[RawrXD] KV cache: 15335424 floats (61.3 MB per cache)
+[RawrXD] MEMSTATUS pre-probe: phys_avail=39504 MB, virt_avail=133947995 MB, commit_avail=138454 MB
+[RawrXD] KV cache attempt: ctx=2048, 15335424 floats (61.3 MB per cache)
+[RawrXD] KV cache final: ctx=2048, 15335424 floats (61.3 MB per cache)
+[RawrXD] Transformer Initialized. AVX-512 Kernels Linked.
+[RawrXD] Swarm plan: GGUF coalesced (27 slices total=0.64 GiB max=319.29 MiB avg=24.13 MiB)
+[RawrXD] Inference engine READY
+[CPUInferenceEngine] Titan ASM engine loaded
+[CPUInferenceEngine] Model loaded successfully
+[CPUInferenceEngine] GenerateStreaming: input_tokens=2 max_tokens=128
+[Forward] ENTRY: tokens=2 start_pos=0
+[Forward] Config check: dim=1152 layers=26 hidden=6912 heads=4
+[Forward] GQA: dim=1152 heads=4 kv_heads=1 head_dim=288 kv_dim=288 hidden=6912
+[MEM] Generation start: avail_phys=39434 MB, avail_virt=133947794 MB
+[MEM] KV footprint: k=58 MB, v=58 MB; tile_buf peak=16 MB
+[MEM] output.weight shard est: vocab=262144 * row_bytes(Q2_K)=336 = 84 MB
+[Forward] Processing token 1/2
+[Forward] Token 1: embedding lookup for token=203
+[Forward] Token 1: calling GetTensorRow for embedding
+[Forward] Token 1: GetTensorRow returned true
+[Forward] Token 1: embedding lookup complete
+[Forward] Token 1: starting 26 transformer layers
+[Forward] Token 1: Layer 1/26 starting
+[Forward] Token 1: Layer 1 - getting attn_norm
+[Forward] Token 1: Layer 1 - applying RMSNorm
+[Forward] Token 1: Layer 1 - has_split_qkv=true
+[Forward] Token 1: Layer 1 - calling StreamingMatMul for Q
+[StreamingMatMul] FIRST CALL: tensor=blk.0.attn_q.weight K=1152 N=1152
+
+[PIPELINE_END] completed=1 tokens=0
+
+[chat-smoke-headless] PASS: no-window chat path completed; trace=C:\Users\Garrett\AppData\Local\Temp\rawrxd_smoke_trace.json bytes=667
+
+[PIPELINE_END] completed=1 tokens=0

@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.16)
+project(Deep2RuntimeIRBridge LANGUAGES CXX)
+add_executable(runtime_ir_bridge_test tests/runtime_ir_bridge_test.cpp)
+target_include_directories(runtime_ir_bridge_test PRIVATE include)
+target_compile_features(runtime_ir_bridge_test PRIVATE cxx_std_20)
+enable_testing()
+add_test(NAME runtime_ir_bridge_test COMMAND runtime_ir_bridge_test)
