@@ -1,0 +1,124 @@
+{
+    "name": "rawrxd-debug",
+    "displayName": "RawrXD Debugger",
+    "version": "1.0.0",
+    "description": "Debug Adapter Protocol implementation for RawrXD",
+    "publisher": "rawrxd",
+    "engines": {
+        "vscode": "^>=1.60.0"
+    },
+    "categories": ["Debuggers"],
+    "keywords": ["debugger", "native", "cpp", "masm"],
+    "activationEvents": [
+        "onDebug"
+    ],
+    "main": "./out/extension.js",
+    "contributes": {
+        "breakpoints": [
+            {
+                "language": "cpp"
+            },
+            {
+                "language": "c"
+            },
+            {
+                "language": "masm"
+            }
+        ],
+        "debuggers": [
+            {
+                "type": "rawrxd",
+                "label": "RawrXD Debugger",
+                "program": "./bin/DAPServer.exe",
+                "args": [],
+                "runtime": "executable",
+                "configurationAttributes": {
+                    "launch": {
+                        "required": ["program"],
+                        "properties": {
+                            "program": {
+                                "type": "string",
+                                "description": "Path to executable to debug",
+                                "default": "${workspaceFolder}/build/Debug/app.exe"
+                            },
+                            "args": {
+                                "type": "array",
+                                "description": "Command line arguments",
+                                "default": [],
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "stopOnEntry": {
+                                "type": "boolean",
+                                "description": "Stop at entry point",
+                                "default": false
+                            },
+                            "cwd": {
+                                "type": "string",
+                                "description": "Working directory",
+                                "default": "${workspaceFolder}"
+                            },
+                            "environment": {
+                                "type": "array",
+                                "description": "Environment variables",
+                                "default": [],
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": { "type": "string" },
+                                        "value": { "type": "string" }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "attach": {
+                        "required": ["processId"],
+                        "properties": {
+                            "processId": {
+                                "type": ["number", "string"],
+                                "description": "Process ID to attach to",
+                                "default": "${command:pickProcess}"
+                            },
+                            "stopOnEntry": {
+                                "type": "boolean",
+                                "description": "Stop immediately after attach",
+                                "default": false
+                            }
+                        }
+                    }
+                },
+                "initialConfigurations": [
+                    {
+                        "name": "RawrXD Debug (Launch)",
+                        "type": "rawrxd",
+                        "request": "launch",
+                        "program": "${workspaceFolder}/build/Debug/app.exe",
+                        "args": [],
+                        "stopOnEntry": false,
+                        "cwd": "${workspaceFolder}",
+                        "environment": []
+                    },
+                    {
+                        "name": "RawrXD Debug (Attach)",
+                        "type": "rawrxd",
+                        "request": "attach",
+                        "processId": "${command:pickProcess}",
+                        "stopOnEntry": false
+                    }
+                ]
+            }
+        ]
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./"
+    },
+    "devDependencies": {
+        "@types/vscode": "^1.60.0",
+        "@types/node": "^16.x",
+        "typescript": "^4.4.x"
+    }
+}

@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "kind": "branch-tip",
+  "original_branch": "codex/d1-opmajor",
+  "original_commit": "c3a850c53894ca61a31c52f3c819171051689682",
+  "worktree": null,
+  "publication": "Source snapshot on a new branch; original history is preserved locally.",
+  "lfs_status": "Remote account budget exceeded; locally available text payloads materialized as regular Git blobs.",
+  "exclusions_receipt": "Local evidence/GITHUB_BRANCH_SYNC_001/b9e61221/exclusions.json",
+  "release_certification": "NOT_CLAIMED"
+}

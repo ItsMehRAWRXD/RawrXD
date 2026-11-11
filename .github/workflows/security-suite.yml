@@ -1,0 +1,137 @@
+# ============================================================================
+# RawrXD CI - Security Suite Gate
+# ============================================================================
+# Complements the existing workflows (ci.yml, tests.yml, hardening.yml, ...).
+# It gates on the RawrXD security library: the input-validation boundary,
+# secure-memory primitives and crash-containment layer in
+#   src/utils/input_sanitizer.cpp
+#   src/utils/secure_buffer.cpp
+#   src/utils/crash_handler.cpp
+#
+# These are deliberately DEPENDENCY-FREE (C++20 standard library only, no Qt,
+# no Vulkan, no ggml, no MASM), so their guarantee can be enforced on fast
+# runners without provisioning the full toolchain that the other workflows need.
+#
+#   security-gate          (windows) configure + build + ctest the security suite
+#   security-gate-asan     (windows) the same suite under AddressSanitizer
+#   security-gate-portable (linux)   g++ build proving the code is portable
+#
+# The suite encodes the security policy (path traversal, SSRF, command/SQL/HTML
+# injection, JSON and UTF-8 handling, memory bounds, zeroization, crash capture,
+# safe-mode degradation) as executable assertions. A red run blocks merges.
+#
+# See PRODUCTION_HARDENING.md for scope, methodology and limitations.
+# ============================================================================
+name: Security Suite
+
+on:
+  push:
+    branches: [main, master, dev, develop, local-30b-backend]
+  pull_request:
+  workflow_dispatch:
+
+# A newer commit supersedes this run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  security-gate:
+    name: Security suite (MSVC / build + ctest)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Configure (security library + suite only)
+        # The native hardening targets do not require Qt/Vulkan/ggml/MASM.
+        # VERIFIED LOCALLY: this exact configure command produces the
+        # rawrxd_security library and the rawrxd_hardening_tests target.
+        run: >
+          cmake -S . -B build-security-ci
+          -G "Visual Studio 17 2022" -A x64
+          -DRAWRXD_BUILD_SECURITY_LIB=ON
+          -DRAWRXD_BUILD_TESTS=ON
+          -DRAWRXD_ENABLE_HARDENING=ON
+          -DENABLE_VULKAN=OFF
+          -DGGML_VULKAN=OFF
+
+      - name: Build security suite
+        run: cmake --build build-security-ci --config Release --target rawrxd_hardening_tests
+
+      - name: Run security suite
+        # Registered with the 'security' label by CMake.
+        run: ctest --test-dir build-security-ci -C Release -L security --output-on-failure
+
+      - name: Upload failure diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-suite-logs
+          path: build-security-ci/Testing/**
+          if-no-files-found: ignore
+
+  security-gate-asan:
+    name: Security suite under AddressSanitizer
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Compile suite with /fsanitize=address
+        # ASan catches heap overflows / use-after-free inside the hardening code
+        # and its tests, not only in production call paths.
+        run: >
+          cl.exe /nologo /std:c++20 /EHsc /W4 /permissive- /O1
+          /fsanitize=address /Zi
+          /Fe:security_suite_asan.exe
+          /I include /I tests
+          src/utils/input_sanitizer.cpp
+          src/utils/secure_buffer.cpp
+          src/utils/crash_handler.cpp
+          tests/test_input_sanitizer.cpp
+          tests/test_crash_resilience.cpp
+          tests/main_hardening_tests.cpp
+          /link dbghelp.lib bcrypt.lib
+
+      - name: Run under ASan
+        run: .\security_suite_asan.exe
+
+  security-gate-portable:
+    name: Portability (GCC / Linux, dependency-free)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compile suite with g++
+        # The project root CMakeLists.txt is Windows-only (ASM_MASM at the top),
+        # so this job compiles the dependency-free sources directly rather than
+        # configuring the whole project.
+        # -Wall -Wextra reports issues without failing the build on a toolchain
+        # we do not gate on; MSVC enforces /W4 /WX per target instead.
+        run: |
+          set -e
+          mkdir -p build-linux/obj
+          for f in src/utils/input_sanitizer.cpp \
+                   src/utils/secure_buffer.cpp \
+                   src/utils/crash_handler.cpp \
+                   tests/test_input_sanitizer.cpp \
+                   tests/test_crash_resilience.cpp \
+                   tests/main_hardening_tests.cpp; do
+            echo "g++ -c $f"
+            g++ -std=c++20 -O1 -g -Wall -Wextra \
+                -c "$f" -o "build-linux/obj/$(basename "${f%.cpp}").o" \
+                -Iinclude -Itests
+          done
+          g++ -std=c++20 -g build-linux/obj/*.o -o build-linux/security_suite
+
+      - name: Run suite
+        run: ./build-linux/security_suite
