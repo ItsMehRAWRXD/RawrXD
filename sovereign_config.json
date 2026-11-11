@@ -1,0 +1,23 @@
+{
+  "model_path": "models/llama3.2-3b-Q3_K_S.gguf",
+  "model_format": "auto",
+  "max_tokens": 512,
+  "temperature": 0.8,
+  "top_p": 0.95,
+  "top_k": 40,
+  "seed": 0,
+  "num_threads": 0,
+  "batch_size": 1,
+  "use_mmap": true,
+  "lock_memory": false,
+  "arena_size_mb": 4096,
+  "kv_cache_size_mb": 512,
+  "use_avx512": true,
+  "use_avx2": true,
+  "use_gpu": false,
+  "log_level": "info",
+  "log_file": "",
+  "log_colors": true,
+  "server_port": 8080,
+  "server_host": "127.0.0.1"
+}

@@ -1,0 +1,436 @@
+﻿=== rawrxda HEAD probe 2026-10-26T19:17:59.2769184-04:00
+PATH=F:\rawrxd\.git\refs\remotes\rawrxda\HEAD EXISTS=True
+CONTENT<<
+ref: refs/remotes/rawrxda/backup/20260316-ide
+
+>>
+PATH=F:\rawrxd\.git\refs\remotes\rawrxda EXISTS=True
+  CHILD=audit
+  CHILD=backup
+  CHILD=cert
+  CHILD=chore
+  CHILD=ci
+  CHILD=copilot
+  CHILD=cursor
+  CHILD=dependabot
+  CHILD=feature
+  CHILD=fix
+  CHILD=hardening
+  CHILD=sovereign
+  CHILD=agentic-ide-production
+  CHILD=clean-main
+  CHILD=copilot-pipeline-kernels
+  CHILD=HEAD
+  CHILD=lazy-production-init
+  CHILD=main
+  CHILD=master
+  CHILD=parity-reconcile-safety
+  CHILD=pr18-head
+  CHILD=session_12183a42
+  CHILD=sync-source-20260114
+  CHILD=temp_clean_branch_pr2
+PATH=F:\rawrxd\.git\packed-refs EXISTS=True
+CONTENT<<
+# pack-refs with: peeled fully-peeled sorted 
+362d5c550e85b5849d5edb4bbfa9af4d24102519 refs/heads/2026-02-12-nsh4
+a0c98e7fb1b938046f7db7b20c2d2c4c178939bf refs/heads/audit/ide-authority-closure-001
+ed12e302e820810407f54193c0822e8a6c5ca1bb refs/heads/b004-validate-isolated
+86869bd301f8fa54be30a996ff95ccf079c78f46 refs/heads/ci/github-control-loop-001
+80dcfd1b0824a334438adfc97dcc39683b4c1164 refs/heads/ci/ide-native-build-local
+61449fe74271971d21b9c7afb074ea2f9c4642bf refs/heads/feat/gpu-quant-dot
+9d91af0237b38e2ab4b5533b6e61503b5d4b0501 refs/heads/feat/hexmag-polymorphic-repeat-tuner-masm
+78be7274c4043caec69fcc3f6acfac2685b1b5ee refs/heads/feat/modelgenie-executionir-mainline
+78be7274c4043caec69fcc3f6acfac2685b1b5ee refs/heads/main
+052fbd54fea6398ebaf97098141eaf703bf85d2a refs/heads/master
+33e71d5d115e5a44a6d238ea1a2a420ee6b296f5 refs/heads/pr37/ci-hygiene
+4c8b2fa537fe3b3e6608c109e301706c04a0d75c refs/heads/production-lazy-init
+3c92b781bd72cdd523f5415a019f94aa45fb28ad refs/heads/promote/hexmag-p1-ide-product
+d13897ce0ef6969082749eedcab4ce2b5092fe2f refs/heads/ssm-nemotron-h
+d9c664b95be5cf0f65f6c8873ff0ce13d3076e20 refs/heads/thorn-measure
+3dd1b614bd638dc97110e6d959b4b9f17b357840 refs/heads/tmp-rebase
+3a595866c28a1c6800b6cc4fb40dccf5aa32f243 refs/kilo/materialize/124c97f67c653e9d425a4eb615b7f56fbd30add1
+104d39726f19042c8cdfe1f88b79977905342003 refs/remotes/closure-origin/cert/deep2-parity-probe-001
+dcc219031c152ebdc367e1b84d28b2b9cf238d98 refs/remotes/closure-origin/cert/p1pra-rc1
+5d98696442525ceb69eed701e2bae14dc9b3fb60 refs/remotes/closure-origin/dependabot/maven/OrganizedPiProject/misc/Desktop/maven-5e87749d8e
+f933dc5efc7d8cdaf99687e111873087ccabc162 refs/remotes/closure-origin/dependabot/npm_and_yarn/OrganizedPiProject/misc/Desktop/amazon-q-cursor/npm_and_yarn-b30699fdf7
+776e0ba11cf65d8f1e3f3ec95ba8bf7d48c71101 refs/remotes/closure-origin/dependabot/pip/pip-49ef8dbef8
+45057c45c51ad6f27cf73697042e786494e47642 refs/remotes/closure-origin/main
+365daa6f393d8449769e52398e2c2347b1ed543a refs/remotes/closure-origin/master
+994250b324ec817bbf3368bd07347f2d07242a77 refs/remotes/closure-origin/sync/cloud-agent-2026-08-29
+7dbd1c4e260aa2f13d36f8da949341ca9e82bd67 refs/remotes/everything/main
+2b48dc8ed58e0dd111f5ab6c5a93308106822863 refs/remotes/final/cert/p1pra-rc1
+1393940bf8206f638057bc5d90a5102b43f614a5 refs/remotes/final/codex/controlled-replacement-pass
+b78c8ed780cafda2a1e78e6a29a471ac32f04aab refs/remotes/final/codex/single-repo-batched-sync
+99ebcadb6f579d54f86ac6b5dace01793e636f7d refs/remotes/final/combined/all-updates
+22a9ab2cf762b5502b998dbb93353d385e998e88 refs/remotes/final/copilot/investigate-access-code-issue
+a0b387fb34a174f4a3192d19942899125e28740f refs/remotes/final/copilot/recover-truncated-files
+9d12807703ef4af44a6f7e25420e51f301d19a86 refs/remotes/final/cursor/final-kb-audit-bd84
+1a8db23c93568e41e8299ea8a781370e272e147d refs/remotes/final/cursor/final-kb-audit-e15b
+d4e04ca804720025fd108b3dd65d70e9ba47f380 refs/remotes/final/cursor/rawrxd-universal-access-51f5
+5a0fcc62ee9ad7482ba008e2c922b136a70faf5e refs/remotes/final/cursor/rawrxd-universal-access-cdc8
+b57a9880825e81dd44c218da23f920629afeafc3 refs/remotes/final/main
+78b69de2ec716730ce65b8a1d39da2b72d649e52 refs/remotes/origin/agentic-ide-production
+66cf173b84196af6f085f32e5c3155ba6672d5f5 refs/remotes/origin/audit-session-2-cleanup
+0859286af1c1e27530fae097ac963a9ec42c0610 refs/remotes/origin/avx2-q4-v0.3.0
+c08e5fd90fc3a6740ced5aae0bc05ad925f8391a refs/remotes/origin/avx2-q4-v0.3.0-clean
+db07527cbb80f9b4359c76ae62b801f315d472e0 refs/remotes/origin/backup/20260316-ide
+b9b1efdb868280f09c62713e16e29d0311ef3736 refs/remotes/origin/beacon-residency-001
+01f740ca0884b587b93125fdcf8239aebc768e37 refs/remotes/origin/cert/deep2-parity-probe-001
+ff340146c29f2265f90f9ee604e78e52bef8f51f refs/remotes/origin/cert/gpu-forward-child-ladder-20260909
+bf2a7da56af244c2467eb3549f09133c7941ed0f refs/remotes/origin/cert/p1pra-rc1
+9023216f5e287afc270b9f1e2fb37f99392b5036 refs/remotes/origin/chore/sovereign-audit-cleanup
+d1fe2429cfae062e07f6d98208fd8969a20646fe refs/remotes/origin/ci/github-control-loop-001
+80dcfd1b0824a334438adfc97dcc39683b4c1164 refs/remotes/origin/ci/ide-native-build
+2a4c014a3463e396e943a8b67c64a282ea1ec82f refs/remotes/origin/ci/win32ide-link-msbuild
+37c395ac1ea621c7381f677db8658f904bd6ef0b refs/remotes/origin/clean-main
+1393940bf8206f638057bc5d90a5102b43f614a5 refs/remotes/origin/codex/controlled-replacement-pass
+76645eb17a7cf460dadb6258698ab887d2d92c57 refs/remotes/origin/codex/single-repo-batched-sync
+56adf109d08f909350a0ce46b2b4ab80f8c80cfd refs/remotes/origin/copilot-worktree-2026-02-17T05-43-21
+18eee006290e9f98a21bbeab5227786d48b3914c refs/remotes/origin/copilot/build-fixes-and-integration
+95d72553dc2b403856a434960ac1152743f70c7b refs/remotes/origin/copilot/merge-repos-into-main
+6593a5862146c7c8e12d994b08ac352ae8c34502 refs/remotes/origin/copilot/sub-pr-5
+a098a57112c79fd81aa90fc50eea078e9eb85e09 refs/remotes/origin/copilot/update-latest-source-20260322
+2cb18689a77ebdb72299652d829c6bec40716487 refs/remotes/origin/copilot/vscode-mlyextom-3zgo
+bafc5ef0c243d29e198b745cba1f8c80b1e9ac40 refs/remotes/origin/copilot/vscode-mlyextom-3zgo-clean
+2cb18689a77ebdb72299652d829c6bec40716487 refs/remotes/origin/copilot/vscode-mlyextom-3zgo-phase4-docs
+49eace9489c0cf5fcfe2e5e7fe425361b4035ed9 refs/remotes/origin/copilot/vscode-mlyextom-3zgo-phase7a
+33e71d5d115e5a44a6d238ea1a2a420ee6b296f5 refs/remotes/origin/cursor/ci-hygiene-blockers-c905
+77f331f7d5d9ff678ba213a5a2f522febf5e413a refs/remotes/origin/cursor/configure-vscode-github-copilot-for-powershell-gpt-5.1-codex-5162
+facbadb9d4136a8f33c3de593281cf7ea76df919 refs/remotes/origin/cursor/ide-e2e-audit-0846
+00dedb3c6ad950d86227ddf0a3a18f998b12cc6b refs/remotes/origin/dependabot/maven/OrganizedPiProject/misc/Desktop/maven-81aca9cd3e
+16cd64e46fab08daf0f8c6657f8f31b2dab2d24d refs/remotes/origin/dependabot/pip/pip-e1fbd7af7b
+8325672d43fad76f5448c084a99b8bfd9592ea17 refs/remotes/origin/feat/cert-ladder-manifest
+61449fe74271971d21b9c7afb074ea2f9c4642bf refs/remotes/origin/feat/gen-a-integration-snapshot
+8ad11f817edb0d95006f798c59cc2de3160d837d refs/remotes/origin/feat/gpu-quant-dot
+2916dd70e0d1198ca2b39f291070d5757e3af88e refs/remotes/origin/feat/gpu-quant-dot-ssmout-fix
+75b5c631c225afb8ff83926facc27456021dee31 refs/remotes/origin/feat/hexmag-polymorphic-repeat-tuner-masm
+d99b1083ef42a35cbba2f8a02b27862c1f6399e3 refs/remotes/origin/feature/dynamic-loader-wiring
+520500a89e8281ed6778237013358464c98bfece refs/remotes/origin/feature/phaseD-flashattention-integration
+04ff3219c43f2a7c9d50c93b780f9c26d47b4f55 refs/remotes/origin/feature/pure-masm-ide-integration
+fe9f35cbb4c64cf2acb192dcf1f9168841b993a4 refs/remotes/origin/feature/q4-avx2-dispatch
+5017dd1432869ef6317086f6cb06d84e034d8231 refs/remotes/origin/feature/q4-avx2-forward-wire
+e533c7c68977d596a6e3aad0820d55cfd3088ee6 refs/remotes/origin/feature/q4-avx2-q4-dispatch-wire
+e533c7c68977d596a6e3aad0820d55cfd3088ee6 refs/remotes/origin/feature/q8-avx2-dispatch
+c3bbd39a4ff54219fd3739dd009bf1f7721ae4f0 refs/remotes/origin/feature/q8-avx2-v2
+f681936c71d7d0164d0020f0848a5c509337db94 refs/remotes/origin/feature/silu-accuracy-fix
+2cf8b8588ea6343feb5477356c55c3d3e07a2a91 refs/remotes/origin/feature/singularity-aperture-v126-merge
+8d63f90ee49d20bd2a696cf1aa3b288e6a8e1422 refs/remotes/origin/feature/singularity-aperture-v126-merge-phase7a
+c37d82de5f9035d82f888c538fbfd9c2d646218c refs/remotes/origin/feature/smoke-gate
+1b8360cf8b61b2e29c5c48b296206905f83d8a16 refs/remotes/origin/feature/tool-ecosystem-unblock-autonomy
+7f9ca5ddb08454c08ac3a0a50d52d3284e1a666a refs/remotes/origin/fix/model-load-crash-streaming-state-unification
+83d484542fc611c0f6c3890ecabf16f38c149beb refs/remotes/origin/fix/seh-regression-ctest
+04f9c899cb93428c89d2af52a8e304a0b0bd80b0 refs/remotes/origin/lazy-production-init
+90cd7621534b3e128eba31b287705cef45fd1ad7 refs/remotes/origin/main
+4cef4e13b05ecba3c1ddfc897dd32f7c86464a42 refs/remotes/origin/masm-pure
+3523edf147378002d0fa6e0203d360a1ff13dfec refs/remotes/origin/master
+b81d3f1312727eb6ab1b7f2dd7ef7798fd5c9223 refs/remotes/origin/model-correctness
+400c5b79b5221c4954e15cc7f9d8808883119ed5 refs/remotes/origin/pr-q4-avx2-dispatch
+0b3bf0f44d0f8bf8fba87180f36e784c6b7539a1 refs/remotes/origin/pr-q4-avx2-forward-wire
+56adf109d08f909350a0ce46b2b4ab80f8c80cfd refs/remotes/origin/pre-wipe-local-main-20260813
+56adf109d08f909350a0ce46b2b4ab80f8c80cfd refs/remotes/origin/pre-wipe-local-main-20260813-v2
+65895d53240422a8f0a0b192cb2f672b44cd722f refs/remotes/origin/preserve-untracked-output
+071ee1d7498e71f3adea98b29bdbede0687a2b86 refs/remotes/origin/production-lazy-init
+0e4133e7e7e08a7394390815f42d30481b4a55b6 refs/remotes/origin/promote/hexmag-p1-ide-product
+76cf96d6099d7cca5845523c262ce65ba2735a61 refs/remotes/origin/recovery-clean-source
+b39dcb4b84c3abb87cd84cabb930e00f303f03ad refs/remotes/origin/release/14.7.3
+47905e26416db71aa0752309acb6c330230cc972 refs/remotes/origin/release/v1.0.0
+588ed401e09d8a4e65453e7226d9cc602207f163 refs/remotes/origin/session_7ec9ed20
+9ce503ce604a8246a36b0e130f265d7feb5f4354 refs/remotes/origin/session_7f014eb4
+15058cda455889331650d0a8827f730542490bc4 refs/remotes/origin/sovereign-evidence-pipeline
+ef1f6c5b7ba3fc563c9a36217826466471debd99 refs/remotes/origin/ssm-nemotron-h
+530749ea1725e46514cf8c44a92a56d206f87534 refs/remotes/origin/staging
+a30c03129efb106476df3375e50383ac365ecf10 refs/remotes/origin/sync-source-20260114
+62b2d4ec8d7d6696439c5a141edd377b7145be43 refs/remotes/origin/temp_clean_branch_pr2
+1ba0423b31b4d9853c57ae9fd5cf4399e4e85cb7 refs/remotes/origin/tmp-rebase
+7745519762fc2cc6a754bfcf9618369807f3e340 refs/remotes/rawrxda/main
+000c6b90ef372da9a9d58ad4925d2b21df1b5459 refs/stash
+1016997acd256406e5f1766b1a30548d8f679570 refs/tags/build-ggml-isolated-20260428-2336
+18fdf1b6ecaa6c8f20e4ad0ff7314b42e471e759 refs/tags/streamer-cert-001
+^d13897ce0ef6969082749eedcab4ce2b5092fe2f
+4d4c1fe22e9bf536919804db13364bc55db51e8e refs/tags/v.10Beta
+ca3886da64d8954148849c78176d2c1fbddc159e refs/tags/v0.1.0
+ecf9d151008b70502e6997231c4a358ffebebaf4 refs/tags/v0.1.0-mvp
+^722be65f5039ab825de2226a0f325cfda02de52e
+535054040f52369b01b927ffc29db5b823f780fd refs/tags/v0.2.0
+^1839aa75e4dd830cb9def23e1c936cb5a87e813b
+4af93f302ffd0630ef0e4715b9cb72a994180b13 refs/tags/v0.2.0-hardened
+^eff2b3e9436fe5d31a4443066e46c21f3b177e75
+8e98f1f97e8230818858556f8b91d6bd7edd658d refs/tags/v0.3.0
+^ec30f7d4a488dab296c02a30595b9f2816a4c138
+f70d7281feb9ce7212f2fb6ad903d2253ea2eea4 refs/tags/v0.4.0-q4-avx2
+^14a162fb996d137bd4d20235acc1790f8ba0038d
+7c3d4864f8ebccdfab2ab96d4ba226a1edeaf37e refs/tags/v0.4.1-q4-avx2-dispatch
+^fd623455fc11d640c96c70bcee3c672432656d64
+187b33ba3e58ae57d035d3f88264b0c251dc0b54 refs/tags/v0.5.0-q4-avx2-production
+^fc12989602b80c17fe8d3d1761ad6a1330072166
+1703304c9767bbfbf7a8a5da63c0b577be8b5c69 refs/tags/v0.6.0-q8-avx2-production
+^fecae686b767c411640e6447f4b3549645a45592
+a0da9e1dcfdbaf2e571ab7972bdf4d7ae3b14061 refs/tags/v0.7.0-flash-avx2
+^952cc32c154072061057fa88aed9d4c7135d491a
+49df62b0b5644391c6cb331d45a6233e8afcd265 refs/tags/v0.7.2-brutal-neon
+d69b3f00d85d4bc770964dd8addc75a44ed7ca20 refs/tags/v1.0-stable-abi
+^eeddac7300435ceaf8fbbd115705154d4f39603c
+f27720074289cd2192537baab9e1eea67d508d89 refs/tags/v1.0-stable-lazy
+^6b29e5867aa22829d9805c3ed39405bbb8ee4de3
+48ba991b3f30acb856523b1afabff3b8d7a0f4cf refs/tags/v1.0.0
+de48fcda982316f31dc709bc192eb5e8571be4c2 refs/tags/v1.0.0-amphibious-locked
+^d78cb36fc7fe073abac30b8742bed0802a29acad
+9b1442422fbf48b1f079cd0bce04bfae9d8489b7 refs/tags/v1.0.0-certified
+^04c6471971db4abf27bcafb4661180ece5e86d37
+79818db210c614a41b9fc4ea2c6bac3226916d58 refs/tags/v1.0.0-complete
+^50082f17e11b45c046f2a503ef01c46cfdc755ba
+fba1f754f10e222b29b0f3810f7b7f47c5ceb885 refs/tags/v1.0.0-dual-gpu
+^a82153c72fd51ef3cddfb2cfd38b73ea32f8725c
+f70bbeb75902cda90791261cf56e5ef4ef3acc64 refs/tags/v1.0.0-ga
+^e010e8f58648875e8bf4d30b46ca7cd1714d1b62
+491ed8485aa7c96fd21eb0b84169e060c2bc568f refs/tags/v1.0.0-gold
+a2b6659573c04c92768f646d3d370beaeb602d46 refs/tags/v1.0.0-rc1.3
+^e26eed8b48401ff7dd257f39c6c585aa71550d46
+4e740d95a307271367ba7cee0592f4dface20f7e refs/tags/v1.0.0-sovereign-complete
+^4bdc9e5c82106598702a6b5d38ee6ac2b3de77ac
+53f85ee735d07ede462a0b7ca5674d73c4fbc6ff refs/tags/v1.0.0-stable
+^a6a1977ab8df6d345c180b16e5b31750378d7211
+beef0a98c88215e04b5500e7542e6313cd3fba7f refs/tags/v1.0.0-trifecta-complete
+^1030227636ad417db7563c3f28c58a1d73737b8c
+400e1570adb6c7734c740e5afffd287b3f2a8b11 refs/tags/v1.0.1
+^995393e0aec2575f588cc532c7e2c3b91c0e51d7
+abd97689dfe1f9d61b8d94f2b01ca0f61b5bf3ff refs/tags/v1.1-lazy-telemetry
+2b902825b88f7d70893f73553ba20aa931afdb7c refs/tags/v1.1.0-dev
+9b70629cdfe6e3b4c9cf3edb8e0a768b1e34250d refs/tags/v1.10-lazy-aicodeassistantpanel
+95ccb41addbc6167dd6fe4d03c794fd4181971cd refs/tags/v1.11-lazy-tokenizerselector
+68da83adf935c6469ee1e223c19d3a977a5b1fbe refs/tags/v1.12-lazy-settingsdialog
+4b080ef4c6eb7c31e5c9c69f05615131469bd1ef refs/tags/v1.13-lazy-trainingdialog
+a36a1f1185c67cd64d2bcbe222ecb3628b6b8ed1 refs/tags/v1.14-lazy-sentencepiece
+22dcfccfef7e80752a9031a143b21973f15ddde5 refs/tags/v1.15-lazy-trainingprogressdock
+7b101467ad9555d44ce1cac25a6c8bc31ac65d70 refs/tags/v1.16-lazy-chatworkspace
+84d0af8ff851222b3fc9c144fc3b6a0b7218457b refs/tags/v1.2-lazy-settings
+9a0d0df7ae09f2aa5a5a2ed79ac932749ab96c43 refs/tags/v1.2.6-sovereign-baseline
+^05794f2c5f633637849ed4ff15dba113db44eacf
+c62eb398fa82636b76d3f1aefe60e617ec8eeb4e refs/tags/v1.3-lazy-multitab
+c5acfef76bebf1c9032450122408a8fc9b00030e refs/tags/v1.3.0-alpha
+^e070b35bdec159a7327bda7238c341bbe603cdc6
+6b29e5867aa22829d9805c3ed39405bbb8ee4de3 refs/tags/v1.4-lazy-chatinterface
+4400c7b8ff8d5607b0384e79798e16117a3abf26 refs/tags/v1.5-lazy-agenticengine
+994969413c780ce8144e768770ce4e91703dc767 refs/tags/v1.6-lazy-observability
+2047161746193176b18dc39396749b3e7ca3f1d2 refs/tags/v1.7-lazy-terminalpool
+bc9439d20f9bd3122dde5bee79993a27733702ab refs/tags/v1.8-lazy-filebrowser
+c730cbcb2446fe39f1bf204de84a4d1ca571744f refs/tags/v1.9-lazy-tododock
+218467f116d30b1b2aac1ee70563777137f563b0 refs/tags/v10.0.0-phase13
+^f15e920d826fcf5bc3a69fff12c13af6b490c4e8
+ec417fa8b55e6f9a74b3a3719dee3aaa373776b5 refs/tags/v11.0.0-phase14
+^0e6ef3981f27699768c2d2cfb4aec4f623c7f46f
+391c826a159ba7b0a581189332398a9ba51801fb refs/tags/v12.0.0-phase15
+^4f6c42862c3c1a0f34a1957b86737dfecf3e7a89
+94421de2aae55ae375cc4cf2671eddc3c240bc54 refs/tags/v13.0.0-phase16
+5fdf345fafd217842870158ca8cea66fb3bc34d7 refs/tags/v14.0.0-phase17
+de23cc5cf29c2386e4de9a5ec622bc23cc815560 refs/tags/v14.1.0-stable
+^07ac8aaf4fb2fbfaee000d4439a85d8e4b885fbe
+50f216a41e2b1af659d800a2171b3afa01ad05d0 refs/tags/v14.2.0
+9d75ddad0018de7f2baa49dcc314b562bf1822b3 refs/tags/v14.3.0
+^d74a1ddc237948c57b99ca86e4883b8be7468924
+de0689b614d9821d357813ebc35a1de4d00d0ac6 refs/tags/v14.5.0
+^d74a1ddc237948c57b99ca86e4883b8be7468924
+fed9ddd5df2cc970a03e9a7f480910ee9419ad34 refs/tags/v14.5.0-GOLD
+^2d0e3224928d88d5bf334ed7bb6ed37a97d23158
+57a922acfcaf7cc73a3164b2882966b43ec79c60 refs/tags/v14.5.1
+^d74a1ddc237948c57b99ca86e4883b8be7468924
+af4c655179e7e41110833ca32e080e960233c9f4 refs/tags/v14.6.0
+^d74a1ddc237948c57b99ca86e4883b8be7468924
+04028398e3d273213b40159e7e74158da0d006f2 refs/tags/v14.6.0-PE-GOLD
+^69ff62dc86016a5ba5c6c052a5f2e6677f07973d
+eb5a77e639c644acb1d1ea0845a5171aa1a98a65 refs/tags/v14.6.1-JIT
+^48f801c08fb7c99cf6c8a86acc2e8d421b4a9ca9
+dc7285c6a3f676683ccf09af3aa7322e90651e95 refs/tags/v14.6.2-ROPE-FUSED
+^4891c9ac3150e6918620e617cbbad60d80f8e6d8
+9229b7c46ae232c593cdef0b3835afe6c9d2a17e refs/tags/v14.6.3-GEMM
+8ffd9498176d5e89ad835253b33477cc6e7dd514 refs/tags/v14.6.3-PE-EXPORTS
+^9591743d1945fedb2ce28b49a7fa85554face9ae
+d4d6451373e10017b5b3c526152487d8dbdfeb95 refs/tags/v14.7.0
+^d74a1ddc237948c57b99ca86e4883b8be7468924
+511b3df2d27f500f754a7ffdc31ed0d5fb177125 refs/tags/v14.7.3
+^45cdcd2097e0588b8555ddbed27d552e1f0d5631
+6cd94bead7742805524fe2f9922ae18202e7824b refs/tags/v14.7.3-win32ide-complete
+^ee6db7b0481fec6f93aef6d0ed9459d5ea2d35b0
+e4fe3e31ddd820377bd1e1db3a8cefcb375cf2b7 refs/tags/v15.0-GOLD
+75538a2e6facf7264fa55ef35405feef0117b12f refs/tags/v15.0.0-GOLD
+^10118137fa8482185ef55bad9b6cfb95687682c3
+9d600e30a1606f0055a523f12b60c8a6d0bbd509 refs/tags/v15.0.0-phase18
+^957883b1690ffe6bed5313fee0f5bdb5d4bb0f42
+75af6f5d2076de8073075e4fe1b0838df185be8b refs/tags/v15.0.1
+^5b5c26f712fd9b894e3b064bd08d29728628c4e0
+07337e8adf7c6cf824263bc31587e5f0cf3337a5 refs/tags/v15.0.2
+^12f009dc129a6a93d7c93b71164f557d81377fe9
+cc673ecda5b6f1d2b9faa7f73a6943615f533d9c refs/tags/v15.0.4
+^11a2ad2e6ac49a324d9e4849bfee77cac9cf3190
+9728b32ddf675fb1a84d354ef6e1da20f778f3d1 refs/tags/v15.1.0-mission2-complete
+^ddf3daec3af74980c576d136643afe6dbd94d179
+fdd1989826236e37aff69a0bf5e6b2f32288c740 refs/tags/v15.1.0-mission2-final
+^aa301fa788d5016038903b1e31a421aa430eed2c
+ebac5928e43aec0a56f3243d65b82f4336301ae5 refs/tags/v15.1.0-mission2-production
+^6304e5b14fbe9c52373072b67478000b09650685
+853de63337d2a4cf0f67a491f6cb4903f6f76c97 refs/tags/v16.2-GPU-HYBRID
+^7325264378fee71dad81272cffa7465242097b0d
+d752f63a41688da84daf9706be906bf39acfbf2e refs/tags/v16.3-FUSED-LAYERS
+^37a8fc64618a5d37397491c71e9dd65dcc7a9482
+87b21612ce76f6b262221b9cd86db8ccc1a26e29 refs/tags/v16.3-MONOLITHIC
+^7325264378fee71dad81272cffa7465242097b0d
+3689c9fd97ee49b94ff1d9323b64a223fd6bb5bd refs/tags/v16.4-KV-CACHE
+b24847297e369b1914c77b1f1c4d6632bea63738 refs/tags/v2.0-feature-complete
+^2047161746193176b18dc39396749b3e7ca3f1d2
+91641be1cf9b785c9133368ad762959672dd8c2f refs/tags/v3.0-phase1-certified
+^46c8d592e156e171751a04a931065324d0453da2
+4b75f02a8161339acc6aea0185b0d9c97a533f22 refs/tags/v3.0-production-ready
+^7b101467ad9555d44ce1cac25a6c8bc31ac65d70
+ebde81638fb3878ebcf0fd1a35f06d07da19cd92 refs/tags/v3.1-lazy-hotpatchpanel
+2d0c9b62b750e94806eb3f84ea5b4a646c2dc165 refs/tags/v3.2-lazy-aichatpanel
+a0de14decd3420933c6795f067f609de7d85461a refs/tags/v3.3-lazy-modelmonitor
+2539ca4dd504baad0733ee6982b7a44b0dfd3a8a refs/tags/v3.4-lazy-terminalwidget
+ae268822dcebc6ed796ef23dcbea19e1dc949072 refs/tags/v3.5-lazy-interpretability
+a30b6671a74f613b96f627d2066b6b6d7db34b26 refs/tags/v3.6-lazy-hardwarebackend
+eb68e8486cf8ffabd5294ee4ad91d62220450fe4 refs/tags/v3.7-lazy-modelregistry
+8b03592d7a6b069a4a560f9ea650dbefafe729b4 refs/tags/v3.8-truly-complete
+fa9a13bc9ef1e122c13edae52ede6e8521798678 refs/tags/v4.1-inline-decorations
+6c19e49baae7a0f48e815a2626464cf29163b831 refs/tags/v4.3-cicd-agent
+^4f900b644c9d5c9bab672f6831c9c9505d495075
+9219e1cd88525056f0885542e1ddebc216e7bb11 refs/tags/v5.0-clean-mainwindow
+^cbe0a149c24bc971958827ff916872e6caa8c81d
+c9eda8877adae3fe4b62b8de3696a2dfb5cf53b9 refs/tags/v5.1-phase1
+c9eda8877adae3fe4b62b8de3696a2dfb5cf53b9 refs/tags/v5.1-phase1-certified
+c1a0e448774e1e5444c357347d8c118ff40faf39 refs/tags/v7.3.0
+^07e5e29a1d5506750ce2c22de36f60fb7eefcd83
+26bb43a1855e291836ca5ab23400b268f6188f13 refs/tags/v7.3.0-stable
+^810720aec97567c14c92c7d2908415188e634366
+b2387728e971eaf6097f8c57c65884c1838c3474 refs/tags/v7.3.1
+^f6b3a5ee147932d04620feac0913e909919c023c
+7edf578a46832b76ff6ce6e99c263ed6db65bf97 refs/tags/v7.3.2-stable
+^8f805bc19a0270e4b69e977a19fe23919f68caa4
+83ac06efbc899d77be990059f8889a008e02f84d refs/tags/v7.3.3-stable
+^2918b3ff4655ef04b364efa5b8c608b4ff380e04
+88fadfb92ab62d2b5a052c518a33fa91d3670494 refs/tags/v7.4.0-phase6b
+^f6f71f4ac951acd3dbc58652db516c8eda931e29
+8be876fa6ee08f39eb138b927e86863deccdb464 refs/tags/v7.5.0
+^11edddc7698f814393c723b6d2902ec0a0a8127d
+013d6b4457895af98aeaa572ac443891b8982afa refs/tags/v7.5.0-phase8b
+^ec0e9dd4e60cb8152737951ea2669d5e5bf91704
+07dcebdb31912474cad22b5571c433b6e43821c6 refs/tags/v7.5.1-phase8b-complete
+^f24ff19af10cacf0249c01fd99a08ecf0b181a04
+3696837bf30297f102dd6a523a81682bb6aa8a93 refs/tags/v7.6.0-phase8c
+^f24ff19af10cacf0249c01fd99a08ecf0b181a04
+4641a17eeb8f67bd96ab4d184a9626d4d3504793 refs/tags/v7.6.0-stable
+^4c5d1ba35a684bf6a640555579ffc3dda8ae9866
+0a4176886c8c75c961f0e376820a1f3ab2c6c274 refs/tags/v7.7.0-phase9a
+7bfa72418d1558c3fa87ee7a7be5121e6c1225d3 refs/tags/v7.8.0-phase9a-asm
+^8d8d47ba801ace895e3533bb1f66ffe15c0aa57a
+4ad12ef029974cb4e21d729e36bd60acde8bc46e refs/tags/v7.8.0-phase9b
+b1c60c9cc27c4b4eccdc2445781ecc62c01ca32c refs/tags/v7.9.0-phase9b-hybrid
+eb611fb997a4521d0ddfab0f64eb0c2eb57b3d4a refs/tags/v8.0.0-phase10
+31eea9ba80d60bd3d59ed5b3791e0b1dba0c2909 refs/tags/v8.0.0-phase11
+434945ebf7fd8b4efc2c2ee786ad3bcd704e6a89 refs/tags/v9.0.0-phase12
+
+>>
+--- git symbolic-ref ---
+refs/remotes/rawrxda/backup/20260316-ide
+
+symbolic-ref_exit=0
+--- git remote show rawrxda ---
+closure-origin
+everything
+final
+origin
+rawrxda
+
+--- show-ref rawrxda ---
+
+49f5088d7578845f255ed68acca20058224b05b2 refs/remotes/rawrxda/HEAD
+78b69de2ec716730ce65b8a1d39da2b72d649e52 refs/remotes/rawrxda/agentic-ide-production
+addd75d99c630f616ed7aca280b072aaa9b72c2a refs/remotes/rawrxda/audit/qt-runtime-native-20261016
+49f5088d7578845f255ed68acca20058224b05b2 refs/remotes/rawrxda/backup/20260316-ide
+dcc219031c152ebdc367e1b84d28b2b9cf238d98 refs/remotes/rawrxda/cert/p1pra-rc1
+69030218bf8ed5df44656acadca0bb3a597fb98b refs/remotes/rawrxda/chore/link-closure-finalization
+82ece56045193dbab59a0c7d235935bcbba958f2 refs/remotes/rawrxda/chore/sovereign-audit-cleanup
+ac79ddc7b831771b9c2b1a536ec7517a48e461c9 refs/remotes/rawrxda/ci/bootstrap-win32ide-link-integrity
+e2be34ed6db03deee98815004ed591a3cf4e8234 refs/remotes/rawrxda/ci/fix-win32ide-link-longpaths
+85c6f049c051da6e3cc1a9f94415cab861cf033b refs/remotes/rawrxda/ci/win32ide-link-msbuild
+37c395ac1ea621c7381f677db8658f904bd6ef0b refs/remotes/rawrxda/clean-main
+0b8965368ab1efae05d813dffaf18eafaa59bbc2 refs/remotes/rawrxda/copilot-pipeline-kernels
+bf36f7084b8492771fd7cafd2b03c9e37990cbd4 refs/remotes/rawrxda/copilot/merge-repos-into-main
+4aaf7724e928f0d85973de0de1811ce781e9b40e refs/remotes/rawrxda/copilot/sub-pr-5
+77f331f7d5d9ff678ba213a5a2f522febf5e413a 
+refs/remotes/rawrxda/cursor/configure-vscode-github-copilot-for-powershell-gpt-5.1-codex-5162
+3c24d5d2682164197cb1db942ad1fb12b8d57d4d refs/remotes/rawrxda/cursor/full-historic-source-dumps-fcc6
+133f43192e47ade0fe39ab5b1a93605b55b3b83d refs/remotes/rawrxda/cursor/unlinked-and-dissolved-symbols-2559
+d465525c6d12db436088365931f6a70e0534f50c refs/remotes/rawrxda/cursor/unlinked-and-dissolved-symbols-841f
+257dfc20b05c2871a7d6e0bd99082ea1c2237188 refs/remotes/rawrxda/cursor/unlinked-dissolved-symbols-2b27
+2cb29b9e837dd16b7858bb4f2c6fd0e6346b8319 refs/remotes/rawrxda/cursor/unlinked-dissolved-symbols-4264
+ec77c36d65d71f2e55b55c268087b94b8591d4a3 
+refs/remotes/rawrxda/dependabot/maven/OrganizedPiProject/misc/Desktop/maven-7a1f3ecaa5
+c7390525dae4b02510f25f08eda32da0103e547d refs/remotes/rawrxda/dependabot/pip/Full-Source/services/pip-38ce82ca23
+43784d18d7f94abbe952087e94e95b07c1a23065 refs/remotes/rawrxda/dependabot/pip/pip-e1fbd7af7b
+7b9b904d86aa89887d90472606cc88ba0709d8fd refs/remotes/rawrxda/feature/adaptive-gpu-layers-ide-completion-phase
+33eeaf2e98d5a58588d0dd5f29f737ef65addbb6 refs/remotes/rawrxda/feature/phase2b-gpu-validation-trace-provenance-sealed
+e0962242caf627bd78e602d1a149f0f3ccde4245 refs/remotes/rawrxda/feature/phase2c-gpu-performance-tuning
+d9dd822172aa0f07b8d8a7a4addc8942baee3535 refs/remotes/rawrxda/feature/phaseD-flashattention-integration
+04ff3219c43f2a7c9d50c93b780f9c26d47b4f55 refs/remotes/rawrxda/feature/pure-masm-ide-integration
+0fbaf3d6f02c37ae26532b40dac6bc8dcefb5bb5 refs/remotes/rawrxda/feature/singularity-aperture-v126-merge
+2fb188d254c43c473ea1a77c24a6e83a962936b8 refs/remotes/rawrxda/feature/singularity-aperture-v126-merge-phase7a
+8f280dde4ddded01fc5efdf131403a3b154862f0 refs/remotes/rawrxda/feature/tool-ecosystem-unblock-autonomy
+57b261c95df9b2a2aeb7b8d32a918b5c2a297117 refs/remotes/rawrxda/fix/model-load-crash-streaming-state-unification
+8c6ab4c6b530d3a3b3b53cd12fb081f5d4e2893a refs/remotes/rawrxda/fix/seh-regression-ctest
+f68bebfa24ae9f727675ee13605320a168e48bf0 refs/remotes/rawrxda/hardening/text-editor-win32
+04f9c899cb93428c89d2af52a8e304a0b0bd80b0 refs/remotes/rawrxda/lazy-production-init
+f61337fb17277c89a59ac5877464b0553f4009d2 refs/remotes/rawrxda/main
+034e4d8d20ccab1e3ebf7336c9f41e482f55e990 refs/remotes/rawrxda/master
+4b8171e82b51ccf9b6e525d15730118ecd1a894e refs/remotes/rawrxda/parity-reconcile-safety
+f68bebfa24ae9f727675ee13605320a168e48bf0 refs/remotes/rawrxda/pr18-head
+8085fd48f881ece4523c46b0ab007f4d59fef8f7 refs/remotes/rawrxda/session_12183a42
+132d77098a0189b41d26358e49f55ae7395e7483 refs/remotes/rawrxda/sovereign/push-20260526-125126
+a30c03129efb106476df3375e50383ac365ecf10 refs/remotes/rawrxda/sync-source-20260114
+461fb3ca471dba241f056b486f3d0003e83c2d11 refs/remotes/rawrxda/temp_clean_branch_pr2
+
+
+
+--- for-each-ref remotes/rawrxda ---
+49f5088d7578845f255ed68acca20058224b05b2 commit	refs/remotes/rawrxda/HEAD
+78b69de2ec716730ce65b8a1d39da2b72d649e52 commit	refs/remotes/rawrxda/agentic-ide-production
+addd75d99c630f616ed7aca280b072aaa9b72c2a commit	refs/remotes/rawrxda/audit/qt-runtime-native-20261016
+49f5088d7578845f255ed68acca20058224b05b2 commit	refs/remotes/rawrxda/backup/20260316-ide
+dcc219031c152ebdc367e1b84d28b2b9cf238d98 commit	refs/remotes/rawrxda/cert/p1pra-rc1
+69030218bf8ed5df44656acadca0bb3a597fb98b commit	refs/remotes/rawrxda/chore/link-closure-finalization
+82ece56045193dbab59a0c7d235935bcbba958f2 commit	refs/remotes/rawrxda/chore/sovereign-audit-cleanup
+ac79ddc7b831771b9c2b1a536ec7517a48e461c9 commit	refs/remotes/rawrxda/ci/bootstrap-win32ide-link-integrity
+e2be34ed6db03deee98815004ed591a3cf4e8234 commit	refs/remotes/rawrxda/ci/fix-win32ide-link-longpaths
+85c6f049c051da6e3cc1a9f94415cab861cf033b commit	refs/remotes/rawrxda/ci/win32ide-link-msbuild
+37c395ac1ea621c7381f677db8658f904bd6ef0b commit	refs/remotes/rawrxda/clean-main
+0b8965368ab1efae05d813dffaf18eafaa59bbc2 commit	refs/remotes/rawrxda/copilot-pipeline-kernels
+bf36f7084b8492771fd7cafd2b03c9e37990cbd4 commit	refs/remotes/rawrxda/copilot/merge-repos-into-main
+4aaf7724e928f0d85973de0de1811ce781e9b40e commit	refs/remotes/rawrxda/copilot/sub-pr-5
+77f331f7d5d9ff678ba213a5a2f522febf5e413a commit	refs/remotes/rawrxda/cursor/configure-vscode-github-copilot-for-powershell-gpt-5.1-codex-5162
+3c24d5d2682164197cb1db942ad1fb12b8d57d4d commit	refs/remotes/rawrxda/cursor/full-historic-source-dumps-fcc6
+133f43192e47ade0fe39ab5b1a93605b55b3b83d commit	refs/remotes/rawrxda/cursor/unlinked-and-dissolved-symbols-2559
+d465525c6d12db436088365931f6a70e0534f50c commit	refs/remotes/rawrxda/cursor/unlinked-and-dissolved-symbols-841f
+257dfc20b05c2871a7d6e0bd99082ea1c2237188 commit	refs/remotes/rawrxda/cursor/unlinked-dissolved-symbols-2b27
+2cb29b9e837dd16b7858bb4f2c6fd0e6346b8319 commit	refs/remotes/rawrxda/cursor/unlinked-dissolved-symbols-4264
+ec77c36d65d71f2e55b55c268087b94b8591d4a3 commit	refs/remotes/rawrxda/dependabot/maven/OrganizedPiProject/misc/Desktop/maven-7a1f3ecaa5
+c7390525dae4b02510f25f08eda32da0103e547d commit	refs/remotes/rawrxda/dependabot/pip/Full-Source/services/pip-38ce82ca23
+43784d18d7f94abbe952087e94e95b07c1a23065 commit	refs/remotes/rawrxda/dependabot/pip/pip-e1fbd7af7b
+7b9b904d86aa89887d90472606cc88ba0709d8fd commit	refs/remotes/rawrxda/feature/adaptive-gpu-layers-ide-completion-phase
+33eeaf2e98d5a58588d0dd5f29f737ef65addbb6 commit	refs/remotes/rawrxda/feature/phase2b-gpu-validation-trace-provenance-sealed
+e0962242caf627bd78e602d1a149f0f3ccde4245 commit	refs/remotes/rawrxda/feature/phase2c-gpu-performance-tuning
+d9dd822172aa0f07b8d8a7a4addc8942baee3535 commit	refs/remotes/rawrxda/feature/phaseD-flashattention-integration
+04ff3219c43f2a7c9d50c93b780f9c26d47b4f55 commit	refs/remotes/rawrxda/feature/pure-masm-ide-integration
+0fbaf3d6f02c37ae26532b40dac6bc8dcefb5bb5 commit	refs/remotes/rawrxda/feature/singularity-aperture-v126-merge
+2fb188d254c43c473ea1a77c24a6e83a962936b8 commit	refs/remotes/rawrxda/feature/singularity-aperture-v126-merge-phase7a
+8f280dde4ddded01fc5efdf131403a3b154862f0 commit	refs/remotes/rawrxda/feature/tool-ecosystem-unblock-autonomy
+57b261c95df9b2a2aeb7b8d32a918b5c2a297117 commit	refs/remotes/rawrxda/fix/model-load-crash-streaming-state-unification
+8c6ab4c6b530d3a3b3b53cd12fb081f5d4e2893a commit	refs/remotes/rawrxda/fix/seh-regression-ctest
+f68bebfa24ae9f727675ee13605320a168e48bf0 commit	refs/remotes/rawrxda/hardening/text-editor-win32
+04f9c899cb93428c89d2af52a8e304a0b0bd80b0 commit	refs/remotes/rawrxda/lazy-production-init
+f61337fb17277c89a59ac5877464b0553f4009d2 commit	refs/remotes/rawrxda/main
+034e4d8d20ccab1e3ebf7336c9f41e482f55e990 commit	refs/remotes/rawrxda/master
+4b8171e82b51ccf9b6e525d15730118ecd1a894e commit	refs/remotes/rawrxda/parity-reconcile-safety
+f68bebfa24ae9f727675ee13605320a168e48bf0 commit	refs/remotes/rawrxda/pr18-head
+8085fd48f881ece4523c46b0ab007f4d59fef8f7 commit	refs/remotes/rawrxda/session_12183a42
+132d77098a0189b41d26358e49f55ae7395e7483 commit	refs/remotes/rawrxda/sovereign/push-20260526-125126
+a30c03129efb106476df3375e50383ac365ecf10 commit	refs/remotes/rawrxda/sync-source-20260114
+461fb3ca471dba241f056b486f3d0003e83c2d11 commit	refs/remotes/rawrxda/temp_clean_branch_pr2
+

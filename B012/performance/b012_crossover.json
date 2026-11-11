@@ -1,0 +1,101 @@
+{
+  "b012_version": "0.1.0",
+  "timestamp": "2026-08-10T04:15:00Z",
+  "experiment": "B012 Amortization Crossover",
+  "model": "unlock-1B-Q4_K_M.gguf",
+  "prompt": "Hi",
+  "prompt_tokens": 3,
+  "status": "COMPLETED_PARTIAL",
+  "note": "Sweep interrupted at decode_length=64 B011 (iteration 29/64). Certified evidence boundary: decode lengths 1–32. Decode lengths 64/128/256 were started but not completed; they are excluded from the certified conclusion.",
+  "results": [
+    {
+      "decode_length": 1,
+      "b010_wall_ms": 21028,
+      "b011_wall_ms": 20282,
+      "delta_ms": -746,
+      "delta_pct": -3.55,
+      "winner": "B011",
+      "b010_tok_per_sec": 0.05,
+      "b011_tok_per_sec": 0.05
+    },
+    {
+      "decode_length": 2,
+      "b010_wall_ms": 26073,
+      "b011_wall_ms": 25481,
+      "delta_ms": -592,
+      "delta_pct": -2.27,
+      "winner": "B011",
+      "b010_tok_per_sec": 0.08,
+      "b011_tok_per_sec": 0.08
+    },
+    {
+      "decode_length": 8,
+      "b010_wall_ms": 59522,
+      "b011_wall_ms": 57070,
+      "delta_ms": -2452,
+      "delta_pct": -4.12,
+      "winner": "B011",
+      "b010_tok_per_sec": 0.13,
+      "b011_tok_per_sec": 0.14
+    },
+    {
+      "decode_length": 16,
+      "b010_wall_ms": 108168,
+      "b011_wall_ms": 102073,
+      "delta_ms": -6095,
+      "delta_pct": -5.63,
+      "winner": "B011",
+      "b010_tok_per_sec": 0.15,
+      "b011_tok_per_sec": 0.16
+    },
+    {
+      "decode_length": 32,
+      "b010_wall_ms": 192634,
+      "b011_wall_ms": 183950,
+      "delta_ms": -8684,
+      "delta_pct": -4.51,
+      "winner": "B011",
+      "b010_tok_per_sec": 0.17,
+      "b011_tok_per_sec": 0.17
+    },
+    {
+      "decode_length": 64,
+      "b010_wall_ms": 363980,
+      "b011_wall_ms": null,
+      "delta_ms": null,
+      "delta_pct": null,
+      "winner": "INCOMPLETE",
+      "note": "B011 run interrupted at iteration 29/64. B010 completed successfully."
+    }
+  ],
+  "crossover_analysis": {
+    "crossover_found": true,
+    "crossover_decode_length": 0,
+    "crossover_description": "B011 is faster than B010 at every tested decode length including decode_length=1. There is no positive crossover point — the cache provides immediate benefit even for single-token generation.",
+    "hypothesis_status": "REFUTED",
+    "original_hypothesis": "B011 cache would be slower for short prompts due to first-pass copy overhead, becoming faster only after 100+ tokens.",
+    "actual_findings": [
+      "B011 is 3.5% faster even at decode_length=1",
+      "Benefit grows to 5.6% at decode_length=16",
+      "Benefit stabilizes around 4-5% for longer sequences",
+      "First-pass copy overhead is amortized within the prefill phase itself"
+    ]
+  },
+  "telemetry_summary": {
+    "b010_baseline": {
+      "bytes_read_mb": 8972,
+      "maps": 983,
+      "unmaps": 983,
+      "hit_rate": "0%"
+    },
+    "b011_cache": {
+      "bytes_read_mb": 2010,
+      "maps": 197,
+      "unmaps": 197,
+      "hit_rate": "79.96%",
+      "bytes_reduction_pct": 77.6,
+      "maps_reduction_pct": 80.0
+    }
+  },
+  "conclusion": "B011 weight residency cache is the preferred implementation for the tested workload. Across decode lengths 1–32, it reduced wall time by 2.27–5.63% relative to B010, with no observed regression in the certification sweep. The mandatory prefill establishes residency state, so the expected initialization penalty does not materialize. The measured crossover is effectively below decode length 1. Decode lengths 64/128/256 were started but not completed; they are excluded from the certified evidence boundary."
+}

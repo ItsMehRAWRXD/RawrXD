@@ -1,0 +1,37 @@
+name: Native Win32 No-Dependency Build Gate
+on:
+  push:
+    paths:
+      - 'CMakeLists.txt'
+      - 'src/win32app/**'
+      - 'src/deep2/**'
+      - '.github/workflows/native-win32-nodeps-build.yml'
+  pull_request:
+    paths:
+      - 'CMakeLists.txt'
+      - 'src/win32app/**'
+      - 'src/deep2/**'
+      - '.github/workflows/native-win32-nodeps-build.yml'
+  workflow_dispatch:
+jobs:
+  native-ide:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure native IDE without Qt or downloads
+        shell: pwsh
+        run: |
+          cmake -S . -B build-nodeps -G "Visual Studio 17 2022" -A x64 -DRAWRXD_REQUIRE_QT=OFF -DENABLE_VULKAN=OFF -DUSE_ZLIB_FETCHCONTENT=OFF -DFETCHCONTENT_ZLIB=OFF -DCMAKE_DISABLE_FIND_PACKAGE_Qt6=TRUE -DCMAKE_DISABLE_FIND_PACKAGE_ZLIB=TRUE -DFETCHCONTENT_FULLY_DISCONNECTED=ON -DFETCHCONTENT_UPDATES_DISCONNECTED=ON
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build native IDE target
+        shell: pwsh
+        run: |
+          cmake --build build-nodeps --config Release --target RawrXD-Win32IDE-Native --parallel 4
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify native executable exists
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem build-nodeps -Recurse -Filter RawrXD-Win32IDE-Native.exe | Select-Object -First 1
+          if (-not $exe) { throw "Native IDE executable not produced" }
+          Get-FileHash $exe.FullName -Algorithm SHA256 | Format-List

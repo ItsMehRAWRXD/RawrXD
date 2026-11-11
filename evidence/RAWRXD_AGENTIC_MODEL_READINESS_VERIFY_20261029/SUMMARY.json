@@ -1,0 +1,42 @@
+﻿{
+    "schema":  "RAWRXD_AGENTIC_MODEL_READINESS_001",
+    "cli":  "F:\\rawrxd\\build_ide\\bin-msvc\\rawr.exe",
+    "cli_sha256":  "1C4B2DC08C00DC2DBBA2F6FB220827F361CD33C47A8977318CCD239370114F76",
+    "timestamp_utc":  "2026-10-29T04:06:56.6077592Z",
+    "results":  [
+                    {
+                        "schema":  "RAWRXD_AGENTIC_MODEL_READINESS_001",
+                        "model":  "qwen3:8b",
+                        "workspace_root":  "F:\\rawrxd",
+                        "fixture":  "F:\\rawrxd\\evidence\\RAWRXD_AGENTIC_MODEL_READINESS_VERIFY_20261029\\qwen3_8b\\fixture.cpp",
+                        "capabilities":  [
+                                             "completion",
+                                             "tools",
+                                             "thinking"
+                                         ],
+                        "family":  "qwen3",
+                        "parameter_size":  "8.2B",
+                        "real_model_inference":  true,
+                        "motd_gate":  true,
+                        "read_tool":  false,
+                        "edit_tool":  false,
+                        "readback_tool":  false,
+                        "file_changed_count":  1,
+                        "diff_verified":  true,
+                        "synthetic_success":  0,
+                        "status":  "FAIL",
+                        "exit_code":  0,
+                        "elapsed_ms":  5237,
+                        "tool_names":  [
+
+                                       ],
+                        "tool_failure_count":  0,
+                        "before_sha256":  "10E1BEF74A8CA32ADD5C7A64BCCA08F187122B81FF5912E2B48D7F8AD3A982DA",
+                        "after_sha256":  "3B026FF0DE8EED9AFF1242BA58C86DBBC4F4D6D0DB8D58654767D71F2E2CC534",
+                        "timestamp_utc":  "2026-10-29T04:06:56.5936381Z"
+                    }
+                ],
+    "pass":  0,
+    "nonpass":  1,
+    "promotion":  "DISABLED"
+}

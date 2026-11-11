@@ -1,0 +1,81 @@
+﻿{
+  "schema": "RAWRXD_NATIVE_OBJECT_INVENTORY_001",
+  "generated_utc": "2026-10-27T10:00:00Z",
+  "method": "obj_manifest.txt_explicit_only_no_recursive_scan",
+  "manifest": "F:\\rawrxd\\evidence\\RAWRXD_SOVEREIGN_LINKER_CERT_001\\obj_manifest.txt",
+  "objects_scanned": 10,
+  "found": 4,
+  "not_found": 6,
+  "freestanding_linkable": 2,
+  "runtime_dependent": 2,
+  "unsupported": 0,
+  "fail_closed": "RUNTIME_DEPENDENT/UNSUPPORTED => stderr diagnostic + nonzero exit; no silent drop",
+  "corpus_executed_sha_reference": "08f4f4f26f40e1156857908862dae266d70ea910c3600af094565bdc26896436",
+  "ENTRY_STUB": "CLOSED",
+  "PROMOTE": 0,
+  "objects": [
+    {
+      "path": "F:\\rawrxd\\build_5os_win\\CMakeFiles\\rawrxd_link.dir\\src\\toolchain\\linker\\main.c.obj",
+      "status": "FOUND",
+      "classification": "FREESTANDING_LINKABLE",
+      "reasons": ["sovereign_linker_c_unit"],
+      "note": "Tooling object for rawrxd_link itself, not a Deep2/REAP product TU"
+    },
+    {
+      "path": "F:\\rawrxd\\build_5os_win\\CMakeFiles\\rawrxd_link.dir\\src\\toolchain\\linker\\section_merge.c.obj",
+      "status": "FOUND",
+      "classification": "FREESTANDING_LINKABLE",
+      "reasons": ["sovereign_linker_c_unit"]
+    },
+    {
+      "path": "F:\\rawrxd\\build_reap\\CMakeFiles\\deep2_bench_tps.dir\\tools\\deep2_bench_tps.cpp.obj",
+      "status": "FOUND",
+      "classification": "RUNTIME_DEPENDENT",
+      "reasons": ["crt_cpp_or_helpers", "cpp_translation_unit"],
+      "rejection_if_linked_by_rawrxd_link": "diagnostic_and_nonzero_exit"
+    },
+    {
+      "path": "F:\\rawrxd\\build_ide\\CMakeFiles\\cpu_engine_e2e.dir\\src\\cpu_inference_engine_impl.cpp.obj",
+      "status": "FOUND",
+      "classification": "RUNTIME_DEPENDENT",
+      "reasons": ["crt_cpp_or_helpers", "cpp_translation_unit"],
+      "rejection_if_linked_by_rawrxd_link": "diagnostic_and_nonzero_exit"
+    },
+    {
+      "path": "F:\\rawrxd\\build_5os_win\\CMakeFiles\\deep2_bench_tps.dir\\tools\\deep2_bench_tps.cpp.obj",
+      "status": "NOT_FOUND",
+      "classification": "NOT_FOUND",
+      "reasons": ["manifest_entry_missing_on_disk"]
+    },
+    {
+      "path": "F:\\rawrxd\\build_5os_win\\CMakeFiles\\deep2_engine_lib.dir\\src\\deep2\\runtime_graph_executor.cpp.obj",
+      "status": "NOT_FOUND",
+      "classification": "NOT_FOUND",
+      "reasons": ["manifest_entry_missing_on_disk"]
+    },
+    {
+      "path": "F:\\rawrxd\\build_5os_win\\CMakeFiles\\deep2_engine_lib.dir\\src\\deep2\\quant_dot_dispatch.cpp.obj",
+      "status": "NOT_FOUND",
+      "classification": "NOT_FOUND",
+      "reasons": ["manifest_entry_missing_on_disk"]
+    },
+    {
+      "path": "F:\\rawrxd\\build_5os_win\\CMakeFiles\\rawr-reap.dir\\src\\reap_corpus_cli.cpp.obj",
+      "status": "NOT_FOUND",
+      "classification": "NOT_FOUND",
+      "reasons": ["manifest_entry_missing_on_disk"]
+    },
+    {
+      "path": "F:\\rawrxd\\build_reap\\CMakeFiles\\rawr-reap.dir\\src\\reap_corpus_cli.cpp.obj",
+      "status": "NOT_FOUND",
+      "classification": "NOT_FOUND",
+      "reasons": ["manifest_entry_missing_on_disk"]
+    },
+    {
+      "path": "F:\\rawrxd\\build_ide\\CMakeFiles\\rawr-reap.dir\\src\\reap_corpus_cli.cpp.obj",
+      "status": "NOT_FOUND",
+      "classification": "NOT_FOUND",
+      "reasons": ["manifest_entry_missing_on_disk"]
+    }
+  ]
+}

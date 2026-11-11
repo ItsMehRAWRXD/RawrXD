@@ -1,0 +1,28 @@
+IDR_MAIN_MENU MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENU "&New",            IDM_FILE_NEW,        GF_GRAYED
+        MENU "&Open...\tCtrl+O", IDM_FILE_OPEN, GF_GRAYED
+        MENU "S&ave\tCtrl+S",  IDM_FILE_SAVE,       GF_GRAYED
+        MENU "Save &As...\tCtrl+Shift+S", IDM_FILE_SAVE_AS, GF_GRAYED
+        SEPARATOR
+        MENU "E&xit",          IDM_EXIT,            GF_GRAYED
+    END
+    POPUP "&Build"
+    BEGIN
+        MENU "&Compile",        IDM_BUILD_COMPILE,   GF_GRAYED
+        MENU "E&xecute",      IDM_BUILD_RUN,       GF_GRAYED
+        MENU "C&llean",       IDM_BUILD_CLEAN,     GF_GRAYED
+        SEPARATOR
+        MENU "&Analyze PE",     IDM_TOOLS_ANALYZE,   GF_GRAYED
+    END
+    POPUP "&Tools"
+    BEGIN
+        MENU "&Options...\tCtrl+P", IDM_TOOLS_OPTIONS, GF_GRAYED
+    END
+    POPUP "(&Help)"
+    BEGIN
+        MENU "&About...\tF1",    IDM_HELP_ABOUT,      GF_GRAYED
+    END
+END

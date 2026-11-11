@@ -1,0 +1,31 @@
+# T15 Disk Verification — FAIL Confirmed
+
+ASOF_UTC=2026-11-03T15:07:00Z
+AUTHORITY_DISK=`T15_DISK_VERIFY.md`
+
+```
+T15_READFILE_E2E=PASS
+T15_EDITFILES_TOOL_EXECUTION=PASS
+BEFORE_EQUALS_ONE_PERSISTED=PASS
+REQUIRED_EDITED_MARKER=FAIL
+T15_EDITFILES_DISK_CONTENT=FAIL
+T15_EDITFILES_PERSISTENCE=FAIL
+T15_FULL_ACCEPTANCE=PENDING
+PHASE3_T15_GATE_CREDIT=PASS
+T15_EDIT_CONTENT_RESIDUAL=OPEN
+
+NEXT_GATE=T15_EDIT_ARGUMENT_AND_CONTENT_ISOLATION
+ROOT_CAUSE=NOT_PROVEN
+EXECUTION_AUTHORIZATION=PENDING
+NOTE=Phase3 Finish-25 credits T15 tools/4107 PASS; disk-content FAIL residual remains open.
+
+WIN32IDE_SHA=3B720981EC567D60461B874F0C1EE46E03F85DB58F6E1788CBEE31F8B2CCAD5F
+WIN32IDE_CERTIFIED=0
+PROMOTE=0
+REBUILD=HELD
+```
+
+Disk verify supersedes tool-success narrative. `file_changed` ≠ full requested content.
+Do not classify filesystem persistence defect until editFiles args + post-edit bytes prove that.
+Candidate-only no-rebuild diagnostic for T15 requires **explicit authorization** (held).
+Agent T15 ≠ Win32IDE Cancel/T17 certification.

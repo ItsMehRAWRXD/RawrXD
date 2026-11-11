@@ -1,0 +1,142 @@
+﻿{
+    "_schema":  "rawrxd-gate-ledger/1",
+    "_note":  "Machine-readable gate ledger. A gate is PASS only with implementation, build, real execution, acceptance thresholds and reproducible evidence all green. BLOCKED gates are never simulated or silently marked PASS.",
+    "baseline_head":  "4213f56908",
+    "updated":  "2026-10-14",
+    "gates":  {
+                  "G01":  {
+                              "status":  "PASS",
+                              "title":  "Fail-closed ghost-cache prefetch",
+                              "evidence":  "evidence/gate5_head_repro_2026-10-14/"
+                          },
+                  "G02":  {
+                              "status":  "PASS",
+                              "title":  "Chain correctness + explicit failure accounting",
+                              "evidence":  "evidence/gate5_head_repro_2026-10-14/"
+                          },
+                  "G03":  {
+                              "status":  "PASS",
+                              "title":  "TLA+ chain-leasing properties",
+                              "evidence":  "evidence/gate5_head_repro_2026-10-14/"
+                          },
+                  "G04":  {
+                              "status":  "PASS",
+                              "title":  "Concurrent-safe residency (generation leases, in-flight pinning, fence-safe eviction, tick-gated prefetch)",
+                              "certification_id":  "RAWRXD_G04_001",
+                              "reopened_then_restored":  true,
+                              "root_cause_of_reopen":  "std::sort comparator in EvictLeastRecentlyUsed read the live atomic lastUseSequence and the stateful GhostCache score from inside the comparator, so the relation was not a strict weak ordering (comp(a,b) and comp(b,a) could both be true). std::sort is undefined for a non-conforming comparator; std::_Insertion_sort_unchecked walked *--_Prev off the front of the candidate vector -\u003e ASan heap-buffer-overflow READ 8 bytes before the buffer. Fixed by snapshotting each candidate\u0027s score once under tensorsMutex_ and sorting immutable snapshot values with a stable identity tie-break.",
+                              "also_fixed":  [
+                                                 "TOCTOU in all six AcquireTensor hand-out sites: state read then pointers captured and lease taken unlocked; now unified in TakeLeaseAtomic which re-validates state and pins the mapping in the same critical section as the pointer capture",
+                                                 "Eviction now performs transition + free + generation advance inside one tensorsMutex_ critical section and re-validates the pin immediately before freeing",
+                                                 "Stale-lease releases refused without decrementing the live mapping\u0027s pin count",
+                                                 "Generation advance saturates at UINT32_MAX, never wrapping to a revalidatable value",
+                                                 "Implemented the missing VwaResolveBlocks definition (declared in VwaRangeAbi.hpp and called from ExecuteNvmeToRam but defined nowhere -\u003e LNK2019)",
+                                                 "Bounded the ReserveHot/ReserveWarmCompressed/ReserveWarmStaged CAS loops (RAWRXD_RENT_PIN_001)",
+                                                 "Eviction-deferred livelock guard: pinned-only working set fails closed instead of looping or freeing a live mapping (RAWRXD_EVICT_LIVELOCK_001)",
+                                                 "RAWRXD_TICKLATCH_001 prefetch warm-up latch wired to ExecuteNvmeToRam completion"
+                                             ],
+                              "acceptance":  {
+                                                 "generation_advances_on_remap":  "PASS",
+                                                 "generation_unchanged_on_cache_hit":  "PASS",
+                                                 "stale_lease_rejected":  "PASS",
+                                                 "stale_release_does_not_decrement_live_pin":  "PASS",
+                                                 "generation_overflow_cannot_revalidate":  "PASS",
+                                                 "active_lease_prevents_eviction":  "PASS",
+                                                 "in_flight_transfer_prevents_eviction":  "PASS",
+                                                 "prefetch_tick_latch":  "PASS",
+                                                 "concurrent_pin_reconciliation":  "PASS",
+                                                 "stale_lease_false_acceptances":  0,
+                                                 "pinned_or_in_flight_evictions":  0,
+                                                 "access_violations":  0,
+                                                 "leaked_pins":  0,
+                                                 "asan_reports":  0,
+                                                 "exit_code":  0,
+                                                 "repeated_runs_clean":  "12/12"
+                                             },
+                              "evidence_dir":  "evidence/gate5_head_repro_2026-10-14/g04_concurrent_safety/",
+                              "test":  "src/deep2/G04_Concurrent_Residency_Test.cpp",
+                              "known_limitations":  [
+                                                        "VwaResolveBlocks saturation at UINT32_MAX is guaranteed by the saturating CAS advance and verified by inspection; reaching the ceiling needs ~4.29e9 retire/re-map cycles and is not a runnable assertion. The test proves monotonic advance and that 0 is never returned to.",
+                                                        "Legacy AcquireForCpu / BindForGpuCompute still return raw pointers without a generation lease. They are outside the Cyclone acquire/release contract this gate certifies but carry the same latent race and should be migrated to TakeLeaseAtomic."
+                                                    ]
+                          },
+                  "G05":  {
+                              "status":  "PASS",
+                              "title":  "Q2_K/Q3_K/Q5_K native kernels with numerical parity",
+                              "blocker":  null,
+                              "certification_id":  "RAWRXD_G05_001",
+                              "root_causes_fixed":  [
+                                                        "block_q2_K/block_q3_K/block_q5_K field order in QuantKernelRegistry.hpp did not match ggml-common.h (q2_K/q3_K/q5_K put the fp16 super-scales at the END of the block). Now asserted by static_assert on size and offsetof per field.",
+                                                        "vec_dot_q2_K_q8_K_single applied one scale byte to all 32 elements of a group; ggml uses scales[8n+2j] for the first 16 and scales[8n+2j+1] for the second 16.",
+                                                        "vec_dot_q2_K_q8_K_single paired the min term with bsums[2n + j/2] (4 of 8 relevant sums, replicated); ggml uses all 16 high nibbles paired 1:1 with bsums[0..15].",
+                                                        "vec_dot_q3_K_q8_K_single advanced q8 by 128 per super-block instead of 32 per group, and read hmask[32*n + l] past the 32-byte hmask; ggml reuses the same 32 hmask bytes with the mask bit continuing to shift.",
+                                                        "vec_dot_q5_K_q8_K_single had a stack buffer overrun (a[32*h+32+l] past int8_t a[256]) and indexed qs/qh independently where ggml walks them in lockstep."
+                                                    ],
+                              "parity_criterion":  "Order-independent: |Deep2 - exact_double| \u003c= |ggml_f32 - exact_double| + slack. ggml_f32 is the verbatim transcription of ggml_vec_dot_q*_K_q8_K_generic, so Deep2 must be at least as accurate as ggml\u0027s own float32 accumulation. A mathematical error cannot pass this bound.",
+                              "acceptance":  {
+                                                 "asan_800_blocks":  "0 reports",
+                                                 "q2k_adversarial_geometry":  "PASS",
+                                                 "q2k_dequant_walk":  "PASS (800 blocks x 256 weights = 204800 weights, exact)",
+                                                 "q5k_dot_vs_ggml":  "PASS (worst rel 2.46e-05)",
+                                                 "block_layout_sizes":  "PASS (84/110/144/176/210/292)",
+                                                 "q2k_dot_vs_ggml":  "PASS (bit-identical to ggml_f32, rel diff 0)",
+                                                 "block_field_offsets":  "PASS",
+                                                 "exit_code":  0,
+                                                 "existing_q8k_q4k_q6k_parity_regression":  "PASS (0 mismatch)",
+                                                 "q3k_dot_vs_ggml":  "PASS (worst Deep2 rel 2.4e-05)"
+                                             },
+                              "evidence_dir":  "evidence/gate5_head_repro_2026-10-14/g05_quant_parity/",
+                              "test":  "src/deep2/test_q2k_q3k_parity.cpp"
+                          },
+                  "G06":  {
+                              "status":  "BLOCKED",
+                              "title":  "Cross-architecture parity",
+                              "blocker":  "nemotron_h SSM/hybrid parity broken"
+                          },
+                  "G07":  {
+                              "status":  "BLOCKED",
+                              "title":  "DeepSeek-671B certification",
+                              "blocker":  "No real DeepSeek-671B GGUF available"
+                          },
+                  "G08":  {
+                              "status":  "BLOCKED",
+                              "title":  "Full parity",
+                              "blocker":  "deepseek2 long-sustained GPU runs unstable"
+                          },
+                  "G11":  {
+                              "status":  "PENDING",
+                              "title":  "Paged KV-cache"
+                          },
+                  "G12":  {
+                              "status":  "PENDING",
+                              "title":  "Long-context memory scheduling"
+                          },
+                  "G13":  {
+                              "status":  "PENDING",
+                              "title":  "AMD/ROCm performance optimization"
+                          },
+                  "G15":  {
+                              "status":  "FAIL",
+                              "title":  "\u003e=150 tokens/sec end-to-end",
+                              "blocker":  "Measured ~4.5 TPS (llama) vs 150 TPS target (~33x gap)"
+                          },
+                  "G16":  {
+                              "status":  "BLOCKED",
+                              "title":  "Win32IDE IDE gate",
+                              "blocker":  "Qt built with v142 (VS2019) vs VS2022 v143 ABI mismatch"
+                          },
+                  "G18":  {
+                              "status":  "BLOCKED",
+                              "title":  "Agent harness",
+                              "blocker":  "Same Qt ABI mismatch as G16"
+                          },
+                  "G19":  {
+                              "status":  "PENDING",
+                              "title":  "Endurance"
+                          },
+                  "G20":  {
+                              "status":  "PENDING",
+                              "title":  "Release"
+                          }
+              }
+}

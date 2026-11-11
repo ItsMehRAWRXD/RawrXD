@@ -1,0 +1,234 @@
+  [token] pos=0 token=1 cache_sizes=0,0,...
+  [emb] token=1 n_in=2688 vocab=131072 row_stride=1848 bytes=1848 type=6 dims=[2688,1]
+  [emb] dequant got=2688 want=2688 type_size_needed
+[exec] Linear block=0 bName='blk.0.ssm_out.weight' bSlot=11 aName='ssm_out' outName='attn_proj' xi=4096
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=0 q_idx=1
+[qdot] descriptor allocated ds=000002A81049DA80 count=1
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] dispatch complete ok=1 fence/submit done
+[exec] Linear block=2 bName='blk.2.ssm_out.weight' bSlot=27 aName='ssm_out' outName='attn_proj' xi=4096
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=3 q_idx=4
+[qdot] descriptor allocated ds=000002A81049DAC0 count=2
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] dispatch complete ok=1 fence/submit done
+[exec] Linear block=4 bName='blk.4.ssm_out.weight' bSlot=43 aName='ssm_out' outName='attn_proj' xi=4096
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=6 q_idx=7
+[qdot] descriptor allocated ds=000002A81049DB00 count=3
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] dispatch complete ok=1 fence/submit done
+[exec] Linear block=5 bName='blk.5.attn_q.weight' bSlot=47 aName='attn_norm' outName='q' xi=2688
+[exec] Linear block=5 bName='blk.5.attn_k.weight' bSlot=44 aName='attn_norm' outName='k' xi=2688
+[exec] Linear block=5 bName='blk.5.attn_v.weight' bSlot=48 aName='attn_norm' outName='v' xi=2688
+[exec] Linear block=5 bName='blk.5.attn_output.weight' bSlot=46 aName='attn_out' outName='attn_proj' xi=4096
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=9 q_idx=10
+[qdot] descriptor allocated ds=000002A81049DB40 count=4
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] dispatch complete ok=1 fence/submit done
+[exec] Linear block=7 bName='blk.7.ssm_out.weight' bSlot=64 aName='ssm_out' outName='attn_proj' xi=4096
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=12 q_idx=13
+[qdot] descriptor allocated ds=000002A81049DB80 count=5
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] dispatch complete ok=1 fence/submit done
+[exec] Linear block=9 bName='blk.9.ssm_out.weight' bSlot=80 aName='ssm_out' outName='attn_proj' xi=4096
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=15 q_idx=16
+[qdot] descriptor allocated ds=000002A81049DBC0 count=6
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] dispatch complete ok=1 fence/submit done
+[exec] Linear block=11 bName='blk.11.ssm_out.weight' bSlot=96 aName='ssm_out' outName='attn_proj' xi=4096
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=18 q_idx=19
+[qdot] descriptor allocated ds=000002A81049DC00 count=7
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] dispatch complete ok=1 fence/submit done
+[exec] Linear block=12 bName='blk.12.attn_q.weight' bSlot=100 aName='attn_norm' outName='q' xi=2688
+[exec] Linear block=12 bName='blk.12.attn_k.weight' bSlot=97 aName='attn_norm' outName='k' xi=2688
+[exec] Linear block=12 bName='blk.12.attn_v.weight' bSlot=101 aName='attn_norm' outName='v' xi=2688
+[exec] Linear block=12 bName='blk.12.attn_output.weight' bSlot=99 aName='attn_out' outName='attn_proj' xi=4096
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=21 q_idx=22
+[qdot] descriptor allocated ds=000002A81049DC40 count=8
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] dispatch complete ok=1 fence/submit done
+[exec] Linear block=14 bName='blk.14.ssm_out.weight' bSlot=117 aName='ssm_out' outName='attn_proj' xi=4096
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=24 q_idx=25
+[qdot] descriptor allocated ds=000002A81049DC80 count=9
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] dispatch complete ok=1 fence/submit done
+[exec] Linear block=16 bName='blk.16.ssm_out.weight' bSlot=133 aName='ssm_out' outName='attn_proj' xi=4096
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=27 q_idx=28
+[qdot] descriptor allocated ds=000002A81049DCC0 count=10
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] dispatch complete ok=1 fence/submit done
+[exec] Linear block=18 bName='blk.18.ssm_out.weight' bSlot=149 aName='ssm_out' outName='attn_proj' xi=4096
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=30 q_idx=31
+[qdot] descriptor allocated ds=000002A81049DD00 count=11
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] dispatch complete ok=1 fence/submit done
+[exec] Linear block=19 bName='blk.19.attn_q.weight' bSlot=153 aName='attn_norm' outName='q' xi=2688
+[exec] Linear block=19 bName='blk.19.attn_k.weight' bSlot=150 aName='attn_norm' outName='k' xi=2688
+[exec] Linear block=19 bName='blk.19.attn_v.weight' bSlot=154 aName='attn_norm' outName='v' xi=2688
+[exec] Linear block=19 bName='blk.19.attn_output.weight' bSlot=152 aName='attn_out' outName='attn_proj' xi=4096
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=33 q_idx=34
+[qdot] descriptor allocated ds=000002A81049DD40 count=12
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] dispatch complete ok=1 fence/submit done
+[exec] Linear block=21 bName='blk.21.ssm_out.weight' bSlot=170 aName='ssm_out' outName='attn_proj' xi=4096
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=36 q_idx=37
+[qdot] descriptor allocated ds=000002A81049DD80 count=13
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] dispatch complete ok=1 fence/submit done
+[exec] Linear block=23 bName='blk.23.ssm_out.weight' bSlot=186 aName='ssm_out' outName='attn_proj' xi=4096
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=39 q_idx=40
+[qdot] descriptor allocated ds=000002A81049DDC0 count=14
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] dispatch complete ok=1 fence/submit done
+[exec] Linear block=25 bName='blk.25.ssm_out.weight' bSlot=202 aName='ssm_out' outName='attn_proj' xi=4096
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=42 q_idx=43
+[qdot] descriptor allocated ds=000002A81049DE00 count=15
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] dispatch complete ok=1 fence/submit done
+[exec] Linear block=26 bName='blk.26.attn_q.weight' bSlot=206 aName='attn_norm' outName='q' xi=2688
+[exec] Linear block=26 bName='blk.26.attn_k.weight' bSlot=203 aName='attn_norm' outName='k' xi=2688
+[exec] Linear block=26 bName='blk.26.attn_v.weight' bSlot=207 aName='attn_norm' outName='v' xi=2688
+[exec] Linear block=26 bName='blk.26.attn_output.weight' bSlot=205 aName='attn_out' outName='attn_proj' xi=4096
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=45 q_idx=46
+[qdot] descriptor allocated ds=000002A81049DE40 count=16
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] dispatch complete ok=1 fence/submit done
+[exec] Linear block=28 bName='blk.28.ssm_out.weight' bSlot=223 aName='ssm_out' outName='attn_proj' xi=4096
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=48 q_idx=49
+[qdot] descriptor allocated ds=000002A81049DE80 count=17
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] dispatch complete ok=1 fence/submit done
+[exec] Linear block=30 bName='blk.30.ssm_out.weight' bSlot=239 aName='ssm_out' outName='attn_proj' xi=4096
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=51 q_idx=52
+[qdot] descriptor allocated ds=000002A81049DEC0 count=18
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] dispatch complete ok=1 fence/submit done
+[exec] Linear block=32 bName='blk.32.ssm_out.weight' bSlot=255 aName='ssm_out' outName='attn_proj' xi=4096
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=54 q_idx=55
+[qdot] descriptor allocated ds=000002A81049DF00 count=19
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] dispatch complete ok=1 fence/submit done
+[exec] Linear block=33 bName='blk.33.attn_q.weight' bSlot=259 aName='attn_norm' outName='q' xi=2688
+[exec] Linear block=33 bName='blk.33.attn_k.weight' bSlot=256 aName='attn_norm' outName='k' xi=2688
+[exec] Linear block=33 bName='blk.33.attn_v.weight' bSlot=260 aName='attn_norm' outName='v' xi=2688
+[exec] Linear block=33 bName='blk.33.attn_output.weight' bSlot=258 aName='attn_out' outName='attn_proj' xi=4096
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=57 q_idx=58
+[qdot] descriptor allocated ds=000002A81049DF40 count=20
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] dispatch complete ok=1 fence/submit done
+[exec] Linear block=35 bName='blk.35.ssm_out.weight' bSlot=276 aName='ssm_out' outName='attn_proj' xi=4096
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=60 q_idx=61
+[qdot] descriptor allocated ds=000002A81049DF80 count=21
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] dispatch complete ok=1 fence/submit done
+[exec] Linear block=37 bName='blk.37.ssm_out.weight' bSlot=292 aName='ssm_out' outName='attn_proj' xi=4096
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=63 q_idx=64
+[qdot] descriptor allocated ds=000002A81049DFC0 count=22
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] dispatch complete ok=1 fence/submit done
+[exec] Linear block=39 bName='blk.39.ssm_out.weight' bSlot=308 aName='ssm_out' outName='attn_proj' xi=4096
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=66 q_idx=67
+[qdot] descriptor allocated ds=000002A81049E000 count=23
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] dispatch complete ok=1 fence/submit done
+[exec] Linear block=41 bName='blk.41.ssm_out.weight' bSlot=324 aName='ssm_out' outName='attn_proj' xi=4096
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=69 q_idx=70
+[qdot] descriptor allocated ds=000002A81049E040 count=24
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] dispatch complete ok=1 fence/submit done
+[exec] Linear block=42 bName='blk.42.attn_q.weight' bSlot=328 aName='attn_norm' outName='q' xi=2688
+[exec] Linear block=42 bName='blk.42.attn_k.weight' bSlot=325 aName='attn_norm' outName='k' xi=2688
+[exec] Linear block=42 bName='blk.42.attn_v.weight' bSlot=329 aName='attn_norm' outName='v' xi=2688
+[exec] Linear block=42 bName='blk.42.attn_output.weight' bSlot=327 aName='attn_out' outName='attn_proj' xi=4096
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=72 q_idx=73
+[qdot] descriptor allocated ds=000002A81049E080 count=25
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] dispatch complete ok=1 fence/submit done
+[exec] Linear block=44 bName='blk.44.ssm_out.weight' bSlot=345 aName='ssm_out' outName='attn_proj' xi=4096
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=75 q_idx=76
+[qdot] descriptor allocated ds=000002A81049E0C0 count=26
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] dispatch complete ok=1 fence/submit done
+[exec] Linear block=46 bName='blk.46.ssm_out.weight' bSlot=361 aName='ssm_out' outName='attn_proj' xi=4096
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=78 q_idx=79
+[qdot] descriptor allocated ds=000002A81049E100 count=27
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] dispatch complete ok=1 fence/submit done
+[exec] Linear block=48 bName='blk.48.ssm_out.weight' bSlot=377 aName='ssm_out' outName='attn_proj' xi=4096
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=81 q_idx=82
+[qdot] descriptor allocated ds=000002A81049E140 count=28
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] dispatch complete ok=1 fence/submit done
+[exec] Linear block=50 bName='blk.50.ssm_out.weight' bSlot=393 aName='ssm_out' outName='attn_proj' xi=4096
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=84 q_idx=85
+[qdot] descriptor allocated ds=000002A81049E180 count=29
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] dispatch complete ok=1 fence/submit done
+[exec] Linear block=52 bName='blk.52.attn_q.weight' bSlot=404 aName='attn_norm' outName='q' xi=2688
+[exec] Linear block=52 bName='blk.52.attn_k.weight' bSlot=401 aName='attn_norm' outName='k' xi=2688
+[exec] Linear block=52 bName='blk.52.attn_v.weight' bSlot=405 aName='attn_norm' outName='v' xi=2688
+[exec] Linear block=52 bName='blk.52.attn_output.weight' bSlot=403 aName='attn_out' outName='attn_proj' xi=4096
+[qdot] enter packed=6193152 q8=17472 out=10752 n_out=2688 n_in=4096 n_blocks=16
+[qdot] uploaded p_idx=87 q_idx=88
+[qdot] descriptor allocated ds=000002A81049E1C0 count=30
+[qdot] descriptors updated
+[qdot] recording dispatch
+[qdot] dispatch complete ok=1 fence/submit done

@@ -1,0 +1,19 @@
+{
+  "test": "RAWRXD_GUI_OLLAMA_CONTEXT_001",
+  "timestamp_utc": "2026-10-28T06:33:51.1125009Z",
+  "source_root": "F:\\rawrxd",
+  "executable": "F:\\rawrxd\\build_ide\\bin\\RawrXD-Win32IDE-Native.exe",
+  "sha256": "B8D4F40F9E6FBCA28F4794AC5C9967B6C17E9652A61E448710CA69303D4B14C2",
+  "health_exit": 0,
+  "model": "nemotron-3.5-lightning:30b",
+  "model_route": "Local models / Ollama",
+  "requested_context_tokens": 1048576,
+  "requested_max_output_tokens": 512,
+  "gui_selection": "PASS",
+  "gui_request_submission": "PASS",
+  "visible_response": "RAWRXD_GUI_CONTEXT_PASS",
+  "generated_response": "PASS",
+  "runtime_telemetry_log": "NOT_CAPTURED_BY_GUI_LAUNCH_WORKING_DIRECTORY",
+  "full_1m_prompt_utilization": "NOT_TESTED",
+  "notes": "Physical UI selection and response were observed through the canonical executable. The source request path clamps context to 1048576 and sends num_ctx plus num_predict to Ollama."
+}

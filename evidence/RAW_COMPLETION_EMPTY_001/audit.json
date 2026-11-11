@@ -1,0 +1,214 @@
+{
+  "certified": false,
+  "gate_count": 25,
+  "gates": [
+    {
+      "evidence": "G01.json",
+      "id": "G01",
+      "phase": "PROVENANCE",
+      "receipt_sha256": null,
+      "title": "Canonical source, model, and executable SHA-256 frozen",
+      "verification": "MISSING"
+    },
+    {
+      "evidence": "G02.json",
+      "id": "G02",
+      "phase": "NUMERICAL",
+      "receipt_sha256": null,
+      "title": "Q4_K dequantization vs independently compiled GGML",
+      "verification": "MISSING"
+    },
+    {
+      "evidence": "G03.json",
+      "id": "G03",
+      "phase": "NUMERICAL",
+      "receipt_sha256": null,
+      "title": "Q6_K dequantization vs independently compiled GGML",
+      "verification": "MISSING"
+    },
+    {
+      "evidence": "G04.json",
+      "id": "G04",
+      "phase": "NUMERICAL",
+      "receipt_sha256": null,
+      "title": "Same-expert packed weights and normalized hidden input validated",
+      "verification": "MISSING"
+    },
+    {
+      "evidence": "G05.json",
+      "id": "G05",
+      "phase": "NUMERICAL",
+      "receipt_sha256": null,
+      "title": "GPU post-SwiGLU activation captured after completion with provenance",
+      "verification": "MISSING"
+    },
+    {
+      "evidence": "G06.json",
+      "id": "G06",
+      "phase": "NUMERICAL",
+      "receipt_sha256": null,
+      "title": "One-expert GPU down output vs independent oracle full vector",
+      "verification": "MISSING"
+    },
+    {
+      "evidence": "G07.json",
+      "id": "G07",
+      "phase": "NUMERICAL",
+      "receipt_sha256": null,
+      "title": "All GPU0 routed experts full-vector parity",
+      "verification": "MISSING"
+    },
+    {
+      "evidence": "G08.json",
+      "id": "G08",
+      "phase": "NUMERICAL",
+      "receipt_sha256": null,
+      "title": "GPU0 repeated-run deterministic vector parity",
+      "verification": "MISSING"
+    },
+    {
+      "evidence": "G09.json",
+      "id": "G09",
+      "phase": "NUMERICAL",
+      "receipt_sha256": null,
+      "title": "Host-to-device and device-to-host transfer integrity",
+      "verification": "MISSING"
+    },
+    {
+      "evidence": "G10.json",
+      "id": "G10",
+      "phase": "NUMERICAL",
+      "receipt_sha256": null,
+      "title": "Frozen tolerances and worst-index receipts accepted",
+      "verification": "MISSING"
+    },
+    {
+      "evidence": "G11.json",
+      "id": "G11",
+      "phase": "MODEL",
+      "receipt_sha256": null,
+      "title": "All Kimi layers and routed experts complete",
+      "verification": "MISSING"
+    },
+    {
+      "evidence": "G12.json",
+      "id": "G12",
+      "phase": "MODEL",
+      "receipt_sha256": null,
+      "title": "MoE routing weights and aggregation parity",
+      "verification": "MISSING"
+    },
+    {
+      "evidence": "G13.json",
+      "id": "G13",
+      "phase": "MODEL",
+      "receipt_sha256": null,
+      "title": "Prefill complete with finite logits",
+      "verification": "MISSING"
+    },
+    {
+      "evidence": "G14.json",
+      "id": "G14",
+      "phase": "MODEL",
+      "receipt_sha256": null,
+      "title": "Decode 8 tokens with full logits and no fallback",
+      "verification": "MISSING"
+    },
+    {
+      "evidence": "G15.json",
+      "id": "G15",
+      "phase": "MODEL",
+      "receipt_sha256": null,
+      "title": "Decode 32 tokens with full logits and no fallback",
+      "verification": "MISSING"
+    },
+    {
+      "evidence": "G16.json",
+      "id": "G16",
+      "phase": "MODEL",
+      "receipt_sha256": null,
+      "title": "Decode 128 tokens with full logits and no fallback",
+      "verification": "MISSING"
+    },
+    {
+      "evidence": "G17.json",
+      "id": "G17",
+      "phase": "MODEL",
+      "receipt_sha256": null,
+      "title": "Full-model logits parity vs independent runner",
+      "verification": "MISSING"
+    },
+    {
+      "evidence": "G18.json",
+      "id": "G18",
+      "phase": "MODEL",
+      "receipt_sha256": null,
+      "title": "KV cache advancement and context state parity",
+      "verification": "MISSING"
+    },
+    {
+      "evidence": "G19.json",
+      "id": "G19",
+      "phase": "MODEL",
+      "receipt_sha256": null,
+      "title": "Reset, cancel, replay, resource release",
+      "verification": "MISSING"
+    },
+    {
+      "evidence": "G20.json",
+      "id": "G20",
+      "phase": "MODEL",
+      "receipt_sha256": null,
+      "title": "GPU_ONLY fail-closed admission and no silent CPU fallback",
+      "verification": "MISSING"
+    },
+    {
+      "evidence": "G21.json",
+      "id": "G21",
+      "phase": "MULTIGPU",
+      "receipt_sha256": null,
+      "title": "GPU1 confirmed nonzero compute contribution",
+      "verification": "MISSING"
+    },
+    {
+      "evidence": "G22.json",
+      "id": "G22",
+      "phase": "MULTIGPU",
+      "receipt_sha256": null,
+      "title": "Dual-GPU deterministic scheduler and expert accounting",
+      "verification": "MISSING"
+    },
+    {
+      "evidence": "G23.json",
+      "id": "G23",
+      "phase": "MULTIGPU",
+      "receipt_sha256": null,
+      "title": "Device-loss, synchronization, memory lifetime recovery",
+      "verification": "MISSING"
+    },
+    {
+      "evidence": "G24.json",
+      "id": "G24",
+      "phase": "REAP",
+      "receipt_sha256": null,
+      "title": "REAP model-size, quality floor, GGUF export and replay",
+      "verification": "MISSING"
+    },
+    {
+      "evidence": "G25.json",
+      "id": "G25",
+      "phase": "IDE",
+      "receipt_sha256": null,
+      "title": "Native IDE chat-agent-tools end-to-end with real model and receipts",
+      "verification": "MISSING"
+    }
+  ],
+  "manifest_sha256": "db2e25ab63c395c6c16aa54a938656915d84b348467dca4609124c45f05850aa",
+  "missing_or_failed_count": 25,
+  "note": "Only receipt structure checked; no model/GPU execution or hash target verified. Manual release review required.",
+  "promote": 0,
+  "schema": "RAWRXD_25_GATE_AUDIT_001/v1",
+  "status": "HOLD",
+  "structurally_complete_count": 0,
+  "tip_climb": "HOLD"
+}

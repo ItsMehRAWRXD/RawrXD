@@ -1,0 +1,28 @@
+tokens: 1: 1
+ingesting F:\models\gguf\library__nemotron-3-nano__4b.gguf ...
+arch=nemotron_h blocks=42 embd=3136 heads=40 kv=40 lora=0 kl=128 vl=128 experts=0 used=0 shared=0 dense_lead=0 rope_dim=0 eps=1e-05
+bound ops=242
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+pos=0 token=1 argmax=8424 max_logit=10.645787 (4843.5 ms)
+  op traces: 242
+  [PASS] forward executed quantized projections
+  [PASS] every dot has a recorded dispatch decision
+  [PASS] no missing kernel silently became a success
+  [PASS] no unauthorized fallback
+  [PASS] forward produced finite outputs
+  [PASS] all expected layers bound
+GATE4_PASS config=gpu dots=54 vulkan=54 cpu=0 gpu_calls=93 cpu_calls=0 fallback=
+Released all tensors
+Vulkan resources cleaned up successfully

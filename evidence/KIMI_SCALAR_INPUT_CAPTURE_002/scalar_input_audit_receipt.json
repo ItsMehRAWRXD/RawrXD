@@ -1,0 +1,27 @@
+{
+  "certified": false,
+  "gpu_output_witness": "ABSENT",
+  "identity": {
+    "expert": 0,
+    "hidden_dim": 7168,
+    "intermediate_dim": 2048,
+    "layer": 1,
+    "stick": 0
+  },
+  "input_sha256": {
+    "down": "8b2c680d14f8de83cdc3cba2e5bcd05e8118a0a64ac88dbdd4063831c2a4edd3",
+    "gate": "a0fa41381e14e09b730f59b8620a2f885f7e6acb2cfb5c43d2dadb539240d18e",
+    "hidden": "db985b8a70b7b2fda24a8c9ed781038cb2f05ae7d404522d58d6ee364c6155c8",
+    "manifest": "72e37729dbf853f743e8b5033818113b84e86bda3df13c0df13bb36090f575ee",
+    "up": "22a5fd07d12aad226b23af8a7f83e116dc3b83450c051da03ed7c5850c3441da"
+  },
+  "note": "CPU input reconstruction only; no GPU per-expert parity",
+  "output_sha256": {
+    "down": "840841d9af21bd8816cf4d698ef884622bc2f1ab7b48c2f1c629a09e5b0d52d3",
+    "gate": "62b4110ff0fdf780052010dcbf0eaf353a3577fa7be93a39e236245b0b44d5aa",
+    "post_swiglu": "b09b77d609f0404bf2600f825b144fc4089524b89677b86a6a6fc3608887c4bc",
+    "up": "79d878394ff36719227b790b32166b7e4c82f5aa698b19a689eba987e7fceb32"
+  },
+  "schema": "DEEP2_KIMI_SCALAR_INPUT_AUDIT_001/v1",
+  "status": "PASS_DIAGNOSTIC"
+}

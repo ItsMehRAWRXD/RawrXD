@@ -1,0 +1,24 @@
+RUN_CONFIG_REQUESTED_MAX_TOKENS=48
+RUN_CONFIG_REQUESTED_CONTEXT=4096
+RUN_CONFIG_MAX_TOKENS=48
+RUN_CONFIG_CONTEXT=4096
+[ESP] seq=1 req=2000607072400 kind=agent_step value=0 message=cli_run_start
+[ESP] seq=2 req=2000607072400 kind=model_load value=0 message=llama3.2:3b
+MOTD_ACK=1 MOTD_SHA256=3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[ESP] seq=3 req=2000607072400 kind=agent_step value=0 message=phase=PREFLIGHT
+[ESP] seq=4 req=2000607072400 kind=agent_step value=0 message=phase=PLANNING
+[ESP] seq=5 req=2000607072400 kind=agent_step value=0 message=inference_start
+[ESP] seq=6 req=2000607072400 kind=agent_step value=0 message=phase=WORKING
+[ESP] seq=7 req=2000607072400 kind=heartbeat value=0 message=source=ollama prompt_eval_count=1132 eval_count=26 total_duration_ns=8612757400 load_duration_ns=8311071400 prompt_eval_duration_ns=151137000 eval_duration_ns=146752000 eval_tps=177.169646751
+[ESP] seq=8 req=2000607072400 kind=agent_step value=0 message=tool_calls_received
+[ESP] seq=9 req=2000607072400 kind=tool_start value=0 message=TOOL_START id=rawr-call-0-0 name=readFile target=tmp_build/cli_smoke_20261028/fixture/calc.cpp
+[ESP] seq=10 req=2000607072400 kind=tool_result value=0 message=TOOL_RESULT id=rawr-call-0-0 name=readFile target=tmp_build/cli_smoke_20261028/fixture/calc.cpp status=PASS duration_ms=0 PASS
+[error] unknown tool: RAWRXD_AGENT_READ_PASS
+[ESP] seq=11 req=2000607072400 kind=heartbeat value=0 message=source=ollama prompt_eval_count=252 eval_count=31 total_duration_ns=247683500 load_duration_ns=8198300 prompt_eval_duration_ns=19618000 eval_duration_ns=172752000 eval_tps=179.447994813
+[ESP] seq=12 req=2000607072400 kind=tool_start value=0 message=TOOL_START id=rawr-call-1-0 name=RAWRXD_AGENT_READ_PASS target=
+[ESP] seq=13 req=2000607072400 kind=tool_result value=1 message=TOOL_RESULT id=rawr-call-1-0 name=RAWRXD_AGENT_READ_PASS target= status=FAIL duration_ms=0 FAIL
+[ESP] seq=14 req=2000607072400 kind=error value=0 message=model_output_invalid
+[ESP] seq=15 req=2000607072400 kind=error value=1 message=inference_failed
+[ESP] seq=16 req=2000607072400 kind=heartbeat value=0 message={"request":2000607072400,"agent":1,"phase":"error","generated":0,"prefill_tokens":0,"context":0,"rolling_tps":0.000,"decode_tps":0.000,"prefill_tps":0.000,"task_tps":0.000,"ttft_ms":-1.000,"prefill_ms":0.000,"decode_ms":0.000,"task_ms":8871.035,"gpu_dispatches":0,"cpu_fallbacks":0,"tool_calls":2,"failures":2,"stalled":false,"active":false,"slow":false}
+[ESP] seq=17 req=2000607072400 kind=finished value=1 message=FAIL
+[StreamEngine] Shutdown

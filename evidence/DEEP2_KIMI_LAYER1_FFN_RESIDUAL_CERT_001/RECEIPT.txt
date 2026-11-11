@@ -1,0 +1,81 @@
+DEEP2_KIMI_LAYER1_FFN_RESIDUAL_CERT_001
+ASOF=2026-10-27T06:40:08-04:00
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+SOURCE_REVIEW                 = COMPLETE_FOR_SELECTED_PATHS
+FFN_RESIDUAL_STRUCTURE        = PRESENT (host + K2 path)
+BUFFER_ALIASING               = INSTRUMENTED (invariant maxAbs)
+MISSING_LAYER_IDENTITY        = HARD_FAIL_UNDER_CERT
+
+SOURCE_WIRED                  = 1
+HARD_FAIL_GUARD               = SOURCE_WIRED
+BUILD                         = PASS
+RUNTIME_REACHED               = 1
+CHECKPOINTS_CAPTURED          = 5/5
+RESIDUAL_INVARIANT            = PASS (maxAbs=1.86264515e-09)
+INDEPENDENT_PARITY            = NOT_TESTED
+NUMERIC_EXIT                  = 0
+CERT_PASS                     = 0  (invariant-only; parity still OPEN)
+
+BUILD
+  Target=deep2_benchmark Release
+  EXE=G:\~dev\rawrxd\build-fd\bin\deep2_benchmark.exe
+  SHA256=A68D8369D054D1672878C128C298165AFF88B52EC6EA4FC6308128448DDB8EBF
+  HEAD=219b0e5694e565575728faf6c820d3f76cfb8006 (working tree dirty; MoE L1 cert hooks)
+  Provenance match: runtime_launch EXE_SHA256 == BUILD SHA256
+
+RUNTIME
+  LAUNCH_UTC=2026-10-27T10:39:25.6795906Z
+  DONE_UTC=2026-10-27T10:40:08.2823259Z
+  ELAPSED_MS=42571
+  METHOD=cmd_/c numeric ERRORLEVEL
+  ENV=DEEP2_KIMI_LAYER1_FFN_RESIDUAL_CERT=1;DEEP2_CERT_STRICT=1
+  MODEL=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+  CLI=deep2_benchmark --model … --phase single --prompt "The capital of France is" --max-tokens 1 --ctx-size 128 --output runtime_report.json --format telemetry
+  CERTIFICATION_ACTIVATION=CERT_GATE=DEEP2_KIMI_LAYER1_FFN_RESIDUAL_CERT_001 PROMOTE=0 (stderr)
+  GENERATED_TOKENS=1 REAL_WEIGHT_FORWARD=1
+  MOE=router60 experts_selected=480 experts_executed=480 parity=1
+  L0_DENSE_STUB=1 (EXIT_DENSE; no dense GEMV yet) — OPEN note, not a FAIL of L1 MoE residual
+
+CHECKPOINTS (stderr L1FFN_CKPT; n=7168; nonfinite=0; tok=0 layer=1)
+  FFN_INP_1      l2=1.16698168  h0=-0.00184856867  h1=-0.0106594227
+  FFN_NORM_1     l2=1.71812955  h0=-0.00218606275  h1=-0.0150898192
+  FFN_DOWN_1     l2=0.312214549 h0=-0.00292162923  h1=0.00402447255
+  FFN_RESIDUAL_1 l2=1.20593758  h0=-0.00477019791  h1=-0.00663495017
+  LAYER_OUT_1    l2=1.20593758  h0=-0.00477019791  h1=-0.00663495017
+  NOTE=LAYER_OUT_1 vector stats match FFN_RESIDUAL_1 (same dump)
+
+INVARIANT
+  L1FFN_INVARIANT layer=1 tok=0 n=7168
+  FFN_RESIDUAL_EQ_INP_PLUS_DOWN maxAbs=1.86264515e-09 PASS=1
+  TOLERANCE=<1e-5 (LAW)
+  SCOPE=internal consistency only; NOT weight/router/SwiGLU/expert correctness
+
+ARTIFACTS
+  G:\~dev\rawrxd\evidence\DEEP2_KIMI_LAYER1_FFN_RESIDUAL_CERT_001\
+    runtime_launch.txt runtime_exit.txt runtime_markers.txt
+    runtime.out.log runtime.err.log RECEIPT.txt LAW.txt
+  F:\rawrxd\evidence\DEEP2_KIMI_LAYER1_FFN_RESIDUAL_CERT_001\
+    (runtime_* + logs mirrored)
+
+LANDINGS
+  KimiLayer1FfnResidualCert.hpp — CertOn/StrictOn, DumpVec, residual invariant
+  K2NativeMoEFfn.cpp — layer==1 dumps FFN_INP/NORM/DOWN/RESIDUAL/LAYER_OUT + invariant
+  Deep2Engine.cpp — RejectMissingLayerIdentity under CERT env
+
+PRESERVED
+  FROZEN_002            = UNCHANGED (KIMI_K2_MOE_RUNTIME_002_*; prior SHA 60796296…)
+  LOCAL_MODEL_MATRIX    = 12/22_UNCHANGED
+  KIMI_K2_MOE_RUNTIME_001_FAIL_BEFORE_FORWARD = UNTOUCHED
+
+NEXT
+  Independent parity: emit/compare reference tensors checkpoint-by-checkpoint;
+  first divergence owns repair (FFN_INP→attn/resid-in; FFN_NORM→RMSNorm;
+  expert/FFN→router/q/SwiGLU/shared; FFN_RESIDUAL→add/alias; LAYER_OUT→assign)
+  L0_DENSE_STUB remains OPEN
+  PROMOTE=0 until PRODUCT_OPEN && SESSION_ENTER && GENERATED_TOKENS>0 &&
+    TOKEN_COMMIT && independent multi-family coverage (invariant ≠ promote)
+
+REAP_PHASE=4/6
+KIMI_LAYER1_RESIDUAL_PARITY=OPEN (invariant sealed; independent compare pending)

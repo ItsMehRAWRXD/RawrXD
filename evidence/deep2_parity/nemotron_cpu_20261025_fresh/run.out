@@ -1,0 +1,16 @@
+tokens: 2: 1 185
+ingesting F:\models\gguf\library__nemotron-3-nano__4b.gguf ...
+arch=nemotron_h blocks=42 embd=3136 heads=40 kv=40 lora=0 kl=128 vl=128 experts=0 used=0 shared=0 dense_lead=0 rope_dim=0 eps=1e-05
+bound ops=242
+pos=0 token=1 argmax=8424 max_logit=10.671607 (3565.0 ms)
+  op traces: 242
+pos=1 token=185 argmax=1093 max_logit=10.135053 (2794.3 ms)
+  op traces: 242
+GENSTREAM: 1093 10.135053 11 11.924428
+  [PASS] forward executed quantized projections
+  [PASS] every dot has a recorded dispatch decision
+  [PASS] no missing kernel silently became a success
+  [PASS] no unauthorized fallback
+  [PASS] forward produced finite outputs
+  [PASS] all expected layers bound
+GATE4_PASS config=cpu dots=108 vulkan=0 cpu=108 gpu_calls=0 cpu_calls=279 fallback=legacy quant dot: force_cpu (weight=blk.0.ssm_in.weight)

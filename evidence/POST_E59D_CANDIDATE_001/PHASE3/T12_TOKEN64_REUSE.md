@@ -1,0 +1,36 @@
+﻿# T12 — Token64 / long-response acceptance (REUSE)
+
+ASOF_UTC=2026-11-03T14:45:00Z
+GATE=FINISH_25_T12
+RESULT=PASS
+METHOD=SHA_BOUND_REUSE
+RERUN=0
+CONTRADICTION=0
+PROMOTE=0
+CERTIFIED=0
+REBUILD=HELD
+
+```
+CERT_EXE_SHA=3B720981EC567D60461B874F0C1EE46E03F85DB58F6E1788CBEE31F8B2CCAD5F
+LIVE_SHA_MATCH=1
+GENERATED_TOKEN_COUNT=648
+TOKEN64_DONE_MARKER=PASS
+RESPONSE_LEN_BYTES=3307
+CHAT_RUNTIME_COMPLETE=PASS
+```
+
+## Authority
+
+- `TOKEN64\RECEIPT.md` (ASOF 2026-11-03T12:01:27Z, RETRY=2)
+- `TOKEN64\BINARY_HASH.txt` · `TOKEN64\RESPONSE.txt` · `TOKEN64\ollama_delta.txt`
+- Harness: `TOKEN64\harness_token64_retry2.ps1`
+
+## Contradiction check
+
+- Live SHA matches sealed BINARY_HASH.
+- On-disk RESPONSE still contains TOKEN64_DONE; 648 >= 64.
+- No newer same-SHA Token64 FAIL present.
+
+## Law
+
+Reuse sealed PASS. Contradiction-only rerun rule satisfied (no contradiction).

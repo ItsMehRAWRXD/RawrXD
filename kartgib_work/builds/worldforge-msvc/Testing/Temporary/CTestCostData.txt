@@ -1,0 +1,16 @@
+worldforge-tests 4 0.00275055
+worldforge-systems-tests 4 0.00263
+worldforge-render-tests 4 0.00238893
+worldforge-lighting-tests 4 0.00282585
+worldforge-materials-tests 4 0.0055142
+worldforge-atmosphere-tests 4 0.00344823
+worldforge-assets-tests 4 0.00308312
+worldforge-streaming-tests 3 0.0069149
+worldforge-vehicle-tests 4 0.00213647
+worldforge-combat-tests 4 0.0019566
+worldforge-editor-tests 4 0.00226558
+worldforge-editor-tools-tests 4 0.00373917
+worldforge-gameplay-tests 4 0.00233042
+worldforge-network-tests 4 0.00205018
+worldforge-integration-tests 4 0.00321253
+---
