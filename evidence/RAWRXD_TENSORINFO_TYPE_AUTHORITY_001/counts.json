@@ -1,0 +1,42 @@
+{
+  "occurrences_total": 216,
+  "declaration_sites": 12,
+  "class_counts": {
+    "Ambiguous": 98,
+    "Boundary": 72,
+    "Loader": 39,
+    "Unrelated": 5,
+    "Engine": 2
+  },
+  "per_occurrence_top_files": {
+    "include/gguf_loader.h": 9,
+    "src/qtapp/gguf_loader.h": 9,
+    "~dev/rawrxd/src/core/lora_hotswap_manager.cpp": 8,
+    "src/deep2/GGUFLoader.hpp": 7,
+    "~dev/rawrxd/src/core/analyzer_distiller.cpp": 7,
+    "~dev/rawrxd/src/core/streaming_loader.hpp": 7,
+    "RawrXD-ModelLoader/src/streaming_gguf_loader.cpp": 6,
+    "src/streaming_gguf_loader.cpp": 6,
+    "tools/classify_tensorinfo.py": 6,
+    "~dev/rawrxd/src/core/analyzer_distiller.h": 6,
+    "~dev/rawrxd/src/core/NativeGGUFLoader.h": 6,
+    "~dev/rawrxd/src/core/rawr_engine_link_closure.cpp": 6,
+    "src/test_harness/hotpatch_e2e_test.cpp": 5,
+    "~dev/rawrxd/src/core/gguf_format.h": 5,
+    "~dev/rawrxd/src/core/streaming_loader.cpp": 5
+  },
+  "declaration_files": [
+    "include/gguf_loader.h",
+    "src/RawrXD_Interfaces.h",
+    "src/deep2/GGUFLoader.hpp",
+    "src/qtapp/gguf_loader.h",
+    "src/qtapp/model_memory_hotpatch.hpp",
+    "standalone_gguf_test.cpp",
+    "~dev/rawr_monolith_v2.cpp",
+    "~dev/rawrxd/src/core/gguf_d3d12_bridge_stub.h",
+    "~dev/rawrxd/src/core/lora_hotswap_manager.cpp",
+    "~dev/rawrxd/src/core/streaming_loader.hpp",
+    "~dev/rawrxd/src/core/test_mapped_gguf.cpp"
+  ],
+  "generated": true
+}
