@@ -8,6 +8,7 @@ param([string]$Repository = 'F:\rawrxd',
       [switch]$RootWorktreeOnly,
       [switch]$IncludeIgnoredSources,
       [string]$ResumePlanPath,
+      [string[]]$ExcludeWorktrees = @(),
       [string[]]$CompletedLabels = @())
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path -LiteralPath $Repository).Path
@@ -98,6 +99,10 @@ foreach ($block in $worktreeBlocks) {
     if ($block -notmatch '(?m)^worktree (.+)\r?$') { continue }
     $directory = $Matches[1].TrimEnd("`r")
     if ($RootWorktreeOnly -and [IO.Path]::GetFullPath($directory) -ne $root) { continue }
+    if (@($ExcludeWorktrees | Where-Object { [IO.Path]::GetFullPath($_) -eq [IO.Path]::GetFullPath($directory) }).Count) { continue }
+    if ($block -match '(?m)^locked initializing\r?$') {
+        $failures.Add([pscustomobject]@{Worktree = $directory; Error = 'worktree initialization incomplete; no snapshot attempted'}); continue
+    }
     if (-not (Test-Path -LiteralPath $directory -PathType Container)) {
         $failures.Add([pscustomobject]@{Worktree = $directory; Error = 'registered worktree directory absent'}); continue
     }
@@ -135,7 +140,7 @@ foreach ($block in $worktreeBlocks) {
             $index = Join-Path $out ('index-' + [Guid]::NewGuid().ToString('N'))
             $null = Invoke-Git $directory @('read-tree', $head) $null $index
             $pathBytes = $utf8.GetBytes(($eligible -join [char]0) + [char]0)
-            $addArguments = @('--literal-pathspecs', '-c', 'filter.lfs.process=', '-c', 'filter.lfs.clean=', '-c', 'filter.lfs.required=false', 'add', '-A')
+            $addArguments = @('--literal-pathspecs', '-c', 'filter.lfs.process=', '-c', 'filter.lfs.clean=', '-c', 'filter.lfs.required=false', 'add', '--sparse', '-A')
             if ($IncludeIgnoredSources) { $addArguments += '-f' }
             $addArguments += @('--pathspec-from-file=-', '--pathspec-file-nul')
             $null = Invoke-Git $directory $addArguments $pathBytes $index
