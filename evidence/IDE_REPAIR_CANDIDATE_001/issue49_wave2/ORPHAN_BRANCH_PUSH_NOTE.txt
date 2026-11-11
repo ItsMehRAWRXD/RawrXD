@@ -1,0 +1,12 @@
+issue49_wave2 / ORPHAN_BRANCH_PUSH
+ASOF_UTC=2026-11-10T08:16:00Z
+TARGET_BRANCH=upload/issue49-wave2-20261110
+REMOTE=origin (https://github.com/ItsMehRAWRXD/RawrXD.git)
+SCOPE=text receipts + harness scripts + ToolCallExactlyOnceGuard.hpp + selftest.cpp
+EXCLUDE=*.exe *.obj *.bin *.dll .gitattributes (no LFS)
+GIT_LFS_SKIP_PUSH=1
+NO_RC4_FORCE_PUSH=1
+NO_WAVE1_SOURCE_CONFLICT=1
+PROMOTE=0
+MATURITY_UNCHANGED=1
+SHA_BINDING=Wave2 unit PASS only; Issue49 11-step NOT_RUN until WAVE1_PUBLISH_SHA
