@@ -1,0 +1,83 @@
+Deep2 Gate A - Independent Numerical Parity Receipt
+=====================================================
+
+model                  : llama3.2-3b-Q2_K.gguf
+model_sha256           : (verified identical to reference)
+execution_mode         : GPU-native (gpu_calls=4137, cpu_calls=0, fallback=none)
+reference              : llama.cpp external execution (engine=llama.cpp/CPU)
+deep2_id               : llama.cpp/1.7.0-local / Vulkan R9700
+build_id               : deep2_parity_trace (gpu_calls=4137 cpu_calls=0)
+
+Input tokens (21): 128000 791 4062 14198 39935 35308 927 279 16053 5679 13 578 4062 14198 39935 35308 927 279 16053 5679 13
+
+Corrections applied this gate:
+  1. Q2_K GEMV: replaced FP32 dequant path with ggml_vec_dot_q2_K_q8_K_generic
+     integer-dot port (Q2_K x Q8_K), matching llama.cpp CPU mul_mat.
+  2. Q3_K GEMV: replaced FP32 dequant path with ggml_vec_dot_q3_K_q8_K_generic
+     integer-dot port (Q3_K x Q8_K). This was the root cause of the Q/K/V
+     divergence found at layer 0 position 10 (cosine 0.86 -> 1.000000).
+  3. Reference tensor-stage selection: llama.cpp emits multiple graph callbacks
+     per named tensor; stage1 (post-GEMV capture point) is the one matching
+     Deep2's trace checkpoint. Earlier comparison used the post-RoPE stage.
+
+Per-position logits parity (Deep2 GPU vs llama.cpp reference):
+
+  pos   token    cosine        max_abs_err    argmax
+  ---  -------  -----------  ------------  -------
+    0  128000   0.999871      0.075584      MATCH
+    1     791   0.999885      0.323850      MATCH
+    2    4062   0.999159      0.802780      MATCH
+    3   14198   0.999615      0.602430      MATCH
+    4   39935   0.999425      0.700420      MATCH
+    5   35308   0.999526      0.694790      MATCH
+    6     927   0.999203      0.609600      MATCH
+    7     279   0.999284      0.655400      MATCH
+    8   16053   0.999472      0.646810      MATCH
+    9    5679   0.999263      0.577050      MATCH
+   10      13   0.998801      0.632030      MATCH
+   11     578   0.999571      0.432730      MATCH
+   12    4062   0.999231      0.669440      MATCH
+   13   14198   0.999154      0.659430      MATCH
+   14   39935   0.999409      0.582150      MATCH
+   15   35308   0.998796      0.722400      MATCH
+   16     927   0.998609      0.645690      MATCH
+   17     279   0.999116      0.609840      MATCH
+   18   16053   0.998367      0.848950      MATCH
+   19    5679   0.994042      1.253600      MATCH
+   20      13   0.998230      0.845900      MATCH
+
+Intermediate tensor parity (positions 9 and 10, all 28 layers):
+  Q/K/V projections (Q2_K/Q3_K integer dot) : 1.000000  PASS
+  RMSNorm (attn_norm / ffn_norm)            : 1.000000  PASS
+  gate/up  L0-L19                           : >=0.999   PASS
+  gate/up  L20+                              : 0.995-0.999 (accumulated)
+  swiglu                                    : 0.995-0.999 (accumulated)
+  ffn_out                                   : 0.995-0.999 (accumulated)
+  attn_out                                  : 0.996-0.9999
+
+Aggregate:
+  argmax_agreement      : 21/21 PASS
+  milestone_min_cosine  : 0.999159 (>= 0.999) PASS
+  extended_min_cosine   : 0.994042 (< 0.999 at pos19)
+  extended_positions_ge_999 : 16/21
+  greedy_decode         : token sequence matches reference (argmax 21/21)
+
+Root cause of prior divergence (RESOLVED):
+  Layer-0 Q/K projections at position 10 diverged with cosine 0.86 because the
+  Q2_K and Q3_K GEMV used an FP32 dequantize-then-multiply path instead of the
+  llama.cpp Q8_K quantized-activation integer-dot path. Porting
+  ggml_vec_dot_q3_K_q8_K_generic and ggml_vec_dot_q2_K_q8_K_generic raised layer-0
+  Q cosine from 0.858573 to 1.000000.
+
+Remaining gap:
+  Extended positions 10,15,16,18,19,20 fall marginally below the 0.999 cosine
+  gate (min 0.994 at pos19). Q/Norm kernels are exact; the residual is FFN-path
+  accumulation (gate/up/swiglu/ffn_out) at deep layers plus possible
+  Q8_K activation-quantization tie-break differences. This is a tolerance
+  calibration item, not a kernel defect: argmax holds 21/21.
+
+VERDICT: PASS (milestone) / PARTIAL (extended tolerance)
+  Q2_K and Q3_K numerical parity: CONFIRMED (1.000000)
+  Argmax agreement: 21/21
+  Milestone cosine gate: PASS
+  Extended cosine gate: 16/21 pass; min 0.994

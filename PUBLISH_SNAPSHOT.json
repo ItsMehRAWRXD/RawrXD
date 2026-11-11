@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "kind": "branch-tip",
+  "original_branch": "fix/kimi-parity-test-fixture-20261027",
+  "original_commit": "4093f12598517db48dafe4541ad900e14da65846",
+  "worktree": null,
+  "publication": "Source snapshot on a new branch; original history is preserved locally.",
+  "lfs_status": "Remote account budget exceeded; locally available text payloads materialized as regular Git blobs.",
+  "exclusions_receipt": "Local evidence/GITHUB_BRANCH_SYNC_001/b9e61221/exclusions.json",
+  "release_certification": "NOT_CLAIMED"
+}

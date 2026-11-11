@@ -1,0 +1,192 @@
+[LR_ENTER] name=blk.0.attn_q.weight type=Q4_K(12) rows=384 cols=3072 startRow=1536 endRow=1920
+[LR_VALIDATE] byte bounds OK: req=3317760 <= total=10616832
+[LR_SOURCE] wt.data=000002CFB7AE6B40 mapped=1 input=000002AD8BA27980 output=000002AD8000DF00 sizeBytes=10616832 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_q.weight type=Q4_K(12) rows=384 cols=3072 startRow=384 endRow=768
+[LR_VALIDATE] byte bounds OK: req=1327104 <= total=10616832
+[LR_SOURCE] wt.data=000002CFB7AE6B40 mapped=1 input=000002AD8BA27980 output=000002AD8000DF00 sizeBytes=10616832 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_q.weight type=Q4_K(12) rows=384 cols=3072 startRow=1920 endRow=2304
+[LR_VALIDATE] byte bounds OK: req=3981312 <= total=10616832
+[LR_SOURCE] wt.data=000002CFB7AE6B40 mapped=1 input=000002AD8BA27980 output=000002AD8000DF00 sizeBytes=10616832 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_q.weight type=Q4_K(12) rows=384 cols=3072 startRow=0 endRow=384
+[LR_VALIDATE] byte bounds OK: req=663552 <= total=10616832
+[LR_SOURCE] wt.data=000002CFB7AE6B40 mapped=1 input=000002AD8BA27980 output=000002AD8000DF00 sizeBytes=10616832 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_q.weight type=Q4_K(12) rows=384 cols=3072 startRow=768 endRow=1152
+[LR_VALIDATE] byte bounds OK: req=1990656 <= total=10616832
+[LR_SOURCE] wt.data=000002CFB7AE6B40 mapped=1 input=000002AD8BA27980 output=000002AD8000DF00 sizeBytes=10616832 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_q.weight type=Q4_K(12) rows=384 cols=3072 startRow=2304 endRow=2688
+[LR_VALIDATE] byte bounds OK: req=4644864 <= total=10616832
+[LR_SOURCE] wt.data=000002CFB7AE6B40 mapped=1 input=000002AD8BA27980 output=000002AD8000DF00 sizeBytes=10616832 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_q.weight type=Q4_K(12) rows=384 cols=3072 startRow=1152 endRow=1536
+[LR_VALIDATE] byte bounds OK: req=2654208 <= total=10616832
+[LR_SOURCE] wt.data=000002CFB7AE6B40 mapped=1 input=000002AD8BA27980 output=000002AD8000DF00 sizeBytes=10616832 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_q.weight type=Q4_K(12) rows=384 cols=3072 startRow=2688 endRow=3072
+[LR_VALIDATE] byte bounds OK: req=5308416 <= total=10616832
+[LR_SOURCE] wt.data=000002CFB7AE6B40 mapped=1 input=000002AD8BA27980 output=000002AD8000DF00 sizeBytes=10616832 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_q.weight type=Q4_K(12) rows=384 cols=3072 startRow=3072 endRow=3456
+[LR_VALIDATE] byte bounds OK: req=5971968 <= total=10616832
+[LR_SOURCE] wt.data=000002CFB7AE6B40 mapped=1 input=000002AD8BA27980 output=000002AD8000DF00 sizeBytes=10616832 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_q.weight type=Q4_K(12) rows=384 cols=3072 startRow=3456 endRow=3840
+[LR_VALIDATE] byte bounds OK: req=6635520 <= total=10616832
+[LR_SOURCE] wt.data=000002CFB7AE6B40 mapped=1 input=000002AD8BA27980 output=000002AD8000DF00 sizeBytes=10616832 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_q.weight type=Q4_K(12) rows=384 cols=3072 startRow=3840 endRow=4224
+[LR_VALIDATE] byte bounds OK: req=7299072 <= total=10616832
+[LR_SOURCE] wt.data=000002CFB7AE6B40 mapped=1 input=000002AD8BA27980 output=000002AD8000DF00 sizeBytes=10616832 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_GEMV] type=Q4_K(12) rows=384 cols=3072 startRow=384 endRow=768
+[LR_EXIT] norm=7.174353e-01 allFinite=YES
+[LR_ENTER] name=blk.0.attn_q.weight type=Q4_K(12) rows=384 cols=3072 startRow=4224 endRow=4608
+[LR_VALIDATE] byte bounds OK: req=7962624 <= total=10616832
+[LR_SOURCE] wt.data=000002CFB7AE6B40 mapped=1 input=000002AD8BA27980 output=000002AD8000DF00 sizeBytes=10616832 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_q.weight type=Q4_K(12) rows=384 cols=3072 startRow=4992 endRow=5376
+[LR_VALIDATE] byte bounds OK: req=9289728 <= total=10616832
+[LR_SOURCE] wt.data=000002CFB7AE6B40 mapped=1 input=000002AD8BA27980 output=000002AD8000DF00 sizeBytes=10616832 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_GEMV] type=Q4_K(12) rows=384 cols=3072 startRow=768 endRow=1152
+[LR_EXIT] norm=6.419556e-01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=384 cols=3072 startRow=2304 endRow=2688
+[LR_EXIT] norm=4.700941e-01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=384 cols=3072 startRow=1152 endRow=1536
+[LR_EXIT] norm=5.732994e-01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=384 cols=3072 startRow=1920 endRow=2304
+[LR_EXIT] norm=3.634253e-01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=384 cols=3072 startRow=0 endRow=384
+[LR_EXIT] norm=5.936444e-01 allFinite=YES
+[LR_ENTER] name=blk.0.attn_q.weight type=Q4_K(12) rows=384 cols=3072 startRow=4608 endRow=4992
+[LR_VALIDATE] byte bounds OK: req=8626176 <= total=10616832
+[LR_SOURCE] wt.data=000002CFB7AE6B40 mapped=1 input=000002AD8BA27980 output=000002AD8000DF00 sizeBytes=10616832 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_q.weight type=Q4_K(12) rows=384 cols=3072 startRow=5760 endRow=6144
+[LR_VALIDATE] byte bounds OK: req=10616832 <= total=10616832
+[LR_SOURCE] wt.data=000002CFB7AE6B40 mapped=1 input=000002AD8BA27980 output=000002AD8000DF00 sizeBytes=10616832 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_q.weight type=Q4_K(12) rows=384 cols=3072 startRow=5376 endRow=5760
+[LR_VALIDATE] byte bounds OK: req=9953280 <= total=10616832
+[LR_SOURCE] wt.data=000002CFB7AE6B40 mapped=1 input=000002AD8BA27980 output=000002AD8000DF00 sizeBytes=10616832 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_GEMV] type=Q4_K(12) rows=384 cols=3072 startRow=1536 endRow=1920
+[LR_EXIT] norm=3.930699e-01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=384 cols=3072 startRow=3840 endRow=4224
+[LR_EXIT] norm=4.482047e-01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=384 cols=3072 startRow=3456 endRow=3840
+[LR_EXIT] norm=7.423738e-01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=384 cols=3072 startRow=2688 endRow=3072
+[LR_EXIT] norm=4.748001e-01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=384 cols=3072 startRow=3072 endRow=3456
+[LR_EXIT] norm=6.325387e-01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=384 cols=3072 startRow=4224 endRow=4608
+[LR_EXIT] norm=4.124468e-01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=384 cols=3072 startRow=4992 endRow=5376
+[LR_EXIT] norm=3.575717e-01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=384 cols=3072 startRow=4608 endRow=4992
+[LR_EXIT] norm=4.254304e-01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=384 cols=3072 startRow=5760 endRow=6144
+[LR_EXIT] norm=4.980063e-01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=384 cols=3072 startRow=5376 endRow=5760
+[LR_EXIT] norm=4.696787e-01 allFinite=YES
+[LR_ENTER] name=blk.0.attn_k.weight type=Q4_K(12) rows=64 cols=3072 startRow=0 endRow=64
+[LR_VALIDATE] byte bounds OK: req=110592 <= total=1769472
+[LR_SOURCE] wt.data=000002CFB8512B40 mapped=1 input=000002AD8BA27980 output=000002AD8056C040 sizeBytes=1769472 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_k.weight type=Q4_K(12) rows=64 cols=3072 startRow=576 endRow=640
+[LR_VALIDATE] byte bounds OK: req=1105920 <= total=1769472
+[LR_SOURCE] wt.data=000002CFB8512B40 mapped=1 input=000002AD8BA27980 output=000002AD8056C040 sizeBytes=1769472 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_k.weight type=Q4_K(12) rows=64 cols=3072 startRow=128 endRow=192
+[LR_VALIDATE] byte bounds OK: req=331776 <= total=1769472
+[LR_SOURCE] wt.data=000002CFB8512B40 mapped=1 input=000002AD8BA27980 output=000002AD8056C040 sizeBytes=1769472 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_k.weight type=Q4_K(12) rows=64 cols=3072 startRow=192 endRow=256
+[LR_VALIDATE] byte bounds OK: req=442368 <= total=1769472
+[LR_SOURCE] wt.data=000002CFB8512B40 mapped=1 input=000002AD8BA27980 output=000002AD8056C040 sizeBytes=1769472 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_k.weight type=Q4_K(12) rows=64 cols=3072 startRow=256 endRow=320
+[LR_VALIDATE] byte bounds OK: req=552960 <= total=1769472
+[LR_SOURCE] wt.data=000002CFB8512B40 mapped=1 input=000002AD8BA27980 output=000002AD8056C040 sizeBytes=1769472 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_k.weight type=Q4_K(12) rows=64 cols=3072 startRow=320 endRow=384
+[LR_VALIDATE] byte bounds OK: req=663552 <= total=1769472
+[LR_SOURCE] wt.data=000002CFB8512B40 mapped=1 input=000002AD8BA27980 output=000002AD8056C040 sizeBytes=1769472 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_k.weight type=Q4_K(12) rows=64 cols=3072 startRow=384 endRow=448
+[LR_VALIDATE] byte bounds OK: req=774144 <= total=1769472
+[LR_SOURCE] wt.data=000002CFB8512B40 mapped=1 input=000002AD8BA27980 output=000002AD8056C040 sizeBytes=1769472 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_k.weight type=Q4_K(12) rows=64 cols=3072 startRow=448 endRow=512
+[LR_VALIDATE] byte bounds OK: req=884736 <= total=1769472
+[LR_SOURCE] wt.data=000002CFB8512B40 mapped=1 input=000002AD8BA27980 output=000002AD8056C040 sizeBytes=1769472 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_k.weight type=Q4_K(12) rows=64 cols=3072 startRow=512 endRow=576
+[LR_VALIDATE] byte bounds OK: req=995328 <= total=1769472
+[LR_SOURCE] wt.data=000002CFB8512B40 mapped=1 input=000002AD8BA27980 output=000002AD8056C040 sizeBytes=1769472 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_GEMV] type=Q4_K(12) rows=64 cols=3072 startRow=576 endRow=640
+[LR_EXIT] norm=2.712273e-01 allFinite=YES
+[LR_ENTER] name=blk.0.attn_k.weight type=Q4_K(12) rows=64 cols=3072 startRow=640 endRow=704
+[LR_VALIDATE] byte bounds OK: req=1216512 <= total=1769472
+[LR_SOURCE] wt.data=000002CFB8512B40 mapped=1 input=000002AD8BA27980 output=000002AD8056C040 sizeBytes=1769472 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_k.weight type=Q4_K(12) rows=64 cols=3072 startRow=704 endRow=768
+[LR_VALIDATE] byte bounds OK: req=1327104 <= total=1769472
+[LR_SOURCE] wt.data=000002CFB8512B40 mapped=1 input=000002AD8BA27980 output=000002AD8056C040 sizeBytes=1769472 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_k.weight type=Q4_K(12) rows=64 cols=3072 startRow=768 endRow=832
+[LR_VALIDATE] byte bounds OK: req=1437696 <= total=1769472
+[LR_SOURCE] wt.data=000002CFB8512B40 mapped=1 input=000002AD8BA27980 output=000002AD8056C040 sizeBytes=1769472 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_k.weight type=Q4_K(12) rows=64 cols=3072 startRow=832 endRow=896
+[LR_VALIDATE] byte bounds OK: req=1548288 <= total=1769472
+[LR_SOURCE] wt.data=000002CFB8512B40 mapped=1 input=000002AD8BA27980 output=000002AD8056C040 sizeBytes=1769472 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_k.weight type=Q4_K(12) rows=64 cols=3072 startRow=896 endRow=960
+[LR_VALIDATE] byte bounds OK: req=1658880 <= total=1769472
+[LR_SOURCE] wt.data=000002CFB8512B40 mapped=1 input=000002AD8BA27980 output=000002AD8056C040 sizeBytes=1769472 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_ENTER] name=blk.0.attn_k.weight type=Q4_K(12) rows=64 cols=3072 startRow=960 endRow=1024
+[LR_VALIDATE] byte bounds OK: req=1769472 <= total=1769472
+[LR_SOURCE] wt.data=000002CFB8512B40 mapped=1 input=000002AD8BA27980 output=000002AD8056C040 sizeBytes=1769472 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_GEMV] type=Q4_K(12) rows=64 cols=3072 startRow=0 endRow=64
+[LR_EXIT] norm=4.699576e-01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=64 cols=3072 startRow=512 endRow=576
+[LR_EXIT] norm=4.137837e-01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=64 cols=3072 startRow=128 endRow=192
+[LR_EXIT] norm=4.576909e-01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=64 cols=3072 startRow=640 endRow=704
+[LR_EXIT] norm=2.120219e-01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=64 cols=3072 startRow=256 endRow=320
+[LR_EXIT] norm=9.400086e-02 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=64 cols=3072 startRow=320 endRow=384
+[LR_EXIT] norm=1.056425e-01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=64 cols=3072 startRow=768 endRow=832
+[LR_EXIT] norm=1.057030e-01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=64 cols=3072 startRow=832 endRow=896
+[LR_EXIT] norm=9.219093e-02 allFinite=YES
+[LR_ENTER] name=blk.0.attn_k.weight type=Q4_K(12) rows=64 cols=3072 startRow=64 endRow=128
+[LR_VALIDATE] byte bounds OK: req=221184 <= total=1769472
+[LR_SOURCE] wt.data=000002CFB8512B40 mapped=1 input=000002AD8BA27980 output=000002AD8056C040 sizeBytes=1769472 rowBytes=1728
+[LR_VALIDATE] result=PASS
+[LR_GEMV] type=Q4_K(12) rows=64 cols=3072 startRow=192 endRow=256
+[LR_EXIT] norm=2.154501e-01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=64 cols=3072 startRow=704 endRow=768
+[LR_EXIT] norm=1.831166e-01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=64 cols=3072 startRow=384 endRow=448
+[LR_EXIT] norm=1.928403e-01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=64 cols=3072 startRow=448 endRow=512
+[LR_EXIT] norm=1.773582e-01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=64 cols=3072 startRow=896 endRow=960
+[LR_EXIT] norm=1.990701e-01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=64 cols=3072 startRow=960 endRow=1024
+[LR_EXIT] norm=1.332893e-01 allFinite=YES
+[LR_GEMV] type=Q4_K(12) rows=64 cols=3072 startRow=64 endRow=128
+[LR_EXIT] norm=2.093878e-01 allFinite=YES
