@@ -3348,6 +3348,19 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                 // ── Fused QKV (Phi-3, etc.) ──
                 if (name.find("attn_qkv") != std::string::npos)
                     lw.wqkv = wt;
+                // ── Attention biases (qwen2 q/k/v/o) — MUST be matched BEFORE the
+                //    "attn_q." / "attn_k." / "attn_v." weight patterns.  Those are
+                //    substrings of "attn_q.bias" etc.; without this guard the bias
+                //    is misrouted into the weight slot (overwriting the weight or
+                //    being silently lost), corrupting Q/K/V and the whole forward. ──
+                else if (name.find("attn_q.bias") != std::string::npos)
+                    lw.bq = wt;
+                else if (name.find("attn_k.bias") != std::string::npos)
+                    lw.bk = wt;
+                else if (name.find("attn_v.bias") != std::string::npos)
+                    lw.bv = wt;
+                else if (name.find("attn_o.bias") != std::string::npos)
+                    lw.bo = wt;
                 // ── Standard MHA / GQA tensors (check BEFORE MLA to avoid substring matches) ──
                 else if (name.find("attn_output") != std::string::npos)
                 {
@@ -4740,6 +4753,14 @@ bool Deep2Engine::loadModelFromBP16(const std::string& bp16Path)
         mapTensor(prefix + "attn_norm.weight", lw.attnNorm);
         mapTensor(prefix + "attn_q_norm.weight", lw.attnQNorm);
         mapTensor(prefix + "attn_k_norm.weight", lw.attnKNorm);
+        // Qwen2-style attention biases (attn_q/k/v/o.bias).  Required for
+        // correct Q/K/V projections on architectures that use them (qwen2).
+        // Models without these tensors leave the fields empty and the forward
+        // path skips the bias add (no silent zero-fill).
+        mapTensor(prefix + "attn_q.bias", lw.bq);
+        mapTensor(prefix + "attn_k.bias", lw.bk);
+        mapTensor(prefix + "attn_v.bias", lw.bv);
+        mapTensor(prefix + "attn_o.bias", lw.bo);
         mapTensor(prefix + "post_attention_norm.weight", lw.attnPostNorm);
         mapTensor(prefix + "ffn_gate.weight", lw.wGate);
         mapTensor(prefix + "ffn_up.weight", lw.wUp);
@@ -5407,6 +5428,18 @@ bool Deep2Engine::embedToken(int tokenId, float* output)
             output[0] = 1.0e-6f;
         }
     }
+    // S07 diagnostic: dump first embedding row (first call only).
+    {
+        static bool s_embedDump = false;
+        if (!s_embedDump)
+        {
+            s_embedDump = true;
+            std::fprintf(stderr, "[EMBED_DUMP] token=%d norm=%.6e first8=%.6e %.6e %.6e %.6e %.6e %.6e %.6e %.6e\n",
+                         tokenId, embedNorm, output[0], output[1], output[2], output[3], output[4],
+                         output[5], output[6], output[7]);
+            std::fflush(stderr);
+        }
+    }
     return true;
 }
 
@@ -5777,7 +5810,11 @@ bool Deep2Engine::bindStandardMultiShardWeights(std::string& error)
             !bindOne(lw.moeRouter, true, "MoE router",
                      {names("ffn_gate_inp.weight"), names("moe.router.weight")}) ||
             !bindOne(lw.attnQNorm, false, "attention Q norm", {names("attn_q_norm.weight")}) ||
-            !bindOne(lw.attnKNorm, false, "attention K norm", {names("attn_k_norm.weight")}))
+            !bindOne(lw.attnKNorm, false, "attention K norm", {names("attn_k_norm.weight")}) ||
+            !bindOne(lw.bq, false, "attention Q bias", {names("attn_q.bias")}) ||
+            !bindOne(lw.bk, false, "attention K bias", {names("attn_k.bias")}) ||
+            !bindOne(lw.bv, false, "attention V bias", {names("attn_v.bias")}) ||
+            !bindOne(lw.bo, false, "attention O bias", {names("attn_o.bias")}))
         {
             releaseStandardMultiShardWeights();
             return false;
@@ -6789,13 +6826,26 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
         if (tryVulkanGEMV(wtEffective, input, output, outDim))
         {
             ++plannedGpuGemvOps_;
-            if (bias)
-            {
-                for (size_t i = 0; i < outDim; ++i)
-                {
-                    output[i] += bias[i];
-                }
-            }
+if (bias)
+    {
+        for (size_t i = 0; i < outDim; ++i)
+        {
+            output[i] += bias[i];
+        }
+    }
+    // S07 diagnostic: dump LinearW output AFTER bias for layer-0 wq.
+    if (wt.name.find("blk.0.attn_q") != std::string::npos)
+    {
+        static bool s_postBiasDump = false;
+        if (!s_postBiasDump)
+        {
+            s_postBiasDump = true;
+            std::fprintf(stderr, "[POSTBIAS_DUMP] %s y0..5=%.6e %.6e %.6e %.6e %.6e %.6e bias0=%.6e\n",
+                         wt.name.c_str(), output[0], output[1], output[2], output[3], output[4],
+                         output[5], bias ? bias[0] : 0.0f);
+            std::fflush(stderr);
+        }
+    }
             auto tLinearW1 = std::chrono::high_resolution_clock::now();
             double linearwMs = std::chrono::duration<double, std::milli>(tLinearW1 - tLinearW0).count();
             int typeIdx = wtEffective.type & 0x1F;
@@ -6897,6 +6947,23 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
     {
         LinearW_Range(wtEffective, input, output, 0, rows, cols);
     }
+    // S07 diagnostic: dump raw GEMV result (before bias) for layer-0 wq.
+    if (wt.name.find("blk.0.attn_q") != std::string::npos)
+    {
+        static bool s_gemvDump = false;
+        if (!s_gemvDump)
+        {
+            s_gemvDump = true;
+            std::fprintf(stderr, "[GEMV_DUMP] %s y0..5=%.6e %.6e %.6e %.6e %.6e %.6e\n",
+                         wt.name.c_str(), output[0], output[1], output[2], output[3], output[4],
+                         output[5]);
+            std::fflush(stderr);
+        }
+    }
+    // NOTE: the authoritative bias add is the original "Add bias" block at the end
+    // of LinearW (after the NaN guard, ~line 7076). An earlier duplicate bias add
+    // placed here caused a DOUBLE bias application (q[0]=0.738 instead of 0.451).
+    // Removed; the single original add is correct (matches the CPU reference).
     auto tLinearW1 = std::chrono::high_resolution_clock::now();
     double linearwMs = std::chrono::duration<double, std::milli>(tLinearW1 - tLinearW0).count();
     int typeIdx = wtEffective.type & 0x1F;
@@ -10060,9 +10127,48 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             throw std::runtime_error("attention buffer overflow");
         }
 
+        // S06/S07 diagnostic: dump layer-0 QKV weights + biases once.
+        {
+            static bool s_qkvDiag = false;
+            if (!s_qkvDiag && layer == 0)
+            {
+                s_qkvDiag = true;
+                auto firstF32 = [](const WeightTensor& w) -> float
+                {
+                    return (w.data && w.type == (int)GGMLType::GGML_TYPE_F32 && w.sizeBytes >= 4)
+                               ? static_cast<const float*>(w.data)[0]
+                               : 0.0f;
+                };
+                std::fprintf(stderr,
+                             "[QKV_DIAG] ropeTheta=%.1f wq(rows=%zu cols=%zu type=%d) "
+                             "wk(rows=%zu cols=%zu type=%d) wv(rows=%zu cols=%zu type=%d) "
+                             "bq(cols=%zu type=%d b0=%.6e) bk(cols=%zu type=%d b0=%.6e) "
+                             "bv(cols=%zu type=%d b0=%.6e)\n",
+                             modelWeights.ropeTheta, lw.wq.rows, lw.wq.cols, lw.wq.type, lw.wk.rows,
+                             lw.wk.cols, lw.wk.type, lw.wv.rows, lw.wv.cols, lw.wv.type, lw.bq.cols,
+                             lw.bq.type, firstF32(lw.bq), lw.bk.cols, lw.bk.type, firstF32(lw.bk),
+                             lw.bv.cols, lw.bv.type, firstF32(lw.bv));
+                std::fflush(stderr);
+            }
+        }
         // Q projection: input -> the actual tensor row count.  This may be
         // wider than the residual stream for GQA models.
-        LinearW(lw.wq, input, nullptr, qProj, projectedQDim);
+        LinearW(lw.wq, input,
+                (lw.bq.data && lw.bq.type == (int)GGMLType::GGML_TYPE_F32)
+                    ? static_cast<const float*>(lw.bq.data)
+                    : nullptr,
+                qProj, projectedQDim);
+        // S07 diagnostic: dump qProj immediately after Q LinearW.
+        {
+            static bool s_qAfterDump = false;
+            if (!s_qAfterDump && layer == 0)
+            {
+                s_qAfterDump = true;
+                std::fprintf(stderr, "[Q_AFTER] q0..5=%.6e %.6e %.6e %.6e %.6e %.6e\n",
+                             qProj[0], qProj[1], qProj[2], qProj[3], qProj[4], qProj[5]);
+                std::fflush(stderr);
+            }
+        }
         emitMiniMaxQDiag("Q_PRE_NORM", qProj, projectedQDim);
         B3_TraceState("ATTN_Q", layer, qProj, projectedQDim);
 
@@ -10078,7 +10184,11 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         }
 
         // K projection: [hiddenDim] -> [kvDim]
-        LinearW(lw.wk, input, nullptr, kProj, kvDim);
+        LinearW(lw.wk, input,
+                (lw.bk.data && lw.bk.type == (int)GGMLType::GGML_TYPE_F32)
+                    ? static_cast<const float*>(lw.bk.data)
+                    : nullptr,
+                kProj, kvDim);
         B3_TraceState("ATTN_K", layer, kProj, kvDim);
 
         // ── Layer 12 diagnostic: K norm (opt-in) ──
@@ -10093,7 +10203,31 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         }
 
         // V projection: [hiddenDim] -> [kvDim]
-        LinearW(lw.wv, input, nullptr, vProj, vDim);
+        LinearW(lw.wv, input,
+                (lw.bv.data && lw.bv.type == (int)GGMLType::GGML_TYPE_F32)
+                    ? static_cast<const float*>(lw.bv.data)
+                    : nullptr,
+                vProj, vDim);
+
+        // S07 diagnostic: dump Q/K/V projection first 6 values (layer 0, first call).
+        {
+            static bool s_qkvProjDump = false;
+            if (!s_qkvProjDump && layer == 0)
+            {
+                s_qkvProjDump = true;
+                auto dump6 = [](const char* tag, const float* p)
+                {
+                    std::fprintf(stderr, "[QKV_PROJ] %s %.6e %.6e %.6e %.6e %.6e %.6e\n", tag,
+                                 p[0], p[1], p[2], p[3], p[4], p[5]);
+                };
+                // input here is the normed layerTemp passed to computeAttention
+                dump6("normed_in", input);
+                dump6("q", qProj);
+                dump6("k", kProj);
+                dump6("v", vProj);
+                std::fflush(stderr);
+            }
+        }
         B3_TraceState("ATTN_V", layer, vProj, vDim);
 
         // ── Layer 12 diagnostic: V norm (opt-in) ──
@@ -12036,6 +12170,27 @@ void Deep2Engine::computeLogits(const float* hiddenState, float* logits)
 
     // lm_head: [vocabSize, hiddenDim] * hiddenState -> [vocabSize]
     LinearW(modelWeights.lmHead, hiddenState, nullptr, logits, config.vocabSize);
+
+    // S07 diagnostic: dump top-5 logits once (first forward's logits).
+    {
+        static bool s_logitDiag = false;
+        if (!s_logitDiag)
+        {
+            s_logitDiag = true;
+            std::vector<std::pair<float, int>> top;
+            top.reserve(config.vocabSize);
+            for (size_t i = 0; i < config.vocabSize; ++i)
+                top.emplace_back(logits[i], static_cast<int>(i));
+            std::partial_sort(top.begin(), top.begin() + 5, top.end(),
+                              [](const std::pair<float, int>& a, const std::pair<float, int>& b)
+                              { return a.first > b.first; });
+            std::fprintf(stderr, "[LOGIT_DIAG] top5:");
+            for (int i = 0; i < 5 && i < static_cast<int>(top.size()); ++i)
+                std::fprintf(stderr, " %d=%.6f", top[i].second, top[i].first);
+            std::fprintf(stderr, "\n");
+            std::fflush(stderr);
+        }
+    }
 
     // ── Gemma logit soft-capping (cap * tanh(logits / cap)) ─────────────
     // Gemma architectures apply logit soft-capping (typically cap=30.0) before

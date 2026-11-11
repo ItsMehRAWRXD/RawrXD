@@ -1,0 +1,42 @@
+# AGGREGATE_DECODE_DEEP2_NATIVE_RUNTIME_001 — S07 CPU PARITY (first-token PASS)
+
+## Root cause (confirmed)
+1. S06 DEFECT (real): primary GGUF loader matched `attn_q.bias` to the `attn_q.`
+   weight pattern, misrouting the 84 Qwen2 QKV biases into the weight slots.
+   -> `lw.bq/bk/bv` were EMPTY -> bias never applied -> wrong output (64787 ' madrid').
+2. S07 MISTAKE (mine): I added a SECOND bias add in LinearW's CPU path, but LinearW
+   ALREADY applies bias at its end ("Add bias" block, ~line 7076). This caused a
+   DOUBLE bias (q[0]=0.738 = 0.451 + 0.287). Removed the duplicate.
+
+## Fix (net)
+- S06: route `attn_q.bias`->`lw.bq`, `attn_k.bias`->`lw.bk`, `attn_v.bias`->`lw.bv`,
+  `attn_o.bias`->`lw.bo` BEFORE the `attn_q.`/`attn_k.`/`attn_v.` weight patterns
+  (Deep2Engine.cpp ~line 3348). Also added mapTensor/bindOne bias bindings.
+- S07: REMOVED the duplicate CPU-path bias add (kept the original single add).
+
+## Verification (CPU forced, Q4_K qwen2, greedy temp=0)
+- GEMV_DUMP (pre-bias) y0..5 = 0.1635855 ... (matches Python wq[0]·normed = 0.164)
+- Q_AFTER q0..5 = 0.4506949 0.2109725 -0.5228920 ... (matches Python q = 0.4514539 ...)
+- LOGIT_DIAG top5: 576=14.735157 151643=14.612321 56922=14.056912 715=13.946362 362=13.588245
+- sampled token=576 piece=' The'   <-- MATCHES llama.cpp reference (576 ' The')
+
+## llama.cpp reference (identical GGUF, prompt, greedy, raw completion)
+- GEN_IDS: [576, 23192, 16895, 63762, 374, 279, 2790, 1372]
+- TEXT: ' The aggregate decode throughput is the total number'
+
+## Deep2 CPU (same fixture)
+- GEN_IDS: [576, 23192, 315, 821]
+
+## Acceptance
+- DEEP2_CPU_FIRST_TOKEN_576 = PASS  (576 ' The' matches reference)
+- First TWO tokens match (576, 23192)
+- Divergence at token 2 (Deep2 315 vs ref 16895) — remaining subtle numerical issue
+  (Q4_K/Q6_K GEMV accumulation or attention/FFN over multiple tokens)
+- NONFINITE = 0
+- CERTIFIED=0  PROMOTE=0  TIP_CLIMB=HOLD
+
+## Next
+- Close the token-2+ divergence (compare per-layer logits vs llama.cpp; likely the
+  Q4_K/Q6_K accumulation or attention over >2 tokens).
+- Then GPU bias in forwardLayerGpuResident (S08).
+- Then re-benchmark (S10).
