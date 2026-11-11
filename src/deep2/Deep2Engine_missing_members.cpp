@@ -82,11 +82,18 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
     if (modelWeights.numLayers == 0) return false;
     if (!attentionOutput) return false;
 
+    // VAL-051.7 instrumentation: count one forward pass per token forwarded.
+    // BeginForward/EndForward were previously never invoked on this path, so
+    // forwardCount stayed 0 while layerCount (RecordLayerTime) advanced — the
+    // exact forwardCount=0 / layerCount=550 discrepancy. Bracket every real
+    // forward here so totalForwardMs and forwardCount reflect actual tokens.
+    ResidencyCounters::BeginForward();
+
     // Give the canonical resident Vulkan path first claim.  It returns false
     // for unsupported topologies or any failed device operation, preserving
     // the existing host implementation as the explicit compatibility path.
     // No GPU counter is promoted unless every layer completes on-device.
-    if (tryGpuTokenForward(hidden)) return true;
+    if (tryGpuTokenForward(hidden)) { ResidencyCounters::EndForward(); return true; }
 
     float* layerInput = hidden;
     float* layerOutput = attentionOutput;
@@ -124,6 +131,7 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
 
         auto layerT0 = std::chrono::high_resolution_clock::now();
         if (!safeForwardLayer(layer, layerInput, layerOutput, seqLen)) {
+            ResidencyCounters::EndForward();
             return false;
         }
         auto layerT1 = std::chrono::high_resolution_clock::now();
@@ -141,6 +149,7 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
     if (layerInput != hidden) {
         memcpy(hidden, layerInput, static_cast<size_t>(config.hiddenDim) * sizeof(float));
     }
+    ResidencyCounters::EndForward();
     return true;
 }
 

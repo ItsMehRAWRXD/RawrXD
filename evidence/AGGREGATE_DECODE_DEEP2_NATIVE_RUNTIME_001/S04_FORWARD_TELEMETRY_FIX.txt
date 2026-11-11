@@ -1,0 +1,42 @@
+# AGGREGATE_DECODE_DEEP2_NATIVE_RUNTIME_001 — S04 Forward telemetry fix
+
+## Defect
+forwardCount=0 while layerCount=550 (earlier run). Root cause: BeginForward/EndForward
+in ResidencyCounters.hpp were never invoked on the forward path, so forwardCount and
+totalForwardMs stayed zero even though RecordLayerTime (layerCount) advanced.
+
+## Fix
+Deep2Engine_missing_members.cpp forwardTokenAllLayers():
+- BeginForward() after the initial null/geometry guards.
+- EndForward() before the GPU success return (tryGpuTokenForward true).
+- EndForward() before the CPU per-layer failure return (safeForwardLayer false).
+- EndForward() before the CPU success return (after final copy).
+
+This brackets every real token forward (prefill + decode both route through here).
+
+## Verification (rebuild + rerun, n4-tiny-oracle, --tokens 4)
+- forwardCount = 13            (was 0)
+- layerCount   = 286           (unchanged; per-layer)
+- totalForwardMs = 18304.694   (was 0)
+- totalLayerMs   = 18283.716
+- totalAttnMs    = 4726.807
+- totalFfnMs     = 13395.597
+- avgLayerMs     = 63.929
+- GENERATED_TOKENS=4  RUNTIME_REACHED=1  deep2_runtime_reached=1
+- BACKEND=DEEP2  DEEP2_COMPUTE_BACKEND=GPU (open-time)
+- CERTIFIED=0  PROMOTE=0
+
+## Acceptance (S04)
+- FORWARD_COUNT > 0        : PASS (13)
+- LAYER_COUNT > 0          : PASS (286)
+- Instrumentation reconciled: PASS
+
+## Remaining P0 (S01/S02) — NOT done here
+- GPU_FORWARD_ATTEMPTED > 0   : tryGpuTokenForward() is called but returns false;
+  the false-return branch is not yet traced/repaired. GPU forward never commits
+  (gpuFwdCommitted_ stays false), so all real work is CPU Q4_0 GEMV.
+- GPU_FORWARD_COMMITTED > 0   : NOT MET
+- GPU_FFN_EXECUTED > 0        : NOT MET
+- CPU_FALLBACK_REASON = NONE  : NOT MET (fallback is the current path)
+- OUTPUT_PARITY             : PENDING (requires GPU path)
+- CERTIFIED=0  PROMOTE=0  TIP_CLIMB=HOLD

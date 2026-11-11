@@ -1,0 +1,74 @@
+BATCH=DEEP2_NATIVE_CORRECTNESS_001
+SESSION=03
+SESSION_TITLE=MULTI_TOKEN_NUMERICAL_CORRECTNESS
+
+SOURCE_COMMIT=d51ecf86bafdee865c179bf2442b9354f720276d
+SOURCE_TREE=87d6e89ed28955017ffd23ef84402139c65ce8d2
+WORKTREE=F:\rawrxd
+WORKTREE_DIRTY=1
+WORKTREE_DIRTY_ENTRIES=12
+WORKTREE_NOTE=Shared worktree. Deep2 S01-S03 changes remain uncommitted. Other agents may have committed unrelated changes.
+
+MODEL_PATH=F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+MODEL_SHA256=9FECC3B3CD76BBA89D504F29B616EEDF7DA85B96540E490CA5824D3F7D2776A0
+MODEL_METADATA=llama hidden=2048 layers=22 heads=32 kvHeads=4 headDim=64 vocab=32000 ctx=2048
+
+COMPILER=MSVC 14.44.35207 (Visual Studio 2022 Build Tools, x64)
+CMAKE_GENERATOR=Visual Studio 17 2022
+CMAKE_CONFIGURATION=Release
+EXECUTION_MODE=CPU_REFERENCE (RAWR_REAP_CPU_ONLY=1)
+
+DEEP2_LIBRARY_LABEL=deep2_engine_lib.lib
+DEEP2_LIBRARY_SHA256=6F0F6698FD3B6C064F64237712CC526B64D761B44FFD8DB8CCE158D1006F727F
+DEEP2_LIBRARY_BYTES=535603436
+
+H11_EXE=build\Release\deep2_h11_prefill_parity.exe
+H11_EXE_SHA256=976620C27B4355AD1B9F07FC0392AF430D0DFF8367C3CD32F0A4CC4517E187D6
+H11_EXE_BYTES=1493504
+
+MULTITOKEN_EXE=build\tests\Release\deep2_multitoken_decode_parity.exe
+MULTITOKEN_EXE_SHA256=9BF75E70CBB9644B41309E01C0B249163287C78AFFD53901C5434147C9760B73
+MULTITOKEN_EXE_BYTES=1618432
+
+S03=PASS
+S03_EXIT=0
+
+S03_H11_P1_CHUNK1=PASS maxAbs=0.000000e+00
+S03_H11_P2_CHUNK2=PASS maxAbs=0.000000e+00
+S03_H11_P3_CHUNK16=PASS maxAbs=0.000000e+00
+S03_H11_P4_CHUNK128=PASS maxAbs=0.000000e+00
+S03_H11_GATES=4/4
+
+S03_PREFILL_PARITY=PASS maxAbs=0.000000000e+00 maxRel=0.000000000e+00 nonFinite=0
+S03_PREFILL_METHOD=serial prefillSerial+computeLogits vs batched prefillBatched+computeLogits
+
+S03_DECODE_TOKENS=8
+S03_DECODE_TOKEN_MATCHES=8/8
+S03_DECODE_MIN_TOP1_MARGIN=8.101749420e-02
+S03_TOKENS_REFERENCE=263 4272 393 756 1063 528 10501 491
+S03_TOKENS_ACTUAL=263 4272 393 756 1063 528 10501 491
+
+S03_DECODE_LOGIT_PARITY=PASS maxAbs=0.000000000e+00 maxRel=0.000000000e+00 nonFinite=0 steps=8
+S03_DECODE_LOGIT_METHOD=generate(k) last hidden state vs full-context reference logits for prefix prompt+k-1
+
+S03_KV_GEOMETRY=ATTN_GEOMETRY_RECONCILED headDim=64 qHeads=32 kvHeads=4
+S03_KV_CACHE=KV_CACHE_CONFIGURED reason=loadModel layers=22 positions=2048 kvHeads=4 headDim=64
+
+S04_STREAMING_SAMPLING_CANCEL=NOT_VERIFIED
+S05_CPU_VULKAN_E2E=NOT_VERIFIED
+
+REGRESSIONS=0
+STUB_PATHS=0
+BACKEND_SUBSTITUTION=0
+
+BATCH_PASS=0
+CERTIFIED=0
+PROMOTE=0
+
+NOTES=
+- H11 covers serial vs batched prefill at chunk sizes 1, 2, 16, 128.
+- The multi-token test independently compares incremental generate() against full-context precomputation.
+- Logit-level decode parity is measured directly from the last hidden state after generate(k), not inferred from token IDs.
+- All comparisons are CPU reference lane. Vulkan correctness remains held from S01.
+- This closes S03 but not Batch 1. S04 and S05 remain NOT_VERIFIED.
+- The library was rebuilt after adding a read-only getHiddenStates() diagnostic accessor; S01/S02 receipts retain their original hashes and should be re-run before final batch seal if exact artifact identity is required.
