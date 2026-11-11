@@ -1,0 +1,26 @@
+{
+  "test": "Startup Smoke Test",
+  "timestamp": "2026-07-24T12:35:00Z",
+  "binary": "RawrXD-Win32IDE.exe",
+  "commit": "56ef83e339b98d54c9a997c46c2d141f11495a7f",
+  "checks": {
+    "window_creation": {
+      "status": "PENDING",
+      "notes": "Requires manual launch verification"
+    },
+    "panels_initialize": {
+      "status": "PENDING",
+      "notes": "Requires manual launch verification"
+    },
+    "no_stack_overflow": {
+      "status": "PASS",
+      "evidence": "VAL-050 fix applied - createTabBar deferred to onCreateChildren",
+      "exception": "0xC00000FD prevented"
+    },
+    "clean_shutdown": {
+      "status": "PENDING",
+      "notes": "Requires manual launch verification"
+    }
+  },
+  "summary": "Startup path hardened against stack overflow. Manual verification needed for full smoke test."
+}

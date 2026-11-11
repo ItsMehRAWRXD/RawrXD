@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "kind": "working-files",
+  "original_branch": "worktree/codex/d1-batched-prefill",
+  "original_commit": "1d756c1cc8a92d429bcc872241283a5aa85d9b40",
+  "worktree": "F:/rawrxd/.worktrees/codex-d1-batched-prefill",
+  "publication": "Source snapshot on a new branch; original history is preserved locally.",
+  "lfs_status": "Remote account budget exceeded; locally available text payloads materialized as regular Git blobs.",
+  "exclusions_receipt": "Local evidence/GITHUB_BRANCH_SYNC_001/3b67c48d/exclusions-batches.jsonl",
+  "release_certification": "NOT_CLAIMED"
+}
