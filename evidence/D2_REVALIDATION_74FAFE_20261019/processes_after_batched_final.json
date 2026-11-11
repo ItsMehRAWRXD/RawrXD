@@ -1,0 +1,12 @@
+{
+  "Processes": [
+    {
+      "ProcessId": 21468,
+      "ParentProcessId": 29508,
+      "Name": "deep2_end_to_end_bench.exe",
+      "ExecutablePath": "F:\\wt_ide1\\_s12_parity_build\\bin\\deep2_end_to_end_bench.exe",
+      "CommandLine": "\"F:\\wt_ide1\\_s12_parity_build\\bin\\deep2_end_to_end_bench.exe\" --strict-vulkan --no-time-reverse --no-vram-stream --stream-tokens 32 --max-tokens 32 --format receipt F:\\~dev\\qwen2.5-coder-1.5b-base.gguf \"The capital of France is\""
+    }
+  ],
+  "CapturedAt": "2026-10-19T23:27:39.3337925-04:00"
+}

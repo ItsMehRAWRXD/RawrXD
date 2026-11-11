@@ -1,0 +1,11 @@
+{
+  "CapturedAt": "2026-10-19T23:27:29.5345261-04:00",
+  "ProcessChain": {
+    "ProcessId": 29508,
+    "ParentProcessId": 11440,
+    "Name": "pwsh.exe",
+    "ExecutablePath": "C:\\Users\\Garrett\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.exe",
+    "CommandLine": "\"C:\\Users\\Garrett\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.exe\" -Command \"try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}\n$env:DEEP2_GPU_TIMING='1'; & .\\scripts\\deep2_gpu_flight_recorder.ps1 -Exe 'F:\\wt_ide1\\_s12_parity_build\\bin\\deep2_end_to_end_bench.exe' -Model 'F:\\~dev\\qwen2.5-coder-1.5b-base.gguf' -Tokens 32 -WarmupRuns 1 -Runs 3 -Q4Hot -Q6Hot -DenseExec LAYER_SPLIT -Q4Tile 8 -NoTrace -Gpu0Weight 100 -Gpu1Weight 0.01 -OutputDir 'F:\\wt_ide1\\deep2_baseline_after_restore'; $code=$LASTEXITCODE; Write-Output \\\"EXIT=$code\\\"; Write-Output '--- route markers ---'; rg -n \\\"BATCH9_SUBGROUP_SIZE|ROWS_PER_BATCH_WORKGROUP|GPUFWD_TIMING|DECODE_TPS\\\" 'F:\\wt_ide1\\deep2_baseline_after_restore' | Select-Object -First 80; exit $code\"",
+    "CreationDate": "2026-10-19T23:27:14.089253-04:00"
+  }
+}

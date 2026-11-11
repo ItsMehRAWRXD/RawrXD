@@ -1,0 +1,62 @@
+{
+  "gate": "VAL-065",
+  "name": "Evidence Chain Signing",
+  "status": "PASS",
+  "commit": "56ef83e",
+  "timestamp": "2026-07-24T13:17:16Z",
+  "components": {
+    "canonicalization": {
+      "algorithm": "RFC 8785 JCS",
+      "status": "IMPLEMENTED",
+      "test_vectors": [
+        {
+          "input": "{\"b\":2,\"a\":1}",
+          "output": "{\"a\":1,\"b\":2}",
+          "description": "Key sorting"
+        },
+        {
+          "input": "{\"a\":1.0}",
+          "output": "{\"a\":1}",
+          "description": "Number normalization"
+        }
+      ]
+    },
+    "hashing": {
+      "algorithm": "SHA-256",
+      "status": "IMPLEMENTED",
+      "provider": "CNG / MASM64 fallback"
+    },
+    "signing": {
+      "algorithms": ["Ed25519", "ECDSA_P256"],
+      "status": "IMPLEMENTED",
+      "providers": {
+        "primary": "CNG (Windows)",
+        "fallback": "MASM64 assembly"
+      }
+    },
+    "key_management": {
+      "revocation_list": "IMPLEMENTED",
+      "key_rotation": "SUPPORTED",
+      "secure_storage": "CNG DPAPI"
+    }
+  },
+  "test_results": {
+    "sign_verify_roundtrip": "PASS",
+    "signature_mutation_detection": "PASS",
+    "key_revocation": "PASS",
+    "canonicalization_consistency": "PASS",
+    "cross_platform_verification": "PASS"
+  },
+  "artifacts": [
+    {
+      "path": "src/val065_evidence_signer.hpp",
+      "description": "Evidence signing implementation",
+      "lines": 450
+    }
+  ],
+  "dependencies": {
+    "VAL-063": "Foundation Attestation - COMPLETE",
+    "VAL-064": "Host Fingerprint - COMPLETE"
+  },
+  "status": "COMPLETE"
+}

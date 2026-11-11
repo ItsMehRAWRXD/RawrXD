@@ -1,0 +1,69 @@
+{
+  "CapturedAt": "2026-10-19T23:21:23.8866734-04:00",
+  "ProcessChain": [
+    {
+      "ProcessId": 22564,
+      "ParentProcessId": 30852,
+      "Name": "deep2_end_to_end_bench.exe",
+      "ExecutablePath": "F:\\wt_ide1\\_s12_parity_build\\bin\\deep2_end_to_end_bench.exe",
+      "CommandLine": "\"F:\\wt_ide1\\_s12_parity_build\\bin\\deep2_end_to_end_bench.exe\" --strict-vulkan --no-time-reverse --no-vram-stream --stream-tokens 32 --max-tokens 32 --format receipt F:\\~dev\\qwen2.5-coder-1.5b-base.gguf \"The capital of France is\"",
+      "CreationDate": "2026-10-19T23:21:14.099937-04:00"
+    },
+    {
+      "ProcessId": 30852,
+      "ParentProcessId": 11440,
+      "Name": "pwsh.exe",
+      "ExecutablePath": "C:\\Users\\Garrett\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.exe",
+      "CommandLine": "\"C:\\Users\\Garrett\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.exe\" -Command \"try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}\n& .\\rawrxd\\scripts\\deep2_gpu_flight_recorder.ps1 -Exe '.\\_s12_parity_build\\bin\\deep2_end_to_end_bench.exe' -Model 'F:\\~dev\\qwen2.5-coder-1.5b-base.gguf' -Tokens 32 -WarmupRuns 1 -Runs 3 -Q4Hot -Q6Hot -NoTrace -OutputDir '.\\deep2_warmed_baseline_current'; Write-Output \\\"EXIT=$LASTEXITCODE\\\"\"",
+      "CreationDate": "2026-10-19T23:21:05.106219-04:00"
+    },
+    {
+      "ProcessId": 11440,
+      "ParentProcessId": 12416,
+      "Name": "codex.exe",
+      "ExecutablePath": "C:\\Users\\Garrett\\AppData\\Local\\OpenAI\\Codex\\bin\\896a0166b774037a\\codex.exe",
+      "CommandLine": "C:\\Users\\Garrett\\AppData\\Local\\OpenAI\\Codex\\bin\\896a0166b774037a\\codex.exe -c features.code_mode_host=true app-server --analytics-default-enabled -c features.prefer_mxc=true -c plugins.codex-app-tools@openai-bundled.mcp_servers.codex_app.enabled=true -c plugins.code-review@openai-bundled.mcp_servers.code-review.enabled=true",
+      "CreationDate": "2026-10-18T14:00:07.784889-04:00"
+    },
+    {
+      "ProcessId": 12416,
+      "ParentProcessId": 6836,
+      "Name": "ChatGPT.exe",
+      "ExecutablePath": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.1013.4894.0_x64__2p2nqsd0c76g0\\app\\ChatGPT.exe",
+      "CommandLine": "\"C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.1013.4894.0_x64__2p2nqsd0c76g0\\app\\ChatGPT.exe\" ",
+      "CreationDate": "2026-10-18T14:00:01.861376-04:00"
+    },
+    {
+      "ProcessId": 6836,
+      "ParentProcessId": 2996,
+      "Name": "sihost.exe",
+      "ExecutablePath": "C:\\WINDOWS\\system32\\sihost.exe",
+      "CommandLine": "sihost.exe",
+      "CreationDate": "2026-10-18T13:59:25.583078-04:00"
+    },
+    {
+      "ProcessId": 2996,
+      "ParentProcessId": 1948,
+      "Name": "svchost.exe",
+      "ExecutablePath": null,
+      "CommandLine": null,
+      "CreationDate": "2026-10-18T13:59:23.760197-04:00"
+    },
+    {
+      "ProcessId": 1948,
+      "ParentProcessId": 1868,
+      "Name": "services.exe",
+      "ExecutablePath": null,
+      "CommandLine": null,
+      "CreationDate": "2026-10-18T13:59:23.310363-04:00"
+    },
+    {
+      "ProcessId": 1868,
+      "ParentProcessId": 1476,
+      "Name": "wininit.exe",
+      "ExecutablePath": null,
+      "CommandLine": null,
+      "CreationDate": "2026-10-18T13:59:23.1806-04:00"
+    }
+  ]
+}

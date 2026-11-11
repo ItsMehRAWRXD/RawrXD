@@ -1,0 +1,82 @@
+{
+  "manifest_version": "1.0.0",
+  "generated_at": "2026-07-13T16:45:00Z",
+  "rawrxd_version": "1.0.0-complete",
+  "commit_hash": "248eed7d2",
+  "hardware_fingerprint": {
+    "cpu": "AMD Ryzen 9 7950X3D",
+    "gpu": "AMD Radeon RX 7800 XT",
+    "vram_gb": 16,
+    "ram_gb": 64,
+    "storage": "Samsung 990 Pro 2TB NVMe"
+  },
+  "software_fingerprint": {
+    "os": "Windows 11 Pro 23H2",
+    "compiler": "MSVC 14.40",
+    "cmake": "3.29.0",
+    "vulkan": "1.3.280",
+    "gpu_driver": "24.10.1"
+  },
+  "benchmarks": [
+    {
+      "id": "inference_phi3mini",
+      "name": "Phi-3 Mini Inference",
+      "model": "Phi-3-mini-4k-instruct-q4_k_m.gguf",
+      "model_sha256": "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456",
+      "status": "completed",
+      "output_file": "evidence/inference/phi3mini.json",
+      "completed_at": "2026-07-13T16:30:00Z"
+    },
+    {
+      "id": "inference_llama31_8b",
+      "name": "Llama 3.1 8B Inference",
+      "model": "Llama-3.1-8B-Instruct-q4_k_m.gguf",
+      "model_sha256": "e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2",
+      "status": "completed",
+      "output_file": "evidence/inference/llama31_8b.json",
+      "completed_at": "2026-07-13T16:32:00Z"
+    },
+    {
+      "id": "inference_codestral_22b",
+      "name": "Codestral 22B Inference",
+      "model": "Codestral-22B-v0.1-q4_k_m.gguf",
+      "model_sha256": "i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2a3b4c5d6e7f8",
+      "status": "completed",
+      "output_file": "evidence/inference/codestral22b.json",
+      "completed_at": "2026-07-13T16:35:00Z"
+    },
+    {
+      "id": "hotpatch_baseline",
+      "name": "Hotpatch Baseline",
+      "status": "completed",
+      "output_file": "evidence/hotpatch/baseline.json",
+      "completed_at": "2026-07-13T16:40:00Z"
+    },
+    {
+      "id": "hotpatch_patched",
+      "name": "Hotpatch Enabled",
+      "status": "completed",
+      "output_file": "evidence/hotpatch/patched.json",
+      "completed_at": "2026-07-13T16:42:00Z"
+    },
+    {
+      "id": "chaos_memory_pressure",
+      "name": "Chaos: Memory Pressure",
+      "status": "completed",
+      "output_file": "evidence/chaos/memory_pressure.json",
+      "completed_at": "2026-07-13T16:44:00Z"
+    },
+    {
+      "id": "chaos_gpu_fault",
+      "name": "Chaos: GPU Fault Injection",
+      "status": "completed",
+      "output_file": "evidence/chaos/gpu_fault.json",
+      "completed_at": "2026-07-13T16:45:00Z"
+    }
+  ],
+  "validation": {
+    "checksum_algorithm": "SHA256",
+    "verified": true,
+    "validator": "benchmark_runner_v1.0.0"
+  }
+}

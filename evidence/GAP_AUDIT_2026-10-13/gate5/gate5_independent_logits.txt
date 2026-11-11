@@ -1,0 +1,182 @@
+=== Gate 5 independent full-logit parity — 129 positions ===
+reference: llama.cpp teacher-forced dump (independent clone), Deep2 cpu/gpu: deep2_parity_trace.exe
+model: tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf (32000 logits x float32 = 128000 bytes per position)
+
+artifact validation: PASS (129 positions x 3 sides, 128000 bytes each)
+[cpu] argmax agreement: 117/129
+[cpu] worst cosine: 0.9962328134 (pos 1)
+[cpu] worst max-abs: 1.188872 (pos 16)
+[cpu] worst RMSE: 0.231302 (pos 1)
+[cpu] nonfinite logits: 0
+[cpu] first argmax divergence: pos 7 ; first maxabs>1e-2: pos 0
+[cpu] disagreements: 12 ; explained by margin<maxabs (boundary/measurement): 12 ; UNEXPLAINED: 0
+    explained pos 7: ref=29871 d2=278 margin=0.034850 maxabs=0.610097 cos=0.9991835 rmse=0.1359
+    explained pos 10: ref=310 d2=29892 margin=0.043894 maxabs=0.595843 cos=0.9994256 rmse=0.1189
+    explained pos 15: ref=14848 d2=29871 margin=0.316716 maxabs=0.544952 cos=0.9991669 rmse=0.1233
+    explained pos 22: ref=29874 d2=29882 margin=0.029890 maxabs=0.440234 cos=0.9994275 rmse=0.0934
+    explained pos 49: ref=2880 d2=29899 margin=0.078043 maxabs=0.384594 cos=0.9993504 rmse=0.0866
+    explained pos 56: ref=29875 d2=292 margin=0.132776 maxabs=0.387733 cos=0.9994334 rmse=0.0785
+    explained pos 60: ref=2880 d2=30064 margin=0.134183 maxabs=0.422112 cos=0.9991815 rmse=0.0975
+    explained pos 63: ref=29871 d2=484 margin=0.285022 maxabs=0.474719 cos=0.9988739 rmse=0.1118
+    explained pos 86: ref=310 d2=29871 margin=0.025940 maxabs=0.557891 cos=0.9991513 rmse=0.0940
+    explained pos 87: ref=293 d2=29871 margin=0.068462 maxabs=0.364389 cos=0.9991502 rmse=0.0857
+    explained pos 91: ref=18386 d2=375 margin=0.009722 maxabs=0.509281 cos=0.9986529 rmse=0.1126
+    explained pos 112: ref=29871 d2=3192 margin=0.073455 maxabs=0.499150 cos=0.9989872 rmse=0.1000
+
+[gpu] argmax agreement: 116/129
+[gpu] worst cosine: 0.9964745431 (pos 100)
+[gpu] worst max-abs: 1.168507 (pos 16)
+[gpu] worst RMSE: 0.260031 (pos 16)
+[gpu] nonfinite logits: 0
+[gpu] first argmax divergence: pos 7 ; first maxabs>1e-2: pos 0
+[gpu] disagreements: 13 ; explained by margin<maxabs (boundary/measurement): 13 ; UNEXPLAINED: 0
+    explained pos 7: ref=29871 d2=278 margin=0.034850 maxabs=0.746655 cos=0.9984554 rmse=0.1868
+    explained pos 10: ref=310 d2=29892 margin=0.043894 maxabs=0.524739 cos=0.9995558 rmse=0.1096
+    explained pos 14: ref=1689 d2=13794 margin=0.045175 maxabs=0.529276 cos=0.9992875 rmse=0.1209
+    explained pos 15: ref=14848 d2=29871 margin=0.316716 maxabs=0.695986 cos=0.9986745 rmse=0.1569
+    explained pos 22: ref=29874 d2=29882 margin=0.029890 maxabs=0.566632 cos=0.9990071 rmse=0.1219
+    explained pos 41: ref=29879 d2=29877 margin=0.037060 maxabs=0.662392 cos=0.9974916 rmse=0.1510
+    explained pos 49: ref=2880 d2=30064 margin=0.078043 maxabs=0.364963 cos=0.9993385 rmse=0.0861
+    explained pos 56: ref=29875 d2=292 margin=0.132776 maxabs=0.433286 cos=0.9991746 rmse=0.0936
+    explained pos 59: ref=29947 d2=29899 margin=0.121364 maxabs=0.464576 cos=0.9993745 rmse=0.0972
+    explained pos 86: ref=310 d2=29871 margin=0.025940 maxabs=0.428279 cos=0.9992678 rmse=0.0841
+    explained pos 91: ref=18386 d2=375 margin=0.009722 maxabs=0.685881 cos=0.9980810 rmse=0.1349
+    explained pos 102: ref=29879 d2=29871 margin=0.033155 maxabs=0.533500 cos=0.9982739 rmse=0.1152
+    explained pos 119: ref=20184 d2=13574 margin=0.017611 maxabs=0.542748 cos=0.9985544 rmse=0.1179
+
+=== first divergent operator per position (Deep2 GPU-native vs CPU-native dumps, tol 1e-04) ===
+(the independent llama.cpp reference only dumps final logits, so the per-op
+ comparison is between Deep2's two native execution paths)
+pos   0: first divergent op pc=16 blk=1 name=attn_norm      maxabs=0.001050 size=2048
+pos   1: first divergent op pc=20 blk=1 name=attn_out       maxabs=0.000504 size=2048
+pos   2: first divergent op pc=20 blk=1 name=attn_out       maxabs=0.000257 size=2048
+pos   3: first divergent op pc=20 blk=1 name=attn_out       maxabs=0.000203 size=2048
+pos   4: first divergent op pc=20 blk=1 name=attn_out       maxabs=0.000190 size=2048
+pos   5: first divergent op pc=20 blk=1 name=attn_out       maxabs=0.000193 size=2048
+pos   6: first divergent op pc=20 blk=1 name=attn_out       maxabs=0.000166 size=2048
+pos   7: first divergent op pc=20 blk=1 name=attn_out       maxabs=0.000230 size=2048
+pos   8: first divergent op pc=20 blk=1 name=attn_out       maxabs=0.000167 size=2048
+pos   9: first divergent op pc=20 blk=1 name=attn_out       maxabs=0.000130 size=2048
+pos  10: first divergent op pc=20 blk=1 name=attn_out       maxabs=0.000121 size=2048
+pos  11: first divergent op pc=16 blk=1 name=attn_norm      maxabs=0.000384 size=2048
+pos  12: first divergent op pc=20 blk=1 name=attn_out       maxabs=0.001133 size=2048
+pos  13: first divergent op pc=20 blk=1 name=attn_out       maxabs=0.000647 size=2048
+pos  14: first divergent op pc=20 blk=1 name=attn_out       maxabs=0.000125 size=2048
+pos  15: first divergent op pc=20 blk=1 name=attn_out       maxabs=0.000126 size=2048
+pos  16: first divergent op pc=20 blk=1 name=attn_out       maxabs=0.000210 size=2048
+pos  17: first divergent op pc=20 blk=1 name=attn_out       maxabs=0.000142 size=2048
+pos  18: first divergent op pc=20 blk=1 name=attn_out       maxabs=0.000136 size=2048
+pos  19: first divergent op pc=20 blk=1 name=attn_out       maxabs=0.000130 size=2048
+pos  20: first divergent op pc=20 blk=1 name=attn_out       maxabs=0.000108 size=2048
+pos  21: first divergent op pc=20 blk=1 name=attn_out       maxabs=0.000111 size=2048
+pos  22: first divergent op pc=20 blk=1 name=attn_out       maxabs=0.000103 size=2048
+pos  23: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000139 size=2048
+pos  24: first divergent op pc=20 blk=1 name=attn_out       maxabs=0.000139 size=2048
+pos  25: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000141 size=2048
+pos  26: first divergent op pc=20 blk=1 name=attn_out       maxabs=0.000131 size=2048
+pos  27: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000169 size=2048
+pos  28: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000111 size=2048
+pos  29: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000161 size=2048
+pos  30: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000166 size=2048
+pos  31: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000150 size=2048
+pos  32: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000476 size=2048
+pos  33: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000165 size=2048
+pos  34: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000159 size=2048
+pos  35: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000159 size=2048
+pos  36: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.001142 size=2048
+pos  37: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000178 size=2048
+pos  38: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000171 size=2048
+pos  39: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000101 size=2048
+pos  40: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000234 size=2048
+pos  41: first divergent op pc=20 blk=1 name=attn_out       maxabs=0.000124 size=2048
+pos  42: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000160 size=2048
+pos  43: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000564 size=2048
+pos  44: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000117 size=2048
+pos  45: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000107 size=2048
+pos  46: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000177 size=2048
+pos  47: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000871 size=2048
+pos  48: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.001661 size=2048
+pos  49: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000497 size=2048
+pos  50: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000763 size=2048
+pos  51: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000171 size=2048
+pos  52: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000106 size=2048
+pos  53: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.001083 size=2048
+pos  54: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000121 size=2048
+pos  55: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000747 size=2048
+pos  56: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000120 size=2048
+pos  57: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000113 size=2048
+pos  58: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000116 size=2048
+pos  59: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000130 size=2048
+pos  60: first divergent op pc=16 blk=1 name=attn_norm      maxabs=0.000218 size=2048
+pos  61: first divergent op pc=20 blk=1 name=attn_out       maxabs=0.000301 size=2048
+pos  62: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000100 size=2048
+pos  63: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.001447 size=2048
+pos  64: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000125 size=2048
+pos  65: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000108 size=2048
+pos  66: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000158 size=2048
+pos  67: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000527 size=2048
+pos  68: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000103 size=2048
+pos  69: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000813 size=2048
+pos  70: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000122 size=2048
+pos  71: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000610 size=2048
+pos  72: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000823 size=2048
+pos  73: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000887 size=2048
+pos  74: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000164 size=2048
+pos  75: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000118 size=2048
+pos  76: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.001048 size=2048
+pos  77: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000143 size=2048
+pos  78: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000926 size=2048
+pos  79: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000153 size=2048
+pos  80: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000811 size=2048
+pos  81: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000103 size=2048
+pos  82: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000436 size=2048
+pos  83: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000949 size=2048
+pos  84: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000720 size=2048
+pos  85: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000134 size=2048
+pos  86: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000116 size=2048
+pos  87: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000924 size=2048
+pos  88: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.001020 size=2048
+pos  89: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000105 size=2048
+pos  90: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.001198 size=2048
+pos  91: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000383 size=2048
+pos  92: first divergent op pc=16 blk=1 name=attn_norm      maxabs=0.000408 size=2048
+pos  93: first divergent op pc=20 blk=1 name=attn_out       maxabs=0.000123 size=2048
+pos  94: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000133 size=2048
+pos  95: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000536 size=2048
+pos  96: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000732 size=2048
+pos  97: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000122 size=2048
+pos  98: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000130 size=2048
+pos  99: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000729 size=2048
+pos 100: first divergent op pc=17 blk=1 name=q              maxabs=0.000656 size=2048
+pos 101: first divergent op pc=20 blk=1 name=attn_out       maxabs=0.000186 size=2048
+pos 102: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000937 size=2048
+pos 103: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000676 size=2048
+pos 104: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000232 size=2048
+pos 105: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.001040 size=2048
+pos 106: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000932 size=2048
+pos 107: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000399 size=2048
+pos 108: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000889 size=2048
+pos 109: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000219 size=2048
+pos 110: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000141 size=2048
+pos 111: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000150 size=2048
+pos 112: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000410 size=2048
+pos 113: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000635 size=2048
+pos 114: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000362 size=2048
+pos 115: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000318 size=2048
+pos 116: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000434 size=2048
+pos 117: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000843 size=2048
+pos 118: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000102 size=2048
+pos 119: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000107 size=2048
+pos 120: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000102 size=2048
+pos 121: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000462 size=2048
+pos 122: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000623 size=2048
+pos 123: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000401 size=2048
+pos 124: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.001126 size=2048
+pos 125: first divergent op pc=23 blk=1 name=ffn_norm       maxabs=0.000679 size=2048
+pos 126: first divergent op pc=17 blk=1 name=q              maxabs=0.001220 size=2048
+pos 127: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000107 size=2048
+pos 128: first divergent op pc=21 blk=1 name=attn_proj      maxabs=0.000167 size=2048
+
+POSITIONS=129
+GPU argmax matches: 116/129
+PARITY_VERDICT=PASS

@@ -1,0 +1,12 @@
+{
+  "CapturedAt": "2026-10-19T23:32:41.5313542-04:00",
+  "Processes": [
+    {
+      "ProcessId": 31668,
+      "ParentProcessId": 11440,
+      "Name": "pwsh.exe",
+      "ExecutablePath": "C:\\Users\\Garrett\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.exe",
+      "CommandLine": "\"C:\\Users\\Garrett\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.exe\" -Command \"try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}\n$buildArgs = [string[]]@('--build','_s12_parity_build','--target','deep2_end_to_end_bench','--config','Release','--parallel','8'); $validationArgs = [string[]]@('--target-env','vulkan1.2','rawrxd/src/deep2/shaders/deep2_qgemv_batch8row.spv'); $benchArgs = [string[]]@('-Exe','_s12_parity_build/bin/deep2_end_to_end_bench.exe','-Model','F:\\~dev\\qwen2.5-coder-1.5b-base.gguf','-Tokens','32','-WarmupRuns','1','-Runs','1','-Q4Hot','-Q6Hot','-DenseExec','LAYER_SPLIT','-Q4Tile','8','-NoTrace','-Gpu0Weight','100','-Gpu1Weight','0.01'); & .\\scripts\\deep2_tps_mutation_gate.ps1 -RepoRoot 'F:\\wt_ide1' -MutationScript 'rawrxd/tools/mutate_qgemv_q6_packed_bytes.ps1' -Files ([string[]]@('rawrxd/src/deep2/shaders/deep2_qgemv_batch8row.comp','rawrxd/src/deep2/shaders/deep2_qgemv_batch8row.spv')) -BuildCommand 'cmake' -BuildArguments $buildArgs -ValidationCommand 'C:\\VulkanSDK\\1.4.357.0\\Bin\\spirv-val.exe' -ValidationArguments $validationArgs -BenchmarkScript 'rawrxd/scripts/deep2_gpu_flight_recorder.ps1' -BenchmarkArguments $benchArgs -BaselineMedianTps 35.897 -MinRelativeGain 0 -ReportPath '.rawrxd/tps_mutation_q6packed_probe.json'; exit $LASTEXITCODE\""
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "CapturedAt": "2026-10-19T23:30:37.5702120-04:00",
+  "Wrapper": {
+    "ProcessId": 25164,
+    "ParentProcessId": 29060,
+    "Name": "pwsh.exe",
+    "ExecutablePath": "C:\\Users\\Garrett\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.exe",
+    "CommandLine": "\"C:\\Users\\Garrett\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.exe\" -NoProfile -File .\\scripts\\deep2_gpu_flight_recorder.ps1 -Exe F:\\wt_ide1\\_s12_parity_build\\bin\\deep2_end_to_end_bench.exe -Model F:\\~dev\\qwen2.5-coder-1.5b-base.gguf -Tokens 32 -WarmupRuns 1 -Runs 1 -Q4Hot -Q6Hot -DenseExec LAYER_SPLIT -Q4Tile 8 -NoTrace -Gpu0Weight 100 -Gpu1Weight 0.01 -OutputDir F:\\wt_ide1\\deep2_probe_recorded_async"
+  },
+  "OuterLauncher": {
+    "ProcessId": 29060,
+    "ParentProcessId": 11440,
+    "Name": "pwsh.exe",
+    "ExecutablePath": "C:\\Users\\Garrett\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.exe",
+    "CommandLine": "\"C:\\Users\\Garrett\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.exe\" -Command \"try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}\n$env:DEEP2_RECORDED_GROUP_ASYNC='1'; Remove-Item Env:DEEP2_GPU_TIMING -ErrorAction SilentlyContinue; pwsh -NoProfile -File .\\scripts\\deep2_gpu_flight_recorder.ps1 -Exe 'F:\\wt_ide1\\_s12_parity_build\\bin\\deep2_end_to_end_bench.exe' -Model 'F:\\~dev\\qwen2.5-coder-1.5b-base.gguf' -Tokens 32 -WarmupRuns 1 -Runs 1 -Q4Hot -Q6Hot -DenseExec LAYER_SPLIT -Q4Tile 8 -NoTrace -Gpu0Weight 100 -Gpu1Weight 0.01 -OutputDir 'F:\\wt_ide1\\deep2_probe_recorded_async'\""
+  },
+  "Children": [
+    {
+      "ProcessId": 14572,
+      "ParentProcessId": 25164,
+      "Name": "deep2_end_to_end_bench.exe",
+      "ExecutablePath": "F:\\wt_ide1\\_s12_parity_build\\bin\\deep2_end_to_end_bench.exe",
+      "CommandLine": "\"F:\\wt_ide1\\_s12_parity_build\\bin\\deep2_end_to_end_bench.exe\" --strict-vulkan --no-time-reverse --no-vram-stream --stream-tokens 32 --max-tokens 32 --format receipt F:\\~dev\\qwen2.5-coder-1.5b-base.gguf \"The capital of France is\""
+    }
+  ],
+  "Action": "Stopping only the exact Qwen flight-recorder wrapper; outer Codex launcher remains running."
+}
