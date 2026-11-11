@@ -1,0 +1,77 @@
+{
+  "certification_id": "RAWRXD_AGENT_RELIABILITY_001",
+  "generated_utc": "2026-10-10T22:35:50Z",
+  "environment": {
+    "os": "Microsoft Windows NT 10.0.26200.0",
+    "architecture": "AMD64",
+    "generator": "Visual Studio 17 2022 / x64 / Release",
+    "compiler": "MSVC (from VS BuildTools)"
+  },
+  "source": {
+    "commit": "07dee937bb5738671660118775c4e30a63c78f90",
+    "branch": "ci/github-control-loop-001",
+    "dirty_in_scope": [],
+    "source_tree_sha1": "edfd24fb00d369ca51e60b5d69dd3b49934684e3",
+    "note": "Only files covered by this certification are checked; the workspace contains many pre-existing untracked artifacts outside this scope."
+  },
+  "artifact": {
+    "name": "agentic-resilience-tests.exe",
+    "sha256": "45411ce23d0bc703e4f0a77317700e7d4db9825fca301d0b1ba9f7ecd700b7d2",
+    "size_bytes": 424448,
+    "path": "build-certification/Release/agentic-resilience-tests.exe",
+    "reproducibility_note": "IMPORTANT: MSVC builds are NOT bit-for-bit deterministic (timestamps and local paths are embedded), so this SHA256 will differ on every rebuild even from identical sources. It identifies the specific binary that was executed for this certification; it is NOT a reproducible-build proof. For reproducible provenance use source.source_tree_sha1, or re-run the suite and confirm the same 148/148 pass."
+  },
+  "results": {
+    "tests_passed": 148,
+    "tests_failed": 0,
+    "exit_code": 0
+  },
+  "evidence": {
+    "retry_recovery": {
+      "verified": true,
+      "detail": "recovered on attempt 3"
+    },
+    "retry_exhaustion": {
+      "verified": true,
+      "detail": "gave up after 3 attempts"
+    },
+    "retry_non_retryable": {
+      "verified": true,
+      "detail": "non-retryable error returned after 1 attempt"
+    },
+    "circuit_breaker": {
+      "verified": true,
+      "detail": "breaker state after 2 failures: open"
+    },
+    "policy_serialization": {
+      "verified": true,
+      "detail": "round-trip preserved 6 retryable"
+    },
+    "conflict_detection": {
+      "verified": true,
+      "detail": "detected 1 conflict"
+    },
+    "three_way_merge": {
+      "verified": true,
+      "detail": "merged cleanly"
+    },
+    "cancellation_propagates": {
+      "verified": true,
+      "detail": "cancel token observed by worker: yes"
+    },
+    "fail_closed_unwired": {
+      "verified": true,
+      "detail": "no work function configured"
+    },
+    "concurrent_delegation": {
+      "verified": true,
+      "detail": "12/12 concurrent tasks succeeded"
+    }
+  },
+  "reproduction": [
+    "pwsh -File scripts\\certify_agent_reliability.ps1",
+    "cmake -B build-certification -G \"Visual Studio 17 2022\" -A x64 -DRAWRXD_BUILD_TESTS=ON -DENABLE_VULKAN=OFF -DGGML_VULKAN=OFF -DUSE_ZLIB_FETCHCONTENT=OFF",
+    "cmake --build build-certification --config Release --target agentic-resilience-tests",
+    "build-certification\\bin\\Release\\agentic-resilience-tests.exe"
+  ]
+}
