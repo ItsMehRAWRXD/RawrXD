@@ -1,0 +1,126 @@
+#pragma once
+
+#include <windows.h>
+#include <string>
+#include <vector>
+#include <atomic>
+#include <thread>
+#include <mutex>
+#include <functional>
+#include <queue>
+#include <condition_variable>
+#include "IDELogger.h"
+#include "agent_esp.hpp"
+#include "rawrxd_snap_detectors.hpp"
+#include "deep2_progress_watchdog.hpp"
+
+// Forward declaration
+class Win32IDE;
+
+// Agentic Loop Bridge - connects IDE to deep2_agentic_loop.exe
+class AgenticLoopBridge {
+public:
+    struct ToolResult {
+        bool success;
+        std::string output;
+        int exitCode;
+        std::string toolName;
+        std::string target;
+    };
+
+    struct TaskConfig {
+        std::string modelPath;
+        std::string workDir;
+        std::string targetFile;
+        std::string task;
+        int maxSteps = 8;
+        int maxNewTokens = 512;
+        int maxRetries = 2;
+        int maxWallTimeSec = 300;
+        int maxTotalTokens = 8192;
+        bool quiet = true;
+    };
+
+    using ProgressCallback = std::function<void(const std::string& message)>;
+    using ToolCallback = std::function<void(const ToolResult&)>;
+    using CompleteCallback = std::function<void(bool success, const std::string& summary)>;
+
+    AgenticLoopBridge(Win32IDE* ide);
+    ~AgenticLoopBridge();
+
+    // Start an autonomous repair task with startup recovery
+    bool StartTask(const TaskConfig& config, ProgressCallback progress, ToolCallback toolCb, CompleteCallback completeCb);
+    
+    // Cancel running task
+    void Cancel();
+    
+    // Check if task is running
+    bool IsRunning() const { return m_running.load(); }
+    
+    // Get current status
+    std::string GetStatus() const;
+
+    // ESP telemetry
+    void SetESPBus(rawrxd::esp::Bus* bus, uint64_t requestId = 0);
+
+private:
+    // Startup recovery
+    void StartupRecovery();
+    bool IsAbandonedProcess(const rawrxd::snap::Process& proc);
+    
+    // Event handlers
+    void HandleSnapEvent(const rawrxd::snap::Event& event);
+    void HandleWatchdogTimeout(const rawrxd::watchdog::Status& status);
+    
+    // Worker thread
+    void WorkerThread();
+    
+    // Process management
+    bool LaunchAgenticLoop();
+    void TerminateProcessTree(DWORD pid);
+    void ReadProcessOutput();
+    
+    // ESP event publishing
+    void PublishESPEvent(rawrxd::esp::Kind kind, const std::string& message, int value = 0);
+    
+    // Parse agentic loop output for tool calls
+    void ParseOutput(const std::string& line);
+
+    Win32IDE* m_ide = nullptr;
+    
+    std::atomic<bool> m_running{false};
+    std::atomic<bool> m_cancelRequested{false};
+    std::atomic<bool> m_processStarted{false};
+    
+    HANDLE m_process = nullptr;
+    HANDLE m_stdoutRead = nullptr;
+    HANDLE m_stdoutWrite = nullptr;
+    HANDLE m_stdinRead = nullptr;
+    HANDLE m_stdinWrite = nullptr;
+    DWORD m_processId = 0;
+    
+    std::thread m_workerThread;
+    std::thread m_outputThread;
+    std::mutex m_callbackMutex;
+    
+    ProgressCallback m_progressCallback;
+    ToolCallback m_toolCallback;
+    CompleteCallback m_completeCallback;
+    
+    TaskConfig m_currentConfig;
+    std::string m_accumulatedOutput;
+    std::queue<std::string> m_outputQueue;
+    std::mutex m_queueMutex;
+    std::condition_variable m_queueCv;
+    
+    // ESP Telemetry
+    rawrxd::esp::Bus* m_espBus = nullptr;
+    uint64_t m_espRequestId = 0;
+    
+    // SNAP Detector for process monitoring
+    rawrxd::snap::Detector m_snapDetector;
+    std::atomic<bool> m_snapStarted{false};
+    
+    // Progress Watchdog
+    rawrxd::watchdog::Watchdog m_watchdog;
+};

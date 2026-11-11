@@ -1,0 +1,41 @@
+name: Deep2 Native Safety Smoke
+on:
+  push:
+    branches:
+      - feature/deep2-promethevs-native-75
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-safety:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and run standalone Deep2 bounds and cache tests (Windows MSVC)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vs = & $vswhere -latest -property installationPath
+          if (-not $vs) { throw 'Visual Studio toolchain missing' }
+          $vcvars = Join-Path $vs 'VC\Auxiliary\Build\vcvars64.bat'
+          $tests = @('deep2_expert_slice_bounds_smoke', 'deep2_expert_cache_budget_smoke')
+          foreach ($test in $tests) {
+            $cmd = 'call "' + $vcvars + '" && cl /nologo /std:c++20 /W4 /WX /EHsc /Fe:' + $test + '.exe tests\' + $test + '.cpp && ' + $test + '.exe'
+            cmd /c $cmd
+            if ($LASTEXITCODE -ne 0) { throw "Failed $test ($LASTEXITCODE)" }
+          }
+      - name: Compile and run standalone Deep2 bounds and cache tests (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          for test in deep2_expert_slice_bounds_smoke deep2_expert_cache_budget_smoke; do
+            g++ -std=c++20 -Wall -Wextra -Werror -pedantic -fsanitize=address,undefined -fno-omit-frame-pointer "tests/${test}.cpp" -o "/tmp/${test}"
+            "/tmp/${test}"
+          done

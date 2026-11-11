@@ -1,0 +1,211 @@
+﻿{
+    "schema":  "rawr.native.c07.cert/2",
+    "gate":  "C07",
+    "suite":  "RAWR_NATIVE_COMPILER_STAGE1",
+    "generated_utc":  "2026-10-22T00:55:36Z",
+    "result":  {
+                   "status":  "CERTIFIED",
+                   "passed":  10,
+                   "failed":  0,
+                   "total":  10,
+                   "suite_total_passed":  160,
+                   "suite_total_failed":  0,
+                   "suite_verdict":  "RAWR_NATIVE_COMPILER_STAGE1 = PASS",
+                   "process_exit_code":  0,
+                   "verdict":  "the first-party assembler, the COFF writer and the native PE linker produce a Windows executable that the Windows loader accepts and that exits with 42"
+               },
+    "gates":  [
+                  {
+                      "gate":  "C01",
+                      "passed":  97,
+                      "failed":  0
+                  },
+                  {
+                      "gate":  "C02",
+                      "passed":  10,
+                      "failed":  0
+                  },
+                  {
+                      "gate":  "C03",
+                      "passed":  7,
+                      "failed":  0
+                  },
+                  {
+                      "gate":  "C04",
+                      "passed":  7,
+                      "failed":  0
+                  },
+                  {
+                      "gate":  "C05",
+                      "passed":  5,
+                      "failed":  0
+                  },
+                  {
+                      "gate":  "C06",
+                      "passed":  14,
+                      "failed":  0
+                  },
+                  {
+                      "gate":  "C07",
+                      "passed":  10,
+                      "failed":  0
+                  },
+                  {
+                      "gate":  "C08",
+                      "passed":  10,
+                      "failed":  0
+                  }
+              ],
+    "build":  {
+                  "script":  "compilers/native_compiler/tools/build_stage1.bat",
+                  "c07_only":  "compilers/native_compiler/tools/build_c07_only.bat",
+                  "compiler":  "MSVC 19.44 (vcvars64), /std:c++17 /EHsc /W3 /O2 /GS-",
+                  "note":  "build_c07_only.bat rebuilds CoffWriter.cpp and X64Assembler.cpp before linking; linking the stale objects made a source fix appear to have no effect",
+                  "linker":  "F:\\rawrxd\\_pre_merge_backup\\toolchain\\from_scratch\\phase2_linker\\build\\rawrxd_link.exe",
+                  "linker_sha256":  "B3DF04A3C42D4F36A5175491C4991DD43D2549135FE5E3460995DEA531D9B9E9"
+              },
+    "exit_codes":  {
+                       "c07_test_exit":  0,
+                       "e2e_program_exit":  42,
+                       "arithmetic_program_exit":  41
+                   },
+    "artifacts":  {
+                      "object":  {
+                                     "path":  "F:\\rawrxd\\compilers\\build\\rawr_stage1/c07_e2e.obj",
+                                     "sha256":  "1885C3B02ACA3F76C60B7DD051B51DEBFFCA79D9E3139CF560C42AB4AE3320E1",
+                                     "bytes":  160
+                                 },
+                      "executable":  {
+                                         "path":  "F:\\rawrxd\\compilers\\build\\rawr_stage1/c07_e2e.exe",
+                                         "sha256":  "2976B8011E9A7F6152DF78733092647A346DA7EC4362064AA16E7C523747BFEB",
+                                         "bytes":  2048
+                                     },
+                      "fixture_e2e":  {
+                                          "path":  "F:\\rawrxd\\compilers\\build\\rawr_stage1/c07_e2e.asm",
+                                          "bytes":  152
+                                      },
+                      "fixture_arith":  {
+                                            "path":  "F:\\rawrxd\\compilers\\build\\rawr_stage1/c07_arith.asm",
+                                            "bytes":  245
+                                        }
+                  },
+    "encodings":  {
+                      "before":  {
+                                     "sub rsp,40":  "48 A9 E0 28 00 00 00",
+                                     "mov ecx,42":  "B8 01 2A 00 00 00",
+                                     "add rsp,40":  "48 81 E0 28 00 00 00",
+                                     "add [rax],ebx":  "01 1D"
+                                 },
+                      "after":  {
+                                    "sub rsp,40":  "48 83 EC 28",
+                                    "mov ecx,42":  "B9 2A 00 00 00",
+                                    "add rsp,40":  "48 83 C4 28",
+                                    "add [rax],ebx":  "01 18",
+                                    "add [rax+8],ebx":  "01 58 08",
+                                    "add ebx,[rax]":  "01 18"
+                                },
+                      "reference":  "the L3 fixture object, which the linker suite certifies"
+                  },
+    "import_contract":  {
+                            "assembler_form":  "E8 rel32 with a REL32 relocation against the external symbol",
+                            "linker_resolution":  "import_gen.c: uint32_t target = sym-\u003eneeds_thunk ? sym-\u003ethunk_rva : sym-\u003eiat_rva; and needs_thunk is 1 for every symbol except the __imp_ forms",
+                            "l3_fixture_form":  "FF 15 disp32 against __imp_ExitProcess, resolved straight to the IAT slot",
+                            "conclusion":  "both representations are supported by the existing linker; no linker change was needed or made",
+                            "relocation_container":  "per-section relocation tables, which is what CoffWriter emits and what coff_reader.c reads"
+                        },
+    "defects_closed":  [
+                           {
+                               "id":  "C07-1",
+                               "title":  "the fixture was written with sizeof on a pointer, truncating it to 7 bytes",
+                               "file":  "compilers/native_compiler/tests/c07_e2e_test.cpp",
+                               "function":  "WriteFixture",
+                               "fix":  "the length comes from strlen"
+                           },
+                           {
+                               "id":  "C07-2",
+                               "title":  "cmd.exe stripped the outer quotes of the link command",
+                               "file":  "compilers/native_compiler/tests/c07_e2e_test.cpp",
+                               "function":  "WrapForCmd",
+                               "fix":  "the whole command is wrapped in one more pair of quotes; paths use backslashes"
+                           },
+                           {
+                               "id":  "C07-3",
+                               "title":  "the ALU immediate encodings were wrong",
+                               "file":  "compilers/native_compiler/src/asm/X64Assembler.cpp",
+                               "function":  "EncodeAlu",
+                               "fix":  "the group-1 opcode is fixed and the operation travels in the ModRM reg field"
+                           },
+                           {
+                               "id":  "C07-4",
+                               "title":  "mov reg, imm mis-selected the register and mangled the immediate",
+                               "file":  "compilers/native_compiler/src/asm/X64Assembler.cpp",
+                               "function":  "EncodeMov",
+                               "fix":  "the destination register is folded into the opcode, 0xB8+rd"
+                           },
+                           {
+                               "id":  "C07-5",
+                               "title":  "the memory forms lost their base register",
+                               "file":  "compilers/native_compiler/src/asm/X64Assembler.cpp",
+                               "function":  "EncodeAlu/EncodeMov and the operand parser",
+                               "fix":  "the memory operand keeps its base, the no-base form emits the disp32 it requires, and the register-against-memory form uses the 32-bit opcode"
+                           },
+                           {
+                               "id":  "C07-6",
+                               "title":  "the test program used a mis-aligned stack frame",
+                               "file":  "compilers/native_compiler/tests/c07_e2e_test.cpp",
+                               "function":  "kProgram/kArithmeticProgram",
+                               "fix":  "a 40-byte frame, matching the Win64 shadow space and the certified L3 fixture"
+                           },
+                           {
+                               "id":  "C07-7",
+                               "title":  "the C07 build linked a stale assembler",
+                               "file":  "compilers/native_compiler/tools/build_c07_only.bat",
+                               "function":  "build_c07_only",
+                               "fix":  "the assembler and the COFF writer are rebuilt from source before linking"
+                           }
+                       ],
+    "scope":  {
+                  "proves":  "a first-party assembler, COFF writer and PE linker produce a Windows executable that the loader accepts and that exits with a chosen code",
+                  "does_not_prove":  "that a C++ front end exists; the lexer is certified separately at C01 and nothing yet connects C++ source to the assembler\u0027s input",
+                  "not_modified":  [
+                                       "C01",
+                                       "C02",
+                                       "C03",
+                                       "C04",
+                                       "C05",
+                                       "C06",
+                                       "C08"
+                                   ]
+              },
+    "source_sha256":  {
+                          "compilers/native_compiler/tests/c07_e2e_test.cpp":  "EBF768F15908E0E89F601A5ECD805C9C9F071A5BB36BBEEF9B8AF11FC002E942",
+                          "compilers/native_compiler/src/asm/X64Assembler.cpp":  "AD07308582794A718A61C7057E0AADF9F8D11250BB72FEF6A97523A4EF13E31E",
+                          "compilers/native_compiler/src/object/CoffWriter.cpp":  "3F4DF8F32370FFB1EE246D65572164862D0BFBFA0FED5A78FEA78438C55EEEFD",
+                          "compilers/native_compiler/tools/build_c07_only.bat":  "502A982E62BA0618CC8685046F238ECAE7AF81315903D95BCA24470FC9031A81",
+                          "compilers/native_compiler/tools/build_stage1.bat":  "422EA4AF0E38E0AA2EB39FB7AA5D7AA101A3FCF56E603CC38DD768B588584165"
+                      },
+    "report":  "certification/C07_ENCODER_ROOT_CAUSE.md",
+    "log":  "certification/RAWR_NATIVE_COMPILER_STAGE1.log",
+    "previous":  "certification/RAWR_NATIVE_C07_CERT_001.json",
+    "clean_tree_validation":  {
+                                  "method":  "the native_compiler sources were copied to a fresh directory with every .obj and .exe removed, then build_stage1.bat was run against a new output directory",
+                                  "build_artifacts_present_at_start":  0,
+                                  "result":  "RAWR_NATIVE_COMPILER_STAGE1 = PASS",
+                                  "per_gate":  {
+                                                   "C01":  "97/0",
+                                                   "C02":  "10/0",
+                                                   "C03":  "7/0",
+                                                   "C04":  "7/0",
+                                                   "C05":  "5/0",
+                                                   "C06":  "14/0",
+                                                   "C07":  "10/0",
+                                                   "C08":  "10/0"
+                                               },
+                                  "total":  "160 passed, 0 failed"
+                              },
+    "provenance_risk":  {
+                            "finding":  "compilers/native_compiler is UNTRACKED in git: git ls-files reports 0 files and the whole tree shows as untracked",
+                            "consequence":  "the native compiler cannot be exported with git archive, so the clean-tree validation above was a fresh copy of the working tree rather than a git export; the sources are not version-controlled",
+                            "recommendation":  "track the native_compiler sources before the next release baseline, or the certified assembler has no history behind it"
+                        }
+}

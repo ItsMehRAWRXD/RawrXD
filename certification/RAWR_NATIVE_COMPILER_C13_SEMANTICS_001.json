@@ -1,0 +1,127 @@
+﻿{
+    "schema":  "rawr.native.compiler.c13/1",
+    "milestone":  "RAWR_NATIVE_COMPILER_C13_SEMANTICS_001",
+    "generated_utc":  "2026-10-22T05:52:13Z",
+    "acceptance":  {
+                       "RAWR_NATIVE_COMPILER_STAGE1":  "PASS",
+                       "total_checks":  280,
+                       "failed":  0,
+                       "clean_git_archive":  "PASS - 280 checks, 0 failures, exit 0, the native linker rebuilt from the exported source",
+                       "no_second_parser":  true,
+                       "linker_unchanged":  true,
+                       "legacy_stage2_front_end":  "kept for regression comparison only; it is not the production path"
+                   },
+    "source_revision":  {
+                            "branch":  "feature/native-compiler-stage3",
+                            "commit":  "a967fd93c3dfb6426ebe5b6ac6e354630673f9e8"
+                        },
+    "gates":  {
+                  "C01-C08":  161,
+                  "C09 provenance":  6,
+                  "C10 preprocessor":  44,
+                  "C11 parser":  29,
+                  "S2 pipeline":  21,
+                  "S2.1 exit 87":  7,
+                  "C13 semantics":  12,
+                  "total":  280
+              },
+    "semantic_layer":  {
+                           "files":  [
+                                         "src/frontend/Sema.h",
+                                         "src/frontend/Sema.cpp"
+                                     ],
+                           "runs":  "after the C11 parser and before the lowering, so a program that does not make sense never becomes machine code",
+                           "symbol_tables":  "a file scope, a function scope for the parameters, and a block scope for the locals; a lookup walks outwards, so a local may shadow an outer name, but a name may not be declared twice in the same scope",
+                           "types":  "the integer types with their signedness and widths, pointers, arrays, functions, structs and enums; a type lives in an arena that never moves it, because a type cannot hold itself",
+                           "declarators":  "resolved from the identifier outwards, so \u0027int *a[10]\u0027 is an array of pointers and \u0027int (*b)[10]\u0027 is a pointer to an array",
+                           "lvalues":  "an identifier, a subscript and a member are places that can be stored to; an assignment to anything else is reported",
+                           "calls":  "the number of the arguments is checked, and each argument is checked against its parameter",
+                           "returns":  "checked against the return type of the function",
+                           "diagnostics":  "every diagnostic carries the span of the source it is about, and the line and column"
+                       },
+    "diagnostic_examples":  [
+                                {
+                                    "code":  "C1030",
+                                    "message":  "the name \"notdeclared\" is not declared",
+                                    "kind":  "negative"
+                                },
+                                {
+                                    "code":  "C1021",
+                                    "message":  "the name \"x\" is declared twice in the same scope",
+                                    "kind":  "negative"
+                                },
+                                {
+                                    "code":  "C1039",
+                                    "message":  "the function \"f\" takes 2 arguments but 1 were given",
+                                    "kind":  "negative"
+                                },
+                                {
+                                    "code":  "C1005",
+                                    "message":  "the function \"f\" is defined twice",
+                                    "kind":  "negative"
+                                },
+                                {
+                                    "code":  "C1037",
+                                    "message":  "the function \"nosuch\" is not declared",
+                                    "kind":  "negative"
+                                },
+                                {
+                                    "code":  "C1041",
+                                    "message":  "this expression is not supported yet",
+                                    "kind":  "negative"
+                                },
+                                {
+                                    "code":  "C1013",
+                                    "message":  "a value of type X cannot be returned from a function that returns Y",
+                                    "kind":  "negative"
+                                }
+                            ],
+    "findings":  [
+                     {
+                         "id":  "S13-01",
+                         "title":  "a function prototype is a file scope declaration, not a function declaration",
+                         "detail":  "the C11 parser records \u0027int helper(void);\u0027 as a DeclStmt whose VarDecl holds a declarator chain with a DeclaratorFunction; the layer recognises that chain, produces no code and treats the name as external",
+                         "consequence":  "a function may be declared in one translation unit and defined in another"
+                     },
+                     {
+                         "id":  "S13-02",
+                         "title":  "(void) is an empty parameter list, not a parameter of type void",
+                         "detail":  "counting the void parameter made a function that takes no arguments look as if it took one, and every call to it was reported",
+                         "consequence":  "fixed in both the declarator resolution and the function definition"
+                     }
+                 ],
+    "unsupported_language_features":  [
+                                          "pointers and pointer arithmetic",
+                                          "arrays and subscripting",
+                                          "structs, unions and their member access",
+                                          "enums",
+                                          "typedefs",
+                                          "switch, case and default",
+                                          "break, continue and goto",
+                                          "labels",
+                                          "floating point",
+                                          "variadic functions",
+                                          "sizeof",
+                                          "compound assignment",
+                                          "shifts",
+                                          "the conditional operator",
+                                          "string literals",
+                                          "casts",
+                                          "storage class specifiers",
+                                          "file scope variables",
+                                          "function pointers"
+                                      ],
+    "unsupported_abi_features":  [
+                                     "arguments are passed in the four integer registers only; a fifth argument would go on the stack, which is not implemented",
+                                     "the caller saved registers are never saved and never restored, because the lowering uses only volatile registers",
+                                     "the stack arguments of a variadic call are not set up",
+                                     "there is no unwind information"
+                                 ],
+    "not_claimed":  [
+                        "complete C17",
+                        "complete C++20",
+                        "self-hosting"
+                    ],
+    "source_manifest":  "certification/RAWR_NATIVE_COMPILER_C13_SEMANTICS_001.source_manifest.csv",
+    "log":  "certification/RAWR_NATIVE_COMPILER_C13_SEMANTICS_001.log"
+}

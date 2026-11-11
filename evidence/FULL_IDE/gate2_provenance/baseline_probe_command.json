@@ -1,0 +1,7 @@
+{
+  "build_command": "cmake --build evidence/FULL_IDE/gate2_provenance/build --config Release --target gate2_admission_probe",
+  "build_exit": 0,
+  "run_command": "evidence/FULL_IDE/gate2_provenance/build/Release/gate2_admission_probe.exe",
+  "run_exit": 1,
+  "expected_baseline_exit": 1
+}

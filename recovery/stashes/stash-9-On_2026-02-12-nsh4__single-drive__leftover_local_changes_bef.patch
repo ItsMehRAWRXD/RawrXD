@@ -1,0 +1,18 @@
+diff --git a/src/asm/RawrXD_OmegaOrchestrator.asm b/src/asm/RawrXD_OmegaOrchestrator.asm
+index ce1f925088..4d769385df 100644
+--- a/src/asm/RawrXD_OmegaOrchestrator.asm
++++ b/src/asm/RawrXD_OmegaOrchestrator.asm
+@@ -80,11 +80,11 @@ FLAG_PREFETCH_L2            EQU 00000800h
+ ; ============================================================
+ ; DATA SECTION
+ ; ============================================================
+-.data
++.DATA
++ALIGN 64
+ 
+ ; NF4 Lookup Table (16 float values for 4-bit dequantization)
+ ; Values from QLoRA paper: Normal Float 4-bit quantization
+-align 64
+ NF4_Lookup_Table REAL4 16 DUP(0.0)
+ ; Initialized in Titan_InitializeDMA
+ 

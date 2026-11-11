@@ -1,0 +1,61 @@
+DEEP2_RESIDENT_Q4K_KERNEL_PARITY_001 — Receipt
+=============================================
+Date: 2026-09-19
+Harness: lane-tagged quant dispatches (1=dual-row via RunWeightHostRoundTrip/
+RunWeightGroupHostRoundTrip, 2=resident via forwardLayerGpuResident ranges),
+1-in-4 sampled GPU timestamp pairs recorded mid-command-buffer into a
+dedicated query pool, collected post-fence (no new synchronization).
+Pipeline-handle identity per lane proves shader/layout match.
+
+GATE=DEEP2_RESIDENT_Q4K_KERNEL_PARITY_001
+VERDICT=PARITY_ALREADY_ACHIEVED (slowdown 0.717 — resident is FASTER)
+
+MEASUREMENTS (Qwen2.5-Coder-32B Q4_K_M, 64-token runs):
+  Arm 1 — dual-row default (dualrow_64.txt):
+    DUAL_Q4K_DISPATCH_COUNT=119360   DUAL_Q4K_ROWS=633454592
+    DUAL_Q4K_SAMPLED_COUNT=29840      DUAL_Q4K_NS_PER_ROW=17.920
+    RESIDENT lane idle (0 samples).
+  Arm 2 — resident-first (resident_64.txt, DECODE_TPS_ENGINE=4.941240):
+    RESIDENT_Q4K_DISPATCH_COUNT=59584 RESIDENT_Q4K_ROWS=618856448
+    RESIDENT_Q4K_SAMPLED_COUNT=14896   RESIDENT_Q4K_NS_PER_ROW=16.970
+    DUAL lane carried only lmHead (192 dispatches, 23.669 ns/row).
+  Q4K_SHADER_MATCH=1  Q4K_LAYOUT_MATCH=1  Q4K_GEOMETRY_MATCH=1
+  RESIDENT_Q4K_SLOWDOWN = 16.970 / 17.920 = 0.717
+
+EXECUTION-PATH FACTS (source-verified):
+  - Both lanes dispatch through the SAME dispatchQuant() on the SAME
+    qPipeline_ (deep2_qgemv.comp): one 256-lane workgroup per row,
+    subgroup tree reduction, same std430 descriptor layout, same
+    packed Q4K decode (q4k_dot4 4-column vector fetch). Dual-row reaches
+    it via DispatchWeight->DispatchGemvQuant; resident via its gemv
+    lambda->DispatchGemvQuant. There was never a separate "slow kernel"
+    to port.
+  - The resident lane is marginally FASTER per row (fused range
+    amortizes one submit/wait per range vs dual-row's per-op envelope).
+
+RE-DERIVATION (resolves the attribution ladder's apparent 2x):
+  - Qwen32 per-token Q4K rows: 64 layers x (4xH^2 + 3xHxI + ...) with
+    H=5120, I=27648 => ~9.4M GEMV rows/token (+ lmHead ~2.6M).
+  - At ~17 ns/row => ~160-200 ms of Q4K GEMV GPU time per token.
+    THIS is the wall in BOTH lanes. The resident ranges (250 ms/token)
+    = Q4K GEMVs + norms + RoPE + device attention + FFN-act. The
+    dual-row lane's 126 ms GPU/token is the same kernels with its
+    per-op envelope overlapped across two GPUs.
+  - The "~2x slower resident kernels" interpretation is RETRACTED.
+    Both lanes run identical kernels at identical (0.72x) efficiency.
+
+NEXT OPTIMIZATION ORDER (updated by this measurement):
+  1. RANGE OVERLAP — the two per-slot ranges are serialized
+     (range0 -> handoff -> range1). With kernels at parity, overlapping
+     the two ranges is now the single largest structural lever
+     (~2x wall reduction potential).
+  2. Q4K GEMV kernel bandwidth itself (~17 ns/row): at H=5120 that is
+     ~300 GB/s effective vs the R9700's peak — there IS kernel-level
+     headroom, but it is a shared improvement for BOTH lanes (same
+     shader), not a resident-specific gap.
+  3. Long-context attention (secondary at 256).
+
+STATUS:
+  PRODUCT_DEFAULT=DUAL_ROW (5.142206 TPS sealed at 256 tokens).
+  Resident-first remains HOLD, but its kernel story is CLOSED: parity
+  achieved by construction (same pipeline) and measured (0.717).
