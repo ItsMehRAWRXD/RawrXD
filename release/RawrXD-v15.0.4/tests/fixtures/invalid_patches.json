@@ -1,0 +1,128 @@
+{
+  "description": "Collection of invalid patches for testing validation",
+  "patches": [
+    {
+      "name": "missing_patch_id",
+      "patch": {
+        "version": "1.0.0",
+        "system_type": "swarm"
+      },
+      "expected_error": "Missing required field: patch_id"
+    },
+    {
+      "name": "missing_version",
+      "patch": {
+        "patch_id": "test-patch",
+        "system_type": "swarm"
+      },
+      "expected_error": "Missing required field: version"
+    },
+    {
+      "name": "invalid_system_type",
+      "patch": {
+        "patch_id": "test-patch",
+        "version": "1.0.0",
+        "system_type": "invalid_system"
+      },
+      "expected_error": "Invalid system_type"
+    },
+    {
+      "name": "empty_components",
+      "patch": {
+        "patch_id": "test-patch",
+        "version": "1.0.0",
+        "system_type": "swarm",
+        "components": []
+      },
+      "expected_error": "Components list cannot be empty"
+    },
+    {
+      "name": "missing_security",
+      "patch": {
+        "patch_id": "test-patch",
+        "version": "1.0.0",
+        "system_type": "swarm",
+        "components": ["coordinator"],
+        "files": []
+      },
+      "expected_error": "Missing security metadata"
+    },
+    {
+      "name": "invalid_checksum",
+      "patch": {
+        "patch_id": "test-patch",
+        "version": "1.0.0",
+        "system_type": "swarm",
+        "components": ["coordinator"],
+        "files": [
+          {
+            "path": "test.txt",
+            "checksum": "invalid checksum with spaces and special chars!@#"
+          }
+        ],
+        "security": {
+          "signature": "test-sig",
+          "approved_by": ["admin"]
+        }
+      },
+      "expected_error": "Invalid checksum format"
+    },
+    {
+      "name": "sql_injection_in_patch_id",
+      "patch": {
+        "patch_id": "patch'; DROP TABLE patches; --",
+        "version": "1.0.0",
+        "system_type": "swarm",
+        "components": ["coordinator"],
+        "files": [],
+        "security": {
+          "signature": "test-sig",
+          "approved_by": ["admin"]
+        }
+      },
+      "expected_error": "Invalid characters in patch_id"
+    },
+    {
+      "name": "path_traversal_in_file_path",
+      "patch": {
+        "patch_id": "test-patch",
+        "version": "1.0.0",
+        "system_type": "swarm",
+        "components": ["coordinator"],
+        "files": [
+          {
+            "path": "../../../etc/passwd",
+            "checksum": "a9993e364706816aba3e25717850c26c9cd0d89d"
+          }
+        ],
+        "security": {
+          "signature": "test-sig",
+          "approved_by": ["admin"]
+        }
+      },
+      "expected_error": "Path traversal detected"
+    },
+    {
+      "name": "oversized_content",
+      "patch": {
+        "patch_id": "test-patch",
+        "version": "1.0.0",
+        "system_type": "swarm",
+        "components": ["coordinator"],
+        "files": [
+          {
+            "path": "test.txt",
+            "checksum": "a9993e364706816aba3e25717850c26c9cd0d89d",
+            "content": "BASE64_ENCODED_CONTENT_EXCEEDING_10MB...",
+            "size": 15728640
+          }
+        ],
+        "security": {
+          "signature": "test-sig",
+          "approved_by": ["admin"]
+        }
+      },
+      "expected_error": "File size exceeds maximum"
+    }
+  ]
+}

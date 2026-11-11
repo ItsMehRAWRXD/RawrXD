@@ -1,0 +1,15 @@
+ Assembling: D:\rawrxd\src\RawrXD_CLI.asm
+D:\rawrxd\src\RawrXD_CLI.asm(20) : error A2034:must be in segment block
+D:\rawrxd\src\RawrXD_CLI.asm(21) : error A2034:must be in segment block
+D:\rawrxd\src\RawrXD_CLI.asm(22) : error A2034:must be in segment block
+D:\rawrxd\src\RawrXD_CLI.asm(23) : error A2034:must be in segment block
+D:\rawrxd\src\RawrXD_CLI.asm(24) : error A2034:must be in segment block
+D:\rawrxd\src\RawrXD_CLI.asm(30) : error A2034:must be in segment block : Get_Kernel32_Base
+D:\rawrxd\src\RawrXD_CLI.asm(32) : error A2034:must be in segment block
+D:\rawrxd\src\RawrXD_CLI.asm(33) : error A2034:must be in segment block
+D:\rawrxd\src\RawrXD_CLI.asm(34) : error A2034:must be in segment block
+D:\rawrxd\src\RawrXD_CLI.asm(35) : error A2034:must be in segment block
+D:\rawrxd\src\RawrXD_CLI.asm(36) : error A2034:must be in segment block
+D:\rawrxd\src\RawrXD_CLI.asm(37) : error A2034:must be in segment block
+D:\rawrxd\src\RawrXD_CLI.asm(38) : error A2034:must be in segment block
+D:\rawrxd\src\RawrXD_CLI.asm(39) : fatal error A1010:unmatched block nesting : Get_Kernel32_Base

@@ -1,0 +1,14 @@
+ Assembling: D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_ide_dpi.asm
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_ide_dpi.asm(11) : error A2006:undefined symbol : HANDLE
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_ide_dpi.asm(11) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_ide_dpi.asm(14) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_ide_dpi.asm(17) : error A2008:syntax error : GetDeviceCaps
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_ide_dpi.asm(20) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_ide_dpi.asm(29) : error A2008:syntax error : LOG_INFO
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_ide_dpi.asm(39) : error A2006:undefined symbol : RECT
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_ide_dpi.asm(39) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_ide_dpi.asm(49) : error A2008:syntax error : SetWindowPos
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_ide_dpi.asm(53) : error A2008:syntax error : LOG_INFO
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_ide_dpi.asm(15) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_ide_dpi.asm(43) : error A2006:undefined symbol : left
+D:\rawrxd\history\runoff\part_0021\d__temp_RawrXD-agentic-ide-production_src_masm_ide_dpi.asm(47) : error A2006:undefined symbol : top

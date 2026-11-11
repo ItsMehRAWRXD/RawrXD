@@ -1,0 +1,9 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD\src\asm\RawrXD\DiskKernel.asm
+D:\rawrxd\reconstructed\RawrXD\src\asm\RawrXD\DiskKernel.asm(523) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\reconstructed\RawrXD\src\asm\RawrXD\DiskKernel.asm(527) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\reconstructed\RawrXD\src\asm\RawrXD\DiskKernel.asm(539) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\reconstructed\RawrXD\src\asm\RawrXD\DiskKernel.asm(543) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\reconstructed\RawrXD\src\asm\RawrXD\DiskKernel.asm(547) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\reconstructed\RawrXD\src\asm\RawrXD\DiskKernel.asm(1264) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\asm\RawrXD\DiskKernel.asm(1873) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\asm\RawrXD\DiskKernel.asm(1093) : error A2009:syntax error in expression

@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(70) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(117) : error A2008:syntax error : stage
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(137) : error A2008:syntax error : size
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(234) : error A2008:syntax error : size
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(258) : error A2008:syntax error : DQ
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(625) : error A2111:conflicting parameter definition
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(633) : error A2008:syntax error : CreateFileA
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(643) : error A2008:syntax error : ReadFile
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(661) : error A2008:syntax error : ReadFile
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(670) : error A2008:syntax error : ReadFile
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(673) : error A2008:syntax error : CloseHandle
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(698) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(705) : error A2008:syntax error : GetProcAddress
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(733) : error A2008:syntax error : GetProcAddress
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(743) : error A2008:syntax error : GetProcAddress
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(863) : error A2008:syntax error : CreateThread
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(931) : error A2111:conflicting parameter definition
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(939) : error A2008:syntax error : VirtualAlloc
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(979) : error A2111:conflicting parameter definition
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1035) : error A2008:syntax error : code
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1070) : error A2008:syntax error : code
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1105) : error A2008:syntax error : code
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1140) : error A2008:syntax error : code
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1244) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1250) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1251) : error A2008:syntax error : code
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1263) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1282) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1292) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1331) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1337) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1338) : error A2008:syntax error : code
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1350) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1369) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1379) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1418) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1424) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1425) : error A2008:syntax error : code
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1437) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1456) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1466) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1505) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1511) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1512) : error A2008:syntax error : code
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1524) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1543) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1553) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1583) : error A2111:conflicting parameter definition
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1626) : error A2111:conflicting parameter definition
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1661) : error A2111:conflicting parameter definition
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1702) : error A2111:conflicting parameter definition
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1794) : error A2111:conflicting parameter definition
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1849) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1868) : error A2111:conflicting parameter definition
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1916) : error A2111:conflicting parameter definition
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1991) : error A2111:conflicting parameter definition
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(2022) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(2043) : error A2111:conflicting parameter definition
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(2230) : error A2008:syntax error : lstrlenA
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(2231) : error A2008:syntax error : WriteFile
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(2236) : error A2111:conflicting parameter definition
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(2239) : error A2008:syntax error : lstrlenA
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(2240) : error A2008:syntax error : WriteFile
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(2245) : error A2111:conflicting parameter definition
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(2362) : error A2008:syntax error : prefetch_queue
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(439) : error A2006:undefined symbol : strcpy_s
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(446) : error A2006:undefined symbol : strcpy_s
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(485) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(491) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(497) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(502) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(509) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(516) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(523) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(530) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(540) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(574) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(586) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(598) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(604) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(610) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(635) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(647) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(659) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(668) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(712) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(714) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(716) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(812) : error A2083:invalid scale value
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(860) : error A2083:invalid scale value
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(902) : error A2006:undefined symbol : prefetch_queue
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(903) : error A2006:undefined symbol : PrefetchEntry
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(904) : error A2006:undefined symbol : PrefetchEntry
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(905) : error A2006:undefined symbol : PrefetchEntry
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(906) : error A2006:undefined symbol : PrefetchEntry
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(907) : error A2006:undefined symbol : PrefetchEntry
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(947) : error A2081:missing operand after unary operator
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(948) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(954) : error A2081:missing operand after unary operator
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(961) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-Streaming-Orchestrator.asm(1004) : fatal error A1012:error count exceeds 100; stopping assembly

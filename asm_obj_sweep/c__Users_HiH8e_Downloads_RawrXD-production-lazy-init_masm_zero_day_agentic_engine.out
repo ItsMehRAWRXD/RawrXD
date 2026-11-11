@@ -1,0 +1,34 @@
+ Assembling: D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(146) : error A2008:syntax error : PRIVATE
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(152) : error A2008:syntax error : PRIVATE
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(158) : error A2008:syntax error : PRIVATE
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(164) : error A2008:syntax error : PRIVATE
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(186) : error A2008:syntax error : rbx
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(187) : error A2008:syntax error : r12
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(188) : error A2008:syntax error : r13
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(189) : error A2008:syntax error : r14
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(290) : error A2008:syntax error : rbx
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(339) : error A2008:syntax error : rbx
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(340) : error A2008:syntax error : r12
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(341) : error A2008:syntax error : r13
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(529) : error A2008:syntax error : rbx
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(530) : error A2008:syntax error : r12
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(531) : error A2008:syntax error : r13
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(532) : error A2008:syntax error : r14
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(533) : error A2008:syntax error : r15
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(661) : error A2008:syntax error : rbx
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(662) : error A2008:syntax error : r12
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(663) : error A2008:syntax error : r13
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(202) : error A2006:undefined symbol : LMEM_ZEROINIT
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(211) : error A2006:undefined symbol : LMEM_ZEROINIT
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(256) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(368) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(391) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(438) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(506) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(564) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(596) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(607) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(617) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(627) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_masm_zero_day_agentic_engine.asm(760) : error A2047:empty (null) string

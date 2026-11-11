@@ -1,0 +1,97 @@
+name: RAWRXD Compiler Driver CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1.1
+      
+    - name: Build Compiler Driver
+      shell: cmd
+      run: |
+        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+        build.bat
+        
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: rawrxd-compiler
+        path: bin/rawrxd-compiler.exe
+        
+    - name: Run Smoke Tests
+      shell: cmd
+      run: |
+        cd tests
+        smoke_test.bat
+
+  test-compilers:
+    runs-on: windows-latest
+    needs: build-windows
+    
+    strategy:
+      matrix:
+        language: [c, asm, csharp]
+        
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Download Artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: rawrxd-compiler
+        path: bin/
+        
+    - name: Test ${{ matrix.language }} Compilation
+      shell: pwsh
+      run: |
+        $testFile = "test.${{ matrix.language }}"
+        $ext = "${{ matrix.language }}"
+        
+        # Create test file based on language
+        switch ($ext) {
+          "c" { 
+            @"
+#include <stdio.h>
+int main() {
+    printf("Hello from C!\n");
+    return 0;
+}
+"@ | Set-Content $testFile
+          }
+          "asm" {
+            @"
+.code
+main proc
+    mov rax, 42
+    ret
+main endp
+end
+"@ | Set-Content $testFile
+          }
+          "csharp" {
+            @"
+using System;
+class Program {
+    static void Main() {
+        Console.WriteLine("Hello from C#!");
+    }
+}
+"@ | Set-Content $testFile
+          }
+        }
+        
+        # Compile
+        .\bin\rawrxd-compiler.exe compile $testFile
+        if ($LASTEXITCODE -ne 0) { throw "Compilation failed" }
+        
+        Write-Host "✅ ${{ matrix.language }} compilation successful"

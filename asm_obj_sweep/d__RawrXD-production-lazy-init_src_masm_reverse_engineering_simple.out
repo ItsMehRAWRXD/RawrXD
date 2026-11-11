@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering_simple.asm
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering_simple.asm(93) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering_simple.asm(95) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering_simple.asm(97) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering_simple.asm(282) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\runoff\part_0017\d__RawrXD-production-lazy-init_src_masm_reverse_engineering_simple.asm(302) : error A2029:multiple base registers not allowed

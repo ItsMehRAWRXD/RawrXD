@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\-1a7ed460\dhk7.ASM
+D:\rawrxd\history\-1a7ed460\dhk7.ASM(6) : error A2008:syntax error : .
+D:\rawrxd\history\-1a7ed460\dhk7.ASM(7) : error A2008:syntax error : .
+D:\rawrxd\history\-1a7ed460\dhk7.ASM(9) : error A2008:syntax error : .
+D:\rawrxd\history\-1a7ed460\dhk7.ASM(12) : fatal error A1000:cannot open file : user32.inc

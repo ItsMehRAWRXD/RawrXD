@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\UEC-X\core\masm64\dispatch.asm
+D:\rawrxd\UEC-X\core\masm64\dispatch.asm(68) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\UEC-X\core\masm64\dispatch.asm(100) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\UEC-X\core\masm64\dispatch.asm(456) : error A2006:undefined symbol : INVALID_HANDLE_VALUE

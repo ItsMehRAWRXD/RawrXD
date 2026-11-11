@@ -1,0 +1,58 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(8) : error A2008:syntax error : WIN64
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(56) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(64) : error A2008:syntax error : type
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(143) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(309) : error A2008:syntax error : name
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(310) : error A2008:syntax error : name
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(471) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(159) : error A2006:undefined symbol : AlignedAlloc64
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(165) : error A2006:undefined symbol : AlignedAlloc64
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(224) : error A2006:undefined symbol : AST_NODE
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(225) : error A2006:undefined symbol : NODE_FUNCTION
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(227) : error A2006:undefined symbol : NODE_CLASS
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(229) : error A2006:undefined symbol : NODE_VARIABLE
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(242) : error A2006:undefined symbol : AST_NODE
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(249) : error A2006:undefined symbol : AST_NODE
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(254) : error A2006:undefined symbol : AST_NODE
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(263) : error A2006:undefined symbol : ESPSortEntities
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(292) : error A2006:undefined symbol : ESPGrowEntityArray
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(302) : error A2006:undefined symbol : AST_NODE
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(304) : error A2006:undefined symbol : AST_NODE
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(313) : error A2006:undefined symbol : AST_NODE
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(314) : error A2081:missing operand after unary operator
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(316) : error A2006:undefined symbol : NODE_FUNCTION
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(318) : error A2006:undefined symbol : NODE_CLASS
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(320) : error A2006:undefined symbol : NODE_VARIABLE
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(325) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(328) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(331) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(334) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(342) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(374) : error A2006:undefined symbol : ClearFramebuffer
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(378) : error A2006:undefined symbol : ESPCullEntities
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(480) : error A2006:undefined symbol : ESPRenderBox
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(489) : error A2006:undefined symbol : ESPRenderSnapLine
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(498) : error A2006:undefined symbol : ESPRenderHealthBar
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(526) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(538) : error A2006:undefined symbol : RenderGlowQuadBlurred
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(593) : error A2006:undefined symbol : AimbotSmoothMove
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(656) : error A2006:undefined symbol : ChamsRenderWireframe
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(662) : error A2006:undefined symbol : ChamsRenderFlat
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(668) : error A2006:undefined symbol : ChamsRenderTextured
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(674) : error A2006:undefined symbol : ChamsRenderHologram
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(192) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(271) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(355) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(434) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(504) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(543) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(615) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(626) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(679) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(693) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(707) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(720) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(790) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(792) : error A2206:missing operator in expression
+D:\rawrxd\reconstructed\RawrXD\src\agentic\monaco\NEON\MONACO\HACK.ASM(794) : error A2206:missing operator in expression

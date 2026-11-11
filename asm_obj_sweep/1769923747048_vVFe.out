@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769923747048_vVFe.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769923747048_vVFe.asm(469) : error A2005:symbol redefinition : Math_InitTables
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769923747048_vVFe.asm(472) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769923747048_vVFe.asm(496) : fatal error A1010:unmatched block nesting : Math_InitTables

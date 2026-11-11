@@ -1,0 +1,10 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633266014_ZYMc.asm
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633266014_ZYMc.asm(7) : error A2008:syntax error : win64
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633266014_ZYMc.asm(155) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633266014_ZYMc.asm(156) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633266014_ZYMc.asm(157) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633266014_ZYMc.asm(158) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633266014_ZYMc.asm(161) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633266014_ZYMc.asm(213) : error A2008:syntax error : type
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633266014_ZYMc.asm(270) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\RawrXD_NativeModelBridge_Complete.asm\1769633266014_ZYMc.asm(360) : fatal error A1010:unmatched block nesting : DequantizeTensor

@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RawrXD Enterprise Support Portal</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo { font-size: 24px; font-weight: 700; color: var(--primary); }
+        
+        .nav { display: flex; gap: 8px; }
+        .nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .nav a:hover, .nav a.active {
+            color: var(--text-primary);
+            background: var(--border);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 32px;
+        }
+        
+        .sidebar {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 24px;
+            height: fit-content;
+        }
+        
+        .sidebar h3 {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+        
+        .sidebar ul {
+            list-style: none;
+        }
+        
+        .sidebar li {
+            margin-bottom: 8px;
+        }
+        
+        .sidebar a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        
+        .sidebar a:hover, .sidebar a.active {
+            color: var(--text-primary);
+            background: var(--border);
+        }
+        
+        .badge {
+            margin-left: auto;
+            background: var(--primary);
+            color: white;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+        
+        .stat-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid var(--border);
+        }
+        
+        .stat-card h4 {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .stat-change {
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        
+        .positive { color: var(--success); }
+        .negative { color: var(--danger); }
+        
+        .section {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid var(--border);
+        }
+        
+        .section h2 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        th {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status.open {
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--primary);
+        }
+        
+        .status.resolved {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--success);
+        }
+        
+        .status.pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+        
+        .priority {
+            display: inline-flex;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .priority.high {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+        
+        .priority.medium {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+        
+        .priority.low {
+            background: rgba(148, 163, 184, 0.2);
+            color: var(--text-secondary);
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+        
+        .ticket-form {
+            display: grid;
+            gap: 16px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .form-group label {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 12px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        .quick-links {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        
+        .quick-link {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: all 0.2s;
+        }
+        
+        .quick-link:hover {
+            border-color: var(--primary);
+        }
+        
+        .quick-link h4 {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        
+        .quick-link p {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">◈ RawrXD Enterprise</div>
+        <nav class="nav">
+            <a href="#" class="active">Support</a>
+            <a href="#">Documentation</a>
+            <a href="#">API</a>
+            <a href="#">Account</a>
+        </nav>
+    </header>
+    
+    <div class="container">
+        <div class="dashboard">
+            <aside class="sidebar">
+                <h3>Support Menu</h3>
+                <ul>
+                    <li><a href="#" class="active">📊 Dashboard</a></li>
+                    <li><a href="#">🎫 My Tickets <span class="badge">3</span></a></li>
+                    <li><a href="#">➕ New Ticket</a></li>
+                    <li><a href="#">📚 Knowledge Base</a></li>
+                    <li><a href="#">💬 Live Chat</a></li>
+                    <li><a href="#">📞 Contact</a></li>
+                </ul>
+                
+                <h3 style="margin-top: 24px;">Resources</h3>
+                <ul>
+                    <li><a href="#">📖 Documentation</a></li>
+                    <li><a href="#">🔧 System Status</a></li>
+                    <li><a href="#">📈 Benchmarks</a></li>
+                    <li><a href="#">🚀 Release Notes</a></li>
+                </ul>
+            </aside>
+            
+            <main class="main-content">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h4>Open Tickets</h4>
+                        <div class="stat-value">3</div>
+                        <div class="stat-change positive">↓ 2 from last week</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Resolved (30d)</h4>
+                        <div class="stat-value">12</div>
+                        <div class="stat-change positive">↑ 5 from last month</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Avg Response</h4>
+                        <div class="stat-value">2.4h</div>
+                        <div class="stat-change positive">↓ 0.5h improvement</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Satisfaction</h4>
+                        <div class="stat-value">98%</div>
+                        <div class="stat-change positive">↑ 3% from last month</div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2>🎫 Recent Tickets</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ticket ID</th>
+                                <th>Subject</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Last Update</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>#SUP-2026-0042</td>
+                                <td>Hotpatch deployment failing on Windows Server</td>
+                                <td><span class="priority high">High</span></td>
+                                <td><span class="status open">Open</span></td>
+                                <td>2 hours ago</td>
+                                <td>15 min ago</td>
+                            </tr>
+                            <tr>
+                                <td>#SUP-2026-0038</td>
+                                <td>Benchmark results discrepancy on RX 7900 XTX</td>
+                                <td><span class="priority medium">Medium</span></td>
+                                <td><span class="status pending">Pending</span></td>
+                                <td>1 day ago</td>
+                                <td>4 hours ago</td>
+                            </tr>
+                            <tr>
+                                <td>#SUP-2026-0035</td>
+                                <td>License renewal question</td>
+                                <td><span class="priority low">Low</span></td>
+                                <td><span class="status resolved">Resolved</span></td>
+                                <td>3 days ago</td>
+                                <td>1 day ago</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="section">
+                    <h2>➕ Create New Ticket</h2>
+                    <form class="ticket-form">
+                        <div class="form-group">
+                            <label>Subject</label>
+                            <input type="text" placeholder="Brief description of your issue">
+                        </div>
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select>
+                                <option>Technical Issue</option>
+                                <option>License Question</option>
+                                <option>Feature Request</option>
+                                <option>Billing</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Priority</label>
+                            <select>
+                                <option>Low - General question</option>
+                                <option>Medium - Minor issue</option>
+                                <option>High - Production impact</option>
+                                <option>Critical - Service down</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea placeholder="Please provide detailed information about your issue...
+
+Include:
+- Steps to reproduce
+- Expected behavior
+- Actual behavior
+- Error messages
+- Environment details"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Submit Ticket</button>
+                    </form>
+                </div>
+                
+                <div class="section">
+                    <h2>📚 Quick Links</h2>
+                    <div class="quick-links">
+                        <a href="#" class="quick-link">
+                            <h4>📖 API Documentation</h4>
+                            <p>Complete API reference</p>
+                        </a>
+                        <a href="#" class="quick-link">
+                            <h4>🔧 Troubleshooting</h4>
+                            <p>Common issues & fixes</p>
+                        </a>
+                        <a href="#" class="quick-link">
+                            <h4>📊 Benchmark Guide</h4>
+                            <p>Running benchmarks</p>
+                        </a>
+                        <a href="#" class="quick-link">
+                            <h4>🐳 Docker Setup</h4>
+                            <p>Container deployment</p>
+                        </a>
+                        <a href="#" class="quick-link">
+                            <h4>🔐 Security</h4>
+                            <p>Security best practices</p>
+                        </a>
+                        <a href="#" class="quick-link">
+                            <h4>🚀 Migration</h4>
+                            <p>Migration guides</p>
+                        </a>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

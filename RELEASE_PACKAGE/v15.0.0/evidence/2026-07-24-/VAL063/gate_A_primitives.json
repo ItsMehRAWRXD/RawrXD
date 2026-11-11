@@ -1,0 +1,27 @@
+{
+  "gate": "A",
+  "component": "identity_primitives",
+  "sha256": "passed",
+  "uuid": "passed",
+  "timestamp": "passed",
+  "identity_composition": "passed",
+  "deterministic": true,
+  "captured_at": "2026-07-24T00:00:00.000Z",
+  "artifacts": {
+    "execution_types.hpp": "Identity substrate definitions",
+    "hash_provider.hpp/cpp": "SHA-256 canonical hashing",
+    "uuid_provider.hpp/cpp": "UUID v4 generation",
+    "timestamp_provider.hpp/cpp": "Monotonic + wall-clock timestamps",
+    "execution_types_test.cpp": "Test suite with 20+ assertions",
+    "CMakeLists.txt": "Build configuration"
+  },
+  "identity_model": {
+    "prompt_hash": "SHA-256 of input prompt",
+    "configuration_hash": "SHA-256 of sampler configuration",
+    "model_hash": "SHA-256 of GGUF file",
+    "runtime_hash": "SHA-256 of runtime binary",
+    "combined_identity": "SHA-256(prompt || config || model || runtime)"
+  },
+  "canonical_serialization": "Binary concatenation (no JSON/whitespace ambiguity)",
+  "status": "COMPLETE"
+}

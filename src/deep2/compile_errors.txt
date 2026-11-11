@@ -1,0 +1,22 @@
+In file included from C:/ProgramData/mingw64/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/immintrin.h:109,
+                 from C:/ProgramData/mingw64/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/x86intrin.h:32,
+                 from C:/ProgramData/mingw64/mingw64/x86_64-w64-mingw32/include/winnt.h:1695,
+                 from C:/ProgramData/mingw64/mingw64/x86_64-w64-mingw32/include/minwindef.h:163,
+                 from C:/ProgramData/mingw64/mingw64/x86_64-w64-mingw32/include/windef.h:9,
+                 from C:/ProgramData/mingw64/mingw64/x86_64-w64-mingw32/include/windows.h:69,
+                 from NVMeStream.h:32,
+                 from Deep2Engine.h:22,
+                 from Deep2Engine.cpp:7:
+C:/ProgramData/mingw64/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/fmaintrin.h: In function 'void Deep2_VecDotProduct(const float*, const float*, float*, size_t)':
+C:/ProgramData/mingw64/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/fmaintrin.h:63:1: error: inlining failed in call to 'always_inline' '__m256 _mm256_fmadd_ps(__m256, __m256, __m256)': target specific option mismatch
+   63 | _mm256_fmadd_ps (__m256 __A, __m256 __B, __m256 __C)
+      | ^~~~~~~~~~~~~~~
+Deep2Engine.cpp:107:34: note: called from here
+  107 |         sum_vec = _mm256_fmadd_ps(va, vb, sum_vec);
+      |                   ~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~
+C:/ProgramData/mingw64/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/fmaintrin.h:63:1: error: inlining failed in call to 'always_inline' '__m256 _mm256_fmadd_ps(__m256, __m256, __m256)': target specific option mismatch
+   63 | _mm256_fmadd_ps (__m256 __A, __m256 __B, __m256 __C)
+      | ^~~~~~~~~~~~~~~
+Deep2Engine.cpp:107:34: note: called from here
+  107 |         sum_vec = _mm256_fmadd_ps(va, vb, sum_vec);
+      |                   ~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~

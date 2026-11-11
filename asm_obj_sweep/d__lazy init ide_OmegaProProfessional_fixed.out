@@ -1,0 +1,107 @@
+ Assembling: D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(4) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(5) : error A2008:syntax error : .
+
+***********
+ASCII build
+***********
+
+C:\masm32\include\windows.inc(9750) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(10183) : error A2008:syntax error : frame
+C:\masm32\include\windows.inc(16333) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(18862) : error A2008:syntax error : Frame
+C:\masm32\include\windows.inc(24749) : error A2042:statement too complex
+C:\masm32\include\winextra.inc(11052) : error A2026:constant expected
+C:\masm32\include\winextra.inc(11053) : error A2026:constant expected
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(129) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(131) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(137) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(146) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(167) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(171) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(175) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(179) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(186) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(188) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(190) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(194) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(195) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(232) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(237) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(238) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(239) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(240) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(241) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(242) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(245) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(252) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(253) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(254) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(255) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(256) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(257) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(258) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(261) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(267) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(271) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(272) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(273) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(274) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(275) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(284) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(285) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(286) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(287) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(288) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(289) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(293) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(306) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(307) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(308) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(309) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(310) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(311) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(313) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(314) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(315) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(318) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(339) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(374) : error A2008:syntax error : RVAToFile
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(376) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(383) : error A2008:syntax error : RVAToFile
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(385) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(386) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(387) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(390) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(391) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(398) : error A2008:syntax error : RVAToFile
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(409) : error A2008:syntax error : RVAToFile
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(416) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(417) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(418) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(419) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(420) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(423) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(428) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(429) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(430) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(431) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(434) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(454) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(472) : error A2008:syntax error : CalcEntropy
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(485) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(488) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(490) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(491) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(495) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(496) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(497) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(500) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(525) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(541) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(542) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(543) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(544) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(545) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(548) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_OmegaProProfessional_fixed.asm(593) : fatal error A1012:error count exceeds 100; stopping assembly

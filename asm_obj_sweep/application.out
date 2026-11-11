@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\rawrxd\application.asm
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\MASM\ide\src\rawrxd\application.asm(5) : fatal error A1000:cannot open file : rawrxd_includes.inc

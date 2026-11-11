@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\all_versions\RawrXD_P2PRelay.asm\1771276750509_13Z0.asm
+D:\rawrxd\history\all_versions\RawrXD_P2PRelay.asm\1771276750509_13Z0.asm(105) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\all_versions\RawrXD_P2PRelay.asm\1771276750509_13Z0.asm(761) : error A2008:syntax error : /content
+D:\rawrxd\history\all_versions\RawrXD_P2PRelay.asm\1771276750509_13Z0.asm(762) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\all_versions\RawrXD_P2PRelay.asm\1771276750509_13Z0.asm(763) : error A2088:END directive required at end of file
+D:\rawrxd\history\all_versions\RawrXD_P2PRelay.asm\1771276750509_13Z0.asm(109) : warning A4014:instructions and initialized data not supported in BSS segments
+D:\rawrxd\history\all_versions\RawrXD_P2PRelay.asm\1771276750509_13Z0.asm(655) : error A2219:Bad alignment for offset in unwind code.

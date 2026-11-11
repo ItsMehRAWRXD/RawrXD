@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\runoff\part_0007\d__lazy init ide_omega_pro_v4.asm
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_omega_pro_v4.asm(4) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_omega_pro_v4.asm(5) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_omega_pro_v4.asm(52) : fatal error A1000:cannot open file : \masm32\include\windows.inc

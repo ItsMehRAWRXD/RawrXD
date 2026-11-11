@@ -1,0 +1,13 @@
+ Assembling: D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_metrics_dump.asm\1769491877478_Oltc.asm
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_metrics_dump.asm\1769491877478_Oltc.asm(21) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_metrics_dump.asm\1769491877478_Oltc.asm(22) : error A2008:syntax error : CreateFileA
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_metrics_dump.asm\1769491877478_Oltc.asm(28) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_metrics_dump.asm\1769491877478_Oltc.asm(31) : error A2008:syntax error : ReadFile
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_metrics_dump.asm\1769491877478_Oltc.asm(34) : error A2008:syntax error : CreateFileA
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_metrics_dump.asm\1769491877478_Oltc.asm(36) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_metrics_dump.asm\1769491877478_Oltc.asm(42) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_metrics_dump.asm\1769491877478_Oltc.asm(43) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_metrics_dump.asm\1769491877478_Oltc.asm(25) : error A2006:undefined symbol : wait
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_metrics_dump.asm\1769491877478_Oltc.asm(37) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_metrics_dump.asm\1769491877478_Oltc.asm(38) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\all_versions\src\thermal\agent_clients\agent_metrics_dump.asm\1769491877478_Oltc.asm(44) : error A2006:undefined symbol : try

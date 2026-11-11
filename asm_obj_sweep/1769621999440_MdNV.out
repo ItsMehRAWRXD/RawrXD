@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621999440_MdNV.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621999440_MdNV.asm(232) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621999440_MdNV.asm(290) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621999440_MdNV.asm(328) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769621999440_MdNV.asm(437) : error A2022:instruction operands must be the same size

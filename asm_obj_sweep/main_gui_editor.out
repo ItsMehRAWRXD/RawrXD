@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(4) : error A2008:syntax error : BITS
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(5) : error A2008:syntax error : DEFAULT
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(8) : error A2008:syntax error : define
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(9) : error A2008:syntax error : define
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(10) : error A2008:syntax error : define
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(11) : error A2008:syntax error : define
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(12) : error A2008:syntax error : define
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(13) : error A2008:syntax error : define
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(14) : error A2008:syntax error : define
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(17) : error A2008:syntax error : define
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(18) : error A2008:syntax error : define
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(19) : error A2008:syntax error : define
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(20) : error A2008:syntax error : define
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(21) : error A2008:syntax error : define
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(22) : error A2008:syntax error : define
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(23) : error A2008:syntax error : define
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(24) : error A2008:syntax error : define
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(26) : error A2008:syntax error : section
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(28) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(29) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(32) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(33) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(34) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(35) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(36) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(39) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(40) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(41) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(42) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(43) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(46) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(47) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(48) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(49) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(50) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(51) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(52) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(55) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(56) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(57) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(58) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(61) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(62) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(63) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(64) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(67) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(68) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(69) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(70) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(71) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(72) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(75) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(76) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(77) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(78) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(81) : error A2008:syntax error : times
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(82) : error A2008:syntax error : times
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(83) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(84) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(85) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(86) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(87) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(90) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(91) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(92) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(93) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(94) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(95) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(98) : error A2008:syntax error : times
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(99) : error A2008:syntax error : times
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(101) : error A2008:syntax error : section
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(102) : error A2008:syntax error : global
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(104) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(105) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(106) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(107) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(108) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(109) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(110) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(113) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(114) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(115) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(117) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(118) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(121) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(122) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(123) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(124) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(125) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(127) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(128) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(131) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(132) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(133) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(135) : error A2008:syntax error : .
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(136) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(137) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(138) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(139) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(141) : error A2034:must be in segment block
+D:\rawrxd\OrganizedPiProject\misc\Desktop\secure-ide-asm\main_gui_editor.asm(142) : fatal error A1012:error count exceeds 100; stopping assembly

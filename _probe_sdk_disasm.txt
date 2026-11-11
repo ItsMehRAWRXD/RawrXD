@@ -1,0 +1,20 @@
+Microsoft (R) COFF/PE Dumper Version 14.51.36246.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file d:\rawrxd-ci-bootstrap\_probe_sdk.dll
+
+File Type: DLL
+
+  0000000180001000: FF 25 22 10 00 00  jmp         qword ptr [0000000180002028h]
+  0000000180001006: FF 25 F4 0F 00 00  jmp         qword ptr [0000000180002000h]
+  000000018000100C: FF 25 F6 0F 00 00  jmp         qword ptr [0000000180002008h]
+  0000000180001012: FF 25 F8 0F 00 00  jmp         qword ptr [0000000180002010h]
+  0000000180001018: FF 25 FA 0F 00 00  jmp         qword ptr [0000000180002018h]
+  000000018000101E: FF 25 FC 0F 00 00  jmp         qword ptr [0000000180002020h]
+
+  Summary
+
+       1D000 .data
+        1000 .rdata
+        1000 .text

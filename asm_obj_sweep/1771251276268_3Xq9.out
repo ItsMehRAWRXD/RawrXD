@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\all_versions\native_core\kernels\q4_0_dequant.asm\1771251276268_3Xq9.asm
+D:\rawrxd\history\all_versions\native_core\kernels\q4_0_dequant.asm\1771251276268_3Xq9.asm(6) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\native_core\kernels\q4_0_dequant.asm\1771251276268_3Xq9.asm(28) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\native_core\kernels\q4_0_dequant.asm\1771251276268_3Xq9.asm(81) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\native_core\kernels\q4_0_dequant.asm\1771251276268_3Xq9.asm(85) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\native_core\kernels\q4_0_dequant.asm\1771251276268_3Xq9.asm(113) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\native_core\kernels\q4_0_dequant.asm\1771251276268_3Xq9.asm(114) : error A2206:missing operator in expression

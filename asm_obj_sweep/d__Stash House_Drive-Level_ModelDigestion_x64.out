@@ -1,0 +1,41 @@
+ Assembling: D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(14) : error A2008:syntax error : ALIGN
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(77) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(78) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(79) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(80) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(81) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(82) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(83) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(86) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(87) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(88) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(89) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(90) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(93) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(94) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(95) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(101) : error A2034:must be in segment block : InitializeAntiDebug
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(102) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(104) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(105) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(106) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(109) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(112) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(113) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(114) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(117) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(118) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(119) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(120) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(122) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(123) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(125) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(126) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(127) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(129) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(130) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(131) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(132) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(133) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0019\d__Stash House_Drive-Level_ModelDigestion_x64.asm(134) : fatal error A1010:unmatched block nesting : InitializeAntiDebug

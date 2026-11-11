@@ -1,0 +1,25 @@
+{
+  "validation_timestamp": "2026-07-30 17:05:28",
+  "overall_status": "FAIL",
+  "inference_validation": {
+    "tps_passed": null,
+    "ttft_passed": null,
+    "avg_ttft_ms": null,
+    "avg_tps": null,
+    "latency_passed": null,
+    "passed": null,
+    "avg_latency_ms": null
+  },
+  "telemetry_validation": {
+    "passed": true
+  },
+  "target_url": "http://127.0.0.1:8080",
+  "hardware_validation": {
+    "passed": false,
+    "rx7800xt_detected": false,
+    "report_path": "validation_output\\hardware_report.json",
+    "r9700_detected": true,
+    "multi_gpu_ready": false
+  },
+  "output_directory": "D:\\rawrxd\\validation\\harness\\validation_output"
+}

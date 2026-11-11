@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\runoff\part_0019\d__temp_agentic_Everything_MyCopilot_IDE_masm-multiwindow-kernel.asm
+D:\rawrxd\history\runoff\part_0019\d__temp_agentic_Everything_MyCopilot_IDE_masm-multiwindow-kernel.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_agentic_Everything_MyCopilot_IDE_masm-multiwindow-kernel.asm(9) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_agentic_Everything_MyCopilot_IDE_masm-multiwindow-kernel.asm(15) : fatal error A1000:cannot open file : \masm32\include\windows.inc

@@ -1,0 +1,20 @@
+ Assembling: D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_vulkan_NEON_VULKAN_FABRIC_STUB.asm
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_vulkan_NEON_VULKAN_FABRIC_STUB.asm(24) : error A2006:undefined symbol : szVulkanDll
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_vulkan_NEON_VULKAN_FABRIC_STUB.asm(25) : error A2006:undefined symbol : LoadLibraryA
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_vulkan_NEON_VULKAN_FABRIC_STUB.asm(28) : error A2006:undefined symbol : hVulkanLib
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_vulkan_NEON_VULKAN_FABRIC_STUB.asm(33) : error A2006:undefined symbol : szVkCreateInst
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_vulkan_NEON_VULKAN_FABRIC_STUB.asm(34) : error A2006:undefined symbol : GetProcAddress
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_vulkan_NEON_VULKAN_FABRIC_STUB.asm(35) : error A2006:undefined symbol : pfnVkCreateInst
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_vulkan_NEON_VULKAN_FABRIC_STUB.asm(39) : error A2006:undefined symbol : szVkEnumPhys
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_vulkan_NEON_VULKAN_FABRIC_STUB.asm(40) : error A2006:undefined symbol : GetProcAddress
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_vulkan_NEON_VULKAN_FABRIC_STUB.asm(41) : error A2006:undefined symbol : pfnVkEnumPhys
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_vulkan_NEON_VULKAN_FABRIC_STUB.asm(44) : error A2006:undefined symbol : g_NeonFabricInit
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_vulkan_NEON_VULKAN_FABRIC_STUB.asm(52) : error A2006:undefined symbol : g_NeonFabricInit
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_vulkan_NEON_VULKAN_FABRIC_STUB.asm(106) : error A2006:undefined symbol : g_NeonFabricInit
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_vulkan_NEON_VULKAN_FABRIC_STUB.asm(116) : error A2006:undefined symbol : VirtualAlloc
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_vulkan_NEON_VULKAN_FABRIC_STUB.asm(157) : error A2006:undefined symbol : hVulkanLib
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_vulkan_NEON_VULKAN_FABRIC_STUB.asm(160) : error A2006:undefined symbol : FreeLibrary
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_vulkan_NEON_VULKAN_FABRIC_STUB.asm(161) : error A2006:undefined symbol : hVulkanLib
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_vulkan_NEON_VULKAN_FABRIC_STUB.asm(165) : error A2006:undefined symbol : pfnVkCreateInst
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_vulkan_NEON_VULKAN_FABRIC_STUB.asm(166) : error A2006:undefined symbol : pfnVkEnumPhys
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_vulkan_NEON_VULKAN_FABRIC_STUB.asm(167) : error A2006:undefined symbol : g_NeonFabricInit

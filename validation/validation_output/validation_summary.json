@@ -1,0 +1,10 @@
+{
+  "boot_passed": true,
+  "boot_time_ms": 1,
+  "health_passed": true,
+  "inference_passed": true,
+  "iterations": 100,
+  "streaming_passed": true,
+  "target_url": "http://127.0.0.1:8080",
+  "validation_completed": "2026-07-30 21:51:25"
+}

@@ -1,0 +1,237 @@
+name: RawrXD Test Suite
+
+on:
+  push:
+    branches: [ main, develop, 'copilot/**' ]
+    paths:
+      - 'security/**'
+      - 'monitoring/**'
+      - 'tests/**'
+      - '.github/workflows/test-suite.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'security/**'
+      - 'monitoring/**'
+      - 'tests/**'
+
+env:
+  POWERSHELL_TELEMETRY_OPTOUT: 1
+
+jobs:
+  # Unit Tests
+  unit-tests:
+    name: Unit Tests
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup PowerShell
+      uses: actions/setup-powershell@v1
+      with:
+        powershell-version: '7.4'
+    
+    - name: Install Pester
+      shell: pwsh
+      run: |
+        Install-Module -Name Pester -Force -SkipPublisherCheck
+        Import-Module Pester -MinimumVersion 5.0
+    
+    - name: Run Unit Tests
+      shell: pwsh
+      run: |
+        $result = Invoke-Pester -Path "tests/unit" -OutputFormat NUnitXml -OutputPath "tests/results/unit-tests.xml" -PassThru
+        if ($result.FailedCount -gt 0) {
+          exit 1
+        }
+    
+    - name: Upload Unit Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: unit-test-results
+        path: tests/results/unit-tests.xml
+
+  # Integration Tests
+  integration-tests:
+    name: Integration Tests
+    runs-on: windows-latest
+    needs: unit-tests
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup PowerShell
+      uses: actions/setup-powershell@v1
+      with:
+        powershell-version: '7.4'
+    
+    - name: Install Pester
+      shell: pwsh
+      run: |
+        Install-Module -Name Pester -Force -SkipPublisherCheck
+        Import-Module Pester -MinimumVersion 5.0
+    
+    - name: Setup Test Environment
+      shell: pwsh
+      run: |
+        # Create required directories
+        New-Item -ItemType Directory -Path "logs/audit" -Force
+        New-Item -ItemType Directory -Path "tests/fixtures" -Force
+        
+        # Initialize RBAC if needed
+        if (Test-Path "security/phase_h_enterprise_security/rbac/rbac_manager.ps1") {
+          & "security/phase_h_enterprise_security/rbac/rbac_manager.ps1" -Operation initialize
+        }
+    
+    - name: Run Integration Tests
+      shell: pwsh
+      run: |
+        $result = Invoke-Pester -Path "tests/integration" -OutputFormat NUnitXml -OutputPath "tests/results/integration-tests.xml" -PassThru
+        if ($result.FailedCount -gt 0) {
+          exit 1
+        }
+    
+    - name: Upload Integration Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: integration-test-results
+        path: tests/results/integration-tests.xml
+
+  # Smoke Tests
+  smoke-tests:
+    name: Smoke Tests
+    runs-on: windows-latest
+    needs: unit-tests
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup PowerShell
+      uses: actions/setup-powershell@v1
+      with:
+        powershell-version: '7.4'
+    
+    - name: Install Pester
+      shell: pwsh
+      run: |
+        Install-Module -Name Pester -Force -SkipPublisherCheck
+        Import-Module Pester -MinimumVersion 5.0
+    
+    - name: Setup Environment
+      shell: pwsh
+      run: |
+        New-Item -ItemType Directory -Path "logs/audit" -Force
+        New-Item -ItemType Directory -Path "backups" -Force
+    
+    - name: Run Smoke Tests
+      shell: pwsh
+      run: |
+        $result = Invoke-Pester -Path "tests/smoke" -Tag "Smoke" -OutputFormat NUnitXml -OutputPath "tests/results/smoke-tests.xml" -PassThru
+        if ($result.FailedCount -gt 0) {
+          exit 1
+        }
+    
+    - name: Upload Smoke Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: smoke-test-results
+        path: tests/results/smoke-tests.xml
+
+  # Code Coverage
+  code-coverage:
+    name: Code Coverage
+    runs-on: windows-latest
+    needs: [unit-tests, integration-tests]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup PowerShell
+      uses: actions/setup-powershell@v1
+      with:
+        powershell-version: '7.4'
+    
+    - name: Install Pester
+      shell: pwsh
+      run: |
+        Install-Module -Name Pester -Force -SkipPublisherCheck
+        Import-Module Pester -MinimumVersion 5.0
+    
+    - name: Run Tests with Coverage
+      shell: pwsh
+      run: |
+        $config = @{
+          Run = @{
+            Path = "tests/unit", "tests/integration"
+            PassThru = $true
+          }
+          CodeCoverage = @{
+            Enabled = $true
+            OutputPath = "tests/coverage/coverage.xml"
+            OutputFormat = "JaCoCo"
+            Path = @("security/**/*.ps1", "monitoring/**/*.ps1")
+            CoveragePercentTarget = 80
+          }
+          TestResult = @{
+            Enabled = $true
+            OutputPath = "tests/results/coverage-tests.xml"
+            OutputFormat = "NUnitXml"
+          }
+        }
+        
+        $result = Invoke-Pester -Configuration $config
+        
+        # Output coverage summary
+        Write-Host "Code Coverage: $($result.CodeCoverage.CoveragePercent)%"
+        
+        if ($result.FailedCount -gt 0) {
+          exit 1
+        }
+        
+        if ($result.CodeCoverage.CoveragePercent -lt 80) {
+          Write-Host "::warning::Code coverage is below 80%"
+        }
+    
+    - name: Upload Coverage Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: code-coverage
+        path: tests/coverage/coverage.xml
+    
+    - name: Upload Coverage Report
+      uses: codecov/codecov-action@v4
+      if: always()
+      with:
+        files: tests/coverage/coverage.xml
+        fail_ci_if_error: false
+        verbose: true
+
+  # Test Summary
+  test-summary:
+    name: Test Summary
+    runs-on: windows-latest
+    needs: [unit-tests, integration-tests, smoke-tests]
+    if: always()
+    
+    steps:
+    - name: Download All Test Results
+      uses: actions/download-artifact@v4
+      with:
+        path: test-results
+    
+    - name: Publish Test Results
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      if: always()
+      with:
+        files: test-results/**/*.xml
+        check_name: RawrXD Test Results
+        comment_title: Test Results Summary

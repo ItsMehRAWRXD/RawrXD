@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\src\asm\SovereignKernels.asm
+D:\rawrxd\src\asm\SovereignKernels.asm(130) : warning A4025:ENDP found before .ENDPROLOG : Kernel_RMSNorm_Final
+D:\rawrxd\src\asm\SovereignKernels.asm(130) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\src\asm\SovereignKernels.asm(130) : error A2220:Missing .ENDPROLOG

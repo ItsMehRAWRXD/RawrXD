@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\mmap_loader.asm\1771477084715_s8t3.asm
+D:\rawrxd\history\all_versions\mmap_loader.asm\1771477084715_s8t3.asm(58) : error A2008:syntax error : s
+D:\rawrxd\history\all_versions\mmap_loader.asm\1771477084715_s8t3.asm(60) : error A2008:syntax error
+D:\rawrxd\history\all_versions\mmap_loader.asm\1771477084715_s8t3.asm(63) : error A2008:syntax error : GGUF_CTX
+D:\rawrxd\history\all_versions\mmap_loader.asm\1771477084715_s8t3.asm(73) : fatal error A1010:unmatched block nesting : GGUF_CTX

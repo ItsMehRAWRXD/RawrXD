@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901610578_hjpD.asm
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901610578_hjpD.asm(45) : error A2008:syntax error : TransferQueue
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901610578_hjpD.asm(441) : error A2005:symbol redefinition : fDefragThreshold
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901610578_hjpD.asm(329) : error A2006:undefined symbol : TransferQueue
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769901610578_hjpD.asm(333) : error A2081:missing operand after unary operator

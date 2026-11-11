@@ -1,0 +1,16 @@
+ Assembling: D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_output_pane_logger.asm
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_output_pane_logger.asm(446) : error A2088:END directive required at end of file
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_output_pane_logger.asm(113) : error A2006:undefined symbol : CreateWindowExA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_output_pane_logger.asm(122) : error A2006:undefined symbol : EM_SETLIMITTEXT
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_output_pane_logger.asm(125) : error A2006:undefined symbol : SendMessageA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_output_pane_logger.asm(176) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_output_pane_logger.asm(224) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_output_pane_logger.asm(269) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_output_pane_logger.asm(304) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_output_pane_logger.asm(337) : error A2006:undefined symbol : wsprintfA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_output_pane_logger.asm(369) : error A2006:undefined symbol : SendMessageA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_output_pane_logger.asm(376) : error A2006:undefined symbol : SendMessageA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_output_pane_logger.asm(383) : error A2006:undefined symbol : SendMessageA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_output_pane_logger.asm(390) : error A2006:undefined symbol : SendMessageA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_output_pane_logger.asm(422) : error A2006:undefined symbol : SendMessageA
+D:\rawrxd\history\runoff\part_0002\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_output_pane_logger.asm(429) : error A2006:undefined symbol : SendMessageA

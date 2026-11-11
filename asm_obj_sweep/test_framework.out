@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\itsmehrawrxd-master\test_framework.asm
+D:\rawrxd\itsmehrawrxd-master\test_framework.asm(5) : fatal error A1000:cannot open file : "error_handling.asm"

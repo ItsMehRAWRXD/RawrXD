@@ -1,0 +1,20 @@
+ Assembling: D:\rawrxd\history\-24688c32\SC9w.asm
+D:\rawrxd\history\-24688c32\SC9w.asm(419) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\-24688c32\SC9w.asm(421) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\-24688c32\SC9w.asm(523) : error A2006:undefined symbol : GetCurrentProcess
+D:\rawrxd\history\-24688c32\SC9w.asm(526) : error A2006:undefined symbol : SetPriorityClass
+D:\rawrxd\history\-24688c32\SC9w.asm(533) : error A2006:undefined symbol : AvSetMmThreadCharacteristicsA
+D:\rawrxd\history\-24688c32\SC9w.asm(539) : error A2206:missing operator in expression
+D:\rawrxd\history\-24688c32\SC9w.asm(562) : error A2006:undefined symbol : NtSetTimerResolution
+D:\rawrxd\history\-24688c32\SC9w.asm(571) : error A2006:undefined symbol : CreateIoCompletionPort
+D:\rawrxd\history\-24688c32\SC9w.asm(215) : warning A4025:ENDP found before .ENDPROLOG : MSQueue_Enqueue
+D:\rawrxd\history\-24688c32\SC9w.asm(215) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\-24688c32\SC9w.asm(215) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\-24688c32\SC9w.asm(292) : warning A4025:ENDP found before .ENDPROLOG : Arena_Alloc
+D:\rawrxd\history\-24688c32\SC9w.asm(409) : warning A4025:ENDP found before .ENDPROLOG : LZ4_Decompress_Block
+D:\rawrxd\history\-24688c32\SC9w.asm(435) : warning A4025:ENDP found before .ENDPROLOG : RS_InitTables
+D:\rawrxd\history\-24688c32\SC9w.asm(466) : warning A4025:ENDP found before .ENDPROLOG : RS_CalculateParity
+D:\rawrxd\history\-24688c32\SC9w.asm(510) : warning A4025:ENDP found before .ENDPROLOG : GPU_SubmitCompute
+D:\rawrxd\history\-24688c32\SC9w.asm(579) : warning A4025:ENDP found before .ENDPROLOG : Titan_MetaInit
+D:\rawrxd\history\-24688c32\SC9w.asm(579) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\-24688c32\SC9w.asm(579) : error A2220:Missing .ENDPROLOG

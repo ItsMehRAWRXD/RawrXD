@@ -1,0 +1,17 @@
+ Assembling: D:\rawrxd\src\agentic\week4\WEEK4_DELIVERABLE.asm
+D:\rawrxd\src\agentic\week4\WEEK4_DELIVERABLE.asm(117) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\src\agentic\week4\WEEK4_DELIVERABLE.asm(161) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\src\agentic\week4\WEEK4_DELIVERABLE.asm(200) : error A2008:syntax error : lock
+D:\rawrxd\src\agentic\week4\WEEK4_DELIVERABLE.asm(203) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\src\agentic\week4\WEEK4_DELIVERABLE.asm(231) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\src\agentic\week4\WEEK4_DELIVERABLE.asm(261) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\src\agentic\week4\WEEK4_DELIVERABLE.asm(293) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\src\agentic\week4\WEEK4_DELIVERABLE.asm(548) : error A2006:undefined symbol : SpinLock
+D:\rawrxd\src\agentic\week4\WEEK4_DELIVERABLE.asm(561) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\week4\WEEK4_DELIVERABLE.asm(1024) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\week4\WEEK4_DELIVERABLE.asm(1080) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\week4\WEEK4_DELIVERABLE.asm(1143) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\week4\WEEK4_DELIVERABLE.asm(1205) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\week4\WEEK4_DELIVERABLE.asm(1217) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\week4\WEEK4_DELIVERABLE.asm(1229) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\agentic\week4\WEEK4_DELIVERABLE.asm(1263) : error A2220:Missing .ENDPROLOG

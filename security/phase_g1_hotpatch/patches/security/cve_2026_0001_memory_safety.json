@@ -1,0 +1,79 @@
+{
+  "$schema": "https://rawrxd.ai/schemas/patch-bundle-v1.json",
+  "BundleId": "security-hotfix-20260713-001",
+  "Version": "1.0.0",
+  "Type": "security",
+  "Severity": "critical",
+  "Description": "Critical memory safety fix for buffer overflow in tensor operations (CVE-2026-0001)",
+  "Author": "security-team@rawrxd.ai",
+  "CreatedAt": "2026-07-13T14:30:00Z",
+  "ExpiresAt": "2026-08-13T14:30:00Z",
+  
+  "Patches": [
+    {
+      "System": "tools",
+      "Target": "cli",
+      "PatchFile": "patches/security/tool_tensor_bounds_v1.0.1.json",
+      "Priority": 1,
+      "RequiresRestart": false,
+      "BackupRequired": true
+    },
+    {
+      "System": "agent",
+      "Target": "worker",
+      "PatchFile": "patches/security/agent_memory_guard_v1.0.1.json",
+      "Priority": 1,
+      "RequiresRestart": true,
+      "BackupRequired": true
+    }
+  ],
+  
+  "Dependencies": [
+    { "System": "tools", "MinimumVersion": "1.0.0", "MaximumVersion": "1.0.99" },
+    { "System": "agent", "MinimumVersion": "1.0.0", "MaximumVersion": "1.0.99" }
+  ],
+  
+  "Conflicts": [
+    { "PatchId": "security-hotfix-*", "Reason": "Previous security patches must be reviewed" }
+  ],
+  
+  "Prerequisites": {
+    "MinDiskSpaceMB": 100,
+    "MinMemoryMB": 512,
+    "ServicesToStop": [],
+    "ServicesToStart": [],
+    "PrePatchCommands": [
+      "powershell -Command 'Write-Host \"Validating memory safety prerequisites...\"'",
+      "powershell -File scripts/security/validate_memory_safety.ps1"
+    ],
+    "PostPatchCommands": [
+      "powershell -Command 'Write-Host \"Running post-patch memory validation...\"'",
+      "powershell -File scripts/security/post_patch_memory_test.ps1"
+    ]
+  },
+  
+  "Rollback": {
+    "AutomaticOnFailure": true,
+    "MaxRetries": 3,
+    "RetryDelaySeconds": 5,
+    "NotifyOnRollback": ["security-team@rawrxd.ai", "ops@rawrxd.ai"]
+  },
+  
+  "Notifications": {
+    "OnStart": ["ops@rawrxd.ai"],
+    "OnSuccess": ["security-team@rawrxd.ai", "ops@rawrxd.ai"],
+    "OnFailure": ["security-team@rawrxd.ai", "ops@rawrxd.ai", "oncall@rawrxd.ai"],
+    "OnRollback": ["security-team@rawrxd.ai", "ops@rawrxd.ai", "oncall@rawrxd.ai"]
+  },
+  
+  "Metadata": {
+    "CVE": "CVE-2026-0001",
+    "CVSS": 9.8,
+    "AffectedVersions": ["1.0.0", "1.0.1"],
+    "FixedVersions": ["1.0.2"],
+    "TestingStatus": "validated",
+    "ApprovalRequired": true,
+    "ApprovedBy": "",
+    "ApprovalTimestamp": ""
+  }
+}

@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\tests\test_marketplace_installer.asm
+D:\rawrxd\tests\test_marketplace_installer.asm(5) : error A2008:syntax error : .
+D:\rawrxd\tests\test_marketplace_installer.asm(6) : error A2008:syntax error : .
+D:\rawrxd\tests\test_marketplace_installer.asm(7) : error A2008:syntax error : .
+D:\rawrxd\tests\test_marketplace_installer.asm(9) : error A2008:syntax error : frame
+D:\rawrxd\tests\test_marketplace_installer.asm(13) : fatal error A1000:cannot open file : user32.inc

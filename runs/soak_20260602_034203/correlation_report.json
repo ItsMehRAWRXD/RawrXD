@@ -1,0 +1,81 @@
+{
+  "GeneratedUtc": "2026-06-02T07:42:05.8604217Z",
+  "MetricsCsvPath": "d:\\rawrxd-ci-bootstrap\\runs\\soak_20260602_034203\\sidecar_metrics.csv",
+  "GateLogPath": "d:\\rawrxd-ci-bootstrap\\runs\\soak_20260602_034203\\gate.log",
+  "Overall": {
+    "SamplesTotal": 48,
+    "CompletionEventsTotal": 0,
+    "MaxFillOverall": 0,
+    "TotalBackpressureEvents": 0,
+    "TotalBackpressureDelta": 0,
+    "TotalDroppedDelta": 0,
+    "SaturationThreshold": 48,
+    "SaturationSampleCount": 0,
+    "SaturationBackpressureEvents": 0
+  },
+  "PerBin": [
+    {
+      "FillBin": "0-15",
+      "SampleCount": 48,
+      "AvgFill": 0.0,
+      "MaxFill": 0,
+      "BackpressureEvents": 0,
+      "BackpressureDeltaSum": 0,
+      "DroppedDeltaSum": 0,
+      "AvgBackpressureDeltaPerSample": 0.0,
+      "CompletionEvents": 0,
+      "AvgLatencyMs": 0,
+      "P95LatencyMs": 0,
+      "StdDevLatencyMs": 0
+    },
+    {
+      "FillBin": "16-31",
+      "SampleCount": 0,
+      "AvgFill": 0,
+      "MaxFill": 0,
+      "BackpressureEvents": 0,
+      "BackpressureDeltaSum": 0,
+      "DroppedDeltaSum": 0,
+      "AvgBackpressureDeltaPerSample": 0,
+      "CompletionEvents": 0,
+      "AvgLatencyMs": 0,
+      "P95LatencyMs": 0,
+      "StdDevLatencyMs": 0
+    },
+    {
+      "FillBin": "32-47",
+      "SampleCount": 0,
+      "AvgFill": 0,
+      "MaxFill": 0,
+      "BackpressureEvents": 0,
+      "BackpressureDeltaSum": 0,
+      "DroppedDeltaSum": 0,
+      "AvgBackpressureDeltaPerSample": 0,
+      "CompletionEvents": 0,
+      "AvgLatencyMs": 0,
+      "P95LatencyMs": 0,
+      "StdDevLatencyMs": 0
+    },
+    {
+      "FillBin": "48-64",
+      "SampleCount": 0,
+      "AvgFill": 0,
+      "MaxFill": 0,
+      "BackpressureEvents": 0,
+      "BackpressureDeltaSum": 0,
+      "DroppedDeltaSum": 0,
+      "AvgBackpressureDeltaPerSample": 0,
+      "CompletionEvents": 0,
+      "AvgLatencyMs": 0,
+      "P95LatencyMs": 0,
+      "StdDevLatencyMs": 0
+    }
+  ],
+  "GateSummary": {
+    "PassLine": "",
+    "CancelRecovered": "",
+    "AvgInferenceMs": "",
+    "P95InferenceMs": "",
+    "GatePassed": false
+  }
+}

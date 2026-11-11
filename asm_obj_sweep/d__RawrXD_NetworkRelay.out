@@ -1,0 +1,30 @@
+ Assembling: D:\rawrxd\history\runoff\part_0010\d__RawrXD_NetworkRelay.asm
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NetworkRelay.asm(20) : error A2008:syntax error : Overlapped
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NetworkRelay.asm(23) : error A2008:syntax error : wsabuf
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NetworkRelay.asm(32) : error A2008:syntax error : ClientAddr
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NetworkRelay.asm(36) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NetworkRelay.asm(65) : error A2006:undefined symbol : GetQueuedCompletionStatus
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NetworkRelay.asm(94) : error A2006:undefined symbol : HeapFree
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NetworkRelay.asm(122) : error A2098:invalid operand for OFFSET
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NetworkRelay.asm(142) : error A2006:undefined symbol : wsabuf
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NetworkRelay.asm(143) : error A2006:undefined symbol : WSABUF
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NetworkRelay.asm(144) : error A2006:undefined symbol : WSABUF
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NetworkRelay.asm(147) : error A2006:undefined symbol : Overlapped
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NetworkRelay.asm(153) : error A2006:undefined symbol : WSASend
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NetworkRelay.asm(175) : error A2006:undefined symbol : wsabuf
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NetworkRelay.asm(176) : error A2006:undefined symbol : WSABUF
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NetworkRelay.asm(178) : error A2006:undefined symbol : WSABUF
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NetworkRelay.asm(182) : error A2006:undefined symbol : Overlapped
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NetworkRelay.asm(183) : error A2006:undefined symbol : Overlapped
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NetworkRelay.asm(184) : error A2006:undefined symbol : Overlapped
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NetworkRelay.asm(185) : error A2006:undefined symbol : Overlapped
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NetworkRelay.asm(193) : error A2006:undefined symbol : wsabuf
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NetworkRelay.asm(195) : error A2006:undefined symbol : Overlapped
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NetworkRelay.asm(197) : error A2006:undefined symbol : WSARecv
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NetworkRelay.asm(217) : error A2006:undefined symbol : CreateIoCompletionPort
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NetworkRelay.asm(222) : error A2006:undefined symbol : GetCurrentProcess
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NetworkRelay.asm(229) : error A2006:undefined symbol : GetProcessAffinityMask
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NetworkRelay.asm(248) : error A2006:undefined symbol : CreateThread
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NetworkRelay.asm(103) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NetworkRelay.asm(164) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_NetworkRelay.asm(258) : error A2220:Missing .ENDPROLOG

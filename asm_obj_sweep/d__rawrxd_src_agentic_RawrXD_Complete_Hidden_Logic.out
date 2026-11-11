@@ -1,0 +1,111 @@
+ Assembling: D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(138) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(141) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(144) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(145) : error A2008:syntax error : g_InfinityState
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(148) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(155) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(163) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(168) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(174) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(188) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(198) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(206) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(214) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(722) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(723) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(724) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(725) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(736) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(745) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(233) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(249) : error A2166:structure field expected
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(255) : error A2166:structure field expected
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(261) : error A2166:structure field expected
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(267) : error A2166:structure field expected
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(273) : error A2166:structure field expected
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(285) : error A2166:structure field expected
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(295) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(301) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(344) : error A2166:structure field expected
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(349) : error A2166:structure field expected
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(353) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(366) : error A2166:structure field expected
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(388) : error A2166:structure field expected
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(404) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(417) : error A2006:undefined symbol : MEM_COMMIT
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(418) : error A2006:undefined symbol : PAGE_READWRITE
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(430) : error A2006:undefined symbol : MEM_COMMIT
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(431) : error A2006:undefined symbol : PAGE_READWRITE
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(439) : error A2006:undefined symbol : MEM_COMMIT
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(440) : error A2006:undefined symbol : PAGE_READWRITE
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(444) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(457) : error A2006:undefined symbol : g_InfinityState
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(458) : error A2006:undefined symbol : INFINITY_STREAM_FULL
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(473) : error A2166:structure field expected
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(507) : error A2166:structure field expected
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(530) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(546) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(589) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(613) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(659) : error A2166:structure field expected
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(679) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(692) : error A2006:undefined symbol : QUAD_SLOT_FULL
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(696) : error A2006:undefined symbol : QUAD_SLOT_FULL
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(703) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(714) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(758) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(769) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(784) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(827) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(845) : error A2006:undefined symbol : HEARTBEAT_NODE
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(848) : error A2006:undefined symbol : HEARTBEAT_NODE
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(867) : error A2006:undefined symbol : HEARTBEAT_NODE
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(871) : error A2006:undefined symbol : HEARTBEAT_NODE
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(878) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(889) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(896) : error A2006:undefined symbol : MAX_RESOURCES
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(900) : error A2006:undefined symbol : g_conflict_detector
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(908) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(919) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(926) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(933) : error A2006:undefined symbol : MAX_RESOURCES
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(937) : error A2006:undefined symbol : g_conflict_detector
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(943) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(955) : error A2166:structure field expected
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(972) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(1005) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(1023) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(1033) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(1047) : error A2006:undefined symbol : g_InfinityState
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(1048) : error A2006:undefined symbol : INFINITY_STREAM_FULL
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(1052) : error A2006:undefined symbol : g_InfinityState
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(1058) : error A2006:undefined symbol : INFINITY_CheckQuadBuffer
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(1068) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(297) : warning A4025:ENDP found before .ENDPROLOG : DetectCPUFeaturesHidden
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(297) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(395) : warning A4025:ENDP found before .ENDPROLOG : GetCurrentNumaNodeHidden
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(395) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(446) : warning A4025:ENDP found before .ENDPROLOG : AllocateHugePageHidden
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(463) : warning A4025:ENDP found before .ENDPROLOG : LockPagesInMemoryHidden
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(486) : warning A4025:ENDP found before .ENDPROLOG : FlushCacheLineHidden
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(525) : warning A4025:ENDP found before .ENDPROLOG : PrefetchHidden
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(548) : warning A4025:ENDP found before .ENDPROLOG : PrefetchRangeHidden
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(584) : warning A4025:ENDP found before .ENDPROLOG : SpinWaitHidden
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(615) : warning A4025:ENDP found before .ENDPROLOG : AdaptiveLockAcquireHidden
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(634) : warning A4025:ENDP found before .ENDPROLOG : ReadTSCHidden
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(650) : warning A4025:ENDP found before .ENDPROLOG : GetNanosecondTimestampHidden
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(670) : warning A4025:ENDP found before .ENDPROLOG : TSCToNanosecondsHidden
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(705) : warning A4025:ENDP found before .ENDPROLOG : SubmitIOBatchHidden
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(760) : warning A4025:ENDP found before .ENDPROLOG : DecompressNF4_AVX512Hidden
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(786) : warning A4025:ENDP found before .ENDPROLOG : LFQueuePushHidden
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(818) : warning A4025:ENDP found before .ENDPROLOG : LFQueuePopHidden
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(880) : warning A4025:ENDP found before .ENDPROLOG : HeartbeatBatchUpdateHidden
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(921) : warning A4025:ENDP found before .ENDPROLOG : WaitForGraphAddEdgeHidden
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(945) : warning A4025:ENDP found before .ENDPROLOG : WaitForGraphRemoveEdgeHidden
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(974) : warning A4025:ENDP found before .ENDPROLOG : EnterCriticalSectionHidden
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(996) : warning A4025:ENDP found before .ENDPROLOG : InterleavedLoadHidden
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(1025) : warning A4025:ENDP found before .ENDPROLOG : WarmUpBranchPredictorHidden
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(1070) : warning A4025:ENDP found before .ENDPROLOG : InitializeHiddenSubsystem
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(1070) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Complete_Hidden_Logic.asm(1070) : error A2220:Missing .ENDPROLOG

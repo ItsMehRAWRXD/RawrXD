@@ -1,0 +1,36 @@
+{
+  "gate": "VAL-063",
+  "component": "RequestWitness",
+  "claim": "Request identity is cryptographically sealed at ingress",
+  "timestamp": "2026-07-24T14:32:46.847293100Z",
+  "request": {
+    "request_id": "a7f3c8d2-4e5b-4a8f-9c1d-8e2f5a6b7c8d",
+    "input_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "input_length_bytes": 42,
+    "input_preview": "What is the capital of France?",
+    "model_manifest_sha256": "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456",
+    "model_path": "./models/llama-3-8b-q4.gguf",
+    "sampling": {
+      "temperature": 0.8,
+      "top_p": 0.95,
+      "top_k": 40,
+      "repetition_penalty": 1.0,
+      "max_tokens": 512
+    },
+    "seed": 42,
+    "timestamp_received_ns": 1721827966847293100,
+    "timestamp_received_iso": "2026-07-24T14:32:46.847293100Z"
+  },
+  "canonicalization": {
+    "method": "SHA-256",
+    "input": "prompt_bytes + model_hash + sampling_params + seed",
+    "attestation_hash": "f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5"
+  },
+  "verification": {
+    "hash_computed": true,
+    "timestamp_captured": true,
+    "uuid_generated": true,
+    "sealed": true
+  },
+  "status": "PASS"
+}

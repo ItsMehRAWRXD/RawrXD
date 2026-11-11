@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\src\asm\solo_standalone_compiler.asm
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(415) : error A2008:syntax error : section
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(419) : error A2008:syntax error : compiler_state
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(420) : error A2008:syntax error : error_code
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(421) : error A2008:syntax error : error_line
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(422) : error A2008:syntax error : error_column
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(423) : error A2008:syntax error : verbose_mode
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(424) : error A2008:syntax error : debug_info
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(425) : error A2008:syntax error : opt_level
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(426) : error A2008:syntax error : target_arch
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(427) : error A2008:syntax error : output_format
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(430) : error A2008:syntax error : heap_start
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(431) : error A2008:syntax error : heap_end
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(432) : error A2008:syntax error : heap_current
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(435) : error A2008:syntax error : source_buffer
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(436) : error A2008:syntax error : source_length
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(437) : error A2008:syntax error : source_pos
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(438) : error A2008:syntax error : current_line
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(439) : error A2008:syntax error : current_column
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(442) : error A2008:syntax error : token_buffer
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(443) : error A2008:syntax error : token_count
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(444) : error A2008:syntax error : token_pos
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(445) : error A2008:syntax error : current_token_type
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(446) : error A2008:syntax error : current_token_start
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(447) : error A2008:syntax error : current_token_length
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(448) : error A2008:syntax error : current_token_value
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(451) : error A2008:syntax error : ast_pool
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(452) : error A2008:syntax error : ast_pool_pos
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(453) : error A2008:syntax error : ast_root
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(454) : error A2008:syntax error : ast_node_count
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(455) : error A2008:syntax error : parse_errors
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(458) : error A2008:syntax error : symbol_table
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(459) : error A2008:syntax error : symbol_count
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(460) : error A2008:syntax error : scope_stack
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(461) : error A2008:syntax error : scope_depth
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(464) : error A2008:syntax error : ir_buffer
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(465) : error A2008:syntax error : ir_pos
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(466) : error A2008:syntax error : ir_instruction_count
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(467) : error A2008:syntax error : temp_var_counter
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(468) : error A2008:syntax error : label_counter
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(471) : error A2008:syntax error : output_buffer
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(472) : error A2008:syntax error : output_pos
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(473) : error A2008:syntax error : code_section_start
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(474) : error A2008:syntax error : data_section_start
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(475) : error A2008:syntax error : bss_section_start
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(476) : error A2008:syntax error : reloc_table
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(477) : error A2008:syntax error : reloc_count
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(480) : error A2008:syntax error : input_file
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(481) : error A2008:syntax error : output_file
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(482) : error A2008:syntax error : temp_file
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(485) : error A2008:syntax error : temp_buffer
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(486) : error A2008:syntax error : error_buffer
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(487) : error A2008:syntax error : name_buffer
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(492) : error A2008:syntax error : section
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(493) : error A2008:syntax error : global
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(494) : error A2008:syntax error : global
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(495) : error A2008:syntax error : global
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(496) : error A2008:syntax error : global
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(497) : error A2008:syntax error : global
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(498) : error A2008:syntax error : global
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(499) : error A2008:syntax error : global
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(502) : error A2008:syntax error : in directive
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(503) : error A2008:syntax error : in directive
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(504) : error A2008:syntax error : in directive
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(505) : error A2008:syntax error : in directive
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(506) : error A2008:syntax error : in directive
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(507) : error A2008:syntax error : in directive
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(508) : error A2008:syntax error : in directive
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(509) : error A2008:syntax error : in directive
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(561) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(567) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(573) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(579) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(583) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(680) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(720) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(729) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(738) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(747) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(755) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(759) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(763) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(767) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(775) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(787) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(791) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(795) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(798) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(807) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(830) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(859) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(864) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(869) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(872) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(903) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(917) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(930) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(943) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(960) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(967) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(974) : error A2008:syntax error : .
+D:\rawrxd\src\asm\solo_standalone_compiler.asm(987) : fatal error A1012:error count exceeds 100; stopping assembly

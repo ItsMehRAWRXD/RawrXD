@@ -1,0 +1,322 @@
+# Phase H.3/5: Kubernetes Operator - Helm Values
+# Default values for RawrXD Sovereign AI Runtime
+
+# ============================================================================
+# Global Configuration
+# ============================================================================
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  storageClass: ""
+
+# ============================================================================
+# Image Configuration
+# ============================================================================
+image:
+  repository: rawrxd/runtime
+  tag: latest
+  pullPolicy: IfNotPresent
+  
+# GPU-enabled image variant
+gpuImage:
+  repository: rawrxd/runtime
+  tag: cuda-latest
+  pullPolicy: IfNotPresent
+
+# ============================================================================
+# Deployment Configuration
+# ============================================================================
+replicaCount: 1
+
+deployment:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  
+  annotations: {}
+  labels: {}
+
+# ============================================================================
+# Pod Configuration
+# ============================================================================
+pod:
+  annotations: {}
+  labels: {}
+  
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+
+# ============================================================================
+# Resource Configuration
+# ============================================================================
+resources:
+  limits:
+    cpu: 8
+    memory: 16Gi
+  requests:
+    cpu: 4
+    memory: 8Gi
+
+# GPU resources
+gpu:
+  enabled: false
+  resources:
+    limits:
+      nvidia.com/gpu: 1
+
+# ============================================================================
+# Service Configuration
+# ============================================================================
+service:
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+  
+  metricsPort: 8081
+  metricsTargetPort: 8081
+  
+  annotations: {}
+  labels: {}
+
+# ============================================================================
+# Ingress Configuration
+# ============================================================================
+ingress:
+  enabled: false
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+  
+  hosts:
+    - host: rawrxd.local
+      paths:
+        - path: /
+          pathType: Prefix
+  
+  tls:
+    - secretName: rawrxd-tls
+      hosts:
+        - rawrxd.local
+
+# ============================================================================
+# Persistence Configuration
+# ============================================================================
+persistence:
+  enabled: true
+  storageClass: ""
+  accessMode: ReadWriteOnce
+  size: 100Gi
+  
+  modelCache:
+    enabled: true
+    size: 500Gi
+    storageClass: ""
+
+# ============================================================================
+# Configuration
+# ============================================================================
+config:
+  logLevel: info
+  enableMetrics: true
+  metricsPort: 8081
+  
+  # Stability envelope settings
+  stability:
+    enabled: true
+    oscillationThreshold: 0.05
+    rollbackEnabled: true
+  
+  # Intelligent ops settings
+  intelligentOps:
+    enabled: true
+    forecastHorizon: 30
+    anomalySensitivity: 0.95
+  
+  # Hotpatch settings
+  hotpatch:
+    enabled: true
+    autoRollback: true
+    safetyThreshold: 0.95
+
+# ============================================================================
+# Health Checks
+# ============================================================================
+livenessProbe:
+  enabled: true
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  enabled: true
+  httpGet:
+    path: /ready
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+startupProbe:
+  enabled: true
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 30
+
+# ============================================================================
+# Autoscaling
+# ============================================================================
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+  
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 10
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+        - type: Pods
+          value: 4
+          periodSeconds: 15
+      selectPolicy: Max
+
+# ============================================================================
+# Pod Disruption Budget
+# ============================================================================
+pdb:
+  enabled: true
+  minAvailable: 1
+
+# ============================================================================
+# Service Account
+# ============================================================================
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# ============================================================================
+# RBAC
+# ============================================================================
+rbac:
+  create: true
+
+# ============================================================================
+# Network Policy
+# ============================================================================
+networkPolicy:
+  enabled: true
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+  egress:
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 53
+        - protocol: UDP
+          port: 53
+
+# ============================================================================
+# Monitoring
+# ============================================================================
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+    scrapeTimeout: 10s
+    labels: {}
+  
+  prometheusRule:
+    enabled: true
+    labels: {}
+    rules:
+      - alert: RawrXDHighErrorRate
+        expr: rate(rawrxd_errors_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate detected"
+      
+      - alert: RawrXDHighLatency
+        expr: histogram_quantile(0.99, rate(rawrxd_request_duration_seconds_bucket[5m])) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High latency detected"
+
+# ============================================================================
+# Prometheus Integration
+# ============================================================================
+prometheus:
+  enabled: false
+
+# ============================================================================
+# Grafana Integration
+# ============================================================================
+grafana:
+  enabled: false
+
+# ============================================================================
+# Node Selector / Affinity / Tolerations
+# ============================================================================
+nodeSelector: {}
+
+tolerations: []
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - rawrxd
+          topologyKey: kubernetes.io/hostname

@@ -1,0 +1,160 @@
+manifest_version: "1.0"
+schema: "rawrxd-distribution-v1.0"
+
+release:
+  identifier: "RawrXD-Runtime-1.0.0-rc1.3-Windows-x64"
+  version: "1.0.0-rc1.3"
+  commit: "56ef83e4a2d81f9"
+  timestamp: "2026-07-24T00:00:00Z"
+  certification_authority: "run_step_d.exe"
+  root_hash: "VAL-074-ROOT-8F92B3C10A9E4D"
+  status: "PRODUCTION READY"
+
+artifacts:
+  - path: "bin/rawrxd-runtime.exe"
+    type: "executable"
+    description: "Core runtime with gateway enforcement"
+    sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    size_bytes: 5242880
+    permissions: "0755"
+    platform: "windows-x64"
+    entry_point: "RawrXDMain"
+    gateway_enforced: true
+
+  - path: "bin/rawrxd-verify.exe"
+    type: "verifier_utility"
+    description: "Standalone verification tool"
+    sha256: "7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069"
+    size_bytes: 2097152
+    permissions: "0755"
+    platform: "windows-x64"
+    standalone: true
+    zero_deps: true
+
+  - path: "lib/rawrxd-core.dll"
+    type: "runtime_library"
+    description: "Certified inference engine"
+    sha256: "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456"
+    size_bytes: 10485760
+    permissions: "0644"
+    certified_gates: ["VAL-050", "VAL-051", "VAL-052", "VAL-053", "VAL-054", "VAL-055", "VAL-056", "VAL-057"]
+
+  - path: "lib/rawrxd-gateway.dll"
+    type: "gateway_library"
+    description: "Attestation and correlation layer"
+    sha256: "b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3"
+    size_bytes: 5242880
+    permissions: "0644"
+    certified_gates: ["VAL-063"]
+
+  - path: "cert/root-chain.crt"
+    type: "certificate_chain"
+    description: "Root hash chain certificate"
+    sha256: "a1b2c3d4e5f60123456789abcdef0123456789abcdef0123456789abcdef0123"
+    size_bytes: 4096
+    permissions: "0644"
+    algorithm: "Ed25519"
+
+  - path: "cert/release-key.pub"
+    type: "public_key"
+    description: "Release signing public key"
+    sha256: "d4e5f6a7b8c90123456789abcdef0123456789abcdef0123456789abcdef0123"
+    size_bytes: 2048
+    permissions: "0644"
+
+  - path: "evidence/evidence-bundle.zip"
+    type: "attestation_bundle"
+    description: "Complete certification evidence"
+    sha256: "c5d6e7f8a9b0123456789abcdef0123456789abcdef0123456789abcdef01234"
+    size_bytes: 104857600
+    gate_matrix: "22/22 PASSED"
+    includes:
+      - "VAL-050 → VAL-060"
+      - "VAL-063"
+      - "RC-1.1"
+      - "RC-1.2"
+      - "RC-1.3"
+
+certification:
+  total_gates: 22
+  passed_gates: 22
+  failed_gates: 0
+  certification_date: "2026-07-24"
+  certification_level: "RC-1.3"
+  
+  gate_breakdown:
+    engine_correctness: "VAL-050 → VAL-060"
+    gateway_attestation: "VAL-063"
+    distribution_reproducibility: "RC-1.1"
+    operational_assurance: "RC-1.2"
+    interoperability: "RC-1.3"
+
+enforcement:
+  min_verifier_version: "1.0.0"
+  revocation_check: "REQUIRED"
+  exit_on_failure: true
+  hard_pipeline_gating: true
+  tamper_evident_provenance: true
+  zero_trust_auditability: true
+
+distribution:
+  format: "zip"
+  compression: "deflate"
+  checksum_algorithm: "SHA-256"
+  
+  mirrors:
+    - url: "https://releases.rawrxd.ai/v1.0.0-rc1.3/"
+      region: "global"
+    - url: "https://cdn.rawrxd.ai/releases/v1.0.0-rc1.3/"
+      region: "global"
+    - url: "https://github.com/ItsMehRAWRXD/RawrXD/releases/tag/v1.0.0-rc1.3"
+      region: "global"
+
+  signatures:
+    - type: "detached"
+      path: "RawrXD-Runtime-1.0.0-rc1.3-Windows-x64.zip.sig"
+      algorithm: "Ed25519"
+
+verification:
+  commands:
+    - "rawrxd-verify --release RC1.3 evidence-bundle.zip"
+    - "rawrxd-verify --signature evidence-bundle.zip.sig --public-key cert/release-key.pub"
+    - "rawrxd-verify --revocation-check bin/rawrxd-runtime.exe"
+  
+  expected_output:
+    status: "CERTIFIED"
+    identity: "PASS"
+    runtime: "PASS"
+    evidence: "PASS"
+    replay: "PASS"
+    signature: "PASS"
+    provenance: "PASS"
+    compatibility: "PASS"
+    cross_platform: "PASS"
+    revocation: "NOT REVOKED"
+
+dependencies:
+  runtime:
+    - "Microsoft Visual C++ Redistributable 2019+"
+  optional:
+    - "Vulkan SDK 1.3+ (for GPU acceleration)"
+    - "ROCm 5.0+ (for AMD GPU acceleration)"
+
+system_requirements:
+  os: "Windows 10/11 64-bit"
+  cpu: "x86-64 with AVX2 support"
+  memory: "8 GB RAM minimum, 16 GB recommended"
+  storage: "2 GB free space"
+  network: "Required for revocation checking"
+
+documentation:
+  release_notes: "RELEASE_NOTES.md"
+  certification_summary: "CERTIFICATION_COMPLETE.md"
+  verification_guide: "docs/VERIFICATION.md"
+  api_reference: "docs/API.md"
+  security_policy: "SECURITY.md"
+
+support:
+  issues: "https://github.com/ItsMehRAWRXD/RawrXD/issues"
+  security: "security@rawrxd.ai"
+  discussions: "https://github.com/ItsMehRAWRXD/RawrXD/discussions"

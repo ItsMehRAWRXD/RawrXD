@@ -1,0 +1,9 @@
+ Assembling: D:\rawrxd\history\-21ace4d6\mBRQ.asm
+D:\rawrxd\history\-21ace4d6\mBRQ.asm(94) : error A2008:syntax error : name
+D:\rawrxd\history\-21ace4d6\mBRQ.asm(95) : error A2070:invalid instruction operands
+D:\rawrxd\history\-21ace4d6\mBRQ.asm(96) : error A2070:invalid instruction operands
+D:\rawrxd\history\-21ace4d6\mBRQ.asm(109) : warning A6004:procedure argument or local not referenced : pTaskName
+D:\rawrxd\history\-21ace4d6\mBRQ.asm(109) : warning A6004:procedure argument or local not referenced : duration
+D:\rawrxd\history\-21ace4d6\mBRQ.asm(109) : warning A6004:procedure argument or local not referenced : priority
+D:\rawrxd\history\-21ace4d6\mBRQ.asm(151) : warning A6004:procedure argument or local not referenced : taskId
+D:\rawrxd\history\-21ace4d6\mBRQ.asm(151) : warning A6004:procedure argument or local not referenced : depId

@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  sovereign:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.sovereign
+    container_name: sovereign-substrate
+    restart: unless-stopped
+    
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    
+    volumes:
+      - ../config:/app/config:ro
+      - sovereign-data:/app/data
+      - sovereign-logs:/app/logs
+    
+    environment:
+      - RAWR_ENVIRONMENT=production
+      - RAWR_LOG_LEVEL=INFO
+      - KIMI_API_KEY=${KIMI_API_KEY}
+      - MOONSHOT_API_KEY=${MOONSHOT_API_KEY}
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    networks:
+      - sovereign-network
+
+volumes:
+  sovereign-data:
+  sovereign-logs:
+
+networks:
+  sovereign-network:
+    driver: bridge

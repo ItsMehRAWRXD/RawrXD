@@ -1,0 +1,86 @@
+{
+  "manifest_version": "1.0.0",
+  "project": "RAWRXD Compiler Driver",
+  "description": "Unified compiler driver for RAWRXD toolchain",
+  "author": "RAWRXD Project",
+  "created": "2026-07-19",
+  
+  "compilers": [
+    {
+      "id": "rawrxd-c",
+      "name": "RAWRXD C Compiler",
+      "language": "c",
+      "version": "1.0.0",
+      "status": "production",
+      "entry_point": "src/backends/c_backend.c",
+      "executable": "c_compiler_working.exe",
+      "search_paths": [
+        "d:\\rawrxd-ci-bootstrap\\compilers\\native_toolchain\\c_compiler_working.exe",
+        "d:\\rawrxd\\compilers\\native_toolchain\\c_compiler_working.exe"
+      ],
+      "file_extensions": [".c", ".h"],
+      "capabilities": ["compile", "optimize", "debug_info"],
+      "dependencies": ["rawrxd_native_linker_v2.exe"]
+    },
+    {
+      "id": "rawrxd-asm",
+      "name": "RAWRXD x64 Assembler",
+      "language": "asm",
+      "version": "1.0.0",
+      "status": "production",
+      "entry_point": "src/backends/asm_backend.c",
+      "executable": "real_assembler.exe",
+      "search_paths": [
+        "d:\\rawrxd-ci-bootstrap\\compilers\\real_assembler.exe",
+        "d:\\rawrxd\\compilers\\real_assembler.exe"
+      ],
+      "file_extensions": [".asm", ".s", ".nasm"],
+      "capabilities": ["assemble", "link"],
+      "dependencies": ["rawrxd_native_linker_v2.exe"]
+    },
+    {
+      "id": "rawrxd-csharp",
+      "name": "RAWRXD C# Compiler (Roslyn)",
+      "language": "csharp",
+      "version": "1.0.0",
+      "status": "production",
+      "entry_point": "src/backends/csharp_backend.c",
+      "executable": "RoslynCLI_Test.exe",
+      "search_paths": [
+        "d:\\rawrxd\\enterprise_kernel\\bin\\RoslynCLI_Test.exe",
+        "d:\\rawrxd\\enterprise_kernel\\bin\\MicroRoslyn_Test.exe"
+      ],
+      "file_extensions": [".cs", ".csharp"],
+      "capabilities": ["compile", "syntax_check", "diagnostics"],
+      "dependencies": []
+    }
+  ],
+  
+  "stubs": {
+    "description": "Non-functional placeholder compilers",
+    "locations": [
+      "compilers/languages/",
+      "compilers/fixed_compilers/",
+      "compilers/real_compilers/",
+      "compilers/all_69*/"
+    ],
+    "count": 800,
+    "status": "do_not_use"
+  },
+  
+  "build": {
+    "command": "build.bat",
+    "output": "bin/rawrxd-compiler.exe",
+    "requires": ["Visual Studio 2019 or later"]
+  },
+  
+  "api": {
+    "header": "include/rawrxd_compiler.h",
+    "version": "1.0.0",
+    "languages": {
+      "c": true,
+      "asm": true,
+      "csharp": true
+    }
+  }
+}

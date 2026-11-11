@@ -1,0 +1,35 @@
+Sovereign Soak MTBD Report
+Generated: 2026-05-31T22:22:55.6456651-04:00
+DurationSeconds: 4  Drop: 0.02  Jitter: 0.01  Corrupt: 0
+PeerAExitCode: 0  PeerBExitCode: 0
+
+
+File                    Samples DesyncEvents MTBDms MaxTickDelta Final
+                                                                  Tick
+----                    ------- ------------ ------ ------------ -----
+soak_log_7777_15788.csv     298            6  12.60          256   256
+soak_log_7778_14104.csv     298            3   7.50          256   256
+
+
+
+Headless Trace Tail:
+97435515,pid=14104,port=7778,headless_pre_cleartape
+97435515,pid=14104,port=7778,headless_cleartape_ok
+97435515,pid=14104,port=7778,headless_pre_recovery_config
+97435515,pid=14104,port=7778,headless_recovery_config_ok
+97435515,pid=14104,port=7778,headless_pre_net_init
+97435531,pid=14104,port=7778,net_init_ok
+97435531,pid=14104,port=7778,threads_started
+97439515,pid=15788,port=7777,headless_stopping
+97439515,pid=15788,port=7777,headless_sim_stop_ok
+97439531,pid=15788,port=7777,headless_exitack_all_ok
+97439531,pid=14104,port=7778,headless_sim_stop_ok
+97439531,pid=15788,port=7777,headless_net_shutdown_ok
+97439531,pid=15788,port=7777,headless_complete
+97439531,pid=15788,port=7777,headless_gateway_shutdown_ok
+97439531,pid=15788,port=7777,headless_shutdown_complete
+97439546,pid=14104,port=7778,headless_exitack_all_ok
+97439546,pid=14104,port=7778,headless_net_shutdown_ok
+97439546,pid=14104,port=7778,headless_complete
+97439546,pid=14104,port=7778,headless_gateway_shutdown_ok
+97439546,pid=14104,port=7778,headless_shutdown_complete

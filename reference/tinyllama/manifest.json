@@ -1,0 +1,13 @@
+{
+  "model": "tinyllama",
+  "prompt": "The quick brown fox",
+  "max_tokens": 10,
+  "hidden_dim": 4096,
+  "vocab_size": 32000,
+  "files": {
+    "logits": "logits.bin",
+    "hidden_states": "hidden_states.bin",
+    "tokens": "tokens.txt",
+    "hashes": "hashes.sha256"
+  }
+}

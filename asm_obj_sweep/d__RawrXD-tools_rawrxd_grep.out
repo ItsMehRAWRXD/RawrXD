@@ -1,0 +1,15 @@
+ Assembling: D:\rawrxd\history\runoff\part_0019\d__RawrXD-tools_rawrxd_grep.asm
+D:\rawrxd\history\runoff\part_0019\d__RawrXD-tools_rawrxd_grep.asm(53) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__RawrXD-tools_rawrxd_grep.asm(59) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__RawrXD-tools_rawrxd_grep.asm(81) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0019\d__RawrXD-tools_rawrxd_grep.asm(84) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0019\d__RawrXD-tools_rawrxd_grep.asm(86) : error A2008:syntax error : CommandLineToArgvW
+D:\rawrxd\history\runoff\part_0019\d__RawrXD-tools_rawrxd_grep.asm(128) : error A2008:syntax error : WideCharToMultiByte
+D:\rawrxd\history\runoff\part_0019\d__RawrXD-tools_rawrxd_grep.asm(129) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0019\d__RawrXD-tools_rawrxd_grep.asm(140) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0019\d__RawrXD-tools_rawrxd_grep.asm(146) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0019\d__RawrXD-tools_rawrxd_grep.asm(151) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0019\d__RawrXD-tools_rawrxd_grep.asm(152) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0019\d__RawrXD-tools_rawrxd_grep.asm(153) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0019\d__RawrXD-tools_rawrxd_grep.asm(154) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0019\d__RawrXD-tools_rawrxd_grep.asm(155) : error A2008:syntax error : invoke

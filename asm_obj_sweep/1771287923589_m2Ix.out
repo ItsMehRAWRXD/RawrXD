@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\week5\WEEK5_COMPLETE_PRODUCTION.asm\1771287923589_m2Ix.asm
+D:\rawrxd\history\all_versions\src\agentic\week5\WEEK5_COMPLETE_PRODUCTION.asm\1771287923589_m2Ix.asm(1) : error A2044:invalid character in file
+D:\rawrxd\history\all_versions\src\agentic\week5\WEEK5_COMPLETE_PRODUCTION.asm\1771287923589_m2Ix.asm(17) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\agentic\week5\WEEK5_COMPLETE_PRODUCTION.asm\1771287923589_m2Ix.asm(733) : error A2006:undefined symbol : szCrashDumpPath

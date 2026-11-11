@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\src\direct_io\nvme_oracle_service.asm\1771286187565_EojC.asm
+D:\rawrxd\history\all_versions\src\direct_io\nvme_oracle_service.asm\1771286187565_EojC.asm(425) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\direct_io\nvme_oracle_service.asm\1771286187565_EojC.asm(423) : error A2006:undefined symbol : ok

@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\pifabric_ui_chain_inspector.asm\1766358272388_rNGJ.asm
+D:\rawrxd\history\all_versions\pifabric_ui_chain_inspector.asm\1766358272388_rNGJ.asm(2) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\pifabric_ui_chain_inspector.asm\1766358272388_rNGJ.asm(3) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\pifabric_ui_chain_inspector.asm\1766358272388_rNGJ.asm(7) : fatal error A1000:cannot open file : user32.inc

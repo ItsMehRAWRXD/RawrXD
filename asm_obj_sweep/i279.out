@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\-2d7bc67b\i279.asm
+D:\rawrxd\history\-2d7bc67b\i279.asm(108) : error A2008:syntax error : qword
+D:\rawrxd\history\-2d7bc67b\i279.asm(181) : error A2008:syntax error : pConfig
+D:\rawrxd\history\-2d7bc67b\i279.asm(292) : error A2008:syntax error : pConfig
+D:\rawrxd\history\-2d7bc67b\i279.asm(107) : warning A4014:instructions and initialized data not supported in BSS segments
+D:\rawrxd\history\-2d7bc67b\i279.asm(109) : warning A4014:instructions and initialized data not supported in BSS segments
+D:\rawrxd\history\-2d7bc67b\i279.asm(110) : warning A4014:instructions and initialized data not supported in BSS segments

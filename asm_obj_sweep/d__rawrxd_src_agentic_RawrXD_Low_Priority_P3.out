@@ -1,0 +1,19 @@
+ Assembling: D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Low_Priority_P3.asm
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Low_Priority_P3.asm(125) : error A2008:syntax error : width
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Low_Priority_P3.asm(178) : error A2006:undefined symbol : swprintf_s
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Low_Priority_P3.asm(182) : error A2006:undefined symbol : _wsystem
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Low_Priority_P3.asm(218) : error A2006:undefined symbol : swprintf_s
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Low_Priority_P3.asm(222) : error A2006:undefined symbol : _wsystem
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Low_Priority_P3.asm(272) : error A2006:undefined symbol : sz_codeaction_method
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Low_Priority_P3.asm(273) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Low_Priority_P3.asm(278) : error A2006:undefined symbol : lstrlenA
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Low_Priority_P3.asm(321) : error A2006:undefined symbol : sz_rename_method
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Low_Priority_P3.asm(322) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Low_Priority_P3.asm(331) : error A2006:undefined symbol : lstrlenA
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Low_Priority_P3.asm(369) : error A2006:undefined symbol : sz_references_method
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Low_Priority_P3.asm(370) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Low_Priority_P3.asm(375) : error A2006:undefined symbol : lstrlenA
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Low_Priority_P3.asm(702) : error A2006:undefined symbol : OpenThread
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Low_Priority_P3.asm(710) : error A2006:undefined symbol : SuspendThread
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Low_Priority_P3.asm(721) : error A2006:undefined symbol : ResumeThread
+D:\rawrxd\history\runoff\part_0011\d__rawrxd_src_agentic_RawrXD_Low_Priority_P3.asm(1014) : error A2081:missing operand after unary operator

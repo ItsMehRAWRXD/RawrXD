@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\runoff\part_0024\e__RawrXD-production-lazy-init_src_masm_agentic_masm.asm
+D:\rawrxd\history\runoff\part_0024\e__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(17) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0024\e__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(18) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0024\e__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(19) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0024\e__RawrXD-production-lazy-init_src_masm_agentic_masm.asm(31) : fatal error A1000:cannot open file : masm/masm_master_include.asm

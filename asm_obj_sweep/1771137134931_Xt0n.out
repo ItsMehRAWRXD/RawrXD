@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\agentic_deep_thinking_kernels.asm\1771137134931_Xt0n.asm
+D:\rawrxd\history\all_versions\src\asm\agentic_deep_thinking_kernels.asm\1771137134931_Xt0n.asm(22) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\asm\agentic_deep_thinking_kernels.asm\1771137134931_Xt0n.asm(38) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\asm\agentic_deep_thinking_kernels.asm\1771137134931_Xt0n.asm(39) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\asm\agentic_deep_thinking_kernels.asm\1771137134931_Xt0n.asm(95) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\asm\agentic_deep_thinking_kernels.asm\1771137134931_Xt0n.asm(260) : error A2024:invalid operand size for instruction
+D:\rawrxd\history\all_versions\src\asm\agentic_deep_thinking_kernels.asm\1771137134931_Xt0n.asm(339) : fatal error A1010:unmatched block nesting : masm_meta_cognitive_loop

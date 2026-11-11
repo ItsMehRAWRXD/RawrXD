@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\RawrZ-Security\RawrZ-Payload-Builder\src\engines\camellia-assembly.asm
+D:\rawrxd\RawrZ-Security\RawrZ-Payload-Builder\src\engines\camellia-assembly.asm(1) : fatal error A1009:line too long
+-Engine\camellia-assembly.asm(7) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(8) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(9) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(10) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(13) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(15) : error A2008:syntax error : section
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(16) : error A2008:syntax error : key_schedule
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(17) : error A2008:syntax error : temp_block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(18) : error A2008:syntax error : round_keys
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(20) : error A2008:syntax error : section
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(21) : error A2008:syntax error : bits
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(22) : error A2008:syntax error : global
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(23) : error A2008:syntax error : global
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(24) : error A2008:syntax error : global
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(25) : error A2008:syntax error : global
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(26) : error A2008:syntax error : global
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(30) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(31) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(32) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(33) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(34) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(35) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(36) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(37) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(38) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(41) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(42) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(43) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(44) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(47) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(48) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(49) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(50) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(51) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(52) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(53) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(54) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(56) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(57) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(58) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(60) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(61) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(62) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(64) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(65) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(67) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(68) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(69) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(70) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(71) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(72) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(73) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(74) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(75) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(78) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(79) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(80) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(81) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(82) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(83) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(84) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(87) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(88) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(89) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(90) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(91) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(94) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(97) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(98) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(100) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(101) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(102) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(103) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(104) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(105) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(106) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(109) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(110) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(111) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(112) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(113) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(118) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(119) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(120) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(121) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(123) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(124) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(125) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(126) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(127) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(130) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(131) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(132) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(133) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(134) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(135) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(136) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(139) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(140) : error A2034:must be in segment block
+D:\rawrxd\RawrZ-Security\Camellia-Engine\camellia-assembly.asm(142) : fatal error A1012:error count exceeds 100; stopping assembly

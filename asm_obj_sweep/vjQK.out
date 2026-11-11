@@ -1,0 +1,68 @@
+ Assembling: D:\rawrxd\history\-2c7a0a9\vjQK.asm
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(30) : error A2006:undefined symbol : RECT
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(30) : error A2195:parameter or local cannot have void type
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(32) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(33) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(36) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(39) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(40) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(41) : error A2008:syntax error : integer
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(49) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(60) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(61) : error A2008:syntax error : integer
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(73) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(94) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(105) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(106) : error A2008:syntax error : DIFF_VIEW_WIDTH
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(112) : error A2008:syntax error : CreateWindowExA
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(116) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(130) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(134) : error A2044:invalid character in file
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(151) : error A2008:syntax error : SetWindowPos
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(167) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(173) : error A2008:syntax error : GetWindowTextA
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(176) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(180) : error A2008:syntax error : .
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(181) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(182) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(184) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(185) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(186) : error A2008:syntax error : .
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(193) : error A2008:syntax error : GetWindowTextA
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(196) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(199) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(200) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(203) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(210) : error A2008:syntax error : invoke
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(46) : error A2006:undefined symbol : WS_EX_TOOLWINDOW
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(52) : error A2006:undefined symbol : ghInstance
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(58) : error A2006:undefined symbol : CreateWindowExA
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(67) : error A2006:undefined symbol : SetWindowTextA
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(70) : error A2006:undefined symbol : WS_EX_CLIENTEDGE
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(72) : error A2006:undefined symbol : EMPTY_STR
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(75) : error A2006:undefined symbol : ghInstance
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(76) : error A2006:undefined symbol : IDC_DIFF_OLD
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(82) : error A2006:undefined symbol : CreateWindowExA
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(88) : error A2006:undefined symbol : SetWindowTextA
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(91) : error A2006:undefined symbol : WS_EX_CLIENTEDGE
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(93) : error A2006:undefined symbol : EMPTY_STR
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(96) : error A2006:undefined symbol : ghInstance
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(97) : error A2006:undefined symbol : IDC_DIFF_NEW
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(103) : error A2006:undefined symbol : CreateWindowExA
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(118) : error A2006:undefined symbol : ghInstance
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(119) : error A2006:undefined symbol : IDC_DIFF_ACCEPT
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(125) : error A2006:undefined symbol : CreateWindowExA
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(136) : error A2006:undefined symbol : ghInstance
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(137) : error A2006:undefined symbol : IDC_DIFF_REJECT
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(143) : error A2006:undefined symbol : CreateWindowExA
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(147) : error A2006:undefined symbol : bottom
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(164) : error A2006:undefined symbol : GetWindowTextLengthA
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(169) : error A2006:undefined symbol : HEAP_ZERO_MEMORY
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(170) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(179) : error A2006:undefined symbol : numDifferences
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(197) : error A2006:undefined symbol : hFile
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(154) : warning A6004:procedure argument or local not referenced : pFilePath
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(189) : warning A6004:procedure argument or local not referenced : hNew
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(189) : warning A6004:procedure argument or local not referenced : pNewText
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(189) : warning A6004:procedure argument or local not referenced : hOldDC
+D:\rawrxd\history\-2c7a0a9\vjQK.asm(189) : warning A6004:procedure argument or local not referenced : hNewDC

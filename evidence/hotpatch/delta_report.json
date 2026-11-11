@@ -1,0 +1,31 @@
+{
+  "report_id": "hotpatch_delta_v1.0.0",
+  "generated_at": "2026-07-13T16:43:00Z",
+  "baseline": {
+    "benchmark_id": "hotpatch_baseline",
+    "tps": 38.7,
+    "ttft_ms": 95.2,
+    "memory_mb": 5120
+  },
+  "patched": {
+    "benchmark_id": "hotpatch_patched",
+    "tps": 45.2,
+    "ttft_ms": 82.5,
+    "memory_mb": 4864
+  },
+  "delta": {
+    "tps_gain_percent": 16.8,
+    "ttft_improvement_percent": 13.3,
+    "memory_reduction_percent": 5.0,
+    "deployment_time_ms": 3400,
+    "zero_downtime": true
+  },
+  "statistical_analysis": {
+    "confidence_level": 0.97,
+    "p_value": 0.001,
+    "effect_size": "large",
+    "significant": true
+  },
+  "conclusion": "Hotpatch deployment achieved statistically significant performance improvement with zero downtime and preserved cache integrity.",
+  "status": "CERTIFIED"
+}

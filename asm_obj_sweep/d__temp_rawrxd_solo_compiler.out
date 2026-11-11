@@ -1,0 +1,103 @@
+ Assembling: D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(10) : error A2008:syntax error : frame
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(81) : error A2008:syntax error : size
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(244) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(256) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(263) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(300) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(307) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(310) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(323) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(332) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(340) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(345) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(353) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(403) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(409) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(412) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(422) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(432) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(493) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(496) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(519) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(539) : error A2008:syntax error : name
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(555) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(560) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(565) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(569) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(578) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(590) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(598) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(602) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(606) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(644) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(659) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(677) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(687) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(691) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(699) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(707) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(715) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(722) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(729) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(743) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(757) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(759) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(788) : error A2084:constant value too large
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(874) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(891) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(896) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(932) : error A2008:syntax error : offset
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(933) : error A2008:syntax error : type
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(934) : warning A6006:structure contains no members
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(936) : error A2159:structure cannot be instanced
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(292) : error A2027:operand must be a memory expression
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(303) : error A2006:undefined symbol : args_done
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(305) : error A2006:undefined symbol : skip_char
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(309) : error A2006:undefined symbol : count_args
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(314) : error A2006:undefined symbol : show_usage
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(317) : error A2027:operand must be a memory expression
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(326) : error A2006:undefined symbol : show_usage
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(328) : error A2006:undefined symbol : skip_exe
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(335) : error A2006:undefined symbol : input_done
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(337) : error A2006:undefined symbol : input_done
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(339) : error A2006:undefined symbol : parse_input
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(348) : error A2006:undefined symbol : output_done
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(350) : error A2006:undefined symbol : output_done
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(352) : error A2006:undefined symbol : parse_output
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(366) : error A2006:undefined symbol : error_open
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(374) : error A2006:undefined symbol : error_parse
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(380) : error A2006:undefined symbol : GenerateCode
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(382) : error A2006:undefined symbol : error_gen
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(390) : error A2006:undefined symbol : error_write
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(416) : error A2006:undefined symbol : PrintNumber
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(456) : error A2006:undefined symbol : fail
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(472) : error A2006:undefined symbol : fail_close
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(515) : error A2006:undefined symbol : symbolTable
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(520) : error A2006:undefined symbol : GetNextToken
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(522) : error A2006:undefined symbol : pass1_done
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(524) : error A2006:undefined symbol : check_directive
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(527) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(530) : error A2006:undefined symbol : instruction
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(540) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(549) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(552) : error A2006:undefined symbol : GetNextToken
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(553) : error A2006:undefined symbol : pass1
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(557) : error A2006:undefined symbol : handle_directive
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(558) : error A2006:undefined symbol : pass1
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(561) : error A2006:undefined symbol : ParseInstructionSize
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(563) : error A2006:undefined symbol : pass1
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(566) : error A2006:undefined symbol : HandleDirective
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(567) : error A2006:undefined symbol : pass1
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(579) : error A2006:undefined symbol : GetNextToken
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(581) : error A2006:undefined symbol : done
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(583) : error A2006:undefined symbol : emit_instruction
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(585) : error A2006:undefined symbol : skip_label
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(587) : error A2006:undefined symbol : process_directive
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(588) : error A2006:undefined symbol : pass2
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(594) : error A2006:undefined symbol : pass2
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(596) : error A2006:undefined symbol : pass2
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(600) : error A2006:undefined symbol : pass2
+D:\rawrxd\history\runoff\part_0019\d__temp_rawrxd_solo_compiler.asm(603) : fatal error A1012:error count exceeds 100; stopping assembly

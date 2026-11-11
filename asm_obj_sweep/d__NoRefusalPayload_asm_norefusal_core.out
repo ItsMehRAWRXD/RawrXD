@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_norefusal_core.asm
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_norefusal_core.asm(65) : error A2006:undefined symbol : ProtectionLoop
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_norefusal_core.asm(125) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_norefusal_core.asm(144) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_norefusal_core.asm(146) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0008\d__NoRefusalPayload_asm_norefusal_core.asm(158) : error A2206:missing operator in expression

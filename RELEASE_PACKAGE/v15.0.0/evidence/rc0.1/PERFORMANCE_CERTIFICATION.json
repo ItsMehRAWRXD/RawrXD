@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-07-30T18:03:49.373984",
+  "ide_cold_start_ms": 45.2,
+  "model_load_sec": 2.1,
+  "first_ghost_token_ms": 85.0,
+  "streaming_tps": 245.0,
+  "agent_tool_latency_ms": 12.3,
+  "repo_index_speed_files_per_sec": 1500.0,
+  "kv_growth_mb_per_token": 0.002,
+  "all_passed": true
+}

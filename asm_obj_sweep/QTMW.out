@@ -1,0 +1,18 @@
+ Assembling: D:\rawrxd\history\-2baba7f6\QTMW.asm
+D:\rawrxd\history\-2baba7f6\QTMW.asm(195) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2baba7f6\QTMW.asm(196) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2baba7f6\QTMW.asm(246) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2baba7f6\QTMW.asm(341) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2baba7f6\QTMW.asm(182) : error A2206:missing operator in expression
+D:\rawrxd\history\-2baba7f6\QTMW.asm(183) : error A2206:missing operator in expression
+D:\rawrxd\history\-2baba7f6\QTMW.asm(192) : error A2206:missing operator in expression
+D:\rawrxd\history\-2baba7f6\QTMW.asm(233) : error A2206:missing operator in expression
+D:\rawrxd\history\-2baba7f6\QTMW.asm(281) : error A2083:invalid scale value
+D:\rawrxd\history\-2baba7f6\QTMW.asm(297) : error A2206:missing operator in expression
+D:\rawrxd\history\-2baba7f6\QTMW.asm(299) : error A2206:missing operator in expression
+D:\rawrxd\history\-2baba7f6\QTMW.asm(311) : error A2083:invalid scale value
+D:\rawrxd\history\-2baba7f6\QTMW.asm(312) : error A2083:invalid scale value
+D:\rawrxd\history\-2baba7f6\QTMW.asm(315) : error A2083:invalid scale value
+D:\rawrxd\history\-2baba7f6\QTMW.asm(348) : error A2083:invalid scale value
+D:\rawrxd\history\-2baba7f6\QTMW.asm(366) : error A2083:invalid scale value
+D:\rawrxd\history\-2baba7f6\QTMW.asm(460) : error A2206:missing operator in expression

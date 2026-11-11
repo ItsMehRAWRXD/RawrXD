@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\runoff\part_0014\d__RawrXD_src_simple_dumpbin.asm
+D:\rawrxd\history\runoff\part_0014\d__RawrXD_src_simple_dumpbin.asm(6) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0014\d__RawrXD_src_simple_dumpbin.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0014\d__RawrXD_src_simple_dumpbin.asm(16) : fatal error A1000:cannot open file : user32.inc

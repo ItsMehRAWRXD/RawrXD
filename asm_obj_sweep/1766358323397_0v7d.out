@@ -1,0 +1,29 @@
+ Assembling: D:\rawrxd\history\all_versions\pifabric_chunk_planner.asm\1766358323397_0v7d.asm
+D:\rawrxd\history\all_versions\pifabric_chunk_planner.asm\1766358323397_0v7d.asm(2) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\pifabric_chunk_planner.asm\1766358323397_0v7d.asm(3) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\pifabric_chunk_planner.asm\1766358323397_0v7d.asm(10) : error A2034:must be in segment block : PiFabric_SelectChunkSize
+D:\rawrxd\history\all_versions\pifabric_chunk_planner.asm\1766358323397_0v7d.asm(11) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_chunk_planner.asm\1766358323397_0v7d.asm(12) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_chunk_planner.asm\1766358323397_0v7d.asm(13) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_chunk_planner.asm\1766358323397_0v7d.asm(14) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_chunk_planner.asm\1766358323397_0v7d.asm(15) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_chunk_planner.asm\1766358323397_0v7d.asm(16) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_chunk_planner.asm\1766358323397_0v7d.asm(17) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_chunk_planner.asm\1766358323397_0v7d.asm(18) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_chunk_planner.asm\1766358323397_0v7d.asm(19) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_chunk_planner.asm\1766358323397_0v7d.asm(20) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_chunk_planner.asm\1766358323397_0v7d.asm(21) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_chunk_planner.asm\1766358323397_0v7d.asm(22) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_chunk_planner.asm\1766358323397_0v7d.asm(23) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_chunk_planner.asm\1766358323397_0v7d.asm(24) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_chunk_planner.asm\1766358323397_0v7d.asm(25) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_chunk_planner.asm\1766358323397_0v7d.asm(26) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_chunk_planner.asm\1766358323397_0v7d.asm(27) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_chunk_planner.asm\1766358323397_0v7d.asm(28) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_chunk_planner.asm\1766358323397_0v7d.asm(29) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_chunk_planner.asm\1766358323397_0v7d.asm(30) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_chunk_planner.asm\1766358323397_0v7d.asm(31) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_chunk_planner.asm\1766358323397_0v7d.asm(32) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_chunk_planner.asm\1766358323397_0v7d.asm(33) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_chunk_planner.asm\1766358323397_0v7d.asm(34) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\pifabric_chunk_planner.asm\1766358323397_0v7d.asm(35) : fatal error A1010:unmatched block nesting : PiFabric_SelectChunkSize

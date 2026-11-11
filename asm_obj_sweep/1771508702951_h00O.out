@@ -1,0 +1,9 @@
+ Assembling: D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508702951_h00O.asm
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508702951_h00O.asm(757) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508702951_h00O.asm(181) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508702951_h00O.asm(512) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508702951_h00O.asm(620) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508702951_h00O.asm(150) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508702951_h00O.asm(901) : warning A4025:ENDP found before .ENDPROLOG : DllMain
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508702951_h00O.asm(901) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\asm\Win32IDE_Sidebar_Core.asm\1771508702951_h00O.asm(901) : error A2220:Missing .ENDPROLOG

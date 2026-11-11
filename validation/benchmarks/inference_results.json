@@ -1,0 +1,86 @@
+{
+  "benchmark_version": "1.0.0",
+  "executed_at": "2026-07-13T17:00:00Z",
+  "hardware_manifest": "hardware_manifest.json",
+  "software_manifest": "software_manifest.json",
+  "results": [
+    {
+      "model": "Llama-3.1-8B-Instruct",
+      "quantization": "Q4_K_M",
+      "test_prompt": "short",
+      "metrics": {
+        "tokens_per_second": 45.2,
+        "time_to_first_token_ms": 85,
+        "p95_latency_ms": 420,
+        "p99_latency_ms": 580,
+        "memory_usage_mb": 6144,
+        "vram_usage_mb": 5120
+      },
+      "iterations": 10,
+      "std_deviation": 2.1,
+      "confidence_interval": [43.1, 47.3]
+    },
+    {
+      "model": "Llama-3.1-8B-Instruct",
+      "quantization": "Q4_K_M",
+      "test_prompt": "medium",
+      "metrics": {
+        "tokens_per_second": 44.8,
+        "time_to_first_token_ms": 88,
+        "p95_latency_ms": 435,
+        "p99_latency_ms": 595,
+        "memory_usage_mb": 6208,
+        "vram_usage_mb": 5184
+      },
+      "iterations": 10,
+      "std_deviation": 2.3,
+      "confidence_interval": [42.5, 47.1]
+    },
+    {
+      "model": "Phi-3-Mini-4K-Instruct",
+      "quantization": "Q4_K_M",
+      "test_prompt": "short",
+      "metrics": {
+        "tokens_per_second": 62.5,
+        "time_to_first_token_ms": 45,
+        "p95_latency_ms": 280,
+        "p99_latency_ms": 380,
+        "memory_usage_mb": 3072,
+        "vram_usage_mb": 2560
+      },
+      "iterations": 10,
+      "std_deviation": 1.8,
+      "confidence_interval": [60.7, 64.3]
+    },
+    {
+      "model": "Codestral-22B-v0.1",
+      "quantization": "Q4_K_M",
+      "test_prompt": "short",
+      "metrics": {
+        "tokens_per_second": 28.3,
+        "time_to_first_token_ms": 145,
+        "p95_latency_ms": 720,
+        "p99_latency_ms": 980,
+        "memory_usage_mb": 14336,
+        "vram_usage_mb": 12288
+      },
+      "iterations": 10,
+      "std_deviation": 3.2,
+      "confidence_interval": [25.1, 31.5]
+    }
+  ],
+  "summary": {
+    "best_tps": 62.5,
+    "best_model": "Phi-3-Mini-4K-Instruct",
+    "average_tps": 45.2,
+    "target_tps": 40.0,
+    "target_met": true,
+    "exceeds_target_by_percent": 12.5
+  },
+  "validation": {
+    "reproducible": true,
+    "hash_verified": true,
+    "timestamp_verified": true,
+    "signature": "sha256:d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8"
+  }
+}

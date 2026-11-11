@@ -1,0 +1,34 @@
+ Assembling: D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(17) : error A2008:syntax error : WIN64
+D:\rawrxd\include\RawrXD_QuadBuffer_Integration.inc(9) : error A2008:syntax error : WIN64
+D:\rawrxd\include\RawrXD_QuadBuffer_Integration.inc(54) : error A2008:syntax error : byte
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(139) : error A2189:invalid combination with segment alignment : 128
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(143) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(150) : error A2189:invalid combination with segment alignment : 32
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(277) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(164) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(177) : error A2006:undefined symbol : InitializeSRWLock
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(239) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(250) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(259) : error A2006:undefined symbol : INFINITY_STREAM
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(265) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(304) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(311) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(312) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(313) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(316) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(351) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(355) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(371) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(384) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(456) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(466) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(530) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(542) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(560) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(577) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(578) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(588) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(596) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(607) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\orchestrator\RawrXD_Titan_Extensions.asm\1769574235707_vidh.asm(629) : error A2206:missing operator in expression

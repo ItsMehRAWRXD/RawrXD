@@ -1,0 +1,44 @@
+{
+  "Failed": 1,
+  "Timestamp": "2026-07-29 00:41:11",
+  "Passed": 5,
+  "Gates": [
+    {
+      "Gate": 1,
+      "Name": "Binary Availability",
+      "Status": "PASS",
+      "Details": "All executables present"
+    },
+    {
+      "Gate": 2,
+      "Name": "Dual GPU Detection",
+      "Status": "PASS",
+      "Details": "2 AMD GPUs detected"
+    },
+    {
+      "Gate": 3,
+      "Name": "Integration Tests",
+      "Status": "WARN",
+      "Details": "Test results inconclusive"
+    },
+    {
+      "Gate": 4,
+      "Name": "System Memory",
+      "Status": "PASS",
+      "Details": " GB RAM detected"
+    },
+    {
+      "Gate": 5,
+      "Name": "Disk Space",
+      "Status": "PASS",
+      "Details": " GB free on D:"
+    },
+    {
+      "Gate": 6,
+      "Name": "Vulkan Runtime",
+      "Status": "PASS",
+      "Details": "Vulkan loader present"
+    }
+  ],
+  "Total": 6
+}

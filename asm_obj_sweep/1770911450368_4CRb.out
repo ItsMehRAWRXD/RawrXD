@@ -1,0 +1,22 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911450368_4CRb.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911450368_4CRb.asm(392) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911450368_4CRb.asm(409) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911450368_4CRb.asm(417) : error A2082:cannot mix 16- and 32-bit registers
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911450368_4CRb.asm(456) : error A2006:undefined symbol : q5k_shift_even
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911450368_4CRb.asm(458) : error A2006:undefined symbol : mask_one_dw
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911450368_4CRb.asm(473) : error A2006:undefined symbol : q5k_shift_odd
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911450368_4CRb.asm(475) : error A2006:undefined symbol : mask_one_dw
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911450368_4CRb.asm(490) : error A2006:undefined symbol : q5k_shift_even
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911450368_4CRb.asm(492) : error A2006:undefined symbol : mask_one_dw
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911450368_4CRb.asm(506) : error A2006:undefined symbol : q5k_shift_odd
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911450368_4CRb.asm(508) : error A2006:undefined symbol : mask_one_dw
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911450368_4CRb.asm(728) : error A2006:undefined symbol : q2k_shifts
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911450368_4CRb.asm(730) : error A2006:undefined symbol : mask_03_dw
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911450368_4CRb.asm(742) : error A2006:undefined symbol : mask_03_dw
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911450368_4CRb.asm(812) : error A2006:undefined symbol : q3k_offset_4
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911450368_4CRb.asm(869) : error A2006:undefined symbol : q2k_shifts
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911450368_4CRb.asm(871) : error A2006:undefined symbol : mask_03_dw
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911450368_4CRb.asm(876) : error A2006:undefined symbol : q5k_shift_even
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911450368_4CRb.asm(878) : error A2006:undefined symbol : mask_one_dw
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911450368_4CRb.asm(893) : error A2006:undefined symbol : mask_03_dw
+D:\rawrxd\history\all_versions\src\asm\RawrXD_KQuant_Dequant.asm\1770911450368_4CRb.asm(899) : error A2006:undefined symbol : mask_one_dw

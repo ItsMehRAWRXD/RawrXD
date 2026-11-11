@@ -1,0 +1,116 @@
+# RAWRXD Compiler Driver - Git Ignore
+
+# Build outputs
+bin/
+obj/
+*.exe
+*.obj
+*.o
+*.a
+*.lib
+*.dll
+*.so
+*.dylib
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio
+.vs/
+*.vcxproj.user
+*.vcxproj.filters
+ipch/
+*.aps
+*.ncb
+*.opensdf
+*.sdf
+*.cachefile
+
+# Testing
+test_output/
+test_results/
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+*~
+*.swp
+*.swo
+*#
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Package files
+*.zip
+*.tar.gz
+*.tar.bz2
+*.7z
+
+# Documentation builds
+docs/_build/
+docs/_site/
+
+# Coverage
+coverage/
+*.gcov
+*.gcda
+*.gcno
+
+# Profiling
+*.prof
+*.pstats
+
+# Debug
+*.pdb
+*.ilk
+
+# Backup files
+*.bak
+*.backup
+
+# Local configuration
+config.local.json
+.env
+.env.local
+
+# Node.js (for extension development)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Python (for scripts)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Distribution
+dist/
+build/
+
+# Installer artifacts
+installer/
+setup/
+
+# Logs
+logs/
+*.log
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock

@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_RawrXD_PatternBridge_New.asm
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_RawrXD_PatternBridge_New.asm(109) : warning A6004:procedure argument or local not referenced : hInst
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_RawrXD_PatternBridge_New.asm(109) : warning A6004:procedure argument or local not referenced : reserved

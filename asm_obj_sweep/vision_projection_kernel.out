@@ -1,0 +1,11 @@
+ Assembling: D:\rawrxd\src\asm\vision_projection_kernel.asm
+D:\rawrxd\src\asm\vision_projection_kernel.asm(160) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\asm\vision_projection_kernel.asm(168) : warning A4025:ENDP found before .ENDPROLOG : ReleaseSpinlock
+D:\rawrxd\src\asm\vision_projection_kernel.asm(168) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\src\asm\vision_projection_kernel.asm(168) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\asm\vision_projection_kernel.asm(257) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\src\asm\vision_projection_kernel.asm(257) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\asm\vision_projection_kernel.asm(447) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\src\asm\vision_projection_kernel.asm(447) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\src\asm\vision_projection_kernel.asm(542) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\src\asm\vision_projection_kernel.asm(542) : error A2220:Missing .ENDPROLOG

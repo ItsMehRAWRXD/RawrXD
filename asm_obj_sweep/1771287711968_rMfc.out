@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan_STANDALONE.asm\1771287711968_rMfc.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_STANDALONE.asm\1771287711968_rMfc.asm(1) : error A2044:invalid character in file
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_STANDALONE.asm\1771287711968_rMfc.asm(468) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_STANDALONE.asm\1771287711968_rMfc.asm(485) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_STANDALONE.asm\1771287711968_rMfc.asm(512) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_STANDALONE.asm\1771287711968_rMfc.asm(697) : error A2006:undefined symbol : GetFileSize
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_STANDALONE.asm\1771287711968_rMfc.asm(769) : error A2206:missing operator in expression

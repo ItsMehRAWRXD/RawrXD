@@ -1,0 +1,87 @@
+{
+  "$schema": "https://rawrxd.ai/schemas/patch-bundle-v1.json",
+  "BundleId": "config-update-20260713-001",
+  "Version": "1.0.1",
+  "Type": "configuration",
+  "Severity": "low",
+  "Description": "Update logging verbosity levels and add structured logging for better observability",
+  "Author": "config-team@rawrxd.ai",
+  "CreatedAt": "2026-07-13T15:30:00Z",
+  "ExpiresAt": "2027-01-13T15:30:00Z",
+  
+  "Patches": [
+    {
+      "System": "swarm",
+      "Target": "config",
+      "PatchFile": "patches/config/swarm_logging_v1.0.1.json",
+      "Priority": 1,
+      "RequiresRestart": false,
+      "BackupRequired": true
+    },
+    {
+      "System": "agent",
+      "Target": "config",
+      "PatchFile": "patches/config/agent_logging_v1.0.1.json",
+      "Priority": 1,
+      "RequiresRestart": false,
+      "BackupRequired": true
+    },
+    {
+      "System": "tools",
+      "Target": "config",
+      "PatchFile": "patches/config/tools_logging_v1.0.1.json",
+      "Priority": 2,
+      "RequiresRestart": false,
+      "BackupRequired": true
+    }
+  ],
+  
+  "Dependencies": [
+    { "System": "swarm", "MinimumVersion": "1.0.0" },
+    { "System": "agent", "MinimumVersion": "1.0.0" },
+    { "System": "tools", "MinimumVersion": "1.0.0" }
+  ],
+  
+  "Conflicts": [],
+  
+  "Prerequisites": {
+    "MinDiskSpaceMB": 10,
+    "MinMemoryMB": 128,
+    "ServicesToStop": [],
+    "ServicesToStart": [],
+    "PrePatchCommands": [
+      "powershell -Command 'Write-Host \"Backing up current logging configuration...\"'",
+      "powershell -File scripts/config/backup_logging_config.ps1"
+    ],
+    "PostPatchCommands": [
+      "powershell -Command 'Write-Host \"Validating logging configuration...\"'",
+      "powershell -File scripts/config/validate_logging.ps1"
+    ]
+  },
+  
+  "Rollback": {
+    "AutomaticOnFailure": true,
+    "MaxRetries": 1,
+    "RetryDelaySeconds": 1,
+    "NotifyOnRollback": ["config-team@rawrxd.ai"]
+  },
+  
+  "Notifications": {
+    "OnStart": [],
+    "OnSuccess": ["config-team@rawrxd.ai"],
+    "OnFailure": ["config-team@rawrxd.ai"],
+    "OnRollback": ["config-team@rawrxd.ai", "ops@rawrxd.ai"]
+  },
+  
+  "Metadata": {
+    "ConfigChanges": [
+      { "Key": "swarm.log_level", "OldValue": "INFO", "NewValue": "DEBUG" },
+      { "Key": "swarm.log_format", "OldValue": "text", "NewValue": "json" },
+      { "Key": "agent.log_level", "OldValue": "INFO", "NewValue": "DEBUG" },
+      { "Key": "tools.log_level", "OldValue": "WARN", "NewValue": "INFO" }
+    ],
+    "TestingStatus": "validated",
+    "ApprovalRequired": false,
+    "CanRollback": true
+  }
+}

@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(6) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(7) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(8) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(26) : error A2042:statement too complex
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(31) : error A2042:statement too complex
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(35) : error A2042:statement too complex
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(39) : error A2042:statement too complex
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(170) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(269) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(341) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(342) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(343) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(406) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(407) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(408) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(431) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(460) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(461) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(462) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(582) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(674) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(675) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(676) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(677) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(678) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(726) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(731) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(769) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(771) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(781) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(783) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(794) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(844) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(845) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(846) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(847) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(848) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(880) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(885) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(923) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(925) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(935) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(937) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(948) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(63) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(68) : error A2006:undefined symbol : AES_SBOX
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(83) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(166) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(279) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(280) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(310) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(311) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(331) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(335) : error A2098:invalid operand for OFFSET
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(347) : error A2006:undefined symbol : AES_SBOX
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(374) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(376) : error A2098:invalid operand for OFFSET
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(381) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(382) : error A2026:constant expected
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(384) : error A2098:invalid operand for OFFSET
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(419) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(420) : error A2006:undefined symbol : AES256_CTX
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(421) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(430) : error A2006:undefined symbol : AES256_CTX
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(466) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(471) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(472) : error A2006:undefined symbol : AES256_CTX
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(503) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(506) : error A2006:undefined symbol : AES256_CTX
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(530) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(531) : error A2006:undefined symbol : AES256_CTX
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(546) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(568) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(579) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(586) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(602) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(614) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(633) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(691) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(693) : error A2006:undefined symbol : AES256_CTX
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(697) : error A2006:undefined symbol : AES256_CTX
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(700) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(701) : error A2006:undefined symbol : AES256_CTX
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(722) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(723) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(732) : error A2006:undefined symbol : temp_keystream
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(738) : error A2006:undefined symbol : temp_keystream
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(770) : error A2098:invalid operand for OFFSET
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(772) : error A2006:undefined symbol : AES256_CTX
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(782) : error A2098:invalid operand for OFFSET
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(784) : error A2006:undefined symbol : AES256_CTX
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(795) : error A2006:undefined symbol : temp_keystream
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(801) : error A2006:undefined symbol : temp_keystream
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(802) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(861) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(862) : error A2006:undefined symbol : AES256_CTX
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(876) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(877) : error A2022:instruction operands must be the same size
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(886) : error A2006:undefined symbol : temp_keystream
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(892) : error A2006:undefined symbol : temp_keystream
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\crypto\masm\crypto\aes.asm(924) : fatal error A1012:error count exceeds 100; stopping assembly

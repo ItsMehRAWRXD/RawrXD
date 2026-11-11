@@ -1,0 +1,49 @@
+ Assembling: D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(184) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(228) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(249) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(264) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(288) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(302) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(328) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(343) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(361) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(383) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(398) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(409) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(426) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(441) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(445) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(479) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(493) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(516) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(523) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(534) : error A2008:syntax error : ALIGN
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(124) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(125) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(150) : error A2006:undefined symbol : capacity_exceeded
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(154) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(179) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(205) : error A2006:undefined symbol : inc_failed
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(208) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(224) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(251) : error A2006:undefined symbol : backup_not_found
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(259) : error A2006:undefined symbol : backup_found
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(262) : error A2006:undefined symbol : find_backup
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(281) : error A2006:undefined symbol : rto_ok
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(290) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(330) : error A2006:undefined symbol : verify_not_found
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(338) : error A2006:undefined symbol : verify_found
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(341) : error A2006:undefined symbol : verify_find
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(345) : error A2009:syntax error in expression
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(354) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(385) : error A2006:undefined symbol : restore_not_found
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(393) : error A2006:undefined symbol : restore_found
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(396) : error A2006:undefined symbol : restore_find
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(428) : error A2006:undefined symbol : info_not_found
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(436) : error A2006:undefined symbol : info_found
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(439) : error A2006:undefined symbol : info_find
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(481) : error A2006:undefined symbol : cleanup_done
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(491) : error A2006:undefined symbol : cleanup_loop
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(513) : error A2006:undefined symbol : skip_backups
+D:\rawrxd\history\runoff\part_0001\c__Users_HiH8e_Downloads_RawrXD-production-lazy-init_src_masm_final-ide_cpp_to_masm_backup_manager.asm(520) : error A2006:undefined symbol : skip_basedir

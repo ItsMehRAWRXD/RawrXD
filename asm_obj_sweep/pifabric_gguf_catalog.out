@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\pifabric_gguf_catalog.asm
+D:\rawrxd\pifabric_gguf_catalog.asm(2) : error A2008:syntax error : .
+D:\rawrxd\pifabric_gguf_catalog.asm(3) : error A2008:syntax error : .
+D:\rawrxd\pifabric_gguf_catalog.asm(27) : error A2179:structure improperly initialized
+D:\rawrxd\pifabric_gguf_catalog.asm(27) : error A2008:syntax error : in structure
+D:\rawrxd\pifabric_gguf_catalog.asm(36) : error A2008:syntax error : esi
+D:\rawrxd\pifabric_gguf_catalog.asm(41) : fatal error A1010:unmatched block nesting : GGUF_Catalog_Load

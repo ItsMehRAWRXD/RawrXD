@@ -1,0 +1,155 @@
+# Alertmanager Configuration for RawrXD
+# Version: 1.0.0
+# Routes alerts to appropriate channels based on severity
+
+global:
+  smtp_smarthost: 'localhost:587'
+  smtp_from: 'alerts@rawrxd.local'
+  smtp_auth_username: 'alerts'
+  smtp_auth_password: 'CHANGEME'
+  
+  slack_api_url: 'CHANGEME'
+  
+  pagerduty_url: 'https://events.pagerduty.com/v2/enqueue'
+
+templates:
+- '/etc/alertmanager/templates/*.tmpl'
+
+# The root route on which each incoming alert enters.
+route:
+  # The labels by which incoming alerts are grouped together.
+  group_by: ['alertname', 'cluster', 'service']
+  
+  # When a new group of alerts is created, wait at least
+  # 'group_wait' to send the initial notification.
+  group_wait: 30s
+  
+  # When the first notification was sent, wait 'group_interval'
+  # to send a batch of new alerts that started firing for that group.
+  group_interval: 5m
+  
+  # If an alert has successfully been sent, wait 'repeat_interval'
+  # to resend them.
+  repeat_interval: 12h
+  
+  # A default receiver
+  receiver: 'default'
+  
+  # The child route trees.
+  routes:
+  # Critical alerts -> PagerDuty + Slack + Email
+  - match:
+      severity: critical
+    receiver: 'critical-alerts'
+    continue: true
+  
+  # Security alerts -> Security team
+  - match:
+      team: security
+    receiver: 'security-team'
+    continue: true
+  
+  # Platform alerts -> Platform team
+  - match:
+      team: platform
+    receiver: 'platform-team'
+    continue: true
+  
+  # Warning alerts -> Slack only
+  - match:
+      severity: warning
+    receiver: 'warning-alerts'
+
+# Inhibition rules allow to mute a set of alerts given that another alert is firing.
+inhibit_rules:
+- source_match:
+    severity: 'critical'
+  target_match:
+    severity: 'warning'
+  equal: ['alertname', 'cluster', 'service']
+
+# Receivers
+receivers:
+- name: 'default'
+  email_configs:
+  - to: 'oncall@rawrxd.local'
+    subject: 'RawrXD Alert: {{ .GroupLabels.alertname }}'
+    body: |
+      {{ range .Alerts }}
+      Alert: {{ .Annotations.summary }}
+      Description: {{ .Annotations.description }}
+      Severity: {{ .Labels.severity }}
+      Time: {{ .StartsAt }}
+      {{ end }}
+
+- name: 'critical-alerts'
+  pagerduty_configs:
+  - service_key: 'CHANGEME'
+    description: '{{ .GroupLabels.alertname }}'
+    severity: critical
+    details:
+      summary: '{{ .Annotations.summary }}'
+      description: '{{ .Annotations.description }}'
+  
+  slack_configs:
+  - channel: '#critical-alerts'
+    title: '🔥 CRITICAL: {{ .GroupLabels.alertname }}'
+    text: |
+      {{ range .Alerts }}
+      *{{ .Annotations.summary }}*
+      {{ .Annotations.description }}
+      *Severity:* {{ .Labels.severity }}
+      *Runbook:* {{ .Annotations.runbook_url }}
+      {{ end }}
+  
+  email_configs:
+  - to: 'oncall@rawrxd.local,manager@rawrxd.local'
+    subject: '🔥 CRITICAL: {{ .GroupLabels.alertname }}'
+    body: |
+      CRITICAL ALERT
+      ==============
+      
+      {{ range .Alerts }}
+      Alert: {{ .Annotations.summary }}
+      Description: {{ .Annotations.description }}
+      Severity: {{ .Labels.severity }}
+      Team: {{ .Labels.team }}
+      Time: {{ .StartsAt }}
+      
+      Runbook: {{ .Annotations.runbook_url }}
+      {{ end }}
+
+- name: 'security-team'
+  slack_configs:
+  - channel: '#security-alerts'
+    title: '🔒 Security Alert: {{ .GroupLabels.alertname }}'
+    text: |
+      {{ range .Alerts }}
+      *{{ .Annotations.summary }}*
+      {{ .Annotations.description }}
+      *Action:* {{ .Annotations.action }}
+      {{ end }}
+  
+  email_configs:
+  - to: 'security@rawrxd.local'
+    subject: 'Security Alert: {{ .GroupLabels.alertname }}'
+
+- name: 'platform-team'
+  slack_configs:
+  - channel: '#platform-alerts'
+    title: '⚙️ Platform Alert: {{ .GroupLabels.alertname }}'
+    text: |
+      {{ range .Alerts }}
+      *{{ .Annotations.summary }}*
+      {{ .Annotations.description }}
+      {{ end }}
+
+- name: 'warning-alerts'
+  slack_configs:
+  - channel: '#alerts'
+    title: '⚠️ Warning: {{ .GroupLabels.alertname }}'
+    text: |
+      {{ range .Alerts }}
+      *{{ .Annotations.summary }}*
+      {{ .Annotations.description }}
+      {{ end }}

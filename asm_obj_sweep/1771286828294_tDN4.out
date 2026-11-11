@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\src\gpu_masm\gpu_memory.asm\1771286828294_tDN4.asm
+D:\rawrxd\history\all_versions\src\gpu_masm\gpu_memory.asm\1771286828294_tDN4.asm(32) : error A2006:undefined symbol : VirtualAlloc
+D:\rawrxd\history\all_versions\src\gpu_masm\gpu_memory.asm\1771286828294_tDN4.asm(58) : error A2006:undefined symbol : VirtualFree

@@ -1,0 +1,118 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(106) : error A2008:syntax error : label
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(167) : error A2008:syntax error : dword
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(346) : error A2005:symbol redefinition : LSPInitialize
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(374) : error A2005:symbol redefinition : LSPParseCapabilities
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(439) : error A2005:symbol redefinition : LSPSendInitialize
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(506) : error A2005:symbol redefinition : LSPTextDocumentDidOpen
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(516) : warning A4020:directive ignored outside a procedure
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(517) : warning A4020:directive ignored outside a procedure
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(554) : error A2005:symbol redefinition : LSPTextDocumentDidChange
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(643) : error A2005:symbol redefinition : LSPCompletion
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(732) : error A2005:symbol redefinition : IntelliSenseRenderPopup
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(755) : error A2005:symbol redefinition : IntelliSenseApplyCompletion
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(841) : error A2005:symbol redefinition : DiagnosticsRenderSquiggles
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(855) : warning A4020:directive ignored outside a procedure
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(856) : warning A4020:directive ignored outside a procedure
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(920) : error A2005:symbol redefinition : DAPLaunch
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(930) : warning A4020:directive ignored outside a procedure
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(931) : warning A4020:directive ignored outside a procedure
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(999) : error A2005:symbol redefinition : DAPSetBreakpoint
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1008) : warning A4020:directive ignored outside a procedure
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1009) : warning A4020:directive ignored outside a procedure
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1042) : error A2005:symbol redefinition : DAPContinue
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1051) : warning A4020:directive ignored outside a procedure
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1052) : warning A4020:directive ignored outside a procedure
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1079) : error A2005:symbol redefinition : DAPStepOver
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1089) : warning A4020:directive ignored outside a procedure
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1090) : warning A4020:directive ignored outside a procedure
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1151) : error A2005:symbol redefinition : DAPStackTrace
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1181) : error A2005:symbol redefinition : GitGetStatus
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1193) : warning A4020:directive ignored outside a procedure
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1194) : warning A4020:directive ignored outside a procedure
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1273) : error A2005:symbol redefinition : GitDiff
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1283) : warning A4020:directive ignored outside a procedure
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1284) : warning A4020:directive ignored outside a procedure
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1358) : error A2005:symbol redefinition : GitBlame
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1420) : error A2005:symbol redefinition : EnterpriseEditorCreate
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1504) : error A2005:symbol redefinition : LaunchServerProcess
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1535) : error A2005:symbol redefinition : JSONCreate
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1601) : error A2005:symbol redefinition : JSONAddString
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1685) : error A2005:symbol redefinition : JSONAddInt
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1732) : error A2005:symbol redefinition : JSONAddObject
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1752) : error A2005:symbol redefinition : JSONToString
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1770) : error A2005:symbol redefinition : JSONDestroy
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1795) : error A2005:symbol redefinition : PipeWrite
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1848) : error A2005:symbol redefinition : LSPWaitResponse
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1949) : error A2005:symbol redefinition : LSPWaitResponseById
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(2061) : error A2005:symbol redefinition : ParseCompletionItems
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(2117) : error A2005:symbol redefinition : DrawPopupBackground
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(2156) : error A2005:symbol redefinition : RenderCompletionItem
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(2217) : error A2005:symbol redefinition : RenderCompletionItemSelected
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(2293) : error A2005:symbol redefinition : DrawWavyLine
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(2358) : error A2005:symbol redefinition : ExecuteCommand
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(2417) : error A2005:symbol redefinition : ParseGitStatus
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(2440) : error A2005:symbol redefinition : LineColToScreen
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(2492) : error A2005:symbol redefinition : StrStrA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(2576) : error A2008:syntax error : :
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(2576) : error A2088:END directive required at end of file
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(313) : error A2006:undefined symbol : process_handle
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(527) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(797) : error A2006:undefined symbol : FONT_WIDTH
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(806) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(810) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(813) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(867) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(870) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(871) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(875) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(880) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(887) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(890) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(901) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(909) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(914) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(942) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(945) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(946) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(948) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(953) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(959) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(961) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(964) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(970) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(977) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(992) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1012) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1025) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1027) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1031) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1036) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1055) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1062) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1064) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1068) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1073) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1093) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1100) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1102) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1106) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1111) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1114) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1133) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1144) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1201) : error A2006:undefined symbol : CreatePipe
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1212) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1213) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1215) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1216) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1249) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1254) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1256) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1291) : error A2006:undefined symbol : CreatePipe
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1302) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1303) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1305) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1306) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1336) : error A2009:syntax error in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771290727848_r9TR.ASM(1339) : fatal error A1012:error count exceeds 100; stopping assembly

@@ -1,0 +1,73 @@
+ Assembling: D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(53) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(97) : error A2008:syntax error : size
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(367) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(375) : error A2008:syntax error : CreateFileA
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(385) : error A2008:syntax error : ReadFile
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(403) : error A2008:syntax error : ReadFile
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(412) : error A2008:syntax error : ReadFile
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(415) : error A2008:syntax error : CloseHandle
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(549) : error A2008:syntax error : CreateThread
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(627) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(646) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(694) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(769) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(800) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(821) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(980) : error A2008:syntax error : lstrlenA
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(981) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(986) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(989) : error A2008:syntax error : lstrlenA
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(990) : error A2008:syntax error : WriteFile
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(995) : error A2111:conflicting parameter definition
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(1029) : error A2008:syntax error : app_info
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(1030) : error A2008:syntax error : instance_info
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(1031) : error A2008:syntax error : buffer_info
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(1032) : error A2008:syntax error : shader_info
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(1033) : error A2008:syntax error : layout_info
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(1034) : error A2008:syntax error : pipeline_info
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(1035) : error A2008:syntax error : command_begin_info
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(1036) : error A2008:syntax error : submit_info
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(242) : error A2006:undefined symbol : strcpy_s
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(249) : error A2006:undefined symbol : strcpy_s
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(274) : error A2006:undefined symbol : InitializePrefetchQueue
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(279) : error A2006:undefined symbol : ARENA_WEIGHTS_SIZE_MB
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(282) : error A2006:undefined symbol : CreateMemoryArena
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(285) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(287) : error A2006:undefined symbol : ARENA_ACTIVATIONS_SIZE_MB
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(290) : error A2006:undefined symbol : CreateMemoryArena
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(293) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(295) : error A2006:undefined symbol : ARENA_TEMP_SIZE_MB
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(298) : error A2006:undefined symbol : CreateMemoryArena
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(301) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(334) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(346) : error A2148:invalid symbol type in expression : c_str
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(377) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(389) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(401) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(407) : error A2006:undefined symbol : operators_loaded
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(410) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(447) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(448) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(449) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(450) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(451) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(452) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(453) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(500) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(546) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(605) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(660) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(670) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(674) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(715) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(720) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(724) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(737) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(738) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(787) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(797) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(798) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(799) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(801) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0006\c__Users_HiH8e_OneDrive_Desktop_RawrXD-StreamingOrchestrator.asm(829) : error A2083:invalid scale value

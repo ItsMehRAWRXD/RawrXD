@@ -1,0 +1,294 @@
+# Performance Regression Workflow
+# Phase D.5 — CI Performance Regression Gates
+#
+# This workflow runs on every PR to detect performance regressions
+# and posts results as a PR comment.
+
+name: Performance Regression
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'src/**'
+      - 'include/**'
+      - 'benchmarks/**'
+      - 'CMakeLists.txt'
+      - '.github/workflows/performance-regression.yml'
+  push:
+    branches: [main]
+
+env:
+  BENCHMARK_SEED: 42
+  WARMUP_RUNS: 5
+  MEASURED_RUNS: 30
+  CRITICAL_THRESHOLD: 0.20  # 20% regression = block
+  WARNING_THRESHOLD: 0.10   # 10% regression = warn
+
+jobs:
+  # Build the benchmark suite
+  build:
+    name: Build Benchmark Suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need full history for baseline comparison
+      
+      - name: Setup build environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build build-essential
+      
+      - name: Configure CMake
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DRAWRXD_BUILD_BENCHMARKS=ON \
+            -G Ninja
+      
+      - name: Build benchmarks
+        run: cmake --build build --target benchmark_runner -j$(nproc)
+      
+      - name: Upload benchmark binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-runner
+          path: build/benchmark_runner
+          retention-days: 1
+
+  # Run benchmarks against baseline
+  benchmark:
+    name: Run Benchmarks
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Download benchmark binary
+        uses: actions/download-artifact@v4
+        with:
+          name: benchmark-runner
+          path: build/
+      
+      - name: Make executable
+        run: chmod +x build/benchmark_runner
+      
+      - name: Download baseline from main
+        run: |
+          # Download latest baseline artifact from main branch
+          gh run download --name benchmark-baseline --branch main || echo "No baseline found"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+      
+      - name: Run Tier 1 benchmarks (Runtime Performance)
+        run: |
+          ./build/benchmark_runner \
+            --tier 1 \
+            --seed ${{ env.BENCHMARK_SEED }} \
+            --warmup ${{ env.WARMUP_RUNS }} \
+            --runs ${{ env.MEASURED_RUNS }} \
+            --output-json tier1_results.json
+      
+      - name: Run Tier 2 benchmarks (Agentic Capability)
+        run: |
+          ./build/benchmark_runner \
+            --tier 2 \
+            --seed ${{ env.BENCHMARK_SEED }} \
+            --warmup ${{ env.WARMUP_RUNS }} \
+            --runs ${{ env.MEASURED_RUNS }} \
+            --output-json tier2_results.json
+      
+      - name: Run Tier 3 benchmarks (Sovereign Features)
+        run: |
+          ./build/benchmark_runner \
+            --tier 3 \
+            --seed ${{ env.BENCHMARK_SEED }} \
+            --warmup ${{ env.WARMUP_RUNS }} \
+            --runs ${{ env.MEASURED_RUNS }} \
+            --output-json tier3_results.json
+      
+      - name: Run Tier 4 benchmarks (Reliability - Short)
+        run: |
+          ./build/benchmark_runner \
+            --tier 4 \
+            --soak-duration 300 \
+            --seed ${{ env.BENCHMARK_SEED }} \
+            --output-json tier4_results.json
+      
+      - name: Run Developer Workflow benchmarks
+        run: |
+          ./build/benchmark_runner \
+            --workflow \
+            --seed ${{ env.BENCHMARK_SEED }} \
+            --warmup ${{ env.WARMUP_RUNS }} \
+            --runs ${{ env.MEASURED_RUNS }} \
+            --output-json workflow_results.json
+      
+      - name: Compare against baseline
+        id: compare
+        run: |
+          ./build/benchmark_runner \
+            --compare \
+            --baseline baseline.json \
+            --current tier1_results.json \
+            --critical-threshold ${{ env.CRITICAL_THRESHOLD }} \
+            --warning-threshold ${{ env.WARNING_THRESHOLD }} \
+            --output-json comparison.json \
+            --output-markdown comparison.md \
+            --github-actions-output
+      
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: |
+            tier1_results.json
+            tier2_results.json
+            tier3_results.json
+            tier4_results.json
+            workflow_results.json
+            comparison.json
+            comparison.md
+          retention-days: 30
+      
+      - name: Set job output
+        id: results
+        run: |
+          echo "passed=$(jq -r '.passed' comparison.json)" >> $GITHUB_OUTPUT
+          echo "critical=$(jq -r '.critical_regressions' comparison.json)" >> $GITHUB_OUTPUT
+          echo "warning=$(jq -r '.warning_regressions' comparison.json)" >> $GITHUB_OUTPUT
+          echo "improvements=$(jq -r '.improvements' comparison.json)" >> $GITHUB_OUTPUT
+
+  # Post PR comment with results
+  comment:
+    name: Post PR Comment
+    needs: benchmark
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Download results
+        uses: actions/download-artifact@v4
+        with:
+          name: benchmark-results
+      
+      - name: Read comparison markdown
+        id: read_comparison
+        run: |
+          echo "content<<EOF" >> $GITHUB_OUTPUT
+          cat comparison.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Find existing comment
+        uses: peter-evans/find-comment@v3
+        id: find_comment
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: '📊 Performance Regression Report'
+      
+      - name: Create or update comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.find_comment.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: ${{ steps.read_comparison.outputs.content }}
+          edit-mode: replace
+
+  # Update baseline on main branch
+  update-baseline:
+    name: Update Baseline
+    needs: benchmark
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Download results
+        uses: actions/download-artifact@v4
+        with:
+          name: benchmark-results
+      
+      - name: Merge results into baseline
+        run: |
+          # Merge all tier results into single baseline file
+          jq -s '{
+            tier1: .[0],
+            tier2: .[1],
+            tier3: .[2],
+            tier4: .[3],
+            workflow: .[4],
+            timestamp: now,
+            commit: "${{ github.sha }}"
+          }' tier1_results.json tier2_results.json tier3_results.json tier4_results.json workflow_results.json > baseline.json
+      
+      - name: Upload baseline artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-baseline
+          path: baseline.json
+          retention-days: 90
+
+  # Generate qualification dashboard
+  dashboard:
+    name: Generate Dashboard
+    needs: benchmark
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Download results
+        uses: actions/download-artifact@v4
+        with:
+          name: benchmark-results
+      
+      - name: Generate HTML dashboard
+        run: |
+          ./build/benchmark_runner \
+            --generate-dashboard \
+            --tier1 tier1_results.json \
+            --tier2 tier2_results.json \
+            --tier3 tier3_results.json \
+            --tier4 tier4_results.json \
+            --workflow workflow_results.json \
+            --output qualification_dashboard.html
+      
+      - name: Upload dashboard
+        uses: actions/upload-artifact@v4
+        with:
+          name: qualification-dashboard
+          path: qualification_dashboard.html
+          retention-days: 30
+
+  # Fail check for critical regressions
+  check-regressions:
+    name: Check for Critical Regressions
+    needs: benchmark
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Download results
+        uses: actions/download-artifact@v4
+        with:
+          name: benchmark-results
+      
+      - name: Check critical regressions
+        run: |
+          CRITICAL=$(jq -r '.critical_regressions' comparison.json)
+          if [ "$CRITICAL" -gt 0 ]; then
+            echo "❌ $CRITICAL critical regression(s) detected"
+            exit 1
+          else
+            echo "✅ No critical regressions"
+          fi

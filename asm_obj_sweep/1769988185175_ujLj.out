@@ -1,0 +1,79 @@
+ Assembling: D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(9) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(11) : error A2008:syntax error : frame
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(181) : error A2008:syntax error : cs
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(300) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(301) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(312) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(355) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(357) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(416) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(417) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(1132) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(1135) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(1146) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(1148) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(1150) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(277) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(282) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(350) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(376) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(393) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(410) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(499) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(506) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(510) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(513) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(598) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(625) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(627) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(629) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(631) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(633) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(701) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(703) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(705) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(707) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(709) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(832) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(900) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(902) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(904) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(906) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(984) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(1054) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(1179) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(1182) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(1184) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(1189) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(1195) : error A2166:structure field expected
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(267) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(294) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(321) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(438) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(480) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(528) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(578) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(619) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(698) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(742) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(807) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(849) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(874) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(897) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(927) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(949) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(958) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(969) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(998) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(1005) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(1049) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(1082) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(1089) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(1106) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(1113) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(1161) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(1200) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\masm\RawrXD_GUI_IDE.asm\1769988185175_ujLj.asm(1230) : error A2220:Missing .ENDPROLOG

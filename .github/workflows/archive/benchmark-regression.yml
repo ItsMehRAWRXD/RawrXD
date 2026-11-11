@@ -1,0 +1,248 @@
+# benchmark-regression.yml
+# Phase F.1 Batch 4/5: Automated benchmark regression detection
+
+name: Benchmark Regression Detection
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM
+  workflow_dispatch:
+
+env:
+  REGRESSION_THRESHOLD: 5.0  # Percentage threshold for regression
+
+jobs:
+  benchmark-current:
+    name: Benchmark Current
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-22.04]
+        include:
+          - os: windows-latest
+            platform: windows
+          - os: ubuntu-22.04
+            platform: linux
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Build Environment
+        uses: ./.github/actions/setup-build
+
+      - name: Build
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --config Release --parallel
+
+      - name: Run Benchmarks
+        run: |
+          cd build
+          ./benchmarks/sovereign_vs_ollama/RawrXD_Benchmark \
+            --output benchmark_current.json \
+            --confidence 0.95 \
+            --runs 30
+
+      - name: Upload Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-current-${{ matrix.platform }}
+          path: build/benchmark_current.json
+
+  benchmark-baseline:
+    name: Benchmark Baseline
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-22.04]
+        include:
+          - os: windows-latest
+            platform: windows
+          - os: ubuntu-22.04
+            platform: linux
+
+    steps:
+      - name: Checkout Baseline
+        uses: actions/checkout@v4
+        with:
+          ref: main  # Always compare against main
+
+      - name: Setup Build Environment
+        uses: ./.github/actions/setup-build
+
+      - name: Build
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --config Release --parallel
+
+      - name: Run Benchmarks
+        run: |
+          cd build
+          ./benchmarks/sovereign_vs_ollama/RawrXD_Benchmark \
+            --output benchmark_baseline.json \
+            --confidence 0.95 \
+            --runs 30
+
+      - name: Upload Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-baseline-${{ matrix.platform }}
+          path: build/benchmark_baseline.json
+
+  compare:
+    name: Compare Results
+    needs: [benchmark-current, benchmark-baseline]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download All Results
+        uses: actions/download-artifact@v4
+        with:
+          path: ./benchmarks
+
+      - name: Compare Benchmarks
+        id: compare
+        run: |
+          python3 << 'PYTHON_SCRIPT'
+          import json
+          import sys
+          import os
+
+          REGRESSION_THRESHOLD = float(os.environ.get('REGRESSION_THRESHOLD', 5.0))
+          regressions = []
+          improvements = []
+
+          platforms = ['windows', 'linux']
+
+          for platform in platforms:
+              current_file = f'benchmarks/benchmark-current-{platform}/benchmark_current.json'
+              baseline_file = f'benchmarks/benchmark-baseline-{platform}/benchmark_baseline.json'
+
+              if not os.path.exists(current_file) or not os.path.exists(baseline_file):
+                  continue
+
+              with open(current_file) as f:
+                  current = json.load(f)
+              with open(baseline_file) as f:
+                  baseline = json.load(f)
+
+              for bench_current, bench_baseline in zip(current.get('benchmarks', []), 
+                                                      baseline.get('benchmarks', [])):
+                  name = bench_current['name']
+                  current_mean = bench_current['mean']
+                  baseline_mean = bench_baseline['mean']
+
+                  # Calculate percentage change (lower is better for most benchmarks)
+                  change_pct = ((current_mean - baseline_mean) / baseline_mean) * 100
+
+                  if change_pct > REGRESSION_THRESHOLD:
+                      regressions.append({
+                          'platform': platform,
+                          'benchmark': name,
+                          'change': change_pct,
+                          'current': current_mean,
+                          'baseline': baseline_mean
+                      })
+                  elif change_pct < -REGRESSION_THRESHOLD:
+                      improvements.append({
+                          'platform': platform,
+                          'benchmark': name,
+                          'change': change_pct,
+                          'current': current_mean,
+                          'baseline': baseline_mean
+                      })
+
+          # Generate report
+          report = []
+          report.append("# Benchmark Comparison Report\n")
+          report.append(f"Regression Threshold: {REGRESSION_THRESHOLD}%\n\n")
+
+          if regressions:
+              report.append("## ⚠️ Regressions Detected\n\n")
+              report.append("| Platform | Benchmark | Change | Current | Baseline |\n")
+              report.append("|----------|-----------|--------|---------|----------|\n")
+              for r in regressions:
+                  report.append(f"| {r['platform']} | {r['benchmark']} | +{r['change']:.1f}% | {r['current']:.2f} | {r['baseline']:.2f} |\n")
+              report.append("\n")
+
+          if improvements:
+              report.append("## ✅ Improvements\n\n")
+              report.append("| Platform | Benchmark | Change | Current | Baseline |\n")
+              report.append("|----------|-----------|--------|---------|----------|\n")
+              for i in improvements:
+                  report.append(f"| {i['platform']} | {i['benchmark']} | {i['change']:.1f}% | {i['current']:.2f} | {i['baseline']:.2f} |\n")
+              report.append("\n")
+
+          if not regressions and not improvements:
+              report.append("## ✅ No Significant Changes\n\n")
+              report.append("All benchmarks within threshold.\n")
+
+          report_text = ''.join(report)
+          print(report_text)
+
+          # Write to file
+          with open('benchmark_report.md', 'w') as f:
+              f.write(report_text)
+
+          # Set output for GitHub Actions
+          with open(os.environ.get('GITHUB_OUTPUT', '/dev/null'), 'a') as f:
+              f.write(f"has_regressions={'true' if regressions else 'false'}\n")
+              f.write(f"regression_count={len(regressions)}\n")
+
+          # Exit with error if regressions found
+          if regressions:
+              print(f"\n❌ {len(regressions)} regression(s) detected!")
+              sys.exit(1)
+          else:
+              print("\n✅ No regressions detected!")
+              sys.exit(0)
+          PYTHON_SCRIPT
+
+      - name: Upload Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-report
+          path: benchmark_report.md
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request' && failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('benchmark_report.md', 'utf8');
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🚨 Benchmark Regression Detected\n\n${report}`
+            });
+
+      - name: Notify on Regression
+        if: failure() && github.event_name == 'schedule'
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "🚨 Benchmark regression detected in ${{ github.repository }}!",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Benchmark Regression Detected*\nRepository: ${{ github.repository }}\nBranch: ${{ github.ref }}\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

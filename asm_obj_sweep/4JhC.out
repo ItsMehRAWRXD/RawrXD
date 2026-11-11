@@ -1,0 +1,9 @@
+ Assembling: D:\rawrxd\history\-12ba11d2\4JhC.asm
+D:\rawrxd\history\-12ba11d2\4JhC.asm(7) : error A2008:syntax error : .
+D:\rawrxd\history\-12ba11d2\4JhC.asm(8) : error A2008:syntax error : .
+D:\rawrxd\history\-12ba11d2\4JhC.asm(9) : error A2008:syntax error : .
+D:\rawrxd\history\-12ba11d2\4JhC.asm(11) : error A2008:syntax error : frame
+D:\rawrxd\history\-12ba11d2\4JhC.asm(105) : error A2008:syntax error : rbx
+D:\rawrxd\history\-12ba11d2\4JhC.asm(109) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\-12ba11d2\4JhC.asm(110) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\history\-12ba11d2\4JhC.asm(197) : fatal error A1010:unmatched block nesting : LspMessage_ParseFromJson

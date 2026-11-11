@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\-16fff6e\0uE4.asm
+D:\rawrxd\history\-16fff6e\0uE4.asm(3) : error A2008:syntax error : .
+D:\rawrxd\history\-16fff6e\0uE4.asm(4) : error A2008:syntax error : .
+D:\rawrxd\history\-16fff6e\0uE4.asm(9) : fatal error A1000:cannot open file : user32.inc

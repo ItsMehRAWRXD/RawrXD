@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(32) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(103) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(115) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(117) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(155) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(169) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(176) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(202) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(207) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(208) : error A2008:syntax error : db
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(209) : error A2008:syntax error : db
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(258) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(295) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(297) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(333) : error A2008:syntax error : bits
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(334) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(382) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(384) : error A2008:syntax error : g_input_filename
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(385) : error A2008:syntax error : g_output_filename
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(386) : error A2008:syntax error : g_current_stage
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(387) : error A2008:syntax error : g_error_code
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(388) : error A2008:syntax error : g_error_line
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(389) : error A2008:syntax error : g_error_column
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(392) : error A2008:syntax error : g_source_buffer
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(393) : error A2008:syntax error : g_source_size
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(394) : error A2008:syntax error : g_source_pos
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(395) : error A2008:syntax error : g_current_line
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(396) : error A2008:syntax error : g_current_column
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(399) : error A2008:syntax error : g_tokens
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(400) : error A2008:syntax error : g_token_count
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(401) : error A2008:syntax error : g_current_token
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(404) : error A2008:syntax error : g_ast_nodes
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(405) : error A2008:syntax error : g_ast_node_count
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(406) : error A2008:syntax error : g_ast_root
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(409) : error A2008:syntax error : g_symbols
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(410) : error A2008:syntax error : g_symbol_count
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(411) : error A2008:syntax error : g_current_section
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(412) : error A2008:syntax error : g_current_offset
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(415) : error A2008:syntax error : g_machine_code
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(416) : error A2008:syntax error : g_machine_code_size
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(417) : error A2008:syntax error : g_relocation_count
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(418) : error A2008:syntax error : g_relocations
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(421) : error A2008:syntax error : g_pe_buffer
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(422) : error A2008:syntax error : g_pe_size
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(423) : error A2008:syntax error : g_entry_point_rva
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(426) : error A2008:syntax error : g_temp_buffer
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(427) : error A2008:syntax error : g_line_buffer
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(428) : error A2008:syntax error : g_identifier_buffer
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(430) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(431) : error A2008:syntax error : global
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(432) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(433) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(434) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(435) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(436) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(437) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(438) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(439) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(440) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(441) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(442) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(443) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(444) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(445) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(446) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(447) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(448) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(496) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(510) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(525) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(540) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(544) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(548) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(560) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(619) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(626) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(632) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(636) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(640) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(644) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(648) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(652) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(656) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(659) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(691) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(693) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(705) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(713) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(722) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(736) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(744) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(753) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(759) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(760) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(763) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(775) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(785) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(795) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(841) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(844) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0013\d__RawrXD_src_masm_masm_solo_compiler.asm(883) : fatal error A1012:error count exceeds 100; stopping assembly

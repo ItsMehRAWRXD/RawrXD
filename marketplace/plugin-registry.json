@@ -1,0 +1,251 @@
+{
+  "schema_version": "1.0.0",
+  "registry_name": "RawrXD Plugin Marketplace",
+  "last_updated": "2026-07-07T00:00:00Z",
+  "categories": [
+    {
+      "id": "inference",
+      "name": "Inference Engines",
+      "description": "Alternative inference backends and optimizations"
+    },
+    {
+      "id": "models",
+      "name": "Model Providers",
+      "description": "Connectors for external model sources"
+    },
+    {
+      "id": "tools",
+      "name": "Developer Tools",
+      "description": "IDE integrations and development utilities"
+    },
+    {
+      "id": "telemetry",
+      "name": "Telemetry & Monitoring",
+      "description": "Metrics, logging, and observability plugins"
+    },
+    {
+      "id": "security",
+      "name": "Security",
+      "description": "Authentication, encryption, and compliance plugins"
+    },
+    {
+      "id": "integrations",
+      "name": "Integrations",
+      "description": "Third-party service integrations"
+    }
+  ],
+  "plugins": [
+    {
+      "id": "rawrxd-vulkan-backend",
+      "name": "Vulkan Inference Backend",
+      "version": "1.2.0",
+      "description": "High-performance Vulkan compute backend for AMD GPUs",
+      "author": "RawrXD Team",
+      "category": "inference",
+      "tags": ["vulkan", "gpu", "amd", "performance"],
+      "license": "MIT",
+      "pricing": "free",
+      "download_url": "https://github.com/itsmehrawrxd/plugins/releases/download/v1.2.0/vulkan-backend.zip",
+      "icon_url": "https://rawrxd.ai/marketplace/icons/vulkan.png",
+      "readme_url": "https://rawrxd.ai/marketplace/plugins/vulkan-backend/README.md",
+      "repository": "https://github.com/itsmehrawrxd/plugins/tree/main/vulkan-backend",
+      "min_rawrxd_version": "1.0.0",
+      "max_rawrxd_version": "2.0.0",
+      "dependencies": [],
+      "stats": {
+        "downloads": 15420,
+        "rating": 4.8,
+        "reviews": 127
+      },
+      "verified": true,
+      "featured": true
+    },
+    {
+      "id": "rawrxd-cuda-backend",
+      "name": "CUDA Inference Backend",
+      "version": "1.1.5",
+      "description": "NVIDIA CUDA backend for RTX series GPUs",
+      "author": "RawrXD Team",
+      "category": "inference",
+      "tags": ["cuda", "nvidia", "gpu", "rtx"],
+      "license": "MIT",
+      "pricing": "free",
+      "download_url": "https://github.com/itsmehrawrxd/plugins/releases/download/v1.1.5/cuda-backend.zip",
+      "icon_url": "https://rawrxd.ai/marketplace/icons/cuda.png",
+      "readme_url": "https://rawrxd.ai/marketplace/plugins/cuda-backend/README.md",
+      "repository": "https://github.com/itsmehrawrxd/plugins/tree/main/cuda-backend",
+      "min_rawrxd_version": "1.0.0",
+      "max_rawrxd_version": "2.0.0",
+      "dependencies": [],
+      "stats": {
+        "downloads": 8930,
+        "rating": 4.7,
+        "reviews": 89
+      },
+      "verified": true,
+      "featured": true
+    },
+    {
+      "id": "rawrxd-ollama-bridge",
+      "name": "Ollama Compatibility Bridge",
+      "version": "2.0.1",
+      "description": "Drop-in replacement for Ollama API with RawrXD performance",
+      "author": "Community",
+      "category": "integrations",
+      "tags": ["ollama", "api", "compatibility", "migration"],
+      "license": "MIT",
+      "pricing": "free",
+      "download_url": "https://github.com/community/rawrxd-plugins/releases/download/v2.0.1/ollama-bridge.zip",
+      "icon_url": "https://rawrxd.ai/marketplace/icons/ollama.png",
+      "readme_url": "https://rawrxd.ai/marketplace/plugins/ollama-bridge/README.md",
+      "repository": "https://github.com/community/rawrxd-plugins/tree/main/ollama-bridge",
+      "min_rawrxd_version": "1.0.0",
+      "max_rawrxd_version": "2.0.0",
+      "dependencies": [],
+      "stats": {
+        "downloads": 22150,
+        "rating": 4.9,
+        "reviews": 312
+      },
+      "verified": true,
+      "featured": true
+    },
+    {
+      "id": "rawrxd-prometheus-exporter",
+      "name": "Prometheus Metrics Exporter",
+      "version": "1.3.0",
+      "description": "Export RawrXD metrics to Prometheus for monitoring",
+      "author": "RawrXD Team",
+      "category": "telemetry",
+      "tags": ["prometheus", "metrics", "monitoring", "observability"],
+      "license": "MIT",
+      "pricing": "free",
+      "download_url": "https://github.com/itsmehrawrxd/plugins/releases/download/v1.3.0/prometheus-exporter.zip",
+      "icon_url": "https://rawrxd.ai/marketplace/icons/prometheus.png",
+      "readme_url": "https://rawrxd.ai/marketplace/plugins/prometheus-exporter/README.md",
+      "repository": "https://github.com/itsmehrawrxd/plugins/tree/main/prometheus-exporter",
+      "min_rawrxd_version": "1.0.0",
+      "max_rawrxd_version": "2.0.0",
+      "dependencies": [],
+      "stats": {
+        "downloads": 6780,
+        "rating": 4.6,
+        "reviews": 54
+      },
+      "verified": true,
+      "featured": false
+    },
+    {
+      "id": "rawrxd-huggingface-hub",
+      "name": "Hugging Face Hub Connector",
+      "version": "1.0.2",
+      "description": "Direct integration with Hugging Face model hub",
+      "author": "Community",
+      "category": "models",
+      "tags": ["huggingface", "models", "download", "hub"],
+      "license": "MIT",
+      "pricing": "free",
+      "download_url": "https://github.com/community/rawrxd-plugins/releases/download/v1.0.2/hf-hub.zip",
+      "icon_url": "https://rawrxd.ai/marketplace/icons/huggingface.png",
+      "readme_url": "https://rawrxd.ai/marketplace/plugins/hf-hub/README.md",
+      "repository": "https://github.com/community/rawrxd-plugins/tree/main/hf-hub",
+      "min_rawrxd_version": "1.0.0",
+      "max_rawrxd_version": "2.0.0",
+      "dependencies": [],
+      "stats": {
+        "downloads": 11200,
+        "rating": 4.7,
+        "reviews": 98
+      },
+      "verified": true,
+      "featured": true
+    },
+    {
+      "id": "rawrxd-vscode-extension",
+      "name": "VS Code Extension",
+      "version": "1.5.0",
+      "description": "Official VS Code extension for RawrXD IDE integration",
+      "author": "RawrXD Team",
+      "category": "tools",
+      "tags": ["vscode", "ide", "extension", "development"],
+      "license": "MIT",
+      "pricing": "free",
+      "download_url": "https://github.com/itsmehrawrxd/plugins/releases/download/v1.5.0/vscode-extension.vsix",
+      "icon_url": "https://rawrxd.ai/marketplace/icons/vscode.png",
+      "readme_url": "https://rawrxd.ai/marketplace/plugins/vscode-extension/README.md",
+      "repository": "https://github.com/itsmehrawrxd/plugins/tree/main/vscode-extension",
+      "min_rawrxd_version": "1.0.0",
+      "max_rawrxd_version": "2.0.0",
+      "dependencies": [],
+      "stats": {
+        "downloads": 28500,
+        "rating": 4.9,
+        "reviews": 456
+      },
+      "verified": true,
+      "featured": true
+    },
+    {
+      "id": "rawrxd-jwt-auth",
+      "name": "JWT Authentication",
+      "version": "1.1.0",
+      "description": "JWT-based authentication for API endpoints",
+      "author": "Security Team",
+      "category": "security",
+      "tags": ["jwt", "authentication", "security", "api"],
+      "license": "MIT",
+      "pricing": "free",
+      "download_url": "https://github.com/security/rawrxd-plugins/releases/download/v1.1.0/jwt-auth.zip",
+      "icon_url": "https://rawrxd.ai/marketplace/icons/security.png",
+      "readme_url": "https://rawrxd.ai/marketplace/plugins/jwt-auth/README.md",
+      "repository": "https://github.com/security/rawrxd-plugins/tree/main/jwt-auth",
+      "min_rawrxd_version": "1.0.0",
+      "max_rawrxd_version": "2.0.0",
+      "dependencies": [],
+      "stats": {
+        "downloads": 4200,
+        "rating": 4.5,
+        "reviews": 34
+      },
+      "verified": true,
+      "featured": false
+    },
+    {
+      "id": "rawrxd-openai-compat",
+      "name": "OpenAI API Compatibility",
+      "version": "2.1.0",
+      "description": "OpenAI-compatible API endpoints for easy migration",
+      "author": "Community",
+      "category": "integrations",
+      "tags": ["openai", "api", "compatibility", "chatgpt"],
+      "license": "MIT",
+      "pricing": "free",
+      "download_url": "https://github.com/community/rawrxd-plugins/releases/download/v2.1.0/openai-compat.zip",
+      "icon_url": "https://rawrxd.ai/marketplace/icons/openai.png",
+      "readme_url": "https://rawrxd.ai/marketplace/plugins/openai-compat/README.md",
+      "repository": "https://github.com/community/rawrxd-plugins/tree/main/openai-compat",
+      "min_rawrxd_version": "1.0.0",
+      "max_rawrxd_version": "2.0.0",
+      "dependencies": [],
+      "stats": {
+        "downloads": 18900,
+        "rating": 4.8,
+        "reviews": 234
+      },
+      "verified": true,
+      "featured": true
+    }
+  ],
+  "featured_plugins": [
+    "rawrxd-vulkan-backend",
+    "rawrxd-ollama-bridge",
+    "rawrxd-vscode-extension",
+    "rawrxd-openai-compat"
+  ],
+  "statistics": {
+    "total_plugins": 8,
+    "total_downloads": 116680,
+    "verified_plugins": 8,
+    "categories": 6
+  }
+}

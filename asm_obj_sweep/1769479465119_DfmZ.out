@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\history\all_versions\src\direct_io\nvme_thermal_stressor.asm\1769479465119_DfmZ.asm
+D:\rawrxd\history\all_versions\src\direct_io\nvme_thermal_stressor.asm\1769479465119_DfmZ.asm(926) : fatal error A1010:unmatched block nesting : NVMe_GetTemperature

@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\RawrXD_TextEditorGUI_Complete.asm
+D:\rawrxd\RawrXD_TextEditorGUI_Complete.asm(127) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\RawrXD_TextEditorGUI_Complete.asm(129) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\RawrXD_TextEditorGUI_Complete.asm(130) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\RawrXD_TextEditorGUI_Complete.asm(302) : error A2008:syntax error : rbx
+D:\rawrxd\RawrXD_TextEditorGUI_Complete.asm(303) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\RawrXD_TextEditorGUI_Complete.asm(340) : fatal error A1010:unmatched block nesting : TextEditorGUI_RenderWindow

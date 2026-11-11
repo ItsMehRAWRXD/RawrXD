@@ -1,0 +1,349 @@
+<<<<<<< HEAD
+;================================================================================
+; RawrXD_Inference_AVX512.asm - High Performance Matrix Multiplication
+; Optimized for RawrXD: Bypasses standard BLAS for direct Register manipulation
+; Uses AVX-512 FMA instructions for maximum throughput
+;================================================================================
+
+
+; ─── Cross-module symbol resolution ───
+INCLUDE rawrxd_master.inc
+INCLUDE rawr_cpu_features.inc
+INCLUDE rawr_globals.inc
+
+.code
+
+; External symbols (placeholders for linking)
+EXTERN Apply_RMSNorm:PROC
+EXTERN Apply_RoPE_Direct:PROC
+EXTERN Compute_MHA_Parallel:PROC
+EXTERN Apply_FFN_SwiGLU:PROC
+EXTERN Sample_Logits_TopP:PROC
+
+;================================================================================
+; MatMul_AVX - Standard AVX2 implementation (Fallback/Compatibility)
+; rcx = Dest, rdx = A (Weights), r8 = B (Activations), r9 = M, [rsp+40] = N, [rsp+48] = K
+;================================================================================
+PUBLIC MatMul_AVX
+MatMul_AVX PROC FRAME
+    push rbp
+    .pushreg rbp
+    mov rbp, rsp
+    .setframe rbp, 0
+    sub rsp, 32        ; Reserved shadow space + alignment
+    .allocstack 32
+    .endprolog
+    
+    ; Setup loop counters
+    mov r10, r9         ; M (rows of A/C)
+    mov r11, [rbp+40]   ; N (cols of B/C)
+    mov r12, [rbp+48]   ; K (cols of A/rows of B)
+    
+    xor r13, r13        ; i = 0
+tile_i:
+    cmp r13, r10
+    jae done_i
+    
+    xor r14, r14        ; j = 0
+tile_j:
+    cmp r14, r11
+    jae next_i
+    
+    vxorps ymm0, ymm0, ymm0  ; sum = 0
+    xor r15, r15        ; k = 0
+    
+inner_k:
+    cmp r15, r12
+    jae store_result
+    
+    ; Load A[i][k]
+    mov rax, r13
+    mul r12
+    add rax, r15
+    vbroadcastss ymm1, dword ptr [rdx + rax*4]
+    
+    ; Load B[k][j]
+    mov rax, r15
+    mul r11
+    add rax, r14
+    vmovups ymm2, YMMWORD PTR [r8 + rax*4]
+    
+    ; FMA: sum += A[i][k] * B[k][j]
+    vfmadd231ps ymm0, ymm1, ymm2
+    
+    inc r15
+    jmp inner_k
+    
+store_result:
+    ; Store C[i][j]
+    mov rax, r13
+    mul r11
+    add rax, r14
+    vmovups YMMWORD PTR [rcx + rax*4], ymm0
+    
+    add r14, 8          ; 8 floats per ymm
+    jmp tile_j
+    
+next_i:
+    inc r13
+    jmp tile_i
+    
+done_i:
+    
+    mov rsp, rbp
+    pop rbp
+    ret
+MatMul_AVX ENDP
+
+;================================================================================
+; Inference_MatMul_AVX512 - The "Unfair Advantage" Kernel
+; Performs Weight * Activation for the Attention Layer
+; Uses ZMM registers (512-bit)
+; rcx = Weights, rdx = Input, r8 = HiddenDim
+;================================================================================
+PUBLIC Inference_MatMul_AVX512
+Inference_MatMul_AVX512 PROC FRAME
+    push rbp
+    .pushreg rbp
+    mov rbp, rsp
+    .setframe rbp, 0
+    .endprolog
+
+    ; ── Runtime AVX-512 gate ──────────────────────────────────────────
+    ; If g_HasAVX512F was never set (InferenceCore_Init not called yet),
+    ; or CPU lacks AVX-512, fall back to the AVX2 MatMul_AVX kernel.
+    cmp     g_HasAVX512F, 1
+    je      @@avx512_ok
+    ; Fallback: tail-call into AVX2 path (same ABI signature)
+    pop     rbp
+    jmp     MatMul_AVX
+@@avx512_ok:
+
+    ; rcx = Weights (A), rdx = Input (B), r8 = HiddenDim (K)
+    ; Assume M=1 for inference (single token), N=HiddenDim
+    
+    vzeroall
+    xor r10, r10        ; k = 0
+    vxorps zmm0, zmm0, zmm0  ; accumulator
+    
+loop_k:
+    cmp r10, r8
+    jae done_k
+    
+    ; Load 16 floats from Weights
+    vmovups zmm1, ZMMWORD PTR [rcx + r10*4]
+    
+    ; Broadcast single float from Input
+    vbroadcastss zmm2, dword ptr [rdx + r10*4]
+    
+    ; FMA: acc += weights * input
+    vfmadd231ps zmm0, zmm1, zmm2
+    
+    add r10, 16
+    jmp loop_k
+    
+done_k:
+    ; Store result back to rcx (in-place?)
+    vmovups ZMMWORD PTR [rcx], zmm0
+    
+    mov rsp, rbp
+    pop rbp
+    ret
+Inference_MatMul_AVX512 ENDP
+
+;================================================================================
+; InferenceCore_GenerateToken - Heartbeat of the Agent
+;================================================================================
+PUBLIC InferenceCore_GenerateToken
+InferenceCore_GenerateToken PROC FRAME
+    push rbp
+    .pushreg rbp
+    mov rbp, rsp
+    .setframe rbp, 0
+    sub rsp, 32
+    .allocstack 32
+    .endprolog
+
+    ; ── Runtime AVX-512 guard ─────────────────────────────────────────
+    ; The sub-routines (RMSNorm, RoPE, MHA, FFN, Sampling) may dispatch
+    ; into ZMM code paths.  If AVX-512 is not available, bail with
+    ; EAX = 0 ("token not generated") so the C++ caller can use its
+    ; scalar fallback.
+    cmp     g_HasAVX512F, 1
+    je      @@gen_avx512_ok
+    xor     eax, eax            ; 0 = generation failed (no AVX-512)
+    add     rsp, 32
+    pop     rbp
+    ret
+@@gen_avx512_ok:
+
+    ; 1. RMSNorm (Root Mean Square Layer Normalization)
+    call Apply_RMSNorm
+    
+    ; 2. RoPE (Rotary Positional Embeddings)
+    ; This is where RawrXD gets its "intelligence" - precise positional awareness
+    ; mov ecx, g_inference_ctx.current_pos ; Symbol not defined, assuming passed in rcx or global
+    call Apply_RoPE_Direct
+    
+    ; 3. Multi-Head Attention
+    call Compute_MHA_Parallel
+    
+    ; 4. Feed-Forward Network (FFN)
+    ; Using SwiGLU activation (Standard for LLaMA3/Mistral)
+    call Apply_FFN_SwiGLU
+    
+    ; 5. Sampling
+    call Sample_Logits_TopP
+    
+    ; Increment position for next token
+    ; inc g_inference_ctx.current_pos
+    
+    add rsp, 32
+    pop rbp
+    ret
+InferenceCore_GenerateToken ENDP
+
+END
+=======
+;================================================================================
+; RawrXD_Inference_AVX512.asm - High Performance Matrix Multiplication
+; Optimized for RawrXD: Bypasses standard BLAS for direct Register manipulation
+; Uses AVX-512 FMA instructions for maximum throughput
+;================================================================================
+
+.code
+
+; External symbols (placeholders for linking)
+EXTERN Apply_RMSNorm:PROC
+EXTERN Apply_RoPE_Direct:PROC
+EXTERN Compute_MHA_Parallel:PROC
+EXTERN Apply_FFN_SwiGLU:PROC
+EXTERN Sample_Logits_TopP:PROC
+
+;================================================================================
+; MatMul_AVX - Standard AVX2 implementation (Fallback/Compatibility)
+; rcx = Dest, rdx = A (Weights), r8 = B (Activations), r9 = M, [rsp+40] = N, [rsp+48] = K
+;================================================================================
+PUBLIC MatMul_AVX
+MatMul_AVX PROC FRAME
+    push rbp
+    .pushreg rbp
+    mov rbp, rsp
+    .setframe rbp, 0
+    sub rsp, 32        ; Reserved shadow space + alignment
+    .allocstack 32
+    .endprolog
+    
+    ; Align stack for AVX
+    and rsp, -32
+    
+    ; Setup loop counters
+    xor r10, r10        ; i counter
+tile_i:
+    xor r11, r11        ; j counter
+tile_j:
+    vzeroall            ; Clear YMM registers for accumulation
+    xor r12, r12        ; k counter
+    
+inner_k:
+    ; Real-time inference math: C[i,j] += A[i,k] * B[k,j]
+    ; Note: simplified addressing for demonstration
+    ; vbroadcastss ymm0, dword ptr [rdx + r12*4] ; Load A element
+    ; vmovaps ymm1, [r8 + r12*32]               ; Load B row
+    ; vfmadd231ps ymm2, ymm0, ymm1              ; Fused Multiply-Add
+    
+    inc r12
+    ; cmp r12, [rbp+48]   ; Check K (Commented out to avoid read access violation in stub)
+    ; jl inner_k
+    
+    ; vmovaps [rcx], ymm2 ; Store Result
+    add rcx, 32
+    
+    ; ... (loop logic for i and j)
+    
+    mov rsp, rbp
+    pop rbp
+    ret
+MatMul_AVX ENDP
+
+;================================================================================
+; Inference_MatMul_AVX512 - The "Unfair Advantage" Kernel
+; Performs Weight * Activation for the Attention Layer
+; Uses ZMM registers (512-bit)
+; rcx = Weights, rdx = Input, r8 = HiddenDim
+;================================================================================
+PUBLIC Inference_MatMul_AVX512
+Inference_MatMul_AVX512 PROC FRAME
+    push rbp
+    .pushreg rbp
+    mov rbp, rsp
+    .setframe rbp, 0
+    .endprolog
+
+    ; zmm0-zmm7: Accumulators (512-bit each)
+    ; zmm8-zmm15: Weights
+    
+    ; Check AVX512 support (assumed present for this code path)
+    
+    vzeroall
+    xor r10, r10 ; Index
+loop_start:
+    ; vmovups zmm8, [rcx + r10]    ; Load 16 floats from Weights
+    ; vmovups zmm9, [rdx + r10]    ; Load 16 floats from Input
+    ; vfmadd231ps zmm0, zmm8, zmm9 ; Parallel Fused Multiply-Add
+    
+    add r10, 64                  ; Move to next 16 floats (16 * 4 bytes)
+    cmp r10, r8                  ; Check hidden dimension size
+    jl loop_start
+    
+    ; Reduce zmm0 to a single scalar result...
+    ; vextractf32x8 ymm1, zmm0, 1
+    ; vaddps ymm0, ymm0, ymm1
+    ; (Final reduction to rax/xmm0)
+    
+    mov rsp, rbp
+    pop rbp
+    ret
+Inference_MatMul_AVX512 ENDP
+
+;================================================================================
+; InferenceCore_GenerateToken - Heartbeat of the Agent
+;================================================================================
+PUBLIC InferenceCore_GenerateToken
+InferenceCore_GenerateToken PROC FRAME
+    push rbp
+    .pushreg rbp
+    mov rbp, rsp
+    .setframe rbp, 0
+    sub rsp, 32
+    .allocstack 32
+    .endprolog
+
+    ; 1. RMSNorm (Root Mean Square Layer Normalization)
+    call Apply_RMSNorm
+    
+    ; 2. RoPE (Rotary Positional Embeddings)
+    ; This is where RawrXD gets its "intelligence" - precise positional awareness
+    ; mov ecx, g_inference_ctx.current_pos ; Symbol not defined, assuming passed in rcx or global
+    call Apply_RoPE_Direct
+    
+    ; 3. Multi-Head Attention
+    call Compute_MHA_Parallel
+    
+    ; 4. Feed-Forward Network (FFN)
+    ; Using SwiGLU activation (Standard for LLaMA3/Mistral)
+    call Apply_FFN_SwiGLU
+    
+    ; 5. Sampling
+    call Sample_Logits_TopP
+    
+    ; Increment position for next token
+    ; inc g_inference_ctx.current_pos
+    
+    add rsp, 32
+    pop rbp
+    ret
+InferenceCore_GenerateToken ENDP
+
+END
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

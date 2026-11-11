@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769622389195_Mqry.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Standalone_Inference.asm\1769622389195_Mqry.asm(345) : fatal error A1010:unmatched block nesting : MultiHeadAttention

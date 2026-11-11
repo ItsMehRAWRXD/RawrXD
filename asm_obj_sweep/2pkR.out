@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\-2217020c\2pkR.asm
+D:\rawrxd\history\-2217020c\2pkR.asm(85) : error A2006:undefined symbol : mutex_lock_done
+D:\rawrxd\history\-2217020c\2pkR.asm(112) : error A2006:undefined symbol : mutex_unlock_done
+D:\rawrxd\history\-2217020c\2pkR.asm(137) : error A2006:undefined symbol : mutex_destroy_done
+D:\rawrxd\history\-2217020c\2pkR.asm(242) : error A2006:undefined symbol : event_set_done
+D:\rawrxd\history\-2217020c\2pkR.asm(274) : error A2006:undefined symbol : event_reset_done
+D:\rawrxd\history\-2217020c\2pkR.asm(348) : error A2006:undefined symbol : event_destroy_done
