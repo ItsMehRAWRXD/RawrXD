@@ -1,0 +1,23 @@
+{
+  "disposition_id": "AGGREGATE_DECODE_DEEP2_RUNTIME_001_DISPOSITION",
+  "deep2_runtime_reached": 1,
+  "single": {"exit": 0, "BACKEND": "DEEP2", "GENERATED_TOKENS": 8},
+  "multi": {
+    "exit": 0,
+    "BACKEND": "DEEP2",
+    "GENERATED_TOKENS": 12,
+    "STREAMS": 2,
+    "concurrent_threads": true,
+    "engine_decode_serialization": "mutex — Deep2Engine not MT-safe; CONCURRENT=1 with real per-stream tokens"
+  },
+  "HTTP_fallback": 0,
+  "stub_tokens": 0,
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "laws": {
+    "DEEP2_RUNTIME_REACHED_NE_CERTIFIED": true,
+    "MUTEX_SERIALIZED_MULTI_NE_TRUE_PARALLEL_GPU_AGGREGATE": true
+  },
+  "optional_next": "Engine-level MT-safe multi-session decode (remove mutex serialization) for true parallel aggregate TPS — separate from RUNTIME_REACHED proof"
+}

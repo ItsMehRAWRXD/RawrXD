@@ -1,0 +1,72 @@
+GPU_R9700_PIN_REMEASURE_001
+ASOF_UTC=2026-11-10T18:44:00Z
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+CONTROLLING_ISSUE49=D015
+D015_TOUCHED=0
+AUTONOMOUS_REPAIR=0
+NAME_STAR_KILL_IDE=0
+P1_EXCLUSIVE_HOLD=0
+BLOCKED_BY_P1=0
+
+# Pin apply (serve/generate process only)
+PIN_APPLIED=Y
+PIN_FILE=R9700_GPU_PIN_ENV_001.env.txt
+PIN_ENV=OLLAMA_LLM_LIBRARY=vulkan; GGML_VK_VISIBLE_DEVICES=0; OLLAMA_VULKAN=1
+PIN_METHOD=PID_SCOPED_STOP_THEN_START_PROCESS_ENV
+SERVE_PID=32192
+SERVE_LOG_CAPTURE=_p5_pin_serve_stderr2.txt
+APPDATA_SERVER_LOG_APPEND=0
+  NOTE=C:\Users\Garrett\AppData\Local\Ollama\server.log stuck len=729217 mtime=2026-11-10T07:36:39; remasure lines from redirected serve stderr
+
+# Remeasure generate
+MODEL=qwen3:8b
+NUM_PREDICT=16
+HTTP=200
+EVAL_COUNT=16
+EVAL_DURATION_NS=155515000
+TOK_S=102.88
+ELAPSED_MS=13678
+RESPONSE_JSON=_p5_pin_remeasure_generate4.json
+
+# Scheduler + runner adapter confirmation (intended)
+RUNNER_GPU_CONFIRMED=Y
+SCHEDULER_GPU=Vulkan0 / AMD Radeon AI PRO R9700
+RUNNER_GPU=Vulkan0 / AMD Radeon AI PRO R9700
+VULKAN_INDEX=0
+GFX_ID_IN_LOG=NOT_PRESENT
+  LAW=R9700_NAME+Vulkan0_CONFIRMED; gfx1201 string absent in this capture
+MISMATCH_THIS_RUN=0
+NO_7800_XT_IN_CAPTURE=1
+NO_IGPU_RADEON_TM_IN_CAPTURE=1
+
+# Log excerpts (stderr capture)
+EXCERPT_PIN_ENV=GGML_VK_VISIBLE_DEVICES:0 ... OLLAMA_LLM_LIBRARY:vulkan
+EXCERPT_OVERRIDE=runner.go:722 user overrode visible devices GGML_VK_VISIBLE_DEVICES=0
+EXCERPT_SCHED=types.go:32 inference compute id=0 filter_id=0 library=Vulkan name=Vulkan0 description="AMD Radeon AI PRO R9700" type=discrete total="31.9 GiB"
+EXCERPT_RUNNER=llama_prepare_model_devices: using device Vulkan0 (AMD Radeon AI PRO R9700) (unknown id) - 31707 MiB free
+EXCERPT_DEVICE_LIST=common_param: - Vulkan0 : AMD Radeon AI PRO R9700 (32624 MiB, 31707 MiB free)
+EXCERPT_OFFLOAD=load_tensors: offloaded 37/37 layers to GPU; Vulkan0 model buffer size = 4643.78 MiB
+
+# Residual blockers (fail-closed honesty)
+DISCOVERY_WATCHDOG_STILL=1
+  EXCERPT=runner.go:584 llama-server GPU discovery watchdog timed out ... extra_envs=map[GGML_VK_VISIBLE_DEVICES:0] error="context deadline exceeded"
+  NOTE=watchdog fired AFTER successful inference-compute enum of R9700; load still used Vulkan0/R9700
+ADAPTER_MISMATCH_HISTORICAL=1
+  AUTHORITY=GPU_R9700_ADAPTER_MISMATCH_001.txt (untouched)
+REMEASURE_PASS=1
+  LAW=REMEASURE_PASS!=PROMOTE; PROMOTE=0
+  LAW=SHORT_DECODE_TPS!=SUSTAINED_THROUGHPUT
+P4_8080_LISTEN_AT_CLOSE=0
+  NOTE=tinyllama :8080 was KEEP_P4 during PID-scoped ollama stop; later observed not listening — not Name=* killed; not restarted by this task
+
+# Host Vulkan enum (vulkaninfo --summary proprietary) — pin index map
+VK_GPU0=AMD Radeon AI PRO R9700 (discrete)  # GGML_VK_VISIBLE_DEVICES=0
+VK_GPU2=AMD Radeon(TM) Graphics (integrated)
+VK_GPU4=AMD Radeon RX 7800 XT (discrete)
+
+NEXT=Keep process pin for P1 CLI window; AppData server.log append still broken; discovery watchdog residual open
+LAW=NOT_RUN!=PASS
+LAW=SOURCE_WIRED!=RUNTIME_REACHED
+LAW=PIN_APPLIED!=PROMOTE

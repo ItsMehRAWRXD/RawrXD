@@ -1,0 +1,1 @@
+{"source":"F:\\OllamaModels\\_r1_iso\\04_ds_r1_qwen3\\DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf","format":"gguf","inspectable":true,"architecture":"qwen3","calibratable":false,"transformable":false,"shards":1,"tensors":399,"reason":"architecture_runtime_not_supported:qwen3"}

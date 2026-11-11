@@ -1,0 +1,130 @@
+25664 [PS_TRACE] start() encoded command length=1208
+
+25664 [PS_TRACE] start() cmd=powershell.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand JAB1AHQAZgA4ACAAPQAgAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAFUAVABGADgARQBuAGMAbwBkAG...
+
+25664 [PS_TRACE] CreateProcessA SUCCESS pid=4064
+
+25664 [PS_TRACE] Process started, starting output threads
+
+23248 [PS_TRACE] readOutputThread() STARTED thread=23248
+
+24112 [PS_TRACE] monitorProcessThread() STARTED thread=24112
+
+10372 [PS_TRACE] start() encoded command length=1208
+
+10372 [PS_TRACE] start() cmd=powershell.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand JAB1AHQAZgA4ACAAPQAgAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAFUAVABGADgARQBuAGMAbwBkAG...
+
+10372 [PS_TRACE] CreateProcessA SUCCESS pid=16592
+
+10372 [PS_TRACE] Process started, starting output threads
+
+22492 [PS_TRACE] readOutputThread() STARTED thread=22492
+
+2536 [PS_TRACE] start() encoded command length=1208
+
+2536 [PS_TRACE] start() cmd=powershell.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand JAB1AHQAZgA4ACAAPQAgAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAFUAVABGADgARQBuAGMAbwBkAG...
+
+2536 [PS_TRACE] CreateProcessA SUCCESS pid=9432
+
+2536 [PS_TRACE] Process started, starting output threads
+
+20204 [PS_TRACE] readOutputThread() STARTED thread=20204
+
+15680 [PS_TRACE] monitorProcessThread() STARTED thread=15680
+
+26012 [PS_TRACE] start() encoded command length=1208
+
+26012 [PS_TRACE] start() cmd=powershell.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand JAB1AHQAZgA4ACAAPQAgAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAFUAVABGADgARQBuAGMAbwBkAG...
+
+26012 [PS_TRACE] CreateProcessA SUCCESS pid=10668
+
+26012 [PS_TRACE] Process started, starting output threads
+
+25976 [PS_TRACE] monitorProcessThread() STARTED thread=25976
+
+28100 [PS_TRACE] readOutputThread() STARTED thread=28100
+
+24048 [PS_TRACE] start() encoded command length=1208
+
+24048 [PS_TRACE] start() cmd=powershell.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand JAB1AHQAZgA4ACAAPQAgAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAFUAVABGADgARQBuAGMAbwBkAG...
+
+24048 [PS_TRACE] CreateProcessA SUCCESS pid=24684
+
+24048 [PS_TRACE] Process started, starting output threads
+
+25492 [PS_TRACE] readOutputThread() STARTED thread=25492
+
+6124 [PS_TRACE] monitorProcessThread() STARTED thread=6124
+
+6724 [PS_TRACE] start() encoded command length=1208
+
+6724 [PS_TRACE] start() cmd=powershell.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand JAB1AHQAZgA4ACAAPQAgAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAFUAVABGADgARQBuAGMAbwBkAG...
+
+6724 [PS_TRACE] CreateProcessA SUCCESS pid=7816
+
+6724 [PS_TRACE] Process started, starting output threads
+
+6856 [PS_TRACE] monitorProcessThread() STARTED thread=6856
+
+3296 [PS_TRACE] readOutputThread() STARTED thread=3296
+
+7116 [PS_TRACE] start() encoded command length=1208
+
+7116 [PS_TRACE] start() cmd=powershell.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand JAB1AHQAZgA4ACAAPQAgAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAFUAVABGADgARQBuAGMAbwBkAG...
+
+7116 [PS_TRACE] CreateProcessA SUCCESS pid=25120
+
+7116 [PS_TRACE] Process started, starting output threads
+
+17612 [PS_TRACE] monitorProcessThread() STARTED thread=17612
+
+26548 [PS_TRACE] readOutputThread() STARTED thread=26548
+
+17612 [PS_TRACE] start() encoded command length=1208
+
+17612 [PS_TRACE] start() cmd=powershell.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand JAB1AHQAZgA4ACAAPQAgAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAFUAVABGADgARQBuAGMAbwBkAG...
+
+17612 [PS_TRACE] CreateProcessA SUCCESS pid=22732
+
+17612 [PS_TRACE] Process started, starting output threads
+
+8680 [PS_TRACE] readOutputThread() STARTED thread=8680
+
+27496 [PS_TRACE] monitorProcessThread() STARTED thread=27496
+
+26080 [PS_TRACE] start() encoded command length=1208
+
+26080 [PS_TRACE] start() cmd=powershell.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand JAB1AHQAZgA4ACAAPQAgAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAFUAVABGADgARQBuAGMAbwBkAG...
+
+26080 [PS_TRACE] CreateProcessA SUCCESS pid=23680
+
+26080 [PS_TRACE] Process started, starting output threads
+
+3724 [PS_TRACE] monitorProcessThread() STARTED thread=3724
+
+28528 [PS_TRACE] readOutputThread() STARTED thread=28528
+
+19908 [PS_TRACE] start() encoded command length=1208
+
+19908 [PS_TRACE] start() cmd=powershell.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand JAB1AHQAZgA4ACAAPQAgAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAFUAVABGADgARQBuAGMAbwBkAG...
+
+19908 [PS_TRACE] CreateProcessA SUCCESS pid=27680
+
+19908 [PS_TRACE] Process started, starting output threads
+
+10476 [PS_TRACE] monitorProcessThread() STARTED thread=10476
+
+20844 [PS_TRACE] readOutputThread() STARTED thread=20844
+
+8820 [PS_TRACE] start() encoded command length=1208
+
+8820 [PS_TRACE] start() cmd=powershell.exe -NoLogo -NoProfile -NonInteractive -EncodedCommand JAB1AHQAZgA4ACAAPQAgAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAFUAVABGADgARQBuAGMAbwBkAG...
+
+8820 [PS_TRACE] CreateProcessA SUCCESS pid=24580
+
+8820 [PS_TRACE] Process started, starting output threads
+
+11232 [PS_TRACE] readOutputThread() STARTED thread=11232
+
+27796 [PS_TRACE] monitorProcessThread() STARTED thread=27796
+

@@ -1,0 +1,14 @@
+{
+  "rawrxd-extension": {
+    "enabled": true,
+    "path": "rawrxd-extension"
+  },
+  "cert-extension": {
+    "enabled": true,
+    "path": "cert-extension"
+  },
+  "rawrxd-lsp-client": {
+    "enabled": true,
+    "path": "rawrxd-lsp-client"
+  }
+}

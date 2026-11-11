@@ -1,0 +1,21 @@
+PASS policy_mouse_deny
+PASS policy_launch_deny
+PASS approval_deny
+PASS approval_allow_still_policy
+PASS cancel
+rawrxd_computer_use_ide_verify.exe : FAIL screenshot_own_window
+At F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\hidden_gap_wave5\harness\Invoke-Wave5SurfaceAudit.ps1:119 char:12
++   $cuOut = & $CuVerify 2>&1 | Out-String
++            ~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (FAIL screenshot_own_window:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+PASS find_own_window
+PASS mouse_own_window
+PASS type_own_window
+PASS agent_tool_approval_deny
+PASS agent_tools_registered
+PASS agent_tool_policy_deny_launch
+PASS bridge_cancel
+VERIFY FAIL
+

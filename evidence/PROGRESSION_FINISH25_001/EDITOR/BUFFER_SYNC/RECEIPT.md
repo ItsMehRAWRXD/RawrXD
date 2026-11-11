@@ -1,0 +1,22 @@
+# T08 BUFFER_SYNC receipt
+
+ASOF_UTC=2026-11-09T01:24:00Z
+PROGRESSION_SHA=323A38A0849EFDE08F735EF85D97009D68C4700C9670317FCC2B630E85580E37
+EXE=F:\rawrxd\build_progression_finish25\bin\RawrXD-Win32IDE-Native.exe
+T08=PASS
+T08_PRESERVED=10
+DOC_TABS_IDC_1030_COUNT=11
+TCM_GETITEMCOUNT=0x1304
+PROMOTE=0
+FINISH_25_PASS=19
+CONTROLLING_SHA=55BE19B7D594118C9C803D8D7DA3B127E33C0C8C82A62BD50E4956D0AC2298A3
+
+## Product deltas
+
+1. Capture outgoing buffer via EM_GETTEXTEX (CP 1200 preferred) + EM_GETMODIFY (+ view state).
+2. switchDocumentTab: same-tab early return; suppress EN_CHANGE on load; rollback on load failure.
+3. kRawrxdActivateDocTab (WM_APP+111) for pointer-free cross-process tab activate.
+4. T07 RICHEDIT50W recreate path retained in setEditorTextUtf8FromFile.
+
+RUNLOG=F:\rawrxd\evidence\PROGRESSION_FINISH25_001\EDITOR\RUNLOG_T17_T07_T08_T10.txt
+TASK08=F:\rawrxd\evidence\PROGRESSION_FINISH25_001\EDITOR\TASK08.md

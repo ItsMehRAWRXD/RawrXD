@@ -1,0 +1,11 @@
+﻿{
+    "Gate":  "T10",
+    "Result":  "PASS",
+    "CandidateSHA256":  "A559704EFE248961BDC696A46F8E49630DE5D6C814C6FC53F102EBB763935CB1",
+    "PIDBefore":  23456,
+    "PIDAfter":  10632,
+    "Marker":  "RAWRXD_T10_EDITOR_REAL_MARKER_20261104G",
+    "EditorMarkerObserved":  true,
+    "RecoveredEditorMarkerObserved":  true,
+    "TimestampUtc":  "2026-11-04T12:48:46.1352599Z"
+}

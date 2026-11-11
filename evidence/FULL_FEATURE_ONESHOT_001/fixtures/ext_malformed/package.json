@@ -1,0 +1,1 @@
+﻿{ "name": "ext-malformed", "publisher": "rawrxd", "version": "0.0.1", "main": "./missing_entry.js", "activationEvents": ["*"] }

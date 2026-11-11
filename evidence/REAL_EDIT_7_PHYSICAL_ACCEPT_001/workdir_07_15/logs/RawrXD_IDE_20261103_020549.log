@@ -1,0 +1,7 @@
+[2026-11-03 02:05:49] [SYSTEM] === RawrXD IDE Logging Initialized ===
+[2026-11-03 02:05:49] [SYSTEM] Log file: logs\RawrXD_IDE_20261103_020549.log
+[2026-11-03 02:05:49] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama
+[2026-11-03 02:05:51] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama
+[2026-11-03 02:05:54] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama
+[2026-11-03 02:05:56] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama
+[2026-11-03 02:05:58] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama

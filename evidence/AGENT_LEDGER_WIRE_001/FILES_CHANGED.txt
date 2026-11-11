@@ -1,0 +1,17 @@
+AGENT_LEDGER_WIRE_001 — files changed
+=====================================
+
+NEW
+  F:\rawrxd\src\agentic\AgentEditHistory.h
+  F:\rawrxd\tests\agentic\agent_ledger_undo_smoke.cpp
+  F:\rawrxd\evidence\AGENT_LEDGER_WIRE_001\GAP_STATUS.json
+  F:\rawrxd\evidence\AGENT_LEDGER_WIRE_001\UNDO_PROOF.txt
+  F:\rawrxd\evidence\AGENT_LEDGER_WIRE_001\LEDGER_PROOF.txt
+  F:\rawrxd\evidence\AGENT_LEDGER_WIRE_001\FILES_CHANGED.txt
+  F:\rawrxd\evidence\AGENT_ARCH_AUDIT_001\GAP_CLOSURE_LEDGER.json
+
+MODIFIED
+  F:\rawrxd\src\win32app\Win32IDE_AgentHistory.cpp
+  F:\rawrxd\src\win32app\Win32IDE_AgentCommands.cpp
+  F:\rawrxd\src\win32app\Win32IDE.h
+  F:\rawrxd\CMakeLists.txt

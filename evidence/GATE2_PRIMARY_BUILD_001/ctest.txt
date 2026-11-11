@@ -1,0 +1,22 @@
+Test project F:/rawrxd/build_ide
+    Start 1: deep2_gpu_code31_pnp_probe
+1/7 Test #1: deep2_gpu_code31_pnp_probe .........   Passed    0.05 sec
+    Start 2: deep2_gdn_reference_contract
+2/7 Test #2: deep2_gdn_reference_contract .......   Passed    0.01 sec
+    Start 3: deep2_qwen4exp_operator_contract
+3/7 Test #3: deep2_qwen4exp_operator_contract ...   Passed    0.04 sec
+    Start 4: deep2_h11_prefill_parity
+4/7 Test #4: deep2_h11_prefill_parity ...........***Skipped   0.03 sec
+    Start 5: workspace_path_policy_smoke
+5/7 Test #5: workspace_path_policy_smoke ........   Passed    0.03 sec
+    Start 6: native_tool_protocol_smoke
+6/7 Test #6: native_tool_protocol_smoke .........   Passed    0.02 sec
+    Start 7: cursor_parity_registry_smoke
+7/7 Test #7: cursor_parity_registry_smoke .......   Passed    0.06 sec
+
+100% tests passed out of 7
+
+Total Test time (real) =   0.34 sec
+
+The following tests did not run:
+	  4 - deep2_h11_prefill_parity (Skipped)

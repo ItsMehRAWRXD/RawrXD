@@ -1,0 +1,37 @@
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[Deep2Engine] GEMMA_NUMERIC logitSoftCap=0.0 attnSoftCap=0.0 embedScale=sqrt(hidden) rmsNorm=plain(baked+1) geGlu=1 sandwich=1 swaPattern=6 swaWindow=512 ropeLocal=10000 ropeGlobal=1000000
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[GREEDY] enabled=1 temperature=0.0000 topK=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[Deep2Engine] GEMMA_ROPE layer0 local theta=10000 (global=1000000 pattern=6)
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[AGENT] PREFILL_DONE prompt_tokens=69 prefill_ms=158504.146
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=236769 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=138 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=1390 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=1390 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=1390 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=236764 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=236769 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=236764 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=236769 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=236779 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=531 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=236779 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=236764 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=531 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=236779 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=236764 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=531 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=1390 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=1390 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=1390 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=1390 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=1018 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=236772 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=138 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=236764 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=236769 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=138 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=236764 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=236772 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=236764 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=236772 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[DBG] sampled token=236764 eosId=1
+F:\rawrxd\tmp_remeasure_015\stdout.txt:[ask] AGENT_RESULT_5=0 chars=56

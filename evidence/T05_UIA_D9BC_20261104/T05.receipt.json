@@ -1,0 +1,8 @@
+﻿{
+    "Gate":  "T05",
+    "Result":  "NOT_VERIFIED",
+    "CandidateSHA256":  "D9BC51AD59808ED381AF405350DC4F042C3AE6E30943DD81D9620382B9A2FBEB",
+    "PID":  23920,
+    "Error":  "PROMPT_READBACK_FAILED model=Local models / Ollama / bigdaddyg-productivity-local:latest",
+    "TimestampUtc":  "2026-11-04T13:47:09.5334327Z"
+}

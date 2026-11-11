@@ -1,0 +1,3 @@
+SHA256 hash of rawr.exe:
+bdeae6078dccf07c1f1bf4efd55584abed8ecaabbc0bf298349f4efa16a3c64f
+CertUtil: -hashfile command completed successfully.

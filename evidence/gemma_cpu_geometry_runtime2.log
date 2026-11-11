@@ -1,0 +1,132 @@
+=== RawrXD CPU Engine End-to-End Test ===
+Model: F:\OllamaModels\gemma-4-E4B-it-GGUF\gemma-4-E4B-it-Q4_K_M.gguf
+Prompt: "The capital of France is"
+
+[1/5] Loading model...
+
+📊 Zone Assignment Summary:
+   embedding: 2 tensors, 2730 MB
+   layers_0: 128 tensors, 422 MB
+   layers_1: 128 tensors, 395 MB
+   layers_2: 128 tensors, 406 MB
+   layers_3: 128 tensors, 401 MB
+   layers_4: 128 tensors, 415 MB
+   layers_5: 32 tensors, 112 MB
+   misc: 3 tensors, 5 MB
+   output_head: 43 tensors, 137 MB
+
+✅ GGUF Model opened in streaming mode
+   File: F:\OllamaModels\gemma-4-E4B-it-GGUF\gemma-4-E4B-it-Q4_K_M.gguf
+   Tensors: 720
+   Zones: 9
+   Memory (header+index): ~0 MB
+[ZONE_ASSIGN_START] tensor_index_size=720
+[ZONE_ASSIGN] name=blk.0.attn_norm.weight layer=0 zone=layers_0
+[ZONE_ASSIGN_DEBUG] blk.0.attn_norm.weight zone_name set to: 'layers_0'
+[ZONE_ASSIGN] name=blk.1.attn_norm.weight layer=1 zone=layers_0
+[ZONE_ASSIGN] name=blk.10.attn_norm.weight layer=10 zone=layers_1
+[ZONE_ASSIGN] name=blk.11.attn_norm.weight layer=11 zone=layers_1
+[ZONE_ASSIGN] name=blk.12.attn_norm.weight layer=12 zone=layers_1
+[ZONE_ASSIGN] name=blk.13.attn_norm.weight layer=13 zone=layers_1
+[ZONE_ASSIGN] name=blk.14.attn_norm.weight layer=14 zone=layers_1
+[ZONE_ASSIGN] name=blk.15.attn_norm.weight layer=15 zone=layers_1
+[ZONE_ASSIGN] name=blk.16.attn_norm.weight layer=16 zone=layers_2
+[ZONE_ASSIGN] name=blk.17.attn_norm.weight layer=17 zone=layers_2
+[ZONE_ASSIGN] name=blk.18.attn_norm.weight layer=18 zone=layers_2
+[ZONE_ASSIGN] name=blk.19.attn_norm.weight layer=19 zone=layers_2
+[ZONE_ASSIGN] name=blk.2.attn_norm.weight layer=2 zone=layers_0
+[ZONE_ASSIGN] name=blk.20.attn_norm.weight layer=20 zone=layers_2
+[ZONE_ASSIGN] name=blk.21.attn_norm.weight layer=21 zone=layers_2
+[ZONE_ASSIGN] name=blk.22.attn_norm.weight layer=22 zone=layers_2
+[ZONE_ASSIGN] name=blk.23.attn_norm.weight layer=23 zone=layers_2
+[ZONE_ASSIGN] name=blk.24.attn_norm.weight layer=24 zone=layers_3
+[ZONE_ASSIGN] name=blk.25.attn_norm.weight layer=25 zone=layers_3
+[ZONE_ASSIGN] name=blk.26.attn_norm.weight layer=26 zone=layers_3
+[ZONE_ASSIGN] name=blk.27.attn_norm.weight layer=27 zone=layers_3
+[ZONE_ASSIGN] name=blk.28.attn_norm.weight layer=28 zone=layers_3
+[ZONE_ASSIGN] name=blk.29.attn_norm.weight layer=29 zone=layers_3
+[ZONE_ASSIGN] name=blk.3.attn_norm.weight layer=3 zone=layers_0
+[ZONE_ASSIGN] name=blk.30.attn_norm.weight layer=30 zone=layers_3
+[ZONE_ASSIGN] name=blk.31.attn_norm.weight layer=31 zone=layers_3
+[ZONE_ASSIGN] name=blk.32.attn_norm.weight layer=32 zone=layers_4
+[ZONE_ASSIGN] name=blk.33.attn_norm.weight layer=33 zone=layers_4
+[ZONE_ASSIGN] name=blk.34.attn_norm.weight layer=34 zone=layers_4
+[ZONE_ASSIGN] name=blk.35.attn_norm.weight layer=35 zone=layers_4
+[ZONE_ASSIGN] name=blk.36.attn_norm.weight layer=36 zone=layers_4
+[ZONE_ASSIGN] name=blk.37.attn_norm.weight layer=37 zone=layers_4
+[ZONE_ASSIGN] name=blk.38.attn_norm.weight layer=38 zone=layers_4
+[ZONE_ASSIGN] name=blk.39.attn_norm.weight layer=39 zone=layers_4
+[ZONE_ASSIGN] name=blk.4.attn_norm.weight layer=4 zone=layers_0
+[ZONE_ASSIGN] name=blk.40.attn_norm.weight layer=40 zone=layers_5
+[ZONE_ASSIGN] name=blk.41.attn_norm.weight layer=41 zone=layers_5
+[ZONE_ASSIGN] name=blk.5.attn_norm.weight layer=5 zone=layers_0
+[ZONE_ASSIGN] name=blk.6.attn_norm.weight layer=6 zone=layers_0
+[ZONE_ASSIGN] name=blk.7.attn_norm.weight layer=7 zone=layers_0
+[ZONE_ASSIGN] name=blk.8.attn_norm.weight layer=8 zone=layers_1
+[ZONE_ASSIGN] name=blk.9.attn_norm.weight layer=9 zone=layers_1
+[LOAD] index_size=720
+[TENSOR_LOOKUP_FAIL] name=output.weight len=13 index_size=720 loader=000001E97F354F60
+[INDEX_CANDIDATE] name=blk.0.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.1.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.10.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.11.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.12.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.13.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.14.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.15.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.16.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.17.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.18.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.19.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.2.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.20.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.21.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.22.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.23.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.24.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.25.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.26.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.27.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.28.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.29.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.3.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.30.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.31.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.32.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.33.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.34.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.35.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.36.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.37.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.38.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.39.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.4.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.40.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.41.attn_norm.weight len=23
+[INDEX_CANDIDATE] name=blk.5.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.6.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.7.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.8.attn_norm.weight len=22
+[INDEX_CANDIDATE] name=blk.9.attn_norm.weight len=22
+[GGUF] GetTensorInfo not found: output.weight (index size=720)
+[CPUInferenceEngine] using tied token_embd.weight as output projection
+[CPU_GEOMETRY] q_dim=512 kv_dim=512 head_dim=256 heads=2'
+  Load time: 9865.5 ms
+  Vocab size: 262144
+  Embedding dim: 2560
+  Layers: 42
+  Heads: 2
+
+[2/5] Tokenizing prompt...
+  Token count: 9
+  Token IDs: 818,245237,41626,245237,1340,245237,31756,245237,511
+  Detokenize check: "The capital of France is"
+
+[3/5] Running prefill forward pass...
+📥 Loading zone: layers_0 (422.1 MB)...
+[ZONE_LOOKUP] name=blk.0.attn_norm.weight len=22 index_size=720
+[ZONE_LOOKUP_OK] zone=layers_0
+✅ Zone loaded: layers_0 (422.1 MB)
+[FORWARD_FAIL] layer=0 proj expect_cols mismatch for blk.0.attn_q.weight got 2048 expected 512
+[FORWARD_FAIL] layer=0 proj failed
+FAIL: Forward pass returned empty logits

@@ -1,0 +1,58 @@
+28052 [PS_TRACE] EXECUTE_CLICKED IDC_PS_BTN_EXECUTE thread=28052
+
+28052 [PS_TRACE] executePowerShellInput() ENTRY thread=28052
+
+28052 [PS_TRACE] executePowerShellInput() command_len=1 cmd='?'
+
+28052 [PS_TRACE] executePowerShellInput() calling executePowerShellPanelCommand() thread=28052
+
+28052 [PS_TRACE] executePowerShellPanelCommand() ENTRY cmd_len=1 thread=28052
+
+28052 [PS_TRACE] executePowerShellPanelCommand() calling writeInput() cmd_len=1 thread=28052
+
+28052 [PS_TRACE] executePowerShellPanelCommand() writeInput() returned
+
+28052 [PS_TRACE] executePowerShellPanelCommand() EXIT
+
+28052 [PS_TRACE] executePowerShellInput() EXIT
+
+28052 [PS_TRACE] EXECUTE_CLICKED IDC_PS_BTN_EXECUTE thread=28052
+
+28052 [PS_TRACE] executePowerShellInput() ENTRY thread=28052
+
+28052 [PS_TRACE] executePowerShellInput() command_len=3 cmd='??s'
+
+28052 [PS_TRACE] executePowerShellInput() calling executePowerShellPanelCommand() thread=28052
+
+28052 [PS_TRACE] executePowerShellPanelCommand() ENTRY cmd_len=3 thread=28052
+
+28052 [PS_TRACE] executePowerShellPanelCommand() calling writeInput() cmd_len=3 thread=28052
+
+28052 [PS_TRACE] executePowerShellPanelCommand() writeInput() returned
+
+28052 [PS_TRACE] executePowerShellPanelCommand() EXIT
+
+28052 [PS_TRACE] executePowerShellInput() EXIT
+
+28052 [PS_TRACE] executePowerShellInput() ENTRY thread=28052
+
+28052 [PS_TRACE] executePowerShellInput() command_len=1 cmd='?'
+
+28052 [PS_TRACE] executePowerShellInput() calling executePowerShellPanelCommand() thread=28052
+
+28052 [PS_TRACE] executePowerShellPanelCommand() ENTRY cmd_len=1 thread=28052
+
+28052 [PS_TRACE] executePowerShellPanelCommand() calling writeInput() cmd_len=1 thread=28052
+
+28052 [PS_TRACE] executePowerShellPanelCommand() writeInput() returned
+
+28052 [PS_TRACE] executePowerShellPanelCommand() EXIT
+
+28052 [PS_TRACE] executePowerShellInput() EXIT
+
+28052 [PS_TRACE] executePowerShellInput() ENTRY thread=28052
+
+28052 [PS_TRACE] executePowerShellInput() command_len=0 cmd=''
+
+28052 [PS_TRACE] executePowerShellInput() exit: empty command
+

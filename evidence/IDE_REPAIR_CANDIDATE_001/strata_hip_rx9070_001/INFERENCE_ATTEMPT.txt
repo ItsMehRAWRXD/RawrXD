@@ -1,0 +1,58 @@
+﻿STRATA_RX9070_INFERENCE_ATTEMPT
+ASOF_UTC=2026-11-10T13:45:00Z
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+
+EXTRACT_PATH=F:\rawrxd\external\strata\engines\rx9070_0.1.59\extracted
+EXTRACT_ALT=F:\rawrxd\external\strata\engines\0.1.59-windows-x86_64-hip-rx9070
+COMPONENTS_RX9070=F:\rawrxd\external\strata\components-rx9070\engine\0.1.59-windows-x86_64-hip-rx9070
+RDNA3_PRESERVED=C:\Users\Garrett\AppData\Local\Strata\components\engine\0.1.59-windows-x86_64-hip-rdna3
+
+DEVICE_RECHECK_CMD=F:\rawrxd\external\strata\engines\rx9070_0.1.59\extracted\strata-device.exe
+DEVICE_RECHECK_EXIT=0
+DEVICE=AMD Radeon AI PRO R9700
+HIP_ARCH=gfx1201 wave32
+COMPILED_FOR=gfx1200,gfx1201
+GFX1201_DEVICE_ACCEPT=PASS
+RX9070_HIP_INITIALIZATION=PASS
+HIP_RUNTIME=F:\rawrxd\external\strata\engines\rx9070_0.1.59\extracted\amdhip64_7.dll
+RX9070_SHA256_MATCH=PASS
+
+MODEL_PATH=F:\rawrxd\external\strata\models\models\qwen36-UD-Q4_K_XL\Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf
+MODEL_BYTES=22853663008
+STRATA_PIN_BYTES=22853663008
+USER_BRIEF_BYTES_STALE=22870700851
+SIZE_VS_STRATA_PIN=MATCH
+MODEL_SHA256=55983c5a75a1ab969824077b3bb3de4146e82a9234072b48ad4e8f92ad3fe9f1
+STRATA_PIN_SHA256=55983c5a75a1ab969824077b3bb3de4146e82a9234072b48ad4e8f92ad3fe9f1
+HASH_MATCH=PASS
+DONE_MARK_PRESENT=1
+FALSE_CACHE_REJECT=0
+QWEN36_COMPLETE=1
+NOTE=launch --plan claimed already-on-disk; size+sha256 verified against setup.py pin before accepting complete
+
+INFERENCE_ENGINE=F:\rawrxd\external\strata\engines\rx9070_0.1.59\extracted\strata.exe
+INFERENCE_CLI=strata-q36 --model GGUF --tokens IDS --n 8 --max-context 2048
+PROMPT_TEXT=Say hi in one word.
+PROMPT_TOKENS=44240,15131,303,799,3299,13
+GEN_TOKENS=271 248068 198 8160 579 264 7047 1817
+GEN_DECODE_TEXT=\n\n<think>\nHere's a thinking process
+STDOUT=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\strata_hip_rx9070_001\INFERENCE_stdout.txt
+STDERR=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\strata_hip_rx9070_001\INFERENCE_stderr.txt
+GENERATE_PROMPT_TPS=1.7
+GENERATE_DECODE_TPS=0.2
+GFX1201_INFERENCE=PASS
+
+API_PORT=8080
+API_ENGINE=F:\rawrxd\external\strata\components-rx9070\engine\0.1.59-windows-x86_64-hip-rx9070\strata.exe
+API_MODELS_HTTP=200
+API_CHAT_HTTP=200
+API_COMPLETION_TOKENS=8
+API_PREDICTED_PER_SECOND=137.0
+API_RESPONSE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\strata_hip_rx9070_001\API_SMOKE_response.json
+STRATA_API=PASS
+STRATA_TPS=137.0
+
+OLLAMA_UNTOUCHED=1
+ISSUE49_UNCHANGED=1

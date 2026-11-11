@@ -1,0 +1,33 @@
+=================================================================
+ G05 - Q2_K / Q3_K numerical parity vs vendored ggml reference
+ blocks=800   oracle: ggml dequantize_row_q*_K (independent)
+=================================================================
+
+[TEST] G05.1 ggml block layout / size parity
+  [PASS] block_q2_K size 84 == ggml 84
+  [PASS] block_q3_K size 110 == ggml 110
+  [PASS] block_q4_K size 144 == ggml 144
+  [PASS] block_q5_K size 176 == ggml 176
+  [PASS] block_q6_K size 210 == ggml 210
+  [PASS] block_q8_K size 292 == ggml 292
+  [PASS] block_q2_K offsets scales=0 qs=16 d=80 dmin=82
+  [PASS] block_q3_K offsets hmask=0 qs=32 scales=96 d=108
+  [PASS] block_q5_K offsets qh=16 qs=48
+
+[TEST] G05.2 Q2_K dequant + dot parity vs ggml reference (800 blocks)
+  [PASS] Q2_K dequant walk (scales/qs/shift indexing) matches ggml over 800 blocks x 256 weights
+  [PASS] Q2_K dot matches ggml (worst rel 1.92e-05 at blk 705; vs ggml_f32 0)
+
+[TEST] G05.3 Q3_K dequant + dot parity vs ggml reference (800 blocks)
+  [PASS] Q3_K dot is as accurate as ggml's own float32 accumulation (worst Deep2 rel 2.4e-05 at blk 285)
+
+[TEST] G05.4 Q5_K dequant + dot parity vs ggml reference (800 blocks)
+  [PASS] Q5_K dot product matches ggml (worst relative 2.46e-05 at blk 378)
+
+[TEST] G05.5 Q2_K adversarial geometry (all nibbles/shifts)
+  [INFO] expect=-125417 got=-125417 rel=0
+  [PASS] adversarial Q2_K geometry matches ggml
+
+=================================================================
+ G05 parity: PASS
+=================================================================

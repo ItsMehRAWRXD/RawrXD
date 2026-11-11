@@ -1,0 +1,739 @@
+
+📊 Zone Assignment Summary:
+   embedding: 2 tensors, 2730 MB
+   layers_0: 128 tensors, 422 MB
+   layers_1: 128 tensors, 395 MB
+   layers_2: 128 tensors, 406 MB
+   layers_3: 128 tensors, 401 MB
+   layers_4: 128 tensors, 415 MB
+   layers_5: 32 tensors, 112 MB
+   misc: 3 tensors, 5 MB
+   output_head: 43 tensors, 137 MB
+
+✅ GGUF Model opened in streaming mode
+   File: F:\OllamaModels\gemma-4-E4B-it-GGUF\gemma-4-E4B-it-Q4_K_M.gguf
+   Tensors: 720
+   Zones: 9
+   Memory (header+index): ~0 MB
+Total tensors: 720
+
+[  0] blk.0.attn_k.weight                                type=12 shape=[2560x512] offset=2933498368 size=737280
+[1  ] blk.0.attn_k_norm.weight                           type=0 shape=[256] offset=2934235648 size=1024
+[2  ] blk.0.attn_norm.weight                             type=0 shape=[2560] offset=2934236672 size=10240
+[3  ] blk.0.attn_output.weight                           type=12 shape=[2048x2560] offset=2934246912 size=2949120
+[4  ] blk.0.attn_q.weight                                type=12 shape=[2560x2048] offset=2937196032 size=2949120
+[5  ] blk.0.attn_q_norm.weight                           type=0 shape=[256] offset=2940145152 size=1024
+[6  ] blk.0.attn_v.weight                                type=14 shape=[2560x512] offset=2940146176 size=1075200
+[7  ] blk.0.ffn_down.weight                              type=14 shape=[10240x2560] offset=2941221376 size=21504000
+[8  ] blk.0.ffn_gate.weight                              type=12 shape=[2560x10240] offset=2962725376 size=14745600
+[9  ] blk.0.ffn_norm.weight                              type=0 shape=[2560] offset=2977470976 size=10240
+[10 ] blk.0.ffn_up.weight                                type=12 shape=[2560x10240] offset=2977481216 size=14745600
+[11 ] blk.0.inp_gate.weight                              type=12 shape=[2560x256] offset=2992226816 size=368640
+[12 ] blk.0.layer_output_scale.weight                    type=0 shape=[1] offset=2992595456 size=4
+[13 ] blk.0.post_attention_norm.weight                   type=0 shape=[2560] offset=2992595488 size=10240
+[14 ] blk.0.post_ffw_norm.weight                         type=0 shape=[2560] offset=2992605728 size=10240
+[15 ] blk.0.post_norm.weight                             type=0 shape=[2560] offset=2992615968 size=10240
+[16 ] blk.0.proj.weight                                  type=12 shape=[256x2560] offset=2992626208 size=368640
+[17 ] blk.1.attn_k.weight                                type=12 shape=[2560x512] offset=2992994848 size=737280
+[18 ] blk.1.attn_k_norm.weight                           type=0 shape=[256] offset=2993732128 size=1024
+[19 ] blk.1.attn_norm.weight                             type=0 shape=[2560] offset=2993733152 size=10240
+[20 ] blk.1.attn_output.weight                           type=12 shape=[2048x2560] offset=2993743392 size=2949120
+[21 ] blk.1.attn_q.weight                                type=12 shape=[2560x2048] offset=2996692512 size=2949120
+[22 ] blk.1.attn_q_norm.weight                           type=0 shape=[256] offset=2999641632 size=1024
+[23 ] blk.1.attn_v.weight                                type=14 shape=[2560x512] offset=2999642656 size=1075200
+[24 ] blk.1.ffn_down.weight                              type=14 shape=[10240x2560] offset=3000717856 size=21504000
+[25 ] blk.1.ffn_gate.weight                              type=12 shape=[2560x10240] offset=3022221856 size=14745600
+[26 ] blk.1.ffn_norm.weight                              type=0 shape=[2560] offset=3036967456 size=10240
+[27 ] blk.1.ffn_up.weight                                type=12 shape=[2560x10240] offset=3036977696 size=14745600
+[28 ] blk.1.inp_gate.weight                              type=12 shape=[2560x256] offset=3051723296 size=368640
+[29 ] blk.1.layer_output_scale.weight                    type=0 shape=[1] offset=3052091936 size=4
+[30 ] blk.1.post_attention_norm.weight                   type=0 shape=[2560] offset=3052091968 size=10240
+[31 ] blk.1.post_ffw_norm.weight                         type=0 shape=[2560] offset=3052102208 size=10240
+[32 ] blk.1.post_norm.weight                             type=0 shape=[2560] offset=3052112448 size=10240
+[33 ] blk.1.proj.weight                                  type=12 shape=[256x2560] offset=3052122688 size=368640
+[34 ] blk.10.attn_k.weight                               type=12 shape=[2560x512] offset=3507452736 size=737280
+[35 ] blk.10.attn_k_norm.weight                          type=0 shape=[256] offset=3508190016 size=1024
+[36 ] blk.10.attn_norm.weight                            type=0 shape=[2560] offset=3508191040 size=10240
+[37 ] blk.10.attn_output.weight                          type=12 shape=[2048x2560] offset=3508201280 size=2949120
+[38 ] blk.10.attn_q.weight                               type=12 shape=[2560x2048] offset=3511150400 size=2949120
+[39 ] blk.10.attn_q_norm.weight                          type=0 shape=[256] offset=3514099520 size=1024
+[40 ] blk.10.attn_v.weight                               type=14 shape=[2560x512] offset=3514100544 size=1075200
+[41 ] blk.10.ffn_down.weight                             type=14 shape=[10240x2560] offset=3515175744 size=21504000
+[42 ] blk.10.ffn_gate.weight                             type=12 shape=[2560x10240] offset=3536679744 size=14745600
+[43 ] blk.10.ffn_norm.weight                             type=0 shape=[2560] offset=3551425344 size=10240
+[44 ] blk.10.ffn_up.weight                               type=12 shape=[2560x10240] offset=3551435584 size=14745600
+[45 ] blk.10.inp_gate.weight                             type=12 shape=[2560x256] offset=3566181184 size=368640
+[46 ] blk.10.layer_output_scale.weight                   type=0 shape=[1] offset=3566549824 size=4
+[47 ] blk.10.post_attention_norm.weight                  type=0 shape=[2560] offset=3566549856 size=10240
+[48 ] blk.10.post_ffw_norm.weight                        type=0 shape=[2560] offset=3566560096 size=10240
+[49 ] blk.10.post_norm.weight                            type=0 shape=[2560] offset=3566570336 size=10240
+[50 ] blk.10.proj.weight                                 type=12 shape=[256x2560] offset=3566580576 size=368640
+[51 ] blk.11.attn_k.weight                               type=12 shape=[2560x1024] offset=3566949216 size=1474560
+[52 ] blk.11.attn_k_norm.weight                          type=0 shape=[512] offset=3568423776 size=2048
+[53 ] blk.11.attn_norm.weight                            type=0 shape=[2560] offset=3568425824 size=10240
+[54 ] blk.11.attn_output.weight                          type=12 shape=[4096x2560] offset=3568436064 size=5898240
+[55 ] blk.11.attn_q.weight                               type=12 shape=[2560x4096] offset=3574334304 size=5898240
+[56 ] blk.11.attn_q_norm.weight                          type=0 shape=[512] offset=3580232544 size=2048
+[57 ] blk.11.attn_v.weight                               type=12 shape=[2560x1024] offset=3580234592 size=1474560
+[58 ] blk.11.ffn_down.weight                             type=12 shape=[10240x2560] offset=3581709152 size=14745600
+[59 ] blk.11.ffn_gate.weight                             type=12 shape=[2560x10240] offset=3596454752 size=14745600
+[60 ] blk.11.ffn_norm.weight                             type=0 shape=[2560] offset=3611200352 size=10240
+[61 ] blk.11.ffn_up.weight                               type=12 shape=[2560x10240] offset=3611210592 size=14745600
+[62 ] blk.11.inp_gate.weight                             type=12 shape=[2560x256] offset=3625956192 size=368640
+[63 ] blk.11.layer_output_scale.weight                   type=0 shape=[1] offset=3626324832 size=4
+[64 ] blk.11.post_attention_norm.weight                  type=0 shape=[2560] offset=3626324864 size=10240
+[65 ] blk.11.post_ffw_norm.weight                        type=0 shape=[2560] offset=3626335104 size=10240
+[66 ] blk.11.post_norm.weight                            type=0 shape=[2560] offset=3626345344 size=10240
+[67 ] blk.11.proj.weight                                 type=12 shape=[256x2560] offset=3626355584 size=368640
+[68 ] blk.12.attn_k.weight                               type=12 shape=[2560x512] offset=3626724224 size=737280
+[69 ] blk.12.attn_k_norm.weight                          type=0 shape=[256] offset=3627461504 size=1024
+[70 ] blk.12.attn_norm.weight                            type=0 shape=[2560] offset=3627462528 size=10240
+[71 ] blk.12.attn_output.weight                          type=12 shape=[2048x2560] offset=3627472768 size=2949120
+[72 ] blk.12.attn_q.weight                               type=12 shape=[2560x2048] offset=3630421888 size=2949120
+[73 ] blk.12.attn_q_norm.weight                          type=0 shape=[256] offset=3633371008 size=1024
+[74 ] blk.12.attn_v.weight                               type=12 shape=[2560x512] offset=3633372032 size=737280
+[75 ] blk.12.ffn_down.weight                             type=12 shape=[10240x2560] offset=3634109312 size=14745600
+[76 ] blk.12.ffn_gate.weight                             type=12 shape=[2560x10240] offset=3648854912 size=14745600
+[77 ] blk.12.ffn_norm.weight                             type=0 shape=[2560] offset=3663600512 size=10240
+[78 ] blk.12.ffn_up.weight                               type=12 shape=[2560x10240] offset=3663610752 size=14745600
+[79 ] blk.12.inp_gate.weight                             type=12 shape=[2560x256] offset=3678356352 size=368640
+[80 ] blk.12.layer_output_scale.weight                   type=0 shape=[1] offset=3678724992 size=4
+[81 ] blk.12.post_attention_norm.weight                  type=0 shape=[2560] offset=3678725024 size=10240
+[82 ] blk.12.post_ffw_norm.weight                        type=0 shape=[2560] offset=3678735264 size=10240
+[83 ] blk.12.post_norm.weight                            type=0 shape=[2560] offset=3678745504 size=10240
+[84 ] blk.12.proj.weight                                 type=12 shape=[256x2560] offset=3678755744 size=368640
+[85 ] blk.13.attn_k.weight                               type=12 shape=[2560x512] offset=3679124384 size=737280
+[86 ] blk.13.attn_k_norm.weight                          type=0 shape=[256] offset=3679861664 size=1024
+[87 ] blk.13.attn_norm.weight                            type=0 shape=[2560] offset=3679862688 size=10240
+[88 ] blk.13.attn_output.weight                          type=12 shape=[2048x2560] offset=3679872928 size=2949120
+[89 ] blk.13.attn_q.weight                               type=12 shape=[2560x2048] offset=3682822048 size=2949120
+[90 ] blk.13.attn_q_norm.weight                          type=0 shape=[256] offset=3685771168 size=1024
+[91 ] blk.13.attn_v.weight                               type=14 shape=[2560x512] offset=3685772192 size=1075200
+[92 ] blk.13.ffn_down.weight                             type=14 shape=[10240x2560] offset=3686847392 size=21504000
+[93 ] blk.13.ffn_gate.weight                             type=12 shape=[2560x10240] offset=3708351392 size=14745600
+[94 ] blk.13.ffn_norm.weight                             type=0 shape=[2560] offset=3723096992 size=10240
+[95 ] blk.13.ffn_up.weight                               type=12 shape=[2560x10240] offset=3723107232 size=14745600
+[96 ] blk.13.inp_gate.weight                             type=12 shape=[2560x256] offset=3737852832 size=368640
+[97 ] blk.13.layer_output_scale.weight                   type=0 shape=[1] offset=3738221472 size=4
+[98 ] blk.13.post_attention_norm.weight                  type=0 shape=[2560] offset=3738221504 size=10240
+[99 ] blk.13.post_ffw_norm.weight                        type=0 shape=[2560] offset=3738231744 size=10240
+[100] blk.13.post_norm.weight                            type=0 shape=[2560] offset=3738241984 size=10240
+[101] blk.13.proj.weight                                 type=12 shape=[256x2560] offset=3738252224 size=368640
+[102] blk.14.attn_k.weight                               type=12 shape=[2560x512] offset=3738620864 size=737280
+[103] blk.14.attn_k_norm.weight                          type=0 shape=[256] offset=3739358144 size=1024
+[104] blk.14.attn_norm.weight                            type=0 shape=[2560] offset=3739359168 size=10240
+[105] blk.14.attn_output.weight                          type=12 shape=[2048x2560] offset=3739369408 size=2949120
+[106] blk.14.attn_q.weight                               type=12 shape=[2560x2048] offset=3742318528 size=2949120
+[107] blk.14.attn_q_norm.weight                          type=0 shape=[256] offset=3745267648 size=1024
+[108] blk.14.attn_v.weight                               type=12 shape=[2560x512] offset=3745268672 size=737280
+[109] blk.14.ffn_down.weight                             type=12 shape=[10240x2560] offset=3746005952 size=14745600
+[110] blk.14.ffn_gate.weight                             type=12 shape=[2560x10240] offset=3760751552 size=14745600
+[111] blk.14.ffn_norm.weight                             type=0 shape=[2560] offset=3775497152 size=10240
+[112] blk.14.ffn_up.weight                               type=12 shape=[2560x10240] offset=3775507392 size=14745600
+[113] blk.14.inp_gate.weight                             type=12 shape=[2560x256] offset=3790252992 size=368640
+[114] blk.14.layer_output_scale.weight                   type=0 shape=[1] offset=3790621632 size=4
+[115] blk.14.post_attention_norm.weight                  type=0 shape=[2560] offset=3790621664 size=10240
+[116] blk.14.post_ffw_norm.weight                        type=0 shape=[2560] offset=3790631904 size=10240
+[117] blk.14.post_norm.weight                            type=0 shape=[2560] offset=3790642144 size=10240
+[118] blk.14.proj.weight                                 type=12 shape=[256x2560] offset=3790652384 size=368640
+[119] blk.15.attn_k.weight                               type=12 shape=[2560x512] offset=3791021024 size=737280
+[120] blk.15.attn_k_norm.weight                          type=0 shape=[256] offset=3791758304 size=1024
+[121] blk.15.attn_norm.weight                            type=0 shape=[2560] offset=3791759328 size=10240
+[122] blk.15.attn_output.weight                          type=12 shape=[2048x2560] offset=3791769568 size=2949120
+[123] blk.15.attn_q.weight                               type=12 shape=[2560x2048] offset=3794718688 size=2949120
+[124] blk.15.attn_q_norm.weight                          type=0 shape=[256] offset=3797667808 size=1024
+[125] blk.15.attn_v.weight                               type=12 shape=[2560x512] offset=3797668832 size=737280
+[126] blk.15.ffn_down.weight                             type=12 shape=[10240x2560] offset=3798406112 size=14745600
+[127] blk.15.ffn_gate.weight                             type=12 shape=[2560x10240] offset=3813151712 size=14745600
+[128] blk.15.ffn_norm.weight                             type=0 shape=[2560] offset=3827897312 size=10240
+[129] blk.15.ffn_up.weight                               type=12 shape=[2560x10240] offset=3827907552 size=14745600
+[130] blk.15.inp_gate.weight                             type=12 shape=[2560x256] offset=3842653152 size=368640
+[131] blk.15.layer_output_scale.weight                   type=0 shape=[1] offset=3843021792 size=4
+[132] blk.15.post_attention_norm.weight                  type=0 shape=[2560] offset=3843021824 size=10240
+[133] blk.15.post_ffw_norm.weight                        type=0 shape=[2560] offset=3843032064 size=10240
+[134] blk.15.post_norm.weight                            type=0 shape=[2560] offset=3843042304 size=10240
+[135] blk.15.proj.weight                                 type=12 shape=[256x2560] offset=3843052544 size=368640
+[136] blk.16.attn_k.weight                               type=12 shape=[2560x512] offset=3843421184 size=737280
+[137] blk.16.attn_k_norm.weight                          type=0 shape=[256] offset=3844158464 size=1024
+[138] blk.16.attn_norm.weight                            type=0 shape=[2560] offset=3844159488 size=10240
+[139] blk.16.attn_output.weight                          type=12 shape=[2048x2560] offset=3844169728 size=2949120
+[140] blk.16.attn_q.weight                               type=12 shape=[2560x2048] offset=3847118848 size=2949120
+[141] blk.16.attn_q_norm.weight                          type=0 shape=[256] offset=3850067968 size=1024
+[142] blk.16.attn_v.weight                               type=14 shape=[2560x512] offset=3850068992 size=1075200
+[143] blk.16.ffn_down.weight                             type=14 shape=[10240x2560] offset=3851144192 size=21504000
+[144] blk.16.ffn_gate.weight                             type=12 shape=[2560x10240] offset=3872648192 size=14745600
+[145] blk.16.ffn_norm.weight                             type=0 shape=[2560] offset=3887393792 size=10240
+[146] blk.16.ffn_up.weight                               type=12 shape=[2560x10240] offset=3887404032 size=14745600
+[147] blk.16.inp_gate.weight                             type=12 shape=[2560x256] offset=3902149632 size=368640
+[148] blk.16.layer_output_scale.weight                   type=0 shape=[1] offset=3902518272 size=4
+[149] blk.16.post_attention_norm.weight                  type=0 shape=[2560] offset=3902518304 size=10240
+[150] blk.16.post_ffw_norm.weight                        type=0 shape=[2560] offset=3902528544 size=10240
+[151] blk.16.post_norm.weight                            type=0 shape=[2560] offset=3902538784 size=10240
+[152] blk.16.proj.weight                                 type=12 shape=[256x2560] offset=3902549024 size=368640
+[153] blk.17.attn_k.weight                               type=12 shape=[2560x1024] offset=3902917664 size=1474560
+[154] blk.17.attn_k_norm.weight                          type=0 shape=[512] offset=3904392224 size=2048
+[155] blk.17.attn_norm.weight                            type=0 shape=[2560] offset=3904394272 size=10240
+[156] blk.17.attn_output.weight                          type=12 shape=[4096x2560] offset=3904404512 size=5898240
+[157] blk.17.attn_q.weight                               type=12 shape=[2560x4096] offset=3910302752 size=5898240
+[158] blk.17.attn_q_norm.weight                          type=0 shape=[512] offset=3916200992 size=2048
+[159] blk.17.attn_v.weight                               type=12 shape=[2560x1024] offset=3916203040 size=1474560
+[160] blk.17.ffn_down.weight                             type=12 shape=[10240x2560] offset=3917677600 size=14745600
+[161] blk.17.ffn_gate.weight                             type=12 shape=[2560x10240] offset=3932423200 size=14745600
+[162] blk.17.ffn_norm.weight                             type=0 shape=[2560] offset=3947168800 size=10240
+[163] blk.17.ffn_up.weight                               type=12 shape=[2560x10240] offset=3947179040 size=14745600
+[164] blk.17.inp_gate.weight                             type=12 shape=[2560x256] offset=3961924640 size=368640
+[165] blk.17.layer_output_scale.weight                   type=0 shape=[1] offset=3962293280 size=4
+[166] blk.17.post_attention_norm.weight                  type=0 shape=[2560] offset=3962293312 size=10240
+[167] blk.17.post_ffw_norm.weight                        type=0 shape=[2560] offset=3962303552 size=10240
+[168] blk.17.post_norm.weight                            type=0 shape=[2560] offset=3962313792 size=10240
+[169] blk.17.proj.weight                                 type=12 shape=[256x2560] offset=3962324032 size=368640
+[170] blk.18.attn_k.weight                               type=12 shape=[2560x512] offset=3962692672 size=737280
+[171] blk.18.attn_k_norm.weight                          type=0 shape=[256] offset=3963429952 size=1024
+[172] blk.18.attn_norm.weight                            type=0 shape=[2560] offset=3963430976 size=10240
+[173] blk.18.attn_output.weight                          type=12 shape=[2048x2560] offset=3963441216 size=2949120
+[174] blk.18.attn_q.weight                               type=12 shape=[2560x2048] offset=3966390336 size=2949120
+[175] blk.18.attn_q_norm.weight                          type=0 shape=[256] offset=3969339456 size=1024
+[176] blk.18.attn_v.weight                               type=12 shape=[2560x512] offset=3969340480 size=737280
+[177] blk.18.ffn_down.weight                             type=12 shape=[10240x2560] offset=3970077760 size=14745600
+[178] blk.18.ffn_gate.weight                             type=12 shape=[2560x10240] offset=3984823360 size=14745600
+[179] blk.18.ffn_norm.weight                             type=0 shape=[2560] offset=3999568960 size=10240
+[180] blk.18.ffn_up.weight                               type=12 shape=[2560x10240] offset=3999579200 size=14745600
+[181] blk.18.inp_gate.weight                             type=12 shape=[2560x256] offset=4014324800 size=368640
+[182] blk.18.layer_output_scale.weight                   type=0 shape=[1] offset=4014693440 size=4
+[183] blk.18.post_attention_norm.weight                  type=0 shape=[2560] offset=4014693472 size=10240
+[184] blk.18.post_ffw_norm.weight                        type=0 shape=[2560] offset=4014703712 size=10240
+[185] blk.18.post_norm.weight                            type=0 shape=[2560] offset=4014713952 size=10240
+[186] blk.18.proj.weight                                 type=12 shape=[256x2560] offset=4014724192 size=368640
+[187] blk.19.attn_k.weight                               type=12 shape=[2560x512] offset=4015092832 size=737280
+[188] blk.19.attn_k_norm.weight                          type=0 shape=[256] offset=4015830112 size=1024
+[189] blk.19.attn_norm.weight                            type=0 shape=[2560] offset=4015831136 size=10240
+[190] blk.19.attn_output.weight                          type=12 shape=[2048x2560] offset=4015841376 size=2949120
+[191] blk.19.attn_q.weight                               type=12 shape=[2560x2048] offset=4018790496 size=2949120
+[192] blk.19.attn_q_norm.weight                          type=0 shape=[256] offset=4021739616 size=1024
+[193] blk.19.attn_v.weight                               type=14 shape=[2560x512] offset=4021740640 size=1075200
+[194] blk.19.ffn_down.weight                             type=14 shape=[10240x2560] offset=4022815840 size=21504000
+[195] blk.19.ffn_gate.weight                             type=12 shape=[2560x10240] offset=4044319840 size=14745600
+[196] blk.19.ffn_norm.weight                             type=0 shape=[2560] offset=4059065440 size=10240
+[197] blk.19.ffn_up.weight                               type=12 shape=[2560x10240] offset=4059075680 size=14745600
+[198] blk.19.inp_gate.weight                             type=12 shape=[2560x256] offset=4073821280 size=368640
+[199] blk.19.layer_output_scale.weight                   type=0 shape=[1] offset=4074189920 size=4
+[200] blk.19.post_attention_norm.weight                  type=0 shape=[2560] offset=4074189952 size=10240
+[201] blk.19.post_ffw_norm.weight                        type=0 shape=[2560] offset=4074200192 size=10240
+[202] blk.19.post_norm.weight                            type=0 shape=[2560] offset=4074210432 size=10240
+[203] blk.19.proj.weight                                 type=12 shape=[256x2560] offset=4074220672 size=368640
+[204] blk.2.attn_k.weight                                type=12 shape=[2560x512] offset=3052491328 size=737280
+[205] blk.2.attn_k_norm.weight                           type=0 shape=[256] offset=3053228608 size=1024
+[206] blk.2.attn_norm.weight                             type=0 shape=[2560] offset=3053229632 size=10240
+[207] blk.2.attn_output.weight                           type=12 shape=[2048x2560] offset=3053239872 size=2949120
+[208] blk.2.attn_q.weight                                type=12 shape=[2560x2048] offset=3056188992 size=2949120
+[209] blk.2.attn_q_norm.weight                           type=0 shape=[256] offset=3059138112 size=1024
+[210] blk.2.attn_v.weight                                type=14 shape=[2560x512] offset=3059139136 size=1075200
+[211] blk.2.ffn_down.weight                              type=14 shape=[10240x2560] offset=3060214336 size=21504000
+[212] blk.2.ffn_gate.weight                              type=12 shape=[2560x10240] offset=3081718336 size=14745600
+[213] blk.2.ffn_norm.weight                              type=0 shape=[2560] offset=3096463936 size=10240
+[214] blk.2.ffn_up.weight                                type=12 shape=[2560x10240] offset=3096474176 size=14745600
+[215] blk.2.inp_gate.weight                              type=12 shape=[2560x256] offset=3111219776 size=368640
+[216] blk.2.layer_output_scale.weight                    type=0 shape=[1] offset=3111588416 size=4
+[217] blk.2.post_attention_norm.weight                   type=0 shape=[2560] offset=3111588448 size=10240
+[218] blk.2.post_ffw_norm.weight                         type=0 shape=[2560] offset=3111598688 size=10240
+[219] blk.2.post_norm.weight                             type=0 shape=[2560] offset=3111608928 size=10240
+[220] blk.2.proj.weight                                  type=12 shape=[256x2560] offset=3111619168 size=368640
+[221] blk.20.attn_k.weight                               type=12 shape=[2560x512] offset=4074589312 size=737280
+[222] blk.20.attn_k_norm.weight                          type=0 shape=[256] offset=4075326592 size=1024
+[223] blk.20.attn_norm.weight                            type=0 shape=[2560] offset=4075327616 size=10240
+[224] blk.20.attn_output.weight                          type=12 shape=[2048x2560] offset=4075337856 size=2949120
+[225] blk.20.attn_q.weight                               type=12 shape=[2560x2048] offset=4078286976 size=2949120
+[226] blk.20.attn_q_norm.weight                          type=0 shape=[256] offset=4081236096 size=1024
+[227] blk.20.attn_v.weight                               type=12 shape=[2560x512] offset=4081237120 size=737280
+[228] blk.20.ffn_down.weight                             type=12 shape=[10240x2560] offset=4081974400 size=14745600
+[229] blk.20.ffn_gate.weight                             type=12 shape=[2560x10240] offset=4096720000 size=14745600
+[230] blk.20.ffn_norm.weight                             type=0 shape=[2560] offset=4111465600 size=10240
+[231] blk.20.ffn_up.weight                               type=12 shape=[2560x10240] offset=4111475840 size=14745600
+[232] blk.20.inp_gate.weight                             type=12 shape=[2560x256] offset=4126221440 size=368640
+[233] blk.20.layer_output_scale.weight                   type=0 shape=[1] offset=4126590080 size=4
+[234] blk.20.post_attention_norm.weight                  type=0 shape=[2560] offset=4126590112 size=10240
+[235] blk.20.post_ffw_norm.weight                        type=0 shape=[2560] offset=4126600352 size=10240
+[236] blk.20.post_norm.weight                            type=0 shape=[2560] offset=4126610592 size=10240
+[237] blk.20.proj.weight                                 type=12 shape=[256x2560] offset=4126620832 size=368640
+[238] blk.21.attn_k.weight                               type=12 shape=[2560x512] offset=4126989472 size=737280
+[239] blk.21.attn_k_norm.weight                          type=0 shape=[256] offset=4127726752 size=1024
+[240] blk.21.attn_norm.weight                            type=0 shape=[2560] offset=4127727776 size=10240
+[241] blk.21.attn_output.weight                          type=12 shape=[2048x2560] offset=4127738016 size=2949120
+[242] blk.21.attn_q.weight                               type=12 shape=[2560x2048] offset=4130687136 size=2949120
+[243] blk.21.attn_q_norm.weight                          type=0 shape=[256] offset=4133636256 size=1024
+[244] blk.21.attn_v.weight                               type=12 shape=[2560x512] offset=4133637280 size=737280
+[245] blk.21.ffn_down.weight                             type=12 shape=[10240x2560] offset=4134374560 size=14745600
+[246] blk.21.ffn_gate.weight                             type=12 shape=[2560x10240] offset=4149120160 size=14745600
+[247] blk.21.ffn_norm.weight                             type=0 shape=[2560] offset=4163865760 size=10240
+[248] blk.21.ffn_up.weight                               type=12 shape=[2560x10240] offset=4163876000 size=14745600
+[249] blk.21.inp_gate.weight                             type=12 shape=[2560x256] offset=4178621600 size=368640
+[250] blk.21.layer_output_scale.weight                   type=0 shape=[1] offset=4178990240 size=4
+[251] blk.21.post_attention_norm.weight                  type=0 shape=[2560] offset=4178990272 size=10240
+[252] blk.21.post_ffw_norm.weight                        type=0 shape=[2560] offset=4179000512 size=10240
+[253] blk.21.post_norm.weight                            type=0 shape=[2560] offset=4179010752 size=10240
+[254] blk.21.proj.weight                                 type=12 shape=[256x2560] offset=4179020992 size=368640
+[255] blk.22.attn_k.weight                               type=12 shape=[2560x512] offset=4179389632 size=737280
+[256] blk.22.attn_k_norm.weight                          type=0 shape=[256] offset=4180126912 size=1024
+[257] blk.22.attn_norm.weight                            type=0 shape=[2560] offset=4180127936 size=10240
+[258] blk.22.attn_output.weight                          type=12 shape=[2048x2560] offset=4180138176 size=2949120
+[259] blk.22.attn_q.weight                               type=12 shape=[2560x2048] offset=4183087296 size=2949120
+[260] blk.22.attn_q_norm.weight                          type=0 shape=[256] offset=4186036416 size=1024
+[261] blk.22.attn_v.weight                               type=14 shape=[2560x512] offset=4186037440 size=1075200
+[262] blk.22.ffn_down.weight                             type=14 shape=[10240x2560] offset=4187112640 size=21504000
+[263] blk.22.ffn_gate.weight                             type=12 shape=[2560x10240] offset=4208616640 size=14745600
+[264] blk.22.ffn_norm.weight                             type=0 shape=[2560] offset=4223362240 size=10240
+[265] blk.22.ffn_up.weight                               type=12 shape=[2560x10240] offset=4223372480 size=14745600
+[266] blk.22.inp_gate.weight                             type=12 shape=[2560x256] offset=4238118080 size=368640
+[267] blk.22.layer_output_scale.weight                   type=0 shape=[1] offset=4238486720 size=4
+[268] blk.22.post_attention_norm.weight                  type=0 shape=[2560] offset=4238486752 size=10240
+[269] blk.22.post_ffw_norm.weight                        type=0 shape=[2560] offset=4238496992 size=10240
+[270] blk.22.post_norm.weight                            type=0 shape=[2560] offset=4238507232 size=10240
+[271] blk.22.proj.weight                                 type=12 shape=[256x2560] offset=4238517472 size=368640
+[272] blk.23.attn_k.weight                               type=12 shape=[2560x1024] offset=4238886112 size=1474560
+[273] blk.23.attn_k_norm.weight                          type=0 shape=[512] offset=4240360672 size=2048
+[274] blk.23.attn_norm.weight                            type=0 shape=[2560] offset=4240362720 size=10240
+[275] blk.23.attn_output.weight                          type=12 shape=[4096x2560] offset=4240372960 size=5898240
+[276] blk.23.attn_q.weight                               type=12 shape=[2560x4096] offset=4246271200 size=5898240
+[277] blk.23.attn_q_norm.weight                          type=0 shape=[512] offset=4252169440 size=2048
+[278] blk.23.attn_v.weight                               type=12 shape=[2560x1024] offset=4252171488 size=1474560
+[279] blk.23.ffn_down.weight                             type=12 shape=[10240x2560] offset=4253646048 size=14745600
+[280] blk.23.ffn_gate.weight                             type=12 shape=[2560x10240] offset=4268391648 size=14745600
+[281] blk.23.ffn_norm.weight                             type=0 shape=[2560] offset=4283137248 size=10240
+[282] blk.23.ffn_up.weight                               type=12 shape=[2560x10240] offset=4283147488 size=14745600
+[283] blk.23.inp_gate.weight                             type=12 shape=[2560x256] offset=4297893088 size=368640
+[284] blk.23.layer_output_scale.weight                   type=0 shape=[1] offset=4298261728 size=4
+[285] blk.23.post_attention_norm.weight                  type=0 shape=[2560] offset=4298261760 size=10240
+[286] blk.23.post_ffw_norm.weight                        type=0 shape=[2560] offset=4298272000 size=10240
+[287] blk.23.post_norm.weight                            type=0 shape=[2560] offset=4298282240 size=10240
+[288] blk.23.proj.weight                                 type=12 shape=[256x2560] offset=4298292480 size=368640
+[289] blk.24.attn_k.weight                               type=12 shape=[2560x512] offset=4298661120 size=737280
+[290] blk.24.attn_k_norm.weight                          type=0 shape=[256] offset=4299398400 size=1024
+[291] blk.24.attn_norm.weight                            type=0 shape=[2560] offset=4299399424 size=10240
+[292] blk.24.attn_output.weight                          type=12 shape=[2048x2560] offset=4299409664 size=2949120
+[293] blk.24.attn_q.weight                               type=12 shape=[2560x2048] offset=4302358784 size=2949120
+[294] blk.24.attn_q_norm.weight                          type=0 shape=[256] offset=4305307904 size=1024
+[295] blk.24.attn_v.weight                               type=12 shape=[2560x512] offset=4305308928 size=737280
+[296] blk.24.ffn_down.weight                             type=12 shape=[10240x2560] offset=4306046208 size=14745600
+[297] blk.24.ffn_gate.weight                             type=12 shape=[2560x10240] offset=4320791808 size=14745600
+[298] blk.24.ffn_norm.weight                             type=0 shape=[2560] offset=4335537408 size=10240
+[299] blk.24.ffn_up.weight                               type=12 shape=[2560x10240] offset=4335547648 size=14745600
+[300] blk.24.inp_gate.weight                             type=12 shape=[2560x256] offset=4350293248 size=368640
+[301] blk.24.layer_output_scale.weight                   type=0 shape=[1] offset=4350661888 size=4
+[302] blk.24.post_attention_norm.weight                  type=0 shape=[2560] offset=4350661920 size=10240
+[303] blk.24.post_ffw_norm.weight                        type=0 shape=[2560] offset=4350672160 size=10240
+[304] blk.24.post_norm.weight                            type=0 shape=[2560] offset=4350682400 size=10240
+[305] blk.24.proj.weight                                 type=12 shape=[256x2560] offset=4350692640 size=368640
+[306] blk.25.attn_k.weight                               type=12 shape=[2560x512] offset=4351061280 size=737280
+[307] blk.25.attn_k_norm.weight                          type=0 shape=[256] offset=4351798560 size=1024
+[308] blk.25.attn_norm.weight                            type=0 shape=[2560] offset=4351799584 size=10240
+[309] blk.25.attn_output.weight                          type=12 shape=[2048x2560] offset=4351809824 size=2949120
+[310] blk.25.attn_q.weight                               type=12 shape=[2560x2048] offset=4354758944 size=2949120
+[311] blk.25.attn_q_norm.weight                          type=0 shape=[256] offset=4357708064 size=1024
+[312] blk.25.attn_v.weight                               type=14 shape=[2560x512] offset=4357709088 size=1075200
+[313] blk.25.ffn_down.weight                             type=14 shape=[10240x2560] offset=4358784288 size=21504000
+[314] blk.25.ffn_gate.weight                             type=12 shape=[2560x10240] offset=4380288288 size=14745600
+[315] blk.25.ffn_norm.weight                             type=0 shape=[2560] offset=4395033888 size=10240
+[316] blk.25.ffn_up.weight                               type=12 shape=[2560x10240] offset=4395044128 size=14745600
+[317] blk.25.inp_gate.weight                             type=12 shape=[2560x256] offset=4409789728 size=368640
+[318] blk.25.layer_output_scale.weight                   type=0 shape=[1] offset=4410158368 size=4
+[319] blk.25.post_attention_norm.weight                  type=0 shape=[2560] offset=4410158400 size=10240
+[320] blk.25.post_ffw_norm.weight                        type=0 shape=[2560] offset=4410168640 size=10240
+[321] blk.25.post_norm.weight                            type=0 shape=[2560] offset=4410178880 size=10240
+[322] blk.25.proj.weight                                 type=12 shape=[256x2560] offset=4410189120 size=368640
+[323] blk.26.attn_k.weight                               type=12 shape=[2560x512] offset=4410557760 size=737280
+[324] blk.26.attn_k_norm.weight                          type=0 shape=[256] offset=4411295040 size=1024
+[325] blk.26.attn_norm.weight                            type=0 shape=[2560] offset=4411296064 size=10240
+[326] blk.26.attn_output.weight                          type=12 shape=[2048x2560] offset=4411306304 size=2949120
+[327] blk.26.attn_q.weight                               type=12 shape=[2560x2048] offset=4414255424 size=2949120
+[328] blk.26.attn_q_norm.weight                          type=0 shape=[256] offset=4417204544 size=1024
+[329] blk.26.attn_v.weight                               type=12 shape=[2560x512] offset=4417205568 size=737280
+[330] blk.26.ffn_down.weight                             type=12 shape=[10240x2560] offset=4417942848 size=14745600
+[331] blk.26.ffn_gate.weight                             type=12 shape=[2560x10240] offset=4432688448 size=14745600
+[332] blk.26.ffn_norm.weight                             type=0 shape=[2560] offset=4447434048 size=10240
+[333] blk.26.ffn_up.weight                               type=12 shape=[2560x10240] offset=4447444288 size=14745600
+[334] blk.26.inp_gate.weight                             type=12 shape=[2560x256] offset=4462189888 size=368640
+[335] blk.26.layer_output_scale.weight                   type=0 shape=[1] offset=4462558528 size=4
+[336] blk.26.post_attention_norm.weight                  type=0 shape=[2560] offset=4462558560 size=10240
+[337] blk.26.post_ffw_norm.weight                        type=0 shape=[2560] offset=4462568800 size=10240
+[338] blk.26.post_norm.weight                            type=0 shape=[2560] offset=4462579040 size=10240
+[339] blk.26.proj.weight                                 type=12 shape=[256x2560] offset=4462589280 size=368640
+[340] blk.27.attn_k.weight                               type=12 shape=[2560x512] offset=4462957920 size=737280
+[341] blk.27.attn_k_norm.weight                          type=0 shape=[256] offset=4463695200 size=1024
+[342] blk.27.attn_norm.weight                            type=0 shape=[2560] offset=4463696224 size=10240
+[343] blk.27.attn_output.weight                          type=12 shape=[2048x2560] offset=4463706464 size=2949120
+[344] blk.27.attn_q.weight                               type=12 shape=[2560x2048] offset=4466655584 size=2949120
+[345] blk.27.attn_q_norm.weight                          type=0 shape=[256] offset=4469604704 size=1024
+[346] blk.27.attn_v.weight                               type=12 shape=[2560x512] offset=4469605728 size=737280
+[347] blk.27.ffn_down.weight                             type=12 shape=[10240x2560] offset=4470343008 size=14745600
+[348] blk.27.ffn_gate.weight                             type=12 shape=[2560x10240] offset=4485088608 size=14745600
+[349] blk.27.ffn_norm.weight                             type=0 shape=[2560] offset=4499834208 size=10240
+[350] blk.27.ffn_up.weight                               type=12 shape=[2560x10240] offset=4499844448 size=14745600
+[351] blk.27.inp_gate.weight                             type=12 shape=[2560x256] offset=4514590048 size=368640
+[352] blk.27.layer_output_scale.weight                   type=0 shape=[1] offset=4514958688 size=4
+[353] blk.27.post_attention_norm.weight                  type=0 shape=[2560] offset=4514958720 size=10240
+[354] blk.27.post_ffw_norm.weight                        type=0 shape=[2560] offset=4514968960 size=10240
+[355] blk.27.post_norm.weight                            type=0 shape=[2560] offset=4514979200 size=10240
+[356] blk.27.proj.weight                                 type=12 shape=[256x2560] offset=4514989440 size=368640
+[357] blk.28.attn_k.weight                               type=12 shape=[2560x512] offset=4515358080 size=737280
+[358] blk.28.attn_k_norm.weight                          type=0 shape=[256] offset=4516095360 size=1024
+[359] blk.28.attn_norm.weight                            type=0 shape=[2560] offset=4516096384 size=10240
+[360] blk.28.attn_output.weight                          type=12 shape=[2048x2560] offset=4516106624 size=2949120
+[361] blk.28.attn_q.weight                               type=12 shape=[2560x2048] offset=4519055744 size=2949120
+[362] blk.28.attn_q_norm.weight                          type=0 shape=[256] offset=4522004864 size=1024
+[363] blk.28.attn_v.weight                               type=14 shape=[2560x512] offset=4522005888 size=1075200
+[364] blk.28.ffn_down.weight                             type=14 shape=[10240x2560] offset=4523081088 size=21504000
+[365] blk.28.ffn_gate.weight                             type=12 shape=[2560x10240] offset=4544585088 size=14745600
+[366] blk.28.ffn_norm.weight                             type=0 shape=[2560] offset=4559330688 size=10240
+[367] blk.28.ffn_up.weight                               type=12 shape=[2560x10240] offset=4559340928 size=14745600
+[368] blk.28.inp_gate.weight                             type=12 shape=[2560x256] offset=4574086528 size=368640
+[369] blk.28.layer_output_scale.weight                   type=0 shape=[1] offset=4574455168 size=4
+[370] blk.28.post_attention_norm.weight                  type=0 shape=[2560] offset=4574455200 size=10240
+[371] blk.28.post_ffw_norm.weight                        type=0 shape=[2560] offset=4574465440 size=10240
+[372] blk.28.post_norm.weight                            type=0 shape=[2560] offset=4574475680 size=10240
+[373] blk.28.proj.weight                                 type=12 shape=[256x2560] offset=4574485920 size=368640
+[374] blk.29.attn_k.weight                               type=12 shape=[2560x1024] offset=4574854560 size=1474560
+[375] blk.29.attn_k_norm.weight                          type=0 shape=[512] offset=4576329120 size=2048
+[376] blk.29.attn_norm.weight                            type=0 shape=[2560] offset=4576331168 size=10240
+[377] blk.29.attn_output.weight                          type=12 shape=[4096x2560] offset=4576341408 size=5898240
+[378] blk.29.attn_q.weight                               type=12 shape=[2560x4096] offset=4582239648 size=5898240
+[379] blk.29.attn_q_norm.weight                          type=0 shape=[512] offset=4588137888 size=2048
+[380] blk.29.attn_v.weight                               type=12 shape=[2560x1024] offset=4588139936 size=1474560
+[381] blk.29.ffn_down.weight                             type=12 shape=[10240x2560] offset=4589614496 size=14745600
+[382] blk.29.ffn_gate.weight                             type=12 shape=[2560x10240] offset=4604360096 size=14745600
+[383] blk.29.ffn_norm.weight                             type=0 shape=[2560] offset=4619105696 size=10240
+[384] blk.29.ffn_up.weight                               type=12 shape=[2560x10240] offset=4619115936 size=14745600
+[385] blk.29.inp_gate.weight                             type=12 shape=[2560x256] offset=4633861536 size=368640
+[386] blk.29.layer_output_scale.weight                   type=0 shape=[1] offset=4634230176 size=4
+[387] blk.29.post_attention_norm.weight                  type=0 shape=[2560] offset=4634230208 size=10240
+[388] blk.29.post_ffw_norm.weight                        type=0 shape=[2560] offset=4634240448 size=10240
+[389] blk.29.post_norm.weight                            type=0 shape=[2560] offset=4634250688 size=10240
+[390] blk.29.proj.weight                                 type=12 shape=[256x2560] offset=4634260928 size=368640
+[391] blk.3.attn_k.weight                                type=12 shape=[2560x512] offset=3111987808 size=737280
+[392] blk.3.attn_k_norm.weight                           type=0 shape=[256] offset=3112725088 size=1024
+[393] blk.3.attn_norm.weight                             type=0 shape=[2560] offset=3112726112 size=10240
+[394] blk.3.attn_output.weight                           type=12 shape=[2048x2560] offset=3112736352 size=2949120
+[395] blk.3.attn_q.weight                                type=12 shape=[2560x2048] offset=3115685472 size=2949120
+[396] blk.3.attn_q_norm.weight                           type=0 shape=[256] offset=3118634592 size=1024
+[397] blk.3.attn_v.weight                                type=14 shape=[2560x512] offset=3118635616 size=1075200
+[398] blk.3.ffn_down.weight                              type=14 shape=[10240x2560] offset=3119710816 size=21504000
+[399] blk.3.ffn_gate.weight                              type=12 shape=[2560x10240] offset=3141214816 size=14745600
+[400] blk.3.ffn_norm.weight                              type=0 shape=[2560] offset=3155960416 size=10240
+[401] blk.3.ffn_up.weight                                type=12 shape=[2560x10240] offset=3155970656 size=14745600
+[402] blk.3.inp_gate.weight                              type=12 shape=[2560x256] offset=3170716256 size=368640
+[403] blk.3.layer_output_scale.weight                    type=0 shape=[1] offset=3171084896 size=4
+[404] blk.3.post_attention_norm.weight                   type=0 shape=[2560] offset=3171084928 size=10240
+[405] blk.3.post_ffw_norm.weight                         type=0 shape=[2560] offset=3171095168 size=10240
+[406] blk.3.post_norm.weight                             type=0 shape=[2560] offset=3171105408 size=10240
+[407] blk.3.proj.weight                                  type=12 shape=[256x2560] offset=3171115648 size=368640
+[408] blk.30.attn_k.weight                               type=12 shape=[2560x512] offset=4634629568 size=737280
+[409] blk.30.attn_k_norm.weight                          type=0 shape=[256] offset=4635366848 size=1024
+[410] blk.30.attn_norm.weight                            type=0 shape=[2560] offset=4635367872 size=10240
+[411] blk.30.attn_output.weight                          type=12 shape=[2048x2560] offset=4635378112 size=2949120
+[412] blk.30.attn_q.weight                               type=12 shape=[2560x2048] offset=4638327232 size=2949120
+[413] blk.30.attn_q_norm.weight                          type=0 shape=[256] offset=4641276352 size=1024
+[414] blk.30.attn_v.weight                               type=12 shape=[2560x512] offset=4641277376 size=737280
+[415] blk.30.ffn_down.weight                             type=12 shape=[10240x2560] offset=4642014656 size=14745600
+[416] blk.30.ffn_gate.weight                             type=12 shape=[2560x10240] offset=4656760256 size=14745600
+[417] blk.30.ffn_norm.weight                             type=0 shape=[2560] offset=4671505856 size=10240
+[418] blk.30.ffn_up.weight                               type=12 shape=[2560x10240] offset=4671516096 size=14745600
+[419] blk.30.inp_gate.weight                             type=12 shape=[2560x256] offset=4686261696 size=368640
+[420] blk.30.layer_output_scale.weight                   type=0 shape=[1] offset=4686630336 size=4
+[421] blk.30.post_attention_norm.weight                  type=0 shape=[2560] offset=4686630368 size=10240
+[422] blk.30.post_ffw_norm.weight                        type=0 shape=[2560] offset=4686640608 size=10240
+[423] blk.30.post_norm.weight                            type=0 shape=[2560] offset=4686650848 size=10240
+[424] blk.30.proj.weight                                 type=12 shape=[256x2560] offset=4686661088 size=368640
+[425] blk.31.attn_k.weight                               type=12 shape=[2560x512] offset=4687029728 size=737280
+[426] blk.31.attn_k_norm.weight                          type=0 shape=[256] offset=4687767008 size=1024
+[427] blk.31.attn_norm.weight                            type=0 shape=[2560] offset=4687768032 size=10240
+[428] blk.31.attn_output.weight                          type=12 shape=[2048x2560] offset=4687778272 size=2949120
+[429] blk.31.attn_q.weight                               type=12 shape=[2560x2048] offset=4690727392 size=2949120
+[430] blk.31.attn_q_norm.weight                          type=0 shape=[256] offset=4693676512 size=1024
+[431] blk.31.attn_v.weight                               type=14 shape=[2560x512] offset=4693677536 size=1075200
+[432] blk.31.ffn_down.weight                             type=14 shape=[10240x2560] offset=4694752736 size=21504000
+[433] blk.31.ffn_gate.weight                             type=12 shape=[2560x10240] offset=4716256736 size=14745600
+[434] blk.31.ffn_norm.weight                             type=0 shape=[2560] offset=4731002336 size=10240
+[435] blk.31.ffn_up.weight                               type=12 shape=[2560x10240] offset=4731012576 size=14745600
+[436] blk.31.inp_gate.weight                             type=12 shape=[2560x256] offset=4745758176 size=368640
+[437] blk.31.layer_output_scale.weight                   type=0 shape=[1] offset=4746126816 size=4
+[438] blk.31.post_attention_norm.weight                  type=0 shape=[2560] offset=4746126848 size=10240
+[439] blk.31.post_ffw_norm.weight                        type=0 shape=[2560] offset=4746137088 size=10240
+[440] blk.31.post_norm.weight                            type=0 shape=[2560] offset=4746147328 size=10240
+[441] blk.31.proj.weight                                 type=12 shape=[256x2560] offset=4746157568 size=368640
+[442] blk.32.attn_k.weight                               type=12 shape=[2560x512] offset=4746526208 size=737280
+[443] blk.32.attn_k_norm.weight                          type=0 shape=[256] offset=4747263488 size=1024
+[444] blk.32.attn_norm.weight                            type=0 shape=[2560] offset=4747264512 size=10240
+[445] blk.32.attn_output.weight                          type=12 shape=[2048x2560] offset=4747274752 size=2949120
+[446] blk.32.attn_q.weight                               type=12 shape=[2560x2048] offset=4750223872 size=2949120
+[447] blk.32.attn_q_norm.weight                          type=0 shape=[256] offset=4753172992 size=1024
+[448] blk.32.attn_v.weight                               type=12 shape=[2560x512] offset=4753174016 size=737280
+[449] blk.32.ffn_down.weight                             type=12 shape=[10240x2560] offset=4753911296 size=14745600
+[450] blk.32.ffn_gate.weight                             type=12 shape=[2560x10240] offset=4768656896 size=14745600
+[451] blk.32.ffn_norm.weight                             type=0 shape=[2560] offset=4783402496 size=10240
+[452] blk.32.ffn_up.weight                               type=12 shape=[2560x10240] offset=4783412736 size=14745600
+[453] blk.32.inp_gate.weight                             type=12 shape=[2560x256] offset=4798158336 size=368640
+[454] blk.32.layer_output_scale.weight                   type=0 shape=[1] offset=4798526976 size=4
+[455] blk.32.post_attention_norm.weight                  type=0 shape=[2560] offset=4798527008 size=10240
+[456] blk.32.post_ffw_norm.weight                        type=0 shape=[2560] offset=4798537248 size=10240
+[457] blk.32.post_norm.weight                            type=0 shape=[2560] offset=4798547488 size=10240
+[458] blk.32.proj.weight                                 type=12 shape=[256x2560] offset=4798557728 size=368640
+[459] blk.33.attn_k.weight                               type=12 shape=[2560x512] offset=4798926368 size=737280
+[460] blk.33.attn_k_norm.weight                          type=0 shape=[256] offset=4799663648 size=1024
+[461] blk.33.attn_norm.weight                            type=0 shape=[2560] offset=4799664672 size=10240
+[462] blk.33.attn_output.weight                          type=12 shape=[2048x2560] offset=4799674912 size=2949120
+[463] blk.33.attn_q.weight                               type=12 shape=[2560x2048] offset=4802624032 size=2949120
+[464] blk.33.attn_q_norm.weight                          type=0 shape=[256] offset=4805573152 size=1024
+[465] blk.33.attn_v.weight                               type=12 shape=[2560x512] offset=4805574176 size=737280
+[466] blk.33.ffn_down.weight                             type=12 shape=[10240x2560] offset=4806311456 size=14745600
+[467] blk.33.ffn_gate.weight                             type=12 shape=[2560x10240] offset=4821057056 size=14745600
+[468] blk.33.ffn_norm.weight                             type=0 shape=[2560] offset=4835802656 size=10240
+[469] blk.33.ffn_up.weight                               type=12 shape=[2560x10240] offset=4835812896 size=14745600
+[470] blk.33.inp_gate.weight                             type=12 shape=[2560x256] offset=4850558496 size=368640
+[471] blk.33.layer_output_scale.weight                   type=0 shape=[1] offset=4850927136 size=4
+[472] blk.33.post_attention_norm.weight                  type=0 shape=[2560] offset=4850927168 size=10240
+[473] blk.33.post_ffw_norm.weight                        type=0 shape=[2560] offset=4850937408 size=10240
+[474] blk.33.post_norm.weight                            type=0 shape=[2560] offset=4850947648 size=10240
+[475] blk.33.proj.weight                                 type=12 shape=[256x2560] offset=4850957888 size=368640
+[476] blk.34.attn_k.weight                               type=12 shape=[2560x512] offset=4851326528 size=737280
+[477] blk.34.attn_k_norm.weight                          type=0 shape=[256] offset=4852063808 size=1024
+[478] blk.34.attn_norm.weight                            type=0 shape=[2560] offset=4852064832 size=10240
+[479] blk.34.attn_output.weight                          type=12 shape=[2048x2560] offset=4852075072 size=2949120
+[480] blk.34.attn_q.weight                               type=12 shape=[2560x2048] offset=4855024192 size=2949120
+[481] blk.34.attn_q_norm.weight                          type=0 shape=[256] offset=4857973312 size=1024
+[482] blk.34.attn_v.weight                               type=14 shape=[2560x512] offset=4857974336 size=1075200
+[483] blk.34.ffn_down.weight                             type=14 shape=[10240x2560] offset=4859049536 size=21504000
+[484] blk.34.ffn_gate.weight                             type=12 shape=[2560x10240] offset=4880553536 size=14745600
+[485] blk.34.ffn_norm.weight                             type=0 shape=[2560] offset=4895299136 size=10240
+[486] blk.34.ffn_up.weight                               type=12 shape=[2560x10240] offset=4895309376 size=14745600
+[487] blk.34.inp_gate.weight                             type=12 shape=[2560x256] offset=4910054976 size=368640
+[488] blk.34.layer_output_scale.weight                   type=0 shape=[1] offset=4910423616 size=4
+[489] blk.34.post_attention_norm.weight                  type=0 shape=[2560] offset=4910423648 size=10240
+[490] blk.34.post_ffw_norm.weight                        type=0 shape=[2560] offset=4910433888 size=10240
+[491] blk.34.post_norm.weight                            type=0 shape=[2560] offset=4910444128 size=10240
+[492] blk.34.proj.weight                                 type=12 shape=[256x2560] offset=4910454368 size=368640
+[493] blk.35.attn_k.weight                               type=12 shape=[2560x1024] offset=4910823008 size=1474560
+[494] blk.35.attn_k_norm.weight                          type=0 shape=[512] offset=4912297568 size=2048
+[495] blk.35.attn_norm.weight                            type=0 shape=[2560] offset=4912299616 size=10240
+[496] blk.35.attn_output.weight                          type=12 shape=[4096x2560] offset=4912309856 size=5898240
+[497] blk.35.attn_q.weight                               type=12 shape=[2560x4096] offset=4918208096 size=5898240
+[498] blk.35.attn_q_norm.weight                          type=0 shape=[512] offset=4924106336 size=2048
+[499] blk.35.attn_v.weight                               type=12 shape=[2560x1024] offset=4924108384 size=1474560
+[500] blk.35.ffn_down.weight                             type=12 shape=[10240x2560] offset=4925582944 size=14745600
+[501] blk.35.ffn_gate.weight                             type=12 shape=[2560x10240] offset=4940328544 size=14745600
+[502] blk.35.ffn_norm.weight                             type=0 shape=[2560] offset=4955074144 size=10240
+[503] blk.35.ffn_up.weight                               type=12 shape=[2560x10240] offset=4955084384 size=14745600
+[504] blk.35.inp_gate.weight                             type=12 shape=[2560x256] offset=4969829984 size=368640
+[505] blk.35.layer_output_scale.weight                   type=0 shape=[1] offset=4970198624 size=4
+[506] blk.35.post_attention_norm.weight                  type=0 shape=[2560] offset=4970198656 size=10240
+[507] blk.35.post_ffw_norm.weight                        type=0 shape=[2560] offset=4970208896 size=10240
+[508] blk.35.post_norm.weight                            type=0 shape=[2560] offset=4970219136 size=10240
+[509] blk.35.proj.weight                                 type=12 shape=[256x2560] offset=4970229376 size=368640
+[510] blk.36.attn_k.weight                               type=12 shape=[2560x512] offset=4970598016 size=737280
+[511] blk.36.attn_k_norm.weight                          type=0 shape=[256] offset=4971335296 size=1024
+[512] blk.36.attn_norm.weight                            type=0 shape=[2560] offset=4971336320 size=10240
+[513] blk.36.attn_output.weight                          type=12 shape=[2048x2560] offset=4971346560 size=2949120
+[514] blk.36.attn_q.weight                               type=12 shape=[2560x2048] offset=4974295680 size=2949120
+[515] blk.36.attn_q_norm.weight                          type=0 shape=[256] offset=4977244800 size=1024
+[516] blk.36.attn_v.weight                               type=14 shape=[2560x512] offset=4977245824 size=1075200
+[517] blk.36.ffn_down.weight                             type=14 shape=[10240x2560] offset=4978321024 size=21504000
+[518] blk.36.ffn_gate.weight                             type=12 shape=[2560x10240] offset=4999825024 size=14745600
+[519] blk.36.ffn_norm.weight                             type=0 shape=[2560] offset=5014570624 size=10240
+[520] blk.36.ffn_up.weight                               type=12 shape=[2560x10240] offset=5014580864 size=14745600
+[521] blk.36.inp_gate.weight                             type=12 shape=[2560x256] offset=5029326464 size=368640
+[522] blk.36.layer_output_scale.weight                   type=0 shape=[1] offset=5029695104 size=4
+[523] blk.36.post_attention_norm.weight                  type=0 shape=[2560] offset=5029695136 size=10240
+[524] blk.36.post_ffw_norm.weight                        type=0 shape=[2560] offset=5029705376 size=10240
+[525] blk.36.post_norm.weight                            type=0 shape=[2560] offset=5029715616 size=10240
+[526] blk.36.proj.weight                                 type=12 shape=[256x2560] offset=5029725856 size=368640
+[527] blk.37.attn_k.weight                               type=12 shape=[2560x512] offset=5030094496 size=737280
+[528] blk.37.attn_k_norm.weight                          type=0 shape=[256] offset=5030831776 size=1024
+[529] blk.37.attn_norm.weight                            type=0 shape=[2560] offset=5030832800 size=10240
+[530] blk.37.attn_output.weight                          type=12 shape=[2048x2560] offset=5030843040 size=2949120
+[531] blk.37.attn_q.weight                               type=12 shape=[2560x2048] offset=5033792160 size=2949120
+[532] blk.37.attn_q_norm.weight                          type=0 shape=[256] offset=5036741280 size=1024
+[533] blk.37.attn_v.weight                               type=14 shape=[2560x512] offset=5036742304 size=1075200
+[534] blk.37.ffn_down.weight                             type=14 shape=[10240x2560] offset=5037817504 size=21504000
+[535] blk.37.ffn_gate.weight                             type=12 shape=[2560x10240] offset=5059321504 size=14745600
+[536] blk.37.ffn_norm.weight                             type=0 shape=[2560] offset=5074067104 size=10240
+[537] blk.37.ffn_up.weight                               type=12 shape=[2560x10240] offset=5074077344 size=14745600
+[538] blk.37.inp_gate.weight                             type=12 shape=[2560x256] offset=5088822944 size=368640
+[539] blk.37.layer_output_scale.weight                   type=0 shape=[1] offset=5089191584 size=4
+[540] blk.37.post_attention_norm.weight                  type=0 shape=[2560] offset=5089191616 size=10240
+[541] blk.37.post_ffw_norm.weight                        type=0 shape=[2560] offset=5089201856 size=10240
+[542] blk.37.post_norm.weight                            type=0 shape=[2560] offset=5089212096 size=10240
+[543] blk.37.proj.weight                                 type=12 shape=[256x2560] offset=5089222336 size=368640
+[544] blk.38.attn_k.weight                               type=12 shape=[2560x512] offset=5089590976 size=737280
+[545] blk.38.attn_k_norm.weight                          type=0 shape=[256] offset=5090328256 size=1024
+[546] blk.38.attn_norm.weight                            type=0 shape=[2560] offset=5090329280 size=10240
+[547] blk.38.attn_output.weight                          type=12 shape=[2048x2560] offset=5090339520 size=2949120
+[548] blk.38.attn_q.weight                               type=12 shape=[2560x2048] offset=5093288640 size=2949120
+[549] blk.38.attn_q_norm.weight                          type=0 shape=[256] offset=5096237760 size=1024
+[550] blk.38.attn_v.weight                               type=14 shape=[2560x512] offset=5096238784 size=1075200
+[551] blk.38.ffn_down.weight                             type=14 shape=[10240x2560] offset=5097313984 size=21504000
+[552] blk.38.ffn_gate.weight                             type=12 shape=[2560x10240] offset=5118817984 size=14745600
+[553] blk.38.ffn_norm.weight                             type=0 shape=[2560] offset=5133563584 size=10240
+[554] blk.38.ffn_up.weight                               type=12 shape=[2560x10240] offset=5133573824 size=14745600
+[555] blk.38.inp_gate.weight                             type=12 shape=[2560x256] offset=5148319424 size=368640
+[556] blk.38.layer_output_scale.weight                   type=0 shape=[1] offset=5148688064 size=4
+[557] blk.38.post_attention_norm.weight                  type=0 shape=[2560] offset=5148688096 size=10240
+[558] blk.38.post_ffw_norm.weight                        type=0 shape=[2560] offset=5148698336 size=10240
+[559] blk.38.post_norm.weight                            type=0 shape=[2560] offset=5148708576 size=10240
+[560] blk.38.proj.weight                                 type=12 shape=[256x2560] offset=5148718816 size=368640
+[561] blk.39.attn_k.weight                               type=12 shape=[2560x512] offset=5149087456 size=737280
+[562] blk.39.attn_k_norm.weight                          type=0 shape=[256] offset=5149824736 size=1024
+[563] blk.39.attn_norm.weight                            type=0 shape=[2560] offset=5149825760 size=10240
+[564] blk.39.attn_output.weight                          type=12 shape=[2048x2560] offset=5149836000 size=2949120
+[565] blk.39.attn_q.weight                               type=12 shape=[2560x2048] offset=5152785120 size=2949120
+[566] blk.39.attn_q_norm.weight                          type=0 shape=[256] offset=5155734240 size=1024
+[567] blk.39.attn_v.weight                               type=14 shape=[2560x512] offset=5155735264 size=1075200
+[568] blk.39.ffn_down.weight                             type=14 shape=[10240x2560] offset=5156810464 size=21504000
+[569] blk.39.ffn_gate.weight                             type=12 shape=[2560x10240] offset=5178314464 size=14745600
+[570] blk.39.ffn_norm.weight                             type=0 shape=[2560] offset=5193060064 size=10240
+[571] blk.39.ffn_up.weight                               type=12 shape=[2560x10240] offset=5193070304 size=14745600
+[572] blk.39.inp_gate.weight                             type=12 shape=[2560x256] offset=5207815904 size=368640
+[573] blk.39.layer_output_scale.weight                   type=0 shape=[1] offset=5208184544 size=4
+[574] blk.39.post_attention_norm.weight                  type=0 shape=[2560] offset=5208184576 size=10240
+[575] blk.39.post_ffw_norm.weight                        type=0 shape=[2560] offset=5208194816 size=10240
+[576] blk.39.post_norm.weight                            type=0 shape=[2560] offset=5208205056 size=10240
+[577] blk.39.proj.weight                                 type=12 shape=[256x2560] offset=5208215296 size=368640
+[578] blk.4.attn_k.weight                                type=12 shape=[2560x512] offset=3171484288 size=737280
+[579] blk.4.attn_k_norm.weight                           type=0 shape=[256] offset=3172221568 size=1024
+[580] blk.4.attn_norm.weight                             type=0 shape=[2560] offset=3172222592 size=10240
+[581] blk.4.attn_output.weight                           type=12 shape=[2048x2560] offset=3172232832 size=2949120
+[582] blk.4.attn_q.weight                                type=12 shape=[2560x2048] offset=3175181952 size=2949120
+[583] blk.4.attn_q_norm.weight                           type=0 shape=[256] offset=3178131072 size=1024
+[584] blk.4.attn_v.weight                                type=14 shape=[2560x512] offset=3178132096 size=1075200
+[585] blk.4.ffn_down.weight                              type=14 shape=[10240x2560] offset=3179207296 size=21504000
+[586] blk.4.ffn_gate.weight                              type=12 shape=[2560x10240] offset=3200711296 size=14745600
+[587] blk.4.ffn_norm.weight                              type=0 shape=[2560] offset=3215456896 size=10240
+[588] blk.4.ffn_up.weight                                type=12 shape=[2560x10240] offset=3215467136 size=14745600
+[589] blk.4.inp_gate.weight                              type=12 shape=[2560x256] offset=3230212736 size=368640
+[590] blk.4.layer_output_scale.weight                    type=0 shape=[1] offset=3230581376 size=4
+[591] blk.4.post_attention_norm.weight                   type=0 shape=[2560] offset=3230581408 size=10240
+[592] blk.4.post_ffw_norm.weight                         type=0 shape=[2560] offset=3230591648 size=10240
+[593] blk.4.post_norm.weight                             type=0 shape=[2560] offset=3230601888 size=10240
+[594] blk.4.proj.weight                                  type=12 shape=[256x2560] offset=3230612128 size=368640
+[595] blk.40.attn_k.weight                               type=12 shape=[2560x512] offset=5208583936 size=737280
+[596] blk.40.attn_k_norm.weight                          type=0 shape=[256] offset=5209321216 size=1024
+[597] blk.40.attn_norm.weight                            type=0 shape=[2560] offset=5209322240 size=10240
+[598] blk.40.attn_output.weight                          type=12 shape=[2048x2560] offset=5209332480 size=2949120
+[599] blk.40.attn_q.weight                               type=12 shape=[2560x2048] offset=5212281600 size=2949120
+[600] blk.40.attn_q_norm.weight                          type=0 shape=[256] offset=5215230720 size=1024
+[601] blk.40.attn_v.weight                               type=14 shape=[2560x512] offset=5215231744 size=1075200
+[602] blk.40.ffn_down.weight                             type=14 shape=[10240x2560] offset=5216306944 size=21504000
+[603] blk.40.ffn_gate.weight                             type=12 shape=[2560x10240] offset=5237810944 size=14745600
+[604] blk.40.ffn_norm.weight                             type=0 shape=[2560] offset=5252556544 size=10240
+[605] blk.40.ffn_up.weight                               type=12 shape=[2560x10240] offset=5252566784 size=14745600
+[606] blk.40.inp_gate.weight                             type=12 shape=[2560x256] offset=5267312384 size=368640
+[607] blk.40.layer_output_scale.weight                   type=0 shape=[1] offset=5267681024 size=4
+[608] blk.40.post_attention_norm.weight                  type=0 shape=[2560] offset=5267681056 size=10240
+[609] blk.40.post_ffw_norm.weight                        type=0 shape=[2560] offset=5267691296 size=10240
+[610] blk.40.post_norm.weight                            type=0 shape=[2560] offset=5267701536 size=10240
+[611] blk.40.proj.weight                                 type=12 shape=[256x2560] offset=5267711776 size=368640
+[612] blk.41.attn_k.weight                               type=12 shape=[2560x1024] offset=5268080416 size=1474560
+[613] blk.41.attn_k_norm.weight                          type=0 shape=[512] offset=5269554976 size=2048
+[614] blk.41.attn_norm.weight                            type=0 shape=[2560] offset=5269557024 size=10240
+[615] blk.41.attn_output.weight                          type=12 shape=[4096x2560] offset=5269567264 size=5898240
+[616] blk.41.attn_q.weight                               type=12 shape=[2560x4096] offset=5275465504 size=5898240
+[617] blk.41.attn_q_norm.weight                          type=0 shape=[512] offset=5281363744 size=2048
+[618] blk.41.attn_v.weight                               type=14 shape=[2560x1024] offset=5281365792 size=2150400
+[619] blk.41.ffn_down.weight                             type=14 shape=[10240x2560] offset=5283516192 size=21504000
+[620] blk.41.ffn_gate.weight                             type=12 shape=[2560x10240] offset=5305020192 size=14745600
+[621] blk.41.ffn_norm.weight                             type=0 shape=[2560] offset=5319765792 size=10240
+[622] blk.41.ffn_up.weight                               type=12 shape=[2560x10240] offset=5319776032 size=14745600
+[623] blk.41.inp_gate.weight                             type=12 shape=[2560x256] offset=5334521632 size=368640
+[624] blk.41.layer_output_scale.weight                   type=0 shape=[1] offset=5334890272 size=4
+[625] blk.41.post_attention_norm.weight                  type=0 shape=[2560] offset=5334890304 size=10240
+[626] blk.41.post_ffw_norm.weight                        type=0 shape=[2560] offset=5334900544 size=10240
+[627] blk.41.post_norm.weight                            type=0 shape=[2560] offset=5334910784 size=10240
+[628] blk.41.proj.weight                                 type=12 shape=[256x2560] offset=5334921024 size=368640
+[629] blk.5.attn_k.weight                                type=12 shape=[2560x1024] offset=3230980768 size=1474560
+[630] blk.5.attn_k_norm.weight                           type=0 shape=[512] offset=3232455328 size=2048
+[631] blk.5.attn_norm.weight                             type=0 shape=[2560] offset=3232457376 size=10240
+[632] blk.5.attn_output.weight                           type=12 shape=[4096x2560] offset=3232467616 size=5898240
+[633] blk.5.attn_q.weight                                type=12 shape=[2560x4096] offset=3238365856 size=5898240
+[634] blk.5.attn_q_norm.weight                           type=0 shape=[512] offset=3244264096 size=2048
+[635] blk.5.attn_v.weight                                type=12 shape=[2560x1024] offset=3244266144 size=1474560
+[636] blk.5.ffn_down.weight                              type=12 shape=[10240x2560] offset=3245740704 size=14745600
+[637] blk.5.ffn_gate.weight                              type=12 shape=[2560x10240] offset=3260486304 size=14745600
+[638] blk.5.ffn_norm.weight                              type=0 shape=[2560] offset=3275231904 size=10240
+[639] blk.5.ffn_up.weight                                type=12 shape=[2560x10240] offset=3275242144 size=14745600
+[640] blk.5.inp_gate.weight                              type=12 shape=[2560x256] offset=3289987744 size=368640
+[641] blk.5.layer_output_scale.weight                    type=0 shape=[1] offset=3290356384 size=4
+[642] blk.5.post_attention_norm.weight                   type=0 shape=[2560] offset=3290356416 size=10240
+[643] blk.5.post_ffw_norm.weight                         type=0 shape=[2560] offset=3290366656 size=10240
+[644] blk.5.post_norm.weight                             type=0 shape=[2560] offset=3290376896 size=10240
+[645] blk.5.proj.weight                                  type=12 shape=[256x2560] offset=3290387136 size=368640
+[646] blk.6.attn_k.weight                                type=12 shape=[2560x512] offset=3290755776 size=737280
+[647] blk.6.attn_k_norm.weight                           type=0 shape=[256] offset=3291493056 size=1024
+[648] blk.6.attn_norm.weight                             type=0 shape=[2560] offset=3291494080 size=10240
+[649] blk.6.attn_output.weight                           type=12 shape=[2048x2560] offset=3291504320 size=2949120
+[650] blk.6.attn_q.weight                                type=12 shape=[2560x2048] offset=3294453440 size=2949120
+[651] blk.6.attn_q_norm.weight                           type=0 shape=[256] offset=3297402560 size=1024
+[652] blk.6.attn_v.weight                                type=12 shape=[2560x512] offset=3297403584 size=737280
+[653] blk.6.ffn_down.weight                              type=12 shape=[10240x2560] offset=3298140864 size=14745600
+[654] blk.6.ffn_gate.weight                              type=12 shape=[2560x10240] offset=3312886464 size=14745600
+[655] blk.6.ffn_norm.weight                              type=0 shape=[2560] offset=3327632064 size=10240
+[656] blk.6.ffn_up.weight                                type=12 shape=[2560x10240] offset=3327642304 size=14745600
+[657] blk.6.inp_gate.weight                              type=12 shape=[2560x256] offset=3342387904 size=368640
+[658] blk.6.layer_output_scale.weight                    type=0 shape=[1] offset=3342756544 size=4
+[659] blk.6.post_attention_norm.weight                   type=0 shape=[2560] offset=3342756576 size=10240
+[660] blk.6.post_ffw_norm.weight                         type=0 shape=[2560] offset=3342766816 size=10240
+[661] blk.6.post_norm.weight                             type=0 shape=[2560] offset=3342777056 size=10240
+[662] blk.6.proj.weight                                  type=12 shape=[256x2560] offset=3342787296 size=368640
+[663] blk.7.attn_k.weight                                type=12 shape=[2560x512] offset=3343155936 size=737280
+[664] blk.7.attn_k_norm.weight                           type=0 shape=[256] offset=3343893216 size=1024
+[665] blk.7.attn_norm.weight                             type=0 shape=[2560] offset=3343894240 size=10240
+[666] blk.7.attn_output.weight                           type=12 shape=[2048x2560] offset=3343904480 size=2949120
+[667] blk.7.attn_q.weight                                type=12 shape=[2560x2048] offset=3346853600 size=2949120
+[668] blk.7.attn_q_norm.weight                           type=0 shape=[256] offset=3349802720 size=1024
+[669] blk.7.attn_v.weight                                type=14 shape=[2560x512] offset=3349803744 size=1075200
+[670] blk.7.ffn_down.weight                              type=14 shape=[10240x2560] offset=3350878944 size=21504000
+[671] blk.7.ffn_gate.weight                              type=12 shape=[2560x10240] offset=3372382944 size=14745600
+[672] blk.7.ffn_norm.weight                              type=0 shape=[2560] offset=3387128544 size=10240
+[673] blk.7.ffn_up.weight                                type=12 shape=[2560x10240] offset=3387138784 size=14745600
+[674] blk.7.inp_gate.weight                              type=12 shape=[2560x256] offset=3401884384 size=368640
+[675] blk.7.layer_output_scale.weight                    type=0 shape=[1] offset=3402253024 size=4
+[676] blk.7.post_attention_norm.weight                   type=0 shape=[2560] offset=3402253056 size=10240
+[677] blk.7.post_ffw_norm.weight                         type=0 shape=[2560] offset=3402263296 size=10240
+[678] blk.7.post_norm.weight                             type=0 shape=[2560] offset=3402273536 size=10240
+[679] blk.7.proj.weight                                  type=12 shape=[256x2560] offset=3402283776 size=368640
+[680] blk.8.attn_k.weight                                type=12 shape=[2560x512] offset=3402652416 size=737280
+[681] blk.8.attn_k_norm.weight                           type=0 shape=[256] offset=3403389696 size=1024
+[682] blk.8.attn_norm.weight                             type=0 shape=[2560] offset=3403390720 size=10240
+[683] blk.8.attn_output.weight                           type=12 shape=[2048x2560] offset=3403400960 size=2949120
+[684] blk.8.attn_q.weight                                type=12 shape=[2560x2048] offset=3406350080 size=2949120
+[685] blk.8.attn_q_norm.weight                           type=0 shape=[256] offset=3409299200 size=1024
+[686] blk.8.attn_v.weight                                type=12 shape=[2560x512] offset=3409300224 size=737280
+[687] blk.8.ffn_down.weight                              type=12 shape=[10240x2560] offset=3410037504 size=14745600
+[688] blk.8.ffn_gate.weight                              type=12 shape=[2560x10240] offset=3424783104 size=14745600
+[689] blk.8.ffn_norm.weight                              type=0 shape=[2560] offset=3439528704 size=10240
+[690] blk.8.ffn_up.weight                                type=12 shape=[2560x10240] offset=3439538944 size=14745600
+[691] blk.8.inp_gate.weight                              type=12 shape=[2560x256] offset=3454284544 size=368640
+[692] blk.8.layer_output_scale.weight                    type=0 shape=[1] offset=3454653184 size=4
+[693] blk.8.post_attention_norm.weight                   type=0 shape=[2560] offset=3454653216 size=10240
+[694] blk.8.post_ffw_norm.weight                         type=0 shape=[2560] offset=3454663456 size=10240
+[695] blk.8.post_norm.weight                             type=0 shape=[2560] offset=3454673696 size=10240
+[696] blk.8.proj.weight                                  type=12 shape=[256x2560] offset=3454683936 size=368640
+[697] blk.9.attn_k.weight                                type=12 shape=[2560x512] offset=3455052576 size=737280
+[698] blk.9.attn_k_norm.weight                           type=0 shape=[256] offset=3455789856 size=1024
+[699] blk.9.attn_norm.weight                             type=0 shape=[2560] offset=3455790880 size=10240
+[700] blk.9.attn_output.weight                           type=12 shape=[2048x2560] offset=3455801120 size=2949120
+[701] blk.9.attn_q.weight                                type=12 shape=[2560x2048] offset=3458750240 size=2949120
+[702] blk.9.attn_q_norm.weight                           type=0 shape=[256] offset=3461699360 size=1024
+[703] blk.9.attn_v.weight                                type=12 shape=[2560x512] offset=3461700384 size=737280
+[704] blk.9.ffn_down.weight                              type=12 shape=[10240x2560] offset=3462437664 size=14745600
+[705] blk.9.ffn_gate.weight                              type=12 shape=[2560x10240] offset=3477183264 size=14745600
+[706] blk.9.ffn_norm.weight                              type=0 shape=[2560] offset=3491928864 size=10240
+[707] blk.9.ffn_up.weight                                type=12 shape=[2560x10240] offset=3491939104 size=14745600
+[708] blk.9.inp_gate.weight                              type=12 shape=[2560x256] offset=3506684704 size=368640
+[709] blk.9.layer_output_scale.weight                    type=0 shape=[1] offset=3507053344 size=4
+[710] blk.9.post_attention_norm.weight                   type=0 shape=[2560] offset=3507053376 size=10240
+[711] blk.9.post_ffw_norm.weight                         type=0 shape=[2560] offset=3507063616 size=10240
+[712] blk.9.post_norm.weight                             type=0 shape=[2560] offset=3507073856 size=10240
+[713] blk.9.proj.weight                                  type=12 shape=[256x2560] offset=3507084096 size=368640
+[714] output_norm.weight                                 type=0 shape=[2560] offset=15823360 size=10240
+[715] per_layer_model_proj.weight                        type=30 shape=[2560x10752] offset=15833600 size=6021120
+[716] per_layer_proj_norm.weight                         type=0 shape=[256] offset=70883840 size=1024
+[717] per_layer_token_embd.weight                        type=14 shape=[10752x262144] offset=70884864 size=2312110080
+[718] rope_freqs.weight                                  type=0 shape=[256] offset=2382994944 size=1024
+[719] token_embd.weight                                  type=14 shape=[2560x262144] offset=2382995968 size=550502400

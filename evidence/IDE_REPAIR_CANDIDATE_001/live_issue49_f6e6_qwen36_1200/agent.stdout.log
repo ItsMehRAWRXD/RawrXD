@@ -1,0 +1,24 @@
+OLLAMA_AGENT_MOTD_SHA256 3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[ollama step 1] request_messages=2 request_bytes_pending
+[ollama step 1] response_bytes=17
+[ollama step 1] response=TOOL read bug.cpp
+[ollama step 1] TOOL=read exit=0 valid=1 observation=128
+[ollama step 1] result=#include <cstdio>\nint add(int a, int b) { return a - b; }\nint main() { std::printf("AGENT_RESULT=%d\n", add(2, 3)); return 0; }\n
+[ollama step 2] request_messages=4 request_bytes_pending
+[ollama step 2] response_bytes=151
+[ollama step 2] response=TOOL write bug.cpp @@#include <cstdio>\nint add(int a, int b) { return a + b; }\nint main() { std::printf("AGENT_RESULT=%d\n", add(2, 3)); return 0; }\n@@
+[ollama] write_body_bytes=128 preview=#include <cstdio>\nint add(int a, int b) { return a + b; }\nint main() { std::printf("AGENT_RESULT=%d\n", add(2, 3)); return 0; }\n
+[ollama step 2] TOOL=write exit=0 valid=1 observation=119
+[ollama step 2] result=write committed; build and test verified; after_sha256=7130baae110f1779babde686555e51c2cf4c0b3616f0426155a8dcfd26fc6434
+[ollama step 3] request_messages=6 request_bytes_pending
+[ollama step 3] response_bytes=11
+[ollama step 3] response=TOOL finish
+[ollama step 3] TOOL=finish exit=0 valid=1 observation=19
+[ollama step 3] result=verified completion
+OLLAMA_AGENT_MODEL qwen36-reference-local:latest
+OLLAMA_AGENT_READ PASS
+OLLAMA_AGENT_EDIT PASS
+OLLAMA_AGENT_BUILD_TEST PASS
+OLLAMA_AGENT_BEFORE_SHA256 1a43ed1e463ba61a50c0a3ceb76a3e868d3700b65c7d5202799ccb86eab0cafe
+OLLAMA_AGENT_AFTER_SHA256 7130baae110f1779babde686555e51c2cf4c0b3616f0426155a8dcfd26fc6434
+OLLAMA_AGENT_VERDICT PASS

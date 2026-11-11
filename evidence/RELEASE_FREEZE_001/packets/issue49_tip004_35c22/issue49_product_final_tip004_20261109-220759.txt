@@ -1,0 +1,239 @@
+2026-11-09T22:07:59.9867688-05:00 STEP 00_CLEAN_CLONE=NOT_RUN_LANE_HARNESS_NOT_CLEAN_MACHINE
+2026-11-09T22:08:00.0830643-05:00 STEP 01_LAUNCH=PENDING
+2026-11-09T22:08:00.0933424-05:00 STEP 02_LOCAL_MODEL_LOAD=MODEL_PATH_PRESENT_LOAD_NOT_PROVEN
+2026-11-09T22:08:00.2253778-05:00 STEP 03_GPU_RUNTIME_R9700=NOT_RUN
+2026-11-09T22:08:00.2636169-05:00 STEP 04_OPEN_PROJECT=PENDING
+2026-11-09T22:08:00.3074837-05:00 STEP 05_AGENT_PROMPT=PENDING
+2026-11-09T22:08:00.4128955-05:00 STEP 06_AGENT_READS_PROJECT=PENDING
+2026-11-09T22:08:00.4479240-05:00 STEP 07_AGENT_REASONING_GPU=PENDING
+2026-11-09T22:08:00.4993182-05:00 STEP 08_TOOL_AUTHORITY=PENDING
+2026-11-09T22:08:00.6061116-05:00 STEP 09_RESULT_REINJECTION=PENDING
+2026-11-09T22:08:00.6720571-05:00 STEP 10_REAL_SOURCE_EDIT=PENDING
+2026-11-09T22:08:00.7404103-05:00 STEP 11_BUILD_FAILURE_RECOVERY=PENDING
+2026-11-09T22:08:00.7578120-05:00 STEP 12_MODEL_DIAGNOSES_FAILURE=PENDING
+2026-11-09T22:08:00.8007246-05:00 STEP 13_SECOND_EDIT=PENDING
+2026-11-09T22:08:00.8062024-05:00 STEP 14_FINAL_BUILD=PENDING
+2026-11-09T22:08:00.8760874-05:00 STEP 15_FINAL_TESTS=PENDING
+2026-11-09T22:08:00.9027230-05:00 STEP 16_MULTI_AGENT_REVIEW=NOT_RUN_NO_INDEPENDENT_REVIEWER
+2026-11-09T22:08:00.9513732-05:00 STEP 17_AGENT_EVIDENCE_REPORT=PENDING
+2026-11-09T22:08:00.9668303-05:00 STEP 18_IDE_GIT_COMMIT=NOT_RUN
+2026-11-09T22:08:01.1638452-05:00 STEP H57_AGENTSESSION=PRESENT_IN_EXE
+2026-11-09T22:08:01.2714254-05:00 TIP_SHA256=35C22E8AAFC1E9B30E40C2505AF7B4DEB66BDFB73D56B75D31C937D8C70D8563
+2026-11-09T22:08:01.3138788-05:00 LOOP_BESIDE=F:\rawrxd\evidence\RELEASE_FREEZE_001\candidates\tip_freeze_001\deep2_agentic_loop.exe EXISTS=1
+2026-11-09T22:08:01.3621159-05:00 MODEL=F:\rawrxd\models\qwen2.5-coder_1.5b-base.gguf EXISTS=1
+2026-11-09T22:08:01.3989795-05:00 PROJECT=F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project\bug.cpp HASH_BEFORE=64E6D99664E6344A320266872EFAE3509570426FED88BF348161FA03F025AB6B
+2026-11-09T22:08:01.4478807-05:00 AgentSession_IN_EXE=1 AgenticLoop_IN_EXE=1
+2026-11-09T22:08:01.6174557-05:00 RAWRXD_CLI_PATH=F:\rawrxd\evidence\RELEASE_FREEZE_001\candidates\tip_freeze_001\deep2_agentic_loop.exe (beside deep2; pin-safe spawn path)
+2026-11-09T22:08:03.6935642-05:00 PID=30748 CWD=F:\rawrxd\evidence\RELEASE_FREEZE_001\candidates\tip_freeze_001 LAUNCH_ATTEMPT=1
+2026-11-09T22:08:05.2891559-05:00 MAIN_VIA_PROC t=2
+2026-11-09T22:08:05.3151382-05:00 MAIN=0x3E0F3C
+2026-11-09T22:08:05.3404279-05:00 STEP 01_LAUNCH=PASS_MAIN_HWND
+2026-11-09T22:08:08.3649580-05:00 STEP 04_OPEN_PROJECT=PASS_ARGV_OPEN_FIXTURE
+2026-11-09T22:08:10.4101438-05:00 STEP 11_BUILD_FAILURE_SUBSTRATE_ONLY=SKIPPED_TIP004_BUILD_CMD_CRASH_AVOID
+2026-11-09T22:08:10.4189731-05:00 STEP 11_BUILD_FAILURE_RECOVERY=NOT_RUN_REQUIRES_AGENT_OWNED_RECOVERY
+2026-11-09T22:08:10.4381583-05:00 PROJECT_HASH_REBASELINE_AFTER_VIEW=64E6D99664E6344A320266872EFAE3509570426FED88BF348161FA03F025AB6B NORM_LEN=238
+2026-11-09T22:08:10.4643183-05:00 CHAT_INPUT setOk=True method=EM_REPLACESEL len=54 setEqGet=1 hwnd=0xC0FE6
+2026-11-09T22:08:11.5547904-05:00 CHAT_CTRL_ENTER newAttempts=0 afterLen=54 stageOk=True sendOk=False rt=F:\rawrxd\evidence\RELEASE_FREEZE_001\candidates\tip_freeze_001\issue49_tip004_35c22_logs\chat_runtime.log
+2026-11-09T22:08:11.5921045-05:00 STEP 05_AGENT_PROMPT=PASS_PROMPT_CTRL_ENTER_SEND
+2026-11-09T22:08:11.6942999-05:00 AGENTIC_LOOP_RUN_4106=True
+2026-11-09T22:08:13.7173704-05:00 AGENT_START_LOOP_4100=True
+2026-11-09T22:08:13.7439924-05:00 AGENT_WAIT_SEC=420 DEADLINE=2026-11-09T22:15:13.7417758-05:00
+2026-11-09T22:08:13.7781051-05:00 POLL loopChild=0 spawned=0 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:08:16.8115191-05:00 POLL loopChild=0 spawned=0 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:08:19.8929450-05:00 POLL loopChild=0 spawned=0 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:08:22.9298269-05:00 POLL loopChild=0 spawned=0 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:08:25.9505837-05:00 POLL loopChild=0 spawned=0 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:08:28.9702303-05:00 POLL loopChild=0 spawned=0 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:08:32.0079970-05:00 POLL loopChild=0 spawned=0 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:08:35.0315631-05:00 POLL loopChild=0 spawned=0 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:08:38.0559587-05:00 POLL loopChild=0 spawned=0 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:08:41.0748709-05:00 POLL loopChild=0 spawned=0 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:08:44.0994195-05:00 POLL loopChild=0 spawned=0 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:08:47.1193976-05:00 POLL loopChild=0 spawned=0 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:08:50.1329545-05:00 POLL loopChild=0 spawned=0 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:08:53.1761517-05:00 POLL loopChild=0 spawned=0 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:08:56.1965402-05:00 POLL loopChild=0 spawned=0 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:08:59.2302635-05:00 POLL loopChild=0 spawned=0 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:09:02.2751196-05:00 POLL loopChild=0 spawned=0 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:09:05.3122759-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:09:08.3338319-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:09:11.3644198-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:09:13.6222114-05:00 POLL loopChild=2 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:09:16.6521978-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:09:16.6578720-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:09:19.6904927-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:09:19.7091271-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:09:22.7507175-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:09:22.7517255-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:09:25.7807739-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:09:25.7822780-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:09:28.8097184-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:09:28.8107879-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:09:31.8405107-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:09:31.8415108-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:09:34.8579118-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:09:34.8589120-05:00 POLL loopChild=2 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:09:37.8790456-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:09:37.8801003-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:09:40.8941291-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:09:40.8951406-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:09:43.9322889-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:09:43.9368229-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:09:46.9661481-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:09:46.9696898-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:09:49.9949320-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:09:49.9993592-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:09:53.0166052-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:09:53.0176067-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:09:56.0328039-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:09:56.0368310-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:09:59.0696020-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:09:59.0726964-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:10:02.0988885-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:10:02.0998884-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:10:05.1288416-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:10:05.1298555-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:10:08.1485168-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:10:08.1516347-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:10:11.1716113-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:10:11.1746253-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:10:14.2020156-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:10:14.2050422-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:10:17.2383824-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:10:17.2414072-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:10:20.2613719-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:10:20.2654488-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:10:23.2847302-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:10:23.2877582-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:10:26.3098012-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:10:26.3140146-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:10:29.3290764-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:10:29.3322656-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:10:32.3616438-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:10:32.3646845-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:10:35.3958705-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:10:35.4002266-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:10:38.4152747-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:10:38.4167864-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:10:41.4353385-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:10:41.4374023-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:10:44.4553341-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:10:44.4598747-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:10:47.4764003-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:10:47.4789244-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:10:50.5079406-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:10:50.5116148-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:10:53.5529198-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:10:53.5559351-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:10:56.5847480-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:10:56.5882584-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:10:59.6091875-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:10:59.6132096-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:11:02.6316149-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:11:02.6355943-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:11:05.6606554-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:11:05.6641967-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:11:08.6958595-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:11:08.7260259-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:11:11.8949945-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:11:12.3104390-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:11:15.4915126-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:11:15.4935232-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:11:18.5795752-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:11:18.6500446-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:11:21.7342591-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:11:21.7699268-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:11:24.9194285-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:11:24.9326586-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:11:27.9751222-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:11:27.9812812-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:11:31.0034248-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:11:31.0099682-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:11:34.0364627-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:11:34.0395255-05:00 POLL loopChild=2 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:11:37.0811566-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:11:37.0842280-05:00 POLL loopChild=2 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:11:40.1348295-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:11:40.1407027-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:11:43.1651214-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:11:43.1691499-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:11:46.2135409-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:11:46.2201198-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:11:49.2485201-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:11:49.2518138-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:11:52.2742568-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:11:52.2789617-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:11:55.2952884-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:11:55.2983263-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:11:58.3197319-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:11:58.3244532-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:12:01.3562637-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:12:01.3608102-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:12:04.3799594-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:12:04.3846394-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:12:07.4222154-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:12:07.4460512-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:12:10.4833997-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:12:10.4864458-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:12:13.5081168-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:12:13.5121502-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:12:16.5378352-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:12:16.5423756-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:12:19.5651177-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:12:19.5696232-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:12:22.5981008-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:12:22.5996162-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:12:25.6299252-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:12:25.6329510-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:12:28.6612816-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:12:28.6627966-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:12:31.6830171-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:12:31.6870413-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:12:34.7112780-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:12:34.7143005-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:12:37.7480503-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:12:37.7510848-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:12:40.7695055-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:12:40.7735425-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:12:43.7889546-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:12:43.7919944-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:12:46.8187474-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:12:46.8217858-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:12:49.8447763-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:12:49.8462898-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:12:52.8651482-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:12:52.8681836-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:12:55.8948381-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:12:55.8988625-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:12:58.9320642-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:12:58.9360942-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:13:01.9610031-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:13:01.9640377-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:13:04.9872353-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:13:04.9902681-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:13:08.0171874-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:13:08.0212201-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:13:11.0490762-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:13:11.0536355-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:13:14.0683566-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:13:14.0723679-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:13:17.0937189-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:13:17.0974605-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:13:20.1207045-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:13:20.1222228-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:13:23.1512242-05:00 CONTENT_CHANGED_WITHOUT_LEDGER_WRITE (ignored for step10)
+2026-11-09T22:13:23.1542529-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T22:13:26.1666467-05:00 IDE_EXIT=1 editHit=0 loopSpawned=1
+2026-11-09T22:13:26.1713312-05:00 IDE_EXIT_BEFORE_EDIT=1 TREAT=FAIL_BLOCKED_NOT_SILENT_NOT_RUN
+2026-11-09T22:13:26.1830097-05:00 EDIT_DISPOSITION=CONTENT_CHANGE_WITHOUT_LEDGER_WRITE collapseChanged=1 ledgerWrite=0 sourceEdited=0
+2026-11-09T22:13:26.1855533-05:00 STEP 10_REAL_SOURCE_EDIT=FAIL_IDE_EXIT_BEFORE_EDIT
+2026-11-09T22:13:26.1888483-05:00 STEP 06_AGENT_READS_PROJECT=PASS_READ_OBSERVED
+2026-11-09T22:13:26.1933971-05:00 STEP 07_AGENT_REASONING_GPU=PARTIAL_STRING_HIT_NOT_GPU_PROOF
+2026-11-09T22:13:26.1975851-05:00 STEP 08_TOOL_AUTHORITY=PASS_TOOL_STRINGS
+2026-11-09T22:13:26.2006171-05:00 STEP 09_RESULT_REINJECTION=NOT_RUN
+2026-11-09T22:13:26.2051656-05:00 STEP 11_BUILD_FAILURE_RECOVERY=BLOCKED_IDE_EXIT_BEFORE_EDIT
+2026-11-09T22:13:26.2077151-05:00 STEP 12_MODEL_DIAGNOSES_FAILURE=BLOCKED_IDE_EXIT_BEFORE_EDIT
+2026-11-09T22:13:26.2122682-05:00 STEP 13_SECOND_EDIT=BLOCKED_IDE_EXIT_BEFORE_EDIT
+2026-11-09T22:13:26.2168083-05:00 STEP 14_FINAL_BUILD=BLOCKED_IDE_EXIT_BEFORE_EDIT
+2026-11-09T22:13:26.2208448-05:00 STEP 15_FINAL_TESTS=BLOCKED_IDE_EXIT_BEFORE_EDIT
+2026-11-09T22:13:26.2238721-05:00 STEP 17_AGENT_EVIDENCE_REPORT=NOT_RUN

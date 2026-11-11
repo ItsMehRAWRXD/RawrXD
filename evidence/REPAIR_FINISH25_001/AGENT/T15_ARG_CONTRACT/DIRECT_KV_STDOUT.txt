@@ -1,0 +1,10 @@
+﻿MOTD_ACK=1 MOTD_SHA256=3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+rawr.exe : DENIED: Tool 'editFiles' denied in mode 'code' (granted: controlled, ceiling: controlled)
+At C:\Users\Garrett\AppData\Local\Temp\ps-script-1f2612b6-a229-43fc-b52c-6b587474f0a7.ps1:148 char:6
++ $out=& $cli tools run editFiles "path=$fx" "old=int before = 0;" "new ...
++      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (DENIED: Tool 'e...ng: controlled):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[StreamEngine] Shutdown
+

@@ -1,0 +1,160 @@
+ASOF_UTC=2026-11-10T11:42:27.2170355Z
+IDE_SHA256=74AA42F76F0853EC9A72AE4879F0A25C586AAADF70D47303451F560DCC3A1EE6
+PID=23248
+MAIN=10030942
+CHILDREN_BEGIN
+id=0 vis=1 cls=ToolbarWindow32 txt= rc=1380x26 hwnd=0x290F8A
+id=1018 vis=1 cls=Static txt=Untitled  -  Workspace rc=420x22 hwnd=0x220F16
+id=1024 vis=1 cls=Button txt=Gear rc=48x22 hwnd=0x1115D2
+id=1030 vis=1 cls=SysTabControl32 txt= rc=1380x26 hwnd=0x2E14BA
+id=1100 vis=1 cls=Static txt= rc=48x499 hwnd=0x30148A
+id=1101 vis=1 cls=Button txt=[] rc=48x48 hwnd=0x461474
+id=1102 vis=1 cls=Button txt=() rc=48x48 hwnd=0x6013C6
+id=1103 vis=1 cls=Button txt=<> rc=48x48 hwnd=0x1513C2
+id=1104 vis=1 cls=Button txt=> rc=48x48 hwnd=0x9913B8
+id=1105 vis=1 cls=Button txt=++ rc=48x48 hwnd=0x5613B4
+id=1106 vis=1 cls=Button txt=* rc=48x48 hwnd=0x1413AE
+id=1107 vis=1 cls=Button txt=@ rc=48x48 hwnd=0x1613A8
+id=0 vis=1 cls=Static txt=Sidebar rc=250x499 hwnd=0x4C139E
+id=0 vis=1 cls=Static txt= rc=248x497 hwnd=0x5C139C
+id=0 vis=1 cls=Static txt= rc=248x30 hwnd=0x641390
+id=6011 vis=0 cls=Button txt=New rc=45x24 hwnd=0x921386
+id=6012 vis=0 cls=Button txt=Folder rc=45x24 hwnd=0x6F136E
+id=6013 vis=0 cls=Button txt=Refresh rc=45x24 hwnd=0x17136A
+id=6014 vis=0 cls=Button txt=Collapse rc=45x24 hwnd=0x1D01366
+id=6010 vis=1 cls=SysTreeView32 txt= rc=248x467 hwnd=0x551358
+id=6020 vis=0 cls=Edit txt= rc=240x25 hwnd=0xFF12F4
+id=0 vis=0 cls=Static txt= rc=240x80 hwnd=0xAE1288
+id=6023 vis=0 cls=Button txt=Regex rc=70x20 hwnd=0x4812EC
+id=6024 vis=0 cls=Button txt=Case rc=70x20 hwnd=0xC512E2
+id=6025 vis=0 cls=Button txt=Whole rc=70x20 hwnd=0x3512DA
+id=0 vis=0 cls=Static txt=Include: rc=50x20 hwnd=0x6E12BC
+id=6026 vis=0 cls=Edit txt=*.ps1,*.cpp rc=160x20 hwnd=0x5212BA
+id=0 vis=0 cls=Static txt=Exclude: rc=50x20 hwnd=0x5112B2
+id=6027 vis=0 cls=Edit txt=node_modules,bin rc=160x20 hwnd=0x3612B0
+id=6022 vis=0 cls=ListBox txt= rc=240x468 hwnd=0x4312A2
+id=0 vis=0 cls=Static txt= rc=250x35 hwnd=0x351290
+id=6031 vis=0 cls=Button txt=Stage rc=50x25 hwnd=0x290EBA
+id=6032 vis=0 cls=Button txt=Unstage rc=50x25 hwnd=0x36127E
+id=6033 vis=0 cls=Button txt=Commit rc=50x25 hwnd=0x5C0DE8
+id=6034 vis=0 cls=Button txt=Sync rc=50x25 hwnd=0x600EAC
+id=0 vis=0 cls=Static txt=Message: rc=60x20 hwnd=0xAD0E40
+id=6035 vis=0 cls=Edit txt= rc=240x60 hwnd=0x880E22
+id=6030 vis=0 cls=SysListView32 txt= rc=240x490 hwnd=0x1B50A96
+id=0 vis=0 cls=SysHeader32 txt= rc=0x0 hwnd=0x3840966
+id=0 vis=0 cls=Static txt= rc=250x35 hwnd=0x23505CC
+id=6041 vis=0 cls=Button txt=Start rc=50x25 hwnd=0x1680A3E
+id=6042 vis=0 cls=Button txt=Stop rc=50x25 hwnd=0xE50AD0
+id=6040 vis=0 cls=ComboBox txt= rc=240x24 hwnd=0x13B07A4
+id=0 vis=0 cls=Static txt=Variables: rc=100x20 hwnd=0x1490586
+id=6043 vis=0 cls=SysListView32 txt= rc=240x450 hwnd=0x8F0B94
+id=0 vis=0 cls=SysHeader32 txt= rc=0x0 hwnd=0x570C8E
+id=6050 vis=0 cls=Edit txt= rc=240x25 hwnd=0x680B5A
+id=6051 vis=0 cls=SysListView32 txt= rc=240x555 hwnd=0xE00E9C
+id=0 vis=0 cls=SysHeader32 txt= rc=0x0 hwnd=0xDA0EAA
+id=1004 vis=1 cls=msctls_statusbar32 txt= rc=1380x22 hwnd=0x66B028A
+id=1300 vis=1 cls=Static txt= rc=1380x250 hwnd=0x1510722
+id=1301 vis=1 cls=SysTabControl32 txt= rc=1180x24 hwnd=0x1240A9A
+id=1306 vis=1 cls=Static txt= rc=200x24 hwnd=0x890E98
+id=1307 vis=1 cls=Button txt=+ rc=24x22 hwnd=0x551284
+id=1308 vis=1 cls=Button txt=|| rc=24x22 hwnd=0xBC0EDE
+id=1309 vis=1 cls=Button txt=X rc=24x22 hwnd=0x11707A8
+id=1310 vis=1 cls=Button txt=^ rc=24x22 hwnd=0x2A0EBE
+id=1311 vis=1 cls=Button txt=x rc=24x22 hwnd=0x6A0F1A
+id=1312 vis=0 cls=SysListView32 txt= rc=1380x224 hwnd=0x760B9E
+id=0 vis=0 cls=SysHeader32 txt= rc=0x0 hwnd=0x1B6057E
+id=1200 vis=1 cls=Static txt= rc=360x499 hwnd=0x3C0EF0
+id=1208 vis=1 cls=SysTabControl32 txt= rc=134x27 hwnd=0x730F18
+id=1 vis=1 cls=msctls_updown32 txt= rc=40x20 hwnd=0x1151172
+id=1209 vis=1 cls=Button txt=New Chat rc=58x27 hwnd=0x690F34
+id=1214 vis=1 cls=Button txt=X rc=24x27 hwnd=0x1310F54
+id=1215 vis=1 cls=Button txt=Restore rc=58x27 hwnd=0x30124A
+id=1216 vis=1 cls=Button txt=Rollback rc=64x27 hwnd=0x301248
+id=0 vis=1 cls=Static txt=AI Sessions rc=350x22 hwnd=0xB60F62
+id=0 vis=1 cls=Static txt=Model: rc=85x18 hwnd=0x940F56
+id=1206 vis=1 cls=ComboBox txt= rc=260x26 hwnd=0x550F7C
+id=0 vis=1 cls=Static txt=GhostText model: rc=85x18 hwnd=0x5F0F80
+id=1211 vis=1 cls=ComboBox txt= rc=260x26 hwnd=0x410FCA
+id=1212 vis=1 cls=Button txt=Allow cloud GhostText for this session rc=350x18 hwnd=0xC81082
+id=0 vis=1 cls=Static txt=Max tokens: rc=85x18 hwnd=0x16E1074
+id=0 vis=0 cls=Static txt=4096 rc=50x18 hwnd=0x4A10A6
+id=1219 vis=1 cls=ComboBox txt= rc=260x21 hwnd=0xD410AA
+id=0 vis=1 cls=Static txt=Context: rc=85x18 hwnd=0xF010CC
+id=0 vis=0 cls=Static txt=64K (pending model admission) rc=115x18 hwnd=0xC810DC
+id=1220 vis=1 cls=ComboBox txt= rc=260x21 hwnd=0x8810D2
+id=0 vis=1 cls=Static txt=Reasoning: rc=85x18 hwnd=0xA91136
+id=1217 vis=1 cls=ComboBox txt= rc=260x21 hwnd=0x18A1138
+id=1218 vis=1 cls=Button txt=Allow web browsing (WinHTTP) rc=350x18 hwnd=0x7B114E
+id=1225 vis=1 cls=ListBox txt= rc=350x0 hwnd=0x36119E
+id=1203 vis=1 cls=Edit txt= rc=350x169 hwnd=0x1C114A
+id=1202 vis=1 cls=Edit txt= rc=350x45 hwnd=0xF10B6
+id=1204 vis=1 cls=Button txt=Send rc=113x30 hwnd=0x5D1154
+id=1205 vis=1 cls=Button txt=Clear rc=113x30 hwnd=0xCF0EE2
+id=1210 vis=1 cls=Button txt=Stop rc=113x30 hwnd=0x2B115A
+id=5600 vis=0 cls=Static txt=PowerShell Console rc=800x250 hwnd=0x17119A
+id=5611 vis=0 cls=Button txt=Clear rc=90x25 hwnd=0x3311AC
+id=5612 vis=0 cls=Button txt=Stop rc=90x25 hwnd=0x6E11DC
+id=5613 vis=0 cls=Button txt=History rc=90x25 hwnd=0x7A1238
+id=5614 vis=0 cls=Button txt=Restart rc=90x25 hwnd=0x5F11EC
+id=5615 vis=0 cls=Button txt=Load RawrXD rc=120x25 hwnd=0x16122E
+id=5601 vis=0 cls=RICHEDIT50W txt= rc=790x155 hwnd=0x181230
+id=5602 vis=0 cls=Edit txt= rc=690x25 hwnd=0x151232
+id=5610 vis=0 cls=Button txt=Execute rc=90x25 hwnd=0x7C0FD8
+id=5604 vis=0 cls=Static txt=PowerShell: Active | 5.1.26100.9818
+ rc=790x20 hwnd=0x481250
+id=1001 vis=1 cls=RICHEDIT50W txt= rc=722x475 hwnd=0xC00F6A
+id=0 vis=0 cls=Edit txt= rc=1260x176 hwnd=0x168170A
+id=0 vis=1 cls=Static txt=  Untitled  >  (workspace) rc=722x24 hwnd=0x11D083E
+id=0 vis=0 cls=Static txt= rc=722x20 hwnd=0xBA0E78
+id=0 vis=0 cls=Static txt= rc=350x20 hwnd=0xAD0AB6
+id=0 vis=0 cls=Static txt= rc=0x20 hwnd=0x4914B0
+id=0 vis=0 cls=Static txt= rc=0x20 hwnd=0x371260
+id=0 vis=0 cls=Static txt= rc=0x20 hwnd=0x241274
+id=0 vis=0 cls=Static txt= rc=0x20 hwnd=0x8B125E
+id=0 vis=0 cls=Static txt= rc=0x20 hwnd=0x301242
+id=0 vis=0 cls=Static txt= rc=0x20 hwnd=0x8511DA
+id=1005 vis=0 cls=SysTabControl32 txt= rc=1230x24 hwnd=0x14127A
+id=1017 vis=0 cls=ComboBox txt= rc=140x24 hwnd=0x17114C
+id=1012 vis=0 cls=RichEdit20A txt= rc=1380x226 hwnd=0x32124E
+id=1013 vis=0 cls=RichEdit20A txt= rc=1380x226 hwnd=0x721150
+id=1014 vis=0 cls=RichEdit20A txt= rc=1380x226 hwnd=0xA71262
+id=1015 vis=0 cls=RichEdit20A txt= rc=1380x226 hwnd=0x96125C
+id=1604 vis=0 cls=RichEdit20A txt= rc=1380x226 hwnd=0x50124C
+id=1605 vis=0 cls=RichEdit20A txt= rc=1380x226 hwnd=0xD611D0
+id=1606 vis=0 cls=RichEdit20A txt= rc=1380x226 hwnd=0x7C1314
+id=1607 vis=0 cls=RichEdit20A txt= rc=1380x226 hwnd=0x4B13A6
+id=1608 vis=0 cls=RichEdit20A txt= rc=1380x226 hwnd=0x62133E
+id=1609 vis=0 cls=RichEdit20A txt= rc=1380x226 hwnd=0xD1096
+id=1610 vis=0 cls=RichEdit20A txt= rc=1380x226 hwnd=0x321336
+id=1611 vis=0 cls=RichEdit20A txt= rc=1380x226 hwnd=0x200FDC
+id=1016 vis=1 cls=Static txt= rc=1380x4 hwnd=0x461050
+CHILDREN_END
+ID_1300 hwnd=22087458 vis=True size=1380x250 px=30,30,30
+ID_1310 hwnd=2756286 vis=True size=24x22 px=240,240,240
+ID_1311 hwnd=6950682 vis=True size=24x22 px=240,240,240
+ID_1312 hwnd=7736222 vis=False size=1380x224 px=n/a
+ID_1400 MISSING
+ID_1500 MISSING
+ID_1600 MISSING
+ID_1200 hwnd=3935984 vis=True size=360x499 px=105,105,105
+ID_1001 hwnd=12586858 vis=True size=722x475 px=30,30,30
+DOCK_CHILDREN_BEGIN
+id=1301 vis=1 cls=SysTabControl32 txt= rc=1180x24 hwnd=0x1240A9A
+id=1306 vis=1 cls=Static txt= rc=200x24 hwnd=0x890E98
+id=1307 vis=1 cls=Button txt=+ rc=24x22 hwnd=0x551284
+id=1308 vis=1 cls=Button txt=|| rc=24x22 hwnd=0xBC0EDE
+id=1309 vis=1 cls=Button txt=X rc=24x22 hwnd=0x11707A8
+id=1310 vis=1 cls=Button txt=^ rc=24x22 hwnd=0x2A0EBE
+id=1311 vis=1 cls=Button txt=x rc=24x22 hwnd=0x6A0F1A
+id=1312 vis=0 cls=SysListView32 txt= rc=1380x224 hwnd=0x760B9E
+id=0 vis=0 cls=SysHeader32 txt= rc=0x0 hwnd=0x1B6057E
+DOCK_CHILDREN_END
+TAB_HWND=2756286
+TAB_SET_0 CUR=0
+TAB_SET_1 CUR=0
+TAB_SET_2 CUR=0
+TAB_SET_3 CUR=0
+ALIVE=True
+EXIT=RUNNING
+PROMOTE=0
+

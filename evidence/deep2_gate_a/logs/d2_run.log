@@ -1,0 +1,38 @@
+=== Gate A Deep2 side: deep2_parity_trace.exe (rebuilt from HEAD, run after commit 0da7cdba9f) ===
+bin: F:\rawrxd\tools\deep2_parity_trace.exe (sha256 D62B3AED325CEE62E178D19D53970908BDB4EC69055E785EA280ED4F2052135F)
+build: tools/build_deep2_parity_trace.bat (VS2022 x64 Release; ggml from build_ggml_profiler; includes
+       runtime_graph_executor.cpp / quant_dot_dispatch.cpp as of commit 0da7cdba9f, i.e. HEAD after
+       6cdb628456 changed those sources)
+model: F:\rawrxd\llama3.2-3b-Q2_K.gguf (arch=llama, 255 tensors, 395 ops bound)
+method: one token per ExecuteToken(tok, pos), full logits dumped per position (f32)
+
+--- run 1: CPU path, 5-token milestone sequence ---
+bound ops=395
+pos=0 token=128000 argmax=14924 max_logit=4.988127 (3383.4 ms)
+pos=1 token=791 argmax=2768 max_logit=8.557472 (2410.2 ms)
+pos=2 token=4062 argmax=323 max_logit=12.311891 (2897.1 ms)
+pos=3 token=14198 argmax=39935 max_logit=12.333713 (3087.7 ms)
+pos=4 token=39935 argmax=35308 max_logit=17.593435 (2597.4 ms)
+gpu_calls=0 cpu_calls=985 fallback=k-quant dot: force_cpu (weight=blk.0.attn_q.weight)
+exit=0
+
+--- run 2: GPU-native path (--gpu), 5-token milestone sequence ---
+pos=1 token=791 argmax=2768 max_logit=8.579390 (604.6 ms)
+pos=2 token=4062 argmax=323 max_logit=12.279307 (603.3 ms)
+pos=3 token=14198 argmax=39935 max_logit=12.518815 (603.3 ms)
+pos=4 token=39935 argmax=35308 max_logit=17.543398 (605.3 ms)
+gpu_calls=985 cpu_calls=0 fallback=<none>
+exit=0
+
+--- run 3: CPU path, 21-token extended sequence ---
+pos=18 token=16053 argmax=5679 max_logit=18.711552 (2678.8 ms)
+pos=19 token=5679 argmax=382 max_logit=18.035429 (2296.0 ms)
+pos=20 token=13 argmax=578 max_logit=14.916121 (2152.8 ms)
+gpu_calls=0 cpu_calls=4137 fallback=k-quant dot: force_cpu (weight=blk.0.attn_q.weight)
+exit=0
+
+--- run 4: GPU-native path (--gpu), 21-token extended sequence ---
+pos=19 token=5679 argmax=382 max_logit=18.014942 (604.5 ms)
+pos=20 token=13 argmax=578 max_logit=14.782249 (604.4 ms)
+gpu_calls=4137 cpu_calls=0 fallback=<none>
+exit=0

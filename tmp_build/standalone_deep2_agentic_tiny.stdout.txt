@@ -1,0 +1,49 @@
+MOTD_WORKSPACE F:\rawrxd
+MOTD_STATUS TURN_START session=deep2-agent-41780-71715413443100 turn=1
+MOTD_SHA256 3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[stage] loading model G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+[stage] ingest done in 2181.4 ms: arch=llama blocks=22 vocab=32000 bos=1 eos=2
+[stage] model ships a chat template (410 bytes):
+{% for message in messages %}
+{% if message['role'] == 'user' %}
+{{ '<|user|>
+' + message['content'] + eos_token }}
+{% elif message['role'] == 'system' %}
+{{ '<|system|>
+' + message['content'] + eos_token }}
+{% elif message['role'] == 'assistant' %}
+{{ '<|assistant|>
+'  + message['content'] + eos_token }}
+{% endif %}
+{% if loop.last and add_generation_prompt %}
+{{ '<|assistant|>' }}
+{% endif %}
+{% endfor %}
+[stage] tokenizer round-trip: PASS (33 ids -> 73 chars)
+[stage] executor bound: ops=311 path=cpu
+[snap] Job Object created and self-assigned; children will inherit
+[snap] Preflight clean: no contention detected
+[flight] Executor flight recorder active: F:\rawrxd
+[stage] chat markers: template user='<|user|>
+' asst='<|assistant|>
+' gen='<|assistant|>' bos_in_template=0
+[env] compiler: MSVC environment initialized via vcvars64.bat (cl=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe)
+[step 1] PREFILL_BATCH_BEGIN pos=0 count=8/229
+[step 1] PREFILL_BATCH_END pos=0 count=8 ok=false ms=0
+[step 1] PrefillBatch refused (prefill-batch: force_cpu pinned; use ExecuteToken); falling back to serial
+
+[step 1] WALL_TIMEOUT during prefill at 34/229
+[step 1] prefill +34/229 tokens (ctx=34 tokens) in 46860 ms (batched-partial)
+[kv] committed KV stream IS A VALID PREFIX OF the current render (34 of 229 ids common; incremental=34 fresh=229)
+[verification] running build command: cl /nologo /EHsc /std:c++20 /Fe:"F:\rawrxd/tmp_build/cli_smoke_20261028/fixture/calc.exe" "F:\rawrxd/tmp_build/cli_smoke_20261028/fixture/calc.cpp"
+[verification] build succeeded
+
+=== verification (harness-run, independent of the model) ===
+MODEL_SAID_FINISH      no
+SOURCE_PATCHED         FAIL (matches the exact expected source)
+BUILD_ARTIFACT         attempted (MSVC environment initialized via vcvars64.bat (cl=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe))
+TEST_EXECUTION         FAIL (tmp_build/cli_smoke_20261028/fixture/calc.cpp exit=0 out=)
+TOOL_RESULT_FEEDBACK   2 steps completed
+KV_PREFIX_CONSISTENT   PASS
+MODEL_REQUESTED_TOOL   NO (tool_calls=0)
+FINAL_VERDICT          FAIL

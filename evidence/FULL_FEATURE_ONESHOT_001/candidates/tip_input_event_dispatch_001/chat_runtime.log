@@ -1,0 +1,21 @@
+SESSION_OPEN session_id=ied_sess_20261109-084206 run_id=ied_run_20261109-084206 pid=39588
+INPUT_EVENT kind=ENTER_NEWLINE path=AIM_GETMESSAGE_WM_KEYDOWN session_id=ied_sess_20261109-084206 run_id=ied_run_20261109-084206
+INPUT_EVENT kind=CTRL_ENTER path=AIM_GETMESSAGE_WM_KEYDOWN repeat=0 session_id=ied_sess_20261109-084206 run_id=ied_run_20261109-084206
+SESSION_OPEN session_id=ied_sess_20261109-084206 run_id=ied_run_20261109-084206 pid=39588
+CHAT_SEND_ATTEMPT dispatch_id=1 send_seq=1 bytes=8 session_id=ied_sess_20261109-084206 run_id=ied_run_20261109-084206
+request_started request_id=1 model=bigdaddyg-productivity-local:latest session_id=ied_sess_20261109-084206 run_id=ied_run_20261109-084206
+CHAT_SEND_ARMED dispatch_id=1 send_seq=1 request_id=1 session=1 session_id=ied_sess_20261109-084206 run_id=ied_run_20261109-084206
+cancel_requested request_id=1 session_id=ied_sess_20261109-084206 run_id=ied_run_20261109-084206
+cancel_acknowledged request_id=1 active_after=0 worker_joinable=0 session_id=ied_sess_20261109-084206 run_id=ied_run_20261109-084206
+INPUT_EVENT kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED session_id=ied_sess_20261109-084206 run_id=ied_run_20261109-084206
+CHAT_SEND_ATTEMPT dispatch_id=2 send_seq=2 bytes=10 session_id=ied_sess_20261109-084206 run_id=ied_run_20261109-084206
+request_started request_id=2 model=bigdaddyg-productivity-local:latest session_id=ied_sess_20261109-084206 run_id=ied_run_20261109-084206
+CHAT_SEND_ARMED dispatch_id=2 send_seq=2 request_id=2 session=1 session_id=ied_sess_20261109-084206 run_id=ied_run_20261109-084206
+cancel_requested request_id=2 session_id=ied_sess_20261109-084206 run_id=ied_run_20261109-084206
+cancel_acknowledged request_id=2 active_after=0 worker_joinable=0 session_id=ied_sess_20261109-084206 run_id=ied_run_20261109-084206
+INPUT_EVENT kind=CTRL_ENTER path=AIM_GETMESSAGE_WM_KEYDOWN repeat=0 session_id=ied_sess_20261109-084206 run_id=ied_run_20261109-084206
+CHAT_SEND_ATTEMPT dispatch_id=3 send_seq=3 bytes=14 session_id=ied_sess_20261109-084206 run_id=ied_run_20261109-084206
+request_started request_id=3 model=bigdaddyg-productivity-local:latest session_id=ied_sess_20261109-084206 run_id=ied_run_20261109-084206
+CHAT_SEND_ARMED dispatch_id=3 send_seq=3 request_id=3 session=1 session_id=ied_sess_20261109-084206 run_id=ied_run_20261109-084206
+cancel_requested request_id=3 session_id=ied_sess_20261109-084206 run_id=ied_run_20261109-084206
+cancel_acknowledged request_id=3 active_after=0 worker_joinable=0 session_id=ied_sess_20261109-084206 run_id=ied_run_20261109-084206

@@ -1,0 +1,1 @@
+F:\rawrxd\src\win32app\Win32IDE_LSPClient.cpp(128,29): error C2039: 'rootUri': is not a member of 'Win32IDE::LSPServerConfig' [F:\rawrxd\build_win32ide\RawrXD-Win32IDE-Native.vcxproj]

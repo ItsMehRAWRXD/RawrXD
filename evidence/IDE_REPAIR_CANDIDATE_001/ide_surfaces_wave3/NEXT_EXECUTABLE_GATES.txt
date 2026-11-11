@@ -1,0 +1,35 @@
+IDE_REPAIR_CANDIDATE_001 / ide_surfaces_wave3 / NEXT_EXECUTABLE_GATES
+ASOF_UTC=2026-11-10T10:05:00Z
+PROMOTE=0
+MATURITY=82%_HOLD
+WAVE1_INTEGRATED=NOT_SEALED
+WAVE3_SOURCE_EDIT_OF_CU_AGENTCOMMANDS=FORBIDDEN
+
+GATE_0  WAVE1_INTEGRATED_SEAL (serial owner: Wave1/P0 — not W3)
+  ACTION=Seal WAVE1_INTEGRATED=PASS or FIRST_FAILURE on controlling SHA
+  W3_DEPENDENCY=blocks product edits to ComputerUse/AgentCommands only; surface measure may proceed
+
+GATE_1  W3_HWND_SMOKE_RC5B
+  STATUS=PASS_DOCK_VISIBLE on SHA 6E59E91A…
+  RECEIPT=artifacts\HWND_SMOKE_20261110-044443.txt
+
+GATE_2  W3_FOUR_PANEL_1_17_RC5B
+  STATUS=MEASURED_PARTIAL FOUR_PANEL=12/17
+  FIRST_FAILURE_CLASS=S_03_TERMINAL_BUILD=POSTED_3014
+  RECEIPT=artifacts\FOUR_PANEL_1_17_RECEIPT_6E59E91A.txt
+  NOTE=regressed harness marks inflated PARTIAL; upgraded harness landed; remasure pending rebuild
+
+GATE_3  W3_FIRST_FAILURE_TRIAGE
+  STATUS=OPEN
+  ACTIONS_DONE=
+    Commands.cpp stop-before-clear on 3014 (S07)
+    lifecycle.cpp WFDE_BP_HIT_RECEIPT emit (S11)
+    four_panel_1_17_measure.ps1 4DE0-era PASS marks restored
+  NEXT=rebuild Ext → remasure same harness on successor SHA; seal 17/17 or new FIRST_FAILURE_CLASS
+
+GATE_4  W3_RC5_LINEAGE_DELTA
+  STATUS=NOT_RUN (informational)
+
+GATE_5  MATURITY_WEIGHT_88_91
+  STATUS=HOLD
+  REQUIRES=GATE_2 PASS 17/17 AND prior 82->85 / 85->88 earned evidence

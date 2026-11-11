@@ -1,0 +1,104 @@
+DUAL_ENGINE_GATE_ORDER_001
+ASOF_UTC=2026-11-10T15:22:00Z
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+NO_INVENT_PASS=1
+MODEL_CANNOT_SELF_CERTIFY=1
+
+# Fixed sequence (do not reorder; do not skip)
+# Each step: NOT_RUN until harness evidence exists for THAT step.
+
+G0_PRECONDITIONS=
+  Worktrees strata-agent + ollama-review isolated (WORKTREE_PROTOCOL.txt)
+  Ollama path left intact (ollama_local / OllamaClient)
+  Sealed separate not reopened:
+    ISSUE49_D_015=10/11
+    DAILY_DRIVER_9FDE_ITEMS_5_10=SEALED
+  S_13 remains Ollama-path diagnostic until STRATA tool protocol proven
+
+G1_STRATA_TOOL_ROUNDTRIP=
+  NAME=STRATA_STRUCTURED_TOOL_ROUNDTRIP
+  WHERE=strata-agent worktree + STRATA runtime
+  REQUIRE=
+    Exact content / structured tool call parse
+    Tool dispatch (Read at minimum; then Edit reinjection)
+    Observable tool result reinjected to model
+  FAIL_CLOSED_IF=
+    Chat-compat only / text-only / HTTP 200 without tool effect
+  STATUS=PROTOCOL_PASS
+  PRODUCT_WIRED=0
+  IDE_WIRED=0
+  EVIDENCE=strata_pilot_001\ + dual_engine_001\G1_STRATA_TOOL_ROUNDTRIP_RECEIPT.txt
+  NOTE=Absorbed from STRATA toolcall pilot 2026-11-10; IDE adapter optional next
+  LAW=OPENAI_CHAT_COMPAT != TOOL_CALL_COMPAT
+  LAW=STRATA_GPU_PASS != IDE_AGENT_PASS
+  LAW=PROTOCOL_PASS != PRODUCT_WIRED
+
+G2_DISPOSABLE_ISSUE49_FIXTURE=
+  NAME=DISPOSABLE_ISSUE49_FIXTURE
+  WHERE=dedicated disposable fixture tree / evidence dir (not sealed D 015 receipts)
+  REQUIRE=
+    Bounded Issue49-style agent steps on disposable pair
+    No mutation of sealed D_015_10_OF_11 or 9FDE items 5-10 evidence
+    No cross-SHA inherit of PASS from historical candidates
+  FAIL_CLOSED_IF=
+    Reuses sealed receipts as new PASS
+    Touches production Issue49 controlling pair without disposable label
+  STATUS=NOT_RUN
+  HARNESS_CITE=
+    F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\harness\Invoke-Issue49Live74aa.ps1
+  LAW=9FDE_PASS != ISSUE49_PASS
+  LAW=D015_10_OF_11 != DUAL_ENGINE_PASS
+
+G3_OLLAMA_REVIEW=
+  NAME=OLLAMA_QWEN3_8B_REVIEW
+  WHERE=ollama-review worktree
+  ENGINE=Ollama qwen3:8b via existing ollama_local route
+  REQUIRE=
+    Independent review of STRATA diffs / fixture outcomes
+    Critique receipt under dual_engine_001 (or linked evidence)
+    No self-certification; review != harness PASS
+  FAIL_CLOSED_IF=
+    Simultaneous write into strata-agent tree
+    Review text treated as PROMOTE authority
+  STATUS=NOT_RUN
+  S_13_NOTE=
+    S_13 stays on Ollama diagnostic path until G1 proven;
+    do not claim S_13 closed via STRATA until tool protocol + harness say so
+
+G4_HARNESS_VERIFY=
+  NAME=DETERMINISTIC_HARNESS_VERIFY
+  OWNER=HARNESS_ONLY
+  REQUIRE=
+    Build/test acceptance commands replayable
+    Exit codes + artifacts recorded
+    Conjunction check vs ARCHITECTURE.txt PROMOTE_IF
+  FAIL_CLOSED_IF=
+    Model claims PASS without harness artifacts
+    NOT_RUN treated as PASS
+  STATUS=NOT_RUN
+  PROMOTE=0 unless full conjunction passes
+
+# Disposition matrix
+STEP_PASS_REQUIRES_HARNESS_ARTIFACT=1
+ANY_STEP_NOT_RUN => OVERALL=NOT_COMPLETE
+OVERALL_PASS => still PROMOTE=0 until product promote tetrad separately authorized
+TIP_CLIMB=HOLD
+
+# Explicit non-goals this scaffold
+NO_MASS_REBUILD=1
+NO_OLLAMA_BREAK=1
+NO_SEALED_RECEIPT_EDIT=1
+NO_S13_CLAIM_VIA_STRATA_YET=1
+
+# Next executable gate (immediate)
+# G1 protocol closed (PROTOCOL_PASS; IDE_WIRED=0). Adapter is optional/hold.
+NEXT_EXECUTABLE_GATE=OPTIONAL_IDE_ADAPTER_AFTER_REVIEW
+AFTER_OPTIONAL_ADAPTER=G2_DISPOSABLE_ISSUE49_FIXTURE
+AFTER_G2=G3_OLLAMA_QWEN3_8B_REVIEW
+AFTER_G3=G4_HARNESS_VERIFY
+
+LAW=HANDOFF_TO_AGENT != DONE
+LAW=SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+LAW=NOT_RUN != PASS

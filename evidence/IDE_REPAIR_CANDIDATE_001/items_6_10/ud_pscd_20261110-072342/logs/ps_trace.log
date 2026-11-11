@@ -1,0 +1,32 @@
+35168 [PS_TRACE] WM_COPYDATA cmd_len=43 cmd='Write-Output 'RAWRXD_ITEM8_20261110-072342''
+
+35168 [PS_TRACE] executePowerShellPanelCommand() ENTRY cmd_len=43 thread=35168
+
+35168 [PS_TRACE] executePowerShellPanelCommand() calling writeInput() cmd_len=43 thread=35168
+
+35168 [PS_TRACE] executePowerShellPanelCommand() writeInput() returned
+
+35168 [PS_TRACE] executePowerShellPanelCommand() EXIT
+
+35168 [PS_TRACE] WM_COPYDATA cmd_len=23 cmd='Start-Sleep -Seconds 45'
+
+35168 [PS_TRACE] executePowerShellPanelCommand() ENTRY cmd_len=23 thread=35168
+
+35168 [PS_TRACE] executePowerShellPanelCommand() calling writeInput() cmd_len=23 thread=35168
+
+35168 [PS_TRACE] executePowerShellPanelCommand() writeInput() returned
+
+35168 [PS_TRACE] executePowerShellPanelCommand() EXIT
+
+35168 [PS_TRACE] WM_COPYDATA cmd_len=44 cmd='Write-Output 'RAWRXD_ITEM7B_20261110-072342''
+
+35168 [PS_TRACE] executePowerShellPanelCommand() ENTRY cmd_len=44 thread=35168
+
+35168 [PS_TRACE] executePowerShellPanelCommand() revive session
+
+35168 [PS_TRACE] executePowerShellPanelCommand() calling writeInput() cmd_len=44 thread=35168
+
+35168 [PS_TRACE] executePowerShellPanelCommand() writeInput() returned
+
+35168 [PS_TRACE] executePowerShellPanelCommand() EXIT
+

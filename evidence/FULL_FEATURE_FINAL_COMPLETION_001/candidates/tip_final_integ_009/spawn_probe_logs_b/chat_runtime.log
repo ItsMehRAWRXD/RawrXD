@@ -1,0 +1,24 @@
+AGENT_SESSION_SPAWNED marker=AgentSession bound task_id=ide-agent-1 session_identity=1 model=F:\rawrxd\models\qwen2.5-coder_1.5b-base.gguf workspace=F:\rawrxd
+REQUEST_DISPATCH_CORRELATED dispatch_id=1 session_identity=1 request_id=2 agentic_chat_session=1 task_bytes=54
+SESSION_OPEN session_id=sid_000068CC_00000000044049FD run_id=run_unset pid=26828
+ui_update request_id=0 rendered=1 complete=0 response_bytes=49 session_id=sid_000068CC_00000000044049FD run_id=run_unset
+RESPONSE_START request_id=0 session=1 dispatch_id=0 session_id=sid_000068CC_00000000044049FD run_id=run_unset
+ui_update request_id=0 rendered=1 complete=0 response_bytes=44 session_id=sid_000068CC_00000000044049FD run_id=run_unset
+ui_update request_id=0 rendered=1 complete=0 response_bytes=63 session_id=sid_000068CC_00000000044049FD run_id=run_unset
+ui_update request_id=0 rendered=1 complete=0 response_bytes=45 session_id=sid_000068CC_00000000044049FD run_id=run_unset
+ui_update request_id=0 rendered=1 complete=0 response_bytes=52 session_id=sid_000068CC_00000000044049FD run_id=run_unset
+ui_update request_id=0 rendered=1 complete=0 response_bytes=48 session_id=sid_000068CC_00000000044049FD run_id=run_unset
+ui_update request_id=0 rendered=1 complete=0 response_bytes=43 session_id=sid_000068CC_00000000044049FD run_id=run_unset
+ui_update request_id=0 rendered=1 complete=0 response_bytes=131 session_id=sid_000068CC_00000000044049FD run_id=run_unset
+ui_update request_id=0 rendered=1 complete=0 response_bytes=15 session_id=sid_000068CC_00000000044049FD run_id=run_unset
+ui_update request_id=0 rendered=1 complete=0 response_bytes=103 session_id=sid_000068CC_00000000044049FD run_id=run_unset
+ui_update request_id=0 rendered=1 complete=0 response_bytes=20 session_id=sid_000068CC_00000000044049FD run_id=run_unset
+ui_update request_id=0 rendered=1 complete=0 response_bytes=15 session_id=sid_000068CC_00000000044049FD run_id=run_unset
+ui_update request_id=0 rendered=1 complete=0 response_bytes=41 session_id=sid_000068CC_00000000044049FD run_id=run_unset
+ui_update request_id=0 rendered=1 complete=0 response_bytes=15 session_id=sid_000068CC_00000000044049FD run_id=run_unset
+ui_update request_id=0 rendered=1 complete=0 response_bytes=15 session_id=sid_000068CC_00000000044049FD run_id=run_unset
+ui_update request_id=0 rendered=1 complete=0 response_bytes=27 session_id=sid_000068CC_00000000044049FD run_id=run_unset
+ui_update request_id=0 rendered=1 complete=0 response_bytes=24 session_id=sid_000068CC_00000000044049FD run_id=run_unset
+ui_update request_id=0 rendered=1 complete=0 response_bytes=17 session_id=sid_000068CC_00000000044049FD run_id=run_unset
+ui_update request_id=0 rendered=1 complete=0 response_bytes=16 session_id=sid_000068CC_00000000044049FD run_id=run_unset
+ui_update request_id=0 rendered=1 complete=0 response_bytes=29 session_id=sid_000068CC_00000000044049FD run_id=run_unset

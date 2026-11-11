@@ -1,0 +1,71 @@
+{
+  "schema": "RAWRXD_REAP_FAMILY_SMOKE_001",
+  "timestamp_utc": "2026-10-26",
+  "source_root": "F:/rawrxd",
+  "branch": "fix/deep2-multimodel-safety-20261025",
+  "source_commit": "9fa781fe811d391359f999f121bfdebe8eaf3aa0",
+  "executable": "F:/rawrxd/build_reap/bin-msvc/rawr-reap-replay.exe",
+  "executable_sha256": "5D39EB39B3AC77751F695BDAE4687E9879B32BFE5834CCC0658F3CACC77762DD",
+  "execution_policy": {
+    "cpu_only_probe": true,
+    "q4k_gpu_disabled": true,
+    "gpu_dispatch_certified": false
+  },
+  "families": [
+    {
+      "family": "MiniMax-M2.7",
+      "model_first_shard": "F:/OllamaModels/MiniMax-M2.7-Q4_K_M/MiniMax-M2.7-Q4_K_M/MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf",
+      "shards": 3,
+      "generated": 1,
+      "continuous_prefill_decode": true,
+      "continuous_completed": true,
+      "token_ids": [20159],
+      "response": "向上",
+      "route_metrics": 496,
+      "elapsed_ms": 27427,
+      "reference_parity": false,
+      "calibration_complete": false,
+      "certification": "CALIBRATED_UNSEALED",
+      "exit_code": 0
+    },
+    {
+      "family": "Kimi-K2",
+      "model_first_shard": "F:/OllamaModels/Kimi-K2-Instruct-0905-GGUF/Q4_K_M/Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf",
+      "shards": 13,
+      "generated": 1,
+      "continuous_prefill_decode": true,
+      "continuous_completed": true,
+      "token_ids": [102810],
+      "response": " Crus",
+      "route_metrics": 480,
+      "elapsed_ms": 63646,
+      "reference_parity": false,
+      "calibration_complete": false,
+      "certification": "CALIBRATED_UNSEALED",
+      "exit_code": 0
+    },
+    {
+      "family": "DeepSeek-R1",
+      "model_first_shard": "F:/OllamaModels/DeepSeek-R1-Q4_K_M-COMPLETE/DeepSeek-R1-Q4_K_M-00001-of-00011.gguf",
+      "shards": 11,
+      "generated": 1,
+      "continuous_prefill_decode": true,
+      "continuous_completed": true,
+      "token_ids": [55320],
+      "response": " Coalition",
+      "route_metrics": 464,
+      "elapsed_ms": 62159,
+      "reference_parity": false,
+      "calibration_complete": false,
+      "certification": "CALIBRATED_UNSEALED",
+      "exit_code": 0
+    }
+  ],
+  "verdict": {
+    "family_cpu_smoke": "PASS",
+    "heap_corruption_regression": "PASS",
+    "gpu_inference": "NOT_CERTIFIED",
+    "reference_parity": "NOT_CERTIFIED",
+    "reap_end_to_end": "NOT_CERTIFIED"
+  }
+}

@@ -1,0 +1,237 @@
+Test project F:/rawrxd/build_reap
+      Start  1: deep2_gpu_code31_pnp_probe
+Could not find executable F:/rawrxd/build_reap/deep2_gpu_code31_pnp_probe.exe
+Looked in the following places:
+F:/rawrxd/build_reap/deep2_gpu_code31_pnp_probe.exe
+F:/rawrxd/build_reap/deep2_gpu_code31_pnp_probe.exe.exe
+F:/rawrxd/build_reap/Release/deep2_gpu_code31_pnp_probe.exe
+F:/rawrxd/build_reap/Release/deep2_gpu_code31_pnp_probe.exe.exe
+Release/F:/rawrxd/build_reap/deep2_gpu_code31_pnp_probe.exe
+Release/F:/rawrxd/build_reap/deep2_gpu_code31_pnp_probe.exe.exe
+Unable to find executable: F:/rawrxd/build_reap/deep2_gpu_code31_pnp_probe.exe
+ 1/27 Test  #1: deep2_gpu_code31_pnp_probe .........***Not Run   0.00 sec
+      Start  2: deep2_gdn_reference_contract
+ 2/27 Test  #2: deep2_gdn_reference_contract .......   Passed    0.02 sec
+      Start  3: deep2_qwen4exp_operator_contract
+ 3/27 Test  #3: deep2_qwen4exp_operator_contract ...   Passed    0.03 sec
+      Start  4: deep2_h11_prefill_parity
+ 4/27 Test  #4: deep2_h11_prefill_parity ...........***Skipped   0.03 sec
+      Start  5: workspace_path_policy_smoke
+Could not find executable F:/rawrxd/build_reap/bin-msvc/workspace_path_policy_smoke.exe
+Looked in the following places:
+F:/rawrxd/build_reap/bin-msvc/workspace_path_policy_smoke.exe
+F:/rawrxd/build_reap/bin-msvc/workspace_path_policy_smoke.exe.exe
+F:/rawrxd/build_reap/bin-msvc/Release/workspace_path_policy_smoke.exe
+F:/rawrxd/build_reap/bin-msvc/Release/workspace_path_policy_smoke.exe.exe
+Release/F:/rawrxd/build_reap/bin-msvc/workspace_path_policy_smoke.exe
+Release/F:/rawrxd/build_reap/bin-msvc/workspace_path_policy_smoke.exe.exe
+Unable to find executable: F:/rawrxd/build_reap/bin-msvc/workspace_path_policy_smoke.exe
+ 5/27 Test  #5: workspace_path_policy_smoke ........***Not Run   0.00 sec
+      Start  6: native_tool_protocol_smoke
+Could not find executable F:/rawrxd/build_reap/bin/native_tool_protocol_smoke.exe
+Looked in the following places:
+F:/rawrxd/build_reap/bin/native_tool_protocol_smoke.exe
+F:/rawrxd/build_reap/bin/native_tool_protocol_smoke.exe.exe
+F:/rawrxd/build_reap/bin/Release/native_tool_protocol_smoke.exe
+F:/rawrxd/build_reap/bin/Release/native_tool_protocol_smoke.exe.exe
+Release/F:/rawrxd/build_reap/bin/native_tool_protocol_smoke.exe
+Release/F:/rawrxd/build_reap/bin/native_tool_protocol_smoke.exe.exe
+Unable to find executable: F:/rawrxd/build_reap/bin/native_tool_protocol_smoke.exe
+ 6/27 Test  #6: native_tool_protocol_smoke .........***Not Run   0.00 sec
+      Start  7: cursor_parity_registry_smoke
+Could not find executable F:/rawrxd/build_reap/bin-msvc/cursor_parity_registry_smoke.exe
+Looked in the following places:
+F:/rawrxd/build_reap/bin-msvc/cursor_parity_registry_smoke.exe
+F:/rawrxd/build_reap/bin-msvc/cursor_parity_registry_smoke.exe.exe
+F:/rawrxd/build_reap/bin-msvc/Release/cursor_parity_registry_smoke.exe
+F:/rawrxd/build_reap/bin-msvc/Release/cursor_parity_registry_smoke.exe.exe
+Release/F:/rawrxd/build_reap/bin-msvc/cursor_parity_registry_smoke.exe
+Release/F:/rawrxd/build_reap/bin-msvc/cursor_parity_registry_smoke.exe.exe
+Unable to find executable: F:/rawrxd/build_reap/bin-msvc/cursor_parity_registry_smoke.exe
+ 7/27 Test  #7: cursor_parity_registry_smoke .......***Not Run   0.00 sec
+      Start  8: q8k_edge_tests
+ 8/27 Test  #8: q8k_edge_tests .....................   Passed    0.02 sec
+      Start  9: q8k_byte_parity
+ 9/27 Test  #9: q8k_byte_parity ....................   Passed    0.02 sec
+      Start 10: quant_parity_cert
+10/27 Test #10: quant_parity_cert ..................   Passed    0.02 sec
+      Start 11: kquant_dot_parity
+11/27 Test #11: kquant_dot_parity ..................   Passed    0.02 sec
+      Start 12: gate2_manifest_consistency
+12/27 Test #12: gate2_manifest_consistency .........   Passed    1.79 sec
+      Start 13: rawr_reap_cli_contract
+13/27 Test #13: rawr_reap_cli_contract .............   Passed    0.03 sec
+      Start 14: rawr_reap_expert_layout
+14/27 Test #14: rawr_reap_expert_layout ............   Passed    0.03 sec
+      Start 15: rawr_reap_runtime_plan
+Could not find executable F:/rawrxd/build_reap/rawr-reap-runtime-plan-test.exe
+Looked in the following places:
+F:/rawrxd/build_reap/rawr-reap-runtime-plan-test.exe
+F:/rawrxd/build_reap/rawr-reap-runtime-plan-test.exe.exe
+F:/rawrxd/build_reap/Release/rawr-reap-runtime-plan-test.exe
+F:/rawrxd/build_reap/Release/rawr-reap-runtime-plan-test.exe.exe
+Release/F:/rawrxd/build_reap/rawr-reap-runtime-plan-test.exe
+Release/F:/rawrxd/build_reap/rawr-reap-runtime-plan-test.exe.exe
+Unable to find executable: F:/rawrxd/build_reap/rawr-reap-runtime-plan-test.exe
+15/27 Test #15: rawr_reap_runtime_plan .............***Not Run   0.00 sec
+      Start 16: rawr_tensor_residency_budget
+16/27 Test #16: rawr_tensor_residency_budget .......   Passed    0.03 sec
+      Start 17: hexmag_reap_live_fail_closed
+17/27 Test #17: hexmag_reap_live_fail_closed .......   Passed    0.04 sec
+      Start 18: reap_moe_transform
+Could not find executable F:/rawrxd/build_reap/reap-moe-transform-test.exe
+Looked in the following places:
+F:/rawrxd/build_reap/reap-moe-transform-test.exe
+F:/rawrxd/build_reap/reap-moe-transform-test.exe.exe
+F:/rawrxd/build_reap/Release/reap-moe-transform-test.exe
+F:/rawrxd/build_reap/Release/reap-moe-transform-test.exe.exe
+Release/F:/rawrxd/build_reap/reap-moe-transform-test.exe
+Release/F:/rawrxd/build_reap/reap-moe-transform-test.exe.exe
+Unable to find executable: F:/rawrxd/build_reap/reap-moe-transform-test.exe
+18/27 Test #18: reap_moe_transform .................***Not Run   0.00 sec
+      Start 19: deep2_mla_lifecycle_test
+19/27 Test #19: deep2_mla_lifecycle_test ...........   Passed    0.03 sec
+      Start 20: reap-floor-audit-smoke
+20/27 Test #20: reap-floor-audit-smoke .............   Passed    0.03 sec
+      Start 21: deep2_snap_test
+21/27 Test #21: deep2_snap_test ....................   Passed    0.02 sec
+      Start 22: snap_process_guard_test
+22/27 Test #22: snap_process_guard_test ............   Passed    1.04 sec
+      Start 23: flight_recorder_smoke_test
+23/27 Test #23: flight_recorder_smoke_test .........   Passed    0.21 sec
+      Start 24: rawr_run_self_test
+24/27 Test #24: rawr_run_self_test .................   Passed    0.03 sec
+      Start 25: rawr_fuzz_parsers
+25/27 Test #25: rawr_fuzz_parsers ..................   Passed    0.18 sec
+      Start 26: rawrxd_production_hardening
+26/27 Test #26: rawrxd_production_hardening ........***Failed    0.08 sec
+RawrXD production hardening verification
+
+== config validation ==
+  ok: default configuration validates
+  ok: an out-of-range enum is reported
+  ok: a value below its minimum is reported
+  ok: validate_or_throw stops throwing once values are valid
+  ok: an invalid enum value throws
+  ok: the error names the offending field
+
+== logger ==
+  ok: info record was emitted
+  ok: records below the level are counted
+
+== structured logging and metrics ==
+  ok: same-name series are identity-shared
+  ok: counter accumulates
+  ok: histogram counts observations
+  ok: prometheus exposition includes the counter
+  ok: prometheus exposition includes histogram buckets
+  ok: quantile is available for a non-empty histogram
+  ok: p95 lands in a bucket above the bulk
+
+== encryption ==
+  ok: in-memory key initialises
+  ok: encryption produces a blob
+  ok: ciphertext is non-empty
+  ok: GCM tag is 128 bits
+  ok: nonce is 96 bits
+  ok: decryption succeeds
+  ok: round-trip preserves plaintext
+  ok: tampered ciphertext is rejected
+  ok: encryption is randomised per call
+  ok: text encryption works
+  ok: text round-trip works
+
+== audit hash chain ==
+  ok: audit log initialises
+  ok: first audit record appends
+  ok: second audit record appends
+  ok: intact chain verifies
+  ok: two records were accepted
+FAIL: open fails on an unreadable trailing record (!audit.initialize(dir, false))
+FAIL: a truncated chain is detected as broken (audit.verify_chain().has_value())
+FAIL: appending into a broken chain is refused (!audit.append("tester", "test.action3", "test.resource3", "success"))
+
+== audit hash chain with encryption at rest ==
+  ok: encryption is ready
+  ok: encrypted audit log initialises
+  ok: first encrypted record appends
+  ok: second encrypted record appends
+  ok: an encrypted chain verifies
+  ok: encrypted records were accepted
+  ok: an encrypted log reopens
+  ok: an encrypted chain continues across a reopen
+  ok: the continued encrypted chain verifies
+
+== circuit breaker ==
+  ok: starts closed
+  ok: closed breaker admits
+  ok: a success while closed stays closed
+  ok: one failure is below the threshold
+  ok: reaching the threshold opens the breaker
+  ok: an open breaker rejects
+  ok: an open breaker stays rejecting
+  ok: after the cooldown a probe is admitted (half-open)
+  ok: a successful half-open probe closes the breaker
+
+== retry policy ==
+  ok: all attempts exhausted classifies as exhausted
+  ok: attempts equal the policy maximum
+  ok: outcome records the attempt count
+  ok: last error is captured
+  ok: a success classifies as success
+  ok: first-attempt success stops retrying
+  ok: backoff is non-negative
+  ok: a non-retryable failure is not retried
+
+== bulkhead ==
+  ok: first acquire succeeds
+  ok: second acquire is rejected when saturated
+  ok: releasing restores capacity
+
+== secret redaction ==
+  ok: token=value is redacted
+  ok: password: value is redacted
+  ok: non-secret text is untouched
+
+== health registry ==
+  ok: run_all returns a definite status
+  ok: health json includes an aggregate status
+  ok: health json includes component detail
+  ok: an override forces the aggregate to unhealthy
+
+== runtime and readiness gates ==
+2026-11-02T04:14:37.536 info security [] audit log open (audit_path=C:\Users\Garrett\AppData\Local\RawrXD\audit\rawrxd_audit.jsonl) (encrypted=true)
+2026-11-02T04:14:37.536 info security [] security runtime initialized (encryption=true) (audit=true) (max_request_bytes=8388608)
+2026-11-02T04:14:37.537 info startup [] readiness gates evaluated (gates_passed=true) (failures=0) (warnings=0) (config_fingerprint=ef3cf11958ea26a3)
+2026-11-02T04:14:37.537 info startup [] production runtime initialized (environment=development) (service=rawrxd) (instance=local) (log_level=info) (config_fingerprint=ef3cf11958ea26a3)
+2026-11-02T04:14:37.543 error reliability [] handled failure recorded (where=) (what=synthetic failure)
+  ok: runtime reports initialised
+  ok: runtime initialises with default configuration
+  ok: uptime is measurable
+  ok: health json is produced
+  ok: a handled failure is recorded and counted
+  ok: the failure timestamp is set
+  ok: shutdown clears the initialized flag
+
+74/77 checks passed
+3 check(s) FAILED
+
+      Start 27: agent_esp_test
+27/27 Test #27: agent_esp_test .....................   Passed    0.02 sec
+
+74% tests passed, 7 tests failed out of 27
+
+Total Test time (real) =   4.17 sec
+
+The following tests did not run:
+	  4 - deep2_h11_prefill_parity (Skipped)
+
+The following tests FAILED:
+	  1 - deep2_gpu_code31_pnp_probe (Not Run)
+	  5 - workspace_path_policy_smoke (Not Run)
+	  6 - native_tool_protocol_smoke (Not Run)
+	  7 - cursor_parity_registry_smoke (Not Run)
+	 15 - rawr_reap_runtime_plan (Not Run)
+	 18 - reap_moe_transform (Not Run)
+	 26 - rawrxd_production_hardening (Failed)
+Errors while running CTest

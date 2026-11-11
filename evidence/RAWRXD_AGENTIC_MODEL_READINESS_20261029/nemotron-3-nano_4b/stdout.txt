@@ -1,0 +1,9 @@
+﻿
+RawrXD Local Agent
+Model:   nemotron-3-nano:4b
+Backend: ollama
+Mode:    autonomous
+Root:    F:\rawrxd
+
+RAWRXD_AGENTIC_EDIT_COMPLETE
+

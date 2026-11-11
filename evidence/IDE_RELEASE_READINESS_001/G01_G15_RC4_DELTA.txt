@@ -1,0 +1,78 @@
+GATE_BOARD=IDE_RELEASE_READINESS_G01_G15
+CANDIDATE=F:\rawrxd\release\RawrXD-readiness-rc4
+EXE_SHA256=78E187AA9A4C95A4282A862A2D76E8B24DCD03BF6F57E036B2C463FB22418596
+PRIOR_RC3_SHA256=A53E59B5FF819E8B8A9805FB944F1C4B693F1077F40360C86A93A2E234F3F165
+CERTIFIED_4DE0=4DE06F9F0D7C4FA59926A1BD89041DB7FE75DE0332DBA783A968D3B4105D8BE6
+PROMOTE=0
+TIP_CLIMB=HOLD
+FREEZE_CONTROL=DEFERRED_NON_BLOCKING
+NO_CROSS_SHA_PASS_INHERITANCE=1
+ASOF_UTC=2026-11-10T05:24:00Z
+
+CREDIT RULE: same-SHA evidence only. Prior rc3 PASS does not transfer to rc4.
+
+G01 Binary identity
+  4DE0 package: PASS (hash match observed; immutable untouched)
+  rc4 candidate identity: PASS (manifest+checksums written for 78E187…)
+  DELTA vs prior: new SHA established
+
+G02 Native UI
+  PRIOR (rc3/4DE0 lineage): partial credit on older SHA only
+  rc4: SOURCE_WIRED Ctrl+S/Ctrl+O accelerators in Win32IDE_lifecycle.cpp
+  RUNTIME_REACHED on rc4 SHA: NOT_RUN
+
+G03 Agent orchestration
+  PRIOR agent_workflow_003 on A53E59B5: FAIL (model did not complete required repair)
+  rc4 retest: NOT_RUN
+  Computer Use agent Registry dispatch: PASS (standalone bridge verify)
+  IDE GUI agent tool dispatch E2E on rc4: NOT_RUN
+
+G04 Code editing
+  PRIOR same-SHA credit only on older SHA: NOT inherited
+  rc4: NOT_RUN
+
+G05 Terminal/PowerShell
+  rc4: NOT_RUN
+
+G06 Build and diagnostics
+  rc4: NOT_RUN
+
+G07 Local model backends
+  PRIOR Deep2 Vulkan / Ollama evidence on other SHAs: NOT inherited
+  rc4: NOT_RUN
+
+G08 GPU execution
+  rc4: NOT_RUN
+
+G09 Cancellation
+  ComputerUse Cancel wired into Stop/Clear/Deep2Cancel/AgenticLoopCancel: SOURCE_WIRED
+  ComputerUse cancel observed (standalone): PASS
+  Full IDE Stop/Clear UI cancel E2E on rc4: NOT_RUN
+  Deep2 thread join present in source (Win32IDE_Deep2Bridge.cpp): SOURCE_WIRED; rc4 runtime: NOT_RUN
+
+G10 Extensions
+  rc4: NOT_RUN (Ext host still linked; not re-exercised)
+
+G11 Persistence
+  --user-data-dir parsing SOURCE_WIRED in main_win32.cpp + NativeProfilePath.h
+  rc4 runtime isolation proof: NOT_RUN
+
+G12 Reliability
+  rc4: NOT_RUN
+
+G13 Deployment
+  Portable package Verify-PortableRelease: see companion receipt
+  Clean install on separate machine: NOT_RUN
+
+G14 Evidence closure
+  computer_use_001 receipts written; G15 not closed
+  PARTIAL
+
+G15 Final acceptance
+  FAIL_CLOSED / NOT_ESTABLISHED (independent release readiness not claimed)
+
+OPEN_BLOCKERS=
+  1) Agent workflow repair still FAIL on prior SHA; not re-proven on 78E187…
+  2) G02–G14 mostly NOT_RUN against new candidate SHA
+  3) Computer Use IDE GUI E2E tool dispatch NOT_RUN
+  4) G15 independent acceptance NOT_ESTABLISHED

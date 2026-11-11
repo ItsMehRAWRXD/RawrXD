@@ -1,0 +1,3 @@
+unknown_required_admitted=0 expected=0
+registry_mla_available=1 registry_mla_present=1
+generated_unimplemented_count=1 generated_first_unimplemented=5 generated_runtime_executable=0

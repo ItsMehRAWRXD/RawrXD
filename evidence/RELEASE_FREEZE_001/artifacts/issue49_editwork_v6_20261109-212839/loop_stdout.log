@@ -1,0 +1,17 @@
+OLLAMA_AGENT_MOTD_SHA256 3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[ollama step 1] response_bytes=17
+[ollama step 1] TOOL=read exit=0 valid=1 observation=172
+[ollama step 1] result=/* Issue #49 product-final fixture: intentional arity bug for agent fix loop. */\r\nint undeclared_fn(int a) { return a; }\r\nint main() {\r\n  return undeclared_fn(1, 2);\r\n}\r\n\r\n
+[ollama step 2] response_bytes=108
+[ollama step 2] result=write committed; build and test verified
+[ollama step 2] TOOL=write exit=0 valid=1 observation=40
+[ollama step 3] response_bytes=11
+[ollama step 3] TOOL=finish exit=0 valid=1 observation=19
+[ollama step 3] result=verified completion
+OLLAMA_AGENT_MODEL llama3.1:8b
+OLLAMA_AGENT_READ PASS
+OLLAMA_AGENT_EDIT PASS
+OLLAMA_AGENT_BUILD_TEST PASS
+OLLAMA_AGENT_BEFORE_SHA256 1429c3cbd630ab69bf17fd97533f4bb2c629c5a373d513ef2e3cb365f1b9a250
+OLLAMA_AGENT_AFTER_SHA256 e92ab220d146edf4ff3c82fac012894ca6f7484d506cad7c5dd0a5d886acc4a3
+OLLAMA_AGENT_VERDICT PASS

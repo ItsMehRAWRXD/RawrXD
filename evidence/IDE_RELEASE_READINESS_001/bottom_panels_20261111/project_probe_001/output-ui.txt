@@ -1,0 +1,134 @@
+Window: "RawrXD IDE - panel_probe.cpp - project_probe_001", App: RawrXD-PanelFixed.exe.
+	0 window RawrXD IDE - panel_probe.cpp - project_probe_001 Secondary Actions: Raise
+		1 text ID: 1016
+		143 text field (edit) Value: Output ready. Select a channel to view build, tool, and runtime messages. File opened successfully (54 bytes, sha256=beaf4c0363908d8b...) INITIALPATH_FLUSH opened=F:\rawrxd\evidence\IDE_RELEASE_READINESS_001\bottom_panels_20261111\project_probe_001\panel_probe.cpp Native IDE build started (workspace=F:\rawrxd\evidence\IDE_RELEASE_READINESS_001\bottom_panels_20261111\project_probe_001, dir=F:\rawrxd\evidence\IDE_RELEASE_READINESS_001\bottom_panels_20261111\project_probe_001\build). [RAWRXD_BUILD_RECEIPT] pane=1 exit=1 status=FAIL [B12] navigateToFileLine F:\rawrxd\evidence\IDE_RELEASE_READINESS_001\bottom_panels_20261111\project_probe_001\panel_probe.cpp:2 ID: 1012
+		144 combo box (settable, string) Value: All Messages ID: 1017
+			145 text (settable, string) Value: All Messages
+			146 button Open ID: DropDown
+		147 tab ID: 1005
+			148 tab item (selectable) Output
+			149 tab item (selectable) Errors
+			150 tab item (selectable) Debug
+			151 tab item (selectable) Find Results
+			152 tab item (selectable) Build
+			153 tab item (selectable) Tasks
+			154 tab item (selectable) Terminal
+			155 tab item (selectable) ExtensionHost
+			156 tab item (selectable) Ollama
+			157 tab item (selectable) Deep2
+			158 tab item (selectable) IDE
+			159 tab item (selectable) Debugger
+			160 tab item (selectable) PowerShell
+		7 toolbar (tool bar)
+			8 image panel_probe.cpp - project_probe_001 ID: 1018
+			9 button Gear ID: 1024
+		10 tab ID: 1030
+			11 tab item (selectable) Untitled x
+			12 tab item (selectable) panel_probe.cpp x
+		13 image ID: 1100
+			14 button [] ID: 1101
+			15 button () ID: 1102
+			16 button <> ID: 1103
+			17 button > ID: 1104
+			18 button ++ ID: 1105
+			19 button * ID: 1106
+			20 button @ ID: 1107
+		21 text Sidebar
+			22 text
+				23 image
+				24 tree ID: 6010
+					25 tree item (selectable) Workspace (F:\rawrxd)
+					26 tree item (selectable) C:\ [Fixed]
+					27 tree item (selectable) D:\ [Fixed]
+					28 tree item (selectable) E:\ [Fixed]
+					29 tree item (selectable) F:\ [Fixed]
+					30 tree item (selectable) G:\ [Fixed]
+		31 status bar ID: 1004
+			32 text
+			33 text <>
+			34 text -50819808 32760
+		35 text ID: 1300
+			36 text ID: 1306
+				37 button (disabled) + ID: 1307
+				38 button (disabled) || ID: 1308
+				39 button (disabled) X ID: 1309
+				40 button ^ ID: 1310
+				41 button x ID: 1311
+			42 tab ID: 1301
+				43 tab item (selectable) TERMINAL
+				44 tab item (selectable) OUTPUT
+				45 tab item (selectable) PROBLEMS (1 errors, 0 warnings)
+				46 tab item (selectable) DEBUG CONSOLE
+		47 text ID: 1200
+			48 tab ID: 1208
+				49 spinner ID: 1
+					50 button More ID: MoreButton
+					51 button Less ID: LessButton
+				52 tab item (selectable) Chat 1
+				53 tab item (selectable) Chat 2
+				54 tab item (selectable) Chat 3
+				55 tab item (selectable) Chat 4
+				56 tab item (selectable) Chat 5
+			57 button New Chat ID: 1209
+			58 button X ID: 1214
+			59 button (disabled) Restore ID: 1215
+			60 button (disabled) Rollback ID: 1216
+			61 text AI Sessions
+			62 text Model:
+			63 combo box (settable, string) Model: Value: Local models / Ollama / bigdaddyg-productivity-local:latest ID: 1206
+				64 text (settable, string) Model: Value: Local models / Ollama / bigdaddyg-productivity-local:latest
+				65 button Open ID: DropDown
+			66 text GhostText model:
+			67 combo box (settable, string) GhostText model: Value: GhostText: Auto Local ID: 1211
+				68 text (settable, string) GhostText model: Value: GhostText: Auto Local
+				69 button Open ID: DropDown
+			70 checkbox (check box) Allow cloud GhostText for this session ID: 1212
+			71 text Max tokens:
+			72 combo box (settable, string) 4096 Value: 4096 ID: 1219
+				73 text (settable, string) 4096 Value: 4096
+				74 button Open ID: DropDown
+			75 text Context:
+			76 combo box (settable, string) 64K (pending model admission) Value: 64K ID: 1220
+				77 text (settable, string) 64K (pending model admission) Value: 64K
+				78 button Open ID: DropDown
+			79 text Reasoning:
+			80 combo box (settable, string) Reasoning: Value: Instant (no reasoning) ID: 1217
+				81 text (settable, string) Reasoning: Value: Instant (no reasoning)
+				82 button Open ID: DropDown
+			83 checkbox (check box) Allow web browsing (WinHTTP) ID: 1218
+			84 text field (edit) Value: Welcome to RawrXD AI Chat! Select a model and type a message to begin. ID: 1203
+				85 scroll bar (disabled, settable, float) Vertical Value: 0 ID: NonClientVerticalScrollBar
+					86 button (disabled) Line up ID: UpButton
+					87 button (disabled) Line down ID: DownButton
+			88 text field (edit) (settable, string) ID: 1202
+				89 scroll bar (disabled, settable, float) Vertical Value: 0 ID: NonClientVerticalScrollBar
+					90 button (disabled) Line up ID: UpButton
+					91 button (disabled) Line down ID: DownButton
+			92 button Send ID: 1204
+			93 button Clear ID: 1205
+			94 button (disabled) Stop ID: 1210
+		95 document (settable, string) RichEdit Control Value: int main() { return missing_panel_probe_symbol; } ID: 1001
+		96 text F: > rawrxd > evidence > IDE_RELEASE_READINESS_001 > bottom_panels_20261111 > project_probe_001 > panel_probe.cpp
+		97 title bar (settable, string) Value: RawrXD IDE - panel_probe.cpp - project_probe_001
+			98 menu bar System ID: MenuBar
+				114 menu item System
+			100 button Minimize
+			101 button Maximize
+			102 button Close
+		103 menu bar Application ID: MenuBar
+			115 menu item File
+			116 menu item Edit
+			117 menu item View
+			118 menu item Terminal
+			119 menu item Tools
+			120 menu item Modules
+			121 menu item Help
+			122 menu item Git
+			123 menu item Agent
+			124 menu item Autonomy
+
+Document text: ```
+int main() {
+    return missing_panel_probe_symbol;
+}
+```

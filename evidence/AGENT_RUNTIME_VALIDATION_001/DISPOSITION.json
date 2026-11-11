@@ -1,0 +1,17 @@
+{
+  "disposition_id": "AGENT_RUNTIME_VALIDATION_001_DISPOSITION",
+  "updated_at": "2026-11-11T16:45:00Z",
+  "G1": "FAIL",
+  "G2": "BLOCKED",
+  "G3": "BLOCKED",
+  "G4": "BLOCKED",
+  "G5": "PASS",
+  "G6": "PASS",
+  "exe": null,
+  "RUNTIME_REACHED_orch_gaps": "0/4",
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "next": "Continue G1 — fix residual compile errors (Annotations/LSP/Semantic/Chat/AutonomousAgent) until RawrXD-Win32IDE-Native links; NO STUBS",
+  "log": "F:\\rawrxd\\evidence\\AGENT_RUNTIME_VALIDATION_001\\g1_build6.log"
+}

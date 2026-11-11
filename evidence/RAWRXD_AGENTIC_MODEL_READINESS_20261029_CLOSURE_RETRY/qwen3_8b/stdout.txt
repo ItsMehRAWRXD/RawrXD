@@ -1,0 +1,9 @@
+
+RawrXD Local Agent
+Model:   qwen3:8b
+Backend: ollama
+Mode:    autonomous
+Root:    F:\rawrxd
+
+RAWRXD_AGENTIC_EDIT_COMPLETE
+

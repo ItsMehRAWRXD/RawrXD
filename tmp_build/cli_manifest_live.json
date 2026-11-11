@@ -1,0 +1,348 @@
+{
+  "end_to_end_forward_parity": {
+    "evidence": "evidence/GAP_AUDIT_2026-10-13/GATE4_CERTIFICATION_2026-10-13.md",
+    "status": "verified",
+    "verified_by": "MODEL_GENIE_NATIVE_FORWARD_001 Gate 4"
+  },
+  "generated_by": "rawr capabilities",
+  "modes": [
+    {
+      "description": "code — Inspect, modify, build and test projects (authority: controlled)",
+      "name": "code"
+    },
+    {
+      "description": "ask — Answer questions and explain code without changing it (authority: read-only)",
+      "name": "ask"
+    },
+    {
+      "description": "debug — Diagnose crashes, apply and verify fixes (authority: controlled)",
+      "name": "debug"
+    },
+    {
+      "description": "plan — Research and create implementation plans (authority: plan-files)",
+      "name": "plan"
+    },
+    {
+      "description": "swarm — Coordinate specialized subagents on parallel tasks (authority: controlled)",
+      "name": "swarm"
+    },
+    {
+      "description": "review — Review code, diffs, architecture and security (authority: read-only)",
+      "name": "review"
+    },
+    {
+      "description": "test — Discover, generate and execute tests (authority: controlled)",
+      "name": "test"
+    },
+    {
+      "description": "repair — Fix build failures and failing tests (authority: controlled)",
+      "name": "repair"
+    },
+    {
+      "description": "refactor — Restructure implementations preserving behavior (authority: controlled)",
+      "name": "refactor"
+    },
+    {
+      "description": "research — Investigate local sources and approved documentation (authority: read-only)",
+      "name": "research"
+    },
+    {
+      "description": "architect — Design components and interfaces (authority: plan-files)",
+      "name": "architect"
+    },
+    {
+      "description": "benchmark — Measure inference and system performance (authority: controlled)",
+      "name": "benchmark"
+    },
+    {
+      "description": "audit — Check implementation completeness and write audit artifacts (authority: plan-files)",
+      "name": "audit"
+    },
+    {
+      "description": "autonomous — Execute a persistent engineering backlog across sessions (authority: full)",
+      "name": "autonomous"
+    }
+  ],
+  "multi_token_kv_parity": {
+    "evidence": "evidence/GAP_AUDIT_2026-10-13/GATE6_KVCACHE_CONTEXT.md",
+    "status": "verified",
+    "verified_by": "MODEL_GENIE_NATIVE_FORWARD_001 Gate 6"
+  },
+  "native_forward_zero_fallback": {
+    "evidence": "evidence/GAP_AUDIT_2026-10-13/GATE4_NATIVE_FORWARD.md",
+    "status": "verified",
+    "verified_by": "MODEL_GENIE_NATIVE_FORWARD_001 Gate 4"
+  },
+  "primitives": [
+    {
+      "available": true,
+      "implementation_required": true,
+      "kernel_present": true,
+      "name": "RmsNormFwd",
+      "status": "bound",
+      "status_source": "RawrXD::Deep2::QuantParityRegistry::ToJson"
+    },
+    {
+      "available": true,
+      "implementation_required": true,
+      "kernel_present": true,
+      "name": "LinearFwd",
+      "status": "bound",
+      "status_source": "RawrXD::Deep2::QuantParityRegistry::ToJson"
+    },
+    {
+      "available": false,
+      "implementation_required": true,
+      "kernel_present": false,
+      "name": "MatMulFwd",
+      "status": "declared_unimplemented",
+      "status_source": "RawrXD::Deep2::QuantParityRegistry::ToJson"
+    },
+    {
+      "available": true,
+      "implementation_required": true,
+      "kernel_present": true,
+      "name": "AttentionFwd",
+      "status": "bound",
+      "status_source": "RawrXD::Deep2::QuantParityRegistry::ToJson"
+    },
+    {
+      "available": true,
+      "implementation_required": true,
+      "kernel_present": true,
+      "name": "MlaDecompressFwd",
+      "status": "bound",
+      "status_source": "RawrXD::Deep2::QuantParityRegistry::ToJson"
+    },
+    {
+      "available": true,
+      "implementation_required": true,
+      "kernel_present": true,
+      "name": "RouterFwd",
+      "status": "bound",
+      "status_source": "RawrXD::Deep2::QuantParityRegistry::ToJson"
+    },
+    {
+      "available": true,
+      "implementation_required": true,
+      "kernel_present": true,
+      "name": "TopKFwd",
+      "status": "bound",
+      "status_source": "RawrXD::Deep2::QuantParityRegistry::ToJson"
+    },
+    {
+      "available": true,
+      "implementation_required": true,
+      "kernel_present": true,
+      "name": "MoEExecuteFwd",
+      "status": "bound",
+      "status_source": "RawrXD::Deep2::QuantParityRegistry::ToJson"
+    },
+    {
+      "available": true,
+      "implementation_required": true,
+      "kernel_present": true,
+      "name": "ResidualAddFwd",
+      "status": "bound",
+      "status_source": "RawrXD::Deep2::QuantParityRegistry::ToJson"
+    },
+    {
+      "available": true,
+      "implementation_required": true,
+      "kernel_present": true,
+      "name": "LMHeadFwd",
+      "status": "bound",
+      "status_source": "RawrXD::Deep2::QuantParityRegistry::ToJson"
+    }
+  ],
+  "primitives_provenance": "live QuantParityRegistry::ToJson() from the linked CLI process",
+  "quantization_kernels": [
+    {
+      "ctest_gate": "(none)",
+      "evidence": "",
+      "format": "F32",
+      "verification": "declared_only"
+    },
+    {
+      "ctest_gate": "(none)",
+      "evidence": "",
+      "format": "F16",
+      "verification": "declared_only"
+    },
+    {
+      "ctest_gate": "(none)",
+      "evidence": "",
+      "format": "Q4_0",
+      "verification": "declared_only"
+    },
+    {
+      "ctest_gate": "(none)",
+      "evidence": "",
+      "format": "Q4_1",
+      "verification": "declared_only"
+    },
+    {
+      "ctest_gate": "(none)",
+      "evidence": "",
+      "format": "Q5_0",
+      "verification": "declared_only"
+    },
+    {
+      "ctest_gate": "(none)",
+      "evidence": "",
+      "format": "Q5_1",
+      "verification": "declared_only"
+    },
+    {
+      "ctest_gate": "(none)",
+      "evidence": "",
+      "format": "Q8_0",
+      "verification": "declared_only"
+    },
+    {
+      "ctest_gate": "(none)",
+      "evidence": "",
+      "format": "Q2_K",
+      "verification": "declared_only"
+    },
+    {
+      "ctest_gate": "(none)",
+      "evidence": "",
+      "format": "Q3_K",
+      "verification": "declared_only"
+    },
+    {
+      "ctest_gate": "(none)",
+      "evidence": "",
+      "format": "Q4_K",
+      "verification": "declared_only"
+    },
+    {
+      "ctest_gate": "(none)",
+      "evidence": "",
+      "format": "Q5_K",
+      "verification": "declared_only"
+    },
+    {
+      "ctest_gate": "(none)",
+      "evidence": "",
+      "format": "Q6_K",
+      "verification": "declared_only"
+    },
+    {
+      "ctest_gate": "(none)",
+      "evidence": "",
+      "format": "Q8_K",
+      "verification": "declared_only"
+    },
+    {
+      "ctest_gate": "(none)",
+      "evidence": "",
+      "format": "IQ2_XXS",
+      "verification": "declared_only"
+    },
+    {
+      "ctest_gate": "(none)",
+      "evidence": "",
+      "format": "IQ2_XS",
+      "verification": "declared_only"
+    },
+    {
+      "ctest_gate": "(none)",
+      "evidence": "",
+      "format": "IQ3_XXS",
+      "verification": "declared_only"
+    },
+    {
+      "ctest_gate": "(none)",
+      "evidence": "",
+      "format": "IQ1_S",
+      "verification": "declared_only"
+    },
+    {
+      "ctest_gate": "(none)",
+      "evidence": "",
+      "format": "IQ4_NL",
+      "verification": "declared_only"
+    },
+    {
+      "ctest_gate": "(none)",
+      "evidence": "",
+      "format": "IQ3_S",
+      "verification": "declared_only"
+    },
+    {
+      "ctest_gate": "(none)",
+      "evidence": "",
+      "format": "IQ2_S",
+      "verification": "declared_only"
+    },
+    {
+      "ctest_gate": "(none)",
+      "evidence": "",
+      "format": "IQ4_XS",
+      "verification": "declared_only"
+    },
+    {
+      "ctest_gate": "(none)",
+      "evidence": "",
+      "format": "BF16",
+      "verification": "declared_only"
+    }
+  ],
+  "schema": "rawrxd-capability-manifest/1",
+  "source_revision": "a7b14a9f8c61c239c3834b1028274a1060170b92",
+  "tool_count": 7,
+  "tools": [
+    {
+      "description": "Create directory inside workspace",
+      "name": "createDirectory",
+      "risk": 1,
+      "status": "registered_and_dispatchable",
+      "verification": "live rawr tool registry"
+    },
+    {
+      "description": "Create a new file without overwriting",
+      "name": "createFile",
+      "risk": 1,
+      "status": "registered_and_dispatchable",
+      "verification": "live rawr tool registry"
+    },
+    {
+      "description": "Replace exact unique text in a file",
+      "name": "editFiles",
+      "risk": 1,
+      "status": "registered_and_dispatchable",
+      "verification": "live rawr tool registry"
+    },
+    {
+      "description": "Find paths by filename substring",
+      "name": "fileSearch",
+      "risk": 0,
+      "status": "registered_and_dispatchable",
+      "verification": "live rawr tool registry"
+    },
+    {
+      "description": "List workspace directory",
+      "name": "listDirectory",
+      "risk": 0,
+      "status": "registered_and_dispatchable",
+      "verification": "live rawr tool registry"
+    },
+    {
+      "description": "Read bounded workspace file",
+      "name": "readFile",
+      "risk": 0,
+      "status": "registered_and_dispatchable",
+      "verification": "live rawr tool registry"
+    },
+    {
+      "description": "Search bounded text files",
+      "name": "textSearch",
+      "risk": 0,
+      "status": "registered_and_dispatchable",
+      "verification": "live rawr tool registry"
+    }
+  ],
+  "workspace": "F:\\rawrxd"
+}

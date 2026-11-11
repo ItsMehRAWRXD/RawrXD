@@ -1,0 +1,43 @@
+{
+  "disposition_id": "AGGREGATE_DECODE_E2E_001_DISPOSITION",
+  "updated_at": "2026-11-11T17:00:00Z",
+  "single_session": {
+    "SOURCE_WIRED": 1,
+    "RUNTIME_REACHED": 1,
+    "backend_smoked": "OLLAMA_HTTP",
+    "exit_code": 0,
+    "note": "Original E2E_001 Ollama path preserved"
+  },
+  "multi_session": {
+    "SOURCE_WIRED": 1,
+    "RUNTIME_REACHED": 1,
+    "backend_smoked": "OLLAMA_HTTP",
+    "streams": 4,
+    "concurrent": 1,
+    "exit_code": 0,
+    "note": "Original E2E_001 Ollama path preserved"
+  },
+  "deep2_engine_backend": {
+    "SOURCE_WIRED": 1,
+    "RUNTIME_REACHED": 1,
+    "deep2_runtime_reached": 1,
+    "backend_smoked": "DEEP2",
+    "gguf": "F:\\ollamamodels\\n4-tiny-oracle.gguf",
+    "single_exit": 0,
+    "multi_exit": 0,
+    "GENERATED_TOKENS_single": 8,
+    "GENERATED_TOKENS_multi": 12,
+    "evidence": "F:\\rawrxd\\evidence\\AGGREGATE_DECODE_DEEP2_RUNTIME_001",
+    "note": "Residual closed: AGGREGATE_DECODE_USE_DEEP2=1 linked deep2_engine_lib; no HTTP fallback; real generateStream tokens"
+  },
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "laws": {
+    "SOURCE_WIRED_NE_RUNTIME_REACHED": true,
+    "OLLAMA_SMOKE_NE_DEEP2_GPU_CERT": true,
+    "NOT_RUN_NE_PASS": true,
+    "DEEP2_RUNTIME_REACHED_NE_CERTIFIED": true
+  },
+  "next_residual": "None for Deep2 aggregate decode runtime reach. CERTIFIED/PROMOTE still held (GPU forward/cert ladder independent)."
+}

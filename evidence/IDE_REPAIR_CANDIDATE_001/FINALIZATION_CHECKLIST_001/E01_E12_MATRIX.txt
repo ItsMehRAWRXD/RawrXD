@@ -1,0 +1,62 @@
+E01_E12_EDITOR_FINALIZATION_MATRIX
+ASOF_UTC=2026-11-10T18:56:00Z
+OWNER=G_E
+MOTD_ACK=1
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+NO_INVENT_PASS=1
+NO_CROSS_SHA_INHERIT=1
+LAW=NOT_RUN!=PASS
+LAW=SOURCE_WIRED!=RUNTIME_REACHED
+LAW=HISTORICAL_RECEIPT!=TIP_PASS
+LAW=CHECKLIST_ITEM!=CONFIRMED_DEFECT
+
+TIP_UNDER_TEST=FROZEN_G
+IDE_SHA256=D56FE6DD5FADF45F1E475740BFBC348415DDE0B44C33D2790B93E5B9EA023635
+LOOP_SHA256=928A90F00D646A39B082559FFA88BEC046362609EC69BAA16C0E6C3DE34E7D8C
+TIP_EXE=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_candidate_D56FE6DD_928A90F0_001\bin\RawrXD-Win32IDE-Native-Ext.exe
+
+HISTORICAL_ONLY_DO_NOT_INHERIT=
+  9FDEBF09 ITEM_9 save/build/problems click PASS (DAILY_DRIVER_9FDE_ITEMS_5_10.txt)
+  F6E6C067 FOUR_PANEL S_05/S_06/S_12 editor+problems+edit markers (different SHA)
+  GhostText UI strings / ollama route logs on other SHAs (AC7DC1D4/401071/96B6D9F4) — display!=accept/reject/cancel proof
+  GhostText boundary build_ghosttext_boundary Native non-Ext — not tip G Ext identity
+
+EVIDENCE_PRIMARY_TIP_G=
+  G020 ISSUE49_PRODUCT_FINAL: S_04_OPEN_PROJECT=PASS_ARGV_OPEN_FIXTURE; SOURCE_EDITED=0; WRITE_COMMIT=0
+  G020 chat/editor path exercised for agent read; durable editor save/reopen cycle not sealed on tip
+  A04 sibling FAIL: no committed durable edit on G (editor agent-edit integrity gap — agent lane; noted for E09)
+
+# ID | STATUS | OBLIGATION | EVIDENCE / NEXT_EXECUTABLE_GATE
+E01=NOT_VERIFIED | File open/save/reopen no data loss/encoding corruption | RUNTIME_PARTIAL: G020 S_04_OPEN_PROJECT=PASS_ARGV_OPEN_FIXTURE on D56FE6DD; save/reopen HISTORICAL 9FDE only; NEXT=open→edit→save→reopen SHA compare on D56FE6DD
+E02=NOT_VERIFIED | Unicode and UTF-16 round-trip | Flush UTF-8 AgentSession CLOSED_ON_G is agent JSON path != editor encoding matrix; NEXT=UTF-8/UTF-16 file round-trip in editor on D56FE6DD
+E03=NOT_VERIFIED | Multi-file editing buffers/tabs/identities | No tip G multi-doc receipt; NEXT=open 2+ files, switch tabs, verify buffer identity on D56FE6DD
+E04=NOT_VERIFIED | Undo/redo after agent and manual edits | No tip G undo/redo receipt; NEXT=manual+agent edit undo/redo stack on D56FE6DD
+E05=NOT_VERIFIED | Search/replace navigation and replacement | No tip G find/replace receipt; NEXT=find→replace→verify buffer on D56FE6DD
+E06=NOT_VERIFIED | Syntax highlighting supported languages | No tip G highlight receipt; NEXT=C/C++/asm highlight visual/API probe on D56FE6DD
+E07=NOT_VERIFIED | Diagnostics navigation to correct locations | HISTORICAL 9FDE ITEM_9 + F6E6 S_06 click-to-line; tip G NOT_RUN; NEXT=Problems navigate caret on D56FE6DD
+E08=NOT_VERIFIED | GhostText accept/reject/cancel/stale protection | Other-SHA GhostText route/UI HISTORICAL; tip G Ext accept/reject/cancel NOT_RUN; NEXT=GhostText accept+reject+cancel+stale on D56FE6DD Ext
+E09=NOT_VERIFIED | Concurrent agent/manual edits no silent overwrites | G020 WRITE_ROLLBACK without commit; durable concurrent integrity NOT proven; NEXT=manual edit during agent write + no silent loss on D56FE6DD (coord B01/B06)
+E10=NOT_VERIFIED | External file changes detect/reconcile | No tip G external-modify receipt; NEXT=touch file on disk → IDE detect/reload prompt on D56FE6DD
+E11=NOT_VERIFIED | Workspace persistence restore files/sessions | --user-data-dir used on G runs; restore intended files/sessions NOT sealed; NEXT=restart restore open set on D56FE6DD userdata
+E12=NOT_VERIFIED | Large-file responsiveness no hang/corruption | No tip G large-file receipt; NEXT=open multi-MB source + scroll/edit latency bound on D56FE6DD
+
+COUNTS=
+  TOTAL=12
+  PASS=0
+  FAIL=0
+  NOT_VERIFIED=12
+  HISTORICAL_NOTES=9FDE_save_problems;F6E6_editor_markers;GhostText_other_SHA
+
+B07_IMPACT=
+  Editor open partial on tip (S_04) insufficient for B07 editor conjunction
+  No tip-G E-lane FAIL requiring minimal source fix this turn
+  NEXT for B07 editor slice=E01 full open/save/reopen + E07 click-to-line on same immutable SHA as agent/terminal/Git
+
+SOURCE_FIXES_THIS_LANE=0
+REBUILD=0
+PROMOTE=0
+CERTIFIED=0
+PRODUCT_PASS=0
+ACCEPTED=0

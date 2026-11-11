@@ -1,0 +1,455 @@
+2026-11-09T23:11:23.2616436-05:00 STEP 00_CLEAN_CLONE=NOT_RUN_LANE_HARNESS_NOT_CLEAN_MACHINE
+2026-11-09T23:11:23.2792950-05:00 STEP 01_LAUNCH=PENDING
+2026-11-09T23:11:23.2822957-05:00 STEP 02_LOCAL_MODEL_LOAD=MODEL_PATH_PRESENT_LOAD_NOT_PROVEN
+2026-11-09T23:11:23.2868086-05:00 STEP 03_GPU_RUNTIME_R9700=NOT_RUN
+2026-11-09T23:11:23.2912165-05:00 STEP 04_OPEN_PROJECT=PENDING
+2026-11-09T23:11:23.3174769-05:00 STEP 05_AGENT_PROMPT=PENDING
+2026-11-09T23:11:23.3190611-05:00 STEP 06_AGENT_READS_PROJECT=PENDING
+2026-11-09T23:11:23.3233695-05:00 STEP 07_AGENT_REASONING_GPU=PENDING
+2026-11-09T23:11:23.3334119-05:00 STEP 08_TOOL_AUTHORITY=PENDING
+2026-11-09T23:11:23.3406783-05:00 STEP 09_RESULT_REINJECTION=PENDING
+2026-11-09T23:11:23.3453918-05:00 STEP 10_REAL_SOURCE_EDIT=PENDING
+2026-11-09T23:11:23.3463978-05:00 STEP 11_BUILD_FAILURE_RECOVERY=PENDING
+2026-11-09T23:11:23.3541105-05:00 STEP 12_MODEL_DIAGNOSES_FAILURE=PENDING
+2026-11-09T23:11:23.3551155-05:00 STEP 13_SECOND_EDIT=PENDING
+2026-11-09T23:11:23.3594797-05:00 STEP 14_FINAL_BUILD=PENDING
+2026-11-09T23:11:23.3641382-05:00 STEP 15_FINAL_TESTS=PENDING
+2026-11-09T23:11:23.3656021-05:00 STEP 16_MULTI_AGENT_REVIEW=NOT_RUN_NO_INDEPENDENT_REVIEWER
+2026-11-09T23:11:23.3686279-05:00 STEP 17_AGENT_EVIDENCE_REPORT=PENDING
+2026-11-09T23:11:23.3716787-05:00 STEP 18_IDE_GIT_COMMIT=NOT_RUN
+2026-11-09T23:11:23.3773351-05:00 STEP H57_AGENTSESSION=PRESENT_IN_EXE
+2026-11-09T23:11:23.3788440-05:00 TIP_SHA256=35C22E8AAFC1E9B30E40C2505AF7B4DEB66BDFB73D56B75D31C937D8C70D8563
+2026-11-09T23:11:23.3829912-05:00 LOOP_BESIDE=F:\rawrxd\evidence\RELEASE_FREEZE_001\candidates\tip_freeze_001\deep2_agentic_loop.exe EXISTS=1
+2026-11-09T23:11:23.3845416-05:00 MODEL=F:\rawrxd\models\qwen2.5-coder_1.5b-base.gguf EXISTS=1
+2026-11-09T23:11:23.3893765-05:00 PROJECT=F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project\bug.cpp HASH_BEFORE=2A63C624A7690435F4CB999A6256694C56353C03932E3EAF3F9FA8B1601B9206
+2026-11-09T23:11:23.3923945-05:00 AgentSession_IN_EXE=1 AgenticLoop_IN_EXE=1
+2026-11-09T23:11:23.4860043-05:00 RAWRXD_CLI_PATH=F:\rawrxd\evidence\RELEASE_FREEZE_001\candidates\tip_freeze_001\rawr_run_to_deep2_shim.exe (rawr-run?deep2 shim; pin-safe spawn path)
+2026-11-09T23:11:25.5444707-05:00 PID=44680 CWD=F:\rawrxd\evidence\RELEASE_FREEZE_001\candidates\tip_freeze_001 LAUNCH_ATTEMPT=1
+2026-11-09T23:11:27.1712227-05:00 MAIN_VIA_PROC t=2
+2026-11-09T23:11:27.1742780-05:00 MAIN=0x1E1006
+2026-11-09T23:11:27.1784272-05:00 STEP 01_LAUNCH=PASS_MAIN_HWND
+2026-11-09T23:11:30.1899162-05:00 STEP 04_OPEN_PROJECT=PASS_ARGV_OPEN_FIXTURE
+2026-11-09T23:11:32.1919902-05:00 STEP 11_BUILD_FAILURE_SUBSTRATE_ONLY=SKIPPED_TIP004_BUILD_CMD_CRASH_AVOID
+2026-11-09T23:11:32.1935049-05:00 STEP 11_BUILD_FAILURE_RECOVERY=NOT_RUN_REQUIRES_AGENT_OWNED_RECOVERY
+2026-11-09T23:11:32.2036843-05:00 PROJECT_HASH_REBASELINE_AFTER_VIEW=2A63C624A7690435F4CB999A6256694C56353C03932E3EAF3F9FA8B1601B9206 NORM_LEN=291
+2026-11-09T23:11:32.2129649-05:00 MODEL_COMBO_SELECT=NO_LOCAL_GGUF_IN_COMBO n=45
+2026-11-09T23:11:32.6442292-05:00 CHAT_INPUT setOk=True method=EM_REPLACESEL len=54 setEqGet=1 hwnd=0x151770
+2026-11-09T23:11:33.7349897-05:00 CHAT_CTRL_ENTER newAttempts=0 afterLen=54 stageOk=True sendOk=False rt=F:\rawrxd\evidence\RELEASE_FREEZE_001\candidates\tip_freeze_001\issue49_tip004_35c22_logs\chat_runtime.log
+2026-11-09T23:11:33.7386096-05:00 STEP 05_AGENT_PROMPT=PASS_PROMPT_CTRL_ENTER_SEND
+2026-11-09T23:11:33.8178527-05:00 AGENTIC_LOOP_RUN_4106=True
+2026-11-09T23:11:35.8880001-05:00 AGENT_START_LOOP_4100=True
+2026-11-09T23:11:35.8932317-05:00 AGENT_WAIT_SEC=1800 DEADLINE=2026-11-09T23:41:35.8901053-05:00
+2026-11-09T23:11:36.0428746-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:11:39.2277755-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:11:42.3572796-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:11:45.4799638-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:11:48.5849134-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:11:51.7515354-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:11:54.8530691-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:11:58.4999443-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:12:01.6571645-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:12:04.7811936-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:12:07.9393892-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:12:11.0692562-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:12:14.1974038-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:12:17.3146293-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:12:20.4343359-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:12:23.4621338-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:12:26.4814202-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:12:29.5013295-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:12:32.5242589-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:12:35.5415280-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:12:38.5638478-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:12:41.5797466-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:12:44.6015025-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:12:47.6241244-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:12:50.6467702-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:12:53.6946531-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:12:56.7215282-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:12:59.7409593-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:13:02.7666099-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:13:05.7915300-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:13:08.8180008-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:13:11.8314034-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:13:14.8508051-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:13:17.8837014-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:13:20.9064345-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:13:23.9339037-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:13:26.9537146-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:13:29.9718626-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:13:32.9923974-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:13:36.0095681-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:13:39.0314760-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:13:42.0684676-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:13:45.0950556-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:13:48.1207552-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:13:51.1453078-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:13:54.1766858-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:13:57.1964261-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:14:00.2196727-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:14:03.2360394-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:14:06.2691561-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:14:09.2839917-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:14:12.3048619-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:14:15.3239505-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:14:18.3455277-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:14:21.3750702-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:14:24.4163507-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:14:27.4508948-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:14:30.5289134-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:14:33.5570236-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:14:36.6069316-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:14:39.6558446-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:14:42.7143452-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:14:45.7442765-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:14:48.8414566-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:14:51.9002156-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:14:54.9599048-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:14:57.9835859-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:15:01.0782017-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:15:04.1341544-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:15:07.2646051-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:15:10.3312102-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:15:13.4229678-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:15:16.6493844-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:15:19.7058857-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:15:22.7786467-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:15:25.8140099-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:15:28.8433136-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:15:31.8610264-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:15:34.8857209-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:15:37.9068923-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:15:40.9315135-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:15:43.9562384-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:15:46.9772451-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:15:50.0022630-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:15:53.0316676-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:15:56.0582704-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:15:59.0781767-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:16:02.1111890-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:16:05.1315714-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:16:08.1571729-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:16:11.1895380-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:16:14.2150293-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:16:17.2427720-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:16:20.2681406-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:16:23.2923930-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:16:26.3204021-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:16:29.3457174-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:16:32.3756635-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:16:35.4129682-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:16:38.4371393-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:16:41.4578153-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:16:44.4833267-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:16:47.5073599-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:16:50.5260650-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:16:53.5528555-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:16:56.5705219-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:16:59.6053038-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:17:02.6220863-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:17:05.6383248-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:17:08.6545333-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:17:11.6834587-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:17:14.7491259-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:17:17.8184126-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:17:20.8365596-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:17:23.8785030-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:17:26.8980350-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:17:29.9289609-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:17:32.9461895-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:17:35.9670706-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:17:38.9943471-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:17:42.0243612-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:17:45.0478490-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:17:48.0846353-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:17:51.1041867-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:17:54.1236922-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:17:57.1466693-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:18:00.1727043-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:18:03.1980666-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:18:06.2136344-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:18:09.2356315-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:18:12.2760667-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:18:15.3035732-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:18:18.3280134-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:18:21.3444513-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:18:24.3654368-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:18:27.3986551-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:18:30.4170467-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:18:33.4465036-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:18:36.4793147-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:18:39.5090308-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:18:42.5340521-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:18:45.5533798-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:18:48.5915516-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:18:51.6271081-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:18:54.7455854-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:18:57.7935627-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:19:00.9171500-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:19:04.2627273-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:19:07.3220736-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:19:10.3565410-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:19:13.3864206-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:19:16.4151056-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:19:19.4360053-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:19:22.4531468-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:19:25.4913489-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:19:28.5133314-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:19:31.5378566-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:19:34.5550417-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:19:37.5831875-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:19:40.6086779-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:19:43.6299054-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:19:46.6456917-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:19:49.6874764-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:19:52.7147141-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:19:55.7315268-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:19:58.7588555-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:20:01.7868724-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:20:04.8105925-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:20:07.8404757-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:20:10.8662884-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:20:13.8913953-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:20:16.9067627-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:20:19.9212897-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:20:22.9367007-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:20:25.9572620-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:20:28.9784639-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:20:32.0028470-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:20:35.0273244-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:20:38.0621644-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:20:41.0889955-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:20:44.1156330-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:20:47.1468031-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:20:50.1763033-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:20:53.1939568-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:20:56.2183208-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:20:59.2441474-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:21:02.2742678-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:21:05.2954446-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:21:08.3253495-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:21:11.3474160-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:21:14.3701143-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:21:17.3965888-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:21:20.4200330-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:21:23.4453460-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:21:26.4823299-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:21:29.5084321-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:21:32.5280244-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:21:35.5436344-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:21:38.5586681-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:21:41.5861747-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:21:44.6044888-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:21:47.6313914-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:21:50.6668184-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:21:53.6856694-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:21:56.7097419-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:21:59.7365572-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:22:02.7673679-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:22:05.7957618-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:22:08.8234652-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:22:11.8520666-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:22:14.8951955-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:22:17.9101297-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:22:20.9260954-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:22:23.9548132-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:22:26.9840630-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:22:30.0082415-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:22:33.0647864-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:22:36.1359185-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:22:39.2470211-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:22:42.3429400-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:22:45.3888281-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:22:48.4195253-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:22:51.4424721-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:22:54.4808688-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:22:57.5095938-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:23:00.5311641-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:23:03.5659190-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:23:06.5983041-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:23:09.6233437-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:23:12.6412827-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:23:15.6581614-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:23:18.6822595-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:23:21.7093280-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:23:24.7308372-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:23:27.7643282-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:23:30.7926613-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:23:33.8227067-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:23:36.8513134-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:23:39.8771827-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:23:42.9047915-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:23:45.9251024-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:23:48.9494898-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:23:51.9835316-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:23:54.9994007-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:23:58.0236941-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:24:01.0419483-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:24:04.0695158-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:24:07.0962682-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:24:10.1224365-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:24:13.1486234-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:24:16.1831474-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:24:19.2135946-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:24:22.2288362-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:24:25.2508348-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:24:28.2680425-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:24:31.2870847-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:24:34.3033851-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:24:37.3190625-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:24:40.3505516-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:24:43.3730580-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:24:46.3991894-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:24:49.4202009-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:24:52.4484000-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:24:55.4624737-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:24:58.4813465-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:25:01.5052316-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:25:04.5429812-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:25:07.5618912-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:25:10.5794314-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:25:13.6017042-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:25:16.6277689-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:25:19.6515822-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:25:22.6708016-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:25:25.7023561-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:25:28.7455329-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:25:31.7656444-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:25:34.7907990-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:25:37.8176027-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:25:40.8327155-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:25:43.8503399-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:25:46.8775104-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:25:49.9075518-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:25:52.9472003-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:25:55.9818922-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:25:58.9985792-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:26:02.0306600-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:26:05.0598919-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:26:08.0895883-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:26:11.1156885-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:26:14.1358970-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:26:17.1754927-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:26:20.2057867-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:26:23.2852048-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:26:26.3356671-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:26:29.3738805-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:26:32.5692047-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:26:35.6037786-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:26:38.6308286-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:26:41.6750255-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:26:44.6955428-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:26:47.7142664-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:26:50.7397784-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:26:53.7630104-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:26:56.7864660-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:26:59.8187975-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:27:02.8377995-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:27:05.8686106-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:27:08.8891466-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:27:11.9132437-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:27:14.9412643-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:27:17.9718179-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:27:20.9964492-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:27:24.0199034-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:27:27.0510543-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:27:30.0882655-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:27:33.1158702-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:27:36.1350772-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:27:39.1573396-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:27:42.1843418-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:27:45.2102776-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:27:48.2354297-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:27:51.2515676-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:27:54.2859465-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:27:57.3088928-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:28:00.3309804-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:28:03.3621676-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:28:06.3831193-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:28:09.4109086-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:28:12.4364174-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:28:15.4615929-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:28:18.4947825-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:28:21.5104122-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:28:24.5318414-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:28:27.5608728-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:28:30.5780433-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:28:33.6102693-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:28:36.6294271-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:28:39.6585028-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:28:42.6873183-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:28:45.7079476-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:28:48.7313679-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:28:51.7492914-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:28:54.7650679-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:28:57.7845719-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:29:00.8101882-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:29:03.8294721-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:29:06.8597282-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:29:09.8764135-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:29:12.9078605-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:29:15.9257210-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:29:18.9508887-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:29:21.9720463-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:29:24.9922017-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:29:28.0206231-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:29:31.0518662-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:29:34.0838621-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:29:37.1054627-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:29:40.1296880-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:29:43.1559675-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:29:46.1838977-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:29:49.2004751-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:29:52.2287834-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:29:55.2811216-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:29:58.2996880-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:30:01.3284776-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:30:04.4185341-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:30:07.5462299-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:30:10.6560816-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:30:13.6787175-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:30:16.7108217-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:30:19.7482502-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:30:22.7694301-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:30:25.7898697-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:30:28.8135518-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:30:31.8349852-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:30:34.8604638-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:30:37.8815171-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:30:40.8977772-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:30:43.9444366-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:30:46.9748293-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:30:50.0042891-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:30:53.0211293-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:30:56.0544462-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:30:59.0733553-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:31:02.0968370-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:31:05.1226399-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:31:08.1657271-05:00 POLL loopChild=1 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:31:11.1896810-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:31:14.2161811-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:31:17.2382339-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:31:20.2641729-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:31:23.2846439-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:31:26.3105998-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:31:29.3396475-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:31:32.3748315-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:31:35.4016331-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:31:38.4263028-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:31:41.4467996-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:31:44.4748959-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:31:47.4984477-05:00 POLL loopChild=0 spawned=1 session=0 dispatch=0 read=1 tool=1 edit=0 recover=0 diag=0 second=0
+2026-11-09T23:31:50.5002778-05:00 IDE_EXIT=-1 editHit=0 loopSpawned=1
+2026-11-09T23:31:50.5087765-05:00 IDE_EXIT_BEFORE_EDIT=1 TREAT=FAIL_BLOCKED_NOT_SILENT_NOT_RUN
+2026-11-09T23:31:50.5179780-05:00 EDIT_DISPOSITION=IDE_EXIT_BEFORE_EDIT collapseChanged=0 ledgerWrite=0 sourceEdited=0
+2026-11-09T23:31:50.5213110-05:00 STEP 10_REAL_SOURCE_EDIT=FAIL_IDE_EXIT_BEFORE_EDIT
+2026-11-09T23:31:50.5272486-05:00 STEP 06_AGENT_READS_PROJECT=PASS_READ_OBSERVED
+2026-11-09T23:31:50.5352029-05:00 STEP 07_AGENT_REASONING_GPU=PARTIAL_STRING_HIT_NOT_GPU_PROOF
+2026-11-09T23:31:50.5423225-05:00 STEP 08_TOOL_AUTHORITY=PASS_TOOL_STRINGS
+2026-11-09T23:31:50.5438374-05:00 STEP 09_RESULT_REINJECTION=NOT_RUN
+2026-11-09T23:31:50.5483776-05:00 STEP 11_BUILD_FAILURE_RECOVERY=BLOCKED_IDE_EXIT_BEFORE_EDIT
+2026-11-09T23:31:50.5559743-05:00 STEP 12_MODEL_DIAGNOSES_FAILURE=BLOCKED_IDE_EXIT_BEFORE_EDIT
+2026-11-09T23:31:50.5575232-05:00 STEP 13_SECOND_EDIT=BLOCKED_IDE_EXIT_BEFORE_EDIT
+2026-11-09T23:31:50.5639470-05:00 STEP 14_FINAL_BUILD=BLOCKED_IDE_EXIT_BEFORE_EDIT
+2026-11-09T23:31:50.5696126-05:00 STEP 15_FINAL_TESTS=BLOCKED_IDE_EXIT_BEFORE_EDIT
+2026-11-09T23:31:50.5742104-05:00 STEP 17_AGENT_EVIDENCE_REPORT=NOT_RUN

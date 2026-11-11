@@ -1,0 +1,78 @@
+{
+  "milestone_id": "AGENT_RUNTIME_VALIDATION_001",
+  "authority": "F:\\rawrxd",
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "laws": {
+    "SOURCE_WIRED_NE_RUNTIME_REACHED": true,
+    "NOT_RUN_NE_PASS": true
+  },
+  "gates": [
+    {
+      "id": "G1",
+      "name": "Native IDE full link",
+      "status": "FAIL",
+      "exe_path": null,
+      "build_exit": 1,
+      "evidence": [
+        "F:\\rawrxd\\evidence\\AGENT_RUNTIME_VALIDATION_001\\g1_build6.log",
+        "F:\\rawrxd\\evidence\\AGENT_RUNTIME_VALIDATION_001\\BUILD_EXIT_CODE.txt",
+        "F:\\rawrxd\\evidence\\AGENT_RUNTIME_VALIDATION_001\\EXE_STAT.txt"
+      ],
+      "notes": "RawrXD-Win32IDE-Native did not link. Compile errors remain across LSPClient/SemanticPanel/Annotations/LSPClient_Additions/ChatWindow/SemanticTokens/AutonomousAgent (and related). Partial remediations applied (problems_aggregator restored, IDEPlugin.h, LSPServer stubs for winsock, Batch2 decls, WIN32_LEAN_AND_MEAN/_WINSOCKAPI_). NOT_RUN!=PASS; no invented link PASS."
+    },
+    {
+      "id": "G2",
+      "name": "Autonomous task production entry",
+      "status": "BLOCKED",
+      "blocker": "G1",
+      "notes": "StartAutonomousTask requires linked production exe."
+    },
+    {
+      "id": "G3",
+      "name": "FSM transitions runtime",
+      "status": "BLOCKED",
+      "blocker": "G1",
+      "notes": "FSM_TRACE.jsonl STATUS=NOT_RUN; ProductAgentFSM SOURCE_WIRED only."
+    },
+    {
+      "id": "G4",
+      "name": "Live agent E2E",
+      "status": "BLOCKED",
+      "blocker": "G1",
+      "RUNTIME_REACHED": 0,
+      "notes": "E2E_RUN.json records BLOCKED; no tokens/tools/exit."
+    },
+    {
+      "id": "G5",
+      "name": "PlanExecutor exclusion",
+      "status": "PASS",
+      "evidence": [
+        "F:\\rawrxd\\evidence\\AGENT_RUNTIME_VALIDATION_001\\PLANEXECUTOR_EXCLUSION.txt"
+      ],
+      "notes": "Win32IDE_PlanExecutor.cpp exists on disk but zero CMakeLists.txt hits and zero RawrXD-Win32IDE-Native.vcxproj hits. SSOT remains AutonomousLoop. No duplicate CMake execution authority."
+    },
+    {
+      "id": "G6",
+      "name": "Evidence/matrix reconcile",
+      "status": "PASS",
+      "notes": "PROMOTION_GATES.json updated honestly. CAPABILITY_MATRIX.json not mutated. Additive GAP_CLOSURE_ORCH_RUNTIME.json written. Gaps 1/2/6/8 remain SOURCE_WIRED only; RUNTIME_REACHED=0/4."
+    }
+  ],
+  "locked_disposition": {
+    "gaps_1_2_6_8": "SOURCE_WIRED",
+    "RUNTIME_REACHED": "0/4",
+    "CERTIFIED": 0,
+    "PROMOTE": 0
+  },
+  "top_failing_tus_g1": [
+    "Win32IDE_LSPClient.cpp",
+    "Win32IDE_SemanticPanel.cpp",
+    "Win32IDE_Annotations.cpp",
+    "Win32IDE_LSPClient_Additions.cpp",
+    "Win32IDE_ChatWindow.cpp",
+    "Win32IDE_SemanticTokens.cpp",
+    "Win32IDE_AutonomousAgent.cpp"
+  ]
+}

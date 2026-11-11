@@ -1,0 +1,874 @@
+=== dumpbin /dependents single ===
+Microsoft (R) COFF/PE Dumper Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file F:\rawrxd\build\bin\aggregate_decode_single_smoke.exe
+
+File Type: EXECUTABLE IMAGE
+
+  Image has the following dependencies:
+
+    WINHTTP.dll
+    vulkan-1.dll
+    KERNEL32.dll
+    ADVAPI32.dll
+    MSVCP140.dll
+    dxgi.dll
+    SETUPAPI.dll
+    VCRUNTIME140.dll
+    VCRUNTIME140_1.dll
+    api-ms-win-crt-runtime-l1-1-0.dll
+    api-ms-win-crt-stdio-l1-1-0.dll
+    api-ms-win-crt-convert-l1-1-0.dll
+    api-ms-win-crt-environment-l1-1-0.dll
+    api-ms-win-crt-string-l1-1-0.dll
+    api-ms-win-crt-heap-l1-1-0.dll
+    api-ms-win-crt-math-l1-1-0.dll
+    api-ms-win-crt-filesystem-l1-1-0.dll
+    api-ms-win-crt-locale-l1-1-0.dll
+
+  Summary
+
+      429000 .data
+        D000 .pdata
+       4F000 .rdata
+        1000 .reloc
+        1000 .rsrc
+      15D000 .text
+=== dumpbin /dependents multi ===
+Microsoft (R) COFF/PE Dumper Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file F:\rawrxd\build\bin\aggregate_decode_multi_smoke.exe
+
+File Type: EXECUTABLE IMAGE
+
+  Image has the following dependencies:
+
+    WINHTTP.dll
+    vulkan-1.dll
+    KERNEL32.dll
+    ADVAPI32.dll
+    MSVCP140.dll
+    dxgi.dll
+    SETUPAPI.dll
+    VCRUNTIME140.dll
+    VCRUNTIME140_1.dll
+    api-ms-win-crt-runtime-l1-1-0.dll
+    api-ms-win-crt-stdio-l1-1-0.dll
+    api-ms-win-crt-convert-l1-1-0.dll
+    api-ms-win-crt-environment-l1-1-0.dll
+    api-ms-win-crt-string-l1-1-0.dll
+    api-ms-win-crt-heap-l1-1-0.dll
+    api-ms-win-crt-math-l1-1-0.dll
+    api-ms-win-crt-filesystem-l1-1-0.dll
+    api-ms-win-crt-locale-l1-1-0.dll
+
+  Summary
+
+      429000 .data
+        D000 .pdata
+       4F000 .rdata
+        1000 .reloc
+        1000 .rsrc
+      15E000 .text
+=== dumpbin /HEADERS lib (first) ===
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+            8664 machine (x64)
+=== lib member Deep2Engine ===
+  4CA5EBA ??B?$unique_ptr@VKVCache@Deep2@@U?$default_delete@VKVCache@Deep2@@@std@@@std@@QEBA_NXZ
+  4CA5EBA ??C?$unique_ptr@VKVCache@Deep2@@U?$default_delete@VKVCache@Deep2@@@std@@@std@@QEBAPEAVKVCache@Deep2@@XZ
+  4CA5EBA ?currentLength@KVCache@Deep2@@QEBA_KXZ
+  4CA5EBA ?ensureGpuForwardArena@Deep2Engine@Deep2@@QEAA_NI@Z
+  4CA5EBA ?forwardGpuContiguousRange@Deep2Engine@Deep2@@QEAA_NIIIPEBMPEAM@Z
+  4CA5EBA ?forwardGpuMultiMap@Deep2Engine@Deep2@@QEAA_NPEBMPEAM@Z
+  4CA5EBA ?forwardLayerGpuResident@Deep2Engine@Deep2@@QEAA_NII_N0@Z
+  4CA5EBA ?tryGpuTokenForward@Deep2Engine@Deep2@@QEAA_NPEAM@Z
+  5BE4410 ?emitHotpathWitnesses@Deep2Engine@Deep2@@QEAAXXZ
+  5BE4410 ?emitLiveDecodeWitnesses@Deep2Engine@Deep2@@QEAAXPEAU_iobuf@@@Z
+  5BE4410 ?forwardTokenAllLayers@Deep2Engine@Deep2@@QEAA_NPEAM_K@Z
+  5BE4410 ?gpuForwardCounters@Deep2Engine@Deep2@@QEBAAEBUGpuForwardCounters@2@XZ
+  5BE4410 ?gpuResidentDecodeEnabled@Deep2Engine@Deep2@@QEBA_NXZ
+  5BE4410 ?isRealGpuForward@Deep2Engine@Deep2@@QEBA_NXZ
+  5BE4410 ?resetGpuForwardCounters@Deep2Engine@Deep2@@QEAAXXZ
+  5BE4410 ?safeForwardLayer@Deep2Engine@Deep2@@AEAA_N_KPEAM10@Z
+  796E5CC ?ApplyExecutionPolicyToEngine@Exec@Deep2@@YA?AUPlacementApplyReport@12@AEAVDeep2Engine@2@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@1@Z
+  796E5CC ?getMARSController@Deep2Engine@Deep2@@QEAAPEAVMARSController@MARS@2@XZ
+  796E5CC ?getModelWeights@Deep2Engine@Deep2@@QEBAAEBUModelWeights@2@XZ
+  796E5CC ?isMARSEnabled@Deep2Engine@Deep2@@QEBA_NXZ
+  796E5CC ?isModelLoaded@Deep2Engine@Deep2@@QEBA_NXZ
+  97C39C4 ??_C@_0BG@PHGOIMFE@Deep2Engine?3?3generate@
+  A3D1D82 ??_C@_0EC@NOAMFOCI@?$FLDeep2Engine?$FN?5Auto?5dual?9GPU?3?5GP@
+  A78154A ?Execute@MLAForward@Deep2@@QEAA_NPEBMPEAMAEBUMLAWeights@2@AEBUKimiK2Config@2@AEAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PEAVK2KVCache@deep2@rawrxd@@IIPEAUMlaCompleteStats@2@P6AXPEAX@Z7@Z
+  E34246A ??_C@_0BB@CBHJECG@K2KVCache?3?5index@
+  E34246A ??_C@_0BB@IIBGPFIM@K2KVCache?3?5layer@
+  E34246A ??_C@_0BJ@NKJABKKP@K2KVCache?3?5null?5KV?5input@
+  E34246A ??_C@_0BO@BEPGMCCK@K2KVCache?3?5dimension?5overflow@
+  E34246A ??_C@_0CE@JFDOCEHI@K2KVCache?3?5sequence?5length?5exce@
+  E34246A ?CanAppend@K2KVCache@deep2@rawrxd@@QEBA_NXZ
+  E34246A ?CheckedElements@K2KVCache@deep2@rawrxd@@CA_K_K00@Z
+  E34246A ?EnsureHot@K2KVCache@deep2@rawrxd@@AEAAX_K@Z
+  E34246A ?GrowAllocated@K2KVCache@deep2@rawrxd@@AEAAX_K@Z
+  E34246A ?MutableAt@K2KVCache@deep2@rawrxd@@AEAAPEAMAEAV?$vector@MV?$allocator@M@std@@@std@@_K1@Z
+  E34246A ?PathBAttend@Deep2@@YA_NPEAVVulkanCompute@CPUInference@@AEAUDeviceBuf@23@PEBM22PEAMPEAVK2KVCache@deep2@rawrxd@@IIIIIIIIMMAEAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
+  E34246A ?Write@K2KVCache@deep2@rawrxd@@QEAAX_KPEBM1@Z
+  E34246A ?currentLength@K2KVCache@deep2@rawrxd@@QEBA_KXZ
+  E34246A ?kPageTok_@K2KVCache@deep2@rawrxd@@0_KB
+  E34246A ?kvDim@K2KVCache@deep2@rawrxd@@QEBA_KXZ
+ 115B7B2C ??$?0AEAPEAVK2KVCache@deep2@rawrxd@@@?$_Compressed_pair@U?$default_delete@VK2KVCache@deep2@rawrxd@@@std@@PEAVK2KVCache@deep2@rawrxd@@$00@std@@QEAA@U_Zero_then_variadic_args_t@1@AEAPEAVK2KVCache@deep2@rawrxd@@@Z
+ 115B7B2C ??$?0U?$default_delete@VK2KVCache@deep2@rawrxd@@@std@@$0A@@?$unique_ptr@VK2KVCache@deep2@rawrxd@@U?$default_delete@VK2KVCache@deep2@rawrxd@@@std@@@std@@QEAA@PEAVK2KVCache@deep2@rawrxd@@@Z
+ 115B7B2C ??$?4U?$default_delete@VK2KVCache@deep2@rawrxd@@@std@@$0A@@?$unique_ptr@VK2KVCache@deep2@rawrxd@@U?$default_delete@VK2KVCache@deep2@rawrxd@@@std@@@std@@QEAAAEAV01@$$QEAV01@@Z
+ 115B7B2C ??$exchange@PEAVK2KVCache@deep2@rawrxd@@$$T@std@@YAPEAVK2KVCache@deep2@rawrxd@@AEAPEAV123@$$QEA$$T@Z
+ 115B7B2C ??$exchange@PEAVK2KVCache@deep2@rawrxd@@AEAPEAV123@@std@@YAPEAVK2KVCache@deep2@rawrxd@@AEAPEAV123@0@Z
+ 115B7B2C ??$forward@AEAPEAVK2KVCache@deep2@rawrxd@@@std@@YAAEAPEAVK2KVCache@deep2@rawrxd@@AEAPEAV123@@Z
+ 115B7B2C ??$forward@U?$default_delete@VK2KVCache@deep2@rawrxd@@@std@@@std@@YA$$QEAU?$default_delete@VK2KVCache@deep2@rawrxd@@@0@AEAU10@@Z
+ 115B7B2C ??$make_unique@VK2KVCache@deep2@rawrxd@@$$V$0A@@std@@YA?AV?$unique_ptr@VK2KVCache@deep2@rawrxd@@U?$default_delete@VK2KVCache@deep2@rawrxd@@@std@@@0@XZ
+ 115B7B2C ??0K2KVCache@deep2@rawrxd@@QEAA@XZ
+ 115B7B2C ??1?$unique_ptr@VK2KVCache@deep2@rawrxd@@U?$default_delete@VK2KVCache@deep2@rawrxd@@@std@@@std@@QEAA@XZ
+ 115B7B2C ??1K2KVCache@deep2@rawrxd@@QEAA@XZ
+ 115B7B2C ??B?$unique_ptr@VK2KVCache@deep2@rawrxd@@U?$default_delete@VK2KVCache@deep2@rawrxd@@@std@@@std@@QEBA_NXZ
+ 115B7B2C ??C?$unique_ptr@VK2KVCache@deep2@rawrxd@@U?$default_delete@VK2KVCache@deep2@rawrxd@@@std@@@std@@QEBAPEAVK2KVCache@deep2@rawrxd@@XZ
+ 115B7B2C ??R?$default_delete@VK2KVCache@deep2@rawrxd@@@std@@QEBAXPEAVK2KVCache@deep2@rawrxd@@@Z
+ 115B7B2C ??_C@_0BC@LHFFLBEK@K2KVCache?5reset?3?5@
+ 115B7B2C ??_C@_0BD@PJKMAC@K2KVCache?5commit?3?5@
+ 115B7B2C ??_C@_0BO@MNBDPMPL@K2KVCache?3?5invalid?5dimensions@
+ 115B7B2C ??_GK2KVCache@deep2@rawrxd@@QEAAPEAXI@Z
+ 115B7B2C ?Clear@K2KVCache@deep2@rawrxd@@QEAAXXZ
+ 115B7B2C ?CommitPosition@K2KVCache@deep2@rawrxd@@QEAAXXZ
+ 115B7B2C ?ForwardMlaLayer@K2NativeStreamGate@@YA_NAEBVGlobalTensorIndex@Deep2@@AEBUKimiK2Config@3@PEAM2IPEAVK2KVCache@deep2@rawrxd@@IPEAUMlaCompleteStats@3@AEAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
+ 115B7B2C ?ProdKv@K2NativeStreamGate@@YAPEAVK2KVCache@deep2@rawrxd@@AEBUKimiK2Config@Deep2@@_K@Z
+ 115B7B2C ?Reset@K2KVCache@deep2@rawrxd@@QEAAX_K00@Z
+ 115B7B2C ?_Get_first@?$_Compressed_pair@U?$default_delete@VK2KVCache@deep2@rawrxd@@@std@@PEAVK2KVCache@deep2@rawrxd@@$00@std@@QEAAAEAU?$default_delete@VK2KVCache@deep2@rawrxd@@@2@XZ
+ 115B7B2C ?g_prodKvLast@K2NativeStreamGate@@3PEAVK2KVCache@deep2@rawrxd@@EA
+ 115B7B2C ?get@?$unique_ptr@VK2KVCache@deep2@rawrxd@@U?$default_delete@VK2KVCache@deep2@rawrxd@@@std@@@std@@QEBAPEAVK2KVCache@deep2@rawrxd@@XZ
+ 115B7B2C ?liveBytes@K2KVCache@deep2@rawrxd@@QEBA_KXZ
+ 115B7B2C ?maxSeqLen@K2KVCache@deep2@rawrxd@@QEBA_KXZ
+ 115B7B2C ?numLayers@K2KVCache@deep2@rawrxd@@QEBA_KXZ
+ 115B7B2C ?release@?$unique_ptr@VK2KVCache@deep2@rawrxd@@U?$default_delete@VK2KVCache@deep2@rawrxd@@@std@@@std@@QEAAPEAVK2KVCache@deep2@rawrxd@@XZ
+ 115B7B2C ?reset@?$unique_ptr@VK2KVCache@deep2@rawrxd@@U?$default_delete@VK2KVCache@deep2@rawrxd@@@std@@@std@@QEAAXPEAVK2KVCache@deep2@rawrxd@@@Z
+ 12A6AED2 ?At@K2KVCache@deep2@rawrxd@@AEBAPEBMAEBV?$vector@MV?$allocator@M@std@@@std@@_K1@Z
+ 12A6AED2 ?Key@K2KVCache@deep2@rawrxd@@QEBAPEBM_K0@Z
+ 12A6AED2 ?MlaAttentionComplete@Deep2@@YA_NPEBM00PEAM1_K2222IMMPEAVK2KVCache@deep2@rawrxd@@IPEAUMlaCompleteStats@1@AEAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
+ 12A6AED2 ?Value@K2KVCache@deep2@rawrxd@@QEBAPEBM_K0@Z
+ 18469A3E ??0CompressedKVCache@Deep2@@QEAA@XZ
+ 18469A3E ??1CompressedKVCache@Deep2@@QEAA@XZ
+ 18469A3E ??_C@_0DG@KAGJDPNI@?$FLCompressedKVCache?$FN?5ERROR?3?5Fail@
+ 18469A3E ??_C@_0FB@OPGNPILM@?$FLCompressedKVCache?$FN?5Initialized@
+ 18469A3E ?compressQ4_0@CompressedKVCache@Deep2@@AEAAXPEBMPEAUKVBlock_Q4_0@2@_K@Z
+ 18469A3E ?compressQ8_0@CompressedKVCache@Deep2@@AEAAXPEBMPEAUKVBlock_Q8_0@2@_K@Z
+ 18469A3E ?decompressQ4_0@CompressedKVCache@Deep2@@AEBAXPEBUKVBlock_Q4_0@2@PEAM_K@Z
+ 18469A3E ?decompressQ8_0@CompressedKVCache@Deep2@@AEBAXPEBUKVBlock_Q8_0@2@PEAM_K@Z
+ 18469A3E ?getBlockOffset@CompressedKVCache@Deep2@@AEBA_K_K00@Z
+ 18469A3E ?getBlocksPerHead@CompressedKVCache@Deep2@@AEBA_KXZ
+ 18469A3E ?initialize@CompressedKVCache@Deep2@@QEAA_NAEBUCompressedKVConfig@2@@Z
+ 18469A3E ?loadK@CompressedKVCache@Deep2@@QEBAX_K00PEAM@Z
+ 18469A3E ?loadKRange@CompressedKVCache@Deep2@@QEBAX_K000PEAM@Z
+ 18469A3E ?loadV@CompressedKVCache@Deep2@@QEBAX_K00PEAM@Z
+ 18469A3E ?loadVRange@CompressedKVCache@Deep2@@QEBAX_K000PEAM@Z
+ 18469A3E ?memoryUsed@CompressedKVCache@Deep2@@QEBA_KXZ
+ 18469A3E ?reset@CompressedKVCache@Deep2@@QEAAXXZ
+ 18469A3E ?storeKV@CompressedKVCache@Deep2@@QEAAX_K00PEBM1@Z
+ 184CF8FA ??0KVCache@Deep2@@QEAA@XZ
+ 184CF8FA ??1KVCache@Deep2@@QEAA@XZ
+ 184CF8FA ??_C@_0CD@IIINAIBA@?$FLKVCache?$FN?5Initialization?5comple@
+ 184CF8FA ??_C@_0DC@PLCJPMJN@?$FLKVCache?$FN?5ERROR?3?5Failed?5to?5allo@
+ 184CF8FA ??_C@_0DD@GCEEKPNM@?$FLKVCache?$FN?5HOT_BYTES?$DN?$CFzu?5?$CInot?5la@
+ 184CF8FA ??_C@_0DN@PENKOKNM@?$FLKVCache?$FN?5page?5grow?5?$CFzu?5?9?$DO?5?$CFzu?5@
+ 184CF8FA ??_C@_0EM@CALDJJAF@?$FLKVCache?$FN?5Lazy?5pages?3?5layers?$DN?$CFz@
+ 184CF8FA ?AttentionWithCache@Deep2@@YA_NPEBMAEBVKVCache@1@_K2PEAM2@Z
+ 184CF8FA ?advance@KVCache@Deep2@@QEAAXXZ
+ 184CF8FA ?advanceBy@KVCache@Deep2@@QEAA_N_K@Z
+ 184CF8FA ?evictColdPages@KVCache@Deep2@@QEAA_KXZ
+ 184CF8FA ?getHeadOffset@KVCache@Deep2@@AEBA_K_K00@Z
+ 184CF8FA ?getK@KVCache@Deep2@@QEBAPEBM_K00@Z
+ 184CF8FA ?getKVPointers@KVCache@Deep2@@QEAAX_K0PEAPEAM1@Z
+ 184CF8FA ?getLayerOffset@KVCache@Deep2@@AEBA_K_K@Z
+ 184CF8FA ?getV@KVCache@Deep2@@QEBAPEBM_K00@Z
+ 184CF8FA ?grow@KVCache@Deep2@@QEAA_N_K@Z
+ 184CF8FA ?headCount@KVCache@Deep2@@QEBA_KXZ
+ 184CF8FA ?headDimSize@KVCache@Deep2@@QEBA_KXZ
+ 184CF8FA ?initialize@KVCache@Deep2@@QEAA_NAEBUKVCacheConfig@2@@Z
+ 184CF8FA ?keyPtr@KVCache@Deep2@@QEAAPEAM_K00@Z
+ 184CF8FA ?maxSeqLen@KVCache@Deep2@@QEBA_KXZ
+ 184CF8FA ?memoryUsed@KVCache@Deep2@@QEBA_KXZ
+ 184CF8FA ?numLayers@KVCache@Deep2@@QEBA_KXZ
+ 184CF8FA ?reset@KVCache@Deep2@@QEAAXXZ
+ 184CF8FA ?valuePtr@KVCache@Deep2@@QEAAPEAM_K00@Z
+ 1858CE48 ??0ToroidalKVCache@rawrxd@@QEAA@_K000@Z
+ 1858CE48 ?attachToEngine@ReverseIntegration@Deep2@@QEAAXPEAVDeep2Engine@2@@Z
+ 1858CE48 ?divertTokens@ToroidalKVCache@rawrxd@@QEAA_NPEB_K_K@Z
+ 1858CE48 ?injectToken@ToroidalKVCache@rawrxd@@QEAA_NAEBUPlasmaToken@2@PEBM1@Z
+ 1858CE48 ?keySlot@ToroidalKVCache@rawrxd@@AEAAPEAM_K@Z
+ 1858CE48 ?magneticReconnection@ToroidalKVCache@rawrxd@@QEAAXXZ
+ 1858CE48 ?memoryBytes@ToroidalKVCache@rawrxd@@QEBA_KXZ
+ 1858CE48 ?oldestSequence@ToroidalKVCache@rawrxd@@QEBA_KXZ
+ 1858CE48 ?plasmaTemperature@ToroidalKVCache@rawrxd@@QEBAMXZ
+ 1858CE48 ?plasmaTurbulence@ToroidalKVCache@rawrxd@@QEBAMXZ
+ 1858CE48 ?queryTokenRange@ToroidalKVCache@rawrxd@@QEBA_N_K0AEAPEBM1AEA_K@Z
+ 1858CE48 ?queryTokenRange@ToroidalKVCache@rawrxd@@QEBA_N_K0AEAUKVCacheSpan@2@1@Z
+ 1858CE48 ?slotIndex@ToroidalKVCache@rawrxd@@AEBA_K_K@Z
+ 1858CE48 ?valueSlot@ToroidalKVCache@rawrxd@@AEAAPEAM_K@Z
+ 19156E9E ??D?$unique_ptr@VKVCache@Deep2@@U?$default_delete@VKVCache@Deep2@@@std@@@std@@QEBAAEAVKVCache@Deep2@@XZ
+ 19156E9E ?beginExecutionRun@Deep2Engine@Deep2@@AEAAXXZ
+ 19156E9E ?buildFitGeometry@Deep2Engine@Deep2@@AEBA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AEBVGGUFLoader@2@AEAUFitModelGeometry@rawrxd@@AEA_K3@Z
+ 19156E9E ?capacity@KVCache@Deep2@@QEBA_KXZ
+ 19156E9E ?commitFitPlan@Deep2Engine@Deep2@@AEAA_NAEBUModelFitPlan@rawrxd@@@Z
+ 19156E9E ?emitExecutionTrace@Deep2Engine@Deep2@@QEAAXPEAU_iobuf@@@Z
+ 19156E9E ?emitModelFitReport@Deep2Engine@Deep2@@QEBAXPEAU_iobuf@@@Z
+ 19156E9E ?enableBatchedPrefill@Deep2Engine@Deep2@@QEAAX_N_K@Z
+ 19156E9E ?endExecutionRun@Deep2Engine@Deep2@@AEAAXXZ
+ 19156E9E ?estimateModelFit@Deep2Engine@Deep2@@QEBA?AUModelFitPlan@rawrxd@@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@_K@Z
+ 19156E9E ?forwardLayerBatched@Deep2Engine@Deep2@@AEAA_N_KAEAUActivationBatch@2@00@Z
+ 19156E9E ?getModelPath@Deep2Engine@Deep2@@QEBA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ
+ 19156E9E ?isFull@KVCache@Deep2@@QEBA_NXZ
+ 19156E9E ?keyAt@KVCache@Deep2@@QEBAPEBM_K00@Z
+ 19156E9E ?kvPrefixReusable@Deep2Engine@Deep2@@QEBA_NAEBV?$vector@HV?$allocator@H@std@@@std@@PEAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@4@@Z
+ 19156E9E ?prefillBatched@Deep2Engine@Deep2@@QEAA_KPEBH_KPEAM1@Z
+ 19156E9E ?prefillParityReport@Deep2Engine@Deep2@@QEAANPEBH_K1PEAU_iobuf@@@Z
+ 19156E9E ?prefillSerial@Deep2Engine@Deep2@@QEAA_KPEBH_KPEAM@Z
+ 19156E9E ?probeHostHardware@Deep2Engine@Deep2@@AEAAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
+ 19156E9E ?resetInferenceState@Deep2Engine@Deep2@@QEAAXXZ
+ 19156E9E ?valueAt@KVCache@Deep2@@QEBAPEBM_K00@Z
+ 1C801448 ??0Deep2EngineHandle@@QEAA@XZ
+ 1C801448 ??1Deep2EngineHandle@@QEAA@XZ
+ 1C801448 ??_GDeep2EngineHandle@@QEAAPEAXI@Z
+ 1C801448 ?getConfig@Deep2Engine@Deep2@@QEBAAEBUEngineConfig@2@XZ
+ 1D6E3758 ?reapRuntimeReceipt@Deep2Engine@Deep2@@QEBAAEBURuntimeInjectionReceipt@Reap@RawrXD@@XZ
+ 1EA7F674 ??$?0$$V@?$_Compressed_pair@U?$default_delete@VCompressedKVCache@Deep2@@@std@@PEAVCompressedKVCache@Deep2@@$00@std@@QEAA@U_Zero_then_variadic_args_t@1@@Z
+ 1EA7F674 ??$?0$$V@?$_Compressed_pair@U?$default_delete@VKVCache@Deep2@@@std@@PEAVKVCache@Deep2@@$00@std@@QEAA@U_Zero_then_variadic_args_t@1@@Z
+ 1EA7F674 ??$?0$$V@?$_Compressed_pair@U?$default_delete@VToroidalKVCache@rawrxd@@@std@@PEAVToroidalKVCache@rawrxd@@$00@std@@QEAA@U_Zero_then_variadic_args_t@1@@Z
+ 1EA7F674 ??$?0AEAPEAVCompressedKVCache@Deep2@@@?$_Compressed_pair@U?$default_delete@VCompressedKVCache@Deep2@@@std@@PEAVCompressedKVCache@Deep2@@$00@std@@QEAA@U_Zero_then_variadic_args_t@1@AEAPEAVCompressedKVCache@Deep2@@@Z
+ 1EA7F674 ??$?0AEAPEAVKVCache@Deep2@@@?$_Compressed_pair@U?$default_delete@VKVCache@Deep2@@@std@@PEAVKVCache@Deep2@@$00@std@@QEAA@U_Zero_then_variadic_args_t@1@AEAPEAVKVCache@Deep2@@@Z
+ 1EA7F674 ??$?0AEAPEAVToroidalKVCache@rawrxd@@@?$_Compressed_pair@U?$default_delete@VToroidalKVCache@rawrxd@@@std@@PEAVToroidalKVCache@rawrxd@@$00@std@@QEAA@U_Zero_then_variadic_args_t@1@AEAPEAVToroidalKVCache@rawrxd@@@Z
+ 1EA7F674 ??$?0U?$default_delete@VCompressedKVCache@Deep2@@@std@@$0A@@?$unique_ptr@VCompressedKVCache@Deep2@@U?$default_delete@VCompressedKVCache@Deep2@@@std@@@std@@QEAA@PEAVCompressedKVCache@Deep2@@@Z
+ 1EA7F674 ??$?0U?$default_delete@VCompressedKVCache@Deep2@@@std@@$0A@@?$unique_ptr@VCompressedKVCache@Deep2@@U?$default_delete@VCompressedKVCache@Deep2@@@std@@@std@@QEAA@XZ
+ 1EA7F674 ??$?0U?$default_delete@VKVCache@Deep2@@@std@@$0A@@?$unique_ptr@VKVCache@Deep2@@U?$default_delete@VKVCache@Deep2@@@std@@@std@@QEAA@PEAVKVCache@Deep2@@@Z
+ 1EA7F674 ??$?0U?$default_delete@VKVCache@Deep2@@@std@@$0A@@?$unique_ptr@VKVCache@Deep2@@U?$default_delete@VKVCache@Deep2@@@std@@@std@@QEAA@XZ
+ 1EA7F674 ??$?0U?$default_delete@VToroidalKVCache@rawrxd@@@std@@$0A@@?$unique_ptr@VToroidalKVCache@rawrxd@@U?$default_delete@VToroidalKVCache@rawrxd@@@std@@@std@@QEAA@PEAVToroidalKVCache@rawrxd@@@Z
+ 1EA7F674 ??$?0U?$default_delete@VToroidalKVCache@rawrxd@@@std@@$0A@@?$unique_ptr@VToroidalKVCache@rawrxd@@U?$default_delete@VToroidalKVCache@rawrxd@@@std@@@std@@QEAA@XZ
+ 1EA7F674 ??$?4U?$default_delete@VCompressedKVCache@Deep2@@@std@@$0A@@?$unique_ptr@VCompressedKVCache@Deep2@@U?$default_delete@VCompressedKVCache@Deep2@@@std@@@std@@QEAAAEAV01@$$QEAV01@@Z
+ 1EA7F674 ??$?4U?$default_delete@VKVCache@Deep2@@@std@@$0A@@?$unique_ptr@VKVCache@Deep2@@U?$default_delete@VKVCache@Deep2@@@std@@@std@@QEAAAEAV01@$$QEAV01@@Z
+ 1EA7F674 ??$?4U?$default_delete@VToroidalKVCache@rawrxd@@@std@@$0A@@?$unique_ptr@VToroidalKVCache@rawrxd@@U?$default_delete@VToroidalKVCache@rawrxd@@@std@@@std@@QEAAAEAV01@$$QEAV01@@Z
+ 1EA7F674 ??$?8VKVCache@Deep2@@U?$default_delete@VKVCache@Deep2@@@std@@@std@@YA_NAEBV?$unique_ptr@VKVCache@Deep2@@U?$default_delete@VKVCache@Deep2@@@std@@@0@$$T@Z
+ 1EA7F674 ??$exchange@PEAVCompressedKVCache@Deep2@@$$T@std@@YAPEAVCompressedKVCache@Deep2@@AEAPEAV12@$$QEA$$T@Z
+ 1EA7F674 ??$exchange@PEAVCompressedKVCache@Deep2@@AEAPEAV12@@std@@YAPEAVCompressedKVCache@Deep2@@AEAPEAV12@0@Z
+ 1EA7F674 ??$exchange@PEAVKVCache@Deep2@@$$T@std@@YAPEAVKVCache@Deep2@@AEAPEAV12@$$QEA$$T@Z
+ 1EA7F674 ??$exchange@PEAVKVCache@Deep2@@AEAPEAV12@@std@@YAPEAVKVCache@Deep2@@AEAPEAV12@0@Z
+ 1EA7F674 ??$exchange@PEAVToroidalKVCache@rawrxd@@$$T@std@@YAPEAVToroidalKVCache@rawrxd@@AEAPEAV12@$$QEA$$T@Z
+ 1EA7F674 ??$exchange@PEAVToroidalKVCache@rawrxd@@AEAPEAV12@@std@@YAPEAVToroidalKVCache@rawrxd@@AEAPEAV12@0@Z
+ 1EA7F674 ??$forward@AEAPEAVCompressedKVCache@Deep2@@@std@@YAAEAPEAVCompressedKVCache@Deep2@@AEAPEAV12@@Z
+ 1EA7F674 ??$forward@AEAPEAVKVCache@Deep2@@@std@@YAAEAPEAVKVCache@Deep2@@AEAPEAV12@@Z
+ 1EA7F674 ??$forward@AEAPEAVToroidalKVCache@rawrxd@@@std@@YAAEAPEAVToroidalKVCache@rawrxd@@AEAPEAV12@@Z
+ 1EA7F674 ??$forward@U?$default_delete@VCompressedKVCache@Deep2@@@std@@@std@@YA$$QEAU?$default_delete@VCompressedKVCache@Deep2@@@0@AEAU10@@Z
+ 1EA7F674 ??$forward@U?$default_delete@VKVCache@Deep2@@@std@@@std@@YA$$QEAU?$default_delete@VKVCache@Deep2@@@0@AEAU10@@Z
+ 1EA7F674 ??$forward@U?$default_delete@VToroidalKVCache@rawrxd@@@std@@@std@@YA$$QEAU?$default_delete@VToroidalKVCache@rawrxd@@@0@AEAU10@@Z
+ 1EA7F674 ??$make_unique@VCompressedKVCache@Deep2@@$$V$0A@@std@@YA?AV?$unique_ptr@VCompressedKVCache@Deep2@@U?$default_delete@VCompressedKVCache@Deep2@@@std@@@0@XZ
+ 1EA7F674 ??$make_unique@VKVCache@Deep2@@$$V$0A@@std@@YA?AV?$unique_ptr@VKVCache@Deep2@@U?$default_delete@VKVCache@Deep2@@@std@@@0@XZ
+ 1EA7F674 ??$make_unique@VToroidalKVCache@rawrxd@@AEA_KAEA_KAEA_KAEA_K$0A@@std@@YA?AV?$unique_ptr@VToroidalKVCache@rawrxd@@U?$default_delete@VToroidalKVCache@rawrxd@@@std@@@0@AEA_K000@Z
+ 1EA7F674 ??$move@AEAV?$unique_ptr@VKVCache@Deep2@@U?$default_delete@VKVCache@Deep2@@@std@@@std@@@std@@YA$$QEAV?$unique_ptr@VKVCache@Deep2@@U?$default_delete@VKVCache@Deep2@@@std@@@0@AEAV10@@Z
+ 1EA7F674 ??0Deep2Engine@Deep2@@QEAA@XZ
+ 1EA7F674 ??0DispatchAccount@Deep2Engine@Deep2@@QEAA@XZ
+ 1EA7F674 ??0MARSPlacementReport@Deep2Engine@Deep2@@QEAA@XZ
+ 1EA7F674 ??1?$unique_ptr@VCompressedKVCache@Deep2@@U?$default_delete@VCompressedKVCache@Deep2@@@std@@@std@@QEAA@XZ
+ 1EA7F674 ??1?$unique_ptr@VKVCache@Deep2@@U?$default_delete@VKVCache@Deep2@@@std@@@std@@QEAA@XZ
+ 1EA7F674 ??1?$unique_ptr@VToroidalKVCache@rawrxd@@U?$default_delete@VToroidalKVCache@rawrxd@@@std@@@std@@QEAA@XZ
+ 1EA7F674 ??1Deep2Engine@Deep2@@QEAA@XZ
+ 1EA7F674 ??1ToroidalKVCache@rawrxd@@QEAA@XZ
+ 1EA7F674 ??B?$unique_ptr@VCompressedKVCache@Deep2@@U?$default_delete@VCompressedKVCache@Deep2@@@std@@@std@@QEBA_NXZ
+ 1EA7F674 ??B?$unique_ptr@VToroidalKVCache@rawrxd@@U?$default_delete@VToroidalKVCache@rawrxd@@@std@@@std@@QEBA_NXZ
+ 1EA7F674 ??C?$unique_ptr@VCompressedKVCache@Deep2@@U?$default_delete@VCompressedKVCache@Deep2@@@std@@@std@@QEBAPEAVCompressedKVCache@Deep2@@XZ
+ 1EA7F674 ??C?$unique_ptr@VToroidalKVCache@rawrxd@@U?$default_delete@VToroidalKVCache@rawrxd@@@std@@@std@@QEBAPEAVToroidalKVCache@rawrxd@@XZ
+ 1EA7F674 ??R?$default_delete@VCompressedKVCache@Deep2@@@std@@QEBAXPEAVCompressedKVCache@Deep2@@@Z
+ 1EA7F674 ??R?$default_delete@VKVCache@Deep2@@@std@@QEBAXPEAVKVCache@Deep2@@@Z
+ 1EA7F674 ??R?$default_delete@VToroidalKVCache@rawrxd@@@std@@QEBAXPEAVToroidalKVCache@rawrxd@@@Z
+ 1EA7F674 ??_C@_0BC@FPKLLMAG@?$FLDeep2Engine?$FN?5?$CFs?6@
+ 1EA7F674 ??_C@_0BJ@DODDHINK@?$FLLIFE?$FN?5?$HODeep2Engine?5END?6@
+ 1EA7F674 ??_C@_0BL@LKPJKG@?$FLDeep2Engine?$FN?5Chamber?3?5?$CFs?6@
+ 1EA7F674 ??_C@_0BL@MEIDOBKG@?$FLLIFE?$FN?5?$HODeep2Engine?5BEGIN?6@
+ 1EA7F674 ??_C@_0BN@EIJCEMGI@?$FLDeep2Engine?$FN?5MARS?5disabled?6@
+ 1EA7F674 ??_C@_0BO@GGGKHPBL@?$FLDeep2Engine?$FN?5Top?910?5logits?3?6@
+ 1EA7F674 ??_C@_0BO@IGJPBLJA@?$FLDeep2Engine?$FN?5Policy?5SHA?3?5?$CFs?6@
+ 1EA7F674 ??_C@_0BP@BHKAPPIA@Deep2Engine?3?3reprogramPCIeBARs@
+ 1EA7F674 ??_C@_0BP@NEDAMBPJ@?$FLDeep2Engine?$FN?5Model?5unloaded?4?6@
+ 1EA7F674 ??_C@_0CA@DJKHAIIA@?$FLDeep2Engine?$FN?5switchModel?5PASS?6@
+ 1EA7F674 ??_C@_0CB@EAMLMKKI@Deep2Engine?3?3disableDamSysDrive@
+ 1EA7F674 ??_C@_0CB@HMECELIP@?$FLDeep2Engine?$FN?5Chat?5template?3?5?$CFs@
+ 1EA7F674 ??_C@_0CB@NEJHMANI@Deep2Engine?3?3bypassHereticSafet@
+ 1EA7F674 ??_C@_0CB@NOAHPIEO@Deep2Engine?3?3extendToolCallLimi@
+ 1EA7F674 ??_C@_0CC@EFEONMPE@?$FLDeep2Engine?$FN?5PlasmaGovernor?3?5?$CF@
+ 1EA7F674 ??_C@_0CC@EPILLLNB@?$FLDeep2Engine?$FN?5POLICY_REJECTED?5?$CF@
+ 1EA7F674 ??_C@_0CC@GKOCPAPA@?$FLDeep2Engine?$FN?5NVMe?5streaming?3?5?$CF@
+ 1EA7F674 ??_C@_0CC@IEAGFJAD@Deep2Engine?3?3disableIFEORedirec@
+ 1EA7F674 ??_C@_0CC@PMLDKGCE@?$FLDeep2Engine?$FN?5Unloading?5model?4?4@
+ 1EA7F674 ??_C@_0CD@JKFPDIIM@?$FLDeep2Engine?$FN?5ToroidalKVCache?3?5@
+ 1EA7F674 ??_C@_0CE@BMCNBMBL@?$FLDeep2Engine?$FN?5Warmup?5scheduler?3@
+ 1EA7F674 ??_C@_0CE@FIDDEBEP@?$FLDeep2Engine?$FN?5MARS?5already?5enab@
+ 1EA7F674 ??_C@_0CE@FKCAPDPB@?$FLDeep2Engine?$FN?5NU?5fused?5packing?3@
+ 1EA7F674 ??_C@_0CE@OJHNDJHB@?$FLDeep2Engine?$FN?5Telemetry?5health?3@
+ 1EA7F674 ??_C@_0CE@PGHIBJHF@?$FLDeep2Engine?$FN?5Formatted?5prompt?3@
+ 1EA7F674 ??_C@_0CF@DEMPJNGE@?$FLDeep2Engine?$FN?5Extracted?5GGUF?5to@
+ 1EA7F674 ??_C@_0CF@EFOFOJLN@?$FLDeep2Engine?$FN?5switchModel?5FAIL?5@
+ 1EA7F674 ??_C@_0CF@FEJMBHBF@?$FLDeep2Engine?$FN?5ENHANCEMENT?5STACK@
+ 1EA7F674 ??_C@_0CF@LDGMNOHE@?$FLDeep2Engine?$FN?5K2?5generateStream@
+ 1EA7F674 ??_C@_0CF@LLAPDAO@?$FLDeep2Engine?$FN?5Using?5tied?5embedd@
+ 1EA7F674 ??_C@_0CG@JDGDEJHH@Deep2Engine?3?3disableTelemetrySe@
+ 1EA7F674 ??_C@_0CG@MFJEBABM@?$FLDeep2Engine?$FN?5Loading?5model?5fro@
+ 1EA7F674 ??_C@_0CH@IFONJKMA@?$FLDeep2Engine?$FN?5LIVE_SETUP?5ok?5act@
+ 1EA7F674 ??_C@_0CH@JMCFAFI@?$FLDeep2Engine?$FN?5?5?5Avg?5tokens?1step@
+ 1EA7F674 ??_C@_0CH@OIHOADDO@?$FLDeep2Engine?$FN?5Kernel?5patch?5fail@
+ 1EA7F674 ??_C@_0CH@PJABDFII@?$FLDeep2Engine?$FN?5Initialization?5co@
+ 1EA7F674 ??_C@_0CI@BCNPGFPD@?$FLDeep2Engine?$FN?5generate?$CI?$CJ?5except@
+ 1EA7F674 ??_C@_0CJ@CILLKGJB@?$FLDeep2Engine?$FN?5switchModel?5BEGIN@
+ 1EA7F674 ??_C@_0CJ@GPPNKECF@?$FLDeep2Engine?$FN?5Reverse?5analysis?3@
+ 1EA7F674 ??_C@_0CJ@IKPLPCLF@?$FLDeep2Engine?$FN?5LIVE_SETUP?5begin?5@
+ 1EA7F674 ??_C@_0CK@BJEMLHOB@?$FLDeep2Engine?$FN?5Sampler?5selected?5@
+ 1EA7F674 ??_C@_0CK@FMHBBDHK@?$FLDeep2Engine?$FN?5PlasmaGovernor?5in@
+ 1EA7F674 ??_C@_0CK@KFFNGFDI@?$FLDeep2Engine?$FN?5MoE?5streaming?5loa@
+ 1EA7F674 ??_C@_0CK@LEJDNBOA@?$FLDeep2Engine?$FN?5?5?5Tokens?3?5?$CFzu?5in?5@
+ 1EA7F674 ??_C@_0CK@MAPDCPPL@?$FLDeep2Engine?$FN?5Reverse?5analysis?3@
+ 1EA7F674 ??_C@_0CK@MDIPJDLM@?$FLDeep2Engine?$FN?5CycloneScheduler?5@
+ 1EA7F674 ??_C@_0CK@PNGJCHCI@?$FLDeep2Engine?$FN?5NVMe?5streaming?5in@
+ 1EA7F674 ??_C@_0CL@GALKLEDD@?$FLDeep2Engine?$FN?5ERROR?3?5BP16?5open?5@
+ 1EA7F674 ??_C@_0CL@GAODHMJO@?$FLDeep2Engine?$FN?5NU?5Fused?5Packer?5i@
+ 1EA7F674 ??_C@_0CL@IGOEKELC@?$FLDeep2Engine?$FN?5ATTN_GEOMETRY_REC@
+ 1EA7F674 ??_C@_0CL@JIDEJBC@?$FLDeep2Engine?$FN?5Medusa?5generation@
+ 1EA7F674 ??_C@_0CL@KPEDJMOC@?$FLDeep2Engine?$FN?5Loading?5BP16?5mode@
+ 1EA7F674 ??_C@_0CL@NKJKGKNM@?$FLDeep2Engine?$FN?5switchModel?5FAIL?5@
+ 1EA7F674 ??_C@_0CM@EPJLBGCF@?$FLDeep2Engine?$FN?5Production?5profil@
+ 1EA7F674 ??_C@_0CM@FGGCBAHI@?$FLDeep2Engine?$FN?5Residency?5telemet@
+ 1EA7F674 ??_C@_0CM@HBPPGLHC@?$FLDeep2Engine?$FN?5Warmup?5scheduler?5@
+ 1EA7F674 ??_C@_0CM@IPOEPEHK@?$FLDeep2Engine?$FN?5GPU?5open?5failed?5s@
+ 1EA7F674 ??_C@_0CM@MLGCNHGN@?$FLDeep2Engine?$FN?5generate?$CI?$CJ?5unknow@
+ 1EA7F674 ??_C@_0CM@OALMOMIA@?$FLDeep2Engine?$FN?5Compressed?5KV?5cac@
+ 1EA7F674 ??_C@_0CN@BNOIKDAP@?$FLDeep2Engine?$FN?5Sliding?5window?3?5?$CF@
+ 1EA7F674 ??_C@_0CN@CIHCNGMM@?$FLDeep2Engine?$FN?5ERROR?3?5Engine?5not@
+ 1EA7F674 ??_C@_0CN@GINGIMBO@?$FLDeep2Engine?$FN?5Host?5Q8_0?5GEMV?5re@
+ 1EA7F674 ??_C@_0CN@NFBAJNAG@?$FLDeep2Engine?$FN?5Residency?5telemet@
+ 1EA7F674 ??_C@_0CN@OOGFMPK@?$FLDeep2Engine?$FN?5?5?5Latency?3?5?$CF?42f?5m@
+ 1EA7F674 ??_C@_0CN@PACHKLA@?$FLDeep2Engine?$FN?5Chamber?5?$CISM0?9DSP?$CJ@
+ 1EA7F674 ??_C@_0CN@PIJOAPKJ@?$FLDeep2Engine?$FN?5Production?5profil@
+ 1EA7F674 ??_C@_0CP@EIAKGPBC@?$FLDeep2Engine?$FN?5Chamber?5routed?5to@
+ 1EA7F674 ??_C@_0CP@PLNDBPKG@?$FLDeep2Engine?$FN?5Medusa?5speculativ@
+ 1EA7F674 ??_C@_0DA@FCHBGJBH@?$FLDeep2Engine?$FN?5Found?5GGUF?5at?5off@
+ 1EA7F674 ??_C@_0DA@PAEBHKLH@?$FLDeep2Engine?$FN?5?5?5Mode?3?5Greedy?5?$CIt@
+ 1EA7F674 ??_C@_0DB@OHANPHMF@?$FLDeep2Engine?$FN?5?5?5Tree?3?5Chain?5?$CL?5f@
+ 1EA7F674 ??_C@_0DB@OKFONHDH@?$FLDeep2Engine?$FN?5ElasticResidencyM@
+ 1EA7F674 ??_C@_0DB@PIEDBOLJ@?$FLDeep2Engine?$FN?5ERROR?3?5Failed?5to?5@
+ 1EA7F674 ??_C@_0DC@BKBKBABK@?$FLDeep2Engine?$FN?5Policy?5VRAM?5hard?$DN@
+ 1EA7F674 ??_C@_0DC@HMDHMIII@?$FLDeep2Engine?$FN?5SovereignOutOfCor@
+ 1EA7F674 ??_C@_0DC@KPGOGIGP@?$FLDeep2Engine?$FN?5PCIe?5BARs?5reprogr@
+ 1EA7F674 ??_C@_0DC@NDCNGPME@?$FLDeep2Engine?$FN?5layer?5plan?5failed@
+ 1EA7F674 ??_C@_0DD@EDGBHKNG@?$FLDeep2Engine?$FN?5GEMMA_GEGLU?5layer@
+ 1EA7F674 ??_C@_0DD@FLHKDBID@?$FLDeep2Engine?$FN?5ERROR?3?5MLA?5buffer@
+ 1EA7F674 ??_C@_0DD@GCOJIFGJ@?$FLDeep2Engine?$FN?5?5?5Fallbacks?3?5?$CFzu?0@
+ 1EA7F674 ??_C@_0DD@GIIHDKMC@?$FLDeep2Engine?$FN?5SovereignOutOfCor@
+ 1EA7F674 ??_C@_0DD@HENENPMP@?$FLDeep2Engine?$FN?5IFEO?5redirects?5di@
+ 1EA7F674 ??_C@_0DD@JCNKJOAI@?$FLDeep2Engine?$FN?5PlasmaGovernor?5co@
+ 1EA7F674 ??_C@_0DD@LKDJBKAC@?$FLDeep2Engine?$FN?5ThreadPool?5?$CIloadM@
+ 1EA7F674 ??_C@_0DD@NFHEIMJJ@?$FLDeep2Engine?$FN?5Dam?4sys?5driver?5di@
+ 1EA7F674 ??_C@_0DD@OMGELGLP@?$FLDeep2Engine?$FN?5BP16?5opened?3?5?$CFzu?5@
+ 1EA7F674 ??_C@_0DE@CEEDIMFI@?$FLDeep2Engine?$FN?5Compressed?5KV?5cac@
+ 1EA7F674 ??_C@_0DE@DOLLKENP@?$FLDeep2Engine?$FN?5ERROR?3?5Failed?5to?5@
+ 1EA7F674 ??_C@_0DE@HIFJMGHE@?$FLDeep2Engine?$FN?5Inferred?5vocabSiz@
+ 1EA7F674 ??_C@_0DE@IAINEIOF@?$FLDeep2Engine?$FN?5Vulkan?5open?5faile@
+ 1EA7F674 ??_C@_0DE@IFGHPAP@?$FLDeep2Engine?$FN?5ERROR?3?5base?5buffe@
+ 1EA7F674 ??_C@_0DE@IKFEHIOG@?$FLDeep2Engine?$FN?5ERROR?3?5Failed?5to?5@
+ 1EA7F674 ??_C@_0DE@NKPJFMFA@?$FLDeep2Engine?$FN?5Greedy?5argmax?5tok@
+ 1EA7F674 ??_C@_0DF@BLCOLNOO@?$FLDeep2Engine?$FN?5MARS?5not?5enabled?0@
+ 1EA7F674 ??_C@_0DF@FFKHBOHK@?$FLDeep2Engine?$FN?5WARNING?3?5CycloneS@
+ 1EA7F674 ??_C@_0DF@GIKKHEFB@?$FLDeep2Engine?$FN?5NVMe?5defer?5until?5@
+ 1EA7F674 ??_C@_0DF@JMFOEHNF@?$FLDeep2Engine?$FN?5ERROR?3?5BP16?5missi@
+ 1EA7F674 ??_C@_0DF@KOFEGFIE@?$FLDeep2Engine?$FN?5Sliding?5window?5in@
+ 1EA7F674 ??_C@_0DF@MFEIHIOP@?$FLDeep2Engine?$FN?5MODEL_FIT_REJECTE@
+ 1EA7F674 ??_C@_0DF@PCELICKB@?$FLDeep2Engine?$FN?5WARNING?3?5reverse?5@
+ 1EA7F674 ??_C@_0DG@FFBDBMEB@?$FLDeep2Engine?$FN?5ERROR?3?5Failed?5to?5@
+ 1EA7F674 ??_C@_0DG@GCHLFGOG@?$FLDeep2Engine?$FN?5Chamber?5CLASH?5det@
+ 1EA7F674 ??_C@_0DG@HFPCJEGI@?$FLDeep2Engine?$FN?5Injected?5router?5w@
+ 1EA7F674 ??_C@_0DG@NBNDHMNH@?$FLDeep2Engine?$FN?5Using?5blob?5direct@
+ 1EA7F674 ??_C@_0DG@NFCODDHC@?$FLDeep2Engine?$FN?5Medusa?5decoder?5in@
+ 1EA7F674 ??_C@_0DG@OFAHGGON@?$FLDeep2Engine?$FN?5Vulkan?5single?9GPU@
+ 1EA7F674 ??_C@_0DH@GCGJENEM@?$FLDeep2Engine?$FN?5ERROR?3?5Failed?5to?5@
+ 1EA7F674 ??_C@_0DH@GKDAHDFK@?$FLDeep2Engine?$FN?5WARNING?3?5No?5GGUF?5@
+ 1EA7F674 ??_C@_0DH@HBPIGAFB@?$FLDeep2Engine?$FN?5Model?5loaded?5succ@
+ 1EA7F674 ??_C@_0DH@HIHIPNFK@?$FLDeep2Engine?$FN?5WARNING?3?5Failed?5t@
+ 1EA7F674 ??_C@_0DH@MABPMANP@?$FLDeep2Engine?$FN?5Telemetry?5service@
+ 1EA7F674 ??_C@_0DH@OILHACHA@?$FLDeep2Engine?$FN?5ERROR?3?5numHeads?$DN?$CF@
+ 1EA7F674 ??_C@_0DI@BLKENCBB@?$FLDeep2Engine?$FN?5CycloneScheduler?5@
+ 1EA7F674 ??_C@_0DI@EHEJIICG@?$FLDeep2Engine?$FN?5WARNING?3?5Failed?5t@
+ 1EA7F674 ??_C@_0DI@FPJJJFHC@?$FLDeep2Engine?$FN?5Context?5length?5fr@
+ 1EA7F674 ??_C@_0DI@GDGJBEAH@?$FLDeep2Engine?$FN?5MoE?5model?3?5?$CFu?5exp@
+ 1EA7F674 ??_C@_0DI@HIBLCCFF@?$FLDeep2Engine?$FN?5Chamber?5state?5syn@
+ 1EA7F674 ??_C@_0DI@HLMNKFDB@?$FLDeep2Engine?$FN?5MARS?5enabled?3?5GPU@
+ 1EA7F674 ??_C@_0DI@OBHGNPPF@?$FLDeep2Engine?$FN?5DUALSTICK_BIND?5vc@
+ 1EA7F674 ??_C@_0DJ@BLGMDKOB@?$FLDeep2Engine?$FN?5WARNING?3?5Failed?5t@
+ 1EA7F674 ??_C@_0DJ@COCLDLN@?$FLDeep2Engine?$FN?5GEMMA_RMSNORM_ONE@
+ 1EA7F674 ??_C@_0DJ@EOJAAHJB@?$FLDeep2Engine?$FN?5Advanced?5features@
+ 1EA7F674 ??_C@_0DJ@EPMKOMCE@?$FLDeep2Engine?$FN?5POLICY_CHANGE_REJ@
+ 1EA7F674 ??_C@_0DJ@GMKCLCBF@?$FLDeep2Engine?$FN?5ERROR?3?5BP16?5faile@
+ 1EA7F674 ??_C@_0DJ@MCMHHIAL@?$FLDeep2Engine?$FN?5ERROR?3?5GlobalTens@
+ 1EA7F674 ??_C@_0DJ@NLMCFFIF@?$FLDeep2Engine?$FN?5NVMe?5lane?5armed?5v@
+ 1EA7F674 ??_C@_0DJ@OBPBCLJO@?$FLDeep2Engine?$FN?5Initializing?5VAL?9@
+ 1EA7F674 ??_C@_0DJ@OPFDDOJG@?$FLDeep2Engine?$FN?5NVMe?5mmap?5fail?5?b?$IG@
+ 1EA7F674 ??_C@_0DJ@PJDFGCHA@?$FLDeep2Engine?$FN?5openK2ShardDirect@
+ 1EA7F674 ??_C@_0DK@BDNDBEHP@?$FLDeep2Engine?$FN?5Multi?9shard?5detec@
+ 1EA7F674 ??_C@_0DK@EJHDAIOF@?$FLDeep2Engine?$FN?5NVMe?5REVERSE_BUNN@
+ 1EA7F674 ??_C@_0DK@FHIHCELF@?$FLDeep2Engine?$FN?5KV_CACHE_CONFIG_F@
+ 1EA7F674 ??_C@_0DK@GOMLIADN@?$FLDeep2Engine?$FN?5GPU?5policy?5?b?$IG?$JC?5CP@
+ 1EA7F674 ??_C@_0DK@LPDGHDFH@?$FLDeep2Engine?$FN?5LAYER_EXEC?5CPU?5sl@
+ 1EA7F674 ??_C@_0DK@MFNAICBC@?$FLDeep2Engine?$FN?5NVMe?5streaming?5in@
+ 1EA7F674 ??_C@_0DK@MOBBHHAK@?$FLDeep2Engine?$FN?5NVMe?5REVERSE_BUNN@
+ 1EA7F674 ??_C@_0DK@NONCIPOF@?$FLDeep2Engine?$FN?5openK2ShardDirect@
+ 1EA7F674 ??_C@_0DL@BCAEPMCB@?$FLDeep2Engine?$FN?5Initializing?5prod@
+ 1EA7F674 ??_C@_0DL@CFKGDIPJ@?$FLDeep2Engine?$FN?5growContext?5resid@
+ 1EA7F674 ??_C@_0DL@CKACCENK@?$FLDeep2Engine?$FN?5ERROR?3?5SSM?5scratc@
+ 1EA7F674 ??_C@_0DL@EPFEKKEP@?$FLDeep2Engine?$FN?5WARNING?3?5Failed?5t@
+ 1EA7F674 ??_C@_0DL@JABAOIFP@?$FLDeep2Engine?$FN?5BP16?5token_embd?5r@
+ 1EA7F674 ??_C@_0DL@JMDLPBLM@?$FLDeep2Engine?$FN?5Created?5?$CFzu?5per?9l@
+ 1EA7F674 ??_C@_0DL@KJMFPHJH@?$FLDeep2Engine?$FN?5WARNING?3?5Canonica@
+ 1EA7F674 ??_C@_0DL@MCBNCILE@?$FLDeep2Engine?$FN?5GEMMA_SANDWICH?5ff@
+ 1EA7F674 ??_C@_0DL@OJCMGPKL@?$FLDeep2Engine?$FN?5ERROR?3?5Failed?5to?5@
+ 1EA7F674 ??_C@_0DM@BKAJGIGN@?$FLDeep2Engine?$FN?5?5?5Pattern?3?5R?$CLN?9G?5@
+ 1EA7F674 ??_C@_0DM@DOOBKBNH@?$FLDeep2Engine?$FN?5GEMMA_SANDWICH?5at@
+ 1EA7F674 ??_C@_0DM@EFDKKNHB@?$FLDeep2Engine?$FN?5WARNING?3?5Failed?5t@
+ 1EA7F674 ??_C@_0DM@EKCAJIAP@?$FLDeep2Engine?$FN?5openK2ShardDirect@
+ 1EA7F674 ??_C@_0DM@HIIPILMC@?$FLDeep2Engine?$FN?5ERROR?3?5Failed?5to?5@
+ 1EA7F674 ??_C@_0DM@IOLCCBOJ@?$FLDeep2Engine?$FN?5WARNING?3?5Failed?5t@
+ 1EA7F674 ??_C@_0DM@JBCFJIKI@?$FLDeep2Engine?$FN?5MARS?5not?5enabled?0@
+ 1EA7F674 ??_C@_0DM@JJBOGPNC@?$FLDeep2Engine?$FN?5HotPatcher?5initia@
+ 1EA7F674 ??_C@_0DM@MIHPFCKE@?$FLDeep2Engine?$FN?5ERROR?3?5No?5?4gguf?5f@
+ 1EA7F674 ??_C@_0DM@PDPGEPEN@?$FLDeep2Engine?$FN?5BP16?5model?5loaded@
+ 1EA7F674 ??_C@_0DN@BMKEHGIL@?$FLDeep2Engine?$FN?5Heretic?5safety?9al@
+ 1EA7F674 ??_C@_0DN@EHJCGDLE@?$FLDeep2Engine?$FN?5MARS?5skipped?5?$CIVul@
+ 1EA7F674 ??_C@_0DN@IJHCABPM@?$FLDeep2Engine?$FN?5CANCEL?5requested?5@
+ 1EA7F674 ??_C@_0DN@JLMOEFMN@?$FLDeep2Engine?$FN?5KV_CACHE_DEFERRED@
+ 1EA7F674 ??_C@_0DN@LHOLCNKP@?$FLDeep2Engine?$FN?5Nemotron?9H?5MoE?1Bo@
+ 1EA7F674 ??_C@_0DO@DGOHCGKB@?$FLDeep2Engine?$FN?5computeLogits?3?5hi@
+ 1EA7F674 ??_C@_0DO@FBEDBKDP@?$FLDeep2Engine?$FN?5ExecutionPolicy?5O@
+ 1EA7F674 ??_C@_0DO@ILCBPCOL@?$FLDeep2Engine?$FN?5Tool?5call?5limit?5e@
+ 1EA7F674 ??_C@_0DO@JDNJNCPH@?$FLDeep2Engine?$FN?5vocabSize?5overrid@
+ 1EA7F674 ??_C@_0DO@NJDDEGD@?$FLDeep2Engine?$FN?5WARNING?3?5byte?9lev@
+ 1EA7F674 ??_C@_0DO@ODIGGGAK@?$FLDeep2Engine?$FN?5WARNING?3?5NVMe?5lan@
+ 1EA7F674 ??_C@_0DO@PFCMFLPJ@?$FLDeep2Engine?$FN?5WARNING?3?5Failed?5t@
+ 1EA7F674 ??_C@_0DO@PMBDEIEL@?$FLDeep2Engine?$FN?5?5?5Verification?3?5R@
+ 1EA7F674 ??_C@_0DP@BABOPBFD@?$FLDeep2Engine?$FN?5WARNING?3?5MoE?5stre@
+ 1EA7F674 ??_C@_0DP@BMIDGBEM@?$FLDeep2Engine?$FN?5Reverse?5analysis?3@
+ 1EA7F674 ??_C@_0DP@FLFDOBGG@?$FLDeep2Engine?$FN?5RAWR_REAP_CPU_ONL@
+ 1EA7F674 ??_C@_0DP@GDEJCPNN@?$FLDeep2Engine?$FN?5WARNING?3?5Residenc@
+ 1EA7F674 ??_C@_0DP@JDKIKNEP@?$FLDeep2Engine?$FN?5Detected?5Ollama?5b@
+ 1EA7F674 ??_C@_0DP@KOHAHHCF@?$FLDeep2Engine?$FN?5TrailBrake?5LIVE?5b@
+ 1EA7F674 ??_C@_0DP@LPOIFNMJ@?$FLDeep2Engine?$FN?5ERROR?3?5Tool?5call?5@
+ 1EA7F674 ??_C@_0DP@MAIKKIKK@?$FLDeep2Engine?$FN?5ElasticResidencyM@
+ 1EA7F674 ??_C@_0DP@NPHMFAKH@?$FLDeep2Engine?$FN?5ERROR?3?5No?5model?5l@
+ 1EA7F674 ??_C@_0DP@PGDKMKCM@?$FLDeep2Engine?$FN?5ERROR?3?5Failed?5to?5@
+ 1EA7F674 ??_C@_0EA@DFMJDHGB@?$FLDeep2Engine?$FN?5GENERATION_REJECT@
+ 1EA7F674 ??_C@_0EA@GMHFNLAE@?$FLDeep2Engine?$FN?5LAYER_EXEC?5OPEN?5s@
+ 1EA7F674 ??_C@_0EA@KJDAKPHH@?$FLDeep2Engine?$FN?5ERROR?3?5Invalid?5to@
+ 1EA7F674 ??_C@_0EA@LFCDKMMF@?$FLDeep2Engine?$FN?5Reverse?5analysis?5@
+ 1EA7F674 ??_C@_0EB@CLBMLBMO@?$FLDeep2Engine?$FN?5ERROR?3?5tokenize?$CI?$CJ@
+ 1EA7F674 ??_C@_0EB@ICBHPFDF@?$FLDeep2Engine?$FN?5KV_CACHE_CONFIG_F@
+ 1EA7F674 ??_C@_0EB@JIBKGFLA@?$FLDeep2Engine?$FN?5TensorResidencyCa@
+ 1EA7F674 ??_C@_0EB@LAMIPLDN@?$FLDeep2Engine?$FN?5MODEL_FIT_REJECTE@
+ 1EA7F674 ??_C@_0EB@OKIDDDH@?$FLDeep2Engine?$FN?5ERROR?3?5loadWeight@
+ 1EA7F674 ??_C@_0EC@KADEKCFO@?$FLDeep2Engine?$FN?5ATTN_GEOM_OVERRID@
+ 1EA7F674 ??_C@_0EC@KFLKECAK@?$FLDeep2Engine?$FN?5ATTN_GEOM_OVERRID@
+ 1EA7F674 ??_C@_0EC@MIINBNDL@?$FLDeep2Engine?$FN?5Residency?5telemet@
+ 1EA7F674 ??_C@_0ED@DENPKELI@?$FLDeep2Engine?$FN?5?5?5Forward?5passes?3@
+ 1EA7F674 ??_C@_0ED@FKADAEEB@?$FLDeep2Engine?$FN?5ERROR?3?5Invalid?5co@
+ 1EA7F674 ??_C@_0ED@MAHECPBE@?$FLDeep2Engine?$FN?5ERROR?3?5attention?5@
+ 1EA7F674 ??_C@_0ED@MMKCLACA@?$FLDeep2Engine?$FN?5MULTI?5contiguous?5@
+ 1EA7F674 ??_C@_0EE@CMBBGHIP@?$FLDeep2Engine?$FN?5K2?5config?3?5expert@
+ 1EA7F674 ??_C@_0EE@HMDJJMMI@?$FLDeep2Engine?$FN?5ERROR?3?5KV?5cache?5c@
+ 1EA7F674 ??_C@_0EE@NBFJHBCP@?$FLDeep2Engine?$FN?5WARNING?3?5ReverseH@
+ 1EA7F674 ??_C@_0EE@NOKLBIAL@?$FLDeep2Engine?$FN?5PlasmaGovernor?5EM@
+ 1EA7F674 ??_C@_0EF@BCGMFFPD@?$FLDeep2Engine?$FN?5K2?5shard?5index?5op@
+ 1EA7F674 ??_C@_0EF@CAFMJCJK@?$FLDeep2Engine?$FN?5Context?5length?3?5n@
+ 1EA7F674 ??_C@_0EF@DCIKIKNG@?$FLDeep2Engine?$FN?5ResidencyManager?5@
+ 1EA7F674 ??_C@_0EF@FAFFAAGF@?$FLDeep2Engine?$FN?5ERROR?3?5KV?5cache?5v@
+ 1EA7F674 ??_C@_0EG@CNMPBDKE@?$FLDeep2Engine?$FN?5WARNING?3?5ElasticR@
+ 1EA7F674 ??_C@_0EG@GBFPFFDN@?$FLDeep2Engine?$FN?5GlobalTensorIndex@
+ 1EA7F674 ??_C@_0EG@NKHEHNC@?$FLDeep2Engine?$FN?5ReverseHotpatch?3?5@
+ 1EA7F674 ??_C@_0EH@EDHFDJOC@?$FLDeep2Engine?$FN?5computeLogits?3?5lm@
+ 1EA7F674 ??_C@_0EH@JBIIJMAP@?$FLDeep2Engine?$FN?5Kernel?5patch?5appl@
+ 1EA7F674 ??_C@_0EH@KIKPMDCG@?$FLDeep2Engine?$FN?5ERROR?3?5loadWeight@
+ 1EA7F674 ??_C@_0EH@MBNACLGP@?$FLDeep2Engine?$FN?5Tokenizer?5loaded?3@
+ 1EA7F674 ??_C@_0EI@CFLJDBEF@?$FLDeep2Engine?$FN?5HEADDIM_SYNC?5conf@
+ 1EA7F674 ??_C@_0EI@DPOIBLD@?$FLDeep2Engine?$FN?5BP16?5inferred?3?5vo@
+ 1EA7F674 ??_C@_0EI@FKGLALDC@?$FLDeep2Engine?$FN?5Generating?5with?5C@
+ 1EA7F674 ??_C@_0EJ@HEDEAJAO@?$FLDeep2Engine?$FN?5Medusa?5not?5availa@
+ 1EA7F674 ??_C@_0EJ@NGOABDKP@?$FLDeep2Engine?$FN?5Generation?5comple@
+ 1EA7F674 ??_C@_0EK@IPDHDNLJ@?$FLDeep2Engine?$FN?5Mamba?92?5state?5buf@
+ 1EA7F674 ??_C@_0EK@KEPHMMEC@?$FLDeep2Engine?$FN?5MoE?5multi?9shard?3?5@
+ 1EA7F674 ??_C@_0EK@PNOCEEFC@?$FLDeep2Engine?$FN?5MoE?5dims?3?5expertD@
+ 1EA7F674 ??_C@_0EL@COKJDBEA@?$FLDeep2Engine?$FN?5vocabSize?5overrid@
+ 1EA7F674 ??_C@_0EL@DOCOHGNE@?$FLDeep2Engine?$FN?5UNREVERSE_HOTPATC@
+ 1EA7F674 ??_C@_0EM@IDILOBJP@?$FLDeep2Engine?$FN?5RouterPrefetchTel@
+ 1EA7F674 ??_C@_0EN@IPJIOLOF@?$FLDeep2Engine?$FN?5Completion?5plan?3?5@
+ 1EA7F674 ??_C@_0EN@NECMCNGP@?$FLDeep2Engine?$FN?5KV?5cache?5sized?5fo@
+ 1EA7F674 ??_C@_0EO@EPADJDBD@?$FLDeep2Engine?$FN?5EARLY_HEADDIM_SYN@
+ 1EA7F674 ??_C@_0EO@LMKCMBGO@?$FLDeep2Engine?$FN?5WARNING?3?5numHeads@
+ 1EA7F674 ??_C@_0EP@JJHGELNA@?$FLDeep2Engine?$FN?5GENERATION_REJECT@
+ 1EA7F674 ??_C@_0FA@KOFMDPNP@?$FLDeep2Engine?$FN?5FATAL?3?5layer?5?$CFzu?5@
+ 1EA7F674 ??_C@_0FA@LCKLDCD@?$FLDeep2Engine?$FN?5Layer?5topology?3?5?$CF@
+ 1EA7F674 ??_C@_0FB@ELGGMHFP@?$FLDeep2Engine?$FN?5ElasticResidencyM@
+ 1EA7F674 ??_C@_0FB@GGBMONOF@?$FLDeep2Engine?$FN?5WARNING?3?5Failed?5t@
+ 1EA7F674 ??_C@_0FE@ICBDFGIL@?$FLDeep2Engine?$FN?5KV_CACHE_REUSED?5r@
+ 1EA7F674 ??_C@_0FE@PGKCNKMO@?$FLDeep2Engine?$FN?5MARS?5placed?5?$CFzu?5t@
+ 1EA7F674 ??_C@_0FF@CBFBNLCP@?$FLDeep2Engine?$FN?5loadWeights?$CI?$CJ?5loa@
+ 1EA7F674 ??_C@_0FF@NGHHPGIG@?$FLDeep2Engine?$FN?5ResidencyManager?3@
+ 1EA7F674 ??_C@_0FF@OGGOKNIC@?$FLDeep2Engine?$FN?5Telemetry?5control@
+ 1EA7F674 ??_C@_0FH@CBFEENAF@?$FLDeep2Engine?$FN?5GEMMA_ROPE?5layer0@
+ 1EA7F674 ??_C@_0FH@MJKNIIOK@?$FLDeep2Engine?$FN?5openK2ShardDirect@
+ 1EA7F674 ??_C@_0FH@NKMCGKPD@?$FLDeep2Engine?$FN?5GQA?5detected?3?5num@
+ 1EA7F674 ??_C@_0FH@NPLGHJNK@?$FLDeep2Engine?$FN?5ToroidalKVCache?5i@
+ 1EA7F674 ??_C@_0FI@BOBKHGMH@?$FLDeep2Engine?$FN?5GEMMA_NORM_BAKE?5m@
+ 1EA7F674 ??_C@_0FJ@IGFMEFDD@?$FLDeep2Engine?$FN?5openK2ShardDirect@
+ 1EA7F674 ??_C@_0FK@JGDEFND@?$FLDeep2Engine?$FN?5WARNING?3?5Could?5no@
+ 1EA7F674 ??_C@_0FN@GJLHBPDM@?$FLDeep2Engine?$FN?5GEMMA_QK_NORM?5q?$DN?$CF@
+ 1EA7F674 ??_C@_0FN@GKMDABON@?$FLDeep2Engine?$FN?5ERROR?3?5multi?9shar@
+ 1EA7F674 ??_C@_0FO@GEAHMBNC@?$FLDeep2Engine?$FN?5MoE?5topology?5auto@
+ 1EA7F674 ??_C@_0FO@KEDEBBMM@?$FLDeep2Engine?$FN?5KV_CACHE_CONFIGUR@
+ 1EA7F674 ??_C@_0FO@OADJLGKN@?$FLDeep2Engine?$FN?5KV_CACHE_CONFIG_F@
+ 1EA7F674 ??_C@_0FO@PDPILANG@?$FLDeep2Engine?$FN?5HEADDIM_SYNC_POST@
+ 1EA7F674 ??_C@_0FP@LMHBMGAJ@?$FLDeep2Engine?$FN?5SovereignOutOfCor@
+ 1EA7F674 ??_C@_0GA@KNJMKMFP@?$FLDeep2Engine?$FN?5Layer?5?$CFzu?5router?5@
+ 1EA7F674 ??_C@_0GB@CHFEFPIN@?$FLDeep2Engine?$FN?5MODEL_FIT_ADMITTE@
+ 1EA7F674 ??_C@_0GB@EODMCBMO@?$FLDeep2Engine?$FN?5Mamba?92?5SSM?3?5?$CFzu?5@
+ 1EA7F674 ??_C@_0GB@HMKODNNJ@?$FLDeep2Engine?$FN?5ERROR?3?5Invalid?5mo@
+ 1EA7F674 ??_C@_0GC@IHLOPBCO@?$FLDeep2Engine?$FN?5GGUF?5architecture@
+ 1EA7F674 ??_C@_0GC@LBFPEBLM@?$FLDeep2Engine?$FN?5PREFILL?3?5?$CFzu?5tok?5@
+ 1EA7F674 ??_C@_0GE@EOIFCPIC@?$FLDeep2Engine?$FN?5ERROR?3?5hidden?9sta@
+ 1EA7F674 ??_C@_0GE@GCCIEMHD@?$FLDeep2Engine?$FN?5ERROR?3?5indexed?5GQ@
+ 1EA7F674 ??_C@_0GE@JBAFGKGB@?$FLDeep2Engine?$FN?5ERROR?3?5Config?5mis@
+ 1EA7F674 ??_C@_0GH@BPEJEPAH@?$FLDeep2Engine?$FN?5embedToken?3?5type?$DN@
+ 1EA7F674 ??_C@_0GH@KJDGLJL@?$FLDeep2Engine?$FN?5Qwen3?45?3?5inferrin@
+ 1EA7F674 ??_C@_0GJ@FCLFAHDA@?$FLDeep2Engine?$FN?5headDim?5post?9bind@
+ 1EA7F674 ??_C@_0GJ@MOCFFKHE@?$FLDeep2Engine?$FN?5MLA?5detected?3?5qLo@
+ 1EA7F674 ??_C@_0GJ@MOCHOJFM@?$FLDeep2Engine?$FN?5WARNING?3?5Layer?5?$CFz@
+ 1EA7F674 ??_C@_0GN@GFEENKMO@?$FLDeep2Engine?$FN?5ERROR?3?5indexed?5st@
+ 1EA7F674 ??_C@_0GO@BHOKGJF@?$FLDeep2Engine?$FN?5headDim?5override?5@
+ 1EA7F674 ??_C@_0GO@JNGDHKDA@?$FLDeep2Engine?$FN?5MLA?5Lite?5path?3?5qL@
+ 1EA7F674 ??_C@_0GP@LPEIPOKL@?$FLDeep2Engine?$FN?5LM_HEAD_GEOMETRY_@
+ 1EA7F674 ??_C@_0HA@IFHKMDEN@?$FLDeep2Engine?$FN?5MLA?5multi?9shard?5p@
+ 1EA7F674 ??_C@_0HH@HKCPKIBD@?$FLDeep2Engine?$FN?5ERROR?3?5indexed?5st@
+ 1EA7F674 ??_C@_0IA@MNONIPAD@?$FLDeep2Engine?$FN?5Indexed?5attention@
+ 1EA7F674 ??_C@_0IK@JPPEOGAH@?$FLDeep2Engine?$FN?5ERROR?3?5GQA?5contra@
+ 1EA7F674 ??_C@_0IK@LBPEGOPI@?$FLDeep2Engine?$FN?5MLA?5single?9shard?5@
+ 1EA7F674 ??_C@_0IL@MINJFNHM@?$FLDeep2Engine?$FN?5ERROR?3?5DeepSeek2?5@
+ 1EA7F674 ??_C@_0JL@GOEADHEF@?$FLDeep2Engine?$FN?5ERROR?3?5Failed?5to?5@
+ 1EA7F674 ??_C@_0KH@DOLAOENI@?$FLDeep2Engine?$FN?5STACK?5vk?$DN?$CFd?5mars?$DN@
+ 1EA7F674 ??_C@_0ND@MIAMIINF@?$FLDeep2Engine?$FN?5GEMMA_NUMERIC?5log@
+ 1EA7F674 ??_GCompressedKVCache@Deep2@@QEAAPEAXI@Z
+ 1EA7F674 ??_GDeep2Engine@Deep2@@QEAAPEAXI@Z
+ 1EA7F674 ??_GKVCache@Deep2@@QEAAPEAXI@Z
+ 1EA7F674 ??_GToroidalKVCache@rawrxd@@QEAAPEAXI@Z
+ 1EA7F674 ?GeGLU@Deep2Engine@Deep2@@QEAAXPEBM0PEAM_K@Z
+ 1EA7F674 ?GenerationStopReasonName@Deep2Engine@Deep2@@SAPEBDW4GenerationStopReason@12@@Z
+ 1EA7F674 ?Linear@Deep2Engine@Deep2@@QEAAXHPEBM0PEAM_K@Z
+ 1EA7F674 ?LinearParallel@Deep2Engine@Deep2@@QEAAXHPEBM0PEAM_K@Z
+ 1EA7F674 ?LinearW@Deep2Engine@Deep2@@QEAAXAEBUWeightTensor@2@PEBM1PEAM_K@Z
+ 1EA7F674 ?RMSNormW@Deep2Engine@Deep2@@QEAAXAEBUWeightTensor@2@PEBMPEAM_KM@Z
+ 1EA7F674 ?SwiGLU@Deep2Engine@Deep2@@QEAAXPEBM0PEAM_K@Z
+ 1EA7F674 ?_Get_first@?$_Compressed_pair@U?$default_delete@VCompressedKVCache@Deep2@@@std@@PEAVCompressedKVCache@Deep2@@$00@std@@QEAAAEAU?$default_delete@VCompressedKVCache@Deep2@@@2@XZ
+ 1EA7F674 ?_Get_first@?$_Compressed_pair@U?$default_delete@VKVCache@Deep2@@@std@@PEAVKVCache@Deep2@@$00@std@@QEAAAEAU?$default_delete@VKVCache@Deep2@@@2@XZ
+ 1EA7F674 ?_Get_first@?$_Compressed_pair@U?$default_delete@VToroidalKVCache@rawrxd@@@std@@PEAVToroidalKVCache@rawrxd@@$00@std@@QEAAAEAU?$default_delete@VToroidalKVCache@rawrxd@@@2@XZ
+ 1EA7F674 ?advance@CompressedKVCache@Deep2@@QEAAXXZ
+ 1EA7F674 ?allocateBuffers@Deep2Engine@Deep2@@AEAA_NXZ
+ 1EA7F674 ?applyRoPE@Deep2Engine@Deep2@@QEAAXPEAM0_K111MM1@Z
+ 1EA7F674 ?applySlidingWindow@Deep2Engine@Deep2@@AEAAXAEA_K0@Z
+ 1EA7F674 ?bindStandardMultiShardWeights@Deep2Engine@Deep2@@AEAA_NAEAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
+ 1EA7F674 ?bypassHereticSafety@Deep2Engine@Deep2@@QEAA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ
+ 1EA7F674 ?clearCancel@Deep2Engine@Deep2@@QEAAXXZ
+ 1EA7F674 ?computeAttention@Deep2Engine@Deep2@@AEAAX_KPEBMPEAM0@Z
+ 1EA7F674 ?computeExpertFFN@Deep2Engine@Deep2@@AEAAXAEBUMoEWeightHandle@2@PEBMPEAM_K3@Z
+ 1EA7F674 ?computeFFN@Deep2Engine@Deep2@@AEAAX_KPEBMPEAM@Z
+ 1EA7F674 ?computeLogits@Deep2Engine@Deep2@@QEAAXPEBMPEAM@Z
+ 1EA7F674 ?computeMoEFFN@Deep2Engine@Deep2@@AEAAX_KPEBMPEAM@Z
+ 1EA7F674 ?computeSSM@Deep2Engine@Deep2@@AEAAX_KPEBMPEAM@Z
+ 1EA7F674 ?computeSharedExpertFFN@Deep2Engine@Deep2@@AEAAX_KPEBMPEAM@Z
+ 1EA7F674 ?configureGeneration@Deep2Engine@Deep2@@QEAAXAEBUGenerationOptions@2@@Z
+ 1EA7F674 ?configureReapRuntimeInjection@Deep2Engine@Deep2@@QEAA_NAEBURuntimeInjection@Reap@RawrXD@@@Z
+ 1EA7F674 ?currentLength@CompressedKVCache@Deep2@@QEBA_KXZ
+ 1EA7F674 ?currentThrottle@Deep2Engine@Deep2@@QEBAMXZ
+ 1EA7F674 ?deallocateBuffers@Deep2Engine@Deep2@@AEAAXXZ
+ 1EA7F674 ?detokenize@Deep2Engine@Deep2@@QEAA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AEBV?$vector@HV?$allocator@H@std@@@4@@Z
+ 1EA7F674 ?disableDamSysDriver@Deep2Engine@Deep2@@QEAA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ
+ 1EA7F674 ?disableIFEORedirects@Deep2Engine@Deep2@@QEAA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ
+ 1EA7F674 ?disableMARS@Deep2Engine@Deep2@@QEAAXXZ
+ 1EA7F674 ?disableReverseAnalysis@Deep2Engine@Deep2@@QEAAXXZ
+ 1EA7F674 ?disableTelemetryServices@Deep2Engine@Deep2@@QEAA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ
+ 1EA7F674 ?embedToken@Deep2Engine@Deep2@@QEAA_NHPEAM@Z
+ 1EA7F674 ?embedTokenFromShard@Deep2Engine@Deep2@@AEAA_NHPEAM@Z
+ 1EA7F674 ?emergencyRollbackAllPatches@Deep2Engine@Deep2@@QEAAXXZ
+ 1EA7F674 ?enableAllEnhancements@Deep2Engine@Deep2@@QEAAXXZ
+ 1EA7F674 ?enableChamber@Deep2Engine@Deep2@@QEAAX_N@Z
+ 1EA7F674 ?enableCompressedKV@Deep2Engine@Deep2@@QEAAX_NW4KVQuantType@2@@Z
+ 1EA7F674 ?enableCyclone@Deep2Engine@Deep2@@QEAAX_N@Z
+ 1EA7F674 ?enableElasticResidency@Deep2Engine@Deep2@@QEAAX_N@Z
+ 1EA7F674 ?enableKVCache@Deep2Engine@Deep2@@QEAAX_N@Z
+ 1EA7F674 ?enableMARS@Deep2Engine@Deep2@@QEAA_N_K0@Z
+ 1EA7F674 ?enableMedusa@Deep2Engine@Deep2@@QEAAX_N@Z
+ 1EA7F674 ?enableNUPacking@Deep2Engine@Deep2@@QEAAX_N@Z
+ 1EA7F674 ?enableNVMeStreaming@Deep2Engine@Deep2@@QEAAX_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
+ 1EA7F674 ?enablePlasmaGovernor@Deep2Engine@Deep2@@QEAAX_N@Z
+ 1EA7F674 ?enableProfiling@Deep2Engine@Deep2@@QEAAX_N@Z
+ 1EA7F674 ?enableResidencyTelemetry@Deep2Engine@Deep2@@QEAAX_N@Z
+ 1EA7F674 ?enableReverseAnalysis@Deep2Engine@Deep2@@QEAAX_N@Z
+ 1EA7F674 ?enableSlidingWindow@Deep2Engine@Deep2@@QEAAX_N_K@Z
+ 1EA7F674 ?enableSovereignRuntime@Deep2Engine@Deep2@@QEAAX_N@Z
+ 1EA7F674 ?enableToroidalKV@Deep2Engine@Deep2@@QEAAX_N_K@Z
+ 1EA7F674 ?enableVulkan@Deep2Engine@Deep2@@QEAAX_N@Z
+ 1EA7F674 ?enableWarmupScheduler@Deep2Engine@Deep2@@QEAAX_N@Z
+ 1EA7F674 ?evaluateChamber@Deep2Engine@Deep2@@QEAA?AW4ChamberResult@rawrxd@@PEBM_K@Z
+ 1EA7F674 ?extendToolCallLimit@Deep2Engine@Deep2@@QEAA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@Z
+ 1EA7F674 ?findTensor@Deep2Engine@Deep2@@AEAAPEAUWeightTensor@2@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
+ 1EA7F674 ?forwardLayer@Deep2Engine@Deep2@@AEAAX_KPEBMPEAM0@Z
+ 1EA7F674 ?forwardLayerPublic@Deep2Engine@Deep2@@QEAAX_KPEBMPEAM0@Z
+ 1EA7F674 ?generate@Deep2Engine@Deep2@@QEAA_KPEBH_KPEAH1PEAUInferenceStats@2@V?$function@$$A6A_NH@Z@std@@@Z
+ 1EA7F674 ?generateChat@Deep2Engine@Deep2@@QEAA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AEBV34@0_K@Z
+ 1EA7F674 ?generateStream@Deep2Engine@Deep2@@QEAA?AUGenerationResult@2@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AEBUGenerationOptions@2@V?$function@$$A6A_NHAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z@5@@Z
+ 1EA7F674 ?generateText@Deep2Engine@Deep2@@QEAA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AEBV34@_K@Z
+ 1EA7F674 ?generateWithMedusa@Deep2Engine@Deep2@@AEAA_KPEBH_KPEAH1PEAUInferenceStats@2@@Z
+ 1EA7F674 ?getDynamicParity@Deep2Engine@Deep2@@QEBA?AUDynamicParity@MARS@2@XZ
+ 1EA7F674 ?getExtendedToolCallLimit@Deep2Engine@Deep2@@QEBAHXZ
+ 1EA7F674 ?getMedusaStats@Deep2Engine@Deep2@@QEBAAEBUMedusaStats@2@XZ
+ 1EA7F674 ?getModelMetadata@Deep2Engine@Deep2@@QEBAAEBUModelMetadata@2@XZ
+ 1EA7F674 ?getNUPackerStats@Deep2Engine@Deep2@@QEBAAEBUStats@NUFusedPacker@2@XZ
+ 1EA7F674 ?getProfileJSONSummary@Deep2Engine@Deep2@@QEBA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ
+ 1EA7F674 ?getReverseIntegration@Deep2Engine@Deep2@@QEBAPEAVReverseIntegration@2@XZ
+ 1EA7F674 ?getSovereignRuntime@Deep2Engine@Deep2@@QEBAPEAVSovereignOutOfCoreRuntime@rawrxd@@XZ
+ 1EA7F674 ?getVulkanComputeSlot@Deep2Engine@Deep2@@QEBAPEAVVulkanCompute@CPUInference@@I@Z
+ 1EA7F674 ?getWarmupStats@Deep2Engine@Deep2@@QEBAAEBUWarmupStats@2@XZ
+ 1EA7F674 ?growContext@Deep2Engine@Deep2@@QEAA_N_K@Z
+ 1EA7F674 ?handleGPUFailure@Deep2Engine@Deep2@@QEAA_NH@Z
+ 1EA7F674 ?handleTensorFault@Deep2Engine@Deep2@@QEAA_N_K@Z
+ 1EA7F674 ?initialize@Deep2Engine@Deep2@@QEAA_NAEBUEngineConfig@2@@Z
+ 1EA7F674 ?initializeAdvancedFeatures@Deep2Engine@Deep2@@AEAA_NXZ
+ 1EA7F674 ?isCancelRequested@Deep2Engine@Deep2@@QEBA_NXZ
+ 1EA7F674 ?isInitialized@KVCache@Deep2@@QEBA_NXZ
+ 1EA7F674 ?kvGeometryReceipt@Deep2Engine@Deep2@@QEBA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ
+ 1EA7F674 ?kvLayerIdx@Deep2Engine@Deep2@@AEBA_K_K@Z
+ 1EA7F674 ?loadModel@Deep2Engine@Deep2@@QEAA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
+ 1EA7F674 ?loadModelFromBP16@Deep2Engine@Deep2@@QEAA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
+ 1EA7F674 ?loadTensorFromGGUF@Deep2Engine@Deep2@@AEAA_NAEAUWeightTensor@2@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
+ 1EA7F674 ?loadWeights@Deep2Engine@Deep2@@QEAA_NPEBX_K@Z
+ 1EA7F674 ?openK2ShardDirectory@Deep2Engine@Deep2@@QEAA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
+ 1EA7F674 ?parseWeightLayerIndex@Deep2Engine@Deep2@@AEBAHAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
+ 1EA7F674 ?placeAllModelTensorsMARS@Deep2Engine@Deep2@@QEAA?AUMARSPlacementReport@12@XZ
+ 1EA7F674 ?placeTensorMARS@Deep2Engine@Deep2@@QEAAPEAUVRAMLease@MARS@2@_KAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@0M@Z
+ 1EA7F674 ?prefetchNextExperts@Deep2Engine@Deep2@@AEAAXH@Z
+ 1EA7F674 ?printHotPatcherStatus@Deep2Engine@Deep2@@QEAAXXZ
+ 1EA7F674 ?printResidencyTelemetryReport@Deep2Engine@Deep2@@QEBAXXZ
+ 1EA7F674 ?rebalanceMARS@Deep2Engine@Deep2@@QEAAXXZ
+ 1EA7F674 ?recordExpertAccess@Deep2Engine@Deep2@@AEAAXHHM@Z
+ 1EA7F674 ?redirectTensor@Deep2Engine@Deep2@@QEAA?AW4HotpatchResult@MARS@2@_KH@Z
+ 1EA7F674 ?refreshElasticDynamicBudget@Deep2Engine@Deep2@@QEAAXXZ
+ 1EA7F674 ?registerKernelPatch@Deep2Engine@Deep2@@QEAA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AEBV34@PEAX1M@Z
+ 1EA7F674 ?registerWeightTensor@Deep2Engine@Deep2@@QEAAHPEAXH_K1@Z
+ 1EA7F674 ?release@?$unique_ptr@VCompressedKVCache@Deep2@@U?$default_delete@VCompressedKVCache@Deep2@@@std@@@std@@QEAAPEAVCompressedKVCache@Deep2@@XZ
+ 1EA7F674 ?release@?$unique_ptr@VKVCache@Deep2@@U?$default_delete@VKVCache@Deep2@@@std@@@std@@QEAAPEAVKVCache@Deep2@@XZ
+ 1EA7F674 ?release@?$unique_ptr@VToroidalKVCache@rawrxd@@U?$default_delete@VToroidalKVCache@rawrxd@@@std@@@std@@QEAAPEAVToroidalKVCache@rawrxd@@XZ
+ 1EA7F674 ?releaseStandardMultiShardWeights@Deep2Engine@Deep2@@AEAAXXZ
+ 1EA7F674 ?reprogramPCIeBARs@Deep2Engine@Deep2@@QEAA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ
+ 1EA7F674 ?reset@?$unique_ptr@VCompressedKVCache@Deep2@@U?$default_delete@VCompressedKVCache@Deep2@@@std@@@std@@QEAAXPEAVCompressedKVCache@Deep2@@@Z
+ 1EA7F674 ?reset@?$unique_ptr@VKVCache@Deep2@@U?$default_delete@VKVCache@Deep2@@@std@@@std@@QEAAXPEAVKVCache@Deep2@@@Z
+ 1EA7F674 ?reset@?$unique_ptr@VToroidalKVCache@rawrxd@@U?$default_delete@VToroidalKVCache@rawrxd@@@std@@@std@@QEAAXPEAVToroidalKVCache@rawrxd@@@Z
+ 1EA7F674 ?reset@Deep2Engine@Deep2@@QEAAXXZ
+ 1EA7F674 ?rollbackKernelPatch@Deep2Engine@Deep2@@QEAA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
+ 1EA7F674 ?routePrimitive@Deep2Engine@Deep2@@QEAA?AUFormulaRoute@rawrxd@@_K@Z
+ 1EA7F674 ?runK2NativeStreamPartial@Deep2Engine@Deep2@@QEAA?AUResult@K2NativeStreamGate@@AEBUConfig@4@@Z
+ 1EA7F674 ?sampleToken@Deep2Engine@Deep2@@AEAAHPEBM@Z
+ 1EA7F674 ?saveProfileJSON@Deep2Engine@Deep2@@QEBA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
+ 1EA7F674 ?setAsyncPrefetchEnabled@Deep2Engine@Deep2@@QEAAX_N@Z
+ 1EA7F674 ?setNumThreads@Deep2Engine@Deep2@@QEAAX_K@Z
+ 1EA7F674 ?setSampler@Deep2Engine@Deep2@@QEAAXV?$unique_ptr@VISampler@sampling@rawrxd@@U?$default_delete@VISampler@sampling@rawrxd@@@std@@@std@@@Z
+ 1EA7F674 ?setSampling@Deep2Engine@Deep2@@QEAAXMM@Z
+ 1EA7F674 ?setTemperature@Deep2Engine@Deep2@@QEAAXM@Z
+ 1EA7F674 ?setTopP@Deep2Engine@Deep2@@QEAAXM@Z
+ 1EA7F674 ?switchModel@Deep2Engine@Deep2@@QEAA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
+ 1EA7F674 ?tokenCount@ToroidalKVCache@rawrxd@@QEBA_KXZ
+ 1EA7F674 ?tokenize@Deep2Engine@Deep2@@QEAA?AV?$vector@HV?$allocator@H@std@@@std@@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@4@@Z
+ 1EA7F674 ?tryVulkanGEMV@Deep2Engine@Deep2@@QEAA_NAEBUWeightTensor@2@PEBMPEAM_K@Z
+ 1EA7F674 ?unloadModel@Deep2Engine@Deep2@@QEAAXXZ
+ 1EA7F674 ?updateThermalState@Deep2Engine@Deep2@@QEAAXAEBUThermalState@rawrxd@@@Z
+ 1EA7F674 ?vulkanDeviceCount@Deep2Engine@Deep2@@QEBAIXZ
+ 1EA7F674 ?vulkanSlotGemvSuccess@Deep2Engine@Deep2@@QEBA_KI@Z
+ 1EA7F674 ?vulkanSlotWeightHits@Deep2Engine@Deep2@@QEBA_KI@Z
+ 1EA7F674 ?vulkanSlotWeightUploads@Deep2Engine@Deep2@@QEBA_KI@Z
+ 1EA7F674 ?writeHead@ToroidalKVCache@rawrxd@@QEBA_KXZ
+=== strings evidence AGGREGATE_DECODE_USE_DEEP2 / Deep2Backend ===
+F:\rawrxd\build\bin\aggregate_decode_single_smoke.exe
+SINGLE_CONTAINS_DEEP2=1
+F:\rawrxd\build\bin\aggregate_decode_multi_smoke.exe
+MULTI_CONTAINS_DEEP2=1
+
+=== LINK_READ_TLOG ===
+FILE=F:\rawrxd\build\tools\aggregate_decode\aggregate_decode_single_smoke.dir\Release\aggregat.C4B9BE15.tlog\link.read.1.tlog
+TLOG_MTIME=2026-11-11T12:06:38.7439515-05:00
+F:\RAWRXD\BUILD\RELEASE\DEEP2_ENGINE_LIB.LIB
+FILE=F:\rawrxd\build\tools\aggregate_decode\aggregate_decode_multi_smoke.dir\Release\aggregat.B120C341.tlog\link.read.1.tlog
+TLOG_MTIME=2026-11-11T12:08:03.8030867-05:00
+F:\RAWRXD\BUILD\RELEASE\DEEP2_ENGINE_LIB.LIB
+
+=== STATIC_LINK_PROOF ===
+NOTE=deep2_engine_lib is STATIC; PE dependents show CRT/Vulkan only (expected)
+LIB_SHA256=4AB07EFC5954F7A91A64FFBEBFAE8E7B56431745CA64C55D1AFEFBE5937CB659
+PRIOR_STALE_LIB_SHA256=FB836068BE0B74985D914734DD81C6E645090E948C1EC9C80A4203E1F24882A9
+LIB_NE_STALE=1
+LIB_MTIME=2026-11-11T12:05:35
+SINGLE_EXE_MTIME=2026-11-11T12:06:32
+MULTI_EXE_MTIME=2026-11-11T12:08:02
+SYMBOL_PROOF=dumpbin /LINKERMEMBER shows ?isInitialized@KVCache@Deep2 and Deep2Engine symbols in NEW lib
+SINGLE_CONTAINS_DEEP2=1
+MULTI_CONTAINS_DEEP2=1

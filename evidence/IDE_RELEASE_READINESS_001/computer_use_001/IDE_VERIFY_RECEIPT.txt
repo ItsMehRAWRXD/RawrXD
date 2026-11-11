@@ -1,0 +1,11 @@
+﻿GATE=COMPUTER_USE_IDE_VERIFY_001
+STATUS=PASS
+UTC=2026-11-10T05:18:46.8778965Z
+TESTS_SHA256=8C97E3AD29C9B40E894FE9504871709926C216A5CEBC650DE64D4E49DE161EC0
+VERIFY_SHA256=38F885371FA53B1A8E203AEE4425CBEAB6A7BE00428C5C02A090B8BC3ED498EC
+OBSERVED=policy_mouse_deny,policy_launch_deny,approval_deny,approval_allow_still_policy,cancel,screenshot_own_window,find_own_window,mouse_own_window,type_own_window,agent_tool_approval_deny,agent_tools_registered,agent_tool_policy_deny_launch,bridge_cancel
+CERTIFIED_4DE0=IMMUTABLE_UNTOUCHED
+FREEZE_CONTROL=DEFERRED_NON_BLOCKING
+SOURCE_WIRED=1
+RUNTIME_REACHED=1
+NOTE=Standalone library+bridge verify PASS; IDE Native-Ext link build follows separately

@@ -1,0 +1,32 @@
+﻿RawrXD Local Agent
+Model:    qwen2.5-coder:1.5b-base
+Backend:  ollama (backup)
+Endpoint: http://127.0.0.1:11434/v1/chat/completions
+Route:    ollama tag preserved; GGUF lookup bypassed; :8080 not probed
+Mode:     code - Default agent: inspect, modify, build and test
+Root:     F:\rawrxd
+Edits:    allowed by policy
+Execute:  allowed by policy
+Tools:    9 registered
+
+RawrXD Local Agent
+Model:    qwen2.5-coder:1.5b-base
+Backend:  ollama (backup)
+Mode:     code - Default agent: inspect, modify, build and test
+Root:     F:\rawrxd
+Edits:    allowed by policy
+Execute:  allowed by policy
+Tools:    9 registered
+
+
+=== Run summary ===
+turns=6 tool_calls=5 denied=0
+  [ok]   read_file {"path":"evidence/IDE_REPAIR_CANDIDATE_001/FINALIZATION_CHECKLIST_001/RAWR_CLI_OLLAMA_ROUTE_001/agent_loop_fixture/off_by_one.cpp"}
+  [ok]   edit_files {"new":"  // OFF_BY_ONE: fixed\n  return x + 1;","old":"  // OFF_BY_ONE: should return x+1\n  return x;","path":"evidence/IDE_REPAIR_CANDIDATE_001/FINALIZATION_CHECKLIST_001/RAWR_CLI_OLLAMA_ROUTE_001/agent_loop_fixture/off_by_one.cpp"}
+  [ok]   run_build {"config":"Debug","dir":"evidence/IDE_REPAIR_CANDIDATE_001/FINALIZATION_CHECKLIST_001/RAWR_CLI_OLLAMA_ROUTE_001/agent_loop_fixture"}
+  [ok]   run_tests {"config":"Debug","dir":"evidence/IDE_REPAIR_CANDIDATE_001/FINALIZATION_CHECKLIST_001/RAWR_CLI_OLLAMA_ROUTE_001/agent_loop_fixture"}
+  [ok]   git_diff {}
+
+Summary: Autonomous repair completed via orchestrator fallback: evidence/IDE_REPAIR_CANDIDATE_001/FINALIZATION_CHECKLIST_001/RAWR_CLI_OLLAMA_ROUTE_001/agent_loop_fixture/off_by_one.cpp read, patched, built, tested.
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.

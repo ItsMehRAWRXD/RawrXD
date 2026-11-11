@@ -1,0 +1,5 @@
+PlanExecutor CMake references in F:\rawrxd\CMakeLists.txt: NONE (rg/Select-String zero hits)
+RAWRXD_NATIVE_IDE_SOURCES intentionally omits Win32IDE_PlanExecutor.cpp (AGENT_RUNTIME_WIRE_001 BUILD_NOTES)
+Win32IDE_PlanExecutor.cpp exists_on_disk=True but NOT in RawrXD-Win32IDE-Native source list
+SSOT planning path remains Win32IDE_AutonomousLoop (SOURCE_WIRED only; RUNTIME_REACHED=0)
+No duplicate execution authority wired via CMake for PlanExecutor as of 2026-11-11T11:45:03.7532002-05:00

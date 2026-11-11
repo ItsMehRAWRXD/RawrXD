@@ -1,0 +1,159 @@
+WEIGHTED_ACCEPTANCE_LEDGER=W6
+ASOF_UTC=2026-11-10T09:50:00Z
+CANDIDATE=IDE_REPAIR_CANDIDATE_001
+SOURCE_CSVS=LAYERS_0_10_GITHUB_LOCAL.csv;ISSUE57_GATES_OBLIGATIONS.csv;WORKSTREAMS_01_25_WAVE1_CROSSWALK.csv
+ROADMAP=MATURITY_ROADMAP_82_100.txt
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+MATURITY_ESTIMATE=82%_HELD
+MEASURED_COMPLETION_PERCENT=NOT_ESTABLISHED
+EARNED_TOTAL=0
+WEIGHT_POLICY=PLACEHOLDER_ONLY_MATCHING_ROADMAP_PLUS3_BANDS
+INVENT_PASS=0
+NO_CROSS_SHA_PASS_INHERITANCE=1
+LAW=NOT_RUN != PASS ; EARNED=0 until same-SHA receipt exists under this candidate
+
+BANDS=
+  B1 82->85 +3  WAVE1_CU_GUI_E2E_AND_AGENT_TOOL_SAME_SHA
+  B2 85->88 +3  ISSUE49_CHAT_SESSION_TOOL_LOOP_EXACTLY_ONCE
+  B3 88->91 +3  NATIVE_IDE_FOUR_PANEL_PROBLEMS_TERMINAL_BUILD
+  B4 91->94 +3  EXTENSIONS_CANCEL_MODEL_SWITCH_PERSIST_RECOVERY
+  B5 94->97 +3  FULL_FEATURE_HIDDEN_GAP_REGRESSION
+  B6 97->100 +3 RELEASE_CERT_REPRO_INDEPENDENT_E2E
+
+AUTHORITY=
+  Band mass is authoritative only on rows with account=1.
+  Obligation rows (account=0) convert CSV items into the ledger for traceability;
+  they do not add extra band mass beyond the account=1 rows.
+
+COLUMNS=
+family	id	title_or_obligation	band	weight	earned	account	receipt_path	fail_closed_note
+
+# ========== B1 account rows (sum=3.000) ==========
+LAYER	L3_I42	Agent Reasoning + Tool Authority	B1	0.750	0	1	WAVE1_REAL_TOOL_READ_AND_CU_E2E_RECEIPT.txt	Wave1 PASS pointer same SHA 6E59E91A; WAVE1_INTEGRATED=NOT_SEALED; earned held
+WS	WS04	AgentSession	B1	0.400	0	1		Session-owned Registry required
+WS	WS05	Agent loop	B1	0.400	0	1		Bounded tool-use vs Copilot text
+WS	WS06	Tool protocol	B1	0.400	0	1		Emit/parse required TOOL read
+WS	WS07	File tools	B1	0.350	0	1		read before write
+WS	WS08	Computer use	B1	0.400	0	1	cu_dispatch_002/RECEIPT.txt;WAVE1_REAL_TOOL_READ_AND_CU_E2E_RECEIPT.txt	Wave1 CU pointer; independent CU_GUI not sealed; earned held
+WS	WS15	Ollama	B1	0.300	0	1		Model must emit required tool form
+
+# ========== B2 account rows (sum=3.000) ==========
+LAYER	L4_I43	Autonomous Edit/Build/Test Loop	B2	0.700	0	1		Historical 35C22 != candidate SHA
+WS	WS02	Chat input	B2	0.350	0	1		Must not remain text-only for agent tools
+WS	WS03	Chat sessions	B2	0.400	0	1		Session ownership must bind tools
+WS	WS19	Agent orchestration	B2	0.350	0	1		Wave2 after 04-07
+WS	WS22	Security	B2	0.300	0	1		Approval until dispatch lives
+I57	A15	IDE-driven agent edit-build-test-snapshot rollback	B2	0.400	0	1		RC4 agent repair FAIL class
+BAND	B2_RESERVE	Issue49 exactly-once / session continuity reserve	B2	0.500	0	1	issue49_wave2/STATUS.txt	ISSUE49=HOLD; 11STEP=NOT_RUN on publish SHA; earned held
+
+# ========== B3 account rows (sum=3.000) ==========
+LAYER	L6_I45	IDE Surface Completion	B3	0.800	0	1	ide_surfaces_wave3/WAVE1_INTEGRATED_STATUS.txt	WAVE1_INTEGRATED=NOT_SEALED; four_panel opcodes ABSENT_ON_DISK at W6 run; earned held
+WS	WS10	Integrated terminal	B3	0.400	0	1		blocked_after Wave1 integrated
+WS	WS11	Build system	B3	0.400	0	1		Needs tool-read to edit path
+WS	WS12	Problems panel	B3	0.400	0	1		
+WS	WS13	Editor	B3	0.350	0	1		
+WS	WS14	Multi-panel UI	B3	0.350	0	1		
+I57	A08	Launch IDE save/close/reopen compare file SHA-256	B3	0.100	0	1		RC4 G04 editor NOT_RUN class
+I57	A09	Terminal start/output/exit/cancel/cleanup	B3	0.100	0	1		
+I57	A10	Native PowerShell panel lifecycle	B3	0.100	0	1		
+
+# ========== B4 account rows (sum=3.000) ==========
+LAYER	L7_I46	Product/Repository Convergence	B4	0.400	0	1		OPEN
+WS	WS09	Cancellation	B4	0.500	0	1		Mid-CU cancel until tools attach
+WS	WS20	Extension host	B4	0.600	0	1		later_wave4
+WS	WS21	Persistence	B4	0.500	0	1		Re-prove on new SHA
+WS	WS23	Reliability	B4	0.500	0	1		after_tools_live
+I57	A11	Native LSP JSON-RPC handshake/diagnostics/completion	B4	0.200	0	1		
+I57	A12	GhostText display/accept/cancel + real model adapter	B4	0.150	0	1		
+I57	A14	Debugger BP/step/watch/vars/stack on real debuggee	B4	0.150	0	1		
+
+# ========== B5 account rows (sum=3.000) ==========
+LAYER	L0_I39	Deep2 GPU Engine Integration & Runtime Residency Closure	B5	0.200	0	1		CLOSED issue; integration seal pending
+LAYER	L1_I40	Deep2 Integration & Runtime Closure	B5	0.200	0	1		OPEN; no RC4 same-SHA credit
+LAYER	L2_I41	GPU/Runtime Execution Closure	B5	0.250	0	1		OPEN; criteria from issue body only
+LAYER	L5_I44	Multi-Agent / Dual-GPU Orchestration	B5	0.250	0	1		OPEN; no RC4 multi-agent
+LAYER	L9_I48	Performance Closure	B5	0.300	0	1		RC4 G08 NOT_RUN until re-proof
+WS	WS16	Deep2Engine	B5	0.300	0	1		later_wave3
+WS	WS17	Multi-GPU	B5	0.250	0	1		later_wave3
+WS	WS18	Context system	B5	0.200	0	1		later
+I57	A03	CMake literal-source admission; disposition missing paths	B5	0.100	0	1		
+I57	A04	Strict no-external-deps scan; Qt/nlohmann quarantine	B5	0.100	0	1		no sealed A04 PASS
+I57	A05	Frozen feature to TU/call-site manifest	B5	0.100	0	1		
+I57	A13	Native browser render/network isolation/lifecycle	B5	0.100	0	1		no clear PASS receipt
+BAND	B5_I57B_CLUSTER	Issue57 B01-B15 toolchain/linker cluster	B5	0.350	0	1		see obligation rows account=0
+BAND	B5_I57C_CLUSTER	Issue57 C01-C14 model/GPU/perf cluster (excl C15)	B5	0.300	0	1		see obligation rows account=0
+
+# ========== B6 account rows (sum=3.000) - W6 owner band ==========
+LAYER	L8_I47	CI/Release Authority	B6	0.500	0	1	release_cert_wave6/runs/verify_20261110-095000/RECEIPT.txt	PASS_INTEGRITY_ONLY on builder clean-extract; HOST_NOT_INDEPENDENT; earned held
+LAYER	L10_I49	Product-Final Acceptance	B6	0.900	0	1	issue49_wave2/STATUS.txt;WAVE1_REAL_TOOL_READ_AND_CU_E2E_RECEIPT.txt	G15 NOT_ESTABLISHED; Issue49=HOLD; Wave1 pointer only; earned held
+WS	WS01	Release lineage	B6	0.250	0	1	release_cert_wave6/SHA_LEDGER_TEMPLATE.txt	rc5b 6E59E91A fresh-filled; RC4 immutable; earned held
+WS	WS24	Packaging	B6	0.450	0	1	release_cert_wave6/runs/verify_20261110-095000/RECEIPT.txt;runs/rollback_rehash_20261110-095000/RECEIPT.txt	integrity+rollback on HOST_NOT_INDEPENDENT; earned held
+WS	WS25	Certification	B6	0.450	0	1	release_cert_wave6/STATUS.txt;INDEPENDENT_VERIFIER_GAPS.txt	CERTIFIED=0; independent VM missing; earned held
+I57	C15	Signed/reproducible packaging + release acceptance	B6	0.450	0	1	release_cert_wave6/runs/rollback_rehash_20261110-095000/RECEIPT.txt	repro rehash OK; signed/independent C15 NOT_ESTABLISHED; earned held
+
+# ========== Obligation rows (account=0) - CSV completeness; no extra band mass ==========
+I57	A01	Resolve GHA runner_id=0; successful Linux+Windows run	B6	0	0	0		obligation; auto_defect=0; covered by L8/WS25 mass
+I57	A02	Per-file SHA-256 inventory JSON on audited commit	B6	0	0	0		related!=PASS; covered by WS24/C15 mass
+I57	A06	Rebuild native Win32 IDE clean checkout no-Qt	B6	0	0	0		clean-clone required; covered by L10/C15 mass
+I57	A07	Rebuild rawr.exe and snapshot/agent same checkout	B6	0	0	0		covered by WS24 mass
+I57	B01	Recover slingshot_braid sources + hashes from legacy	B5	0	0	0		in B5_I57B_CLUSTER
+I57	B02	SBraid emitter/read-back roundtrip + corrupt reject	B5	0	0	0		in B5_I57B_CLUSTER
+I57	B03	Review SlingshotGuard concurrency/integrity	B5	0	0	0		in B5_I57B_CLUSTER
+I57	B04	Replace SlingshotPOC simulated VRAM if promoted	B5	0	0	0		in B5_I57B_CLUSTER
+I57	B05	Reconcile legacy vs Deep2 residency/loader	B5	0	0	0		in B5_I57B_CLUSTER
+I57	B06	Compiler/linker source inventory MASM/native/ancestry	B5	0	0	0		in B5_I57B_CLUSTER
+I57	B07	Native C frontend compiles portable C	B5	0	0	0		in B5_I57B_CLUSTER
+I57	B08	Native C++20 frontend templates/exceptions/ABI	B5	0	0	0		in B5_I57B_CLUSTER
+I57	B09	MASM x86/x64 + COFF vs independent oracle	B5	0	0	0		in B5_I57B_CLUSTER
+I57	B10	NASM x86/x64 + object oracle	B5	0	0	0		in B5_I57B_CLUSTER
+I57	B11	Native linker PE32/PE32+ startup/imports/relocs/exports	B5	0	0	0		in B5_I57B_CLUSTER
+I57	B12	Full compile-link-execute without external compiler	B5	0	0	0		in B5_I57B_CLUSTER
+I57	B13	ELF/Linux capability vs host fallback + smoke	B5	0	0	0		in B5_I57B_CLUSTER
+I57	B14	Mach-O/macOS/iOS contracts + macOS runner evidence	B5	0	0	0		in B5_I57B_CLUSTER
+I57	B15	Android ABI/ELF/APK contracts + device evidence	B5	0	0	0		in B5_I57B_CLUSTER
+I57	C01	Deterministic reference model/quant baseline archive	B5	0	0	0		in B5_I57C_CLUSTER
+I57	C02	Corrected ffn_gate_up multi-token GPU path	B5	0	0	0		in B5_I57C_CLUSTER
+I57	C03	Q4_K/Q5_K/Q6_K/F32 fused host GEMV vs oracles	B5	0	0	0		in B5_I57C_CLUSTER
+I57	C04	Compare four fused GEMV paths to pre-patch resume/fence	B5	0	0	0		in B5_I57C_CLUSTER
+I57	C05	Lane-state restoration success/error/fallback/dual-GPU	B5	0	0	0		in B5_I57C_CLUSTER
+I57	C06	R9700 single-GPU TPS 32/128/256 + control	B5	0	0	0		in B5_I57C_CLUSTER
+I57	C07	RX7800 XT single-GPU TPS 32/128/256 + control	B5	0	0	0		in B5_I57C_CLUSTER
+I57	C08	Dual-GPU full-model TPS; no-fallback counters	B5	0	0	0		in B5_I57C_CLUSTER
+I57	C09	Attribute GPU0 fences / GPU1 overlap + PCIe receipts	B5	0	0	0		in B5_I57C_CLUSTER
+I57	C10	GGUF shard/index/quant/arch on supported matrix	B5	0	0	0		in B5_I57C_CLUSTER
+I57	C11	Nemotron SSM Q4_K NaN + residual parity	B5	0	0	0		in B5_I57C_CLUSTER
+I57	C12	Real-model 150+ single-stream decode TPS if attainable	B5	0	0	0		no synthetic TPS
+I57	C13	Identical A/B conditions for performance compares	B5	0	0	0		in B5_I57C_CLUSTER
+I57	C14	25x20=500 cell feature matrix with real evidence	B5	0	0	0		in B5_I57C_CLUSTER
+
+BAND_SUM_CHECK=
+  B1=3.000 earned=0
+  B2=3.000 earned=0
+  B3=3.000 earned=0
+  B4=3.000 earned=0
+  B5=3.000 earned=0
+  B6=3.000 earned=0
+  TOTAL_PLACEHOLDER_WEIGHT=18.000
+  TOTAL_EARNED=0.000
+
+EARN_RULES=
+  1) earned may flip 0->weight only when a same-SHA receipt path is sealed under IDE_REPAIR_CANDIDATE_001/
+  2) Builder-host PASS does not earn B6 rows; independent verifier required
+  3) PROMOTE stays 0 until higher-level conjunction closes (see AGENTS.md / Deep2ProductGate)
+  4) Do not derive MEASURED_COMPLETION_PERCENT from placeholder sums
+
+
+W6_EXECUTION_NOTE=
+  ASOF_UTC=2026-11-10T09:50:00Z
+  PACKAGE_ID=RawrXD-readiness-rc5b
+  INTEGRITY=PASS_INTEGRITY_ONLY
+  INDEPENDENT_HOST=HOST_NOT_INDEPENDENT
+  SMOKE=SMOKE_LAUNCH_ONLY
+  ROLLBACK=PASS_ROLLBACK_REHASH_ONLY
+  EARNED_TOTAL=0
+  CERTIFIED=0
+  PROMOTE=0
+  SAME_SHA_POINTERS=Wave1 PASS / Issue49 HOLD / FourPanel NOT_SEALED (no invented earn)
+LEDGER_PATH=evidence/IDE_REPAIR_CANDIDATE_001/release_cert_wave6/WEIGHTED_ACCEPTANCE_LEDGER.txt

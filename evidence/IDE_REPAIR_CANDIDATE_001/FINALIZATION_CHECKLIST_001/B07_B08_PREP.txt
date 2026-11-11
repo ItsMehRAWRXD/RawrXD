@@ -1,0 +1,83 @@
+B07_B08_PREP
+ASOF_UTC=2026-11-10T15:15:00Z
+OWNER=I_T_P_H_B07B08
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+NO_INVENT_PASS=1
+CONTROLLING_GATE=B01_S13_SECOND_EDIT_RECOVERY
+ISSUE49_CONTROLLING=D_015_10_OF_11
+LAW=B07_INTEGRATED != SUM_OF_STANDALONE_PASS
+LAW=B08_INDEPENDENT != BUILDER_HOST_RECEIPT
+LAW=11_OF_11 != FULL_IDE_COMPLETE
+LAW=NOT_RUN != PASS
+
+================================================================================
+B07 — Integrated acceptance (all mandatory subsystems on ONE build)
+================================================================================
+DEFINITION=Demonstrate editor + chat + terminal + Git + agent + inference + CPU/GPU providers operating together on one immutable IDE/loop/package SHA.
+STATUS=NOT_READY
+BLOCKED_BY=
+  B01_S13=OPEN
+  B02_11_OF_11=NOT_ACHIEVED_ON_IMMUTABLE_PAIR
+  ISSUE49_TIP_G=D56FE6DD 8/11_ALIVE (not 11/11)
+  DAILY_DRIVER_9FDE=SEPARATE_SHA (items 5-10 PASS != Issue49 integrated)
+
+MANDATORY_SUBSYSTEM_GAPS_REMAINING=
+  INFERENCE_IDE=I01 NOT_VERIFIED; I02/I03 SEALED_STANDALONE only; I05-I10/I12/I14 NOT_VERIFIED
+  I11_I13=DAILY_DRIVER_SEPARATED (exclude from B07 minimum unless release spec mandates)
+  TERMINAL_BUILD=T01/T05/T07/T08 HISTORICAL_9FDE only; T02 FAIL class open; T03/T04/T06/T09-T12 NOT_VERIFIED
+  GIT_DEPLOY=P01-P06/P08/P10-P12 NOT_VERIFIED; P07/P09 HISTORICAL partial
+  HIDDEN_RELIABILITY=H01-H16 no tip PASS (2 HISTORICAL sealed-class notes only)
+  GUI_EDITOR_AGENT=owned by sibling workers (G/E/A/B01-B06) — conjunction required
+
+REMAINING_EXECUTABLE_GATES_B07=
+  1) Close B01 ordered evidence: first edit → mid build/test → second edit recovery on ONE pair
+  2) Reach Issue49 11/11 on that same immutable IDE+loop SHA
+  3) Re-prove T01 PowerShell + T05 Build + P02 Git status on THAT SHA (no 9FDE inherit)
+  4) Prove I02 IDE-to-STRATA generation OR document Ollama-primary integrated path with I05 coexistence
+  5) Keep CPU lifecycle + STRATA standalone sealed; include them as providers without reopening
+  6) Single integrated receipt tree under FINALIZATION_CHECKLIST_001\ or IRC package binding one SHA
+
+B07_EXIT_CRITERIA=
+  ONE_SHA
+  EDITOR_CHAT_TERMINAL_GIT_AGENT_INFERENCE_ALIVE
+  NO_CROSS_SHA_BORROW
+  S13_PASS
+  PROMOTE still 0 until B08
+
+================================================================================
+B08 — Independent certification
+================================================================================
+DEFINITION=Clean-machine / independent-host rebuild+launch+full coding workflow with retained artifacts; distinct from builder host.
+STATUS=NOT_READY
+CURRENT_BEST=release_cert_wave6\CLEAN_MACHINE_CHECKLIST.txt VERDICT=HOST_NOT_INDEPENDENT DISTINCT_VM=0
+EARNED_BAND_CREDIT=0
+
+REMAINING_EXECUTABLE_GATES_B08=
+  1) Distinct VM or fresh OS user profile (operator precondition unchecked)
+  2) Publish single IRC package after B07 SHA freeze; fill SHA_LEDGER for that package
+  3) Verify-PackageIntegrity PASS on clean extract (re-run; do not inherit rc5b-only as final)
+  4) Observe IDE main HWND on clean machine (currently NOT sealed)
+  5) Product-path smokes on clean machine: open project, chat Send, tool path, edit→build→test (all NOT_RUN / POINTER today)
+  6) Independent verifier identity != builder host; retain receipts under release_cert_wave6\runs\ or successor
+  7) Only then evaluate CERTIFIED / PROMOTE policy conjunction (still held)
+
+B08_EXIT_CRITERIA=
+  DISTINCT_MACHINE=1
+  PACKAGE_INTEGRITY_PASS
+  HWND_OBSERVED
+  PRODUCT_PATH_SMOKE_MIN_PASS
+  INDEPENDENT_VERIFIER_RECEIPT
+  PROMOTE_IF policy elsewhere; default PROMOTE=0 until conjunction
+
+================================================================================
+SCOREBOARD_PREP
+================================================================================
+B07_STATUS=NOT_READY
+B08_STATUS=NOT_READY
+B07_PASS=0
+B08_PASS=0
+CERTIFIED=0
+PROMOTE=0
+NEXT=WAIT_B01_S13_THEN_SINGLE_SHA_INTEGRATED_MATRIX

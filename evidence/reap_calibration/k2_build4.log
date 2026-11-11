@@ -1,0 +1,480 @@
+[1/82] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2GpuStreamCopy.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[2/82] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\vulkan_compute_engine_adapter.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[3/82] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\VulkanWeightStreamerVulkanBackend.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[4/82] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLA_GpuGemv.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[5/82] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\MoEWeightProxy.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[6/82] Building CXX object CMakeFiles\rawrxd_gpu_compute.dir\src\deep2\vulkan_compute.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\vulkan_compute.cpp(2287): warning C4456: declaration of 'lane' hides previous local declaration
+F:\rawrxd\src\deep2\vulkan_compute.cpp(2268): note: see declaration of 'lane'
+F:\rawrxd\src\deep2\vulkan_compute.cpp(6311): warning C4100: 'epoch': unreferenced parameter
+[7/82] Linking CXX static library rawrxd_gpu_compute.lib
+[8/82] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2CLIBridge.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2CLIBridge.cpp(38): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+F:\rawrxd\src\deep2\Deep2CLIBridge.cpp(58): warning C4267: 'return': conversion from 'size_t' to 'unsigned int', possible loss of data
+F:\rawrxd\src\deep2\Deep2CLIBridge.cpp(63): warning C4267: 'return': conversion from 'size_t' to 'unsigned int', possible loss of data
+[9/82] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2Engine_ModelFit.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine_ModelFit.cpp(573): warning C4458: declaration of 'numHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::numHeads'
+F:\rawrxd\src\deep2\Deep2Engine_ModelFit.cpp(574): warning C4458: declaration of 'numKVHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1070): note: see declaration of 'Deep2::Deep2Engine::numKVHeads'
+F:\rawrxd\src\deep2\Deep2Engine_ModelFit.cpp(575): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1071): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine_ModelFit.cpp(896): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1071): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine_ModelFit.cpp(926): warning C4458: declaration of 'logits' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1009): note: see declaration of 'Deep2::Deep2Engine::logits'
+[10/82] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2NativeMoEFfn_Place.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\K2NativeMoEFfn_Place.cpp(87): warning C4244: '=': conversion from 'uint32_t' to 'uint8_t', possible loss of data
+[11/82] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2NativeMoEFfn_Expert.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+[12/82] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\agentic\AgentOrchestrator.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(159): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(186): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(210): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(233): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(221): warning C4100: 'r': unreferenced parameter
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(256): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(244): warning C4100: 'r': unreferenced parameter
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(406): warning C4244: '=': conversion from '_Rep' to 'double', possible loss of data
+        with
+        [
+            _Rep=__int64
+        ]
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(414): warning C4244: '=': conversion from '_Rep' to 'double', possible loss of data
+        with
+        [
+            _Rep=__int64
+        ]
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(424): warning C4244: '=': conversion from '_Rep' to 'double', possible loss of data
+        with
+        [
+            _Rep=__int64
+        ]
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(442): warning C4244: '=': conversion from '_Rep' to 'double', possible loss of data
+        with
+        [
+            _Rep=__int64
+        ]
+F:\rawrxd\src\agentic\AgentOrchestrator.cpp(458): warning C4244: '=': conversion from '_Rep' to 'double', possible loss of data
+        with
+        [
+            _Rep=__int64
+        ]
+[13/82] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2NativeMoEFfn_ExpertGpu.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+[14/82] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2LivePathTensorCache.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[15/82] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2NativeMoEFfn_ExpertGpuDevice.cpp.obj
+FAILED: [code=2] CMakeFiles/deep2_engine_lib.dir/src/deep2/K2NativeMoEFfn_ExpertGpuDevice.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DDEEP2_SHADER_DIR=\"F:/rawrxd/src/deep2/shaders\" -DFORTIFY_SOURCE=2 -DGGML_USE_CPU -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -D_CRT_SECURE_NO_WARNINGS -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\src -IF:\rawrxd\src\deep2 -IF:\rawrxd\tools\deep2_debugger -IF:\rawrxd\3rdparty\ggml\include -IF:\rawrxd\3rdparty\ggml\src -IF:\rawrxd\3rdparty\ggml\src\..\include -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /std:c++20 /O2 /showIncludes /FoCMakeFiles\deep2_engine_lib.dir\src\deep2\K2NativeMoEFfn_ExpertGpuDevice.cpp.obj /FdCMakeFiles\deep2_engine_lib.dir\deep2_engine_lib.pdb /FS -c F:\rawrxd\src\deep2\K2NativeMoEFfn_ExpertGpuDevice.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\K2NativeMoEFfn_ExpertGpuDevice.cpp(148): error C2664: 'void Deep2::ed3::NoteD2h(int,int,const char *,const float *,size_t)': cannot convert argument 3 from 'uint64_t' to 'const char *'
+F:\rawrxd\src\deep2\K2NativeMoEFfn_ExpertGpuDevice.cpp(148): note: Conversion from integral type to pointer type requires reinterpret_cast, C-style cast or parenthesized function-style cast
+F:\rawrxd\src\deep2\lavapath/EndDeviceStep3Diag.hpp(35): note: see declaration of 'Deep2::ed3::NoteD2h'
+F:\rawrxd\src\deep2\K2NativeMoEFfn_ExpertGpuDevice.cpp(148): note: while trying to match the argument list '(const int, uint64_t, uint64_t, float *, size_t)'
+[16/82] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\Deep2Engine.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\../telemetry/DoubleBufferedHistogram.hpp(130): warning C4324: 'DoubleBufferedHistogram': structure was padded due to alignment specifier
+F:\rawrxd\src\deep2\../telemetry/LockFreeLatencyTracker.hpp(99): warning C4324: 'rawrxd::telemetry::LockFreeLatencyTracker<65536>': structure was padded due to alignment specifier
+F:\rawrxd\src\deep2\../telemetry/LockFreeLatencyTracker.hpp(99): note: the template instantiation context (the oldest one first) is
+F:\rawrxd\src\deep2\Deep2Telemetry.hpp(60): note: see reference to class template instantiation 'rawrxd::telemetry::LockFreeLatencyTracker<65536>' being compiled
+F:\rawrxd\src\deep2\../telemetry/LockFreeLatencyTracker.hpp(101): warning C4324: 'rawrxd::telemetry::LockFreeLatencyTracker<65536>': structure was padded due to alignment specifier
+F:\rawrxd\src\deep2\Deep2Engine.cpp(919): warning C4310: cast truncates constant value
+F:\rawrxd\src\deep2\Deep2Engine.cpp(920): warning C4310: cast truncates constant value
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1811): warning C4458: declaration of 'vocabSize' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1077): note: see declaration of 'Deep2::Deep2Engine::vocabSize'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1814): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1071): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1818): warning C4458: declaration of 'ffnDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1076): note: see declaration of 'Deep2::Deep2Engine::ffnDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1846): warning C4458: declaration of 'numHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::numHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1815): warning C4189: 'kvHeads': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(2279): warning C4244: '=': conversion from 'const uint32_t' to 'float', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3308): warning C4456: declaration of 'attnLayers' hides previous local declaration
+F:\rawrxd\src\deep2\Deep2Engine.cpp(2862): note: see declaration of 'attnLayers'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3391): warning C4477: 'printf' : format string '%u' requires an argument of type 'unsigned int', but variadic argument 1 has type 'size_t'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3391): note: consider using '%zu' in the format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3391): warning C4477: 'printf' : format string '%u' requires an argument of type 'unsigned int', but variadic argument 2 has type 'size_t'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3391): note: consider using '%zu' in the format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3391): warning C4477: 'printf' : format string '%u' requires an argument of type 'unsigned int', but variadic argument 3 has type 'size_t'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3391): note: consider using '%zu' in the format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3404): warning C4477: 'printf' : format string '%u' requires an argument of type 'unsigned int', but variadic argument 1 has type 'size_t'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3404): note: consider using '%zu' in the format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3404): warning C4477: 'printf' : format string '%u' requires an argument of type 'unsigned int', but variadic argument 2 has type 'size_t'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3404): note: consider using '%zu' in the format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3404): warning C4477: 'printf' : format string '%u' requires an argument of type 'unsigned int', but variadic argument 3 has type 'size_t'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3404): note: consider using '%zu' in the format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3837): warning C4458: declaration of 'weightSize' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1003): note: see declaration of 'Deep2::Deep2Engine::weightSize'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3965): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(3978): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4014): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4046): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4485): warning C4458: declaration of 'vocabSize' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1077): note: see declaration of 'Deep2::Deep2Engine::vocabSize'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4486): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4567): warning C4477: 'fprintf' : format string '%u' requires an argument of type 'unsigned int', but variadic argument 2 has type 'size_t'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4567): note: consider using '%zu' in the format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4776): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1071): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4776): warning C4458: declaration of 'numHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::numHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4776): warning C4458: declaration of 'numKVHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1070): note: see declaration of 'Deep2::Deep2Engine::numKVHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4989): warning C4189: 'scale': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4988): warning C4189: 'diff': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(5295): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(5636): warning C4244: 'argument': conversion from 'uint64_t' to 'double', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6532): warning C4474: 'fprintf' : too many arguments passed for format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6532): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6580): warning C4474: 'fprintf' : too many arguments passed for format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6580): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6650): warning C4244: 'argument': conversion from 'uint64_t' to 'unsigned int', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6757): warning C4474: 'fprintf' : too many arguments passed for format string
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6757): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6850): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6529): warning C4101: 'ex': unreferenced local variable
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6577): warning C4101: 'ex': unreferenced local variable
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6708): warning C4101: 'ex': unreferenced local variable
+F:\rawrxd\src\deep2\Deep2Engine.cpp(6754): warning C4101: 'ex': unreferenced local variable
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7478): warning C4244: 'argument': conversion from 'uint64_t' to 'unsigned int', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7489): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7807): warning C4244: 'argument': conversion from 'uint64_t' to 'unsigned int', possible loss of data
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7826): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7827): warning C4458: declaration of 'numHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::numHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7828): warning C4458: declaration of 'numKVHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1070): note: see declaration of 'Deep2::Deep2Engine::numKVHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7829): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1071): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7853): warning C4456: declaration of 'headDim' hides previous local declaration
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7829): note: see declaration of 'headDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7854): warning C4456: declaration of 'numHeads' hides previous local declaration
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7827): note: see declaration of 'numHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8508): warning C4458: declaration of 'numLayers' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1078): note: see declaration of 'Deep2::Deep2Engine::numLayers'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7917): warning C4189: 'scale': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7915): warning C4189: 'attnOutSize': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7962): warning C4189: 'Q_h': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(7969): warning C4189: 'K_t': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8017): warning C4189: 'V_h': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8016): warning C4189: 'K_h': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8015): warning C4189: 'Q_h': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8094): warning C4189: 'q': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8725): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8772): warning C4458: declaration of 'ffnDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1076): note: see declaration of 'Deep2::Deep2Engine::ffnDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8861): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8938): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1071): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(8937): warning C4189: 'headsPerGroup': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9219): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9385): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9397): warning C4458: declaration of 'ffnDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1076): note: see declaration of 'Deep2::Deep2Engine::ffnDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9422): warning C4189: 'rowBytes': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9445): warning C4458: declaration of 'hiddenDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1068): note: see declaration of 'Deep2::Deep2Engine::hiddenDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9472): warning C4458: declaration of 'ffnDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1076): note: see declaration of 'Deep2::Deep2Engine::ffnDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9566): warning C4458: declaration of 'logits' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1009): note: see declaration of 'Deep2::Deep2Engine::logits'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(9610): warning C4458: declaration of 'logits' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1009): note: see declaration of 'Deep2::Deep2Engine::logits'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(10465): warning C4458: declaration of 'headDim' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1071): note: see declaration of 'Deep2::Deep2Engine::headDim'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(10466): warning C4458: declaration of 'numHeads' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1069): note: see declaration of 'Deep2::Deep2Engine::numHeads'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(10467): warning C4458: declaration of 'numLayers' hides class member
+F:\rawrxd\src\deep2\../Deep2Engine.h(1078): note: see declaration of 'Deep2::Deep2Engine::numLayers'
+F:\rawrxd\src\deep2\Deep2Engine.cpp(10728): warning C4100: 'outDim': unreferenced parameter
+F:\rawrxd\src\deep2\Deep2Engine.cpp(11539): warning C4100: 'seqLen': unreferenced parameter
+F:\rawrxd\src\deep2\Deep2Engine.cpp(667): warning C4505: 'Deep2::fp32GEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(712): warning C4505: 'Deep2::q4kGEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(836): warning C4505: 'Deep2::dequantizeQ5KBlock': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(867): warning C4505: 'Deep2::q5kGEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1106): warning C4505: 'Deep2::q2kGEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1194): warning C4505: 'Deep2::q3kGEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1258): warning C4505: 'Deep2::q4_1GEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1324): warning C4505: 'Deep2::q5_0GEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1391): warning C4505: 'Deep2::q5_1GEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1450): warning C4505: 'Deep2::q8kGEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(1497): warning C4505: 'Deep2::fp16GEMV': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4904): warning C4505: 'Deep2::`anonymous-namespace'::Q6KAsmEnabled': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(4927): warning C4505: 'Deep2::`anonymous-namespace'::ValidateQ6KAsm': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(5878): warning C4505: 'Deep2::`anonymous-namespace'::B3_MinValue': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(5883): warning C4505: 'Deep2::`anonymous-namespace'::B3_MaxValue': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\deep2\Deep2Engine.cpp(10952): warning C4505: 'Deep2::GetToolCallLimit_Patched': unreferenced function with internal linkage has been removed
+[17/82] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2LivePathTensorCache_Emit.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[18/82] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2LogitsClimb.cpp.obj
+FAILED: [code=2] CMakeFiles/deep2_engine_lib.dir/src/deep2/K2LogitsClimb.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DDEEP2_SHADER_DIR=\"F:/rawrxd/src/deep2/shaders\" -DFORTIFY_SOURCE=2 -DGGML_USE_CPU -DHAVE_VULKAN=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_VULKAN_SDK_HEADER=\"C:/VulkanSDK/1.4.357.0/include/vulkan/vulkan.h\" -D_CRT_SECURE_NO_WARNINGS -D_FORTIFY_SOURCE=2 -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\src -IF:\rawrxd\src\deep2 -IF:\rawrxd\tools\deep2_debugger -IF:\rawrxd\3rdparty\ggml\include -IF:\rawrxd\3rdparty\ggml\src -IF:\rawrxd\3rdparty\ggml\src\..\include -external:IC:\VulkanSDK\1.4.357.0\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG /GL /Ob2 /Ot /GF /Gy /EHa -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /std:c++20 /O2 /showIncludes /FoCMakeFiles\deep2_engine_lib.dir\src\deep2\K2LogitsClimb.cpp.obj /FdCMakeFiles\deep2_engine_lib.dir\deep2_engine_lib.pdb /FS -c F:\rawrxd\src\deep2\K2LogitsClimb.cpp
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(86): error C2061: syntax error: identifier 'block_q8_K'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(87): error C2065: 'k': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(87): error C2737: 'nb': const object must be initialized
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(95): error C2065: 'y': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(96): error C2065: 'y': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(97): error C2065: 'y': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(97): error C2065: 'y': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(97): error C2660: 'memset': function does not take 2 arguments
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vcruntime_string.h(63): note: see declaration of 'memset'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(97): note: while trying to match the argument list '()'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(104): error C2065: 'y': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(108): error C2065: 'y': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(109): error C2065: 'y': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(111): error C2065: 'y': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(117): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(117): error C2143: syntax error: missing ',' before '*'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(118): error C2065: 'y': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(118): error C2737: 'd': const object must be initialized
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(122): error C2065: 'y': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(170): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(170): error C2143: syntax error: missing ',' before '*'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(175): error C2065: 'xQ8': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(173): error C2660: 'Deep2::`anonymous-namespace'::vec_dot_q6_K_q8_K_block': function does not take 1 arguments
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(117): note: see declaration of 'Deep2::`anonymous-namespace'::vec_dot_q6_K_q8_K_block'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(173): note: while trying to match the argument list '(const Deep2::`anonymous-namespace'::Q6_K_Block *)'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(337): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(337): error C2143: syntax error: missing ';' before '*'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(337): error C2238: unexpected token(s) preceding ';'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(402): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(402): error C2143: syntax error: missing ',' before '*'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(374): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(374): error C2143: syntax error: missing ';' before '*'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(374): warning C4458: declaration of 'block_q8_K' hides class member
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(337): note: see declaration of 'Deep2::`anonymous-namespace'::Pool::block_q8_K'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(374): error C2065: 'xq': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(374): error C2065: 'xQ8': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(387): error C2065: 'xq': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(386): error C2737: 'sc': const object must be initialized
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(402): warning C4458: declaration of 'block_q8_K' hides class member
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(337): note: see declaration of 'Deep2::`anonymous-namespace'::Pool::block_q8_K'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(404): error C2065: 'nw': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(408): error C2065: 'xQ8': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(408): error C2065: 'xq': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(408): error C2065: 'q8': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(409): error C2065: 'lo': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(410): error C2065: 'hi': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(410): error C2065: 'hi': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(427): error C2065: 'outV': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(428): error C2065: 'outR': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(442): error C2280: 'Deep2::`anonymous-namespace'::Pool::Pool(void)': attempting to reference a deleted function
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(439): note: compiler has generated 'Deep2::`anonymous-namespace'::Pool::Pool' here
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(439): note: 'Deep2::`anonymous-namespace'::Pool::Pool(void)': function was implicitly deleted because 'Deep2::`anonymous-namespace'::Pool' has an uninitialized const-qualified data member 'Deep2::`anonymous-namespace'::Pool::block_q8_K'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(337): note: see declaration of 'Deep2::`anonymous-namespace'::Pool::block_q8_K'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(544): error C2065: 'block_q8_K': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(544): error C2923: 'std::vector': 'block_q8_K' is not a valid template type argument for parameter '_Ty'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(544): note: see declaration of 'block_q8_K'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(544): error C2976: 'std::vector': too few template arguments
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(442): note: see declaration of 'std::vector'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(544): error C2641: cannot deduce template arguments for 'std::vector'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(544): error C2783: 'std::vector<_Ty,_Alloc> std::vector(void) noexcept(<expr>)': could not deduce template argument for '_Ty'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(670): note: see declaration of 'std::vector'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(544): error C2780: 'std::vector<_Ty,_Alloc> std::vector(std::vector<_Ty,_Alloc>)': expects 1 arguments - 0 provided
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(442): note: see declaration of 'std::vector'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(546): error C2663: 'std::vector<_Ty,_Alloc>::resize': no overloaded function has valid conversion for 'this' pointer
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1628): note: could be 'void std::vector<_Ty,_Alloc>::resize(const allocator_traits<allocator_traits<_Alloc>::rebind_alloc<_Ty>>::size_type)'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(546): note: 'void std::vector<_Ty,_Alloc>::resize(const allocator_traits<allocator_traits<_Alloc>::rebind_alloc<_Ty>>::size_type)': cannot convert 'this' pointer from 'std::vector' to 'std::vector<_Ty,_Alloc> &'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(546): note: Reason: cannot convert from 'std::vector' to 'std::vector<_Ty,_Alloc>'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(546): note: Conversion requires a second user-defined-conversion operator or constructor
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(546): note: while trying to match the argument list '(const size_t)'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(547): error C2663: 'std::vector<_Ty,_Alloc>::data': no overloaded function has valid conversion for 'this' pointer
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1836): note: could be 'const _Ty *std::vector<_Ty,_Alloc>::data(void) noexcept const'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(547): note: 'const _Ty *std::vector<_Ty,_Alloc>::data(void) noexcept const': cannot convert 'this' pointer from 'std::vector' to 'const std::vector<_Ty,_Alloc> &'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(547): note: Reason: cannot convert from 'std::vector' to 'const std::vector<_Ty,_Alloc>'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(547): note: Conversion requires a second user-defined-conversion operator or constructor
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1832): note: or       '_Ty *std::vector<_Ty,_Alloc>::data(void) noexcept'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(547): note: '_Ty *std::vector<_Ty,_Alloc>::data(void) noexcept': cannot convert 'this' pointer from 'std::vector' to 'std::vector<_Ty,_Alloc> &'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(547): note: Reason: cannot convert from 'std::vector' to 'std::vector<_Ty,_Alloc>'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(547): note: Conversion requires a second user-defined-conversion operator or constructor
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(547): note: while trying to match the argument list '()'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(554): error C2663: 'std::vector<_Ty,_Alloc>::data': no overloaded function has valid conversion for 'this' pointer
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1836): note: could be 'const _Ty *std::vector<_Ty,_Alloc>::data(void) noexcept const'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(554): note: 'const _Ty *std::vector<_Ty,_Alloc>::data(void) noexcept const': cannot convert 'this' pointer from 'std::vector' to 'const std::vector<_Ty,_Alloc> &'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(554): note: Reason: cannot convert from 'std::vector' to 'const std::vector<_Ty,_Alloc>'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(554): note: Conversion requires a second user-defined-conversion operator or constructor
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1832): note: or       '_Ty *std::vector<_Ty,_Alloc>::data(void) noexcept'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(554): note: '_Ty *std::vector<_Ty,_Alloc>::data(void) noexcept': cannot convert 'this' pointer from 'std::vector' to 'std::vector<_Ty,_Alloc> &'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(554): note: Reason: cannot convert from 'std::vector' to 'std::vector<_Ty,_Alloc>'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(554): note: Conversion requires a second user-defined-conversion operator or constructor
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(554): note: while trying to match the argument list '()'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(553): error C2737: 'sc': const object must be initialized
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(590): error C2065: 'block_q8_K': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(590): error C2923: 'std::vector': 'block_q8_K' is not a valid template type argument for parameter '_Ty'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(590): note: see declaration of 'block_q8_K'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(590): error C2976: 'std::vector': too few template arguments
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(442): note: see declaration of 'std::vector'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(590): error C2641: cannot deduce template arguments for 'std::vector'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(590): error C2783: 'std::vector<_Ty,_Alloc> std::vector(void) noexcept(<expr>)': could not deduce template argument for '_Ty'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(670): note: see declaration of 'std::vector'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(590): error C2780: 'std::vector<_Ty,_Alloc> std::vector(std::vector<_Ty,_Alloc>)': expects 1 arguments - 0 provided
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(442): note: see declaration of 'std::vector'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(591): error C2065: 'block_q8_K': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(591): error C2065: 'xQ8': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(593): error C2662: 'allocator_traits<allocator_traits<_Alloc>::rebind_alloc<_Ty>>::size_type std::vector<_Ty,_Alloc>::size(void) noexcept const': cannot convert 'this' pointer from 'std::vector' to 'const std::vector<_Ty,_Alloc> &'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(593): note: Reason: cannot convert from 'std::vector' to 'const std::vector<_Ty,_Alloc>'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(593): note: Conversion requires a second user-defined-conversion operator or constructor
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1913): note: see declaration of 'std::vector<_Ty,_Alloc>::size'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(593): note: while trying to match the argument list '()'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(593): error C2663: 'std::vector<_Ty,_Alloc>::resize': no overloaded function has valid conversion for 'this' pointer
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1628): note: could be 'void std::vector<_Ty,_Alloc>::resize(const allocator_traits<allocator_traits<_Alloc>::rebind_alloc<_Ty>>::size_type)'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(593): note: 'void std::vector<_Ty,_Alloc>::resize(const allocator_traits<allocator_traits<_Alloc>::rebind_alloc<_Ty>>::size_type)': cannot convert 'this' pointer from 'std::vector' to 'std::vector<_Ty,_Alloc> &'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(593): note: Reason: cannot convert from 'std::vector' to 'std::vector<_Ty,_Alloc>'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(593): note: Conversion requires a second user-defined-conversion operator or constructor
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(593): note: while trying to match the argument list '(const size_t)'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(594): error C2663: 'std::vector<_Ty,_Alloc>::data': no overloaded function has valid conversion for 'this' pointer
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1836): note: could be 'const _Ty *std::vector<_Ty,_Alloc>::data(void) noexcept const'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(594): note: 'const _Ty *std::vector<_Ty,_Alloc>::data(void) noexcept const': cannot convert 'this' pointer from 'std::vector' to 'const std::vector<_Ty,_Alloc> &'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(594): note: Reason: cannot convert from 'std::vector' to 'const std::vector<_Ty,_Alloc>'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(594): note: Conversion requires a second user-defined-conversion operator or constructor
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1832): note: or       '_Ty *std::vector<_Ty,_Alloc>::data(void) noexcept'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(594): note: '_Ty *std::vector<_Ty,_Alloc>::data(void) noexcept': cannot convert 'this' pointer from 'std::vector' to 'std::vector<_Ty,_Alloc> &'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(594): note: Reason: cannot convert from 'std::vector' to 'std::vector<_Ty,_Alloc>'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(594): note: Conversion requires a second user-defined-conversion operator or constructor
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(594): note: while trying to match the argument list '()'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(595): error C2065: 'xQ8': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(595): error C2663: 'std::vector<_Ty,_Alloc>::data': no overloaded function has valid conversion for 'this' pointer
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1836): note: could be 'const _Ty *std::vector<_Ty,_Alloc>::data(void) noexcept const'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(595): note: 'const _Ty *std::vector<_Ty,_Alloc>::data(void) noexcept const': cannot convert 'this' pointer from 'std::vector' to 'const std::vector<_Ty,_Alloc> &'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(595): note: Reason: cannot convert from 'std::vector' to 'const std::vector<_Ty,_Alloc>'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(595): note: Conversion requires a second user-defined-conversion operator or constructor
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1832): note: or       '_Ty *std::vector<_Ty,_Alloc>::data(void) noexcept'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(595): note: '_Ty *std::vector<_Ty,_Alloc>::data(void) noexcept': cannot convert 'this' pointer from 'std::vector' to 'std::vector<_Ty,_Alloc> &'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(595): note: Reason: cannot convert from 'std::vector' to 'std::vector<_Ty,_Alloc>'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(595): note: Conversion requires a second user-defined-conversion operator or constructor
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(595): note: while trying to match the argument list '()'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(604): error C2065: 'xQ8': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(603): error C2737: 'sc': const object must be initialized
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(611): error C2065: 'xQ8': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(626): error C2065: 'block_q8_K': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(671): error C2065: 'block_q8_K': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(671): error C2923: 'std::vector': 'block_q8_K' is not a valid template type argument for parameter '_Ty'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(671): note: see declaration of 'block_q8_K'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(671): error C2976: 'std::vector': too few template arguments
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(442): note: see declaration of 'std::vector'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(671): error C2641: cannot deduce template arguments for 'std::vector'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(671): error C2783: 'std::vector<_Ty,_Alloc> std::vector(void) noexcept(<expr>)': could not deduce template argument for '_Ty'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(670): note: see declaration of 'std::vector'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(671): error C2780: 'std::vector<_Ty,_Alloc> std::vector(std::vector<_Ty,_Alloc>)': expects 1 arguments - 0 provided
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(442): note: see declaration of 'std::vector'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(672): error C2065: 'block_q8_K': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(672): error C2065: 'xQ8': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(674): error C2662: 'allocator_traits<allocator_traits<_Alloc>::rebind_alloc<_Ty>>::size_type std::vector<_Ty,_Alloc>::size(void) noexcept const': cannot convert 'this' pointer from 'std::vector' to 'const std::vector<_Ty,_Alloc> &'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(674): note: Reason: cannot convert from 'std::vector' to 'const std::vector<_Ty,_Alloc>'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(674): note: Conversion requires a second user-defined-conversion operator or constructor
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1913): note: see declaration of 'std::vector<_Ty,_Alloc>::size'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(674): note: while trying to match the argument list '()'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(674): error C2663: 'std::vector<_Ty,_Alloc>::resize': no overloaded function has valid conversion for 'this' pointer
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1628): note: could be 'void std::vector<_Ty,_Alloc>::resize(const allocator_traits<allocator_traits<_Alloc>::rebind_alloc<_Ty>>::size_type)'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(674): note: 'void std::vector<_Ty,_Alloc>::resize(const allocator_traits<allocator_traits<_Alloc>::rebind_alloc<_Ty>>::size_type)': cannot convert 'this' pointer from 'std::vector' to 'std::vector<_Ty,_Alloc> &'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(674): note: Reason: cannot convert from 'std::vector' to 'std::vector<_Ty,_Alloc>'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(674): note: Conversion requires a second user-defined-conversion operator or constructor
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(674): note: while trying to match the argument list '(const size_t)'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(675): error C2663: 'std::vector<_Ty,_Alloc>::data': no overloaded function has valid conversion for 'this' pointer
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1836): note: could be 'const _Ty *std::vector<_Ty,_Alloc>::data(void) noexcept const'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(675): note: 'const _Ty *std::vector<_Ty,_Alloc>::data(void) noexcept const': cannot convert 'this' pointer from 'std::vector' to 'const std::vector<_Ty,_Alloc> &'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(675): note: Reason: cannot convert from 'std::vector' to 'const std::vector<_Ty,_Alloc>'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(675): note: Conversion requires a second user-defined-conversion operator or constructor
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1832): note: or       '_Ty *std::vector<_Ty,_Alloc>::data(void) noexcept'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(675): note: '_Ty *std::vector<_Ty,_Alloc>::data(void) noexcept': cannot convert 'this' pointer from 'std::vector' to 'std::vector<_Ty,_Alloc> &'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(675): note: Reason: cannot convert from 'std::vector' to 'std::vector<_Ty,_Alloc>'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(675): note: Conversion requires a second user-defined-conversion operator or constructor
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(675): note: while trying to match the argument list '()'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(676): error C2065: 'xQ8': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(676): error C2663: 'std::vector<_Ty,_Alloc>::data': no overloaded function has valid conversion for 'this' pointer
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1836): note: could be 'const _Ty *std::vector<_Ty,_Alloc>::data(void) noexcept const'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(676): note: 'const _Ty *std::vector<_Ty,_Alloc>::data(void) noexcept const': cannot convert 'this' pointer from 'std::vector' to 'const std::vector<_Ty,_Alloc> &'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(676): note: Reason: cannot convert from 'std::vector' to 'const std::vector<_Ty,_Alloc>'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(676): note: Conversion requires a second user-defined-conversion operator or constructor
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1832): note: or       '_Ty *std::vector<_Ty,_Alloc>::data(void) noexcept'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(676): note: '_Ty *std::vector<_Ty,_Alloc>::data(void) noexcept': cannot convert 'this' pointer from 'std::vector' to 'std::vector<_Ty,_Alloc> &'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(676): note: Reason: cannot convert from 'std::vector' to 'std::vector<_Ty,_Alloc>'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(676): note: Conversion requires a second user-defined-conversion operator or constructor
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(676): note: while trying to match the argument list '()'
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(684): error C2065: 'xQ8': undeclared identifier
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(683): error C2737: 'sc': const object must be initialized
+F:\rawrxd\src\deep2\K2LogitsClimb.cpp(691): error C2065: 'xQ8': undeclared identifier
+[19/82] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLA_PathB_Attn.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[20/82] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2MLA_PathB.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+[21/82] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2NativeStreamGate.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+F:\rawrxd\src\deep2\lavapath\ProductE2EBlocker.hpp(16): warning C4566: character represented by universal-character-name '\u2260' cannot be represented in the current code page (1252)
+F:\rawrxd\src\deep2\Tokenizer.hpp(66): warning C4100: 'token': unreferenced parameter
+F:\rawrxd\src\deep2\ModelFit.hpp(591): warning C4189: 'cpuLayers': local variable is initialized but not referenced
+F:\rawrxd\src\deep2\K2NativeStreamGate.cpp(381): warning C4244: '=': conversion from 'const uint32_t' to 'uint8_t', possible loss of data
+[22/82] Building CXX object CMakeFiles\deep2_engine_lib.dir\src\deep2\K2LivePathTensorCache_Prefetch.cpp.obj
+cl : Command line warning D9025 : overriding '/EHs' with '/EHa'
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+ninja: build stopped: subcommand failed.

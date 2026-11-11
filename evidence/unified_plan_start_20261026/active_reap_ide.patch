@@ -1,0 +1,107 @@
+diff --git a/src/deep2/Deep2Engine.cpp b/src/deep2/Deep2Engine.cpp
+index 18cb562166..013624d32c 100644
+--- a/src/deep2/Deep2Engine.cpp
++++ b/src/deep2/Deep2Engine.cpp
+@@ -9,6 +9,7 @@
+ // #define B3_CONTINUE_FOR_RESIDENCY_BASELINE
+ 
+ #include "Deep2Engine.h"
++#include "execution_policy/ExecutionPolicyBridge.hpp"
+ #include "Deep2Log.hpp"   // Logf_()-style logger shared with the agentic-loop tool
+ #include "../sampling/advanced_sampler.hpp"
+ #include "AttnCertProbe.hpp"
+@@ -2897,7 +2898,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
+                 {
+                     printf("[SSM_UNKNOWN] Unmatched SSM tensor: %s (rows=%zu cols=%zu type=%d)\n", name.c_str(),
+                            wt.rows, wt.cols, wt.type);
+-                }
++                }
+             }
+         }
+     }
+@@ -4169,11 +4170,11 @@ bool Deep2Engine::embedToken(int tokenId, float* output)
+                 reg.Initialize();
+             }
+             auto dequant = reg.GetDequant(modelWeights.tokenEmbed.type);
+-            static const bool embedDiagEnabled = [] {
+-                const char* flag = std::getenv("DEEP2_EMBED_DIAG");
+-                return flag && flag[0] == '1';
+-            }();
+-            if (embedDiagEnabled)
++            static const bool embedDiagEnabled = [] {
++                const char* flag = std::getenv("DEEP2_EMBED_DIAG");
++                return flag && flag[0] == '1';
++            }();
++            if (embedDiagEnabled)
+                 fprintf(stderr, "[EMBED_DIAG] dequant=%p type=%d\n", (void*)dequant, modelWeights.tokenEmbed.type);
+             if (dequant)
+             {
+@@ -9332,7 +9333,7 @@ if (hasGate)
+         }
+     }
+ 
+-    // Dump gate (pre-SiLU) before SwiGLU overwrites gateBuf with the product.
++    // Dump gate (pre-SiLU) before SwiGLU overwrites gateBuf with the product.
+     if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer) && hasGate)
+     {
+         const size_t tokPos = kvCache ? kvCache->currentLength() : 0;
+@@ -11072,18 +11073,40 @@ float Deep2Engine::currentThrottle() const
+ 
+ void Deep2Engine::enableSovereignRuntime(bool enable)
+ {
+-    sovereignRuntimeEnabled_ = enable;
+-    if (enable && !sovereignRuntime_)
+-    {
++    if (!enable) {
++        sovereignRuntimeEnabled_ = false;
++        printf("[Deep2Engine] SovereignOutOfCoreRuntime: DISABLED\n");
++        return;
++    }
++    Deep2::Exec::EnsurePolicyLoaded();
++    const Deep2::Exec::ExecutionPolicy& policy = Deep2::Exec::ActivePolicy();
++    const Deep2::Exec::PolicyValidation verdict = Deep2::Exec::Validate(policy);
++    if (!verdict.ok) {
++        sovereignRuntimeEnabled_ = false;
++        printf("[Deep2Engine] POLICY_REJECTED %s\n", verdict.detail.c_str());
++        return;
++    }
++    if (!sovereignRuntime_) {
+         rawrxd::SovereignOutOfCoreRuntime::Config cfg;
+-        cfg.ramBudgetBytes = 8ull * 1024 * 1024 * 1024;    // 8GB default
+-        cfg.vramBudgetBytes = 32ull * 1024 * 1024 * 1024;  // 32GB for R9700
++        const uint64_t ram = policy.memory.ramBudget.present
++            ? policy.memory.ramBudget.value.n
++            : (policy.memory.ram.hardCap.present
++                   ? policy.memory.ram.hardCap.value.n
++                   : (8ull << 30));
++        const uint64_t vram = policy.memory.vramBudget.present
++            ? policy.memory.vramBudget.value.n
++            : (12ull << 30);
++        cfg.ramBudgetBytes = static_cast<std::size_t>(ram);
++        cfg.vramBudgetBytes = static_cast<std::size_t>(vram);
+         cfg.enableCPU = true;
+         cfg.enableGPU = true;
+         sovereignRuntime_ = std::make_unique<rawrxd::SovereignOutOfCoreRuntime>(cfg);
+-        printf("[Deep2Engine] SovereignOutOfCoreRuntime initialized (8GB RAM / 32GB VRAM)\n");
++        printf("[Deep2Engine] SovereignOutOfCoreRuntime initialized from ExecutionPolicy (ram=%llu vram=%llu)\n",
++               static_cast<unsigned long long>(ram),
++               static_cast<unsigned long long>(vram));
+     }
+-    printf("[Deep2Engine] SovereignOutOfCoreRuntime: %s\n", enable ? "ENABLED" : "DISABLED");
++    sovereignRuntimeEnabled_ = true;
++    printf("[Deep2Engine] SovereignOutOfCoreRuntime: ENABLED\n");
+ }
+ 
+ rawrxd::SovereignOutOfCoreRuntime* Deep2Engine::getSovereignRuntime() const
+diff --git a/src/reap_cli.cpp b/src/reap_cli.cpp
+index cb265f7c43..89292f79c7 100644
+--- a/src/reap_cli.cpp
++++ b/src/reap_cli.cpp
+@@ -1,6 +1,7 @@
+ #include "deep2/GGUFLoader.hpp"
+ #include "deep2/ReapMoETransformer.hpp"
+ #include "reap_cli_contract.hpp"
++#include "reap_inventory.hpp"
+ #include "deep2/deep2_sha256.hpp"
+ #include <nlohmann/json.hpp>
+ #include <algorithm>

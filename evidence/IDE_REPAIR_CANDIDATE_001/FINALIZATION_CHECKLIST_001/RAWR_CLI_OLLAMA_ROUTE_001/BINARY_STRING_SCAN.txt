@@ -1,0 +1,6 @@
+﻿unsupported backend=True
+11434=True
+8080=True
+/v1/chat/completions=True
+GGUF lookup bypassed=True
+qwen3=True

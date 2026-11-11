@@ -1,0 +1,7 @@
+﻿{
+    "moe_layers_calibrated":  60,
+    "routing_evidence":  "synthetic",
+    "schema":  "reap.calibration_001.v1",
+    "model":  "Kimi K2 Instruct Q4_K_M",
+    "calibration_complete":  true
+}

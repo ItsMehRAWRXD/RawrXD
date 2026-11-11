@@ -1,0 +1,33 @@
+SESSION_OPEN session_id=eo35_20261109-181901 run_id=eorun_20261109-181901 pid=25432
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x00000000006B0C60 session=1 pane=copilot_sidebar session_id=eo35_20261109-181901 run_id=eorun_20261109-181901
+DISPATCH_ID id=1 bytes=16
+CHAT_SEND_ATTEMPT dispatch_id=1 send_seq=1 bytes=16
+request_started request_id=1 model=kilo-auto/free
+exactly_once_submit session=1 request_id=1 model=kilo-auto/free
+CHAT_SEND_ARMED dispatch_id=1 send_seq=1 request_id=1 session=1
+callback request_id=1 complete=1 response_bytes=108 stop=0
+ui_update request_id=1 rendered=1 complete=1 response_bytes=108
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x00000000006B0C60 session=1 pane=copilot_sidebar session_id=eo35_20261109-181901 run_id=eorun_20261109-181901
+DISPATCH_ID id=2 bytes=28
+CHAT_SEND_ATTEMPT dispatch_id=2 send_seq=2 bytes=28
+request_started request_id=2 model=kilo-auto/free
+exactly_once_submit session=1 request_id=2 model=kilo-auto/free
+CHAT_SEND_ARMED dispatch_id=2 send_seq=2 request_id=2 session=1
+callback request_id=2 complete=1 response_bytes=108 stop=0
+ui_update request_id=2 rendered=1 complete=1 response_bytes=108
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x00000000006B0C60 session=1 pane=copilot_sidebar session_id=eo35_20261109-181901 run_id=eorun_20261109-181901
+DISPATCH_ID id=3 bytes=16
+CHAT_SEND_ATTEMPT dispatch_id=3 send_seq=3 bytes=16
+request_started request_id=3 model=kilo-auto/free
+exactly_once_submit session=1 request_id=3 model=kilo-auto/free
+CHAT_SEND_ARMED dispatch_id=3 send_seq=3 request_id=3 session=1
+callback request_id=3 complete=1 response_bytes=108 stop=0
+ui_update request_id=3 rendered=1 complete=1 response_bytes=108
+INPUT_EVENT kind=CTRL_LATCH mark=CHAT_CTRL_LATCH_V1 session_id=eo35_20261109-181901 run_id=eorun_20261109-181901
+INPUT_EVENT source=ctrl_enter kind=CTRL_ENTER path=AIM_GETMESSAGE_WM_KEYDOWN repeat=0 hwnd=0x0000000000680C5A session=1 pane=copilot_sidebar session_id=eo35_20261109-181901 run_id=eorun_20261109-181901
+DISPATCH_ID id=4 bytes=20
+CHAT_SEND_ATTEMPT dispatch_id=4 send_seq=4 bytes=20
+request_started request_id=4 model=kilo-auto/free
+exactly_once_submit session=1 request_id=4 model=kilo-auto/free
+CHAT_SEND_ARMED dispatch_id=4 send_seq=4 request_id=4 session=1
+ui_update request_id=4 rendered=1 complete=1 response_bytes=108

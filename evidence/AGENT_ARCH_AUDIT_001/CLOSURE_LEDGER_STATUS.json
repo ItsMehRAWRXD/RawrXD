@@ -1,0 +1,25 @@
+{
+  "ledger_id": "CLOSURE_LEDGER_STATUS",
+  "updated_at": "2026-11-11T16:02:00Z",
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "system_certifiable": false,
+  "reason_not_certifiable": "Native full link + live agent E2E (AGENT_RUNTIME_VALIDATION_001 G1-G4) not proven. Gaps 5/9 CLOSED_SOURCE_WIRED only.",
+  "next_milestone": "AGENT_RUNTIME_VALIDATION_001",
+  "gaps": {
+    "1": {"disposition": "SOURCE_WIRED", "RUNTIME_REACHED": false},
+    "2": {"disposition": "SOURCE_WIRED", "RUNTIME_REACHED": false},
+    "3": {"disposition": "CLOSED", "note": "sandbox + adversarial"},
+    "4": {"disposition": "CLOSED", "note": "SecurityGate + consent"},
+    "5": {"disposition": "CLOSED_SOURCE_WIRED", "AgentCommands_hits_SecurityGate": true, "RUNTIME_REACHED": "probe_only"},
+    "6": {"disposition": "SOURCE_WIRED", "RUNTIME_REACHED": false},
+    "7": {"disposition": "CLOSED", "level": "SOURCE_PLUS_SMOKE"},
+    "8": {"disposition": "SOURCE_WIRED", "RUNTIME_REACHED": false},
+    "9": {"disposition": "CLOSED_SOURCE_WIRED", "BackendRouter": true, "RUNTIME_REACHED": "NOT_RUN_live_tokens"},
+    "10": {"disposition": "CLOSED", "level": "SOURCE_PLUS_SMOKE"}
+  },
+  "certification": "NOT_GRANTED",
+  "promotion": "NOT_AUTHORIZED",
+  "baseline_matrix_immutable": "CAPABILITY_MATRIX.json"
+}

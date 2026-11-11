@@ -1,0 +1,31 @@
+GATE=GEMMA_HEADDIM_RESCALE_REMEASURE_010
+EXE_SHA=a6b66c6e3bc37fe23900a021c71ae285fec33d6963c93c8c4b0727fc7feacb05
+CMD=run F:\rawrxd\gemma3-1b-Q2_K.gguf ask --prompt "Say exactly: AGENT_RESULT=5" --max-tokens 32
+ASK_PATH=ASK_PATH=generateChat max_tokens=32
+CHAT_TEMPLATE=Chat template: gemma2
+GREEDY_LINE=[GREEDY] enabled=1 temperature=0.0000 topK=1
+FORMATTED_PROMPT_HEAD=<bos><start_of_turn>user
+You are a helpful assistant. Follow the user's instructions exactly. Reply with the requested text only � no JSON, no tools, no markdown fences.
+
+
+Say exact
+PREFILL_DONE=PREFILL_DONE prompt_tokens=69 prefill_ms=111404.566
+DECODE_BEGIN=DECODE_BEGIN max_out=32
+ASK_LINE=[ask] AGENT_RESULT_5=0 chars=182
+AGENT_RESULT_5=False
+WALL_S=169.432
+KILLED=0
+EXIT=
+STATUS=PARTIAL
+GAP=askBit=0 sample=leLeaseCount    = 0
+avgLayerMs         = 61.585
+============================================================
+ويل বোঝারTSстями在ca
+
+பாடு áos開کولමSmithGuateurs1 явиme End piped ambitoদের bassin profondes Yสุขภาพpaced décoshall- Bohemian
+
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+D015=HOLD
+TIP_CLIMB=HOLD

@@ -1,0 +1,5 @@
+SESSION_OPEN session_id=sid_000083BC_0000000007FC42DF run_id=run_unset pid=33724
+PANEL_LAYOUT phase=enter width=1260 height=737 ready=0 creating=1 depth=0 session_id=sid_000083BC_0000000007FC42DF run_id=run_unset
+PANEL_LAYOUT phase=enter width=1260 height=737 ready=0 creating=0 depth=0 session_id=sid_000083BC_0000000007FC437B run_id=run_unset
+PANEL_LAYOUT phase=enter width=1260 height=737 ready=1 creating=0 depth=0 session_id=sid_000083BC_0000000007FC4967 run_id=run_unset
+PANEL_LAYOUT phase=complete active=0 body_top=489 body_height=226 dock=1 terminal_panes=1 output_channels=12 active_output=Output debug_hwnd=2295224 session_id=sid_000083BC_0000000007FC4986 run_id=run_unset

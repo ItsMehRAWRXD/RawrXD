@@ -1,0 +1,22 @@
+{
+  "milestone_id": "AGENT_RUNTIME_VALIDATION_001",
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "prerequisite": "AGENT_RUNTIME_WIRE_001 gaps 1/2/6/8 SOURCE_WIRED only",
+  "gates": [
+    {"id": "G1", "name": "Native IDE full link", "required": "RawrXD-Win32IDE-Native links; exe exists; not mere .obj compile", "status": "FAIL"},
+    {"id": "G2", "name": "Autonomous task production entry", "required": "StartAutonomousTask starts live task", "status": "BLOCKED"},
+    {"id": "G3", "name": "FSM transitions runtime", "required": "pending→running→done verified; waiting/error exercised", "status": "BLOCKED"},
+    {"id": "G4", "name": "Live agent E2E", "required": "End-to-end agent run completes with evidence", "status": "BLOCKED"},
+    {"id": "G5", "name": "PlanExecutor exclusion", "required": "Outside SSOT; no accidental CMake/dep authority", "status": "PASS"},
+    {"id": "G6", "name": "Evidence/matrix reconcile", "required": "Additive closure only; CAPABILITY_MATRIX.json intact; independent runtime proofs", "status": "PASS"}
+  ],
+  "priority_order": [
+    "Native IDE full link (include graph, unresolved symbols, cross-worker TUs)",
+    "Live agent E2E via StartAutonomousTask + FSM evidence",
+    "PlanExecutor contamination removal",
+    "Certification only after G1-G5"
+  ],
+  "updated": "AGENT_RUNTIME_VALIDATION_001 worker disposition — honest FAIL/BLOCKED; no invented PASS"
+}

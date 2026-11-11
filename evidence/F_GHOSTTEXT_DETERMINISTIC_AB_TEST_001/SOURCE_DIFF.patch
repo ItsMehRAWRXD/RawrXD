@@ -1,0 +1,3 @@
+Candidate source change: `src/win32app/Win32IDE_GhostText.cpp`.
+
+Added `<chrono>`, `<cstdlib>`, and `<thread>`, plus `applyGhostTextTestDelay(requestId)`. The callback invokes it only after a completed provider response and before posting the existing result message. No production routing or render logic changed.

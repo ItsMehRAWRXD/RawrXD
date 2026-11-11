@@ -1,0 +1,44 @@
+{
+  "gate": "AGGREGATE_DECODE_E2E_001",
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "model": "n4-tiny-oracle:latest",
+  "model_source": "ollama list / F:\\ollamamodels",
+  "compiler": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Tools\\MSVC\\14.44.35207\\bin\\Hostx64\\x64\\cl.exe",
+  "single": {
+    "SOURCE_WIRED": 1,
+    "RUNTIME_REACHED": 1,
+    "backend": "OLLAMA_HTTP",
+    "deep2_backend_source_wired": 1,
+    "deep2_runtime_reached": 0,
+    "GENERATED_TOKENS": 16,
+    "AGGREGATE_DECODE_TPS_SINGLE": 39.947778,
+    "exit_code": 0
+  },
+  "multi": {
+    "SOURCE_WIRED": 1,
+    "RUNTIME_REACHED": 1,
+    "backend": "OLLAMA_HTTP",
+    "deep2_backend_source_wired": 1,
+    "deep2_runtime_reached": 0,
+    "STREAMS": 4,
+    "CONCURRENT": 1,
+    "GENERATED_TOKENS": 48,
+    "AGGREGATE_DECODE_TPS_MULTI": 29.873536,
+    "WORST_STREAM_TPS": 7.485522,
+    "BEST_STREAM_TPS": 28.602510,
+    "FAIRNESS_RATIO": 0.261709,
+    "ALL_SESSIONS_WORKED": 1,
+    "BOTH_LANES": 1,
+    "AGGREGATE_GE_MAX_STREAM": 1,
+    "exit_code": 0
+  },
+  "provenance": [
+    "G:\\~dev\\rawrxd\\src\\deep2\\Deep2Benchmark.cpp::runSaturationTest",
+    "F:\\rawrxd\\src\\deep2\\Deep2Benchmark.h::SaturationResult",
+    "F:\\rawrxd\\src\\deep2\\d2_decode_contract.h",
+    "Deep2 dual-aggregate / finished-TPS contract (serial harness fixed as concurrent product)"
+  ],
+  "notes": "Deep2 GGUF engine path SOURCE_WIRED via AggregateDecodeDeep2Backend (AGGREGATE_DECODE_USE_DEEP2 + deep2_engine_lib). Smoke RUNTIME used Ollama HTTP live generate (authorized fallback). No stub tokens."
+}

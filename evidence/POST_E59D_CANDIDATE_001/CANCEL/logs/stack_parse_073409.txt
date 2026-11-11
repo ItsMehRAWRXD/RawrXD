@@ -1,0 +1,125 @@
+﻿CANCEL_NATIVE_STACK_RESIDUAL_PARSE
+Dump=F:\rawrxd\evidence\POST_E59D_CANDIDATE_001\CANCEL\logs\rawrxd-20261103-073409.dmp
+DumpSize=5837586
+Streams=3,4,5,6,7,12,13,15,17,21,22
+ThreadCount=15
+ExceptionThreadId=27444
+ExceptionCode=0xC0000005
+ExceptionFlags=0x00000000
+ExceptionAddress=0x7FFC7BE7BD02 (comctl32.dll+0xBD02)
+ExceptionInformation[0]=0x1 (0=read,1=write)
+ExceptionInformation[1]=0x22B44CDCE0 (target VA)
+Context.Rip=0x7FFC7BE7BD02 (comctl32.dll+0xBD02)
+Context.Rsp=0xC9B39AD2D8
+Context.Rbp=0xF000
+Context.Rcx=0x22B44CDCE0
+Context.Rdx=0xFFFF
+Context.R8=0x0
+Context.R9=0x7FFEFFFF
+FaultingThread.StackStart=0xC9B39A9908 Size=0x66F8 FileRva=0x528D02
+RspInThreadStackMemory=True
+MemoryListRanges=208
+StackScanMode=RSP_DIRECT
+
+=== Key modules ===
+comctl32.dll base=0x7FFC7BE70000 size=0xB5000
+comctl32.dll base=0x7FFC92430000 size=0x291000
+gdi32.dll base=0x7FFCA8440000 size=0x2B000
+gdi32full.dll base=0x7FFCA5FE0000 size=0x129000
+imm32.dll base=0x7FFCA7220000 size=0x31000
+kernel32.dll base=0x7FFCA7140000 size=0xCB000
+KERNELBASE.dll base=0x7FFCA6200000 size=0x409000
+msctf.dll base=0x7FFCA8170000 size=0x15B000
+ntdll.dll base=0x7FFCA8D70000 size=0x26C000
+ole32.dll base=0x7FFCA7F60000 size=0x199000
+RawrXD-Win32IDE-Native.exe base=0x7FF65A190000 size=0x9E9000
+riched20.dll base=0x7FFC45930000 size=0xBE000
+user32.dll base=0x7FFCA7B40000 size=0x1DE000
+
+=== Stack (RIP + module-mapped RET candidates from RSP) ===
+  [ 0] RIP  comctl32.dll+0xBD02
+  [ 1] RET  comctl32.dll+0x17C1E  (rsp+0x0)
+  [ 2] RET  comctl32.dll+0x18EC8  (rsp+0x30)
+  [ 3] RET  ntdll.dll+0x2F8DE  (rsp+0x70)
+  [ 4] RET  user32.dll+0x152E6  (rsp+0x170)
+  [ 5] RET  user32.dll+0x154B9  (rsp+0x210)
+  [ 6] RET  user32.dll+0x150C2  (rsp+0x290)
+  [ 7] RET  user32.dll+0x154B9  (rsp+0x2A0)
+  [ 8] RET  user32.dll+0x14B6C  (rsp+0x2D0)
+  [ 9] RET  comctl32.dll+0x18350  (rsp+0x2E0)
+  [10] RET  user32.dll+0x3F543  (rsp+0x330)
+  [11] RET  comctl32.dll+0x18350  (rsp+0x358)
+  [12] RET  user32.dll+0xC1720  (rsp+0x380)
+  [13] RET  ntdll.dll+0x16A424  (rsp+0x390)
+  [14] RET  win32u.dll+0x1364  (rsp+0x3C8)
+  [15] RET  comctl32.dll+0x18350  (rsp+0x410)
+  [16] RET  ntdll.dll+0x1662B0  (rsp+0x418)
+  [17] RET  user32.dll+0x126D8  (rsp+0x420)
+  [18] RET  user32.dll+0x11079  (rsp+0x450)
+  [19] RET  RawrXD-Win32IDE-Native.exe+0x12FB9C  (rsp+0x480)
+  [20] RET  RawrXD-Win32IDE-Native.exe+0x33F9  (rsp+0x4E0)
+  [21] RET  vulkan-1.dll+0x191F40  (rsp+0x520)
+  [22] RET  RawrXD-Win32IDE-Native.exe+0x583420  (rsp+0x558)
+  [23] RET  RawrXD-Win32IDE-Native.exe+0x583420  (rsp+0x578)
+  [24] RET  KERNELBASE.dll+0x396BE0  (rsp+0x590)
+  [25] RET  ntdll.dll+0x17D91A  (rsp+0x5E0)
+  [26] RET  RawrXD-Win32IDE-Native.exe+0x583420  (rsp+0x5F0)
+  [27] RET  RawrXD-Win32IDE-Native.exe+0x583420  (rsp+0x5F8)
+  [28] RET  RawrXD-Win32IDE-Native.exe+0x583600  (rsp+0x6B8)
+  [29] RET  KERNELBASE.dll+0x4155C  (rsp+0x780)
+  [30] RET  RawrXD-Win32IDE-Native.exe+0x583420  (rsp+0x788)
+  [31] RET  ntdll.dll+0x12F9B3  (rsp+0x790)
+  [32] RET  ntdll.dll+0x12F969  (rsp+0x7C0)
+  [33] RET  ntdll.dll+0x17FE00  (rsp+0x7C8)
+  [34] RET  ntdll.dll+0x17FE01  (rsp+0x7D0)
+  [35] RET  RawrXD-Win32IDE-Native.exe+0x583420  (rsp+0x7E0)
+  [36] RET  ntdll.dll+0x17FE00  (rsp+0x7F8)
+  [37] RET  ntdll.dll+0x17FE00  (rsp+0x808)
+  [38] RET  ntdll.dll+0x12F9B3  (rsp+0x810)
+  [39] RET  ntdll.dll+0x12F969  (rsp+0x840)
+  [40] RET  ntdll.dll+0x17FE00  (rsp+0x848)
+  [41] RET  ntdll.dll+0x17FE01  (rsp+0x850)
+  [42] RET  ntdll.dll+0x17D91A  (rsp+0x8C0)
+  [43] RET  ntdll.dll+0x12F037  (rsp+0xAC0)
+  [44] RET  ntdll.dll+0x17FE00  (rsp+0xAE8)
+  [45] RET  ntdll.dll+0x17FE00  (rsp+0xAF8)
+  [46] RET  ntdll.dll+0x12F9B3  (rsp+0xB00)
+  [47] RET  ntdll.dll+0x12F969  (rsp+0xB30)
+  [48] RET  ntdll.dll+0x17FE00  (rsp+0xB38)
+  [49] RET  ntdll.dll+0x17FE01  (rsp+0xB40)
+  [50] RET  RawrXD-Win32IDE-Native.exe+0x492FC8  (rsp+0xB78)
+  [51] RET  msvcp140.dll+0x65C28  (rsp+0xB80)
+  [52] RET  msvcp140.dll+0x65B88  (rsp+0xC20)
+  [53] RET  ntdll.dll+0x97003  (rsp+0xC90)
+  [54] RET  ntdll.dll+0x95CD  (rsp+0xD40)
+  [55] RET  ntdll.dll+0x95CD  (rsp+0xD80)
+  [56] RET  ntdll.dll+0x546A8  (rsp+0xDF0)
+  [57] RET  ntdll.dll+0x97003  (rsp+0xF00)
+  [58] RET  setupapi.dll+0x12C080  (rsp+0xF18)
+  [59] RET  ntdll.dll+0x60A2  (rsp+0xF20)
+  [60] RET  ntdll.dll+0x17D1D0  (rsp+0xF78)
+  [61] RET  ntdll.dll+0x90001  (rsp+0x14E0)
+  [62] RET  RawrXD-Win32IDE-Native.exe+0x49B2B0  (rsp+0x15B0)
+  [63] RET  RawrXD-Win32IDE-Native.exe+0x0  (rsp+0x1608)
+  [64] RET  ntdll.dll+0x1C601  (rsp+0x1750)
+  [65] RET  ntdll.dll+0xEBB00  (rsp+0x1790)
+  [66] RET  VCRUNTIME140_1.dll+0x4401  (rsp+0x1838)
+  [67] RET  ntdll.dll+0x176600  (rsp+0x1B30)
+  [68] RET  RawrXD-Win32IDE-Native.exe+0x49B908  (rsp+0x1DC0)
+
+PRODUCT_FRAMES_IN_STACK_SCAN=13
+  PRODUCT RawrXD-Win32IDE-Native.exe+0x12FB9C
+  PRODUCT RawrXD-Win32IDE-Native.exe+0x33F9
+  PRODUCT RawrXD-Win32IDE-Native.exe+0x583420
+  PRODUCT RawrXD-Win32IDE-Native.exe+0x583420
+  PRODUCT RawrXD-Win32IDE-Native.exe+0x583420
+  PRODUCT RawrXD-Win32IDE-Native.exe+0x583420
+  PRODUCT RawrXD-Win32IDE-Native.exe+0x583600
+  PRODUCT RawrXD-Win32IDE-Native.exe+0x583420
+  PRODUCT RawrXD-Win32IDE-Native.exe+0x583420
+  PRODUCT RawrXD-Win32IDE-Native.exe+0x492FC8
+  PRODUCT RawrXD-Win32IDE-Native.exe+0x49B2B0
+  PRODUCT RawrXD-Win32IDE-Native.exe+0x0
+  PRODUCT RawrXD-Win32IDE-Native.exe+0x49B908
+COMCTL32_FRAMES=6
+USER32_FRAMES=9

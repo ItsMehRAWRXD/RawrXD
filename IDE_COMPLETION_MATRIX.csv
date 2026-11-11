@@ -1,0 +1,162 @@
+feature_id,category,feature_name,source_file,source_provenance,canonical_destination,dependencies,implementation_status,integration_status,compile_status,runtime_status,acceptance_test,evidence,commit_sha
+E01,Editor Core,Syntax Highlighting (Tree-sitter based),Win32IDE_SyntaxHighlight.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (SyntaxToken, TokenType, SyntaxLanguage),INTEGRATED,INTEGRATED,BLOCKED,NONE,NONE,NONE,none
+E02,Editor Core,Multi-cursor / Column Selection,Win32IDE_MultiCursor.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (m_hwndEditor, MultiCursorState),INTEGRATED,INTEGRATED,BLOCKED,NONE,NONE,NONE,none
+E03,Editor Core,Minimap,Win32IDE_Minimap.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (m_hwndEditor, m_editorFont),INTEGRATED,INTEGRATED,BLOCKED,NONE,NONE,NONE,none
+E04,Editor Core,Breadcrumbs,Win32IDE_Breadcrumbs.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (BreadcrumbItem),INTEGRATED,INTEGRATED,BLOCKED,NONE,NONE,NONE,none
+E05,Editor Core,Outline View,Win32IDE_OutlinePanel.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (OutlineSymbol, SymbolKind),INTEGRATED,INTEGRATED,BLOCKED,NONE,NONE,NONE,none
+E06,Editor Core,Sticky Scroll,None,Not in thorn-measure,src/win32app/,None,MISSING,MISSING,NONE,NONE,NONE,NONE,none
+E07,Editor Core,Diff Viewer (inline/side-by-side/3-way),Win32IDE_DiffView.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (DiffViewHunk, DiffViewState),INTEGRATED,INTEGRATED,BLOCKED,NONE,NONE,NONE,none
+E08,Editor Core,Large File Handling (10MB+),None,Partial via RichEdit,src/win32app/,None,INTEGRATED,PARTIAL,BLOCKED,NONE,NONE,NONE,none
+E09,Editor Core,Split Panes / Detachable Windows,Win32IDE_DockingPaneManager.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+E10,Editor Core,Command Palette (fuzzy),Win32IDE_CommandPalette.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (CommandPaletteItem),INTEGRATED,INTEGRATED,BLOCKED,NONE,NONE,NONE,none
+E11,Editor Core,Quick Open (fuzzy file search),Win32IDE_QuickOpen.cpp,Recovered from thorn-measure,src/win32app/,None,INTEGRATED,INTEGRATED,BLOCKED,NONE,NONE,NONE,none
+E12,Editor Core,Code Completion (LSP-driven),Win32IDE_CodeCompletion.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (LSPLanguage),INTEGRATED,INTEGRATED,BLOCKED,NONE,NONE,NONE,none
+E13,Editor Core,Inline/Ghost Completion,Win32IDE_InlineCompletion.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (m_ghostTextEnabled),INTEGRATED,INTEGRATED,BLOCKED,NONE,NONE,NONE,none
+E14,Editor Core,Go to Definition,Win32IDE_GoToSymbol.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (LSPClient),INTEGRATED,INTEGRATED,BLOCKED,NONE,NONE,NONE,none
+E15,Editor Core,Find All References,Win32IDE_ReferencesPanel.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (LSPClient),INTEGRATED,INTEGRATED,BLOCKED,NONE,NONE,NONE,none
+E16,Editor Core,Symbol Search (workspace-wide),Win32IDE_SemanticIndex.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (WorkspaceSymbol),INTEGRATED,INTEGRATED,BLOCKED,NONE,NONE,NONE,none
+E17,Editor Core,Workspace Symbols,Win32IDE_WorkspaceSymbol.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (WorkspaceSymbol),RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+E18,Editor Core,Rename Refactoring,Win32IDE_RenamePreview.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (RenameChange, RenamePreviewState),INTEGRATED,INTEGRATED,BLOCKED,NONE,NONE,NONE,none
+E19,Editor Core,Extract Method/Inline/Move/Safe Delete,Win32IDE_Refactoring.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (LSPClient),RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+E20,Editor Core,Hover Tooltips,Win32IDE_HoverTooltips.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (HoverTooltipState),INTEGRATED,INTEGRATED,BLOCKED,NONE,NONE,NONE,none
+E21,Editor Core,Signature Help,Win32IDE_SignatureHelp.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (LSPSignatureHelpInfo),RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+E22,Editor Core,Code Lens,Win32IDE_CodeLens.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (LSPClient),RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+E23,Editor Core,Inlay Hints,Win32IDE_InlayHints.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (LSPClient),RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+E24,Editor Core,Snippet Engine,Win32IDE_SnippetEngine.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (SnippetDef),INTEGRATED,INTEGRATED,BLOCKED,NONE,NONE,NONE,none
+E25,Editor Core,Format on Save / Formatter Integration,format_router.cpp,Recovered from src root,src/win32app/,None,INTEGRATED,PARTIAL,BLOCKED,NONE,NONE,NONE,none
+E26,Editor Core,Linter Integration,None,Not in thorn-measure,src/win32app/,None,MISSING,MISSING,NONE,NONE,NONE,NONE,none
+E27,Editor Core,Vim/Emacs Keybinding Modes,None,Not in thorn-measure,src/win32app/,None,MISSING,MISSING,NONE,NONE,NONE,NONE,none
+E28,Editor Core,Zen / Distraction-Free Mode,None,Not in thorn-measure,src/win32app/,None,MISSING,MISSING,NONE,NONE,NONE,NONE,none
+E29,Editor Core,Status Bar (git, errors, line/col, encoding),Win32IDE_StatusBarActions.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+E30,Editor Core,Notifications/Toasts,None,Not in thorn-measure,src/win32app/,None,MISSING,MISSING,NONE,NONE,NONE,NONE,none
+E31,Editor Core,Peek View / Peek Overlay,Win32IDE_PeekView.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+E32,Editor Core,Call Stack Symbols,Win32IDE_CallStackSymbols.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+E33,Editor Core,Go to Line,Win32IDE_GoToLine.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+E34,Editor Core,Annotation Overlay,Win32IDE_AnnotationOverlay.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+P01,Project & Workspace,Multi-root Workspaces,Win32IDE_Project.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (m_openDocuments),RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+P02,Project & Workspace,File Explorer with Git Decorators,Win32IDE_Sidebar.cpp,Recovered from thorn-measure (partial),src/win32app/,Win32IDE.h (m_hwndSidebar),RECOVERED,PARTIAL,NONE,NONE,NONE,NONE,none
+P03,Project & Workspace,File Nesting Rules,None,Not in thorn-measure,src/win32app/,None,MISSING,MISSING,NONE,NONE,NONE,NONE,none
+P04,Project & Workspace,Global Search & Replace (regex, filters),Win32IDE_SearchPanel.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+P05,Project & Workspace,Task Runner (npm, cargo, gradle, CMake, Make),Win32IDE_TaskRunner.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+P06,Project & Workspace,Integrated Terminal (multi-tab, profiles, shell detect),Win32TerminalManager,Partial in canonical,src/win32app/,Win32IDE.h (m_terminalPanes),INTEGRATED,PARTIAL,BLOCKED,NONE,NONE,NONE,none
+P07,Project & Workspace,Output / Debug / Problems Panels,Win32IDE_ProblemsPanel.cpp,Partial in canonical,src/win32app/,None,INTEGRATED,PARTIAL,BLOCKED,NONE,NONE,NONE,none
+P08,Project & Workspace,Clickable Error Navigation,Win32IDE_CompilerPanel.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+P09,Project & Workspace,Project Settings (.vscode-style),Win32IDE_Settings.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (m_settings),RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+P10,Project & Workspace,Workspace Symbol Index,Win32IDE_SemanticIndex.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (WorkspaceSymbol),INTEGRATED,INTEGRATED,BLOCKED,NONE,NONE,NONE,none
+V01,Version Control,Full Git Integration (stage, commit, push, pull, branch, stash, cherry-pick),Win32IDE_Git.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+D01,Debugger,Breakpoints (regular, conditional, logpoint, hit-count),Win32IDE_BreakpointManagerPanel.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+D02,Debugger,Call Stack, Locals, Watch Expressions,Win32IDE_CallStackSymbols.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+D03,Debugger,Step Over/Into/Out, Run to Cursor,Win32IDE_DebuggerIntegration.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+D04,Debugger,Attach to Process / Remote Debug,Win32IDE_DAPServer.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (DAP methods),RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+D05,Debugger,Memory/Register Inspection (C/C++/Rust),Win32IDE_MemoryView.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+D06,Debugger,DAP Support,DAPIntegrationBridge.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (DAP methods),RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+A01,AI Features,Inline Code Completion (Ghost Text),Win32IDE_InlineCompletion.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (m_ghostTextEnabled, m_ghostText),RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+A02,AI Features,Chat Panel (explain, generate, refactor, debug, document),Win32IDE_ChatPanel.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+A03,AI Features,Agent Mode (multi-step tasks),Win32IDE_AutonomousAgent.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (agent methods),RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+A04,AI Features,Codebase-wide Context (RAG),Win32IDE_ProjectRagLite.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (context methods),RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+A05,AI Features,@ Mentions (symbols, files, docs),Win32IDE_ContextMentionParser.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+A06,AI Features,Terminal Command Generation,Win32IDE_AgenticBrowser.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+A07,AI Features,Multi-model Support (local 7B/13B/70B),Win32IDE_ModelManager.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (ModelManager),RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+A08,AI Features,Custom Instructions per Project,Win32IDE_PromptTemplates.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+A09,AI Features,Code Review AI,Win32IDE_StaticAnalysisPanel.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+M01,Local Model Management,Model Browser (download, delete, organize GGUF/ONNX),Win32IDE_ModelDiscovery.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+M02,Local Model Management,Quantization Selector (Q4_K_M, Q5_K_M, Q8_0),Win32IDE_Quantum.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+M03,Local Model Management,Context Length Config (4K, 8K, 32K, 128K),Win32IDE_ModelManager.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+M04,Local Model Management,GPU/CPU Scheduling (offload layers, batch, threads),Win32IDE_VRAM_Bridge.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+M05,Local Model Management,Model Benchmarking (tokens/sec, memory),Win32IDE_BenchmarkMenu.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+M06,Local Model Management,Model Loader / GGUF Reader,Win32IDE_GGUF_Reader.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+L01,Language Support,LSP Client (stdin/stdout, JSON-RPC),Win32IDE_LSPClient.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (LSPClient methods),INTEGRATED,INTEGRATED,BLOCKED,NONE,NONE,NONE,none
+L02,Language Support,LSP Server Hosting,Win32IDE_LSPServer.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (LSPServer methods),INTEGRATED,INTEGRATED,BLOCKED,NONE,NONE,NONE,none
+L03,Language Support,Pre-configured Servers (Python, TS/JS, C/C++, Rust, Go, Java, C#, Ruby, PHP, Swift, Kotlin),Win32IDE_LanguagePlugin.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (LanguagePlugin methods),INTEGRATED,INTEGRATED,BLOCKED,NONE,NONE,NONE,none
+L04,Language Support,Formatter Integration (prettier, black, rustfmt, clang-format),format_router.cpp,Recovered from src root,src/win32app/,None,INTEGRATED,PARTIAL,BLOCKED,NONE,NONE,NONE,none
+L05,Language Support,Linter Integration (eslint, pylint, clippy),None,Not in thorn-measure,src/win32app/,None,MISSING,MISSING,NONE,NONE,NONE,NONE,none
+L06,Language Support,Snippet Libraries per Language,Win32IDE_SnippetEngine.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (SnippetDef),INTEGRATED,INTEGRATED,BLOCKED,NONE,NONE,NONE,none
+L07,Language Support,Semantic Tokens / Highlighting,Win32IDE_SemanticTokens.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (SyntaxToken, TokenType),INTEGRATED,INTEGRATED,BLOCKED,NONE,NONE,NONE,none
+L08,Language Support,Code Actions / Quick Fixes,Win32IDE_CodeActions.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (CodeActions methods),INTEGRATED,INTEGRATED,BLOCKED,NONE,NONE,NONE,none
+L09,Language Support,Document Symbols / Outline,Win32IDE_OutlinePanel.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (OutlineSymbol),INTEGRATED,INTEGRATED,BLOCKED,NONE,NONE,NONE,none
+L10,Language Support,Workspace Symbols,Win32IDE_SemanticIndex.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (WorkspaceSymbol),INTEGRATED,INTEGRATED,BLOCKED,NONE,NONE,NONE,none
+X01,Extensions / Plugins,Extension Marketplace (discover, install, update, disable),Win32IDE_ExtensionMarketplace.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+X02,Extensions / Plugins,Extension API (commands, tree views, webviews, status bar),ExtensionAPI_VSCode.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+X03,Extensions / Plugins,Extension Isolation (crash one, don't bring down IDE),ExtensionSandboxManager.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+X04,Extensions / Plugins,Extension Host (separate process),ExtensionHost.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+X05,Extensions / Plugins,Extension Manifest Loader,ExtensionManifestLoader.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+X06,Extensions / Plugins,Extension Security Check,ExtensionSecurityCheck.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+X07,Extensions / Plugins,Native Plugin Manager,NativePluginManager.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+X08,Extensions / Plugins,VS Code Extension Compatibility,ExtensionAPI_VSCode.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+U01,UI/UX Polish,Custom Themes (light, dark, high contrast, custom CSS),Win32IDE_Themes.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (IDETheme),RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+U02,UI/UX Polish,Font Ligatures, Variable Font Support,Win32IDE_LineEndingSelector.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+U03,UI/UX Polish,Command Palette (fuzzy),Win32IDE_CommandPalette.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (CommandPaletteItem),INTEGRATED,INTEGRATED,BLOCKED,NONE,NONE,NONE,none
+U04,UI/UX Polish,Keyboard Shortcut Editor (conflict detection),Win32IDE_ShortcutEditor.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+U05,UI/UX Polish,Zen Mode / Distraction-Free,None,Not in thorn-measure,src/win32app/,None,MISSING,MISSING,NONE,NONE,NONE,NONE,none
+U06,UI/UX Polish,Status Bar (git, errors, line/col, encoding, lang),Win32IDE_StatusBarActions.cpp,Partial in canonical,src/win32app/,None,INTEGRATED,PARTIAL,BLOCKED,NONE,NONE,NONE,none
+U07,UI/UX Polish,Notifications / Toasts,Win32IDE_NotificationPanel.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+U08,UI/UX Polish,Welcome Page,Win32IDE_WelcomePage.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+U09,UI/UX Polish,Settings GUI,Win32IDE_SettingsGUI.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+U10,UI/UX Polish,Color Picker,Win32IDE_ColorPicker.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+C01,Collaboration,Live Share (real-time collaborative editing),Win32IDE_Collab.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+C02,Collaboration,Comments on Code (inline discussions),Win32IDE_AnnotationOverlay.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+C03,Collaboration,Pair Programming Mode,None,Not in thorn-measure,src/win32app/,None,MISSING,MISSING,NONE,NONE,NONE,NONE,none
+C04,Collaboration,Voice Assistant / Automation,Win32IDE_VoiceAssistantPanel.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+C05,Collaboration,Screen Pilot / Remote Control,Win32IDE_AgenticBrowser.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+C06,Collaboration,CRDT / Conflict Resolution,rawrxd_collab_crdt_impl.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+C07,Collaboration,RTP / Real-time Protocol,rtp_protocol_bridge.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+I01,Inference Engine,Local LLM Runtime (llama.cpp / custom backend),cpu_inference_engine_impl.cpp,Recovered from src root,src/win32app/,Win32IDE.h (AIBackend methods),RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+I02,Inference Engine,Multi-backend (Vulkan, CUDA, Metal, DirectML, CPU AVX2/512/NEON),vulkan_compute.cpp,Recovered from src root,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+I03,Inference Engine,Streaming Token Generation,Win32IDE_StreamingUX.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+I04,Inference Engine,Speculative Decoding,SpeculativeOptimizer.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+I05,Inference Engine,Continuous Batching,None,Not in thorn-measure,src/win32app/,None,MISSING,MISSING,NONE,NONE,NONE,NONE,none
+I06,Inference Engine,KV-Cache Management,Win32IDE_KVCacheCleanup.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+I07,Inference Engine,GGUF Parser,GGUFLoader.cpp,Recovered from src root,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+I08,Inference Engine,ONNX Runtime Integration,None,Not in thorn-measure,src/win32app/,None,MISSING,MISSING,NONE,NONE,NONE,NONE,none
+R01,Context & RAG,Codebase Indexing (AST, symbol graph, chunking),Win32IDE_SemanticIndex.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (WorkspaceSymbol),INTEGRATED,INTEGRATED,BLOCKED,NONE,NONE,NONE,none
+R02,Context & RAG,Embedding Model (sentence-transformer),semantic_store.cpp,Recovered from src/context,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+R03,Context & RAG,Vector Database (sqlite-vss, faiss, chroma),None,Not in thorn-measure,src/win32app/,None,MISSING,MISSING,NONE,NONE,NONE,NONE,none
+R04,Context & RAG,Incremental Indexing,Win32IDE_FileSystemEvents.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+R05,Context & RAG,Context Assembly (prioritize, token budget),Win32IDE_ContextGovernor.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+R06,Context & RAG,Repository Map Generation,RawrXD_SymbolEngine.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (queryWorkspaceSymbols),INTEGRATED,INTEGRATED,BLOCKED,NONE,NONE,NONE,none
+AF01,Agent Framework,Tool/Function Calling (shell, read, edit, search),Win32IDE_AgentExecutor.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (agent methods),RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+AF02,Agent Framework,Planning & Execution Loop,Win32IDE_AutonomousLoop.h,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+AF03,Agent Framework,State Machine (pending, running, waiting, done, error),Win32IDE_AgentStepTimeline.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+AF04,Agent Framework,Sandboxing (restrict AI deletions/modifications),ExtensionSandboxManager.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+AF05,Agent Framework,Undo Stack for AI Edits,Win32IDE_AgentHistory.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+AF06,Agent Framework,Approval Gates (run command? edit file?),Win32IDE_ConsentPrompt.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+AF07,Agent Framework,Agentic Bridge / Loop Bridge,Win32IDE_AgenticIntegration.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (AgenticBridge methods),RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+PR01,Performance & Resource,Memory Budget Enforcement,Win32IDE_MemoryStats.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+PR02,Performance & Resource,GPU Memory Monitoring (dynamic offload),Win32IDE_VRAM_Bridge.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+PR03,Performance & Resource,Background Worker Threads (indexing, model loading),Win32IDE_IOCPFileWatcher.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+PR04,Performance & Resource,Lazy Initialization (don't load models until needed),Win32IDE_InitSequence.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+PR05,Performance & Resource,Swap/Paging Awareness,Win32IDE_PageFaultHandler.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+PR06,Performance & Resource,Battery Awareness,None,Not in thorn-measure,src/win32app/,None,MISSING,MISSING,NONE,NONE,NONE,NONE,none
+PR07,Performance & Resource,Performance Profiler,PerformanceProfiler.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (Profiling methods),RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+DS01,Data & State,Session Persistence (open files, cursors, terminal history, chat history),Win32IDE_Session.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+DS02,Data & State,Project Settings (.vscode-style),Win32IDE_Settings.cpp,Recovered from thorn-measure,src/win32app/,Win32IDE.h (m_settings),RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+DS03,Data & State,User Preferences (cross-workspace, synced/portable),Win32IDE_Settings.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+DS04,Data & State,Crash Recovery (auto-save, restore unsaved),Win32IDE_CrashReporter.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+DS05,Data & State,Startup Banner,Win32IDE_StartupBanner.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+SP01,Security & Privacy,Zero Network Requirement for Core AI,None,Architecture (not a file),src/win32app/,None,INTEGRATED,ARCHITECTURAL,NONE,NONE,NONE,NONE,none
+SP02,Security & Privacy,Optional Cloud Fallback (opt-in),Win32IDE_AirgappedEnterprise.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+SP03,Security & Privacy,Code Execution Sandbox,ExtensionSandboxManager.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+SP04,Security & Privacy,Secret Scanning,Win32IDE_SecurityScans.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+SP05,Security & Privacy,Telemetry (strict opt-in, anonymized),Win32IDE_Telemetry.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+SP06,Security & Privacy,AES-GCM + Hash-chained Audit,Win32IDE_Attestation.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+SP07,Security & Privacy,License Management / Activation,Win32IDE_LicenseCreator.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+BD01,Build & Distribution,Cross-platform Builds (Windows MSI/EXE, macOS DMG, Linux AppImage/DEB/RPM/Flatpak),None,Not in thorn-measure,src/win32app/,None,MISSING,MISSING,NONE,NONE,NONE,NONE,none
+BD02,Build & Distribution,Auto-updater (delta updates, rollback),None,Not in thorn-measure,src/win32app/,None,MISSING,MISSING,NONE,NONE,NONE,NONE,none
+BD03,Build & Distribution,Code Signing (Windows EV, macOS notarization, Linux GPG),None,Not in thorn-measure,src/win32app/,None,MISSING,MISSING,NONE,NONE,NONE,NONE,none
+BD04,Build & Distribution,Installer (silent install, portable mode),Win32IDE_DownloadsPanel.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+BD05,Build & Distribution,Crash Reporter (minidump, optional upload),Win32IDE_CrashReporter.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+TQ01,Testing & Quality,Unit Test Suite (core editor, AI, agent),Win32IDE_EnterpriseStressTests.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+TQ02,Testing & Quality,Integration Tests (LSP, debugger, model loading),Win32IDE_DebuggerIntegration_test.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+TQ03,Testing & Quality,Performance Benchmarks (startup, file open, tokens/sec),Win32IDE_BenchmarkMenu.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+TQ04,Testing & Quality,Accessibility Testing,None,Not in thorn-measure,src/win32app/,None,MISSING,MISSING,NONE,NONE,NONE,NONE,none
+TQ05,Testing & Quality,Localization Framework (i18n),None,Not in thorn-measure,src/win32app/,None,MISSING,MISSING,NONE,NONE,NONE,NONE,none
+BI01,Business Infrastructure,License Management (activation, floating, trials),Win32IDE_LicenseCreator.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+BI02,Business Infrastructure,Payment Processing / Subscription,None,Not in thorn-measure,src/win32app/,None,MISSING,MISSING,NONE,NONE,NONE,NONE,none
+BI03,Business Infrastructure,Usage Analytics (feature adoption, crash rates),Win32IDE_Telemetry.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+BI04,Business Infrastructure,Support System (ticketing, KB, forum),None,Not in thorn-measure,src/win32app/,None,MISSING,MISSING,NONE,NONE,NONE,NONE,none
+BI05,Business Infrastructure,Documentation (user, API, troubleshooting),None,Not in thorn-measure,src/win32app/,None,MISSING,MISSING,NONE,NONE,NONE,NONE,none
+CE01,Compliance & Enterprise,SOC 2 / ISO 27001 Readiness,Win32IDE_AuditDashboard.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+CE02,Compliance & Enterprise,SSO / SAML / OIDC Integration,None,Not in thorn-measure,src/win32app/,None,MISSING,MISSING,NONE,NONE,NONE,NONE,none
+CE03,Compliance & Enterprise,Audit Logging,Win32IDE_AuditDashboard.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+CE04,Compliance & Enterprise,Air-gapped Deployment,Win32IDE_AirgappedEnterprise.cpp,Recovered from thorn-measure,src/win32app/,None,RECOVERED,NOT_INTEGRATED,NONE,NONE,NONE,NONE,none
+CE05,Compliance & Enterprise,Proxy Support,None,Not in thorn-measure,src/win32app/,None,MISSING,MISSING,NONE,NONE,NONE,NONE,none

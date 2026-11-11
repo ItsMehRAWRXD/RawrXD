@@ -1,0 +1,6 @@
+[ATTN_DIAG] layer=0 head=0: NON-FINITE VALUE VECTOR pos=0
+[KVCache] Lazy pages: layers=2 page=8 virtualMax=8 heads=2 dim=4
+[KVCache] HOT_BYTES=1024 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+ATTN_GEOMETRY layers=2 positions=8 kvHeads=2 headDim=4
+ATTN_FINITE_VALID=1 ATTN_NAN_REJECTED=1

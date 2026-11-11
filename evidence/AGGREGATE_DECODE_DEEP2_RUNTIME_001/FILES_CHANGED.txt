@@ -1,0 +1,8 @@
+F:\rawrxd\CMakeLists.txt
+F:\rawrxd\tools\aggregate_decode\CMakeLists.txt
+F:\rawrxd\src\deep2\aggregate_decode\AggregateDecodeDeep2Backend.hpp
+F:\rawrxd\src\deep2\aggregate_decode\AggregateDecodeDeep2Backend.cpp
+F:\rawrxd\tools\aggregate_decode_single_smoke.cpp
+F:\rawrxd\tools\aggregate_decode_multi_smoke.cpp
+F:\rawrxd\evidence\AGGREGATE_DECODE_E2E_001\DISPOSITION.json
+F:\ollamamodels\n4-tiny-oracle.gguf (hardlink to ollama blob)

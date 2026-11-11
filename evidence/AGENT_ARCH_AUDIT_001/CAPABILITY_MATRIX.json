@@ -1,0 +1,335 @@
+{
+  "audit_id": "AGENT_ARCH_AUDIT_001",
+  "title": "Fable-to-RawrXD agent architecture capability matrix",
+  "scope_primary": "F:\\rawrxd",
+  "scope_crosscheck": "G:\\~dev\\rawrxd (not required for primary findings)",
+  "laws": {
+    "SOURCE_WIRED_NE_RUNTIME_REACHED": true,
+    "NOT_RUN_NE_PASS": true,
+    "PROMOTE": 0,
+    "CERTIFIED": 0,
+    "TIP_CLIMB": "HOLD"
+  },
+  "fable_extraction_refs": [
+    {
+      "path": "F:\\rawrxd\\FEATURE_GAP_REGISTER.md",
+      "note": "Primary Fable-like agent capability inventory (AF01-AF07 Batch 3/6). Not a sealed Fable extract; used as claim source."
+    },
+    {
+      "path": "F:\\rawrxd\\docs\\IDE_NOT_CAPABLE_AUDIT.md",
+      "note": "Documents agent/model routing gaps; cites AGENTIC_AND_MODEL_LOADING_AUDIT."
+    },
+    {
+      "path": "F:\\rawrxd\\3rdparty\\r9700-stack\\notes\\review-fable.md",
+      "note": "Named 'Fable' but is GPU/kernel code review — NOT agent-architecture extraction."
+    },
+    {
+      "path": "F:\\rawrxd\\docs\\archive\\AUTONOMOUS_AGENT_IMPLEMENTATION_ROADMAP.md",
+      "note": "Historical autonomous-agent roadmap; cross-check only."
+    }
+  ],
+  "summary": {
+    "capability_count": 9,
+    "source_wired_true": 4,
+    "source_wired_false": 5,
+    "merely_present_not_wired_highlights": [
+      "Win32IDE_AgentExecutor.cpp (stub returns true)",
+      "Win32IDE_AutonomousLoop.h (header only; no .cpp)",
+      "Win32IDE_PlanExecutor.cpp (not in CMake product lists)",
+      "ExtensionSandboxManager (always-allow)",
+      "Win32IDE_ConsentPrompt.cpp (demo MessageBox; not tool-dispatch gate)",
+      "src/agentic/agent_loop.hpp AgentState enum (not product FSM driver)"
+    ],
+    "consolidation_targets_future_only": [
+      "Unified Autonomous Agent Runtime: collapse AgenticBridge + AgenticLoopBridge + SelfRepairLoop/agent_loop into one driver",
+      "Single ToolRegistry/SSOT: rawr_core::ToolRegistry + agentic ToolCallBridge + ComputerUse RegisterTools",
+      "Canonical PlanningLoop: implement/promote one loop (AutonomousLoop or SelfRepairLoop); drop dead PlanExecutor until cleaned",
+      "TaskLedger SSOT: PersistentTaskBacklog + AgentSession; AgentHistory becomes undo adapter only",
+      "SecurityBoundary: path/command policy + approval inside tool dispatch (not always-true sandbox)",
+      "ModelProvider facade: BackendRouter (Deep2/Ollama) + GGUF/Vulkan under Deep2; Strata as residency/KV; cloud held false"
+    ]
+  },
+  "capabilities": [
+    {
+      "name": "AgentExecutor",
+      "fable_claim": "AF01 recoverable surface + dedicated executor for agent tasks (shell/read/edit/search orchestration entry).",
+      "rawrxd_paths": [
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgentExecutor.h",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgentExecutor.cpp",
+        "F:\\rawrxd\\src\\agentic\\agentic_executor.h",
+        "F:\\rawrxd\\CMakeLists.txt (lists Win32IDE_AgentExecutor.cpp)"
+      ],
+      "source_wired": false,
+      "runtime_reached": false,
+      "gaps": [
+        "ExecuteAgentTask always returns true with no tool/model dispatch",
+        "Initialize always returns true; no environment setup",
+        "CMake inclusion of stub != product capability",
+        "Real execution lives elsewhere (AgentCommands / AgenticBridge / CLI ToolRegistry)"
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgentExecutor.cpp",
+        "F:\\rawrxd\\FEATURE_GAP_REGISTER.md#AF01"
+      ]
+    },
+    {
+      "name": "PlanningLoop",
+      "fable_claim": "AF02 Planning & Execution Loop — multi-step plan then execute with progress/pause/cancel.",
+      "rawrxd_paths": [
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AutonomousLoop.h",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_PlanExecutor.cpp",
+        "F:\\rawrxd\\src\\agentic\\agent_loop.hpp",
+        "F:\\rawrxd\\src\\agentic\\SelfRepairLoop.h",
+        "F:\\rawrxd\\src\\agentic\\SelfRepairLoop.cpp",
+        "F:\\rawrxd\\src\\agentic\\execution_plan_ir.h",
+        "F:\\rawrxd\\src\\qtapp\\plan_mode_handler.hpp"
+      ],
+      "source_wired": false,
+      "runtime_reached": "unknown",
+      "gaps": [
+        "FEATURE_GAP_REGISTER marks AF02 canonical as missing (❌)",
+        "Win32IDE_AutonomousLoop.h has no matching .cpp implementation",
+        "Win32IDE_PlanExecutor.cpp not listed in CMake product sources; include graph polluted/duplicated",
+        "SelfRepairLoop wired on separate agentic dual-engine target — not proven as Win32IDE product planning loop",
+        "Qt PlanningAgent / plan_mode_handler are alternate stack, not Win32IDE SSOT"
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\FEATURE_GAP_REGISTER.md#AF02",
+        "F:\\rawrxd\\docs\\IDE_NOT_CAPABLE_AUDIT.md",
+        "F:\\rawrxd\\CMakeLists.txt (SelfRepairLoop near BackendRouter block; PlanExecutor absent)"
+      ]
+    },
+    {
+      "name": "StateMachine",
+      "fable_claim": "AF03 State Machine (pending, running, waiting, done, error) driving agent lifecycle.",
+      "rawrxd_paths": [
+        "F:\\rawrxd\\src\\agentic\\agent_loop.hpp (enum class AgentState)",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgentStepTimeline.h",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgentStepTimeline.cpp",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_Types.h (PlanStepStatus)"
+      ],
+      "source_wired": false,
+      "runtime_reached": "unknown",
+      "gaps": [
+        "FEATURE_GAP_REGISTER marks AF03 canonical missing (❌)",
+        "AgentStepTimeline is UI chip strip, not an execution state machine",
+        "AgentState enum in agent_loop.hpp not proven as sole driver of Win32IDE agent turns",
+        "No single authoritative transition table wired across Bridge/Loop/Session"
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\FEATURE_GAP_REGISTER.md#AF03",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgentStepTimeline.h",
+        "F:\\rawrxd\\src\\agentic\\agent_loop.hpp"
+      ]
+    },
+    {
+      "name": "ToolCalling",
+      "fable_claim": "AF01 Tool/Function Calling (shell, read, edit, search) with registry + dispatch.",
+      "rawrxd_paths": [
+        "F:\\rawrxd\\src\\rawr_core.hpp (class ToolRegistry)",
+        "F:\\rawrxd\\src\\rawr_core.cpp (registerDefaultTools/dispatch)",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgentCommands.cpp",
+        "F:\\rawrxd\\src\\agentic\\ToolCallBridge.h",
+        "F:\\rawrxd\\src\\agentic\\ToolRegistry.h",
+        "F:\\rawrxd\\src\\computer_use\\ComputerUseBridge.cpp (RegisterTools)",
+        "F:\\rawrxd\\src\\rawr_cli.cpp"
+      ],
+      "source_wired": true,
+      "runtime_reached": "unknown",
+      "gaps": [
+        "Multiple registries (rawr_core, agentic ToolRegistry/ToolCallBridge, ComputerUse) — no single SSOT",
+        "IDE AgentCommands path vs CLI ToolRegistry path not consolidated",
+        "Permission/approval not uniformly applied at one dispatch choke point",
+        "SOURCE_WIRED != RUNTIME_REACHED: this audit did not execute tool E2E"
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\FEATURE_GAP_REGISTER.md#AF01",
+        "F:\\rawrxd\\src\\rawr_core.cpp",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgentCommands.cpp"
+      ]
+    },
+    {
+      "name": "AgentHistory_TaskLedger",
+      "fable_claim": "AF05 Undo stack for AI edits + durable task/tool ledger across turns/cancel/crash.",
+      "rawrxd_paths": [
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgentHistory.cpp",
+        "F:\\rawrxd\\src\\agentic\\AgentSession.h",
+        "F:\\rawrxd\\src\\agentic\\AgentSession.cpp",
+        "F:\\rawrxd\\src\\agentic\\PersistentTaskBacklog.cpp",
+        "F:\\rawrxd\\src\\agentic\\agent_history.h"
+      ],
+      "source_wired": false,
+      "runtime_reached": "unknown",
+      "gaps": [
+        "Win32IDE_AgentHistory undoLastAgentEdit pops stack but does not restore file content",
+        "FEATURE_GAP_REGISTER marks AF05 canonical missing (❌)",
+        "PersistentTaskBacklog + AgentSession ledger live primarily on agentic dual-engine target — not proven as IDE product SSOT",
+        "Two incomplete ledgers instead of one durable TaskLedger"
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\FEATURE_GAP_REGISTER.md#AF05",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgentHistory.cpp",
+        "F:\\rawrxd\\src\\agentic\\AgentSession.h",
+        "F:\\rawrxd\\CMakeLists.txt (PersistentTaskBacklog / AgentSession)"
+      ]
+    },
+    {
+      "name": "AgenticBridge",
+      "fable_claim": "AF07 Agentic Bridge / Loop Bridge connecting IDE UI to agent runtime.",
+      "rawrxd_paths": [
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgenticBridge.h",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgenticBridge.cpp",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgenticLoopBridge.h",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgenticLoopBridge.cpp",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgentCommands.cpp"
+      ],
+      "source_wired": true,
+      "runtime_reached": "unknown",
+      "gaps": [
+        "Dual bridges (AgenticBridge native/PS + AgenticLoopBridge process) without single runtime owner",
+        "IDE_NOT_CAPABLE_AUDIT historically: agent path stuck on CPUInferenceEngine; Ollama/cloud routing incomplete on agent tools",
+        "Headless agentic bridge documented as stub/hardcoded failures",
+        "SOURCE_WIRED != RUNTIME_REACHED; NOT_RUN != PASS"
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\FEATURE_GAP_REGISTER.md#AF07",
+        "F:\\rawrxd\\docs\\IDE_NOT_CAPABLE_AUDIT.md",
+        "F:\\rawrxd\\CMakeLists.txt (AgenticBridge + AgenticLoopBridge listed)"
+      ]
+    },
+    {
+      "name": "SessionManagement_Cancellation",
+      "fable_claim": "Session lifecycle with durable audit + cooperative cancel of running agentic tasks/generation.",
+      "rawrxd_paths": [
+        "F:\\rawrxd\\src\\agentic\\AgentSession.h",
+        "F:\\rawrxd\\src\\agentic\\AgentSession.cpp",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgenticLoopBridge.cpp (Cancel)",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgentCommands.cpp (onAgenticLoopCancel/onDeep2Cancel)",
+        "F:\\rawrxd\\src\\backend\\ollama_client.cpp (cancelActiveRequest)",
+        "F:\\rawrxd\\src\\deep2\\InferenceSession.hpp",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_Session.cpp"
+      ],
+      "source_wired": true,
+      "runtime_reached": "unknown",
+      "gaps": [
+        "Multiple session types (IDE session JSON, AgentSession, Deep2 InferenceSession, chat sessions) not one agent session SSOT",
+        "Cancel paths exist in source; this audit did not prove end-to-end cancel under live agent turn",
+        "AgentSession driver-owned ledger not verified as RUNTIME_REACHED on product IDE path"
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgentCommands.cpp",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AgenticLoopBridge.cpp",
+        "F:\\rawrxd\\src\\agentic\\AgentSession.h"
+      ]
+    },
+    {
+      "name": "SecurityBoundary",
+      "fable_claim": "AF04 Sandboxing + AF06 Approval Gates + SP03/SP06 audit — restrict destructive AI actions; approve before mutate.",
+      "rawrxd_paths": [
+        "F:\\rawrxd\\src\\win32app\\ExtensionSandboxManager.h",
+        "F:\\rawrxd\\src\\win32app\\ExtensionSandboxManager.cpp",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_ConsentPrompt.cpp",
+        "F:\\rawrxd\\src\\win32app\\ConsentPrompt.h",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_AutonomousLoop.h (ToolRisk Auto/Confirm/Block — header design only)"
+      ],
+      "source_wired": false,
+      "runtime_reached": false,
+      "gaps": [
+        "ExtensionSandboxManager::IsPathAllowed/IsCommandAllowed always return true",
+        "ConsentPrompt is standalone MessageBox demo, not wired into tool dispatch choke point",
+        "FEATURE_GAP_REGISTER marks AF04/AF06 canonical missing (❌)",
+        "Risk-tiered approval exists as AutonomousLoop.h design only (no .cpp)",
+        "No certified audit trail for approve/deny decisions on IDE agent path"
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\FEATURE_GAP_REGISTER.md#AF04",
+        "F:\\rawrxd\\FEATURE_GAP_REGISTER.md#AF06",
+        "F:\\rawrxd\\src\\win32app\\ExtensionSandboxManager.cpp",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_ConsentPrompt.cpp"
+      ]
+    },
+    {
+      "name": "ModelProviderAbstraction",
+      "fable_claim": "Unified provider surface: Ollama, GGUF/local, Vulkan GPU, Strata residency/KV, optional cloud — selectable without silent splice.",
+      "rawrxd_paths": [
+        "F:\\rawrxd\\src\\agentic\\BackendRouter.h",
+        "F:\\rawrxd\\src\\agentic\\BackendRouter.cpp",
+        "F:\\rawrxd\\src\\agentic\\InferenceBackend.h",
+        "F:\\rawrxd\\src\\backend\\ollama_client.h",
+        "F:\\rawrxd\\src\\backend\\ollama_client.cpp",
+        "F:\\rawrxd\\src\\deep2\\Deep2Engine.cpp (GGUFLoader + Vulkan)",
+        "F:\\rawrxd\\src\\deep2\\StrataInt8KVCache.hpp",
+        "F:\\rawrxd\\src\\deep2\\StrataExpertResidency.hpp",
+        "F:\\rawrxd\\src\\win32app\\Win32IDE_GGUF_Reader.cpp"
+      ],
+      "source_wired": true,
+      "runtime_reached": "unknown",
+      "gaps": [
+        "BackendRouter covers Deep2 + Ollama on agentic target; explicitly no paid cloud fallback (allow_cloud_fallback=false)",
+        "IDE agent historically bypasses BackendSwitcher for tools (IDE_NOT_CAPABLE_AUDIT)",
+        "Strata is KV/expert residency — not a full alternate chat provider facade",
+        "GGUF/Vulkan live under Deep2Engine; not a single IModelProvider used by all agent entry points",
+        "Ollama runtime logs exist elsewhere; agent-path RUNTIME_REACHED still unknown for this audit",
+        "SOURCE_WIRED != RUNTIME_REACHED; NOT_RUN != PASS"
+      ],
+      "evidence_refs": [
+        "F:\\rawrxd\\src\\agentic\\BackendRouter.h",
+        "F:\\rawrxd\\docs\\IDE_NOT_CAPABLE_AUDIT.md",
+        "F:\\rawrxd\\FEATURE_GAP_REGISTER.md (M01/M06/I02/I07)",
+        "F:\\rawrxd\\CMakeLists.txt (BackendRouter / ollama_client)"
+      ]
+    }
+  ],
+  "top_10_gaps_by_blocking_severity": [
+    {
+      "rank": 1,
+      "gap": "No product-wired Planning & Execution Loop (AF02): AutonomousLoop header-only; PlanExecutor not in CMake",
+      "blocks": "Multi-step autonomous agent runtime"
+    },
+    {
+      "rank": 2,
+      "gap": "Win32IDE_AgentExecutor is a always-true stub while listed in CMake",
+      "blocks": "Trustworthy executor entry; invents success"
+    },
+    {
+      "rank": 3,
+      "gap": "Security sandbox always-allows path/command",
+      "blocks": "Safe autonomy; AF04"
+    },
+    {
+      "rank": 4,
+      "gap": "Approval gates not on tool-dispatch choke point (ConsentPrompt demo only)",
+      "blocks": "Human-in-the-loop mutate/shell; AF06"
+    },
+    {
+      "rank": 5,
+      "gap": "Fragmented ToolRegistry surfaces (CLI / agentic / ComputerUse / AgentCommands)",
+      "blocks": "Unified permissions + exactly-once tool semantics"
+    },
+    {
+      "rank": 6,
+      "gap": "No execution StateMachine SSOT (UI timeline + enums only)",
+      "blocks": "Deterministic pending/running/waiting/done/error; AF03"
+    },
+    {
+      "rank": 7,
+      "gap": "AgentHistory undo does not restore file bytes",
+      "blocks": "AF05 rollback trust"
+    },
+    {
+      "rank": 8,
+      "gap": "Dual AgenticBridge + AgenticLoopBridge without single runtime owner",
+      "blocks": "Unified Autonomous Agent Runtime consolidation"
+    },
+    {
+      "rank": 9,
+      "gap": "IDE agent path historically not routed through BackendRouter/Ollama for tools",
+      "blocks": "ModelProviderAbstraction on product agent loop"
+    },
+    {
+      "rank": 10,
+      "gap": "AgentSession/PersistentTaskBacklog not proven as IDE product ledger RUNTIME_REACHED",
+      "blocks": "Durable TaskLedger + cancel/crash audit"
+    }
+  ]
+}

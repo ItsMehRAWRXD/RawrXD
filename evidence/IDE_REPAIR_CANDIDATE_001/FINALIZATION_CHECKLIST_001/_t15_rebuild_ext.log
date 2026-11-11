@@ -1,0 +1,46 @@
+**********************************************************************
+** Visual Studio 2022 Developer Command Prompt v17.14.39
+** Copyright (c) 2025 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'
+[1/2] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Commands.cpp.obj
+FAILED: [code=2] CMakeFiles/RawrXD-Win32IDE-Native-Ext.dir/src/win32app/Win32IDE_Commands.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DFORTIFY_SOURCE=2 -DGGML_USE_CPU -DHAVE_GGML=1 -DNOMINMAX -DRAWRXD_HARDENING=1 -DRAWRXD_HAS_AGENT_SESSION=1 -DRAWRXD_HAS_COMPUTER_USE=1 -DRAWRXD_NATIVE_IDE_EXT=1 -DRAWR_HAS_QUICKJS=1 -DRAWR_QUICKJS_STUB=0 -D_CRT_SECURE_NO_WARNINGS -D_FORTIFY_SOURCE=2 -D_MBCS -D_WIN32_WINNT=0x0A00 -IF:\rawrxd\build_tip_ext_host_001\generated -IF:\rawrxd\src -IF:\rawrxd\src\deep2 -IF:\rawrxd\src\win32app -IF:\rawrxd\src\modules -IF:\rawrxd\src\utils -IF:\rawrxd\src\snap -IF:\rawrxd\src\deep2\perf_fix -IF:\rawrxd\src\deep2\watchdog -IF:\rawrxd\3rdparty\ggml\include -IF:\rawrxd\tools\agent_esp\rawrxd_agent_esp -IF:\rawrxd\tools\deep2_snap\deep2_snap -IF:\rawrxd\tools\snap_process_guard -IF:\rawrxd\3rdparty\quickjs_ng -IC:\VulkanSDK\1.4.357.0\include -IF:\rawrxd\src\production -IF:\rawrxd\src\computer_use -IF:\rawrxd\3rdparty\ggml\src\..\include -external:IF:\rawrxd\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /Zi /O2 /Ob1 /DNDEBUG -std:c++20 -MD /MD /GS /guard:cf /guard:ehcont /VOLATILE:ISO /W4 /Zc:strictStrings /Zc:throwingNew /permissive- /EHsc /showIncludes /FoCMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Commands.cpp.obj /FdCMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\ /FS -c F:\rawrxd\src\win32app\Win32IDE_Commands.cpp
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(183): error C2888: 'bool Win32IDE::routeCommand(int)': symbol cannot be defined within namespace 'rawrxd'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(264): error C2888: 'void Win32IDE::registerCommandHandler(int,std::function<void (void)>)': symbol cannot be defined within namespace 'rawrxd'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(268): error C2888: 'std::string Win32IDE::getCommandDescription(int) const': symbol cannot be defined within namespace 'rawrxd'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(276): error C2888: 'bool Win32IDE::isCommandEnabled(int) const': symbol cannot be defined within namespace 'rawrxd'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(284): error C2888: 'void Win32IDE::updateCommandStates(void)': symbol cannot be defined within namespace 'rawrxd'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(306): error C2888: 'void Win32IDE::handleFileCommand(int)': symbol cannot be defined within namespace 'rawrxd'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(375): error C2888: 'void Win32IDE::handleEditCommand(int)': symbol cannot be defined within namespace 'rawrxd'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(434): error C2888: 'void Win32IDE::handleViewCommand(int)': symbol cannot be defined within namespace 'rawrxd'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(438): error C2888: 'Win32IDE::handleViewCommand::<lambda_1>': symbol cannot be defined within namespace 'rawrxd'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(482): error C2888: 'void Win32IDE::handleTerminalCommand(int)': symbol cannot be defined within namespace 'rawrxd'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(502): error C2888: 'void Win32IDE::handleToolsCommand(int)': symbol cannot be defined within namespace 'rawrxd'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(845): error C2888: 'void Win32IDE::triggerAIEdit(void)': symbol cannot be defined within namespace 'rawrxd'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(921): error C2888: 'void Win32IDE::applyAIEdit(void)': symbol cannot be defined within namespace 'rawrxd'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(940): error C2888: 'void Win32IDE::showAIChat(void)': symbol cannot be defined within namespace 'rawrxd'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(950): error C2888: 'void Win32IDE::launchAIEdit(const std::string &)': symbol cannot be defined within namespace 'rawrxd'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(965): error C2888: 'Win32IDE::launchAIEdit::<lambda_1>': symbol cannot be defined within namespace 'rawrxd'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(952): error C2664: 'void Win32IDE::generateResponseAsync(const std::string &,std::function<void (const std::string &,bool,bool)>,uint64_t *)': cannot convert argument 2 from 'Win32IDE::launchAIEdit::<lambda_1>' to 'std::function<void (const std::string &,bool,bool)>'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(965): note: No user-defined-conversion operator available that can perform this conversion, or the operator cannot be called
+F:\rawrxd\src\win32app\Win32IDE.h(663): note: see declaration of 'Win32IDE::generateResponseAsync'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(952): note: while trying to match the argument list '(const std::string, Win32IDE::launchAIEdit::<lambda_1>)'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(968): error C2888: 'std::string Win32IDE::queryOllamaForEdit(const std::string &)': symbol cannot be defined within namespace 'rawrxd'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(972): error C2888: 'void Win32IDE::handleModulesCommand(int)': symbol cannot be defined within namespace 'rawrxd'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(985): error C2888: 'void Win32IDE::handleHelpCommand(int)': symbol cannot be defined within namespace 'rawrxd'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(1055): error C2888: 'void Win32IDE::buildCommandRegistry(void)': symbol cannot be defined within namespace 'rawrxd'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(1125): error C2888: 'void Win32IDE::showCommandPalette(void)': symbol cannot be defined within namespace 'rawrxd'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(1205): error C2888: 'void Win32IDE::hideCommandPalette(void)': symbol cannot be defined within namespace 'rawrxd'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(1217): error C2888: 'void Win32IDE::filterCommandPalette(const std::string &)': symbol cannot be defined within namespace 'rawrxd'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(1219): warning C4390: ';': empty controlled statement found; is this the intent?
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(1255): error C2888: 'void Win32IDE::executeCommandFromPalette(int)': symbol cannot be defined within namespace 'rawrxd'
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(1257): warning C4390: ';': empty controlled statement found; is this the intent?
+F:\rawrxd\src\win32app\Win32IDE_Commands.cpp(1268): error C2888: 'LRESULT Win32IDE::CommandPaletteProc(HWND,UINT,WPARAM,LPARAM)': symbol cannot be defined within namespace 'rawrxd'
+ninja: build stopped: subcommand failed.
+NINJA_EXIT=2
+SHA256 hash of bin\RawrXD-Win32IDE-Native-Ext.exe:
+a8534c731fffb576978490883c67ae8de0eca52409e3c648761bf96a5038f3a9
+CertUtil: -hashfile command completed successfully.

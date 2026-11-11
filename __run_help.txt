@@ -1,0 +1,38 @@
+
+RawrXD Sovereign Runtime v1.0-ALPHA
+Usage: rawrxd.exe [options]
+
+Required:
+  --model PATH          Path to GGUF model file
+  --prompt TEXT         Input prompt
+
+Execution Mode:
+  --inference           Single generation (default)
+  --agentic             Autonomous agent loop
+  --validate            Full validation + evidence bundle
+
+Generation Parameters:
+  --max-tokens N        Maximum tokens to generate (default: 512)
+  --temperature T       Sampling temperature (default: 0.7)
+  --top-p P             Nucleus sampling (default: 0.9)
+  --top-k K             Top-k sampling (default: 40)
+  --repeat-penalty R    Repetition penalty (default: 1.1)
+  --seed S              RNG seed for deterministic sampling (default: 0 = random)
+  --deterministic       Greedy argmax mode (ignores temperature/top-p/top-k)
+
+Backend:
+  --backend NAME        Backend: auto, cpu_avx2, cpu_avx512, vulkan_amd
+
+Validation:
+  --evidence-dir PATH   Evidence output directory (default: validation/runs)
+
+Other:
+  --verbose             Detailed output
+  --residency-pool-mb N WeightResidencyPool size in MB (default: 4096)
+  --help                Show this help
+
+Examples:
+  rawrxd.exe --model phi3.gguf --prompt "Hello world"
+  rawrxd.exe --model phi3.gguf --prompt "Analyze code" --agentic
+  rawrxd.exe --model phi3.gguf --prompt "Hello" --validate
+

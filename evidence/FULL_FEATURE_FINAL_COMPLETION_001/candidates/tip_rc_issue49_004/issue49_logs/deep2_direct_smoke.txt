@@ -1,0 +1,27 @@
+MOTD_WORKSPACE F:\rawrxd
+MOTD_STATUS TURN_START session=deep2-agent-3856-3523226154400 turn=1
+MOTD_SHA256 3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[stage] loading model F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+[stage] ingest done in 1603.4 ms: arch=llama blocks=22 vocab=32000 bos=1 eos=2
+[stage] model ships a chat template (410 bytes):
+{% for message in messages %}
+{% if message['role'] == 'user' %}
+{{ '<|user|>
+' + message['content'] + eos_token }}
+{% elif message['role'] == 'system' %}
+{{ '<|system|>
+' + message['content'] + eos_token }}
+{% elif message['role'] == 'assistant' %}
+{{ '<|assistant|>
+'  + message['content'] + eos_token }}
+{% endif %}
+{% if loop.last and add_generation_prompt %}
+{{ '<|assistant|>' }}
+{% endif %}
+{% endfor %}
+[stage] tokenizer round-trip: PASS (33 ids -> 73 chars)
+[stage] executor bound: ops=311 path=gpu-first
+[snap] Job Object created and self-assigned; children will inherit
+[snap] Preflight: CONTENTION DETECTED - 1 candidates, 1 warnings
+[snap]   Process 8336 (deep2_agentic_loop.exe) not assigned to RawrXD job object
+[snap] Authorized recovery: terminating verified stale PID 8336

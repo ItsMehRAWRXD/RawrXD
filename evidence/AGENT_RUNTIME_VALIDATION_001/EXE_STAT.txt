@@ -1,0 +1,5 @@
+exe_found=0
+searched=F:\rawrxd\build_win32ide/**/RawrXD-Win32IDE-Native.exe
+timestamp=
+size_bytes=
+note=G1 link not achieved; compile errors remain in Batch2/agent cosmetic TUs (see g1_build6.log). CERTIFIED=0 PROMOTE=0

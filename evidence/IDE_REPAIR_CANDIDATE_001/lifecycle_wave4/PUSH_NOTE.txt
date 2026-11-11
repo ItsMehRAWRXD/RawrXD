@@ -1,0 +1,13 @@
+WAVE4_ORPHAN_PUSH_NOTE
+ASOF_UTC=2026-11-10T09:58:00Z
+SCOPE=evidence/IDE_REPAIR_CANDIDATE_001/lifecycle_wave4/** text receipts only
+EXCLUDE=package/*.exe userdata_* binaries
+GIT_LFS_SKIP_PUSH=1_REQUIRED
+INTENDED_BRANCH=upload/lifecycle-wave4-20261110
+REMOTE=origin https://github.com/ItsMehRAWRXD/RawrXD.git
+STATUS=PUSH_ATTEMPT_BLOCKED_SHELL_CONTENTION
+REASON=Host shell/git invocations hung amid Ext 0xC000041D / process contention; receipts sealed locally
+NEXT=Retry orphan text-only push with GIT_LFS_SKIP_PUSH=1 when host is idle; do not force-push RC4
+NO_RC4_FORCE_PUSH=1
+PROMOTE=0
+MATURITY_CHANGE=0

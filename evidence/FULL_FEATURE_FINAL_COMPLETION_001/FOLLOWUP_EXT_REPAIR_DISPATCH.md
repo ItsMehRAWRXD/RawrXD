@@ -1,0 +1,23 @@
+# FOLLOWUP_EXT_REPAIR_DISPATCH
+
+ASOF_UTC=2026-11-09T10:00:00Z
+PROMOTE=0
+CERTIFIED=0
+PRODUCT_PASS=0
+
+```
+TRIGGER=Integration owner stop condition B
+INTEG_SHA=7582A0C9899E0EA587E98F6343BBF8F28364713701CA91CF58319C20D46E2F58
+EXT_LOAD=FAIL
+REASON=ext_runtime_receipt not written after --ext-dir/--ext-cmd/--ext-quit
+WORKER=f8888cfa-ee69-4f2a-998a-5a8bade1d0b2
+PRIOR_INTEGRATION=c30982d7-6f92-4e17-a2ab-b3a7e8267642
+FROZEN_A4F_UNTOUCHED=1
+NO_CROSS_SHA_PASS_INHERITANCE=1
+```
+
+## Required outcome
+
+1. tip_final_integ_002 (or successor) with measured EXT_LOAD=PASS on its own SHA  
+2. Chat AIM retest on same SHA  
+3. Update FINAL_INTEGRATION_GATE / FINAL_VERDICT — PRODUCT_PASS=0 until conjunction  

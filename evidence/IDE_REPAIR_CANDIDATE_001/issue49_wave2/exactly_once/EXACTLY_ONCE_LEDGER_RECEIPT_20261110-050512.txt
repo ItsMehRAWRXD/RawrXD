@@ -1,0 +1,17 @@
+﻿WAVE2_EXACTLY_ONCE_LEDGER=PASS
+ASOF_UTC=2026-11-10T10:05:12Z
+LEDGER=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\fixtures\exactly_once_tool_ledger.txt
+ROWS=6
+FAIL_ROWS=0
+PROMOTE=0
+CERTIFIED=0
+MATURITY_UNCHANGED=1
+ISSUE49_PRODUCT=NOT_CLAIMED
+PRODUCT_PATH_WIRED=0
+NOTE=Fixture contract only; Ext/ToolCallBridge absorb held until Wave1 new SHA
+ROW_1 id='tc-read-001' expect=FIRST got=FIRST ok=True
+ROW_2 id='tc-read-001' expect=DUPLICATE got=DUPLICATE ok=True
+ROW_3 id='tc-write-002' expect=FIRST got=FIRST ok=True
+ROW_4 id='' expect=REJECT_EMPTY_ID got=REJECT_EMPTY_ID ok=True
+ROW_5 id='tc-write-002' expect=DUPLICATE got=DUPLICATE ok=True
+ROW_6 id='tc-build-003' expect=FIRST got=FIRST ok=True

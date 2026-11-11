@@ -1,0 +1,34 @@
+﻿{
+    "schema":  "RAWRXD_AGENTIC_MODEL_READINESS_001",
+    "model":  "nemotron-3.5-bolt:latest",
+    "workspace_root":  "F:\\rawrxd",
+    "fixture":  "F:\\rawrxd\\evidence\\RAWRXD_AGENTIC_MODEL_READINESS_20261029\\nemotron-3.5-bolt_latest\\fixture.cpp",
+    "capabilities":  [
+                         "completion",
+                         "vision",
+                         "tools",
+                         "thinking"
+                     ],
+    "family":  "nemotron_h_moe",
+    "parameter_size":  "74.0B",
+    "real_model_inference":  true,
+    "motd_gate":  true,
+    "read_tool":  true,
+    "edit_tool":  true,
+    "readback_tool":  true,
+    "file_changed_count":  1,
+    "diff_verified":  true,
+    "synthetic_success":  0,
+    "status":  "PASS",
+    "exit_code":  0,
+    "elapsed_ms":  53296,
+    "tool_names":  [
+                       "readFile",
+                       "editFiles",
+                       "readFile"
+                   ],
+    "tool_failure_count":  0,
+    "before_sha256":  "10E1BEF74A8CA32ADD5C7A64BCCA08F187122B81FF5912E2B48D7F8AD3A982DA",
+    "after_sha256":  "3B026FF0DE8EED9AFF1242BA58C86DBBC4F4D6D0DB8D58654767D71F2E2CC534",
+    "timestamp_utc":  "2026-10-29T05:57:10.8521341Z"
+}

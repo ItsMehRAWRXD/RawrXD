@@ -1,0 +1,8 @@
+﻿{
+  "args": "{\"path\":\"evidence/IDE_REPAIR_CANDIDATE_001/FINALIZATION_CHECKLIST_001/RAWR_CLI_OLLAMA_ROUTE_001/agent_loop_fixture/off_by_one.cpp\"}",
+  "denied": false,
+  "exit_code": 0,
+  "ok": true,
+  "output": "#include <cstdio>\nint add_one(int x) {\n  // OFF_BY_ONE: should return x+1\n  return x;\n}\nint main() {\n  int r = add_one(41);\n  if (r != 42) {\n    std::printf(\"FAIL got=%d\\n\", r);\n    return 1;\n  }\n  std::printf(\"PASS\\n\");\n  return 0;\n}\n[encoding=utf-8]",
+  "tool": "read_file"
+}

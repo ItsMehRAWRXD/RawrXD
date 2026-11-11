@@ -1,0 +1,108 @@
+{
+    "CERTIFIED":  0,
+    "PROMOTE":  0,
+    "RELEASE":  "HELD",
+    "TIP_CLIMB":  "HOLD",
+    "build_exit_code":  1,
+    "priority_status":  {
+                            "Breadcrumbs":  0,
+                            "MultiCursor":  0,
+                            "Minimap":  0,
+                            "CommandPalette":  0,
+                            "RenamePreview":  0,
+                            "AgenticBridge":  0,
+                            "DiffView":  0,
+                            "OutlinePanel":  0,
+                            "GoToSymbol":  0,
+                            "QuickOpen":  0,
+                            "HoverTooltips":  0,
+                            "CodeCompletion":  0,
+                            "ReferencesPanel":  0,
+                            "SymbolEngine":  0,
+                            "SemanticIndex":  0
+                        },
+    "remaining_top":  [
+                          {
+                              "file":  "Win32IDE_LSPClient.cpp",
+                              "count":  109,
+                              "disposition":  "OPEN"
+                          },
+                          {
+                              "file":  "Win32IDE_SemanticPanel.cpp",
+                              "count":  102,
+                              "disposition":  "OPEN"
+                          },
+                          {
+                              "file":  "Win32IDE_TerminalTabs.cpp",
+                              "count":  101,
+                              "disposition":  "OPEN"
+                          },
+                          {
+                              "file":  "Win32IDE_CodeActions.cpp",
+                              "count":  100,
+                              "disposition":  "OPEN"
+                          },
+                          {
+                              "file":  "Win32IDE_SemanticTokens.cpp",
+                              "count":  98,
+                              "disposition":  "OPEN"
+                          },
+                          {
+                              "file":  "Win32IDE_LanguagePlugin.cpp",
+                              "count":  93,
+                              "disposition":  "OPEN"
+                          },
+                          {
+                              "file":  "Win32IDE_SearchPanel.cpp",
+                              "count":  84,
+                              "disposition":  "OPEN"
+                          },
+                          {
+                              "file":  "Win32IDE_LSPServer.cpp",
+                              "count":  73,
+                              "disposition":  "OPEN"
+                          },
+                          {
+                              "file":  "Win32IDE_LSPClient_Additions.cpp",
+                              "count":  48,
+                              "disposition":  "OPEN"
+                          },
+                          {
+                              "file":  "Win32IDE_MemoryView.cpp",
+                              "count":  37,
+                              "disposition":  "OPEN"
+                          },
+                          {
+                              "file":  "RawrXD_LSPServer.h",
+                              "count":  29,
+                              "disposition":  "OPEN"
+                          },
+                          {
+                              "file":  "Win32IDE_AnnotationOverlay.cpp",
+                              "count":  26,
+                              "disposition":  "OPEN"
+                          }
+                      ],
+    "files_changed":  [
+                          "src/win32app/Win32IDE.h",
+                          "src/win32app/Win32IDE_AgenticBridge.h",
+                          "src/win32app/Win32IDE_AgenticLoopBridge.h",
+                          "src/win32app/Win32IDE_MultiCursor.cpp",
+                          "src/win32app/Win32IDE_DiffView.cpp",
+                          "src/win32app/Win32IDE_RenamePreview.cpp",
+                          "src/win32app/Win32IDE_HoverTooltips.cpp",
+                          "src/win32app/Win32IDE_CommandPalette.cpp",
+                          "src/win32app/Win32IDE_CommandPalette.hpp",
+                          "src/win32app/Win32IDE_CompletionHelpers.cpp",
+                          "src/win32app/Win32IDE.cpp",
+                          "src/win32app/Win32IDE_SemanticPanel.cpp",
+                          "src/win32app/Win32IDE_SemanticIndex.cpp",
+                          "src/win32app/RawrXD_SymbolEngine.h",
+                          "src/win32app/RawrXD_SymbolEngine.cpp",
+                          "src/win32app/Win32IDE_LSPClient_Additions.cpp",
+                          "src/core/semantic_code_intelligence.hpp",
+                          "src/core/problems_aggregator.hpp",
+                          "include/lsp/RawrXD_LSPServer.h",
+                          "CMakeLists.txt"
+                      ]
+}

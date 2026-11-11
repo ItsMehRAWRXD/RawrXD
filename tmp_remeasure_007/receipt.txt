@@ -1,0 +1,25 @@
+GATE=GEMMA_HEADDIM_RESCALE_REMEASURE_007
+EXE=F:\rawrxd\build_tip_debug_rel\bin-msvc\rawr.exe
+EXE_SHA=8A8CC0E589F00DA15427D76007C04743D0B2E2747C335263C09600105288B2C8
+CMD=run F:\rawrxd\gemma3-1b-Q2_K.gguf ask --fresh-session --prompt Say exactly: AGENT_RESULT=5 --max-tokens 32
+RAWRXD_GREEDY=1
+FIX=ATTN_PRE_WO validate wo.cols/attnConcat not hiddenDim tail
+BOUND_TIMEOUT_S=1800
+WALL_S=1802.042
+KILLED=1
+EXIT=-1
+HEADDIM_SYNC=HEADDIM_SYNC config.headDim=256 modelWeights.headDim=256
+HEADDIM_SYNC_POST_BIND=HEADDIM_SYNC_POST_BIND config.headDim=256 modelWeights.headDim=256 kvHeads=1
+GREEDY_LINE=[GREEDY] enabled=1 temperature=0.0000 topK=1
+PREFILL_DONE=PREFILL_DONE prompt_tokens=237 prefill_ms=375383.233
+ABORT=
+POST_GENERATE_GENERATED=240
+SAMPLE_PIECES= retrouve*>
+AGENT_RESULT_5=False
+STATUS=PARTIAL
+GAP=wall_s=1802.042 gen=240 killed=1 abort= sample= retrouve*>
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+D015=HOLD
+TIP_CLIMB=HOLD

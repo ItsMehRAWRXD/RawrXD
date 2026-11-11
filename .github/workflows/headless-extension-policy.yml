@@ -1,0 +1,32 @@
+name: Headless extension policy gates
+on:
+  push:
+    paths:
+      - 'tests/extension_policy_smoke.cpp'
+      - 'tests/headless_mock_protocol_smoke.py'
+      - '~dev/rawrxd/src/core/extension_entry_policy.hpp'
+      - '~dev/rawrxd/src/core/extension_manifest_policy.hpp'
+      - '~dev/rawrxd/src/core/extension_read_policy.hpp'
+      - '.github/workflows/headless-extension-policy.yml'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  extension-policy:
+    name: Extension policy (real headers, no model)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile production-header policy gate
+        run: |
+          c++ -std=c++20 -O1 -g -Wall -Wextra -Werror -pedantic \
+            -fsanitize=address,undefined -fno-omit-frame-pointer \
+            tests/extension_policy_smoke.cpp -o /tmp/rawrxd_extension_policy_gate
+      - name: Execute production-header policy gate
+        env:
+          ASAN_OPTIONS: detect_leaks=1
+          UBSAN_OPTIONS: halt_on_error=1
+        run: /tmp/rawrxd_extension_policy_gate
+      - name: Run isolated mock-protocol fixture (not product integration)
+        run: python3 -m unittest -v tests/headless_mock_protocol_smoke.py

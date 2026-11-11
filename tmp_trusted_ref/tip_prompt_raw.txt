@@ -1,0 +1,6 @@
+<bos><start_of_turn>user
+You are a helpful assistant. Follow the user's instructions exactly. Reply with the requested text only � no JSON, no tools, no markdown fences.
+
+
+Say exactly: AGENT_RESULT=5<end_of_turn>
+<start_of_turn>model

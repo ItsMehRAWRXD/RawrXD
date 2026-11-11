@@ -1,0 +1,39 @@
+[2026-11-10 10:05:14] [SYSTEM] === RawrXD IDE Logging Initialized ===
+[2026-11-10 10:05:14] [SYSTEM] Log file: logs\RawrXD_IDE_20261110_100514.log
+[2026-11-10 10:05:14] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=-1
+[2026-11-10 10:05:14] [INFO] [EDITOR_CHANGE] code=768 suppressed=1 active=-1
+[2026-11-10 10:05:14] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=-1
+[2026-11-10 10:05:15] [INFO] [EDITOR_CHANGE] code=256 suppressed=0 active=0
+[2026-11-10 10:05:15] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:05:20] [INFO] [EDITOR_CHANGE] code=512 suppressed=0 active=0
+[2026-11-10 10:05:20] [INFO] GhostText inference route: bigdaddyg-productivity-local:latest backend=ollama
+[2026-11-10 10:05:43] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:05:43] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:05:43] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:05:43] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:05:43] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:05:43] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:05:43] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:05:43] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:05:43] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:05:43] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:05:43] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:05:43] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:05:43] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:05:43] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:05:43] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:05:43] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:05:44] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:05:44] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:05:44] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:05:44] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:05:44] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:05:44] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:05:44] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:05:44] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:05:44] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:05:44] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:05:44] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:05:44] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:05:45] [INFO] [EDITOR_CHANGE] code=1024 suppressed=0 active=0
+[2026-11-10 10:10:24] [INFO] [ModelSelector] dropdown count=193 open=0 rect=1 width=560 height=202

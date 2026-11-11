@@ -1,0 +1,4 @@
+STARTED_PID=26976
+EXE=F:\rawrxd\build_deep2_openai_001\bin\deep2_openai_server.exe
+HOST_DECODE=1
+GPU_POLICY=CPU

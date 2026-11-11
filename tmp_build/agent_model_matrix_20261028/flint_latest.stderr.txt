@@ -1,0 +1,20 @@
+RUN_CONFIG_REQUESTED_MAX_TOKENS=48
+RUN_CONFIG_REQUESTED_CONTEXT=4096
+RUN_CONFIG_MAX_TOKENS=48
+RUN_CONFIG_CONTEXT=4096
+[ESP] seq=1 req=1851409234100 kind=agent_step value=0 message=cli_run_start
+[ESP] seq=2 req=1851409234100 kind=model_load value=0 message=flint:latest
+MOTD_ACK=1 MOTD_SHA256=3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[ESP] seq=3 req=1851409234100 kind=agent_step value=0 message=phase=PREFLIGHT
+[ESP] seq=4 req=1851409234100 kind=agent_step value=0 message=phase=PLANNING
+[ESP] seq=5 req=1851409234100 kind=agent_step value=0 message=inference_start
+[ESP] seq=6 req=1851409234100 kind=agent_step value=0 message=phase=WORKING
+[ESP] seq=7 req=1851409234100 kind=heartbeat value=0 message=source=ollama prompt_eval_count=1242 eval_count=24 total_duration_ns=32799717100 load_duration_ns=31916523100 prompt_eval_duration_ns=618448000 eval_duration_ns=242262000 eval_tps=99.0663001214
+[ESP] seq=8 req=1851409234100 kind=agent_step value=0 message=tool_calls_received
+[ESP] seq=9 req=1851409234100 kind=tool_start value=0 message=TOOL_START id=rawr-call-0-0 name=readFile target=tmp_build/cli_smoke_20261028/fixture/calc.cpp
+[ESP] seq=10 req=1851409234100 kind=tool_result value=0 message=TOOL_RESULT id=rawr-call-0-0 name=readFile target=tmp_build/cli_smoke_20261028/fixture/calc.cpp status=PASS duration_ms=0 PASS
+[ESP] seq=11 req=1851409234100 kind=heartbeat value=0 message=source=ollama prompt_eval_count=1276 eval_count=23 total_duration_ns=362779800 load_duration_ns=8214500 prompt_eval_duration_ns=111507000 eval_duration_ns=225350000 eval_tps=102.063456845
+[ESP] seq=13 req=1851409234100 kind=agent_step value=0 message=phase=COMPLETED
+[ESP] seq=14 req=1851409234100 kind=heartbeat value=0 message={"request":1851409234100,"agent":1,"phase":"done","generated":1,"prefill_tokens":0,"context":0,"rolling_tps":0.000,"decode_tps":113.086,"prefill_tps":0.000,"task_tps":0.030,"ttft_ms":33171.979,"prefill_ms":0.000,"decode_ms":8.843,"task_ms":33180.822,"gpu_dispatches":0,"cpu_fallbacks":0,"tool_calls":1,"failures":0,"stalled":false,"active":false,"slow":false}
+[ESP] seq=15 req=1851409234100 kind=finished value=0 message=PASS
+[StreamEngine] Shutdown

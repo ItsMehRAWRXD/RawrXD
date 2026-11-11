@@ -1,0 +1,23 @@
+[0/2] Re-checking globbed directories...
+[1/8] Performing build step for 'vulkan-shaders-gen'
+ninja: no work to do.
+[2/8] Performing install step for 'vulkan-shaders-gen'
+-- Up-to-date: F:/rawrxd/build_reap/Release/vulkan-shaders-gen.exe
+[3/8] Completed 'vulkan-shaders-gen'
+[4/8] Building CXX object CMakeFiles\rawrxd_agentic_backend.dir\src\backend\ollama_client.cpp.obj
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\backend\ollama_client.cpp(452): warning C4267: 'argument': conversion from 'size_t' to 'DWORD', possible loss of data
+F:\rawrxd\src\backend\ollama_client.cpp(451): warning C4267: 'argument': conversion from 'size_t' to 'DWORD', possible loss of data
+F:\rawrxd\src\backend\ollama_client.cpp(450): warning C4245: 'argument': conversion from 'int' to 'DWORD', signed/unsigned mismatch
+F:\rawrxd\src\backend\ollama_client.cpp(489): warning C4100: 'on_error': unreferenced parameter
+F:\rawrxd\src\backend\ollama_client.cpp(510): warning C4505: 'RawrXD::Backend::MakeOkResponse': unreferenced function with internal linkage has been removed
+F:\rawrxd\src\backend\ollama_client.cpp(522): warning C4505: 'RawrXD::Backend::MakeErrorResponse': unreferenced function with internal linkage has been removed
+[5/8] Linking CXX static library rawrxd_agentic_backend.lib
+[6/8] Building CXX object CMakeFiles\RawrXD-CLI-V2.dir\src\rawrxd_cli_v2.cpp.obj
+cl : Command line warning D9025 : overriding '/EHa' with '/EHs'
+F:\rawrxd\src\agentic/ToolCallBridge.h(55): warning C4100: 'registry': unreferenced parameter
+F:\rawrxd\src\rawrxd_cli_v2.cpp(463): warning C4100: 'args': unreferenced parameter
+F:\rawrxd\src\rawrxd_cli_v2.cpp(498): warning C4189: 'a': local variable is initialized but not referenced
+F:\rawrxd\src\rawrxd_cli_v2.cpp(1249): warning C4211: nonstandard extension used: redefined extern to static
+F:\rawrxd\src\rawrxd_cli_v2.cpp(1589): warning C4189: 'code': local variable is initialized but not referenced
+[7/8] Linking CXX executable bin-msvc\rawr.exe

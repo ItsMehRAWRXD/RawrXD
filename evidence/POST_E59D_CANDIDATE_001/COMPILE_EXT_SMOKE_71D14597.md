@@ -1,0 +1,18 @@
+﻿# Compile / Extension smoke — freeze 71D14597
+
+ASOF_UTC=2026-11-09T06:58:53.0348121Z
+FREEZE_SHA=71D1459754830B5987E2291CE2FA43E3A8B6900F27AC1997A8B4D9F7B523CE05
+
+## Native compile/link/run
+COMPILE_LINK=PASS
+EVIDENCE=ninja RawrXD-Win32IDE-Native via build_repair_candidate (NINJA_EXIT=0)
+RUN_SMOKE=PASS
+EVIDENCE_RUN=Editor harness launched EXE; T17/T07/T08/T10 exercised live HWND
+
+## Extension load
+EXTENSION_SMOKE=NOT_RUN
+NOTE=Extension dirs present: F:\rawrxd\extensions
+LAW=NOT_RUN!=PASS
+
+PROMOTE=0
+CERTIFIED=0

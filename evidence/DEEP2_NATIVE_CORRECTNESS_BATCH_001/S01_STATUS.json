@@ -1,0 +1,17 @@
+{
+  "status_id": "S01_SESSION_STATUS",
+  "updated_at": "2026-11-11T17:04:00Z",
+  "S01": "NOT_VERIFIED",
+  "BATCH_PASS": 0,
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "reason": "Session 01 worker still running; no new verified build or runtime evidence yet",
+  "parent_mode": "PASSIVE_COORDINATOR",
+  "duplicate_dispatch": 0,
+  "laws": {
+    "NOT_RUN_NE_PASS": true,
+    "NOT_VERIFIED_NE_FAIL": true,
+    "NOT_VERIFIED_NE_PASS": true
+  }
+}

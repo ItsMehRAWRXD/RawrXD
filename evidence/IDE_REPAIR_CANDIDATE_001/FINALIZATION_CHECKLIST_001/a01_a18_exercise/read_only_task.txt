@@ -1,0 +1,1 @@
+Read bug.cpp with TOOL read. After the tool result is returned, reply with a one-line summary of the two defects. Do not write or edit any file. Do not call build or test. Stop after summarizing.

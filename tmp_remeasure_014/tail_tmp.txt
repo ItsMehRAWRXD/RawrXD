@@ -1,0 +1,26 @@
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 171824.995
+totalEmbedMs       = 1.434
+totalLogitsMs      = 455.411
+totalAttnMs        = 27684.760
+totalFfnMs         = 143199.633
+acquireCount       = 0
+mapCount           = 0
+releaseCount       = 0
+releaseErrorCount  = 0
+tensorAcquireFail  = 0
+mappingErrorCount  = 0
+residencyErrorCount= 0
+staleLeaseCount    = 0
+avgLayerMs         = 66.087
+============================================================
+ to.........- using,ния,TT, to(**(,,,.:リ.  _...:...  itist  
+[ask] AGENT_RESULT_5=0 chars=65
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[ResidencyManager] Shutdown complete

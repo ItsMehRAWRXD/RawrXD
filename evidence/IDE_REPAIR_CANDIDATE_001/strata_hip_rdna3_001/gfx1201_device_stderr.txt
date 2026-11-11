@@ -1,0 +1,12 @@
+﻿strata-device.exe : strata: Windows budgets 31707 of this card's 32624 MiB for this process; free VRAM is counted 
+within that (STRATA_WDDM_BUDGET=0: off)
+At C:\Users\Garrett\AppData\Local\Temp\ps-script-8d9e01dc-06dc-4a13-9537-bbacf62059d7.ps1:96 char:12
++ $out1201 = & "$eng\strata-device.exe" 2>&1 | Out-String
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (strata: Windows..._BUDGET=0: off):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+strata-device: GPU 0 (AMD Radeon AI PRO R9700, gfx1201) is not an architecture this Strata engine was compiled for 
+(gfx1100,gfx1101,gfx1102,gfx1151); compile it for this card (./setup.sh --backend hip, or 
+-DCMAKE_HIP_ARCHITECTURES=gfx1201, docs/AMD_HIP.md) or choose another GPU with HIP_VISIBLE_DEVICES
+

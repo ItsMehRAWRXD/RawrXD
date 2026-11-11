@@ -1,0 +1,18 @@
+{
+  "asof_utc": "2026-11-10T02:32:25Z",
+  "tip": "tip_final_integ_011",
+  "tip_sha256": "167A2CB972212F88997178B7C351AB07E2F30EA22A5AE321992DCC5C9D13DA86",
+  "tool_call_evidence": 1,
+  "source_edited": 1,
+  "project_sha_before": "9138F519658753A6DB9C02AE328D23B56B88C7047B9AD7765E41789C7B8D7EF2",
+  "project_sha_after": "31898E4EA21B272FDFDB15B2234781DC47E1511744CAE2540B98042E50FCD005",
+  "ledger_tool_calls": 2,
+  "ledger_tools": ["read:FORCE_LOCAL_HOST_READ", "write:FORCE_LOCAL_HOST_WRITE"],
+  "files_modified": ["F:\\rawrxd\\evidence\\CC79_RUNTIME_001\\fixtures\\issue49_project\\bug.cpp"],
+  "s_08_tool_authority": "PASS_TOOL_LEDGER_CORROBORATED",
+  "s_10_real_source_edit": "PASS_SOURCE_HASH_AND_LEDGER",
+  "required_pass_hits": "5/11",
+  "issue49_verdict": "FAIL_CLOSED_PARTIAL_STEPS",
+  "product_pass": 0,
+  "promote": 0
+}

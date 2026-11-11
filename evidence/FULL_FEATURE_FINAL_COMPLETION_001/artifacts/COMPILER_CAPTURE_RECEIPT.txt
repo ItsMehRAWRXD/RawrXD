@@ -1,0 +1,160 @@
+BUILD_REQUEST fixture=F:\rawrxd\T080_test_bad.cpp
+PROCESS_CREATE cmdline=cmd.exe /d /s /c "echo [RAWRXD_PROBLEMS_FIXTURE_START] && cd /d F:\rawrxd && set VS_UNICODE_OUTPUT=&& set VC_CLEAR=&& "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe" /nologo /c /W4 /EHsc /FS "F:\rawrxd\T080_test_bad.cpp" 2>&1 & echo [RAWRXD_PROBLEMS_FIXTURE_RESULT] DONE"
+CWD=F:\rawrxd
+CL_EXE=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe
+FORCE_PIPE=1
+SCRUB=VS_UNICODE_OUTPUT
+NO_VCVARS_IN_PIPE=1
+PROCESS_STARTED pid=5640 transport=1
+STDOUT_LINE [RAWRXD_PROBLEMS_FIXTURE_START]
+STDOUT_LINE T080_test_bad.cpp
+STDOUT_LINE [RAWRXD_PROBLEMS_FIXTURE_RESULT] DONE
+PROCESS_EXIT pid=5640 exit=0 disposition=success transport=1 stdout_bytes=92 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=32736 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=35436 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=5304 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=21900 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=100 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=39708 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=30868 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=26448 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=18368 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=25536 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=4648 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=15588 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=25836 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=38460 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=32872 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=25904 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=7436 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=42104 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=45128 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=45236 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=28040 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=21544 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=21120 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=316 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=31104 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=25392 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=35148 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=7928 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=18412 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=35800 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=3592 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=24400 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=13572 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=37336 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=37364 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=32064 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=39448 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=38512 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+STDOUT_LINE PS F:\rawrxd> PS F:\rawrxd>
+STDOUT_LINE [RAWRXD_BUILD_START]
+STDOUT_LINE **********************************************************************
+STDOUT_LINE ** Visual Studio 2022 Developer Command Prompt v17.14.39
+STDOUT_LINE ** Copyright (c) 2025 Microsoft Corporation
+STDOUT_LINE **********************************************************************
+STDOUT_LINE [vcvarsall.bat] Environment initialized for: 'x64'
+STDOUT_LINE [1/2] Building CXX object CMakeFiles\panel_probe.dir\panel_probe.cpp.obj
+STDOUT_LINE FAILED: [code=2] CMakeFiles/panel_probe.dir/panel_probe.cpp.obj
+STDOUT_LINE "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP   /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -MD /showIncludes /FoCMakeFiles\panel_probe.dir\panel_probe.cpp.obj /FdCMakeFiles\panel_probe.dir\ /FS -c F:\rawrxd\evidence\IDE_RELEASE_READINESS_001\bottom_panels_20261111\project_probe_001\panel_probe.cpp
+STDOUT_LINE F:\rawrxd\evidence\IDE_RELEASE_READINESS_001\bottom_panels_20261111\project_probe_001\panel_probe.cpp(2): error C2065: 'missing_panel_probe_symbol': undeclared identifier
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\IDE_RELEASE_READINESS_001\bottom_panels_20261111\project_probe_001\panel_probe.cpp line=2 sev=0 msg=C2065: 'missing_panel_probe_symbol': undeclared identifier
+PROBLEM_ADDED
+STDOUT_LINE ninja: build stopped: subcommand failed.
+STDOUT_LINE [RAWRXD_BUILD_RESULT] EXIT=2
+STDOUT_LINE $ErrorActionPreference='Continue'; Set-Location -LiteralPath
+STDOUT_LINE 'F:\rawrxd\evidence\IDE_RELEASE_READINESS_001\bottom_panels_20261111\project_probe_001'; Write-Output
+STDOUT_LINE '[RAWRXD_BUILD_START]'; $vswhere="${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe";
+STDOUT_LINE $vcvars=$null; if(Test-Path -LiteralPath $vswhere){ $installPath=& $vswhere -latest -products * -requires
+STDOUT_LINE Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath 2>$null; if($installPath){
+STDOUT_LINE $vcvars=Join-Path $installPath "VC\Auxiliary\Build\vcvars64.bat" } }; if(-not $vcvars){ $vcvars=@('C:\Program Files
+STDOUT_LINE (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat','C:\Program Files\Microsoft Visual
+STDOUT_LINE Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat') | Where-Object { Test-Path -LiteralPath $_ } | Select-Object
+STDOUT_LINE -First 1 }; if($null -eq $vcvars){ Write-Error 'MSVC vcvars64.bat was not found'; $rc=1 } else { cmd.exe /d /s /c
+STDOUT_LINE ('call "' + $vcvars + '" && cmake --build "' +
+STDOUT_LINE 'F:\rawrxd\evidence\IDE_RELEASE_READINESS_001\bottom_panels_20261111\project_probe_001\build' + '" --target
+STDOUT_LINE panel_probe --config Release'); $rc=$LASTEXITCODE }; Write-Output ('[RAWRXD_BUILD_RESULT] EXIT=' + $rc); if($rc -ne
+STDOUT_LINE 0){ Write-Error ('Native IDE build failed with exit code ' + $rc) }
+STDOUT_LINE  : Native IDE build failed with exit code 2
+STDOUT_LINE     + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+STDOUT_LINE     + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException
+PROCESS_EXIT pid=37532 exit=1 disposition=success transport=2 stdout_bytes=2768 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=28748 exit=3221225786 disposition=success transport=2 stdout_bytes=232 stderr_bytes=0
+BUILD_RESULT=success
+STDOUT_LINE (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat','C:\Program Files\Microsoft Visual
+STDOUT_LINE Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat') | Where-Object { Test-Path -LiteralPath $_ } | Select-Object
+STDOUT_LINE -First 1 }; if($null -eq $vcvars){ Write-Error 'MSVC vcvars64.bat was not found'; $rc=1 } else { cmd.exe /d /s /c
+STDOUT_LINE ('call "' + $vcvars + '" && cmake --build "' +
+STDOUT_LINE 'F:\rawrxd\evidence\IDE_RELEASE_READINESS_001\bottom_panels_20261111\project_probe_001\build' + '" --target
+STDOUT_LINE panel_probe --config Release'); $rc=$LASTEXITCODE }; Write-Output ('[RAWRXD_BUILD_RESULT] EXIT=' + $rc); if($rc -ne
+STDOUT_LINE 0){ Write-Error ('Native IDE build failed with exit code ' + $rc) }
+STDOUT_LINE  : Native IDE build failed with exit code 2
+STDOUT_LINE     + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+STDOUT_LINE     + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException
+STDOUT_LINE (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat','C:\Program Files\Microsoft Visual
+STDOUT_LINE Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat') | Where-Object { Test-Path -LiteralPath $_ } | Select-Object
+STDOUT_LINE -First 1 }; if($null -eq $vcvars){ Write-Error 'MSVC vcvars64.bat was not found'; $rc=1 } else { cmd.exe /d /s /c
+STDOUT_LINE ('call "' + $vcvars + '" && cmake --build "' +
+STDOUT_LINE 'F:\rawrxd\evidence\IDE_RELEASE_READINESS_001\bottom_panels_20261111\project_probe_001\build' + '" --target
+STDOUT_LINE panel_probe --config Release'); $rc=$LASTEXITCODE }; Write-Output ('[RAWRXD_BUILD_RESULT] EXIT=' + $rc); if($rc -ne
+STDOUT_LINE 0){ Write-Error ('Native IDE build failed with exit code ' + $rc) }
+STDOUT_LINE  : Native IDE build failed with exit code 2
+STDOUT_LINE     + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+STDOUT_LINE     + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException
+STDOUT_LINE (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat','C:\Program Files\Microsoft Visual
+STDOUT_LINE Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat') | Where-Object { Test-Path -LiteralPath $_ } | Select-Object
+STDOUT_LINE -First 1 }; if($null -eq $vcvars){ Write-Error 'MSVC vcvars64.bat was not found'; $rc=1 } else { cmd.exe /d /s /c
+STDOUT_LINE ('call "' + $vcvars + '" && cmake --build "' +
+STDOUT_LINE 'F:\rawrxd\evidence\IDE_RELEASE_READINESS_001\bottom_panels_20261111\project_probe_001\build' + '" --target
+STDOUT_LINE panel_probe --config Release'); $rc=$LASTEXITCODE }; Write-Output ('[RAWRXD_BUILD_RESULT] EXIT=' + $rc); if($rc -ne
+STDOUT_LINE 0){ Write-Error ('Native IDE build failed with exit code ' + $rc) }
+STDOUT_LINE  : Native IDE build failed with exit code 2
+STDOUT_LINE     + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+STDOUT_LINE     + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException
+PROCESS_EXIT pid=38040 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=7300 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=49444 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success

@@ -1,0 +1,50 @@
+AGENT_LEDGER_WIRE_001 / GAP 10 — AgentSession/TaskLedger on IDE product path
+============================================================================
+DATE: 2026-11-11
+CERTIFIED=0
+PROMOTE=0
+NOT_RUN != PASS
+
+CLAIM
+  PersistentTaskBacklog + AgentSession are the TaskLedger SSOT for IDE agent
+  turns: create / update / resume / cancel wired into AgentCommands path;
+  CMake product target reaches needed sources via rawrxd_agentic_backend.
+
+IMPLEMENTATION
+  create: ensureProductTaskLedger → AddTask + MarkTaskStarted
+          ensureProductAgentSession binds task_id + AppendUserMessage + Flush path
+  update: handleAgenticLoopToolResult appends TaskStep + UpdateTask;
+          AgentSession RecordToolCall / RecordFileModified / RecordAgentTurn
+  resume: RAWRXD_RESUME_TASK_ID → MarkTaskStarted + AgentSession::LoadFromDisk
+  cancel: onAgenticLoopCancel → TerminationReason::Cancelled + MarkTaskReverted
+  complete: handleAgenticLoopComplete → MarkTaskCompleted / MarkTaskFailed
+  CMake: rawrxd_agentic_backend includes PersistentTaskBacklog.cpp + AgentSession.cpp
+         RawrXD-Win32IDE-Native-Ext POST-links rawrxd_agentic_backend
+         AgentSession.cpp also listed in Ext sources (H01/H57)
+
+SMOKE RUNTIME (session + backlog disk round-trip)
+  Target: agent_ledger_undo_smoke
+  Binary: F:\rawrxd\build\bin\Release\agent_ledger_undo_smoke.exe
+  Exit: 0
+  Observed:
+    PASS session_ledger_on_disk
+    PASS session_load_from_disk
+    PASS session_task_id_roundtrip
+    PASS session_turns_roundtrip
+    PASS session_files_roundtrip
+    PASS backlog_add
+    PASS backlog_reload_get
+    PASS backlog_status_completed
+    PASS backlog_result_roundtrip
+    FAIL_COUNT=0
+    SOURCE_WIRED=1
+    RUNTIME_REACHED=1
+    CERTIFIED=0
+    PROMOTE=0
+
+DISPOSITION
+  GAP10_SOURCE_WIRED=1 (AgentCommands + CMake product link)
+  GAP10_RUNTIME_REACHED=1 (best-effort: smoke proves session/backlog disk RT;
+    full IDE exe agent-turn E2E NOT_RUN this turn)
+  CERTIFIED=0
+  PROMOTE=0

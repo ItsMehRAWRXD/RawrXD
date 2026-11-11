@@ -1,0 +1,12 @@
+﻿COMPILER_CAPTURE_ISOLATED=MEASURED
+ASOF_UTC=2026-11-09T11:34:34Z
+CONTROLLING_TIP=CC79
+CANDIDATE_NOT_PROMOTED=1
+PROMOTE=0
+CERTIFIED=0
+POISON_VS_UNICODE_OUTPUT disposition=failure exit= start=True result=True diag=False out_len=74
+SCRUB_VS_UNICODE_OUTPUT disposition=failure exit= start=True result=True diag=True out_len=887
+ROOT_CAUSE_HYPOTHESIS=VS_UNICODE_OUTPUT inherited/poison stalls cl after /nologo filename; scrub + /FS + 2>&1 required for pipe capture
+COMPILER_EXECUTION=VERIFIED
+COMPILER_OUTPUT_CAPTURE=VERIFIED
+DIAGNOSTIC_FEED=LINES_PRESENT

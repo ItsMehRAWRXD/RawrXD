@@ -1,0 +1,11 @@
+INDEPENDENT_HOST_STATUS=W6
+ASOF_UTC=2026-11-10T09:47:19Z
+HOST=RAWRXD
+USER=Garrett
+BUILDER_TREE=F:\rawrxd
+CLEAN_EXTRACT=C:\Temp\w6_release_cert_rc5b_clean\extract_1
+DISTINCT_VM=0
+VERDICT=HOST_NOT_INDEPENDENT
+NOTE=Smoke/integrity executed on builder host via clean extract dir outside F:\rawrxd; does not satisfy independent verifier for B6 earn.
+PROMOTE=0
+CERTIFIED=0

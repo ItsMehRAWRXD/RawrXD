@@ -1,0 +1,30 @@
+{
+  "tracker_id": "UPPER_TIER_MASTER_001",
+  "updated_at": "2026-11-11T17:12:00Z",
+  "TARGET": "UPPER_TIER_ALL_8_DIMENSIONS",
+  "UPPER_TIER": 0,
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "STUB_ACCEPTANCE": "FORBIDDEN",
+  "SOURCE_PATCH_NE_RUNTIME_PASS": true,
+  "estimates_unchanged_until_new_runtime_acceptance": {
+    "engineering_completeness_pct": 82,
+    "release_readiness_pct": 58,
+    "ai_ide_parity_pct": 69,
+    "traditional_ide_parity_pct": 63
+  },
+  "immediate_batch": 17,
+  "hotpatch": {
+    "HOTPATCH_SOURCE": "IMPLEMENTED",
+    "ROUTING_E2E": "NOT_CERTIFIED",
+    "REBUILD": "FAIL",
+    "T25": "HELD"
+  },
+  "powershell_routing": {
+    "PATCH": "SOURCE_APPLIED",
+    "RUNTIME_SMOKE": "HELD",
+    "preserve_patch": true
+  },
+  "P01_P20_status": "OPEN_CRITICAL_PATH",
+  "batches_17_27": "PLANNED"
+}

@@ -1,0 +1,25 @@
+{
+    "stage":  "before",
+    "root":  920294,
+    "editor":  1051364,
+    "guiThread":  24496,
+    "callerThread":  21528,
+    "foreground":  656022,
+    "foregroundThread":  10416,
+    "guiActive":  0,
+    "guiFocus":  0,
+    "callerFocus":  0
+}
+{
+    "stage":  "after",
+    "root":  920294,
+    "editor":  1051364,
+    "guiThread":  24496,
+    "callerThread":  21528,
+    "foreground":  656022,
+    "foregroundThread":  10416,
+    "guiActive":  0,
+    "guiFocus":  0,
+    "callerFocus":  0,
+    "editor_is_gui_focus":  false
+}

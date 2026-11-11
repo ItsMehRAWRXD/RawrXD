@@ -1,0 +1,16 @@
+{
+  "exe_sha256": "",
+  "agent": [
+    {"request_id":"", "gui_model":"", "resolved_model":"", "ollama_model":"", "exact_output":false, "exe_sha256":""},
+    {"request_id":"", "gui_model":"", "resolved_model":"", "ollama_model":"", "exact_output":false, "exe_sha256":""}
+  ],
+  "ghosttext": [
+    {"request_id":"", "gui_model":"", "resolved_model":"", "ollama_model":"", "exact_output":false, "exe_sha256":""},
+    {"request_id":"", "gui_model":"", "resolved_model":"", "ollama_model":"", "exact_output":false, "exe_sha256":""}
+  ],
+  "cancel_recovery_pass": false,
+  "no_stale_output": false,
+  "PROMOTE": 0,
+  "CERTIFIED": 0,
+  "T25": "HELD"
+}

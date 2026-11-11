@@ -1,0 +1,22 @@
+{
+  "note_id": "MSBUILD_SUPERSEDED_001",
+  "recorded_at": "2026-11-11T16:06:00Z",
+  "failed_invocation": {
+    "kind": "background_msbuild",
+    "selected_files": "Win32IDE_AgentToolSsot.cpp",
+    "exit_code": -1,
+    "disposition": "SUPERSEDED_EXECUTION_NOISE"
+  },
+  "authoritative_replacement": {
+    "kind": "direct_cl_exe",
+    "object_dir": "F:\\rawrxd\\evidence\\AGENT_TOOLS_ROUTE_WIRE_001\\tu_obj\\",
+    "result": "SAME_TRANSLATION_UNITS_COMPILED_SUCCESSFULLY"
+  },
+  "impact": {
+    "gaps_5_9_closure_evidence": "UNAFFECTED",
+    "treat_as_tu_compile_failure": false,
+    "CERTIFIED": 0,
+    "PROMOTE": 0
+  },
+  "law": "SUPERSEDED_MSBUILD_EXIT_NE_TU_COMPILE_FAIL; cl.exe objs remain authoritative for this packet"
+}

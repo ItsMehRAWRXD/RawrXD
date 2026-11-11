@@ -1,0 +1,15 @@
+OLLAMA_AGENT_MOTD_SHA256 3d08b40abb22482209e7585175e76fa8cffc4d999f9edfc252910a38e1ed98de
+[ollama step 1] request_messages=2 request_bytes_pending
+[ollama step 1] response_bytes=11
+[ollama step 1] response=TOOL finish
+[ollama step 1] TOOL=finish exit=-1 valid=0 observation=189
+[ollama step 1] result=The target has not been read. Your next reply MUST be exactly TOOL read F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\fixtures\bug.cpp. Do not build, test, write, or finish yet.
+[ollama step 2] request_messages=4 request_bytes_pending
+[ollama step 2] response_bytes=84
+[ollama step 2] response=TOOL read F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\fixtures\bug.cpp
+[ollama step 2] TOOL=read exit=0 valid=1 observation=240
+[ollama step 2] result=/* Issue #49 Wave2 fixture: intentional arity bug for agent fix loop.\n * Same shape as CC79 issue49_project ? Wave2 copy so Wave1 paths stay untouched. */\nint undeclared_fn(int a) { return a; }\nint main() {\n  return undeclared_fn(1, 2);\n}\r\n
+[ollama step 3] request_messages=6 request_bytes_pending
+[ollama step 3] response_bytes=326
+[ollama step 3] response=TOOL write F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\fixtures\bug.cpp @@/* Issue #49 Wave2 fixture: intentional arity bug for agent fix loop.\n * Same shape as CC79 issue49_project ? Wave2 copy so Wave1 paths stay untouched. */\nint undeclared_fn(int a) { return a; }\nint main() {\n  return undeclared_fn(1);\n}\n@@
+[ollama] write_body_bytes=235 preview=/* Issue #49 Wave2 fixture: intentional arity bug for agent fix loop.\n * Same shape as CC79 issue49_project ? Wave2 copy so Wave1 paths stay untouched. */\nint undeclared_fn(int a) { return a; }\nint main() {\n  return undeclared_fn(1);\n}

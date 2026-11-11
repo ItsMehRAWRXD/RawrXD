@@ -1,0 +1,6 @@
+request_started request_id=1 model=bigdaddyg-productivity-local:latest
+cancel_requested request_id=1
+cancel_acknowledged request_id=1 active_after=0
+request_started request_id=2 model=bigdaddyg-productivity-local:latest
+callback request_id=2 complete=1 response_bytes=2726 stop=0
+ui_update request_id=2 rendered=1 complete=1 response_bytes=2726

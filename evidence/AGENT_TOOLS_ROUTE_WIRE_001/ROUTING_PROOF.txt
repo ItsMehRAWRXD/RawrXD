@@ -1,0 +1,38 @@
+﻿AGENT_TOOLS_ROUTE_WIRE_001 — routing proof (CERTIFIED=0 PROMOTE=0)
+
+SSOT chosen:
+  IdeSsot::DispatchTool -> ToolCallBridge::ExecuteToolCall
+  Registry SSOT: rawrxd::tools::Registry (session-owned via Win32IDE)
+
+IDE entrypoints updated:
+  Win32IDE::ensureAgentToolSsotReady()
+  Win32IDE::dispatchAgentTool()          — MOTD turn + DispatchTool
+  Win32IDE::initializeAgenticBridge()    — ensureAgentToolSsotReady before Init
+  Win32IDE::onAgentExecuteCommand()      — ensureAgentToolSsotReady before Execute
+  AgenticBridge::ExecuteAgentCommand()   — TOOL: -> DispatchToolLine -> dispatchAgentTool
+  AgenticBridge::ChatViaBackendRouter()  — model turns (gap 9)
+  AgenticBridge::SpawnPowerShellProcess()— BYPASS_BLOCKED (no CreateProcess tool path)
+  Win32IDE_ComputerUse::ensureComputerUseReady() — BindBridge + SecurityGate + Consent
+
+Authorization order (BEFORE side effects):
+  1) BeginUserTurn + read_motd (MOTD)
+  2) SecurityGate (ExtensionSandboxManager::CheckPathAndCommand)
+  3) ApprovalCallback (RequestToolConsent / ReadOnly auto)
+  4) Registry::call invoke
+
+Fail-closed:
+  SecurityGate missing + non-ReadOnly -> "DENIED: security gate not configured"
+  Proven by probe case deny_security_gate_missing
+
+BackendRouter selection:
+  BackendRouter.cpp LogRouterSelection writes:
+    BACKEND_ROUTER_SELECTED kind=<deep2|ollama> mode=<auto|...> stage=ChatSync
+  AgenticBridge no longer uses CPUInferenceEngine::Ask for agent turns.
+
+Adversarial probe:
+  agent_commands_security_probe.exe -> 13/13 PASS, PROOF_DENY_ON_ESCAPE=true
+
+Compile:
+  tu_obj/: BackendRouter.obj, Win32IDE_AgentToolSsot.obj, Win32IDE_AgenticBridge.obj,
+           Win32IDE_AgentCommands.obj, Win32IDE_ComputerUse.obj
+  rawrxd_agentic_backend.lib Release rebuilt

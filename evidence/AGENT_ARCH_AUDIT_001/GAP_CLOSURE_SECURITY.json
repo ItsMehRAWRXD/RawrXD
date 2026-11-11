@@ -1,0 +1,32 @@
+{
+  "audit_id": "AGENT_ARCH_AUDIT_001",
+  "closure_id": "GAP_CLOSURE_SECURITY",
+  "worker": "AGENT_SECURITY_WIRE_001",
+  "gaps_closed": [
+    {
+      "rank": 3,
+      "gap": "Security sandbox always-allows path/command",
+      "disposition": "SOURCE_WIRED + adversarial DENY proven",
+      "impl": "ExtensionSandboxManager::IsPathAllowed / IsCommandAllowed (fail-closed)"
+    },
+    {
+      "rank": 4,
+      "gap": "Approval gates not on tool-dispatch choke point",
+      "disposition": "SOURCE_WIRED on ToolCallBridge + ComputerUse bind",
+      "impl": "SetSecurityGate + SetApprovalCallback / RequestToolConsent before mutate/shell"
+    }
+  ],
+  "not_owned": [
+    "PlanningLoop / AgentExecutor / Bridge consolidation",
+    "ToolRegistry SSOT merge beyond approval insert",
+    "Breadcrumbs compile fixes"
+  ],
+  "proof": {
+    "PROOF_DENY_ON_ESCAPE": true,
+    "probe_results": "F:\\rawrxd\\evidence\\AGENT_SECURITY_WIRE_001\\ADVERSARIAL_PROBE_RESULTS.json",
+    "escape_case": "gate_escape_encoded_ps denied=true reason=command denied by sandbox"
+  },
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD"
+}

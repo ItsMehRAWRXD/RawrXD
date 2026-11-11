@@ -1,0 +1,4 @@
+=== RAWRXD_DEEP2_GPU_QUANT_DOT_002 (REAL GGUF WEIGHTS) ===
+model: F:\ollamamodels\_r1_iso\03_llama32_3b\llama3.2-3b-Q2_K.gguf
+  mmap ok, 255 tensors, 1363935456 bytes
+KIND_UNSUPPORTED type=10

@@ -1,0 +1,5 @@
+EXE_SHA=a6b66c6e3bc37fe23900a021c71ae285fec33d6963c93c8c4b0727fc7feacb05
+ARGS=run F:\rawrxd\gemma3-1b-Q2_K.gguf ask --prompt "Say exactly: AGENT_RESULT=5" --max-tokens 32
+FIX=generateChat_configureGeneration_greedy
+START=2026-11-10T18:47:30.5327401-05:00
+PID=39568

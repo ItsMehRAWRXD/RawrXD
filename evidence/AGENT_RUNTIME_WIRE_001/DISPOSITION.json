@@ -1,0 +1,25 @@
+{
+  "disposition_id": "AGENT_RUNTIME_WIRE_001_DISPOSITION",
+  "updated_at": "2026-11-11T15:59:00Z",
+  "gaps_1_2_6_8": "SOURCE_WIRED",
+  "source_wired_count": 4,
+  "runtime_reached_count": 0,
+  "certified_count": 0,
+  "RUNTIME_REACHED": 0,
+  "live_agent_e2e": "NOT_RUN",
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "laws": {
+    "SOURCE_WIRED_NE_RUNTIME_REACHED": true,
+    "NOT_RUN_NE_PASS": true,
+    "SOURCE_ARCHITECTURE_WIRED_NE_CERTIFIED": true
+  },
+  "preserve": {
+    "evidence": "F:\\rawrxd\\evidence\\AGENT_RUNTIME_WIRE_001\\",
+    "closure_matrix": "F:\\rawrxd\\evidence\\AGENT_ARCH_AUDIT_001\\GAP_CLOSURE_ORCH.json",
+    "historical_baseline": "F:\\rawrxd\\evidence\\AGENT_ARCH_AUDIT_001\\CAPABILITY_MATRIX.json",
+    "baseline_immutable": true
+  },
+  "next_milestone": "AGENT_RUNTIME_VALIDATION_001"
+}

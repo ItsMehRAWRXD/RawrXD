@@ -1,0 +1,3331 @@
+=============================================
+  Deep2 OpenAI-Compatible Local Model Server
+=============================================
+D2LOAD_S00_SERVER_LOAD_ENTER
+D2LOAD_S01_ENGINE_EXISTS
+D2LOAD_S02_ENGINE_CREATE_ENTER
+D2LOAD_S03_ENGINE_CREATE_PASS
+[server] Loading model: F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+D2LOAD_S04_ENGINE_LOAD_ENTER
+D2LOAD_S04a_MODEL_ENTER
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.62
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.62
+[MOE_KEYS_DIAG] Scanning 19 metadata keys for expert/moe keys
+[MOE_KEYS_DIAG] Scanning 19 metadata keys for expert/moe keys
+[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=32000\n[REAP_TOKENIZER] merges=61249\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\n[REAP_TOKENIZER] loader_begin\n[REAP_TOKENIZER] loader_ok\n[REAP_TOKENIZER] vocab=32000\n[REAP_TOKENIZER] merges=61249\n[REAP_TOKENIZER] bundle_ready\n[REAP_TOKENIZER] apply_vocab_begin\n[REAP_TOKENIZER] apply_vocab_ok\n[REAP_TOKENIZER] apply_merges_begin\n[REAP_TOKENIZER] apply_merges_ok\nVK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x13C0 type=1 discrete=0 compute=1 localGB=31.83
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x13C0 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=45.62
+HOST_Q8_GEMV_FFN=1
+HOST_Q8_GEMV_ATTN=1
+HOST_Q8_GEMV_SSM_IN=1
+HOST_Q8_GEMV_NUMERIC_FINITE=1
+HOST_Q8_GEMV_BOUNDS_SAFE=1
+HOST_Q8_GEMV_REFERENCE_PARITY=1
+HOST_Q8_GEMV_SAFE=1
+D2LOAD_S04b_MODEL_PASS
+[OpenAI] ChatTemplate=phi3 for model=tinyllama-1.1b-chat-v1.0.Q4_K_M
+[OpenAI] MODEL_LOAD=PASS  model=tinyllama-1.1b-chat-v1.0.Q4_K_M
+D2LOAD_S05_ENGINE_LOAD_RETURN ok=1
+D2LOAD_S06_MODEL_LOAD_PASS
+D2LOAD_S07_LISTEN_ENTER port=11436
+[OpenAI] Server listening on http://127.0.0.1:11436
+D2LOAD_S08_LISTEN_PASS
+[server] Ready.   Endpoint: http://127.0.0.1:11436/v1/chat/completions
+[server] Press Ctrl+C to stop.
+[GET /health] 200  0.09 ms
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+[DBG-FWD] enter layer=0 seqLen=1 liveSeq=0
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=1 liveSeq=0
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=1 liveSeq=0
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=1 liveSeq=0
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=1 liveSeq=0
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=1 liveSeq=0
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=1 liveSeq=0
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=1 liveSeq=0
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=1 liveSeq=0
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=1 liveSeq=0
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=1 liveSeq=0
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=1 liveSeq=0
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=1 liveSeq=0
+[DBG-FWD] layer=12 rmsnorm ok
+[L12_DIAG] layer=12 Q_proj norm=1.120641e+01
+[L12_DIAG] layer=12 K_proj norm=6.717815e+00
+[L12_DIAG] layer=12 V_proj norm=5.278572e-01
+[L12_ROPE_DIAG] pos=0 headDim=64 numHeads=32 numKVHeads=4 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: 1.159895e-02 1.682315e-02 9.138322e-03 5.746410e-02 1.442595e-02 -4.577126e-02 -5.409002e-02 -3.487846e-02 
+[L12_ROPE_DIAG] K head=0: k[0]=1.159895e-02 k[1]=1.682315e-02 k[2]=9.138322e-03 k[3]=5.746410e-02
+[L12_ROPE_DIAG] K pair i=0: k0=1.159895e-02 k1=1.682315e-02 cosA=1.000000e+00 sinA=0.000000e+00 before=4.175538e-04
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=1.159895e-02 kh[i+1]=1.682315e-02 after=4.175538e-04
+[L12_ROPE_DIAG] K pair i=2: k0=9.138322e-03 k1=5.746410e-02 cosA=1.000000e+00 sinA=0.000000e+00 before=3.385632e-03
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=9.138322e-03 kh[i+1]=5.746410e-02 after=3.385632e-03
+[L12_ROPE_DIAG] K head=1: k[0]=2.046205e-02 k[1]=1.624949e-02 k[2]=-2.624854e-02 k[3]=-2.221200e-02
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=1.120641e+01 K_postRoPE norm=6.717815e+00
+[L12_DIAG] layer=12 wo_proj norm=9.135279e-01
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=9.135279e-01
+[L12_DIAG] layer=12 after residual norm=1.884988e+02
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=1.884988e+02
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=1 liveSeq=0
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=1 liveSeq=0
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=1 liveSeq=0
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=1 liveSeq=0
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=1 liveSeq=0
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=1 liveSeq=0
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=1 liveSeq=0
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=1 liveSeq=0
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=1 liveSeq=0
+[DBG-FWD] layer=21 rmsnorm ok
+[KV_DIAG] layer=21 writePos=0 kvBytes=1024 kBase=000002060F8108A0 vBase=000002060F76A3E0 currentPos=0
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=0 seqLen=2 liveSeq=1
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=2 liveSeq=1
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=2 liveSeq=1
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=2 liveSeq=1
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=2 liveSeq=1
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=2 liveSeq=1
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=2 liveSeq=1
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=2 liveSeq=1
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=2 liveSeq=1
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=2 liveSeq=1
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=2 liveSeq=1
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=2 liveSeq=1
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=2 liveSeq=1
+[DBG-FWD] layer=12 rmsnorm ok
+[L12_DIAG] layer=12 Q_proj norm=4.071599e+01
+[L12_DIAG] layer=12 K_proj norm=3.581130e+01
+[L12_DIAG] layer=12 V_proj norm=3.510707e+00
+[L12_ROPE_DIAG] pos=1 headDim=64 numHeads=32 numKVHeads=4 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: 6.264509e-02 2.589309e+00 -1.166704e+00 -9.509853e-01 1.567978e-01 5.522662e-02 -2.104046e+00 -7.436418e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=6.264509e-02 k[1]=2.589309e+00 k[2]=-1.166704e+00 k[3]=-9.509853e-01
+[L12_ROPE_DIAG] K pair i=0: k0=6.264509e-02 k1=2.589309e+00 cosA=5.403023e-01 sinA=8.414710e-01 before=6.708444e+00
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=-2.144981e+00 kh[i+1]=1.451723e+00 after=6.708443e+00
+[L12_ROPE_DIAG] K pair i=2: k0=-1.166704e+00 k1=-9.509853e-01 cosA=7.317610e-01 sinA=6.815614e-01 before=2.265572e+00
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=-2.055938e-01 kh[i+1]=-1.491074e+00 after=2.265571e+00
+[L12_ROPE_DIAG] K head=1: k[0]=-1.957109e+00 k[1]=2.248832e+00 k[2]=8.400238e-01 k[3]=2.554823e-01
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=4.071599e+01 K_postRoPE norm=3.581130e+01
+[L12_DIAG] layer=12 wo_proj norm=1.042034e+00
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=1.042034e+00
+[L12_DIAG] layer=12 after residual norm=4.727391e+00
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=4.727391e+00
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=2 liveSeq=1
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=2 liveSeq=1
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=2 liveSeq=1
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=2 liveSeq=1
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=2 liveSeq=1
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=2 liveSeq=1
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=2 liveSeq=1
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=2 liveSeq=1
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=2 liveSeq=1
+[DBG-FWD] layer=21 rmsnorm ok
+[KV_DIAG] layer=21 writePos=1 kvBytes=1024 kBase=000002060F810CA0 vBase=000002060F76A7E0 currentPos=1
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=0 seqLen=3 liveSeq=2
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=3 liveSeq=2
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=3 liveSeq=2
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=3 liveSeq=2
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=3 liveSeq=2
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=3 liveSeq=2
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=3 liveSeq=2
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=3 liveSeq=2
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=3 liveSeq=2
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=3 liveSeq=2
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=3 liveSeq=2
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=3 liveSeq=2
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=3 liveSeq=2
+[DBG-FWD] layer=12 rmsnorm ok
+[L12_DIAG] layer=12 Q_proj norm=4.285382e+01
+[L12_DIAG] layer=12 K_proj norm=3.820031e+01
+[L12_DIAG] layer=12 V_proj norm=4.189550e+00
+[L12_ROPE_DIAG] pos=2 headDim=64 numHeads=32 numKVHeads=4 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: -3.066979e-01 1.760832e+00 -6.346759e-01 -4.631492e-01 -7.446736e-02 -1.716027e+00 -6.467414e-01 -8.591834e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=-3.066979e-01 k[1]=1.760832e+00 k[2]=-6.346759e-01 k[3]=-4.631492e-01
+[L12_ROPE_DIAG] K pair i=0: k0=-3.066979e-01 k1=1.760832e+00 cosA=-4.161468e-01 sinA=9.092974e-01 before=3.194593e+00
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=-1.473488e+00 kh[i+1]=-1.011644e+00 after=3.194593e+00
+[L12_ROPE_DIAG] K pair i=2: k0=-6.346759e-01 k1=-4.631492e-01 cosA=7.094827e-02 sinA=9.974800e-01 before=6.173206e-01
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=4.169528e-01 kh[i+1]=-6.659361e-01 after=6.173206e-01
+[L12_ROPE_DIAG] K head=1: k[0]=-1.011476e+00 k[1]=9.276907e-01 k[2]=1.435671e+00 k[3]=-7.760608e-01
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=4.285382e+01 K_postRoPE norm=3.820031e+01
+[L12_DIAG] layer=12 wo_proj norm=1.716226e+00
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=1.716226e+00
+[L12_DIAG] layer=12 after residual norm=5.208398e+00
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=5.208398e+00
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=3 liveSeq=2
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=3 liveSeq=2
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=3 liveSeq=2
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=3 liveSeq=2
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=3 liveSeq=2
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=3 liveSeq=2
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=3 liveSeq=2
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=3 liveSeq=2
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=3 liveSeq=2
+[DBG-FWD] layer=21 rmsnorm ok
+[KV_DIAG] layer=21 writePos=2 kvBytes=1024 kBase=000002060F8110A0 vBase=000002060F76ABE0 currentPos=2
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=0 seqLen=4 liveSeq=3
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=4 liveSeq=3
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=4 liveSeq=3
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=4 liveSeq=3
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=4 liveSeq=3
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=4 liveSeq=3
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=4 liveSeq=3
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=4 liveSeq=3
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=4 liveSeq=3
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=4 liveSeq=3
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=4 liveSeq=3
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=4 liveSeq=3
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=4 liveSeq=3
+[DBG-FWD] layer=12 rmsnorm ok
+[L12_DIAG] layer=12 Q_proj norm=3.930440e+01
+[L12_DIAG] layer=12 K_proj norm=3.838764e+01
+[L12_DIAG] layer=12 V_proj norm=3.595818e+00
+[L12_ROPE_DIAG] pos=3 headDim=64 numHeads=32 numKVHeads=4 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: -8.725102e-01 2.012857e+00 -1.493761e+00 -1.300386e+00 3.220561e-01 -1.217057e+00 -1.214200e+00 3.483346e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=-8.725102e-01 k[1]=2.012857e+00 k[2]=-1.493761e+00 k[3]=-1.300386e+00
+[L12_ROPE_DIAG] K pair i=0: k0=-8.725102e-01 k1=2.012857e+00 cosA=-9.899925e-01 sinA=1.411200e-01 before=4.812867e+00
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=5.797242e-01 kh[i+1]=-2.115842e+00 after=4.812867e+00
+[L12_ROPE_DIAG] K pair i=2: k0=-1.493761e+00 k1=-1.300386e+00 cosA=-6.279267e-01 sinA=7.782725e-01 before=3.922327e+00
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=1.950027e+00 kh[i+1]=-3.460063e-01 after=3.922327e+00
+[L12_ROPE_DIAG] K head=1: k[0]=-2.084107e+00 k[1]=2.375529e+00 k[2]=2.256841e+00 k[3]=8.936410e-01
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=3.930440e+01 K_postRoPE norm=3.838764e+01
+[L12_DIAG] layer=12 wo_proj norm=1.757569e+00
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=1.757569e+00
+[L12_DIAG] layer=12 after residual norm=5.104759e+00
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=5.104759e+00
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=4 liveSeq=3
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=4 liveSeq=3
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=4 liveSeq=3
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=4 liveSeq=3
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=4 liveSeq=3
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=4 liveSeq=3
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=4 liveSeq=3
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=4 liveSeq=3
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=4 liveSeq=3
+[DBG-FWD] layer=21 rmsnorm ok
+[KV_DIAG] layer=21 writePos=3 kvBytes=1024 kBase=000002060F8114A0 vBase=000002060F76AFE0 currentPos=3
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=0 seqLen=5 liveSeq=4
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=5 liveSeq=4
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=5 liveSeq=4
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=5 liveSeq=4
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=5 liveSeq=4
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=5 liveSeq=4
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=5 liveSeq=4
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=5 liveSeq=4
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=5 liveSeq=4
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=5 liveSeq=4
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=5 liveSeq=4
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=5 liveSeq=4
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=5 liveSeq=4
+[DBG-FWD] layer=12 rmsnorm ok
+[L12_DIAG] layer=12 Q_proj norm=4.218454e+01
+[L12_DIAG] layer=12 K_proj norm=3.922373e+01
+[L12_DIAG] layer=12 V_proj norm=3.836584e+00
+[L12_ROPE_DIAG] pos=4 headDim=64 numHeads=32 numKVHeads=4 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: -2.762066e-01 4.595270e-01 -8.161389e-01 -9.146690e-01 -6.688619e-02 -9.936106e-01 -7.163132e-01 8.856429e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=-2.762066e-01 k[1]=4.595270e-01 k[2]=-8.161389e-01 k[3]=-9.146690e-01
+[L12_ROPE_DIAG] K pair i=0: k0=-2.762066e-01 k1=4.595270e-01 cosA=-6.536436e-01 sinA=-7.568025e-01 before=2.874552e-01
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=5.283119e-01 kh[i+1]=-9.133303e-02 after=2.874552e-01
+[L12_ROPE_DIAG] K pair i=2: k0=-8.161389e-01 k1=-9.146690e-01 cosA=-9.899327e-01 sinA=1.415389e-01 before=1.502702e+00
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=9.373838e-01 kh[i+1]=7.899454e-01 after=1.502702e+00
+[L12_ROPE_DIAG] K head=1: k[0]=-9.971292e-01 k[1]=1.075449e+00 k[2]=9.678354e-01 k[3]=6.073505e-01
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=4.218454e+01 K_postRoPE norm=3.922373e+01
+[L12_DIAG] layer=12 wo_proj norm=2.015080e+00
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=2.015080e+00
+[L12_DIAG] layer=12 after residual norm=4.959015e+00
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=4.959015e+00
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=5 liveSeq=4
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=5 liveSeq=4
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=5 liveSeq=4
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=5 liveSeq=4
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=5 liveSeq=4
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=5 liveSeq=4
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=5 liveSeq=4
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=5 liveSeq=4
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=5 liveSeq=4
+[DBG-FWD] layer=21 rmsnorm ok
+[KV_DIAG] layer=21 writePos=4 kvBytes=1024 kBase=000002060F8118A0 vBase=000002060F76B3E0 currentPos=4
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=0 seqLen=6 liveSeq=5
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=6 liveSeq=5
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=6 liveSeq=5
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=6 liveSeq=5
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=6 liveSeq=5
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=6 liveSeq=5
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=6 liveSeq=5
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=6 liveSeq=5
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=6 liveSeq=5
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=6 liveSeq=5
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=6 liveSeq=5
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=6 liveSeq=5
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=6 liveSeq=5
+[DBG-FWD] layer=12 rmsnorm ok
+[L12_DIAG] layer=12 Q_proj norm=1.617994e+01
+[L12_DIAG] layer=12 K_proj norm=8.032280e+00
+[L12_DIAG] layer=12 V_proj norm=5.822819e-01
+[L12_ROPE_DIAG] pos=5 headDim=64 numHeads=32 numKVHeads=4 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: -3.952037e-03 -3.187651e-02 -2.347006e-02 2.333738e-02 3.695112e-03 1.957575e-02 -6.210190e-03 2.721423e-02 
+[L12_ROPE_DIAG] K head=0: k[0]=-3.952037e-03 k[1]=-3.187651e-02 k[2]=-2.347006e-02 k[3]=2.333738e-02
+[L12_ROPE_DIAG] K pair i=0: k0=-3.952037e-03 k1=-3.187651e-02 cosA=2.836622e-01 sinA=-9.589243e-01 before=1.031730e-03
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=-3.168820e-02 kh[i+1]=-5.252457e-03 after=1.031730e-03
+[L12_ROPE_DIAG] K pair i=2: k0=-2.347006e-02 k1=2.333738e-02 cosA=-8.208616e-01 sinA=-5.711271e-01 before=1.095477e-03
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=3.259428e-02 kh[i+1]=-5.752376e-03 after=1.095477e-03
+[L12_ROPE_DIAG] K head=1: k[0]=1.329292e-02 k[1]=2.683667e-02 k[2]=-3.954032e-03 k[3]=2.339446e-02
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=1.617994e+01 K_postRoPE norm=8.032280e+00
+[L12_DIAG] layer=12 wo_proj norm=7.538138e-01
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=7.538138e-01
+[L12_DIAG] layer=12 after residual norm=2.069503e+02
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=2.069503e+02
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=6 liveSeq=5
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=6 liveSeq=5
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=6 liveSeq=5
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=6 liveSeq=5
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=6 liveSeq=5
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=6 liveSeq=5
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=6 liveSeq=5
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=6 liveSeq=5
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=6 liveSeq=5
+[DBG-FWD] layer=21 rmsnorm ok
+[KV_DIAG] layer=21 writePos=5 kvBytes=1024 kBase=000002060F811CA0 vBase=000002060F76B7E0 currentPos=5
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=0 seqLen=7 liveSeq=6
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=7 liveSeq=6
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=7 liveSeq=6
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=7 liveSeq=6
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=7 liveSeq=6
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=7 liveSeq=6
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=7 liveSeq=6
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=7 liveSeq=6
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=7 liveSeq=6
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=7 liveSeq=6
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=7 liveSeq=6
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=7 liveSeq=6
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=7 liveSeq=6
+[DBG-FWD] layer=12 rmsnorm ok
+[L12_DIAG] layer=12 Q_proj norm=4.146900e+01
+[L12_DIAG] layer=12 K_proj norm=3.629511e+01
+[L12_DIAG] layer=12 V_proj norm=3.007314e+00
+[L12_ROPE_DIAG] pos=6 headDim=64 numHeads=32 numKVHeads=4 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: 2.993027e-01 -3.042011e-01 -4.729939e-01 -7.321485e-01 -2.697267e-01 -6.201512e-01 -1.173708e+00 1.211887e+00 
+[L12_ROPE_DIAG] K head=0: k[0]=2.993027e-01 k[1]=-3.042011e-01 k[2]=-4.729939e-01 k[3]=-7.321485e-01
+[L12_ROPE_DIAG] K pair i=0: k0=2.993027e-01 k1=-3.042011e-01 cosA=9.601703e-01 sinA=-2.794155e-01 before=1.821204e-01
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=2.023830e-01 kh[i+1]=-3.757146e-01 after=1.821204e-01
+[L12_ROPE_DIAG] K pair i=2: k0=-4.729939e-01 k1=-7.321485e-01 cosA=-2.114162e-01 sinA=-9.773961e-01 before=7.597647e-01
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=-6.156006e-01 kh[i+1]=6.170905e-01 after=7.597647e-01
+[L12_ROPE_DIAG] K head=1: k[0]=-9.449100e-01 k[1]=1.052241e+00 k[2]=1.812351e-01 k[3]=-7.504749e-02
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=4.146900e+01 K_postRoPE norm=3.629511e+01
+[L12_DIAG] layer=12 wo_proj norm=1.245773e+00
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=1.245773e+00
+[L12_DIAG] layer=12 after residual norm=4.620236e+00
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=4.620236e+00
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=7 liveSeq=6
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=7 liveSeq=6
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=7 liveSeq=6
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=7 liveSeq=6
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=7 liveSeq=6
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=7 liveSeq=6
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=7 liveSeq=6
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=7 liveSeq=6
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=7 liveSeq=6
+[DBG-FWD] layer=21 rmsnorm ok
+[KV_DIAG] layer=21 writePos=6 kvBytes=1024 kBase=000002060F8120A0 vBase=000002060F76BBE0 currentPos=6
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=0 seqLen=8 liveSeq=7
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=8 liveSeq=7
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=8 liveSeq=7
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=8 liveSeq=7
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=8 liveSeq=7
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=8 liveSeq=7
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=8 liveSeq=7
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=8 liveSeq=7
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=8 liveSeq=7
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=8 liveSeq=7
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=8 liveSeq=7
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=8 liveSeq=7
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=8 liveSeq=7
+[DBG-FWD] layer=12 rmsnorm ok
+[L12_DIAG] layer=12 Q_proj norm=4.319351e+01
+[L12_DIAG] layer=12 K_proj norm=4.169916e+01
+[L12_DIAG] layer=12 V_proj norm=3.380064e+00
+[L12_ROPE_DIAG] pos=7 headDim=64 numHeads=32 numKVHeads=4 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: 1.146115e-01 3.043372e+00 -2.590074e-02 -1.786733e+00 -2.366192e-01 -1.619449e+00 -3.382655e+00 -8.430650e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=1.146115e-01 k[1]=3.043372e+00 k[2]=-2.590074e-02 k[3]=-1.786733e+00
+[L12_ROPE_DIAG] K pair i=0: k0=1.146115e-01 k1=3.043372e+00 cosA=7.539023e-01 sinA=6.569866e-01 before=9.275248e+00
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=-1.913049e+00 kh[i+1]=2.369703e+00 after=9.275249e+00
+[L12_ROPE_DIAG] K pair i=2: k0=-2.590074e-02 k1=-1.786733e+00 cosA=5.114493e-01 sinA=-8.593135e-01 before=3.193085e+00
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=-1.548611e+00 kh[i+1]=-8.915664e-01 after=3.193085e+00
+[L12_ROPE_DIAG] K head=1: k[0]=-2.032982e+00 k[1]=2.500750e+00 k[2]=6.572051e-01 k[3]=-8.036916e-01
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=4.319351e+01 K_postRoPE norm=4.169916e+01
+[L12_DIAG] layer=12 wo_proj norm=1.184946e+00
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=1.184946e+00
+[L12_DIAG] layer=12 after residual norm=4.735053e+00
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=4.735053e+00
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=8 liveSeq=7
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=8 liveSeq=7
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=8 liveSeq=7
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=8 liveSeq=7
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=8 liveSeq=7
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=8 liveSeq=7
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=8 liveSeq=7
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=8 liveSeq=7
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=8 liveSeq=7
+[DBG-FWD] layer=21 rmsnorm ok
+[KV_DIAG] layer=21 writePos=7 kvBytes=1024 kBase=000002060F8124A0 vBase=000002060F76BFE0 currentPos=7
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=0 seqLen=9 liveSeq=8
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=9 liveSeq=8
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=9 liveSeq=8
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=9 liveSeq=8
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=9 liveSeq=8
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=9 liveSeq=8
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=9 liveSeq=8
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=9 liveSeq=8
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=9 liveSeq=8
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=9 liveSeq=8
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=9 liveSeq=8
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=9 liveSeq=8
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=9 liveSeq=8
+[DBG-FWD] layer=12 rmsnorm ok
+[L12_DIAG] layer=12 Q_proj norm=4.479680e+01
+[L12_DIAG] layer=12 K_proj norm=4.045241e+01
+[L12_DIAG] layer=12 V_proj norm=3.324204e+00
+[L12_ROPE_DIAG] pos=8 headDim=64 numHeads=32 numKVHeads=4 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: -1.746981e-01 2.725440e+00 7.944330e-01 -1.511686e+00 6.766377e-01 -2.620013e+00 -2.534686e+00 -9.043248e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=-1.746981e-01 k[1]=2.725440e+00 k[2]=7.944330e-01 k[3]=-1.511686e+00
+[L12_ROPE_DIAG] K pair i=0: k0=-1.746981e-01 k1=2.725440e+00 cosA=-1.455000e-01 sinA=9.893582e-01 before=7.458543e+00
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=-2.671018e+00 kh[i+1]=-5.693907e-01 after=7.458544e+00
+[L12_ROPE_DIAG] K pair i=2: k0=7.944330e-01 k1=-1.511686e+00 cosA=9.599335e-01 sinA=-2.802281e-01 before=2.916319e+00
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=3.389859e-01 kh[i+1]=-1.673741e+00 after=2.916319e+00
+[L12_ROPE_DIAG] K head=1: k[0]=-1.808240e+00 k[1]=1.893390e+00 k[2]=1.694325e+00 k[3]=-7.901086e-01
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=4.479680e+01 K_postRoPE norm=4.045241e+01
+[L12_DIAG] layer=12 wo_proj norm=1.160670e+00
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=1.160670e+00
+[L12_DIAG] layer=12 after residual norm=4.884366e+00
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=4.884366e+00
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=9 liveSeq=8
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=9 liveSeq=8
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=9 liveSeq=8
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=9 liveSeq=8
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=9 liveSeq=8
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=9 liveSeq=8
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=9 liveSeq=8
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=9 liveSeq=8
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=9 liveSeq=8
+[DBG-FWD] layer=21 rmsnorm ok
+[KV_DIAG] layer=21 writePos=8 kvBytes=1024 kBase=0000020609C57BC0 vBase=0000020613EED9C0 currentPos=8
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=0 seqLen=10 liveSeq=9
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=10 liveSeq=9
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=10 liveSeq=9
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=10 liveSeq=9
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=10 liveSeq=9
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=10 liveSeq=9
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=10 liveSeq=9
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=10 liveSeq=9
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=10 liveSeq=9
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=10 liveSeq=9
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=10 liveSeq=9
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=10 liveSeq=9
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=10 liveSeq=9
+[DBG-FWD] layer=12 rmsnorm ok
+[L12_DIAG] layer=12 Q_proj norm=4.491642e+01
+[L12_DIAG] layer=12 K_proj norm=4.006582e+01
+[L12_DIAG] layer=12 V_proj norm=3.813467e+00
+[L12_ROPE_DIAG] pos=9 headDim=64 numHeads=32 numKVHeads=4 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: -1.048966e-01 1.148427e+00 -1.000346e+00 -1.769353e+00 8.688538e-01 2.414877e-01 -1.892679e+00 8.155714e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=-1.048966e-01 k[1]=1.148427e+00 k[2]=-1.000346e+00 k[3]=-1.769353e+00
+[L12_ROPE_DIAG] K pair i=0: k0=-1.048966e-01 k1=1.148427e+00 cosA=-9.111302e-01 sinA=4.121185e-01 before=1.329888e+00
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=-3.777137e-01 kh[i+1]=-1.089597e+00 after=1.329888e+00
+[L12_ROPE_DIAG] K pair i=2: k0=-1.000346e+00 k1=-1.769353e+00 cosA=8.934345e-01 sinA=4.491935e-01 before=4.131302e+00
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=-9.896159e-02 kh[i+1]=-2.030150e+00 after=4.131302e+00
+[L12_ROPE_DIAG] K head=1: k[0]=-1.870586e+00 k[1]=8.624330e-01 k[2]=3.163353e-01 k[3]=1.739663e+00
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=4.491642e+01 K_postRoPE norm=4.006582e+01
+[L12_DIAG] layer=12 wo_proj norm=1.246109e+00
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=1.246109e+00
+[L12_DIAG] layer=12 after residual norm=5.494107e+00
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=5.494107e+00
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=10 liveSeq=9
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=10 liveSeq=9
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=10 liveSeq=9
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=10 liveSeq=9
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=10 liveSeq=9
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=10 liveSeq=9
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=10 liveSeq=9
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=10 liveSeq=9
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=10 liveSeq=9
+[DBG-FWD] layer=21 rmsnorm ok
+[KV_DIAG] layer=21 writePos=9 kvBytes=1024 kBase=0000020609C57FC0 vBase=0000020613EEDDC0 currentPos=9
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=0 seqLen=11 liveSeq=10
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=11 liveSeq=10
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=11 liveSeq=10
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=11 liveSeq=10
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=11 liveSeq=10
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=11 liveSeq=10
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=11 liveSeq=10
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=11 liveSeq=10
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=11 liveSeq=10
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=11 liveSeq=10
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=11 liveSeq=10
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=11 liveSeq=10
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=11 liveSeq=10
+[DBG-FWD] layer=12 rmsnorm ok
+[L12_DIAG] layer=12 Q_proj norm=4.405353e+01
+[L12_DIAG] layer=12 K_proj norm=4.171742e+01
+[L12_DIAG] layer=12 V_proj norm=3.735916e+00
+[L12_ROPE_DIAG] pos=10 headDim=64 numHeads=32 numKVHeads=4 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: 1.336441e-01 2.475502e+00 -3.413564e-01 -1.367831e+00 6.894029e-01 -8.412808e-01 -3.884205e+00 -1.144344e+00 
+[L12_ROPE_DIAG] K head=0: k[0]=1.336441e-01 k[1]=2.475502e+00 k[2]=-3.413564e-01 k[3]=-1.367831e+00
+[L12_ROPE_DIAG] K pair i=0: k0=1.336441e-01 k1=2.475502e+00 cosA=-8.390715e-01 sinA=-5.440211e-01 before=6.145970e+00
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=1.234588e+00 kh[i+1]=-2.149828e+00 after=6.145969e+00
+[L12_ROPE_DIAG] K pair i=2: k0=-3.413564e-01 k1=-1.367831e+00 cosA=3.476276e-01 sinA=9.376327e-01 before=1.987485e+00
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=1.163858e+00 kh[i+1]=-7.955626e-01 after=1.987485e+00
+[L12_ROPE_DIAG] K head=1: k[0]=-2.728215e+00 k[1]=3.373059e+00 k[2]=1.231007e+00 k[3]=7.988062e-01
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=4.405353e+01 K_postRoPE norm=4.171742e+01
+[L12_DIAG] layer=12 wo_proj norm=1.334464e+00
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=1.334464e+00
+[L12_DIAG] layer=12 after residual norm=5.312336e+00
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=5.312336e+00
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=11 liveSeq=10
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=11 liveSeq=10
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=11 liveSeq=10
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=11 liveSeq=10
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=11 liveSeq=10
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=11 liveSeq=10
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=11 liveSeq=10
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=11 liveSeq=10
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=11 liveSeq=10
+[DBG-FWD] layer=21 rmsnorm ok
+[KV_DIAG] layer=21 writePos=10 kvBytes=1024 kBase=0000020609C583C0 vBase=0000020613EEE1C0 currentPos=10
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=0 seqLen=12 liveSeq=11
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=12 liveSeq=11
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=12 liveSeq=11
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=12 liveSeq=11
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=12 liveSeq=11
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=12 liveSeq=11
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=12 liveSeq=11
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=12 liveSeq=11
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=12 liveSeq=11
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=12 liveSeq=11
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=12 liveSeq=11
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=12 liveSeq=11
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=12 liveSeq=11
+[DBG-FWD] layer=12 rmsnorm ok
+[L12_DIAG] layer=12 Q_proj norm=4.371663e+01
+[L12_DIAG] layer=12 K_proj norm=3.907601e+01
+[L12_DIAG] layer=12 V_proj norm=4.292684e+00
+[L12_ROPE_DIAG] pos=11 headDim=64 numHeads=32 numKVHeads=4 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: -2.377212e-01 5.282085e-01 5.260921e-01 -3.897143e-01 7.864892e-02 -1.202256e+00 -8.219709e-01 3.328699e-02 
+[L12_ROPE_DIAG] K head=0: k[0]=-2.377212e-01 k[1]=5.282085e-01 k[2]=5.260921e-01 k[3]=-3.897143e-01
+[L12_ROPE_DIAG] K pair i=0: k0=-2.377212e-01 k1=5.282085e-01 cosA=4.425698e-03 sinA=-9.999902e-01 before=3.355156e-01
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=5.271512e-01 kh[i+1]=2.400565e-01 after=3.355156e-01
+[L12_ROPE_DIAG] K pair i=2: k0=5.260921e-01 k1=-3.897143e-01 cosA=-3.846743e-01 sinA=9.230524e-01 before=4.286501e-01
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=1.573526e-01 kh[i+1]=6.355236e-01 after=4.286501e-01
+[L12_ROPE_DIAG] K head=1: k[0]=-5.862381e-01 k[1]=8.171219e-01 k[2]=6.313962e-01 k[3]=-5.252302e-01
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=4.371663e+01 K_postRoPE norm=3.907601e+01
+[L12_DIAG] layer=12 wo_proj norm=1.414586e+00
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=1.414586e+00
+[L12_DIAG] layer=12 after residual norm=6.062662e+00
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=6.062662e+00
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=12 liveSeq=11
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=12 liveSeq=11
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=12 liveSeq=11
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=12 liveSeq=11
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=12 liveSeq=11
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=12 liveSeq=11
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=12 liveSeq=11
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=12 liveSeq=11
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=12 liveSeq=11
+[DBG-FWD] layer=21 rmsnorm ok
+[KV_DIAG] layer=21 writePos=11 kvBytes=1024 kBase=0000020609C587C0 vBase=0000020613EEE5C0 currentPos=11
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=0 seqLen=13 liveSeq=12
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=13 liveSeq=12
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=13 liveSeq=12
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=13 liveSeq=12
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=13 liveSeq=12
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=13 liveSeq=12
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=13 liveSeq=12
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=13 liveSeq=12
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=13 liveSeq=12
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=13 liveSeq=12
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=13 liveSeq=12
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=13 liveSeq=12
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=13 liveSeq=12
+[DBG-FWD] layer=12 rmsnorm ok
+[L12_DIAG] layer=12 Q_proj norm=4.494502e+01
+[L12_DIAG] layer=12 K_proj norm=3.953766e+01
+[L12_DIAG] layer=12 V_proj norm=3.475577e+00
+[L12_ROPE_DIAG] pos=12 headDim=64 numHeads=32 numKVHeads=4 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: -1.160909e-01 1.951307e-01 -6.679502e-01 -5.943899e-01 -1.370579e-02 3.465470e-01 -5.702953e-01 6.092365e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=-1.160909e-01 k[1]=1.951307e-01 k[2]=-6.679502e-01 k[3]=-5.943899e-01
+[L12_ROPE_DIAG] K pair i=0: k0=-1.160909e-01 k1=1.951307e-01 cosA=8.438540e-01 sinA=-5.365729e-01 before=5.155308e-02
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=6.738037e-03 kh[i+1]=2.269530e-01 after=5.155308e-02
+[L12_ROPE_DIAG] K pair i=2: k0=-6.679502e-01 k1=-5.943899e-01 cosA=-9.106064e-01 sinA=4.132747e-01 before=7.994567e-01
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=8.538859e-01 kh[i+1]=2.652083e-01 after=7.994566e-01
+[L12_ROPE_DIAG] K head=1: k[0]=-3.214486e-01 k[1]=1.091106e-01 k[2]=-2.499506e-03 k[3]=7.749493e-01
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=4.494502e+01 K_postRoPE norm=3.953766e+01
+[L12_DIAG] layer=12 wo_proj norm=1.848636e+00
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=1.848636e+00
+[L12_DIAG] layer=12 after residual norm=5.019033e+00
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=5.019033e+00
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=13 liveSeq=12
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=13 liveSeq=12
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=13 liveSeq=12
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=13 liveSeq=12
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=13 liveSeq=12
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=13 liveSeq=12
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=13 liveSeq=12
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=13 liveSeq=12
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=13 liveSeq=12
+[DBG-FWD] layer=21 rmsnorm ok
+[KV_DIAG] layer=21 writePos=12 kvBytes=1024 kBase=0000020609C58BC0 vBase=0000020613EEE9C0 currentPos=12
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=0 seqLen=14 liveSeq=13
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=14 liveSeq=13
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=14 liveSeq=13
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=14 liveSeq=13
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=14 liveSeq=13
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=14 liveSeq=13
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=14 liveSeq=13
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=14 liveSeq=13
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=14 liveSeq=13
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=14 liveSeq=13
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=14 liveSeq=13
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=14 liveSeq=13
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=14 liveSeq=13
+[DBG-FWD] layer=12 rmsnorm ok
+[L12_DIAG] layer=12 Q_proj norm=4.350327e+01
+[L12_DIAG] layer=12 K_proj norm=3.761819e+01
+[L12_DIAG] layer=12 V_proj norm=2.876707e+00
+[L12_ROPE_DIAG] pos=13 headDim=64 numHeads=32 numKVHeads=4 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: -5.048938e-01 2.883617e+00 -3.497541e-01 -1.679425e+00 9.543551e-01 -4.267309e-01 -1.910179e+00 2.084711e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=-5.048938e-01 k[1]=2.883617e+00 k[2]=-3.497541e-01 k[3]=-1.679425e+00
+[L12_ROPE_DIAG] K pair i=0: k0=-5.048938e-01 k1=2.883617e+00 cosA=9.074468e-01 sinA=4.201670e-01 before=8.570163e+00
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=-1.669765e+00 kh[i+1]=2.404589e+00 after=8.570164e+00
+[L12_ROPE_DIAG] K pair i=2: k0=-3.497541e-01 k1=-1.679425e+00 cosA=-9.480183e-01 sinA=-3.182158e-01 before=2.942796e+00
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=-2.028463e-01 kh[i+1]=1.703423e+00 after=2.942796e+00
+[L12_ROPE_DIAG] K head=1: k[0]=-1.614034e+00 k[1]=1.333524e+00 k[2]=6.529505e-01 k[3]=4.695771e-01
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=4.350327e+01 K_postRoPE norm=3.761819e+01
+[L12_DIAG] layer=12 wo_proj norm=9.942298e-01
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=9.942298e-01
+[L12_DIAG] layer=12 after residual norm=4.789673e+00
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=4.789673e+00
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=14 liveSeq=13
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=14 liveSeq=13
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=14 liveSeq=13
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=14 liveSeq=13
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=14 liveSeq=13
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=14 liveSeq=13
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=14 liveSeq=13
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=14 liveSeq=13
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=14 liveSeq=13
+[DBG-FWD] layer=21 rmsnorm ok
+[KV_DIAG] layer=21 writePos=13 kvBytes=1024 kBase=0000020609C58FC0 vBase=0000020613EEEDC0 currentPos=13
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=0 seqLen=15 liveSeq=14
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=15 liveSeq=14
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=15 liveSeq=14
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=15 liveSeq=14
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=15 liveSeq=14
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=15 liveSeq=14
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=15 liveSeq=14
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=15 liveSeq=14
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=15 liveSeq=14
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=15 liveSeq=14
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=15 liveSeq=14
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=15 liveSeq=14
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=15 liveSeq=14
+[DBG-FWD] layer=12 rmsnorm ok
+[L12_DIAG] layer=12 Q_proj norm=4.761023e+01
+[L12_DIAG] layer=12 K_proj norm=4.500115e+01
+[L12_DIAG] layer=12 V_proj norm=3.579857e+00
+[L12_ROPE_DIAG] pos=14 headDim=64 numHeads=32 numKVHeads=4 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: -4.795027e-01 2.513264e+00 4.254825e-01 -1.535146e+00 4.791164e-01 -2.145262e-01 -1.793158e+00 8.337188e-02 
+[L12_ROPE_DIAG] K head=0: k[0]=-4.795027e-01 k[1]=2.513264e+00 k[2]=4.254825e-01 k[3]=-1.535146e+00
+[L12_ROPE_DIAG] K pair i=0: k0=-4.795027e-01 k1=2.513264e+00 cosA=1.367372e-01 sinA=9.906074e-01 before=6.546421e+00
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=-2.555224e+00 kh[i+1]=-1.313421e-01 after=6.546421e+00
+[L12_ROPE_DIAG] K pair i=2: k0=4.254825e-01 k1=-1.535146e+00 cosA=-4.768393e-01 sinA=-8.789905e-01 before=2.537709e+00
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=-1.552266e+00 kh[i+1]=3.580228e-01 after=2.537709e+00
+[L12_ROPE_DIAG] K head=1: k[0]=-1.819348e+00 k[1]=1.231279e+00 k[2]=6.556168e-01 k[3]=5.872613e-01
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=4.761023e+01 K_postRoPE norm=4.500115e+01
+[L12_DIAG] layer=12 wo_proj norm=1.232458e+00
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=1.232458e+00
+[L12_DIAG] layer=12 after residual norm=4.767755e+00
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=4.767755e+00
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=15 liveSeq=14
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=15 liveSeq=14
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=15 liveSeq=14
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=15 liveSeq=14
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=15 liveSeq=14
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=15 liveSeq=14
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=15 liveSeq=14
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=15 liveSeq=14
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=15 liveSeq=14
+[DBG-FWD] layer=21 rmsnorm ok
+[KV_DIAG] layer=21 writePos=14 kvBytes=1024 kBase=0000020609C593C0 vBase=0000020613EEF1C0 currentPos=14
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=0 seqLen=16 liveSeq=15
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=16 liveSeq=15
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=16 liveSeq=15
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=16 liveSeq=15
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=16 liveSeq=15
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=16 liveSeq=15
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=16 liveSeq=15
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=16 liveSeq=15
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=16 liveSeq=15
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=16 liveSeq=15
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=16 liveSeq=15
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=16 liveSeq=15
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=16 liveSeq=15
+[DBG-FWD] layer=12 rmsnorm ok
+[L12_DIAG] layer=12 Q_proj norm=5.262021e+01
+[L12_DIAG] layer=12 K_proj norm=4.910652e+01
+[L12_DIAG] layer=12 V_proj norm=3.460957e+00
+[L12_ROPE_DIAG] pos=15 headDim=64 numHeads=32 numKVHeads=4 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: -1.986027e-01 2.950238e+00 -8.377964e-01 -1.349643e+00 1.332154e-01 -7.796932e-01 -3.266212e+00 -1.358676e+00 
+[L12_ROPE_DIAG] K head=0: k[0]=-1.986027e-01 k[1]=2.950238e+00 k[2]=-8.377964e-01 k[3]=-1.349643e+00
+[L12_ROPE_DIAG] K pair i=0: k0=-1.986027e-01 k1=2.950238e+00 cosA=-7.596879e-01 sinA=6.502879e-01 before=8.743350e+00
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=-1.767628e+00 kh[i+1]=-2.370409e+00 after=8.743351e+00
+[L12_ROPE_DIAG] K pair i=2: k0=-8.377964e-01 k1=-1.349643e+00 cosA=2.501535e-01 sinA=-9.682062e-01 before=2.523439e+00
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=-1.516310e+00 kh[i+1]=4.735417e-01 after=2.523439e+00
+[L12_ROPE_DIAG] K head=1: k[0]=-2.740629e+00 k[1]=2.550763e+00 k[2]=1.052722e+00 k[3]=4.689428e-01
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=5.262021e+01 K_postRoPE norm=4.910652e+01
+[L12_DIAG] layer=12 wo_proj norm=1.163773e+00
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=1.163773e+00
+[L12_DIAG] layer=12 after residual norm=4.015072e+00
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=4.015072e+00
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=16 liveSeq=15
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=16 liveSeq=15
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=16 liveSeq=15
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=16 liveSeq=15
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=16 liveSeq=15
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=16 liveSeq=15
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=16 liveSeq=15
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=16 liveSeq=15
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=16 liveSeq=15
+[DBG-FWD] layer=21 rmsnorm ok
+[KV_DIAG] layer=21 writePos=15 kvBytes=1024 kBase=0000020609C597C0 vBase=0000020613EEF5C0 currentPos=15
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=0 seqLen=17 liveSeq=16
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=17 liveSeq=16
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=17 liveSeq=16
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=17 liveSeq=16
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=17 liveSeq=16
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=17 liveSeq=16
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=17 liveSeq=16
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=17 liveSeq=16
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=17 liveSeq=16
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=17 liveSeq=16
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=17 liveSeq=16
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=17 liveSeq=16
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=17 liveSeq=16
+[DBG-FWD] layer=12 rmsnorm ok
+[L12_DIAG] layer=12 Q_proj norm=5.045903e+01
+[L12_DIAG] layer=12 K_proj norm=4.755257e+01
+[L12_DIAG] layer=12 V_proj norm=3.200239e+00
+[L12_ROPE_DIAG] pos=16 headDim=64 numHeads=32 numKVHeads=4 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: -3.260626e-01 2.967263e+00 5.549860e-02 -7.029794e-01 4.018563e-01 -1.229579e+00 -2.192392e+00 -2.210207e+00 
+[L12_ROPE_DIAG] K head=0: k[0]=-3.260626e-01 k[1]=2.967263e+00 k[2]=5.549860e-02 k[3]=-7.029794e-01
+[L12_ROPE_DIAG] K pair i=0: k0=-3.260626e-01 k1=2.967263e+00 cosA=-9.576595e-01 sinA=-2.879033e-01 before=8.910965e+00
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=1.166542e+00 kh[i+1]=-2.747753e+00 after=8.910966e+00
+[L12_ROPE_DIAG] K pair i=2: k0=5.549860e-02 k1=-7.029794e-01 cosA=8.429444e-01 sinA=-5.380006e-01 before=4.972601e-01
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=-3.314211e-01 kh[i+1]=-6.224309e-01 after=4.972601e-01
+[L12_ROPE_DIAG] K head=1: k[0]=-2.921520e+00 k[1]=1.935519e+00 k[2]=1.979535e+00 k[3]=-9.567580e-01
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=5.045903e+01 K_postRoPE norm=4.755257e+01
+[L12_DIAG] layer=12 wo_proj norm=1.343261e+00
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=1.343261e+00
+[L12_DIAG] layer=12 after residual norm=4.440051e+00
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=4.440051e+00
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=17 liveSeq=16
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=17 liveSeq=16
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=17 liveSeq=16
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=17 liveSeq=16
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=17 liveSeq=16
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=17 liveSeq=16
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=17 liveSeq=16
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=17 liveSeq=16
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=17 liveSeq=16
+[DBG-FWD] layer=21 rmsnorm ok
+[KV_DIAG] layer=21 writePos=16 kvBytes=1024 kBase=0000020614222A80 vBase=000002060F6FCBE0 currentPos=16
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=0 seqLen=18 liveSeq=17
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=18 liveSeq=17
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=18 liveSeq=17
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=18 liveSeq=17
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=18 liveSeq=17
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=18 liveSeq=17
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=18 liveSeq=17
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=18 liveSeq=17
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=18 liveSeq=17
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=18 liveSeq=17
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=18 liveSeq=17
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=18 liveSeq=17
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=18 liveSeq=17
+[DBG-FWD] layer=12 rmsnorm ok
+[L12_DIAG] layer=12 Q_proj norm=4.830919e+01
+[L12_DIAG] layer=12 K_proj norm=4.554196e+01
+[L12_DIAG] layer=12 V_proj norm=3.865812e+00
+[L12_ROPE_DIAG] pos=17 headDim=64 numHeads=32 numKVHeads=4 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: -6.688953e-01 1.601851e+00 1.127409e-01 -4.557334e-01 3.550165e-01 -1.072175e+00 -6.845346e-01 -1.530635e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=-6.688953e-01 k[1]=1.601851e+00 k[2]=1.127409e-01 k[3]=-4.557334e-01
+[L12_ROPE_DIAG] K pair i=0: k0=-6.688953e-01 k1=1.601851e+00 cosA=-2.751634e-01 sinA=-9.613975e-01 before=3.013349e+00
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=1.724071e+00 kh[i+1]=2.023035e-01 after=3.013348e+00
+[L12_ROPE_DIAG] K pair i=2: k0=1.127409e-01 k1=-4.557334e-01 cosA=9.835143e-01 sinA=1.808304e-01 before=2.204034e-01
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=1.932928e-01 kh[i+1]=-4.278333e-01 after=2.204034e-01
+[L12_ROPE_DIAG] K head=1: k[0]=-1.464539e+00 k[1]=8.853338e-01 k[2]=1.362695e+00 k[3]=-8.025423e-01
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=4.830919e+01 K_postRoPE norm=4.554196e+01
+[L12_DIAG] layer=12 wo_proj norm=1.328584e+00
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=1.328584e+00
+[L12_DIAG] layer=12 after residual norm=5.049075e+00
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=5.049075e+00
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=18 liveSeq=17
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=18 liveSeq=17
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=18 liveSeq=17
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=18 liveSeq=17
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=18 liveSeq=17
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=18 liveSeq=17
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=18 liveSeq=17
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=18 liveSeq=17
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=18 liveSeq=17
+[DBG-FWD] layer=21 rmsnorm ok
+[KV_DIAG] layer=21 writePos=17 kvBytes=1024 kBase=0000020614222E80 vBase=000002060F6FCFE0 currentPos=17
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=0 seqLen=19 liveSeq=18
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=19 liveSeq=18
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=19 liveSeq=18
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=19 liveSeq=18
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=19 liveSeq=18
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=19 liveSeq=18
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=19 liveSeq=18
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=19 liveSeq=18
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=19 liveSeq=18
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=19 liveSeq=18
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=19 liveSeq=18
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=19 liveSeq=18
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=19 liveSeq=18
+[DBG-FWD] layer=12 rmsnorm ok
+[L12_DIAG] layer=12 Q_proj norm=5.110481e+01
+[L12_DIAG] layer=12 K_proj norm=4.945713e+01
+[L12_DIAG] layer=12 V_proj norm=3.590401e+00
+[L12_ROPE_DIAG] pos=18 headDim=64 numHeads=32 numKVHeads=4 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: -8.074639e-01 2.056801e+00 -1.126400e+00 -9.841871e-01 6.096852e-01 -1.314732e+00 -1.443090e+00 2.131700e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=-8.074639e-01 k[1]=2.056801e+00 k[2]=-1.126400e+00 k[3]=-9.841871e-01
+[L12_ROPE_DIAG] K pair i=0: k0=-8.074639e-01 k1=2.056801e+00 cosA=6.603167e-01 sinA=-7.509872e-01 before=4.882430e+00
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=1.011450e+00 kh[i+1]=1.964535e+00 after=4.882429e+00
+[L12_ROPE_DIAG] K pair i=2: k0=-1.126400e+00 k1=-9.841871e-01 cosA=5.964504e-01 sinA=8.026500e-01 before=2.237401e+00
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=1.181161e-01 kh[i+1]=-1.491124e+00 after=2.237401e+00
+[L12_ROPE_DIAG] K head=1: k[0]=-2.185304e+00 k[1]=1.700188e+00 k[2]=2.166115e+00 k[3]=9.874491e-01
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=5.110481e+01 K_postRoPE norm=4.945713e+01
+[L12_DIAG] layer=12 wo_proj norm=1.602932e+00
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=1.602932e+00
+[L12_DIAG] layer=12 after residual norm=4.902567e+00
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=4.902567e+00
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=19 liveSeq=18
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=19 liveSeq=18
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=19 liveSeq=18
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=19 liveSeq=18
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=19 liveSeq=18
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=19 liveSeq=18
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=19 liveSeq=18
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=19 liveSeq=18
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=19 liveSeq=18
+[DBG-FWD] layer=21 rmsnorm ok
+[KV_DIAG] layer=21 writePos=18 kvBytes=1024 kBase=0000020614223280 vBase=000002060F6FD3E0 currentPos=18
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=0 seqLen=20 liveSeq=19
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=20 liveSeq=19
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=20 liveSeq=19
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=20 liveSeq=19
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=20 liveSeq=19
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=20 liveSeq=19
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=20 liveSeq=19
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=20 liveSeq=19
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=20 liveSeq=19
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=20 liveSeq=19
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=20 liveSeq=19
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=20 liveSeq=19
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=20 liveSeq=19
+[DBG-FWD] layer=12 rmsnorm ok
+[L12_DIAG] layer=12 Q_proj norm=5.132277e+01
+[L12_DIAG] layer=12 K_proj norm=4.764410e+01
+[L12_DIAG] layer=12 V_proj norm=3.526681e+00
+[L12_ROPE_DIAG] pos=19 headDim=64 numHeads=32 numKVHeads=4 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: -6.783990e-01 1.088624e+00 -4.465650e-01 -7.954222e-01 3.289148e-01 -6.573638e-01 -4.849605e-01 4.558579e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=-6.783990e-01 k[1]=1.088624e+00 k[2]=-4.465650e-01 k[3]=-7.954222e-01
+[L12_ROPE_DIAG] K pair i=0: k0=-6.783990e-01 k1=1.088624e+00 cosA=9.887046e-01 sinA=1.498772e-01 before=1.645328e+00
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=-8.338963e-01 kh[i+1]=9.746515e-01 after=1.645328e+00
+[L12_ROPE_DIAG] K pair i=2: k0=-4.465650e-01 k1=-7.954222e-01 cosA=-1.105960e-01 sinA=9.938654e-01 before=8.321167e-01
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=8.399309e-01 kh[i+1]=-3.558550e-01 after=8.321167e-01
+[L12_ROPE_DIAG] K head=1: k[0]=-1.697315e+00 k[1]=7.570946e-01 k[2]=1.562721e+00 k[3]=1.155278e+00
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=5.132277e+01 K_postRoPE norm=4.764410e+01
+[L12_DIAG] layer=12 wo_proj norm=2.318544e+00
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=2.318544e+00
+[L12_DIAG] layer=12 after residual norm=4.903366e+00
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=4.903366e+00
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=20 liveSeq=19
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=20 liveSeq=19
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=20 liveSeq=19
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=20 liveSeq=19
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=20 liveSeq=19
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=20 liveSeq=19
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=20 liveSeq=19
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=20 liveSeq=19
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=20 liveSeq=19
+[DBG-FWD] layer=21 rmsnorm ok
+[KV_DIAG] layer=21 writePos=19 kvBytes=1024 kBase=0000020614223680 vBase=000002060F6FD7E0 currentPos=19
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=0 seqLen=21 liveSeq=20
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=21 liveSeq=20
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=21 liveSeq=20
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=21 liveSeq=20
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=21 liveSeq=20
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=21 liveSeq=20
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=21 liveSeq=20
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=21 liveSeq=20
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=21 liveSeq=20
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=21 liveSeq=20
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=21 liveSeq=20
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=21 liveSeq=20
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=21 liveSeq=20
+[DBG-FWD] layer=12 rmsnorm ok
+[L12_DIAG] layer=12 Q_proj norm=4.533465e+01
+[L12_DIAG] layer=12 K_proj norm=4.041246e+01
+[L12_DIAG] layer=12 V_proj norm=3.990883e+00
+[L12_ROPE_DIAG] pos=20 headDim=64 numHeads=32 numKVHeads=4 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: -4.242706e-01 3.197343e-01 -5.217845e-01 -6.852900e-01 1.783141e-01 9.985574e-01 -1.106348e+00 -1.076982e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=-4.242706e-01 k[1]=3.197343e-01 k[2]=-5.217845e-01 k[3]=-6.852900e-01
+[L12_ROPE_DIAG] K pair i=0: k0=-4.242706e-01 k1=3.197343e-01 cosA=4.080821e-01 sinA=9.129453e-01 before=2.822355e-01
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=-4.650371e-01 kh[i+1]=-2.568580e-01 after=2.822356e-01
+[L12_ROPE_DIAG] K pair i=2: k0=-5.217845e-01 k1=-6.852900e-01 cosA=-7.583101e-01 sinA=6.518940e-01 before=7.418815e-01
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=8.424109e-01 kh[i+1]=1.795141e-01 after=7.418815e-01
+[L12_ROPE_DIAG] K head=1: k[0]=-2.310817e-01 k[1]=2.886805e-01 k[2]=-5.891988e-01 k[3]=1.503403e+00
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=4.533465e+01 K_postRoPE norm=4.041246e+01
+[L12_DIAG] layer=12 wo_proj norm=2.015030e+00
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=2.015030e+00
+[L12_DIAG] layer=12 after residual norm=4.680135e+00
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=4.680135e+00
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=21 liveSeq=20
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=21 liveSeq=20
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=21 liveSeq=20
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=21 liveSeq=20
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=21 liveSeq=20
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=21 liveSeq=20
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=21 liveSeq=20
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=21 liveSeq=20
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=21 liveSeq=20
+[DBG-FWD] layer=21 rmsnorm ok
+[KV_DIAG] layer=21 writePos=20 kvBytes=1024 kBase=0000020614223A80 vBase=000002060F6FDBE0 currentPos=20
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=0 seqLen=22 liveSeq=21
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=22 liveSeq=21
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=22 liveSeq=21
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=22 liveSeq=21
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=22 liveSeq=21
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=22 liveSeq=21
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=22 liveSeq=21
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=22 liveSeq=21
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=22 liveSeq=21
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=22 liveSeq=21
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=22 liveSeq=21
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=22 liveSeq=21
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=22 liveSeq=21
+[DBG-FWD] layer=12 rmsnorm ok
+[L12_DIAG] layer=12 Q_proj norm=4.738104e+01
+[L12_DIAG] layer=12 K_proj norm=4.249665e+01
+[L12_DIAG] layer=12 V_proj norm=3.100746e+00
+[L12_ROPE_DIAG] pos=21 headDim=64 numHeads=32 numKVHeads=4 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: 1.855876e-01 1.741641e+00 -7.476772e-01 -8.854932e-01 1.259746e-01 -1.110665e+00 -3.378619e+00 -6.827700e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=1.855876e-01 k[1]=1.741641e+00 k[2]=-7.476772e-01 k[3]=-8.854932e-01
+[L12_ROPE_DIAG] K pair i=0: k0=1.855876e-01 k1=1.741641e+00 cosA=-5.477293e-01 sinA=8.366556e-01 before=3.067755e+00
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=-1.558805e+00 kh[i+1]=-7.986746e-01 after=3.067754e+00
+[L12_ROPE_DIAG] K pair i=2: k0=-7.476772e-01 k1=-8.854932e-01 cosA=-9.992075e-01 sinA=-3.980415e-02 before=1.343119e+00
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=7.118384e-01 kh[i+1]=9.145521e-01 after=1.343119e+00
+[L12_ROPE_DIAG] K head=1: k[0]=-1.451225e+00 k[1]=2.777409e+00 k[2]=3.982506e-01 k[3]=4.987131e-02
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=4.738104e+01 K_postRoPE norm=4.249665e+01
+[L12_DIAG] layer=12 wo_proj norm=2.118450e+00
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=2.118450e+00
+[L12_DIAG] layer=12 after residual norm=4.803017e+00
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=4.803017e+00
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=22 liveSeq=21
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=22 liveSeq=21
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=22 liveSeq=21
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=22 liveSeq=21
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=22 liveSeq=21
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=22 liveSeq=21
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=22 liveSeq=21
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=22 liveSeq=21
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=22 liveSeq=21
+[DBG-FWD] layer=21 rmsnorm ok
+[KV_DIAG] layer=21 writePos=21 kvBytes=1024 kBase=0000020614223E80 vBase=000002060F6FDFE0 currentPos=21
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=0 seqLen=23 liveSeq=22
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=23 liveSeq=22
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=23 liveSeq=22
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=23 liveSeq=22
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=23 liveSeq=22
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=23 liveSeq=22
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=23 liveSeq=22
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=23 liveSeq=22
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=23 liveSeq=22
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=23 liveSeq=22
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=23 liveSeq=22
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=23 liveSeq=22
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=23 liveSeq=22
+[DBG-FWD] layer=12 rmsnorm ok
+[L12_DIAG] layer=12 Q_proj norm=4.900206e+01
+[L12_DIAG] layer=12 K_proj norm=4.203221e+01
+[L12_DIAG] layer=12 V_proj norm=3.529734e+00
+[L12_ROPE_DIAG] pos=22 headDim=64 numHeads=32 numKVHeads=4 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: 1.211730e-01 2.347718e+00 -3.263521e-01 -1.177294e+00 1.637923e-01 -2.599995e+00 -1.572200e+00 -9.537386e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=1.211730e-01 k[1]=2.347718e+00 k[2]=-3.263521e-01 k[3]=-1.177294e+00
+[L12_ROPE_DIAG] K pair i=0: k0=1.211730e-01 k1=2.347718e+00 cosA=-9.999608e-01 sinA=-8.851309e-03 before=5.526460e+00
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=-1.003879e-01 kh[i+1]=-2.348698e+00 after=5.526461e+00
+[L12_ROPE_DIAG] K pair i=2: k0=-3.263521e-01 k1=-1.177294e+00 cosA=-7.040514e-01 sinA=-7.101490e-01 before=1.492526e+00
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=-6.062852e-01 kh[i+1]=1.060634e+00 after=1.492526e+00
+[L12_ROPE_DIAG] K head=1: k[0]=-1.463561e+00 k[1]=2.278723e+00 k[2]=1.084578e+00 k[3]=-9.295369e-01
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=4.900206e+01 K_postRoPE norm=4.203221e+01
+[L12_DIAG] layer=12 wo_proj norm=2.174167e+00
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=2.174167e+00
+[L12_DIAG] layer=12 after residual norm=5.522932e+00
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=5.522932e+00
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=23 liveSeq=22
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=23 liveSeq=22
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=23 liveSeq=22
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=23 liveSeq=22
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=23 liveSeq=22
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=23 liveSeq=22
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=23 liveSeq=22
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=23 liveSeq=22
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=23 liveSeq=22
+[DBG-FWD] layer=21 rmsnorm ok
+[KV_DIAG] layer=21 writePos=22 kvBytes=1024 kBase=0000020614224280 vBase=000002060F6FE3E0 currentPos=22
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=0 seqLen=24 liveSeq=23
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=24 liveSeq=23
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=24 liveSeq=23
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=24 liveSeq=23
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=24 liveSeq=23
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=24 liveSeq=23
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=24 liveSeq=23
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=24 liveSeq=23
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=24 liveSeq=23
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=24 liveSeq=23
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=24 liveSeq=23
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=24 liveSeq=23
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=24 liveSeq=23
+[DBG-FWD] layer=12 rmsnorm ok
+[L12_DIAG] layer=12 Q_proj norm=4.803118e+01
+[L12_DIAG] layer=12 K_proj norm=4.008660e+01
+[L12_DIAG] layer=12 V_proj norm=2.864490e+00
+[L12_ROPE_DIAG] pos=23 headDim=64 numHeads=32 numKVHeads=4 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: -2.394334e-01 1.952115e+00 -2.136260e-03 -9.056299e-01 6.709510e-02 -2.175227e+00 -9.871932e-01 3.443873e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=-2.394334e-01 k[1]=1.952115e+00 k[2]=-2.136260e-03 k[3]=-9.056299e-01
+[L12_ROPE_DIAG] K pair i=0: k0=-2.394334e-01 k1=1.952115e+00 cosA=-5.328330e-01 sinA=-8.462204e-01 before=3.868081e+00
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=1.779498e+00 kh[i+1]=-8.375378e-01 after=3.868081e+00
+[L12_ROPE_DIAG] K pair i=2: k0=-2.136260e-03 k1=-9.056299e-01 cosA=-3.118831e-02 sinA=-9.995135e-01 before=8.201701e-01
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=-9.051227e-01 kh[i+1]=3.038029e-02 after=8.201701e-01
+[L12_ROPE_DIAG] K head=1: k[0]=-1.470041e+00 k[1]=1.713826e+00 k[2]=1.058284e+00 k[3]=-1.121056e+00
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=4.803118e+01 K_postRoPE norm=4.008660e+01
+[L12_DIAG] layer=12 wo_proj norm=1.599643e+00
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=1.599643e+00
+[L12_DIAG] layer=12 after residual norm=4.961927e+00
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=4.961927e+00
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=24 liveSeq=23
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=24 liveSeq=23
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=24 liveSeq=23
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=24 liveSeq=23
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=24 liveSeq=23
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=24 liveSeq=23
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=24 liveSeq=23
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=24 liveSeq=23
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=24 liveSeq=23
+[DBG-FWD] layer=21 rmsnorm ok
+[KV_DIAG] layer=21 writePos=23 kvBytes=1024 kBase=0000020614224680 vBase=000002060F6FE7E0 currentPos=23
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+[DBG-FWD] enter layer=0 seqLen=25 liveSeq=24
+[DBG-FWD] layer=0 rmsnorm ok
+[DBG-FWD] layer=0 attention ok
+[DBG-FWD] layer=0 ffn ok
+[DBG-FWD] layer=0 exit
+[DBG-FWD] enter layer=1 seqLen=25 liveSeq=24
+[DBG-FWD] layer=1 rmsnorm ok
+[DBG-FWD] layer=1 attention ok
+[DBG-FWD] layer=1 ffn ok
+[DBG-FWD] layer=1 exit
+[DBG-FWD] enter layer=2 seqLen=25 liveSeq=24
+[DBG-FWD] layer=2 rmsnorm ok
+[DBG-FWD] layer=2 attention ok
+[DBG-FWD] layer=2 ffn ok
+[DBG-FWD] layer=2 exit
+[DBG-FWD] enter layer=3 seqLen=25 liveSeq=24
+[DBG-FWD] layer=3 rmsnorm ok
+[DBG-FWD] layer=3 attention ok
+[DBG-FWD] layer=3 ffn ok
+[DBG-FWD] layer=3 exit
+[DBG-FWD] enter layer=4 seqLen=25 liveSeq=24
+[DBG-FWD] layer=4 rmsnorm ok
+[DBG-FWD] layer=4 attention ok
+[DBG-FWD] layer=4 ffn ok
+[DBG-FWD] layer=4 exit
+[DBG-FWD] enter layer=5 seqLen=25 liveSeq=24
+[DBG-FWD] layer=5 rmsnorm ok
+[DBG-FWD] layer=5 attention ok
+[DBG-FWD] layer=5 ffn ok
+[DBG-FWD] layer=5 exit
+[DBG-FWD] enter layer=6 seqLen=25 liveSeq=24
+[DBG-FWD] layer=6 rmsnorm ok
+[DBG-FWD] layer=6 attention ok
+[DBG-FWD] layer=6 ffn ok
+[DBG-FWD] layer=6 exit
+[DBG-FWD] enter layer=7 seqLen=25 liveSeq=24
+[DBG-FWD] layer=7 rmsnorm ok
+[DBG-FWD] layer=7 attention ok
+[DBG-FWD] layer=7 ffn ok
+[DBG-FWD] layer=7 exit
+[DBG-FWD] enter layer=8 seqLen=25 liveSeq=24
+[DBG-FWD] layer=8 rmsnorm ok
+[DBG-FWD] layer=8 attention ok
+[DBG-FWD] layer=8 ffn ok
+[DBG-FWD] layer=8 exit
+[DBG-FWD] enter layer=9 seqLen=25 liveSeq=24
+[DBG-FWD] layer=9 rmsnorm ok
+[DBG-FWD] layer=9 attention ok
+[DBG-FWD] layer=9 ffn ok
+[DBG-FWD] layer=9 exit
+[DBG-FWD] enter layer=10 seqLen=25 liveSeq=24
+[DBG-FWD] layer=10 rmsnorm ok
+[DBG-FWD] layer=10 attention ok
+[DBG-FWD] layer=10 ffn ok
+[DBG-FWD] layer=10 exit
+[DBG-FWD] enter layer=11 seqLen=25 liveSeq=24
+[DBG-FWD] layer=11 rmsnorm ok
+[DBG-FWD] layer=11 attention ok
+[DBG-FWD] layer=11 ffn ok
+[DBG-FWD] layer=11 exit
+[DBG-FWD] enter layer=12 seqLen=25 liveSeq=24
+[DBG-FWD] layer=12 rmsnorm ok
+[L12_DIAG] layer=12 Q_proj norm=4.669746e+01
+[L12_DIAG] layer=12 K_proj norm=3.931651e+01
+[L12_DIAG] layer=12 V_proj norm=3.498521e+00
+[L12_ROPE_DIAG] pos=24 headDim=64 numHeads=32 numKVHeads=4 theta=1.000000e+04 scaling=1.000000e+00
+[L12_ROPE_DIAG] K all finite BEFORE RoPE (256 elements)
+[L12_ROPE_DIAG] K first 8: -7.429040e-01 6.884646e-01 -8.152043e-01 -8.166049e-01 5.956674e-01 -9.149069e-01 -2.431961e-01 4.097625e-01 
+[L12_ROPE_DIAG] K head=0: k[0]=-7.429040e-01 k[1]=6.884646e-01 k[2]=-8.152043e-01 k[3]=-8.166049e-01
+[L12_ROPE_DIAG] K pair i=0: k0=-7.429040e-01 k1=6.884646e-01 cosA=4.241790e-01 sinA=-9.055784e-01 before=1.025890e+00
+[L12_ROPE_DIAG] K pair i=0 OUT: kh[i]=3.083344e-01 kh[i+1]=9.647900e-01 after=1.025890e+00
+[L12_ROPE_DIAG] K pair i=2: k0=-8.152043e-01 k1=-8.166049e-01 cosA=6.584080e-01 sinA=-7.526612e-01 before=1.331401e+00
+[L12_ROPE_DIAG] K pair i=2 OUT: kh[i]=-1.151364e+00 kh[i+1]=7.591337e-02 after=1.331402e+00
+[L12_ROPE_DIAG] K head=1: k[0]=-1.253759e-01 k[1]=2.739982e-01 k[2]=5.163522e-01 k[3]=1.181208e-01
+[L12_ROPE_DIAG] K all finite AFTER RoPE (256 elements)
+[L12_DIAG] layer=12 Q_postRoPE norm=4.669746e+01 K_postRoPE norm=3.931651e+01
+[L12_DIAG] layer=12 wo_proj norm=1.835850e+00
+[DBG-FWD] layer=12 attention ok
+[L12_DIAG] layer=12 after attention norm=1.835850e+00
+[L12_DIAG] layer=12 after residual norm=5.138689e+00
+[L12_DIAG] layer=12 after POST_ATTN_RESIDUAL norm=5.138689e+00
+[DBG-FWD] layer=12 ffn ok
+[DBG-FWD] layer=12 exit
+[DBG-FWD] enter layer=13 seqLen=25 liveSeq=24
+[DBG-FWD] layer=13 rmsnorm ok
+[DBG-FWD] layer=13 attention ok
+[DBG-FWD] layer=13 ffn ok
+[DBG-FWD] layer=13 exit
+[DBG-FWD] enter layer=14 seqLen=25 liveSeq=24
+[DBG-FWD] layer=14 rmsnorm ok
+[DBG-FWD] layer=14 attention ok
+[DBG-FWD] layer=14 ffn ok
+[DBG-FWD] layer=14 exit
+[DBG-FWD] enter layer=15 seqLen=25 liveSeq=24
+[DBG-FWD] layer=15 rmsnorm ok
+[DBG-FWD] layer=15 attention ok
+[DBG-FWD] layer=15 ffn ok
+[DBG-FWD] layer=15 exit
+[DBG-FWD] enter layer=16 seqLen=25 liveSeq=24
+[DBG-FWD] layer=16 rmsnorm ok
+[DBG-FWD] layer=16 attention ok
+[DBG-FWD] layer=16 ffn ok
+[DBG-FWD] layer=16 exit
+[DBG-FWD] enter layer=17 seqLen=25 liveSeq=24
+[DBG-FWD] layer=17 rmsnorm ok
+[DBG-FWD] layer=17 attention ok
+[DBG-FWD] layer=17 ffn ok
+[DBG-FWD] layer=17 exit
+[DBG-FWD] enter layer=18 seqLen=25 liveSeq=24
+[DBG-FWD] layer=18 rmsnorm ok
+[DBG-FWD] layer=18 attention ok
+[DBG-FWD] layer=18 ffn ok
+[DBG-FWD] layer=18 exit
+[DBG-FWD] enter layer=19 seqLen=25 liveSeq=24
+[DBG-FWD] layer=19 rmsnorm ok
+[DBG-FWD] layer=19 attention ok
+[DBG-FWD] layer=19 ffn ok
+[DBG-FWD] layer=19 exit
+[DBG-FWD] enter layer=20 seqLen=25 liveSeq=24
+[DBG-FWD] layer=20 rmsnorm ok
+[DBG-FWD] layer=20 attention ok
+[DBG-FWD] layer=20 ffn ok
+[DBG-FWD] layer=20 exit
+[DBG-FWD] enter layer=21 seqLen=25 liveSeq=24
+[DBG-FWD] layer=21 rmsnorm ok
+[KV_DIAG] layer=21 writePos=24 kvBytes=1024 kBase=0000020609A58020 vBase=000002061333E0A0 currentPos=24
+[DBG-FWD] layer=21 attention ok
+[DBG-FWD] layer=21 ffn ok
+[DBG-FWD] layer=21 exit
+
+============================================================
+LINEARW CALL BREAKDOWN BY QUANTIZATION TYPE
+============================================================
+  Q6_K      calls=    3350  ms=    2218.085  MACs=   21207449600  ms/MAC=0.000000
+  IQ2_XS    calls=     506  ms=    6166.868  MACs=    3407872000  ms/MAC=0.000002
+  TOTAL     calls=       0  ms=    8384.953  MACs=   24615321600
+
+============================================================
+TOP 20 LINEARW CALLS BY CUMULATIVE TIME (ms)
+============================================================
+  TENSOR                                      CALLS           MS           MACs      MS/CALL
+  output.weight                                   6      809.738      393216000      134.956
+  blk.15.ffn_down.weight                         25      778.894      288358400       31.156
+  blk.12.ffn_down.weight                         25      599.774      288358400       23.991
+  blk.7.ffn_down.weight                          25      522.277      288358400       20.891
+  blk.0.ffn_down.weight                          25      515.586      288358400       20.623
+  blk.4.ffn_down.weight                          25      504.143      288358400       20.166
+  blk.9.ffn_down.weight                          25      499.054      288358400       19.962
+  blk.1.ffn_down.weight                          25      491.448      288358400       19.658
+  blk.20.ffn_down.weight                         25      435.340      288358400       17.414
+  blk.18.ffn_down.weight                         25      416.208      288358400       16.648
+  blk.8.ffn_down.weight                          25      400.700      288358400       16.028
+  blk.7.ffn_gate.weight                          25      105.895      288358400        4.236
+  blk.20.ffn_gate.weight                         25       58.092      288358400        2.324
+  blk.6.ffn_gate.weight                          25       56.325      288358400        2.253
+  blk.17.ffn_up.weight                           25       49.310      288358400        1.972
+  blk.4.ffn_gate.weight                          25       48.381      288358400        1.935
+  blk.19.ffn_gate.weight                         25       39.849      288358400        1.594
+  blk.9.ffn_up.weight                            25       38.263      288358400        1.531
+  blk.13.ffn_down.weight                         25       37.602      288358400        1.504
+  blk.7.attn_v.weight                            25       36.568       13107200        1.463
+============================================================
+[AGENT] GENERATION_RECEIPT prompt=20 generated=6 completed=1 cancelled=0 stop_reason=16 stop=COMPLETED
+[D2_HTTP_SEND] bodySize=292 httpSize=524
+[D2_HTTP_SENT] ret=524 wsalasterr=0
+[POST /v1/chat/completions] 200  9288.78 ms

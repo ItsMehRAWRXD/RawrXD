@@ -1,0 +1,11 @@
+ASOF_UTC=2026-11-10T11:33:52.8823410Z
+SWARM=W3
+LINEAGE=custom
+TIP_EXE=F:\rawrxd\build_tip_ext_host_001\bin\RawrXD-Win32IDE-Native-Ext.exe
+TIP_SHA256=61085F3807AE60165A281F16FFD0201FC90E7D3F19A491CD121A9A6B53793E88
+PRIMARY_HARNESS=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\harness\four_panel_1_17_measure.ps1
+OUT_DIR=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\ide_surfaces_wave3\artifacts
+LOG_DIR=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\ide_surfaces_wave3\candidates\four_panel_run
+PROMOTE=0
+NO_CROSS_SHA_PASS_INHERITANCE=1
+WAVE1_TU_EDIT=0

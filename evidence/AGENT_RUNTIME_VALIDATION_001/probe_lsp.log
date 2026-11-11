@@ -1,0 +1,2 @@
+probe_lsp.cpp
+F:\rawrxd\src\win32app\Win32IDE_AgenticLoopBridge.h(14): fatal error C1083: Cannot open include file: 'agent_esp.hpp': No such file or directory

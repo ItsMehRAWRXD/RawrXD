@@ -1,0 +1,12 @@
+HARNESS_S13_TIGHTEN_001
+ASOF=2026-11-10
+PURPOSE=Record SHA of tightened Issue49 live harness before S_13 remasure 016
+HARNESS_PATH=F:\rawrxd\evidence\IDE_REPAIR_CANDIDATE_001\issue49_wave2\harness\Invoke-Issue49Live74aa.ps1
+HARNESS_SHA256=08E5605A6F32A24CFB05C0C5FB13250D9223CE8FF821B14610E6BBA726D36745
+METHOD=certutil -hashfile SHA256
+NOTES=Staged prompt requires first write leave add() as a-b; S_13 fail-closed needs rollback→commit and/or intermediate wrong AGENT_RESULT + distinct after_sha; S_11 no longer credits mere substring "build" inside write-verified string.
+TIP_IDE_SHA_EXPECTED=401071ADD351A9CF82DD11941E6DB26D10D0DFF6543CD39197772221CF98E7B3
+TIP_LOOP_SHA_EXPECTED=5BAC2E7959A5337B350FB81918D158AB500B4077E5CDB59542F3BC5E4F74AB49
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD

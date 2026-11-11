@@ -1,0 +1,149 @@
+load_backend: loaded RPC backend from F:\rawrxd\dist\RawrXD_Enterprise_v3.0\extras\powershield\tools\ggml-rpc.dll
+load_backend: loaded CPU backend from F:\rawrxd\dist\RawrXD_Enterprise_v3.0\extras\powershield\tools\ggml-cpu-icelake.dll
+build: 7157 (583cb8341) with clang version 19.1.5 for x86_64-pc-windows-msvc
+main: llama backend init
+main: load the model and apply lora adapter, if any
+llama_model_loader: additional 12 GGUFs metadata loaded.
+llama_model_loader: loaded meta data with 63 key-value pairs and 1096 tensors from F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf (version GGUF V3 (latest))
+llama_model_loader: Dumping metadata keys/values. Note: KV overrides do not apply in this output.
+llama_model_loader: - kv   0:                       general.architecture str              = deepseek2
+llama_model_loader: - kv   1:                               general.type str              = model
+llama_model_loader: - kv   2:                               general.name str              = Kimi-K2-Instruct-0905
+llama_model_loader: - kv   3:                            general.version str              = 0905
+llama_model_loader: - kv   4:                           general.finetune str              = Instruct
+llama_model_loader: - kv   5:                           general.basename str              = Kimi-K2-Instruct-0905
+llama_model_loader: - kv   6:                       general.quantized_by str              = Unsloth
+llama_model_loader: - kv   7:                         general.size_label str              = 384x14B
+llama_model_loader: - kv   8:                            general.license str              = other
+llama_model_loader: - kv   9:                       general.license.name str              = modified-mit
+llama_model_loader: - kv  10:                           general.repo_url str              = https://huggingface.co/unsloth
+llama_model_loader: - kv  11:                   general.base_model.count u32              = 1
+llama_model_loader: - kv  12:                  general.base_model.0.name str              = Kimi K2 Instruct 0905 BF16
+llama_model_loader: - kv  13:               general.base_model.0.version str              = 0905
+llama_model_loader: - kv  14:          general.base_model.0.organization str              = Moonshotai
+llama_model_loader: - kv  15:              general.base_model.0.repo_url str              = https://huggingface.co/moonshotai/Kim...
+llama_model_loader: - kv  16:                               general.tags arr[str,1]       = ["unsloth"]
+llama_model_loader: - kv  17:                      deepseek2.block_count u32              = 61
+llama_model_loader: - kv  18:                   deepseek2.context_length u32              = 262144
+llama_model_loader: - kv  19:                 deepseek2.embedding_length u32              = 7168
+llama_model_loader: - kv  20:              deepseek2.feed_forward_length u32              = 18432
+llama_model_loader: - kv  21:             deepseek2.attention.head_count u32              = 64
+llama_model_loader: - kv  22:          deepseek2.attention.head_count_kv u32              = 1
+llama_model_loader: - kv  23:                   deepseek2.rope.freq_base f32              = 50000.000000
+llama_model_loader: - kv  24: deepseek2.attention.layer_norm_rms_epsilon f32              = 0.000010
+llama_model_loader: - kv  25:                deepseek2.expert_used_count u32              = 8
+llama_model_loader: - kv  26:        deepseek2.leading_dense_block_count u32              = 1
+llama_model_loader: - kv  27:                       deepseek2.vocab_size u32              = 163840
+llama_model_loader: - kv  28:            deepseek2.attention.q_lora_rank u32              = 1536
+llama_model_loader: - kv  29:           deepseek2.attention.kv_lora_rank u32              = 512
+llama_model_loader: - kv  30:             deepseek2.attention.key_length u32              = 576
+llama_model_loader: - kv  31:           deepseek2.attention.value_length u32              = 512
+llama_model_loader: - kv  32:         deepseek2.attention.key_length_mla u32              = 192
+llama_model_loader: - kv  33:       deepseek2.attention.value_length_mla u32              = 128
+llama_model_loader: - kv  34:       deepseek2.expert_feed_forward_length u32              = 2048
+llama_model_loader: - kv  35:                     deepseek2.expert_count u32              = 384
+llama_model_loader: - kv  36:              deepseek2.expert_shared_count u32              = 1
+llama_model_loader: - kv  37:             deepseek2.expert_weights_scale f32              = 2.827000
+llama_model_loader: - kv  38:              deepseek2.expert_weights_norm bool             = true
+llama_model_loader: - kv  39:               deepseek2.expert_gating_func u32              = 2
+llama_model_loader: - kv  40:             deepseek2.rope.dimension_count u32              = 64
+llama_model_loader: - kv  41:                deepseek2.rope.scaling.type str              = yarn
+llama_model_loader: - kv  42:              deepseek2.rope.scaling.factor f32              = 64.000000
+llama_model_loader: - kv  43: deepseek2.rope.scaling.original_context_length u32              = 4096
+llama_model_loader: - kv  44: deepseek2.rope.scaling.yarn_log_multiplier f32              = 0.100000
+llama_model_loader: - kv  45:                       tokenizer.ggml.model str              = gpt2
+llama_model_loader: - kv  46:                         tokenizer.ggml.pre str              = kimi-k2
+llama_model_loader: - kv  47:                      tokenizer.ggml.tokens arr[str,163840]  = ["!", "\"", "#", "$", "%", "&", "'", ...
+llama_model_loader: - kv  48:                  tokenizer.ggml.token_type arr[i32,163840]  = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...
+llama_model_loader: - kv  49:                      tokenizer.ggml.merges arr[str,163328]  = ["Ġ Ġ", "ĠĠ ĠĠ", "Ġ t", "i n",...
+llama_model_loader: - kv  50:                tokenizer.ggml.bos_token_id u32              = 163584
+llama_model_loader: - kv  51:                tokenizer.ggml.eos_token_id u32              = 163586
+llama_model_loader: - kv  52:            tokenizer.ggml.padding_token_id u32              = 163839
+llama_model_loader: - kv  53:                    tokenizer.chat_template str              = {%- if tools -%}\n  <|im_system|>tool_...
+llama_model_loader: - kv  54:               general.quantization_version u32              = 2
+llama_model_loader: - kv  55:                          general.file_type u32              = 15
+llama_model_loader: - kv  56:                      quantize.imatrix.file str              = Kimi-K2-Instruct-0905-GGUF/imatrix_un...
+llama_model_loader: - kv  57:                   quantize.imatrix.dataset str              = unsloth_calibration_Kimi-K2-Instruct-...
+llama_model_loader: - kv  58:             quantize.imatrix.entries_count u32              = 789
+llama_model_loader: - kv  59:              quantize.imatrix.chunks_count u32              = 206
+llama_model_loader: - kv  60:                                   split.no u16              = 0
+llama_model_loader: - kv  61:                        split.tensors.count i32              = 1096
+llama_model_loader: - kv  62:                                split.count u16              = 13
+llama_model_loader: - type  f32:  365 tensors
+llama_model_loader: - type q8_0:  183 tensors
+llama_model_loader: - type q4_K:  337 tensors
+llama_model_loader: - type q5_K:  120 tensors
+llama_model_loader: - type q6_K:   91 tensors
+print_info: file format = GGUF V3 (latest)
+print_info: file type   = Q4_K - Medium
+print_info: file size   = 578.57 GiB (4.84 BPW) 
+load: printing all EOG tokens:
+load:   - 163586 ('<|im_end|>')
+load: special tokens cache size = 256
+load: token to piece cache size = 1.0607 MB
+print_info: arch             = deepseek2
+print_info: vocab_only       = 0
+print_info: n_ctx_train      = 262144
+print_info: n_embd           = 7168
+print_info: n_embd_inp       = 7168
+print_info: n_layer          = 61
+print_info: n_head           = 64
+print_info: n_head_kv        = 1
+print_info: n_rot            = 64
+print_info: n_swa            = 0
+print_info: is_swa_any       = 0
+print_info: n_embd_head_k    = 576
+print_info: n_embd_head_v    = 512
+print_info: n_gqa            = 64
+print_info: n_embd_k_gqa     = 576
+print_info: n_embd_v_gqa     = 512
+print_info: f_norm_eps       = 0.0e+00
+print_info: f_norm_rms_eps   = 1.0e-05
+print_info: f_clamp_kqv      = 0.0e+00
+print_info: f_max_alibi_bias = 0.0e+00
+print_info: f_logit_scale    = 0.0e+00
+print_info: f_attn_scale     = 0.0e+00
+print_info: n_ff             = 18432
+print_info: n_expert         = 384
+print_info: n_expert_used    = 8
+print_info: n_expert_groups  = 0
+print_info: n_group_used     = 0
+print_info: causal attn      = 1
+print_info: pooling type     = 0
+print_info: rope type        = 0
+print_info: rope scaling     = yarn
+print_info: freq_base_train  = 50000.0
+print_info: freq_scale_train = 0.015625
+print_info: n_ctx_orig_yarn  = 4096
+print_info: rope_finetuned   = unknown
+print_info: model type       = 671B
+print_info: model params     = 1.03 T
+print_info: general.name     = Kimi-K2-Instruct-0905
+print_info: n_layer_dense_lead   = 1
+print_info: n_lora_q             = 1536
+print_info: n_lora_kv            = 512
+print_info: n_embd_head_k_mla    = 192
+print_info: n_embd_head_v_mla    = 128
+print_info: n_ff_exp             = 2048
+print_info: n_expert_shared      = 1
+print_info: expert_weights_scale = 2.8
+print_info: expert_weights_norm  = 1
+print_info: expert_gating_func   = sigmoid
+print_info: rope_yarn_log_mul    = 0.1000
+print_info: vocab type       = BPE
+print_info: n_vocab          = 163840
+print_info: n_merges         = 163328
+print_info: BOS token        = 163584 '[BOS]'
+print_info: EOS token        = 163586 '<|im_end|>'
+print_info: EOT token        = 163586 '<|im_end|>'
+print_info: PAD token        = 163839 '[PAD]'
+print_info: LF token         = 198 'Ċ'
+print_info: EOG token        = 163586 '<|im_end|>'
+print_info: max token length = 512
+load_tensors: loading model tensors, this can take a while... (mmap = true)
+ggml_backend_cpu_buffer_type_alloc_buffer: failed to allocate buffer of size 481993850880
+alloc_tensor_range: failed to allocate CPU_REPACK buffer of size 481993850880
+llama_model_load: error loading model: unable to allocate CPU_REPACK buffer
+llama_model_load_from_file_impl: failed to load model
+common_init_from_params: failed to load model 'F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf', try reducing --n-gpu-layers if you're running out of VRAM
+main: error: unable to load model

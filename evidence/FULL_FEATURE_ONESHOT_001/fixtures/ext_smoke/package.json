@@ -1,0 +1,11 @@
+﻿{
+  "name": "oneshot-ext-smoke",
+  "displayName": "Oneshot EXT Smoke",
+  "version": "0.0.1",
+  "publisher": "rawrxd",
+  "main": "./extension.js",
+  "activationEvents": ["*"],
+  "contributes": {
+    "commands": [{ "command": "oneshot.ext.ping", "title": "Oneshot Ping" }]
+  }
+}

@@ -1,0 +1,4 @@
+{"type":"LEDGER_START","entry":0,"payload":{}}
+{"type":"TOOL_CALL","entry":1,"payload":{"step":1,"tool":"test","target":"","observation_bytes":96,"exit_code":1,"valid":true,"timestamp":1794287073909}}
+{"type":"TOOL_CALL","entry":2,"payload":{"step":2,"tool":"build","target":"","observation_bytes":8,"exit_code":0,"valid":true,"timestamp":1794287075584}}
+{"type":"TOOL_CALL","entry":3,"payload":{"step":3,"tool":"read","target":"bug.exe","observation_bytes":140800,"exit_code":0,"valid":true,"timestamp":1794287075732}}

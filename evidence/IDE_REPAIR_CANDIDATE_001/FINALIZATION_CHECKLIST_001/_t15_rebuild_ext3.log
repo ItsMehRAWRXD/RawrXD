@@ -1,0 +1,13 @@
+**********************************************************************
+** Visual Studio 2022 Developer Command Prompt v17.14.39
+** Copyright (c) 2025 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'
+[1/2] Building CXX object CMakeFiles\RawrXD-Win32IDE-Native-Ext.dir\src\win32app\Win32IDE_Commands.cpp.obj
+F:\rawrxd\src\tokenizer/qwen3_tokenizer.hpp(133): warning C4189: 'end': local variable is initialized but not referenced
+F:\rawrxd\src\win32app\../native_agent.hpp(246): warning C4100: 'query': unreferenced parameter
+[2/2] Linking CXX executable bin\RawrXD-Win32IDE-Native-Ext.exe
+NINJA_EXIT=0
+SHA256 hash of bin\RawrXD-Win32IDE-Native-Ext.exe:
+a4903e6ff683099d88a0f081af24b4f713ffab6b311d57bcd3dd79c9b22c0c31
+CertUtil: -hashfile command completed successfully.

@@ -1,0 +1,1 @@
+"F:\rawrxd\build_ide\bin-msvc\rawr.exe" run nemotron-3-nano:4b "Say hello" --approve-mutations=true --cancel-after-ms 15000 > "F:\rawrxd\verify_temp\rawr_test_gen.txt" 2>&1

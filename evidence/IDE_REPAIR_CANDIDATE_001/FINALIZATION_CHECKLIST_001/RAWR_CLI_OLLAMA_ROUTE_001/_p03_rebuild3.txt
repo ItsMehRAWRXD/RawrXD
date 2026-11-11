@@ -1,0 +1,7 @@
+[0/2] Re-checking globbed directories...
+[1/4] Performing build step for 'vulkan-shaders-gen'
+ninja: no work to do.
+[2/4] Performing install step for 'vulkan-shaders-gen'
+-- Up-to-date: F:/rawrxd/build_tip_debug_rel/RelWithDebInfo/vulkan-shaders-gen.exe
+[3/4] Completed 'vulkan-shaders-gen'
+BUILD_EXIT=!ERRORLEVEL! 

@@ -1,0 +1,106 @@
+[DEBUG] Key[0] start_pos=24
+[DEBUG] Key[0]=general.architecture key_start=24 key_end=52
+[DEBUG] Metadata key[0]=general.architecture
+[DEBUG] Key[0] value_type=8 pos=56
+[DEBUG] Key[0] value=llama val_start=56 val_end=69
+[DEBUG] Key[1] start_pos=69
+[DEBUG] Key[1]=general.name key_start=69 key_end=89
+[DEBUG] Metadata key[1]=general.name
+[DEBUG] Key[1] value_type=8 pos=93
+[DEBUG] Key[1] value=tinyllama_tinyllama-1.1b-chat-v1.0 val_start=93 val_end=135
+[DEBUG] Key[2] start_pos=135
+[DEBUG] Key[2]=llama.context_length key_start=135 key_end=163
+[DEBUG] Metadata key[2]=llama.context_length
+[DEBUG] Key[2] value_type=4 pos=167
+[DEBUG] Key[3] start_pos=171
+[DEBUG] Key[3]=llama.embedding_length key_start=171 key_end=201
+[DEBUG] Metadata key[3]=llama.embedding_length
+[DEBUG] Key[3] value_type=4 pos=205
+[DEBUG] Key[4] start_pos=209
+[DEBUG] Key[4]=llama.block_count key_start=209 key_end=234
+[DEBUG] Metadata key[4]=llama.block_count
+[DEBUG] Key[4] value_type=4 pos=238
+[DEBUG] Key[5] start_pos=242
+[DEBUG] Key[5]=llama.feed_forward_length key_start=242 key_end=275
+[DEBUG] Metadata key[5]=llama.feed_forward_length
+[DEBUG] Key[5] value_type=4 pos=279
+[DEBUG] Key[6] start_pos=283
+[DEBUG] Key[6]=llama.rope.dimension_count key_start=283 key_end=317
+[DEBUG] Metadata key[6]=llama.rope.dimension_count
+[DEBUG] Key[6] value_type=4 pos=321
+[DEBUG] Key[7] start_pos=325
+[DEBUG] Key[7]=llama.attention.head_count key_start=325 key_end=359
+[DEBUG] Metadata key[7]=llama.attention.head_count
+[DEBUG] Key[7] value_type=4 pos=363
+[DEBUG] Key[8] start_pos=367
+[DEBUG] Key[8]=llama.attention.head_count_kv key_start=367 key_end=404
+[DEBUG] Metadata key[8]=llama.attention.head_count_kv
+[DEBUG] Key[8] value_type=4 pos=408
+[DEBUG] Key[9] start_pos=412
+[DEBUG] Key[9]=llama.attention.layer_norm_rms_epsilon key_start=412 key_end=458
+[DEBUG] Metadata key[9]=llama.attention.layer_norm_rms_epsilon
+[DEBUG] Key[9] value_type=6 pos=462
+[DEBUG] Key[10] start_pos=466
+[DEBUG] Key[10]=llama.rope.freq_base key_start=466 key_end=494
+[DEBUG] Key[10] value_type=6 pos=498
+[DEBUG] Key[11] start_pos=502
+[DEBUG] Key[11]=general.file_type key_start=502 key_end=527
+[DEBUG] Key[11] value_type=4 pos=531
+[DEBUG] Key[12] start_pos=535
+[DEBUG] Key[12]=tokenizer.ggml.model key_start=535 key_end=563
+[DEBUG] Key[12] value_type=8 pos=567
+[DEBUG] Key[12] value=llama val_start=567 val_end=580
+[DEBUG] Key[13] start_pos=580
+[DEBUG] Key[13]=tokenizer.ggml.tokens key_start=580 key_end=609
+[DEBUG] Key[13] value_type=9 pos=613
+[DEBUG] Key[14] start_pos=467544
+[DEBUG] Key[14]=tokenizer.ggml.scores key_start=467544 key_end=467573
+[DEBUG] Key[14] value_type=9 pos=467577
+[DEBUG] Key[15] start_pos=595589
+[DEBUG] Key[15]=tokenizer.ggml.token_type key_start=595589 key_end=595622
+[DEBUG] Key[15] value_type=9 pos=595626
+[DEBUG] Key[16] start_pos=723638
+[DEBUG] Key[16]=tokenizer.ggml.merges key_start=723638 key_end=723667
+[DEBUG] Key[16] value_type=9 pos=723671
+[DEBUG] Key[17] start_pos=1696853
+[DEBUG] Key[17]=tokenizer.ggml.bos_token_id key_start=1696853 key_end=1696888
+[DEBUG] Key[17] value_type=4 pos=1696892
+[DEBUG] Key[18] start_pos=1696896
+[DEBUG] Key[18]=tokenizer.ggml.eos_token_id key_start=1696896 key_end=1696931
+[DEBUG] Key[18] value_type=4 pos=1696935
+[DEBUG] Key[19] start_pos=1696939
+[DEBUG] Key[19]=tokenizer.ggml.unknown_token_id key_start=1696939 key_end=1696978
+[DEBUG] Key[19] value_type=4 pos=1696982
+[DEBUG] Key[20] start_pos=1696986
+[DEBUG] Key[20]=tokenizer.ggml.padding_token_id key_start=1696986 key_end=1697025
+[DEBUG] Key[20] value_type=4 pos=1697029
+[DEBUG] Key[21] start_pos=1697033
+[DEBUG] Key[21]=tokenizer.chat_template key_start=1697033 key_end=1697064
+[DEBUG] Key[21] value_type=8 pos=1697068
+[DEBUG] Key[21] value={% for message in messages %}
+{% if message['role' val_start=1697068 val_end=1697486
+[DEBUG] Key[22] start_pos=1697486
+[DEBUG] Key[22]=general.quantization_version key_start=1697486 key_end=1697522
+[DEBUG] Metadata key[22]=general.quantization_version
+[DEBUG] Key[22] value_type=4 pos=1697526
+
+📊 Zone Assignment Summary:
+[GGUF] shard 0 tensors=201 data_start=1709440 file_size=668788096
+[ZONE_ASSIGN_START] tensor_index_size=201
+[ZONE_ASSIGN_DEBUG] blk.0.attn_norm.weight zone_name set to: 'layers_0'
+MULTISHARD_SHARDS_INDEXED=1/1
+MULTISHARD_TENSORS_INDEXED=201
+MULTISHARD_DUPLICATES=0
+[LOAD] index_size=201
+   embedding: 1 tensors, 35 MB
+   layers_0: 64 tensors, 182 MB
+   layers_1: 64 tensors, 182 MB
+   layers_2: 48 tensors, 134 MB
+   output_head: 24 tensors, 100 MB
+
+✅ GGUF Model opened in streaming mode
+   File: F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+   Shards: 1
+   Tensors: 201
+   Zones: 5
+   Memory (header+index): ~0 MB

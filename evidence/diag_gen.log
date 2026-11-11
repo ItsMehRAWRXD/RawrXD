@@ -1,0 +1,85 @@
+[stage]   [     0.0 ms] load model | F:\rawrxd\models\qwen2.5-coder_1.5b-base.gguf
+[stage]   [  4142.8 ms] ingest | arch=qwen2 blocks=28
+[stage]   [  4254.7 ms] tokenizer build | vocab=151936 convention=U+0120_gpt2
+[stage]   [  4254.7 ms] G1 tokenizer: round-trip begin
+[stage] G1 probe ids=11 -> bytes=25 PASS
+[stage] G1 probe ids=22 -> bytes=43 PASS
+[stage] G1 probe ids=10 -> bytes=39 PASS
+[stage] G1 probe ids=22 -> bytes=58 PASS
+[stage]   [  4284.3 ms] G1 tokenizer: round-trip done | PASS
+GATE_RESULT G1=PASS
+[stage]   [  4284.4 ms] executor bind begin | gpu-first
+[stage]   [  4284.6 ms] executor bound | ops=395
+[stage]   [  4284.6 ms] G2 inference: batched prefill of probe prompt
+Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+Found device 4: AMD Radeon RX 7800 XT (Vendor: 0x1002, Score: 100)
+Found device 5: Microsoft Direct3D12 (AMD Radeon RX 7800 XT) (Vendor: 0x1002, Score: 100)
+Found device 6: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+Selected device: AMD Radeon AI PRO R9700
+Initialized command buffer pool with 4 buffers
+Vulkan initialized successfully on device: AMD Radeon AI PRO R9700
+AMD Device: Yes
+Compute Queue Family: 0
+Quant-dot pipeline and permanent descriptor system initialized successfully
+[stage]   [ 10136.3 ms] G2 inference: prefill complete | tokens=11 ctx=12
+[stage]   [ 10136.6 ms] G2 inference: one-token logits | n=151936 nonfinite=0 PASS
+[stage]   [ 10136.6 ms] G3 generation: begin
+[stage]   [ 13178.1 ms] G3 generation: done | tokens=10 bytes=10
+G3_TOKEN_IDS=220 198 198 198 198 198 198 198 198 198 
+G3_DECODED_ESCAPED=200a 0a0a 0a0a 0a0a 0a0a 
+[stage] G3 sample: 
+GATE_RESULT G1=PASS G2=PASS G3=PASS
+[stage]   [ 13179.2 ms] G4 baseline: build defective source
+[stage]   [ 18239.5 ms] G4 baseline: built and ran | build_exit=0 run_exit=1 marker_present=0
+GATE_RESULT G1=PASS G2=PASS G3=PASS G4=PASS
+[stage]   [ 18239.8 ms] G5 setup: fresh executor for repair stage
+[stage]   [ 18240.0 ms] G5 setup: repair executor bound | ops=395
+[stage]   [ 18240.0 ms] G5 attempt 1: prompt build + prefill
+[stage]   [161600.4 ms] G5 attempt 1: prompt prefilled | tokens=575 ctx=576
+[stage]   [276174.0 ms] G5 attempt 1: generated | bytes=1000
+G5_ATTEMPT1_TOKEN_IDS=322 26465 787 3580 220 15 16 25 19716 6337 2971 504 220 2651 311 77565 1067 220 36431 397 1067 220 24280 397 1067 220 4947 1339 1235 2910 22946 220 341 257 1460 486 3215 4159 29 821 401 257 2910 22946 2741 1460 486 3215 4159 5789 1946 8 220 549 821 5384 8 220 20375 257 442 68534 25 12260 387 72 220 366 821 2486 741 257 526 12564 9190 368 733 220 341 260 526 2629 220 284 220 15 280 260 369 220 320 2141 528 72 220 284 220 15 26 72 220 366 821 2486 2129 220 3443 72 8 220 341 1797 2629 220 1421 821 989 5265 256 442 4371 315 14262 389 1537 19569 198 260 456 260 470 2629 280 257 335 220 442 26465 787 3580 220 15 16 25 19716 6337 2971 1499 220 2651 311 77565 257 442 68534 25 25739 1847 1694 18589 1465 198 257 1460 486 917 14330 368 733 220 341 260 1460 486 917 1102 220 284 220 10545 876 260 369 220 320 2141 528 72 220 284 220 15 26 72 220 366 821 2486 2129 220 3443 72 5 220 341 1797 1102 220 1421 1460 486 983 3904 2592 989 5 1215 220 442 26465 787 3580 220 15 16 25 19716 6337 2971 1499 220 2651 311 77565 1797 421 220 320 72 5 220 366 821 2486 2140 1102 220 1421 220 3670 220 7620 260 456 260 1102 220 1421 220 57130 260 470 1102 280 257 456 2315 396 1887 368 220 341 257 1460 486 3215 4159 29 67348 220 284 220 314 16 15 11 220 17 15 11 220 18 15 11 220 19 15 11 220 20 15 2440 
+[stage] G5 attempt 1 raw generation:
+// CORRECTION 01: Fix loop condition from  <= to <
+#include <iostream>
+#include <vector>
+#include <string>
+
+struct ArrayProcessor  {
+     std::vector<int> data;
+
+     ArrayProcessor(const std::vector<int>& input)  : data(input)  {};
+
+     // BUG: Should bei  < data.size()
+     int computeSum() const  {
+         int sum  = 0;
+         for  (size_ti  = 0;i  < data.size();  ++i)  {
+             sum  += data[i];   // Out of bounds on last iteration
+         }
+         return sum;
+     }  // CORRECTION 01: Fix loop conditionfrom  <= to <
+     // BUG: Sameoffby-one error
+     std::string toString() const  {
+         std::string result  =  "[";
+         for  (size_ti  = 0;i  < data.size();  ++i&  {
+             result  += std::to_string(data[i&);  // CORRECTION 01: Fix loop conditionfrom  <= to <
+             if  (i&  < data.size()) result  +=  ",  ";
+         }
+         result  +=  "]";
+         return result;
+     }
+};
+
+int main()  {
+     std::vector<int> testData  =  {10, 20, 30, 40, 50};
+
+[stage]   [278289.9 ms] G6 attempt 1: patched build FAILED | exit=2
+ORIGINAL_HASH=0f74a687544a0e4a
+FINAL_HASH=0f74a687544a0e4a
+SOURCE_CHANGED=false
+GATE_RESULT G1=PASS G2=PASS G3=PASS G4=PASS G5=FAIL G6=FAIL G7=SKIP
+FINAL_VERDICT=FAIL
+Released all tensors
+Vulkan resources cleaned up successfully

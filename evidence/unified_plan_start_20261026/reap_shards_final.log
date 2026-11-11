@@ -1,0 +1,7 @@
+[PASS] DeepSeek: 11 shards, 1025 tensors, none_structural_only
+[PASS] MiniMax: 3 shards, 809 tensors, none_structural_only
+[PASS] Kimi-K2: 13 shards, 1096 tensors, none_structural_only
+[PASS] DeepSeek: capability deepseek2, calibratable=True
+[PASS] MiniMax: capability minimax-m2, calibratable=False
+[PASS] Kimi-K2: capability deepseek2, calibratable=True
+ALL REAP SHARD AND CAPABILITY VERIFICATION TESTS PASSED

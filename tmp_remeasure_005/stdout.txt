@@ -1,0 +1,4024 @@
+Loading model via Deep2 engine: F:\rawrxd\gemma3-1b-Q2_K.gguf
+[Deep2Engine] Loading model from: F:\rawrxd\gemma3-1b-Q2_K.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Auto dual-GPU: GPU0=AMD Radeon AI PRO R9700 (32479 MB) GPU1=AMD Radeon(TM) Graphics (2021 MB)
+[Deep2Engine] MODEL_FIT_ADMITTED model=F:\rawrxd\gemma3-1b-Q2_K.gguf mode=GPU_MULTI devices=2 kv_per_token=8424 max_ctx_est=16836
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\rawrxd)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] ERROR: No tensors parsed (run Parse first)
+[ReverseHotpatch] FAILED at stage 3 (ReverseUnlayer_Index)
+[Deep2Engine] WARNING: ReverseHotpatch failed, attempting raw load
+[Deep2Engine] GGUF architecture: 'gemma3'  hidden=1152 layers=26 heads=4 kvHeads=1 inter=6912 vocab=262144
+[Deep2Engine] headDim override from Q tensor (blk.0.attn_q.weight): metadata headDim=288 -> weight headDim=256 (numHeads=4)
+[Deep2Engine] HEADDIM_SYNC config.headDim=256 modelWeights.headDim=256
+[Deep2Engine] Context length from metadata: 32768 tokens
+[Deep2Engine] Tokenizer loaded: vocab=262144 bos=2 eos=1 (Spm::encode)
+[Deep2Engine] Layer topology: 26 attention, 0 SSM, 0 unknown of 26 total
+[Deep2Engine] KV cache sized for 26 attention layers (SSM layers excluded)
+[Deep2Engine] HEADDIM_SYNC_POST_BIND config.headDim=256 modelWeights.headDim=256 kvHeads=1
+[Deep2Engine] Using tied embeddings
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=0000020580032560  Registered 'blk.0.attn_q.weight': shard=0 offset=0 bytes=663552  |  registry_size=1  registeredBytes=663552  zeroOffset=1  maxResidentBytes=536870912
+[ResidencyManager] this=0000020580032560  Registered 'blk.11.attn_q.weight': shard=0 offset=0 bytes=663552  |  registry_size=100  registeredBytes=153868032  zeroOffset=100  maxResidentBytes=536870912
+[ResidencyManager] this=0000020580032560  Registered 'blk.22.attn_k.weight': shard=0 offset=0 bytes=165888  |  registry_size=200  registeredBytes=307238400  zeroOffset=200  maxResidentBytes=536870912
+[Deep2Engine] ResidencyManager: this=0000020580032560  registered=236 tensors  bytes=682988544  max=536870912
+[Deep2Engine] Auto dual-GPU: GPU0=AMD Radeon AI PRO R9700 (32479 MB) GPU1=AMD Radeon(TM) Graphics (2021 MB)
+[Deep2Engine] ThreadPool (loadModel): 8 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF7D2371E80 dequant=00007FF7D236D4F0 GetGEMV(12)=00007FF7D2371E80 match=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 19 GEMV kernels, 19 dequant kernels
+[KVCache] Lazy pages: layers=26 page=8 virtualMax=16836 heads=1 dim=256
+[KVCache] HOT_BYTES=425984 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] KV cache: 26 layers x 16836 positions x 1 heads x 256 dim = 854.95 MB
+[Deep2Engine] Model loaded successfully (340 tensors)
+[Deep2Engine] Auto dual-GPU: GPU0=AMD Radeon AI PRO R9700 (32479 MB) GPU1=AMD Radeon(TM) Graphics (2021 MB)
+DEEP2_DEVICE_COUNT_DETECTED=3
+DEEP2_DEVICE_COUNT_OPENED=2
+DEEP2_COMPUTE_BACKEND=DUAL_SOVEREIGN
+DEEP2_EXEC_PATH=DUAL_SOVEREIGN
+SHARED_WEIGHT_ARENA=0
+CROSS_GPU_WEIGHT_COPY=0
+CROSS_LANE_SYNC=DEPENDENCIES_ONLY
+DEEP2_EXEC_MODE=5
+DEEP2_GPU_POLICY=6
+DEEP2_PLAN_REASON=auto_dual_gpu_detected
+DEEP2_PRIMARY_INDEX=0
+DEEP2_PRIMARY_STABLE_ID=1002:7551:00000000000161CA
+DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_VENDOR=AMD
+DEEP2_DEVICE_0_STABLE_ID=1002:7551:00000000000161CA
+DEEP2_DEVICE_0_VRAM_BYTES=34057322496
+DEEP2_DEVICE_0_SCORE=4294967295
+DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
+DEEP2_DEVICE_0_PROBLEM_CODE=0
+DEEP2_DEVICE_0_HEALTHY=1
+DEEP2_DEVICE_0_RESET_ATTEMPTED=0
+DEEP2_DEVICE_0_RESET_OK=0
+DEEP2_DEVICE_0_RESET_SKIPPED=0
+DEEP2_DEVICE_0_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_0_ACCESS_DENIED=0
+DEEP2_DEVICE_0_INSTANCE_ID=PCI\VEN_1002&DEV_7551&SUBSYS_E4991DA2&REV_C0\6&8916A45&0&00000009
+DEEP2_DEVICE_1_NAME=AMD Radeon(TM) Graphics
+DEEP2_DEVICE_1_VENDOR=AMD
+DEEP2_DEVICE_1_STABLE_ID=1002:13C0:000000000001BC10
+DEEP2_DEVICE_1_VRAM_BYTES=2119970816
+DEEP2_DEVICE_1_SCORE=4294967295
+DEEP2_DEVICE_1_DUTY=COMPUTE_SECONDARY
+DEEP2_DEVICE_1_PROBLEM_CODE=0
+DEEP2_DEVICE_1_HEALTHY=1
+DEEP2_DEVICE_1_RESET_ATTEMPTED=0
+DEEP2_DEVICE_1_RESET_OK=0
+DEEP2_DEVICE_1_RESET_SKIPPED=0
+DEEP2_DEVICE_1_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_1_ACCESS_DENIED=0
+DEEP2_DEVICE_1_INSTANCE_ID=PCI\VEN_1002&DEV_13C0&SUBSYS_364E1849&REV_E5\4&16012499&0&0041
+DEEP2_DEVICE_2_NAME=AMD Radeon RX 7800 XT
+DEEP2_DEVICE_2_VENDOR=AMD
+DEEP2_DEVICE_2_STABLE_ID=1002:747E:0000000000018F42
+DEEP2_DEVICE_2_VRAM_BYTES=16962633728
+DEEP2_DEVICE_2_SCORE=4294967295
+DEEP2_DEVICE_2_DUTY=DETECTED/UNUSED
+DEEP2_DEVICE_2_PROBLEM_CODE=0
+DEEP2_DEVICE_2_HEALTHY=1
+DEEP2_DEVICE_2_RESET_ATTEMPTED=0
+DEEP2_DEVICE_2_RESET_OK=0
+DEEP2_DEVICE_2_RESET_SKIPPED=0
+DEEP2_DEVICE_2_RESET_REQUIRES_ELEVATION=0
+DEEP2_DEVICE_2_ACCESS_DENIED=0
+DEEP2_DEVICE_2_INSTANCE_ID=PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2E27FDA8&0&0000000B
+DEEP2_COST_T_BEST=0.000000
+DEEP2_COST_CUT=13
+DEEP2_COST_KEEP=0
+DEEP2_COST_WINNER=SPLIT
+DEEP2_COST_MODEL=PIPELINE_V2
+DEEP2_COST_DUAL_DEVICES_KEPT=2
+DEEP2_COST_SLOT0_LAYERS=0-12
+DEEP2_COST_SLOT1_LAYERS=13-25
+DEEP2_COST_VRAM_GATE=0
+[Deep2Engine] LAYER_EXEC OPEN slot=0 AMD Radeon AI PRO R9700 layers=0-12 kind=GPU
+[Deep2Engine] LAYER_EXEC OPEN slot=1 AMD Radeon(TM) Graphics layers=13-25 kind=GPU
+[Deep2Engine] DUALSTICK_BIND vc0=1 vc1=1 devices=2
+DEEP2_MULTI_GPU_PLAN=ACTIVE
+DEEP2_HYBRID_PLAN=INACTIVE
+DEEP2_DEVICE_OPENED_COUNT=2
+DEEP2_DEVICE_PLANNED_COUNT=2
+DEEP2_DEVICE_EXECUTING_COUNT=0
+DEEP2_LAYERS_EXECUTED=0
+DEEP2_REAL_GPU_LAYER_EXEC=0
+DEEP2_REAL_GPU_LAYER_COVERAGE=0
+DEEP2_PLAN_DEVICE_COUNT=2
+DEEP2_PLAN_NUM_LAYERS=26
+DEEP2_PLAN_SLOT_0_STABLE_ID=1002:7551:00000000000161CA
+DEEP2_PLAN_SLOT_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_PLAN_SLOT_0_KIND=GPU
+DEEP2_PLAN_SLOT_0_LAYER_RANGE=0-12
+DEEP2_PLAN_SLOT_0_LAYER_EXECS=0
+DEEP2_PLAN_SLOT_0_SCORE=4294967295
+DEEP2_PLAN_SLOT_1_STABLE_ID=1002:13C0:000000000001BC10
+DEEP2_PLAN_SLOT_1_NAME=AMD Radeon(TM) Graphics
+DEEP2_PLAN_SLOT_1_KIND=GPU
+DEEP2_PLAN_SLOT_1_LAYER_RANGE=13-25
+DEEP2_PLAN_SLOT_1_LAYER_EXECS=0
+DEEP2_PLAN_SLOT_1_SCORE=4294967295
+DEEP2_LAYER_0_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_0_EXECUTED=0
+DEEP2_LAYER_1_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_1_EXECUTED=0
+DEEP2_LAYER_2_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_2_EXECUTED=0
+DEEP2_LAYER_3_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_3_EXECUTED=0
+DEEP2_LAYER_4_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_4_EXECUTED=0
+DEEP2_LAYER_5_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_5_EXECUTED=0
+DEEP2_LAYER_6_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_6_EXECUTED=0
+DEEP2_LAYER_7_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_7_EXECUTED=0
+DEEP2_LAYER_8_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_8_EXECUTED=0
+DEEP2_LAYER_9_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_9_EXECUTED=0
+DEEP2_LAYER_10_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_10_EXECUTED=0
+DEEP2_LAYER_11_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_11_EXECUTED=0
+DEEP2_LAYER_12_DEVICE=1002:7551:00000000000161CA
+DEEP2_LAYER_12_EXECUTED=0
+DEEP2_LAYER_13_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_13_EXECUTED=0
+DEEP2_LAYER_14_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_14_EXECUTED=0
+DEEP2_LAYER_15_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_15_EXECUTED=0
+DEEP2_LAYER_16_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_16_EXECUTED=0
+DEEP2_LAYER_17_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_17_EXECUTED=0
+DEEP2_LAYER_18_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_18_EXECUTED=0
+DEEP2_LAYER_19_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_19_EXECUTED=0
+DEEP2_LAYER_20_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_20_EXECUTED=0
+DEEP2_LAYER_21_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_21_EXECUTED=0
+DEEP2_LAYER_22_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_22_EXECUTED=0
+DEEP2_LAYER_23_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_23_EXECUTED=0
+DEEP2_LAYER_24_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_24_EXECUTED=0
+DEEP2_LAYER_25_DEVICE=1002:13C0:000000000001BC10
+DEEP2_LAYER_25_EXECUTED=0
+[Deep2Engine] MULTI contiguous layers ACTIVE devices=2 strict=0
+[Deep2Engine] Host Q8_0 GEMV receipts: SAFE
+Deep2 model loaded: F:\rawrxd\gemma3-1b-Q2_K.gguf  hidden=1152  vocab=262144
+RawrXD Local Agent (Deep2 backend)
+Model:    F:\rawrxd\gemma3-1b-Q2_K.gguf
+Backend:  deep2 (in-process GGUF inference)
+Mode:     ask - Answer and explain without changing anything
+Root:     F:\rawrxd
+Edits:    denied
+Execute:  denied by default
+Tools:    9 registered
+
+[GREEDY] enabled=0 temperature=0.8000 topK=40
+[AGENT] PREFILL_BEGIN prompt_tokens=237
+[AGENT] PRE_GENERATE calling generate()
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=0
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+[Deep2Engine] Completion plan: ALL_NEEDS_SATISFIED → CALL_GENERATE_STREAM
+[K2_DBG] entry depth=26 tokens=240
+[K2_DBG] after ResetSwitches
+[K2_DBG] after Decide mode=2 arm=TRAMPOLINE_OUTPUT_CACHE
+AUTO_POLICY_ACTIVE=1
+MANUAL_ARM_FORCING=0
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=default_auto
+K2_LIVE_POLICY_REUSE_STEPS=6240
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=26 TOKENS=240
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=1437800000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=(unset) MECH_ENV=trampoline WANTED=0
+[Deep2Engine] embedToken: type=8 vocabSize=262144 hiddenDim=1152 data=00000205A211EF60 sizeBytes=320864256 rows=262144 cols=1152
+[KVCache] page grow 8 -> 16 hot (virtualMax=16836 pos=8)
+[KVCache] page grow 16 -> 24 hot (virtualMax=16836 pos=16)
+[KVCache] page grow 24 -> 32 hot (virtualMax=16836 pos=24)
+[KVCache] page grow 32 -> 40 hot (virtualMax=16836 pos=32)
+[KVCache] page grow 40 -> 48 hot (virtualMax=16836 pos=40)
+[KVCache] page grow 48 -> 56 hot (virtualMax=16836 pos=48)
+[KVCache] page grow 56 -> 64 hot (virtualMax=16836 pos=56)
+[KVCache] page grow 64 -> 72 hot (virtualMax=16836 pos=64)
+[KVCache] page grow 72 -> 80 hot (virtualMax=16836 pos=72)
+[KVCache] page grow 80 -> 88 hot (virtualMax=16836 pos=80)
+[KVCache] page grow 88 -> 96 hot (virtualMax=16836 pos=88)
+[KVCache] page grow 96 -> 104 hot (virtualMax=16836 pos=96)
+[KVCache] page grow 104 -> 112 hot (virtualMax=16836 pos=104)
+[KVCache] page grow 112 -> 120 hot (virtualMax=16836 pos=112)
+[KVCache] page grow 120 -> 128 hot (virtualMax=16836 pos=120)
+[KVCache] page grow 128 -> 136 hot (virtualMax=16836 pos=128)
+[KVCache] page grow 136 -> 144 hot (virtualMax=16836 pos=136)
+[KVCache] page grow 144 -> 152 hot (virtualMax=16836 pos=144)
+[KVCache] page grow 152 -> 160 hot (virtualMax=16836 pos=152)
+[KVCache] page grow 160 -> 168 hot (virtualMax=16836 pos=160)
+[KVCache] page grow 168 -> 176 hot (virtualMax=16836 pos=168)
+[KVCache] page grow 176 -> 184 hot (virtualMax=16836 pos=176)
+[KVCache] page grow 184 -> 192 hot (virtualMax=16836 pos=184)
+[KVCache] page grow 192 -> 200 hot (virtualMax=16836 pos=192)
+[KVCache] page grow 200 -> 208 hot (virtualMax=16836 pos=200)
+[KVCache] page grow 208 -> 216 hot (virtualMax=16836 pos=208)
+[KVCache] page grow 216 -> 224 hot (virtualMax=16836 pos=216)
+[KVCache] page grow 224 -> 232 hot (virtualMax=16836 pos=224)
+[KVCache] page grow 232 -> 240 hot (virtualMax=16836 pos=232)
+[AGENT] PREFILL_DONE prompt_tokens=237 prefill_ms=586162.364
+[AGENT] DECODE_BEGIN max_out=240
+[DBG] stateNorm=3.263061e+02 finite=1 pos=237
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=237576 logit=   44.219803 text='着'
+  [ 1] id=180309 logit=   39.193447 text=' Произ'
+  [ 2] id=239842 logit=   38.093887 text='困'
+  [ 3] id=225609 logit=   37.023582 text='本社'
+  [ 4] id=168104 logit=   36.012714 text='વાસ'
+  [ 5] id= 6187 logit=   35.923828 text='об'
+  [ 6] id=193542 logit=   35.495831 text='Произ'
+  [ 7] id=  854 logit=   34.947281 text='com'
+  [ 8] id= 7637 logit=   34.790371 text='पर'
+  [ 9] id=236833 logit=   33.624283 text='न'
+[Deep2Engine] Sampler selected token: 237576
+[DBG] sampled token=237576 eosId=1
+[AGENT] TOKEN id=237576 piece=\xE7\x9D\x80
+[DBG] stateNorm=3.148957e+02 finite=1 pos=238
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 4240 logit=   35.107899 text='hand'
+  [ 1] id=171289 logit=   30.356331 text='ണ്ഡ'
+  [ 2] id=56843 logit=   28.645012 text='عية'
+  [ 3] id=47283 logit=   28.453423 text='constructor'
+  [ 4] id= 9425 logit=   27.965523 text='ской'
+  [ 5] id=248063 logit=   27.821239 text='遡'
+  [ 6] id=184525 logit=   27.715040 text='当社'
+  [ 7] id=32319 logit=   27.613012 text=' Climate'
+  [ 8] id=23451 logit=   27.568439 text='velle'
+  [ 9] id=15457 logit=   27.497532 text='sea'
+[Deep2Engine] Sampler selected token: 4240
+[DBG] sampled token=4240 eosId=1
+[DBG] stateNorm=3.291813e+02 finite=1 pos=239
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 3805 logit=   38.988422 text='[]'
+  [ 1] id=10893 logit=   35.974556 text='மை'
+  [ 2] id=203658 logit=   35.297047 text=' слоя'
+  [ 3] id=  168 logit=   35.199074 text='<table>'
+  [ 4] id= 2542 logit=   33.670052 text='For'
+  [ 5] id=238445 logit=   33.113449 text='식'
+  [ 6] id= 1708 logit=   32.547291 text='for'
+  [ 7] id=48189 logit=   32.518005 text='BEGIN'
+  [ 8] id=12004 logit=   32.409790 text='тво'
+  [ 9] id=30288 logit=   32.402382 text='#####'
+[Deep2Engine] Sampler selected token: 3805
+[DBG] sampled token=3805 eosId=1
+[DBG] stateNorm=3.086644e+02 finite=1 pos=240
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=236874 logit=   38.051258 text='Y'
+  [ 1] id=236806 logit=   36.585381 text='O'
+  [ 2] id=18043 logit=   35.155445 text='преде'
+  [ 3] id=  895 logit=   32.012245 text=' Y'
+  [ 4] id=236994 logit=   31.692259 text='น'
+  [ 5] id=  858 logit=   31.539787 text=' i'
+  [ 6] id=  708 logit=   31.496120 text=' O'
+  [ 7] id=156204 logit=   31.429703 text='నించ'
+  [ 8] id= 7637 logit=   31.147285 text='पर'
+  [ 9] id=236797 logit=   31.081049 text='N'
+[Deep2Engine] Sampler selected token: 236874
+[DBG] sampled token=236874 eosId=1
+[KVCache] page grow 240 -> 248 hot (virtualMax=16836 pos=240)
+[DBG] stateNorm=3.317018e+02 finite=1 pos=241
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 5405 logit=   34.092384 text=' resources'
+  [ 1] id=  497 logit=   33.390659 text='er'
+  [ 2] id=237270 logit=   32.345833 text='ת'
+  [ 3] id=235388 logit=   31.349945 text=' confluent'
+  [ 4] id=91111 logit=   31.108398 text='తూ'
+  [ 5] id=52916 logit=   31.075371 text=' averages'
+  [ 6] id=18892 logit=   30.518326 text='resources'
+  [ 7] id=236490 logit=   30.487453 text='lín'
+  [ 8] id=241096 logit=   30.171377 text='凭'
+  [ 9] id=203526 logit=   30.001574 text='*}\'
+[Deep2Engine] Sampler selected token: 5405
+[DBG] sampled token=5405 eosId=1
+[DBG] stateNorm=3.104102e+02 finite=1 pos=242
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=165144 logit=   40.836021 text=' причем'
+  [ 1] id= 9520 logit=   37.534439 text='Lo'
+  [ 2] id=237281 logit=   35.738682 text='의'
+  [ 3] id=  565 logit=   35.326038 text=' C'
+  [ 4] id=236780 logit=   35.239849 text='C'
+  [ 5] id=123339 logit=   33.531868 text='संख्य'
+  [ 6] id=46425 logit=   33.193790 text='::{'
+  [ 7] id=245706 logit=   32.459145 text='峙'
+  [ 8] id=254033 logit=   32.261204 text='繇'
+  [ 9] id= 6569 logit=   32.129734 text='প্র'
+[Deep2Engine] Sampler selected token: 165144
+[DBG] sampled token=165144 eosId=1
+[DBG] stateNorm=3.307807e+02 finite=1 pos=243
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=53227 logit=   40.043842 text='visited'
+  [ 1] id=93011 logit=   37.992870 text='ériques'
+  [ 2] id=60804 logit=   37.882507 text=' artículos'
+  [ 3] id=198174 logit=   37.680878 text=' ослож'
+  [ 4] id=13099 logit=   36.486214 text='ীদের'
+  [ 5] id=102171 logit=   36.421261 text=' Copies'
+  [ 6] id=233260 logit=   36.323833 text='人用'
+  [ 7] id=67810 logit=   36.207062 text=' tiempos'
+  [ 8] id=78962 logit=   36.066109 text='エスト'
+  [ 9] id=148446 logit=   35.954163 text=' ஏற்படுத்தும்'
+[Deep2Engine] Sampler selected token: 93011
+[DBG] sampled token=93011 eosId=1
+[DBG] stateNorm=3.376844e+02 finite=1 pos=244
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=67437 logit=   42.327282 text='нные'
+  [ 1] id=63920 logit=   37.512444 text='нной'
+  [ 2] id=127338 logit=   35.020454 text='นาย'
+  [ 3] id=  501 logit=   34.796360 text='en'
+  [ 4] id=27460 logit=   34.760014 text='->_'
+  [ 5] id=214851 logit=   34.592045 text='entery'
+  [ 6] id=50061 logit=   34.551559 text='ंकर'
+  [ 7] id=250053 logit=   34.269733 text='⼊'
+  [ 8] id=16353 logit=   34.073448 text='cases'
+  [ 9] id=237270 logit=   33.922573 text='ת'
+[Deep2Engine] Sampler selected token: 67437
+[DBG] sampled token=67437 eosId=1
+[DBG] stateNorm=3.279200e+02 finite=1 pos=245
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=191188 logit=   34.103268 text='けん'
+  [ 1] id= 3845 logit=   33.428574 text='Inter'
+  [ 2] id=46612 logit=   32.254417 text=':\\'
+  [ 3] id=140606 logit=   31.733873 text='κού'
+  [ 4] id= 2266 logit=   31.565445 text='inter'
+  [ 5] id=239778 logit=   31.237579 text='漫'
+  [ 6] id= 2750 logit=   30.513218 text='equ'
+  [ 7] id=100955 logit=   30.438452 text='ப்புற'
+  [ 8] id=237921 logit=   29.853695 text='再'
+  [ 9] id=72699 logit=   29.538006 text='happ'
+[Deep2Engine] Sampler selected token: 191188
+[DBG] sampled token=191188 eosId=1
+[DBG] stateNorm=3.218732e+02 finite=1 pos=246
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=60804 logit=   41.324539 text=' artículos'
+  [ 1] id=117107 logit=   38.911873 text=' clogged'
+  [ 2] id=64437 logit=   38.668560 text='că'
+  [ 3] id=233260 logit=   38.466488 text='人用'
+  [ 4] id=67810 logit=   38.402676 text=' tiempos'
+  [ 5] id=10308 logit=   37.868294 text=' articles'
+  [ 6] id=130867 logit=   37.655678 text=' सैनिकों'
+  [ 7] id=37645 logit=   37.447399 text='ാവ'
+  [ 8] id=39009 logit=   37.156105 text=' Articles'
+  [ 9] id=73443 logit=   37.112488 text='पाई'
+[Deep2Engine] Sampler selected token: 60804
+[DBG] sampled token=60804 eosId=1
+[DBG] stateNorm=3.331988e+02 finite=1 pos=247
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=67437 logit=   36.684212 text='нные'
+  [ 1] id=63920 logit=   36.642056 text='нной'
+  [ 2] id=31627 logit=   36.130894 text='cli'
+  [ 3] id=188940 logit=   35.753922 text='ோருக்கு'
+  [ 4] id=235160 logit=   34.188286 text='regelen'
+  [ 5] id=209086 logit=   34.170300 text=' establecidas'
+  [ 6] id=88064 logit=   33.488258 text='シーズ'
+  [ 7] id=209411 logit=   33.005505 text='uptools'
+  [ 8] id= 1583 logit=   32.812965 text='iness'
+  [ 9] id=104648 logit=   32.637920 text='patches'
+[Deep2Engine] Sampler selected token: 63920
+[DBG] sampled token=63920 eosId=1
+[DBG] stateNorm=3.372659e+02 finite=1 pos=248
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=216356 logit=   38.346603 text='enfance'
+  [ 1] id=53227 logit=   37.313950 text='visited'
+  [ 2] id= 7705 logit=   36.215721 text='that'
+  [ 3] id= 2572 logit=   35.922165 text='দের'
+  [ 4] id=99388 logit=   35.010406 text=' visitation'
+  [ 5] id=105859 logit=   34.657417 text=' fringes'
+  [ 6] id=152806 logit=   34.632835 text=' території'
+  [ 7] id=254223 logit=   34.481544 text='薜'
+  [ 8] id=95677 logit=   34.038280 text=' Aspects'
+  [ 9] id=224021 logit=   34.004807 text='ฝ่าย'
+[Deep2Engine] Sampler selected token: 216356
+[DBG] sampled token=216356 eosId=1
+[KVCache] page grow 248 -> 256 hot (virtualMax=16836 pos=248)
+[DBG] stateNorm=3.108766e+02 finite=1 pos=249
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 2897 logit=   37.279411 text='side'
+  [ 1] id=233260 logit=   35.500473 text='人用'
+  [ 2] id=237086 logit=   35.242344 text='人'
+  [ 3] id=116901 logit=   34.180866 text='стями'
+  [ 4] id=165096 logit=   33.490589 text='WeatherData'
+  [ 5] id=130753 logit=   32.982533 text='వారి'
+  [ 6] id=73443 logit=   32.555435 text='पाई'
+  [ 7] id=253283 logit=   32.261906 text='⼈'
+  [ 8] id=31467 logit=   32.126175 text='erious'
+  [ 9] id=190881 logit=   31.982176 text=' nostrum'
+[Deep2Engine] Sampler selected token: 2897
+[DBG] sampled token=2897 eosId=1
+[DBG] stateNorm=3.267425e+02 finite=1 pos=250
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=46612 logit=   36.212997 text=':\\'
+  [ 1] id=251808 logit=   36.054756 text='𝑐'
+  [ 2] id=12381 logit=   35.122704 text=' जाने'
+  [ 3] id=253283 logit=   34.199047 text='⼈'
+  [ 4] id=234364 logit=   34.069519 text='γραφή'
+  [ 5] id=241819 logit=   32.403187 text='ෘ'
+  [ 6] id=243518 logit=   31.994230 text='繫'
+  [ 7] id=237261 logit=   31.884060 text='本'
+  [ 8] id=34018 logit=   31.814245 text=' }));'
+  [ 9] id=252245 logit=   31.802555 text='旳'
+[Deep2Engine] Sampler selected token: 46612
+[DBG] sampled token=46612 eosId=1
+[DBG] stateNorm=3.360732e+02 finite=1 pos=251
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=    2 logit=   48.292233 text='<bos>'
+  [ 1] id=69437 logit=   39.773376 text='”),'
+  [ 2] id=135748 logit=   37.888466 text=']]:'
+  [ 3] id=38980 logit=   37.243786 text='ษา'
+  [ 4] id=16151 logit=   37.055950 text='marks'
+  [ 5] id=78962 logit=   36.189938 text='エスト'
+  [ 6] id=152874 logit=   36.092579 text=':”'
+  [ 7] id=192367 logit=   36.073406 text='වින්'
+  [ 8] id=50061 logit=   36.066536 text='ंकर'
+  [ 9] id=127338 logit=   35.888390 text='นาย'
+[Deep2Engine] Sampler selected token: 2
+[DBG] sampled token=2 eosId=1
+[DBG] stateNorm=3.064109e+02 finite=1 pos=252
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=200524 logit=   37.745106 text=' प्रहरी'
+  [ 1] id=185275 logit=   36.556084 text='मील'
+  [ 2] id=102215 logit=   35.809380 text='ईन'
+  [ 3] id=65360 logit=   35.668495 text='>','
+  [ 4] id=195469 logit=   35.577694 text='র্জা'
+  [ 5] id=53886 logit=   35.457100 text='ยว'
+  [ 6] id= 4382 logit=   34.624432 text='ées'
+  [ 7] id=16657 logit=   34.400536 text=' बस'
+  [ 8] id=  634 logit=   34.389977 text='ess'
+  [ 9] id=197938 logit=   34.362854 text=' oxyd'
+[Deep2Engine] Sampler selected token: 634
+[DBG] sampled token=634 eosId=1
+[DBG] stateNorm=3.085867e+02 finite=1 pos=253
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=74155 logit=   35.935284 text='itorio'
+  [ 1] id=144627 logit=   32.926720 text='сай'
+  [ 2] id=19327 logit=   31.731586 text='nego'
+  [ 3] id= 1179 logit=   31.707808 text='sh'
+  [ 4] id=92003 logit=   30.948114 text='当初'
+  [ 5] id=20855 logit=   30.930176 text='zek'
+  [ 6] id=222221 logit=   30.287048 text='પણે'
+  [ 7] id=255566 logit=   29.822727 text='ᱶ'
+  [ 8] id=130470 logit=   29.748898 text='žení'
+  [ 9] id=249835 logit=   29.566372 text='擞'
+[Deep2Engine] Sampler selected token: 74155
+[DBG] sampled token=74155 eosId=1
+[DBG] stateNorm=3.312143e+02 finite=1 pos=254
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=129211 logit=   35.365589 text='opharmaceutical'
+  [ 1] id=191627 logit=   32.706947 text='注意的是'
+  [ 2] id=170744 logit=   31.787388 text='timers'
+  [ 3] id=188940 logit=   31.772259 text='ோருக்கு'
+  [ 4] id= 1071 logit=   31.733616 text='to'
+  [ 5] id= 1437 logit=   31.675373 text='the'
+  [ 6] id= 2897 logit=   31.330017 text='side'
+  [ 7] id= 1062 logit=   31.267658 text='то'
+  [ 8] id=152903 logit=   31.173456 text='લું'
+  [ 9] id=250053 logit=   31.115656 text='⼊'
+[Deep2Engine] Sampler selected token: 129211
+[DBG] sampled token=129211 eosId=1
+[DBG] stateNorm=3.273913e+02 finite=1 pos=255
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=188940 logit=   38.586067 text='ோருக்கு'
+  [ 1] id=147969 logit=   35.810059 text='chette'
+  [ 2] id=50061 logit=   35.555332 text='ंकर'
+  [ 3] id=241519 logit=   35.252476 text='ὰ'
+  [ 4] id=125954 logit=   34.994385 text=' significativo'
+  [ 5] id=12766 logit=   34.863453 text='вод'
+  [ 6] id= 4130 logit=   34.407204 text='aged'
+  [ 7] id=234216 logit=   34.391899 text='ിട'
+  [ 8] id=216764 logit=   34.215820 text='écl'
+  [ 9] id=13830 logit=   34.091660 text='зе'
+[Deep2Engine] Sampler selected token: 188940
+[DBG] sampled token=188940 eosId=1
+[DBG] stateNorm=3.300443e+02 finite=1 pos=256
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=16353 logit=   40.145859 text='cases'
+  [ 1] id=50061 logit=   36.555023 text='ंकर'
+  [ 2] id=237066 logit=   35.951420 text='ú'
+  [ 3] id=129211 logit=   35.620735 text='opharmaceutical'
+  [ 4] id=237261 logit=   35.481773 text='本'
+  [ 5] id=237270 logit=   35.370766 text='ת'
+  [ 6] id=63920 logit=   35.046200 text='нной'
+  [ 7] id=118658 logit=   34.578655 text='squeeze'
+  [ 8] id=116270 logit=   34.570137 text='vação'
+  [ 9] id=61686 logit=   34.378597 text='’।'
+[Deep2Engine] Sampler selected token: 16353
+[DBG] sampled token=16353 eosId=1
+[KVCache] page grow 256 -> 264 hot (virtualMax=16836 pos=256)
+[DBG] stateNorm=3.153008e+02 finite=1 pos=257
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=176673 logit=   35.655209 text=' ఎమ్మెల్యే'
+  [ 1] id=211825 logit=   34.048138 text=' traffickers'
+  [ 2] id=130772 logit=   30.578106 text=' मुल'
+  [ 3] id=182844 logit=   30.418615 text=' identifications'
+  [ 4] id=97608 logit=   29.698374 text=' வீர'
+  [ 5] id=142551 logit=   29.341043 text='icius'
+  [ 6] id=118679 logit=   28.980505 text='वालियर'
+  [ 7] id=46455 logit=   28.778692 text=' Recall'
+  [ 8] id=23532 logit=   28.513096 text=' NFL'
+  [ 9] id=196947 logit=   28.463114 text='mce'
+[Deep2Engine] Sampler selected token: 211825
+[DBG] sampled token=211825 eosId=1
+[DBG] stateNorm=3.181773e+02 finite=1 pos=258
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  858 logit=   35.863827 text=' i'
+  [ 1] id= 2060 logit=   35.716122 text='return'
+  [ 2] id=237637 logit=   33.796932 text='接'
+  [ 3] id=33578 logit=   33.682877 text='Own'
+  [ 4] id=54664 logit=   33.549831 text='Writing'
+  [ 5] id=177519 logit=   33.549217 text='接到'
+  [ 6] id=11188 logit=   33.523369 text=' thể'
+  [ 7] id= 6323 logit=   32.646034 text='ifying'
+  [ 8] id=237888 logit=   32.637535 text='完'
+  [ 9] id=110399 logit=   32.342590 text='类型的'
+[Deep2Engine] Sampler selected token: 2060
+[DBG] sampled token=2060 eosId=1
+[DBG] stateNorm=3.167326e+02 finite=1 pos=259
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=225848 logit=   34.637432 text='வையாக'
+  [ 1] id= 1625 logit=   31.884205 text='ati'
+  [ 2] id=11750 logit=   31.447800 text=' supposed'
+  [ 3] id=27966 logit=   31.377771 text=' allegedly'
+  [ 4] id=148328 logit=   30.506605 text='agel'
+  [ 5] id=50554 logit=   30.300125 text=' substrates'
+  [ 6] id= 8815 logit=   30.185036 text='ías'
+  [ 7] id=22381 logit=   30.106087 text=' wabarakatuh'
+  [ 8] id=33797 logit=   30.054079 text=' creator'
+  [ 9] id=167531 logit=   29.836899 text='ට්ට'
+[Deep2Engine] Sampler selected token: 225848
+[DBG] sampled token=225848 eosId=1
+[DBG] stateNorm=3.155436e+02 finite=1 pos=260
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=17742 logit=   35.806709 text='ơi'
+  [ 1] id=    2 logit=   34.603184 text='<bos>'
+  [ 2] id=237086 logit=   33.801922 text='人'
+  [ 3] id=233260 logit=   33.630215 text='人用'
+  [ 4] id=236785 logit=   32.622536 text='\'
+  [ 5] id=13987 logit=   31.259247 text=' प्रदेश'
+  [ 6] id=10479 logit=   31.235399 text='sort'
+  [ 7] id=247577 logit=   30.617931 text='ઍ'
+  [ 8] id=12381 logit=   30.367355 text=' जाने'
+  [ 9] id=53227 logit=   30.136284 text='visited'
+[Deep2Engine] Sampler selected token: 2
+[DBG] sampled token=2 eosId=1
+[DBG] stateNorm=3.097711e+02 finite=1 pos=261
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=236811 logit=   35.710278 text='F'
+  [ 1] id=13846 logit=   34.795464 text='ør'
+  [ 2] id=  858 logit=   34.554806 text=' i'
+  [ 3] id=24026 logit=   34.476101 text='Про'
+  [ 4] id=237117 logit=   34.155014 text='С'
+  [ 5] id= 2730 logit=   33.586784 text='En'
+  [ 6] id=236958 logit=   33.510933 text='ف'
+  [ 7] id=143174 logit=   32.812714 text='无比'
+  [ 8] id=232358 logit=   32.474628 text='Hmmm'
+  [ 9] id=54490 logit=   32.464058 text='ева'
+[Deep2Engine] Sampler selected token: 13846
+[DBG] sampled token=13846 eosId=1
+[DBG] stateNorm=3.193332e+02 finite=1 pos=262
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=151908 logit=   34.171692 text=' стороне'
+  [ 1] id=116901 logit=   32.824806 text='стями'
+  [ 2] id=77841 logit=   32.318573 text='ностей'
+  [ 3] id= 2572 logit=   31.572546 text='দের'
+  [ 4] id=10479 logit=   31.255293 text='sort'
+  [ 5] id=73443 logit=   29.536894 text='पाई'
+  [ 6] id=136174 logit=   28.579388 text=' dependents'
+  [ 7] id= 2897 logit=   28.299183 text='side'
+  [ 8] id=10521 logit=   27.893522 text=' interests'
+  [ 9] id=146597 logit=   27.816004 text='బాబు'
+[Deep2Engine] Sampler selected token: 151908
+[DBG] sampled token=151908 eosId=1
+[DBG] stateNorm=3.153964e+02 finite=1 pos=263
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=15171 logit=   33.619576 text='textContent'
+  [ 1] id=48838 logit=   32.280720 text='щей'
+  [ 2] id=18250 logit=   32.105690 text=' ಪ್ರ'
+  [ 3] id=255913 logit=   31.705078 text='列'
+  [ 4] id=238240 logit=   31.639559 text='ঢ'
+  [ 5] id=22270 logit=   31.493767 text=' அமை'
+  [ 6] id=74201 logit=   31.478214 text='логі'
+  [ 7] id=11484 logit=   31.373857 text='وان'
+  [ 8] id=141669 logit=   31.224054 text='Disposable'
+  [ 9] id=98574 logit=   31.182575 text=' trenches'
+[Deep2Engine] Sampler selected token: 141669
+[DBG] sampled token=141669 eosId=1
+[DBG] stateNorm=3.104387e+02 finite=1 pos=264
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=188940 logit=   33.626377 text='ோருக்கு'
+  [ 1] id=116439 logit=   33.441940 text='peł'
+  [ 2] id=204639 logit=   33.227165 text='MUX'
+  [ 3] id=222159 logit=   32.599876 text='लीकरण'
+  [ 4] id=  854 logit=   31.672903 text='com'
+  [ 5] id=48104 logit=   30.585606 text='ступи'
+  [ 6] id=155976 logit=   30.402084 text='erebbe'
+  [ 7] id=234216 logit=   29.790777 text='ിട'
+  [ 8] id=217385 logit=   29.700838 text='точной'
+  [ 9] id=66308 logit=   29.684580 text='TK'
+[Deep2Engine] Sampler selected token: 188940
+[DBG] sampled token=188940 eosId=1
+[KVCache] page grow 264 -> 272 hot (virtualMax=16836 pos=264)
+[DBG] stateNorm=3.083723e+02 finite=1 pos=265
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 5276 logit=   30.757011 text='द्'
+  [ 1] id=    2 logit=   30.649723 text='<bos>'
+  [ 2] id=216173 logit=   29.668964 text='ücher'
+  [ 3] id=236751 logit=   29.569710 text='s'
+  [ 4] id=38632 logit=   28.312006 text='স্ক'
+  [ 5] id=218243 logit=   27.959381 text=' அரசின்'
+  [ 6] id=175476 logit=   27.372839 text='פס'
+  [ 7] id=217526 logit=   27.221869 text='شاف'
+  [ 8] id=11875 logit=   27.191429 text='sis'
+  [ 9] id=20022 logit=   26.607574 text='ρί'
+[Deep2Engine] Sampler selected token: 5276
+[DBG] sampled token=5276 eosId=1
+[DBG] stateNorm=3.198642e+02 finite=1 pos=266
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=12381 logit=   36.372726 text=' जाने'
+  [ 1] id=237850 logit=   32.822887 text='ણ'
+  [ 2] id=124191 logit=   32.780117 text='enças'
+  [ 3] id=117749 logit=   32.596481 text='ونت'
+  [ 4] id=23685 logit=   32.092258 text=' premises'
+  [ 5] id=93973 logit=   32.065380 text='lüğ'
+  [ 6] id=53227 logit=   31.335838 text='visited'
+  [ 7] id=93933 logit=   30.200293 text='ющихся'
+  [ 8] id=93011 logit=   29.812351 text='ériques'
+  [ 9] id=102171 logit=   29.697109 text=' Copies'
+[Deep2Engine] Sampler selected token: 12381
+[DBG] sampled token=12381 eosId=1
+[DBG] stateNorm=3.309293e+02 finite=1 pos=267
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=84111 logit=   42.135513 text='வற்றை'
+  [ 1] id=54410 logit=   41.577991 text='ifié'
+  [ 2] id=22281 logit=   40.686512 text='िकल'
+  [ 3] id=  924 logit=   40.024624 text='но'
+  [ 4] id=71842 logit=   39.081108 text=' ripen'
+  [ 5] id=121842 logit=   38.590538 text=' শতাব্দ'
+  [ 6] id=248825 logit=   38.512962 text='𝘤'
+  [ 7] id=149957 logit=   38.490013 text='ится'
+  [ 8] id=236780 logit=   38.352753 text='C'
+  [ 9] id=85266 logit=   38.211605 text='型的'
+[Deep2Engine] Sampler selected token: 84111
+[DBG] sampled token=84111 eosId=1
+[DBG] stateNorm=3.236421e+02 finite=1 pos=268
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=85266 logit=   39.944401 text='型的'
+  [ 1] id=101585 logit=   36.413750 text=' ಅನ್ನು'
+  [ 2] id=32235 logit=   36.217621 text='ارة'
+  [ 3] id=119935 logit=   35.904793 text='trou'
+  [ 4] id= 3947 logit=   35.692429 text='point'
+  [ 5] id=237731 logit=   34.267002 text='型'
+  [ 6] id=232351 logit=   34.108505 text='thirsty'
+  [ 7] id=  495 logit=   33.821163 text='in'
+  [ 8] id=122687 logit=   33.780861 text='手の'
+  [ 9] id=42758 logit=   33.501492 text='ന്നു'
+[Deep2Engine] Sampler selected token: 85266
+[DBG] sampled token=85266 eosId=1
+[DBG] stateNorm=3.156261e+02 finite=1 pos=269
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 3834 logit=   35.690598 text='At'
+  [ 1] id=  657 logit=   35.428482 text=' at'
+  [ 2] id=  616 logit=   35.200783 text='ers'
+  [ 3] id= 3735 logit=   34.559345 text=' easy'
+  [ 4] id=236848 logit=   34.049778 text='ल'
+  [ 5] id= 9928 logit=   33.947044 text=' AT'
+  [ 6] id=236824 logit=   33.852974 text='W'
+  [ 7] id=237953 logit=   33.759445 text='長'
+  [ 8] id=176918 logit=   33.701996 text='자리'
+  [ 9] id=  558 logit=   33.701279 text=' T'
+[Deep2Engine] Sampler selected token: 3834
+[DBG] sampled token=3834 eosId=1
+[DBG] stateNorm=3.072988e+02 finite=1 pos=270
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=13896 logit=   27.429560 text=' visited'
+  [ 1] id=53227 logit=   27.179472 text='visited'
+  [ 2] id=  858 logit=   26.390776 text=' i'
+  [ 3] id=  584 logit=   25.379559 text='if'
+  [ 4] id= 4533 logit=   24.654224 text=' except'
+  [ 5] id=20285 logit=   24.426950 text='except'
+  [ 6] id= 9561 logit=   24.411087 text='liche'
+  [ 7] id=183325 logit=   24.288292 text=' interessa'
+  [ 8] id=136926 logit=   24.247559 text='越し'
+  [ 9] id=  414 logit=   24.180710 text='�'
+[Deep2Engine] Sampler selected token: 13896
+[DBG] sampled token=13896 eosId=1
+[DBG] stateNorm=3.239405e+02 finite=1 pos=271
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1150 logit=   36.569103 text='ре'
+  [ 1] id=10447 logit=   35.350136 text=' Э'
+  [ 2] id=55592 logit=   34.626846 text=' возду'
+  [ 3] id=  645 logit=   34.609447 text=' E'
+  [ 4] id=14044 logit=   34.443508 text=' י'
+  [ 5] id=  558 logit=   32.982033 text=' T'
+  [ 6] id=100955 logit=   32.925480 text='ப்புற'
+  [ 7] id=86058 logit=   32.881187 text='みんな'
+  [ 8] id=132059 logit=   32.830860 text=' Xian'
+  [ 9] id=10537 logit=   32.685410 text=' Ca'
+[Deep2Engine] Sampler selected token: 1150
+[DBG] sampled token=1150 eosId=1
+[DBG] stateNorm=3.202145e+02 finite=1 pos=272
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=236833 logit=   33.701630 text='न'
+  [ 1] id=93973 logit=   33.050758 text='lüğ'
+  [ 2] id=27545 logit=   32.465073 text='வன'
+  [ 3] id=67437 logit=   32.232708 text='нные'
+  [ 4] id=233260 logit=   31.941364 text='人用'
+  [ 5] id=101864 logit=   31.749439 text='onyms'
+  [ 6] id=54284 logit=   31.518702 text='”:'
+  [ 7] id=56950 logit=   31.487312 text='人は'
+  [ 8] id=255913 logit=   31.275085 text='列'
+  [ 9] id=93933 logit=   31.108974 text='ющихся'
+[Deep2Engine] Sampler selected token: 27545
+[DBG] sampled token=27545 eosId=1
+[KVCache] page grow 272 -> 280 hot (virtualMax=16836 pos=272)
+[DBG] stateNorm=3.151989e+02 finite=1 pos=273
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=106129 logit=   41.981228 text='人民币'
+  [ 1] id=130977 logit=   36.364037 text='зит'
+  [ 2] id=30284 logit=   34.821320 text='Ti'
+  [ 3] id=44965 logit=   34.175247 text='Tick'
+  [ 4] id=205797 logit=   33.929520 text=' রোল'
+  [ 5] id=  902 logit=   33.919827 text='In'
+  [ 6] id= 4830 logit=   33.864391 text='Dis'
+  [ 7] id=232760 logit=   33.602997 text='గ్ర'
+  [ 8] id=122356 logit=   32.698433 text='कालिक'
+  [ 9] id=181451 logit=   32.663174 text='বেলা'
+[Deep2Engine] Sampler selected token: 106129
+[DBG] sampled token=106129 eosId=1
+[DBG] stateNorm=3.329117e+02 finite=1 pos=274
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=253446 logit=   37.460175 text='Ɵ'
+  [ 1] id= 3340 logit=   35.050781 text='াব'
+  [ 2] id=219215 logit=   34.838463 text=' ambito'
+  [ 3] id=238403 logit=   34.684635 text='對'
+  [ 4] id=155319 logit=   33.902504 text='\"{'
+  [ 5] id=78797 logit=   33.460087 text='くと'
+  [ 6] id=248021 logit=   32.990376 text='⁎'
+  [ 7] id= 4106 logit=   32.920944 text=' areas'
+  [ 8] id=149627 logit=   32.642879 text='ostiene'
+  [ 9] id=12381 logit=   32.634098 text=' जाने'
+[Deep2Engine] Sampler selected token: 253446
+[DBG] sampled token=253446 eosId=1
+[DBG] stateNorm=3.266650e+02 finite=1 pos=275
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=67437 logit=   41.156868 text='нные'
+  [ 1] id=185321 logit=   38.491409 text=' Affected'
+  [ 2] id= 1788 logit=   38.421391 text='ness'
+  [ 3] id=237086 logit=   37.738342 text='人'
+  [ 4] id=211760 logit=   37.494041 text='Affected'
+  [ 5] id=152806 logit=   36.818115 text=' території'
+  [ 6] id=13262 logit=   36.651615 text='Area'
+  [ 7] id=34480 logit=   36.534561 text='地区'
+  [ 8] id=52769 logit=   36.179993 text='вої'
+  [ 9] id=236833 logit=   36.119892 text='न'
+[Deep2Engine] Sampler selected token: 67437
+[DBG] sampled token=67437 eosId=1
+[DBG] stateNorm=3.318470e+02 finite=1 pos=276
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1479 logit=   34.095505 text='Re'
+  [ 1] id= 2572 logit=   32.514114 text='দের'
+  [ 2] id=14447 logit=   31.247366 text='World'
+  [ 3] id=144895 logit=   29.630081 text='நாட்டு'
+  [ 4] id=190634 logit=   29.541872 text=' Mutant'
+  [ 5] id= 4109 logit=   29.359459 text=' World'
+  [ 6] id= 1639 logit=   28.048035 text='ants'
+  [ 7] id=236928 logit=   27.959873 text='í'
+  [ 8] id= 3778 logit=   27.943851 text='Pr'
+  [ 9] id=236858 logit=   27.753569 text='’'
+[Deep2Engine] Sampler selected token: 2572
+[DBG] sampled token=2572 eosId=1
+[DBG] stateNorm=3.385908e+02 finite=1 pos=277
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=    2 logit=   47.112827 text='<bos>'
+  [ 1] id= 2870 logit=   34.955399 text=' general'
+  [ 2] id=  532 logit=   31.685467 text=' and'
+  [ 3] id=12289 logit=   30.895222 text=':\'
+  [ 4] id=92793 logit=   30.851049 text='由於'
+  [ 5] id=240148 logit=   30.803650 text='泡'
+  [ 6] id= 1883 logit=   30.463108 text=' state'
+  [ 7] id=236785 logit=   30.209711 text='\'
+  [ 8] id=52711 logit=   29.914700 text='ंमध्ये'
+  [ 9] id= 6601 logit=   29.856153 text='ques'
+[Deep2Engine] Sampler selected token: 2
+[DBG] sampled token=2 eosId=1
+[DBG] stateNorm=3.134486e+02 finite=1 pos=278
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=78845 logit=   36.850105 text='പോ'
+  [ 1] id=237333 logit=   35.903107 text='પ'
+  [ 2] id= 4240 logit=   35.775822 text='hand'
+  [ 3] id=250893 logit=   33.048401 text='𝙡'
+  [ 4] id=10170 logit=   31.411194 text=' Real'
+  [ 5] id=24229 logit=   31.086454 text='şı'
+  [ 6] id=66350 logit=   30.874508 text=' Catch'
+  [ 7] id=  584 logit=   30.772102 text='if'
+  [ 8] id=134505 logit=   30.690252 text=' فشاں'
+  [ 9] id=51549 logit=   30.104576 text='வரை'
+[Deep2Engine] Sampler selected token: 4240
+[DBG] sampled token=4240 eosId=1
+[DBG] stateNorm=3.240596e+02 finite=1 pos=279
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=144312 logit=   40.174103 text='டர்'
+  [ 1] id= 7515 logit=   33.785130 text='scape'
+  [ 2] id=128151 logit=   33.503231 text='appelijke'
+  [ 3] id=244116 logit=   31.396341 text='槛'
+  [ 4] id=38453 logit=   30.890320 text='qquad'
+  [ 5] id=158678 logit=   30.793453 text='нца'
+  [ 6] id= 3511 logit=   30.532135 text='quad'
+  [ 7] id=51401 logit=   30.428322 text=' পথে'
+  [ 8] id=180422 logit=   30.119606 text=' стаття'
+  [ 9] id=14114 logit=   29.797012 text='时候'
+[Deep2Engine] Sampler selected token: 144312
+[DBG] sampled token=144312 eosId=1
+[DBG] stateNorm=3.209881e+02 finite=1 pos=280
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 2572 logit=   37.415291 text='দের'
+  [ 1] id=239115 logit=   36.369392 text='ණ'
+  [ 2] id=113769 logit=   34.677769 text='obu'
+  [ 3] id=135024 logit=   34.017941 text=' esquerda'
+  [ 4] id= 5900 logit=   32.313313 text='names'
+  [ 5] id= 2928 logit=   32.275322 text='ager'
+  [ 6] id=103934 logit=   32.253601 text=' Paj'
+  [ 7] id=21260 logit=   32.156982 text='నే'
+  [ 8] id=77841 logit=   31.765102 text='ностей'
+  [ 9] id=151908 logit=   31.761421 text=' стороне'
+[Deep2Engine] Sampler selected token: 2572
+[DBG] sampled token=2572 eosId=1
+[KVCache] page grow 280 -> 288 hot (virtualMax=16836 pos=280)
+[DBG] stateNorm=3.302233e+02 finite=1 pos=281
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=27798 logit=   38.404709 text=' unemployment'
+  [ 1] id=12381 logit=   38.235256 text=' जाने'
+  [ 2] id=244871 logit=   35.728127 text='ᴘ'
+  [ 3] id=11214 logit=   35.603210 text='formed'
+  [ 4] id=251808 logit=   35.590328 text='𝑐'
+  [ 5] id=14044 logit=   35.481541 text=' י'
+  [ 6] id=20053 logit=   35.317257 text='வர'
+  [ 7] id=116901 logit=   35.005100 text='стями'
+  [ 8] id=62655 logit=   34.999966 text='никами'
+  [ 9] id=147639 logit=   34.647392 text='pore'
+[Deep2Engine] Sampler selected token: 12381
+[DBG] sampled token=12381 eosId=1
+[DBG] stateNorm=3.227148e+02 finite=1 pos=282
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=    2 logit=   44.491982 text='<bos>'
+  [ 1] id=109081 logit=   35.487366 text=' Oyster'
+  [ 2] id=190314 logit=   34.207569 text='在新'
+  [ 3] id=239842 logit=   33.400330 text='困'
+  [ 4] id=49033 logit=   33.244511 text='ल्याण'
+  [ 5] id=47124 logit=   31.936344 text=' billions'
+  [ 6] id=87737 logit=   31.741028 text=' viewDidLoad'
+  [ 7] id=125093 logit=   31.707966 text=' $<$'
+  [ 8] id=220455 logit=   31.566475 text='シップ'
+  [ 9] id=252828 logit=   31.357876 text='᱗'
+[Deep2Engine] Sampler selected token: 2
+[DBG] sampled token=2 eosId=1
+[DBG] stateNorm=3.277127e+02 finite=1 pos=283
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 5790 logit=   38.918148 text='AY'
+  [ 1] id=80123 logit=   38.533760 text='τές'
+  [ 2] id=185880 logit=   36.111588 text='أل'
+  [ 3] id=112267 logit=   34.074181 text='ophon'
+  [ 4] id= 3778 logit=   33.475082 text='Pr'
+  [ 5] id=22035 logit=   33.253555 text='či'
+  [ 6] id=47453 logit=   32.702438 text='Credit'
+  [ 7] id=33126 logit=   32.173622 text='вую'
+  [ 8] id=99515 logit=   32.048790 text=' পুনঃ'
+  [ 9] id= 2224 logit=   31.976839 text='ais'
+[Deep2Engine] Sampler selected token: 5790
+[DBG] sampled token=5790 eosId=1
+[DBG] stateNorm=3.204909e+02 finite=1 pos=284
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=15182 logit=   44.171478 text='ités'
+  [ 1] id=124191 logit=   41.077553 text='enças'
+  [ 2] id=88064 logit=   40.711815 text='シーズ'
+  [ 3] id= 8350 logit=   40.312290 text='ан'
+  [ 4] id=14813 logit=   39.660446 text='вые'
+  [ 5] id=19176 logit=   39.505795 text='ousing'
+  [ 6] id=73443 logit=   39.437420 text='पाई'
+  [ 7] id=62500 logit=   38.909122 text='是有'
+  [ 8] id= 8815 logit=   38.306316 text='ías'
+  [ 9] id=65852 logit=   38.276764 text='ваний'
+[Deep2Engine] Sampler selected token: 15182
+[DBG] sampled token=15182 eosId=1
+[DBG] stateNorm=3.183268e+02 finite=1 pos=285
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=17742 logit=   37.369362 text='ơi'
+  [ 1] id= 2572 logit=   36.911999 text='দের'
+  [ 2] id=166210 logit=   36.621677 text='োয়া'
+  [ 3] id=238579 logit=   35.635311 text='員'
+  [ 4] id=237850 logit=   35.267181 text='ણ'
+  [ 5] id=130867 logit=   35.144234 text=' सैनिकों'
+  [ 6] id=151908 logit=   34.700668 text=' стороне'
+  [ 7] id=116901 logit=   34.364502 text='стями'
+  [ 8] id=230274 logit=   34.038857 text='都道府県'
+  [ 9] id=55281 logit=   33.535210 text='kä'
+[Deep2Engine] Sampler selected token: 17742
+[DBG] sampled token=17742 eosId=1
+[DBG] stateNorm=3.076334e+02 finite=1 pos=286
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=237173 logit=   38.979519 text='ら'
+  [ 1] id=225373 logit=   36.511566 text='ágico'
+  [ 2] id= 9034 logit=   34.299004 text=' affected'
+  [ 3] id=148772 logit=   34.093712 text='shaded'
+  [ 4] id=53227 logit=   34.068069 text='visited'
+  [ 5] id=199323 logit=   33.906391 text=' کودکان'
+  [ 6] id=225194 logit=   33.702427 text='த்திற்கான'
+  [ 7] id=187552 logit=   33.522125 text='民间'
+  [ 8] id=134640 logit=   33.238632 text=' организма'
+  [ 9] id=211196 logit=   33.068676 text=' ifstream'
+[Deep2Engine] Sampler selected token: 237173
+[DBG] sampled token=237173 eosId=1
+[DBG] stateNorm=3.069148e+02 finite=1 pos=287
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1583 logit=   33.877941 text='iness'
+  [ 1] id= 2093 logit=   33.329166 text='ified'
+  [ 2] id=51927 logit=   32.400658 text='กำ'
+  [ 3] id=154769 logit=   31.517324 text='शिला'
+  [ 4] id=  525 logit=   29.986568 text='ic'
+  [ 5] id=  858 logit=   29.660282 text=' i'
+  [ 6] id=11260 logit=   29.501190 text='তার'
+  [ 7] id=236992 logit=   29.441668 text='ш'
+  [ 8] id=27438 logit=   28.284714 text='িং'
+  [ 9] id=236773 logit=   28.257275 text='S'
+[Deep2Engine] Sampler selected token: 1583
+[DBG] sampled token=1583 eosId=1
+[DBG] stateNorm=3.173791e+02 finite=1 pos=288
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 8494 logit=   38.481079 text='session'
+  [ 1] id= 6478 logit=   37.874504 text=' session'
+  [ 2] id= 2029 logit=   36.305367 text='ся'
+  [ 3] id= 5943 logit=   35.879459 text='देश'
+  [ 4] id=236751 logit=   34.250336 text='s'
+  [ 5] id=31106 logit=   33.889374 text='SESSION'
+  [ 6] id=127338 logit=   33.860806 text='นาย'
+  [ 7] id=183935 logit=   33.754280 text='argout'
+  [ 8] id=16774 logit=   33.661678 text='socket'
+  [ 9] id=206772 logit=   32.433731 text=' pelt'
+[Deep2Engine] Sampler selected token: 8494
+[DBG] sampled token=8494 eosId=1
+[KVCache] page grow 288 -> 296 hot (virtualMax=16836 pos=288)
+[DBG] stateNorm=3.363364e+02 finite=1 pos=289
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=14813 logit=   43.536930 text='вые'
+  [ 1] id=185321 logit=   42.136002 text=' Affected'
+  [ 2] id=165318 logit=   42.131287 text=' Rupees'
+  [ 3] id=78962 logit=   42.032745 text='エスト'
+  [ 4] id=130867 logit=   42.006310 text=' सैनिकों'
+  [ 5] id=116901 logit=   41.761467 text='стями'
+  [ 6] id=25541 logit=   41.046421 text='matches'
+  [ 7] id=191199 logit=   40.744755 text=' Comptes'
+  [ 8] id=152439 logit=   39.692215 text=' clutches'
+  [ 9] id=52769 logit=   39.652180 text='вої'
+[Deep2Engine] Sampler selected token: 14813
+[DBG] sampled token=14813 eosId=1
+[DBG] stateNorm=3.162725e+02 finite=1 pos=290
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=254239 logit=   38.884811 text='𝙔'
+  [ 1] id=143748 logit=   36.453491 text='chid'
+  [ 2] id=124191 logit=   35.997131 text='enças'
+  [ 3] id=93011 logit=   35.773438 text='ériques'
+  [ 4] id= 1150 logit=   34.399704 text='ре'
+  [ 5] id= 2572 logit=   34.395935 text='দের'
+  [ 6] id=86363 logit=   33.366169 text=' camar'
+  [ 7] id=27545 logit=   33.288609 text='வன'
+  [ 8] id=39070 logit=   32.860859 text=' успе'
+  [ 9] id=124290 logit=   32.815186 text=' trúc'
+[Deep2Engine] Sampler selected token: 254239
+[DBG] sampled token=254239 eosId=1
+[DBG] stateNorm=3.137368e+02 finite=1 pos=291
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=60126 logit=   37.340000 text=' bosses'
+  [ 1] id=150654 logit=   36.789799 text=' Añ'
+  [ 2] id=80040 logit=   36.465481 text='employees'
+  [ 3] id= 6404 logit=   35.695446 text='पी'
+  [ 4] id=34170 logit=   35.610592 text='держи'
+  [ 5] id=157403 logit=   34.813530 text='трима'
+  [ 6] id=80001 logit=   34.771324 text='ionario'
+  [ 7] id=181454 logit=   34.628117 text=' Administrators'
+  [ 8] id=58234 logit=   34.432556 text='પી'
+  [ 9] id=74538 logit=   34.355236 text='ఖ్య'
+[Deep2Engine] Sampler selected token: 60126
+[DBG] sampled token=60126 eosId=1
+[DBG] stateNorm=3.348700e+02 finite=1 pos=292
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=93973 logit=   32.363632 text='lüğ'
+  [ 1] id= 3705 logit=   31.558941 text='ites'
+  [ 2] id=15182 logit=   31.313692 text='ités'
+  [ 3] id=53227 logit=   31.291695 text='visited'
+  [ 4] id= 1236 logit=   30.167179 text='ities'
+  [ 5] id=151268 logit=   29.134676 text='utrients'
+  [ 6] id=238264 logit=   28.785118 text='ഴ'
+  [ 7] id=10217 logit=   28.747211 text=' aspects'
+  [ 8] id=20503 logit=   28.725052 text=' visits'
+  [ 9] id=202269 logit=   28.401951 text='visits'
+[Deep2Engine] Sampler selected token: 53227
+[DBG] sampled token=53227 eosId=1
+[DBG] stateNorm=3.335527e+02 finite=1 pos=293
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=116901 logit=   36.307442 text='стями'
+  [ 1] id=10866 logit=   34.979855 text=' Offic'
+  [ 2] id=33958 logit=   31.950493 text='typed'
+  [ 3] id= 2572 logit=   31.639170 text='দের'
+  [ 4] id= 1583 logit=   30.262550 text='iness'
+  [ 5] id=112269 logit=   30.226549 text='จะเป็น'
+  [ 6] id=14044 logit=   29.427174 text=' י'
+  [ 7] id=62422 logit=   29.108103 text='importance'
+  [ 8] id=218155 logit=   28.620888 text=' Indications'
+  [ 9] id=  895 logit=   28.334301 text=' Y'
+[Deep2Engine] Sampler selected token: 116901
+[DBG] sampled token=116901 eosId=1
+[DBG] stateNorm=3.321785e+02 finite=1 pos=294
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=53227 logit=   36.217682 text='visited'
+  [ 1] id=105859 logit=   34.742550 text=' fringes'
+  [ 2] id=  698 logit=   33.914440 text='ang'
+  [ 3] id=89858 logit=   32.173958 text=' coverings'
+  [ 4] id=32557 logit=   32.047306 text=' perspectives'
+  [ 5] id= 8981 logit=   32.004284 text='eres'
+  [ 6] id= 9034 logit=   31.680134 text=' affected'
+  [ 7] id=188940 logit=   31.421757 text='ோருக்கு'
+  [ 8] id=212722 logit=   31.083675 text='の原因'
+  [ 9] id= 1283 logit=   30.401020 text='ages'
+[Deep2Engine] Sampler selected token: 53227
+[DBG] sampled token=53227 eosId=1
+[DBG] stateNorm=3.219628e+02 finite=1 pos=295
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=116901 logit=   41.916676 text='стями'
+  [ 1] id=240424 logit=   37.390789 text='辦'
+  [ 2] id=34077 logit=   34.878105 text=' práct'
+  [ 3] id=234259 logit=   33.919231 text=' органами'
+  [ 4] id=66017 logit=   33.763004 text=' Measurements'
+  [ 5] id=23586 logit=   32.819996 text=' Π'
+  [ 6] id=  895 logit=   32.466019 text=' Y'
+  [ 7] id=104890 logit=   32.060669 text='rcParams'
+  [ 8] id=48556 logit=   31.882267 text='Collected'
+  [ 9] id=10866 logit=   31.818157 text=' Offic'
+[Deep2Engine] Sampler selected token: 116901
+[DBG] sampled token=116901 eosId=1
+[DBG] stateNorm=3.221380e+02 finite=1 pos=296
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=151908 logit=   35.777653 text=' стороне'
+  [ 1] id=238044 logit=   34.892769 text='片'
+  [ 2] id=105859 logit=   31.255297 text=' fringes'
+  [ 3] id= 2572 logit=   30.779636 text='দের'
+  [ 4] id=89858 logit=   30.700678 text=' coverings'
+  [ 5] id=53227 logit=   30.599697 text='visited'
+  [ 6] id=188940 logit=   30.188738 text='ோருக்கு'
+  [ 7] id=97858 logit=   29.713852 text=' сторону'
+  [ 8] id=99393 logit=   29.052624 text=' bilang'
+  [ 9] id=17742 logit=   28.989862 text='ơi'
+[Deep2Engine] Sampler selected token: 151908
+[DBG] sampled token=151908 eosId=1
+[KVCache] page grow 296 -> 304 hot (virtualMax=16836 pos=296)
+[DBG] stateNorm=3.208582e+02 finite=1 pos=297
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=254833 logit=   37.459145 text='葲'
+  [ 1] id=141041 logit=   34.175201 text=' 〈'
+  [ 2] id=    2 logit=   33.977161 text='<bos>'
+  [ 3] id=232351 logit=   33.678596 text='thirsty'
+  [ 4] id=253283 logit=   33.531677 text='⼈'
+  [ 5] id=47334 logit=   33.481350 text='}','
+  [ 6] id=203741 logit=   33.289650 text='深圳市'
+  [ 7] id=251654 logit=   33.219418 text='⽅'
+  [ 8] id=144519 logit=   33.179409 text='وزر'
+  [ 9] id=43178 logit=   33.043331 text='liness'
+[Deep2Engine] Sampler selected token: 254833
+[DBG] sampled token=254833 eosId=1
+[DBG] stateNorm=3.225551e+02 finite=1 pos=298
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=78962 logit=   40.586784 text='エスト'
+  [ 1] id=124191 logit=   40.139446 text='enças'
+  [ 2] id=137637 logit=   36.846947 text='Visited'
+  [ 3] id=67165 logit=   35.532730 text='Called'
+  [ 4] id=230274 logit=   35.287842 text='都道府県'
+  [ 5] id=242906 logit=   34.466129 text='勘'
+  [ 6] id= 9072 logit=   34.397041 text='рі'
+  [ 7] id=233260 logit=   34.151508 text='人用'
+  [ 8] id=236490 logit=   33.874672 text='lín'
+  [ 9] id=53227 logit=   33.609261 text='visited'
+[Deep2Engine] Sampler selected token: 78962
+[DBG] sampled token=78962 eosId=1
+[DBG] stateNorm=3.365196e+02 finite=1 pos=299
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=213629 logit=   36.632168 text=' afectadas'
+  [ 1] id=188940 logit=   36.506020 text='ோருக்கு'
+  [ 2] id=130753 logit=   36.088516 text='వారి'
+  [ 3] id=185321 logit=   34.283432 text=' Affected'
+  [ 4] id=167194 logit=   34.009880 text=' afectados'
+  [ 5] id= 1571 logit=   33.327980 text='ten'
+  [ 6] id= 9034 logit=   33.171944 text=' affected'
+  [ 7] id=233912 logit=   32.768322 text=' afectada'
+  [ 8] id= 3740 logit=   31.682386 text='aves'
+  [ 9] id= 1583 logit=   31.574123 text='iness'
+[Deep2Engine] Sampler selected token: 213629
+[DBG] sampled token=213629 eosId=1
+[DBG] stateNorm=3.229241e+02 finite=1 pos=300
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 7637 logit=   38.324871 text='पर'
+  [ 1] id=185256 logit=   33.152367 text='amentales'
+  [ 2] id=  558 logit=   32.400768 text=' T'
+  [ 3] id=55355 logit=   32.098827 text=' Internacional'
+  [ 4] id=159467 logit=   31.786846 text='ADAS'
+  [ 5] id=147712 logit=   31.200151 text='โยชน์'
+  [ 6] id=25507 logit=   30.941174 text='IAN'
+  [ 7] id=237092 logit=   30.361256 text='ల'
+  [ 8] id=24430 logit=   29.640217 text='టీ'
+  [ 9] id=234059 logit=   29.551609 text='Quan'
+[Deep2Engine] Sampler selected token: 7637
+[DBG] sampled token=7637 eosId=1
+[DBG] stateNorm=3.210195e+02 finite=1 pos=301
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 2572 logit=   38.122452 text='দের'
+  [ 1] id= 6044 logit=   32.680019 text='ний'
+  [ 2] id= 2897 logit=   32.501057 text='side'
+  [ 3] id=116901 logit=   30.933121 text='стями'
+  [ 4] id= 3916 logit=   30.492142 text='ti'
+  [ 5] id=  558 logit=   30.379696 text=' T'
+  [ 6] id=  895 logit=   29.990950 text=' Y'
+  [ 7] id=100955 logit=   29.980663 text='ப்புற'
+  [ 8] id=236858 logit=   29.181870 text='’'
+  [ 9] id=66312 logit=   28.408218 text='mites'
+[Deep2Engine] Sampler selected token: 2572
+[DBG] sampled token=2572 eosId=1
+[DBG] stateNorm=3.365044e+02 finite=1 pos=302
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=12381 logit=   44.734222 text=' जाने'
+  [ 1] id=108309 logit=   37.294014 text='群众'
+  [ 2] id=98574 logit=   36.609009 text=' trenches'
+  [ 3] id=  924 logit=   36.058189 text='но'
+  [ 4] id=214851 logit=   35.202976 text='entery'
+  [ 5] id=120490 logit=   34.994331 text='quear'
+  [ 6] id=120855 logit=   34.878384 text=' terrains'
+  [ 7] id=165556 logit=   34.701351 text='aventure'
+  [ 8] id=61670 logit=   34.283573 text='立ち'
+  [ 9] id=175365 logit=   34.241821 text=' reconstructions'
+[Deep2Engine] Sampler selected token: 12381
+[DBG] sampled token=12381 eosId=1
+[DBG] stateNorm=3.327388e+02 finite=1 pos=303
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=98574 logit=   41.441105 text=' trenches'
+  [ 1] id=248825 logit=   40.654854 text='𝘤'
+  [ 2] id=109081 logit=   40.381718 text=' Oyster'
+  [ 3] id= 8473 logit=   39.800117 text='admin'
+  [ 4] id=232351 logit=   39.702652 text='thirsty'
+  [ 5] id=192301 logit=   39.230839 text=' retails'
+  [ 6] id=119984 logit=   38.426998 text='になると'
+  [ 7] id=219921 logit=   38.217876 text='überküloz'
+  [ 8] id=205603 logit=   37.770943 text='überkü'
+  [ 9] id=  990 logit=   37.416046 text=' time'
+[Deep2Engine] Sampler selected token: 8473
+[DBG] sampled token=8473 eosId=1
+[DBG] stateNorm=3.193922e+02 finite=1 pos=304
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=17125 logit=   42.631851 text='できる'
+  [ 1] id=90532 logit=   40.286663 text='出来る'
+  [ 2] id=107743 logit=   37.655334 text='らう'
+  [ 3] id=177833 logit=   37.390720 text='สัย'
+  [ 4] id=10217 logit=   36.731251 text=' aspects'
+  [ 5] id=210521 logit=   36.012638 text='會在'
+  [ 6] id=111899 logit=   35.682076 text='рованные'
+  [ 7] id=175677 logit=   35.631416 text='зё'
+  [ 8] id=16827 logit=   35.377136 text='ứng'
+  [ 9] id= 9034 logit=   34.919815 text=' affected'
+[Deep2Engine] Sampler selected token: 17125
+[DBG] sampled token=17125 eosId=1
+[KVCache] page grow 304 -> 312 hot (virtualMax=16836 pos=304)
+[DBG] stateNorm=3.377481e+02 finite=1 pos=305
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  497 logit=   37.167301 text='er'
+  [ 1] id=95305 logit=   36.611477 text='తులు'
+  [ 2] id=236981 logit=   35.475906 text='फ'
+  [ 3] id= 5615 logit=   35.337387 text='ses'
+  [ 4] id=237202 logit=   34.840916 text='ę'
+  [ 5] id=49312 logit=   33.632938 text='atics'
+  [ 6] id=  854 logit=   33.567181 text='com'
+  [ 7] id=112663 logit=   32.954350 text='நப'
+  [ 8] id=62383 logit=   32.938267 text=' প্রকার'
+  [ 9] id=236766 logit=   32.801510 text='v'
+[Deep2Engine] Sampler selected token: 497
+[DBG] sampled token=497 eosId=1
+[DBG] stateNorm=3.194051e+02 finite=1 pos=306
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=12076 logit=   38.407005 text=' brings'
+  [ 1] id= 7336 logit=   38.055889 text=' જ'
+  [ 2] id=50760 logit=   37.036255 text='க்கள்'
+  [ 3] id=62722 logit=   36.337112 text='同時'
+  [ 4] id=85919 logit=   36.255466 text='시는'
+  [ 5] id=236963 logit=   36.007267 text='ই'
+  [ 6] id=24317 logit=   35.637096 text='వి'
+  [ 7] id= 8815 logit=   35.597942 text='ías'
+  [ 8] id=81667 logit=   35.415726 text='物質'
+  [ 9] id=45763 logit=   35.409931 text='INESS'
+[Deep2Engine] Sampler selected token: 7336
+[DBG] sampled token=7336 eosId=1
+[DBG] stateNorm=3.295765e+02 finite=1 pos=307
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 9034 logit=   40.666382 text=' affected'
+  [ 1] id=213629 logit=   39.061321 text=' afectadas'
+  [ 2] id= 1283 logit=   35.912346 text='ages'
+  [ 3] id=151908 logit=   35.169312 text=' стороне'
+  [ 4] id=89858 logit=   35.120102 text=' coverings'
+  [ 5] id=188940 logit=   34.419922 text='ோருக்கு'
+  [ 6] id=211760 logit=   34.256565 text='Affected'
+  [ 7] id=230274 logit=   34.185234 text='都道府県'
+  [ 8] id=53227 logit=   33.671246 text='visited'
+  [ 9] id=136174 logit=   33.138290 text=' dependents'
+[Deep2Engine] Sampler selected token: 9034
+[DBG] sampled token=9034 eosId=1
+[DBG] stateNorm=3.439547e+02 finite=1 pos=308
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 2572 logit=   40.529930 text='দের'
+  [ 1] id=236772 logit=   37.088974 text='-'
+  [ 2] id=137909 logit=   35.764877 text='的相关'
+  [ 3] id=62422 logit=   33.853256 text='importance'
+  [ 4] id= 1583 logit=   33.270485 text='iness'
+  [ 5] id=151908 logit=   33.003143 text=' стороне'
+  [ 6] id=233912 logit=   32.330067 text=' afectada'
+  [ 7] id= 3765 logit=   32.182163 text='tes'
+  [ 8] id=21632 logit=   32.092213 text=' Interest'
+  [ 9] id=62576 logit=   31.791948 text=' территории'
+[Deep2Engine] Sampler selected token: 2572
+[DBG] sampled token=2572 eosId=1
+[DBG] stateNorm=3.353748e+02 finite=1 pos=309
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 2870 logit=   38.544739 text=' general'
+  [ 1] id=89858 logit=   38.298363 text=' coverings'
+  [ 2] id= 1883 logit=   37.629669 text=' state'
+  [ 3] id=237261 logit=   37.490040 text='本'
+  [ 4] id=    2 logit=   37.038353 text='<bos>'
+  [ 5] id=89448 logit=   36.652920 text=' pous'
+  [ 6] id=107260 logit=   33.880169 text=' PartialEq'
+  [ 7] id=108983 logit=   33.724346 text='指向'
+  [ 8] id=12289 logit=   33.354034 text=':\'
+  [ 9] id=191892 logit=   33.188824 text=' Villiers'
+[Deep2Engine] Sampler selected token: 2870
+[DBG] sampled token=2870 eosId=1
+[DBG] stateNorm=3.193071e+02 finite=1 pos=310
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=237857 logit=   43.897011 text='開'
+  [ 1] id=95944 logit=   39.724941 text=' เกิด'
+  [ 2] id=237873 logit=   38.069523 text='為'
+  [ 3] id=41107 logit=   37.674263 text=' муж'
+  [ 4] id=158135 logit=   37.324154 text='っていく'
+  [ 5] id=10177 logit=   36.812653 text='quer'
+  [ 6] id=240780 logit=   36.639912 text='谓'
+  [ 7] id=160538 logit=   35.213959 text='तिया'
+  [ 8] id=37098 logit=   34.989155 text=' อยู่'
+  [ 9] id=45673 logit=   34.869518 text='発生'
+[Deep2Engine] Sampler selected token: 237857
+[DBG] sampled token=237857 eosId=1
+[DBG] stateNorm=3.091142e+02 finite=1 pos=311
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 3530 logit=   33.712555 text=' specific'
+  [ 1] id=236914 logit=   33.390594 text='س'
+  [ 2] id=220120 logit=   31.332916 text='тивна'
+  [ 3] id= 1583 logit=   30.959705 text='iness'
+  [ 4] id=58640 logit=   30.430826 text='ότε'
+  [ 5] id=237231 logit=   30.252558 text='生'
+  [ 6] id= 1246 logit=   29.916000 text='ta'
+  [ 7] id=25159 logit=   29.824596 text=' remembered'
+  [ 8] id=239171 logit=   29.511652 text='№'
+  [ 9] id= 3198 logit=   29.382488 text=' least'
+[Deep2Engine] Sampler selected token: 3530
+[DBG] sampled token=3530 eosId=1
+[DBG] stateNorm=3.320652e+02 finite=1 pos=312
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=123664 logit=   39.908218 text=' Riders'
+  [ 1] id=50061 logit=   39.483387 text='ंकर'
+  [ 2] id=236751 logit=   37.000992 text='s'
+  [ 3] id=67437 logit=   34.403011 text='нные'
+  [ 4] id=193447 logit=   33.810471 text='asjoner'
+  [ 5] id=88797 logit=   33.723522 text='étiques'
+  [ 6] id=152806 logit=   33.549477 text=' території'
+  [ 7] id=93933 logit=   33.353535 text='ющихся'
+  [ 8] id=53712 logit=   32.891956 text=' Areas'
+  [ 9] id= 4106 logit=   32.794281 text=' areas'
+[Deep2Engine] Sampler selected token: 123664
+[DBG] sampled token=123664 eosId=1
+[KVCache] page grow 312 -> 320 hot (virtualMax=16836 pos=312)
+[DBG] stateNorm=3.341114e+02 finite=1 pos=313
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=251084 logit=   33.141926 text='𝒄'
+  [ 1] id=48583 logit=   32.551052 text='idered'
+  [ 2] id=37626 logit=   32.157349 text='平均'
+  [ 3] id=188940 logit=   31.685003 text='ோருக்கு'
+  [ 4] id= 2302 logit=   31.408176 text='ries'
+  [ 5] id= 2572 logit=   31.159508 text='দের'
+  [ 6] id=12381 logit=   30.945721 text=' जाने'
+  [ 7] id=167194 logit=   30.492334 text=' afectados'
+  [ 8] id=200855 logit=   29.965977 text='ทะเล'
+  [ 9] id=39820 logit=   29.789160 text=' '
+[Deep2Engine] Sampler selected token: 251084
+[DBG] sampled token=251084 eosId=1
+[DBG] stateNorm=3.305609e+02 finite=1 pos=314
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=236751 logit=   38.068062 text='s'
+  [ 1] id=89309 logit=   37.138645 text='igua'
+  [ 2] id= 3984 logit=   36.229206 text='Des'
+  [ 3] id=60410 logit=   35.796436 text='said'
+  [ 4] id=63455 logit=   35.730240 text=' Pix'
+  [ 5] id=80740 logit=   35.181053 text=' letras'
+  [ 6] id=216788 logit=   34.429161 text='oxygène'
+  [ 7] id=70520 logit=   34.358757 text=' Bret'
+  [ 8] id=88489 logit=   34.012810 text=' ubicación'
+  [ 9] id=191937 logit=   33.844944 text='sellers'
+[Deep2Engine] Sampler selected token: 3984
+[DBG] sampled token=3984 eosId=1
+[DBG] stateNorm=3.103256e+02 finite=1 pos=315
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=18211 logit=   33.900658 text=' surrounded'
+  [ 1] id=12989 logit=   33.899269 text=' surrounding'
+  [ 2] id=184820 logit=   33.006618 text=' matchups'
+  [ 3] id=113019 logit=   32.985138 text=' peripherals'
+  [ 4] id=93997 logit=   32.827740 text='pell'
+  [ 5] id=79615 logit=   32.234764 text=' surrounds'
+  [ 6] id=236975 logit=   31.998810 text='ख'
+  [ 7] id=191892 logit=   31.416243 text=' Villiers'
+  [ 8] id=22648 logit=   31.305479 text=' boots'
+  [ 9] id=69132 logit=   30.918930 text=' IllegalArgument'
+[Deep2Engine] Sampler selected token: 12989
+[DBG] sampled token=12989 eosId=1
+[DBG] stateNorm=3.427390e+02 finite=1 pos=316
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=237646 logit=   40.463387 text='因'
+  [ 1] id=67437 logit=   39.848736 text='нные'
+  [ 2] id=88797 logit=   39.290810 text='étiques'
+  [ 3] id=173479 logit=   39.182983 text=' landslides'
+  [ 4] id=123664 logit=   38.809242 text=' Riders'
+  [ 5] id=101085 logit=   36.562256 text='rieved'
+  [ 6] id=15042 logit=   36.464901 text='झे'
+  [ 7] id=152806 logit=   36.419518 text=' території'
+  [ 8] id=41937 logit=   36.116478 text=' recipients'
+  [ 9] id=21893 logit=   36.016792 text='ancies'
+[Deep2Engine] Sampler selected token: 237646
+[DBG] sampled token=237646 eosId=1
+[DBG] stateNorm=3.208787e+02 finite=1 pos=317
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=166695 logit=   37.012497 text='Profiles'
+  [ 1] id=60973 logit=   36.521484 text=' URLs'
+  [ 2] id=114560 logit=   36.474724 text=' UNIX'
+  [ 3] id=27939 logit=   36.436108 text=' mặt'
+  [ 4] id=73254 logit=   35.488869 text=' recruits'
+  [ 5] id=203903 logit=   35.397736 text=' libertarian'
+  [ 6] id=225174 logit=   35.286259 text=' minY'
+  [ 7] id=168072 logit=   35.102592 text='hereinafter'
+  [ 8] id=66997 logit=   34.898865 text=' persön'
+  [ 9] id=240105 logit=   34.839817 text='宫'
+[Deep2Engine] Sampler selected token: 114560
+[DBG] sampled token=114560 eosId=1
+[DBG] stateNorm=3.259759e+02 finite=1 pos=318
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=14133 logit=   38.764538 text=' Area'
+  [ 1] id=236751 logit=   38.616531 text='s'
+  [ 2] id=63003 logit=   37.525414 text=' Aspect'
+  [ 3] id=50682 logit=   36.831017 text='Areas'
+  [ 4] id=116901 logit=   36.263390 text='стями'
+  [ 5] id=102291 logit=   36.220257 text='的产品'
+  [ 6] id=22812 logit=   35.177307 text=' área'
+  [ 7] id=51354 logit=   35.062679 text=' jóvenes'
+  [ 8] id=13262 logit=   34.759361 text='Area'
+  [ 9] id=236772 logit=   34.558266 text='-'
+[Deep2Engine] Sampler selected token: 14133
+[DBG] sampled token=14133 eosId=1
+[DBG] stateNorm=3.307388e+02 finite=1 pos=319
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=188940 logit=   40.741234 text='ோருக்கு'
+  [ 1] id=53227 logit=   38.094460 text='visited'
+  [ 2] id=124191 logit=   35.800217 text='enças'
+  [ 3] id=33884 logit=   35.410690 text='houses'
+  [ 4] id=98574 logit=   34.807884 text=' trenches'
+  [ 5] id=73443 logit=   34.442772 text='पाई'
+  [ 6] id=16606 logit=   33.960693 text=' ages'
+  [ 7] id=197524 logit=   33.811977 text=' Woodford'
+  [ 8] id=233260 logit=   33.691113 text='人用'
+  [ 9] id=230274 logit=   33.488686 text='都道府県'
+[Deep2Engine] Sampler selected token: 188940
+[DBG] sampled token=188940 eosId=1
+[DBG] stateNorm=3.119445e+02 finite=1 pos=320
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=11875 logit=   35.825882 text='sis'
+  [ 1] id=50061 logit=   34.614681 text='ंकर'
+  [ 2] id=237850 logit=   32.982529 text='ણ'
+  [ 3] id= 1062 logit=   32.913578 text='то'
+  [ 4] id=217385 logit=   32.575832 text='точной'
+  [ 5] id= 6652 logit=   30.725723 text='sch'
+  [ 6] id=237159 logit=   30.668451 text='ะ'
+  [ 7] id=49714 logit=   30.558483 text='மையான'
+  [ 8] id=32493 logit=   30.557066 text='arious'
+  [ 9] id=188431 logit=   30.468681 text='らを'
+[Deep2Engine] Sampler selected token: 11875
+[DBG] sampled token=11875 eosId=1
+[KVCache] page grow 320 -> 328 hot (virtualMax=16836 pos=320)
+[DBG] stateNorm=3.375472e+02 finite=1 pos=321
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1479 logit=   37.757027 text='Re'
+  [ 1] id=42100 logit=   36.681053 text='Guard'
+  [ 2] id=29764 logit=   34.254387 text=' custody'
+  [ 3] id=117995 logit=   34.157467 text=' Fidelity'
+  [ 4] id=249471 logit=   34.122787 text='Ց'
+  [ 5] id=112300 logit=   33.764454 text='තාව'
+  [ 6] id= 1829 logit=   33.570145 text='Cl'
+  [ 7] id=236780 logit=   33.340630 text='C'
+  [ 8] id=136909 logit=   33.285698 text='මත්'
+  [ 9] id=129693 logit=   33.247952 text=' πά'
+[Deep2Engine] Sampler selected token: 42100
+[DBG] sampled token=42100 eosId=1
+[DBG] stateNorm=3.202012e+02 finite=1 pos=322
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=237328 logit=   37.857391 text='お'
+  [ 1] id=169211 logit=   37.440041 text='చె'
+  [ 2] id=167311 logit=   36.836040 text='ってくる'
+  [ 3] id= 1788 logit=   36.084759 text='ness'
+  [ 4] id=167250 logit=   35.953529 text='apparition'
+  [ 5] id=155976 logit=   35.256443 text='erebbe'
+  [ 6] id=38125 logit=   34.929428 text=' riders'
+  [ 7] id=238091 logit=   34.759747 text='ـ'
+  [ 8] id=106752 logit=   34.039322 text=' ያለው'
+  [ 9] id=140082 logit=   33.821838 text='Investors'
+[Deep2Engine] Sampler selected token: 169211
+[DBG] sampled token=169211 eosId=1
+[DBG] stateNorm=3.058273e+02 finite=1 pos=323
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=73443 logit=   31.559059 text='पाई'
+  [ 1] id= 2572 logit=   30.980026 text='দের'
+  [ 2] id=130753 logit=   29.681873 text='వారి'
+  [ 3] id=236858 logit=   29.318726 text='’'
+  [ 4] id=160483 logit=   29.103195 text='તુ'
+  [ 5] id=237281 logit=   28.557625 text='의'
+  [ 6] id=254239 logit=   28.278387 text='𝙔'
+  [ 7] id= 2947 logit=   27.991756 text=' qui'
+  [ 8] id=152305 logit=   27.202404 text='取的'
+  [ 9] id= 4440 logit=   27.179255 text='ियों'
+[Deep2Engine] Sampler selected token: 73443
+[DBG] sampled token=73443 eosId=1
+[DBG] stateNorm=3.429328e+02 finite=1 pos=324
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=236751 logit=   39.886757 text='s'
+  [ 1] id= 1179 logit=   39.519432 text='sh'
+  [ 2] id= 7743 logit=   36.751331 text=' गु'
+  [ 3] id=74412 logit=   35.119923 text='পক্ষে'
+  [ 4] id=98720 logit=   34.000195 text='sas'
+  [ 5] id=88431 logit=   33.869656 text=' Tribe'
+  [ 6] id=153440 logit=   33.347778 text='erche'
+  [ 7] id= 3765 logit=   33.236691 text='tes'
+  [ 8] id=78962 logit=   33.226086 text='エスト'
+  [ 9] id=15042 logit=   33.069614 text='झे'
+[Deep2Engine] Sampler selected token: 236751
+[DBG] sampled token=236751 eosId=1
+[DBG] stateNorm=3.524948e+02 finite=1 pos=325
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 3298 logit=   34.949009 text=' points'
+  [ 1] id= 4916 logit=   34.252163 text=' hands'
+  [ 2] id=98661 logit=   32.494289 text=' cobertura'
+  [ 3] id= 3947 logit=   32.011559 text='point'
+  [ 4] id=16721 logit=   31.980057 text=' rubber'
+  [ 5] id=48365 logit=   31.139156 text=' paperwork'
+  [ 6] id=142526 logit=   30.459391 text=' cuero'
+  [ 7] id= 2354 logit=   30.449129 text=' document'
+  [ 8] id= 1518 logit=   30.346670 text=' years'
+  [ 9] id=115877 logit=   30.010595 text='信任'
+[Deep2Engine] Sampler selected token: 3298
+[DBG] sampled token=3298 eosId=1
+[DBG] stateNorm=3.181475e+02 finite=1 pos=326
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=53828 logit=   41.173176 text=' illnesses'
+  [ 1] id=208379 logit=   40.708130 text='setLookAndFeel'
+  [ 2] id=11551 logit=   40.602566 text=' admin'
+  [ 3] id=61354 logit=   38.577023 text='ADMIN'
+  [ 4] id=30715 logit=   37.569492 text=' Admin'
+  [ 5] id=82445 logit=   36.605598 text=' వరకు'
+  [ 6] id= 8473 logit=   36.351288 text='admin'
+  [ 7] id=240607 logit=   36.291981 text='沢'
+  [ 8] id=55432 logit=   36.134575 text='pora'
+  [ 9] id=211961 logit=   36.008446 text='otard'
+[Deep2Engine] Sampler selected token: 208379
+[DBG] sampled token=208379 eosId=1
+[DBG] stateNorm=3.177587e+02 finite=1 pos=327
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 6968 logit=   37.853813 text='ted'
+  [ 1] id= 3765 logit=   36.885777 text='tes'
+  [ 2] id=117974 logit=   35.504158 text='ம்பி'
+  [ 3] id=105967 logit=   34.687981 text=' Euh'
+  [ 4] id=21083 logit=   34.507416 text='JS'
+  [ 5] id=225984 logit=   34.418808 text='ความเป็น'
+  [ 6] id=17952 logit=   33.940018 text='يت'
+  [ 7] id=123263 logit=   33.829887 text='的基本'
+  [ 8] id=135669 logit=   33.409420 text='եկ'
+  [ 9] id=244362 logit=   33.346161 text='懈'
+[Deep2Engine] Sampler selected token: 3765
+[DBG] sampled token=3765 eosId=1
+[DBG] stateNorm=3.264266e+02 finite=1 pos=328
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 9072 logit=   42.495281 text='рі'
+  [ 1] id=133430 logit=   38.433777 text='フィン'
+  [ 2] id=88658 logit=   38.054893 text='nasium'
+  [ 3] id=49125 logit=   36.880650 text=' ky'
+  [ 4] id=236860 logit=   36.711769 text='к'
+  [ 5] id=241692 logit=   36.554760 text='谋'
+  [ 6] id= 1314 logit=   36.071949 text='(\'
+  [ 7] id=25493 logit=   36.010311 text=' associations'
+  [ 8] id=39255 logit=   34.439369 text='いつ'
+  [ 9] id=112122 logit=   34.230026 text='}=(\'
+[Deep2Engine] Sampler selected token: 9072
+[DBG] sampled token=9072 eosId=1
+[KVCache] page grow 328 -> 336 hot (virtualMax=16836 pos=328)
+[DBG] stateNorm=3.145790e+02 finite=1 pos=329
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=233260 logit=   40.676975 text='人用'
+  [ 1] id= 2897 logit=   39.011566 text='side'
+  [ 2] id=11468 logit=   34.798637 text='க்'
+  [ 3] id=237086 logit=   34.353649 text='人'
+  [ 4] id=216448 logit=   32.936745 text=' vét'
+  [ 5] id=223698 logit=   32.322506 text='iénd'
+  [ 6] id=27545 logit=   31.922211 text='வன'
+  [ 7] id=130753 logit=   31.777281 text='వారి'
+  [ 8] id=255913 logit=   31.572199 text='列'
+  [ 9] id= 5990 logit=   31.570787 text='ians'
+[Deep2Engine] Sampler selected token: 233260
+[DBG] sampled token=233260 eosId=1
+[DBG] stateNorm=3.240265e+02 finite=1 pos=330
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=112269 logit=   34.164326 text='จะเป็น'
+  [ 1] id=236751 logit=   33.010910 text='s'
+  [ 2] id=14133 logit=   31.740261 text=' Area'
+  [ 3] id=  895 logit=   30.639599 text=' Y'
+  [ 4] id=27229 logit=   28.822956 text='ajes'
+  [ 5] id= 8922 logit=   28.532768 text=' Why'
+  [ 6] id=116901 logit=   28.353588 text='стями'
+  [ 7] id=245519 logit=   27.833199 text='̩'
+  [ 8] id=50682 logit=   27.820383 text='Areas'
+  [ 9] id=92557 logit=   27.817566 text='作為'
+[Deep2Engine] Sampler selected token: 236751
+[DBG] sampled token=236751 eosId=1
+[DBG] stateNorm=3.058061e+02 finite=1 pos=331
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=10893 logit=   38.652870 text='மை'
+  [ 1] id=32460 logit=   32.833588 text='वत'
+  [ 2] id=141917 logit=   32.209602 text=' articolo'
+  [ 3] id=115697 logit=   31.606205 text='рту'
+  [ 4] id=209775 logit=   31.577091 text='ositol'
+  [ 5] id=71262 logit=   31.550753 text=' refrain'
+  [ 6] id=140266 logit=   31.183781 text=' accedi'
+  [ 7] id=62489 logit=   31.037580 text='acteria'
+  [ 8] id=236774 logit=   31.034813 text='T'
+  [ 9] id=195537 logit=   30.951977 text=' stances'
+[Deep2Engine] Sampler selected token: 10893
+[DBG] sampled token=10893 eosId=1
+[DBG] stateNorm=3.352263e+02 finite=1 pos=332
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=116762 logit=   47.784279 text=' soggetti'
+  [ 1] id=91958 logit=   47.353203 text=' territoire'
+  [ 2] id=197567 logit=   46.384396 text=' impeded'
+  [ 3] id= 9034 logit=   45.589523 text=' affected'
+  [ 4] id=101584 logit=   45.298431 text=' voci'
+  [ 5] id=215741 logit=   44.640602 text=' collegamento'
+  [ 6] id=88435 logit=   44.082905 text=' correlates'
+  [ 7] id=125837 logit=   43.657482 text=' tante'
+  [ 8] id=85338 logit=   43.655491 text=' horizons'
+  [ 9] id=151609 logit=   43.537014 text=' enlaces'
+[Deep2Engine] Sampler selected token: 116762
+[DBG] sampled token=116762 eosId=1
+[DBG] stateNorm=3.189278e+02 finite=1 pos=333
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=36307 logit=   36.162819 text=' जनवरी'
+  [ 1] id=26588 logit=   35.304996 text='Weather'
+  [ 2] id=11875 logit=   34.793819 text='sis'
+  [ 3] id=237888 logit=   34.266991 text='完'
+  [ 4] id=232211 logit=   34.040215 text='XmlApplication'
+  [ 5] id= 8981 logit=   33.336224 text='eres'
+  [ 6] id=165096 logit=   33.270138 text='WeatherData'
+  [ 7] id= 3916 logit=   33.251377 text='ti'
+  [ 8] id=206184 logit=   33.192963 text='தைத்'
+  [ 9] id=237106 logit=   33.072868 text='ă'
+[Deep2Engine] Sampler selected token: 26588
+[DBG] sampled token=26588 eosId=1
+[DBG] stateNorm=3.218404e+02 finite=1 pos=334
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=209411 logit=   34.871532 text='uptools'
+  [ 1] id=29429 logit=   34.491760 text='tests'
+  [ 2] id=171312 logit=   32.800064 text='desert'
+  [ 3] id=15003 logit=   32.401676 text=' seeds'
+  [ 4] id=184301 logit=   31.896976 text='infested'
+  [ 5] id=109229 logit=   30.787981 text=' messing'
+  [ 6] id=24965 logit=   30.512508 text=' definite'
+  [ 7] id=70930 logit=   30.173527 text=' caste'
+  [ 8] id=223732 logit=   29.773773 text=' atteinte'
+  [ 9] id=75383 logit=   29.771519 text=' inducing'
+[Deep2Engine] Sampler selected token: 209411
+[DBG] sampled token=209411 eosId=1
+[DBG] stateNorm=3.362361e+02 finite=1 pos=335
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=233260 logit=   43.107948 text='人用'
+  [ 1] id=78962 logit=   39.678871 text='エスト'
+  [ 2] id=56950 logit=   38.600758 text='人は'
+  [ 3] id=187993 logit=   38.000362 text=' proliferate'
+  [ 4] id=40448 logit=   37.917099 text='काम'
+  [ 5] id=237777 logit=   37.779121 text='અ'
+  [ 6] id=154441 logit=   37.768852 text=' లు'
+  [ 7] id=125358 logit=   36.677361 text='部品'
+  [ 8] id=89198 logit=   36.520210 text='क्यूमेंट'
+  [ 9] id=174331 logit=   36.185528 text=' artigos'
+[Deep2Engine] Sampler selected token: 233260
+[DBG] sampled token=233260 eosId=1
+[DBG] stateNorm=3.332341e+02 finite=1 pos=336
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=39009 logit=   35.848991 text=' Articles'
+  [ 1] id=10308 logit=   34.879204 text=' articles'
+  [ 2] id= 2572 logit=   32.256741 text='দের'
+  [ 3] id=237169 logit=   31.987967 text='我'
+  [ 4] id=11875 logit=   31.527454 text='sis'
+  [ 5] id=66502 logit=   31.377062 text='Articles'
+  [ 6] id=  497 logit=   31.184099 text='er'
+  [ 7] id= 8922 logit=   31.080873 text=' Why'
+  [ 8] id=230274 logit=   31.074202 text='都道府県'
+  [ 9] id=54106 logit=   30.284195 text='సే'
+[Deep2Engine] Sampler selected token: 39009
+[DBG] sampled token=39009 eosId=1
+[KVCache] page grow 336 -> 344 hot (virtualMax=16836 pos=336)
+[DBG] stateNorm=3.390382e+02 finite=1 pos=337
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=    2 logit=   41.065468 text='<bos>'
+  [ 1] id=73312 logit=   37.646061 text=' fronts'
+  [ 2] id= 2302 logit=   37.576996 text='ries'
+  [ 3] id= 1883 logit=   36.659653 text=' state'
+  [ 4] id=243149 logit=   35.680935 text='痘'
+  [ 5] id=205010 logit=   34.954865 text='度和'
+  [ 6] id=53828 logit=   34.316349 text=' illnesses'
+  [ 7] id=82347 logit=   34.026340 text=' offsets'
+  [ 8] id=15151 logit=   33.952660 text='ात'
+  [ 9] id=12818 logit=   33.532696 text=' diseases'
+[Deep2Engine] Sampler selected token: 2
+[DBG] sampled token=2 eosId=1
+[DBG] stateNorm=3.141849e+02 finite=1 pos=338
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=    2 logit=   31.653440 text='<bos>'
+  [ 1] id=79280 logit=   31.489103 text='antos'
+  [ 2] id=59468 logit=   30.016743 text='antas'
+  [ 3] id=102830 logit=   29.357697 text='attend'
+  [ 4] id=26241 logit=   29.007851 text=' attendance'
+  [ 5] id=132434 logit=   28.608173 text='ეთის'
+  [ 6] id=47334 logit=   28.550287 text='}','
+  [ 7] id=191394 logit=   28.296219 text=' beset'
+  [ 8] id=  784 logit=   28.243662 text=' all'
+  [ 9] id=98495 logit=   28.210804 text='íž'
+[Deep2Engine] Sampler selected token: 79280
+[DBG] sampled token=79280 eosId=1
+[DBG] stateNorm=3.353780e+02 finite=1 pos=339
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=    2 logit=   37.665916 text='<bos>'
+  [ 1] id=237261 logit=   37.053947 text='本'
+  [ 2] id=237270 logit=   34.753090 text='ת'
+  [ 3] id=176500 logit=   34.077389 text='\">\'
+  [ 4] id=16353 logit=   33.678501 text='cases'
+  [ 5] id=127338 logit=   33.346428 text='นาย'
+  [ 6] id=247883 logit=   32.764797 text=''
+  [ 7] id=50061 logit=   31.770073 text='ंकर'
+  [ 8] id=116604 logit=   31.648720 text='wür'
+  [ 9] id=67437 logit=   31.625755 text='нные'
+[Deep2Engine] Sampler selected token: 237261
+[DBG] sampled token=237261 eosId=1
+[DBG] stateNorm=3.476195e+02 finite=1 pos=340
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=215835 logit=   43.476044 text=' effectuées'
+  [ 1] id=203032 logit=   43.353844 text=' réalisées'
+  [ 2] id=166898 logit=   41.122818 text=' anciennes'
+  [ 3] id=104534 logit=   40.596905 text=' enkele'
+  [ 4] id=91862 logit=   40.170368 text=' ያለ'
+  [ 5] id=17980 logit=   39.965523 text=' από'
+  [ 6] id=82707 logit=   38.635395 text=' Dabei'
+  [ 7] id=177242 logit=   38.226036 text=' trazendo'
+  [ 8] id=121327 logit=   38.113258 text=' acteurs'
+  [ 9] id=12841 logit=   38.090565 text=' एवं'
+[Deep2Engine] Sampler selected token: 166898
+[DBG] sampled token=166898 eosId=1
+[DBG] stateNorm=3.073605e+02 finite=1 pos=341
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 4150 logit=   38.153465 text=' Rep'
+  [ 1] id=215690 logit=   37.615719 text='iquent'
+  [ 2] id=12083 logit=   37.123558 text=' är'
+  [ 3] id=122617 logit=   35.624565 text=' figli'
+  [ 4] id=  563 logit=   33.803551 text=' is'
+  [ 5] id=112112 logit=   33.709049 text='いません'
+  [ 6] id=141131 logit=   33.580658 text=' Breit'
+  [ 7] id=49967 logit=   33.562004 text=' heir'
+  [ 8] id= 2684 logit=   32.729744 text='enn'
+  [ 9] id= 7120 logit=   32.457497 text='onic'
+[Deep2Engine] Sampler selected token: 215690
+[DBG] sampled token=215690 eosId=1
+[DBG] stateNorm=2.960475e+02 finite=1 pos=342
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=38632 logit=   30.592129 text='স্ক'
+  [ 1] id=116439 logit=   30.555357 text='peł'
+  [ 2] id=144950 logit=   29.766495 text='ਵਾ'
+  [ 3] id=12572 logit=   29.615376 text='দে'
+  [ 4] id=18810 logit=   28.666916 text='ван'
+  [ 5] id=237173 logit=   28.387136 text='ら'
+  [ 6] id=19472 logit=   27.508158 text='nas'
+  [ 7] id=237470 logit=   27.487993 text='사'
+  [ 8] id=124290 logit=   27.473944 text=' trúc'
+  [ 9] id=25091 logit=   27.206633 text=' emerged'
+[Deep2Engine] Sampler selected token: 144950
+[DBG] sampled token=144950 eosId=1
+[DBG] stateNorm=3.356793e+02 finite=1 pos=343
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=213629 logit=   40.446915 text=' afectadas'
+  [ 1] id=225719 logit=   40.333939 text='PCs'
+  [ 2] id=152806 logit=   40.255440 text=' території'
+  [ 3] id=185321 logit=   40.104916 text=' Affected'
+  [ 4] id=242463 logit=   40.014771 text='ៗ'
+  [ 5] id=13262 logit=   39.909912 text='Area'
+  [ 6] id=137909 logit=   39.690567 text='的相关'
+  [ 7] id=218155 logit=   39.521248 text=' Indications'
+  [ 8] id=167194 logit=   39.099094 text=' afectados'
+  [ 9] id=14133 logit=   38.588799 text=' Area'
+[Deep2Engine] Sampler selected token: 13262
+[DBG] sampled token=13262 eosId=1
+[DBG] stateNorm=3.118410e+02 finite=1 pos=344
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=98574 logit=   33.281464 text=' trenches'
+  [ 1] id=    2 logit=   32.227402 text='<bos>'
+  [ 2] id=253283 logit=   32.147717 text='⼈'
+  [ 3] id=13536 logit=   31.555012 text='’,'
+  [ 4] id=89448 logit=   30.867178 text=' pous'
+  [ 5] id=188940 logit=   30.785591 text='ோருக்கு'
+  [ 6] id=102960 logit=   30.180712 text=' тим'
+  [ 7] id=119984 logit=   29.680759 text='になると'
+  [ 8] id= 2870 logit=   29.339104 text=' general'
+  [ 9] id= 2678 logit=   28.731365 text=' side'
+[Deep2Engine] Sampler selected token: 98574
+[DBG] sampled token=98574 eosId=1
+[KVCache] page grow 344 -> 352 hot (virtualMax=16836 pos=344)
+[DBG] stateNorm=3.363642e+02 finite=1 pos=345
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=236751 logit=   40.768150 text='s'
+  [ 1] id=210477 logit=   35.623337 text='vants'
+  [ 2] id=159860 logit=   35.320404 text=' Graphical'
+  [ 3] id=233912 logit=   33.230202 text=' afectada'
+  [ 4] id=168506 logit=   32.767265 text='ブーツ'
+  [ 5] id=  616 logit=   32.734642 text='ers'
+  [ 6] id=49312 logit=   32.545635 text='atics'
+  [ 7] id= 3740 logit=   32.200596 text='aves'
+  [ 8] id=45575 logit=   32.034481 text='ayers'
+  [ 9] id= 2572 logit=   31.964102 text='দের'
+[Deep2Engine] Sampler selected token: 236751
+[DBG] sampled token=236751 eosId=1
+[DBG] stateNorm=3.344212e+02 finite=1 pos=346
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 9758 logit=   44.744225 text='ষ্ঠ'
+  [ 1] id=237392 logit=   39.214977 text='对'
+  [ 2] id=237711 logit=   37.605755 text='示'
+  [ 3] id=238403 logit=   37.265808 text='對'
+  [ 4] id=38752 logit=   36.668457 text='#!/'
+  [ 5] id=116766 logit=   35.463623 text=' Minggu'
+  [ 6] id=139057 logit=   35.460114 text='eneuve'
+  [ 7] id=221495 logit=   35.430328 text=' giallo'
+  [ 8] id=39009 logit=   35.323299 text=' Articles'
+  [ 9] id=115784 logit=   34.450943 text=' статье'
+[Deep2Engine] Sampler selected token: 9758
+[DBG] sampled token=9758 eosId=1
+[DBG] stateNorm=3.221916e+02 finite=1 pos=347
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=93011 logit=   38.777267 text='ériques'
+  [ 1] id=33262 logit=   37.843388 text='cesso'
+  [ 2] id=124191 logit=   37.668541 text='enças'
+  [ 3] id=198174 logit=   37.155659 text=' ослож'
+  [ 4] id=242906 logit=   37.131920 text='勘'
+  [ 5] id=67165 logit=   35.944717 text='Called'
+  [ 6] id=122827 logit=   35.908558 text=' amic'
+  [ 7] id=140915 logit=   35.633175 text=' seuls'
+  [ 8] id=137398 logit=   35.612671 text=' Territorial'
+  [ 9] id=122596 logit=   35.050739 text=' čak'
+[Deep2Engine] Sampler selected token: 67165
+[DBG] sampled token=67165 eosId=1
+[DBG] stateNorm=3.210768e+02 finite=1 pos=348
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=15552 logit=   37.232033 text='кий'
+  [ 1] id=155400 logit=   36.998650 text='就行'
+  [ 2] id=11614 logit=   36.602009 text='ূপ'
+  [ 3] id=235251 logit=   35.855511 text=' нен'
+  [ 4] id=143130 logit=   35.083298 text=' TimeSpan'
+  [ 5] id=59244 logit=   34.898354 text=' hoop'
+  [ 6] id=90931 logit=   34.334698 text='性和'
+  [ 7] id=11759 logit=   34.039505 text=' एंड'
+  [ 8] id=65927 logit=   33.935772 text=' Ore'
+  [ 9] id=102911 logit=   33.658344 text=' Änder'
+[Deep2Engine] Sampler selected token: 143130
+[DBG] sampled token=143130 eosId=1
+[DBG] stateNorm=3.319797e+02 finite=1 pos=349
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=123664 logit=   38.362797 text=' Riders'
+  [ 1] id= 1179 logit=   35.346928 text='sh'
+  [ 2] id=73443 logit=   33.852802 text='पाई'
+  [ 3] id=50061 logit=   33.816978 text='ंकर'
+  [ 4] id=64437 logit=   33.040066 text='că'
+  [ 5] id=173479 logit=   31.686222 text=' landslides'
+  [ 6] id=63163 logit=   31.391346 text='suits'
+  [ 7] id=127338 logit=   30.651230 text='นาย'
+  [ 8] id=98574 logit=   30.614555 text=' trenches'
+  [ 9] id=236751 logit=   30.591881 text='s'
+[Deep2Engine] Sampler selected token: 123664
+[DBG] sampled token=123664 eosId=1
+[DBG] stateNorm=3.086232e+02 finite=1 pos=350
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=155679 logit=   36.697807 text='さは'
+  [ 1] id=237095 logit=   35.379456 text='‘'
+  [ 2] id=108309 logit=   30.355333 text='群众'
+  [ 3] id=14678 logit=   29.770763 text='हत'
+  [ 4] id= 1583 logit=   29.547249 text='iness'
+  [ 5] id=73443 logit=   29.398090 text='पाई'
+  [ 6] id=23823 logit=   29.331051 text=' hast'
+  [ 7] id=48797 logit=   29.188080 text='தான்'
+  [ 8] id= 2001 logit=   28.919924 text='че'
+  [ 9] id=21260 logit=   28.710972 text='నే'
+[Deep2Engine] Sampler selected token: 155679
+[DBG] sampled token=155679 eosId=1
+[DBG] stateNorm=3.268213e+02 finite=1 pos=351
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 9034 logit=   41.436600 text=' affected'
+  [ 1] id=185321 logit=   35.562229 text=' Affected'
+  [ 2] id=43626 logit=   32.991512 text=' territories'
+  [ 3] id=216214 logit=   32.516060 text=' ресурсы'
+  [ 4] id= 5405 logit=   32.188805 text=' resources'
+  [ 5] id=144803 logit=   31.447891 text='])):'
+  [ 6] id=21893 logit=   30.635201 text='ancies'
+  [ 7] id= 4106 logit=   30.494629 text=' areas'
+  [ 8] id=73443 logit=   30.332157 text='पाई'
+  [ 9] id=99388 logit=   30.267330 text=' visitation'
+[Deep2Engine] Sampler selected token: 9034
+[DBG] sampled token=9034 eosId=1
+[DBG] stateNorm=3.365382e+02 finite=1 pos=352
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=179785 logit=   40.485550 text='दानी'
+  [ 1] id=151908 logit=   36.808529 text=' стороне'
+  [ 2] id= 1283 logit=   33.957420 text='ages'
+  [ 3] id=70452 logit=   33.258381 text=' caregivers'
+  [ 4] id=132802 logit=   32.961014 text='ElementType'
+  [ 5] id= 4106 logit=   32.109558 text=' areas'
+  [ 6] id= 7705 logit=   31.313786 text='that'
+  [ 7] id=72407 logit=   30.892796 text='subjects'
+  [ 8] id=230894 logit=   30.493267 text=' αφού'
+  [ 9] id=31848 logit=   30.259510 text='рования'
+[Deep2Engine] Sampler selected token: 179785
+[DBG] sampled token=179785 eosId=1
+[KVCache] page grow 352 -> 360 hot (virtualMax=16836 pos=352)
+[DBG] stateNorm=3.198195e+02 finite=1 pos=353
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=32203 logit=   41.074242 text=' Texture'
+  [ 1] id=56549 logit=   40.226250 text=' Looks'
+  [ 2] id=148526 logit=   39.699162 text=' Activated'
+  [ 3] id=154958 logit=   39.669857 text=' bột'
+  [ 4] id=146406 logit=   39.196602 text='あん'
+  [ 5] id=224877 logit=   38.592686 text=' Parental'
+  [ 6] id=12839 logit=   37.990215 text='teen'
+  [ 7] id= 5911 logit=   37.710903 text='TS'
+  [ 8] id=133197 logit=   36.394260 text=' Derechos'
+  [ 9] id= 3668 logit=   36.147877 text=' American'
+[Deep2Engine] Sampler selected token: 56549
+[DBG] sampled token=56549 eosId=1
+[DBG] stateNorm=3.211009e+02 finite=1 pos=354
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=78962 logit=   40.353001 text='エスト'
+  [ 1] id=39009 logit=   37.914692 text=' Articles'
+  [ 2] id=137398 logit=   35.519218 text=' Territorial'
+  [ 3] id=163240 logit=   34.981834 text='сторон'
+  [ 4] id=37645 logit=   34.067257 text='ാവ'
+  [ 5] id= 9072 logit=   32.419830 text='рі'
+  [ 6] id=66502 logit=   32.404182 text='Articles'
+  [ 7] id=166695 logit=   32.173035 text='Profiles'
+  [ 8] id=27939 logit=   31.994923 text=' mặt'
+  [ 9] id=27545 logit=   31.734474 text='வன'
+[Deep2Engine] Sampler selected token: 78962
+[DBG] sampled token=78962 eosId=1
+[DBG] stateNorm=3.345782e+02 finite=1 pos=355
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=50682 logit=   35.807945 text='Areas'
+  [ 1] id=236751 logit=   35.786827 text='s'
+  [ 2] id=100955 logit=   34.141399 text='ப்புற'
+  [ 3] id= 3765 logit=   33.730503 text='tes'
+  [ 4] id=124290 logit=   33.378765 text=' trúc'
+  [ 5] id=126746 logit=   33.135834 text='taste'
+  [ 6] id= 3386 logit=   33.048008 text='des'
+  [ 7] id=64437 logit=   32.989861 text='că'
+  [ 8] id= 3984 logit=   32.976585 text='Des'
+  [ 9] id=41354 logit=   32.381294 text='মাদের'
+[Deep2Engine] Sampler selected token: 100955
+[DBG] sampled token=100955 eosId=1
+[DBG] stateNorm=3.225424e+02 finite=1 pos=356
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=10177 logit=   37.266071 text='quer'
+  [ 1] id=125122 logit=   34.892700 text='টিস'
+  [ 2] id= 8350 logit=   33.389690 text='ан'
+  [ 3] id=    2 logit=   33.136345 text='<bos>'
+  [ 4] id=113831 logit=   33.073154 text='やる'
+  [ 5] id=81492 logit=   32.832958 text='ichlet'
+  [ 6] id=81454 logit=   32.787842 text=' policing'
+  [ 7] id=237106 logit=   32.655952 text='ă'
+  [ 8] id=237076 logit=   32.397064 text='ط'
+  [ 9] id=105967 logit=   32.139946 text=' Euh'
+[Deep2Engine] Sampler selected token: 10177
+[DBG] sampled token=10177 eosId=1
+[DBG] stateNorm=3.155788e+02 finite=1 pos=357
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=240790 logit=   40.724960 text='赶'
+  [ 1] id=172672 logit=   32.194748 text='СФ'
+  [ 2] id=145841 logit=   32.072388 text=' étrangers'
+  [ 3] id=243184 logit=   31.847111 text='趕'
+  [ 4] id=238675 logit=   31.619677 text='ಭ'
+  [ 5] id=236764 logit=   30.960186 text=','
+  [ 6] id=17555 logit=   30.707001 text=' เป็น'
+  [ 7] id=120342 logit=   30.688263 text=' वार्ता'
+  [ 8] id= 1179 logit=   30.605570 text='sh'
+  [ 9] id=15319 logit=   30.372774 text='เป็น'
+[Deep2Engine] Sampler selected token: 240790
+[DBG] sampled token=240790 eosId=1
+[DBG] stateNorm=3.161127e+02 finite=1 pos=358
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=185629 logit=   35.877510 text=' găsit'
+  [ 1] id=109790 logit=   34.952888 text='ずつ'
+  [ 2] id=25023 logit=   34.789841 text=' tự'
+  [ 3] id=10696 logit=   34.447853 text='tim'
+  [ 4] id=106728 logit=   34.226883 text=' дел'
+  [ 5] id=160087 logit=   32.913345 text=' σύν'
+  [ 6] id=11341 logit=   32.812038 text='tra'
+  [ 7] id=173204 logit=   32.719276 text=' asiento'
+  [ 8] id=238264 logit=   32.646503 text='ഴ'
+  [ 9] id=159213 logit=   32.255413 text=' createImage'
+[Deep2Engine] Sampler selected token: 25023
+[DBG] sampled token=25023 eosId=1
+[DBG] stateNorm=3.154408e+02 finite=1 pos=359
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=237731 logit=   34.134617 text='型'
+  [ 1] id=98574 logit=   33.530502 text=' trenches'
+  [ 2] id=63562 logit=   32.578938 text='assertEqual'
+  [ 3] id=225372 logit=   31.899326 text=' क्‍'
+  [ 4] id=239796 logit=   31.645710 text='馆'
+  [ 5] id=119984 logit=   31.513920 text='になると'
+  [ 6] id=55140 logit=   31.493242 text=' sickness'
+  [ 7] id=250986 logit=   31.367636 text='霑'
+  [ 8] id=243783 logit=   31.112656 text='萎'
+  [ 9] id=85266 logit=   30.977329 text='型的'
+[Deep2Engine] Sampler selected token: 237731
+[DBG] sampled token=237731 eosId=1
+[DBG] stateNorm=3.333181e+02 finite=1 pos=360
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=16825 logit=   33.041130 text=' entrance'
+  [ 1] id=  506 logit=   31.421883 text=' the'
+  [ 2] id=27968 logit=   31.112137 text=' incorporate'
+  [ 3] id=  562 logit=   30.700233 text=' A'
+  [ 4] id=27183 logit=   30.302725 text='ễn'
+  [ 5] id=19480 logit=   30.056355 text=' swing'
+  [ 6] id=248846 logit=   30.041582 text='藓'
+  [ 7] id= 3295 logit=   30.025421 text=' members'
+  [ 8] id=190412 logit=   29.723553 text=' assemblages'
+  [ 9] id=118399 logit=   29.685335 text=' أجل'
+[Deep2Engine] Sampler selected token: 16825
+[DBG] sampled token=16825 eosId=1
+[KVCache] page grow 360 -> 368 hot (virtualMax=16836 pos=360)
+[DBG] stateNorm=3.260451e+02 finite=1 pos=361
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=237270 logit=   39.583813 text='ת'
+  [ 1] id=34058 logit=   33.918877 text='ший'
+  [ 2] id=  497 logit=   31.585472 text='er'
+  [ 3] id=112371 logit=   31.286272 text=' తెలంగాణ'
+  [ 4] id=237409 logit=   30.965872 text='性'
+  [ 5] id=237169 logit=   30.307991 text='我'
+  [ 6] id=  665 logit=   30.297565 text='ity'
+  [ 7] id=232554 logit=   29.976206 text='ifrån'
+  [ 8] id=21226 logit=   29.124407 text='希望'
+  [ 9] id=214123 logit=   28.828419 text='estinal'
+[Deep2Engine] Sampler selected token: 237270
+[DBG] sampled token=237270 eosId=1
+[DBG] stateNorm=3.184076e+02 finite=1 pos=362
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=    2 logit=   36.917995 text='<bos>'
+  [ 1] id=230029 logit=   31.395819 text=' অ্যাকাউন্ট'
+  [ 2] id=19472 logit=   30.743423 text='nas'
+  [ 3] id=236751 logit=   30.475285 text='s'
+  [ 4] id=21264 logit=   30.320206 text=' Primary'
+  [ 5] id=50700 logit=   30.285265 text='έρ'
+  [ 6] id=14813 logit=   29.748026 text='вые'
+  [ 7] id=120780 logit=   29.690327 text=' Chanc'
+  [ 8] id=237261 logit=   29.632135 text='本'
+  [ 9] id=236981 logit=   29.389906 text='फ'
+[Deep2Engine] Sampler selected token: 2
+[DBG] sampled token=2 eosId=1
+[DBG] stateNorm=3.253463e+02 finite=1 pos=363
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=18803 logit=   32.854446 text='shall'
+  [ 1] id= 2001 logit=   31.967834 text='че'
+  [ 2] id= 6337 logit=   31.668514 text='anto'
+  [ 3] id=59468 logit=   31.065561 text='antas'
+  [ 4] id=  895 logit=   30.675442 text=' Y'
+  [ 5] id= 3284 logit=   30.574799 text='ca'
+  [ 6] id=  558 logit=   30.505180 text=' T'
+  [ 7] id= 1177 logit=   28.568062 text='ym'
+  [ 8] id=22416 logit=   27.575336 text='ীরা'
+  [ 9] id=236757 logit=   27.551128 text='m'
+[Deep2Engine] Sampler selected token: 18803
+[DBG] sampled token=18803 eosId=1
+[DBG] stateNorm=3.258619e+02 finite=1 pos=364
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 9879 logit=   34.195156 text=' ต'
+  [ 1] id=239030 logit=   32.748558 text='능'
+  [ 2] id= 2246 logit=   30.873093 text=' call'
+  [ 3] id=67165 logit=   30.851505 text='Called'
+  [ 4] id= 9861 logit=   30.532551 text=' Call'
+  [ 5] id=22539 logit=   30.044167 text='>>>'
+  [ 6] id=  895 logit=   29.858652 text=' Y'
+  [ 7] id=237313 logit=   29.713953 text='子'
+  [ 8] id=11114 logit=   29.650497 text='нима'
+  [ 9] id= 4941 logit=   29.635460 text=' の'
+[Deep2Engine] Sampler selected token: 9879
+[DBG] sampled token=9879 eosId=1
+[DBG] stateNorm=3.173194e+02 finite=1 pos=365
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=204861 logit=   36.665192 text=' главных'
+  [ 1] id=153888 logit=   34.696419 text='ênio'
+  [ 2] id=24172 logit=   33.985207 text='вое'
+  [ 3] id=92155 logit=   32.541962 text='NSE'
+  [ 4] id=52605 logit=   32.525970 text='jalan'
+  [ 5] id=86830 logit=   32.465214 text=' Rider'
+  [ 6] id=236767 logit=   32.215969 text='k'
+  [ 7] id=33868 logit=   31.722296 text=' Driver'
+  [ 8] id= 1989 logit=   31.709133 text='SE'
+  [ 9] id=97402 logit=   31.708792 text=' Rég'
+[Deep2Engine] Sampler selected token: 204861
+[DBG] sampled token=204861 eosId=1
+[DBG] stateNorm=3.231723e+02 finite=1 pos=366
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=237576 logit=   38.028000 text='着'
+  [ 1] id=225372 logit=   32.637833 text=' क्‍'
+  [ 2] id=107744 logit=   32.366829 text='Sums'
+  [ 3] id=191949 logit=   31.870878 text=' keyValue'
+  [ 4] id=39451 logit=   31.501537 text='Office'
+  [ 5] id=16994 logit=   31.493877 text='tk'
+  [ 6] id=169140 logit=   31.301350 text=' 接'
+  [ 7] id=237637 logit=   30.846556 text='接'
+  [ 8] id=201098 logit=   30.787163 text='वाहक'
+  [ 9] id=26449 logit=   30.609688 text='മായ'
+[Deep2Engine] Sampler selected token: 237576
+[DBG] sampled token=237576 eosId=1
+[DBG] stateNorm=3.158565e+02 finite=1 pos=367
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=164737 logit=   34.888596 text='运算符'
+  [ 1] id=52714 logit=   29.439789 text=' kung'
+  [ 2] id=237409 logit=   28.178665 text='性'
+  [ 3] id=36842 logit=   28.031530 text='只要'
+  [ 4] id=237426 logit=   27.780788 text='ข'
+  [ 5] id= 2426 logit=   27.529566 text=' check'
+  [ 6] id=90904 logit=   27.390696 text='tempo'
+  [ 7] id=51384 logit=   26.984554 text='צי'
+  [ 8] id=165144 logit=   26.943808 text=' причем'
+  [ 9] id=41576 logit=   26.736790 text=' natür'
+[Deep2Engine] Sampler selected token: 164737
+[DBG] sampled token=164737 eosId=1
+[DBG] stateNorm=3.263990e+02 finite=1 pos=368
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=73443 logit=   32.566437 text='पाई'
+  [ 1] id=23252 logit=   30.488958 text='вати'
+  [ 2] id=37692 logit=   30.168621 text='uria'
+  [ 3] id=230274 logit=   29.834705 text='都道府県'
+  [ 4] id=166210 logit=   29.618200 text='োয়া'
+  [ 5] id=237270 logit=   29.436306 text='ת'
+  [ 6] id=  497 logit=   29.306105 text='er'
+  [ 7] id=141763 logit=   28.810272 text='iries'
+  [ 8] id=78962 logit=   28.563854 text='エスト'
+  [ 9] id=116901 logit=   28.410572 text='стями'
+[Deep2Engine] Sampler selected token: 73443
+[DBG] sampled token=73443 eosId=1
+[KVCache] page grow 368 -> 376 hot (virtualMax=16836 pos=368)
+[DBG] stateNorm=3.129628e+02 finite=1 pos=369
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=116901 logit=   37.340576 text='стями'
+  [ 1] id=  854 logit=   31.235592 text='com'
+  [ 2] id=163298 logit=   31.127251 text='地域の'
+  [ 3] id=83679 logit=   30.781265 text='compan'
+  [ 4] id=153528 logit=   29.971806 text='quera'
+  [ 5] id=141041 logit=   29.117413 text=' 〈'
+  [ 6] id=38980 logit=   29.105246 text='ษา'
+  [ 7] id=78962 logit=   29.102331 text='エスト'
+  [ 8] id= 2572 logit=   29.034384 text='দের'
+  [ 9] id=152903 logit=   28.980803 text='લું'
+[Deep2Engine] Sampler selected token: 116901
+[DBG] sampled token=116901 eosId=1
+[DBG] stateNorm=3.154581e+02 finite=1 pos=370
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=237719 logit=   37.199799 text='શ'
+  [ 1] id= 2678 logit=   34.693794 text=' side'
+  [ 2] id= 1476 logit=   33.425308 text='ward'
+  [ 3] id=59833 logit=   33.275146 text='жного'
+  [ 4] id=78122 logit=   32.901421 text='erful'
+  [ 5] id= 2897 logit=   32.455860 text='side'
+  [ 6] id=244708 logit=   31.914934 text='ఔ'
+  [ 7] id=151908 logit=   31.160593 text=' стороне'
+  [ 8] id=  765 logit=   31.015041 text='ft'
+  [ 9] id=123524 logit=   30.931875 text='ನಿಯ'
+[Deep2Engine] Sampler selected token: 237719
+[DBG] sampled token=237719 eosId=1
+[DBG] stateNorm=3.316362e+02 finite=1 pos=371
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=    2 logit=   38.635738 text='<bos>'
+  [ 1] id=61354 logit=   36.955559 text='ADMIN'
+  [ 2] id=89448 logit=   36.564636 text=' pous'
+  [ 3] id=42360 logit=   35.603329 text=' administrators'
+  [ 4] id= 5643 logit=   35.560104 text='[\'
+  [ 5] id=226443 logit=   35.512901 text='സിയ'
+  [ 6] id=218808 logit=   34.608639 text=' தாண்ட'
+  [ 7] id= 1283 logit=   34.297340 text='ages'
+  [ 8] id=28122 logit=   34.042786 text='general'
+  [ 9] id=233260 logit=   33.833412 text='人用'
+[Deep2Engine] Sampler selected token: 2
+[DBG] sampled token=2 eosId=1
+[DBG] stateNorm=3.306676e+02 finite=1 pos=372
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  895 logit=   38.756798 text=' Y'
+  [ 1] id=  558 logit=   36.154961 text=' T'
+  [ 2] id= 6337 logit=   35.301037 text='anto'
+  [ 3] id=34269 logit=   34.175041 text='paths'
+  [ 4] id=17832 logit=   32.162521 text='Ca'
+  [ 5] id=10537 logit=   32.157410 text=' Ca'
+  [ 6] id=  555 logit=   31.554741 text=' S'
+  [ 7] id= 3284 logit=   31.407143 text='ca'
+  [ 8] id=  142 logit=   31.068886 text='      '
+  [ 9] id=79280 logit=   31.049938 text='antos'
+[Deep2Engine] Sampler selected token: 895
+[DBG] sampled token=895 eosId=1
+[DBG] stateNorm=3.284849e+02 finite=1 pos=373
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 2572 logit=   38.488266 text='দের'
+  [ 1] id=12766 logit=   36.726879 text='вод'
+  [ 2] id=168441 logit=   35.406338 text='τρέ'
+  [ 3] id=150273 logit=   35.200882 text=' forêts'
+  [ 4] id=236833 logit=   34.796066 text='न'
+  [ 5] id=33884 logit=   34.724430 text='houses'
+  [ 6] id=137292 logit=   34.528366 text=' политики'
+  [ 7] id=234216 logit=   34.382954 text='ിട'
+  [ 8] id=216448 logit=   34.345184 text=' vét'
+  [ 9] id= 2750 logit=   34.226543 text='equ'
+[Deep2Engine] Sampler selected token: 2572
+[DBG] sampled token=2572 eosId=1
+[DBG] stateNorm=3.310445e+02 finite=1 pos=374
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  774 logit=   37.608864 text='ated'
+  [ 1] id=22620 logit=   37.281921 text=' directors'
+  [ 2] id=72874 logit=   34.582695 text='になりました'
+  [ 3] id=59833 logit=   34.190197 text='жного'
+  [ 4] id=55355 logit=   33.999054 text=' Internacional'
+  [ 5] id=131914 logit=   33.609936 text='нным'
+  [ 6] id= 4378 logit=   33.421471 text='selves'
+  [ 7] id=89858 logit=   32.965370 text=' coverings'
+  [ 8] id=99797 logit=   32.687309 text='órico'
+  [ 9] id=  806 logit=   32.617424 text='ous'
+[Deep2Engine] Sampler selected token: 774
+[DBG] sampled token=774 eosId=1
+[DBG] stateNorm=3.387283e+02 finite=1 pos=375
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=186193 logit=   41.673653 text=' analogies'
+  [ 1] id=159079 logit=   40.637207 text='StartState'
+  [ 2] id=53227 logit=   39.457191 text='visited'
+  [ 3] id=137398 logit=   39.270298 text=' Territorial'
+  [ 4] id=127212 logit=   38.824936 text='CXX'
+  [ 5] id=218723 logit=   38.576805 text='ignés'
+  [ 6] id=68399 logit=   37.112473 text=' Experiments'
+  [ 7] id=10308 logit=   36.736671 text=' articles'
+  [ 8] id=60804 logit=   36.699947 text=' artículos'
+  [ 9] id=172259 logit=   36.680241 text='cador'
+[Deep2Engine] Sampler selected token: 186193
+[DBG] sampled token=186193 eosId=1
+[DBG] stateNorm=3.130653e+02 finite=1 pos=376
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 9034 logit=   40.496964 text=' affected'
+  [ 1] id=147381 logit=   38.634811 text='టింగ్'
+  [ 2] id=56801 logit=   38.619499 text='なお'
+  [ 3] id=49630 logit=   37.496498 text='関連'
+  [ 4] id= 6968 logit=   36.729683 text='ted'
+  [ 5] id=236996 logit=   36.586315 text='ள'
+  [ 6] id=42164 logit=   36.455784 text='らない'
+  [ 7] id=221985 logit=   36.243771 text='頂きました'
+  [ 8] id=247067 logit=   35.433380 text='̗'
+  [ 9] id=237173 logit=   35.347103 text='ら'
+[Deep2Engine] Sampler selected token: 9034
+[DBG] sampled token=9034 eosId=1
+[KVCache] page grow 376 -> 384 hot (virtualMax=16836 pos=376)
+[DBG] stateNorm=3.322840e+02 finite=1 pos=377
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=19418 logit=   37.813667 text=' lifetime'
+  [ 1] id=116901 logit=   37.468353 text='стями'
+  [ 2] id=19698 logit=   36.246696 text=' residence'
+  [ 3] id=12935 logit=   35.361351 text='eties'
+  [ 4] id=234259 logit=   34.441353 text=' органами'
+  [ 5] id=214155 logit=   33.765545 text='нутри'
+  [ 6] id= 4106 logit=   31.993361 text=' areas'
+  [ 7] id=125048 logit=   31.517525 text=' lifetimes'
+  [ 8] id=82465 logit=   31.467201 text=' între'
+  [ 9] id=16106 logit=   31.325325 text=' healthcare'
+[Deep2Engine] Sampler selected token: 19418
+[DBG] sampled token=19418 eosId=1
+[DBG] stateNorm=3.218348e+02 finite=1 pos=378
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=236224 logit=   35.982582 text='matical'
+  [ 1] id=254239 logit=   35.312939 text='𝙔'
+  [ 2] id= 4440 logit=   33.586006 text='ियों'
+  [ 3] id=204421 logit=   33.110378 text=' sót'
+  [ 4] id=196981 logit=   33.073997 text=' actief'
+  [ 5] id=14044 logit=   33.035946 text=' י'
+  [ 6] id=13099 logit=   32.672119 text='ীদের'
+  [ 7] id=28517 logit=   32.606033 text='zeug'
+  [ 8] id=143748 logit=   32.331165 text='chid'
+  [ 9] id=160483 logit=   32.266407 text='તુ'
+[Deep2Engine] Sampler selected token: 236224
+[DBG] sampled token=236224 eosId=1
+[DBG] stateNorm=3.236809e+02 finite=1 pos=379
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=236751 logit=   40.069252 text='s'
+  [ 1] id=236922 logit=   33.090336 text='च'
+  [ 2] id=  616 logit=   32.618324 text='ers'
+  [ 3] id=159860 logit=   31.990475 text=' Graphical'
+  [ 4] id=18671 logit=   31.356073 text=' Tech'
+  [ 5] id=238825 logit=   31.243279 text='ẻ'
+  [ 6] id=106693 logit=   30.816612 text='側の'
+  [ 7] id=54106 logit=   30.514618 text='సే'
+  [ 8] id=  500 logit=   30.445940 text='re'
+  [ 9] id= 2572 logit=   30.241783 text='দের'
+[Deep2Engine] Sampler selected token: 236751
+[DBG] sampled token=236751 eosId=1
+[DBG] stateNorm=3.331032e+02 finite=1 pos=380
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=79532 logit=   39.433186 text='法人'
+  [ 1] id=91352 logit=   36.778801 text=' விழு'
+  [ 2] id= 6996 logit=   36.217899 text=' কা'
+  [ 3] id=89032 logit=   35.595200 text='urethane'
+  [ 4] id=38752 logit=   35.375298 text='#!/'
+  [ 5] id=251012 logit=   35.357307 text='ﻙ'
+  [ 6] id=  505 logit=   35.145351 text=' c'
+  [ 7] id=78962 logit=   33.814198 text='エスト'
+  [ 8] id=48358 logit=   33.598301 text=' Courts'
+  [ 9] id=239600 logit=   33.350410 text='株'
+[Deep2Engine] Sampler selected token: 79532
+[DBG] sampled token=79532 eosId=1
+[DBG] stateNorm=3.104567e+02 finite=1 pos=381
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=18671 logit=   33.928516 text=' Tech'
+  [ 1] id=185321 logit=   33.609501 text=' Affected'
+  [ 2] id=248629 logit=   33.025528 text='ὗ'
+  [ 3] id=205357 logit=   32.620644 text=' Changel'
+  [ 4] id=27229 logit=   32.440079 text='ajes'
+  [ 5] id=37895 logit=   32.311420 text='тельные'
+  [ 6] id=181839 logit=   32.076904 text='うん'
+  [ 7] id=17770 logit=   31.756407 text=' Given'
+  [ 8] id=225773 logit=   31.726444 text='AspectRatio'
+  [ 9] id=14133 logit=   31.504379 text=' Area'
+[Deep2Engine] Sampler selected token: 18671
+[DBG] sampled token=18671 eosId=1
+[DBG] stateNorm=3.128594e+02 finite=1 pos=382
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=130753 logit=   37.405731 text='వారి'
+  [ 1] id= 2572 logit=   37.195499 text='দের'
+  [ 2] id=107920 logit=   35.720196 text='йы'
+  [ 3] id=81215 logit=   35.203079 text='चुअल'
+  [ 4] id=243476 logit=   34.721737 text='谭'
+  [ 5] id=255062 logit=   34.571667 text='ᵁ'
+  [ 6] id=11726 logit=   34.378540 text='yer'
+  [ 7] id=167800 logit=   33.958118 text='POV'
+  [ 8] id=29764 logit=   33.948307 text=' custody'
+  [ 9] id=33704 logit=   33.314335 text='ادہ'
+[Deep2Engine] Sampler selected token: 130753
+[DBG] sampled token=130753 eosId=1
+[DBG] stateNorm=3.440125e+02 finite=1 pos=383
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=141167 logit=   47.545345 text=' possibles'
+  [ 1] id=19340 logit=   42.321625 text=' brothers'
+  [ 2] id=174990 logit=   42.308071 text=' independientes'
+  [ 3] id=212042 logit=   41.630749 text=' acteur'
+  [ 4] id=174338 logit=   41.158897 text=' appartenant'
+  [ 5] id= 2653 logit=   40.380005 text=' possible'
+  [ 6] id=10521 logit=   39.917221 text=' interests'
+  [ 7] id=235143 logit=   39.681427 text=' Tenants'
+  [ 8] id=112027 logit=   38.783722 text=' adversaries'
+  [ 9] id=183200 logit=   38.518188 text=' possíveis'
+[Deep2Engine] Sampler selected token: 141167
+[DBG] sampled token=141167 eosId=1
+[DBG] stateNorm=3.314884e+02 finite=1 pos=384
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 2572 logit=   34.244755 text='দের'
+  [ 1] id=  854 logit=   34.237804 text='com'
+  [ 2] id= 1571 logit=   32.547798 text='ten'
+  [ 3] id=13554 logit=   31.772738 text='ASE'
+  [ 4] id=196791 logit=   31.229645 text=' ফাই'
+  [ 5] id=27776 logit=   30.940567 text='mans'
+  [ 6] id= 3386 logit=   30.933601 text='des'
+  [ 7] id=146268 logit=   30.871038 text='thet'
+  [ 8] id=170723 logit=   30.843662 text='bois'
+  [ 9] id= 3314 logit=   30.477142 text=' Des'
+[Deep2Engine] Sampler selected token: 2572
+[DBG] sampled token=2572 eosId=1
+[KVCache] page grow 384 -> 392 hot (virtualMax=16836 pos=384)
+[DBG] stateNorm=3.324354e+02 finite=1 pos=385
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=13668 logit=   38.833015 text=' facing'
+  [ 1] id=106353 logit=   37.598347 text=' επισ'
+  [ 2] id= 1283 logit=   35.012218 text='ages'
+  [ 3] id=86919 logit=   34.708874 text=' इंटरनेशनल'
+  [ 4] id=78122 logit=   34.618431 text='erful'
+  [ 5] id=188940 logit=   34.318420 text='ோருக்கு'
+  [ 6] id= 7376 logit=   33.482422 text='area'
+  [ 7] id=30701 logit=   33.322105 text='fang'
+  [ 8] id=18092 logit=   32.959190 text='しょう'
+  [ 9] id=  774 logit=   32.934883 text='ated'
+[Deep2Engine] Sampler selected token: 13668
+[DBG] sampled token=13668 eosId=1
+[DBG] stateNorm=2.915537e+02 finite=1 pos=386
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=236777 logit=   37.901382 text='I'
+  [ 1] id= 6416 logit=   35.563641 text='idade'
+  [ 2] id=52440 logit=   34.238831 text='мите'
+  [ 3] id=180847 logit=   32.518776 text='θεν'
+  [ 4] id=237363 logit=   32.004280 text='И'
+  [ 5] id=40010 logit=   31.541771 text='ஸ்த'
+  [ 6] id= 5009 logit=   31.539677 text='ité'
+  [ 7] id=33950 logit=   31.046459 text='AGES'
+  [ 8] id=98504 logit=   30.846735 text=' خال'
+  [ 9] id=16115 logit=   30.732430 text='με'
+[Deep2Engine] Sampler selected token: 236777
+[DBG] sampled token=236777 eosId=1
+[DBG] stateNorm=3.157410e+02 finite=1 pos=387
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=55432 logit=   48.342575 text='pora'
+  [ 1] id=  497 logit=   40.053017 text='er'
+  [ 2] id=    2 logit=   38.017288 text='<bos>'
+  [ 3] id= 1150 logit=   36.528496 text='ре'
+  [ 4] id=242364 logit=   35.543148 text='咪'
+  [ 5] id= 3956 logit=   35.110630 text=' industry'
+  [ 6] id=68240 logit=   34.748283 text='성을'
+  [ 7] id=112632 logit=   34.584091 text='ிரா'
+  [ 8] id=44148 logit=   32.853840 text='રૂ'
+  [ 9] id=82772 logit=   32.805347 text='성이'
+[Deep2Engine] Sampler selected token: 55432
+[DBG] sampled token=55432 eosId=1
+[DBG] stateNorm=3.253660e+02 finite=1 pos=388
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=17125 logit=   40.484070 text='できる'
+  [ 1] id=120444 logit=   39.843601 text='军事'
+  [ 2] id=237342 logit=   39.364071 text='入'
+  [ 3] id= 4794 logit=   38.803936 text='vas'
+  [ 4] id=98973 logit=   37.992638 text='military'
+  [ 5] id=16013 logit=   37.426292 text='вого'
+  [ 6] id=191826 logit=   37.259029 text='மர'
+  [ 7] id=37311 logit=   36.727020 text='areas'
+  [ 8] id=10217 logit=   36.692818 text=' aspects'
+  [ 9] id=21224 logit=   36.549599 text='方面'
+[Deep2Engine] Sampler selected token: 17125
+[DBG] sampled token=17125 eosId=1
+[DBG] stateNorm=3.060091e+02 finite=1 pos=389
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  895 logit=   32.359093 text=' Y'
+  [ 1] id=18787 logit=   32.217373 text=' Major'
+  [ 2] id=230274 logit=   30.793434 text='都道府県'
+  [ 3] id=236934 logit=   30.662718 text='й'
+  [ 4] id= 3946 logit=   30.506302 text=' Pre'
+  [ 5] id=  563 logit=   29.466389 text=' is'
+  [ 6] id=  649 logit=   28.914770 text=' W'
+  [ 7] id=245519 logit=   28.889088 text='̩'
+  [ 8] id=76758 logit=   28.463255 text='యి'
+  [ 9] id= 4582 logit=   28.002253 text='ming'
+[Deep2Engine] Sampler selected token: 895
+[DBG] sampled token=895 eosId=1
+[DBG] stateNorm=3.255731e+02 finite=1 pos=390
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=214851 logit=   35.051033 text='entery'
+  [ 1] id=230274 logit=   34.802242 text='都道府県'
+  [ 2] id=136174 logit=   32.591145 text=' dependents'
+  [ 3] id=188940 logit=   32.568863 text='ோருக்கு'
+  [ 4] id=237270 logit=   32.278454 text='ת'
+  [ 5] id= 9034 logit=   32.180820 text=' affected'
+  [ 6] id=18101 logit=   31.779335 text='ships'
+  [ 7] id=29054 logit=   31.590393 text=' যেন'
+  [ 8] id=96304 logit=   31.352262 text='covering'
+  [ 9] id=89858 logit=   31.350273 text=' coverings'
+[Deep2Engine] Sampler selected token: 230274
+[DBG] sampled token=230274 eosId=1
+[DBG] stateNorm=3.203201e+02 finite=1 pos=391
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 2572 logit=   40.499500 text='দের'
+  [ 1] id=24586 logit=   37.569584 text=' attacked'
+  [ 2] id=34369 logit=   36.741470 text=' searches'
+  [ 3] id=136384 logit=   35.269978 text=' Quit'
+  [ 4] id=223294 logit=   34.935738 text=' conspiracies'
+  [ 5] id=228689 logit=   34.781693 text='mediaDevices'
+  [ 6] id=241261 logit=   34.749428 text='陪'
+  [ 7] id=20503 logit=   34.626129 text=' visits'
+  [ 8] id=225041 logit=   34.304920 text=' attaques'
+  [ 9] id=52681 logit=   32.869720 text='adero'
+[Deep2Engine] Sampler selected token: 2572
+[DBG] sampled token=2572 eosId=1
+[DBG] stateNorm=3.301118e+02 finite=1 pos=392
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=59833 logit=   37.565186 text='жного'
+  [ 1] id=158622 logit=   36.486507 text=' pressione'
+  [ 2] id=13668 logit=   36.281498 text=' facing'
+  [ 3] id=78122 logit=   36.084419 text='erful'
+  [ 4] id= 1280 logit=   35.814857 text='ative'
+  [ 5] id=223912 logit=   34.869225 text=' নেতাকর্মীরা'
+  [ 6] id=20678 logit=   34.156933 text='রাজ'
+  [ 7] id=22620 logit=   33.979988 text=' directors'
+  [ 8] id=43171 logit=   33.676373 text='дам'
+  [ 9] id=106353 logit=   33.134850 text=' επισ'
+[Deep2Engine] Sampler selected token: 158622
+[DBG] sampled token=158622 eosId=1
+[KVCache] page grow 392 -> 400 hot (virtualMax=16836 pos=392)
+[DBG] stateNorm=3.222677e+02 finite=1 pos=393
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=211760 logit=   38.001816 text='Affected'
+  [ 1] id=95677 logit=   36.273830 text=' Aspects'
+  [ 2] id=185321 logit=   36.202389 text=' Affected'
+  [ 3] id= 9034 logit=   35.950886 text=' affected'
+  [ 4] id=237360 logit=   35.546505 text='面'
+  [ 5] id=146021 logit=   34.349487 text='ខ្លួន'
+  [ 6] id=19694 logit=   33.425709 text=' Welcome'
+  [ 7] id=10217 logit=   33.416489 text=' aspects'
+  [ 8] id=52630 logit=   33.241241 text=' recruited'
+  [ 9] id=53802 logit=   33.240368 text=' aspectos'
+[Deep2Engine] Sampler selected token: 211760
+[DBG] sampled token=211760 eosId=1
+[DBG] stateNorm=3.183329e+02 finite=1 pos=394
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=237075 logit=   40.092945 text='在'
+  [ 1] id=13557 logit=   35.450191 text='வே'
+  [ 2] id=239143 logit=   34.931145 text='費'
+  [ 3] id=20162 logit=   34.319580 text='对于'
+  [ 4] id=237731 logit=   33.975872 text='型'
+  [ 5] id=12381 logit=   33.888363 text=' जाने'
+  [ 6] id=119984 logit=   33.305241 text='になると'
+  [ 7] id=202222 logit=   32.193275 text='timeouts'
+  [ 8] id=158237 logit=   31.773329 text='ținut'
+  [ 9] id=160713 logit=   31.394413 text='rières'
+[Deep2Engine] Sampler selected token: 237075
+[DBG] sampled token=237075 eosId=1
+[DBG] stateNorm=3.302496e+02 finite=1 pos=395
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=200248 logit=   38.286659 text='SystemFileSystem'
+  [ 1] id=214851 logit=   37.378281 text='entery'
+  [ 2] id=67810 logit=   37.259941 text=' tiempos'
+  [ 3] id=  958 logit=   37.114567 text='}\'
+  [ 4] id=185370 logit=   36.381485 text=' reliefs'
+  [ 5] id= 2572 logit=   35.867451 text='দের'
+  [ 6] id=10308 logit=   35.174301 text=' articles'
+  [ 7] id=251992 logit=   34.763962 text='㑨'
+  [ 8] id=34342 logit=   34.374920 text='东西'
+  [ 9] id=151908 logit=   34.093586 text=' стороне'
+[Deep2Engine] Sampler selected token: 958
+[DBG] sampled token=958 eosId=1
+[DBG] stateNorm=3.025129e+02 finite=1 pos=396
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 6801 logit=   37.321434 text='reci'
+  [ 1] id=73443 logit=   37.016968 text='पाई'
+  [ 2] id=237086 logit=   36.268776 text='人'
+  [ 3] id=170744 logit=   35.364594 text='timers'
+  [ 4] id=58027 logit=   34.989010 text='वती'
+  [ 5] id=236963 logit=   34.729580 text='ই'
+  [ 6] id=84500 logit=   33.747837 text='Secretary'
+  [ 7] id=248492 logit=   33.003189 text='𝑖'
+  [ 8] id=116901 logit=   32.435131 text='стями'
+  [ 9] id=48797 logit=   32.342613 text='தான்'
+[Deep2Engine] Sampler selected token: 73443
+[DBG] sampled token=73443 eosId=1
+[DBG] stateNorm=3.299093e+02 finite=1 pos=397
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=140766 logit=   37.831039 text=' Interests'
+  [ 1] id=10521 logit=   36.527084 text=' interests'
+  [ 2] id=238825 logit=   36.407021 text='ẻ'
+  [ 3] id=133126 logit=   34.741386 text='sorting'
+  [ 4] id=  616 logit=   34.570473 text='ers'
+  [ 5] id= 9591 logit=   32.807858 text='اف'
+  [ 6] id=51354 logit=   31.893053 text=' jóvenes'
+  [ 7] id= 9072 logit=   31.855997 text='рі'
+  [ 8] id= 7743 logit=   31.846010 text=' गु'
+  [ 9] id=99672 logit=   31.745142 text=' অশ'
+[Deep2Engine] Sampler selected token: 140766
+[DBG] sampled token=140766 eosId=1
+[DBG] stateNorm=3.177422e+02 finite=1 pos=398
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=110291 logit=   34.704525 text='erun'
+  [ 1] id=21264 logit=   33.105648 text=' Primary'
+  [ 2] id=  497 logit=   31.010708 text='er'
+  [ 3] id=15455 logit=   30.990025 text='primary'
+  [ 4] id= 5905 logit=   30.514809 text=' primary'
+  [ 5] id=61244 logit=   30.368868 text='lust'
+  [ 6] id=32663 logit=   30.262489 text='Primary'
+  [ 7] id=  895 logit=   29.822966 text=' Y'
+  [ 8] id=236751 logit=   29.672935 text='s'
+  [ 9] id=236767 logit=   29.555033 text='k'
+[Deep2Engine] Sampler selected token: 110291
+[DBG] sampled token=110291 eosId=1
+[DBG] stateNorm=3.248397e+02 finite=1 pos=399
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=18235 logit=   40.881550 text='Bu'
+  [ 1] id= 8772 logit=   39.734165 text=' Bu'
+  [ 2] id= 1740 logit=   38.971634 text='ES'
+  [ 3] id= 7802 logit=   37.939209 text=' Jack'
+  [ 4] id= 5911 logit=   37.270172 text='TS'
+  [ 5] id=32469 logit=   35.391647 text=' Independent'
+  [ 6] id= 6489 logit=   35.055847 text='bu'
+  [ 7] id= 8242 logit=   35.052757 text='GB'
+  [ 8] id=63552 logit=   34.370567 text=' Aware'
+  [ 9] id= 4502 logit=   34.354935 text='PS'
+[Deep2Engine] Sampler selected token: 18235
+[DBG] sampled token=18235 eosId=1
+[DBG] stateNorm=3.148945e+02 finite=1 pos=400
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=237281 logit=   31.749203 text='의'
+  [ 1] id=122596 logit=   30.115433 text=' čak'
+  [ 2] id=155976 logit=   29.070744 text='erebbe'
+  [ 3] id= 4798 logit=   28.507256 text=' het'
+  [ 4] id=124679 logit=   28.222061 text='чого'
+  [ 5] id=  695 logit=   28.178112 text='ies'
+  [ 6] id=23286 logit=   27.895163 text=' quit'
+  [ 7] id=130238 logit=   27.852686 text='的身'
+  [ 8] id=224159 logit=   27.802086 text=' potenciales'
+  [ 9] id=153514 logit=   27.743999 text=' inició'
+[Deep2Engine] Sampler selected token: 237281
+[DBG] sampled token=237281 eosId=1
+[KVCache] page grow 400 -> 408 hot (virtualMax=16836 pos=400)
+[DBG] stateNorm=3.170077e+02 finite=1 pos=401
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 2572 logit=   38.001518 text='দের'
+  [ 1] id=170723 logit=   33.060242 text='bois'
+  [ 2] id=23286 logit=   32.670692 text=' quit'
+  [ 3] id=255062 logit=   32.250481 text='ᵁ'
+  [ 4] id=213752 logit=   31.910847 text='遺跡'
+  [ 5] id=76847 logit=   31.643906 text=' যাবার'
+  [ 6] id=14044 logit=   30.208973 text=' י'
+  [ 7] id=100955 logit=   30.118216 text='ப்புற'
+  [ 8] id=109202 logit=   29.335014 text=' quitting'
+  [ 9] id=136384 logit=   29.061106 text=' Quit'
+[Deep2Engine] Sampler selected token: 2572
+[DBG] sampled token=2572 eosId=1
+[DBG] stateNorm=3.203588e+02 finite=1 pos=402
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=59833 logit=   38.232239 text='жного'
+  [ 1] id=228487 logit=   34.896614 text='ようになりました'
+  [ 2] id= 2678 logit=   34.577763 text=' side'
+  [ 3] id=237850 logit=   34.217606 text='ણ'
+  [ 4] id=43171 logit=   32.933437 text='дам'
+  [ 5] id= 1476 logit=   32.848915 text='ward'
+  [ 6] id= 2897 logit=   32.519928 text='side'
+  [ 7] id=131914 logit=   31.717051 text='нным'
+  [ 8] id=179785 logit=   31.608805 text='दानी'
+  [ 9] id=75319 logit=   31.336758 text='त्वा'
+[Deep2Engine] Sampler selected token: 59833
+[DBG] sampled token=59833 eosId=1
+[DBG] stateNorm=3.336864e+02 finite=1 pos=403
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=    2 logit=   39.542336 text='<bos>'
+  [ 1] id= 1150 logit=   36.232910 text='ре'
+  [ 2] id=127338 logit=   35.627289 text='นาย'
+  [ 3] id=55432 logit=   34.788147 text='pora'
+  [ 4] id=119716 logit=   34.377407 text='()],'
+  [ 5] id=106134 logit=   33.747257 text='omyces'
+  [ 6] id=38481 logit=   32.666100 text='रु'
+  [ 7] id=92483 logit=   32.152660 text='clas'
+  [ 8] id= 4440 logit=   32.008568 text='ियों'
+  [ 9] id= 2678 logit=   31.433933 text=' side'
+[Deep2Engine] Sampler selected token: 2
+[DBG] sampled token=2 eosId=1
+[DBG] stateNorm=3.144775e+02 finite=1 pos=404
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 8473 logit=   39.505630 text='admin'
+  [ 1] id= 1626 logit=   36.386272 text=' final'
+  [ 2] id=    2 logit=   35.946465 text='<bos>'
+  [ 3] id=10218 logit=   35.044476 text='final'
+  [ 4] id=71958 logit=   33.908615 text=' retrouve'
+  [ 5] id=17061 logit=   33.222275 text='classes'
+  [ 6] id=15111 logit=   32.009636 text='cod'
+  [ 7] id=144519 logit=   31.990242 text='وزر'
+  [ 8] id=  565 logit=   31.535225 text=' C'
+  [ 9] id= 6761 logit=   31.487991 text='ના'
+[Deep2Engine] Sampler selected token: 8473
+[DBG] sampled token=8473 eosId=1
+[DBG] stateNorm=3.359324e+02 finite=1 pos=405
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=167194 logit=   42.511375 text=' afectados'
+  [ 1] id=186610 logit=   36.008488 text=' ganglions'
+  [ 2] id=218155 logit=   35.990826 text=' Indications'
+  [ 3] id=213629 logit=   35.954342 text=' afectadas'
+  [ 4] id=250882 logit=   35.636539 text='噫'
+  [ 5] id=77841 logit=   35.113632 text='ностей'
+  [ 6] id=166695 logit=   34.643589 text='Profiles'
+  [ 7] id=141580 logit=   34.109165 text=' favoritos'
+  [ 8] id=224159 logit=   33.951500 text=' potenciales'
+  [ 9] id=150511 logit=   33.786541 text=' utilizadas'
+[Deep2Engine] Sampler selected token: 167194
+[DBG] sampled token=167194 eosId=1
+[DBG] stateNorm=3.203852e+02 finite=1 pos=406
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=    2 logit=   39.088356 text='<bos>'
+  [ 1] id=  558 logit=   34.725346 text=' T'
+  [ 2] id= 1583 logit=   34.684780 text='iness'
+  [ 3] id=  895 logit=   33.537346 text=' Y'
+  [ 4] id=59468 logit=   33.488094 text='antas'
+  [ 5] id=  958 logit=   32.239864 text='}\'
+  [ 6] id=15111 logit=   31.964382 text='cod'
+  [ 7] id=  565 logit=   31.906120 text=' C'
+  [ 8] id= 4440 logit=   31.614771 text='ियों'
+  [ 9] id=79280 logit=   31.238194 text='antos'
+[Deep2Engine] Sampler selected token: 2
+[DBG] sampled token=2 eosId=1
+[DBG] stateNorm=3.196239e+02 finite=1 pos=407
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=79280 logit=   39.735870 text='antos'
+  [ 1] id=59468 logit=   36.398911 text='antas'
+  [ 2] id= 6337 logit=   34.562592 text='anto'
+  [ 3] id= 4440 logit=   33.524086 text='ियों'
+  [ 4] id=162769 logit=   32.558468 text=' нашим'
+  [ 5] id= 1626 logit=   32.209324 text=' final'
+  [ 6] id=15111 logit=   32.141521 text='cod'
+  [ 7] id= 8473 logit=   32.009232 text='admin'
+  [ 8] id=  895 logit=   31.851337 text=' Y'
+  [ 9] id=  854 logit=   31.828447 text='com'
+[Deep2Engine] Sampler selected token: 79280
+[DBG] sampled token=79280 eosId=1
+[DBG] stateNorm=3.289411e+02 finite=1 pos=408
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=248991 logit=   38.027718 text='珺'
+  [ 1] id=24172 logit=   37.751022 text='вое'
+  [ 2] id= 3668 logit=   37.312065 text=' American'
+  [ 3] id=42744 logit=   36.865780 text='つの'
+  [ 4] id=77583 logit=   34.830658 text='сё'
+  [ 5] id= 8008 logit=   34.598335 text=' supported'
+  [ 6] id= 7103 logit=   34.082348 text='ப்'
+  [ 7] id=49261 logit=   33.941521 text=' catches'
+  [ 8] id= 9034 logit=   33.663986 text=' affected'
+  [ 9] id=19009 logit=   32.397850 text=' fits'
+[Deep2Engine] Sampler selected token: 248991
+[DBG] sampled token=248991 eosId=1
+[KVCache] page grow 408 -> 416 hot (virtualMax=16836 pos=408)
+[DBG] stateNorm=3.259748e+02 finite=1 pos=409
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=236751 logit=   37.822323 text='s'
+  [ 1] id=236767 logit=   36.325409 text='k'
+  [ 2] id=236749 logit=   36.020107 text='n'
+  [ 3] id=21260 logit=   34.837017 text='నే'
+  [ 4] id=236752 logit=   34.277832 text='l'
+  [ 5] id= 2572 logit=   33.833912 text='দের'
+  [ 6] id=217352 logit=   33.799484 text='यची'
+  [ 7] id=29552 logit=   33.661484 text='members'
+  [ 8] id=73443 logit=   33.423820 text='पाई'
+  [ 9] id= 7769 logit=   33.027107 text='います'
+[Deep2Engine] Sampler selected token: 236751
+[DBG] sampled token=236751 eosId=1
+[DBG] stateNorm=3.157853e+02 finite=1 pos=410
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=91352 logit=   38.296516 text=' விழு'
+  [ 1] id=  505 logit=   37.925999 text=' c'
+  [ 2] id=38752 logit=   34.505699 text='#!/'
+  [ 3] id=32781 logit=   32.768677 text='thumb'
+  [ 4] id=115784 logit=   32.224251 text=' статье'
+  [ 5] id=185063 logit=   32.084808 text=' facades'
+  [ 6] id=238403 logit=   31.148314 text='對'
+  [ 7] id= 1550 logit=   31.042362 text=' value'
+  [ 8] id=89032 logit=   30.792011 text='urethane'
+  [ 9] id=153264 logit=   30.676632 text=' गवर्नर'
+[Deep2Engine] Sampler selected token: 505
+[DBG] sampled token=505 eosId=1
+[DBG] stateNorm=3.258266e+02 finite=1 pos=411
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=81741 logit=   42.209805 text='コート'
+  [ 1] id=98574 logit=   40.921478 text=' trenches'
+  [ 2] id=89448 logit=   40.130920 text=' pous'
+  [ 3] id=50328 logit=   36.802963 text=' coats'
+  [ 4] id=112627 logit=   36.427582 text='writeFile'
+  [ 5] id=250986 logit=   36.095062 text='霑'
+  [ 6] id=250767 logit=   35.972664 text='郢'
+  [ 7] id=16606 logit=   35.869602 text=' ages'
+  [ 8] id=186935 logit=   34.596825 text=' आलम'
+  [ 9] id=228723 logit=   34.321564 text='buried'
+[Deep2Engine] Sampler selected token: 81741
+[DBG] sampled token=81741 eosId=1
+[DBG] stateNorm=3.308268e+02 finite=1 pos=412
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=10217 logit=   49.182953 text=' aspects'
+  [ 1] id= 3884 logit=   46.880917 text=' và'
+  [ 2] id=174338 logit=   46.625294 text=' appartenant'
+  [ 3] id=53802 logit=   46.213936 text=' aspectos'
+  [ 4] id= 1402 logit=   45.555309 text=' और'
+  [ 5] id=13248 logit=   44.266159 text=' અને'
+  [ 6] id=18720 logit=   43.978870 text=' ಮತ್ತು'
+  [ 7] id=88435 logit=   43.044392 text=' correlates'
+  [ 8] id= 9227 logit=   42.967999 text=' και'
+  [ 9] id=168770 logit=   42.879047 text='得以'
+[Deep2Engine] Sampler selected token: 10217
+[DBG] sampled token=10217 eosId=1
+[DBG] stateNorm=3.220308e+02 finite=1 pos=413
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=70541 logit=   33.472012 text=' taps'
+  [ 1] id=42870 logit=   32.303101 text=' associates'
+  [ 2] id= 9299 logit=   30.496790 text=' API'
+  [ 3] id=  555 logit=   30.382883 text=' S'
+  [ 4] id=20737 logit=   29.671200 text=' JavaScript'
+  [ 5] id=86089 logit=   29.532303 text=' ידי'
+  [ 6] id=10252 logit=   29.422943 text='API'
+  [ 7] id=21632 logit=   29.300230 text=' Interest'
+  [ 8] id= 1639 logit=   29.204372 text='ants'
+  [ 9] id=20961 logit=   28.868328 text='μέ'
+[Deep2Engine] Sampler selected token: 70541
+[DBG] sampled token=70541 eosId=1
+[DBG] stateNorm=3.465099e+02 finite=1 pos=414
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=58309 logit=   38.622341 text=' youths'
+  [ 1] id=62576 logit=   37.548740 text=' территории'
+  [ 2] id=128149 logit=   36.196411 text=' []*'
+  [ 3] id= 2001 logit=   35.684410 text='че'
+  [ 4] id=26700 logit=   34.775314 text=' Youth'
+  [ 5] id=10974 logit=   34.493401 text=' youth'
+  [ 6] id=216214 logit=   34.268936 text=' ресурсы'
+  [ 7] id=122949 logit=   34.239025 text='Youth'
+  [ 8] id=124290 logit=   33.687832 text=' trúc'
+  [ 9] id=12029 logit=   33.497417 text=' ஏ'
+[Deep2Engine] Sampler selected token: 58309
+[DBG] sampled token=58309 eosId=1
+[DBG] stateNorm=3.181637e+02 finite=1 pos=415
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=    2 logit=   41.723969 text='<bos>'
+  [ 1] id=18803 logit=   38.679413 text='shall'
+  [ 2] id=67676 logit=   34.993931 text='თვის'
+  [ 3] id= 2572 logit=   34.157806 text='দের'
+  [ 4] id=47898 logit=   33.939644 text='remos'
+  [ 5] id=106134 logit=   33.896057 text='omyces'
+  [ 6] id= 5643 logit=   32.947052 text='[\'
+  [ 7] id=55432 logit=   32.896496 text='pora'
+  [ 8] id=172307 logit=   32.709641 text=' stimulants'
+  [ 9] id=127338 logit=   32.643604 text='นาย'
+[Deep2Engine] Sampler selected token: 2
+[DBG] sampled token=2 eosId=1
+[DBG] stateNorm=3.188723e+02 finite=1 pos=416
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=59468 logit=   34.176453 text='antas'
+  [ 1] id= 6337 logit=   33.591034 text='anto'
+  [ 2] id=79280 logit=   32.452778 text='antos'
+  [ 3] id=102830 logit=   31.351517 text='attend'
+  [ 4] id=130753 logit=   29.803698 text='వారి'
+  [ 5] id= 1177 logit=   29.661213 text='ym'
+  [ 6] id=  142 logit=   28.600521 text='      '
+  [ 7] id= 2572 logit=   28.519693 text='দের'
+  [ 8] id=191833 logit=   28.292442 text='भीत'
+  [ 9] id=  558 logit=   28.280178 text=' T'
+[Deep2Engine] Sampler selected token: 59468
+[DBG] sampled token=59468 eosId=1
+[KVCache] page grow 416 -> 424 hot (virtualMax=16836 pos=416)
+[DBG] stateNorm=3.162848e+02 finite=1 pos=417
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=16337 logit=   35.264526 text=' یک'
+  [ 1] id=  641 logit=   35.075691 text='ew'
+  [ 2] id=  995 logit=   34.852242 text=' م'
+  [ 3] id=16033 logit=   34.846645 text='اني'
+  [ 4] id=151941 logit=   34.524021 text=' الحمل'
+  [ 5] id=199560 logit=   34.243858 text='íč'
+  [ 6] id= 2054 logit=   32.612080 text=' एक'
+  [ 7] id=122530 logit=   32.448475 text='äne'
+  [ 8] id=  744 logit=   32.425793 text=' ا'
+  [ 9] id=237057 logit=   32.407852 text='ก'
+[Deep2Engine] Sampler selected token: 151941
+[DBG] sampled token=151941 eosId=1
+[DBG] stateNorm=3.165592e+02 finite=1 pos=418
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=130753 logit=   35.872410 text='వారి'
+  [ 1] id=73443 logit=   35.639511 text='पाई'
+  [ 2] id= 2897 logit=   34.949181 text='side'
+  [ 3] id=229254 logit=   34.460419 text=' забе'
+  [ 4] id= 1150 logit=   33.992779 text='ре'
+  [ 5] id=  586 logit=   33.097977 text='ly'
+  [ 6] id=96925 logit=   32.750015 text='পথে'
+  [ 7] id= 2678 logit=   30.758026 text=' side'
+  [ 8] id=  854 logit=   30.415985 text='com'
+  [ 9] id=236490 logit=   30.311342 text='lín'
+[Deep2Engine] Sampler selected token: 73443
+[DBG] sampled token=73443 eosId=1
+[DBG] stateNorm=3.285532e+02 finite=1 pos=419
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1179 logit=   37.029381 text='sh'
+  [ 1] id=21364 logit=   36.047562 text='suit'
+  [ 2] id= 1025 logit=   34.689117 text='set'
+  [ 3] id=78962 logit=   34.581570 text='エスト'
+  [ 4] id=112269 logit=   33.772194 text='จะเป็น'
+  [ 5] id=  616 logit=   32.719383 text='ers'
+  [ 6] id= 8096 logit=   32.245598 text=' Association'
+  [ 7] id= 1508 logit=   31.141296 text='self'
+  [ 8] id= 2029 logit=   30.872742 text='ся'
+  [ 9] id=236751 logit=   30.833746 text='s'
+[Deep2Engine] Sampler selected token: 21364
+[DBG] sampled token=21364 eosId=1
+[DBG] stateNorm=3.519768e+02 finite=1 pos=420
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=167194 logit=   42.827553 text=' afectados'
+  [ 1] id= 2572 logit=   42.772285 text='দের'
+  [ 2] id=137909 logit=   40.479424 text='的相关'
+  [ 3] id=185321 logit=   38.026592 text=' Affected'
+  [ 4] id=152806 logit=   37.937870 text=' території'
+  [ 5] id=41010 logit=   37.361046 text=' террито'
+  [ 6] id=213629 logit=   36.850117 text=' afectadas'
+  [ 7] id=124290 logit=   36.788303 text=' trúc'
+  [ 8] id=233912 logit=   36.549603 text=' afectada'
+  [ 9] id=53227 logit=   36.161221 text='visited'
+[Deep2Engine] Sampler selected token: 2572
+[DBG] sampled token=2572 eosId=1
+[DBG] stateNorm=3.177032e+02 finite=1 pos=421
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=244708 logit=   37.549473 text='ఔ'
+  [ 1] id=53227 logit=   36.181866 text='visited'
+  [ 2] id=  806 logit=   35.923016 text='ous'
+  [ 3] id=208185 logit=   35.416668 text=' PDC'
+  [ 4] id=124744 logit=   33.443779 text=' itertools'
+  [ 5] id=228487 logit=   33.286667 text='ようになりました'
+  [ 6] id=23586 logit=   32.865261 text=' Π'
+  [ 7] id=27279 logit=   32.774456 text='aping'
+  [ 8] id=53828 logit=   32.608837 text=' illnesses'
+  [ 9] id=115139 logit=   32.477650 text='urier'
+[Deep2Engine] Sampler selected token: 244708
+[DBG] sampled token=244708 eosId=1
+[DBG] stateNorm=3.282478e+02 finite=1 pos=422
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=    2 logit=   43.440845 text='<bos>'
+  [ 1] id= 1281 logit=   38.166790 text=' know'
+  [ 2] id=12818 logit=   37.783775 text=' diseases'
+  [ 3] id=53828 logit=   37.006256 text=' illnesses'
+  [ 4] id=98633 logit=   36.920956 text=' シャツ'
+  [ 5] id=166210 logit=   36.478935 text='োয়া'
+  [ 6] id=218808 logit=   35.563080 text=' தாண்ட'
+  [ 7] id=72935 logit=   35.041904 text=' reins'
+  [ 8] id= 8473 logit=   34.962440 text='admin'
+  [ 9] id=33560 logit=   34.918110 text=' कहीं'
+[Deep2Engine] Sampler selected token: 2
+[DBG] sampled token=2 eosId=1
+[DBG] stateNorm=3.230140e+02 finite=1 pos=423
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=79280 logit=   36.946499 text='antos'
+  [ 1] id=59468 logit=   36.423225 text='antas'
+  [ 2] id= 4440 logit=   34.618217 text='ियों'
+  [ 3] id= 6337 logit=   33.891266 text='anto'
+  [ 4] id=191833 logit=   33.713512 text='भीत'
+  [ 5] id= 2897 logit=   31.687405 text='side'
+  [ 6] id= 2572 logit=   31.640984 text='দের'
+  [ 7] id= 1626 logit=   31.383793 text=' final'
+  [ 8] id=71958 logit=   31.335831 text=' retrouve'
+  [ 9] id=162769 logit=   31.143250 text=' нашим'
+[Deep2Engine] Sampler selected token: 79280
+[DBG] sampled token=79280 eosId=1
+[DBG] stateNorm=3.217109e+02 finite=1 pos=424
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 9034 logit=   40.196468 text=' affected'
+  [ 1] id= 4106 logit=   37.641129 text=' areas'
+  [ 2] id=14813 logit=   37.207642 text='вые'
+  [ 3] id=124191 logit=   36.099346 text='enças'
+  [ 4] id=182958 logit=   35.149738 text='ванные'
+  [ 5] id=42744 logit=   34.728504 text='つの'
+  [ 6] id=43046 logit=   34.675083 text='ваться'
+  [ 7] id= 8350 logit=   34.511372 text='ан'
+  [ 8] id=24172 logit=   34.243340 text='вое'
+  [ 9] id= 6192 logit=   34.025486 text=' fields'
+[Deep2Engine] Sampler selected token: 9034
+[DBG] sampled token=9034 eosId=1
+[KVCache] page grow 424 -> 432 hot (virtualMax=16836 pos=424)
+[DBG] stateNorm=3.294030e+02 finite=1 pos=425
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=10422 logit=   39.418858 text='keys'
+  [ 1] id= 1583 logit=   35.887787 text='iness'
+  [ 2] id=165144 logit=   34.846504 text=' причем'
+  [ 3] id=116901 logit=   34.271694 text='стями'
+  [ 4] id= 4440 logit=   33.744198 text='ियों'
+  [ 5] id=83679 logit=   32.689690 text='compan'
+  [ 6] id= 2572 logit=   32.519901 text='দের'
+  [ 7] id=86058 logit=   32.398438 text='みんな'
+  [ 8] id= 2001 logit=   32.160728 text='че'
+  [ 9] id=88899 logit=   32.086109 text='classified'
+[Deep2Engine] Sampler selected token: 10422
+[DBG] sampled token=10422 eosId=1
+[DBG] stateNorm=3.380702e+02 finite=1 pos=426
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=129284 logit=   38.597458 text=' philosophies'
+  [ 1] id=160038 logit=   37.069805 text=' поведения'
+  [ 2] id=185370 logit=   37.065014 text=' reliefs'
+  [ 3] id=10422 logit=   36.901855 text='keys'
+  [ 4] id=45575 logit=   36.722973 text='ayers'
+  [ 5] id=121343 logit=   36.684696 text='Perspective'
+  [ 6] id= 2572 logit=   36.415993 text='দের'
+  [ 7] id=32557 logit=   36.286785 text=' perspectives'
+  [ 8] id=127338 logit=   36.037945 text='นาย'
+  [ 9] id=61354 logit=   35.946590 text='ADMIN'
+[Deep2Engine] Sampler selected token: 129284
+[DBG] sampled token=129284 eosId=1
+[DBG] stateNorm=3.473242e+02 finite=1 pos=427
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=127338 logit=   44.806469 text='นาย'
+  [ 1] id=58309 logit=   40.583595 text=' youths'
+  [ 2] id=38903 logit=   40.270531 text='species'
+  [ 3] id=228160 logit=   39.950382 text='Toxic'
+  [ 4] id=16164 logit=   39.364059 text='FS'
+  [ 5] id= 2001 logit=   39.056145 text='че'
+  [ 6] id=131119 logit=   38.274380 text='ತನ'
+  [ 7] id=122949 logit=   37.578487 text='Youth'
+  [ 8] id=185930 logit=   37.349056 text=' উদ্দেশে'
+  [ 9] id=50714 logit=   37.061066 text='Parts'
+[Deep2Engine] Sampler selected token: 127338
+[DBG] sampled token=127338 eosId=1
+[DBG] stateNorm=3.356278e+02 finite=1 pos=428
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=89448 logit=   45.431133 text=' pous'
+  [ 1] id=237894 logit=   43.263062 text='見'
+  [ 2] id=202222 logit=   39.814106 text='timeouts'
+  [ 3] id= 9788 logit=   39.773891 text='इन'
+  [ 4] id= 7606 logit=   39.570137 text=' weather'
+  [ 5] id=237566 logit=   37.957130 text='ක'
+  [ 6] id=120105 logit=   37.504154 text=' chestnuts'
+  [ 7] id=87363 logit=   37.121944 text=' monsoon'
+  [ 8] id=38506 logit=   37.020145 text=' terrace'
+  [ 9] id=97022 logit=   36.798973 text=' thirsty'
+[Deep2Engine] Sampler selected token: 89448
+[DBG] sampled token=89448 eosId=1
+[DBG] stateNorm=3.239469e+02 finite=1 pos=429
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 2572 logit=   38.139748 text='দের'
+  [ 1] id=121343 logit=   33.597008 text='Perspective'
+  [ 2] id=236858 logit=   32.541580 text='’'
+  [ 3] id=170723 logit=   32.496517 text='bois'
+  [ 4] id=130753 logit=   32.477997 text='వారి'
+  [ 5] id=116901 logit=   31.162384 text='стями'
+  [ 6] id=73443 logit=   31.048138 text='पाई'
+  [ 7] id= 3386 logit=   30.982986 text='des'
+  [ 8] id=22425 logit=   30.697029 text='guard'
+  [ 9] id=187731 logit=   30.679211 text='を有する'
+[Deep2Engine] Sampler selected token: 2572
+[DBG] sampled token=2572 eosId=1
+[DBG] stateNorm=3.158952e+02 finite=1 pos=430
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=124744 logit=   36.414703 text=' itertools'
+  [ 1] id=27279 logit=   34.224251 text='aping'
+  [ 2] id=123524 logit=   34.088417 text='ನಿಯ'
+  [ 3] id=59833 logit=   34.020481 text='жного'
+  [ 4] id=53227 logit=   33.766552 text='visited'
+  [ 5] id=228487 logit=   33.589935 text='ようになりました'
+  [ 6] id=208185 logit=   33.535381 text=' PDC'
+  [ 7] id=23586 logit=   33.182240 text=' Π'
+  [ 8] id=211604 logit=   32.538456 text=' aquifers'
+  [ 9] id=244708 logit=   32.466652 text='ఔ'
+[Deep2Engine] Sampler selected token: 124744
+[DBG] sampled token=124744 eosId=1
+[DBG] stateNorm=3.182172e+02 finite=1 pos=431
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=38653 logit=   34.506889 text='IER'
+  [ 1] id=236874 logit=   34.025414 text='Y'
+  [ 2] id= 4939 logit=   32.743610 text='ifier'
+  [ 3] id=  895 logit=   32.640869 text=' Y'
+  [ 4] id=250299 logit=   32.361057 text='犸'
+  [ 5] id=47433 logit=   32.157990 text='子的'
+  [ 6] id= 1099 logit=   32.025547 text='ier'
+  [ 7] id=92983 logit=   31.795803 text=' ওয়'
+  [ 8] id=238178 logit=   31.686443 text='️'
+  [ 9] id=73443 logit=   31.389732 text='पाई'
+[Deep2Engine] Sampler selected token: 38653
+[DBG] sampled token=38653 eosId=1
+[DBG] stateNorm=3.097053e+02 finite=1 pos=432
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1150 logit=   33.282539 text='ре'
+  [ 1] id=91134 logit=   31.628708 text='ಸ್‌'
+  [ 2] id=31467 logit=   31.504766 text='erious'
+  [ 3] id=216448 logit=   31.390659 text=' vét'
+  [ 4] id=225372 logit=   31.365662 text=' क्‍'
+  [ 5] id=130753 logit=   31.259184 text='వారి'
+  [ 6] id=95258 logit=   30.808887 text='こそ'
+  [ 7] id=235726 logit=   30.761789 text='рель'
+  [ 8] id=  854 logit=   30.753666 text='com'
+  [ 9] id=39495 logit=   30.620678 text='}{('
+[Deep2Engine] Sampler selected token: 1150
+[DBG] sampled token=1150 eosId=1
+[KVCache] page grow 432 -> 440 hot (virtualMax=16836 pos=432)
+[DBG] stateNorm=3.146153e+02 finite=1 pos=433
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=53227 logit=   37.090065 text='visited'
+  [ 1] id=    2 logit=   36.144264 text='<bos>'
+  [ 2] id=106423 logit=   34.595795 text='rentes'
+  [ 3] id=111743 logit=   33.528164 text='ServiceImpl'
+  [ 4] id=64318 logit=   33.367760 text=' Kaiser'
+  [ 5] id=165556 logit=   33.341156 text='aventure'
+  [ 6] id=211687 logit=   33.223846 text='Reached'
+  [ 7] id=98574 logit=   33.212826 text=' trenches'
+  [ 8] id=22270 logit=   33.153076 text=' அமை'
+  [ 9] id=242906 logit=   33.024269 text='勘'
+[Deep2Engine] Sampler selected token: 53227
+[DBG] sampled token=53227 eosId=1
+[DBG] stateNorm=3.252126e+02 finite=1 pos=434
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=107417 logit=   32.801193 text=' utilisée'
+  [ 1] id= 2181 logit=   32.030430 text='test'
+  [ 2] id=116901 logit=   31.926020 text='стями'
+  [ 3] id=104890 logit=   31.080217 text='rcParams'
+  [ 4] id=51354 logit=   30.808666 text=' jóvenes'
+  [ 5] id= 1179 logit=   30.686186 text='sh'
+  [ 6] id=133989 logit=   30.464600 text=' Tested'
+  [ 7] id=212039 logit=   30.437290 text='ப்பான்'
+  [ 8] id=41354 logit=   30.405170 text='মাদের'
+  [ 9] id=115124 logit=   30.022602 text='ிலுள்ள'
+[Deep2Engine] Sampler selected token: 107417
+[DBG] sampled token=107417 eosId=1
+[DBG] stateNorm=3.283571e+02 finite=1 pos=435
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 2572 logit=   34.584194 text='দের'
+  [ 1] id=10866 logit=   33.897018 text=' Offic'
+  [ 2] id=178052 logit=   31.354427 text='selen'
+  [ 3] id=108632 logit=   31.277172 text=' Featured'
+  [ 4] id=14044 logit=   30.979597 text=' י'
+  [ 5] id=67339 logit=   30.281572 text=' Frontier'
+  [ 6] id=116901 logit=   30.272074 text='стями'
+  [ 7] id=41281 logit=   29.486546 text='letters'
+  [ 8] id=26700 logit=   29.178291 text=' Youth'
+  [ 9] id=175377 logit=   28.786694 text=' અસર'
+[Deep2Engine] Sampler selected token: 2572
+[DBG] sampled token=2572 eosId=1
+[DBG] stateNorm=3.098837e+02 finite=1 pos=436
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 3403 logit=   30.743767 text=' colspan'
+  [ 1] id=106970 logit=   29.241114 text='deque'
+  [ 2] id=236757 logit=   28.996262 text='m'
+  [ 3] id=14231 logit=   28.581810 text='footer'
+  [ 4] id= 2897 logit=   28.388773 text='side'
+  [ 5] id= 5973 logit=   28.331158 text='object'
+  [ 6] id=91951 logit=   28.228996 text='மையாக'
+  [ 7] id= 3255 logit=   27.983562 text='state'
+  [ 8] id= 1476 logit=   27.917896 text='ward'
+  [ 9] id=124744 logit=   27.420776 text=' itertools'
+[Deep2Engine] Sampler selected token: 3403
+[DBG] sampled token=3403 eosId=1
+[DBG] stateNorm=3.202144e+02 finite=1 pos=437
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=    2 logit=   35.037048 text='<bos>'
+  [ 1] id=  854 logit=   34.502884 text='com'
+  [ 2] id=170723 logit=   34.187408 text='bois'
+  [ 3] id= 2572 logit=   34.154049 text='দের'
+  [ 4] id=  895 logit=   33.487732 text=' Y'
+  [ 5] id=83679 logit=   33.238708 text='compan'
+  [ 6] id=17742 logit=   32.665768 text='ơi'
+  [ 7] id= 1150 logit=   32.117821 text='ре'
+  [ 8] id=10422 logit=   30.883423 text='keys'
+  [ 9] id= 9923 logit=   30.798321 text='cou'
+[Deep2Engine] Sampler selected token: 2572
+[DBG] sampled token=2572 eosId=1
+[DBG] stateNorm=3.164432e+02 finite=1 pos=438
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=236749 logit=   38.227043 text='n'
+  [ 1] id=58375 logit=   35.158073 text='મને'
+  [ 2] id=236757 logit=   32.847267 text='m'
+  [ 3] id=20678 logit=   32.578438 text='রাজ'
+  [ 4] id= 3403 logit=   32.459579 text=' colspan'
+  [ 5] id=138237 logit=   31.873747 text='fuels'
+  [ 6] id=68022 logit=   31.549412 text=' हिस्से'
+  [ 7] id=237175 logit=   31.533834 text='ெ'
+  [ 8] id= 2897 logit=   31.244797 text='side'
+  [ 9] id= 4682 logit=   31.072374 text=' catch'
+[Deep2Engine] Sampler selected token: 236749
+[DBG] sampled token=236749 eosId=1
+[DBG] stateNorm=3.421279e+02 finite=1 pos=439
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=    2 logit=   45.396473 text='<bos>'
+  [ 1] id=237894 logit=   45.199753 text='見'
+  [ 2] id=238533 logit=   41.425232 text='調'
+  [ 3] id=185801 logit=   40.328461 text='వరకు'
+  [ 4] id=153264 logit=   38.783607 text=' गवर्नर'
+  [ 5] id=119984 logit=   38.211960 text='になると'
+  [ 6] id=239608 logit=   37.730896 text='職'
+  [ 7] id=82445 logit=   37.721897 text=' వరకు'
+  [ 8] id=40958 logit=   36.030746 text='ventional'
+  [ 9] id=156576 logit=   35.533012 text='產業'
+[Deep2Engine] Sampler selected token: 2
+[DBG] sampled token=2 eosId=1
+[DBG] stateNorm=3.343379e+02 finite=1 pos=440
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=236757 logit=   37.381977 text='m'
+  [ 1] id= 1177 logit=   36.979004 text='ym'
+  [ 2] id= 6337 logit=   35.984642 text='anto'
+  [ 3] id= 4404 logit=   35.334560 text='mes'
+  [ 4] id=79280 logit=   34.430176 text='antos'
+  [ 5] id= 3241 logit=   33.880550 text='main'
+  [ 6] id= 3284 logit=   32.635910 text='ca'
+  [ 7] id=59468 logit=   31.837240 text='antas'
+  [ 8] id= 2876 logit=   31.717186 text=' El'
+  [ 9] id=12729 logit=   30.181896 text='itos'
+[Deep2Engine] Sampler selected token: 236757
+[DBG] sampled token=236757 eosId=1
+[KVCache] page grow 440 -> 448 hot (virtualMax=16836 pos=440)
+[DBG] stateNorm=3.327599e+02 finite=1 pos=441
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=    2 logit=   54.082287 text='<bos>'
+  [ 1] id=84372 logit=   37.068947 text='यत'
+  [ 2] id=237894 logit=   35.360615 text='見'
+  [ 3] id=243119 logit=   34.740105 text='漬'
+  [ 4] id=184261 logit=   34.708778 text=' Surrounded'
+  [ 5] id=119984 logit=   34.306816 text='になると'
+  [ 6] id=185801 logit=   33.708221 text='వరకు'
+  [ 7] id=236879 logit=   33.393417 text='द'
+  [ 8] id=237394 logit=   33.351398 text='事'
+  [ 9] id=98661 logit=   33.036587 text=' cobertura'
+[Deep2Engine] Sampler selected token: 2
+[DBG] sampled token=2 eosId=1
+[DBG] stateNorm=3.322451e+02 finite=1 pos=442
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=236757 logit=   36.879276 text='m'
+  [ 1] id=  895 logit=   34.636463 text=' Y'
+  [ 2] id=79280 logit=   34.469543 text='antos'
+  [ 3] id= 4404 logit=   32.954041 text='mes'
+  [ 4] id= 6337 logit=   32.708099 text='anto'
+  [ 5] id= 3284 logit=   32.197609 text='ca'
+  [ 6] id=59468 logit=   31.482388 text='antas'
+  [ 7] id=12729 logit=   31.231710 text='itos'
+  [ 8] id= 1177 logit=   31.053488 text='ym'
+  [ 9] id=  558 logit=   30.910484 text=' T'
+[Deep2Engine] Sampler selected token: 236757
+[DBG] sampled token=236757 eosId=1
+[DBG] stateNorm=3.286544e+02 finite=1 pos=443
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=    2 logit=   58.729187 text='<bos>'
+  [ 1] id=98661 logit=   40.112740 text=' cobertura'
+  [ 2] id=237894 logit=   38.783882 text='見'
+  [ 3] id=137637 logit=   38.504066 text='Visited'
+  [ 4] id=119984 logit=   38.455681 text='になると'
+  [ 5] id=184261 logit=   36.626858 text=' Surrounded'
+  [ 6] id= 2404 logit=   35.167473 text=' health'
+  [ 7] id=43037 logit=   35.046463 text=' fluids'
+  [ 8] id=241402 logit=   34.769821 text='坊'
+  [ 9] id=236975 logit=   34.605587 text='ख'
+[Deep2Engine] Sampler selected token: 2
+[DBG] sampled token=2 eosId=1
+[DBG] stateNorm=3.261676e+02 finite=1 pos=444
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=79280 logit=   39.197269 text='antos'
+  [ 1] id= 6337 logit=   37.372814 text='anto'
+  [ 2] id= 2897 logit=   35.699409 text='side'
+  [ 3] id=  895 logit=   35.349934 text=' Y'
+  [ 4] id=236757 logit=   34.913086 text='m'
+  [ 5] id=59468 logit=   34.318493 text='antas'
+  [ 6] id= 8473 logit=   33.842461 text='admin'
+  [ 7] id= 1626 logit=   33.705757 text=' final'
+  [ 8] id=130753 logit=   33.554886 text='వారి'
+  [ 9] id=  878 logit=   32.842205 text='ions'
+[Deep2Engine] Sampler selected token: 79280
+[DBG] sampled token=79280 eosId=1
+[DBG] stateNorm=3.314001e+02 finite=1 pos=445
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 9034 logit=   41.351967 text=' affected'
+  [ 1] id=174338 logit=   37.883354 text=' appartenant'
+  [ 2] id= 6968 logit=   37.118805 text='ted'
+  [ 3] id=53227 logit=   36.663548 text='visited'
+  [ 4] id=146697 logit=   36.462498 text=' accesses'
+  [ 5] id=220547 logit=   36.309540 text='一層'
+  [ 6] id=42132 logit=   36.307861 text='soever'
+  [ 7] id=185321 logit=   35.944534 text=' Affected'
+  [ 8] id=49630 logit=   35.924809 text='関連'
+  [ 9] id=105967 logit=   35.717239 text=' Euh'
+[Deep2Engine] Sampler selected token: 9034
+[DBG] sampled token=9034 eosId=1
+[DBG] stateNorm=3.321053e+02 finite=1 pos=446
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=254765 logit=   41.578728 text='㕣'
+  [ 1] id=152806 logit=   41.096767 text=' території'
+  [ 2] id=117047 logit=   40.792652 text=' către'
+  [ 3] id=92758 logit=   39.675198 text='extras'
+  [ 4] id=42360 logit=   37.556381 text=' administrators'
+  [ 5] id=146165 logit=   36.717079 text='стите'
+  [ 6] id=    2 logit=   36.444584 text='<bos>'
+  [ 7] id=216339 logit=   36.215183 text='admins'
+  [ 8] id=66143 logit=   36.086769 text='খানি'
+  [ 9] id=175514 logit=   35.541946 text=' अन्दर'
+[Deep2Engine] Sampler selected token: 254765
+[DBG] sampled token=254765 eosId=1
+[DBG] stateNorm=3.061918e+02 finite=1 pos=447
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=236928 logit=   35.874165 text='í'
+  [ 1] id= 4578 logit=   34.941414 text=' ago'
+  [ 2] id=  499 logit=   33.442459 text='he'
+  [ 3] id=238864 logit=   33.373779 text='히'
+  [ 4] id= 4412 logit=   32.119411 text='het'
+  [ 5] id=  895 logit=   31.829714 text=' Y'
+  [ 6] id=  568 logit=   31.077095 text=' ('
+  [ 7] id=17174 logit=   30.932693 text='še'
+  [ 8] id=236752 logit=   30.761509 text='l'
+  [ 9] id= 4798 logit=   30.158306 text=' het'
+[Deep2Engine] Sampler selected token: 236928
+[DBG] sampled token=236928 eosId=1
+[DBG] stateNorm=3.160946e+02 finite=1 pos=448
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=189385 logit=   33.324677 text='ியுள்ள'
+  [ 1] id=  895 logit=   33.233711 text=' Y'
+  [ 2] id=138911 logit=   31.923138 text=' jää'
+  [ 3] id= 1072 logit=   31.738638 text='ey'
+  [ 4] id=236874 logit=   31.535686 text='Y'
+  [ 5] id=187093 logit=   31.174728 text='மானு'
+  [ 6] id= 2572 logit=   30.047970 text='দের'
+  [ 7] id=16444 logit=   30.045635 text='esi'
+  [ 8] id=236832 logit=   29.908154 text='7'
+  [ 9] id=117831 logit=   29.563145 text='ਰਾ'
+[Deep2Engine] Sampler selected token: 189385
+[DBG] sampled token=189385 eosId=1
+[KVCache] page grow 448 -> 456 hot (virtualMax=16836 pos=448)
+[DBG] stateNorm=3.358681e+02 finite=1 pos=449
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=213028 logit=   41.087933 text=' colère'
+  [ 1] id=10308 logit=   39.942200 text=' articles'
+  [ 2] id=49582 logit=   39.047905 text=' wilderness'
+  [ 3] id=221742 logit=   38.478470 text='肥料'
+  [ 4] id=68584 logit=   38.354202 text='東西'
+  [ 5] id=27798 logit=   38.295128 text=' unemployment'
+  [ 6] id=243149 logit=   37.385944 text='痘'
+  [ 7] id=238518 logit=   36.117958 text='获'
+  [ 8] id=60424 logit=   36.069614 text=' foreigners'
+  [ 9] id=237236 logit=   35.841061 text='行'
+[Deep2Engine] Sampler selected token: 10308
+[DBG] sampled token=10308 eosId=1
+[DBG] stateNorm=3.227005e+02 finite=1 pos=450
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=165144 logit=   37.492977 text=' причем'
+  [ 1] id=187660 logit=   36.971405 text=' campi'
+  [ 2] id= 6847 logit=   36.771408 text=' đi'
+  [ 3] id=152806 logit=   36.667377 text=' території'
+  [ 4] id=205848 logit=   36.394554 text=' râ'
+  [ 5] id=122323 logit=   36.151287 text='怎么办'
+  [ 6] id=185872 logit=   35.816742 text='णातील'
+  [ 7] id=23586 logit=   35.366161 text=' Π'
+  [ 8] id=104890 logit=   35.029076 text='rcParams'
+  [ 9] id=42489 logit=   34.805832 text=' câ'
+[Deep2Engine] Sampler selected token: 152806
+[DBG] sampled token=152806 eosId=1
+[DBG] stateNorm=3.358294e+02 finite=1 pos=451
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=236772 logit=   40.250496 text='-'
+  [ 1] id= 1788 logit=   37.828247 text='ness'
+  [ 2] id=36743 logit=   37.214626 text='pixels'
+  [ 3] id= 3765 logit=   36.104050 text='tes'
+  [ 4] id=140950 logit=   35.823063 text=' eerder'
+  [ 5] id=246736 logit=   34.164330 text='羌'
+  [ 6] id=245721 logit=   33.963493 text='崽'
+  [ 7] id=133130 logit=   33.614159 text='的世界'
+  [ 8] id= 9034 logit=   33.427807 text=' affected'
+  [ 9] id=124290 logit=   33.301491 text=' trúc'
+[Deep2Engine] Sampler selected token: 236772
+[DBG] sampled token=236772 eosId=1
+[DBG] stateNorm=3.229174e+02 finite=1 pos=452
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1281 logit=   45.145180 text=' know'
+  [ 1] id= 3403 logit=   39.910057 text=' colspan'
+  [ 2] id=32042 logit=   36.945015 text='know'
+  [ 3] id= 9758 logit=   34.789368 text='ষ্ঠ'
+  [ 4] id=14299 logit=   34.199368 text='ць'
+  [ 5] id=205010 logit=   33.841469 text='度和'
+  [ 6] id=192282 logit=   33.731304 text='цька'
+  [ 7] id=10077 logit=   32.590881 text=' knows'
+  [ 8] id=143149 logit=   32.368675 text=' Rajput'
+  [ 9] id=237406 logit=   32.291058 text='け'
+[Deep2Engine] Sampler selected token: 1281
+[DBG] sampled token=1281 eosId=1
+[DBG] stateNorm=3.142436e+02 finite=1 pos=453
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=237409 logit=   38.879253 text='性'
+  [ 1] id=236767 logit=   37.538841 text='k'
+  [ 2] id=127338 logit=   35.787258 text='นาย'
+  [ 3] id=182129 logit=   34.582649 text='ધ્ય'
+  [ 4] id=23368 logit=   34.556782 text='्हा'
+  [ 5] id=81654 logit=   33.893906 text=' ஏற்படும்'
+  [ 6] id=  561 logit=   33.703323 text='se'
+  [ 7] id=66481 logit=   32.714993 text='URS'
+  [ 8] id=237494 logit=   32.649422 text='자'
+  [ 9] id=21260 logit=   31.592430 text='నే'
+[Deep2Engine] Sampler selected token: 237409
+[DBG] sampled token=237409 eosId=1
+[DBG] stateNorm=3.224762e+02 finite=1 pos=454
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=181857 logit=   39.190395 text='區域'
+  [ 1] id=25927 logit=   39.042618 text=' espè'
+  [ 2] id= 2572 logit=   38.181187 text='দের'
+  [ 3] id=238356 logit=   37.058052 text='越'
+  [ 4] id=156540 logit=   36.649082 text='ússia'
+  [ 5] id=56195 logit=   35.946346 text=' ít'
+  [ 6] id=88489 logit=   35.940628 text=' ubicación'
+  [ 7] id=91641 logit=   35.786457 text='જો'
+  [ 8] id=203670 logit=   35.754566 text='フルーツ'
+  [ 9] id=17742 logit=   35.309635 text='ơi'
+[Deep2Engine] Sampler selected token: 25927
+[DBG] sampled token=25927 eosId=1
+[DBG] stateNorm=3.209403e+02 finite=1 pos=455
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=    2 logit=   48.022694 text='<bos>'
+  [ 1] id=205848 logit=   37.876759 text=' râ'
+  [ 2] id= 1150 logit=   36.973095 text='ре'
+  [ 3] id=170723 logit=   36.744907 text='bois'
+  [ 4] id=130514 logit=   33.454182 text=' serp'
+  [ 5] id=10537 logit=   32.844833 text=' Ca'
+  [ 6] id=44098 logit=   32.441978 text=' informações'
+  [ 7] id=92483 logit=   32.119926 text='clas'
+  [ 8] id=83679 logit=   31.860603 text='compan'
+  [ 9] id=239565 logit=   31.737263 text='怕'
+[Deep2Engine] Sampler selected token: 2
+[DBG] sampled token=2 eosId=1
+[DBG] stateNorm=3.098513e+02 finite=1 pos=456
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=25146 logit=   39.467548 text='Complete'
+  [ 1] id=38066 logit=   37.586250 text='పై'
+  [ 2] id=178505 logit=   35.912743 text=' הראשון'
+  [ 3] id=131401 logit=   35.735119 text='ப்பாடு'
+  [ 4] id=211001 logit=   35.474968 text=' வலை'
+  [ 5] id=143181 logit=   35.298374 text=' COMPLETE'
+  [ 6] id=173769 logit=   34.866283 text=' ರಚ'
+  [ 7] id=238930 logit=   34.865833 text='ဖ'
+  [ 8] id=167177 logit=   34.511841 text=' પાડ'
+  [ 9] id=63185 logit=   34.468224 text='ใช่'
+[Deep2Engine] Sampler selected token: 25146
+[DBG] sampled token=25146 eosId=1
+[KVCache] page grow 456 -> 464 hot (virtualMax=16836 pos=456)
+[DBG] stateNorm=3.222771e+02 finite=1 pos=457
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=72753 logit=   31.582737 text='peres'
+  [ 1] id=192830 logit=   30.245499 text=' γιατί'
+  [ 2] id=227750 logit=   29.740154 text=' ಗುರು'
+  [ 3] id=10301 logit=   29.724785 text='ourse'
+  [ 4] id=80075 logit=   29.046404 text='тт'
+  [ 5] id= 1336 logit=   28.009827 text='me'
+  [ 6] id=128406 logit=   27.974407 text='торое'
+  [ 7] id=247706 logit=   27.897198 text='펫'
+  [ 8] id= 4404 logit=   26.970486 text='mes'
+  [ 9] id=  895 logit=   26.968258 text=' Y'
+[Deep2Engine] Sampler selected token: 192830
+[DBG] sampled token=192830 eosId=1
+[DBG] stateNorm=3.245204e+02 finite=1 pos=458
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  895 logit=   34.082237 text=' Y'
+  [ 1] id=104130 logit=   33.454601 text=' ESA'
+  [ 2] id= 2572 logit=   31.189434 text='দের'
+  [ 3] id= 6337 logit=   30.484241 text='anto'
+  [ 4] id= 2876 logit=   29.594315 text=' El'
+  [ 5] id=67589 logit=   28.809505 text='getY'
+  [ 6] id=195747 logit=   28.313047 text='шель'
+  [ 7] id=236224 logit=   28.120224 text='matical'
+  [ 8] id=26700 logit=   27.882412 text=' Youth'
+  [ 9] id=90198 logit=   27.542191 text='子の'
+[Deep2Engine] Sampler selected token: 895
+[DBG] sampled token=895 eosId=1
+[DBG] stateNorm=3.331660e+02 finite=1 pos=459
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1583 logit=   39.380627 text='iness'
+  [ 1] id=10422 logit=   38.953846 text='keys'
+  [ 2] id=116901 logit=   35.594093 text='стями'
+  [ 3] id=160713 logit=   34.924328 text='rières'
+  [ 4] id= 4440 logit=   34.179230 text='ियों'
+  [ 5] id=243149 logit=   33.854568 text='痘'
+  [ 6] id=247883 logit=   33.269341 text=''
+  [ 7] id=    2 logit=   32.956337 text='<bos>'
+  [ 8] id=75428 logit=   32.848263 text='ಿಕೊಂಡ'
+  [ 9] id=18101 logit=   32.261391 text='ships'
+[Deep2Engine] Sampler selected token: 10422
+[DBG] sampled token=10422 eosId=1
+[DBG] stateNorm=3.335239e+02 finite=1 pos=460
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=14044 logit=   37.985985 text=' י'
+  [ 1] id=63455 logit=   36.571712 text=' Pix'
+  [ 2] id=127338 logit=   35.147255 text='นาย'
+  [ 3] id=124290 logit=   34.783108 text=' trúc'
+  [ 4] id= 2572 logit=   33.477440 text='দের'
+  [ 5] id=121343 logit=   33.353531 text='Perspective'
+  [ 6] id=59924 logit=   33.101402 text='以为'
+  [ 7] id=11521 logit=   32.895546 text=' perspective'
+  [ 8] id= 2001 logit=   32.668705 text='че'
+  [ 9] id=10252 logit=   32.536774 text='API'
+[Deep2Engine] Sampler selected token: 14044
+[DBG] sampled token=14044 eosId=1
+[DBG] stateNorm=3.469015e+02 finite=1 pos=461
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  895 logit=   36.956974 text=' Y'
+  [ 1] id=104130 logit=   35.495762 text=' ESA'
+  [ 2] id=13125 logit=   32.638027 text='我們'
+  [ 3] id=87986 logit=   32.244755 text=' Jedi'
+  [ 4] id=139352 logit=   31.943993 text=' Dens'
+  [ 5] id=26700 logit=   31.875795 text=' Youth'
+  [ 6] id=248629 logit=   30.722292 text='ὗ'
+  [ 7] id=204041 logit=   28.943968 text=' Abyss'
+  [ 8] id=86058 logit=   28.713629 text='みんな'
+  [ 9] id=100797 logit=   28.662649 text=' distância'
+[Deep2Engine] Sampler selected token: 895
+[DBG] sampled token=895 eosId=1
+[DBG] stateNorm=3.296395e+02 finite=1 pos=462
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1583 logit=   38.904873 text='iness'
+  [ 1] id=    2 logit=   36.285717 text='<bos>'
+  [ 2] id=10422 logit=   34.807823 text='keys'
+  [ 3] id= 4440 logit=   33.449699 text='ियों'
+  [ 4] id= 2572 logit=   32.033100 text='দের'
+  [ 5] id=18101 logit=   31.961319 text='ships'
+  [ 6] id=116901 logit=   31.577642 text='стями'
+  [ 7] id=53227 logit=   31.512047 text='visited'
+  [ 8] id=185256 logit=   31.402210 text='amentales'
+  [ 9] id=180236 logit=   31.228855 text=' administers'
+[Deep2Engine] Sampler selected token: 1583
+[DBG] sampled token=1583 eosId=1
+[DBG] stateNorm=3.267386e+02 finite=1 pos=463
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=12381 logit=   36.626835 text=' जाने'
+  [ 1] id=    2 logit=   36.469658 text='<bos>'
+  [ 2] id=150273 logit=   36.423080 text=' forêts'
+  [ 3] id=53227 logit=   36.253094 text='visited'
+  [ 4] id=16606 logit=   34.624390 text=' ages'
+  [ 5] id=12818 logit=   34.161316 text=' diseases'
+  [ 6] id=133898 logit=   33.638752 text='èbres'
+  [ 7] id=244708 logit=   33.016376 text='ఔ'
+  [ 8] id=40860 logit=   32.811115 text=' fabrics'
+  [ 9] id=127785 logit=   32.771755 text=' raíces'
+[Deep2Engine] Sampler selected token: 150273
+[DBG] sampled token=150273 eosId=1
+[DBG] stateNorm=3.116735e+02 finite=1 pos=464
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 2572 logit=   35.599915 text='দের'
+  [ 1] id=129693 logit=   31.564579 text=' πά'
+  [ 2] id=59813 logit=   31.028187 text='RIES'
+  [ 3] id= 4440 logit=   30.706518 text='ियों'
+  [ 4] id=73443 logit=   30.684860 text='पाई'
+  [ 5] id=211618 logit=   30.336872 text=' usersRouter'
+  [ 6] id=116901 logit=   30.052319 text='стями'
+  [ 7] id=42484 logit=   29.926332 text=' тому'
+  [ 8] id=19227 logit=   29.830742 text=' desert'
+  [ 9] id=170723 logit=   29.810745 text='bois'
+[Deep2Engine] Sampler selected token: 2572
+[DBG] sampled token=2572 eosId=1
+[KVCache] page grow 464 -> 472 hot (virtualMax=16836 pos=464)
+[DBG] stateNorm=3.192815e+02 finite=1 pos=465
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=208185 logit=   35.522228 text=' PDC'
+  [ 1] id=59833 logit=   34.963085 text='жного'
+  [ 2] id=191833 logit=   34.917969 text='भीत'
+  [ 3] id=124744 logit=   33.927418 text=' itertools'
+  [ 4] id=244708 logit=   32.802879 text='ఔ'
+  [ 5] id=237719 logit=   32.665558 text='શ'
+  [ 6] id=89469 logit=   32.210041 text=' equivalently'
+  [ 7] id=151908 logit=   31.885227 text=' стороне'
+  [ 8] id=81534 logit=   31.093571 text='ெல்லாம்'
+  [ 9] id=166210 logit=   30.929466 text='োয়া'
+[Deep2Engine] Sampler selected token: 59833
+[DBG] sampled token=59833 eosId=1
+[DBG] stateNorm=3.418014e+02 finite=1 pos=466
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=124290 logit=   39.587288 text=' trúc'
+  [ 1] id=104130 logit=   38.618694 text=' ESA'
+  [ 2] id= 2572 logit=   37.953163 text='দের'
+  [ 3] id=100955 logit=   36.455635 text='ப்புற'
+  [ 4] id=75585 logit=   35.758842 text='pectives'
+  [ 5] id=213752 logit=   35.605007 text='遺跡'
+  [ 6] id=110896 logit=   35.597767 text='Homepage'
+  [ 7] id=63455 logit=   35.374477 text=' Pix'
+  [ 8] id=247379 logit=   35.135147 text='╭'
+  [ 9] id=82474 logit=   34.970894 text='teachers'
+[Deep2Engine] Sampler selected token: 124290
+[DBG] sampled token=124290 eosId=1
+[DBG] stateNorm=3.275583e+02 finite=1 pos=467
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=224159 logit=   40.822720 text=' potenciales'
+  [ 1] id=16827 logit=   38.742809 text='ứng'
+  [ 2] id=116762 logit=   38.216122 text=' soggetti'
+  [ 3] id=22561 logit=   37.081554 text=' biết'
+  [ 4] id= 3636 logit=   36.426422 text=' cases'
+  [ 5] id=121338 logit=   36.424530 text=' francs'
+  [ 6] id=215052 logit=   36.261566 text=' 발생하는'
+  [ 7] id=16353 logit=   36.053726 text='cases'
+  [ 8] id=75322 logit=   35.998535 text=' pudo'
+  [ 9] id= 7191 logit=   35.845074 text=' parte'
+[Deep2Engine] Sampler selected token: 224159
+[DBG] sampled token=224159 eosId=1
+[DBG] stateNorm=3.062617e+02 finite=1 pos=468
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=39009 logit=   32.599037 text=' Articles'
+  [ 1] id=99672 logit=   32.045616 text=' অশ'
+  [ 2] id=230274 logit=   31.888901 text='都道府県'
+  [ 3] id=166210 logit=   31.695414 text='োয়া'
+  [ 4] id=64437 logit=   31.621984 text='că'
+  [ 5] id=119647 logit=   31.312450 text='良かった'
+  [ 6] id=51746 logit=   31.100845 text='सूस'
+  [ 7] id=10308 logit=   31.006592 text=' articles'
+  [ 8] id=240111 logit=   30.093315 text='尤'
+  [ 9] id=93274 logit=   29.942026 text=' खड़े'
+[Deep2Engine] Sampler selected token: 99672
+[DBG] sampled token=99672 eosId=1
+[DBG] stateNorm=3.127243e+02 finite=1 pos=469
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=22202 logit=   35.156300 text=' Technical'
+  [ 1] id=45292 logit=   33.649616 text='খা'
+  [ 2] id=33399 logit=   33.583214 text=' contacted'
+  [ 3] id=58972 logit=   33.382675 text='Technical'
+  [ 4] id=16444 logit=   32.724380 text='esi'
+  [ 5] id=30791 logit=   32.439720 text=' Below'
+  [ 6] id= 8330 logit=   32.380955 text=' technical'
+  [ 7] id= 4686 logit=   32.354805 text='ем'
+  [ 8] id=12576 logit=   32.263920 text='கு'
+  [ 9] id=21632 logit=   32.230579 text=' Interest'
+[Deep2Engine] Sampler selected token: 22202
+[DBG] sampled token=22202 eosId=1
+[DBG] stateNorm=3.196507e+02 finite=1 pos=470
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 2876 logit=   33.563438 text=' El'
+  [ 1] id=  895 logit=   31.658480 text=' Y'
+  [ 2] id= 4976 logit=   31.602982 text='El'
+  [ 3] id= 1023 logit=   30.605721 text=' our'
+  [ 4] id= 6337 logit=   30.336514 text='anto'
+  [ 5] id=108118 logit=   29.875397 text=' нами'
+  [ 6] id=236743 logit=   29.297337 text=' '
+  [ 7] id=  107 logit=   28.838961 text='
+'
+  [ 8] id= 1177 logit=   28.831987 text='ym'
+  [ 9] id= 2278 logit=   28.484932 text='ours'
+[Deep2Engine] Sampler selected token: 2876
+[DBG] sampled token=2876 eosId=1
+[DBG] stateNorm=3.278520e+02 finite=1 pos=471
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 2572 logit=   36.423500 text='দের'
+  [ 1] id= 4440 logit=   33.766972 text='ियों'
+  [ 2] id= 1150 logit=   33.202293 text='ре'
+  [ 3] id=17742 logit=   32.942707 text='ơi'
+  [ 4] id=10422 logit=   32.043324 text='keys'
+  [ 5] id=170723 logit=   31.864918 text='bois'
+  [ 6] id=116901 logit=   31.002937 text='стями'
+  [ 7] id= 1583 logit=   30.922295 text='iness'
+  [ 8] id=208442 logit=   30.747261 text='!”,'
+  [ 9] id=53388 logit=   30.721516 text=' чего'
+[Deep2Engine] Sampler selected token: 2572
+[DBG] sampled token=2572 eosId=1
+[DBG] stateNorm=3.297882e+02 finite=1 pos=472
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=208185 logit=   38.593945 text=' PDC'
+  [ 1] id=53906 logit=   37.181675 text=' wik'
+  [ 2] id=59833 logit=   36.474640 text='жного'
+  [ 3] id=81052 logit=   36.339230 text=' alcance'
+  [ 4] id=68252 logit=   35.590603 text=' ต่อ'
+  [ 5] id=124744 logit=   35.381611 text=' itertools'
+  [ 6] id=81534 logit=   35.355831 text='ெல்லாம்'
+  [ 7] id=191833 logit=   34.901058 text='भीत'
+  [ 8] id=229561 logit=   34.878616 text=' PYTHONPATH'
+  [ 9] id=244708 logit=   33.909248 text='ఔ'
+[Deep2Engine] Sampler selected token: 208185
+[DBG] sampled token=208185 eosId=1
+[KVCache] page grow 472 -> 480 hot (virtualMax=16836 pos=472)
+[DBG] stateNorm=3.266936e+02 finite=1 pos=473
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 2572 logit=   35.211376 text='দের'
+  [ 1] id=  895 logit=   32.376553 text=' Y'
+  [ 2] id= 1412 logit=   31.597769 text='ts'
+  [ 3] id=108118 logit=   31.309044 text=' нами'
+  [ 4] id=178052 logit=   29.794390 text='selen'
+  [ 5] id=236751 logit=   28.919992 text='s'
+  [ 6] id=70541 logit=   27.399147 text=' taps'
+  [ 7] id=  555 logit=   27.321901 text=' S'
+  [ 8] id=144753 logit=   27.316811 text='意義'
+  [ 9] id=203775 logit=   26.936375 text=' inclusiv'
+[Deep2Engine] Sampler selected token: 2572
+[DBG] sampled token=2572 eosId=1
+[DBG] stateNorm=3.213307e+02 finite=1 pos=474
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=124744 logit=   36.625877 text=' itertools'
+  [ 1] id=208185 logit=   35.669373 text=' PDC'
+  [ 2] id=59833 logit=   35.044266 text='жного'
+  [ 3] id=81052 logit=   34.893856 text=' alcance'
+  [ 4] id=81534 logit=   33.522118 text='ெல்லாம்'
+  [ 5] id=244708 logit=   33.380821 text='ఔ'
+  [ 6] id=166210 logit=   32.574539 text='োয়া'
+  [ 7] id=68252 logit=   32.541458 text=' ต่อ'
+  [ 8] id=237036 logit=   32.085495 text='た'
+  [ 9] id= 5285 logit=   32.008347 text='lib'
+[Deep2Engine] Sampler selected token: 124744
+[DBG] sampled token=124744 eosId=1
+[DBG] stateNorm=3.112934e+02 finite=1 pos=475
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=225041 logit=   37.246376 text=' attaques'
+  [ 1] id=99672 logit=   37.145126 text=' অশ'
+  [ 2] id=93274 logit=   36.586624 text=' खड़े'
+  [ 3] id=61400 logit=   36.211826 text='nets'
+  [ 4] id=212433 logit=   36.099758 text='‌కు'
+  [ 5] id=56155 logit=   35.991734 text=' iniz'
+  [ 6] id=39450 logit=   35.754635 text=' বসে'
+  [ 7] id=159260 logit=   35.707626 text=' thăm'
+  [ 8] id=78071 logit=   35.553139 text='ஸ்ப'
+  [ 9] id=114048 logit=   34.888588 text=' jovens'
+[Deep2Engine] Sampler selected token: 61400
+[DBG] sampled token=61400 eosId=1
+[DBG] stateNorm=3.288686e+02 finite=1 pos=476
+[DBG] nonFiniteLogits=0 vocabSize=262144
+[Deep2Engine] Top-10 logits:
+  [ 0] id=150273 logit=   41.921860 text=' forêts'
+  [ 1] id=24599 logit=   41.058346 text=' forests'
+  [ 2] id=153395 logit=   39.365841 text=' woodlands'
+  [ 3] id=93011 logit=   38.681797 text='ériques'
+  [ 4] id=67810 logit=   38.409138 text=' tiempos'
+  [ 5] id=124191 logit=   38.152897 text='enças'
+  [ 6] id=60804 logit=   37.882355 text=' artículos'
+  [ 7] id=98574 logit=   37.334454 text=' trenches'
+  [ 8] id= 4106 logit=   37.241005 text=' areas'
+  [ 9] id=67107 logit=   36.695778 text=' elephants'
+[Deep2Engine] Sampler selected token: 24599
+[DBG] sampled token=24599 eosId=1
+[Deep2Engine] Generation complete: 240 tokens in 1016538.48 ms (E2E 0.24 TPS)
+[Deep2Engine] PREFILL: 237 tok in 586162.36 ms (0.40 tok/s) | DECODE: 240 tok in 430356.63 ms (0.56 tok/s)
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=0
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 12376
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 973558.781
+totalEmbedMs       = 463.876
+totalLogitsMs      = 2404.652
+totalAttnMs        = 191656.595
+totalFfnMs         = 774454.943
+acquireCount       = 0
+mapCount           = 0
+releaseCount       = 0
+releaseErrorCount  = 0
+tensorAcquireFail  = 0
+mappingErrorCount  = 0
+residencyErrorCount= 0
+staleLeaseCount    = 0
+avgLayerMs         = 78.665
+============================================================
+[AGENT] POST_GENERATE generated=240 tokens
+[GREEDY] enabled=0 temperature=0.8000 topK=40
+[AGENT] PREFILL_BEGIN prompt_tokens=530
+[AGENT] PRE_GENERATE calling generate()
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+DEEP2_GPU_FORWARD_FALLBACKS=0
+HOST_FORWARD_LAYER_CALLS=0
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=0
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+[Deep2Engine] Completion plan: ALL_NEEDS_SATISFIED → CALL_GENERATE_STREAM
+[K2_DBG] entry depth=26 tokens=240
+[K2_DBG] after ResetSwitches
+[K2_DBG] after Decide mode=2 arm=TRAMPOLINE_OUTPUT_CACHE
+AUTO_POLICY_ACTIVE=1
+MANUAL_ARM_FORCING=0
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=default_auto
+K2_LIVE_POLICY_REUSE_STEPS=6240
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=26 TOKENS=240
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=1437800000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=(unset) MECH_ENV=trampoline WANTED=0
+[KVCache] page grow 480 -> 488 hot (virtualMax=16836 pos=480)

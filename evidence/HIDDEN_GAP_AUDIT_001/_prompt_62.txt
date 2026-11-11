@@ -1,0 +1,23 @@
+﻿MOTD first: Read g:\~dev\.cursor\rules\PassiveRoleNotRoleplay.mdc
+
+AUDIT TRACK E â€” Five-layer reverse-engineering sample + prepare MASTER merge.
+Workspace F:\rawrxd. Evidence lane F:\rawrxd\evidence\HIDDEN_GAP_AUDIT_001\
+
+Execute concrete audits (not handwaving):
+1) BUILD GRAPH sample: pick ExtensionHost + Terminal/ConPTY + Problems + Debug Console features â†’ CMakeLists/target â†’ .cpp TUs â†’ confirm linked into tip_final_005 / CC79 candidate if present. Flag H01/H03 style exclusions.
+2) COMMAND GRAPH sample: enumerate main menu command IDs â†’ handlers; flag no-ops (H13).
+3) LIFECYCLE sample: HWND/callback/cancel paths for chat stop + terminal cancel + ext unload (H16/H18/H29/H49).
+4) FAILURE sample: fault injection points documented or missing for compiler cancel and model cancel.
+5) ACCEPTANCE sample: map Issue #49 product-final steps to existing oneshot/final_completion receipts; mark each NOT_DEMONSTRATED vs measured SHA.
+
+Wait for sibling worker outputs if present in the lane (LOCAL_*, GITHUB_*, HIDDEN_GAPS_*) and produce:
+MASTER_HIDDEN_GAP_REGISTER.md (replace skeleton statuses with filled data; PENDING only where still unknown)
+PRODUCT_FINAL_49_GAP_MAP.md
+AUDIT_DISPOSITION.md with:
+ENGINEERING_MATURITY=82%
+MAJOR_INTEGRATED_ACCEPTANCE=NOT_DEMONSTRATED
+CONTROLLING_TIP=CC79
+PROMOTE=0 CERTIFIED=0
+NEXT_ACTION=...
+
+No shortcuts. No invented CONFIRMED. Deduplicate â€” do not sum 78+120+45.

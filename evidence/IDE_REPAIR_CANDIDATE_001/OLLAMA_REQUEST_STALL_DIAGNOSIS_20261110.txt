@@ -1,0 +1,77 @@
+OLLAMA_REQUEST_STALL_DIAGNOSIS
+ASOF_UTC=2026-11-10T13:35:00Z
+PROMOTE=0
+CERTIFIED=0
+INVENT_PASS=0
+ACCEPTED=0
+FOUR_PANEL_F6E6_UNTOUCHED=1
+PRESENT_NEQ_ACCEPTED=1
+NO_CROSS_SHA=1
+
+SYMPTOM_ORIGINAL=
+  [ollama step 1] request_messages=2 request_bytes_pending
+  [agent] Task failed
+  No HTTP= line, no TOOL=read, no AGENT_RESULT=5
+
+ROOT_CAUSE_CONFIRMED=
+  --provider ollama launched with a GGUF filesystem path as --model
+  (LocalFile selector / MODEL_PATH under RAWRXD_FORCE_OLLAMA_AGENTIC without
+   RAWRXD_OLLAMA_AGENT_MODEL tag). WinHttp stalled in ReceiveResponse.
+
+SOURCE_FIXES_LANDED=
+  1. OllamaChat rejects filesystem/GGUF model ids before HTTP (PREFLIGHT_FAIL).
+  2. REQUEST_SEND / REQUEST_SENT / RESPONSE_RECV / fail paths log elapsed_ms,
+     payload_bytes, HTTP status, Win32 errors.
+  3. AgentCommands: FORCE_OLLAMA requires Ollama tag; reject GGUF path early.
+
+THIS_WORKER_REBUILD=
+  TARGET=build_tip_ext_host_001 RelWithDebInfo (ninja)
+  ACTION=ninja -t clean deep2_agentic_loop.exe RawrXD-Win32IDE-Native-Ext.exe
+         then ninja deep2_agentic_loop.exe RawrXD-Win32IDE-Native-Ext.exe
+  STATUS=HUNG_AT_94_OF_128 (Win32IDE_PowerShell.cpp) under multi-agent shell saturation
+  THIS_WORKER_CERTUTIL_POST_REBUILD=NOT_RUN
+  CLAIM_REBUILD_COMPLETE=0
+  NOT_RUN_NEQ_PASS=1
+
+SESSION_START_HASHES_THIS_WORKER (pre-clean; do not inherit PASS):
+  TIP_IDE_SHA=249E4EC3595E509A8144576A9813D54EF55B4B9EE3D45B9C397934A31B8A1FE3
+  TIP_LOOP_SHA=8DB531B9B0B8B29E1C392EC8A3F0B7552857734AB4C02882335DBBF04D0D1012
+  NOTE=Neither F6E6C067 nor 796A6C47; measured explicitly. F6E6 four-panel remains PRESENT.
+
+HTTP_DIAGNOSTICS_THIS_WORKER_SESSION=
+  curl /api/tags = HTTP 200 (models include qwen3:8b, qwen2.5-coder:1.5b-base, ...)
+  ollama ps = qwen3:8b + bigdaddyg-productivity-local:latest resident (GPU)
+
+CONCURRENT_REMEASURE_PRESENT (no ACCEPTED inherit; cite only):
+  LOOP_SHA=5BAC2E7959A5337B350FB81918D158AB500B4077E5CDB59542F3BC5E4F74AB49
+  IDE_SHA_CONTROLLING=8901F07CA16506C2069F2591A9FCD811E56A6DFEC1D42B7B3279843DC9426FDC
+  MODEL_ID=qwen3:8b
+  PATH_A=RAWRXD_FORCE_OLLAMA_AGENTIC + tag (not GGUF path)
+  EVIDENCE=agent_workflow_currentpair_010 + issue49_gui_ollama_qwen3_012
+  HTTP_SEEN=
+    REQUEST_SEND endpoint=http://127.0.0.1:11434 model=qwen3:8b
+    REQUEST_SENT waiting_response
+    RESPONSE_RECV http=200
+  AGENT_READ=PASS
+  AGENT_EDIT=PASS
+  AGENT_BUILD_TEST=PASS
+  AGENT_RESULT=5
+  OLLAMA_AGENT_VERDICT=PASS
+  ISSUE49_11STEP=10/11 FAIL_CLOSED (S_13_SECOND_EDIT=NOT_RUN)
+  ACCEPTED_FOR_PROMOTE=0
+
+ACCEPTANCE=
+  OLLAMA_STALL_ROOT_CAUSE=CONFIRMED
+  OLLAMA_TRANSPORT_DIAGNOSTICS=EXERCISED_PRESENT (REQUEST_*/http=200)
+  AGENT_RESULT_5=PRESENT_ON_5BAC_QWEN3 (concurrent; this-worker post-rebuild remasure NOT_RUN)
+  ISSUE49_AGENT_E2E=FAIL_CLOSED
+  ACCEPTED=0
+  PROMOTE=0
+  CERTIFIED=0
+  RELEASE=HELD
+
+BLOCKERS=
+  1. This-worker RelWithDebInfo clean rebuild hung; post-rebuild tip SHA NOT_REHASHED here
+  2. Shell/process saturation blocked certutil remasure after clean
+  3. Issue49 controlling pair still <11 (S_13 outstanding)
+  4. VM / clean-machine NOT_VERIFIED

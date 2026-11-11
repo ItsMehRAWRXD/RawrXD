@@ -1,0 +1,14 @@
+﻿{
+    "Gate":  "T05",
+    "Result":  "PASS",
+    "CandidateSHA256":  "B54422C4E082D19BEEB46E135FBE5D37D9AD9D202D87321C1B1BA3D326493909",
+    "PID":  5728,
+    "RequestA":  "T05_A_A559_LONG_REQUEST_20261104",
+    "RequestB":  "T05_B_A559_SUCCESS_20261104",
+    "RequestBInputExact":  true,
+    "StopObserved":  true,
+    "BMarkerObserved":  true,
+    "AiResponseOnly":  true,
+    "TranscriptDelta":  "\r\nAI:   T05_B_A559_SUCCESS_20261104\r\n\r\n",
+    "TimestampUtc":  "2026-11-04T14:02:50.5812933Z"
+}

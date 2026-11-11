@@ -1,0 +1,63 @@
+
+=== P1 REBUILD LINKER (entry stub untouched) ===
+**********************************************************************
+** Visual Studio 2022 Developer Command Prompt v17.14.39
+** Copyright (c) 2025 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'
+[0/2] Re-checking globbed directories...
+[1/2] Building C object CMakeFiles\rawrxd_link.dir\src\toolchain\linker\section_merge.c.obj
+F:\rawrxd\src\toolchain\linker\section_merge.c(54): warning C4996: 'strncpy': This function or variable may be unsafe. Consider using strncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+Generating code
+Finished generating code
+[rebuild] OK F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\bin\rawrxd_link_corpus.exe (from F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\bin\rawrxd_link_corpus_5691.exe)
+SHA256 hash of F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\bin\rawrxd_link_corpus.exe:
+c173610b31158fc0bf410d49b71efdbb9a8102add58f963056ec6e4f055d4225
+CertUtil: -hashfile command completed successfully.
+LINKER_SHA256=c173610b31158fc0bf410d49b71efdbb9a8102add58f963056ec6e4f055d4225
+=== FREEZE BASELINE ===
+=== PROVENANCE ===
+PROVENANCE dirty=True head=99f02e078cb068bf663860b2d30caf6513da0d4c
+=== PE STRUCTURAL ===
+PE_PASS 01_minimal_return_zero_O2.exe
+PE_PASS 02_exit_sentinel_O2.exe
+PE_PASS 03_multi_tu_linking_O2.exe
+PE_PASS 07_relocation_O2.exe
+PE_PASS 09_global_init_O2.exe
+PE_PASS 10_bss_zero_O2.exe
+PE_PASS 17_optimization_O2.exe
+PE_PASS test_exit42.exe
+=== NEGATIVES ===
+[coff_reader] F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\out\malformed.obj: truncated header
+rawrxd_link: cannot read 'F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\out\malformed.obj'
+rawrxd_link - RawrXD PE/COFF Linker (from scratch)
+Usage: rawrxd_link [-o out.exe] [-v] [-entry sym] [-base 0xN]
+                   [-subsys N] [-stack N] [-heap N] [-map] file.obj ...
+
+Phases:
+  1. COFF Reader     - Parse object files (headers, sections, symbols, relocs)
+  2. Section Merger  - Merge same-named sections, assign RVAs
+  3. Reloc Resolver  - Apply x64 relocations (REL32, ADDR64, etc.)
+  4. PE Writer       - Generate PE32+ executable with full headers
+  5. Entry Stub      - Inject CRT entry point if needed
+PASS neg_malformed_obj link_fail
+neg_duplicate_a.c
+neg_duplicate_b.c
+[linker] phase 1 complete: 2 object file(s) loaded
+[merge] duplicate strong symbol 'conflict' (obj 0 vs 1)
+rawrxd_link: section merge failed
+PASS neg_duplicate_strong link_fail
+=== DEEP2/REAP PROXY ===
+deep2_proxy_a.c
+deep2_proxy_b.c
+[linker] phase 1 complete: 2 object file(s) loaded
+[linker] phase 2 complete: 4 merged section(s), next RVA=0x5000
+[reloc] Applied 5 relocations, 0 errors
+[linker] phase 3 complete: relocation errors=0
+[linker] auto-detected entry: main at RVA 0x3000
+[pe_writer] F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\out\deep2_proxy.exe: 4096 bytes, 6 sections, entry=0x6000, base=0x140000000
+[linker] phase 4 complete: F:\rawrxd\evidence\RAWRXD_SOVEREIGN_LINKER_CERT_001\out\deep2_proxy.exe written successfully
+[linker] all phases complete (exit 0)
+deep2_proxy exit=42 pe_struct=0
+PASS deep2_reap_proxy
+=== P1 DONE pe=8/8 neg=2/2 proxy=True provenance=1 ===

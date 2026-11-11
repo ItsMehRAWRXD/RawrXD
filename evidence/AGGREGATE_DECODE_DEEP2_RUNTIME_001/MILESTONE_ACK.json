@@ -1,0 +1,27 @@
+{
+  "ack_id": "DEEP2_AGGREGATE_DECODE_MILESTONE_ACK",
+  "updated_at": "2026-11-11T16:58:00Z",
+  "DEEP2_RUNTIME_REACHED": "PASS_REPORTED",
+  "historical_smoke_preserved": true,
+  "historical_path": "F:\\rawrxd\\evidence\\AGGREGATE_DECODE_DEEP2_RUNTIME_001",
+  "do_not_relabel_as_full_certification": true,
+  "NOT_VERIFIED": [
+    "CLEAN_TIP_REBUILD",
+    "NUMERICAL_CORRECTNESS",
+    "TRUE_PARALLEL_DECODE",
+    "SESSION_ISOLATION",
+    "THREAD_SAFE_SHARED_ENGINE",
+    "KV_CACHE_ISOLATION",
+    "SUSTAINED_THROUGHPUT"
+  ],
+  "performance_baseline_only": {
+    "native_single_tps": 0.28,
+    "native_two_stream_aggregate_tps": 0.19,
+    "note": "multi ~32% below single; not a scalability claim"
+  },
+  "CERTIFIED": 0,
+  "PROMOTE": 0,
+  "completion_estimate_pct": 84,
+  "next_batch": ["N01", "N02", "N03", "N04", "N05"],
+  "immediate_priority": "N01"
+}

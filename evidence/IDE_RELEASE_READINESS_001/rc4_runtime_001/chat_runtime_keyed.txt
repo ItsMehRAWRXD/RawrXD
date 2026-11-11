@@ -1,0 +1,9 @@
+INPUT_EVENT source=button kind=BUTTON_CLICK path=WM_COMMAND_BN_CLICKED hwnd=0x00000000000911BA session=1 pane=copilot_sidebar session_id=rc4_cu_gui_e2e run_id=rc4_runtime_001
+DISPATCH_ID id=1 bytes=117 session_id=rc4_cu_gui_e2e run_id=rc4_runtime_001
+CHAT_SEND_ATTEMPT dispatch_id=1 send_seq=1 bytes=117 session_id=rc4_cu_gui_e2e run_id=rc4_runtime_001
+TRANSCRIPT_INSERT role=user count=1 session=1 dispatch_id=1 pane=copilot_sidebar session_id=rc4_cu_gui_e2e run_id=rc4_runtime_001
+BACKEND_REQUEST_START request_id=1 dispatch_id=1 model=bigdaddyg-productivity-local:latest session_id=rc4_cu_gui_e2e run_id=rc4_runtime_001
+CHAT_SEND_ARMED dispatch_id=1 send_seq=1 request_id=1 session=1 session_id=rc4_cu_gui_e2e run_id=rc4_runtime_001
+RESPONSE_START request_id=1 session=1 dispatch_id=1 session_id=rc4_cu_gui_e2e run_id=rc4_runtime_001
+BACKEND_REQUEST_END request_id=1 success=1 stop=0 session_id=rc4_cu_gui_e2e run_id=rc4_runtime_001
+RESPONSE_END request_id=1 session=1 bytes=1161 session_id=rc4_cu_gui_e2e run_id=rc4_runtime_001

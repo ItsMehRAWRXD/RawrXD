@@ -1,0 +1,20 @@
+=== Tools ===
+  Delete          [controlled]  Delete a workspace file
+  Glob            [controlled]  Find paths by filename substring
+  Grep            [controlled]  Search bounded text files
+  Read            [controlled]  Read bounded workspace file
+  Shell           [controlled]  Run command with workspace as cwd
+  StrReplace      [controlled]  Replace exact unique text in a file
+  Write           [controlled]  Write/overwrite a workspace file
+  createDirectory [controlled]  Create directory inside workspace
+  createFile      [controlled]  Create a new file without overwriting
+  deleteFile      [controlled]  Delete a workspace file
+  editFiles       [controlled]  Replace exact unique text in a file
+  fileSearch      [controlled]  Find paths by filename substring
+  listDirectory   [controlled]  List workspace directory
+  readFile        [controlled]  Read bounded workspace file
+  runInTerminal   [controlled]  Run command with workspace as cwd
+  textSearch      [controlled]  Search bounded text files
+  writeFile       [controlled]  Write/overwrite a workspace file
+
+Authority: controlled
