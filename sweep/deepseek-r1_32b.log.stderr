@@ -1,0 +1,196 @@
+[TRACE] generation_begin (prompt_len=7 tokens=3 mode=certification)
+[TRACE] forward_0_begin
+[attn-scores] block=0 pos=0 scale=0.088388348 s0=1.000000
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+Failed to allocate memory
+Quant-dot weight buffer allocation failed
+[TRACE] forward_0_end (ok=1, 24908.8 ms)
+[attn-scores] block=0 pos=0 scale=0.088388348 s0=1.000000
+[TRACE] step 0 ok (gpu 24908.8 ms)
+[attn-scores] block=0 pos=1 scale=0.088388348 s0=0.217354 s1=0.782646
+[attn-scores] block=0 pos=1 scale=0.088388348 s0=0.217354 s1=0.782646
+[TRACE] step 1 ok (gpu 7707.3 ms)
+[attn-scores] block=0 pos=2 scale=0.088388348 s0=0.180082 s1=0.196597 s2=0.623321
+[attn-scores] block=0 pos=2 scale=0.088388348 s0=0.180082 s1=0.196597 s2=0.623321
+[TRACE] step 2 ok (gpu 5762.4 ms)
+[TRACE] repeat_begin
+[TRACE] repeat_bind_begin (state reset: fresh executor + rebind)
+[TRACE] repeat_bind_end (ok)
+[TRACE] repeat_forward_0_begin
+[attn-scores] block=0 pos=0 scale=0.088388348 s0=1.000000
+[TRACE] repeat_forward_0_end (ok)
+[TRACE] repeat step 0 ok
+[attn-scores] block=0 pos=1 scale=0.088388348 s0=0.217354 s1=0.782646
+[TRACE] repeat step 1 ok
+[attn-scores] block=0 pos=2 scale=0.088388348 s0=0.180082 s1=0.196597 s2=0.623321
+[TRACE] repeat step 2 ok
+[TRACE] repeat_done

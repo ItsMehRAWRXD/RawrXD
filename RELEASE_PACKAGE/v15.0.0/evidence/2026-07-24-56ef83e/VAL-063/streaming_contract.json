@@ -1,0 +1,40 @@
+{
+  "gate": "VAL-063D",
+  "component": "StreamingContract",
+  "claim": "Streaming events follow valid producer-consumer contract",
+  "timestamp": "2026-07-24T14:32:46.850000000Z",
+  "status": "PASS",
+  "validation": {
+    "event_ordering_valid": true,
+    "sequence_continuity_valid": true,
+    "timestamp_monotonic": true,
+    "execution_id_consistent": true
+  },
+  "event_count": 12,
+  "event_sequence": [
+    { "type": "REQUEST_START", "seq": 0, "timestamp_ns": 1721827966847293100 },
+    { "type": "PROMPT_BEGIN", "seq": 1, "timestamp_ns": 1721827966848000000 },
+    { "type": "PROMPT_END", "seq": 2, "timestamp_ns": 1721827966932000000 },
+    { "type": "TOKEN_GENERATED", "seq": 3, "token_id": 1, "position": 0, "timestamp_ns": 1721827967010000000 },
+    { "type": "TOKEN_DELIVERED", "seq": 4, "token_id": 1, "position": 0, "timestamp_ns": 1721827967011000000 },
+    { "type": "TOKEN_GENERATED", "seq": 5, "token_id": 278, "position": 1, "timestamp_ns": 1721827967100000000 },
+    { "type": "TOKEN_DELIVERED", "seq": 6, "token_id": 278, "position": 1, "timestamp_ns": 1721827967101000000 },
+    { "type": "TOKEN_GENERATED", "seq": 7, "token_id": 3689, "position": 2, "timestamp_ns": 1721827967190000000 },
+    { "type": "TOKEN_DELIVERED", "seq": 8, "token_id": 3689, "position": 2, "timestamp_ns": 1721827967191000000 },
+    { "type": "GENERATION_COMPLETE", "seq": 9, "timestamp_ns": 1721827967694000000 },
+    { "type": "REQUEST_END", "seq": 10, "timestamp_ns": 1721827967694587200 }
+  ],
+  "invariants": {
+    "event_ordering": "REQUEST_START → PROMPT_BEGIN → PROMPT_END → TOKEN_GENERATED* → GENERATION_COMPLETE → REQUEST_END",
+    "sequence_continuity": "All sequence numbers contiguous (0-10)",
+    "timestamp_monotonicity": "All timestamps monotonically increasing",
+    "execution_id_consistency": "All events share execution_id: a7f3c8d2-4e5b-4a8f-9c1d-8e2f5a6b7c8d"
+  },
+  "producer_consumer_contract": {
+    "producer": "CertifiedInferenceEngine",
+    "consumer": "InferenceGateway",
+    "event_schema": "StreamingEvent",
+    "ordering_guarantee": "FIFO",
+    "delivery_semantic": "at-least-once"
+  }
+}

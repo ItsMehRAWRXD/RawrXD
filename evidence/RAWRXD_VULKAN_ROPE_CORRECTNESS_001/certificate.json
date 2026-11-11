@@ -1,0 +1,116 @@
+{
+  "certificate_id": "RAWRXD_VULKAN_ROPE_CORRECTNESS_001",
+  "date": "2026-10-11",
+  "verdict": "PASS",
+  "scope": "Vulkan RoPE compute kernel correctness against a CPU reference that replicates MGRope::Alpha() from ModelGenieExecutor.cpp exactly, including the YaRN corr_dim bounds and rope_yarn_ramp mix.",
+  "what_was_replaced": "VulkanCompute::ExecuteRoPE was a placeholder that printed a message and returned true without performing any work. It now dispatches a real compute shader.",
+  "implementation": {
+    "shader_source": "tools/shaders/rope_fixed.comp",
+    "shader_binary": "tools/shaders/rope_fixed.spv",
+    "compiler": "glslc --target-env=vulkan1.2",
+    "entry_point": "VulkanCompute::ExecuteRoPE in src/vulkan_compute.cpp",
+    "supporting": "VulkanCompute::EnsureRoPEPipeline in src/vulkan_compute.cpp; rope descriptor layout/pool members in include/vulkan_compute.h",
+    "device": "AMD Radeon AI PRO R9700, compute queue family 0",
+    "parameters": "Defaults to the DeepSeek-V2-Lite configuration: freq_base 10000, freq_scale 0.025, original_context_length 4096, beta_fast 32, beta_slow 1. yarn_log_multiplier is accepted conceptually but unused because attn_factor_org == rope_attn_factor == 1, so mscale == 1 and no cos/sin magnitude scaling is required.",
+    "note_on_signature": "ExecuteRoPE keeps its original host-pointer signature, so the current kernel does a host upload and readback per call. That is correct but not optimal; a deeper integration can keep vectors device-resident."
+  },
+  "tolerances_declared_before_inspection": {
+    "cosine_min": 0.999999,
+    "relative_rmse_max": 0.0001,
+    "bitwise_required": false
+  },
+  "results": [
+    {
+      "label": "deep2_k_pe_pos0",
+      "dim": 64,
+      "pos": 0,
+      "rot": 64,
+      "cosine": 1.0,
+      "rel_rmse": 0.0,
+      "max_abs": 0.0,
+      "finite": true,
+      "verdict": "PASS"
+    },
+    {
+      "label": "deep2_k_pe_pos1",
+      "dim": 64,
+      "pos": 1,
+      "rot": 64,
+      "cosine": 1.0,
+      "rel_rmse": 6.49e-08,
+      "max_abs": 1.19e-07,
+      "finite": true,
+      "verdict": "PASS"
+    },
+    {
+      "label": "deep2_k_pe_pos7",
+      "dim": 64,
+      "pos": 7,
+      "rot": 64,
+      "cosine": 1.0,
+      "rel_rmse": 2.17e-07,
+      "max_abs": 6.85e-07,
+      "finite": true,
+      "verdict": "PASS"
+    },
+    {
+      "label": "deep2_partial_rot",
+      "dim": 128,
+      "pos": 3,
+      "rot": 64,
+      "cosine": 1.0,
+      "rel_rmse": 5.97e-08,
+      "max_abs": 1.79e-07,
+      "finite": true,
+      "verdict": "PASS"
+    },
+    {
+      "label": "deep2_full_k_no_tail_touch",
+      "dim": 192,
+      "pos": 5,
+      "rot": 64,
+      "cosine": 1.0,
+      "rel_rmse": 5.57e-08,
+      "max_abs": 2.61e-07,
+      "finite": true,
+      "verdict": "PASS"
+    },
+    {
+      "label": "deep2_late_pos",
+      "dim": 64,
+      "pos": 63,
+      "rot": 64,
+      "cosine": 1.0,
+      "rel_rmse": 1.04e-06,
+      "max_abs": 2.29e-06,
+      "finite": true,
+      "verdict": "PASS"
+    },
+    {
+      "label": "odd_dim_tail",
+      "dim": 66,
+      "pos": 2,
+      "rot": 64,
+      "cosine": 1.0,
+      "rel_rmse": 4.4e-08,
+      "max_abs": 5.96e-08,
+      "finite": true,
+      "verdict": "PASS"
+    }
+  ],
+  "notes": [
+    "dim 64 / rot 64 is the exact Deep2 K_pe shape, so the previously-verified native K_PE comparison against the llama.cpp reference is now backed by a real GPU kernel.",
+    "dim 128 / rot 64 and dim 192 / rot 64 confirm dimensions beyond the rotated range pass through unchanged.",
+    "dim 66 exercises the odd trailing element copy path.",
+    "pos 0 yields exactly zero difference, confirming rotation at position 0 is the identity as expected."
+  ],
+  "what_this_does_not_establish": [
+    "Deep2 Layer 0 GPU inference. ModelGenieExecutor still performs its attention and linear arithmetic on the CPU; this kernel is available but not yet called by the inference path.",
+    "GPU quantised linear projections (Q4_K / Q6_K). The existing matmul kernel is plain FP32 and does not consume quantised weights.",
+    "Any performance or TPS claim."
+  ],
+  "reproduction": {
+    "harness_source": "tools/gpu_rope_verify.cpp",
+    "build": "tools/build_gpu_rope.bat"
+  }
+}

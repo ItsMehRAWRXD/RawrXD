@@ -1,0 +1,24 @@
+{
+  "models": [
+    {
+      "id": "deep2:default",
+      "backend": "deep2",
+      "capabilities": ["chat", "code", "plan", "reasoning", "debug", "verify", "review", "research", "summarize", "completion", "tools"],
+      "context": 2048,
+      "healthy": true,
+      "speed": "medium",
+      "vram_mb": 0,
+      "priority": 50
+    },
+    {
+      "id": "stub:deterministic",
+      "backend": "stub",
+      "capabilities": ["chat", "code", "plan", "verify", "tools", "debug", "review"],
+      "context": 8192,
+      "healthy": true,
+      "speed": "fast",
+      "vram_mb": 0,
+      "priority": 200
+    }
+  ]
+}

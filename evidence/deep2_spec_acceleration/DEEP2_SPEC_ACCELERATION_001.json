@@ -1,0 +1,32 @@
+{
+  "gate": "DEEP2_SPEC_ACCELERATION_001",
+  "model": "F:\\rawrxd\\models\\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+  "model_sha256": "9fecc3b3cd76bba89d504f29b616eedf7da85b96540e490ca5824d3f7d2776a0",
+  "passed": true,
+  "criteria": {
+    "speedup_above_1x_code": true,
+    "speedup_above_1x_prose": true,
+    "parity_maintained": true,
+    "reproducible": true
+  },
+  "evidence": {
+    "code_workload": {
+      "serial_tps": 1.49,
+      "spec_tps": 2.38,
+      "speedup": 1.60,
+      "acceptance_rate": 0.65,
+      "parity": "PASS"
+    },
+    "prose_workload": {
+      "serial_tps": 2.14,
+      "spec_tps": 2.70,
+      "speedup": 1.26,
+      "acceptance_rate": 0.75,
+      "parity": "PASS"
+    },
+    "minimum_speedup": 1.26,
+    "both_workloads_above_1x": true
+  },
+  "source_tool": "deep2_spec_bench",
+  "source_gate": "RAWRXD_DEEP2_SPEC_VERIFY_001"
+}

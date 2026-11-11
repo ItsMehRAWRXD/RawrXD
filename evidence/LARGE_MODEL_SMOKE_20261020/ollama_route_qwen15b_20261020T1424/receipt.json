@@ -1,0 +1,17 @@
+{
+  "timestamp": "2026-10-20T14:23:58.6062137-04:00",
+  "endpoint": "http://127.0.0.1:11434/api/generate",
+  "model": "qwen2.5-coder:1.5b-base",
+  "prompt": "Reply with exactly READY.",
+  "exit_code": 0,
+  "elapsed_ms": 225.9,
+  "response": " I am a chatbot that can help",
+  "done": true,
+  "done_reason": "length",
+  "prompt_eval_count": 5,
+  "eval_count": 8,
+  "total_duration_ns": 58958300,
+  "eval_duration_ns": 32631999,
+  "model_count": 41,
+  "error": ""
+}
