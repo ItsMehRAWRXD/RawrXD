@@ -1,0 +1,36 @@
+﻿# PHASE1 T05 — A→Stop→B only after A survives
+
+ASOF_UTC=2026-11-03T14:54:00Z
+GATE=FINISH_25_BACKLOG_PHASE1_T05
+AUTH=FINISH_25_BACKLOG
+CERT_EXE_SHA=3B720981EC567D60461B874F0C1EE46E03F85DB58F6E1788CBEE31F8B2CCAD5F
+
+## Survival gate
+
+```
+REQUEST_A_SURVIVES_ON_CANCEL_PATH=0
+REQUEST_A_ONLY_BM_DUAL_25S=NO_CRASH
+A_SURVIVAL_FOR_A_STOP_B=NOT_MET
+```
+
+## Action
+
+```
+A_STOP_B_RERUN=NOT_RUN
+RATIONALE=Do not blind-repeat A→Stop→B until Cancel Request A survives.
+NOT_RUN != PASS
+```
+
+## Result (fail-closed correction)
+
+```
+T05=NOT_RUN
+A_STOP_B=HELD
+BATCH1_CANCEL_RECOVERY=FAIL
+PARENT_CORRECTION=T05_WAS_MISLABELED_PASS_RETRACTED
+NEXT_GATE=BATCH1_CANCEL_RECOVERY
+PROMOTE=0
+REBUILD=HELD
+```
+
+Prior worker label `T05=PASS` applied only to writing a hold receipt — that is **not** closure of task 05 (Close A→Stop→B recovery). Retracted.

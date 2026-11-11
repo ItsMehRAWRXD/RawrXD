@@ -1,0 +1,30 @@
+RAWRXD_SOVEREIGN_PE_RUNTIME_001
+TIMESTAMP=2026-10-27
+ARTIFACT=F:\rawrxd\build_5os_win\rawrxd_link.exe
+LINKER_SHA256=5be9408e5e1e424a41bcd283e4e409daafb6c4fbf9882ad08d5d8a4d1bd68438
+TEST_PE=F:\rawrxd\evidence\RAWRXD_SOVEREIGN_PE_RUNTIME_001\test_exit42.exe
+RUNTIME_LOG=runtime_log.txt
+
+TRI_FORMAT_COMPOSE      = 45/45 PASS (prior seal; unchanged)
+MODIFIED_WRITER_BUILD   = PASS (fresh rebuild; new SHA above; not prior binary)
+IMPORT_DIRECTORY_VALID  = PASS (.idata present; descriptor kernel32.dll / ExitProcess; ImportDir RVA=0x3000 Size=0x28; IAT=0x3045)
+ENTRY_RELOCATION_VALID  = PASS (entry RVA=0x4000 in .stub; E8→main 0x1000; FF15→IAT 0x3045; disp@+5 / +0x0D)
+WINDOWS_EXIT_CODE_42    = PASS (EXIT_CODE=42; RUNTIME_PASS_EXIT_42)
+
+ROOT_CAUSE_PRIOR_AV:
+  Stub restored RSP (add rsp,0x28) before call [ExitProcess].
+  x64 ABI requires 32-byte shadow space; ExitProcess writes into it → 0xC0000005.
+  Fix: keep sub rsp,0x28 through FF15; remove add-before-exit.
+  Also: SizeOfHeaders now computed after .idata/.stub are appended.
+
+WINDOWS_RUNTIME_SMOKE   = PASS
+WINDOWS_RUNTIME_CERT    = 0
+FIVE_OS_CERTIFIED       = FALSE
+PROMOTE                 = 0
+TIP_CLIMB               = HOLD
+
+FOLLOW_ON: RAWRXD_SOVEREIGN_LINKER_CERT_001 corpus_19_19=PASS
+           (freestanding; does not raise WINDOWS_RUNTIME_CERT)
+
+NOTE: Local Windows exit-42 is a P0 recovery gate only.
+      Multi-OS / FIVE_OS certification remains sealed closed.

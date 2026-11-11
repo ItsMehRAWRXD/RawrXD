@@ -1,0 +1,7 @@
+
+RawrXD Local Agent
+Model:   granite3.3:8b
+Backend: ollama
+Mode:    autonomous
+Root:    F:\rawrxd
+

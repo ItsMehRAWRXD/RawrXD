@@ -1,0 +1,53 @@
+#version 460
+#extension GL_KHR_shader_subgroup_arithmetic : enable
+layout(local_size_x=256) in;
+
+layout(set=0,binding=0,std430) readonly buffer W { uint w[]; };
+layout(set=0,binding=1,std430) readonly buffer X { float x[]; };
+layout(set=0,binding=2,std430) readonly buffer S { float scale[]; };
+layout(set=0,binding=3,std430) writeonly buffer Y { float y[]; };
+
+layout(push_constant) uniform PC {
+    uint rows;
+    uint cols;
+    uint wordsPerRow;
+    uint groupsPerRow;
+    uint groupSize;
+} pc;
+
+shared float subgroupSums[8];
+
+float dq4(uint word,uint nib) {
+    return float(int((word>>(nib*4u))&15u)-8);
+}
+
+void main() {
+    uint row=gl_WorkGroupID.x;
+    if(row>=pc.rows) return;
+    uint lid=gl_LocalInvocationID.x;
+    float a0=0.0,a1=0.0,a2=0.0,a3=0.0;
+
+    for(uint c=lid;c<pc.cols;c+=1024u) {
+        uint cc[4]=uint[4](c,c+256u,c+512u,c+768u);
+        for(int j=0;j<4;++j) {
+            if(cc[j]<pc.cols) {
+                uint wi=row*pc.wordsPerRow+(cc[j]>>3u);
+                uint gi=row*pc.groupsPerRow+(cc[j]/pc.groupSize);
+                float v=dq4(w[wi],cc[j]&7u)*scale[gi]*x[cc[j]];
+                if(j==0)a0+=v; else if(j==1)a1+=v; else if(j==2)a2+=v; else a3+=v;
+            }
+        }
+    }
+
+    float sum=a0+a1+a2+a3;
+    float sg=subgroupAdd(sum);
+    if(subgroupElect()) subgroupSums[gl_SubgroupID]=sg;
+    barrier();
+
+    if(gl_SubgroupID==0u) {
+        float v=gl_SubgroupInvocationID<gl_NumSubgroups ?
+                subgroupSums[gl_SubgroupInvocationID] : 0.0;
+        float total=subgroupAdd(v);
+        if(subgroupElect()) y[row]=total;
+    }
+}

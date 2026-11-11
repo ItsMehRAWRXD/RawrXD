@@ -1,0 +1,50 @@
+﻿======== F:\rawrxd ========
+EXISTS=1
+GIT=1
+ABSENT cmake\empty_target_stub.cpp
+ABSENT src\win32app\AgentSession.cpp
+ABSENT src\win32app\AgentSessionBar.cpp
+ABSENT src\win32app\AgentRunLoop.cpp
+ABSENT src\win32app\AgentHttp.cpp
+ABSENT src\win32app\AgentSessionGuiProof.cpp
+ABSENT src\win32app\Win32IDE_LocalServer.cpp
+======== F:\~dev\rawrxd ========
+EXISTS=1
+GIT=0
+PRESENT 200 2026-10-17 cmake\empty_target_stub.cpp
+ABSENT src\win32app\AgentSession.cpp
+ABSENT src\win32app\AgentSessionBar.cpp
+ABSENT src\win32app\AgentRunLoop.cpp
+ABSENT src\win32app\AgentHttp.cpp
+ABSENT src\win32app\AgentSessionGuiProof.cpp
+PRESENT 459 2026-10-03 src\win32app\Win32IDE_LocalServer.cpp
+======== G:\~dev\rawrxd ========
+EXISTS=1
+GIT=1
+ABSENT cmake\empty_target_stub.cpp
+PRESENT 4159 2026-10-26 src\win32app\AgentSession.cpp
+PRESENT 3901 2026-10-26 src\win32app\AgentSessionBar.cpp
+PRESENT 1320 2026-10-26 src\win32app\AgentRunLoop.cpp
+PRESENT 3946 2026-10-26 src\win32app\AgentHttp.cpp
+PRESENT 2489 2026-10-26 src\win32app\AgentSessionGuiProof.cpp
+PRESENT 217490 2026-10-26 src\win32app\Win32IDE_LocalServer.cpp
+======== G:\~dev\rawrxd-cmake-clean ========
+EXISTS=1
+GIT=1
+ABSENT cmake\empty_target_stub.cpp
+PRESENT 4159 2026-10-26 src\win32app\AgentSession.cpp
+PRESENT 3901 2026-10-26 src\win32app\AgentSessionBar.cpp
+PRESENT 1320 2026-10-26 src\win32app\AgentRunLoop.cpp
+PRESENT 3946 2026-10-26 src\win32app\AgentHttp.cpp
+PRESENT 2489 2026-10-26 src\win32app\AgentSessionGuiProof.cpp
+PRESENT 217490 2026-10-26 src\win32app\Win32IDE_LocalServer.cpp
+======== G:\VSC0de ========
+EXISTS=1
+GIT=1
+ABSENT cmake\empty_target_stub.cpp
+ABSENT src\win32app\AgentSession.cpp
+ABSENT src\win32app\AgentSessionBar.cpp
+ABSENT src\win32app\AgentRunLoop.cpp
+ABSENT src\win32app\AgentHttp.cpp
+ABSENT src\win32app\AgentSessionGuiProof.cpp
+ABSENT src\win32app\Win32IDE_LocalServer.cpp

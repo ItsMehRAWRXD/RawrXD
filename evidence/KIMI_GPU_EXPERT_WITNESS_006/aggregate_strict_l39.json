@@ -1,0 +1,59 @@
+{
+  "certified": false,
+  "counts": {
+    "error": 0,
+    "fail": 1,
+    "pass": 0
+  },
+  "entries": [
+    {
+      "expert_ids": [
+        105,
+        143,
+        193,
+        238,
+        294,
+        312,
+        325,
+        340
+      ],
+      "layer": 39,
+      "metrics": {
+        "elements": 7168,
+        "max_abs": 0.37263394099999997,
+        "mean_abs": 0.08150687275601567,
+        "rms_abs": 0.10190588728412539,
+        "within_threshold": false,
+        "worst_index": 6198
+      },
+      "routing_weights": [
+        0.368106,
+        0.358236,
+        0.349027,
+        0.344646,
+        0.359937,
+        0.33804,
+        0.370192,
+        0.338816
+      ],
+      "sha256": {
+        "cpu": "225f2141f72e3afbf8dee2c23361ce908cd4d47a06cf3fd4cdc28e56eb441bd5",
+        "gpu": "e9dec6dd26917eaf02a22c62b3630d9afc5710a0e4f18beb7105de3ea947c148",
+        "manifest": "d373657a2161bcdc0400a981f269794047acbc61bd7eb2fdc76206fbc93f2255"
+      },
+      "status": "FAIL",
+      "stick": 0
+    }
+  ],
+  "gpu_expert_witness": "ABSENT",
+  "note": "All requested pairs must pass; no per-expert GPU proof",
+  "promote": 0,
+  "required_scopes": 1,
+  "schema": "DEEP2_KIMI_AGGREGATE_BATCH_001/v1",
+  "scope": "COMPLETED_AGGREGATE_DIAGNOSTIC_ONLY",
+  "status": "FAIL",
+  "thresholds": {
+    "max_abs": 0.001,
+    "max_rms": 0.0001
+  }
+}

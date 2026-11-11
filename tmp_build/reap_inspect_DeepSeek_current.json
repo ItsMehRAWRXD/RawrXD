@@ -1,0 +1,2 @@
+[StreamEngine] Shutdown
+{"source":"F:\\OllamaModels\\DeepSeek-R1-Q4_K_M-COMPLETE\\DeepSeek-R1-Q4_K_M-00001-of-00011.gguf","shards":11,"tensors":1025,"bytes":404430188064,"expert_tensors":174,"expert_bytes":393983557632,"logical_experts":14848,"logical_expert_bytes":393983557632,"min_triplet_bytes":24772608,"max_triplet_bytes":28557312}

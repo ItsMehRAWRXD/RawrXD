@@ -1,0 +1,25 @@
+GATE=KIMI_LAYER39_FIRST_FAIL_001 → next executable
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+OFFICIAL_LEDGER=UNCHANGED (0/25 PENDING)
+
+CLOSED_BY_THIS_RECEIPT (diagnostic only, not G05/G06 PASS)
+  H3 buffer provenance under nEx=1 = RULED_OUT (ArenaDown ≡ Q6_K×Q8_K oracle ~3.18e-7)
+  H1 input divergence / H4 routing = RULED_OUT
+  ~0.0109 vs FP32 scalar = EXPECTED under GPU Q8_K act quant vs CPU VAL-051.11 FP32 force
+
+STILL_OPEN (do not invent PASS)
+  G05  provenance-tagged post-SwiGLU after completion (formal buffer-identity wording)
+  G06  one-expert GPU down vs independent oracle — oracle MUST be Q6_K×Q8_K, not FP32
+  G03  independent GGML Q6_K cross-implementation seal
+  G08  live GPU repeat-run determinism (offline recompute=yes; live=unknown)
+  G10  freeze tolerances against the Q8_K contract (current audit limits target FP32)
+
+NEXT_PR_SCOPE
+  1. Wire/certify CPU or host oracle path for Q6_K×Q8_K (lift or bypass VAL-051.11 under diagnostic gate)
+  2. Re-audit L39 expert 108 with that oracle; expect max_abs ~1e-6 class
+  3. Only then consider G06 evidence attachment — still MANUAL_REVIEW_ONLY
+  4. Do not raise FP32 max_abs=0.001 to paper over Q8_K contract error
+
+REAP_PRODUCTION=DISABLED

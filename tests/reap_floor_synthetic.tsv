@@ -1,0 +1,6 @@
+# name	type	bytes	expert_count	family
+blk.0.ffn_gate_exps.weight	Q4_K	38400	384	expert_gate
+blk.0.ffn_up_exps.weight	Q4_K	38400	384	expert_up
+blk.0.ffn_down_exps.weight	Q6_K	76800	384	expert_down
+blk.0.attn_q.weight	Q4_K	4096	0	attention
+output.weight	Q4_K	8192	0	output

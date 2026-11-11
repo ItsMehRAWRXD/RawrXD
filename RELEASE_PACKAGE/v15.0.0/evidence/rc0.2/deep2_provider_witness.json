@@ -1,0 +1,17 @@
+{
+  "inference_chain_complete": true,
+  "backend": "Vulkan/HIP",
+  "routing_path": [
+    "UniversalModelRouter",
+    "Deep2Provider",
+    "Deep2Bridge",
+    "Sampler"
+  ],
+  "components_verified": {
+    "router": "PASS",
+    "provider": "PASS",
+    "bridge": "PASS",
+    "sampler": "PASS"
+  },
+  "test_timestamp": "2026-07-30T16:23:12.394473"
+}

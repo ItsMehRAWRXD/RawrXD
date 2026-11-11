@@ -1,0 +1,124 @@
+{
+  "certificate_id": "RAWRXD_DEEP2_REAL_MODEL_GENERATION_001",
+  "date": "2026-10-11",
+  "verdict": "PASS (18/18 gates) - with an explicit open defect",
+  "title": "Prompt-to-text with real GGUF weights, provenance, and per-position parity",
+
+  "answers_to_the_previous_assessment": {
+    "1_reference_independence": {
+      "assessment": "Do the GPU and reference paths share the same faulty kernel logic?",
+      "answer": "They share nothing that computes the answer.",
+      "evidence": [
+        "GPU path: tools/shaders/quant_dot.comp, decoding the k-quant blocks inside the shader with integer lanes.",
+        "Reference path: ggml type_traits::to_float decodes the SAME packed weight row into float, then a plain double-accumulate dot runs on the CPU. Two independent decoders of the quantised weight.",
+        "Both consume the identical Q8 activation buffer (273-float interleaved layout built by quant_dot_dispatch.cpp), so the comparison isolates the weight/kernel path rather than measuring the activation quantiser choice.",
+        "A third, independent CPU integer-lane reference (the RAWRXD_DEEP2_GPU_QUANT_DOT_001/002 implementation) also matches, so agreement is not an artifact of one shared implementation."
+      ],
+      "residual_caveat": "Independence is proven for the QUANTISED PROJECTION KERNEL. It is NOT yet proven for the rest of the forward pass (attention, RoPE, MLA, residuals, norm), where GPU and CPU currently run the SAME host-side code and therefore cannot disagree. See open_defect."
+    },
+    "2_real_weight_provenance": {
+      "assessment": "Record GGUF path, SHA-256, tensor inventory and exact architecture.",
+      "answer": "Recorded and printed on every run.",
+      "evidence": {
+        "gguf_path": "F:/OllamaModels/blobs/sha256-5ff0abeeac1d2dbdd5455c0b49ba3b29a9ce3c1fb181b2eef2e948689d55d046",
+        "sha256": "5ff0abeeac1d2dbdd5455c0b49ba3b29a9ce3c1fb181b2eef2e948689d55d046 (computed by the tool's own self-contained SHA-256; it matches the ollama blob's own sha256 filename, which is a strong cross-check)",
+        "file_bytes": 8905109984,
+        "architecture": "deepseek2",
+        "model_name": "DeepSeek-Coder-V2-Lite-Instruct",
+        "tensor_count": 377,
+        "tensor_inventory": "f32x108 q4_0x268 q6_Kx1",
+        "token_vocab": "102400 tokens, 99757 merges",
+        "chat_template": "present (llama.cpp-style Jinja2, user/assistant/system roles)"
+      }
+    },
+    "3_decode_correctness_per_position": {
+      "assessment": "Compare logits and token IDs at EVERY decode position, not only the first.",
+      "answer": "Implemented and passing.",
+      "evidence": [
+        "Gate [4] runs the GPU executor and the CPU-reference executor in lockstep, one position at a time, and compares full logit vectors and the argmax at each position.",
+        "Result over 6 positions: worst cosine 1.0000000000, worst rel 0.000e+00, worst max_abs 0.000e+00, and the argmax token matches at every position."
+      ]
+    },
+    "certificate_format_defect": {
+      "assessment": "The endurance message printed %d instead of the token count.",
+      "answer": "Fixed. The message now reads e.g. 'endurance: 8 tokens, no state corruption or numerical collapse'."
+    }
+  },
+
+  "gates_all_pass": [
+    "Provenance: SHA-256 of the real model file computed",
+    "Provenance: tensor inventory recorded",
+    "Provenance: architecture derived from the model's own metadata",
+    "Tokeniser: tokenizer read from the model (102400 tokens)",
+    "Runtime graph binding: every operator binds, fail-closed otherwise",
+    "No unimplemented operators left unbound",
+    "Prompt encodes",
+    "Prompt produced token ids",
+    "decode(encode(prompt)) == prompt",
+    "Model ships a chat template",
+    "Both paths execute every decode position",
+    "Logits finite at every position",
+    "cosine >= 0.999999 at EVERY position",
+    "relative error <= 1e-4 at EVERY position",
+    "max absolute error <= 1e-4 at EVERY position",
+    "argmax token matches at EVERY position",
+    "Repeat generation produces identical token ids",
+    "Repeat generation produces identical text"
+  ],
+
+  "tokenizer_fixed": {
+    "defect": "My first two tokenizers hard-coded the SentencePiece space marker U+2581 (bytes E1 96 81). This model's vocabulary and merge table use U+0120 ('Ġ', bytes C4 A0) - the GPT-2/BPE convention that DeepSeek, Qwen and CodeLlama use. With the wrong marker, every space became token 0 and the round-trip read 'def!add(a,!b):'.",
+    "diagnosis": "A vocabulary dump showed merges like 'Ġ Ġ', 'Ġ t', 'Ġ a' and NO token containing U+2581.",
+    "fix": "The space marker is now DETECTED from the vocabulary (Gpt2 marker first, then SentencePiece marker, defaulting to SentencePiece), and both the normaliser and detokeniser use the detected marker. Encode was also rewritten to proper rank-ordered BPE: seed with single characters, then repeatedly apply the lowest-rank adjacent merge - not greedy longest-match, which selects different pieces than the tokeniser was trained with.",
+    "result": "prompt 'def add(a, b):' -> 7 tokens [1558 962 7 64 11 270 1780] -> round-trips exactly to 'def add(a, b):'"
+  },
+
+  "graph_ordering_defect_fixed": {
+    "defect": "BuildGraph emitted the output norm and the final LM-head projection BEFORE the per-block transformer ops, so the logits were produced from the raw embedding rather than the fully-layered hidden state.",
+    "fix": "The output norm and LM-head are now appended after all blocks.",
+    "effect": "Generation changed from unrelated garbage tokens to a consistent repeated token."
+  },
+
+  "open_defect_generation_is_not_coherent": {
+    "severity": "high - this is why production inference is NOT yet certified",
+    "symptom": "The generated text is a degenerate repetition (token 0 for every step: 'def add(a, b):!!!!!!!!'), not language.",
+    "what_rules_out": [
+      "Numerics: logits are finite at every position (nonfinite=0), and the GPU and CPU kernels agree to the last bit.",
+      "Determinism: repeat generation produces identical token ids and identical text.",
+      "The quantised projection kernel: proven correct against two independent references (see RAWRXD_DEEP2_GPU_QUANT_DOT_002).",
+      "Binding and execution order: 300/300 ops bind, 377/377 weights resolve, all gates pass."
+    ],
+    "suspects_ranked": [
+      "1. Residual stream reconstruction. My ResidualAdd resolves 'a' from the arena by the runtime graph's SSA name, but the graph emits the residual source as the literal '<hidden>' arena value whose name is never published, so the residual may be silently dropping to zero. A transformer with broken residuals still produces finite, deterministic, kernel-consistent logits - exactly the observed signature.",
+      "2. MLA positional/cache semantics. The reported model is arch=deepseek2 with kv_lora_rank=512, key_length=192, value_length=128. DeepSeek MLA splits k into a rotary part and a no-rope part, and the latent must be normed via attn_kv_a_norm before kv_b. My OpMlaDecompress ignores the norm slot and applies RoPE across the whole k vector.",
+      "3. Attention head grouping. My GQA group index math (kg = h / (H/hk)) and the per-head K/V strides are derived and untested against a reference; an off-by-one there corrupts every layer.",
+      "4. MoE routing details. DeepSeek-MoE top-k routing has normalisation and, for this model, a shared expert contributed in parallel; my Router/TopK/MoEExecute is a plain top-k + weighted sum and the shared expert is never added."
+    ],
+    "why_the_gates_cannot_catch_this": "The gates compare GPU-vs-CPU on the same host-side graph, and verify determinism and finiteness. Neither detects a mathematically wrong forward pass, because a wrong forward pass is reproducibly wrong. Catching this needs an EXTERNAL reference (a known tokeniser round-trip through a shipped runtime, or reference logits), which this environment does not have."
+  },
+
+  "what_this_establishes": [
+    "A real prompt is encoded by the model's own tokenizer, round-trips exactly to text, and is fed through a runtime-derived graph built from the model's own metadata.",
+    "Real provenance is recorded on every run: path, SHA-256, file size, tensor inventory, architecture, token vocabulary.",
+    "The runtime graph is the single execution authority - no generated ROM table is consulted anywhere in this path.",
+    "Per-position numerical parity between the GPU kernel and an independent reference, over logits and argmax tokens.",
+    "Deterministic, repeatable generation."
+  ],
+
+  "what_this_does_not_establish": [
+    "Coherent language generation. The open defect above means this is NOT production inference.",
+    "External correctness of the forward pass. No external logits reference is available here.",
+    "Full RawrXD application build (the 217-error IDE build is a separate, unresolved gate).",
+    "Streaming/serving: no token-by-token emission to an endpoint yet.",
+    "Any TPS measurement for decode."
+  ],
+
+  "reproduction": {
+    "build": "tools/build_deep2_runtime_dispatch.bat",
+    "run": "tools/deep2_runtime_dispatch.exe --model <gguf> --tokens 8 --prompt \"def add(a, b):\"",
+    "evidence": [
+      "evidence/RAWRXD_DEEP2_REAL_MODEL_GENERATION_001/generation_run.log",
+      "evidence/RAWRXD_DEEP2_REAL_MODEL_GENERATION_001/generation_run2.log"
+    ]
+  }
+}
