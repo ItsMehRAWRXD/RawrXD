@@ -8034,10 +8034,20 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
             fprintf(stderr, "[B3_FAIL] hidden state invalid pos=%zu norm=%.9e\n", position, stateNorm);
             return tokensGenerated;
         }
-        // Soft gate: warn on norm explosion (>100x expected)
-        if (stateNorm > 100.0)
+        // Soft gate: warn when the hidden state is implausibly large for the
+        // architecture. The raw L2 norm scales with sqrt(hiddenDim), so a flat
+        // threshold is not comparable across models: a healthy llama3.2 state
+        // (hidden=3072) measures ~85 (RMS 1.53) and a healthy gemma3 state
+        // (hidden=1152) measures ~160 (RMS 4.7). The old flat 100.0 therefore
+        // passed llama3.2 while flagging gemma3, and the warning said nothing
+        // about correctness. Compare the RMS, which is architecture independent.
+        const double stateRms =
+            stateNorm / std::sqrt(static_cast<double>(config.hiddenDim));
+        if (stateRms > 100.0)
         {
-            fprintf(stderr, "[B3_WARN] hidden state norm explosion pos=%zu norm=%.9e\n", position, stateNorm);
+            fprintf(stderr, "[B3_WARN] hidden state rms explosion pos=%zu rms=%.9e "
+                            "norm=%.9e hidden=%zu\n",
+                    position, stateRms, stateNorm, config.hiddenDim);
         }
 
         // Hard gate: reject invalid logits
