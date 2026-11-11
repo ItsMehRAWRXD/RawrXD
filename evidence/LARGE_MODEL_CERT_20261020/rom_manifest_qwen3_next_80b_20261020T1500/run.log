@@ -1,0 +1,9 @@
+FILE    F:\OllamaModels\blobs\sha256-8476acca2ca7dc4dd86ad2e069cb270fdbd44287d9ff3006d86e9a54cc19acd1
+ARCH    qwen3next
+GGUF    version 3, 807 tensors, data start 5984928, 50351320736 bytes
+
+MANIFEST  entries=807 bound=807 unbound=0
+DTYPE_CROSSCHECK inconsistent=0 unknown=0
+DTYPES F32=313 Q4_K=415 Q6_K=79
+
+VERDICT=BOUND_ALL

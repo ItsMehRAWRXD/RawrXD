@@ -1,0 +1,7 @@
+root ::= toolcall | finalcall
+toolcall ::= "{" ws "\"action\"\" : \"\"tool\"\", \" ws "\"tool\"\" : \"" tool "\", \" \" ws "\"args\"\" : \"\"" arg "\"\"" "}" ws
+finalcall ::= "{" ws "\"action\"\" : \"\"final\"\", \" ws "\"summary\"\" : \"\"" txt "\"\", \" \" \" ws "\"findings\"\" : \"\"" txt "\"\", \" \" \" \" ws "\"next_actions\"\" : \"\"" txt "\"\"" "}" ws
+tool ::= "\"list_repo\"" | "\"read_file\"" | "\"search_text\"" | "\"git_status\"" | "\"write_file\"" | "\"run_build\"" | "\"run_tests\""
+arg ::= [^"]*
+txt ::= [^"]*
+ws ::= [ ]*

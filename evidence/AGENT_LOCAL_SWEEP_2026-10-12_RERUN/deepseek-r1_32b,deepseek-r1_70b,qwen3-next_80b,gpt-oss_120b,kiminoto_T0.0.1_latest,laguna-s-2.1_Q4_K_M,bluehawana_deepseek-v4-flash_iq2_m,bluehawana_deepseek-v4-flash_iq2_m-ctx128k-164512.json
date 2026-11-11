@@ -1,0 +1,20 @@
+{
+  "Model": "deepseek-r1:32b,deepseek-r1:70b,qwen3-next:80b,gpt-oss:120b,kiminoto/T0.0.1:latest,laguna-s-2.1:Q4_K_M,bluehawana/deepseek-v4-flash:iq2_m,bluehawana/deepseek-v4-flash:iq2_m-ctx128k",
+  "StartedAt": "2026-10-12T16:45:09.0162605-04:00",
+  "KeepAlive": 0,
+  "Cold": true,
+  "Before": {
+    "CommittedGB": 45.68,
+    "LimitGB": 0.0,
+    "AvailableGB": 14.39
+  },
+  "PeakCommittedGB": 0.0,
+  "HttpStatus": 400,
+  "ErrorBody": "Response status code does not indicate success: 400 (Bad Request).",
+  "After": {
+    "CommittedGB": 45.62,
+    "LimitGB": 0.0,
+    "AvailableGB": 13.92
+  },
+  "Classification": "RESOURCE_LIMIT"
+}

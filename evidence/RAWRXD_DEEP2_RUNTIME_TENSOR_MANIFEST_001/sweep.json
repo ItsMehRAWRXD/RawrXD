@@ -1,0 +1,562 @@
+[
+    {
+        "file":  "bluehawana__deepseek-v4-flash__iq2_m.gguf",
+        "arch":  "deepseek4",
+        "entries":  1328,
+        "bound":  1328,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "bluehawana__deepseek-v4-flash__iq2_m-ctx128k.gguf",
+        "arch":  "deepseek4",
+        "entries":  1328,
+        "bound":  1328,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "kiminoto__T0.0.1__latest.gguf",
+        "arch":  "qwen35",
+        "entries":  883,
+        "bound":  883,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__bigdaddyg__latest.gguf",
+        "arch":  "llama",
+        "entries":  255,
+        "bound":  255,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__bigdaddyg-16gb__latest.gguf",
+        "arch":  "gptoss",
+        "entries":  459,
+        "bound":  459,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__bigdaddyg-16gb-balanced__latest.gguf",
+        "arch":  "gptoss",
+        "entries":  459,
+        "bound":  459,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__bigdaddyg-16gb-v2__latest.gguf",
+        "arch":  "gptoss",
+        "entries":  459,
+        "bound":  459,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__bigdaddyg-agentic__latest.gguf",
+        "arch":  "llama",
+        "entries":  255,
+        "bound":  255,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__bigdaddyg-alldrive__latest.gguf",
+        "arch":  "llama",
+        "entries":  255,
+        "bound":  255,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__bigdaddyg-comprehensive__latest.gguf",
+        "arch":  "llama",
+        "entries":  255,
+        "bound":  255,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__bigdaddyg-fast__latest.gguf",
+        "arch":  "llama",
+        "entries":  255,
+        "bound":  255,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__bigdaddyg-fast-agentic__latest.gguf",
+        "arch":  "llama",
+        "entries":  255,
+        "bound":  255,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__bigdaddyglocal__latest.gguf",
+        "arch":  "llama",
+        "entries":  723,
+        "bound":  723,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__bigdaddygnative__latest.gguf",
+        "arch":  "llama",
+        "entries":  723,
+        "bound":  723,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__bigdaddyg-personalized__latest.gguf",
+        "arch":  "llama",
+        "entries":  255,
+        "bound":  255,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__bigdaddyg-personalized-agentic__latest.gguf",
+        "arch":  "llama",
+        "entries":  255,
+        "bound":  255,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__bigdaddyg-productivity-local__latest.gguf",
+        "arch":  "llama",
+        "entries":  723,
+        "bound":  723,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__bigdaddyg-productivity-native__latest.gguf",
+        "arch":  "llama",
+        "entries":  723,
+        "bound":  723,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__bigdaddyg-q2k-ultra-productive__latest.gguf",
+        "arch":  "llama",
+        "entries":  723,
+        "bound":  723,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__bigdaddyg-q2-ultra__latest.gguf",
+        "arch":  "llama",
+        "entries":  723,
+        "bound":  723,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__cheetah-speed-agentic__latest.gguf",
+        "arch":  "llama",
+        "entries":  255,
+        "bound":  255,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__cheetah-stealth__latest.gguf",
+        "arch":  "llama",
+        "entries":  255,
+        "bound":  255,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__cheetah-stealth-agentic__latest.gguf",
+        "arch":  "llama",
+        "entries":  255,
+        "bound":  255,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__cheetah-stealth-agentic-5gb__latest.gguf",
+        "arch":  "llama",
+        "entries":  255,
+        "bound":  255,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__cheetah-stealth-agentic-q5km-full__latest.gguf",
+        "arch":  "llama",
+        "entries":  255,
+        "bound":  255,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__deepseek-coder-v2__16b.gguf",
+        "arch":  "deepseek2",
+        "entries":  377,
+        "bound":  377,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__deepseek-r1__32b.gguf",
+        "arch":  "qwen2",
+        "entries":  771,
+        "bound":  771,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__deepseek-r1__70b.gguf",
+        "arch":  "llama",
+        "entries":  724,
+        "bound":  724,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__gemma3__4b.gguf",
+        "arch":  "gemma3",
+        "entries":  883,
+        "bound":  883,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__gemma3__latest.gguf",
+        "arch":  "gemma3",
+        "entries":  883,
+        "bound":  883,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__gpt-oss__120b.gguf",
+        "arch":  "gptoss",
+        "entries":  687,
+        "bound":  687,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__gpt-oss__20b.gguf",
+        "arch":  "gptoss",
+        "entries":  459,
+        "bound":  459,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__gpt-oss__latest.gguf",
+        "arch":  "gptoss",
+        "entries":  459,
+        "bound":  459,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__granite3.3__8b.gguf",
+        "arch":  "granite",
+        "entries":  362,
+        "bound":  362,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__laguna-s-2.1__Q4_K_M.gguf",
+        "arch":  "laguna",
+        "entries":  814,
+        "bound":  814,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__llama3.1__8b.gguf",
+        "arch":  "llama",
+        "entries":  292,
+        "bound":  292,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__llama3.2__3b.gguf",
+        "arch":  "llama",
+        "entries":  255,
+        "bound":  255,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__llama3.2__latest.gguf",
+        "arch":  "llama",
+        "entries":  255,
+        "bound":  255,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__n4-tiny-oracle__latest.gguf",
+        "arch":  "llama",
+        "entries":  201,
+        "bound":  201,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__nemotron-3.5-lightning__30b.gguf",
+        "arch":  "nemotron_h_moe",
+        "entries":  417,
+        "bound":  417,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__nemotron-3-nano__4b.gguf",
+        "arch":  "nemotron_h",
+        "entries":  263,
+        "bound":  263,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__ornith-1.5__35b.gguf",
+        "arch":  "qwen35moe",
+        "entries":  753,
+        "bound":  753,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__phi3__mini.gguf",
+        "arch":  "phi3",
+        "entries":  197,
+        "bound":  197,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__quantumide-security__latest.gguf",
+        "arch":  "llama",
+        "entries":  255,
+        "bound":  255,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__qwen2.5-coder__1.5b-base.gguf",
+        "arch":  "qwen2",
+        "entries":  338,
+        "bound":  338,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__qwen3.8__27b.gguf",
+        "arch":  "qwen35",
+        "entries":  866,
+        "bound":  866,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__qwen3__8b.gguf",
+        "arch":  "qwen3",
+        "entries":  399,
+        "bound":  399,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__qwen35-40b-heretic-q8__latest.gguf",
+        "arch":  "phi3",
+        "entries":  197,
+        "bound":  197,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__qwen3-next__80b.gguf",
+        "arch":  "qwen3next",
+        "entries":  807,
+        "bound":  807,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__starcoder2__15b.gguf",
+        "arch":  "starcoder2",
+        "entries":  644,
+        "bound":  644,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__unlocked-125M__latest.gguf",
+        "arch":  "llama",
+        "entries":  255,
+        "bound":  255,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__unlocked-1B__latest.gguf",
+        "arch":  "llama",
+        "entries":  255,
+        "bound":  255,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__unlocked-350M__latest.gguf",
+        "arch":  "llama",
+        "entries":  255,
+        "bound":  255,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "library__unlocked-60M__latest.gguf",
+        "arch":  "llama",
+        "entries":  255,
+        "bound":  255,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "pdurugyan__qwen3.5-9b-deepseek-v4-flash-Q4_K_M-v_2__latest.gguf",
+        "arch":  "qwen35",
+        "entries":  427,
+        "bound":  427,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    },
+    {
+        "file":  "RageBait__LadySophiaNoctua__latest.gguf",
+        "arch":  "llama",
+        "entries":  255,
+        "bound":  255,
+        "inconsistent":  0,
+        "unknown":  0,
+        "verdict":  "BOUND_ALL",
+        "pass":  true
+    }
+]

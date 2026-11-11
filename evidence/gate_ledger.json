@@ -1,0 +1,28 @@
+{
+  "baseline_head": "4213f56908",
+  "evidence_root": "evidence/gate5_head_repro_2026-10-14/PARITY_RECEIPTS.txt",
+  "gates": {
+    "G01_freeze_baseline": "PASS",
+    "G02_explicit_cross_device_transfer": "PASS",
+    "G03_independent_device_budgets": "PASS",
+    "G04_concurrent_safe_residency": "PASS (in-flight pinning; best-identical under 1700+6045 evictions)",
+    "G05_native_quant_coverage": "PASS (Q2_K kind5 84B + Q3_K kind6 110B native GPU; cpu_calls=0; bounded parity vs llama.cpp cos .997/.986 0-unexplained; Q4_K bit-identical 4,128,000)",
+    "G06_cross_arch_parity": "PARTIAL (llama/qwen/deepseek2-MoE PASS; nemotron_h FAIL §D)",
+    "G07_deepseek_671B": "BLOCKED (no 671B GGUF on disk)",
+    "G08_full_numerical_correctness": "PARTIAL",
+    "G09_streaming_bf16_nanoquant": "OPEN (nanoquant codec extracted §P11)",
+    "G10_continuous_generation": "PARTIAL",
+    "G11_secondary_gpu_kv": "OPEN",
+    "G12_long_context_1M": "OPEN (modelpluscontext plan captured §N)",
+    "G13_gpu_deck_scheduler": "OPEN (gpu_deck + hardware_pressure extracted)",
+    "G14_speculative": "OPEN",
+    "G15_150tps": "BLOCKED (best ~4.5 TPS)",
+    "G16_ide_server": "BLOCKED (Qt v142/v143 ABI)",
+    "G17_agentic_tool_integrity": "OPEN",
+    "G18_swarm": "OPEN",
+    "G19_endurance": "OPEN",
+    "G20_release_provenance": "OPEN"
+  },
+  "roadmap_phase1": {"01":"PASS","02":"PASS","03":"PASS","04":"PASS","05":"PASS","06":"BLOCKED(no V3)"},
+  "resume": "G05 (Q2_K/Q3_K native kernels) then G06/G08 (fix nemotron_h SSM) then KV-offload/context/180-perf/IDE"
+}

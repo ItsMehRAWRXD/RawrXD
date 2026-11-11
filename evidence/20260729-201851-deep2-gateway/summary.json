@@ -1,0 +1,10 @@
+{
+  "test": "certification_summary",
+  "timestamp": "20260729-201851",
+  "total_tests": 5,
+  "passed": 0,
+  "failed": 5,
+  "duration_ms": 0.00,
+  "certified": false,
+  "evidence_path": "D:\RawrXD\evidence\20260729-201851-deep2-gateway"
+}

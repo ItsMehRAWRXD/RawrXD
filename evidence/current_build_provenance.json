@@ -1,0 +1,13 @@
+{
+  "schema": "RAWRXD_CURRENT_BUILD_PROVENANCE_001",
+  "timestamp": "2026-10-24T13:55:49.9079559Z",
+  "sourceRoot": "F:\\rawrxd",
+  "branch": "local-30b-backend",
+  "commit": "4cdbf7f963cc0f4f3f032aa7d3819ecdfef4957d",
+  "cli": "F:\\rawrxd\\build_msvc\\bin-msvc\\rawr.exe",
+  "cliSha256": "4125DF8E7477AAD16D2E0A9EED2B38A4BB7EE083E20B654A7E2AEFE7C986D446",
+  "ide": "F:\\rawrxd\\build_ide\\bin\\RawrXD-Win32IDE-Native.exe",
+  "ideSha256": "A842B75220C222B5EB22E208C8B86BE4D1A0AB5E36F2094A2AC651115B5B5BE9",
+  "cliBytes": 2108416,
+  "ideBytes": 1351168
+}
