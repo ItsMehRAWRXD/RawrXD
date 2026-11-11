@@ -1,0 +1,17 @@
+{
+  "tested_utc": "2026-11-10T05:10:26.6262531Z",
+  "scope": "Deterministic mock protocol regression; not real model inference.",
+  "ide_sha256": "A53E59B5FF819E8B8A9805FB944F1C4B693F1077F40360C86A93A2E234F3F165",
+  "agent_sha256": "352BA4012A320302A3D3AA7E58C43C00DD15964FF6A811CF8740EBBF3CE887DA",
+  "model": "fixture-protocol",
+  "process_id": 20976,
+  "process_exit": 0,
+  "timed_out": false,
+  "source_changed": true,
+  "source_after_sha256": "7130BAAE110F1779BABDE686555E51C2CF4C0B3616F0426155A8DCFD26FC6434",
+  "independent_run_exit": 0,
+  "independent_run_output": "AGENT_RESULT=5",
+  "verdict": "PASS",
+  "stdout": "F:\\rawrxd\\evidence\\IDE_RELEASE_READINESS_001\\agent_protocol_002\\run\\agent.stdout.log",
+  "stderr": "F:\\rawrxd\\evidence\\IDE_RELEASE_READINESS_001\\agent_protocol_002\\run\\agent.stderr.log"
+}

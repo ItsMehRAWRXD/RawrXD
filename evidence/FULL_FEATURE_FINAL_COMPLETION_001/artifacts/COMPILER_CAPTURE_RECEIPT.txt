@@ -1,0 +1,18 @@
+BUILD_REQUEST fixture=F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project\bug.cpp
+PROCESS_CREATE cmdline=cmd.exe /d /s /c "echo [RAWRXD_PROBLEMS_FIXTURE_START] && cd /d F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project && set VS_UNICODE_OUTPUT=&& set VC_CLEAR=&& "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe" /nologo /c /W4 /EHsc /FS "F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project\bug.cpp" 2>&1 & echo [RAWRXD_PROBLEMS_FIXTURE_RESULT] DONE"
+CWD=F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project
+CL_EXE=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe
+FORCE_PIPE=1
+SCRUB=VS_UNICODE_OUTPUT
+NO_VCVARS_IN_PIPE=1
+PROCESS_STARTED pid=45460 transport=1
+STDOUT_LINE [RAWRXD_PROBLEMS_FIXTURE_START]
+STDOUT_LINE bug.cpp
+STDOUT_LINE F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project\bug.cpp(7): error C2660: 'undeclared_fn': function does not take 2 arguments
+DIAGNOSTIC_PARSED file=F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project\bug.cpp line=7 sev=0 msg=C2660: 'undeclared_fn': function does not take 2 arguments
+PROBLEM_ADDED
+STDOUT_LINE F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project\bug.cpp(4): note: see declaration of 'undeclared_fn'
+STDOUT_LINE F:\rawrxd\evidence\CC79_RUNTIME_001\fixtures\issue49_project\bug.cpp(7): note: while trying to match the argument list '(int, int)'
+STDOUT_LINE [RAWRXD_PROBLEMS_FIXTURE_RESULT] DONE
+PROCESS_EXIT pid=45460 exit=0 disposition=success transport=1 stdout_bytes=469 stderr_bytes=0
+BUILD_RESULT=success

@@ -1,0 +1,45 @@
+PROBE_START
+Mon 11/09/2026  4:31:26.35
+ Volume in drive F has no label.
+ Volume Serial Number is 66A3-7175
+
+ Directory of F:\rawrxd\evidence\DAILY_DRIVER_CLOSE_001\package\tip_ext_host_002
+
+11/09/2026  04:17 AM           2722304 RawrXD-Win32IDE-Native-Ext.exe
+11/09/2026  04:17 AM           2722304 RawrXD-Win32IDE-Native.exe
+               2 File(s)        5444608 bytes
+               0 Dir(s)    505632493568 bytes free
+ Volume in drive F has no label.
+ Volume Serial Number is 66A3-7175
+
+ Directory of F:\rawrxd\evidence\DAILY_DRIVER_CLOSE_001\package
+
+11/09/2026  02:16 AM           2601472 RawrXD-Win32IDE-Native.exe
+               1 File(s)        2601472 bytes
+               0 Dir(s)    505632493568 bytes free
+ Volume in drive F has no label.
+ Volume Serial Number is 66A3-7175
+
+ Directory of F:\rawrxd\build_tip_ext_host_001
+
+File Not Found
+F:\rawrxd\build_tip_ext_host_001\bin\RawrXD-Win32IDE-Native-Ext.exe
+F:\rawrxd\evidence\DAILY_DRIVER_CLOSE_001\package\RawrXD-Win32IDE-Native.exe
+F:\rawrxd\evidence\DAILY_DRIVER_CLOSE_001\package\tip_chat_ctrl_enter_001\RawrXD-Win32IDE-Native-Ext.exe
+F:\rawrxd\evidence\DAILY_DRIVER_CLOSE_001\package\tip_chat_ctrl_enter_001\RawrXD-Win32IDE-Native.exe
+F:\rawrxd\evidence\DAILY_DRIVER_CLOSE_001\package\tip_ext_host_001\RawrXD-Win32IDE-Native.exe
+F:\rawrxd\evidence\DAILY_DRIVER_CLOSE_001\package\tip_ext_host_002\RawrXD-Win32IDE-Native-Ext.exe
+F:\rawrxd\evidence\DAILY_DRIVER_CLOSE_001\package\tip_ext_host_002\RawrXD-Win32IDE-Native.exe
+F:\rawrxd\evidence\DAILY_DRIVER_CLOSE_001\package\tip_ext_host_003\RawrXD-Win32IDE-Native-Ext.exe
+F:\rawrxd\evidence\DAILY_DRIVER_CLOSE_001\package\tip_ext_host_003\RawrXD-Win32IDE-Native.exe
+F:\rawrxd\evidence\DAILY_DRIVER_CLOSE_001\package\tip_ext_host_004\RawrXD-Win32IDE-Native.exe
+F:\rawrxd\evidence\DAILY_DRIVER_CLOSE_001\package\tip_ext_host_005\RawrXD-Win32IDE-Native.exe
+F:\rawrxd\evidence\DAILY_DRIVER_CLOSE_001\package\tip_t05_fix\RawrXD-Win32IDE-Native.exe
+F:\rawrxd\evidence\DAILY_DRIVER_CLOSE_001\package\tip_t10_recovery_001\RawrXD-Win32IDE-Native.exe
+F:\rawrxd\build_tip_ext_host_001\bin\RawrXD-Win32IDE-Native-Ext.exe
+F:\rawrxd\evidence\DAILY_DRIVER_CLOSE_001\package\tip_chat_ctrl_enter_001\RawrXD-Win32IDE-Native-Ext.exe
+F:\rawrxd\evidence\DAILY_DRIVER_CLOSE_001\package\tip_ext_host_002\RawrXD-Win32IDE-Native-Ext.exe
+F:\rawrxd\evidence\DAILY_DRIVER_CLOSE_001\package\tip_ext_host_003\RawrXD-Win32IDE-Native-Ext.exe
+F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\artifacts\RawrXD-Win32IDE-Native-Ext.exe
+F:\rawrxd\tip_stages\tip_ext_host_001\RawrXD-Win32IDE-Native-Ext.exe
+PROBE_END

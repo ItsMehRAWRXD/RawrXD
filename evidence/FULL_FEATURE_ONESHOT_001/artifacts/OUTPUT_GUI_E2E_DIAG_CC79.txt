@@ -1,0 +1,38 @@
+ASOF_UTC=2026-11-09T12:20:00Z
+TIP_SHA256=CC79F6CDD08F5ECEBB672290CC96F7FEEEA0DA6AB6F8B596E5826C3EA22940C4
+TIP=package\tip_final_005\RawrXD-Win32IDE-Native-Ext.exe
+OUTPUT_GUI_E2E=FAIL
+PROBLEMS_GUI_E2E=NOT_RUN
+FOUR_PANEL=NOT_VERIFIED
+PROMOTE=0
+CERTIFIED=0
+INVENT_PASS=0
+
+## Measured (CC79 only)
+PRIOR_RUNLOG=artifacts\ide_panels_gui_run_20261109-051949.txt
+PRIOR_RECEIPT=artifacts\verify005_panels.txt
+MAIN_HWND=0x6F0E9C
+POST_BUILD_3014=PROCESS_EXITED_DURING_WAIT exit=-1 t=11
+CHILD_COUNT=0
+REPRO_20261109-0526=EXIT t=44 code=-1 (fixture launch PASS in build_dispatch_trace)
+WER_DUMP_FOR_REPRO=ABSENT
+EXIT_CODE_INTERPRETATION=0xFFFFFFFF matches .NET Process.Kill / Stop-Process -Force
+
+## Root cause (measured + code)
+1) Concurrent harness/agents call Stop-Process -Name RawrXD-Win32IDE-Native* while panel wait is in-flight → IDE ExitCode=-1, HWND enum empty. NOT an MSVC AV dump path.
+2) Problems items historically 0 even on EA5D OUTPUT PASS: ConPTY chunks split MSVC lines mid-callback + VT color sequences break ^file(line) regex.
+
+## Source repairs landed (SHA will change → tip_final_006 required)
+- Win32IDE.cpp: stripAnsiForDiag + ingestTerminalDiagnostics(diagCarry across chunks)
+- Win32IDE.h: TerminalPane::diagCarry
+- Win32IDE_VSCodeUI.cpp: addProblem null ListView guard; clearProblems clears diagCarry
+- Win32IDE_lifecycle.cpp: Finished keeps terminal HWNDs visible
+- harness/ide_panels_gui_verify.ps1: Global\RawrXD_IDE_Panels_Gui_Verify mutex + EARLY_CHILD_COUNT
+
+## Gates (fail-closed; no cross-SHA inherit)
+OUTPUT_GUI_E2E=FAIL (CC79 measured)
+PROBLEMS_GUI_E2E=NOT_RUN (blocked by process death on CC79)
+NEXT=rebuild tip_final_006 RelWithDebInfo + exclusive panel remeasure
+NEVER_MUTATE_A4F=1
+NEVER_MUTATE_9C91=1
+NEVER_MUTATE_EA5D=1

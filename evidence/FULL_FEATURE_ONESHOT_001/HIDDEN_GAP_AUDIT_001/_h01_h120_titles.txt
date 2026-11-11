@@ -1,0 +1,120 @@
+﻿H001|Implemented source files excluded from the production CMake target
+H002|Duplicate implementations with only the older version linked
+H003|Stub functions silently replacing production functionality
+H004|Feature flags disabling important components in release builds
+H005|Missing source dependencies concealed by incremental builds
+H006|Stale object files producing apparently successful builds
+H007|Debug and Release configurations behaving differently
+H008|Incorrect compiler definitions or inherited environment variables
+H009|Unresolved symbols hidden behind optional build paths
+H010|Different branches containing incompatible implementations
+H011|Generated headers or resources missing from clean checkout
+H012|Non-reproducible binaries despite identical source revisions
+H013|Menu commands pointing to missing or incorrect handlers
+H014|Toolbar buttons displaying but not executing
+H015|Keyboard shortcuts bypassing the correct command path
+H016|HWND references surviving after window destruction
+H017|Worker threads modifying Win32 controls directly
+H018|Posted messages arriving after session cancellation
+H019|Reentrant window procedures corrupting application state
+H020|Focus switching between panels breaking keyboard input
+H021|Incorrect DPI scaling or panel geometry
+H022|Resize operations destroying or obscuring controls
+H023|Modal dialogs blocking active background operations
+H024|UI thread deadlocks during compiler or model execution
+H025|Unhandled exceptions inside message dispatch
+H026|Window recreation losing application state
+H027|Compiler subprocess inheriting incompatible environment variables
+H028|Stdout/stderr pipe backpressure causing deadlocks
+H029|Compiler child processes surviving cancellation
+H030|Timeout terminating the parent but not descendants
+H031|Diagnostics parsed incorrectly when paths contain spaces
+H032|Unicode diagnostic text corrupted
+H033|Compiler warnings mistaken for errors
+H034|Duplicate Problems entries from repeated builds
+H035|Old diagnostics remaining after successful rebuild
+H036|Problems click-to-line dispatching without actual navigation
+H037|Incorrect line/column offsets
+H038|Multiple projects mixing diagnostic ownership
+H039|Linker errors missing from Problems
+H040|Failed builds reporting success because artifacts already exist
+H041|Native PE/COFF linker accepting malformed relocations
+H042|Compiler adapter passing while native compiler functionality remains incomplete
+H043|Extension discovery works but activation never executes
+H044|Worker starts without completing IPC handshake
+H045|IPC messages lack framing or size validation
+H046|Extension commands execute on the wrong thread
+H047|Host and worker disagree on protocol version
+H048|Extension crashes terminate the entire IDE
+H049|Unloading leaves callbacks registered
+H050|Reloading creates duplicate commands or subscriptions
+H051|Extension process survives IDE shutdown
+H052|Crashed workers cannot restart cleanly
+H053|Extension filesystem access bypasses permissions
+H054|Extension event handlers block the UI
+H055|Extension state corrupts across projects
+H056|A test extension passes but real extensions fail
+H057|Agent session lifetime not owned by a single controller
+H058|Cancelled agent continues executing tools
+H059|Old tool results injected into a newer conversation
+H060|Model-generated tool calls parsed incorrectly
+H061|Tool permission checks bypassed by alternate entry points
+H062|Agent edits wrong workspace or file
+H063|Partial writes leave corrupted source
+H064|Failed edits cannot be rolled back
+H065|Agent reports build success without executable evidence
+H066|Agent loops indefinitely after repeated failures
+H067|Tool execution blocks model streaming
+H068|Concurrent agents overwrite one another's changes
+H069|Agent state cannot recover after application restart
+H070|Review agent approves untested changes
+H071|Git commit includes unrelated modifications
+H072|Agent reports task completion before final tests finish
+H073|Model selector points to wrong model or backend
+H074|Ollama streaming parser mishandles fragmented JSON
+H075|Inference cancellation leaves active GPU work
+H076|Backend shutdown leaks threads or memory
+H077|Model loading succeeds but inference produces invalid output
+H078|GPU offload counters differ from actual executed operations
+H079|Quantized kernels produce incorrect numerical results
+H080|KV-cache rollback corrupts subsequent generations
+H081|Long-context allocation exceeds available VRAM/RAM
+H082|Multi-GPU partitioning causes incorrect tensor placement
+H083|GPU synchronization serializes supposedly parallel execution
+H084|Fallback paths silently execute on CPU
+H085|Driver incompatibility is mistaken for a model defect
+H086|Model switching retains stale tokenizer or sampler state
+H087|GPU device loss cannot be recovered without restarting the IDE
+H088|Benchmark throughput excludes prefill, waits or transfers without disclosure
+H089|Model-format and GGUF shard validation accepts corrupt data
+H090|Local-only operation inadvertently depends on external services
+H091|Workspace path traversal through agent or extension tools
+H092|Untrusted model output bypasses tool authorization
+H093|Shell argument handling allows unintended command execution
+H094|Sensitive values leak into logs or crash dumps
+H095|Extension IPC accepts unauthorized commands
+H096|Downloaded or installed extensions lack appropriate validation
+H097|Security-sensitive production paths use placeholder cryptography
+H098|Release binaries depend on undeclared DLLs
+H099|Installer writes outside intended directories
+H100|Uninstall or rollback destroys user data
+H101|Crash recovery replays unsafe or incomplete operations
+H102|Build artifacts or test receipts are accepted without provenance
+H103|GitHub Actions reports success without executing mandatory tests
+H104|LFS or branch divergence leaves the release source incomplete
+H105|Signed artifact differs from the tested executable
+H106|Final release is certified using evidence from multiple SHAs
+H107|LSP handshake succeeds but diagnostics/completion do not work
+H108|GhostText appears but accept/cancel edits the wrong range
+H109|Native browser renders but lacks origin or navigation isolation
+H110|Git operations modify an unintended repository or branch
+H111|Snapshot restoration fails after a partially completed edit
+H112|Settings persist but are not applied to active components
+H113|Feature registry advertises commands with no real backend
+H114|Cross-platform functionality is claimed without native execution
+H115|Performance tests use synthetic kernels instead of real model decode
+H116|Release documentation describes capabilities absent from the binary
+H117|Acceptance tests omit negative and recovery scenarios
+H118|Multiple passing components fail when operated simultaneously
+H119|Test fixtures conceal environment or dependency requirements
+H120|Final product acceptance omits the complete autonomous coding loop

@@ -1,0 +1,14 @@
+﻿{
+    "STAMP":  "20261109-041536",
+    "TIP_SHA256":  "0A53EA74C7E2838AD40109B62BE1B8A2D753E446EF0E03A312C29F78311E79BF",
+    "EXT_LOAD":  "PASS",
+    "INIT_OK":  "1",
+    "LOAD_OK":  "1",
+    "ACTIVATE_OK":  "1",
+    "CMD_OK":  "0",
+    "DETAIL":  "",
+    "FAULT_ISOLATED":  "1",
+    "EXIT_A":  -1,
+    "EXIT_B":  0,
+    "PROMOTE":  0
+}

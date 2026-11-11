@@ -1,0 +1,3 @@
+SHA256 hash of F:\rawrxd\evidence\DAILY_DRIVER_CLOSE_001\package\tip_final_006\RawrXD-Win32IDE-Native-Ext.exe:
+69fe3d921fecc3dc66da9e71901b338a045d706717f00c3b587b3b1bdb1268bb
+CertUtil: -hashfile command completed successfully.

@@ -1,0 +1,47 @@
+﻿ASOF_UTC=2026-11-09T09:42:05Z
+GATE=DEEP2_VULKAN_GATE
+PROMOTE=0
+CERTIFIED=0
+INVENT_PASS=0
+NEW_PERF_CLAIMS=0
+ROCM_REPLACEMENT=0
+MODEL=tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+MODEL_SHA256=9FECC3B3CD76BBA89D504F29B616EEDF7DA85B96540E490CA5824D3F7D2776A0
+BENCH_SHA256=E3AE9C8343599E41945A5503D9A8EC1F4ADB1D4F5E040FE0224A916544A9E2B8
+CPU_INFERENCE=PASS
+VULKAN_R9700=PASS
+VULKAN_DEVICE4=FAIL
+LIFECYCLE=PASS
+KV_ROLLBACK_OR_CANCEL=PASS
+CANCEL_MIDGEN=PASS
+LOAD_UNLOAD_RELOAD=PASS
+DEEP2_VULKAN=PARTIAL
+RX7800XT_VULKANINFO=GPU4 present
+RX7800XT_GGML_ENUM=NOT_PRESENT_IN_BENCH_DEVICE_LIST
+FIRST_HARNESS_FAIL_REASON=Start-Process ArgumentList split tokens
+NOT_RUN_NE_PASS=1
+CPU_MEAS>BENCH model=F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf decode=8 runs=1 backend=cpu-pinned prefill=serial ExecuteToken wide_dot_batch=0
+CPU_MEAS>Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+CPU_MEAS>Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+CPU_MEAS>Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+CPU_MEAS>Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+CPU_MEAS>Found device 4: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+CPU_MEAS>Selected device: AMD Radeon AI PRO R9700
+CPU_MEAS>RUN1: PREFILL_TPS=1.672 DECODE_TPS=1.819 STEADY_DECODE_TPS=1.822 E2E_TPS=0.396
+VK0_MEAS>BENCH model=F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf decode=8 runs=1 backend=vulkan-native prefill=PrefillBatch wide_dot_batch=1
+VK0_MEAS>Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+VK0_MEAS>Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+VK0_MEAS>Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+VK0_MEAS>Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+VK0_MEAS>Found device 4: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+VK0_MEAS>Selected device: AMD Radeon AI PRO R9700
+VK0_MEAS>RUN1: PREFILL_TPS=0.919 DECODE_TPS=0.598 STEADY_DECODE_TPS=0.535 E2E_TPS=0.144
+VK4_MEAS>BENCH model=F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf decode=8 runs=1 backend=vulkan-native prefill=PrefillBatch wide_dot_batch=1
+VK4_MEAS>Found device 0: AMD Radeon AI PRO R9700 (Vendor: 0x1002, Score: 100)
+VK4_MEAS>Found device 1: Microsoft Direct3D12 (AMD Radeon AI PRO R9700) (Vendor: 0x1002, Score: 100)
+VK4_MEAS>Found device 2: AMD Radeon(TM) Graphics (Vendor: 0x1002, Score: 100)
+VK4_MEAS>Found device 3: Microsoft Direct3D12 (AMD Radeon(TM) Graphics) (Vendor: 0x1002, Score: 100)
+VK4_MEAS>Found device 4: Microsoft Direct3D12 (Microsoft Basic Render Driver) (Vendor: 0x1414, Score: 0)
+VK4_MEAS>Selected device: Microsoft Direct3D12 (Microsoft Basic Render Driver)
+VK4_MEAS>RUN1: PREFILL_TPS=0.761 DECODE_TPS=1.808 STEADY_DECODE_TPS=1.822 E2E_TPS=0.308
+RX7800XT_BLOCKER=vulkaninfo shows RX7800XT as GPU4 but ggml-vulkan enum lacks it; --device 4 selects Basic Render → VERDICT FAIL

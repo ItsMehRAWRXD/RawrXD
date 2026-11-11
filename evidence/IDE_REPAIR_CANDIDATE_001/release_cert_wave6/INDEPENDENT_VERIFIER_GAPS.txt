@@ -1,0 +1,39 @@
+INDEPENDENT_VERIFIER_GAPS=W6
+ASOF_UTC=2026-11-10T08:15:00Z
+CANDIDATE=IDE_REPAIR_CANDIDATE_001
+BAND=97_TO_100
+PROMOTE=0
+CERTIFIED=0
+EARNED=0
+STATUS=PREPARED_TEMPLATES_ONLY
+
+MISSING_INDEPENDENT_VERIFIER_STEPS=
+  1. Designate an independent host/VM distinct from the builder tree (not F:\rawrxd).
+  2. Publish a bit-identical package artifact + filled SHA_LEDGER_TEMPLATE.txt
+     (replace every FILL_EXPECTED_SHA256_64HEX; no cross-SHA inheritance).
+  3. On the independent host: extract package → run Verify-PackageIntegrity.ps1
+     → require VERDICT=PASS_INTEGRITY_ONLY (integrity != CERTIFIED).
+  4. Complete CLEAN_MACHINE_CHECKLIST.txt with operator sign (host/UTC/SHA set).
+  5. Run Invoke-CleanMachineSmoke.ps1 -LaunchProbe; seal launch HWND/smoke receipt.
+  6. Execute product-path E2E on the SAME package SHA:
+       chat→AgentSession→required TOOL read→reinjection→CU GUI dispatch
+       →edit/build/test OR sealed first-failure class (fail-closed).
+  7. Prove rollback: delete extract; confirm no residual services; re-extract;
+     re-hash matches ledger.
+  8. Seal Issue #57 C15 + Layer10/#49 independent acceptance keys on that SHA
+     (G15). Builder receipts do not satisfy this step.
+  9. Only after steps 1–8: consider flipping B6 earned rows 0→weight in
+     WEIGHTED_ACCEPTANCE_LEDGER.txt. Still keep PROMOTE=0 until product gate
+     conjunction passes; never set PROMOTE=1 from W6 prep alone.
+ 10. Optional but required for full Issue #57 A01: green Linux+Windows GHA run
+     with non-zero runner_id (obligation remains OPEN).
+
+STILL_NOT_DONE=
+  PACKAGE_BYTES_PUBLISHED=0
+  SHA_LEDGER_FILLED=0
+  CLEAN_MACHINE_SIGNED=0
+  INDEPENDENT_E2E_RECEIPT=0
+  C15_SEAL=0
+  G15=NOT_ESTABLISHED
+  PROMOTE=0
+  CERTIFIED=0
