@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\exception\SEH_wrapper.asm\1771251379205_ttIf.asm
+D:\rawrxd\history\all_versions\exception\SEH_wrapper.asm\1771251379205_ttIf.asm(29) : warning A4026:.ENDPROLOG found before EH directives
+D:\rawrxd\history\all_versions\exception\SEH_wrapper.asm\1771251379205_ttIf.asm(30) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\exception\SEH_wrapper.asm\1771251379205_ttIf.asm(65) : error A2006:undefined symbol : GetLastError

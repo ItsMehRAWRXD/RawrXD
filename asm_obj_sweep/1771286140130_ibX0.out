@@ -1,0 +1,10 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286140130_ibX0.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286140130_ibX0.asm(902) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286140130_ibX0.asm(907) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286140130_ibX0.asm(915) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286140130_ibX0.asm(827) : warning A4025:ENDP found before .ENDPROLOG : RMSNorm_AVX512
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286140130_ibX0.asm(827) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286140130_ibX0.asm(827) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286140130_ibX0.asm(952) : warning A4025:ENDP found before .ENDPROLOG : RoPE_Rotate_AVX512
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286140130_ibX0.asm(952) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\RawrXD_Titan_UNIFIED.asm\1771286140130_ibX0.asm(952) : error A2220:Missing .ENDPROLOG

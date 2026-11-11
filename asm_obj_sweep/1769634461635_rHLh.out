@@ -1,0 +1,33 @@
+ Assembling: D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(107) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(152) : error A2008:syntax error : access_lock
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(155) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(163) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(170) : error A2008:syntax error : offset
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(176) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(191) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(252) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(260) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(262) : error A2008:syntax error : g_modelSlotLock
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(277) : error A2008:syntax error : IF
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(281) : error A2008:syntax error : ELSEIF
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(283) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(372) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(480) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(518) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(278) : error A2006:undefined symbol : g_modelSlotLock
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(353) : error A2006:undefined symbol : FILE_SHARE_READ
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(355) : error A2006:undefined symbol : OPEN_EXISTING
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(356) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(361) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(390) : error A2006:undefined symbol : FILE_MAP_READ
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(400) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(469) : error A2006:undefined symbol : access_lock
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(470) : error A2006:undefined symbol : AcquireSRWLockShared
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(488) : error A2006:undefined symbol : access_lock
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(489) : error A2006:undefined symbol : ReleaseSRWLockShared
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(287) : warning A6004:procedure argument or local not referenced : hInst
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(287) : warning A6004:procedure argument or local not referenced : fdwReason
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(287) : warning A6004:procedure argument or local not referenced : lpReserved
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(497) : warning A6004:procedure argument or local not referenced : pPrompt
+D:\rawrxd\history\all_versions\Ship\RawrXD_Titan_Kernel.asm\1769634461635_rHLh.asm(497) : warning A6004:procedure argument or local not referenced : pInferCtx

@@ -1,0 +1,162 @@
+# release.yml
+# Phase H.2 Batch 5/5: GitHub Actions Release Workflow
+# Path: .github/workflows/release.yml
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.0)'
+        required: true
+        default: '1.0.0'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Build and test
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        include:
+          - os: windows-latest
+            target: windows
+            ext: .exe
+          - os: ubuntu-latest
+            target: linux
+            ext: ""
+          - os: macos-latest
+            target: macos
+            ext: ""
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Build Environment
+        uses: ./.github/actions/setup-build
+        with:
+          target: ${{ matrix.target }}
+
+      - name: Build
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --config Release
+
+      - name: Package
+        run: |
+          if [ "${{ matrix.target }}" == "windows" ]; then
+            powershell -File packaging/windows/build_msi.ps1 -Version ${{ github.ref_name || inputs.version }}
+          elif [ "${{ matrix.target }}" == "macos" ]; then
+            bash packaging/macos/build_dmg.sh ${{ github.ref_name || inputs.version }}
+          else
+            bash packaging/linux/build_appimage.sh ${{ github.ref_name || inputs.version }}
+          fi
+        shell: bash
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rawrxd-${{ matrix.target }}
+          path: output/*
+
+  # Sign artifacts
+  sign:
+    needs: build
+    runs-on: windows-latest
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Sign Windows Artifacts
+        run: |
+          $cert = Get-ChildItem -Path Cert:\CurrentUser\My -CodeSigningCert | Select-Object -First 1
+          if ($cert) {
+            Get-ChildItem -Path artifacts\rawrxd-windows\* -Include *.msi,*.exe | ForEach-Object {
+              Set-AuthenticodeSignature -FilePath $_.FullName -Certificate $cert -TimestampUrl http://timestamp.digicert.com
+            }
+          }
+        shell: pwsh
+
+      - name: Upload Signed Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rawrxd-signed
+          path: artifacts/**/*
+
+  # Create release
+  release:
+    needs: sign
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Download Signed Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: rawrxd-signed
+          path: release
+
+      - name: Generate Checksums
+        run: |
+          cd release
+          find . -type f -name "*.msi" -o -name "*.dmg" -o -name "*.AppImage" | while read f; do
+            sha256sum "$f" > "$f.sha256"
+          done
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release/**/*
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Update package managers
+  update-winget:
+    needs: release
+    runs-on: windows-latest
+    steps:
+      - name: Update Winget Manifest
+        uses: vedantmgoyal2009/winget-releaser@v2
+        with:
+          identifier: RawrXD.RawrXD
+          installers-regex: '\.msi$'
+          token: ${{ secrets.WINGET_TOKEN }}
+
+  update-homebrew:
+    needs: release
+    runs-on: macos-latest
+    steps:
+      - name: Update Homebrew Formula
+        run: |
+          VERSION="${{ github.ref_name || inputs.version }}"
+          # Trigger homebrew-tap update via repository dispatch
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.HOMEBREW_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/ItsMehRAWRXD/homebrew-tap/dispatches \
+            -d "{\"event_type\": \"update-formula\", \"client_payload\": {\"version\": \"$VERSION\"}}"
+
+  update-chocolatey:
+    needs: release
+    runs-on: windows-latest
+    steps:
+      - name: Push to Chocolatey
+        run: |
+          choco apikey --key ${{ secrets.CHOCOLATEY_API_KEY }} --source https://push.chocolatey.org/
+          choco push rawrxd.${{ github.ref_name || inputs.version }}.nupkg --source https://push.chocolatey.org/

@@ -1,0 +1,32 @@
+BATCH2_BOS_FIRST_MISMATCH — 2026-08-29
+
+AUTHORITY=CPU-only llama (ggml-cpu-zen4)
+MODEL=F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+INPUT_IDS=[1, 21521, 9312]
+BISECT_POS=0 (BOS token; AttnCert 0/1/2 not reopened)
+
+Authority for this bisect = live [STAGE_DIGEST] lines (FNV/l2), not stale stage_bins/.
+
+BOUNDARY (pos=0, full vectors n=2048 / K,V n=256):
+  PROMPT_EMBED  MATCH  fnv=13123758da8b244a  l2=1.008737855e-01
+  ATTN_NORM_0   MATCH  fnv=b4ca919612be6c51  l2=8.105918780e-01
+  Q_0           DIFF   << FIRST MISMATCHING BOUNDARY
+    position=0
+    element_count=2048
+    deep2_fnv=78631c3504e1b579  deep2_l2=1.940769701e+00  deep2_max_abs=3.363968134e-01
+    llama_fnv=8d53927ede5ddb3f  llama_l2=1.938517021e+00  llama_max_abs=3.353509903e-01
+    l2_rel≈0.00116
+  K_0/V_0       DIFF (same GEMV family; stopped — not first)
+
+CLASSIFICATION=
+  Embed + attn RMSNorm match CPU llama.
+  First divergence = L0 Q projection (LinearW / Q4_K attn_q).
+  Not BOS insertion / KV-length / tokenizer.
+
+CERT=
+  BOS_behavioral_argmax_parity = PASS (CPU argmax 13 == Deep2 13)
+  BOS_numerical_parity         = FAIL @ Q_0
+  Vulkan_29892                 = quarantined
+  AGENT-E2E-002b               = BLOCKED
+
+NEXT=parity-fix Deep2 Q4_K GEMV for attn_q vs ggml CPU on identical ATTN_NORM_0 input.

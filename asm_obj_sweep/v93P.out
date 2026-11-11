@@ -1,0 +1,44 @@
+ Assembling: D:\rawrxd\history\-2a944535\v93P.asm
+D:\rawrxd\history\-2a944535\v93P.asm(178) : error A2070:invalid instruction operands
+D:\rawrxd\history\-2a944535\v93P.asm(183) : error A2008:syntax error : .
+D:\rawrxd\history\-2a944535\v93P.asm(187) : error A2008:syntax error : .
+D:\rawrxd\history\-2a944535\v93P.asm(191) : error A2008:syntax error : .
+D:\rawrxd\history\-2a944535\v93P.asm(195) : error A2008:syntax error : .
+D:\rawrxd\history\-2a944535\v93P.asm(198) : error A2008:syntax error : .
+D:\rawrxd\history\-2a944535\v93P.asm(232) : error A2008:syntax error : .
+D:\rawrxd\history\-2a944535\v93P.asm(249) : error A2008:syntax error : .
+D:\rawrxd\history\-2a944535\v93P.asm(264) : error A2008:syntax error : .
+D:\rawrxd\history\-2a944535\v93P.asm(267) : error A2008:syntax error : .
+D:\rawrxd\history\-2a944535\v93P.asm(425) : error A2008:syntax error : .
+D:\rawrxd\history\-2a944535\v93P.asm(431) : error A2008:syntax error : .
+D:\rawrxd\history\-2a944535\v93P.asm(436) : error A2008:syntax error : .
+D:\rawrxd\history\-2a944535\v93P.asm(121) : error A2206:missing operator in expression
+D:\rawrxd\history\-2a944535\v93P.asm(130) : error A2006:undefined symbol : server_init_oom
+D:\rawrxd\history\-2a944535\v93P.asm(137) : error A2009:syntax error in expression
+D:\rawrxd\history\-2a944535\v93P.asm(138) : error A2009:syntax error in expression
+D:\rawrxd\history\-2a944535\v93P.asm(139) : error A2009:syntax error in expression
+D:\rawrxd\history\-2a944535\v93P.asm(140) : error A2009:syntax error in expression
+D:\rawrxd\history\-2a944535\v93P.asm(141) : error A2009:syntax error in expression
+D:\rawrxd\history\-2a944535\v93P.asm(142) : error A2009:syntax error in expression
+D:\rawrxd\history\-2a944535\v93P.asm(148) : error A2006:undefined symbol : server_init_route_oom
+D:\rawrxd\history\-2a944535\v93P.asm(153) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-2a944535\v93P.asm(157) : error A2006:undefined symbol : server_init_conn_oom
+D:\rawrxd\history\-2a944535\v93P.asm(165) : error A2006:undefined symbol : server_init_log_oom
+D:\rawrxd\history\-2a944535\v93P.asm(181) : error A2006:undefined symbol : server_init_done
+D:\rawrxd\history\-2a944535\v93P.asm(199) : error A2206:missing operator in expression
+D:\rawrxd\history\-2a944535\v93P.asm(219) : error A2006:undefined symbol : server_shutdown_invalid
+D:\rawrxd\history\-2a944535\v93P.asm(226) : error A2009:syntax error in expression
+D:\rawrxd\history\-2a944535\v93P.asm(227) : error A2006:undefined symbol : server_shutdown_no_socket
+D:\rawrxd\history\-2a944535\v93P.asm(243) : error A2009:syntax error in expression
+D:\rawrxd\history\-2a944535\v93P.asm(244) : error A2006:undefined symbol : server_shutdown_no_tls
+D:\rawrxd\history\-2a944535\v93P.asm(262) : error A2006:undefined symbol : server_shutdown_done
+D:\rawrxd\history\-2a944535\v93P.asm(327) : error A2009:syntax error in expression
+D:\rawrxd\history\-2a944535\v93P.asm(360) : error A2009:syntax error in expression
+D:\rawrxd\history\-2a944535\v93P.asm(388) : error A2206:missing operator in expression
+D:\rawrxd\history\-2a944535\v93P.asm(400) : error A2006:undefined symbol : register_route_full
+D:\rawrxd\history\-2a944535\v93P.asm(406) : error A2006:undefined symbol : register_route_oom
+D:\rawrxd\history\-2a944535\v93P.asm(412) : error A2009:syntax error in expression
+D:\rawrxd\history\-2a944535\v93P.asm(416) : error A2009:syntax error in expression
+D:\rawrxd\history\-2a944535\v93P.asm(423) : error A2006:undefined symbol : register_route_done
+D:\rawrxd\history\-2a944535\v93P.asm(429) : error A2006:undefined symbol : register_route_done
+D:\rawrxd\history\-2a944535\v93P.asm(437) : error A2206:missing operator in expression

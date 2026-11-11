@@ -1,0 +1,13 @@
+TOKENIZER-PARITY-002b-001 / token_metadata
+model=F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+
+1: '<s>'  unicode_escape=<s>
+3: '<0x00>'  unicode_escape=<0x00>
+16: '<0x0D>'  unicode_escape=<0x0D>
+35: '<0x20>'  unicode_escape=<0x20>
+129: '<0x7E>'  unicode_escape=<0x7E>
+195: '<0xC0>'  unicode_escape=<0xC0>
+198: '<0xC3>'  unicode_escape=<0xC3>
+248: '<0xF5>'  unicode_escape=<0xF5>
+258: '<0xFF>'  unicode_escape=<0xFF>
+29871: '▁'  unicode_escape=\u2581

@@ -1,0 +1,23 @@
+ Assembling: D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\gguf\advanced\features.asm
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\gguf\advanced\features.asm(7) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\gguf\advanced\features.asm(8) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\gguf\advanced\features.asm(38) : error A2008:syntax error : [
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\gguf\advanced\features.asm(42) : error A2008:syntax error : [
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\gguf\advanced\features.asm(46) : error A2008:syntax error : real4
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\gguf\advanced\features.asm(48) : error A2008:syntax error : [
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\gguf\advanced\features.asm(53) : error A2008:syntax error : [
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\gguf\advanced\features.asm(55) : error A2008:syntax error : [
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\gguf\advanced\features.asm(102) : error A2008:syntax error : esi
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\gguf\advanced\features.asm(104) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\gguf\advanced\features.asm(105) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\gguf\advanced\features.asm(106) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\gguf\advanced\features.asm(107) : error A2012:PROC, MACRO, or macro repeat directive must precede LOCAL
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\gguf\advanced\features.asm(110) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\gguf\advanced\features.asm(118) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\gguf\advanced\features.asm(133) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\gguf\advanced\features.asm(134) : error A2008:syntax error : /
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\gguf\advanced\features.asm(137) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\gguf\advanced\features.asm(138) : error A2045:missing angle bracket or brace in literal
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\gguf\advanced\features.asm(152) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\gguf\advanced\features.asm(157) : error A2008:syntax error : invoke
+D:\rawrxd\reconstructed\Users\HiH8e\OneDrive\Desktop\RawrXD-production-lazy-init\masm\ide\src\gguf\advanced\features.asm(162) : fatal error A1010:unmatched block nesting : GGUF_LoadSafeTensors

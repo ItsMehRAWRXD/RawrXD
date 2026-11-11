@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\src\RawrXD_v26_Abyss.asm
+D:\rawrxd\src\RawrXD_v26_Abyss.asm(19) : error A2006:undefined symbol : SwarmV26_Binary_Ghost_Fuser
+D:\rawrxd\src\RawrXD_v26_Abyss.asm(20) : error A2006:undefined symbol : SwarmV26_WaitFree_Commit
+D:\rawrxd\src\RawrXD_v26_Abyss.asm(22) : error A2006:undefined symbol : SwarmV26_Holographic_KV_Swap
+D:\rawrxd\src\RawrXD_v26_Abyss.asm(11) : error A2206:missing operator in expression

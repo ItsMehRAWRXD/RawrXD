@@ -1,0 +1,112 @@
+RAWRXD_MODELGENIE_WEIGHT_NUMERIC_CLOSURE_001
+ARCHIVE DATE: 2026-10-07
+STATUS: CERTIFIED PASS
+
+=============================================================================
+FINAL CORRECTION
+=============================================================================
+
+ROOT CAUSE: STALE DATA-START OFFSET
+  OLD: kDataStart = 3972000
+  NEW: kDataStart = 3996416
+  DELTA: 24416 bytes
+
+EFFECT: All tensor reads were off by 24416 bytes, reading wrong physical memory
+
+=============================================================================
+OFFICIAL SOURCE AUDIT
+=============================================================================
+
+SOURCE=official DeepSeek-V2-Lite-Chat safetensors
+REPO=deepseek-ai/DeepSeek-V2-Lite-Chat
+
+blk.0.attn_norm.weight -> model.layers.0.input_layernorm.weight
+  Shape: (2048,)
+  Dtype: torch.bfloat16
+  Nonfinite: 0
+  NaN: 0
+  Inf: 0
+  Min: 2.197266e-01
+  Max: 7.625000e+00
+
+blk.0.ffn_norm.weight -> model.layers.0.post_attention_layernorm.weight
+  Shape: (2048,)
+  Dtype: torch.bfloat16
+  Nonfinite: 0
+  NaN: 0
+  Inf: 0
+  Min: 1.611328e-02
+  Max: 4.746094e-01
+
+output_norm.weight -> model.norm.weight
+  Shape: (2048,)
+  Dtype: torch.bfloat16
+  Nonfinite: 0
+  NaN: 0
+  Inf: 0
+  Min: 2.773438e-01
+  Max: 2.609375e+00
+
+OFFICIAL_SOURCE_FINITE=1
+
+=============================================================================
+POST-CORRECTION BOUNDARY MAP
+=============================================================================
+
+BLOCK_0_INPUT:              FINITE (2048/2048)
+BLOCK_0_ATTN_NORM_WEIGHT:   FINITE (0/2048, MIN=0.219727, MAX=7.625)
+BLOCK_0_POST_ATTN_NORM:     FINITE (0/2048, MIN=-2.8833, MAX=7.20233)
+BLOCK_0_POST_Q:             FINITE (0/2048)
+BLOCK_0_POST_MLA:           STUB (zeros)
+BLOCK_0_POST_ATTN_OUTPUT:   STUB (zeros)
+BLOCK_0_POST_ATTN_RESIDUAL: FINITE
+BLOCK_0_FFN_NORM_WEIGHT:    FINITE (0/2048, MIN=0.0161133, MAX=0.474609)
+BLOCK_0_POST_FFN_NORM:      FINITE (0/2048, MIN=-0.137395, MAX=0.785905)
+BLOCK_0_POST_FFN_GATE_UP:   FINITE
+BLOCK_0_POST_FFN_DOWN:      FINITE
+BLOCK_0_POST_FFN_RESIDUAL:  FINITE
+BLOCK_0_BLOCK_OUTPUT:       FINITE
+
+BLOCKS 1-26 POST_ATTN_NORM:  ALL FINITE (0/2048 nonfinite each)
+BLOCKS 1-26 POST_FFN_NORM:   ALL FINITE (0/2048 nonfinite each)
+
+LOGITS_FINITE=1
+VERDICT=PASS_EXECUTABLE_PARTIAL_MODEL_MATH
+
+=============================================================================
+CLOSED FRONTIERS
+=============================================================================
+
+PREVIOUS_NAN_WEIGHT_FRONTIER=CLOSED
+  Cause: stale data-start offset, not corrupt GGUF or NaN source weights
+  Fix: kDataStart corrected from 3972000 to 3996416
+
+RMSNORM_NUMERIC_FRONTIER=CLOSED
+  All 27 attention normalization stages produce finite outputs
+  All 27 FFN normalization stages produce finite outputs
+
+ROM_OFFSET_AUTHORITY=CLOSED
+  All 377 tensors bound to correct physical addresses
+  OFFSET_MODE=DATA_RELATIVE verified
+
+=============================================================================
+REMAINING WORK
+=============================================================================
+
+FULL_EXECUTIONIR_001: PENDING
+  - Execute all 300 execution ops
+  - MLA real output (27 blocks)
+  - MoE execution (26 blocks)
+  - Token-0 emission
+
+TOKEN0_EMITTED: PENDING
+  - Requires full ExecutionIR, MLA, and MoE implementation
+
+=============================================================================
+EVIDENCE FILES
+=============================================================================
+
+  evidence\HEADER_AUTHORITY_MILESTONE\WEIGHT_NUMERIC_CLOSURE_001.txt
+  evidence\HEADER_AUTHORITY_MILESTONE\WEIGHT_NUMERIC_CLOSURE_001.json
+  evidence\HEADER_AUTHORITY_MILESTONE\token0_rebuilt.log
+  evidence\HEADER_AUTHORITY_MILESTONE\address_verification.log

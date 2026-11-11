@@ -1,0 +1,200 @@
+catalog-model: tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+catalog-path: F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+catalog-kind: gguf
+[Deep2Engine] Loading model from: F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\~dev\rawrxd\models)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] === Stage 4: ReverseCompute_Graph ===
+[ReverseHotpatch] === Stage 5: ReverseHotpatch_Next ===
+[ReverseHotpatch] === Stage 6: ReverseHop_Verify ===
+[ReverseHotpatch] === Stage 7: ReverseHop_Commit ===
+[ReverseHotpatch] All 7 stages completed. Repairs: 0  Corruptions: 0
+[Deep2Engine] GGUF architecture: 'llama'  hidden=2048 layers=22 heads=32 kvHeads=4 inter=5632 vocab=2048
+[Deep2Engine] Tokenizer loaded: 32000 tokens from GGUF
+[Deep2Engine] vocabSize override: metadata=2048 -> tensor=32000 (hidden=2048)
+[WO_DIAG] GGUF wo.data=0000025037DB0000 rows=2048 cols=2048 type=12(Q4_K) block0 d=0x01BA dmin=0x0B26 qs[0]=0xD8
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=0000025030CD8B40  Registered 'blk.0.attn_q.weight': offset=0 bytes=2359296  |  registry_size=1  registeredBytes=2359296  maxResidentBytes=536870912
+[ResidencyManager] this=0000025030CD8B40  Registered 'blk.11.attn_q.weight': offset=0 bytes=2359296  |  registry_size=100  registeredBytes=293691392  maxResidentBytes=536870912
+[ResidencyManager] this=0000025030CD8B40  Registered 'output.weight': offset=0 bytes=53760000  |  registry_size=200  registeredBytes=667070464  maxResidentBytes=536870912
+[Deep2Engine] ResidencyManager: this=0000025030CD8B40  registered=201 tensors  bytes=667078656  max=536870912
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+[Deep2Engine] ThreadPool (loadModel): 16 threads
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 21 GEMV kernels, 21 dequant kernels
+[KVCache] Initializing: layers=22 maxSeqLen=2048 numHeads=4 headDim=64
+[KVCache] Formula: layers * maxSeqLen * numHeads * headDim * 2(K+V) * sizeof(float)
+[KVCache]        = 22 * 2048 * 4 * 64 * 2 * 4
+[KVCache]        = 92274688 bytes (K=46137344 + V=46137344)
+[KVCache] Total cache size: 88.00 MB
+[KVCache] Initialization complete
+[Deep2Engine] Model loaded successfully (201 tensors)
+RawrXD Sovereign Agentic Runtime
+architecture: llama
+model: tinyllama_tinyllama-1.1b-chat-v1.0
+chat-template: phi3
+deep2-streaming: whole-response
+workspace: F:\~dev\rawrxd\evidence\AGENT_E2E_002b\smoke_gen4
+external inference runtime: none
+cloud API: none
+
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[Deep2Engine] embedToken: type=12 vocabSize=32000 hiddenDim=2048 data=00000250344C0000 sizeBytes=36864000
+[Deep2Engine] Layer 0 weights: wq.data=0000025037FF0000 type=12 wk.data=0000025037D60000 wv.data=0000025038230000 wo.data=0000025037DB0000 wqkv.data=0000000000000000 attnO.data=0000000000000000
+[Deep2Engine] Layer 0 weights: attnNorm.data=0000025030E40000 ffnNorm.data=0000025030E50000
+[Q6K_GEMV] ENTER call=0 w=0000025038230000 x=00000250310E8960 y=00000250310E1100 rows=16 cols=2048
+[Q6K_GEMV] ENTER call=1 w=0000025038236900 x=00000250310E8960 y=00000250310E1140 rows=16 cols=2048
+[Q6K_GEMV] ENTER call=3 w=0000025038250D00 x=00000250310E8960 y=00000250310E1240 rows=16 cols=2048
+[Q6K_GEMV] ENTER call=2 w=000002503824A400 x=00000250310E8960 y=00000250310E1200 rows=16 cols=2048
+[Q6K_GEMV] EXIT call=0
+[Q6K_GEMV] EXIT call=1
+[Q6K_GEMV] EXIT call=3
+[Q6K_GEMV] EXIT call=2
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.
+[FATAL_EMBED] token=35 produced invalid embedding norm=0.000000e+00 type=12 data=00000250344C0000 — inference cannot proceed.

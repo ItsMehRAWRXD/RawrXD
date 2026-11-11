@@ -1,0 +1,81 @@
+RAWRXD_SOURCE_WEIGHT_PROVENANCE_001
+ARCHIVE DATE: 2026-10-07
+STATUS: OFFICIAL SOURCE FINITE - GGUF CORRUPTION CONFIRMED
+
+=============================================================================
+OFFICIAL SOURCE AUDIT
+=============================================================================
+
+SOURCE=official DeepSeek-V2-Lite-Chat safetensors
+REPO=deepseek-ai/DeepSeek-V2-Lite-Chat
+SHARD=model-00001-of-000004.safetensors (8.0 GB)
+
+TENSOR MAPPING (GGUF -> safetensors):
+  blk.0.attn_norm.weight -> model.layers.0.input_layernorm.weight
+  blk.0.ffn_norm.weight -> model.layers.0.post_attention_layernorm.weight
+  output_norm.weight -> model.norm.weight
+
+=============================================================================
+RESULTS
+=============================================================================
+
+blk.0.attn_norm.weight:
+  Shape: (2048,)
+  Dtype: torch.bfloat16
+  Nonfinite: 0
+  NaN: 0
+  Inf: 0
+  Min: 2.197266e-01
+  Max: 7.625000e+00
+
+blk.0.ffn_norm.weight:
+  Shape: (2048,)
+  Dtype: torch.bfloat16
+  Nonfinite: 0
+  NaN: 0
+  Inf: 0
+  Min: 1.611328e-02
+  Max: 4.746094e-01
+
+output_norm.weight:
+  Shape: (2048,)
+  Dtype: torch.bfloat16
+  Nonfinite: 0
+  NaN: 0
+  Inf: 0
+  Min: 2.773438e-01
+  Max: 2.609375e+00
+
+=============================================================================
+VERDICT
+=============================================================================
+
+OFFICIAL_SOURCE_WEIGHT=FINITE
+GGUF_WEIGHT=NONFINITE (13 NaN in blk.0.attn_norm.weight, 8 NaN in blk.0.ffn_norm.weight)
+
+ROOT_CAUSE_STAGE=conversion/quantization/GGUF artifact corruption
+
+CONCLUSION: The NaNs were introduced during GGUF conversion or quantization.
+The official DeepSeek-V2-Lite-Chat BF16 model has clean, finite norm weights.
+
+=============================================================================
+NEXT STEPS
+=============================================================================
+
+Option B: Regenerate clean GGUF from official source
+  1. Convert official BF16 safetensors to BF16 GGUF
+  2. Quantize BF16 GGUF to Q4_K_M
+  3. Verify clean GGUF has finite F32 norm weights
+  4. Update ModelGenie evidence with new GGUF
+  5. Regenerate 8 headers from clean GGUF
+  6. Re-run header/ROM/tensor authority
+  7. Resume numerical closure
+
+=============================================================================
+EVIDENCE FILES
+=============================================================================
+
+  evidence\HEADER_AUTHORITY_MILESTONE\SOURCE_WEIGHT_PROVENANCE_001.txt
+  evidence\HEADER_AUTHORITY_MILESTONE\SOURCE_WEIGHT_PROVENANCE_001.json
+  evidence\HEADER_AUTHORITY_MILESTONE\source_provenance_simple.log
+  tmp_model-00001-of-000004.safetensors (8.0 GB, official shard 1)

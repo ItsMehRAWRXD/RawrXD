@@ -1,0 +1,35 @@
+ Assembling: D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(8) : error A2008:syntax error : WIN64
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(202) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(244) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(265) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(308) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(316) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(317) : error A2008:syntax error : size
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(330) : error A2008:syntax error : size
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(335) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(343) : error A2064:structure alignment must be 1, 2, 4, 8, or 16
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(353) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(1566) : error A2008:syntax error : [
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(1574) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(406) : error A2084:constant value too large
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(413) : error A2084:constant value too large
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(415) : error A2084:constant value too large
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(630) : error A2083:invalid scale value
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(886) : error A2084:constant value too large
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(1045) : error A2006:undefined symbol : vkCmdPushConstants
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(1629) : error A2006:undefined symbol : VulkanCreateFSMBuffer
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(514) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(539) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(594) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(703) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(766) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(935) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(995) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(1079) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(1127) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(1178) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(1198) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(1341) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(1461) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\runoff\part_0024\e__NEON_VULKAN_FABRIC.asm(1514) : error A2220:Missing .ENDPROLOG

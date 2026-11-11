@@ -1,0 +1,64 @@
+ Assembling: D:\rawrxd\src\RawrXD_IPC_Bridge.asm
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(7) : error A2008:syntax error : frame
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(31) : error A2034:must be in segment block
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(32) : error A2034:must be in segment block
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(33) : error A2034:must be in segment block
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(34) : error A2034:must be in segment block
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(269) : error A2070:invalid instruction operands
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(746) : error A2070:invalid instruction operands
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(152) : error A2006:undefined symbol : MEM_COMMIT
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(153) : error A2006:undefined symbol : PAGE_READWRITE
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(154) : error A2006:undefined symbol : VirtualAlloc
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(158) : error A2022:instruction operands must be the same size
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(165) : error A2006:undefined symbol : IPC_MUTEX_NAME
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(166) : error A2006:undefined symbol : CreateMutexA
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(175) : error A2006:undefined symbol : IPC_EVENT_GUI
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(176) : error A2006:undefined symbol : CreateEventA
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(182) : error A2006:undefined symbol : IPC_EVENT_CLI
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(183) : error A2006:undefined symbol : CreateEventA
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(188) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(190) : error A2006:undefined symbol : PAGE_READWRITE
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(193) : error A2006:undefined symbol : IPC_SHARED_MEM_NAME
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(195) : error A2006:undefined symbol : CreateFileMappingA
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(204) : error A2006:undefined symbol : FILE_MAP_ALL_ACCESS
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(208) : error A2006:undefined symbol : MapViewOfFile
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(246) : error A2006:undefined symbol : Sleep
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(261) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(267) : error A2006:undefined symbol : MEM_RELEASE
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(268) : error A2006:undefined symbol : VirtualFree
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(311) : error A2022:instruction operands must be the same size
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(315) : error A2006:undefined symbol : INFINITE
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(316) : error A2006:undefined symbol : WaitForSingleObject
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(324) : error A2098:invalid operand for OFFSET
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(330) : error A2098:invalid operand for OFFSET
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(349) : error A2006:undefined symbol : GetCurrentProcessId
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(352) : error A2006:undefined symbol : GetTickCount64
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(385) : error A2006:undefined symbol : SetEvent
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(396) : error A2006:undefined symbol : ReleaseMutex
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(421) : error A2022:instruction operands must be the same size
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(425) : error A2006:undefined symbol : INFINITE
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(426) : error A2006:undefined symbol : WaitForSingleObject
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(434) : error A2098:invalid operand for OFFSET
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(440) : error A2098:invalid operand for OFFSET
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(468) : error A2006:undefined symbol : ReleaseMutex
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(491) : error A2022:instruction operands must be the same size
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(497) : error A2006:undefined symbol : INFINITE
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(498) : error A2006:undefined symbol : WaitForSingleObject
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(506) : error A2098:invalid operand for OFFSET
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(512) : error A2098:invalid operand for OFFSET
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(549) : error A2006:undefined symbol : ReleaseMutex
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(581) : error A2022:instruction operands must be the same size
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(601) : error A2006:undefined symbol : WaitForSingleObject
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(604) : error A2006:undefined symbol : WAIT_TIMEOUT
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(632) : error A2022:instruction operands must be the same size
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(642) : error A2006:undefined symbol : Sleep
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(677) : error A2022:instruction operands must be the same size
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(690) : error A2022:instruction operands must be the same size
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(707) : error A2022:instruction operands must be the same size
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(725) : error A2006:undefined symbol : UnmapViewOfFile
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(729) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(732) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(735) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(738) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(743) : error A2006:undefined symbol : MEM_RELEASE
+D:\rawrxd\src\RawrXD_IPC_Bridge.asm(744) : error A2006:undefined symbol : VirtualFree

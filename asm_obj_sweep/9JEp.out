@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\-14d56c8\9JEp.asm
+D:\rawrxd\history\-14d56c8\9JEp.asm(2) : error A2008:syntax error : .
+D:\rawrxd\history\-14d56c8\9JEp.asm(3) : error A2008:syntax error : .
+D:\rawrxd\history\-14d56c8\9JEp.asm(8) : fatal error A1000:cannot open file : user32.inc

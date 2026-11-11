@@ -1,0 +1,16 @@
+ Assembling: D:\rawrxd\RawrXD_Amphibious_CLI_Robust.asm
+D:\rawrxd\RawrXD_Amphibious_CLI_Robust.asm(112) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_Amphibious_CLI_Robust.asm(347) : warning A6001:no return from procedure
+D:\rawrxd\RawrXD_Amphibious_CLI_Robust.asm(111) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_Amphibious_CLI_Robust.asm(118) : error A2206:missing operator in expression
+D:\rawrxd\RawrXD_Amphibious_CLI_Robust.asm(103) : warning A6004:procedure argument or local not referenced : hStdOut
+D:\rawrxd\RawrXD_Amphibious_CLI_Robust.asm(103) : warning A6004:procedure argument or local not referenced : lenStr
+D:\rawrxd\RawrXD_Amphibious_CLI_Robust.asm(103) : warning A6004:procedure argument or local not referenced : ignore
+D:\rawrxd\RawrXD_Amphibious_CLI_Robust.asm(111) : error A2156:constant value out of range
+D:\rawrxd\RawrXD_Amphibious_CLI_Robust.asm(167) : warning A6004:procedure argument or local not referenced : tokenCtr
+D:\rawrxd\RawrXD_Amphibious_CLI_Robust.asm(224) : warning A6004:procedure argument or local not referenced : hFile
+D:\rawrxd\RawrXD_Amphibious_CLI_Robust.asm(224) : warning A6004:procedure argument or local not referenced : jsonBuf
+D:\rawrxd\RawrXD_Amphibious_CLI_Robust.asm(224) : warning A6004:procedure argument or local not referenced : jsonLen
+D:\rawrxd\RawrXD_Amphibious_CLI_Robust.asm(224) : warning A6004:procedure argument or local not referenced : dummy
+D:\rawrxd\RawrXD_Amphibious_CLI_Robust.asm(283) : warning A6004:procedure argument or local not referenced : cycleNum
+D:\rawrxd\RawrXD_Amphibious_CLI_Robust.asm(347) : warning A6004:procedure argument or local not referenced : cycleIdx

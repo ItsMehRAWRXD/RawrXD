@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(5) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(7) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(8) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(72) : error A2008:syntax error : codegen_target
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(73) : error A2008:syntax error : codegen_output
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(74) : error A2008:syntax error : codegen_output_size
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(75) : error A2008:syntax error : codegen_output_capacity
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(76) : error A2008:syntax error : codegen_label_count
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(77) : error A2008:syntax error : codegen_temp_count
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(78) : error A2008:syntax error : codegen_stack_offset
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(79) : error A2008:syntax error : codegen_registers
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(80) : error A2008:syntax error : codegen_registers_used
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(81) : error A2008:syntax error : codegen_registers_free
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(84) : error A2008:syntax error : instructions_generated
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(85) : error A2008:syntax error : labels_generated
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(86) : error A2008:syntax error : temporaries_generated
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(87) : error A2008:syntax error : functions_generated
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(88) : error A2008:syntax error : expressions_generated
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(89) : error A2008:syntax error : statements_generated
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(90) : error A2008:syntax error : codegen_time
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(91) : error A2008:syntax error : codegen_memory_usage
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(94) : error A2008:syntax error : output_buffer
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(95) : error A2008:syntax error : output_buffer_size
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(96) : error A2008:syntax error : output_buffer_capacity
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(97) : error A2008:syntax error : output_buffer_head
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(98) : error A2008:syntax error : output_buffer_tail
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(101) : error A2008:syntax error : label_table
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(102) : error A2008:syntax error : label_count
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(103) : error A2008:syntax error : label_table_capacity
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(106) : error A2008:syntax error : temp_table
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(107) : error A2008:syntax error : temp_count
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(108) : error A2008:syntax error : temp_table_capacity
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(111) : error A2008:syntax error : function_table
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(112) : error A2008:syntax error : function_count
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(113) : error A2008:syntax error : function_table_capacity
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(116) : error A2008:syntax error : optimize_code
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(117) : error A2008:syntax error : inline_functions
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(118) : error A2008:syntax error : unroll_loops
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(119) : error A2008:syntax error : eliminate_dead_code
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(120) : error A2008:syntax error : constant_folding
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(121) : error A2008:syntax error : register_allocation
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(122) : error A2008:syntax error : stack_optimization
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(124) : error A2008:syntax error : section
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(125) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(126) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(127) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(128) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(129) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(130) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(131) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(132) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(133) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(134) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(135) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(136) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(137) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(138) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(139) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(140) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(141) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(142) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(143) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(144) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(145) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(146) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(147) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(148) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(149) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(150) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(151) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(152) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(153) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(154) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(155) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(156) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(157) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(158) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(159) : error A2008:syntax error : global
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(162) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(163) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(164) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(167) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(168) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(169) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(170) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(173) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(174) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(175) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(176) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(177) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(178) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(179) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(180) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(181) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(184) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(185) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(186) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(187) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(188) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(189) : error A2034:must be in segment block
+D:\rawrxd\itsmehrawrxd-master\x86_64_codegen.asm(190) : fatal error A1012:error count exceeds 100; stopping assembly

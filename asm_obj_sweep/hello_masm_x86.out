@@ -1,0 +1,8 @@
+ Assembling: D:\rawrxd\toolchain\masm\samples\hello_masm_x86.asm
+D:\rawrxd\toolchain\masm\samples\hello_masm_x86.asm(3) : error A2008:syntax error : .
+D:\rawrxd\toolchain\masm\samples\hello_masm_x86.asm(4) : error A2008:syntax error : .
+D:\rawrxd\toolchain\masm\samples\hello_masm_x86.asm(23) : error A2070:invalid instruction operands
+D:\rawrxd\toolchain\masm\samples\hello_masm_x86.asm(24) : error A2070:invalid instruction operands
+D:\rawrxd\toolchain\masm\samples\hello_masm_x86.asm(25) : error A2070:invalid instruction operands
+D:\rawrxd\toolchain\masm\samples\hello_masm_x86.asm(30) : error A2008:syntax error : main
+D:\rawrxd\toolchain\masm\samples\hello_masm_x86.asm(30) : error A2088:END directive required at end of file

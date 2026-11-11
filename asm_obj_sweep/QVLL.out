@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\-1d5b10d8\QVLL.asm
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(13) : error A2008:syntax error : bits
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(14) : error A2008:syntax error : default
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(15) : error A2008:syntax error : section
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(17) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(18) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(19) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(127) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(128) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(129) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(130) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(131) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(132) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(133) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(134) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(136) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(137) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(138) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(139) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(140) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(141) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(142) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(143) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(144) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(147) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(148) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(149) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(150) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(151) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(152) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(153) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(154) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(157) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(158) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(159) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(160) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(161) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(164) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(165) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(166) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(167) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(170) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(171) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(172) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(173) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(174) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(175) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(176) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(177) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(178) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(179) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(182) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(183) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(184) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(185) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(186) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(187) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(188) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(189) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(191) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(192) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(193) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(194) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(196) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(197) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(198) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(199) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(200) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(201) : error A2034:must be in segment block
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(203) : error A2008:syntax error : section
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(205) : error A2008:syntax error : g_input_filename
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(206) : error A2008:syntax error : g_output_filename
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(207) : error A2008:syntax error : g_current_stage
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(208) : error A2008:syntax error : g_error_code
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(209) : error A2008:syntax error : g_error_line
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(210) : error A2008:syntax error : g_error_column
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(213) : error A2008:syntax error : g_source_buffer
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(214) : error A2008:syntax error : g_source_size
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(215) : error A2008:syntax error : g_source_pos
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(216) : error A2008:syntax error : g_current_line
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(217) : error A2008:syntax error : g_current_column
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(220) : error A2008:syntax error : g_tokens
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(221) : error A2008:syntax error : g_token_count
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(222) : error A2008:syntax error : g_current_token
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(225) : error A2008:syntax error : g_ast_nodes
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(226) : error A2008:syntax error : g_ast_node_count
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(227) : error A2008:syntax error : g_ast_root
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(230) : error A2008:syntax error : g_symbols
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(231) : error A2008:syntax error : g_symbol_count
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(232) : error A2008:syntax error : g_current_section
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(233) : error A2008:syntax error : g_current_offset
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(236) : error A2008:syntax error : g_machine_code
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(237) : error A2008:syntax error : g_machine_code_size
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(238) : error A2008:syntax error : g_relocation_count
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(239) : error A2008:syntax error : g_relocations
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(242) : error A2008:syntax error : g_pe_buffer
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(243) : error A2008:syntax error : g_pe_size
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(244) : error A2008:syntax error : g_entry_point_rva
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(247) : error A2008:syntax error : g_temp_buffer
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(248) : error A2008:syntax error : g_line_buffer
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(249) : error A2008:syntax error : g_identifier_buffer
+D:\rawrxd\history\-1d5b10d8\QVLL.asm(251) : fatal error A1012:error count exceeds 100; stopping assembly

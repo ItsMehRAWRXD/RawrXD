@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\-1bd1bafa\00LZ.asm
+D:\rawrxd\history\-1bd1bafa\00LZ.asm(1578) : error A2006:undefined symbol : IID_ID2D1Factory
+D:\rawrxd\history\-1bd1bafa\00LZ.asm(1579) : error A2006:undefined symbol : D2D1_FACTORY_TYPE_SINGLE_THREADED
+D:\rawrxd\history\-1bd1bafa\00LZ.asm(1585) : error A2006:undefined symbol : IID_IDWriteFactory
+D:\rawrxd\history\-1bd1bafa\00LZ.asm(1586) : error A2006:undefined symbol : DWRITE_FACTORY_TYPE_SHARED
+D:\rawrxd\history\-1bd1bafa\00LZ.asm(1745) : error A2006:undefined symbol : WS_CHILD

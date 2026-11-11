@@ -1,0 +1,20 @@
+ Assembling: D:\rawrxd\history\all_versions\src\asm\RawrXD_NanoQuant_Engine.asm\1770783240106_R0YP.asm
+D:\rawrxd\history\all_versions\src\asm\RawrXD_NanoQuant_Engine.asm\1770783240106_R0YP.asm(643) : error A2008:syntax error : ymm5
+D:\rawrxd\history\all_versions\src\asm\RawrXD_NanoQuant_Engine.asm\1770783240106_R0YP.asm(690) : error A2008:syntax error : ymm5
+D:\rawrxd\history\all_versions\src\asm\RawrXD_NanoQuant_Engine.asm\1770783240106_R0YP.asm(727) : error A2008:syntax error : ymm5
+D:\rawrxd\history\all_versions\src\asm\RawrXD_NanoQuant_Engine.asm\1770783240106_R0YP.asm(759) : error A2008:syntax error : ymm5
+D:\rawrxd\history\all_versions\src\asm\RawrXD_NanoQuant_Engine.asm\1770783240106_R0YP.asm(993) : error A2008:syntax error : ymm3
+D:\rawrxd\history\all_versions\src\asm\RawrXD_NanoQuant_Engine.asm\1770783240106_R0YP.asm(1198) : error A2008:syntax error : ymm3
+D:\rawrxd\history\all_versions\src\asm\RawrXD_NanoQuant_Engine.asm\1770783240106_R0YP.asm(598) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD_NanoQuant_Engine.asm\1770783240106_R0YP.asm(599) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD_NanoQuant_Engine.asm\1770783240106_R0YP.asm(600) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD_NanoQuant_Engine.asm\1770783240106_R0YP.asm(630) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD_NanoQuant_Engine.asm\1770783240106_R0YP.asm(696) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD_NanoQuant_Engine.asm\1770783240106_R0YP.asm(697) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD_NanoQuant_Engine.asm\1770783240106_R0YP.asm(705) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD_NanoQuant_Engine.asm\1770783240106_R0YP.asm(731) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD_NanoQuant_Engine.asm\1770783240106_R0YP.asm(734) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD_NanoQuant_Engine.asm\1770783240106_R0YP.asm(736) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD_NanoQuant_Engine.asm\1770783240106_R0YP.asm(763) : error A2083:invalid scale value
+D:\rawrxd\history\all_versions\src\asm\RawrXD_NanoQuant_Engine.asm\1770783240106_R0YP.asm(1991) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\all_versions\src\asm\RawrXD_NanoQuant_Engine.asm\1770783240106_R0YP.asm(2618) : error A2029:multiple base registers not allowed

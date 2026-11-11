@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\runoff\part_0012\d__RawrXD_src_direct_io_nvme_oracle_service.asm
+D:\rawrxd\history\runoff\part_0012\d__RawrXD_src_direct_io_nvme_oracle_service.asm(425) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0012\d__RawrXD_src_direct_io_nvme_oracle_service.asm(423) : error A2006:undefined symbol : ok

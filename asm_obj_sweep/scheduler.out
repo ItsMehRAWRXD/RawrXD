@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD\pifabric\scheduler.asm
+D:\rawrxd\reconstructed\RawrXD\pifabric\scheduler.asm(2) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\pifabric\scheduler.asm(3) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\RawrXD\pifabric\scheduler.asm(32) : error A2070:invalid instruction operands
+D:\rawrxd\reconstructed\RawrXD\pifabric\scheduler.asm(33) : error A2070:invalid instruction operands

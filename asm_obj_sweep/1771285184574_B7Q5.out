@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\src\CodexUltimate.asm\1771285184574_B7Q5.asm
+D:\rawrxd\history\all_versions\src\CodexUltimate.asm\1771285184574_B7Q5.asm(26) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\CodexUltimate.asm\1771285184574_B7Q5.asm(29) : fatal error A1000:cannot open file : \masm64\include64\win64.inc

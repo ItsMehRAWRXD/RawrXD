@@ -1,0 +1,513 @@
+// ============================================================================
+// Win32IDE_Session.cpp — Session Persistence
+// ============================================================================
+// Saves and restores IDE state across launches:
+//   - Open tabs (file paths, display names, active tab)
+//   - Editor cursor position and scroll offset
+//   - Panel visibility and height
+//   - Sidebar state and width
+//   - Loaded model path for inference/chat restore
+//   - Current working directory
+//
+// Session file: %APPDATA%\RawrXD\session.json
+// ============================================================================
+
+#include "Win32IDE.h"
+#include "Win32IDE_ShellLayout.hpp"
+#include "Win32IDE_MainMenuAuthority.hpp"
+#include "IDELogger.h"
+#include "../SettingsManager.h"
+#include "../product/gateway/product_deep2_infer.hpp"
+#include "../product/ide/session_io.hpp"
+#if defined(RAWRXD_BUILD_EVIDENCE) && RAWRXD_BUILD_EVIDENCE
+#include "../deep2/RuntimeEvidence512HostIDE.hpp"
+#endif
+#include <nlohmann/json.hpp>
+#include <fstream>
+#include <shlobj.h>
+#include <richedit.h>
+
+// ============================================================================
+// SESSION FILE PATH
+// ============================================================================
+std::string Win32IDE::getSessionFilePath() const {
+    // Use %APPDATA%\RawrXD\session.json
+    char appDataPath[MAX_PATH] = {0};
+    if (SUCCEEDED(SHGetFolderPathA(nullptr, CSIDL_APPDATA, nullptr, 0, appDataPath))) {
+        std::string dir = std::string(appDataPath) + "\\RawrXD";
+        CreateDirectoryA(dir.c_str(), nullptr);
+        return dir + "\\session.json";
+    }
+    // Fallback: use executable directory
+    return "session.json";
+}
+
+// ============================================================================
+// SAVE SESSION — master entry point
+// ============================================================================
+void Win32IDE::saveSession() {
+    LOG_INFO("Saving IDE session...");
+    
+    try {
+        nlohmann::json session;
+        session["version"] = 2;
+        session["schemaVersion"] = "2.2";     // Hardening: explicit schema version for forward compat
+        session["annotationFormat"] = 2;  // v2 = actions array; v1 = single actionType
+        session["timestamp"] = std::to_string(GetTickCount64());
+        
+        // Save each section
+        saveSessionTabs(session);
+        saveSessionPanelState(session);
+        saveSessionEditorState(session);
+        saveSessionAnnotations(session);
+        saveSessionTheme(session);
+        
+        // Save current file
+        session["currentFile"] = m_currentFile;
+
+        // Save active model so the next launch can restore inference/chat state.
+        if (!m_loadedModelPath.empty()) {
+            session["loadedModelPath"] = m_loadedModelPath;
+            rawr::product::ProductSession ps{};
+            ps.id = "ide_last";
+            ps.modelPath = m_loadedModelPath;
+            ps.modelAlias = m_loadedModelPath;
+            ps.keepOpen = 1;
+            ps.maxTokens = 256;
+            (void)rawr::product::saveSession(ps);
+        }
+        
+        // Save working directory
+        char cwd[MAX_PATH] = {0};
+        GetCurrentDirectoryA(MAX_PATH, cwd);
+        session["workingDirectory"] = std::string(cwd);
+        
+        // Write to file
+        std::string path = getSessionFilePath();
+        std::ofstream out(path);
+        if (out.is_open()) {
+            out << session.dump(2);
+            out.close();
+            LOG_INFO("Session saved to: " + path);
+        } else {
+            LOG_ERROR("Failed to write session file: " + path);
+        }
+    } catch (const std::exception& e) {
+        LOG_ERROR("Session save error: " + std::string(e.what()));
+    }
+}
+
+// ============================================================================
+// LOAD SESSION — compatibility/manual entry point
+// ============================================================================
+void Win32IDE::loadSession() {
+    restoreSession();
+}
+
+// ============================================================================
+// RESTORE SESSION — master entry point
+// ============================================================================
+void Win32IDE::restoreSession() {
+    LOG_INFO("Restoring IDE session...");
+    HWND traceHwnd = m_hwndMain;
+    
+    try {
+        std::string path = getSessionFilePath();
+        std::ifstream in(path);
+        if (!in.is_open()) {
+            LOG_INFO("No session file found at: " + path);
+            RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_JSON_OK");
+            RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_TABS_OK");
+            RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_PANELS_OK");
+            RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_MODEL_PATH_OK");
+            return;
+        }
+        
+        std::string content((std::istreambuf_iterator<char>(in)),
+                             std::istreambuf_iterator<char>());
+        in.close();
+        
+        nlohmann::json session = nlohmann::json::parse(content);
+        RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_JSON_OK");
+        
+        // Validate version (accept v1 and v2)
+        int version = session.value("version", 0);
+        if (version < 1 || version > 2) {
+            LOG_WARNING("Unknown session version: " + std::to_string(version) + " — skipping restore");
+            return;
+        }
+        if (version == 1) {
+            LOG_INFO("Session: upgrading from v1 format (legacy single-action annotations)");
+        }
+
+        // Hardening: log schema version for diagnostics
+        std::string schemaVer = session.value("schemaVersion", "1.0");
+        LOG_INFO("Session: schema version " + schemaVer + ", data version " + std::to_string(version));
+        
+        // Restore each section (UI/metadata only — no synchronous model load)
+        restoreSessionTabs(session);
+        RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_TABS_OK");
+        restoreSessionPanelState(session);
+        RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_PANELS_OK");
+        restoreSessionEditorState(session);
+        RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_EDITOR_OK");
+        restoreSessionAnnotations(session);
+        RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_ANNOTATIONS_OK");
+        restoreSessionTheme(session);
+        RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_THEME_OK");
+        
+        // NEVER touch CWD synchronously here — SetCurrentDirectory/GetFileAttributes/
+        // GetDriveType on a dead/mapped root (observed: G:\rawrxd-p1-promote\...) can hang
+        // the UI thread for minutes and block RESTORE_SESSION_COMPLETE.
+        std::string cwd = session.value("workingDirectory", "");
+        if (!cwd.empty() && m_hwndMain && IsWindow(m_hwndMain)) {
+            m_pendingRestoreCwd = cwd;
+            PostMessageA(m_hwndMain, WM_APP_RESTORE_CWD, 0, 0);
+            RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_CWD_DEFERRED");
+        } else {
+            RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_CWD_OK");
+        }
+
+        // Record desired model path and POST async restore — never loadGGUFModel here.
+        RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_MODEL_BEGIN");
+        std::string savedModelPath = session.value("loadedModelPath", "");
+        if (!savedModelPath.empty()) {
+            // Do not GetFileAttributes here (same hang class as CWD). Record + defer.
+            LOG_INFO("Session: recording model path for deferred restore: " + savedModelPath);
+            setLoadedModelPath(savedModelPath);
+            /* ProductRuntime → OpenSession (no serialized engine resurrection). */
+            (void)rawr::ProductOpenSession(savedModelPath.c_str());
+            m_pendingApp201ModelLoad = true;
+            if (m_hwndMain && IsWindow(m_hwndMain))
+                PostMessage(m_hwndMain, WM_APP_RESTORE_MODEL, 0, 0);
+        }
+        RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_MODEL_PATH_OK");
+        
+        m_sessionRestored = true;
+        LOG_INFO("Session restored successfully.");
+#if defined(RAWRXD_BUILD_EVIDENCE) && RAWRXD_BUILD_EVIDENCE
+        Deep2::Ev512::HostEmitSessionRestore(
+            Deep2::Ev512::HostPathHash(path.c_str()),
+            (uint64_t)content.size());
+#endif
+
+        // v1→v2 write-once migration: if we just loaded a v1 session,
+        // re-save immediately as v2 so the legacy format is retired on disk.
+        if (version == 1) {
+            RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_MIGRATE_BEGIN");
+            LOG_INFO("Session: performing v1→v2 migration write...");
+            saveSession();
+            LOG_INFO("Session: v1→v2 migration complete — legacy format retired.");
+            RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_MIGRATE_OK");
+        }
+        
+    } catch (const std::exception& e) {
+        LOG_ERROR("Session restore error: " + std::string(e.what()));
+        RawrXD::MainMenuAuthority::TraceLine("RESTORE_SESSION_ERROR what=%s", e.what());
+    }
+}
+
+// ============================================================================
+// SAVE/RESTORE TABS
+// ============================================================================
+void Win32IDE::saveSessionTabs(nlohmann::json& session) {
+    nlohmann::json tabs = nlohmann::json::array();
+    
+    for (const auto& tab : m_editorTabs) {
+        nlohmann::json t;
+        t["filePath"] = tab.filePath;
+        t["displayName"] = tab.displayName;
+        t["modified"] = tab.modified;
+        tabs.push_back(t);
+    }
+    
+    session["tabs"] = tabs;
+    session["activeTabIndex"] = m_activeTabIndex;
+}
+
+void Win32IDE::restoreSessionTabs(const nlohmann::json& session) {
+    if (!session.contains("tabs")) return;
+    
+    const auto& tabs = session["tabs"];
+    int activeIdx = session.value("activeTabIndex", 0);
+    
+    for (size_t ti = 0; ti < tabs.size(); ti++) {
+        const auto& t = tabs[ti];
+        std::string filePath = t.value("filePath", "");
+        std::string displayName = t.value("displayName", "");
+        
+        if (filePath.empty()) continue;
+        
+        // Only restore tabs for files that still exist
+        DWORD attrs = GetFileAttributesA(filePath.c_str());
+        if (attrs == INVALID_FILE_ATTRIBUTES) {
+            LOG_WARNING("Session tab file missing: " + filePath);
+            continue;
+        }
+        
+        addTab(filePath, displayName);
+    }
+    
+    // Set the active tab
+    if (activeIdx >= 0 && activeIdx < (int)m_editorTabs.size()) {
+        setActiveTab(activeIdx);
+    }
+}
+
+// ============================================================================
+// SAVE/RESTORE PANEL STATE
+// ============================================================================
+void Win32IDE::saveSessionPanelState(nlohmann::json& session) {
+    nlohmann::json panel;
+    
+    panel["visible"] = m_panelVisible;
+    panel["height"] = m_panelHeight;
+    panel["maximized"] = m_panelMaximized;
+    panel["activeTab"] = (int)m_activePanelTab;
+    
+    // Sidebar state
+    panel["sidebarVisible"] = m_sidebarVisible;
+    panel["sidebarWidth"] = m_sidebarWidth;
+    panel["sidebarView"] = (int)m_currentSidebarView;
+    
+    session["panel"] = panel;
+}
+
+void Win32IDE::restoreSessionPanelState(const nlohmann::json& session) {
+    if (RawrXD::ShellLayout::RebuildActive())
+        return;
+    if (!session.contains("panel")) return;
+    
+    const auto& panel = session["panel"];
+    
+    // Restore panel state
+    m_panelVisible = panel.value("visible", true);
+    m_panelHeight = panel.value("height", 200);
+    m_panelMaximized = panel.value("maximized", false);
+    
+    int tabIdx = panel.value("activeTab", 0);
+    if (tabIdx >= 0 && tabIdx <= 3) {
+        m_activePanelTab = static_cast<PanelTab>(tabIdx);
+    }
+    
+    // Restore sidebar state
+    m_sidebarVisible = panel.value("sidebarVisible", true);
+    m_sidebarWidth = panel.value("sidebarWidth", 240);
+    
+    int viewIdx = panel.value("sidebarView", 0);
+    m_currentSidebarView = static_cast<SidebarView>(viewIdx);
+    
+    // Apply the restored layout
+    if (m_hwndMain) {
+        RECT rc;
+        GetClientRect(m_hwndMain, &rc);
+        SendMessage(m_hwndMain, WM_SIZE, SIZE_RESTORED, MAKELPARAM(rc.right, rc.bottom));
+    }
+}
+
+// ============================================================================
+// SAVE/RESTORE EDITOR STATE (cursor, scroll, selection)
+// ============================================================================
+void Win32IDE::saveSessionEditorState(nlohmann::json& session) {
+    nlohmann::json editor;
+    
+    if (m_hwndEditor) {
+        // Cursor position
+        CHARRANGE sel;
+        SendMessage(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
+        editor["selStart"] = (int)sel.cpMin;
+        editor["selEnd"] = (int)sel.cpMax;
+        
+        // Scroll position
+        POINT scrollPos;
+        SendMessage(m_hwndEditor, EM_GETSCROLLPOS, 0, (LPARAM)&scrollPos);
+        editor["scrollX"] = (int)scrollPos.x;
+        editor["scrollY"] = (int)scrollPos.y;
+        
+        // First visible line
+        int firstVisible = (int)SendMessage(m_hwndEditor, EM_GETFIRSTVISIBLELINE, 0, 0);
+        editor["firstVisibleLine"] = firstVisible;
+        
+        // Current line and column
+        int line = (int)SendMessage(m_hwndEditor, EM_LINEFROMCHAR, sel.cpMin, 0);
+        int lineStart = (int)SendMessage(m_hwndEditor, EM_LINEINDEX, line, 0);
+        editor["cursorLine"] = line;
+        editor["cursorColumn"] = (int)(sel.cpMin - lineStart);
+    }
+    
+    // Syntax coloring state
+    editor["syntaxColoringEnabled"] = m_syntaxColoringEnabled;
+    editor["syntaxLanguage"] = (int)m_syntaxLanguage;
+    
+    // Annotation visibility
+    editor["annotationsVisible"] = m_annotationsVisible;
+    
+    session["editor"] = editor;
+}
+
+void Win32IDE::restoreSessionEditorState(const nlohmann::json& session) {
+    if (!session.contains("editor")) return;
+    
+    const auto& editor = session["editor"];
+    
+    // Restore syntax coloring preference
+    m_syntaxColoringEnabled = editor.value("syntaxColoringEnabled", true);
+    
+    int langIdx = editor.value("syntaxLanguage", 0);
+    m_syntaxLanguage = static_cast<SyntaxLanguage>(langIdx);
+    
+    // Restore annotation visibility
+    m_annotationsVisible = editor.value("annotationsVisible", true);
+    
+    if (!m_hwndEditor) return;
+    
+    // Restore cursor/selection (defer slightly so content is loaded first)
+    int selStart = editor.value("selStart", 0);
+    int selEnd = editor.value("selEnd", 0);
+    int scrollX = editor.value("scrollX", 0);
+    int scrollY = editor.value("scrollY", 0);
+    
+    // Use PostMessage to defer restoration until after content is loaded
+    // Store values for deferred restore
+    m_sessionFilePath = getSessionFilePath(); // Tag that we're in restore mode
+    
+    // Set cursor position
+    CHARRANGE cr;
+    cr.cpMin = selStart;
+    cr.cpMax = selEnd;
+    SendMessage(m_hwndEditor, EM_EXSETSEL, 0, (LPARAM)&cr);
+    
+    // Restore scroll position
+    POINT scrollPos;
+    scrollPos.x = scrollX;
+    scrollPos.y = scrollY;
+    SendMessage(m_hwndEditor, EM_SETSCROLLPOS, 0, (LPARAM)&scrollPos);
+    
+    // Update line number gutter
+    updateLineNumbers();
+    
+    LOG_INFO("Editor state restored: cursor at " + std::to_string(selStart) + 
+             ", scroll Y=" + std::to_string(scrollY));
+}
+
+// ============================================================================
+// SAVE/RESTORE THEME + TRANSPARENCY
+// ============================================================================
+
+void Win32IDE::saveSessionTheme(nlohmann::json& session) {
+    nlohmann::json theme;
+
+    theme["name"]         = m_currentTheme.name;
+    theme["themeId"]      = m_activeThemeId;
+    theme["alpha"]        = (int)m_windowAlpha;
+    theme["transparency"] = m_transparencyEnabled;
+
+    session["theme"] = theme;
+    LOG_DEBUG("Session: saved theme \"" + m_currentTheme.name +
+              "\" alpha=" + std::to_string(m_windowAlpha));
+}
+
+void Win32IDE::restoreSessionTheme(const nlohmann::json& session) {
+    if (!session.contains("theme")) {
+        // No theme block: still force opaque (session without theme must not leave layered alpha=0).
+        setWindowTransparency(255);
+        return;
+    }
+
+    const auto& theme = session["theme"];
+    std::string savedName = theme.value("name", "");
+    int savedId           = theme.value("themeId", (int)IDM_THEME_DARK_PLUS);
+    int savedAlpha        = theme.value("alpha", 255);
+
+    // Validate theme ID is in valid range; fallback to Dark+ if not
+    if (savedId < IDM_THEME_DARK_PLUS || savedId > IDM_THEME_ABYSS) {
+        // Try to match by name from m_themes map
+        bool found = false;
+        for (int id = IDM_THEME_DARK_PLUS; id <= IDM_THEME_ABYSS; id++) {
+            IDETheme candidate = getBuiltinTheme(id);
+            if (candidate.name == savedName) {
+                savedId = id;
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            LOG_WARNING("Session: unknown theme \"" + savedName + "\" — falling back to Dark+");
+            savedId = IDM_THEME_DARK_PLUS;
+        }
+    }
+
+    // Apply the restored theme
+    m_currentTheme = getBuiltinTheme(savedId);
+    m_activeThemeId = savedId;
+    applyTheme();
+    applyThemeToAllControls();
+
+    // Restore transparency ONLY when session explicitly enabled it.
+    // Alpha alone must not make launch see-through (END_WITHOUT_ONE → E2E gated).
+    const bool wantTransparency = theme.value("transparency", false);
+    BYTE alpha = (BYTE)std::clamp(savedAlpha, 30, 255);
+    if (wantTransparency && alpha < 255) {
+        setWindowTransparency(alpha);
+    } else {
+        setWindowTransparency(255);
+    }
+
+    // Re-trigger syntax coloring with restored theme palette
+    if (m_syntaxColoringEnabled) {
+        onEditorContentChanged();
+    }
+
+    LOG_INFO("Session: restored theme \"" + m_currentTheme.name +
+             "\" alpha=" + std::to_string(alpha));
+}
+
+// ============================================================================
+// WINDOW STATE PERSISTENCE (SettingsManager)
+// ============================================================================
+
+void Win32IDE::SaveWindowState() {
+    if (!m_hwndMain || !IsWindow(m_hwndMain)) {
+        return;
+    }
+    
+    // Get window placement
+    WINDOWPLACEMENT wp = { sizeof(WINDOWPLACEMENT) };
+    if (!GetWindowPlacement(m_hwndMain, &wp)) {
+        return;
+    }
+    
+    RawrXD::WindowState state;
+    state.x = wp.rcNormalPosition.left;
+    state.y = wp.rcNormalPosition.top;
+    state.width = wp.rcNormalPosition.right - wp.rcNormalPosition.left;
+    state.height = wp.rcNormalPosition.bottom - wp.rcNormalPosition.top;
+    state.maximized = (wp.showCmd == SW_SHOWMAXIMIZED);
+    state.fullscreen = false;  // Not currently supported
+    
+    RawrXD::GetSettings().SetWindowState(state);
+    LOG_INFO("Window state saved: " + std::to_string(state.width) + "x" + 
+             std::to_string(state.height) + " at (" + std::to_string(state.x) + 
+             "," + std::to_string(state.y) + ")");
+}
+
+void Win32IDE::LoadWindowState() {
+    auto state = RawrXD::GetSettings().GetWindowState();
+    
+    if (!state.IsValid()) {
+        LOG_INFO("No saved window state, using defaults");
+        return;
+    }
+    
+    // Store for use during window creation
+    m_windowX = state.x;
+    m_windowY = state.y;
+    m_windowWidth = state.width;
+    m_windowHeight = state.height;
+    m_windowMaximized = state.maximized;
+    
+    LOG_INFO("Window state loaded: " + std::to_string(state.width) + "x" + 
+             std::to_string(state.height) + " at (" + std::to_string(state.x) + 
+             "," + std::to_string(state.y) + ")" + 
+             (state.maximized ? " [maximized]" : ""));
+}

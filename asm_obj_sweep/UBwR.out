@@ -1,0 +1,11 @@
+ Assembling: D:\rawrxd\history\-1f07befc\UBwR.asm
+D:\rawrxd\history\-1f07befc\UBwR.asm(234) : error A2006:undefined symbol : OutputDebugStringA
+D:\rawrxd\history\-1f07befc\UBwR.asm(238) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\history\-1f07befc\UBwR.asm(262) : error A2006:undefined symbol : OutputDebugStringA
+D:\rawrxd\history\-1f07befc\UBwR.asm(283) : error A2006:undefined symbol : OutputDebugStringA
+D:\rawrxd\history\-1f07befc\UBwR.asm(312) : error A2006:undefined symbol : OutputDebugStringA
+D:\rawrxd\history\-1f07befc\UBwR.asm(321) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\history\-1f07befc\UBwR.asm(383) : error A2006:undefined symbol : OutputDebugStringA
+D:\rawrxd\history\-1f07befc\UBwR.asm(404) : error A2006:undefined symbol : OutputDebugStringA
+D:\rawrxd\history\-1f07befc\UBwR.asm(408) : error A2006:undefined symbol : HeapAlloc
+D:\rawrxd\history\-1f07befc\UBwR.asm(425) : error A2006:undefined symbol : OutputDebugStringA

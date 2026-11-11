@@ -1,0 +1,41 @@
+﻿RawrXD IDE Runtime Dependencies
+===============================
+
+REQUIRED (System)
+-----------------
+- Windows 10/11 (64-bit)
+- MSVC Runtime (vcruntime140.dll, msvcp140.dll)
+- kernel32.dll
+- user32.dll
+- gdi32.dll
+- shell32.dll
+- ole32.dll
+- oleaut32.dll
+- uuid.dll
+- comdlg32.dll
+- advapi32.dll
+- version.dll
+- ws2_32.dll
+
+OPTIONAL (Runtime Loaded)
+-------------------------
+- vulkan-1.dll
+  * Purpose: GPU acceleration for inference
+  * Source: Vulkan SDK or graphics driver
+  * Fallback: CPU inference if not present
+  
+- zlib1.dll
+  * Purpose: Checkpoint compression
+  * Source: zlib.net or system package
+  * Fallback: Uncompressed checkpoints if not present
+
+BUNDLED
+-------
+- None (all dependencies are system or runtime-loaded)
+
+NOTES
+-----
+- RawrXD IDE uses runtime loading for optional components
+- No external SDKs required at build time
+- CPU fallback always available
+- GPU acceleration requires compatible hardware + drivers

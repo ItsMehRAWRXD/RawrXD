@@ -1,0 +1,29 @@
+ Assembling: D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_chunk_planner.asm
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_chunk_planner.asm(2) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_chunk_planner.asm(3) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_chunk_planner.asm(10) : error A2034:must be in segment block : PiFabric_SelectChunkSize
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_chunk_planner.asm(11) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_chunk_planner.asm(12) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_chunk_planner.asm(13) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_chunk_planner.asm(14) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_chunk_planner.asm(15) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_chunk_planner.asm(16) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_chunk_planner.asm(17) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_chunk_planner.asm(18) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_chunk_planner.asm(19) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_chunk_planner.asm(20) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_chunk_planner.asm(21) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_chunk_planner.asm(22) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_chunk_planner.asm(23) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_chunk_planner.asm(24) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_chunk_planner.asm(25) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_chunk_planner.asm(26) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_chunk_planner.asm(27) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_chunk_planner.asm(28) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_chunk_planner.asm(29) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_chunk_planner.asm(30) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_chunk_planner.asm(31) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_chunk_planner.asm(32) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_chunk_planner.asm(33) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_chunk_planner.asm(34) : error A2034:must be in segment block
+D:\rawrxd\history\runoff\part_0001\c__RawrXD_pifabric_chunk_planner.asm(35) : fatal error A1010:unmatched block nesting : PiFabric_SelectChunkSize

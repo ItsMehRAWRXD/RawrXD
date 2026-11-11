@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907761554_J1NK.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907761554_J1NK.asm(234) : error A2006:undefined symbol : @att_ret
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907761554_J1NK.asm(262) : error A2029:multiple base registers not allowed

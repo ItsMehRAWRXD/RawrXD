@@ -1,0 +1,10 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769901903509_Vytr.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769901903509_Vytr.asm(56) : error A2179:structure improperly initialized
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769901903509_Vytr.asm(56) : error A2065:expected : )
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769901903509_Vytr.asm(127) : error A2006:undefined symbol : KvCache
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769901903509_Vytr.asm(128) : error A2006:undefined symbol : KvCache
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769901903509_Vytr.asm(129) : error A2006:undefined symbol : KvCache
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769901903509_Vytr.asm(171) : error A2006:undefined symbol : KvCache
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769901903509_Vytr.asm(208) : error A2006:undefined symbol : KvCache
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769901903509_Vytr.asm(222) : error A2006:undefined symbol : ModelHandle
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769901903509_Vytr.asm(273) : error A2006:undefined symbol : KvCache

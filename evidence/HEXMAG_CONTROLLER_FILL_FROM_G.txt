@@ -1,0 +1,18 @@
+﻿HEXMAG_CONTROLLER_FILL — polymorphic swarm + tuner into F (route closed)
+
+base=a63745c2a cert/deep2-parity-probe-001
+donor=G feat/hexmag-polymorphic-repeat-tuner-masm (core only; no IDE UI)
+
+TRANSPLANTED
+- src/asm/RawrXD_HexMag_Swarm.asm (hx_goal_needs_input + actionable intent)
+- src/core/hexmag_ide_send_path.hpp (shared IDE operator turn)
+- controller: ensureTunerRequest + advanceTunerOnWrong on TunerRedispatch
+- CopilotRoute → ideHexMagSendPath().operatorTurn
+- AgentRuntimeController → ideHexMagSendPath
+- tests/hexmag_ide_e2e_cert.cpp + hexmag_runtime_controller_cert.cpp
+
+PRESERVED ON F
+- hexmag_control_plane.cpp evaluateFinalize (P0D) — NOT G allowFinal regression
+- NEED_INPUT latch terminal (no tuner mutate / no FINAL resurrection)
+- HandleCopilotSend / WndProc / render path unchanged for authority
+

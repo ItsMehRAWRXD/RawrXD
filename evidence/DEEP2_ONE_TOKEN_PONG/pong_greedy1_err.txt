@@ -1,0 +1,26 @@
+[EMBED_RAW] token=21521 row=000002323C414C80 rowBytes=1152 first32=12 06 D4 11 A8 BF FA A4 66 B6 BF A2 E4 74 D6 55 52 6C 64 66 55 3B 37 87 4F 92 53 65 43 8A 3E 08 
+[EMBED_RAW] token=9312 row=000002323B6AB000 rowBytes=1152 first32=B4 04 A5 10 FF F0 E8 EE FF F5 E9 E2 DC BB 26 7F 22 B6 38 08 05 58 2C 87 BC 9A AB 6A 98 F8 70 59 
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] unloadModel
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=22
+[LIFE] unloadModel FreeTensorData ggufResult (201 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+[LIFE] release MoE
+[LIFE] disableMARS
+[LIFE] stop telemetryController
+[LIFE] release residency/elastic/cache
+[LIFE] reset elasticResidency
+[LIFE] reset residencyManager
+[LIFE] reset residencyCache
+[LIFE] reset globalIndex
+[LIFE] residency/elastic/cache done
+[LIFE] release KV / compressedKV / toroidalKV
+[LIFE] stop threadPool
+[LIFE] release satellite engines
+[LIFE] deallocateBuffers
+[LIFE] remove temp Ollama GGUF
+[LIFE] ~Deep2Engine END

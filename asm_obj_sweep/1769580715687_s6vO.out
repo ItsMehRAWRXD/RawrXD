@@ -1,0 +1,27 @@
+ Assembling: D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769580715687_s6vO.asm
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769580715687_s6vO.asm(4) : error A2008:syntax error : ALIGN
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769580715687_s6vO.asm(6) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769580715687_s6vO.asm(14) : error A2008:syntax error : ptr
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769580715687_s6vO.asm(15) : warning A6006:structure contains no members
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769580715687_s6vO.asm(23) : error A2008:syntax error : offset
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769580715687_s6vO.asm(26) : error A2008:syntax error : PVOID
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769580715687_s6vO.asm(28) : error A2008:syntax error : HANDLE
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769580715687_s6vO.asm(33) : error A2008:syntax error : Ipv4
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769580715687_s6vO.asm(34) : error A2008:syntax error : Ipv6
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769580715687_s6vO.asm(35) : error A2008:syntax error : short
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769580715687_s6vO.asm(36) : warning A6006:structure contains no members
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769580715687_s6vO.asm(170) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769580715687_s6vO.asm(177) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769580715687_s6vO.asm(178) : error A2159:structure cannot be instanced
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769580715687_s6vO.asm(179) : error A2159:structure cannot be instanced
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769580715687_s6vO.asm(180) : error A2159:structure cannot be instanced
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769580715687_s6vO.asm(183) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769580715687_s6vO.asm(240) : error A2006:undefined symbol : g_LockScheduler
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769580715687_s6vO.asm(255) : error A2006:undefined symbol : g_LockScheduler
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769580715687_s6vO.asm(270) : error A2006:undefined symbol : g_LockConflictDetector
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769580715687_s6vO.asm(285) : error A2006:undefined symbol : g_LockConflictDetector
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769580715687_s6vO.asm(300) : error A2006:undefined symbol : g_LockHeartbeat
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769580715687_s6vO.asm(315) : error A2006:undefined symbol : g_LockHeartbeat
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769580715687_s6vO.asm(431) : error A2006:undefined symbol : g_LockScheduler
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769580715687_s6vO.asm(501) : error A2006:undefined symbol : g_LockConflictDetector
+D:\rawrxd\history\all_versions\src\Titan_Streaming_Orchestrator_Fixed.asm\1769580715687_s6vO.asm(582) : error A2006:undefined symbol : g_LockHeartbeat

@@ -1,0 +1,7 @@
+ Assembling: D:\rawrxd\history\-1a7e0bf1\mSM3.asm
+D:\rawrxd\history\-1a7e0bf1\mSM3.asm(611) : error A2006:undefined symbol : Docker_BuildImage
+D:\rawrxd\history\-1a7e0bf1\mSM3.asm(618) : error A2006:undefined symbol : Docker_Tag
+D:\rawrxd\history\-1a7e0bf1\mSM3.asm(623) : error A2006:undefined symbol : Docker_Push
+D:\rawrxd\history\-1a7e0bf1\mSM3.asm(631) : error A2006:undefined symbol : Kubectl_Apply
+D:\rawrxd\history\-1a7e0bf1\mSM3.asm(637) : error A2006:undefined symbol : Deployment_VerifyProduction
+D:\rawrxd\history\-1a7e0bf1\mSM3.asm(643) : error A2006:undefined symbol : Deployment_RecordDeployment

@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\terraform.asm\1771247304774_SkWy.asm
+D:\rawrxd\history\all_versions\terraform.asm\1771247304774_SkWy.asm(273) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\terraform.asm\1771247304774_SkWy.asm(1255) : error A2001:immediate operand not allowed
+D:\rawrxd\history\all_versions\terraform.asm\1771247304774_SkWy.asm(1257) : error A2001:immediate operand not allowed
+D:\rawrxd\history\all_versions\terraform.asm\1771247304774_SkWy.asm(1176) : error A2006:undefined symbol : syntax_err

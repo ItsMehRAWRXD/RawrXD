@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(39) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(132) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(148) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(152) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(192) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(206) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(213) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(239) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(244) : error A2008:syntax error : section
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(245) : error A2008:syntax error : db
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(246) : error A2008:syntax error : db
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(295) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(332) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(334) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(370) : error A2008:syntax error : bits
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(371) : error A2008:syntax error : section
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(419) : error A2008:syntax error : section
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(421) : error A2008:syntax error : g_input_filename
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(422) : error A2008:syntax error : g_output_filename
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(423) : error A2008:syntax error : g_current_stage
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(424) : error A2008:syntax error : g_error_code
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(425) : error A2008:syntax error : g_error_line
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(426) : error A2008:syntax error : g_error_column
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(429) : error A2008:syntax error : g_source_buffer
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(430) : error A2008:syntax error : g_source_size
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(431) : error A2008:syntax error : g_source_pos
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(432) : error A2008:syntax error : g_current_line
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(433) : error A2008:syntax error : g_current_column
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(436) : error A2008:syntax error : g_tokens
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(437) : error A2008:syntax error : g_token_count
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(438) : error A2008:syntax error : g_current_token
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(441) : error A2008:syntax error : g_ast_nodes
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(442) : error A2008:syntax error : g_ast_node_count
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(443) : error A2008:syntax error : g_ast_root
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(446) : error A2008:syntax error : g_symbols
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(447) : error A2008:syntax error : g_symbol_count
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(448) : error A2008:syntax error : g_current_section
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(449) : error A2008:syntax error : g_current_offset
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(452) : error A2008:syntax error : g_machine_code
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(453) : error A2008:syntax error : g_machine_code_size
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(454) : error A2008:syntax error : g_relocation_count
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(455) : error A2008:syntax error : g_relocations
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(458) : error A2008:syntax error : g_pe_buffer
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(459) : error A2008:syntax error : g_pe_size
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(460) : error A2008:syntax error : g_entry_point_rva
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(463) : error A2008:syntax error : g_temp_buffer
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(464) : error A2008:syntax error : g_line_buffer
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(465) : error A2008:syntax error : g_identifier_buffer
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(467) : error A2008:syntax error : section
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(468) : error A2008:syntax error : global
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(469) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(470) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(471) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(472) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(473) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(474) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(475) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(476) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(477) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(478) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(479) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(480) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(481) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(482) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(483) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(484) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(485) : error A2008:syntax error : in directive
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(533) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(547) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(562) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(577) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(581) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(585) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(597) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(656) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(663) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(669) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(673) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(677) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(681) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(685) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(689) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(693) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(696) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(728) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(730) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(742) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(750) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(759) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(773) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(781) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(790) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(796) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(797) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(800) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(812) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(822) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(832) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(878) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(881) : error A2008:syntax error : .
+D:\rawrxd\history\all_versions\src\masm\masm_solo_compiler.asm\1771286867363_gs8A.asm(920) : fatal error A1012:error count exceeds 100; stopping assembly

@@ -1,0 +1,69 @@
+{
+  "version": "1.0.0",
+  "description": "Standard prompt suite for inference validation",
+  "prompts": [
+    {
+      "id": "capital_france",
+      "text": "The capital of France is",
+      "expected_tokens": [" Paris", ".", " It", " is", " the"],
+      "category": "factual",
+      "max_tokens": 5
+    },
+    {
+      "id": "hello_world",
+      "text": "def hello_world():",
+      "expected_tokens": ["\n", "    ", "print", "(", "\"", "Hello"],
+      "category": "code",
+      "max_tokens": 10
+    },
+    {
+      "id": "story_start",
+      "text": "Once upon a time",
+      "expected_tokens": [",", " there", " was", " a", " young"],
+      "category": "creative",
+      "max_tokens": 10
+    },
+    {
+      "id": "math_simple",
+      "text": "2 + 2 =",
+      "expected_tokens": [" 4", ".", " The", " answer", " is"],
+      "category": "math",
+      "max_tokens": 5
+    },
+    {
+      "id": "empty_prompt",
+      "text": "",
+      "expected_tokens": ["The", " first", " thing"],
+      "category": "edge_case",
+      "max_tokens": 3
+    },
+    {
+      "id": "unicode_emoji",
+      "text": "Hello 😀",
+      "expected_tokens": [" world", "!", " How", " are", " you"],
+      "category": "unicode",
+      "max_tokens": 5
+    },
+    {
+      "id": "multilingual",
+      "text": "こんにちは",
+      "expected_tokens": ["世界", "！", "私", "は", "AI"],
+      "category": "multilingual",
+      "max_tokens": 5
+    },
+    {
+      "id": "long_context",
+      "text": "The quick brown fox jumps over the lazy dog. ",
+      "repeat": 100,
+      "expected_tokens": ["The", " dog", " was", " very", " lazy"],
+      "category": "long_context",
+      "max_tokens": 5
+    }
+  ],
+  "config": {
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "top_k": 0,
+    "seed": 42
+  }
+}

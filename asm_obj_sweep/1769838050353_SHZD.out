@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_HTTP_Router.asm\1769838050353_SHZD.asm
+D:\rawrxd\history\all_versions\src\RawrXD_HTTP_Router.asm\1769838050353_SHZD.asm(7) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\RawrXD_HTTP_Router.asm\1769838050353_SHZD.asm(22) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_HTTP_Router.asm\1769838050353_SHZD.asm(30) : error A2220:Missing .ENDPROLOG

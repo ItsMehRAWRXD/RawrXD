@@ -1,0 +1,1514 @@
+﻿.\build-modelgenie-tools-new\bin\Release\rawrxd_modelgenie_token0_execution.exe : [DEBUG] main entered
+At line:4 char:15
++ ...  F:\rawrxd; .\build-modelgenie-tools-new\bin\Release\rawrxd_modelgeni ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([DEBUG] main entered:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+=============================================================================
+RAWRXD_MODELGENIE_TOKEN0_EXECUTION_001
+=============================================================================
+
+[Gate] MODEL_EXPORT_SINGLE_INCLUDE=1
+[Gate] Model: DeepSeek-V2-Lite-Chat
+[Gate] Architecture: deepseek2
+[Gate] Blocks: 27
+[Gate] Hidden: 2048
+[Gate] Vocab: 102400
+[Gate] Execution ops: 300
+
+[Runtime] Opening GGUF storage: G:\~dev\rawrxd\models\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf
+[ROM] GGUF data_start=3972000 (from evidence)
+[ROM] Mapped 10364416768 bytes from G:\~dev\rawrxd\models\DeepSeek-V2-Lite-Chat.Q4_K_M.gguf
+[Runtime] GGUF opened
+[DEBUG] about to printf 1
+[DEBUG] about to printf 2
+[DEBUG] about to printf 3
+[DEBUG] past initial prints
+[DEBUG] before MODEL_EXPORT prints
+[DEBUG] before ModelExportRuntime construction
+[DEBUG] before Initialize call
+[DEBUG] Initialize start
+[DEBUG] rom_.Open succeeded
+[DEBUG] past GGUF opened
+[Gate] ROM_OFFSET_AUTHORITY_001
+[Gate] DATA_START=3996416 TENSORS_CHECKED=377 OUT_OF_RANGE=0
+ROM_OFFSET_AUTHORITY=PASS
+[BindTensor] name=output.weight dataOffset=0 kDataStart=3996416 absoluteOffset=3996416
+[BindTensor] name=token_embd.weight dataOffset=172032000 kDataStart=3996416 absoluteOffset=176028416
+[BindTensor] name=blk.0.attn_norm.weight dataOffset=289996800 kDataStart=3996416 absoluteOffset=293993216
+[BindTensor] name=blk.0.ffn_down.weight dataOffset=290004992 kDataStart=3996416 absoluteOffset=294001408
+[BindTensor] name=blk.0.ffn_gate.weight dataOffset=313819136 kDataStart=3996416 absoluteOffset=317815552
+[BindTensor] name=blk.0.ffn_up.weight dataOffset=326426624 kDataStart=3996416 absoluteOffset=330423040
+[BindTensor] name=blk.0.ffn_norm.weight dataOffset=339034112 kDataStart=3996416 absoluteOffset=343030528
+[BindTensor] name=blk.0.attn_kv_a_norm.weight dataOffset=339042304 kDataStart=3996416 absoluteOffset=343038720
+[BindTensor] name=blk.0.attn_kv_a_mqa.weight dataOffset=339044352 kDataStart=3996416 absoluteOffset=343040768
+[BindTensor] name=blk.0.attn_kv_b.weight dataOffset=339707904 kDataStart=3996416 absoluteOffset=343704320
+[BindTensor] name=blk.0.attn_output.weight dataOffset=340887552 kDataStart=3996416 absoluteOffset=344883968
+[BindTensor] name=blk.0.attn_q.weight dataOffset=343246848 kDataStart=3996416 absoluteOffset=347243264
+[BindTensor] name=blk.1.attn_norm.weight dataOffset=346785792 kDataStart=3996416 absoluteOffset=350782208
+[BindTensor] name=blk.1.ffn_down_exps.weight dataOffset=346793984 kDataStart=3996416 absoluteOffset=350790400
+[BindTensor] name=blk.1.ffn_gate_exps.weight dataOffset=542877696 kDataStart=3996416 absoluteOffset=546874112
+[BindTensor] name=blk.1.ffn_up_exps.weight dataOffset=646686720 kDataStart=3996416 absoluteOffset=650683136
+[BindTensor] name=blk.1.ffn_gate_inp.weight dataOffset=750495744 kDataStart=3996416 absoluteOffset=754492160
+[BindTensor] name=blk.1.ffn_down_shexp.weight dataOffset=751020032 kDataStart=3996416 absoluteOffset=755016448
+[BindTensor] name=blk.1.ffn_gate_shexp.weight dataOffset=755750912 kDataStart=3996416 absoluteOffset=759747328
+[BindTensor] name=blk.1.ffn_up_shexp.weight dataOffset=758994944 kDataStart=3996416 absoluteOffset=762991360
+[BindTensor] name=blk.1.ffn_norm.weight dataOffset=762238976 kDataStart=3996416 absoluteOffset=766235392
+[BindTensor] name=blk.1.attn_kv_a_norm.weight dataOffset=762247168 kDataStart=3996416 absoluteOffset=766243584
+[BindTensor] name=blk.1.attn_kv_a_mqa.weight dataOffset=762249216 kDataStart=3996416 absoluteOffset=766245632
+[BindTensor] name=blk.1.attn_kv_b.weight dataOffset=762912768 kDataStart=3996416 absoluteOffset=766909184
+[BindTensor] name=blk.1.attn_output.weight dataOffset=764092416 kDataStart=3996416 absoluteOffset=768088832
+[BindTensor] name=blk.1.attn_q.weight dataOffset=766451712 kDataStart=3996416 absoluteOffset=770448128
+[BindTensor] name=blk.2.attn_norm.weight dataOffset=769990656 kDataStart=3996416 absoluteOffset=773987072
+[BindTensor] name=blk.2.ffn_down_exps.weight dataOffset=769998848 kDataStart=3996416 absoluteOffset=773995264
+[BindTensor] name=blk.2.ffn_gate_exps.weight dataOffset=966082560 kDataStart=3996416 absoluteOffset=970078976
+[BindTensor] name=blk.2.ffn_up_exps.weight dataOffset=1069891584 kDataStart=3996416 absoluteOffset=1073888000
+[BindTensor] name=blk.2.ffn_gate_inp.weight dataOffset=1173700608 kDataStart=3996416 absoluteOffset=1177697024
+[BindTensor] name=blk.2.ffn_down_shexp.weight dataOffset=1174224896 kDataStart=3996416 absoluteOffset=1178221312
+[BindTensor] name=blk.2.ffn_gate_shexp.weight dataOffset=1178955776 kDataStart=3996416 absoluteOffset=1182952192
+[BindTensor] name=blk.2.ffn_up_shexp.weight dataOffset=1182199808 kDataStart=3996416 absoluteOffset=1186196224
+[BindTensor] name=blk.2.ffn_norm.weight dataOffset=1185443840 kDataStart=3996416 absoluteOffset=1189440256
+[BindTensor] name=blk.2.attn_kv_a_norm.weight dataOffset=1185452032 kDataStart=3996416 absoluteOffset=1189448448
+[BindTensor] name=blk.2.attn_kv_a_mqa.weight dataOffset=1185454080 kDataStart=3996416 absoluteOffset=1189450496
+[BindTensor] name=blk.2.attn_kv_b.weight dataOffset=1186117632 kDataStart=3996416 absoluteOffset=1190114048
+[BindTensor] name=blk.2.attn_output.weight dataOffset=1187297280 kDataStart=3996416 absoluteOffset=1191293696
+[BindTensor] name=blk.2.attn_q.weight dataOffset=1189656576 kDataStart=3996416 absoluteOffset=1193652992
+[BindTensor] name=blk.3.attn_norm.weight dataOffset=1193195520 kDataStart=3996416 absoluteOffset=1197191936
+[BindTensor] name=blk.3.ffn_down_exps.weight dataOffset=1193203712 kDataStart=3996416 absoluteOffset=1197200128
+[BindTensor] name=blk.3.ffn_gate_exps.weight dataOffset=1320081408 kDataStart=3996416 absoluteOffset=1324077824
+[BindTensor] name=blk.3.ffn_up_exps.weight dataOffset=1423890432 kDataStart=3996416 absoluteOffset=1427886848
+[BindTensor] name=blk.3.ffn_gate_inp.weight dataOffset=1527699456 kDataStart=3996416 absoluteOffset=1531695872
+[BindTensor] name=blk.3.ffn_down_shexp.weight dataOffset=1528223744 kDataStart=3996416 absoluteOffset=1532220160
+[BindTensor] name=blk.3.ffn_gate_shexp.weight dataOffset=1531467776 kDataStart=3996416 absoluteOffset=1535464192
+[BindTensor] name=blk.3.ffn_up_shexp.weight dataOffset=1534711808 kDataStart=3996416 absoluteOffset=1538708224
+[BindTensor] name=blk.3.ffn_norm.weight dataOffset=1537955840 kDataStart=3996416 absoluteOffset=1541952256
+[BindTensor] name=blk.3.attn_kv_a_norm.weight dataOffset=1537964032 kDataStart=3996416 absoluteOffset=1541960448
+[BindTensor] name=blk.3.attn_kv_a_mqa.weight dataOffset=1537966080 kDataStart=3996416 absoluteOffset=1541962496
+[BindTensor] name=blk.3.attn_kv_b.weight dataOffset=1538629632 kDataStart=3996416 absoluteOffset=1542626048
+[BindTensor] name=blk.3.attn_output.weight dataOffset=1539809280 kDataStart=3996416 absoluteOffset=1543805696
+[BindTensor] name=blk.3.attn_q.weight dataOffset=1542168576 kDataStart=3996416 absoluteOffset=1546164992
+[BindTensor] name=blk.4.attn_norm.weight dataOffset=1545707520 kDataStart=3996416 absoluteOffset=1549703936
+[BindTensor] name=blk.4.ffn_down_exps.weight dataOffset=1545715712 kDataStart=3996416 absoluteOffset=1549712128
+[BindTensor] name=blk.4.ffn_gate_exps.weight dataOffset=1672593408 kDataStart=3996416 absoluteOffset=1676589824
+[BindTensor] name=blk.4.ffn_up_exps.weight dataOffset=1776402432 kDataStart=3996416 absoluteOffset=1780398848
+[BindTensor] name=blk.4.ffn_gate_inp.weight dataOffset=1880211456 kDataStart=3996416 absoluteOffset=1884207872
+[BindTensor] name=blk.4.ffn_down_shexp.weight dataOffset=1880735744 kDataStart=3996416 absoluteOffset=1884732160
+[BindTensor] name=blk.4.ffn_gate_shexp.weight dataOffset=1883979776 kDataStart=3996416 absoluteOffset=1887976192
+[BindTensor] name=blk.4.ffn_up_shexp.weight dataOffset=1887223808 kDataStart=3996416 absoluteOffset=1891220224
+[BindTensor] name=blk.4.ffn_norm.weight dataOffset=1890467840 kDataStart=3996416 absoluteOffset=1894464256
+[BindTensor] name=blk.4.attn_kv_a_norm.weight dataOffset=1890476032 kDataStart=3996416 absoluteOffset=1894472448
+[BindTensor] name=blk.4.attn_kv_a_mqa.weight dataOffset=1890478080 kDataStart=3996416 absoluteOffset=1894474496
+[BindTensor] name=blk.4.attn_kv_b.weight dataOffset=1891141632 kDataStart=3996416 absoluteOffset=1895138048
+[BindTensor] name=blk.4.attn_output.weight dataOffset=1892321280 kDataStart=3996416 absoluteOffset=1896317696
+[BindTensor] name=blk.4.attn_q.weight dataOffset=1894680576 kDataStart=3996416 absoluteOffset=1898676992
+[BindTensor] name=blk.5.attn_norm.weight dataOffset=1898219520 kDataStart=3996416 absoluteOffset=1902215936
+[BindTensor] name=blk.5.ffn_down_exps.weight dataOffset=1898227712 kDataStart=3996416 absoluteOffset=1902224128
+[BindTensor] name=blk.5.ffn_gate_exps.weight dataOffset=2094311424 kDataStart=3996416 absoluteOffset=2098307840
+[BindTensor] name=blk.5.ffn_up_exps.weight dataOffset=2198120448 kDataStart=3996416 absoluteOffset=2202116864
+[BindTensor] name=blk.5.ffn_gate_inp.weight dataOffset=2301929472 kDataStart=3996416 absoluteOffset=2305925888
+[BindTensor] name=blk.5.ffn_down_shexp.weight dataOffset=2302453760 kDataStart=3996416 absoluteOffset=2306450176
+[BindTensor] name=blk.5.ffn_gate_shexp.weight dataOffset=2307184640 kDataStart=3996416 absoluteOffset=2311181056
+[BindTensor] name=blk.5.ffn_up_shexp.weight dataOffset=2310428672 kDataStart=3996416 absoluteOffset=2314425088
+[BindTensor] name=blk.5.ffn_norm.weight dataOffset=2313672704 kDataStart=3996416 absoluteOffset=2317669120
+[BindTensor] name=blk.5.attn_kv_a_norm.weight dataOffset=2313680896 kDataStart=3996416 absoluteOffset=2317677312
+[BindTensor] name=blk.5.attn_kv_a_mqa.weight dataOffset=2313682944 kDataStart=3996416 absoluteOffset=2317679360
+[BindTensor] name=blk.5.attn_kv_b.weight dataOffset=2314346496 kDataStart=3996416 absoluteOffset=2318342912
+[BindTensor] name=blk.5.attn_output.weight dataOffset=2315526144 kDataStart=3996416 absoluteOffset=2319522560
+[BindTensor] name=blk.5.attn_q.weight dataOffset=2317885440 kDataStart=3996416 absoluteOffset=2321881856
+[BindTensor] name=blk.6.attn_norm.weight dataOffset=2321424384 kDataStart=3996416 absoluteOffset=2325420800
+[BindTensor] name=blk.6.ffn_down_exps.weight dataOffset=2321432576 kDataStart=3996416 absoluteOffset=2325428992
+[BindTensor] name=blk.6.ffn_gate_exps.weight dataOffset=2448310272 kDataStart=3996416 absoluteOffset=2452306688
+[BindTensor] name=blk.6.ffn_up_exps.weight dataOffset=2552119296 kDataStart=3996416 absoluteOffset=2556115712
+[BindTensor] name=blk.6.ffn_gate_inp.weight dataOffset=2655928320 kDataStart=3996416 absoluteOffset=2659924736
+[BindTensor] name=blk.6.ffn_down_shexp.weight dataOffset=2656452608 kDataStart=3996416 absoluteOffset=2660449024
+[BindTensor] name=blk.6.ffn_gate_shexp.weight dataOffset=2659696640 kDataStart=3996416 absoluteOffset=2663693056
+[BindTensor] name=blk.6.ffn_up_shexp.weight dataOffset=2662940672 kDataStart=3996416 absoluteOffset=2666937088
+[BindTensor] name=blk.6.ffn_norm.weight dataOffset=2666184704 kDataStart=3996416 absoluteOffset=2670181120
+[BindTensor] name=blk.6.attn_kv_a_norm.weight dataOffset=2666192896 kDataStart=3996416 absoluteOffset=2670189312
+[BindTensor] name=blk.6.attn_kv_a_mqa.weight dataOffset=2666194944 kDataStart=3996416 absoluteOffset=2670191360
+[BindTensor] name=blk.6.attn_kv_b.weight dataOffset=2666858496 kDataStart=3996416 absoluteOffset=2670854912
+[BindTensor] name=blk.6.attn_output.weight dataOffset=2668038144 kDataStart=3996416 absoluteOffset=2672034560
+[BindTensor] name=blk.6.attn_q.weight dataOffset=2670397440 kDataStart=3996416 absoluteOffset=2674393856
+[BindTensor] name=blk.7.ffn_gate_inp.weight dataOffset=2673936384 kDataStart=3996416 absoluteOffset=2677932800
+[BindTensor] name=blk.7.ffn_down_shexp.weight dataOffset=2674460672 kDataStart=3996416 absoluteOffset=2678457088
+[BindTensor] name=blk.7.ffn_gate_shexp.weight dataOffset=2677704704 kDataStart=3996416 absoluteOffset=2681701120
+[BindTensor] name=blk.7.ffn_up_shexp.weight dataOffset=2680948736 kDataStart=3996416 absoluteOffset=2684945152
+[BindTensor] name=blk.7.attn_kv_a_norm.weight dataOffset=2684192768 kDataStart=3996416 absoluteOffset=2688189184
+[BindTensor] name=blk.7.attn_kv_a_mqa.weight dataOffset=2684194816 kDataStart=3996416 absoluteOffset=2688191232
+[BindTensor] name=blk.7.attn_kv_b.weight dataOffset=2684858368 kDataStart=3996416 absoluteOffset=2688854784
+[BindTensor] name=blk.7.attn_output.weight dataOffset=2686038016 kDataStart=3996416 absoluteOffset=2690034432
+[BindTensor] name=blk.7.attn_q.weight dataOffset=2688397312 kDataStart=3996416 absoluteOffset=2692393728
+[BindTensor] name=output_norm.weight dataOffset=2691936256 kDataStart=3996416 absoluteOffset=2695932672
+[BindTensor] name=blk.10.attn_norm.weight dataOffset=2691944448 kDataStart=3996416 absoluteOffset=2695940864
+[BindTensor] name=blk.10.ffn_down_exps.weight dataOffset=2691952640 kDataStart=3996416 absoluteOffset=2695949056
+[BindTensor] name=blk.10.ffn_gate_exps.weight dataOffset=2818830336 kDataStart=3996416 absoluteOffset=2822826752
+[BindTensor] name=blk.10.ffn_up_exps.weight dataOffset=2922639360 kDataStart=3996416 absoluteOffset=2926635776
+[BindTensor] name=blk.10.ffn_gate_inp.weight dataOffset=3026448384 kDataStart=3996416 absoluteOffset=3030444800
+[BindTensor] name=blk.10.ffn_down_shexp.weight dataOffset=3026972672 kDataStart=3996416 absoluteOffset=3030969088
+[BindTensor] name=blk.10.ffn_gate_shexp.weight dataOffset=3030216704 kDataStart=3996416 absoluteOffset=3034213120
+[BindTensor] name=blk.10.ffn_up_shexp.weight dataOffset=3033460736 kDataStart=3996416 absoluteOffset=3037457152
+[BindTensor] name=blk.10.ffn_norm.weight dataOffset=3036704768 kDataStart=3996416 absoluteOffset=3040701184
+[BindTensor] name=blk.10.attn_kv_a_norm.weight dataOffset=3036712960 kDataStart=3996416 absoluteOffset=3040709376
+[BindTensor] name=blk.10.attn_kv_a_mqa.weight dataOffset=3036715008 kDataStart=3996416 absoluteOffset=3040711424
+[BindTensor] name=blk.10.attn_kv_b.weight dataOffset=3037378560 kDataStart=3996416 absoluteOffset=3041374976
+[BindTensor] name=blk.10.attn_output.weight dataOffset=3038558208 kDataStart=3996416 absoluteOffset=3042554624
+[BindTensor] name=blk.10.attn_q.weight dataOffset=3040917504 kDataStart=3996416 absoluteOffset=3044913920
+[BindTensor] name=blk.11.attn_norm.weight dataOffset=3044456448 kDataStart=3996416 absoluteOffset=3048452864
+[BindTensor] name=blk.11.ffn_down_exps.weight dataOffset=3044464640 kDataStart=3996416 absoluteOffset=3048461056
+[BindTensor] name=blk.11.ffn_gate_exps.weight dataOffset=3240548352 kDataStart=3996416 absoluteOffset=3244544768
+[BindTensor] name=blk.11.ffn_up_exps.weight dataOffset=3344357376 kDataStart=3996416 absoluteOffset=3348353792
+[BindTensor] name=blk.11.ffn_gate_inp.weight dataOffset=3448166400 kDataStart=3996416 absoluteOffset=3452162816
+[BindTensor] name=blk.11.ffn_down_shexp.weight dataOffset=3448690688 kDataStart=3996416 absoluteOffset=3452687104
+[BindTensor] name=blk.11.ffn_gate_shexp.weight dataOffset=3453421568 kDataStart=3996416 absoluteOffset=3457417984
+[BindTensor] name=blk.11.ffn_up_shexp.weight dataOffset=3456665600 kDataStart=3996416 absoluteOffset=3460662016
+[BindTensor] name=blk.11.ffn_norm.weight dataOffset=3459909632 kDataStart=3996416 absoluteOffset=3463906048
+[BindTensor] name=blk.11.attn_kv_a_norm.weight dataOffset=3459917824 kDataStart=3996416 absoluteOffset=3463914240
+[BindTensor] name=blk.11.attn_kv_a_mqa.weight dataOffset=3459919872 kDataStart=3996416 absoluteOffset=3463916288
+[BindTensor] name=blk.11.attn_kv_b.weight dataOffset=3460583424 kDataStart=3996416 absoluteOffset=3464579840
+[BindTensor] name=blk.11.attn_output.weight dataOffset=3461763072 kDataStart=3996416 absoluteOffset=3465759488
+[BindTensor] name=blk.11.attn_q.weight dataOffset=3464122368 kDataStart=3996416 absoluteOffset=3468118784
+[BindTensor] name=blk.12.attn_norm.weight dataOffset=3467661312 kDataStart=3996416 absoluteOffset=3471657728
+[BindTensor] name=blk.12.ffn_down_exps.weight dataOffset=3467669504 kDataStart=3996416 absoluteOffset=3471665920
+[BindTensor] name=blk.12.ffn_gate_exps.weight dataOffset=3594547200 kDataStart=3996416 absoluteOffset=3598543616
+[BindTensor] name=blk.12.ffn_up_exps.weight dataOffset=3698356224 kDataStart=3996416 absoluteOffset=3702352640
+[BindTensor] name=blk.12.ffn_gate_inp.weight dataOffset=3802165248 kDataStart=3996416 absoluteOffset=3806161664
+[BindTensor] name=blk.12.ffn_down_shexp.weight dataOffset=3802689536 kDataStart=3996416 absoluteOffset=3806685952
+[BindTensor] name=blk.12.ffn_gate_shexp.weight dataOffset=3805933568 kDataStart=3996416 absoluteOffset=3809929984
+[BindTensor] name=blk.12.ffn_up_shexp.weight dataOffset=3809177600 kDataStart=3996416 absoluteOffset=3813174016
+[BindTensor] name=blk.12.ffn_norm.weight dataOffset=3812421632 kDataStart=3996416 absoluteOffset=3816418048
+[BindTensor] name=blk.12.attn_kv_a_norm.weight dataOffset=3812429824 kDataStart=3996416 absoluteOffset=3816426240
+[BindTensor] name=blk.12.attn_kv_a_mqa.weight dataOffset=3812431872 kDataStart=3996416 absoluteOffset=3816428288
+[BindTensor] name=blk.12.attn_kv_b.weight dataOffset=3813095424 kDataStart=3996416 absoluteOffset=3817091840
+[BindTensor] name=blk.12.attn_output.weight dataOffset=3814275072 kDataStart=3996416 absoluteOffset=3818271488
+[BindTensor] name=blk.12.attn_q.weight dataOffset=3816634368 kDataStart=3996416 absoluteOffset=3820630784
+[BindTensor] name=blk.13.attn_norm.weight dataOffset=3820173312 kDataStart=3996416 absoluteOffset=3824169728
+[BindTensor] name=blk.13.ffn_down_exps.weight dataOffset=3820181504 kDataStart=3996416 absoluteOffset=3824177920
+[BindTensor] name=blk.13.ffn_gate_exps.weight dataOffset=3947059200 kDataStart=3996416 absoluteOffset=3951055616
+[BindTensor] name=blk.13.ffn_up_exps.weight dataOffset=4050868224 kDataStart=3996416 absoluteOffset=4054864640
+[BindTensor] name=blk.13.ffn_gate_inp.weight dataOffset=4154677248 kDataStart=3996416 absoluteOffset=4158673664
+[BindTensor] name=blk.13.ffn_down_shexp.weight dataOffset=4155201536 kDataStart=3996416 absoluteOffset=4159197952
+[BindTensor] name=blk.13.ffn_gate_shexp.weight dataOffset=4158445568 kDataStart=3996416 absoluteOffset=4162441984
+[BindTensor] name=blk.13.ffn_up_shexp.weight dataOffset=4161689600 kDataStart=3996416 absoluteOffset=4165686016
+[BindTensor] name=blk.13.ffn_norm.weight dataOffset=4164933632 kDataStart=3996416 absoluteOffset=4168930048
+[BindTensor] name=blk.13.attn_kv_a_norm.weight dataOffset=4164941824 kDataStart=3996416 absoluteOffset=4168938240
+[BindTensor] name=blk.13.attn_kv_a_mqa.weight dataOffset=4164943872 kDataStart=3996416 absoluteOffset=4168940288
+[BindTensor] name=blk.13.attn_kv_b.weight dataOffset=4165607424 kDataStart=3996416 absoluteOffset=4169603840
+[BindTensor] name=blk.13.attn_output.weight dataOffset=4166787072 kDataStart=3996416 absoluteOffset=4170783488
+[BindTensor] name=blk.13.attn_q.weight dataOffset=4169146368 kDataStart=3996416 absoluteOffset=4173142784
+[BindTensor] name=blk.14.ffn_gate_inp.weight dataOffset=4172685312 kDataStart=3996416 absoluteOffset=4176681728
+[BindTensor] name=blk.14.ffn_down_shexp.weight dataOffset=4173209600 kDataStart=3996416 absoluteOffset=4177206016
+[BindTensor] name=blk.14.ffn_gate_shexp.weight dataOffset=4177940480 kDataStart=3996416 absoluteOffset=4181936896
+[BindTensor] name=blk.14.ffn_up_shexp.weight dataOffset=4181184512 kDataStart=3996416 absoluteOffset=4185180928
+[BindTensor] name=blk.14.attn_kv_a_norm.weight dataOffset=4184428544 kDataStart=3996416 absoluteOffset=4188424960
+[BindTensor] name=blk.14.attn_kv_a_mqa.weight dataOffset=4184430592 kDataStart=3996416 absoluteOffset=4188427008
+[BindTensor] name=blk.14.attn_kv_b.weight dataOffset=4185094144 kDataStart=3996416 absoluteOffset=4189090560
+[BindTensor] name=blk.14.attn_output.weight dataOffset=4186273792 kDataStart=3996416 absoluteOffset=4190270208
+[BindTensor] name=blk.14.attn_q.weight dataOffset=4188633088 kDataStart=3996416 absoluteOffset=4192629504
+[BindTensor] name=blk.7.attn_norm.weight dataOffset=4192172032 kDataStart=3996416 absoluteOffset=4196168448
+[BindTensor] name=blk.7.ffn_down_exps.weight dataOffset=4192180224 kDataStart=3996416 absoluteOffset=4196176640
+[BindTensor] name=blk.7.ffn_gate_exps.weight dataOffset=4319057920 kDataStart=3996416 absoluteOffset=4323054336
+[BindTensor] name=blk.7.ffn_up_exps.weight dataOffset=4422866944 kDataStart=3996416 absoluteOffset=4426863360
+[BindTensor] name=blk.7.ffn_norm.weight dataOffset=4526675968 kDataStart=3996416 absoluteOffset=4530672384
+[BindTensor] name=blk.8.attn_norm.weight dataOffset=4526684160 kDataStart=3996416 absoluteOffset=4530680576
+[BindTensor] name=blk.8.ffn_down_exps.weight dataOffset=4526692352 kDataStart=3996416 absoluteOffset=4530688768
+[BindTensor] name=blk.8.ffn_gate_exps.weight dataOffset=4722776064 kDataStart=3996416 absoluteOffset=4726772480
+[BindTensor] name=blk.8.ffn_up_exps.weight dataOffset=4826585088 kDataStart=3996416 absoluteOffset=4830581504
+[BindTensor] name=blk.8.ffn_gate_inp.weight dataOffset=4930394112 kDataStart=3996416 absoluteOffset=4934390528
+[BindTensor] name=blk.8.ffn_down_shexp.weight dataOffset=4930918400 kDataStart=3996416 absoluteOffset=4934914816
+[BindTensor] name=blk.8.ffn_gate_shexp.weight dataOffset=4935649280 kDataStart=3996416 absoluteOffset=4939645696
+[BindTensor] name=blk.8.ffn_up_shexp.weight dataOffset=4938893312 kDataStart=3996416 absoluteOffset=4942889728
+[BindTensor] name=blk.8.ffn_norm.weight dataOffset=4942137344 kDataStart=3996416 absoluteOffset=4946133760
+[BindTensor] name=blk.8.attn_kv_a_norm.weight dataOffset=4942145536 kDataStart=3996416 absoluteOffset=4946141952
+[BindTensor] name=blk.8.attn_kv_a_mqa.weight dataOffset=4942147584 kDataStart=3996416 absoluteOffset=4946144000
+[BindTensor] name=blk.8.attn_kv_b.weight dataOffset=4942811136 kDataStart=3996416 absoluteOffset=4946807552
+[BindTensor] name=blk.8.attn_output.weight dataOffset=4943990784 kDataStart=3996416 absoluteOffset=4947987200
+[BindTensor] name=blk.8.attn_q.weight dataOffset=4946350080 kDataStart=3996416 absoluteOffset=4950346496
+[BindTensor] name=blk.9.attn_norm.weight dataOffset=4949889024 kDataStart=3996416 absoluteOffset=4953885440
+[BindTensor] name=blk.9.ffn_down_exps.weight dataOffset=4949897216 kDataStart=3996416 absoluteOffset=4953893632
+[BindTensor] name=blk.9.ffn_gate_exps.weight dataOffset=5076774912 kDataStart=3996416 absoluteOffset=5080771328
+[BindTensor] name=blk.9.ffn_up_exps.weight dataOffset=5180583936 kDataStart=3996416 absoluteOffset=5184580352
+[BindTensor] name=blk.9.ffn_gate_inp.weight dataOffset=5284392960 kDataStart=3996416 absoluteOffset=5288389376
+[BindTensor] name=blk.9.ffn_down_shexp.weight dataOffset=5284917248 kDataStart=3996416 absoluteOffset=5288913664
+[BindTensor] name=blk.9.ffn_gate_shexp.weight dataOffset=5288161280 kDataStart=3996416 absoluteOffset=5292157696
+[BindTensor] name=blk.9.ffn_up_shexp.weight dataOffset=5291405312 kDataStart=3996416 absoluteOffset=5295401728
+[BindTensor] name=blk.9.ffn_norm.weight dataOffset=5294649344 kDataStart=3996416 absoluteOffset=5298645760
+[BindTensor] name=blk.9.attn_kv_a_norm.weight dataOffset=5294657536 kDataStart=3996416 absoluteOffset=5298653952
+[BindTensor] name=blk.9.attn_kv_a_mqa.weight dataOffset=5294659584 kDataStart=3996416 absoluteOffset=5298656000
+[BindTensor] name=blk.9.attn_kv_b.weight dataOffset=5295323136 kDataStart=3996416 absoluteOffset=5299319552
+[BindTensor] name=blk.9.attn_output.weight dataOffset=5296502784 kDataStart=3996416 absoluteOffset=5300499200
+[BindTensor] name=blk.9.attn_q.weight dataOffset=5298862080 kDataStart=3996416 absoluteOffset=5302858496
+[BindTensor] name=blk.14.attn_norm.weight dataOffset=5302401024 kDataStart=3996416 absoluteOffset=5306397440
+[BindTensor] name=blk.14.ffn_down_exps.weight dataOffset=5302409216 kDataStart=3996416 absoluteOffset=5306405632
+[BindTensor] name=blk.14.ffn_gate_exps.weight dataOffset=5498492928 kDataStart=3996416 absoluteOffset=5502489344
+[BindTensor] name=blk.14.ffn_up_exps.weight dataOffset=5602301952 kDataStart=3996416 absoluteOffset=5606298368
+[BindTensor] name=blk.14.ffn_norm.weight dataOffset=5706110976 kDataStart=3996416 absoluteOffset=5710107392
+[BindTensor] name=blk.15.attn_norm.weight dataOffset=5706119168 kDataStart=3996416 absoluteOffset=5710115584
+[BindTensor] name=blk.15.ffn_down_exps.weight dataOffset=5706127360 kDataStart=3996416 absoluteOffset=5710123776
+[BindTensor] name=blk.15.ffn_gate_exps.weight dataOffset=5833005056 kDataStart=3996416 absoluteOffset=5837001472
+[BindTensor] name=blk.15.ffn_up_exps.weight dataOffset=5936814080 kDataStart=3996416 absoluteOffset=5940810496
+[BindTensor] name=blk.15.ffn_gate_inp.weight dataOffset=6040623104 kDataStart=3996416 absoluteOffset=6044619520
+[BindTensor] name=blk.15.ffn_down_shexp.weight dataOffset=6041147392 kDataStart=3996416 absoluteOffset=6045143808
+[BindTensor] name=blk.15.ffn_gate_shexp.weight dataOffset=6044391424 kDataStart=3996416 absoluteOffset=6048387840
+[BindTensor] name=blk.15.ffn_up_shexp.weight dataOffset=6047635456 kDataStart=3996416 absoluteOffset=6051631872
+[BindTensor] name=blk.15.ffn_norm.weight dataOffset=6050879488 kDataStart=3996416 absoluteOffset=6054875904
+[BindTensor] name=blk.15.attn_kv_a_norm.weight dataOffset=6050887680 kDataStart=3996416 absoluteOffset=6054884096
+[BindTensor] name=blk.15.attn_kv_a_mqa.weight dataOffset=6050889728 kDataStart=3996416 absoluteOffset=6054886144
+[BindTensor] name=blk.15.attn_kv_b.weight dataOffset=6051553280 kDataStart=3996416 absoluteOffset=6055549696
+[BindTensor] name=blk.15.attn_output.weight dataOffset=6052732928 kDataStart=3996416 absoluteOffset=6056729344
+[BindTensor] name=blk.15.attn_q.weight dataOffset=6055092224 kDataStart=3996416 absoluteOffset=6059088640
+[BindTensor] name=blk.16.attn_norm.weight dataOffset=6058631168 kDataStart=3996416 absoluteOffset=6062627584
+[BindTensor] name=blk.16.ffn_down_exps.weight dataOffset=6058639360 kDataStart=3996416 absoluteOffset=6062635776
+[BindTensor] name=blk.16.ffn_gate_exps.weight dataOffset=6185517056 kDataStart=3996416 absoluteOffset=6189513472
+[BindTensor] name=blk.16.ffn_up_exps.weight dataOffset=6289326080 kDataStart=3996416 absoluteOffset=6293322496
+[BindTensor] name=blk.16.ffn_gate_inp.weight dataOffset=6393135104 kDataStart=3996416 absoluteOffset=6397131520
+[BindTensor] name=blk.16.ffn_down_shexp.weight dataOffset=6393659392 kDataStart=3996416 absoluteOffset=6397655808
+[BindTensor] name=blk.16.ffn_gate_shexp.weight dataOffset=6396903424 kDataStart=3996416 absoluteOffset=6400899840
+[BindTensor] name=blk.16.ffn_up_shexp.weight dataOffset=6400147456 kDataStart=3996416 absoluteOffset=6404143872
+[BindTensor] name=blk.16.ffn_norm.weight dataOffset=6403391488 kDataStart=3996416 absoluteOffset=6407387904
+[BindTensor] name=blk.16.attn_kv_a_norm.weight dataOffset=6403399680 kDataStart=3996416 absoluteOffset=6407396096
+[BindTensor] name=blk.16.attn_kv_a_mqa.weight dataOffset=6403401728 kDataStart=3996416 absoluteOffset=6407398144
+[BindTensor] name=blk.16.attn_kv_b.weight dataOffset=6404065280 kDataStart=3996416 absoluteOffset=6408061696
+[BindTensor] name=blk.16.attn_output.weight dataOffset=6405244928 kDataStart=3996416 absoluteOffset=6409241344
+[BindTensor] name=blk.16.attn_q.weight dataOffset=6407604224 kDataStart=3996416 absoluteOffset=6411600640
+[BindTensor] name=blk.17.attn_norm.weight dataOffset=6411143168 kDataStart=3996416 absoluteOffset=6415139584
+[BindTensor] name=blk.17.ffn_down_exps.weight dataOffset=6411151360 kDataStart=3996416 absoluteOffset=6415147776
+[BindTensor] name=blk.17.ffn_gate_exps.weight dataOffset=6607235072 kDataStart=3996416 absoluteOffset=6611231488
+[BindTensor] name=blk.17.ffn_up_exps.weight dataOffset=6711044096 kDataStart=3996416 absoluteOffset=6715040512
+[BindTensor] name=blk.17.ffn_gate_inp.weight dataOffset=6814853120 kDataStart=3996416 absoluteOffset=6818849536
+[BindTensor] name=blk.17.ffn_down_shexp.weight dataOffset=6815377408 kDataStart=3996416 absoluteOffset=6819373824
+[BindTensor] name=blk.17.ffn_gate_shexp.weight dataOffset=6820108288 kDataStart=3996416 absoluteOffset=6824104704
+[BindTensor] name=blk.17.ffn_up_shexp.weight dataOffset=6823352320 kDataStart=3996416 absoluteOffset=6827348736
+[BindTensor] name=blk.17.ffn_norm.weight dataOffset=6826596352 kDataStart=3996416 absoluteOffset=6830592768
+[BindTensor] name=blk.17.attn_kv_a_norm.weight dataOffset=6826604544 kDataStart=3996416 absoluteOffset=6830600960
+[BindTensor] name=blk.17.attn_kv_a_mqa.weight dataOffset=6826606592 kDataStart=3996416 absoluteOffset=6830603008
+[BindTensor] name=blk.17.attn_kv_b.weight dataOffset=6827270144 kDataStart=3996416 absoluteOffset=6831266560
+[BindTensor] name=blk.17.attn_output.weight dataOffset=6828449792 kDataStart=3996416 absoluteOffset=6832446208
+[BindTensor] name=blk.17.attn_q.weight dataOffset=6830809088 kDataStart=3996416 absoluteOffset=6834805504
+[BindTensor] name=blk.18.attn_norm.weight dataOffset=6834348032 kDataStart=3996416 absoluteOffset=6838344448
+[BindTensor] name=blk.18.ffn_down_exps.weight dataOffset=6834356224 kDataStart=3996416 absoluteOffset=6838352640
+[BindTensor] name=blk.18.ffn_gate_exps.weight dataOffset=6961233920 kDataStart=3996416 absoluteOffset=6965230336
+[BindTensor] name=blk.18.ffn_up_exps.weight dataOffset=7065042944 kDataStart=3996416 absoluteOffset=7069039360
+[BindTensor] name=blk.18.ffn_gate_inp.weight dataOffset=7168851968 kDataStart=3996416 absoluteOffset=7172848384
+[BindTensor] name=blk.18.ffn_down_shexp.weight dataOffset=7169376256 kDataStart=3996416 absoluteOffset=7173372672
+[BindTensor] name=blk.18.ffn_gate_shexp.weight dataOffset=7172620288 kDataStart=3996416 absoluteOffset=7176616704
+[BindTensor] name=blk.18.ffn_up_shexp.weight dataOffset=7175864320 kDataStart=3996416 absoluteOffset=7179860736
+[BindTensor] name=blk.18.ffn_norm.weight dataOffset=7179108352 kDataStart=3996416 absoluteOffset=7183104768
+[BindTensor] name=blk.18.attn_kv_a_norm.weight dataOffset=7179116544 kDataStart=3996416 absoluteOffset=7183112960
+[BindTensor] name=blk.18.attn_kv_a_mqa.weight dataOffset=7179118592 kDataStart=3996416 absoluteOffset=7183115008
+[BindTensor] name=blk.18.attn_kv_b.weight dataOffset=7179782144 kDataStart=3996416 absoluteOffset=7183778560
+[BindTensor] name=blk.18.attn_output.weight dataOffset=7180961792 kDataStart=3996416 absoluteOffset=7184958208
+[BindTensor] name=blk.18.attn_q.weight dataOffset=7183321088 kDataStart=3996416 absoluteOffset=7187317504
+[BindTensor] name=blk.19.attn_norm.weight dataOffset=7186860032 kDataStart=3996416 absoluteOffset=7190856448
+[BindTensor] name=blk.19.ffn_down_exps.weight dataOffset=7186868224 kDataStart=3996416 absoluteOffset=7190864640
+[BindTensor] name=blk.19.ffn_gate_exps.weight dataOffset=7313745920 kDataStart=3996416 absoluteOffset=7317742336
+[BindTensor] name=blk.19.ffn_up_exps.weight dataOffset=7417554944 kDataStart=3996416 absoluteOffset=7421551360
+[BindTensor] name=blk.19.ffn_gate_inp.weight dataOffset=7521363968 kDataStart=3996416 absoluteOffset=7525360384
+[BindTensor] name=blk.19.ffn_down_shexp.weight dataOffset=7521888256 kDataStart=3996416 absoluteOffset=7525884672
+[BindTensor] name=blk.19.ffn_gate_shexp.weight dataOffset=7525132288 kDataStart=3996416 absoluteOffset=7529128704
+[BindTensor] name=blk.19.ffn_up_shexp.weight dataOffset=7528376320 kDataStart=3996416 absoluteOffset=7532372736
+[BindTensor] name=blk.19.ffn_norm.weight dataOffset=7531620352 kDataStart=3996416 absoluteOffset=7535616768
+[BindTensor] name=blk.19.attn_kv_a_norm.weight dataOffset=7531628544 kDataStart=3996416 absoluteOffset=7535624960
+[BindTensor] name=blk.19.attn_kv_a_mqa.weight dataOffset=7531630592 kDataStart=3996416 absoluteOffset=7535627008
+[BindTensor] name=blk.19.attn_kv_b.weight dataOffset=7532294144 kDataStart=3996416 absoluteOffset=7536290560
+[BindTensor] name=blk.19.attn_output.weight dataOffset=7533473792 kDataStart=3996416 absoluteOffset=7537470208
+[BindTensor] name=blk.19.attn_q.weight dataOffset=7535833088 kDataStart=3996416 absoluteOffset=7539829504
+[BindTensor] name=blk.20.attn_norm.weight dataOffset=7539372032 kDataStart=3996416 absoluteOffset=7543368448
+[BindTensor] name=blk.20.ffn_down_exps.weight dataOffset=7539380224 kDataStart=3996416 absoluteOffset=7543376640
+[BindTensor] name=blk.20.ffn_gate_exps.weight dataOffset=7735463936 kDataStart=3996416 absoluteOffset=7739460352
+[BindTensor] name=blk.20.ffn_up_exps.weight dataOffset=7839272960 kDataStart=3996416 absoluteOffset=7843269376
+[BindTensor] name=blk.20.ffn_gate_inp.weight dataOffset=7943081984 kDataStart=3996416 absoluteOffset=7947078400
+[BindTensor] name=blk.20.ffn_down_shexp.weight dataOffset=7943606272 kDataStart=3996416 absoluteOffset=7947602688
+[BindTensor] name=blk.20.ffn_gate_shexp.weight dataOffset=7948337152 kDataStart=3996416 absoluteOffset=7952333568
+[BindTensor] name=blk.20.ffn_up_shexp.weight dataOffset=7951581184 kDataStart=3996416 absoluteOffset=7955577600
+[BindTensor] name=blk.20.ffn_norm.weight dataOffset=7954825216 kDataStart=3996416 absoluteOffset=7958821632
+[BindTensor] name=blk.20.attn_kv_a_norm.weight dataOffset=7954833408 kDataStart=3996416 absoluteOffset=7958829824
+[BindTensor] name=blk.20.attn_kv_a_mqa.weight dataOffset=7954835456 kDataStart=3996416 absoluteOffset=7958831872
+[BindTensor] name=blk.20.attn_kv_b.weight dataOffset=7955499008 kDataStart=3996416 absoluteOffset=7959495424
+[BindTensor] name=blk.20.attn_output.weight dataOffset=7956678656 kDataStart=3996416 absoluteOffset=7960675072
+[BindTensor] name=blk.20.attn_q.weight dataOffset=7959037952 kDataStart=3996416 absoluteOffset=7963034368
+[BindTensor] name=blk.21.attn_norm.weight dataOffset=7962576896 kDataStart=3996416 absoluteOffset=7966573312
+[BindTensor] name=blk.21.ffn_down_exps.weight dataOffset=7962585088 kDataStart=3996416 absoluteOffset=7966581504
+[BindTensor] name=blk.21.ffn_gate_exps.weight dataOffset=8089462784 kDataStart=3996416 absoluteOffset=8093459200
+[BindTensor] name=blk.21.ffn_up_exps.weight dataOffset=8193271808 kDataStart=3996416 absoluteOffset=8197268224
+[BindTensor] name=blk.21.ffn_gate_inp.weight dataOffset=8297080832 kDataStart=3996416 absoluteOffset=8301077248
+[BindTensor] name=blk.21.ffn_down_shexp.weight dataOffset=8297605120 kDataStart=3996416 absoluteOffset=8301601536
+[BindTensor] name=blk.21.ffn_gate_shexp.weight dataOffset=8300849152 kDataStart=3996416 absoluteOffset=8304845568
+[BindTensor] name=blk.21.ffn_up_shexp.weight dataOffset=8304093184 kDataStart=3996416 absoluteOffset=8308089600
+[BindTensor] name=blk.21.ffn_norm.weight dataOffset=8307337216 kDataStart=3996416 absoluteOffset=8311333632
+[BindTensor] name=blk.21.attn_kv_a_norm.weight dataOffset=8307345408 kDataStart=3996416 absoluteOffset=8311341824
+[BindTensor] name=blk.21.attn_kv_a_mqa.weight dataOffset=8307347456 kDataStart=3996416 absoluteOffset=8311343872
+[BindTensor] name=blk.21.attn_kv_b.weight dataOffset=8308011008 kDataStart=3996416 absoluteOffset=8312007424
+[BindTensor] name=blk.21.attn_output.weight dataOffset=8309190656 kDataStart=3996416 absoluteOffset=8313187072
+[BindTensor] name=blk.21.attn_q.weight dataOffset=8311549952 kDataStart=3996416 absoluteOffset=8315546368
+[BindTensor] name=blk.22.ffn_gate_inp.weight dataOffset=8315088896 kDataStart=3996416 absoluteOffset=8319085312
+[BindTensor] name=blk.22.ffn_down_shexp.weight dataOffset=8315613184 kDataStart=3996416 absoluteOffset=8319609600
+[BindTensor] name=blk.22.ffn_gate_shexp.weight dataOffset=8318857216 kDataStart=3996416 absoluteOffset=8322853632
+[BindTensor] name=blk.22.ffn_up_shexp.weight dataOffset=8322101248 kDataStart=3996416 absoluteOffset=8326097664
+[BindTensor] name=blk.22.attn_kv_a_norm.weight dataOffset=8325345280 kDataStart=3996416 absoluteOffset=8329341696
+[BindTensor] name=blk.22.attn_kv_a_mqa.weight dataOffset=8325347328 kDataStart=3996416 absoluteOffset=8329343744
+[BindTensor] name=blk.22.attn_kv_b.weight dataOffset=8326010880 kDataStart=3996416 absoluteOffset=8330007296
+[BindTensor] name=blk.22.attn_output.weight dataOffset=8327190528 kDataStart=3996416 absoluteOffset=8331186944
+[BindTensor] name=blk.22.attn_q.weight dataOffset=8329549824 kDataStart=3996416 absoluteOffset=8333546240
+[BindTensor] name=blk.22.attn_norm.weight dataOffset=8333088768 kDataStart=3996416 absoluteOffset=8337085184
+[BindTensor] name=blk.22.ffn_down_exps.weight dataOffset=8333096960 kDataStart=3996416 absoluteOffset=8337093376
+[BindTensor] name=blk.22.ffn_gate_exps.weight dataOffset=8459974656 kDataStart=3996416 absoluteOffset=8463971072
+[BindTensor] name=blk.22.ffn_up_exps.weight dataOffset=8563783680 kDataStart=3996416 absoluteOffset=8567780096
+[BindTensor] name=blk.22.ffn_norm.weight dataOffset=8667592704 kDataStart=3996416 absoluteOffset=8671589120
+[BindTensor] name=blk.23.attn_norm.weight dataOffset=8667600896 kDataStart=3996416 absoluteOffset=8671597312
+[BindTensor] name=blk.23.ffn_down_exps.weight dataOffset=8667609088 kDataStart=3996416 absoluteOffset=8671605504
+[BindTensor] name=blk.23.ffn_gate_exps.weight dataOffset=8863692800 kDataStart=3996416 absoluteOffset=8867689216
+[BindTensor] name=blk.23.ffn_up_exps.weight dataOffset=8967501824 kDataStart=3996416 absoluteOffset=8971498240
+[BindTensor] name=blk.23.ffn_gate_inp.weight dataOffset=9071310848 kDataStart=3996416 absoluteOffset=9075307264
+[BindTensor] name=blk.23.ffn_down_shexp.weight dataOffset=9071835136 kDataStart=3996416 absoluteOffset=9075831552
+[BindTensor] name=blk.23.ffn_gate_shexp.weight dataOffset=9076566016 kDataStart=3996416 absoluteOffset=9080562432
+[BindTensor] name=blk.23.ffn_up_shexp.weight dataOffset=9079810048 kDataStart=3996416 absoluteOffset=9083806464
+[BindTensor] name=blk.23.ffn_norm.weight dataOffset=9083054080 kDataStart=3996416 absoluteOffset=9087050496
+[BindTensor] name=blk.23.attn_kv_a_norm.weight dataOffset=9083062272 kDataStart=3996416 absoluteOffset=9087058688
+[BindTensor] name=blk.23.attn_kv_a_mqa.weight dataOffset=9083064320 kDataStart=3996416 absoluteOffset=9087060736
+[BindTensor] name=blk.23.attn_kv_b.weight dataOffset=9083727872 kDataStart=3996416 absoluteOffset=9087724288
+[BindTensor] name=blk.23.attn_output.weight dataOffset=9084907520 kDataStart=3996416 absoluteOffset=9088903936
+[BindTensor] name=blk.23.attn_q.weight dataOffset=9087266816 kDataStart=3996416 absoluteOffset=9091263232
+[BindTensor] name=blk.24.attn_norm.weight dataOffset=9090805760 kDataStart=3996416 absoluteOffset=9094802176
+[BindTensor] name=blk.24.ffn_down_exps.weight dataOffset=9090813952 kDataStart=3996416 absoluteOffset=9094810368
+[BindTensor] name=blk.24.ffn_gate_exps.weight dataOffset=9286897664 kDataStart=3996416 absoluteOffset=9290894080
+[BindTensor] name=blk.24.ffn_up_exps.weight dataOffset=9390706688 kDataStart=3996416 absoluteOffset=9394703104
+[BindTensor] name=blk.24.ffn_gate_inp.weight dataOffset=9494515712 kDataStart=3996416 absoluteOffset=9498512128
+[BindTensor] name=blk.24.ffn_down_shexp.weight dataOffset=9495040000 kDataStart=3996416 absoluteOffset=9499036416
+[BindTensor] name=blk.24.ffn_gate_shexp.weight dataOffset=9499770880 kDataStart=3996416 absoluteOffset=9503767296
+[BindTensor] name=blk.24.ffn_up_shexp.weight dataOffset=9503014912 kDataStart=3996416 absoluteOffset=9507011328
+[BindTensor] name=blk.24.ffn_norm.weight dataOffset=9506258944 kDataStart=3996416 absoluteOffset=9510255360
+[BindTensor] name=blk.24.attn_kv_a_norm.weight dataOffset=9506267136 kDataStart=3996416 absoluteOffset=9510263552
+[BindTensor] name=blk.24.attn_kv_a_mqa.weight dataOffset=9506269184 kDataStart=3996416 absoluteOffset=9510265600
+[BindTensor] name=blk.24.attn_kv_b.weight dataOffset=9506932736 kDataStart=3996416 absoluteOffset=9510929152
+[BindTensor] name=blk.24.attn_output.weight dataOffset=9508112384 kDataStart=3996416 absoluteOffset=9512108800
+[BindTensor] name=blk.24.attn_q.weight dataOffset=9510471680 kDataStart=3996416 absoluteOffset=9514468096
+[BindTensor] name=blk.25.attn_norm.weight dataOffset=9514010624 kDataStart=3996416 absoluteOffset=9518007040
+[BindTensor] name=blk.25.ffn_down_exps.weight dataOffset=9514018816 kDataStart=3996416 absoluteOffset=9518015232
+[BindTensor] name=blk.25.ffn_gate_exps.weight dataOffset=9710102528 kDataStart=3996416 absoluteOffset=9714098944
+[BindTensor] name=blk.25.ffn_up_exps.weight dataOffset=9813911552 kDataStart=3996416 absoluteOffset=9817907968
+[BindTensor] name=blk.25.ffn_gate_inp.weight dataOffset=9917720576 kDataStart=3996416 absoluteOffset=9921716992
+[BindTensor] name=blk.25.ffn_down_shexp.weight dataOffset=9918244864 kDataStart=3996416 absoluteOffset=9922241280
+[BindTensor] name=blk.25.ffn_gate_shexp.weight dataOffset=9922975744 kDataStart=3996416 absoluteOffset=9926972160
+[BindTensor] name=blk.25.ffn_up_shexp.weight dataOffset=9926219776 kDataStart=3996416 absoluteOffset=9930216192
+[BindTensor] name=blk.25.ffn_norm.weight dataOffset=9929463808 kDataStart=3996416 absoluteOffset=9933460224
+[BindTensor] name=blk.25.attn_kv_a_norm.weight dataOffset=9929472000 kDataStart=3996416 absoluteOffset=9933468416
+[BindTensor] name=blk.25.attn_kv_a_mqa.weight dataOffset=9929474048 kDataStart=3996416 absoluteOffset=9933470464
+[BindTensor] name=blk.25.attn_kv_b.weight dataOffset=9930137600 kDataStart=3996416 absoluteOffset=9934134016
+[BindTensor] name=blk.25.attn_output.weight dataOffset=9931317248 kDataStart=3996416 absoluteOffset=9935313664
+[BindTensor] name=blk.25.attn_q.weight dataOffset=9933676544 kDataStart=3996416 absoluteOffset=9937672960
+[BindTensor] name=blk.26.attn_norm.weight dataOffset=9937215488 kDataStart=3996416 absoluteOffset=9941211904
+[BindTensor] name=blk.26.ffn_down_exps.weight dataOffset=9937223680 kDataStart=3996416 absoluteOffset=9941220096
+[BindTensor] name=blk.26.ffn_gate_exps.weight dataOffset=10133307392 kDataStart=3996416 absoluteOffset=10137303808
+[BindTensor] name=blk.26.ffn_up_exps.weight dataOffset=10237116416 kDataStart=3996416 absoluteOffset=10241112832
+[BindTensor] name=blk.26.ffn_gate_inp.weight dataOffset=10340925440 kDataStart=3996416 absoluteOffset=10344921856
+[BindTensor] name=blk.26.ffn_down_shexp.weight dataOffset=10341449728 kDataStart=3996416 absoluteOffset=10345446144
+[BindTensor] name=blk.26.ffn_gate_shexp.weight dataOffset=10346180608 kDataStart=3996416 absoluteOffset=10350177024
+[BindTensor] name=blk.26.ffn_up_shexp.weight dataOffset=10349424640 kDataStart=3996416 absoluteOffset=10353421056
+[BindTensor] name=blk.26.ffn_norm.weight dataOffset=10352668672 kDataStart=3996416 absoluteOffset=10356665088
+[BindTensor] name=blk.26.attn_kv_a_norm.weight dataOffset=10352676864 kDataStart=3996416 absoluteOffset=10356673280
+[BindTensor] name=blk.26.attn_kv_a_mqa.weight dataOffset=10352678912 kDataStart=3996416 absoluteOffset=10356675328
+[BindTensor] name=blk.26.attn_kv_b.weight dataOffset=10353342464 kDataStart=3996416 absoluteOffset=10357338880
+[BindTensor] name=blk.26.attn_output.weight dataOffset=10354522112 kDataStart=3996416 absoluteOffset=10358518528
+[BindTensor] name=blk.26.attn_q.weight dataOffset=10356881408 kDataStart=3996416 absoluteOffset=10360877824
+[DEBUG] binding loop done, bound=377 missing=0
+[DEBUG] past Bound printf
+[DEBUG] before token_embd check
+[DEBUG] past essential tensor checks
+[Gate] QUANT_STORAGE_AUTHORITY_001
+[Gate] TENSORS_CHECKED=377 TYPE_UNKNOWN=0 ELEMENT_BLOCK_REMAINDER=0 ENCODED_BYTE_MISMATCHES=0
+QUANT_STORAGE_AUTHORITY=PASS
+[DEBUG] before resize
+[DEBUG] after hidden resize
+[DEBUG] after logits resize
+[DEBUG] before return true
+[DEBUG] Initialize returned 1
+[DEBUG] after Initialize check
+[Gate] MODEL_ROM_OPEN=1
+[Gate] MODEL_ROM_MAPPED=1
+[Gate] NO_GGUF_PARSE=1
+[Gate] NO_GGUF_METADATA_READ=1
+[Gate] NO_TENSOR_NAME_LOOKUP=1
+[Gate] NO_ARCH_STRING_DISPATCH=1
+[Gate] TENSOR_ROM_RANGE_CHECK_PASS=1
+[Gate] TENSOR_ID_BIND_COMPLETE=1
+[Gate] TENSOR_BIND_MISSING=0
+[Gate] TENSOR_BIND_DUPLICATE=0
+
+[Gate] PREFILL_STARTED=1
+[DEBUG] Forward start, tokenId=1
+[DEBUG] before embedding lookup
+[DEBUG] embView found, bytes=117964800
+[DEBUG] embW size=209715200
+[DEBUG] after embedding memcpy
+[Forward] Embedding OK
+[Forward] Block 0/27
+[DEBUG] ForwardBlock start, l=0
+[DEBUG] Block 0: isDense=1 isMoE=0
+[Gate] SOURCE_TENSOR_AUTHORITY_001 BLOCK=0
+ROLE=ATTN_NORM ACTUAL_ID=2 EXPECTED_ID=2 MATCH=1
+ROLE=FFN_DOWN ACTUAL_ID=3 EXPECTED_ID=3 MATCH=1
+ROLE=FFN_GATE ACTUAL_ID=4 EXPECTED_ID=4 MATCH=1
+ROLE=FFN_UP ACTUAL_ID=5 EXPECTED_ID=5 MATCH=1
+ROLE=FFN_NORM ACTUAL_ID=6 EXPECTED_ID=6 MATCH=1
+ROLE=MLA_KV_NORM ACTUAL_ID=7 EXPECTED_ID=7 MATCH=1
+ROLE=MLA_KV_A ACTUAL_ID=8 EXPECTED_ID=8 MATCH=1
+ROLE=MLA_KV_B ACTUAL_ID=9 EXPECTED_ID=9 MATCH=1
+ROLE=ATTN_OUTPUT ACTUAL_ID=10 EXPECTED_ID=10 MATCH=1
+ROLE=ATTN_Q ACTUAL_ID=11 EXPECTED_ID=11 MATCH=1
+BLOCK=0 TENSOR_ID_MISMATCHES=0 UNDECLARED_ALIASES=0
+SOURCE_TENSOR_AUTHORITY=PASS
+[Boundary] BLOCK=0 STAGE=BLOCK_INPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-0.194824 MAX=4.42556 L2=17.296
+[DEBUG] ForwardBlock views: attnNorm=00000228A2CB9238 attnQ=00000228A2CB93B8 attnOutput=00000228A2CB9358 
+ffnNorm=00000228A2CB9598 ffnGate=00000228A2CB90B8 ffnUp=00000228A2CB9538 ffnDown=00000228A2CB9178
+[DEBUG] before attnNorm dequant
+[Dequant] F32 tv.data=00000228B46FFB00 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] attnNormW size=2048
+[Boundary] BLOCK=0 STAGE=ATTN_NORM_WEIGHT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=0.219727 MAX=7.625 L2=25.2319
+[DEBUG] attnQW size=6291456
+[Boundary] BLOCK=0 STAGE=ATTN_Q_WEIGHT COUNT=6291456 NONFINITE=0 FIRST_NONFINITE=0 MIN=-0.0790215 MAX=1.78499 
+L2=359.054
+[DEBUG] attnOutputW size=4194304
+[Dequant] F32 tv.data=00000228B75C3B00 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] ffnNormW size=2048
+[Boundary] BLOCK=0 STAGE=FFN_NORM_WEIGHT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=0.0161133 MAX=0.474609 L2=3.3252
+[DEBUG] ffnGateW size=22413312
+[DEBUG] ffnUpW size=22413312
+[DEBUG] ffnDownW size=22413312
+[DEBUG] all dequant done
+[DEBUG] before RMSNorm, attnNormW.size=2048 hidden_.size=2048
+[DEBUG] scalar RMSNorm start, n=2048
+[DEBUG] scalar RMSNorm sum=299.150940
+[DEBUG] scalar RMSNorm scale=2.616485
+[DEBUG] scalar RMSNorm done
+[Boundary] BLOCK=0 STAGE=POST_ATTN_NORM COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-2.8833 MAX=7.20233 L2=25.3871
+[Boundary] BLOCK=0 STAGE=POST_Q COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-3.1258 MAX=42.7655 L2=752.655
+[Dequant] F32 tv.data=00000228B75C5B00 tv.bytes=2048 tv.elementCount=512
+[Dequant] F32 tv.data=00000228B75C5B00 tv.bytes=2048 tv.elementCount=512
+[Boundary] BLOCK=0 STAGE=POST_MLA COUNT=512 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=0 STAGE=POST_ATTN_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=0 STAGE=POST_ATTN_RESIDUAL COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-0.194824 MAX=4.42556 
+L2=17.296
+[DEBUG] before FFN RMSNorm
+[Boundary] BLOCK=0 STAGE=POST_FFN_NORM COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-0.137395 MAX=0.785905 L2=3.39972
+[Boundary] BLOCK=0 STAGE=POST_FFN_GATE_UP COUNT=10944 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=162.441 L2=4451.38
+[Boundary] BLOCK=0 STAGE=POST_FFN_DOWN COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.828 L2=5625.61
+[Boundary] BLOCK=0 STAGE=POST_FFN_RESIDUAL COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[Boundary] BLOCK=0 STAGE=BLOCK_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock start, l=1
+[DEBUG] Block 1: isDense=0 isMoE=1
+[Gate] SOURCE_TENSOR_AUTHORITY_001 BLOCK=1
+BLOCK=1 TENSOR_ID_MISMATCHES=0 UNDECLARED_ALIASES=0
+SOURCE_TENSOR_AUTHORITY=PASS
+[Boundary] BLOCK=1 STAGE=BLOCK_INPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock views: attnNorm=00000228A2CB97D8 attnQ=00000228A2CBB938 attnOutput=00000228A2CBAFD8 
+ffnNorm=00000228A2CBAF78 ffnGate=0000000000000000 ffnUp=0000000000000000 ffnDown=0000000000000000
+[DEBUG] before attnNorm dequant
+[Dequant] F32 tv.data=00000228B7D28300 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] attnNormW size=2048
+[DEBUG] attnQW size=6291456
+[DEBUG] attnOutputW size=4194304
+[Dequant] F32 tv.data=00000228D095D300 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] ffnNormW size=2048
+[DEBUG] all dequant done
+[DEBUG] before RMSNorm, attnNormW.size=2048 hidden_.size=2048
+[DEBUG] scalar RMSNorm start, n=2048
+[DEBUG] scalar RMSNorm sum=31649924.000000
+[DEBUG] scalar RMSNorm scale=0.008044
+[DEBUG] scalar RMSNorm done
+[Boundary] BLOCK=1 STAGE=POST_ATTN_NORM COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-3.86114 MAX=3.20122 L2=37.4992
+[Boundary] BLOCK=1 STAGE=POST_Q COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-3.33155 MAX=57.128 L2=600.893
+[Dequant] F32 tv.data=00000228D095F300 tv.bytes=2048 tv.elementCount=512
+[Dequant] F32 tv.data=00000228D095F300 tv.bytes=2048 tv.elementCount=512
+[Boundary] BLOCK=1 STAGE=POST_MLA COUNT=512 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=1 STAGE=POST_ATTN_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=1 STAGE=POST_ATTN_RESIDUAL COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 
+L2=5625.83
+[Forward] Block 1 is MoE, skipping FFN in simplified executor
+[Boundary] BLOCK=1 STAGE=BLOCK_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock start, l=2
+[DEBUG] Block 2: isDense=0 isMoE=1
+[Gate] SOURCE_TENSOR_AUTHORITY_001 BLOCK=2
+BLOCK=2 TENSOR_ID_MISMATCHES=0 UNDECLARED_ALIASES=0
+SOURCE_TENSOR_AUTHORITY=PASS
+[Boundary] BLOCK=2 STAGE=BLOCK_INPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock views: attnNorm=00000228A2CBB3F8 attnQ=00000228A2CBAE58 attnOutput=00000228A2CBB5D8 
+ffnNorm=00000228A2CBACD8 ffnGate=0000000000000000 ffnUp=0000000000000000 ffnDown=0000000000000000
+[DEBUG] before attnNorm dequant
+[Dequant] F32 tv.data=00000228D10C1B00 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] attnNormW size=2048
+[DEBUG] attnQW size=6291456
+[DEBUG] attnOutputW size=4194304
+[Dequant] F32 tv.data=00000228E9CF6B00 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] ffnNormW size=2048
+[DEBUG] all dequant done
+[DEBUG] before RMSNorm, attnNormW.size=2048 hidden_.size=2048
+[DEBUG] scalar RMSNorm start, n=2048
+[DEBUG] scalar RMSNorm sum=31649924.000000
+[DEBUG] scalar RMSNorm scale=0.008044
+[DEBUG] scalar RMSNorm done
+[Boundary] BLOCK=2 STAGE=POST_ATTN_NORM COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-2.71327 MAX=3.71097 L2=39.508
+[Boundary] BLOCK=2 STAGE=POST_Q COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-22.3702 MAX=29.2067 L2=243.952
+[Dequant] F32 tv.data=00000228E9CF8B00 tv.bytes=2048 tv.elementCount=512
+[Dequant] F32 tv.data=00000228E9CF8B00 tv.bytes=2048 tv.elementCount=512
+[Boundary] BLOCK=2 STAGE=POST_MLA COUNT=512 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=2 STAGE=POST_ATTN_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=2 STAGE=POST_ATTN_RESIDUAL COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 
+L2=5625.83
+[Forward] Block 2 is MoE, skipping FFN in simplified executor
+[Boundary] BLOCK=2 STAGE=BLOCK_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock start, l=3
+[DEBUG] Block 3: isDense=0 isMoE=1
+[Gate] SOURCE_TENSOR_AUTHORITY_001 BLOCK=3
+BLOCK=3 TENSOR_ID_MISMATCHES=0 UNDECLARED_ALIASES=0
+SOURCE_TENSOR_AUTHORITY=PASS
+[Boundary] BLOCK=3 STAGE=BLOCK_INPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock views: attnNorm=00000228A2CBAEB8 attnQ=00000228A2CBAF18 attnOutput=00000228A2CBB6F8 
+ffnNorm=00000228A2CBB098 ffnGate=0000000000000000 ffnUp=0000000000000000 ffnDown=0000000000000000
+[DEBUG] before attnNorm dequant
+[Dequant] F32 tv.data=00000228EA45B300 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] attnNormW size=2048
+[DEBUG] attnQW size=6291456
+[DEBUG] attnOutputW size=4194304
+[Dequant] F32 tv.data=00000228FED25300 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] ffnNormW size=2048
+[DEBUG] all dequant done
+[DEBUG] before RMSNorm, attnNormW.size=2048 hidden_.size=2048
+[DEBUG] scalar RMSNorm start, n=2048
+[DEBUG] scalar RMSNorm sum=31649924.000000
+[DEBUG] scalar RMSNorm scale=0.008044
+[DEBUG] scalar RMSNorm done
+[Boundary] BLOCK=3 STAGE=POST_ATTN_NORM COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-3.17885 MAX=3.12246 L2=39.7035
+[Boundary] BLOCK=3 STAGE=POST_Q COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-25.8247 MAX=27.4685 L2=222.809
+[Dequant] F32 tv.data=00000228FED27300 tv.bytes=2048 tv.elementCount=512
+[Dequant] F32 tv.data=00000228FED27300 tv.bytes=2048 tv.elementCount=512
+[Boundary] BLOCK=3 STAGE=POST_MLA COUNT=512 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=3 STAGE=POST_ATTN_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=3 STAGE=POST_ATTN_RESIDUAL COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 
+L2=5625.83
+[Forward] Block 3 is MoE, skipping FFN in simplified executor
+[Boundary] BLOCK=3 STAGE=BLOCK_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock start, l=4
+[DEBUG] Block 4: isDense=0 isMoE=1
+[Gate] SOURCE_TENSOR_AUTHORITY_001 BLOCK=4
+BLOCK=4 TENSOR_ID_MISMATCHES=0 UNDECLARED_ALIASES=0
+SOURCE_TENSOR_AUTHORITY=PASS
+[Boundary] BLOCK=4 STAGE=BLOCK_INPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock views: attnNorm=00000228A2CBB7B8 attnQ=00000228A2CBDC38 attnOutput=00000228A2CBD6F8 
+ffnNorm=00000228A2CBDA58 ffnGate=0000000000000000 ffnUp=0000000000000000 ffnDown=0000000000000000
+[DEBUG] before attnNorm dequant
+[Dequant] F32 tv.data=00000228FF489B00 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] attnNormW size=2048
+[DEBUG] attnQW size=6291456
+[DEBUG] attnOutputW size=4194304
+[Dequant] F32 tv.data=0000022913D53B00 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] ffnNormW size=2048
+[DEBUG] all dequant done
+[DEBUG] before RMSNorm, attnNormW.size=2048 hidden_.size=2048
+[DEBUG] scalar RMSNorm start, n=2048
+[DEBUG] scalar RMSNorm sum=31649924.000000
+[DEBUG] scalar RMSNorm scale=0.008044
+[DEBUG] scalar RMSNorm done
+[Boundary] BLOCK=4 STAGE=POST_ATTN_NORM COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-3.25638 MAX=2.65158 L2=36.1898
+[Boundary] BLOCK=4 STAGE=POST_Q COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-9.32714 MAX=37.2327 L2=399.581
+[Dequant] F32 tv.data=0000022913D55B00 tv.bytes=2048 tv.elementCount=512
+[Dequant] F32 tv.data=0000022913D55B00 tv.bytes=2048 tv.elementCount=512
+[Boundary] BLOCK=4 STAGE=POST_MLA COUNT=512 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=4 STAGE=POST_ATTN_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=4 STAGE=POST_ATTN_RESIDUAL COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 
+L2=5625.83
+[Forward] Block 4 is MoE, skipping FFN in simplified executor
+[Boundary] BLOCK=4 STAGE=BLOCK_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[Forward] Block 5/27
+[DEBUG] ForwardBlock start, l=5
+[DEBUG] Block 5: isDense=0 isMoE=1
+[Gate] SOURCE_TENSOR_AUTHORITY_001 BLOCK=5
+BLOCK=5 TENSOR_ID_MISMATCHES=0 UNDECLARED_ALIASES=0
+SOURCE_TENSOR_AUTHORITY=PASS
+[Boundary] BLOCK=5 STAGE=BLOCK_INPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock views: attnNorm=00000228A2CBE0B8 attnQ=00000228A2CBD5D8 attnOutput=00000228A2CBDF38 
+ffnNorm=00000228A2CBD818 ffnGate=0000000000000000 ffnUp=0000000000000000 ffnDown=0000000000000000
+[DEBUG] before attnNorm dequant
+[Dequant] F32 tv.data=00000229144B8300 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] attnNormW size=2048
+[DEBUG] attnQW size=6291456
+[DEBUG] attnOutputW size=4194304
+[Dequant] F32 tv.data=000002292D0ED300 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] ffnNormW size=2048
+[DEBUG] all dequant done
+[DEBUG] before RMSNorm, attnNormW.size=2048 hidden_.size=2048
+[DEBUG] scalar RMSNorm start, n=2048
+[DEBUG] scalar RMSNorm sum=31649924.000000
+[DEBUG] scalar RMSNorm scale=0.008044
+[DEBUG] scalar RMSNorm done
+[Boundary] BLOCK=5 STAGE=POST_ATTN_NORM COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-3.64404 MAX=2.40439 L2=34.1243
+[Boundary] BLOCK=5 STAGE=POST_Q COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-28.0637 MAX=13.5096 L2=270.667
+[Dequant] F32 tv.data=000002292D0EF300 tv.bytes=2048 tv.elementCount=512
+[Dequant] F32 tv.data=000002292D0EF300 tv.bytes=2048 tv.elementCount=512
+[Boundary] BLOCK=5 STAGE=POST_MLA COUNT=512 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=5 STAGE=POST_ATTN_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=5 STAGE=POST_ATTN_RESIDUAL COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 
+L2=5625.83
+[Forward] Block 5 is MoE, skipping FFN in simplified executor
+[Boundary] BLOCK=5 STAGE=BLOCK_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock start, l=6
+[DEBUG] Block 6: isDense=0 isMoE=1
+[Gate] SOURCE_TENSOR_AUTHORITY_001 BLOCK=6
+BLOCK=6 TENSOR_ID_MISMATCHES=0 UNDECLARED_ALIASES=0
+SOURCE_TENSOR_AUTHORITY=PASS
+[Boundary] BLOCK=6 STAGE=BLOCK_INPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock views: attnNorm=00000228A2CBD398 attnQ=00000228A2CBE058 attnOutput=00000228A2CBDE78 
+ffnNorm=00000228A2CBD758 ffnGate=0000000000000000 ffnUp=0000000000000000 ffnDown=0000000000000000
+[DEBUG] before attnNorm dequant
+[Dequant] F32 tv.data=000002292D851B00 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] attnNormW size=2048
+[DEBUG] attnQW size=6291456
+[DEBUG] attnOutputW size=4194304
+[Dequant] F32 tv.data=000002294211BB00 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] ffnNormW size=2048
+[DEBUG] all dequant done
+[DEBUG] before RMSNorm, attnNormW.size=2048 hidden_.size=2048
+[DEBUG] scalar RMSNorm start, n=2048
+[DEBUG] scalar RMSNorm sum=31649924.000000
+[DEBUG] scalar RMSNorm scale=0.008044
+[DEBUG] scalar RMSNorm done
+[Boundary] BLOCK=6 STAGE=POST_ATTN_NORM COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-4.09374 MAX=2.49777 L2=34.3819
+[Boundary] BLOCK=6 STAGE=POST_Q COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-13.4132 MAX=21.5178 L2=218.335
+[Dequant] F32 tv.data=000002294211DB00 tv.bytes=2048 tv.elementCount=512
+[Dequant] F32 tv.data=000002294211DB00 tv.bytes=2048 tv.elementCount=512
+[Boundary] BLOCK=6 STAGE=POST_MLA COUNT=512 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=6 STAGE=POST_ATTN_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=6 STAGE=POST_ATTN_RESIDUAL COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 
+L2=5625.83
+[Forward] Block 6 is MoE, skipping FFN in simplified executor
+[Boundary] BLOCK=6 STAGE=BLOCK_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock start, l=7
+[DEBUG] Block 7: isDense=0 isMoE=1
+[Gate] SOURCE_TENSOR_AUTHORITY_001 BLOCK=7
+BLOCK=7 TENSOR_ID_MISMATCHES=0 UNDECLARED_ALIASES=0
+SOURCE_TENSOR_AUTHORITY=PASS
+[Boundary] BLOCK=7 STAGE=BLOCK_INPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock views: attnNorm=00000228A2CBE708 attnQ=00000228A2CBA7C8 attnOutput=00000228A2CBA768 
+ffnNorm=00000228A2CBF128 ffnGate=0000000000000000 ffnUp=0000000000000000 ffnDown=0000000000000000
+[DEBUG] before attnNorm dequant
+[Dequant] F32 tv.data=000002299D067300 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] attnNormW size=2048
+[DEBUG] attnQW size=6291456
+[DEBUG] attnOutputW size=4194304
+[Dequant] F32 tv.data=00000229B0F69300 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] ffnNormW size=2048
+[DEBUG] all dequant done
+[DEBUG] before RMSNorm, attnNormW.size=2048 hidden_.size=2048
+[DEBUG] scalar RMSNorm start, n=2048
+[DEBUG] scalar RMSNorm sum=31649924.000000
+[DEBUG] scalar RMSNorm scale=0.008044
+[DEBUG] scalar RMSNorm done
+[Boundary] BLOCK=7 STAGE=POST_ATTN_NORM COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-4.18677 MAX=2.97693 L2=41.6715
+[Boundary] BLOCK=7 STAGE=POST_Q COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-18.4486 MAX=26.944 L2=216.428
+[Dequant] F32 tv.data=0000022943248300 tv.bytes=2048 tv.elementCount=512
+[Dequant] F32 tv.data=0000022943248300 tv.bytes=2048 tv.elementCount=512
+[Runtime] Bound 377 tensors, missing 0
+[Runtime] Initialized OK
+[Forward] Starting forward for token 1
+[Q4K] blocks=819200 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=209715200
+[Q4K] blocks=24576 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=6291456
+[Q4K] blocks=16384 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=4194304
+[Q4K] blocks=87552 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=22413312
+[Q4K] blocks=87552 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=22413312
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=24576 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=6291456
+[Q4K] blocks=16384 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=4194304
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=24576 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=6291456
+[Q4K] blocks=16384 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=4194304
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=24576 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=6291456
+[Q4K] blocks=16384 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=4194304
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=24576 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=6291456
+[Q4K] blocks=16384 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=4194304
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=24576 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=6291456
+[Q4K] blocks=16384 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=4194304
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=24576 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=6291456
+[Q4K] blocks=16384 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=4194304
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=24576 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=6291456
+[Q4K] blocks=16384 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=4194304
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Boundary] BLOCK=7 STAGE=POST_MLA COUNT=512 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=7 STAGE=POST_ATTN_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=7 STAGE=POST_ATTN_RESIDUAL COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 
+L2=5625.83
+[Forward] Block 7 is MoE, skipping FFN in simplified executor
+[Boundary] BLOCK=7 STAGE=BLOCK_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock start, l=8
+[DEBUG] Block 8: isDense=0 isMoE=1
+[Gate] SOURCE_TENSOR_AUTHORITY_001 BLOCK=8
+BLOCK=8 TENSOR_ID_MISMATCHES=0 UNDECLARED_ALIASES=0
+SOURCE_TENSOR_AUTHORITY=PASS
+[Boundary] BLOCK=8 STAGE=BLOCK_INPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock views: attnNorm=00000228A2CBEA08 attnQ=00000228A2CBC5E8 attnOutput=00000228A2CBCA08 
+ffnNorm=00000228A2CBBE68 ffnGate=0000000000000000 ffnUp=0000000000000000 ffnDown=0000000000000000
+[DEBUG] before attnNorm dequant
+[Dequant] F32 tv.data=00000229B0F6B300 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] attnNormW size=2048
+[DEBUG] attnQW size=6291456
+[DEBUG] attnOutputW size=4194304
+[Dequant] F32 tv.data=00000229C9BA0300 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] ffnNormW size=2048
+[DEBUG] all dequant done
+[DEBUG] before RMSNorm, attnNormW.size=2048 hidden_.size=2048
+[DEBUG] scalar RMSNorm start, n=2048
+[DEBUG] scalar RMSNorm sum=31649924.000000
+[DEBUG] scalar RMSNorm scale=0.008044
+[DEBUG] scalar RMSNorm done
+[Boundary] BLOCK=8 STAGE=POST_ATTN_NORM COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-2.80669 MAX=2.56913 L2=34.3318
+[Boundary] BLOCK=8 STAGE=POST_Q COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-22.7141 MAX=20.368 L2=202.146
+[Dequant] F32 tv.data=00000229C9BA2300 tv.bytes=2048 tv.elementCount=512
+[Dequant] F32 tv.data=00000229C9BA2300 tv.bytes=2048 tv.elementCount=512
+[Boundary] BLOCK=8 STAGE=POST_MLA COUNT=512 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=8 STAGE=POST_ATTN_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=8 STAGE=POST_ATTN_RESIDUAL COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 
+L2=5625.83
+[Forward] Block 8 is MoE, skipping FFN in simplified executor
+[Boundary] BLOCK=8 STAGE=BLOCK_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock start, l=9
+[DEBUG] Block 9: isDense=0 isMoE=1
+[Gate] SOURCE_TENSOR_AUTHORITY_001 BLOCK=9
+BLOCK=9 TENSOR_ID_MISMATCHES=0 UNDECLARED_ALIASES=0
+SOURCE_TENSOR_AUTHORITY=PASS
+[Boundary] BLOCK=9 STAGE=BLOCK_INPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock views: attnNorm=00000228A2CBCB28 attnQ=00000228A2CBC168 attnOutput=00000228A2CBC408 
+ffnNorm=00000228A2CBC348 ffnGate=0000000000000000 ffnUp=0000000000000000 ffnDown=0000000000000000
+[DEBUG] before attnNorm dequant
+[Dequant] F32 tv.data=00000229CA304B00 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] attnNormW size=2048
+[DEBUG] attnQW size=6291456
+[DEBUG] attnOutputW size=4194304
+[Dequant] F32 tv.data=00000229DEBCEB00 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] ffnNormW size=2048
+[DEBUG] all dequant done
+[DEBUG] before RMSNorm, attnNormW.size=2048 hidden_.size=2048
+[DEBUG] scalar RMSNorm start, n=2048
+[DEBUG] scalar RMSNorm sum=31649924.000000
+[DEBUG] scalar RMSNorm scale=0.008044
+[DEBUG] scalar RMSNorm done
+[Boundary] BLOCK=9 STAGE=POST_ATTN_NORM COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-3.00828 MAX=2.34484 L2=29.0309
+[Boundary] BLOCK=9 STAGE=POST_Q COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-19.5269 MAX=14.5911 L2=180.55
+[Dequant] F32 tv.data=00000229DEBD0B00 tv.bytes=2048 tv.elementCount=512
+[Dequant] F32 tv.data=00000229DEBD0B00 tv.bytes=2048 tv.elementCount=512
+[Boundary] BLOCK=9 STAGE=POST_MLA COUNT=512 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=9 STAGE=POST_ATTN_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=9 STAGE=POST_ATTN_RESIDUAL COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 
+L2=5625.83
+[Forward] Block 9 is MoE, skipping FFN in simplified executor
+[Boundary] BLOCK=9 STAGE=BLOCK_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[Forward] Block 10/27
+[DEBUG] ForwardBlock start, l=10
+[DEBUG] Block 10: isDense=0 isMoE=1
+[Gate] SOURCE_TENSOR_AUTHORITY_001 BLOCK=10
+BLOCK=10 TENSOR_ID_MISMATCHES=0 UNDECLARED_ALIASES=0
+SOURCE_TENSOR_AUTHORITY=PASS
+[Boundary] BLOCK=10 STAGE=BLOCK_INPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock views: attnNorm=00000228A2CBA0A8 attnQ=00000228A2CB9988 attnOutput=00000228A2CBA708 
+ffnNorm=00000228A2CBA6A8 ffnGate=0000000000000000 ffnUp=0000000000000000 ffnDown=0000000000000000
+[DEBUG] before attnNorm dequant
+[Dequant] F32 tv.data=00000229439ACB00 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] attnNormW size=2048
+[DEBUG] attnQW size=6291456
+[DEBUG] attnOutputW size=4194304
+[Dequant] F32 tv.data=0000022958276B00 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] ffnNormW size=2048
+[DEBUG] all dequant done
+[DEBUG] before RMSNorm, attnNormW.size=2048 hidden_.size=2048
+[DEBUG] scalar RMSNorm start, n=2048
+[DEBUG] scalar RMSNorm sum=31649924.000000
+[DEBUG] scalar RMSNorm scale=0.008044
+[DEBUG] scalar RMSNorm done
+[Boundary] BLOCK=10 STAGE=POST_ATTN_NORM COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-3.55101 MAX=3.11016 L2=41.5556
+[Boundary] BLOCK=10 STAGE=POST_Q COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-21.6513 MAX=39.1396 L2=258.43
+[Dequant] F32 tv.data=0000022958278B00 tv.bytes=2048 tv.elementCount=512
+[Dequant] F32 tv.data=0000022958278B00 tv.bytes=2048 tv.elementCount=512
+[Boundary] BLOCK=10 STAGE=POST_MLA COUNT=512 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=10 STAGE=POST_ATTN_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=10 STAGE=POST_ATTN_RESIDUAL COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 
+L2=5625.83
+[Forward] Block 10 is MoE, skipping FFN in simplified executor
+[Boundary] BLOCK=10 STAGE=BLOCK_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock start, l=11
+[DEBUG] Block 11: isDense=0 isMoE=1
+[Gate] SOURCE_TENSOR_AUTHORITY_001 BLOCK=11
+BLOCK=11 TENSOR_ID_MISMATCHES=0 UNDECLARED_ALIASES=0
+SOURCE_TENSOR_AUTHORITY=PASS
+[Boundary] BLOCK=11 STAGE=BLOCK_INPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock views: attnNorm=00000228A2CBA288 attnQ=00000228A2CB9CE8 attnOutput=00000228A2CB9BC8 
+ffnNorm=00000228A2CB9A48 ffnGate=0000000000000000 ffnUp=0000000000000000 ffnDown=0000000000000000
+[DEBUG] before attnNorm dequant
+[Dequant] F32 tv.data=00000229589DB300 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] attnNormW size=2048
+[DEBUG] attnQW size=6291456
+[DEBUG] attnOutputW size=4194304
+[Dequant] F32 tv.data=0000022971610300 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] ffnNormW size=2048
+[DEBUG] all dequant done
+[DEBUG] before RMSNorm, attnNormW.size=2048 hidden_.size=2048
+[DEBUG] scalar RMSNorm start, n=2048
+[DEBUG] scalar RMSNorm sum=31649924.000000
+[DEBUG] scalar RMSNorm scale=0.008044
+[DEBUG] scalar RMSNorm done
+[Boundary] BLOCK=11 STAGE=POST_ATTN_NORM COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-3.25638 MAX=3.0381 L2=29.7122
+[Boundary] BLOCK=11 STAGE=POST_Q COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-18.3113 MAX=19.2608 L2=175.058
+[Dequant] F32 tv.data=0000022971612300 tv.bytes=2048 tv.elementCount=512
+[Dequant] F32 tv.data=0000022971612300 tv.bytes=2048 tv.elementCount=512
+[Boundary] BLOCK=11 STAGE=POST_MLA COUNT=512 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=11 STAGE=POST_ATTN_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=11 STAGE=POST_ATTN_RESIDUAL COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 
+L2=5625.83
+[Forward] Block 11 is MoE, skipping FFN in simplified executor
+[Boundary] BLOCK=11 STAGE=BLOCK_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock start, l=12
+[DEBUG] Block 12: isDense=0 isMoE=1
+[Gate] SOURCE_TENSOR_AUTHORITY_001 BLOCK=12
+BLOCK=12 TENSOR_ID_MISMATCHES=0 UNDECLARED_ALIASES=0
+SOURCE_TENSOR_AUTHORITY=PASS
+[Boundary] BLOCK=12 STAGE=BLOCK_INPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock views: attnNorm=00000228A2CBA348 attnQ=00000228A2CBEFA8 attnOutput=00000228A2CBE828 
+ffnNorm=00000228A2CBE3A8 ffnGate=0000000000000000 ffnUp=0000000000000000 ffnDown=0000000000000000
+[DEBUG] before attnNorm dequant
+[Dequant] F32 tv.data=0000022971D74B00 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] attnNormW size=2048
+[DEBUG] attnQW size=6291456
+[DEBUG] attnOutputW size=4194304
+[Dequant] F32 tv.data=000002298663EB00 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] ffnNormW size=2048
+[DEBUG] all dequant done
+[DEBUG] before RMSNorm, attnNormW.size=2048 hidden_.size=2048
+[DEBUG] scalar RMSNorm start, n=2048
+[DEBUG] scalar RMSNorm sum=31649924.000000
+[DEBUG] scalar RMSNorm scale=0.008044
+[DEBUG] scalar RMSNorm done
+[Boundary] BLOCK=12 STAGE=POST_ATTN_NORM COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-3.13677 MAX=2.91576 L2=35.2965
+[Boundary] BLOCK=12 STAGE=POST_Q COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-27.4758 MAX=10.2206 L2=275.079
+[Dequant] F32 tv.data=0000022986640B00 tv.bytes=2048 tv.elementCount=512
+[Dequant] F32 tv.data=0000022986640B00 tv.bytes=2048 tv.elementCount=512
+[Boundary] BLOCK=12 STAGE=POST_MLA COUNT=512 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=12 STAGE=POST_ATTN_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=12 STAGE=POST_ATTN_RESIDUAL COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 
+L2=5625.83
+[Forward] Block 12 is MoE, skipping FFN in simplified executor
+[Boundary] BLOCK=12 STAGE=BLOCK_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock start, l=13
+[DEBUG] Block 13: isDense=0 isMoE=1
+[Gate] SOURCE_TENSOR_AUTHORITY_001 BLOCK=13
+BLOCK=13 TENSOR_ID_MISMATCHES=0 UNDECLARED_ALIASES=0
+SOURCE_TENSOR_AUTHORITY=PASS
+[Boundary] BLOCK=13 STAGE=BLOCK_INPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock views: attnNorm=00000228A2CBEF48 attnQ=00000228A2CBE348 attnOutput=00000228A2CBF188 
+ffnNorm=00000228A2CBE6A8 ffnGate=0000000000000000 ffnUp=0000000000000000 ffnDown=0000000000000000
+[DEBUG] before attnNorm dequant
+[Dequant] F32 tv.data=0000022986DA3300 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] attnNormW size=2048
+[DEBUG] attnQW size=6291456
+[DEBUG] attnOutputW size=4194304
+[Dequant] F32 tv.data=000002299B66D300 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] ffnNormW size=2048
+[DEBUG] all dequant done
+[DEBUG] before RMSNorm, attnNormW.size=2048 hidden_.size=2048
+[DEBUG] scalar RMSNorm start, n=2048
+[DEBUG] scalar RMSNorm sum=31649924.000000
+[DEBUG] scalar RMSNorm scale=0.008044
+[DEBUG] scalar RMSNorm done
+[Boundary] BLOCK=13 STAGE=POST_ATTN_NORM COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-3.38043 MAX=2.79342 L2=33.0219
+[Boundary] BLOCK=13 STAGE=POST_Q COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-19.1265 MAX=18.528 L2=188.024
+[Dequant] F32 tv.data=000002299B66F300 tv.bytes=2048 tv.elementCount=512
+[Dequant] F32 tv.data=000002299B66F300 tv.bytes=2048 tv.elementCount=512
+[Boundary] BLOCK=13 STAGE=POST_MLA COUNT=512 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=13 STAGE=POST_ATTN_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=13 STAGE=POST_ATTN_RESIDUAL COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 
+L2=5625.83
+[Forward] Block 13 is MoE, skipping FFN in simplified executor
+[Boundary] BLOCK=13 STAGE=BLOCK_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock start, l=14
+[DEBUG] Block 14: isDense=0 isMoE=1
+[Gate] SOURCE_TENSOR_AUTHORITY_001 BLOCK=14
+BLOCK=14 TENSOR_ID_MISMATCHES=0 UNDECLARED_ALIASES=0
+SOURCE_TENSOR_AUTHORITY=PASS
+[Boundary] BLOCK=14 STAGE=BLOCK_INPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock views: attnNorm=00000228A2CBC468 attnQ=00000228A2CBE4C8 attnOutput=00000228A2CBF008 
+ffnNorm=00000228A2CBC888 ffnGate=0000000000000000 ffnUp=0000000000000000 ffnDown=0000000000000000
+[DEBUG] before attnNorm dequant
+[Dequant] F32 tv.data=00000229DF333300 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] attnNormW size=2048
+[DEBUG] attnQW size=6291456
+[DEBUG] attnOutputW size=4194304
+[Dequant] F32 tv.data=00000229F7435300 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] ffnNormW size=2048
+[DEBUG] all dequant done
+[DEBUG] before RMSNorm, attnNormW.size=2048 hidden_.size=2048
+[DEBUG] scalar RMSNorm start, n=2048
+[DEBUG] scalar RMSNorm sum=31649924.000000
+[DEBUG] scalar RMSNorm scale=0.008044
+[DEBUG] scalar RMSNorm done
+[Boundary] BLOCK=14 STAGE=POST_ATTN_NORM COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-3.86114 MAX=3.46629 L2=35.7279
+[Boundary] BLOCK=14 STAGE=POST_Q COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-19.1973 MAX=22.1717 L2=183.447
+[Dequant] F32 tv.data=000002299C904B00 tv.bytes=2048 tv.elementCount=512
+[Dequant] F32 tv.data=000002299C904B00 tv.bytes=2048 tv.elementCount=512
+[Boundary] BLOCK=14 STAGE=POST_MLA COUNT=512 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=14 STAGE=POST_ATTN_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=14 STAGE=POST_ATTN_RESIDUAL COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 
+L2=5625.83
+[Forward] Block 14 is MoE, skipping FFN in simplified executor
+[Boundary] BLOCK=14 STAGE=BLOCK_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[Forward] Block 15/27
+[DEBUG] ForwardBlock start, l=15
+[DEBUG] Block 15: isDense=0 isMoE=1
+[Gate] SOURCE_TENSOR_AUTHORITY_001 BLOCK=15
+BLOCK=15 TENSOR_ID_MISMATCHES=0 UNDECLARED_ALIASES=0
+SOURCE_TENSOR_AUTHORITY=PASS
+[Boundary] BLOCK=15 STAGE=BLOCK_INPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock views: attnNorm=00000228A2CBCA68 attnQ=00000228A2CBC108 attnOutput=00000228A2CBC048 
+ffnNorm=00000228A2CBBEC8 ffnGate=0000000000000000 ffnUp=0000000000000000 ffnDown=0000000000000000
+[DEBUG] before attnNorm dequant
+[Dequant] F32 tv.data=00000229F7437300 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] attnNormW size=2048
+[DEBUG] attnQW size=6291456
+[DEBUG] attnOutputW size=4194304
+[Dequant] F32 tv.data=0000022A0BD01300 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] ffnNormW size=2048
+[DEBUG] all dequant done
+[DEBUG] before RMSNorm, attnNormW.size=2048 hidden_.size=2048
+[DEBUG] scalar RMSNorm start, n=2048
+[DEBUG] scalar RMSNorm sum=31649924.000000
+[DEBUG] scalar RMSNorm scale=0.008044
+[DEBUG] scalar RMSNorm done
+[Boundary] BLOCK=15 STAGE=POST_ATTN_NORM COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-3.69056 MAX=3.93526 L2=30.5426
+[Boundary] BLOCK=15 STAGE=POST_Q COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-14.2603 MAX=11.7065 L2=143.053
+[Dequant] F32 tv.data=0000022A0BD03300 tv.bytes=2048 tv.elementCount=512
+[Dequant] F32 tv.data=0000022A0BD03300 tv.bytes=2048 tv.elementCount=512
+[Boundary] BLOCK=15 STAGE=POST_MLA COUNT=512 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=15 STAGE=POST_ATTN_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=15 STAGE=POST_ATTN_RESIDUAL COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 
+L2=5625.83
+[Forward] Block 15 is MoE, skipping FFN in simplified executor
+[Boundary] BLOCK=15 STAGE=BLOCK_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock start, l=16
+[DEBUG] Block 16: isDense=0 isMoE=1
+[Gate] SOURCE_TENSOR_AUTHORITY_001 BLOCK=16
+BLOCK=16 TENSOR_ID_MISMATCHES=0 UNDECLARED_ALIASES=0
+SOURCE_TENSOR_AUTHORITY=PASS
+[Boundary] BLOCK=16 STAGE=BLOCK_INPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock views: attnNorm=00000228A2CBC1C8 attnQ=00000228A2CCB6F8 attnOutput=00000228A2CCB0F8 
+ffnNorm=00000228A2CCACD8 ffnGate=0000000000000000 ffnUp=0000000000000000 ffnDown=0000000000000000
+[DEBUG] before attnNorm dequant
+[Dequant] F32 tv.data=0000022A0C465B00 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] attnNormW size=2048
+[DEBUG] attnQW size=6291456
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=24576 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=6291456
+[Q4K] blocks=16384 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=4194304
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=24576 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=6291456
+[Q4K] blocks=16384 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=4194304
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=24576 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=6291456
+[Q4K] blocks=16384 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=4194304
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=24576 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=6291456
+[Q4K] blocks=16384 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=4194304
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=24576 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=6291456
+[Q4K] blocks=16384 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=4194304
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=24576 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=6291456
+[Q4K] blocks=16384 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=4194304
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=24576 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=6291456
+[Q4K] blocks=16384 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=4194304
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=24576 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=6291456
+[Q4K] blocks=16384 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=4194304
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=24576 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=6291456
+[DEBUG] attnOutputW size=4194304
+[Dequant] F32 tv.data=0000022A20D2FB00 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] ffnNormW size=2048
+[DEBUG] all dequant done
+[DEBUG] before RMSNorm, attnNormW.size=2048 hidden_.size=2048
+[DEBUG] scalar RMSNorm start, n=2048
+[DEBUG] scalar RMSNorm sum=31649924.000000
+[DEBUG] scalar RMSNorm scale=0.008044
+[DEBUG] scalar RMSNorm done
+[Boundary] BLOCK=16 STAGE=POST_ATTN_NORM COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-4.0007 MAX=3.69058 L2=37.4687
+[Boundary] BLOCK=16 STAGE=POST_Q COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-17.4794 MAX=40.4616 L2=305.353
+[Dequant] F32 tv.data=0000022A20D31B00 tv.bytes=2048 tv.elementCount=512
+[Dequant] F32 tv.data=0000022A20D31B00 tv.bytes=2048 tv.elementCount=512
+[Boundary] BLOCK=16 STAGE=POST_MLA COUNT=512 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=16 STAGE=POST_ATTN_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=16 STAGE=POST_ATTN_RESIDUAL COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 
+L2=5625.83
+[Forward] Block 16 is MoE, skipping FFN in simplified executor
+[Boundary] BLOCK=16 STAGE=BLOCK_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock start, l=17
+[DEBUG] Block 17: isDense=0 isMoE=1
+[Gate] SOURCE_TENSOR_AUTHORITY_001 BLOCK=17
+BLOCK=17 TENSOR_ID_MISMATCHES=0 UNDECLARED_ALIASES=0
+SOURCE_TENSOR_AUTHORITY=PASS
+[Boundary] BLOCK=17 STAGE=BLOCK_INPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock views: attnNorm=00000228A2CCB398 attnQ=00000228A2CCB1B8 attnOutput=00000228A2CCAB58 
+ffnNorm=00000228A2CCB518 ffnGate=0000000000000000 ffnUp=0000000000000000 ffnDown=0000000000000000
+[DEBUG] before attnNorm dequant
+[Dequant] F32 tv.data=0000022A21494300 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] attnNormW size=2048
+[DEBUG] attnQW size=6291456
+[DEBUG] attnOutputW size=4194304
+[Dequant] F32 tv.data=0000022A3A0C9300 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] ffnNormW size=2048
+[DEBUG] all dequant done
+[DEBUG] before RMSNorm, attnNormW.size=2048 hidden_.size=2048
+[DEBUG] scalar RMSNorm start, n=2048
+[DEBUG] scalar RMSNorm sum=31649924.000000
+[DEBUG] scalar RMSNorm scale=0.008044
+[DEBUG] scalar RMSNorm done
+[Boundary] BLOCK=17 STAGE=POST_ATTN_NORM COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-3.33391 MAX=4.30228 L2=31.0399
+[Boundary] BLOCK=17 STAGE=POST_Q COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-20.4507 MAX=20.1047 L2=186.552
+[Dequant] F32 tv.data=0000022A3A0CB300 tv.bytes=2048 tv.elementCount=512
+[Dequant] F32 tv.data=0000022A3A0CB300 tv.bytes=2048 tv.elementCount=512
+[Boundary] BLOCK=17 STAGE=POST_MLA COUNT=512 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=17 STAGE=POST_ATTN_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=17 STAGE=POST_ATTN_RESIDUAL COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 
+L2=5625.83
+[Forward] Block 17 is MoE, skipping FFN in simplified executor
+[Boundary] BLOCK=17 STAGE=BLOCK_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock start, l=18
+[DEBUG] Block 18: isDense=0 isMoE=1
+[Gate] SOURCE_TENSOR_AUTHORITY_001 BLOCK=18
+BLOCK=18 TENSOR_ID_MISMATCHES=0 UNDECLARED_ALIASES=0
+SOURCE_TENSOR_AUTHORITY=PASS
+[Boundary] BLOCK=18 STAGE=BLOCK_INPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock views: attnNorm=00000228A2CCB218 attnQ=00000228A2CCAFD8 attnOutput=00000228A2CCAF78 
+ffnNorm=00000228A2CCB938 ffnGate=0000000000000000 ffnUp=0000000000000000 ffnDown=0000000000000000
+[DEBUG] before attnNorm dequant
+[Dequant] F32 tv.data=0000022A3A82DB00 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] attnNormW size=2048
+[DEBUG] attnQW size=6291456
+[DEBUG] attnOutputW size=4194304
+[Dequant] F32 tv.data=0000022A4F0F7B00 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] ffnNormW size=2048
+[DEBUG] all dequant done
+[DEBUG] before RMSNorm, attnNormW.size=2048 hidden_.size=2048
+[DEBUG] scalar RMSNorm start, n=2048
+[DEBUG] scalar RMSNorm sum=31649924.000000
+[DEBUG] scalar RMSNorm scale=0.008044
+[DEBUG] scalar RMSNorm done
+[Boundary] BLOCK=18 STAGE=POST_ATTN_NORM COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-4.58995 MAX=4.77125 L2=27.7903
+[Boundary] BLOCK=18 STAGE=POST_Q COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-14.3563 MAX=12.2901 L2=128.844
+[Dequant] F32 tv.data=0000022A4F0F9B00 tv.bytes=2048 tv.elementCount=512
+[Dequant] F32 tv.data=0000022A4F0F9B00 tv.bytes=2048 tv.elementCount=512
+[Boundary] BLOCK=18 STAGE=POST_MLA COUNT=512 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=18 STAGE=POST_ATTN_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=18 STAGE=POST_ATTN_RESIDUAL COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 
+L2=5625.83
+[Forward] Block 18 is MoE, skipping FFN in simplified executor
+[Boundary] BLOCK=18 STAGE=BLOCK_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock start, l=19
+[DEBUG] Block 19: isDense=0 isMoE=1
+[Gate] SOURCE_TENSOR_AUTHORITY_001 BLOCK=19
+BLOCK=19 TENSOR_ID_MISMATCHES=0 UNDECLARED_ALIASES=0
+SOURCE_TENSOR_AUTHORITY=PASS
+[Boundary] BLOCK=19 STAGE=BLOCK_INPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock views: attnNorm=00000228A2CCC648 attnQ=00000228A2CCBEC8 attnOutput=00000228A2CCBB08 
+ffnNorm=00000228A2CCC168 ffnGate=0000000000000000 ffnUp=0000000000000000 ffnDown=0000000000000000
+[DEBUG] before attnNorm dequant
+[Dequant] F32 tv.data=0000022A4F85C300 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] attnNormW size=2048
+[DEBUG] attnQW size=6291456
+[DEBUG] attnOutputW size=4194304
+[Dequant] F32 tv.data=0000022A64126300 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] ffnNormW size=2048
+[DEBUG] all dequant done
+[DEBUG] before RMSNorm, attnNormW.size=2048 hidden_.size=2048
+[DEBUG] scalar RMSNorm start, n=2048
+[DEBUG] scalar RMSNorm sum=31649924.000000
+[DEBUG] scalar RMSNorm scale=0.008044
+[DEBUG] scalar RMSNorm done
+[Boundary] BLOCK=19 STAGE=POST_ATTN_NORM COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-3.55101 MAX=3.34395 L2=23.0536
+[Boundary] BLOCK=19 STAGE=POST_Q COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-15.8018 MAX=11.7377 L2=112.808
+[Dequant] F32 tv.data=0000022A64128300 tv.bytes=2048 tv.elementCount=512
+[Dequant] F32 tv.data=0000022A64128300 tv.bytes=2048 tv.elementCount=512
+[Boundary] BLOCK=19 STAGE=POST_MLA COUNT=512 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=19 STAGE=POST_ATTN_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=19 STAGE=POST_ATTN_RESIDUAL COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 
+L2=5625.83
+[Forward] Block 19 is MoE, skipping FFN in simplified executor
+[Boundary] BLOCK=19 STAGE=BLOCK_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[Forward] Block 20/27
+[DEBUG] ForwardBlock start, l=20
+[DEBUG] Block 20: isDense=0 isMoE=1
+[Gate] SOURCE_TENSOR_AUTHORITY_001 BLOCK=20
+BLOCK=20 TENSOR_ID_MISMATCHES=0 UNDECLARED_ALIASES=0
+SOURCE_TENSOR_AUTHORITY=PASS
+[Boundary] BLOCK=20 STAGE=BLOCK_INPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock views: attnNorm=00000228A2CCC948 attnQ=00000228A2CCC4C8 attnOutput=00000228A2CCBFE8 
+ffnNorm=00000228A2CCC9A8 ffnGate=0000000000000000 ffnUp=0000000000000000 ffnDown=0000000000000000
+[DEBUG] before attnNorm dequant
+[Dequant] F32 tv.data=0000022A6488AB00 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] attnNormW size=2048
+[DEBUG] attnQW size=6291456
+[DEBUG] attnOutputW size=4194304
+[Dequant] F32 tv.data=0000022A7D4BFB00 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] ffnNormW size=2048
+[DEBUG] all dequant done
+[DEBUG] before RMSNorm, attnNormW.size=2048 hidden_.size=2048
+[DEBUG] scalar RMSNorm start, n=2048
+[DEBUG] scalar RMSNorm sum=31649924.000000
+[DEBUG] scalar RMSNorm scale=0.008044
+[DEBUG] scalar RMSNorm done
+[Boundary] BLOCK=20 STAGE=POST_ATTN_NORM COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-3.86114 MAX=4.77125 L2=24.762
+[Boundary] BLOCK=20 STAGE=POST_Q COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-6.8181 MAX=17.8036 L2=169.947
+[Dequant] F32 tv.data=0000022A7D4C1B00 tv.bytes=2048 tv.elementCount=512
+[Dequant] F32 tv.data=0000022A7D4C1B00 tv.bytes=2048 tv.elementCount=512
+[Boundary] BLOCK=20 STAGE=POST_MLA COUNT=512 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=20 STAGE=POST_ATTN_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=20 STAGE=POST_ATTN_RESIDUAL COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 
+L2=5625.83
+[Forward] Block 20 is MoE, skipping FFN in simplified executor
+[Boundary] BLOCK=20 STAGE=BLOCK_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock start, l=21
+[DEBUG] Block 21: isDense=0 isMoE=1
+[Gate] SOURCE_TENSOR_AUTHORITY_001 BLOCK=21
+BLOCK=21 TENSOR_ID_MISMATCHES=0 UNDECLARED_ALIASES=0
+SOURCE_TENSOR_AUTHORITY=PASS
+[Boundary] BLOCK=21 STAGE=BLOCK_INPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock views: attnNorm=00000228A2CCC108 attnQ=00000228A2CC2738 attnOutput=00000228A2CCC768 
+ffnNorm=00000228A2CCC528 ffnGate=0000000000000000 ffnUp=0000000000000000 ffnDown=0000000000000000
+[DEBUG] before attnNorm dequant
+[Dequant] F32 tv.data=0000022A7DC24300 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] attnNormW size=2048
+[DEBUG] attnQW size=6291456
+[DEBUG] attnOutputW size=4194304
+[Dequant] F32 tv.data=0000022A924EE300 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] ffnNormW size=2048
+[DEBUG] all dequant done
+[DEBUG] before RMSNorm, attnNormW.size=2048 hidden_.size=2048
+[DEBUG] scalar RMSNorm start, n=2048
+[DEBUG] scalar RMSNorm sum=31649924.000000
+[DEBUG] scalar RMSNorm scale=0.008044
+[DEBUG] scalar RMSNorm done
+[Boundary] BLOCK=21 STAGE=POST_ATTN_NORM COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-4.21779 MAX=4.01682 L2=26.086
+[Boundary] BLOCK=21 STAGE=POST_Q COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-7.47981 MAX=19.6504 L2=144.175
+[Dequant] F32 tv.data=0000022A924F0300 tv.bytes=2048 tv.elementCount=512
+[Dequant] F32 tv.data=0000022A924F0300 tv.bytes=2048 tv.elementCount=512
+[Boundary] BLOCK=21 STAGE=POST_MLA COUNT=512 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=21 STAGE=POST_ATTN_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=21 STAGE=POST_ATTN_RESIDUAL COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 
+L2=5625.83
+[Forward] Block 21 is MoE, skipping FFN in simplified executor
+[Boundary] BLOCK=21 STAGE=BLOCK_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock start, l=22
+[DEBUG] Block 22: isDense=0 isMoE=1
+[Gate] SOURCE_TENSOR_AUTHORITY_001 BLOCK=22
+BLOCK=22 TENSOR_ID_MISMATCHES=0 UNDECLARED_ALIASES=0
+SOURCE_TENSOR_AUTHORITY=PASS
+[Boundary] BLOCK=22 STAGE=BLOCK_INPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock views: attnNorm=00000228A2CC2258 attnQ=00000228A2CC2138 attnOutput=00000228A2CC2678 
+ffnNorm=00000228A2CC18F8 ffnGate=0000000000000000 ffnUp=0000000000000000 ffnDown=0000000000000000
+[DEBUG] before attnNorm dequant
+[Dequant] F32 tv.data=0000022A93D7D300 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] attnNormW size=2048
+[DEBUG] attnQW size=6291456
+[DEBUG] attnOutputW size=4194304
+[Dequant] F32 tv.data=0000022AA7C7F300 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] ffnNormW size=2048
+[DEBUG] all dequant done
+[DEBUG] before RMSNorm, attnNormW.size=2048 hidden_.size=2048
+[DEBUG] scalar RMSNorm start, n=2048
+[DEBUG] scalar RMSNorm sum=31649924.000000
+[DEBUG] scalar RMSNorm scale=0.008044
+[DEBUG] scalar RMSNorm done
+[Boundary] BLOCK=22 STAGE=POST_ATTN_NORM COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-3.57263 MAX=4.20033 L2=27.6002
+[Boundary] BLOCK=22 STAGE=POST_Q COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-14.4396 MAX=14.7782 L2=125.081
+[Dequant] F32 tv.data=0000022A9361AB00 tv.bytes=2048 tv.elementCount=512
+[Dequant] F32 tv.data=0000022A9361AB00 tv.bytes=2048 tv.elementCount=512
+[Boundary] BLOCK=22 STAGE=POST_MLA COUNT=512 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=22 STAGE=POST_ATTN_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=22 STAGE=POST_ATTN_RESIDUAL COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 
+L2=5625.83
+[Forward] Block 22 is MoE, skipping FFN in simplified executor
+[Boundary] BLOCK=22 STAGE=BLOCK_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock start, l=23
+[DEBUG] Block 23: isDense=0 isMoE=1
+[Gate] SOURCE_TENSOR_AUTHORITY_001 BLOCK=23
+BLOCK=23 TENSOR_ID_MISMATCHES=0 UNDECLARED_ALIASES=0
+SOURCE_TENSOR_AUTHORITY=PASS
+[Boundary] BLOCK=23 STAGE=BLOCK_INPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock views: attnNorm=00000228A2CC1F58 attnQ=00000228A2CC2558 attnOutput=00000228A2CC19B8 
+ffnNorm=00000228A2CC1FB8 ffnGate=0000000000000000 ffnUp=0000000000000000 ffnDown=0000000000000000
+[DEBUG] before attnNorm dequant
+[Dequant] F32 tv.data=0000022AA7C81300 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] attnNormW size=2048
+[DEBUG] attnQW size=6291456
+[DEBUG] attnOutputW size=4194304
+[Dequant] F32 tv.data=0000022AC08B6300 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] ffnNormW size=2048
+[DEBUG] all dequant done
+[DEBUG] before RMSNorm, attnNormW.size=2048 hidden_.size=2048
+[DEBUG] scalar RMSNorm start, n=2048
+[DEBUG] scalar RMSNorm sum=31649924.000000
+[DEBUG] scalar RMSNorm scale=0.008044
+[DEBUG] scalar RMSNorm done
+[Boundary] BLOCK=23 STAGE=POST_ATTN_NORM COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-3.48898 MAX=4.13916 L2=24.452
+[Boundary] BLOCK=23 STAGE=POST_Q COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-16.7812 MAX=8.63349 L2=149.521
+[Dequant] F32 tv.data=0000022AC08B8300 tv.bytes=2048 tv.elementCount=512
+[Dequant] F32 tv.data=0000022AC08B8300 tv.bytes=2048 tv.elementCount=512
+[Boundary] BLOCK=23 STAGE=POST_MLA COUNT=512 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=23 STAGE=POST_ATTN_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=23 STAGE=POST_ATTN_RESIDUAL COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 
+L2=5625.83
+[Forward] Block 23 is MoE, skipping FFN in simplified executor
+[Boundary] BLOCK=23 STAGE=BLOCK_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock start, l=24
+[DEBUG] Block 24: isDense=0 isMoE=1
+[Gate] SOURCE_TENSOR_AUTHORITY_001 BLOCK=24
+BLOCK=24 TENSOR_ID_MISMATCHES=0 UNDECLARED_ALIASES=0
+SOURCE_TENSOR_AUTHORITY=PASS
+[Boundary] BLOCK=24 STAGE=BLOCK_INPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock views: attnNorm=00000228A2CC1B38 attnQ=00000228A2CC3D48 attnOutput=00000228A2CC2DE8 
+ffnNorm=00000228A2CC1EF8 ffnGate=0000000000000000 ffnUp=0000000000000000 ffnDown=0000000000000000
+[DEBUG] before attnNorm dequant
+[Dequant] F32 tv.data=0000022AC101AB00 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] attnNormW size=2048
+[DEBUG] attnQW size=6291456
+[DEBUG] attnOutputW size=4194304
+[Dequant] F32 tv.data=0000022AD9C4FB00 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] ffnNormW size=2048
+[DEBUG] all dequant done
+[DEBUG] before RMSNorm, attnNormW.size=2048 hidden_.size=2048
+[DEBUG] scalar RMSNorm start, n=2048
+[DEBUG] scalar RMSNorm sum=31649924.000000
+[DEBUG] scalar RMSNorm scale=0.008044
+[DEBUG] scalar RMSNorm done
+[Boundary] BLOCK=24 STAGE=POST_ATTN_NORM COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-5.02413 MAX=4.44501 L2=26.9366
+[Boundary] BLOCK=24 STAGE=POST_Q COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-8.54444 MAX=17.0386 L2=138.134
+[Dequant] F32 tv.data=0000022AD9C51B00 tv.bytes=2048 tv.elementCount=512
+[Dequant] F32 tv.data=0000022AD9C51B00 tv.bytes=2048 tv.elementCount=512
+[Q4K] blocks=16384 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=4194304
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=24576 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=6291456
+[Q4K] blocks=16384 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=4194304
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=24576 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=6291456
+[Q4K] blocks=16384 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=4194304
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=24576 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=6291456
+[Q4K] blocks=16384 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=4194304
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=24576 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=6291456
+[Q4K] blocks=16384 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=4194304
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=24576 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=6291456
+[Q4K] blocks=16384 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=4194304
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=24576 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=6291456
+[Q4K] blocks=16384 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=4194304
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=24576 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=6291456
+[Q4K] blocks=16384 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=4194304
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=24576 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=6291456
+[Q4K] blocks=16384 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=4194304
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Boundary] BLOCK=24 STAGE=POST_MLA COUNT=512 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=24 STAGE=POST_ATTN_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=24 STAGE=POST_ATTN_RESIDUAL COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 
+L2=5625.83
+[Forward] Block 24 is MoE, skipping FFN in simplified executor
+[Boundary] BLOCK=24 STAGE=BLOCK_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[Forward] Block 25/27
+[DEBUG] ForwardBlock start, l=25
+[DEBUG] Block 25: isDense=0 isMoE=1
+[Gate] SOURCE_TENSOR_AUTHORITY_001 BLOCK=25
+BLOCK=25 TENSOR_ID_MISMATCHES=0 UNDECLARED_ALIASES=0
+SOURCE_TENSOR_AUTHORITY=PASS
+[Boundary] BLOCK=25 STAGE=BLOCK_INPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock views: attnNorm=00000228A2CC3C88 attnQ=00000228A2CC35C8 attnOutput=00000228A2CC3628 
+ffnNorm=00000228A2CC2AE8 ffnGate=0000000000000000 ffnUp=0000000000000000 ffnDown=0000000000000000
+[DEBUG] before attnNorm dequant
+[Dequant] F32 tv.data=0000022ADA3B4300 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] attnNormW size=2048
+[DEBUG] attnQW size=6291456
+[DEBUG] attnOutputW size=4194304
+[Dequant] F32 tv.data=0000022AF2FE9300 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] ffnNormW size=2048
+[DEBUG] all dequant done
+[DEBUG] before RMSNorm, attnNormW.size=2048 hidden_.size=2048
+[DEBUG] scalar RMSNorm start, n=2048
+[DEBUG] scalar RMSNorm sum=31649924.000000
+[DEBUG] scalar RMSNorm scale=0.008044
+[DEBUG] scalar RMSNorm done
+[Boundary] BLOCK=25 STAGE=POST_ATTN_NORM COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-6.26466 MAX=5.50528 L2=33.1203
+[Boundary] BLOCK=25 STAGE=POST_Q COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-28.5628 MAX=13.5577 L2=189.958
+[Dequant] F32 tv.data=0000022AF2FEB300 tv.bytes=2048 tv.elementCount=512
+[Dequant] F32 tv.data=0000022AF2FEB300 tv.bytes=2048 tv.elementCount=512
+[Boundary] BLOCK=25 STAGE=POST_MLA COUNT=512 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=25 STAGE=POST_ATTN_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=25 STAGE=POST_ATTN_RESIDUAL COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 
+L2=5625.83
+[Forward] Block 25 is MoE, skipping FFN in simplified executor
+[Boundary] BLOCK=25 STAGE=BLOCK_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock start, l=26
+[DEBUG] Block 26: isDense=0 isMoE=1
+[Gate] SOURCE_TENSOR_AUTHORITY_001 BLOCK=26
+BLOCK=26 TENSOR_ID_MISMATCHES=0 UNDECLARED_ALIASES=0
+SOURCE_TENSOR_AUTHORITY=PASS
+[Boundary] BLOCK=26 STAGE=BLOCK_INPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[DEBUG] ForwardBlock views: attnNorm=00000228A2CC3F88 attnQ=00000228A2CC38C8 attnOutput=00000228A2CC3E68 
+ffnNorm=00000228A2CC2F68 ffnGate=0000000000000000 ffnUp=0000000000000000 ffnDown=0000000000000000
+[DEBUG] before attnNorm dequant
+[Dequant] F32 tv.data=0000022AF374DB00 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] attnNormW size=2048
+[DEBUG] attnQW size=6291456
+[DEBUG] attnOutputW size=4194304
+[Dequant] F32 tv.data=0000022B0C382B00 tv.bytes=8192 tv.elementCount=2048
+[DEBUG] ffnNormW size=2048
+[DEBUG] all dequant done
+[DEBUG] before RMSNorm, attnNormW.size=2048 hidden_.size=2048
+[DEBUG] scalar RMSNorm start, n=2048
+[DEBUG] scalar RMSNorm sum=31649924.000000
+[DEBUG] scalar RMSNorm scale=0.008044
+[DEBUG] scalar RMSNorm done
+[Boundary] BLOCK=26 STAGE=POST_ATTN_NORM COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-6.4842 MAX=8.35987 L2=41.4773
+[Boundary] BLOCK=26 STAGE=POST_Q COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-10.815 MAX=30.8764 L2=287.521
+[Dequant] F32 tv.data=0000022B0C384B00 tv.bytes=2048 tv.elementCount=512
+[Dequant] F32 tv.data=0000022B0C384B00 tv.bytes=2048 tv.elementCount=512
+[Boundary] BLOCK=26 STAGE=POST_MLA COUNT=512 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=26 STAGE=POST_ATTN_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=0 MAX=0 L2=0
+[Boundary] BLOCK=26 STAGE=POST_ATTN_RESIDUAL COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 
+L2=5625.83
+[Forward] Block 26 is MoE, skipping FFN in simplified executor
+[Boundary] BLOCK=26 STAGE=BLOCK_OUTPUT COUNT=2048 NONFINITE=0 FIRST_NONFINITE=0 MIN=-385.743 MAX=421.925 L2=5625.83
+[Forward] Blocks complete
+[Dequant] F32 tv.data=00000229439AAB00 tv.bytes=8192 tv.elementCount=2048
+[Forward] Logits computed
+[Gate] PREFILL_COMPLETED=1
+[Gate] DECODE_STEP=0
+[Gate] FORWARD_PASS_OK=1
+[Gate] EXECUTION_IR_CONSUMED=1
+[Gate] EXECUTION_OPS_EXPECTED=300
+[Gate] EXECUTION_OPS_EXECUTED=2
+[Gate] EXECUTION_OPS_SKIPPED=0
+[Gate] QUANT_DECODES=84
+[Gate] QUANT_STUB_PATHS=0
+[Gate] STUB_PATHS=0
+[Gate] STUB_PATH_USED=0
+[Gate] ZERO_FILL_FALLBACKS=0
+[Gate] ZERO_FILL_PATH_USED=0
+[Gate] SYNTHETIC_OUTPUTS=0
+[Gate] SYNTHETIC_OUTPUT_USED=0
+[Gate] MLA_OPS=27
+[Gate] MLA_STUB_PATH=0
+[Gate] MOE_OPS=26
+[Gate] MOE_PARTIAL_EXECUTION=1
+[Gate] FINAL_NORM_EXECUTED=1
+[Gate] LM_HEAD_EXECUTED=1
+[Gate] FINAL_OPS_MISSING=0
+[Gate] LOGITS_PRESENT=1
+[Gate] LOGITS_FINITE=1
+[Gate] LOGITS_COUNT=102400
+[Gate] LOGITS_MAX=0.330657
+[Gate] LOGITS_MIN=-0.326705
+[Gate] TOKEN0_ID=93633
+[Gate] TOKEN0_EMITTED=1
+[Gate] ARGMAX_IN_RANGE=1
+
+=============================================================================
+VERDICT=PASS_EXECUTABLE
+=============================================================================
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=24576 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=6291456
+[Q4K] blocks=16384 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=4194304
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=24576 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=6291456
+[Q4K] blocks=16384 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=4194304
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Q4K] blocks=4608 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=1179648
+[Q4K] blocks=8192 badBlocks=0 firstBadBlock=0 firstBadElement=0 outSize=2097152
+[Sample] token=93633 prob=0.000014

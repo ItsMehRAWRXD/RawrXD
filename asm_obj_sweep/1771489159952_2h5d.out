@@ -1,0 +1,13 @@
+ Assembling: D:\rawrxd\history\all_versions\build_prod\autofinisher_test\rewritten\genesis.asm\1771489159952_2h5d.asm
+D:\rawrxd\history\all_versions\build_prod\autofinisher_test\rewritten\genesis.asm\1771489159952_2h5d.asm(157) : error A2042:statement too complex
+D:\rawrxd\history\all_versions\build_prod\autofinisher_test\rewritten\genesis.asm\1771489159952_2h5d.asm(157) : error A2039:line too long
+D:\rawrxd\history\all_versions\build_prod\autofinisher_test\rewritten\genesis.asm\1771489159952_2h5d.asm(173) : error A2042:statement too complex
+D:\rawrxd\history\all_versions\build_prod\autofinisher_test\rewritten\genesis.asm\1771489159952_2h5d.asm(173) : error A2039:line too long
+D:\rawrxd\history\all_versions\build_prod\autofinisher_test\rewritten\genesis.asm\1771489159952_2h5d.asm(189) : error A2008:syntax error :     ret
+D:\rawrxd\history\all_versions\build_prod\autofinisher_test\rewritten\genesis.asm\1771489159952_2h5d.asm(242) : error A2042:statement too complex
+D:\rawrxd\history\all_versions\build_prod\autofinisher_test\rewritten\genesis.asm\1771489159952_2h5d.asm(242) : error A2039:line too long
+D:\rawrxd\history\all_versions\build_prod\autofinisher_test\rewritten\genesis.asm\1771489159952_2h5d.asm(259) : error A2008:syntax error : LSP_HandleRequest ENDP
+D:\rawrxd\history\all_versions\build_prod\autofinisher_test\rewritten\genesis.asm\1771489159952_2h5d.asm(277) : error A2042:statement too complex
+D:\rawrxd\history\all_versions\build_prod\autofinisher_test\rewritten\genesis.asm\1771489159952_2h5d.asm(277) : error A2039:line too long
+D:\rawrxd\history\all_versions\build_prod\autofinisher_test\rewritten\genesis.asm\1771489159952_2h5d.asm(294) : error A2008:syntax error : Agent_SecurityScan ENDP
+D:\rawrxd\history\all_versions\build_prod\autofinisher_test\rewritten\genesis.asm\1771489159952_2h5d.asm(1022) : error A2006:undefined symbol : g_Pattern_CompletionEngine

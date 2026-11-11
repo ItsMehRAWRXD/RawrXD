@@ -1,0 +1,13 @@
+ Assembling: D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_factorial.asm
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_factorial.asm(13) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_factorial.asm(14) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_factorial.asm(15) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_factorial.asm(34) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_factorial.asm(45) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_factorial.asm(87) : error A2008:syntax error : main
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_factorial.asm(87) : error A2088:END directive required at end of file
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_factorial.asm(29) : error A2006:undefined symbol : recursive
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_factorial.asm(32) : error A2006:undefined symbol : done
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_factorial.asm(61) : error A2006:undefined symbol : GetStdHandle
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_factorial.asm(69) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\runoff\part_0024\e__RawrXD_tests_masm_factorial.asm(82) : error A2006:undefined symbol : ExitProcess

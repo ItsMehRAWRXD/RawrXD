@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_RingBuffer_Consumer.asm\1769900401140_EAt9.asm
+D:\rawrxd\history\all_versions\src\RawrXD_RingBuffer_Consumer.asm\1769900401140_EAt9.asm(86) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_RingBuffer_Consumer.asm\1769900401140_EAt9.asm(121) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\RawrXD_RingBuffer_Consumer.asm\1769900401140_EAt9.asm(166) : error A2220:Missing .ENDPROLOG

@@ -1,0 +1,5 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902888971_RswN.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902888971_RswN.asm(92) : error A2163:non-benign structure redefinition: incorrect initializers : ModelHandleStruct
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902888971_RswN.asm(92) : error A2164:non-benign structure redefinition: too few initializers : ModelHandleStruct
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902888971_RswN.asm(93) : error A2161:non-benign structure redefinition: too few labels : ModelHandleStruct
+D:\rawrxd\history\all_versions\src\RawrXD_Inference_Engine.asm\1769902888971_RswN.asm(93) : error A2164:non-benign structure redefinition: too few initializers : ModelHandleStruct

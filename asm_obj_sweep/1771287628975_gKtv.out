@@ -1,0 +1,52 @@
+ Assembling: D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(1) : error A2044:invalid character in file
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(12) : error A2008:syntax error : WIN64
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(108) : error A2008:syntax error : label
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(169) : error A2008:syntax error : dword
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(287) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(2032) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(2210) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(2211) : error A2070:invalid instruction operands
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(501) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(765) : error A2006:undefined symbol : LineColToScreen
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(771) : error A2006:undefined symbol : FONT_WIDTH
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(780) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(784) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(787) : error A2206:missing operator in expression
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(839) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(900) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(927) : error A2006:undefined symbol : StrStrA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(964) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(1001) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(1039) : error A2006:undefined symbol : lstrcpyA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(1064) : error A2006:undefined symbol : StrStrA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(1140) : error A2006:undefined symbol : CreatePipe
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(1230) : error A2006:undefined symbol : CreatePipe
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(1316) : error A2006:undefined symbol : AlignedAlloc64
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(1320) : error A2006:undefined symbol : BufferCreate
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(1379) : error A2006:undefined symbol : CreatePipe
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(1388) : error A2006:undefined symbol : CreatePipe
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(1777) : error A2006:undefined symbol : RtlMoveMemory
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(1818) : error A2006:undefined symbol : StrStrA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(1877) : error A2006:undefined symbol : RtlMoveMemory
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(1907) : error A2006:undefined symbol : StrStrA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(1914) : error A2006:undefined symbol : StrStrA
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(2014) : error A2006:undefined symbol : CreateSolidBrush
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(2033) : error A2006:undefined symbol : RoundRect
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(2038) : error A2006:undefined symbol : SetDCPenColor
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(2109) : error A2006:undefined symbol : CreateSolidBrush
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(2123) : error A2006:undefined symbol : FillRect
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(2172) : error A2006:undefined symbol : CreatePen
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(2186) : error A2006:undefined symbol : MoveToEx
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(2212) : error A2006:undefined symbol : LineTo
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(348) : warning A4025:ENDP found before .ENDPROLOG : LSPInitialize
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(348) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(413) : warning A4025:ENDP found before .ENDPROLOG : LSPSendInitialize
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(413) : error A2247:size of prolog too big, must be < 256 bytes
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(480) : warning A4025:ENDP found before .ENDPROLOG : LSPTextDocumentDidOpen
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(617) : warning A4025:ENDP found before .ENDPROLOG : LSPCompletion
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(706) : warning A4025:ENDP found before .ENDPROLOG : IntelliSenseRenderPopup
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(729) : warning A4025:ENDP found before .ENDPROLOG : IntelliSenseApplyCompletion
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(815) : warning A4025:ENDP found before .ENDPROLOG : DiagnosticsRenderSquiggles
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(1120) : warning A4025:ENDP found before .ENDPROLOG : GitGetStatus
+D:\rawrxd\history\all_versions\src\agentic\monaco\MONACO_EDITOR_ENTERPRISE.ASM\1771287628975_gKtv.ASM(1359) : warning A4025:ENDP found before .ENDPROLOG : EnterpriseEditorCreate

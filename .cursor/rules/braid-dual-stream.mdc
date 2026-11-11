@@ -1,0 +1,15 @@
+---
+description: Braid dual-stream — post-epoch siblings only; no coverage hill-climb
+alwaysApply: true
+---
+
+# Braid dual-stream (post-epoch)
+
+Authority: `evidence/RAWRXD_PERFORMANCE_001/BRAID_DUAL_STREAM_001.txt`
+
+- Dual streams are **siblings from one snapshot S**, not a pipeline.
+- Authoritative sequence: run A from S → restore S → run B from S → elect by `GENERATION_WALL_NS` (parity first).
+- Concurrent same-HW walls are non-authoritative only.
+- Winner commits; loser transient authority purged; canonical model never rewritten.
+- **Forbidden during finite coverage epochs** (18 unique). Braid only after epoch + for justified challengers (e.g. auto-quant).
+- Single braid win = provisional; endurance required to promote.

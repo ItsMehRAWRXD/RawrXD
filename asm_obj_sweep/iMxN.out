@@ -1,0 +1,63 @@
+ Assembling: D:\rawrxd\history\-1bd1bafa\iMxN.asm
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(2783) : error A2070:invalid instruction operands
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(4088) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(4090) : error A2046:missing single or double quotation mark in string
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(4093) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(4095) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(4097) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(4099) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(4101) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(4103) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(4105) : error A2109:only white space or comment can follow backslash
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1102) : error A2006:undefined symbol : GENERIC_WRITE
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1105) : error A2006:undefined symbol : CREATE_ALWAYS
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1106) : error A2006:undefined symbol : FILE_ATTRIBUTE_NORMAL
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1108) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1110) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1120) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1133) : error A2006:undefined symbol : WriteFile
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1140) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1187) : error A2006:undefined symbol : GENERIC_READ
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1190) : error A2006:undefined symbol : OPEN_EXISTING
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1193) : error A2006:undefined symbol : CreateFileA
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1195) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1205) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1218) : error A2006:undefined symbol : ReadFile
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1225) : error A2006:undefined symbol : CloseHandle
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1482) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1595) : error A2006:undefined symbol : style_component_not_found
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1658) : error A2006:undefined symbol : margin_left
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1660) : error A2006:undefined symbol : margin_top
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1662) : error A2006:undefined symbol : margin_right
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1664) : error A2006:undefined symbol : margin_bottom
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1725) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1726) : error A2006:undefined symbol : height
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1728) : error A2006:undefined symbol : SWP_NOZORDER
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1733) : error A2006:undefined symbol : visible
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1736) : error A2006:undefined symbol : SW_HIDE
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1739) : error A2006:undefined symbol : SW_SHOW
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1759) : error A2006:undefined symbol : g_hMainWnd
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1765) : error A2006:undefined symbol : g_animation_active
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1950) : error A2081:missing operand after unary operator
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1962) : error A2006:undefined symbol : height
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(1975) : error A2006:undefined symbol : visible
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(2246) : error A2006:undefined symbol : szJsonStart
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(2414) : error A2006:undefined symbol : IID_ID2D1Factory
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(2421) : error A2006:undefined symbol : IID_IDWriteFactory
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(2779) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(2952) : error A2006:undefined symbol : rclient
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(2956) : error A2006:undefined symbol : rclient
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(2960) : error A2006:undefined symbol : rclient
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(2964) : error A2006:undefined symbol : rclient
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(2968) : error A2006:undefined symbol : rclient
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(2997) : error A2006:undefined symbol : rclient
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(3001) : error A2006:undefined symbol : rclient
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(3005) : error A2006:undefined symbol : rclient
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(3217) : error A2006:undefined symbol : WS_CHILD
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(3997) : error A2006:undefined symbol : szIdKey_Val
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(4007) : error A2006:undefined symbol : szTypeKey_Val
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(4017) : error A2006:undefined symbol : szXKey_Val
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(4027) : error A2006:undefined symbol : szYKey_Val
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(4037) : error A2006:undefined symbol : szWKey_Val
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(4047) : error A2006:undefined symbol : szHKey_Val
+D:\rawrxd\history\-1bd1bafa\iMxN.asm(4057) : error A2006:undefined symbol : szStyleKey_Val

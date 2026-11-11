@@ -1,0 +1,15 @@
+ Assembling: D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_gguf_memory_map.asm
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_gguf_memory_map.asm(18) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_gguf_memory_map.asm(19) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_gguf_memory_map.asm(20) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_gguf_memory_map.asm(168) : error A2084:constant value too large
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_gguf_memory_map.asm(141) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_gguf_memory_map.asm(148) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_gguf_memory_map.asm(149) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_gguf_memory_map.asm(150) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_gguf_memory_map.asm(151) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_gguf_memory_map.asm(187) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_gguf_memory_map.asm(193) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_gguf_memory_map.asm(228) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_gguf_memory_map.asm(230) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0020\d__temp_RawrXD-agentic-ide-production_gguf_memory_map.asm(313) : error A2006:undefined symbol : NtUnmapViewOfSection

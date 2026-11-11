@@ -1,0 +1,2 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907508682_Gsvu.asm
+D:\rawrxd\history\all_versions\src\RawrXD_Titan.asm\1769907508682_Gsvu.asm(410) : error A2006:undefined symbol : MemCpy_AVX512

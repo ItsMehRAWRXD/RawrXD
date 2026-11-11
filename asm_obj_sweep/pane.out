@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(7) : error A2008:syntax error : bits
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(8) : error A2008:syntax error : default
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(10) : error A2008:syntax error : section
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(17) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(18) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(19) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(22) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(23) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(26) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(27) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(30) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(32) : error A2008:syntax error : section
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(34) : error A2008:syntax error : struc
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(35) : error A2008:syntax error : .type
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(36) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(37) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(38) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(39) : error A2008:syntax error : endstruc
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(42) : error A2008:syntax error : chatMessages
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(43) : error A2008:syntax error : messageCount
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(44) : error A2008:syntax error : scrollPosition
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(47) : error A2008:syntax error : inputBuffer
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(48) : error A2008:syntax error : inputLength
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(49) : error A2008:syntax error : inputCursorPos
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(52) : error A2008:syntax error : hPipe
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(53) : error A2008:syntax error : agentConnected
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(56) : error A2008:syntax error : sendBuffer
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(57) : error A2008:syntax error : recvBuffer
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(60) : error A2008:syntax error : ioBytesWritten
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(61) : error A2008:syntax error : ioBytesRead
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(63) : error A2008:syntax error : section
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(65) : error A2008:syntax error : in directive
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(66) : error A2008:syntax error : in directive
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(67) : error A2008:syntax error : in directive
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(68) : error A2008:syntax error : in directive
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(69) : error A2008:syntax error : in directive
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(70) : error A2008:syntax error : in directive
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(71) : error A2008:syntax error : in directive
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(76) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(77) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(78) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(79) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(82) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(83) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(84) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(85) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(88) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(89) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(90) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(91) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(92) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(95) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(96) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(97) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(98) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(101) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(102) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(103) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(106) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(108) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(109) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(110) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(114) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(115) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(116) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(118) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(119) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(124) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(125) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(126) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(128) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(129) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(134) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(135) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(136) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(138) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(139) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(144) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(145) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(146) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(148) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(149) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(156) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(157) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(158) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(159) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(160) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(161) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(162) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(165) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(166) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(167) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(169) : error A2008:syntax error : .
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(171) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(172) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(173) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(174) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(177) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(180) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(181) : error A2034:must be in segment block
+D:\rawrxd\reconstructed\professional-nasm-ide\src\chat\pane.asm(182) : fatal error A1012:error count exceeds 100; stopping assembly

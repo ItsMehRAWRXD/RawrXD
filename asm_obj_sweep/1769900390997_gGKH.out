@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(27) : error A2008:syntax error : offset
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(28) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(54) : error A2008:syntax error : type
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(57) : error A2008:syntax error : size
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(60) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(65) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(78) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(85) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(86) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(87) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(89) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(92) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(93) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(94) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(96) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(99) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(100) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(101) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(102) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(105) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(107) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(108) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(109) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(111) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(112) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(113) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(115) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(116) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(117) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(118) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(119) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(127) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(128) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(129) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(130) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(131) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(132) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(134) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(135) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(138) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(139) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(140) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(142) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(144) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(145) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(146) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(147) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(148) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(150) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(151) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(153) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(154) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(155) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(157) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(160) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(161) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(164) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(165) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(166) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(167) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(168) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(169) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(171) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(172) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(173) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(175) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(176) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(178) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(180) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(181) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(182) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(183) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(184) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(186) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(188) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(189) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(190) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(191) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(194) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(197) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(198) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(199) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(200) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(201) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(202) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(203) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(204) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(205) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(207) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(208) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(211) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(213) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(214) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(215) : error A2008:syntax error : ,
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(217) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(218) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(219) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(222) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(224) : error A2034:must be in segment block
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(226) : error A2037:statement not allowed inside structure definition
+D:\rawrxd\history\all_versions\src\RawrXD_GPU_Memory.asm\1769900390997_gGKH.asm(227) : fatal error A1012:error count exceeds 100; stopping assembly

@@ -1,0 +1,60 @@
+BATCH2_BOS_L0_BISECT — 2026-08-29 (continued from HexMag freeze / cert ladder)
+
+AUTHORITY
+  workspace_cert = F:\~dev\rawrxd   (NOT g:\rawrxd)
+  model = F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+  sha256 = 9FECC3B3CD76BBA89D504F29B616EEDF7DA85B96540E490CA5824D3F7D2776A0
+  ids = [1, 21521, 9312]
+  oracle = CPU-only llama (ggml-cpu-zen4); Vulkan-scheduled llama is CONTAMINATED for this gate
+
+GATE STATUS
+  tokenizer/specials     = PASS (closed; do not reopen)
+  HexMag MASM            = PASS (frozen baseline; not a suspect)
+  raw BOS forward        = FAIL — first activation mismatch at LAYER 0
+  AGENT-E2E-002b         = BLOCKED
+
+ORACLE CORRECTION (locks measuring stick)
+  Deep2 greedy-1 argmax          = 13
+  CPU-only llama greedy-1 argmax = 13   ← MATCH
+  Vulkan-scheduled llama argmax  = 29892 ← do NOT use as Deep2 CPU cert golden
+  Prior BATCH2_BOS_VERDICT expected=29892 was oracle class A (Vulkan). Superseded by
+  BATCH2_BOS_FIRST_DIVERGENCE.txt stick B (CPU). Soft gate: match CPU hidden digests.
+
+FIRST ACTIVATION MISMATCH (pos=0 = BOS token)
+  Artifact pair:
+    Deep2: evidence/DEEP2_PONG_BATCH2/deep2_layer_bisect_stdout.txt
+    REF:   evidence/DEEP2_PONG_BATCH2/ref_layer_bisect_stdout.txt
+
+  PROMPT_EMBED pos=0 (Deep2):
+    l2=1.008737855e-01 fnv=13123758da8b244a
+    (llama inp_embd column not present in ref dump — capture next)
+
+  LAYER_OUT_0 / l_out-0 pos=0:
+    Deep2  l2=1.895024295e+00  fnv=e462588dd7b9ec59
+    llama  l2=9.900394931e-01  fnv=d1a7d1749916f1b8
+    → FAIL  (~1.91× l2, FNV mismatch)  <<< FIRST CONFIRMED LAYER DIVERGENCE
+
+  LAYER_OUT_0 pos=1 (▁PO) / pos=2 (NG): much closer (near-miss magnitudes)
+    Deep2 pos1 l2=1.099 vs llama 1.070
+    Deep2 pos2 l2=0.763 vs llama 0.748
+    → BOS-conditioned L0 path is the hot spot, not generic Q4_K for all tokens
+
+  Deep2 L0 internal (pos=0 only):
+    LAYER0_POST_ATTN l2=2.160429169e-01
+    LAYER0_POST_FFN  l2=1.895024295e+00  (= LAYER_OUT_0)
+    → Most residual growth is in L0 FFN branch after attention (need llama attn/ffn nodes)
+
+NEXT CODE ACTIONS (ordered)
+  1. Capture llama inp_embd (+ optional attn/ffn intermediates) for ids=[1,21521,9312]
+     via llama_ref_parity_probe (CPU backends only; RAWRXD_REF_EMBED=1).
+  2. If embed FNV mismatches → fix BOS row dequant / token embedding path.
+  3. If embed PASS → bisect L0: attn_norm → QKV → RoPE(id) → scores → out → residual
+     then ffn_norm → gate/up/down → residual. Stop at first substage FAIL vs llama.
+  4. Re-gate: STAGE_DIGEST LAYER_OUT_0 pos=0 FNV match CPU llama; then FINAL_HIDDEN;
+     greedy argmax need only agree with CPU stick (13 today), not Vulkan 29892.
+
+DO NOT
+  - Reopen EncodeLongestMatch / chat-template / tool encode
+  - Blame HexMag orchestration
+  - Use g:\rawrxd as cert authority (missing harnesses / stale Deep2)
+  - Mix Q4_0 tinyllama_fresh.gguf into this chase

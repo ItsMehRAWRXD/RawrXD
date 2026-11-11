@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_rawrxd_encoder_engine.asm
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_rawrxd_encoder_engine.asm(106) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_rawrxd_encoder_engine.asm(111) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_rawrxd_encoder_engine.asm(116) : error A2189:invalid combination with segment alignment : 256
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_rawrxd_encoder_engine.asm(141) : error A2189:invalid combination with segment alignment : 256
+D:\rawrxd\history\runoff\part_0015\d__RawrXD-Compilers_rawrxd_encoder_engine.asm(284) : error A2022:instruction operands must be the same size

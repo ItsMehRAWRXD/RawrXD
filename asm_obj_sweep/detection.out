@@ -1,0 +1,17 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD\src\gpu\masm\gpu\detection.asm
+D:\rawrxd\reconstructed\RawrXD\src\gpu\masm\gpu\detection.asm(10) : error A2006:undefined symbol : GPU_ScanPCIBus
+D:\rawrxd\reconstructed\RawrXD\src\gpu\masm\gpu\detection.asm(11) : error A2006:undefined symbol : GPU_ReadPCIConfig
+D:\rawrxd\reconstructed\RawrXD\src\gpu\masm\gpu\detection.asm(12) : error A2006:undefined symbol : GPU_ReadPCIConfigDword
+D:\rawrxd\reconstructed\RawrXD\src\gpu\masm\gpu\detection.asm(13) : error A2006:undefined symbol : GPU_GetDeviceProperties
+D:\rawrxd\reconstructed\RawrXD\src\gpu\masm\gpu\detection.asm(14) : error A2006:undefined symbol : GPU_GetNVIDIAProperties
+D:\rawrxd\reconstructed\RawrXD\src\gpu\masm\gpu\detection.asm(15) : error A2006:undefined symbol : GPU_GetAMDProperties
+D:\rawrxd\reconstructed\RawrXD\src\gpu\masm\gpu\detection.asm(16) : error A2006:undefined symbol : GPU_GetIntelProperties
+D:\rawrxd\reconstructed\RawrXD\src\gpu\masm\gpu\detection.asm(17) : error A2006:undefined symbol : GPU_GetGenericProperties
+D:\rawrxd\reconstructed\RawrXD\src\gpu\masm\gpu\detection.asm(18) : error A2006:undefined symbol : GPU_ReadMemorySize
+D:\rawrxd\reconstructed\RawrXD\src\gpu\masm\gpu\detection.asm(19) : error A2006:undefined symbol : GPU_Initialize
+D:\rawrxd\reconstructed\RawrXD\src\gpu\masm\gpu\detection.asm(20) : error A2006:undefined symbol : GPU_Shutdown
+D:\rawrxd\reconstructed\RawrXD\src\gpu\masm\gpu\detection.asm(62) : error A2006:undefined symbol : VendorID
+D:\rawrxd\reconstructed\RawrXD\src\gpu\masm\gpu\detection.asm(63) : error A2006:undefined symbol : DeviceID
+D:\rawrxd\reconstructed\RawrXD\src\gpu\masm\gpu\detection.asm(64) : error A2006:undefined symbol : ComputeUnits
+D:\rawrxd\reconstructed\RawrXD\src\gpu\masm\gpu\detection.asm(65) : error A2006:undefined symbol : ClockSpeedMHz
+D:\rawrxd\reconstructed\RawrXD\src\gpu\masm\gpu\detection.asm(66) : error A2006:undefined symbol : MemorySize

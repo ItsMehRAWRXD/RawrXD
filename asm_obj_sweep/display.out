@@ -1,0 +1,29 @@
+ Assembling: D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\gpu\memory\display.asm
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\gpu\memory\display.asm(11) : error A2008:syntax error : CreateWindowEx
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\gpu\memory\display.asm(19) : error A2008:syntax error : SetLayeredWindowAttributes
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\gpu\memory\display.asm(20) : error A2008:syntax error : SetTimer
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\gpu\memory\display.asm(22) : error A2008:syntax error : LOG_INFO
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\gpu\memory\display.asm(35) : error A2008:syntax error : wsprintf
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\gpu\memory\display.asm(46) : error A2008:syntax error : SWITCH
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\gpu\memory\display.asm(47) : error A2008:syntax error : CASE
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\gpu\memory\display.asm(48) : error A2008:syntax error : if
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\gpu\memory\display.asm(50) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\gpu\memory\display.asm(51) : error A2008:syntax error : .
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\gpu\memory\display.asm(54) : error A2008:syntax error : CASE
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\gpu\memory\display.asm(57) : error A2008:syntax error : ENDSW
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\gpu\memory\display.asm(59) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\gpu\memory\display.asm(67) : error A2006:undefined symbol : PAINTSTRUCT
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\gpu\memory\display.asm(67) : error A2195:parameter or local cannot have void type
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\gpu\memory\display.asm(69) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\gpu\memory\display.asm(72) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\gpu\memory\display.asm(73) : error A2008:syntax error : FillRect
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\gpu\memory\display.asm(74) : error A2008:syntax error : DeleteObject
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\gpu\memory\display.asm(76) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\gpu\memory\display.asm(77) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\gpu\memory\display.asm(79) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\gpu\memory\display.asm(82) : error A2008:syntax error : invoke
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\gpu\memory\display.asm(61) : warning A6004:procedure argument or local not referenced : hWnd
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\gpu\memory\display.asm(61) : warning A6004:procedure argument or local not referenced : uMsg
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\gpu\memory\display.asm(61) : warning A6004:procedure argument or local not referenced : wParam
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\gpu\memory\display.asm(61) : warning A6004:procedure argument or local not referenced : lParam
+D:\rawrxd\.archive\reconstructed\temp\RawrXD-agentic-ide-production\src\masm\gpu\memory\display.asm(85) : warning A6004:procedure argument or local not referenced : ps

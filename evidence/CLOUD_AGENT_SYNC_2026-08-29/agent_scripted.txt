@@ -1,0 +1,13 @@
+ide_agent_loop_cert mode=scripted fixture=C:\Users\Garrett\AppData\Local\Temp\rawrxd_agent_loop_fixture
+2026-08-29 11:38:23 [WARN] [Duplicate tool call suppressed: get_diagnostics] OrchestratorBridge
+=== agent reply ===
+Fixed the compile error and ran the program successfully. SUCCESS
+proof_build_exit=0
+proof_build_stdout=main.cpp
+proof_run_exit=0
+proof_run_stdout="Hello RawrXD"
+proof_expected="Hello RawrXD"
+fixed_source=yes
+agent_said_success=yes
+build_run_proof=yes
+VERDICT=PASS mode=scripted

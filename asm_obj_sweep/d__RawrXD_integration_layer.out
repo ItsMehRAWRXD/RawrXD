@@ -1,0 +1,15 @@
+ Assembling: D:\rawrxd\history\runoff\part_0010\d__RawrXD_integration_layer.asm
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_integration_layer.asm(8) : error A2008:syntax error : frame
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_integration_layer.asm(97) : error A2063:can ALIGN only to power of 2 : 7
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_integration_layer.asm(110) : error A2063:can ALIGN only to power of 2 : 7
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_integration_layer.asm(157) : error A2189:invalid combination with segment alignment : 4096
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_integration_layer.asm(481) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_integration_layer.asm(210) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_integration_layer.asm(428) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_integration_layer.asm(465) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_integration_layer.asm(484) : error A2006:undefined symbol : VirtualProtect
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_integration_layer.asm(506) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_integration_layer.asm(752) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_integration_layer.asm(808) : error A2006:undefined symbol : T_EOF
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_integration_layer.asm(810) : error A2006:undefined symbol : K_FN
+D:\rawrxd\history\runoff\part_0010\d__RawrXD_integration_layer.asm(120) : error A2206:missing operator in expression

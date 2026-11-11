@@ -1,0 +1,53 @@
+ Assembling: D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(7) : error A2008:syntax error : WIN64
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(111) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(119) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(166) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(181) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(237) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(245) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(307) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(315) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(331) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(339) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(360) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(368) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(389) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(397) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(411) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(419) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(439) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(447) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(461) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(469) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(483) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(491) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(505) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(517) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(523) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(531) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(535) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(543) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(547) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(555) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(559) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(571) : error A2008:syntax error : SAVE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(575) : error A2008:syntax error : RESTORE_REGS
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(584) : error A2008:syntax error : MAIN
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(584) : error A2088:END directive required at end of file
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(171) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(239) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(309) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(333) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(362) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(391) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(413) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(441) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(463) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(485) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(507) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(525) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(537) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(549) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(561) : error A2220:Missing .ENDPROLOG
+D:\rawrxd\compilers\assembly_source\Phase5_Test_Harness.asm(577) : error A2220:Missing .ENDPROLOG

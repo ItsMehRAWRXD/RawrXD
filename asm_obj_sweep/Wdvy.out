@@ -1,0 +1,10 @@
+ Assembling: D:\rawrxd\history\-22da4888\Wdvy.asm
+D:\rawrxd\history\-22da4888\Wdvy.asm(631) : error A2006:undefined symbol : KEY_READ
+D:\rawrxd\history\-22da4888\Wdvy.asm(633) : error A2006:undefined symbol : RegOpenKeyExA
+D:\rawrxd\history\-22da4888\Wdvy.asm(675) : error A2006:undefined symbol : REG_OPTION_NON_VOLATILE
+D:\rawrxd\history\-22da4888\Wdvy.asm(676) : error A2006:undefined symbol : KEY_WRITE
+D:\rawrxd\history\-22da4888\Wdvy.asm(688) : error A2006:undefined symbol : REG_DWORD
+D:\rawrxd\history\-22da4888\Wdvy.asm(752) : error A2006:undefined symbol : CreateSolidBrush
+D:\rawrxd\history\-22da4888\Wdvy.asm(759) : error A2006:undefined symbol : GCLP_HBRBACKGROUND
+D:\rawrxd\history\-22da4888\Wdvy.asm(761) : error A2006:undefined symbol : SetClassLongPtrA
+D:\rawrxd\history\-22da4888\Wdvy.asm(767) : error A2006:undefined symbol : InvalidateRect

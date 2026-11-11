@@ -1,0 +1,6 @@
+ Assembling: D:\rawrxd\history\-2d7bc67b\T8H5.asm
+D:\rawrxd\history\-2d7bc67b\T8H5.asm(108) : error A2008:syntax error : qword
+D:\rawrxd\history\-2d7bc67b\T8H5.asm(181) : error A2008:syntax error : pConfig
+D:\rawrxd\history\-2d7bc67b\T8H5.asm(292) : error A2008:syntax error : pConfig
+D:\rawrxd\history\-2d7bc67b\T8H5.asm(316) : error A2008:syntax error : mainCRTStartup
+D:\rawrxd\history\-2d7bc67b\T8H5.asm(316) : error A2088:END directive required at end of file

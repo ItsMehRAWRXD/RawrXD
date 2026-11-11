@@ -1,0 +1,30 @@
+ Assembling: D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_RawrXD-ModelLoader_kernels_deflate_godmode_masm.asm
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_RawrXD-ModelLoader_kernels_deflate_godmode_masm.asm(22) : error A2189:invalid combination with segment alignment : 32
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_RawrXD-ModelLoader_kernels_deflate_godmode_masm.asm(73) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_RawrXD-ModelLoader_kernels_deflate_godmode_masm.asm(94) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_RawrXD-ModelLoader_kernels_deflate_godmode_masm.asm(125) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_RawrXD-ModelLoader_kernels_deflate_godmode_masm.asm(126) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_RawrXD-ModelLoader_kernels_deflate_godmode_masm.asm(140) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_RawrXD-ModelLoader_kernels_deflate_godmode_masm.asm(159) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_RawrXD-ModelLoader_kernels_deflate_godmode_masm.asm(168) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_RawrXD-ModelLoader_kernels_deflate_godmode_masm.asm(178) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_RawrXD-ModelLoader_kernels_deflate_godmode_masm.asm(74) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_RawrXD-ModelLoader_kernels_deflate_godmode_masm.asm(77) : error A2006:undefined symbol : zero_hash
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_RawrXD-ModelLoader_kernels_deflate_godmode_masm.asm(98) : error A2006:undefined symbol : god_done
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_RawrXD-ModelLoader_kernels_deflate_godmode_masm.asm(108) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_RawrXD-ModelLoader_kernels_deflate_godmode_masm.asm(118) : error A2006:undefined symbol : god_literal
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_RawrXD-ModelLoader_kernels_deflate_godmode_masm.asm(128) : error A2006:undefined symbol : match_done
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_RawrXD-ModelLoader_kernels_deflate_godmode_masm.asm(131) : error A2006:undefined symbol : match_done
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_RawrXD-ModelLoader_kernels_deflate_godmode_masm.asm(134) : error A2006:undefined symbol : match_done
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_RawrXD-ModelLoader_kernels_deflate_godmode_masm.asm(135) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_RawrXD-ModelLoader_kernels_deflate_godmode_masm.asm(136) : error A2029:multiple base registers not allowed
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_RawrXD-ModelLoader_kernels_deflate_godmode_masm.asm(137) : error A2006:undefined symbol : match_done
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_RawrXD-ModelLoader_kernels_deflate_godmode_masm.asm(139) : error A2006:undefined symbol : match_loop
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_RawrXD-ModelLoader_kernels_deflate_godmode_masm.asm(142) : error A2006:undefined symbol : god_literal
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_RawrXD-ModelLoader_kernels_deflate_godmode_masm.asm(153) : error A2206:missing operator in expression
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_RawrXD-ModelLoader_kernels_deflate_godmode_masm.asm(157) : error A2006:undefined symbol : god_loop
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_RawrXD-ModelLoader_kernels_deflate_godmode_masm.asm(161) : error A2006:undefined symbol : god_done
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_RawrXD-ModelLoader_kernels_deflate_godmode_masm.asm(166) : error A2006:undefined symbol : god_loop
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_RawrXD-ModelLoader_kernels_deflate_godmode_masm.asm(175) : error A2006:undefined symbol : no_flush
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_RawrXD-ModelLoader_kernels_deflate_godmode_masm.asm(230) : error A2022:instruction operands must be the same size
+D:\rawrxd\history\runoff\part_0016\d__RawrXD-production-lazy-init_RawrXD-ModelLoader_kernels_deflate_godmode_masm.asm(25) : error A2206:missing operator in expression

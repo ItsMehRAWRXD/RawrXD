@@ -1,0 +1,130 @@
+[RawrXD] CPU-only mode (Vulkan disabled)
+[RawrXD] Stage: loader.Load
+[RawrXD] ⚡ INITIALIZING SOVEREIGN NEURAL HIVE-MIND SYSTEMS...
+[RawrXD] ⚠️  Sovereign Interceptor: Could not locate Win32IDE.exe module
+[RawrXD] ⚡ Speculative Swarm: Ready for 20x model chaining (600B+ aggregate)
+[RawrXD] ⚡ AVX-512 VPOPCNT: Ready for 0.8-bit weight reconstruction
+[GGUF] validation begin
+[GGUF] path=F:\Franken\BackwardsUnlock\1b\unlock-1B-Q4_K_M.gguf
+[GGUF] extension=PASS
+[RawrXD][BACKEND] backend=cpu-only result=ok reason=cpu fallback verified
+[RawrXD] ⚡ SOVEREIGN APERTURE: Reserved 1925 MB placeholder window (zero commit)
+[VMM] SeLockMemoryPrivilege not held; Large Pages disabled (falling back).
+[RawrXD] Stage: parse_header_metadata
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 0000029856650000 (2000+ TPS ready)
+[GGUF] size=2019377376
+[GGUF] magic=0x46554747
+[GGUF] version=3
+[GGUF] magic=PASS
+[GGUF] version=PASS
+[RawrXD] Stage: parse_tensor_index tensor_count=255
+[RawrXD] Stage: tensor_materialization mode=lazy tensor_count=255 indexed_storage=1.87 GB
+[RawrXD] Data starts at offset 7837664
+[RawrXD] Stage: build_tensor_lookup_map
+[RawrXD] Canonical tensor alias: output.weight -> token_embd.weight
+[GGUF] header=PASS
+[GGUF] metadata=PASS
+[GGUF] tensors=PASS
+[GGUF] accepted=PASS
+[RawrXD] Model loaded successfully. VRAM used: 0.00 GB
+[RawrXD] Config: dim=3072, layers=28, heads=24, kv_heads=8, vocab=128256, ctx=131072, experts=0, experts_used=0
+[RawrXD] Tensor names in model (256 total):
+  [  0] type=12 dims=8192 3072 blk.6.ffn_down.weight
+  [  1] type=0 dims=3072 blk.13.ffn_norm.weight
+  [  2] type=12 dims=3072 1024 blk.0.attn_k.weight
+  [  3] type=12 dims=8192 3072 blk.15.ffn_down.weight
+  [  4] type=0 dims=64 rope_freqs.weight
+  [  5] type=14 dims=3072 1024 blk.25.attn_v.weight
+  [  6] type=12 dims=3072 8192 blk.18.ffn_up.weight
+  [  7] type=0 dims=3072 blk.0.ffn_norm.weight
+  [  8] type=14 dims=8192 3072 blk.0.ffn_down.weight
+  [  9] type=14 dims=3072 1024 blk.1.attn_v.weight
+  [ 10] type=0 dims=3072 blk.19.ffn_norm.weight
+  [ 11] type=12 dims=3072 8192 blk.1.ffn_up.weight
+  [ 12] type=12 dims=8192 3072 blk.22.ffn_down.weight
+  [ 13] type=12 dims=3072 3072 blk.19.attn_output.weight
+  [ 14] type=14 dims=3072 128256 token_embd.weight
+  [ 15] type=14 dims=3072 1024 blk.26.attn_v.weight
+  ... (240 more)
+[RawrXD] Config: dim=3072 layers=28 heads=24 kv_heads=8 vocab=128256 hidden=8192 ctx=2048
+[RawrXD] Stage: transformer.Initialize
+[RawrXD] KV cache: 58720256 floats (234.9 MB per cache)
+[RawrXD] Transformer Initialized. AVX-512 Kernels Linked.
+[RawrXD] Swarm plan: GGUF coalesced (31 slices total=2.17 GiB max=369.22 MiB avg=71.83 MiB)
+[RawrXD] Stage: tokenizer.Load
+[RawrXD] Inference engine READY
+[STREAM] calling Forward() for prefill, tokens=3
+[Forward] GQA: dim=3072 heads=24 kv_heads=8 head_dim=128 kv_dim=1024 hidden=8192
+[MEM] Generation start: avail_phys=39014 MB, avail_virt=134211201 MB
+[MEM] KV footprint: k=224 MB, v=224 MB; tile_buf peak=16 MB
+[MEM] output.weight shard est: vocab=128256 * row_bytes(Q2_K)=1008 = 123 MB
+[Forward] prefill: tokens=3 layers=28 total_layer_execs=84 est_ms=10920
+[Forward] B009 layer-outer batched prefill: T=3 layers=28
+[STEP] Layer 1/28 (batched T=3)
+[CPU] batched layer=0  513.6 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 0000029856650000 (2000+ TPS ready)
+[CPU] batched layer=1  558.3 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 0000029856650000 (2000+ TPS ready)
+[CPU] batched layer=2  471.3 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 0000029856650000 (2000+ TPS ready)
+[CPU] batched layer=3  478.8 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 0000029856650000 (2000+ TPS ready)
+[CPU] batched layer=4  528.0 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 0000029856650000 (2000+ TPS ready)
+[STEP] Layer 6/28 (batched T=3)
+[CPU] batched layer=5  469.4 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 0000029856650000 (2000+ TPS ready)
+[CPU] batched layer=6  491.8 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 0000029856650000 (2000+ TPS ready)
+[CPU] batched layer=7  568.4 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 0000029856650000 (2000+ TPS ready)
+[CPU] batched layer=8  466.6 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 0000029856650000 (2000+ TPS ready)
+[CPU] batched layer=9  476.6 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 0000029856650000 (2000+ TPS ready)
+[STEP] Layer 11/28 (batched T=3)
+[CPU] batched layer=10  538.3 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 0000029856650000 (2000+ TPS ready)
+[CPU] batched layer=11  480.3 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 0000029856650000 (2000+ TPS ready)
+[CPU] batched layer=12  1134.0 ms  SLOW (T=3)
+[RawrXD] Prefetch view promoted to compute window (off=636178656 size=63946752 view=61 MB)
+[CPU] batched layer=13  568.5 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 0000029856650000 (2000+ TPS ready)
+[CPU] batched layer=14  476.9 ms  SLOW (T=3)
+[RawrXD] Prefetch view promoted to compute window (off=756773088 size=56647680 view=54 MB)
+[STEP] Layer 16/28 (batched T=3)
+[CPU] batched layer=15  476.2 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 0000029856650000 (2000+ TPS ready)
+[CPU] batched layer=16  537.0 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 0000029856650000 (2000+ TPS ready)
+[CPU] batched layer=17  466.6 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 0000029856650000 (2000+ TPS ready)
+[CPU] batched layer=18  479.8 ms  SLOW (T=3)
+[RawrXD] Prefetch view promoted to compute window (off=990662880 size=63946752 view=61 MB)
+[CPU] batched layer=19  532.3 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 0000029856650000 (2000+ TPS ready)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 0000029856650000 (2000+ TPS ready)
+[STEP] Layer 21/28 (batched T=3)
+[CPU] batched layer=20  534.7 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 0000029856650000 (2000+ TPS ready)
+[CPU] batched layer=21  471.5 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 0000029856650000 (2000+ TPS ready)
+[CPU] batched layer=22  475.3 ms  SLOW (T=3)
+[RawrXD] Prefetch view promoted to compute window (off=1699631328 size=63946752 view=61 MB)
+[CPU] batched layer=23  550.5 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 0000029856650000 (2000+ TPS ready)
+[CPU] batched layer=24  524.0 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 0000029856650000 (2000+ TPS ready)
+[STEP] Layer 26/28 (batched T=3)
+[CPU] batched layer=25  533.6 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 0000029856650000 (2000+ TPS ready)
+[CPU] batched layer=26  520.3 ms  SLOW (T=3)
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-1 GB: Mapped 1925 MB at 0000029856650000 (2000+ TPS ready)
+[STEP] Layer 28/28 (batched T=3)
+[CPU] batched layer=27  518.8 ms  SLOW (T=3)
+[Forward] B009 batched prefill complete: T=3 layers=28 elapsed_ms=14842.23 ms_per_layer=530.08
+[DECODE] final_norm begin
+[DECODE] final_norm complete
+[DECODE] output_projection begin vocab=128256 dim=3072
+[MATMUL] output.weight ENTER layer=28 in=3072 out=128256

@@ -1,0 +1,198 @@
+# Phase H.2/5: Docker Compose Runtime Configuration
+# Multi-service deployment for RawrXD C++ Runtime
+
+version: '3.8'
+
+services:
+  # ============================================================================
+  # RawrXD API Server
+  # ============================================================================
+  rawrxd-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.runtime
+      target: runtime
+    image: rawrxd/runtime:latest
+    container_name: rawrxd-api
+    restart: unless-stopped
+    
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    
+    environment:
+      - RAWRXD_LOG_LEVEL=info
+      - RAWRXD_CONFIG_PATH=/etc/rawrxd/config.json
+      - RAWRXD_MODEL_PATH=/models
+      - RAWRXD_ENABLE_METRICS=true
+      - RAWRXD_METRICS_PORT=8081
+    
+    volumes:
+      - ./config:/etc/rawrxd:ro
+      - model-cache:/models
+      - rawrxd-data:/var/lib/rawrxd
+    
+    networks:
+      - rawrxd-network
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    deploy:
+      resources:
+        limits:
+          cpus: '8'
+          memory: 16G
+        reservations:
+          cpus: '4'
+          memory: 8G
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+  # ============================================================================
+  # RawrXD with GPU Support
+  # ============================================================================
+  rawrxd-gpu:
+    build:
+      context: .
+      dockerfile: Dockerfile.runtime
+      target: cuda-runtime
+    image: rawrxd/runtime:cuda-latest
+    container_name: rawrxd-gpu
+    restart: unless-stopped
+    profiles:
+      - gpu
+    
+    ports:
+      - "8082:8080"
+      - "8083:8081"
+    
+    environment:
+      - RAWRXD_LOG_LEVEL=info
+      - RAWRXD_CONFIG_PATH=/etc/rawrxd/config.json
+      - RAWRXD_MODEL_PATH=/models
+      - RAWRXD_ENABLE_GPU=true
+      - NVIDIA_VISIBLE_DEVICES=all
+    
+    volumes:
+      - ./config:/etc/rawrxd:ro
+      - model-cache:/models
+      - rawrxd-data:/var/lib/rawrxd
+    
+    networks:
+      - rawrxd-network
+    
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  # ============================================================================
+  # Prometheus Metrics
+  # ============================================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: rawrxd-prometheus
+    restart: unless-stopped
+    profiles:
+      - monitoring
+    
+    ports:
+      - "9090:9090"
+    
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    
+    networks:
+      - rawrxd-network
+
+  # ============================================================================
+  # Grafana Dashboards
+  # ============================================================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: rawrxd-grafana
+    restart: unless-stopped
+    profiles:
+      - monitoring
+    
+    ports:
+      - "3000:3000"
+    
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./config/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./config/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    
+    networks:
+      - rawrxd-network
+    depends_on:
+      - prometheus
+
+  # ============================================================================
+  # Redis Cache
+  # ============================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: rawrxd-redis
+    restart: unless-stopped
+    profiles:
+      - cache
+    
+    ports:
+      - "6379:6379"
+    
+    volumes:
+      - redis-data:/data
+    
+    networks:
+      - rawrxd-network
+    
+    command: redis-server --appendonly yes --maxmemory 2gb --maxmemory-policy allkeys-lru
+
+# ============================================================================
+# Networks
+# ============================================================================
+networks:
+  rawrxd-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# ============================================================================
+# Volumes
+# ============================================================================
+volumes:
+  model-cache:
+    driver: local
+  rawrxd-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+  redis-data:
+    driver: local

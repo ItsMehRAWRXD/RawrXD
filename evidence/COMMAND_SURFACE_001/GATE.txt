@@ -1,0 +1,33 @@
+COMMAND_SURFACE_001 = PASS / IMPLEMENTED
+
+Date: 2026-08-30
+Authority: RawrXD Command Primary Surface plan
+
+CANONICAL STATE
+```
+COMMAND_SURFACE_001     = PASS (desktop shell implemented)
+COMMAND_SESSION_001     = PASS (SessionBinder rejects unbound steer)
+COMMAND_APPROVAL_001    = PASS (approval strip + /approve-test + git_write hook)
+COMMAND_JOURNAL_001     = PASS (append-only .rawrxd/command/journal/events.jsonl)
+REMOTE_CONTROL_001      = BLOCKED (IControlChannel stub; no network listen)
+```
+
+SHELL REGIONS (launch = Command-home)
+  TopContextBar, CommandLeftRail, Conversation, ActivityStrip, Composer, Footer
+  Work mode: existing IDE chrome via enterWorkMode()
+
+MODULES
+  src/win32app/Win32IDE_CommandSurface.cpp
+  src/command/SessionBinder.*
+  src/command/CommandBroker.*
+  src/command/CommandEventJournal.*
+  src/command/CapabilityProfile.*
+  src/command/IControlChannel.h (disabled)
+
+LOCAL_ONLY
+  LOCAL_ONLY_001 enforced via CommandBroker + LocalOnlyPolicy
+  Composer model list: Deep2 Local only
+
+DOES NOT DISTURB
+  P1_UI_MENU_E2E_001 = BLOCKED
+  STREAMER_CERT_001 / LOCAL_ONLY_001 evidence = frozen

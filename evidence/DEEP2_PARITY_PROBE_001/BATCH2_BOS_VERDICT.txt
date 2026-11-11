@@ -1,0 +1,16 @@
+BATCH2_BOS_VERDICT — 2026-08-29
+
+SOLE_NUMERICAL_AUTHORITY=CPU-only llama (ggml-cpu-zen4; no Vulkan/RPC)
+QUARANTINE=Vulkan-scheduled tips (incl. misnamed ref_bos_cpu2 → 29892)
+
+INPUT_IDS=[1, 21521, 9312]
+
+BOS_BEHAVIORAL_ARGMAX:
+  Deep2 CPU      = 13
+  llama pure CPU = 13
+  Vulkan llama   = 29892  # NON-AUTHORITATIVE
+
+BOS_NUMERICAL_PARITY=OPEN (bisect in progress)
+AGENT-E2E-002b=BLOCKED until numerical parity classified
+
+DO_NOT_REOPEN=BOS insertion / KV-length / tokenizer (AttnCert 0/1/2 PASS)

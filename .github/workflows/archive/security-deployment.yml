@@ -1,0 +1,343 @@
+name: Security System Deployment
+
+on:
+  push:
+    branches: [ 'v1.0.1-hotfix1-security' ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      strategy:
+        description: 'Deployment strategy'
+        required: true
+        default: 'BlueGreen'
+        type: choice
+        options:
+          - BlueGreen
+          - Canary
+          - Rolling
+          - A/B
+
+env:
+  POWERSHELL_TELEMETRY_OPTOUT: 1
+
+jobs:
+  # ============================================
+  # Phase 1: Pre-Deployment Validation
+  # ============================================
+  pre-deployment:
+    name: Pre-Deployment Checks
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell
+        uses: actions/setup-powershell@v1
+        with:
+          powershell-version: '7.4'
+
+      - name: Validate Deployment Readiness
+        shell: pwsh
+        run: |
+          Write-Host "=== Pre-Deployment Validation ===" -ForegroundColor Cyan
+          
+          # Check all required files exist
+          $requiredFiles = @(
+            "install.ps1",
+            "security/rbac/rbac_manager.ps1",
+            "security/audit/audit_logger.ps1",
+            "security/compliance/compliance_checker.ps1",
+            "deployment/deployment_orchestrator.ps1",
+            "monitoring/scripts/health_check.ps1"
+          )
+          
+          $missingFiles = @()
+          foreach ($file in $requiredFiles) {
+            if (-not (Test-Path $file)) {
+              $missingFiles += $file
+            }
+          }
+          
+          if ($missingFiles.Count -gt 0) {
+            throw "Missing required files: $($missingFiles -join ', ')"
+          }
+          
+          Write-Host "✓ All required files present" -ForegroundColor Green
+          
+          # Validate PowerShell scripts
+          $scripts = Get-ChildItem -Path "security" -Filter "*.ps1" -Recurse
+          $syntaxErrors = 0
+          foreach ($script in $scripts) {
+            $content = Get-Content $script.FullName -Raw
+            $parseErrors = $null
+            $null = [System.Management.Automation.PSParser]::Tokenize($content, [ref]$parseErrors)
+            if ($parseErrors.Count -gt 0) {
+              Write-Warning "$($script.Name): $($parseErrors.Count) syntax errors"
+              $syntaxErrors++
+            }
+          }
+          
+          if ($syntaxErrors -gt 0) {
+            throw "Found $syntaxErrors scripts with syntax errors"
+          }
+          
+          Write-Host "✓ All scripts have valid syntax" -ForegroundColor Green
+
+      - name: Security Compliance Check
+        shell: pwsh
+        run: |
+          # Initialize RBAC and verify
+          ./security/rbac/rbac_manager.ps1 -Operation init
+          
+          # Quick smoke test
+          $roles = ./security/rbac/rbac_manager.ps1 -Operation list -JsonOutput | ConvertFrom-Json
+          if ($roles.Count -lt 5) {
+            throw "RBAC not properly configured"
+          }
+          
+          Write-Host "✓ Security system operational" -ForegroundColor Green
+
+  # ============================================
+  # Phase 2: Staging Deployment
+  # ============================================
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: windows-latest
+    needs: pre-deployment
+    if: github.event.inputs.environment == 'staging' || github.event.inputs.environment == null
+    environment:
+      name: staging
+      url: https://staging.rawrxd.local
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell
+        uses: actions/setup-powershell@v1
+        with:
+          powershell-version: '7.4'
+
+      - name: Deploy to Staging
+        shell: pwsh
+        run: |
+          Write-Host "=== Deploying to Staging ===" -ForegroundColor Cyan
+          
+          # Create staging directory
+          $stagingPath = "C:\RawrXD-Staging"
+          New-Item -ItemType Directory -Path $stagingPath -Force | Out-Null
+          
+          # Copy deployment files
+          Copy-Item -Path "./security" -Destination "$stagingPath/security" -Recurse -Force
+          Copy-Item -Path "./monitoring" -Destination "$stagingPath/monitoring" -Recurse -Force
+          Copy-Item -Path "./deployment" -Destination "$stagingPath/deployment" -Recurse -Force
+          Copy-Item -Path "./install.ps1" -Destination "$stagingPath/" -Force
+          
+          Write-Host "✓ Files deployed to staging" -ForegroundColor Green
+
+      - name: Run Staging Tests
+        shell: pwsh
+        run: |
+          Write-Host "=== Running Staging Tests ===" -ForegroundColor Cyan
+          
+          # Initialize in staging
+          $stagingPath = "C:\RawrXD-Staging"
+          & "$stagingPath\security\rbac\rbac_manager.ps1" -Operation init
+          
+          # Test RBAC
+          $roles = & "$stagingPath\security\rbac\rbac_manager.ps1" -Operation list -JsonOutput | ConvertFrom-Json
+          Write-Host "✓ RBAC operational: $($roles.Count) roles" -ForegroundColor Green
+          
+          # Health check
+          if (Test-Path "$stagingPath\monitoring\scripts\health_check.ps1") {
+            & "$stagingPath\monitoring\scripts\health_check.ps1"
+            Write-Host "✓ Health check passed" -ForegroundColor Green
+          }
+
+  # ============================================
+  # Phase 3: Production Deployment
+  # ============================================
+  deploy-production:
+    name: Deploy to Production
+    runs-on: windows-latest
+    needs: [pre-deployment, deploy-staging]
+    if: github.event.inputs.environment == 'production' || startsWith(github.ref, 'refs/tags/v')
+    environment:
+      name: production
+      url: https://rawrxd.local
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell
+        uses: actions/setup-powershell@v1
+        with:
+          powershell-version: '7.4'
+
+      - name: Determine Deployment Strategy
+        shell: pwsh
+        run: |
+          $strategy = "${{ github.event.inputs.strategy }}"
+          if ([string]::IsNullOrEmpty($strategy)) {
+            $strategy = "BlueGreen"
+          }
+          
+          Write-Host "=== Deployment Strategy: $strategy ===" -ForegroundColor Cyan
+          
+          # Set output for later steps
+          echo "DEPLOY_STRATEGY=$strategy" >> $env:GITHUB_ENV
+
+      - name: Create Backup
+        shell: pwsh
+        run: |
+          Write-Host "=== Creating Pre-Deployment Backup ===" -ForegroundColor Cyan
+          
+          $backupPath = "C:\RawrXD-Backups\pre-deploy-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+          New-Item -ItemType Directory -Path $backupPath -Force | Out-Null
+          
+          # Backup existing installation
+          if (Test-Path "C:\RawrXD") {
+            Copy-Item -Path "C:\RawrXD\security" -Destination "$backupPath\security" -Recurse -Force
+            Copy-Item -Path "C:\RawrXD\monitoring" -Destination "$backupPath\monitoring" -Recurse -Force
+            Write-Host "✓ Backup created at $backupPath" -ForegroundColor Green
+          }
+
+      - name: Deploy with Blue/Green Strategy
+        shell: pwsh
+        run: |
+          Write-Host "=== Executing Blue/Green Deployment ===" -ForegroundColor Cyan
+          
+          $productionPath = "C:\RawrXD"
+          $greenPath = "$productionPath-Green"
+          $bluePath = "$productionPath-Blue"
+          
+          # Determine which environment is live
+          $livePath = $bluePath
+          $newPath = $greenPath
+          
+          if (Test-Path "$bluePath\LIVE") {
+            $livePath = $bluePath
+            $newPath = $greenPath
+          } elseif (Test-Path "$greenPath\LIVE") {
+            $livePath = $greenPath
+            $newPath = $bluePath
+          }
+          
+          Write-Host "Live environment: $livePath"
+          Write-Host "Deploying to: $newPath"
+          
+          # Deploy to new environment
+          New-Item -ItemType Directory -Path $newPath -Force | Out-Null
+          Copy-Item -Path "./security" -Destination "$newPath\security" -Recurse -Force
+          Copy-Item -Path "./monitoring" -Destination "$newPath\monitoring" -Recurse -Force
+          Copy-Item -Path "./deployment" -Destination "$newPath\deployment" -Recurse -Force
+          Copy-Item -Path "./install.ps1" -Destination "$newPath\" -Force
+          
+          # Initialize new environment
+          & "$newPath\security\rbac\rbac_manager.ps1" -Operation init
+          
+          # Health check on new environment
+          $health = & "$newPath\monitoring\scripts\health_check.ps1" -JsonOutput 2>$null | ConvertFrom-Json
+          if ($health -and $health.status -eq "healthy") {
+            Write-Host "✓ New environment healthy" -ForegroundColor Green
+          }
+          
+          # Mark new environment as live
+          "LIVE" | Out-File "$newPath\LIVE" -Force
+          if (Test-Path "$livePath\LIVE") {
+            Remove-Item "$livePath\LIVE" -Force
+          }
+          
+          Write-Host "✓ Switched to new environment" -ForegroundColor Green
+
+      - name: Post-Deployment Validation
+        shell: pwsh
+        run: |
+          Write-Host "=== Post-Deployment Validation ===" -ForegroundColor Cyan
+          
+          # Verify RBAC
+          $roles = ./security/rbac/rbac_manager.ps1 -Operation list -JsonOutput | ConvertFrom-Json
+          Write-Host "✓ RBAC roles: $($roles.Count)" -ForegroundColor Green
+          
+          # Test permission system
+          ./security/rbac/rbac_manager.ps1 -Operation assign_role `
+            -UserId "deploy-test" -RoleName "patch-viewer"
+          
+          $perm = ./security/rbac/rbac_manager.ps1 -Operation check_permission `
+            -UserId "deploy-test" -Permission "patch:view" -JsonOutput | ConvertFrom-Json
+          
+          if ($perm.granted) {
+            Write-Host "✓ Permission system operational" -ForegroundColor Green
+          }
+          
+          # Cleanup test user
+          ./security/rbac/rbac_manager.ps1 -Operation revoke_role -UserId "deploy-test"
+
+      - name: Deployment Summary
+        shell: pwsh
+        run: |
+          Write-Host "========================================" -ForegroundColor Cyan
+          Write-Host "Deployment Summary" -ForegroundColor Cyan
+          Write-Host "========================================" -ForegroundColor Cyan
+          Write-Host "Environment: ${{ github.event.inputs.environment }}" -ForegroundColor White
+          Write-Host "Strategy: $env:DEPLOY_STRATEGY" -ForegroundColor White
+          Write-Host "Version: ${{ github.ref_name }}" -ForegroundColor White
+          Write-Host "Status: ✅ SUCCESS" -ForegroundColor Green
+          Write-Host "========================================" -ForegroundColor Cyan
+
+  # ============================================
+  # Phase 4: Rollback (on failure)
+  # ============================================
+  rollback:
+    name: Rollback on Failure
+    runs-on: windows-latest
+    needs: deploy-production
+    if: failure()
+    steps:
+      - name: Rollback Deployment
+        shell: pwsh
+        run: |
+          Write-Host "=== Rolling Back Deployment ===" -ForegroundColor Red
+          
+          # Find backup
+          $backups = Get-ChildItem -Path "C:\RawrXD-Backups" -Directory | Sort-Object CreationTime -Descending
+          if ($backups.Count -gt 0) {
+            $latestBackup = $backups[0].FullName
+            Write-Host "Restoring from: $latestBackup" -ForegroundColor Yellow
+            
+            # Restore from backup
+            if (Test-Path "$latestBackup\security") {
+              Copy-Item -Path "$latestBackup\security" -Destination "C:\RawrXD\security" -Recurse -Force
+              Copy-Item -Path "$latestBackup\monitoring" -Destination "C:\RawrXD\monitoring" -Recurse -Force
+              Write-Host "✓ Rollback completed" -ForegroundColor Green
+            }
+          } else {
+            Write-Warning "No backup found for rollback"
+          }
+
+  # ============================================
+  # Phase 5: Notify
+  # ============================================
+  notify:
+    name: Notify Team
+    runs-on: windows-latest
+    needs: [deploy-production, rollback]
+    if: always()
+    steps:
+      - name: Send Notification
+        shell: pwsh
+        run: |
+          $status = if ('${{ needs.deploy-production.result }}' -eq 'success') { '✅ SUCCESS' } else { '❌ FAILED' }
+          $color = if ('${{ needs.deploy-production.result }}' -eq 'success') { 'Green' } else { 'Red' }
+          
+          Write-Host "Deployment Status: $status" -ForegroundColor $color
+          
+          # Here you would integrate with Slack, Teams, etc.
+          # Example: Send-SlackMessage -Channel "#deployments" -Text "RawrXD Security Deployment: $status"

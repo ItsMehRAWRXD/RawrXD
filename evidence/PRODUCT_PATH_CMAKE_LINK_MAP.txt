@@ -1,0 +1,95 @@
+# PRODUCT_PATH_CMAKE_LINK_MAP — cmake → target → source (build-fd truth)
+# Derived from hung push job context + ninja object presence.
+# Date: 2026-09-08
+
+## Authority (header-only — no .cpp in cmake)
+src/deep2/lavapath/ProductRun.hpp
+src/deep2/lavapath/ProductReceipt.hpp
+  → OpenSession (RawrRunSession.hpp)
+  → Deep2Engine::generateStream
+  → EmitReceipt PRODUCT_RUN
+
+## CMake entry order (root CMakeLists.txt)
+1. InferenceEngine STATIC          (Deep2Engine + IDE session + OrchestratorBridge)
+2. RawrXD-Win32IDE (optional)      + include cmake/RawrXD_Product100.cmake
+3. include cmake/RawrAgenticCli.fragment.cmake   → rawr
+4. include cmake/RawrProductLayer.fragment.cmake → ASM pipe + product certs + rawr ASM
+
+---
+
+## IS linked (build-fd measured)
+
+### InferenceEngine.lib
+| Object | Present |
+|--------|---------|
+| Deep2Engine.cpp.obj | YES |
+| Deep2IDEIntegration.cpp.obj | YES |
+| Deep2ModelRuntime.cpp.obj | YES |
+| K2NativeStreamGate.cpp.obj | YES |
+| OrchestratorBridge.cpp.obj | YES |
+
+### rawr.exe
+| Object / dep | Present |
+|-------------|---------|
+| rawr_commands.cpp.obj | YES (CmdRun → ProductRun) |
+| product_deep2_infer.cpp.obj | YES |
+| Deep2GenerateStream.cpp.obj | YES |
+| rawr_product_serve.cpp.obj | YES |
+| rawr_product_x64.obj / pipe | YES (RawrProductLayer) |
+| link InferenceEngine | YES (CMakeLists ~10058) |
+
+### product certs (RawrProductLayer rawr_product_cert)
+Also compile product_deep2_infer.cpp + link InferenceEngine when target exists.
+
+---
+
+## IS NOT in this build-fd tree
+
+| Target | Why |
+|--------|-----|
+| RawrXD-Win32IDE | **Not configured** in build-fd (no CMakeFiles/RawrXD-Win32IDE.dir). Product100.cmake only runs inside `if(TARGET RawrXD-Win32IDE)`. |
+| RawrXD_Gold product_deep2_infer | Gold exists but has **no** product_deep2_infer.obj (IDE ProductRun adapter not on Gold). |
+
+### CMake says Win32IDE WOULD get (when built)
+cmake/RawrXD_Product100.cmake → target_sources:
+  - product_deep2_infer.cpp
+  - RawrXD_Product100.cpp / Wave3/Wave4 / MASM
+CMakeLists Win32IDE link: InferenceEngine + ChatPanel_Ollama + GhostText + LocalServer + OrchestratorBridge
+
+---
+
+## End-to-end call graph (smart path only)
+
+```
+cmake RawrAgenticCli + RawrProductLayer
+ └── rawr.exe
+      ├── rawr_commands.cpp::CmdRun
+      │    └── ProductRun.hpp::ProductRun
+      │         ├── rawr_run::OpenSession
+      │         └── Deep2Engine::generateStream  ← InferenceEngine
+      │              └── ProductPathSeal / Batch007 / PRODUCT_RUN receipt
+      └── product_deep2_infer.cpp  (serve / IDE adapter API)
+           └── ProductRun (same)
+
+cmake InferenceEngine
+ └── Deep2IDEIntegration::GenerateStream → ProductRun (when IDE session used)
+ └── Deep2ModelRuntime → session GenerateStream
+ └── OrchestratorBridge → CreateModelRuntime(Deep2) → same
+
+cmake RawrXD_Product100 (ONLY if RawrXD-Win32IDE built)
+ └── Win32IDE chat/ghost/local server → ProductDeep2Infer[Stream]
+```
+
+---
+
+## Hung-job snapshot vs now
+Hung job (180601) saw UNTRACKED:
+  ?? product_deep2_infer.cpp
+  ?? IDE_PRODUCT_PATH_BATCH15/16
+Those are now on cert/p1pra-rc1 @ 2b48dc8ed+.
+Gap that remains in **this** configure: Win32IDE binary not built in build-fd,
+so IDE Product100 overlay is cmake-declared but not object-verified here.
+
+## Next verify command
+  cmake -DRAWRXD_BUILD_WIN32IDE=ON ... && ninja RawrXD-Win32IDE
+  then confirm: CMakeFiles/RawrXD-Win32IDE.dir/**/product_deep2_infer.cpp.obj

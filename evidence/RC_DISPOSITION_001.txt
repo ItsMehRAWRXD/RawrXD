@@ -1,0 +1,62 @@
+RC_DISPOSITION_001 — Release Candidate Authority
+===============================================
+
+Date: 2026-08-31
+
+Gate dispositions (additive; frozen baselines unchanged)
+--------------------------------------------------------
+
+P1_OUTCOME_REVERSE_RUNTIME_001
+    = PASS / RETAIN
+    Evidence: f:\~dev\rawrxd\evidence\P1_OUTCOME_REVERSE_RUNTIME_001\RUN.log
+
+P1_PRODUCT_RUNTIME_AUTHORITY_001 (MASM contract smoke)
+    = PASS / RETAIN (component gate only)
+    Evidence: f:\~dev\rawrxd\evidence\P1_PRODUCT_RUNTIME_AUTHORITY_001\RUN.log
+    Note: Smoke certifies fail-closed ledger + ordered stage contract.
+          Does NOT certify IDE -> agent -> inference -> token path.
+
+RawrXD component/kernel maturity
+    = substantial
+    Retain: GGUF loader, kernel/component certifications, build infrastructure.
+
+RawrXD product-level inference authority
+    = NOT YET CERTIFIED
+    Required: P1_PRODUCT_RUNTIME_AUTHORITY_001 wired to shipped executable
+              with zero STUB_SYMBOL_REACHED / PLACEHOLDER_RESPONSE_REACHED.
+
+RawrXD v1.0.0-rc1 release disposition
+    = HOLD
+
+Problem statement (defensible)
+------------------------------
+RawrXD has substantial real machinery whose authoritative production
+composition has not yet been certified. Stub implementations may remain
+reachable/linked; production routing to real implementations is unproven
+at the product level.
+
+Audit buckets (do not conflate)
+-------------------------------
+RETAIN          GGUF loader, component certifications, P1_OUTCOME_REVERSE_RUNTIME_001,
+                P1_PRODUCT_RUNTIME_AUTHORITY_001 MASM contract, binaries/build infra
+REPAIR          documented executable path, deadlock, zero hidden state
+ROUTE/PROVE     CPU inference, agent, chat, LSP, model router (real vs stub routing)
+REPLACE CERT    2 ms/file-existence validation, unexecuted release-freeze evidence
+
+Next product gate (unwired)
+---------------------------
+RawrXD-Win32IDE.exe -> prompt -> ChatInterface -> agent -> router ->
+real GGUF -> CPU/Deep2/Vulkan backend -> forward -> sampler -> token ->
+visible IDE response
+
+Fail predicates: STUB_SYMBOL_REACHED, PLACEHOLDER_RESPONSE_REACHED,
+MODEL_LOADED!=1, REAL_WEIGHT_BYTES_CONSUMED==0, HIDDEN_STATE_NORM<=epsilon,
+LOGITS_FINITE!=1, TOKENS_EMITTED==0, DEADLOCK_OR_TIMEOUT,
+VISIBLE_RESPONSE_MATCHED_RUN!=1, PROCESS_EXIT!=0
+
+Production hook: P1PRA_* calls at each stage; P1PRA_RecordStubHit is sticky.
+
+Run (MASM contract smoke only)
+------------------------------
+cd /d f:\~dev\rawrxd\tests\masm
+build_P1_ProductRuntimeAuthority_Smoke_x64.cmd

@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "kind": "working-files",
+  "original_branch": "worktree/thorn-measure",
+  "original_commit": "d9c664b95be5cf0f65f6c8873ff0ce13d3076e20",
+  "worktree": "F:/rawrxd/.kilo/worktrees/thorn-measure",
+  "publication": "Source snapshot on a new branch; original history is preserved locally.",
+  "lfs_status": "Remote account budget exceeded; locally available text payloads materialized as regular Git blobs.",
+  "exclusions_receipt": "Local evidence/GITHUB_BRANCH_SYNC_001/3b67c48d/exclusions-batches.jsonl",
+  "release_certification": "NOT_CLAIMED"
+}

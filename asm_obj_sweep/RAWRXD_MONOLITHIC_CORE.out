@@ -1,0 +1,23 @@
+ Assembling: D:\rawrxd\src\agentic\RAWRXD_MONOLITHIC_CORE.asm
+D:\rawrxd\src\agentic\RAWRXD_MONOLITHIC_CORE.asm(32) : error A2008:syntax error : WIN64
+D:\rawrxd\src\agentic\RAWRXD_MONOLITHIC_CORE.asm(33) : error A2008:syntax error : FRAME
+D:\rawrxd\src\agentic\RAWRXD_MONOLITHIC_CORE.asm(1638) : error A2070:invalid instruction operands
+D:\rawrxd\src\agentic\RAWRXD_MONOLITHIC_CORE.asm(1838) : error A2070:invalid instruction operands
+D:\rawrxd\src\agentic\RAWRXD_MONOLITHIC_CORE.asm(1885) : error A2070:invalid instruction operands
+D:\rawrxd\src\agentic\RAWRXD_MONOLITHIC_CORE.asm(1894) : error A2070:invalid instruction operands
+D:\rawrxd\src\agentic\RAWRXD_MONOLITHIC_CORE.asm(1927) : error A2070:invalid instruction operands
+D:\rawrxd\src\agentic\RAWRXD_MONOLITHIC_CORE.asm(2106) : error A2070:invalid instruction operands
+D:\rawrxd\src\agentic\RAWRXD_MONOLITHIC_CORE.asm(2114) : error A2070:invalid instruction operands
+D:\rawrxd\src\agentic\RAWRXD_MONOLITHIC_CORE.asm(2118) : error A2070:invalid instruction operands
+D:\rawrxd\src\agentic\RAWRXD_MONOLITHIC_CORE.asm(2146) : error A2070:invalid instruction operands
+D:\rawrxd\src\agentic\RAWRXD_MONOLITHIC_CORE.asm(2101) : error A2022:instruction operands must be the same size
+D:\rawrxd\src\agentic\RAWRXD_MONOLITHIC_CORE.asm(2132) : error A2022:instruction operands must be the same size
+D:\rawrxd\src\agentic\RAWRXD_MONOLITHIC_CORE.asm(2159) : error A2022:instruction operands must be the same size
+D:\rawrxd\src\agentic\RAWRXD_MONOLITHIC_CORE.asm(2182) : error A2022:instruction operands must be the same size
+D:\rawrxd\src\agentic\RAWRXD_MONOLITHIC_CORE.asm(2204) : error A2022:instruction operands must be the same size
+D:\rawrxd\src\agentic\RAWRXD_MONOLITHIC_CORE.asm(2226) : error A2022:instruction operands must be the same size
+D:\rawrxd\src\agentic\RAWRXD_MONOLITHIC_CORE.asm(2248) : error A2022:instruction operands must be the same size
+D:\rawrxd\src\agentic\RAWRXD_MONOLITHIC_CORE.asm(2270) : error A2022:instruction operands must be the same size
+D:\rawrxd\src\agentic\RAWRXD_MONOLITHIC_CORE.asm(2294) : error A2022:instruction operands must be the same size
+D:\rawrxd\src\agentic\RAWRXD_MONOLITHIC_CORE.asm(2315) : error A2022:instruction operands must be the same size
+D:\rawrxd\src\agentic\RAWRXD_MONOLITHIC_CORE.asm(2453) : error A2022:instruction operands must be the same size

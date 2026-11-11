@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\analyze.asm
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\analyze.asm(58) : error A2008:syntax error : AnalyzeTensors
+D:\rawrxd\reconstructed\RawrXD-production-lazy-init\src\gguf\analyzer\analyze.asm(58) : error A2088:END directive required at end of file

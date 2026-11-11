@@ -1,0 +1,4 @@
+ Assembling: D:\rawrxd\history\all_versions\src\RawrXD_HTTP_Router.asm\1769900675927_d6vC.asm
+D:\rawrxd\history\all_versions\src\RawrXD_HTTP_Router.asm\1769900675927_d6vC.asm(19) : error A2179:structure improperly initialized
+D:\rawrxd\history\all_versions\src\RawrXD_HTTP_Router.asm\1769900675927_d6vC.asm(19) : error A2008:syntax error : in structure
+D:\rawrxd\history\all_versions\src\RawrXD_HTTP_Router.asm\1769900675927_d6vC.asm(37) : error A2070:invalid instruction operands

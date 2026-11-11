@@ -1,0 +1,23 @@
+---
+description: >-
+  Multitask Mode: launch async background workers, end turn, steer with max
+  "Please continue ensuring" prompt (Cursor Task + Deep IDE /api/subagent).
+alwaysApply: true
+---
+
+# Multitask Mode
+
+Treat Multitask Mode as **active** when Cursor Multitask is on, the user says `Please continue ensuring`, or asks for background workers on streamer/agentic readiness.
+
+## Coordinator must
+
+1. Reply with the required **3-line** ack only.
+2. Launch **one** async worker (`Task` `run_in_background: true` in Cursor; `EngineAPI.subagent` / `POST /api/subagent` in Deep IDE).
+3. Put the **max** continue-ensure brief in that worker prompt.
+4. **End the turn immediately** — no await, poll, or foreground-duplicate.
+
+If background spawn is unavailable: keep the 3 lines; do the work in-session — do not fake a launch.
+
+## Pick the max
+
+One coherent E2E worker with full product path + perfect metrics + no invented unstubs. `PROMOTE=0` · `TIP_CLIMB=HOLD`. No roleplay.
