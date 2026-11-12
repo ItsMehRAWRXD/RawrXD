@@ -572,7 +572,11 @@ static RunOutcome runAgentLoop(std::function<InferenceResult(const std::vector<j
             if (res.tool == "run_tests" && res.ok) fbTestDone = true;
             if (res.tool == "git_diff" && res.ok) fbVerifyDone = true;
         }
-        if (fbReadDone && fs == FallbackState::CONTEXT) fs = FallbackState::DIAGNOSIS;
+        // Only enter repair DIAGNOSIS when a concrete target file was named in
+        // the goal. Audit/swarm explore often read_file incidental sources; that
+        // must not hijack CONTEXT into PATCH (C50 completed=false defect).
+        if (fbReadDone && fs == FallbackState::CONTEXT && !fbTargetFile.empty())
+            fs = FallbackState::DIAGNOSIS;
         if (fbEditDone && (fs == FallbackState::PATCH || fs == FallbackState::DIAGNOSIS))
             fs = FallbackState::BUILD;
         if (fbBuildDone && fs == FallbackState::BUILD) fs = FallbackState::TEST;
@@ -720,6 +724,23 @@ static RunOutcome runAgentLoop(std::function<InferenceResult(const std::vector<j
                             continue;
                         }
                         logLine("run: orchestrator_fallback PATCH exhausted without edit");
+                        // Same-turn final for audit/swarm explore (no named target):
+                        // do not burn another turn after COMPLETE assignment.
+                        if (fbTargetFile.empty() && fbListDone &&
+                            (swarmMode || auditMode)) {
+                            fs = FallbackState::COMPLETE;
+                            json finalObj;
+                            finalObj["action"] = "final";
+                            finalObj["summary"] =
+                                "Audit/swarm explore completed via host fallback: "
+                                "list_repo=ok, tool_calls=" +
+                                std::to_string(ro.toolCalls +
+                                               static_cast<int>(ro.results.size()));
+                            finalObj["findings"] = json::array();
+                            finalObj["next_actions"] = json::array();
+                            objects.push_back(finalObj);
+                            break;
+                        }
                         fs = FallbackState::COMPLETE;
                         break;
                     }
