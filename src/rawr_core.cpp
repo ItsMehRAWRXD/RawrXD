@@ -3,6 +3,7 @@
  * @brief Implementation of the RawrXD shared native core.
  */
 #include "rawr_core.hpp"
+#include "rawr_edit_rollback.hpp"
 
 namespace rawr {
 
@@ -98,6 +99,38 @@ ToolResult ToolRegistry::dispatch(const std::string& name, const json& args,
                        "' may only write plan artifacts; refusing to write '" + rel + "'";
             return r;
         }
+    }
+
+    // Strict schema gate: reject unknown keys and missing required fields.
+    // Schema shape: {"field":{"type":"...","required":true,"default":"..."}}
+    try {
+        json schema = json::parse(it->second.argsSchema);
+        if (schema.is_object()) {
+            for (auto itArg = args.begin(); itArg != args.end(); ++itArg) {
+                if (!schema.contains(itArg.key())) {
+                    r.ok = false;
+                    r.output = "ERROR: unknown arg '" + itArg.key() +
+                               "' for tool '" + name + "' (strict schema)";
+                    return r;
+                }
+            }
+            for (auto itSch = schema.begin(); itSch != schema.end(); ++itSch) {
+                const bool required =
+                    itSch.value().is_object() &&
+                    itSch.value().value("required", false) == true;
+                if (required && !args.contains(itSch.key())) {
+                    r.ok = false;
+                    r.output = "ERROR: missing required arg '" + itSch.key() +
+                               "' for tool '" + name + "'";
+                    return r;
+                }
+            }
+        }
+    } catch (...) {
+        // Malformed schema is a host bug: fail closed rather than dispatch.
+        r.ok = false;
+        r.output = "ERROR: tool schema parse failed for '" + name + "'";
+        return r;
     }
 
     try {
@@ -329,7 +362,7 @@ void registerDefaultTools(ToolRegistry& reg, const Workspace& ws) {
     // â”€â”€ read_file â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     reg.registerTool(
         "read_file", "Read up to 60KB of a workspace file",
-        R"({"path":{"type":"string"}})",
+        R"({"path":{"type":"string","required":true}})",
         CAP_READ,
         [&ws](const json& args, const ToolContext&) -> ToolResult {
             ToolResult r;
@@ -399,6 +432,27 @@ void registerDefaultTools(ToolRegistry& reg, const Workspace& ws) {
             bool aborted = false;
             try {
                 std::error_code ec;
+                // Single-file search: path may be a regular file (not only a dir).
+                if (fs::is_regular_file(fs::path(abs), ec) && !ec) {
+                    if (!isPathAuthorized(fs::path(abs))) {
+                        r.output = "ERROR: access denied (restricted path)";
+                        return r;
+                    }
+                    ++scanned;
+                    std::string content, enc;
+                    if (readTextUtf8(abs, content, enc) &&
+                        toLower(content).find(q) != std::string::npos) {
+                        ++hits;
+                        os << ws.relOf(fs::path(abs)) << " [" << enc << "]\n";
+                    }
+                    std::ostringstream head;
+                    head << "query=" << query << "\nroot=" << abs
+                         << "\nfiles_scanned=" << scanned
+                         << "\nmatching_files=" << hits << "\n";
+                    r.output = head.str() + os.str();
+                    r.ok = true;
+                    return r;
+                }
                 fs::recursive_directory_iterator it(
                     abs, fs::directory_options::skip_permission_denied, ec);
                 if (ec) { r.output = "ERROR: cannot iterate " + abs; return r; }
@@ -462,8 +516,8 @@ void registerDefaultTools(ToolRegistry& reg, const Workspace& ws) {
     // â”€â”€ write_file â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     reg.registerTool(
         "write_file", "Create/modify a workspace file (overwrite is backed up first)",
-        R"({"path":{"type":"string"},"action":{"type":"string","enum":["replace","append"]},
-            "content":{"type":"string"}})",
+        R"({"path":{"type":"string","required":true},"action":{"type":"string","enum":["replace","append"],"default":"replace"},
+            "content":{"type":"string","required":true}})",
         CAP_WRITE,
         [&ws](const json& args, const ToolContext& ctx) -> ToolResult {
             ToolResult r;
@@ -551,7 +605,7 @@ void registerDefaultTools(ToolRegistry& reg, const Workspace& ws) {
     // â”€â”€ run_build â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     reg.registerTool(
         "run_build", "Invoke the CMake build for the workspace",
-        R"({"config":{"type":"string","default":"Release"}})",
+        R"({"config":{"type":"string","default":"Release"},"dir":{"type":"string","description":"workspace-relative project dir with CMakeLists.txt"}})",
         CAP_EXEC,
         [&ws](const json& args, const ToolContext&) -> ToolResult {
             ToolResult r;
@@ -577,7 +631,17 @@ void registerDefaultTools(ToolRegistry& reg, const Workspace& ws) {
                 }
                 cmd = "cmake --build \"" + bdir + "\" --config " + config;
             } else {
-                cmd = "cmake --build build_vs --config " + config;
+                // Prefer the live IDE build tree when present; fall back through
+                // common local cmake dirs instead of hard-failing on build_vs.
+                std::string bdir = "build_vs";
+                for (const char* cand : {"build_ide", "build", "build_vs", "build_ninja"}) {
+                    std::error_code bec;
+                    if (fs::exists(fs::path(ws.root()) / cand, bec) && !bec) {
+                        bdir = cand;
+                        break;
+                    }
+                }
+                cmd = "cmake --build " + bdir + " --config " + config;
             }
             CommandResult c = runBoundedCommand(cmd, ws.root(), 900000);
             r.output += c.output;
@@ -590,7 +654,7 @@ void registerDefaultTools(ToolRegistry& reg, const Workspace& ws) {
     // â”€â”€ run_tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     reg.registerTool(
         "run_tests", "Invoke the CTest suite for the workspace",
-        R"({"filter":{"type":"string"}})",
+        R"({"filter":{"type":"string"},"dir":{"type":"string","description":"workspace-relative project dir"},"config":{"type":"string","default":"Debug"}})",
         CAP_EXEC,
         [&ws](const json& args, const ToolContext&) -> ToolResult {
             ToolResult r;
@@ -599,6 +663,13 @@ void registerDefaultTools(ToolRegistry& reg, const Workspace& ws) {
             std::string dir = args.value("dir", std::string());
             std::string config = args.value("config", std::string("Debug"));
             std::string testDir = "build_vs";
+            for (const char* cand : {"build_ide", "build", "build_vs", "build_ninja"}) {
+                std::error_code bec;
+                if (fs::exists(fs::path(ws.root()) / cand, bec) && !bec) {
+                    testDir = cand;
+                    break;
+                }
+            }
             if (!dir.empty()) {
                 std::string abs = ws.resolve(dir, true);
                 if (abs.empty()) {
@@ -621,7 +692,7 @@ void registerDefaultTools(ToolRegistry& reg, const Workspace& ws) {
     // â”€â”€ edit_files â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     reg.registerTool(
         "edit_files", "Replace exact unique text in a workspace file",
-        R"({"path":{"type":"string"},"old":{"type":"string"},"new":{"type":"string"}})",
+        R"({"path":{"type":"string","required":true},"old":{"type":"string","required":true},"new":{"type":"string","required":true}})",
         CAP_WRITE,
         [&ws](const json& args, const ToolContext& ctx) -> ToolResult {
             ToolResult r;
@@ -634,9 +705,13 @@ void registerDefaultTools(ToolRegistry& reg, const Workspace& ws) {
                 r.output = "ERROR: path and old are required";
                 return r;
             }
-            std::string abs = ws.resolve(rel, false);
+            std::string abs = ws.resolve(rel, true);
             if (abs.empty()) {
-                r.output = "ERROR: path escapes the workspace: " + rel;
+                r.output = "ERROR: path escapes the workspace or missing: " + rel;
+                return r;
+            }
+            if (!isPathAuthorized(fs::path(abs))) {
+                r.output = "ERROR: access denied (restricted path): " + rel;
                 return r;
             }
             if (ctx.mode && !ctx.mode->sourceEditsAllowed) {
@@ -658,6 +733,14 @@ void registerDefaultTools(ToolRegistry& reg, const Workspace& ws) {
                     r.output = "ERROR: cannot read " + rel;
                     return r;
                 }
+                // Normalize CRLF so model/orchestrator LF snippets match Windows files.
+                auto stripCr = [](std::string s) {
+                    s.erase(std::remove(s.begin(), s.end(), '\r'), s.end());
+                    return s;
+                };
+                content = stripCr(std::move(content));
+                oldStr = stripCr(std::move(oldStr));
+                newStr = stripCr(std::move(newStr));
                 size_t pos = content.find(oldStr);
                 if (pos == std::string::npos) {
                     r.output = "ERROR: old text not found in " + rel;
@@ -667,13 +750,43 @@ void registerDefaultTools(ToolRegistry& reg, const Workspace& ws) {
                     r.output = "ERROR: old text occurs more than once in " + rel;
                     return r;
                 }
+                // Snapshot pre-edit bytes for rollback_edit (C15).
+                {
+                    std::string serr;
+                    if (!rawr_edit_rb::writeSnapshot(abs, content, &serr)) {
+                        r.output = "ERROR: rollback snapshot failed: " + serr;
+                        return r;
+                    }
+                }
                 content.replace(pos, oldStr.size(), newStr);
-                std::ofstream f(abs, std::ios::binary | std::ios::trunc);
-                if (!f) { r.output = "ERROR: cannot write " + rel; return r; }
-                f.write(content.data(), content.size());
-                f.close();
+                // Atomic replace: write temp then ReplaceFileW (no trunc-in-place).
+                const std::string tmp = abs + ".rawrxd.edit.tmp";
+                {
+                    std::ofstream f(tmp, std::ios::binary | std::ios::trunc);
+                    if (!f) { r.output = "ERROR: cannot write temp for " + rel; return r; }
+                    f.write(content.data(), static_cast<std::streamsize>(content.size()));
+                    f.close();
+                    if (!f) {
+                        r.output = "ERROR: temp write failed for " + rel;
+                        fs::remove(tmp);
+                        return r;
+                    }
+                }
+                std::wstring wAbs = utf8ToWide(abs);
+                std::wstring wTmp = utf8ToWide(tmp);
+                if (!ReplaceFileW(wAbs.c_str(), wTmp.c_str(), nullptr,
+                                  REPLACEFILE_IGNORE_MERGE_ERRORS, nullptr, nullptr)) {
+                    // Fallback for first-create edge: MoveFileEx after delete.
+                    if (!MoveFileExW(wTmp.c_str(), wAbs.c_str(),
+                                     MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
+                        r.output = "ERROR: atomic replace failed for " + rel +
+                                   " gle=" + std::to_string(GetLastError());
+                        fs::remove(tmp);
+                        return r;
+                    }
+                }
                 r.output = "EDITED " + rel + " (" + std::to_string(newStr.size()) +
-                           " bytes replacement)";
+                           " bytes replacement, atomic; rollback snapshot saved)";
                 r.ok = true;
                 return r;
             } catch (const std::exception& e) {
@@ -682,7 +795,109 @@ void registerDefaultTools(ToolRegistry& reg, const Workspace& ws) {
             }
         });
 
-    // â”€â”€ git_diff â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // â”€â”€ rollback_edit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    reg.registerTool(
+        "rollback_edit", "Restore last edit_files snapshot for a workspace path",
+        R"({"path":{"type":"string","required":true}})",
+        CAP_WRITE,
+        [&ws](const json& args, const ToolContext& ctx) -> ToolResult {
+            ToolResult r;
+            r.tool = "rollback_edit";
+            std::string rel = args.value("path", std::string());
+            if (rel.empty()) { r.output = "ERROR: path is required"; return r; }
+            std::string abs = ws.resolve(rel, true);
+            if (abs.empty()) {
+                r.output = "ERROR: path escapes the workspace or missing: " + rel;
+                return r;
+            }
+            if (!isPathAuthorized(fs::path(abs))) {
+                r.output = "ERROR: access denied (restricted path): " + rel;
+                return r;
+            }
+            if (ctx.mode && !ctx.mode->sourceEditsAllowed) {
+                std::string l = toLower(rel);
+                bool isSource = l.find("src/") == 0 || l.find("src\\") == 0 ||
+                                l.find("include/") == 0 || (l.size() > 4 &&
+                                (l.substr(l.size() - 4) == ".cpp" ||
+                                 l.substr(l.size() - 4) == ".hpp"));
+                if (isSource) {
+                    r.denied = true;
+                    r.output = "DENIED: mode '" + std::string(ctx.mode->name) +
+                               "' does not permit rollback of project source: " + rel;
+                    return r;
+                }
+            }
+            std::string msg;
+            if (!rawr_edit_rb::restoreSnapshot(abs, &msg)) {
+                r.output = msg;
+                return r;
+            }
+            r.output = msg + " path=" + rel;
+            r.ok = true;
+            return r;
+        });
+
+    // --- run_shell (C34): workspace cwd; CAP_EXEC; honors g_toolCancelFlag ---
+    reg.registerTool(
+        "run_shell",
+        "Run a short command in the workspace (cmd.exe /c, cancel-aware)",
+        R"({"command":{"type":"string","required":true},"timeout_ms":{"type":"integer","default":60000}})",
+        CAP_EXEC,
+        [&ws](const json& args, const ToolContext& ctx) -> ToolResult {
+            ToolResult r;
+            r.tool = "run_shell";
+            if (ctx.mode && (ctx.mode->caps & CAP_EXEC) == 0) {
+                r.denied = true;
+                r.output = "DENIED: mode '" + std::string(ctx.mode->name) +
+                           "' does not permit run_shell";
+                return r;
+            }
+            std::string cmd = args.value("command", std::string());
+            while (!cmd.empty() && (unsigned char)cmd.back() <= ' ') cmd.pop_back();
+            if (cmd.empty()) { r.output = "ERROR: command is required"; return r; }
+            if (cmd.size() > 2048) {
+                r.output = "ERROR: command too long (max 2048)";
+                return r;
+            }
+            const std::string low = toLower(cmd);
+            for (const char* bad : {"&&", "||", "|", ";", "`", "$(", "\n", "\r",
+                                    "..\\", "../", "rmdir", "del /s", "format ",
+                                    "shutdown", "reg add", "reg delete",
+                                    ":\\windows"}) {
+                if (low.find(bad) != std::string::npos) {
+                    r.denied = true;
+                    r.output = std::string("DENIED: shell metachar/forbidden: ") + bad;
+                    return r;
+                }
+            }
+            int timeout = 60000;
+            if (args.contains("timeout_ms")) {
+                if (args["timeout_ms"].is_number_integer())
+                    timeout = args["timeout_ms"].get<int>();
+                else if (args["timeout_ms"].is_string()) {
+                    try { timeout = std::stoi(args["timeout_ms"].get<std::string>()); }
+                    catch (...) { timeout = 60000; }
+                }
+            }
+            if (timeout < 1000) timeout = 1000;
+            if (timeout > 300000) timeout = 300000;
+            CommandResult c = runBoundedCommand(cmd, ws.root(),
+                                                static_cast<DWORD>(timeout));
+            r.output = c.output;
+            if (!c.error.empty()) r.output += "\nERROR: " + c.error;
+            r.exitCode = static_cast<int>(c.exitCode);
+            if (toolCancelRequested()) {
+                r.output += "\nCANCELED=1";
+                r.ok = false;
+                return r;
+            }
+            r.ok = c.launched && c.completed && c.exitCode == 0;
+            if (!c.completed)
+                r.output += "\nSHELL_DID_NOT_COMPLETE (timeout/cancel)";
+            return r;
+        });
+
+    // --- git_diff ---
     reg.registerTool(
         "git_diff", "Show git diff for the workspace",
         R"({})",
@@ -863,6 +1078,145 @@ InferenceResult InferenceClient::complete(const std::vector<json>& messages,
             return out;
         }
     }
+    return out;
+}
+
+InferenceResult InferenceClient::completeStream(const std::vector<json>& messages,
+                                                int maxTokens, double temperature,
+                                                StreamDeltaFn onDelta,
+                                                CancelCheckFn shouldCancel) {
+    InferenceResult out;
+    json payload;
+    payload["model"] = sanitizeUtf8(model_);
+    json cleanMessages = messages;
+    for (auto& m : cleanMessages) {
+        if (!m.is_object()) continue;
+        for (const char* key : {"role", "content", "name"}) {
+            if (m.contains(key) && m[key].is_string())
+                m[key] = sanitizeUtf8(m[key].get<std::string>());
+        }
+    }
+    payload["messages"] = std::move(cleanMessages);
+    payload["max_tokens"] = maxTokens;
+    payload["temperature"] = temperature;
+    payload["stream"] = true;
+    const std::string body = payload.dump();
+
+    HINTERNET session = WinHttpOpen(L"RawrXDCore/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+                                    WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+    if (!session) { out.error = "WinHttpOpen failed"; return out; }
+    HINTERNET conn = WinHttpConnect(session, host_.c_str(),
+                                    static_cast<INTERNET_PORT>(port_), 0);
+    if (!conn) {
+        out.error = "WinHttpConnect failed";
+        WinHttpCloseHandle(session);
+        return out;
+    }
+    HINTERNET req = WinHttpOpenRequest(conn, L"POST", utf8ToWide(path_).c_str(), nullptr,
+                                       WINHTTP_NO_REFERER,
+                                       WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
+    if (!req) {
+        out.error = "WinHttpOpenRequest failed";
+        WinHttpCloseHandle(conn);
+        WinHttpCloseHandle(session);
+        return out;
+    }
+    DWORD t = static_cast<DWORD>(timeoutMs_);
+    WinHttpSetTimeouts(req, t, t, t, t);
+    if (!WinHttpSendRequest(req, L"Content-Type: application/json\r\n", -1L,
+                            const_cast<char*>(body.data()),
+                            static_cast<DWORD>(body.size()),
+                            static_cast<DWORD>(body.size()), 0) ||
+        !WinHttpReceiveResponse(req, nullptr)) {
+        out.error = "WinHttp stream send/recv failed (" +
+                    std::to_string(GetLastError()) + ")";
+        WinHttpCloseHandle(req);
+        WinHttpCloseHandle(conn);
+        WinHttpCloseHandle(session);
+        return out;
+    }
+    DWORD code = 0, sz = sizeof(code);
+    WinHttpQueryHeaders(req, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+                        WINHTTP_HEADER_NAME_BY_INDEX, &code, &sz,
+                        WINHTTP_NO_HEADER_INDEX);
+    if (code != 200) {
+        out.error = "HTTP status " + std::to_string(code);
+        WinHttpCloseHandle(req);
+        WinHttpCloseHandle(conn);
+        WinHttpCloseHandle(session);
+        return out;
+    }
+
+    std::string carry;
+    auto ingestLine = [&](const std::string& line) {
+        if (line.rfind("data:", 0) != 0) return;
+        std::string payload = line.substr(5);
+        while (!payload.empty() && (payload.front() == ' ' || payload.front() == '\t'))
+            payload.erase(payload.begin());
+        if (payload == "[DONE]") {
+            out.finishReason = out.finishReason.empty() ? "stop" : out.finishReason;
+            return;
+        }
+        try {
+            json doc = json::parse(payload);
+            if (!doc.is_object() || !doc.contains("choices") || !doc["choices"].is_array())
+                return;
+            for (const auto& c : doc["choices"]) {
+                if (!c.is_object()) continue;
+                if (c.contains("finish_reason") && c["finish_reason"].is_string())
+                    out.finishReason = c["finish_reason"].get<std::string>();
+                if (!c.contains("delta") || !c["delta"].is_object()) continue;
+                const auto& d = c["delta"];
+                if (!d.contains("content") || !d["content"].is_string()) continue;
+                const std::string piece = d["content"].get<std::string>();
+                if (piece.empty()) continue;
+                out.content += piece;
+                out.streamDeltas += 1;
+                out.completionTokens += 1;
+                if (onDelta) onDelta(piece);
+            }
+            if (doc.contains("usage") && doc["usage"].is_object()) {
+                out.promptTokens = doc["usage"].value("prompt_tokens", out.promptTokens);
+                out.completionTokens =
+                    doc["usage"].value("completion_tokens", out.completionTokens);
+            }
+        } catch (...) {
+            /* ignore partial SSE frames */
+        }
+    };
+
+    for (;;) {
+        if (shouldCancel && shouldCancel()) {
+            out.canceled = true;
+            out.finishReason = "cancelled";
+            out.ok = !out.content.empty();
+            out.error = out.ok ? std::string() : "cancelled before tokens";
+            break;
+        }
+        DWORD have = 0;
+        if (!WinHttpQueryDataAvailable(req, &have)) break;
+        if (have == 0) break;
+        std::vector<char> buf(static_cast<size_t>(have) + 1, 0);
+        DWORD rd = 0;
+        if (!WinHttpReadData(req, buf.data(), have, &rd) || rd == 0) break;
+        carry.append(buf.data(), rd);
+        for (;;) {
+            const auto nl = carry.find('\n');
+            if (nl == std::string::npos) break;
+            std::string line = carry.substr(0, nl);
+            carry.erase(0, nl + 1);
+            if (!line.empty() && line.back() == '\r') line.pop_back();
+            if (!line.empty()) ingestLine(line);
+        }
+    }
+    if (!carry.empty()) ingestLine(carry);
+    if (!out.canceled) {
+        out.ok = !out.content.empty() || out.finishReason == "stop";
+        if (!out.ok && out.error.empty()) out.error = "empty stream";
+    }
+    WinHttpCloseHandle(req);
+    WinHttpCloseHandle(conn);
+    WinHttpCloseHandle(session);
     return out;
 }
 

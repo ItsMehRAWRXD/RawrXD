@@ -258,6 +258,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     ide.showWindow();
     startupTrace("showWindow returned");
 
+    // Native GUI chat smoke (local-first Ollama): send → tokens → cancel →
+    // second request → editor save/open. Writes receipt then ExitProcess.
+    if (lpCmdLine && std::strstr(lpCmdLine, "--chat-smoke")) {
+        startupTrace("chat-smoke begin");
+        const char* receipt = nullptr;
+        if (const char* env = std::getenv("RAWRXD_CHAT_SMOKE_RECEIPT")) {
+            if (*env) receipt = env;
+        }
+        ide.beginChatSmoke(receipt);
+    }
+
     bool extQuit = false;
 #if defined(RAWRXD_NATIVE_IDE_EXT) && RAWRXD_NATIVE_IDE_EXT
     ExtHostWireResult extWire{};
@@ -284,14 +295,28 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         !(lpCmdLine && (std::strstr(lpCmdLine, "--ext-") ||
                         std::strstr(lpCmdLine, "--vsix") ||
                         std::strstr(lpCmdLine, "--term-smoke") ||
+                        std::strstr(lpCmdLine, "--chat-smoke") ||
                         std::strstr(lpCmdLine, "--user-data-dir")))) {
-        // Do NOT open here: finishSession loadEditorSession runs after the
-        // message loop starts and would overwrite the buffer/title with the
-        // sticky session (INITIALPATH_BUFFER_LEN_0_TITLE_MISS / broken_multi).
-        // Queue until flushPendingInitialDocument after session materialize.
-        LOG_INFO("Queueing initial document (post-session): " + initialPath);
-        ide.queueInitialDocumentPath(initialPath);
-        startupTrace("initial document queued for post-session flush");
+        // Directories are workspace roots, not documents. Queuing a directory
+        // as the initial path was observed to tear down Native tip F8249 with
+        // process EXIT=-1 ~6s after finishSession.done. Keep the HWND alive.
+        const DWORD attrs = GetFileAttributesA(initialPath.c_str());
+        const bool isDir =
+            attrs != INVALID_FILE_ATTRIBUTES &&
+            (attrs & FILE_ATTRIBUTE_DIRECTORY) != 0;
+        if (isDir) {
+            LOG_INFO("Ignoring directory argv as initial document: " +
+                     initialPath);
+            startupTrace("initial document skipped (directory argv)");
+        } else {
+            // Do NOT open here: finishSession loadEditorSession runs after the
+            // message loop starts and would overwrite the buffer/title with the
+            // sticky session (INITIALPATH_BUFFER_LEN_0_TITLE_MISS / broken_multi).
+            // Queue until flushPendingInitialDocument after session materialize.
+            LOG_INFO("Queueing initial document (post-session): " + initialPath);
+            ide.queueInitialDocumentPath(initialPath);
+            startupTrace("initial document queued for post-session flush");
+        }
     }
     LOG_INFO("Entering message loop");
     startupTrace("entering message loop");

@@ -3147,6 +3147,7 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuA(hViewMenu, MF_STRING, IDM_VIEW_OUTPUT_PANEL, "Output &Panel");
     AppendMenuA(hViewMenu, MF_STRING, IDM_VIEW_MODULE_BROWSER, "Module &Browser");
     AppendMenuA(hViewMenu, MF_STRING, IDM_VIEW_FLOATING_PANEL, "&Floating Panel");
+    AppendMenuA(hViewMenu, MF_STRING, IDM_VIEW_COMMAND_PALETTE, "Command &Palette	Ctrl+Shift+P");
     AppendMenuA(hViewMenu, MF_SEPARATOR, 0, nullptr);
     AppendMenuA(hViewMenu, MF_STRING, IDM_VIEW_THEME_EDITOR, "&Theme Editor...");
     AppendMenuA(hViewMenu, MF_SEPARATOR, 0, nullptr);
@@ -3191,6 +3192,7 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuA(hHelpMenu, MF_STRING, IDM_HELP_PSDOCS, "PowerShell &Documentation");
     AppendMenuA(hHelpMenu, MF_STRING, IDM_HELP_SEARCH, "&Search Help...");
     AppendMenuA(hHelpMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuA(hHelpMenu, MF_STRING, IDM_HELP_DOCTOR, "Environment &Doctor");
     AppendMenuA(hHelpMenu, MF_STRING, IDM_HELP_ABOUT, "&About");
     AppendMenuA(m_hMenu, MF_POPUP, (UINT_PTR)hHelpMenu, "&Help");
 
@@ -3211,6 +3213,7 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuA(hAgentMenu, MF_STRING, IDM_AGENT_VIEW_TOOLS, "View &Tools");
     AppendMenuA(hAgentMenu, MF_STRING, IDM_AGENT_VIEW_STATUS, "View &Status");
     AppendMenuA(hAgentMenu, MF_STRING, IDM_AGENT_STOP, "&Stop Agent");
+    AppendMenuA(hAgentMenu, MF_STRING, IDM_AGENT_UNDO_LAST_EDIT, "&Undo Last Agent Edit");
     AppendMenuA(hAgentMenu, MF_SEPARATOR, 0, nullptr);
     AppendMenuA(hAgentMenu, MF_STRING, IDM_AGENTIC_LOOP_RUN, "Run Agentic &Task");
     AppendMenuA(hAgentMenu, MF_STRING, IDM_AGENTIC_LOOP_CANCEL, "&Cancel Agentic Task");
@@ -3338,11 +3341,15 @@ bool Win32IDE::isOpenableDocumentPath(const std::string& path) const
                           ((path[0] >= 'A' && path[0] <= 'Z') ||
                            (path[0] >= 'a' && path[0] <= 'z')) &&
                           path[1] == ':' && (path[2] == '\\' || path[2] == '/');
+    const DWORD attr = GetFileAttributesA(path.c_str());
+    if (attr != INVALID_FILE_ATTRIBUTES &&
+        (attr & FILE_ATTRIBUTE_DIRECTORY) != 0) {
+        // Directories are workspace roots, never editor documents.
+        return false;
+    }
     if (!hasSep && !hasDrive) {
         // Leaf-only names like "t8 01 doc" stick the TabCtrl and fail open.
-        const DWORD attr = GetFileAttributesA(path.c_str());
         if (attr == INVALID_FILE_ATTRIBUTES) return false;
-        if (attr & FILE_ATTRIBUTE_DIRECTORY) return false;
         return true;
     }
     return true;
@@ -4011,6 +4018,12 @@ bool Win32IDE::flushPendingInitialDocument()
     m_pendingInitialDocumentPath.clear();
     if (!m_hwndEditor) {
         m_pendingInitialDocumentPath = path;
+        return false;
+    }
+    if (!isOpenableDocumentPath(path)) {
+        appendToOutput("INITIALPATH_FLUSH skipped (not a document): " + path +
+                           "\n",
+                       "Output", OutputSeverity::Info);
         return false;
     }
     // Argv / RAWRXD_PROBLEMS_FIXTURE wins over sticky session restore.
@@ -5609,6 +5622,7 @@ void Win32IDE::showFindDialog()
 {
     if (m_hwndFindDialog && IsWindow(m_hwndFindDialog)) {
         SetForegroundWindow(m_hwndFindDialog);
+        appendCopilotChatUtf8("\r\nRAWRXD_FIND_VERDICT=PASS reused=1\n");
         return;
     }
     
@@ -5618,9 +5632,13 @@ void Win32IDE::showFindDialog()
     if (!m_hwndFindDialog) {
         // Fallback: create simple dialog programmatically
         HWND hwndDlg = CreateSearchWindow(m_hInstance, m_hwndMain, FindDialogProc, this, "Find");
-        if (!hwndDlg) return;
+        if (!hwndDlg) {
+            appendCopilotChatUtf8("\r\nRAWRXD_FIND_VERDICT=FAIL\n");
+            return;
+        }
         SetWindowPos(hwndDlg, nullptr, 100, 100, 400, 150, SWP_NOZORDER | SWP_NOACTIVATE);
         m_hwndFindDialog = hwndDlg;
+        appendCopilotChatUtf8("\r\nRAWRXD_FIND_VERDICT=PASS fallback=1\n");
         
         CreateWindowExA(0, "STATIC", "Find what:", WS_CHILD | WS_VISIBLE,
             10, 15, 80, 20, hwndDlg, nullptr, m_hInstance, nullptr);
@@ -7064,10 +7082,16 @@ void Win32IDE::appendChatMessage(const std::string& user, const std::string& mes
 void Win32IDE::showGitStatus()
 {
     if (!isGitRepository()) {
-        MessageBoxA(m_hwndMain, "Not a Git repository", "Git", MB_OK | MB_ICONWARNING);
+        appendCopilotChatUtf8("\r\nRAWRXD_GIT_STATUS_VERDICT=FAIL detail=not_a_repo\n");
+        const char* headless = std::getenv("RAWRXD_UIA_HEADLESS");
+        if (!(headless && headless[0] == '1')) {
+            MessageBoxA(m_hwndMain, "Not a Git repository", "Git",
+                        MB_OK | MB_ICONWARNING);
+        }
         return;
     }
     
+    if (!m_currentExplorerPath.empty()) m_gitRepoPath = m_currentExplorerPath;
     updateGitStatus();
     
     std::ostringstream status;
@@ -7079,8 +7103,21 @@ void Win32IDE::showGitStatus()
     status << "  Added:     " << m_gitStatus.added << "\n";
     status << "  Deleted:   " << m_gitStatus.deleted << "\n";
     status << "  Untracked: " << m_gitStatus.untracked << "\n";
-    
-    MessageBoxA(m_hwndMain, status.str().c_str(), "Git Status", MB_OK | MB_ICONINFORMATION);
+
+    const bool gitOk = !m_gitStatus.branch.empty();
+    appendCopilotChatUtf8(
+        "\r\nRAWRXD_GIT_STATUS_BEGIN\nbranch=" + m_gitStatus.branch +
+        "\nmodified=" + std::to_string(m_gitStatus.modified) +
+        "\nuntracked=" + std::to_string(m_gitStatus.untracked) +
+        "\nRAWRXD_GIT_STATUS_VERDICT=" + std::string(gitOk ? "PASS" : "FAIL") +
+        "\n");
+    appendToOutput(status.str() + "\n", "Output", OutputSeverity::Info);
+
+    const char* headless = std::getenv("RAWRXD_UIA_HEADLESS");
+    if (!(headless && headless[0] == '1')) {
+        MessageBoxA(m_hwndMain, status.str().c_str(), "Git Status",
+                    MB_OK | MB_ICONINFORMATION);
+    }
 }
 
 void Win32IDE::updateGitStatus()
@@ -7248,16 +7285,24 @@ bool Win32IDE::executeGitCommand(const std::string& command, std::string& output
     GetTempPathA(MAX_PATH, tempPath);
     std::string tempFile = std::string(tempPath) + "rawr_git_output.txt";
     
-    // Execute command and redirect output
-    std::string fullCommand = command + " > \"" + tempFile + "\" 2>&1";
+    // Redirection requires a shell; run in the detected repo cwd.
+    char cwdBuf[MAX_PATH];
+    std::string cwd = m_gitRepoPath;
+    if (cwd.empty() && GetCurrentDirectoryA(MAX_PATH, cwdBuf) > 0) cwd = cwdBuf;
+    if (cwd.empty() && !m_currentExplorerPath.empty()) cwd = m_currentExplorerPath;
+    std::string fullCommand = "cmd.exe /c " + command + " > \"" + tempFile + "\" 2>&1";
     
     STARTUPINFOA si = { sizeof(si) };
     PROCESS_INFORMATION pi = {};
     si.dwFlags = STARTF_USESHOWWINDOW;
     si.wShowWindow = SW_HIDE;
     
-    if (CreateProcessA(NULL, const_cast<char*>(fullCommand.c_str()), 
-        NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
+    char* cmdMutable = _strdup(fullCommand.c_str());
+    const char* dirPtr = cwd.empty() ? NULL : cwd.c_str();
+    BOOL ok = cmdMutable && CreateProcessA(NULL, cmdMutable, NULL, NULL, FALSE,
+        CREATE_NO_WINDOW, NULL, dirPtr, &si, &pi);
+    if (cmdMutable) free(cmdMutable);
+    if (ok) {
         
         WaitForSingleObject(pi.hProcess, 5000);  // 5 second timeout
         CloseHandle(pi.hProcess);
@@ -8072,6 +8117,9 @@ void Win32IDE::toggleTerminal()
         onSize(rc.right, rc.bottom);
         InvalidateRect(m_hwndMain, NULL, TRUE);
     }
+    appendCopilotChatUtf8(
+        std::string("\r\nRAWRXD_TERMINAL_VERDICT=PASS visible=") +
+        (m_outputPanelVisible ? "1" : "0") + "\n");
 }
 
 void Win32IDE::showAbout()
@@ -8809,8 +8857,13 @@ void Win32IDE::populateModelSelector() {
     SendMessage(m_hwndModelSelector, CB_RESETCONTENT, 0, 0);
     m_availableModels.clear();
 
-    const auto* kiloRoute = RawrXD::ChatRouteMenu::find(
-        RawrXD::ChatRouteMenu::RouteKind::KiloFree);
+    // Local-first: do not seed cloud Kilo unless explicitly allowed.
+    // Silent cloud default breaks daily-driver parity with CLI (local Ollama/Deep2).
+    const bool allowCloud =
+        environmentValue("RAWRXD_ALLOW_CLOUD") == "1";
+    const auto* kiloRoute = allowCloud
+        ? RawrXD::ChatRouteMenu::find(RawrXD::ChatRouteMenu::RouteKind::KiloFree)
+        : nullptr;
     if (kiloRoute) {
         std::string display = kiloRoute->breadcrumb;
         display += " / ";
@@ -8851,7 +8904,9 @@ void Win32IDE::populateModelSelector() {
                 !forceOllamaTag.empty()) {
                 forceRouteRow = static_cast<int>(item);
             }
-            if (m_availableModels[i].source == ChatModelEntry::Source::KiloFree) {
+            // Prefer any seeded local Ollama over cloud while discovery runs.
+            if (m_availableModels[i].source == ChatModelEntry::Source::Ollama &&
+                defaultRouteRow < 0) {
                 defaultRouteRow = static_cast<int>(item);
             }
         }
@@ -9316,8 +9371,44 @@ void Win32IDE::HandleCopilotSend() {
         }
     };
     
+    // C03: feed prior session turns into the product chat path (history was
+    // stored but previously discarded for inference — single-turn only).
+    std::string promptForModel = userMessage;
+    {
+        std::vector<std::pair<std::string, std::string>> turns;
+        if (auto* session = activeChatSession())
+            turns = session->history;
+        else
+            turns = m_chatHistory;
+        if (turns.size() > 1) {
+            std::ostringstream os;
+            os << "You are a helpful assistant in a multi-turn IDE chat. "
+                  "Use earlier turns when answering.\n\n";
+            for (size_t i = 0; i < turns.size(); ++i) {
+                std::string role = turns[i].first;
+                std::string content = turns[i].second;
+                // Strip harness dispatch markers from prompt context.
+                const std::string marker = "[dispatch_id=";
+                if (content.rfind(marker, 0) == 0) {
+                    const size_t close = content.find("] ");
+                    if (close != std::string::npos)
+                        content = content.substr(close + 2);
+                }
+                if (role == "user")
+                    os << "User: " << content << "\n";
+                else if (role == "assistant")
+                    os << "Assistant: " << content << "\n";
+            }
+            os << "Assistant:";
+            promptForModel = os.str();
+            WriteChatRuntimeEvidence(
+                "CHAT_MULTITURN_PROMPT turns=" + std::to_string(turns.size()) +
+                " dispatch_id=" + std::to_string(sendSeq));
+        }
+    }
+
     // Generate response
-    generateResponseAsync(userMessage, onResponse, generationHolder.get());
+    generateResponseAsync(promptForModel, onResponse, generationHolder.get());
     WriteChatRuntimeEvidence(
         "CHAT_SEND_ARMED dispatch_id=" + std::to_string(sendSeq) +
         " send_seq=" + std::to_string(sendSeq) +

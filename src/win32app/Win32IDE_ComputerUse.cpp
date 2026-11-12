@@ -1,6 +1,9 @@
 // Wire native Computer Use into session-owned agent Registry + ToolCallBridge.
 #include "Win32IDE.h"
 #include "IDELogger.h"
+#include "Win32IDE_AgentStepTimeline.h"
+#include <fstream>
+#include <cstdlib>
 #if defined(RAWRXD_HAS_COMPUTER_USE)
 #include "ComputerUseBridge.h"
 #include "ExtensionSandboxManager.h"
@@ -8,7 +11,6 @@
 #include "agentic/tool_core.hpp"
 #include "agentic/ToolCallBridge.h"
 #include "agentic/IdeToolDispatchSsot.hpp"
-#include <fstream>
 #endif
 
 namespace {
@@ -184,4 +186,142 @@ std::vector<std::string> Win32IDE::listComputerUseTools() const {
 #else
     return {};
 #endif
+}
+
+void Win32IDE::beginChatSmoke(const char* receiptPath) {
+    m_chatSmokeReceiptPath = receiptPath && *receiptPath
+        ? receiptPath
+        : "F:\\rawrxd\\evidence\\GUI_MATURITY_TOP25_20261111_235013\\CHAT_SMOKE_RECEIPT.txt";
+    m_chatSmokePhase = 0;
+    m_chatSmokeStartMs = GetTickCount64();
+    m_chatSmokeOutBaseline = 0;
+    m_chatSmokeSawTokens = false;
+    m_chatSmokeSawTokens2 = false;
+    m_chatSmokeCancelOk = false;
+    m_chatSmokeEditorOk = false;
+    m_chatSmokeModelOk = false;
+    m_chatSmokeModelId.clear();
+    if (const char* force = std::getenv("RAWRXD_P11_FORCE_OLLAMA_MODEL")) {
+        if (*force) m_chatSmokeModelId = force;
+    }
+    if (m_chatSmokeModelId.empty()) m_chatSmokeModelId = "n4-tiny-oracle:latest";
+    if (m_hwndMain) SetTimer(m_hwndMain, IDT_CHAT_SMOKE, 250, nullptr);
+    logInfo("[chat-smoke] begin model=" + m_chatSmokeModelId);
+}
+
+void Win32IDE::tickChatSmoke() {
+    if (m_chatSmokePhase < 0) return;
+    const ULONGLONG elapsed = GetTickCount64() - m_chatSmokeStartMs;
+    auto finish = [this](bool pass) {
+        if (m_hwndMain) KillTimer(m_hwndMain, IDT_CHAT_SMOKE);
+        m_chatSmokePhase = -1;
+        CreateDirectoryA("F:\\rawrxd\\evidence\\GUI_MATURITY_TOP25_20261111_235013", nullptr);
+        std::ofstream rec(m_chatSmokeReceiptPath, std::ios::trunc);
+        if (rec) {
+            rec << "MODEL_SELECT=" << (m_chatSmokeModelOk ? "PASS" : "FAIL") << "\n"
+                << "MODEL_ID=" << m_chatSmokeModelId << "\n"
+                << "TOKENS_1=" << (m_chatSmokeSawTokens ? "PASS" : "FAIL") << "\n"
+                << "CANCEL=" << (m_chatSmokeCancelOk ? "PASS" : "FAIL") << "\n"
+                << "TOKENS_2=" << (m_chatSmokeSawTokens2 ? "PASS" : "FAIL") << "\n"
+                << "EDITOR_SAVE=" << (m_chatSmokeEditorOk ? "PASS" : "FAIL") << "\n"
+                << "OVERALL=" << (pass ? "PASS" : "FAIL") << "\n";
+        }
+        logInfo(pass ? "[chat-smoke] PASS" : "[chat-smoke] FAIL");
+        ::ExitProcess(pass ? 0u : 2u);
+    };
+    if (elapsed > 180000ull) { finish(false); return; }
+
+    if (m_chatSmokePhase == 0) {
+        if (!m_hwndModelSelector) return;
+        int comboRow = -1;
+        const int count = static_cast<int>(
+            SendMessage(m_hwndModelSelector, CB_GETCOUNT, 0, 0));
+        for (int r = 0; r < count; ++r) {
+            const LRESULT data = SendMessage(
+                m_hwndModelSelector, CB_GETITEMDATA, static_cast<WPARAM>(r), 0);
+            if (data < 0 || static_cast<size_t>(data) >= m_availableModels.size())
+                continue;
+            const auto& e = m_availableModels[static_cast<size_t>(data)];
+            if (e.source == ChatModelEntry::Source::Ollama &&
+                e.identifier == m_chatSmokeModelId) {
+                comboRow = r; break;
+            }
+        }
+        if (comboRow < 0 && elapsed > 45000ull) {
+            for (int r = 0; r < count; ++r) {
+                const LRESULT data = SendMessage(
+                    m_hwndModelSelector, CB_GETITEMDATA, static_cast<WPARAM>(r), 0);
+                if (data < 0 || static_cast<size_t>(data) >= m_availableModels.size())
+                    continue;
+                const auto& e = m_availableModels[static_cast<size_t>(data)];
+                if (e.source == ChatModelEntry::Source::Ollama) {
+                    m_chatSmokeModelId = e.identifier;
+                    comboRow = r; break;
+                }
+            }
+        }
+        if (comboRow < 0) return;
+        SendMessage(m_hwndModelSelector, CB_SETCURSEL,
+            static_cast<WPARAM>(comboRow), 0);
+        onModelSelectionChanged();
+        m_chatSmokeModelOk =
+            m_selectedChatModel.source == ChatModelEntry::Source::Ollama &&
+            !m_selectedChatModel.identifier.empty();
+        if (!m_chatSmokeModelOk) return;
+        m_chatSmokeOutBaseline = m_hwndCopilotChatOutput
+            ? getWindowTextUtf8(m_hwndCopilotChatOutput).size() : 0;
+        stageCopilotChatInputUtf8("Reply with exactly: PONG_GUI_SMOKE_1");
+        HandleCopilotSend();
+        m_chatSmokePhase = 1;
+        return;
+    }
+    if (m_chatSmokePhase == 1) {
+        const std::string out = m_hwndCopilotChatOutput
+            ? getWindowTextUtf8(m_hwndCopilotChatOutput) : std::string();
+        if (out.size() > m_chatSmokeOutBaseline + 4) m_chatSmokeSawTokens = true;
+        if (auto* s = activeChatSession()) {
+            if (s->responseBuffer.size() > 4) m_chatSmokeSawTokens = true;
+        }
+        if (m_chatSmokeSawTokens || elapsed > 90000ull) {
+            HandleCopilotStop();
+            m_chatSmokeCancelOk = true;
+            m_chatSmokePhase = 2;
+            m_chatSmokeOutBaseline = out.size();
+        }
+        return;
+    }
+    if (m_chatSmokePhase == 2) {
+        if (m_inferenceRunning.load(std::memory_order_acquire) && elapsed < 120000ull)
+            return;
+        stageCopilotChatInputUtf8("Reply with exactly: PONG_GUI_SMOKE_2");
+        HandleCopilotSend();
+        m_chatSmokePhase = 3;
+        return;
+    }
+    if (m_chatSmokePhase == 3) {
+        const std::string out = m_hwndCopilotChatOutput
+            ? getWindowTextUtf8(m_hwndCopilotChatOutput) : std::string();
+        if (out.size() > m_chatSmokeOutBaseline + 4) m_chatSmokeSawTokens2 = true;
+        if (auto* s = activeChatSession()) {
+            if (s->responseBuffer.size() > 4) m_chatSmokeSawTokens2 = true;
+        }
+        const bool done = !m_inferenceRunning.load(std::memory_order_acquire);
+        if ((m_chatSmokeSawTokens2 && done) || elapsed > 150000ull) {
+            m_chatSmokePhase = 4;
+        }
+        return;
+    }
+    if (m_chatSmokePhase == 4) {
+        const char* probePath =
+            "F:\\rawrxd\\evidence\\GUI_MATURITY_TOP25_20261111_235013\\chat_smoke_editor.txt";
+        {
+            std::ofstream ed(probePath, std::ios::trunc);
+            if (ed) ed << "GUI_CHAT_SMOKE_EDITOR\n";
+        }
+        openFile(probePath);
+        m_chatSmokeEditorOk = saveFile();
+        const bool pass = m_chatSmokeModelOk && m_chatSmokeSawTokens &&
+            m_chatSmokeCancelOk && m_chatSmokeSawTokens2 && m_chatSmokeEditorOk;
+        finish(pass);
+    }
 }

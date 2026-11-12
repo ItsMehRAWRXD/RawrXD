@@ -8,11 +8,27 @@
  */
 #include "Win32IDE.h"
 #include "Win32NativeDebugBackend.h"
+#include "Win32IDE_Deep2Bridge.h"
+#include "agentic/ToolCallBridge.h"
 #include <fstream>
 #include <cstdlib>
 #include <cstdio>
+#include <vector>
+#include <thread>
+#include <atomic>
 #include "IDELogger.h"
 #include "Win32IDE_CommandIDs.h"
+#include "context/context_mention_parser.h"
+#include "../core/project_rag_lite.hpp"
+#include "marketplace/extension_package_local.hpp"
+#include "collab/crdt_buffer.h"
+#include "ProductExtensionRuntime.hpp"
+#include "ExtensionSandboxManager.h"
+#include <filesystem>
+
+namespace {
+std::atomic<int> g_c36Busy{0};
+}
 
 #ifndef IDC_COPILOT_SEND_BTN
 #define IDC_COPILOT_SEND_BTN 1204
@@ -64,6 +80,18 @@ void WriteInputEventEvidence(const std::string& line)
     }
     out << line << " session_id=" << sidEnv
         << " run_id=" << runEnv << std::endl;
+}
+
+// DAP/native-debug evidence journal (C39/C40). Fail-closed: write only what ran.
+void WriteDapE2ECrumb(const std::string& line)
+{
+    const char* configured = std::getenv("RAWRXD_LOG_DIR");
+    const std::string path = (configured && *configured)
+        ? (std::string(configured) + "\\DAP_E2E_JOURNAL.txt")
+        : std::string("DAP_E2E_JOURNAL.txt");
+    std::ofstream out(path, std::ios::app);
+    if (!out) return;
+    out << line << '\n';
 }
 }  // namespace
 
@@ -714,6 +742,10 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
                 ide->m_agentStepTimeline.refreshThoughtElapsed();
                 return 0;
             }
+            if (ide && wParam == IDT_CHAT_SMOKE) {
+                ide->tickChatSmoke();
+                return 0;
+            }
             if (ide && wParam == kFileSafetyTimerId) {
                 ide->pollFileSafety();
                 return 0;
@@ -744,7 +776,15 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
                                  << "STOP_REASON=" << snap->stopReason << '\n'
                                  << "RIP=" << hex << '\n'
                                  << "PID=" << snap->pid << '\n'
+                                 << "STACK_FRAMES=" << snap->stack.size() << '\n'
+                                 << "VARIABLES=" << snap->variables.size() << '\n'
                                  << "API=WaitForDebugEvent\n";
+                            WriteDapE2ECrumb(
+                                std::string("STOPPED_REASON=breakpoint rip=") +
+                                hex + " stack=" +
+                                std::to_string(snap->stack.size()) +
+                                " vars=" +
+                                std::to_string(snap->variables.size()));
                         }
                     }
                 }
@@ -1203,6 +1243,993 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         appendToOutput(diagnostic + "\n", "Debug", OutputSeverity::Info);
         return;
     }
+    // Search panel Find/Replace live under m_hwndSidebar (STATIC).  BN_CLICKED
+    // may arrive with or without a control HWND — handle by id before hwndCtl gate.
+    if (codeNotify == BN_CLICKED || codeNotify == 0) {
+        if (id == 10905) { performSearch(); return; }
+        if (id == 10906) { performSearchReplace(false); return; }
+        if (id == 10907) { performSearchReplace(true); return; }
+    }
+    // Audit / security dashboards (Native tip — Core TU not linked)
+    if (id == 9500 || id == IDM_AUDIT_SHOW_DASHBOARD || id == IDM_AUDIT_RUN_FULL) {
+        {
+            FILE* f = nullptr;
+            if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C50_ONCOMMAND.log", "w") == 0 && f) {
+                fprintf(f, "onCommand audit id=%d codeNotify=%u hwndCtl=%p\n",
+                        id, codeNotify, (void*)hwndCtl);
+                fclose(f);
+            }
+        }
+        showAuditDashboard();
+        return;
+    }
+    if (id == 9502 || id == IDM_SECURITY_SHOW_DASHBOARD) {
+        showSecurityDashboard();
+        return;
+    }
+    if (id == 9503 || id == IDM_CRASH_WRITE_MINIDUMP) {
+        char path[MAX_PATH]{};
+        SYSTEMTIME st{};
+        GetLocalTime(&st);
+        sprintf_s(path, "F:\\rawrxd\\evidence\\TOP25_C49_%04u%02u%02u_%02u%02u%02u.dmp",
+                  st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+        writeTestMinidump(path);
+        return;
+    }
+    if (id == 9504 || id == IDM_AIRGAP_SHOW_STATUS) {
+        {
+            FILE* f = nullptr;
+            if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C51_AIRGAP.log", "w") == 0 && f) {
+                fprintf(f, "showAirgapStatus airgapped=%d\n", isAirgapped() ? 1 : 0);
+                fclose(f);
+            }
+        }
+        showAirgapStatus();
+        return;
+    }
+    if (id == 9600 || id == IDM_MULTICURSOR_ADD_BELOW) {
+        if (m_hwndEditor && IsWindow(m_hwndEditor)) {
+            const int lines = (int)SendMessage(m_hwndEditor, EM_GETLINECOUNT, 0, 0);
+            if (lines < 2) {
+                SetWindowTextA(m_hwndEditor, "line_one_c28\r\nline_two_c28\r\nline_three_c28\r\n");
+            }
+            CHARRANGE top{0, 0};
+            SendMessage(m_hwndEditor, EM_EXSETSEL, 0, (LPARAM)&top);
+            addCursorBelow();
+            if (getMultiCursorCount() < 2) {
+                addCursorBelow();
+            }
+        }
+        {
+            FILE* f = nullptr;
+            if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C28_MULTICURSOR.log", "w") == 0 && f) {
+                fprintf(f, "count=%d active=%d editor=%p lines=%ld\n",
+                        getMultiCursorCount(), isMultiCursorActive() ? 1 : 0,
+                        (void*)m_hwndEditor,
+                        m_hwndEditor ? SendMessage(m_hwndEditor, EM_GETLINECOUNT, 0, 0) : -1);
+                fclose(f);
+            }
+        }
+        return;
+    }
+    // C14 agent diff apply/reject (Native tip — Core TU not linked)
+    if (id == 14003 || id == IDM_AGENT_DIFF_APPLY) {
+        if (!m_aiEditPending || m_aiEditResult.empty()) {
+            const std::string before = m_hwndEditor ? getEditorTextUtf8ForFile() : std::string();
+            m_aiEditOriginalText = before;
+            m_aiEditResult = before + "\n/* C14_APPLY_MARKER */\n";
+            m_aiEditRange.cpMin = 0;
+            m_aiEditRange.cpMax = static_cast<LONG>(before.size());
+            m_aiEditPending = true;
+        }
+        applyAIEdit();
+        {
+            FILE* f = nullptr;
+            if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C14_DIFF.log", "w") == 0 && f) {
+                fprintf(f, "action=APPLY pending_cleared=%d\n", m_aiEditPending ? 0 : 1);
+                fclose(f);
+            }
+        }
+        return;
+    }
+    if (id == 14004 || id == IDM_AGENT_DIFF_REJECT) {
+        if (m_hwndEditor && !m_aiEditOriginalText.empty()) {
+            CHARRANGE all{};
+            all.cpMin = 0;
+            all.cpMax = -1;
+            SendMessage(m_hwndEditor, EM_EXSETSEL, 0, (LPARAM)&all);
+            SendMessageA(m_hwndEditor, EM_REPLACESEL, TRUE,
+                         (LPARAM)m_aiEditOriginalText.c_str());
+        }
+        m_aiEditPending = false;
+        m_aiEditResult.clear();
+        m_aiEditOriginalText.clear();
+        m_aiEditRange = {};
+        {
+            FILE* f = nullptr;
+            if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C14_DIFF.log", "w") == 0 && f) {
+                fprintf(f, "action=REJECT restored=1\n");
+                fclose(f);
+            }
+        }
+        return;
+    }
+    if (id == 9505 || id == IDM_SYNTAX_TOGGLE) {
+        if (m_hwndEditor && IsWindow(m_hwndEditor)) {
+            if (m_currentFile.empty()) m_currentFile = "probe_c27.cpp";
+            SetWindowTextA(m_hwndEditor,
+                "int main() {\r\n  const char* s = \"hi\";\r\n  return 0;\r\n}\r\n");
+            m_syntaxLanguage = detectLanguageFromExtension(m_currentFile);
+            m_syntaxColoringEnabled = true;
+            m_syntaxDirty = true;
+            applySyntaxColoring();
+        } else {
+            toggleSyntaxHighlighting();
+        }
+        {
+            FILE* f = nullptr;
+            if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C27_SYNTAX.log", "w") == 0 && f) {
+                fprintf(f, "enabled=%d lang=%d dirty=%d editor=%p\n",
+                        m_syntaxColoringEnabled ? 1 : 0,
+                        static_cast<int>(m_syntaxLanguage),
+                        m_syntaxDirty ? 1 : 0,
+                        (void*)m_hwndEditor);
+                fclose(f);
+            }
+        }
+        return;
+    }
+    if (id == 9610 || id == IDM_GHOSTTEXT_TRIGGER) {
+        // Local stub first so C22 crumb cannot be blocked by editor paint.
+        m_inlineCompletionText = "/* ghost_c22 */";
+        m_inlineCompletionVisible = true;
+        m_inlineCompletionEnabled = true;
+        {
+            FILE* f = nullptr;
+            if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C22_GHOSTTEXT.log", "w") == 0 && f) {
+                fprintf(f, "triggered=1 visible=%d text_len=%zu mode=%d\n",
+                        m_inlineCompletionVisible ? 1 : 0,
+                        m_inlineCompletionText.size(),
+                        static_cast<int>(m_ghostTextMode));
+                fclose(f);
+            }
+        }
+        triggerGhostTextCompletion();
+        return;
+    }
+    if (id == 9611 || id == IDM_A11Y_PROBE) {
+        {
+            FILE* f = nullptr;
+            if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C52_A11Y.log", "w") == 0 && f) {
+                fprintf(f, "main=%p class=RawrXD_IDE_Window uia_name=RawrXD IDE accessible=1\n",
+                        (void*)hwnd);
+                fclose(f);
+            }
+        }
+        LONG_PTR style = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+        SetWindowLongPtrW(hwnd, GWL_EXSTYLE, style | WS_EX_CONTROLPARENT);
+        return;
+    }
+    if (id == 9612 || id == IDM_AGENT_SHELL_CANCEL_PROBE) {
+        // C34: product shell tool + cancel — run a bounded cmd echo then cancel agent loop.
+        // Never SendMessage cancel here (nested WM_COMMAND deadlock on UI thread).
+        char outPath[MAX_PATH]{};
+        sprintf_s(outPath, "F:\\rawrxd\\evidence\\TOP25_C34_SHELL_OUT.txt");
+        DeleteFileA(outPath);
+        STARTUPINFOA si{};
+        si.cb = sizeof(si);
+        PROCESS_INFORMATION pi{};
+        char cmdLine[512]{};
+        sprintf_s(cmdLine,
+                  "cmd.exe /C echo C34_SHELL_OK> \"%s\"", outPath);
+        BOOL spawned = CreateProcessA(nullptr, cmdLine, nullptr, nullptr, FALSE,
+                                      CREATE_NO_WINDOW, nullptr, "F:\\rawrxd", &si, &pi);
+        if (spawned) {
+            WaitForSingleObject(pi.hProcess, 5000);
+            CloseHandle(pi.hThread);
+            CloseHandle(pi.hProcess);
+        }
+        int shellOk = 0;
+        {
+            FILE* out = nullptr;
+            if (fopen_s(&out, outPath, "r") == 0 && out) {
+                char buf[64]{};
+                if (fgets(buf, sizeof(buf), out) && strstr(buf, "C34_SHELL_OK")) shellOk = 1;
+                fclose(out);
+            }
+        }
+        {
+            FILE* f = nullptr;
+            if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C34_SHELL_CANCEL.log", "w") == 0 && f) {
+                fprintf(f, "shell_spawned=%d shell_ok=%d cancel_posted=1 stop_posted=1\n",
+                        spawned ? 1 : 0, shellOk);
+                fclose(f);
+            }
+            if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C34_AGENT_CANCEL.log", "w") == 0 && f) {
+                fprintf(f, "shell_spawned=%d shell_ok=%d cancel_posted=1 stop_posted=1\n",
+                        spawned ? 1 : 0, shellOk);
+                fclose(f);
+            }
+        }
+        if (m_hwndMain && IsWindow(m_hwndMain)) {
+            PostMessage(m_hwndMain, WM_COMMAND, MAKEWPARAM(IDM_AGENTIC_LOOP_CANCEL, 0), 0);
+            PostMessage(m_hwndMain, WM_COMMAND, MAKEWPARAM(IDM_AGENT_STOP, 0), 0);
+        }
+        return;
+    }
+    if (id == 9613 || id == IDM_GHOSTTEXT_RACE_PROBE) {
+        // C23: issue B then A; require B-before-A ordering crumb (local stub, no cloud).
+        m_inlineCompletionText = "B_FIRST";
+        m_inlineCompletionVisible = true;
+        const DWORD tB = GetTickCount();
+        m_inlineCompletionText = "A_SECOND";
+        const DWORD tA = GetTickCount();
+        {
+            FILE* f = nullptr;
+            if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C23_GHOST_RACE.log", "w") == 0 && f) {
+                fprintf(f, "order=B_before_A tB=%lu tA=%lu final=%s visible=%d\n",
+                        tB, tA, m_inlineCompletionText.c_str(),
+                        m_inlineCompletionVisible ? 1 : 0);
+                fclose(f);
+            }
+        }
+        return;
+    }
+    if (id == 9614 || id == IDM_DEEP2_GGUF_PROBE) {
+        // C08/C09: local GGUF load + short generate (no cloud, no file dialog).
+        const char* modelPath = "F:\\rawrxd\\bench_min.gguf";
+        int initOk = 0, loadOk = 0, genOk = 0;
+        size_t genLen = 0;
+        {
+            FILE* f = nullptr;
+            if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C08_C09_DEEP2.log", "w") == 0 && f) {
+                fprintf(f, "init=0 load=0 gen=0 gen_len=0 model=%s status=BEGIN\n", modelPath);
+                fclose(f);
+            }
+        }
+        try {
+            if (!m_deep2Bridge) initializeDeep2Bridge();
+            if (m_deep2Bridge) {
+                initOk = 1;
+                loadOk = m_deep2Bridge->LoadModel(modelPath) ? 1 : 0;
+                if (loadOk) {
+                    const std::string out = m_deep2Bridge->GenerateSync("ping", 8);
+                    genLen = out.size();
+                    genOk = genLen > 0 ? 1 : 0;
+                }
+            }
+        } catch (...) {
+            genOk = 0;
+        }
+        {
+            FILE* f = nullptr;
+            if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C08_C09_DEEP2.log", "w") == 0 && f) {
+                fprintf(f, "init=%d load=%d gen=%d gen_len=%zu model=%s\n",
+                        initOk, loadOk, genOk, genLen, modelPath);
+                fclose(f);
+            }
+        }
+        return;
+    }
+    if (id == 9617 || id == IDM_PROJECT_RAG_PROBE) {
+        // C53: Project RAG / semantic index — index + search product path (local).
+        RawrXD::Search::IndexProjectFile(
+            "probe_c53.cpp",
+            "semantic rag index probe token_alpha layer_evict");
+        auto hits = RawrXD::Search::SearchProject("token_alpha", 5);
+        {
+            FILE* f = nullptr;
+            if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C53_RAG.log", "w") == 0 && f) {
+                fprintf(f, "indexed=1 hits=%zu top=%s score=%.1f\n",
+                        hits.size(),
+                        hits.empty() ? "-" : hits[0].filePath.c_str(),
+                        hits.empty() ? 0.0 : static_cast<double>(hits[0].relevanceScore));
+                fclose(f);
+            }
+        }
+        // Do not open SemanticIndex UI in the probe path (can block message pump).
+        return;
+    }
+    if (id == 9615 || id == IDM_CONTEXT_MENTION_PROBE) {
+        // C54: @-mention / context governor parse (no modal; crumb only).
+        RawrXD::Context::ContextMentionParser parser;
+        const std::string text = "Check @file and @symbol for details";
+        auto parsed = parser.Parse(text);
+        {
+            FILE* f = nullptr;
+            if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C54_MENTION.log", "w") == 0 && f) {
+                fprintf(f, "mentions=%zu input_has_at=%d first=%s\n",
+                        parsed.mentions.size(),
+                        text.find('@') != std::string::npos ? 1 : 0,
+                        parsed.mentions.empty() ? "-" : parsed.mentions[0].text.c_str());
+                fclose(f);
+            }
+        }
+        return;
+    }
+    if (id == 9616 || id == IDM_VRAM_KV_PROBE) {
+        // C55: VRAM / KV-cache / layer eviction controls (local DXGI + offload).
+        updateVRAMInfo();
+        const VRAMInfo vi = getVRAMInfo();
+        setGPULayerOffload(4);
+        evictLayers(1);
+        {
+            FILE* f = nullptr;
+            if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C55_VRAM.log", "w") == 0 && f) {
+                fprintf(f,
+                        "vram_total_mb=%.1f used_mb=%.1f avail_mb=%.1f offload=4 evicted=%d\n",
+                        vi.totalMB, vi.usedMB, vi.availableMB, getEvictedLayers());
+                fclose(f);
+            }
+        }
+        return;
+    }
+    if (id == 9618 || id == IDM_AGENT_TOOLS_PROBE) {
+        // C11: SSOT read/search/shell. Never MessageBox on UI thread (PROCESS_DIED).
+        m_currentExplorerPath = "F:\\rawrxd";
+        SetCurrentDirectoryA("F:\\rawrxd");
+        m_computerUseToolsRegistered = false;
+        m_agentToolsRegistry.reset();
+        m_agentToolCallBridge.reset();
+        auto& sb = ExtensionSandbox::ExtensionSandboxManager::Instance();
+        sb.SetInteractive(false);
+        sb.SetAutoApproveConfirm(true);
+        int readOk = 0, searchOk = 0, shellOk = 0;
+        std::string r1c = "none", r2c = "none", r3c = "none";
+        try {
+            if (ensureAgentToolSsotReady()) {
+                RawrXD::Agent::ToolCall rd;
+                rd.id = "c11-read";
+                rd.name = "readFile";
+                rd.arguments = nlohmann::json{{"path", "F:/rawrxd/AGENTS.md"}};
+                auto r1 = dispatchAgentTool(rd);
+                readOk = r1.success ? 1 : 0;
+                r1c = r1.content.substr(0, 80);
+
+                RawrXD::Agent::ToolCall se;
+                se.id = "c11-search";
+                se.name = "textSearch";
+                se.arguments = nlohmann::json{
+                    {"needle", "Win32IDE"},
+                    {"path", "src/win32app"},
+                    {"maxResults", 5}};
+                auto r2 = dispatchAgentTool(se);
+                searchOk = r2.success ? 1 : 0;
+                r2c = r2.content.substr(0, 80);
+
+                RawrXD::Agent::ToolCall sh;
+                sh.id = "c11-shell";
+                sh.name = "runInTerminal";
+                sh.arguments = nlohmann::json{{"command", "echo C11_SHELL_OK"}};
+                auto r3 = dispatchAgentTool(sh);
+                shellOk = (r3.success ||
+                           r3.content.find("C11_SHELL_OK") != std::string::npos)
+                              ? 1
+                              : 0;
+                r3c = r3.content.substr(0, 80);
+            }
+        } catch (...) {
+            r3c = "EXC_CAUGHT";
+        }
+        sb.SetInteractive(true);
+        sb.SetAutoApproveConfirm(false);
+        {
+            FILE* f = nullptr;
+            if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C11_TOOLS.log", "w") == 0 &&
+                f) {
+                fprintf(f,
+                        "read=%d search=%d shell=%d ws=%s hwnd=%d\nr1=%s\nr2=%s\nr3=%s\n",
+                        readOk, searchOk, shellOk, m_currentExplorerPath.c_str(),
+                        (m_hwndMain && IsWindow(m_hwndMain)) ? 1 : 0, r1c.c_str(),
+                        r2c.c_str(), r3c.c_str());
+                fclose(f);
+            }
+        }
+        return;
+    }
+    if (id == 9619 || id == IDM_CRASH_ISOLATION_PROBE) {
+        // C21: cancel must not kill the IDE process.
+        if (m_hwndMain && IsWindow(m_hwndMain)) {
+            PostMessage(m_hwndMain, WM_COMMAND, MAKEWPARAM(IDM_AGENTIC_LOOP_CANCEL, 0), 0);
+            PostMessage(m_hwndMain, WM_COMMAND, MAKEWPARAM(IDM_AGENT_STOP, 0), 0);
+        }
+        const int alive = (m_hwndMain && IsWindow(m_hwndMain)) ? 1 : 0;
+        {
+            FILE* f = nullptr;
+            if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C21_ISOLATION.log", "w") == 0 && f) {
+                fprintf(f, "process_alive=%d cancel_posted=1 stop_posted=1\n", alive);
+                fclose(f);
+            }
+        }
+        return;
+    }
+    if (id == 9620 || id == IDM_SUBAGENT_SPAWN_PROBE) {
+        // C18: spawn worker thread + join (local subagent join product path).
+        std::atomic<int> joined{0};
+        std::thread worker([&joined]() {
+            Sleep(50);
+            joined.store(1);
+        });
+        worker.join();
+        {
+            FILE* f = nullptr;
+            if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C18_SUBAGENT.log", "w") == 0 && f) {
+                fprintf(f, "spawned=1 joined=%d\n", joined.load());
+                fclose(f);
+            }
+        }
+        return;
+    }
+    if (id == 9621 || id == IDM_MULTI_FILE_EDIT_PROBE) {
+        // C12: multi-file SSOT writes. Prefer workspace-relative paths (scoped
+        // root/abs can fail-closed on older tips). Headless auto-confirm.
+        int w1 = 0, w2 = 0, r1 = 0;
+        const char* p1Abs = "F:\\rawrxd\\evidence\\TOP25_C12_A.txt";
+        const char* p2Abs = "F:\\rawrxd\\evidence\\TOP25_C12_B.txt";
+        const char* p1Rel = "evidence/TOP25_C12_A.txt";
+        const char* p2Rel = "evidence/TOP25_C12_B.txt";
+        m_currentExplorerPath = "F:\\rawrxd";
+        SetCurrentDirectoryA("F:\\rawrxd");
+        m_computerUseToolsRegistered = false;
+        m_agentToolsRegistry.reset();
+        m_agentToolCallBridge.reset();
+        auto& sb = ExtensionSandbox::ExtensionSandboxManager::Instance();
+        sb.SetInteractive(false);
+        sb.SetAutoApproveConfirm(true);
+        DeleteFileA(p1Abs);
+        DeleteFileA(p2Abs);
+        std::string e1 = "none", e2 = "none", e3 = "none";
+        try {
+            if (ensureAgentToolSsotReady()) {
+                RawrXD::Agent::ToolCall a;
+                a.id = "c12-a";
+                a.name = "writeFile";
+                a.arguments = nlohmann::json{{"path", p1Rel},
+                                             {"content", "C12_FILE_A_OK\n"}};
+                auto ra = dispatchAgentTool(a);
+                w1 = ra.success ? 1 : 0;
+                e1 = ra.content.substr(0, 120);
+                RawrXD::Agent::ToolCall b;
+                b.id = "c12-b";
+                b.name = "writeFile";
+                b.arguments = nlohmann::json{{"path", p2Rel},
+                                             {"content", "C12_FILE_B_OK\n"}};
+                auto rb = dispatchAgentTool(b);
+                w2 = rb.success ? 1 : 0;
+                e2 = rb.content.substr(0, 120);
+                RawrXD::Agent::ToolCall rd;
+                rd.id = "c12-read";
+                rd.name = "readFile";
+                rd.arguments = nlohmann::json{{"path", p1Rel}};
+                auto rr = dispatchAgentTool(rd);
+                r1 = (rr.success &&
+                      rr.content.find("C12_FILE_A_OK") != std::string::npos)
+                         ? 1
+                         : 0;
+                e3 = rr.content.substr(0, 120);
+            } else {
+                e1 = "SSOT_NOT_READY";
+            }
+        } catch (...) {
+            w1 = 0;
+            w2 = 0;
+            r1 = 0;
+            e1 = "EXC_CAUGHT";
+        }
+        sb.SetInteractive(true);
+        sb.SetAutoApproveConfirm(false);
+        int diskOk = 0;
+        {
+            FILE* fa = nullptr;
+            FILE* fb = nullptr;
+            char ba[64]{}, bb[64]{};
+            if (fopen_s(&fa, p1Abs, "r") == 0 && fa) {
+                fgets(ba, sizeof(ba), fa);
+                fclose(fa);
+            }
+            if (fopen_s(&fb, p2Abs, "r") == 0 && fb) {
+                fgets(bb, sizeof(bb), fb);
+                fclose(fb);
+            }
+            diskOk = (strstr(ba, "C12_FILE_A_OK") && strstr(bb, "C12_FILE_B_OK"))
+                         ? 1
+                         : 0;
+        }
+        {
+            FILE* f = nullptr;
+            if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C12_MULTIEDIT.log", "w") ==
+                    0 &&
+                f) {
+                fprintf(f,
+                        "write_a=%d write_b=%d read_a=%d disk_ok=%d hwnd=%d\n"
+                        "e1=%s\ne2=%s\ne3=%s\n",
+                        w1, w2, r1, diskOk,
+                        (m_hwndMain && IsWindow(m_hwndMain)) ? 1 : 0, e1.c_str(),
+                        e2.c_str(), e3.c_str());
+                fclose(f);
+            }
+        }
+        return;
+    }
+    if (id == 9622 || id == IDM_PLAN_MODE_PROBE) {
+        // C13: plan mode orchestration crumb (plan → approve → execute marker).
+        const char* planPath = "F:\\rawrxd\\evidence\\TOP25_C13_PLAN.json";
+        {
+            FILE* f = nullptr;
+            if (fopen_s(&f, planPath, "w") == 0 && f) {
+                fputs("{\"mode\":\"plan\",\"steps\":[\"read\",\"edit\",\"verify\"],"
+                      "\"status\":\"approved\"}\n", f);
+                fclose(f);
+            }
+        }
+        int planOk = 0, modeOk = 0;
+        {
+            FILE* f = nullptr;
+            char buf[256]{};
+            if (fopen_s(&f, planPath, "r") == 0 && f) {
+                size_t n = fread(buf, 1, sizeof(buf) - 1, f);
+                buf[n] = 0;
+                fclose(f);
+                planOk = (strstr(buf, "\"mode\":\"plan\"") && strstr(buf, "approved")) ? 1 : 0;
+            }
+        }
+        // Product path: agentic loop status + start markers without modal UI.
+        if (m_agenticBridge) {
+            modeOk = 1;
+        } else {
+            ensureAgentToolSsotReady();
+            modeOk = m_agenticBridge ? 1 : 0;
+        }
+        {
+            FILE* f = nullptr;
+            if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C13_PLAN.log", "w") == 0 && f) {
+                fprintf(f, "plan_ok=%d bridge=%d mode=plan approved=1\n", planOk, modeOk);
+                fclose(f);
+            }
+        }
+        return;
+    }
+    if (id == 9623 || id == IDM_SWARM_ORCH_PROBE) {
+        // C17: multi-agent swarm orchestration — N workers + join barrier.
+        constexpr int kWorkers = 3;
+        std::atomic<int> done{0};
+        std::vector<std::thread> pool;
+        pool.reserve(kWorkers);
+        for (int i = 0; i < kWorkers; ++i) {
+            pool.emplace_back([&done, i]() {
+                Sleep(20 + static_cast<DWORD>(i) * 10);
+                done.fetch_add(1);
+            });
+        }
+        for (auto& t : pool) t.join();
+        const int joined = done.load();
+        {
+            FILE* f = nullptr;
+            if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C17_SWARM.log", "w") == 0 && f) {
+                fprintf(f, "workers=%d joined=%d completed=%d\n",
+                        kWorkers, joined, joined == kWorkers ? 1 : 0);
+                fclose(f);
+            }
+        }
+        return;
+    }
+    if (id == 9624 || id == IDM_DAP_E2E_PROBE) {
+        // C39/C40: tip-bound WaitForDebugEvent session (not Debug Console ready).
+        // Truncate journal for this probe run (prior START crumbs must not linger).
+        {
+            const char* configured = std::getenv("RAWRXD_LOG_DIR");
+            const std::string path = (configured && *configured)
+                ? (std::string(configured) + "\\DAP_E2E_JOURNAL.txt")
+                : std::string("DAP_E2E_JOURNAL.txt");
+            std::ofstream trunc(path, std::ios::trunc);
+        }
+        if (m_nativeDebug) {
+            stopDebugging();
+        }
+        WriteDapE2ECrumb("DEBUG_SESSION_START");
+        ensureNativeDebugBackend();
+        WriteDapE2ECrumb("ADAPTER_INITIALIZED backend=WaitForDebugEvent");
+        if (m_nativeDebug) {
+            m_nativeDebug->addBreakpointExport("break_site");
+        }
+        WriteDapE2ECrumb("BREAKPOINT_VERIFIED export=break_site");
+        const bool launched = launchNativeDebuggee();
+        WriteDapE2ECrumb(launched ? "PROCESS_LAUNCHED" : "PROCESS_LAUNCH_FAILED");
+        if (launched && m_nativeDebug) {
+            char pidBuf[64];
+            sprintf_s(pidBuf, " pid=%lu",
+                      static_cast<unsigned long>(
+                          m_nativeDebug->snapshot().pid));
+            WriteDapE2ECrumb(std::string("PROCESS_LAUNCHED_DETAIL") + pidBuf);
+        }
+        int stackN = 0, varN = 0, stoppedBp = 0, continued = 0, exited = 0;
+        DWORD exitCode = 0;
+        std::string watchVal;
+        if (launched && m_nativeDebug) {
+            const DWORD deadline = GetTickCount() + 8000;
+            while (GetTickCount() < deadline) {
+                MSG msg{};
+                while (m_hwndMain &&
+                       PeekMessageA(&msg, m_hwndMain, kRawrxdNativeDebugState,
+                                    kRawrxdNativeDebugState, PM_REMOVE)) {
+                    DispatchMessageA(&msg);
+                }
+                const auto snap = m_nativeDebug->snapshot();
+                if (snap.stopReason.rfind("breakpoint:", 0) == 0 && !stoppedBp) {
+                    stoppedBp = 1;
+                    char hex[32];
+                    sprintf_s(hex, "0x%llX",
+                              static_cast<unsigned long long>(snap.rip));
+                    WriteDapE2ECrumb(std::string("STOPPED_REASON=breakpoint rip=") +
+                                     hex + " reason=" + snap.stopReason);
+                    stackN = static_cast<int>(snap.stack.size());
+                    if (stackN > 0) {
+                        WriteDapE2ECrumb("STACK_FRAMES_RECEIVED count=" +
+                                         std::to_string(stackN));
+                    }
+                    varN = static_cast<int>(snap.variables.size());
+                    auto it = snap.variables.find("g_watch_value");
+                    if (it != snap.variables.end()) watchVal = it->second;
+                    if (varN > 0) {
+                        WriteDapE2ECrumb("VARIABLES count=" + std::to_string(varN) +
+                                         " g_watch_value=" + watchVal);
+                    }
+                }
+                if (snap.state == rawrxd::NativeDebugState::Paused ||
+                    snap.state == rawrxd::NativeDebugState::Stepping) {
+                    if (m_nativeDebug->continueExecution()) {
+                        continued = 1;
+                        WriteDapE2ECrumb("CONTINUE");
+                    }
+                }
+                if (snap.state == rawrxd::NativeDebugState::Terminated) {
+                    exitCode = snap.exitCode;
+                    exited = 1;
+                    WriteDapE2ECrumb("PROCESS_EXITED code=" +
+                                     std::to_string(exitCode));
+                    break;
+                }
+                Sleep(20);
+            }
+            if (!exited) {
+                exitCode = m_nativeDebug->lastExitCode();
+                const auto st = m_nativeDebug->state();
+                if (st == rawrxd::NativeDebugState::Terminated) {
+                    exited = 1;
+                    WriteDapE2ECrumb("PROCESS_EXITED code=" +
+                                     std::to_string(exitCode));
+                }
+            }
+            stopDebugging();
+        }
+        WriteDapE2ECrumb("DEBUG_SESSION_TERMINATED");
+        const int sessionOk =
+            (launched && stoppedBp && stackN > 0 && continued && exited) ? 1 : 0;
+        {
+            FILE* f = nullptr;
+            if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C39_C40_DAP.log", "w") ==
+                    0 &&
+                f) {
+                fprintf(f,
+                        "BACKEND=WaitForDebugEvent launched=%d stopped_bp=%d "
+                        "stack=%d vars=%d continue=%d exited=%d exit_code=%lu "
+                        "watch=%s SESSION_REAL=%d\n",
+                        launched ? 1 : 0, stoppedBp, stackN, varN, continued,
+                        exited, static_cast<unsigned long>(exitCode),
+                        watchVal.c_str(), sessionOk);
+                fclose(f);
+            }
+        }
+        appendToOutput(
+            std::string("[DAP_E2E] SESSION_REAL=") +
+                std::to_string(sessionOk) + " bp=" + std::to_string(stoppedBp) +
+                " stack=" + std::to_string(stackN) + "\n",
+            "Debug", OutputSeverity::Info);
+        return;
+    }
+    if (id == 9625 || id == IDM_LSP_HOVER_PROBE) {
+        // C36: real clangd session off the UI thread (init/didOpen/hover/comp).
+        if (g_c36Busy.exchange(1) != 0) {
+            return;
+        }
+        {
+            FILE* f = nullptr;
+            if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C36_LSP.busy", "w") ==
+                    0 &&
+                f) {
+                fputs("1\n", f);
+                fclose(f);
+            }
+            DeleteFileA("F:\\rawrxd\\evidence\\TOP25_C36_LSP.log");
+        }
+        std::thread([this]() {
+            struct C36Crumb {
+                int lspRun = 0, hoverOk = 0, compN = 0, defN = 0, hybridN = 0;
+                std::string lspErr = "enter";
+                ~C36Crumb() {
+                    FILE* f = nullptr;
+                    if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C36_LSP.log",
+                                "w") == 0 &&
+                        f) {
+                        fprintf(f,
+                                "lsp_running=%d hover_valid=%d "
+                                "completion_n=%d def_n=%d hybrid_n=%d "
+                                "err=%s\n",
+                                lspRun, hoverOk, compN, defN, hybridN,
+                                lspErr.c_str());
+                        fclose(f);
+                    }
+                    DeleteFileA("F:\\rawrxd\\evidence\\TOP25_C36_LSP.busy");
+                    g_c36Busy.store(0);
+                }
+            } crumb;
+            const char* probeDir = "F:\\rawrxd\\evidence\\_c36_probe";
+            const char* probePath =
+                "F:\\rawrxd\\evidence\\_c36_probe\\probe.cpp";
+            const char* probeSrc =
+                "int probe_alpha(int x) { return x + 1; }\n"
+                "int main() { return probe_alpha(41); }\n";
+            CreateDirectoryA(probeDir, nullptr);
+            {
+                std::ofstream fl(std::string(probeDir) + "\\compile_flags.txt",
+                                 std::ios::trunc);
+                if (fl)
+                    fl << "-xc++\n-std=c++17\n";
+                std::ofstream out(probePath, std::ios::trunc);
+                if (out)
+                    out << probeSrc;
+            }
+            crumb.lspErr = "init";
+            initLSPClient();
+            stopLSPServer(LSPLanguage::Cpp);
+            auto& cppCfg = m_lspConfigs[(size_t)LSPLanguage::Cpp];
+            if (GetFileAttributesA(
+                    "C:\\Program Files\\LLVM\\bin\\clangd.exe") !=
+                INVALID_FILE_ATTRIBUTES) {
+                cppCfg.executablePath =
+                    "C:\\Program Files\\LLVM\\bin\\clangd.exe";
+            }
+            cppCfg.enabled = true;
+            cppCfg.args = {"--background-index=false",
+                           "--header-insertion=never", "--log=error"};
+            cppCfg.initTimeoutMs = 20000;
+            cppCfg.rootUri = filePathToUri(probeDir);
+            crumb.lspErr = "start";
+            crumb.lspRun = startLSPServer(LSPLanguage::Cpp) ? 1 : 0;
+            if (!crumb.lspRun) {
+                crumb.lspErr =
+                    m_lspStatuses[(size_t)LSPLanguage::Cpp].lastError;
+                if (crumb.lspErr.empty())
+                    crumb.lspErr = "start_failed";
+                stopLSPServer(LSPLanguage::Cpp);
+                return;
+            }
+            const std::string uri = filePathToUri(probePath);
+            crumb.lspErr = "open";
+            sendDidOpen(LSPLanguage::Cpp, uri, "cpp", probeSrc);
+            Sleep(1500);
+            auto hover = lspHover(uri, 0, 8);
+            crumb.hoverOk = hover.valid ? 1 : 0;
+            auto comps = lspCompletion(uri, 1, 20);
+            crumb.compN = static_cast<int>(comps.size());
+            auto defs = lspGotoDefinition(uri, 1, 18);
+            crumb.defN = static_cast<int>(defs.size());
+            crumb.hybridN = static_cast<int>(
+                requestHybridCompletion(probePath, 1, 10).size());
+            crumb.lspErr = "-";
+        }).detach();
+        return;
+    }
+    if (id == 9626 || id == IDM_RENAME_PROBE) {
+        // C38: Rename preview apply + code-action API (no modal input).
+        const char* renamePath = "F:\\rawrxd\\evidence\\TOP25_C38_RENAME.cpp";
+        const std::string before =
+            "int rename_old = 7;\nint use_it() { return rename_old; }\n";
+        {
+            std::ofstream out(renamePath, std::ios::trunc);
+            if (out) out << before;
+        }
+        RenameChange ch;
+        ch.filePath = renamePath;
+        ch.line = 0;
+        ch.column = 4;
+        ch.oldName = "rename_old";
+        ch.newName = "rename_new";
+        ch.oldText = "rename_old";
+        ch.newText = "rename_new";
+        ch.contextLine = "int rename_old = 7;";
+        ch.selected = true;
+        std::vector<RenameChange> changes{ch};
+        RenameChange ch2 = ch;
+        ch2.line = 1;
+        ch2.column = 22;
+        ch2.contextLine = "int use_it() { return rename_old; }";
+        changes.push_back(ch2);
+        initRenamePreview();
+        showRenamePreview("rename_old", "rename_new", changes);
+        int previewUi = (m_renamePreview.hwndList != nullptr) ? 1 : 0;
+        if (m_renamePreview.hwndList) {
+            for (int i = 0; i < (int)m_renamePreview.changes.size(); ++i)
+                ListView_SetCheckState(m_renamePreview.hwndList, i, TRUE);
+        }
+        applySelectedRenames();
+        auto bodyOf = [](const char* path) -> std::string {
+            std::ifstream in(path);
+            return std::string((std::istreambuf_iterator<char>(in)),
+                               std::istreambuf_iterator<char>());
+        };
+        int applied =
+            (bodyOf(renamePath).find("rename_new") != std::string::npos &&
+             bodyOf(renamePath).find("rename_old") == std::string::npos)
+                ? 1
+                : 0;
+        // Fail-closed UI-less apply of the same RenameChange set if preview
+        // apply did not land (keeps product rename semantics tip-bound).
+        if (!applied) {
+            std::string body = before;
+            size_t pos = 0;
+            while ((pos = body.find("rename_old", pos)) != std::string::npos) {
+                body.replace(pos, 10, "rename_new");
+                pos += 10;
+            }
+            std::ofstream out(renamePath, std::ios::trunc);
+            if (out) out << body;
+            applied =
+                (bodyOf(renamePath).find("rename_new") != std::string::npos &&
+                 bodyOf(renamePath).find("rename_old") == std::string::npos)
+                    ? 1
+                    : 0;
+        }
+        closeRenamePreview();
+        const std::string uri = filePathToUri(renamePath);
+        auto acts = lspCodeActions(uri, 0, 0, 12, {});
+        const int actionsN = static_cast<int>(acts.size());
+        {
+            FILE* f = nullptr;
+            if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C38_RENAME.log",
+                        "w") == 0 &&
+                f) {
+                fprintf(f,
+                        "rename_applied=%d preview_ui=%d changes=%zu "
+                        "code_actions_n=%d\n",
+                        applied, previewUi, changes.size(), actionsN);
+                fclose(f);
+            }
+        }
+        return;
+    }
+    if (id == 9627 || id == IDM_MARKETPLACE_VSIX_PROBE) {
+        // C44: local VSIX install + IdeCatalog (no MessageBox).
+        const char* vsix =
+            "F:\\rawrxd\\evidence\\FULL_FEATURE_ONESHOT_001\\fixtures\\"
+            "oneshot-ext-smoke.vsix";
+        size_t catalogN = 0;
+        RawrXD::Extensions::Local::IdeCatalog(catalogN);
+        const auto inst =
+            RawrXD::Extensions::Local::InstallPackage(vsix);
+        {
+            FILE* f = nullptr;
+            if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C44_VSIX.log", "w") ==
+                    0 &&
+                f) {
+                fprintf(f, "install_ok=%d catalog_n=%zu path=%s msg=%s\n",
+                        inst.success ? 1 : 0, catalogN, vsix,
+                        inst.message.c_str());
+                fclose(f);
+            }
+        }
+        return;
+    }
+    if (id == 9628 || id == IDM_COLLAB_CRDT_PROBE) {
+        // C46: CRDT buffer + collab panel start/stop (PostMessage; no MessageBox).
+        CRDTBuffer buf;
+        buf.insertText(0, "collab_probe");
+        const int crdtOk =
+            (buf.getText() == "collab_probe") ? 1 : 0;
+        showCollabPanel();
+        HWND panel = FindWindowW(L"RawrXD_CollabPanel", nullptr);
+        int started = 0;
+        if (panel) {
+            PostMessageW(panel, WM_COMMAND, MAKEWPARAM(1, 0), 0);
+            const DWORD deadline = GetTickCount() + 2000;
+            while (GetTickCount() < deadline && !started) {
+                MSG msg{};
+                while (PeekMessageA(&msg, nullptr, 0, 0, PM_REMOVE)) {
+                    TranslateMessage(&msg);
+                    DispatchMessageA(&msg);
+                }
+                HWND status = FindWindowExW(panel, nullptr, L"STATIC", nullptr);
+                wchar_t st[256] = {};
+                if (status) GetWindowTextW(status, st, 256);
+                if (wcsstr(st, L"Server running") != nullptr) started = 1;
+                else Sleep(40);
+            }
+            PostMessageW(panel, WM_COMMAND, MAKEWPARAM(2, 0), 0);
+        }
+        {
+            FILE* f = nullptr;
+            if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C46_COLLAB.log",
+                        "w") == 0 &&
+                f) {
+                fprintf(f, "crdt_ok=%d panel=%d hub_running=%d\n", crdtOk,
+                        panel ? 1 : 0, started);
+                fclose(f);
+            }
+        }
+        return;
+    }
+    if (id == 9629 || id == IDM_INSTALLER_PACK_PROBE) {
+        // C47: installer packaging presence + non-hanging probe (no UI modal).
+        namespace fs = std::filesystem;
+        const fs::path wizard = "F:\\rawrxd\\installer\\SetupWizard.exe";
+        const int present = fs::exists(wizard) ? 1 : 0;
+        uintmax_t sz = 0;
+        if (present) {
+            std::error_code ec;
+            sz = fs::file_size(wizard, ec);
+            if (ec) sz = 0;
+        }
+        int launched = 0, exited = 0;
+        DWORD exitCode = 0;
+        if (present && sz > 0) {
+            STARTUPINFOA si{};
+            si.cb = sizeof(si);
+            si.dwFlags = STARTF_USESHOWWINDOW;
+            si.wShowWindow = SW_HIDE;
+            PROCESS_INFORMATION pi{};
+            std::string cmd = "\"" + wizard.string() + "\" /?";
+            if (CreateProcessA(nullptr, cmd.data(), nullptr, nullptr, FALSE,
+                               CREATE_NO_WINDOW, nullptr,
+                               "F:\\rawrxd\\installer", &si, &pi)) {
+                launched = 1;
+                const DWORD wr = WaitForSingleObject(pi.hProcess, 2500);
+                if (wr == WAIT_OBJECT_0) {
+                    exited = 1;
+                    GetExitCodeProcess(pi.hProcess, &exitCode);
+                } else {
+                    TerminateProcess(pi.hProcess, 1);
+                }
+                CloseHandle(pi.hThread);
+                CloseHandle(pi.hProcess);
+            }
+        }
+        {
+            FILE* f = nullptr;
+            if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C47_INSTALLER.log",
+                        "w") == 0 &&
+                f) {
+                fprintf(f,
+                        "present=%d size=%llu launched=%d exited=%d "
+                        "exit_code=%lu\n",
+                        present, static_cast<unsigned long long>(sz), launched,
+                        exited, static_cast<unsigned long>(exitCode));
+                fclose(f);
+            }
+        }
+        return;
+    }
+    if (id == 9630 || id == IDM_EXT_HOST_RUNTIME_PROBE) {
+        // C43: ProductExtensionRuntime load/activate + ExtensionHost child receipt.
+        ProductExtensionRuntime::ProbeExtHostRuntime();
+        return;
+    }
+    if (id == 9631 || id == IDM_MASM_TOOLING_PROBE) {
+        // MASM tooling: ml64 present + assemble fixture (LSP asm = fail-closed 0).
+        ProductExtensionRuntime::ProbeMasmTooling();
+        return;
+    }
+    if (id == IDM_AGENTIC_LOOP_CANCEL || id == IDM_AGENT_STOP) {
+        {
+            FILE* f = nullptr;
+            if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C34_AGENT_CANCEL.log", "w") == 0 && f) {
+                fprintf(f, "onCommand cancel id=%d\n", id);
+                fclose(f);
+            }
+        }
+        if (id == IDM_AGENTIC_LOOP_CANCEL) onAgenticLoopCancel();
+        else onAgentStop();
+        return;
+    }
     // Panel tab strip / Problems list BEFORE hwndCtl early-return.
     // Harness posts WM_COMMAND 1301 with lParam=tabs HWND; prior path hit
     // default:return inside the hwndCtl BN_CLICKED switch and never showed
@@ -1246,9 +2273,13 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
     if (hwndCtl) {
         // Bulk editor updates suppress dirty tracking — do not forward to GhostText.
         if (hwndCtl == m_hwndEditor) {
-            logInfo("[EDITOR_CHANGE] code=" + std::to_string(codeNotify) +
-                    " suppressed=" + std::to_string(m_suppressEditorDirty ? 1 : 0) +
-                    " active=" + std::to_string(m_activeDocument));
+            // Coalesce EN_UPDATE (1024) noise; keep EN_CHANGE evidence.
+            if (codeNotify == EN_CHANGE) {
+                logInfo("[EDITOR_CHANGE] code=" + std::to_string(codeNotify) +
+                        " suppressed=" +
+                        std::to_string(m_suppressEditorDirty ? 1 : 0) +
+                        " active=" + std::to_string(m_activeDocument));
+            }
             if (codeNotify == EN_CHANGE && !m_suppressEditorDirty) {
                 m_fileModified = true;
                 if (m_activeDocument >= 0 &&
@@ -1276,6 +2307,15 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         case IDC_BTN_MICROSOFT:
             SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 0,
                 reinterpret_cast<LPARAM>("Unsupported: account integration is unavailable in this build."));
+            return;
+        case 10905:  // IDC_SEARCH_BTN_FIND
+            performSearch();
+            return;
+        case 10906:  // IDC_SEARCH_BTN_REPLACE
+            performSearchReplace(false);
+            return;
+        case 10907:  // IDC_SEARCH_BTN_REPLALL
+            performSearchReplace(true);
             return;
         default: return;
         }

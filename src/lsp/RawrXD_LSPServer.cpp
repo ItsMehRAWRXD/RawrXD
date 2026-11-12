@@ -82,7 +82,7 @@ static constexpr int kSemanticTokenTypeCount = 22;
 // ============================================================================
 
 RawrXDLSPServer::RawrXDLSPServer() {
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(RAWRXD_LSP_EMBEDDED)
     // Force binary mode on stdin/stdout to prevent CR/LF mangling
     _setmode(_fileno(stdin),  _O_BINARY);
     _setmode(_fileno(stdout), _O_BINARY);
@@ -118,14 +118,19 @@ bool RawrXDLSPServer::start() {
     m_shutdownRequested = false;
     m_exitRequested     = false;
 
+#ifndef RAWRXD_LSP_EMBEDDED
     // Launch reader thread
     m_readerThread = std::thread(&RawrXDLSPServer::readerThreadFunc, this);
-
+#endif
     // Launch dispatch thread
     m_dispatchThread = std::thread(&RawrXDLSPServer::dispatchThreadFunc, this);
 
     m_state.store(ServerState::Running);
     return true;
+}
+
+void RawrXDLSPServer::processMessageSync(const std::string& jsonRpcMessage) {
+    dispatchMessage(jsonRpcMessage);
 }
 
 void RawrXDLSPServer::stop() {
@@ -226,11 +231,12 @@ bool RawrXDLSPServer::readMessage(std::string& outMessage) {
 }
 
 void RawrXDLSPServer::writeMessage(const std::string& jsonBody) {
+#ifndef RAWRXD_LSP_EMBEDDED
     std::string header = "Content-Length: " + std::to_string(jsonBody.size()) + "\r\n\r\n";
     std::cout << header << jsonBody;
     std::cout.flush();
-
-    // Also queue for in-process polling
+#endif
+    // Queue for in-process / CLI embed polling
     {
         std::lock_guard<std::mutex> lk(m_outgoingMutex);
         m_outgoingQueue.push_back(jsonBody);
@@ -238,7 +244,7 @@ void RawrXDLSPServer::writeMessage(const std::string& jsonBody) {
 
     {
         std::lock_guard<std::mutex> lk(m_statsMutex);
-        m_stats.bytesWritten += (uint64_t)header.size() + (uint64_t)jsonBody.size();
+        m_stats.bytesWritten += (uint64_t)jsonBody.size();
     }
 }
 
@@ -331,6 +337,10 @@ void RawrXDLSPServer::handleRequest(int id, const std::string& method, const jso
         result = handleWorkspaceSymbol(id, params);
     } else if (method == "textDocument/semanticTokens/full") {
         result = handleTextDocumentSemanticTokensFull(id, params);
+    } else if (method == "textDocument/rename") {
+        result = handleTextDocumentRename(id, params);
+    } else if (method == "textDocument/codeAction") {
+        result = handleTextDocumentCodeAction(id, params);
     } else {
         // Check custom handlers
         auto it = m_customRequestHandlers.find(method);
@@ -421,8 +431,8 @@ json RawrXDLSPServer::handleInitialize(int /*id*/, const json& params) {
         }
     }
 
-    // Build initial index from rootPath
-    if (!m_config.rootPath.empty() && fs::exists(m_config.rootPath)) {
+    // Build initial index from rootPath (directories only — never walk a file path).
+    if (!m_config.rootPath.empty() && fs::is_directory(m_config.rootPath)) {
         rebuildIndex();
     }
 
@@ -445,6 +455,8 @@ json RawrXDLSPServer::handleInitialize(int /*id*/, const json& params) {
     if (m_config.enableReferences) {
         caps["referencesProvider"] = true;
     }
+    caps["renameProvider"] = true;
+    caps["codeActionProvider"] = true;
     if (m_config.enableDocumentSymbol) {
         caps["documentSymbolProvider"] = true;
     }
@@ -501,7 +513,9 @@ json RawrXDLSPServer::handleTextDocumentHover(int /*id*/, const json& params) {
         if (sym.filePath == filePath && sym.line == line &&
             character >= sym.startChar && character <= sym.endChar) {
             json content;
-            std::string markdown = "```cpp\n" + sym.detail + "\n```\n";
+            const bool masmDetail = sym.detail.rfind("MASM ", 0) == 0;
+            std::string markdown =
+                std::string(masmDetail ? "```asm\n" : "```cpp\n") + sym.detail + "\n```\n";
             markdown += "\n*" + kindToString(sym.kind) + "* ";
             if (!sym.containerName.empty()) {
                 markdown += "in `" + sym.containerName + "` ";
@@ -827,6 +841,83 @@ json RawrXDLSPServer::handleTextDocumentSemanticTokensFull(int /*id*/, const jso
     return result;
 }
 
+json RawrXDLSPServer::handleTextDocumentRename(int /*id*/, const json& params) {
+    std::string uri = params["textDocument"]["uri"].get<std::string>();
+    int line = params["position"]["line"].get<int>();
+    int character = params["position"]["character"].get<int>();
+    std::string newName = params.value("newName", std::string());
+    if (newName.empty()) return json::object();
+
+    std::string word;
+    {
+        std::lock_guard<std::mutex> lk(m_docMutex);
+        auto it = m_openDocuments.find(uri);
+        if (it != m_openDocuments.end()) {
+            std::istringstream iss(it->second.content);
+            std::string curLine;
+            for (int i = 0; i <= line && std::getline(iss, curLine); ++i) {}
+            int start = character, end = character;
+            while (start > 0 && (std::isalnum((unsigned char)curLine[start - 1]) ||
+                                 curLine[start - 1] == '_'))
+                --start;
+            while (end < (int)curLine.size() &&
+                   (std::isalnum((unsigned char)curLine[end]) || curLine[end] == '_'))
+                ++end;
+            if (start < end) word = curLine.substr(start, end - start);
+        }
+    }
+    if (word.empty() || word == newName) return json::object();
+
+    json changes = json::object();
+    json edits = json::array();
+    std::shared_lock<std::shared_mutex> lock(m_symbolMutex);
+    for (const auto& sym : m_symbols) {
+        if (sym.name != word) continue;
+        json e;
+        e["range"]["start"]["line"] = sym.line;
+        e["range"]["start"]["character"] = sym.startChar;
+        e["range"]["end"]["line"] = sym.line;
+        e["range"]["end"]["character"] = sym.endChar;
+        e["newText"] = newName;
+        std::string u = filePathToUri(sym.filePath);
+        if (!changes.contains(u)) changes[u] = json::array();
+        changes[u].push_back(std::move(e));
+        edits.push_back({{"uri", u}, {"newText", newName}});
+    }
+    json result;
+    result["changes"] = changes;
+    result["documentChanges"] = json::array();
+    (void)edits;
+    return result;
+}
+
+json RawrXDLSPServer::handleTextDocumentCodeAction(int /*id*/, const json& params) {
+    json actions = json::array();
+    std::string uri;
+    if (params.contains("textDocument"))
+        uri = params["textDocument"].value("uri", std::string());
+    json diags = params.value("context", json::object()).value("diagnostics", json::array());
+    for (const auto& d : diags) {
+        std::string msg = d.value("message", std::string());
+        if (msg.find("TODO") == std::string::npos && msg.find("FIXME") == std::string::npos)
+            continue;
+        json a;
+        a["title"] = "Mark task marker resolved";
+        a["kind"] = "quickfix";
+        a["isPreferred"] = false;
+        a["edit"]["changes"][uri] = json::array();
+        actions.push_back(std::move(a));
+    }
+    if (actions.empty()) {
+        json a;
+        a["title"] = "Organize symbols (RawrXD)";
+        a["kind"] = "source.organizeImports";
+        a["edit"]["changes"] = json::object();
+        actions.push_back(std::move(a));
+    }
+    return actions;
+}
+
 // ============================================================================
 // LSP NOTIFICATION HANDLERS
 // ============================================================================
@@ -859,6 +950,47 @@ void RawrXDLSPServer::handleDidOpen(const json& params) {
     // Index the opened file
     std::string filePath = uriToFilePath(uri);
     indexFileContent(filePath, text);
+
+    // Publish lightweight diagnostics for asm/MASM on open (PROC/ENDP balance).
+    if (m_config.enableDiagnostics &&
+        (languageId == "asm" || languageId == "masm" || languageId == "assembly")) {
+        std::vector<DiagnosticEntry> diagnostics;
+        int procDepth = 0;
+        std::istringstream iss(text);
+        std::string line;
+        int lineNum = 0;
+        while (std::getline(iss, line)) {
+            std::string up = line;
+            std::transform(up.begin(), up.end(), up.begin(),
+                           [](unsigned char c) { return (char)std::toupper(c); });
+            if (up.find(" PROC") != std::string::npos || up.rfind("PROC", 0) == 0)
+                procDepth++;
+            if (up.find(" ENDP") != std::string::npos || up.rfind("ENDP", 0) == 0)
+                procDepth--;
+            if (line.size() > 200) {
+                DiagnosticEntry d;
+                d.range.start = {lineNum, 0};
+                d.range.end = {lineNum, (int)line.size()};
+                d.severity = DiagnosticSeverity::Hint;
+                d.code = "asm-line-long";
+                d.source = "rawrxd-masm";
+                d.message = "Line exceeds 200 characters";
+                diagnostics.push_back(std::move(d));
+            }
+            lineNum++;
+        }
+        if (procDepth != 0) {
+            DiagnosticEntry d;
+            d.range.start = {0, 0};
+            d.range.end = {0, 1};
+            d.severity = DiagnosticSeverity::Warning;
+            d.code = "asm-proc-balance";
+            d.source = "rawrxd-masm";
+            d.message = "PROC/ENDP balance mismatch (depth=" + std::to_string(procDepth) + ")";
+            diagnostics.push_back(std::move(d));
+        }
+        publishDiagnostics(uri, diagnostics);
+    }
 }
 
 void RawrXDLSPServer::handleDidChange(const json& params) {
@@ -1026,114 +1158,18 @@ void RawrXDLSPServer::clearDiagnostics(const std::string& uri) {
 void RawrXDLSPServer::rebuildIndex() {
     if (m_config.rootPath.empty() || !fs::exists(m_config.rootPath)) return;
 
-    std::vector<IndexedSymbol> newSymbols;
+    {
+        std::unique_lock<std::shared_mutex> lock(m_symbolMutex);
+        m_symbols.clear();
+    }
 
+    // Reuse indexFileContent (includes MASM PROC/PROTO/EQU/MACRO/.asm paths).
     for (auto& entry : fs::recursive_directory_iterator(
              m_config.rootPath, fs::directory_options::skip_permission_denied)) {
         if (!entry.is_regular_file()) continue;
         std::string path = entry.path().string();
         if (!isCodeFile(path)) continue;
-
-        // Index file from disk
-        std::ifstream ifs(path);
-        if (!ifs) continue;
-        std::string content((std::istreambuf_iterator<char>(ifs)),
-                             std::istreambuf_iterator<char>());
-
-        // Parse symbols from content
-        std::istringstream iss(content);
-        std::string line;
-        int lineNum = 0;
-
-        // Regex patterns (matching context/indexer.cpp + extended patterns)
-        static const std::regex re_func(
-            R"((?:^|\s)(?:[\w:*&<>]+)\s+([A-Za-z_]\w*)\s*\([^;]*\)\s*\{)");
-        static const std::regex re_class(
-            R"((?:^|\s)class\s+([A-Za-z_]\w*)\s*)");
-        static const std::regex re_struct(
-            R"((?:^|\s)struct\s+([A-Za-z_]\w*)\s*)");
-        static const std::regex re_enum(
-            R"((?:^|\s)enum\s+(?:class\s+)?([A-Za-z_]\w*)\s*)");
-        static const std::regex re_namespace(
-            R"((?:^|\s)namespace\s+([A-Za-z_]\w*)\s*)");
-        static const std::regex re_define(
-            R"(^\s*#define\s+([A-Za-z_]\w*))");
-        static const std::regex re_var(
-            R"((?:^|\s)(?:int|float|double|bool|auto|size_t|uint\d+_t|int\d+_t|std::\w+)\s+([A-Za-z_]\w*)\s*(=|;))");
-
-        while (std::getline(iss, line)) {
-            std::smatch m;
-            IndexedSymbol sym;
-            sym.filePath = path;
-            sym.line     = lineNum;
-
-            if (std::regex_search(line, m, re_class)) {
-                sym.name     = m[1].str();
-                sym.kind     = SymbolKind::Class;
-                sym.detail   = "class " + sym.name;
-                sym.startChar = (int)m.position(1);
-                sym.endChar   = sym.startChar + (int)sym.name.size();
-            } else if (std::regex_search(line, m, re_struct)) {
-                sym.name     = m[1].str();
-                sym.kind     = SymbolKind::Struct;
-                sym.detail   = "struct " + sym.name;
-                sym.startChar = (int)m.position(1);
-                sym.endChar   = sym.startChar + (int)sym.name.size();
-            } else if (std::regex_search(line, m, re_enum)) {
-                sym.name     = m[1].str();
-                sym.kind     = SymbolKind::Enum;
-                sym.detail   = "enum " + sym.name;
-                sym.startChar = (int)m.position(1);
-                sym.endChar   = sym.startChar + (int)sym.name.size();
-            } else if (std::regex_search(line, m, re_namespace)) {
-                sym.name     = m[1].str();
-                sym.kind     = SymbolKind::Namespace;
-                sym.detail   = "namespace " + sym.name;
-                sym.startChar = (int)m.position(1);
-                sym.endChar   = sym.startChar + (int)sym.name.size();
-            } else if (std::regex_search(line, m, re_define)) {
-                sym.name     = m[1].str();
-                sym.kind     = SymbolKind::Constant;
-                sym.detail   = "#define " + sym.name;
-                sym.startChar = (int)m.position(1);
-                sym.endChar   = sym.startChar + (int)sym.name.size();
-            } else if (std::regex_search(line, m, re_func)) {
-                sym.name     = m[1].str();
-                sym.kind     = SymbolKind::Function;
-                sym.detail   = line;  // Full line as detail
-                // Trim leading/trailing whitespace from detail
-                auto dStart = sym.detail.find_first_not_of(" \t");
-                auto dEnd   = sym.detail.find_last_not_of(" \t\r\n{");
-                if (dStart != std::string::npos && dEnd != std::string::npos) {
-                    sym.detail = sym.detail.substr(dStart, dEnd - dStart + 1);
-                }
-                sym.startChar = (int)m.position(1);
-                sym.endChar   = sym.startChar + (int)sym.name.size();
-            } else if (std::regex_search(line, m, re_var)) {
-                sym.name     = m[1].str();
-                sym.kind     = SymbolKind::Variable;
-                sym.detail   = line;
-                auto dStart = sym.detail.find_first_not_of(" \t");
-                if (dStart != std::string::npos) {
-                    sym.detail = sym.detail.substr(dStart);
-                }
-                sym.startChar = (int)m.position(1);
-                sym.endChar   = sym.startChar + (int)sym.name.size();
-            } else {
-                lineNum++;
-                continue;
-            }
-
-            sym.hash = fnv1a(sym.name + "|" + sym.filePath + "|" + std::to_string(sym.line));
-            newSymbols.push_back(std::move(sym));
-            lineNum++;
-        }
-    }
-
-    // Swap in the new index
-    {
-        std::unique_lock<std::shared_mutex> lock(m_symbolMutex);
-        m_symbols = std::move(newSymbols);
+        indexFileFromDisk(path);
     }
 
     {
@@ -1183,12 +1219,30 @@ void RawrXDLSPServer::indexFileContent(const std::string& filePath, const std::s
     std::string line;
     int lineNum = 0;
 
+    const std::string lowerPath = toLower(filePath);
+    auto endsWith = [&](const char* ext) {
+        const size_t n = std::char_traits<char>::length(ext);
+        return lowerPath.size() >= n &&
+               lowerPath.compare(lowerPath.size() - n, n, ext) == 0;
+    };
+    const bool isAsm =
+        endsWith(".asm") || endsWith(".inc") || endsWith(".masm") || endsWith(".s");
+
     static const std::regex re_func(
         R"((?:^|\s)(?:[\w:*&<>]+)\s+([A-Za-z_]\w*)\s*\([^;]*\)\s*\{)");
     static const std::regex re_class(R"((?:^|\s)class\s+([A-Za-z_]\w*)\s*)");
     static const std::regex re_struct(R"((?:^|\s)struct\s+([A-Za-z_]\w*)\s*)");
     static const std::regex re_enum(R"((?:^|\s)enum\s+(?:class\s+)?([A-Za-z_]\w*)\s*)");
     static const std::regex re_define(R"(^\s*#define\s+([A-Za-z_]\w*))");
+    // MASM / ml64: name PROC|PROTO|MACRO|EQU ; also name:
+    static const std::regex re_masm_proc(
+        R"(^\s*([A-Za-z_$@?][\w$@?]*)\s+(PROC|proc|PROTO|proto)\b)");
+    static const std::regex re_masm_macro(
+        R"(^\s*([A-Za-z_$@?][\w$@?]*)\s+(MACRO|macro)\b)");
+    static const std::regex re_masm_equ(
+        R"(^\s*([A-Za-z_$@?][\w$@?]*)\s+(EQU|equ)\b)");
+    static const std::regex re_masm_label(
+        R"(^\s*([A-Za-z_$@?][\w$@?]*):)");
 
     while (std::getline(iss, line)) {
         std::smatch m;
@@ -1196,7 +1250,28 @@ void RawrXDLSPServer::indexFileContent(const std::string& filePath, const std::s
         sym.filePath = filePath;
         sym.line     = lineNum;
 
-        if (std::regex_search(line, m, re_class)) {
+        if (isAsm) {
+            if (std::regex_search(line, m, re_masm_proc)) {
+                sym.name = m[1].str();
+                sym.kind = SymbolKind::Function;
+                sym.detail = "MASM " + m[2].str() + " " + sym.name;
+            } else if (std::regex_search(line, m, re_masm_macro)) {
+                sym.name = m[1].str();
+                sym.kind = SymbolKind::Function;
+                sym.detail = "MASM MACRO " + sym.name;
+            } else if (std::regex_search(line, m, re_masm_equ)) {
+                sym.name = m[1].str();
+                sym.kind = SymbolKind::Constant;
+                sym.detail = "MASM EQU " + sym.name;
+            } else if (std::regex_search(line, m, re_masm_label)) {
+                sym.name = m[1].str();
+                sym.kind = SymbolKind::Variable;
+                sym.detail = "MASM label " + sym.name;
+            } else {
+                lineNum++;
+                continue;
+            }
+        } else if (std::regex_search(line, m, re_class)) {
             sym.name = m[1].str(); sym.kind = SymbolKind::Class;
             sym.detail = "class " + sym.name;
         } else if (std::regex_search(line, m, re_struct)) {

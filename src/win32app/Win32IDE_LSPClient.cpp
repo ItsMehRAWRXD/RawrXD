@@ -30,6 +30,7 @@
 #include "Win32IDE.h"
 #include "Win32IDE_Types.h"
 #include "core/problems_aggregator.hpp"
+#include "lsp/RawrXD_LSPServer.h"
 #include <algorithm>
 #include <cctype>
 #include <chrono>
@@ -117,6 +118,15 @@ void Win32IDE::initLSPClient()
     tsCfg.enabled = true;
     tsCfg.initTimeoutMs = 15000;
 
+    // Assembly / MASM — embedded RawrXDLSPServer (no external asm language server).
+    auto& asmCfg = m_lspConfigs[(size_t)LSPLanguage::Assembly];
+    asmCfg.language = LSPLanguage::Assembly;
+    asmCfg.name = "rawrxd-masm-lsp";
+    asmCfg.executablePath = "embedded";
+    asmCfg.args = {};
+    asmCfg.enabled = true;
+    asmCfg.initTimeoutMs = 10000;
+
     // ---- Set root URI from current working directory -----------------------
     {
         char cwd[MAX_PATH] = {};
@@ -140,6 +150,7 @@ void Win32IDE::initLSPClient()
         m_lspStatuses[i].pid = 0;
         m_lspStatuses[i].requestIdCounter = 1;
         m_lspStatuses[i].initialized = false;
+        m_lspStatuses[i].embedded = false;
         m_lspStatuses[i].lastError = "";
         m_lspStatuses[i].startedEpochMs = 0;
         m_lspStatuses[i].requestCount = 0;
@@ -205,6 +216,64 @@ bool Win32IDE::startLSPServer(LSPLanguage lang)
     status.state = LSPServerState::Starting;
     status.lastError = "";
 
+    // ---- Embedded Assembly / MASM path (RawrXDLSPServer in-process) --------
+    if (lang == LSPLanguage::Assembly || cfg.executablePath == "embedded")
+    {
+        if (!m_lspServer)
+            initLSPServer();
+        if (!m_lspServer)
+        {
+            status.state = LSPServerState::Error;
+            status.lastError = "Embedded RawrXDLSPServer unavailable";
+            return false;
+        }
+        // Avoid full-repo walk on initialize; .asm symbols indexed via didOpen.
+        {
+            using namespace RawrXD::LSPServer;
+            ServerConfig sc = m_lspServer->getConfig();
+            sc.useStdio = false;
+            // Keep rootUri for client handshake, but clear rootPath so
+            // initialize does not walk the whole workspace; didOpen indexes .asm.
+            sc.rootPath.clear();
+            sc.rootUri = cfg.rootUri;
+            sc.enableHover = true;
+            sc.enableCompletion = true;
+            sc.enableDiagnostics = true;
+            sc.enableDefinition = true;
+            sc.enableDocumentSymbol = true;
+            m_lspServer->configure(sc);
+            if (!m_lspServer->isRunning())
+                m_lspServer->start();
+        }
+        status.embedded = true;
+        status.hProcess = nullptr;
+        status.hStdinWrite = nullptr;
+        status.hStdoutRead = nullptr;
+        status.pid = GetCurrentProcessId();
+        status.startedEpochMs = currentEpochMs();
+
+        // Null rootUri for init so server does not walk the whole workspace.
+        std::string savedRootUri = m_lspConfigs[(size_t)lang].rootUri;
+        m_lspConfigs[(size_t)lang].rootUri.clear();
+        bool initOk = sendInitialize(lang);
+        m_lspConfigs[(size_t)lang].rootUri = savedRootUri;
+        if (!initOk)
+        {
+            status.state = LSPServerState::Error;
+            if (status.lastError.empty())
+                status.lastError = "Embedded initialize handshake failed";
+            logError("startLSPServer", status.lastError);
+            return false;
+        }
+        sendInitialized(lang);
+        status.state = LSPServerState::Running;
+        status.initialized = true;
+        logInfo("[LSP] " + cfg.name + " embedded ready");
+        appendToOutput("[LSP] " + cfg.name + " ready (embedded MASM)", "General",
+                       OutputSeverity::Info);
+        return true;
+    }
+
     // ---- Create pipes for stdin/stdout communication -----------------------
     SECURITY_ATTRIBUTES sa = {};
     sa.nLength = sizeof(sa);
@@ -234,12 +303,16 @@ bool Win32IDE::startLSPServer(LSPLanguage lang)
     }
 
     // ---- Launch child process ----------------------------------------------
+    // Keep stderr off the JSON-RPC stdout pipe — clangd log lines otherwise
+    // corrupt Content-Length framing and break initialize / hover / completion.
+    HANDLE hNul = CreateFileA("NUL", GENERIC_WRITE, FILE_SHARE_WRITE, &sa,
+                              OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     STARTUPINFOA si = {};
     si.cb = sizeof(si);
     si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
     si.hStdInput = hStdinRead;
     si.hStdOutput = hStdoutWrite;
-    si.hStdError = hStdoutWrite;  // Merge stderr into stdout
+    si.hStdError = (hNul != INVALID_HANDLE_VALUE) ? hNul : hStdoutWrite;
     si.wShowWindow = SW_HIDE;
 
     PROCESS_INFORMATION pi = {};
@@ -257,6 +330,7 @@ bool Win32IDE::startLSPServer(LSPLanguage lang)
     // Close the child-side pipe handles (we keep the parent-side)
     CloseHandle(hStdinRead);
     CloseHandle(hStdoutWrite);
+    if (hNul != INVALID_HANDLE_VALUE) CloseHandle(hNul);
 
     if (!created)
     {
@@ -282,15 +356,24 @@ bool Win32IDE::startLSPServer(LSPLanguage lang)
 
     logInfo("[LSP] " + cfg.name + " spawned (pid=" + std::to_string(status.pid) + ")");
 
-    // ---- Start reader thread -----------------------------------------------
+    // ---- Start reader thread BEFORE initialize (response must be drained) --
     m_lspReaderThreads.emplace_back(&Win32IDE::lspReaderThread, this, lang);
+    // Let the reader arm PeekNamedPipe before we write initialize.
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+    // Fail-closed floor: never handshake with a zero/too-short timeout.
+    {
+        auto& mutCfg = m_lspConfigs[(size_t)lang];
+        if (mutCfg.initTimeoutMs < 15000) mutCfg.initTimeoutMs = 15000;
+    }
 
     // ---- Send initialize handshake -----------------------------------------
     bool initOk = sendInitialize(lang);
     if (!initOk)
     {
         status.state = LSPServerState::Error;
-        status.lastError = "Initialize handshake failed or timed out";
+        if (status.lastError.empty())
+            status.lastError = "Initialize handshake failed or timed out";
         logError("startLSPServer", status.lastError);
         appendToOutput("[LSP] " + cfg.name + " started but initialize handshake failed.", "General",
                        OutputSeverity::Warning);
@@ -322,6 +405,22 @@ void Win32IDE::stopLSPServer(LSPLanguage lang)
 
     logInfo("[LSP] Stopping " + cfg.name + "...");
     status.state = LSPServerState::ShuttingDown;
+
+    // Embedded Assembly: protocol shutdown only (shared in-process server stays).
+    if (status.embedded)
+    {
+        if (status.initialized)
+        {
+            sendShutdown(lang);
+            sendExit(lang);
+        }
+        status.embedded = false;
+        status.initialized = false;
+        status.pid = 0;
+        status.state = LSPServerState::Stopped;
+        logInfo("[LSP] " + cfg.name + " embedded stopped");
+        return;
+    }
 
     // Send shutdown + exit per LSP protocol
     if (status.initialized)
@@ -409,7 +508,85 @@ int Win32IDE::sendLSPRequest(LSPLanguage lang, const std::string& method, const 
         return -1;
     auto& status = m_lspStatuses[(size_t)lang];
 
-    if (!status.hStdinWrite || status.state != LSPServerState::Running)
+    // Embedded Assembly path: sync processMessageSync + deposit response.
+    if (status.embedded)
+    {
+        if (status.state != LSPServerState::Running && status.state != LSPServerState::Starting)
+            return -1;
+        if (!m_lspServer)
+            return -1;
+        int id;
+        {
+            std::lock_guard<std::mutex> lock(m_lspMutex);
+            id = status.requestIdCounter++;
+        }
+        nlohmann::json msg;
+        msg["jsonrpc"] = "2.0";
+        msg["id"] = id;
+        msg["method"] = method;
+        msg["params"] = params;
+        m_lspServer->processMessageSync(msg.dump());
+        // Drain outgoing until matching id (also captures publishDiagnostics).
+        for (int i = 0; i < 64; ++i)
+        {
+            std::string out = m_lspServer->pollOutgoing();
+            if (out.empty())
+                break;
+            try
+            {
+                nlohmann::json resp = nlohmann::json::parse(out);
+                if (resp.contains("id") && resp["id"] == id)
+                {
+                    std::lock_guard<std::mutex> lock(m_lspResponseMutex);
+                    m_lspPendingResponses[id] = std::move(resp);
+                    m_lspResponseCV.notify_all();
+                }
+                else if (resp.contains("method") &&
+                         resp["method"] == "textDocument/publishDiagnostics")
+                {
+                    auto& p = resp["params"];
+                    std::string uri = p.value("uri", "");
+                    std::vector<LSPDiagnostic> diags;
+                    if (p.contains("diagnostics") && p["diagnostics"].is_array())
+                    {
+                        for (auto& dj : p["diagnostics"])
+                        {
+                            LSPDiagnostic d;
+                            if (dj.contains("range"))
+                            {
+                                auto& rj = dj["range"];
+                                if (rj.contains("start"))
+                                {
+                                    d.range.start.line = rj["start"].value("line", 0);
+                                    d.range.start.character = rj["start"].value("character", 0);
+                                }
+                                if (rj.contains("end"))
+                                {
+                                    d.range.end.line = rj["end"].value("line", 0);
+                                    d.range.end.character = rj["end"].value("character", 0);
+                                }
+                            }
+                            d.severity = dj.value("severity", 1);
+                            d.message = dj.value("message", "");
+                            d.source = dj.value("source", "rawrxd-masm");
+                            diags.push_back(std::move(d));
+                        }
+                    }
+                    onDiagnosticsReceived(uri, diags);
+                }
+            }
+            catch (...)
+            {
+            }
+        }
+        status.requestCount++;
+        return id;
+    }
+
+    // Allow Starting so textDocument/initialize can land before Running.
+    if (!status.hStdinWrite ||
+        (status.state != LSPServerState::Running &&
+         status.state != LSPServerState::Starting))
     {
         return -1;
     }
@@ -446,6 +623,52 @@ void Win32IDE::sendLSPNotification(LSPLanguage lang, const std::string& method, 
     if (lang >= LSPLanguage::Count)
         return;
     auto& status = m_lspStatuses[(size_t)lang];
+
+    if (status.embedded)
+    {
+        if (!m_lspServer)
+            return;
+        nlohmann::json msg;
+        msg["jsonrpc"] = "2.0";
+        msg["method"] = method;
+        msg["params"] = params;
+        m_lspServer->processMessageSync(msg.dump());
+        // Drain any publishDiagnostics from didOpen etc.
+        for (int i = 0; i < 32; ++i)
+        {
+            std::string out = m_lspServer->pollOutgoing();
+            if (out.empty())
+                break;
+            try
+            {
+                nlohmann::json resp = nlohmann::json::parse(out);
+                if (resp.contains("method") &&
+                    resp["method"] == "textDocument/publishDiagnostics")
+                {
+                    auto& p = resp["params"];
+                    std::string uri = p.value("uri", "");
+                    std::vector<LSPDiagnostic> diags;
+                    if (p.contains("diagnostics") && p["diagnostics"].is_array())
+                    {
+                        for (auto& dj : p["diagnostics"])
+                        {
+                            LSPDiagnostic d;
+                            d.severity = dj.value("severity", 1);
+                            d.message = dj.value("message", "");
+                            d.source = dj.value("source", "rawrxd-masm");
+                            diags.push_back(std::move(d));
+                        }
+                    }
+                    onDiagnosticsReceived(uri, diags);
+                }
+            }
+            catch (...)
+            {
+            }
+        }
+        status.notificationCount++;
+        return;
+    }
 
     if (!status.hStdinWrite)
         return;
@@ -568,11 +791,26 @@ void Win32IDE::lspReaderThread(LSPLanguage lang)
             {
                 nlohmann::json msg = nlohmann::json::parse(jsonBody);
 
-                if (msg.contains("id") && !msg["id"].is_null())
+                // Server->client requests have both method+id; do not treat as
+                // responses or they can steal the initialize id slot.
+                if (msg.contains("id") && !msg["id"].is_null() &&
+                    !msg.contains("method"))
                 {
-                    // Response to a request
-                    int respId = msg["id"].get<int>();
-                    {
+                    int respId = 0;
+                    if (msg["id"].is_number_integer())
+                        respId = msg["id"].get<int>();
+                    else if (msg["id"].is_number_unsigned())
+                        respId = static_cast<int>(msg["id"].get<unsigned>());
+                    else if (msg["id"].is_string()) {
+                        try {
+                            respId = std::stoi(msg["id"].get<std::string>());
+                        } catch (...) {
+                            respId = -1;
+                        }
+                    } else {
+                        respId = -1;
+                    }
+                    if (respId >= 0) {
                         std::lock_guard<std::mutex> lock(m_lspResponseMutex);
                         m_lspPendingResponses[respId] = msg;
                     }
@@ -580,7 +818,7 @@ void Win32IDE::lspReaderThread(LSPLanguage lang)
                 }
                 else if (msg.contains("method"))
                 {
-                    // Server notification
+                    // Server notification (or request — ignore body for now)
                     std::string method = msg["method"].get<std::string>();
                     if (method == "textDocument/publishDiagnostics")
                     {
@@ -654,7 +892,19 @@ bool Win32IDE::sendInitialize(LSPLanguage lang)
 
     nlohmann::json params;
     params["processId"] = (int)GetCurrentProcessId();
-    params["rootUri"] = cfg.rootUri;
+    if (cfg.rootUri.empty()) {
+        params["rootUri"] = nullptr;
+        params["rootPath"] = nullptr;
+    } else {
+        params["rootUri"] = cfg.rootUri;
+        params["rootPath"] = uriToFilePath(cfg.rootUri);
+    }
+    {
+        nlohmann::json folder;
+        folder["uri"] = cfg.rootUri;
+        folder["name"] = "workspace";
+        params["workspaceFolders"] = nlohmann::json::array({folder});
+    }
 
     // Client capabilities — declare what we support
     nlohmann::json textDocCaps;
@@ -665,22 +915,30 @@ bool Win32IDE::sendInitialize(LSPLanguage lang)
     textDocCaps["references"]["dynamicRegistration"] = false;
     textDocCaps["rename"]["dynamicRegistration"] = false;
     textDocCaps["hover"]["dynamicRegistration"] = false;
+    textDocCaps["completion"]["dynamicRegistration"] = false;
     textDocCaps["publishDiagnostics"]["relatedInformation"] = false;
 
     nlohmann::json caps;
     caps["textDocument"] = textDocCaps;
+    caps["workspace"]["workspaceFolders"] = true;
     params["capabilities"] = caps;
 
     params["clientInfo"] = {{"name", "RawrXD-IDE"}, {"version", "7.7.0"}};
 
     int id = sendLSPRequest(lang, "initialize", params);
-    if (id < 0)
+    if (id < 0) {
+        m_lspStatuses[(size_t)lang].lastError =
+            "Initialize send failed (server not Starting/Running)";
         return false;
+    }
 
-    nlohmann::json resp = readLSPResponse(lang, id, cfg.initTimeoutMs);
+    const int timeoutMs =
+        cfg.initTimeoutMs < 15000 ? 15000 : cfg.initTimeoutMs;
+    nlohmann::json resp = readLSPResponse(lang, id, timeoutMs);
     if (resp.contains("error"))
     {
-        m_lspStatuses[(size_t)lang].lastError = "Initialize error: " + resp["error"].value("message", "unknown");
+        m_lspStatuses[(size_t)lang].lastError =
+            "Initialize error: " + resp["error"].value("message", "unknown");
         return false;
     }
 
@@ -1516,7 +1774,13 @@ Win32IDE::LSPLanguage Win32IDE::detectLanguageForFile(const std::string& filePat
         return LSPLanguage::TypeScript;
     }
 
-    return LSPLanguage::Count;  // Unknown
+    // Assembly / MASM — embedded RawrXDLSPServer (not clangd).
+    if (ext == ".asm" || ext == ".masm" || ext == ".inc")
+    {
+        return LSPLanguage::Assembly;
+    }
+
+    return LSPLanguage::Count;  // Unknown / no LSP
 }
 
 std::string Win32IDE::lspLanguageId(LSPLanguage lang) const
@@ -1529,6 +1793,8 @@ std::string Win32IDE::lspLanguageId(LSPLanguage lang) const
             return "python";
         case LSPLanguage::TypeScript:
             return "typescript";
+        case LSPLanguage::Assembly:
+            return "asm";
         default:
             return "plaintext";
     }
@@ -1544,6 +1810,8 @@ std::string Win32IDE::lspLanguageString(LSPLanguage lang) const
             return "Python";
         case LSPLanguage::TypeScript:
             return "TypeScript";
+        case LSPLanguage::Assembly:
+            return "Assembly/MASM";
         default:
             return "Unknown";
     }
@@ -1557,6 +1825,8 @@ Win32IDE::LSPLanguage Win32IDE::lspLanguageFromString(const std::string& name) c
         return LSPLanguage::Python;
     if (name == "TypeScript" || name == "typescript" || name == "ts")
         return LSPLanguage::TypeScript;
+    if (name == "Assembly/MASM" || name == "asm" || name == "masm" || name == "Assembly")
+        return LSPLanguage::Assembly;
     return LSPLanguage::Count;
 }
 

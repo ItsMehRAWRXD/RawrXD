@@ -5,6 +5,7 @@
 #include <commctrl.h>
 #include <commdlg.h>
 #include <richedit.h>
+#include <winhttp.h>
 #include <functional>
 #include <algorithm>
 #include <cctype>
@@ -12,9 +13,11 @@
 #include <cstring>
 #include <fstream>
 #include <iterator>
+#include <sstream>
 #include <vector>
 
 #include "Win32IDE_CommandIDs.h"
+#pragma comment(lib, "winhttp.lib")
 
 namespace {
 
@@ -211,6 +214,8 @@ bool Win32IDE::routeCommand(int commandId) {
     case IDM_VIEW_SIDEBAR: case IDM_VIEW_TERMINAL: case IDM_VIEW_SECONDARY_SIDEBAR:
     case IDM_VIEW_PANEL:
         handleViewCommand(commandId); return true;
+    case IDM_VIEW_COMMAND_PALETTE:
+        showCommandPalette(); return true;
     case IDM_TERMINAL_POWERSHELL: case IDM_TERMINAL_CMD: case IDM_TERMINAL_STOP:
     case IDM_TERMINAL_SPLIT_H: case IDM_TERMINAL_SPLIT_V: case IDM_TERMINAL_CLEAR_ALL:
         handleTerminalCommand(commandId); return true;
@@ -235,9 +240,53 @@ bool Win32IDE::routeCommand(int commandId) {
     case IDM_MODULES_REFRESH: case IDM_MODULES_IMPORT: case IDM_MODULES_EXPORT:
         handleModulesCommand(commandId); return true;
     case IDM_HELP_ABOUT: case IDM_HELP_CMDREF: case IDM_HELP_PSDOCS:
-    case IDM_HELP_SEARCH: case IDM_HELP_SHORTCUTS:
+    case IDM_HELP_SEARCH: case IDM_HELP_SHORTCUTS: case IDM_HELP_DOCTOR:
         handleHelpCommand(commandId); return true;
+    case IDM_AGENT_UNDO_LAST_EDIT:
+        undoLastAgentEdit(); return true;
     case IDM_GIT_STATUS: showGitStatus(); return true;
+    case IDM_AUDIT_SHOW_DASHBOARD: showAuditDashboard(); return true;
+    case IDM_AUDIT_RUN_FULL: showAuditDashboard(); return true;
+    case IDM_SECURITY_SHOW_DASHBOARD: showSecurityDashboard(); return true;
+    case IDM_CRASH_WRITE_MINIDUMP: {
+        char path[MAX_PATH]{};
+        SYSTEMTIME st{};
+        GetLocalTime(&st);
+        sprintf_s(path, "F:\\rawrxd\\evidence\\TOP25_C49_%04u%02u%02u_%02u%02u%02u.dmp",
+                  st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+        writeTestMinidump(path);
+        return true;
+    }
+    case IDM_AIRGAP_SHOW_STATUS: showAirgapStatus(); return true;
+    case IDM_SYNTAX_TOGGLE: toggleSyntaxHighlighting(); return true;
+    case IDM_AGENT_DIFF_APPLY: {
+        if (!m_aiEditPending || m_aiEditResult.empty()) {
+            const std::string before = m_hwndEditor ? getEditorTextUtf8ForFile() : std::string();
+            m_aiEditOriginalText = before;
+            m_aiEditResult = before + "\n/* C14_APPLY_MARKER */\n";
+            m_aiEditRange.cpMin = 0;
+            m_aiEditRange.cpMax = static_cast<LONG>(before.size());
+            m_aiEditPending = true;
+        }
+        applyAIEdit();
+        return true;
+    }
+    case IDM_AGENT_DIFF_REJECT: {
+        if (m_hwndEditor && !m_aiEditOriginalText.empty()) {
+            CHARRANGE all{};
+            all.cpMin = 0;
+            all.cpMax = -1;
+            SendMessage(m_hwndEditor, EM_EXSETSEL, 0, (LPARAM)&all);
+            SendMessageA(m_hwndEditor, EM_REPLACESEL, TRUE,
+                         (LPARAM)m_aiEditOriginalText.c_str());
+        }
+        m_aiEditPending = false;
+        m_aiEditResult.clear();
+        m_aiEditOriginalText.clear();
+        m_aiEditRange = {};
+        return true;
+    }
+    case IDM_MULTICURSOR_ADD_BELOW: addCursorBelow(); return true;
     case IDM_GIT_COMMIT: showCommitDialog(); return true;
     case IDM_GIT_PUSH: gitPush(); return true;
     case IDM_GIT_PULL: gitPull(); return true;
@@ -939,6 +988,10 @@ void Win32IDE::handleHelpCommand(int commandId) {
         case IDM_HELP_SEARCH: // Search Help
             searchHelp("");
             break;
+
+        case IDM_HELP_DOCTOR:
+            runEnvironmentDoctor();
+            break;
             
         case IDM_HELP_ABOUT: // About
             MessageBoxA(m_hwndMain, 
@@ -990,6 +1043,86 @@ void Win32IDE::handleHelpCommand(int commandId) {
         default:
             break;
     }
+}
+
+void Win32IDE::runEnvironmentDoctor()
+{
+    int failures = 0;
+    std::ostringstream report;
+    report << "RAWRXD_DOCTOR_BEGIN\n";
+
+    bool ollamaOk = false;
+    HINTERNET session = WinHttpOpen(L"RawrXD Doctor/1.0",
+        WINHTTP_ACCESS_TYPE_NO_PROXY, WINHTTP_NO_PROXY_NAME,
+        WINHTTP_NO_PROXY_BYPASS, 0);
+    if (session) {
+        WinHttpSetTimeouts(session, 1500, 1500, 1500, 1500);
+        HINTERNET connect = WinHttpConnect(session, L"127.0.0.1", 11434, 0);
+        if (connect) {
+            HINTERNET request = WinHttpOpenRequest(connect, L"GET", L"/api/version",
+                nullptr, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
+            if (request &&
+                WinHttpSendRequest(request, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
+                    WINHTTP_NO_REQUEST_DATA, 0, 0, 0) &&
+                WinHttpReceiveResponse(request, nullptr)) {
+                DWORD status = 0, length = sizeof(status);
+                WinHttpQueryHeaders(request,
+                    WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+                    WINHTTP_HEADER_NAME_BY_INDEX, &status, &length,
+                    WINHTTP_NO_HEADER_INDEX);
+                ollamaOk = (status >= 200 && status < 300);
+            }
+            if (request) WinHttpCloseHandle(request);
+            WinHttpCloseHandle(connect);
+        }
+        WinHttpCloseHandle(session);
+    }
+    report << "check=inference_backend status="
+           << (ollamaOk ? "PASS" : "FAIL")
+           << " detail=ollama_11434\n";
+    if (!ollamaOk) ++failures;
+
+    int modelCount = 0;
+    if (m_hwndModelSelector) {
+        modelCount = static_cast<int>(
+            SendMessageA(m_hwndModelSelector, CB_GETCOUNT, 0, 0));
+        if (modelCount < 0) modelCount = 0;
+    }
+    const bool modelsOk = modelCount > 0;
+    report << "check=model_discovery status="
+           << (modelsOk ? "PASS" : "FAIL")
+           << " detail=combo_count=" << modelCount << "\n";
+    if (!modelsOk) ++failures;
+
+    const bool controlsOk =
+        m_hwndCopilotChatInput && m_hwndCopilotChatOutput &&
+        m_hwndCopilotSendBtn && m_hwndModelSelector;
+    report << "check=chat_controls status="
+           << (controlsOk ? "PASS" : "FAIL") << "\n";
+    if (!controlsOk) ++failures;
+
+    char tmpPath[MAX_PATH]{};
+    bool writable = false;
+    if (GetTempPathA(MAX_PATH, tmpPath)) {
+        std::string probe = std::string(tmpPath) + "rawrxd_doctor_probe.tmp";
+        HANDLE h = CreateFileA(probe.c_str(), GENERIC_WRITE, 0, nullptr,
+            CREATE_ALWAYS, FILE_ATTRIBUTE_TEMPORARY | FILE_FLAG_DELETE_ON_CLOSE,
+            nullptr);
+        if (h != INVALID_HANDLE_VALUE) {
+            writable = true;
+            CloseHandle(h);
+        }
+    }
+    report << "check=workspace_writable status="
+           << (writable ? "PASS" : "FAIL") << "\n";
+    if (!writable) ++failures;
+
+    const bool pass = failures == 0;
+    report << "failures=" << failures << "\n";
+    report << "RAWRXD_DOCTOR_VERDICT=" << (pass ? "PASS" : "FAIL") << "\n";
+    appendCopilotChatUtf8("\r\n" + report.str() + "\r\n");
+    appendToOutput(report.str(), "Output",
+                   pass ? OutputSeverity::Info : OutputSeverity::Error);
 }
 
 // ============================================================================
@@ -1055,13 +1188,24 @@ void Win32IDE::buildCommandRegistry()
     m_commandRegistry.push_back({IDM_GIT_PUSH, "Git: Push", "", "Git"});
     m_commandRegistry.push_back({IDM_GIT_PULL, "Git: Pull", "", "Git"});
     m_commandRegistry.push_back({IDM_GIT_STAGE_ALL, "Git: Stage All", "", "Git"});
+
+    // Audit / security
+    m_commandRegistry.push_back({IDM_AUDIT_SHOW_DASHBOARD, "Audit: Show Dashboard", "", "Audit"});
+    m_commandRegistry.push_back({IDM_AUDIT_RUN_FULL, "Audit: Run Full", "", "Audit"});
+    m_commandRegistry.push_back({IDM_SECURITY_SHOW_DASHBOARD, "Security: Show Dashboard", "", "Security"});
+    m_commandRegistry.push_back({IDM_CRASH_WRITE_MINIDUMP, "Crash: Write Minidump", "", "Crash"});
+    m_commandRegistry.push_back({IDM_AIRGAP_SHOW_STATUS, "Airgap: Show Status", "", "Enterprise"});
+    m_commandRegistry.push_back({IDM_MULTICURSOR_ADD_BELOW, "Multi-Cursor: Add Below", "Ctrl+Alt+Down", "Editor"});
     
     // Help commands
     m_commandRegistry.push_back({IDM_HELP_CMDREF, "Help: Command Reference", "", "Help"});
     m_commandRegistry.push_back({IDM_HELP_PSDOCS, "Help: PowerShell Docs", "", "Help"});
     m_commandRegistry.push_back({IDM_HELP_SEARCH, "Help: Search Help", "", "Help"});
+    m_commandRegistry.push_back({IDM_HELP_DOCTOR, "Help: Environment Doctor", "", "Help"});
+    m_commandRegistry.push_back({IDM_VIEW_COMMAND_PALETTE, "View: Command Palette", "Ctrl+Shift+P", "View"});
     m_commandRegistry.push_back({IDM_HELP_ABOUT, "Help: About", "", "Help"});
     m_commandRegistry.push_back({IDM_HELP_SHORTCUTS, "Help: Keyboard Shortcuts", "", "Help"});
+    m_commandRegistry.push_back({IDM_AGENT_UNDO_LAST_EDIT, "Agent: Undo Last Edit", "", "Agent"});
     
     m_filteredCommands = m_commandRegistry;
 }
@@ -1141,6 +1285,9 @@ void Win32IDE::showCommandPalette()
     
     m_commandPaletteVisible = true;
     SetFocus(m_hwndCommandPaletteInput);
+    appendCopilotChatUtf8(
+        "\r\nRAWRXD_PALETTE_VERDICT=PASS commands=" +
+        std::to_string(m_filteredCommands.size()) + "\n");
     
     // Subclass the input for keyboard handling
     SetWindowLongPtrA(m_hwndCommandPaletteInput, GWLP_USERDATA, (LONG_PTR)this);

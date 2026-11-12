@@ -7,12 +7,29 @@
 #include "../backend/ollama_client.h"
 
 namespace {
-// GhostText inference runs on the shared Ollama server, so a superseded
-// request must be released quickly rather than holding the model for the chat
-// lane's multi-minute budget.  The transport still reports HTTP_TIMEOUT if a
-// genuinely slow model exceeds this; that is a distinct, logged outcome from
-// cancellation.
-constexpr int kGhostTextTimeoutSeconds = 180;
+// Debounce (ms) lives in NativeGhostTextController. This is the Ollama HTTP
+// deadline in seconds (30–120). Never pass debounce ms into WinHTTP.
+constexpr int kGhostTextTimeoutSeconds = 120;
+constexpr int kGhostTextDebounceMsLog = 250;
+
+bool PreferGhostTextModel(const ChatModelEntry& a, const ChatModelEntry& b) {
+    // Prefer small local coder models for inline latency; never invent IDs.
+    auto score = [](const ChatModelEntry& e) -> int {
+        if (e.source != ChatModelEntry::Source::Ollama || e.identifier.empty())
+            return -1;
+        int s = 0;
+        const std::string& id = e.identifier;
+        if (id.find("coder") != std::string::npos) s += 40;
+        if (id.find("1.5b") != std::string::npos) s += 30;
+        if (id.find("3b") != std::string::npos) s += 20;
+        if (id.find("4b") != std::string::npos) s += 15;
+        if (id.find("8b") != std::string::npos) s += 10;
+        if (id.find("productivity") != std::string::npos) s -= 50;
+        if (id.find("cloud") != std::string::npos) s -= 100;
+        return s;
+    };
+    return score(a) > score(b);
+}
 
 void AppendGhostRuntimeEvidence(const std::string& line)
 {
@@ -66,26 +83,35 @@ void Win32IDE::initializeNativeGhostText() {
             } else if (m_ghostTextMode == GhostTextMode::FollowChat) {
                 route = m_selectedChatModel;
             } else {
-                // Auto Local follows the currently selected chat model when
-                // it is an Ollama route.  Previously it always chose the
-                // first catalog row, which pinned every completion to the
-                // discovery-order default (often
-                // bigdaddyg-productivity-local:latest) even after the user
-                // selected GPT-OSS or Nemotron in the model selector.
-                if (m_selectedChatModel.source == ChatModelEntry::Source::Ollama &&
-                    !m_selectedChatModel.identifier.empty()) {
-                    route = m_selectedChatModel;
-                } else {
-                    // If chat is on a native GGUF or cloud route, choose the
-                    // first currently available Ollama model. Never invent a
-                    // model ID and never silently use a stale entry.
+                // Auto Local: prefer a small local coder for inline latency.
+                // Do not pin GhostText to a heavy chat model (e.g. productivity).
+                // Env RAWRXD_GHOSTTEXT_MODEL wins when present in the live catalog.
+                const char* envModel = std::getenv("RAWRXD_GHOSTTEXT_MODEL");
+                if (envModel && *envModel) {
                     for (const auto& candidate : m_availableModels) {
                         if (candidate.source == ChatModelEntry::Source::Ollama &&
-                            !candidate.identifier.empty()) {
+                            candidate.identifier == envModel) {
                             route = candidate;
                             break;
                         }
                     }
+                }
+                if (route.identifier.empty()) {
+                    for (const auto& candidate : m_availableModels) {
+                        if (candidate.source != ChatModelEntry::Source::Ollama ||
+                            candidate.identifier.empty()) {
+                            continue;
+                        }
+                        if (route.identifier.empty() ||
+                            PreferGhostTextModel(candidate, route)) {
+                            route = candidate;
+                        }
+                    }
+                }
+                if (route.identifier.empty() &&
+                    m_selectedChatModel.source == ChatModelEntry::Source::Ollama &&
+                    !m_selectedChatModel.identifier.empty()) {
+                    route = m_selectedChatModel;
                 }
             }
             if (route.identifier.empty()) {
@@ -102,7 +128,8 @@ void Win32IDE::initializeNativeGhostText() {
                     ? "native" : "cloud");
             logInfo("GhostText inference route: " + route.identifier +
                     " backend=" + backend +
-                    " timeout_ms=" + std::to_string(kGhostTextTimeoutSeconds));
+                    " timeout_s=" + std::to_string(kGhostTextTimeoutSeconds) +
+                    " debounce_ms=" + std::to_string(kGhostTextDebounceMsLog));
             return requestNativeGhostText(prompt, std::move(callback));
         };
 
@@ -115,6 +142,7 @@ void Win32IDE::initializeNativeGhostText() {
             // path; keeping this sink on the UI thread avoids racing the
             // native output controls while preserving raw lifecycle evidence.
             appendNativeDebugOutput("[GhostText] " + event + "\n");
+            AppendGhostRuntimeEvidence(event);
         });
     appendNativeDebugOutput(std::string("[GhostText] native controller ") +
                             (attached ? "READY\n" : "FAILED\n"), !attached);
@@ -155,6 +183,7 @@ void Win32IDE::initializeNativeGhostText() {
         if (controller->attach(m_hwndMain, surface.hwnd, request, surface.prompt,
                                [this](const std::string& event) {
                                    appendNativeDebugOutput("[GhostText] " + event + "\n");
+                                   AppendGhostRuntimeEvidence(event);
                                })) {
             m_ghostTextInputs.push_back(std::move(controller));
         }
@@ -292,7 +321,12 @@ NativeGhostTextController::RequestCancel Win32IDE::requestNativeGhostText(
                 AppendGhostRuntimeEvidence(
                     "GHOSTTEXT_RUNTIME response request_id=" +
                     std::to_string(requestId) + " model=" + model +
-                    " success=" + (gr.success ? "1" : "0"));
+                    " success=" + (gr.success ? "1" : "0") +
+                    " http_status=" + std::to_string(gr.httpStatus) +
+                    " elapsed_ms=" + std::to_string(gr.elapsedMs) +
+                    " response_bytes=" + std::to_string(gr.text.size()) +
+                    " failure_reason=" +
+                        (gr.failureReason.empty() ? "NONE" : gr.failureReason));
             } catch (...) {
                 NativeGhostTextController::Response gr;
                 gr.done = true;
@@ -302,7 +336,8 @@ NativeGhostTextController::RequestCancel Win32IDE::requestNativeGhostText(
                 AppendGhostRuntimeEvidence(
                     "GHOSTTEXT_RUNTIME response request_id=" +
                     std::to_string(requestId) + " model=" + model +
-                    " success=0");
+                    " success=0 failure_reason=EXCEPTION elapsed_ms=" +
+                    std::to_string(gr.elapsedMs));
             }
         }).detach();
 

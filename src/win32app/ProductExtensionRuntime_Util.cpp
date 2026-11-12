@@ -41,14 +41,15 @@ bool ReadPackageJson(const std::filesystem::path& dir, ExtRecord& out) {
     if (text.empty()) return false;
     out.path = dir.string();
     // Fail-closed: inventing id from dirname for malformed JSON is not a load.
-    out.id = JsonStr(text, "name");
-    if (out.id.empty()) return false;
-    out.name = JsonStr(text, "displayName");
-    if (out.name.empty()) out.name = out.id;
-    out.version = JsonStr(text, "version");
-    if (out.version.empty()) out.version = "0.0.1";
+    std::string name = JsonStr(text, "name");
+    if (name.empty()) return false;
     out.publisher = JsonStr(text, "publisher");
     if (out.publisher.empty()) out.publisher = "rawrxd";
+    out.id = out.publisher + "." + name;
+    out.name = JsonStr(text, "displayName");
+    if (out.name.empty()) out.name = name;
+    out.version = JsonStr(text, "version");
+    if (out.version.empty()) out.version = "0.0.1";
     return true;
 }
 

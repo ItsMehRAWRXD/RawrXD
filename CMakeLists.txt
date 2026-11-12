@@ -3946,6 +3946,7 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/AdvancedLSPClient.cpp
         src/win32app/Win32IDE_LSPServer.cpp
         src/lsp/RawrXD_LSPServer.cpp
+        src/lsp/MasmLspSession.cpp
         src/core/semantic_code_intelligence.cpp
         # BATCH17_USE_AGENTIC_LIB: src/agentic/BackendRouter.cpp
         # BATCH17_USE_AGENTIC_LIB: src/agentic/PersistentTaskBacklog.cpp
@@ -4019,6 +4020,19 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/ExtensionManifestLoader.h
         src/win32app/ExtensionSecurityCheck.cpp
         src/win32app/ExtensionSecurityCheck.h
+        # Product ExtensionHost runtime (Batch 22) — /api/extensions + host spawn
+        src/win32app/ProductExtensionRuntime.hpp
+        src/win32app/ProductExtensionRuntime_Internal.hpp
+        src/win32app/ProductExtensionRuntime_State.cpp
+        src/win32app/ProductExtensionRuntime_Util.cpp
+        src/win32app/ProductExtensionRuntime_Scan.cpp
+        src/win32app/ProductExtensionRuntime_Manifest.cpp
+        src/win32app/ProductExtensionRuntime_Host.cpp
+        src/win32app/ProductExtensionRuntime_Activate.cpp
+        src/win32app/ProductExtensionRuntime_Toggles.cpp
+        src/win32app/ProductExtensionRuntime_Api.cpp
+        src/win32app/ProductExtensionRuntime_Probe.cpp
+        src/win32app/ProductExtensionRuntime_MasmProbe.cpp
         src/win32app/NativePluginManager.cpp
         src/win32app/NativePluginManager.h
         src/win32app/Win32IDE_ModelLab.cpp
@@ -4137,6 +4151,7 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
             _WIN32_WINNT=0x0A00
             _CRT_SECURE_NO_WARNINGS
             _MBCS
+            RAWRXD_LSP_EMBEDDED=1
             $<$<BOOL:${ENABLE_VULKAN}>:ENABLE_VULKAN=1>
         )
         target_compile_options(RawrXD-Win32IDE-Native PRIVATE
@@ -4280,6 +4295,9 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         if(EXISTS "${CMAKE_SOURCE_DIR}/src/win32app/ExtensionHostWorker_main.cpp")
             add_executable(RawrXD-ExtensionHost WIN32
                 src/win32app/ExtensionHostWorker_main.cpp
+                src/win32app/ExtensionHostWorker_Parse.cpp
+                src/win32app/ExtensionHostWorker_Activate.cpp
+                src/win32app/ExtensionHostWorker_Activate.h
             )
             set_target_properties(RawrXD-ExtensionHost PROPERTIES
                 OUTPUT_NAME "RawrXD-ExtensionHost"
@@ -6115,13 +6133,56 @@ endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/rawr_cli.cpp")
     add_executable(RawrXD-CLI-V2
         src/rawr_cli.cpp
+        src/cli/rawr_cli_lsp.cpp
+        src/cli/rawr_cli_top25_gaps.cpp
+        src/cli/rawr_cli_extensions.cpp
+        src/lsp/RawrXD_LSPServer.cpp
+        src/marketplace/extension_package_local.cpp
+        src/collab/crdt_buffer.cpp
+        src/collab/websocket_hub.cpp
         src/rawr_core.cpp
+        src/core/project_rag_lite.cpp
+        src/core/vram_kv_controls.cpp
+        src/core/crash_minidump.cpp
+        src/win32app/context/context_mention_parser.cpp
+        src/win32app/Win32NativeDebugBackend.cpp
+        # C43 product ExtensionHost runtime — same TUs as Native GUI
+        src/win32app/ProductExtensionRuntime.hpp
+        src/win32app/ProductExtensionRuntime_Internal.hpp
+        src/win32app/ProductExtensionRuntime_State.cpp
+        src/win32app/ProductExtensionRuntime_Util.cpp
+        src/win32app/ProductExtensionRuntime_Scan.cpp
+        src/win32app/ProductExtensionRuntime_Manifest.cpp
+        src/win32app/ProductExtensionRuntime_Host.cpp
+        src/win32app/ProductExtensionRuntime_Activate.cpp
+        src/win32app/ProductExtensionRuntime_Toggles.cpp
+        src/win32app/ProductExtensionRuntime_Api.cpp
+        src/win32app/ProductExtensionRuntime_Probe.cpp
+        src/win32app/ProductExtensionRuntime_MasmProbe.cpp
+        src/lsp/MasmLspSession.cpp
     )
+    target_link_libraries(RawrXD-CLI-V2 PRIVATE psapi)
     target_link_libraries(RawrXD-CLI-V2 PRIVATE
         nlohmann_json::nlohmann_json
         ws2_32
         winmm
         winhttp
+        dxgi
+        dbghelp
+        advapi32
+        gdi32
+        user32
+    )
+    if(TARGET rawrxd_computer_use)
+        target_link_libraries(RawrXD-CLI-V2 PRIVATE rawrxd_computer_use)
+        target_include_directories(RawrXD-CLI-V2 PRIVATE
+            ${CMAKE_SOURCE_DIR}/src/computer_use)
+        target_compile_definitions(RawrXD-CLI-V2 PRIVATE RAWRXD_HAS_COMPUTER_USE=1)
+        message(STATUS "RawrXD-CLI-V2: linked rawrxd_computer_use (C45)")
+    endif()
+    target_compile_definitions(RawrXD-CLI-V2 PRIVATE
+        RAWRXD_LSP_NO_MAIN=1
+        RAWRXD_LSP_EMBEDDED=1
     )
     # The Deep2 static archive is emitted in the configuration archive
     # directory on MSVC.  Keep that directory on the CLI link line explicitly;
@@ -6150,6 +6211,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/rawr_cli.cpp")
     target_include_directories(RawrXD-CLI-V2 PRIVATE
         ${CMAKE_SOURCE_DIR}/src
         ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/src/win32app
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
         ${CMAKE_SOURCE_DIR}/src/deep2
@@ -6161,7 +6223,16 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/rawr_cli.cpp")
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}"
         OUTPUT_NAME "rawr"
     )
-    message(STATUS "RawrXD-CLI-V2: entry=src/rawr_cli.cpp (Ollama route SOURCE_FIXED, output: rawr.exe)")
+    if(TARGET RawrXD-ExtensionHost)
+        add_dependencies(RawrXD-CLI-V2 RawrXD-ExtensionHost)
+        add_custom_command(TARGET RawrXD-CLI-V2 POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "$<TARGET_FILE:RawrXD-ExtensionHost>"
+                "$<TARGET_FILE_DIR:RawrXD-CLI-V2>/RawrXD-ExtensionHost.exe"
+            COMMENT "Side-by-side RawrXD-ExtensionHost.exe for CLI ProductExtensionRuntime"
+        )
+    endif()
+    message(STATUS "RawrXD-CLI-V2: entry=src/rawr_cli.cpp + ProductExtensionRuntime (C43 product API)")
 elseif(EXISTS "${CMAKE_SOURCE_DIR}/src/rawrxd_cli_v2.cpp")
     add_executable(RawrXD-CLI-V2 src/rawrxd_cli_v2.cpp
         src/reap_cli_contract.cpp

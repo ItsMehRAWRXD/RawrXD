@@ -57,6 +57,9 @@ private:
     void showCompletion(const std::string& completion, uint64_t generation);
     void positionHint();
     std::string editorText() const;
+    // Resolve caret to a real cp in [0, length]. Returns -1 only when the
+    // editor handle is gone; never leaves the -1 sentinel into insert.
+    long resolveCaretCp() const;
 
     HWND m_host = nullptr;
     HWND m_editor = nullptr;
@@ -67,6 +70,7 @@ private:
     std::string m_promptPrefix;
     std::string m_completion;
     std::string m_snapshot;
+    long m_caretCp = -1;  // caret captured at request; -1 = unresolved
     uint64_t m_generation = 0;
     UINT_PTR m_timer = 0;
     bool m_requestPending = false;

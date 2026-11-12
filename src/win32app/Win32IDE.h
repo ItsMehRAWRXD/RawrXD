@@ -610,6 +610,9 @@ public:
     void onAgenticLoopCancel();
     void onAgenticLoopStatus();
     bool stageCopilotChatInputUtf8(const std::string& utf8);
+    // Native --chat-smoke: local Ollama send/cancel/recover + editor save probe.
+    void beginChatSmoke(const char* receiptPath);
+    void tickChatSmoke();
     bool ensureProductAgentSession(const std::string& modelIdentity,
                                    const std::string& workspaceRoot,
                                    const std::string& task);
@@ -1057,6 +1060,7 @@ private:
     void showCommandReference();
     void showPowerShellDocs();
     void searchHelp(const std::string& query);
+    void runEnvironmentDoctor();
 
     // Enhanced output panel (public for AutonomousLoop/DAP)
 public:
@@ -1334,6 +1338,7 @@ public:
     void initCrashReporter();
     void showCrashReport(const std::string& crashFile);
     std::string getLastCrashLog();
+    bool writeTestMinidump(const char* outPath);
 
     void initAirgappedMode();
     void showAirgapStatus();
@@ -2142,8 +2147,10 @@ private:
 public:
     enum class LSPLanguage {
         Cpp = 0, CPP = Cpp, Python = 1, TypeScript = 2, JavaScript = 3, Rust = 4, Go = 5,
-        Java = 6, CSharp = 7, Ruby = 8, PHP = 9, Swift = 10, Kotlin = 11, Unknown = 12,
-        Count = 13
+        Java = 6, CSharp = 7, Ruby = 8, PHP = 9, Swift = 10, Kotlin = 11,
+        Assembly = 12,  // embedded RawrXDLSPServer MASM path (no external asm LS)
+        Unknown = 13,
+        Count = 14
     };
     LSPLanguage detectLanguageForFile(const std::string& filePath) const;
     std::string lspLanguageId(LSPLanguage lang) const;
@@ -2496,6 +2503,7 @@ private:
         int pid = 0;
         int requestIdCounter = 1;
         bool initialized = false;
+        bool embedded = false;  // Assembly → in-process RawrXDLSPServer
         std::string lastError;
         int64_t startedEpochMs = 0;
         int requestCount = 0;
@@ -2823,6 +2831,17 @@ public:
     HWND m_hwndCopilotChatOutput = nullptr;
     // Cross-process SetWindowTextW cache for IDC_COPILOT_CHAT_INPUT (1202).
     std::string m_copilotChatInputCache;
+    // --chat-smoke state machine (IDT_CHAT_SMOKE). -1 = idle/off.
+    int m_chatSmokePhase = -1;
+    ULONGLONG m_chatSmokeStartMs = 0;
+    size_t m_chatSmokeOutBaseline = 0;
+    bool m_chatSmokeSawTokens = false;
+    bool m_chatSmokeSawTokens2 = false;
+    bool m_chatSmokeCancelOk = false;
+    bool m_chatSmokeEditorOk = false;
+    bool m_chatSmokeModelOk = false;
+    std::string m_chatSmokeReceiptPath;
+    std::string m_chatSmokeModelId;
     static LRESULT CALLBACK CopilotChatInputProc(HWND hwnd, UINT uMsg,
                                                  WPARAM wParam, LPARAM lParam);
     void installCopilotChatInputSubclass();

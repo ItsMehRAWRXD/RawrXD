@@ -42,4 +42,9 @@ std::string HandleRoute(const std::string& method, const std::string& path,
                         const std::string& body);
 bool ToolActivate(const std::string& id, std::string& outJson);
 
+// Tip probes (WM_COMMAND) — write TOP25_C43_EXTHOST / TOP25_MASM_TOOLING logs.
+void ProbeExtHostRuntime();
+void ProbeMasmTooling();
+
 } // namespace ProductExtensionRuntime
+

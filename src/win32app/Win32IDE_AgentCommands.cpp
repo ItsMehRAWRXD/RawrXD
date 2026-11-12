@@ -758,11 +758,30 @@ void Win32IDE::onAgentViewTools() {
     toolsList << "Example: TOOL:shell:{\"cmd\":\"Get-Process\"}\n";
     toolsList << "CU E2E: set RAWRXD_AGENT_MODE=ACTIVE and use Run Agentic Task "
                  "(not Copilot text-only Send).\n";
-    
-    MessageBoxA(m_hwndMain, toolsList.str().c_str(), "Agent Tools", MB_OK | MB_ICONINFORMATION);
-    
-    // Also log to output
+
+    // Machine-readable chat surface for tip-bound UIA (C11).
+    std::ostringstream chat;
+    chat << "\r\nRAWRXD_TOOLS_BEGIN\n";
+    bool hasRead = false, hasSearch = false, hasShell = false;
+    for (const auto& tool : tools) {
+        chat << "tool=" << tool << "\n";
+        if (tool.find("read") != std::string::npos) hasRead = true;
+        if (tool.find("search") != std::string::npos) hasSearch = true;
+        if (tool.find("shell") != std::string::npos ||
+            tool.find("execute") != std::string::npos) hasShell = true;
+    }
+    chat << "count=" << tools.size() << "\n";
+    chat << "RAWRXD_TOOLS_VERDICT="
+         << ((tools.size() > 0 && (hasRead || hasSearch || hasShell)) ? "PASS" : "FAIL")
+         << "\n";
+    appendCopilotChatUtf8(chat.str());
     appendToOutput(toolsList.str() + "\n", "Output", OutputSeverity::Info);
+
+    const char* headless = std::getenv("RAWRXD_UIA_HEADLESS");
+    if (!(headless && headless[0] == '1')) {
+        MessageBoxA(m_hwndMain, toolsList.str().c_str(), "Agent Tools",
+                    MB_OK | MB_ICONINFORMATION);
+    }
 }
 
 // View agent status

@@ -13,6 +13,9 @@
 #ifndef IDT_AGENT_THOUGHT
 #define IDT_AGENT_THOUGHT 0xA571
 #endif
+#ifndef IDT_CHAT_SMOKE
+#define IDT_CHAT_SMOKE 0xA580
+#endif
 
 struct AgentStepTimeline {
     HWND hwndList = nullptr;

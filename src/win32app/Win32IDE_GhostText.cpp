@@ -15,6 +15,8 @@
 namespace {
 constexpr UINT_PTR kGhostTimer = 0x5247;
 constexpr UINT kGhostResult = WM_APP + 73;
+// Typing debounce only — never reuse this as the Ollama HTTP deadline.
+constexpr UINT kGhostDebounceMs = 250;
 
 bool utf8ToWide(const std::string& input, std::wstring& output) {
     output.clear();
@@ -165,15 +167,28 @@ void NativeGhostTextController::onEditorChanged() {
         }
         if (!m_requestPending && m_completion.empty() && !m_timer &&
             m_editor && !text.empty()) {
-            m_timer = SetTimer(m_editor, kGhostTimer, 250, nullptr);
+            m_timer = SetTimer(m_editor, kGhostTimer, kGhostDebounceMs, nullptr);
         }
         return;
     }
     m_snapshot = std::move(text);
     dismiss();
     if (m_editor && !m_snapshot.empty()) {
-        m_timer = SetTimer(m_editor, kGhostTimer, 250, nullptr);
+        m_timer = SetTimer(m_editor, kGhostTimer, kGhostDebounceMs, nullptr);
     }
+}
+
+long NativeGhostTextController::resolveCaretCp() const {
+    if (!m_editor || !IsWindow(m_editor)) return -1;
+    CHARRANGE selection{};
+    // EM_EXGETSEL returns SEL_* flags; SEL_EMPTY==0 at a caret is success.
+    SendMessageW(m_editor, EM_EXGETSEL, 0,
+                 reinterpret_cast<LPARAM>(&selection));
+    long caret = selection.cpMin;
+    const int length = GetWindowTextLengthW(m_editor);
+    if (length < 0) return -1;
+    if (caret < 0 || caret > length) caret = length;
+    return caret;
 }
 
 void NativeGhostTextController::triggerCompletion() {
@@ -196,11 +211,13 @@ void NativeGhostTextController::requestCompletion() {
         : m_promptPrefix + " Return only the text to append at the current caret; do not repeat the existing document prefix and do not use markdown:\n") + m_snapshot;
     auto accumulated = std::make_shared<std::string>();
 
-    long cursor = -1;
-    CHARRANGE selection{};
-    if (m_editor && SendMessageA(m_editor, EM_EXGETSEL, 0,
-                                 reinterpret_cast<LPARAM>(&selection)) != 0) {
-        cursor = selection.cpMax;
+    m_caretCp = resolveCaretCp();
+    if (m_caretCp < 0) {
+        if (m_trace) {
+            m_trace("GHOSTTEXT_CURSOR_UNRESOLVED request_id=" +
+                    std::to_string(requestId) + " sentinel=-1");
+        }
+        return;
     }
 
     m_requestPending = true;
@@ -210,10 +227,11 @@ void NativeGhostTextController::requestCompletion() {
                 " generation=" + std::to_string(generation) +
                 " editor_hwnd=" +
                 std::to_string(reinterpret_cast<uintptr_t>(m_editor)) +
-                " cursor=" + std::to_string(cursor) +
+                " cursor=" + std::to_string(m_caretCp) +
                 " editor_bytes=" + std::to_string(m_snapshot.size()));
         m_trace("GHOSTTEXT_REQUEST_SENT request_id=" + std::to_string(requestId) +
                 " generation=" + std::to_string(generation) +
+                " cursor=" + std::to_string(m_caretCp) +
                 " editor_bytes=" + std::to_string(m_snapshot.size()));
     }
 
@@ -294,15 +312,11 @@ void NativeGhostTextController::positionHint() {
     GetWindowRect(m_editor, &editorRect);
     POINT p{editorRect.left + 8, editorRect.top + 4};
 
-    // RichEdit exposes the caret position in client coordinates.  Anchor the
-    // hint to that position instead of painting a misleading footer overlay.
-    // If a non-RichEdit surface does not support EM_POSFROMCHAR, retain a
-    // safe top-left fallback inside the editor bounds.
-    CHARRANGE selection{};
-    if (SendMessageA(m_editor, EM_EXGETSEL, 0,
-                     reinterpret_cast<LPARAM>(&selection)) != 0) {
-        const LRESULT packed = SendMessageA(
-            m_editor, EM_POSFROMCHAR, static_cast<WPARAM>(selection.cpMax), 0);
+    // Anchor to resolved caret; SEL_EMPTY (0) from EM_EXGETSEL is success.
+    const long caret = (m_caretCp >= 0) ? m_caretCp : resolveCaretCp();
+    if (caret >= 0) {
+        const LRESULT packed = SendMessageW(
+            m_editor, EM_POSFROMCHAR, static_cast<WPARAM>(caret), 0);
         if (packed != -1) {
             POINT clientPoint{static_cast<SHORT>(LOWORD(packed)),
                               static_cast<SHORT>(HIWORD(packed))};
@@ -343,6 +357,7 @@ void NativeGhostTextController::dismiss() {
         m_timer = 0;
     }
     m_completion.clear();
+    m_caretCp = -1;
     if (m_hint) ShowWindow(m_hint, SW_HIDE);
     if (m_trace && (hadCompletion || hadPending)) {
         m_trace("GHOSTTEXT_INVALIDATED request_id=" + std::to_string(m_requestId) +
@@ -360,6 +375,16 @@ bool NativeGhostTextController::accept() {
         dismiss();
         return false;
     }
+    long caret = m_caretCp;
+    if (caret < 0) caret = resolveCaretCp();
+    if (caret < 0) {
+        if (m_trace) {
+            m_trace("GHOSTTEXT_CURSOR_UNRESOLVED request_id=" +
+                    std::to_string(m_requestId) + " phase=accept");
+        }
+        dismiss();
+        return false;
+    }
     std::wstring wideCompletion;
     if (!utf8ToWide(m_completion, wideCompletion)) {
         traceUtf8ConversionFailure(m_trace, "accept");
@@ -368,14 +393,32 @@ bool NativeGhostTextController::accept() {
     }
     if (m_trace) {
         m_trace("GHOSTTEXT_ACCEPTED request_id=" + std::to_string(m_requestId) +
+                " cursor=" + std::to_string(caret) +
                 " suggestion_bytes=" + std::to_string(m_completion.size()));
     }
-    // Replace the current selection at the caret.  Appending at EOF made
-    // accepted suggestions modify the wrong location in multi-line editors.
+    // Place the real caret before insert — never leave sentinel -1 into
+    // EM_REPLACESEL (which would append at an undefined selection).
+    CHARRANGE range{caret, caret};
+    SendMessageW(m_editor, EM_EXSETSEL, 0, reinterpret_cast<LPARAM>(&range));
+    const size_t acceptedBytes = m_completion.size();
+    const std::string before = editorText();
     SendMessageW(m_editor, EM_REPLACESEL, TRUE,
                  reinterpret_cast<LPARAM>(wideCompletion.c_str()));
+    const std::string after = editorText();
+    // RichEdit may normalize newlines; require growth + suggestion substring.
+    const bool documentVerified =
+        after.size() > before.size() &&
+        after.find(m_completion) != std::string::npos;
+    if (m_trace) {
+        m_trace(std::string("GHOSTTEXT_DOCUMENT_CONTENT_VERIFIED request_id=") +
+                std::to_string(m_requestId) +
+                " verified=" + (documentVerified ? "1" : "0") +
+                " cursor=" + std::to_string(caret) +
+                " accepted_bytes=" + std::to_string(acceptedBytes) +
+                " document_bytes=" + std::to_string(after.size()));
+    }
     dismiss();
-    return true;
+    return documentVerified;
 }
 
 bool NativeGhostTextController::handleMessage(UINT message, WPARAM wParam, LPARAM lParam) {
@@ -428,6 +471,12 @@ bool NativeGhostTextController::handleMessage(UINT message, WPARAM wParam, LPARA
                 " snapshot_current=" + (snapshotCurrent ? "1" : "0"));
     }
     if (eligible) {
+        if (m_trace) {
+            m_trace("GHOSTTEXT_SUGGESTION_VALIDATED request_id=" +
+                    std::to_string(result->requestId) +
+                    " response_bytes=" +
+                    std::to_string(result->response.text.size()));
+        }
         showCompletion(result->response.text, result->generation);
     } else if (m_trace) {
         m_trace("GHOSTTEXT_RENDER_DECISION request_id=" +

@@ -233,7 +233,20 @@ public:
      */
     std::string resolve(const std::string& raw, bool mustExist) const {
         std::string rel = toRelative(raw);
-        if (rel.empty() || rel.find("..") != std::string::npos) return {};
+        if (rel.empty()) return {};
+        // Reject parent-directory segments only (not substrings like "foo..bar").
+        {
+            std::string tok;
+            for (size_t i = 0; i <= rel.size(); ++i) {
+                const char c = (i < rel.size()) ? rel[i] : '/';
+                if (c == '/' || c == '\\') {
+                    if (tok == "..") return {};
+                    tok.clear();
+                } else {
+                    tok.push_back(c);
+                }
+            }
+        }
 
         fs::path root(root_);
         fs::path candidate = root / rel;
@@ -244,7 +257,12 @@ public:
         auto rootStr = root.lexically_normal().wstring();
         auto absStr = abs.wstring();
         if (rootStr.size() > absStr.size()) return {};
+        // Require exact root match or root + path separator (fail-closed).
         if (absStr.compare(0, rootStr.size(), rootStr) != 0) return {};
+        if (absStr.size() > rootStr.size()) {
+            const wchar_t sep = absStr[rootStr.size()];
+            if (sep != L'\\' && sep != L'/') return {};
+        }
         if (mustExist && !fs::exists(abs)) return {};
         return abs.string();
     }
@@ -278,6 +296,14 @@ struct CommandResult {
     std::string output;
     std::string error;
 };
+
+// Cooperative cancel flag for in-flight tool processes (Ctrl-C / loop cancel).
+inline volatile LONG* g_toolCancelFlag = nullptr;
+inline void setToolCancelFlag(volatile LONG* flag) { g_toolCancelFlag = flag; }
+inline bool toolCancelRequested() {
+    return g_toolCancelFlag &&
+           InterlockedCompareExchange(g_toolCancelFlag, 0, 0) != 0;
+}
 
 inline CommandResult runBoundedCommand(const std::string& cmdLine,
                                        const std::string& cwd,
@@ -337,6 +363,13 @@ inline CommandResult runBoundedCommand(const std::string& cmdLine,
                 buf[rd] = 0;
                 res.output += buf;
             }
+            break;
+        }
+        if (toolCancelRequested()) {
+            TerminateProcess(pi.hProcess, 1);
+            timedOut = true;
+            res.exitCode = static_cast<DWORD>(-1);
+            res.output += "\n[RAWRXD-NOTE] command killed by cancel";
             break;
         }
         if (GetTickCount() - start > timeoutMs) {
@@ -414,12 +447,17 @@ void registerDefaultTools(ToolRegistry& reg, const Workspace& ws);
 
 struct InferenceResult {
     bool ok = false;
+    bool canceled = false;
     std::string content;
     std::string finishReason;
     std::string error;
     int promptTokens = 0;
     int completionTokens = 0;
+    int streamDeltas = 0;
 };
+
+using StreamDeltaFn = std::function<void(const std::string& delta)>;
+using CancelCheckFn = std::function<bool()>;
 
 class InferenceClient {
 public:
@@ -432,6 +470,12 @@ public:
     /// @brief Blocking chat completion against the local backend.
     InferenceResult complete(const std::vector<json>& messages, int maxTokens,
                              double temperature = 0.2);
+
+    /// @brief OpenAI-compatible SSE stream (`stream=true`) with cancel polls.
+    InferenceResult completeStream(const std::vector<json>& messages, int maxTokens,
+                                   double temperature = 0.2,
+                                   StreamDeltaFn onDelta = {},
+                                   CancelCheckFn shouldCancel = {});
 
     /// @brief Cheap liveness probe used by `rawr doctor` and session startup.
     /// @param timeoutMs Must cover a COLD model load: ping() performs a real

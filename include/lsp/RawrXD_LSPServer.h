@@ -274,9 +274,10 @@ public:
     // ---- Main loop (blocking, for stdio mode) ----
     void runBlocking();                    // Blocks until shutdown received
 
-    // ---- In-process message injection (for Win32IDE bridge) ----
+    // ---- In-process message injection (for Win32IDE bridge / CLI embed) ----
     void injectMessage(const std::string& jsonRpcMessage);
     std::string pollOutgoing();            // Returns next outgoing message, or ""
+    void processMessageSync(const std::string& jsonRpcMessage);  // no stdio threads
 
     // ---- Symbol database operations ----
     void rebuildIndex();                                   // Full re-index from rootPath
@@ -327,6 +328,8 @@ private:
     nlohmann::json handleTextDocumentDocumentSymbol(int id, const nlohmann::json& params);
     nlohmann::json handleWorkspaceSymbol(int id, const nlohmann::json& params);
     nlohmann::json handleTextDocumentSemanticTokensFull(int id, const nlohmann::json& params);
+    nlohmann::json handleTextDocumentRename(int id, const nlohmann::json& params);
+    nlohmann::json handleTextDocumentCodeAction(int id, const nlohmann::json& params);
 
     // ---- LSP Notification Handlers ----
     void handleInitialized(const nlohmann::json& params);

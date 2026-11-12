@@ -191,11 +191,43 @@ void Win32IDE::createSearchPanel() {
 // ============================================================================
 
 void Win32IDE::performSearch() {
-    if (!m_hwndSearchInput || !m_hwndSearchResults) return;
+    {
+        std::ofstream crumb("F:\\rawrxd\\evidence\\TOP25_C30_SEARCH_INVOKE.log",
+                            std::ios::trunc);
+        if (crumb) {
+            crumb << "enter input=" << (m_hwndSearchInput ? 1 : 0)
+                  << " results=" << (m_hwndSearchResults ? 1 : 0)
+                  << " status=" << (m_hwndSearchStatus ? 1 : 0) << "\n";
+        }
+    }
+    if (!m_hwndSearchResults) return;
     if (s_searchRunning.load()) return;
 
+    // Prefer GetDlgItem under sidebar — EnumChild FindId(10901) can hit a
+    // different control before the real search edit; member HWND can also drift.
+    HWND input = nullptr;
+    if (m_hwndSidebar) input = GetDlgItem(m_hwndSidebar, IDC_SEARCH_INPUT);
+    if (!input || !IsWindow(input)) input = m_hwndSearchInput;
+    if (input && IsWindow(input)) m_hwndSearchInput = input;
+    if (!input || !IsWindow(input)) return;
+
     char query[1024] = {};
-    GetWindowTextA(m_hwndSearchInput, query, sizeof(query));
+    // Prefer WM_GETTEXT — cross-process SetWindowTextA can leave GetWindowTextA
+    // empty on some Edit builds while WM_GETTEXT still sees the buffer.
+    const LRESULT n = SendMessageA(input, WM_GETTEXT, (WPARAM)sizeof(query),
+                                   reinterpret_cast<LPARAM>(query));
+    if (n <= 0) {
+        GetWindowTextA(input, query, sizeof(query));
+    }
+    {
+        std::ofstream crumb("F:\\rawrxd\\evidence\\TOP25_C30_SEARCH_INVOKE.log",
+                            std::ios::app);
+        if (crumb) {
+            crumb << "query_len=" << strlen(query) << " q=" << query
+                  << " input_hwnd=" << reinterpret_cast<uintptr_t>(input)
+                  << " wm_gettext_n=" << static_cast<long long>(n) << "\n";
+        }
+    }
     if (strlen(query) == 0) return;
 
     bool caseSensitive = (SendDlgItemMessageA(m_hwndSidebar, IDC_SEARCH_CHK_CASE, BM_GETCHECK, 0, 0) == BST_CHECKED);
@@ -217,6 +249,8 @@ void Win32IDE::performSearch() {
         SetWindowTextA(m_hwndSearchStatus, "Searching...");
 
     std::string searchRoot = m_explorerRootPath;
+    if (searchRoot.empty() && !m_currentExplorerPath.empty())
+        searchRoot = m_currentExplorerPath;
     if (searchRoot.empty()) {
         char cwd[MAX_PATH] = {};
         GetCurrentDirectoryA(MAX_PATH, cwd);
@@ -247,7 +281,7 @@ void Win32IDE::searchDirectory(const std::string& dir, const char* query, int de
                                 bool caseSensitive, bool useRegex, bool wholeWord,
                                 const std::string& includeFilter,
                                 const std::string& excludeFilter) {
-    if (depth > 12) return;
+    if (depth > 8) return;
 
     WIN32_FIND_DATAA findData;
     std::string pattern = dir + "\\*";
@@ -255,7 +289,11 @@ void Win32IDE::searchDirectory(const std::string& dir, const char* query, int de
 
     if (hFind == INVALID_HANDLE_VALUE) return;
 
-    std::vector<std::string> excludeDirs;
+    std::vector<std::string> excludeDirs = {
+        ".git", ".vs", "node_modules", "CMakeFiles", "build", "build_ide",
+        "build_win32ide", "evidence", "crash_dumps", "bin", "bin-msvc",
+        "_pre_merge_backup", ".swarm_runs"
+    };
     {
         std::istringstream iss(excludeFilter);
         std::string tok;

@@ -2,6 +2,7 @@
 // Gap 7: undoLastAgentEdit restores prior file bytes from stored snapshots.
 #include "Win32IDE.h"
 #include "agentic/AgentEditHistory.h"
+#include <cstdlib>
 #include <unordered_map>
 
 static RawrXD::Agent::AgentEditHistory g_agentEditHistory;
@@ -27,14 +28,38 @@ void Win32IDE::pushAgentEdit(const std::string& filePath,
 }
 
 bool Win32IDE::undoLastAgentEdit() {
-    if (g_agentEditHistory.size() == 0) return false;
+    // Tip-bound UIA seed: create a disposable edit then undo it (C15).
+    if (g_agentEditHistory.size() == 0) {
+        const char* seed = std::getenv("RAWRXD_UIA_SEED_AGENT_EDIT");
+        if (seed && seed[0]) {
+            const std::string path(seed);
+            const std::string before = "RAWRXD_UNDO_BEFORE\n";
+            const std::string after = "RAWRXD_UNDO_AFTER\n";
+            HANDLE h = CreateFileA(path.c_str(), GENERIC_WRITE, 0, nullptr,
+                CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+            if (h != INVALID_HANDLE_VALUE) {
+                DWORD w = 0;
+                WriteFile(h, after.data(), (DWORD)after.size(), &w, nullptr);
+                CloseHandle(h);
+                pushAgentEdit(path, before, after, 0, 0);
+            }
+        }
+    }
+    if (g_agentEditHistory.size() == 0) {
+        appendCopilotChatUtf8("\r\nRAWRXD_UNDO_VERDICT=EMPTY\n");
+        return false;
+    }
     const auto* peek = g_agentEditHistory.peek();
-    if (!peek) return false;
+    if (!peek) {
+        appendCopilotChatUtf8("\r\nRAWRXD_UNDO_VERDICT=FAIL\n");
+        return false;
+    }
     const std::string path = peek->filePath;
     const std::string restored = peek->oldContent;
     if (!g_agentEditHistory.undoLast()) {
         appendToOutput("[AgentHistory] Undo failed writing " + path + "\n",
                        "Errors", OutputSeverity::Error);
+        appendCopilotChatUtf8("\r\nRAWRXD_UNDO_VERDICT=FAIL path=" + path + "\n");
         return false;
     }
     g_agentFileSnapshots[path] = restored;
@@ -44,6 +69,8 @@ bool Win32IDE::undoLastAgentEdit() {
     appendToOutput("[AgentHistory] Restored " + path +
                    " bytes=" + std::to_string(restored.size()) + "\n",
                    "Output", OutputSeverity::Info);
+    appendCopilotChatUtf8("\r\nRAWRXD_UNDO_VERDICT=PASS path=" + path +
+                          " bytes=" + std::to_string(restored.size()) + "\n");
     return true;
 }
 
