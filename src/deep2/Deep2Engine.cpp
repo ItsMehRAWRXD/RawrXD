@@ -532,14 +532,17 @@ static bool deriveAttentionGeometry(const ModelWeights &mw, AttentionGeometry &g
     for (size_t i = 0; i < mw.layers.size(); ++i)
     {
         const LayerWeights &lw = mw.layers[i];
-        if (lw.hasSSM && !lw.wq.data && !lw.wqkv.data)
-            continue; // SSM-only layer does not use attention KV
+        // SSM-only and Qwen3.5 gated attn_qkv hybrids do not expose classic
+        // Q/K/V geometry. Treating gated wqkv as fused QKV invents bogus
+        // kvHeads (e.g. 24) and fails GQA against metadata heads.
+        if (lw.hasSSM && !lw.wq.data)
+            continue;
 
         size_t qRows = lw.wq.data ? lw.wq.rows : 0;
         size_t kRows = lw.wk.data ? lw.wk.rows : 0;
         size_t vRows = lw.wv.data ? lw.wv.rows : 0;
 
-        if (lw.wqkv.data)
+        if (lw.wqkv.data && !lw.hasSSM)
         {
             // Fused QKV: rows = hiddenDim + 2*kvDim.
             if (lw.wqkv.rows <= mw.hiddenDim ||
@@ -616,6 +619,20 @@ static bool deriveAttentionGeometry(const ModelWeights &mw, AttentionGeometry &g
 
     if (!haveFirst || seenLayers == 0)
     {
+        // Hybrid MoE/SSM models (qwen35moe / ornith) may bind only gated
+        // attn_qkv on SSM layers while full-attn layers use key_length-sized
+        // heads that are not yet projected into classic wq/wk/wv rows here.
+        // Fall back to authoritative metadata rather than refusing open.
+        if (mw.numHeads > 0 && mw.numKVHeads > 0 && mw.headDim > 0 &&
+            (mw.numHeads % mw.numKVHeads) == 0)
+        {
+            g.headDim = mw.headDim;
+            g.numHeads = mw.numHeads;
+            g.numKVHeads = mw.numKVHeads;
+            g.valid = true;
+            g.detail = "metadata fallback (no classic Q/K/V layers bound)";
+            return true;
+        }
         g.detail = "no attention layers found";
         return false;
     }
@@ -696,8 +713,8 @@ static bool configureKVCacheFor(ModelWeights &mw, EngineConfig &cfg,
     size_t attnLayers = 0;
     for (const auto &lw : mw.layers)
     {
-        if (lw.hasSSM && !lw.wq.data && !lw.wqkv.data)
-            continue;
+        if (lw.hasSSM && !lw.wq.data)
+            continue; // gated SSM hybrid is not a KV-cache attention layer
         if (lw.wq.data || lw.wk.data || lw.wv.data || lw.wqkv.data)
             ++attnLayers;
     }
@@ -770,8 +787,8 @@ static bool validateKVCacheGeometryFor(const ModelWeights &mw,
     size_t attnLayers = 0;
     for (const auto &lw : mw.layers)
     {
-        if (lw.hasSSM && !lw.wq.data && !lw.wqkv.data)
-            continue;
+        if (lw.hasSSM && !lw.wq.data)
+            continue; // gated SSM hybrid is not a KV-cache attention layer
         if (lw.wq.data || lw.wk.data || lw.wv.data || lw.wqkv.data)
             ++attnLayers;
     }
@@ -3822,6 +3839,22 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
     residencyManager_ = std::make_unique<ResidencyManager>();
     ResidencyConfig resConfig;
     resConfig.maxResidentBytes = 512ULL * 1024 * 1024;
+    // Honor the same budget knobs GpuForward already reads. The prior hard
+    // 512 MiB window forced 70B paging into an impossible pin set.
+    auto parseBudgetMib = [](const char* env) -> unsigned long long {
+        if (!env || !env[0]) return 0;
+        char* end = nullptr;
+        const unsigned long long mib = std::strtoull(env, &end, 10);
+        if (end == env || (end && *end != '\0') || mib == 0)
+            return 0;
+        if (mib > (std::numeric_limits<unsigned long long>::max() >> 20))
+            return 0;
+        return mib;
+    };
+    if (unsigned long long mib = parseBudgetMib(std::getenv("DEEP2_WEIGHT_BUDGET_MIB")))
+        resConfig.maxResidentBytes = mib << 20;
+    else if (unsigned long long mib = parseBudgetMib(std::getenv("WEIGHT_BUDGET_MIB")))
+        resConfig.maxResidentBytes = mib << 20;
     resConfig.pageAlignment = 4096;
     resConfig.mapGranularity = 65536;
     resConfig.oversizePolicy = ResidencyConfig::OversizePolicy::DedicatedWindow;
@@ -10161,7 +10194,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         // S07 diagnostic: dump qProj immediately after Q LinearW.
         {
             static bool s_qAfterDump = false;
-            if (!s_qAfterDump && layer == 0)
+            if (!s_qAfterDump && layer == 27)
             {
                 s_qAfterDump = true;
                 std::fprintf(stderr, "[Q_AFTER] q0..5=%.6e %.6e %.6e %.6e %.6e %.6e\n",
@@ -10170,7 +10203,22 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             }
         }
         emitMiniMaxQDiag("Q_PRE_NORM", qProj, projectedQDim);
-        B3_TraceState("ATTN_Q", layer, qProj, projectedQDim);
+        // S08 diagnostic: dump attention output and attention scores for all layers (first token only)
+        {
+            static bool s_attnDump = false;
+            if (!s_attnDump)
+            {
+                s_attnDump = true;
+                // Dump first 6 attention scores and output for this layer
+                std::fprintf(stderr, "[S08_ATTN_DUMP] layer=%zu q0..5=%.6e %.6e %.6e %.6e %.6e %.6e\n",
+                             layer, qProj[0], qProj[1], qProj[2], qProj[3], qProj[4], qProj[5]);
+                std::fprintf(stderr, "[S08_ATTN_DUMP] layer=%zu k0..5=%.6e %.6e %.6e %.6e %.6e %.6e\n",
+                             layer, kProj[0], kProj[1], kProj[2], kProj[3], kProj[4], kProj[5]);
+                std::fprintf(stderr, "[S08_ATTN_DUMP] layer=%zu v0..5=%.6e %.6e %.6e %.6e %.6e %.6e\n",
+                             layer, vProj[0], vProj[1], vProj[2], vProj[3], vProj[4], vProj[5]);
+                std::fflush(stderr);
+            }
+        }
 
         // ── Layer 12 diagnostic: Q norm (opt-in) ──
         if (layer == 12 && Deep2DebugEnabled())
@@ -12149,6 +12197,20 @@ void Deep2Engine::computeLogits(const float* hiddenState, float* logits)
 
     // ── VAL-051.7: Clear logits before compute to prevent stale values ─
     std::fill(logits, logits + config.vocabSize, 0.0f);
+
+    // S07 diagnostic: dump final hidden state (first forward only) — valid
+    // checkpoint for CPU vs GPU comparison (post-submit).
+    {
+        static bool s_hiddenDump = false;
+        if (!s_hiddenDump)
+        {
+            s_hiddenDump = true;
+            std::fprintf(stderr, "[HIDDEN_DUMP] h0..5=%.6e %.6e %.6e %.6e %.6e %.6e\n",
+                         hiddenState[0], hiddenState[1], hiddenState[2], hiddenState[3],
+                         hiddenState[4], hiddenState[5]);
+            std::fflush(stderr);
+        }
+    }
 
     // ── Diagnostic: verify hidden state and weights (opt-in) ───────────
     if (B3_LogitsTraceEnabled())

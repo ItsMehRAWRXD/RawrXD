@@ -243,10 +243,16 @@ void main() {
     }
 
     float acc = 0.0;
-    if (pc.type == 12u || pc.type == 14u) {
-        // Match vec_dot_q{4,6}_K_q8_K: quantize each activation super-block
-        // with the selected signed maximum, then perform the integer dot with
-        // the packed q4/q6 values and apply the block scales.
+    // Q4_K (12): FP32 dequant×act matching Deep2Engine::q4kGEMV /
+    // ggml dequantize_row_q4_K (paired scales over 32-byte qs chunks).
+    // The prior Q8_K activation path diverged from the CPU authority enough
+    // to flip first-token argmax (576 ' The' vs 64787 ' madrid').
+    if (pc.type == 12u) {
+        for (uint j = lane * 4u; j < pc.cols; j += 1024u)
+            acc += q4k_dot4(rb, j);
+    } else if (pc.type == 14u) {
+        // Match vec_dot_q6_K_q8_K: quantize each activation super-block
+        // with the selected signed maximum, then integer-dot with q6.
         const uint blocks = (pc.cols + 255u) / 256u;
         for (uint block = 0u; block < blocks; ++block) {
             const uint col = block * 256u + lane;
@@ -282,52 +288,38 @@ void main() {
             barrier();
 
             if (col < pc.cols) {
-                if (pc.type == 12u) {
-                    const uint b = rb + block * 144u;
-                    const uint idx = lane;
-                    const uint sb = idx / 32u;
-                    const uint l = idx % 32u;
-                    uint sc, mn;
-                    q4kScaleMin(b, sb, sc, mn);
-                    const uint pair = sb / 2u;
-                    const uint packed = getb(b + 16u + pair * 32u + l);
-                    const uint q = (sb & 1u) == 0u ? (packed & 15u) : (packed >> 4u);
-                    acc += q8D * float(q8) * geth(b) * float(sc) * float(q) -
-                           q8D * float(q8) * geth(b + 2u) * float(mn);
+                const uint b = rb + block * 210u;
+                const uint idx = lane;
+                const uint hi128 = idx / 128u;
+                const uint within = idx % 128u;
+                const uint cat = within / 32u;
+                const uint l = within % 32u;
+                const uint is = l / 16u;
+                const uint qlBase = b + hi128 * 64u;
+                const uint qhBase = b + 128u + hi128 * 32u;
+                const uint scBase = b + 192u + hi128 * 8u;
+                uint q = 0u;
+                uint scIndex = 0u;
+                if (cat == 0u) {
+                    q = (getb(qlBase + l) & 15u) |
+                        (((getb(qhBase + l) >> 0u) & 3u) << 4u);
+                    scIndex = is + 0u;
+                } else if (cat == 1u) {
+                    q = (getb(qlBase + l + 32u) & 15u) |
+                        (((getb(qhBase + l) >> 2u) & 3u) << 4u);
+                    scIndex = is + 2u;
+                } else if (cat == 2u) {
+                    q = (getb(qlBase + l) >> 4u) |
+                        (((getb(qhBase + l) >> 4u) & 3u) << 4u);
+                    scIndex = is + 4u;
                 } else {
-                    const uint b = rb + block * 210u;
-                    const uint idx = lane;
-                    const uint hi128 = idx / 128u;
-                    const uint within = idx % 128u;
-                    const uint cat = within / 32u;
-                    const uint l = within % 32u;
-                    const uint is = l / 16u;
-                    const uint qlBase = b + hi128 * 64u;
-                    const uint qhBase = b + 128u + hi128 * 32u;
-                    const uint scBase = b + 192u + hi128 * 8u;
-                    uint q = 0u;
-                    uint scIndex = 0u;
-                    if (cat == 0u) {
-                        q = (getb(qlBase + l) & 15u) |
-                            (((getb(qhBase + l) >> 0u) & 3u) << 4u);
-                        scIndex = is + 0u;
-                    } else if (cat == 1u) {
-                        q = (getb(qlBase + l + 32u) & 15u) |
-                            (((getb(qhBase + l) >> 2u) & 3u) << 4u);
-                        scIndex = is + 2u;
-                    } else if (cat == 2u) {
-                        q = (getb(qlBase + l) >> 4u) |
-                            (((getb(qhBase + l) >> 4u) & 3u) << 4u);
-                        scIndex = is + 4u;
-                    } else {
-                        q = (getb(qlBase + l + 32u) >> 4u) |
-                            (((getb(qhBase + l) >> 6u) & 3u) << 4u);
-                        scIndex = is + 6u;
-                    }
-                    const int qs = int(q) - 32;
-                    const int scale = gets8(scBase + scIndex);
-                    acc += q8D * float(q8) * geth(b + 208u) * float(scale) * float(qs);
+                    q = (getb(qlBase + l + 32u) >> 4u) |
+                        (((getb(qhBase + l) >> 6u) & 3u) << 4u);
+                    scIndex = is + 6u;
                 }
+                const int qs = int(q) - 32;
+                const int scale = gets8(scBase + scIndex);
+                acc += q8D * float(q8) * geth(b + 208u) * float(scale) * float(qs);
             }
             barrier();
         }

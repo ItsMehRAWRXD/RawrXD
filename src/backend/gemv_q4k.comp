@@ -1,5 +1,7 @@
 #version 450
-// gemv_q4k.comp — fused Q4_K dequant+dot, interleaved subgroups (MLA parity twin)
+// gemv_q4k.comp — fused Q4_K dequant+dot matching ggml dequantize_row_q4_K
+// Layout: for scale pair (is,is+1), qs[0..31] lo→group is, hi→group is+1.
+// Do NOT use per-16-byte interleaved lo/hi within one scale (pre-VAL-051 bug).
 layout(local_size_x = 64) in;
 layout(binding = 0) readonly buffer W { uint packed[]; };
 layout(binding = 1) readonly buffer In { float x[]; };
@@ -17,11 +19,9 @@ void scmin(uint base, uint j, out uint sc, out uint m) {
     sc = u8(base + j) & 63u;
     m = u8(base + j + 4u) & 63u;
   } else {
-    uint a = u8(base + j + 4u);
-    uint b = u8(base + j - 4u);
-    uint c = u8(base + j);
-    sc = (a & 15u) | ((b >> 6) << 4);
-    m = (a >> 4) | ((c >> 6) << 4);
+    // llama.cpp get_scale_min_k4: 6-bit scales packed in 12 bytes.
+    sc = (u8(base + j + 4u) & 0xFu) | ((u8(base + j - 4u) >> 6u) << 4u);
+    m = (u8(base + j + 4u) >> 4u) | ((u8(base + j) >> 6u) << 4u);
   }
 }
 
@@ -38,19 +38,23 @@ void main() {
     uint scb = blk + 4u;
     uint qbase = blk + 16u;
     uint elem = b * 256u;
-    for (uint s = 0u; s < 8u; ++s) {
-      uint sc, m;
-      scmin(scb, s, sc, m);
-      float scale = d * float(sc);
-      float minv = dmin * float(m);
-      uint qo = qbase + s * 16u;
-      uint baseIdx = elem + s * 32u;
-      for (uint k = 0u; k < 16u; ++k) {
-        uint byte = u8(qo + k);
-        uint lo = baseIdx + k;
-        uint hi = lo + 16u;
-        if (lo < pc.cols) sum += (scale * float(byte & 15u) - minv) * x[lo];
-        if (hi < pc.cols) sum += (scale * float((byte >> 4) & 15u) - minv) * x[hi];
+    // 4 groups of 64 elements; each uses 32 qs bytes (paired scales).
+    for (uint j = 0u; j < 4u; ++j) {
+      uint sc0, m0, sc1, m1;
+      scmin(scb, j * 2u, sc0, m0);
+      scmin(scb, j * 2u + 1u, sc1, m1);
+      float d1 = d * float(sc0);
+      float m1v = dmin * float(m0);
+      float d2 = d * float(sc1);
+      float m2v = dmin * float(m1);
+      uint qo = qbase + j * 32u;
+      uint baseIdx = elem + j * 64u;
+      for (uint l = 0u; l < 32u; ++l) {
+        uint byte = u8(qo + l);
+        if (baseIdx + l < pc.cols)
+          sum += (d1 * float(byte & 15u) - m1v) * x[baseIdx + l];
+        if (baseIdx + l + 32u < pc.cols)
+          sum += (d2 * float((byte >> 4) & 15u) - m2v) * x[baseIdx + l + 32u];
       }
     }
   }

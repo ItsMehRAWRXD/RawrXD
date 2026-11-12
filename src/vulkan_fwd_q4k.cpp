@@ -12,11 +12,18 @@
 namespace CPUInference {
 namespace {
 bool LoadQ4kSpv(std::vector<uint32_t>& code) {
+    // Prefer cwd/bin, then this workspace (F:), then legacy G: mirrors.
     const char* paths[] = {
+        "gemv_q4k.spv",
+        "bin/gemv_q4k.spv",
+        "src/backend/gemv_q4k.spv",
+        "F:/rawrxd/src/backend/gemv_q4k.spv",
+        "F:\\rawrxd\\src\\backend\\gemv_q4k.spv",
+        "F:/rawrxd/build/bin/gemv_q4k.spv",
+        "F:/~dev/rawrxd/src/backend/gemv_q4k.spv",
         "G:/~dev/rawrxd/src/backend/gemv_q4k.spv",
         "G:\\~dev\\rawrxd\\src\\backend\\gemv_q4k.spv",
         "G:/~dev/rawrxd/build-ninja/bin/gemv_q4k.spv",
-        "gemv_q4k.spv", "bin/gemv_q4k.spv",
     };
     for (const char* p : paths) {
         std::ifstream f(p, std::ios::binary | std::ios::ate);
@@ -26,6 +33,7 @@ bool LoadQ4kSpv(std::vector<uint32_t>& code) {
         f.read(reinterpret_cast<char*>(code.data()), (std::streamsize)n);
         if (!code.empty()) {
             printf("[VulkanCompute] Q4K_SPV=%s bytes=%zu\n", p, n);
+            fflush(stdout);
             return true;
         }
     }

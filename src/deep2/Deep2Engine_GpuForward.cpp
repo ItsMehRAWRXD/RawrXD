@@ -274,6 +274,37 @@ bool Deep2Engine::forwardLayerGpuResident(
                                  weightKey(lw.ffnNorm), hidden))
         return reject("reject: resolve resident ffnNorm failed");
 
+    // S08: Q/K/V biases must be resident BEFORE BeginFusedLayer.  A mid-fuse
+    // UploadBuf into ArenaAttnW/Gate/Up races the fused QGEMV (which only
+    // writes ArenaQ/K/V at EndFusedLayer) and effectively skips bias — the
+    // measured first-token regression to the no-bias CPU id (64787).
+    DeviceBuf bqDev{}, bkDev{}, bvDev{};
+    const bool haveBq =
+        lw.bq.data &&
+        lw.bq.sizeBytes >= lw.wq.rows * sizeof(float) &&
+        lw.bq.type == static_cast<int>(GGMLType::GGML_TYPE_F32);
+    const bool haveBk =
+        lw.bk.data &&
+        lw.bk.sizeBytes >= static_cast<size_t>(kvDim) * sizeof(float) &&
+        lw.bk.type == static_cast<int>(GGMLType::GGML_TYPE_F32);
+    const bool haveBv =
+        lw.bv.data &&
+        lw.bv.sizeBytes >= static_cast<size_t>(kvDim) * sizeof(float) &&
+        lw.bv.type == static_cast<int>(GGMLType::GGML_TYPE_F32);
+    if (haveBq &&
+        !gpu->ResolveResidentF32(bqDev, static_cast<const float*>(lw.bq.data),
+                                 weightKey(lw.bq),
+                                 static_cast<uint32_t>(lw.wq.rows)))
+        return reject("reject: resolve resident bq failed");
+    if (haveBk &&
+        !gpu->ResolveResidentF32(bkDev, static_cast<const float*>(lw.bk.data),
+                                 weightKey(lw.bk), kvDim))
+        return reject("reject: resolve resident bk failed");
+    if (haveBv &&
+        !gpu->ResolveResidentF32(bvDev, static_cast<const float*>(lw.bv.data),
+                                 weightKey(lw.bv), kvDim))
+        return reject("reject: resolve resident bv failed");
+
     auto& counters = gpuFwd_;
     if (ownRecording && !gpu->BeginFusedLayer()) {
         gpuForwardTrace("reject: BeginFusedLayer failed");
@@ -340,6 +371,29 @@ bool Deep2Engine::forwardLayerGpuResident(
         !gemv(lw.wv, gpu->ArenaNormed(), gpu->ArenaV(), kvDim, hidden))
         return fail();
     counters.qkvOps += 3;
+
+    // S08: record Q/K/V bias adds into the fused command buffer only.
+    // Bias buffers were resolved resident above; do not UploadBuf here.
+    {
+        static bool s_biasDiag = false;
+        if (!s_biasDiag && (haveBq || haveBk || haveBv)) {
+            s_biasDiag = true;
+            std::fprintf(stderr,
+                         "[S08_BIAS_DIAG] bq=%d bk=%d bv=%d resident=1 fused_add=1\n",
+                         haveBq ? 1 : 0, haveBk ? 1 : 0, haveBv ? 1 : 0);
+            std::fflush(stderr);
+        }
+        if (haveBq &&
+            !gpu->DispatchResidualAdd(gpu->ArenaQ(), bqDev, gpu->ArenaQ(),
+                                      static_cast<uint32_t>(lw.wq.rows)))
+            return fail();
+        if (haveBk &&
+            !gpu->DispatchResidualAdd(gpu->ArenaK(), bkDev, gpu->ArenaK(), kvDim))
+            return fail();
+        if (haveBv &&
+            !gpu->DispatchResidualAdd(gpu->ArenaV(), bvDev, gpu->ArenaV(), kvDim))
+            return fail();
+    }
 
     // The active adapter preserves the historical parameter names
     // (nHeads,nope,rope), but forwards them to the backend as
@@ -447,6 +501,20 @@ bool Deep2Engine::forwardGpuContiguousRange(
     if (!gpu->DownloadHidden(hostOut, static_cast<uint32_t>(modelWeights.hiddenDim))) {
         gpuForwardTrace("reject: contiguousRange DownloadHidden");
         return false;
+    }
+    // S08 diagnostic: download the last layer's Q (valid post-submit checkpoint).
+    {
+        static bool s_lastQ = false;
+        if (!s_lastQ)
+        {
+            s_lastQ = true;
+            std::vector<float> qh(modelWeights.hiddenDim);
+            bool qd = gpu->DownloadBuf(gpu->ArenaQ(), qh.data(),
+                                       static_cast<uint32_t>(modelWeights.hiddenDim));
+            std::fprintf(stderr, "[S08_LAST_Q] dl=%d q0..5=%.6e %.6e %.6e %.6e %.6e %.6e\n",
+                         qd ? 1 : 0, qh[0], qh[1], qh[2], qh[3], qh[4], qh[5]);
+            std::fflush(stderr);
+        }
     }
     ++gpuFwd_.hostSyncBoundaries;
     return true;
