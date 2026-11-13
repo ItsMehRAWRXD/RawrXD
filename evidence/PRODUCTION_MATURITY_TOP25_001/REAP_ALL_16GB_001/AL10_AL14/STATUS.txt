@@ -36,9 +36,11 @@ AL10 TOK3_SELECTED_ID still OPEN (need ARGMAX on complete paired runs).
 
 ## Chained next
 
-[MiniMax softmax SwiGLU FNV](af48142c-7c25-4489-9f51-df59ab917a7a) — attn softmax scale / MoE SwiGLU / lm_head vs llama.
+[MiniMax softmax SwiGLU FNV](af48142c-7c25-4489-9f51-df59ab917a7a) — **CLOSED formula** (`RE_MINIMAX_SOFTMAX_SWIGLU_LMHEAD_001`):
+  Softmax `1/sqrt(128)` MATCH · SwiGLU silu(gate)*up MATCH · lm_head FNV REFERENCE_BLOCKED (TIMEOUT).
+  PATCH=N. Does **not** explain AL09 tok4 L17 input mismatch (decode-after-tok0).
 
-SCOREBOARD next for Deep2↔ggml: seal Q_LINEAR_0 (Batch01).
+SCOREBOARD next for Deep2↔ggml: seal Q_LINEAR_0 (Batch01); AL09/AL11 remain OPEN for tok4+.
 
 ```
 PROMOTE=0

@@ -47,18 +47,22 @@ Prior retain-256 theta EXE: `EA4E20229633F9671F1B43620A3B6F27D21667F57A784B06830
 | MiniMax forward residual | **MATCH** | attn→+res→ffn_norm→moe→+res |
 | MiniMax STREAM_CORRECTNESS | **NOT_PASS** | backtick runs (`2765:11.62`) |
 | MiniMax retain-256 quality | **RUNTIME_REACHED / NOT_PASS** | `minimax_r256_quality.*` + `minimax_r256_theta_moe.*` |
+| MiniMax attn softmax scale | **MATCH** | `1/sqrt(128)` Deep2==llama — `RE_MINIMAX_SOFTMAX_SWIGLU_LMHEAD_001` |
+| MiniMax MoE SwiGLU order | **MATCH** | silu(gate)*up separate gate/up/down — same RE |
+| MiniMax lm_head vs llama FNV | **REFERENCE_BLOCKED** | llama-direct CPU TIMEOUT (walltime/load); DLL OK |
 | Kimi COHERENT_USEFUL | **OPEN** | `QUALITY_149.txt` |
 | GUI four-panel | **FAIL_CLOSED** | `FOUR_PANEL_COMPLETION_001` |
 
 ## RE notes (this turn)
 
+- **Softmax / SwiGLU / lm_head RE:** `RE_MINIMAX_SOFTMAX_SWIGLU_LMHEAD_001` — softmax `1/sqrt(128)` MATCH; MoE SwiGLU `silu(gate)*up` MATCH; lm_head FNV **REFERENCE_BLOCKED** (llama-direct CPU TIMEOUT post-backend; not 0xC0000135). **PATCH=N**.
 - **PRENORM SEALED:** `B03_PRENORM_MATERIALIZE` for shard+non-MLA; ATTN_NORM_0 maxdiff=2.98e-08 vs ggml — `RE_MINIMAX_BATCH01_PRENORM_QLINEAR_001`.
-- **FIRST_DIVERGENT_OP=Q_LINEAR_0:** Q4_K GEMV maxdiff≈1.25e-3 (K/V same class). Q_NORM/K_NORM OK given Deep Q/K. No RoPE/attn/MoE patches yet.
-- **Semantic progress ≠ PASS:** RAW Hello → `.\n\nThe first` (was `olisian¶¶¶`).
+- **FIRST_DIVERGENT_OP=Q_LINEAR_0:** Q4_K GEMV maxdiff≈1.25e-3 (K/V same class). Q_NORM/K_NORM OK given Deep Q/K. Softmax/SwiGLU formula closed; not numeric root.
+- **Semantic progress ≠ PASS:** RAW Hello → `.\n\nThe first` (was `olisian¶¶¶`); retain-256 still backticks.
 - Prior closed: NeoX L2, Q4_K block, KV ownership, embed MATCH, QK-norm flat, wo/lm_head geom.
 
 ## Next executable gate
 
-Seal `Q_LINEAR_0` vs linked-ggml / llama STAGE_DIGEST (same RAW Hello). Then continue Q_ROPE→ATTN chain. No speculative MoE/attn edits.
+Seal `Q_LINEAR_0` vs linked-ggml / llama STAGE_DIGEST (same RAW Hello). Cross-link AL09 tok4 L17 / AL10_AL14 for decode-after-tok0. No speculative Softmax/SwiGLU edits.
 
 `PROMOTE=0` · `TIP_CLIMB=HOLD` · `NOT_RUN!=PASS`

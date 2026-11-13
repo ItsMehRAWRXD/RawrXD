@@ -1,0 +1,99 @@
+RE_MINIMAX_SOFTMAX_SWIGLU_LMHEAD_001
+ASOF=2026-11-13
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD
+PRIOR=RE_MINIMAX_NEOX_WO_Q6K_001 (NEXT_OWNER handoff)
+EXE_SHA256=BC1583B773D6DC28109D7F64AD43844E2F97E1FC2446E8E3F828BC73736DE3D5
+  (sealed NeoX L2 retain-256 Hello smoke; PATCH=NONE → no rebuild)
+WORKSPACE_RAWR_EXE=3477751CCFAE69D1CC5FBCA36432D86CA3442905BA42B76D86918FAEA7E30561
+  (build-fd/bin/rawr.exe at RE time; dirty tree; not rebound)
+NOT_RUN!=PASS CROSS_SHA_CREDIT=0
+
+================================================================================
+1) ATTENTION SOFTMAX SCALE — MATCH
+================================================================================
+GGUF: attention.key_length=value_length=128; rope.dimension_count=64 (partial RoPE).
+llama minimax-m2.cpp graph:
+  build_attn(..., 1.0f/sqrtf(float(n_embd_head)), ...)
+  n_embd_head = hparams.n_embd_head_v() == 128 (assert == n_embd_head_k).
+  Comment confirms n_embd_head == n_rot is WRONG for MiniMax.
+
+Deep2 (host KV path used by retain-256):
+  KVCache.cpp AttentionWithCache: scale = 1.0f / sqrtf((float)headDim)
+  Deep2Engine compressed/toroidal paths: same 1/sqrt(headDim)
+Runtime witness (minimax_neox_l2gate.err / reap16):
+  B03_ROPE_LAYOUT=NEOX ropeDim=64 headDim=128
+  [BUF] heads=48 headDim=128 qOut=6144 kv_heads=8
+No f_attn_scale / attention.scale in minimax_gguf_kv.txt → default 0 → 1/sqrt(hd).
+NOT using 1/sqrt(ropeDim=64). NOT MLA qk-dim scale (MiniMax is GQA, not MLA).
+
+VERDICT: SOFTMAX_SCALE = MATCH (1/sqrt(128))
+
+================================================================================
+2) MoE SwiGLU / gate-up-down — MATCH
+================================================================================
+llama minimax-m2 build_moe_ffn(..., up_exps, gate_exps, down_exps, ...,
+  LLM_FFN_SILU, /*norm_w=*/true, expert_weights_scale, sigmoid_func)
+ggml_swiglu_split(gate, up) → ggml_vec_swiglu_f32: y[i]=silu(x[i])*g[i]
+  with x=src0=gate, g=src1=up.
+
+Deep2 computeExpertFFN:
+  kGate → gateOut; kUp → upOut; SwiGLU(gateOut, upOut, gateOut, expertDim)
+  XR_SwiGLU_F32: dst[i]=SiLU(gate[i])*up[i]  (XR_RealMath.hpp)
+Separate gate/up/down projections (no fused gate_up_exps) — same as llama tensors.
+Activation order: gate GEMV → up GEMV → silu(gate)*up → down GEMV. MATCH.
+MiniMax: no shared expert tensors; useSharedExpert set from meta/shexp (false).
+Sigmoid gating + exp_probs_b choice bias + top-k renorm already sealed
+  (RE_MINIMAX_SIGMOID_GATE_001); B03_MOE_CFG gating_func=2 scale=1.0000.
+
+VERDICT: SWIGLU_ORDER_ACT = MATCH
+
+================================================================================
+3) lm_head logits FNV / top-1 vs llama — REFERENCE_BLOCKED
+================================================================================
+Attempt: g:\~dev\llama-direct\vulkan\llama-cli.exe (DLLs colocated — NOT 0xC0000135)
+  -m F:\ollamamodels\...\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf
+  -ngl 0 -n 1 -p Hello --temp 0 -c 64
+Witness: minimax_llama_softmax_probe2.{err,out,exit}.txt
+  backends load OK (RPC/Vulkan/CPU-zen4)
+  RESULT=TIMEOUT @45s — no model load progress past backends; stdout empty
+Prior sealed: minimax_llama_direct_hello1 / minimax_llama_hello8 = TIMEOUT @180s
+  while loading ~47GB shard-0 (+ multi-shard); no first-token logits.
+
+BLOCKER_EXACT=
+  REFERENCE_BLOCKED: llama-direct CPU Hello never emits logits / top-1 within
+  walltime; process stuck in multi-GB mmap/load after backend init.
+  (DLL missing 0xC0000135 is FIXED via llama-direct\vulkan; walltime remains.)
+
+Forced-39 Hello ID match already sealed (RE_MINIMAX_PROMPT_TOKENS_001) —
+  cannot close lm_head numeric without llama STAGE_DIGEST / logits dump.
+
+================================================================================
+4) RoPE / wo / Q6_K
+================================================================================
+NOT reopened. No concrete line mismatch found in this RE.
+Authority remains RE_MINIMAX_NEOX_WO_Q6K_001 / RE_MINIMAX_ROPE_WO_LMHEAD_001.
+
+================================================================================
+5) Cross-link AL09 / AL10_AL14 (decode after tok0)
+================================================================================
+AL09: tok1–3 L17 input FNV MATCH; tok4 L17 input MISMATCH (router symptom).
+This RE covers prefill softmax/SwiGLU/lm_head formula — does not seal tok4+.
+If decode after tok0 is chased next, retain AL10_AL14 STATUS:
+  AL11 earliest paired key still BOUNDED_OPEN (FFN_DOWN_1@pos3 incomplete full arm).
+Do not treat Softmax/SwiGLU as explaining AL09 tok4 without paired digests.
+
+Chain FIRST_DIVERGENT_OP (Batch01 RAW Hello pos0) remains Q_LINEAR_0
+  (Q4_K GEMV maxdiff≈1.25e-3) — RE_MINIMAX_BATCH01_PRENORM_QLINEAR_001.
+  Softmax/SwiGLU sit downstream of that GEMV class; formula MATCH ≠ numeric seal.
+
+================================================================================
+PATCH / DISPOSITION
+================================================================================
+PATCH=N
+FIRST_REAL_MISMATCH_THIS_OWNER=NONE
+  (softmax scale MATCH; SwiGLU MATCH; lm_head FNV REFERENCE_BLOCKED)
+STREAM_SEMANTIC=NOT_PASS (retain-256 backticks still; no fix this turn)
+NEXT_OWNER: seal Q_LINEAR_0 vs linked-ggml/llama STAGE_DIGEST (Batch01),
+  or host-side first-token logits dump without full llama-cli load,
+  or AL10_AL14 tok4 L17 input when dual CLEAN_EXIT allowlist reseal lands.
+PROMOTE=0 TIP_CLIMB=HOLD
