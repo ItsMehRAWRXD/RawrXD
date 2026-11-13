@@ -15,26 +15,32 @@ CROSS_SHA_CREDIT=0
 | STREAM_SEMANTIC retain-256 | NOT_PASS (backticks) | SCOREBOARD |
 | Allowlist bank wire | SOURCE_WIRED | [Allowlist bank wiring](1d685d31-6bdf-4a72-bdb8-6cb5c552b49e) |
 
-## AL10 from [AL10-14 MiniMax divergence](b14ea6e9-04c4-4558-969b-1452b3d76d0a)
+## AL09 seed
 
-TOK3_SELECTED=**Y** (FINAL_NORM@pos2 + PROMPT_EMBED@pos3; ARGMAX lines absent)
-FIRST_DIVERGENT_KEY=`FFN_DOWN_1` @ pos=3 (tok4) — aligned with AL09 tok4 L17 symptom
-CRASH: FULL EXIT=-1 resource abort ≠ PHYS early load abort (no SEH)
-git: `a841424f07` on origin
+tok1–3: L17_INPUT_FNV MATCH + ORDERED_ID_MATCH  
+tok4: L17_INPUT_FNV MISMATCH → L17 router is symptom
 
-AL09: tok1–3 L17 match; tok4 L17 input mismatch = downstream of FFN_DOWN_1@3
+## AL11 first divergent (stage walk — BOUNDED_OPEN)
 
-## AL11 / AL13
+Reported earliest key mismatch among *paired* digests:
 
-FFN_DOWN_1@pos3 still needs CLEAN dual-arm reseal after gate_inp fix.
-AL13: FFN body+bias PASS; `ffn_gate_inp` FAIL both orders; bias sorted PASS.
+```
+FFN_DOWN_1 @ pos=3
+  FULL fnv=0a38208b6642f3d6
+  PHYS fnv=020e34f17b2bbf8a
+```
+
+**INCOMPLETE:** AL11_LAYER_OUT_WALK shows FULL `LAYER18_OUT|T3`…`ABSENT` while PHYS present → full arm did not finish tok3 upper layers. Do **not** treat FFN_DOWN_1@3 as sealed FIRST_DIVERGENT_OP until dual CLEAN_EXIT same-SHA allowlist-active reseal.
+
+AL10 TOK3_SELECTED_ID still OPEN (need ARGMAX on complete paired runs).
 
 ## Chained next
 
-[Fix CALIB ffn_gate_inp export](3225f99c-6f01-402b-87da-19836c4b8831) — align router columns to sorted IDs; recheck FFN_DOWN_1@3.
-[Seal MiniMax Q_LINEAR_0 FDO](fc4beaf4-b46f-47ce-b12c-8022a78578e7) — Deep2↔ggml Batch01 track (orthogonal).
+[MiniMax softmax SwiGLU FNV](af48142c-7c25-4489-9f51-df59ab917a7a) — **CLOSED formula** (`RE_MINIMAX_SOFTMAX_SWIGLU_LMHEAD_001`):
+  Softmax `1/sqrt(128)` MATCH · SwiGLU silu(gate)*up MATCH · lm_head FNV REFERENCE_BLOCKED (TIMEOUT).
+  PATCH=N. Does **not** explain AL09 tok4 L17 input mismatch (decode-after-tok0).
 
-Softmax/SwiGLU: CLOSED MATCH (PATCH=N) — does not explain tok4 MoE diverge.
+SCOREBOARD next for Deep2↔ggml: seal Q_LINEAR_0 (Batch01); AL09/AL11 remain OPEN for tok4+.
 
 ```
 PROMOTE=0
