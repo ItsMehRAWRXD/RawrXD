@@ -45,3 +45,21 @@ EXCLUSIVE_32768=NOT_RUN
 NOT_RUN!=PASS
 PROMOTE=0
 ```
+
+## MoE batch 2026-11-13T14:43 (terminal abort)
+
+BATCH_EXIT=4294967295 (~46s) harness/peer abort — NOT certification.
+| Arm | EXIT | Note |
+|-----|------|------|
+| M_minimax_reap27_sidecar_host | 12 | meta incomplete / mid-load |
+| M_minimax_full_reap16_host | -1 | meta incomplete |
+| M_qwen36_a3b_host | ABSENT_DONE | no terminal DONE |
+| M_dsv2lite_host | 12 | |
+| D_nemotron35_host | 12 | 219ms NO_CLEAN_EXIT GT=NOT_FOUND |
+| D_glm47_flash_host | 12 | |
+
+CERTIFICATION=HELD
+MULTI_ARCH=OPEN
+NOT_RUN!=PASS
+PROMOTE=0
+FOLLOWUP_AGENT=1ca769b2-499c-4cbf-b452-ee8f09d1864f
