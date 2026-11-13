@@ -1,0 +1,45 @@
+AL10–AL14 — MiniMax FULL+allowlist vs PHYS CALIB
+DATE=2026-11-13
+PROMOTE=0
+CERTIFIED=0
+CROSS_SHA_CREDIT=0
+PARENT_MODE=PASSIVE_COORDINATOR
+BACKGROUND_WORKERS=4
+
+## AL09 seed (same EXE 0C531CA2…)
+
+Source: evidence/REAP16_BATCH_001/CALIBRATED_001/AL09/AL09_COMPARE.txt
+
+| Token | L17_INPUT_FNV | ORDERED_ID_MATCH |
+|-------|---------------|------------------|
+| 1–3   | MATCH         | True             |
+| 4     | MISMATCH      | False            |
+
+L17 router flip at tok4 is a **downstream symptom**. First divergence is in the tok3→tok4 interval (L18–61 / FINAL_NORM / LOGITS / ARGMAX / KV) or tok4 L0–16 before L17.
+
+## This-turn dispatch
+
+| Worker | Track |
+|--------|-------|
+| AL10–14 MiniMax divergence | Numerics / mapping / crashes |
+| Production inference certify | Dense+MoE / GPU / REAP load |
+| IDE daily-use completion | Debugger/terminal/editor/agent/Sunshine |
+| Bench + Top25 | Competitive suites + maturity ops |
+
+## Host (exclusive)
+
+See AL11_HOST_SNAPSHOT.json when present. At dispatch: FreePhys≈42GB, Commit≈38/176GB, rawr*=0.
+
+## Gates
+
+AL10 TOKEN_BOUNDARY = OPEN (worker)
+AL11 FIRST_DIVERGENT_OP = OPEN (worker)
+AL12 CRASH_CLASS = OPEN (worker)
+AL13 EXPERT_MAP = OPEN (worker)
+AL14 SEMANTIC = OPEN
+
+```
+PROMOTE=0
+CERTIFIED=0
+NOT_RUN!=PASS
+```

@@ -1,0 +1,303 @@
+﻿=== al09_full.err.txt size=196127 ===
+LAYER_OUT count=0
+LAYER_EXIT count=237
+MOE_IN count=8
+KV_PROBE count=0
+ARGMAX count=0
+LOGITS count=0
+CLEAN_EXIT count=0
+ACQUIRE count=8
+exception count=0
+nan count=1
+inf count=1
+STAGE_DIGEST count=0
+TOKEN id= count=0
+
+=== al09_full.out.txt size=56347 ===
+LAYER_OUT count=0
+LAYER_EXIT count=0
+MOE_IN count=0
+KV_PROBE count=0
+ARGMAX count=0
+LOGITS count=0
+CLEAN_EXIT count=0
+ACQUIRE count=0
+exception count=0
+nan count=0
+inf count=0
+STAGE_DIGEST count=264
+TOKEN id= count=0
+LAST_LAYER17: [STAGE_DIGEST] side=deep2 key=LAYER17_OUT pos=3 n=3072 l2=6.360362893e+01 max_abs=6.169179916e+01 min=-4.455136776e+00 max=6.169179916e+01 sum=8.705258448e+01 fnv=5ab99f4d553f4e34 nf=0
+
+=== al09_full_cmd.err.txt size=145171 ===
+LAYER_OUT count=130
+LAYER_EXIT count=130
+MOE_IN count=4
+KV_PROBE count=0
+ARGMAX count=0
+LOGITS count=0
+CLEAN_EXIT count=0
+ACQUIRE count=8
+exception count=0
+nan count=0
+inf count=0
+STAGE_DIGEST count=0
+TOKEN id= count=0
+
+=== al09_full_cmd.out.txt size=7300 ===
+LAYER_OUT count=0
+LAYER_EXIT count=0
+MOE_IN count=0
+KV_PROBE count=0
+ARGMAX count=0
+LOGITS count=0
+CLEAN_EXIT count=0
+ACQUIRE count=0
+exception count=0
+nan count=0
+inf count=0
+STAGE_DIGEST count=0
+TOKEN id= count=0
+
+=== al09_full_layer.err.txt size=39716 ===
+LAYER_OUT count=24
+LAYER_EXIT count=24
+MOE_IN count=2
+KV_PROBE count=0
+ARGMAX count=0
+LOGITS count=0
+CLEAN_EXIT count=0
+ACQUIRE count=8
+exception count=0
+nan count=0
+inf count=0
+STAGE_DIGEST count=0
+TOKEN id= count=0
+
+=== al09_full_layer.out.txt size=7300 ===
+LAYER_OUT count=0
+LAYER_EXIT count=0
+MOE_IN count=0
+KV_PROBE count=0
+ARGMAX count=0
+LOGITS count=0
+CLEAN_EXIT count=0
+ACQUIRE count=0
+exception count=0
+nan count=0
+inf count=0
+STAGE_DIGEST count=0
+TOKEN id= count=0
+
+=== al09_phys.err.txt size=4056 ===
+LAYER_OUT count=0
+LAYER_EXIT count=0
+MOE_IN count=0
+KV_PROBE count=0
+ARGMAX count=0
+LOGITS count=0
+CLEAN_EXIT count=0
+ACQUIRE count=0
+exception count=0
+nan count=0
+inf count=0
+STAGE_DIGEST count=0
+TOKEN id= count=0
+
+=== al09_phys.out.txt size=0 ===
+LAYER_OUT count=0
+LAYER_EXIT count=0
+MOE_IN count=0
+KV_PROBE count=0
+ARGMAX count=0
+LOGITS count=0
+CLEAN_EXIT count=0
+ACQUIRE count=0
+exception count=0
+nan count=0
+inf count=0
+STAGE_DIGEST count=0
+TOKEN id= count=0
+
+=== al09_phys2.err.txt size=431268 ===
+LAYER_OUT count=0
+LAYER_EXIT count=426
+MOE_IN count=14
+KV_PROBE count=0
+ARGMAX count=0
+LOGITS count=0
+CLEAN_EXIT count=0
+ACQUIRE count=8
+exception count=0
+nan count=1
+inf count=3
+STAGE_DIGEST count=462
+TOKEN id= count=0
+LAST_LAYER17: [STAGE_DIGEST] side=deep2 key=LAYER17_OUT pos=6 n=3072 l2=4.984496526e+01 max_abs=4.827029419e+01 min=-2.865957022e+00 max=4.827029419e+01 sum=4.955740536e+01 fnv=b04b24fa41a13ca5 nf=0
+
+=== al09_phys2.out.txt size=0 ===
+LAYER_OUT count=0
+LAYER_EXIT count=0
+MOE_IN count=0
+KV_PROBE count=0
+ARGMAX count=0
+LOGITS count=0
+CLEAN_EXIT count=0
+ACQUIRE count=0
+exception count=0
+nan count=0
+inf count=0
+STAGE_DIGEST count=0
+TOKEN id= count=0
+
+=== al09_phys_layer.err.txt size=264144 ===
+LAYER_OUT count=252
+LAYER_EXIT count=252
+MOE_IN count=8
+KV_PROBE count=0
+ARGMAX count=0
+LOGITS count=0
+CLEAN_EXIT count=0
+ACQUIRE count=8
+exception count=0
+nan count=0
+inf count=2
+STAGE_DIGEST count=0
+TOKEN id= count=0
+
+=== al09_phys_layer.out.txt size=0 ===
+LAYER_OUT count=0
+LAYER_EXIT count=0
+MOE_IN count=0
+KV_PROBE count=0
+ARGMAX count=0
+LOGITS count=0
+CLEAN_EXIT count=0
+ACQUIRE count=0
+exception count=0
+nan count=0
+inf count=0
+STAGE_DIGEST count=0
+TOKEN id= count=0
+
+=== bound_full.err.txt size=53007 ===
+LAYER_OUT count=0
+LAYER_EXIT count=46
+MOE_IN count=2
+KV_PROBE count=0
+ARGMAX count=0
+LOGITS count=0
+CLEAN_EXIT count=0
+ACQUIRE count=8
+exception count=0
+nan count=0
+inf count=0
+STAGE_DIGEST count=0
+TOKEN id= count=0
+
+=== bound_full.out.txt size=7300 ===
+LAYER_OUT count=0
+LAYER_EXIT count=0
+MOE_IN count=0
+KV_PROBE count=0
+ARGMAX count=0
+LOGITS count=0
+CLEAN_EXIT count=0
+ACQUIRE count=0
+exception count=0
+nan count=0
+inf count=0
+STAGE_DIGEST count=0
+TOKEN id= count=0
+
+=== bound_phys.err.txt size=4257 ===
+LAYER_OUT count=0
+LAYER_EXIT count=0
+MOE_IN count=0
+KV_PROBE count=0
+ARGMAX count=0
+LOGITS count=0
+CLEAN_EXIT count=0
+ACQUIRE count=0
+exception count=0
+nan count=0
+inf count=0
+STAGE_DIGEST count=0
+TOKEN id= count=0
+
+=== bound_phys.out.txt size=0 ===
+LAYER_OUT count=0
+LAYER_EXIT count=0
+MOE_IN count=0
+KV_PROBE count=0
+ARGMAX count=0
+LOGITS count=0
+CLEAN_EXIT count=0
+ACQUIRE count=0
+exception count=0
+nan count=0
+inf count=0
+STAGE_DIGEST count=0
+TOKEN id= count=0
+
+=== full_digest.err.txt size=93176 ===
+LAYER_OUT count=0
+LAYER_EXIT count=110
+MOE_IN count=0
+KV_PROBE count=0
+ARGMAX count=0
+LOGITS count=0
+CLEAN_EXIT count=0
+ACQUIRE count=8
+exception count=0
+nan count=1
+inf count=1
+STAGE_DIGEST count=0
+TOKEN id= count=0
+
+=== full_digest.out.txt size=37428 ===
+LAYER_OUT count=0
+LAYER_EXIT count=0
+MOE_IN count=0
+KV_PROBE count=0
+ARGMAX count=0
+LOGITS count=0
+CLEAN_EXIT count=0
+ACQUIRE count=0
+exception count=0
+nan count=0
+inf count=0
+STAGE_DIGEST count=162
+TOKEN id= count=0
+LAST_LAYER17: [STAGE_DIGEST] side=deep2 key=LAYER17_OUT pos=1 n=3072 l2=6.761991984e+01 max_abs=5.576543427e+01 min=-5.576543427e+01 max=5.866576672e+00 sum=-5.714695665e+01 fnv=58ed809c0a15e3ba nf=0
+
+=== phys_digest.err.txt size=4248 ===
+LAYER_OUT count=0
+LAYER_EXIT count=0
+MOE_IN count=0
+KV_PROBE count=0
+ARGMAX count=0
+LOGITS count=0
+CLEAN_EXIT count=0
+ACQUIRE count=0
+exception count=0
+nan count=0
+inf count=0
+STAGE_DIGEST count=0
+TOKEN id= count=0
+
+=== phys_digest.out.txt size=0 ===
+LAYER_OUT count=0
+LAYER_EXIT count=0
+MOE_IN count=0
+KV_PROBE count=0
+ARGMAX count=0
+LOGITS count=0
+CLEAN_EXIT count=0
+ACQUIRE count=0
+exception count=0
+nan count=0
+inf count=0
+STAGE_DIGEST count=0
+TOKEN id= count=0
+
