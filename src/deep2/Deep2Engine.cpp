@@ -718,6 +718,8 @@ static bool configureKVCacheFor(ModelWeights &mw, EngineConfig &cfg,
     size_t attnLayers = 0;
     for (const auto &lw : mw.layers)
     {
+        if (IsQwenGdnLayerBound(lw) || IsQwenGdnLayer(lw))
+            continue; // Qwen GDN recurrence — no KV slots
         if (lw.hasSSM && !lw.wq.data)
             continue; // gated SSM hybrid is not a KV-cache attention layer
         if (lw.wq.data || lw.wk.data || lw.wv.data || lw.wqkv.data)
@@ -792,6 +794,8 @@ static bool validateKVCacheGeometryFor(const ModelWeights &mw,
     size_t attnLayers = 0;
     for (const auto &lw : mw.layers)
     {
+        if (IsQwenGdnLayerBound(lw) || IsQwenGdnLayer(lw))
+            continue; // Qwen GDN recurrence — no KV slots
         if (lw.hasSSM && !lw.wq.data)
             continue; // gated SSM hybrid is not a KV-cache attention layer
         if (lw.wq.data || lw.wk.data || lw.wv.data || lw.wqkv.data)
@@ -3708,36 +3712,28 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                        hasTensor(lw.attnO) || hasTensor(lw.wqkv) || hasMla;
         bool hasSsm = lw.hasSSM;
         const bool hasMoE = hasTensor(lw.moeRouter);
-        if (hasAttn && !hasSsm)
-        {
-            topo.mixer = LayerMixer::Attention;
-            topo.hasMoE = hasMoE;
-            kvLayerMap_[i] = kvLayer++;
-            ++attnLayers;
-        }
-        else if (hasSsm && !hasAttn)
+        // Use bound descriptors: data may still be null at topology time.
+        const bool isQwenGdn = IsQwenGdnLayerBound(lw) || IsQwenGdnLayer(lw);
+        // Qwen GDN: product recurrence path (computeGDN). Never allocate KV —
+        // attn_qkv/attn_gate are GDN projections, not MHA K/V cache layers.
+        if (isQwenGdn)
         {
             topo.mixer = LayerMixer::SSM;
             topo.hasSSM = true;
-            topo.ssmInnerSize = lw.ssmIn.cols > 0 ? lw.ssmIn.cols : 0;
+            topo.hasMoE = hasMoE;
+            topo.ssmInnerSize = lw.ssmOut.rows > 0 ? lw.ssmOut.rows :
+                                (lw.wqkv.rows > 0 ? lw.wqkv.rows : 0);
             topo.ssmStateSize = lw.ssmA.rows > 0 ? lw.ssmA.rows :
                                 (lw.ssmA.cols > 0 ? lw.ssmA.cols : 0);
             topo.ssmConvDim = lw.ssmConv1d.cols > 0 ? lw.ssmConv1d.cols : 0;
             ++topologySsmLayers;
         }
-        else if (hasAttn && hasSsm)
+        else if (hasAttn && !hasSsm)
         {
-            // Hybrid layer: both attention and SSM (e.g. some Nemotron variants)
             topo.mixer = LayerMixer::Attention;
-            topo.hasSSM = true;
             topo.hasMoE = hasMoE;
-            topo.ssmInnerSize = lw.ssmIn.cols > 0 ? lw.ssmIn.cols : 0;
-            topo.ssmStateSize = lw.ssmA.rows > 0 ? lw.ssmA.rows :
-                                (lw.ssmA.cols > 0 ? lw.ssmA.cols : 0);
-            topo.ssmConvDim = lw.ssmConv1d.cols > 0 ? lw.ssmConv1d.cols : 0;
             kvLayerMap_[i] = kvLayer++;
             ++attnLayers;
-            ++topologySsmLayers;
         }
         else if (hasSsm && !hasAttn)
         {
@@ -6202,7 +6198,7 @@ void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads,
     const float* sinTable = &g_ropeSinTable[pos * headDim];
 
     // ── Layer 12 RoPE diagnostic: pre-scan ALL K heads for NaN ──
-    if (Deep2DebugEnabled() && layerIdx == 12)
+    if (Deep2DebugEnabled() && layerIdx == 12 && k != nullptr)
     {
         fprintf(stderr,
                 "[L12_ROPE_DIAG] pos=%zu headDim=%zu numHeads=%zu numKVHeads=%zu theta=%.6e scaling=%.6e\n",
@@ -6237,6 +6233,9 @@ void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads,
     // ── RoPE energy invariant: rotation must preserve pair norm ──
     auto pair_energy = [](float a, float b) -> double { return double(a) * a + double(b) * b; };
 
+    // Partial-RoPE / MLA call sites pass nullptr for the unused side with
+    // numHeads=0 or numKVHeads=0. Guard both pointers before any scan/rotate.
+    if (q != nullptr)
     for (size_t h = 0; h < numHeads; ++h)
     {
         float* qh = q + h * headDim;
@@ -6259,6 +6258,8 @@ void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads,
             }
         }
     }
+    if (k == nullptr)
+        return;
     for (size_t h = 0; h < numKVHeads; ++h)
     {
         float* kh = k + h * headDim;

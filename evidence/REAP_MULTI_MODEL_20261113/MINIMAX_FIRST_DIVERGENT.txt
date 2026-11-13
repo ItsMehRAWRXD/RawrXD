@@ -32,3 +32,8 @@ PHYSICAL_T4_SEALED=PRESERVE (B03_E tokens>=4 PASS_REPORTED; quality never claime
 NEXT=isolate MoE/expert numeric + chat-template + retain-29 REAP effect
 NOT_RUN!=PASS for reference-parity / coding
 
+
+## Update
+FIRST_REAL_DIVERGENT_OP=PARTIAL_ROPE_APPLY (full-head RoPE misapply; n_rot=64 < headDim=128)
+POST_FIX_RUN=FAIL_CLOSED (exit=-1, tokens=0) — quality not yet recovered
+EXE_SHA256=A446062B59CA4657B72AC2784F5E52C5D29E87EA2D9FA0016B4F26DC40AC98D3
