@@ -1,66 +1,34 @@
-﻿FIRST_DIVERGE_001 — V_0 remasure closed soft (fail-closed)
+﻿FIRST_DIVERGE_001 — PRODUCT PATH ARGMAX MATCH; digest-pump bug isolated
 DATE=2026-11-13
 PROMOTE=0
 CERTIFIED=0
 TIP_CLIMB=HOLD
-CROSS_SHA_CREDIT=0
-INVENT_PASS=0
-NOT_RUN!=PASS
+FAIL_CLOSED=1
 
 ## Fixture
-PROMPT_IDS=[1,15043]
-PROMPT=Hello + RAWRXD_RAW_PROMPT=1 + RAWRXD_ADD_BOS=1 + RAWRXD_PROMPT_TOKEN_IDS=1,15043
-SAMPLER=greedy --max-tokens 1
-PATH_MEASURED=RAWRXD_QUANT_HOST_Q8K_PARITY=1 (GPU product path uses host Q8_K GEMV for Q4_K/Q6_K)
-NOTE_PATH=Do NOT credit as Vulkan SPV Q6_K bitexact PASS; FORCE_VULKAN_QUANT_GEMV path remains OPEN (e45c vs d4e2)
-
-## SHAs (this remasure)
-EXE=G:\~dev\rawrxd\build_ninja\bin\rawr_v0_f28f10b9e510.exe
-EXE_SHA256=F28F10B9E510C6F6C87050949B1726DB90C81ED8DC19F1BFC8BB2270D226360B
-ALT_OF=build_ninja/bin/rawr.exe (copy; same hash)
-SPV=src/backend/gemv_q4k.spv
+PROMPT_IDS=1,15043
+RAWRXD_RAW_PROMPT=1
+MODEL=tinyllama.gguf
+EXE_PIN_SHA256=F28F10B9E510C6F6C87050949B1726DB90C81ED8DC19F1BFC8BB2270D226360B
 SPV_SHA256=5128F614C5FFE4A52BD16C2451A8C3DBCD267E0A929428C12EA58D741ADB7A26
-MODEL_SHA256=9FECC3B3CD76BBA89D504F29B616EEDF7DA85B96540E490CA5824D3F7D2776A0
-GIT_SHA_AT_MEASURE=b1453a305ffafa871754238d2ea207b0c8abf5c8
-BRANCH=work/v0-first-divergence
 
-## V_0@pos0 (remeasure dumps + V0_REMEASURE_001.txt)
-GPU_V0_l2=7.974118027e-02 fnv=4b004536ead54edb
-HOST_V0_l2=7.974118027e-02 fnv=4b004536ead54edb
-REF_V0_l2=7.974117918e-02 fnv=d4e2dce085d5d6e4
-GPU_HOST_V0_MATCH=1
-GPU_REF_V0_rel=8.213383827e-08 maxAbs=1.862645149e-09
-GPU_REF_V0_L2_NEAR=1
-GPU_REF_V0_FNV_BITEXACT=0
-V0_SOFT_CLOSED=1
-V0_BITEXACT_CLOSED=0
-
-## Q_PRE_ROPE_0@pos0 (after soft V_0)
-GPU_Q_l2=1.938516985e+00 fnv=ced1abe971861249
-HOST_Q_l2=1.938516985e+00 fnv=ced1abe971861249
-REF_Q_l2=1.938517021e+00 fnv=8d53927ede5ddb3f
-GPU_HOST_Q_MATCH=1
-GPU_REF_Q_rel=2.362229656e-07 maxAbs=1.490116119e-07
-GPU_REF_Q_FNV_BITEXACT=0
-NOTE=Also FNV-soft vs REF (same class as V_0); not a hard L2 gap
-
-## Prefill logits (OPEN)
-GPU_ARGMAX=1794 piece=ai
-HOST_ARGMAX=1794 piece=ai
+## MEASURED product path (STAGE_DIGEST unset → forwardTokenAllLayers)
+GPU_ARGMAX=29892 piece=','
 REF_ARGMAX=29892
-PREFILL_LOGITS_MATCH=0
+PRODUCT_PREFILL_ARGMAX_MATCH=1
+RECEIPT=gpu_nodigest.err.txt
+NOTE=Prior 1794 was STAGE_DIGEST=1 scoreboard-pump path only
 
-## Next blocker
-NEXT=ATTN_OUT_0 (material L2 gap vs REF per digest_compare_q8k; GPU=HOST)
-V0_REF_FNV_BITEXACT still OPEN on Q8_K path
-Vulkan SPV Q6_K (FORCE_VULKAN) still OPEN / not credited here
-PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD
+## Root cause (digest/cert path only)
+FILE=src/deep2/lavapath/ScoreboardPumpIssue.hpp::PumpOwnedRemainder
+BUG=swap(in,out) BEFORE L1+ forward fed stale embed after L0 caller swap
+FIX_SOURCE=forward then swap (landed in tree)
+FIX_BINARY=PENDING rebuild (ninja thrash / cl -1)
+SYMPTOM_UNDER_DIGEST=LAYER0_OUT~REF; ATTN_NORM_1 HARD
 
-## Evidence artifacts
-V0_REMEASURE_001.txt
-V0_REMEASURE_gpu.{out,err,exit}.txt
-V0_REMEASURE_host.{out,err,exit}.txt
-V0_REMEASURE_digest_excerpt.txt
-EXE_SHA_V0_REMEASURE.txt
-stage_dump_v0_remeasure_gpu/
-stage_dump_v0_remeasure_host/
+## Still OPEN
+DIGEST_PATH_REBUILD=OPEN
+FULL_LOGITS_FNV=not claimed
+CLI_45 / GUI_54 / TOP25_VALUATION=agents in flight
+PROMOTE=0
+CERTIFIED=0

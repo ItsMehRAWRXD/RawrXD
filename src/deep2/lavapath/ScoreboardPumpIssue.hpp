@@ -2,6 +2,7 @@
 /* ScoreboardPumpIssue — pump issue arm. LIVE=0. ≤99. */
 #include <atomic>
 #include <cstdint>
+#include <utility>
 
 namespace Deep2 {
 namespace scoreboard {
@@ -59,15 +60,18 @@ inline void DisarmPumpIssue() noexcept {
 }
 
 /* Walk the remaining layers via the armed pump body.
-   Returns 1 on full completion, 0 on partial failure. */
+   Returns 1 on full completion, 0 on partial failure.
+   Contract: after L0 the caller swaps once then ArmPumpIssue(in=L0_out,out=scratch).
+   Do NOT swap before the first pumped forward — that fed embed into L1+ (ATTN_NORM_1 HARD).
+   After each forward, swap so .in holds the latest layer output for the next iter / caller. */
 inline int PumpOwnedRemainder(uint32_t /*totalLayersHint*/) noexcept {
     PumpIssueArm& a = PumpArm();
     if (!a.armed.load(std::memory_order_acquire) || !a.forward)
         return 1; /* nothing to do */
     while (a.currentLayer < a.nLayers) {
         uint32_t ly = a.currentLayer++;
-        std::swap(a.in, a.out);
         a.forward(a.engine, ly, a.in, a.out, a.seq);
+        std::swap(a.in, a.out);
     }
     return 1;
 }
