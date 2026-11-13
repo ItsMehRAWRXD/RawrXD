@@ -1,0 +1,12 @@
+{
+    "SUITE":  "cli_health",
+    "COMMAND":  "G:\\~dev\\rawrxd\\bin\\SovereignCLI_Complete.exe",
+    "EXE_PATH":  "G:\\~dev\\rawrxd\\bin\\SovereignCLI_Complete.exe",
+    "EXE_SHA256":  "5BC452BE0E518DC6E9F866A0D57B33A24CC234B165B336ACAF3BA9A5648DA20C",
+    "EXE_EXISTS":  true,
+    "STARTED_UTC":  "2026-11-13T19:31:35.6191721Z",
+    "PROMOTE":  0,
+    "ENDED_UTC":  "2026-11-13T19:31:35.6239899Z",
+    "STDOUT_LOG":  "G:\\~dev\\rawrxd\\evidence\\COMPETITIVE_BENCH_001\\logs\\cli_health_20261113_143135_out.txt",
+    "STDERR_LOG":  "G:\\~dev\\rawrxd\\evidence\\COMPETITIVE_BENCH_001\\logs\\cli_health_20261113_143135_err.txt"
+}

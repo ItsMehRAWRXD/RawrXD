@@ -1,0 +1,12 @@
+{
+    "SUITE":  "cli_validate",
+    "COMMAND":  "G:\\~dev\\rawrxd\\bin\\SovereignCLI.exe",
+    "EXE_PATH":  "G:\\~dev\\rawrxd\\bin\\SovereignCLI.exe",
+    "EXE_SHA256":  "A390E69F596FBF2A5D9B2CA4F429437D2962AA593310EF9031B2542D804D7E4F",
+    "EXE_EXISTS":  true,
+    "STARTED_UTC":  "2026-11-13T19:32:03.5496268Z",
+    "PROMOTE":  0,
+    "ENDED_UTC":  "2026-11-13T19:32:03.5583075Z",
+    "STDOUT_LOG":  "G:\\~dev\\rawrxd\\evidence\\COMPETITIVE_BENCH_001\\logs\\cli_validate_20261113_143203_out.txt",
+    "STDERR_LOG":  "G:\\~dev\\rawrxd\\evidence\\COMPETITIVE_BENCH_001\\logs\\cli_validate_20261113_143203_err.txt"
+}

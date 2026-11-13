@@ -1,11 +1,12 @@
 COMPETITIVE_BENCH_001
-ASOF_LOCAL=2026-11-13T14:24:08-05:00
+ASOF_LOCAL=2026-11-13T14:30:00-05:00
 PROMOTE=0
 CERTIFIED=0
 INVENT_PASS=0
 CROSS_SHA_CREDIT=0
 NOT_RUN!=PASS
 HEAD_TO_HEAD=NOT_SEALED
+TIP_CLIMB=HOLD
 
 PURPOSE
   Independent competitive testing inventory + smallest runnable smoke.
@@ -23,13 +24,52 @@ LOCATED_IN_TREE
   Local microbenches:
     benchmark_isa_dispatch.exe / benchmark_streaming.exe / benchmark_kernel.exe
     tests/smoke_test_minimal.exe
-    BENCHMARK_HARNESS_README.md (deep2_benchmark.exe ABSENT)
+    BENCHMARK_HARNESS_README.md (deep2_benchmark.exe ABSENT from root cert path)
   Prior CLI health logs (this pack logs/): cb_* SovereignCLI/terminal_gate receipts
+  Minimal stubs (this pack harness/):
+    Run-TerminalBench.ps1 → real terminal_gate.exe
+    Run-IdeBench.ps1 → real RawrXD-Win32IDE.exe presence/SHA
+    Run-CodingTaskBench.ps1 → fixtures/agent_multierror_calc + cl.exe
+    Run-CliKernelBench.ps1 → SovereignCLI status/version/validate/benchmark
   Game-dev:
     DOC=docs/REVERSE_ENGINEERING_GAME_DEVELOPMENT.md
     PROJECT_FIXTURES=NOT_FOUND
-    fixtures/= agent/obj/VAL (367 entries; not game-dev projects)
+    fixtures/= agent/obj/VAL (not game-dev projects)
+    unity/unreal under src/engine_bindings = bindings source, NOT competitive fixtures
   External IDE-Bench / Terminal-Bench packages: NOT_IN_TREE (g:\~dev grep)
+
+MEASURED_GATES_P3 (ASOF 2026-11-13; shell task 55874 overall exit=1)
+  terminal_gate.exe v4
+    EXE=evidence/FOUR_PANEL_COMPLETION_001/bin/terminal_gate.exe
+    SHA256=5125CFE10FE6C89F649B401A216EA976BC44DB06D44D1EA401E41411D579094D
+    COMMAND=terminal_gate.exe
+    EXIT=1
+    RESULT=FAIL_CLOSED fail_count=1
+    FAIL=compile+run via ConPTY   OPEN=OPEN_CONPTY_COMPILE_RUN.md
+    PASS=echo/interrupt/resize/restart/capture/no-orphan/PowerShell
+  SovereignCLI validate
+    EXE=bin/SovereignCLI.exe
+    SHA256=A390E69F596FBF2A5D9B2CA4F429437D2962AA593310EF9031B2542D804D7E4F
+    COMMAND=SovereignCLI.exe validate
+    EXIT=0  RESULT=PASS 2/2 (RMSNorm, ResidualAdd)
+  SovereignCLI benchmark
+    COMMAND=SovereignCLI.exe benchmark --iter 100
+    EXIT=0  RESULT=PASS (timed RMSNorm+ResidualAdd; LayerNorm+Q4K SKIPPED≠PASS)
+    MEASURED=RMSNorm 0.003 us/call 9844.38 GB/s; ResidualAdd 0.674 us/call
+  RawrXD_Autonomous_CLI list
+    EXE=bin/RawrXD_Autonomous_CLI.exe
+    SHA256=16B134F6DF56F6DB91AB6367796AD389CFA42D53B658F3B470D4494A72B590BF
+    COMMAND=stdin list/quit
+    EXIT=0  RESULT=PASS  MEASURED=6/69 compilers available
+  IDE presence
+    EXE=bin/RawrXD-Win32IDE.exe
+    SHA256=D60C6F9A840D6EC824215BAE604EEF2561E5DE844C0F856893BE2E5AF5A0F31C
+    RESULT=PASS (binary present)  GUI_E2E=NOT_RUN  PARITY_SCORE=NOT_MEASURED
+  coding fixture agent_multierror_calc
+    COMMAND=cl /nologo /EHsc /std:c++20 add.cpp mul.cpp main.cpp /Fe:calc_ok.exe (via vcvars64)
+    EXIT=2  RESULT=FAIL (intentional multi-error fixture; agent autofix NOT_RUN)
+  game-dev competitive
+    RESULT=NOT_RUN  PATH=fixtures/game ABSENT
 
 SMOKE_RUNS (smoke_runs/; ASOF 2026-11-13T14:24:08-05:00)
   swebench_help
@@ -59,20 +99,25 @@ SMOKE_RUNS (smoke_runs/; ASOF 2026-11-13T14:24:08-05:00)
 
 NOT_RUN
   IDE-Bench suite                     NOT_IN_TREE
-  Terminal-Bench suite                NOT_IN_TREE
+  Terminal-Bench suite                NOT_IN_TREE (stub wired → terminal_gate; suite FAIL_CLOSED)
   RawrXD-SWEBench --real-agent        NOT_RUN (needs live model)
   OLLAMA_MATCHED / VLLM_MATCHED / LLAMACPP_MATCHED  NOT_RUN
-  deep2_benchmark.exe certify         NOT_RUN (binary absent)
+  deep2_benchmark.exe certify         NOT_RUN (binary absent from cert path)
   IDE_SmokeTest_Harness.exe           NOT_RUN (exe absent)
   b112 IDE-benchmark contract exe     NOT_RUN
   game-dev project fixture E2E        NOT_RUN
+  IDE GUI E2E / parity %              NOT_RUN / NOT_MEASURED
 
-SCORES
+SCORES (measured only)
   SWE-bench null-agent self-test OVERALL=0.0% (measured; NOT competitive PASS)
-  All other harnesses this turn: SCORE=NONE
+  SovereignCLI validate=2/2 PASS
+  Autonomous CLI compilers ready=6/69
+  SovereignCLI RMSNorm throughput=9844.38 GB/s (10000 iters path; --iter 100 requested)
+  All other competitive/parity composites: SCORE=NONE / NOT_CLAIMED
 
 AUTHORITY
   Recognition TPS narrative: PRODUCTION_MATURITY_TOP25_001/STATUS.txt only.
   Ops gaps: TOP25_OPS_001/STATUS.txt (+ TOP25_RECOGNITION_OPS_001 if present).
+  Suite detail: SUITE_MATRIX.md · OPEN_CONPTY_COMPILE_RUN.md · EXE_SHA256.txt · STATUS.md
 
 PROMOTE=0 · TIP_CLIMB=HOLD · CERTIFIED=0

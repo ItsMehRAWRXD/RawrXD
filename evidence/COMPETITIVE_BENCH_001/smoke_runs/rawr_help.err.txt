@@ -1,0 +1,22 @@
+Usage:
+  rawr list [--verbose] [--refresh]
+  rawr show <model>
+  rawr paths
+  rawr run <model> [prompt|-p P|--prompt P] [--max-tokens N]
+  rawr run <model> --reap <params>/<experts> [-p P] [--receipt R]
+  rawr run <model> --size <params>/<experts> [-p P] [--receipt R]
+             live size alias: working-set budget + MoE top-k
+  rawr run <model> [--verbose|--trace]  # stdin if prompt empty
+  rawr chat|agent|steer|resume|term|serve ...
+[StreamEngine] Shutdown
+& : The term 'g:\~dev\rawrxd\build_ninja\bin\rawr.exe' is not recognized as the name of a cmdlet, function, script 
+file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct 
+and try again.
+At line:15 char:9
++       & $exe @a 1>$outf 2>$errf
++         ~~~~
+    + CategoryInfo          : ObjectNotFound: (g:\~dev\rawrxd\build_ninja\bin\rawr.exe:String) [], CommandNotFoundExce 
+   ption
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+

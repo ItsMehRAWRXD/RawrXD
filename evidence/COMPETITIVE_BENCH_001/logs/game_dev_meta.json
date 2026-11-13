@@ -1,0 +1,7 @@
+{
+    "SUITE":  "game_dev",
+    "RESULT":  "NOT_RUN",
+    "REASON":  "NO_GAME_FIXTURES (fixtures/ has agent_e2e + ASM objs only; no game-dev bench fixtures)",
+    "PATH":  "docs/REVERSE_ENGINEERING_GAME_DEVELOPMENT.md (docs only)",
+    "PROMOTE":  0
+}

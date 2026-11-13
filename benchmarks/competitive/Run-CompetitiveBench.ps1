@@ -44,8 +44,17 @@ function Invoke-Tracked {
         return $meta
     }
     $wd = if ($WorkDir) { $WorkDir } else { Split-Path $Exe }
-    $p = Start-Process -FilePath $Exe -ArgumentList $Args -WorkingDirectory $wd `
-        -NoNewWindow -PassThru -RedirectStandardOutput $outPath -RedirectStandardError $errPath
+    # Start-Process rejects -ArgumentList @() / $null; omit when no args.
+    $sp = @{
+        FilePath               = $Exe
+        WorkingDirectory       = $wd
+        NoNewWindow            = $true
+        PassThru               = $true
+        RedirectStandardOutput = $outPath
+        RedirectStandardError  = $errPath
+    }
+    if ($Args -and $Args.Count -gt 0) { $sp.ArgumentList = $Args }
+    $p = Start-Process @sp
     if (-not $p.WaitForExit($TimeoutSec * 1000)) {
         Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
         $meta.RESULT = 'FAIL'

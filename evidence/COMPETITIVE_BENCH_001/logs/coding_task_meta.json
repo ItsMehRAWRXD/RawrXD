@@ -1,0 +1,10 @@
+{
+    "SUITE":  "coding_task",
+    "COMMAND":  "call \"C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat\" \u003enul \u0026\u0026 cd /d \"G:\\~dev\\rawrxd\\fixtures\\agent_multierror_calc\" \u0026\u0026 cl /nologo /EHsc /std:c++20 add.cpp mul.cpp main.cpp /Fe:calc_ok.exe \u0026\u0026 calc_ok.exe",
+    "FIXTURE":  "G:\\~dev\\rawrxd\\fixtures\\agent_multierror_calc",
+    "RESULT":  "FAIL",
+    "EXIT_CODE":  2,
+    "NOTE":  "Fixture is intentionally broken (agent autofix). Exit!=0 expected until agent repairs.",
+    "LOG":  "G:\\~dev\\rawrxd\\evidence\\COMPETITIVE_BENCH_001\\logs\\coding_task_multierror_calc.txt",
+    "PROMOTE":  0
+}

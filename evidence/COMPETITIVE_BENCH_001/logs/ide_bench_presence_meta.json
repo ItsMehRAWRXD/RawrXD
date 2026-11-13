@@ -1,0 +1,10 @@
+{
+    "SUITE":  "ide_bench",
+    "COMMAND":  "Test-Path + SHA256 G:\\~dev\\rawrxd\\bin\\RawrXD-Win32IDE.exe (GUI; no automated IDE-Bench suite)",
+    "EXE_PATH":  "G:\\~dev\\rawrxd\\bin\\RawrXD-Win32IDE.exe",
+    "EXE_SHA256":  "D60C6F9A840D6EC824215BAE604EEF2561E5DE844C0F856893BE2E5AF5A0F31C",
+    "EXE_EXISTS":  true,
+    "RESULT":  "PASS",
+    "NOTE":  "Binary presence gate only. Full IDE-Bench tasks NOT_RUN (no harness fixtures).",
+    "PROMOTE":  0
+}
