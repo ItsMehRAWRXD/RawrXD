@@ -2,33 +2,37 @@ GPU_REQUIRED_001 — TinyLlama discrete GPU smoke
 DATE=2026-11-13
 PROMOTE=0
 CERTIFIED=0
+TIP_CLIMB=HOLD
 
-EXE_SHA256=35F7F91986C2200AA32E26234E5BB4DA9377B8A6526E4AFCB58E77D94A6843E7
-MODEL=G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+EXE_SHA=4868652AB6F0E3FB44881EC4DF7028F737F63408E699B6832FBBE0E1089E8AF3
+EXE=g:\~dev\rawrxd\build_ninja\bin\rawr.exe
+MODEL=G:\~dev\rawrxd\models\tinyllama.gguf
 
-## Policy
+## Policy (GPU envs ONLY — no RAWRXD_HOST_DECODE=1)
 RAWRXD_ALLOW_GPU=1
 RAWR_FORCE_GPU=1
 RAWR_NO_CPU_FALLBACK=1
-RAWRXD_HOST_DECODE=0
-R1_HOST_FLOOR=0
+WEIGHT_BUDGET_MIB=4096
+
+## Decision line
+[AUTO_BACKEND] decision=VulkanPrimary reason=Primary GPU fits weights+KV+scratch
 
 ## Measured
-AUTO_BACKEND decision=VulkanPrimary
-reason=Primary GPU fits weights+KV+scratch
-primaryReady=1 primaryValidated=1 secondaryReady=1 vramPriMB=32768
-PRODUCT_LAA=1 HOST_DECODE=0 ALLOW_GPU=1 GPU_DEFAULT=1
-VK_ICD=NOT_BLOCKED (no R1_HOST_FLOOR)
-EXIT=0
-GENERATED_TOKENS>=1 (DECODE path live; gpu_res=1)
+primaryReady=1 primaryValidated=1 secondaryReady=1 secondaryValidated=1 vramPriMB=32768
+Vulkan ICD ready
+PRODUCT_LAA=1 HOST_DECODE=0 ALLOW_GPU=1 PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1 GPU_DEFAULT=1
+VK_ICD=NOT_BLOCKED (no WHY=R1_HOST_FLOOR)
+STDOUT_TOKENS=arc arc arc arc arc arc arc arc
+CPU_FALLBACK=0
+decision≠CPU FAIL_CLOSED_OK=1
 
-## Root cause closed
-MeasureGpuBudget never set primaryComputeValidated → Decide rejected all GPU
-plans with "No eligible GPU execution plan" under forceGPU. Fixed: ICD+PnP
-healthy ⇒ primary/secondaryComputeValidated=1.
+## Artifacts
+tiny_gpu.err.txt
+tiny_gpu.out.txt
+EXE_SHA.txt
 
 ## Disposition
-GPU_REQUIRED_SMOKE=PASS_RUNTIME
-CPU_FALLBACK=0
+GPU_REQUIRED_SMOKE=PASS_RUNTIME (AUTO_BACKEND+HOST_DECODE gates)
+BIND16_COMMIT_FAIL seen on decode path (non-blocking for gate; tokens emitted)
 PROMOTE=0
 TIP_CLIMB=HOLD

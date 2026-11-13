@@ -1813,10 +1813,13 @@ bool HeadlessIDE::loadModel(const std::string& filepath) {
     if (RawrXD::HeadlessProduct::LocalOnly()) {
 #ifdef _WIN32
         _putenv_s("RAWRXD_PRODUCT_MODEL", localPath.c_str());
-        _putenv_s("RAWRXD_HOST_DECODE", "1");
-        _putenv_s("DEEP2_MINIMAL_ENHANCE", "1");
-        _putenv_s("DEEP2_DUALSTICK_ARM", "0");
-        _putenv_s("RAWRXD_FORCE_CPU_INFERENCE", "1");
+        /* GPU-required product path — no CPU-only IDE load. */
+        _putenv_s("RAWRXD_ALLOW_GPU", "1");
+        _putenv_s("RAWR_FORCE_GPU", "1");
+        _putenv_s("RAWR_NO_CPU_FALLBACK", "1");
+        _putenv_s("RAWRXD_HOST_DECODE", "0");
+        _putenv_s("RAWRXD_FORCE_CPU_INFERENCE", "0");
+        _putenv_s("DEEP2_MINIMAL_ENHANCE", "0");
 #endif
         /* Soft-reload: session already open after soft-unload → re-arm only.
          * OpenBody still PATH_SWITCHes when the path differs. */

@@ -77,8 +77,11 @@ __declspec(dllexport) bool Win32IDE_LoadGGUFModel(const char* path) {
             return false;
         }
 #ifdef _WIN32
-        _putenv_s("RAWRXD_HOST_DECODE", "1");
-        _putenv_s("RAWRXD_FORCE_CPU_INFERENCE", "1");
+        _putenv_s("RAWRXD_ALLOW_GPU", "1");
+        _putenv_s("RAWR_FORCE_GPU", "1");
+        _putenv_s("RAWR_NO_CPU_FALLBACK", "1");
+        _putenv_s("RAWRXD_HOST_DECODE", "0");
+        _putenv_s("RAWRXD_FORCE_CPU_INFERENCE", "0");
         _putenv_s("RAWRXD_PRODUCT_MODEL", path);
 #endif
         if (!Engine()->LoadModel(path)) {
