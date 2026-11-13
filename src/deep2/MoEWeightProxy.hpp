@@ -31,7 +31,10 @@ struct MoEWeightHandle {
     size_t expertBytes = 0;
     int layer = -1;
     int expertId = -1;
-    int quantType = 0;   // GGMLType enum value (default resolved by proxy)
+    int quantType = 0;   // GGMLType enum value (legacy / gate default)
+    int gateQuantType = 0;
+    int upQuantType = 0;
+    int downQuantType = 0;
     bool valid = false;
 };
 
@@ -81,6 +84,8 @@ public:
 
     // Wire the neutral (fixed GGUF v3 parser) loader
     void Attach(MoEWeightsLoader* loader);
+    /* B03 MiniMax: one loader per GGUF shard; Acquire tries each. */
+    void AttachMulti(const std::vector<MoEWeightsLoader*>& loaders);
     void Detach();
 
     // Single call to fetch a complete expert.
@@ -133,7 +138,8 @@ public:
 
 private:
     mutable std::mutex attachMutex_;
-    MoEWeightsLoader* loader_ = nullptr;  // not owned
+    MoEWeightsLoader* loader_ = nullptr;  // not owned (first / primary)
+    std::vector<MoEWeightsLoader*> loaders_; /* multi-shard; not owned */
     MoEProxyStats stats_;
 
     // Async prefetch job tracking

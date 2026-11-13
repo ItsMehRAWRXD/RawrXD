@@ -1,0 +1,519 @@
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+KEN_MARS_ACTIVE=1 DEEP2_MARS=1 HOST_DECODE=0 GPU_POLICY=MULTI GPU_DEVICE_CLASS=DISCRETE NO_TRUNCATE_NEEDLE=1 PRODUCT_STREAMER_ARM=1
+WEIGHT_BUDGET_INPUT=7886
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=7886
+WEIGHT_BUDGET_BYTES=8269070336
+WEIGHT_BUDGET_SOURCE=HOST_FLOOR_RAM_EIGHTH
+WEIGHT_BUDGET_PRE_FLOOR_SRC=ARMSPEED_SETENVIFUNSET_OR_USER
+WEIGHT_BUDGET_PRE_FLOOR_RAW="E8B0M"
+WEIGHT_BUDGET_PRE_FLOOR_MIB=59568
+WEIGHT_BUDGET_POST_FLOOR_SRC=HOST_FLOOR_RAM_EIGHTH
+WEIGHT_BUDGET_ENV_PRESENT=1
+WEIGHT_BUDGET_ENV_RAW="7886"
+WEIGHT_BUDGET_PARSE_OK=1
+WEIGHT_BUDGET_INPUT_MIB=7886
+WEIGHT_BUDGET_EFFECTIVE_MIB=7886
+RESIDENCY_BUDGET_MIB=7886
+BUDGET_RELATION_VALID=1
+NOTE=REAP_TARGET_NE_RESIDENCY_BUDGET; ARMSPEED_E8B0M_IS_SETENVIFUNSET_DEFAULT; MODEL_SIZE_NE_PHYSICAL_RESIDENCY
+PRODUCT_LAA=1 HOST_DECODE=1 DUALSTICK_ARM=0 MINIMAL_ENHANCE=1 VK_ICD=BLOCKED WHY=R1_HOST_FLOOR
+PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1
+MODEL_DIGESTION_STREAM_BEGIN=1
+MODEL_PATH=F:\ollamamodels\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf
+ARCH=minimax-m2
+HIDDEN=3072 LAYERS=62 HEADS=48 KV_HEADS=8 HEAD_DIM=128 VOCAB=200064 INTERMEDIATE=1536
+SPLIT_QKV_LAYERS=22 FUSED_QKV_LAYERS=0 PROJECTOR_BLOCK_LAYERS=0 MLA_LAYERS=0 BLOCKED_LAYERS=0
+SPLIT_FFN_LAYERS=21 FUSED_FFN_LAYERS=0
+ROOT_EMBED=token_embd.weight ROOT_FINAL_NORM=output_norm.weight ROOT_LM_HEAD=output.weight
+MANIFEST_READY=0 BLOCKED_AT=layer_topology
+AUTHORITY_CLASS=DISCOVERY_ONLY
+PROMOTE=0
+MODEL_DIGESTION_STREAM_END=1
+MODEL_DIGESTION_STREAM_CACHE=G:\~dev\rawrxd\evidence\RAWRXD_MODEL_MANIFESTS\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf.b7fa8e340.1dd35b4ecfcb121.rmanifest.jsonl
+[K2Index] shard=0 tensors=288 data_start=8255296 file_size=49386414912 path=F:\ollamamodels\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf
+[K2Index] shard=1 tensors=299 data_start=18784 file_size=49712985440 path=F:\ollamamodels\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M-00002-of-00003.gguf
+[K2Index] shard=2 tensors=222 data_start=13984 file_size=39242984096 path=F:\ollamamodels\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M-00003-of-00003.gguf
+MULTISHARD_SHARDS_INDEXED=3/3
+MULTISHARD_TENSORS_INDEXED=809
+MULTISHARD_DUPLICATES=0
+MODEL_DIGESTION_STREAM_BEGIN=1
+MODEL_PATH=F:\ollamamodels\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf
+ARCH=minimax-m2
+HIDDEN=3072 LAYERS=62 HEADS=48 KV_HEADS=8 HEAD_DIM=128 VOCAB=200064 INTERMEDIATE=1536
+SPLIT_QKV_LAYERS=62 FUSED_QKV_LAYERS=0 PROJECTOR_BLOCK_LAYERS=0 MLA_LAYERS=0 BLOCKED_LAYERS=0
+SPLIT_FFN_LAYERS=62 FUSED_FFN_LAYERS=0
+ROOT_EMBED=token_embd.weight ROOT_FINAL_NORM=output_norm.weight ROOT_LM_HEAD=output.weight
+MANIFEST_READY=1 BLOCKED_AT=NONE
+AUTHORITY_CLASS=DISCOVERY_ONLY
+PROMOTE=0
+MODEL_DIGESTION_STREAM_END=1
+B03_MULTISHARD_TOPOLOGY ready=1 blocked=NONE layers=62 headDim=128 (geom_hd=128)
+B02_INDEX_LOOKUP emb=1 shard=0 out=1 shard=0 nrm=1
+B02_ROOT_MATERIALIZE=1 name=token_embd.weight shard=0 off=512428864 bytes=345710592 rows=200064 cols=3072 type=12 head4=c1081d14
+B02_ROOT_MATERIALIZE=1 name=output.weight shard=0 off=8255296 bytes=504161280 rows=200064 cols=3072 type=14 head4=5d70d4bb
+B02_ROOT_MATERIALIZE=1 name=output_norm.weight shard=0 off=512416576 bytes=12288 rows=3072 cols=1 type=0 head4=00003940
+B02_ROOT_MATERIALIZE=1 name=blk.0.attn_norm.weight shard=0 off=859913024 bytes=12288 rows=3072 cols=1 type=0 head4=0000503c
+B02_ROOT_MATERIALIZE=1 name=blk.0.attn_q.weight shard=0 off=870542144 bytes=10616832 rows=6144 cols=3072 type=12 head4=4b08b714
+B02_ROOT_MATERIALIZE=1 name=blk.0.attn_k.weight shard=0 off=858139456 bytes=1769472 rows=1024 cols=3072 type=12 head4=6c069912
+B02_ROOT_MATERIALIZE=1 name=blk.0.attn_v.weight shard=0 off=881183552 bytes=2580480 rows=1024 cols=3072 type=14 head4=7a211120
+B02_ROOT_MATERIALIZE=1 name=blk.0.attn_output.weight shard=0 off=859925312 bytes=10616832 rows=3072 cols=6144 type=12 head4=83079f14
+B02_ROOT_MATERIALIZE=1 name=blk.0.attn_q_norm.weight shard=0 off=881158976 bytes=24576 rows=6144 cols=1 type=0 head4=0000483f
+B02_ROOT_MATERIALIZE=1 name=blk.0.attn_k_norm.weight shard=0 off=859908928 bytes=4096 rows=1024 cols=1 type=0 head4=00005f3f
+B02_ROOT_MATERIALIZE=1 name=blk.0.ffn_norm.weight shard=0 off=2557292352 bytes=12288 rows=3072 cols=1 type=0 head4=0000a53f
+B02_ROOT_MATERIALIZE=1 name=blk.0.ffn_gate_inp.weight shard=0 off=2554146624 bytes=3145728 rows=256 cols=3072 type=0 head4=803da2bc
+B02_ROOT_MATERIALIZE=1 name=blk.1.attn_norm.weight shard=0 off=3238555456 bytes=12288 rows=3072 cols=1 type=0 head4=0000943d
+B02_ROOT_MATERIALIZE=1 name=blk.1.attn_q.weight shard=0 off=3249184576 bytes=10616832 rows=6144 cols=3072 type=12 head4=4708e514
+B02_ROOT_MATERIALIZE=1 name=blk.1.attn_k.weight shard=0 off=3236781888 bytes=1769472 rows=1024 cols=3072 type=12 head4=1108a313
+B02_ROOT_MATERIALIZE=1 name=blk.1.attn_v.weight shard=0 off=3259825984 bytes=2580480 rows=1024 cols=3072 type=14 head4=0113dc70
+B02_ROOT_MATERIALIZE=1 name=blk.1.attn_output.weight shard=0 off=3238567744 bytes=10616832 rows=3072 cols=6144 type=12 head4=b0066613
+B02_ROOT_MATERIALIZE=1 name=blk.1.attn_q_norm.weight shard=0 off=3259801408 bytes=24576 rows=6144 cols=1 type=0 head4=0000453e
+B02_ROOT_MATERIALIZE=1 name=blk.1.attn_k_norm.weight shard=0 off=3238551360 bytes=4096 rows=1024 cols=1 type=0 head4=0000443f
+B02_ROOT_MATERIALIZE=1 name=blk.1.ffn_norm.weight shard=0 off=4935934784 bytes=12288 rows=3072 cols=1 type=0 head4=0000d53f
+B02_ROOT_MATERIALIZE=1 name=blk.1.ffn_gate_inp.weight shard=0 off=4932789056 bytes=3145728 rows=256 cols=3072 type=0 head4=80c2babc
+B02_ROOT_MATERIALIZE=1 name=blk.2.attn_norm.weight shard=0 off=5617197888 bytes=12288 rows=3072 cols=1 type=0 head4=0000b53d
+B02_ROOT_MATERIALIZE=1 name=blk.2.attn_q.weight shard=0 off=5627827008 bytes=10616832 rows=6144 cols=3072 type=12 head4=62075f12
+B02_ROOT_MATERIALIZE=1 name=blk.2.attn_k.weight shard=0 off=5615424320 bytes=1769472 rows=1024 cols=3072 type=12 head4=f904cf10
+B02_ROOT_MATERIALIZE=1 name=blk.2.attn_v.weight shard=0 off=5638468416 bytes=2580480 rows=1024 cols=3072 type=14 head4=f12fb8df
+B02_ROOT_MATERIALIZE=1 name=blk.2.attn_output.weight shard=0 off=5617210176 bytes=10616832 rows=3072 cols=6144 type=12 head4=1408b714
+B02_ROOT_MATERIALIZE=1 name=blk.2.attn_q_norm.weight shard=0 off=5638443840 bytes=24576 rows=6144 cols=1 type=0 head4=0000c43e
+B02_ROOT_MATERIALIZE=1 name=blk.2.attn_k_norm.weight shard=0 off=5617193792 bytes=4096 rows=1024 cols=1 type=0 head4=0000803f
+B02_ROOT_MATERIALIZE=1 name=blk.2.ffn_norm.weight shard=0 off=7314577216 bytes=12288 rows=3072 cols=1 type=0 head4=0000ed3f
+B02_ROOT_MATERIALIZE=1 name=blk.2.ffn_gate_inp.weight shard=0 off=7311431488 bytes=3145728 rows=256 cols=3072 type=0 head4=33d0583d
+B02_ROOT_MATERIALIZE=1 name=blk.3.attn_norm.weight shard=0 off=7995840320 bytes=12288 rows=3072 cols=1 type=0 head4=0000ed3d
+B02_ROOT_MATERIALIZE=1 name=blk.3.attn_q.weight shard=0 off=8006469440 bytes=10616832 rows=6144 cols=3072 type=12 head4=fe083d15
+B02_ROOT_MATERIALIZE=1 name=blk.3.attn_k.weight shard=0 off=7994066752 bytes=1769472 rows=1024 cols=3072 type=12 head4=8203150e
+B02_ROOT_MATERIALIZE=1 name=blk.3.attn_v.weight shard=0 off=8017110848 bytes=2580480 rows=1024 cols=3072 type=14 head4=dda64cae
+B02_ROOT_MATERIALIZE=1 name=blk.3.attn_output.weight shard=0 off=7995852608 bytes=10616832 rows=3072 cols=6144 type=12 head4=0e06fc11
+B02_ROOT_MATERIALIZE=1 name=blk.3.attn_q_norm.weight shard=0 off=8017086272 bytes=24576 rows=6144 cols=1 type=0 head4=0000ed3c
+B02_ROOT_MATERIALIZE=1 name=blk.3.attn_k_norm.weight shard=0 off=7995836224 bytes=4096 rows=1024 cols=1 type=0 head4=0000813f
+B02_ROOT_MATERIALIZE=1 name=blk.3.ffn_norm.weight shard=0 off=9693219648 bytes=12288 rows=3072 cols=1 type=0 head4=0000d73f
+B02_ROOT_MATERIALIZE=1 name=blk.3.ffn_gate_inp.weight shard=0 off=9690073920 bytes=3145728 rows=256 cols=3072 type=0 head4=2845763d
+B02_ROOT_MATERIALIZE=1 name=blk.4.attn_norm.weight shard=0 off=10374482752 bytes=12288 rows=3072 cols=1 type=0 head4=0000243e
+B02_ROOT_MATERIALIZE=1 name=blk.4.attn_q.weight shard=0 off=10385111872 bytes=10616832 rows=6144 cols=3072 type=12 head4=230a7615
+B02_ROOT_MATERIALIZE=1 name=blk.4.attn_k.weight shard=0 off=10372709184 bytes=1769472 rows=1024 cols=3072 type=12 head4=e207c012
+B02_ROOT_MATERIALIZE=1 name=blk.4.attn_v.weight shard=0 off=10395753280 bytes=2580480 rows=1024 cols=3072 type=14 head4=c20c0606
+B02_ROOT_MATERIALIZE=1 name=blk.4.attn_output.weight shard=0 off=10374495040 bytes=10616832 rows=3072 cols=6144 type=12 head4=21097e14
+B02_ROOT_MATERIALIZE=1 name=blk.4.attn_q_norm.weight shard=0 off=10395728704 bytes=24576 rows=6144 cols=1 type=0 head4=0000bf3f
+B02_ROOT_MATERIALIZE=1 name=blk.4.attn_k_norm.weight shard=0 off=10374478656 bytes=4096 rows=1024 cols=1 type=0 head4=0000c83f
+B02_ROOT_MATERIALIZE=1 name=blk.4.ffn_norm.weight shard=0 off=12071862080 bytes=12288 rows=3072 cols=1 type=0 head4=0000da3f
+B02_ROOT_MATERIALIZE=1 name=blk.4.ffn_gate_inp.weight shard=0 off=12068716352 bytes=3145728 rows=256 cols=3072 type=0 head4=b5f10d3d
+B02_ROOT_MATERIALIZE=1 name=blk.5.attn_norm.weight shard=0 off=12753125184 bytes=12288 rows=3072 cols=1 type=0 head4=0000073e
+B02_ROOT_MATERIALIZE=1 name=blk.5.attn_q.weight shard=0 off=12763754304 bytes=10616832 rows=6144 cols=3072 type=12 head4=7f0ae615
+B02_ROOT_MATERIALIZE=1 name=blk.5.attn_k.weight shard=0 off=12751351616 bytes=1769472 rows=1024 cols=3072 type=12 head4=a8062913
+B02_ROOT_MATERIALIZE=1 name=blk.5.attn_v.weight shard=0 off=12774395712 bytes=2580480 rows=1024 cols=3072 type=14 head4=a4c9fddd
+B02_ROOT_MATERIALIZE=1 name=blk.5.attn_output.weight shard=0 off=12753137472 bytes=10616832 rows=3072 cols=6144 type=12 head4=fd06d213
+B02_ROOT_MATERIALIZE=1 name=blk.5.attn_q_norm.weight shard=0 off=12774371136 bytes=24576 rows=6144 cols=1 type=0 head4=0000e73f
+B02_ROOT_MATERIALIZE=1 name=blk.5.attn_k_norm.weight shard=0 off=12753121088 bytes=4096 rows=1024 cols=1 type=0 head4=0000b33f
+B02_ROOT_MATERIALIZE=1 name=blk.5.ffn_norm.weight shard=0 off=14450504512 bytes=12288 rows=3072 cols=1 type=0 head4=0000cd3f
+B02_ROOT_MATERIALIZE=1 name=blk.5.ffn_gate_inp.weight shard=0 off=14447358784 bytes=3145728 rows=256 cols=3072 type=0 head4=2d558b3c
+B02_ROOT_MATERIALIZE=1 name=blk.6.attn_norm.weight shard=0 off=15131767616 bytes=12288 rows=3072 cols=1 type=0 head4=0000143e
+B02_ROOT_MATERIALIZE=1 name=blk.6.attn_q.weight shard=0 off=15142396736 bytes=10616832 rows=6144 cols=3072 type=12 head4=a7099815
+B02_ROOT_MATERIALIZE=1 name=blk.6.attn_k.weight shard=0 off=15129994048 bytes=1769472 rows=1024 cols=3072 type=12 head4=dd04e810
+B02_ROOT_MATERIALIZE=1 name=blk.6.attn_v.weight shard=0 off=15153038144 bytes=2580480 rows=1024 cols=3072 type=14 head4=f711a3dc
+B02_ROOT_MATERIALIZE=1 name=blk.6.attn_output.weight shard=0 off=15131779904 bytes=10616832 rows=3072 cols=6144 type=12 head4=4c067f11
+B02_ROOT_MATERIALIZE=1 name=blk.6.attn_q_norm.weight shard=0 off=15153013568 bytes=24576 rows=6144 cols=1 type=0 head4=00005d3f
+B02_ROOT_MATERIALIZE=1 name=blk.6.attn_k_norm.weight shard=0 off=15131763520 bytes=4096 rows=1024 cols=1 type=0 head4=00000c3f
+B02_ROOT_MATERIALIZE=1 name=blk.6.ffn_norm.weight shard=0 off=16829146944 bytes=12288 rows=3072 cols=1 type=0 head4=0000dc3f
+B02_ROOT_MATERIALIZE=1 name=blk.6.ffn_gate_inp.weight shard=0 off=16826001216 bytes=3145728 rows=256 cols=3072 type=0 head4=110966bc
+B02_ROOT_MATERIALIZE=1 name=blk.7.attn_norm.weight shard=0 off=17510410048 bytes=12288 rows=3072 cols=1 type=0 head4=00006b3e
+B02_ROOT_MATERIALIZE=1 name=blk.7.attn_q.weight shard=0 off=17521039168 bytes=10616832 rows=6144 cols=3072 type=12 head4=a1060114
+B02_ROOT_MATERIALIZE=1 name=blk.7.attn_k.weight shard=0 off=17508636480 bytes=1769472 rows=1024 cols=3072 type=12 head4=5907ae14
+B02_ROOT_MATERIALIZE=1 name=blk.7.attn_v.weight shard=0 off=17531680576 bytes=1769472 rows=1024 cols=3072 type=12 head4=2e073b13
+B02_ROOT_MATERIALIZE=1 name=blk.7.attn_output.weight shard=0 off=17510422336 bytes=10616832 rows=3072 cols=6144 type=12 head4=2f07b013
+B02_ROOT_MATERIALIZE=1 name=blk.7.attn_q_norm.weight shard=0 off=17531656000 bytes=24576 rows=6144 cols=1 type=0 head4=0000a23d
+B02_ROOT_MATERIALIZE=1 name=blk.7.attn_k_norm.weight shard=0 off=17510405952 bytes=4096 rows=1024 cols=1 type=0 head4=0000e53f
+B02_ROOT_MATERIALIZE=1 name=blk.7.ffn_norm.weight shard=0 off=18895551296 bytes=12288 rows=3072 cols=1 type=0 head4=0000d23f
+B02_ROOT_MATERIALIZE=1 name=blk.7.ffn_gate_inp.weight shard=0 off=18892405568 bytes=3145728 rows=256 cols=3072 type=0 head4=fd74403d
+B02_ROOT_MATERIALIZE=1 name=blk.8.attn_norm.weight shard=0 off=19576814400 bytes=12288 rows=3072 cols=1 type=0 head4=0000683e
+B02_ROOT_MATERIALIZE=1 name=blk.8.attn_q.weight shard=0 off=19587443520 bytes=10616832 rows=6144 cols=3072 type=12 head4=c6085d15
+B02_ROOT_MATERIALIZE=1 name=blk.8.attn_k.weight shard=0 off=19575040832 bytes=1769472 rows=1024 cols=3072 type=12 head4=09083a14
+B02_ROOT_MATERIALIZE=1 name=blk.8.attn_v.weight shard=0 off=19598084928 bytes=1769472 rows=1024 cols=3072 type=12 head4=3e08c614
+B02_ROOT_MATERIALIZE=1 name=blk.8.attn_output.weight shard=0 off=19576826688 bytes=10616832 rows=3072 cols=6144 type=12 head4=05089b13
+B02_ROOT_MATERIALIZE=1 name=blk.8.attn_q_norm.weight shard=0 off=19598060352 bytes=24576 rows=6144 cols=1 type=0 head4=0000283f
+B02_ROOT_MATERIALIZE=1 name=blk.8.attn_k_norm.weight shard=0 off=19576810304 bytes=4096 rows=1024 cols=1 type=0 head4=0000d63f
+B02_ROOT_MATERIALIZE=1 name=blk.8.ffn_norm.weight shard=0 off=20961955648 bytes=12288 rows=3072 cols=1 type=0 head4=0000cb3f
+B02_ROOT_MATERIALIZE=1 name=blk.8.ffn_gate_inp.weight shard=0 off=20958809920 bytes=3145728 rows=256 cols=3072 type=0 head4=6113793d
+B02_ROOT_MATERIALIZE=1 name=blk.9.attn_norm.weight shard=0 off=21643218752 bytes=12288 rows=3072 cols=1 type=0 head4=0000853e
+B02_ROOT_MATERIALIZE=1 name=blk.9.attn_q.weight shard=0 off=21653847872 bytes=10616832 rows=6144 cols=3072 type=12 head4=d508e516
+B02_ROOT_MATERIALIZE=1 name=blk.9.attn_k.weight shard=0 off=21641445184 bytes=1769472 rows=1024 cols=3072 type=12 head4=39054411
+B02_ROOT_MATERIALIZE=1 name=blk.9.attn_v.weight shard=0 off=21664489280 bytes=2580480 rows=1024 cols=3072 type=14 head4=cac73f7f
+B02_ROOT_MATERIALIZE=1 name=blk.9.attn_output.weight shard=0 off=21643231040 bytes=10616832 rows=3072 cols=6144 type=12 head4=89067612
+B02_ROOT_MATERIALIZE=1 name=blk.9.attn_q_norm.weight shard=0 off=21664464704 bytes=24576 rows=6144 cols=1 type=0 head4=0000a23f
+B02_ROOT_MATERIALIZE=1 name=blk.9.attn_k_norm.weight shard=0 off=21643214656 bytes=4096 rows=1024 cols=1 type=0 head4=0000b13f
+B02_ROOT_MATERIALIZE=1 name=blk.9.ffn_norm.weight shard=0 off=23340598080 bytes=12288 rows=3072 cols=1 type=0 head4=0000b53f
+B02_ROOT_MATERIALIZE=1 name=blk.9.ffn_gate_inp.weight shard=0 off=23337452352 bytes=3145728 rows=256 cols=3072 type=0 head4=6d84443c
+B02_ROOT_MATERIALIZE=1 name=blk.10.attn_norm.weight shard=0 off=24021861184 bytes=12288 rows=3072 cols=1 type=0 head4=0000633e
+B02_ROOT_MATERIALIZE=1 name=blk.10.attn_q.weight shard=0 off=24032490304 bytes=10616832 rows=6144 cols=3072 type=12 head4=f2073515
+B02_ROOT_MATERIALIZE=1 name=blk.10.attn_k.weight shard=0 off=24020087616 bytes=1769472 rows=1024 cols=3072 type=12 head4=6c03e20e
+B02_ROOT_MATERIALIZE=1 name=blk.10.attn_v.weight shard=0 off=24043131712 bytes=1769472 rows=1024 cols=3072 type=12 head4=4f04ce11
+B02_ROOT_MATERIALIZE=1 name=blk.10.attn_output.weight shard=0 off=24021873472 bytes=10616832 rows=3072 cols=6144 type=12 head4=23045b10
+B02_ROOT_MATERIALIZE=1 name=blk.10.attn_q_norm.weight shard=0 off=24043107136 bytes=24576 rows=6144 cols=1 type=0 head4=0000103f
+B02_ROOT_MATERIALIZE=1 name=blk.10.attn_k_norm.weight shard=0 off=24021857088 bytes=4096 rows=1024 cols=1 type=0 head4=00002a3c
+B02_ROOT_MATERIALIZE=1 name=blk.10.ffn_norm.weight shard=0 off=25407002432 bytes=12288 rows=3072 cols=1 type=0 head4=0000b83f
+B02_ROOT_MATERIALIZE=1 name=blk.10.ffn_gate_inp.weight shard=0 off=25403856704 bytes=3145728 rows=256 cols=3072 type=0 head4=78936c3d
+B02_ROOT_MATERIALIZE=1 name=blk.11.attn_norm.weight shard=0 off=26088265536 bytes=12288 rows=3072 cols=1 type=0 head4=0000ad3e
+B02_ROOT_MATERIALIZE=1 name=blk.11.attn_q.weight shard=0 off=26098894656 bytes=10616832 rows=6144 cols=3072 type=12 head4=2708a013
+B02_ROOT_MATERIALIZE=1 name=blk.11.attn_k.weight shard=0 off=26086491968 bytes=1769472 rows=1024 cols=3072 type=12 head4=7d064614
+B02_ROOT_MATERIALIZE=1 name=blk.11.attn_v.weight shard=0 off=26109536064 bytes=1769472 rows=1024 cols=3072 type=12 head4=55071d14
+B02_ROOT_MATERIALIZE=1 name=blk.11.attn_output.weight shard=0 off=26088277824 bytes=10616832 rows=3072 cols=6144 type=12 head4=2a076c13
+B02_ROOT_MATERIALIZE=1 name=blk.11.attn_q_norm.weight shard=0 off=26109511488 bytes=24576 rows=6144 cols=1 type=0 head4=0000893f
+B02_ROOT_MATERIALIZE=1 name=blk.11.attn_k_norm.weight shard=0 off=26088261440 bytes=4096 rows=1024 cols=1 type=0 head4=0000d83f
+B02_ROOT_MATERIALIZE=1 name=blk.11.ffn_norm.weight shard=0 off=27473406784 bytes=12288 rows=3072 cols=1 type=0 head4=0000b73f
+B02_ROOT_MATERIALIZE=1 name=blk.11.ffn_gate_inp.weight shard=0 off=27470261056 bytes=3145728 rows=256 cols=3072 type=0 head4=ac05273d
+B02_ROOT_MATERIALIZE=1 name=blk.12.attn_norm.weight shard=0 off=28154669888 bytes=12288 rows=3072 cols=1 type=0 head4=00008d3e
+B02_ROOT_MATERIALIZE=1 name=blk.12.attn_q.weight shard=0 off=28165299008 bytes=10616832 rows=6144 cols=3072 type=12 head4=57070c12
+B02_ROOT_MATERIALIZE=1 name=blk.12.attn_k.weight shard=0 off=28152896320 bytes=1769472 rows=1024 cols=3072 type=12 head4=ff04eb11
+B02_ROOT_MATERIALIZE=1 name=blk.12.attn_v.weight shard=0 off=28175940416 bytes=2580480 rows=1024 cols=3072 type=14 head4=06a230b7
+B02_ROOT_MATERIALIZE=1 name=blk.12.attn_output.weight shard=0 off=28154682176 bytes=10616832 rows=3072 cols=6144 type=12 head4=9606ab13
+B02_ROOT_MATERIALIZE=1 name=blk.12.attn_q_norm.weight shard=0 off=28175915840 bytes=24576 rows=6144 cols=1 type=0 head4=0000f33e
+B02_ROOT_MATERIALIZE=1 name=blk.12.attn_k_norm.weight shard=0 off=28154665792 bytes=4096 rows=1024 cols=1 type=0 head4=0000b53f
+B02_ROOT_MATERIALIZE=1 name=blk.12.ffn_norm.weight shard=0 off=29852049216 bytes=12288 rows=3072 cols=1 type=0 head4=0000b53f
+B02_ROOT_MATERIALIZE=1 name=blk.12.ffn_gate_inp.weight shard=0 off=29848903488 bytes=3145728 rows=256 cols=3072 type=0 head4=0faa803d
+B02_ROOT_MATERIALIZE=1 name=blk.13.attn_norm.weight shard=0 off=30533312320 bytes=12288 rows=3072 cols=1 type=0 head4=00009a3e
+B02_ROOT_MATERIALIZE=1 name=blk.13.attn_q.weight shard=0 off=30543941440 bytes=10616832 rows=6144 cols=3072 type=12 head4=2d086214
+B02_ROOT_MATERIALIZE=1 name=blk.13.attn_k.weight shard=0 off=30531538752 bytes=1769472 rows=1024 cols=3072 type=12 head4=db064413
+B02_ROOT_MATERIALIZE=1 name=blk.13.attn_v.weight shard=0 off=30554582848 bytes=1769472 rows=1024 cols=3072 type=12 head4=1f09b015
+B02_ROOT_MATERIALIZE=1 name=blk.13.attn_output.weight shard=0 off=30533324608 bytes=10616832 rows=3072 cols=6144 type=12 head4=4407dd13
+B02_ROOT_MATERIALIZE=1 name=blk.13.attn_q_norm.weight shard=0 off=30554558272 bytes=24576 rows=6144 cols=1 type=0 head4=0000893f
+B02_ROOT_MATERIALIZE=1 name=blk.13.attn_k_norm.weight shard=0 off=30533308224 bytes=4096 rows=1024 cols=1 type=0 head4=00000f3f
+B02_ROOT_MATERIALIZE=1 name=blk.13.ffn_norm.weight shard=0 off=31918453568 bytes=12288 rows=3072 cols=1 type=0 head4=0000b63f
+B02_ROOT_MATERIALIZE=1 name=blk.13.ffn_gate_inp.weight shard=0 off=31915307840 bytes=3145728 rows=256 cols=3072 type=0 head4=ed7f713d
+B02_ROOT_MATERIALIZE=1 name=blk.14.attn_norm.weight shard=0 off=32599716672 bytes=12288 rows=3072 cols=1 type=0 head4=0000a53e
+B02_ROOT_MATERIALIZE=1 name=blk.14.attn_q.weight shard=0 off=32610345792 bytes=10616832 rows=6144 cols=3072 type=12 head4=84071214
+B02_ROOT_MATERIALIZE=1 name=blk.14.attn_k.weight shard=0 off=32597943104 bytes=1769472 rows=1024 cols=3072 type=12 head4=df073c13
+B02_ROOT_MATERIALIZE=1 name=blk.14.attn_v.weight shard=0 off=32620987200 bytes=1769472 rows=1024 cols=3072 type=12 head4=a708bd14
+B02_ROOT_MATERIALIZE=1 name=blk.14.attn_output.weight shard=0 off=32599728960 bytes=10616832 rows=3072 cols=6144 type=12 head4=f5058a11
+B02_ROOT_MATERIALIZE=1 name=blk.14.attn_q_norm.weight shard=0 off=32620962624 bytes=24576 rows=6144 cols=1 type=0 head4=0000b93f
+B02_ROOT_MATERIALIZE=1 name=blk.14.attn_k_norm.weight shard=0 off=32599712576 bytes=4096 rows=1024 cols=1 type=0 head4=0000453f
+B02_ROOT_MATERIALIZE=1 name=blk.14.ffn_norm.weight shard=0 off=33984857920 bytes=12288 rows=3072 cols=1 type=0 head4=0000b63f
+B02_ROOT_MATERIALIZE=1 name=blk.14.ffn_gate_inp.weight shard=0 off=33981712192 bytes=3145728 rows=256 cols=3072 type=0 head4=fbc51dbd
+B02_ROOT_MATERIALIZE=1 name=blk.15.attn_norm.weight shard=0 off=34666121024 bytes=12288 rows=3072 cols=1 type=0 head4=0000d03e
+B02_ROOT_MATERIALIZE=1 name=blk.15.attn_q.weight shard=0 off=34676750144 bytes=10616832 rows=6144 cols=3072 type=12 head4=e507a214
+B02_ROOT_MATERIALIZE=1 name=blk.15.attn_k.weight shard=0 off=34664347456 bytes=1769472 rows=1024 cols=3072 type=12 head4=a2061c13
+B02_ROOT_MATERIALIZE=1 name=blk.15.attn_v.weight shard=0 off=34687391552 bytes=2580480 rows=1024 cols=3072 type=14 head4=cf20caef
+B02_ROOT_MATERIALIZE=1 name=blk.15.attn_output.weight shard=0 off=34666133312 bytes=10616832 rows=3072 cols=6144 type=12 head4=7406dc12
+B02_ROOT_MATERIALIZE=1 name=blk.15.attn_q_norm.weight shard=0 off=34687366976 bytes=24576 rows=6144 cols=1 type=0 head4=0000983f
+B02_ROOT_MATERIALIZE=1 name=blk.15.attn_k_norm.weight shard=0 off=34666116928 bytes=4096 rows=1024 cols=1 type=0 head4=0000303f
+B02_ROOT_MATERIALIZE=1 name=blk.15.ffn_norm.weight shard=0 off=36363500352 bytes=12288 rows=3072 cols=1 type=0 head4=0000b53f
+B02_ROOT_MATERIALIZE=1 name=blk.15.ffn_gate_inp.weight shard=0 off=36360354624 bytes=3145728 rows=256 cols=3072 type=0 head4=1702703d
+B02_ROOT_MATERIALIZE=1 name=blk.16.attn_norm.weight shard=0 off=37044763456 bytes=12288 rows=3072 cols=1 type=0 head4=00000d3f
+B02_ROOT_MATERIALIZE=1 name=blk.16.attn_q.weight shard=0 off=37055392576 bytes=10616832 rows=6144 cols=3072 type=12 head4=29076812
+B02_ROOT_MATERIALIZE=1 name=blk.16.attn_k.weight shard=0 off=37042989888 bytes=1769472 rows=1024 cols=3072 type=12 head4=a4069714
+B02_ROOT_MATERIALIZE=1 name=blk.16.attn_v.weight shard=0 off=37066033984 bytes=1769472 rows=1024 cols=3072 type=12 head4=36067213
+B02_ROOT_MATERIALIZE=1 name=blk.16.attn_output.weight shard=0 off=37044775744 bytes=10616832 rows=3072 cols=6144 type=12 head4=6b055611
+B02_ROOT_MATERIALIZE=1 name=blk.16.attn_q_norm.weight shard=0 off=37066009408 bytes=24576 rows=6144 cols=1 type=0 head4=00002e3f
+B02_ROOT_MATERIALIZE=1 name=blk.16.attn_k_norm.weight shard=0 off=37044759360 bytes=4096 rows=1024 cols=1 type=0 head4=0000c43f
+B02_ROOT_MATERIALIZE=1 name=blk.16.ffn_norm.weight shard=0 off=38429904704 bytes=12288 rows=3072 cols=1 type=0 head4=0000b43f
+B02_ROOT_MATERIALIZE=1 name=blk.16.ffn_gate_inp.weight shard=0 off=38426758976 bytes=3145728 rows=256 cols=3072 type=0 head4=1b366c3d
+B02_ROOT_MATERIALIZE=1 name=blk.17.attn_norm.weight shard=0 off=39111167808 bytes=12288 rows=3072 cols=1 type=0 head4=0000b03e
+B02_ROOT_MATERIALIZE=1 name=blk.17.attn_q.weight shard=0 off=39121796928 bytes=10616832 rows=6144 cols=3072 type=12 head4=6208bd14
+B02_ROOT_MATERIALIZE=1 name=blk.17.attn_k.weight shard=0 off=39109394240 bytes=1769472 rows=1024 cols=3072 type=12 head4=87078014
+B02_ROOT_MATERIALIZE=1 name=blk.17.attn_v.weight shard=0 off=39132438336 bytes=1769472 rows=1024 cols=3072 type=12 head4=27073213
+B02_ROOT_MATERIALIZE=1 name=blk.17.attn_output.weight shard=0 off=39111180096 bytes=10616832 rows=3072 cols=6144 type=12 head4=cb088615
+B02_ROOT_MATERIALIZE=1 name=blk.17.attn_q_norm.weight shard=0 off=39132413760 bytes=24576 rows=6144 cols=1 type=0 head4=00008f3f
+B02_ROOT_MATERIALIZE=1 name=blk.17.attn_k_norm.weight shard=0 off=39111163712 bytes=4096 rows=1024 cols=1 type=0 head4=0000ae3f
+B02_ROOT_MATERIALIZE=1 name=blk.17.ffn_norm.weight shard=0 off=40496309056 bytes=12288 rows=3072 cols=1 type=0 head4=0000b23f
+B02_ROOT_MATERIALIZE=1 name=blk.17.ffn_gate_inp.weight shard=0 off=40493163328 bytes=3145728 rows=256 cols=3072 type=0 head4=a948d83b
+B02_ROOT_MATERIALIZE=1 name=blk.18.attn_norm.weight shard=0 off=41177572160 bytes=12288 rows=3072 cols=1 type=0 head4=0000c83e
+B02_ROOT_MATERIALIZE=1 name=blk.18.attn_q.weight shard=0 off=41188201280 bytes=10616832 rows=6144 cols=3072 type=12 head4=53086d14
+B02_ROOT_MATERIALIZE=1 name=blk.18.attn_k.weight shard=0 off=41175798592 bytes=1769472 rows=1024 cols=3072 type=12 head4=90054d11
+B02_ROOT_MATERIALIZE=1 name=blk.18.attn_v.weight shard=0 off=41198842688 bytes=2580480 rows=1024 cols=3072 type=14 head4=c040216c
+B02_ROOT_MATERIALIZE=1 name=blk.18.attn_output.weight shard=0 off=41177584448 bytes=10616832 rows=3072 cols=6144 type=12 head4=f8082414
+B02_ROOT_MATERIALIZE=1 name=blk.18.attn_q_norm.weight shard=0 off=41198818112 bytes=24576 rows=6144 cols=1 type=0 head4=0000733f
+B02_ROOT_MATERIALIZE=1 name=blk.18.attn_k_norm.weight shard=0 off=41177568064 bytes=4096 rows=1024 cols=1 type=0 head4=0000b03f
+B02_ROOT_MATERIALIZE=1 name=blk.18.ffn_norm.weight shard=0 off=42874951488 bytes=12288 rows=3072 cols=1 type=0 head4=0000ad3f
+B02_ROOT_MATERIALIZE=1 name=blk.18.ffn_gate_inp.weight shard=0 off=42871805760 bytes=3145728 rows=256 cols=3072 type=0 head4=4f73bdbc
+B02_ROOT_MATERIALIZE=1 name=blk.19.attn_norm.weight shard=0 off=43556214592 bytes=12288 rows=3072 cols=1 type=0 head4=0000aa3e
+B02_ROOT_MATERIALIZE=1 name=blk.19.attn_q.weight shard=0 off=43566843712 bytes=10616832 rows=6144 cols=3072 type=12 head4=5708c213
+B02_ROOT_MATERIALIZE=1 name=blk.19.attn_k.weight shard=0 off=43554441024 bytes=1769472 rows=1024 cols=3072 type=12 head4=5d05b711
+B02_ROOT_MATERIALIZE=1 name=blk.19.attn_v.weight shard=0 off=43577485120 bytes=1769472 rows=1024 cols=3072 type=12 head4=11081915
+B02_ROOT_MATERIALIZE=1 name=blk.19.attn_output.weight shard=0 off=43556226880 bytes=10616832 rows=3072 cols=6144 type=12 head4=95085914
+B02_ROOT_MATERIALIZE=1 name=blk.19.attn_q_norm.weight shard=0 off=43577460544 bytes=24576 rows=6144 cols=1 type=0 head4=0000bf3e
+B02_ROOT_MATERIALIZE=1 name=blk.19.attn_k_norm.weight shard=0 off=43556210496 bytes=4096 rows=1024 cols=1 type=0 head4=00000440
+B02_ROOT_MATERIALIZE=1 name=blk.19.ffn_norm.weight shard=0 off=44941355840 bytes=12288 rows=3072 cols=1 type=0 head4=0000ad3f
+B02_ROOT_MATERIALIZE=1 name=blk.19.ffn_gate_inp.weight shard=0 off=44938210112 bytes=3145728 rows=256 cols=3072 type=0 head4=e3b35d3c
+B02_ROOT_MATERIALIZE=1 name=blk.20.attn_norm.weight shard=0 off=45622618944 bytes=12288 rows=3072 cols=1 type=0 head4=0000bb3e
+B02_ROOT_MATERIALIZE=1 name=blk.20.attn_q.weight shard=0 off=45633248064 bytes=10616832 rows=6144 cols=3072 type=12 head4=b907aa13
+B02_ROOT_MATERIALIZE=1 name=blk.20.attn_k.weight shard=0 off=45620845376 bytes=1769472 rows=1024 cols=3072 type=12 head4=f204aa11
+B02_ROOT_MATERIALIZE=1 name=blk.20.attn_v.weight shard=0 off=45643889472 bytes=1769472 rows=1024 cols=3072 type=12 head4=7e076514
+B02_ROOT_MATERIALIZE=1 name=blk.20.attn_output.weight shard=0 off=45622631232 bytes=10616832 rows=3072 cols=6144 type=12 head4=8708dd13
+B02_ROOT_MATERIALIZE=1 name=blk.20.attn_q_norm.weight shard=0 off=45643864896 bytes=24576 rows=6144 cols=1 type=0 head4=0000be3e
+B02_ROOT_MATERIALIZE=1 name=blk.20.attn_k_norm.weight shard=0 off=45622614848 bytes=4096 rows=1024 cols=1 type=0 head4=0000483f
+B02_ROOT_MATERIALIZE=1 name=blk.20.ffn_norm.weight shard=0 off=47007760192 bytes=12288 rows=3072 cols=1 type=0 head4=0000aa3f
+B02_ROOT_MATERIALIZE=1 name=blk.20.ffn_gate_inp.weight shard=0 off=47004614464 bytes=3145728 rows=256 cols=3072 type=0 head4=fbcc783d
+B02_ROOT_MATERIALIZE=1 name=blk.21.attn_norm.weight shard=0 off=47689023296 bytes=12288 rows=3072 cols=1 type=0 head4=0000b23e
+B02_ROOT_MATERIALIZE=1 name=blk.21.attn_q.weight shard=0 off=47699652416 bytes=10616832 rows=6144 cols=3072 type=12 head4=10083714
+B02_ROOT_MATERIALIZE=1 name=blk.21.attn_k.weight shard=0 off=47687249728 bytes=1769472 rows=1024 cols=3072 type=12 head4=da062913
+B02_ROOT_MATERIALIZE=1 name=blk.21.attn_v.weight shard=0 off=47710293824 bytes=2580480 rows=1024 cols=3072 type=14 head4=91cc2fe7
+B02_ROOT_MATERIALIZE=1 name=blk.21.attn_output.weight shard=0 off=47689035584 bytes=10616832 rows=3072 cols=6144 type=12 head4=6206b111
+B02_ROOT_MATERIALIZE=1 name=blk.21.attn_q_norm.weight shard=0 off=47710269248 bytes=24576 rows=6144 cols=1 type=0 head4=0000453f
+B02_ROOT_MATERIALIZE=1 name=blk.21.attn_k_norm.weight shard=0 off=47689019200 bytes=4096 rows=1024 cols=1 type=0 head4=0000f33f
+B02_ROOT_MATERIALIZE=1 name=blk.21.ffn_norm.weight shard=0 off=49386402624 bytes=12288 rows=3072 cols=1 type=0 head4=0000aa3f
+B02_ROOT_MATERIALIZE=1 name=blk.21.ffn_gate_inp.weight shard=0 off=49383256896 bytes=3145728 rows=256 cols=3072 type=0 head4=e77a363d
+B02_ROOT_MATERIALIZE=1 name=blk.22.attn_norm.weight shard=1 off=681269600 bytes=12288 rows=3072 cols=1 type=0 head4=0000f63e
+B02_ROOT_MATERIALIZE=1 name=blk.22.attn_q.weight shard=1 off=691898720 bytes=10616832 rows=6144 cols=3072 type=12 head4=7e075912
+B02_ROOT_MATERIALIZE=1 name=blk.22.attn_k.weight shard=1 off=679496032 bytes=1769472 rows=1024 cols=3072 type=12 head4=68041e11
+B02_ROOT_MATERIALIZE=1 name=blk.22.attn_v.weight shard=1 off=702540128 bytes=1769472 rows=1024 cols=3072 type=12 head4=93084a13
+B02_ROOT_MATERIALIZE=1 name=blk.22.attn_output.weight shard=1 off=681281888 bytes=10616832 rows=3072 cols=6144 type=12 head4=c9068312
+B02_ROOT_MATERIALIZE=1 name=blk.22.attn_q_norm.weight shard=1 off=702515552 bytes=24576 rows=6144 cols=1 type=0 head4=0000393f
+B02_ROOT_MATERIALIZE=1 name=blk.22.attn_k_norm.weight shard=1 off=681265504 bytes=4096 rows=1024 cols=1 type=0 head4=0000b73f
+B02_ROOT_MATERIALIZE=1 name=blk.22.ffn_norm.weight shard=1 off=2066410848 bytes=12288 rows=3072 cols=1 type=0 head4=0000ac3f
+B02_ROOT_MATERIALIZE=1 name=blk.22.ffn_gate_inp.weight shard=1 off=2063265120 bytes=3145728 rows=256 cols=3072 type=0 head4=86c0223d
+B02_ROOT_MATERIALIZE=1 name=blk.23.attn_norm.weight shard=1 off=2747673952 bytes=12288 rows=3072 cols=1 type=0 head4=0000f43e
+B02_ROOT_MATERIALIZE=1 name=blk.23.attn_q.weight shard=1 off=2758303072 bytes=10616832 rows=6144 cols=3072 type=12 head4=1a073f11
+B02_ROOT_MATERIALIZE=1 name=blk.23.attn_k.weight shard=1 off=2745900384 bytes=1769472 rows=1024 cols=3072 type=12 head4=18074714
+B02_ROOT_MATERIALIZE=1 name=blk.23.attn_v.weight shard=1 off=2768944480 bytes=1769472 rows=1024 cols=3072 type=12 head4=37082214
+B02_ROOT_MATERIALIZE=1 name=blk.23.attn_output.weight shard=1 off=2747686240 bytes=10616832 rows=3072 cols=6144 type=12 head4=7a05a711
+B02_ROOT_MATERIALIZE=1 name=blk.23.attn_q_norm.weight shard=1 off=2768919904 bytes=24576 rows=6144 cols=1 type=0 head4=0000a23f
+B02_ROOT_MATERIALIZE=1 name=blk.23.attn_k_norm.weight shard=1 off=2747669856 bytes=4096 rows=1024 cols=1 type=0 head4=0000ec3f
+B02_ROOT_MATERIALIZE=1 name=blk.23.ffn_norm.weight shard=1 off=4132815200 bytes=12288 rows=3072 cols=1 type=0 head4=0000ac3f
+B02_ROOT_MATERIALIZE=1 name=blk.23.ffn_gate_inp.weight shard=1 off=4129669472 bytes=3145728 rows=256 cols=3072 type=0 head4=a2e5b23c
+B02_ROOT_MATERIALIZE=1 name=blk.24.attn_norm.weight shard=1 off=4814078304 bytes=12288 rows=3072 cols=1 type=0 head4=0000113f
+B02_ROOT_MATERIALIZE=1 name=blk.24.attn_q.weight shard=1 off=4824707424 bytes=10616832 rows=6144 cols=3072 type=12 head4=4910011c
+B02_ROOT_MATERIALIZE=1 name=blk.24.attn_k.weight shard=1 off=4812304736 bytes=1769472 rows=1024 cols=3072 type=12 head4=6d063011
+B02_ROOT_MATERIALIZE=1 name=blk.24.attn_v.weight shard=1 off=4835348832 bytes=2580480 rows=1024 cols=3072 type=14 head4=02463d84
+B02_ROOT_MATERIALIZE=1 name=blk.24.attn_output.weight shard=1 off=4814090592 bytes=10616832 rows=3072 cols=6144 type=12 head4=8d06c413
+B02_ROOT_MATERIALIZE=1 name=blk.24.attn_q_norm.weight shard=1 off=4835324256 bytes=24576 rows=6144 cols=1 type=0 head4=000011bc
+B02_ROOT_MATERIALIZE=1 name=blk.24.attn_k_norm.weight shard=1 off=4814074208 bytes=4096 rows=1024 cols=1 type=0 head4=0000883f
+B02_ROOT_MATERIALIZE=1 name=blk.24.ffn_norm.weight shard=1 off=6511457632 bytes=12288 rows=3072 cols=1 type=0 head4=0000ab3f
+B02_ROOT_MATERIALIZE=1 name=blk.24.ffn_gate_inp.weight shard=1 off=6508311904 bytes=3145728 rows=256 cols=3072 type=0 head4=c2f9963c
+B02_ROOT_MATERIALIZE=1 name=blk.25.attn_norm.weight shard=1 off=7192720736 bytes=12288 rows=3072 cols=1 type=0 head4=0000293f
+B02_ROOT_MATERIALIZE=1 name=blk.25.attn_q.weight shard=1 off=7203349856 bytes=10616832 rows=6144 cols=3072 type=12 head4=f0075c12
+B02_ROOT_MATERIALIZE=1 name=blk.25.attn_k.weight shard=1 off=7190947168 bytes=1769472 rows=1024 cols=3072 type=12 head4=4b057711
+B02_ROOT_MATERIALIZE=1 name=blk.25.attn_v.weight shard=1 off=7213991264 bytes=1769472 rows=1024 cols=3072 type=12 head4=2407dc13
+B02_ROOT_MATERIALIZE=1 name=blk.25.attn_output.weight shard=1 off=7192733024 bytes=10616832 rows=3072 cols=6144 type=12 head4=fc050313
+B02_ROOT_MATERIALIZE=1 name=blk.25.attn_q_norm.weight shard=1 off=7213966688 bytes=24576 rows=6144 cols=1 type=0 head4=0000913f
+B02_ROOT_MATERIALIZE=1 name=blk.25.attn_k_norm.weight shard=1 off=7192716640 bytes=4096 rows=1024 cols=1 type=0 head4=0000893f
+B02_ROOT_MATERIALIZE=1 name=blk.25.ffn_norm.weight shard=1 off=8577861984 bytes=12288 rows=3072 cols=1 type=0 head4=0000a73f
+B02_ROOT_MATERIALIZE=1 name=blk.25.ffn_gate_inp.weight shard=1 off=8574716256 bytes=3145728 rows=256 cols=3072 type=0 head4=81f25d3d
+B02_ROOT_MATERIALIZE=1 name=blk.26.attn_norm.weight shard=1 off=9259125088 bytes=12288 rows=3072 cols=1 type=0 head4=0000213f
+B02_ROOT_MATERIALIZE=1 name=blk.26.attn_q.weight shard=1 off=9269754208 bytes=10616832 rows=6144 cols=3072 type=12 head4=a7063c13
+B02_ROOT_MATERIALIZE=1 name=blk.26.attn_k.weight shard=1 off=9257351520 bytes=1769472 rows=1024 cols=3072 type=12 head4=720a4815
+B02_ROOT_MATERIALIZE=1 name=blk.26.attn_v.weight shard=1 off=9280395616 bytes=1769472 rows=1024 cols=3072 type=12 head4=94074112
+B02_ROOT_MATERIALIZE=1 name=blk.26.attn_output.weight shard=1 off=9259137376 bytes=10616832 rows=3072 cols=6144 type=12 head4=fb053511
+B02_ROOT_MATERIALIZE=1 name=blk.26.attn_q_norm.weight shard=1 off=9280371040 bytes=24576 rows=6144 cols=1 type=0 head4=0000363f
+B02_ROOT_MATERIALIZE=1 name=blk.26.attn_k_norm.weight shard=1 off=9259120992 bytes=4096 rows=1024 cols=1 type=0 head4=000082bc
+B02_ROOT_MATERIALIZE=1 name=blk.26.ffn_norm.weight shard=1 off=10644266336 bytes=12288 rows=3072 cols=1 type=0 head4=0000a43f
+B02_ROOT_MATERIALIZE=1 name=blk.26.ffn_gate_inp.weight shard=1 off=10641120608 bytes=3145728 rows=256 cols=3072 type=0 head4=1e63bf3c
+B02_ROOT_MATERIALIZE=1 name=blk.27.attn_norm.weight shard=1 off=11325529440 bytes=12288 rows=3072 cols=1 type=0 head4=0000443f
+B02_ROOT_MATERIALIZE=1 name=blk.27.attn_q.weight shard=1 off=11336158560 bytes=10616832 rows=6144 cols=3072 type=12 head4=200c6618
+B02_ROOT_MATERIALIZE=1 name=blk.27.attn_k.weight shard=1 off=11323755872 bytes=1769472 rows=1024 cols=3072 type=12 head4=ed0ab116
+B02_ROOT_MATERIALIZE=1 name=blk.27.attn_v.weight shard=1 off=11346799968 bytes=2580480 rows=1024 cols=3072 type=14 head4=085c5a27
+B02_ROOT_MATERIALIZE=1 name=blk.27.attn_output.weight shard=1 off=11325541728 bytes=10616832 rows=3072 cols=6144 type=12 head4=d0062812
+B02_ROOT_MATERIALIZE=1 name=blk.27.attn_q_norm.weight shard=1 off=11346775392 bytes=24576 rows=6144 cols=1 type=0 head4=0000be3f
+B02_ROOT_MATERIALIZE=1 name=blk.27.attn_k_norm.weight shard=1 off=11325525344 bytes=4096 rows=1024 cols=1 type=0 head4=0000673a
+B02_ROOT_MATERIALIZE=1 name=blk.27.ffn_norm.weight shard=1 off=13022908768 bytes=12288 rows=3072 cols=1 type=0 head4=00009d3f
+B02_ROOT_MATERIALIZE=1 name=blk.27.ffn_gate_inp.weight shard=1 off=13019763040 bytes=3145728 rows=256 cols=3072 type=0 head4=ce53553d
+B02_ROOT_MATERIALIZE=1 name=blk.28.attn_norm.weight shard=1 off=13704171872 bytes=12288 rows=3072 cols=1 type=0 head4=0000373f
+B02_ROOT_MATERIALIZE=1 name=blk.28.attn_q.weight shard=1 off=13714800992 bytes=10616832 rows=6144 cols=3072 type=12 head4=8906cb13
+B02_ROOT_MATERIALIZE=1 name=blk.28.attn_k.weight shard=1 off=13702398304 bytes=1769472 rows=1024 cols=3072 type=12 head4=1c05c711
+B02_ROOT_MATERIALIZE=1 name=blk.28.attn_v.weight shard=1 off=13725442400 bytes=1769472 rows=1024 cols=3072 type=12 head4=19079512
+B02_ROOT_MATERIALIZE=1 name=blk.28.attn_output.weight shard=1 off=13704184160 bytes=10616832 rows=3072 cols=6144 type=12 head4=c907ba13
+B02_ROOT_MATERIALIZE=1 name=blk.28.attn_q_norm.weight shard=1 off=13725417824 bytes=24576 rows=6144 cols=1 type=0 head4=00006d3f
+B02_ROOT_MATERIALIZE=1 name=blk.28.attn_k_norm.weight shard=1 off=13704167776 bytes=4096 rows=1024 cols=1 type=0 head4=00000040
+B02_ROOT_MATERIALIZE=1 name=blk.28.ffn_norm.weight shard=1 off=15089313120 bytes=12288 rows=3072 cols=1 type=0 head4=00009c3f
+B02_ROOT_MATERIALIZE=1 name=blk.28.ffn_gate_inp.weight shard=1 off=15086167392 bytes=3145728 rows=256 cols=3072 type=0 head4=3a84773d
+B02_ROOT_MATERIALIZE=1 name=blk.29.attn_norm.weight shard=1 off=15770576224 bytes=12288 rows=3072 cols=1 type=0 head4=0000583f
+B02_ROOT_MATERIALIZE=1 name=blk.29.attn_q.weight shard=1 off=15781205344 bytes=10616832 rows=6144 cols=3072 type=12 head4=eb08fe14
+B02_ROOT_MATERIALIZE=1 name=blk.29.attn_k.weight shard=1 off=15768802656 bytes=1769472 rows=1024 cols=3072 type=12 head4=c3056411
+B02_ROOT_MATERIALIZE=1 name=blk.29.attn_v.weight shard=1 off=15791846752 bytes=1769472 rows=1024 cols=3072 type=12 head4=f407b412
+B02_ROOT_MATERIALIZE=1 name=blk.29.attn_output.weight shard=1 off=15770588512 bytes=10616832 rows=3072 cols=6144 type=12 head4=1f073a12
+B02_ROOT_MATERIALIZE=1 name=blk.29.attn_q_norm.weight shard=1 off=15791822176 bytes=24576 rows=6144 cols=1 type=0 head4=00008c3f
+B02_ROOT_MATERIALIZE=1 name=blk.29.attn_k_norm.weight shard=1 off=15770572128 bytes=4096 rows=1024 cols=1 type=0 head4=0000c23f
+B02_ROOT_MATERIALIZE=1 name=blk.29.ffn_norm.weight shard=1 off=17155717472 bytes=12288 rows=3072 cols=1 type=0 head4=0000983f
+B02_ROOT_MATERIALIZE=1 name=blk.29.ffn_gate_inp.weight shard=1 off=17152571744 bytes=3145728 rows=256 cols=3072 type=0 head4=302fba3c
+B02_ROOT_MATERIALIZE=1 name=blk.30.attn_norm.weight shard=1 off=17836980576 bytes=12288 rows=3072 cols=1 type=0 head4=00005c3f
+B02_ROOT_MATERIALIZE=1 name=blk.30.attn_q.weight shard=1 off=17847609696 bytes=10616832 rows=6144 cols=3072 type=12 head4=230b6317
+B02_ROOT_MATERIALIZE=1 name=blk.30.attn_k.weight shard=1 off=17835207008 bytes=1769472 rows=1024 cols=3072 type=12 head4=d20a9116
+B02_ROOT_MATERIALIZE=1 name=blk.30.attn_v.weight shard=1 off=17858251104 bytes=2580480 rows=1024 cols=3072 type=14 head4=408c635a
+B02_ROOT_MATERIALIZE=1 name=blk.30.attn_output.weight shard=1 off=17836992864 bytes=10616832 rows=3072 cols=6144 type=12 head4=f5041111
+B02_ROOT_MATERIALIZE=1 name=blk.30.attn_q_norm.weight shard=1 off=17858226528 bytes=24576 rows=6144 cols=1 type=0 head4=0000a2bd
+B02_ROOT_MATERIALIZE=1 name=blk.30.attn_k_norm.weight shard=1 off=17836976480 bytes=4096 rows=1024 cols=1 type=0 head4=0000833c
+B02_ROOT_MATERIALIZE=1 name=blk.30.ffn_norm.weight shard=1 off=19534359904 bytes=12288 rows=3072 cols=1 type=0 head4=0000963f
+B02_ROOT_MATERIALIZE=1 name=blk.30.ffn_gate_inp.weight shard=1 off=19531214176 bytes=3145728 rows=256 cols=3072 type=0 head4=8240123d
+B02_ROOT_MATERIALIZE=1 name=blk.31.attn_norm.weight shard=1 off=20215623008 bytes=12288 rows=3072 cols=1 type=0 head4=00004e3f
+B02_ROOT_MATERIALIZE=1 name=blk.31.attn_q.weight shard=1 off=20226252128 bytes=10616832 rows=6144 cols=3072 type=12 head4=36079b14
+B02_ROOT_MATERIALIZE=1 name=blk.31.attn_k.weight shard=1 off=20213849440 bytes=1769472 rows=1024 cols=3072 type=12 head4=640c2717
+B02_ROOT_MATERIALIZE=1 name=blk.31.attn_v.weight shard=1 off=20236893536 bytes=1769472 rows=1024 cols=3072 type=12 head4=6f06a411
+B02_ROOT_MATERIALIZE=1 name=blk.31.attn_output.weight shard=1 off=20215635296 bytes=10616832 rows=3072 cols=6144 type=12 head4=f6067311
+B02_ROOT_MATERIALIZE=1 name=blk.31.attn_q_norm.weight shard=1 off=20236868960 bytes=24576 rows=6144 cols=1 type=0 head4=0000473f
+B02_ROOT_MATERIALIZE=1 name=blk.31.attn_k_norm.weight shard=1 off=20215618912 bytes=4096 rows=1024 cols=1 type=0 head4=0000ec3e
+B02_ROOT_MATERIALIZE=1 name=blk.31.ffn_norm.weight shard=1 off=21600764256 bytes=12288 rows=3072 cols=1 type=0 head4=0000933f
+B02_ROOT_MATERIALIZE=1 name=blk.31.ffn_gate_inp.weight shard=1 off=21597618528 bytes=3145728 rows=256 cols=3072 type=0 head4=fd2cfe3c
+B02_ROOT_MATERIALIZE=1 name=blk.32.attn_norm.weight shard=1 off=22282027360 bytes=12288 rows=3072 cols=1 type=0 head4=0000773f
+B02_ROOT_MATERIALIZE=1 name=blk.32.attn_q.weight shard=1 off=22292656480 bytes=10616832 rows=6144 cols=3072 type=12 head4=3708e314
+B02_ROOT_MATERIALIZE=1 name=blk.32.attn_k.weight shard=1 off=22280253792 bytes=1769472 rows=1024 cols=3072 type=12 head4=6b049911
+B02_ROOT_MATERIALIZE=1 name=blk.32.attn_v.weight shard=1 off=22303297888 bytes=1769472 rows=1024 cols=3072 type=12 head4=8f05e211
+B02_ROOT_MATERIALIZE=1 name=blk.32.attn_output.weight shard=1 off=22282039648 bytes=10616832 rows=3072 cols=6144 type=12 head4=3f095915
+B02_ROOT_MATERIALIZE=1 name=blk.32.attn_q_norm.weight shard=1 off=22303273312 bytes=24576 rows=6144 cols=1 type=0 head4=0000bf3f
+B02_ROOT_MATERIALIZE=1 name=blk.32.attn_k_norm.weight shard=1 off=22282023264 bytes=4096 rows=1024 cols=1 type=0 head4=0000a13f
+B02_ROOT_MATERIALIZE=1 name=blk.32.ffn_norm.weight shard=1 off=23667168608 bytes=12288 rows=3072 cols=1 type=0 head4=0000903f
+B02_ROOT_MATERIALIZE=1 name=blk.32.ffn_gate_inp.weight shard=1 off=23664022880 bytes=3145728 rows=256 cols=3072 type=0 head4=99d6403d
+B02_ROOT_MATERIALIZE=1 name=blk.33.attn_norm.weight shard=1 off=24348431712 bytes=12288 rows=3072 cols=1 type=0 head4=0000583f
+B02_ROOT_MATERIALIZE=1 name=blk.33.attn_q.weight shard=1 off=24359060832 bytes=10616832 rows=6144 cols=3072 type=12 head4=f9068b13
+B02_ROOT_MATERIALIZE=1 name=blk.33.attn_k.weight shard=1 off=24346658144 bytes=1769472 rows=1024 cols=3072 type=12 head4=8504c110
+B02_ROOT_MATERIALIZE=1 name=blk.33.attn_v.weight shard=1 off=24369702240 bytes=2580480 rows=1024 cols=3072 type=14 head4=0e0bae98
+B02_ROOT_MATERIALIZE=1 name=blk.33.attn_output.weight shard=1 off=24348444000 bytes=10616832 rows=3072 cols=6144 type=12 head4=89047b10
+B02_ROOT_MATERIALIZE=1 name=blk.33.attn_q_norm.weight shard=1 off=24369677664 bytes=24576 rows=6144 cols=1 type=0 head4=0000193f
+B02_ROOT_MATERIALIZE=1 name=blk.33.attn_k_norm.weight shard=1 off=24348427616 bytes=4096 rows=1024 cols=1 type=0 head4=0000b43f
+B02_ROOT_MATERIALIZE=1 name=blk.33.ffn_norm.weight shard=1 off=26045811040 bytes=12288 rows=3072 cols=1 type=0 head4=0000913f
+B02_ROOT_MATERIALIZE=1 name=blk.33.ffn_gate_inp.weight shard=1 off=26042665312 bytes=3145728 rows=256 cols=3072 type=0 head4=ea7bf33c
+B02_ROOT_MATERIALIZE=1 name=blk.34.attn_norm.weight shard=1 off=26727074144 bytes=12288 rows=3072 cols=1 type=0 head4=0000793f
+B02_ROOT_MATERIALIZE=1 name=blk.34.attn_q.weight shard=1 off=26737703264 bytes=10616832 rows=6144 cols=3072 type=12 head4=4d08c614
+B02_ROOT_MATERIALIZE=1 name=blk.34.attn_k.weight shard=1 off=26725300576 bytes=1769472 rows=1024 cols=3072 type=12 head4=7908e414
+B02_ROOT_MATERIALIZE=1 name=blk.34.attn_v.weight shard=1 off=26748344672 bytes=1769472 rows=1024 cols=3072 type=12 head4=7d063c12
+B02_ROOT_MATERIALIZE=1 name=blk.34.attn_output.weight shard=1 off=26727086432 bytes=10616832 rows=3072 cols=6144 type=12 head4=8a046411
+B02_ROOT_MATERIALIZE=1 name=blk.34.attn_q_norm.weight shard=1 off=26748320096 bytes=24576 rows=6144 cols=1 type=0 head4=0000863f
+B02_ROOT_MATERIALIZE=1 name=blk.34.attn_k_norm.weight shard=1 off=26727070048 bytes=4096 rows=1024 cols=1 type=0 head4=0000a53f
+B02_ROOT_MATERIALIZE=1 name=blk.34.ffn_norm.weight shard=1 off=28112215392 bytes=12288 rows=3072 cols=1 type=0 head4=0000913f
+B02_ROOT_MATERIALIZE=1 name=blk.34.ffn_gate_inp.weight shard=1 off=28109069664 bytes=3145728 rows=256 cols=3072 type=0 head4=ae3e9f3c
+B02_ROOT_MATERIALIZE=1 name=blk.35.attn_norm.weight shard=1 off=28793478496 bytes=12288 rows=3072 cols=1 type=0 head4=0000923f
+B02_ROOT_MATERIALIZE=1 name=blk.35.attn_q.weight shard=1 off=28804107616 bytes=10616832 rows=6144 cols=3072 type=12 head4=0608b913
+B02_ROOT_MATERIALIZE=1 name=blk.35.attn_k.weight shard=1 off=28791704928 bytes=1769472 rows=1024 cols=3072 type=12 head4=d204810f
+B02_ROOT_MATERIALIZE=1 name=blk.35.attn_v.weight shard=1 off=28814749024 bytes=1769472 rows=1024 cols=3072 type=12 head4=60060212
+B02_ROOT_MATERIALIZE=1 name=blk.35.attn_output.weight shard=1 off=28793490784 bytes=10616832 rows=3072 cols=6144 type=12 head4=d7064613
+B02_ROOT_MATERIALIZE=1 name=blk.35.attn_q_norm.weight shard=1 off=28814724448 bytes=24576 rows=6144 cols=1 type=0 head4=0000a23f
+B02_ROOT_MATERIALIZE=1 name=blk.35.attn_k_norm.weight shard=1 off=28793474400 bytes=4096 rows=1024 cols=1 type=0 head4=0000b03f
+B02_ROOT_MATERIALIZE=1 name=blk.35.ffn_norm.weight shard=1 off=30178619744 bytes=12288 rows=3072 cols=1 type=0 head4=0000913f
+B02_ROOT_MATERIALIZE=1 name=blk.35.ffn_gate_inp.weight shard=1 off=30175474016 bytes=3145728 rows=256 cols=3072 type=0 head4=25b5063d
+B02_ROOT_MATERIALIZE=1 name=blk.36.attn_norm.weight shard=1 off=30859882848 bytes=12288 rows=3072 cols=1 type=0 head4=00006e3f
+B02_ROOT_MATERIALIZE=1 name=blk.36.attn_q.weight shard=1 off=30870511968 bytes=10616832 rows=6144 cols=3072 type=12 head4=d3056812
+B02_ROOT_MATERIALIZE=1 name=blk.36.attn_k.weight shard=1 off=30858109280 bytes=1769472 rows=1024 cols=3072 type=12 head4=a4044410
+B02_ROOT_MATERIALIZE=1 name=blk.36.attn_v.weight shard=1 off=30881153376 bytes=2580480 rows=1024 cols=3072 type=14 head4=d245de9e
+B02_ROOT_MATERIALIZE=1 name=blk.36.attn_output.weight shard=1 off=30859895136 bytes=10616832 rows=3072 cols=6144 type=12 head4=3e088015
+B02_ROOT_MATERIALIZE=1 name=blk.36.attn_q_norm.weight shard=1 off=30881128800 bytes=24576 rows=6144 cols=1 type=0 head4=0000063f
+B02_ROOT_MATERIALIZE=1 name=blk.36.attn_k_norm.weight shard=1 off=30859878752 bytes=4096 rows=1024 cols=1 type=0 head4=0000903f
+B02_ROOT_MATERIALIZE=1 name=blk.36.ffn_norm.weight shard=1 off=32557262176 bytes=12288 rows=3072 cols=1 type=0 head4=0000933f
+B02_ROOT_MATERIALIZE=1 name=blk.36.ffn_gate_inp.weight shard=1 off=32554116448 bytes=3145728 rows=256 cols=3072 type=0 head4=33581f3d
+B02_ROOT_MATERIALIZE=1 name=blk.37.attn_norm.weight shard=1 off=33238525280 bytes=12288 rows=3072 cols=1 type=0 head4=00008c3f
+B02_ROOT_MATERIALIZE=1 name=blk.37.attn_q.weight shard=1 off=33249154400 bytes=10616832 rows=6144 cols=3072 type=12 head4=96053f11
+B02_ROOT_MATERIALIZE=1 name=blk.37.attn_k.weight shard=1 off=33236751712 bytes=1769472 rows=1024 cols=3072 type=12 head4=9f03990f
+B02_ROOT_MATERIALIZE=1 name=blk.37.attn_v.weight shard=1 off=33259795808 bytes=1769472 rows=1024 cols=3072 type=12 head4=35053412
+B02_ROOT_MATERIALIZE=1 name=blk.37.attn_output.weight shard=1 off=33238537568 bytes=10616832 rows=3072 cols=6144 type=12 head4=08062b11
+B02_ROOT_MATERIALIZE=1 name=blk.37.attn_q_norm.weight shard=1 off=33259771232 bytes=24576 rows=6144 cols=1 type=0 head4=0000673f
+B02_ROOT_MATERIALIZE=1 name=blk.37.attn_k_norm.weight shard=1 off=33238521184 bytes=4096 rows=1024 cols=1 type=0 head4=0000f33f
+B02_ROOT_MATERIALIZE=1 name=blk.37.ffn_norm.weight shard=1 off=34623666528 bytes=12288 rows=3072 cols=1 type=0 head4=0000953f
+B02_ROOT_MATERIALIZE=1 name=blk.37.ffn_gate_inp.weight shard=1 off=34620520800 bytes=3145728 rows=256 cols=3072 type=0 head4=a2589e3c
+B02_ROOT_MATERIALIZE=1 name=blk.38.attn_norm.weight shard=1 off=35304929632 bytes=12288 rows=3072 cols=1 type=0 head4=0000993f
+B02_ROOT_MATERIALIZE=1 name=blk.38.attn_q.weight shard=1 off=35315558752 bytes=10616832 rows=6144 cols=3072 type=12 head4=8e062012
+B02_ROOT_MATERIALIZE=1 name=blk.38.attn_k.weight shard=1 off=35303156064 bytes=1769472 rows=1024 cols=3072 type=12 head4=da046f10
+B02_ROOT_MATERIALIZE=1 name=blk.38.attn_v.weight shard=1 off=35326200160 bytes=1769472 rows=1024 cols=3072 type=12 head4=d607ae13
+B02_ROOT_MATERIALIZE=1 name=blk.38.attn_output.weight shard=1 off=35304941920 bytes=10616832 rows=3072 cols=6144 type=12 head4=46073d12
+B02_ROOT_MATERIALIZE=1 name=blk.38.attn_q_norm.weight shard=1 off=35326175584 bytes=24576 rows=6144 cols=1 type=0 head4=00003f3f
+B02_ROOT_MATERIALIZE=1 name=blk.38.attn_k_norm.weight shard=1 off=35304925536 bytes=4096 rows=1024 cols=1 type=0 head4=0000fb3f
+B02_ROOT_MATERIALIZE=1 name=blk.38.ffn_norm.weight shard=1 off=36690070880 bytes=12288 rows=3072 cols=1 type=0 head4=0000963f
+B02_ROOT_MATERIALIZE=1 name=blk.38.ffn_gate_inp.weight shard=1 off=36686925152 bytes=3145728 rows=256 cols=3072 type=0 head4=9d36703d
+B02_ROOT_MATERIALIZE=1 name=blk.39.attn_norm.weight shard=1 off=37371333984 bytes=12288 rows=3072 cols=1 type=0 head4=0000923f
+B02_ROOT_MATERIALIZE=1 name=blk.39.attn_q.weight shard=1 off=37381963104 bytes=10616832 rows=6144 cols=3072 type=12 head4=d906d811
+B02_ROOT_MATERIALIZE=1 name=blk.39.attn_k.weight shard=1 off=37369560416 bytes=1769472 rows=1024 cols=3072 type=12 head4=85065e12
+B02_ROOT_MATERIALIZE=1 name=blk.39.attn_v.weight shard=1 off=37392604512 bytes=2580480 rows=1024 cols=3072 type=14 head4=9b4736de
+B02_ROOT_MATERIALIZE=1 name=blk.39.attn_output.weight shard=1 off=37371346272 bytes=10616832 rows=3072 cols=6144 type=12 head4=3e061d14
+B02_ROOT_MATERIALIZE=1 name=blk.39.attn_q_norm.weight shard=1 off=37392579936 bytes=24576 rows=6144 cols=1 type=0 head4=0000b33f
+B02_ROOT_MATERIALIZE=1 name=blk.39.attn_k_norm.weight shard=1 off=37371329888 bytes=4096 rows=1024 cols=1 type=0 head4=0000c53f
+B02_ROOT_MATERIALIZE=1 name=blk.39.ffn_norm.weight shard=1 off=39068713312 bytes=12288 rows=3072 cols=1 type=0 head4=0000993f
+B02_ROOT_MATERIALIZE=1 name=blk.39.ffn_gate_inp.weight shard=1 off=39065567584 bytes=3145728 rows=256 cols=3072 type=0 head4=5ec08bbc
+B02_ROOT_MATERIALIZE=1 name=blk.40.attn_norm.weight shard=1 off=39749976416 bytes=12288 rows=3072 cols=1 type=0 head4=0000893f
+B02_ROOT_MATERIALIZE=1 name=blk.40.attn_q.weight shard=1 off=39760605536 bytes=10616832 rows=6144 cols=3072 type=12 head4=6f06be12
+B02_ROOT_MATERIALIZE=1 name=blk.40.attn_k.weight shard=1 off=39748202848 bytes=1769472 rows=1024 cols=3072 type=12 head4=ca043f11
+B02_ROOT_MATERIALIZE=1 name=blk.40.attn_v.weight shard=1 off=39771246944 bytes=1769472 rows=1024 cols=3072 type=12 head4=6106a511
+B02_ROOT_MATERIALIZE=1 name=blk.40.attn_output.weight shard=1 off=39749988704 bytes=10616832 rows=3072 cols=6144 type=12 head4=0e06ea11
+B02_ROOT_MATERIALIZE=1 name=blk.40.attn_q_norm.weight shard=1 off=39771222368 bytes=24576 rows=6144 cols=1 type=0 head4=0000453f
+B02_ROOT_MATERIALIZE=1 name=blk.40.attn_k_norm.weight shard=1 off=39749972320 bytes=4096 rows=1024 cols=1 type=0 head4=00001340
+B02_ROOT_MATERIALIZE=1 name=blk.40.ffn_norm.weight shard=1 off=41135117664 bytes=12288 rows=3072 cols=1 type=0 head4=00009a3f
+B02_ROOT_MATERIALIZE=1 name=blk.40.ffn_gate_inp.weight shard=1 off=41131971936 bytes=3145728 rows=256 cols=3072 type=0 head4=91af6e3d
+B02_ROOT_MATERIALIZE=1 name=blk.41.attn_norm.weight shard=1 off=41816380768 bytes=12288 rows=3072 cols=1 type=0 head4=0000823f
+B02_ROOT_MATERIALIZE=1 name=blk.41.attn_q.weight shard=1 off=41827009888 bytes=10616832 rows=6144 cols=3072 type=12 head4=a805d911
+B02_ROOT_MATERIALIZE=1 name=blk.41.attn_k.weight shard=1 off=41814607200 bytes=1769472 rows=1024 cols=3072 type=12 head4=9904fc10
+B02_ROOT_MATERIALIZE=1 name=blk.41.attn_v.weight shard=1 off=41837651296 bytes=1769472 rows=1024 cols=3072 type=12 head4=e2058912
+B02_ROOT_MATERIALIZE=1 name=blk.41.attn_output.weight shard=1 off=41816393056 bytes=10616832 rows=3072 cols=6144 type=12 head4=f1078113
+B02_ROOT_MATERIALIZE=1 name=blk.41.attn_q_norm.weight shard=1 off=41837626720 bytes=24576 rows=6144 cols=1 type=0 head4=0000aa3f
+B02_ROOT_MATERIALIZE=1 name=blk.41.attn_k_norm.weight shard=1 off=41816376672 bytes=4096 rows=1024 cols=1 type=0 head4=0000ce3f
+B02_ROOT_MATERIALIZE=1 name=blk.41.ffn_norm.weight shard=1 off=43201522016 bytes=12288 rows=3072 cols=1 type=0 head4=00009e3f
+B02_ROOT_MATERIALIZE=1 name=blk.41.ffn_gate_inp.weight shard=1 off=43198376288 bytes=3145728 rows=256 cols=3072 type=0 head4=6fbf113d
+B02_ROOT_MATERIALIZE=1 name=blk.42.attn_norm.weight shard=1 off=43882785120 bytes=12288 rows=3072 cols=1 type=0 head4=0000b43f
+B02_ROOT_MATERIALIZE=1 name=blk.42.attn_q.weight shard=1 off=43893414240 bytes=10616832 rows=6144 cols=3072 type=12 head4=fc040012
+B02_ROOT_MATERIALIZE=1 name=blk.42.attn_k.weight shard=1 off=43881011552 bytes=1769472 rows=1024 cols=3072 type=12 head4=7205a511
+B02_ROOT_MATERIALIZE=1 name=blk.42.attn_v.weight shard=1 off=43904055648 bytes=2580480 rows=1024 cols=3072 type=14 head4=b308024e
+B02_ROOT_MATERIALIZE=1 name=blk.42.attn_output.weight shard=1 off=43882797408 bytes=10616832 rows=3072 cols=6144 type=12 head4=6a064c11
+B02_ROOT_MATERIALIZE=1 name=blk.42.attn_q_norm.weight shard=1 off=43904031072 bytes=24576 rows=6144 cols=1 type=0 head4=0000063f
+B02_ROOT_MATERIALIZE=1 name=blk.42.attn_k_norm.weight shard=1 off=43882781024 bytes=4096 rows=1024 cols=1 type=0 head4=0000a23f
+B02_ROOT_MATERIALIZE=1 name=blk.42.ffn_norm.weight shard=1 off=45580164448 bytes=12288 rows=3072 cols=1 type=0 head4=0000a43f
+B02_ROOT_MATERIALIZE=1 name=blk.42.ffn_gate_inp.weight shard=1 off=45577018720 bytes=3145728 rows=256 cols=3072 type=0 head4=89ca593d
+B02_ROOT_MATERIALIZE=1 name=blk.43.attn_norm.weight shard=1 off=46261427552 bytes=12288 rows=3072 cols=1 type=0 head4=0000a13f
+B02_ROOT_MATERIALIZE=1 name=blk.43.attn_q.weight shard=1 off=46272056672 bytes=10616832 rows=6144 cols=3072 type=12 head4=83079b13
+B02_ROOT_MATERIALIZE=1 name=blk.43.attn_k.weight shard=1 off=46259653984 bytes=1769472 rows=1024 cols=3072 type=12 head4=64047a10
+B02_ROOT_MATERIALIZE=1 name=blk.43.attn_v.weight shard=1 off=46282698080 bytes=1769472 rows=1024 cols=3072 type=12 head4=7b06f912
+B02_ROOT_MATERIALIZE=1 name=blk.43.attn_output.weight shard=1 off=46261439840 bytes=10616832 rows=3072 cols=6144 type=12 head4=7a06fe12
+B02_ROOT_MATERIALIZE=1 name=blk.43.attn_q_norm.weight shard=1 off=46282673504 bytes=24576 rows=6144 cols=1 type=0 head4=0000283f
+B02_ROOT_MATERIALIZE=1 name=blk.43.attn_k_norm.weight shard=1 off=46261423456 bytes=4096 rows=1024 cols=1 type=0 head4=0000e63f
+B02_ROOT_MATERIALIZE=1 name=blk.43.ffn_norm.weight shard=1 off=47646568800 bytes=12288 rows=3072 cols=1 type=0 head4=0000a83f
+B02_ROOT_MATERIALIZE=1 name=blk.43.ffn_gate_inp.weight shard=1 off=47643423072 bytes=3145728 rows=256 cols=3072 type=0 head4=789dfb3c
+B02_ROOT_MATERIALIZE=1 name=blk.44.attn_norm.weight shard=1 off=48327831904 bytes=12288 rows=3072 cols=1 type=0 head4=0000b23f
+B02_ROOT_MATERIALIZE=1 name=blk.44.attn_q.weight shard=1 off=48338461024 bytes=10616832 rows=6144 cols=3072 type=12 head4=f0054d12
+B02_ROOT_MATERIALIZE=1 name=blk.44.attn_k.weight shard=1 off=48326058336 bytes=1769472 rows=1024 cols=3072 type=12 head4=61046310
+B02_ROOT_MATERIALIZE=1 name=blk.44.attn_v.weight shard=1 off=48349102432 bytes=1769472 rows=1024 cols=3072 type=12 head4=f3053f11
+B02_ROOT_MATERIALIZE=1 name=blk.44.attn_output.weight shard=1 off=48327844192 bytes=10616832 rows=3072 cols=6144 type=12 head4=d8075e14
+B02_ROOT_MATERIALIZE=1 name=blk.44.attn_q_norm.weight shard=1 off=48349077856 bytes=24576 rows=6144 cols=1 type=0 head4=0000a23f
+B02_ROOT_MATERIALIZE=1 name=blk.44.attn_k_norm.weight shard=1 off=48327827808 bytes=4096 rows=1024 cols=1 type=0 head4=0000ec3f
+B02_ROOT_MATERIALIZE=1 name=blk.44.ffn_norm.weight shard=1 off=49712973152 bytes=12288 rows=3072 cols=1 type=0 head4=0000ac3f
+B02_ROOT_MATERIALIZE=1 name=blk.44.ffn_gate_inp.weight shard=1 off=49709827424 bytes=3145728 rows=256 cols=3072 type=0 head4=c112e93b
+B02_ROOT_MATERIALIZE=1 name=blk.45.attn_norm.weight shard=2 off=681264800 bytes=12288 rows=3072 cols=1 type=0 head4=0000a03f
+B02_ROOT_MATERIALIZE=1 name=blk.45.attn_q.weight shard=2 off=691893920 bytes=10616832 rows=6144 cols=3072 type=12 head4=ca085514
+B02_ROOT_MATERIALIZE=1 name=blk.45.attn_k.weight shard=2 off=679491232 bytes=1769472 rows=1024 cols=3072 type=12 head4=d6034710
+B02_ROOT_MATERIALIZE=1 name=blk.45.attn_v.weight shard=2 off=702535328 bytes=2580480 rows=1024 cols=3072 type=14 head4=d2ac61e5
+B02_ROOT_MATERIALIZE=1 name=blk.45.attn_output.weight shard=2 off=681277088 bytes=10616832 rows=3072 cols=6144 type=12 head4=f4068e11
+B02_ROOT_MATERIALIZE=1 name=blk.45.attn_q_norm.weight shard=2 off=702510752 bytes=24576 rows=6144 cols=1 type=0 head4=0000ae3f
+B02_ROOT_MATERIALIZE=1 name=blk.45.attn_k_norm.weight shard=2 off=681260704 bytes=4096 rows=1024 cols=1 type=0 head4=00008d3f
+B02_ROOT_MATERIALIZE=1 name=blk.45.ffn_norm.weight shard=2 off=2378644128 bytes=12288 rows=3072 cols=1 type=0 head4=0000b23f
+B02_ROOT_MATERIALIZE=1 name=blk.45.ffn_gate_inp.weight shard=2 off=2375498400 bytes=3145728 rows=256 cols=3072 type=0 head4=f4b5d23b
+B02_ROOT_MATERIALIZE=1 name=blk.46.attn_norm.weight shard=2 off=3059907232 bytes=12288 rows=3072 cols=1 type=0 head4=0000963f
+B02_ROOT_MATERIALIZE=1 name=blk.46.attn_q.weight shard=2 off=3070536352 bytes=10616832 rows=6144 cols=3072 type=12 head4=97058c12
+B02_ROOT_MATERIALIZE=1 name=blk.46.attn_k.weight shard=2 off=3058133664 bytes=1769472 rows=1024 cols=3072 type=12 head4=74052412
+B02_ROOT_MATERIALIZE=1 name=blk.46.attn_v.weight shard=2 off=3081177760 bytes=1769472 rows=1024 cols=3072 type=12 head4=41081814
+B02_ROOT_MATERIALIZE=1 name=blk.46.attn_output.weight shard=2 off=3059919520 bytes=10616832 rows=3072 cols=6144 type=12 head4=8906ab12
+B02_ROOT_MATERIALIZE=1 name=blk.46.attn_q_norm.weight shard=2 off=3081153184 bytes=24576 rows=6144 cols=1 type=0 head4=0000913f
+B02_ROOT_MATERIALIZE=1 name=blk.46.attn_k_norm.weight shard=2 off=3059903136 bytes=4096 rows=1024 cols=1 type=0 head4=0000e83f
+B02_ROOT_MATERIALIZE=1 name=blk.46.ffn_norm.weight shard=2 off=4445048480 bytes=12288 rows=3072 cols=1 type=0 head4=0000b63f
+B02_ROOT_MATERIALIZE=1 name=blk.46.ffn_gate_inp.weight shard=2 off=4441902752 bytes=3145728 rows=256 cols=3072 type=0 head4=125af43c
+B02_ROOT_MATERIALIZE=1 name=blk.47.attn_norm.weight shard=2 off=5126311584 bytes=12288 rows=3072 cols=1 type=0 head4=0000ae3f
+B02_ROOT_MATERIALIZE=1 name=blk.47.attn_q.weight shard=2 off=5136940704 bytes=10616832 rows=6144 cols=3072 type=12 head4=4c08bf13
+B02_ROOT_MATERIALIZE=1 name=blk.47.attn_k.weight shard=2 off=5124538016 bytes=1769472 rows=1024 cols=3072 type=12 head4=3906e313
+B02_ROOT_MATERIALIZE=1 name=blk.47.attn_v.weight shard=2 off=5147582112 bytes=1769472 rows=1024 cols=3072 type=12 head4=3309c614
+B02_ROOT_MATERIALIZE=1 name=blk.47.attn_output.weight shard=2 off=5126323872 bytes=10616832 rows=3072 cols=6144 type=12 head4=7006ea10
+B02_ROOT_MATERIALIZE=1 name=blk.47.attn_q_norm.weight shard=2 off=5147557536 bytes=24576 rows=6144 cols=1 type=0 head4=0000943f
+B02_ROOT_MATERIALIZE=1 name=blk.47.attn_k_norm.weight shard=2 off=5126307488 bytes=4096 rows=1024 cols=1 type=0 head4=0000d73f
+B02_ROOT_MATERIALIZE=1 name=blk.47.ffn_norm.weight shard=2 off=6511452832 bytes=12288 rows=3072 cols=1 type=0 head4=0000bb3f
+B02_ROOT_MATERIALIZE=1 name=blk.47.ffn_gate_inp.weight shard=2 off=6508307104 bytes=3145728 rows=256 cols=3072 type=0 head4=7d409b3c
+B02_ROOT_MATERIALIZE=1 name=blk.48.attn_norm.weight shard=2 off=7192715936 bytes=12288 rows=3072 cols=1 type=0 head4=0000a93f
+B02_ROOT_MATERIALIZE=1 name=blk.48.attn_q.weight shard=2 off=7203345056 bytes=10616832 rows=6144 cols=3072 type=12 head4=f005e112
+B02_ROOT_MATERIALIZE=1 name=blk.48.attn_k.weight shard=2 off=7190942368 bytes=1769472 rows=1024 cols=3072 type=12 head4=ab04dc10
+B02_ROOT_MATERIALIZE=1 name=blk.48.attn_v.weight shard=2 off=7213986464 bytes=2580480 rows=1024 cols=3072 type=14 head4=20907c06
+B02_ROOT_MATERIALIZE=1 name=blk.48.attn_output.weight shard=2 off=7192728224 bytes=10616832 rows=3072 cols=6144 type=12 head4=d807fc11
+B02_ROOT_MATERIALIZE=1 name=blk.48.attn_q_norm.weight shard=2 off=7213961888 bytes=24576 rows=6144 cols=1 type=0 head4=00007c3f
+B02_ROOT_MATERIALIZE=1 name=blk.48.attn_k_norm.weight shard=2 off=7192711840 bytes=4096 rows=1024 cols=1 type=0 head4=0000dd3f
+B02_ROOT_MATERIALIZE=1 name=blk.48.ffn_norm.weight shard=2 off=8890095264 bytes=12288 rows=3072 cols=1 type=0 head4=0000c23f
+B02_ROOT_MATERIALIZE=1 name=blk.48.ffn_gate_inp.weight shard=2 off=8886949536 bytes=3145728 rows=256 cols=3072 type=0 head4=4f5fc83c
+B02_ROOT_MATERIALIZE=1 name=blk.49.attn_norm.weight shard=2 off=9571358368 bytes=12288 rows=3072 cols=1 type=0 head4=0000a53f
+B02_ROOT_MATERIALIZE=1 name=blk.49.attn_q.weight shard=2 off=9581987488 bytes=10616832 rows=6144 cols=3072 type=12 head4=77088c14
+B02_ROOT_MATERIALIZE=1 name=blk.49.attn_k.weight shard=2 off=9569584800 bytes=1769472 rows=1024 cols=3072 type=12 head4=8c07c113
+B02_ROOT_MATERIALIZE=1 name=blk.49.attn_v.weight shard=2 off=9592628896 bytes=1769472 rows=1024 cols=3072 type=12 head4=ae07a914
+B02_ROOT_MATERIALIZE=1 name=blk.49.attn_output.weight shard=2 off=9571370656 bytes=10616832 rows=3072 cols=6144 type=12 head4=db075e12
+B02_ROOT_MATERIALIZE=1 name=blk.49.attn_q_norm.weight shard=2 off=9592604320 bytes=24576 rows=6144 cols=1 type=0 head4=00009c3f
+B02_ROOT_MATERIALIZE=1 name=blk.49.attn_k_norm.weight shard=2 off=9571354272 bytes=4096 rows=1024 cols=1 type=0 head4=0000cc3f
+B02_ROOT_MATERIALIZE=1 name=blk.49.ffn_norm.weight shard=2 off=10956499616 bytes=12288 rows=3072 cols=1 type=0 head4=0000c73f
+B02_ROOT_MATERIALIZE=1 name=blk.49.ffn_gate_inp.weight shard=2 off=10953353888 bytes=3145728 rows=256 cols=3072 type=0 head4=377f3abc
+B02_ROOT_MATERIALIZE=1 name=blk.50.attn_norm.weight shard=2 off=11637762720 bytes=12288 rows=3072 cols=1 type=0 head4=0000c83f
+B02_ROOT_MATERIALIZE=1 name=blk.50.attn_q.weight shard=2 off=11648391840 bytes=10616832 rows=6144 cols=3072 type=12 head4=82062912
+B02_ROOT_MATERIALIZE=1 name=blk.50.attn_k.weight shard=2 off=11635989152 bytes=1769472 rows=1024 cols=3072 type=12 head4=3d053f11
+B02_ROOT_MATERIALIZE=1 name=blk.50.attn_v.weight shard=2 off=11659033248 bytes=1769472 rows=1024 cols=3072 type=12 head4=bb0ab716
+B02_ROOT_MATERIALIZE=1 name=blk.50.attn_output.weight shard=2 off=11637775008 bytes=10616832 rows=3072 cols=6144 type=12 head4=6c086e14
+B02_ROOT_MATERIALIZE=1 name=blk.50.attn_q_norm.weight shard=2 off=11659008672 bytes=24576 rows=6144 cols=1 type=0 head4=00002d3f
+B02_ROOT_MATERIALIZE=1 name=blk.50.attn_k_norm.weight shard=2 off=11637758624 bytes=4096 rows=1024 cols=1 type=0 head4=00009c3f
+B02_ROOT_MATERIALIZE=1 name=blk.50.ffn_norm.weight shard=2 off=13022903968 bytes=12288 rows=3072 cols=1 type=0 head4=0000ce3f
+B02_ROOT_MATERIALIZE=1 name=blk.50.ffn_gate_inp.weight shard=2 off=13019758240 bytes=3145728 rows=256 cols=3072 type=0 head4=e88b943c
+B02_ROOT_MATERIALIZE=1 name=blk.51.attn_norm.weight shard=2 off=13704167072 bytes=12288 rows=3072 cols=1 type=0 head4=0000db3f

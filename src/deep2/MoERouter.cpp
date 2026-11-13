@@ -3,9 +3,11 @@
 // ============================================================================
 
 #include "MoERouter.hpp"
+#include "ReapPhysicalBank.hpp"
 #include <fstream>
 #include <iostream>
 #include <cstring>
+#include <limits>
 
 namespace Deep2 {
 
@@ -53,6 +55,12 @@ TokenRoute MoERouter::Route(const float* hiddenState) {
             score += routerWeights_[d * config_.numExperts + e] * hiddenState[d];
         }
         logits[e] = score;
+    }
+    /* Physical REAP: permanently exclude pruned experts from top-k. */
+    if (ReapPhysicalBankActive()) {
+        const uint32_t retained = ReapPhysicalRetainedPerLayer();
+        for (size_t e = retained; e < logits.size(); ++e)
+            logits[e] = -std::numeric_limits<float>::infinity();
     }
     
     route.routerLogits = logits;

@@ -366,6 +366,8 @@ inline void FinalizeLayerFacts(DynamicManifest& m) {
     if (!m.discoveryReady) {
         if (m.root["embed"].empty()) m.blockedAt = "token_embd";
         else m.blockedAt = "layer_topology";
+    } else {
+        m.blockedAt.clear(); /* B03: ready=1 must not leave stale layer_topology. */
     }
 }
 
@@ -488,8 +490,16 @@ inline DynamicManifest DigestLoadedModel(const std::string& modelPath,
     m.layers = meta.numLayers;
     m.heads = meta.numHeads;
     m.kvHeads = meta.numKeyValueHeads;
-    m.headDim = meta.numHeads ? (meta.hiddenSize / meta.numHeads) : 0;
-    m.intermediate = meta.intermediateSize;
+    /* B03: prefer attention.key_length over hidden/heads (MiniMax 128 vs 64). */
+    if (meta.keyLength > 0)
+        m.headDim = meta.keyLength;
+    else if (meta.numHeads)
+        m.headDim = meta.hiddenSize / meta.numHeads;
+    else
+        m.headDim = 0;
+    m.intermediate = meta.intermediateSize
+                         ? meta.intermediateSize
+                         : meta.moeIntermediateSize;
 
     std::ostringstream id;
     id << SanitizeFileComponent(std::filesystem::path(modelPath).filename().string())

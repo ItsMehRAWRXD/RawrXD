@@ -106,6 +106,8 @@
 #include "KimiK2Config.hpp"
 #include "KimiLayer1FfnResidualCert.hpp"
 #include "K2GlobalTensorIndex.hpp"
+#include "MultiShardWeightBind.hpp"
+#include "MultiShardMoESetup.hpp"
 #include "K2LivePathTensorCache.hpp"
 #include "K2LivePathOwnership.hpp"
 #include "K2TokenEmbedding.hpp"
@@ -1512,6 +1514,7 @@ Deep2Engine::~Deep2Engine() {
     moePinnedHandles_.clear();
     if (moeWeightProxy_) moeWeightProxy_->Detach();
     moeWeightProxy_.reset();
+    moeShardLoaders_.clear();
     if (moeWeightsLoader_) moeWeightsLoader_->Close();
     moeWeightsLoader_.reset();
     moeLayer_.reset();
@@ -1748,6 +1751,7 @@ bool Deep2Engine::allocateBuffers() {
     gateBuf         = alignedAlloc(ffnGateScratch);
     upBuf           = alignedAlloc(ffnDim);
     layerTemp       = alignedAlloc(hiddenSize);
+    moeExpertOut_   = alignedAlloc(hiddenSize);
     fprintf(stderr,
         "[BUF] hidden=%zu heads=%zu headDim=%zu qOut=%zu headScratch=%zu "
         "kvDim=%zu ffn=%zu ffnGateScratch=%zu\n",
@@ -1828,7 +1832,7 @@ bool Deep2Engine::allocateBuffers() {
             stPer, cvPer, ssmInner_, ssmStateSize_);
     const bool baseOkay =
         hiddenStates && attentionOutput && attnHeadScratch_ && ffnOutput && logits &&
-        qProj && kProj && vProj && gateBuf && upBuf && layerTemp;
+        qProj && kProj && vProj && gateBuf && upBuf && layerTemp && moeExpertOut_;
     if (!baseOkay) {
         fprintf(stderr, "[Deep2Engine] ERROR: base buffer allocation failed\n");
         return false;
@@ -1882,6 +1886,7 @@ void Deep2Engine::deallocateBuffers() {
     alignedFree(qProj);
     alignedFree(kProj);
     alignedFree(vProj);
+    alignedFree(moeExpertOut_);
     alignedFree(gateBuf);
     alignedFree(upBuf);
     alignedFree(layerTemp);
@@ -1900,6 +1905,7 @@ void Deep2Engine::deallocateBuffers() {
     ssmMambaArmed_ = 0;
     hiddenStates = attentionOutput = attnHeadScratch_ = ffnOutput = nullptr;
     logits = qProj = kProj = vProj = gateBuf = upBuf = layerTemp = nullptr;
+    moeExpertOut_ = nullptr;
     mlaQ_a = mlaKV_a = mlaQ_b = mlaK_b = mlaV_b = nullptr;
     ssmState = ssmConvState = ssmX = ssmY = ssmTemp = nullptr;
 }
@@ -2270,6 +2276,12 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
 
     // â”€â”€ Build GlobalTensorIndex for multi-shard models â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (isMultiShard) {
+        /* B03: headDim from dynamic geometry (key_length), not hidden/heads. */
+        if (sessionGeometry_.headDim > 0) {
+            s_dynManifest.headDim = sessionGeometry_.headDim;
+            modelWeights.headDim = sessionGeometry_.headDim;
+            config.headDim = sessionGeometry_.headDim;
+        }
         KimiK2Config k2config;
         // Populate k2config from metadata
         const auto& meta = ggufResult.metadata;
@@ -2293,6 +2305,27 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         }
         printf("[Deep2Engine] GlobalTensorIndex built: %zu tensors across %zu shards\n",
                globalIndex_->TotalTensors(), globalIndex_->TotalShards());
+        /* B03: re-digest topology from all shards (shard0 alone undercounts). */
+        {
+            s_dynManifest.layerFacts.clear();
+            globalIndex_->ForEach([&](const GlobalTensorRef& ref) {
+                if (!ref.name.empty())
+                    rawr::manifest_dyn::ClassifyTensorName(s_dynManifest, ref.name);
+            });
+            if (sessionGeometry_.headDim > 0)
+                s_dynManifest.headDim = sessionGeometry_.headDim;
+            rawr::manifest_dyn::FinalizeLayerFacts(s_dynManifest);
+            rawr::manifest_dyn::EmitSummary(s_dynManifest, stderr);
+            fprintf(stderr,
+                    "B03_MULTISHARD_TOPOLOGY ready=%d blocked=%s layers=%llu "
+                    "headDim=%llu (geom_hd=%u)\n",
+                    s_dynManifest.discoveryReady ? 1 : 0,
+                    s_dynManifest.blockedAt.empty() ? "NONE"
+                                                    : s_dynManifest.blockedAt.c_str(),
+                    (unsigned long long)s_dynManifest.layers,
+                    (unsigned long long)s_dynManifest.headDim,
+                    sessionGeometry_.headDim);
+        }
 
         // Initialize residency cache for streaming tensor access.
         // REAP may impose a hard resident-byte budget (non-destructive).
@@ -2310,6 +2343,44 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             }
             residencyConfig.max_resident_bytes =
                 static_cast<uint64_t>(reapRuntimeInjection_.workingSetBytes);
+        }
+        // MiniMax standard multi-shard pins non-expert attn/norm/router for the
+        // whole generation. REAP expert working-set must not starve those pins.
+        {
+            std::string archLower = k2config.architecture;
+            std::transform(archLower.begin(), archLower.end(), archLower.begin(),
+                           [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+            if (archLower.find("minimax") != std::string::npos)
+            {
+                uint64_t nonExpertBytes = 0;
+                globalIndex_->ForEach([&](const GlobalTensorRef& ref) {
+                    if (!ref.isExpertTensor)
+                        nonExpertBytes += ref.byteSize;
+                });
+                constexpr uint64_t kGranule = 65536ull;
+                const uint64_t pinFloor =
+                    nonExpertBytes +
+                    kGranule * static_cast<uint64_t>(residencyConfig.max_active);
+                const uint64_t expertBudget = residencyConfig.max_resident_bytes;
+                const uint64_t need =
+                    (expertBudget > 0 &&
+                     pinFloor <= (std::numeric_limits<uint64_t>::max)() - expertBudget)
+                        ? (pinFloor + expertBudget)
+                        : pinFloor;
+                if (expertBudget > 0 && need > expertBudget)
+                {
+                    std::fprintf(stderr,
+                                 "[MULTISHARD_RESIDENCY] minimax pin floor "
+                                 "from=%llu to=%llu non_expert=%llu expert_budget=%llu\n",
+                                 static_cast<unsigned long long>(
+                                     residencyConfig.max_resident_bytes),
+                                 static_cast<unsigned long long>(need),
+                                 static_cast<unsigned long long>(nonExpertBytes),
+                                 static_cast<unsigned long long>(expertBudget));
+                    std::fflush(stderr);
+                    residencyConfig.max_resident_bytes = need;
+                }
+            }
         }
         residencyCache_ = std::make_unique<gguf_shard_cache::TensorResidencyCache>(residencyConfig);
         for (uint32_t s = 0; s < static_cast<uint32_t>(globalIndex_->TotalShards()); ++s) {
@@ -3145,6 +3216,14 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             }
             } // else (!token_embd): gemma alias + llama map
         }
+    } else if (globalIndex_) {
+        /* B02: multi-shard roots live in GlobalTensorIndex, not ggufResult. */
+        if (!Deep2::multishard_bind::BindAll(modelWeights, *globalIndex_)) {
+            fprintf(stderr,
+                    "[RawrXD] FATAL: B02 multi-shard root bind failed "
+                    "(token_embd/output via GlobalTensorIndex)\n");
+            return false;
+        }
     }
 
     // Re-sync config.vocabSize after tensor-derived override
@@ -3155,7 +3234,10 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         modelWeights.lmHead = modelWeights.tokenEmbed;
         modelWeights.tieEmbeddings = true;
         printf("[Deep2Engine] Using tied embeddings\n");
-    } else if (modelWeights.lmHead.data == nullptr && modelWeights.tokenEmbed.data == nullptr) {
+    } else if (modelWeights.lmHead.data == nullptr &&
+               modelWeights.tokenEmbed.data == nullptr &&
+               !modelWeights.lmHead.hasFileBacking &&
+               !modelWeights.tokenEmbed.hasFileBacking) {
         fprintf(stderr, "[RawrXD] FATAL: No embedding weights found - neither lmHead nor tokenEmbed available\n");
         return false;
     }
@@ -3889,7 +3971,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             moeConfig_.sharedExpertDim    = moeConfig_.expertDim;
             moeConfig_.hiddenDim          = meta.hiddenSize;
 
-            // Create per-layer routers for multi-shard (weights loaded on-demand)
+            // Create per-layer routers for multi-shard (weights injected on materialize)
             moeRouters_.clear();
             moeRouters_.resize(modelWeights.numLayers);
             for (size_t layerIdx = 0; layerIdx < modelWeights.numLayers; ++layerIdx) {
@@ -3899,14 +3981,35 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             }
             printf("[Deep2Engine] Created %zu per-layer routers (multi-shard)\n", moeRouters_.size());
 
+            {
+                size_t maxCache = reapRuntimeInjection_.enabled
+                    ? static_cast<size_t>(reapRuntimeInjection_.workingSetBytes)
+                    : (size_t)8 * 1024 * 1024 * 1024;
+                const int nOpen = Deep2::multishard_moe::OpenShardLoaders(
+                    firstShard, moeShardLoaders_, maxCache);
+                if (nOpen > 0) {
+                    moeWeightProxy_ = std::make_unique<MoEWeightProxy>();
+                    std::vector<MoEWeightsLoader*> ptrs;
+                    ptrs.reserve(moeShardLoaders_.size());
+                    for (auto& L : moeShardLoaders_) ptrs.push_back(L.get());
+                    moeWeightProxy_->AttachMulti(ptrs);
+                    std::fprintf(stderr, "B03_MOE_PROXY_ATTACH shards=%d\n", nOpen);
+                } else {
+                    std::fprintf(stderr, "B03_MOE_PROXY_ATTACH fail=0_shards\n");
+                }
+            }
+
             moeInitialized_ = true;
             if (reapRuntimeInjection_.enabled)
             {
                 reapRuntimeReceipt_.routeConfigured = true;
-                reapRuntimeReceipt_.streamerConfigured = residencyCache_ != nullptr;
+                reapRuntimeReceipt_.streamerConfigured =
+                    residencyCache_ != nullptr || moeWeightProxy_ != nullptr;
+                // Budget may be raised for MiniMax non-expert pin floor; still
+                // configured if at least the requested expert working-set holds.
                 reapRuntimeReceipt_.workingSetConfigured =
                     residencyCache_ != nullptr &&
-                    residencyCache_->resident_budget_bytes() ==
+                    residencyCache_->resident_budget_bytes() >=
                         reapRuntimeInjection_.workingSetBytes;
                 reapRuntimeReceipt_.active = reapRuntimeReceipt_.streamerConfigured;
                 reapRuntimeReceipt_.status = reapRuntimeReceipt_.streamerConfigured
@@ -8352,7 +8455,11 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     bool hasMoeExperts = !lw.moeUp.empty();
     bool hasSharedExpert = (lw.moeSharedUp.data != nullptr &&
                             lw.moeSharedDown.data != nullptr);
-    bool hasFfn = hasDenseFfn || hasMoeExperts || hasSharedExpert;
+    /* MiniMax multi-shard: experts live in MoEWeightProxy, not lw.moeUp. */
+    bool hasMoeRouter = modelWeights.isMoE && moeInitialized_ &&
+                        (lw.moeRouter.data != nullptr || lw.moeRouter.hasFileBacking) &&
+                        moeWeightProxy_ != nullptr;
+    bool hasFfn = hasDenseFfn || hasMoeExperts || hasSharedExpert || hasMoeRouter;
 
     ResidencyCounters::BeginFFN();
     if (profilingEnabled_ && profiler_) profiler_->beginFFNGate();
@@ -8368,7 +8475,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         else computeSSM(layer, layerTemp, ffnOutput);
         B3_TraceState("SSM_OUT", layer, ffnOutput, hiddenDim);
     } else if (hasFfn) {
-        if (hasMoeExperts || hasSharedExpert) {
+        if (hasMoeExperts || hasSharedExpert || hasMoeRouter) {
             MoEPlaceLive().ffn_dispatch_moe++;
             if (opTiming) { auto _t0 = opNow(); computeMoEFFN(layer, layerTemp, ffnOutput); auto _t1 = opNow(); opFfnGateUs = std::chrono::duration<double, std::micro>(_t1 - _t0).count(); opFfnDownUs = opFfnGateUs; }
             else computeMoEFFN(layer, layerTemp, ffnOutput);
@@ -8584,6 +8691,38 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         if (output && input && hiddenDim)
             std::memcpy(output, input, hiddenDim * sizeof(float));
         return;
+    }
+    /* B03: MiniMax multi-shard HOST_DECODE — materialize this layer's attn
+     * slots from GlobalTensorIndex before TOPOLOGY-CERT / LinearW. */
+    if (globalIndex_ && !k2ShardIndexOpen_ && layer < modelWeights.layers.size()) {
+        auto& lwMat = modelWeights.layers[layer];
+        /* Dematerialize held: VirtualAlloc reuse + MoE cache → HEAP_CORRUPT. */
+        if (lwMat.wq.hasFileBacking && !lwMat.wq.data) {
+            const int n = Deep2::multishard_bind::MaterializeLayerAttn(
+                lwMat, *globalIndex_, layer);
+            std::fprintf(stderr, "B03_FORWARD_MATERIALIZE layer=%zu slots=%d\n",
+                         layer, n);
+            if (!lwMat.wq.data) {
+                std::fprintf(stderr,
+                             "B03_FORWARD_MATERIALIZE_FAIL layer=%zu "
+                             "name=%s shard=%u\n",
+                             layer, lwMat.wq.name.c_str(), lwMat.wq.shardId);
+                throw std::runtime_error("B03 layer attn materialize failed");
+            }
+        }
+        if (layer < moeRouters_.size() && moeRouters_[layer] &&
+            lwMat.moeRouter.data) {
+            Deep2::multishard_moe::InjectRouterF32(
+                *moeRouters_[layer], lwMat.moeRouter,
+                moeConfig_.numExperts ? moeConfig_.numExperts
+                                      : modelWeights.numExperts,
+                config.hiddenDim ? config.hiddenDim : modelWeights.hiddenDim);
+        }
+        std::fprintf(stderr,
+                     "B03_ATTN_BEGIN layer=%zu wq=%p wv=%p type_q=%d type_v=%d\n",
+                     layer, lwMat.wq.data, lwMat.wv.data, lwMat.wq.type,
+                     lwMat.wv.type);
+        std::fflush(stderr);
     }
     // Production K2 shard path: computeAttention → MlaAttentionComplete.
     if (k2ShardIndexOpen_ && globalIndex_ && config.useMLA) {
@@ -10031,7 +10170,10 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
 
     // 1. Route the token through the per-layer router
     MoEPlaceLive().moe_router_calls++;
+    std::fprintf(stderr, "B03_MOE_ROUTE_ENTER layer=%zu\n", layer);
     TokenRoute route = moeRouters_[layer]->Route(input);
+    std::fprintf(stderr, "B03_MOE_ROUTE_OK layer=%zu topk=%zu\n", layer,
+                 route.topExperts.size());
 
     // 2. Check pending prefetches from layer N-1 (previous layer's async jobs)
     //    If fence signaled â†’ expert is HOT, record telemetry
@@ -10113,7 +10255,7 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
     }
 
     // 4. Residency-aware place: hits-first DualStick order (router set unchanged)
-    float* expertOut = attentionOutput;
+    float* expertOut = moeExpertOut_ ? moeExpertOut_ : ffnOutput;
     {
         MoEPlaceLive().moe_place_enter++;
         MoEExpertResidencyPlace& place = MoEPlaceGlobal();
@@ -10182,9 +10324,24 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
                     .count();
             if (!handle.valid) {
                 MoEPlaceLive().expert_acquire_fail++;
+                if (layer < 2 || MoEPlaceLive().expert_acquire_fail <= 8)
+                    std::fprintf(stderr,
+                                 "B03_MOE_ACQUIRE_FAIL layer=%zu expert=%d "
+                                 "fail_ctr=%llu\n",
+                                 layer, expertId,
+                                 (unsigned long long)
+                                     MoEPlaceLive().expert_acquire_fail);
                 continue;
             }
             MoEPlaceLive().expert_acquire_ok++;
+            if (layer < 2 && MoEPlaceLive().expert_acquire_ok <= 8)
+                std::fprintf(stderr,
+                             "B03_MOE_ACQUIRE_OK layer=%zu expert=%d bytes=%zu "
+                             "q=%d g=%d u=%d d=%d expertDim=%zu\n",
+                             layer, expertId, handle.expertBytes,
+                             handle.quantType, handle.gateQuantType,
+                             handle.upQuantType, handle.downQuantType,
+                             moeConfig_.expertDim);
             place.MarkHot((int)layer, expertId, slot.stick,
                           handle.expertBytes ? (uint64_t)handle.expertBytes : 0);
             MoEPlaceLive().expert_markhot++;
@@ -10255,33 +10412,28 @@ void Deep2Engine::computeExpertFFN(const MoEWeightHandle& handle,
     }
 
     auto& reg = Deep2::QuantKernelRegistry::Instance();
-    auto kernel = reg.GetGEMV(handle.quantType);
-    auto geom   = reg.GetGeometry(handle.quantType);
-    if (!kernel || geom.blockSize == 0) {
+    const int gT = handle.gateQuantType ? handle.gateQuantType : handle.quantType;
+    const int uT = handle.upQuantType ? handle.upQuantType : handle.quantType;
+    const int dT = handle.downQuantType ? handle.downQuantType : handle.quantType;
+    auto kGate = reg.GetGEMV(gT);
+    auto kUp = reg.GetGEMV(uT);
+    auto kDown = reg.GetGEMV(dT);
+    if (!kGate || !kUp || !kDown) {
         memset(output, 0, hiddenDim * sizeof(float));
         reg.GetBatch21Counters().registryMisses.fetch_add(1, std::memory_order_relaxed);
-        printf("[computeExpertFFN] ERROR: No registry kernel for quantType=%d\n", handle.quantType);
+        printf("[computeExpertFFN] ERROR: No registry kernel g=%d u=%d d=%d\n",
+               gT, uT, dT);
         return;
     }
     reg.GetBatch21Counters().registryHits.fetch_add(1, std::memory_order_relaxed);
-    reg.GetBatch21Counters().kernelInvocations.fetch_add(3, std::memory_order_relaxed); // gate + up + down
-    size_t blocksPerRow = (hiddenDim + geom.elemsPerBlock - 1) / geom.elemsPerBlock;
-    size_t rowBytes = blocksPerRow * geom.blockSize;
-
-    // Use gateBuf and upBuf as temp (both hiddenDim*4 sized, enough for expertDim)
-    // Gate projection: [expertDim, hiddenDim] * input -> [expertDim]
+    reg.GetBatch21Counters().kernelInvocations.fetch_add(3, std::memory_order_relaxed);
+    /* MiniMax mixed Q4_K/Q6_K: one GEMV kernel per expert projection. */
     float* gateOut = gateBuf;
-    kernel((const uint8_t*)handle.gateWeights, input, gateOut, expertDim, hiddenDim);
-
-    // Up projection: [expertDim, hiddenDim] * input -> [expertDim]
+    kGate((const uint8_t*)handle.gateWeights, input, gateOut, expertDim, hiddenDim);
     float* upOut = upBuf;
-    kernel((const uint8_t*)handle.upWeights, input, upOut, expertDim, hiddenDim);
-
-    // SwiGLU: silu(gate) * up
+    kUp((const uint8_t*)handle.upWeights, input, upOut, expertDim, hiddenDim);
     SwiGLU(gateOut, upOut, gateOut, expertDim);
-
-    // Down projection: [hiddenDim, expertDim] * gateOut -> [hiddenDim]
-    kernel((const uint8_t*)handle.downWeights, gateOut, output, hiddenDim, expertDim);
+    kDown((const uint8_t*)handle.downWeights, gateOut, output, hiddenDim, expertDim);
 }
 
 // ============================================================================
@@ -13036,6 +13188,11 @@ Deep2::ArchitectureFamily InferFamilyFromArchitecture(const std::string& archite
     if (lower.find("kimi") != std::string::npos) return Deep2::ArchitectureFamily::KimiK2;
     if (lower.find("deepseek") != std::string::npos) return Deep2::ArchitectureFamily::DeepSeekMLA_MoE;
     if (lower.find("llama") != std::string::npos) return Deep2::ArchitectureFamily::Llama;
+    /* MiniMax-M2 / qwen35moe: standard GQA + MoE (not MLA). */
+    if (lower.find("minimax") != std::string::npos ||
+        lower.find("qwen35moe") != std::string::npos ||
+        lower.find("qwen35") != std::string::npos)
+        return Deep2::ArchitectureFamily::Llama;
     return Deep2::ArchitectureFamily::Unknown;
 }
 

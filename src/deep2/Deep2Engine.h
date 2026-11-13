@@ -792,6 +792,7 @@ private:
     std::vector<std::unique_ptr<MoERouter>> moeRouters_;  // per-layer router
     std::unique_ptr<MoELayer> moeLayer_;
     std::unique_ptr<MoEWeightsLoader> moeWeightsLoader_;
+    std::vector<std::unique_ptr<MoEWeightsLoader>> moeShardLoaders_; /* MiniMax */
     std::unique_ptr<MoEWeightProxy> moeWeightProxy_;
     MoEConfig moeConfig_;
     bool moeInitialized_ = false;
@@ -948,6 +949,7 @@ private:
     float* upBuf = nullptr;
     float* layerTemp = nullptr;  // Dedicated temp buffer for forwardLayer()
     float* attnHeadScratch_ = nullptr; // [numHeads*headDim] pre-O concat
+    float* moeExpertOut_ = nullptr; /* MoE expert scratch — never alias attentionOutput */
 
     // MLA (K2) buffers
     float* mlaQ_a = nullptr;      // [qLoraRank]

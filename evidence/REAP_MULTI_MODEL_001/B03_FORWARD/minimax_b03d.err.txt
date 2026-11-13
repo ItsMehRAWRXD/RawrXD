@@ -1,0 +1,190 @@
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+KEN_MARS_ACTIVE=1 DEEP2_MARS=1 HOST_DECODE=0 GPU_POLICY=MULTI GPU_DEVICE_CLASS=DISCRETE NO_TRUNCATE_NEEDLE=1 PRODUCT_STREAMER_ARM=1
+WEIGHT_BUDGET_INPUT=7886
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=7886
+WEIGHT_BUDGET_BYTES=8269070336
+WEIGHT_BUDGET_SOURCE=HOST_FLOOR_RAM_EIGHTH
+WEIGHT_BUDGET_PRE_FLOOR_SRC=ARMSPEED_SETENVIFUNSET_OR_USER
+WEIGHT_BUDGET_PRE_FLOOR_RAW="E8B0M"
+WEIGHT_BUDGET_PRE_FLOOR_MIB=59568
+WEIGHT_BUDGET_POST_FLOOR_SRC=HOST_FLOOR_RAM_EIGHTH
+WEIGHT_BUDGET_ENV_PRESENT=1
+WEIGHT_BUDGET_ENV_RAW="7886"
+WEIGHT_BUDGET_PARSE_OK=1
+WEIGHT_BUDGET_INPUT_MIB=7886
+WEIGHT_BUDGET_EFFECTIVE_MIB=7886
+RESIDENCY_BUDGET_MIB=7886
+BUDGET_RELATION_VALID=1
+NOTE=REAP_TARGET_NE_RESIDENCY_BUDGET; ARMSPEED_E8B0M_IS_SETENVIFUNSET_DEFAULT; MODEL_SIZE_NE_PHYSICAL_RESIDENCY
+PRODUCT_LAA=1 HOST_DECODE=1 DUALSTICK_ARM=0 MINIMAL_ENHANCE=1 VK_ICD=BLOCKED WHY=R1_HOST_FLOOR
+PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1
+MODEL_DIGESTION_STREAM_BEGIN=1
+MODEL_PATH=F:\ollamamodels\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf
+ARCH=minimax-m2
+HIDDEN=3072 LAYERS=62 HEADS=48 KV_HEADS=8 HEAD_DIM=128 VOCAB=200064 INTERMEDIATE=1536
+SPLIT_QKV_LAYERS=22 FUSED_QKV_LAYERS=0 PROJECTOR_BLOCK_LAYERS=0 MLA_LAYERS=0 BLOCKED_LAYERS=0
+SPLIT_FFN_LAYERS=21 FUSED_FFN_LAYERS=0
+ROOT_EMBED=token_embd.weight ROOT_FINAL_NORM=output_norm.weight ROOT_LM_HEAD=output.weight
+MANIFEST_READY=0 BLOCKED_AT=layer_topology
+AUTHORITY_CLASS=DISCOVERY_ONLY
+PROMOTE=0
+MODEL_DIGESTION_STREAM_END=1
+MODEL_DIGESTION_STREAM_CACHE=G:\~dev\rawrxd\evidence\RAWRXD_MODEL_MANIFESTS\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf.b7fa8e340.1dd35b4ecfcb121.rmanifest.jsonl
+[K2Index] shard=0 tensors=288 data_start=8255296 file_size=49386414912 path=F:\ollamamodels\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf
+[K2Index] shard=1 tensors=299 data_start=18784 file_size=49712985440 path=F:\ollamamodels\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M-00002-of-00003.gguf
+[K2Index] shard=2 tensors=222 data_start=13984 file_size=39242984096 path=F:\ollamamodels\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M-00003-of-00003.gguf
+MULTISHARD_SHARDS_INDEXED=3/3
+MULTISHARD_TENSORS_INDEXED=809
+MULTISHARD_DUPLICATES=0
+MODEL_DIGESTION_STREAM_BEGIN=1
+MODEL_PATH=F:\ollamamodels\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf
+ARCH=minimax-m2
+HIDDEN=3072 LAYERS=62 HEADS=48 KV_HEADS=8 HEAD_DIM=128 VOCAB=200064 INTERMEDIATE=1536
+SPLIT_QKV_LAYERS=62 FUSED_QKV_LAYERS=0 PROJECTOR_BLOCK_LAYERS=0 MLA_LAYERS=0 BLOCKED_LAYERS=0
+SPLIT_FFN_LAYERS=62 FUSED_FFN_LAYERS=0
+ROOT_EMBED=token_embd.weight ROOT_FINAL_NORM=output_norm.weight ROOT_LM_HEAD=output.weight
+MANIFEST_READY=1 BLOCKED_AT=NONE
+AUTHORITY_CLASS=DISCOVERY_ONLY
+PROMOTE=0
+MODEL_DIGESTION_STREAM_END=1
+B03_MULTISHARD_TOPOLOGY ready=1 blocked=NONE layers=62 headDim=128 (geom_hd=128)
+B02_INDEX_LOOKUP emb=1 shard=0 out=1 shard=0 nrm=1 global_tensors=809
+B02_ROOT_MATERIALIZE=1 name=token_embd.weight shard=0 off=512428864 bytes=345710592 rows=200064 cols=3072 type=12 head4=c1081d14
+B02_ROOT_MATERIALIZE=1 name=output.weight shard=0 off=8255296 bytes=504161280 rows=200064 cols=3072 type=14 head4=5d70d4bb
+B02_ROOT_MATERIALIZE=1 name=output_norm.weight shard=0 off=512416576 bytes=12288 rows=3072 cols=1 type=0 head4=00003940
+B03_L0_BIND slot=attn_norm name=blk.0.attn_norm.weight shard=0 rows=3072 cols=1 type=0 bytes=12288 data=0 fileBack=1
+B03_L0_BIND slot=wq name=blk.0.attn_q.weight shard=0 rows=6144 cols=3072 type=12 bytes=10616832 data=0 fileBack=1
+B03_L0_BIND slot=wk name=blk.0.attn_k.weight shard=0 rows=1024 cols=3072 type=12 bytes=1769472 data=0 fileBack=1
+B03_L0_BIND slot=wv name=blk.0.attn_v.weight shard=0 rows=1024 cols=3072 type=14 bytes=2580480 data=0 fileBack=1
+B03_L0_BIND slot=wo name=blk.0.attn_output.weight shard=0 rows=3072 cols=6144 type=12 bytes=10616832 data=0 fileBack=1
+B03_L0_BIND slot=attn_q_norm name=blk.0.attn_q_norm.weight shard=0 rows=6144 cols=1 type=0 bytes=24576 data=0 fileBack=1
+B03_L0_BIND slot=attn_k_norm name=blk.0.attn_k_norm.weight shard=0 rows=1024 cols=1 type=0 bytes=4096 data=0 fileBack=1
+B03_L0_BIND slot=ffn_norm name=blk.0.ffn_norm.weight shard=0 rows=3072 cols=1 type=0 bytes=12288 data=0 fileBack=1
+B03_L0_BIND slot=moe_router name=blk.0.ffn_gate_inp.weight shard=0 rows=256 cols=3072 type=0 bytes=3145728 data=0 fileBack=1
+B03_LAYER_INVALID layer=0 slot=attn_norm name=blk.0.attn_norm.weight shard=0 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=1 slot=attn_norm name=blk.1.attn_norm.weight shard=0 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=2 slot=attn_norm name=blk.2.attn_norm.weight shard=0 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=3 slot=attn_norm name=blk.3.attn_norm.weight shard=0 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=4 slot=attn_norm name=blk.4.attn_norm.weight shard=0 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=5 slot=attn_norm name=blk.5.attn_norm.weight shard=0 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=6 slot=attn_norm name=blk.6.attn_norm.weight shard=0 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=7 slot=attn_norm name=blk.7.attn_norm.weight shard=0 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=8 slot=attn_norm name=blk.8.attn_norm.weight shard=0 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=9 slot=attn_norm name=blk.9.attn_norm.weight shard=0 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=10 slot=attn_norm name=blk.10.attn_norm.weight shard=0 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=11 slot=attn_norm name=blk.11.attn_norm.weight shard=0 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=12 slot=attn_norm name=blk.12.attn_norm.weight shard=0 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=13 slot=attn_norm name=blk.13.attn_norm.weight shard=0 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=14 slot=attn_norm name=blk.14.attn_norm.weight shard=0 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=15 slot=attn_norm name=blk.15.attn_norm.weight shard=0 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=16 slot=attn_norm name=blk.16.attn_norm.weight shard=0 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=17 slot=attn_norm name=blk.17.attn_norm.weight shard=0 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=18 slot=attn_norm name=blk.18.attn_norm.weight shard=0 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=19 slot=attn_norm name=blk.19.attn_norm.weight shard=0 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=20 slot=attn_norm name=blk.20.attn_norm.weight shard=0 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=21 slot=attn_norm name=blk.21.attn_norm.weight shard=0 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=22 slot=attn_norm name=blk.22.attn_norm.weight shard=1 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=23 slot=attn_norm name=blk.23.attn_norm.weight shard=1 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=24 slot=attn_norm name=blk.24.attn_norm.weight shard=1 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=25 slot=attn_norm name=blk.25.attn_norm.weight shard=1 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=26 slot=attn_norm name=blk.26.attn_norm.weight shard=1 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=27 slot=attn_norm name=blk.27.attn_norm.weight shard=1 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=28 slot=attn_norm name=blk.28.attn_norm.weight shard=1 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=29 slot=attn_norm name=blk.29.attn_norm.weight shard=1 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=30 slot=attn_norm name=blk.30.attn_norm.weight shard=1 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=31 slot=attn_norm name=blk.31.attn_norm.weight shard=1 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=32 slot=attn_norm name=blk.32.attn_norm.weight shard=1 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=33 slot=attn_norm name=blk.33.attn_norm.weight shard=1 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=34 slot=attn_norm name=blk.34.attn_norm.weight shard=1 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=35 slot=attn_norm name=blk.35.attn_norm.weight shard=1 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=36 slot=attn_norm name=blk.36.attn_norm.weight shard=1 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=37 slot=attn_norm name=blk.37.attn_norm.weight shard=1 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=38 slot=attn_norm name=blk.38.attn_norm.weight shard=1 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=39 slot=attn_norm name=blk.39.attn_norm.weight shard=1 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=40 slot=attn_norm name=blk.40.attn_norm.weight shard=1 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=41 slot=attn_norm name=blk.41.attn_norm.weight shard=1 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=42 slot=attn_norm name=blk.42.attn_norm.weight shard=1 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=43 slot=attn_norm name=blk.43.attn_norm.weight shard=1 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=44 slot=attn_norm name=blk.44.attn_norm.weight shard=1 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=45 slot=attn_norm name=blk.45.attn_norm.weight shard=2 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=46 slot=attn_norm name=blk.46.attn_norm.weight shard=2 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=47 slot=attn_norm name=blk.47.attn_norm.weight shard=2 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=48 slot=attn_norm name=blk.48.attn_norm.weight shard=2 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=49 slot=attn_norm name=blk.49.attn_norm.weight shard=2 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=50 slot=attn_norm name=blk.50.attn_norm.weight shard=2 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=51 slot=attn_norm name=blk.51.attn_norm.weight shard=2 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=52 slot=attn_norm name=blk.52.attn_norm.weight shard=2 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=53 slot=attn_norm name=blk.53.attn_norm.weight shard=2 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=54 slot=attn_norm name=blk.54.attn_norm.weight shard=2 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=55 slot=attn_norm name=blk.55.attn_norm.weight shard=2 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=56 slot=attn_norm name=blk.56.attn_norm.weight shard=2 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=57 slot=attn_norm name=blk.57.attn_norm.weight shard=2 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=58 slot=attn_norm name=blk.58.attn_norm.weight shard=2 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=59 slot=attn_norm name=blk.59.attn_norm.weight shard=2 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=60 slot=attn_norm name=blk.60.attn_norm.weight shard=2 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_INVALID layer=61 slot=attn_norm name=blk.61.attn_norm.weight shard=2 data=0 fileBack=1 rows=3072 cols=1 bytes=12288 why=DATA_NULL_NOT_MATERIALIZED
+B03_LAYER_TENSORS_VALID=0/62
+B03_ATTENTION_BIND_VALID=0
+B02_BIND_RESULT emb=1 lm=1 nrm=1 layers=62 layers_meta_ok=0 L0_wq_bound=1
+[RawrXD] FATAL: B02 multi-shard root bind failed (token_embd/output via GlobalTensorIndex)
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] disableMARS
+[LIFE] shutdown cyclone before elastic
+TD=03 KV_RELEASE_BEGIN
+TD=04 KV_RELEASE_END
+[LIFE] unloadModel
+GREEDY_DET TRACE_HASH=cbf29ce484222325 EXPERT_SEQUENCE_HASH=cbf29ce484222325 ARGMAX_STEPS=0 STICK_HASH_MODE=0
+D2_MOE_LIVE moe_ffn_enter=0 moe_place_enter=0 MOE_PLACE_CALLS=0 moe_router_calls=0 ffn_dispatch_moe=0 ffn_dispatch_dense=0 ffn_dispatch_ssm=0
+D2_MOE_LIVE experts_selected=0 experts_executed=0 parity=1 thrash_tokens=0
+D2_MOE_LIVE hits=N/A misses=N/A miss_bytes=N/A EXPERT_LOGICAL_MISS_BYTES=N/A_NOT_REACHED acquire_ok=0 acquire_fail=0 markhot=0
+D2_MOE_LIVE SHARED_EXPERT_CALLS=0 slice_layout_mismatch=0 stick_retains=0 stick_assigns=0
+D2_MOE_LIVE EXPERT_GPU_ACQUIRE=0 EXPERT_GPU_EXEC=0 HOST_GEMV_EXPERT=0
+D2_MOE_DECODE K2_MOE_LAYER_CALLS=0 MOE_PLACE_CALLS=0 EXPERTS_SELECTED=0 EXPERTS_EXECUTED=0 parity=1
+DUALSTICK_REQUESTED=0
+DUALSTICK_PLANNED=0
+DUALSTICK_ARMED=0
+DUALSTICK_ARM_COUNT=0
+DUALSTICK_ARM_ACQUIRES=0
+DUALSTICK_ARM_BYTES_WORKED=0
+DUALSTICK_ARM_EXEC=0
+DUALSTICK_RUNTIME_USED=0
+DUALSTICK_RUNTIME_DEVICE_COUNT=0
+DUALSTICK_FORWARD_CALLS_GPU0=0
+DUALSTICK_FORWARD_CALLS_GPU1=0
+DUALSTICK_RUNTIME_BYTES_WORKED=0
+DUALSTICK_TRUE_RUNTIME=0
+DUALSTICK_ARM_ONLY=0
+DUAL_STICK_ARMED=0
+DUAL_STICK_EXEC=0
+DUAL_STICK_ACQUIRES=0
+DUAL_STICK_CONSUMERS=0
+DUAL_STICK_OWNERSHIP_ADVANCES=0
+DUAL_STICK_BYTES_WORKED=0
+DUAL_STICK_EXEC_NOTE=alias_of_DUALSTICK_RUNTIME_USED
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=62
+[LIFE] unloadModel FreeTensorData ggufResult (288 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+RXEV_SURFACE ARMED=0 DISPOSITION=NO_RUN_STATE
+RXOW stage=NONE br=BR_NO_RUN_STATE layers=0 tensors=0 graph=0 decode0=0 note=norun_unclassified
+[LIFE] release MoE
+TD=05 WINDOW_RELEASE_BEGIN
+TD=06 WINDOW_RELEASE_END
+TD=07 GPU_DESTROY_BEGIN
+[LIFE] release vulkan devices
+TD=08 GPU_DESTROY_END
+[LIFE] stop telemetryController
+TD=09 MODEL_DESTROY_BEGIN
+TD=10 MODEL_DESTROY_END
+[LIFE] ~Deep2Engine END
+TD=11 CLEAN_EXIT
+rawr: REAP runtime exit=4
+[StreamEngine] Shutdown

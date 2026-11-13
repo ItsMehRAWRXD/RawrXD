@@ -1,0 +1,702 @@
+{
+  "shards": [
+    {
+      "shard": 0,
+      "path": "F:\\ollamamodels\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf",
+      "tensor_count": 288
+    },
+    {
+      "shard": 1,
+      "path": "F:\\ollamamodels\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M-00002-of-00003.gguf",
+      "tensor_count": 299
+    },
+    {
+      "shard": 2,
+      "path": "F:\\ollamamodels\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M-00003-of-00003.gguf",
+      "tensor_count": 222
+    }
+  ],
+  "by_layer": {
+    "root": [
+      {
+        "name": "output.weight",
+        "dims": [
+          3072,
+          200064
+        ],
+        "type": 14,
+        "rel_off": 0,
+        "shard": 0
+      },
+      {
+        "name": "output_norm.weight",
+        "dims": [
+          3072
+        ],
+        "type": 0,
+        "rel_off": 504161280,
+        "shard": 0
+      },
+      {
+        "name": "token_embd.weight",
+        "dims": [
+          3072,
+          200064
+        ],
+        "type": 12,
+        "rel_off": 504173568,
+        "shard": 0
+      }
+    ],
+    "0": [
+      {
+        "name": "blk.0.attn_k.weight",
+        "dims": [
+          3072,
+          1024
+        ],
+        "type": 12,
+        "rel_off": 849884160,
+        "shard": 0
+      },
+      {
+        "name": "blk.0.attn_k_norm.weight",
+        "dims": [
+          1024
+        ],
+        "type": 0,
+        "rel_off": 851653632,
+        "shard": 0
+      },
+      {
+        "name": "blk.0.attn_norm.weight",
+        "dims": [
+          3072
+        ],
+        "type": 0,
+        "rel_off": 851657728,
+        "shard": 0
+      },
+      {
+        "name": "blk.0.attn_output.weight",
+        "dims": [
+          6144,
+          3072
+        ],
+        "type": 12,
+        "rel_off": 851670016,
+        "shard": 0
+      },
+      {
+        "name": "blk.0.attn_q.weight",
+        "dims": [
+          3072,
+          6144
+        ],
+        "type": 12,
+        "rel_off": 862286848,
+        "shard": 0
+      },
+      {
+        "name": "blk.0.attn_q_norm.weight",
+        "dims": [
+          6144
+        ],
+        "type": 0,
+        "rel_off": 872903680,
+        "shard": 0
+      },
+      {
+        "name": "blk.0.attn_v.weight",
+        "dims": [
+          3072,
+          1024
+        ],
+        "type": 14,
+        "rel_off": 872928256,
+        "shard": 0
+      },
+      {
+        "name": "blk.0.exp_probs_b.bias",
+        "dims": [
+          256
+        ],
+        "type": 0,
+        "rel_off": 875508736,
+        "shard": 0
+      },
+      {
+        "name": "blk.0.ffn_down_exps.weight",
+        "dims": [
+          1536,
+          3072,
+          256
+        ],
+        "type": 14,
+        "rel_off": 875509760,
+        "shard": 0
+      },
+      {
+        "name": "blk.0.ffn_gate_exps.weight",
+        "dims": [
+          3072,
+          1536,
+          256
+        ],
+        "type": 12,
+        "rel_off": 1866414080,
+        "shard": 0
+      },
+      {
+        "name": "blk.0.ffn_gate_inp.weight",
+        "dims": [
+          3072,
+          256
+        ],
+        "type": 0,
+        "rel_off": 2545891328,
+        "shard": 0
+      },
+      {
+        "name": "blk.0.ffn_norm.weight",
+        "dims": [
+          3072
+        ],
+        "type": 0,
+        "rel_off": 2549037056,
+        "shard": 0
+      },
+      {
+        "name": "blk.0.ffn_up_exps.weight",
+        "dims": [
+          3072,
+          1536,
+          256
+        ],
+        "type": 12,
+        "rel_off": 2549049344,
+        "shard": 0
+      }
+    ],
+    "1": [
+      {
+        "name": "blk.1.attn_k.weight",
+        "dims": [
+          3072,
+          1024
+        ],
+        "type": 12,
+        "rel_off": 3228526592,
+        "shard": 0
+      },
+      {
+        "name": "blk.1.attn_k_norm.weight",
+        "dims": [
+          1024
+        ],
+        "type": 0,
+        "rel_off": 3230296064,
+        "shard": 0
+      },
+      {
+        "name": "blk.1.attn_norm.weight",
+        "dims": [
+          3072
+        ],
+        "type": 0,
+        "rel_off": 3230300160,
+        "shard": 0
+      },
+      {
+        "name": "blk.1.attn_output.weight",
+        "dims": [
+          6144,
+          3072
+        ],
+        "type": 12,
+        "rel_off": 3230312448,
+        "shard": 0
+      },
+      {
+        "name": "blk.1.attn_q.weight",
+        "dims": [
+          3072,
+          6144
+        ],
+        "type": 12,
+        "rel_off": 3240929280,
+        "shard": 0
+      },
+      {
+        "name": "blk.1.attn_q_norm.weight",
+        "dims": [
+          6144
+        ],
+        "type": 0,
+        "rel_off": 3251546112,
+        "shard": 0
+      },
+      {
+        "name": "blk.1.attn_v.weight",
+        "dims": [
+          3072,
+          1024
+        ],
+        "type": 14,
+        "rel_off": 3251570688,
+        "shard": 0
+      },
+      {
+        "name": "blk.1.exp_probs_b.bias",
+        "dims": [
+          256
+        ],
+        "type": 0,
+        "rel_off": 3254151168,
+        "shard": 0
+      },
+      {
+        "name": "blk.1.ffn_down_exps.weight",
+        "dims": [
+          1536,
+          3072,
+          256
+        ],
+        "type": 14,
+        "rel_off": 3254152192,
+        "shard": 0
+      },
+      {
+        "name": "blk.1.ffn_gate_exps.weight",
+        "dims": [
+          3072,
+          1536,
+          256
+        ],
+        "type": 12,
+        "rel_off": 4245056512,
+        "shard": 0
+      },
+      {
+        "name": "blk.1.ffn_gate_inp.weight",
+        "dims": [
+          3072,
+          256
+        ],
+        "type": 0,
+        "rel_off": 4924533760,
+        "shard": 0
+      },
+      {
+        "name": "blk.1.ffn_norm.weight",
+        "dims": [
+          3072
+        ],
+        "type": 0,
+        "rel_off": 4927679488,
+        "shard": 0
+      },
+      {
+        "name": "blk.1.ffn_up_exps.weight",
+        "dims": [
+          3072,
+          1536,
+          256
+        ],
+        "type": 12,
+        "rel_off": 4927691776,
+        "shard": 0
+      }
+    ],
+    "3": [
+      {
+        "name": "blk.3.attn_k.weight",
+        "dims": [
+          3072,
+          1024
+        ],
+        "type": 12,
+        "rel_off": 7985811456,
+        "shard": 0
+      },
+      {
+        "name": "blk.3.attn_k_norm.weight",
+        "dims": [
+          1024
+        ],
+        "type": 0,
+        "rel_off": 7987580928,
+        "shard": 0
+      },
+      {
+        "name": "blk.3.attn_norm.weight",
+        "dims": [
+          3072
+        ],
+        "type": 0,
+        "rel_off": 7987585024,
+        "shard": 0
+      },
+      {
+        "name": "blk.3.attn_output.weight",
+        "dims": [
+          6144,
+          3072
+        ],
+        "type": 12,
+        "rel_off": 7987597312,
+        "shard": 0
+      },
+      {
+        "name": "blk.3.attn_q.weight",
+        "dims": [
+          3072,
+          6144
+        ],
+        "type": 12,
+        "rel_off": 7998214144,
+        "shard": 0
+      },
+      {
+        "name": "blk.3.attn_q_norm.weight",
+        "dims": [
+          6144
+        ],
+        "type": 0,
+        "rel_off": 8008830976,
+        "shard": 0
+      },
+      {
+        "name": "blk.3.attn_v.weight",
+        "dims": [
+          3072,
+          1024
+        ],
+        "type": 14,
+        "rel_off": 8008855552,
+        "shard": 0
+      },
+      {
+        "name": "blk.3.exp_probs_b.bias",
+        "dims": [
+          256
+        ],
+        "type": 0,
+        "rel_off": 8011436032,
+        "shard": 0
+      },
+      {
+        "name": "blk.3.ffn_down_exps.weight",
+        "dims": [
+          1536,
+          3072,
+          256
+        ],
+        "type": 14,
+        "rel_off": 8011437056,
+        "shard": 0
+      },
+      {
+        "name": "blk.3.ffn_gate_exps.weight",
+        "dims": [
+          3072,
+          1536,
+          256
+        ],
+        "type": 12,
+        "rel_off": 9002341376,
+        "shard": 0
+      },
+      {
+        "name": "blk.3.ffn_gate_inp.weight",
+        "dims": [
+          3072,
+          256
+        ],
+        "type": 0,
+        "rel_off": 9681818624,
+        "shard": 0
+      },
+      {
+        "name": "blk.3.ffn_norm.weight",
+        "dims": [
+          3072
+        ],
+        "type": 0,
+        "rel_off": 9684964352,
+        "shard": 0
+      },
+      {
+        "name": "blk.3.ffn_up_exps.weight",
+        "dims": [
+          3072,
+          1536,
+          256
+        ],
+        "type": 12,
+        "rel_off": 9684976640,
+        "shard": 0
+      }
+    ],
+    "31": [
+      {
+        "name": "blk.31.attn_k.weight",
+        "dims": [
+          3072,
+          1024
+        ],
+        "type": 12,
+        "rel_off": 20213830656,
+        "shard": 1
+      },
+      {
+        "name": "blk.31.attn_k_norm.weight",
+        "dims": [
+          1024
+        ],
+        "type": 0,
+        "rel_off": 20215600128,
+        "shard": 1
+      },
+      {
+        "name": "blk.31.attn_norm.weight",
+        "dims": [
+          3072
+        ],
+        "type": 0,
+        "rel_off": 20215604224,
+        "shard": 1
+      },
+      {
+        "name": "blk.31.attn_output.weight",
+        "dims": [
+          6144,
+          3072
+        ],
+        "type": 12,
+        "rel_off": 20215616512,
+        "shard": 1
+      },
+      {
+        "name": "blk.31.attn_q.weight",
+        "dims": [
+          3072,
+          6144
+        ],
+        "type": 12,
+        "rel_off": 20226233344,
+        "shard": 1
+      },
+      {
+        "name": "blk.31.attn_q_norm.weight",
+        "dims": [
+          6144
+        ],
+        "type": 0,
+        "rel_off": 20236850176,
+        "shard": 1
+      },
+      {
+        "name": "blk.31.attn_v.weight",
+        "dims": [
+          3072,
+          1024
+        ],
+        "type": 12,
+        "rel_off": 20236874752,
+        "shard": 1
+      },
+      {
+        "name": "blk.31.exp_probs_b.bias",
+        "dims": [
+          256
+        ],
+        "type": 0,
+        "rel_off": 20238644224,
+        "shard": 1
+      },
+      {
+        "name": "blk.31.ffn_down_exps.weight",
+        "dims": [
+          1536,
+          3072,
+          256
+        ],
+        "type": 12,
+        "rel_off": 20238645248,
+        "shard": 1
+      },
+      {
+        "name": "blk.31.ffn_gate_exps.weight",
+        "dims": [
+          3072,
+          1536,
+          256
+        ],
+        "type": 12,
+        "rel_off": 20918122496,
+        "shard": 1
+      },
+      {
+        "name": "blk.31.ffn_gate_inp.weight",
+        "dims": [
+          3072,
+          256
+        ],
+        "type": 0,
+        "rel_off": 21597599744,
+        "shard": 1
+      },
+      {
+        "name": "blk.31.ffn_norm.weight",
+        "dims": [
+          3072
+        ],
+        "type": 0,
+        "rel_off": 21600745472,
+        "shard": 1
+      },
+      {
+        "name": "blk.31.ffn_up_exps.weight",
+        "dims": [
+          3072,
+          1536,
+          256
+        ],
+        "type": 12,
+        "rel_off": 21600757760,
+        "shard": 1
+      }
+    ],
+    "61": [
+      {
+        "name": "blk.61.attn_k.weight",
+        "dims": [
+          3072,
+          1024
+        ],
+        "type": 12,
+        "rel_off": 36864327680,
+        "shard": 2
+      },
+      {
+        "name": "blk.61.attn_k_norm.weight",
+        "dims": [
+          1024
+        ],
+        "type": 0,
+        "rel_off": 36866097152,
+        "shard": 2
+      },
+      {
+        "name": "blk.61.attn_norm.weight",
+        "dims": [
+          3072
+        ],
+        "type": 0,
+        "rel_off": 36866101248,
+        "shard": 2
+      },
+      {
+        "name": "blk.61.attn_output.weight",
+        "dims": [
+          6144,
+          3072
+        ],
+        "type": 12,
+        "rel_off": 36866113536,
+        "shard": 2
+      },
+      {
+        "name": "blk.61.attn_q.weight",
+        "dims": [
+          3072,
+          6144
+        ],
+        "type": 12,
+        "rel_off": 36876730368,
+        "shard": 2
+      },
+      {
+        "name": "blk.61.attn_q_norm.weight",
+        "dims": [
+          6144
+        ],
+        "type": 0,
+        "rel_off": 36887347200,
+        "shard": 2
+      },
+      {
+        "name": "blk.61.attn_v.weight",
+        "dims": [
+          3072,
+          1024
+        ],
+        "type": 14,
+        "rel_off": 36887371776,
+        "shard": 2
+      },
+      {
+        "name": "blk.61.exp_probs_b.bias",
+        "dims": [
+          256
+        ],
+        "type": 0,
+        "rel_off": 36889952256,
+        "shard": 2
+      },
+      {
+        "name": "blk.61.ffn_down_exps.weight",
+        "dims": [
+          1536,
+          3072,
+          256
+        ],
+        "type": 14,
+        "rel_off": 36889953280,
+        "shard": 2
+      },
+      {
+        "name": "blk.61.ffn_gate_exps.weight",
+        "dims": [
+          3072,
+          1536,
+          256
+        ],
+        "type": 12,
+        "rel_off": 37880857600,
+        "shard": 2
+      },
+      {
+        "name": "blk.61.ffn_gate_inp.weight",
+        "dims": [
+          3072,
+          256
+        ],
+        "type": 0,
+        "rel_off": 38560334848,
+        "shard": 2
+      },
+      {
+        "name": "blk.61.ffn_norm.weight",
+        "dims": [
+          3072
+        ],
+        "type": 0,
+        "rel_off": 38563480576,
+        "shard": 2
+      },
+      {
+        "name": "blk.61.ffn_up_exps.weight",
+        "dims": [
+          3072,
+          1536,
+          256
+        ],
+        "type": 12,
+        "rel_off": 38563492864,
+        "shard": 2
+      }
+    ]
+  }
+}

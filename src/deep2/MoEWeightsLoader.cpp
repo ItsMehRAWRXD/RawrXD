@@ -635,14 +635,35 @@ const void* MoEWeightsLoader::LoadExpertInternal(int layer, int expert) {
     }
     
     // Gate is optional (Nemotron uses ReLU² FFN with only up+down)
-    if (!upInfo || !downInfo) return nullptr;
+    if (!upInfo || !downInfo) {
+        static int once = 0;
+        if (once++ < 4)
+            fprintf(stderr,
+                    "B03_MOE_LOAD_MISS layer=%d expert=%d up=%d down=%d "
+                    "gate=%d projs=%zu\n",
+                    layer, expert, upInfo ? 1 : 0, downInfo ? 1 : 0,
+                    gateInfo ? 1 : 0, expertProjections_.size());
+        return nullptr;
+    }
     
     size_t gateBytes = gateInfo ? gateInfo->bytesPerExpert : 0;
     size_t expertBytes = gateBytes + upInfo->bytesPerExpert + downInfo->bytesPerExpert;
     if (expertBytes == 0) return nullptr;
+    if ((size_t)expert >= upInfo->numExperts) {
+        static int onceE = 0;
+        if (onceE++ < 4)
+            fprintf(stderr,
+                    "B03_MOE_LOAD_OOR layer=%d expert=%d numExperts=%zu\n",
+                    layer, expert, upInfo->numExperts);
+        return nullptr;
+    }
     
     void* buffer = _aligned_malloc(expertBytes, 32);
-    if (!buffer) return nullptr;
+    if (!buffer) {
+        fprintf(stderr, "B03_MOE_LOAD_OOM layer=%d expert=%d bytes=%zu\n",
+                layer, expert, expertBytes);
+        return nullptr;
+    }
     
     // Per-expert offset within the stacked tensor
     // For up_exps [numExperts, hidden, expertDim]: offset = expert * hidden * expertDim * typeSize
@@ -675,6 +696,12 @@ const void* MoEWeightsLoader::LoadExpertInternal(int layer, int expert) {
     }
     
     if (!ok) {
+        fprintf(stderr,
+                "B03_MOE_LOAD_READFAIL layer=%d expert=%d upOff=%llu "
+                "bytes=%zu\n",
+                layer, expert,
+                (unsigned long long)(upInfo->fileOffset + upExpertOffset),
+                upInfo->bytesPerExpert);
         _aligned_free(buffer);
         return nullptr;
     }

@@ -19,16 +19,25 @@ namespace Deep2 {
 void MoEWeightProxy::Attach(MoEWeightsLoader* loader) {
     std::lock_guard<std::mutex> lock(attachMutex_);
     loader_ = loader;
+    loaders_.clear();
+    if (loader) loaders_.push_back(loader);
+}
+
+void MoEWeightProxy::AttachMulti(const std::vector<MoEWeightsLoader*>& loaders) {
+    std::lock_guard<std::mutex> lock(attachMutex_);
+    loaders_ = loaders;
+    loader_ = loaders.empty() ? nullptr : loaders.front();
 }
 
 void MoEWeightProxy::Detach() {
     std::lock_guard<std::mutex> lock(attachMutex_);
     loader_ = nullptr;
+    loaders_.clear();
 }
 
 bool MoEWeightProxy::IsAttached() const {
     std::lock_guard<std::mutex> lock(attachMutex_);
-    return loader_ != nullptr;
+    return loader_ != nullptr || !loaders_.empty();
 }
 
 bool MoEWeightProxy::IsCached(int layer, int expert) const {
@@ -48,6 +57,13 @@ MoEWeightHandle MoEWeightProxy::Acquire(int layer, int expert) {
     if (expert < 0 ||
         !ReapPhysicalExpertAllowed(static_cast<uint32_t>(expert))) {
         ReapPhysicalNoteAcquire(expert < 0 ? 0u : (uint32_t)expert, false);
+        static int denyOnce = 0;
+        if (denyOnce++ < 8)
+            std::fprintf(stderr,
+                         "B03_MOE_ACQUIRE_DENIED layer=%d expert=%d "
+                         "bank=%d retained=%u\n",
+                         layer, expert, ReapPhysicalBankActive() ? 1 : 0,
+                         ReapPhysicalRetainedPerLayer());
         MoEWeightHandle denied{};
         denied.layer = layer;
         denied.expertId = expert;
@@ -284,15 +300,20 @@ const PrefetchJob* MoEWeightProxy::GetPrefetchJob(uint64_t jobHandle) const {
 
 MoEWeightHandle MoEWeightProxy::AcquireInternal(int layer, int expert) {
     MoEWeightHandle h;
-    MoEWeightsLoader* loader;
+    std::vector<MoEWeightsLoader*> loaders;
     {
         std::lock_guard<std::mutex> lock(attachMutex_);
-        loader = loader_;
+        loaders = loaders_;
+        if (loaders.empty() && loader_) loaders.push_back(loader_);
     }
-    if (!loader) return h;
-
-    const void* packed = loader->LoadExpert(layer, expert);
-    if (!packed) return h;
+    MoEWeightsLoader* loader = nullptr;
+    const void* packed = nullptr;
+    for (MoEWeightsLoader* cand : loaders) {
+        if (!cand) continue;
+        packed = cand->LoadExpert(layer, expert);
+        if (packed) { loader = cand; break; }
+    }
+    if (!loader || !packed) return h;
 
     // Walk the projection table to find the three slices for this layer.
     const auto& projections = loader->GetExpertProjections();
@@ -313,16 +334,23 @@ MoEWeightHandle MoEWeightProxy::AcquireInternal(int layer, int expert) {
     h.expertBytes = gateBytes + upBytes + downBytes;
     h.layer = layer;
     h.expertId = expert;
-    // Resolve quant type from first projection with matching layer
     for (const auto& info : projections) {
-        if (info.layerIdx == layer && info.expertIdx == -1) {
-            h.quantType = static_cast<int>(info.type);
-            break;
+        if (info.layerIdx != layer || info.expertIdx != -1) continue;
+        const int t = static_cast<int>(info.type);
+        switch (info.proj) {
+            case ExpertProjection::Gate: h.gateQuantType = t; break;
+            case ExpertProjection::Up:   h.upQuantType = t;   break;
+            case ExpertProjection::Down: h.downQuantType = t; break;
         }
     }
+    h.quantType = h.gateQuantType ? h.gateQuantType
+                : (h.upQuantType ? h.upQuantType : h.downQuantType);
     if (h.quantType == 0) {
         h.quantType = static_cast<int>(GGMLType::GGML_TYPE_Q4_K);
     }
+    if (!h.gateQuantType) h.gateQuantType = h.quantType;
+    if (!h.upQuantType) h.upQuantType = h.quantType;
+    if (!h.downQuantType) h.downQuantType = h.quantType;
     h.valid = true;
 
     stats_.bytesStreamed.fetch_add(h.expertBytes, std::memory_order_relaxed);

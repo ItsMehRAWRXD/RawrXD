@@ -1,0 +1,55 @@
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+[Deep2Engine] Loading model from: F:\ollamamodels\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Multi-shard detected: YES (3 files in F:\ollamamodels\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M)
+[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=PASS arch=minimax-m2 L=62 H=3072 FFN=1536 heads=48 kv=8 hd=128 ctx=196608
+[Deep2Engine] AUTHORITY_LADDER=DEFER_UNTIL_RUNTIME_RECEIPT
+[Deep2Engine] GlobalTensorIndex built: 809 tensors across 3 shards
+[Deep2Engine] TensorResidencyCache ready (3 shards registered)
+[Deep2Engine] GGUF architecture: 'minimax-m2'  hidden=3072 layers=62 heads=48 kvHeads=8 inter=1536 vocab=200064
+[Deep2Engine] Tokenizer loaded: vocab=200064 bos=200034 eos=200020 (Spm::encode)
+[ResidencyManager] Initialized: maxResidentBytes=16539541504, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=15773 MB
+[ResidencyManager] this=000001DE7DC0DD10  Registered 'blk.0.attn_k_norm.weight': shard=0 offset=859908928 bytes=4096  |  registry_size=1  registeredBytes=4096  zeroOffset=0  maxResidentBytes=16539541504
+[ResidencyManager] this=000001DE7DC0DD10  Registered 'blk.2.ffn_gate_exps.weight': shard=0 offset=6631954240 bytes=679477248  |  registry_size=100  registeredBytes=19930369024  zeroOffset=0  maxResidentBytes=16539541504
+[ResidencyManager] this=000001DE7DC0DD10  Registered 'blk.8.attn_v.weight': shard=0 offset=19598084928 bytes=1769472  |  registry_size=200  registeredBytes=33230577664  zeroOffset=0  maxResidentBytes=16539541504
+[ResidencyManager] this=000001DE7DC0DD10  Registered 'blk.12.attn_v.weight': shard=0 offset=28175940416 bytes=2580480  |  registry_size=300  registeredBytes=48673494016  zeroOffset=0  maxResidentBytes=16539541504
+[ResidencyManager] this=000001DE7DC0DD10  Registered 'blk.17.ffn_norm.weight': shard=0 offset=40496309056 bytes=12288  |  registry_size=400  registeredBytes=68827527168  zeroOffset=0  maxResidentBytes=16539541504
+[ResidencyManager] this=000001DE7DC0DD10  Registered 'blk.26.attn_k.weight': shard=1 offset=9257351520 bytes=1769472  |  registry_size=500  registeredBytes=83243520000  zeroOffset=0  maxResidentBytes=16539541504
+[ResidencyManager] this=000001DE7DC0DD10  Registered 'blk.46.attn_k_norm.weight': shard=2 offset=3059903136 bytes=4096  |  registry_size=501  registeredBytes=83243524096  zeroOffset=0  maxResidentBytes=16539541504
+[ResidencyManager] this=000001DE7DC0DD10  Registered 'blk.26.attn_norm.weight': shard=1 offset=9259125088 bytes=12288  |  registry_size=502  registeredBytes=83243536384  zeroOffset=0  maxResidentBytes=16539541504
+[ResidencyManager] this=000001DE7DC0DD10  Registered 'blk.35.ffn_gate_inp.weight': shard=1 offset=30175474016 bytes=3145728  |  registry_size=503  registeredBytes=83246682112  zeroOffset=0  maxResidentBytes=16539541504
+[ResidencyManager] this=000001DE7DC0DD10  Registered 'blk.26.attn_output.weight': shard=1 offset=9259137376 bytes=10616832  |  registry_size=504  registeredBytes=83257298944  zeroOffset=0  maxResidentBytes=16539541504
+[ResidencyManager] this=000001DE7DC0DD10  Registered 'blk.32.attn_k_norm.weight': shard=1 offset=22282023264 bytes=4096  |  registry_size=505  registeredBytes=83257303040  zeroOffset=0  maxResidentBytes=16539541504
+[ResidencyManager] this=000001DE7DC0DD10  Registered 'blk.28.attn_k.weight': shard=1 offset=13702398304 bytes=1769472  |  registry_size=506  registeredBytes=83259072512  zeroOffset=0  maxResidentBytes=16539541504
+[ResidencyManager] this=000001DE7DC0DD10  Registered 'blk.26.attn_q.weight': shard=1 offset=9269754208 bytes=10616832  |  registry_size=507  registeredBytes=83269689344  zeroOffset=0  maxResidentBytes=16539541504
+[ResidencyManager] this=000001DE7DC0DD10  Registered 'blk.27.attn_output.weight': shard=1 offset=11325541728 bytes=10616832  |  registry_size=508  registeredBytes=83280306176  zeroOffset=0  maxResidentBytes=16539541504
+[ResidencyManager] this=000001DE7DC0DD10  Registered 'blk.26.ffn_gate_inp.weight': shard=1 offset=10641120608 bytes=3145728  |  registry_size=509  registeredBytes=83283451904  zeroOffset=0  maxResidentBytes=16539541504
+[ResidencyManager] this=000001DE7DC0DD10  Registered 'blk.39.attn_k.weight': shard=1 offset=37369560416 bytes=1769472  |  registry_size=600  registeredBytes=97060413440  zeroOffset=0  maxResidentBytes=16539541504
+[ResidencyManager] this=000001DE7DC0DD10  Registered 'blk.47.attn_q.weight': shard=2 offset=5136940704 bytes=10616832  |  registry_size=700  registeredBytes=117205210112  zeroOffset=0  maxResidentBytes=16539541504
+[ResidencyManager] this=000001DE7DC0DD10  Registered 'blk.60.attn_k.weight': shard=2 offset=34485699232 bytes=1769472  |  registry_size=800  registeredBytes=136639285248  zeroOffset=0  maxResidentBytes=16539541504
+RMV_MOUNT_001
+TENSORS_DISCOVERED=809
+TENSORS_ADDRESSED=809
+TENSORS_REGISTERED=809
+INVALID_SHARD=0
+INVALID_RANGE=0
+OVERFLOW_RANGE=0
+ZERO_SIZE=0
+UNADDRESSED=0
+RMV_MOUNT_001=PASS
+[Deep2Engine] ResidencyManager: this=000001DE7DC0DD10  registered=809 tensors  bytes=138334096384  max=16539541504
+[RMV_MOUNT_001]=PASS
+[Deep2Engine] AUTHORITY_LADDER=BLOCKED
+BLOCKED_AT=GEOM
+BLOCKED_OWNER=ONE_LOCAL_MODEL_AUTHORITY
+FIRST_DELTA=GEOM
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[ResidencyManager] Shutdown complete
+{"schema":"rawrxd.reap.runtime_receipt.v1","status":"LOAD_FAILED","model":"F:\\ollamamodels\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf","plan":{"schema":"rawrxd.reap.runtime_injection.v1","model":"F:\\ollamamodels\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf","architecture":"minimax-m2","injection_mode":"PHYSICAL_STREAM_EXPERT_REDUCE","streamer_path":"ReapPhysicalBank+MoEWeightProxy","requested_parameters":30000000000,"requested_experts":8,"actual_parameters":80733051392,"actual_tensor_bytes":49378159616,"actual_experts":256,"actual_experts_per_token":8,"target_working_set_bytes":18348678303,"direction":"DOWNSIZE","status":"PLAN_READY","reason":"ALL_SHARDS_ROUTED_EXPERT_INVENTORY_BUDGET_REDUCE","source_immutable":true,"writer_invoked":false,"shards":3,"tensors":288},"runtime":{"active":true,"route_configured":false,"streamer_configured":false,"working_set_configured":false,"effective_experts":0,"status":"STAGED","reason":"APPLY_ON_NEXT_MODEL_LOAD"},"generation_requested":true,"generation_completed":false,"generated_tokens":0,"prompt_tokens":0,"load_ms":1353,"output":"","physical":{"physical_reduce":true,"mode":"PHYSICAL_STREAM","selection_policy":"BUDGET_UNIFORM_UNCERTIFIED","calibration_status":"NOT_RUN","export_status":"NOT_RUN","INVENTORY_METHOD":"ALL_SHARDS_GGUF_TENSOR_SIZE","REPACKED_SCOPE":"SHARED_KEEP_PLUS_RETAINED_ROUTED_EXPERTS","ACCOUNTING_COMPLETE":1,"REPACKED_MODEL_BYTES_KIND":"PROXY_PLAN_SCOPE","ORIGINAL_MODEL_BYTES":138342384448,"ORIGINAL_EXPERT_COUNT":256,"ORIGINAL_EXPERT_TENSOR_BYTES":135725580288,"SHARED_NON_EXPERT_BYTES":2608516096,"ROUTED_EXPERT_BYTES":135725580288,"SHARED_KEEP_BYTES":2608516096,"RETAINED_EXPERT_COUNT":29,"RETAINED_EXPERT_SLICES":1769,"RETAINED_EXPERT_BYTES":15375163392,"PRUNED_EXPERT_BYTES":120350416896,"PRUNED_ROUTED_EXPERT_BYTES":120350416896,"PRUNED_PARAMETER_COUNT":120350416896,"PRUNED_PARAMETER_COUNT_UNIT":"BYTE_PROXY","REPACKED_MODEL_BYTES":17983679488,"ACTIVE_PARAMETERS_PER_TOKEN":69531544,"MOE_LAYER_COUNT":61,"TOP_K":8,"REAP_MODEL_SHA256":"","export_path":"","source_immutable":true,"writer_invoked":false,"reason":"ALL_SHARDS_ROUTED_EXPERT_INVENTORY_BUDGET_REDUCE","PROMOTE":0,"CERTIFIED":0,"NOTE":"REPACKED_MODEL_BYTES_IS_NOT_A_CERTIFIED_STANDALONE_GGUF;TIP15_19_4GB_SMOKE=PROXY_ONLY"},"stream_correctness":{"ROUTE_OK":0,"ROUTE_DENIED":0,"ACQUIRE_OK":0,"ACQUIRE_DENIED":0,"TOPK_MISMATCH":0,"PASS":true},"writer_invoked":false,"source_immutable":true}
