@@ -2,6 +2,7 @@
 #include "deep2/ReapMoETransformer.hpp"
 #include "reap_cli_contract.hpp"
 #include "reap/ReapRuntime.hpp"
+#include "reap/ReapPhysicalPolicy.hpp"
 #include "reap_expert_layout.hpp"
 #include "reap_inventory.hpp"
 #include "deep2/deep2_sha256.hpp"
@@ -35,6 +36,8 @@ static void usage() {
                  "rawr-reap verify <first-shard.gguf> [--receipt <receipt.json>] [--structural-only]\n"
                  "rawr-reap runtime <model-or-alias> --target <parameters>/<experts> "
                  "[--prompt <text>] [--max-tokens <N>] [--receipt <receipt.json>]\n"
+                 "rawr-reap physical-plan <first-shard.gguf> --active-experts <N> "
+                 "[--output <plan.json>]  (deterministic prefix; CERTIFIED=0)\n"
                  "rawr-reap reap <first-shard.gguf> --target-size|--size <B|MB|GB|TB> "
                  "--active-experts <N> --expert-budget <B|MB|GB|TB> "
                  "--quality-floor <0..1> [--calibration <receipt.json>] "
@@ -935,6 +938,68 @@ static int runtimeInjection(int argc, char** argv) {
     return result.exitCode;
 }
 
+static int physicalPlan(int argc, char** argv) {
+    if (argc < 3) { usage(); return 2; }
+    const std::string model = argv[2];
+    uint32_t retained = 0;
+    std::string outputPath;
+    for (int i = 3; i < argc; ++i) {
+        const std::string option = argv[i];
+        if (i + 1 >= argc) { usage(); return 2; }
+        const std::string value = argv[++i];
+        if (option == "--active-experts") {
+            if (!RawrXD::Reap::ParseActiveExperts(value, retained)) {
+                std::cerr << "REAP_PHYSICAL_INVALID_ACTIVE_EXPERTS\n";
+                return 2;
+            }
+        } else if (option == "--output") outputPath = value;
+        else { std::cerr << "REAP_PHYSICAL_UNKNOWN_OPTION: " << option << "\n"; return 2; }
+    }
+    if (!retained) { std::cerr << "REAP_PHYSICAL_ACTIVE_EXPERTS_REQUIRED\n"; return 2; }
+
+    Deep2::GGUFLoader loader;
+    ReapInventory inventory;
+    std::string inventoryError;
+    if (!collectReapInventory(model, loader, inventory, inventoryError)) {
+        std::cerr << "REAP_PHYSICAL_INVENTORY_FAILED: " << inventoryError << "\n";
+        return 4;
+    }
+    RawrXD::Reap::PhysicalTopology topo;
+    topo.originalBytes = inventory.totalBytes;
+    topo.expertBytes = inventory.expertBytes;
+    topo.sharedBytes = inventory.totalBytes >= inventory.expertBytes
+        ? inventory.totalBytes - inventory.expertBytes : 0;
+    topo.originalExpertsPerLayer =
+        static_cast<uint32_t>(inventory.maxExpertsPerLayer);
+    topo.moeLayerCount = static_cast<uint32_t>(inventory.moeLayers.size());
+    topo.logicalExpertSlices = inventory.logicalExperts;
+
+    RawrXD::Reap::PhysicalSelection sel;
+    const bool ok =
+        RawrXD::Reap::BuildDeterministicPhysicalSelection(topo, retained, sel);
+    std::ostringstream out;
+    out << "{\"schema\":\"rawrxd.reap.physical_plan.v1\""
+        << ",\"status\":" << json_quote(sel.status)
+        << ",\"reason\":" << json_quote(sel.reason)
+        << ",\"semantics\":" << json_quote(RawrXD::Reap::ClarifyReapSemantics())
+        << ",\"model\":" << json_quote(model)
+        << ",\"original_model_bytes\":" << topo.originalBytes
+        << ",\"original_expert_count\":" << topo.originalExpertsPerLayer
+        << ",\"retained_expert_count\":" << sel.retainedExpertsPerLayer
+        << ",\"moe_layers\":" << topo.moeLayerCount
+        << ",\"pruned_parameter_count\":" << sel.prunedParameterApprox
+        << ",\"repacked_model_bytes\":" << sel.estimatedRepackBytes
+        << ",\"active_parameters_per_token\":" << sel.activeParametersPerTokenApprox
+        << ",\"policy\":" << json_quote(sel.policy)
+        << ",\"physical_repack\":0,\"residency_only\":0"
+        << ",\"original_gguf_intact\":1,\"writer_invoked\":false"
+        << ",\"promote\":0,\"certified\":0,\"tip_climb\":\"HOLD\"}\n";
+    const std::string receipt = out.str();
+    std::cout << receipt;
+    if (!writePlan(outputPath, receipt)) return 5;
+    return ok ? 0 : 4;
+}
+
 int main(int argc, char** argv) {
     if (argc >= 3 && std::string(argv[1]) == "verify") {
         std::string receiptPath;
@@ -968,6 +1033,7 @@ int main(int argc, char** argv) {
         return capabilities(argv[2]);
     }
     if (argc >= 3 && std::string(argv[1]) == "runtime") return runtimeInjection(argc, argv);
+    if (argc >= 3 && std::string(argv[1]) == "physical-plan") return physicalPlan(argc, argv);
     if (argc >= 3 && (std::string(argv[1]) == "reap" || std::string(argv[1]) == "--reap")) return reapPlan(argc, argv);
     if (argc < 3 || (std::string(argv[1]) != "inspect" && std::string(argv[1]) != "plan")) { usage(); return 2; }
     if (std::string(argv[1]) == "inspect" && argc != 3) { usage(); return 2; }

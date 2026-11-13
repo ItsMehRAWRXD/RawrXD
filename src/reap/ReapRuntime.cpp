@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -112,6 +113,10 @@ RuntimeResult RunRuntime(const RuntimeRequest& request) {
     injection.expertCount = target.expertCount;
     injection.workingSetBytes = plan.targetWorkingSetBytes;
     injection.enabled = true;
+    // Opt-in only: valued --reap stays residency unless RAWR_REAP_PHYSICAL=1.
+    const char* physicalEnv = std::getenv("RAWR_REAP_PHYSICAL");
+    injection.physicalExclude =
+        physicalEnv && physicalEnv[0] == '1' && physicalEnv[1] == '\0';
     if (!engine.configureReapRuntimeInjection(injection)) {
         const auto& receipt = engine.reapRuntimeReceipt();
         result.receipt = "{\"status\":\"CONFIGURATION_FAILED\",\"reason\":" +
@@ -159,6 +164,9 @@ RuntimeResult RunRuntime(const RuntimeRequest& request) {
             << ",\"route_configured\":" << (configuredReceipt.routeConfigured ? "true" : "false")
             << ",\"streamer_configured\":" << (configuredReceipt.streamerConfigured ? "true" : "false")
             << ",\"working_set_configured\":" << (configuredReceipt.workingSetConfigured ? "true" : "false")
+            << ",\"physical_exclude\":" << (configuredReceipt.physicalExclude ? "true" : "false")
+            << ",\"residency_only\":" << (configuredReceipt.residencyOnly ? "true" : "false")
+            << ",\"retained_experts\":" << configuredReceipt.retainedExperts
             << ",\"effective_experts\":" << configuredReceipt.effectiveExperts
             << ",\"status\":" << quote(configuredReceipt.status)
             << ",\"reason\":" << quote(configuredReceipt.reason) << "}"
@@ -168,7 +176,8 @@ RuntimeResult RunRuntime(const RuntimeRequest& request) {
             << ",\"prompt_tokens\":" << generation.promptTokens
             << ",\"load_ms\":" << elapsedLoad
             << ",\"output\":" << quote(generated)
-            << ",\"writer_invoked\":false,\"source_immutable\":true}\n";
+            << ",\"writer_invoked\":false,\"source_immutable\":true"
+            << ",\"physical_repack\":0,\"promote\":0,\"certified\":0}\n";
     result.receipt = receipt.str();
     result.exitCode = runtimePass ? 0 : 4;
     if (!request.receiptPath.empty()) {

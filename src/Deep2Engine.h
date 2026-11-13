@@ -518,8 +518,8 @@ namespace Deep2
         void setAsyncPrefetchEnabled(bool enable) { asyncPrefetchEnabled_ = enable; }
         bool isAsyncPrefetchEnabled() const { return asyncPrefetchEnabled_; }
 
-        // Runtime REAP injection. This stages a non-destructive residency and
-        // MoE top-k policy for the next model load. It never rewrites GGUF.
+        // Runtime REAP injection. Default: residency + MoE top-k. With
+        // physicalExclude: retained-expert router remap (still no GGUF rewrite).
         bool configureReapRuntimeInjection(
             const RawrXD::Reap::RuntimeInjection& injection);
         const RawrXD::Reap::RuntimeInjectionReceipt& reapRuntimeReceipt() const {

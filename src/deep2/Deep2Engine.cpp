@@ -1975,8 +1975,14 @@ bool Deep2Engine::configureReapRuntimeInjection(
     reapRuntimeReceipt_.requestedParameters = injection.parameterCount;
     reapRuntimeReceipt_.requestedExperts = injection.expertCount;
     reapRuntimeReceipt_.workingSetBytes = injection.workingSetBytes;
+    reapRuntimeReceipt_.physicalExclude = injection.physicalExclude;
+    reapRuntimeReceipt_.residencyOnly = !injection.physicalExclude;
+    reapRuntimeReceipt_.retainedExperts =
+        injection.physicalExclude ? injection.expertCount : 0;
     reapRuntimeReceipt_.status = "STAGED";
-    reapRuntimeReceipt_.reason = "APPLY_ON_NEXT_MODEL_LOAD";
+    reapRuntimeReceipt_.reason = injection.physicalExclude
+        ? "APPLY_PHYSICAL_EXCLUDE_ON_NEXT_MODEL_LOAD"
+        : "APPLY_ON_NEXT_MODEL_LOAD";
     return true;
 }
 
@@ -4434,6 +4440,23 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                 moeConfig_.numActiveExperts = reapRuntimeInjection_.enabled
                     ? static_cast<size_t>(reapRuntimeInjection_.expertCount)
                     : modelWeights.numExpertsPerToken;
+                if (reapRuntimeInjection_.enabled &&
+                    reapRuntimeInjection_.physicalExclude)
+                {
+                    // Retained cardinality shrinks router geometry; top-k caps
+                    // at the model's experts-per-token (not residency LRU).
+                    const size_t retained =
+                        static_cast<size_t>(reapRuntimeInjection_.expertCount);
+                    moeConfig_.numExperts = retained;
+                    const size_t topk = modelWeights.numExpertsPerToken
+                        ? modelWeights.numExpertsPerToken
+                        : retained;
+                    moeConfig_.numActiveExperts =
+                        topk < retained ? topk : retained;
+                    reapRuntimeReceipt_.retainedExperts = retained;
+                    reapRuntimeReceipt_.physicalExclude = true;
+                    reapRuntimeReceipt_.residencyOnly = false;
+                }
                 moeConfig_.useSharedExpert = modelWeights.numSharedExperts > 0;
                 moeConfig_.expertDim = modelWeights.moeIntermediateDim > 0 ? modelWeights.moeIntermediateDim : config.intermediateDim;
                 // Shared expert GGUF packs n_shared * expert_ff into one shexp tensor
@@ -4470,7 +4493,20 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                     const auto& lw = modelWeights.layers[layerIdx];
                     if (lw.moeRouter.data && lw.moeRouter.type == (int)GGMLType::GGML_TYPE_F32)
                     {
-                        router->SetRouterWeights((const float*)lw.moeRouter.data, lw.moeRouter.rows, lw.moeRouter.cols);
+                        const float* src = (const float*)lw.moeRouter.data;
+                        size_t rows = lw.moeRouter.rows;
+                        size_t cols = lw.moeRouter.cols;
+                        // Physical exclude: keep deterministic prefix expert
+                        // rows (POLICY_DETERMINISTIC_PREFIX). Layout is
+                        // [numExperts][hiddenDim] matching MoERouter::Route.
+                        if (reapRuntimeInjection_.enabled &&
+                            reapRuntimeInjection_.physicalExclude &&
+                            rows > moeConfig_.numExperts &&
+                            cols == moeConfig_.hiddenDim)
+                        {
+                            rows = moeConfig_.numExperts;
+                        }
+                        router->SetRouterWeights(src, rows, cols);
                     }
                     else if (lw.moeRouter.data)
                     {
@@ -4594,8 +4630,19 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                     reapRuntimeReceipt_.streamerConfigured = true;
                     reapRuntimeReceipt_.workingSetConfigured = true;
                     reapRuntimeReceipt_.active = true;
-                    reapRuntimeReceipt_.status = "ACTIVE_RUNTIME_INJECTION";
-                    reapRuntimeReceipt_.reason = "MOE_ROUTER_TOPK_AND_STREAMER_CACHE_APPLIED";
+                    if (reapRuntimeInjection_.physicalExclude)
+                    {
+                        reapRuntimeReceipt_.status =
+                            "ACTIVE_PHYSICAL_EXCLUDE_STREAM";
+                        reapRuntimeReceipt_.reason =
+                            "ROUTER_REMAP_AND_RETAINED_EXPERT_EXECUTE_PATH";
+                    }
+                    else
+                    {
+                        reapRuntimeReceipt_.status = "ACTIVE_RUNTIME_INJECTION";
+                        reapRuntimeReceipt_.reason =
+                            "MOE_ROUTER_TOPK_AND_STREAMER_CACHE_APPLIED";
+                    }
                 }
             }
         }
@@ -4606,6 +4653,21 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             moeConfig_.numActiveExperts = reapRuntimeInjection_.enabled
                 ? static_cast<size_t>(reapRuntimeInjection_.expertCount)
                 : modelWeights.numExpertsPerToken;
+            if (reapRuntimeInjection_.enabled &&
+                reapRuntimeInjection_.physicalExclude)
+            {
+                const size_t retained =
+                    static_cast<size_t>(reapRuntimeInjection_.expertCount);
+                moeConfig_.numExperts = retained;
+                const size_t topk = modelWeights.numExpertsPerToken
+                    ? modelWeights.numExpertsPerToken
+                    : retained;
+                moeConfig_.numActiveExperts =
+                    topk < retained ? topk : retained;
+                reapRuntimeReceipt_.retainedExperts = retained;
+                reapRuntimeReceipt_.physicalExclude = true;
+                reapRuntimeReceipt_.residencyOnly = false;
+            }
             moeConfig_.useSharedExpert = meta.numSharedExperts > 0;
             moeConfig_.expertDim = meta.moeIntermediateSize > 0 ? meta.moeIntermediateSize : meta.intermediateSize;
             if (meta.sharedExpertIntermediateSize > 0)
@@ -4642,12 +4704,25 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                     residencyCache_->resident_budget_bytes() ==
                         reapRuntimeInjection_.workingSetBytes;
                 reapRuntimeReceipt_.active = reapRuntimeReceipt_.streamerConfigured;
-                reapRuntimeReceipt_.status = reapRuntimeReceipt_.streamerConfigured
-                    ? "ACTIVE_RUNTIME_ROUTER_RESIDENCY"
-                    : "STREAMER_UNAVAILABLE";
-                reapRuntimeReceipt_.reason = reapRuntimeReceipt_.streamerConfigured
-                    ? "MOE_ROUTER_TOPK_AND_MULTISHARD_RESIDENCY_BYTE_BUDGET_APPLIED"
-                    : "MULTISHARD_RESIDENCY_CACHE_NOT_INITIALIZED";
+                if (reapRuntimeInjection_.physicalExclude &&
+                    reapRuntimeReceipt_.streamerConfigured)
+                {
+                    reapRuntimeReceipt_.status =
+                        "ACTIVE_PHYSICAL_EXCLUDE_MULTISHARD";
+                    reapRuntimeReceipt_.reason =
+                        "RETAINED_ROUTER_CARDINALITY_PLUS_RESIDENCY_BUDGET";
+                }
+                else
+                {
+                    reapRuntimeReceipt_.status =
+                        reapRuntimeReceipt_.streamerConfigured
+                            ? "ACTIVE_RUNTIME_ROUTER_RESIDENCY"
+                            : "STREAMER_UNAVAILABLE";
+                    reapRuntimeReceipt_.reason =
+                        reapRuntimeReceipt_.streamerConfigured
+                            ? "MOE_ROUTER_TOPK_AND_MULTISHARD_RESIDENCY_BYTE_BUDGET_APPLIED"
+                            : "MULTISHARD_RESIDENCY_CACHE_NOT_INITIALIZED";
+                }
             }
         }
     }
