@@ -2938,6 +2938,7 @@ set(SOURCES
     src/deep2/KimiK2Config.cpp
     src/deep2/K2MLAWeights.cpp
     src/deep2/K2MoEWeights.cpp
+    src/deep2/ReapPhysicalBank.cpp
     src/deep2/K2GlobalTensorIndex.cpp
     src/deep2/Deep2Bridge.cpp
     src/deep2/InferenceSession.cpp
@@ -5148,6 +5149,7 @@ src/vulkan_fwd_q4k_act.cpp
     src/vulkan_fwd_hostops.cpp
     src/vulkan_fwd_stubs.cpp
     src/deep2/K2MoEWeights.cpp
+    src/deep2/ReapPhysicalBank.cpp
     src/deep2/K2GlobalTensorIndex.cpp
     src/deep2/Deep2Bridge.cpp
     src/deep2/ProductionProfiler.cpp
@@ -7139,6 +7141,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_ToolActionStatus.cpp
         src/win32app/Win32IDE_ChatPanel.cpp
         src/win32app/Win32IDE_ChatPanel_Ollama.cpp  # RESTORED: Required for HandleCopilotSend_Ollama and initializeChatPanelOllama
+        src/win32app/Win32IDE_AiEdit.cpp  # T15 IDM_AI_EDIT=2060 live Deep2/Ollama (no mock)
         src/win32app/Win32IDE_VulkanRenderer.cpp
         src/win32app/Win32IDE_OSExplorerInterceptor.cpp
         src/win32app/Win32IDE_IOCPFileWatcher.cpp
@@ -7226,6 +7229,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/deep2/K2MLAWeights.cpp
         src/deep2/K2MLA_KvExpand_Fused.cpp
         src/deep2/K2MoEWeights.cpp
+    src/deep2/ReapPhysicalBank.cpp
         src/deep2/K2GlobalTensorIndex.cpp
         # Deep2 component files required by Deep2Engine.cpp
         src/deep2/ReverseIntegration.cpp
@@ -13490,6 +13494,7 @@ if(WIN32)
         src/deep2/K2MLAWeights.cpp
         src/deep2/K2MLA_KvExpand_Fused.cpp
         src/deep2/K2MoEWeights.cpp
+    src/deep2/ReapPhysicalBank.cpp
         src/deep2/K2GlobalTensorIndex.cpp
         src/deep2/Deep2Bridge.cpp
         src/deep2/InferenceSession.cpp
@@ -15171,6 +15176,7 @@ add_executable(k2_runtime_validation tests/k2_runtime_validation.cpp
     src/deep2/K2MLAWeights.cpp
     src/deep2/K2MLA_KvExpand_Fused.cpp
     src/deep2/K2MoEWeights.cpp
+    src/deep2/ReapPhysicalBank.cpp
     src/deep2/K2GlobalTensorIndex.cpp
     src/deep2/KimiK2Config.cpp
     src/deep2/Deep2Bridge.cpp
@@ -15251,6 +15257,7 @@ add_executable(k2_native_smoke_test tests/k2_native_smoke_test.cpp
     src/deep2/K2MLAWeights.cpp
     src/deep2/K2MLA_KvExpand_Fused.cpp
     src/deep2/K2MoEWeights.cpp
+    src/deep2/ReapPhysicalBank.cpp
     src/deep2/KimiK2Config.cpp
     src/deep2/Deep2Engine.cpp
     src/deep2/GGUFLoader.cpp
@@ -15301,6 +15308,7 @@ add_executable(k2_002_tensor_streaming tests/k2_002_tensor_streaming.cpp
     src/deep2/K2MLAWeights.cpp
     src/deep2/K2MLA_KvExpand_Fused.cpp
     src/deep2/K2MoEWeights.cpp
+    src/deep2/ReapPhysicalBank.cpp
     src/deep2/KimiK2Config.cpp
     src/deep2/GGUFLoader.cpp
     src/deep2/Deep2Bridge.cpp
@@ -15352,6 +15360,7 @@ add_executable(k2_003_layer_execution tests/k2_003_layer_execution.cpp
     src/deep2/K2MLAWeights.cpp
     src/deep2/K2MLA_KvExpand_Fused.cpp
     src/deep2/K2MoEWeights.cpp
+    src/deep2/ReapPhysicalBank.cpp
     src/deep2/KimiK2Config.cpp
     src/deep2/GGUFLoader.cpp
     src/deep2/Deep2Bridge.cpp
@@ -15431,6 +15440,7 @@ add_executable(k2_004_bounded_prefill tests/k2_004_bounded_prefill.cpp
     src/deep2/K2MLAWeights.cpp
     src/deep2/K2MLA_KvExpand_Fused.cpp
     src/deep2/K2MoEWeights.cpp
+    src/deep2/ReapPhysicalBank.cpp
     src/deep2/KimiK2Config.cpp
     src/deep2/GGUFLoader.cpp
     src/deep2/Deep2Bridge.cpp

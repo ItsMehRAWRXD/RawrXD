@@ -86,6 +86,7 @@ set(RAWR_AGENTIC_SOURCES
   src/deep2/daily/d2_session_mock.c
   src/reap/ReapRuntimePlan.cpp
   src/reap/ReapRuntime.cpp
+  src/reap/ReapPhysicalReduce.cpp
 )
 
 # Replace thin rawr_run with agentic front door if rawr already defined.

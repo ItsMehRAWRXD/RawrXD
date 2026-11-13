@@ -6,6 +6,7 @@
 #include "MoEWeightProxy.hpp"
 #include "MoEEliminate.hpp"
 #include "MoEWeightsLoader.hpp"
+#include "ReapPhysicalBank.hpp"
 #include "lavapath/FreeTokenMicroZone.hpp"
 #include "lavapath/FreeTokenHelpFrame.hpp"
 #include "lavapath/FutureConsumerSpace.hpp"
@@ -42,6 +43,15 @@ bool MoEWeightProxy::IsCached(int layer, int expert) const {
 MoEWeightHandle MoEWeightProxy::Acquire(int layer, int expert) {
     auto start = std::chrono::high_resolution_clock::now();
     stats_.totalRequests.fetch_add(1, std::memory_order_relaxed);
+
+    /* Physical REAP: pruned experts are not part of the resident model. */
+    if (expert < 0 || !ReapPhysicalExpertAllowed(static_cast<uint32_t>(expert))) {
+        MoEWeightHandle denied{};
+        denied.layer = layer;
+        denied.expertId = expert;
+        denied.valid = false;
+        return denied;
+    }
 
     MoEWeightHandle h = AcquireInternal(layer, expert);
 

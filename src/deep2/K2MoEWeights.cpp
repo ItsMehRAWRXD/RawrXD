@@ -1,10 +1,12 @@
 /* K2MoEWeights.cpp — physical ExpertSlice + selection-only eScoreCorrectionBias. */
 #include "K2MoEWeights.hpp"
 #include "K2GlobalTensorIndex.hpp"
+#include "ReapPhysicalBank.hpp"
 #include "UniversalTensorDescriptor.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <limits>
 #include <numeric>
 
 namespace Deep2 {
@@ -254,6 +256,15 @@ bool KimiK2Router::Route(const float* hidden, MoERoutingResult& result,
     if (eScoreCorrectionBias_.size() == scores.size()) {
         for (size_t e = 0; e < scores.size(); ++e)
             choice[e] = scores[e] + eScoreCorrectionBias_[e]; /* selection ONLY */
+    }
+    /* Physical REAP: permanently exclude pruned experts from routing so the
+     * stream executes a reduced expert set, not full-topology top-k. */
+    if (ReapPhysicalBankActive()) {
+        const uint32_t retained = ReapPhysicalRetainedPerLayer();
+        for (size_t e = 0; e < choice.size(); ++e) {
+            if (e >= retained)
+                choice[e] = -std::numeric_limits<float>::infinity();
+        }
     }
     result = SelectExpertsNoAuxTC(scores, choice);
     NormalizeAndScaleSelectedWeights(result);

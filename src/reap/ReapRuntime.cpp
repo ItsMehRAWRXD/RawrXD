@@ -1,6 +1,7 @@
 #include "ReapRuntime.hpp"
 
 #include "reap/ReapRuntimePlan.hpp"
+#include "reap/ReapPhysicalReduce.hpp"
 #include "Deep2Engine.h"
 #include "deep2/RawrModelAlias.hpp"
 
@@ -106,6 +107,20 @@ RuntimeResult RunRuntime(const RuntimeRequest& request) {
         return result;
     }
 
+    PhysicalReducePlan physical{};
+    if (!BuildPhysicalReducePlan(plan, physical, error)) {
+        result.receipt = "{\"status\":\"PHYSICAL_PLAN_FAILED\",\"reason\":" +
+                         quote(error) +
+                         ",\"writer_invoked\":false,\"source_immutable\":true}\n";
+        return result;
+    }
+    ApplyPhysicalReducePlan(physical);
+    if (physical.physicalRepresentation) {
+        plan.injectionMode = "PHYSICAL_STREAM_EXPERT_REDUCE";
+        plan.streamerPath = "ReapPhysicalBank+MoEWeightProxy";
+        plan.reason = physical.reason;
+    }
+
     Deep2::Deep2Engine engine;
     RuntimeInjection injection{};
     injection.parameterCount = target.parameterCount;
@@ -174,7 +189,10 @@ RuntimeResult RunRuntime(const RuntimeRequest& request) {
             << ",\"prompt_tokens\":" << generation.promptTokens
             << ",\"load_ms\":" << elapsedLoad
             << ",\"output\":" << quote(generated)
-            << ",\"writer_invoked\":false,\"source_immutable\":true}\n";
+            << ",\"physical\":" << PhysicalReduceReceiptJson(physical)
+            << ",\"writer_invoked\":" << (physical.writerInvoked ? "true" : "false")
+            << ",\"source_immutable\":true}\n";
+    ClearPhysicalReducePlan();
     result.receipt = receipt.str();
     result.exitCode = runtimePass ? 0 : 4;
     if (!request.receiptPath.empty()) {

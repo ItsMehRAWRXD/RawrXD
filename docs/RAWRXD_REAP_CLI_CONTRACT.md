@@ -1,10 +1,12 @@
 # RawrXD REAP CLI contract
 
 REAP has two explicit modes. The production `--reap <parameters>/<experts>`
-form is a live, non-destructive streamer/router injection. It changes the
-resident parameter working-set budget and the active MoE expert target for
-the model session, then runs that model. It does not quantize, prune, rewrite,
-or replace GGUF files.
+form is a live, **source-immutable** stream path. On MoE DOWNSIZE it now
+builds a **physical** retained-expert set from the working-set budget
+(`PHYSICAL_STREAM` / `ReapPhysicalBank`): pruned experts are excluded from
+routing and weight acquire. That is distinct from Tip14 residency-only
+hotpatch. It still does not rewrite or replace the original GGUF unless a
+separate authorized sidecar writer path is invoked (`writer_invoked`).
 
 ```text
 rawr run <model> --reap 1B/8 "run the model with the requested runtime policy"
