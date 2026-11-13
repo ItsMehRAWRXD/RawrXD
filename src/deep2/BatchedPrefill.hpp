@@ -28,6 +28,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <limits>
 #include <vector>
 
@@ -159,6 +160,56 @@ inline void batchedAttentionScores(
 // (~1 GB of Q4_K weights stays hot across the whole chunk instead of being
 // re-streamed per token).
 // ---------------------------------------------------------------------------
+// Minimal FP32→F16→FP32 for post-attn KV seal (matches Deep2Engine storeKvRoundTrip).
+inline float fp16RoundTripLocal(float val) {
+    uint32_t x;
+    std::memcpy(&x, &val, sizeof(x));
+    const uint32_t sign = (x >> 16) & 0x8000u;
+    const uint32_t exp = (x >> 23) & 0xFFu;
+    const uint32_t mant = x & 0x7FFFFFu;
+    uint16_t h;
+    if (exp == 0xFFu)
+        h = (uint16_t)(sign | 0x7C00u | (mant ? 0x200u : 0u));
+    else {
+        const int e = (int)exp - 127 + 15;
+        if (e >= 31)
+            h = (uint16_t)(sign | 0x7C00u);
+        else if (e <= 0)
+            h = (uint16_t)sign;
+        else {
+            uint32_t he = (uint32_t)e << 10;
+            uint32_t hm = mant >> 13;
+            const uint32_t rem = mant & 0x1FFFu;
+            if (rem > 0x1000u || (rem == 0x1000u && (hm & 1u))) {
+                ++hm;
+                if (hm == 0x400u) {
+                    hm = 0;
+                    he += 0x400u;
+                }
+            }
+            h = (uint16_t)(sign | he | hm);
+        }
+    }
+    const uint32_t hs = (uint32_t)(h & 0x8000u) << 16;
+    const uint32_t he2 = (h >> 10) & 0x1Fu;
+    const uint32_t hm2 = h & 0x3FFu;
+    uint32_t out;
+    if (he2 == 0)
+        out = hs;
+    else if (he2 == 31)
+        out = hs | 0x7F800000u | (hm2 << 13);
+    else
+        out = hs | ((he2 + 127 - 15) << 23) | (hm2 << 13);
+    float f;
+    std::memcpy(&f, &out, sizeof(f));
+    return f;
+}
+
+inline bool KvKeepF32Env() {
+    const char* e = std::getenv("DEEP2_KV_F32");
+    return e && e[0] && e[0] != '0';
+}
+
 inline size_t SelectPrefillChunkSize(size_t promptLen, size_t hiddenDim,
                                      size_t /*layerCount*/) {
     (void)hiddenDim;

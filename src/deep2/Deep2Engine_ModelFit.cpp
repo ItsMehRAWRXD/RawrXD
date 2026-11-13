@@ -729,23 +729,27 @@ bool Deep2Engine::forwardLayerBatched(size_t layer, ActivationBatch& batch,
             !H11TraceBatchVector("v_view", layer, 0, vView.data(), vView.size())) return false;
     }
 
-    // Use the production KV-cache attention reducer for the correctness path.
-    // It is intentionally invoked for each query row/head after the whole
-    // chunk's K/V has been staged.  This preserves the layer-major batching
-    // boundary while guaranteeing that H11 compares the same AVX2 dot,
-    // expf/epsilon softmax, and weighted-accumulation semantics as the serial
-    // forward path.  The standalone batched scorer remains available for a
-    // later performance implementation once this reference is certified.
-    for (size_t j = 0; j < B; ++j) {
-        const size_t visibleForRow = chunkBase + j + 1;
-        for (size_t h = 0; h < numHeads; ++h) {
-            const size_t groupedHead = g.groupSize ? h / g.groupSize : h;
-            const size_t kvHead =
-                (g.groupSize && groupedHead < numKVHeads) ? groupedHead : h;
-            if (!AttentionWithCache(qAll.data() + j * H + h * headDim,
-                                    *kvCache, layer, kvHead,
-                                    attn.row(j) + h * headDim, visibleForRow))
-                return false;
+    // RC2-05: multi-token causal scorer (llama default ubatch graph parity).
+    // Serial AttentionWithCache-per-row forced tip14=15233 (-ub 1); continuous
+    // llama default needs layer-major multi-token scores → tip14=29213.
+    {
+        std::vector<float> scoresScratch;
+        batchedAttentionScores(qb, kView.data(), vView.data(), g, chunkBase,
+                               visible, attn, scoresScratch);
+    }
+    // Seal chunk KV as F16 after F32 in-batch attention (decode path preserved).
+    if (!KvKeepF32Env()) {
+        for (size_t j = 0; j < B; ++j) {
+            for (size_t h = 0; h < kvHeadsForCache; ++h) {
+                float* kd = kvCache->keyPtr(layer, h, chunkBase + j);
+                float* vd = kvCache->valuePtr(layer, h, chunkBase + j);
+                if (!kd || !vd)
+                    return false;
+                for (size_t d = 0; d < headDim; ++d) {
+                    kd[d] = fp16RoundTripLocal(kd[d]);
+                    vd[d] = fp16RoundTripLocal(vd[d]);
+                }
+            }
         }
     }
     for (size_t j = 0; j < B; ++j)

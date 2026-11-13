@@ -8259,8 +8259,31 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
         prefill_scope_id = flight_recorder_->begin("prefill");
     }
 
-        // Process prompt tokens (prefill)
-    for (size_t t = 0; t < promptLen && t < config.maxSeqLen; ++t)
+    // RC2-05 tip14: llama default ubatch processes the prompt as one
+    // layer-major multi-token graph (tip14=29213). Serial token-major prefill
+    // matches llama -ub 1 (tip14=15233). Prefer batched prefill when enabled
+    // and stage dumps are off (dumps need per-token serial traces).
+    // Default ON (llama continuous ubatch parity); DEEP2_BATCHED_PREFILL=0 disables.
+    enableBatchedPrefill(true, prefillChunkSize_);
+    const bool useBatchedPrefill =
+        batchedPrefillEnabled_ && promptLen > 1 && !B3_StageDigestEnabled();
+    if (useBatchedPrefill)
+    {
+        std::vector<float> hiddenOut(promptLen * config.hiddenDim, 0.0f);
+        const size_t done = prefillBatched(promptTokens, promptLen, hiddenOut.data(),
+                                           prefillChunkSize_ ? prefillChunkSize_ : 0);
+        if (done != promptLen)
+        {
+            fprintf(stderr, "[B3_ABORT] prefillBatched done=%zu want=%zu\n", done, promptLen);
+            fflush(stderr);
+            m_generationStop = GenerationStopReason::FORWARD_FAULT;
+            return 0;
+        }
+        fprintf(stderr, "PREFILL_BATCHED=1 prompt=%zu chunk=%zu (llama ubatch parity path)\n",
+                promptLen, prefillChunkSize_ ? prefillChunkSize_ : done);
+        fflush(stderr);
+    }
+    else for (size_t t = 0; t < promptLen && t < config.maxSeqLen; ++t)
     {
         // Embed token using real embedding table
         float* h = hiddenStates + t * config.hiddenDim;
