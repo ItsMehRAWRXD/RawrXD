@@ -8315,17 +8315,20 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
         prefill_scope_id = flight_recorder_->begin("prefill");
     }
 
-    // RC2-05: batched prefill = CPU FA-off exact (tip14=15233). GPU decode does
-    // not ingest host batched-prefill KV → tip1 garbage under vulkan. Gate host
-    // batched path off when GPU forward is live; SPV untouched. Env=0 still wins.
-    enableBatchedPrefill(true, prefillChunkSize_);
+    // RC2-05 tip26 FIRST_OP=L0_ATTN_OUT under CPU batched prefill (F32-in-chunk
+    // then post-attn F16 seal). Prefix tip0..25 MATCH; tip26 897 vs llama/GPU
+    // 18266. AB on EXE DCF607E4: DEEP2_BATCHED_PREFILL=0 → CPU_TOK32 exact ==
+    // GPU_32 == LLAMA_FAOFF_32. Default tokenwise for FA-off CONT32; env=1
+    // retains ubatch experiment path. GPU already tokenwise (HOST_KV_HANDOFF).
+    // tip17 GPU==llama HOLD; SPV/Q4K untouched. PROMOTE=0.
+    enableBatchedPrefill(false, prefillChunkSize_);
     const bool useBatchedPrefill =
         batchedPrefillEnabled_ && promptLen > 1 && !B3_StageDigestEnabled() &&
         !vulkanEnabled_;
     if (vulkanEnabled_ && batchedPrefillEnabled_ && promptLen > 1)
     {
         fprintf(stderr,
-                "PREFILL_BATCHED=0 reason=GPU_HOST_KV_HANDOFF (CPU keeps batched)\n");
+                "PREFILL_BATCHED=0 reason=GPU_HOST_KV_HANDOFF (CPU opt-in batched ignored)\n");
         fflush(stderr);
     }
     if (useBatchedPrefill)

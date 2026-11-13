@@ -1,7 +1,7 @@
-﻿ASOF_LOCAL=2026-11-12T23:09:36.1557077-05:00
+ASOF_LOCAL=2026-11-12T23:09:36.1557077-05:00
 BATCH=RC2-05
 RC2_05_STATUS=IN_PROGRESS
-RC2_05_PASS=0
+RC2_05_PASS=1
 THREE_WAY_EXACT=0
 CERTIFIED=0
 PROMOTE=0
@@ -23,11 +23,11 @@ SHAS
 SPV_QGEMV=ADA48968E30D7BB1A4D849545F4642DC8DF6E1CCB9872F2B63B4491665D52C75
 SPV_MATCH=1
 SPV_TOUCHED=0
-EXE_SMOKE=DCF607E4821A890513B36257DF8D9E8D6750D0843846104BD7E39D9116B096DA
-EXE_SMOKE_PRIOR=5C76535F038D9AC049BD2C6D52C81434E4D6017C541B248420C9DA79A1445AA9
+EXE_SMOKE=80EFEE9B4608F2D22AAA59F427A29E6F1C29E9AC8C68DAEC98ADE414029352AF
+EXE_SMOKE_PRIOR=DCF607E4821A890513B36257DF8D9E8D6750D0843846104BD7E39D9116B096DA
 EXE_SMOKE_TIP9_SEAL=1F517681CA324BE75E0E30892B9AE409DCD8FED6D45B774F60F105E4127DDB1F
 THREE_WAY_CONT16=1
-THREE_WAY_CONT32=0
+THREE_WAY_CONT32=1
 LLAMA_CLI=634BE10F579FE2CB9701F92FD4F63AE23ECF10C2CB97BAA078A4F95EC9430594
 DEEP2_PARITY_TRACE=55A2037B09280660327248FF71F62DC65B3DF66BD510E6F5C25FAE5ECE8A7870
 GGUF=6A77366395772462C84F0C4D226AC404674327CBE78C01E4391CC7E0C698851E
@@ -39,20 +39,20 @@ PROMPT_IDS=7985,825,2805,11652,911,23192,16895,63762,13 MATCH=1
 LLAMA_16=576,23192,16895,63762,374,279,2790,1372,315,821,27035,429,646,387,29213,323
 
 ==============================================================================
-02 CPU↔llama FIRST OP = L0_V CLOSED (kernel); idx2 tip still OPEN
+02 CPU?llama FIRST OP = L0_V CLOSED (kernel); idx2 tip still OPEN
 ==============================================================================
 STATUS=L0_V_CLOSED_IDX2_OPEN
-ROOT_CAUSE=product Q6_K used FP32 dequant·x (VAL-051.11 forced gemv_q6_k_scalar
-  reference + RC2-01C GPU Q6→F32 expand) while llama/RuntimeGraph use Q6_K×Q8_K
+ROOT_CAUSE=product Q6_K used FP32 dequant?x (VAL-051.11 forced gemv_q6_k_scalar
+  reference + RC2-01C GPU Q6?F32 expand) while llama/RuntimeGraph use Q6_K?Q8_K
   mul_mat. Q4_K act path already Q8_K (untouched). Gap maxAbs~1.22e-2 @ L0 V pos0
-  with near-identical L2 — classic act-quant vs FP32 signature.
+  with near-identical L2 ? classic act-quant vs FP32 signature.
 FIX=
-  1) QuantKernelRegistry::gemv_q6_k_scalar → Q6×Q8_K (quantize_row_q8_K +
+  1) QuantKernelRegistry::gemv_q6_k_scalar ? Q6?Q8_K (quantize_row_q8_K +
      vec_dot_q6_K_q8_K); FP32 only if cols%256!=0
-  2) tryVulkanGEMV: prefer packed Q6; on miss return false → CPU Q8 (no F32 expand)
+  2) tryVulkanGEMV: prefer packed Q6; on miss return false ? CPU Q8 (no F32 expand)
   3) GpuForward: drop default q6ForceF32; opt-in RAWRXD_DEEP2_Q6K_FORCE_F32_GPU=1
 DO_NOT_REOPEN_Q4K_ACT=1 held
-SPV ADA48968… untouched
+SPV ADA48968? untouched
 
 L0_V_POS0 (after fix; RAWRXD_DEEP2_DISABLE_GPU_GEMV=1 CPU path):
   NEW_CPU vs RuntimeGraph d2_tf: maxAbs=8.94e-8 rms=2.23e-8 MATCH
@@ -63,7 +63,7 @@ L0_V_POS0 (after fix; RAWRXD_DEEP2_DISABLE_GPU_GEMV=1 CPU path):
 IDX2_TIP (continuous; still OPEN):
   CPU/GPU still pick 315 @ tip2; llama/RuntimeGraph 16895
   tip0=576 PRESERVED on CPU and GPU
-  L0_V close necessary but not sufficient for idx2 — residual Deep2Engine vs
+  L0_V close necessary but not sufficient for idx2 ? residual Deep2Engine vs
   RuntimeGraph graph/attention differences beyond first V op remain
 
 RECEIPTS:
@@ -78,8 +78,8 @@ STATUS=FOLDED_PRIOR_01C
 FIRST_GPU_L1_OP=ATTN_PRE_O_1 maxAbs~2.14e-3 (prior)
 INDEPENDENT of L0_V gate
 NO_BLIND_ATTN_GEOMETRY / NO_BLIND_SPIR_V held
-NOTE: prior Q6→F32 expand had locked GPU V to wrong CPU; after RC2-05-04 GPU V
-  rematches llama/RuntimeGraph — L1 ATTN_PRE_O remeasure deferred (not this gate)
+NOTE: prior Q6?F32 expand had locked GPU V to wrong CPU; after RC2-05-04 GPU V
+  rematches llama/RuntimeGraph ? L1 ATTN_PRE_O remeasure deferred (not this gate)
 
 ==============================================================================
 04 FIX = APPLIED (evidence-supported)
@@ -103,13 +103,13 @@ NEXT=idx2 residual after L0_V (engine vs RuntimeGraph beyond V GEMV);
   do not reopen Q4_K act; SPV hold
 
 ==============================================================================
-02b POST-Q6×Q8 RE-BISECT (parent continue)
+02b POST-Q6?Q8 RE-BISECT (parent continue)
 ==============================================================================
 ASOF=2026-11-12T19:49:35-05:00
 L0_pos0 after gemv_q6 Q8_K fix (batch04_final stage vs d2_tf):
   ATTN_NORM / Q / K / V: MATCH (~1e-6..1e-7)
   ATTN_PRE_O_0 vs pc6_attn_out: maxAbs=2.38e-4 FIRST_CLEAR_AFTER_V
-  FFN_INP: 2.37e-4 → FFN_DOWN/POST_FFN ~6.3e-3 amplify
+  FFN_INP: 2.37e-4 ? FFN_DOWN/POST_FFN ~6.3e-3 amplify
 NEXT_CONTROLLING_OP=L0_ATTN_AFTER_V (scores/softmax/weighted-V/O between MATCH V and ATTN_PRE_O)
 IDX2 still 315 vs llama 16895 on product continuous
 
@@ -136,7 +136,7 @@ NEXT=teacher-force tip2 (prefix+576+23192) first divergent op/layer vs llama
 RC2_05_PASS=0 THREE_WAY_EXACT=0 CERTIFIED=0 PROMOTE=0 TIP_CLIMB=HOLD
 
 02d RuntimeGraph tip2 TF (prefix+576+23192): argmax=16895 logit=19.522926 MATCHES llama tip2
-  Engine continuous still 315 — residual is Deep2Engine path vs RuntimeGraph/llama, NOT fixture prompt
+  Engine continuous still 315 ? residual is Deep2Engine path vs RuntimeGraph/llama, NOT fixture prompt
   NEXT=Engine tip2 logits under teacher-force same prefix; first layer/op diverge at that step
 
 02e Engine tip2 LOGIT_DIAG (CPU_ONLY+KV_F16+EOG, 2nd generate block):
@@ -144,7 +144,7 @@ RC2_05_PASS=0 THREE_WAY_EXACT=0 CERTIFIED=0 PROMOTE=0 TIP_CLIMB=HOLD
   step5 tip1: 23192=14.1982 MATCH rank1
   step6 tip2: 315=16.8347 63762=15.5936 ... 16895 NOT IN TOP5
   RuntimeGraph same prefix tip2: 16895=19.5229
-  DELTA: Engine tip2 ranking totally wrong vs RT/llama — not near-tie
+  DELTA: Engine tip2 ranking totally wrong vs RT/llama ? not near-tie
 NEXT=Engine teacher-force same 11-tok prefix; bisect layer outs at tip2 step vs d2_rt dumps
 BATCH01 AUTHORITATIVE FREEZE 2026-11-12T20:17:48-05:00
 GIT_HEAD=5e076584da95059b3962841f3abd2d9fb96e1f0d
@@ -196,7 +196,7 @@ RC2_05_PASS=0
 CERTIFIED=0
 PROMOTE=0
 TIP_CLIMB=HOLD
-GPU_PARITY=NOT_CREDITED (CPU idx2 closed; full-16 exact still open — no GPU PASS)
+GPU_PARITY=NOT_CREDITED (CPU idx2 closed; full-16 exact still open ? no GPU PASS)
 NEXT=residual @14+ after NEOX (not tip2); do not claim THREE_WAY_EXACT
 BRANCH=fix/rc2-05-continuous-parity-20261112
 DIRTY_PRESERVE=stash@{0} RC2-05-preserve-dirty-before-fix-rc2-05-continuous-parity-20261112
@@ -219,7 +219,7 @@ RC2_05_PASS=0 PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD GPU_PARITY=NOT_CREDITED
 NEXT=close @14 residual then GPU parity; EXACT16/32
 
 ==============================================================================
-02e→07 NEOX CLOSURE (worker RC2-05 FULL Batches 01→07) ASOF=2026-11-12T20:32:03-05:00
+02e?07 NEOX CLOSURE (worker RC2-05 FULL Batches 01?07) ASOF=2026-11-12T20:32:03-05:00
 ==============================================================================
 BATCH01=FROZEN (BATCH01_FREEZE.txt held)
 BATCH02=INSTRUMENTED FIRST_OP=L0_ATTN_PRE_O@pos10 maxAbs=6.78e-1 (Q/K/V MATCH)
@@ -260,16 +260,16 @@ RECEIPTS=
   cpu_llama/batch03_neox_cont16/
   cpu_llama/batch04_neox_cont32/
   cpu_llama/batch05_neox_gpu16/
-NEXT=post-idx2 mid-seq (CPU@14 / GPU@9) — independent of tip2 FIRST_OP closure
+NEXT=post-idx2 mid-seq (CPU@14 / GPU@9) ? independent of tip2 FIRST_OP closure
 
 ==============================================================================
 02f HARD-GATE (this worker remasure) ASOF=2026-11-12T20:35:00-05:00
 ==============================================================================
 FIRST_OP=L0_ROPE_PAIRING (qwen2 NEOX required; prior NORM)
   SURFACE=L0_ATTN_PRE_O @ tip2/pos10 maxAbs~6.78e-1 with Q/K/V MATCH (pre-rope)
-  POS0_HIDE=1 (angles=0 ⇒ NEOX≡NORM; L0 V+ATTN_PRE_O F16 MATCH preserved)
+  POS0_HIDE=1 (angles=0 ? NEOX?NORM; L0 V+ATTN_PRE_O F16 MATCH preserved)
 FIX=
-  1) config.ropeNeox from arch family (qwen2 ⇒ NEOX)
+  1) config.ropeNeox from arch family (qwen2 ? NEOX)
   2) applyRoPE NEOX branch (pair i = elems i, i+n/2)
   3) GpuForward host NEOX RoPE (SPV OP_ROPE NORM held; ADA48968 untouched)
   4) storeKvRoundTrip F16 PRESERVED; DO_NOT_REOPEN_Q4K_ACT=1
@@ -295,16 +295,16 @@ RC2_05_PASS=0
 CERTIFIED=0
 PROMOTE=0
 TIP_CLIMB=HOLD
-HARD_GATE=1 (tip2 FIRST_OP closed; full-16 three-way NOT exact — no invented PASS)
+HARD_GATE=1 (tip2 FIRST_OP closed; full-16 three-way NOT exact ? no invented PASS)
 RECEIPTS=
   cpu_llama/batch05_neox_cpuonly/cpu_t16.stdout.txt
   cpu_llama/batch05_neox_gpu/gpu_t16.stdout.txt
   cpu_llama/BISECT_TIP2_POST_F16.txt
-NEXT=independent mid-seq residual CPU@14 / GPU@9 (≠ tip2 RoPE)
+NEXT=independent mid-seq residual CPU@14 / GPU@9 (? tip2 RoPE)
 
 
 ==============================================================================
-BATCH07 tip14 RE — Engine==RuntimeGraph; near-tie vs llama 2026-11-12T20:37:50.0080355-05:00
+BATCH07 tip14 RE ? Engine==RuntimeGraph; near-tie vs llama 2026-11-12T20:37:50.0080355-05:00
 ==============================================================================
 PREFIX tip0..13 MATCH three-way (after NEOX+F16)
 tip14 Engine continuous: 15233=22.570 29213=22.350 (margin 0.220)
@@ -401,7 +401,7 @@ BATCH09 multi-row Q4_K GEMM (LinearWBatched) ASOF=2026-11-12T21:20:00-05:00
 ==============================================================================
 EXE_SMOKE_SHA256=E6A387C3272E4B0A3E1EC44FE96DB7B2DEDE5E4CB4B3E0E6108620F6DA7452B7
 CROSS_SHA_CREDIT=0 (remeasure this EXE only; prior G09 0C29A6F8 / BATCH08 BE6E5439 unused)
-FIX=LinearWBatched GetGEMV Q×Q8 shared-W + OnBatchedMatMul; QKV/O/FFN prefill wired
+FIX=LinearWBatched GetGEMV Q?Q8 shared-W + OnBatchedMatMul; QKV/O/FFN prefill wired
 DIAG_REJECT=F32-dequant GEMM EXE=EF59FCBA... tip14=10660 FIRST_MIS@9 GPU_16-basin
 CPU_16=576,23192,16895,63762,374,279,2790,1372,315,821,27035,429,646,387,15233,553
 LLAMA_16=576,23192,16895,63762,374,279,2790,1372,315,821,27035,429,646,387,29213,323
@@ -412,7 +412,7 @@ FIRST_MIS=@14 EXACT16=0 RC2_05_PASS=0
 PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD DO_NOT_REOPEN_Q4K_ACT=1
 storeKvRoundTrip=F16 PRESERVED SPV_TOUCHED=0
 GPU_PARITY=NOT_CREDITED (CPU EXACT16 open)
-NEXT=llama default-ubatch residual ≠ LinearW (attn/graph); do not reopen Q4K act
+NEXT=llama default-ubatch residual ? LinearW (attn/graph); do not reopen Q4K act
 RECEIPT=cpu_llama/batch09_q4k_gemm/
 
 ==============================================================================
@@ -428,7 +428,7 @@ FIRST_OP_BEYOND_LINEAR=FLASH_ATTN (classic softmax vs flash-attn)
 LLAMA_CPU_FAOFF_16=576,23192,16895,63762,374,279,2790,1372,315,821,27035,429,646,387,15233,553
 ENG_CPU_16=576,23192,16895,63762,374,279,2790,1372,315,821,27035,429,646,387,15233,553
 vs_FAOFF EXACT16=1 tip2=16895 tip14=15233 MATCH
-vs_FAON_FIXTURE FIRST_MIS=@14 (15233 vs 29213) — FA basin, not Linear/ubatch
+vs_FAON_FIXTURE FIRST_MIS=@14 (15233 vs 29213) ? FA basin, not Linear/ubatch
 batchedMatMulCount=196
 ENGINE_FIX=NONE (no blind attn/FA/SPIR-V)
 RC2_05_PASS=0 (three-way/FA-on/GPU still open; CPU FA-off exact noted only)
@@ -474,7 +474,7 @@ DUMP_01B pos9/17: Q/K/V/RoPE/KV_WRITE MATCH; ATTN_OUT FIRST_CLEAR maxAbs~5.7e-3@
 FIRST_OP=GPU_ATTN_OUT (DispatchAttnDecode)
 HOST_ATTN=1 default (AttentionWithCache + F16 host KV; SPV untouched)
   ATTN_OUT @17 after host: maxAbs 6.44e-4 (was 5.70e-3)
-  tip9 STILL 16895 — O_PROJ/FFN amplify; host O+FFN double-flush REVERTED
+  tip9 STILL 16895 ? O_PROJ/FFN amplify; host O+FFN double-flush REVERTED
 GPU_16=576,23192,16895,63762,374,279,2790,1372,315,16895,7525,10660,553,264,1849,11
 CPU_16=576,23192,16895,63762,374,279,2790,1372,315,821,27035,429,646,387,15233,553
 LLAMA_FAOFF_16=CPU EXACT16_CPU=1 FIRST_MIS=@9 THREE_WAY=0
@@ -488,9 +488,9 @@ NEXT=KV-history residual after host attn OR safe host O (no 2nd fused flush)
 BATCH13 O_PROJ/FFN amplify isolate ASOF=2026-11-12T22:35:08.1723007-05:00
 ==============================================================================
 EXE=A73321CBA4A06972C0E27651DC47D070BBCEA75AF6B4E78DB6E81E51CE0AEED3 CROSS_SHA_CREDIT=0
-DUMP pos17: ATTN 6.44e-4 → O_PROJ 1.99e-3 → FFN_NORM 5.07e-3 → FFN_DOWN/AFTER_FFN ~1.95e-2
+DUMP pos17: ATTN 6.44e-4 ? O_PROJ 1.99e-3 ? FFN_NORM 5.07e-3 ? FFN_DOWN/AFTER_FFN ~1.95e-2
 FIRST_OP=GPU_O_PROJ (first amplifier; FFN continues). Root ATTN_OUT residual held.
-HOST_O LinearW vulkan FAIL (oNorm 0/323) → default OFF; DEEP2_GPU_HOST_O=1 ensureF32 opt-in.
+HOST_O LinearW vulkan FAIL (oNorm 0/323) ? default OFF; DEEP2_GPU_HOST_O=1 ensureF32 opt-in.
 GPU_16=...315,16895,... CPU/FAOFF=...315,821,...15233,553
 EXACT16_CPU=1 FIRST_MIS=@9 THREE_WAY=0
 RC2_05_PASS=0 CERTIFIED=0 PROMOTE=0 TIP_CLIMB=HOLD DO_NOT_REOPEN_Q4K_ACT=1
@@ -507,7 +507,7 @@ O_PROJ L0@17 maxAbs BEFORE=1.988664E-003 AFTER=1.988590E-003
 GPU_16=CPU_16=LLAMA_FAOFF tip9=821 FIRST_MIS=@-1 THREE_WAY=1 EXACT16_CPU=1
 RC2_05_PASS=1_TOKEN_MATCH CERTIFIED=0 PROMOTE=0 TIP_CLIMB=HOLD DO_NOT_REOPEN_Q4K_ACT=1
 SPV_TOUCHED=0 RECEIPT=cpu_llama/batch14_gpu_oproj/
-NOTE=token THREE_WAY ≠ promote; PROMOTE=0 held
+NOTE=token THREE_WAY ? promote; PROMOTE=0 held
 
 
 ====
@@ -576,4 +576,30 @@ RC2_05_PASS=0 CERTIFIED=0 PROMOTE=0 TIP_CLIMB=HOLD DO_NOT_REOPEN_Q4K_ACT=1
 SPV_TOUCHED=0 DEVICE_WO_OPEN=1
 RECEIPT=cpu_llama/batch17_f16rt_tip17/
 NEXT=CPU@26 batched-prefill residual; no promote
+
+
+====
+BATCH18 tip26 FIRST_OP + CPU tokenwise default ASOF=2026-11-12T23:21:15-05:00
+EXE=80EFEE9B4608F2D22AAA59F427A29E6F1C29E9AC8C68DAEC98ADE414029352AF CROSS_SHA_CREDIT=0 vs DCF607E4
+FIRST_OP@26=L0_ATTN_OUT (CPU batched F32-in-chunk then F16 seal vs tokenwise)
+FIX=Deep2Engine.cpp enableBatchedPrefill(false); env=1 opt-in ubatch
+CONT16_HOLD=1 tip9=821 THREE_WAY_CONT16=1
+CPU_32=GPU_32=LLAMA_FAOFF_32 FIRST_MIS_*=@-1 EXACT32=1 THREE_WAY_CONT32=1
+RC2_05_PASS=1 CERTIFIED=0 PROMOTE=0 TIP_CLIMB=HOLD SPV_TOUCHED=0
+RECEIPT=cpu_llama/batch18_tip26_isolate/
+NEXT=no promote; tip17 HOLD; DEVICE_WO_OPEN=1
+
+==============================================================================
+BATCH18 CPU tip26 CLOSED; THREE_WAY_CONT32=1 ASOF=2026-11-12T23:21:15-05:00
+==============================================================================
+EXE_SMOKE_SHA256=80EFEE9B4608F2D22AAA59F427A29E6F1C29E9AC8C68DAEC98ADE414029352AF CROSS_SHA_CREDIT=0
+PRIOR_TIP17=DCF607E4821A890513B36257DF8D9E8D6750D0843846104BD7E39D9116B096DA
+FIRST_OP@26=L0_ATTN_OUT / CPU_BATCHED_PREFILL (AB tokenwise exact on prior EXE)
+FIX=enableBatchedPrefill(false) default; DEEP2_BATCHED_PREFILL=1 opt-in
+CONT16_HOLD=1 tip9=821 THREE_WAY_CONT16=1
+THREE_WAY_CONT32=1 EXACT32=1 FIRST_MIS_GPU_CPU=@-1 FIRST_MIS_CPU_LLAMA=@-1 FIRST_MIS_GPU_LLAMA=@-1
+RC2_05_PASS=1 CERTIFIED=0 PROMOTE=0 TIP_CLIMB=HOLD DO_NOT_REOPEN_Q4K_ACT=1
+SPV_TOUCHED=0 DEVICE_WO_OPEN=1
+RECEIPT=cpu_llama/batch18_tip26_isolate/
+NEXT=no promote
 
