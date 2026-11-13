@@ -1,0 +1,11 @@
+Usage:
+  rawr list [--verbose] [--refresh]
+  rawr show <model>
+  rawr paths
+  rawr run <model> [prompt|-p P|--prompt P] [--max-tokens N]
+  rawr run <model> --reap <params>/<experts> [-p P] [--receipt R]
+  rawr run <model> --size <params>/<experts> [-p P] [--receipt R]
+             live size alias: working-set budget + MoE top-k
+  rawr run <model> [--verbose|--trace]  # stdin if prompt empty
+  rawr chat|agent|steer|resume|term|serve ...
+[StreamEngine] Shutdown

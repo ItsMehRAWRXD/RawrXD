@@ -1,24 +1,6 @@
-# RawrXD Mega Unified System v5.0
-## Installation Guide
+﻿# HISTORICAL / NON-AUTHORITATIVE — do not use for install
 
-### System Requirements
-- Windows 10/11
-- 4GB RAM minimum
-- 1GB disk space
-- Visual C++ Redistributable
+**ASOF:** 2026-11-13 · **PROMOTE=0** · **STATUS=HISTORICAL**
 
-### Installation
-1. Run `setup.exe`
-2. Follow installation wizard
-3. Launch from Start Menu or Desktop
-
-### Quick Start
-```cmd
-RawrXD-Mega> stats
-RawrXD-Mega> search <tool>
-RawrXD-Mega> run <tool_id>
-```
-
-### Support
-- Documentation: docs.rawrxd.com
-- Support: support@rawrxd.com
+Authoritative path: repo-root `INSTALL.md` → `build_ninja\bin\rawr.exe`.
+See `evidence/PRODUCTION_MATURITY_TOP25_001/VALUATION_CLI.txt`.

@@ -1,0 +1,31 @@
+ZIP_INSTALL_SMOKE
+ASOF_LOCAL=2026-11-13
+PROMOTE=0
+CERTIFIED=0
+NOT_RUN!=PASS
+
+ZIP=RawrXD-14.7.3-Windows-x64.zip
+SHA256_ZIP=DDEB7D50840C1097B2C79A5702C54C115BD076B108F9C43D15BCB4BE563B829D
+EXTRACT=TOP25_RECOGNITION_OPS_001/zip_smoke_extract
+
+## Release zip product EXE
+SMOKE_EXE=zip_smoke_extract/bin/RawrXD.exe
+SMOKE_EXE_SHA256=0295D6C1C545F19780403FC2AEB19C48812E94CBA5E3D90079B108F7EE681FB9
+HELP_EXIT=TIMEOUT_8S
+VERSION_EXIT=TIMEOUT_8S
+NESTED_EXE=zip_smoke_extract/RawrXD-14.7.3/bin/RawrXD.exe
+NESTED_HELP_EXIT=TIMEOUT_8S
+RESULT_ZIP=FAIL_ZIP_SMOKE_TIMEOUT
+
+## Authority product CLI (local build — not the DRAFT zip)
+BUILD_RAWR=build_ninja/bin/rawr.exe
+BUILD_RAWR_HELP=PASS (usage printed; see build_rawr_help.out.txt)
+BUILD_RAWR_AUTHORITY=1
+CLEAN_VM=ABSENT
+
+NOTE=
+  DRAFT_SHA_BOUND v14.7.3 zip contains legacy RawrXD.exe that hangs on --help/--version
+  within 8s. Product install path remains local-first INSTALL.md → build_ninja\bin\rawr.exe.
+  NOT_PUBLISHED unchanged. Do not clear publish gate on this smoke.
+
+PROMOTE=0

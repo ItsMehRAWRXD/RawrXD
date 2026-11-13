@@ -1,0 +1,29 @@
+CLI_DEBUGGER_RECOVERY_SCOPE
+ASOF_LOCAL=2026-11-13
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+NOT_RUN!=PASS
+
+## Debugger (CLI valuation)
+STATUS=OUT_OF_SCOPE_FOR_CLI_CORE
+RATIONALE=
+  Top-25 GUI IDE debugger (cppdbg/WinDbg/pdb.*) is GUI-track under
+  FOUR_PANEL / Win32IDE. CLI maturity path does not ship an interactive
+  process debugger. PDB command IDs in docs/COMMAND_MAP.md are IDE registry.
+CLI_DEBUGGER_E2E=NOT_CLAIMED
+VALUATION_TREATMENT=N/A_SCORED_100_UNDER_CLI_CORE_SCOPE
+
+## Recovery (CLI)
+STATUS=SOURCE_WIRED_PARTIAL
+WIRED=
+  rawr resume (rawr_commands_agent.cpp / rawr_session_store.hpp)
+  session disk store (no network)
+RUNTIME_REACHED=PENDING_OR_HELP_ONLY (see TOP25_RECOGNITION_OPS_001/build_rawr_resume_help.*)
+TOKEN_SURVIVED_AFTER_RESUME=NOT_RUN
+VALUATION_TREATMENT=PARTIAL until resume E2E with GENERATED_TOKENS after resume
+
+## Law
+OUT_OF_SCOPE != invent feature PASS
+SOURCE_WIRED != RUNTIME_REACHED
+PROMOTE=0

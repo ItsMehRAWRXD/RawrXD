@@ -4,7 +4,9 @@
 #endif
 #include "vulkan_compute.h"
 #if RAWR_VULKAN_AVAILABLE
+#include "QuantKernelRegistry.hpp"
 #include "deep2/Deep2Locality64.hpp"
+#include <cstdio>
 #include <cstring>
 #include <cstdlib>
 
@@ -13,6 +15,29 @@ namespace CPUInference {
 bool VulkanCompute::DispatchGEMVQ6kPacked(const void* packed, size_t bytes,
                                           const float* input, float* output,
                                           uint32_t rows, uint32_t cols) {
+    /* BATCH2_V_PROJ_001: TinyLlama attn_v is Q6_K. Host Q8_K opt-in via
+     * RAWRXD_QUANT_HOST_Q8K_PARITY=1; default / FORCE_VULKAN uses gemv_q6k.spv. */
+    const char* hostPar = std::getenv("RAWRXD_QUANT_HOST_Q8K_PARITY");
+    const char* forceVk = std::getenv("RAWRXD_FORCE_VULKAN_QUANT_GEMV");
+    const bool wantHost =
+        hostPar && hostPar[0] == '1' &&
+        !(forceVk && forceVk[0] == '1');
+    if (wantHost && packed && input && output && bytes && rows && cols &&
+        (cols % 256u) == 0u) {
+        auto gemv = Deep2::QuantKernelRegistry::Instance().GetGEMV(14);
+        if (gemv) {
+            ++gemv_attempts_;
+            gemv(static_cast<const uint8_t*>(packed), input, output, rows, cols);
+            std::fprintf(stderr,
+                         "Q6K_HOST_Q8K_PARITY rows=%u cols=%u "
+                         "(bypass gemv_q6k.comp FP32) PROMOTE=0\n",
+                         rows, cols);
+            std::fflush(stderr);
+            ++q6k_packed_ops_;
+            ++gemv_success_;
+            return true;
+        }
+    }
     if (!EnsureQ6kPipeline() || !packed || !input || !output || bytes == 0)
         return false;
     ++gemv_attempts_;

@@ -1,0 +1,7 @@
+
+FullName                                                          
+--------                                                          
+F:\OllamaModels\manifests\registry.ollama.ai\library\unlocked-125M
+
+
+

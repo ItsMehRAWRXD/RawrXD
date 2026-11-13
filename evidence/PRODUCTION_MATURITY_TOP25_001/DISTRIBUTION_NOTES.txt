@@ -11,9 +11,14 @@ RELEASE=HELD
 4. Optional PATH helper: scripts/Install-RawrDevPath.ps1 (User PATH only)
 5. distribution/README.md — channel inventory with NOT_PUBLISHED=1
 6. Local verify witness: TOP25_RECOGNITION_OPS_001/VERIFY_LOCAL.txt (help smoke)
+7. One SHA-pinned Windows zip channel (download pin only):
+   TOP25_RECOGNITION_OPS_001/WINDOWS_ZIP_CHANNEL.txt
+   TAG=v14.7.3 SHA256=DDEB7D50840C1097B2C79A5702C54C115BD076B108F9C43D15BCB4BE563B829D
+8. Install-path smoke: TOP25_RECOGNITION_OPS_001/INSTALL_PATH_SMOKE.txt
 
-No sealed binary release receipt (SHA + smoke + version tag) is attached to this pack.
-Measured note: winget search RawrXD = NO_PACKAGE_FOUND; winget/choco/brew SHAs = PLACEHOLDER.
+Measured: winget search RawrXD = NO_PACKAGE_FOUND (NOT_PUBLISHED).
+Zip pin = DRAFT_SHA_BOUND; zip RawrXD.exe --help = TIMEOUT (≠ CLI smoke PASS).
+Ops valuation: VALUATION_OPS.txt OPS_AXIS_PCT=70 · PROMOTE=0.
 
 ## Non-authoritative / do-not-ship-as-cert
 | Artifact | Why held |

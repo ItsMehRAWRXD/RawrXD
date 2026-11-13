@@ -42,22 +42,28 @@ void main() {
       float dmin = f16(u8(blk + 2u) | (u8(blk + 3u) << 8));
       uint scb = blk + 4u;
       uint qbase = blk + 16u;
+      // ggml Q4_K paired lo-then-hi over 32 qs bytes per scale pair.
       uint elem = b * 256u;
-      for (uint s = 0u; s < 8u; ++s) {
-        uint sc, m;
-        scmin(scb, s, sc, m);
-        float scale = d * float(sc);
-        float minv = dmin * float(m);
-        uint qo = qbase + s * 16u;
-        uint baseIdx = elem + s * 32u;
-        for (uint k = 0u; k < 16u; ++k) {
+      for (uint pair = 0u; pair < 4u; ++pair) {
+        uint s0 = pair * 2u;
+        uint s1 = s0 + 1u;
+        uint sc0, m0, sc1, m1;
+        scmin(scb, s0, sc0, m0);
+        scmin(scb, s1, sc1, m1);
+        float scale0 = d * float(sc0);
+        float min0 = dmin * float(m0);
+        float scale1 = d * float(sc1);
+        float min1 = dmin * float(m1);
+        uint qo = qbase + pair * 32u;
+        uint base0 = elem + pair * 64u;
+        for (uint k = 0u; k < 32u; ++k) {
           uint byte = u8(qo + k);
-          uint lo = baseIdx + k;
-          uint hi = lo + 16u;
+          uint lo = base0 + k;
+          uint hi = base0 + 32u + k;
           if (lo < pc.cols)
-            sum += (scale * float(byte & 15u) - minv) * x[lo];
+            sum += (scale0 * float(byte & 15u) - min0) * x[lo];
           if (hi < pc.cols)
-            sum += (scale * float((byte >> 4) & 15u) - minv) * x[hi];
+            sum += (scale1 * float((byte >> 4) & 15u) - min1) * x[hi];
         }
       }
     }

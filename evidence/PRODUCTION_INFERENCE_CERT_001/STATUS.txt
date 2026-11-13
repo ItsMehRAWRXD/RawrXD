@@ -29,7 +29,8 @@ HOST_CONTENTION=llama-cli repeatedly consumed 16–37GB during MoE runs; killed 
 | D_llama32_3b_host | DENSE | llama | 67D9B85C… | 0 | 1 | 8 | HOST_DECODE | — |
 | D_phi3_mini_host | DENSE | phi3 | 67D9B85C… | 0 | 1 | 8 | HOST_DECODE | — |
 | D_gemma4_e4b_host | DENSE | gemma4 | 67D9B85C… | 0 | 1 | 8 | HOST_DECODE | — |
-| D_tinyllama_gpu | DENSE | llama | 67D9B85C… | -1 | 0 | 0/NOT_FOUND | GPU_ATTEMPT | VULKAN_CREATE_INSTANCE_FAIL; DualStick NOT_RUN |
+| D_tinyllama_gpu | DENSE | llama | 67D9B85C… | -1 | 0 | 0/NOT_FOUND | GPU_ATTEMPT | HISTORICAL on EXE_PIN: VULKAN_CREATE_INSTANCE_FAIL |
+| D_tinyllama_gpu_cli_vulkan_smoke | DENSE | llama | 78435C9B… (LIVE tip) | 0 | 1 | 8 | GPU VulkanPrimary | CLI_VULKAN_SMOKE_001 PASS_RUNTIME; HOST_DECODE=0; MATCH_vs_llama-cli=0 |
 | M_minimax_reap27_sidecar_host | MoE | minimax-m2 | 67D9B85C… | NO_SEAL (stale EXIT=12) | 0 | NOT_FOUND | HOST_DECODE | PREFILL_PARTIAL (observed thru ~L27) then PROCESS_GONE under host contention; CLEAN_EXIT not sealed |
 | M_minimax_full_reap16_host | MoE | minimax-m2 | 67D9B85C… | NO_SEAL | 0 | NOT_FOUND | HOST_DECODE+REAP16/8 retain27 | LOAD/topology reached; CLEAN_EXIT NOT_RUN this seal |
 | M_dsv2lite_host | MoE | deepseek2 | 67D9B85C… | 4 (earlier) / -1 (retry) | 0 | 0 | HOST_DECODE | SHARD_INDEX_DUP_TENSOR + incomplete MLA metadata (first measured); retry truncated |
@@ -41,20 +42,23 @@ HOST_CONTENTION=llama-cli repeatedly consumed 16–37GB during MoE runs; killed 
 ### CLEAN_EXIT inventory (this EXE_PIN only)
 DENSE_CLEAN_EXIT=4/4 attempted small-mid (tinyllama, llama3.2-3b, phi3-mini, gemma4-E4B)
 MoE_CLEAN_EXIT=0/N on this EXE_PIN seal (MiniMax prefill reached but not sealed)
-GPU_CLEAN_EXIT=0/1
+GPU_CLEAN_EXIT=0/1 on EXE_PIN 67D9B85C…
+GPU_CLEAN_EXIT_LIVE_TIP=1/1 on EXE_SHA 78435C9B… (CLI_VULKAN_SMOKE_001; CROSS_SHA from PIN=0)
 
 ## GPU decode path (Vulkan / DualStick) vs HOST_DECODE — measured
 HOST_DECODE path:
   PRODUCT_LAA HOST_DECODE=1 DUALSTICK_ARM=0 VK_ICD=BLOCKED WHY=R1_HOST_FLOOR
   ENHANCEMENT STACK: HOST_DECODE (CPU; skip vulkan/speed) on CLEAN_EXIT dense runs
   Dense CLEAN_EXIT works with RAWRXD_HOST_DECODE=1 even when "Vulkan open failed" / vkCreateInstance failed is logged (CPU opt-in).
+  HOST_ONLY=INVALID for competitive / Top-25 GPU credit.
 
-GPU / DualStick this cert:
-  D_tinyllama_gpu: HOST_DECODE=0 requested → EXIT=-1; vkCreateInstance failed; DualStick NOT_RUN
-  DUALSTICK_RUNTIME_USED=0 on HOST CLEAN_EXIT rows
-  DUALSTICK_TRUE_RUNTIME=NOT_RUN on EXE_PIN this session
-  Historical DualStick CLEAN_EXIT exists under REAP_TIP_PORT_001/k2gen/g09_gpu_tok.* on a different EXE/SHA
-    → CROSS_SHA_CREDIT=0 for this STATUS; do not promote from it.
+GPU / DualStick:
+  HISTORICAL EXE_PIN D_tinyllama_gpu: HOST_DECODE=0 → EXIT=-1; vkCreateInstance failed
+  LIVE tip CLI_VULKAN_SMOKE_001 (exclusive host): HOST_DECODE=0 ALLOW_GPU=1 VulkanPrimary
+    CLEAN_EXIT=1 GENERATED_TOKENS=8 TOKENS_COMMITTED=8 STDOUT="Sure, here's an example"
+    llama-cli Vulkan compare MATCH=0 (fail-closed)
+  Authority: evidence/PRODUCTION_INFERENCE_CERT_001/CLI_VULKAN_SMOKE_001/
+  CERTIFIED=0 PROMOTE=0 (MATCH=0; multi-family still OPEN)
 
 ## REAP export sidecar / ≤16GB program — measured on disk
 reap_export_sidecar.exe present:
@@ -79,15 +83,16 @@ SOURCE_WIRED=1 (rawr run product path exercised)
 RUNTIME_REACHED=1 (dense + MiniMax load/prefill)
 TOKEN_SURVIVED=1 (dense CLEAN_EXIT GENERATED_TOKENS=8)
 MoE_TOKEN_SURVIVED=0 (this EXE_PIN)
-GPU_DUALSTICK_PASS=0 (NOT_RUN / OPEN_FAIL)
+GPU_DUALSTICK_PASS=0 (DualStick not required for CLI_VULKAN_SMOKE seal)
+CLI_VULKAN_SMOKE=PASS_RUNTIME (LIVE tip 78435C9B…; see CLI_VULKAN_SMOKE_001)
 PROMOTE=0
 CERTIFIED=0
 
 ## Next blocker
 1) Exclusive-host MiniMax REAP27 CLEAN_EXIT seal on a single stable EXE (no concurrent llama-cli / rawr.exe rebuild races).
-2) Restore Vulkan ICD / DualStick GPU decode on this machine (vkCreateInstance failed throughout this cert) — HOST_DECODE is the only measured CLEAN_EXIT backend.
+2) GPU MATCH/parity vs llama-cli still MATCH=0 — optional denser GPU arms + multi-family.
 3) Independent MoE/hybrid refuse matrix on the same EXE_PIN (Qwen3.6-A3B / Nemotron SSM_CERT, DeepSeek-V2-Lite MLA) without PowerShell stderr truncation — use cmd.exe redirection only.
-4) Do not promote: PROMOTE_IF still requires PRODUCT_OPEN_PASS && SESSION_ENTER_PASS && GENERATED_TOKENS>0 && TOKEN_COMMIT_PASS across intended production arches (+ multi-family). Dense-only ≠ production MoE cert.
+4) Do not promote: PROMOTE_IF still requires PRODUCT_OPEN_PASS && SESSION_ENTER_PASS && GENERATED_TOKENS>0 && TOKEN_COMMIT_PASS across intended production arches (+ multi-family). Dense TinyLlama GPU ≠ production MoE cert.
 
 ## Artifacts
 runs/*.err.txt runs/*.out.txt runs/*.exit.txt runs/*.meta.txt

@@ -23,6 +23,7 @@ User retention schema: TOP25_RECOGNITION_OPS_001/RETENTION_METRICS.schema.json (
 - **/q4k_dump/*.bin tensor dumps
 - REAP export GGUF shards under exports/ (regenerable)
 - __pycache__/
+- TOP25_RECOGNITION_OPS_001/_zip_smoke_extract/ (local extract scratch; do not commit)
 
 ## DELETE_ONLY_WITH_EXPLICIT_OWNER
 - Anything marked SEALED or CROSS_SHA_ACCEPTANCE-bound

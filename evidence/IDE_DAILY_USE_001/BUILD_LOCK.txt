@@ -1,0 +1,6 @@
+﻿BUILD_LOCK=1
+OWNER=win32ide_relink_specialist
+ASOF_UTC=2026-11-13T21:34:35.6982890Z
+SCOPE=cmake_fix_relink_RawrXD-Win32IDE
+NOTE=Exclusive: other ninja is building rawr.exe elsewhere; link001 owned by this specialist for Win32IDE relink.
+PROMOTE=0

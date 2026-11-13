@@ -1,0 +1,49 @@
+CLI_VULKAN_SMOKE_001 — exclusive TinyLlama GPU decode
+DATE=2026-11-13
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+NOT_RUN!=PASS
+HOST_ONLY=INVALID
+
+## Measured (this seal)
+EXE=g:\~dev\rawrxd\build_ninja\bin\rawr.exe
+EXE_SHA256=78435C9B42FD7C268EACC815BE159CC5E8905C7093AC065540930CA37C5F429D
+GIT_HEAD=ba7f537c9e62a5dfdfdbda8d072e7913ee7c1732
+MODEL=g:\~dev\rawrxd\models\tinyllama.gguf
+PROMPT=Hello MAX_TOKENS=8
+EXCLUSIVE_HOST=1 (competing rawr killed before arm)
+
+| Gate | Value |
+|------|-------|
+| HOST_DECODE | 0 |
+| ALLOW_GPU / GPU_DEFAULT | 1 |
+| R1_HOST_FLOOR / VK_ICD block | 0 (not present) |
+| AUTO_BACKEND | VulkanPrimary |
+| CLEAN_EXIT | 1 |
+| GENERATED_TOKENS | 8 |
+| TOKENS_COMMITTED | 8 |
+| PRODUCT_OPEN_PASS | 1 |
+| SESSION_ENTER_PASS | 1 |
+| TOKEN_COMMIT_PASS | 1 |
+| STDOUT | Sure, here's an example |
+| DECODE_TPS_REAL | 1.275 (display-only; ≠ promote) |
+
+## llama-cli GPU compare (same model, -ngl 99)
+EXE=G:\~dev\llama-direct\vulkan\llama-cli.exe
+VK_DEVICE=AMD Radeon AI PRO R9700
+STDOUT_SNIP=Certainly! Here's a
+GEN_TPS_DISPLAY≈467.5
+MATCH_VS_RAWR=0 (fail-closed; different completion text)
+COMPARE_ARTIFACTS=llama_cli_gpu.{out,err}.txt
+
+## Disposition
+CLI_VULKAN_SMOKE=PASS_RUNTIME
+GPU_DENSE_TOKEN_SURVIVED=1
+MATCH_VS_LLAMA_CLI=0
+CERTIFIED=0
+PROMOTE=0
+NEXT_GATE=MULTI_FAMILY + MATCH/parity if required for Top-25 score
+ARTIFACTS=tinyllama_gpu.{out,err,exit,meta}.txt EXE_SHA256.txt
+
+PROMOTE=0
