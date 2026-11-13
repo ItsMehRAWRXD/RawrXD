@@ -1,0 +1,3 @@
+# Keep SHA receipts; do not commit release zip binaries
+*.zip
+!SHA256.txt

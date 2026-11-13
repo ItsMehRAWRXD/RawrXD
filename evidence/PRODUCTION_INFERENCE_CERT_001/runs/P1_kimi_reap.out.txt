@@ -1,0 +1,68 @@
+WEIGHT_BUDGET_INPUT=59568
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+[Deep2Engine] Loading model from: F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Multi-shard detected: YES (16 files in F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M)
+[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=PASS arch=deepseek2 L=61 H=7168 FFN=2048 heads=64 kv=1 hd=576 ctx=4096 ropeBase=50000 ropeDim=64
+[Deep2Engine] AUTHORITY_LADDER=DEFER_UNTIL_RUNTIME_RECEIPT
+[Deep2Engine] GlobalTensorIndex built: 1096 tensors across 13 shards
+[Deep2Engine] TensorResidencyCache ready (13 shards registered)
+[Deep2Engine] GGUF architecture: 'deepseek2'  hidden=7168 layers=61 heads=64 kvHeads=1 inter=2048 vocab=163840
+[Deep2Engine] MLA detected: qLoraRank=1536 kvLoraRank=512 qkNope=128 qkRope=64 vHeadDim=128 headDim=192
+[NVMeStream] SHARD_IO bridge path=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M warmed=13 (RANDOM_ACCESS)
+[Deep2Engine] NVMe lane armed via SHARD_IO (warmed=13)
+[Deep2Engine] K2 shard index open: 1096 tensors, 13 shards, arch=deepseek2 numExperts=384 expertsPerToken=8
+[Deep2Engine] K2 tokenizer loaded: vocab=163840 bos=163584 eos=163586
+[Deep2Engine] K2_INDEX_MLA_SYNC headDim=192 qkNope=128 qkRope=64 v=128 (geo.key_length was NOT authoritative)
+[Deep2Engine] AUTHORITY_LADDER=PASS (K2_INDEX shard0)
+[Deep2Engine] loadModel=INDEX_AND_ADDRESS (F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M) ModelState=Indexed ? weights not resident
+[Deep2Engine] REAP K2 INDEX apply: experts=8/384 working_set=19511390163
+[QuantKernelRegistry] Q4_K GEMV=00007FF784645E30 dequant=00007FF7846431D0 GetGEMV(12)=00007FF784645E30 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 22 GEMV kernels, 22 dequant kernels
+MODEL_SIZE_INDEPENDENT_LOAD=1
+RAWRXD_NO_TP=1
+QUANTIZED_STORAGE_PRESERVED=1
+FULL_MODEL_RESIDENCY_REQUIRED=0
+FULL_LAYER_RESIDENCY_REQUIRED=0
+VRAM_REQUIRED=0
+VRAM_BYTES_REQUIRED=0
+WEIGHT_RESIDENCY_BOUNDED=1
+KV_RESIDENCY_BOUNDED=1
+EXECUTION_OWNER_PER_TENSOR=1
+TENSOR_PARTITIONS=0
+CROSS_DEVICE_COLLECTIVES=0
+ALL_REDUCE_OPS=0
+ONE_TENSOR_ONE_OWNER=1
+WEIGHT_WINDOW_BYTES=0
+ACTIVATION_LIVE_BYTES=86016
+KV_HOT_BYTES=0
+SCRATCH_BYTES=28672
+WORKING_SET_BYTES=114688
+SPACE_CAPACITY_BYTES=536870912
+SPACE_OCCUPIED_BYTES=0
+SPACE_RECLAIMABLE_BYTES=0
+SPACE_SUFFICIENT=1
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[ChatTemplate] Forced 'deepseek' from arch/name (arch=deepseek2)
+LIVE_FORWARD=forwardTokenAllLayers
+LIVE_MLA_DISPATCH=MLA_Gemv
+LIVE_K2_OWNERSHIP=generateStream?runK2NativeStreamPartial
+AUTO_POLICY_ACTIVE=0
+MANUAL_ARM_FORCING=1
+K2_LIVE_POLICY_ARM=OFF
+K2_LIVE_POLICY_MODE=0
+K2_LIVE_POLICY_REASON=force_off
+K2_LIVE_POLICY_REUSE_STEPS=488
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=61 TOKENS=8
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=3373300000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=0 MECH_ENV=none WANTED=0

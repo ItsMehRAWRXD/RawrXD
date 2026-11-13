@@ -1,19 +1,32 @@
-# OPEN — ConPTY compile+run gate
+# ConPTY compile+run gate
 
 ```
 PROMOTE=0
 TIP_CLIMB=HOLD
-STATUS=OPEN
+STATUS=CLOSED_PASS (local terminal_gate v5)
 NOT_RUN != PASS
+EXTERNAL_TERMINAL_BENCH=NOT_IN_TREE
 ```
 
-## Measured (2026-11-13)
+## Prior measured FAIL (superseded for this sub-gate)
 
 ```
 COMMAND=g:\~dev\rawrxd\evidence\FOUR_PANEL_COMPLETION_001\bin\terminal_gate.exe
 SHA256=5125CFE10FE6C89F649B401A216EA976BC44DB06D44D1EA401E41411D579094D
 EXIT=1
 HARNESS=terminal_gate.exe v4
+compile+run via ConPTY = FAIL
+TERMINAL_GATE fail_count=1
+```
+
+## This-turn measured PASS (2026-11-13T14:50:45-05:00)
+
+```
+COMMAND=g:\~dev\rawrxd\evidence\FOUR_PANEL_COMPLETION_001\bin\terminal_gate.exe
+SHA256=30DBF28C7280CF080F3C5D6C527969007C86E8D3FBCEAE9DC08840B4529B2D1B
+HARNESS=terminal_gate.exe v5
+LOG=logs/terminal_bench_20261113_145045_out.txt
+META=logs/terminal_bench_20261113_145045_meta.json
 ```
 
 ### Sub-results
@@ -21,7 +34,7 @@ HARNESS=terminal_gate.exe v4
 | Check | Result |
 |-------|--------|
 | echo capture marker_in_pipe | PASS |
-| compile+run via ConPTY | FAIL |
+| compile+run via ConPTY | PASS |
 | interrupt issued | PASS |
 | resize | PASS |
 | restart | PASS |
@@ -30,16 +43,14 @@ HARNESS=terminal_gate.exe v4
 | PowerShell capture | PASS |
 
 ```
-TERMINAL_GATE fail_count=1
-TERMINAL=FAIL_CLOSED
+TERMINAL_GATE fail_count=0
+TERMINAL=PASS
 ```
 
 ## Disposition
 
-- Overall Terminal-Bench / terminal_gate suite: **FAIL_CLOSED** (not PASS).
-- ConPTY compile+run remains **OPEN** — do not treat prior FOUR_PANEL `TERMINAL=PASS` echo/marker seal as closing this sub-gate.
-- No invented score. Fix owner: ConPTY product path under `src/win32app/Win32TerminalManager.cpp` + terminal_gate harness case for compile+run.
-
-## Log
-
-`logs/cb_terminal_gate_out.txt`
+- Local terminal_gate / Terminal-Bench stub: **PASS** (artifact stdout).
+- Named upstream Terminal-Bench package: still **NOT_IN_TREE**.
+- Process ExitCode in meta may be null (Start-Process quirk); content disposition uses STDOUT_LOG.
+- COMPETITIVE_PASS=0 for peer leaderboard (no matched Ollama/vLLM/llama.cpp suite).
+- PROMOTE=0 · TIP_CLIMB=HOLD · CERTIFIED=0

@@ -1,0 +1,1 @@
+[MODEL_RESOLUTION] F:\ollamamodels\NVIDIA-Nemotron-3-Nano-4B-GGUF\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf

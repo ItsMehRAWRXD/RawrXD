@@ -1,0 +1,149 @@
+WEIGHT_BUDGET_INPUT=59568
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+KEN_MARS_ACTIVE=1 DEEP2_MARS=1 HOST_DECODE=1 GPU_POLICY=MULTI GPU_DEVICE_CLASS=DISCRETE NO_TRUNCATE_NEEDLE=1 PRODUCT_STREAMER_ARM=1
+WEIGHT_BUDGET_INPUT=59568
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=USER_WEIGHT_BUDGET_MIB
+WEIGHT_BUDGET_PRE_FLOOR_SRC=ARMSPEED_SETENVIFUNSET_OR_USER
+WEIGHT_BUDGET_PRE_FLOOR_RAW="59568"
+WEIGHT_BUDGET_PRE_FLOOR_MIB=59568
+WEIGHT_BUDGET_POST_FLOOR_SRC=USER_WEIGHT_BUDGET_MIB
+WEIGHT_BUDGET_ENV_PRESENT=1
+WEIGHT_BUDGET_ENV_RAW="59568"
+WEIGHT_BUDGET_PARSE_OK=1
+WEIGHT_BUDGET_INPUT_MIB=59568
+WEIGHT_BUDGET_EFFECTIVE_MIB=59568
+RESIDENCY_BUDGET_MIB=59568
+BUDGET_RELATION_VALID=1
+NOTE=REAP_TARGET_NE_RESIDENCY_BUDGET; ARMSPEED_E8B0M_IS_SETENVIFUNSET_DEFAULT; MODEL_SIZE_NE_PHYSICAL_RESIDENCY
+PRODUCT_LAA=1 HOST_DECODE=1 DUALSTICK_ARM=0 MINIMAL_ENHANCE=1 VK_ICD=BLOCKED WHY=R1_HOST_FLOOR
+PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1
+MODEL_DIGESTION_STREAM_BEGIN=1
+MODEL_PATH=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+ARCH=deepseek2
+HIDDEN=7168 LAYERS=61 HEADS=64 KV_HEADS=1 HEAD_DIM=576 VOCAB=163840 INTERMEDIATE=18432
+SPLIT_QKV_LAYERS=0 FUSED_QKV_LAYERS=0 PROJECTOR_BLOCK_LAYERS=0 MLA_LAYERS=6 BLOCKED_LAYERS=0
+SPLIT_FFN_LAYERS=5 FUSED_FFN_LAYERS=0
+ROOT_EMBED=token_embd.weight ROOT_FINAL_NORM=output_norm.weight ROOT_LM_HEAD=output.weight
+MANIFEST_READY=1 BLOCKED_AT=NONE
+AUTHORITY_CLASS=DISCOVERY_ONLY
+PROMOTE=0
+MODEL_DIGESTION_STREAM_END=1
+MODEL_DIGESTION_STREAM_CACHE=G:\~dev\rawrxd\evidence\RAWRXD_MODEL_MANIFESTS\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf.ac7f10aa0.1dd25d7a505afe2.rmanifest.jsonl
+[ModelOpenCompat] repaired metadata: arch=0 vocab=0 hidden=0 layers=0 inter=1 heads=0 kvHeads=0
+[K2Index] shard=0 tensors=98 data_start=6917280 file_size=46304135840 path=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+[K2Index] shard=1 tensors=78 data_start=5120 file_size=49211448320 path=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00002-of-00013.gguf
+[K2Index] shard=2 tensors=90 data_start=5984 file_size=49548961120 path=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00003-of-00013.gguf
+[K2Index] shard=3 tensors=86 data_start=5696 file_size=47810262080 path=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00004-of-00013.gguf
+[K2Index] shard=4 tensors=88 data_start=5824 file_size=46366024896 path=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00005-of-00013.gguf
+[K2Index] shard=5 tensors=78 data_start=5216 file_size=47758122080 path=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00006-of-00013.gguf
+[K2Index] shard=6 tensors=86 data_start=5696 file_size=47810262080 path=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00007-of-00013.gguf
+[K2Index] shard=7 tensors=90 data_start=5984 file_size=49548961120 path=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00008-of-00013.gguf
+[K2Index] shard=8 tensors=88 data_start=5824 file_size=47819351232 path=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00009-of-00013.gguf
+[K2Index] shard=9 tensors=90 data_start=5984 file_size=49548961120 path=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00010-of-00013.gguf
+[K2Index] shard=10 tensors=78 data_start=5216 file_size=47758122080 path=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00011-of-00013.gguf
+[K2Index] shard=11 tensors=84 data_start=5568 file_size=47533978560 path=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00012-of-00013.gguf
+[K2Index] shard=12 tensors=62 data_start=4192 file_size=44226634336 path=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00013-of-00013.gguf
+MULTISHARD_SHARDS_INDEXED=13/13
+MULTISHARD_TENSORS_INDEXED=1096
+MULTISHARD_DUPLICATES=0
+MODEL_DIGESTION_STREAM_BEGIN=1
+MODEL_PATH=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+ARCH=deepseek2
+HIDDEN=7168 LAYERS=61 HEADS=64 KV_HEADS=1 HEAD_DIM=576 VOCAB=163840 INTERMEDIATE=18432
+SPLIT_QKV_LAYERS=0 FUSED_QKV_LAYERS=0 PROJECTOR_BLOCK_LAYERS=0 MLA_LAYERS=61 BLOCKED_LAYERS=0
+SPLIT_FFN_LAYERS=61 FUSED_FFN_LAYERS=0
+ROOT_EMBED=token_embd.weight ROOT_FINAL_NORM=output_norm.weight ROOT_LM_HEAD=output.weight
+MANIFEST_READY=1 BLOCKED_AT=NONE
+AUTHORITY_CLASS=DISCOVERY_ONLY
+PROMOTE=0
+MODEL_DIGESTION_STREAM_END=1
+B03_MULTISHARD_TOPOLOGY ready=1 blocked=NONE layers=61 headDim=576 (geom_hd=576)
+[K2Index] shard=0 tensors=98 data_start=6917280 file_size=46304135840 path=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+[K2Index] shard=1 tensors=78 data_start=5120 file_size=49211448320 path=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00002-of-00013.gguf
+[K2Index] shard=2 tensors=90 data_start=5984 file_size=49548961120 path=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00003-of-00013.gguf
+[K2Index] shard=3 tensors=86 data_start=5696 file_size=47810262080 path=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00004-of-00013.gguf
+[K2Index] shard=4 tensors=88 data_start=5824 file_size=46366024896 path=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00005-of-00013.gguf
+[K2Index] shard=5 tensors=78 data_start=5216 file_size=47758122080 path=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00006-of-00013.gguf
+[K2Index] shard=6 tensors=86 data_start=5696 file_size=47810262080 path=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00007-of-00013.gguf
+[K2Index] shard=7 tensors=90 data_start=5984 file_size=49548961120 path=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00008-of-00013.gguf
+[K2Index] shard=8 tensors=88 data_start=5824 file_size=47819351232 path=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00009-of-00013.gguf
+[K2Index] shard=9 tensors=90 data_start=5984 file_size=49548961120 path=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00010-of-00013.gguf
+[K2Index] shard=10 tensors=78 data_start=5216 file_size=47758122080 path=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00011-of-00013.gguf
+[K2Index] shard=11 tensors=84 data_start=5568 file_size=47533978560 path=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00012-of-00013.gguf
+[K2Index] shard=12 tensors=62 data_start=4192 file_size=44226634336 path=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00013-of-00013.gguf
+MULTISHARD_SHARDS_INDEXED=13/13
+MULTISHARD_TENSORS_INDEXED=1096
+MULTISHARD_DUPLICATES=0
+K2_MLA_SCHEMA_DEFER=1 layers=61 vocab=163840
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+STREAM_STATUS=READY
+NEXT_ACTION=CALL_GENERATE_STREAM
+GENERATE_STREAM_ENTER=1 ARCH=deepseek2 LAYERS=61 KV_HEADS=1 HEAD_DIM=192
+HOST_DECODE_SANITIZE=1 elastic=0 cyclone=0 ckv=0 mars=0 medusa=0 livepath=0 BASE_FORWARD=1 OPTIONAL_ONLY_SKIPPED=1
+STEP_ENTER STEP=0/8
+STREAM_HEARTBEAT STEP=0/8 TEARDOWN_WITNESS=0
+L39_GEOM_DUMP_BEGIN vs L38
+L38_GEOM name=blk.38.ffn_norm.weight ggml=0 ne=[7168,0,0,0] byteSize=28672 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_gate_inp.weight ggml=0 ne=[7168,384,0,0] byteSize=11010048 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_gate_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L38_GEOM name=blk.38.ffn_up_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L38_GEOM name=blk.38.ffn_down_exps.weight ggml=12 ne=[2048,7168,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L38_GEOM name=blk.38.ffn_gate_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_up_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_down_shexp.weight ggml=14 ne=[2048,7168,0,0] byteSize=12042240 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_norm.weight ggml=0 ne=[7168,0,0,0] byteSize=28672 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_gate_inp.weight ggml=0 ne=[7168,384,0,0] byteSize=11010048 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_gate_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L39_GEOM name=blk.39.ffn_up_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L39_GEOM name=blk.39.ffn_down_exps.weight ggml=14 ne=[2048,7168,384,0] byteSize=4624220160 expertCount=384 stride=12042240
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=0 off=0 size=12042240 last=12042240 srcEnd=4624220160 bounds_ok=1
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=1 off=12042240 size=12042240 last=24084480 srcEnd=4624220160 bounds_ok=1
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=192 off=2312110080 size=12042240 last=2324152320 srcEnd=4624220160 bounds_ok=1
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=383 off=4612177920 size=12042240 last=4624220160 srcEnd=4624220160 bounds_ok=1
+L39_GEOM name=blk.39.ffn_gate_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_up_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_down_shexp.weight ggml=14 ne=[2048,7168,0,0] byteSize=12042240 expertCount=0 stride=0
+L39_GEOM_DUMP_END

@@ -1,0 +1,2 @@
+CMD=G:\~dev\rawrxd\build_ninja\bin\rawr.exe run F:\ollamamodels\NVIDIA-Nemotron-3-Nano-4B-GGUF\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf -p Say hi. --max-tokens 8
+EXIT= ELAPSED_MS=294 GENERATED_TOKENS= CLEAN_EXIT= RUNTIME_REACHED=0 TOKEN_SURVIVED=0

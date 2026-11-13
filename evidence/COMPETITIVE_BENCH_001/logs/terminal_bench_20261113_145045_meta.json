@@ -1,0 +1,15 @@
+{
+    "SUITE":  "terminal_bench",
+    "COMMAND":  "G:\\~dev\\rawrxd\\evidence\\FOUR_PANEL_COMPLETION_001\\bin\\terminal_gate.exe",
+    "EXE_PATH":  "G:\\~dev\\rawrxd\\evidence\\FOUR_PANEL_COMPLETION_001\\bin\\terminal_gate.exe",
+    "EXE_SHA256":  "30DBF28C7280CF080F3C5D6C527969007C86E8D3FBCEAE9DC08840B4529B2D1B",
+    "EXE_EXISTS":  true,
+    "STARTED_UTC":  "2026-11-13T19:50:45.5158981Z",
+    "PROMOTE":  0,
+    "EXIT_CODE":  null,
+    "RESULT":  "EXIT_NONZERO",
+    "NOTE":  "RESULT is process exit class only; COMPETITIVE_PASS=0 unless separately sealed.",
+    "ENDED_UTC":  "2026-11-13T19:50:55.4866475Z",
+    "STDOUT_LOG":  "G:\\~dev\\rawrxd\\evidence\\COMPETITIVE_BENCH_001\\logs\\terminal_bench_20261113_145045_out.txt",
+    "STDERR_LOG":  "G:\\~dev\\rawrxd\\evidence\\COMPETITIVE_BENCH_001\\logs\\terminal_bench_20261113_145045_err.txt"
+}

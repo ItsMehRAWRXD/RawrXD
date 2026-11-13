@@ -1,14 +1,15 @@
 ﻿[
     {
         "Id":  "D_tinyllama_host",
-        "Exit":  "EXIT=-1",
-        "GT":  "NOT_FOUND",
-        "CE":  "0",
+        "Exit":  "EXIT=0",
+        "GT":  "8",
+        "CE":  "1",
         "Arch":  "llama",
         "HD":  "1",
-        "DS":  "?",
+        "DS":  "0",
         "VK":  "OPEN_FAIL",
-        "Backend":  "HOST"
+        "Backend":  "HOST",
+        "Blocker":  "SSM_CERT_REFUSE"
     },
     {
         "Id":  "D_tinyllama_gpu",
@@ -19,7 +20,8 @@
         "HD":  "0",
         "DS":  "?",
         "VK":  "VK_MENTION",
-        "Backend":  "GPU"
+        "Backend":  "GPU",
+        "Blocker":  "NO_CLEAN_EXIT"
     },
     {
         "Id":  "D_llama32_3b_host",
@@ -30,7 +32,8 @@
         "HD":  "1",
         "DS":  "?",
         "VK":  "OPEN_FAIL",
-        "Backend":  "HOST"
+        "Backend":  "HOST",
+        "Blocker":  "NO_CLEAN_EXIT"
     },
     {
         "Id":  "D_phi3_mini_host",
@@ -41,7 +44,8 @@
         "HD":  "1",
         "DS":  "?",
         "VK":  "OPEN_FAIL",
-        "Backend":  "HOST"
+        "Backend":  "HOST",
+        "Blocker":  "NO_CLEAN_EXIT"
     },
     {
         "Id":  "D_gemma4_e4b_host",
@@ -52,29 +56,32 @@
         "HD":  "1",
         "DS":  "?",
         "VK":  "VK_MENTION",
-        "Backend":  "HOST"
+        "Backend":  "HOST",
+        "Blocker":  "NO_CLEAN_EXIT"
     },
     {
         "Id":  "M_dsv2lite_host",
-        "Exit":  "EXIT=32",
+        "Exit":  "EXIT=4",
         "GT":  "NOT_FOUND",
-        "CE":  "0",
-        "Arch":  "UNKNOWN",
-        "HD":  "?",
-        "DS":  "?",
-        "VK":  "?",
-        "Backend":  "HOST"
+        "CE":  "1",
+        "Arch":  "deepseek2",
+        "HD":  "1",
+        "DS":  "0",
+        "VK":  "VK_MENTION",
+        "Backend":  "HOST",
+        "Blocker":  ""
     },
     {
         "Id":  "M_qwen36_a3b_host",
-        "Exit":  "EXIT=32",
+        "Exit":  "EXIT=-1",
         "GT":  "NOT_FOUND",
         "CE":  "0",
         "Arch":  "UNKNOWN",
-        "HD":  "?",
+        "HD":  "1",
         "DS":  "?",
-        "VK":  "?",
-        "Backend":  "HOST"
+        "VK":  "VK_MENTION",
+        "Backend":  "HOST",
+        "Blocker":  "NO_CLEAN_EXIT"
     },
     {
         "Id":  "D_glm47_flash_host",
@@ -85,7 +92,8 @@
         "HD":  "1",
         "DS":  "?",
         "VK":  "VK_MENTION",
-        "Backend":  "HOST"
+        "Backend":  "HOST",
+        "Blocker":  "NO_CLEAN_EXIT"
     },
     {
         "Id":  "D_nemotron35_host",
@@ -96,7 +104,8 @@
         "HD":  "1",
         "DS":  "?",
         "VK":  "VK_MENTION",
-        "Backend":  "HOST"
+        "Backend":  "HOST",
+        "Blocker":  "NO_CLEAN_EXIT"
     },
     {
         "Id":  "D_qwen38_27b_host",
@@ -107,7 +116,8 @@
         "HD":  "1",
         "DS":  "?",
         "VK":  "VK_MENTION",
-        "Backend":  "HOST"
+        "Backend":  "HOST",
+        "Blocker":  "NO_CLEAN_EXIT"
     },
     {
         "Id":  "M_minimax_full_reap16_host",
@@ -118,17 +128,19 @@
         "HD":  "1",
         "DS":  "?",
         "VK":  "?",
-        "Backend":  "HOST"
+        "Backend":  "HOST",
+        "Blocker":  "NO_CLEAN_EXIT"
     },
     {
         "Id":  "M_minimax_reap27_sidecar_host",
         "Exit":  "EXIT=-1",
         "GT":  "NOT_FOUND",
         "CE":  "0",
-        "Arch":  "minimax",
+        "Arch":  "minimax-m2",
         "HD":  "1",
         "DS":  "?",
-        "VK":  "VK_MENTION",
-        "Backend":  "HOST"
+        "VK":  "OPEN_FAIL",
+        "Backend":  "HOST",
+        "Blocker":  "NO_CLEAN_EXIT"
     }
 ]

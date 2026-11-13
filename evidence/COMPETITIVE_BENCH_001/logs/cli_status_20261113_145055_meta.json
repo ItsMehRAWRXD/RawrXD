@@ -1,0 +1,15 @@
+{
+    "SUITE":  "cli_status",
+    "COMMAND":  "G:\\~dev\\rawrxd\\bin\\SovereignCLI.exe status",
+    "EXE_PATH":  "G:\\~dev\\rawrxd\\bin\\SovereignCLI.exe",
+    "EXE_SHA256":  "A390E69F596FBF2A5D9B2CA4F429437D2962AA593310EF9031B2542D804D7E4F",
+    "EXE_EXISTS":  true,
+    "STARTED_UTC":  "2026-11-13T19:50:55.6434494Z",
+    "PROMOTE":  0,
+    "EXIT_CODE":  null,
+    "RESULT":  "EXIT_NONZERO",
+    "NOTE":  "RESULT is process exit class only; COMPETITIVE_PASS=0 unless separately sealed.",
+    "ENDED_UTC":  "2026-11-13T19:50:55.7263987Z",
+    "STDOUT_LOG":  "G:\\~dev\\rawrxd\\evidence\\COMPETITIVE_BENCH_001\\logs\\cli_status_20261113_145055_out.txt",
+    "STDERR_LOG":  "G:\\~dev\\rawrxd\\evidence\\COMPETITIVE_BENCH_001\\logs\\cli_status_20261113_145055_err.txt"
+}

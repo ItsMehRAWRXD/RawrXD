@@ -18,7 +18,7 @@ Measured note: winget search RawrXD = NO_PACKAGE_FOUND; winget/choco/brew SHAs =
 ## Non-authoritative / do-not-ship-as-cert
 | Artifact | Why held |
 |----------|----------|
-| DISTRIBUTION_MANIFEST.yaml | Placeholder hashes (e.g. empty SHA e3b0c442…); status text “PRODUCTION READY” contradicts LAW PROMOTE=0 |
+| DISTRIBUTION_MANIFEST.yaml | Rewritten 2026-11-13 fail-closed (HELD); prior PRODUCTION READY revoked; measured zip SHAs listed |
 | INSTALL.md historical copies (release-assets/, RELEASE_PACKAGE/) | Aspirational winget/brew/docker/MSI; not measured here |
 | docs/guides/installation.md | Legacy; defer to root INSTALL.md |
 | Docker / winget / Homebrew / apt / rpm URLs | UNVERIFIED — no receipt under this pack |

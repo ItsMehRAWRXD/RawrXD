@@ -1,0 +1,8 @@
+{
+    "MiniMax_full":  "F:\\ollamamodels\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf",
+    "Nemotron_REAP16":  "F:\\ollamamodels\\nemotron-3.5-lightning-REAP16\\nemotron-3.5-lightning-30b-Q4_K_M.gguf",
+    "Nemotron_Nano4B":  "F:\\ollamamodels\\NVIDIA-Nemotron-3-Nano-4B-GGUF\\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf",
+    "GLM_4_7":  "F:\\ollamamodels\\GLM-4.7-Flash-GGUF\\GLM-4.7-Flash-Q4_K_M.gguf",
+    "Kimi_K2":  "F:\\ollamamodels\\Kimi-K2-Instruct-0905-GGUF\\Q4_K_M\\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf",
+    "MiniMax_phys":  "F:\\ollamamodels\\MiniMax-M2.7-REAP16\\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf"
+}

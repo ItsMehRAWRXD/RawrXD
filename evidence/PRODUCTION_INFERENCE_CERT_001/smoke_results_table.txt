@@ -1,18 +1,18 @@
 ﻿
-Id                            Exit    GT        CE Arch       HD DS VK         Backend
---                            ----    --        -- ----       -- -- --         -------
-D_tinyllama_host              EXIT=-1 NOT_FOUND 0  llama      1  ?  OPEN_FAIL  HOST   
-D_tinyllama_gpu               EXIT=-1 NOT_FOUND 0  llama      0  ?  VK_MENTION GPU    
-D_llama32_3b_host             EXIT=-1 NOT_FOUND 0  llama      1  ?  OPEN_FAIL  HOST   
-D_phi3_mini_host              EXIT=-1 NOT_FOUND 0  phi3       1  ?  OPEN_FAIL  HOST   
-D_gemma4_e4b_host             EXIT=-1 NOT_FOUND 0  UNKNOWN    1  ?  VK_MENTION HOST   
-M_dsv2lite_host               EXIT=32 NOT_FOUND 0  UNKNOWN    ?  ?  ?          HOST   
-M_qwen36_a3b_host             EXIT=32 NOT_FOUND 0  UNKNOWN    ?  ?  ?          HOST   
-D_glm47_flash_host            EXIT=-1 NOT_FOUND 0  UNKNOWN    1  ?  VK_MENTION HOST   
-D_nemotron35_host             EXIT=-1 NOT_FOUND 0  UNKNOWN    1  ?  VK_MENTION HOST   
-D_qwen38_27b_host             EXIT=-1 NOT_FOUND 0  UNKNOWN    1  ?  VK_MENTION HOST   
-M_minimax_full_reap16_host    EXIT=-1 NOT_FOUND 0  minimax-m2 1  ?  ?          HOST   
-M_minimax_reap27_sidecar_host EXIT=-1 NOT_FOUND 0  minimax    1  ?  VK_MENTION HOST   
+Id                            Exit    GT        CE Arch       HD DS VK         Backend Blocker        
+--                            ----    --        -- ----       -- -- --         ------- -------        
+D_tinyllama_host              EXIT=0  8         1  llama      1  0  OPEN_FAIL  HOST    SSM_CERT_REFUSE
+D_tinyllama_gpu               EXIT=-1 NOT_FOUND 0  llama      0  ?  VK_MENTION GPU     NO_CLEAN_EXIT  
+D_llama32_3b_host             EXIT=-1 NOT_FOUND 0  llama      1  ?  OPEN_FAIL  HOST    NO_CLEAN_EXIT  
+D_phi3_mini_host              EXIT=-1 NOT_FOUND 0  phi3       1  ?  OPEN_FAIL  HOST    NO_CLEAN_EXIT  
+D_gemma4_e4b_host             EXIT=-1 NOT_FOUND 0  UNKNOWN    1  ?  VK_MENTION HOST    NO_CLEAN_EXIT  
+M_dsv2lite_host               EXIT=4  NOT_FOUND 1  deepseek2  1  0  VK_MENTION HOST                   
+M_qwen36_a3b_host             EXIT=-1 NOT_FOUND 0  UNKNOWN    1  ?  VK_MENTION HOST    NO_CLEAN_EXIT  
+D_glm47_flash_host            EXIT=-1 NOT_FOUND 0  UNKNOWN    1  ?  VK_MENTION HOST    NO_CLEAN_EXIT  
+D_nemotron35_host             EXIT=-1 NOT_FOUND 0  UNKNOWN    1  ?  VK_MENTION HOST    NO_CLEAN_EXIT  
+D_qwen38_27b_host             EXIT=-1 NOT_FOUND 0  UNKNOWN    1  ?  VK_MENTION HOST    NO_CLEAN_EXIT  
+M_minimax_full_reap16_host    EXIT=-1 NOT_FOUND 0  minimax-m2 1  ?  ?          HOST    NO_CLEAN_EXIT  
+M_minimax_reap27_sidecar_host EXIT=-1 NOT_FOUND 0  minimax-m2 1  ?  OPEN_FAIL  HOST    NO_CLEAN_EXIT  
 
 
 

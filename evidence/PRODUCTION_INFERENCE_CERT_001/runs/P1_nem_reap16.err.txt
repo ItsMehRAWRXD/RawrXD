@@ -1,0 +1,98 @@
+[MODEL_RESOLUTION] F:\ollamamodels\nemotron-3.5-lightning-REAP16\nemotron-3.5-lightning-30b-Q4_K_M.gguf
+[AUTO_BACKEND] model=F:\ollamamodels\nemotron-3.5-lightning-REAP16\nemotron-3.5-lightning-30b-Q4_K_M.gguf weights=16285MB kv=848MB scratch=2MB moe=1 experts=83 ctx=2048
+[AUTO_BACKEND] host RAM=41669MB commit=137256MB
+[AUTO_BACKEND] GPU Virtual Display Driver status=25174027 problem=0 healthy=1
+[AUTO_BACKEND] GPU AMD Radeon(TM) Graphics status=25174026 problem=0 healthy=1
+[AUTO_BACKEND] GPU AMD Radeon AI PRO R9700 status=25174026 problem=0 healthy=1
+[AUTO_BACKEND] GPU AMD Radeon RX 7800 XT status=25174026 problem=0 healthy=1
+[AUTO_BACKEND] Vulkan ICD ready
+[AUTO_BACKEND] decision=CPU reason=CPU fallback fits policy
+WEIGHT_BUDGET_INPUT=32768
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=32768
+WEIGHT_BUDGET_BYTES=34359738368
+WEIGHT_BUDGET_SOURCE=ENV
+KEN_MARS_ACTIVE=1 DEEP2_MARS=1 HOST_DECODE=1 GPU_POLICY=MULTI GPU_DEVICE_CLASS=DISCRETE NO_TRUNCATE_NEEDLE=1 PRODUCT_STREAMER_ARM=1
+WEIGHT_BUDGET_INPUT=32768
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=32768
+WEIGHT_BUDGET_BYTES=34359738368
+WEIGHT_BUDGET_SOURCE=USER_WEIGHT_BUDGET_MIB
+WEIGHT_BUDGET_PRE_FLOOR_SRC=ARMSPEED_SETENVIFUNSET_OR_USER
+WEIGHT_BUDGET_PRE_FLOOR_RAW="32768"
+WEIGHT_BUDGET_PRE_FLOOR_MIB=32768
+WEIGHT_BUDGET_POST_FLOOR_SRC=USER_WEIGHT_BUDGET_MIB
+WEIGHT_BUDGET_ENV_PRESENT=1
+WEIGHT_BUDGET_ENV_RAW="32768"
+WEIGHT_BUDGET_PARSE_OK=1
+WEIGHT_BUDGET_INPUT_MIB=32768
+WEIGHT_BUDGET_EFFECTIVE_MIB=32768
+RESIDENCY_BUDGET_MIB=32768
+BUDGET_RELATION_VALID=1
+NOTE=REAP_TARGET_NE_RESIDENCY_BUDGET; ARMSPEED_E8B0M_IS_SETENVIFUNSET_DEFAULT; MODEL_SIZE_NE_PHYSICAL_RESIDENCY
+PRODUCT_LAA=1 HOST_DECODE=1 DUALSTICK_ARM=0 MINIMAL_ENHANCE=1 VK_ICD=BLOCKED WHY=R1_HOST_FLOOR
+PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1
+RAWRXD_GPU_PREFLIGHT_BEGIN
+GPU_0=R9700
+GPU_0_WINDOWS_HEALTH=PASS
+GPU_0_PROBLEM_CODE=0
+GPU_0_CODE31=0
+GPU_1=RX_7800_XT
+GPU_1_WINDOWS_HEALTH=PASS
+GPU_1_PROBLEM_CODE=0
+GPU_1_CODE31=0
+GPU_PREFLIGHT=PASS
+WEIGHT_BUDGET_INPUT=32768
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=32768
+WEIGHT_BUDGET_BYTES=34359738368
+WEIGHT_BUDGET_SOURCE=ENV
+[Deep2Engine] Loading model from: F:\ollamamodels\nemotron-3.5-lightning-REAP16\nemotron-3.5-lightning-30b-Q4_K_M.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\ollamamodels\nemotron-3.5-lightning-REAP16)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] === Stage 4: ReverseCompute_Graph ===
+[ReverseHotpatch] === Stage 5: ReverseHotpatch_Next ===
+[ReverseHotpatch] === Stage 6: ReverseHop_Verify ===
+[ReverseHotpatch] === Stage 7: ReverseHop_Commit ===
+[ReverseHotpatch] All 7 stages completed. Repairs: 403  Corruptions: 0
+[Deep2Engine] ReverseHotpatch: 403 repairs, 0 corruptions detected
+[GGUF] WARNING: Tensor 'blk.1.ffn_down_exps.weight' offset not 64-byte aligned: 649866592
+[GGUF] WARNING: Tensor 'blk.1.ffn_down_shexp.weight' offset not 64-byte aligned: 1089827680
+[GGUF] WARNING: Tensor 'blk.1.ffn_gate_inp.weight' offset not 64-byte aligned: 1100429152
+[GGUF] WARNING: Tensor 'blk.1.ffn_up_exps.weight' offset not 64-byte aligned: 1101321568
+[GGUF] WARNING: Tensor 'blk.1.ffn_up_shexp.weight' offset not 64-byte aligned: 1386002272
+[GGUF] WARNING: Tensor 'blk.2.attn_norm.weight' offset not 64-byte aligned: 1392862048
+[GGUF] WARNING: Tensor 'blk.2.ssm_a' offset not 64-byte aligned: 1392872800
+[GGUF] WARNING: Tensor 'blk.2.ssm_conv1d.bias' offset not 64-byte aligned: 1392873056
+[GGUF] WARNING: Tensor 'blk.2.ssm_conv1d.weight' offset not 64-byte aligned: 1392897632
+[GGUF] WARNING: Tensor 'blk.2.ssm_d' offset not 64-byte aligned: 1392995936
+[GGUF] WARNING: Tensor 'blk.2.ssm_dt.bias' offset not 64-byte aligned: 1392996192
+[GGUF] WARNING: Tensor 'blk.2.ssm_in.weight' offset not 64-byte aligned: 1392996448
+[GGUF] WARNING: Tensor 'blk.2.ssm_norm.weight' offset not 64-byte aligned: 1412038240
+[GGUF] WARNING: Tensor 'blk.2.ssm_out.weight' offset not 64-byte aligned: 1412054624
+[GGUF] WARNING: Tensor 'blk.3.attn_norm.weight' offset not 64-byte aligned: 1418247776
+[GGUF] WARNING: Tensor 'blk.3.exp_probs_b.bias' offset not 64-byte aligned: 1418258528
+[GGUF] WARNING: Tensor 'blk.6.ffn_down_exps.weight' offset not 64-byte aligned: 2201370656
+[GGUF] WARNING: Tensor 'blk.6.ffn_down_shexp.weight' offset not 64-byte aligned: 2486051360
+[GGUF] WARNING: Tensor 'blk.6.ffn_gate_inp.weight' offset not 64-byte aligned: 2492911136
+[GGUF] WARNING: Tensor 'blk.6.ffn_up_exps.weight' offset not 64-byte aligned: 2493803552
+[GGUF] WARNING: Tensor 'blk.6.ffn_up_shexp.weight' offset not 64-byte aligned: 2778484256
+[GGUF] WARNING: Tensor 'blk.7.attn_norm.weight' offset not 64-byte aligned: 2785344032
+[GGUF] WARNING: Tensor 'blk.7.ssm_a' offset not 64-byte aligned: 2785354784
+[GGUF] WARNING: Tensor 'blk.7.ssm_conv1d.bias' offset not 64-byte aligned: 2785355040
+[GGUF] WARNING: Tensor 'blk.7.ssm_conv1d.weight' offset not 64-byte aligned: 2785379616
+[GGUF] WARNING: Tensor 'blk.7.ssm_d' offset not 64-byte aligned: 2785477920
+[GGUF] WARNING: Tensor 'blk.7.ssm_dt.bias' offset not 64-byte aligned: 2785478176
+[GGUF] WARNING: Tensor 'blk.7.ssm_in.weight' offset not 64-byte aligned: 2785478432
+[GGUF] WARNING: Tensor 'blk.7.ssm_norm.weight' offset not 64-byte aligned: 2804520224
+[GGUF] WARNING: Tensor 'blk.7.ssm_out.weight' offset not 64-byte aligned: 2804536608
+[GGUF] WARNING: Tensor 'blk.8.attn_norm.weight' offset not 64-byte aligned: 2810729760
+[GGUF] WARNING: Tensor 'blk.8.exp_probs_b.bias' offset not 64-byte aligned: 2810740512
+[GGUF] WARNING: Tensor 'blk.10.ffn_down_exps.weight' offset not 64-byte aligned: 3579133152
+[GGUF] WARNING: Tensor 'blk.10.ffn_down_shexp.weight' offset not 64-byte aligned: 3863813856
+[GGUF] WARNING: Tensor 'blk.10.ffn_gate_inp.weight' offset not 64-byte aligned: 3870673632
+[GGUF] WARNING: Tensor 'blk.10.ffn_up_exps.weight' offset not 64

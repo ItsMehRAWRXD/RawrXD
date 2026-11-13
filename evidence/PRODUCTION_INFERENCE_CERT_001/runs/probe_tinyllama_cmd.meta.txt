@@ -1,0 +1,9 @@
+ID=probe_tinyllama_cmd
+BACKEND=HOST
+ARCH=llama
+GENERATED_TOKENS=8
+CLEAN_EXIT_MARKER=1
+HOST_DECODE_SEEN=1
+VK=HOST_STACK
+EXIT=0
+NOTE=manual_cmd_probe_before_matrix
