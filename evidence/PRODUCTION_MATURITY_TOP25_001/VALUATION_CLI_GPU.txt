@@ -1,0 +1,50 @@
+VALUATION_CLI_GPU — GPU arm numbers for Top-25 CLI valuation
+ASOF_LOCAL=2026-11-13
+PROMOTE=0
+CERTIFIED=0
+NOT_RUN!=PASS
+HOST_CPU_RAM_ONLY=INVALID
+
+## Authority witness
+evidence/PRODUCTION_INFERENCE_CERT_001/CLI_VULKAN_SMOKE_001/STATUS.txt
+EXE_SHA256=78435C9B42FD7C268EACC815BE159CC5E8905C7093AC065540930CA37C5F429D
+GIT_HEAD=ba7f537c9e62a5dfdfdbda8d072e7913ee7c1732
+
+## Dense TinyLlama GPU arm (rawr product CLI)
+| Metric | Value |
+|--------|-------|
+| HOST_DECODE | 0 |
+| VK | OPEN (VulkanPrimary) |
+| CLEAN_EXIT | 1 |
+| GENERATED_TOKENS | 8 |
+| TOKENS_COMMITTED | 8 |
+| PRODUCT_OPEN_PASS | 1 |
+| SESSION_ENTER_PASS | 1 |
+| TOKEN_COMMIT_PASS | 1 |
+| STDOUT | Sure, here's an example |
+| DECODE_TPS_REAL | 1.275 |
+| FUNCTIONAL_PASS | 1 |
+| PRODUCT_PASS | 1 |
+
+## llama-cli Vulkan H2H (same GGUF; not product path)
+| Metric | Value |
+|--------|-------|
+| Device | AMD Radeon AI PRO R9700 |
+| STDOUT_SNIP | Certainly! Here's a |
+| GEN_TPS_DISPLAY | ~467.5 |
+| MATCH_VS_RAWR | 0 |
+
+## Category feed (VALUATION_CLI row 7)
+Local GPU decode Dense:
+  SOURCE_WIRED=Y
+  RUNTIME_REACHED=Y (CLI_VULKAN_SMOKE)
+  TOKEN_SURVIVED=Y (GENERATED_TOKENS=8)
+  PERFORMANCE vs Top-25=PARTIAL (tps<<llama-cli; MATCH=0)
+  PCT=55 (was 25; still <100)
+  HOST_ONLY_CREDIT=INVALID
+
+## MoE GPU / denser
+NOT_RUN this seal (exclusive TinyLlama first). Densers deferred.
+
+PROMOTE=0
+TIP_CLIMB=HOLD

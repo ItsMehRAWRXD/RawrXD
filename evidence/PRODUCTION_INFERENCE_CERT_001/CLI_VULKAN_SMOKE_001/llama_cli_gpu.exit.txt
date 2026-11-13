@@ -1,0 +1,2 @@
+EXIT=0
+NOTE=interactive llama-cli exited after generation; stdout present
