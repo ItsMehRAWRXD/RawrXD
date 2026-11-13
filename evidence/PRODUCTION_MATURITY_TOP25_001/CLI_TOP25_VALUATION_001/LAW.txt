@@ -1,0 +1,35 @@
+CLI_TOP25_VALUATION_001
+PARENT=PRODUCTION_MATURITY_TOP25_001
+ASOF_LOCAL=2026-11-13
+PROMOTE=0
+CERTIFIED=0
+CROSS_SHA_CREDIT=0
+TIP_CLIMB=HOLD
+NOT_RUN!=PASS
+INVENT_PASS=0
+CLOUD_MODELS_REQUIRED=0
+LOCAL_GGUF_ONLY=1
+MiniMax_FULL=HELD_NUMERICAL_EXCLUSIVITY
+
+## Law
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+HOST_DECODE / R1_HOST_FLOOR = NOT_GPU_BENCH (never PASS for GPU axes)
+RAWRXD_ALLOW_GPU=1 required for GPU axis credit
+CLI_CAN_FINISH_WITHOUT_GUI=1
+CLI_VALUATION=READY_FOR_PEER only if measured Top-25 parity on local GPU
+  across install/agent/terminal/editor-tools/GPU/recovery/docs/competitive
+  WITHOUT inventing PASS. PROMOTE remains 0 until product PromoteReady.
+
+## Scope axes (Cursor / VSCode-Copilot / Continue-class)
+A1 Install + local verify
+A2 Agent lifecycle (CLI agent|steer|resume|chat)
+A3 Terminal (ConPTY / term)
+A4 Editor / tools surface (CLI tools + list/paths; HWND out of CLI scope)
+A5 Model load + GPU decode (TinyLlama / gemma3-1b / unlock-125M)
+A6 Recovery (bad model / fail-closed exit)
+A7 Docs + distribution honesty
+A8 Competitive harness (terminal_gate / cli_validate / H2H)
+
+## Forbidden
+Invent PASS; credit HOST_DECODE as GPU; MiniMax FULL this pack; cloud models;
+alter sealed certification evidence; force-push main/master.

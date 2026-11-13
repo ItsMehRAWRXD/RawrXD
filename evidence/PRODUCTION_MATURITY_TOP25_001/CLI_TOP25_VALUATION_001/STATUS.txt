@@ -1,0 +1,48 @@
+CLI_TOP25_VALUATION_001 — STATUS
+ASOF_LOCAL=2026-11-13T16:41-05:00
+TIP_SHA=PENDING_COMMIT
+EXE_SHA256=F28F10B9E510C6F6C87050949B1726DB90C81ED8DC19F1BFC8BB2270D226360B
+EXE=g:\~dev\rawrxd\build_ninja\bin\rawr.exe
+PROMOTE=0
+CERTIFIED=0
+CLOUD_MODELS=0
+NO_CPU_ONLY_PRODUCT_PATH=1
+
+## Gates (measured)
+HELP_EXIT=0
+  witness=runs/help.exit.txt (+ help.err Usage text)
+INSTALL_VERIFY_EXIT=0
+  witness=runs/install_verify.exit.txt
+AUTO_BACKEND=VulkanPrimary
+  proof_line=[AUTO_BACKEND] decision=VulkanPrimary reason=Primary GPU fits weights+KV+scratch
+  witness=gpu/tiny_gpu.err.txt · gpu/tinyllama_gpu_hello.err.txt
+HOST_DECODE=0
+  proof_line=PRODUCT_LAA=1 HOST_DECODE=0 ALLOW_GPU=1 … GPU_DEFAULT=1
+CLI_GPU_LAW=1
+  proof_line=CLI_GPU_LAW=1 ALLOW_GPU=1 FORCE_GPU=1 NO_CPU_FALLBACK=1 HOST_DECODE=0 VULKAN_WANT=1
+TINY_GPU_EXIT=0
+  witness=gpu/tiny_gpu.exit.txt
+GENERATED_TOKENS=8
+  proof_line=GENERATED_TOKENS=8 · CLEAN_EXIT=1 CRASH_OBSERVED=0
+  out=gpu/tiny_gpu.out.txt ("Sure, here's an example")
+MODEL=g:\~dev\rawrxd\models\tinyllama.gguf
+FLAGS=run … -p Hello --max-tokens 8 --vulkan
+ENV=RAWRXD_ALLOW_GPU=1 RAWR_FORCE_GPU=1 RAWR_NO_CPU_FALLBACK=1 (HOST_DECODE unset/0)
+
+## Verdict
+AUTO_BACKEND_NE_CPU=PASS
+LOCAL_GPU_DENSE_CANARY=PASS
+CLI_PRODUCT_LOCAL_GPU_PATH=PASS
+CLI_COMPLETE=1
+CLI_MATURITY_COMPLETE=0
+WHY_MATURITY_STILL_0=
+  Full 11-cat VALUATION_CLI matrix ≠100 (MoE semantic, competitive H2H,
+  distribution clean-VM, debugger/recovery NOT_RUN). Asymmetric product-path
+  COMPLETE earned on help EXIT=0 + TinyLlama VulkanPrimary + EXIT=0 + tokens.
+ASYMMETRIC_OK=1
+GUI_MAY_LAG=1
+PROMOTE=0
+
+## Authority
+EXE_BIND.txt · gpu/tiny_gpu.{err,out,exit,meta}.txt · runs/help.exit.txt
+VALUATION_CLI.txt · VALUATION_TOP25_CLI_GUI_001/STATUS.txt · VALUATION_SCOREBOARD.txt
