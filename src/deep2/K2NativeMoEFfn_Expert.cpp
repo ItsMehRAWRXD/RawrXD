@@ -65,7 +65,14 @@ void SiluMul(float* gate, const float* up, size_t n) {
 
 bool HostGemv(int ggmlType, const uint8_t* w, const float* x, float* y,
               size_t rows, size_t cols, const char* tag, std::string& error) {
-    auto kn = QuantKernelRegistry::Instance().GetGEMV(ggmlType);
+    /* kn = GEMVKernelFn from QuantKernelRegistry. Null means type not
+     * registered — K2 INDEX early-return historically skipped Initialize(). */
+    auto& reg = QuantKernelRegistry::Instance();
+    auto kn = reg.GetGEMV(ggmlType);
+    if (!kn) {
+        if (reg.GetRegisteredCount() == 0) reg.Initialize();
+        kn = reg.GetGEMV(ggmlType);
+    }
     if (!kn || !w || !x || !y || !rows || !cols) {
         char buf[192];
         std::snprintf(buf, sizeof(buf),
@@ -181,6 +188,45 @@ bool K2MoEExecExpert(const GlobalTensorIndex& index, const KimiK2Config& cfg,
     MoELiveAdd(MoEPlaceLive().host_gemv_expert, 1);
     return SwiGLUHost(gateB.data(), gt, upB.data(), ut, downB.data(), dt, hidden,
                       expertOut, H, I, layer, expertId, false, error);
+}
+
+bool K2MoEExecDense(const GlobalTensorIndex& index, const KimiK2Config& cfg,
+                    uint32_t layer, const float* hidden, float* denseOut,
+                    std::string& error) {
+    char gateN[64], upN[64], downN[64];
+    std::snprintf(gateN, sizeof(gateN), "blk.%u.ffn_gate.weight", layer);
+    std::snprintf(upN, sizeof(upN), "blk.%u.ffn_up.weight", layer);
+    std::snprintf(downN, sizeof(downN), "blk.%u.ffn_down.weight", layer);
+    WeightSpan gs{}, us{}, ds{};
+    std::vector<uint8_t> gBuf, uBuf, dBuf;
+    if (!ResolveWeight(index, gateN, gs, gBuf, error)) return false;
+    if (!ResolveWeight(index, upN, us, uBuf, error)) return false;
+    if (!ResolveWeight(index, downN, ds, dBuf, error)) return false;
+    auto gRef = index.Find(gateN);
+    auto uRef = index.Find(upN);
+    auto dRef = index.Find(downN);
+    if (!gRef || !uRef || !dRef) {
+        error = "dense FFN refs missing";
+        return false;
+    }
+    size_t H = cfg.hiddenDim;
+    /* Dense L0 intermediate is model FFN width (Kimi≈18432), not MoE 2048. */
+    size_t I = 18432u;
+    if (gRef->shape.size() >= 2 && gRef->shape[0] && gRef->shape[1]) {
+        H = (size_t)gRef->shape[0];
+        I = (size_t)gRef->shape[1];
+    }
+    (void)cfg;
+    const uint8_t* gp = gs.data ? gs.data : gBuf.data();
+    const uint8_t* up = us.data ? us.data : uBuf.data();
+    const uint8_t* dp = ds.data ? ds.data : dBuf.data();
+    moe_ltrace::BC(layer, "DENSE_SWIGLU_BEGIN");
+    if (!SwiGLUHost(gp, (int)gRef->ggmlType, up, (int)uRef->ggmlType, dp,
+                    (int)dRef->ggmlType, hidden, denseOut, H, I, layer, -2,
+                    true, error))
+        return false;
+    moe_ltrace::BC(layer, "DENSE_SWIGLU_DONE");
+    return true;
 }
 
 bool K2MoEExecShared(const GlobalTensorIndex& index, const KimiK2Config& cfg,

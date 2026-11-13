@@ -11,6 +11,7 @@
 #include "ChatTemplate.hpp"
 #include "d2_gen_quality_probe.hpp"
 #include "Deep2Engine.h"
+#include <limits>
 #include "Deep2SsVkPackedDualAdapter.hpp"
 #include "lavapath/DualStickStreamWindow.hpp"
 #include "lavapath/ParseMibBudget.hpp"
@@ -1904,6 +1905,40 @@ void Deep2Engine::deallocateBuffers() {
 }
 
 // ============================================================================
+// Runtime REAP injection (non-destructive working-set + MoE top-k)
+// ============================================================================
+bool Deep2Engine::configureReapRuntimeInjection(
+    const RawrXD::Reap::RuntimeInjection& injection)
+{
+    reapRuntimeReceipt_ = {};
+    reapRuntimeReceipt_.sourceImmutable = true;
+
+    if (modelWeights.loaded)
+    {
+        reapRuntimeReceipt_.status = "REQUIRES_PRELOAD";
+        reapRuntimeReceipt_.reason = "RUNTIME_INJECTION_MUST_BE_STAGED_BEFORE_MODEL_LOAD";
+        return false;
+    }
+    if (!injection.enabled || injection.parameterCount == 0 ||
+        injection.expertCount == 0 || injection.workingSetBytes == 0)
+    {
+        reapRuntimeReceipt_.status = "INVALID_TARGET";
+        reapRuntimeReceipt_.reason = "PARAMETERS_EXPERTS_AND_WORKING_SET_MUST_BE_NONZERO";
+        return false;
+    }
+
+    reapRuntimeInjection_ = injection;
+    asyncPrefetchEnabled_ = true;
+    reapRuntimeReceipt_.active = true;
+    reapRuntimeReceipt_.requestedParameters = injection.parameterCount;
+    reapRuntimeReceipt_.requestedExperts = injection.expertCount;
+    reapRuntimeReceipt_.workingSetBytes = injection.workingSetBytes;
+    reapRuntimeReceipt_.status = "STAGED";
+    reapRuntimeReceipt_.reason = "APPLY_ON_NEXT_MODEL_LOAD";
+    return true;
+}
+
+// ============================================================================
 // Model Loading from GGUF
 // ============================================================================
 bool Deep2Engine::loadModel(const std::string& ggufPath) {
@@ -2259,12 +2294,35 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         printf("[Deep2Engine] GlobalTensorIndex built: %zu tensors across %zu shards\n",
                globalIndex_->TotalTensors(), globalIndex_->TotalShards());
 
-        // Initialize residency cache for streaming tensor access
-        residencyCache_ = std::make_unique<gguf_shard_cache::TensorResidencyCache>();
-        for (uint32_t s = 0; s < static_cast<uint32_t>(globalIndex_->TotalShards()); ++s) {
-            residencyCache_->register_shard(s, globalIndex_->ShardPath(s).string());
+        // Initialize residency cache for streaming tensor access.
+        // REAP may impose a hard resident-byte budget (non-destructive).
+        gguf_shard_cache::TensorResidencyCache::Config residencyConfig;
+        residencyConfig.max_active = 1024;
+        if (reapRuntimeInjection_.enabled)
+        {
+            if (reapRuntimeInjection_.workingSetBytes >
+                static_cast<uint64_t>((std::numeric_limits<size_t>::max)()))
+            {
+                printf("[Deep2Engine] ERROR: REAP working-set exceeds host size_t\n");
+                reapRuntimeReceipt_.status = "TARGET_OVERFLOW";
+                reapRuntimeReceipt_.reason = "WORKING_SET_EXCEEDS_HOST_SIZE_T";
+                return false;
+            }
+            residencyConfig.max_resident_bytes =
+                static_cast<uint64_t>(reapRuntimeInjection_.workingSetBytes);
         }
-        printf("[Deep2Engine] TensorResidencyCache ready\n");
+        residencyCache_ = std::make_unique<gguf_shard_cache::TensorResidencyCache>(residencyConfig);
+        for (uint32_t s = 0; s < static_cast<uint32_t>(globalIndex_->TotalShards()); ++s) {
+            if (!residencyCache_->register_shard(s, globalIndex_->ShardPath(s).string())) {
+                fprintf(stderr, "[Deep2Engine] ERROR: Failed to register shard %u: %s\n",
+                        s, globalIndex_->ShardPath(s).string().c_str());
+                globalIndex_.reset();
+                residencyCache_.reset();
+                return false;
+            }
+        }
+        printf("[Deep2Engine] TensorResidencyCache ready (%u shards registered)\n",
+               static_cast<uint32_t>(globalIndex_->TotalShards()));
     }
 
     isMultiShard_ = isMultiShard;
@@ -2516,6 +2574,75 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                 printf("[Deep2Engine] loadModel=INDEX_AND_ADDRESS (%s) "
                        "ModelState=Indexed — weights not resident\n",
                        shardDir.c_str());
+                // K2 INDEX path returns before the dense/MoE trailer. Apply
+                // staged REAP residency + expert top-k here or leave STAGED.
+                if (reapRuntimeInjection_.enabled)
+                {
+                    const uint64_t requestedExperts =
+                        reapRuntimeInjection_.expertCount;
+                    const uint64_t physicalExperts =
+                        k2ShardConfig_.numExperts > 0
+                            ? static_cast<uint64_t>(k2ShardConfig_.numExperts)
+                            : static_cast<uint64_t>(modelWeights.numExperts);
+                    if (physicalExperts == 0 && requestedExperts != 1)
+                    {
+                        reapRuntimeReceipt_.status = "TOPOLOGY_REJECTED";
+                        reapRuntimeReceipt_.reason =
+                            "DENSE_MODEL_HAS_NO_MOE_EXPERT_TOPOLOGY";
+                        return false;
+                    }
+                    if (physicalExperts > 0 &&
+                        requestedExperts > physicalExperts)
+                    {
+                        reapRuntimeReceipt_.status = "TOPOLOGY_REJECTED";
+                        reapRuntimeReceipt_.reason =
+                            "REQUESTED_EXPERTS_EXCEED_PHYSICAL_MODEL_EXPERTS";
+                        return false;
+                    }
+                    moeConfig_.numExperts = static_cast<size_t>(
+                        physicalExperts > 0 ? physicalExperts : 1);
+                    moeConfig_.numActiveExperts =
+                        static_cast<size_t>(requestedExperts);
+                    modelWeights.numExperts =
+                        static_cast<uint32_t>(moeConfig_.numExperts);
+                    modelWeights.numExpertsPerToken =
+                        static_cast<uint32_t>(requestedExperts);
+                    reapRuntimeReceipt_.effectiveExperts = requestedExperts;
+                    reapRuntimeReceipt_.routeConfigured = true;
+                    reapRuntimeReceipt_.streamerConfigured =
+                        residencyCache_ != nullptr;
+                    reapRuntimeReceipt_.workingSetConfigured =
+                        residencyCache_ != nullptr &&
+                        residencyCache_->resident_budget_bytes() ==
+                            reapRuntimeInjection_.workingSetBytes;
+                    reapRuntimeReceipt_.active =
+                        reapRuntimeReceipt_.streamerConfigured;
+                    reapRuntimeReceipt_.status =
+                        reapRuntimeReceipt_.workingSetConfigured
+                            ? "ACTIVE_RUNTIME_ROUTER_RESIDENCY"
+                            : "STREAMER_UNAVAILABLE";
+                    reapRuntimeReceipt_.reason =
+                        reapRuntimeReceipt_.workingSetConfigured
+                            ? "MOE_ROUTER_TOPK_AND_K2_INDEX_RESIDENCY_BYTE_BUDGET_APPLIED"
+                            : "K2_INDEX_RESIDENCY_BUDGET_NOT_MATCHED";
+                    if (!reapRuntimeReceipt_.workingSetConfigured)
+                        return false;
+                    printf("[Deep2Engine] REAP K2 INDEX apply: experts=%llu/%llu "
+                           "working_set=%llu\n",
+                           (unsigned long long)requestedExperts,
+                           (unsigned long long)physicalExperts,
+                           (unsigned long long)reapRuntimeInjection_.workingSetBytes);
+                    if (k2ShardConfig_.expertsPerToken == 0 &&
+                        modelWeights.numExpertsPerToken > 0)
+                        k2ShardConfig_.expertsPerToken =
+                            modelWeights.numExpertsPerToken;
+                }
+                /* INDEX path returns before dense trailer — host MoE GEMV still
+                 * needs Q4_K/Q5_K/Q6_K dispatch (kn was null → PLACE_EXEC_FAIL). */
+                {
+                    auto& reg = Deep2::QuantKernelRegistry::Instance();
+                    if (reg.GetRegisteredCount() == 0) reg.Initialize();
+                }
                 RawrWorkingSet w{};
                 w.activationBytes = (uint64_t)config.hiddenDim * 4ull * 3ull;
                 w.scratchBytes = (uint64_t)config.hiddenDim * 4ull;
@@ -3548,6 +3675,35 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
            isMultiShard ? globalIndex_->TotalTensors() : ggufResult.tensors.size());
     modelState_ = ModelState::Choreographable;
 
+    // Runtime REAP admission: working-set budget + router top-k. Fail closed
+    // on impossible topology; never fabricate experts or rewrite GGUF.
+    if (reapRuntimeInjection_.enabled)
+    {
+        const uint64_t requestedExperts = reapRuntimeInjection_.expertCount;
+        const bool denseModel = meta.numExperts == 0;
+        if (denseModel && requestedExperts != 1)
+        {
+            printf("[Deep2Engine] ERROR: REAP expert target requires /1 for dense model\n");
+            reapRuntimeReceipt_.status = "TOPOLOGY_REJECTED";
+            reapRuntimeReceipt_.reason = "DENSE_MODEL_HAS_NO_MOE_EXPERT_TOPOLOGY";
+            return false;
+        }
+        if (!denseModel && requestedExperts > meta.numExperts)
+        {
+            printf("[Deep2Engine] ERROR: REAP experts exceed physical model experts\n");
+            reapRuntimeReceipt_.status = "TOPOLOGY_REJECTED";
+            reapRuntimeReceipt_.reason = "REQUESTED_EXPERTS_EXCEED_PHYSICAL_MODEL_EXPERTS";
+            return false;
+        }
+        if (requestedExperts > static_cast<uint64_t>((std::numeric_limits<size_t>::max)()))
+        {
+            reapRuntimeReceipt_.status = "TARGET_OVERFLOW";
+            reapRuntimeReceipt_.reason = "EXPERT_TARGET_EXCEEDS_HOST_SIZE_T";
+            return false;
+        }
+        reapRuntimeReceipt_.effectiveExperts = requestedExperts;
+    }
+
     // Wire MoE streaming loader
     if (meta.numExperts > 0) {
         modelWeights.isMoE = true;
@@ -3562,7 +3718,20 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         // For multi-shard, MoE weights are resolved via GlobalTensorIndex + residency cache
         if (!isMultiShard) {
             moeWeightsLoader_ = std::make_unique<MoEWeightsLoader>();
-            moeWeightsLoader_->SetMaxCacheSize(4ULL * 1024 * 1024 * 1024);
+            size_t maxCacheBytes = 4ULL * 1024 * 1024 * 1024;
+            if (reapRuntimeInjection_.enabled)
+            {
+                if (reapRuntimeInjection_.workingSetBytes >
+                    static_cast<uint64_t>((std::numeric_limits<size_t>::max)()))
+                {
+                    reapRuntimeReceipt_.status = "TARGET_OVERFLOW";
+                    reapRuntimeReceipt_.reason = "WORKING_SET_EXCEEDS_HOST_SIZE_T";
+                    return false;
+                }
+                maxCacheBytes = static_cast<size_t>(reapRuntimeInjection_.workingSetBytes);
+                if (maxCacheBytes == 0) maxCacheBytes = 1;
+            }
+            moeWeightsLoader_->SetMaxCacheSize(maxCacheBytes);
             if (!moeWeightsLoader_->Open(firstShard.string().c_str())) {
                 printf("[Deep2Engine] WARNING: MoE streaming loader failed to open %s\n",
                        firstShard.string().c_str());
@@ -3571,7 +3740,9 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                 printf("[Deep2Engine] MoE streaming loader ready\n");
 
                 moeConfig_.numExperts       = meta.numExperts;
-                moeConfig_.numActiveExperts = modelWeights.numExpertsPerToken;
+                moeConfig_.numActiveExperts = reapRuntimeInjection_.enabled
+                    ? static_cast<size_t>(reapRuntimeInjection_.expertCount)
+                    : modelWeights.numExpertsPerToken;
                 moeConfig_.useSharedExpert  = moeConfig_.useSharedExpert || (meta.numSharedExperts > 0);
                 if (moeConfig_.expertDim == 0) moeConfig_.expertDim = meta.moeIntermediateSize > 0 ?
                                                 meta.moeIntermediateSize : meta.intermediateSize;
@@ -3687,11 +3858,22 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                        modelWeights.numLayers, meta.numExperts);
 
                 moeInitialized_ = true;
+                if (reapRuntimeInjection_.enabled)
+                {
+                    reapRuntimeReceipt_.routeConfigured = true;
+                    reapRuntimeReceipt_.streamerConfigured = true;
+                    reapRuntimeReceipt_.workingSetConfigured = true;
+                    reapRuntimeReceipt_.active = true;
+                    reapRuntimeReceipt_.status = "ACTIVE_RUNTIME_INJECTION";
+                    reapRuntimeReceipt_.reason = "MOE_ROUTER_TOPK_AND_STREAMER_CACHE_APPLIED";
+                }
             }
         } else {
             printf("[Deep2Engine] MoE multi-shard: using GlobalTensorIndex + residency cache\n");
             moeConfig_.numExperts       = meta.numExperts;
-            moeConfig_.numActiveExperts = modelWeights.numExpertsPerToken;
+            moeConfig_.numActiveExperts = reapRuntimeInjection_.enabled
+                ? static_cast<size_t>(reapRuntimeInjection_.expertCount)
+                : modelWeights.numExpertsPerToken;
                 moeConfig_.useSharedExpert  = moeConfig_.useSharedExpert || (meta.numSharedExperts > 0);
                 if (moeConfig_.expertDim == 0) moeConfig_.expertDim = meta.moeIntermediateSize > 0 ?
                                                 meta.moeIntermediateSize : meta.intermediateSize;
@@ -3709,7 +3891,34 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             printf("[Deep2Engine] Created %zu per-layer routers (multi-shard)\n", moeRouters_.size());
 
             moeInitialized_ = true;
+            if (reapRuntimeInjection_.enabled)
+            {
+                reapRuntimeReceipt_.routeConfigured = true;
+                reapRuntimeReceipt_.streamerConfigured = residencyCache_ != nullptr;
+                reapRuntimeReceipt_.workingSetConfigured =
+                    residencyCache_ != nullptr &&
+                    residencyCache_->resident_budget_bytes() ==
+                        reapRuntimeInjection_.workingSetBytes;
+                reapRuntimeReceipt_.active = reapRuntimeReceipt_.streamerConfigured;
+                reapRuntimeReceipt_.status = reapRuntimeReceipt_.streamerConfigured
+                    ? "ACTIVE_RUNTIME_ROUTER_RESIDENCY"
+                    : "STREAMER_UNAVAILABLE";
+                reapRuntimeReceipt_.reason = reapRuntimeReceipt_.streamerConfigured
+                    ? "MOE_ROUTER_TOPK_AND_MULTISHARD_RESIDENCY_BYTE_BUDGET_APPLIED"
+                    : "MULTISHARD_RESIDENCY_CACHE_NOT_INITIALIZED";
+            }
         }
+    }
+
+    if (reapRuntimeInjection_.enabled && meta.numExperts == 0)
+    {
+        reapRuntimeReceipt_.active = true;
+        reapRuntimeReceipt_.routeConfigured = false;
+        reapRuntimeReceipt_.streamerConfigured = false;
+        reapRuntimeReceipt_.workingSetConfigured = false;
+        reapRuntimeReceipt_.effectiveExperts = 1;
+        reapRuntimeReceipt_.status = "ACTIVE_DENSE_MODEL";
+        reapRuntimeReceipt_.reason = "NO_MOE_STREAMER_REQUIRED";
     }
 
     strncpy(config.modelPath, ggufPath.c_str(), sizeof(config.modelPath) - 1);
@@ -7174,6 +7383,19 @@ Deep2::GenerationResult Deep2Engine::generateStream(
                 std::string piece;
                 if (s->eng)
                     piece = s->eng->detokenize(std::vector<int>{id});
+                /* K2 path bypasses sampleToken — mirror IDs into quality trace. */
+                if (const char* qp = std::getenv("DEEP2_GEN_QUALITY_TRACE");
+                    qp && qp[0]) {
+                    if (FILE* qf = std::fopen(qp, "ab")) {
+                        std::fprintf(qf,
+                            "token_ordinal=%u selected_token_id=%d "
+                            "piece_bytes=%zu chat_template_valid=%d "
+                            "path=K2_STREAM\n",
+                            s->count, (int)id, piece.size(),
+                            s->eng ? s->eng->genQualityChatValid_ : 0);
+                        std::fclose(qf);
+                    }
+                }
                 Deep2::Ev512::HostEmitTokenCallback((uint64_t)(uint32_t)id,
                                                    (uint64_t)s->count);
                 Deep2::Ev512::HostEmitTokenDecoded((uint64_t)(uint32_t)id,
@@ -13125,12 +13347,31 @@ K2NativeStreamGate::Result Deep2Engine::runK2NativeStreamPartial(
         K2LivePolicy_Emit(stdout, pol);
     }
 
-    // K2_GPU_STREAM_COPY / MLA: open Vulkan + bind streamâ†’GPU upload path.
-    if (K2GpuStreamCopy_Wanted() || MLA_GpuGemvWanted()) {
+    // K2_GPU_STREAM_COPY / MLA: open Vulkan + bind stream→GPU upload path.
+    // DualStick MoE also needs VC bind on INDEX path (arm ≠ open devices).
+    const bool dualStickGpu =
+        DualStickState().armed || DualStickState().requested ||
+        DualStickState().planned;
+    if (K2GpuStreamCopy_Wanted() || MLA_GpuGemvWanted() || dualStickGpu) {
         if (!vulkanInitialized_) enableVulkan(true);
-        K2GpuStreamCopy_Bind(getVulkanComputeSlot(0));
-        K2GpuStreamCopy_Reset();
-        MLA_GpuGemv_Reset();
+        if (getVulkanComputeSlot(0)) {
+            DualStickBindVc(0, getVulkanComputeSlot(0));
+            if (getVulkanComputeSlot(1))
+                DualStickBindVc(1, getVulkanComputeSlot(1));
+        }
+        if (K2GpuStreamCopy_Wanted() || MLA_GpuGemvWanted()) {
+            K2GpuStreamCopy_Bind(getVulkanComputeSlot(0));
+            K2GpuStreamCopy_Reset();
+            MLA_GpuGemv_Reset();
+        }
+        fprintf(stderr,
+                "K2_DUALSTICK_VC_BIND stick0=%p stick1=%p vulkanInit=%d "
+                "armed=%d requested=%d\n",
+                (void*)DualStickVc(0), (void*)DualStickVc(1),
+                vulkanInitialized_ ? 1 : 0,
+                DualStickState().armed ? 1 : 0,
+                DualStickState().requested ? 1 : 0);
+        fflush(stderr);
     }
 
     const bool liveOn = LivePath_Wanted();

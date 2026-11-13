@@ -10,7 +10,9 @@
 #include "../deep2/lavapath/ProductStreamerPrep.hpp"
 #include "../deep2/GpuPreflight.hpp"
 #include "../deep2/RawrAutoBackendPolicy.hpp"
+#include "../reap/ReapRuntime.hpp"
 #include "../core/agent_wal.hpp"
+#include <cstdio>
 #include <cstdlib>
 #include <string>
 
@@ -25,6 +27,51 @@ int OnTok(void* user, uint32_t, const char* text, size_t n) {
 int CmdRun(const CliArgs& a) {
     if (a.model.empty()) { PrintUsage(); return ExitCode::Usage; }
     if (a.verbose) _putenv_s("RAWRXD_D2_SESSION_TRACE", "1");
+
+    // Live size target: --reap <params>/<experts>, or --size <params>/<experts>
+    // as a compatibility alias. Plain --size without '/' remains fail-closed.
+    std::string reapTarget = a.reapTarget;
+    if (reapTarget.empty() && !a.sizeOnly.empty()) {
+        if (a.sizeOnly.find('/') != std::string::npos) {
+            reapTarget = a.sizeOnly;
+            Diag("[REAP] --size %s accepted as live target alias for --reap\n",
+                 a.sizeOnly.c_str());
+        } else {
+            Diag("MODEL_SIZE_REQUESTED=%s\n", a.sizeOnly.c_str());
+            Diag("REAP_RUNTIME_UNAVAILABLE: use --reap <params>/<experts> "
+                 "or --size <params>/<experts> "
+                 "(e.g. --reap 30GB/8 or --size 1B/8); plain byte --size is rejected\n");
+            return ExitCode::Usage;
+        }
+    }
+
+    // Live REAP: non-destructive working-set + expert top-k, then usable run.
+    if (!reapTarget.empty()) {
+        RawrXD::Reap::RuntimeRequest req{};
+        req.model = a.model;
+        req.target = reapTarget;
+        req.prompt = a.prompt;
+        req.maxTokens = a.maxTokens ? a.maxTokens : 64u;
+        req.receiptPath = a.reapReceiptPath;
+        if (req.prompt.empty()) {
+            Diag("rawr: --reap/--size target requires a prompt (-p/--prompt) "
+                 "for usable E2E (or --receipt for load-only)\n");
+            if (a.reapReceiptPath.empty()) return ExitCode::Usage;
+        }
+        if (!Deep2::ProductStreamerPrep()) return ExitCode::Runtime;
+        const auto result = RawrXD::Reap::RunRuntime(req);
+        std::fputs(result.receipt.c_str(), stdout);
+        std::fflush(stdout);
+        if (result.exitCode == 0) {
+            rawrxd::agent_wal::Append(rawrxd::agent_wal::DefaultRoot(), 1,
+                                      "CMD_RUN_REAP_OK", a.model.c_str());
+            return ExitCode::Ok;
+        }
+        Diag("rawr: REAP runtime exit=%d\n", result.exitCode);
+        if (result.exitCode == 2) return ExitCode::Usage;
+        return ExitCode::Runtime;
+    }
+
     auto& reg = ModelRegistry::instance();
 
     /* Announce resolution start so the user sees progress instead of a hang. */

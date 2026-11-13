@@ -35,6 +35,9 @@ void PrintUsage() {
     Diag("  rawr show <model>\n");
     Diag("  rawr paths\n");
     Diag("  rawr run <model> [prompt|-p P|--prompt P] [--max-tokens N]\n");
+    Diag("  rawr run <model> --reap <params>/<experts> [-p P] [--receipt R]\n");
+    Diag("  rawr run <model> --size <params>/<experts> [-p P] [--receipt R]\n");
+    Diag("             live size alias: working-set budget + MoE top-k\n");
     Diag("  rawr run <model> [--verbose|--trace]  # stdin if prompt empty\n");
     Diag("  rawr chat|agent|steer|resume|term|serve ...\n");
 }

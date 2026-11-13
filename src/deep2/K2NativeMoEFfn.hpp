@@ -16,4 +16,9 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
                        uint32_t layer, bool decodePhase, const float* normed,
                        float* accum, std::string& error);
 
+/* Dense SwiGLU (Kimi L0): blk.N.ffn_{gate,up,down}.weight — not a no-op. */
+bool K2MoEExecDense(const GlobalTensorIndex& index, const KimiK2Config& cfg,
+                    uint32_t layer, const float* hidden, float* denseOut,
+                    std::string& error);
+
 } // namespace Deep2

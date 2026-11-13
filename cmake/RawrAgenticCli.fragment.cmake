@@ -84,6 +84,8 @@ set(RAWR_AGENTIC_SOURCES
   src/deep2/daily/d2_stream_metrics.c
   src/deep2/daily/d2_token_sink.c
   src/deep2/daily/d2_session_mock.c
+  src/reap/ReapRuntimePlan.cpp
+  src/reap/ReapRuntime.cpp
 )
 
 # Replace thin rawr_run with agentic front door if rawr already defined.
@@ -284,6 +286,50 @@ target_sources(rawrxd_ge_probe_001 PRIVATE ${RAWR_LEGAL_ASM_OBJ})
 add_dependencies(rawrxd_ge_probe_001 rawr_shape_legal_asm)
 if(MSVC)
   target_link_libraries(rawrxd_ge_probe_001 PRIVATE psapi)
+endif()
+
+# Offline rawr-reap writer/transformer held: multimodel GGUFLoader instance API
+# is not tip-compatible. Live usable size = product rawr + ReapRuntime (above).
+option(BUILD_RAWR_REAP_OFFLINE_CLI
+  "Build offline rawr-reap writer CLI (needs tip GGUFLoader REAP port)" OFF)
+if(BUILD_RAWR_REAP_OFFLINE_CLI)
+  message(WARNING "[Deep2] BUILD_RAWR_REAP_OFFLINE_CLI=ON but tip GGUFLoader REAP port incomplete")
+endif()
+
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/reap_runtime_plan_test.cpp")
+  add_executable(rawr-reap-runtime-plan-test
+    tests/reap_runtime_plan_test.cpp
+    src/reap/ReapRuntimePlan.cpp)
+  target_include_directories(rawr-reap-runtime-plan-test PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/deep2
+    ${CMAKE_SOURCE_DIR}/include)
+  target_link_libraries(rawr-reap-runtime-plan-test PRIVATE InferenceEngine)
+  if(MSVC)
+    target_compile_options(rawr-reap-runtime-plan-test PRIVATE /EHsc /W3 /std:c++20)
+  endif()
+  set_target_properties(rawr-reap-runtime-plan-test PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+  enable_testing()
+  add_test(NAME rawr_reap_runtime_plan COMMAND rawr-reap-runtime-plan-test)
+endif()
+
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/tensor_residency_budget_test.cpp")
+  add_executable(rawr-tensor-residency-budget-test
+    tests/tensor_residency_budget_test.cpp)
+  target_include_directories(rawr-tensor-residency-budget-test PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/deep2
+    ${CMAKE_SOURCE_DIR}/include)
+  if(MSVC)
+    target_compile_options(rawr-tensor-residency-budget-test PRIVATE /EHsc /W3 /std:c++20)
+  endif()
+  set_target_properties(rawr-tensor-residency-budget-test PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+  enable_testing()
+  add_test(NAME rawr_tensor_residency_budget COMMAND rawr-tensor-residency-budget-test)
 endif()
 
 message(STATUS "[Deep2] RAWRXD_AGENTIC_CLI_SOURCE_DROP_001 wired")

@@ -28,6 +28,7 @@
 #include "KimiK2Config.hpp"
 #include "K2NativeStreamGate.hpp"
 #include "TensorResidencyCache.hpp"
+#include "reap/ReapRuntimePlan.hpp"
 #include "ResidencyManager.hpp"
 #include "VirtualTensorDesc.hpp"
 #include <cstdio>
@@ -512,6 +513,14 @@ public:
     void setAsyncPrefetchEnabled(bool enable) { asyncPrefetchEnabled_ = enable; }
     bool isAsyncPrefetchEnabled() const { return asyncPrefetchEnabled_; }
 
+    // Runtime REAP injection: non-destructive residency + MoE top-k for next load.
+    // Never rewrites GGUF. Must be staged before loadModel.
+    bool configureReapRuntimeInjection(
+        const RawrXD::Reap::RuntimeInjection& injection);
+    const RawrXD::Reap::RuntimeInjectionReceipt& reapRuntimeReceipt() const {
+        return reapRuntimeReceipt_;
+    }
+
     // Production profiler (Batch 1)
     void enableProfiling(bool enable);
     bool isProfilingEnabled() const { return profilingEnabled_; }
@@ -856,6 +865,9 @@ private:
     // Key: layerId, Value: vector of job handles returned by PrefetchAsync
     std::unordered_map<int, std::vector<uint64_t>> pendingPrefetches_;
     bool asyncPrefetchEnabled_ = false;
+
+    RawrXD::Reap::RuntimeInjection reapRuntimeInjection_{};
+    RawrXD::Reap::RuntimeInjectionReceipt reapRuntimeReceipt_{};
 
     // BP16 streaming support (zero-copy mapped weight access)
     std::unique_ptr<BP16Streamer> bp16Streamer_;

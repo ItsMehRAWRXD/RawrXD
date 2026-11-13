@@ -45,13 +45,30 @@ bool K2NativeMoE_AfterMla(const GlobalTensorIndex& index, const KimiK2Config& cf
     std::snprintf(denseGate, sizeof(denseGate), "blk.%u.ffn_gate.weight", layer);
     if (layer == 0 && index.Find(denseGate)) {
         MoEPlaceLive().ffn_dispatch_dense++;
-        moe_ltrace::BC(layer, "EXIT_DENSE");
-        if (kimi_l1_ffn::CertOn()) {
-            std::fprintf(stderr,
-                         "L1FFN_NOTE L0_DENSE_STUB=1 "
-                         "(EXIT_DENSE; no dense GEMV yet)\n");
-            std::fflush(stderr);
+        char normN0[64];
+        std::snprintf(normN0, sizeof(normN0), "blk.%u.ffn_norm.weight", layer);
+        WeightSpan nSpan{};
+        std::vector<uint8_t> nBuf;
+        if (!ResolveWeight(index, normN0, nSpan, nBuf, error)) {
+            moe_ltrace::BC(layer, "DENSE_NORM_FAIL");
+            return false;
         }
+        const float* nw = reinterpret_cast<const float*>(
+            nSpan.data ? nSpan.data : nBuf.data());
+        float ss = 0.f;
+        for (size_t i = 0; i < H; ++i) ss += hiddenIO[i] * hiddenIO[i];
+        float inv = 1.f / std::sqrt(ss / (float)H + cfg.normRmsEps);
+        for (size_t i = 0; i < H; ++i) scratch[i] = hiddenIO[i] * inv * nw[i];
+        std::vector<float> dens(H, 0.f);
+        if (!K2MoEExecDense(index, cfg, layer, scratch, dens.data(), error)) {
+            moe_ltrace::BC(layer, "DENSE_EXEC_FAIL");
+            std::fprintf(stderr, "K2MoE_DENSE_FAIL layer=%u err=%s\n", layer,
+                         error.empty() ? "(none)" : error.c_str());
+            std::fflush(stderr);
+            return false;
+        }
+        for (size_t i = 0; i < H; ++i) hiddenIO[i] += dens[i];
+        moe_ltrace::BC(layer, "EXIT_DENSE_LIVE");
         return true;
     }
     if (cfg.numExperts == 0) {
@@ -83,6 +100,9 @@ bool K2NativeMoE_AfterMla(const GlobalTensorIndex& index, const KimiK2Config& cf
     if (!K2MoEPlaceAndExec(index, cfg, layer, decodePhase, scratch, accum.data(),
                            error)) {
         moe_ltrace::BC(layer, "PLACE_EXEC_FAIL");
+        std::fprintf(stderr, "K2MoE_PLACE_EXEC_FAIL layer=%u err=%s\n", layer,
+                     error.empty() ? "(none)" : error.c_str());
+        std::fflush(stderr);
         return false;
     }
     if (dumpL1) kimi_l1_ffn::DumpVec("FFN_DOWN_1", layer, tok, accum.data(), H);

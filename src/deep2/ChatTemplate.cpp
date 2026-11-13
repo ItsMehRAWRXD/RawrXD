@@ -63,107 +63,123 @@ ChatTemplateType ChatTemplate::detectFromModel(const std::string& architecture,
                                                 const std::string& modelName) {
     std::string arch = toLower(architecture);
     std::string name = toLower(modelName);
+    /* Basename only for path-ish names: "OllamaModels" contains "llama" and
+     * previously forced LLAMA2 for every model under F:\OllamaModels\... */
+    std::string base = name;
+    {
+        const auto slash = base.find_last_of("/\\");
+        if (slash != std::string::npos) base = base.substr(slash + 1);
+    }
 
     // TinyLlama / Zephyr chat (must beat generic "llama" → LLAMA2)
-    if (name.find("tinyllama") != std::string::npos ||
-        name.find("tiny-llama") != std::string::npos ||
+    if (base.find("tinyllama") != std::string::npos ||
+        base.find("tiny-llama") != std::string::npos ||
+        base.find("zephyr") != std::string::npos ||
+        name.find("tinyllama") != std::string::npos ||
         name.find("zephyr") != std::string::npos) {
         return ChatTemplateType::TINYLLAMA;
     }
 
+    // DeepSeek2 / Kimi / Moonshot BEFORE generic llama — arch=deepseek2 + path
+    // under OllamaModels must not become LLAMA2 ([INST] corrupts K2 decode).
+    if (arch.find("deepseek") != std::string::npos ||
+        base.find("deepseek") != std::string::npos ||
+        name.find("minimax") != std::string::npos ||
+        arch.find("minimax") != std::string::npos) {
+        if (base.find("coder") != std::string::npos ||
+            name.find("coder") != std::string::npos)
+            return ChatTemplateType::DEEPSEEK_CODER;
+        return ChatTemplateType::DEEPSEEK;
+    }
+    if (base.find("kimi") != std::string::npos || arch.find("kimi") != std::string::npos ||
+        arch.find("moonshot") != std::string::npos ||
+        base.find("moonshot") != std::string::npos) {
+        return ChatTemplateType::CHATML;
+    }
+
     // Phi family
-    if (arch.find("phi3") != std::string::npos || name.find("phi3") != std::string::npos ||
-        arch.find("phi-3") != std::string::npos || name.find("phi-3") != std::string::npos) {
+    if (arch.find("phi3") != std::string::npos || base.find("phi3") != std::string::npos ||
+        arch.find("phi-3") != std::string::npos || base.find("phi-3") != std::string::npos) {
         return ChatTemplateType::PHI3;
     }
-    if (arch.find("phi4") != std::string::npos || name.find("phi4") != std::string::npos ||
-        arch.find("phi-4") != std::string::npos || name.find("phi-4") != std::string::npos) {
+    if (arch.find("phi4") != std::string::npos || base.find("phi4") != std::string::npos ||
+        arch.find("phi-4") != std::string::npos || base.find("phi-4") != std::string::npos) {
         return ChatTemplateType::PHI4;
     }
 
-    // Llama family
-    if (arch.find("llama3") != std::string::npos || name.find("llama3") != std::string::npos ||
-        arch.find("llama-3") != std::string::npos || name.find("llama-3") != std::string::npos) {
+    // Llama family — match arch or BASENAME only (never full path: Ollama*).
+    if (arch.find("llama3") != std::string::npos || base.find("llama3") != std::string::npos ||
+        arch.find("llama-3") != std::string::npos || base.find("llama-3") != std::string::npos) {
         return ChatTemplateType::LLAMA3;
     }
-    if (arch.find("llama2") != std::string::npos || name.find("llama2") != std::string::npos ||
-        arch.find("llama-2") != std::string::npos || name.find("llama-2") != std::string::npos) {
+    if (arch.find("llama2") != std::string::npos || base.find("llama2") != std::string::npos ||
+        arch.find("llama-2") != std::string::npos || base.find("llama-2") != std::string::npos) {
         return ChatTemplateType::LLAMA2;
     }
-    if (arch.find("llama") != std::string::npos || name.find("llama") != std::string::npos) {
+    if (arch.find("llama") != std::string::npos || base.find("llama") != std::string::npos) {
         return ChatTemplateType::LLAMA2;  // default llama
     }
 
     // Mistral family
-    if (arch.find("mistral") != std::string::npos || name.find("mistral") != std::string::npos) {
+    if (arch.find("mistral") != std::string::npos || base.find("mistral") != std::string::npos) {
         return ChatTemplateType::MISTRAL;
     }
-    if (arch.find("mixtral") != std::string::npos || name.find("mixtral") != std::string::npos) {
+    if (arch.find("mixtral") != std::string::npos || base.find("mixtral") != std::string::npos) {
         return ChatTemplateType::MIXTRAL;
     }
 
     // Qwen family
-    if (arch.find("qwen3") != std::string::npos || name.find("qwen3") != std::string::npos ||
-        arch.find("qwen-3") != std::string::npos || name.find("qwen-3") != std::string::npos) {
+    if (arch.find("qwen3") != std::string::npos || base.find("qwen3") != std::string::npos ||
+        arch.find("qwen-3") != std::string::npos || base.find("qwen-3") != std::string::npos) {
         return ChatTemplateType::QWEN3;
     }
-    if (arch.find("qwen2.5") != std::string::npos || name.find("qwen2.5") != std::string::npos ||
-        arch.find("qwen-2.5") != std::string::npos || name.find("qwen-2.5") != std::string::npos) {
+    if (arch.find("qwen2.5") != std::string::npos || base.find("qwen2.5") != std::string::npos ||
+        arch.find("qwen-2.5") != std::string::npos || base.find("qwen-2.5") != std::string::npos) {
         return ChatTemplateType::QWEN25;
     }
-    if (arch.find("qwen2") != std::string::npos || name.find("qwen2") != std::string::npos ||
-        arch.find("qwen-2") != std::string::npos || name.find("qwen-2") != std::string::npos ||
-        arch.find("qwen") != std::string::npos || name.find("qwen") != std::string::npos) {
+    if (arch.find("qwen2") != std::string::npos || base.find("qwen2") != std::string::npos ||
+        arch.find("qwen-2") != std::string::npos || base.find("qwen-2") != std::string::npos ||
+        arch.find("qwen") != std::string::npos || base.find("qwen") != std::string::npos) {
         return ChatTemplateType::QWEN2;
     }
 
     // Gemma family (4 → 3 → 2)
-    if (arch.find("gemma4") != std::string::npos || name.find("gemma4") != std::string::npos ||
-        arch.find("gemma-4") != std::string::npos || name.find("gemma-4") != std::string::npos) {
+    if (arch.find("gemma4") != std::string::npos || base.find("gemma4") != std::string::npos ||
+        arch.find("gemma-4") != std::string::npos || base.find("gemma-4") != std::string::npos) {
         return ChatTemplateType::GEMMA3;
     }
-    if (arch.find("gemma3") != std::string::npos || name.find("gemma3") != std::string::npos ||
-        arch.find("gemma-3") != std::string::npos || name.find("gemma-3") != std::string::npos) {
+    if (arch.find("gemma3") != std::string::npos || base.find("gemma3") != std::string::npos ||
+        arch.find("gemma-3") != std::string::npos || base.find("gemma-3") != std::string::npos) {
         return ChatTemplateType::GEMMA3;
     }
-    if (arch.find("gemma2") != std::string::npos || name.find("gemma2") != std::string::npos ||
-        arch.find("gemma-2") != std::string::npos || name.find("gemma-2") != std::string::npos ||
-        arch.find("gemma") != std::string::npos || name.find("gemma") != std::string::npos) {
+    if (arch.find("gemma2") != std::string::npos || base.find("gemma2") != std::string::npos ||
+        arch.find("gemma-2") != std::string::npos || base.find("gemma-2") != std::string::npos ||
+        arch.find("gemma") != std::string::npos || base.find("gemma") != std::string::npos) {
         return ChatTemplateType::GEMMA2;
     }
 
-    // DeepSeek / R1 / MiniMax → ChatML-family
-    if (arch.find("deepseek") != std::string::npos || name.find("deepseek") != std::string::npos ||
-        name.find("minimax") != std::string::npos || arch.find("minimax") != std::string::npos) {
-        if (name.find("coder") != std::string::npos) return ChatTemplateType::DEEPSEEK_CODER;
-        return ChatTemplateType::DEEPSEEK;
-    }
-
     // GLM / ChatGLM
-    if (arch.find("glm") != std::string::npos || name.find("glm") != std::string::npos ||
+    if (arch.find("glm") != std::string::npos || base.find("glm") != std::string::npos ||
         arch.find("chatglm") != std::string::npos) {
         return ChatTemplateType::CHATML;
     }
 
     // Codestral
-    if (arch.find("codestral") != std::string::npos || name.find("codestral") != std::string::npos) {
+    if (arch.find("codestral") != std::string::npos ||
+        base.find("codestral") != std::string::npos) {
         return ChatTemplateType::CODESTRAL;
     }
 
     // Nemo / Nemotron
-    if (arch.find("nemo") != std::string::npos || name.find("nemo") != std::string::npos ||
-        arch.find("nemotron") != std::string::npos || name.find("nemotron") != std::string::npos) {
+    if (arch.find("nemo") != std::string::npos || base.find("nemo") != std::string::npos ||
+        arch.find("nemotron") != std::string::npos ||
+        base.find("nemotron") != std::string::npos) {
         return ChatTemplateType::NEMO;
     }
 
-    // Kimi / Moonshot
-    if (name.find("kimi") != std::string::npos || arch.find("kimi") != std::string::npos ||
-        arch.find("moonshot") != std::string::npos) {
-        return ChatTemplateType::CHATML;
-    }
-
     // BigDaddyG
-    if (name.find("bigdaddyg") != std::string::npos || name.find("bigdaddy") != std::string::npos) {
+    if (base.find("bigdaddyg") != std::string::npos ||
+        base.find("bigdaddy") != std::string::npos) {
         return ChatTemplateType::BIGDADDYG;
     }
 
@@ -235,6 +251,29 @@ bool ChatTemplate::initFromMetadata(const std::string& architecture,
     config_.bosToken = bosToken.empty() ? "<s>" : bosToken;
     config_.eosToken = eosToken.empty() ? "</s>" : eosToken;
 
+    // Name/arch rule is authoritative for TinyLlama/Zephyr: their GGUF jinja
+    // shares <|user|>/<|assistant|> with Phi-3, but EOS is </s> and the
+    // published turn layout requires the TinyLlama formatter. Prefer this
+    // before template-string classification so HTTP prompts never fall into
+    // raw/PHI3 mismatch that yields immediate EOS (content="", tokens=1).
+    const ChatTemplateType named = detectFromModel(architecture, modelName);
+    if (named == ChatTemplateType::TINYLLAMA) {
+        config_.type = ChatTemplateType::TINYLLAMA;
+        printf("[ChatTemplate] Forced '%s' from model name (arch=%s)\n",
+               getTypeName(), architecture.c_str());
+        return true;
+    }
+    /* deepseek2 / Kimi: architecture wins over path/jinja false-friends
+     * (OllamaModels⊃llama → LLAMA2; [INST] destroys MoE decode quality). */
+    if (named == ChatTemplateType::DEEPSEEK ||
+        named == ChatTemplateType::DEEPSEEK_CODER ||
+        named == ChatTemplateType::CHATML) {
+        config_.type = named;
+        printf("[ChatTemplate] Forced '%s' from arch/name (arch=%s)\n",
+               getTypeName(), architecture.c_str());
+        return true;
+    }
+
     // First try to detect from the raw template string
     if (!chatTemplateStr.empty()) {
         config_.type = detectFromTemplate(chatTemplateStr);
@@ -271,7 +310,7 @@ bool ChatTemplate::initFromMetadata(const std::string& architecture,
     }
 
     // Fall back to architecture + name detection
-    config_.type = detectFromModel(architecture, modelName);
+    config_.type = named;
     if (config_.type != ChatTemplateType::UNKNOWN) {
         printf("[ChatTemplate] Detected '%s' from model metadata (arch=%s)\n",
                getTypeName(), architecture.c_str());

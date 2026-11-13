@@ -24,6 +24,11 @@ struct CliArgs {
     std::string bindTerm;
     std::string styleProfile;
     std::string pipeName;
+    // Runtime REAP target: <parameters>/<experts>, e.g. 30GB/8 or 1B/8.
+    std::string reapTarget;
+    // Bare --size without --reap: parsed for fail-closed reject only.
+    std::string sizeOnly;
+    std::string reapReceiptPath;
     unsigned short httpPort = 0;
     AutonomyLevel autoLevel = AutonomyLevel::Off;
     uint32_t maxTokens = 0;
@@ -101,6 +106,8 @@ inline CliArgs ParseArgs(int argc, char** argv) {
                      !std::strcmp(s, "--tokens")) known = true;
             else if (!std::strncmp(s, "--max-tokens=", 13) ||
                      !std::strncmp(s, "--tokens=", 9)) known = true;
+            else if (!std::strcmp(s, "--reap") || !std::strcmp(s, "--size") ||
+                     !std::strcmp(s, "--receipt")) known = true;
             if (!known) {
                 std::fprintf(stderr,
                     "rawr: unknown argument '%s'\n"
@@ -123,6 +130,12 @@ inline CliArgs ParseArgs(int argc, char** argv) {
             a.workspace = argv[++i];
         else if (!std::strcmp(s, "--term") && i + 1 < argc)
             a.bindTerm = argv[++i];
+        else if (!std::strcmp(s, "--reap") && i + 1 < argc)
+            a.reapTarget = argv[++i];
+        else if (!std::strcmp(s, "--size") && i + 1 < argc)
+            a.sizeOnly = argv[++i];
+        else if (!std::strcmp(s, "--receipt") && i + 1 < argc)
+            a.reapReceiptPath = argv[++i];
         else if (!std::strncmp(s, "--profile=", 10)) a.styleProfile = s + 10;
         else if (!std::strncmp(s, "--auto=", 7))
             a.autoLevel = ParseAutonomy(s + 7);

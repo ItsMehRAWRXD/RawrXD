@@ -77,7 +77,8 @@ struct MoEWeights {
 
 // Router → residency handoff. weights are FINAL coefficients (sum ≈ 2.827).
 struct MoERoutingResult {
-    static constexpr uint32_t kMaxExperts = 8;
+    /* Match MoE place cap so REAP --size A/B top-k can exceed stock 8. */
+    static constexpr uint32_t kMaxExperts = 16;
 
     uint32_t expertIds[kMaxExperts] = {};
     // Unbiased sigmoid at selected IDs → normalize to sum 1 → × routedScalingFactor.

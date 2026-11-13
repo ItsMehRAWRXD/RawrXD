@@ -212,7 +212,10 @@ MoERoutingResult KimiK2Router::SelectExpertsNoAuxTC(
     const std::vector<float>& scores, const std::vector<float>& choiceScores) {
     MoERoutingResult result{};
     const uint32_t E = config_.numExperts;
-    const uint32_t k = config_.expertsPerToken;
+    uint32_t k = config_.expertsPerToken;
+    if (k > MoERoutingResult::kMaxExperts)
+        k = MoERoutingResult::kMaxExperts;
+    if (!k || !E || k > E) return result;
     std::vector<uint32_t> idx(E);
     std::iota(idx.begin(), idx.end(), 0);
     std::partial_sort(idx.begin(), idx.begin() + k, idx.end(),

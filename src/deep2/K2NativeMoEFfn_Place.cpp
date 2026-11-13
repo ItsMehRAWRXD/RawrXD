@@ -255,6 +255,70 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
             assignOne(plan.slots[si]);
     /* #10 steal RUNTIME_HELD until PREDICT_ERR collapses */
 
+    /* HOST_DECODE floor (DUALSTICK_ARM=0 / VC unbound): host GEMV, no stick
+     * worklist. Stick path hard-requires DualStickVc and would fail-closed
+     * then trip process abort on some CRT paths — REAP size must stay usable. */
+    if (!DualStickVc(0u)) {
+        uint32_t executed = 0;
+        std::vector<float> eout(cfg.hiddenDim, 0.f);
+        for (uint32_t si = 0; si < plan.count; ++si) {
+            if (plan.slots[si].expertId < 0) continue;
+            std::memset(eout.data(), 0, eout.size() * sizeof(float));
+            if (!K2MoEExecExpert(index, cfg, layer, plan.slots[si].expertId, 0u,
+                                 normed, eout.data(), error)) {
+                MoELiveAdd(MoEPlaceLive().expert_acquire_fail, 1);
+                return false;
+            }
+            const float w = plan.slots[si].weight;
+            for (uint32_t i = 0; i < cfg.hiddenDim; ++i)
+                accum[i] += eout[i] * w;
+            MoELiveAdd(MoEPlaceLive().expert_acquire_ok, 1);
+            ++executed;
+        }
+        MoEPlaceLive().experts_executed += executed;
+        if (decodePhase) MoEPlaceLive().decode_experts_executed += executed;
+        if (executed != pn) {
+            error = "K2MoE: HOST_EXPERT_PARITY fail selected!=executed";
+            return false;
+        }
+        MoEPlaceLive().product_backend_attested = 0;
+        moe_ltrace::BC(layer, "HOST_ROUTED_ACCUM_DONE");
+        std::vector<float> routed(cfg.hiddenDim);
+        for (uint32_t i = 0; i < cfg.hiddenDim; ++i) routed[i] = accum[i];
+        std::vector<float> shared(cfg.hiddenDim, 0.f);
+        moe_ltrace::BC(layer, "SHARED_GATE_BEGIN");
+        if (!K2MoEExecShared(index, cfg, layer, normed, shared.data(), error)) {
+            moe_ltrace::BC(layer, "SHARED_FAIL");
+            return false;
+        }
+        moe_ltrace::BC(layer, "SHARED_ACCUM_DONE");
+        MoEPlaceLive().shared_expert_calls++;
+        for (uint32_t i = 0; i < cfg.hiddenDim; ++i) accum[i] += shared[i];
+        if (kimi_l1_ffn::CertOn() && layer == 1u) {
+            kimi_l1_ffn::DumpVec("FFN_ROUTED_1", layer, moe_ltrace::Tok(),
+                                 routed.data(), cfg.hiddenDim);
+            kimi_l1_ffn::DumpVec("FFN_SHARED_1", layer, moe_ltrace::Tok(),
+                                 shared.data(), cfg.hiddenDim);
+            kimi_l1_ffn::DumpVec("FFN_ACCUM_1", layer, moe_ltrace::Tok(), accum,
+                                 cfg.hiddenDim);
+            double maxAbs = 0.0;
+            for (uint32_t i = 0; i < cfg.hiddenDim; ++i) {
+                const double expect =
+                    (double)routed[i] + (double)shared[i];
+                const double err = std::fabs(expect - (double)accum[i]);
+                if (err > maxAbs) maxAbs = err;
+            }
+            std::fprintf(stderr,
+                         "L1FFN_JOIN_INVARIANT layer=1 tok=%u n=%u "
+                         "ACCUM_EQ_ROUTED_PLUS_SHARED maxAbs=%.9g PASS=%d "
+                         "backend=HOST\n",
+                         moe_ltrace::Tok(), cfg.hiddenDim, maxAbs,
+                         maxAbs < 1e-5 ? 1 : 0);
+            std::fflush(stderr);
+        }
+        return true;
+    }
+
     /* #6/#7/#10: true parallel stick workers → one D2H partial/stick → join. */
     uint32_t ix0[MOE_PLACE_MAX_K], ix1[MOE_PLACE_MAX_K];
     uint32_t n0 = 0, n1 = 0;
