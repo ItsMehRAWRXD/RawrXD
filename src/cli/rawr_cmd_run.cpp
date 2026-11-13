@@ -111,10 +111,18 @@ int CmdRun(const CliArgs& a) {
     Deep2::DeviceBudget budget{};
     Deep2::ExecutionPolicy policy{};
 
-    // CLI/env overrides
+    // CLI/env overrides ? GPU-first; CPU only on explicit opt-in.
     if (const char* e = std::getenv("RAWR_FORCE_CPU")) policy.forceCPU = (e[0] == '1');
     if (const char* e = std::getenv("RAWR_FORCE_GPU")) policy.forceGPU = (e[0] == '1');
-    if (const char* e = std::getenv("RAWR_NO_CPU_FALLBACK")) policy.allowCPUFallback = (e[0] != '1');
+    if (const char* e = std::getenv("RAWR_NO_CPU_FALLBACK"))
+        policy.allowCPUFallback = (e[0] != '1');
+    else if (const char* hd = std::getenv("RAWRXD_HOST_DECODE");
+             hd && hd[0] == '1')
+        policy.allowCPUFallback = true;
+    else {
+        policy.forceGPU = true;
+        policy.allowCPUFallback = false;
+    }
     if (const char* e = std::getenv("RAWR_MIN_CPU_TPS")) policy.minimumCpuTPS = std::atof(e);
     if (const char* e = std::getenv("RAWR_PREFILL_TIMEOUT_MS")) policy.prefillTimeoutMs = std::atof(e);
     if (const char* e = std::getenv("RAWR_DECODE_TIMEOUT_MS")) policy.decodeTimeoutMs = std::atof(e);
@@ -135,6 +143,37 @@ int CmdRun(const CliArgs& a) {
     auto decision = abc.Decide(fit, budget, policy);
     Diag("[AUTO_BACKEND] decision=%s reason=%s\n",
         Deep2::BackendName(decision.backend), decision.reason.c_str());
+
+    /* MiniMax REAP residency skip: historically forced CPU. GPU-required law:
+       never CPU-override when RAWR_FORCE_GPU / RAWR_NO_CPU_FALLBACK / ALLOW_GPU. */
+    if (decision.backend == Deep2::Backend::Reject) {
+        const char* skip = std::getenv("RAWR_SKIP_AUTO_BACKEND");
+        const char* reap = std::getenv("RAWRXD_REAP_RETAINED");
+        const char* forceGpu = std::getenv("RAWR_FORCE_GPU");
+        const char* noCpu = std::getenv("RAWR_NO_CPU_FALLBACK");
+        const char* allowGpu = std::getenv("RAWRXD_ALLOW_GPU");
+        const bool gpuRequired =
+            (forceGpu && forceGpu[0] == '1') ||
+            (noCpu && noCpu[0] == '1') ||
+            (allowGpu && allowGpu[0] == '1' &&
+             !(std::getenv("RAWRXD_HOST_DECODE") &&
+               std::getenv("RAWRXD_HOST_DECODE")[0] == '1'));
+        if (skip && skip[0] == '1' && reap && reap[0] && reap[0] != '0') {
+            if (gpuRequired) {
+                decision.backend = Deep2::Backend::VulkanPrimary;
+                decision.reason =
+                    "RAWR_SKIP_AUTO_BACKEND+REAP but GPU_REQUIRED "
+                    "(FORCE_GPU/NO_CPU_FALLBACK/ALLOW_GPU)";
+            } else {
+                decision.backend = Deep2::Backend::CPU;
+                decision.reason =
+                    "RAWR_SKIP_AUTO_BACKEND=1 + RAWRXD_REAP_RETAINED "
+                    "(host residency)";
+            }
+            Diag("[AUTO_BACKEND] override=%s reason=%s\n",
+                 Deep2::BackendName(decision.backend), decision.reason.c_str());
+        }
+    }
 
     if (decision.backend == Deep2::Backend::Reject) {
         Diag("[ERROR] NO_FEASIBLE_BACKEND: %s\n", decision.reason.c_str());

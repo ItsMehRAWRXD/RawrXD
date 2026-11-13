@@ -95,7 +95,12 @@ struct AgentExecutor {
         Deep2::ModelFit fit{};
         Deep2::DeviceBudget budget{};
         Deep2::ExecutionPolicy policy{};
-        policy.allowCPUFallback = true;
+        /* GPU-first agent path; CPU only if HOST_DECODE / FORCE_CPU set. */
+        const char* hd = std::getenv("RAWRXD_HOST_DECODE");
+        const char* fc = std::getenv("RAWR_FORCE_CPU");
+        policy.allowCPUFallback =
+            (hd && hd[0] == '1') || (fc && fc[0] == '1');
+        policy.forceGPU = !policy.allowCPUFallback;
 
         if (abc.InspectModel(ar.path, fit)) {
             abc.MeasureHostBudget(budget);

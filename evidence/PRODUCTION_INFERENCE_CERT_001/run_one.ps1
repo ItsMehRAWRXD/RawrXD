@@ -1,7 +1,7 @@
 param(
   [Parameter(Mandatory=$true)][string]$Id,
   [Parameter(Mandatory=$true)][string]$Model,
-  [ValidateSet("HOST","GPU")][string]$Backend = "HOST",
+  [ValidateSet("HOST","GPU")][string]$Backend = "GPU",
   [string]$ExtraArgs = "",
   [int]$BudgetMib = 59568,
   [int]$MaxTokens = 8,
