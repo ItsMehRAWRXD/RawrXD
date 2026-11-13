@@ -411,3 +411,25 @@ storeKvRoundTrip=F16 PRESERVED SPV_TOUCHED=0
 GPU_PARITY=NOT_CREDITED (CPU EXACT16 open)
 NEXT=llama default-ubatch residual ≠ LinearW (attn/graph); do not reopen Q4K act
 RECEIPT=cpu_llama/batch09_q4k_gemm/
+
+==============================================================================
+BATCH10 FIRST_OP beyond Linear = FLASH_ATTN ASOF=2026-11-12T21:35:00-05:00
+==============================================================================
+EXE_SMOKE_SHA256=E6A387C3272E4B0A3E1EC44FE96DB7B2DEDE5E4CB4B3E0E6108620F6DA7452B7
+CROSS_SHA_CREDIT=0
+DUMP=
+  llama CPU -ngl0 FA-off: ub1=ub9=ub512 tip14=15233 'processed'
+  llama CPU -ngl0 FA-on ub9: tip14=29213 'decoded'
+  prior 'default ubatch->29213' was FA-auto/GPU contamination
+FIRST_OP_BEYOND_LINEAR=FLASH_ATTN (classic softmax vs flash-attn)
+LLAMA_CPU_FAOFF_16=576,23192,16895,63762,374,279,2790,1372,315,821,27035,429,646,387,15233,553
+ENG_CPU_16=576,23192,16895,63762,374,279,2790,1372,315,821,27035,429,646,387,15233,553
+vs_FAOFF EXACT16=1 tip2=16895 tip14=15233 MATCH
+vs_FAON_FIXTURE FIRST_MIS=@14 (15233 vs 29213) — FA basin, not Linear/ubatch
+batchedMatMulCount=196
+ENGINE_FIX=NONE (no blind attn/FA/SPIR-V)
+RC2_05_PASS=0 (three-way/FA-on/GPU still open; CPU FA-off exact noted only)
+CERTIFIED=0 PROMOTE=0 TIP_CLIMB=HOLD DO_NOT_REOPEN_Q4K_ACT=1
+storeKvRoundTrip=F16 PRESERVED SPV_TOUCHED=0 ADA48968
+RECEIPT=cpu_llama/batch10_attn_beyond_linear/
+NEXT=hold FA-off as CPU authority OR scoped FA host path (not this turn)
