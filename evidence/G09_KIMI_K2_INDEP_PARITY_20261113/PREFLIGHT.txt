@@ -25,3 +25,9 @@ DEEP2_LIVE_SMOKE=F:\rawrxd\build_reap\bin\aggregate_decode_single_smoke.exe
   NOTE=live smoke is RC2-05 tip26 seal EXE; G09 Kimi compare must restore/remasure 0C29A6F8 or document new EXE remasure — do not mix credit
 
 NEXT=Gate2 fixture equality (tokenize + template bytes) then Gate3 ref greedy gen without assuming MLA until load probe
+
+GATE2_FIXTURE_INVENTORY ASOF=2026-11-13T03:02:00-05:00
+DIR=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M
+SHARDS=13/13 + blobs/ + manifests/ + Modelfile
+SHARD1_SHA256=EB48051961B59B420E182552965B7AA141D16C99488C69CCC9DE1327E96F5639
+SHARD1_BYTES=46304135840
