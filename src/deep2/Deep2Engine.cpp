@@ -2539,17 +2539,26 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                 openK2ShardDirectory(shardDir)) {
                 modelWeights.loaded = true;
                 modelWeights.useMLA = true;
+                /* INDEX returns before the dense trailer that copies
+                 * modelWeights → config. Sync MLA-corrected dims INTO config
+                 * first — previously config still held geo.headDim from
+                 * attention.key_length (Kimi=576) and the reverse copy below
+                 * clobbered modelWeights.headDim=192 → incoherent decode. */
+                config.qLoraRank = modelWeights.qLoraRank;
+                config.kvLoraRank = modelWeights.kvLoraRank;
+                config.qkNopeHeadDim = modelWeights.qkNopeHeadDim;
+                config.qkRopeHeadDim = modelWeights.qkRopeHeadDim;
+                config.vHeadDim = modelWeights.vHeadDim;
+                config.headDim = modelWeights.headDim;
                 modelWeights.hiddenDim = config.hiddenDim;
                 modelWeights.numLayers = config.numLayers;
                 modelWeights.numHeads = config.numHeads;
                 modelWeights.numKVHeads = config.numKVHeads;
                 modelWeights.vocabSize = config.vocabSize;
-                modelWeights.qLoraRank = config.qLoraRank;
-                modelWeights.kvLoraRank = config.kvLoraRank;
-                modelWeights.qkNopeHeadDim = config.qkNopeHeadDim;
-                modelWeights.qkRopeHeadDim = config.qkRopeHeadDim;
-                modelWeights.vHeadDim = config.vHeadDim;
-                modelWeights.headDim = config.headDim;
+                printf("[Deep2Engine] K2_INDEX_MLA_SYNC headDim=%zu qkNope=%zu "
+                       "qkRope=%zu v=%zu (geo.key_length was NOT authoritative)\n",
+                       config.headDim, config.qkNopeHeadDim, config.qkRopeHeadDim,
+                       config.vHeadDim);
                 modelState_ = ModelState::Indexed;
                 initialized = true;
                 choreo::ApplyLawEnv();
