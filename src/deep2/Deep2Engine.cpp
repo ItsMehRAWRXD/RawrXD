@@ -8315,14 +8315,19 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
         prefill_scope_id = flight_recorder_->begin("prefill");
     }
 
-    // RC2-05 tip14: llama default ubatch processes the prompt as one
-    // layer-major multi-token graph (tip14=29213). Serial token-major prefill
-    // matches llama -ub 1 (tip14=15233). Prefer batched prefill when enabled
-    // and stage dumps are off (dumps need per-token serial traces).
-    // Default ON (llama continuous ubatch parity); DEEP2_BATCHED_PREFILL=0 disables.
+    // RC2-05: batched prefill = CPU FA-off exact (tip14=15233). GPU decode does
+    // not ingest host batched-prefill KV → tip1 garbage under vulkan. Gate host
+    // batched path off when GPU forward is live; SPV untouched. Env=0 still wins.
     enableBatchedPrefill(true, prefillChunkSize_);
     const bool useBatchedPrefill =
-        batchedPrefillEnabled_ && promptLen > 1 && !B3_StageDigestEnabled();
+        batchedPrefillEnabled_ && promptLen > 1 && !B3_StageDigestEnabled() &&
+        !vulkanEnabled_;
+    if (vulkanEnabled_ && batchedPrefillEnabled_ && promptLen > 1)
+    {
+        fprintf(stderr,
+                "PREFILL_BATCHED=0 reason=GPU_HOST_KV_HANDOFF (CPU keeps batched)\n");
+        fflush(stderr);
+    }
     if (useBatchedPrefill)
     {
         std::vector<float> hiddenOut(promptLen * config.hiddenDim, 0.0f);
