@@ -160,49 +160,77 @@ inline void batchedAttentionScores(
 // (~1 GB of Q4_K weights stays hot across the whole chunk instead of being
 // re-streamed per token).
 // ---------------------------------------------------------------------------
-// Minimal FP32→F16→FP32 for post-attn KV seal (matches Deep2Engine storeKvRoundTrip).
-inline float fp16RoundTripLocal(float val) {
+// FP32→F16→FP32 must bit-match Deep2Engine::storeKvRoundTrip (floatToFp16 RNE
+// + fp16ToFloat). Prior local helper flushed e<=0 to ±0 (no subnormals) and
+// zeroed FP16-subnormal decode — that seeded HOST_ATTN KV history drift vs CPU
+// decode (ATTN_OUT FIRST_OP @L0; CONT32 tip17). Do not reopen Q4K act / SPV.
+inline uint16_t floatToFp16Local(float val) {
     uint32_t x;
     std::memcpy(&x, &val, sizeof(x));
     const uint32_t sign = (x >> 16) & 0x8000u;
     const uint32_t exp = (x >> 23) & 0xFFu;
     const uint32_t mant = x & 0x7FFFFFu;
-    uint16_t h;
     if (exp == 0xFFu)
-        h = (uint16_t)(sign | 0x7C00u | (mant ? 0x200u : 0u));
-    else {
-        const int e = (int)exp - 127 + 15;
-        if (e >= 31)
-            h = (uint16_t)(sign | 0x7C00u);
-        else if (e <= 0)
-            h = (uint16_t)sign;
-        else {
-            uint32_t he = (uint32_t)e << 10;
-            uint32_t hm = mant >> 13;
-            const uint32_t rem = mant & 0x1FFFu;
-            if (rem > 0x1000u || (rem == 0x1000u && (hm & 1u))) {
-                ++hm;
-                if (hm == 0x400u) {
-                    hm = 0;
-                    he += 0x400u;
-                }
-            }
-            h = (uint16_t)(sign | he | hm);
+        return (uint16_t)(sign | 0x7C00u | (mant ? 0x200u : 0u));
+    const int e = (int)exp - 127 + 15;
+    if (e >= 31)
+        return (uint16_t)(sign | 0x7C00u);
+    if (e <= 0) {
+        if (e < -10)
+            return (uint16_t)sign;
+        uint32_t m = mant | 0x800000u;
+        const int rshift = 14 - e;
+        uint32_t q = m >> rshift;
+        const uint32_t rem = m & ((1u << rshift) - 1u);
+        const uint32_t half = 1u << (rshift - 1);
+        if (rem > half || (rem == half && (q & 1u)))
+            ++q;
+        return (uint16_t)(sign | q);
+    }
+    uint32_t he = (uint32_t)e << 10;
+    uint32_t hm = mant >> 13;
+    const uint32_t rem = mant & 0x1FFFu;
+    if (rem > 0x1000u || (rem == 0x1000u && (hm & 1u))) {
+        ++hm;
+        if (hm == 0x400u) {
+            hm = 0;
+            he += 0x400u;
+            if (he >= 0x7C00u)
+                return (uint16_t)(sign | 0x7C00u);
         }
     }
-    const uint32_t hs = (uint32_t)(h & 0x8000u) << 16;
-    const uint32_t he2 = (h >> 10) & 0x1Fu;
-    const uint32_t hm2 = h & 0x3FFu;
-    uint32_t out;
-    if (he2 == 0)
-        out = hs;
-    else if (he2 == 31)
-        out = hs | 0x7F800000u | (hm2 << 13);
-    else
-        out = hs | ((he2 + 127 - 15) << 23) | (hm2 << 13);
-    float f;
-    std::memcpy(&f, &out, sizeof(f));
-    return f;
+    return (uint16_t)(sign | he | hm);
+}
+
+inline float fp16ToFloatLocal(uint16_t h) {
+    const uint32_t sign = (h >> 15) & 0x1u;
+    const uint32_t exp = (h >> 10) & 0x1Fu;
+    uint32_t mant = h & 0x3FFu;
+    uint32_t f;
+    if (exp == 0) {
+        if (mant == 0) {
+            f = sign << 31;
+        } else {
+            int e = 0;
+            while (!(mant & 0x400u)) {
+                mant <<= 1;
+                e++;
+            }
+            mant &= 0x3FFu;
+            f = (sign << 31) | ((113 - e) << 23) | (mant << 13);
+        }
+    } else if (exp == 31) {
+        f = (sign << 31) | (0xFFu << 23) | (mant << 13);
+    } else {
+        f = (sign << 31) | ((exp + 127 - 15) << 23) | (mant << 13);
+    }
+    float result;
+    std::memcpy(&result, &f, sizeof(float));
+    return result;
+}
+
+inline float fp16RoundTripLocal(float val) {
+    return fp16ToFloatLocal(floatToFp16Local(val));
 }
 
 inline bool KvKeepF32Env() {
