@@ -21,14 +21,17 @@ inline int ProductStreamerPrep() {
     static std::atomic<int> armed{0};
     if (armed.load() != 0) return 1;
     if (!StreamerArmSpeedEnvCore(stderr)) return 0;
-    /* R1 multi-GGUF needs LAA:YES VA (>2GB), but amdvlk ICD remains unsafe.
-     * Force HOST_DECODE whenever LAA:NO *or* caller/env opts into CPU floor.
-     * Never arm DualStick/ICD on product path unless RAWRXD_ALLOW_GPU=1. */
+    /* GPU-required product default (no CPU-only benches/IDE/CLI).
+     * Opt into HOST_DECODE only via RAWRXD_HOST_DECODE=1 or RAWR_FORCE_CPU=1.
+     * LAA:NO still forces host floor (VA). */
+    SetEnvIfUnset("RAWRXD_ALLOW_GPU", "1");
+    const char* forceCpu = std::getenv("RAWR_FORCE_CPU");
+    const char* hostDec = std::getenv("RAWRXD_HOST_DECODE");
     const char* allowGpu = std::getenv("RAWRXD_ALLOW_GPU");
-    const bool gpuOk = allowGpu && allowGpu[0] == '1';
-    const bool hostFloor = !ProcessIsLargeAddressAware() || !gpuOk ||
-                           (std::getenv("RAWRXD_HOST_DECODE") &&
-                            std::getenv("RAWRXD_HOST_DECODE")[0] == '1');
+    const bool explicitHost =
+        (hostDec && hostDec[0] == '1') || (forceCpu && forceCpu[0] == '1');
+    const bool gpuOk = allowGpu && allowGpu[0] == '1' && !explicitHost;
+    const bool hostFloor = !ProcessIsLargeAddressAware() || !gpuOk;
     if (hostFloor) {
         SetEnv("RAWRXD_HOST_DECODE", "1");
         SetEnv("DEEP2_DUALSTICK_ARM", "0");
@@ -37,9 +40,11 @@ inline int ProductStreamerPrep() {
         /* ArmSpeed SetEnvIfUnset pins MANUAL+trampoline+E8B0M — neutralize. */
         SetEnv("DEEP2_LIVE_POLICY", "OFF");
         SetEnv("DEEP2_LIVE_MECH", "none");
-        SetEnv("RAWRXD_DEEP2_ALLOW_ELASTIC", "0");
-        /* Capture ArmSpeed/E8B0M raw BEFORE overwriting effective floor. */
+        /* B04/B02: keep elastic — multi-shard HOST_DECODE acquires via fileOffset. */
+        SetEnvIfUnset("RAWRXD_DEEP2_ALLOW_ELASTIC", "1");
+        /* B04: capture ArmSpeed SetEnvIfUnset("E8B0M") BEFORE host-floor overwrite. */
         char rawBud[64] = {};
+        const char* preFloorSrc = "UNSET";
         if (const char* p = std::getenv("DEEP2_WEIGHT_BUDGET_MIB")) {
             size_t n = 0;
             while (p[n] && n + 1 < sizeof(rawBud)) {
@@ -47,13 +52,14 @@ inline int ProductStreamerPrep() {
                 ++n;
             }
             rawBud[n] = 0;
+            preFloorSrc = "ARMSPEED_SETENVIFUNSET_OR_USER";
         }
-        /* Honor user-configured weight budget if present; otherwise derive a
-         * hardware-aware default from available system RAM rather than forcing
-         * an arbitrarily small 2 GiB cap. MoE models stream; residency does not
-         * require full model materialization. */
         const char* explicitBudget = std::getenv("WEIGHT_BUDGET_MIB");
-        if (!explicitBudget || explicitBudget[0] == '\0') {
+        const char* postFloorSrc = "HOST_FLOOR_RAM_EIGHTH";
+        if (explicitBudget && explicitBudget[0]) {
+            SetEnv("DEEP2_WEIGHT_BUDGET_MIB", explicitBudget);
+            postFloorSrc = "USER_WEIGHT_BUDGET_MIB";
+        } else {
             MEMORYSTATUSEX memStatus{};
             memStatus.dwLength = sizeof(memStatus);
             GlobalMemoryStatusEx(&memStatus);
@@ -68,32 +74,36 @@ inline int ProductStreamerPrep() {
             _snprintf_s(buf, sizeof(buf), "%llu", (unsigned long long)defaultMib);
             SetEnv("WEIGHT_BUDGET_MIB", buf);
             SetEnv("DEEP2_WEIGHT_BUDGET_MIB", buf);
-        } else {
-            SetEnv("DEEP2_WEIGHT_BUDGET_MIB", explicitBudget);
         }
-        /* WEIGHT_BUDGET_BYTES intentionally unset so WEIGHT_BUDGET_MIB path is
-         * evaluated in Deep2Engine. */
-{
-            MibParseResult raw = ParseMibTokenEx(rawBud[0] ? rawBud : "E8B0M");
-            EmitWeightBudgetReceipt(stderr, raw, "ENV_RAW_BEFORE_HOST_FLOOR");
-            unsigned long long residencyBudget = raw.ok ? raw.mib : 0ULL;
-            int budgetRelation = (raw.ok && raw.mib > 0) ? 1 : 0;
+        /* WEIGHT_BUDGET_BYTES unset so WEIGHT_BUDGET_MIB path is authoritative. */
+        {
+            MibParseResult raw = ParseMibTokenEx(rawBud[0] ? rawBud : nullptr);
+            const char* effStr = std::getenv("DEEP2_WEIGHT_BUDGET_MIB");
+            MibParseResult eff = ParseMibTokenEx(effStr);
+            EmitWeightBudgetReceipt(stderr, eff, postFloorSrc);
             std::fprintf(stderr,
-                         "WEIGHT_BUDGET_ENV_PRESENT=1\n"
+                         "WEIGHT_BUDGET_PRE_FLOOR_SRC=%s\n"
+                         "WEIGHT_BUDGET_PRE_FLOOR_RAW=\"%s\"\n"
+                         "WEIGHT_BUDGET_PRE_FLOOR_MIB=%llu\n"
+                         "WEIGHT_BUDGET_POST_FLOOR_SRC=%s\n"
+                         "WEIGHT_BUDGET_ENV_PRESENT=%d\n"
                          "WEIGHT_BUDGET_ENV_RAW=\"%s\"\n"
                          "WEIGHT_BUDGET_PARSE_OK=%d\n"
                          "WEIGHT_BUDGET_INPUT_MIB=%llu\n"
                          "WEIGHT_BUDGET_EFFECTIVE_MIB=%llu\n"
                          "RESIDENCY_BUDGET_MIB=%llu\n"
                          "BUDGET_RELATION_VALID=%d\n"
-                         "NOTE=MODEL_SIZE_NE_PHYSICAL_RESIDENCY; "
-                         "RESIDENCY_LE_PHYSICAL_BUDGET; "
-                         "MODEL_SIZE_LE_LOGICAL_ADDRESSABILITY_REQUIRES_LAA\n",
-                         raw.input && raw.input[0] ? raw.input : "(empty)",
-                         raw.ok, (unsigned long long)raw.mib,
-                         (unsigned long long)raw.mib,
-                         residencyBudget,
-                         budgetRelation);
+                         "NOTE=REAP_TARGET_NE_RESIDENCY_BUDGET; "
+                         "ARMSPEED_E8B0M_IS_SETENVIFUNSET_DEFAULT; "
+                         "MODEL_SIZE_NE_PHYSICAL_RESIDENCY\n",
+                         preFloorSrc, rawBud[0] ? rawBud : "(unset)",
+                         (unsigned long long)(raw.ok ? raw.mib : 0ULL),
+                         postFloorSrc, effStr && effStr[0] ? 1 : 0,
+                         effStr ? effStr : "(unset)", eff.ok,
+                         (unsigned long long)(eff.ok ? eff.mib : 0ULL),
+                         (unsigned long long)(eff.ok ? eff.mib : 0ULL),
+                         (unsigned long long)(eff.ok ? eff.mib : 0ULL),
+                         (eff.ok && eff.mib > 0) ? 1 : 0);
             std::fflush(stderr);
         }
         SetEnv("DEEP2_GPU_FWD", "0");
@@ -134,10 +144,16 @@ inline int ProductStreamerPrep() {
             ArmDualStickNoTruncate(wp);
         }
     }
+    SetEnvIfUnset("DEEP2_GPU_FWD", "1");
+    SetEnvIfUnset("RAWRXD_GPU_FWD", "1");
+    SetEnv("RAWRXD_HOST_DECODE", "0");
     freetoken::Init(FREETOKEN_ZONE_BYTES, 4);
     future::InitFromPhysicalPool();
     armed.store(1);
-    std::fprintf(stderr, "PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1\n");
+    std::fprintf(stderr,
+                 "PRODUCT_LAA=%d HOST_DECODE=0 ALLOW_GPU=1 "
+                 "PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1 GPU_DEFAULT=1\n",
+                 ProcessIsLargeAddressAware() ? 1 : 0);
     if (experimental_ssm::AllowFlag())
         experimental_ssm::EmitAuthResume(stderr, 0);
     std::fflush(stderr);

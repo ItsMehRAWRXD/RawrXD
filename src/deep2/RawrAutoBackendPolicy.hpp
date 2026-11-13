@@ -82,7 +82,9 @@ struct DeviceBudget {
 struct ExecutionPolicy {
     bool forceCPU = false;
     bool forceGPU = false;
-    bool allowCPUFallback = true;
+    /* Product/bench default: GPU required. Opt into CPU via RAWR_FORCE_CPU /
+     * RAWRXD_HOST_DECODE or RAWR_NO_CPU_FALLBACK=0. */
+    bool allowCPUFallback = false;
     bool allowStreaming = true;
 
     // 0 disables performance-based CPU rejection.
