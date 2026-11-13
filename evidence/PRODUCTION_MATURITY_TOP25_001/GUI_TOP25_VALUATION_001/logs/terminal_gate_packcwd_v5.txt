@@ -1,0 +1,13 @@
+TERMINAL_GATE harness v5 PROMOTE=0
+PACK_CWD=G:\~dev\rawrxd\evidence\FOUR_PANEL_COMPLETION_001
+PASS echo capture marker_in_pipe
+PASS compile+run via ConPTY
+PASS interrupt issued
+PASS resize
+PASS restart
+PASS capture after restart
+PASS no orphan after stop
+PASS PowerShell capture
+TERMINAL_GATE fail_count=0
+TERMINAL=PASS
+PROMOTE=0 TIP_CLIMB=HOLD

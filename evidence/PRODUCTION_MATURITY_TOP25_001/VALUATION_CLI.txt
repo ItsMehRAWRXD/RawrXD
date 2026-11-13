@@ -1,11 +1,14 @@
-﻿PRODUCTION_MATURITY_TOP25_001 — VALUATION_CLI
-ASOF_LOCAL=2026-11-13T16:56-05:00
+﻿PRODUCTION_MATURITY_TOP25_001 ? VALUATION_CLI
+ASOF_LOCAL=2026-11-13T16:52-05:00
 WORKSTREAM=CLI_TOP25_MATURITY_VALUATION
 CLI_CAN_FINISH_WITHOUT_GUI=1
 PROMOTE=0
 CERTIFIED=0
 CLI_MATURITY_COMPLETE=0
+REJECTED_CLI_COMPLETE_AT_SUB100=1
 CLI_COMPLETE=0
+CLI_COMPLETE_BASIS=help EXIT=0 + TinyLlama AUTO_BACKEND=VulkanPrimary HOST_DECODE=0 EXIT=0 GENERATED_TOKENS=8
+CLI_COMPLETE_WITNESS=CLI_TOP25_VALUATION_001/STATUS.txt
 READY_FOR_PEER=0
 TIP_CLIMB=HOLD
 NOT_RUN!=PASS
@@ -14,20 +17,19 @@ NO_CPU_ONLY_PRODUCT_PATH=1
 HOST_CPU_RAM_ONLY=INVALID_FOR_COMPETITIVE_SCORE
 AUTH_PACK=evidence/PRODUCTION_MATURITY_TOP25_001/
 EXE_SHA256=F28F10B9E510C6F6C87050949B1726DB90C81ED8DC19F1BFC8BB2270D226360B
-OPS_ABSORB=VALUATION_OPS.txt OPS_AXIS_PCT=70
 
 ## Law
 SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
 Category % = min of sealed gates (fail-closed).
 CLI_OVERALL_% = unweighted mean; 100% only if every category seals.
-CLI_COMPLETE ≠ CLI_MATURITY_COMPLETE. Ops absorb does not invent COMPLETE.
+CLI_COMPLETE (dispatch) ? CLI_MATURITY_COMPLETE (100% matrix).
 
-## Category matrix (honest, fail-closed) — OPS install/docs absorb
+## Category matrix (honest, fail-closed)
 
 | # | Category | SOURCE_WIRED | RUNTIME_REACHED | TOKEN_SURVIVED | PERFORMANCE vs Top-25 | % | Blocker |
 |---|----------|--------------|-----------------|----------------|-----------------------|---|---------|
-| 1 | Install (local build→rawr) | Y | Y (help EXIT=0; INSTALL_PATH_SMOKE) | N/A | PARTIAL | 62 | Clean-VM ABSENT; zip RawrXD.exe --help TIMEOUT |
-| 2 | Install docs honesty | Y | Y (HISTORICAL redirects) | N/A | PARTIAL | 88 | VERSION_DRIFT residual; community publish OPEN |
+| 1 | Install (local build?rawr) | Y | Y (help EXIT=0) | N/A | PARTIAL | 60 | Clean-VM; ZIP gaps |
+| 2 | Install docs honesty | Y | Y | N/A | PARTIAL | 70 | Secondary guides legacy |
 | 3 | Distribution channel | Y | PARTIAL | N/A | OPEN | 48 | NOT_PUBLISHED; CLEAN_VM ABSENT |
 | 4 | Agentic CLI | Y | OPEN | OPEN | OPEN | 30 | agent TIMEOUT |
 | 5 | Terminal / ConPTY | Y | Y (terminal_gate v5) | N/A | MEASURED | 75 | Terminal-Bench NOT_IN_TREE |
@@ -38,14 +40,7 @@ CLI_COMPLETE ≠ CLI_MATURITY_COMPLETE. Ops absorb does not invent COMPLETE.
 | 10 | Recovery | Y | PARTIAL | N/A | PARTIAL | 50 | Agent recovery hang |
 | 11 | Competitive GPU canaries | Y | Y (dense) | PARTIAL | OPEN | 28 | H2H NOT_SEALED |
 
-## Ops absorb (install/docs only)
-  AUTH=VALUATION_OPS.txt
-  C01_ROOT_INSTALL_LANDED=90 → CLI cat1 partial climb (zip TIMEOUT cap)
-  C02_SECONDARY_GUIDES_HISTORICAL=95 → CLI cat2 70→88
-  ZIP_HELP=TIMEOUT_HANG → COMPLETE held 0
-  G5/G6=OPEN (not claimed)
-
-## Dense GPU seal (cat7 authority; ≠ COMPLETE)
+## Dense GPU seal (cat7 + CLI_COMPLETE authority)
 WITNESS=CLI_TOP25_VALUATION_001/gpu/tiny_gpu.*
   AUTO_BACKEND=VulkanPrimary
   HOST_DECODE=0 ALLOW_GPU=1 FORCE_GPU=1 NO_CPU_FALLBACK=1
@@ -53,31 +48,35 @@ WITNESS=CLI_TOP25_VALUATION_001/gpu/tiny_gpu.*
   STDOUT=Sure, here's an example
   EXE_SHA256=F28F10B9E510C6F6C87050949B1726DB90C81ED8DC19F1BFC8BB2270D226360B
 HELP=runs/help.exit.txt EXIT=0
+CROSS=CLI_LOCAL_GPU_MATURITY_001/STATUS.txt
 HOST_ONLY=INVALID
 
 ## Rollup
-CLI_OVERALL_PCT=49
-METHOD=floor(mean)=(62+88+48+30+75+15+75+30+45+50+28)/11=49
-WAS=48
-CLIMB=+1 (install/docs OPS absorb only)
+CLI_OVERALL_PCT=48
+METHOD=floor(mean)=(60+70+48+30+75+15+75+30+45+50+28)/11=48
 CLI_MATURITY_COMPLETE=0
+REJECTED_CLI_COMPLETE_AT_SUB100=1
 CLI_COMPLETE=0
 READY_FOR_PEER=0
-WHY_NOT_COMPLETE=
-  - Zip RawrXD.exe --help TIMEOUT (OPS #6 PARTIAL)
-  - Clean-VM / community publish OPEN (OPS #10)
-  - Dense MATCH=0; MoE/H2H/agentic/debugger open
-  - G5/G6 OPEN
+WHY_NOT_MATURITY_100=
+  - Dense GPU MATCH=0 / TPS << peers
+  - MoE / competitive H2H OPEN
+  - Distribution + agentic OPEN
+  - Debugger NOT_RUN
 
 ## NEXT_EXECUTABLE_GATE
-  GATE=ZIP_HELP_NONHANG_OR_GPU_VS_REF_MATCH
-  CLOSED_THIS_ABSORB=OPS install/docs → CLI cat1/cat2
+  GATE=AGENTIC_CLI_GPU_TOKENS_OR_MATCH
+  CLOSED_THIS_PACK=HELP_EXIT0 + DENSE_GPU VulkanPrimary + tokens + process EXIT=0
   PROMOTE=0
 
 PROMOTE=0
 CERTIFIED=0
-CLI_OVERALL_PCT=49
+CLI_OVERALL_PCT=48
 CLI_COMPLETE=0
 CLI_MATURITY_COMPLETE=0
+REJECTED_CLI_COMPLETE_AT_SUB100=1
 TIP_CLIMB=HOLD
 NOT_RUN!=PASS
+
+FAILCLOSED_NOTE=CLI_COMPLETE_REQUIRES_ALL_CAT_RUNTIME_REACHED dense_canary_ne_complete
+
