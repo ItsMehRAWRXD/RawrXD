@@ -45,3 +45,11 @@ LLAMA_DIRECT_VULKAN_LOAD:
   DEVICES=R9700+7800XT vulkan backends loaded before abort
 
 PYTHON_STORE_STUB=FAIL use Python313 full path; llama_cpp_python present via pip
+
+GATE3_REF_GEN8_CPU_MOE ASOF=2026-11-13T03:16:00-05:00
+CLI=llama-direct\vulkan\llama-cli.exe -ngl 0 --cpu-moe -n 8 greedy
+RESULT=FAIL
+ERROR=unable to allocate CPU_REPACK buffer
+OUT=Failed to load the model
+NOTE=hparams fatal fixed enough to reach buffer alloc; host cannot stage full Kimi CPU_REPACK
+TOKENS=NOT_RUN INDEPENDENT_PARITY=PENDING PROMOTE=0
