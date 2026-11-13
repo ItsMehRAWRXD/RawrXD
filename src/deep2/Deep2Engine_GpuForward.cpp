@@ -635,14 +635,15 @@ bool Deep2Engine::forwardLayerGpuResident(
         }
     }
 
-    // RC2-05 BATCH13: host AttentionWithCache (BATCH12). Host LinearW(wo) under
-    // vulkan yielded oNorm=0 then ~323 (CPU O ~5.6) → tip*=15; keep opt-in only
-    // via DEEP2_GPU_HOST_O=1 (ensureF32 path). Default: device O+FFN.
-    // Opt out attn: DEEP2_GPU_DEVICE_ATTN=1.
+    // RC2-05 BATCH14: host AttentionWithCache. Device packed wo GEMV amplifies
+    // ATTN residual (O maxAbs 1.99e-3). LinearW under vulkan routes to
+    // tryVulkanGEMV → tip*=15. Fix: QuantKernelRegistry::GetGEMV (CPU Q4×Q8,
+    // same as LinearW quant path) for O under HOST_ATTN. Opt out:
+    // DEEP2_GPU_DEVICE_O=1 / DEEP2_GPU_DEVICE_ATTN=1.
     const char* devAttnEnv = std::getenv("DEEP2_GPU_DEVICE_ATTN");
     const bool useDeviceAttn = (devAttnEnv && devAttnEnv[0] == '1');
-    const char* hostOEnv = std::getenv("DEEP2_GPU_HOST_O");
-    const bool wantHostO = (hostOEnv && hostOEnv[0] == '1');
+    const char* devOEnv = std::getenv("DEEP2_GPU_DEVICE_O");
+    const bool useDeviceO = (devOEnv && devOEnv[0] == '1');
     bool hostAttnDone = false;
     bool hostODone = false;
     std::vector<float> attnHostHold;
@@ -696,17 +697,15 @@ bool Deep2Engine::forwardLayerGpuResident(
         ++counters.softmaxOps;
         ++counters.attnValueOps;
         hostAttnDone = true;
-        if (wantHostO) {
-            // ensureF32: packed LinearW under vulkan was scale-broken (oNorm~323).
-            const float* wF = ensureF32(wo, vulkanWeightF32_);
-            if (!wF)
+        if (!useDeviceO && wo.data) {
+            QuantKernelRegistry::Instance().Initialize();
+            auto gemvCpu = QuantKernelRegistry::Instance().GetGEMV(wo.type);
+            if (!gemvCpu)
                 return fail();
-            WeightTensor woF = wo;
-            woF.data = const_cast<float*>(wF);
-            woF.type = static_cast<int>(GGMLType::GGML_TYPE_F32);
-            woF.sizeBytes = static_cast<size_t>(wo.rows) * wo.cols * sizeof(float);
-            std::vector<float> oOut(hidden), resid(hidden);
-            LinearW(woF, attnHostHold.data(), nullptr, oOut.data(), hidden);
+            std::vector<float> oOut(hidden, 0.0f), resid(hidden);
+            gemvCpu(static_cast<const uint8_t*>(wo.data), attnHostHold.data(),
+                    oOut.data(), static_cast<size_t>(hidden),
+                    static_cast<size_t>(hidden));
             for (uint32_t i = 0; i < hidden; ++i)
                 resid[i] = hIn[i] + oOut[i];
             if (layer == 0 && pos == 0) {
@@ -718,7 +717,7 @@ bool Deep2Engine::forwardLayerGpuResident(
                 for (float x : attnHostHold)
                     aN += static_cast<double>(x) * x;
                 std::fprintf(stderr,
-                    "[HOST_O_DIAG] woType=%d aNorm=%.6e hNorm=%.6e oNorm=%.6e\n",
+                    "[HOST_O_GEMV] woType=%d aNorm=%.6e hNorm=%.6e oNorm=%.6e\n",
                     wo.type, std::sqrt(aN), std::sqrt(hN), std::sqrt(oN));
                 std::fflush(stderr);
             }
@@ -740,8 +739,8 @@ bool Deep2Engine::forwardLayerGpuResident(
         if (!s_hostAttnOnce) {
             s_hostAttnOnce = 1;
             std::fprintf(stderr,
-                "GPU_HOST_ATTN=1 HOST_O=%d (DEEP2_GPU_HOST_O=1 enables; "
-                "DEEP2_GPU_DEVICE_ATTN=1 restores device attn)\n",
+                "GPU_HOST_ATTN=1 HOST_O_GEMV=%d FIRST_OP=O_PROJ "
+                "(DEEP2_GPU_DEVICE_O/ATTN=1 restores device)\n",
                 hostODone ? 1 : 0);
             std::fflush(stderr);
         }

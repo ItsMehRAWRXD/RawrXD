@@ -494,3 +494,15 @@ RC2_05_PASS=0 CERTIFIED=0 PROMOTE=0 TIP_CLIMB=HOLD DO_NOT_REOPEN_Q4K_ACT=1
 SPV_TOUCHED=0 RECEIPT=cpu_llama/batch13_gpu_oproj/
 NEXT=ATTN_OUT KV-history residual OR vulkan-safe host O (Q8-act)
 
+
+==============================================================================
+BATCH14 HOST_O_GEMV closes tip9 THREE_WAY ASOF=2026-11-12T22:41:38.3738399-05:00
+==============================================================================
+EXE=1F517681CA324BE75E0E30892B9AE409DCD8FED6D45B774F60F105E4127DDB1F CROSS_SHA_CREDIT=0
+FIX=QuantKernelRegistry::GetGEMV(wo) under HOST_ATTN (not LinearW/tryVulkanGEMV)
+O_PROJ L0@17 maxAbs BEFORE=1.988664E-003 AFTER=1.988590E-003
+GPU_16=CPU_16=LLAMA_FAOFF tip9=821 FIRST_MIS=@-1 THREE_WAY=1 EXACT16_CPU=1
+RC2_05_PASS=1_TOKEN_MATCH CERTIFIED=0 PROMOTE=0 TIP_CLIMB=HOLD DO_NOT_REOPEN_Q4K_ACT=1
+SPV_TOUCHED=0 RECEIPT=cpu_llama/batch14_gpu_oproj/
+NOTE=token THREE_WAY ≠ promote; PROMOTE=0 held
+
