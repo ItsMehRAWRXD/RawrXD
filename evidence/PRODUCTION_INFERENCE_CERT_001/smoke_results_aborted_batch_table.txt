@@ -1,0 +1,10 @@
+Id                            Exit     GT        CE  Class                         Meta         PASS
+--                            ----     --        --  -----                         ----         ----
+M_minimax_reap27_sidecar_host EXIT=12  NOT_FOUND 0   ABORT_BY_PEER_MID_LOAD        STARTED_ONLY 0
+M_minimax_full_reap16_host    EXIT=-1  NOT_FOUND 0   ABORT_BY_PEER_KILLED          STARTED_ONLY 0
+M_dsv2lite_host               EXIT=12  NOT_FOUND 0   ABORT_BY_PEER_MID_LOAD        STARTED_ONLY 0
+M_qwen36_a3b_host             EXIT=12  NOT_FOUND 0   OOM_INSUFFICIENT_HOST_MEMORY  COMPLETE     0
+D_nemotron35_host             EXIT=12  NOT_FOUND 0   OOM_INSUFFICIENT_HOST_MEMORY  COMPLETE     0
+D_glm47_flash_host            EXIT=12  NOT_FOUND 0   ABORT_BY_PEER_MID_LOAD        STARTED_ONLY 0
+
+PROMOTE=0 CERTIFIED=0 NOT_RUN!=PASS PARTIAL!=PASS

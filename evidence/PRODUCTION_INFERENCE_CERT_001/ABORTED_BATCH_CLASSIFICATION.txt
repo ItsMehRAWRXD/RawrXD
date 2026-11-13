@@ -1,0 +1,32 @@
+PRODUCTION_INFERENCE_CERT_001 — aborted batch classification
+DATE=2026-11-13
+BATCH_TERMINAL=225669 EXIT=4294967295 (~46s) = peer/orchestrator abort (unsigned -1)
+EXE_PIN=g:\~dev\rawrxd\build_ninja\bin\rawr_cert_pin.exe
+EXE_SHA=67D9B85C183247AA5915C08EC219D3406B04BD82878D3F354B7956248EEA19AA
+WEIGHT_BUDGET_MIB=59568 (DSV2lite=16384)
+PROMOTE=0 CERTIFIED=0
+LAW=NOT_RUN!=PASS; STARTED_ONLY!=PASS; PARTIAL!=PASS
+
+## Per-arm (from runs/*.exit.txt *.meta.txt *.err.txt *.out.txt)
+
+| Arm | Exit | Class | CLEAN_EXIT | GENERATED_TOKENS | Meta | Evidence |
+|-----|------|-------|------------|------------------|------|----------|
+| M_minimax_reap27_sidecar_host | EXIT=12 | ABORT_BY_PEER mid-load | 0 | NOT_FOUND | STARTED-only (no ENDED) | Residency register ~10GB; batch kill before harness tail |
+| M_minimax_full_reap16_host | EXIT=-1 | ABORT_BY_PEER / killed | 0 | NOT_FOUND | STARTED-only | Early WEIGHT_BUDGET only; EXIT=-1 classic kill |
+| M_dsv2lite_host | EXIT=12 | ABORT_BY_PEER mid-load | 0 | NOT_FOUND | STARTED-only | Past GPU_PREFLIGHT; no gen; harness incomplete |
+| M_qwen36_a3b_host | EXIT=12 | OOM / INSUFFICIENT_HOST_MEMORY | 0 | NOT_FOUND | COMPLETE ENDED | AUTO_BACKEND Reject; host RAM=1022MB at reject; ELAPSED=309ms |
+| D_nemotron35_host | EXIT=12 | OOM / INSUFFICIENT_HOST_MEMORY | 0 | NOT_FOUND | COMPLETE ENDED | AUTO_BACKEND Reject; commit=122432MB; ELAPSED=219ms; BLOCKER was NO_CLEAN_EXIT in meta (err proves memory) |
+| D_glm47_flash_host | EXIT=12 | ABORT_BY_PEER mid-load | 0 | NOT_FOUND | STARTED-only | Mid-GGUF parse (alignment warnings); no ENDED |
+
+## Notes
+- Overlapping STARTED timestamps (~14:43) imply concurrent/overlapping arms → commit pressure → Nemotron/Qwen memory reject.
+- MiniMax STARTED-only metas = harness killed before Add-Content tail (mid-load peer abort), not a PASS.
+- No arm in this aborted wave has CLEAN_EXIT=1 or GENERATED_TOKENS>0.
+
+## Exclusive recovery gate (poll 2026-11-13 ~14:50 local)
+QC CONCURRENCY_LOCK: LOCK_OWNER=QUALITY_CURVE_001 EXCLUSIVE=1 HOLD_CM=1 DO_NOT_KILL_QC16_HOST=1 (refreshed live)
+Live peer: llama-cli ~14000MB WorkingSet
+FreePhysicalMB≈689 (insufficient)
+EXCLUSIVE_SEQUENTIAL_RERUN=NOT_RUN
+WHY=QC_EXCLUSIVE_LOCK_LIVE + LOW_FREE_RAM
+DO_NOT=steal QC lock; invent PASS; treat NOT_RUN as PASS

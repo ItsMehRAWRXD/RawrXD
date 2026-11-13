@@ -1,0 +1,6 @@
+GPU_PREFLIGHT=PASS (Windows health R9700+7800XT problem=0 CODE31=0)
+VULKANINFO_DEVICES=AMD Radeon AI PRO R9700 proprietary + Dozen + iGPU
+VK_ICD_ON_HOST_PATH=BLOCKED WHY=R1_HOST_FLOOR (RAWRXD_HOST_DECODE=1)
+VULKAN_OPEN_ON_GPU_ATTEMPT=FAIL (GPU open failed slots 0/1/2; product requires HOST_DECODE opt-in)
+GPU_DECODE_CERT=NOT_PASS (do not invent GPU PASS)
+ICD_DUPLICATE_WARNING=VK_LAYER_AMD_switchable_graphics duplicate layer paths (loader warning only)

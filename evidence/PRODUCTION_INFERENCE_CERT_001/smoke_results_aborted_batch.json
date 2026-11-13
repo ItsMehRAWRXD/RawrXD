@@ -1,0 +1,71 @@
+[
+  {
+    "Id": "M_minimax_reap27_sidecar_host",
+    "Exit": "EXIT=12",
+    "GT": "NOT_FOUND",
+    "CE": "0",
+    "Arch": "minimax-m2",
+    "Class": "ABORT_BY_PEER_MID_LOAD",
+    "Meta": "STARTED_ONLY",
+    "Disposition": "FAIL",
+    "PASS": 0
+  },
+  {
+    "Id": "M_minimax_full_reap16_host",
+    "Exit": "EXIT=-1",
+    "GT": "NOT_FOUND",
+    "CE": "0",
+    "Arch": "UNKNOWN",
+    "Class": "ABORT_BY_PEER_KILLED",
+    "Meta": "STARTED_ONLY",
+    "Disposition": "FAIL",
+    "PASS": 0
+  },
+  {
+    "Id": "M_dsv2lite_host",
+    "Exit": "EXIT=12",
+    "GT": "NOT_FOUND",
+    "CE": "0",
+    "Arch": "UNKNOWN",
+    "Class": "ABORT_BY_PEER_MID_LOAD",
+    "Meta": "STARTED_ONLY",
+    "Disposition": "FAIL",
+    "PASS": 0
+  },
+  {
+    "Id": "M_qwen36_a3b_host",
+    "Exit": "EXIT=12",
+    "GT": "NOT_FOUND",
+    "CE": "0",
+    "Arch": "UNKNOWN",
+    "Class": "OOM_INSUFFICIENT_HOST_MEMORY",
+    "Meta": "COMPLETE",
+    "Blocker": "INSUFFICIENT_HOST_MEMORY",
+    "Disposition": "FAIL",
+    "PASS": 0
+  },
+  {
+    "Id": "D_nemotron35_host",
+    "Exit": "EXIT=12",
+    "GT": "NOT_FOUND",
+    "CE": "0",
+    "Arch": "UNKNOWN",
+    "Class": "OOM_INSUFFICIENT_HOST_MEMORY",
+    "Meta": "COMPLETE",
+    "Blocker": "INSUFFICIENT_HOST_MEMORY",
+    "ElapsedMs": 219,
+    "Disposition": "FAIL",
+    "PASS": 0
+  },
+  {
+    "Id": "D_glm47_flash_host",
+    "Exit": "EXIT=12",
+    "GT": "NOT_FOUND",
+    "CE": "0",
+    "Arch": "UNKNOWN",
+    "Class": "ABORT_BY_PEER_MID_LOAD",
+    "Meta": "STARTED_ONLY",
+    "Disposition": "FAIL",
+    "PASS": 0
+  }
+]

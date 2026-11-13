@@ -4,6 +4,7 @@ PROMOTE=0
 CERTIFIED=0
 EXE_SHA256_MATRIX1=67D9B85C183247AA5915C08EC219D3406B04BD82878D3F354B7956248EEA19AA
 EXE_SHA256_MATRIX2=288585489E198CCFE45502051E50D77AA1C0D0D3B9EDF608F987F25BB244C8E3
+EXE_PIN=g:\~dev\rawrxd\build_ninja\bin\rawr_cert_pin.exe
 
 ## Matrix result (run_smoke_matrix.ps1 ×2)
 
@@ -13,13 +14,6 @@ DSV2lite/Qwen A3B returned EXIT=32 on matrix2; others still -1.
 This is **NOT_PASS / incomplete harness parse or aborted gen** — not architecture certification.
 Do not credit manual probe_tinyllama_cmd.meta as CLEAN_EXIT proof.
 
-Known confounders observed in logs:
-- HOST_FLOOR_RAM_EIGHTH overwrote residency to ~7886 MiB (need WEIGHT_BUDGET_MIB explicit)
-- High system commit during concurrent agents
-- GPU arms: VK OPEN_FAIL / HOST_STACK
-
-Evidence: smoke_results.json · smoke_results_table.txt · runs/*
-
 ## Matrix3 pinned exclusive (rawr_cert_pin EXE 67D9B85C…)
 
 | Arm | Result |
@@ -28,20 +22,31 @@ Evidence: smoke_results.json · smoke_results_table.txt · runs/*
 | M_dsv2lite_host | EXIT=4 CE=1 GT=NOT_FOUND — partial |
 | All other dense/MoE/GPU/MiniMax | NO_CLEAN_EXIT / NOT_FOUND |
 
-## Exclusive WEIGHT_BUDGET_MIB=32768 single-arm
+## Aborted MoE/dense batch (terminal 225669 EXIT=4294967295)
+
+Classified in ABORTED_BATCH_CLASSIFICATION.txt + smoke_results_aborted_batch*.
+All six recovery arms: CLEAN_EXIT=0 · GENERATED_TOKENS=NOT_FOUND · PASS=0.
+MiniMax/DSV2/GLM: STARTED-only metas (ABORT_BY_PEER mid-load).
+Qwen A3B + Nemotron3.5: complete metas, INSUFFICIENT_HOST_MEMORY (OOM/commit).
+Harness hardened: run_one.ps1 try/finally always emits DONE + HARNESS_COMPLETE=1; partial≠PASS.
+
+## Exclusive WEIGHT_BUDGET_MIB=59568 sequential recovery
 
 STATUS=NOT_RUN
-WHY=QUALITY_CURVE_001 holds CONCURRENCY_LOCK EXCLUSIVE=1 (HOLD_CM=1; last refresh ~14:36:54-05)
-POLL=2026-11-13T14:32–14:40 local — rawr intermittently present under QC; no steal
-PRIOR_LIVE_RAWR=PID 8580 MiniMax REAP16 (cleared by poll end; lock not released)
-NEXT_GATE=after LOCK clear: exclusive single-arm smokes with WEIGHT_BUDGET_MIB=32768 (HOST_DECODE=1; no concurrent agents)
-DO_NOT=claim PASS from matrix1/2; invent GPU PASS; steal QC lock
+WHY=QUALITY_CURVE_001 holds CONCURRENCY_LOCK EXCLUSIVE=1 HOLD_CM=1 DO_NOT_KILL_QC16_HOST=1 (live refresh ~14:49–14:50 local); llama-cli ~14GB WS; FreePhysicalMB≈689
+POLL=2026-11-13T14:50 local — no steal
+ARMS_PENDING=M_minimax_reap27_sidecar_host, M_minimax_full_reap16_host (--reap 16GB/8 Retain27), M_dsv2lite_host (16384), M_qwen36_a3b_host, D_nemotron35_host, D_glm47_flash_host
+NEXT_GATE=after QC lock clear + FreePhysicalMB>>model residency: exclusive one-arm-at-a-time rerun WEIGHT_BUDGET_MIB=59568 (DSV2=16384); kill peers first; fail-closed disposition
+DO_NOT=claim PASS from aborted batch; invent GPU PASS; steal QC lock; treat NOT_RUN as PASS
 
 ```
 CERTIFICATION=HELD
 TINYLLAMA_HOST_SMOKE=NARROW_ONLY
 MULTI_ARCH=OPEN
-EXCLUSIVE_32768=NOT_RUN
+EXCLUSIVE_59568_RECOVERY=NOT_RUN
+ABORTED_BATCH=CLASSIFIED_FAIL
+HARNESS_DONE_ON_KILL=HARDENED
 NOT_RUN!=PASS
 PROMOTE=0
+CERTIFIED=0
 ```
