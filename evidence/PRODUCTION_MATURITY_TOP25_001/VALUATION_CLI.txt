@@ -1,5 +1,5 @@
 PRODUCTION_MATURITY_TOP25_001 — VALUATION_CLI
-ASOF_LOCAL=2026-11-13T18:00-05:00
+ASOF_LOCAL=2026-11-13T18:02-05:00
 WORKSTREAM=CLI_TOP25_MATURITY_VALUATION
 CLI_CAN_FINISH_WITHOUT_GUI=1
 PROMOTE=0
@@ -15,15 +15,13 @@ INVENT_PASS=0
 NO_CPU_ONLY_PRODUCT_PATH=1
 R29_SEAL=CLI_TOP25_VALUATION_001/runs/R29_CLI_SEAL.txt
 R30_SEAL=CLI_TOP25_VALUATION_001/runs/R30_RAISE_SEAL.txt
-AUTH_PACK=evidence/PRODUCTION_MATURITY_TOP25_001/TOP25_MATURITY_VALUATION_001/
 A2_TIP_SHA256=420ED0F53B95697C00EED32727FD3B277123291874987F6F5BAC6C79B16E6045
 A2_TIP_CLOSED=1
 DENSE_PIN_SHA256=F28F10B9E510C6F6C87050949B1726DB90C81ED8DC19F1BFC8BB2270D226360B
-F28F_BACKUP=F28F10B9E510C6F6C87050949B1726DB90C81ED8DC19F1BFC8BB2270D226360B
+COMMIT_EVIDENCE=7c111081e5
 
 ## Law
 SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
-Category % fail-closed. CLI_COMPLETE requires all cats RUNTIME_REACHED.
 REJECT invent Debugger PASS / CLEAN_VM / Dist>55 without publish.
 HOST_DECODE=0 required for competitive GPU credit.
 
@@ -31,36 +29,31 @@ HOST_DECODE=0 required for competitive GPU credit.
 
 | # | Category | SOURCE_WIRED | RUNTIME_REACHED | TOKEN_SURVIVED | PERFORMANCE vs Top-25 | % | Blocker |
 |---|----------|--------------|-----------------|----------------|-----------------------|---|---------|
-| 1 | Install (local build→rawr) | Y | Y (help EXIT=0) | N/A | PARTIAL | 60 | Clean-VM |
+| 1 | Install (local build→rawr) | Y | Y | N/A | PARTIAL | 60 | Clean-VM |
 | 2 | Install docs honesty | Y | Y | N/A | PARTIAL | 70 | Secondary guides legacy |
-| 3 | Distribution channel | Y | Y (zip HELP=0 r29/r30) | N/A | OPEN | 55 | NOT_PUBLISHED; CLEAN_VM ABSENT |
-| 4 | Agentic CLI | Y | Y (A2 OK + chat GPU) | Y GEN=95 | PARTIAL | 70 | recovery hang; dual-binary |
+| 3 | Distribution channel | Y | Y (zip HELP=0) | N/A | OPEN | 55 | NOT_PUBLISHED; CLEAN_VM ABSENT |
+| 4 | Agentic CLI | Y | Y | Y GEN=95 | PARTIAL | 70 | recovery hang; dual-binary |
 | 5 | Terminal / ConPTY | Y | Y | N/A | MEASURED | 75 | Terminal-Bench NOT_IN_TREE |
 | 6 | Debugger (CLI) | PARTIAL | NOT_RUN | N/A | NOT_RUN | 15 | No CLI debugger E2E |
 | 7 | Local GPU decode Dense | Y | Y | Y GEN=16 | PARTIAL TPS=1.43 MATCH=0 | 82 | Top-25 TPS/MATCH open |
-| 8 | Local GPU decode MoE | Y | PARTIAL | 0 EXIT=12 | OPEN | 30 | MiniMax held |
+| 8 | Local GPU decode MoE | Y | PARTIAL | 0 | OPEN | 30 | MiniMax held |
 | 9 | REAP export | Y | Y | PARTIAL | OPEN | 45 | Coherence FAIL |
 | 10 | Recovery | Y | PARTIAL | N/A | PARTIAL | 50 | Agent recovery hang |
-| 11 | Competitive GPU canaries | Y | Y (dense+chat TPS) | PARTIAL | OPEN | 35 | H2H NOT_SEALED |
+| 11 | Competitive GPU canaries | Y | Y | PARTIAL | OPEN | 35 | H2H NOT_SEALED |
 | 12 | Offline autonomy | Y | Y | N/A | PARTIAL | 78 | publish open |
 
-## Seals (GPU evidence)
-DENSE_R29=CLI_TOP25_VALUATION_001/gpu/tiny_dense_r29.*
-  EXE_SHA256=F28F10B9… HOST_DECODE=0 BACKEND=VulkanPrimary
-  GENERATED_TOKENS=16 DECODE_TPS_REAL=1.429516 FUNCTIONAL_PASS=1 PRODUCT_PASS=1 EXIT=0
-AGENTIC_CHAT_R30=runs/agentic_chat_gpu_r30.*
-  EXE_SHA256=F28F10B9… HOST_DECODE=0 VulkanPrimary GEN=95 TPS≈3.123 PRODUCT_PASS=1 EXIT=0
-A2=runs/agent_status_r29.* + agent_status_r30_420ed.* EXIT=0 AGENT_STATUS_OK=1 SHA=420ED0F5…
-ZIP=zip/PRODUCT_ZIP_CHANNEL_r29.txt + runs/zip_help_r29.* + zip_help_r30.* HELP_EXIT=0
+## Seals
+DENSE_R29=gpu/tiny_dense_r29.* F28F HD=0 GEN=16 TPS=1.429516 PRODUCT_PASS=1 EXIT=0
+AGENTIC_CHAT_R30=runs/agentic_chat_gpu_r30.* F28F HD=0 GEN=95 TPS≈3.123 PRODUCT_PASS=1 EXIT=0
+A2=runs/agent_status_r29.* + agent_status_r30_420ed.* EXIT=0 OK=1 SHA=420ED0F5
+ZIP=zip/PRODUCT_ZIP_CHANNEL_r29.txt + zip_help_r29/r30 HELP_EXIT=0
 build_win32ide_link001=UNTOUCHED
 
 ## Rollup
-CLI_OVERALL_PCT=55
-CLI_PCT=55
 METHOD=floor(mean)=(60+70+55+70+75+15+82+30+45+50+35+78)/12=55
+CLI_PCT=55
 PRIOR_USER_PCT=48
-CATS_RAISED=Agentic 30→70; Dense 75→82 (≥2)
-CATS_HELD=Debugger15 MoE30 Dist55 publish H2H35
+CATS_RAISED=Agentic 30→70; Dense 75→82
 GUI_SCORE_PCT=40
 EXE_ABSORB=FAIL_CLOSED
 OVERALL_PCT=40
