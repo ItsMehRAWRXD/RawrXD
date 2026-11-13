@@ -1,0 +1,6 @@
+﻿NAME=smoke_test_minimal
+EXE=g:\~dev\rawrxd\tests\smoke_test_minimal.exe
+ARGS=
+EXIT=-1073741515
+ELAPSED_MS=20
+TS=2026-11-13T14:24:08-05:00

@@ -1,0 +1,24 @@
+PRODUCTION_INFERENCE_CERT_001
+DATE=2026-11-13
+PROMOTE=0
+CERTIFIED=0
+EXE_SHA256=67D9B85C183247AA5915C08EC219D3406B04BD82878D3F354B7956248EEA19AA
+
+## Matrix result (run_smoke_matrix.ps1)
+
+12/12 arms reported EXIT=-1 · GENERATED_TOKENS=NOT_FOUND · CLEAN_EXIT=0.
+
+This is **NOT_PASS / incomplete harness parse or aborted gen** — not architecture certification.
+
+Known confounders observed in logs:
+- HOST_FLOOR_RAM_EIGHTH overwrote residency to ~7886 MiB (need WEIGHT_BUDGET_MIB explicit)
+- High system commit during concurrent agents
+- GPU arms: VK OPEN_FAIL / HOST_STACK
+
+Evidence: smoke_results.json · smoke_results_table.txt · runs/*
+
+```
+CERTIFICATION=HELD
+NOT_RUN!=PASS
+PROMOTE=0
+```

@@ -1,0 +1,6 @@
+﻿NAME=swebench_help
+EXE=g:\~dev\rawrxd\build-ninja-ctx2\bin\RawrXD-SWEBench.exe
+ARGS=--help
+EXIT=0
+ELAPSED_MS=17
+TS=2026-11-13T14:24:08-05:00

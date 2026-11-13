@@ -1,0 +1,6 @@
+﻿NAME=isa_dispatch
+EXE=g:\~dev\rawrxd\benchmark_isa_dispatch.exe
+ARGS=
+EXIT=-1073741515
+ELAPSED_MS=32
+TS=2026-11-13T14:24:08-05:00

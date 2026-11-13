@@ -1,0 +1,15 @@
+COMPETITIVE_BENCH_001
+DATE=2026-11-13
+PROMOTE=0
+CERTIFIED=0
+
+## What ran
+
+Smoke inventory under smoke_runs/ (rawr help, swebench help, streaming benchmark, isa_dispatch, minimal).
+
+No IDE-Bench / Terminal-Bench / full SWE-bench score claimed.
+
+```
+BENCH_SCORES=NOT_RUN
+PROMOTE=0
+```

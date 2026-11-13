@@ -1,0 +1,6 @@
+﻿NAME=benchmark_streaming
+EXE=g:\~dev\rawrxd\benchmark_streaming.exe
+ARGS=
+EXIT=0
+ELAPSED_MS=53
+TS=2026-11-13T14:24:08-05:00
