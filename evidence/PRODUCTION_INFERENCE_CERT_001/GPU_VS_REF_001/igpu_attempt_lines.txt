@@ -1,0 +1,40 @@
+﻿[AUTO_BACKEND] GPU AMD Radeon(TM) Graphics status=25174026 problem=0 healthy=1
+KEN_MARS_ACTIVE=1 DEEP2_MARS=1 HOST_DECODE=0 GPU_POLICY=SINGLE GPU_DEVICE_CLASS=DISCRETE NO_TRUNCATE_NEEDLE=1 PRODUCT_STREAMER_ARM=1
+[Deep2Engine] GPU open failed slot 1 (AMD Radeon(TM) Graphics) ? keep opened sticks (no clear-all)
+DEEP2_DEVICE_COUNT_OPENED=3
+DEEP2_GPU_POLICY=3
+DEEP2_DEVICE_1_NAME=AMD Radeon(TM) Graphics
+[VulkanCompute] DETECTED phys[2] type=1 AMD Radeon(TM) Graphics
+[VulkanCompute] DETECTED phys[3] type=1 Microsoft Direct3D12 (AMD Radeon(TM) Graphics)
+[VulkanCompute] SKIP_WARP_ICD phys[3] Microsoft Direct3D12 (AMD Radeon(TM) Graphics)
+[VulkanCompute] OPEN_ONE AMD Radeon AI PRO R9700 (others unused)
+[VulkanCompute] DETECTED phys[2] type=1 AMD Radeon(TM) Graphics
+[VulkanCompute] DETECTED phys[3] type=1 Microsoft Direct3D12 (AMD Radeon(TM) Graphics)
+[VulkanCompute] SKIP_WARP_ICD phys[3] Microsoft Direct3D12 (AMD Radeon(TM) Graphics)
+[VulkanCompute] no eligible compute device (needle=AMD Radeon(TM) Graphics)
+[VulkanCompute] DETECTED phys[2] type=1 AMD Radeon(TM) Graphics
+[VulkanCompute] DETECTED phys[3] type=1 Microsoft Direct3D12 (AMD Radeon(TM) Graphics)
+[VulkanCompute] SKIP_WARP_ICD phys[3] Microsoft Direct3D12 (AMD Radeon(TM) Graphics)
+[VulkanCompute] OPEN_ONE AMD Radeon RX 7800 XT (others unused)
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+AUTO_POLICY_ACTIVE=0
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=manual_preserve_mech
+K2_LIVE_POLICY_REUSE_STEPS=352
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+POLICY_SWITCHES_PER_REQUEST=1
+DEEP2_GPU_RMSNORM_OPS=682
+DEEP2_GPU_QKV_OPS=3410
+DEEP2_GPU_ROPE_OPS=682
+DEEP2_GPU_ATTN_SCORE_OPS=682
+DEEP2_GPU_SOFTMAX_OPS=682
+DEEP2_GPU_ATTN_VALUE_OPS=682
+DEEP2_GPU_O_PROJ_OPS=682
+DEEP2_GPU_RESIDUAL_OPS=682
+DEEP2_GPU_FFN_NORM_OPS=682
+DEEP2_GPU_FFN_ACT_OPS=682
+DEEP2_GPU_FFN_RESIDUAL_OPS=682
+DEEP2_GPU_FORWARD_LAYERS=682
+DEEP2_GPU_FORWARD_SLOT_0=682

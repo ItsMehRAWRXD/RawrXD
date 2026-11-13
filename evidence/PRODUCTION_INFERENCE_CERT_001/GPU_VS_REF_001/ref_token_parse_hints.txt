@@ -1,0 +1,22 @@
+llama_model_loader: - kv  17:                tokenizer.ggml.bos_token_id u32              = 1
+llama_model_loader: - kv  18:                tokenizer.ggml.eos_token_id u32              = 2
+llama_model_loader: - kv  19:            tokenizer.ggml.unknown_token_id u32              = 0
+llama_model_loader: - kv  20:            tokenizer.ggml.padding_token_id u32              = 2
+n_remain: 15
+n_remain: 14
+n_remain: 13
+n_remain: 12
+n_remain: 11
+n_remain: 10
+n_remain: 9
+n_remain: 8
+n_remain: 7
+n_remain: 6
+n_remain: 5
+n_remain: 4
+n_remain: 3
+n_remain: 2
+n_remain: 1
+n_remain: 0
+common_perf_print: prompt eval time =     108.23 ms /    18 tokens (    6.01 ms per token,   166.31 tokens per second)
+common_perf_print:        eval time =     314.79 ms /    15 runs   (   20.99 ms per token,    47.65 tokens per second)
