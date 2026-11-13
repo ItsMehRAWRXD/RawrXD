@@ -1,0 +1,26 @@
+﻿AL11_CRASH_CLASSIFICATION
+DATE=2026-11-13
+PROMOTE=0 CERTIFIED=0
+
+## CLASS A — FULL / shared magnitude (NOT crash)
+NAME=LAYER0_POST_FFN_MAGNITUDE
+EVIDENCE=al09_full.err.txt + al09_phys2.err.txt [B3_FIRST_BAD] phase=LAYER0_POST_FFN pos=0 l2~1.27e3 nan=0 inf=0
+SHARED=YES (LAYER0_OUT@pos0 FNV match a897e724acb5d69b both arms)
+RELATION_TO_FIRST_DIVERGENT=INDEPENDENT (occurs at pos0 before FFN_DOWN_1@pos3 break)
+CLASS=NUMERICAL_MAGNITUDE_WARNING_NOT_CRASH
+
+## CLASS B — PHYS L36
+NAME=PHYS_L36
+EVIDENCE_THIS_PAIR=al09_phys2 completes B03_MOE_ROUTE_OK layer=36 across toks 1..7; LAYER_OUT includes L36@tok3 fnv=c067ea3b6ab7ff4b
+CRASH_IN_AL09_SAME_SHA_PAIR=NO
+CLASS=NOT_REPRO_IN_AL09_PAIR / SEPARATE_DEFECT_IF_SEEN_ELSEWHERE
+NOTE=Do not conflate with FFN_DOWN_1@pos3 numerical divergence.
+
+## CLASS C — FULL mid-run abort
+NAME=FULL_ALLOW_INCOMPLETE_LAYER_SWEEP
+EVIDENCE=al09_full_layer / bound_full meta EXIT=-1; host commit pressure historically ~28-36GB free
+CLASS=RESOURCE_ABORT_NOT_L36_MAPPING
+INDEPENDENT_OF=FFN_DOWN_1 first-divergent (observed in completed STAGE_DIGEST through pos3 L17 on FULL out)
+
+SEPARATE=1
+PROMOTE=0

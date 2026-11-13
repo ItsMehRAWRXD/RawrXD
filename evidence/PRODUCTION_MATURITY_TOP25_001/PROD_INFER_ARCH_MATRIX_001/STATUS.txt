@@ -1,0 +1,86 @@
+﻿PROD_INFER_ARCH_MATRIX_001 STATUS
+DATE=2026-11-13T14:29:28.6420192-05:00
+TRACK=Production inference — dense/MoE architectures, GPU decode, model loading, REAP export
+PROMOTE=0
+CERTIFIED=0
+CROSS_SHA_CREDIT=0
+TIP_CLIMB=HOLD
+NOT_RUN!=PASS
+BRANCH=feature/ide-agentic-product-path-20261026
+COMMIT=f9ca95b74de909c277ab62c0d2a3430551719aa1
+EXE_NOW=g:\~dev\rawrxd\build_ninja\bin\rawr.exe
+EXE_SHA256_NOW=4CFE7EAF23DE472D74AEA51FDEE85188F5C64427E39B911B06B71BAEA10AE274
+
+## Laws
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+export packing != quality
+MiniMax FULL / QUALITY_CURVE = Numerical exclusive (NOT_RUN this worker)
+
+## Architecture matrix (wired vs measured this turn)
+
+| Model | Class | Arch meta | Load path | Decode | This-turn result | Disposition |
+|-------|-------|-----------|-----------|--------|------------------|-------------|
+| TinyLlama 1.1B Q4_K_M | DENSE | llama | GGUFLoader+RMV_MOUNT | HOST_DECODE | EXIT=0 OUT='I'm glad to hear that' TOKEN_AGENT_LINES=1 GEN_MAX=1 STREAM_OUTPUT_PRESENT=1 | PASS_SMOKE_HOST (EXE_SHA256=67D9B85C183247AA5915C08EC219D3406B04BD82878D3F354B7956248EEA19AA) |
+| TinyLlama 1.1B Q4_K_M | DENSE | llama | same | GPU Vulkan SOLO/ALLOW_GPU | Vulkan open R9700; DEEP2_COMPUTE_BACKEND=GPU; BIND16 bound; tokens=0 OUT empty | RUNTIME_REACHED=1 TOKEN_SURVIVED=0 → OPEN (contention/crash before gen) |
+| phi3-mini Q2_K | DENSE | phi3 | GGUFLoader | HOST | truncated mid-load under host contention | OPEN / NOT_COMPLETE |
+| llama3.2-3b Q2_K | DENSE | llama | GGUFLoader | HOST | digestion ARCH=llama then truncated | OPEN / NOT_COMPLETE |
+| DeepSeek-V2-Lite | MoE | deepseek | MoEWeightProxy+K2 | HOST | NOT_RUN this turn (mem/contention) | OPEN |
+| Qwen3.6-35B-A3B | MoE/hybrid | qwen* | multi-shard | HOST | prior REAP_ALL: EXPORT_OK SMOKE_BLOCKED SSM-CERT | OPEN (SSM refuse) |
+| MiniMax-M2.7 full | MoE E=256 | minimax | multi-shard+router | — | NOT_RUN (Numerical exclusive) | OPEN / HELD |
+| MiniMax REAP PHYS shards | MoE sliced | minimax-m2 | exported sidecar | — | prior REAP_ALL indep smoke EXIT=0 tokens but SEMANTIC=FAIL | EXPORT_MEASURED≠QUALITY |
+| gemma-4-31B / GLM / Nemotron dense large | DENSE | * | — | — | REAP expert-slice N/A; prior multi-model FAIL/OPEN | OPEN |
+| Nemotron hybrid / Nano-4B | HYBRID SSM | nemotron | SSM path | — | SSM-CERT-001 refuse unless experimental auth | OPEN |
+
+## Prior sealed inventory (CROSS_SHA_CREDIT=0 — cite only, no credit)
+
+DEEP2_ARCH_MATRIX_001 GATE_STATUS: llama/qwen2/phi3/gemma2/mistral/deepseek=OK (arch enum only; not this EXE)
+G3_MULTI_MODEL_E2E_001: tinyllama/phi3-mini/gemma4-e4b/deepseek-r1-qwen3-8b/phi3-medium PASS historically; several large FAIL
+STREAMER_GPU_* COMPLETE umbrella files claim PASS historically — not re-bound to EXE_SHA256_NOW
+REAP_ALL_16GB_001 STATUS: MiniMax REAP27 ≤16GiB EXPORT_MEASURED; A3B export OK smoke FAIL_ARCH; DS/Kimi LE16 impossible at topK; dense REAP blocked
+REAP_PHYSICAL_EXPORT_MINIMAX_001: writer_invoked=1 export_status=EXPORTED SOURCE_UNTOUCHED=1 CERTIFIED=0 experimental
+REAP_MULTI_MODEL B03: MoE plumbing CLOSED (acquire/parity); MINIMAX_QUALITY=OPEN
+
+## GPU decode gates (fail-closed)
+
+SOURCE_WIRED=1 (enableVulkan / tryVulkanGEMV / deep2_gpu_packed_forward_cert sources)
+RUNTIME_REACHED_THIS_TURN=1 (Vulkan single-GPU open AMD Radeon AI PRO R9700; gpu_open=1 backend_gpu=1)
+TOKEN_SURVIVED_THIS_TURN=0
+PACKED_FORWARD_CERT_EXE=MISSING_IN_BIN (rebuild blocked earlier by InferenceEngine.obj lock; later writable but host contended)
+GPU_DECODE_EFFICIENCY cert writer exists (P1_PRODUCT_RUNTIME_AUTHORITY_002) — NOT_RERUN
+HOST floor: ProductStreamerPrep forces HOST_DECODE unless RAWRXD_ALLOW_GPU=1
+Disposition: GPU_DECODE=OPEN (reachability≠token survival≠cert)
+
+## REAP export path integrity
+
+Admission: RAWR_REAP_EXPORT_DIR + (rewrite_authorized∧reference_parity_pass OR EXPORT_EXPERIMENTAL=1)
+Writer: ReapPhysicalReduceExport → transformMoEGGUF (source-immutable sidecar)
+Receipt distinguishes REPACKED_MODEL_BYTES_KIND=EXPORT_MEASURED_ON_DISK vs PROXY_PLAN_SCOPE
+Without EXPORT_DIR: export_status=NOT_RUN (fail-closed residency-only) — not PASS for disk reduction
+Measured prior: SOURCE_BYTES=138342384448 EXPORT_BYTES=6669226880 REDUCTION_RATIO≈0.048 SOURCE_UNTOUCHED=1
+Quality: packing success ≠ coherent generation (REAP16 SEMANTIC=FAIL; PROMOTE=0)
+This turn export re-run: NOT_RUN (MiniMax exclusive)
+
+## Model loading gates
+
+GGUF dynamic geometry + RMV_MOUNT_001 exercised on TinyLlama HOST (201 tensors PASS)
+MoE multi-shard GlobalTensorIndex+residency: SOURCE_WIRED (Deep2Engine); live MiniMax NOT_RUN here
+SSM/hybrid: fail-closed refuse SSM-CERT-001 (A3B/Nemotron) — not weakened
+
+## Honest conjunction
+
+PRODUCT_OPEN_PASS / SESSION_ENTER / GENERATED_TOKENS>0 / TOKEN_COMMIT multi-arch: NOT_MET
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD
+
+## Artifacts
+tinyllama_host_decode8b.{out,err,meta}.txt  (HOST PASS smoke)
+tinyllama_gpu.{out,err,summary}.txt         (GPU open / no tokens)
+D_phi3_mini_host.* D_llama32_3b_host.* D_tinyllama_gpu.* (OPEN truncated)
+EXE_BIND.txt
+
+## Remaining OPEN
+1. Re-run dense matrix (phi3, llama3.2, gemma-E4B) on quiet host; bind EXE_SHA
+2. GPU decode token survival + packed-forward cert rebuild/rebind on EXE_SHA_NOW
+3. MoE smoke on PHYS MiniMax REAP27 or DSv2-Lite when Numerical releases host
+4. Certified REAP rewrite (reference_parity_pass=true) — experimental export only today
+5. Multi-family PromoteReady conjunction — held
+

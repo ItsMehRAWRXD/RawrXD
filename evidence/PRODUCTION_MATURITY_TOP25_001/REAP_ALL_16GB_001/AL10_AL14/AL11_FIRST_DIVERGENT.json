@@ -1,0 +1,57 @@
+{
+  "gate": "AL11",
+  "title": "First divergent STAGE_DIGEST in execution order",
+  "DATE": "2026-11-13",
+  "PROMOTE": 0,
+  "CERTIFIED": 0,
+  "CROSS_SHA_CREDIT": 0,
+  "EXE_SHA": "0C531CA21E5C590EF645553E3EB0E09E2F5AA34C8B1D88847EDCDEECBF41B7CA",
+  "pair": {
+    "full": "G:\\~dev\\rawrxd\\evidence\\REAP16_BATCH_001\\CALIBRATED_001\\AL09\\al09_full.out.txt",
+    "phys": "G:\\~dev\\rawrxd\\evidence\\REAP16_BATCH_001\\CALIBRATED_001\\AL09\\al09_phys2.err.txt"
+  },
+  "window": "tok3 L18-61 -> FINAL_NORM/LOGITS/ARGMAX -> tok4 L0-16",
+  "tok3_pos": 2,
+  "tok4_pos": 3,
+  "tok3_closure": {
+    "LAYER17_OUT_match": true,
+    "fnv": "02b6b68f15862955",
+    "PROMPT_POST_LAYERS_match": true,
+    "PROMPT_POST_LAYERS_fnv": "f99437f24234f06d",
+    "FINAL_NORM_match": true,
+    "FINAL_NORM_fnv": "9a10ede4f6cd094f",
+    "LOGITS_STAGE_DIGEST": "ABSENT",
+    "ARGMAX_STAGE_DIGEST": "ABSENT",
+    "note": "Sparse STAGE_DIGEST omits L18-61 keys; PROMPT_POST_LAYERS is post-L61 residual and matches. AL09 probes: LAYER17_OUT@tok3 bit-exact."
+  },
+  "FIRST_DIVERGENT": {
+    "key": "FFN_DOWN_1",
+    "pos": 3,
+    "AL09_tok": 4,
+    "full_fnv": "0a38208b6642f3d6",
+    "phys_fnv": "020e34f17b2bbf8a",
+    "full_l2": "1.719651024e+00",
+    "phys_l2": "1.719650950e+00",
+    "last_exact": {
+      "key": "FFN_NORM_1",
+      "pos": 3,
+      "fnv": "a2334583d009d20c"
+    },
+    "LAYER0_OUT_pos3_match": true,
+    "attn_path_L1_through_FFN_NORM_1_match": true
+  },
+  "route_at_break_L1_tok4": {
+    "full_orig_ids_scores": "22:0.18631859 3:0.16391455 233:0.097529352 140:0.10485329 29:0.10633606 52:0.10256938 32:0.14941354 7:0.089065291",
+    "phys_slots_scores": "3:0.18631859 0:0.16391455 23:0.097529352 16:0.10485329 5:0.10633606 8:0.10256938 6:0.14941354 1:0.089065291",
+    "score_order_match": true,
+    "slot_map_consistent_with_sorted_calib": true
+  },
+  "classification": "MOE_EXPERT_BODY_OR_ACCUM_UNDER_EQUAL_NORM",
+  "L17_router": "SYMPTOM",
+  "FFN_DOWN_1_earlier_pos": {
+    "pos0": "MATCH",
+    "pos1": "MATCH",
+    "pos2": "MATCH",
+    "pos3": "MISMATCH"
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "gate": "AL10",
+  "title": "TOK3/TOK4 token-boundary extract from AL09 (utf-16-le aware)",
+  "DATE": "2026-11-13",
+  "PROMOTE": 0,
+  "CERTIFIED": 0,
+  "CROSS_SHA_CREDIT": 0,
+  "EXE_SHA_AL09": "0C531CA21E5C590EF645553E3EB0E09E2F5AA34C8B1D88847EDCDEECBF41B7CA",
+  "sources": {
+    "compare": "G:\\~dev\\rawrxd\\evidence\\REAP16_BATCH_001\\CALIBRATED_001\\AL09\\AL09_COMPARE.txt",
+    "full_stage": "G:\\~dev\\rawrxd\\evidence\\REAP16_BATCH_001\\CALIBRATED_001\\AL09\\al09_full.out.txt",
+    "phys_stage": "G:\\~dev\\rawrxd\\evidence\\REAP16_BATCH_001\\CALIBRATED_001\\AL09\\al09_phys2.err.txt",
+    "encoding_note": "AL09_COMPARE.txt is UTF-16-LE; STAGE_DIGEST logs are UTF-8"
+  },
+  "pos_index": {
+    "note": "STAGE_DIGEST pos is 0-based; AL09 tok is 1-based (tok=pos+1)",
+    "tok3_pos": 2,
+    "tok4_pos": 3
+  },
+  "TOK3_ARGMAX_ID": {
+    "full": null,
+    "phys": null,
+    "status": "NOT_EMITTED_IN_AL09_LOGS",
+    "ARGMAX_line_count": 0,
+    "LOGITS_line_count": 0
+  },
+  "TOK3_SELECTED_MATCH": {
+    "value": "Y",
+    "basis": [
+      "FINAL_NORM@pos=2 FNV match full=phys=9a10ede4f6cd094f",
+      "PROMPT_FINAL_NORM@pos=2 match",
+      "PROMPT_POST_LAYERS@pos=2 match fnv=f99437f24234f06d (post L61)",
+      "PROMPT_EMBED@pos=3 match fnv=dca8c3318f355f60 (tok4 input embed => same selected token id)"
+    ],
+    "explicit_argmax_id_logged": false
+  },
+  "TOK4_INPUT_TOKEN": {
+    "id_full": null,
+    "id_phys": null,
+    "PROMPT_EMBED_fnv_full": "dca8c3318f355f60",
+    "PROMPT_EMBED_fnv_phys": "dca8c3318f355f60",
+    "embed_match": true,
+    "note": "Token id integer not printed; identical embed FNV implies identical input token id"
+  },
+  "KV": {
+    "KV_PROBE_count": 0,
+    "KV_digest_status": "MISSING",
+    "KV_positions_status": "MISSING_AS_DIGEST",
+    "observed": "Only KVCache init lines (heads/dim/ctx); no per-pos KV FNV digests in AL09 pair"
+  },
+  "tok3_stage_parity": {
+    "all_shared_STAGE_DIGEST_keys_match": true,
+    "includes_LAYER17_OUT": true,
+    "includes_FINAL_NORM": true,
+    "LAYER17_OUT_fnv": "02b6b68f15862955"
+  },
+  "tok4_L17_symptom": {
+    "L17_INPUT_FNV_full": "bfa6ead1de74a48a",
+    "L17_INPUT_FNV_phys": "594eea008270b879",
+    "match": false,
+    "note": "Matches AL09_COMPARE tok=4; L17 router is symptom of earlier FFN_DOWN_1 drift"
+  },
+  "exclusive_rerun": {
+    "required_by_missing_argmax_kv": true,
+    "attempted": true,
+    "detail_file": "AL10_EXCLUSIVE_RERUN_STATUS.txt"
+  }
+}

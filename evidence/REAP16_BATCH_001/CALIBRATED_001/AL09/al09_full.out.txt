@@ -1,0 +1,357 @@
+WEIGHT_BUDGET_INPUT=32768
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=32768
+WEIGHT_BUDGET_BYTES=34359738368
+WEIGHT_BUDGET_SOURCE=ENV
+[Deep2Engine] Loading model from: F:\ollamamodels\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Multi-shard detected: YES (3 files in F:\ollamamodels\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M)
+[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=PASS arch=minimax-m2 L=62 H=3072 FFN=1536 heads=48 kv=8 hd=128 ctx=196608 ropeBase=5000000 ropeDim=64
+[Deep2Engine] AUTHORITY_LADDER=DEFER_UNTIL_RUNTIME_RECEIPT
+[Deep2Engine] GlobalTensorIndex built: 809 tensors across 3 shards
+[Deep2Engine] TensorResidencyCache ready (3 shards registered)
+[Deep2Engine] GGUF architecture: 'minimax-m2'  hidden=3072 layers=62 heads=48 kvHeads=8 inter=1536 vocab=200064
+[Deep2Engine] Tokenizer loaded: vocab=200064 bos=200034 eos=200020 (Spm::encode)
+[ResidencyManager] Initialized: maxResidentBytes=34359738368, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=32768 MB
+[ResidencyManager] this=000001C0FECFED20  Registered 'blk.0.attn_k_norm.weight': shard=0 offset=859908928 bytes=4096  |  registry_size=1  registeredBytes=4096  zeroOffset=0  maxResidentBytes=34359738368
+[ResidencyManager] this=000001C0FECFED20  Registered 'blk.2.ffn_gate_exps.weight': shard=0 offset=6631954240 bytes=679477248  |  registry_size=100  registeredBytes=19930369024  zeroOffset=0  maxResidentBytes=34359738368
+[ResidencyManager] this=000001C0FECFED20  Registered 'blk.8.attn_v.weight': shard=0 offset=19598084928 bytes=1769472  |  registry_size=200  registeredBytes=33230577664  zeroOffset=0  maxResidentBytes=34359738368
+[ResidencyManager] this=000001C0FECFED20  Registered 'blk.12.attn_v.weight': shard=0 offset=28175940416 bytes=2580480  |  registry_size=300  registeredBytes=48673494016  zeroOffset=0  maxResidentBytes=34359738368
+[ResidencyManager] this=000001C0FECFED20  Registered 'blk.17.ffn_norm.weight': shard=0 offset=40496309056 bytes=12288  |  registry_size=400  registeredBytes=68827527168  zeroOffset=0  maxResidentBytes=34359738368
+[ResidencyManager] this=000001C0FECFED20  Registered 'blk.26.attn_k.weight': shard=1 offset=9257351520 bytes=1769472  |  registry_size=500  registeredBytes=83243520000  zeroOffset=0  maxResidentBytes=34359738368
+[ResidencyManager] this=000001C0FECFED20  Registered 'blk.46.attn_k_norm.weight': shard=2 offset=3059903136 bytes=4096  |  registry_size=501  registeredBytes=83243524096  zeroOffset=0  maxResidentBytes=34359738368
+[ResidencyManager] this=000001C0FECFED20  Registered 'blk.26.attn_norm.weight': shard=1 offset=9259125088 bytes=12288  |  registry_size=502  registeredBytes=83243536384  zeroOffset=0  maxResidentBytes=34359738368
+[ResidencyManager] this=000001C0FECFED20  Registered 'blk.35.ffn_gate_inp.weight': shard=1 offset=30175474016 bytes=3145728  |  registry_size=503  registeredBytes=83246682112  zeroOffset=0  maxResidentBytes=34359738368
+[ResidencyManager] this=000001C0FECFED20  Registered 'blk.26.attn_output.weight': shard=1 offset=9259137376 bytes=10616832  |  registry_size=504  registeredBytes=83257298944  zeroOffset=0  maxResidentBytes=34359738368
+[ResidencyManager] this=000001C0FECFED20  Registered 'blk.32.attn_k_norm.weight': shard=1 offset=22282023264 bytes=4096  |  registry_size=505  registeredBytes=83257303040  zeroOffset=0  maxResidentBytes=34359738368
+[ResidencyManager] this=000001C0FECFED20  Registered 'blk.28.attn_k.weight': shard=1 offset=13702398304 bytes=1769472  |  registry_size=506  registeredBytes=83259072512  zeroOffset=0  maxResidentBytes=34359738368
+[ResidencyManager] this=000001C0FECFED20  Registered 'blk.26.attn_q.weight': shard=1 offset=9269754208 bytes=10616832  |  registry_size=507  registeredBytes=83269689344  zeroOffset=0  maxResidentBytes=34359738368
+[ResidencyManager] this=000001C0FECFED20  Registered 'blk.27.attn_output.weight': shard=1 offset=11325541728 bytes=10616832  |  registry_size=508  registeredBytes=83280306176  zeroOffset=0  maxResidentBytes=34359738368
+[ResidencyManager] this=000001C0FECFED20  Registered 'blk.26.ffn_gate_inp.weight': shard=1 offset=10641120608 bytes=3145728  |  registry_size=509  registeredBytes=83283451904  zeroOffset=0  maxResidentBytes=34359738368
+[ResidencyManager] this=000001C0FECFED20  Registered 'blk.39.attn_k.weight': shard=1 offset=37369560416 bytes=1769472  |  registry_size=600  registeredBytes=97060413440  zeroOffset=0  maxResidentBytes=34359738368
+[ResidencyManager] this=000001C0FECFED20  Registered 'blk.47.attn_q.weight': shard=2 offset=5136940704 bytes=10616832  |  registry_size=700  registeredBytes=117205210112  zeroOffset=0  maxResidentBytes=34359738368
+[ResidencyManager] this=000001C0FECFED20  Registered 'blk.60.attn_k.weight': shard=2 offset=34485699232 bytes=1769472  |  registry_size=800  registeredBytes=136639285248  zeroOffset=0  maxResidentBytes=34359738368
+RMV_MOUNT_001
+TENSORS_DISCOVERED=809
+TENSORS_ADDRESSED=809
+TENSORS_REGISTERED=809
+INVALID_SHARD=0
+INVALID_RANGE=0
+OVERFLOW_RANGE=0
+ZERO_SIZE=0
+UNADDRESSED=0
+RMV_MOUNT_001=PASS
+[Deep2Engine] ResidencyManager: this=000001C0FECFED20  registered=809 tensors  bytes=138334096384  max=34359738368
+[RMV_MOUNT_001]=PASS
+[Deep2Engine] AUTHORITY_LADDER=PASS schema=0 quant=0 tok=200064
+[ThreadPool] Initializing with 32 threads...
+[ThreadPool] Initialized 32 worker threads
+[ThreadPool] Reinitializing with 32 threads...
+[ThreadPool] Reinitialized 32 worker threads
+[Deep2Engine] ThreadPool (loadModel): 32 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF7AA6254B0 dequant=00007FF7AA622850 GetGEMV(12)=00007FF7AA6254B0 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 22 GEMV kernels, 22 dequant kernels
+[KVCache] Lazy pages: layers=62 page=8 virtualMax=196608 heads=8 dim=128
+[KVCache] HOT_BYTES=4063232 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] Model loaded successfully (809 tensors)
+[Deep2Engine] MoE model: 256 experts, top-8, 0 shared
+[Deep2Engine] MoE multi-shard: using GlobalTensorIndex + residency cache
+[Deep2Engine] Created 62 per-layer routers (multi-shard) gating_func=2
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[ChatTemplate] Forced 'minimax' from arch/name (arch=minimax-m2)
+[AGENT] PREFILL_BEGIN prompt_tokens=39
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+HOTPATH_GEMV=CPU
+HOTPATH_RMSNORM=CPU
+HOTPATH_ATTN=CPU
+HOTPATH_FFN=CPU
+HOTPATH_MEDUSA=0
+HOTPATH_ELASTIC=0
+HOTPATH_CYCLONE=0
+HOTPATH_CKV=0
+HOTPATH_GPU_FWD_ENABLED=0
+AUTO_POLICY_ACTIVE=0
+MANUAL_ARM_FORCING=1
+K2_LIVE_POLICY_ARM=OFF
+K2_LIVE_POLICY_MODE=0
+K2_LIVE_POLICY_REASON=force_off
+K2_LIVE_POLICY_REUSE_STEPS=62
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=62 TOKENS=1
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=3428600000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=0 MECH_ENV=none WANTED=0
+[Deep2Engine] embedToken: type=12 vocabSize=200064 hiddenDim=3072 data=000001C0A2800000 sizeBytes=345710592
+[STAGE_DIGEST] side=deep2 key=PROMPT_EMBED pos=0 n=3072 l2=3.381438085e-01 max_abs=2.721090317e-01 min=-9.018230438e-02 max=2.721090317e-01 sum=2.712203264e-01 fnv=9b6e2b94c4d15330 nf=0
+[Deep2Engine] Layer 0 weights: wq.data=0000000000000000 type=12 wk.data=0000000000000000 wv.data=0000000000000000 wo.data=0000000000000000 wqkv.data=0000000000000000 attnO.data=0000000000000000
+[Deep2Engine] Layer 0 weights: attnNorm.data=0000000000000000 ffnNorm.data=0000000000000000
+[STAGE_DIGEST] side=deep2 key=ATTN_NORM_0 pos=0 n=3072 l2=1.977413447e+01 max_abs=1.693524170e+01 min=-1.019968033e+01 max=1.693524170e+01 sum=6.720449041e+00 fnv=702a66c7aa1e02d5 nf=0
+[STAGE_DIGEST] rms_norm_epsilon_source=llama.attention.layer_norm_rms_epsilon
+[STAGE_DIGEST] rms_norm_epsilon=9.999999975e-07
+[STAGE_DIGEST] NORM_EPS=9.999999975e-07 attnNorm.type=0
+[STAGE_DIGEST] side=deep2 key=V_0 pos=0 n=1024 l2=1.125009932e+01 max_abs=2.839364052e+00 min=-2.839364052e+00 max=2.748951435e+00 sum=1.013892378e+01 fnv=25555434f182c2ea nf=0
+[STAGE_DIGEST] side=deep2 key=Q_LINEAR_0 pos=0 n=6144 l2=4.188990078e+01 max_abs=5.019061565e+00 min=-5.019061565e+00 max=4.953289986e+00 sum=-2.083876862e+00 fnv=d4831cb38ca4213a nf=0
+[STAGE_DIGEST] side=deep2 key=K_LINEAR_0 pos=0 n=1024 l2=1.869037242e+01 max_abs=2.493433952e+00 min=-2.322825909e+00 max=2.493433952e+00 sum=-8.566741282e-01 fnv=3d39955060bf202d nf=0
+[STAGE_DIGEST] side=deep2 key=Q_NORM_0 pos=0 n=6144 l2=9.698743411e+01 max_abs=2.729424286e+01 min=-2.729424286e+01 max=1.817494202e+01 sum=2.980189282e+01 fnv=024b67dffb49a926 nf=0
+[STAGE_DIGEST] side=deep2 key=K_NORM_0 pos=0 n=1024 l2=3.523411485e+01 max_abs=5.719275475e+00 min=-5.719275475e+00 max=5.469695568e+00 sum=1.299116759e+00 fnv=a9f8afae12121a21 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_0 pos=0 n=6144 l2=9.698743411e+01 max_abs=2.729424286e+01 min=-2.729424286e+01 max=1.817494202e+01 sum=2.980189282e+01 fnv=024b67dffb49a926 nf=0
+[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_0 pos=0 n=1024 l2=3.523411485e+01 max_abs=5.719275475e+00 min=-5.719275475e+00 max=5.469695568e+00 sum=1.299116759e+00 fnv=a9f8afae12121a21 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_POST_ROPE_0 pos=0 n=6144 l2=9.698743411e+01 max_abs=2.729424286e+01 min=-2.729424286e+01 max=1.817494202e+01 sum=2.980189282e+01 fnv=024b67dffb49a926 nf=0
+[STAGE_DIGEST] side=deep2 key=K_POST_ROPE_0 pos=0 n=1024 l2=3.523411485e+01 max_abs=5.719275475e+00 min=-5.719275475e+00 max=5.469695568e+00 sum=1.299116759e+00 fnv=a9f8afae12121a21 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_0 pos=0 n=6144 l2=2.755700290e+01 max_abs=2.839364052e+00 min=-2.839364052e+00 max=2.748951435e+00 sum=6.083354271e+01 fnv=9af3b621ba7d4e11 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_OUT_0 pos=0 n=3072 l2=1.042268381e+03 max_abs=1.040615723e+03 min=-1.040615723e+03 max=3.309180450e+01 sum=-1.075609657e+03 fnv=7b31437144017446 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_INP_0 pos=0 n=3072 l2=1.042267870e+03 max_abs=1.040614624e+03 min=-1.040614624e+03 max=3.309445572e+01 sum=-1.075338489e+03 fnv=6787bfd3447d3ee5 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_NORM_0 pos=0 n=3072 l2=1.490255863e+01 max_abs=1.459100723e+01 min=-1.459100723e+01 max=4.880959392e-01 sum=-1.757823639e+01 fnv=a3d37fab31899977 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_DOWN_0 pos=0 n=3072 l2=2.370637335e+02 max_abs=2.241164093e+02 min=-2.241164093e+02 max=5.504979706e+01 sum=-1.549326458e+02 fnv=fe2a39f8bbd3fec3 nf=0
+[STAGE_DIGEST] side=deep2 key=POST_FFN_0 pos=0 n=3072 l2=1.270607293e+03 max_abs=1.264731079e+03 min=-1.264731079e+03 max=8.814425659e+01 sum=-1.230271180e+03 fnv=a897e724acb5d69b nf=0
+[STAGE_DIGEST] side=deep2 key=LAYER0_OUT pos=0 n=3072 l2=1.270607293e+03 max_abs=1.264731079e+03 min=-1.264731079e+03 max=8.814425659e+01 sum=-1.230271180e+03 fnv=a897e724acb5d69b nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_NORM_1 pos=0 n=3072 l2=2.500160444e-01 max_abs=1.762423813e-01 min=-1.363743395e-01 max=1.762423813e-01 sum=-1.026184505e-01 fnv=3c8ac0ab3cb23d92 nf=0
+[STAGE_DIGEST] side=deep2 key=V_1 pos=0 n=1024 l2=1.248756082e-01 max_abs=3.582427651e-02 min=-3.582427651e-02 max=2.067176253e-02 sum=-1.123488438e-01 fnv=60cb9a7287863291 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_LINEAR_1 pos=0 n=6144 l2=7.622264753e-01 max_abs=7.072752714e-02 min=-7.072752714e-02 max=6.696478277e-02 sum=-1.045286113e+00 fnv=f78cb7fecb8e33b9 nf=0
+[STAGE_DIGEST] side=deep2 key=K_LINEAR_1 pos=0 n=1024 l2=2.534209432e-01 max_abs=4.306375980e-02 min=-4.149977490e-02 max=4.306375980e-02 sum=-3.335761481e-03 fnv=530a1494d80bcb97 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_NORM_1 pos=0 n=6144 l2=9.099171142e+01 max_abs=9.633104324e+00 min=-8.653075218e+00 max=9.633104324e+00 sum=-1.100167395e+02 fnv=6546a79a905196c5 nf=0
+[STAGE_DIGEST] side=deep2 key=K_NORM_1 pos=0 n=1024 l2=4.374473021e+01 max_abs=1.495029449e+01 min=-1.495029449e+01 max=7.549617767e+00 sum=-2.147781067e+01 fnv=0bf784a104d8ba50 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_1 pos=0 n=6144 l2=9.099171142e+01 max_abs=9.633104324e+00 min=-8.653075218e+00 max=9.633104324e+00 sum=-1.100167395e+02 fnv=6546a79a905196c5 nf=0
+[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_1 pos=0 n=1024 l2=4.374473021e+01 max_abs=1.495029449e+01 min=-1.495029449e+01 max=7.549617767e+00 sum=-2.147781067e+01 fnv=0bf784a104d8ba50 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_1 pos=0 n=6144 l2=3.058815213e-01 max_abs=3.582427651e-02 min=-3.582427651e-02 max=2.067176253e-02 sum=-6.740930629e-01 fnv=8c1f9d7fc153be55 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_OUT_1 pos=0 n=3072 l2=4.721788969e+00 max_abs=4.679420948e+00 min=-4.679420948e+00 max=8.912579715e-02 sum=-4.778527894e+00 fnv=02ec8a0e710c15bc nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_INP_1 pos=0 n=3072 l2=1.275277904e+03 max_abs=1.269410522e+03 min=-1.269410522e+03 max=8.823338318e+01 sum=-1.235049732e+03 fnv=f0d0cc9db8353d36 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_NORM_1 pos=0 n=3072 l2=5.954280890e+00 max_abs=5.145308971e+00 min=-5.145308971e+00 max=1.017977953e+00 sum=-8.679260081e+00 fnv=a9e55dbe255659bb nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_DOWN_1 pos=0 n=3072 l2=2.746926232e+00 max_abs=2.892562151e-01 min=-2.892562151e-01 max=1.846800297e-01 sum=-2.251155456e+00 fnv=77805e9837e02982 nf=0
+[STAGE_DIGEST] side=deep2 key=POST_FFN_1 pos=0 n=3072 l2=1.275124498e+03 max_abs=1.269225830e+03 min=-1.269225830e+03 max=8.835171509e+01 sum=-1.237300873e+03 fnv=2a28337d9cc30545 nf=0
+[STAGE_DIGEST] side=deep2 key=LAYER1_OUT pos=0 n=3072 l2=1.275124498e+03 max_abs=1.269225830e+03 min=-1.269225830e+03 max=8.835171509e+01 sum=-1.237300873e+03 fnv=2a28337d9cc30545 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_NORM_2 pos=0 n=3072 l2=5.130232623e-01 max_abs=4.040716588e-01 min=-4.040716588e-01 max=1.604787111e-01 sum=-3.619926991e-01 fnv=dee1b58fc377e6ac nf=0
+[STAGE_DIGEST] side=deep2 key=V_2 pos=0 n=1024 l2=1.091711428e-01 max_abs=1.991887018e-02 min=-1.991887018e-02 max=1.149671059e-02 sum=-1.338856850e-01 fnv=5f91f2ebfc12e842 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_LINEAR_2 pos=0 n=6144 l2=1.197831900e+00 max_abs=1.309454888e-01 min=-1.299046725e-01 max=1.309454888e-01 sum=1.177887683e+00 fnv=c7b5da1ed15ceee4 nf=0
+[STAGE_DIGEST] side=deep2 key=K_LINEAR_2 pos=0 n=1024 l2=4.500189005e-01 max_abs=1.069226414e-01 min=-8.773283660e-02 max=1.069226414e-01 sum=8.581231267e-02 fnv=b811ef8aa6a648d1 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_NORM_2 pos=0 n=6144 l2=8.598004576e+01 max_abs=1.062134457e+01 min=-9.741681099e+00 max=1.062134457e+01 sum=4.666948619e+01 fnv=e10064c15be05295 nf=0
+[STAGE_DIGEST] side=deep2 key=K_NORM_2 pos=0 n=1024 l2=4.554490599e+01 max_abs=1.232386971e+01 min=-9.852676392e+00 max=1.232386971e+01 sum=7.815473154e+00 fnv=0e64f0cc6dfdd7fc nf=0
+[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_2 pos=0 n=6144 l2=8.598004576e+01 max_abs=1.062134457e+01 min=-9.741681099e+00 max=1.062134457e+01 sum=4.666948619e+01 fnv=e10064c15be05295 nf=0
+[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_2 pos=0 n=1024 l2=4.554490599e+01 max_abs=1.232386971e+01 min=-9.852676392e+00 max=1.232386971e+01 sum=7.815473154e+00 fnv=0e64f0cc6dfdd7fc nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_2 pos=0 n=6144 l2=2.674135946e-01 max_abs=1.991887018e-02 min=-1.991887018e-02 max=1.149671059e-02 sum=-8.033141102e-01 fnv=543d1f8f9afa0075 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_OUT_2 pos=0 n=3072 l2=4.826861461e-01 max_abs=1.557592154e-01 min=-1.557592154e-01 max=5.738126487e-02 sum=7.086350899e-01 fnv=c209796b861dbe68 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_INP_2 pos=0 n=3072 l2=1.275284280e+03 max_abs=1.269381592e+03 min=-1.269381592e+03 max=8.838096619e+01 sum=-1.236592242e+03 fnv=7f7d66a7f42e02fb nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_NORM_2 pos=0 n=3072 l2=6.006716590e+00 max_abs=4.438973427e+00 min=-4.438973427e+00 max=3.105938911e+00 sum=-1.832700918e+00 fnv=4137a831603d25f7 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_DOWN_2 pos=0 n=3072 l2=2.667576779e-01 max_abs=1.160263941e-01 min=-1.582658850e-02 max=1.160263941e-01 sum=3.830497981e-01 fnv=95c8cec8235d5b55 nf=0
+[STAGE_DIGEST] side=deep2 key=POST_FFN_2 pos=0 n=3072 l2=1.275168227e+03 max_abs=1.269265625e+03 min=-1.269265625e+03 max=8.837094879e+01 sum=-1.236209250e+03 fnv=03722c7c5ed61bec nf=0
+[STAGE_DIGEST] side=deep2 key=LAYER2_OUT pos=0 n=3072 l2=1.275168227e+03 max_abs=1.269265625e+03 min=-1.269265625e+03 max=8.837094879e+01 sum=-1.236209250e+03 fnv=03722c7c5ed61bec nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_NORM_17 pos=0 n=3072 l2=2.113221342e+00 max_abs=1.474695563e+00 min=-1.474695563e+00 max=8.767475486e-01 sum=-1.523746218e+00 fnv=9470637e56e06c01 nf=0
+[STAGE_DIGEST] side=deep2 key=V_17 pos=0 n=1024 l2=4.970341298e-01 max_abs=2.300036997e-01 min=-2.300036997e-01 max=9.106070548e-02 sum=-8.094761176e-01 fnv=20d5c48f29e555de nf=0
+[STAGE_DIGEST] side=deep2 key=Q_LINEAR_17 pos=0 n=6144 l2=5.060590090e+00 max_abs=4.115745127e-01 min=-4.115745127e-01 max=3.828750253e-01 sum=1.076143561e+01 fnv=636936f42637b062 nf=0
+[STAGE_DIGEST] side=deep2 key=K_LINEAR_17 pos=0 n=1024 l2=2.013167569e+00 max_abs=6.290182471e-01 min=-6.290182471e-01 max=6.229853034e-01 sum=2.551758858e+00 fnv=39ad398619abaa38 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_NORM_17 pos=0 n=6144 l2=1.065522459e+02 max_abs=1.483567810e+01 min=-1.483567810e+01 max=1.172033215e+01 sum=2.003823507e+02 fnv=19ebe73805ae77e4 nf=0
+[STAGE_DIGEST] side=deep2 key=K_NORM_17 pos=0 n=1024 l2=4.950754532e+01 max_abs=1.858854675e+01 min=-1.858854675e+01 max=1.627255440e+01 sum=7.609866720e+01 fnv=053127a6bc025cb3 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_17 pos=0 n=6144 l2=1.065522459e+02 max_abs=1.483567810e+01 min=-1.483567810e+01 max=1.172033215e+01 sum=2.003823507e+02 fnv=19ebe73805ae77e4 nf=0
+[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_17 pos=0 n=1024 l2=4.950754532e+01 max_abs=1.858854675e+01 min=-1.858854675e+01 max=1.627255440e+01 sum=7.609866720e+01 fnv=053127a6bc025cb3 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_17 pos=0 n=6144 l2=1.217480003e+00 max_abs=2.300036997e-01 min=-2.300036997e-01 max=9.106070548e-02 sum=-4.856856706e+00 fnv=a1717fa902d68909 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_OUT_17 pos=0 n=3072 l2=2.388202268e+00 max_abs=1.779050350e+00 min=-1.779050350e+00 max=2.105932534e-01 sum=-3.163028047e+00 fnv=ec9f7b99f9f846ca nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_INP_17 pos=0 n=3072 l2=1.277308533e+03 max_abs=1.271259766e+03 min=-1.271259766e+03 max=8.950099182e+01 sum=-1.253005811e+03 fnv=3191121132fd66e0 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_NORM_17 pos=0 n=3072 l2=5.472256519e+00 max_abs=3.883674622e+00 min=-3.260793447e+00 max=3.883674622e+00 sum=1.882902796e-02 fnv=a2e65d86b4e56d16 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_DOWN_17 pos=0 n=3072 l2=1.555373249e-01 max_abs=1.808997430e-02 min=-1.559098158e-02 max=1.808997430e-02 sum=-2.266300141e-01 fnv=668193f9ae1b226e nf=0
+[STAGE_DIGEST] side=deep2 key=POST_FFN_17 pos=0 n=3072 l2=1.277298907e+03 max_abs=1.271247681e+03 min=-1.271247681e+03 max=8.951552582e+01 sum=-1.253232444e+03 fnv=1a5d3b2646df5b63 nf=0
+[STAGE_DIGEST] side=deep2 key=LAYER17_OUT pos=0 n=3072 l2=1.277298907e+03 max_abs=1.271247681e+03 min=-1.271247681e+03 max=8.951552582e+01 sum=-1.253232444e+03 fnv=1a5d3b2646df5b63 nf=0
+[STAGE_DIGEST] side=deep2 key=PROMPT_POST_LAYERS pos=0 n=3072 l2=1.253922631e+03 max_abs=1.235397217e+03 min=-1.235397217e+03 max=1.008913422e+02 sum=-1.198778099e+03 fnv=aef12b3fd593aa28 nf=0
+[STAGE_DIGEST] side=deep2 key=PROMPT_FINAL_NORM pos=0 n=3072 l2=7.128036867e+01 max_abs=6.655200195e+01 min=-6.655200195e+01 max=1.407554340e+01 sum=-7.307105765e+01 fnv=d8663d48342d5ff6 nf=0
+[STAGE_DIGEST] side=deep2 key=FINAL_NORM pos=0 n=3072 l2=7.128036867e+01 max_abs=6.655200195e+01 min=-6.655200195e+01 max=1.407554340e+01 sum=-7.307105765e+01 fnv=d8663d48342d5ff6 nf=0
+[STAGE_DIGEST] side=deep2 key=PROMPT_EMBED pos=1 n=3072 l2=1.932638518e-01 max_abs=1.230919361e-02 min=-1.230919361e-02 max=1.167082787e-02 sum=-5.556946993e-02 fnv=da1a36e6680bed43 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_NORM_0 pos=1 n=3072 l2=8.888120452e-01 max_abs=6.180778742e-01 min=-2.591274679e-01 max=6.180778742e-01 sum=2.336402910e-01 fnv=489b9a269af7644e nf=0
+[STAGE_DIGEST] side=deep2 key=V_0 pos=1 n=1024 l2=7.904260186e-01 max_abs=1.672674417e-01 min=-1.230360121e-01 max=1.672674417e-01 sum=2.245469273e-01 fnv=bed3a1c22837d413 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_LINEAR_0 pos=1 n=6144 l2=2.273171975e+00 max_abs=1.311081499e-01 min=-1.311081499e-01 max=1.293892860e-01 sum=2.270523686e+00 fnv=4f03cb7b17d70695 nf=0
+[STAGE_DIGEST] side=deep2 key=K_LINEAR_0 pos=1 n=1024 l2=1.029627189e+00 max_abs=2.096398324e-01 min=-2.096398324e-01 max=1.904486865e-01 sum=3.236943105e-01 fnv=a85c2b281be90c6a nf=0
+[STAGE_DIGEST] side=deep2 key=Q_NORM_0 pos=1 n=6144 l2=8.777222241e+01 max_abs=1.168830395e+01 min=-1.168830395e+01 max=6.516643047e+00 sum=8.927180958e+01 fnv=fb390a074dfdcd66 nf=0
+[STAGE_DIGEST] side=deep2 key=K_NORM_0 pos=1 n=1024 l2=4.367943201e+01 max_abs=1.882460594e+01 min=-1.882460594e+01 max=1.275667286e+01 sum=1.188598604e+01 fnv=bce9375fc4f8ccf3 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_0 pos=1 n=6144 l2=8.777222241e+01 max_abs=1.168830395e+01 min=-1.168830395e+01 max=6.516643047e+00 sum=8.927180958e+01 fnv=fb390a074dfdcd66 nf=0
+[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_0 pos=1 n=1024 l2=4.367943201e+01 max_abs=1.882460594e+01 min=-1.882460594e+01 max=1.275667286e+01 sum=1.188598604e+01 fnv=bce9375fc4f8ccf3 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_POST_ROPE_0 pos=1 n=6144 l2=8.777222227e+01 max_abs=1.168830395e+01 min=-1.168830395e+01 max=6.516643047e+00 sum=1.085335172e+02 fnv=942d22bb2b971c7a nf=0
+[STAGE_DIGEST] side=deep2 key=K_POST_ROPE_0 pos=1 n=1024 l2=4.367943173e+01 max_abs=1.882460594e+01 min=-1.882460594e+01 max=1.275667286e+01 sum=8.851232060e+00 fnv=f87b198e9a981ee0 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_0 pos=1 n=6144 l2=1.001942098e+01 max_abs=2.510991096e+00 min=-1.564742088e+00 max=2.510991096e+00 sum=1.798205611e+00 fnv=b0a7ff474e725dac nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_OUT_0 pos=1 n=3072 l2=1.087734797e+02 max_abs=1.085140228e+02 min=-1.085140228e+02 max=2.431081057e+00 sum=-1.046129143e+02 fnv=4b89d027d3e1dec3 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_INP_0 pos=1 n=3072 l2=1.087726697e+02 max_abs=1.085133438e+02 min=-1.085133438e+02 max=2.436329126e+00 sum=-1.046684850e+02 fnv=83eb13f0dcd7470a nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_NORM_0 pos=1 n=3072 l2=1.522694156e+01 max_abs=1.457933712e+01 min=-1.457933712e+01 max=5.997499228e-01 sum=-1.388300073e+01 fnv=97ec74050396f2bc nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_DOWN_0 pos=1 n=3072 l2=2.762496709e+01 max_abs=2.662392378e+00 min=-2.662392378e+00 max=2.371815205e+00 sum=1.110652283e+01 fnv=30183881be9f068c nf=0
+[STAGE_DIGEST] side=deep2 key=POST_FFN_0 pos=1 n=3072 l2=1.152897435e+02 max_abs=1.111757355e+02 min=-1.111757355e+02 max=4.808144569e+00 sum=-9.356196161e+01 fnv=25043292982b319b nf=0
+[STAGE_DIGEST] side=deep2 key=LAYER0_OUT pos=1 n=3072 l2=1.152897435e+02 max_abs=1.111757355e+02 min=-1.111757355e+02 max=4.808144569e+00 sum=-9.356196161e+01 fnv=25043292982b319b nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_NORM_1 pos=1 n=3072 l2=1.064940399e+00 max_abs=1.547307372e-01 min=-1.321189106e-01 max=1.547307372e-01 sum=3.151929881e-01 fnv=c5031012e9a860d4 nf=0
+[STAGE_DIGEST] side=deep2 key=V_1 pos=1 n=1024 l2=9.858059716e-01 max_abs=1.476877630e-01 min=-1.274916232e-01 max=1.476877630e-01 sum=-6.258924253e-02 fnv=d466e3f3af4b578d nf=0
+[STAGE_DIGEST] side=deep2 key=Q_LINEAR_1 pos=1 n=6144 l2=4.186945312e+00 max_abs=3.394688666e-01 min=-3.394688666e-01 max=3.358406723e-01 sum=7.323618841e+00 fnv=e9ddd235b2712e46 nf=0
+[STAGE_DIGEST] side=deep2 key=K_LINEAR_1 pos=1 n=1024 l2=1.734389569e+00 max_abs=2.898183167e-01 min=-2.101607770e-01 max=2.898183167e-01 sum=1.382124528e+00 fnv=1dde63e7f0aba266 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_NORM_1 pos=1 n=6144 l2=8.816133612e+01 max_abs=1.097070217e+01 min=-1.097070217e+01 max=8.383620262e+00 sum=1.458726838e+02 fnv=21d9deceba57a282 nf=0
+[STAGE_DIGEST] side=deep2 key=K_NORM_1 pos=1 n=1024 l2=3.725226013e+01 max_abs=4.846085548e+00 min=-4.846085548e+00 max=4.525496006e+00 sum=2.488628628e+01 fnv=470de73999581a0f nf=0
+[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_1 pos=1 n=6144 l2=8.816133612e+01 max_abs=1.097070217e+01 min=-1.097070217e+01 max=8.383620262e+00 sum=1.458726838e+02 fnv=21d9deceba57a282 nf=0
+[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_1 pos=1 n=1024 l2=3.725226013e+01 max_abs=4.846085548e+00 min=-4.846085548e+00 max=4.525496006e+00 sum=2.488628628e+01 fnv=470de73999581a0f nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_1 pos=1 n=6144 l2=1.677718692e+00 max_abs=1.441855431e-01 min=-1.217087507e-01 max=1.441855431e-01 sum=1.342435336e+00 fnv=dbdb39eebb02a870 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_OUT_1 pos=1 n=3072 l2=1.337359213e+01 max_abs=1.298549461e+01 min=-1.298549461e+01 max=2.562366724e-01 sum=-1.828541336e+01 fnv=07c3fa77202f127f nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_INP_1 pos=1 n=3072 l2=1.276576904e+02 max_abs=1.241612320e+02 min=-1.241612320e+02 max=4.782873154e+00 sum=-1.118473775e+02 fnv=9365e5f91fbea5de nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_NORM_1 pos=1 n=3072 l2=2.020400197e+01 max_abs=5.027511120e+00 min=-5.027511120e+00 max=1.522666693e+00 sum=-4.986712158e-01 fnv=1ad47fd7f3fe537d nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_DOWN_1 pos=1 n=3072 l2=6.175304924e+00 max_abs=2.734277964e+00 min=-5.340999961e-01 max=2.734277964e+00 sum=2.196673234e+00 fnv=b248f224cb9db5de nf=0
+[STAGE_DIGEST] side=deep2 key=POST_FFN_1 pos=1 n=3072 l2=1.250021105e+02 max_abs=1.214269562e+02 min=-1.214269562e+02 max=5.081569672e+00 sum=-1.096507072e+02 fnv=2186eb341c729e27 nf=0
+[STAGE_DIGEST] side=deep2 key=LAYER1_OUT pos=1 n=3072 l2=1.250021105e+02 max_abs=1.214269562e+02 min=-1.214269562e+02 max=5.081569672e+00 sum=-1.096507072e+02 fnv=2186eb341c729e27 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_NORM_2 pos=1 n=3072 l2=1.497088364e+00 max_abs=4.462295473e-01 min=-4.462295473e-01 max=1.775692850e-01 sum=-1.155384122e-01 fnv=68d0523527ddb06c nf=0
+[STAGE_DIGEST] side=deep2 key=V_2 pos=1 n=1024 l2=1.223656226e+00 max_abs=1.868289113e-01 min=-1.868289113e-01 max=1.429896355e-01 sum=-4.229064863e-01 fnv=7522230f3c559785 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_LINEAR_2 pos=1 n=6144 l2=4.386866465e+00 max_abs=2.706909180e-01 min=-2.706909180e-01 max=2.655543983e-01 sum=3.090349314e+00 fnv=9a9afcbc39f4cfab nf=0
+[STAGE_DIGEST] side=deep2 key=K_LINEAR_2 pos=1 n=1024 l2=1.576494825e+00 max_abs=1.744361073e-01 min=-1.744361073e-01 max=1.406000257e-01 sum=-1.048479538e+00 fnv=642be8f45021427b nf=0
+[STAGE_DIGEST] side=deep2 key=Q_NORM_2 pos=1 n=6144 l2=8.687874488e+01 max_abs=6.396493435e+00 min=-5.788753033e+00 max=6.396493435e+00 sum=6.723893870e+01 fnv=5b6a2c635806e2e4 nf=0
+[STAGE_DIGEST] side=deep2 key=K_NORM_2 pos=1 n=1024 l2=4.111667721e+01 max_abs=4.824464321e+00 min=-4.824464321e+00 max=4.634134769e+00 sum=3.490447295e-01 fnv=a9f6b8fe30daf57d nf=0
+[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_2 pos=1 n=6144 l2=8.687874488e+01 max_abs=6.396493435e+00 min=-5.788753033e+00 max=6.396493435e+00 sum=6.723893870e+01 fnv=5b6a2c635806e2e4 nf=0
+[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_2 pos=1 n=1024 l2=4.111667721e+01 max_abs=4.824464321e+00 min=-4.824464321e+00 max=4.634134769e+00 sum=3.490447295e-01 fnv=a9f6b8fe30daf57d nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_2 pos=1 n=6144 l2=2.599771475e+00 max_abs=1.858247519e-01 min=-1.858247519e-01 max=1.429832578e-01 sum=-2.208561745e+00 fnv=f3d1dbe68046137a nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_OUT_2 pos=1 n=3072 l2=1.502309924e+01 max_abs=1.436638832e+01 min=-1.436638832e+01 max=3.614171445e-01 sum=-1.917698176e+01 fnv=b27d12718011c17f nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_INP_2 pos=1 n=3072 l2=1.388195179e+02 max_abs=1.357933502e+02 min=-1.357933502e+02 max=5.412104607e+00 sum=-1.288276954e+02 fnv=8c79ebc228d86720 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_NORM_2 pos=1 n=3072 l2=1.818918350e+01 max_abs=2.147059441e+00 min=-2.147059441e+00 max=1.747256041e+00 sum=4.224073318e+00 fnv=ca09feed4321b2bb nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_DOWN_2 pos=1 n=3072 l2=4.574636362e+00 max_abs=2.237937212e+00 min=-2.380912304e-01 max=2.237937212e+00 sum=2.038623915e+00 fnv=24c4a38d9d4025b1 nf=0
+[STAGE_DIGEST] side=deep2 key=POST_FFN_2 pos=1 n=3072 l2=1.366491019e+02 max_abs=1.335554199e+02 min=-1.335554199e+02 max=5.432444096e+00 sum=-1.267890786e+02 fnv=3e60c5917bdc9ba1 nf=0
+[STAGE_DIGEST] side=deep2 key=LAYER2_OUT pos=1 n=3072 l2=1.366491019e+02 max_abs=1.335554199e+02 min=-1.335554199e+02 max=5.432444096e+00 sum=-1.267890786e+02 fnv=3e60c5917bdc9ba1 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_NORM_17 pos=1 n=3072 l2=1.035897067e+01 max_abs=5.718719006e+00 min=-5.718719006e+00 max=2.352825880e+00 sum=2.314280562e+00 fnv=556975ac2fcd0ae2 nf=0
+[STAGE_DIGEST] side=deep2 key=V_17 pos=1 n=1024 l2=5.044210239e+00 max_abs=5.395135880e-01 min=-5.395135880e-01 max=4.210665226e-01 sum=-5.989888930e+00 fnv=820a12ba16e27175 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_LINEAR_17 pos=1 n=6144 l2=1.713756548e+01 max_abs=1.181082249e+00 min=-1.181082249e+00 max=1.003684521e+00 sum=-2.628959857e+01 fnv=652edcf6aa05f623 nf=0
+[STAGE_DIGEST] side=deep2 key=K_LINEAR_17 pos=1 n=1024 l2=9.039163850e+00 max_abs=1.294888020e+00 min=-1.108559132e+00 max=1.294888020e+00 sum=-1.142509228e+01 fnv=6b7bde73d06835fc nf=0
+[STAGE_DIGEST] side=deep2 key=Q_NORM_17 pos=1 n=6144 l2=1.013195004e+02 max_abs=1.283932495e+01 min=-1.017089462e+01 max=1.283932495e+01 sum=-1.927864739e+02 fnv=c4965271e8b46812 nf=0
+[STAGE_DIGEST] side=deep2 key=K_NORM_17 pos=1 n=1024 l2=5.218596319e+01 max_abs=1.839196968e+01 min=-8.950562477e+00 max=1.839196968e+01 sum=-5.747418647e+01 fnv=271de7855f98e254 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_17 pos=1 n=6144 l2=1.013195004e+02 max_abs=1.283932495e+01 min=-1.017089462e+01 max=1.283932495e+01 sum=-1.927864739e+02 fnv=c4965271e8b46812 nf=0
+[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_17 pos=1 n=1024 l2=5.218596319e+01 max_abs=1.839196968e+01 min=-8.950562477e+00 max=1.839196968e+01 sum=-5.747418647e+01 fnv=271de7855f98e254 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_17 pos=1 n=6144 l2=1.047714609e+01 max_abs=5.390422344e-01 min=-5.390422344e-01 max=4.207408130e-01 sum=-3.153143027e+01 fnv=35cdf56b7181837d nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_OUT_17 pos=1 n=3072 l2=1.579476020e+01 max_abs=1.099050903e+01 min=-7.274118662e-01 max=1.099050903e+01 sum=2.056593820e-01 fnv=c5a11a9b208f5c19 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_INP_17 pos=1 n=3072 l2=6.802521760e+01 max_abs=5.735343933e+01 min=-5.735343933e+01 max=5.678718090e+00 sum=-4.977776061e+01 fnv=e2b0d40d8f770063 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_NORM_17 pos=1 n=3072 l2=3.611615916e+01 max_abs=4.177773476e+00 min=-4.177773476e+00 max=3.712511063e+00 sum=4.066337012e+00 fnv=b664a72158a88511 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_DOWN_17 pos=1 n=3072 l2=1.000233903e+01 max_abs=1.588003874e+00 min=-5.820431113e-01 max=1.588003874e+00 sum=-7.369196422e+00 fnv=155290ad3f2b1077 nf=0
+[STAGE_DIGEST] side=deep2 key=POST_FFN_17 pos=1 n=3072 l2=6.761991984e+01 max_abs=5.576543427e+01 min=-5.576543427e+01 max=5.866576672e+00 sum=-5.714695665e+01 fnv=58ed809c0a15e3ba nf=0
+[STAGE_DIGEST] side=deep2 key=LAYER17_OUT pos=1 n=3072 l2=6.761991984e+01 max_abs=5.576543427e+01 min=-5.576543427e+01 max=5.866576672e+00 sum=-5.714695665e+01 fnv=58ed809c0a15e3ba nf=0
+[STAGE_DIGEST] side=deep2 key=PROMPT_POST_LAYERS pos=1 n=3072 l2=3.181098868e+02 max_abs=8.045783234e+01 min=-4.781873703e+01 max=8.045783234e+01 sum=-6.288451790e+02 fnv=733a7c302c329c52 nf=0
+[STAGE_DIGEST] side=deep2 key=PROMPT_FINAL_NORM pos=1 n=3072 l2=1.533950810e+02 max_abs=2.007989693e+01 min=-1.683409119e+01 max=2.007989693e+01 sum=-3.730439880e+02 fnv=da64398ec08f87f0 nf=0
+[STAGE_DIGEST] side=deep2 key=FINAL_NORM pos=1 n=3072 l2=1.533950810e+02 max_abs=2.007989693e+01 min=-1.683409119e+01 max=2.007989693e+01 sum=-3.730439880e+02 fnv=da64398ec08f87f0 nf=0
+[STAGE_DIGEST] side=deep2 key=PROMPT_EMBED pos=2 n=3072 l2=1.154980016e+00 max_abs=2.172546387e-01 min=-2.172546387e-01 max=1.016360521e-01 sum=1.159253120e-01 fnv=47ab3bfcff2624a1 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_NORM_0 pos=2 n=3072 l2=1.107920255e+00 max_abs=7.806044221e-01 min=-4.913306534e-01 max=7.806044221e-01 sum=4.188665647e-01 fnv=4f4287ed5ddb25c4 nf=0
+[STAGE_DIGEST] side=deep2 key=V_0 pos=2 n=1024 l2=8.457576591e-01 max_abs=1.836757362e-01 min=-1.836757362e-01 max=1.713823825e-01 sum=-7.263561478e-03 fnv=ce04f0ba063d9de9 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_LINEAR_0 pos=2 n=6144 l2=3.042492398e+00 max_abs=3.280306458e-01 min=-3.016967773e-01 max=3.280306458e-01 sum=1.300827538e+00 fnv=c0a18585af1aefcd nf=0
+[STAGE_DIGEST] side=deep2 key=K_LINEAR_0 pos=2 n=1024 l2=1.359743055e+00 max_abs=1.700610369e-01 min=-1.700610369e-01 max=1.600927711e-01 sum=1.585172947e+00 fnv=9ba74edee96e0234 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_NORM_0 pos=2 n=6144 l2=9.408936069e+01 max_abs=2.455270576e+01 min=-1.523654270e+01 max=2.455270576e+01 sum=2.889046459e+01 fnv=10459ea82fd170b5 nf=0
+[STAGE_DIGEST] side=deep2 key=K_NORM_0 pos=2 n=1024 l2=3.652099623e+01 max_abs=7.784093857e+00 min=-7.784093857e+00 max=6.208934784e+00 sum=3.661641675e+01 fnv=c83c7d5fc9d45be6 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_0 pos=2 n=6144 l2=9.408936069e+01 max_abs=2.455270576e+01 min=-1.523654270e+01 max=2.455270576e+01 sum=2.889046459e+01 fnv=10459ea82fd170b5 nf=0
+[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_0 pos=2 n=1024 l2=3.652099623e+01 max_abs=7.784093857e+00 min=-7.784093857e+00 max=6.208934784e+00 sum=3.661641675e+01 fnv=c83c7d5fc9d45be6 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_POST_ROPE_0 pos=2 n=6144 l2=9.408936066e+01 max_abs=2.455270386e+01 min=-1.523654175e+01 max=2.455270386e+01 sum=2.927269151e+01 fnv=cd978f91937de6e7 nf=0
+[STAGE_DIGEST] side=deep2 key=K_POST_ROPE_0 pos=2 n=1024 l2=3.652099615e+01 max_abs=7.784093857e+00 min=-7.784093857e+00 max=6.208934307e+00 sum=3.979418465e+01 fnv=d7bebd0f7dfb09de nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_0 pos=2 n=6144 l2=2.150602951e+00 max_abs=3.527326584e-01 min=-2.101354301e-01 max=3.527326584e-01 sum=4.433323392e-01 fnv=3b3aef7c772baff0 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_OUT_0 pos=2 n=3072 l2=4.363681441e+01 max_abs=4.349075317e+01 min=-1.090387344e+00 max=4.349075317e+01 sum=4.691779807e+01 fnv=55e3b48321b5903c nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_INP_0 pos=2 n=3072 l2=4.366363546e+01 max_abs=4.350400925e+01 min=-1.099425316e+00 max=4.350400925e+01 sum=4.703372339e+01 fnv=84644ec91d6d42b2 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_NORM_0 pos=2 n=3072 l2=1.564867146e+01 max_abs=1.456074142e+01 min=-1.228970289e+00 max=1.456074142e+01 sum=1.968804022e+01 fnv=8f99ec449dd52c77 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_DOWN_0 pos=2 n=3072 l2=1.768537712e+00 max_abs=1.009201527e+00 min=-2.032846510e-01 max=1.009201527e+00 sum=2.302552356e+00 fnv=5a4920879a39a861 nf=0
+[STAGE_DIGEST] side=deep2 key=POST_FFN_0 pos=2 n=3072 l2=4.470140145e+01 max_abs=4.451321030e+01 min=-1.064610362e+00 max=4.451321030e+01 sum=4.933627531e+01 fnv=2be429c0ad02705a nf=0
+[STAGE_DIGEST] side=deep2 key=LAYER0_OUT pos=2 n=3072 l2=4.470140145e+01 max_abs=4.451321030e+01 min=-1.064610362e+00 max=4.451321030e+01 sum=4.933627531e+01 fnv=2be429c0ad02705a nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_NORM_1 pos=2 n=3072 l2=4.433428081e-01 max_abs=2.505253255e-01 min=-2.725033090e-02 max=2.505253255e-01 sum=8.120673424e-01 fnv=3ecc7f3abde64bb7 nf=0
+[STAGE_DIGEST] side=deep2 key=V_1 pos=2 n=1024 l2=3.438621492e-01 max_abs=6.640593708e-02 min=-5.377811939e-02 max=6.640593708e-02 sum=4.080447183e-01 fnv=028754c156565359 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_LINEAR_1 pos=2 n=6144 l2=1.416057572e+00 max_abs=1.435219646e-01 min=-1.435219646e-01 max=1.104812697e-01 sum=-1.295846175e+00 fnv=170b9b34f257537f nf=0
+[STAGE_DIGEST] side=deep2 key=K_LINEAR_1 pos=2 n=1024 l2=5.549461403e-01 max_abs=1.022412404e-01 min=-5.924215168e-02 max=1.022412404e-01 sum=3.394438052e-01 fnv=3a848cda88c99cea nf=0
+[STAGE_DIGEST] side=deep2 key=Q_NORM_1 pos=2 n=6144 l2=9.680196624e+01 max_abs=1.208435154e+01 min=-1.208435154e+01 max=1.153372955e+01 sum=-1.001430654e+02 fnv=898d822d66e512c8 nf=0
+[STAGE_DIGEST] side=deep2 key=K_NORM_1 pos=2 n=1024 l2=4.873627100e+01 max_abs=1.894487190e+01 min=-8.318910599e+00 max=1.894487190e+01 sum=7.264844903e+01 fnv=d839727a8d55a2cb nf=0
+[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_1 pos=2 n=6144 l2=9.680196624e+01 max_abs=1.208435154e+01 min=-1.208435154e+01 max=1.153372955e+01 sum=-1.001430654e+02 fnv=898d822d66e512c8 nf=0
+[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_1 pos=2 n=1024 l2=4.873627100e+01 max_abs=1.894487190e+01 min=-8.318910599e+00 max=1.894487190e+01 sum=7.264844903e+01 fnv=d839727a8d55a2cb nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_1 pos=2 n=6144 l2=5.859028150e-01 max_abs=8.805509657e-02 min=-8.805509657e-02 max=6.954283267e-02 sum=-7.978897959e-01 fnv=2a07441471943498 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_OUT_1 pos=2 n=3072 l2=4.875678342e+00 max_abs=4.776321888e+00 min=-4.776321888e+00 max=1.610077620e-01 sum=-5.656549060e+00 fnv=5bad9158729f9c03 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_INP_1 pos=2 n=3072 l2=3.994931130e+01 max_abs=3.973688889e+01 min=-9.036026001e-01 max=3.973688889e+01 sum=4.367972666e+01 fnv=a479b77090338028 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_NORM_1 pos=2 n=3072 l2=7.762830973e+00 max_abs=5.141598225e+00 min=-6.458903551e-01 max=5.141598225e+00 sum=9.225254049e+00 fnv=5cf48beeed731dbb nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_DOWN_1 pos=2 n=3072 l2=1.650786985e+00 max_abs=8.669535518e-01 min=-1.614103168e-01 max=8.669535518e-01 sum=3.407071078e+00 fnv=d4179a87114559c4 nf=0
+[STAGE_DIGEST] side=deep2 key=POST_FFN_1 pos=2 n=3072 l2=4.087913050e+01 max_abs=4.060384369e+01 min=-8.702887297e-01 max=4.060384369e+01 sum=4.708679892e+01 fnv=76eed64b5d471379 nf=0
+[STAGE_DIGEST] side=deep2 key=LAYER1_OUT pos=2 n=3072 l2=4.087913050e+01 max_abs=4.060384369e+01 min=-8.702887297e-01 max=4.060384369e+01 sum=4.708679892e+01 fnv=76eed64b5d471379 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_NORM_2 pos=2 n=3072 l2=9.936021513e-01 max_abs=4.463793337e-01 min=-1.530413032e-01 max=4.463793337e-01 sum=2.135646824e+00 fnv=374024575020793d nf=0
+[STAGE_DIGEST] side=deep2 key=V_2 pos=2 n=1024 l2=6.846789162e-01 max_abs=1.347119212e-01 min=-1.347119212e-01 max=1.267890781e-01 sum=1.651600001e+00 fnv=cdc6705277997984 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_LINEAR_2 pos=2 n=6144 l2=3.491951238e+00 max_abs=2.727974653e-01 min=-2.337179929e-01 max=2.727974653e-01 sum=-4.958963211e+00 fnv=b94e1197274f01b0 nf=0
+[STAGE_DIGEST] side=deep2 key=K_LINEAR_2 pos=2 n=1024 l2=1.529116257e+00 max_abs=3.077413738e-01 min=-3.077413738e-01 max=2.229974866e-01 sum=-2.669408946e+00 fnv=e0da70d37980db05 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_NORM_2 pos=2 n=6144 l2=8.837803003e+01 max_abs=9.039413452e+00 min=-7.439875603e+00 max=9.039413452e+00 sum=-1.332413681e+02 fnv=1f0bd25ed69b32e4 nf=0
+[STAGE_DIGEST] side=deep2 key=K_NORM_2 pos=2 n=1024 l2=5.328847428e+01 max_abs=2.877308083e+01 min=-2.877308083e+01 max=1.173708630e+01 sum=-1.262300541e+02 fnv=1b56c5b8b4072cd4 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_2 pos=2 n=6144 l2=8.837803003e+01 max_abs=9.039413452e+00 min=-7.439875603e+00 max=9.039413452e+00 sum=-1.332413681e+02 fnv=1f0bd25ed69b32e4 nf=0
+[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_2 pos=2 n=1024 l2=5.328847428e+01 max_abs=2.877308083e+01 min=-2.877308083e+01 max=1.173708630e+01 sum=-1.262300541e+02 fnv=1b56c5b8b4072cd4 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_2 pos=2 n=6144 l2=1.081009791e+00 max_abs=1.059652045e-01 min=-1.059652045e-01 max=1.000137404e-01 sum=4.265602687e+00 fnv=0de6b0d043984056 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_OUT_2 pos=2 n=3072 l2=1.020284480e+01 max_abs=9.980447769e+00 min=-2.452238053e-01 max=9.980447769e+00 sum=1.047909450e+01 fnv=758c5d9cf906926d nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_INP_2 pos=2 n=3072 l2=5.090622516e+01 max_abs=5.058428955e+01 min=-9.268487692e-01 max=5.058428955e+01 sum=5.756589177e+01 fnv=fa236313d7b45a80 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_NORM_2 pos=2 n=3072 l2=6.023605556e+00 max_abs=1.113625526e+00 min=-5.853135586e-01 max=1.113625526e+00 sum=2.466612409e+00 fnv=908f71070929eb14 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_DOWN_2 pos=2 n=3072 l2=1.075741316e+00 max_abs=7.329837084e-01 min=-6.821310520e-02 max=7.329837084e-01 sum=1.535026059e+00 fnv=fbd985a57932e286 nf=0
+[STAGE_DIGEST] side=deep2 key=POST_FFN_2 pos=2 n=3072 l2=5.166245372e+01 max_abs=5.131727219e+01 min=-9.741029739e-01 max=5.131727219e+01 sum=5.910091688e+01 fnv=6bfaa57106afb09f nf=0
+[STAGE_DIGEST] side=deep2 key=LAYER2_OUT pos=2 n=3072 l2=5.166245372e+01 max_abs=5.131727219e+01 min=-9.741029739e-01 max=5.131727219e+01 sum=5.910091688e+01 fnv=6bfaa57106afb09f nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_NORM_17 pos=2 n=3072 l2=6.372707168e+00 max_abs=2.105817795e+00 min=-1.707286358e+00 max=2.105817795e+00 sum=1.053660168e+01 fnv=02b148ba539ee67c nf=0
+[STAGE_DIGEST] side=deep2 key=V_17 pos=2 n=1024 l2=3.297421882e+00 max_abs=5.909743905e-01 min=-5.909743905e-01 max=3.887853026e-01 sum=6.267221035e-01 fnv=d15a408ddc6cec74 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_LINEAR_17 pos=2 n=6144 l2=2.249270016e+01 max_abs=3.334496260e+00 min=-3.334496260e+00 max=3.121096134e+00 sum=-7.062869713e+01 fnv=3c9f7050c54d23cc nf=0
+[STAGE_DIGEST] side=deep2 key=K_LINEAR_17 pos=2 n=1024 l2=6.920578065e+00 max_abs=1.276062727e+00 min=-8.321970701e-01 max=1.276062727e+00 sum=-4.113077945e+00 fnv=ebf30d21f1ad219d nf=0
+[STAGE_DIGEST] side=deep2 key=Q_NORM_17 pos=2 n=6144 l2=9.474769265e+01 max_abs=1.859350395e+01 min=-1.275080490e+01 max=1.859350395e+01 sum=-2.298104426e+02 fnv=5ab7dafed21af596 nf=0
+[STAGE_DIGEST] side=deep2 key=K_NORM_17 pos=2 n=1024 l2=5.350188491e+01 max_abs=2.088360977e+01 min=-1.171490860e+01 max=2.088360977e+01 sum=-5.684550395e+01 fnv=f107ab346fb6dcdb nf=0
+[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_17 pos=2 n=6144 l2=9.474769265e+01 max_abs=1.859350395e+01 min=-1.275080490e+01 max=1.859350395e+01 sum=-2.298104426e+02 fnv=5ab7dafed21af596 nf=0
+[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_17 pos=2 n=1024 l2=5.350188491e+01 max_abs=2.088360977e+01 min=-1.171490860e+01 max=2.088360977e+01 sum=-5.684550395e+01 fnv=f107ab346fb6dcdb nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_17 pos=2 n=6144 l2=2.716315677e+00 max_abs=3.243067563e-01 min=-3.243067563e-01 max=2.252991349e-01 sum=-4.442983257e+00 fnv=a9dfef89f19f60e0 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_OUT_17 pos=2 n=3072 l2=3.448245980e+00 max_abs=5.867182016e-01 min=-5.867182016e-01 max=4.181149602e-01 sum=7.300415646e+00 fnv=bdfbe0cc2bf242bf nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_INP_17 pos=2 n=3072 l2=6.635577323e+01 max_abs=6.364137268e+01 min=-4.744682312e+00 max=6.364137268e+01 sum=9.751354709e+01 fnv=64fba5a932bb90a9 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_NORM_17 pos=2 n=3072 l2=1.589165423e+01 max_abs=1.131565928e+00 min=-9.619863033e-01 max=1.131565928e+00 sum=3.157239470e+01 fnv=a7acb07623c48eb4 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_DOWN_17 pos=2 n=3072 l2=1.981685656e+00 max_abs=1.282973289e-01 min=-1.282973289e-01 max=1.181589589e-01 sum=-3.378980189e-01 fnv=ffdb9c37e90f260e nf=0
+[STAGE_DIGEST] side=deep2 key=POST_FFN_17 pos=2 n=3072 l2=6.631404856e+01 max_abs=6.358673477e+01 min=-4.733432770e+00 max=6.358673477e+01 sum=9.717565141e+01 fnv=02b6b68f15862955 nf=0
+[STAGE_DIGEST] side=deep2 key=LAYER17_OUT pos=2 n=3072 l2=6.631404856e+01 max_abs=6.358673477e+01 min=-4.733432770e+00 max=6.358673477e+01 sum=9.717565141e+01 fnv=02b6b68f15862955 nf=0
+[STAGE_DIGEST] side=deep2 key=PROMPT_POST_LAYERS pos=2 n=3072 l2=4.684863128e+02 max_abs=2.602348022e+02 min=-9.490511322e+01 max=2.602348022e+02 sum=3.228529274e+02 fnv=f99437f24234f06d nf=0
+[STAGE_DIGEST] side=deep2 key=PROMPT_FINAL_NORM pos=2 n=3072 l2=1.300049653e+02 max_abs=3.147244072e+01 min=-2.724911690e+01 max=3.147244072e+01 sum=-3.014750067e+00 fnv=9a10ede4f6cd094f nf=0
+[STAGE_DIGEST] side=deep2 key=FINAL_NORM pos=2 n=3072 l2=1.300049653e+02 max_abs=3.147244072e+01 min=-2.724911690e+01 max=3.147244072e+01 sum=-3.014750067e+00 fnv=9a10ede4f6cd094f nf=0
+[STAGE_DIGEST] side=deep2 key=PROMPT_EMBED pos=3 n=3072 l2=7.893006826e-01 max_abs=4.005932808e-01 min=-2.674827576e-01 max=4.005932808e-01 sum=4.280123115e-01 fnv=dca8c3318f355f60 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_NORM_0 pos=3 n=3072 l2=7.900570519e-01 max_abs=4.172752798e-01 min=-3.291300237e-01 max=4.172752798e-01 sum=3.502979705e-01 fnv=71ad88c7a6b51391 nf=0
+[STAGE_DIGEST] side=deep2 key=V_0 pos=3 n=1024 l2=4.888585133e-01 max_abs=1.148968041e-01 min=-1.148968041e-01 max=1.071959138e-01 sum=-5.907944389e-03 fnv=5e123c80de6a4ac3 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_LINEAR_0 pos=3 n=6144 l2=3.679536317e+00 max_abs=3.074312508e-01 min=-3.074312508e-01 max=2.705866098e-01 sum=2.031399947e+00 fnv=dcadc45cb7456090 nf=0
+[STAGE_DIGEST] side=deep2 key=K_LINEAR_0 pos=3 n=1024 l2=1.477837095e+00 max_abs=1.916786730e-01 min=-1.916786730e-01 max=1.889594048e-01 sum=-4.948062303e-01 fnv=940420275ae7f5a9 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_NORM_0 pos=3 n=6144 l2=9.197940185e+01 max_abs=1.670558929e+01 min=-1.342706871e+01 max=1.670558929e+01 sum=-3.208638804e+01 fnv=9a150efb89a50014 nf=0
+[STAGE_DIGEST] side=deep2 key=K_NORM_0 pos=3 n=1024 l2=3.935376346e+01 max_abs=1.023737335e+01 min=-1.023737335e+01 max=5.172619820e+00 sum=-2.646756906e+01 fnv=0447b64770a75e56 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_0 pos=3 n=6144 l2=9.197940185e+01 max_abs=1.670558929e+01 min=-1.342706871e+01 max=1.670558929e+01 sum=-3.208638804e+01 fnv=9a150efb89a50014 nf=0
+[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_0 pos=3 n=1024 l2=3.935376346e+01 max_abs=1.023737335e+01 min=-1.023737335e+01 max=5.172619820e+00 sum=-2.646756906e+01 fnv=0447b64770a75e56 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_POST_ROPE_0 pos=3 n=6144 l2=9.197940179e+01 max_abs=1.670558929e+01 min=-1.342706108e+01 max=1.670558929e+01 sum=-7.867573551e+00 fnv=83d927ceee660729 nf=0
+[STAGE_DIGEST] side=deep2 key=K_POST_ROPE_0 pos=3 n=1024 l2=3.935376336e+01 max_abs=1.023737335e+01 min=-1.023737335e+01 max=5.172605991e+00 sum=-2.174502420e+01 fnv=64d8f3eab137a5f1 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_0 pos=3 n=6144 l2=1.310569449e+00 max_abs=3.407015502e-01 min=-1.957075894e-01 max=3.407015502e-01 sum=3.090074900e-01 fnv=d4807e77e20a9c4b nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_OUT_0 pos=3 n=3072 l2=2.649268167e+01 max_abs=2.643546867e+01 min=-3.550750911e-01 max=2.643546867e+01 sum=2.704910560e+01 fnv=d7de108ca005d46f nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_INP_0 pos=3 n=3072 l2=2.649963261e+01 max_abs=2.643953323e+01 min=-3.927261531e-01 max=2.643953323e+01 sum=2.747711745e+01 fnv=1da612c6bddec3c0 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_NORM_0 pos=3 n=3072 l2=1.544368550e+01 max_abs=1.458100319e+01 min=-3.787865639e-01 max=1.458100319e+01 sum=2.158250698e+01 fnv=062152e5bac15de3 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_DOWN_0 pos=3 n=3072 l2=4.332052332e+00 max_abs=3.855355263e+00 min=-3.828998804e-01 max=3.855355263e+00 sum=7.172601392e+00 fnv=a83fdb670debc88a nf=0
+[STAGE_DIGEST] side=deep2 key=POST_FFN_0 pos=3 n=3072 l2=3.042885435e+01 max_abs=3.029488754e+01 min=-7.756260633e-01 max=3.029488754e+01 sum=3.464971803e+01 fnv=c93580f28b13fc8c nf=0
+[STAGE_DIGEST] side=deep2 key=LAYER0_OUT pos=3 n=3072 l2=3.042885435e+01 max_abs=3.029488754e+01 min=-7.756260633e-01 max=3.029488754e+01 sum=3.464971803e+01 fnv=c93580f28b13fc8c nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_NORM_1 pos=3 n=3072 l2=4.674331526e-01 max_abs=2.626475692e-01 min=-7.346767187e-02 max=2.626475692e-01 sum=1.095776594e+00 fnv=074b674af201b255 nf=0
+[STAGE_DIGEST] side=deep2 key=V_1 pos=3 n=1024 l2=3.830771548e-01 max_abs=5.277097598e-02 min=-4.235757142e-02 max=5.277097598e-02 sum=3.816906653e-01 fnv=313da1fe8b75cf58 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_LINEAR_1 pos=3 n=6144 l2=1.774616869e+00 max_abs=1.381074041e-01 min=-1.159990951e-01 max=1.381074041e-01 sum=-1.791141720e+00 fnv=009fdb184f3a653a nf=0
+[STAGE_DIGEST] side=deep2 key=K_LINEAR_1 pos=3 n=1024 l2=9.065201815e-01 max_abs=1.402080506e-01 min=-9.960354120e-02 max=1.402080506e-01 sum=-9.758793516e-02 fnv=ac22fe53f265b6c2 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_NORM_1 pos=3 n=6144 l2=9.631853483e+01 max_abs=1.155385876e+01 min=-1.142243481e+01 max=1.155385876e+01 sum=-1.294126784e+02 fnv=541145d43c337e73 nf=0
+[STAGE_DIGEST] side=deep2 key=K_NORM_1 pos=3 n=1024 l2=4.725971201e+01 max_abs=1.839382362e+01 min=-9.512092590e+00 max=1.839382362e+01 sum=4.244648127e+01 fnv=72c2d3882abc7c1e nf=0
+[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_1 pos=3 n=6144 l2=9.631853483e+01 max_abs=1.155385876e+01 min=-1.142243481e+01 max=1.155385876e+01 sum=-1.294126784e+02 fnv=541145d43c337e73 nf=0
+[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_1 pos=3 n=1024 l2=4.725971201e+01 max_abs=1.839382362e+01 min=-9.512092590e+00 max=1.839382362e+01 sum=4.244648127e+01 fnv=72c2d3882abc7c1e nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_1 pos=3 n=6144 l2=4.819494138e-01 max_abs=3.838804737e-02 min=-3.031285852e-02 max=3.838804737e-02 sum=1.446566256e-01 fnv=5fb140c1a03ed88a nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_OUT_1 pos=3 n=3072 l2=3.620502474e+00 max_abs=3.489997387e+00 min=-1.969148815e-01 max=3.489997387e+00 sum=2.402058428e+00 fnv=7b6056997ecc4f8d nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_INP_1 pos=3 n=3072 l2=3.392103467e+01 max_abs=3.378488541e+01 min=-8.661214113e-01 max=3.378488541e+01 sum=3.705177694e+01 fnv=f886065a283af9fb nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_NORM_1 pos=3 n=3072 l2=7.174499236e+00 max_abs=5.148334980e+00 min=-4.264566302e-01 max=5.148334980e+00 sum=1.464550279e+01 fnv=a2334583d009d20c nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_DOWN_1 pos=3 n=3072 l2=1.719651024e+00 max_abs=1.038501740e+00 min=-1.551946700e-01 max=1.038501740e+00 sum=8.310121863e-01 fnv=0a38208b6642f3d6 nf=0
+[STAGE_DIGEST] side=deep2 key=POST_FFN_1 pos=3 n=3072 l2=3.502231925e+01 max_abs=3.482338715e+01 min=-1.021316051e+00 max=3.482338715e+01 sum=3.788278908e+01 fnv=917654fa9b9a907b nf=0
+[STAGE_DIGEST] side=deep2 key=LAYER1_OUT pos=3 n=3072 l2=3.502231925e+01 max_abs=3.482338715e+01 min=-1.021316051e+00 max=3.482338715e+01 sum=3.788278908e+01 fnv=917654fa9b9a907b nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_NORM_2 pos=3 n=3072 l2=9.567777183e-01 max_abs=4.384168983e-01 min=-2.967447639e-01 max=4.384168983e-01 sum=1.577098136e+00 fnv=28b1a9dd8c0defa6 nf=0
+[STAGE_DIGEST] side=deep2 key=V_2 pos=3 n=1024 l2=6.267116491e-01 max_abs=1.250576675e-01 min=-1.250576675e-01 max=1.138647795e-01 sum=6.730022443e-01 fnv=c176305d807710c1 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_LINEAR_2 pos=3 n=6144 l2=3.581480490e+00 max_abs=2.526599169e-01 min=-2.300527245e-01 max=2.526599169e-01 sum=-7.806988756e+00 fnv=8a8510eafef4f941 nf=0
+[STAGE_DIGEST] side=deep2 key=K_LINEAR_2 pos=3 n=1024 l2=1.629105382e+00 max_abs=3.227715492e-01 min=-3.227715492e-01 max=2.134190202e-01 sum=-1.585042365e+00 fnv=368879a83df228b0 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_NORM_2 pos=3 n=6144 l2=8.752845651e+01 max_abs=8.162950516e+00 min=-6.917760372e+00 max=8.162950516e+00 sum=-2.002322573e+02 fnv=6ad3d30d3c836b6b nf=0
+[STAGE_DIGEST] side=deep2 key=K_NORM_2 pos=3 n=1024 l2=5.126048440e+01 max_abs=2.832685471e+01 min=-2.832685471e+01 max=1.054377365e+01 sum=-8.218283841e+01 fnv=2502a69f30c48f42 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_2 pos=3 n=6144 l2=8.752845651e+01 max_abs=8.162950516e+00 min=-6.917760372e+00 max=8.162950516e+00 sum=-2.002322573e+02 fnv=6ad3d30d3c836b6b nf=0
+[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_2 pos=3 n=1024 l2=5.126048440e+01 max_abs=2.832685471e+01 min=-2.832685471e+01 max=1.054377365e+01 sum=-8.218283841e+01 fnv=2502a69f30c48f42 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_2 pos=3 n=6144 l2=1.009989834e+00 max_abs=1.166239232e-01 min=-1.166239232e-01 max=1.164358258e-01 sum=4.230970646e+00 fnv=bd26802632686b2f nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_OUT_2 pos=3 n=3072 l2=1.418103323e+01 max_abs=1.404053879e+01 min=-2.085595131e-01 max=1.404053879e+01 sum=1.726302813e+01 fnv=02f4f8266cf9b136 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_INP_2 pos=3 n=3072 l2=4.907361332e+01 max_abs=4.886392593e+01 min=-1.034215569e+00 max=4.886392593e+01 sum=5.514581733e+01 fnv=dd2fb20ec132e440 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_NORM_2 pos=3 n=3072 l2=5.100963664e+00 max_abs=1.059609056e+00 min=-3.611009419e-01 max=1.059609056e+00 sum=8.849489312e+00 fnv=c3bfddee10505c35 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_DOWN_2 pos=3 n=3072 l2=5.679189230e-01 max_abs=3.315849900e-01 min=-3.551878035e-02 max=3.315849900e-01 sum=6.593402633e-01 fnv=b47e88dc4b2d812c nf=0
+[STAGE_DIGEST] side=deep2 key=POST_FFN_2 pos=3 n=3072 l2=4.941545825e+01 max_abs=4.919551086e+01 min=-1.069734335e+00 max=4.919551086e+01 sum=5.580515736e+01 fnv=42b4b1077da31dcd nf=0
+[STAGE_DIGEST] side=deep2 key=LAYER2_OUT pos=3 n=3072 l2=4.941545825e+01 max_abs=4.919551086e+01 min=-1.069734335e+00 max=4.919551086e+01 sum=5.580515736e+01 fnv=42b4b1077da31dcd nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_NORM_17 pos=3 n=3072 l2=5.667537100e+00 max_abs=2.306102037e+00 min=-2.306102037e+00 max=1.855812669e+00 sum=7.340125572e+00 fnv=b0ca069ac7998488 nf=0
+[STAGE_DIGEST] side=deep2 key=V_17 pos=3 n=1024 l2=2.478702243e+00 max_abs=2.907459438e-01 min=-2.907459438e-01 max=2.442514300e-01 sum=3.024812153e+00 fnv=762ee0f8999583a1 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_LINEAR_17 pos=3 n=6144 l2=1.971174959e+01 max_abs=2.846378088e+00 min=-2.846378088e+00 max=2.676718235e+00 sum=-6.244106454e+01 fnv=4918f383be616525 nf=0
+[STAGE_DIGEST] side=deep2 key=K_LINEAR_17 pos=3 n=1024 l2=5.807112258e+00 max_abs=9.682388306e-01 min=-7.177107334e-01 max=9.682388306e-01 sum=-5.339156679e+00 fnv=74dc728e0ae2e33a nf=0
+[STAGE_DIGEST] side=deep2 key=Q_NORM_17 pos=3 n=6144 l2=9.629940505e+01 max_abs=1.975385475e+01 min=-1.323744392e+01 max=1.975385475e+01 sum=-2.366236690e+02 fnv=0871519b76e477b6 nf=0
+[STAGE_DIGEST] side=deep2 key=K_NORM_17 pos=3 n=1024 l2=5.241851030e+01 max_abs=1.762561035e+01 min=-1.425057125e+01 max=1.762561035e+01 sum=-7.147151074e+01 fnv=8fab92293a8471d0 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_17 pos=3 n=6144 l2=9.629940505e+01 max_abs=1.975385475e+01 min=-1.323744392e+01 max=1.975385475e+01 sum=-2.366236690e+02 fnv=0871519b76e477b6 nf=0
+[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_17 pos=3 n=1024 l2=5.241851030e+01 max_abs=1.762561035e+01 min=-1.425057125e+01 max=1.762561035e+01 sum=-7.147151074e+01 fnv=8fab92293a8471d0 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_17 pos=3 n=6144 l2=2.490230631e+00 max_abs=2.653905749e-01 min=-2.653905749e-01 max=1.685407907e-01 sum=-1.580819674e+00 fnv=447e97b69439c888 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_OUT_17 pos=3 n=3072 l2=2.705409148e+00 max_abs=5.847131014e-01 min=-5.847131014e-01 max=1.951749623e-01 sum=4.644044777e+00 fnv=2771d4157af9e815 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_INP_17 pos=3 n=3072 l2=6.336563830e+01 max_abs=6.150127029e+01 min=-4.354387760e+00 max=6.150127029e+01 sum=8.690930794e+01 fnv=18f1961d7e11662a nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_NORM_17 pos=3 n=3072 l2=1.355827065e+01 max_abs=8.856092691e-01 min=-7.818322778e-01 max=8.856092691e-01 sum=2.489456388e+01 fnv=bfa6ead1de74a48a nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_DOWN_17 pos=3 n=3072 l2=1.870131486e+00 max_abs=1.905288398e-01 min=-1.082364991e-01 max=1.905288398e-01 sum=1.432761758e-01 fnv=2704f5573c0c5065 nf=0
+[STAGE_DIGEST] side=deep2 key=POST_FFN_17 pos=3 n=3072 l2=6.360362893e+01 max_abs=6.169179916e+01 min=-4.455136776e+00 max=6.169179916e+01 sum=8.705258448e+01 fnv=5ab99f4d553f4e34 nf=0
+[STAGE_DIGEST] side=deep2 key=LAYER17_OUT pos=3 n=3072 l2=6.360362893e+01 max_abs=6.169179916e+01 min=-4.455136776e+00 max=6.169179916e+01 sum=8.705258448e+01 fnv=5ab99f4d553f4e34 nf=0

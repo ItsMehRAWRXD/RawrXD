@@ -1,0 +1,38 @@
+﻿AL11_FIRST_DIVERGENT_STAGE
+DATE=2026-11-13
+EXE_SHA=0C531CA21E5C590EF645553E3EB0E09E2F5AA34C8B1D88847EDCDEECBF41B7CA
+PAIR=al09_full.out.txt (FULL_ALLOW) vs al09_phys2.err.txt (PHYS)
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD
+
+## Primary seal (both-present STAGE_DIGEST, phys order)
+FIRST_DIVERGENT_STAGE=FFN_DOWN_1
+POS=3
+AL09_TOK=4
+FULL_FNV=0a38208b6642f3d6
+PHYS_FNV=020e34f17b2bbf8a
+LAST_EXACT_STAGE=FFN_NORM_1@pos=3 fnv=a2334583d009d20c
+LAYER0_OUT@pos3=MATCH fnv=c93580f28b13fc8c
+ATTN_PATH_LAYER1@pos3=MATCH (through FFN_INP_1 / FFN_NORM_1)
+
+## Preceding FFN_DOWN_1 identity at earlier tokens (same layer)
+FFN_DOWN_1@pos0 MATCH fnv=77805e9837e02982
+FFN_DOWN_1@pos1 MATCH fnv=b248f224cb9db5de
+FFN_DOWN_1@pos2 MATCH fnv=d4179a87114559c4
+FFN_DOWN_1@pos3 MISMATCH (first break)
+
+## Router at break (L1 tok4) — scores bit-align FULL orig IDs vs PHYS slots
+FULL_ROUTE_L1_TOK4=22:0.18631859 3:0.16391455 233:0.097529352 140:0.10485329 29:0.10633606 52:0.10256938 32:0.14941354 7:0.089065291
+PHYS_ROUTE_L1_TOK4=3:0.18631859 0:0.16391455 23:0.097529352 16:0.10485329 5:0.10633606 8:0.10256938 6:0.14941354 1:0.089065291
+ROUTE_SCORE_ORDER_MATCH=YES
+EXPERT_ID_REMAP_AT_BREAK=CONSISTENT_WITH_AL03
+IMPLIES=Not router/ID flip; MoE expert body (gate/up/down) or accumulate diverges under equal FFN_NORM + equal route scores.
+
+## AL09 interval refinement
+AL09_BOUNDED: LAYER17_OUT@tok3 exact → L16_MOE_IN@tok4 mismatch (L17 symptom)
+AL11_PINPOINT: first both-present mismatch = FFN_DOWN_1@pos3 (tok4), cascading to L16/L17
+LAYER_SWEEP_WALK tok3 L18..L61 / tok4 L0..L16: FULL layer-sweep ABSENT (INCOMPLETE); not used for first-divergence claim
+
+## Sparse digest caveat
+STAGE_DIGEST sparse (layers 0,1,2,17). L18..L61@pos2 not present both sides → cannot prove exactness of tok3 tail via STAGE_DIGEST; AL09_COMPARE still holds L17_OUT@tok3 bit-exact via AL09 probes.
+
+PROMOTE=0

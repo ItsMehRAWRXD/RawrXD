@@ -1,0 +1,21 @@
+﻿AL12_PHYSICAL_EXPERT_MAPPING
+DATE=2026-11-13
+PROMOTE=0 CERTIFIED=0
+
+## Verification from same-SHA AL09 pair
+AL03/AL04 prior: PASS (expert-ID remapping not t1 root cause)
+L1 tok1..tok4: ROUTE scores identical FULL(orig IDs) vs PHYS(slots) in order
+At FIRST_DIVERGENT FFN_DOWN_1@pos3: FFN_NORM match + route score match → mapping/lifetime NOT root of this break
+L36 acquire/route: OK on PHYS in al09_phys2 (no ACQUIRE_FAIL)
+
+## Acquire invariants (src ReapPhysicalBank)
+bitAllowed: layer < allowlistLayers; expertId < allowlistExperts; expertId < kReapAllowMaxExperts
+prefix mode: expertId < retainedPerLayer
+NoteAcquire counters only — no slot remap inside bank
+
+## Fix disposition
+MAPPING_FIX=NOT_INDICATED_FOR_FFN_DOWN_1
+L36_MAPPING_BUG=NOT_REPRO_THIS_PAIR
+NEXT_ROOT=MoE expert body/accumulate path under equal FFN_NORM (gate/up/down or stick cache) for newly selected L1 experts (FULL ids 22,3 / PHYS slots 3,0)
+NO_L19_CLIPPING=1
+PROMOTE=0

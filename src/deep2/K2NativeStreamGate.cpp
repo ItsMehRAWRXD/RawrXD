@@ -8,6 +8,7 @@
 #include "K2MLA_GpuGemv.hpp"
 #include "K2NativeMoEFfn.hpp"
 #include "K2NativeMoE_LayerTrace.hpp"
+#include "K2StageDigest.hpp"
 #include "MoEPlaceLiveCounters.hpp"
 #include "MoEExpertResidencyPlace.hpp"
 #include "lavapath/DualStickStreamWindow.hpp"
@@ -580,7 +581,17 @@ bool RunMlaOnPayloads(uint32_t layerIdx, const Deep2::GlobalTensorIndex& index,
                              kvCache, layerIdx, position, stats);
     Deep2::OProj_SetResidualBase(nullptr);
     Deep2::StreamPathTiming_Add(Deep2::SPT_mla(), tMla);
+    if (!ok) {
+        for (size_t p = 0; p < 9; ++p) {
+            TrackFree(payloads[p].size());
+            payloads[p].clear();
+        }
+        return false;
+    }
+    // QUALITY_149: mlaOut was never written (stayed memset0) — ATTN_OUT digests
+    // were false zeros. Capture O_PROJ (or residual-delta if GPU fused residual).
     if (Deep2::OProj_ResidualFused().load() == rf0) {
+        memcpy(mlaOut, hiddenOut, hiddenDim * sizeof(float));
         // No GPU residual fuse — hiddenOut holds O_PROJ only; add residual.
         size_t i = 0;
 #if defined(__AVX512F__)
@@ -596,6 +607,9 @@ bool RunMlaOnPayloads(uint32_t layerIdx, const Deep2::GlobalTensorIndex& index,
             _mm256_storeu_ps(hiddenOut + i, _mm256_add_ps(a, b));
         }
         for (; i < hiddenDim; ++i) hiddenOut[i] = hiddenIn[i] + hiddenOut[i];
+    } else {
+        for (size_t i = 0; i < hiddenDim; ++i)
+            mlaOut[i] = hiddenOut[i] - hiddenIn[i];
     }
     for (size_t p = 0; p < 9; ++p) { TrackFree(payloads[p].size()); payloads[p].clear(); }
     return ok;
@@ -804,6 +818,14 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
             joinAll();
             releaseKvTrack();
             return false;
+        }
+        Deep2::k2_digest::NoteWiredOnce();
+        if (Deep2::k2_digest::DumpLayer(layer)) {
+            char kAttn[48], kInp[48];
+            std::snprintf(kAttn, sizeof(kAttn), "ATTN_OUT_%u", layer);
+            Deep2::k2_digest::Emit(kAttn, position, mlaOut.data(), hiddenDim);
+            std::snprintf(kInp, sizeof(kInp), "FFN_INP_%u", layer);
+            Deep2::k2_digest::Emit(kInp, position, out, hiddenDim);
         }
         /* Host MoE after MLA: router → shared placer → execute ALL selected. */
         if (k2cfg.numExperts > 0) {
@@ -1103,6 +1125,32 @@ bool ProjectLogitsArgmax(const Deep2::GlobalTensorIndex& index,
     fprintf(stderr, "LOGITS_ARGMAX_END STEP=%u/%u TOK=%d\n",
             logitsStep, logitsSteps, (int)bestTok);
     fflush(stderr);
+    if (Deep2::k2_digest::Enabled()) {
+        Deep2::k2_digest::Emit("FINAL_HIDDEN_FOR_LOGITS", logitsStep, hidden,
+                               modelHidden);
+        std::printf("[STAGE_DIGEST] side=deep2 key=ARGMAX pos=%u id=%d "
+                    "logit=%.9f\n",
+                    logitsStep, (int)bestTok, (double)best);
+        std::fflush(stdout);
+        /* Full lm_head FNV: opt-in (O(vocab) Q6_K); default = ARGMAX only. */
+        if (logitsStep == 0 && std::getenv("RAWRXD_STAGE_DIGEST_FULL_LOGITS")) {
+            std::vector<float> full(modelVocab, 0.f);
+            std::string ferr;
+            if (ProjectLogitsFull(index, outRef, modelHidden, modelVocab, hidden,
+                                  full.data(), ferr)) {
+                Deep2::k2_digest::Emit("LOGITS", logitsStep, full.data(),
+                                       modelVocab);
+            } else {
+                std::printf("[STAGE_DIGEST] LOGITS_FULL=FAIL err=%s\n",
+                            ferr.empty() ? "(none)" : ferr.c_str());
+                std::fflush(stdout);
+            }
+        } else if (logitsStep == 0) {
+            std::printf("[STAGE_DIGEST] LOGITS_FULL=SKIPPED set "
+                        "RAWRXD_STAGE_DIGEST_FULL_LOGITS=1 for lm_head FNV\n");
+            std::fflush(stdout);
+        }
+    }
     return true;
 }
 
@@ -1141,6 +1189,15 @@ bool ForwardMlaLayer(const Deep2::GlobalTensorIndex& index,
                          scratch.data(), mlaOut.data(), kv, position, stats,
                          error))
         return false;
+    Deep2::k2_digest::NoteWiredOnce();
+    if (Deep2::k2_digest::DumpLayer(layer)) {
+        char kAttn[48];
+        std::snprintf(kAttn, sizeof(kAttn), "ATTN_OUT_%u", layer);
+        Deep2::k2_digest::Emit(kAttn, position, mlaOut.data(), hd);
+        char kInp[48];
+        std::snprintf(kInp, sizeof(kInp), "FFN_INP_%u", layer);
+        Deep2::k2_digest::Emit(kInp, position, hiddenOut, hd);
+    }
     /* Live decode uses per-layer ForwardMlaLayer; MoE must mirror ForwardMLALayers.
      * Prior path returned after MLA only → SHARD_MOE_US=0 / experts never entered. */
     if (k2cfg.numExperts > 0) {
@@ -1151,6 +1208,11 @@ bool ForwardMlaLayer(const Deep2::GlobalTensorIndex& index,
             return false;
     } else {
         Deep2::MoEPlaceLive().ffn_dispatch_dense++;
+    }
+    if (Deep2::k2_digest::DumpLayer(layer)) {
+        char kOut[48];
+        std::snprintf(kOut, sizeof(kOut), "LAYER_OUT_%u", layer);
+        Deep2::k2_digest::Emit(kOut, position, hiddenOut, hd);
     }
     if (Deep2::LivePath_Active())
         Deep2::LivePath_OnLayerEnd(Deep2::LivePath_ActiveCyclone(), layer, 0, 0);
@@ -1258,6 +1320,18 @@ Result Run(const fs::path& shardDir,
         return result;
     }
     result.promptTokenId = promptTokens.back();
+    // B02: dump prompt token ids for matched-prompt parity vs llama-tokenize.
+    if (Deep2::k2_digest::Enabled()) {
+        std::printf("[STAGE_DIGEST] side=deep2 key=PROMPT_TOKEN_IDS count=%zu ids=[",
+                    promptTokens.size());
+        for (size_t i = 0; i < promptTokens.size(); ++i) {
+            if (i)
+                std::fputc(',', stdout);
+            std::printf("%d", (int)promptTokens[i]);
+        }
+        std::printf("] last=%d PROMOTE=0\n", (int)promptTokens.back());
+        std::fflush(stdout);
+    }
 
     auto outRefOpt = index.Find("output.weight");
     if (!outRefOpt || outRefOpt->ggmlType != 14) {
@@ -1377,6 +1451,12 @@ Result Run(const fs::path& shardDir,
             result.peakResidencyBytes = g_peakResidency;
             result.finalResidencyBytes = g_currentResidency;
             return result;
+        }
+        // B02: digest TOKEN_EMBD after gather for embd-vs-llama oracle.
+        if (Deep2::k2_digest::Enabled()) {
+            char kEmbd[48];
+            std::snprintf(kEmbd, sizeof(kEmbd), "TOKEN_EMBD_tok%d", (int)curToken);
+            Deep2::k2_digest::Emit(kEmbd, step, hidden.data(), hiddenDim);
         }
         memcpy(preMla.data(), hidden.data(), hiddenDim * sizeof(float));
         if (!ForwardMLALayers(layerDepth, index, k2cfg, hidden.data(),

@@ -1,0 +1,24 @@
+{
+    "FreePhys_GB":  35.23,
+    "rawr":  [
+                 {
+                     "Id":  19228,
+                     "ProcessName":  "rawr",
+                     "WorkingSet64":  4336107520
+                 },
+                 {
+                     "Id":  52156,
+                     "ProcessName":  "rawr",
+                     "WorkingSet64":  3082866688
+                 }
+             ],
+    "TotalPhys_GB":  61.61,
+    "Commit_GB":  50.76,
+    "PageFiles":  [
+                      {
+                          "Name":  "C:\\pagefile.sys",
+                          "AllocMB":  117134,
+                          "CurrMB":  2819
+                      }
+                  ]
+}

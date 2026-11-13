@@ -1,0 +1,41 @@
+AL10_BOUNDARY — status
+DATE=2026-11-13
+PROMOTE=0 CERTIFIED=0 CROSS_SHA_CREDIT=0 TIP_CLIMB=HOLD
+NOT_RUN!=PASS
+
+## Sealed boundary (do not reopen as decode ARGMAX)
+
+prompt_tokens=39 chat template (Hello).
+First four PREFILL input IDs (0-based pos 0..3 / al09 tok 1..4):
+  tok1 id=200034
+  tok2 id=200019
+  tok3 id=28463
+  tok4 id=10
+These are FIXED chat-template prompt IDs — NOT decode ARGMAX / selected tokens.
+TOK3_SELECTED_ID equality is therefore trivial; investigate KV/hidden divergence
+in execution order inside OPEN_INTERVAL.
+
+## Inherited AL09 seals (unchanged)
+LAST_EXACT=LAYER17_OUT@tok=3
+FIRST_MISMATCH=L16_MOE_IN@tok=4
+L17 router flip = SYMPTOM
+AL04 remapping router/bias/up PASS on equal inputs
+OPEN_INTERVAL = tok3 L18..61 + tok4 L0..16
+
+## AL10 instrumentation (this turn)
+Env: RAWRXD_AL10=1 RAWRXD_AL10_MAX_TOK=4 (+ RAWRXD_AL09=1 for MOE_IN/ROUTER)
+Emits: AL10_INPUT_ID per prefill Tok(); AL10_LAYER_OUT FNV on OPEN_INTERVAL
+       (+ L17); AL10_EARLY_EXIT / AL10_PREFILL_ABORT_CLEAN after tok=4
+Optional: RAWRXD_KV_PROBE=1 for KV write digests
+
+## A/B arms (exclusive)
+PHYS = F:\ollamamodels\MiniMax-M2.7-REAP16-CALIB-ROUTE27\...
+FULL = MiniMax full + RAWR_REAP_SELECTION_MANIFEST=selection_calib_top27.json
+       RAWRXD_REAP_RETAINED=256 --reap 30GB/8
+WEIGHT_BUDGET_MIB=32768
+
+## Disposition
+AL10_BOUNDARY=SEALED_PREFILL_FIXED_IDS
+FIRST_DIVERGENT_OP=OPEN (await exclusive A/B LAYER_OUT walk)
+PROMOTE=0
+CERTIFIED=0
