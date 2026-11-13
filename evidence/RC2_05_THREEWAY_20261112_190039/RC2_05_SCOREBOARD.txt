@@ -460,3 +460,23 @@ NEOX + F16 KV held
 RECEIPT=cpu_llama/batch11_gpu_residual/
 NEXT=GPU @9 residual dump (tokenwise prefill+GPU decode); no FA/tip14 reopen
 
+
+==============================================================================
+BATCH12 GPU@9 FIRST_OP=ATTN_OUT + host attn mitigation ASOF=2026-11-12T22:13:34.7782898-05:00
+==============================================================================
+PRE_EXE=0AC0481DD26979FF3155D1F427C32BA94E932B9A7395D9EC8CB668C5B84371F4 MATCH=1
+POST_EXE=D24DFC60A52DC1E70714E6A4FF0893089F7EAE0761F0A0D0668B54613F90B530
+CROSS_SHA_CREDIT=0
+DUMP_01B pos9/17: Q/K/V/RoPE/KV_WRITE MATCH; ATTN_OUT FIRST_CLEAR maxAbs~5.7e-3@17
+FIRST_OP=GPU_ATTN_OUT (DispatchAttnDecode)
+HOST_ATTN=1 default (AttentionWithCache + F16 host KV; SPV untouched)
+  ATTN_OUT @17 after host: maxAbs 6.44e-4 (was 5.70e-3)
+  tip9 STILL 16895 — O_PROJ/FFN amplify; host O+FFN double-flush REVERTED
+GPU_16=576,23192,16895,63762,374,279,2790,1372,315,16895,7525,10660,553,264,1849,11
+CPU_16=576,23192,16895,63762,374,279,2790,1372,315,821,27035,429,646,387,15233,553
+LLAMA_FAOFF_16=CPU EXACT16_CPU=1 FIRST_MIS=@9 THREE_WAY=0
+RC2_05_PASS=0 CERTIFIED=0 PROMOTE=0 TIP_CLIMB=HOLD DO_NOT_REOPEN_Q4K_ACT=1
+SPV_TOUCHED=0 ADA48968 NEOX held BATCH11 gate held
+RECEIPT=cpu_llama/batch12_gpu_tip9/
+NEXT=KV-history residual after host attn OR safe host O (no 2nd fused flush)
+

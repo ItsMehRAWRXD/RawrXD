@@ -14,6 +14,8 @@
 #include "GpuTransferCounters.hpp"
 #include "QuantKernelRegistry.hpp"
 #include "Rc201bAttnDump.hpp"
+#include "KVCache.h"
+#include "BatchedPrefill.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -633,42 +635,103 @@ bool Deep2Engine::forwardLayerGpuResident(
         }
     }
 
-    // The adapter's final argument is the cache layer selector even though
-    // its historical parameter name is nHeads.  Pass the actual layer so
-    // each layer owns a disjoint K/V region.
+    // RC2-05 BATCH12 dump: Q/K/V/RoPE/KV_WRITE match CPU; ATTN_OUT first clear
+    // mis (maxAbs~5e-3 @pos17). Device OP_ATTN is FIRST_OP for tip9 (16895 vs
+    // 821). Host AttentionWithCache + F16 host KV seal closes without SPV.
+    // Opt out: DEEP2_GPU_DEVICE_ATTN=1.
+    const char* devAttnEnv = std::getenv("DEEP2_GPU_DEVICE_ATTN");
+    const bool useDeviceAttn = (devAttnEnv && devAttnEnv[0] == '1');
+    bool hostAttnDone = false;
+    if (kvCache && !useDeviceAttn) {
+        if (!gpu->FlushFusedRestart())
+            return fail();
+        std::vector<float> qh(heads * headDim), kh(kvDim), vh(kvDim);
+        if (!gpu->DownloadBuf(gpu->ArenaQ(), qh.data(), heads * headDim) ||
+            !gpu->DownloadBuf(gpu->ArenaK(), kh.data(), kvDim) ||
+            !gpu->DownloadBuf(gpu->ArenaV(), vh.data(), kvDim))
+            return fail();
+        const size_t kl = kvLayerIdx(layer);
+        if (kl == SIZE_MAX)
+            return fail();
+        const size_t cacheHeads = kvCache->headCount();
+        for (size_t h = 0; h < cacheHeads && h < kvHeads; ++h) {
+            float* kd = kvCache->keyPtr(kl, h, pos);
+            float* vd = kvCache->valuePtr(kl, h, pos);
+            if (!kd || !vd)
+                return fail();
+            if (KvKeepF32Env()) {
+                std::memcpy(kd, kh.data() + h * headDim, headDim * sizeof(float));
+                std::memcpy(vd, vh.data() + h * headDim, headDim * sizeof(float));
+            } else {
+                for (size_t d = 0; d < headDim; ++d) {
+                    kd[d] = fp16RoundTripLocal(kh[h * headDim + d]);
+                    vd[d] = fp16RoundTripLocal(vh[h * headDim + d]);
+                }
+            }
+        }
+        if (layer == 0 && Rc201b::Enabled() && Rc201b::WantPos(pos)) {
+            Rc201b::DumpF32("KV_WRITE_K", 0, pos, kh.data(), kh.size());
+            Rc201b::DumpF32("KV_WRITE_V", 0, pos, vh.data(), vh.size());
+            std::fprintf(stderr, "[01B_KV] side=%s pos=%u seqLen=%u kvDim=%u host=1\n",
+                         Rc201b::Side(), pos, pos + 1, kvDim);
+            std::fflush(stderr);
+        }
+        std::vector<float> attnHost(heads * headDim, 0.0f);
+        const size_t groupSize = heads / (kvHeads ? kvHeads : 1u);
+        const size_t attend = static_cast<size_t>(pos) + 1;
+        for (uint32_t h = 0; h < heads; ++h) {
+            const size_t kvHead = h / groupSize;
+            if (!AttentionWithCache(qh.data() + h * headDim, *kvCache, kl, kvHead,
+                                    attnHost.data() + h * headDim, attend))
+                return fail();
+        }
+        if (!gpu->UploadBuf(gpu->ArenaAttn(), attnHost.data(), heads * headDim))
+            return fail();
+        ++counters.attnScoreOps;
+        ++counters.softmaxOps;
+        ++counters.attnValueOps;
+        hostAttnDone = true;
+        static int s_hostAttnOnce = 0;
+        if (!s_hostAttnOnce) {
+            s_hostAttnOnce = 1;
+            std::fprintf(stderr,
+                "GPU_HOST_ATTN=1 FIRST_OP=ATTN_OUT (DEEP2_GPU_DEVICE_ATTN=1 restores)\n");
+            std::fflush(stderr);
+        }
+    }
+
+    // Device KV append kept for optional device-attn / diagnostics.
     if (!gpu->AppendKV(gpu->ArenaK(), gpu->ArenaV(), kvDim, pos, layer)) {
         gpuForwardTrace("layer fail: AppendKV");
         return fail();
     }
 
-    // RC2-01B-3 measurement: KV write sources at pos.
-    if (layer == 0 && Rc201b::Enabled() && Rc201b::WantPos(pos)) {
-        const bool flushed = gpu->FlushFusedRestart();
-        std::vector<float> kh(kvDim), vh(kvDim);
-        if (flushed &&
-            gpu->DownloadBuf(gpu->ArenaK(), kh.data(), kvDim) &&
-            gpu->DownloadBuf(gpu->ArenaV(), vh.data(), kvDim)) {
-            Rc201b::DumpF32("KV_WRITE_K", 0, pos, kh.data(), kh.size());
-            Rc201b::DumpF32("KV_WRITE_V", 0, pos, vh.data(), vh.size());
-            std::fprintf(stderr, "[01B_KV] side=%s pos=%u seqLen=%u kvDim=%u\n",
-                         Rc201b::Side(), pos, pos + 1, kvDim);
-            std::fflush(stderr);
+    if (!hostAttnDone) {
+        if (layer == 0 && Rc201b::Enabled() && Rc201b::WantPos(pos)) {
+            const bool flushed = gpu->FlushFusedRestart();
+            std::vector<float> kh(kvDim), vh(kvDim);
+            if (flushed &&
+                gpu->DownloadBuf(gpu->ArenaK(), kh.data(), kvDim) &&
+                gpu->DownloadBuf(gpu->ArenaV(), vh.data(), kvDim)) {
+                Rc201b::DumpF32("KV_WRITE_K", 0, pos, kh.data(), kh.size());
+                Rc201b::DumpF32("KV_WRITE_V", 0, pos, vh.data(), vh.size());
+                std::fprintf(stderr, "[01B_KV] side=%s pos=%u seqLen=%u kvDim=%u\n",
+                             Rc201b::Side(), pos, pos + 1, kvDim);
+                std::fflush(stderr);
+            }
         }
+        if (!gpu->DispatchAttnDecode(gpu->ArenaQ(), gpu->ArenaKCache(),
+                                     gpu->ArenaVCache(), gpu->ArenaAttn(), pos + 1,
+                                     headDim, heads, kvHeads,
+                                     1.0f / std::sqrt(static_cast<float>(headDim)),
+                                     layer)) {
+            gpuForwardTrace("layer fail: DispatchAttnDecode");
+            return fail();
+        }
+        ++counters.attnScoreOps;
+        ++counters.softmaxOps;
+        ++counters.attnValueOps;
     }
-    // The adapter retains the historical parameter name `kvDim`, but its
-    // implementation forwards this value as the backend's KV-head count.
-    // Pass kvHeads here; the flattened width was already used by AppendKV.
-    if (!gpu->DispatchAttnDecode(gpu->ArenaQ(), gpu->ArenaKCache(),
-                                 gpu->ArenaVCache(), gpu->ArenaAttn(), pos + 1,
-                                 headDim, heads, kvHeads,
-                                 1.0f / std::sqrt(static_cast<float>(headDim)),
-                                 layer)) {
-        gpuForwardTrace("layer fail: DispatchAttnDecode");
-        return fail();
-    }
-    ++counters.attnScoreOps;
-    ++counters.softmaxOps;
-    ++counters.attnValueOps;
 
     // RC2-01B-4 measurement: attn output before O-proj.
     if (layer == 0 && Rc201b::Enabled() && Rc201b::WantPos(pos)) {
@@ -720,8 +783,6 @@ bool Deep2Engine::forwardLayerGpuResident(
         return fail();
     ++counters.oProjOps;
     ++counters.residualOps;
-
-    // RC2-01A/02 + 01B-5: after attn residual / O-proj (measurement only).
     {
         const bool want01b = (layer == 0 && Rc201b::Enabled() && Rc201b::WantPos(pos));
         static uint32_t s_l0AttnPos = UINT32_MAX;
@@ -751,7 +812,6 @@ bool Deep2Engine::forwardLayerGpuResident(
                 Rc201b::DumpF32("AFTER_ATTN_RESIDUAL", 0, pos, rh.data(), rh.size());
         }
     }
-
     if (!gpu->DispatchRmsNorm(gpu->ArenaResidual(), ffnNormDevice,
                               gpu->ArenaNormed(), hidden, modelWeights.normEps) ||
         !gemv(lw.wGate, gpu->ArenaNormed(), gpu->ArenaGate(), intermediate, hidden) ||
