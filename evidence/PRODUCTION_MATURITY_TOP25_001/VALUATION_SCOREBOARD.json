@@ -1,25 +1,36 @@
 {
   "pack": "PRODUCTION_MATURITY_TOP25_001",
-  "asof_local": "2026-11-13T17:12:00-05:00",
-  "branch": "feature/ide-agentic-product-path-20261026",
+  "asof_local": "2026-11-13T17:56:00-05:00",
   "promote": 0,
   "certified": 0,
   "tip_climb": "HOLD",
   "invent_pass": 0,
+  "claim_overall_100": 0,
+  "push": "HELD_NOT_CLEAN_FF",
+  "r30_seal": "CLI_TOP25_VALUATION_001/runs/R30_RAISE_SEAL.txt",
   "scores": {
-    "CLI_SCORE_PCT": 48,
-    "GUI_SCORE_PCT": 32,
-    "OVERALL_PCT": 32,
+    "CLI_SCORE_PCT": 55,
+    "GUI_SCORE_PCT": 37,
+    "OVERALL_PCT": 37,
     "CONJUNCTION_PASS": 0
   },
   "tracks": {
     "CLI_COMPLETE": 0,
     "GUI_COMPLETE": 0,
-    "DENSE_GPU_CANARY_SEALED": 1,
-    "EXE_RELINK": "PENDING_LINK",
-    "EXE_SHA256": "D9589D9A665E07F93E906A637B9D4ADB80D99BFD9604103A882E6AC79078BC08",
-    "DEEP2BRIDGE_C2039_FIX_SOURCE": 1,
+    "JOINT_COMPLETE": 0,
+    "CLI_MATURITY_COMPLETE": 0,
+    "A2_TIP_CLOSED": 1,
+    "CLI_TIP_SHA256": "420ED0F53B95697C00EED32727FD3B277123291874987F6F5BAC6C79B16E6045",
+    "CLI_DENSE_PIN_SHA256": "F28F10B9E510C6F6C87050949B1726DB90C81ED8DC19F1BFC8BB2270D226360B",
     "EXE_ABSORB_GPU_DEFAULT": 0,
-    "REJECT_GUI60_INVENT": 1
-  }
+    "CATS_RAISED": "Agentic 30->70; Dist->58"
+  },
+  "open": [
+    "debugger",
+    "MoE_MATCH",
+    "publish",
+    "H2H",
+    "recovery_hang",
+    "gemma3_AV_POST_PREFILL"
+  ]
 }

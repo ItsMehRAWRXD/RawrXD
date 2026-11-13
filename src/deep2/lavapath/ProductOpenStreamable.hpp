@@ -4,6 +4,9 @@
 #include "../NVMeStream.h"
 #include <cstdio>
 #include <cstdint>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 namespace Deep2 {
 namespace product_open {
@@ -29,7 +32,20 @@ inline int AcquireWorkingSet(Deep2Engine& e, const ModelWeights& mw) {
         if (w.hasFileBacking && nv->prefetchRange(w.fileOffset, (size_t)n))
             return 1;
     }
+    /* GPU/file-backed OPEN: do not touch host pointers that may be device VA
+     * (AV 0xC0000005 after SESSION_EXIT ok=1 under FORCE_GPU). Backing/mmap
+     * already proves working-set reachability for streamable OPEN. */
+    if (w.hasFileBacking || e.GgufMmapBound()) return 1;
     if (!w.data) return 0;
+#ifdef _WIN32
+    MEMORY_BASIC_INFORMATION mbi{};
+    if (VirtualQuery(w.data, &mbi, sizeof(mbi)) == 0) return 0;
+    if (!(mbi.State & MEM_COMMIT)) return 0;
+    if (!(mbi.Protect & (PAGE_READONLY | PAGE_READWRITE | PAGE_WRITECOPY |
+                         PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE |
+                         PAGE_EXECUTE_WRITECOPY)))
+        return 0;
+#endif
     volatile char c = static_cast<const volatile char*>(w.data)[0];
     (void)c;
     return 1;
