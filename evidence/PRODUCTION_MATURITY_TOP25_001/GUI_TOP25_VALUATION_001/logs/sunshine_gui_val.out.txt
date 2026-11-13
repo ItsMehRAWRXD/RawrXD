@@ -1,0 +1,21 @@
+{
+  "schema_version": "sunshine.voxel.receipt/1",
+  "mode": "headless",
+  "adapter": "AMD Radeon AI PRO R9700",
+  "seed": 42,
+  "frames": 8,
+  "frames_captured": 8,
+  "width": 640,
+  "height": 360,
+  "chunks_drawn": 109,
+  "triangles_drawn": 163118,
+  "mean_frame_ms": 0.715,
+  "total_seconds": 2.448,
+  "mean_luminance": 89.13,
+  "distinct_colours": 2868,
+  "repeated_colours": 1411,
+  "terrain_fraction": 0.59081,
+  "terrain_fraction_max": 0.59081,
+  "drew_terrain": true,
+  "files": ["G:\\~dev\\rawrxd\\evidence\\PRODUCTION_MATURITY_TOP25_001\\GUI_TOP25_VALUATION_001\\sunshine/voxel_frame_000.bmp", "G:\\~dev\\rawrxd\\evidence\\PRODUCTION_MATURITY_TOP25_001\\GUI_TOP25_VALUATION_001\\sunshine/voxel_frame_000.png", "G:\\~dev\\rawrxd\\evidence\\PRODUCTION_MATURITY_TOP25_001\\GUI_TOP25_VALUATION_001\\sunshine/voxel_frame_001.bmp", "G:\\~dev\\rawrxd\\evidence\\PRODUCTION_MATURITY_TOP25_001\\GUI_TOP25_VALUATION_001\\sunshine/voxel_frame_001.png", "G:\\~dev\\rawrxd\\evidence\\PRODUCTION_MATURITY_TOP25_001\\GUI_TOP25_VALUATION_001\\sunshine/voxel_frame_002.bmp", "G:\\~dev\\rawrxd\\evidence\\PRODUCTION_MATURITY_TOP25_001\\GUI_TOP25_VALUATION_001\\sunshine/voxel_frame_002.png", "G:\\~dev\\rawrxd\\evidence\\PRODUCTION_MATURITY_TOP25_001\\GUI_TOP25_VALUATION_001\\sunshine/voxel_frame_003.bmp", "G:\\~dev\\rawrxd\\evidence\\PRODUCTION_MATURITY_TOP25_001\\GUI_TOP25_VALUATION_001\\sunshine/voxel_frame_003.png", "G:\\~dev\\rawrxd\\evidence\\PRODUCTION_MATURITY_TOP25_001\\GUI_TOP25_VALUATION_001\\sunshine/voxel_frame_004.bmp", "G:\\~dev\\rawrxd\\evidence\\PRODUCTION_MATURITY_TOP25_001\\GUI_TOP25_VALUATION_001\\sunshine/voxel_frame_004.png", "G:\\~dev\\rawrxd\\evidence\\PRODUCTION_MATURITY_TOP25_001\\GUI_TOP25_VALUATION_001\\sunshine/voxel_frame_005.bmp", "G:\\~dev\\rawrxd\\evidence\\PRODUCTION_MATURITY_TOP25_001\\GUI_TOP25_VALUATION_001\\sunshine/voxel_frame_005.png", "G:\\~dev\\rawrxd\\evidence\\PRODUCTION_MATURITY_TOP25_001\\GUI_TOP25_VALUATION_001\\sunshine/voxel_frame_006.bmp", "G:\\~dev\\rawrxd\\evidence\\PRODUCTION_MATURITY_TOP25_001\\GUI_TOP25_VALUATION_001\\sunshine/voxel_frame_006.png", "G:\\~dev\\rawrxd\\evidence\\PRODUCTION_MATURITY_TOP25_001\\GUI_TOP25_VALUATION_001\\sunshine/voxel_frame_007.bmp", "G:\\~dev\\rawrxd\\evidence\\PRODUCTION_MATURITY_TOP25_001\\GUI_TOP25_VALUATION_001\\sunshine/voxel_frame_007.png"]
+}

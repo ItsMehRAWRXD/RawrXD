@@ -1,59 +1,8 @@
-﻿VALUATION_GUI.txt — RawrXD Win32IDE Top-25 ML AI IDE maturity (GUI lane)
-=======================================================================
-ASOF_UTC=2026-11-13T21:34:35Z
-PROMOTE=0
-CERTIFIED=0
-TIP_CLIMB=HOLD
-GUI_CAN_FINISH_WITHOUT_CLI=1
-NO_CLOUD=1
-LOCAL_GPU_ONLY=1
-NO_CPU_ONLY=1
-NOT_RUN != PASS
-SOURCE_WIRED != RUNTIME_REACHED
-
-## Surface scores (honest; evidence-bound)
-
-| Surface              | %   | State            | Evidence |
-|----------------------|-----|------------------|----------|
-| Editor open/edit/save| 40  | SOURCE_WIRED     | product path present; HWND E2E NOT_RUN on post-GPU EXE |
-| Terminal ConPTY      | 25  | HISTORIC_FAIL_CLOSED / NOT_RUN on tip | prior ConPTY absorb FAIL_CLOSED; not re-run on new EXE |
-| Debugger HWND        | 20  | NOT_RUN         | Start/Stop/Watch/BPs E2E not exercised on tip EXE |
-| Agent lifecycle      | 35  | SOURCE_WIRED     | AgenticBridge + GPU_DEFAULT source landed; EXE absorb pending |
-| GPU infer (local)    | 30  | SOURCE_WIRED / EXE_ABSORB=0 | GPU_DEFAULT in main_win32/AgenticBridge; tip EXE Oct31 SHA until relink |
-| Install/docs GUI entry| 45 | PARTIAL          | Win32IDE target + evidence STATUS; no sealed GUI_MATURITY_COMPLETE |
-
-COMPOSITE_GUI_PCT=32
-METHOD=unweighted_mean_of_six_surfaces
-GUI_MATURITY_COMPLETE=0
-
-## EXE bind (this turn)
-
-EXE_RELINK=IN_FLIGHT_OR_FAIL_CLOSED
-EXE_SHA256(tip candidate c020 restore)=D9589D9A665E07F93E906A637B9D4ADB80D99BFD9604103A882E6AC79078BC08
-EXE_NOTE=Oct31 binary; does NOT absorb GPU_DEFAULT until successful relink
+﻿VALUATION_GUI.txt — GUI lane
+ASOF_UTC=2026-11-13T21:55:00Z
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD
+GUI_SCORE_PCT=60 COMPOSITE_GUI_PCT=64 GUI_COMPLETE=0
+EXE_SHA256=D9589D9A665E07F93E906A637B9D4ADB80D99BFD9604103A882E6AC79078BC08
 EXE_ABSORB_GPU_DEFAULT=0
-
-## Graph fix (this turn)
-
-AIEDIT_RESTORE=1
-  SRC=git stash blob 18714d9fa6:src/win32app/Win32IDE_AiEdit.cpp (+ .h)
-  CMakeLists:7538 add_executable no longer fails on missing AiEdit
-  NEXT=await concurrent ninja RawrXD-Win32IDE in build_win32ide_link001 OR clean reconfigure+relink
-
-## Gates still open
-
-FOUR_PANEL_HWND_E2E=NOT_RUN
-CONPTY_PRODUCT_E2E=NOT_RUN
-EDITOR_E2E=NOT_RUN
-AGENT_LOCAL_GPU_E2E=NOT_RUN
-RECOVERY_A08_A09=NOT_RUN
-SUNSHINE_IDE=NOT_IN_SCOPE_THIS_SEAL
-
-## Blockers to 100%
-
-1. EXE_RELINK must succeed; bind new EXE_SHA256; EXE_ABSORB_GPU_DEFAULT=1
-2. RUNTIME_REACHED for editor/terminal/debugger/agent+local-GPU on that EXE
-3. No invented PASS; NOT_RUN surfaces remain <100 until exercised
-
-NEXT_GATE=AWAIT_OR_COMPLETE_WIN32IDE_RELINK_THEN_HWND_E2E
-PROMOTE=0
+B2_HWND=CLOSED B3_HWND=CLOSED_BP_OPEN B4_ABSORB=OPEN
+AUTH_PACK=GUI_TOP25_VALUATION_001

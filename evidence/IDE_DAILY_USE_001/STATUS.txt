@@ -1,65 +1,40 @@
-IDE_DAILY_USE_001 — STATUS (GPU_DEFAULT seal + tip relink attempt)
+IDE_DAILY_USE_001 — STATUS (GPU_DEFAULT + Win32IDE relink)
 =============================================
-ASOF_UTC=2026-11-13T21:35:00Z
+ASOF_LOCAL=2026-11-13T17:04-05:00
 PROMOTE=0
 TIP_CLIMB=HOLD
 CERTIFIED=0
 PERFECT=0
 NOT_RUN != PASS
-SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
 GPU_DEFAULT=1
 NO_CPU_ONLY=1
-BRANCH=feature/ide-agentic-product-path-20261026
 
-## Product CPU-pin elimination (win32app)
+## Source fixes landed (≠ EXE absorb)
+- Win32IDE_AiEdit.cpp PRESENT (prior missing-file CMake:7538 gate closed when tree stable)
+- Win32IDE_Deep2Bridge.cpp C2039 fixed: ConfigureGeneration/infer → SetSamplerConfig/Generate
+  GIT cite: 4f38dc7d8c
+- main_win32 / AgenticBridge GPU_DEFAULT SOURCE_WIRED (prior)
 
-| Site | Prior product default | Now |
-|------|----------------------|-----|
-| main_win32.cpp message_loop | RAWRXD_FORCE_CPU_INFERENCE=1 | GPU defaults unless truth-valued FORCE_CPU opt-in |
-| HeadlessIDE.cpp LocalOnly load | already ALLOW_GPU=1 HOST_DECODE=0 FORCE_CPU=0 | unchanged |
-| gguf_loader_masm*.cpp | already GPU-required putenv | unchanged |
-| Win32IDE_AgenticBridge p1praBackendSelectLabel | presence of FORCE_CPU=0 → backend=cpu | truth-valued opt-in only |
-| Win32IDE_Deep2Bridge ConfigureGeneration/infer | Deep2 SetSamplerConfig / Generate | SOURCE_WIRED; tip recompile FAIL |
-
-Remaining CPU pins (explicit opt-in only — not product defaults):
-- RAWRXD_FORCE_CPU_INFERENCE=1 / RAWR_FORCE_CPU=1 / RAWRXD_HOST_DECODE=1
-- RAWRXD_BRIDGE_CPU_ONLY=1 / RAWRXD_DISABLE_GPU=1
-- HAVE_DEEP2_ENGINE off compile lane (CPUInferenceEngine fallback)
-- agentic_bridge_headless rejects FORCE_CPU truth (NOT_PRODUCT_PATH)
-- mcp_hooks.asm FLAG_FORCE_CPU bit (flag enum only)
-
-## Build (this turn)
-
-```
-OBJ_RC:
-  main_win32.cpp.obj = OK (rebuilt 2026-11-13)
-  Win32IDE_AiEdit.cpp.obj = OK (source present; prior missing-file gate closed)
-  Win32IDE_AgenticBridge.cpp.obj = OK compile attempt
-  Win32IDE_Deep2Bridge.cpp.obj = FAIL
-    WHY=C2039 ConfigureGeneration / infer not member of RawrXD::CPUInferenceEngine
-    (HAVE_DEEP2_ENGINE / fallback path compile under link001 flags)
+## EXE tip candidate
+EXE=g:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+EXE_SHA256=D9589D9A665E07F93E906A637B9D4ADB80D99BFD9604103A882E6AC79078BC08
+EXE_TIME=2026-10-31T09:27:44
 EXE_RELINK=FAIL_CLOSED
-EXE_SHA256(tip candidate c020)=D9589D9A665E07F93E906A637B9D4ADB80D99BFD9604103A882E6AC79078BC08
-EXE_NOTE=Oct31 binary; does NOT absorb this-turn GPU source until successful relink
-LOG=evidence/IDE_DAILY_USE_001/logs/ (prior relink_* + this note)
-```
-
-## Daily-use cross-link (IDE_DAILY_USE_E2E_001 on c020)
-Headless health/tools/editor/terminal-exec/lifecycle/recovery = PASS
-Four-panel HWND / ConPTY product = FAIL_CLOSED
-Debugger HWND = NOT_RUN (harness RUNTIME_PARTIAL)
-GPU load on GUI tip EXE = NOT_PROVED (HOST_DECODE product path not exercised on c020)
+EXE_ABSORB_GPU_DEFAULT=0
+  WHY=multi-agent ninja/cl thrash on shared trees
+       (cl exit 4294967295 / ninja recompaction Permission denied)
+       Deep2Bridge.obj compiled then deleted by concurrent clean/rebuild
+       fresh dirs absorb_015/018 also FAIL_CLOSED mid-InferenceEngine
 
 ## Explicit non-claims
-
-```
 PROMOTE=0
 CERTIFIED=0
 EXE_ABSORB_GPU_DEFAULT=0
-FOUR_PANEL_HWND_E2E=NOT_RUN
 GUI_COMPLETE=0
-NOT_RUN != PASS
-```
+FOUR_PANEL_HWND_E2E=NOT_RUN_ON_TIP
 
-NEXT_GATE=FIX_Deep2Bridge_CPUInferenceEngine_fallback_OR_force_HAVE_DEEP2_ENGINE then RELINK
+NEXT_GATE=EXCLUSIVE_MACHINE_RELINK
+  REQUIRE=single ninja -j1..4 owner; no parallel cmake regenerate;
+          Deep2Bridge.obj + AiEdit.obj + main_win32.obj → tip EXE new SHA
+          then daily-use smoke on THAT exe → EXE_ABSORB_GPU_DEFAULT=1
 PROMOTE=0
