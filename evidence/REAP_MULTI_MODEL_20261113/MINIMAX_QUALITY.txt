@@ -1,14 +1,93 @@
-# MiniMax QUALITY disposition (Issue #83 worker)
-UTC=2026-11-13T07:09:05.5088854-05:00
+﻿# MiniMax QUALITY — longer deterministic coding/reasoning
+UTC=2026-11-13T07:24:00-05:00
+MOTD_ACK=1
+DISPOSITION=QUALITY_LONGER_DETERMINISTIC_MEASURED
 PROMOTE=0
-QUALITY=OPEN
 CERTIFIED=0
+QUALITY=OPEN
 CROSS_SHA_CREDIT=0
 ORIGINAL_GGUF_INTACT=1
-CONTROLLING_SHA_SEALED=C9A5564CB03612F3F6AF7F313D55B339AAD65BA6545BA93EC543441396701B16
-LIVE_EXE=MISSING (peer rebuild / GDN_WIP_985A745C run in flight ? no steal)
-FIRST_DIVERGENT_OP=FALSE_POSITIVE_PREPROJ_UNINIT_KV; POST_LINEARW finite
-ENCODING=MoERouter UTF-8 normalized; see MOE_ENCODING.txt
-MEANINGFUL_OUTPUT=NOT_PASS (???? repetition)
-NEXT_GATE=rebuild_from_5c8f29+UTF8_MoE+postLinearW_diag; deterministic English/coding probe; finite logits; expert counters
-Qwen_GDN=HELD until MiniMax quality progresses
+TIP_CLIMB=HOLD
+B03_A_TO_E=NOT_REOPENED
+NOTE=Semantic/coherence QUALITY only. Sealed B03 physical/T4 acceptance preserved.
+
+## EXE rehash / rebound
+EXPECTED_CONTROLLING=C9A5564CB03612F3F6AF7F313D55B339AAD65BA6545BA93EC543441396701B16
+MEASURE_EXE=F:\rawrxd\build_reap\bin-msvc\rawr-reap.GDN_WIP_985A745C.exe
+MEASURE_EXE_SHA256=985A745C98A58FCBDF56BA38203AC82AED32B6554FB347A98F2D58553405CE09
+CURRENT_EXE_REBOUND=1
+REBOUND_REASON=live rawr-reap.exe churned during concurrent rebuilds; C9A5564C not present on disk; QUALITY measured on WIP copy 985A745C
+POST_JOB_LIVE_EXE=F:\rawrxd\build_reap\bin-msvc\rawr-reap.exe
+POST_JOB_LIVE_SHA256=D7661CFC53CC1A14BA8FEBA1332B7D36FF3CC01A203D69D769CD15F539391B36
+SILENT_CREDIT_ACROSS_SHA=0
+GIT_TIP_AT_PUSH=see commit
+
+## Baseline (sealed B03-E on C9A5564C — not useful QUALITY)
+BASELINE_PROMPT=Hello
+BASELINE_MAX_TOKENS=4
+BASELINE_OUTPUT=姬被被被
+BASELINE_COHERENCE=FAIL_REPETITION
+BASELINE_NOTE=tokens/ROUTE/ACQUIRE acceptance != semantic quality
+
+## Run A — coding (retain-29 / physical 30GB/8)
+CMD=rawr-reap.GDN_WIP_985A745C.exe runtime <MiniMax-00001-of-00003.gguf> --target 30GB/8 --prompt "Write a Python factorial function using recursion. Code only." --max-tokens 16 --receipt MINIMAX_QUALITY_CODING_RECEIPT.json
+TEMP=0 GREEDY=1 topK=1
+status=PASS (runtime tokens only; != QUALITY PASS)
+generated_tokens=16
+prompt_tokens=11
+generation_completed=1
+output=</000android280android84C57={={=3
+TOKEN_IDS=1579,48,48,48,23724,19267,23724,56,52,67,53,55,5940,5940,61,51
+piece0=</
+LOGITS_FINITE=1 (nonFiniteLogits=0 x16; tip LOGIT_DIAG top5 finite 1579=8.693507 ...)
+PEAK_RAM_WS_BYTES=3444928512
+PEAK_RAM_WS_GB=3.208
+ROUTE_OK=12896 ACQUIRE_OK=12896 EXCLUDED=0 retain=29 STREAM_CORRECTNESS=PASS
+S08_ATTN_DUMP_L0_K=-2.725508e+38 (garbage-scale / uninit-pattern)
+S08_ATTN_DUMP_L0_V=1.821688e-44 (denormal / uninit-pattern)
+QKV_PROJ_K_V=sane ~1e-2 (same run; S08 dump timing precedes K/V LinearW — see MINIMAX_FIRST_DIVERGENT.txt)
+COHERENCE_VS_BASELINE=NOT_IMPROVED (still non-code garbage; different string than 姬被被被)
+CODING=OPEN_FAIL
+
+## Run B — reasoning (retain-29 / physical 30GB/8)
+CMD=rawr-reap.GDN_WIP_985A745C.exe runtime <MiniMax-00001-of-00003.gguf> --target 30GB/8 --prompt "Reason step by step: if all cats are animals and some animals are pets, are all cats pets? Answer yes or no with one sentence." --max-tokens 24 --receipt MINIMAX_QUALITY_REASON_RECEIPT.json
+TEMP=0 GREEDY=1 topK=1
+status=CRASH_BEFORE_RECEIPT
+EXIT=-1
+generated_tokens_observed=23 (stdout sampled; receipt NOT written)
+TOKEN_IDS=1139,1139,3293,1788,51,1139,5940,120,1139,1788,1139,5940,3293,1139,51,19328,1139,1139,110,1139,50,1139,1139
+piece0=="
+LOGITS_FINITE=1 (nonFiniteLogits=0 each step observed)
+PEAK_RAM_WS_BYTES=3838664704
+PEAK_RAM_WS_GB=3.575
+S08_ATTN_DUMP_L0_K=0 / V=0 (uninit-pattern zeros)
+COHERENCE=FAIL (repetitive token 1139; not a yes/no justification)
+REASONING=OPEN_FAIL
+
+## Optional full-topology vs retain-29
+FULLTOPO_COMPARE=NOT_RUN
+REASON=not cheap under concurrent EXE rebound/rebuild; QUALITY already OPEN on retain-29 longer prompts
+
+## K/V dump quality signal
+SEALED_T4_C9A5564C_S08_K=1.125868e+24
+SEALED_T4_C9A5564C_S08_V=6.020336e+12
+INTERPRETATION=S08_ATTN_DUMP K/V pre-LinearW reads are garbage-scale/uninit; QKV_PROJ post-LinearW values are sane — dump is a correctness/telemetry footgun, not proof of post-GEMV explode
+SEMANTIC_GATE=still FAIL on decoded text regardless of S08 FP disposition
+
+## Verdict
+QUALITY=OPEN
+PROMOTE=0
+CERTIFIED=0
+CODING_PASS=0
+REASONING_PASS=0
+COHERENCE_PASS=0
+NEXT=isolate MoE/expert numeric + chat-template + whether retain-29 expert set drives token garbage (CROSS_SHA_CREDIT=0)
+
+## Evidence files
+RECEIPT_CODING=MINIMAX_QUALITY_CODING_RECEIPT.json
+STDOUT_CODING=MINIMAX_QUALITY_CODING_STDOUT.log (gitignored)
+STDERR_CODING=MINIMAX_QUALITY_CODING_STDERR.log (gitignored)
+STDOUT_REASON=MINIMAX_QUALITY_REASON_STDOUT.log (gitignored)
+STDERR_REASON=MINIMAX_QUALITY_REASON_STDERR.log (gitignored)
+PROOF=MINIMAX_QUALITY_PROOF.txt
+FIRST_DIVERGENT_REF=MINIMAX_FIRST_DIVERGENT.txt

@@ -1,25 +1,10 @@
-MOE_ENCODING.txt
+﻿MOE_ENCODING.txt
 PROMOTE=0 CERTIFIED=0 CROSS_SHA_CREDIT=0
 ISSUE=https://github.com/ItsMehRAWRXD/RawrXD/issues/83
-TREE=F:\rawrxd @ 5c8f29a9c8 evidence/reap-multi-model-20261113
-MoERouter.cpp BEFORE=UTF-16LE (2F 00 2F 00) len=26086 sha256=d3842a42948dba3eb95c4506da040d34e2d84c94fc4895795c2704249536150c
-MoERouter.cpp AFTER=UTF-8 no BOM len=13043 sha256=8aebfd7a56d05493a9e3756c5c726144a9d3a457a0847b5f608b335009fd4371
+MoERouter.cpp BEFORE=UTF-16LE (2F 00 2F 00...) len=26086
+MoERouter.cpp AFTER=UTF-8 no BOM
 BACKUP=F:\rawrxd\src\deep2\MoERouter.cpp.utf16bak
-CONVERTED_BATCH=MoERouter.hpp MoEArchitectureParser.hpp MoEEliminate.hpp MoEExpertResidencyPlace.hpp MoELiveAdd.hpp MoEPlaceLiveCounters.hpp MoEValidator.h MoEWeightProxy.cpp/.hpp MoEWeightsLoader.cpp/.hpp (+utf16bak each)
-PORTED=MoEArchitectureParser.cpp from G:\~dev\rawrxd (was missing on F)
-MultiShardWeightBind.hpp=UTF-8 present (matches G)
-MultiShardLayerMaterialize.hpp=UTF-8 present
---- LIVE AUDIT ---
-MoERouter.cpp size=13043 enc=UTF-8 bom=NO_BOM sha256=8aebfd7a56d05493a9e3756c5c726144a9d3a457a0847b5f608b335009fd4371
-MoERouter.hpp size=5908 enc=UTF-8 bom=NO_BOM sha256=c5a157bb2b6f570b745511f8300bddbe451c52b83395e1469db1684b3a86c6dc
-MoEWeightProxy.cpp size=16026 enc=UTF-8 bom=NO_BOM sha256=584dd1b8baa3f5870611512238d5808b08252203628fc4118fb116ce46c6eb1f
-MoEWeightsLoader.cpp size=34939 enc=UTF-8 bom=NO_BOM sha256=ccdedf9e254549acf7f280d8ae3ab04be90e989c43ab7de4e560f17bb375f29e
-MoEArchitectureParser.cpp size=21575 enc=UTF-8 bom=NO_BOM sha256=dd6a9de4eb61db8e2cc095677901dbb6d1907a7b38a4175458e3b335f8edfa32
-MultiShardWeightBind.hpp size=4799 enc=UTF-8 bom=NO_BOM sha256=5fcc1cae43ebe038051619898a3d83ef99a31342454851a0be79e9ad11bf0d20
-MSVC_ROUTE_SMOKE=PENDING (peer holds EXE rebuild; LNK1104 earlier; rawr-reap.exe MISSING; GDN_WIP process may still run)
-ORIGINAL_GGUF_INTACT=1
-PROMOTE=0
-
-LIVE_EXE_SHA256=73A108B60715A547C7A55280ACF1EFB411A84ACB934C93F9089B3EB3A79B51E8
-CURRENT_EXE_REBOUND=1
-MSVC_FULL_LINK=PEER_REBUILT_73A108 (see EXE_SHA_REBIND.json)
+MASS_CONVERT=406 UTF-16LE deep2 sources -> UTF-8; REMAINING_BOM=0
+BACKUP_DIR=F:\rawrxd\evidence\REAP_MULTI_MODEL_20261113\_utf16_bak
+MoERouter.hpp=UTF-8 (untouched BOM earlier)
+NOTE=Normalize landed; semantic route smoke pending; PROMOTE=0

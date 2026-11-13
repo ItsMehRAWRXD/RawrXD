@@ -3,9 +3,11 @@
 // ============================================================================
 
 #include "MoERouter.hpp"
+#include "ReapPhysicalBank.hpp"
 #include <fstream>
 #include <iostream>
 #include <cstring>
+#include <limits>
 
 namespace Deep2 {
 
@@ -58,6 +60,17 @@ TokenRoute MoERouter::Route(const float* hiddenState) {
             score += row[d] * hiddenState[d];
         }
         logits[e] = score;
+    }
+
+    // Physical REAP: permanently exclude pruned experts from host MoE routing
+    // (matches KimiK2Router). Without this, top-k can select expert>=retained
+    // and MoEWeightProxy::Acquire fail-closes with weights unavailable.
+    if (ReapPhysicalBankActive()) {
+        const uint32_t retained = ReapPhysicalRetainedPerLayer();
+        for (size_t e = 0; e < nExp; ++e) {
+            if (e >= retained)
+                logits[e] = -std::numeric_limits<float>::infinity();
+        }
     }
     
     route.routerLogits = logits;
