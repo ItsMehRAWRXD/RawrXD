@@ -755,6 +755,12 @@ namespace Deep2
         void LinearW(const WeightTensor &wt, const float *input, const float *bias,
                      float *output, size_t outDim);
 
+        // RC2-05: multi-row Q4_K/Q6_K GEMM for layer-major prefill (llama ubatch).
+        // inputBatch [batch*cols], outputBatch [batch*outDim]. Counts OnBatchedMatMul.
+        void LinearWBatched(const WeightTensor &wt, const float *inputBatch,
+                            float *outputBatch, size_t batch, size_t outDim,
+                            const float *bias);
+
         // Parallel version using ThreadPool
         void LinearParallel(int weightIdx, const float *input, const float *bias,
                             float *output, size_t outDim);

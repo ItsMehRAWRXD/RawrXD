@@ -628,14 +628,16 @@ bool Deep2Engine::forwardLayerBatched(size_t layer, ActivationBatch& batch,
     kAll.assign(B * kvDim, 0.0f);
     vAll.assign(B * kvDim, 0.0f);
 
-    for (size_t j = 0; j < B; ++j) {
-        const float* in = &normed[j * H];
+    // RC2-05: multi-row Q4_K GEMM (weight-outer) — enters llama default-ubatch basin.
+    {
         const float* bq = lw.bq.data ? reinterpret_cast<const float*>(lw.bq.data) : nullptr;
         const float* bk = lw.bk.data ? reinterpret_cast<const float*>(lw.bk.data) : nullptr;
         const float* bv = lw.bv.data ? reinterpret_cast<const float*>(lw.bv.data) : nullptr;
-        LinearW(lw.wq, in, bq, &qAll[j * H], H);
-        LinearW(lw.wk, in, bk, &kAll[j * kvDim], kvDim);
-        LinearW(lw.wv, in, bv, &vAll[j * kvDim], kvDim);
+        LinearWBatched(lw.wq, normed.data(), qAll.data(), B, H, bq);
+        LinearWBatched(lw.wk, normed.data(), kAll.data(), B, kvDim, bk);
+        LinearWBatched(lw.wv, normed.data(), vAll.data(), B, kvDim, bv);
+    }
+    for (size_t j = 0; j < B; ++j) {
         if (!H11TraceBatchVector("q", layer, j, &qAll[j * H], H) ||
             !H11TraceBatchVector("k", layer, j, &kAll[j * kvDim], kvDim) ||
             !H11TraceBatchVector("v", layer, j, &vAll[j * kvDim], kvDim)) return false;
@@ -759,8 +761,7 @@ bool Deep2Engine::forwardLayerBatched(size_t layer, ActivationBatch& batch,
     const WeightTensor& wo = lw.wo.data ? lw.wo : lw.attnO;
     static thread_local std::vector<float> proj;
     proj.assign(B * H, 0.0f);
-    for (size_t j = 0; j < B; ++j)
-        LinearW(wo, attn.row(j), nullptr, &proj[j * H], H);
+    LinearWBatched(wo, attn.data.data(), proj.data(), B, H, nullptr);
     for (size_t j = 0; j < B; ++j)
         if (!H11TraceBatchVector("attn_output", layer, j, &proj[j * H], H)) return false;
 
@@ -770,24 +771,56 @@ bool Deep2Engine::forwardLayerBatched(size_t layer, ActivationBatch& batch,
     for (size_t j = 0; j < B; ++j)
         if (!H11TraceBatchVector("post_attn", layer, j, batch.row(j), H)) return false;
 
-    // ---- FFN ----
-    for (size_t j = 0; j < B; ++j) {
-        static thread_local std::vector<float> ffnNormed;
-        ffnNormed.assign(H, 0.0f);
-        RMSNormW(lw.ffnNorm, batch.row(j), ffnNormed.data(), H, modelWeights.normEps);
-        if (!H11TraceBatchVector("ffn_norm", layer, j, ffnNormed.data(), H)) return false;
-
-        static thread_local std::vector<float> ffnOut;
-        ffnOut.assign(H, 0.0f);
-        if (modelWeights.isMoE && modelWeights.numExperts > 0)
+    // ---- FFN (batched GEMM when dense; MoE stays per-row) ----
+    if (modelWeights.isMoE && modelWeights.numExperts > 0) {
+        for (size_t j = 0; j < B; ++j) {
+            static thread_local std::vector<float> ffnNormed, ffnOut;
+            ffnNormed.assign(H, 0.0f);
+            ffnOut.assign(H, 0.0f);
+            RMSNormW(lw.ffnNorm, batch.row(j), ffnNormed.data(), H, modelWeights.normEps);
+            if (!H11TraceBatchVector("ffn_norm", layer, j, ffnNormed.data(), H)) return false;
             computeMoEFFN(layer, ffnNormed.data(), ffnOut.data());
-        else
-            computeFFN(layer, ffnNormed.data(), ffnOut.data());
-        if (!H11TraceBatchVector("ffn", layer, j, ffnOut.data(), H)) return false;
-
-        for (size_t i = 0; i < H; ++i)
-            batch.row(j)[i] += ffnOut[i];
-        if (!H11TraceBatchVector("post_ffn", layer, j, batch.row(j), H)) return false;
+            if (!H11TraceBatchVector("ffn", layer, j, ffnOut.data(), H)) return false;
+            for (size_t i = 0; i < H; ++i)
+                batch.row(j)[i] += ffnOut[i];
+            if (!H11TraceBatchVector("post_ffn", layer, j, batch.row(j), H)) return false;
+        }
+    } else {
+        static thread_local std::vector<float> ffnNormed, gateAll, upAll, ffnOut;
+        ffnNormed.assign(B * H, 0.0f);
+        for (size_t j = 0; j < B; ++j) {
+            RMSNormW(lw.ffnNorm, batch.row(j), &ffnNormed[j * H], H, modelWeights.normEps);
+            if (!H11TraceBatchVector("ffn_norm", layer, j, &ffnNormed[j * H], H)) return false;
+        }
+        const size_t inter = lw.wGate.data ? lw.wGate.rows
+            : (lw.wUp.data ? lw.wUp.rows : config.intermediateDim);
+        if (!inter || !lw.wDown.data) return false;
+        gateAll.assign(B * inter, 0.0f);
+        upAll.assign(B * inter, 0.0f);
+        ffnOut.assign(B * H, 0.0f);
+        const WeightTensor& upWt = lw.wUp.data ? lw.wUp : lw.wGate;
+        if (lw.wGate.data)
+            LinearWBatched(lw.wGate, ffnNormed.data(), gateAll.data(), B, inter, nullptr);
+        LinearWBatched(upWt, ffnNormed.data(), upAll.data(), B, inter, nullptr);
+        for (size_t j = 0; j < B; ++j) {
+            float* g = &gateAll[j * inter];
+            const float* u = &upAll[j * inter];
+            if (config.gemmaGeGLU) {
+                if (lw.wGate.data) GeGLU(g, u, g, inter);
+                else GeGLU(u, u, g, inter);
+            } else if (lw.wGate.data) {
+                SwiGLU(g, u, g, inter);
+            } else {
+                SwiGLU(u, u, g, inter);
+            }
+        }
+        LinearWBatched(lw.wDown, gateAll.data(), ffnOut.data(), B, H, nullptr);
+        for (size_t j = 0; j < B; ++j) {
+            if (!H11TraceBatchVector("ffn", layer, j, &ffnOut[j * H], H)) return false;
+            for (size_t i = 0; i < H; ++i)
+                batch.row(j)[i] += ffnOut[j * H + i];
+            if (!H11TraceBatchVector("post_ffn", layer, j, batch.row(j), H)) return false;
+        }
     }
 
     ++execTelemetry_.layerExecutions;

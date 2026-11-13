@@ -7300,6 +7300,62 @@ if (bias)
     }
 }
 
+// RC2-05: multi-row Q4_K/Q6_K GEMM for prefill — same Q×Q8 mul_mat math as
+// LinearW/GetGEMV (NOT F32-dequant; that entered the GPU basin). Weight ptr
+// shared across batch cols; OnBatchedMatMul once per call when batch>1.
+void Deep2Engine::LinearWBatched(const WeightTensor& wt, const float* inputBatch,
+                                 float* outputBatch, size_t batch, size_t outDim,
+                                 const float* bias)
+{
+    if (!wt.data || !inputBatch || !outputBatch || outDim == 0 || batch == 0)
+        throw std::runtime_error("LinearWBatched: invalid args name=" + wt.name);
+    if (batch == 1)
+    {
+        LinearW(wt, inputBatch, bias, outputBatch, outDim);
+        return;
+    }
+    WeightTensor wtEffective = wt;
+    Deep2::ElasticResidencyManager::ResidencyHandle resHandle;
+    bool acquired = false;
+    if (elasticResidencyEnabled_ && elasticResidency_ && !wt.name.empty() && !vulkanEnabled_)
+    {
+        auto st = elasticResidency_->AcquireTensor(wt.name, 0, 0, resHandle);
+        if (st == Deep2::ElasticResidencyManager::AcquireStatus::Ready && resHandle.ready)
+        {
+            wtEffective.data = resHandle.cpuPtr;
+            acquired = true;
+        }
+    }
+    if (wtEffective.rows < outDim)
+        throw std::runtime_error("LinearWBatched: rows < outDim name=" + wt.name);
+    const size_t cols = wtEffective.cols;
+    auto& registry = Deep2::QuantKernelRegistry::Instance();
+    registry.Initialize();
+    auto gemv = registry.GetGEMV(wtEffective.type);
+    std::memset(outputBatch, 0, batch * outDim * sizeof(float));
+    if (gemv)
+    {
+        const uint8_t* w = static_cast<const uint8_t*>(wtEffective.data);
+        for (size_t b = 0; b < batch; ++b)
+            gemv(w, inputBatch + b * cols, outputBatch + b * outDim, outDim, cols);
+    }
+    else
+    {
+        for (size_t b = 0; b < batch; ++b)
+            LinearW_Range(wtEffective, inputBatch + b * cols,
+                          outputBatch + b * outDim, 0, outDim, cols);
+    }
+    if (bias)
+    {
+        for (size_t b = 0; b < batch; ++b)
+            for (size_t r = 0; r < outDim; ++r)
+                outputBatch[b * outDim + r] += bias[r];
+    }
+    ResidencyCounters::OnBatchedMatMul();
+    if (acquired && elasticResidency_ && !wt.name.empty())
+        elasticResidency_->ReleaseTensor(wt.name);
+}
+
 // ============================================================================
 // Reset
 // ============================================================================

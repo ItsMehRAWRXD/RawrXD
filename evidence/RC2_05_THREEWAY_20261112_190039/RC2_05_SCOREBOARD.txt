@@ -392,3 +392,22 @@ FIRST_MIS=@14 EXACT16=0 RC2_05_PASS=0 PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD
 GPU_PARITY=NOT_CREDITED
 NEXT=multi-row Q4_K GEMM prefill (batchedMatMulCount>0) to enter llama default basin
 BISECT=cpu_llama/batch07_tip14_tf/BISECT_TIP14.txt
+
+==============================================================================
+BATCH09 multi-row Q4_K GEMM (LinearWBatched) ASOF=2026-11-12T21:20:00-05:00
+==============================================================================
+EXE_SMOKE_SHA256=E6A387C3272E4B0A3E1EC44FE96DB7B2DEDE5E4CB4B3E0E6108620F6DA7452B7
+CROSS_SHA_CREDIT=0 (remeasure this EXE only; prior G09 0C29A6F8 / BATCH08 BE6E5439 unused)
+FIX=LinearWBatched GetGEMV Q×Q8 shared-W + OnBatchedMatMul; QKV/O/FFN prefill wired
+DIAG_REJECT=F32-dequant GEMM EXE=EF59FCBA... tip14=10660 FIRST_MIS@9 GPU_16-basin
+CPU_16=576,23192,16895,63762,374,279,2790,1372,315,821,27035,429,646,387,15233,553
+LLAMA_16=576,23192,16895,63762,374,279,2790,1372,315,821,27035,429,646,387,29213,323
+batchedMatMulCount=196
+tip2=16895 PASS
+tip14=15233 FAIL (target 29213)
+FIRST_MIS=@14 EXACT16=0 RC2_05_PASS=0
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD DO_NOT_REOPEN_Q4K_ACT=1
+storeKvRoundTrip=F16 PRESERVED SPV_TOUCHED=0
+GPU_PARITY=NOT_CREDITED (CPU EXACT16 open)
+NEXT=llama default-ubatch residual ≠ LinearW (attn/graph); do not reopen Q4K act
+RECEIPT=cpu_llama/batch09_q4k_gemm/
