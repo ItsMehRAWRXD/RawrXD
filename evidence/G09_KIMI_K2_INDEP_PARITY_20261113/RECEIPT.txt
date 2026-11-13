@@ -116,3 +116,9 @@ NEXT_EXECUTABLE_GATE=
   2) Fix/use llama.cpp build that tokenizes kimi-k2 without vocab_only hparams abort
   3) OR host with enough RAM/commit for --no-repack mmap decode of 578GiB Q4_K_M
   4) Compare prompt IDs then greedy 8; emit FIRST_MIS at first divergence
+
+GIT_BRANCH=evidence/g09-kimi-k2-indep-parity-20261113
+PR=https://github.com/ItsMehRAWRXD/RawrXD/pull/81
+CLEANUP_COMMIT=7bec3f2c3b8c030ffe7262e1726ef0f097359ba4
+PROMOTE=0
+
