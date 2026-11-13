@@ -1,6 +1,0 @@
-﻿PROBE_DUMP_TOOLS=2026-11-12T19:20
-llama_dump_logits_teacher_forced.exe=NO_USAGE_OUTPUT (exit via pipe / missing?)
-llama_dump_logits_and_hidden.exe=NO_USAGE_OUTPUT
-deep2_parity_trace.exe=OK usage --model <gguf> [--tokens] [--outdir] [--gate4 cpu|gpu] [--gpu] [--generate N]
-PRIOR_IDX2=F:\rawrxd\evidence\AGGREGATE_DECODE_DEEP2_NATIVE_RUNTIME_001\S07_CPU_PARITY_FIX.txt
-PRIOR_NOTE=same tip split Deep2 315 vs ref 16895 at token 2; GEN_IDS llama-like [576,23192,16895,63762,...]
