@@ -1,0 +1,25 @@
+{
+    "gate":  "AL07",
+    "status":  "PASS",
+    "shard_count":  3,
+    "bytes":  16757091008,
+    "GiB":  15.606257,
+    "files":  [
+                  {
+                      "name":  "MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf",
+                      "bytes":  6473627200,
+                      "sha256":  "2FB4DC182AFDDBA092C0EE6C32972C1F4C7C981670F05B61819E1FE48291C64F"
+                  },
+                  {
+                      "name":  "MiniMax-M2.7-Q4_K_M-00002-of-00003.gguf",
+                      "bytes":  5759034656,
+                      "sha256":  "CC5779FFDFE6FF413B15312834BB0452E1309A6451738041C250844A3C4ECA2C"
+                  },
+                  {
+                      "name":  "MiniMax-M2.7-Q4_K_M-00003-of-00003.gguf",
+                      "bytes":  4524429152,
+                      "sha256":  "6B602418DCDC51B04D68A2952217BF815321CEE003732FB17D93F033C0E9BDF0"
+                  }
+              ],
+    "PROMOTE":  0
+}

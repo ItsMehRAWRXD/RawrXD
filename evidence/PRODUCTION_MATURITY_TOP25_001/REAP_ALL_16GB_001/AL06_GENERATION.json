@@ -1,0 +1,13 @@
+{
+    "gate":  "AL06",
+    "status":  "EXEC_PASS_SEMANTIC_FAIL",
+    "CLEAN_EXIT":  1,
+    "GENERATED_TOKENS":  48,
+    "EXIT":  0,
+    "first_token_id":  44,
+    "first_piece":  ",",
+    "observed":  "48-token greedy Hello collapses to comma stream (id=44) — quality cliff at R=27 retained, not expert-ID remapping",
+    "note":  "AL03/AL05 already prove topology+numerics match FULL+allowlist; incoherence is selection/rank quality not export remap",
+    "PROMOTE":  0,
+    "CERTIFIED":  0
+}

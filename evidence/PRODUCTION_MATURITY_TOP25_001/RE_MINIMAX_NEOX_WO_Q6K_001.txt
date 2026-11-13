@@ -1,0 +1,58 @@
+RE_MINIMAX_NEOX_WO_Q6K_001
+ASOF=2026-11-13
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD
+SMOKE=minimax_neox_l2gate.* RAWRXD_REAP_RETAINED=256 Hello max-tokens=8
+EXE_SHA256=BC1583B773D6DC28109D7F64AD43844E2F97E1FC2446E8E3F828BC73736DE3D5
+NOT_RUN!=PASS CROSS_SHA_CREDIT=0
+
+================================================================================
+FINDING
+================================================================================
+1) ggml NEOX rotate_pairs vs Deep2 neoHead: PAIR + THETA INDEX MATCH.
+   ggml: rotate_pairs(n_dims, n_dims/2) → (ic, ic+half), cache[2i]/[2i+1]
+   Deep2: (h[i], h[i+half]), freq=theta^(-2i/ropeDim)
+   REF: llama.cpp-kimi-ref/ggml/src/ggml-cpu/ops.cpp rotate_pairs + ggml.h NEOX notes.
+
+2) Q_PRE_ROPE vs Q_POST_ROPE L2 anomaly (B04 pumpfix 146→84 / 1.62→87)
+   is a FALSE LEAD — not NeoX non-orthogonality.
+   - pos0 NeoX is identity; PRE≠POST there cannot be rotation.
+   - Independent RE_MINIMAX_QPRE_IS_PRENORM_001: RMSNorm(PRE,q_norm)≈POST @1e-6.
+   - In-function B03_ROPE_L2_OK (this EXE): pos0/pos1 q/k L2 rat≈1.0.
+
+3) LinearW(wo): rows=3072 cols=6144; headScratch=6144; no OT clamp. MATCH.
+4) Q6_K: QuantKernelRegistry RegisterGEMV → gemv_q6_k_scalar (not masm). MATCH path.
+5) llama-cli: killed stuck 44GB process; prior DLL/TIMEOUT REFERENCE_BLOCKED.
+
+================================================================================
+PATCHED
+================================================================================
+- rawrxd/src/deep2/Deep2Engine.cpp
+  * NeoX applyRoPE: B03_ROPE_L2_OK/FAIL gate (must preserve L2)
+  * QK-norm: ensureNormHost(MaterializeOne) before RMSNormW; log qnorm_data
+  * B03_QKV_MAXABS prints qL2/kL2 + qnorm_data
+  * AttnCert QProj n = numHeads*headDim (was hiddenDim)
+- rawrxd/src/cli/rawr_cmd_run.cpp
+  * RAWR_SKIP_AUTO_BACKEND=1 + RAWRXD_REAP_RETAINED → CPU residency override
+    (full weightsBytes~47GB falsely Rejects host; product uses retain-N)
+
+================================================================================
+SMOKE
+================================================================================
+CMD: rawr run MiniMax-M2.7-Q4_K_M -p Hello --max-tokens 8
+ENV: RAWRXD_REAP_RETAINED=256 RAWR_SKIP_AUTO_BACKEND=1 RAWRXD_HOST_DECODE=1
+     WEIGHT_BUDGET_INPUT=E8B0M RAWRXD_GREEDY=1
+MEASURED:
+  B03_ROPE_L2_OK pos=0 qL2≈95.54 rat=1
+  B03_ROPE_L2_OK pos=1 qL2≈87.77 rat≈1
+  qnorm_data != null
+  GENERATED_TOKENS=8 CLEAN_EXIT=1 PRODUCT_PASS=1 (plumbing ≠ semantic)
+  FIRST_TOKENS: backtick/newline/@ garbage (hex 60*) — SEMANTIC NOT_PASS
+Witness: minimax_neox_l2gate.{out,err,pid,exit}.txt
+
+================================================================================
+DISPOSITION / NEXT_OWNER
+================================================================================
+NEOX_PAIR / ROPE_L2 / WO_COLS / Q6K_SCALAR_PATH = CLOSED (not semantic root).
+NEXT_OWNER: ATTN softmax-scale / MoE expert SwiGLU apply / lm_head Q6_K logits
+  vs llama-direct first-token FNV (when host memory allows).
+PROMOTE=0 TIP_CLIMB=HOLD

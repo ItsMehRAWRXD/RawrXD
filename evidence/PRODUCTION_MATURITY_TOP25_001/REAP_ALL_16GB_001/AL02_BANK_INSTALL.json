@@ -1,0 +1,9 @@
+{
+  "gate": "AL02",
+  "status": "PASS",
+  "expected_tagged": 1674,
+  "tagged": 1674,
+  "layers": 62,
+  "note": "Runtime log REAP_ALLOWLIST layers=62 tagged=1674 matches 62*27",
+  "PROMOTE": 0
+}

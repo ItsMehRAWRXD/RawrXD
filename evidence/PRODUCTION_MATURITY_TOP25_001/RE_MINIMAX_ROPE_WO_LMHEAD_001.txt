@@ -1,0 +1,104 @@
+RE_MINIMAX_ROPE_WO_LMHEAD_001
+ASOF=2026-11-13
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD
+PRIOR_SMOKE=minimax_r256_theta_moe.* EXE_SHA256=EA4E20229633F9671F1B43620A3B6F27D21667F57A784B06830986E3E2B94113
+PATCH=NONE (no mismatch → no rebuild / no sole smoke this turn)
+NOT_RUN!=PASS
+
+================================================================================
+1) ggml NEOX rotate_pairs vs Deep2 applyRoPE neoHead
+================================================================================
+REF: g:\~dev\llama-vulkan\ggml\src\ggml-cpu\ops.cpp
+  rotate_pairs @5710-5723:
+    for i0=0..n-1 step 2:
+      ic = i0/scale   (scale default 2 → ic=i0/2)
+      cos=cache[i0], sin=cache[i0+1]
+      rotate (src[ic], src[ic+n_offset])
+  GGML_ROPE_TYPE_NEOX @5847-5850:
+    rotate_pairs(n_dims, n_dims/2, cache, src, dst)  // n_offset=half
+  cache init @5620-5633 + theta_scale=powf(freq_base,-2/n_dims) @5782:
+    angle_i = pos * freq_base^(-2*i/n_dims)  (ext_factor=0, freq_scale=1)
+
+DEEP2: src/deep2/Deep2Engine.cpp:5047-5060 neoHead
+  half=ropeDim/2
+  for i=0..half-1:
+    freq = 1/powf(theta, 2*i/ropeDim)
+    rotate (h[i], h[i+half]) with cos/sin(pos*freq)
+  Tail headDim-ropeDim untouched (early return after NeoX path).
+
+PAIR_STRIDE: MATCH (i, i+ropeDim/2) == (ic, ic+n_dims/2)
+SIN/COS INDEX: MATCH (pair i uses frequency i; ggml cache[2i]/[2i+1])
+THETA: already MEASURED MATCH 5e6 (RE_MINIMAX_MOE_ROPE_Q4K_001)
+ROPE_NEOX_BUG=0
+PATCH=NONE
+
+================================================================================
+2) LinearW(wo) / headScratch — not truncated to hiddenDim
+================================================================================
+BIND (minimax_r256_theta_moe.err.txt:65):
+  B03_L0_BIND slot=wo name=blk.0.attn_output.weight
+    rows=3072 cols=6144 type=12 bytes=10616832
+BUF (same err:98):
+  hidden=3072 heads=48 headDim=128 qOut=6144 headScratch=6144
+CODE:
+  Deep2Engine.cpp:8904  headConcat = numHeads * headDim  // 48*128=6144
+  Deep2Engine.cpp:9596-9598
+    // O-proj: headScratch[wo.cols] → output[hiddenDim]
+    LinearW(*attnOutWeight, headScratch, nullptr, output, hiddenDim)
+  Deep2Engine.cpp:5475-5476  cols=wt.cols  rows=wt.rows  (no cols clamp to hidden)
+  Deep2Engine.cpp:5497-5502  only clamps rows→outDim when rows>outDim
+    wo rows=3072 == outDim → no clamp; cols stays 6144
+
+WO_COLS_BUG=0  (cols==headConcat==6144; input is full headScratch)
+PATCH=NONE
+
+================================================================================
+3) lm_head Q6_K computeLogits geometry + dequant scales
+================================================================================
+BIND / RUNTIME:
+  B02_ROOT_MATERIALIZE output.weight off=8255296 bytes=504161280
+    rows=200064 cols=3072 type=14 head4=5d70d4bb
+  B03_LOGITS_TOPK lm_type=14 rows=200064 cols=3072
+    (vocab × hidden) MATCH
+CODE:
+  Deep2Engine.cpp:3028-3029  output.weight → modelWeights.lmHead
+  Deep2Engine.cpp:10753-10755  LinearW(lmHead, hidden, …, vocabSize)
+
+PYTHON/GGML scale dump (file abs off=8255296, head4=5d70d4bb MATCH B02):
+  block_q6_K: ql[128]|qh[64]|scales[16] i8|d fp16 @208
+  row0_b0 d_raw=0x00B7 d=1.090765e-05
+    sc=[-95,103,-128,79,-76,-116,-77,77,…]
+    eff0..3 = d*sc = [-0.00103623, 0.00112349, -0.00139618, 0.00086170]
+  row0_b1 d_raw=0x80DA d=-1.299381e-05 sc0..3=[-72,64,113,68]
+  row0_b2 d_raw=0x80CC d=-1.215935e-05 sc0..3=[-73,85,99,63]
+  row1_b0 (after 12 blocks = cols/256) d_raw=0x8114
+
+DEEP2 dequant authority:
+  QuantKernelRegistry.cpp:717-741 rxd_q6k_dequant_block
+  == llama-vulkan/ggml/src/ggml-quants.c:1822-1849 dequantize_row_q6_K
+  (same l=0..31 / sc[is+0,2,4,6] / two-half layout)
+
+LMHEAD_GEOM_BUG=0  LMHEAD_Q6K_LAYOUT_BUG=0
+NOTE: runtime block0 dump from mapped lmHead not printed this turn
+      (file-level ggml/python dump is the independent check).
+PATCH=NONE
+
+================================================================================
+4) llama-cli DLL path (optional)
+================================================================================
+llama-vulkan/build/bin/llama-cli.exe alone → 0xC0000135 (no ggml/llama DLLs).
+WORKAROUND: use g:\~dev\llama-direct\vulkan\llama-cli.exe (DLLs colocated)
+  OR copy llama-direct\vulkan\*.dll beside llama-vulkan/build/bin.
+8-token Hello CPU (-ngl 0) this turn: TIMEOUT @180s while loading
+  (backends OK; stdout empty) — minimax_llama_hello8.{err,out,exit}.txt
+Prior B04 Vulkan path REFERENCE_BLOCKED (device OOM).
+REFERENCE_STATUS=STILL_BLOCKED (deps fixed via llama-direct; walltime/size).
+
+================================================================================
+5) Disposition
+================================================================================
+HIGH-VALUE suspects (1)(2)(3) CLOSED as MATCH / NOT root.
+Semantic retain-256 still backticks (2765:11.62) — root elsewhere.
+NEXT_OWNER: expert SwiGLU numeric / attn softmax-scale / residual add /
+  or llama CPU tensor FNV if Hello ref completes.
+PROMOTE=0 TIP_CLIMB=HOLD

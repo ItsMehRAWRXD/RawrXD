@@ -1,45 +1,48 @@
-AL10–AL14 — MiniMax FULL+allowlist vs PHYS CALIB
+AL10–AL14 — MiniMax FULL vs PHYS / semantic RE follow-up
 DATE=2026-11-13
 PROMOTE=0
 CERTIFIED=0
 CROSS_SHA_CREDIT=0
-PARENT_MODE=PASSIVE_COORDINATOR
-BACKGROUND_WORKERS=4
 
-## AL09 seed (same EXE 0C531CA2…)
+## Follow-up from completed RE agents
 
-Source: evidence/REAP16_BATCH_001/CALIBRATED_001/AL09/AL09_COMPARE.txt
+| Check | Result | Agent/evidence |
+|-------|--------|----------------|
+| Forced Hello specials (39 IDs) | PASS vs llama-tokenize | RE_MINIMAX_PROMPT_TOKENS_001 |
+| Residual order | MATCH llama minimax-m2 | same |
+| NeoX RoPE / wo / Q6_K | MATCH | RE_MINIMAX_ROPE_WO_LMHEAD_001 / NEOX_WO_Q6K |
+| Q_PRE/POST L2 drop | FALSE_LEAD (pre-QK-norm dumps) | RE_MINIMAX_QPRE_IS_PRENORM_001 |
+| STREAM_SEMANTIC retain-256 | NOT_PASS (backticks) | SCOREBOARD |
+| Allowlist bank wire | SOURCE_WIRED | [Allowlist bank wiring](1d685d31-6bdf-4a72-bdb8-6cb5c552b49e) |
 
-| Token | L17_INPUT_FNV | ORDERED_ID_MATCH |
-|-------|---------------|------------------|
-| 1–3   | MATCH         | True             |
-| 4     | MISMATCH      | False            |
+## AL09 seed
 
-L17 router flip at tok4 is a **downstream symptom**. First divergence is in the tok3→tok4 interval (L18–61 / FINAL_NORM / LOGITS / ARGMAX / KV) or tok4 L0–16 before L17.
+tok1–3: L17_INPUT_FNV MATCH + ORDERED_ID_MATCH  
+tok4: L17_INPUT_FNV MISMATCH → L17 router is symptom
 
-## This-turn dispatch
+## AL11 first divergent (stage walk — BOUNDED_OPEN)
 
-| Worker | Track |
-|--------|-------|
-| AL10–14 MiniMax divergence | Numerics / mapping / crashes |
-| Production inference certify | Dense+MoE / GPU / REAP load |
-| IDE daily-use completion | Debugger/terminal/editor/agent/Sunshine |
-| Bench + Top25 | Competitive suites + maturity ops |
+Reported earliest key mismatch among *paired* digests:
 
-## Host (exclusive)
+```
+FFN_DOWN_1 @ pos=3
+  FULL fnv=0a38208b6642f3d6
+  PHYS fnv=020e34f17b2bbf8a
+```
 
-See AL11_HOST_SNAPSHOT.json when present. At dispatch: FreePhys≈42GB, Commit≈38/176GB, rawr*=0.
+**INCOMPLETE:** AL11_LAYER_OUT_WALK shows FULL `LAYER18_OUT|T3`…`ABSENT` while PHYS present → full arm did not finish tok3 upper layers. Do **not** treat FFN_DOWN_1@3 as sealed FIRST_DIVERGENT_OP until dual CLEAN_EXIT same-SHA allowlist-active reseal.
 
-## Gates
+AL10 TOK3_SELECTED_ID still OPEN (need ARGMAX on complete paired runs).
 
-AL10 TOKEN_BOUNDARY = OPEN (worker)
-AL11 FIRST_DIVERGENT_OP = OPEN (worker)
-AL12 CRASH_CLASS = OPEN (worker)
-AL13 EXPERT_MAP = OPEN (worker)
-AL14 SEMANTIC = OPEN
+## Chained next
+
+[MiniMax softmax SwiGLU FNV](af48142c-7c25-4489-9f51-df59ab917a7a) — attn softmax scale / MoE SwiGLU / lm_head vs llama.
+
+SCOREBOARD next for Deep2↔ggml: seal Q_LINEAR_0 (Batch01).
 
 ```
 PROMOTE=0
 CERTIFIED=0
+TIP_CLIMB=HOLD
 NOT_RUN!=PASS
 ```

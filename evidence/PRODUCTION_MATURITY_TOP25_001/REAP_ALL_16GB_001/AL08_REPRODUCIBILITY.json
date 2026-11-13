@@ -1,0 +1,34 @@
+{
+    "gate":  "AL08",
+    "status":  "PASS",
+    "exe_sha256":  "1380140F964BE8ED1CA30A38F4E132BC278D8A9A834FA8EB8489DEE9D847CE52",
+    "exe_path":  "G:\\~dev\\rawrxd\\build_ninja\\bin\\rawr.exe",
+    "manifest_sha256":  "62971142992D29851847CBC1BD9372CC2023978E9E3F40C6AAE9F5DB82E59811",
+    "manifest":  "g:\\~dev\\rawrxd\\evidence\\PRODUCTION_MATURITY_TOP25_001\\REAP_ALL_16GB_001\\minimax_reap16_calib_selection.json",
+    "calib_shards":  [
+                         {
+                             "name":  "MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf",
+                             "sha256":  "2FB4DC182AFDDBA092C0EE6C32972C1F4C7C981670F05B61819E1FE48291C64F"
+                         },
+                         {
+                             "name":  "MiniMax-M2.7-Q4_K_M-00002-of-00003.gguf",
+                             "sha256":  "CC5779FFDFE6FF413B15312834BB0452E1309A6451738041C250844A3C4ECA2C"
+                         },
+                         {
+                             "name":  "MiniMax-M2.7-Q4_K_M-00003-of-00003.gguf",
+                             "sha256":  "6B602418DCDC51B04D68A2952217BF815321CEE003732FB17D93F033C0E9BDF0"
+                         }
+                     ],
+    "evidence_bindings":  [
+                              "AL01_MANIFEST.json",
+                              "AL02_BANK_INSTALL.json",
+                              "AL03_ROUTE_IDENTITY.json",
+                              "AL04_PHYSICAL_MAPPING.json",
+                              "AL05_NUMERICAL_PARITY.json",
+                              "CALIB_NUMERIC_PARITY_T1.md",
+                              "AL_FULL_CALIB_ROUTES_t1.combined.txt",
+                              "AL_PHYS_CALIB_ROUTES_t1.combined.txt"
+                          ],
+    "PROMOTE":  0,
+    "CERTIFIED":  0
+}

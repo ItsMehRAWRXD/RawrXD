@@ -1,0 +1,9 @@
+{
+  "gate": "AL03",
+  "status": "PASS",
+  "layers_compared": 62,
+  "mismatch_count": 0,
+  "excluded_full_hits": 0,
+  "mismatches_head": [],
+  "PROMOTE": 0
+}

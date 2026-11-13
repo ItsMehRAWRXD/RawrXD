@@ -1,0 +1,50 @@
+RE_MINIMAX_BATCH01_PRENORM_QLINEAR_001
+ASOF=2026-11-13
+GATE=MINIMAX_KV_AND_FIRST_DIVERGENT_OP
+PROMOTE=0 CERTIFIED=0 CROSS_SHA_CREDIT=0
+
+EXE_SHA256=4B19643C1DA9B61288DC804A3928C9FCAA70A128454A509ED7C8134B1DF8ECF7
+SMOKE=B04_NUMERICAL/MINIMAX_KV_AND_FIRST_DIVERGENT_OP/batch01_raw_hello2.*
+DUMP=B04_NUMERICAL/deep2_dump_batch01_raw/
+FIXTURE=RAW Hello (RAWRXD_RAW_PROMPT=1) prompt_tokens=1 id=19739 retain=256 max_tokens=4
+
+## Source fix (this EXE)
+B03_PRENORM_MATERIALIZE gate was `globalIndex_ && !k2ShardIndexOpen_`.
+MiniMax opens shard index without MLA, so prenorm materialize was skipped and
+RMSNormW saw fileBack+data=null → silent identity (or fail-closed throw).
+FIX: materialize when `globalIndex_ && !(k2ShardIndexOpen_ && config.useMLA)`.
+Witness: B03_PRENORM_MATERIALIZE layer=0 slots=10 attnNorm≠null.
+
+RMSNormW already fail-closes fileBack+data=null (B03_RMSNORM_FAIL).
+
+## Tensor chain (pos0, same fixture)
+
+| Boundary     | maxdiff      | corr      | Disposition                          |
+|--------------|--------------|-----------|--------------------------------------|
+| PROMPT_EMBED | 0            | 1         | MATCH vs GGUF tok19739               |
+| ATTN_NORM_0  | 2.98e-08     | 1         | NEAR_MATCH (fp32) — PRENORM SEALED   |
+| Q_LINEAR_0   | 1.25e-03     | 0.999933  | DIFF — FIRST_DIVERGENT_OP candidate  |
+| K_LINEAR_0   | 1.04e-03     | 0.999964  | DIFF (same class as Q GEMV)          |
+| V_LINEAR_0   | 1.13e-03     | 0.999921  | DIFF (Q6_K V; same class)            |
+| Q_NORM_0     | 1.91e-06     | 1         | NEAR vs oracle(deep Q_LINEAR)        |
+| K_NORM_0     | 9.54e-07     | 1         | NEAR vs oracle(deep K_LINEAR)        |
+
+ATTN_NORM pre-fix (prior dump): l2=55.37 (unweighted x/rms).
+ATTN_NORM post-fix: l2=0.737778 matches ggml w*(x/rms).
+
+Q_NORM/K_NORM match when fed Deep2's Q/K_LINEAR → QK-norm axis/weights/eps OK.
+Do NOT patch RoPE/attn/MoE until Q_LINEAR GEMV sealed.
+
+## Semantic (not acceptance)
+output=".\n\nThe first" (was olisian¶¶¶). Progress ≠ PASS.
+
+## FIRST_DIVERGENT_OP
+FIRST_DIVERGENT_OP=Q_LINEAR_0
+CLASS=Q4_K_GEMV (attn_q) vs gguf.quants.dequantize + fp64 matvec
+NOTE=Python dequant≠linked ggml row kernel; next seal = block-exact GEMV vs ggml
+      or same-fixture llama STAGE_DIGEST Q projection.
+
+## Explicit non-credits
+llama.cpp full tensor FNV still REFERENCE_BLOCKED separately.
+CHAT Hello (39 toks) must not be merged with RAW fixture PASS.
+PROMOTE=0 TIP_CLIMB=HOLD

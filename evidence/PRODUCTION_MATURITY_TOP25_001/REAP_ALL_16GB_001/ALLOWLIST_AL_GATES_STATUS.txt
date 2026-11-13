@@ -1,0 +1,48 @@
+REAP16 — Calibrated allowlist AL01–AL08 disposition
+DATE=2026-11-13
+PAIR=FULL+--reap+RAWR_REAP_SELECTION_MANIFEST vs PHYS MiniMax-M2.7-REAP16-CALIB-epoch1
+PROMPT=raw Hello max-tokens=1 (AL03/AL05) / 48 (AL06)
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+
+## Gate board
+
+| Gate | Result | Evidence |
+|------|--------|----------|
+| AL01 Manifest validation | PASS | AL01_MANIFEST.json schema=RAWRXD_REAP_EXPERT_SELECTION_001 layers=62×27 sha256=62971142992D2985… |
+| AL02 Bank installation | PASS | AL02_BANK_INSTALL.json tagged=1674=62×27; runtime REAP_ALLOWLIST layers=62 tagged=1674 |
+| AL03 Routing identity | PASS | AL03_ROUTE_IDENTITY.json layers_compared=62 mismatch=0 excluded_hits=0 (phys slots→orig IDs) |
+| AL04 Physical mapping | PASS | AL04_PHYSICAL_MAPPING.json + prior expert-slice byte identity |
+| AL05 Numerical parity | PASS | AL05_NUMERICAL_PARITY.json COMPARED=941 MATCH=941 FIRST_DIVERGENT_OP=NONE ARGMAX id=44 |
+| AL06 Generation | EXEC_PASS · SEMANTIC_FAIL | AL06_GENERATION.json CLEAN_EXIT=1 TOKENS=48 first_token=, (id=44) comma collapse |
+| AL07 Artifact size | PASS | AL07_ARTIFACT_SIZE.json 3 shards 16757091008 B = 15.606257 GiB |
+| AL08 Reproducibility | PASS | AL08_REPRODUCIBILITY.json exe+manifest+shard SHAs bound |
+
+## Critical claim (sealed)
+
+Full-model active allowlist and physical CALIB export execute the **same expert IDs** at every layer on t1 Hello, with **bit-identical stage digests** (941/941) and matching ARGMAX.
+
+Therefore expert-ID remapping / allowlist wiring is **not** the incoherence root.
+Remaining quality failure is **BANK_REMAP / calibration ranking / R=27 capacity**, not topology mismatch.
+
+## Supersedes
+
+ISOLATION_PREFIX_VS_RETAIN27.txt (false-control RETAINED-without--reap and OPEN first-divergent claims) — see ISOLATION_PREFIX_VS_RETAIN27_SUPERSEDED.txt
+
+## Disposition
+
+```
+BUILD=PASS
+ALLOWLIST_SOURCE_WIRED=1
+ALLOWLIST_RUNTIME_VERIFIED=1
+EXPERT_ID_PARITY=PASS
+NUMERICAL_PARITY_T1=PASS
+BANK_REMAP=PENDING
+SEMANTIC_QUALITY=OPEN
+PROMOTE=0
+CERTIFIED=0
+```
+
+NEXT: richer calib / higher R within 16GiB, or accept R=27 quality cliff as measured.
+Route-layer lifecycle: 62 distinct B03_MOE_ROUTE_IDS layer=0..61 first-sightings; no cross-layer ID bleed observed on single-session t1.

@@ -1,0 +1,38 @@
+RE_MINIMAX_QPRE_IS_PRENORM_001
+ASOF=2026-11-13
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD
+EXE_CROSS_CHECK=EA4E2022… (B04 pumpfix dumps) — CROSS_SHA_CREDIT=0 for semantic
+
+================================================================================
+FINDING
+================================================================================
+B04 Q_PRE_ROPE_0 vs Q_POST_ROPE_0 at pos=0 is NOT a NeoX RoPE bug.
+
+At pos=0 NeoX is identity (cos=1,sin=0). Measured PRE≠POST with:
+  pre_l2=145.95  post_l2=83.58  n_diff=6144/6144 (including rope tail)
+
+PYTHON (gguf blk.0.attn_q_norm.weight F32[6144]):
+  y = PRE / sqrt(mean(PRE^2)+1e-6) * w
+  max|y - POST| ≈ 1.26e-6
+  corr ≈ 1.0
+
+Therefore the labeled "Q_PRE_ROPE" dump in that run is actually pre-QK-norm,
+and "Q_POST_ROPE" at pos=0 is post-QK-norm (RoPE identity). Same class of
+L2 drop on K_PRE→K_POST (72.75→39.22).
+
+================================================================================
+IMPLICATION
+================================================================================
+ROPE_L2_ANOMALY = FALSE_LEAD (dump label / ordering vs QK-norm).
+NeoX pairing already MATCH vs ggml rotate_pairs (RE_MINIMAX_ROPE_WO_LMHEAD_001).
+Do not spend more turns on RoPE L2 from these B04 bins.
+
+Current source (Deep2Engine.cpp ~9125-9160) dumps Q_PRE after RMSNormW;
+if rebuilt, pos0 PRE should ≈ POST. B04 bins predate or disagree with that order.
+
+================================================================================
+NEXT_OWNER (fail-closed)
+================================================================================
+ATTN_OUT / softmax / MoE expert apply / SwiGLU numeric /
+llama-direct first-token logits for tensor FNV.
+PROMOTE=0 TIP_CLIMB=HOLD NOT_RUN!=PASS

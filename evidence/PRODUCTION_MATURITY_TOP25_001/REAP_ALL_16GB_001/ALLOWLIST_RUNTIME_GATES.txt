@@ -1,0 +1,72 @@
+REAP16 MiniMax — Calibrated allowlist runtime gates
+DATE=2026-11-13
+EXE_SHA256=1380140F964BE8ED1CA30A38F4E132BC278D8A9A834FA8EB8489DEE9D847CE52
+MANIFEST=minimax_reap16_calib_selection.json
+PHYS=exports/MiniMax-M2.7-REAP16-CALIB-epoch1 (15.606 GiB prior measure)
+PROMOTE=0
+CERTIFIED=0
+BANK_REMAP=PENDING (ranks file unused; selection JSON is authority)
+
+## Gate results
+
+| Gate | Result | Evidence |
+|------|--------|----------|
+| AL01 Manifest validation | PASS | schema OK; 62 layers; 27 experts/layer; layer index contiguous |
+| AL02 Bank installation | PASS | REAP_ALLOWLIST layers=62 tagged=1674; receipt allowlist_status=CALIBRATED_ALLOWLIST_ACTIVE |
+| AL03 Routing admission | PASS | 22816 route IDs; VIOLATIONS=0; ACQUIRE_DENIED=0 |
+| AL04 Physical mapping | PASS (L0 sampled) | gate_exps/gate_inp/bias/embd byte-identical to selected originals |
+| AL05 Numerical / route parity | FAIL | see below |
+| AL06 Generation semantic | FAIL | full allowlist=`let()()()()\nlet`; phys=`letl…params` |
+| AL07 Artifact size | PASS (prior) | 16757091008 B = 15.606 GiB ≤16 |
+| AL08 Reproducibility bind | PARTIAL | EXE+manifest+paths recorded; source shard SHA NOT re-hashed this turn |
+
+## AL05 detail (same EXE, chat Hello, max=8, prompt_tokens=39)
+
+Route events aligned: 2852 == 2852
+ORDER_MATCH_RATE=0.2156 (615/2852)
+SET_MATCH_RATE=0.3752 (1070/2852)
+
+EVENT0 exact match:
+  full/phys layer0 ids = (12,20,19,16,25,0,5,17)
+
+FIRST_ORDER_DIVERGENCE event=197 layer=11 (~token 3):
+  full (23,16,12,8,11,27,14,20)
+  phys (16,23,12,8,11,27,14,20)
+  → same expert SET; top-2 order swap only
+
+FIRST_SET_DIVERGENCE event=203 layer=17:
+  full (9,22,21,0,18,17,24,2)
+  phys (9,22,21,0,17,18,24,11)
+  → experts {2} vs {11} differ after prior order drift
+
+Topology: full E=256 + allowlist mask; phys E=27 compact.
+First divergent routing decision is score-ordering under compact vs masked domains,
+not a gross wrong-expert remap at token0/layer0.
+
+## Disposition
+
+BUILD=PASS
+ALLOWLIST_SOURCE_WIRED=1
+ALLOWLIST_RUNTIME_VERIFIED=1
+AL01=PASS AL02=PASS AL03=PASS AL04=PASS_L0
+AL05=FAIL_ROUTE_ORDER_THEN_SET
+AL06=FAIL_SEMANTIC
+EXPERT_ID_PARITY=PARTIAL_EVENT0_PASS_THEN_DIVERGE
+BANK_REMAP=PENDING
+FIRST_DIVERGENT_OP=POST_ATTN_OR_BEFORE layer=7 tok=3; then ROUTE_ORDER L11; then ROUTE_SET L17
+SEMANTIC_QUALITY=FAIL
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+
+## FIRST_DIVERGENT_OP (sealed)
+
+Offline router identical-hidden: DIFF=0.0 L0/L11; top8 ORDER_EQ.
+Attn L7 weights byte-identical. L6 selected expert slices MATCH. shexp ABSENT.
+Live: tok0-2 no FINAL mad>1e-3; tok3 FIRST mad>1e-3 at layer=7 POST_ATTN and FINAL.
+Export remap is NOT the token-0 root cause; numeric forward drift is.
+See FIRST_DIVERGENT_OP_ALLOWLIST_VS_PHYS.json
+
+RETAINED=256 same-SHA: EXIT=-1 mid-forward (coherent floor NOT_SEALED on this EXE)
+
+NEXT: L7 attn numeric isolation; restore RETAINED=256 coherent baseline; quality floor.

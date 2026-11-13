@@ -1,0 +1,106 @@
+RE_MINIMAX_PROMPT_TOKENS_001
+ASOF=2026-11-13
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD
+EXE_SHA256=2239254F64C8305DA9808A90C337B7826F5402AAB533BCA801E933C6168ACF6E
+EXE_MEASURED=G:\~dev\rawrxd\build_ninja\bin\rawr_149_digest.exe
+NOTE=minimax_r256_quality.* ran under this SHA; live bin\rawr.exe may churn
+  (observed later 4413D36A… under other MiniMax smoke — do not conflate).
+
+JOB
+  Dump Forced MiniMax Hello prompt token IDs; verify ]~b] / [e~[ / <think>
+  encode as GGUF specials (not ASCII pieces). Audit forwardLayer residual
+  vs llama-vulkan minimax-m2.cpp. Optional RAW after fix only.
+
+-------------------------------------------------------------------------------
+1) PROMPT TOKEN DUMP (Forced minimax template)
+-------------------------------------------------------------------------------
+RENDER (ChatTemplate::formatMiniMax / MiniMax-M2.jinja, no tools):
+  ]~!b[]~b]system\n
+  You are a helpful assistant. Your name is MiniMax-M2.7 and is built by MiniMax.
+  [e~[\n]~b]user\nHello[e~[\n]~b]ai\n<think>\n
+  prompt_bytes=134
+
+MEASURED_IDS (39) — Deep2 BPE_ENCODE + llama-tokenize --ids IDENTICAL:
+  [200034, 200019, 28463, 10, 2985, 457, 258, 12473, 23413, 46, 5324, 1925,
+   355, 35353, 12973, 5145, 50, 46, 55, 306, 355, 6904, 531, 35353, 12973,
+   46, 200020, 10, 200019, 3995, 10, 19739, 200020, 10, 200019, 1361, 10,
+   200050, 10]
+
+PIECE MAP (specials atomic):
+  200034  type=3 CONTROL       piece=]~!b[     (bos / begin)
+  200019  type=3 CONTROL       piece=]~b]      (role open)
+  28463                        piece=system   (ordinary BPE)
+  10                           piece=\n
+  … system text …
+  200020  type=3 CONTROL       piece=[e~[      (role close)  NOTE: NOT e~/]
+  200019  type=3 CONTROL       piece=]~b]
+  3995                         piece=user
+  19739                        piece=Hello
+  200020  type=3 CONTROL       piece=[e~[
+  200019  type=3 CONTROL       piece=]~b]
+  1361                         piece=ai
+  200050  type=4 USER_DEFINED  piece=<think>
+  10                           piece=\n
+
+GGUF VOCAB SCAN (shard0 tokenizer.ggml.tokens / token_type):
+  MARKER ']~!b['  count=1 id=200034 type=3
+  MARKER ']~b]'   count=1 id=200019 type=3
+  MARKER '[e~['   count=1 id=200020 type=3
+  MARKER '<think>' count=1 id=200050 type=4
+  MARKER '</think>' count=1 id=200051 type=4
+  MARKER 'e~/]'   count=0  (DOES NOT EXIST — typo/misremember vs [e~[)
+
+CHAT_ID_MATCH vs llama-tokenize = Y
+ASCII_PIECE_FRAGMENTATION = 0
+PATCH_CHATTEMPLATE = NONE (emit strings already match jinja + vocab specials;
+  Tokenizer.hpp token_type CONTROL/USER_DEFINED longest-match keeps them atomic)
+
+Witnesses:
+  B04_NUMERICAL/deep2_chat.err.txt [BPE_ENCODE] + DEEP2_CHAT_TRACE
+  B04_NUMERICAL/deep2_prompt_ids_chat.txt
+  B04_NUMERICAL/ref_prompt_ids_chat.txt
+  B04_NUMERICAL/chat_id_compare.txt
+  live llama-tokenize --ids on RE_MINIMAX_prompt_hello.txt (this turn)
+
+minimax_r256_quality.json prompt_tokens=39 (same Forced path)
+
+-------------------------------------------------------------------------------
+2) FORWARD LAYER RESIDUAL AUDIT
+-------------------------------------------------------------------------------
+REF llama-vulkan/src/models/minimax-m2.cpp (per layer):
+  inpSA = inpL
+  cur = attn(RMSNorm(inpL))          # wo proj
+  ffn_inp = cur + inpSA              # attn residual
+  cur = RMSNorm(ffn_inp, ffn_norm)
+  cur = moe_ffn(cur)                 # silu + gating
+  cur = cur + ffn_inp                # ffn residual
+  inpL = cur
+
+DEEP2 Deep2Engine::forwardLayer (host decode used by MiniMax sole smoke):
+  RMSNormW(attnNorm, input → layerTemp)
+  computeAttention(… → output)       # attn out
+  output += input                    # == ffn_inp
+  RMSNormW(ffnNorm, output → layerTemp)
+  computeMoEFFN(layerTemp → ffnOutput)  # zeros then shared+routed; no inner residual
+  output += ffnOutput                # == ffn_inp + moe
+RESIDUAL_ORDER = MATCH
+PATCH_RESIDUAL = NONE
+
+-------------------------------------------------------------------------------
+3) OPTIONAL RAW_PROMPT SMOKE
+-------------------------------------------------------------------------------
+RAW_PROMPT_SMOKE = SKIPPED
+  Reason: no ChatTemplate/residual patch this turn; "after any fix" gate N/A.
+  Prior RAW retain-256 still garbage (RE_MINIMAX_LAYOUT_CHAT_001) — not sole cause.
+  Do not concurrent with other MiniMax rawr (none running at write).
+
+-------------------------------------------------------------------------------
+DISPOSITION
+-------------------------------------------------------------------------------
+PROMPT_SPECIALS = PASS (atomic; match llama + GGUF)
+RESIDUAL_VS_LLAMA = MATCH
+STREAM_SEMANTIC = NOT_PASS (unchanged; retain-256 quality backtick runs)
+  B03_LOGITS_TOPK top=2765:11.62 piece=```  EXE=2239254F…
+NEXT_OWNER = first-step logits / expert SwiGLU / Q6_K lm_head vs llama ref
+  (still REFERENCE_BLOCKED for tensor FNV)
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD NOT_RUN!=PASS

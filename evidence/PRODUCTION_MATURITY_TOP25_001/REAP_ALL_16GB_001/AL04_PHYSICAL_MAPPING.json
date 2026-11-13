@@ -1,0 +1,9 @@
+{
+    "gate":  "AL04",
+    "status":  "PASS",
+    "basis":  [
+                  "AL03: 62/62 layers phys dense slots remap via sorted calib selection to identical original expert IDs as FULL+allowlist",
+                  "Prior compare_expert_slices: byte-identical expert tensors for mapped original IDs"
+              ],
+    "PROMOTE":  0
+}

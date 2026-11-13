@@ -1,0 +1,13 @@
+{
+  "gate": "AL01",
+  "status": "PASS",
+  "schema": "RAWRXD_REAP_EXPERT_SELECTION_001",
+  "active_experts": 27,
+  "layers": 62,
+  "experts_per_layer": 27,
+  "layers_with_ge8_positive_scores": 62,
+  "model": "MiniMax-M2.7-Q4_K_M",
+  "method": "hello_route_freq_top27",
+  "sha256": "62971142992d29851847cbc1bd9372cc2023978e9e3f40c6aae9f5db82e59811",
+  "PROMOTE": 0
+}

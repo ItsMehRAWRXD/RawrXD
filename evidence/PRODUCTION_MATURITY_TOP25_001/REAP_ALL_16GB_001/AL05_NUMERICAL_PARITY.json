@@ -1,0 +1,16 @@
+{
+    "gate":  "AL05",
+    "status":  "PASS",
+    "COMPARED":  941,
+    "MATCH":  941,
+    "FIRST_DIVERGENT_OP":  "NONE",
+    "ARGMAX_MATCH":  true,
+    "ARGMAX_ID":  44,
+    "pair":  "FULL+--reap+allowlist vs PHYS CALIB epoch1",
+    "evidence":  [
+                     "parity_calib_t1.combined.txt",
+                     "AL_FULL_CALIB_ROUTES_t1.combined.txt",
+                     "AL_PHYS_CALIB_ROUTES_t1.combined.txt"
+                 ],
+    "PROMOTE":  0
+}
