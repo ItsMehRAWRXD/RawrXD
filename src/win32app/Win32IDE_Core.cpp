@@ -1107,10 +1107,11 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             // for this id still reaches __report_gsfailure. Menu posts use
             // lParam==0; fail-closed early return BEFORE CmdDiag/sehCallOnCommand.
             // No invent Watch panel PASS. PROMOTE=0 tip748B HOLD.
-            if (lParam == 0 &&
+            // IDE_DAILY_USE_001: only bypass during startup pumps. After pumps,
+            // fall through to handleDebugWatchCommand → ensureDebuggerUI.
+            if (lParam == 0 && !m_startupPumpsComplete &&
                 cmdId >= static_cast<WORD>(IDM_DBGWATCH_SHOW) &&
                 cmdId <= static_cast<WORD>(IDM_DBGWATCH_CLEAR)) {
-                // Stack-only breadcrumb (no CRT heap / std::string) — prove path.
                 char mod[MAX_PATH] = {};
                 if (GetModuleFileNameA(nullptr, mod, MAX_PATH) > 0) {
                     char* slash = strrchr(mod, '\\');
@@ -1128,16 +1129,16 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                         HANDLE h = CreateFileA(bcPath, GENERIC_WRITE, FILE_SHARE_READ, nullptr,
                                               CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
                         if (h != INVALID_HANDLE_VALUE) {
-                            const char msg[] = "BC=WM_COMMAND_EARLY_BYPASS FAIL_CLOSED\r\n";
+                            const char msg[] = "BC=WM_COMMAND_EARLY_BYPASS_STARTUP FAIL_CLOSED\r\n";
                             DWORD w = 0;
                             WriteFile(h, msg, sizeof(msg) - 1, &w, nullptr);
                             CloseHandle(h);
                         }
                     }
                 }
+                deferStartupMenuCommand(static_cast<int>(cmdId));
                 OutputDebugStringA(
-                    "[DebugWatch] WM_COMMAND_EARLY_BYPASS FAIL_CLOSED "
-                    "IDM_DBGWATCH_* — no invent Watch panel ready PASS\n");
+                    "[DebugWatch] WM_COMMAND_DEFER_STARTUP IDM_DBGWATCH_*\n");
                 return 0;
             }
             const bool subAgentBand =

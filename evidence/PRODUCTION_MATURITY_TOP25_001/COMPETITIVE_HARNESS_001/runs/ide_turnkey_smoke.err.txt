@@ -1,0 +1,23 @@
+At G:\~dev\rawrxd\scripts\Run-TurnkeyIdeSmoke.ps1:160 char:20
++ ...      $txt = $(if ($out -is [array]) { $out -join "`n" } else { [strin ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$(subexpression) is missing the closing ')'.
+At G:\~dev\rawrxd\scripts\Run-TurnkeyIdeSmoke.ps1:156 char:55
++             ${env:RAWRXD_COPILOT_SMOKE_FAST_EXIT} = "1"
++                                                       ~
+The string is missing the terminator: ".
+At G:\~dev\rawrxd\scripts\Run-TurnkeyIdeSmoke.ps1:164 char:28
++             if ($ex -ne 0) {
++                            ~
+Missing closing '}' in statement block or type definition.
+At G:\~dev\rawrxd\scripts\Run-TurnkeyIdeSmoke.ps1:82 char:11
++     catch {
++           ~
+Missing closing '}' in statement block or type definition.
+At G:\~dev\rawrxd\scripts\Run-TurnkeyIdeSmoke.ps1:76 char:58
++ function Invoke-Step([string]$name, [scriptblock]$block) {
++                                                          ~
+Missing closing '}' in statement block or type definition.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : IncompleteDollarSubexpressionReference
+ 

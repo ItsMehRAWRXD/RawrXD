@@ -1,0 +1,15 @@
+{
+    "SUITE":  "ide_entrypoint_present",
+    "COMMAND":  "G:\\~dev\\rawrxd\\bin\\RawrXD-Win32IDE.exe --help",
+    "EXE_PATH":  "G:\\~dev\\rawrxd\\bin\\RawrXD-Win32IDE.exe",
+    "EXE_SHA256":  "D60C6F9A840D6EC824215BAE604EEF2561E5DE844C0F856893BE2E5AF5A0F31C",
+    "EXE_EXISTS":  true,
+    "STARTED_UTC":  "2026-11-13T19:34:33.5434889Z",
+    "PROMOTE":  0,
+    "RESULT":  "FAIL",
+    "REASON":  "TIMEOUT",
+    "EXIT_CODE":  -1,
+    "ENDED_UTC":  "2026-11-13T19:34:40.4700805Z",
+    "STDOUT_LOG":  "G:\\~dev\\rawrxd\\evidence\\COMPETITIVE_BENCH_001\\logs\\ide_entrypoint_present_20261113_143433_out.txt",
+    "STDERR_LOG":  "G:\\~dev\\rawrxd\\evidence\\COMPETITIVE_BENCH_001\\logs\\ide_entrypoint_present_20261113_143433_err.txt"
+}

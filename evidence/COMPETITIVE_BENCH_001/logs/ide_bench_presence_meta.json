@@ -4,7 +4,7 @@
     "EXE_PATH":  "G:\\~dev\\rawrxd\\bin\\RawrXD-Win32IDE.exe",
     "EXE_SHA256":  "D60C6F9A840D6EC824215BAE604EEF2561E5DE844C0F856893BE2E5AF5A0F31C",
     "EXE_EXISTS":  true,
-    "RESULT":  "PASS",
-    "NOTE":  "Binary presence gate only. Full IDE-Bench tasks NOT_RUN (no harness fixtures).",
+    "RESULT":  "PRESENCE_OK",
+    "NOTE":  "Binary presence gate only. Full IDE-Bench tasks NOT_RUN (no harness fixtures). COMPETITIVE_PASS=0.",
     "PROMOTE":  0
 }

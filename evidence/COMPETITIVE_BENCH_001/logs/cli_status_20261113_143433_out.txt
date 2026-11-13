@@ -1,0 +1,20 @@
+==============================================================================
+Sovereign Kernel Status
+==============================================================================
+
+Kernel Table Initialized Successfully
+
+Available Kernels:
+  RMSNorm:              YES
+  LayerNorm:            YES
+  ResidualAdd:          YES
+  RoPE:                 YES
+  Q4K Dequant:          YES
+  Q4Q8 MatMul (MASM):   YES
+  Q4Q8 MatMul (Intr):   YES
+  FlashAttention (MASM):YES
+  FlashAttention (Intr):YES
+
+Total: 9/9 kernels available
+
+==============================================================================

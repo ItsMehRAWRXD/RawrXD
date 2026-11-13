@@ -2,13 +2,16 @@ PRODUCTION_INFERENCE_CERT_001
 DATE=2026-11-13
 PROMOTE=0
 CERTIFIED=0
-EXE_SHA256=67D9B85C183247AA5915C08EC219D3406B04BD82878D3F354B7956248EEA19AA
+EXE_SHA256_MATRIX1=67D9B85C183247AA5915C08EC219D3406B04BD82878D3F354B7956248EEA19AA
+EXE_SHA256_MATRIX2=288585489E198CCFE45502051E50D77AA1C0D0D3B9EDF608F987F25BB244C8E3
 
-## Matrix result (run_smoke_matrix.ps1)
+## Matrix result (run_smoke_matrix.ps1 ×2)
 
-12/12 arms reported EXIT=-1 · GENERATED_TOKENS=NOT_FOUND · CLEAN_EXIT=0.
+Both passes: 12/12 arms EXIT=-1 or 32 · GENERATED_TOKENS=NOT_FOUND · CLEAN_EXIT=0.
+DSV2lite/Qwen A3B returned EXIT=32 on matrix2; others still -1.
 
 This is **NOT_PASS / incomplete harness parse or aborted gen** — not architecture certification.
+Do not credit manual probe_tinyllama_cmd.meta as CLEAN_EXIT proof.
 
 Known confounders observed in logs:
 - HOST_FLOOR_RAM_EIGHTH overwrote residency to ~7886 MiB (need WEIGHT_BUDGET_MIB explicit)
@@ -17,8 +20,28 @@ Known confounders observed in logs:
 
 Evidence: smoke_results.json · smoke_results_table.txt · runs/*
 
+## Matrix3 pinned exclusive (rawr_cert_pin EXE 67D9B85C…)
+
+| Arm | Result |
+|-----|--------|
+| D_tinyllama_host | EXIT=0 GT=8 CE=1 — narrow host smoke only (≠ multi-family cert) |
+| M_dsv2lite_host | EXIT=4 CE=1 GT=NOT_FOUND — partial |
+| All other dense/MoE/GPU/MiniMax | NO_CLEAN_EXIT / NOT_FOUND |
+
+## Exclusive WEIGHT_BUDGET_MIB=32768 single-arm
+
+STATUS=NOT_RUN
+WHY=QUALITY_CURVE_001 holds CONCURRENCY_LOCK EXCLUSIVE=1 (HOLD_CM=1; last refresh ~14:36:54-05)
+POLL=2026-11-13T14:32–14:40 local — rawr intermittently present under QC; no steal
+PRIOR_LIVE_RAWR=PID 8580 MiniMax REAP16 (cleared by poll end; lock not released)
+NEXT_GATE=after LOCK clear: exclusive single-arm smokes with WEIGHT_BUDGET_MIB=32768 (HOST_DECODE=1; no concurrent agents)
+DO_NOT=claim PASS from matrix1/2; invent GPU PASS; steal QC lock
+
 ```
 CERTIFICATION=HELD
+TINYLLAMA_HOST_SMOKE=NARROW_ONLY
+MULTI_ARCH=OPEN
+EXCLUSIVE_32768=NOT_RUN
 NOT_RUN!=PASS
 PROMOTE=0
 ```

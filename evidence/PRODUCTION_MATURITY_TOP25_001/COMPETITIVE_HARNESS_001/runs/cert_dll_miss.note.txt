@@ -1,0 +1,6 @@
+EXIT=-1073741515
+NTSTATUS=0xC0000135 STATUS_DLL_NOT_FOUND
+MISSING_DEP=libstdc++-6.dll (MinGW)
+DISPOSITION=NOT_RUN_PRODUCTIVE / BINARY_UNLAUNCHABLE
+PROMOTE=0 CERTIFIED=0
+NOTE=Historical MinGW cert stubs; not rebuilt against current MSVC tip. Scores not credited.

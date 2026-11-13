@@ -1,0 +1,76 @@
+IDE_DAILY_USE_001 — STATUS
+==========================
+ASOF_UTC=2026-11-13T19:20:00Z
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+PERFECT=0
+NOT_RUN != PASS
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+BRANCH=feature/ide-agentic-product-path-20261026
+TIP_FREEZE_748B=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
+748B_CLOBBER=0
+ABSORB=NOT_AUTHORIZED
+
+## Gap board (daily-use surfaces)
+
+| Surface | SOURCE_WIRED | RUNTIME_REACHED | Notes |
+|---------|-------------:|----------------:|-------|
+| Debugger (Run/Debug Start+panel) | 1 | PARTIAL_THIS_TURN | ensureDebuggerUI + IDC_DEBUG_START/STOP wired; HWND E2E on candidate EXE NOT_RUN |
+| Debugger Watch menu | 1 | PARTIAL_THIS_TURN | post-pumps path → ensureDebuggerUI; startup still defer; MET=0 |
+| Debugger List BPs | 1 | PARTIAL_THIS_TURN | cmdDbgListBPs lists engine BPs after ensureDebuggerUI; MET=0 |
+| Terminal / ConPTY | 1 | HARNESS_PASS | FOUR_PANEL TERMINAL=PASS; product EXE absorb RELINK still FAIL_CLOSED |
+| Output panel channels | 1 | PARTIAL | harness PASS; HWND product E2E NOT_RUN |
+| Problems panel | 1 | PARTIAL | aggregator+navigate SOURCE; HWND click E2E NOT_RUN |
+| Editor core | 1 | OPEN | U12 no tip closure receipt |
+| Agent lifecycle (/api/agent/run) | 1 | FAIL_CLOSED_HIST | tip 748B model_not_loaded 503 ENTERED=0 (G02) |
+| Recovery (crash/session/A09) | 1 | OPEN | CrashReporter+session restore SOURCE; A08/A09 tip MET=0 |
+| Sunshine workflows | 1_CLI | 0_IDE | SunshineSubsystem in SovereignCLI; Win32IDE/Headless route NOT_WIRED |
+
+Cite matrix: WIN32IDE_CLOSURE_MATRIX_001 · FOUR_PANEL_COMPLETION_001 · CONPTY_STREAM_OWNER_* · AGENT_LIFECYCLE_TIP_001
+
+## Landed this turn (source)
+
+1. `Win32IDE::ensureDebuggerUI()` — lazy create + position near output panel.
+2. RunDebug sidebar activation calls ensureDebuggerUI.
+3. IDC_DEBUG_START / IDC_DEBUG_STOP handled in SidebarContentProc (were CreateWindow-only).
+4. `startDebugging` / `attachDebugger` ensure UI before touching status HWND.
+5. `cmdDbgListBPs` + DebugWatch SHOW route through ensureDebuggerUI (startup pumps still defer).
+6. Core WM_COMMAND DBGWATCH early-bypass narrowed to !m_startupPumpsComplete.
+
+Files:
+- src/win32app/Win32IDE.h
+- src/win32app/Win32IDE_Debugger.cpp
+- src/win32app/Win32IDE_Sidebar.cpp
+- src/win32app/Win32IDE_Tier5Cosmetics.cpp
+- src/win32app/Win32IDE_NativeDebugPanel.cpp
+- src/win32app/Win32IDE_Core.cpp
+
+## Explicit non-claims
+
+```
+PROMOTE=0
+CERTIFIED=0
+TIP_748B_REBUILD=0
+DEBUGGER_HWND_E2E=NOT_RUN
+TERMINAL_PRODUCT_EXE_ABSORB=FAIL_CLOSED (candidate relink)
+SUNSHINE_IDE_RUNTIME=NOT_RUN
+AGENT_RUN_LOOP_G02_MET=0
+FOUR_PANEL_INTEGRATION=FAIL_CLOSED
+```
+
+## Remaining blockers
+
+1. Candidate Win32IDE EXE relink (`-DRAWRXD_BUILD_WIN32IDE=ON`) + hash bind for debugger/terminal HWND E2E.
+2. ConPTY product RUNTIME on candidate after 4001 (NEW_PS_CHILD/CHROME_VIS).
+3. Output/Problems HWND product E2E (FOUR_PANEL tracks H/I).
+4. AgentRunLoop tip 503 / model ready gate (G02).
+5. Sunshine IDE/Headless route (CLI-only today).
+6. A08/A09 lifecycle+crash recovery tip receipts.
+7. PathB swarm FAIL (S-002) — out of daily-use P2 scope but blocks A14.
+
+COMPILE_THIS_TURN=NOT_RUN
+COMPILE_NOTE=candidate ninja obj rebuild hung on cmake --regenerate-during-build (same FOUR_PANEL CANDIDATE_RELINK FAIL_CLOSED class); source landed unstubbed; no invent PASS
+
+NEXT_GATE=CANDIDATE_RELINK_THEN_DEBUGGER_HWND_E2E
+PROMOTE=0

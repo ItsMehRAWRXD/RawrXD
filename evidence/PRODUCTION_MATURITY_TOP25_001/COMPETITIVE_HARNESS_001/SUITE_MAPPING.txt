@@ -1,0 +1,4 @@
+IDE-Bench    -> NOT_FOUND_AS_NAMED_SUITE; use Smoke-IDE-TurnKey / b061 / IDE_SmokeTest_Harness
+Terminal-Bench -> NOT_FOUND_AS_NAMED_SUITE; use b136 / AGENT_TERMINAL_001 / EMBEDDED_TERMINAL_FAILCLOSE_001
+coding-task  -> RawrXD-SWEBench.exe (null self-test SCORE=0.0% this turn)
+game-dev     -> docs only; harness NOT_RUN

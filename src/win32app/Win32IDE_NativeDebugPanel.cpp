@@ -300,12 +300,21 @@ void Win32IDE::cmdDbgClearBPs() {
 extern "C" const char* RawrXD_UI_ListBreakpointsAndShowPanel(HWND hwndParent);
 
 void Win32IDE::cmdDbgListBPs() {
-    // BREAKPOINT_FOLLOWON_D252_001: prior List+Show panel path → EXIT=0xC0000409
-    // on live D252 (same class as IDM_DBGWATCH_SHOW). Pure ODS fail-closed;
-    // no Create/Show, no engine, no appendToOutput, no invent BP panel PASS.
-    OutputDebugStringA(
-        "[Debug] FEATURE_FICTION=1 FAIL_CLOSED IDM_DBG_LIST_BPS "
-        "— no invent BP panel ready PASS\n");
+    // IDE_DAILY_USE_001: prior List+Show on null HWND → 0xC0000409.
+    // Ensure real debugger panel, then list engine BPs into Output (no invent PASS).
+    if (!ensureDebuggerUI()) {
+        OutputDebugStringA("[Debug] FAIL_CLOSED IDM_DBG_LIST_BPS ensureDebuggerUI miss\n");
+        return;
+    }
+    if (m_hwndDebuggerBreakpoints && IsWindow(m_hwndDebuggerBreakpoints))
+        ShowWindow(m_hwndDebuggerBreakpoints, SW_SHOW);
+    auto bps = NativeDebuggerEngine::Instance().getBreakpoints();
+    appendToOutput("[Debug] breakpoints=" + std::to_string(bps.size()) + "\n");
+    for (const auto& bp : bps) {
+        appendToOutput("  BP#" + std::to_string(bp.id) + " " + bp.sourceFile +
+                       ":" + std::to_string(bp.sourceLine) + "\n");
+    }
+    OutputDebugStringA("[Debug] IDM_DBG_LIST_BPS RUNTIME_REACHED ensureDebuggerUI\n");
 }
 
 // =============================================================================

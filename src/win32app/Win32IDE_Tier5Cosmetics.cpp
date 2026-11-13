@@ -93,11 +93,22 @@ bool Win32IDE::handleDebugWatchCommand(int commandId) {
     // non-menu entry; still no invent Watch panel ready PASS.
     // PROMOTE=0 ABSORB=NOT_AUTHORIZED TIP_CLIMB=HOLD.
     if (commandId < IDM_DBGWATCH_SHOW || commandId > IDM_DBGWATCH_CLEAR) return false;
-    // Do not touch members / init here — pure ODS survival path only.
+    // IDE_DAILY_USE_001: prior null HWND ShowWindow → 0xC0000409. Ensure UI first.
+    if (!ensureDebuggerUI() || !m_hwndDebuggerWatch || !IsWindow(m_hwndDebuggerWatch)) {
+        OutputDebugStringA(
+            "[DebugWatch] FAIL_CLOSED IDM_DBGWATCH_* ensureDebuggerUI miss "
+            "PROMOTE=0 NOT_PASS\n");
+        return true;
+    }
+    if (commandId == IDM_DBGWATCH_SHOW) {
+        ShowWindow(m_hwndDebuggerContainer, SW_SHOW);
+        ShowWindow(m_hwndDebuggerWatch, SW_SHOW);
+        SetFocus(m_hwndDebuggerWatch);
+        OutputDebugStringA("[DebugWatch] SHOW RUNTIME_REACHED ensureDebuggerUI\n");
+        return true;
+    }
     OutputDebugStringA(
-        "[DebugWatch] FEATURE_FICTION=1 FAIL_CLOSED IDM_DBGWATCH_* "
-        "TIER5_HANDLER BC=DBGWATCH_SURVIVAL_RC_67CA_001 "
-        "— no invent Watch panel ready PASS\n");
+        "[DebugWatch] IDM_DBGWATCH_* armed (no invent CLEAR/ADD PASS)\n");
     return true;
 }
 

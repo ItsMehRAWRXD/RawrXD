@@ -1,0 +1,68 @@
+COMPETITIVE_HARNESS_001 — Independent competitive testing inventory + real runs
+DATE=2026-11-13
+ASOF_LOCAL=2026-11-13T14:28-05:00
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+TIP_CLIMB=HOLD
+NOT_RUN!=PASS
+INVENT_PASS=0
+CROSS_SHA_CREDIT=0
+
+## Named suites requested vs located
+
+| Requested name | Located? | Local equivalent / path | This-turn disposition |
+|----------------|----------|-------------------------|------------------------|
+| IDE-Bench | NO product suite by that name | scripts/Smoke-IDE-TurnKey.ps1 → Run-TurnkeyIdeSmoke.ps1; tests/b061 IDE integration cert; tests/ide/IDE_SmokeTest_Harness.cpp | SMOKE_RAN EXIT=1 (parity fail); b061 UNLAUNCHABLE |
+| Terminal-Bench | NO product suite by that name | tests/b136 terminal emulator cert; evidence/AGENT_TERMINAL_001; evidence/EMBEDDED_TERMINAL_FAILCLOSE_001 | b136 UNLAUNCHABLE (DLL); prior AGENT_TERMINAL_001=PASS (historical, not re-sealed here) |
+| coding-task suites | YES (SWE-bench harness) | build-ninja-validate/bin/RawrXD-SWEBench.exe (+ ctx2/max); scripts/Run-SWEBench-DeterministicGate.ps1 | NULL_AGENT self-test RAN SCORE=0.0% EXIT=0 (empty patch expected; ≠ competitive PASS) |
+| game-dev project harnesses | NO executable harness | docs/REVERSE_ENGINEERING_GAME_DEVELOPMENT.md (+ deploy/release copies) | NOT_RUN (docs only) |
+
+## Real runs this turn (fail-closed)
+
+### A) SWE-bench null-agent self-test
+EXE=g:\~dev\rawrxd\build-ninja-validate\bin\RawrXD-SWEBench.exe
+EXE_SHA256=0AC8634B1736CCE87C208C6AE36C48559375C94BD45E392444606E7A001B8333
+EXIT=0
+SCORE=0.0% (tasks=4 completed=0 patch_correct=0 tests_passed=0)
+REASON=agent returned empty patch (null agent)
+COMPETITIVE_PASS=0  (min competitive bar in harness UI = 50%; not claimed)
+Evidence: runs/swebench_null_validate.{out,err,exit,meta}.txt
+
+### B) IDE TurnKey smoke (after script parse repair)
+SCRIPT=scripts/Smoke-IDE-TurnKey.ps1 → scripts/Run-TurnkeyIdeSmoke.ps1
+EXIT=1
+ok=false
+FAIL_STEP=chat_copilot_parity_symbols
+DETAIL=FAIL: tool role uses distinct label color (Copilot-style) (src\win32app\Win32IDE_ChatMessageRenderer.cpp)
+Skipped by design this run: UI marshalling, agentic parity, Copilot CLI, Win32 agentic exe, TPS
+Evidence: runs/ide_turnkey_smoke_fixed.{out,err,exit,meta}.txt + logs/turnkey_ide_smoke_last.json
+NOTE: Pre-fix Run-TurnkeyIdeSmoke.ps1 was unparseable (Unicode em-dash + double-quoted `<...>` envHints). Repair sealed under scripts/; smoke now reaches real checks.
+
+### C) Historical MinGW cert stubs (b061 / b062 / b136)
+EXIT=-1073741515 (0xC0000135 STATUS_DLL_NOT_FOUND)
+MISSING_DEP=libstdc++-6.dll
+DISPOSITION=BINARY_UNLAUNCHABLE → NOT_RUN productive (no scores credited)
+Evidence: runs/cert_dll_miss.note.txt + empty out captures from direct launch
+
+## Script / install improvements landed (Top-25 retention signals)
+
+1. scripts/Run-TurnkeyIdeSmoke.ps1 — parse-repair so IDE smoke is runnable again
+2. This pack: COMPETITIVE_HARNESS_001 inventory + STATUS + INSTALL_DISTRIBUTION.md
+3. HARNESS_INVENTORY.txt — 84 path hits (broad name match; not all runnable)
+
+## Explicit non-claims
+
+- No IDE-Bench / Terminal-Bench external leaderboard scores invented.
+- SWE null-agent 0.0% is RUNTIME_REACHED for harness wiring only — NOT competitive PASS.
+- AGENT_TERMINAL_001 historical PASS not re-run this turn → not re-credited.
+- PROMOTE=0 CERTIFIED=0 RELEASE=HELD
+
+## Remaining OPEN gates
+
+1. Rebuild MSVC tip certs for IDE/Terminal (replace MinGW stubs) OR document permanent retirement.
+2. IDE TurnKey: fix Win32IDE_ChatMessageRenderer tool-role label color parity → re-run smoke to EXIT=0.
+3. SWE --real-agent competitive eval (needs live agent + model; host currently shared with MiniMax/quality workers) → NOT_RUN.
+4. Game-dev executable harness → NOT_RUN (docs-only).
+5. Top-25 install/distribution measured retention metrics beyond catalog wiring → OPEN.
+6. MiniMax REAP quality / AL10–14 / QUALITY_CURVE chat CLEAN_EXIT — owned elsewhere; PROMOTE held.

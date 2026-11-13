@@ -2514,6 +2514,8 @@ class Win32IDE
     // ========================================================================
     // Debugger UI Creation & Management
     void createDebuggerUI();
+    // IDE_DAILY_USE_001: lazy create — Start/Watch/BP paths must not touch null HWNDs.
+    bool ensureDebuggerUI();
     static LRESULT CALLBACK DebuggerContainerProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     void updateDebuggerUI();
     void toggleDebugger();

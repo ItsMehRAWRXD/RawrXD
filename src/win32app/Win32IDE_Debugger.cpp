@@ -44,9 +44,35 @@ using namespace RawrXD::Debugger;
 // DEBUGGER UI CREATION
 // ============================================================================
 
+bool Win32IDE::ensureDebuggerUI()
+{
+    if (m_hwndDebuggerContainer && IsWindow(m_hwndDebuggerContainer)) {
+        ShowWindow(m_hwndDebuggerContainer, SW_SHOW);
+        return true;
+    }
+    createDebuggerUI();
+    if (!(m_hwndDebuggerContainer && IsWindow(m_hwndDebuggerContainer)))
+        return false;
+    // Place beside/above output panel so Start/Watch are visible (was 0,0 orphan).
+    RECT panelRect{};
+    if (m_hwndOutputPanel && IsWindow(m_hwndOutputPanel)) {
+        GetClientRect(m_hwndOutputPanel, &panelRect);
+        MapWindowPoints(m_hwndOutputPanel, m_hwndMain, (POINT*)&panelRect, 2);
+    } else {
+        RECT mainRect{};
+        GetClientRect(m_hwndMain, &mainRect);
+        panelRect = {0, mainRect.bottom - 220, mainRect.right, mainRect.bottom};
+    }
+    MoveWindow(m_hwndDebuggerContainer, panelRect.left, panelRect.top,
+               panelRect.right - panelRect.left, panelRect.bottom - panelRect.top, TRUE);
+    OutputDebugStringA("[Debugger] ensureDebuggerUI SOURCE_WIRED RUNTIME_REACHED path armed\n");
+    return true;
+}
+
 void Win32IDE::createDebuggerUI()
 {
     if (!m_hwndMain) return;
+    if (m_hwndDebuggerContainer && IsWindow(m_hwndDebuggerContainer)) return;
 
     // Create main debugger container (at bottom, alongside terminal)
     m_hwndDebuggerContainer = CreateWindowExA(
@@ -329,6 +355,12 @@ void Win32IDE::attachDebugger()
 {
     METRICS.increment("debugger.attach_total");
     if (m_debuggerAttached) return;
+    // Landed-but-broken: status/watch HWNDs were null → 0xC0000409 on menu paths.
+    if (!ensureDebuggerUI()) {
+        appendToOutput("UNAVAILABLE=1 DEBUG_ATTACH — debugger UI create failed\n",
+                       "Output", OutputSeverity::Error);
+        return;
+    }
 
     auto& engine = NativeDebuggerEngine::Instance();
 
@@ -345,7 +377,8 @@ void Win32IDE::attachDebugger()
         if (!initR.success) {
             std::string err = "❌ Debugger engine init failed: ";
             err += initR.detail;
-            SetWindowTextA(m_hwndDebuggerStatus, err.c_str());
+            if (m_hwndDebuggerStatus)
+                SetWindowTextA(m_hwndDebuggerStatus, err.c_str());
             appendToOutput(err, "Output", OutputSeverity::Error);
             return;
         }

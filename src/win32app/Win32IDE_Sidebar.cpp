@@ -613,6 +613,18 @@ LRESULT CALLBACK Win32IDE::SidebarContentProc(HWND hwnd, UINT uMsg, WPARAM wPara
                 pThis->searchExtensions(buf);
                 return 0;
             }
+            // IDE_DAILY_USE_001: Start/Stop were CreateWindow'd but never handled.
+            if (id == IDC_DEBUG_START)
+            {
+                pThis->ensureDebuggerUI();
+                pThis->startDebugging();
+                return 0;
+            }
+            if (id == IDC_DEBUG_STOP)
+            {
+                pThis->stopDebugging();
+                return 0;
+            }
             break;
         }
         case WM_NOTIFY:
@@ -815,6 +827,8 @@ void Win32IDE::setSidebarView(SidebarView view)
         case SidebarView::RunDebug:
             ShowWindow(m_hwndDebugConfigs, SW_SHOW);
             ShowWindow(m_hwndDebugToolbar, SW_SHOW);
+            // IDE_DAILY_USE_001: arm real debugger panel (was never created).
+            ensureDebuggerUI();
             appendToOutput("Run and Debug view activated\n", "Output", OutputSeverity::Info);
             break;
 
@@ -2104,6 +2118,13 @@ void Win32IDE::createLaunchConfiguration()
 
 void Win32IDE::startDebugging()
 {
+    // Batch 004 + IDE_DAILY_USE_001: ensure panel HWNDs before engine attach.
+    if (!ensureDebuggerUI()) {
+        m_debuggingActive = false;
+        appendToOutput("UNAVAILABLE=1 DEBUG_START — debugger UI create failed\n",
+                       "Output", OutputSeverity::Error);
+        return;
+    }
     // Batch 004: real NativeDebuggerEngine path — never success-only.
     attachDebugger();
     if (m_debuggerAttached) {
