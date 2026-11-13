@@ -1,0 +1,39 @@
+G09_REAP QUALITY_149 20261113
+PROMOTE=0 CERTIFIED=0 CROSS_SHA_CREDIT=0
+QUALITY_RETENTION=OPEN
+EXE_SHA256=23978A6AC03068073937F7861E01B7E065E288C1A5940714C1B8CA2C0D3D3E04
+GIT=239279a608 + ReapPhysicalReduce loadTensors=false
+
+## Prompt (same both arms)
+PROMPT=Write a Python function is_prime(n) that returns True if n is prime. Include a short docstring and handle n < 2. Output only the function.
+N=24 --reap 30GB/8
+
+## Arm A ? Tip15 retain-149 (RAWRXD_REAP_RETAINED=149)
+RECEIPT=QUALITY_149/quality_149.json
+RETAINED_EXPERT_COUNT=149
+TOKENS=24
+ACQUIRE_OK=11520
+ACQUIRE_DENIED=0
+OUTPUT<<
+ Ras Ras Rasonkonkonkonkonkonkonkonkonkonk Ras Ras Ras Ras Ras Ras Ras Ras Ras RasRoy
+>>
+COHERENT_USEFUL_PYTHON=0
+
+## Arm B ? budget retain-8 (no RAWRXD_REAP_RETAINED)
+RECEIPT=QUALITY_149/quality_retain8.json
+RETAINED_EXPERT_COUNT=8
+TOKENS=24
+ACQUIRE_OK=11520
+ACQUIRE_DENIED=0
+OUTPUT<<
+literalliteralliteralliteralliteralliteralliteralliteralliteralliteralChunk???????????????????????????????Chunk???????Chunk???
+>>
+COHERENT_USEFUL_PYTHON=0
+FULL_384_PATH=NOT_RUN
+
+## Verdict
+QUALITY_RETENTION=OPEN
+QUALITY_COMPARE_MEASURED=1
+COHERENT_USEFUL=0
+CERTIFIED=0
+PROMOTE=0

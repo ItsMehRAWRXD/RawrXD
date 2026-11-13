@@ -1,0 +1,25 @@
+G09_REAP REBOUND_VS_HISTORICAL DISPOSITION 20261113
+USER_LOCKED_BASE_HONORED=1
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD CROSS_SHA_CREDIT=0
+
+FIELD                         | HISTORICAL 149 (locked)              | REBOUND 149 (measured)
+------------------------------|--------------------------------------|----------------------------------------
+PHYSICAL_RUNTIME              | PASS_HISTORICAL                      | MEASURED (n=2 + n=32)
+EXE_SHA256                    | C921BB4A? (GONE from disk)           | 23978A6A? @ 239279a608 + inv fix
+GIT                           | 04b25b93fd                           | 239279a608 + loadTensors=false
+TOKENS (Hello n=2)            | 82406,82406                          | 82406,82406 (MATCH)
+DECODED (n=2)                 |  Ras Ras                             |  Ras Ras (MATCH)
+ROUTE_OK / DENIED             | 960 / 0                              | 960 / 0
+ACQUIRE_OK / DENIED           | 0 / 0 (instrumentation gap)          | 960 / 0 (n=2); 15360 / 0 (n=32)
+RETAINED_EXPERT_COUNT         | 149                                  | 149
+REPACKED_MODEL_BYTES          | 246151710720                         | 246151710720
+ACCOUNTING_COMPLETE           | 1                                    | 1
+LIVE_CACHE_PEAK               | ~4.49 GiB                            | 4817186816 (~4.49 GiB)
+CURRENT_EXE_REBOUND           | 0 (pre)                              | 1
+QUALITY_RETENTION             | OPEN                                 | OPEN (measured; coherent=0)
+LLAMA_REFERENCE_PARITY        | BLOCKED                              | BLOCKED (doc only)
+STANDALONE_GGUF_EXPORT        | OPEN                                 | OPEN
+CERTIFIED / PROMOTE           | 0 / 0                                | 0 / 0
+
+LOCKED_PRESERVED: PHYSICAL_RUNTIME_8=PASS ? PHYSICAL_RUNTIME_149=PASS_HISTORICAL ? ACCOUNTING_COMPLETE=1 ? REPACKED_MODEL_BYTES=246151710720 ? ORIGINAL_GGUF_INTACT=1
+REBOUND: CURRENT_EXE_REBOUND=1 ? ACQUIRE_OK_NONZERO=1 ? N32_MEASURED=1 ? QUALITY_COMPARE_MEASURED=1

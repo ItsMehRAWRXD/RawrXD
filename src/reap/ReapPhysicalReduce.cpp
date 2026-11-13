@@ -1,5 +1,7 @@
 #include "reap/ReapPhysicalReduce.hpp"
 
+#include "reap/ReapPhysicalReduceCalib.hpp"
+#include "reap/ReapPhysicalReduceExport.hpp"
 #include "deep2/GGUFLoader.hpp"
 #include "deep2/ReapPhysicalBank.hpp"
 
@@ -86,6 +88,8 @@ bool BuildPhysicalReducePlan(const RuntimePlan& runtime,
 
     Deep2::GGUFLoadOptions options{};
     options.mmap = false;
+    /* Metadata ParseTensors sets size via CalculateTensorSize; payload load
+       OOMs on Kimi 13-shard inventory (~3GiB/tensor VirtualAlloc). */
     options.loadTensors = false;
     options.verbose = false;
 
@@ -179,6 +183,27 @@ bool BuildPhysicalReducePlan(const RuntimePlan& runtime,
     out.reason = forced
         ? "RAWRXD_REAP_RETAINED_OVERRIDE_TIP15_BIND"
         : "ALL_SHARDS_ROUTED_EXPERT_INVENTORY_BUDGET_REDUCE";
+
+    PhysicalCalibResult calib{};
+    const char* calibEnv = std::getenv("RAWR_REAP_CALIBRATION");
+    TryLoadCalibrationRanks(calibEnv ? calibEnv : "", E, retained, calib);
+    out.calibrationStatus = calib.status;
+
+    PhysicalExportResult exp{};
+    const char* exportDir = std::getenv("RAWR_REAP_EXPORT_DIR");
+    if (exportDir && exportDir[0]) {
+        if (TryExportReducedSidecar(runtime.actual.model, exportDir,
+                                    static_cast<uint32_t>(retained),
+                                    out.repackedModelBytes, exp)) {
+            out.writerInvoked = true;
+            out.exportStatus = exp.status;
+            out.exportPath = exp.outputFirstShard;
+            out.exportSha256 = exp.sha256;
+        } else {
+            out.exportStatus = exp.status;
+        }
+    }
+
     (void)tensorCount;
     return true;
 }
@@ -208,28 +233,44 @@ std::string PhysicalReduceReceiptJson(const PhysicalReducePlan& plan) {
       << (plan.physicalRepresentation ? "true" : "false")
       << ",\"mode\":\"" << plan.mode << "\""
       << ",\"selection_policy\":\"" << plan.selectionPolicy << "\""
+      << ",\"calibration_status\":\"" << plan.calibrationStatus << "\""
+      << ",\"export_status\":\"" << plan.exportStatus << "\""
       << ",\"INVENTORY_METHOD\":\"ALL_SHARDS_GGUF_TENSOR_SIZE\""
       << ",\"REPACKED_SCOPE\":\"SHARED_KEEP_PLUS_RETAINED_ROUTED_EXPERTS\""
       << ",\"ACCOUNTING_COMPLETE\":1"
+      << ",\"REPACKED_MODEL_BYTES_KIND\":\"PROXY_PLAN_SCOPE\""
       << ",\"ORIGINAL_MODEL_BYTES\":" << plan.originalModelBytes
       << ",\"ORIGINAL_EXPERT_COUNT\":" << plan.originalExpertCount
+      << ",\"ORIGINAL_EXPERT_TENSOR_BYTES\":" << plan.expertBytes
+      << ",\"SHARED_NON_EXPERT_BYTES\":" << plan.sharedBytes
       << ",\"ROUTED_EXPERT_BYTES\":" << plan.expertBytes
       << ",\"SHARED_KEEP_BYTES\":" << plan.sharedBytes
       << ",\"RETAINED_EXPERT_COUNT\":" << plan.retainedExpertsPerLayer
       << ",\"RETAINED_EXPERT_SLICES\":" << plan.retainedExpertSlices
+      << ",\"RETAINED_EXPERT_BYTES\":"
+      << (plan.originalExpertCount
+              ? (plan.expertBytes / plan.originalExpertCount) *
+                    plan.retainedExpertsPerLayer
+              : 0)
+      << ",\"PRUNED_EXPERT_BYTES\":" << plan.prunedParameterEstimate
       << ",\"PRUNED_ROUTED_EXPERT_BYTES\":" << plan.prunedParameterEstimate
+      << ",\"PRUNED_PARAMETER_COUNT\":" << plan.prunedParameterEstimate
+      << ",\"PRUNED_PARAMETER_COUNT_UNIT\":\"BYTE_PROXY\""
       << ",\"REPACKED_MODEL_BYTES\":" << plan.repackedModelBytes
       << ",\"ACTIVE_PARAMETERS_PER_TOKEN\":"
       << plan.activeParametersPerToken
       << ",\"MOE_LAYER_COUNT\":" << plan.moeLayerCount
       << ",\"TOP_K\":" << plan.topK
+      << ",\"REAP_MODEL_SHA256\":\"" << plan.exportSha256 << "\""
+      << ",\"export_path\":\"" << plan.exportPath << "\""
       << ",\"source_immutable\":"
       << (plan.sourceImmutable ? "true" : "false")
       << ",\"writer_invoked\":"
       << (plan.writerInvoked ? "true" : "false")
       << ",\"reason\":\"" << plan.reason << "\""
       << ",\"PROMOTE\":0,\"CERTIFIED\":0"
-      << ",\"NOTE\":\"REPACKED_MODEL_BYTES_IS_NOT_A_CERTIFIED_STANDALONE_GGUF\"}";
+      << ",\"NOTE\":\"REPACKED_MODEL_BYTES_IS_NOT_A_CERTIFIED_STANDALONE_GGUF;"
+         "TIP15_19_4GB_SMOKE=PROXY_ONLY\"}";
     return o.str();
 }
 
