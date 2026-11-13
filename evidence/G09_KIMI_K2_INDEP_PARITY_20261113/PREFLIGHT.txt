@@ -1,4 +1,4 @@
-﻿G09_KIMI_K2_INDEP_PARITY PREFLIGHT ASOF=2026-11-13T03:38:53-05:00
+﻿G09_KIMI_K2_INDEP_PARITY PREFLIGHT ASOF=2026-11-13T05:35:00-05:00
 PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD
 CROSS_SHA_CREDIT=0
 NOT_RUN != PASS
@@ -11,30 +11,29 @@ CLI_PRIMARY=G:\~dev\llama-direct\vulkan\llama-cli.exe
   VERSION=8352 (d23355afc) Clang 19.1.5 Windows x86_64
   BACKENDS=Vulkan(R9700+7800XT)+CPU(zen4)+RPC
   HELP=OK — chat-template list includes kimi-k2, deepseek2; --cpu-moe/--no-repack/--verbose-prompt present
-  DEVICES=Vulkan0 R9700 ~32624MiB (31707 free at preflight); Vulkan1 7800XT ~16368MiB
-CLI_TOKENIZE=G:\~dev\llama-direct\vulkan\llama-tokenize.exe
+CLI_TOKENIZE_STOCK=G:\~dev\llama-direct\vulkan\llama-tokenize.exe
   SHA256=02B423EE41F382FB0D8BD36CC34597193A26CBC260E7CB044EA03DD2DD4EF85B
+  VOCAB_ONLY=FATAL llama-hparams.cpp:92 (unchanged stock)
+CLI_TOKENIZE_PATCHED=G:\~dev\llama-vulkan\build_tok_cpu\bin\llama-tokenize.exe
+  SHA256=8325EB3598CC55AB1A1E203D011182D39E2A0BF03103AB7C39C16B67858A0114
+  BUILD=G:\~dev\llama-vulkan\build_tok_cpu (CPU-only, GGML_VULKAN=OFF)
+  PATCH_FILE=src/llama-model.cpp print_info — guard DEEPSEEK/DEEPSEEK2/GLM_DSA blocks with !hparams.vocab_only
+  ROOT_CAUSE=vocab_only early-return skips n_layer/MLA load; print_info called n_embd_head_k_mla() → n_embd_head_k() abort
 CLI_FALLBACK=G:\~dev\llama-vulkan\build\bin\llama-cli.exe
-  SHA256=6BC797F4E8C2AA7988A2B513911C65B046A7589BD9DE1C077EED0A9ACAA51099 SIZE=62855680
-  SOURCE_ARCH=LLM_ARCH_DEEPSEEK2 + LLAMA_VOCAB_PRE_TYPE_KIMI_K2 present in llama-vulkan/src
+  SHA256=6BC797F4E8C2AA7988A2B513911C65B046A7589BD9DE1C077EED0A9ACAA51099
 CLI_CPU_FALLBACK=F:\rawrxd\tmp_llama-cpp-cpu\llama-cli.exe
   SHA256=634BE10F579FE2CB9701F92FD4F63AE23ECF10C2CB97BAA078A4F95EC9430594
-  VERSION=7157 (583cb8341) — used only after primary/fallback; Kimi MLA unverified on this build
 
 ARCH_SUPPORT:
-  GGUF general.architecture=deepseek2 (metadata dump OK)
+  GGUF general.architecture=deepseek2
   tokenizer.ggml.pre=kimi-k2
   MLA keys present: q_lora_rank=1536 kv_lora_rank=512 key_length_mla=192 value_length_mla=128
-  expert_count=384 expert_used_count=8 leading_dense_block_count=1
-  llama-tokenize vocab_only path: FATAL llama-hparams.cpp:92 (n_embd_head_k il>=n_layer)
-    print_info under vocab_only shows n_lora_q=0 n_lora_kv=0 n_layer_dense_lead=0 then abort
-  GATE1_RESULT=PARTIAL — help/SHA/version/arch-string OK; vocab_only tokenize BROKEN on preferred+vulkan builds
+  GATE1_RESULT=PASS_TOKENIZE — patched vocab_only tokenize OK; stock still broken
 
 HOST_RAM=61.6 GiB total (insufficient for full 578.57 GiB Q4_K_M residency)
-VRAM_FREE_PREFLIGHT≈47 GiB combined (still << full model)
 
 ========================================================================
-GATE2 — FIXTURE EQUALITY
+GATE2 — FIXTURE EQUALITY (SEALED — UNCHANGED THIS TURN)
 ========================================================================
 MODEL_DIR=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M
 SHARDS=13/13 + blobs/ + manifests/ + Modelfile
@@ -52,27 +51,33 @@ FIXTURE_TEXT=<<EOF
 Say hi in one word.<|im_end|>
 <|im_start|>assistant
 EOF
-MATCHES_DEEP2_CHAT_TRACE=1 (g09_dense_full.err.txt prompt_bytes=69 template=deepseek)
 CHAT_TEMPLATE_SHA256=AA8B293348DDC4057A620B3C2F30084CD9E6DDCA077167FF7CCDB1CC4DA341AE BYTES=1880
-DECODE_CFG_TARGET=greedy temp=0 top_k=1 top_p=1 min_p=0 repeat_penalty=1 seed=1 n_predict=8 ctx=256 no-jinja (avoid auto chat-format drift; raw fixture already templated)
-GATE2_RESULT=PASS (paths/bytes/template hash sealed; prompt tokenize IDs still PENDING authority)
+GATE2_RESULT=PASS (paths/bytes/template hash sealed; fixture NOT modified)
 
 ========================================================================
-GATE3/4 PREFLIGHT NOTES
+GATE3 — REFERENCE TOKENIZE (THIS TURN) / GENERATION
 ========================================================================
+REF_TOKENIZE_VOCAB_ONLY_STOCK: FATAL hparams.cpp:92
+REF_TOKENIZE_VOCAB_ONLY_PATCHED: PASS
+  METHOD=patched_llama_tokenize_vocab_only
+  NO_WEIGHT_ALLOC=1
+  REF_PROMPT_TOKEN_COUNT=24
+  REF_PROMPT_TOKEN_IDS=27,91,348,9485,91,29,2482,198,71079,20910,306,1101,6268,13,163586,198,27,91,348,9485,91,29,69702,198
+  --no-bos identical
 REF_LOAD_DEFAULT: FAIL unable to allocate CPU_REPACK buffer size=478804967424 (~446 GiB)
-REF_LOAD_NOREPACK_MMAP: STARTED — VM≈586–630 GiB mapped, WS peaked ~47 GiB, CPU>1000s; no verbose-prompt tokens within ≥15 min; killed to free host (61.6 GiB RAM)
-REF_TOKENIZE_VOCAB_ONLY: FATAL hparams.cpp:92 (both primary + llama-vulkan tokenize)
-HF_BPE_CONTENTS_ATTEMPT: NON_AUTHORITY (specials split wrong; count 32 vs Deep2 PROMPT_TOKENS=25)
-DEEP2_TOKTEST: hung at "loading vocabulary" >120s under memory pressure; killed; NOT_RUN
+REF_LOAD_NOREPACK_MMAP: STARTED historically — no tokens within ≥15 min; killed
+REFERENCE_GENERATION=NOT_RUN
 
+HF_BPE_CONTENTS_ATTEMPT: NON_AUTHORITY (count 32; do not credit)
+
+========================================================================
+GATE4 — DEEP2 COMPARISON PREFLIGHT
+========================================================================
 DEEP2_EXE_REMEASURE:
-  CITED_TIP14_QWEN=0C29A6F882CDE811AD042482DCBC4787F703BA14657E29FD770940E842A32761
-    prior path F:\rawrxd\build_reap\bin\aggregate_decode_single_smoke.exe
-    LIVE_NOW=80EFEE9B4608F2D22AAA59F427A29E6F1C29E9AC8C68DAEC98ADE414029352AF
-    NOTE=RC2-05 Qwen seal EXE — DIFFERENT GATE — CROSS_SHA_CREDIT=0
   CITED_KIMI_G09_DISPOSITION=EA0371A1019EF10B207E41B42104FCF4ECFF9EA523FFF44FB7868E89BD4EA112
-    LIVE_PATH=NOT_FOUND in narrow bin scan this turn
-  LIVE_DEEP2_AGENTIC_LOOP=F:\rawrxd\build\bin\Release\deep2_agentic_loop.exe
-    SHA256=3E88847DC4ABFDB6B505E0947B40CD7A1034061173741FF56A036F5D2BAF34BF
-    NOT credited as G09 host-run EXE without remasure match to EA0371A1
+    LIVE_PATH=NOT_FOUND (narrow bin scan this turn)
+  LIVE_SMOKE=F:\rawrxd\build_reap\bin\aggregate_decode_single_smoke.exe
+    SHA256=80EFEE9B4608F2D22AAA59F427A29E6F1C29E9AC8C68DAEC98ADE414029352AF
+    CROSS_SHA_CREDIT=0 (Qwen RC2-05 / different gate)
+  DEEP2_PROMPT_TOKEN_COUNT_PRIOR=25 ≠ REF 24 — parity UNVERIFIED until SHA-bound remasure
+  DEEP2_PROMPT_TOKEN_IDS=PENDING

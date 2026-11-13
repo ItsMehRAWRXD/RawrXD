@@ -1,5 +1,5 @@
 G09 / Tip14 — Independent Kimi K2 token parity RECEIPT
-ASOF=2026-11-13T03:38:53-05:00
+ASOF=2026-11-13T05:35:00-05:00
 EVIDENCE_DIR=F:\rawrxd\evidence\G09_KIMI_K2_INDEP_PARITY_20261113
 MIRROR=g:\~dev\rawrxd\evidence\G09_KIMI_K2_INDEP_PARITY_20261113
 PROMOTE=0
@@ -9,23 +9,38 @@ CROSS_SHA_CREDIT=0
 NOT_RUN != PASS
 
 ------------------------------------------------------------------------
+DISPOSITION (user-locked base + this-turn tokenize update)
+------------------------------------------------------------------------
+G09_GATE2_FIXTURE=PASS
+REFERENCE_TOKENIZATION=PASS
+REFERENCE_GENERATION=NOT_RUN
+INDEPENDENT_TOKEN_PARITY=UNVERIFIED
+FAIL_CLASS=REFERENCE_BACKEND_BLOCKED (generation/full-load still blocked; tokenize unblocked)
+CERTIFIED=0
+PROMOTE=0
+
+------------------------------------------------------------------------
 CLI SHAs
 ------------------------------------------------------------------------
 PRIMARY_LLAMA_CLI=F7CDB198DA9DFC8EE9490653A91EF0AA4E7F5C502FB0294C1398ACDDF408D772
   PATH=G:\~dev\llama-direct\vulkan\llama-cli.exe VERSION=8352 (d23355afc)
-PRIMARY_LLAMA_TOKENIZE=02B423EE41F382FB0D8BD36CC34597193A26CBC260E7CB044EA03DD2DD4EF85B
+PRIMARY_LLAMA_TOKENIZE_STOCK=02B423EE41F382FB0D8BD36CC34597193A26CBC260E7CB044EA03DD2DD4EF85B
+  NOTE=stock vocab_only FATAL @ llama-hparams.cpp:92 (print_info n_embd_head_k_mla)
+PATCHED_LLAMA_TOKENIZE=8325EB3598CC55AB1A1E203D011182D39E2A0BF03103AB7C39C16B67858A0114
+  PATH=G:\~dev\llama-vulkan\build_tok_cpu\bin\llama-tokenize.exe
+  BUILD=build_tok_cpu CPU-only Ninja Release; source patch llama-model.cpp print_info
+  PATCH=skip DEEPSEEK/DEEPSEEK2/GLM_DSA print_info accessors when hparams.vocab_only
 FALLBACK_LLAMA_VULKAN=6BC797F4E8C2AA7988A2B513911C65B046A7589BD9DE1C077EED0A9ACAA51099
 CPU_FALLBACK_LLAMA=634BE10F579FE2CB9701F92FD4F63AE23ECF10C2CB97BAA078A4F95EC9430594
 
-ARCH_SUPPORT=PARTIAL
-  deepseek2 + kimi-k2 recognized in GGUF metadata and CLI chat-template list
-  MLA ranks present in GGUF KV
-  BLOCKER_TOKENIZE=llama-tokenize vocab_only FATAL @ llama-hparams.cpp:92
+ARCH_SUPPORT=PARTIAL→TOKENIZE_OK
+  deepseek2 + kimi-k2 recognized; MLA KV present in GGUF
+  BLOCKER_TOKENIZE_STOCK=llama-tokenize vocab_only FATAL @ llama-hparams.cpp:92 (resolved via patched build)
   BLOCKER_FULL_LOAD_DEFAULT=CPU_REPACK alloc 478804967424 bytes FAIL (host RAM 61.6 GiB)
   BLOCKER_FULL_LOAD_NOREPACK=mmap progresses (VM~630 GiB) but no token output within resource window; WS~45–47 GiB saturates host
 
 ------------------------------------------------------------------------
-FIXTURE
+FIXTURE (UNCHANGED — DO NOT REVISE)
 ------------------------------------------------------------------------
 SHARD1=F:\ollamamodels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
 SHARD1_SHA256=EB48051961B59B420E182552965B7AA141D16C99488C69CCC9DE1327E96F5639
@@ -41,27 +56,36 @@ EOF
 DECODE=greedy n=8 temp=0 top_k=1 top_p=1 min_p=0 repeat_penalty=1 seed=1 ctx=256 --no-jinja
 
 ------------------------------------------------------------------------
-PROMPT TOKEN IDs
+PROMPT TOKEN IDs (REFERENCE — llama vocab_only authority)
 ------------------------------------------------------------------------
-REF_PROMPT_TOKEN_IDS=PENDING
-  reason=llama-tokenize FATAL vocab_only; full CLI load blocked by RAM/repack; HF BPE non-authority
-REF_PROMPT_TOKEN_COUNT=PENDING
+REF_PROMPT_TOKEN_IDS=27,91,348,9485,91,29,2482,198,71079,20910,306,1101,6268,13,163586,198,27,91,348,9485,91,29,69702,198
+REF_PROMPT_TOKEN_COUNT=24
+REF_METHOD=patched_llama_tokenize_vocab_only
+  EXE_SHA256=8325EB3598CC55AB1A1E203D011182D39E2A0BF03103AB7C39C16B67858A0114
+  FLAGS=-m SHARD1 -f fixture_prompt.txt --ids  (also --no-bos identical)
+  NO_WEIGHT_ALLOC=1 (llama_model_load: vocab only - skipping tensors)
+  OUT=ref_tok_vocabonly_patched.out.txt
+  PIECES=ref_tok_vocabonly_patched_pieces.out.txt
+  NOTE=<|im_end|> atomic id 163586; <|im_start|> emitted as 6 BPE pieces under llama parse_special
+REF_PROMPT_TOKEN_IDS_NOBOS=identical (model add_bos=false for this path)
+
 DEEP2_PROMPT_TOKEN_COUNT_PRIOR=25
   source=g:\~dev\rawrxd\evidence\REAP_TIP_PORT_001\k2gen\g09_dense_full.out.txt
   LIVE_REMEASURE_THIS_TURN=NOT_RUN
-DEEP2_PROMPT_TOKEN_IDS=PENDING (not printed as CSV in prior receipt; count only)
+DEEP2_PROMPT_TOKEN_IDS=PENDING
+  reason=cited EXE SHA EA0371A1019EF10B207E41B42104FCF4ECFF9EA523FFF44FB7868E89BD4EA112 NOT FOUND live
+  DO_NOT_CREDIT=80EFEE9B… (live aggregate_decode_single_smoke) or 0C29A6F8… (Qwen RC2-05)
 
 HF_NONAUTHORITY_ATTEMPT (do not credit):
   PROMPT_TOKEN_COUNT=32
-  PROMPT_TOKEN_IDS=27,91,348,62,5402,91,29,2482,198,71079,20910,306,1101,6268,13,27,91,348,62,517,91,29,198,27,91,348,62,5402,91,29,69702,198
-  NOTE=specials incorrectly fragmented; ≠ Deep2 count 25
+  NOTE=specials incorrectly fragmented; ≠ llama REF count 24; ≠ Deep2 prior count 25
 
 ------------------------------------------------------------------------
 GENERATED TOKEN IDs (first + 8)
 ------------------------------------------------------------------------
 REF_GEN_FIRST=PENDING
 REF_GEN_8=PENDING
-  reason=NOT_RUN — full reference decode not completed
+  reason=NOT_RUN — full reference decode still blocked (CPU_REPACK / mmap stall)
 
 DEEP2_GEN_8_PRIOR=220,11,220,4275,220,4275,4275,59689
   source=G09_DISPOSITION.md + host re-run claim LOGITS_RETURN_OK
@@ -79,20 +103,24 @@ LIVE_SMOKE_EXE=F:\rawrxd\build_reap\bin\aggregate_decode_single_smoke.exe
 FIRST_MIS
 ------------------------------------------------------------------------
 FIRST_MIS=PENDING
-  reason=no authoritative REF vs Deep2 token sequence this turn
+  reason=REF prompt IDs sealed; Deep2 live IDs still PENDING (missing EXE EA0371A1); no gen IDs
 
 ------------------------------------------------------------------------
 FIVE GATES
 ------------------------------------------------------------------------
-GATE1_REFERENCE_COMPAT=PARTIAL
-  PASS: --help, EXE SHA256, version strings, deepseek2/kimi-k2 strings, MLA KV present
-  FAIL: vocab_only tokenize abort; full weight load not resource-viable on this host
+GATE1_REFERENCE_COMPAT=PASS_TOKENIZE
+  PASS: --help, EXE SHA256, version strings, deepseek2/kimi-k2, MLA KV
+  PASS: patched vocab_only tokenize (no weight alloc)
+  STOCK_TOKENIZE=still FATAL without print_info vocab_only guard
 GATE2_FIXTURE_EQUALITY=PASS
-  13 shards + Modelfile; fixture 69B matches Deep2 chat trace; template SHA sealed
+  13 shards + Modelfile; fixture 69B SHA unchanged; template SHA sealed
+GATE3_REFERENCE_TOKENIZE=PASS
+  REF_PROMPT_TOKEN_IDS emitted via patched llama-tokenize vocab_only
 GATE3_REFERENCE_GENERATION=NOT_RUN
-  BLOCKER=CPU_REPACK 446GiB alloc FAIL; --no-repack mmap incomplete under 61.6GiB RAM; tokenize FATAL
+  BLOCKER=CPU_REPACK 446GiB alloc FAIL; --no-repack mmap incomplete under 61.6GiB RAM
 GATE4_DEEP2_COMPARISON=PENDING
-  prior gen IDs recorded; live EXE remasure for EA0371A1 missing; no REF IDs to compare
+  REF prompt IDs ready (count 24); Deep2 live remasure blocked — missing EXE EA0371A1
+  prior Deep2 prompt count 25 ≠ REF 24 — do not close parity without SHA-bound remasure
 GATE5_FAILURE_LOCALIZATION=PENDING
   no FIRST_MIS — stop before inventing embed/MLA/norm/MoE root cause
 
@@ -106,19 +134,16 @@ TIP_CLIMB=HOLD
 GIT
 ------------------------------------------------------------------------
 PRODUCT_REPO=F:\rawrxd
-PRODUCT_HEAD=5e076584da95059b3962841f3abd2d9fb96e1f0d
-PRODUCT_BRANCH_AT_START=upload/ide-fixes-20261111
-PR80=https://github.com/ItsMehRAWRXD/RawrXD/pull/80 Qwen RC2-05 ONLY — do not mix G09 Kimi receipts into that seal
-DEV_MIRROR_HEAD=04b25b93fdff9a946d7389ce1741fcc2a1bb2fdf
+PRODUCT_BRANCH_TARGET=evidence/g09-kimi-k2-indep-parity-20261113
+PR81=https://github.com/ItsMehRAWRXD/RawrXD/pull/81
+PR80=https://github.com/ItsMehRAWRXD/RawrXD/pull/80 Qwen RC2-05 ONLY — CROSS_SHA_CREDIT=0
 
 NEXT_EXECUTABLE_GATE=
-  1) Restore/find EXE SHA EA0371A1 (or remasure new Deep2 EXE and seal separately)
-  2) Fix/use llama.cpp build that tokenizes kimi-k2 without vocab_only hparams abort
-  3) OR host with enough RAM/commit for --no-repack mmap decode of 578GiB Q4_K_M
-  4) Compare prompt IDs then greedy 8; emit FIRST_MIS at first divergence
+  1) Restore/find EXE SHA EA0371A1 (or remasure new Deep2 EXE and seal separately) for Gate4 ID compare
+  2) Host with enough RAM/commit for --no-repack mmap decode of 578GiB Q4_K_M (REFERENCE_GENERATION)
+  3) Compare prompt IDs then greedy 8; emit FIRST_MIS at first divergence
+  4) Optionally upstream the vocab_only print_info guard into stock llama-direct tokenize (02B423EE)
 
 GIT_BRANCH=evidence/g09-kimi-k2-indep-parity-20261113
 PR=https://github.com/ItsMehRAWRXD/RawrXD/pull/81
-CLEANUP_COMMIT=7bec3f2c3b8c030ffe7262e1726ef0f097359ba4
 PROMOTE=0
-
