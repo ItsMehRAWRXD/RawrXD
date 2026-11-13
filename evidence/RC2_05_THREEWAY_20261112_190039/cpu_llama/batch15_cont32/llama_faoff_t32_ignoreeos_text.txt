@@ -1,0 +1,1 @@
+﻿ The aggregate decode throughput is the total number of data packets that can be processed by a network device in a given time period. This metric is important for evaluating the
