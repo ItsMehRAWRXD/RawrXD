@@ -1,0 +1,60 @@
+# Qwen3.6-35B-A3B Full-Topology Runtime (fail-closed)
+UTC=2026-11-13
+DISPOSITION=FULL_TOPOLOGY_FAIL
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+QUALITY=OPEN
+CROSS_SHA_CREDIT=0
+NOT_RUN_NE_PASS=1
+ORIGINAL_GGUF_INTACT=1
+
+## Controlling EXE bind
+EXE=F:\rawrxd\build_reap\bin-msvc\rawr-reap.exe
+EXE_SHA256=C9A5564CB03612F3F6AF7F313D55B339AAD65BA6545BA93EC543441396701B16
+GIT_SHA=bd26a619da6f1890ab3ade31ca6a0570c22c3568
+BRANCH=evidence/reap-multi-model-20261113
+PR=https://github.com/ItsMehRAWRXD/RawrXD/pull/82
+REBUILD=NOT_REQUIRED_FOR_BIND (C9A5564C still on disk; rehashed this turn)
+CMD=rawr-reap runtime <Qwen3.6-35B-A3B-Q4_K_M.gguf> --target 1GB/8 --prompt Hello --max-tokens 1 --receipt QWEN36_RUNTIME_RECEIPT.json
+
+## Model
+GGUF=F:\OllamaModels\Qwen3.6-35B-A3B-GGUF\Qwen3.6-35B-A3B-Q4_K_M.gguf
+GGUF_SHA256=4AC6A06BCE551257267F49AD2226F8671A22519CCC1A4DDE9D5B433D1F2A410D
+ARCH=qwen35moe
+L=40 E=256 TOPK=8
+
+## Measured result (controlling SHA only)
+EXIT=4
+RECEIPT_STATUS=PARTIAL
+generated_tokens=0
+generation_completed=false
+prompt_tokens=1
+load_ms=4037
+stop_reason=12
+stop=EXCEPTION
+FFN_SKIP=N/A (prefill aborted before MoE place)
+LIVE_K2_MOE_PLACE=0
+ROUTE_OK=0
+ACQUIRE_OK=0
+EXCLUDED_ACQUIRES=0
+
+## RCA (fail-closed)
+ABORT=[SSM_FATAL] layer=0 missing required Mamba-2 SSM tensors
+DETAIL=hasSSM=1 ssmIn=NULL ssmD=NULL ssmConv1dBias=NULL; ssmOut/ssmA/ssmConv1d/ssmDtBias/ssmNorm bound
+ROOT_CAUSE=rawr-reap/Deep2Engine host path routes qwen35moe hybrid blocks into Nemotron Mamba-2 computeSSM; GGUF is Qwen GDN (ssm_alpha/beta/a/conv/dt/norm/out + attn_qkv/attn_gate), not Nemotron ssm_in/ssm_d
+PRIOR_GDN_WITNESS=DEEP2_QWEN36_GDN_PRODUCTION_001 / DEEP2_QWEN36_GDN_ADMISSION_001 (deep2_bench_tps / deep2_gpu_certify; CROSS_SHA_CREDIT=0 vs C9A5564C rawr-reap)
+INJECTION_NOTE=--target 1GB/8 selected PHYSICAL_STREAM_EXPERT_REDUCE retain=8 on this arch (single-shard inventory); still aborted at SSM before any token — no REAP claim
+
+## Gates
+FULL_TOPOLOGY_PASS=0
+TOKENS_GE_1=0
+FORWARD_COMPLETED=0
+PHYSICAL_REAP_ELIGIBLE=0
+PROMOTE=0
+
+## Evidence
+STDOUT=QWEN36_RUNTIME_STDOUT.log
+STDERR=QWEN36_RUNTIME_STDERR.log
+RECEIPT=QWEN36_RUNTIME_RECEIPT.json
+ARCH=QWEN36_ARCH_INVENTORY.txt

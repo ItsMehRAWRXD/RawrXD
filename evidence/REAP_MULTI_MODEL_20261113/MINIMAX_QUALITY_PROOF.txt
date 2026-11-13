@@ -1,0 +1,4 @@
+﻿# MiniMax QUALITY proof excerpts
+[PHYSICAL_INVENTORY] shards=3 tensors=809 disk=138342384448 routed=135725580288 keep=2608516096 E=256 bpe=530178048 
+[MULTISHARD_BIND] standard tensors bound layers=62 experts=256 topk=8 shared=0 expertDim=1536 mappings=560
+[AGENT] GENERATION_RECEIPT prompt=1 generated=8 completed=1 cancelled=0 stop_reason=16 stop=COMPLETED
