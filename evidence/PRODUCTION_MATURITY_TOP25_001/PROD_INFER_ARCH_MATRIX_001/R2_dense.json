@@ -1,0 +1,41 @@
+[
+    "EXIT=",
+    {
+        "Id":  "R2_phi3_mini_host",
+        "Exit":  {
+
+                 },
+        "Arch":  "UNKNOWN",
+        "GT":  "NOT_FOUND",
+        "Tok":  0,
+        "CE":  "0",
+        "Pass":  false,
+        "Preview":  ""
+    },
+    "EXIT=",
+    {
+        "Id":  "R2_llama32_3b_host",
+        "Exit":  {
+
+                 },
+        "Arch":  "llama",
+        "GT":  "NOT_FOUND",
+        "Tok":  1,
+        "CE":  "1",
+        "Pass":  false,
+        "Preview":  "Hello! How can I assist you today"
+    },
+    "EXIT=",
+    {
+        "Id":  "R2_unlock125_host",
+        "Exit":  {
+
+                 },
+        "Arch":  "llama",
+        "GT":  "8",
+        "Tok":  1,
+        "CE":  "1",
+        "Pass":  false,
+        "Preview":  "Hello! How can I assist you today"
+    }
+]

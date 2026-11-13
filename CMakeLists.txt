@@ -5742,6 +5742,10 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/full_agentic_ide/AgenticPlanningOrchestrator.cpp
         src/full_agentic_ide/AgenticIOCPBridge.cpp
         src/win32app/Win32IDE_AgentCommands.cpp
+        # Agentic loop + Deep2 IDE bridges (process launch, SNAP recovery, ESP)
+        src/win32app/Win32IDE_Deep2Bridge.cpp
+        src/win32app/Win32IDE_AgenticLoopBridge.cpp
+        src/win32app/Win32IDE_AgentStepTimeline.cpp
         src/win32app/Win32IDE_TabManager.cpp
         src/win32app/Win32IDE_Settings.cpp
         src/win32app/Win32IDE_TaskRunner.cpp
@@ -7595,6 +7599,11 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         "${CMAKE_CURRENT_SOURCE_DIR}/src/masm"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/sovereign_autonomy"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/runtime"
+        # AgenticLoopBridge / Deep2Bridge headers (agent_esp, SNAP, watchdog)
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/project_wizard"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/snap"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/watchdog"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tools/agent_esp/rawrxd_agent_esp"
     )
     if(EXISTS "${RAWRXD_INFRA_ROOT}/Headers")
         target_include_directories(RawrXD-Win32IDE PRIVATE
@@ -8846,8 +8855,11 @@ option(BUILD_DEEP2_GPU_PACKED_FORWARD_CERT "Build STREAMER_GPU packed-forward ga
 if(BUILD_DEEP2_GPU_PACKED_FORWARD_CERT)
     add_executable(deep2_gpu_packed_forward_cert
         src/deep2/deep2_gpu_packed_forward_cert.cpp
+        src/deep2/GpuPreflight.cpp
+        src/deep2/GpuPreflightReset.cpp
+        src/deep2/GpuPreflightElevatedPnp.cpp
     )
-    target_link_libraries(deep2_gpu_packed_forward_cert PRIVATE InferenceEngine dxgi)
+    target_link_libraries(deep2_gpu_packed_forward_cert PRIVATE InferenceEngine dxgi setupapi cfgmgr32)
     if(MSVC)
         target_compile_options(deep2_gpu_packed_forward_cert PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
     endif()
