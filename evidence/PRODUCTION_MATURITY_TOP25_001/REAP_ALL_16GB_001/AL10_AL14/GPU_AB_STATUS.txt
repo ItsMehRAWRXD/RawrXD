@@ -1,0 +1,33 @@
+GPU_AB_STATUS — FFN_DOWN_1@pos3 after gate_inp export fix
+DATE=2026-11-13
+PROMOTE=0
+CERTIFIED=0
+
+LAW=ALLOW_GPU=1 FORCE_GPU=1 RAWR_NO_CPU_FALLBACK=1 --vulkan
+NO_HOST_DECODE=1
+
+HOST
+FreePhysGB≈35.67 (gate cleared vs prior 12.79)
+HALT_CONCURRENCY OWNER=AL10_AL14_NUMERICAL_CORRECTNESS EXCLUSIVE=1
+GPUs=AMD Radeon RX 7800 XT + AI PRO R9700 (no nvidia-smi)
+
+BUILD
+ninja rawr FAILED: Deep2Engine.cpp missing KvOwnershipProbe.hpp
+→ new transform/export objects not linked into build_ninja\bin\rawr.exe this turn
+
+A/B
+FULL_ALLOWLIST vs PHYS_CALIB max-tok=4: NOT_RUN (rebuild blocked)
+Disposition: NOT_RUN_BUILD_BLOCKED (≠ PASS; ≠ invent CPU PASS)
+If later Vulkan OOM on MiniMax FULL: seal NOT_RUN_GPU_OOM fail-closed
+
+OFFLINE (independent of rebuild)
+gate_inp stride_sorted bad=0/27; bias sorted=0; AL12 expert bodies MATCH
+EXPORT_PATCH=Y landed in source (copyGateInpExpertColumns)
+
+```
+PROMOTE=0
+FFN_DOWN_1@3_AFTER=NOT_RUN_BUILD_BLOCKED
+AL13_GATE_INP_STATIC=PASS
+EXPORT_PATCH=Y
+NOT_RUN!=PASS
+```

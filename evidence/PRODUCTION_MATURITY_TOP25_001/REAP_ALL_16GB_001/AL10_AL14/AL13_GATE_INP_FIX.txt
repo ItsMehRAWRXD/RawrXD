@@ -1,0 +1,41 @@
+AL13_GATE_INP_FIX — MiniMax CALIB ffn_gate_inp column remap
+DATE=2026-11-13
+PROMOTE=0
+CERTIFIED=0
+
+## Sealed problem
+
+FIRST_DIVERGENT_OP=FFN_DOWN_1@pos3
+last_exact=FFN_NORM_1@pos3
+AL13 sealed claim: ffn_gate_inp FAIL (router column order vs selection)
+
+## Offline root-cause
+
+ggml `ffn_gate_inp` ne=[H,E]: expert column e lives at bytes [e*H*4,(e+1)*H*4).
+Python gguf ndarray reports shape (E,H) while metadata is [H,E].
+Prior AL13 ncol gather `farr[:,e]` on (E,H) → false 27/27 FAIL.
+
+Probe (ROUTE27 PHYS vs FULL, L0) with expert-major stride:
+  stride_sorted bad=0/27
+  stride_hit bad=23/27
+  bias sorted bad=0
+Expert bodies (AL12) byte-identical under sorted M_l.
+
+## Export fix (this turn)
+
+`transformMoEGGUF` now remaps gate_inp via `copyGateInpExpertColumns`:
+  - requires F32 dims=[H,E]
+  - walks sorted M_l
+  - copies contiguous ggml columns (not hit-order, not HE-row)
+Bodies + `exp_probs_b.bias` keep stride/dims.back() path, same sorted order.
+`ReapPhysicalReduceExport` restored → calls transformMoEGGUF (source immutable).
+
+EXPORT_PATCH=Y (explicit column remap path)
+VERIFY_AXIS=row_E0 / stride_EH still required for AL13 scripts
+AL13_STATIC_PROBE=PASS (existing PHYS already matches sorted columns)
+
+## FFN_DOWN_1@pos3
+
+Offline weights MATCH → divergence class remains ACCUM/STICK/EXEC under equal
+FFN_NORM. GPU A/B required (ALLOW_GPU=1 FORCE_GPU=1; no HOST_DECODE).
+PROMOTE=0 · NOT_RUN!=PASS

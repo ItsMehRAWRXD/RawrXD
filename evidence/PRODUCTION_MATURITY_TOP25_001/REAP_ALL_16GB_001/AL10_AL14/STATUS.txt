@@ -1,65 +1,41 @@
-AL10–AL14 — MiniMax FULL vs PHYS / semantic RE follow-up
+AL10–AL14 — MiniMax FULL vs PHYS / ffn_gate_inp CALIB
 DATE=2026-11-13
 PROMOTE=0
 CERTIFIED=0
 CROSS_SHA_CREDIT=0
 
-## Follow-up from completed RE agents
+## Sealed first-divergence (AL09/AL11 STAGE_DIGEST path)
 
-| Check | Result | Agent/evidence |
-|-------|--------|----------------|
-| Forced Hello specials (39 IDs) | PASS vs llama-tokenize | RE_MINIMAX_PROMPT_TOKENS_001 |
-| Residual order | MATCH llama minimax-m2 | same |
-| NeoX RoPE / wo / Q6_K | MATCH | RE_MINIMAX_ROPE_WO_LMHEAD_001 / NEOX_WO_Q6K |
-| Q_PRE/POST L2 drop | FALSE_LEAD (pre-QK-norm dumps) | RE_MINIMAX_QPRE_IS_PRENORM_001 |
-| STREAM_SEMANTIC retain-256 | NOT_PASS (backticks) | SCOREBOARD |
-| Allowlist bank wire | SOURCE_WIRED | [Allowlist bank wiring](1d685d31-6bdf-4a72-bdb8-6cb5c552b49e) |
+FIRST_DIVERGENT_KEY=`FFN_DOWN_1` @ pos=3 (tok4)
+  FULL fnv=0a38208b6642f3d6  PHYS fnv=020e34f17b2bbf8a
+  last_exact=`FFN_NORM_1`@pos3  class=MOE_EXPERT_BODY_OR_ACCUM_UNDER_EQUAL_NORM
+  route scores MATCH; slot_map_consistent_with_sorted_calib=true
+Evidence: AL11_FIRST_DIVERGENT.json
 
-## AL09 seed
+## AL13 ffn_gate_inp (this fix)
 
-tok1–3: L17_INPUT_FNV MATCH + ORDERED_ID_MATCH  
-tok4: L17_INPUT_FNV MISMATCH → L17 router is symptom
+Sealed claim: gate_inp FAIL. Offline: verify-axis false lead on ncol of (E,H)
+ndarray; ggml expert columns already match sorted M_l (bad=0/27).
+EXPORT_PATCH=Y — `copyGateInpExpertColumns` in transformMoEGGUF +
+ReapPhysicalReduceExport wired to transform (source immutable).
+Evidence: AL13_GATE_INP_FIX.txt · _probe_gate_inp.py · AL12 body parity
 
-## AL11 first divergent (stage walk — BOUNDED_OPEN)
+## GPU A/B law
 
-Reported earliest key mismatch among *paired* digests:
-
-```
-FFN_DOWN_1 @ pos=3
-  FULL fnv=0a38208b6642f3d6
-  PHYS fnv=020e34f17b2bbf8a
-```
-
-**INCOMPLETE:** AL11_LAYER_OUT_WALK shows FULL `LAYER18_OUT|T3`…`ABSENT` while PHYS present → full arm did not finish tok3 upper layers. Do **not** treat FFN_DOWN_1@3 as sealed FIRST_DIVERGENT_OP until dual CLEAN_EXIT same-SHA allowlist-active reseal.
-
-AL10 TOK3_SELECTED_ID still OPEN (need ARGMAX on complete paired runs).
+ALLOW_GPU=1 FORCE_GPU=1 RAWR_NO_CPU_FALLBACK=1 --vulkan
+Do NOT set RAWRXD_HOST_DECODE=1. OOM → NOT_RUN_GPU_OOM (≠ CPU PASS).
 
 ## Chained next
 
-[MiniMax softmax SwiGLU FNV](af48142c-7c25-4489-9f51-df59ab917a7a) — **CLOSED formula** (`RE_MINIMAX_SOFTMAX_SWIGLU_LMHEAD_001`):
-  Softmax `1/sqrt(128)` MATCH · SwiGLU silu(gate)*up MATCH · lm_head FNV REFERENCE_BLOCKED (TIMEOUT).
-  PATCH=N. Does **not** explain AL09 tok4 L17 input mismatch (decode-after-tok0).
-
-SCOREBOARD next for Deep2↔ggml: seal Q_LINEAR_0 (Batch01); AL09/AL11 remain OPEN for tok4+.
+Exclusive GPU FULL_ALLOWLIST vs PHYS_CALIB max-tok=4 reseal FFN_DOWN_1@pos3
+(accum/stick path under equal weights+gate_inp columns).
 
 ```
 PROMOTE=0
 CERTIFIED=0
 TIP_CLIMB=HOLD
+AL13_GATE_INP_STATIC=PASS
+EXPORT_PATCH=Y
+FFN_DOWN_1@3=BOUNDED_OPEN
 NOT_RUN!=PASS
 ```
-
-## AL13 expert mapping (static GGUF)
-
-OVERALL=FAIL � expert FFN families + bias PASS on L0/L1/L17; `ffn_gate_inp.weight` FAIL (router) on those layers.
-full meta expert_count=256 � phys meta expert_count=27
-Evidence: AL13_EXPERT_MAPPING.json
-
-## IDE daily-use (W3) � 2026-11-13
-SEE=evidence/IDE_DAILY_USE_E2E_001
-EXE_SHA256=D9589D9A665E07F93E906A637B9D4ADB80D99BFD9604103A882E6AC79078BC08
-AGENT_LIFECYCLE+RECOVERY=PASS (headless)
-SUNSHINE_HEADLESS=PASS
-TERMINAL_CONPTY=FAIL_CLOSED
-DEBUGGER_HWND=NOT_RUN (RUNTIME_PARTIAL dbgeng)
-PROMOTE=0

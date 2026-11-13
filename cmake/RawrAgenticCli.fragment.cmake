@@ -87,6 +87,8 @@ set(RAWR_AGENTIC_SOURCES
   src/reap/ReapRuntimePlan.cpp
   src/reap/ReapRuntime.cpp
   src/reap/ReapPhysicalReduce.cpp
+  src/reap/ReapPhysicalReduceExport.cpp
+  src/deep2/ReapMoETransformer.cpp
 )
 
 # Replace thin rawr_run with agentic front door if rawr already defined.

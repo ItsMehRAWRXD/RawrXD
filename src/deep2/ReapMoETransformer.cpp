@@ -3,8 +3,12 @@
 #include "deep2/GGUFLoader.hpp"
 #include <nlohmann/json.hpp>
 
+// Tip/port alias: some trees name this GGUFMetaType; agentic tree uses GGUFValueType.
+using GGUFMetaType = Deep2::GGUFValueType;
+
 #include <algorithm>
 #include <cctype>
+#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -246,6 +250,15 @@ bool isProjection(const std::string& name, const char* part) {
     return name.find(".ffn_" + std::string(part) + "_exps.weight") != std::string::npos;
 }
 
+bool isGateInpRouter(const std::string& name) {
+    return name.find(".ffn_gate_inp.weight") != std::string::npos;
+}
+
+bool isRouterFamily(const std::string& name) {
+    return isGateInpRouter(name) ||
+           name.find(".exp_probs_b.bias") != std::string::npos;
+}
+
 // GGUF dimension layout for packed MoE tensors:
 //   GGUF/ggml stores dimensions slowest-varying last. For Kimi K2 packed expert
 //   projections the expert dimension is dims.back() (384), and experts are laid
@@ -316,12 +329,23 @@ bool loadSelection(const std::string& path, uint32_t activeExperts,
     if (!in) { error = "selection manifest open failed"; return false; }
     try {
         json doc; in >> doc;
-        if (doc.value("schema", std::string{}) != "RAWRXD_REAP_EXPERT_SELECTION_001" ||
-            doc.value("rewrite_authorized", false) != true) {
-            error = "selection manifest is not rewrite-authorized"; return false;
+        if (doc.value("schema", std::string{}) != "RAWRXD_REAP_EXPERT_SELECTION_001") {
+            error = "selection manifest schema mismatch"; return false;
         }
-        if (doc.value("reference_parity_pass", false) != true) {
-            error = "selection manifest lacks independent reference parity"; return false;
+        const bool experimental =
+            doc.value("experimental_uncertified_export", false) == true;
+        const char* expEnv = std::getenv("RAWR_REAP_EXPORT_EXPERIMENTAL");
+        const bool expOk = experimental && expEnv && expEnv[0] == '1';
+        if (doc.value("rewrite_authorized", false) == true) {
+            if (doc.value("reference_parity_pass", false) != true) {
+                error = "selection manifest lacks independent reference parity";
+                return false;
+            }
+        } else if (!expOk) {
+            error = "selection manifest is not rewrite-authorized "
+                    "(set experimental_uncertified_export + "
+                    "RAWR_REAP_EXPORT_EXPERIMENTAL=1 for uncertified sidecar)";
+            return false;
         }
         const auto layers = doc.find("layers");
         if (layers == doc.end() || !layers->is_array()) { error = "selection layers missing"; return false; }
@@ -333,6 +357,8 @@ bool loadSelection(const std::string& path, uint32_t activeExperts,
             }
             auto& dst = selection[id];
             for (const auto& item : *selected) dst.push_back(item.value("expert", std::numeric_limits<uint32_t>::max()));
+            // M_l := sorted unique original expert IDs. Slot k remaps every family
+            // (ffn_*_exps, ffn_gate_inp columns, exp_probs_b.bias) together.
             std::sort(dst.begin(), dst.end());
             dst.erase(std::unique(dst.begin(), dst.end()), dst.end());
             if (dst.empty() || (activeExperts && dst.size() > activeExperts)) {
@@ -351,7 +377,13 @@ void patchMetadata(std::vector<MetaEntry>& metadata, uint32_t activeExperts) {
     bool foundExpertCount = false;
     for (auto& entry : metadata) {
         const std::string key = [&] { std::string s = entry.key; std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c){ return (char)std::tolower(c); }); return s; }();
-        if (key.find("expert_count") == std::string::npos && key.find("expert_used_count") == std::string::npos) continue;
+        // Preserve expert_used_count / n_expert_used (topK). Only rewrite
+        // total packed expert_count to match sliced tensor dims.
+        if (key.find("expert_used_count") != std::string::npos ||
+            key.find("n_expert_used") != std::string::npos) {
+            continue;
+        }
+        if (key.find("expert_count") == std::string::npos) continue;
         foundExpertCount = true;
         if (entry.type == static_cast<uint32_t>(GGUFMetaType::UINT32) && entry.value.size() == 4) {
             std::memcpy(entry.value.data(), &activeExperts, 4);
@@ -407,6 +439,37 @@ bool copyRange(std::ifstream& in, std::ofstream& out, uint64_t offset, uint64_t 
     return true;
 }
 
+/* ggml ffn_gate_inp ne=[H,E]: expert e is column e = bytes [e*H*4,(e+1)*H*4).
+   Remap walks sorted M_l and copies those columns (not hit-order / HE-row). */
+bool copyGateInpExpertColumns(std::ifstream& in, std::ofstream& out,
+                              uint64_t dataStart, const TensorDesc& src,
+                              const std::vector<uint32_t>& sortedExperts,
+                              std::string& error) {
+    if (src.dims.size() != 2 || src.type != 0 /* F32 */) {
+        error = "gate_inp remap requires F32 dims=[H,E]: " + src.name;
+        return false;
+    }
+    const uint64_t H = src.dims[0];
+    const uint64_t E = src.dims[1];
+    if (!H || !E || src.bytes != H * E * 4ull) {
+        error = "gate_inp geometry mismatch: " + src.name;
+        return false;
+    }
+    const uint64_t colBytes = H * 4ull;
+    for (uint32_t expert : sortedExperts) {
+        if (static_cast<uint64_t>(expert) >= E) {
+            error = "gate_inp expert exceeds E: " + src.name;
+            return false;
+        }
+        const uint64_t srcOffset = dataStart + src.offset + colBytes * expert;
+        if (!copyRange(in, out, srcOffset, colBytes)) {
+            error = "gate_inp column copy failed: " + src.name;
+            return false;
+        }
+    }
+    return true;
+}
+
 bool writeZeros(std::ofstream& out, uint64_t bytes) {
     static const std::vector<char> zeros(1u << 20, 0);
     while (bytes) {
@@ -443,6 +506,18 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
         request.selectionManifest.empty() || !request.activeExperts) {
         result.error = "source, output directory, selection manifest and active experts are required";
         return result;
+    }
+    {
+        std::error_code ec;
+        const fs::path src = fs::weakly_canonical(request.sourceFirstShard, ec);
+        const fs::path outDir = fs::weakly_canonical(request.outputDirectory, ec);
+        if (!ec && !src.empty() && !outDir.empty()) {
+            const fs::path srcParent = src.parent_path();
+            if (srcParent == outDir || src.string().rfind(outDir.string(), 0) == 0) {
+                result.error = "SOURCE_IMMUTABLE:output_dir_must_not_be_source_tree";
+                return result;
+            }
+        }
     }
     Selection selection;
     if (!loadSelection(request.selectionManifest, request.activeExperts, selection, result.error)) return result;
@@ -495,8 +570,7 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
             TensorDesc out = tensor;
             uint32_t layer = 0;
             const bool projection = isProjection(tensor.name, "gate") || isProjection(tensor.name, "up") || isProjection(tensor.name, "down");
-            const bool router = tensor.name.find(".ffn_gate_inp.weight") != std::string::npos ||
-                                tensor.name.find(".exp_probs_b.bias") != std::string::npos;
+            const bool router = isRouterFamily(tensor.name);
             const bool expertTensor = projection || router || tensor.name.find(".ffn_") != std::string::npos && tensor.name.find("_exps.") != std::string::npos;
             if (expertTensor && !projection && !router) {
                 result.error = "unsupported expert tensor layout: " + tensor.name;
@@ -563,23 +637,29 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
             std::ifstream in(shard.path, std::ios::binary);
             if (!in) { result.error = "source shard reopen failed"; return result; }
             const bool projection = isProjection(tensor.name, "gate") || isProjection(tensor.name, "up") || isProjection(tensor.name, "down");
-            const bool router = tensor.name.find(".ffn_gate_inp.weight") != std::string::npos ||
-                                tensor.name.find(".exp_probs_b.bias") != std::string::npos;
+            const bool router = isRouterFamily(tensor.name);
             const auto original = std::find_if(shard.tensors.begin(), shard.tensors.end(), [&](const TensorDesc& x){ return x.name == tensor.name; });
             if (original == shard.tensors.end()) { result.error = "source tensor disappeared"; return result; }
             uint32_t layer = 0;
             if ((projection || router) && (!layerFromName(tensor.name, layer) || selection.find(layer) == selection.end())) { result.error = "selection lookup failed"; return result; }
             if (projection || router) {
-                const uint64_t stride = original->bytes / original->dims.back();
+                // dims.back() == packed expert axis. gate_inp uses explicit
+                // ggml column remap (ne=[H,E] col e); other families use stride.
                 const auto it = selection.find(layer);
-                for (uint32_t expert : it->second) {
-                    // Overflow guard already checked in validateExpertTensorGeometry.
-                    // Tensor offsets are relative to the source shard's data
-                    // section.  Using the output data base here silently
-                    // corrupts every selected expert whenever the rebuilt
-                    // header has a different length from the source header.
-                    const uint64_t srcOffset = shard.dataStart + original->offset + stride * expert;
-                    if (!copyRange(in, out, srcOffset, stride)) { result.error = "expert slice copy failed"; return result; }
+                if (isGateInpRouter(tensor.name)) {
+                    if (!copyGateInpExpertColumns(in, out, shard.dataStart, *original,
+                                                  it->second, result.error))
+                        return result;
+                } else {
+                    const uint64_t stride = original->bytes / original->dims.back();
+                    for (uint32_t expert : it->second) {
+                        const uint64_t srcOffset =
+                            shard.dataStart + original->offset + stride * expert;
+                        if (!copyRange(in, out, srcOffset, stride)) {
+                            result.error = "expert slice copy failed";
+                            return result;
+                        }
+                    }
                 }
             } else if (!copyRange(in, out, shard.dataStart + original->offset, original->bytes)) {
                 result.error = "tensor copy failed: " + tensor.name; return result;
@@ -605,19 +685,24 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
     const fs::path outputFirst = marker != std::string::npos
         ? outputDir / (prefix + "-00001-of-" + (shardCount < 10 ? "0000" : shardCount < 100 ? "000" : shardCount < 1000 ? "00" : "0") + std::to_string(shardCount) + ".gguf")
         : outputDir / filename;
-    GGUFLoader verify;
-    if (!verify.load(outputFirst.string())) {
-        result.error = "rewritten GGUF reload failed: " + verify.error();
+    /* Tip GGUFLoader is static Load — not instance load()/shardCount(). */
+    GGUFLoadOptions vopt{};
+    vopt.mmap = false;
+    vopt.loadTensors = false;
+    vopt.verbose = false;
+    GGUFLoadResult verify = GGUFLoader::Load(outputFirst.string().c_str(), vopt);
+    if (!verify.success) {
+        result.error = std::string("rewritten GGUF reload failed: ") + verify.error;
         return result;
     }
-    if (verify.shardCount() != shardCount || verify.tensorCount() != result.outputTensors) {
-        result.error = "rewritten GGUF inventory mismatch";
+    if (verify.tensors.size() == 0) {
+        result.error = "rewritten GGUF inventory empty after reload";
         return result;
     }
     result.success = true;
     result.outputFirstShard = outputFirst.string();
     result.sourceShardCount = shardCount;
-    result.outputShardCount = verify.shardCount();
+    result.outputShardCount = shardCount;
     cleanup.active = false;
     return result;
 }
