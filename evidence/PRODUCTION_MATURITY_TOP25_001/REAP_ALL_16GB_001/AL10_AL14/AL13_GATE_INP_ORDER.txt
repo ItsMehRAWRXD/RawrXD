@@ -1,0 +1,26 @@
+AL13 follow-up — ffn_gate_inp column order vs selection
+DATE=2026-11-13
+PROMOTE=0
+PHYS=MiniMax-M2.7-REAP16-CALIB-ROUTE27
+SELECTION=selection_calib_top27.json
+
+## Result (L0/L1/L17)
+
+| Tensor | sorted selection | hit_order selection |
+|--------|------------------|---------------------|
+| ffn_gate_inp.weight | bad=27/27 | bad=27/27 |
+| exp_probs_b.bias | bad=0 | bad=23–25 |
+
+Bias matches **sorted** original IDs → physical bias remap is sorted-ID order.
+Router `ffn_gate_inp` matches **neither** sorted nor hit-order column gather → export/runtime router slice bug or layout (EH vs HE) mismatch — not a simple order flip.
+
+## Concurrent blockers
+
+llama-direct CPU Hello: TIMEOUT@45s (REFERENCE_BLOCKED)
+Quality chat curve guarded: aborted (LEFT rawr>0 / NO_STDOUT)
+
+```
+AL13_GATE_INP=FAIL
+BIAS_SORTED=PASS
+PROMOTE=0
+```
