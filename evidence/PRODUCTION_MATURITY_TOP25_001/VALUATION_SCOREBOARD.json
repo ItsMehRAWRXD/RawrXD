@@ -1,7 +1,7 @@
 {
   "pack": "PRODUCTION_MATURITY_TOP25_001",
   "artifact": "VALUATION_SCOREBOARD",
-  "asof_local": "2026-11-13T16:52:00-05:00",
+  "asof_local": "2026-11-13T16:56:00-05:00",
   "promote": 0,
   "certified": 0,
   "tip_climb": "HOLD",
@@ -11,13 +11,23 @@
   "year11_enterprise_target": 1,
   "overall_rule": "min(CLI_SCORE,GUI_SCORE)_and_conjunction",
   "gpu_law": "HOST_CPU_RAM_ONLY_INVALID_FOR_COMPETITIVE",
+  "ops_absorb": {
+    "auth": "VALUATION_OPS.txt",
+    "OPS_AXIS_PCT": 70,
+    "C01_ROOT_INSTALL_DOCS": 90,
+    "C10_CLEAN_VM_COMMUNITY_PUBLISH": 10,
+    "OPS_MATURITY_COMPLETE": 0,
+    "G5_G6": "OPEN",
+    "ZIP_HELP": "TIMEOUT_HANG"
+  },
   "scores": {
-    "CLI_SCORE_PCT": 58,
+    "CLI_SCORE_PCT": 49,
     "GUI_SCORE_PCT": 32,
     "OVERALL_PCT": 32,
     "CONJUNCTION_PASS": 0,
-    "CLI_METHOD": "(60+90+48+30+75+100+75+30+45+50+40)/11",
-    "CLI_AUTHORITY": "VALUATION_CLI.txt"
+    "CLI_METHOD": "floor((62+88+48+30+75+15+75+30+45+50+28)/11)=49",
+    "CLI_AUTHORITY": "VALUATION_CLI.txt",
+    "COMPLETE": 0
   },
   "tracks": {
     "CLI_COMPLETE": 0,
@@ -29,14 +39,10 @@
     "EXE_ABSORB_GPU_DEFAULT": 0,
     "FOUR_PANEL_HWND_E2E": "NOT_RUN"
   },
-  "agents_inflight": {
-    "V0_Q6K": "2393b058-64c6-4011-99b2-0c2b09d19133",
-    "CLI_TOP25": "0eb6d221-059f-4931-81ad-ca3a29f828df",
-    "GUI_WIN32": "62334642-65be-4a62-8906-abd0630da94d"
-  },
   "authority": {
     "cli": "VALUATION_CLI.txt",
     "gui": "VALUATION_GUI.txt",
+    "ops": "VALUATION_OPS.txt",
     "rollup": "VALUATION_ROLLUP_001/STATUS.txt"
   }
 }
