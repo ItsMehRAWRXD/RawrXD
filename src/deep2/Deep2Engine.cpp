@@ -9861,6 +9861,12 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
             profiler_->endFFNNorm();
     }
     B3_TraceState("FFN_NORM", layer, layerTemp, hiddenDim);
+    if (layer == 0 && Rc201b::Enabled()) {
+        const std::uint32_t p =
+            static_cast<std::uint32_t>(kvCache ? kvCache->currentLength() : 0);
+        if (Rc201b::WantPos(p))
+            Rc201b::DumpF32("FFN_NORM", 0, p, layerTemp, hiddenDim);
+    }
     if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer))
     {
         const size_t tokPos = kvCache ? kvCache->currentLength() : (seqLen > 0 ? seqLen - 1 : 0);
@@ -10013,6 +10019,12 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         B3_StageDigest(key, tokPos, output, hiddenDim);
     }
     Deep2ValidateVector("POST_FFN_RESIDUAL", layer, output, hiddenDim);
+    if (layer == 0 && Rc201b::Enabled()) {
+        const std::uint32_t p =
+            static_cast<std::uint32_t>(kvCache ? kvCache->currentLength() : 0);
+        if (Rc201b::WantPos(p))
+            Rc201b::DumpF32("AFTER_FFN", 0, p, output, hiddenDim);
+    }
 
     // Real layer execution mark: this forwardLayer completed on its planned device.
     if (multiGpuLayerPlan_.active)
@@ -11776,6 +11788,15 @@ if (hasGate)
     if (profilingEnabled_ && profiler_)
         profiler_->endFFNDown();
     B3_TraceState("FFN_DOWN", layer, output, hiddenDim);
+    if (layer == 0 && Rc201b::Enabled()) {
+        const std::uint32_t p =
+            static_cast<std::uint32_t>(kvCache ? kvCache->currentLength() : 0);
+        if (Rc201b::WantPos(p)) {
+            Rc201b::DumpF32("FFN_UP", 0, p, upBuf, intermediateDim);
+            Rc201b::DumpF32("FFN_ACT", 0, p, gateBuf, intermediateDim);
+            Rc201b::DumpF32("FFN_DOWN", 0, p, output, hiddenDim);
+        }
+    }
 }
 
 // ============================================================================

@@ -635,20 +635,25 @@ bool Deep2Engine::forwardLayerGpuResident(
         }
     }
 
-    // RC2-05 BATCH12 dump: Q/K/V/RoPE/KV_WRITE match CPU; ATTN_OUT first clear
-    // mis (maxAbs~5e-3 @pos17). Device OP_ATTN is FIRST_OP for tip9 (16895 vs
-    // 821). Host AttentionWithCache + F16 host KV seal closes without SPV.
-    // Opt out: DEEP2_GPU_DEVICE_ATTN=1.
+    // RC2-05 BATCH13: host AttentionWithCache (BATCH12). Host LinearW(wo) under
+    // vulkan yielded oNorm=0 then ~323 (CPU O ~5.6) → tip*=15; keep opt-in only
+    // via DEEP2_GPU_HOST_O=1 (ensureF32 path). Default: device O+FFN.
+    // Opt out attn: DEEP2_GPU_DEVICE_ATTN=1.
     const char* devAttnEnv = std::getenv("DEEP2_GPU_DEVICE_ATTN");
     const bool useDeviceAttn = (devAttnEnv && devAttnEnv[0] == '1');
+    const char* hostOEnv = std::getenv("DEEP2_GPU_HOST_O");
+    const bool wantHostO = (hostOEnv && hostOEnv[0] == '1');
     bool hostAttnDone = false;
+    bool hostODone = false;
+    std::vector<float> attnHostHold;
     if (kvCache && !useDeviceAttn) {
         if (!gpu->FlushFusedRestart())
             return fail();
-        std::vector<float> qh(heads * headDim), kh(kvDim), vh(kvDim);
+        std::vector<float> qh(heads * headDim), kh(kvDim), vh(kvDim), hIn(hidden);
         if (!gpu->DownloadBuf(gpu->ArenaQ(), qh.data(), heads * headDim) ||
             !gpu->DownloadBuf(gpu->ArenaK(), kh.data(), kvDim) ||
-            !gpu->DownloadBuf(gpu->ArenaV(), vh.data(), kvDim))
+            !gpu->DownloadBuf(gpu->ArenaV(), vh.data(), kvDim) ||
+            !gpu->DownloadHidden(hIn.data(), hidden))
             return fail();
         const size_t kl = kvLayerIdx(layer);
         if (kl == SIZE_MAX)
@@ -676,26 +681,68 @@ bool Deep2Engine::forwardLayerGpuResident(
                          Rc201b::Side(), pos, pos + 1, kvDim);
             std::fflush(stderr);
         }
-        std::vector<float> attnHost(heads * headDim, 0.0f);
+        attnHostHold.assign(heads * headDim, 0.0f);
         const size_t groupSize = heads / (kvHeads ? kvHeads : 1u);
         const size_t attend = static_cast<size_t>(pos) + 1;
         for (uint32_t h = 0; h < heads; ++h) {
             const size_t kvHead = h / groupSize;
             if (!AttentionWithCache(qh.data() + h * headDim, *kvCache, kl, kvHead,
-                                    attnHost.data() + h * headDim, attend))
+                                    attnHostHold.data() + h * headDim, attend))
                 return fail();
         }
-        if (!gpu->UploadBuf(gpu->ArenaAttn(), attnHost.data(), heads * headDim))
+        if (!gpu->UploadBuf(gpu->ArenaAttn(), attnHostHold.data(), heads * headDim))
             return fail();
         ++counters.attnScoreOps;
         ++counters.softmaxOps;
         ++counters.attnValueOps;
         hostAttnDone = true;
+        if (wantHostO) {
+            // ensureF32: packed LinearW under vulkan was scale-broken (oNorm~323).
+            const float* wF = ensureF32(wo, vulkanWeightF32_);
+            if (!wF)
+                return fail();
+            WeightTensor woF = wo;
+            woF.data = const_cast<float*>(wF);
+            woF.type = static_cast<int>(GGMLType::GGML_TYPE_F32);
+            woF.sizeBytes = static_cast<size_t>(wo.rows) * wo.cols * sizeof(float);
+            std::vector<float> oOut(hidden), resid(hidden);
+            LinearW(woF, attnHostHold.data(), nullptr, oOut.data(), hidden);
+            for (uint32_t i = 0; i < hidden; ++i)
+                resid[i] = hIn[i] + oOut[i];
+            if (layer == 0 && pos == 0) {
+                double hN = 0, oN = 0, aN = 0;
+                for (uint32_t i = 0; i < hidden; ++i) {
+                    hN += static_cast<double>(hIn[i]) * hIn[i];
+                    oN += static_cast<double>(oOut[i]) * oOut[i];
+                }
+                for (float x : attnHostHold)
+                    aN += static_cast<double>(x) * x;
+                std::fprintf(stderr,
+                    "[HOST_O_DIAG] woType=%d aNorm=%.6e hNorm=%.6e oNorm=%.6e\n",
+                    wo.type, std::sqrt(aN), std::sqrt(hN), std::sqrt(oN));
+                std::fflush(stderr);
+            }
+            if (layer == 0 && Rc201b::Enabled() && Rc201b::WantPos(pos)) {
+                Rc201b::DumpF32("ATTN_OUT", 0, pos, attnHostHold.data(),
+                                attnHostHold.size());
+                Rc201b::DumpF32("O_PROJ", 0, pos, oOut.data(), oOut.size());
+                Rc201b::DumpF32("AFTER_ATTN_RESIDUAL", 0, pos, resid.data(),
+                                resid.size());
+            }
+            if (!gpu->UploadBuf(gpu->ArenaResidual(), resid.data(), hidden) ||
+                !gpu->FlushFusedRestart())
+                return fail();
+            ++counters.oProjOps;
+            ++counters.residualOps;
+            hostODone = true;
+        }
         static int s_hostAttnOnce = 0;
         if (!s_hostAttnOnce) {
             s_hostAttnOnce = 1;
             std::fprintf(stderr,
-                "GPU_HOST_ATTN=1 FIRST_OP=ATTN_OUT (DEEP2_GPU_DEVICE_ATTN=1 restores)\n");
+                "GPU_HOST_ATTN=1 HOST_O=%d (DEEP2_GPU_HOST_O=1 enables; "
+                "DEEP2_GPU_DEVICE_ATTN=1 restores device attn)\n",
+                hostODone ? 1 : 0);
             std::fflush(stderr);
         }
     }
@@ -733,8 +780,8 @@ bool Deep2Engine::forwardLayerGpuResident(
         ++counters.attnValueOps;
     }
 
-    // RC2-01B-4 measurement: attn output before O-proj.
-    if (layer == 0 && Rc201b::Enabled() && Rc201b::WantPos(pos)) {
+    // RC2-01B-4: attn before O — skip extra flush when host path already dumped.
+    if (!hostODone && layer == 0 && Rc201b::Enabled() && Rc201b::WantPos(pos)) {
         const bool flushed = gpu->FlushFusedRestart();
         std::vector<float> ah(heads * headDim);
         if (flushed &&
@@ -749,7 +796,7 @@ bool Deep2Engine::forwardLayerGpuResident(
     }
 
     // RC2-02: after first decode attn, dump Q/K/attn norms (layer 0 only).
-    if (wantL0Decode) {
+    if (!hostODone && wantL0Decode) {
         static uint32_t s_l0AttnPos = UINT32_MAX;
         if (s_l0AttnPos != pos) {
             s_l0AttnPos = pos;
@@ -777,39 +824,42 @@ bool Deep2Engine::forwardLayerGpuResident(
         }
     }
 
-    if (!gemv(wo, gpu->ArenaAttn(), gpu->ArenaDown(), hidden, hidden) ||
-        !gpu->DispatchResidualAdd(gpu->ArenaHidden(), gpu->ArenaDown(),
-                                  gpu->ArenaResidual(), hidden))
-        return fail();
-    ++counters.oProjOps;
-    ++counters.residualOps;
-    {
-        const bool want01b = (layer == 0 && Rc201b::Enabled() && Rc201b::WantPos(pos));
-        static uint32_t s_l0AttnPos = UINT32_MAX;
-        const bool doL0 = wantL0 && s_l0AttnPos != pos;
-        if (doL0 || want01b) {
-            if (doL0) s_l0AttnPos = pos;
-            const bool flushed = gpu->FlushFusedRestart();
-            std::vector<float> rh(hidden), oh(hidden);
-            const bool rd = flushed &&
-                gpu->DownloadBuf(gpu->ArenaResidual(), rh.data(), hidden);
-            const bool od = flushed &&
-                gpu->DownloadBuf(gpu->ArenaDown(), oh.data(), hidden);
-            if (doL0) {
-                double rNorm = 0.0;
-                for (float x : rh) rNorm += static_cast<double>(x) * x;
-                rNorm = std::sqrt(rNorm);
-                std::fprintf(stderr,
-                    "[LAYER0_AFTER_ATTN] pos=%u dl=%d flush=%d rNorm=%.6e "
-                    "r0..5=%.6e %.6e %.6e %.6e %.6e %.6e\n",
-                    pos, rd ? 1 : 0, flushed ? 1 : 0, rNorm,
-                    rh[0], rh[1], rh[2], rh[3], rh[4], rh[5]);
-                std::fflush(stderr);
+    if (!hostODone) {
+        if (!gemv(wo, gpu->ArenaAttn(), gpu->ArenaDown(), hidden, hidden) ||
+            !gpu->DispatchResidualAdd(gpu->ArenaHidden(), gpu->ArenaDown(),
+                                      gpu->ArenaResidual(), hidden))
+            return fail();
+        ++counters.oProjOps;
+        ++counters.residualOps;
+        {
+            const bool want01b = (layer == 0 && Rc201b::Enabled() && Rc201b::WantPos(pos));
+            static uint32_t s_l0AttnPos = UINT32_MAX;
+            const bool doL0 = wantL0 && s_l0AttnPos != pos;
+            if (doL0 || want01b) {
+                if (doL0) s_l0AttnPos = pos;
+                const bool flushed = gpu->FlushFusedRestart();
+                std::vector<float> rh(hidden), oh(hidden);
+                const bool rd = flushed &&
+                    gpu->DownloadBuf(gpu->ArenaResidual(), rh.data(), hidden);
+                const bool od = flushed &&
+                    gpu->DownloadBuf(gpu->ArenaDown(), oh.data(), hidden);
+                if (doL0) {
+                    double rNorm = 0.0;
+                    for (float x : rh) rNorm += static_cast<double>(x) * x;
+                    rNorm = std::sqrt(rNorm);
+                    std::fprintf(stderr,
+                        "[LAYER0_AFTER_ATTN] pos=%u dl=%d flush=%d rNorm=%.6e "
+                        "r0..5=%.6e %.6e %.6e %.6e %.6e %.6e\n",
+                        pos, rd ? 1 : 0, flushed ? 1 : 0, rNorm,
+                        rh[0], rh[1], rh[2], rh[3], rh[4], rh[5]);
+                    std::fflush(stderr);
+                }
+                if (want01b && od)
+                    Rc201b::DumpF32("O_PROJ", 0, pos, oh.data(), oh.size());
+                if (want01b && rd)
+                    Rc201b::DumpF32("AFTER_ATTN_RESIDUAL", 0, pos, rh.data(),
+                                    rh.size());
             }
-            if (want01b && od)
-                Rc201b::DumpF32("O_PROJ", 0, pos, oh.data(), oh.size());
-            if (want01b && rd)
-                Rc201b::DumpF32("AFTER_ATTN_RESIDUAL", 0, pos, rh.data(), rh.size());
         }
     }
     if (!gpu->DispatchRmsNorm(gpu->ArenaResidual(), ffnNormDevice,
@@ -825,6 +875,27 @@ bool Deep2Engine::forwardLayerGpuResident(
     ++counters.ffnNormOps;
     ++counters.ffnActOps;
     ++counters.ffnResidualOps;
+    // BATCH13: FFN stage dumps at L0 WantPos (after full FFN residual).
+    if (layer == 0 && Rc201b::Enabled() && Rc201b::WantPos(pos)) {
+        const bool flushed = gpu->FlushFusedRestart();
+        std::vector<float> nn(hidden), gg(intermediate), uu(intermediate),
+            aa(intermediate), dd(hidden), hh(hidden);
+        if (flushed &&
+            gpu->DownloadBuf(gpu->ArenaNormed(), nn.data(), hidden) &&
+            gpu->DownloadBuf(gpu->ArenaGate(), gg.data(), intermediate) &&
+            gpu->DownloadBuf(gpu->ArenaUp(), uu.data(), intermediate) &&
+            gpu->DownloadBuf(gpu->ArenaFFNAct(), aa.data(), intermediate) &&
+            gpu->DownloadBuf(gpu->ArenaDown(), dd.data(), hidden) &&
+            gpu->DownloadBuf(gpu->ArenaHidden(), hh.data(), hidden)) {
+            // Gate pre-SiLU was overwritten by SwiGLU into FFNAct; dump act/up/down/out.
+            Rc201b::DumpF32("FFN_NORM", 0, pos, nn.data(), nn.size());
+            Rc201b::DumpF32("FFN_UP", 0, pos, uu.data(), uu.size());
+            Rc201b::DumpF32("FFN_ACT", 0, pos, aa.data(), aa.size());
+            Rc201b::DumpF32("FFN_DOWN", 0, pos, dd.data(), dd.size());
+            Rc201b::DumpF32("AFTER_FFN", 0, pos, hh.data(), hh.size());
+            (void)gg;
+        }
+    }
 
     if (wantL0) {
         static uint32_t s_l0OutPos = UINT32_MAX;

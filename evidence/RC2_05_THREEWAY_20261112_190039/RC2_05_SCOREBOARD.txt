@@ -480,3 +480,17 @@ SPV_TOUCHED=0 ADA48968 NEOX held BATCH11 gate held
 RECEIPT=cpu_llama/batch12_gpu_tip9/
 NEXT=KV-history residual after host attn OR safe host O (no 2nd fused flush)
 
+
+==============================================================================
+BATCH13 O_PROJ/FFN amplify isolate ASOF=2026-11-12T22:35:08.1723007-05:00
+==============================================================================
+EXE=A73321CBA4A06972C0E27651DC47D070BBCEA75AF6B4E78DB6E81E51CE0AEED3 CROSS_SHA_CREDIT=0
+DUMP pos17: ATTN 6.44e-4 → O_PROJ 1.99e-3 → FFN_NORM 5.07e-3 → FFN_DOWN/AFTER_FFN ~1.95e-2
+FIRST_OP=GPU_O_PROJ (first amplifier; FFN continues). Root ATTN_OUT residual held.
+HOST_O LinearW vulkan FAIL (oNorm 0/323) → default OFF; DEEP2_GPU_HOST_O=1 ensureF32 opt-in.
+GPU_16=...315,16895,... CPU/FAOFF=...315,821,...15233,553
+EXACT16_CPU=1 FIRST_MIS=@9 THREE_WAY=0
+RC2_05_PASS=0 CERTIFIED=0 PROMOTE=0 TIP_CLIMB=HOLD DO_NOT_REOPEN_Q4K_ACT=1
+SPV_TOUCHED=0 RECEIPT=cpu_llama/batch13_gpu_oproj/
+NEXT=ATTN_OUT KV-history residual OR vulkan-safe host O (Q8-act)
+
