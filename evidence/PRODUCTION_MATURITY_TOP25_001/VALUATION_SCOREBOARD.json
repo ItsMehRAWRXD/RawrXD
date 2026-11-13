@@ -1,36 +1,45 @@
 {
   "pack": "PRODUCTION_MATURITY_TOP25_001",
-  "asof_local": "2026-11-13T17:56:00-05:00",
+  "asof_local": "2026-11-13T17:59:00-05:00",
+  "peer_agent": "401d8761",
+  "peer_lock": 1,
   "promote": 0,
   "certified": 0,
   "tip_climb": "HOLD",
   "invent_pass": 0,
   "claim_overall_100": 0,
-  "push": "HELD_NOT_CLEAN_FF",
-  "r30_seal": "CLI_TOP25_VALUATION_001/runs/R30_RAISE_SEAL.txt",
+  "peer_baseline_cli": 51,
+  "cli_tip_sha256": "F28F10B9E510C6F6C87050949B1726DB90C81ED8DC19F1BFC8BB2270D226360B",
   "scores": {
     "CLI_SCORE_PCT": 55,
-    "GUI_SCORE_PCT": 37,
-    "OVERALL_PCT": 37,
+    "GUI_SCORE_PCT": 42,
+    "OVERALL_PCT": 42,
     "CONJUNCTION_PASS": 0
   },
+  "cats_raised": ["cat4_Agentic", "cat7_Dense", "cat11_Competitive"],
   "tracks": {
     "CLI_COMPLETE": 0,
+    "CLI_MATURITY_COMPLETE": 0,
     "GUI_COMPLETE": 0,
     "JOINT_COMPLETE": 0,
-    "CLI_MATURITY_COMPLETE": 0,
-    "A2_TIP_CLOSED": 1,
-    "CLI_TIP_SHA256": "420ED0F53B95697C00EED32727FD3B277123291874987F6F5BAC6C79B16E6045",
-    "CLI_DENSE_PIN_SHA256": "F28F10B9E510C6F6C87050949B1726DB90C81ED8DC19F1BFC8BB2270D226360B",
-    "EXE_ABSORB_GPU_DEFAULT": 0,
-    "CATS_RAISED": "Agentic 30->70; Dist->58"
+    "A2_TIP_CLOSED": 0,
+    "DUAL_BINARY_GAP": 1,
+    "A2_PASS_SHA256": "A8917FE6094FD0CAC5BD741C2C756C0B24514C990529F72F82E10B2979E279AB",
+    "DENSE_SHA256": "F28F10B9E510C6F6C87050949B1726DB90C81ED8DC19F1BFC8BB2270D226360B",
+    "A5a_TINYLLAMA": "OK",
+    "A5b": "FAIL_CLOSED",
+    "DEBUGGER_CLI": "NOT_RUN",
+    "MOE_ATTEMPT": "OPEN_EXIT4_TOK0"
   },
   "open": [
-    "debugger",
+    "A2_DUAL_BINARY_GAP",
+    "debugger_NOT_RUN",
     "MoE_MATCH",
-    "publish",
     "H2H",
-    "recovery_hang",
-    "gemma3_AV_POST_PREFILL"
-  ]
+    "gemma3_AV_POST_PREFILL",
+    "publish",
+    "CLEAN_VM",
+    "recovery"
+  ],
+  "push": "HELD_PEER_LOCK"
 }

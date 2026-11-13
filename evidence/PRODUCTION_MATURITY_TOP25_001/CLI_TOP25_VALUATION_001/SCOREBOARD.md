@@ -1,32 +1,14 @@
 # CLI Top-25 valuation scoreboard (fail-closed)
 
-**ASOF:** 2026-11-13 · **PROMOTE=0** · **CERTIFIED=0** · **CROSS_SHA_CREDIT=0** · **TIP_CLIMB=HOLD**  
-**CLI_VALUATION=MEASURED_PARTIAL** · **READY_FOR_PEER=0** · **CLI_COMPLETE=0** · **CLI_OVERALL_PCT=58**
+**ASOF:** 2026-11-13T17:58 · **A2_TIP=420ED0F5… CLOSED** · **DENSE=F28F/CB9E** · **PROMOTE=0** · **CLI_PCT=54** · **CLI_COMPLETE=0**
 
-Peer axes ≈ Cursor / VS Code+Copilot / Continue — CLI/`rawr.exe`/headless/Deep `/api` only. GUI HWND out of scope.
+| Axis | Result | Witness |
+|------|--------|---------|
+| A2 tip | **PASS** | `runs/agent_status_r30_420ed.meta.txt` + unify status |
+| Agentic chat GPU | **PASS GEN=95 HD=0** | `runs/agentic_chat_gpu_r30.*` |
+| Dense GPU | **PASS GEN=8 HD=0** | `gpu/tiny_cb9e.*` |
+| Debugger CLI | **15 NOT_RUN** | `runs/debugger_cli_r30.meta.txt` |
+| MoE MiniMax | **30 OPEN** attempt | `runs/moe_minimax_exclusive_r30.*` EXIT=12 |
 
-| Axis | Result | Witness | Next gate |
-|------|--------|---------|-----------|
-| A1 Install + verify | **PASS** (local) | `runs/install_verify.*` | clean-VM zip with product `rawr.exe` |
-| A2 Agent lifecycle | **OPEN** | `runs/agent_status.exit.txt` TIMEOUT | non-hang `rawr agent status` EXIT=0 |
-| A3 Terminal | **PASS** | COMPETITIVE_BENCH_001 terminal_gate v5 | optional external Terminal-Bench |
-| A4 Editor/tools (CLI) | **PARTIAL** | `list`/`paths` OK; Deep `/api` NOT_REACHABLE | `/api/tool` live or OUT_OF_SCOPE |
-| A5a GPU TinyLlama | **PASS** (canary) | `gpu/tiny_gpu*` HOST_DECODE=0 tokens=8 | MATCH + Top-25 TPS |
-| A5b GPU gemma3-1b | **OPEN** | `gpu/gemma3_gpu.*` TOKEN_SURVIVED=0 | tokens>0 CLEAN_EXIT |
-| A5c unlock-125M | **OPEN** | fixture GGUF missing | resolve + GPU canary |
-| A6 Recovery | **PARTIAL** | bad-model EXIT=-1 | resume E2E |
-| A7 Docs/dist | **PARTIAL** | INSTALL + DRAFT_SHA; NOT_PUBLISHED | publish/clean-VM |
-| A8 Competitive | **PARTIAL** | terminal PASS; H2H NOT_SEALED | GPU H2H seal/HOLD |
-| MoE MiniMax FULL | **HELD** | numerical exclusivity | not this pack |
-
-## Rollup
-| Metric | Value |
-|--------|-------|
-| CLI_OVERALL_PCT | **58** (`VALUATION_CLI.txt`) |
-| GPU_DENSE_CANARY | **PASS** |
-| HOST_DECODE as GPU | **INVALID** |
-| READY_FOR_PEER | **0** |
-| COMPETITIVE_PASS | **0** |
-| PROMOTE | **0** |
-
-`NOT_RUN!=PASS` · `INVENT_PASS=0`
+**Cats raised:** Agentic **30→70**. **Held:** Debugger15 MoE30 REAP45 H2H35 Dist55 publish.  
+**OVERALL=min(54,42)=42** · `build_win32ide_link001` untouched · `PROMOTE=0`
