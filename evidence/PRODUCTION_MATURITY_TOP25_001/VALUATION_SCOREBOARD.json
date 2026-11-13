@@ -1,8 +1,8 @@
 {
   "pack": "PRODUCTION_MATURITY_TOP25_001",
   "artifact": "VALUATION_SCOREBOARD",
-  "asof_local": "2026-11-13T16:34:00-05:00",
-  "tip_sha": "cd3429e3a84d2de1ff9480c90c33bca385756c09",
+  "asof_local": "2026-11-13T16:42:00-05:00",
+  "tip_sha": "baad5a432b339e7546365294316bf0ca881bbf10",
   "tip_floor": "96a72ea965",
   "promote": 0,
   "certified": 0,
@@ -14,12 +14,12 @@
   "overall_rule": "min(CLI_SCORE,GUI_SCORE)_and_conjunction",
   "gpu_law": "HOST_CPU_RAM_ONLY_INVALID_FOR_COMPETITIVE",
   "scores": {
-    "CLI_SCORE_PCT": 43,
-    "GUI_SCORE_PCT": 20,
-    "OVERALL_PCT": 20,
+    "CLI_SCORE_PCT": 45,
+    "GUI_SCORE_PCT": 32,
+    "OVERALL_PCT": 32,
     "CONJUNCTION_PASS": 0,
-    "CLI_WAS": 39,
-    "GUI_WAS": 20
+    "CLI_TABLE_SUM": 505,
+    "CLI_METHOD": "floor(505/11)"
   },
   "tracks": {
     "CLI_COMPLETE": 0,
@@ -29,27 +29,12 @@
     "GUI_MATURITY_COMPLETE": 0,
     "DENSE_GPU_CANARY_SEALED": 1,
     "GPU_VS_REF_MATCH": 0,
-    "COMPETITIVE_PASS": 0
+    "COMPETITIVE_PASS": 0,
+    "EXE_ABSORB_GPU_DEFAULT": 0
   },
-  "new_evidence": [
-    "COMPETITIVE_BENCH_001/logs/cli_vulkan_tip_20261113_163222.* EXIT=0 HOST_DECODE=0 GENERATED_TOKENS=4",
-    "CLI_TOP25_VALUATION_001/gpu/tiny_gpu.err.txt GENERATED_TOKENS=8 CLEAN_EXIT=1",
-    "PRODUCTION_INFERENCE_CERT_001/GPU_REQUIRED_001/tiny_gpu_tip.*",
-    "CLI_TOP25_VALUATION_001/runs/recovery_bad_model.exit.txt EXIT=-1"
-  ],
   "authority": {
     "cli": "VALUATION_CLI.txt",
     "gui": "VALUATION_GUI.txt",
     "joint": "VALUATION_TOP25_CLI_GUI_001/STATUS.txt"
-  },
-  "blockers": [
-    "B1_DISTRIBUTION_NOT_PUBLISHED_CLEAN_VM_ABSENT",
-    "B2_GUI_FOUR_PANEL_HWND_FAIL_CLOSED",
-    "B3_EXE_ABSORB_GPU_DEFAULT_0",
-    "B4_GPU_VS_REF_MATCH_0_OR_MOE_OPEN",
-    "B5_COMPETITIVE_PASS_0",
-    "B6_NUMERICAL_REAP_NOT_PASS",
-    "B7_RETENTION_COHORT_NOT_RUN",
-    "B8_PROMOTE_0_CERTIFIED_0"
-  ]
+  }
 }

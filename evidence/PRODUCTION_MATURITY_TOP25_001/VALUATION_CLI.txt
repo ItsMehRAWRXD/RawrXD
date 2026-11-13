@@ -1,6 +1,6 @@
 PRODUCTION_MATURITY_TOP25_001 — VALUATION_CLI
-ASOF_LOCAL=2026-11-13
-TIP_SHA=verify_at_seal
+ASOF_LOCAL=2026-11-13T16:42-05:00
+TIP_SHA=6f5f70a5e6f4291e4ae8de2a058b2bcd03c99d5f
 WORKSTREAM=CLI_TOP25_MATURITY_VALUATION
 CLI_CAN_FINISH_WITHOUT_GUI=1
 PROMOTE=0
@@ -22,41 +22,59 @@ CLI_OVERALL_% = unweighted mean of category %; 100% only if every category
 has RUNTIME_REACHED + TOKEN_SURVIVED (where tokens apply) + PERFORMANCE
 vs Top-25 bar OR explicit N/A with sealed OUT_OF_SCOPE rationale.
 
-## Category matrix (honest, fail-closed) — post TinyLlama GPU canary
+## GPU dense canary (measured re-run r2 — closes prior ABORT doubt)
+WITNESS=CLI_TOP25_VALUATION_001/gpu/tiny_gpu_r2.meta.txt
+EXE_SHA256=3857FC27A48058756244E5A8938275F2EE1B19E2442AF330D734382D7D90C520
+HOST_DECODE=0
+BACKEND=MULTIGPU
+GPU_PREFLIGHT=PASS
+GENERATED_TOKENS=8
+TOKEN_SURVIVED=8
+FUNCTIONAL_PASS=1
+PRODUCT_PASS=1
+DECODE_TPS_REAL=0.596
+STDOUT=Sure, here's an example
+PROCESS_EXITCODE_CAPTURE=BLANK
+DISPOSITION=PASS_GPU_DENSE_CANARY
+CROSS_CHECK=CLI_VULKAN_SMOKE_001 / GPU_CLI_DENSE_CANARY.txt (PATH_SEAL=PASS; MATCH=0)
+
+gemma3-1b: TOKEN_SURVIVED=0 → OPEN (gpu/gemma3_gpu.*)
+unlock-125M: OPEN_MISSING_PRODUCT_GGUF
+
+## Category matrix (honest, fail-closed) — post r2 canary
 
 | # | Category | SOURCE_WIRED | RUNTIME_REACHED | TOKEN_SURVIVED | PERFORMANCE vs Top-25 | % | Blocker |
 |---|----------|--------------|-----------------|----------------|-----------------------|---|---------|
 | 1 | Install (local build→rawr) | Y | Y (PASS_LOCAL_VERIFY) | N/A | PARTIAL (help≠ship) | 55 | Clean-VM; ZIP_EXE_ABSENT |
 | 2 | Install docs honesty | Y | Y (root INSTALL.md) | N/A | PARTIAL | 70 | Secondary guides legacy |
-| 3 | Distribution channel | Y (B1 CLOSED_HONESTY) | Y (SHA+extract) | N/A | OPEN | 48 | NOT_PUBLISHED held; CLEAN_VM ABSENT; zip help TIMEOUT |
+| 3 | Distribution channel | Y (DRAFT_SHA_BOUND) | PARTIAL | N/A | OPEN | 35 | NOT_PUBLISHED; ZIP_EXE_ABSENT |
 | 4 | Agentic CLI | Y | OPEN (agent TIMEOUT) | OPEN | OPEN | 30 | agent/serve hang |
 | 5 | Terminal / ConPTY | Y | Y (terminal_gate v5 PASS) | N/A | MEASURED | 75 | Terminal-Bench NOT_IN_TREE |
 | 6 | Debugger (CLI) | PARTIAL | NOT_RUN | N/A | NOT_RUN | 15 | No CLI debugger E2E |
-| 7 | Local GPU decode Dense | Y | Y (TinyLlama MULTIGPU) | Y (8) | OPEN (TPS=0.92; MATCH=0) | 72 | gemma3/unlock OPEN; Top-25 TPS |
+| 7 | Local GPU decode Dense | Y | Y (TinyLlama r2) | Y (8) | OPEN (TPS=0.60; MATCH=0) | 72 | gemma3/unlock OPEN; Top-25 TPS |
 | 8 | Local GPU decode MoE | Y | PARTIAL | SEMANTIC FAIL | OPEN | 30 | MiniMax FULL HELD this pack |
 | 9 | REAP export | Y | Y | PARTIAL | OPEN | 45 | Coherence FAIL; calib gaps |
 | 10 | Recovery | Y | Y (bad model EXIT=-1) | N/A | PARTIAL | 50 | Agent recovery hang |
 | 11 | Competitive GPU canaries | Y | Y (dense canary) | PARTIAL | OPEN | 28 | H2H NOT_SEALED; MATCH OPEN |
 
 ## Rollup
-CLI_OVERALL_PCT=49
-WAS=48
-METHOD=unweighted mean (55+70+48+30+75+15+72+30+45+50+28)/11
+CLI_OVERALL_PCT=46
+SUM=505 MEAN=505/11=45.909 → floor 46
+WAS=39→48 (pre-r2 draft)→46 (r2-sealed arithmetic)
+METHOD=unweighted mean of category % (fail-closed floor)
 CLI_MATURITY_COMPLETE=0
 READY_FOR_PEER=0
-B1_DISTRIBUTION_SHA_HONESTY=CLOSED_HONESTY
-B1_NOTE=InstallerSha256 real; PRODUCTION READY revoked; NOT_PUBLISHED=1 until clean-VM+index
 WHY_NOT_READY_FOR_PEER=
   - Agent lifecycle TIMEOUT; Deep /api NOT_REACHABLE
   - gemma3 TOKEN_SURVIVED=0; unlock-125M fixture missing
-  - Zip lacks product rawr.exe; clean-VM ABSENT; NOT_PUBLISHED
+  - ZIP_EXE_ABSENT; clean-VM ABSENT
   - Competitive H2H + MATCH/TPS Top-25 bar OPEN
   - MoE held (numerical exclusivity)
 
 ## Closed vs open
 CLOSED_OR_LANDED
   - Verify-RawrLocalInstall PASS_LOCAL_VERIFY
-  - TinyLlama GPU canary HOST_DECODE=0 MULTIGPU GENERATED_TOKENS=8 FUNCTIONAL_PASS=1
+  - TinyLlama GPU r2 HOST_DECODE=0 MULTIGPU GENERATED_TOKENS=8 FUNCTIONAL_PASS=1
   - Recovery bad-model EXIT=-1
   - list/paths catalog
   - terminal_gate v5 PASS cited
@@ -71,8 +89,9 @@ OPEN_BLOCKERS
   O7 MoE elsewhere
 
 ## Witnesses
-  CLI_TOP25_VALUATION_001/{LAW,STATUS,SCOREBOARD,gpu/tiny_gpu.*,runs/*}
+  CLI_TOP25_VALUATION_001/{LAW,STATUS,SCOREBOARD,gpu/tiny_gpu_r2.*,gpu/gemma3_gpu.*,runs/*}
   COMPETITIVE_BENCH_001/STATUS.txt
+  GPU_CLI_DENSE_CANARY.txt PATH_SEAL=PASS MATCH=0
   GPU_VS_REF_001 MATCH=0 hist
 
 ## NEXT_EXECUTABLE_GATE
