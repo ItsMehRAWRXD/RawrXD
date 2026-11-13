@@ -1,0 +1,13 @@
+﻿CRITERION=C50
+STATUS=VERIFIED_PASS
+TIP_SHA=B35588DB8FCDB0D6BB78F822490174C6E62E88715852E6509353FF3953252C1C
+TIP_PATH=F:\rawrxd\evidence\CONTINUE_20261112_142725\rawr.TIP.exe
+VIA=self-audit completed=true
+NOTE=completed
+LOG={ |  |   "completed": true, |  |   "denied": 1, |  |   "ledger": "F:\\rawrxd\\evidence\\RAWRXD_SELF_AUDIT_002.md", |  |   "tool_calls": 8, |  |   "turns": 12 |  | } |  |  | [14:32:44.145] self-audit: starting agent run |  | [14:32:48.306] run: tool call list_repo args={"path":"./"} |  | [14:32:58.234] run: tool call search_text args={"path":"./","query":"cmake_install.cmake"} |  | [14:33:14.280] run: tool call read_file args={"path":"./build_d1_opmajor/CMakeFiles/CMakeConfigureLog.yaml"} |  | [14:33:22.958] run: tool call list_repo args={"path":"./build_d1_opmajor"} |  | [14:33:28.815] run: orchestrator_fallback tool=git_status state=CONTEXT origin=audit |  | [14:33:28.815] run: tool call git_status args={} |  | [14:33:42.975] run: tool call read_file args={"path":"./evidence/AGENT_SECURITY_WIRE_001/security_audit.jsonl"} |  | [14:35:22.597] run: orchestrator_fallback waiting for model edit proposal state=PATCH |  | [14:36:38.171] run: orchestrator_fallback waiting for model edit proposal state=PATCH |  | [14:38:02.320] run: orchestrator_fallback PATCH exhausted without edit |  | [14:38:02.320] run: tool call allow_workspace_file args={} |  | [14:39:25.717] run: tool call write_file args={"action":"append","content":"allow_workspace_file unknown tool","path":"./evidence/AGENT_SECURITY_WIRE_001/security_audit.jsonl"} |  | [14:40:35.818] run: agent produced FINAL answer at turn 12 |  | [StreamEngine] Shutdown |  | 
+EV=F:\rawrxd\evidence\CONTINUE_20261112_142725
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+VALUATION_100=NOT_CLAIMED
+CROSS_SHA_CREDIT=0

@@ -1,0 +1,13 @@
+﻿CRITERION=C14
+STATUS=VERIFIED_PASS
+TIP_SHA=B35588DB8FCDB0D6BB78F822490174C6E62E88715852E6509353FF3953252C1C
+TIP_PATH=F:\rawrxd\evidence\CONTINUE_20261112_142725\rawr.TIP.exe
+VIA=edit_files apply + rollback_edit reject + disk
+NOTE=disk-state proof
+LOG={ |  |   "args": "{\"new\":\"LINE_B_APPLIED\",\"old\":\"LINE_B\",\"path\":\"diffme.txt\"}", |  |   "canceled": false, |  |   "denied": false, |  |   "exit_code": 0, |  |   "ok": true, |  |   "output": "EDITED diffme.txt (14 bytes replacement, atomic; rollback snapshot saved)", |  |   "tool": "edit_files" |  | } |  |  | [StreamEngine] Shutdown |  | { |  |   "args": "{\"path\":\"diffme.txt\"}", |  |   "canceled": false, |  |   "denied": false, |  |   "exit_code": 0, |  |   "ok": true, |  |   "output": "ROLLED_BACK (22 bytes) path=diffme.txt", |  |   "tool": "rollback_edit" |  | } |  |  | [StreamEngine] Shutdown |  | LINE_A | LINE_B_APPLIED | LINE_C |  | LINE_A | LINE_B | LINE_C |  | 
+EV=F:\rawrxd\evidence\CONTINUE_20261112_142725
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+VALUATION_100=NOT_CLAIMED
+CROSS_SHA_CREDIT=0

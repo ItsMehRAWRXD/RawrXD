@@ -1,0 +1,13 @@
+﻿CRITERION=C48
+STATUS=VERIFIED_PASS
+TIP_SHA=B35588DB8FCDB0D6BB78F822490174C6E62E88715852E6509353FF3953252C1C
+TIP_PATH=F:\rawrxd\evidence\CONTINUE_20261112_142725\rawr.TIP.exe
+VIA=portable copy+doctor
+NOTE=sha_match=True
+LOG={ |  |   "checks": [ |  |     { |  |       "check": "inference_backend", |  |       "detail": "127.0.0.1:11434 (ollama) answered a completion request", |  |       "status": "PASS" |  |     }, |  |     { |  |       "check": "cmake_available", |  |       "detail": "cmake version 4.4.2", |  |       "status": "PASS" |  |     }, |  |     { |  |       "check": "git_available", |  |       "detail": "upload/ide-fixes-20261111\n", |  |       "status": "PASS" |  |     }, |  |     { |  |       "check": "tool_registry", |  |       "detail": "11 tools registered", |  |       "status": "PASS" |  |     }, |  |     { |  |       "check": "workspace_path_scoping", |  |       "detail": "path traversal rejected: ERROR: file outside workspace or not found: ..\\..\\Windows\\System32\\drivers\\etc\\hosts", |  |       "status": "PASS" |  |     }, |  |     { |  |       "check": "mode_permission_enforcement", |  |       "detail": "ask mode was denied write_file as expected", |  |       "status": "PASS" |  |     }, |  |     { |  |       "check": "workspace_writable", |  |       "detail": "evidence/ is writable", |  |       "status": "PASS" |  |     } |  |   ], |  |   "failures": 0, |  |   "verdict": "PASS" |  | } |  | [StreamEngine] Shutdown |  | 
+EV=F:\rawrxd\evidence\CONTINUE_20261112_142725
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+VALUATION_100=NOT_CLAIMED
+CROSS_SHA_CREDIT=0
