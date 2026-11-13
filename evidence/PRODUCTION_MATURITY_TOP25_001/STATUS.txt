@@ -1,0 +1,64 @@
+PRODUCTION_MATURITY_TOP25_001 — STATUS (P4 recognition readiness)
+ASOF_LOCAL=2026-11-13
+WORKSTREAM=P4_TOP25_RECOGNITION_READINESS
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+TIP_CLIMB=HOLD
+CROSS_SHA_ACCEPTANCE=PROHIBITED
+NOT_RUN!=PASS
+INVENT_PASS=0
+FAKE_MATURITY_SEAL=0
+
+## Verdict
+TOP25_RECOGNITION=NOT_READY
+TOP25_PARITY=UNMEASURED
+DOC_OPS_LAND=PARTIAL (install/distribution/onboarding gaps closed this land)
+COMPETITIVE_PERF=MEASURED_CITATIONS_ONLY (no head-to-head Top-25 rank sealed)
+
+## What landed (this P4 land)
+- INSTALL.md rewritten to local-first build path (cmake/ninja → build_ninja\bin\rawr.exe)
+- scripts/Verify-RawrLocalInstall.ps1 — EXE present + help smoke (≠ maturity PASS)
+- scripts/Install-RawrDevPath.ps1 — optional User PATH prepend for build_ninja\bin
+- DISTRIBUTION_NOTES.txt — honest distro surface; rejects stale “PRODUCTION READY” manifest
+- ONBOARDING_RETENTION_GAPS.txt — REAP retain / first-run hazards from measured seals
+- P4_RECOGNITION_GAPS.txt — remaining recognition blockers
+- SCOREBOARD.md — competitive citations + TOP25 row update (still unmeasured parity)
+
+## Measured competitive / throughput citations (existing evidence only)
+Do not invent; do not promote.
+
+| Claim class | Number | Witness | Interpretation |
+|-------------|--------|---------|----------------|
+| Dense Llama-3.2 host-decode | Prefill 3.21 tok/s; Decode 3.19 tok/s; E2E 0.46 TPS | cli_llama32_smoke_post.err.txt | Dense unload path EXIT=0; ≠ Top-25 |
+| MiniMax REAP calib decode | Decode ≈0.32–0.37 tok/s (examples) | REAP_ALL_16GB_001 QUALITY_CURVE / COMPARISON_MATRIX *.err/.out | Functional tokens; semantic often FAIL |
+| MiniMax REAP16 indep | GENERATED_TOKENS=48 CLEAN_EXIT; SEMANTIC_COHERENCE=FAIL | REAP_ALL_16GB_001/INDEP_SMOKE_SEAL.txt | Load≠coherent |
+| 671B 35–50 TPS target | TARGET_35_50_TPS=UNMINTED; DECODE_TPS=NOT_RUN | RAWRXD_PERFORMANCE_001/DEEP2_671_STREAM_TPS_35_50_001/STATUS.txt | NOT_RUN≠PASS |
+| Product floor constant | PRODUCT_FLOOR_TPS=5.000 | many Deep2 stderr lines | Target floor string; ≠ achieved TPS |
+| Ollama / vLLM head-to-head | — | COMPETITIVE_BENCH_001 (HEAD_TO_HEAD=NOT_SEALED) | NOT_RUN |
+| SWE-bench null-agent self-test | OVERALL=0.0% (0/4 tasks) | COMPETITIVE_BENCH_001/smoke_runs/swebench_help.* EXIT=0 | Measured null agent; NOT competitive PASS |
+| isa_dispatch / smoke_test_minimal | EXIT=-1073741515 | COMPETITIVE_BENCH_001/smoke_runs/*.meta | DLL_NOT_FOUND; SCORE=NONE |
+
+## Recognition blockers still OPEN
+1. README.md unresolved merge conflict (`<<<<<<< HEAD` … `>>>>>>>`)
+2. DISTRIBUTION_MANIFEST.yaml non-authoritative (placeholder SHA / PRODUCTION READY)
+3. MiniMax STREAM_CORRECTNESS / semantic NOT_PASS (SCOREBOARD + B03/B04)
+4. GUI four-panel FAIL_CLOSED (FOUR_PANEL_COMPLETION_001)
+5. TOP25 IDE parity matrix G3_IDE_TOP25_PARITY_001 — LAW only; no E2E seal
+6. Public package channels (winget/brew/docker/MSI) UNVERIFIED
+7. No sealed competitive suite vs peers with matched model/prompt/hardware
+8. MoE retention onboarding: R=27 quality FAIL; calib bank wire still gapped
+
+## Authority anchors (unchanged)
+LAW.txt · SCOREBOARD.md · REAP_ALL_16GB_001/INDEP_SMOKE_SEAL.txt ·
+REAP_MULTI_MODEL_001/B03_FORWARD/STATUS.md · G09 QUALITY_149 · REAP_TIP_PORT_001
+
+NEXT_EXECUTABLE_DOC_GATE=
+  Resolve README conflict OR ship a short honest README_PRODUCT.md and point INSTALL at it.
+NEXT_EXECUTABLE_PERF_GATE=
+  Sealed same-SHA competitive bench receipt (model/prompt/hardware pinned) OR explicit HOLD.
+
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+TIP_CLIMB=HOLD

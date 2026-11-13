@@ -8,6 +8,7 @@
 #include <mutex>
 #include <functional>
 #include <queue>
+#include <unordered_set>
 #include <condition_variable>
 #include "IDELogger.h"
 #include "agent_esp.hpp"
@@ -42,7 +43,16 @@ public:
         int maxRetries = 2;
         int maxWallTimeSec = 300;
         int maxTotalTokens = 8192;
+        // deep2_agentic_loop defaults to context_size=128 which cannot hold
+        // MOTD + tool protocol + source. Native-Ext must pass a usable size.
+        int contextSize = 4096;
         bool quiet = true;
+        // When true, use the canonical RawrXD CLI one-shot agent.  This is
+        // the same backend exercised by `rawr run`, so GUI chat does not
+        // silently use a second, divergent agent implementation.
+        bool useCliAgent = false;
+        bool approveMutations = false;
+        bool readOnly = true;
     };
 
     using ProgressCallback = std::function<void(const std::string& message)>;
@@ -82,7 +92,10 @@ private:
     
     // Process management
     bool LaunchAgenticLoop();
+    void EnsureChildJob();
+    void CloseChildJob();
     void TerminateProcessTree(DWORD pid);
+    void ReapChildProcess();
     void ReadProcessOutput();
     
     // ESP event publishing
@@ -99,6 +112,7 @@ private:
     std::atomic<bool> m_completionSent{false};
     
     HANDLE m_process = nullptr;
+    HANDLE m_hJob = nullptr;  // KILL_ON_JOB_CLOSE supervisor; owned until reap
     HANDLE m_stdoutRead = nullptr;
     HANDLE m_stdoutWrite = nullptr;
     HANDLE m_stdinRead = nullptr;
@@ -115,6 +129,16 @@ private:
     
     TaskConfig m_currentConfig;
     std::string m_accumulatedOutput;
+    // Completion truth is derived from structured tool_result events, never
+    // from model text that merely says "TOOL ...".  These counters are reset
+    // per task and read after the output thread has been joined.
+    size_t m_structuredToolResults = 0;
+    size_t m_successfulToolResults = 0;
+    size_t m_failedToolResults = 0;
+    // ReadFile is allowed to split a newline-delimited ESP record at any
+    // byte. Keep the incomplete tail until the next read so structured
+    // events are never silently dropped or parsed twice.
+    std::string m_lineBuffer;
     std::queue<std::string> m_outputQueue;
     std::mutex m_queueMutex;
     std::condition_variable m_queueCv;
@@ -122,6 +146,9 @@ private:
     // ESP Telemetry
     rawrxd::esp::Bus* m_espBus = nullptr;
     uint64_t m_espRequestId = 0;
+    // Child CLI events are forwarded once per child request/sequence pair.
+    // The child JSONL remains the authoritative raw record.
+    std::unordered_set<std::string> m_forwardedChildEvents;
     
     // SNAP Detector for process monitoring
     rawrxd::snap::Detector m_snapDetector;

@@ -1,262 +1,134 @@
-# RawrXD Installation Guide
+# RawrXD — Local Installation (fail-closed)
 
-Quick installation instructions for RawrXD Sovereign Inferencer.
+**ASOF:** 2026-11-13 · **PROMOTE=0** · **CERTIFIED=0** · **RELEASE=HELD**
 
-## System Requirements
+This guide documents the **measured local product path** used in
+`evidence/PRODUCTION_MATURITY_TOP25_001/`. It does **not** claim winget,
+Homebrew, Docker Hub, or MSI channels are verified. Those remain
+**UNVERIFIED** until a receipt lands under this evidence pack.
 
-### Minimum Requirements
-- **OS**: Windows 10/11, Ubuntu 20.04+, macOS 12+
-- **CPU**: x64 with AVX2 support
-- **RAM**: 8 GB
-- **Storage**: 2 GB free space
-- **GPU**: Optional (for acceleration)
+Authority: `evidence/PRODUCTION_MATURITY_TOP25_001/LAW.txt` ·
+`NOT_RUN != PASS` · no invented maturity %.
 
-### Recommended Requirements
-- **OS**: Windows 11, Ubuntu 22.04+, macOS 13+
-- **CPU**: x64 with AVX-512 support
-- **RAM**: 32 GB
-- **Storage**: 10 GB free space (for models)
-- **GPU**: NVIDIA RTX 3060+ or AMD RX 6600+ with 8GB+ VRAM
+---
 
-## Quick Install
+## What you get (product binaries)
 
-### Windows
+| Artifact | Path (after ninja build) | Role |
+|----------|--------------------------|------|
+| CLI | `build_ninja\bin\rawr.exe` | Primary inference CLI (`rawr run` / `list` / `paths`) |
+| Optional | `build_ninja\bin\reap_export_sidecar.exe` | REAP physical export tooling |
 
-#### Option 1: Installer (Recommended)
+There is **no** sealed public installer receipt in this pack. Treat
+`DISTRIBUTION_MANIFEST.yaml` as **historical / non-authoritative** (hashes
+and “PRODUCTION READY” text are not current cert).
 
-1. Download `RawrXD-v14.7.3-win64.exe` from [releases](https://github.com/ItsMehRAWRXD/RawrXD/releases)
-2. Run the installer
-3. Follow the setup wizard
-4. Launch RawrXD from Start Menu
+---
 
-#### Option 2: Portable
+## System requirements (measured host class)
 
-1. Download `RawrXD-v14.7.3-win64.zip`
-2. Extract to desired location
-3. Run `bin\rawrxd.exe`
+| Item | Minimum for dense smoke | Notes |
+|------|-------------------------|-------|
+| OS | Windows 10/11 x64 | Primary measured platform |
+| Toolchain | VS 2022 BuildTools + CMake + Ninja | See AGENTS.md for `ml64.exe` path |
+| RAM | 16 GB+ free for small dense models | Large MoE needs far more / REAP |
+| GPU | Optional | Dense smoke used `RAWRXD_HOST_DECODE=1` when Vulkan blocked |
+| Models | Local GGUF on disk | No mandatory cloud API |
 
-#### Option 3: Winget
+---
+
+## Build from source (authoritative path)
+
+From a Developer PowerShell / VsDevCmd (`x64`):
 
 ```powershell
-winget install RawrXD.RawrXD
+cd G:\~dev\rawrxd   # or your clone root
+
+# Configure once (Ninja + RelWithDebInfo matches lab cache)
+cmake -G Ninja -S . -B build_ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
+
+# Build CLI
+ninja -C build_ninja bin/rawr.exe
 ```
 
-### Linux
-
-#### Ubuntu/Debian
-
-```bash
-# Download and install
-wget https://github.com/ItsMehRAWRXD/RawrXD/releases/download/v14.7.3/rawrxd_14.7.3_amd64.deb
-sudo dpkg -i rawrxd_14.7.3_amd64.deb
-
-# Start service
-sudo systemctl enable --now rawrxd
-```
-
-#### Fedora/RHEL
-
-```bash
-# Download and install
-sudo rpm -i https://github.com/ItsMehRAWRXD/RawrXD/releases/download/v14.7.3/rawrxd-14.7.3.x86_64.rpm
-
-# Start service
-sudo systemctl enable --now rawrxd
-```
-
-#### Generic (tar.gz)
-
-```bash
-# Download
-curl -L -o rawrxd.tar.gz https://github.com/ItsMehRAWRXD/RawrXD/releases/download/v14.7.3/RawrXD-v14.7.3-linux.tar.gz
-
-# Extract
-tar -xzf rawrxd.tar.gz
-cd RawrXD-v14.7.3-linux
-
-# Run
-./bin/rawrxd
-```
-
-### macOS
-
-```bash
-# Using Homebrew
-brew tap rawrxd/tap
-brew install rawrxd
-
-# Or download directly
-curl -L -o rawrxd.dmg https://github.com/ItsMehRAWRXD/RawrXD/releases/download/v14.7.3/RawrXD-v14.7.3-macos.dmg
-open rawrxd.dmg
-```
-
-## Post-Installation
-
-### 1. Configure
-
-Edit `config/default.json` or set environment variables:
-
-```bash
-# Linux/macOS
-export RAWRXD_SERVER_PORT=8080
-export RAWRXD_MODELS_DIRECTORY=/path/to/models
-
-# Windows PowerShell
-$env:RAWRXD_SERVER_PORT = 8080
-$env:RAWRXD_MODELS_DIRECTORY = "C:\Models"
-```
-
-### 2. Download Models
-
-```bash
-# Using the model downloader
-rawrxd model download llama-3.2-3b
-
-# Or manually place .gguf files in models/ directory
-```
-
-### 3. Start Server
-
-```bash
-# Start with default config
-rawrxd
-
-# Start with custom config
-rawrxd --config /path/to/config.json
-
-# Start with specific model
-rawrxd --model llama-3.2-3b
-```
-
-### 4. Verify Installation
-
-```bash
-# Check version
-rawrxd --version
-
-# Check health
-curl http://localhost:8080/health
-
-# Test inference
-curl http://localhost:8080/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -d '{"model": "llama-3.2-3b", "messages": [{"role": "user", "content": "Hello"}]}'
-```
-
-## Docker Installation
-
-```bash
-# Pull image
-docker pull rawrxd/rawrxd:latest
-
-# Run
-docker run -d \
-  -p 8080:8080 \
-  -v /path/to/models:/models \
-  -e RAWRXD_MODELS_DIRECTORY=/models \
-  rawrxd/rawrxd:latest
-```
-
-## GPU Support
-
-### NVIDIA (CUDA)
-
-```bash
-# Install CUDA drivers first
-# Then run with GPU support
-rawrxd --gpu-layers 35
-```
-
-### AMD (ROCm)
-
-```bash
-# Install ROCm drivers first
-# Then run with GPU support
-rawrxd --gpu-layers 35 --backend rocm
-```
-
-### Vulkan (Cross-platform)
-
-```bash
-# Install Vulkan drivers
-# Then run with Vulkan backend
-rawrxd --backend vulkan
-```
-
-## Troubleshooting
-
-### Port Already in Use
-
-```bash
-# Use different port
-rawrxd --port 8081
-```
-
-### Out of Memory
-
-```bash
-# Reduce context size
-rawrxd --max-context-length 2048
-
-# Or use memory-mapped files
-rawrxd --use-mmap
-```
-
-### Model Not Found
-
-```bash
-# Verify model path
-rawrxd --models-dir /path/to/models --list-models
-```
-
-### Permission Denied (Linux)
-
-```bash
-# Fix permissions
-sudo chown -R $USER:$USER ~/.config/rawrxd
-```
-
-## Uninstallation
-
-### Windows
+Verify:
 
 ```powershell
-# Using winget
-winget uninstall RawrXD.RawrXD
-
-# Or Control Panel > Programs and Features
+.\scripts\Verify-RawrLocalInstall.ps1
+# or manually:
+.\build_ninja\bin\rawr.exe
+# prints Usage: rawr list | show | paths | run ...
 ```
 
-### Linux
+Optional: add `build_ninja\bin` to the **user** PATH for this session/dev box:
 
-```bash
-# Ubuntu/Debian
-sudo apt remove rawrxd
-
-# Fedora/RHEL
-sudo rpm -e rawrxd
-
-# Generic
-sudo rm -rf /opt/rawrxd
+```powershell
+.\scripts\Install-RawrDevPath.ps1
 ```
 
-### macOS
+---
 
-```bash
-# Homebrew
-brew uninstall rawrxd
+## First inference (dense)
 
-# Manual
-sudo rm -rf /Applications/RawrXD.app
+Use a local GGUF. Example shape (paths are machine-local):
+
+```powershell
+$env:RAWRXD_HOST_DECODE = "1"   # only if Vulkan/GPU path is blocked
+.\build_ninja\bin\rawr.exe run <path-to-llama-gguf> -p "Hello" --max-tokens 8
 ```
 
-## Getting Help
+**Measured (not a top-25 claim):** dense Llama-3.2 unload smoke in this pack
+(`cli_llama32_smoke_post.*`) reported:
 
-- **Documentation**: https://docs.rawrxd.ai
-- **GitHub Issues**: https://github.com/ItsMehRAWRXD/RawrXD/issues
-- **Discord**: https://discord.gg/rawrxd
-- **Email**: support@rawrxd.ai
+- `EXIT=0`
+- Prefill ≈ **3.21 tok/s** · Decode ≈ **3.19 tok/s** · E2E ≈ **0.46 TPS**
+  (3 tokens / 6549.39 ms)
 
-## License
+Cite the err log; do not generalize to MoE or competitor ranking.
 
-RawrXD is licensed under the MIT License. See LICENSE file for details.
+---
+
+## MoE / REAP retention (onboarding hazard)
+
+Large MoE models (e.g. MiniMax-M2.7) often need `--reap` / retained-expert
+policy. Uniform low retain (**R=27**) has **measured** independent load
+`FUNCTIONAL_PASS` but **SEMANTIC_COHERENCE=FAIL** — see
+`REAP_ALL_16GB_001/INDEP_SMOKE_SEAL.txt`.
+
+Do **not** tell new users that REAP16 prefix retention is “production ready.”
+
+Env knobs operators hit during onboarding (document; do not invent defaults):
+
+| Knob | Meaning |
+|------|---------|
+| `RAWRXD_REAP_RETAINED` | Retained expert count override |
+| `RAWRXD_HOST_DECODE` | Force CPU host decode |
+| `WEIGHT_BUDGET` | Weight residency budget string |
+
+Details: `docs/RAWRXD_REAP_CLI_CONTRACT.md` ·
+`ONBOARDING_RETENTION_GAPS.txt` in this evidence pack.
+
+---
+
+## Unverified / do-not-advertise (until receipt)
+
+- `winget install RawrXD.RawrXD`
+- Homebrew / apt / rpm package URLs in older docs
+- Docker Hub `rawrxd/rawrxd:latest`
+- MSI/`setup.exe` wizard paths without SHA + smoke receipt
+- Any “Top 25” or “100% production” marketing line
+
+---
+
+## Related docs
+
+| Doc | Role |
+|-----|------|
+| `evidence/PRODUCTION_MATURITY_TOP25_001/STATUS.txt` | P4 recognition readiness |
+| `evidence/PRODUCTION_MATURITY_TOP25_001/DISTRIBUTION_NOTES.txt` | Distro honesty |
+| `evidence/PRODUCTION_MATURITY_TOP25_001/SCOREBOARD.md` | Measured gates |
+| `evidence/TOP25_OPS_001/STATUS.txt` | Install/docs/distro/retention gap board |
+| `evidence/COMPETITIVE_BENCH_001/STATUS.txt` | Competitive smoke inventory (PROMOTE=0) |
+| `docs/guides/installation.md` | Legacy guide — defer to this file |
+
+`PROMOTE=0` · `TIP_CLIMB=HOLD` · `NOT_RUN!=PASS`

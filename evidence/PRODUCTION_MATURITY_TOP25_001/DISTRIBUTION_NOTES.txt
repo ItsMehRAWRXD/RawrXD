@@ -1,0 +1,34 @@
+DISTRIBUTION_NOTES — RawrXD (P4 / PRODUCTION_MATURITY_TOP25_001)
+ASOF_LOCAL=2026-11-13
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+
+## Authoritative distribute-able surface (today)
+1. Source tree + CMake/Ninja build → build_ninja\bin\rawr.exe
+2. Operator docs: INSTALL.md (repo root) + this evidence pack STATUS
+3. Verify script: scripts/Verify-RawrLocalInstall.ps1
+4. Optional PATH helper: scripts/Install-RawrDevPath.ps1 (User PATH only)
+
+No sealed binary release receipt (SHA + smoke + version tag) is attached to this pack.
+
+## Non-authoritative / do-not-ship-as-cert
+| Artifact | Why held |
+|----------|----------|
+| DISTRIBUTION_MANIFEST.yaml | Placeholder hashes (e.g. empty SHA e3b0c442…); status text “PRODUCTION READY” contradicts LAW PROMOTE=0 |
+| INSTALL.md historical copies (release-assets/, RELEASE_PACKAGE/) | Aspirational winget/brew/docker/MSI; not measured here |
+| docs/guides/installation.md | Legacy; defer to root INSTALL.md |
+| Docker / winget / Homebrew / apt / rpm URLs | UNVERIFIED — no receipt under this pack |
+| Marketing “Top 25” / “100% production” docs | Checklist ≠ measurement (LAW) |
+
+## Retention / REAP distribution caveat
+Physical REAP exports ≤16 GiB can LOAD independently (MiniMax measured) while
+SEMANTIC_COHERENCE remains FAIL at uniform/prefix R=27. Shipping a REAP16 zip
+without calibrated retention docs is an onboarding failure mode — see
+ONBOARDING_RETENTION_GAPS.txt and INDEP_SMOKE_SEAL.txt.
+
+## Git remotes (land policy)
+origin + rawrxd-gh → https://github.com/ItsMehRAWRXD/RawrXD.git
+Push every land; no force-push.
+
+PROMOTE=0 · NOT_RUN!=PASS · FAKE_MATURITY_SEAL=0

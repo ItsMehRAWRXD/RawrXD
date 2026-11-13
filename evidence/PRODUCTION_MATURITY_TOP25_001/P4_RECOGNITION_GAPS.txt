@@ -1,0 +1,29 @@
+P4_RECOGNITION_GAPS — remaining after doc/script land
+ASOF_LOCAL=2026-11-13
+PROMOTE=0
+CERTIFIED=0
+TOP25_RECOGNITION=NOT_READY
+
+## Closed this land (doc/ops only)
+- Grounded INSTALL.md
+- Verify + DevPath scripts
+- DISTRIBUTION_NOTES / ONBOARDING_RETENTION_GAPS / STATUS
+- SCOREBOARD competitive citation hygiene
+
+## Still OPEN (blocks “Top-25 recognition”)
+G1  README.md merge conflict (<<<<<<< / >>>>>>>) — first impression fail
+G2  No sealed public distribution artifact (SHA + smoke + tag)
+G3  TOP25_PARITY unmeasured (SCOREBOARD); G3_IDE_TOP25_PARITY_001 = LAW only
+G4  MiniMax STREAM_CORRECTNESS / semantic NOT_PASS
+G5  GUI four-panel FAIL_CLOSED
+G6  No sealed peer competitive bench (Ollama/vLLM/llama.cpp matched)
+G7  671B TARGET_35_50_TPS=UNMINTED
+G8  REAP retention quality at production-facing R not coherent
+G9  Stale / contradictory cert docs (DISTRIBUTION_MANIFEST, older INSTALL copies)
+
+## Competitive numbers policy
+Only cite measured witnesses listed in STATUS.txt.
+PRODUCT_FLOOR_TPS=5.000 is a constant, not a result.
+STREAM_NORM_TPS=150.000 in older stderr is not a sealed product TPS claim for this pack.
+
+PROMOTE=0 · FAKE_MATURITY_SEAL=0

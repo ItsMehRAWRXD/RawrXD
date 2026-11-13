@@ -1,0 +1,17 @@
+COMMAND=call vcvars64.bat && cd fixtures\agent_multierror_calc && cl /nologo /EHsc /std:c++20 add.cpp mul.cpp main.cpp /Fe:calc_ok.exe && calc_ok.exe
+ASOF=2026-11-13
+EXIT_CODE=2
+RESULT=FAIL
+NOTE=Intentional broken fixture (agent autofix). Not a competitive win.
+
+add.cpp
+mul.cpp
+mul.cpp(5): error C2143: syntax error: missing ';' before '}'
+main.cpp
+main.cpp(5): error C3861: 'sub': identifier not found
+main.cpp(5): error C2737: 'value': const object must be initialized
+main.cpp(6): error C2039: 'cout': is not a member of 'std'
+main.cpp(6): error C2065: 'cout': undeclared identifier
+main.cpp(6): error C2039: 'endl': is not a member of 'std'
+main.cpp(6): error C2065: 'endl': undeclared identifier
+Generating Code...

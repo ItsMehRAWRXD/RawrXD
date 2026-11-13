@@ -17,7 +17,9 @@ struct Config { uint64_t startupMs=30000; uint64_t wallMs=600000; uint32_t pollM
 struct Status { State state; uint64_t elapsedMs; uint64_t progressEvents; uint64_t lastProgressMs; };
 class Watchdog {
     Config config_;
-    const uint64_t start_ = GetTickCount64();
+    // Task-relative epoch (reset in Start). Construction-time clocks falsely
+    // burn startup budget before the first agentic spawn (tip_016 class).
+    std::atomic<uint64_t> start_{0};
     std::atomic<uint64_t> events_{0};
     std::atomic<uint64_t> last_{0};
     std::atomic<bool> finished_{false};
@@ -25,7 +27,10 @@ class Watchdog {
     std::atomic<bool> cancellationRequested_{false};
     std::thread monitor_;
 public:
-    explicit Watchdog(Config c={}):config_(c) { if(!config_.pollMs)config_.pollMs=100; }
+    explicit Watchdog(Config c={}):config_(c) {
+        if(!config_.pollMs)config_.pollMs=100;
+        start_.store(GetTickCount64(),std::memory_order_release);
+    }
     ~Watchdog(){Stop();}
     Watchdog(const Watchdog&)=delete;
     Watchdog& operator=(const Watchdog&)=delete;
@@ -39,7 +44,8 @@ public:
     Status Inspect() const noexcept {
         const uint64_t now=GetTickCount64();
         const uint64_t count=events_.load(std::memory_order_acquire);
-        const uint64_t elapsed=now-start_;
+        const uint64_t epoch=start_.load(std::memory_order_acquire);
+        const uint64_t elapsed=now-epoch;
         State s=State::WaitingForFirstProgress;
         if(finished_.load(std::memory_order_acquire))s=State::Finished;
         else if(config_.wallMs && elapsed>=config_.wallMs)s=State::WallTimedOut;
@@ -51,7 +57,13 @@ public:
     // Callback runs on monitoring thread, exactly once on first timeout.
     // Callback should request cooperative cancellation; don't kill arbitrary threads.
     bool Start(std::function<void(Status)> onTimeout){
-        if(monitor_.joinable() || !onTimeout)return false;
+        Stop();
+        if(!onTimeout)return false;
+        finished_.store(false,std::memory_order_release);
+        cancellationRequested_.store(false,std::memory_order_release);
+        events_.store(0,std::memory_order_release);
+        last_.store(0,std::memory_order_release);
+        start_.store(GetTickCount64(),std::memory_order_release);
         stop_.store(false,std::memory_order_release);
         try {
             monitor_=std::thread([this,cb=std::move(onTimeout)]() {

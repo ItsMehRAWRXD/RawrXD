@@ -1,5 +1,11 @@
 # Installation Guide
 
+> **Authoritative (2026-11-13):** Use repo-root [`INSTALL.md`](../../INSTALL.md) for the
+> measured local path (`cmake`/`ninja` → `build_ninja\bin\rawr.exe`). Verify with
+> `scripts/Verify-RawrLocalInstall.ps1`. Maturity: `evidence/PRODUCTION_MATURITY_TOP25_001/STATUS.txt`
+> (`PROMOTE=0`). Sections below are **legacy / unverified** (winget, zip URLs, Docker) unless
+> a receipt lands under that evidence pack.
+
 ## Phase J.2/5: User Guides - Installation
 
 This guide covers installing RawrXD Sovereign AI Runtime on various platforms.

@@ -1,0 +1,42 @@
+ONBOARDING + RETENTION GAPS (concretely missing / hazardous)
+ASOF_LOCAL=2026-11-13
+PROMOTE=0
+CERTIFIED=0
+
+## First-run onboarding (was missing; partially closed)
+| Gap | Before | After this land |
+|-----|--------|-----------------|
+| Honest install path | INSTALL.md advertised winget/brew/docker | Root INSTALL.md → cmake/ninja + rawr.exe |
+| Local verify | No fail-closed script | scripts/Verify-RawrLocalInstall.ps1 |
+| Dev PATH | Manual | scripts/Install-RawrDevPath.ps1 |
+| Distro honesty | DISTRIBUTION_MANIFEST “PRODUCTION READY” | DISTRIBUTION_NOTES.txt marks non-authoritative |
+
+Still missing for recognition-grade onboarding:
+- Conflict-free product README (README.md still has merge markers)
+- One-page “first GGUF in 5 minutes” with a *small* dense model path that exists on a clean machine
+- Published release tarball + SHA256SUMS + Verify script against pinned SHA
+- GUI first-run (four-panel FAIL_CLOSED — not this land)
+
+## Expert retention (REAP) — measured hazards for new users
+Witness: REAP_ALL_16GB_001/INDEP_SMOKE_SEAL.txt · COMPARISON_MATRIX_001/STATUS.txt
+
+1. FUNCTIONAL_PASS ≠ SEMANTIC_PASS
+   MiniMax-M2.7-REAP16 independent: CLEAN_EXIT + 48 tokens, output degenerate (`[][][]…` / `$ $ $`).
+2. Uniform / prefix retain R=27
+   Coverage mean_C ≈ 0.11 from route dumps; quality FAIL consistent with low routed mass.
+3. “Calib” false sense of security
+   FULL+env “calib” can show allowlist_status=INACTIVE (=prefix bank). Users must see
+   CALIBRATED_ALLOWLIST_ACTIVE tagged in stderr before trusting calib exports.
+4. Concurrent quality-curve loads
+   QUALITY_CURVE_001 HALT_CONCURRENCY — onboarding docs must say exclusive host for heavy MoE.
+5. HOST_DECODE / Vulkan
+   Dense smoke required host-decode when Vulkan open failed — first-run must document the env opt-in.
+
+## Operator checklist (honest)
+[ ] Build rawr.exe (INSTALL.md)
+[ ] Verify-RawrLocalInstall.ps1 PASS_LOCAL_VERIFY
+[ ] Dense smoke on a small GGUF (expect tok/s from *your* machine; cite your log)
+[ ] MoE: only after reading INDEP_SMOKE_SEAL + retention policy; do not ship R=27 as “ready”
+[ ] Do not claim Top-25 / PROMOTE until SCOREBOARD conjunction + LAW allow
+
+PROMOTE=0 · TIP_CLIMB=HOLD · NOT_RUN!=PASS

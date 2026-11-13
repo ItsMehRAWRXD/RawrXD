@@ -1,15 +1,78 @@
 COMPETITIVE_BENCH_001
-DATE=2026-11-13
+ASOF_LOCAL=2026-11-13T14:24:08-05:00
 PROMOTE=0
 CERTIFIED=0
+INVENT_PASS=0
+CROSS_SHA_CREDIT=0
+NOT_RUN!=PASS
+HEAD_TO_HEAD=NOT_SEALED
 
-## What ran
+PURPOSE
+  Independent competitive testing inventory + smallest runnable smoke.
+  Do not invent benchmark PASS. Empty EXIT / null-agent 0% ≠ competitive win.
 
-Smoke inventory under smoke_runs/ (rawr help, swebench help, streaming benchmark, isa_dispatch, minimal).
+LOCATED_IN_TREE
+  SWE-bench coding harness:
+    SOURCE=src/eval/swe_bench_harness.cpp
+    README=src/eval/README.md
+    EXE=build-ninja-ctx2\bin\RawrXD-SWEBench.exe (+ build-ninja-max)
+  IDE smoke (source only this host):
+    tests/ide/IDE_SmokeTest_Harness.cpp
+  IDE-Benchmark contract (internal cert source, not external IDE-Bench suite):
+    tests/b112/b112_final_integration_gate_iii_certification.cpp
+  Local microbenches:
+    benchmark_isa_dispatch.exe / benchmark_streaming.exe / benchmark_kernel.exe
+    tests/smoke_test_minimal.exe
+    BENCHMARK_HARNESS_README.md (deep2_benchmark.exe ABSENT)
+  Prior CLI health logs (this pack logs/): cb_* SovereignCLI/terminal_gate receipts
+  Game-dev:
+    DOC=docs/REVERSE_ENGINEERING_GAME_DEVELOPMENT.md
+    PROJECT_FIXTURES=NOT_FOUND
+    fixtures/= agent/obj/VAL (367 entries; not game-dev projects)
+  External IDE-Bench / Terminal-Bench packages: NOT_IN_TREE (g:\~dev grep)
 
-No IDE-Bench / Terminal-Bench / full SWE-bench score claimed.
+SMOKE_RUNS (smoke_runs/; ASOF 2026-11-13T14:24:08-05:00)
+  swebench_help
+    EXE=build-ninja-ctx2\bin\RawrXD-SWEBench.exe
+    ARGS=--help  (falls through to null-agent self-test; 4 builtin instances)
+    STATUS=RAN  EXIT=0  ELAPSED_MS=17
+    SCORE_OVERALL=0.0%
+    TASKS_COMPLETED=0/4  PATCH_CORRECT=0/4  TESTS_PASSED=0/4
+    REASON=agent returned empty patch (null agent; NOT live model)
+    COMPETITIVE_PASS=0  (harness prints minimum competitive=50.0%)
+  benchmark_streaming
+    EXE=benchmark_streaming.exe
+    STATUS=RAN  EXIT=0  ELAPSED_MS=53
+    SCORE=NONE  NOTE=No samples collected
+  isa_dispatch
+    EXE=benchmark_isa_dispatch.exe
+    STATUS=RAN_FAILED  EXIT=-1073741515  (STATUS_DLL_NOT_FOUND / 0xC0000135)
+    SCORE=NONE  ELAPSED_MS=32
+  smoke_test_minimal
+    EXE=tests\smoke_test_minimal.exe
+    STATUS=RAN_FAILED  EXIT=-1073741515  (STATUS_DLL_NOT_FOUND)
+    SCORE=NONE  ELAPSED_MS=20
+  rawr_help
+    EXE=build_ninja\bin\rawr.exe  ARGS=--help
+    STATUS=RAN  EXIT=-1  ELAPSED_MS=43
+    SCORE=NONE  NOTE=Usage on stderr; not a competitive score
 
-```
-BENCH_SCORES=NOT_RUN
-PROMOTE=0
-```
+NOT_RUN
+  IDE-Bench suite                     NOT_IN_TREE
+  Terminal-Bench suite                NOT_IN_TREE
+  RawrXD-SWEBench --real-agent        NOT_RUN (needs live model)
+  OLLAMA_MATCHED / VLLM_MATCHED / LLAMACPP_MATCHED  NOT_RUN
+  deep2_benchmark.exe certify         NOT_RUN (binary absent)
+  IDE_SmokeTest_Harness.exe           NOT_RUN (exe absent)
+  b112 IDE-benchmark contract exe     NOT_RUN
+  game-dev project fixture E2E        NOT_RUN
+
+SCORES
+  SWE-bench null-agent self-test OVERALL=0.0% (measured; NOT competitive PASS)
+  All other harnesses this turn: SCORE=NONE
+
+AUTHORITY
+  Recognition TPS narrative: PRODUCTION_MATURITY_TOP25_001/STATUS.txt only.
+  Ops gaps: TOP25_OPS_001/STATUS.txt (+ TOP25_RECOGNITION_OPS_001 if present).
+
+PROMOTE=0 · TIP_CLIMB=HOLD · CERTIFIED=0

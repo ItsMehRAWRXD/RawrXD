@@ -10,6 +10,7 @@
 
 #ifdef HAVE_DEEP2_ENGINE
 #include "Deep2Engine.h"
+#include <cstdlib>
 #include "deep2_snap.hpp"
 #include "snap_process_guard.hpp"
 #endif
@@ -56,7 +57,13 @@ bool Deep2Bridge::Initialize(const std::string& modelPath)
     }
 
     LOG_INFO("Initializing Deep2 Bridge...");
-    
+    // Opt-in only: honor DEEP2_GPU_DEVICE_RESET if already set; never default ON.
+    {
+        const char* gpuReset = std::getenv("DEEP2_GPU_DEVICE_RESET");
+        const bool enabled = gpuReset && gpuReset[0] == '1';
+        LOG_INFO(std::string("DEEP2_GPU_DEVICE_RESET=") + (enabled ? "1 (opt-in device-lost teardown/recreate/retry)" : "0 (default; mark-only on code31/VK_ERROR_DEVICE_LOST)"));
+    }
+
     try {
 #ifdef HAVE_DEEP2_ENGINE
         m_engine = new Deep2::Deep2Engine();
@@ -77,8 +84,13 @@ bool Deep2Bridge::Initialize(const std::string& modelPath)
             return false;
         }
         
-        // Enable Vulkan GPU if available
-        m_engine->enableVulkan(true);
+        // Enable Vulkan GPU by default.  The opt-out is diagnostic only so
+        // lifecycle failures can be separated from bridge/callback failures;
+        // production behavior remains GPU-first unless explicitly disabled.
+        const char* disableVulkan = std::getenv("RAWRXD_BRIDGE_DISABLE_VULKAN");
+        const bool useVulkan = !(disableVulkan && disableVulkan[0] == '1');
+        m_engine->enableVulkan(useVulkan);
+        LOG_INFO(std::string("Deep2Bridge Vulkan=") + (useVulkan ? "enabled" : "disabled (diagnostic)"));
         
         // Enable batched prefill for performance
         m_engine->enableBatchedPrefill(true);
@@ -215,6 +227,18 @@ bool Deep2Bridge::GenerateStream(const std::string& prompt,
         return false;
     }
 
+    // A completed worker remains joinable until its owner joins it.  Reusing
+    // the std::thread slot without joining would call std::terminate() on the
+    // second request, which surfaced as intermittent 0xC0000409 exits during
+    // repeated lifecycle tests.
+    if (m_generationThread.joinable()) {
+        if (m_generationThread.get_id() == std::this_thread::get_id()) {
+            LOG_ERROR("Cannot relaunch generation from its own worker callback");
+            return false;
+        }
+        m_generationThread.join();
+    }
+
     m_maxTokens = maxTokens;
     m_temperature = temperature;
     m_topP = topP;
@@ -229,6 +253,7 @@ bool Deep2Bridge::GenerateStream(const std::string& prompt,
     m_tokenCount = 0;
     m_tokensPerSecond = 0.0;
     m_generationStartTime = std::chrono::high_resolution_clock::now();
+
 
     if (m_espBus) {
         m_espBus->publish(rawrxd::esp::Kind::PrefillStart, "prompt_len=" + std::to_string(prompt.size()), m_espRequestId);
@@ -254,6 +279,7 @@ void Deep2Bridge::GenerationWorker(const std::string& prompt, int maxTokens)
             m_espBus->publish(rawrxd::esp::Kind::PrefillEnd, "tokens=0", m_espRequestId);
         }
 
+
         // Configure generation parameters
         Deep2::GenerationOptions options;
         options.maxTokens = static_cast<uint32_t>(maxTokens);
@@ -263,12 +289,14 @@ void Deep2Bridge::GenerationWorker(const std::string& prompt, int maxTokens)
         options.repeatPenalty = 1.1f;
         options.minP = 0.0f;
         options.seed = 0;
-        
+        LOG_INFO("Deep2Bridge generation: configure begin");
         m_engine->configureGeneration(options);
+        LOG_INFO("Deep2Bridge generation: configure complete");
         
         std::string fullResponse;
         
          // Use streaming generation
+         LOG_INFO("Deep2Bridge generation: engine stream begin");
          auto result = m_engine->generateStream(
              prompt,
              options,
@@ -295,11 +323,13 @@ void Deep2Bridge::GenerationWorker(const std::string& prompt, int maxTokens)
              }
          );
         
+        LOG_INFO("Deep2Bridge generation: engine stream returned");
         OnGenerationComplete(m_cancelRequested.load());
 #else
         if (!m_cpuEngine) {
             throw std::runtime_error("CPU engine not available");
         }
+
 
         if (m_espBus) {
             m_espBus->publish(rawrxd::esp::Kind::PrefillEnd, "tokens=0", m_espRequestId);

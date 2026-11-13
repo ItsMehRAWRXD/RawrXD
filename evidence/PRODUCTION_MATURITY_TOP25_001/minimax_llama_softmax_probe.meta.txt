@@ -1,0 +1,6 @@
+﻿PROBE=llama-direct\vulkan\llama-cli.exe -ngl 0 -n 1 Hello MiniMax
+RESULT=INCOMPLETE
+STDOUT_BYTES=0
+STDERR=backends_loaded_only
+NOTE=exited without generation; llama CPU ref REFERENCE_BLOCKED for softmax/SwiGLU FNV
+PROMOTE=0

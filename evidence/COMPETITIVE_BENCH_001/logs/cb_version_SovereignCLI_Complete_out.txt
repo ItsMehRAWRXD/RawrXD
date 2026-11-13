@@ -1,0 +1,12 @@
+==============================================================================
+Sovereign CLI Version Information
+==============================================================================
+
+CLI Version:     8.1.0
+Build Date:      2026-07-11
+Architecture:    x64
+Kernel Backend:  MASM + Intrinsics
+
+Kernel Version:  Sovereign Kernel Suite v1.2.0 (AVX2 + Phase 7A Resurrected + Phase 7B Intrinsics)
+
+==============================================================================

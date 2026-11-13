@@ -10,10 +10,23 @@ Prior retain-256 theta EXE: `EA4E20229633F9671F1B43620A3B6F27D21667F57A784B06830
 
 | Score | Status | Measured basis |
 |-------|--------|----------------|
-| CLI_MATURITY | **Not certified** | Dense unload PASS (`391D1F45…`). MiniMax semantic NOT_PASS. |
+| CLI_MATURITY | **Not certified** | Dense unload PASS (`cli_llama32_smoke_post.*`). MiniMax semantic NOT_PASS. |
 | GUI_MATURITY | **Not certified** | Four-panel FAIL_CLOSED. |
-| TOP25_PARITY | **Unmeasured** | — |
+| TOP25_PARITY | **Unmeasured** | P4 doc/ops land only — see `STATUS.txt` / `P4_RECOGNITION_GAPS.txt`. No sealed peer parity. |
+| TOP25_RECOGNITION | **NOT_READY** | Install/distribution/onboarding gaps partially closed; PROMOTE=0. |
 | COMMERCIAL_VALUATION | **Unverified** | Stale Aug-2026 ≠ cert. |
+
+## Competitive throughput (citations only — not a ranking)
+
+| Witness | Measured | Not a claim of |
+|---------|----------|----------------|
+| `cli_llama32_smoke_post.err.txt` | Prefill 3.21 tok/s; Decode 3.19 tok/s; E2E 0.46 TPS | Top-25 / MoE / GPU champion |
+| `REAP_ALL_16GB_001` QUALITY_CURVE / COMPARISON_MATRIX | MiniMax decode ≈0.32–0.37 tok/s on cited arms | Semantic PASS or peer win |
+| `REAP_ALL_16GB_001/INDEP_SMOKE_SEAL.txt` | MiniMax REAP16 CLEAN_EXIT + 48 tokens; SEMANTIC_COHERENCE=FAIL | Production REAP ship |
+| `DEEP2_671_STREAM_TPS_35_50_001/STATUS.txt` | TARGET_35_50_TPS=UNMINTED; DECODE_TPS=NOT_RUN | 35–50 TPS achieved |
+| `COMPETITIVE_BENCH_001/smoke_runs/*.meta` | Help/smoke meta; EXIT empty | Ollama/vLLM head-to-head |
+
+`PRODUCT_FLOOR_TPS=5.000` in stderr is a floor constant, not a measured result.
 
 ## P0 gates
 
