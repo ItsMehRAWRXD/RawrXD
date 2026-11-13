@@ -1,28 +1,14 @@
-# MiniMax QUALITY longer deterministic (optional; Qwen blocked)
-UTC=2026-11-13
-DISPOSITION=QUALITY_LONGER_DETERMINISTIC_MEASURED
+# MiniMax QUALITY disposition (Issue #83 worker)
+UTC=2026-11-13T07:09:05.5088854-05:00
 PROMOTE=0
 QUALITY=OPEN
+CERTIFIED=0
 CROSS_SHA_CREDIT=0
 ORIGINAL_GGUF_INTACT=1
-NOTE=Optional fallback after Qwen36 full-topology FAIL. Does not rewrite sealed B03.
-
-## Controlling EXE
-EXE=F:\rawrxd\build_reap\bin-msvc\rawr-reap.exe
-EXE_SHA256=C9A5564CB03612F3F6AF7F313D55B339AAD65BA6545BA93EC543441396701B16
-CMD=rawr-reap runtime <MiniMax-00001-of-00003.gguf> --target 30GB/8 --prompt Hello --max-tokens 8 --receipt MINIMAX_QUALITY_RECEIPT.json
-
-## Measured
-status=PASS
-generated_tokens=8
-generation_completed=1
-stop=COMPLETED
-output=姬被被被\\被6,
-COHERENCE=OPEN (repetition; not claimed)
-CODING=OPEN
-PROMOTE=0
-
-## Evidence
-RECEIPT=MINIMAX_QUALITY_RECEIPT.json
-STDOUT=MINIMAX_QUALITY_STDOUT.log
-STDERR=MINIMAX_QUALITY_STDERR.log
+CONTROLLING_SHA_SEALED=C9A5564CB03612F3F6AF7F313D55B339AAD65BA6545BA93EC543441396701B16
+LIVE_EXE=MISSING (peer rebuild / GDN_WIP_985A745C run in flight ? no steal)
+FIRST_DIVERGENT_OP=FALSE_POSITIVE_PREPROJ_UNINIT_KV; POST_LINEARW finite
+ENCODING=MoERouter UTF-8 normalized; see MOE_ENCODING.txt
+MEANINGFUL_OUTPUT=NOT_PASS (???? repetition)
+NEXT_GATE=rebuild_from_5c8f29+UTF8_MoE+postLinearW_diag; deterministic English/coding probe; finite logits; expert counters
+Qwen_GDN=HELD until MiniMax quality progresses
