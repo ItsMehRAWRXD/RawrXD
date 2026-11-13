@@ -1,0 +1,13 @@
+side=deep2
+stage=POST_FFN_0
+pos=5
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=1536
+nbytes=6144
+fnv=13b1cfd6955756a1
+l2=12.211823025922193
+seq=365
+path=F:\rawrxd\evidence\RC2_05_THREEWAY_20261112_190039\cpu_llama\batch04_cpuq8\stage_engine\deep2_POST_FFN_0_pos5_layer0_full_n1536_seq365.bin

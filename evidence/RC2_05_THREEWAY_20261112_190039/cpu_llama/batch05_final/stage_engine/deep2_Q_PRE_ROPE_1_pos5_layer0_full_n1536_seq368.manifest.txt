@@ -1,0 +1,13 @@
+side=deep2
+stage=Q_PRE_ROPE_1
+pos=5
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=1536
+nbytes=6144
+fnv=3bec6411d382411f
+l2=53.985987932305228
+seq=368
+path=F:\rawrxd\evidence\RC2_05_THREEWAY_20261112_190039\cpu_llama\batch05_final\stage_engine\deep2_Q_PRE_ROPE_1_pos5_layer0_full_n1536_seq368.bin

@@ -1,0 +1,30 @@
+﻿ASOF_LOCAL=2026-11-12T19:00:39-05:00
+BATCH=RC2-05
+DELIVERABLE=corrected Deep2 CPU reference + continuous GPU/llama three-way under frozen fixture
+RC2_04_PASS=0
+RC2_05_STATUS=DISPATCHED
+RC2_05_PASS=0
+THREE_WAY_EXACT=0
+CERTIFIED=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+CROSS_SHA_CREDIT=0
+DO_NOT_REOPEN_Q4K_ACT=1
+
+PRIORITY
+1) Deep2 CPU vs llama.cpp idx2 — earliest correctness gate (reference certification)
+2) GPU L1 ATTN_PRE_O ~2e-3 — independent tip flip investigation (fold 6404e3ca)
+
+KNOWN
+- GPU/CPU continuous 15/16; diverge@15 (77404 vs 6388); margin CPU +0.0027
+- V_POSTBIAS MATCH; KV 16/32/128 preserve PASS
+- CPU≠llama @ idx2 — CPU not sole GT until fixture+earliest op proven
+- Prior04=F:\rawrxd\evidence\RC2_04_TIP_PARITY_20261112_184234
+
+BATCHES=01 fixture freeze, 02 CPU↔llama first op, 03 GPU L1 attn, 04 evidence-only fix+hash, 05 three-way 16/32/128
+SPV_SHA256=ADA48968E30D7BB1A4D849545F4642DC8DF6E1CCB9872F2B63B4491665D52C75
+SPV_MATCH=1
+EXE_SHA256=DA6E80BD35278360057817040EF09D17BEEA28969C32E593400ECF245EB962C7
+LLAMA_CLI_PREF=F:\llama.cpp-ref\build-vulkan\bin\llama-cli.exe
+SHADER_DIR=F:\rawrxd\evidence\RC2_05_THREEWAY_20261112_190039\shaders_sealed
+EV=F:\rawrxd\evidence\RC2_05_THREEWAY_20261112_190039

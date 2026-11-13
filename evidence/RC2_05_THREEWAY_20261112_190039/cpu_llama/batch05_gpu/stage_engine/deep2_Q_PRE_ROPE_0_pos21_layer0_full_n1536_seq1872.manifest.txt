@@ -1,0 +1,13 @@
+side=deep2
+stage=Q_PRE_ROPE_0
+pos=21
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=1536
+nbytes=6144
+fnv=7c195f558b3c0e34
+l2=224.53787265338897
+seq=1872
+path=F:\rawrxd\evidence\RC2_05_THREEWAY_20261112_190039\cpu_llama\batch05_gpu\stage_engine\deep2_Q_PRE_ROPE_0_pos21_layer0_full_n1536_seq1872.bin

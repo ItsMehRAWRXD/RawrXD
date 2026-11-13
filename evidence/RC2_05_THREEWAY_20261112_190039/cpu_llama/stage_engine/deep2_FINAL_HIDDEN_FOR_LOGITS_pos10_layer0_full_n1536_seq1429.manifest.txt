@@ -1,0 +1,13 @@
+side=deep2
+stage=FINAL_HIDDEN_FOR_LOGITS
+pos=10
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=1536
+nbytes=6144
+fnv=2c9cb7ca5d96d503
+l2=228.48018497367619
+seq=1429
+path=F:\rawrxd\evidence\RC2_05_THREEWAY_20261112_190039\cpu_llama\stage_engine\deep2_FINAL_HIDDEN_FOR_LOGITS_pos10_layer0_full_n1536_seq1429.bin

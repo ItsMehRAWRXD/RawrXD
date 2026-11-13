@@ -1,0 +1,13 @@
+side=deep2
+stage=LAYER_OUT_24
+pos=7
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=1536
+nbytes=6144
+fnv=34f25c24a14a71db
+l2=119.14762528126602
+seq=554
+path=F:\rawrxd\evidence\RC2_05_THREEWAY_20261112_190039\cpu_llama\batch04_cpuq8\stage_engine\deep2_LAYER_OUT_24_pos7_layer0_full_n1536_seq554.bin

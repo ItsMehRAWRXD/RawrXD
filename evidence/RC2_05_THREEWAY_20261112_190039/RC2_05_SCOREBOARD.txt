@@ -1,0 +1,155 @@
+﻿ASOF_LOCAL=2026-11-12T19:50:00-05:00
+BATCH=RC2-05
+RC2_05_STATUS=IN_PROGRESS
+RC2_05_PASS=0
+THREE_WAY_EXACT=0
+CERTIFIED=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+DO_NOT_REOPEN_Q4K_ACT=1
+CROSS_SHA_CREDIT=0
+NO_BLIND_SPIR_V=1
+NO_BLIND_ATTN_GEOMETRY=1
+
+EV=F:\rawrxd\evidence\RC2_05_THREEWAY_20261112_190039
+FIXTURE=F:\rawrxd\evidence\RC2_05_THREEWAY_20261112_190039\RC2_05_FIXTURE.txt
+
+==============================================================================
+SHAS
+==============================================================================
+SPV_QGEMV=ADA48968E30D7BB1A4D849545F4642DC8DF6E1CCB9872F2B63B4491665D52C75
+SPV_MATCH=1
+SPV_TOUCHED=0
+EXE_SMOKE=5C76535F038D9AC049BD2C6D52C81434E4D6017C541B248420C9DA79A1445AA9
+EXE_SMOKE_PRIOR=DA6E80BD35278360057817040EF09D17BEEA28969C32E593400ECF245EB962C7
+LLAMA_CLI=634BE10F579FE2CB9701F92FD4F63AE23ECF10C2CB97BAA078A4F95EC9430594
+DEEP2_PARITY_TRACE=55A2037B09280660327248FF71F62DC65B3DF66BD510E6F5C25FAE5ECE8A7870
+GGUF=6A77366395772462C84F0C4D226AC404674327CBE78C01E4391CC7E0C698851E
+
+==============================================================================
+01 FIXTURE = FROZEN (parent)
+==============================================================================
+PROMPT_IDS=7985,825,2805,11652,911,23192,16895,63762,13 MATCH=1
+LLAMA_16=576,23192,16895,63762,374,279,2790,1372,315,821,27035,429,646,387,29213,323
+
+==============================================================================
+02 CPU↔llama FIRST OP = L0_V CLOSED (kernel); idx2 tip still OPEN
+==============================================================================
+STATUS=L0_V_CLOSED_IDX2_OPEN
+ROOT_CAUSE=product Q6_K used FP32 dequant·x (VAL-051.11 forced gemv_q6_k_scalar
+  reference + RC2-01C GPU Q6→F32 expand) while llama/RuntimeGraph use Q6_K×Q8_K
+  mul_mat. Q4_K act path already Q8_K (untouched). Gap maxAbs~1.22e-2 @ L0 V pos0
+  with near-identical L2 — classic act-quant vs FP32 signature.
+FIX=
+  1) QuantKernelRegistry::gemv_q6_k_scalar → Q6×Q8_K (quantize_row_q8_K +
+     vec_dot_q6_K_q8_K); FP32 only if cols%256!=0
+  2) tryVulkanGEMV: prefer packed Q6; on miss return false → CPU Q8 (no F32 expand)
+  3) GpuForward: drop default q6ForceF32; opt-in RAWRXD_DEEP2_Q6K_FORCE_F32_GPU=1
+DO_NOT_REOPEN_Q4K_ACT=1 held
+SPV ADA48968… untouched
+
+L0_V_POS0 (after fix; RAWRXD_DEEP2_DISABLE_GPU_GEMV=1 CPU path):
+  NEW_CPU vs RuntimeGraph d2_tf: maxAbs=8.94e-8 rms=2.23e-8 MATCH
+  GPU packed vs d2_tf: maxAbs=1.19e-7 rms=3.76e-8 MATCH
+  GPU vs NEW_CPU: maxAbs=1.19e-7 rms=3.81e-8 MATCH
+  PRIOR (FP32): maxAbs=1.217e-2 rms=3.504e-3 MISMATCH
+
+IDX2_TIP (continuous; still OPEN):
+  CPU/GPU still pick 315 @ tip2; llama/RuntimeGraph 16895
+  tip0=576 PRESERVED on CPU and GPU
+  L0_V close necessary but not sufficient for idx2 — residual Deep2Engine vs
+  RuntimeGraph graph/attention differences beyond first V op remain
+
+RECEIPTS:
+  cpu_llama/batch04_final/ (CPU Q8 STAGE+16)
+  cpu_llama/batch04_gpu/   (GPU packed Q6 STAGE+16)
+  cpu_llama/batch04_cpuq8/ (prove-disable-GPU-GEMV)
+
+==============================================================================
+03 GPU L1 ATTN_PRE_O = FOLDED (independent; not closed)
+==============================================================================
+STATUS=FOLDED_PRIOR_01C
+FIRST_GPU_L1_OP=ATTN_PRE_O_1 maxAbs~2.14e-3 (prior)
+INDEPENDENT of L0_V gate
+NO_BLIND_ATTN_GEOMETRY / NO_BLIND_SPIR_V held
+NOTE: prior Q6→F32 expand had locked GPU V to wrong CPU; after RC2-05-04 GPU V
+  rematches llama/RuntimeGraph — L1 ATTN_PRE_O remeasure deferred (not this gate)
+
+==============================================================================
+04 FIX = APPLIED (evidence-supported)
+05 ACCEPT = HELD (three-way continuous still FAIL)
+==============================================================================
+CPU_16 (2nd gen; hit EOS@13)=576,23192,315,821,374,29213,323,15233,553,279,24551,13,151643
+GPU_16=576,23192,315,821,374,29213,323,15233,1526,264,4013,315,7354,11,13653,6388
+LLAMA_16=576,23192,16895,63762,374,279,2790,1372,315,821,27035,429,646,387,29213,323
+TIP0_ALL=576 PASS
+CPU_LLAMA_FIRST_MIS=@2 (315 vs 16895) STILL
+CPU_GPU_FIRST_MIS=@8 (553 vs 1526) after L0_V fix mid-seq drift
+CONTINUOUS_16_EXACT=0
+THREE_WAY_EXACT=0
+L0_V_THREE_WAY_MATCH=1
+RC2_05_PASS=0
+CERTIFIED=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+NEXT=idx2 residual after L0_V (engine vs RuntimeGraph beyond V GEMV);
+  do not reopen Q4_K act; SPV hold
+
+==============================================================================
+02b POST-Q6×Q8 RE-BISECT (parent continue)
+==============================================================================
+ASOF=2026-11-12T19:49:35-05:00
+L0_pos0 after gemv_q6 Q8_K fix (batch04_final stage vs d2_tf):
+  ATTN_NORM / Q / K / V: MATCH (~1e-6..1e-7)
+  ATTN_PRE_O_0 vs pc6_attn_out: maxAbs=2.38e-4 FIRST_CLEAR_AFTER_V
+  FFN_INP: 2.37e-4 → FFN_DOWN/POST_FFN ~6.3e-3 amplify
+NEXT_CONTROLLING_OP=L0_ATTN_AFTER_V (scores/softmax/weighted-V/O between MATCH V and ATTN_PRE_O)
+IDX2 still 315 vs llama 16895 on product continuous
+
+==============================================================================
+02c KV_F16 closes L0 ATTN TF; idx2 STILL OPEN (parent RE continue)
+==============================================================================
+ASOF=2026-11-12T20:11:55-05:00
+FIX_PRODUCT=storeKvRoundTrip FP32->F16->FP32 on host KV write (Deep2Engine.cpp)
+  DEEP2_KV_F32=1 disables; default ON. Witness: KV_F16_ROUNDTRIP=1
+L0_pos0 vs d2_tf AFTER F16 (batch05_kv_f16):
+  ATTN_PRE_O_0 vs pc6_attn_out: maxAbs=0 EXACT
+  FFN_INP_0 vs pc8_resid1: maxAbs=0 EXACT
+  LAYER_OUT_0 vs pc14_resid2: maxAbs~1.43e-6
+PRIOR_ATTN_PRE_O_2.38e-4 = F32 KV vs llama/RuntimeGraph F16 KV (CLOSED as L0_ATTN cause)
+CONTINUOUS_CPU_ONLY (batch05_cont16_cpuonly, RAWR_REAP_CPU_ONLY=1, KV_F16=1, EOG_BIAS=1):
+  576,23192,315,821,374,29213,323,15233,1526,264,4013,315,25185,323,12538,11
+  CPU_LLAMA_FIRST_MIS=@2 (315 vs 16895) STILL
+  tip0 LOGIT_DIAG: EOS~14.61 vs 576~14.51 (EOG bias required for tip0=576)
+CONTINUOUS_GPU (batch05_cont16, no CPU_ONLY): tip15=6388; idx2 still 315
+EXE_SMOKE_SHA256=871ADD25B6BC7F4D5910CAC32F929E375FF7A6B14761F91206B4F31CFDD9BD24
+SPV_TOUCHED=0
+STATUS=L0_ATTN_F16_CLOSED_IDX2_OPEN
+NEXT=teacher-force tip2 (prefix+576+23192) first divergent op/layer vs llama
+RC2_05_PASS=0 THREE_WAY_EXACT=0 CERTIFIED=0 PROMOTE=0 TIP_CLIMB=HOLD
+
+02d RuntimeGraph tip2 TF (prefix+576+23192): argmax=16895 logit=19.522926 MATCHES llama tip2
+  Engine continuous still 315 — residual is Deep2Engine path vs RuntimeGraph/llama, NOT fixture prompt
+  NEXT=Engine tip2 logits under teacher-force same prefix; first layer/op diverge at that step
+
+02e Engine tip2 LOGIT_DIAG (CPU_ONLY+KV_F16+EOG, 2nd generate block):
+  step4 tip0: EOS=14.6107 576=14.5120 (EOG bias -> 576)
+  step5 tip1: 23192=14.1982 MATCH rank1
+  step6 tip2: 315=16.8347 63762=15.5936 ... 16895 NOT IN TOP5
+  RuntimeGraph same prefix tip2: 16895=19.5229
+  DELTA: Engine tip2 ranking totally wrong vs RT/llama — not near-tie
+NEXT=Engine teacher-force same 11-tok prefix; bisect layer outs at tip2 step vs d2_rt dumps
+BATCH01 AUTHORITATIVE FREEZE 2026-11-12T20:17:48-05:00
+GIT_HEAD=5e076584da95059b3962841f3abd2d9fb96e1f0d
+GIT_BRANCH=upload/ide-fixes-20261111
+GIT_DIRTY_FILE_COUNT=733
+EXE_SMOKE_SHA256=871ADD25B6BC7F4D5910CAC32F929E375FF7A6B14761F91206B4F31CFDD9BD24
+SPV_SHA256=ADA48968E30D7BB1A4D849545F4642DC8DF6E1CCB9872F2B63B4491665D52C75
+GGUF_SHA256=6A77366395772462C84F0C4D226AC404674327CBE78C01E4391CC7E0C698851E
+REF_TIP2=16895 ENG_TIP2=315
+FIRST_DIVERGENT_OP=L0_ATTN_PRE_O @ tip2_step(pos10) maxAbs=6.78e-1
+  (Q/K/V MATCH; scores/softmax/AV after MATCH V)
+L0_POS0_ATTN=PASS CONTINUOUS_IDX2=FAIL
+RC2_05_PASS=0 PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD GPU_PARITY=NOT_CREDITED
+BISECT=F:\rawrxd\evidence\RC2_05_THREEWAY_20261112_190039\cpu_llama\BISECT_TIP2_POST_F16.txt

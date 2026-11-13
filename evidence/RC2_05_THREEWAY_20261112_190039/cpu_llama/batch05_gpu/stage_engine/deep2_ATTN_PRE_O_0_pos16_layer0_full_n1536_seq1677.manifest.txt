@@ -1,0 +1,13 @@
+side=deep2
+stage=ATTN_PRE_O_0
+pos=16
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=1536
+nbytes=6144
+fnv=1e41e0f2edf1bc5c
+l2=9.9737427476094691
+seq=1677
+path=F:\rawrxd\evidence\RC2_05_THREEWAY_20261112_190039\cpu_llama\batch05_gpu\stage_engine\deep2_ATTN_PRE_O_0_pos16_layer0_full_n1536_seq1677.bin

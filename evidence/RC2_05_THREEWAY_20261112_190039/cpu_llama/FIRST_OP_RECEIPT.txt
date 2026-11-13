@@ -1,0 +1,39 @@
+﻿ASOF_LOCAL=2026-11-12T19:30:00-05:00
+BATCH=RC2-05-02
+COMPARE=Deep2Engine_CPU (product smoke STAGE) vs llama_tf + deep2_parity_trace (RuntimeGraph)
+
+TEACHER_FORCED_PREFIX=7985 825 2805 11652 911 23192 16895 63762 13 576 23192
+GEN_IDX2_POS_MAPPING=STAGE_LOGITS@pos11 == llama/d2_tf logits after abs pos10
+
+IDX2_LOGITS
+  eng_arg=315   315=16.975788  16895=12.272224  63762=15.719300
+  llama_arg=16895  315=14.280169  16895=19.504307  margin(16895-315)=+5.224
+  d2_tf_arg=16895  315=14.421208  16895=19.522926  margin=+5.102
+  eng_vs_llama maxAbs=7.232e+00 rms=1.458e+00
+  d2tf_vs_llama maxAbs=8.292e-01 rms=1.792e-01 (argmax MATCH)
+
+FIRST_DIVERGENT_OP (product Deep2Engine vs RuntimeGraph/llama-aligned path)
+  OP=L0_V (attn_v projection / V dump)
+  FIRST_POS=0
+  maxAbs=1.216719e-02 rms=3.503742e-03
+  PRIOR_MATCH: ATTN_NORM_0 / Q_PRE_ROPE_0 / K_PRE_ROPE_0 ~1e-6 MATCH at all pos0..10
+  WEIGHT_TYPE=Q6_K (blk.0.attn_v.weight type=14)
+  CASCADE: ATTN_PRE_O_0 maxAbs~1.2e-2@pos0 grows; POST_FFN_0~3.8e-2; L1+ amplify; idx2 tip flip
+
+NOTE_PATH_SPLIT
+  RuntimeGraph deep2_parity_trace AGREES llama argmax at idx2 (16895)
+  Product Deep2Engine smoke disagrees (315)
+  CPU product path is NOT llama-GT; first numerical op break is L0 V (Q6_K), not final logits alone
+
+RECEIPTS
+  CMP_TF_LOGITS.txt
+  BISECT_ENGINE_VS_TF.txt
+  FIRST_OP_V_SWEEP.txt
+  llama_tf/ref_logits_pos*.bin
+  d2_tf/d2_logits_pos*.bin
+  stage_engine/deep2_* dumps
+
+GPU_L1_ATTN_PRE_O (batch03 fold; worker 6404e3ca STALLED mtime=19:04; no new artifacts)
+  PRIOR_01C: L1 Q/K/V MATCH ~1e-6; FIRST_CLEAR=ATTN_PRE_O_1 maxAbs=2.136e-03
+  GAP=between MATCH V_1 and MISMATCH ATTN_PRE_O_1 (RoPE/scores/softmax/weighted-V; mid-attn)
+  DO_NOT_THRASH=1 NO_BLIND_ATTN_GEOMETRY=1

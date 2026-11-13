@@ -1,0 +1,13 @@
+side=deep2
+stage=FFN_UP_0
+pos=10
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=8960
+nbytes=35840
+fnv=97146ed44d78b802
+l2=29.618577175591568
+seq=1441
+path=F:\rawrxd\evidence\RC2_05_THREEWAY_20261112_190039\cpu_llama\batch04_cpuq8\stage_engine\deep2_FFN_UP_0_pos10_layer0_full_n8960_seq1441.bin

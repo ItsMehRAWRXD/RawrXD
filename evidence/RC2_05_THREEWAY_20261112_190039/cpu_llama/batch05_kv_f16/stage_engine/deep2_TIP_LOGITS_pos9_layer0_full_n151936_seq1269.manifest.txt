@@ -1,0 +1,13 @@
+side=deep2
+stage=TIP_LOGITS
+pos=9
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=151936
+nbytes=607744
+fnv=ba0b47a3870573fe
+l2=1117.9950889084491
+seq=1269
+path=F:\rawrxd\evidence\RC2_05_THREEWAY_20261112_190039\cpu_llama\batch05_kv_f16\stage_engine\deep2_TIP_LOGITS_pos9_layer0_full_n151936_seq1269.bin

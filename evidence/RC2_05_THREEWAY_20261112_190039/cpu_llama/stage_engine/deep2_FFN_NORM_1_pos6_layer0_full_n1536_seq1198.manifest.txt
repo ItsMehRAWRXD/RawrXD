@@ -1,0 +1,13 @@
+side=deep2
+stage=FFN_NORM_1
+pos=6
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=1536
+nbytes=6144
+fnv=6263bcd96a95d7b8
+l2=94.096076336791882
+seq=1198
+path=F:\rawrxd\evidence\RC2_05_THREEWAY_20261112_190039\cpu_llama\stage_engine\deep2_FFN_NORM_1_pos6_layer0_full_n1536_seq1198.bin

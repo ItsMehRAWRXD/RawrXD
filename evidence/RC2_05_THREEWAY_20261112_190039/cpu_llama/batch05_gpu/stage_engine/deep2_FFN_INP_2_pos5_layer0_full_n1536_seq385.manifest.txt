@@ -1,0 +1,13 @@
+side=deep2
+stage=FFN_INP_2
+pos=5
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=1536
+nbytes=6144
+fnv=f82799ad7eea7181
+l2=23.09050269413617
+seq=385
+path=F:\rawrxd\evidence\RC2_05_THREEWAY_20261112_190039\cpu_llama\batch05_gpu\stage_engine\deep2_FFN_INP_2_pos5_layer0_full_n1536_seq385.bin

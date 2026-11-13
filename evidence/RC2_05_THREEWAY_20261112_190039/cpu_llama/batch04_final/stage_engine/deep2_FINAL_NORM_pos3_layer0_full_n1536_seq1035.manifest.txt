@@ -1,0 +1,13 @@
+side=deep2
+stage=FINAL_NORM
+pos=3
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=1536
+nbytes=6144
+fnv=ebaa4ad3572117bd
+l2=212.8835565069308
+seq=1035
+path=F:\rawrxd\evidence\RC2_05_THREEWAY_20261112_190039\cpu_llama\batch04_final\stage_engine\deep2_FINAL_NORM_pos3_layer0_full_n1536_seq1035.bin

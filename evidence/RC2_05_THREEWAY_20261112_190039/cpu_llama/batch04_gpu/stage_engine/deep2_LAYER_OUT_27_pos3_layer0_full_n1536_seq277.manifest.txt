@@ -1,0 +1,13 @@
+side=deep2
+stage=LAYER_OUT_27
+pos=3
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=1536
+nbytes=6144
+fnv=94104a212359661b
+l2=172.03908850695541
+seq=277
+path=F:\rawrxd\evidence\RC2_05_THREEWAY_20261112_190039\cpu_llama\batch04_gpu\stage_engine\deep2_LAYER_OUT_27_pos3_layer0_full_n1536_seq277.bin

@@ -1,0 +1,13 @@
+side=deep2
+stage=LOGITS
+pos=23
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=151936
+nbytes=607744
+fnv=c38c57dd86b97d43
+l2=1152.6690731302108
+seq=1950
+path=F:\rawrxd\evidence\RC2_05_THREEWAY_20261112_190039\cpu_llama\batch05_gpu\stage_engine\deep2_LOGITS_pos23_layer0_full_n151936_seq1950.bin

@@ -1,0 +1,13 @@
+side=deep2
+stage=FINAL_HIDDEN_FOR_LOGITS
+pos=11
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=1536
+nbytes=6144
+fnv=3b8b3eb6737f7eda
+l2=216.7437096803956
+seq=1469
+path=F:\rawrxd\evidence\RC2_05_THREEWAY_20261112_190039\cpu_llama\batch04_gpu\stage_engine\deep2_FINAL_HIDDEN_FOR_LOGITS_pos11_layer0_full_n1536_seq1469.bin

@@ -1,0 +1,13 @@
+side=deep2
+stage=ATTN_NORM_0
+pos=4
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=1536
+nbytes=6144
+fnv=0f67adca6e71b203
+l2=19.170856205451926
+seq=1037
+path=F:\rawrxd\evidence\RC2_05_THREEWAY_20261112_190039\cpu_llama\batch05_gpu\stage_engine\deep2_ATTN_NORM_0_pos4_layer0_full_n1536_seq1037.bin

@@ -1,0 +1,82 @@
+TEACHER_FORCED tokens=7985 825 2805 11652 911 23192 16895 63762 13 576 23192
+COMPARE llama_tf vs deep2_parity_trace (d2_tf) logits/hidden
+FOCUS_IDS=315,16895,63762,576,23192
+pos=0 llama_arg=15 d2_arg=15 match=1 maxAbs=4.406170e-01 rms=9.796161e-02 llama_max=10.729160 d2_max=10.493648
+  focus 315:3.101050/3.004602 16895:-0.184124/-0.121654 63762:-0.573524/-0.467213 576:2.977396/3.000638 23192:-0.410580/-0.351082 151643:0.554562/0.462547
+  hidden vs d2_pos0_blk999_pc393_out_norm.bin maxAbs=4.734015e-01 rms=7.199062e-02
+pos=1 llama_arg=11652 d2_arg=323 match=0 maxAbs=1.208742e+00 rms=2.161662e-01 llama_max=15.682271 d2_max=15.441683
+  focus 315:13.254832/13.191381 16895:0.794257/0.420614 63762:0.028572/-0.119771 576:3.556420/3.556854 23192:5.257785/5.098355 151643:2.477980/2.589136
+  hidden vs d2_pos1_blk999_pc393_out_norm.bin maxAbs=1.759117e+00 rms=3.163826e-01
+pos=2 llama_arg=3364 d2_arg=14311 match=0 maxAbs=8.769712e-01 rms=1.825312e-01 llama_max=16.976576 d2_max=16.977163
+  focus 315:10.475969/10.315374 16895:0.335006/0.471343 63762:-2.504825/-2.372434 576:3.129249/3.194923 23192:3.802780/3.897983 151643:4.996106/5.035859
+  hidden vs d2_pos2_blk999_pc393_out_norm.bin maxAbs=2.493977e+00 rms=2.492460e-01
+pos=3 llama_arg=429 d2_arg=429 match=1 maxAbs=1.620715e+00 rms=4.691175e-01 llama_max=20.916805 d2_max=20.885530
+  focus 315:15.991735/15.963358 16895:1.267141/1.769797 63762:-1.054368/-0.761774 576:10.587779/10.935344 23192:1.490021/1.835888 151643:9.436204/9.768284
+  hidden vs d2_pos3_blk999_pc393_out_norm.bin maxAbs=4.077621e+00 rms=4.167523e-01
+pos=4 llama_arg=264 d2_arg=264 match=1 maxAbs=6.735240e+00 rms=1.681160e+00 llama_max=16.254398 d2_max=15.207472
+  focus 315:4.678879/5.212073 16895:-3.602801/-0.631477 63762:-6.309132/-3.394130 576:8.891264/8.453725 23192:-4.222589/-1.279220 151643:5.307435/5.080850
+  hidden vs d2_pos4_blk999_pc393_out_norm.bin maxAbs=1.898744e+01 rms=1.967524e+00
+pos=5 llama_arg=7479 d2_arg=7479 match=1 maxAbs=2.405096e+00 rms=6.129915e-01 llama_max=16.754166 d2_max=16.939028
+  focus 315:11.803765/11.979402 16895:-1.661515/-1.399539 63762:6.444877/7.259510 576:5.212442/5.361075 23192:7.428002/7.795040 151643:6.101221/7.176012
+  hidden vs d2_pos5_blk999_pc393_out_norm.bin maxAbs=7.504124e+00 rms=7.402793e-01
+pos=6 llama_arg=429 d2_arg=429 match=1 maxAbs=1.647248e+00 rms=3.735574e-01 llama_max=15.599819 d2_max=15.151436
+  focus 315:11.900467/11.949502 16895:10.846469/11.404882 63762:3.452476/4.140129 576:11.329791/11.782084 23192:9.477495/10.505121 151643:8.399272/9.480453
+  hidden vs d2_pos6_blk999_pc393_out_norm.bin maxAbs=1.004415e+01 rms=5.632957e-01
+pos=7 llama_arg=429 d2_arg=13 match=0 maxAbs=1.104751e+00 rms=2.524075e-01 llama_max=15.169025 d2_max=15.134963
+  focus 315:13.964670/14.244550 16895:10.924150/10.937277 63762:11.008294/11.423997 576:10.774500/10.858805 23192:10.346876/10.213676 151643:9.521690/10.339688
+  hidden vs d2_pos7_blk999_pc393_out_norm.bin maxAbs=4.517363e+00 rms=3.727120e-01
+pos=8 llama_arg=576 d2_arg=576 match=1 maxAbs=1.592938e+00 rms=3.931027e-01 llama_max=14.869408 d2_max=14.863833
+  focus 315:8.644162/9.217604 16895:7.544857/7.982744 63762:6.004520/6.331374 576:14.869408/14.863833 23192:12.742571/12.642300 151643:9.584401/11.116539
+  hidden vs d2_pos8_blk999_pc393_out_norm.bin maxAbs=9.356133e+00 rms=5.057012e-01
+pos=9 llama_arg=23192 d2_arg=23192 match=1 maxAbs=9.746065e-01 rms=1.930285e-01 llama_max=14.535401 d2_max=14.496351
+  focus 315:4.800605/4.811170 16895:9.950107/10.350858 63762:10.786921/10.924068 576:5.158864/5.252457 23192:14.535401/14.496351 151643:6.259958/5.928789
+  hidden vs d2_pos9_blk999_pc393_out_norm.bin maxAbs=1.350731e+00 rms=2.171446e-01
+pos=10 llama_arg=16895 d2_arg=16895 match=1 maxAbs=8.291862e-01 rms=1.791889e-01 llama_max=19.504307 d2_max=19.522926
+  focus 315:14.280169/14.421208 16895:19.504307/19.522926 63762:16.181786/16.169811 576:6.690114/6.754211 23192:12.492371/11.810998 151643:8.035286/8.470515
+  hidden vs d2_pos10_blk999_pc393_out_norm.bin maxAbs=2.426601e+00 rms=2.441363e-01
+
+FIRST_ARGMAX_MISMATCH_POS=1
+FIRST_LOGIT_MAXABS_GT_1e-3_POS=0
+ENGINE_STAGE_LOGITS_FILES=36
+  deep2_FINAL_HIDDEN_FOR_LOGITS_pos10_layer0_full_n1536_seq1429.bin
+  deep2_FINAL_HIDDEN_FOR_LOGITS_pos10_layer0_full_n1536_seq1429.manifest.txt
+  deep2_FINAL_HIDDEN_FOR_LOGITS_pos10_layer0_full_n1536_seq674.bin
+  deep2_FINAL_HIDDEN_FOR_LOGITS_pos10_layer0_full_n1536_seq674.manifest.txt
+  deep2_FINAL_HIDDEN_FOR_LOGITS_pos11_layer0_full_n1536_seq1469.bin
+  deep2_FINAL_HIDDEN_FOR_LOGITS_pos11_layer0_full_n1536_seq1469.manifest.txt
+  deep2_FINAL_HIDDEN_FOR_LOGITS_pos11_layer0_full_n1536_seq714.bin
+  deep2_FINAL_HIDDEN_FOR_LOGITS_pos11_layer0_full_n1536_seq714.manifest.txt
+  deep2_FINAL_HIDDEN_FOR_LOGITS_pos12_layer0_full_n1536_seq1509.bin
+  deep2_FINAL_HIDDEN_FOR_LOGITS_pos12_layer0_full_n1536_seq1509.manifest.txt
+  deep2_FINAL_HIDDEN_FOR_LOGITS_pos12_layer0_full_n1536_seq754.bin
+  deep2_FINAL_HIDDEN_FOR_LOGITS_pos12_layer0_full_n1536_seq754.manifest.txt
+  deep2_FINAL_HIDDEN_FOR_LOGITS_pos9_layer0_full_n1536_seq1387.bin
+  deep2_FINAL_HIDDEN_FOR_LOGITS_pos9_layer0_full_n1536_seq1387.manifest.txt
+  deep2_FINAL_HIDDEN_FOR_LOGITS_pos9_layer0_full_n1536_seq632.bin
+  deep2_FINAL_HIDDEN_FOR_LOGITS_pos9_layer0_full_n1536_seq632.manifest.txt
+  deep2_LOGITS_pos10_layer0_full_n151936_seq1430.bin
+  deep2_LOGITS_pos10_layer0_full_n151936_seq1430.manifest.txt
+  deep2_LOGITS_pos10_layer0_full_n151936_seq675.bin
+  deep2_LOGITS_pos10_layer0_full_n151936_seq675.manifest.txt
+  deep2_LOGITS_pos11_layer0_full_n151936_seq1470.bin
+  deep2_LOGITS_pos11_layer0_full_n151936_seq1470.manifest.txt
+  deep2_LOGITS_pos11_layer0_full_n151936_seq715.bin
+  deep2_LOGITS_pos11_layer0_full_n151936_seq715.manifest.txt
+  deep2_LOGITS_pos12_layer0_full_n151936_seq1510.bin
+  deep2_LOGITS_pos12_layer0_full_n151936_seq1510.manifest.txt
+  deep2_LOGITS_pos12_layer0_full_n151936_seq755.bin
+  deep2_LOGITS_pos12_layer0_full_n151936_seq755.manifest.txt
+  deep2_LOGITS_pos9_layer0_full_n151936_seq1388.bin
+  deep2_LOGITS_pos9_layer0_full_n151936_seq1388.manifest.txt
+
+POS10_DETAIL
+  id=315 llama=14.280168533 d2_tf=14.421208382 delta=0.141039848
+  id=16895 llama=19.504306793 d2_tf=19.522926331 delta=0.018619537
+  id=63762 llama=16.181785583 d2_tf=16.169811249 delta=-0.011974335
+  id=821 llama=12.875055313 d2_tf=12.974123955 delta=0.099068642
+  id=374 llama=13.309150696 d2_tf=13.358173370 delta=0.049022675
+  margin_llama(16895-315)=5.224138260
+  margin_d2(16895-315)=5.101717949
+ENGINE_LOGITS_POS10_CANDS=2
+  eng=deep2_LOGITS_pos10_layer0_full_n151936_seq1430.bin arg=23192 vs_llama maxAbs=1.320634e+01 vs_d2tf maxAbs=1.322496e+01 e315=4.085919 e16895=6.297966
+  eng=deep2_LOGITS_pos10_layer0_full_n151936_seq675.bin arg=23192 vs_llama maxAbs=1.320634e+01 vs_d2tf maxAbs=1.322496e+01 e315=4.085919 e16895=6.297966

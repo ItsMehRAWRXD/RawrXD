@@ -1,0 +1,5 @@
+﻿PARITY_TRACE_LOCATE=2026-11-12T19:34:34-05:00
+EXE=F:\rawrxd\build_reap\bin\deep2_parity_trace.exe
+SRC_CANDIDATE=F:\rawrxd\tools\deep2_parity_trace.cpp
+HEADER=G:\~dev\rawrxd\src\core\inference_parity_trace.h
+COMPARE_ps1=G:\~dev\rawrxd\scripts\compare_parity_trace.ps1
