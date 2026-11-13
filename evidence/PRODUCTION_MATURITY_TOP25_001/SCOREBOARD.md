@@ -10,8 +10,9 @@ Prior retain-256 theta EXE: `EA4E20229633F9671F1B43620A3B6F27D21667F57A784B06830
 
 | Score | Status | Measured basis |
 |-------|--------|----------------|
-| CLI_MATURITY | **Not certified** | Dense unload PASS (`cli_llama32_smoke_post.*`). MiniMax semantic NOT_PASS. |
-| GUI_MATURITY | **Not certified** | Four-panel FAIL_CLOSED. |
+| CLI_MATURITY | **Not certified** · CLI_SCORE_PCT=**47** (was ≈43) | Dense GPU canary TOKEN_SURVIVED GEN=8 CLEAN_EXIT=1 (`VALUATION_ROLLUP_001/tiny_canary2.*` + `CLI_VULKAN_SMOKE_001`). MATCH=0. MiniMax semantic NOT_PASS. |
+| GUI_MATURITY | **Not certified** · GUI_SCORE_PCT=**32** | Four-panel FAIL_CLOSED. |
+| OVERALL (min) | **32** | `min(47,32)`; CONJUNCTION_PASS=0 — `VALUATION_SCOREBOARD.txt` |
 | TOP25_PARITY | **MEASURED_PARTIAL** | Ops audited (`TOP25_RECOGNITION_OPS_001` + `TOP25_OPS_001`). No sealed peer IDE/perf parity. ≠ certified. |
 | TOP25_RECOGNITION | **NOT_READY** | DRAFT_SHA_BOUND (v14.7.3/v1.0.0 zips); NOT_PUBLISHED; clean-VM ABSENT; PROMOTE=0. |
 | COMMERCIAL_VALUATION | **Unverified** | Stale Aug-2026 ≠ cert. |
@@ -20,6 +21,7 @@ Prior retain-256 theta EXE: `EA4E20229633F9671F1B43620A3B6F27D21667F57A784B06830
 
 | Witness | Measured | Not a claim of |
 |---------|----------|----------------|
+| `VALUATION_ROLLUP_001/tiny_canary2.*` + `CLI_VULKAN_SMOKE_001` | HOST_DECODE=0; GENERATED_TOKENS=8; CLEAN_EXIT=1; DECODE_TPS≈1.3 | Top-25 / MATCH / DualStick true runtime |
 | `cli_llama32_smoke_post.err.txt` | Prefill 3.21 tok/s; Decode 3.19 tok/s; E2E 0.46 TPS | Top-25 / MoE / GPU champion |
 | `REAP_ALL_16GB_001` QUALITY_CURVE / COMPARISON_MATRIX | MiniMax decode ≈0.32–0.37 tok/s on cited arms | Semantic PASS or peer win |
 | `REAP_ALL_16GB_001/INDEP_SMOKE_SEAL.txt` | MiniMax REAP16 CLEAN_EXIT + 48 tokens; SEMANTIC_COHERENCE=FAIL | Production REAP ship |
