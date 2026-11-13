@@ -1,0 +1,78 @@
+﻿G09_REAP_PHYSICAL_AUDIT 20261113
+MOTD_ACK=1
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+CROSS_SHA_CREDIT=0
+RESUME_AFTER_AUDIT=18b81438-63cc-43b5-b128-f4925ab05d59
+NOTE_G09_TIP14_EXE_SHA=0C29A6F882CDE811AD042482DCBC4787F703BA14657E29FD770940E842A32761
+NOTE_LIVE_RAWR_REAP_EXE_SHA=1CBD9ED8F89250C7C45E933B5C1B9282B737120B367B2F6B386AD0B8362C4646
+NOTE_DO_NOT_MIX=G09 Tip14 isolate credited to 0C29A6F8 only; live rawr-reap rebuild is 1CBD9ED8
+GIT_WT_BASE=b471eff5069f207472fa9bc3ec70c6ff05834a77
+GIT_WT_BRANCH=fix/rc2-05-continuous-parity-20261112
+GIT_PRODUCT=5e076584da95059b3962841f3abd2d9fb96e1f0d
+PR=https://github.com/ItsMehRAWRXD/RawrXD/pull/80
+POLICY_SMOKE_REPACK_BYTES=21106775680 MEASURED
+POLICY_SMOKE_PRUNE_BYTES=600138449184 MEASURED
+PHYSICAL_PLAN_CLI=MEASURED (rawr-reap physical-plan exit=0; see PHYSICAL_PLAN.json)
+LOADER_EXCLUDE_SMOKE=PASS MEASURED (keep0=LOADED prune_at_limit=REJECTED high100=REJECTED)
+
+## Verdict
+TIP14_VALUED_REAP=RESIDENCY_ONLY
+PHYSICAL_REPACK=0
+RESIDENCY_ONLY=1 (valued Tip14 default unchanged)
+ORIGINAL_GGUF_INTACT=1
+PHYSICAL_EXCLUDE_STREAM=SOURCE_WIRED
+  - RAWR_REAP_PHYSICAL=1 OR rawr-reap runtime --physical OR valued --reap --physical
+  - MoEWeightsLoader::SetPhysicalExpertLimit hard-gate
+  - Deep2Engine execute-path prune clamp
+  - router F32+dequant remap to retained prefix
+OFFLINE_TRANSFORM_CODE=PRESENT (ReapMoETransformer; admission-gated; NOT_RUN this receipt)
+STREAM_DECODE_PHYSICAL=NOT_RUN
+  GATE=HOST_FREE_RAM_INSUFFICIENT
+  FREE_PHYSICAL_MEMORY_KB=287332 (~0.27 GiB)
+  TOTAL_VISIBLE_MEMORY_KB=64607604 (~61.6 GiB)
+  REQUIRED=working-set for Kimi multi-shard stream load + decode (>> free)
+  NOTE=loader mmap smoke ≠ RUNTIME_REACHED_PHYSICAL
+
+## Semantics
+VALUED --reap <params>/<experts>: params->working-set; experts->router top-k (RESIDENCY)
+VALUED --reap <params>/<experts> --physical | RAWR_REAP_PHYSICAL=1: retained cardinality + exclude
+BARE --reap --target-size/--active-experts: offline/physical-candidate contract (writer admission-gated)
+32B active-params/token != REAP target size
+P_REAP = P_shared + sum_l E_retained,l * P_expert,l
+
+## Evidence fields
+ORIGINAL_MODEL_BYTES=621245224864 MEASURED
+ORIGINAL_EXPERT_COUNT=384 MEASURED (per MoE layer; inventory + physical-plan)
+RETAINED_EXPERT_COUNT=8 MEASURED_PLAN (deterministic prefix; CERTIFIED=0)
+PRUNED_PARAMETER_COUNT=600138449184 BYTE_PROXY MEASURED
+REPACKED_MODEL_BYTES=21106775680 ESTIMATED_PLAN (writer/export NOT_RUN; ~21GB retain-8)
+ACTIVE_PARAMETERS_PER_TOKEN=NOT_IMPLEMENTED
+  MISSING_SURFACE=per-token census of P_shared + top-k expert params (neq P_REAP disk bytes)
+RESIDENT_RAM_BYTES=NOT_RUN (stream decode not reached)
+RESIDENT_VRAM_BYTES=NOT_RUN
+TOKENS_COMMITTED=NOT_RUN
+REAP_MODEL_SHA256=NOT_RUN (no reduced artifact; ORIGINAL shards untouched)
+SHARD1_PATH=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf PRESENT=True
+SHARD1_SHA256_PREFIX=EB480519 (user-cited; full rehash NOT_RUN)
+SHARD_COUNT=13 MEASURED
+
+## Code paths touched (this resume)
+MoEWeightsLoader::{SetPhysicalExpertLimit,LoadExpert,LoadExpertDirect}
+Deep2Engine: SetPhysicalExpertLimit on stream open; dequant router truncate; telemetry retained;
+  execute-path prune clamp for physicalExclude
+ReapRuntime: --physical | RAWR_REAP_PHYSICAL=1
+reap_cli runtime --physical; physical-plan CLI exercised
+rawrxd_cli_v2 valued --reap --physical pass-through
+
+## Disposition
+PHYSICAL_REPACK=0
+RESIDENCY_ONLY=1 (Tip14 valued default)
+ORIGINAL_GGUF_INTACT=1
+SOURCE_WIRED_PHYSICAL_EXCLUDE=1
+RUNTIME_REACHED_PHYSICAL=0
+TOKEN_SURVIVED_PHYSICAL=0
+PERFORMANCE_PASS=0
+PROMOTE=0
+OPEN_GATES=HOST_FREE_RAM_FOR_STREAM_DECODE; OPTIONAL_NONDESTRUCTIVE_EXPORT_ARTIFACT; ACTIVE_PARAMETERS_PER_TOKEN_SURFACE

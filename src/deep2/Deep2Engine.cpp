@@ -4456,6 +4456,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                     reapRuntimeReceipt_.retainedExperts = retained;
                     reapRuntimeReceipt_.physicalExclude = true;
                     reapRuntimeReceipt_.residencyOnly = false;
+                    moeWeightsLoader_->SetPhysicalExpertLimit(retained);
                 }
                 moeConfig_.useSharedExpert = modelWeights.numSharedExperts > 0;
                 moeConfig_.expertDim = modelWeights.moeIntermediateDim > 0 ? modelWeights.moeIntermediateDim : config.intermediateDim;
@@ -4595,10 +4596,18 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                             if (dequantFn)
                             {
                                 dequantFn((const uint8_t*)tmpWt.data, dequant.data(), rows * cols);
-                                router->SetRouterWeights(dequant.data(), rows, cols);
+                                size_t setRows = rows;
+                                if (reapRuntimeInjection_.enabled &&
+                                    reapRuntimeInjection_.physicalExclude &&
+                                    setRows > moeConfig_.numExperts &&
+                                    cols == moeConfig_.hiddenDim)
+                                {
+                                    setRows = moeConfig_.numExperts;
+                                }
+                                router->SetRouterWeights(dequant.data(), setRows, cols);
                                 printf("[Deep2Engine] Layer %zu router weights dequantized via registry from type=%d "
                                        "to FP32 (%zux%zu)\n",
-                                       layerIdx, lw.moeRouter.type, rows, cols);
+                                       layerIdx, lw.moeRouter.type, setRows, cols);
                             }
                             else
                             {
@@ -4617,11 +4626,18 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
 
                 // Initialize residency telemetry for router-driven prefetch pipeline
                 residencyTelemetry_ = std::make_unique<RouterPrefetchTelemetry>();
-                residencyTelemetry_->Initialize(static_cast<int>(modelWeights.numLayers),
-                                                static_cast<int>(modelWeights.numExperts));
-                telemetryEnabled_ = true;
-                printf("[Deep2Engine] RouterPrefetchTelemetry initialized: %zu layers x %u experts\n",
-                       modelWeights.numLayers, meta.numExperts);
+                {
+                    const int teleExperts =
+                        (reapRuntimeInjection_.enabled &&
+                         reapRuntimeInjection_.physicalExclude)
+                            ? static_cast<int>(moeConfig_.numExperts)
+                            : static_cast<int>(modelWeights.numExperts);
+                    residencyTelemetry_->Initialize(
+                        static_cast<int>(modelWeights.numLayers), teleExperts);
+                    telemetryEnabled_ = true;
+                    printf("[Deep2Engine] RouterPrefetchTelemetry initialized: %zu layers x %d experts\n",
+                           modelWeights.numLayers, teleExperts);
+                }
 
                 moeInitialized_ = true;
                 if (reapRuntimeInjection_.enabled)
@@ -12430,6 +12446,13 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
         float weight = er.weight;
 
         if (expertId < 0)
+            continue;
+        // Physical REAP: never execute/acquire pruned expert IDs even if a
+        // stale router or prefetch leaks them (multi-shard + streamer paths).
+        if (reapRuntimeInjection_.enabled &&
+            reapRuntimeInjection_.physicalExclude &&
+            static_cast<uint64_t>(expertId) >=
+                reapRuntimeInjection_.expertCount)
             continue;
 
         auto tAcquire0 = std::chrono::high_resolution_clock::now();

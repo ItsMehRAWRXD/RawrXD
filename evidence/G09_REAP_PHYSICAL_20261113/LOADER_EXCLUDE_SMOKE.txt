@@ -1,0 +1,9 @@
+﻿PHYSICAL_EXCLUDE_LOADER_GATE=PASS
+keep0=LOADED
+prune_at_limit=REJECTED
+high100=REJECTED
+layers_in_shard1=5
+experts_per_layer=384
+retained=8
+RUNTIME_REACHED_PHYSICAL=0
+NOTE=loader_hard_gate_only_neq_stream_decode_E2E

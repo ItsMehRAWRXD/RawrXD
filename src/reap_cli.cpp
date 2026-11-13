@@ -35,7 +35,8 @@ static void usage() {
                  "rawr-reap capabilities <model-file-or-directory>\n"
                  "rawr-reap verify <first-shard.gguf> [--receipt <receipt.json>] [--structural-only]\n"
                  "rawr-reap runtime <model-or-alias> --target <parameters>/<experts> "
-                 "[--prompt <text>] [--max-tokens <N>] [--receipt <receipt.json>]\n"
+                 "[--physical] [--prompt <text>] [--max-tokens <N>] [--receipt <receipt.json>]\n"
+                 "  (default=Tip14 residency; --physical|RAWR_REAP_PHYSICAL=1=exclude)\n"
                  "rawr-reap physical-plan <first-shard.gguf> --active-experts <N> "
                  "[--output <plan.json>]  (deterministic prefix; CERTIFIED=0)\n"
                  "rawr-reap reap <first-shard.gguf> --target-size|--size <B|MB|GB|TB> "
@@ -913,6 +914,11 @@ static int runtimeInjection(int argc, char** argv) {
     request.model = argv[2];
     for (int i = 3; i < argc; ++i) {
         const std::string option = argv[i];
+        // Boolean switch: distinguish Tip14 residency from physical exclude.
+        if (option == "--physical") {
+            request.physicalExclude = true;
+            continue;
+        }
         if (i + 1 >= argc) { usage(); return 2; }
         const std::string value = argv[++i];
         if (option == "--target") request.target = value;

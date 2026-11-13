@@ -113,10 +113,12 @@ RuntimeResult RunRuntime(const RuntimeRequest& request) {
     injection.expertCount = target.expertCount;
     injection.workingSetBytes = plan.targetWorkingSetBytes;
     injection.enabled = true;
-    // Opt-in only: valued --reap stays residency unless RAWR_REAP_PHYSICAL=1.
+    // Opt-in only: valued --reap stays residency unless --physical or
+    // RAWR_REAP_PHYSICAL=1. Tip14 residency semantics are not redefined.
     const char* physicalEnv = std::getenv("RAWR_REAP_PHYSICAL");
-    injection.physicalExclude =
+    const bool physicalEnvOn =
         physicalEnv && physicalEnv[0] == '1' && physicalEnv[1] == '\0';
+    injection.physicalExclude = request.physicalExclude || physicalEnvOn;
     if (!engine.configureReapRuntimeInjection(injection)) {
         const auto& receipt = engine.reapRuntimeReceipt();
         result.receipt = "{\"status\":\"CONFIGURATION_FAILED\",\"reason\":" +

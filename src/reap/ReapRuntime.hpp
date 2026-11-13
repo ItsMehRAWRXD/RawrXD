@@ -11,6 +11,9 @@ struct RuntimeRequest {
     std::string prompt;
     uint32_t maxTokens = 1;
     std::string receiptPath;
+    // Explicit physical opt-in (also RAWR_REAP_PHYSICAL=1). Valued Tip14
+    // residency stays default when both are false.
+    bool physicalExclude = false;
 };
 
 struct RuntimeResult {

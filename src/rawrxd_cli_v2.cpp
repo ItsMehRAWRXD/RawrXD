@@ -584,6 +584,8 @@ static int HandleRuntimeReap(const std::string& model,
     }
     request.maxTokens = static_cast<uint32_t>((std::max)(1, g_run_max_tokens));
     if (auto r = flags.find("receipt"); r != flags.end()) request.receiptPath = r->second;
+    // Valued --reap stays residency unless --physical or RAWR_REAP_PHYSICAL=1.
+    request.physicalExclude = flags.count("physical") != 0;
     const auto result = RawrXD::Reap::RunRuntime(request);
     std::cout << result.receipt;
     return result.exitCode;
