@@ -1,4 +1,4 @@
-# Run-CompetitiveBench.ps1
+﻿# Run-CompetitiveBench.ps1
 # Minimal competitive harness stubs: invoke real CLI/IDE/terminal entrypoints.
 # No fake scores. PROMOTE=0. NOT_RUN != PASS.
 param(
@@ -21,7 +21,8 @@ function Invoke-Tracked {
     param(
         [string]$Suite,
         [string]$Exe,
-        [string[]]$Args = @(),
+        # Do not name this $Args — conflicts with PowerShell automatic $args.
+        [string[]]$ArgList = @(),
         [int]$TimeoutSec = 120,
         [string]$WorkDir = $null
     )
@@ -30,7 +31,7 @@ function Invoke-Tracked {
     $errPath = Join-Path $logs "${Suite}_${stamp}_err.txt"
     $meta = [ordered]@{
         SUITE          = $Suite
-        COMMAND        = if ($Args.Count) { "$Exe $($Args -join ' ')" } else { $Exe }
+        COMMAND        = if ($ArgList.Count) { "$Exe $($ArgList -join ' ')" } else { $Exe }
         EXE_PATH       = $Exe
         EXE_SHA256     = (Get-Sha256 $Exe)
         EXE_EXISTS     = (Test-Path $Exe)
@@ -53,7 +54,7 @@ function Invoke-Tracked {
         RedirectStandardOutput = $outPath
         RedirectStandardError  = $errPath
     }
-    if ($Args -and $Args.Count -gt 0) { $sp.ArgumentList = $Args }
+    if ($ArgList -and $ArgList.Count -gt 0) { $sp.ArgumentList = $ArgList }
     $p = Start-Process @sp
     if (-not $p.WaitForExit($TimeoutSec * 1000)) {
         Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
@@ -62,7 +63,9 @@ function Invoke-Tracked {
         $meta.EXIT_CODE = -1
     } else {
         $meta.EXIT_CODE = $p.ExitCode
-        $meta.RESULT = if ($p.ExitCode -eq 0) { 'PASS' } else { 'FAIL' }
+        # EXIT=0 is process success only — not a competitive leaderboard PASS.
+        $meta.RESULT = if ($p.ExitCode -eq 0) { 'EXIT_0' } else { 'EXIT_NONZERO' }
+        $meta.NOTE = 'RESULT is process exit class only; COMPETITIVE_PASS=0 unless separately sealed.'
     }
     $meta.ENDED_UTC = (Get-Date).ToUniversalTime().ToString('o')
     $meta.STDOUT_LOG = $outPath
@@ -80,15 +83,15 @@ $results += Invoke-Tracked -Suite 'terminal_bench' `
     -Exe (Join-Path $RepoRoot 'evidence\FOUR_PANEL_COMPLETION_001\bin\terminal_gate.exe') `
     -TimeoutSec 180
 $results += Invoke-Tracked -Suite 'cli_status' `
-    -Exe (Join-Path $RepoRoot 'bin\SovereignCLI.exe') -Args @('status')
+    -Exe (Join-Path $RepoRoot 'bin\SovereignCLI.exe') -ArgList @('status')
 $results += Invoke-Tracked -Suite 'cli_validate' `
-    -Exe (Join-Path $RepoRoot 'bin\SovereignCLI.exe') -Args @('validate')
+    -Exe (Join-Path $RepoRoot 'bin\SovereignCLI.exe') -ArgList @('validate')
 $results += Invoke-Tracked -Suite 'cli_benchmark' `
-    -Exe (Join-Path $RepoRoot 'bin\SovereignCLI.exe') -Args @('benchmark', '--iter', '100')
+    -Exe (Join-Path $RepoRoot 'bin\SovereignCLI.exe') -ArgList @('benchmark', '--iter', '100')
 $results += Invoke-Tracked -Suite 'cli_health' `
-    -Exe (Join-Path $RepoRoot 'bin\SovereignCLI_Complete.exe') -Args @('health')
+    -Exe (Join-Path $RepoRoot 'bin\SovereignCLI_Complete.exe') -ArgList @('health')
 $results += Invoke-Tracked -Suite 'ide_entrypoint_present' `
-    -Exe (Join-Path $RepoRoot 'bin\RawrXD-Win32IDE.exe') -Args @('--help') -TimeoutSec 5
+    -Exe (Join-Path $RepoRoot 'bin\RawrXD-Win32IDE.exe') -ArgList @('--help') -TimeoutSec 5
 
 # IDE GUI: presence+SHA only; --help may timeout (no invented PASS)
 $ide = Join-Path $RepoRoot 'bin\RawrXD-Win32IDE.exe'
@@ -98,8 +101,8 @@ $ideMeta = [ordered]@{
     EXE_PATH    = $ide
     EXE_SHA256  = (Get-Sha256 $ide)
     EXE_EXISTS  = (Test-Path $ide)
-    RESULT      = if (Test-Path $ide) { 'PASS' } else { 'FAIL' }
-    NOTE        = 'Binary presence gate only. Full IDE-Bench tasks NOT_RUN (no harness fixtures).'
+    RESULT      = if (Test-Path $ide) { 'PRESENCE_OK' } else { 'ABSENT' }
+    NOTE        = 'Binary presence gate only. Full IDE-Bench tasks NOT_RUN (no harness fixtures). COMPETITIVE_PASS=0.'
     PROMOTE     = 0
 }
 $ideMeta | ConvertTo-Json | Set-Content (Join-Path $logs 'ide_bench_presence_meta.json') -Encoding ASCII

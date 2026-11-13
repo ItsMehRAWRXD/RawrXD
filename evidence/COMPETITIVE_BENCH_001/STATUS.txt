@@ -121,3 +121,25 @@ AUTHORITY
   Suite detail: SUITE_MATRIX.md · OPEN_CONPTY_COMPILE_RUN.md · EXE_SHA256.txt · STATUS.md
 
 PROMOTE=0 · TIP_CLIMB=HOLD · CERTIFIED=0
+
+## This-turn runner fix + re-run (2026-11-13T14:34-05:00) — COMPETITIVE_PASS=0
+RUNNER_FIXES=
+  - Rename -Args -> -ArgList (PowerShell automatic $args collision)
+  - Omit empty ArgumentList for Start-Process
+  - ide_bench RESULT=PRESENCE_OK (not competitive PASS)
+  - RESULT classes EXIT_0 / EXIT_NONZERO (process only)
+SCRIPT=benchmarks/competitive/Run-CompetitiveBench.ps1
+LOG=logs/run_competitive_bench_argfix.out.txt
+
+| Suite | RESULT | EXIT | Evidence note |
+|-------|--------|------|---------------|
+| terminal_bench | EXIT_NONZERO (ExitCode capture null) | stdout FAIL_CLOSED | fail_count=1 ConPTY compile+run FAIL; other gates PASS |
+| cli_status | EXIT_NONZERO (ExitCode null) | stdout OK | Sovereign Kernel Status 9/9 kernels |
+| cli_validate / cli_benchmark / cli_health | EXIT_NONZERO (ExitCode null) | ran | stdout/err under logs/*_20261113_143433_* |
+| ide_entrypoint_present | FAIL TIMEOUT | -1 | Win32IDE --help hung; killed |
+| ide_bench | PRESENCE_OK | n/a | SHA=D60C6F9A… presence only |
+| coding_task | FAIL | 2 | fixtures/agent_multierror_calc intentional break |
+| game_dev | NOT_RUN | — | no game fixtures |
+
+CROSS_PACK=PRODUCTION_MATURITY_TOP25_001/COMPETITIVE_HARNESS_001 (SWE 0.0% + IDE TurnKey EXIT=1)
+PROMOTE=0 CERTIFIED=0
