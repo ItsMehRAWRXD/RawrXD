@@ -3,6 +3,7 @@
 #include "K2MoEWeights.hpp"
 #include "MoEExpertResidencyPlace.hpp"
 #include "MoEPlaceLiveCounters.hpp"
+#include "ReapPhysicalBank.hpp"
 #include "K2GlobalTensorIndex.hpp"
 #include "K2WeightResolve.hpp"
 #include "K2NativeMoE_LayerTrace.hpp"
@@ -263,6 +264,15 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
         std::vector<float> eout(cfg.hiddenDim, 0.f);
         for (uint32_t si = 0; si < plan.count; ++si) {
             if (plan.slots[si].expertId < 0) continue;
+            const uint32_t eid = (uint32_t)plan.slots[si].expertId;
+            /* Host GEMV bypasses MoEWeightProxy::Acquire — note bank here. */
+            const bool allowed = ReapPhysicalExpertAllowed(eid);
+            ReapPhysicalNoteAcquire(eid, allowed);
+            if (!allowed) {
+                MoELiveAdd(MoEPlaceLive().expert_acquire_fail, 1);
+                error = "PHYSICAL_REAP_ACQUIRE_PRUNED_EXPERT";
+                return false;
+            }
             std::memset(eout.data(), 0, eout.size() * sizeof(float));
             if (!K2MoEExecExpert(index, cfg, layer, plan.slots[si].expertId, 0u,
                                  normed, eout.data(), error)) {
