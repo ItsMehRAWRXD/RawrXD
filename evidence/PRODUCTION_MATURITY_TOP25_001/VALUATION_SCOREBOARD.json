@@ -1,42 +1,12 @@
 {
-  "pack": "PRODUCTION_MATURITY_TOP25_001",
-  "artifact": "VALUATION_SCOREBOARD",
   "asof_local": "2026-11-13T16:52:00-05:00",
   "promote": 0,
   "certified": 0,
   "tip_climb": "HOLD",
-  "perfect": 0,
-  "invent_pass": 0,
-  "cloud_models_required": 0,
-  "year11_enterprise_target": 1,
-  "overall_rule": "min(CLI_SCORE,GUI_SCORE)_and_conjunction",
-  "gpu_law": "HOST_CPU_RAM_ONLY_INVALID_FOR_COMPETITIVE",
-  "scores": {
-    "CLI_SCORE_PCT": 58,
-    "GUI_SCORE_PCT": 32,
-    "OVERALL_PCT": 32,
-    "CONJUNCTION_PASS": 0,
-    "CLI_METHOD": "(60+90+48+30+75+100+75+30+45+50+40)/11",
-    "CLI_AUTHORITY": "VALUATION_CLI.txt"
-  },
-  "tracks": {
-    "CLI_COMPLETE": 0,
-    "GUI_COMPLETE": 0,
-    "JOINT_COMPLETE": 0,
-    "DENSE_GPU_CANARY_SEALED": 1,
-    "GPU_VS_REF_MATCH": 0,
-    "COMPETITIVE_PASS": 0,
-    "EXE_ABSORB_GPU_DEFAULT": 0,
-    "FOUR_PANEL_HWND_E2E": "NOT_RUN"
-  },
-  "agents_inflight": {
-    "V0_Q6K": "2393b058-64c6-4011-99b2-0c2b09d19133",
-    "CLI_TOP25": "0eb6d221-059f-4931-81ad-ca3a29f828df",
-    "GUI_WIN32": "62334642-65be-4a62-8906-abd0630da94d"
-  },
-  "authority": {
-    "cli": "VALUATION_CLI.txt",
-    "gui": "VALUATION_GUI.txt",
-    "rollup": "VALUATION_ROLLUP_001/STATUS.txt"
-  }
+  "scores": {"CLI_SCORE_PCT": 48, "GUI_SCORE_PCT": 60, "OVERALL_PCT": 48, "CONJUNCTION_PASS": 0},
+  "tracks": {"CLI_COMPLETE": 1, "GUI_COMPLETE": 0, "EXE_ABSORB_GPU_DEFAULT": 0, "FOUR_PANEL_HWND_E2E": "CLOSED_HWND_BP_OPEN", "GUI_AHEAD_OF_CLI": 1},
+  "blockers": {"B2": "CLOSED_HWND", "B3": "CLOSED_HWND_BP_OPEN", "B4": "OPEN"},
+  "exe_sha256": "D9589D9A665E07F93E906A637B9D4ADB80D99BFD9604103A882E6AC79078BC08",
+  "cross_sha_credit": 0,
+  "gui_auth": "GUI_TOP25_VALUATION_001"
 }
