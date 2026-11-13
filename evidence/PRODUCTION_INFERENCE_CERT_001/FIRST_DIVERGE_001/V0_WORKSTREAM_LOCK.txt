@@ -53,3 +53,10 @@ V0_REF_PARITY requires reproducible evidence on ONE corrected EXE SHA:
   - fixture [1,15043]
   - V_0@pos0 GPU vs REF parity (prefer FNV bitexact; document if soft-only)
   - PROMOTE=0 until full CLI/GUI gates
+
+## Rebuild note (this turn)
+InferenceEngine objects for vulkan_fwd_q6k_host.cpp + vulkan_fwd_quant_host.cpp REBUILT.
+rawr.exe LINK blocked: PID 33288 holds build_ninja/bin/rawr.exe (foreign/concurrent run).
+LIVE_BUILD_NINJA_EXE_SHA_AT_ATTEMPT=1BDE4A964C0877492C7C515669618D1458BCE124BEB5193B2D57B83E198654B8
+REMEASURE=BLOCKED_UNTIL_EXE_UNLOCK
+SOURCE_COMMIT=ba7f537c9e
