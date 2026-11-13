@@ -1,40 +1,28 @@
 {
   "pack": "PRODUCTION_MATURITY_TOP25_001",
   "artifact": "VALUATION_SCOREBOARD",
-  "asof_local": "2026-11-13T16:42:00-05:00",
-  "tip_sha": "baad5a432b339e7546365294316bf0ca881bbf10",
-  "tip_floor": "96a72ea965",
+  "asof_local": "2026-11-13T16:56:00-05:00",
+  "branch": "feature/ide-agentic-product-path-20261026",
   "promote": 0,
   "certified": 0,
   "tip_climb": "HOLD",
-  "perfect": 0,
   "invent_pass": 0,
-  "cloud_models_required": 0,
-  "year11_enterprise_target": 1,
-  "overall_rule": "min(CLI_SCORE,GUI_SCORE)_and_conjunction",
-  "gpu_law": "HOST_CPU_RAM_ONLY_INVALID_FOR_COMPETITIVE",
   "scores": {
-    "CLI_SCORE_PCT": 45,
+    "CLI_SCORE_PCT": 56,
     "GUI_SCORE_PCT": 32,
     "OVERALL_PCT": 32,
     "CONJUNCTION_PASS": 0,
-    "CLI_TABLE_SUM": 505,
-    "CLI_METHOD": "floor(505/11)"
+    "CLI_METHOD": "(60+70+48+30+75+100+75+30+45+50+40)/11"
   },
   "tracks": {
     "CLI_COMPLETE": 0,
     "GUI_COMPLETE": 0,
     "JOINT_COMPLETE": 0,
-    "CLI_MATURITY_COMPLETE": 0,
-    "GUI_MATURITY_COMPLETE": 0,
     "DENSE_GPU_CANARY_SEALED": 1,
-    "GPU_VS_REF_MATCH": 0,
-    "COMPETITIVE_PASS": 0,
+    "READY_FOR_PEER": 0,
+    "EXE_RELINK": "PENDING_LINK",
+    "EXE_SHA256": "D9589D9A665E07F93E906A637B9D4ADB80D99BFD9604103A882E6AC79078BC08",
+    "DEEP2BRIDGE_OBJ": 1,
     "EXE_ABSORB_GPU_DEFAULT": 0
-  },
-  "authority": {
-    "cli": "VALUATION_CLI.txt",
-    "gui": "VALUATION_GUI.txt",
-    "joint": "VALUATION_TOP25_CLI_GUI_001/STATUS.txt"
   }
 }
