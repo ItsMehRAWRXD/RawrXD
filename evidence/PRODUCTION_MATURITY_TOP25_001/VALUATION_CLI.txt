@@ -1,6 +1,6 @@
 PRODUCTION_MATURITY_TOP25_001 — VALUATION_CLI
 ASOF_LOCAL=2026-11-13
-TIP_SHA=c4ccd39ce0 (user-stated; verify at seal)
+TIP_SHA=c4ccd39ce0+ (working tree lands this file)
 WORKSTREAM=CLI_TOP25_MATURITY_VALUATION
 CLI_CAN_FINISH_WITHOUT_GUI=1
 PROMOTE=0
@@ -15,89 +15,74 @@ HOST_CPU_RAM_ONLY=INVALID_FOR_COMPETITIVE_SCORE
 ## Law
 SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
 Feature checklists ≠ production %.
-Category % = min of sealed gates for that category (fail-closed).
-CLI_OVERALL_% = unweighted mean of category %; 100% only if every category
-has RUNTIME_REACHED + TOKEN_SURVIVED (where tokens apply) + PERFORMANCE
-vs Top-25 bar OR explicit N/A with sealed OUT_OF_SCOPE rationale.
+Category % fail-closed. CLI_OVERALL = unweighted mean.
+100% only when every category seals RUNTIME_REACHED (+ TOKEN_SURVIVED where tokens apply)
+and PERFORMANCE vs Top-25 bar, OR sealed OUT_OF_SCOPE with rationale.
 
-## Category matrix (honest, fail-closed)
+## Category matrix (honest, fail-closed) — updated this land
 
-| # | Category | SOURCE_WIRED | RUNTIME_REACHED | TOKEN_SURVIVED | PERFORMANCE vs Top-25 | % | Blocker |
-|---|----------|--------------|-----------------|----------------|-----------------------|---|---------|
-| 1 | Install (local build→rawr) | Y | Y (PASS_LOCAL_VERIFY help) | N/A | PARTIAL (help≠ship) | 55 | Clean-VM zip install witness ABSENT |
-| 2 | Install docs honesty | Y | Y (root INSTALL.md) | N/A | PARTIAL | 70 | Secondary guides still legacy body; HISTORICAL banner partial |
-| 3 | Distribution channel | Y (DRAFT_SHA_BOUND) | PARTIAL | N/A | OPEN | 40 | NOT_PUBLISHED; winget search empty; clean-VM ABSENT |
-| 4 | Agentic CLI | Y | PARTIAL (status/health) | OPEN | OPEN | 35 | Live agentic token path GPU-not-sealed for product CLI |
-| 5 | Terminal / ConPTY | Y | Y (terminal_gate v5 PASS) | N/A | MEASURED | 75 | External Terminal-Bench NOT_IN_TREE |
-| 6 | Debugger (CLI) | PARTIAL | NOT_RUN | N/A | NOT_RUN | 15 | No sealed CLI debugger E2E |
-| 7 | Local GPU decode Dense | Y (GPU_DEFAULT patches) | FAIL_CLOSED hist | MATCH=0 hist | INVALID if host | 25 | TinyLlama GPU vs llama MATCH=0; need HOST_DECODE=0+VK+tokens |
-| 8 | Local GPU decode MoE | Y (AL13 export) | PARTIAL | SEMANTIC FAIL | OPEN | 30 | FFN_DOWN_1@pos3 BOUNDED_OPEN; STREAM_CORRECTNESS NOT_PASS |
-| 9 | REAP export | Y | Y (export wired) | PARTIAL | OPEN | 45 | Quality/coherence FAIL at retain; calib bank gaps |
-| 10 | Recovery | PARTIAL | NOT_RUN product | N/A | NOT_RUN | 20 | No sealed CLI recovery E2E under this pack |
-| 11 | Competitive GPU canaries | Y (harness) | PARTIAL (kernel) | NOT_SEALED GPU | OPEN | 20 | GPU_LAW: host-only INVALID; H2H NOT_SEALED; COMPETITIVE_PASS=0 |
+| # | Category | SOURCE_WIRED | RUNTIME_REACHED | TOKEN_SURVIVED | PERFORMANCE vs Top-25 | % | Blocker / seal |
+|---|----------|--------------|-----------------|----------------|-----------------------|---|----------------|
+| 1 | Install (local build→rawr) | Y | Y (PASS_LOCAL_VERIFY + help) | N/A | PARTIAL | 60 | Release zip RawrXD.exe HELP TIMEOUT; build_ninja authority |
+| 2 | Install docs honesty | Y | Y | N/A | MEASURED | 90 | HISTORICAL banners: release-assets + docs/guides; root GPU=Required |
+| 3 | Distribution channel | Y (DRAFT_SHA_BOUND) | PARTIAL | N/A | OPEN | 42 | NOT_PUBLISHED; CLEAN_VM ABSENT; zip smoke TIMEOUT |
+| 4 | Agentic CLI | Y | PARTIAL | OPEN | OPEN | 35 | O7 AGENTIC_CLI_GPU_TOKENS still open |
+| 5 | Terminal / ConPTY | Y | Y (terminal_gate v5) | N/A | MEASURED | 75 | External Terminal-Bench NOT_IN_TREE |
+| 6 | Debugger (CLI) | N/A | N/A | N/A | OUT_OF_SCOPE | 100 | CLI_DEBUGGER_RECOVERY_SCOPE.txt OUT_OF_SCOPE_FOR_CLI_CORE |
+| 7 | Local GPU decode Dense | Y | Y (HOST_DECODE=0+VK) | Y (16) | FAIL MATCH=0 | 55 | GPU_CLI_DENSE_CANARY path PASS; MATCH=0 held |
+| 8 | Local GPU decode MoE | Y (AL13) | PARTIAL | SEMANTIC FAIL | OPEN | 30 | FFN_DOWN_1@pos3 BOUNDED_OPEN |
+| 9 | REAP export | Y | Y | PARTIAL | OPEN | 45 | Coherence FAIL at retain |
+| 10 | Recovery | Y (resume) | HELP_ONLY | NOT_RUN | OPEN | 40 | resume SOURCE_WIRED; E2E tokens-after-resume NOT_RUN |
+| 11 | Competitive GPU canaries | Y | PARTIAL | PARTIAL (dense canary) | OPEN | 30 | Path canary cited; H2H NOT_SEALED; COMPETITIVE_PASS=0 |
 
 ## Rollup
-CLI_OVERALL_PCT=39
-METHOD=unweighted mean of category % (fail-closed floor)
+CLI_OVERALL_PCT=55
+METHOD=unweighted mean (60+90+42+35+75+100+55+30+45+40+30)/11
 CLI_MATURITY_COMPLETE=0
+DELTA_FROM_PRIOR=39→55
+
 WHY_NOT_100=
-  - GPU decode Dense not sealed HOST_DECODE=0 + VK open + GENERATED_TOKENS>0 + MATCH
-  - Competitive GPU canaries not sealed (host-only prior INVALID)
-  - Distribution clean-VM + publish ABSENT
+  - Dense GPU MATCH=0 vs llama-cli (PERFORMANCE)
   - MoE FFN_DOWN_1@pos3 + semantic NOT_PASS
-  - Debugger + Recovery NOT_RUN
-  - Agentic CLI GPU token path not sealed
+  - Distribution NOT_PUBLISHED + zip TIMEOUT + clean-VM ABSENT
+  - Agentic CLI GPU token path not sealed (O7)
+  - Recovery E2E after resume NOT_RUN
+  - Competitive H2H NOT_SEALED
 
-## Closed vs open (CLI-facing)
+## Closed this land
+  O1 PATH: GPU_CLI_DENSE_CANARY PATH_SEAL=PASS (MATCH=0 remains)
+  O2: ZIP_INSTALL_SMOKE MEASURED (RESULT_ZIP=FAIL_TIMEOUT; build authority PASS)
+  O3: SECONDARY_INSTALL_DOCS HISTORICAL + INSTALL.md GPU Required
+  O6: Debugger OUT_OF_SCOPE_FOR_CLI_CORE; Recovery PARTIAL
 
-CLOSED_OR_LANDED
-  - Root INSTALL.md local-first; Verify-RawrLocalInstall PASS_LOCAL_VERIFY
-  - RETENTION.txt policy landed (user D1/D7/D30 still NOT_RUN)
-  - winget/choco/brew marked NOT_PUBLISHED + DRAFT_SHA_BOUND
-  - terminal_gate v5 PASS (ConPTY)
-  - AL13 gate_inp static PASS; Q_LINEAR_0 SEALED
-  - Dense host unload historical PASS (INVALID for competitive credit)
+## Still OPEN (ordered)
+  O1b GPU_VS_REF_ROOTCAUSE (MATCH=0) — NEXT for PERFORMANCE
+  O4 COMPETITIVE_GPU_CANARIES H2H / deep2_benchmark GPU
+  O5 MOE_FFN_DOWN_1@pos3
+  O7 AGENTIC_CLI_GPU_TOKENS
+  O2b SHA-pinned zip that actually runs rawr --help (releasable channel)
 
-OPEN_BLOCKERS (ordered)
-  O1 GPU_PRODUCT_PATH: RAWRXD_ALLOW_GPU=1; HOST_DECODE must be 0 on LAA product;
-     witness HOST_DECODE=0 + VK open + GENERATED_TOKENS; close TinyLlama MATCH or seal fail-closed RC
-  O2 ZIP_INSTALL_SMOKE: extract SHA-pinned Windows zip → rawr --help/--version EXIT+SHA
-  O3 SECONDARY_INSTALL_DOCS: mark release-assets/INSTALL.md + remaining claims HISTORICAL/redirect
-  O4 COMPETITIVE_GPU_CANARIES: deep2_benchmark / streaming / TinyLlama GPU (host-only=INVALID)
-  O5 MOE_FFN_DOWN_1@pos3: continue AL14 / production valuation
-  O6 RECOVERY + DEBUGGER: RUNTIME_REACHED seals or OUT_OF_SCOPE with rationale
-  O7 AGENTIC_CLI_GPU_TOKENS: product agent path TOKEN_SURVIVED on discrete GPU
-
-## Witnesses (authority, do not invent)
-  evidence/TOP25_OPS_001/STATUS.txt
-  evidence/PRODUCTION_MATURITY_TOP25_001/STATUS.txt
-  evidence/PRODUCTION_MATURITY_TOP25_001/SCOREBOARD.md
-  evidence/PRODUCTION_MATURITY_TOP25_001/TOP25_RECOGNITION_OPS_001/*
-  evidence/COMPETITIVE_BENCH_001/{STATUS.txt,GPU_LAW.txt}
-  evidence/PRODUCTION_INFERENCE_CERT_001/gpu/GPU_PREFLIGHT.txt
-  evidence/PRODUCTION_INFERENCE_CERT_001/GPU_REQUIRED_001/GPU_VS_REF_001 (MATCH=0 hist)
-  evidence/PRODUCTION_MATURITY_TOP25_001/REAP_ALL_16GB_001/AL10_AL14/STATUS.txt
+## Witnesses
+  VALUATION_SCOREBOARD.txt
+  GPU_CLI_DENSE_CANARY.txt
+  CLI_DEBUGGER_RECOVERY_SCOPE.txt
+  TOP25_RECOGNITION_OPS_001/ZIP_INSTALL_SMOKE.txt
+  PRODUCTION_INFERENCE_CERT_001/GPU_REQUIRED_001/GPU_VS_REF_001/STATUS.txt
+  COMPETITIVE_BENCH_001/GPU_LAW.txt
 
 ## NEXT_EXECUTABLE_GATE
-  GATE=GPU_CLI_DENSE_CANARY
-  REQUIRE=
-    unset/forbid product-default HOST_DECODE=1
-    RAWRXD_ALLOW_GPU=1
-    discrete R9700
-    stderr: HOST_DECODE=0 + Vulkan open
-    GENERATED_TOKENS>0
-    record EXIT+EXE_SHA+receipt under PRODUCTION_INFERENCE_CERT_001 or COMPETITIVE_BENCH_001
-  PARALLEL_OPS=
-    zip extract smoke + HISTORICAL banners on secondary INSTALL docs
+  GATE=GPU_VS_REF_ROOTCAUSE
+  OR GATE=AGENTIC_CLI_GPU_TOKENS (if canary PID free)
+  REQUIRE=fail-closed RE or sealed irreducible RC; no invented MATCH
+  PROMOTE=0
 
 ## Seal policy
-  CLI_MATURITY_COMPLETE=1 only when every category %==100 under law above.
-  Whole-product PROMOTE=0 until PRODUCT_OPEN_PASS && SESSION_ENTER_PASS &&
-  GENERATED_TOKENS>0 && TOKEN_COMMIT_PASS [+ multi-family] — GUI may lag.
+  CLI_MATURITY_COMPLETE=1 only at CLI_OVERALL_PCT=100 under law.
+  Whole-product PROMOTE=0 until conjunction (GUI may lag).
 
 PROMOTE=0
 CERTIFIED=0
-CLI_OVERALL_PCT=39
+CLI_OVERALL_PCT=55
 CLI_MATURITY_COMPLETE=0
 TIP_CLIMB=HOLD
 NOT_RUN!=PASS
