@@ -12,8 +12,7 @@ public:
  void model_load(std::string_view model){metrics_.task_start();bus_.publish(Kind::ModelLoad,model,request_,agent_);}
  void tokenizer(bool ok){bus_.publish(Kind::TokenizerCheck,ok?"PASS":"FAIL",request_,agent_);if(!ok)metrics_.failure();}
  void prefill_start(uint64_t tokens,uint64_t context){metrics_.set_context(context);metrics_.begin_prefill(tokens);bus_.publish(Kind::PrefillStart,"tokens="+std::to_string(tokens)+" ctx="+std::to_string(context),request_,agent_);}
- void prefill_end(){metrics_.end_prefill();auto s=metrics_.snapshot();bus_.publish(Kind::PrefillEnd,"elapsed_ms="+std::to_string(s.prefill_ms)+" tokens="+std::to_string(s.prefill_tokens),request_,agent_,static_cast<int64_t>(s.prefill_ms));}
- void prefill_end(uint64_t completed_tokens){metrics_.end_prefill(completed_tokens);auto s=metrics_.snapshot();bus_.publish(Kind::PrefillEnd,"elapsed_ms="+std::to_string(s.prefill_ms)+" tokens="+std::to_string(s.prefill_tokens),request_,agent_,static_cast<int64_t>(s.prefill_ms));}
+ void prefill_end(){metrics_.end_prefill();auto s=metrics_.snapshot();bus_.publish(Kind::PrefillEnd,"elapsed_ms="+std::to_string(s.prefill_ms),request_,agent_,static_cast<int64_t>(s.prefill_ms));}
  void decode_start(){metrics_.begin_decode();}
  void token(int64_t token_id,std::string_view safe_fragment={}){metrics_.token(static_cast<uint64_t>(token_id));bus_.publish(Kind::TokenGenerated,safe_fragment,request_,agent_,token_id);}
  void snap(std::string_view reason){bus_.publish(Kind::SnapStop,reason,request_,agent_);}
