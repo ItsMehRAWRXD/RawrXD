@@ -1,0 +1,55 @@
+﻿V0_WORKSTREAM_LOCK — evidence freeze
+DATE=2026-11-13
+WORKSTREAM=V0_FIRST_DIVERGENCE
+EXECUTION=AUTHORIZED
+PROMOTE=0
+CERTIFIED=0
+CROSS_SHA_CREDIT=0
+WEBSITE_PRODUCTION=UNCHANGED
+TIP_CLIMB=HOLD
+
+## Locked fixture
+PROMPT_IDS=[1,15043]
+PROMPT_PIECES=1:'<s>' 15043:' Hello'
+SOURCE=evidence/PRODUCTION_INFERENCE_CERT_001/FIRST_DIVERGE_001/FIXTURE.txt
+
+## Sealed / measured EXE identities (do not conflate)
+SEALED_EXE_SHA_POST_FIX=AAC492DC7701599D76A7B4DF2D40DFCD379D23C518567BE939B97852392CCFB4
+MEASURED_TIP_EXE_SHA_STATUS=A1BCF508B6AA52C6C2A46DB8B3326CA39CFB64A14AD7BA124B889FCFB57B6C6B
+LIVE_BUILD_NINJA_EXE_SHA=78435C9B42FD7C268EACC815BE159CC5E8905C7093AC065540930CA37C5F429D
+NOTE=CROSS_SHA_CREDIT=0 — tip EXE is not AAC492DC; remasure must bind corrected SHA
+
+## Shader
+SPV=src/backend/gemv_q4k.spv
+SPV_SHA256_STATUS=5128F614C5FFE4A52BD16C2451A8C3DBCD267E0A929428C12EA58D741ADB7A26
+SPV_SHA256_NOW=5128F614C5FFE4A52BD16C2451A8C3DBCD267E0A929428C12EA58D741ADB7A26
+SPV_FIX=ggml paired 32-byte qs layout (lo-then-hi)
+
+## Source tip at lock
+GIT_SHA=96a72ea965c5b87340f0673aa38e06d942b1b195
+BRANCH=feature/ide-agentic-product-path-20261026
+
+## Prior measured V_0@pos0 (STATUS.txt — tip A1BCF508…)
+GPU_V0_l2=7.974118027e-02 fnv=4b004536ead54edb
+HOST_V0_l2=7.974118027e-02 fnv=4b004536ead54edb
+REF_V0_l2=7.974117918e-02 fnv=d4e2dce085d5d6e4
+GPU_HOST_V0_MATCH=1
+GPU_REF_V0_L2_NEAR=1
+GPU_REF_V0_FNV_BITEXACT=0
+
+## Root cause chain (locked)
+1. PRIOR_FALSE_LAYOUT: Vulkan gemv_q4k.comp interleaved qs (affects Q_PRE_ROPE / Q4_K Wq) — FIXED in working tree
+2. V_0 tensor is TinyLlama attn_v Q6_K (type 14) — Vulkan FP32 dequant·x ≠ llama Q6_K×Q8_K
+3. Host/GPU now share QuantKernelRegistry gemv_q6_k_scalar Q8_K path → GPU_HOST_MATCH
+4. Residual: Deep2 Q6_K×Q8_K vs llama REF still FNV-soft (L2 near) — OPEN for bitexact
+5. NEXT_AFTER_V0_SOFT: Q_PRE_ROPE_0 GPU=HOST≠REF
+
+## Pre-fix dump quantify (old deep2 e45c vs llama d4e2; layout-bug era)
+MAX_ABS_ERR~7.50e-4 RMSE~2.52e-4 count_gt_1e-4=175
+NOTE=Not the post-Q8K tip dump; sealed for historical isolate only
+
+## Success gate (this workstream)
+V0_REF_PARITY requires reproducible evidence on ONE corrected EXE SHA:
+  - fixture [1,15043]
+  - V_0@pos0 GPU vs REF parity (prefer FNV bitexact; document if soft-only)
+  - PROMOTE=0 until full CLI/GUI gates

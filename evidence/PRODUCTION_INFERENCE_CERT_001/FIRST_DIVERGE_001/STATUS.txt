@@ -1,0 +1,51 @@
+﻿FIRST_DIVERGE_001 — V_0 Q4K GEMV layout fix + remeasure
+DATE=2026-11-13
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+
+## Fixture
+PROMPT_IDS=1,15043
+PROMPT=Hello + RAWRXD_RAW_PROMPT=1 + canonical add_bos=1
+EXE_SHA256=A1BCF508B6AA52C6C2A46DB8B3326CA39CFB64A14AD7BA124B889FCFB57B6C6B
+NOTE_EXE=Measured tip EXE (not AAC492DC…); full SHA above
+SPV=G:/~dev/rawrxd/src/backend/gemv_q4k.spv
+SPV_SHA256=5128F614C5FFE4A52BD16C2451A8C3DBCD267E0A929428C12EA58D741ADB7A26
+SPV_FIX=ggml paired 32-byte qs layout (was wrong 16B lo/hi interleave)
+GIT_SHA=4aa90955ced169ac3b3da0125e84d0930b53afae
+
+## V_0@pos0
+GPU_V0_l2=7.974118027e-02 fnv=4b004536ead54edb
+HOST_V0_l2=7.974118027e-02 fnv=4b004536ead54edb
+REF_V0_l2=7.974117918e-02 fnv=d4e2dce085d5d6e4
+GPU_HOST_V0_MATCH=1
+GPU_REF_V0_L2_NEAR=1
+GPU_REF_V0_FNV_BITEXACT=0
+ROOT_CAUSE_PRIOR=VULKAN_Q4K_QS_LAYOUT (FIXED in gemv_q4k.comp/spv)
+SOURCE_FIX=APPLIED_SHADER
+SOURCE_FIX_VERIFIED_GPU_EQ_HOST_V0=1
+
+## Prefill logits (still OPEN)
+GPU_ARGMAX=1794 piece=ai
+HOST_ARGMAX=1794 piece=ai
+REF_ARGMAX=29892 piece=' '
+PREFILL_LOGITS_MATCH=0
+NOTE=On this EXE, HOST and GPU agree with each other after shader fix but both disagree with llama REF argmax. Next isolate: Q_PRE_ROPE_0 / attention (GPU=HOST≠REF).
+
+## Next divergent shared key after matched embed/norm
+PROMPT_EMBED|0 MATCH
+ATTN_NORM_0|0 MATCH
+V_0|0 SOFT_MATCH (l2/max/sum; FNV soft)
+Q_PRE_ROPE_0|0 DIFF (GPU=HOST≠REF) — NEXT_TARGET
+
+GPU_REFERENCE_PARITY=OPEN
+PROMOTE=0
+CERTIFIED=0
+CROSS_SHA_CREDIT=0
+
+## Soft vs hard (remeasure note)
+V_0 and Q_PRE_ROPE_0: relative L2 error ~1e-9..1e-8 (FNV soft-mismatch only)
+ATTN_OUT / later stages: check hard DIFF — prefill argmax still 1794 vs REF 29892
+NEXT=first stage with material L2 gap (not FNV-only), then attention/FFN
+GUI_ACCEPTANCE=53/54 unchanged
+CLI_ACCEPTANCE=35/45 unchanged

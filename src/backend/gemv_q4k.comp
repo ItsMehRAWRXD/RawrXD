@@ -1,5 +1,7 @@
 #version 450
-// gemv_q4k.comp — fused Q4_K dequant+dot, interleaved subgroups (MLA parity twin)
+// gemv_q4k.comp — Q4_K dequant+dot matching ggml dequantize_row_q4_K /
+// Deep2Engine::dequantizeQ4KBlock (paired scales over 32-byte qs chunks).
+// PRIOR bug: per-subblock 16B lo/hi interleave ≠ host → V_0@pos0 DIFF.
 layout(local_size_x = 64) in;
 layout(binding = 0) readonly buffer W { uint packed[]; };
 layout(binding = 1) readonly buffer In { float x[]; };
@@ -38,19 +40,27 @@ void main() {
     uint scb = blk + 4u;
     uint qbase = blk + 16u;
     uint elem = b * 256u;
-    for (uint s = 0u; s < 8u; ++s) {
-      uint sc, m;
-      scmin(scb, s, sc, m);
-      float scale = d * float(sc);
-      float minv = dmin * float(m);
-      uint qo = qbase + s * 16u;
-      uint baseIdx = elem + s * 32u;
-      for (uint k = 0u; k < 16u; ++k) {
-        uint byte = u8(qo + k);
-        uint lo = baseIdx + k;
-        uint hi = lo + 16u;
-        if (lo < pc.cols) sum += (scale * float(byte & 15u) - minv) * x[lo];
-        if (hi < pc.cols) sum += (scale * float((byte >> 4) & 15u) - minv) * x[hi];
+    // ggml: is = 0,2,4,6 — 32 lo-nibbles then 32 hi-nibbles from same 32 qs bytes
+    for (uint pair = 0u; pair < 4u; ++pair) {
+      uint is0 = pair * 2u;
+      uint sc0, m0, sc1, m1;
+      scmin(scb, is0, sc0, m0);
+      scmin(scb, is0 + 1u, sc1, m1);
+      float d1 = d * float(sc0);
+      float min1 = dmin * float(m0);
+      float d2 = d * float(sc1);
+      float min2 = dmin * float(m1);
+      uint qo = qbase + pair * 32u;
+      uint loBase = elem + pair * 64u;
+      uint hiBase = loBase + 32u;
+      for (uint l = 0u; l < 32u; ++l) {
+        uint byte = u8(qo + l);
+        uint ilo = loBase + l;
+        uint ihi = hiBase + l;
+        if (ilo < pc.cols)
+          sum += (d1 * float(byte & 15u) - min1) * x[ilo];
+        if (ihi < pc.cols)
+          sum += (d2 * float((byte >> 4) & 15u) - min2) * x[ihi];
       }
     }
   }
