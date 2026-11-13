@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.20)
 project(RawrXD-ModelLoader VERSION 1.0.13)
 
 # DEEP2_GPU_CODE31_RESET_001 — inject VK lost / Win32 code 31; assert reset seq.
@@ -3573,6 +3573,10 @@ endforeach()
             ${CMAKE_SOURCE_DIR}/src/deep2/Deep2Engine.cpp
             ${CMAKE_SOURCE_DIR}/src/reap/ReapRuntimePlan.cpp
             ${CMAKE_SOURCE_DIR}/src/reap/ReapRuntime.cpp
+            ${CMAKE_SOURCE_DIR}/src/reap/ReapPhysicalReduce.cpp
+            ${CMAKE_SOURCE_DIR}/src/reap/ReapPhysicalReduceCalib.cpp
+            ${CMAKE_SOURCE_DIR}/src/reap/ReapPhysicalReduceExport.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/ReapPhysicalBank.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/Deep2CLIBridge.cpp
             # Shared lifecycle-managed Deep2 service used by AgentOrchestrator
             # and IDE/agent bridges.  Keep the implementation in the same
