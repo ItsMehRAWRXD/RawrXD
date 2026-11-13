@@ -1,24 +1,32 @@
-# CLI_TOP25_VALUATION_001 — axis scoreboard
+# CLI Top-25 valuation scoreboard (fail-closed)
 
-**ASOF:** 2026-11-13 · **PROMOTE=0** · **CERTIFIED=0** · **READY_FOR_PEER=0** · **TIP_CLIMB=HOLD**
+**ASOF:** 2026-11-13 · **PROMOTE=0** · **CERTIFIED=0** · **CROSS_SHA_CREDIT=0** · **TIP_CLIMB=HOLD**  
+**CLI_VALUATION=MEASURED_PARTIAL** · **READY_FOR_PEER=0** · **CLI_COMPLETE=0** · **CLI_OVERALL_PCT=58**
 
-EXE_SHA256 (r2): `3857FC27A48058756244E5A8938275F2EE1B19E2442AF330D734382D7D90C520`
+Peer axes ≈ Cursor / VS Code+Copilot / Continue — CLI/`rawr.exe`/headless/Deep `/api` only. GUI HWND out of scope.
 
-| Axis | Status | Evidence | Notes |
-|------|--------|----------|-------|
-| A1 Install / verify | **PASS** (local help) | `runs/install_verify.*` | ≠ ship/clean-VM |
-| A2 Agent lifecycle | **OPEN** | `runs/agent_status.exit.txt=TIMEOUT` | serve TIMEOUT |
-| A3 Terminal | **PASS** (cited) | COMPETITIVE_BENCH_001 terminal_gate v5 | External Terminal-Bench NOT_IN_TREE |
-| A4 Editor / tools (CLI) | **PARTIAL** | `list` OK; `tools --help` EXIT=1 usage | HWND out of CLI scope |
-| A5 GPU decode TinyLlama | **PASS** canary | `gpu/tiny_gpu_r2.*` TOKEN_SURVIVED=8 HOST_DECODE=0 | TPS/MATCH Top-25 OPEN |
-| A5b GPU gemma3-1b | **OPEN** | `gpu/gemma3_gpu.*` TOKEN_SURVIVED=0 | |
-| A5c unlock-125M | **OPEN** | fixture GGUF missing | |
-| A6 Recovery | **PARTIAL** | bad-model EXIT=-1 | agent recovery hang |
-| A7 Docs / dist honesty | **PARTIAL** | INSTALL.md + DRAFT_SHA; ZIP_EXE_ABSENT | NOT_PUBLISHED |
-| A8 Competitive harness | **PARTIAL** | terminal PASS; cli_validate FAIL; H2H NOT_SEALED | |
+| Axis | Result | Witness | Next gate |
+|------|--------|---------|-----------|
+| A1 Install + verify | **PASS** (local) | `runs/install_verify.*` | clean-VM zip with product `rawr.exe` |
+| A2 Agent lifecycle | **OPEN** | `runs/agent_status.exit.txt` TIMEOUT | non-hang `rawr agent status` EXIT=0 |
+| A3 Terminal | **PASS** | COMPETITIVE_BENCH_001 terminal_gate v5 | optional external Terminal-Bench |
+| A4 Editor/tools (CLI) | **PARTIAL** | `list`/`paths` OK; Deep `/api` NOT_REACHABLE | `/api/tool` live or OUT_OF_SCOPE |
+| A5a GPU TinyLlama | **PASS** (canary) | `gpu/tiny_gpu*` HOST_DECODE=0 tokens=8 | MATCH + Top-25 TPS |
+| A5b GPU gemma3-1b | **OPEN** | `gpu/gemma3_gpu.*` TOKEN_SURVIVED=0 | tokens>0 CLEAN_EXIT |
+| A5c unlock-125M | **OPEN** | fixture GGUF missing | resolve + GPU canary |
+| A6 Recovery | **PARTIAL** | bad-model EXIT=-1 | resume E2E |
+| A7 Docs/dist | **PARTIAL** | INSTALL + DRAFT_SHA; NOT_PUBLISHED | publish/clean-VM |
+| A8 Competitive | **PARTIAL** | terminal PASS; H2H NOT_SEALED | GPU H2H seal/HOLD |
+| MoE MiniMax FULL | **HELD** | numerical exclusivity | not this pack |
 
 ## Rollup
-`CLI_OVERALL_PCT=46` (mean of VALUATION_CLI categories) · `CLI_MATURITY_COMPLETE=0` · `HOST_DECODE≠PASS`
+| Metric | Value |
+|--------|-------|
+| CLI_OVERALL_PCT | **58** (`VALUATION_CLI.txt`) |
+| GPU_DENSE_CANARY | **PASS** |
+| HOST_DECODE as GPU | **INVALID** |
+| READY_FOR_PEER | **0** |
+| COMPETITIVE_PASS | **0** |
+| PROMOTE | **0** |
 
-## Explicit non-claims
-Not Top-25 ranked · Not READY_FOR_PEER · Not PROMOTE · gemma3 not sealed · MiniMax FULL not run
+`NOT_RUN!=PASS` · `INVENT_PASS=0`

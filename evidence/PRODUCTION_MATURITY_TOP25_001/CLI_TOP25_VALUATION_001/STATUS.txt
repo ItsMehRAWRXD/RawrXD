@@ -1,48 +1,67 @@
 CLI_TOP25_VALUATION_001 — STATUS
-ASOF_LOCAL=2026-11-13T16:41-05:00
-TIP_SHA=PENDING_COMMIT
-EXE_SHA256=F28F10B9E510C6F6C87050949B1726DB90C81ED8DC19F1BFC8BB2270D226360B
+ASOF_LOCAL=2026-11-13T16:43-05:00
 EXE=g:\~dev\rawrxd\build_ninja\bin\rawr.exe
 PROMOTE=0
 CERTIFIED=0
-CLOUD_MODELS=0
-NO_CPU_ONLY_PRODUCT_PATH=1
+CROSS_SHA_CREDIT=0
+TIP_CLIMB=HOLD
+NOT_RUN!=PASS
+INVENT_PASS=0
+CLOUD=0
+MiniMax_FULL=NOT_TOUCHED
 
-## Gates (measured)
-HELP_EXIT=0
-  witness=runs/help.exit.txt (+ help.err Usage text)
-INSTALL_VERIFY_EXIT=0
-  witness=runs/install_verify.exit.txt
-AUTO_BACKEND=VulkanPrimary
-  proof_line=[AUTO_BACKEND] decision=VulkanPrimary reason=Primary GPU fits weights+KV+scratch
-  witness=gpu/tiny_gpu.err.txt · gpu/tinyllama_gpu_hello.err.txt
-HOST_DECODE=0
-  proof_line=PRODUCT_LAA=1 HOST_DECODE=0 ALLOW_GPU=1 … GPU_DEFAULT=1
-CLI_GPU_LAW=1
-  proof_line=CLI_GPU_LAW=1 ALLOW_GPU=1 FORCE_GPU=1 NO_CPU_FALLBACK=1 HOST_DECODE=0 VULKAN_WANT=1
-TINY_GPU_EXIT=0
-  witness=gpu/tiny_gpu.exit.txt
-GENERATED_TOKENS=8
-  proof_line=GENERATED_TOKENS=8 · CLEAN_EXIT=1 CRASH_OBSERVED=0
-  out=gpu/tiny_gpu.out.txt ("Sure, here's an example")
-MODEL=g:\~dev\rawrxd\models\tinyllama.gguf
-FLAGS=run … -p Hello --max-tokens 8 --vulkan
-ENV=RAWRXD_ALLOW_GPU=1 RAWR_FORCE_GPU=1 RAWR_NO_CPU_FALLBACK=1 (HOST_DECODE unset/0)
-
-## Verdict
-AUTO_BACKEND_NE_CPU=PASS
-LOCAL_GPU_DENSE_CANARY=PASS
-CLI_PRODUCT_LOCAL_GPU_PATH=PASS
-CLI_COMPLETE=1
+## Verdict (fail-closed)
+CLI_VALUATION=MEASURED_PARTIAL
+READY_FOR_PEER=0
+CLI_COMPLETE=0
 CLI_MATURITY_COMPLETE=0
-WHY_MATURITY_STILL_0=
-  Full 11-cat VALUATION_CLI matrix ≠100 (MoE semantic, competitive H2H,
-  distribution clean-VM, debugger/recovery NOT_RUN). Asymmetric product-path
-  COMPLETE earned on help EXIT=0 + TinyLlama VulkanPrimary + EXIT=0 + tokens.
-ASYMMETRIC_OK=1
-GUI_MAY_LAG=1
-PROMOTE=0
+CLI_OVERALL_PCT=58
+  AUTH=../VALUATION_CLI.txt (60+90+48+30+75+100+75+30+45+50+40)/11
+CLI_CAN_FINISH_WITHOUT_GUI=1
+ASYMMETRIC_PRODUCT_PATH_CANARY=PASS
+  NOTE=help+install verify+TinyLlama Vulkan HOST_DECODE=0 TOKEN_SURVIVED=8
+  NOTE2=canary ≠ COMPLETE ≠ READY_FOR_PEER ≠ Top-25 parity
 
-## Authority
-EXE_BIND.txt · gpu/tiny_gpu.{err,out,exit,meta}.txt · runs/help.exit.txt
-VALUATION_CLI.txt · VALUATION_TOP25_CLI_GUI_001/STATUS.txt · VALUATION_SCOREBOARD.txt
+## Axis disposition
+A1 Install/verify PASS (local)
+A2 Agent lifecycle OPEN (TIMEOUT)
+A3 Terminal PASS (terminal_gate v5)
+A4 Editor/tools CLI PARTIAL (list OK; Deep /api NOT_REACHABLE)
+A5a TinyLlama GPU PASS canary (HOST_DECODE=0 MULTIGPU tokens=8)
+A5b gemma3-1b OPEN (TOKEN_SURVIVED=0)
+A5c unlock-125M OPEN (fixture)
+A6 Recovery PARTIAL (bad-model EXIT=-1)
+A7 Docs/dist PARTIAL (DRAFT_SHA; ZIP/clean-VM/publish OPEN)
+A8 Competitive PARTIAL (terminal PASS; H2H NOT_SEALED)
+MoE MiniMax FULL HELD
+
+## GPU proof (this pack + cited)
+WITNESS=gpu/tiny_gpu.* (+ tiny_gpu_r2.* if present)
+HOST_DECODE=0
+ALLOW_GPU=1
+BACKEND=MULTIGPU|VulkanPrimary
+GENERATED_TOKENS=8
+FUNCTIONAL_PASS=1 / PRODUCT_PASS=1 (where present)
+DECODE_TPS_REAL≈0.92 (NOT Top-25 PERFORMANCE)
+MATCH_VS_LLAMA=0 hist (GPU_VS_REF_001)
+
+## Explicit non-claims
+NOT READY_FOR_PEER · NOT CLI_COMPLETE · NOT CERTIFIED · NOT PROMOTE
+HOST_DECODE never PASS for GPU axes
+Debugger 100% is OUT_OF_SCOPE_FOR_CLI_CORE only (see CLI_DEBUGGER_RECOVERY_SCOPE.txt)
+
+## NEXT_EXECUTABLE_GATES
+G1 agent status non-hang EXIT=0
+G2 gemma3 GPU TOKEN_SURVIVED>0
+G3 unlock-125M GGUF + GPU canary
+G4 zip product rawr.exe + clean-VM
+G5 Deep /api live or OUT_OF_SCOPE
+G6 MATCH/H2H seal or HOLD
+G7 flip READY_FOR_PEER only on measured peer parity (no invention)
+
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+READY_FOR_PEER=0
+CLI_COMPLETE=0
+END
