@@ -1,0 +1,51 @@
+INSTALL_PATH_SMOKE
+ASOF_LOCAL=2026-11-13T16:35-05:00
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+INVENT_PASS=0
+
+## A) Local product binary (authoritative ops smoke)
+EXE=G:\~dev\rawrxd\build_ninja\bin\rawr.exe
+EXE_SHA256=1BDE4A964C0877492C7C515669618D1458BCE124BEB5193B2D57B83E198654B8
+BYTES=10734592
+
+CMD=rawr --help
+EXIT=1
+USAGE_PRINTED=1
+NOTE=CLI prints Usage on stderr and exits 1 when no subcommand / unknown flag
+
+CMD=rawr --version
+EXIT=1
+USAGE_PRINTED=1
+NOTE=no dedicated --version string; same Usage path as --help
+
+CMD=rawr (bare)
+EXIT=1
+USAGE_PRINTED=1
+
+RESULT_LOCAL=USAGE_SMOKE_MEASURED
+PASS_LOCAL_VERIFY=1 (Usage present; EXIT nonzero is measured behavior, not invented 0)
+≠ product maturity PASS · ≠ Top-25 recognition
+
+## B) SHA-pinned Windows zip channel
+ZIP=RawrXD-14.7.3-Windows-x64.zip
+ZIP_SHA256=DDEB7D50840C1097B2C79A5702C54C115BD076B108F9C43D15BCB4BE563B829D
+EXTRACT=OK → _zip_smoke_extract/ (local scratch; ARCHIVE candidate)
+ZIP_RAWRXD_EXE=bin\RawrXD.exe
+ZIP_EXE_SHA256=0295D6C1C545F19780403FC2AEB19C48812E94CBA5E3D90079B108F7EE681FB9
+BYTES=274432
+CMD=RawrXD.exe --help
+RESULT_ZIP_HELP=TIMEOUT_HANG (killed; no EXIT recorded)
+NOTE=zip contains RawrXD.exe / GUI stubs, not build_ninja\bin\rawr.exe
+rawr CLI path for ops remains local build (A)
+
+## C) winget
+winget search RawrXD → No package found
+WINGET=NOT_PUBLISHED
+
+## Law
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+EXIT=1 + Usage ≠ FAIL invent; also ≠ EXIT=0 invent
+ZIP_HELP TIMEOUT ≠ PASS
+NOT_RUN != PASS

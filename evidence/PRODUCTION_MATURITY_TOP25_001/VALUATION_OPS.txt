@@ -1,0 +1,64 @@
+PRODUCTION_MATURITY_TOP25_001 — VALUATION_OPS
+ASOF_LOCAL=2026-11-13T16:40-05:00
+WORKSTREAM=TOP25_OPS_INSTALL_DOCS_DISTRO_RETENTION
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+TIP_CLIMB=HOLD
+INVENT_PASS=0
+NOT_RUN!=PASS
+FAKE_MATURITY_SEAL=0
+TOP25_RECOGNITION=NOT_READY
+
+## Law
+Ops axis % = unweighted mean of ops categories below (fail-closed).
+Feature checklists ≠ production %. Secondary guide redirect ≠ publish.
+DRAFT_SHA_BOUND != PUBLISHED. EXIT=1+Usage ≠ invent EXIT=0.
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+
+## Category matrix (ops axis)
+
+| # | Category | Disposition | % | Evidence |
+|---|----------|-------------|---|----------|
+| 1 | Root INSTALL.md local-first | LANDED | 90 | INSTALL.md; Verify-RawrLocalInstall |
+| 2 | Secondary install guides HISTORICAL/redirect | LANDED | 95 | docs/guides/installation.md; release-assets/INSTALL.md; RELEASE_PACKAGE/INSTALL.md |
+| 3 | Winget honesty | CLOSED_AS_NOT_PUBLISHED | 90 | winget search=No package; distribution/winget NOT_PUBLISHED |
+| 4 | One SHA-pinned Windows zip channel | DOCUMENTED | 80 | WINDOWS_ZIP_CHANNEL.txt (v14.7.3 / DDEB7D50…) |
+| 5 | Install-path smoke (local rawr Usage+SHA) | MEASURED | 70 | INSTALL_PATH_SMOKE.txt A — EXIT=1 Usage printed |
+| 6 | Zip extract + CLI help smoke | PARTIAL | 35 | extract OK; RawrXD.exe --help TIMEOUT_HANG |
+| 7 | RETENTION.txt pack policy | LANDED | 75 | RETENTION.txt; user D1/D7/D30 NOT_RUN → cap |
+| 8 | version.txt align/drift | DOCUMENTED_DRIFT | 60 | VERSION_DRIFT.txt (1.0.0 vs v14.7.3 / v15.0.4) |
+| 9 | Certification hold (fail-closed) | HELD_CORRECT | 100 | PROMOTE=0 CERTIFIED=0 RELEASE=HELD |
+| 10 | Clean-VM / community publish | OPEN | 10 | ABSENT / NOT_CLAIMED |
+
+## Rollup
+OPS_AXIS_PCT=70
+METHOD=unweighted mean of categories 1–10 (fail-closed; no invented 100)
+OPS_MATURITY_COMPLETE=0
+WHY_NOT_100=
+  - Clean-VM install witness ABSENT
+  - Community indexes NOT_PUBLISHED
+  - Zip RawrXD.exe --help TIMEOUT (no CLI help EXIT)
+  - version.txt drift unresolved (documented only)
+  - User retention D1/D7/D30 NOT_RUN
+  - CERTIFIED/PROMOTE correctly held — does not unlock 100 alone
+
+## G1–G8 closeout map (TOP25_OPS_001)
+G1 INSTALL_DOCS_DRIFT     → CLOSED (secondary guides HISTORICAL; version drift DOCUMENTED)
+G2 WINGET_MISSING         → CLOSED_AS_NOT_PUBLISHED (claims removed / banners retained)
+G3 DISTRIBUTION_FRAGMENT  → PARTIAL_CLOSED (one SHA channel documented; publish held)
+G4 RETENTION_UNOWNED      → CLOSED (RETENTION.txt present)
+G5 COMPETITIVE_SUITES     → OPEN (out of this ops land; ≠ invent)
+G6 GAME_DEV_FIXTURES      → OPEN / not required for ops % this turn
+G7 PRODUCT_SMOKE_VS_OPS   → PARTIAL_CLOSED (local Usage+SHA; zip help TIMEOUT)
+G8 CERTIFICATION_HELD     → HELD (PROMOTE=0 CERTIFIED=0 RELEASE=HELD)
+
+## Cross-link
+  evidence/TOP25_OPS_001/STATUS.txt
+  TOP25_RECOGNITION_OPS_001/{STATUS,WINDOWS_ZIP_CHANNEL,INSTALL_PATH_SMOKE}.txt
+  VALUATION_CLI.txt / VALUATION_SCOREBOARD.txt (separate axes; do not overwrite)
+
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+OPS_AXIS_PCT=70

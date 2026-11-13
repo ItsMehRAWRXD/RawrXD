@@ -19,9 +19,13 @@ Authority: `evidence/PRODUCTION_MATURITY_TOP25_001/LAW.txt` ·
 | CLI | `build_ninja\bin\rawr.exe` | Primary inference CLI (`rawr run` / `list` / `paths`) |
 | Optional | `build_ninja\bin\reap_export_sidecar.exe` | REAP physical export tooling |
 
-There is **no** sealed public installer receipt in this pack. Treat
-`DISTRIBUTION_MANIFEST.yaml` as **historical / non-authoritative** (hashes
-and “PRODUCTION READY” text are not current cert).
+Package managers remain **NOT_PUBLISHED**. GitHub zip SHA is **DRAFT_SHA_BOUND**
+(`RawrXD-14.7.3-Windows-x64.zip` =
+`DDEB7D50840C1097B2C79A5702C54C115BD076B108F9C43D15BCB4BE563B829D`) —
+see `TOP25_RECOGNITION_OPS_001/B1_DISTRIBUTION_SHA_HONESTY.txt`. That zip’s
+`bin/RawrXD.exe` is **legacy** (help TIMEOUT); product CLI is still
+`build_ninja\bin\rawr.exe`. `DISTRIBUTION_MANIFEST.yaml` is fail-closed **HELD**
+(prior “PRODUCTION READY” revoked).
 
 ---
 
@@ -32,7 +36,7 @@ and “PRODUCTION READY” text are not current cert).
 | OS | Windows 10/11 x64 | Primary measured platform |
 | Toolchain | VS 2022 BuildTools + CMake + Ninja | See AGENTS.md for `ml64.exe` path |
 | RAM | 16 GB+ free for small dense models | Large MoE needs far more / REAP |
-| GPU | Optional | Dense smoke used `RAWRXD_HOST_DECODE=1` when Vulkan blocked |
+| GPU | **Required** (discrete Vulkan; R9700 class measured) | Product path: `RAWRXD_ALLOW_GPU=1`, `HOST_DECODE=0`. CPU only via explicit `RAWRXD_HOST_DECODE=1` opt-in — **invalid for competitive credit** |
 | Models | Local GGUF on disk | No mandatory cloud API |
 
 ---

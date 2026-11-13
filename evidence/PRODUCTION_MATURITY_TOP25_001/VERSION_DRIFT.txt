@@ -1,0 +1,25 @@
+VERSION_DRIFT — documented (not silently “aligned”)
+ASOF_LOCAL=2026-11-13
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+ALIGN_ACTION=DOCUMENT_ONLY (no invent of sealed product tag)
+
+## Measured strings
+| Source | Value |
+|--------|-------|
+| repo root version.txt | 1.0.0 |
+| repo root VERSION.txt | 1.0.0 |
+| Canonical zip channel tag | v14.7.3 |
+| Local release tree dirs | RawrXD-v15.0.0 / v15.0.1 / v15.0.4 present under release\ |
+| DRAFT winget PackageVersion | 14.7.3 (NOT_PUBLISHED) |
+
+## Disposition
+DRIFT=YES
+SEALED_SINGLE_PRODUCT_TAG=ABSENT
+Do **not** rewrite version.txt to 14.7.3 or 15.0.4 without a sealed release
+receipt + SHA + smoke under LAW. Ops closeout keeps 1.0.0 as tree file value
+and treats v14.7.3 as the **download pin only**.
+
+Authority: TOP25_OPS_001 G1 · WINDOWS_ZIP_CHANNEL.txt · LAW.txt
+NOT_RUN != PASS

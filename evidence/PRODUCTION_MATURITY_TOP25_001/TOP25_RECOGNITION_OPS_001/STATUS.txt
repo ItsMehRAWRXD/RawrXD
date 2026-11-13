@@ -48,15 +48,26 @@ Witness: DRAFT_SHA_BOUND.txt · release_assets/SHA256.txt
 - DISTRIBUTION_MANIFEST.yaml rewritten fail-closed (PRODUCTION READY revoked)
 - NOT_PUBLISHED banners retained; no winget publish; no D1/D7/D30 invent
 
+## Ops closeout this turn (≠ CERTIFIED)
+- Secondary INSTALL guides → HISTORICAL/redirect (docs/guides, release-assets, RELEASE_PACKAGE)
+- WINDOWS_ZIP_CHANNEL.txt — one SHA pin (v14.7.3 / DDEB7D50…)
+- INSTALL_PATH_SMOKE.txt — local rawr Usage+SHA EXIT=1; zip --help TIMEOUT
+- VERSION_DRIFT.txt — document 1.0.0 vs v14.7.3 / v15.0.4 (no invent align)
+- VALUATION_OPS.txt — OPS_AXIS_PCT=70
+- winget remains NOT_PUBLISHED (search empty)
+
 ## Remaining OPEN
 1. Clean-VM install witness for the SHA-bound zip
 2. Community index publish (winget/choco/brew) — NOT_CLAIMED
 3. macOS Homebrew real tarball
 4. User retention D1/D7/D30 — NOT_RUN
 5. Competitive / MiniMax semantic gates (elsewhere; no FULL here)
+6. Zip CLI help EXIT (current RawrXD.exe hangs on --help)
 
 ```
 PROMOTE=0
 CERTIFIED=0
+RELEASE=HELD
+OPS_AXIS_PCT=70
 NOT_RUN!=PASS
 ```

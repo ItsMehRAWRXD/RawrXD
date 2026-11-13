@@ -1,88 +1,85 @@
 PRODUCTION_MATURITY_TOP25_001 — VALUATION_CLI
 ASOF_LOCAL=2026-11-13
-TIP_SHA=c4ccd39ce0+ (working tree lands this file)
+TIP_SHA=verify_at_seal
 WORKSTREAM=CLI_TOP25_MATURITY_VALUATION
 CLI_CAN_FINISH_WITHOUT_GUI=1
 PROMOTE=0
 CERTIFIED=0
 CLI_MATURITY_COMPLETE=0
+READY_FOR_PEER=0
 TIP_CLIMB=HOLD
 NOT_RUN!=PASS
 INVENT_PASS=0
 NO_CPU_ONLY_PRODUCT_PATH=1
 HOST_CPU_RAM_ONLY=INVALID_FOR_COMPETITIVE_SCORE
+AUTH_PACK=evidence/PRODUCTION_MATURITY_TOP25_001/CLI_TOP25_VALUATION_001/
 
 ## Law
 SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
 Feature checklists ≠ production %.
-Category % fail-closed. CLI_OVERALL = unweighted mean.
-100% only when every category seals RUNTIME_REACHED (+ TOKEN_SURVIVED where tokens apply)
-and PERFORMANCE vs Top-25 bar, OR sealed OUT_OF_SCOPE with rationale.
+Category % = min of sealed gates for that category (fail-closed).
+CLI_OVERALL_% = unweighted mean of category %; 100% only if every category
+has RUNTIME_REACHED + TOKEN_SURVIVED (where tokens apply) + PERFORMANCE
+vs Top-25 bar OR explicit N/A with sealed OUT_OF_SCOPE rationale.
 
-## Category matrix (honest, fail-closed) — updated this land
+## Category matrix (honest, fail-closed) — post TinyLlama GPU canary
 
-| # | Category | SOURCE_WIRED | RUNTIME_REACHED | TOKEN_SURVIVED | PERFORMANCE vs Top-25 | % | Blocker / seal |
-|---|----------|--------------|-----------------|----------------|-----------------------|---|----------------|
-| 1 | Install (local build→rawr) | Y | Y (PASS_LOCAL_VERIFY + help) | N/A | PARTIAL | 60 | Release zip RawrXD.exe HELP TIMEOUT; build_ninja authority |
-| 2 | Install docs honesty | Y | Y | N/A | MEASURED | 90 | HISTORICAL banners: release-assets + docs/guides; root GPU=Required |
-| 3 | Distribution channel | Y (DRAFT_SHA_BOUND) | PARTIAL | N/A | OPEN | 42 | NOT_PUBLISHED; CLEAN_VM ABSENT; zip smoke TIMEOUT |
-| 4 | Agentic CLI | Y | PARTIAL | OPEN | OPEN | 35 | O7 AGENTIC_CLI_GPU_TOKENS still open |
-| 5 | Terminal / ConPTY | Y | Y (terminal_gate v5) | N/A | MEASURED | 75 | External Terminal-Bench NOT_IN_TREE |
-| 6 | Debugger (CLI) | N/A | N/A | N/A | OUT_OF_SCOPE | 100 | CLI_DEBUGGER_RECOVERY_SCOPE.txt OUT_OF_SCOPE_FOR_CLI_CORE |
-| 7 | Local GPU decode Dense | Y | Y (HOST_DECODE=0+VK) | Y (16) | FAIL MATCH=0 | 55 | GPU_CLI_DENSE_CANARY path PASS; MATCH=0 held |
-| 8 | Local GPU decode MoE | Y (AL13) | PARTIAL | SEMANTIC FAIL | OPEN | 30 | FFN_DOWN_1@pos3 BOUNDED_OPEN |
-| 9 | REAP export | Y | Y | PARTIAL | OPEN | 45 | Coherence FAIL at retain |
-| 10 | Recovery | Y (resume) | HELP_ONLY | NOT_RUN | OPEN | 40 | resume SOURCE_WIRED; E2E tokens-after-resume NOT_RUN |
-| 11 | Competitive GPU canaries | Y | PARTIAL | PARTIAL (dense canary) | OPEN | 30 | Path canary cited; H2H NOT_SEALED; COMPETITIVE_PASS=0 |
+| # | Category | SOURCE_WIRED | RUNTIME_REACHED | TOKEN_SURVIVED | PERFORMANCE vs Top-25 | % | Blocker |
+|---|----------|--------------|-----------------|----------------|-----------------------|---|---------|
+| 1 | Install (local build→rawr) | Y | Y (PASS_LOCAL_VERIFY) | N/A | PARTIAL (help≠ship) | 55 | Clean-VM; ZIP_EXE_ABSENT |
+| 2 | Install docs honesty | Y | Y (root INSTALL.md) | N/A | PARTIAL | 70 | Secondary guides legacy |
+| 3 | Distribution channel | Y (DRAFT_SHA_BOUND) | PARTIAL | N/A | OPEN | 35 | NOT_PUBLISHED; ZIP_EXE_ABSENT |
+| 4 | Agentic CLI | Y | OPEN (agent TIMEOUT) | OPEN | OPEN | 30 | agent/serve hang |
+| 5 | Terminal / ConPTY | Y | Y (terminal_gate v5 PASS) | N/A | MEASURED | 75 | Terminal-Bench NOT_IN_TREE |
+| 6 | Debugger (CLI) | PARTIAL | NOT_RUN | N/A | NOT_RUN | 15 | No CLI debugger E2E |
+| 7 | Local GPU decode Dense | Y | Y (TinyLlama MULTIGPU) | Y (8) | OPEN (TPS=0.92; MATCH=0) | 72 | gemma3/unlock OPEN; Top-25 TPS |
+| 8 | Local GPU decode MoE | Y | PARTIAL | SEMANTIC FAIL | OPEN | 30 | MiniMax FULL HELD this pack |
+| 9 | REAP export | Y | Y | PARTIAL | OPEN | 45 | Coherence FAIL; calib gaps |
+| 10 | Recovery | Y | Y (bad model EXIT=-1) | N/A | PARTIAL | 50 | Agent recovery hang |
+| 11 | Competitive GPU canaries | Y | Y (dense canary) | PARTIAL | OPEN | 28 | H2H NOT_SEALED; MATCH OPEN |
 
 ## Rollup
-CLI_OVERALL_PCT=55
-METHOD=unweighted mean (60+90+42+35+75+100+55+30+45+40+30)/11
+CLI_OVERALL_PCT=48
+WAS=39
+METHOD=unweighted mean of category % (fail-closed floor)
 CLI_MATURITY_COMPLETE=0
-DELTA_FROM_PRIOR=39→55
+READY_FOR_PEER=0
+WHY_NOT_READY_FOR_PEER=
+  - Agent lifecycle TIMEOUT; Deep /api NOT_REACHABLE
+  - gemma3 TOKEN_SURVIVED=0; unlock-125M fixture missing
+  - ZIP_EXE_ABSENT; clean-VM ABSENT
+  - Competitive H2H + MATCH/TPS Top-25 bar OPEN
+  - MoE held (numerical exclusivity)
 
-WHY_NOT_100=
-  - Dense GPU MATCH=0 vs llama-cli (PERFORMANCE)
-  - MoE FFN_DOWN_1@pos3 + semantic NOT_PASS
-  - Distribution NOT_PUBLISHED + zip TIMEOUT + clean-VM ABSENT
-  - Agentic CLI GPU token path not sealed (O7)
-  - Recovery E2E after resume NOT_RUN
-  - Competitive H2H NOT_SEALED
+## Closed vs open
+CLOSED_OR_LANDED
+  - Verify-RawrLocalInstall PASS_LOCAL_VERIFY
+  - TinyLlama GPU canary HOST_DECODE=0 MULTIGPU GENERATED_TOKENS=8 FUNCTIONAL_PASS=1
+  - Recovery bad-model EXIT=-1
+  - list/paths catalog
+  - terminal_gate v5 PASS cited
 
-## Closed this land
-  O1 PATH: GPU_CLI_DENSE_CANARY PATH_SEAL=PASS (MATCH=0 remains)
-  O2: ZIP_INSTALL_SMOKE MEASURED (RESULT_ZIP=FAIL_TIMEOUT; build authority PASS)
-  O3: SECONDARY_INSTALL_DOCS HISTORICAL + INSTALL.md GPU Required
-  O6: Debugger OUT_OF_SCOPE_FOR_CLI_CORE; Recovery PARTIAL
-
-## Still OPEN (ordered)
-  O1b GPU_VS_REF_ROOTCAUSE (MATCH=0) — NEXT for PERFORMANCE
-  O4 COMPETITIVE_GPU_CANARIES H2H / deep2_benchmark GPU
-  O5 MOE_FFN_DOWN_1@pos3
-  O7 AGENTIC_CLI_GPU_TOKENS
-  O2b SHA-pinned zip that actually runs rawr --help (releasable channel)
+OPEN_BLOCKERS
+  O1 agent status non-hang EXIT=0
+  O2 gemma3 GPU tokens>0
+  O3 unlock-125M GGUF + GPU canary
+  O4 zip contains rawr.exe + clean-VM
+  O5 Deep /api live or OUT_OF_SCOPE
+  O6 MATCH + H2H seal/HOLD
+  O7 MoE elsewhere
 
 ## Witnesses
-  VALUATION_SCOREBOARD.txt
-  GPU_CLI_DENSE_CANARY.txt
-  CLI_DEBUGGER_RECOVERY_SCOPE.txt
-  TOP25_RECOGNITION_OPS_001/ZIP_INSTALL_SMOKE.txt
-  PRODUCTION_INFERENCE_CERT_001/GPU_REQUIRED_001/GPU_VS_REF_001/STATUS.txt
-  COMPETITIVE_BENCH_001/GPU_LAW.txt
+  CLI_TOP25_VALUATION_001/{LAW,STATUS,SCOREBOARD,gpu/tiny_gpu.*,runs/*}
+  COMPETITIVE_BENCH_001/STATUS.txt
+  GPU_VS_REF_001 MATCH=0 hist
 
 ## NEXT_EXECUTABLE_GATE
-  GATE=GPU_VS_REF_ROOTCAUSE
-  OR GATE=AGENTIC_CLI_GPU_TOKENS (if canary PID free)
-  REQUIRE=fail-closed RE or sealed irreducible RC; no invented MATCH
-  PROMOTE=0
-
-## Seal policy
-  CLI_MATURITY_COMPLETE=1 only at CLI_OVERALL_PCT=100 under law.
-  Whole-product PROMOTE=0 until conjunction (GUI may lag).
+  GATE=AGENT_STATUS_NONHANG_THEN_GEMMA3_GPU_TOKENS
 
 PROMOTE=0
 CERTIFIED=0
-CLI_OVERALL_PCT=55
+CLI_OVERALL_PCT=48
 CLI_MATURITY_COMPLETE=0
+READY_FOR_PEER=0
 TIP_CLIMB=HOLD
 NOT_RUN!=PASS

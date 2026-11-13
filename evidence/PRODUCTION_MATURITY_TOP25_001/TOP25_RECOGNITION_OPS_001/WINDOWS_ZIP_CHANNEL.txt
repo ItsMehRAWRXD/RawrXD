@@ -1,0 +1,36 @@
+WINDOWS_ZIP_CHANNEL — single SHA-pinned public download (ops)
+ASOF_LOCAL=2026-11-13
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+NOT_PUBLISHED=1
+WINGET=NOT_PUBLISHED (winget search RawrXD → No package found)
+
+## Canonical channel (one)
+CHANNEL=GitHub Releases / ItsMehRAWRXD/RawrXD
+TAG=v14.7.3
+ASSET=RawrXD-14.7.3-Windows-x64.zip
+URL=https://github.com/ItsMehRAWRXD/RawrXD/releases/download/v14.7.3/RawrXD-14.7.3-Windows-x64.zip
+BYTES=910960
+SHA256=DDEB7D50840C1097B2C79A5702C54C115BD076B108F9C43D15BCB4BE563B829D
+LOCAL_COPY=release_assets/RawrXD-14.7.3-Windows-x64.zip
+WITNESS=release_assets/SHA256.txt · DRAFT_SHA_BOUND.txt
+
+## Scope
+This is the **one** documented Windows zip pin for Top-25 ops recognition prep.
+Secondary historical asset (not the canonical channel):
+  TAG=v1.0.0 RawrXD-v1.0.0-Release.zip
+  SHA256=3B692DDC9F14D75D373CB682CE1968B9B3E25074327254F88CFE910DE8BDE7D5
+
+## Not claimed
+- winget / Chocolatey / Homebrew community index publish
+- Clean-VM install PASS
+- Zip-embedded RawrXD.exe --help/--version CLI smoke PASS
+  (measured: process hang / TIMEOUT when launched with --help; see INSTALL_PATH_SMOKE.txt)
+- PRODUCT_READY / CERTIFIED from zip README.txt (historical packaging claim ≠ LAW)
+
+## Operator path today
+Prefer local build: repo-root INSTALL.md → build_ninja\bin\rawr.exe
+
+DRAFT_SHA_BOUND != PUBLISHED
+NOT_RUN != PASS
