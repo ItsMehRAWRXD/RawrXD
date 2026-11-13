@@ -1,0 +1,64 @@
+{
+  "pack": "PRODUCTION_MATURITY_TOP25_001",
+  "artifact": "VALUATION_SCOREBOARD",
+  "asof_local": "2026-11-13T16:27:00-05:00",
+  "tip_at_land": "c4ccd39ce0b6d78698129ebd01ab06572823c09e",
+  "promote": 0,
+  "certified": 0,
+  "tip_climb": "HOLD",
+  "perfect": 0,
+  "invent_pass": 0,
+  "cloud_models_required": 0,
+  "year11_enterprise_target": 1,
+  "overall_rule": "min(CLI_SCORE,GUI_SCORE)_and_conjunction",
+  "gpu_law": "HOST_CPU_RAM_ONLY_INVALID_FOR_COMPETITIVE",
+  "scores": {
+    "CLI_SCORE_PCT": 44,
+    "GUI_SCORE_PCT": 21,
+    "OVERALL_PCT": 21,
+    "CONJUNCTION_PASS": 0
+  },
+  "tracks": {
+    "CLI_COMPLETE": 0,
+    "GUI_COMPLETE": 0,
+    "JOINT_COMPLETE": 0
+  },
+  "categories": [
+    {"id": "C01_INSTALL_DOCS_DISTRO", "weight": 10, "cli": 4, "gui": 4, "cli_disp": "MEASURED_PARTIAL", "gui_disp": "MEASURED_PARTIAL", "cite": "TOP25_RECOGNITION_OPS_001; TOP25_OPS_001 G1-G3; PASS_LOCAL_VERIFY; NOT_PUBLISHED"},
+    {"id": "C02_EDITOR", "weight": 10, "cli": "N/A", "gui": 0, "cli_disp": "N/A_CLI_HEADLESS", "gui_disp": "FAIL_CLOSED", "cite": "FOUR_PANEL_COMPLETION_001; IDE_DAILY_USE_001 EXE_RELINK=FAIL_CLOSED"},
+    {"id": "C03_TERMINAL_CONPTY", "weight": 10, "cli": 10, "gui": 0, "cli_disp": "RUNTIME_REACHED_PASS", "gui_disp": "FAIL_CLOSED", "cite": "COMPETITIVE_BENCH_001 terminal_gate v5; FOUR_PANEL TERMINAL=FAIL_CLOSED"},
+    {"id": "C04_DEBUGGER", "weight": 10, "cli": 0, "gui": 0, "cli_disp": "NOT_RUN", "gui_disp": "FAIL_CLOSED", "cite": "FOUR_PANEL DEBUG_CONSOLE=FAIL_CLOSED"},
+    {"id": "C05_AGENT_LIFECYCLE_RECOVERY", "weight": 10, "cli": 2, "gui": 1, "cli_disp": "SOURCE_WIRED_PARTIAL", "gui_disp": "SOURCE_WIRED_NO_EXE_ABSORB", "cite": "IDE_DAILY_USE_001 EXE_ABSORB_GPU_DEFAULT=0"},
+    {"id": "C06_LOCAL_GPU_INFERENCE_DENSE_MOE", "weight": 10, "cli": 3, "gui": 1, "cli_disp": "DENSE_GPU_PARTIAL_MOE_FAIL", "gui_disp": "GUI_PATH_OPEN", "cite": "GPU_REQUIRED_001 PASS_RUNTIME; PRODUCTION_INFERENCE_CERT_001 MoE_CLEAN_EXIT=0; GPU_LAW"},
+    {"id": "C07_COMPETITIVE_GPU_BENCHES", "weight": 10, "cli": 0, "gui": 0, "cli_disp": "FAIL_CLOSED", "gui_disp": "FAIL_CLOSED", "cite": "COMPETITIVE_BENCH_001 COMPETITIVE_PASS=0; GPU_LAW"},
+    {"id": "C08_SUNSHINE_REMOTE", "weight": 10, "cli": "N/A", "gui": "N/A", "cli_disp": "N/A_NOT_CLAIMED", "gui_disp": "N/A_NOT_CLAIMED", "cite": "no sealed Sunshine claim in live STATUS packs"},
+    {"id": "C09_NUMERICAL_REAP_CORRECTNESS", "weight": 10, "cli": 2, "gui": 2, "cli_disp": "NOT_PASS_PARTIAL_SEALS", "gui_disp": "NOT_PASS_PARTIAL_SEALS", "cite": "GPU_VS_REF_001 MATCH=0; AL10_AL14; STREAM_CORRECTNESS=NOT_PASS"},
+    {"id": "C10_RETENTION_OPS", "weight": 10, "cli": 3, "gui": 3, "cli_disp": "POLICY_PARTIAL", "gui_disp": "POLICY_PARTIAL", "cite": "RETENTION.txt POLICY_LANDED; D1/D7/D30 NOT_RUN"}
+  ],
+  "blockers": [
+    "B1_DISTRIBUTION_NOT_PUBLISHED_CLEAN_VM_ABSENT",
+    "B2_GUI_FOUR_PANEL_FAIL_CLOSED",
+    "B3_GUI_TERMINAL_HWND_FAIL_CLOSED",
+    "B4_DEBUGGER_FAIL_CLOSED",
+    "B5_AGENT_RECOVERY_EXE_ABSORB_0",
+    "B6_GPU_MOE_CLEAN_EXIT_0",
+    "B7_COMPETITIVE_GPU_NOT_SEALED",
+    "B8_GPU_VS_REF_NUMERICAL_DIVERGE",
+    "B9_RETENTION_COHORT_NOT_RUN",
+    "B10_PROMOTE_0_CERTIFIED_0"
+  ],
+  "live_packs": [
+    "IDE_DAILY_USE_001",
+    "TOP25_OPS_001",
+    "TOP25_RECOGNITION_OPS_001",
+    "COMPETITIVE_BENCH_001",
+    "PRODUCTION_INFERENCE_CERT_001",
+    "GPU_LAW",
+    "GPU_VS_REF_001",
+    "GPU_VS_REF_PREFILL_001",
+    "GPU_REQUIRED_001",
+    "AL10_AL14",
+    "FOUR_PANEL_COMPLETION_001",
+    "VALUATION_TOP25_CLI_GUI_001"
+  ]
+}
