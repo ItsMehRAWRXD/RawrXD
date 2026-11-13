@@ -9,6 +9,7 @@
 #include "lavapath/OneByOneIgnoreLadder.hpp"
 #include "lavapath/ScoreboardPumpIssue.hpp"
 #include "lavapath/ScoreboardLayerWalk.hpp"
+#include "lavapath/HeapWitness.hpp"
 #include "DecodeBlockerAttribution.hpp"
 #include <cmath>
 #include <cstdio>
@@ -171,22 +172,38 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
             std::memcpy(hidden, layerInput, config.hiddenDim * sizeof(float));
     }
     rawr::iso_ladder::A().forwardNs += rawr::iso_ladder::Ns(f0);
-    // Non-finite hidden state: fail closed — NaN/Inf must not propagate.
+    // Non-finite / exploded hidden: sanitize so logits/sample can run.
+    // STREAM_CORRECTNESS remains NOT_PASS until reference parity closes.
     double n2 = 0.0;
     size_t nonFiniteCount = 0;
+    float maxAbs = 0.f;
     for (size_t i = 0; i < config.hiddenDim; ++i) {
         const float v = hidden[i];
         if (!std::isfinite(v)) {
             nonFiniteCount++;
+            hidden[i] = 0.f;
         } else {
             n2 += (double)v * (double)v;
+            const float a = std::fabs(v);
+            if (a > maxAbs) maxAbs = a;
         }
     }
     if (nonFiniteCount > 0) {
         fprintf(stderr,
-            "[FORWARD_WARN] hidden non-finite count=%zu/%zu layers=%zu dim=%zu continuing\n",
-            nonFiniteCount, config.hiddenDim, modelWeights.numLayers,
-            config.hiddenDim);
+            "[FORWARD_WARN] hidden non-finite count=%zu/%zu zeroed continuing\n",
+            nonFiniteCount, config.hiddenDim);
+        fflush(stderr);
+        n2 = 0.0;
+        for (size_t i = 0; i < config.hiddenDim; ++i)
+            n2 += (double)hidden[i] * (double)hidden[i];
+    }
+    if (maxAbs > 1.0e6f && n2 > 0.0) {
+        const float inv = 1.0f / std::sqrt(static_cast<float>(n2 / (double)config.hiddenDim) + 1e-6f);
+        for (size_t i = 0; i < config.hiddenDim; ++i) hidden[i] *= inv;
+        fprintf(stderr,
+            "B03_HIDDEN_SANITIZE maxAbs=%.3e -> unit_rms inv=%.6g "
+            "STREAM_CORRECTNESS=NOT_PASS\n",
+            (double)maxAbs, (double)inv);
         fflush(stderr);
     }
     if (!(n2 > 1.0e-24)) {
@@ -195,6 +212,7 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
             modelWeights.numLayers, config.hiddenDim);
         fflush(stderr);
     }
+    Deep2::heap::EmitOk(stderr, "AFTER_FORWARD_LAYERS");
     return true;
 }
 

@@ -1743,7 +1743,8 @@ bool Deep2Engine::allocateBuffers() {
     }
     attentionOutput = alignedAlloc(hiddenSize); // layer ping-pong only (hiddenDim)
     attnHeadScratch_ = alignedAlloc(qOutDim);   // pre-O head concat (may > hidden)
-    ffnOutput       = alignedAlloc(ffnDim);
+    /* MoE writes hiddenDim into ffnOutput; MiniMax FFN dim 1536 < hidden 3072. */
+    ffnOutput       = alignedAlloc((std::max)(ffnDim, hiddenSize));
     logits          = alignedAlloc(vocabSize);
     qProj           = alignedAlloc(qProjSize);
     kProj           = alignedAlloc((std::max)(hiddenSize, kvDim));
@@ -5754,10 +5755,32 @@ void Deep2Engine::unloadModel() {
         bp16Enabled_ = false;
     }
 
-    std::fprintf(stderr, "[LIFE] unloadModel clear weight aliases (no alignedFree) layers=%zu\n",
+    std::fprintf(stderr, "[LIFE] unloadModel release multi-shard VirtualAlloc layers=%zu\n",
                  modelWeights.layers.size());
     std::fflush(stderr);
+    auto releaseMapped = [](WeightTensor& wt) {
+        if (wt.data && wt.mapped) {
+#ifdef _WIN32
+            VirtualFree(wt.data, 0, MEM_RELEASE);
+#endif
+            wt.data = nullptr;
+            wt.mapped = false;
+        }
+    };
+    releaseMapped(modelWeights.tokenEmbed);
+    releaseMapped(modelWeights.lmHead);
+    releaseMapped(modelWeights.finalNorm);
     for (auto& layer : modelWeights.layers) {
+        releaseMapped(layer.attnNorm);
+        releaseMapped(layer.wq); releaseMapped(layer.wk);
+        releaseMapped(layer.wv); releaseMapped(layer.wo);
+        releaseMapped(layer.attnQNorm); releaseMapped(layer.attnKNorm);
+        releaseMapped(layer.ffnNorm); releaseMapped(layer.moeRouter);
+        releaseMapped(layer.wGate); releaseMapped(layer.wUp);
+        releaseMapped(layer.wDown);
+        releaseMapped(layer.moeSharedGate);
+        releaseMapped(layer.moeSharedUp);
+        releaseMapped(layer.moeSharedDown);
         layer = LayerWeights();
     }
     modelWeights.layers.clear();
@@ -10427,10 +10450,14 @@ void Deep2Engine::computeExpertFFN(const MoEWeightHandle& handle,
     }
     reg.GetBatch21Counters().registryHits.fetch_add(1, std::memory_order_relaxed);
     reg.GetBatch21Counters().kernelInvocations.fetch_add(3, std::memory_order_relaxed);
-    /* MiniMax mixed Q4_K/Q6_K: one GEMV kernel per expert projection. */
+    /* Registry GEMVs accumulate (y[r] += …). Must zero like LinearW. */
     float* gateOut = gateBuf;
-    kGate((const uint8_t*)handle.gateWeights, input, gateOut, expertDim, hiddenDim);
     float* upOut = upBuf;
+    std::memset(gateOut, 0, expertDim * sizeof(float));
+    std::memset(upOut, 0, expertDim * sizeof(float));
+    std::memset(output, 0, hiddenDim * sizeof(float));
+    /* MiniMax mixed Q4_K/Q6_K: one GEMV kernel per expert projection. */
+    kGate((const uint8_t*)handle.gateWeights, input, gateOut, expertDim, hiddenDim);
     kUp((const uint8_t*)handle.upWeights, input, upOut, expertDim, hiddenDim);
     SwiGLU(gateOut, upOut, gateOut, expertDim);
     kDown((const uint8_t*)handle.downWeights, gateOut, output, hiddenDim, expertDim);
