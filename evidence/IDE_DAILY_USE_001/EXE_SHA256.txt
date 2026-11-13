@@ -1,0 +1,10 @@
+ASOF_LOCAL=2026-11-13T17:34:00
+EXE=g:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
+EXE_SIZE=332257792
+EXE_SHA256=
+LINK_RC=0
+LINK_LOG=evidence/IDE_DAILY_USE_001/logs/exclusive_link_gui_e2e_034.txt
+SHA_NE_D9589D9A=1
+SIZE_GT_50MB=1
+PROMOTE=0
+CERTIFIED=0

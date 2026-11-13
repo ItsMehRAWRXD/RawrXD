@@ -1,6 +1,6 @@
-IDE_DAILY_USE_001 — STATUS (GPU_DEFAULT + Win32IDE relink)
+IDE_DAILY_USE_001 ? STATUS (GPU_DEFAULT + Win32IDE relink)
 =============================================
-ASOF_LOCAL=2026-11-13T17:04-05:00
+ASOF_LOCAL=2026-11-13T17:34:09-05:00
 PROMOTE=0
 TIP_CLIMB=HOLD
 CERTIFIED=0
@@ -9,22 +9,15 @@ NOT_RUN != PASS
 GPU_DEFAULT=1
 NO_CPU_ONLY=1
 
-## Source fixes landed (≠ EXE absorb)
-- Win32IDE_AiEdit.cpp PRESENT (prior missing-file CMake:7538 gate closed when tree stable)
-- Win32IDE_Deep2Bridge.cpp C2039 fixed: ConfigureGeneration/infer → SetSamplerConfig/Generate
-  GIT cite: 4f38dc7d8c
-- main_win32 / AgenticBridge GPU_DEFAULT SOURCE_WIRED (prior)
-
 ## EXE tip candidate
 EXE=g:\~dev\rawrxd\build_win32ide_link001\bin\RawrXD-Win32IDE.exe
-EXE_SHA256=D9589D9A665E07F93E906A637B9D4ADB80D99BFD9604103A882E6AC79078BC08
-EXE_TIME=2026-10-31T09:27:44
-EXE_RELINK=FAIL_CLOSED
+EXE_SHA256=
+EXE_SIZE=332257792
+EXE_TIME=2026-11-13T17:33:21
+EXE_RELINK=PASS_LINK_RC0
 EXE_ABSORB_GPU_DEFAULT=0
-  WHY=multi-agent ninja/cl thrash on shared trees
-       (cl exit 4294967295 / ninja recompaction Permission denied)
-       Deep2Bridge.obj compiled then deleted by concurrent clean/rebuild
-       fresh dirs absorb_015/018 also FAIL_CLOSED mid-InferenceEngine
+  WHY=link031 LINK_RC=0 SIZE>50MB; HWND/GPU absorb daily-use smoke NOT_RUN this seal
+  LNK4088=/FORCE:MULTIPLE image-may-not-run warning retained from rsp
 
 ## Explicit non-claims
 PROMOTE=0
@@ -33,8 +26,5 @@ EXE_ABSORB_GPU_DEFAULT=0
 GUI_COMPLETE=0
 FOUR_PANEL_HWND_E2E=NOT_RUN_ON_TIP
 
-NEXT_GATE=EXCLUSIVE_MACHINE_RELINK
-  REQUIRE=single ninja -j1..4 owner; no parallel cmake regenerate;
-          Deep2Bridge.obj + AiEdit.obj + main_win32.obj → tip EXE new SHA
-          then daily-use smoke on THAT exe → EXE_ABSORB_GPU_DEFAULT=1
+NEXT_GATE=DAILY_USE_SMOKE_ON_TIP_THEN_ABSORB
 PROMOTE=0
