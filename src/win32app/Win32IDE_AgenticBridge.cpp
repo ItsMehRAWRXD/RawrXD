@@ -1253,15 +1253,13 @@ void AgenticBridge::p1praWitnessLoadMemberAddrs() const noexcept
 
 static const char* p1praBackendSelectLabel() noexcept
 {
+    // Truth-valued opt-in only (=0 / unset stays GPU). Presence of FORCE_CPU=0
+    // must not pin backend=cpu after product GPU defaults.
     if (bridgeLoadSkipsDeep2())
         return "backend=cpu";
+    if (envDisablesCapabilityHotpatch("RAWRXD_DISABLE_GPU"))
+        return "backend=cpu";
     char buf[64] = {};
-    if (GetEnvironmentVariableA("RAWRXD_FORCE_CPU_INFERENCE", buf, sizeof(buf)) > 0)
-        return "backend=cpu";
-    if (GetEnvironmentVariableA("RAWRXD_BRIDGE_CPU_ONLY", buf, sizeof(buf)) > 0)
-        return "backend=cpu";
-    if (GetEnvironmentVariableA("RAWRXD_DISABLE_GPU", buf, sizeof(buf)) > 0)
-        return "backend=cpu";
     if (GetEnvironmentVariableA("VK_ICD_FILENAMES", buf, sizeof(buf)) > 0 &&
         strstr(buf, "__no_vulkan") != nullptr)
         return "backend=cpu";

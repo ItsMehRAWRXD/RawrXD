@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 // Windows / Winsock include order (required for MSVC + MinGW):
 //   winsock2.h â†’ ws2tcpip.h â†’ windows.h â†’ commctrl.h â†’ commdlg.h
@@ -84,6 +84,8 @@
 #include "IDELogger.h"
 #include "TransparentRenderer.h"
 #include "Win32IDE_AgenticBridge.h"
+#include "Win32IDE_AgenticLoopBridge.h"
+#include "Win32IDE_AgentStepTimeline.h"
 #include "Win32IDE_Autonomy.h"
 #include "Win32IDE_IRCBridge.h"
 #include "Win32IDE_SubAgent.h"
@@ -91,6 +93,7 @@
 #include "Win32IDE_Types.h"
 #include "Win32IDE_WebView2.h"
 #include "Win32TerminalManager.h"
+#include "agent_esp.hpp"
 #include <array>
 #include <atomic>
 #include <filesystem>
@@ -105,8 +108,16 @@
 #include <string>
 #include <thread>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
+// Forward declaration for Deep2Bridge (GPU inference path)
+class Deep2Bridge;
+
+inline void RawrxdProductAgentSessionDeleterNoop(void*) {}
+
+// Legacy AgenticBridge completion (isolated from AgenticLoop WM_APP+105).
+inline constexpr UINT kRawrxdLegacyAgentComplete = WM_APP + 109;
 
 #include "../../include/mcp_integration.h"
 #include "../core/70b_gguf_hotpatch.h"
@@ -369,6 +380,35 @@ class Win32IDE
     void onAgentViewStatus();
     void onAgentStop();
     void onAgentAuditDrive();
+
+    // Deep2 Inference Bridge (GPU-accelerated)
+    Deep2Bridge* m_deep2Bridge = nullptr;
+    void initializeDeep2Bridge();
+    void onDeep2LoadModel();
+    void onDeep2Generate();
+    void onDeep2Cancel();
+    void onDeep2ModelInfo();
+    void onDeep2Configure();
+
+    // Agentic Loop Bridge (deep2_agentic_loop.exe) — lifecycle + recovery
+    std::unique_ptr<AgenticLoopBridge> m_agenticLoopBridge;
+    int m_agenticChatSessionId = 0;
+    std::unique_ptr<void, void(*)(void*)> m_productAgentSession{
+        nullptr, &RawrxdProductAgentSessionDeleterNoop};
+    uint64_t m_productAgentSessionId = 0;
+    void initializeAgenticLoopBridge();
+    void onAgenticLoopRunTask();
+    void onAgenticLoopCancel();
+    void onAgenticLoopStatus();
+    bool stageCopilotChatInputUtf8(const std::string& utf8);
+    bool ensureProductAgentSession(const std::string& modelIdentity,
+                                   const std::string& workspaceRoot,
+                                   const std::string& task);
+    LRESULT handleAgenticLoopProgress(WPARAM wParam, LPARAM lParam);
+    LRESULT handleAgenticLoopToolResult(WPARAM wParam, LPARAM lParam);
+    LRESULT handleAgenticLoopComplete(WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK AgentModelDialogProc(HWND hwnd, UINT uMsg,
+                                                 WPARAM wParam, LPARAM lParam);
 
     // Autonomy Framework Controls
     std::unique_ptr<AutonomyManager> m_autonomyManager;  // high-level autonomous orchestrator
@@ -2062,6 +2102,13 @@ class Win32IDE
     // m_hwndDebugConsole declared above (line ~2136) with initializer
     bool m_debuggingActive;
 
+    // Agent ESP Telemetry (AgenticLoop / Deep2 bridge)
+    rawrxd::esp::Bus m_espBus;
+    std::unique_ptr<rawrxd::esp::Recorder> m_espRecorder;
+    std::atomic<bool> m_espActive{false};
+    std::unordered_set<std::string> m_espDisplayedKeys;
+    uint64_t m_espRequestId = 1;
+
     // Disk Recovery View
     HWND m_hwndRecoveryTitle = nullptr;
     HWND m_hwndRecoveryDriveList = nullptr;
@@ -2163,7 +2210,10 @@ class Win32IDE
     HWND m_hwndSecondarySidebarHeader;
     HWND m_hwndCopilotChatInput;
     HWND m_hwndCopilotChatOutput;
+    std::string m_copilotChatInputCache;
+    AgentStepTimeline m_agentStepTimeline;
     HWND m_hwndCopilotSendBtn;
+    HWND m_hwndCopilotStopBtn = nullptr;
     HWND m_hwndCopilotClearBtn;
     HWND m_hwndHexMagTelemetry = nullptr;
     std::atomic<bool> m_chatSendInFlight{false};
@@ -2538,6 +2588,10 @@ class Win32IDE
                                    std::function<void(const std::string&, bool)> callback);
     void HandleCopilotSend_Ollama();
     void initializeChatPanelOllama();
+    // T15 / IDM_AI_EDIT=2060 — live tip AI edit (Deep2 :11436 then Ollama :11434)
+    void triggerAIEdit();
+    void applyAIEdit(long start, long end, const std::string& replacement);
+    void cancelAIEdit();
 
   public:
     // AI Chat Panel â€” public for HandleChatPanel free-function adapter
@@ -2575,7 +2629,7 @@ class Win32IDE
     // Feature-probe / multi-model GhostText surface (Ollama nano cert)
     bool isGhostTextVisible() const { return m_ghostTextVisible && m_ghostSource == 1; }
     std::string getGhostTextContent() const { return m_ghostTextContent; }
-    void setOllamaModelOverride(const std::string& model) { m_ollamaModelOverride = model; }
+    void setOllamaModelOverride(const std::string& model);
     uint64_t editorDocGen() const { return m_editorDocGen; }
     std::string requestGhostTextCompletion(const std::string& context, const std::string& language,
                                            const std::string& suffix, const std::string& filePath,
@@ -2584,6 +2638,7 @@ class Win32IDE
     bool handleGhostTextKey(UINT vk);
     void triggerGhostTextCompletion();
     void dismissGhostText();
+    void invalidateGhostTextRequests(); // cancel + model-select: bump seq, drop outstanding
 
   private:
     std::vector<std::string> getModelsFromDirectory(const std::string& directory);
@@ -2640,10 +2695,16 @@ class Win32IDE
 #define WM_AGENT_OUTPUT_SAFE (WM_APP + 102)
 #define WM_IDE_OUTPUT_APPEND_SAFE (WM_APP + 103)
 #define WM_IDE_MOE_PACK_STATUS_REFRESH (WM_APP + 104)
+// AgenticLoop UI marshaling — keep off 101–105 (agent/output/MOE collision).
+#define WM_AGENTIC_LOOP_PROGRESS (WM_APP + 530)
+#define WM_AGENTIC_LOOP_TOOL_RESULT (WM_APP + 531)
+#define WM_AGENTIC_LOOP_COMPLETE (WM_APP + 532)
+  public:
     void onAgentOutput(const char* text);
     void postAgentOutputSafe(const std::string& text);
-    /** Thread-safe: appends to Output tab on the UI thread (inference may run on workers). */
+    /** Thread-safe: appends to Output tab on the UI thread (BuildRunner / inference workers). */
     void postOutputPanelSafe(const std::string& text, const std::string& tabName = "Output");
+  private:
 
     // ========================================================================
     // Ghost Text / Inline Completions (Win32IDE_GhostText.cpp)
@@ -2692,6 +2753,8 @@ class Win32IDE
     uint64_t m_ghostLegacyRejected = 0;
     HFONT m_ghostTextFont = nullptr;
     std::atomic<uint64_t> m_ghostTextRequestSeq{0};
+    std::atomic<uint64_t> m_ghostTextNextRequestId{1}; // unique correlation IDs
+    std::atomic<uint64_t> m_ghostTextRoutingEpoch{1};   // bumps on model select
     std::mutex m_ghostTextCacheMutex;
     std::unordered_map<std::string, GhostTextCacheEntry> m_ghostTextCache;
     GhostTextMetrics m_ghostTextMetrics = {};
@@ -2761,12 +2824,16 @@ class Win32IDE
   private:
     // Agentic mode (Ask/Plan/Agent/Debug) â€” agentic_mode_switcher.hpp
     void setAgenticMode(RawrXD::AgenticMode mode);
+    void SetAgenticMode(bool enabled);  // Copilot route parity (bool → Agent/Ask)
+    void agentRouteUserMessage(const std::string& routedPrompt);
     void onAgenticModeChanged(RawrXD::AgenticMode mode);
     void onAgenticModeAsk();
     void onAgenticModePlan();
     void onAgenticModeAgent();
     void onAgenticModeDebug();
     RawrXD::AgenticMode m_agenticMode = RawrXD::AgenticMode::Ask;
+    // Copilot-style default: tools + workspace on first send (route parity).
+    bool m_agenticFunctionCallingMode = true;
     HWND m_hwndAgenticModeAsk = nullptr;
     HWND m_hwndAgenticModePlan = nullptr;
     HWND m_hwndAgenticModeAgent = nullptr;

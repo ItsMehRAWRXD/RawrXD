@@ -157,6 +157,10 @@ class AgenticBridge
     void EnableMultiAgent(bool enabled) { m_multiAgentEnabled = enabled; }
     void WarmUpModel();
 
+    // Copilot/agent route parity (Win32IDE::HandleCopilotSend)
+    void SetAgenticMode(bool enabled) { m_agenticMode = enabled; }
+    bool IsAgenticMode() const { return m_agenticMode; }
+
     // Engine access for context window configuration
     std::shared_ptr<RawrXD::CPUInferenceEngine> GetEngine() const { return m_nativeEngine; }
 
@@ -224,6 +228,7 @@ class AgenticBridge
     std::string m_lastModelLoadError;
     bool m_multiAgentEnabled = false;
     bool m_swarmMode = false;
+    bool m_agenticMode = false;
     /// When true, agent prompts use OrchestratorBridge + Deep2 (not CPU/Ollama stub path).
     bool m_deep2Ready = false;
     std::string m_deep2ModelPath;

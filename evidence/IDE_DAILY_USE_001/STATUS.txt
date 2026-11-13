@@ -1,76 +1,59 @@
-IDE_DAILY_USE_001 — STATUS
-==========================
-ASOF_UTC=2026-11-13T19:20:00Z
+IDE_DAILY_USE_001 — STATUS (GPU_DEFAULT seal)
+=============================================
+ASOF_UTC=2026-11-13T21:50:00Z
 PROMOTE=0
 TIP_CLIMB=HOLD
 CERTIFIED=0
 PERFECT=0
 NOT_RUN != PASS
 SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+GPU_DEFAULT=1
+NO_CPU_ONLY=1
 BRANCH=feature/ide-agentic-product-path-20261026
-TIP_FREEZE_748B=748B210A8F17C6C47685BE1E2718CB0113C070E47881AD3A76B2EBB013934145
-748B_CLOBBER=0
-ABSORB=NOT_AUTHORIZED
 
-## Gap board (daily-use surfaces)
+## Product CPU-pin elimination (win32app)
 
-| Surface | SOURCE_WIRED | RUNTIME_REACHED | Notes |
-|---------|-------------:|----------------:|-------|
-| Debugger (Run/Debug Start+panel) | 1 | PARTIAL_THIS_TURN | ensureDebuggerUI + IDC_DEBUG_START/STOP wired; HWND E2E on candidate EXE NOT_RUN |
-| Debugger Watch menu | 1 | PARTIAL_THIS_TURN | post-pumps path → ensureDebuggerUI; startup still defer; MET=0 |
-| Debugger List BPs | 1 | PARTIAL_THIS_TURN | cmdDbgListBPs lists engine BPs after ensureDebuggerUI; MET=0 |
-| Terminal / ConPTY | 1 | HARNESS_PASS | FOUR_PANEL TERMINAL=PASS; product EXE absorb RELINK still FAIL_CLOSED |
-| Output panel channels | 1 | PARTIAL | harness PASS; HWND product E2E NOT_RUN |
-| Problems panel | 1 | PARTIAL | aggregator+navigate SOURCE; HWND click E2E NOT_RUN |
-| Editor core | 1 | OPEN | U12 no tip closure receipt |
-| Agent lifecycle (/api/agent/run) | 1 | FAIL_CLOSED_HIST | tip 748B model_not_loaded 503 ENTERED=0 (G02) |
-| Recovery (crash/session/A09) | 1 | OPEN | CrashReporter+session restore SOURCE; A08/A09 tip MET=0 |
-| Sunshine workflows | 1_CLI | 0_IDE | SunshineSubsystem in SovereignCLI; Win32IDE/Headless route NOT_WIRED |
+| Site | Prior product default | Now |
+|------|----------------------|-----|
+| main_win32.cpp message_loop | RAWRXD_FORCE_CPU_INFERENCE=1 | GPU defaults unless truth-valued FORCE_CPU opt-in |
+| HeadlessIDE.cpp LocalOnly load | already ALLOW_GPU=1 HOST_DECODE=0 FORCE_CPU=0 | unchanged |
+| gguf_loader_masm*.cpp | already GPU-required putenv | unchanged |
+| Win32IDE_AgenticBridge p1praBackendSelectLabel | presence of FORCE_CPU=0 → backend=cpu | truth-valued opt-in only |
+| Win32IDE_Deep2Bridge ConfigureGeneration/infer | already SetSamplerConfig / Generate (OBJ_RC=0) | SOURCE_WIRED |
 
-Cite matrix: WIN32IDE_CLOSURE_MATRIX_001 · FOUR_PANEL_COMPLETION_001 · CONPTY_STREAM_OWNER_* · AGENT_LIFECYCLE_TIP_001
+Remaining CPU pins (explicit opt-in only — not product defaults):
+- RAWRXD_FORCE_CPU_INFERENCE=1 / RAWR_FORCE_CPU=1 / RAWRXD_HOST_DECODE=1
+- RAWRXD_BRIDGE_CPU_ONLY=1 / RAWRXD_DISABLE_GPU=1
+- HAVE_DEEP2_ENGINE off compile lane (CPUInferenceEngine fallback)
+- agentic_bridge_headless rejects FORCE_CPU truth (NOT_PRODUCT_PATH)
+- mcp_hooks.asm FLAG_FORCE_CPU bit (flag enum only)
 
-## Landed this turn (source)
+## Build (this turn)
 
-1. `Win32IDE::ensureDebuggerUI()` — lazy create + position near output panel.
-2. RunDebug sidebar activation calls ensureDebuggerUI.
-3. IDC_DEBUG_START / IDC_DEBUG_STOP handled in SidebarContentProc (were CreateWindow-only).
-4. `startDebugging` / `attachDebugger` ensure UI before touching status HWND.
-5. `cmdDbgListBPs` + DebugWatch SHOW route through ensureDebuggerUI (startup pumps still defer).
-6. Core WM_COMMAND DBGWATCH early-bypass narrowed to !m_startupPumpsComplete.
-
-Files:
-- src/win32app/Win32IDE.h
-- src/win32app/Win32IDE_Debugger.cpp
-- src/win32app/Win32IDE_Sidebar.cpp
-- src/win32app/Win32IDE_Tier5Cosmetics.cpp
-- src/win32app/Win32IDE_NativeDebugPanel.cpp
-- src/win32app/Win32IDE_Core.cpp
+```
+OBJ_RC=0
+  main_win32.cpp.obj
+  Win32IDE_AgenticBridge.cpp.obj
+  Win32IDE_Deep2Bridge.cpp.obj
+  Win32IDE.cpp.obj  (prior IsAgenticMode unblock)
+LOG=evidence/IDE_DAILY_USE_001/logs/gpu_default_relink_002.txt
+EXE_RELINK=FAIL_CLOSED
+  WHY=build_win32ide_link001 ninja graph stale (missing Win32IDE_AiEdit.cpp)
+       + cmake --regenerate-during-build fails CMakeLists.txt:7538
+       + direct rsp link LNK1120 (45 unresolved; stale .rsp)
+EXE_SHA256(tip candidate c020 restore)=D9589D9A665E07F93E906A637B9D4ADB80D99BFD9604103A882E6AC79078BC08
+EXE_NOTE=Oct31 binary; does NOT absorb this-turn GPU source until successful relink
+```
 
 ## Explicit non-claims
 
 ```
 PROMOTE=0
 CERTIFIED=0
-TIP_748B_REBUILD=0
-DEBUGGER_HWND_E2E=NOT_RUN
-TERMINAL_PRODUCT_EXE_ABSORB=FAIL_CLOSED (candidate relink)
-SUNSHINE_IDE_RUNTIME=NOT_RUN
-AGENT_RUN_LOOP_G02_MET=0
-FOUR_PANEL_INTEGRATION=FAIL_CLOSED
+EXE_ABSORB_GPU_DEFAULT=0
+FOUR_PANEL_HWND_E2E=NOT_RUN
+NOT_RUN != PASS
 ```
 
-## Remaining blockers
-
-1. Candidate Win32IDE EXE relink (`-DRAWRXD_BUILD_WIN32IDE=ON`) + hash bind for debugger/terminal HWND E2E.
-2. ConPTY product RUNTIME on candidate after 4001 (NEW_PS_CHILD/CHROME_VIS).
-3. Output/Problems HWND product E2E (FOUR_PANEL tracks H/I).
-4. AgentRunLoop tip 503 / model ready gate (G02).
-5. Sunshine IDE/Headless route (CLI-only today).
-6. A08/A09 lifecycle+crash recovery tip receipts.
-7. PathB swarm FAIL (S-002) — out of daily-use P2 scope but blocks A14.
-
-COMPILE_THIS_TURN=NOT_RUN
-COMPILE_NOTE=candidate ninja obj rebuild hung on cmake --regenerate-during-build (same FOUR_PANEL CANDIDATE_RELINK FAIL_CLOSED class); source landed unstubbed; no invent PASS
-
-NEXT_GATE=CANDIDATE_RELINK_THEN_DEBUGGER_HWND_E2E
+NEXT_GATE=RECONFIGURE_WIN32IDE_THEN_RELINK_EXE
 PROMOTE=0

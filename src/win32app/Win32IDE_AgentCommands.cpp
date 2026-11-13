@@ -2553,6 +2553,9 @@ void Win32IDE::onPlanningDiagnostics()
 void Win32IDE::setAgenticMode(RawrXD::AgenticMode mode)
 {
     m_agenticMode = mode;
+    if (m_agenticBridge)
+        m_agenticBridge->SetAgenticMode(mode == RawrXD::AgenticMode::Agent ||
+                                        mode == RawrXD::AgenticMode::Debug);
     LOG_INFO("Agentic mode set to " + std::string(RawrXD::AgenticModeToString(mode)));
     if (m_hwndAgenticModeAsk)
         SendMessage(m_hwndAgenticModeAsk, BM_SETCHECK,
@@ -2568,6 +2571,11 @@ void Win32IDE::setAgenticMode(RawrXD::AgenticMode mode)
                     (mode == RawrXD::AgenticMode::Debug) ? BST_CHECKED : BST_UNCHECKED, 0);
     appendToOutput("Chat mode: " + std::string(RawrXD::AgenticModeToString(mode)) + "\n", "Output",
                    OutputSeverity::Info);
+}
+
+void Win32IDE::SetAgenticMode(bool enabled)
+{
+    setAgenticMode(enabled ? RawrXD::AgenticMode::Agent : RawrXD::AgenticMode::Ask);
 }
 
 void Win32IDE::onAgenticModeChanged(RawrXD::AgenticMode mode)

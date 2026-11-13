@@ -2711,9 +2711,25 @@ static int WinMainImpl(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow)
     startupTrace("message_loop_entered");
     OutputDebugStringA("[main_win32] ⭐ MESSAGE LOOP STARTING ⭐\n");
 
-    // P1-2 S2: pin CPU inference on the product path (UI-thread Vulkan aborts at INF_vulkan).
-    // Harness still validates AUTO/Vulkan off-UI separately.
-    _putenv_s("RAWRXD_FORCE_CPU_INFERENCE", "1");
+    // GPU-required product path (align HeadlessIDE / gguf_loader_masm*).
+    // CPU only via explicit opt-in: RAWRXD_HOST_DECODE=1 / RAWR_FORCE_CPU=1 /
+    // RAWRXD_FORCE_CPU_INFERENCE=1 (never product-defaulted here).
+    {
+        char forceCpu[8] = {};
+        const bool cpuOptIn =
+            GetEnvironmentVariableA("RAWRXD_FORCE_CPU_INFERENCE", forceCpu,
+                                    (DWORD)sizeof(forceCpu)) > 0 &&
+            (forceCpu[0] == '1' || forceCpu[0] == 't' || forceCpu[0] == 'T' ||
+             forceCpu[0] == 'y' || forceCpu[0] == 'Y');
+        if (!cpuOptIn)
+        {
+            _putenv_s("RAWRXD_ALLOW_GPU", "1");
+            _putenv_s("RAWR_FORCE_GPU", "1");
+            _putenv_s("RAWR_NO_CPU_FALLBACK", "1");
+            _putenv_s("RAWRXD_HOST_DECODE", "0");
+            _putenv_s("RAWRXD_FORCE_CPU_INFERENCE", "0");
+        }
+    }
 
     // Session restore must run on the live loop (never under WM_CREATE / post-create pumps).
     if (ide.pendingSessionRestore())
@@ -2749,7 +2765,7 @@ static int WinMainImpl(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow)
             {
                 PostMessageA(hwnd, WM_APP + 201, 0, 0);
                 startupTrace("P1_message_loop_flush_WM_APP_201");
-                fprintf(stderr, "[STARTUP] message_loop: posted WM_APP+201 flush (FORCE_CPU=1)\n");
+                fprintf(stderr, "[STARTUP] message_loop: posted WM_APP+201 flush (GPU_DEFAULT=1)\n");
                 fflush(stderr);
                 RawrXD::P1GgufCert::emit("DEFERRED_LOAD_FLUSHED", "INFO",
                                          "flush_after_message_loop_entered");
