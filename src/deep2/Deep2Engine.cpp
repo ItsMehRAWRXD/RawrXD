@@ -6233,12 +6233,62 @@ void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads,
     // ── RoPE energy invariant: rotation must preserve pair norm ──
     auto pair_energy = [](float a, float b) -> double { return double(a) * a + double(b) * b; };
 
+    // MiniMax-M2 (and Qwen/Gemma-class): llama.cpp rope_type = NEOX —
+    // pair i is elements (i, i+n_rot/2). Adjacent NORM pairing destroys quality
+    // even after partial n_rot is armed (ferrox/llama.cpp minimax-m2 graphs).
+    std::string archLower = k2ShardConfig_.architecture;
+    for (char& c : archLower)
+        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    const bool ropeNeox = archLower.find("minimax") != std::string::npos ||
+                          archLower.find("qwen") != std::string::npos ||
+                          archLower.find("gemma") != std::string::npos;
+    if (ropeNeox)
+    {
+        static bool s_neoxLogged = false;
+        if (!s_neoxLogged)
+        {
+            s_neoxLogged = true;
+            std::fprintf(stderr,
+                         "[Deep2Engine] ROPE_TYPE=NEOX arch=%s n_rot=%zu "
+                         "(pair i with i+n_rot/2)\n",
+                         k2ShardConfig_.architecture.c_str(), headDim);
+            std::fflush(stderr);
+        }
+    }
+
     // Partial-RoPE / MLA call sites pass nullptr for the unused side with
     // numHeads=0 or numKVHeads=0. Guard both pointers before any scan/rotate.
     if (q != nullptr)
     for (size_t h = 0; h < numHeads; ++h)
     {
         float* qh = q + h * headDim;
+        if (ropeNeox)
+        {
+            const size_t nOff = headDim / 2;
+            for (size_t i = 0; i < nOff; ++i)
+            {
+                // initRoPETables stores pair-i angle at [2i] (and [2i+1]).
+                const float cosA = cosTable[2 * i];
+                const float sinA = sinTable[2 * i];
+                const float q0 = qh[i];
+                const float q1 = qh[i + nOff];
+                const double before = pair_energy(q0, q1);
+                qh[i] = q0 * cosA - q1 * sinA;
+                qh[i + nOff] = q0 * sinA + q1 * cosA;
+                const double after = pair_energy(qh[i], qh[i + nOff]);
+                const double err =
+                    std::fabs(after - before) / std::max(1.0e-20, std::fabs(before));
+                if (err > 1.0e-5)
+                {
+                    fprintf(stderr,
+                            "[D2_ROPE_FAIL] NEOX Q pos=%zu head=%zu pair=%zu "
+                            "before=%.17g after=%.17g rel=%.9g\n",
+                            pos, h, i, before, after, err);
+                    std::abort();
+                }
+            }
+        }
+        else
         for (size_t i = 0; i < headDim; i += 2)
         {
             float cosA = cosTable[i];
@@ -6272,6 +6322,32 @@ void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads,
             fflush(stderr);
         }
 
+        if (ropeNeox)
+        {
+            const size_t nOff = headDim / 2;
+            for (size_t i = 0; i < nOff; ++i)
+            {
+                const float cosA = cosTable[2 * i];
+                const float sinA = sinTable[2 * i];
+                const float k0 = kh[i];
+                const float k1 = kh[i + nOff];
+                const double before = pair_energy(k0, k1);
+                kh[i] = k0 * cosA - k1 * sinA;
+                kh[i + nOff] = k0 * sinA + k1 * cosA;
+                const double after = pair_energy(kh[i], kh[i + nOff]);
+                const double err =
+                    std::fabs(after - before) / std::max(1.0e-20, std::fabs(before));
+                if (err > 1.0e-5)
+                {
+                    fprintf(stderr,
+                            "[D2_ROPE_FAIL] NEOX K pos=%zu head=%zu pair=%zu "
+                            "before=%.17g after=%.17g rel=%.9g\n",
+                            pos, h, i, before, after, err);
+                    std::abort();
+                }
+            }
+        }
+        else
         for (size_t i = 0; i < headDim; i += 2)
         {
             float cosA = cosTable[i];

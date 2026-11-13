@@ -3357,6 +3357,9 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND EXISTS ${CMAKE_SO
             ${CMAKE_SOURCE_DIR}/src/deep2/QuantKernelRegistry.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/MoEWeightsLoader.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/MoERouter.cpp
+            # Qwen3.5/3.6 GDN host recurrence (distinct from Nemotron computeSSM)
+            ${CMAKE_SOURCE_DIR}/src/deep2/QwenGdnHost.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/op_gdn.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/MoEWeightProxy.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/NUFusedPacker.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/RouterPrefetchTelemetry.cpp

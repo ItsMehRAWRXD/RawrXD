@@ -1,0 +1,71 @@
+# Qwen3.6-35B-A3B GDN Wire Fix (controlling rawr-reap)
+UTC=2026-11-13
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+CROSS_SHA_CREDIT=0
+NOT_RUN_NE_PASS=1
+ORIGINAL_GGUF_INTACT=1
+
+## Problem
+Controlling EXE C9A5564C routed qwen35moe hybrid blocks into Nemotron
+computeSSM (requires ssm_in/ssm_d). Qwen GDN tensors are
+ssm_alpha/beta/a/conv/dt/norm/out (+ attn_qkv/attn_gate); NO ssm_in/ssm_d.
+ABORT=[SSM_FATAL] layer=0 — PHYSICAL_REAP=NOT_RUN
+
+## Model
+GGUF=F:\OllamaModels\Qwen3.6-35B-A3B-GGUF\Qwen3.6-35B-A3B-Q4_K_M.gguf
+GGUF_SHA256=4AC6A06BCE551257267F49AD2226F8671A22519CCC1A4DDE9D5B433D1F2A410D
+ARCH=qwen35moe L=40 E=256 TOPK=8 HEAD=16 KV=2 KEY_LENGTH=256
+FULL_ATTN_INTERVAL=4 (10 full-attn + 30 GDN)
+
+## GDN_WIRE
+STATUS=WIRED_RUNTIME_REACHED_TOKEN_SURVIVED
+PATH=Deep2Engine::forwardLayer → IsQwenGdnLayer → computeGDN → RunQwenGdnRecurrence
+SOURCES=src/deep2/QwenGdnHost.{hpp,cpp} + op_gdn.cpp (CMake deep2_engine_lib)
+FAIL_CLOSED=incomplete GDN tensors → [GDN_FATAL] (no Nemotron identity fallback)
+KV_MAP=IsQwenGdnLayerBound excludes GDN from kvLayerMap (10 attn slots only)
+GATED_FULL_ATTN=attn_q 2*H*key_length [q|gate] + sigmoid pre-O; headDim=key_length
+MOE_NORM=post_attention_norm after residual when ffn_norm absent (Qwen hybrid)
+MOE_ROUTER=ReapPhysicalBank masks expert>=retained (-inf)
+
+## Controlling EXE (measured; no cross-credit vs C9A5564C)
+EXE=F:\rawrxd\build_reap\bin-msvc\rawr-reap.exe
+EXE_SHA256=211D84494E9AE99E58AEDD4E93F026C71D6EC6FD46EE8A65913107E47029C779
+EXE_SHA8=211D8449
+CROSS_SHA_CREDIT=0
+PRIOR_FAIL_SHA=C9A5564C
+BRANCH=evidence/reap-multi-model-20261113
+PR=https://github.com/ItsMehRAWRXD/RawrXD/pull/82
+
+## Full topology gate (--target 1GB/8 --max-tokens 1)
+FULL_TOPOLOGY_PASS=1
+TOKENS_GE_1=1
+generated_tokens=1
+generation_completed=true
+ACQUIRE_OK=320 ACQUIRE_DENIED=0
+TOPOLOGY=10 attention, 30 SSM/GDN
+RECEIPT=QWEN36_RUNTIME_RECEIPT.json
+NOTE=process exit -1073740791 observed after COMPLETED generation (shutdown); generation gate uses receipt
+
+## Physical REAP gate (--target 1GB/8 --max-tokens 2)
+PHYSICAL_REAP_PASS=1
+RETAINED_EXPERT_COUNT=8
+TOKENS_GE_2=1
+generated_tokens=2
+generation_completed=true
+ACQUIRE_OK=640 ACQUIRE_DENIED=0
+EXCLUDED_ACQUIRES=0 (measured as ACQUIRE_DENIED=0; no separate EXCLUDED counter in receipt)
+physical_reduce=true
+RECEIPT=QWEN36_PHYSICAL_RECEIPT.json
+
+## Untouched seals
+MiniMax B03=NOT_TOUCHED
+Kimi Gate2=NOT_TOUCHED
+PR81=NOT_TOUCHED
+
+## Gates summary
+GDN_WIRE=1
+FULL_TOPOLOGY=PASS
+PHYSICAL_REAP=PASS
+PROMOTE=0
