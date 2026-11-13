@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <sstream>
@@ -148,6 +149,18 @@ bool BuildPhysicalReducePlan(const RuntimePlan& runtime,
     if (retained < out.topK) retained = out.topK;
     if (retained > E) retained = E;
 
+    /* Explicit Tip15-bind / experiment override (still source-immutable). */
+    const char* forceRet = std::getenv("RAWRXD_REAP_RETAINED");
+    bool forced = false;
+    if (forceRet && forceRet[0]) {
+        char* end = nullptr;
+        unsigned long long v = std::strtoull(forceRet, &end, 10);
+        if (end != forceRet && v >= out.topK && v <= E) {
+            retained = static_cast<uint64_t>(v);
+            forced = true;
+        }
+    }
+
     out.retainedExpertsPerLayer = retained;
     out.retainedExpertSlices = retained * out.moeLayerCount;
     /* Honest scope: keep tensors + retained routed expert slices only. */
@@ -161,8 +174,11 @@ bool BuildPhysicalReducePlan(const RuntimePlan& runtime,
     out.enabled = true;
     out.physicalRepresentation = true;
     out.mode = "PHYSICAL_STREAM";
-    out.selectionPolicy = "BUDGET_UNIFORM_UNCERTIFIED";
-    out.reason = "ALL_SHARDS_ROUTED_EXPERT_INVENTORY_BUDGET_REDUCE";
+    out.selectionPolicy = forced ? "FORCED_RETAINED_OVERRIDE_UNCERTIFIED"
+                                 : "BUDGET_UNIFORM_UNCERTIFIED";
+    out.reason = forced
+        ? "RAWRXD_REAP_RETAINED_OVERRIDE_TIP15_BIND"
+        : "ALL_SHARDS_ROUTED_EXPERT_INVENTORY_BUDGET_REDUCE";
     (void)tensorCount;
     return true;
 }
