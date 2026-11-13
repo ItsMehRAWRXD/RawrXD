@@ -15,8 +15,11 @@
 #include "rawrxd_snap_detectors.hpp"
 #include "deep2_progress_watchdog.hpp"
 
-// Forward declaration
+// Forward declaration (class — never a namespace). Guard against duplicate fwd.
+#ifndef RAWRXD_WIN32IDE_CLASS_FWD
+#define RAWRXD_WIN32IDE_CLASS_FWD
 class Win32IDE;
+#endif
 
 // Agentic Loop Bridge - connects IDE to deep2_agentic_loop.exe
 class AgenticLoopBridge {
