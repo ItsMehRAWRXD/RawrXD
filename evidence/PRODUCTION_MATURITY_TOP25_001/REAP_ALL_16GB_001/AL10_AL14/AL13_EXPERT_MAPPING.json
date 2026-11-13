@@ -1,0 +1,500 @@
+{
+  "gate": "AL13",
+  "PROMOTE": 0,
+  "CERTIFIED": 0,
+  "full_path": "F:\\ollamamodels\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf",
+  "phys_path": "F:\\ollamamodels\\MiniMax-M2.7-REAP16-CALIB-ROUTE27\\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf",
+  "selection": "G:\\~dev\\rawrxd\\evidence\\REAP16_BATCH_001\\CALIBRATED_001\\selection_calib_top27.json",
+  "full_expert_meta": {
+    "key": "minimax-m2.expert_count",
+    "value": 256,
+    "fields": {
+      "minimax-m2.expert_count": 256,
+      "minimax-m2.expert_used_count": 8,
+      "minimax-m2.expert_gating_func": 2,
+      "minimax-m2.expert_feed_forward_length": 1536
+    }
+  },
+  "phys_expert_meta": {
+    "key": "minimax-m2.expert_count",
+    "value": 27,
+    "fields": {
+      "minimax-m2.expert_count": 27,
+      "minimax-m2.expert_used_count": 8,
+      "minimax-m2.expert_gating_func": 2,
+      "minimax-m2.expert_feed_forward_length": 1536
+    }
+  },
+  "families_present_L0": {
+    "ffn_gate_exps.weight": {
+      "full": true,
+      "phys": true
+    },
+    "ffn_up_exps.weight": {
+      "full": true,
+      "phys": true
+    },
+    "ffn_down_exps.weight": {
+      "full": true,
+      "phys": true
+    },
+    "ffn_gate_inp.weight": {
+      "full": true,
+      "phys": true
+    },
+    "exp_probs_b.bias": {
+      "full": true,
+      "phys": true
+    },
+    "ffn_shexp.weight": {
+      "full": false,
+      "phys": false
+    },
+    "ffn_gate_shexp.weight": {
+      "full": false,
+      "phys": false
+    },
+    "ffn_up_shexp.weight": {
+      "full": false,
+      "phys": false
+    },
+    "ffn_down_shexp.weight": {
+      "full": false,
+      "phys": false
+    }
+  },
+  "tensor_family_counts": {
+    "full": {
+      "gate_exps": 22,
+      "up_exps": 21,
+      "down_exps": 22,
+      "gate_inp": 22,
+      "bias": 22
+    },
+    "phys": {
+      "gate_exps": 22,
+      "up_exps": 21,
+      "down_exps": 22,
+      "gate_inp": 22,
+      "bias": 22
+    }
+  },
+  "layers": [
+    {
+      "layer": 0,
+      "selected_sorted": [
+        0,
+        13,
+        15,
+        17,
+        23,
+        28,
+        32,
+        39,
+        46,
+        61,
+        63,
+        86,
+        88,
+        94,
+        139,
+        140,
+        152,
+        159,
+        168,
+        193,
+        194,
+        196,
+        197,
+        206,
+        216,
+        239,
+        249
+      ],
+      "families": {
+        "ffn_gate_exps.weight": {
+          "status": "PASS",
+          "full_shape": [
+            3072,
+            1536,
+            256
+          ],
+          "phys_shape": [
+            3072,
+            1536,
+            27
+          ],
+          "full_E": 256,
+          "phys_E": 27,
+          "cmp": {
+            "ok": true,
+            "checked": 27,
+            "bad_head": [],
+            "stride": 2654208
+          }
+        },
+        "ffn_up_exps.weight": {
+          "status": "PASS",
+          "full_shape": [
+            3072,
+            1536,
+            256
+          ],
+          "phys_shape": [
+            3072,
+            1536,
+            27
+          ],
+          "full_E": 256,
+          "phys_E": 27,
+          "cmp": {
+            "ok": true,
+            "checked": 27,
+            "bad_head": [],
+            "stride": 2654208
+          }
+        },
+        "ffn_down_exps.weight": {
+          "status": "PASS",
+          "full_shape": [
+            1536,
+            3072,
+            256
+          ],
+          "phys_shape": [
+            1536,
+            3072,
+            27
+          ],
+          "full_E": 256,
+          "phys_E": 27,
+          "cmp": {
+            "ok": true,
+            "checked": 27,
+            "bad_head": [],
+            "stride": 3870720
+          }
+        },
+        "ffn_gate_inp.weight": {
+          "status": "FAIL",
+          "full_shape": [
+            3072,
+            256
+          ],
+          "phys_shape": [
+            3072,
+            27
+          ],
+          "checked": 27,
+          "bad_head": [
+            {
+              "slot": 0,
+              "expert": 0
+            },
+            {
+              "slot": 1,
+              "expert": 13
+            },
+            {
+              "slot": 2,
+              "expert": 15
+            },
+            {
+              "slot": 3,
+              "expert": 17
+            },
+            {
+              "slot": 4,
+              "expert": 23
+            }
+          ]
+        },
+        "exp_probs_b.bias": {
+          "status": "PASS",
+          "full_len": 256,
+          "phys_len": 27,
+          "checked": 27,
+          "bad_head": []
+        }
+      }
+    },
+    {
+      "layer": 1,
+      "selected_sorted": [
+        3,
+        7,
+        15,
+        22,
+        25,
+        29,
+        32,
+        35,
+        52,
+        55,
+        81,
+        88,
+        92,
+        93,
+        101,
+        138,
+        140,
+        145,
+        154,
+        212,
+        216,
+        221,
+        226,
+        233,
+        235,
+        248,
+        251
+      ],
+      "families": {
+        "ffn_gate_exps.weight": {
+          "status": "PASS",
+          "full_shape": [
+            3072,
+            1536,
+            256
+          ],
+          "phys_shape": [
+            3072,
+            1536,
+            27
+          ],
+          "full_E": 256,
+          "phys_E": 27,
+          "cmp": {
+            "ok": true,
+            "checked": 27,
+            "bad_head": [],
+            "stride": 2654208
+          }
+        },
+        "ffn_up_exps.weight": {
+          "status": "PASS",
+          "full_shape": [
+            3072,
+            1536,
+            256
+          ],
+          "phys_shape": [
+            3072,
+            1536,
+            27
+          ],
+          "full_E": 256,
+          "phys_E": 27,
+          "cmp": {
+            "ok": true,
+            "checked": 27,
+            "bad_head": [],
+            "stride": 2654208
+          }
+        },
+        "ffn_down_exps.weight": {
+          "status": "PASS",
+          "full_shape": [
+            1536,
+            3072,
+            256
+          ],
+          "phys_shape": [
+            1536,
+            3072,
+            27
+          ],
+          "full_E": 256,
+          "phys_E": 27,
+          "cmp": {
+            "ok": true,
+            "checked": 27,
+            "bad_head": [],
+            "stride": 3870720
+          }
+        },
+        "ffn_gate_inp.weight": {
+          "status": "FAIL",
+          "full_shape": [
+            3072,
+            256
+          ],
+          "phys_shape": [
+            3072,
+            27
+          ],
+          "checked": 27,
+          "bad_head": [
+            {
+              "slot": 0,
+              "expert": 3
+            },
+            {
+              "slot": 1,
+              "expert": 7
+            },
+            {
+              "slot": 2,
+              "expert": 15
+            },
+            {
+              "slot": 3,
+              "expert": 22
+            },
+            {
+              "slot": 4,
+              "expert": 25
+            }
+          ]
+        },
+        "exp_probs_b.bias": {
+          "status": "PASS",
+          "full_len": 256,
+          "phys_len": 27,
+          "checked": 27,
+          "bad_head": []
+        }
+      }
+    },
+    {
+      "layer": 17,
+      "selected_sorted": [
+        7,
+        9,
+        25,
+        30,
+        39,
+        51,
+        55,
+        58,
+        59,
+        69,
+        71,
+        73,
+        81,
+        82,
+        88,
+        96,
+        97,
+        135,
+        164,
+        167,
+        173,
+        177,
+        205,
+        213,
+        223,
+        234,
+        235
+      ],
+      "families": {
+        "ffn_gate_exps.weight": {
+          "status": "PASS",
+          "full_shape": [
+            3072,
+            1536,
+            256
+          ],
+          "phys_shape": [
+            3072,
+            1536,
+            27
+          ],
+          "full_E": 256,
+          "phys_E": 27,
+          "cmp": {
+            "ok": true,
+            "checked": 27,
+            "bad_head": [],
+            "stride": 2654208
+          }
+        },
+        "ffn_up_exps.weight": {
+          "status": "PASS",
+          "full_shape": [
+            3072,
+            1536,
+            256
+          ],
+          "phys_shape": [
+            3072,
+            1536,
+            27
+          ],
+          "full_E": 256,
+          "phys_E": 27,
+          "cmp": {
+            "ok": true,
+            "checked": 27,
+            "bad_head": [],
+            "stride": 2654208
+          }
+        },
+        "ffn_down_exps.weight": {
+          "status": "PASS",
+          "full_shape": [
+            1536,
+            3072,
+            256
+          ],
+          "phys_shape": [
+            1536,
+            3072,
+            27
+          ],
+          "full_E": 256,
+          "phys_E": 27,
+          "cmp": {
+            "ok": true,
+            "checked": 27,
+            "bad_head": [],
+            "stride": 2654208
+          }
+        },
+        "ffn_gate_inp.weight": {
+          "status": "FAIL",
+          "full_shape": [
+            3072,
+            256
+          ],
+          "phys_shape": [
+            3072,
+            27
+          ],
+          "checked": 27,
+          "bad_head": [
+            {
+              "slot": 0,
+              "expert": 7
+            },
+            {
+              "slot": 1,
+              "expert": 9
+            },
+            {
+              "slot": 2,
+              "expert": 25
+            },
+            {
+              "slot": 3,
+              "expert": 30
+            },
+            {
+              "slot": 4,
+              "expert": 39
+            }
+          ]
+        },
+        "exp_probs_b.bias": {
+          "status": "PASS",
+          "full_len": 256,
+          "phys_len": 27,
+          "checked": 27,
+          "bad_head": []
+        }
+      }
+    }
+  ],
+  "note": "expert_count metadata on FULL expected 256; PHYS tensors compacted to E=27 per layer",
+  "overall": "FAIL"
+}

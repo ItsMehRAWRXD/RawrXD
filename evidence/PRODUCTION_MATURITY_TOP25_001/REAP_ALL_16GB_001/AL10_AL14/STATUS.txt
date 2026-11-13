@@ -46,3 +46,9 @@ CERTIFIED=0
 TIP_CLIMB=HOLD
 NOT_RUN!=PASS
 ```
+
+## AL13 expert mapping (static GGUF)
+
+OVERALL=FAIL — expert FFN families + bias PASS on L0/L1/L17; `ffn_gate_inp.weight` FAIL (router) on those layers.
+full meta expert_count=256 · phys meta expert_count=27
+Evidence: AL13_EXPERT_MAPPING.json
