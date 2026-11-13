@@ -1,0 +1,40 @@
+AL09_COMPARE EXE tip PROMOTE=0
+M17_slots 97->16 164->18
+--- tok=1 ---
+ L17_INPUT_FNV full=a2e65d86b4e56d16 phys=a2e65d86b4e56d16 match=True
+ PHYS_POST_SLOTS 8,5,3,26,6,22,9,24
+ PHYS_POST_MAP   [59, 51, 30, 235, 55, 205, 69, 223]
+ FULL_POST_IDS   59,51,30,235,55,205,69,223
+ ORDERED_ID_MATCH True
+ E97/slot16: full_raw=0.17053579 phys_raw=0.17053579 draw=0 full_ch=2.2135529 phys_ch=2.2135529 dch=0
+ E164/slot18: full_raw=0.035696909 phys_raw=0.035696909 draw=0 full_ch=2.1889458 phys_ch=2.1889458 dch=0
+--- tok=2 ---
+ L17_INPUT_FNV full=b664a72158a88511 phys=b664a72158a88511 match=True
+ PHYS_POST_SLOTS 23,24,5,1,11,18,6,3
+ PHYS_POST_MAP   [213, 223, 51, 9, 73, 164, 55, 30]
+ FULL_POST_IDS   213,223,51,9,73,164,55,30
+ ORDERED_ID_MATCH True
+ E97/slot16: full_raw=-4.0949416 phys_raw=-4.0949416 draw=0 full_ch=1.6874058 phys_ch=1.6874058 dch=0
+ E164/slot18: full_raw=-1.8617462 phys_raw=-1.8617462 draw=0 full_ch=1.8145221 phys_ch=1.8145221 dch=0
+--- tok=3 ---
+ L17_INPUT_FNV full=a7acb07623c48eb4 phys=a7acb07623c48eb4 match=True
+ PHYS_POST_SLOTS 13,1,20,16,5,22,4,18
+ PHYS_POST_MAP   [82, 9, 173, 97, 51, 205, 39, 164]
+ FULL_POST_IDS   82,9,173,97,51,205,39,164
+ ORDERED_ID_MATCH True
+ E97/slot16: full_raw=-1.8466269 phys_raw=-1.8466269 draw=0 full_ch=1.8072915 phys_ch=1.8072915 dch=0
+ E164/slot18: full_raw=-2.4060643 phys_raw=-2.4060643 draw=0 full_ch=1.7627339 phys_ch=1.7627339 dch=0
+--- tok=4 ---
+ L17_INPUT_FNV full=bfa6ead1de74a48a phys=594eea008270b879 match=False
+ PHYS_POST_SLOTS 11,20,22,13,23,4,1,16
+ PHYS_POST_MAP   [73, 173, 205, 82, 213, 39, 9, 97]
+ FULL_POST_IDS   73,173,205,82,213,39,9,164
+ ORDERED_ID_MATCH False
+ E97/slot16: full_raw=-1.6750509 phys_raw=-1.658448 draw=-0.0166 full_ch=1.828774 phys_ch=1.8309925 dch=-0.00222
+ E164/slot18: full_raw=-1.7393571 phys_raw=-1.7342972 draw=-0.00506 full_ch=1.8294171 phys_ch=1.8300612 dch=-0.000644
+--- tok=5 ---
+ PHYS_ONLY c934c325575a7959 post=20,11,13,21,6,22,2,9
+--- tok=6 ---
+ PHYS_ONLY e0f170ddd15e5702 post=11,20,5,6,1,24,21,22
+--- tok=7 ---
+ PHYS_ONLY 97981e525ea89927 post=12,5,24,6,20,8,9,23

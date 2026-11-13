@@ -1,0 +1,173 @@
+﻿AL10_TRACE_INVENTORY
+DATE=2026-11-13T14:15:01.5992827-05:00
+PROMOTE=0 CERTIFIED=0 CROSS_SHA_CREDIT=0
+EV=G:\~dev\rawrxd\evidence\REAP16_BATCH_001\CALIBRATED_001\AL09
+ERR_FILE_COUNT=10
+=== al09_full.err.txt ===
+LAYER_OUT count=0
+LAYER_EXIT count=237
+LAST_LAYER_EXIT: [LAYER_EXIT] ly=50
+MOE_IN count=8
+LAST_MOE_IN: AL09_MOE_IN layer=17 tok=4 n=3072 fnv=bfa6ead1de74a48a x0=0.269618005 x1=0.0111848721 x2=0.100593179 PROMOTE=0
+KV_PROBE count=0
+ARGMAX count=0
+LOGITS count=0
+CLEAN_EXIT count=0
+ACQUIRE count=8
+LAST_ACQUIRE: B03_MOE_ACQUIRE_OK layer=0 expert=94 bytes=9179136 q=12 g=12 u=12 d=14 expertDim=1536
+exception count=0
+nan count=5
+LAST_nan: [B3_FIRST_BAD] phase=LAYER0_POST_FFN pos=0 l2=1.270607293e+03 min=-1.264731079e+03 max=8.814425659e+01 nan=0 inf=0 finite=3072
+inf count=2
+LAST_inf: [B3_FIRST_BAD] phase=LAYER0_POST_FFN pos=0 l2=1.270607293e+03 min=-1.264731079e+03 max=8.814425659e+01 nan=0 inf=0 finite=3072
+STAGE_DIGEST count=0
+=== al09_full_cmd.err.txt ===
+LAYER_OUT count=130
+LAST_LAYER_OUT: AL09_LAYER_OUT layer=5 tok=3 n=3072 fnv=f8e08dc822a66117 x0=0.0237076376 x1=-0.00841232948 x2=-0.107761905 PROMOTE=0
+LAYER_EXIT count=130
+LAST_LAYER_EXIT: [LAYER_EXIT] ly=5
+MOE_IN count=4
+LAST_MOE_IN: AL09_MOE_IN layer=17 tok=2 n=3072 fnv=b664a72158a88511 x0=1.37741423 x1=0.131454855 x2=-0.27277568 PROMOTE=0
+KV_PROBE count=0
+ARGMAX count=0
+LOGITS count=0
+CLEAN_EXIT count=0
+ACQUIRE count=8
+LAST_ACQUIRE: B03_MOE_ACQUIRE_OK layer=0 expert=94 bytes=9179136 q=12 g=12 u=12 d=14 expertDim=1536
+exception count=0
+nan count=4
+LAST_nan: MODEL_PROVENANCE_END=1
+inf count=1
+LAST_inf: FFN_INTER_INFERRED ok=1 why=META_EXISTING inter=1536 old_meta=1536 old_model=1536 old_config=1536
+STAGE_DIGEST count=0
+=== al09_full_layer.err.txt ===
+LAYER_OUT count=24
+LAST_LAYER_OUT: AL09_LAYER_OUT layer=23 tok=1 n=3072 fnv=7949fda9f1aea73a x0=-0.0502982251 x1=-0.575699925 x2=0.293350399 PROMOTE=0
+LAYER_EXIT count=24
+LAST_LAYER_EXIT: [LAYER_EXIT] ly=23
+MOE_IN count=2
+LAST_MOE_IN: AL09_MOE_IN layer=17 tok=1 n=3072 fnv=a2e65d86b4e56d16 x0=-0.000899051025 x1=-0.0281257275 x2=-0.00787535403 PROMOTE=0
+KV_PROBE count=0
+ARGMAX count=0
+LOGITS count=0
+CLEAN_EXIT count=0
+ACQUIRE count=8
+LAST_ACQUIRE: B03_MOE_ACQUIRE_OK layer=0 expert=94 bytes=9179136 q=12 g=12 u=12 d=14 expertDim=1536
+exception count=0
+nan count=4
+LAST_nan: MODEL_PROVENANCE_END=1
+inf count=1
+LAST_inf: FFN_INTER_INFERRED ok=1 why=META_EXISTING inter=1536 old_meta=1536 old_model=1536 old_config=1536
+STAGE_DIGEST count=0
+=== al09_phys.err.txt ===
+LAYER_OUT count=0
+LAYER_EXIT count=0
+MOE_IN count=0
+KV_PROBE count=0
+ARGMAX count=0
+LOGITS count=0
+CLEAN_EXIT count=0
+ACQUIRE count=0
+exception count=0
+nan count=0
+inf count=0
+STAGE_DIGEST count=0
+=== al09_phys2.err.txt ===
+LAYER_OUT count=0
+LAYER_EXIT count=426
+LAST_LAYER_EXIT: [LAYER_EXIT] ly=53
+MOE_IN count=14
+LAST_MOE_IN: AL09_MOE_IN layer=17 tok=7 n=3072 fnv=97981e525ea89927 x0=-0.167104438 x1=0.051973287 x2=0.164537668 PROMOTE=0
+KV_PROBE count=0
+ARGMAX count=0
+LOGITS count=0
+CLEAN_EXIT count=0
+ACQUIRE count=8
+LAST_ACQUIRE: B03_MOE_ACQUIRE_OK layer=0 expert=13 bytes=9179136 q=12 g=12 u=12 d=14 expertDim=1536
+exception count=0
+nan count=5
+LAST_nan: [B3_FIRST_BAD] phase=LAYER0_POST_FFN pos=0 l2=1.270607293e+03 min=-1.264731079e+03 max=8.814425659e+01 nan=0 inf=0 finite=3072
+inf count=4
+LAST_inf: [B3_FIRST_BAD] phase=LAYER0_POST_FFN pos=0 l2=1.270607293e+03 min=-1.264731079e+03 max=8.814425659e+01 nan=0 inf=0 finite=3072
+STAGE_DIGEST count=462
+LAST_STAGE_DIGEST: [STAGE_DIGEST] side=deep2 key=LAYER17_OUT pos=6 n=3072 l2=4.984496526e+01 max_abs=4.827029419e+01 min=-2.865957022e+00 max=4.827029419e+01 sum=4.955740536e+01 fnv=b04b24fa41a13ca5 nf=0
+=== al09_phys_layer.err.txt ===
+LAYER_OUT count=252
+LAST_LAYER_OUT: AL09_LAYER_OUT layer=3 tok=5 n=3072 fnv=91361fad33cb4a0f x0=0.0184280183 x1=0.0383496173 x2=-0.00776489265 PROMOTE=0
+LAYER_EXIT count=252
+LAST_LAYER_EXIT: [LAYER_EXIT] ly=3
+MOE_IN count=8
+LAST_MOE_IN: AL09_MOE_IN layer=17 tok=4 n=3072 fnv=594eea008270b879 x0=0.267903864 x1=0.00712670758 x2=0.100841843 PROMOTE=0
+KV_PROBE count=0
+ARGMAX count=0
+LOGITS count=0
+CLEAN_EXIT count=0
+ACQUIRE count=8
+LAST_ACQUIRE: B03_MOE_ACQUIRE_OK layer=0 expert=13 bytes=9179136 q=12 g=12 u=12 d=14 expertDim=1536
+exception count=0
+nan count=4
+LAST_nan: MODEL_PROVENANCE_END=1
+inf count=3
+LAST_inf: [Deep2Engine] Vulkan open failed ? GPU inference required (RAWRXD_HOST_DECODE=1 for CPU opt-in only)
+STAGE_DIGEST count=0
+=== bound_full.err.txt ===
+LAYER_OUT count=0
+LAYER_EXIT count=46
+LAST_LAYER_EXIT: [LAYER_EXIT] ly=45
+MOE_IN count=2
+LAST_MOE_IN: AL09_MOE_IN layer=17 tok=1 n=3072 fnv=a2e65d86b4e56d16 x0=-0.000899051025 x1=-0.0281257275 x2=-0.00787535403 PROMOTE=0
+KV_PROBE count=0
+ARGMAX count=0
+LOGITS count=0
+CLEAN_EXIT count=0
+ACQUIRE count=8
+LAST_ACQUIRE: B03_MOE_ACQUIRE_OK layer=0 expert=94 bytes=9179136 q=12 g=12 u=12 d=14 expertDim=1536
+exception count=0
+nan count=4
+LAST_nan: MODEL_PROVENANCE_END=1
+inf count=1
+LAST_inf: FFN_INTER_INFERRED ok=1 why=META_EXISTING inter=1536 old_meta=1536 old_model=1536 old_config=1536
+STAGE_DIGEST count=0
+=== bound_phys.err.txt ===
+LAYER_OUT count=0
+LAYER_EXIT count=0
+MOE_IN count=0
+KV_PROBE count=0
+ARGMAX count=0
+LOGITS count=0
+CLEAN_EXIT count=0
+ACQUIRE count=0
+exception count=0
+nan count=0
+inf count=0
+STAGE_DIGEST count=0
+=== full_digest.err.txt ===
+LAYER_OUT count=0
+LAYER_EXIT count=110
+LAST_LAYER_EXIT: [LAYER_EXIT] ly=47
+MOE_IN count=0
+KV_PROBE count=0
+ARGMAX count=0
+LOGITS count=0
+CLEAN_EXIT count=0
+ACQUIRE count=8
+LAST_ACQUIRE: B03_MOE_ACQUIRE_OK layer=0 expert=94 bytes=9179136 q=12 g=12 u=12 d=14 expertDim=1536
+exception count=0
+nan count=5
+LAST_nan: [B3_FIRST_BAD] phase=LAYER0_POST_FFN pos=0 l2=1.270607293e+03 min=-1.264731079e+03 max=8.814425659e+01 nan=0 inf=0 finite=3072
+inf count=2
+LAST_inf: [B3_FIRST_BAD] phase=LAYER0_POST_FFN pos=0 l2=1.270607293e+03 min=-1.264731079e+03 max=8.814425659e+01 nan=0 inf=0 finite=3072
+STAGE_DIGEST count=0
+=== phys_digest.err.txt ===
+LAYER_OUT count=0
+LAYER_EXIT count=0
+MOE_IN count=0
+KV_PROBE count=0
+ARGMAX count=0
+LOGITS count=0
+CLEAN_EXIT count=0
+ACQUIRE count=0
+exception count=0
+nan count=0
+inf count=0
+STAGE_DIGEST count=0

@@ -1,0 +1,58 @@
+AL09_FIRST_DIVERGENT_OP — status
+DATE=2026-11-13
+EXE_SHA_AL09_ROUTER=0C531CA21E5C590EF645553E3EB0E09E2F5AA34C8B1D88847EDCDEECBF41B7CA
+EXE_SHA_LAYER_SWEEP=6CB6DDA1D6B2F44AA7BD617B2C350A9C8D1D09456CA49F34EC16DEDF7341C633
+PROMOTE=0 CERTIFIED=0
+
+## Decision tree result (measured)
+
+Question: Does L17_INPUT match at the route-break token?
+
+Tokens 1–3 (AL09 tok index; zip token 0–2):
+  L16 MOE_IN / L17 ATTN_* / FFN_* / LAYER17_OUT / ROUTER raw&choice for E97/E164:
+  ALL FNV and FP values BIT-EXACT between FULL_ALLOWLIST and PHYS_CALIB_ROUTE27.
+
+Token 4 (zip token 3 — the 8th-expert flip):
+  L17_INPUT_FNV full=bfa6ead1de74a48a phys=594eea008270b879  MATCH=False
+  L16_MOE_IN already MATCH=False before L17.
+  Therefore L17 router flip is a SYMPTOM, not the first divergent op.
+
+## 8th-expert near-tie (FULL tok=4)
+  E97  choice=1.828774
+  E164 choice=1.829417
+  margin(97-164)= -0.000643
+  FULL TOPK_POST = 73,173,205,82,213,39,9,164
+  PHYS TOPK_MAP  = 73,173,205,82,213,39,9,97
+  → Identical 7/8; boundary expert is FP-sensitive once hidden state drifts.
+
+## Remapping / router local op at matched tokens
+  When L17_INPUT matches, raw logits for E97/E164 are draw=0 vs phys slots 16/18.
+  AL04 remapping + local router math: PASS on equal inputs.
+
+## First divergent locus (bounded)
+  LAST_EXACT = LAYER17_OUT @ tok=3 (bit-exact)
+  FIRST_OBSERVED_MISMATCH = L16_MOE_IN @ tok=4
+  OPEN_INTERVAL = after L17_OUT tok=3 through before L16 MoE tok=4
+                 = layers 18..61 of tok=3 and/or layers 0..15 of tok=4
+  PHYS layer sweep: 252 LAYER_OUT lines (tok1–4 complete)
+  FULL layer sweep: repeatedly aborted mid-run (redirect/memory); still OPEN for
+  pinpointing the exact layer inside the interval.
+
+## Artifacts
+  AL09_COMPARE.txt — per-tok L17 FNV + E97/E164 margins
+  al09_phys2.err.txt / al09_full.err.txt — router probes
+  al09_phys_layer.err.txt — full-layer FNV (phys)
+
+## Disposition
+AL09_FIRST_DIVERGENT_OP=BOUNDED_OPEN_INTERVAL
+L17_IS_SYMPTOM=1
+ROUTER_ON_EQUAL_INPUT=PASS
+EXPERT_ID_PARITY=PASS_TOK_1_3 / FAIL_TOK_4_DOWNSTREAM
+SEMANTIC_QUALITY=DEGRADED_OPEN
+PROMOTE=0
+CERTIFIED=0
+
+## Runtime blocker (this session)
+Host commit ~127GB with ~28�36GB free; full MiniMax allowlist runs abort mid-prefill (EXIT=-1).
+Phys CALIB-ROUTE27 layer sweep previously completed (252 LAYER_OUT) under better free RAM.
+Pinpoint inside OPEN_INTERVAL deferred until stable free RAM for a full+phys LAYER_IN/OUT tok3�4 pair.
