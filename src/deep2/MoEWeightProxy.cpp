@@ -45,13 +45,16 @@ MoEWeightHandle MoEWeightProxy::Acquire(int layer, int expert) {
     stats_.totalRequests.fetch_add(1, std::memory_order_relaxed);
 
     /* Physical REAP: pruned experts are not part of the resident model. */
-    if (expert < 0 || !ReapPhysicalExpertAllowed(static_cast<uint32_t>(expert))) {
+    if (expert < 0 ||
+        !ReapPhysicalExpertAllowed(static_cast<uint32_t>(expert))) {
+        ReapPhysicalNoteAcquire(expert < 0 ? 0u : (uint32_t)expert, false);
         MoEWeightHandle denied{};
         denied.layer = layer;
         denied.expertId = expert;
         denied.valid = false;
         return denied;
     }
+    ReapPhysicalNoteAcquire(static_cast<uint32_t>(expert), true);
 
     MoEWeightHandle h = AcquireInternal(layer, expert);
 

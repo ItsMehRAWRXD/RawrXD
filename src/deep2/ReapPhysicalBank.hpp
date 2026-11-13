@@ -27,4 +27,14 @@ uint32_t ReapPhysicalRetainedPerLayer();
 bool ReapPhysicalExpertAllowed(uint32_t expertId);
 const ReapPhysicalBankState& ReapPhysicalBankSnapshot();
 
+/* Streaming-correctness counters (Gate3). */
+void ReapPhysicalNoteRoute(uint32_t expertId, bool allowed);
+void ReapPhysicalNoteAcquire(uint32_t expertId, bool allowed);
+void ReapPhysicalNoteTopK(uint32_t count, uint32_t expected);
+uint64_t ReapPhysicalRouteOk();
+uint64_t ReapPhysicalRouteDenied();
+uint64_t ReapPhysicalAcquireOk();
+uint64_t ReapPhysicalAcquireDenied();
+uint64_t ReapPhysicalTopKMismatch();
+
 } // namespace Deep2

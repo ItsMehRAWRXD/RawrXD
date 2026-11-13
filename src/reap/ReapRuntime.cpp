@@ -4,6 +4,7 @@
 #include "reap/ReapPhysicalReduce.hpp"
 #include "Deep2Engine.h"
 #include "deep2/RawrModelAlias.hpp"
+#include "deep2/ReapPhysicalBank.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -190,6 +191,18 @@ RuntimeResult RunRuntime(const RuntimeRequest& request) {
             << ",\"load_ms\":" << elapsedLoad
             << ",\"output\":" << quote(generated)
             << ",\"physical\":" << PhysicalReduceReceiptJson(physical)
+            << ",\"stream_correctness\":{"
+            << "\"ROUTE_OK\":" << Deep2::ReapPhysicalRouteOk()
+            << ",\"ROUTE_DENIED\":" << Deep2::ReapPhysicalRouteDenied()
+            << ",\"ACQUIRE_OK\":" << Deep2::ReapPhysicalAcquireOk()
+            << ",\"ACQUIRE_DENIED\":" << Deep2::ReapPhysicalAcquireDenied()
+            << ",\"TOPK_MISMATCH\":" << Deep2::ReapPhysicalTopKMismatch()
+            << ",\"PASS\":"
+            << ((Deep2::ReapPhysicalRouteDenied() == 0 &&
+                 Deep2::ReapPhysicalTopKMismatch() == 0)
+                    ? "true"
+                    : "false")
+            << "}"
             << ",\"writer_invoked\":" << (physical.writerInvoked ? "true" : "false")
             << ",\"source_immutable\":true}\n";
     ClearPhysicalReducePlan();

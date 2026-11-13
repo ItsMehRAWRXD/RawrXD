@@ -8,14 +8,53 @@
 #include <cstring>
 #include <filesystem>
 #include <sstream>
+#include <vector>
 
 namespace RawrXD::Reap {
 namespace {
 
-bool isExpertTensor(const std::string& name) {
-    return name.find("_exps.") != std::string::npos ||
-           name.find("ffn_gate_inp") != std::string::npos ||
-           name.find("exp_probs_b") != std::string::npos;
+namespace fs = std::filesystem;
+
+enum class TensorClass : uint8_t {
+    RoutedExps,
+    Keep
+};
+
+TensorClass classifyTensor(const std::string& name) {
+    if (name.find("ffn_gate_exps") != std::string::npos ||
+        name.find("ffn_up_exps") != std::string::npos ||
+        name.find("ffn_down_exps") != std::string::npos)
+        return TensorClass::RoutedExps;
+    return TensorClass::Keep;
+}
+
+bool listShardPaths(const fs::path& first, std::vector<fs::path>& out,
+                    std::string& error) {
+    out.clear();
+    std::error_code ec;
+    if (!fs::is_regular_file(first, ec)) {
+        error = "PHYSICAL_FIRST_SHARD_MISSING";
+        return false;
+    }
+    const std::string name = first.filename().string();
+    const auto marker = name.find("-00001-of-");
+    if (marker == std::string::npos) {
+        out.push_back(first);
+        return true;
+    }
+    const std::string prefix = name.substr(0, marker);
+    for (auto& ent : fs::directory_iterator(first.parent_path(), ec)) {
+        if (ec || !ent.is_regular_file(ec)) continue;
+        const std::string fn = ent.path().filename().string();
+        if (fn.rfind(prefix, 0) == 0 && ent.path().extension() == ".gguf")
+            out.push_back(ent.path());
+    }
+    std::sort(out.begin(), out.end());
+    if (out.empty()) {
+        error = "PHYSICAL_NO_SHARDS_FOUND";
+        return false;
+    }
+    return true;
 }
 
 } // namespace
@@ -28,31 +67,6 @@ bool BuildPhysicalReducePlan(const RuntimePlan& runtime,
     out.sourceImmutable = true;
     out.topK = runtime.requested.expertCount;
     out.originalExpertCount = runtime.actual.expertCount;
-    out.originalModelBytes = runtime.actual.tensorBytes;
-    /* Prefer on-disk shard sum for ORIGINAL_MODEL_BYTES (full Kimi ≈578GiB). */
-    {
-        namespace fs = std::filesystem;
-        std::error_code ec;
-        const fs::path first(runtime.actual.model);
-        uint64_t disk = 0;
-        if (fs::is_regular_file(first, ec)) {
-            const std::string name = first.filename().string();
-            const auto marker = name.find("-00001-of-");
-            if (marker != std::string::npos) {
-                const std::string prefix = name.substr(0, marker);
-                for (auto& ent : fs::directory_iterator(first.parent_path(), ec)) {
-                    if (ec || !ent.is_regular_file(ec)) continue;
-                    const std::string fn = ent.path().filename().string();
-                    if (fn.rfind(prefix, 0) == 0 &&
-                        ent.path().extension() == ".gguf")
-                        disk += static_cast<uint64_t>(ent.file_size(ec));
-                }
-            } else {
-                disk = static_cast<uint64_t>(fs::file_size(first, ec));
-            }
-        }
-        if (disk > out.originalModelBytes) out.originalModelBytes = disk;
-    }
 
     if (runtime.actual.expertCount == 0) {
         out.mode = "RESIDENCY_ONLY";
@@ -65,76 +79,91 @@ bool BuildPhysicalReducePlan(const RuntimePlan& runtime,
         return true;
     }
 
+    std::vector<fs::path> shards;
+    if (!listShardPaths(fs::path(runtime.actual.model), shards, error))
+        return false;
+
     Deep2::GGUFLoadOptions options{};
     options.mmap = false;
     options.loadTensors = false;
     options.verbose = false;
-    Deep2::GGUFLoadResult result =
-        Deep2::GGUFLoader::Load(runtime.actual.model.c_str(), options);
-    if (!result.success) {
-        error = std::string("PHYSICAL_INVENTORY_FAILED:") + result.error;
+
+    uint64_t disk = 0;
+    uint64_t routed = 0;
+    uint64_t keep = 0;
+    uint64_t tensorCount = 0;
+    uint32_t metaLayers = 0;
+    uint32_t denseLead = 1;
+    uint32_t expertCount = static_cast<uint32_t>(runtime.actual.expertCount);
+
+    for (const auto& shard : shards) {
+        std::error_code ec;
+        disk += static_cast<uint64_t>(fs::file_size(shard, ec));
+        Deep2::GGUFLoadResult result =
+            Deep2::GGUFLoader::Load(shard.string().c_str(), options);
+        if (!result.success) {
+            error = std::string("PHYSICAL_SHARD_INVENTORY_FAILED:") +
+                    shard.filename().string() + ":" + result.error;
+            return false;
+        }
+        if (result.metadata.numLayers)
+            metaLayers = result.metadata.numLayers;
+        if (result.metadata.leadingDenseBlockCount)
+            denseLead = result.metadata.leadingDenseBlockCount;
+        if (result.metadata.numExperts)
+            expertCount = result.metadata.numExperts;
+        for (const auto& tensor : result.tensors) {
+            const uint64_t bytes = static_cast<uint64_t>(tensor.size);
+            ++tensorCount;
+            if (classifyTensor(tensor.name) == TensorClass::RoutedExps)
+                routed += bytes;
+            else
+                keep += bytes;
+        }
+    }
+
+    out.originalModelBytes = disk ? disk : runtime.actual.tensorBytes;
+    out.originalExpertCount = expertCount ? expertCount
+                                          : runtime.actual.expertCount;
+    out.expertBytes = routed;
+    out.sharedBytes = keep;
+    out.moeLayerCount = (metaLayers > denseLead)
+        ? (metaLayers - denseLead)
+        : (runtime.actual.layerCount > 1 ? runtime.actual.layerCount - 1 : 1);
+
+    const uint64_t E = (std::max)(uint64_t{1}, out.originalExpertCount);
+    const uint64_t bytesPerExpertAllLayers = routed / E;
+    if (!bytesPerExpertAllLayers) {
+        error = "PHYSICAL_ROUTED_EXPERT_BYTES_ZERO";
         return false;
     }
 
-    uint64_t expertBytes = 0;
-    uint64_t sharedBytes = 0;
-    for (const auto& tensor : result.tensors) {
-        const uint64_t bytes = static_cast<uint64_t>(tensor.size);
-        if (isExpertTensor(tensor.name)) expertBytes += bytes;
-        else sharedBytes += bytes;
-    }
-    /* Prefer metadata layer geometry over first-shard tensor sampling.
-     * Split Kimi GGUFs expose only a subset of tensors in shard 0. */
-    uint64_t moeLayers = 0;
-    if (result.metadata.numLayers > 1) {
-        const uint32_t denseLead =
-            result.metadata.leadingDenseBlockCount
-                ? result.metadata.leadingDenseBlockCount
-                : 1u;
-        moeLayers = result.metadata.numLayers > denseLead
-            ? result.metadata.numLayers - denseLead
-            : result.metadata.numLayers;
-    } else if (runtime.actual.layerCount > 1) {
-        moeLayers = runtime.actual.layerCount - 1;
-    } else {
-        moeLayers = 1;
-    }
-
-    out.expertBytes = expertBytes;
-    out.sharedBytes = sharedBytes ? sharedBytes
-                                  : runtime.actual.tensorBytes / 10;
-    out.moeLayerCount = moeLayers;
-
-    const uint64_t E = (std::max)(uint64_t{1}, runtime.actual.expertCount);
-    const uint64_t bytesPerExpertAllLayers =
-        expertBytes ? (expertBytes / E)
-                    : (runtime.actual.tensorBytes / E);
     const uint64_t budget = runtime.targetWorkingSetBytes
         ? runtime.targetWorkingSetBytes
         : runtime.requested.parameterCount;
 
     uint64_t retained = out.topK;
-    if (budget > out.sharedBytes && bytesPerExpertAllLayers > 0) {
-        retained = (budget - out.sharedBytes) / bytesPerExpertAllLayers;
-    }
+    if (budget > keep)
+        retained = (budget - keep) / bytesPerExpertAllLayers;
     if (retained < out.topK) retained = out.topK;
     if (retained > E) retained = E;
 
     out.retainedExpertsPerLayer = retained;
-    out.retainedExpertSlices = retained * moeLayers;
-    out.repackedModelBytes =
-        out.sharedBytes + bytesPerExpertAllLayers * retained;
+    out.retainedExpertSlices = retained * out.moeLayerCount;
+    /* Honest scope: keep tensors + retained routed expert slices only. */
+    out.repackedModelBytes = keep + bytesPerExpertAllLayers * retained;
     out.prunedParameterEstimate =
-        (E > retained) ? bytesPerExpertAllLayers * (E - retained) : 0;
+        bytesPerExpertAllLayers * (E - retained);
     out.activeParametersPerToken =
         out.topK *
-        (bytesPerExpertAllLayers / (std::max)(moeLayers, uint64_t{1}));
+        (bytesPerExpertAllLayers / (std::max)(out.moeLayerCount, uint64_t{1}));
 
     out.enabled = true;
     out.physicalRepresentation = true;
     out.mode = "PHYSICAL_STREAM";
     out.selectionPolicy = "BUDGET_UNIFORM_UNCERTIFIED";
-    out.reason = "PHYSICAL_EXPERT_SET_DERIVED_FROM_WORKING_SET_BUDGET";
+    out.reason = "ALL_SHARDS_ROUTED_EXPERT_INVENTORY_BUDGET_REDUCE";
+    (void)tensorCount;
     return true;
 }
 
@@ -163,16 +192,19 @@ std::string PhysicalReduceReceiptJson(const PhysicalReducePlan& plan) {
       << (plan.physicalRepresentation ? "true" : "false")
       << ",\"mode\":\"" << plan.mode << "\""
       << ",\"selection_policy\":\"" << plan.selectionPolicy << "\""
+      << ",\"INVENTORY_METHOD\":\"ALL_SHARDS_GGUF_TENSOR_SIZE\""
+      << ",\"REPACKED_SCOPE\":\"SHARED_KEEP_PLUS_RETAINED_ROUTED_EXPERTS\""
+      << ",\"ACCOUNTING_COMPLETE\":1"
       << ",\"ORIGINAL_MODEL_BYTES\":" << plan.originalModelBytes
       << ",\"ORIGINAL_EXPERT_COUNT\":" << plan.originalExpertCount
+      << ",\"ROUTED_EXPERT_BYTES\":" << plan.expertBytes
+      << ",\"SHARED_KEEP_BYTES\":" << plan.sharedBytes
       << ",\"RETAINED_EXPERT_COUNT\":" << plan.retainedExpertsPerLayer
       << ",\"RETAINED_EXPERT_SLICES\":" << plan.retainedExpertSlices
-      << ",\"PRUNED_PARAMETER_COUNT\":" << plan.prunedParameterEstimate
+      << ",\"PRUNED_ROUTED_EXPERT_BYTES\":" << plan.prunedParameterEstimate
       << ",\"REPACKED_MODEL_BYTES\":" << plan.repackedModelBytes
       << ",\"ACTIVE_PARAMETERS_PER_TOKEN\":"
       << plan.activeParametersPerToken
-      << ",\"SHARED_BYTES\":" << plan.sharedBytes
-      << ",\"EXPERT_BYTES\":" << plan.expertBytes
       << ",\"MOE_LAYER_COUNT\":" << plan.moeLayerCount
       << ",\"TOP_K\":" << plan.topK
       << ",\"source_immutable\":"
@@ -180,7 +212,8 @@ std::string PhysicalReduceReceiptJson(const PhysicalReducePlan& plan) {
       << ",\"writer_invoked\":"
       << (plan.writerInvoked ? "true" : "false")
       << ",\"reason\":\"" << plan.reason << "\""
-      << ",\"PROMOTE\":0,\"CERTIFIED\":0}";
+      << ",\"PROMOTE\":0,\"CERTIFIED\":0"
+      << ",\"NOTE\":\"REPACKED_MODEL_BYTES_IS_NOT_A_CERTIFIED_STANDALONE_GGUF\"}";
     return o.str();
 }
 

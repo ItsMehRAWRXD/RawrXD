@@ -268,6 +268,19 @@ bool KimiK2Router::Route(const float* hidden, MoERoutingResult& result,
     }
     result = SelectExpertsNoAuxTC(scores, choice);
     NormalizeAndScaleSelectedWeights(result);
+    if (ReapPhysicalBankActive()) {
+        const uint32_t expect = (uint32_t)config_.expertsPerToken;
+        ReapPhysicalNoteTopK(result.count, expect);
+        for (uint32_t i = 0; i < result.count; ++i) {
+            const uint32_t id = result.expertIds[i];
+            const bool ok = ReapPhysicalExpertAllowed(id);
+            ReapPhysicalNoteRoute(id, ok);
+            if (!ok) {
+                error = "PHYSICAL_REAP_ROUTED_PRUNED_EXPERT";
+                return false;
+            }
+        }
+    }
     totalTokensRouted++;
     totalExpertActivations += result.count;
     return true;
