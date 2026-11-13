@@ -1,0 +1,25 @@
+﻿MINIMAX_QUALITY_ROOT_CAUSE.txt
+PROMOTE=0 CERTIFIED=0 CROSS_SHA_CREDIT=0 ORIGINAL_GGUF_INTACT=1
+ISSUE=#83
+
+FALSE_LEAD: S08 K~1e24/V~1e12 = dump before LinearW (uninit)
+POST_LINEARW: Q/K/V finite ~1e-2
+
+TRUE_ROOT_CAUSE:
+  MiniMax-M2 GGUF: attention.key_length=128, rope.dimension_count=64 (partial RoPE)
+  modelWeights.ropeDimensionCount assigned ONLY inside MLA/DeepSeek2 block
+  Non-MLA MiniMax kept ropeDimensionCount=0 → applyRoPE rotated ALL 128 dims
+  Mode collapse output baseline=姬被被被
+
+FIX_LANDED:
+  Deep2Engine.cpp: always set ropeDimensionCount/keyLength/valueLength
+  PARTIAL_ROPE_META when n_rot < key_length
+  computeAttention partial applyRoPE (first n_rot dims)
+
+REMEASURE:
+  PARTIAL_ROPE_META n_rot=64 key_length=128 = CONFIRMED
+  PARTIAL_ROPE headDim=128 n_rot=64 = CONFIRMED
+  EXE_SHA256=742D3E39DDF6A8044BD31B7D82A2BACB1DB244202CA41763021AB6F7BD45C040
+  (strings also seen on 625F6EFBE7029AE36A4375282E4FE8022CC0715471241B550737FA58C54F27F8)
+  output 姬被被被\\被6, → 姬1果用用4={%  (changed; QUALITY still OPEN)
+  CERTIFIED=0 PROMOTE=0
