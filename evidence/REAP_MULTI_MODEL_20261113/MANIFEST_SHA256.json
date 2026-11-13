@@ -1,0 +1,32 @@
+﻿{
+    "F:\\OllamaModels\\Kimi-K2-Instruct-0905-GGUF\\Q4_K_M\\Kimi-K2-Instruct-0905-Q4_K_M-00003-of-00013.gguf":  {
+                                                                                                                   "sha256":  "124C30F2497AB21FF8AFF10F3FC6B242275C8C74D4F72E2B4FA1AC5E617214BD",
+                                                                                                                   "name":  "Kimi-K2-Instruct-0905-Q4_K_M-00003-of-00013.gguf",
+                                                                                                                   "bytes":  49548961120
+                                                                                                               },
+    "F:\\OllamaModels\\Kimi-K2-Instruct-0905-GGUF\\Q4_K_M\\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf":  {
+                                                                                                                   "sha256":  "EB48051961B59B420E182552965B7AA141D16C99488C69CCC9DE1327E96F5639",
+                                                                                                                   "name":  "Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf",
+                                                                                                                   "bytes":  46304135840
+                                                                                                               },
+    "F:\\OllamaModels\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M-00003-of-00003.gguf":  {
+                                                                                                                "sha256":  "CA0F9B513061E16C363A80A14F5407F8FDC474DD02423ED5CB9DC0DC9A882045",
+                                                                                                                "name":  "MiniMax-M2.7-Q4_K_M-00003-of-00003.gguf",
+                                                                                                                "bytes":  39242984096
+                                                                                                            },
+    "F:\\OllamaModels\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M-00002-of-00003.gguf":  {
+                                                                                                                "sha256":  "0337C040974DF7EE14AB8E0F4EDC5F3CB1A97C63ADA5A2C3997CE2EE10B880DE",
+                                                                                                                "name":  "MiniMax-M2.7-Q4_K_M-00002-of-00003.gguf",
+                                                                                                                "bytes":  49712985440
+                                                                                                            },
+    "F:\\OllamaModels\\Kimi-K2-Instruct-0905-GGUF\\Q4_K_M\\Kimi-K2-Instruct-0905-Q4_K_M-00002-of-00013.gguf":  {
+                                                                                                                   "sha256":  "ACD4BD970882053DD1E821921AC4D0D82E9A861933FDE71843D80838AE9865F2",
+                                                                                                                   "name":  "Kimi-K2-Instruct-0905-Q4_K_M-00002-of-00013.gguf",
+                                                                                                                   "bytes":  49211448320
+                                                                                                               },
+    "F:\\OllamaModels\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M\\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf":  {
+                                                                                                                "sha256":  "68C284BE6A929843C8CB774861D0A6665DB87DE7FEC2A4367D2357BC94B05B2A",
+                                                                                                                "name":  "MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf",
+                                                                                                                "bytes":  49386414912
+                                                                                                            }
+}

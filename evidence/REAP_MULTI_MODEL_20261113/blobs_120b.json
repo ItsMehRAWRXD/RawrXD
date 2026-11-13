@@ -1,0 +1,32 @@
+[
+    {
+        "manifest":  "F:\\OllamaModels\\manifests\\registry.ollama.ai\\library\\gpt-oss\\120b",
+        "digest":  "sha256:6be6d66a3f546d8c19b130dc41dc24b2fc159f84ffbc76a0ee0676205083cf5a",
+        "present":  true,
+        "bytes":  65369799840
+    },
+    {
+        "manifest":  "F:\\OllamaModels\\manifests\\registry.ollama.ai\\library\\gpt-oss\\120b",
+        "digest":  "sha256:fa6710a93d78da62641e192361344be7a8c0a1c3737f139cf89f20ce1626b99c",
+        "present":  true,
+        "bytes":  7240
+    },
+    {
+        "manifest":  "F:\\OllamaModels\\manifests\\registry.ollama.ai\\library\\gpt-oss\\120b",
+        "digest":  "sha256:f60356777647e927149cbd4c0ec1314a90caba9400ad205ddc4ce47ed001c2d6",
+        "present":  true,
+        "bytes":  11353
+    },
+    {
+        "manifest":  "F:\\OllamaModels\\manifests\\registry.ollama.ai\\library\\gpt-oss\\120b",
+        "digest":  "sha256:d8ba2f9a17b3bbdeb5690efaa409b3fcb0b56296a777c7a69c78aa33bbddf182",
+        "present":  true,
+        "bytes":  18
+    },
+    {
+        "manifest":  "F:\\OllamaModels\\manifests\\registry.ollama.ai\\library\\gpt-oss\\120b",
+        "digest":  "sha256:0b3eaefc220f88ee3875909c1306654b2fbda9e31dae0133d6cdf488b37f9402",
+        "present":  true,
+        "bytes":  490
+    }
+]

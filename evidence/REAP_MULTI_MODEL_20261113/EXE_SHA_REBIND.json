@@ -1,0 +1,5 @@
+{
+  "rawr-reap.exe": {"path":"F:\\rawrxd\\build_reap\\bin-msvc\\rawr-reap.exe","sha256":"94EE99CAD1AB2EAE1FF73C2CBEADCF0EF5152A65F66829089A97F7938CDCBEFC"},
+  "rawr.exe_live": {"path":"G:\\~dev\\rawrxd\\build_ninja\\bin\\rawr.exe","sha256":"BDC5E4A261086D24902B28E65A8AA213F30FED9FAC04D3C811D55FCDAB0F517B","note":"ECB45BC9 hint NOT matched; CROSS_SHA_CREDIT=0"},
+  "hash_job": "see _hash_stdout.log / MANIFEST_SHA256.json"
+}

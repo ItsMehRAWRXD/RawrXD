@@ -2818,6 +2818,44 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             residencyConfig.max_resident_bytes =
                 static_cast<uint64_t>(reapRuntimeInjection_.workingSetBytes);
         }
+        // MiniMax standard multi-shard pins non-expert attn/norm/router for the
+        // whole generation. REAP expert working-set must not starve those pins.
+        {
+            std::string archLower = k2config.architecture;
+            std::transform(archLower.begin(), archLower.end(), archLower.begin(),
+                           [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+            if (archLower.find("minimax") != std::string::npos)
+            {
+                uint64_t nonExpertBytes = 0;
+                globalIndex_->ForEach([&](const GlobalTensorRef& ref) {
+                    if (!ref.isExpertTensor)
+                        nonExpertBytes += ref.byteSize;
+                });
+                constexpr uint64_t kGranule = 65536ull;
+                const uint64_t pinFloor =
+                    nonExpertBytes +
+                    kGranule * static_cast<uint64_t>(residencyConfig.max_active);
+                const uint64_t expertBudget = residencyConfig.max_resident_bytes;
+                const uint64_t need =
+                    (expertBudget > 0 &&
+                     pinFloor <= (std::numeric_limits<uint64_t>::max)() - expertBudget)
+                        ? (pinFloor + expertBudget)
+                        : pinFloor;
+                if (expertBudget > 0 && need > expertBudget)
+                {
+                    std::fprintf(stderr,
+                                 "[MULTISHARD_RESIDENCY] minimax pin floor "
+                                 "from=%llu to=%llu non_expert=%llu expert_budget=%llu\n",
+                                 static_cast<unsigned long long>(
+                                     residencyConfig.max_resident_bytes),
+                                 static_cast<unsigned long long>(need),
+                                 static_cast<unsigned long long>(nonExpertBytes),
+                                 static_cast<unsigned long long>(expertBudget));
+                    std::fflush(stderr);
+                    residencyConfig.max_resident_bytes = need;
+                }
+            }
+        }
         residencyCache_ = std::make_unique<gguf_shard_cache::TensorResidencyCache>(residencyConfig);
         for (uint32_t s = 0; s < static_cast<uint32_t>(globalIndex_->TotalShards()); ++s)
         {
@@ -4549,9 +4587,11 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                 // enforces the requested resident-byte budget.
                 reapRuntimeReceipt_.routeConfigured = true;
                 reapRuntimeReceipt_.streamerConfigured = residencyCache_ != nullptr;
+                // Budget may be raised for MiniMax non-expert pin floor; still
+                // configured if at least the requested expert working-set holds.
                 reapRuntimeReceipt_.workingSetConfigured =
                     residencyCache_ != nullptr &&
-                    residencyCache_->resident_budget_bytes() ==
+                    residencyCache_->resident_budget_bytes() >=
                         reapRuntimeInjection_.workingSetBytes;
                 reapRuntimeReceipt_.active = reapRuntimeReceipt_.streamerConfigured;
                 reapRuntimeReceipt_.status = reapRuntimeReceipt_.streamerConfigured

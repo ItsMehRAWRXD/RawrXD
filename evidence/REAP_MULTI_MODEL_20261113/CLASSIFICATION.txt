@@ -1,0 +1,17 @@
+﻿# CLASSIFICATION.txt — REAP_MULTI_MODEL_20261113
+PROMOTE=0 ORIGINAL_GGUF_INTACT=1
+
+MiniMax-M2.7-Q4_K_M              MoE
+Kimi-K2-Instruct-0905-Q4_K_M    MoE
+Qwen3.6-35B-A3B-Q4_K_M          MoE
+DeepSeek-R1-Q4_K_M              MoE
+Qwen3-Next-80B (ollama blob)    UNKNOWN
+GPT-OSS-120B (ollama blob)      UNKNOWN
+Laguna-S-2.1 (ollama blob)      UNKNOWN
+GLM-4.7-Flash-Q4_K_M            MoE
+Qwen3.8-Flash-Next-AD-IQ1_M     MoE
+Qwen3.8-27B-AD-Q4_K_M           DENSE
+Qwen3.8-27B-Q4_K_M              UNKNOWN   # local GGUF absent
+Qwen2.5-Coder-14B-Q8_0          DENSE
+
+RULE: Dense = control only; no expert REAP. Quant/streaming/structured prune are separate tracks.
