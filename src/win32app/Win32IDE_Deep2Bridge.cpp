@@ -11,27 +11,8 @@
 #ifdef HAVE_DEEP2_ENGINE
 #include "Deep2Engine.h"
 #include <cstdlib>
-/* SNAP lives under src/snap/ (not src/deep2_snap.hpp). Prefer cmake -Isrc/snap;
-   relative fallback keeps direct cl / ninja both green. */
-#if defined(__has_include)
-#  if __has_include("deep2_snap.hpp")
-#    include "deep2_snap.hpp"
-#  elif __has_include("../snap/deep2_snap.hpp")
-#    include "../snap/deep2_snap.hpp"
-#  else
-#    error "deep2_snap.hpp ABSENT — wire src/snap/deep2_snap.hpp"
-#  endif
-#  if __has_include("snap_process_guard.hpp")
-#    include "snap_process_guard.hpp"
-#  elif __has_include("../snap/snap_process_guard.hpp")
-#    include "../snap/snap_process_guard.hpp"
-#  else
-#    error "snap_process_guard.hpp ABSENT — wire src/snap/snap_process_guard.hpp"
-#  endif
-#else
-#  include "../snap/deep2_snap.hpp"
-#  include "../snap/snap_process_guard.hpp"
-#endif
+#include "deep2_snap.hpp"
+#include "snap_process_guard.hpp"
 #endif
 
 Deep2Bridge::Deep2Bridge(Win32IDE* ide)
