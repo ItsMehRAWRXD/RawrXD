@@ -272,6 +272,10 @@ namespace Deep2
         bool useRoPE = true;
         float ropeTheta = 10000.0f;
         float ropeScaling = 1.0f;
+        // false = NORM adjacent pairs (llama/deepseek); true = NEOX (qwen/gemma/phi).
+        // RC2-05 tip2: qwen2 MUST be NEOX — NORM matches Q/K/V pre-rope but breaks
+        // scores/softmax/AV (ATTN_PRE_O maxAbs~6.78e-1 @ pos10).
+        bool ropeNeox = false;
         float normEps = 1e-6f;
 
         // Gemma logit soft-capping (cap * tanh(logits / cap)). 0 = disabled.
