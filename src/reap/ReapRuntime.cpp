@@ -13,10 +13,55 @@
 #include <system_error>
 #include <vector>
 
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#include <psapi.h>
+#pragma comment(lib, "psapi.lib")
+#endif
+
 namespace RawrXD::Reap {
 namespace {
 
 namespace fs = std::filesystem;
+
+struct MemSample {
+    uint64_t freePhys = 0;
+    uint64_t commitLimit = 0;
+    uint64_t commitAvail = 0;
+    uint64_t commitUsed = 0;
+    uint64_t procWorkingSet = 0;
+    uint64_t procPagefile = 0;
+    uint64_t procPeakWorkingSet = 0;
+    uint64_t procPeakPagefile = 0;
+};
+
+MemSample sampleMem() {
+    MemSample s{};
+#ifdef _WIN32
+    MEMORYSTATUSEX ms{};
+    ms.dwLength = sizeof(ms);
+    if (GlobalMemoryStatusEx(&ms)) {
+        s.freePhys = ms.ullAvailPhys;
+        s.commitLimit = ms.ullTotalPageFile;
+        s.commitAvail = ms.ullAvailPageFile;
+        s.commitUsed = (ms.ullTotalPageFile > ms.ullAvailPageFile)
+            ? (ms.ullTotalPageFile - ms.ullAvailPageFile) : 0;
+    }
+    PROCESS_MEMORY_COUNTERS_EX pmc{};
+    if (GetProcessMemoryInfo(GetCurrentProcess(),
+                             reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&pmc),
+                             sizeof(pmc))) {
+        s.procWorkingSet = pmc.WorkingSetSize;
+        s.procPagefile = pmc.PagefileUsage;
+        s.procPeakWorkingSet = pmc.PeakWorkingSetSize;
+        s.procPeakPagefile = pmc.PeakPagefileUsage;
+    }
+#endif
+    return s;
+}
 
 std::string quote(const std::string& value) {
     std::ostringstream out;
@@ -126,11 +171,25 @@ RuntimeResult RunRuntime(const RuntimeRequest& request) {
         return result;
     }
 
+    const MemSample memPre = sampleMem();
     const auto started = std::chrono::steady_clock::now();
     const bool loaded = engine.loadModel(enginePath);
     const auto elapsedLoad = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::steady_clock::now() - started).count();
     const auto& configuredReceipt = engine.reapRuntimeReceipt();
+    const MemSample memPostLoad = sampleMem();
+
+    // PATH_A: reduction never became active (load/config before physical apply).
+    // PATH_B: physicalExclude active; failure during retained expert acquire/gen.
+    std::string failPhase = "NONE";
+    if (!loaded) {
+        // Reduction is "active" only after MoE path stamps ACTIVE_PHYSICAL_*.
+        if (configuredReceipt.physicalExclude &&
+            configuredReceipt.status.find("ACTIVE_PHYSICAL") != std::string::npos)
+            failPhase = "DURING_RETAINED_ACQUIRE";
+        else
+            failPhase = "BEFORE_REDUCTION_ACTIVE";
+    }
 
     std::string generated;
     Deep2::GenerationResult generation{};
@@ -151,15 +210,20 @@ RuntimeResult RunRuntime(const RuntimeRequest& request) {
                 return true;
             });
         generationPass = generation.completed && generation.generatedTokens > 0;
+        if (!generationPass)
+            failPhase = "DURING_RETAINED_ACQUIRE";
     }
+    const MemSample memPost = sampleMem();
 
     const bool loadPass = loaded;
     const bool runtimePass = loadPass && generationPass &&
                              configuredReceipt.sourceImmutable &&
                              configuredReceipt.active;
+    if (runtimePass) failPhase = "NONE";
     std::ostringstream receipt;
     receipt << "{\"schema\":\"rawrxd.reap.runtime_receipt.v1\""
             << ",\"status\":" << quote(runtimePass ? "PASS" : (loadPass ? "PARTIAL" : "LOAD_FAILED"))
+            << ",\"fail_phase\":" << quote(failPhase)
             << ",\"model\":" << quote(enginePath)
             << ",\"plan\":" << RuntimePlanJson(plan).substr(0, RuntimePlanJson(plan).size() - 1)
             << ",\"runtime\":{\"active\":" << (configuredReceipt.active ? "true" : "false")
@@ -172,6 +236,15 @@ RuntimeResult RunRuntime(const RuntimeRequest& request) {
             << ",\"effective_experts\":" << configuredReceipt.effectiveExperts
             << ",\"status\":" << quote(configuredReceipt.status)
             << ",\"reason\":" << quote(configuredReceipt.reason) << "}"
+            << ",\"memory\":{\"free_phys_pre\":" << memPre.freePhys
+            << ",\"free_phys_post_load\":" << memPostLoad.freePhys
+            << ",\"free_phys_post\":" << memPost.freePhys
+            << ",\"commit_limit\":" << memPost.commitLimit
+            << ",\"commit_used_post\":" << memPost.commitUsed
+            << ",\"proc_ws_post\":" << memPost.procWorkingSet
+            << ",\"proc_pagefile_post\":" << memPost.procPagefile
+            << ",\"proc_peak_ws\":" << memPost.procPeakWorkingSet
+            << ",\"proc_peak_pagefile\":" << memPost.procPeakPagefile << "}"
             << ",\"generation_requested\":" << (generationRequested ? "true" : "false")
             << ",\"generation_completed\":" << (generation.completed ? "true" : "false")
             << ",\"generated_tokens\":" << generation.generatedTokens
