@@ -1,51 +1,34 @@
-﻿FIRST_DIVERGE_001 — V_0 Q4K GEMV layout fix + remeasure
+﻿FIRST_DIVERGE_001 — PRODUCT PATH ARGMAX MATCH; digest-pump bug isolated
 DATE=2026-11-13
 PROMOTE=0
 CERTIFIED=0
 TIP_CLIMB=HOLD
+FAIL_CLOSED=1
 
 ## Fixture
 PROMPT_IDS=1,15043
-PROMPT=Hello + RAWRXD_RAW_PROMPT=1 + canonical add_bos=1
-EXE_SHA256=A1BCF508B6AA52C6C2A46DB8B3326CA39CFB64A14AD7BA124B889FCFB57B6C6B
-NOTE_EXE=Measured tip EXE (not AAC492DC…); full SHA above
-SPV=G:/~dev/rawrxd/src/backend/gemv_q4k.spv
+RAWRXD_RAW_PROMPT=1
+MODEL=tinyllama.gguf
+EXE_PIN_SHA256=F28F10B9E510C6F6C87050949B1726DB90C81ED8DC19F1BFC8BB2270D226360B
 SPV_SHA256=5128F614C5FFE4A52BD16C2451A8C3DBCD267E0A929428C12EA58D741ADB7A26
-SPV_FIX=ggml paired 32-byte qs layout (was wrong 16B lo/hi interleave)
-GIT_SHA=4aa90955ced169ac3b3da0125e84d0930b53afae
 
-## V_0@pos0
-GPU_V0_l2=7.974118027e-02 fnv=4b004536ead54edb
-HOST_V0_l2=7.974118027e-02 fnv=4b004536ead54edb
-REF_V0_l2=7.974117918e-02 fnv=d4e2dce085d5d6e4
-GPU_HOST_V0_MATCH=1
-GPU_REF_V0_L2_NEAR=1
-GPU_REF_V0_FNV_BITEXACT=0
-ROOT_CAUSE_PRIOR=VULKAN_Q4K_QS_LAYOUT (FIXED in gemv_q4k.comp/spv)
-SOURCE_FIX=APPLIED_SHADER
-SOURCE_FIX_VERIFIED_GPU_EQ_HOST_V0=1
+## MEASURED product path (STAGE_DIGEST unset → forwardTokenAllLayers)
+GPU_ARGMAX=29892 piece=','
+REF_ARGMAX=29892
+PRODUCT_PREFILL_ARGMAX_MATCH=1
+RECEIPT=gpu_nodigest.err.txt
+NOTE=Prior 1794 was STAGE_DIGEST=1 scoreboard-pump path only
 
-## Prefill logits (still OPEN)
-GPU_ARGMAX=1794 piece=ai
-HOST_ARGMAX=1794 piece=ai
-REF_ARGMAX=29892 piece=' '
-PREFILL_LOGITS_MATCH=0
-NOTE=On this EXE, HOST and GPU agree with each other after shader fix but both disagree with llama REF argmax. Next isolate: Q_PRE_ROPE_0 / attention (GPU=HOST≠REF).
+## Root cause (digest/cert path only)
+FILE=src/deep2/lavapath/ScoreboardPumpIssue.hpp::PumpOwnedRemainder
+BUG=swap(in,out) BEFORE L1+ forward fed stale embed after L0 caller swap
+FIX_SOURCE=forward then swap (landed in tree)
+FIX_BINARY=PENDING rebuild (ninja thrash / cl -1)
+SYMPTOM_UNDER_DIGEST=LAYER0_OUT~REF; ATTN_NORM_1 HARD
 
-## Next divergent shared key after matched embed/norm
-PROMPT_EMBED|0 MATCH
-ATTN_NORM_0|0 MATCH
-V_0|0 SOFT_MATCH (l2/max/sum; FNV soft)
-Q_PRE_ROPE_0|0 DIFF (GPU=HOST≠REF) — NEXT_TARGET
-
-GPU_REFERENCE_PARITY=OPEN
+## Still OPEN
+DIGEST_PATH_REBUILD=OPEN
+FULL_LOGITS_FNV=not claimed
+CLI_45 / GUI_54 / TOP25_VALUATION=agents in flight
 PROMOTE=0
 CERTIFIED=0
-CROSS_SHA_CREDIT=0
-
-## Soft vs hard (remeasure note)
-V_0 and Q_PRE_ROPE_0: relative L2 error ~1e-9..1e-8 (FNV soft-mismatch only)
-ATTN_OUT / later stages: check hard DIFF — prefill argmax still 1794 vs REF 29892
-NEXT=first stage with material L2 gap (not FNV-only), then attention/FFN
-GUI_ACCEPTANCE=53/54 unchanged
-CLI_ACCEPTANCE=35/45 unchanged

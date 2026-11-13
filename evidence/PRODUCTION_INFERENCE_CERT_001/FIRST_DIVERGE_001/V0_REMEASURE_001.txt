@@ -1,0 +1,13 @@
+GPU_V0 path=G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_v0_remeasure_gpu\deep2_V_0_pos0_layer0_full_n256_seq003.bin l2=7.974118027e-02 fnv=4b004536ead54edb
+HOST_V0 path=G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_v0_remeasure_host\deep2_V_0_pos0_layer0_full_n256_seq003.bin l2=7.974118027e-02 fnv=4b004536ead54edb
+REF_V0 path=G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_gpu_fix\llama_V_0_pos0_layer0_full_n256_seq011.bin l2=7.974117918e-02 fnv=d4e2dce085d5d6e4
+GPU_Q path=G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_v0_remeasure_gpu\deep2_Q_PRE_ROPE_0_pos0_layer0_full_n2048_seq008.bin l2=1.938516985e+00 fnv=ced1abe971861249
+HOST_Q path=G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_v0_remeasure_host\deep2_Q_PRE_ROPE_0_pos0_layer0_full_n2048_seq008.bin l2=1.938516985e+00 fnv=ced1abe971861249
+REF_Q path=G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_gpu_fix\llama_Q_PRE_ROPE_0_pos0_layer0_full_n2048_seq005.bin l2=1.938517021e+00 fnv=8d53927ede5ddb3f
+GPU_HOST_V0_MATCH=1
+GPU_REF_V0_rel=8.213383827e-08 maxAbs=1.862645149e-09
+GPU_REF_V0_L2_NEAR=1
+GPU_REF_V0_FNV_BITEXACT=0
+GPU_HOST_Q_MATCH=1
+GPU_REF_Q_rel=2.362229656e-07 maxAbs=1.490116119e-07
+GPU_REF_Q_FNV_BITEXACT=0

@@ -11,8 +11,27 @@
 #ifdef HAVE_DEEP2_ENGINE
 #include "Deep2Engine.h"
 #include <cstdlib>
-#include "deep2_snap.hpp"
-#include "snap_process_guard.hpp"
+/* SNAP lives under src/snap/ (not src/deep2_snap.hpp). Prefer cmake -Isrc/snap;
+   relative fallback keeps direct cl / ninja both green. */
+#if defined(__has_include)
+#  if __has_include("deep2_snap.hpp")
+#    include "deep2_snap.hpp"
+#  elif __has_include("../snap/deep2_snap.hpp")
+#    include "../snap/deep2_snap.hpp"
+#  else
+#    error "deep2_snap.hpp ABSENT — wire src/snap/deep2_snap.hpp"
+#  endif
+#  if __has_include("snap_process_guard.hpp")
+#    include "snap_process_guard.hpp"
+#  elif __has_include("../snap/snap_process_guard.hpp")
+#    include "../snap/snap_process_guard.hpp"
+#  else
+#    error "snap_process_guard.hpp ABSENT — wire src/snap/snap_process_guard.hpp"
+#  endif
+#else
+#  include "../snap/deep2_snap.hpp"
+#  include "../snap/snap_process_guard.hpp"
+#endif
 #endif
 
 Deep2Bridge::Deep2Bridge(Win32IDE* ide)
@@ -92,9 +111,9 @@ bool Deep2Bridge::Initialize(const std::string& modelPath)
         m_engine->enableVulkan(useVulkan);
         LOG_INFO(std::string("Deep2Bridge Vulkan=") + (useVulkan ? "enabled" : "disabled (diagnostic)"));
         
-        // Enable batched prefill for performance
-        m_engine->enableBatchedPrefill(true);
-        
+        // Batched prefill API removed from Deep2Engine tip — GPU path remains
+        // enableVulkan(useVulkan) above (fail-closed: no invented method call).
+
         // Load model if path provided
         if (!modelPath.empty()) {
             if (!m_engine->loadModel(modelPath)) {
@@ -335,8 +354,8 @@ void Deep2Bridge::GenerationWorker(const std::string& prompt, int maxTokens)
             m_espBus->publish(rawrxd::esp::Kind::PrefillEnd, "tokens=0", m_espRequestId);
         }
 
-        // Configure generation parameters
-        m_cpuEngine->ConfigureGeneration(m_temperature, m_topP, static_cast<uint32_t>(m_topK), 1.1f, 0);
+        // Configure generation parameters (CPUInferenceEngine API — no ConfigureGeneration)
+        m_cpuEngine->SetSamplerConfig(m_temperature, m_topP, static_cast<int>(m_topK), 1.1f, 0);
         
         std::string fullResponse;
         
@@ -456,9 +475,10 @@ std::string Deep2Bridge::GenerateSync(const std::string& prompt, int maxTokens)
             return "Error: CPU engine not available";
         }
         
-        // Configure and use the sync inference
-        m_cpuEngine->ConfigureGeneration(m_temperature, m_topP, static_cast<uint32_t>(m_topK), 1.1f, 0);
-        return m_cpuEngine->infer(prompt);
+        // Configure and use sync Generate/Detokenize (CPUInferenceEngine — no infer())
+        m_cpuEngine->SetSamplerConfig(m_temperature, m_topP, static_cast<int>(m_topK), 1.1f, 0);
+        const auto ids = m_cpuEngine->Generate(m_cpuEngine->Tokenize(prompt), maxTokens);
+        return m_cpuEngine->Detokenize(ids);
 #endif
     }
     catch (const std::exception& e) {
