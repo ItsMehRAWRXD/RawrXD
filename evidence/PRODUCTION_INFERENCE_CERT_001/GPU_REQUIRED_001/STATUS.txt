@@ -1,12 +1,15 @@
-GPU_REQUIRED_001 — TinyLlama discrete GPU smoke
+GPU_REQUIRED_001 — TinyLlama discrete GPU smoke (TIP reseal)
 DATE=2026-11-13
 PROMOTE=0
 CERTIFIED=0
 TIP_CLIMB=HOLD
+NOT_RUN!=PASS
 
-EXE_SHA=4868652AB6F0E3FB44881EC4DF7028F737F63408E699B6832FBBE0E1089E8AF3
+EXE_SHA=78435C9B42FD7C268EACC815BE159CC5E8905C7093AC065540930CA37C5F429D
 EXE=g:\~dev\rawrxd\build_ninja\bin\rawr.exe
+EXE_MTIME=2026-11-13T16:29:40-05:00
 MODEL=G:\~dev\rawrxd\models\tinyllama.gguf
+CMD=rawr run tinyllama.gguf -p Hello --max-tokens 8 --vulkan
 
 ## Policy (GPU envs ONLY — no RAWRXD_HOST_DECODE=1)
 RAWRXD_ALLOW_GPU=1
@@ -14,25 +17,44 @@ RAWR_FORCE_GPU=1
 RAWR_NO_CPU_FALLBACK=1
 WEIGHT_BUDGET_MIB=4096
 
-## Decision line
+## Decision / ICD
 [AUTO_BACKEND] decision=VulkanPrimary reason=Primary GPU fits weights+KV+scratch
-
-## Measured
 primaryReady=1 primaryValidated=1 secondaryReady=1 secondaryValidated=1 vramPriMB=32768
 Vulkan ICD ready
-PRODUCT_LAA=1 HOST_DECODE=0 ALLOW_GPU=1 PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1 GPU_DEFAULT=1
+BLOCKED_AT=NONE (manifest + provenance)
 VK_ICD=NOT_BLOCKED (no WHY=R1_HOST_FLOOR)
-STDOUT_TOKENS=arc arc arc arc arc arc arc arc
+PRODUCT_LAA=1 HOST_DECODE=0 ALLOW_GPU=1 PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1 GPU_DEFAULT=1
+
+## Vulkan open
+[VulkanCompute] OPEN_ONE AMD Radeon AI PRO R9700
+[VulkanCompute] OPEN_ONE AMD Radeon RX 7800 XT
+BIND16_SSVK_PRODUCT_BOUND=1
+GPU_RESIDENT=1
+HOTPATH_FFN=GPU_RESIDENT
 CPU_FALLBACK=0
 decision≠CPU FAIL_CLOSED_OK=1
 
+## Tokens (this tip)
+STDOUT=Sure, here's an example
+FIRST_TOKEN_ID=29903 piece=S
+TOKENS_REQUESTED=8
+COHERENT_LOCAL_TEXT=1 (≠ prior arc×N stick)
+NOTE_EXIT_FILE=Start-Process ExitCode often null; process completed + tokens emitted
+
 ## Artifacts
-tiny_gpu.err.txt
-tiny_gpu.out.txt
-EXE_SHA.txt
+tiny_gpu_tip.{out,err,exit}.txt
+EXE_SHA.txt / EXE_SHA256.txt
+Prior sealed arc-stick receipts kept as tiny_gpu*.txt (historical)
+
+## Cross-link
+GPU_VS_REF_001 MATCH=0 still (prior EXE 4868652A…); tip coherent ≠ MATCH seal.
+COMPETITIVE_BENCH_001 logs/cli_vulkan_tip_20261113_163222.* (2+2= → "Yes, 2")
 
 ## Disposition
-GPU_REQUIRED_SMOKE=PASS_RUNTIME (AUTO_BACKEND+HOST_DECODE gates)
-BIND16_COMMIT_FAIL seen on decode path (non-blocking for gate; tokens emitted)
+GPU_REQUIRED_SMOKE=PASS_RUNTIME
+AUTO_BACKEND≠CPU=1
+VK_NOT_BLOCKED=1
+GPU_RESIDENT_OR_VULKAN_OPEN=1
 PROMOTE=0
 TIP_CLIMB=HOLD
+CERTIFIED=0

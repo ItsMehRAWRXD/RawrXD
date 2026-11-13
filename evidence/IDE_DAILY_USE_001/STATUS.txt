@@ -1,6 +1,6 @@
-IDE_DAILY_USE_001 — STATUS (GPU_DEFAULT seal)
+IDE_DAILY_USE_001 — STATUS (GPU_DEFAULT seal + tip relink attempt)
 =============================================
-ASOF_UTC=2026-11-13T21:50:00Z
+ASOF_UTC=2026-11-13T21:35:00Z
 PROMOTE=0
 TIP_CLIMB=HOLD
 CERTIFIED=0
@@ -19,7 +19,7 @@ BRANCH=feature/ide-agentic-product-path-20261026
 | HeadlessIDE.cpp LocalOnly load | already ALLOW_GPU=1 HOST_DECODE=0 FORCE_CPU=0 | unchanged |
 | gguf_loader_masm*.cpp | already GPU-required putenv | unchanged |
 | Win32IDE_AgenticBridge p1praBackendSelectLabel | presence of FORCE_CPU=0 → backend=cpu | truth-valued opt-in only |
-| Win32IDE_Deep2Bridge ConfigureGeneration/infer | already SetSamplerConfig / Generate (OBJ_RC=0) | SOURCE_WIRED |
+| Win32IDE_Deep2Bridge ConfigureGeneration/infer | Deep2 SetSamplerConfig / Generate | SOURCE_WIRED; tip recompile FAIL |
 
 Remaining CPU pins (explicit opt-in only — not product defaults):
 - RAWRXD_FORCE_CPU_INFERENCE=1 / RAWR_FORCE_CPU=1 / RAWRXD_HOST_DECODE=1
@@ -31,19 +31,24 @@ Remaining CPU pins (explicit opt-in only — not product defaults):
 ## Build (this turn)
 
 ```
-OBJ_RC=0
-  main_win32.cpp.obj
-  Win32IDE_AgenticBridge.cpp.obj
-  Win32IDE_Deep2Bridge.cpp.obj
-  Win32IDE.cpp.obj  (prior IsAgenticMode unblock)
-LOG=evidence/IDE_DAILY_USE_001/logs/gpu_default_relink_002.txt
+OBJ_RC:
+  main_win32.cpp.obj = OK (rebuilt 2026-11-13)
+  Win32IDE_AiEdit.cpp.obj = OK (source present; prior missing-file gate closed)
+  Win32IDE_AgenticBridge.cpp.obj = OK compile attempt
+  Win32IDE_Deep2Bridge.cpp.obj = FAIL
+    WHY=C2039 ConfigureGeneration / infer not member of RawrXD::CPUInferenceEngine
+    (HAVE_DEEP2_ENGINE / fallback path compile under link001 flags)
 EXE_RELINK=FAIL_CLOSED
-  WHY=build_win32ide_link001 ninja graph stale (missing Win32IDE_AiEdit.cpp)
-       + cmake --regenerate-during-build fails CMakeLists.txt:7538
-       + direct rsp link LNK1120 (45 unresolved; stale .rsp)
-EXE_SHA256(tip candidate c020 restore)=D9589D9A665E07F93E906A637B9D4ADB80D99BFD9604103A882E6AC79078BC08
+EXE_SHA256(tip candidate c020)=D9589D9A665E07F93E906A637B9D4ADB80D99BFD9604103A882E6AC79078BC08
 EXE_NOTE=Oct31 binary; does NOT absorb this-turn GPU source until successful relink
+LOG=evidence/IDE_DAILY_USE_001/logs/ (prior relink_* + this note)
 ```
+
+## Daily-use cross-link (IDE_DAILY_USE_E2E_001 on c020)
+Headless health/tools/editor/terminal-exec/lifecycle/recovery = PASS
+Four-panel HWND / ConPTY product = FAIL_CLOSED
+Debugger HWND = NOT_RUN (harness RUNTIME_PARTIAL)
+GPU load on GUI tip EXE = NOT_PROVED (HOST_DECODE product path not exercised on c020)
 
 ## Explicit non-claims
 
@@ -52,8 +57,9 @@ PROMOTE=0
 CERTIFIED=0
 EXE_ABSORB_GPU_DEFAULT=0
 FOUR_PANEL_HWND_E2E=NOT_RUN
+GUI_COMPLETE=0
 NOT_RUN != PASS
 ```
 
-NEXT_GATE=RECONFIGURE_WIN32IDE_THEN_RELINK_EXE
+NEXT_GATE=FIX_Deep2Bridge_CPUInferenceEngine_fallback_OR_force_HAVE_DEEP2_ENGINE then RELINK
 PROMOTE=0

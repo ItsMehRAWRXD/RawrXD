@@ -1,0 +1,34 @@
+B1_DISTRIBUTION_NOT_PUBLISHED — honesty close (≠ community publish)
+ASOF_LOCAL=2026-11-13
+PROMOTE=0
+CERTIFIED=0
+GATE=B1_DISTRIBUTION_SHA_HONESTY
+DISPOSITION=CLOSED_HONESTY
+NOT_PUBLISHED=1
+WINGET_PUBLISH=NOT_CLAIMED
+CLEAN_VM=ABSENT
+
+## What closed
+1. Real InstallerSha256 bound (no PLACEHOLDER):
+   Asset=RawrXD-14.7.3-Windows-x64.zip
+   SHA256=DDEB7D50840C1097B2C79A5702C54C115BD076B108F9C43D15BCB4BE563B829D
+   Bound in: distribution/winget/RawrXD.RawrXD.yaml
+              distribution/chocolatey/tools/chocolateyinstall.ps1
+              distribution/homebrew/rawrxd.rb (Windows SHA; macOS ABSENT)
+2. DISTRIBUTION_MANIFEST.yaml: prior "PRODUCTION READY" revoked → status HELD
+3. distribution/README.md: DRAFT_SHA_BOUND + NOT_PUBLISHED banners
+4. WINDOWS_ZIP_CHANNEL.txt: single canonical Windows zip pin
+5. ZIP_INSTALL_SMOKE_1473: SHA match + extract inventory (legacy RawrXD.exe ≠ product rawr.exe)
+
+## What remains OPEN (not B1 honesty)
+- Community index publish (winget/choco/brew listing)
+- Clean-VM install PASS
+- Zip-embedded exe --help (TIMEOUT / hang measured — not invent PASS)
+- Product CLI remains build_ninja\bin\rawr.exe (INSTALL.md)
+
+## Law
+CLOSED_HONESTY != PUBLISHED
+DRAFT_SHA_BOUND != CERTIFIED
+NOT_RUN != PASS
+
+Witnesses: DRAFT_SHA_BOUND.txt · release_assets/SHA256.txt · WINDOWS_ZIP_CHANNEL.txt
