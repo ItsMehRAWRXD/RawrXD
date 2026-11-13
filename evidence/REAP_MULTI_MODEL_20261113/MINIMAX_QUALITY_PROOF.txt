@@ -1,4 +1,27 @@
-﻿# MiniMax QUALITY proof excerpts
-[PHYSICAL_INVENTORY] shards=3 tensors=809 disk=138342384448 routed=135725580288 keep=2608516096 E=256 bpe=530178048 
-[MULTISHARD_BIND] standard tensors bound layers=62 experts=256 topk=8 shared=0 expertDim=1536 mappings=560
-[AGENT] GENERATION_RECEIPT prompt=1 generated=8 completed=1 cancelled=0 stop_reason=16 stop=COMPLETED
+﻿# MiniMax QUALITY proof excerpts (logs gitignored)
+MEASURE_EXE_SHA256=985A745C98A58FCBDF56BA38203AC82AED32B6554FB347A98F2D58553405CE09
+PROMOTE=0 CERTIFIED=0 QUALITY=OPEN
+
+## Coding retain-29 max-tokens=16
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[S08_ATTN_DUMP] layer=0 k0..5=-2.725508e+38 4.590934e-41 0.000000e+00 0.000000e+00 1.401298e-45 1.135052e-43
+[S08_ATTN_DUMP] layer=0 v0..5=1.821688e-44 0.000000e+00 -1.869858e-20 0.000000e+00 1.401298e-44 0.000000e+00
+[LOGIT_DIAG] top5: 1579=8.693507 10875=8.410844 6597=8.282447 10=8.179502 1709=7.945696
+[DBG] nonFiniteLogits=0 vocabSize=200064 (x16)
+TOKEN_IDS=1579,48,48,48,23724,19267,23724,56,52,67,53,55,5940,5940,61,51
+[AGENT] TOKEN id=1579 piece=</
+[AGENT] GENERATION_RECEIPT prompt=11 generated=16 completed=1 cancelled=0 stop_reason=16 stop=COMPLETED
+output=</000android280android84C57={={=3
+PEAK_RAM_WS_GB=3.208 ROUTE_OK=12896 ACQUIRE_OK=12896 retain=29
+
+## Reasoning retain-29 max-tokens=24 (crash before receipt)
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[S08_ATTN_DUMP] layer=0 k0..5=0 v0..5=0
+[LOGIT_DIAG] top5: 1139=11.296640 ...
+[DBG] sampled token sequence (23): 1139,1139,3293,1788,51,1139,5940,120,1139,1788,1139,5940,3293,1139,51,19328,1139,1139,110,1139,50,1139,1139
+[AGENT] TOKEN id=1139 piece=="
+EXIT=-1 PEAK_RAM_WS_GB=3.575 receipt=NOT_WRITTEN
+
+## Sealed B03 baseline (C9A5564C) — not useful quality
+output=姬被被被 tokens=4
+S08_T4_R1 k0=1.125868e+24 v0=6.020336e+12
