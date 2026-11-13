@@ -1,0 +1,134 @@
+﻿[
+    {
+        "Id":  "D_tinyllama_host",
+        "Exit":  "EXIT=-1",
+        "GT":  "NOT_FOUND",
+        "CE":  "0",
+        "Arch":  "llama",
+        "HD":  "1",
+        "DS":  "?",
+        "VK":  "OPEN_FAIL",
+        "Backend":  "HOST"
+    },
+    {
+        "Id":  "D_tinyllama_gpu",
+        "Exit":  "EXIT=-1",
+        "GT":  "NOT_FOUND",
+        "CE":  "0",
+        "Arch":  "llama",
+        "HD":  "0",
+        "DS":  "?",
+        "VK":  "VK_MENTION",
+        "Backend":  "GPU"
+    },
+    {
+        "Id":  "D_llama32_3b_host",
+        "Exit":  "EXIT=-1",
+        "GT":  "NOT_FOUND",
+        "CE":  "0",
+        "Arch":  "llama",
+        "HD":  "1",
+        "DS":  "?",
+        "VK":  "OPEN_FAIL",
+        "Backend":  "HOST"
+    },
+    {
+        "Id":  "D_phi3_mini_host",
+        "Exit":  "EXIT=-1",
+        "GT":  "NOT_FOUND",
+        "CE":  "0",
+        "Arch":  "phi3",
+        "HD":  "1",
+        "DS":  "?",
+        "VK":  "OPEN_FAIL",
+        "Backend":  "HOST"
+    },
+    {
+        "Id":  "D_gemma4_e4b_host",
+        "Exit":  "EXIT=-1",
+        "GT":  "NOT_FOUND",
+        "CE":  "0",
+        "Arch":  "UNKNOWN",
+        "HD":  "1",
+        "DS":  "?",
+        "VK":  "VK_MENTION",
+        "Backend":  "HOST"
+    },
+    {
+        "Id":  "M_dsv2lite_host",
+        "Exit":  "EXIT=32",
+        "GT":  "NOT_FOUND",
+        "CE":  "0",
+        "Arch":  "UNKNOWN",
+        "HD":  "?",
+        "DS":  "?",
+        "VK":  "?",
+        "Backend":  "HOST"
+    },
+    {
+        "Id":  "M_qwen36_a3b_host",
+        "Exit":  "EXIT=32",
+        "GT":  "NOT_FOUND",
+        "CE":  "0",
+        "Arch":  "UNKNOWN",
+        "HD":  "?",
+        "DS":  "?",
+        "VK":  "?",
+        "Backend":  "HOST"
+    },
+    {
+        "Id":  "D_glm47_flash_host",
+        "Exit":  "EXIT=-1",
+        "GT":  "NOT_FOUND",
+        "CE":  "0",
+        "Arch":  "UNKNOWN",
+        "HD":  "1",
+        "DS":  "?",
+        "VK":  "VK_MENTION",
+        "Backend":  "HOST"
+    },
+    {
+        "Id":  "D_nemotron35_host",
+        "Exit":  "EXIT=-1",
+        "GT":  "NOT_FOUND",
+        "CE":  "0",
+        "Arch":  "UNKNOWN",
+        "HD":  "1",
+        "DS":  "?",
+        "VK":  "VK_MENTION",
+        "Backend":  "HOST"
+    },
+    {
+        "Id":  "D_qwen38_27b_host",
+        "Exit":  "EXIT=-1",
+        "GT":  "NOT_FOUND",
+        "CE":  "0",
+        "Arch":  "UNKNOWN",
+        "HD":  "1",
+        "DS":  "?",
+        "VK":  "VK_MENTION",
+        "Backend":  "HOST"
+    },
+    {
+        "Id":  "M_minimax_full_reap16_host",
+        "Exit":  "EXIT=-1",
+        "GT":  "NOT_FOUND",
+        "CE":  "0",
+        "Arch":  "minimax-m2",
+        "HD":  "1",
+        "DS":  "?",
+        "VK":  "?",
+        "Backend":  "HOST"
+    },
+    {
+        "Id":  "M_minimax_reap27_sidecar_host",
+        "Exit":  "EXIT=-1",
+        "GT":  "NOT_FOUND",
+        "CE":  "0",
+        "Arch":  "minimax",
+        "HD":  "1",
+        "DS":  "?",
+        "VK":  "VK_MENTION",
+        "Backend":  "HOST"
+    }
+]

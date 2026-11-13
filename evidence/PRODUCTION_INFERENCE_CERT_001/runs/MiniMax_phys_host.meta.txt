@@ -1,0 +1,2 @@
+CMD=G:\~dev\rawrxd\build_ninja\bin\rawr.exe run F:\ollamamodels\MiniMax-M2.7-REAP16\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf --reap 16GB/8 -p Say hi. --max-tokens 8
+EXIT= ELAPSED_MS=1403 GENERATED_TOKENS= CLEAN_EXIT= RUNTIME_REACHED=1 TOKEN_SURVIVED=0

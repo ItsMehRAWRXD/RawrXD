@@ -1,4 +1,4 @@
-PRODUCTION_MATURITY_TOP25_001 — STATUS (P4 recognition readiness)
+﻿PRODUCTION_MATURITY_TOP25_001 — STATUS (P4 recognition readiness)
 ASOF_LOCAL=2026-11-13
 WORKSTREAM=P4_TOP25_RECOGNITION_READINESS
 PROMOTE=0
@@ -43,25 +43,36 @@ Do not invent; do not promote.
 | Ollama / vLLM head-to-head | — | COMPETITIVE_BENCH_001 (HEAD_TO_HEAD=NOT_SEALED) | NOT_RUN |
 | SWE-bench null-agent self-test | OVERALL=0.0% (0/4 tasks) | COMPETITIVE_BENCH_001/smoke_runs/swebench_help.* EXIT=0 | Measured null agent; NOT competitive PASS |
 | isa_dispatch / smoke_test_minimal | EXIT=-1073741515 | COMPETITIVE_BENCH_001/smoke_runs/*.meta | DLL_NOT_FOUND; SCORE=NONE |
-| Local install verify | PASS_LOCAL_VERIFY; SHA CB412035… | TOP25_RECOGNITION_OPS_001/VERIFY_LOCAL.txt | Help smoke only |
+| Local install verify | PASS_LOCAL_VERIFY; SHA 8E4CEC2F… (prior CB412035…) | TOP25_RECOGNITION_OPS_001/VERIFY_LOCAL.txt | Help smoke only |
 
 ## Recognition blockers still OPEN
-1. DISTRIBUTION_MANIFEST.yaml non-authoritative (placeholder SHA / PRODUCTION READY) — README conflict CLOSED
+1. DISTRIBUTION_MANIFEST.yaml — PRODUCTION READY revoked; status HELD / DRAFT_SHA_BOUND (2026-11-13) — still ≠ publish
 2. MiniMax STREAM_CORRECTNESS / semantic NOT_PASS (SCOREBOARD + B03/B04)
 3. GUI four-panel FAIL_CLOSED (FOUR_PANEL_COMPLETION_001)
 4. TOP25 IDE parity matrix G3_IDE_TOP25_PARITY_001 — LAW only; no E2E seal
-5. Public package channels (winget/brew/docker/MSI) NOT_PUBLISHED / UNVERIFIED
+5. Public package channels NOT_PUBLISHED (SHA bound to v14.7.3 zip; clean-VM witness ABSENT)
 6. No sealed competitive suite vs peers with matched model/prompt/hardware
 7. MoE retention onboarding: R=27 quality FAIL; calib bank wire still gapped
 8. User retention cohort D1/D7/D30 = NOT_RUN (schema only)
 
+## DRAFT_SHA_BOUND (not publish)
+v14.7.3 zip SHA256=DDEB7D50840C1097B2C79A5702C54C115BD076B108F9C43D15BCB4BE563B829D
+v1.0.0 zip SHA256=3B692DDC9F14D75D373CB682CE1968B9B3E25074327254F88CFE910DE8BDE7D5
+See TOP25_RECOGNITION_OPS_001/DRAFT_SHA_BOUND.txt
+
+
+## Competitive microbench cross-link (this turn; COMPETITIVE_PASS=0)
+COMPETITIVE_BENCH_001 run 20261113_145044: terminal_gate v5 PASS (ConPTY closed);
+cli_validate FAIL 1/2; IDE presence OK / --help TIMEOUT; coding FAIL intentional;
+game NOT_RUN; external IDE/Terminal-Bench NOT_IN_TREE. MiniMax FULL skipped (QC EXCLUSIVE).
+≠ Top-25 recognition PASS.
 ## Authority anchors (unchanged)
 LAW.txt · SCOREBOARD.md · REAP_ALL_16GB_001/INDEP_SMOKE_SEAL.txt ·
 REAP_MULTI_MODEL_001/B03_FORWARD/STATUS.md · G09 QUALITY_149 · REAP_TIP_PORT_001
 
 NEXT_EXECUTABLE_DOC_GATE=
-  Bind real InstallerSha256 to a measured release zip (or MSI) + clean-VM install witness;
-  then clear distribution/ NOT_PUBLISHED.
+  Clean-VM install witness for SHA-bound v14.7.3 zip; then consider clearing NOT_PUBLISHED
+  (DRAFT_SHA_BOUND already landed — publish still held).
 NEXT_EXECUTABLE_PERF_GATE=
   Sealed same-SHA competitive bench receipt (model/prompt/hardware pinned) OR explicit HOLD.
 
@@ -69,3 +80,4 @@ PROMOTE=0
 CERTIFIED=0
 RELEASE=HELD
 TIP_CLIMB=HOLD
+

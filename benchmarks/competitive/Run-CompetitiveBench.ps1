@@ -62,10 +62,22 @@ function Invoke-Tracked {
         $meta.REASON = 'TIMEOUT'
         $meta.EXIT_CODE = -1
     } else {
-        $meta.EXIT_CODE = $p.ExitCode
-        # EXIT=0 is process success only — not a competitive leaderboard PASS.
-        $meta.RESULT = if ($p.ExitCode -eq 0) { 'EXIT_0' } else { 'EXIT_NONZERO' }
-        $meta.NOTE = 'RESULT is process exit class only; COMPETITIVE_PASS=0 unless separately sealed.'
+        # Start-Process PassThru can leave ExitCode null until Refresh; poll briefly.
+        $exitCode = $null
+        for ($i = 0; $i -lt 20 -and $null -eq $exitCode; $i++) {
+            $p.Refresh()
+            $exitCode = $p.ExitCode
+            if ($null -eq $exitCode) { Start-Sleep -Milliseconds 25 }
+        }
+        $meta.EXIT_CODE = $exitCode
+        if ($null -eq $exitCode) {
+            $meta.RESULT = 'EXIT_UNKNOWN'
+            $meta.NOTE = 'ExitCode stayed null after WaitForExit+Refresh; use STDOUT_LOG for content disposition. COMPETITIVE_PASS=0.'
+        } else {
+            # EXIT=0 is process success only — not a competitive leaderboard PASS.
+            $meta.RESULT = if ($exitCode -eq 0) { 'EXIT_0' } else { 'EXIT_NONZERO' }
+            $meta.NOTE = 'RESULT is process exit class only; COMPETITIVE_PASS=0 unless separately sealed.'
+        }
     }
     $meta.ENDED_UTC = (Get-Date).ToUniversalTime().ToString('o')
     $meta.STDOUT_LOG = $outPath

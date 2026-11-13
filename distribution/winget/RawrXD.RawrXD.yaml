@@ -2,13 +2,14 @@
 # Phase H.2 Batch 1/5: Windows Package Manager (Winget) Manifest
 # https://docs.microsoft.com/en-us/windows/package-manager/package/
 #
-# STATUS: NOT_PUBLISHED · PROMOTE=0 · CERTIFIED=0
-# InstallerSha256 is PLACEHOLDER — do not claim winget install works.
-# Measured 2026-11-13: winget search RawrXD → no package; v1.0.0 asset is zip not MSI.
+# STATUS: NOT_PUBLISHED · DRAFT_SHA_BOUND · PROMOTE=0 · CERTIFIED=0
+# InstallerSha256 MEASURED from downloaded GitHub asset (2026-11-13).
+# winget search RawrXD → still no package. Clean-VM install witness = ABSENT.
 # Authority: evidence/PRODUCTION_MATURITY_TOP25_001/TOP25_RECOGNITION_OPS_001/
+# Witness: release_assets/SHA256.txt
 
 PackageIdentifier: RawrXD.RawrXD
-PackageVersion: 1.0.0
+PackageVersion: 14.7.3
 PackageLocale: en-US
 Publisher: RawrXD AI
 PublisherUrl: https://rawrxd.ai
@@ -16,55 +17,44 @@ PublisherSupportUrl: https://github.com/ItsMehRAWRXD/RawrXD/issues
 PrivacyUrl: https://rawrxd.ai/privacy
 Author: RawrXD Team
 PackageName: RawrXD Sovereign
-PackageUrl: https://rawrxd.ai/download
+PackageUrl: https://github.com/ItsMehRAWRXD/RawrXD/releases/tag/v14.7.3
 License: MIT
 LicenseUrl: https://github.com/ItsMehRAWRXD/RawrXD/blob/main/LICENSE
 Copyright: Copyright (c) 2026 RawrXD AI
 CopyrightUrl: https://rawrxd.ai/legal
-ShortDescription: Sovereign AI runtime with autonomous capabilities
+ShortDescription: Sovereign AI runtime (local-first; package channel not published)
 Description: |
-  RawrXD Sovereign is a production-grade AI inference runtime featuring:
-  - Autonomous operation with self-healing capabilities
-  - Hotpatch MASM kernel optimization (zero-downtime updates)
-  - Chaos engineering validation for production resilience
-  - Intelligent operations with predictive analytics
-  - Multi-platform support (Windows, macOS, Linux)
-  
-  Designed for enterprise deployment with 99.99% availability targets.
+  RawrXD Sovereign draft winget recipe.
+  DRAFT_SHA_BOUND to the measured GitHub Windows zip only.
+  NOT_PUBLISHED — do not treat as community-index install.
 Moniker: rawrxd
 Tags:
   - ai
   - inference
   - llm
   - machine-learning
-  - autonomous
   - sovereign
   - runtime
-  - production
 MinimumOSVersion: 10.0.17763.0
-InstallerType: wix
+InstallerType: zip
 InstallModes:
   - interactive
   - silent
   - silentWithProgress
 UpgradeBehavior: install
 Commands:
-  - rawrxd
-  - rawrxd-cli
+  - rawr
 FileExtensions:
   - gguf
-  - onnx
 Protocols:
   - rawrxd
-ReleaseDate: 2026-07-13
+ReleaseDate: 2026-07-15
 Installers:
   - Architecture: x64
-    InstallerUrl: https://github.com/ItsMehRAWRXD/RawrXD/releases/download/v1.0.0/RawrXD-1.0.0-x64.msi
-    InstallerSha256: PLACEHOLDER_SHA256
-    Scope: machine
+    InstallerUrl: https://github.com/ItsMehRAWRXD/RawrXD/releases/download/v14.7.3/RawrXD-14.7.3-Windows-x64.zip
+    InstallerSha256: DDEB7D50840C1097B2C79A5702C54C115BD076B108F9C43D15BCB4BE563B829D
+    Scope: user
     InstallerLocale: en-US
-    ProductCode: "{12345678-1234-1234-1234-123456789012}"
-    ElevationRequirement: elevationRequired
-    ReleaseDate: 2026-07-13
+    ReleaseDate: 2026-07-15
 ManifestType: singleton
 ManifestVersion: 1.4.0

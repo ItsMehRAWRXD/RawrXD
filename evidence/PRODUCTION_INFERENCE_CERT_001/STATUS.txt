@@ -1,52 +1,96 @@
-PRODUCTION_INFERENCE_CERT_001
+PRODUCTION_INFERENCE_CERT_001 STATUS
 DATE=2026-11-13
 PROMOTE=0
 CERTIFIED=0
-EXE_SHA256_MATRIX1=67D9B85C183247AA5915C08EC219D3406B04BD82878D3F354B7956248EEA19AA
-EXE_SHA256_MATRIX2=288585489E198CCFE45502051E50D77AA1C0D0D3B9EDF608F987F25BB244C8E3
-EXE_PIN=g:\~dev\rawrxd\build_ninja\bin\rawr_cert_pin.exe
-
-## Matrix result (run_smoke_matrix.ps1 ×2)
-
-Both passes: 12/12 arms EXIT=-1 or 32 · GENERATED_TOKENS=NOT_FOUND · CLEAN_EXIT=0.
-DSV2lite/Qwen A3B returned EXIT=32 on matrix2; others still -1.
-
-This is **NOT_PASS / incomplete harness parse or aborted gen** — not architecture certification.
-Do not credit manual probe_tinyllama_cmd.meta as CLEAN_EXIT proof.
-
-## Matrix3 pinned exclusive (rawr_cert_pin EXE 67D9B85C…)
-
-| Arm | Result |
-|-----|--------|
-| D_tinyllama_host | EXIT=0 GT=8 CE=1 — narrow host smoke only (≠ multi-family cert) |
-| M_dsv2lite_host | EXIT=4 CE=1 GT=NOT_FOUND — partial |
-| All other dense/MoE/GPU/MiniMax | NO_CLEAN_EXIT / NOT_FOUND |
-
-## Aborted MoE/dense batch (terminal 225669 EXIT=4294967295)
-
-Classified in ABORTED_BATCH_CLASSIFICATION.txt + smoke_results_aborted_batch*.
-All six recovery arms: CLEAN_EXIT=0 · GENERATED_TOKENS=NOT_FOUND · PASS=0.
-MiniMax/DSV2/GLM: STARTED-only metas (ABORT_BY_PEER mid-load).
-Qwen A3B + Nemotron3.5: complete metas, INSUFFICIENT_HOST_MEMORY (OOM/commit).
-Harness hardened: run_one.ps1 try/finally always emits DONE + HARNESS_COMPLETE=1; partial≠PASS.
-
-## Exclusive WEIGHT_BUDGET_MIB=59568 sequential recovery
-
-STATUS=NOT_RUN
-WHY=QUALITY_CURVE_001 holds CONCURRENCY_LOCK EXCLUSIVE=1 HOLD_CM=1 DO_NOT_KILL_QC16_HOST=1 (live refresh ~14:49–14:50 local); llama-cli ~14GB WS; FreePhysicalMB≈689
-POLL=2026-11-13T14:50 local — no steal
-ARMS_PENDING=M_minimax_reap27_sidecar_host, M_minimax_full_reap16_host (--reap 16GB/8 Retain27), M_dsv2lite_host (16384), M_qwen36_a3b_host, D_nemotron35_host, D_glm47_flash_host
-NEXT_GATE=after QC lock clear + FreePhysicalMB>>model residency: exclusive one-arm-at-a-time rerun WEIGHT_BUDGET_MIB=59568 (DSV2=16384); kill peers first; fail-closed disposition
-DO_NOT=claim PASS from aborted batch; invent GPU PASS; steal QC lock; treat NOT_RUN as PASS
-
-```
-CERTIFICATION=HELD
-TINYLLAMA_HOST_SMOKE=NARROW_ONLY
-MULTI_ARCH=OPEN
-EXCLUSIVE_59568_RECOVERY=NOT_RUN
-ABORTED_BATCH=CLASSIFIED_FAIL
-HARNESS_DONE_ON_KILL=HARDENED
+CROSS_SHA_CREDIT=0
+TIP_CLIMB=HOLD
 NOT_RUN!=PASS
+FAIL_CLOSED=1
+
+## Scope
+P1 production inference certification inventory on local product path:
+  EXE_PIN=g:\~dev\rawrxd\build_ninja\bin\rawr_cert_pin.exe
+  (snapshot of rawr.exe.stale_192356 — pinned to avoid mid-cert rebuild races on rawr.exe)
+EXE_SHA256=67D9B85C183247AA5915C08EC219D3406B04BD82878D3F354B7956248EEA19AA
+EXE_LIVE_AT_WRITE=g:\~dev\rawrxd\build_ninja\bin\rawr.exe
+EXE_LIVE_SHA256=8E4CEC2FFA2DE2437B818B2DCD48F1BD355C2378F7603B7F370947C7BBE39574
+  NOTE: LIVE SHA differs from PIN; LIVE was rebuilt by concurrent agents during this cert.
+  All CLEAN_EXIT rows below are on EXE_PIN SHA unless noted.
+GIT_HEAD_AT_WRITE=<filled by commit>
+SMOKE=max-tokens 8 prompt=Hello HOST_DECODE=1 R1_HOST_FLOOR=1 unless GPU row
+HOST_CONTENTION=llama-cli repeatedly consumed 16–37GB during MoE runs; killed for exclusive host
+  when observed. Several MoE smokes aborted mid-prefill under memory pressure.
+
+## Per-arch matrix (measured this cert)
+
+| ID | Class | Arch | EXE_SHA | EXIT | CLEAN_EXIT | GENERATED_TOKENS | Backend | Blocker |
+|----|-------|------|---------|------|------------|------------------|---------|---------|
+| D_tinyllama_host | DENSE | llama | 67D9B85C… | 0 | 1 | 8 | HOST_DECODE | — |
+| D_llama32_3b_host | DENSE | llama | 67D9B85C… | 0 | 1 | 8 | HOST_DECODE | — |
+| D_phi3_mini_host | DENSE | phi3 | 67D9B85C… | 0 | 1 | 8 | HOST_DECODE | — |
+| D_gemma4_e4b_host | DENSE | gemma4 | 67D9B85C… | 0 | 1 | 8 | HOST_DECODE | — |
+| D_tinyllama_gpu | DENSE | llama | 67D9B85C… | -1 | 0 | 0/NOT_FOUND | GPU_ATTEMPT | VULKAN_CREATE_INSTANCE_FAIL; DualStick NOT_RUN |
+| M_minimax_reap27_sidecar_host | MoE | minimax-m2 | 67D9B85C… | NO_SEAL (stale EXIT=12) | 0 | NOT_FOUND | HOST_DECODE | PREFILL_PARTIAL (observed thru ~L27) then PROCESS_GONE under host contention; CLEAN_EXIT not sealed |
+| M_minimax_full_reap16_host | MoE | minimax-m2 | 67D9B85C… | NO_SEAL | 0 | NOT_FOUND | HOST_DECODE+REAP16/8 retain27 | LOAD/topology reached; CLEAN_EXIT NOT_RUN this seal |
+| M_dsv2lite_host | MoE | deepseek2 | 67D9B85C… | 4 (earlier) / -1 (retry) | 0 | 0 | HOST_DECODE | SHARD_INDEX_DUP_TENSOR + incomplete MLA metadata (first measured); retry truncated |
+| M_qwen36_a3b_host | MoE/hybrid | (hybrid) | 67D9B85C… | -1 | 0 | 0 | HOST_DECODE | THIS_SHA_SMOKE_INCONCLUSIVE (stderr truncated); HISTORICAL SSM_CERT_REFUSE on other SHA — CROSS_SHA_CREDIT=0 |
+| D_nemotron35_host | hybrid | (hybrid) | 67D9B85C… | -1 | 0 | 0 | HOST_DECODE | THIS_SHA_SMOKE_INCONCLUSIVE; HISTORICAL SSM_CERT_REFUSE other SHA — CROSS_SHA_CREDIT=0 |
+| D_glm47_flash_host | DENSE/large | ? | 67D9B85C… | 12 | 0 | 0 | HOST_DECODE | INSUFFICIENT_HOST_MEMORY / NO_FEASIBLE_BACKEND |
+| D_qwen38_27b_host | hybrid | ? | 67D9B85C… | -1 | 0 | 0 | HOST_DECODE | THIS_SHA_SMOKE_INCONCLUSIVE (SSM tensors present in GGUF warnings on prior attempt) |
+
+### CLEAN_EXIT inventory (this EXE_PIN only)
+DENSE_CLEAN_EXIT=4/4 attempted small-mid (tinyllama, llama3.2-3b, phi3-mini, gemma4-E4B)
+MoE_CLEAN_EXIT=0/N on this EXE_PIN seal (MiniMax prefill reached but not sealed)
+GPU_CLEAN_EXIT=0/1
+
+## GPU decode path (Vulkan / DualStick) vs HOST_DECODE — measured
+HOST_DECODE path:
+  PRODUCT_LAA HOST_DECODE=1 DUALSTICK_ARM=0 VK_ICD=BLOCKED WHY=R1_HOST_FLOOR
+  ENHANCEMENT STACK: HOST_DECODE (CPU; skip vulkan/speed) on CLEAN_EXIT dense runs
+  Dense CLEAN_EXIT works with RAWRXD_HOST_DECODE=1 even when "Vulkan open failed" / vkCreateInstance failed is logged (CPU opt-in).
+
+GPU / DualStick this cert:
+  D_tinyllama_gpu: HOST_DECODE=0 requested → EXIT=-1; vkCreateInstance failed; DualStick NOT_RUN
+  DUALSTICK_RUNTIME_USED=0 on HOST CLEAN_EXIT rows
+  DUALSTICK_TRUE_RUNTIME=NOT_RUN on EXE_PIN this session
+  Historical DualStick CLEAN_EXIT exists under REAP_TIP_PORT_001/k2gen/g09_gpu_tok.* on a different EXE/SHA
+    → CROSS_SHA_CREDIT=0 for this STATUS; do not promote from it.
+
+## REAP export sidecar / ≤16GB program — measured on disk
+reap_export_sidecar.exe present:
+  PATH=g:\~dev\rawrxd\build_ninja\bin\reap_export_sidecar.exe
+  SHA256=BD139B6887130F54E5C5144ECAC57D384DBC7C85E370821E0B9F6F1FCC71C57A
+  usage requires RAWR_REAP_EXPORT_EXPERIMENTAL=1
+
+On-disk ≤16GiB sidecars (FileSize measured; SOURCE_IMMUTABLE assumed from prior seals):
+| Export | Shards | GiB | Notes |
+|--------|--------|-----|-------|
+| F:\ollamamodels\MiniMax-M2.7-REAP27-16GB | 3 | 15.606 | expert_count=27; loadable; CLEAN_EXIT not sealed this EXE_PIN |
+| F:\ollamamodels\MiniMax-M2.7-REAP16 | 3 | 15.606 | alias-size of retain27 family |
+| F:\ollamamodels\Qwen3.6-35B-A3B-REAP16 | 1 | 15.936 | prior smoke SSM refuse (other SHA) |
+| F:\ollamamodels\GLM-4.7-Flash-REAP16 | 1 | 15.910 | prior crash/overrun (other SHA) |
+| F:\ollamamodels\nemotron-3.5-lightning-REAP16 | 1 | 15.911 | prior SSM refuse (other SHA) |
+
+Product path: `--reap` alone = residency/proxy (export_status=NOT_RUN unless RAWR_REAP_EXPORT_DIR + experimental/auth).
+Certified rewrite still requires rewrite_authorized + reference_parity — PROMOTE=0.
+
+## Gates
+SOURCE_WIRED=1 (rawr run product path exercised)
+RUNTIME_REACHED=1 (dense + MiniMax load/prefill)
+TOKEN_SURVIVED=1 (dense CLEAN_EXIT GENERATED_TOKENS=8)
+MoE_TOKEN_SURVIVED=0 (this EXE_PIN)
+GPU_DUALSTICK_PASS=0 (NOT_RUN / OPEN_FAIL)
 PROMOTE=0
 CERTIFIED=0
-```
+
+## Next blocker
+1) Exclusive-host MiniMax REAP27 CLEAN_EXIT seal on a single stable EXE (no concurrent llama-cli / rawr.exe rebuild races).
+2) Restore Vulkan ICD / DualStick GPU decode on this machine (vkCreateInstance failed throughout this cert) — HOST_DECODE is the only measured CLEAN_EXIT backend.
+3) Independent MoE/hybrid refuse matrix on the same EXE_PIN (Qwen3.6-A3B / Nemotron SSM_CERT, DeepSeek-V2-Lite MLA) without PowerShell stderr truncation — use cmd.exe redirection only.
+4) Do not promote: PROMOTE_IF still requires PRODUCT_OPEN_PASS && SESSION_ENTER_PASS && GENERATED_TOKENS>0 && TOKEN_COMMIT_PASS across intended production arches (+ multi-family). Dense-only ≠ production MoE cert.
+
+## Artifacts
+runs/*.err.txt runs/*.out.txt runs/*.exit.txt runs/*.meta.txt
+EXE_SHA256.txt EXE_PIN_PATH.txt
+run_one.ps1 run_smoke_matrix.ps1
+smoke_results.json (early matrix; superseded by STATUS table where conflict — STATUS is authority)

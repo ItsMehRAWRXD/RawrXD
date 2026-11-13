@@ -1,31 +1,33 @@
 ﻿# chocolateyinstall.ps1
 # Phase H.2 Batch 2/5: Chocolatey Installation Script
 #
-# STATUS: NOT_PUBLISHED · PROMOTE=0 · CERTIFIED=0
-# checksum64 is PLACEHOLDER; claimed MSI was ABSENT on v1.0.0 (zip only).
-# Do not run as a production install path until SHA + asset bind.
+# STATUS: NOT_PUBLISHED · DRAFT_SHA_BOUND · PROMOTE=0 · CERTIFIED=0
+# checksum64 MEASURED for RawrXD-14.7.3-Windows-x64.zip (2026-11-13).
+# MSI claim removed — asset was ABSENT. Clean-VM install witness = ABSENT.
 # Authority: evidence/PRODUCTION_MATURITY_TOP25_001/TOP25_RECOGNITION_OPS_001/
 
 $ErrorActionPreference = 'Stop'
 
 $packageName = 'rawrxd'
 $toolsDir = "$(Split-Path -Parent $MyInvocation.MyCommand.Definition)"
-$url64 = 'https://github.com/ItsMehRAWRXD/RawrXD/releases/download/v1.0.0/RawrXD-1.0.0-x64.msi'
-$checksum64 = 'PLACEHOLDER_SHA256'
+$url64 = 'https://github.com/ItsMehRAWRXD/RawrXD/releases/download/v14.7.3/RawrXD-14.7.3-Windows-x64.zip'
+$checksum64 = 'DDEB7D50840C1097B2C79A5702C54C115BD076B108F9C43D15BCB4BE563B829D'
 $checksumType64 = 'sha256'
+
+Write-Warning "rawrxd Chocolatey script is NOT_PUBLISHED / DRAFT_SHA_BOUND — no community publish claim."
 
 $packageArgs = @{
   packageName    = $packageName
   unzipLocation  = $toolsDir
-  fileType       = 'msi'
+  fileType       = 'zip'
   url64bit       = $url64
   checksum64     = $checksum64
   checksumType64 = $checksumType64
-  silentArgs     = "/qn /norestart /l*v `"$($env:TEMP)\$($packageName).log`""
-  validExitCodes = @(0, 3010, 1641)
+  validExitCodes = @(0)
 }
 
-Install-ChocolateyPackage @packageArgs
+# DRAFT only — do not treat Install-ChocolateyZipPackage success as Top-25 publish.
+Install-ChocolateyZipPackage @packageArgs
 
 # Add to PATH if not already present
 $installPath = "${env:ProgramFiles}\RawrXD"

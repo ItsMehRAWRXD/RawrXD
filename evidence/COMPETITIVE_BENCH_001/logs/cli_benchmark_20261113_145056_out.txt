@@ -1,0 +1,16 @@
+==============================================================================
+Sovereign Kernel Benchmark
+==============================================================================
+
+Benchmarking RMSNorm (4096 elements, 10000 iterations)...
+  Time: 0.004 us/call
+  Throughput: 8477.11 GB/s
+
+Benchmarking LayerNorm... SKIPPED (kernel under investigation)
+
+Benchmarking ResidualAdd (4096 elements, 10000 iterations)...
+  Time: 0.365 us/call
+
+Benchmarking Q4K Dequant... SKIPPED (needs tensor_info structure)
+
+==============================================================================

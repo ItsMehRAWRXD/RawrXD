@@ -13,7 +13,7 @@ Prior retain-256 theta EXE: `EA4E20229633F9671F1B43620A3B6F27D21667F57A784B06830
 | CLI_MATURITY | **Not certified** | Dense unload PASS (`cli_llama32_smoke_post.*`). MiniMax semantic NOT_PASS. |
 | GUI_MATURITY | **Not certified** | Four-panel FAIL_CLOSED. |
 | TOP25_PARITY | **MEASURED_PARTIAL** | Ops audited (`TOP25_RECOGNITION_OPS_001` + `TOP25_OPS_001`). No sealed peer IDE/perf parity. ≠ certified. |
-| TOP25_RECOGNITION | **NOT_READY** | README conflict closed; local verify PASS; package channels NOT_PUBLISHED; PROMOTE=0. |
+| TOP25_RECOGNITION | **NOT_READY** | DRAFT_SHA_BOUND (v14.7.3/v1.0.0 zips); NOT_PUBLISHED; clean-VM ABSENT; PROMOTE=0. |
 | COMMERCIAL_VALUATION | **Unverified** | Stale Aug-2026 ≠ cert. |
 
 ## Competitive throughput (citations only — not a ranking)
@@ -49,20 +49,22 @@ Prior retain-256 theta EXE: `EA4E20229633F9671F1B43620A3B6F27D21667F57A784B06830
 | MiniMax retain-256 quality | **RUNTIME_REACHED / NOT_PASS** | `minimax_r256_quality.*` + `minimax_r256_theta_moe.*` |
 | MiniMax attn softmax scale | **MATCH** | `1/sqrt(128)` Deep2==llama — `RE_MINIMAX_SOFTMAX_SWIGLU_LMHEAD_001` |
 | MiniMax MoE SwiGLU order | **MATCH** | silu(gate)*up separate gate/up/down — same RE |
+| MiniMax Q_LINEAR_0 Q4_K×Q8_K | **SEALED** | offline GEMV maxdiff=2.24e-08; FP32 1.25e-3=false lead — `RE_MINIMAX_QLINEAR0_SEAL_001` |
 | MiniMax lm_head vs llama FNV | **REFERENCE_BLOCKED** | llama-direct CPU TIMEOUT (walltime/load); DLL OK |
 | Kimi COHERENT_USEFUL | **OPEN** | `QUALITY_149.txt` |
 | GUI four-panel | **FAIL_CLOSED** | `FOUR_PANEL_COMPLETION_001` |
 
 ## RE notes (this turn)
 
-- **Softmax / SwiGLU / lm_head RE:** `RE_MINIMAX_SOFTMAX_SWIGLU_LMHEAD_001` — softmax `1/sqrt(128)` MATCH; MoE SwiGLU `silu(gate)*up` MATCH; lm_head FNV **REFERENCE_BLOCKED** (llama-direct CPU TIMEOUT post-backend; not 0xC0000135). **PATCH=N**.
-- **PRENORM SEALED:** `B03_PRENORM_MATERIALIZE` for shard+non-MLA; ATTN_NORM_0 maxdiff=2.98e-08 vs ggml — `RE_MINIMAX_BATCH01_PRENORM_QLINEAR_001`.
-- **FIRST_DIVERGENT_OP=Q_LINEAR_0:** Q4_K GEMV maxdiff≈1.25e-3 (K/V same class). Q_NORM/K_NORM OK given Deep Q/K. Softmax/SwiGLU formula closed; not numeric root.
-- **Semantic progress ≠ PASS:** RAW Hello → `.\n\nThe first` (was `olisian¶¶¶`); retain-256 still backticks.
-- Prior closed: NeoX L2, Q4_K block, KV ownership, embed MATCH, QK-norm flat, wo/lm_head geom.
+- **Q_LINEAR_0 SEALED:** offline Q4_K×Q8_K GEMV maxdiff=2.24e-08 (`compare_q_linear_q8k.rerun`) — `RE_MINIMAX_QLINEAR0_SEAL_001`. FP32-dequant 1.25e-3 = **false lead** (wrong authority). **PATCH=N**.
+- **AL13 gate_inp:** verify-axis false FAIL closed; export OK; OVERALL PASS after `_al13_verify.py` row_E0 fix.
+- Softmax/SwiGLU formula MATCH; lm_head FNV still REFERENCE_BLOCKED — prior RE.
+- **PRENORM SEALED:** ATTN_NORM_0 maxdiff=2.98e-08 — Batch01.
+- **Semantic progress ≠ PASS:** RAW Hello → `.\n\nThe first`; retain-256 still backticks.
+- Prior closed: NeoX L2, Q4_K block, KV, embed, QK-norm, wo/lm_head, Softmax/SwiGLU.
 
 ## Next executable gate
 
-Seal `Q_LINEAR_0` vs linked-ggml / llama STAGE_DIGEST (same RAW Hello). Cross-link AL09 tok4 L17 / AL10_AL14 for decode-after-tok0. No speculative Softmax/SwiGLU edits.
+`FFN_DOWN_5_CANDIDATE` / dump layers 3..8 (`B3_FIRST_BAD phase=FFN_DOWN pos=5`). Cross-link AL09 tok4 L17 / AL10_AL14. llama Forced STAGE_DIGEST still REFERENCE_BLOCKED.
 
 `PROMOTE=0` · `TIP_CLIMB=HOLD` · `NOT_RUN!=PASS`

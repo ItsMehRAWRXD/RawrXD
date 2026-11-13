@@ -1,0 +1,15 @@
+{
+    "SUITE":  "cli_health",
+    "COMMAND":  "G:\\~dev\\rawrxd\\bin\\SovereignCLI_Complete.exe health",
+    "EXE_PATH":  "G:\\~dev\\rawrxd\\bin\\SovereignCLI_Complete.exe",
+    "EXE_SHA256":  "5BC452BE0E518DC6E9F866A0D57B33A24CC234B165B336ACAF3BA9A5648DA20C",
+    "EXE_EXISTS":  true,
+    "STARTED_UTC":  "2026-11-13T19:50:56.3049464Z",
+    "PROMOTE":  0,
+    "EXIT_CODE":  null,
+    "RESULT":  "EXIT_NONZERO",
+    "NOTE":  "RESULT is process exit class only; COMPETITIVE_PASS=0 unless separately sealed.",
+    "ENDED_UTC":  "2026-11-13T19:50:56.3395416Z",
+    "STDOUT_LOG":  "G:\\~dev\\rawrxd\\evidence\\COMPETITIVE_BENCH_001\\logs\\cli_health_20261113_145056_out.txt",
+    "STDERR_LOG":  "G:\\~dev\\rawrxd\\evidence\\COMPETITIVE_BENCH_001\\logs\\cli_health_20261113_145056_err.txt"
+}

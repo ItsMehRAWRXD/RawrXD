@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- rawrxd.nuspec -->
 <!-- Phase H.2 Batch 2/5: Chocolatey Package Specification -->
-<!-- STATUS: NOT_PUBLISHED · PROMOTE=0 · CERTIFIED=0 · checksum PLACEHOLDER in chocolateyinstall.ps1 -->
+<!-- STATUS: NOT_PUBLISHED · DRAFT_SHA_BOUND · PROMOTE=0 · CERTIFIED=0 -->
+<!-- checksum bound to RawrXD-14.7.3-Windows-x64.zip — community publish ABSENT -->
 <!-- Authority: evidence/PRODUCTION_MATURITY_TOP25_001/TOP25_RECOGNITION_OPS_001/ -->
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
     <id>rawrxd</id>
-    <version>1.0.0</version>
+    <version>14.7.3</version>
     <title>RawrXD Sovereign</title>
     <authors>RawrXD Team</authors>
     <owners>ItsMehRAWRXD</owners>
