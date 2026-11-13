@@ -1,0 +1,68 @@
+TOP25_RECOGNITION_OPS_001 MEASURE
+ASOF_LOCAL=2026-11-13T14:24-05:00
+PROMOTE=0
+CERTIFIED=0
+NOT_RUN!=PASS
+METHOD=host_inventory+gh_api+winget_search+local_exe_help
+
+## DISTRIBUTION manifests
+PLACEHOLDER_SHA256_COUNT=3
+  distribution/winget/RawrXD.RawrXD.yaml:InstallerSha256=PLACEHOLDER_SHA256
+  distribution/homebrew/rawrxd.rb:sha256=PLACEHOLDER_SHA256
+  distribution/chocolatey/tools/chocolateyinstall.ps1:checksum64=PLACEHOLDER_SHA256
+CLAIMED_INSTALLER_URL_MSI=https://github.com/ItsMehRAWRXD/RawrXD/releases/download/v1.0.0/RawrXD-1.0.0-x64.msi
+CLAIMED_MSI_ON_RELEASE=ABSENT
+WINGET_SEARCH_RawrXD=NO_PACKAGE_FOUND
+CHOCO_CLI=NOT_INSTALLED_ON_HOST (≠ community publish proof)
+DISTRIBUTION_README_BEFORE=ABSENT
+
+## GitHub release assets (measured)
+RELEASE|v1.0.0|assets=RawrXD-v1.0.0-Release.zip
+RELEASE|v14.7.3|assets=RawrXD-14.7.3-Windows-x64.zip
+DOC_CLAIM_win64_exe_v14.7.3=MISMATCH (docs name .exe/.deb/.rpm/.dmg; release has zip only for checked tags)
+DOC_CLAIM_msi_v1.0.0=MISMATCH
+
+## INSTALLATION / local product binary
+CANONICAL_CLI_NAME=rawr.exe (not rawrxd.exe in measured help)
+BIN_build_Release=ABSENT
+BIN_out_x64_Release=ABSENT
+BIN_cmake_build_release=ABSENT
+BIN_bin_rawr=ABSENT
+FOUND_RAWR|build_ninja/bin/rawr.exe|sha256=CB41203599477F3B5409317773A0B64C2EA438B72435125FF502AFDB4D491EB1
+FOUND_RAWR|build_clean/bin/rawr.exe|len=7534080|sha256=6F2CB09571E8A4C1489948D1171C443045CDDC0C50F7E3BDDF45A0C20ACAC098
+FOUND_RAWR|build-fd/bin/rawr.exe|len=7480320|sha256=3477751CCFAE69D1CC5FBCA36432D86CA3442905BA42B76D86918FAEA7E30561
+HELP_SMOKE_build_ninja=PASS_LOCAL_VERIFY (Verify-RawrLocalInstall.ps1; VERIFY_LOCAL.txt)
+HELP_SMOKE_build_clean=RUNTIME_REACHED (usage: rawr list|show|paths|run|chat|agent|serve)
+VERSION_STRING_STABLE=NOT_ASSERTED (help path only; --version not sealed this pack)
+README_MERGE_CONFLICT=CLOSED (fail-closed product README)
+
+## DOCUMENTATION presence
+DOC|README.md=PRESENT
+DOC|INSTALL.md=PRESENT (pre-fix: package-manager-first; version drift)
+DOC|docs/guides/installation.md=PRESENT
+DOC|docs/guides/GETTING_STARTED.md=PRESENT (pre-fix: winget/choco/brew as default)
+DOC|docs/QUICKSTART.md=PRESENT (pre-fix: invents rawrxd-linux-x64.tar.gz latest asset)
+DOC|distribution/README.md=ABSENT (pre-landing)
+DOC|docs/guides/LOCAL_INSTALL.md=ABSENT (pre-landing)
+
+## USER_RETENTION
+RETENTION_TELEMETRY_SCHEMA=ABSENT
+RETENTION_COHORT_MEASURE=NOT_RUN
+DAY1_DAY7_DAY30=NOT_RUN
+ONBOARDING_COMPLETION_FUNNEL=NOT_RUN
+
+## COMPETITIVE_PERFORMANCE (pointer only; no MiniMax FULL this pack)
+PARENT_SCOREBOARD_CLI_MATURITY=Not certified
+PARENT_SCOREBOARD_GUI_MATURITY=Not certified
+PARENT_SCOREBOARD_TOP25_PARITY=was Unmeasured → this pack opens MEASURED_PARTIAL ops
+MINIMAX_STREAM_CORRECTNESS=NOT_PASS (parent SCOREBOARD)
+DENSE_UNLOAD=PASS (parent; TinyLlama smoke only)
+KIMI_COHERENT_USEFUL=OPEN
+IDE_TOP25_CRITICAL_GAPS=see G3_IDE_TOP25_PARITY_001/LAW.txt (DAP/LSP/MCP etc.)
+
+## Disposition inputs
+PUBLISHED_PACKAGE_MANAGER=0
+INSTALLER_SHA_BOUND=0
+DOC_ASSET_MATCH=0
+RETENTION_MEASURED=0
+COMPETITIVE_TOP25_CERT=0

@@ -12,18 +12,23 @@ FAKE_MATURITY_SEAL=0
 
 ## Verdict
 TOP25_RECOGNITION=NOT_READY
-TOP25_PARITY=UNMEASURED
-DOC_OPS_LAND=PARTIAL (install/distribution/onboarding gaps closed this land)
+TOP25_PARITY=MEASURED_PARTIAL
+DOC_OPS_LAND=PARTIAL (install/distribution/onboarding + README honesty)
 COMPETITIVE_PERF=MEASURED_CITATIONS_ONLY (no head-to-head Top-25 rank sealed)
+LOCAL_INSTALL_VERIFY=PASS_LOCAL_VERIFY (help smoke; see TOP25_RECOGNITION_OPS_001/VERIFY_LOCAL.txt)
 
 ## What landed (this P4 land)
 - INSTALL.md rewritten to local-first build path (cmake/ninja → build_ninja\bin\rawr.exe)
-- scripts/Verify-RawrLocalInstall.ps1 — EXE present + help smoke (≠ maturity PASS)
+- scripts/Verify-RawrLocalInstall.ps1 — EXE present + help smoke (≠ maturity PASS); fallbacks build_clean/build-fd
 - scripts/Install-RawrDevPath.ps1 — optional User PATH prepend for build_ninja\bin
 - DISTRIBUTION_NOTES.txt — honest distro surface; rejects stale “PRODUCTION READY” manifest
+- distribution/README.md + NOT_PUBLISHED banners (winget/choco/homebrew)
 - ONBOARDING_RETENTION_GAPS.txt — REAP retain / first-run hazards from measured seals
+- RETENTION.txt — evidence-pack keep/archive policy (user D1/D7/D30 still NOT_RUN)
 - P4_RECOGNITION_GAPS.txt — remaining recognition blockers
-- SCOREBOARD.md — competitive citations + TOP25 row update (still unmeasured parity)
+- TOP25_RECOGNITION_OPS_001 — gap board + MEASURE + retention schema + VERIFY_LOCAL
+- README.md — merge conflict resolved; fail-closed product entry
+- SCOREBOARD.md — competitive citations + TOP25_PARITY=MEASURED_PARTIAL
 
 ## Measured competitive / throughput citations (existing evidence only)
 Do not invent; do not promote.
@@ -38,23 +43,25 @@ Do not invent; do not promote.
 | Ollama / vLLM head-to-head | — | COMPETITIVE_BENCH_001 (HEAD_TO_HEAD=NOT_SEALED) | NOT_RUN |
 | SWE-bench null-agent self-test | OVERALL=0.0% (0/4 tasks) | COMPETITIVE_BENCH_001/smoke_runs/swebench_help.* EXIT=0 | Measured null agent; NOT competitive PASS |
 | isa_dispatch / smoke_test_minimal | EXIT=-1073741515 | COMPETITIVE_BENCH_001/smoke_runs/*.meta | DLL_NOT_FOUND; SCORE=NONE |
+| Local install verify | PASS_LOCAL_VERIFY; SHA CB412035… | TOP25_RECOGNITION_OPS_001/VERIFY_LOCAL.txt | Help smoke only |
 
 ## Recognition blockers still OPEN
-1. README.md unresolved merge conflict (`<<<<<<< HEAD` … `>>>>>>>`)
-2. DISTRIBUTION_MANIFEST.yaml non-authoritative (placeholder SHA / PRODUCTION READY)
-3. MiniMax STREAM_CORRECTNESS / semantic NOT_PASS (SCOREBOARD + B03/B04)
-4. GUI four-panel FAIL_CLOSED (FOUR_PANEL_COMPLETION_001)
-5. TOP25 IDE parity matrix G3_IDE_TOP25_PARITY_001 — LAW only; no E2E seal
-6. Public package channels (winget/brew/docker/MSI) UNVERIFIED
-7. No sealed competitive suite vs peers with matched model/prompt/hardware
-8. MoE retention onboarding: R=27 quality FAIL; calib bank wire still gapped
+1. DISTRIBUTION_MANIFEST.yaml non-authoritative (placeholder SHA / PRODUCTION READY) — README conflict CLOSED
+2. MiniMax STREAM_CORRECTNESS / semantic NOT_PASS (SCOREBOARD + B03/B04)
+3. GUI four-panel FAIL_CLOSED (FOUR_PANEL_COMPLETION_001)
+4. TOP25 IDE parity matrix G3_IDE_TOP25_PARITY_001 — LAW only; no E2E seal
+5. Public package channels (winget/brew/docker/MSI) NOT_PUBLISHED / UNVERIFIED
+6. No sealed competitive suite vs peers with matched model/prompt/hardware
+7. MoE retention onboarding: R=27 quality FAIL; calib bank wire still gapped
+8. User retention cohort D1/D7/D30 = NOT_RUN (schema only)
 
 ## Authority anchors (unchanged)
 LAW.txt · SCOREBOARD.md · REAP_ALL_16GB_001/INDEP_SMOKE_SEAL.txt ·
 REAP_MULTI_MODEL_001/B03_FORWARD/STATUS.md · G09 QUALITY_149 · REAP_TIP_PORT_001
 
 NEXT_EXECUTABLE_DOC_GATE=
-  Resolve README conflict OR ship a short honest README_PRODUCT.md and point INSTALL at it.
+  Bind real InstallerSha256 to a measured release zip (or MSI) + clean-VM install witness;
+  then clear distribution/ NOT_PUBLISHED.
 NEXT_EXECUTABLE_PERF_GATE=
   Sealed same-SHA competitive bench receipt (model/prompt/hardware pinned) OR explicit HOLD.
 

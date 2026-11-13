@@ -12,8 +12,8 @@ Prior retain-256 theta EXE: `EA4E20229633F9671F1B43620A3B6F27D21667F57A784B06830
 |-------|--------|----------------|
 | CLI_MATURITY | **Not certified** | Dense unload PASS (`cli_llama32_smoke_post.*`). MiniMax semantic NOT_PASS. |
 | GUI_MATURITY | **Not certified** | Four-panel FAIL_CLOSED. |
-| TOP25_PARITY | **Unmeasured** | P4 doc/ops land only — see `STATUS.txt` / `P4_RECOGNITION_GAPS.txt`. No sealed peer parity. |
-| TOP25_RECOGNITION | **NOT_READY** | Install/distribution/onboarding gaps partially closed; PROMOTE=0. |
+| TOP25_PARITY | **MEASURED_PARTIAL** | Ops audited (`TOP25_RECOGNITION_OPS_001` + `TOP25_OPS_001`). No sealed peer IDE/perf parity. ≠ certified. |
+| TOP25_RECOGNITION | **NOT_READY** | README conflict closed; local verify PASS; package channels NOT_PUBLISHED; PROMOTE=0. |
 | COMMERCIAL_VALUATION | **Unverified** | Stale Aug-2026 ≠ cert. |
 
 ## Competitive throughput (citations only — not a ranking)

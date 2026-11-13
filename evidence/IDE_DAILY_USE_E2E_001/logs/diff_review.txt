@@ -1,0 +1,3 @@
+BEFORE=v0\n
+AFTER=v1_edited\n
+DIFF_OBSERVED=True

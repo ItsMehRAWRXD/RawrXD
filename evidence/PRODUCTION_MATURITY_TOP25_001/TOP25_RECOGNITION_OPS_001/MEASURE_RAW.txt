@@ -1,0 +1,23 @@
+﻿PLACEHOLDER_HITS=2
+PH|distribution\homebrew\rawrxd.rb|9|sha256 "PLACEHOLDER_SHA256"
+PH|distribution\winget\RawrXD.RawrXD.yaml|58|InstallerSha256: PLACEHOLDER_SHA256
+INSTALL_VERSION_HITS=14
+RELEASE|v1.0.0|failed to parse jq expression (line 1, column 25)     [.assets[].name] | join(',')                             ^  unexpected token "'"
+RELEASE|v14.7.3|failed to parse jq expression (line 1, column 25)     [.assets[].name] | join(',')                             ^  unexpected token "'"
+RELEASE|v1.0.0-trifecta-complete|failed to parse jq expression (line 1, column 25)     [.assets[].name] | join(',')                             ^  unexpected token "'"
+WINGET_SEARCH=No package found matching input criteria.
+CHOCO_SEARCH=
+BIN|build\Release\rawr.exe|False
+BIN|out\build\x64-Release\rawr.exe|False
+BIN|cmake-build-release\rawr.exe|False
+BIN|bin\rawr.exe|False
+FOUND_RAWR|G:\~dev\rawrxd\build-fd\bin\rawr.exe|7480320
+FOUND_RAWR|G:\~dev\rawrxd\build_clean\bin\rawr.exe|7534080
+FOUND_RAWR|G:\~dev\rawrxd\build_ninja\bin\rawr.exe|10756096
+FOUND_RAWR|G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\G3_STREAMER_AGENTIC_CONTINUE_ENSURE_001\smoke_bin\rawr.exe|6483456
+DOC|README.md|True
+DOC|INSTALL.md|True
+DOC|docs\guides\installation.md|True
+DOC|distribution\README.md|False
+DOC|docs\QUICKSTART.md|True
+DOC|docs\guides\quickstart.md|False

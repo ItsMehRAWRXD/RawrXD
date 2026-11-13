@@ -4,34 +4,50 @@
 
 Welcome to RawrXD Sovereign - the production-grade AI inference runtime.
 
+> **Fail-closed (2026-11-13):** The package-manager / service blocks below are **NOT_PUBLISHED** drafts.  
+> Start with repo-root **[`INSTALL.md`](../../INSTALL.md)** (or [`LOCAL_INSTALL.md`](LOCAL_INSTALL.md)).  
+> Evidence: `evidence/PRODUCTION_MATURITY_TOP25_001/` · `PROMOTE=0` · `CERTIFIED=0`
+
 ---
 
-## Quick Start
+## Quick Start (authority)
 
-### 1. Installation
+```powershell
+.\scripts\Verify-RawrLocalInstall.ps1
+.\build_ninja\bin\rawr.exe --help
+.\build_ninja\bin\rawr.exe paths
+```
 
-#### Windows (Winget)
+See [`INSTALL.md`](../../INSTALL.md) for build steps and measured release zip names.
+
+---
+
+## Package managers (NOT_PUBLISHED)
+
+Do **not** treat these as green install paths until `distribution/README.md` clears `NOT_PUBLISHED` (real SHA + index listing + clean-VM witness).
+
+#### Windows (Winget) — DRAFT
 ```powershell
 winget install RawrXD.RawrXD
 ```
 
-#### Windows (Chocolatey)
+#### Windows (Chocolatey) — DRAFT
 ```powershell
 choco install rawrxd
 ```
 
-#### macOS (Homebrew)
+#### macOS (Homebrew) — DRAFT
 ```bash
 brew install rawrxd
 ```
 
-#### Linux (APT)
+#### Linux (APT) — UNPROVEN
 ```bash
 curl -fsSL https://apt.rawrxd.ai/setup.sh | sudo bash
 sudo apt-get install rawrxd
 ```
 
-### 2. Start the Service
+### Service start (UNPROVEN on default desktop installs)
 
 #### Windows
 ```powershell
@@ -43,18 +59,13 @@ Start-Service RawrXD
 sudo systemctl start rawrxd
 ```
 
-### 3. Verify Installation
+### Verify (local CLI)
 
-```bash
-rawrxd --version
+```powershell
+.\build_clean\bin\rawr.exe --help
 ```
 
-Expected output:
-```
-RawrXD Sovereign v1.0.0
-Build: 2026-07-13
-Platform: x64
-```
+A fixed marketing `--version` string is **not** asserted here (`NOT_RUN!=PASS`).
 
 ---
 

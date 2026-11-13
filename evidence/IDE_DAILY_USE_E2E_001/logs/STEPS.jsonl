@@ -1,0 +1,21 @@
+
+{"detail":"hash candidate exe","step":"tip_sha_verify","utc":"2026-11-13T19:35:16.7683742Z","status":"RUNNING"}
+{"detail":"SHA_MATCH=D9589D9A665E07F93E906A637B9D4ADB80D99BFD9604103A882E6AC79078BC08","step":"tip_sha_verify","utc":"2026-11-13T19:35:18.0619802Z","status":"PASS"}
+{"detail":"--headless --local --port 19892 --bind 127.0.0.1 --dir G:\\~dev\\rawrxd","step":"tip_spawn","utc":"2026-11-13T19:35:19.7705634Z","status":"RUNNING"}
+{"detail":"pid=51020 port=19892 ready","step":"tip_spawn","utc":"2026-11-13T19:35:20.7761221Z","status":"PASS"}
+{"detail":"failclosed_no_model status=503","step":"user_prompt","utc":"2026-11-13T19:35:20.8071388Z","status":"PASS"}
+{"detail":"headless_or_missing status=503","step":"agent_run_loop","utc":"2026-11-13T19:35:20.8121638Z","status":"NOT_RUN"}
+{"detail":"status=200","step":"plan_tools_motd","utc":"2026-11-13T19:35:20.8467968Z","status":"PASS"}
+{"detail":"fixture listed","step":"plan_tools_list","utc":"2026-11-13T19:35:20.9505999Z","status":"PASS"}
+{"detail":"unknown_tool surface status=400; list_directory proves tool surface","step":"plan_tools_inventory","utc":"2026-11-13T19:35:20.9526153Z","status":"PASS"}
+{"detail":"write_file tracked.txt -\u003e v1_edited","step":"editor_file_ops","utc":"2026-11-13T19:35:21.0122350Z","status":"PASS"}
+{"detail":"hello.cmd via execute_command","step":"terminal_exec","utc":"2026-11-13T19:35:21.0813213Z","status":"PASS"}
+{"detail":"delta via /api/tool","step":"diff_review","utc":"2026-11-13T19:35:21.0904844Z","status":"PASS"}
+{"detail":"write retained","step":"accept","utc":"2026-11-13T19:35:21.1265364Z","status":"PASS"}
+{"detail":"restored v0 via write_file (CheckpointManager NOT_RUN)","step":"rollback","utc":"2026-11-13T19:35:21.1620902Z","status":"PASS"}
+{"detail":"kill pid=51020","step":"recovery_kill","utc":"2026-11-13T19:35:21.1636071Z","status":"RUNNING"}
+{"detail":"process dead","step":"recovery_kill","utc":"2026-11-13T19:35:23.1935473Z","status":"PASS"}
+{"detail":"health+MOTD+read_file after kill/restart pid2=40408","step":"recovery_respawn","utc":"2026-11-13T19:35:30.6394537Z","status":"PASS"}
+{"detail":"Stop-Job cancelled in-flight generate; AgentSessionCancel NOT_EXPOSEABLE","step":"cancel","utc":"2026-11-13T19:35:37.2677544Z","status":"PASS"}
+{"detail":"daily-use lifecycle+recovery harness complete","step":"final_response","utc":"2026-11-13T19:35:37.2722993Z","status":"PASS"}
+{"detail":"process stopped","step":"tip_shutdown","utc":"2026-11-13T19:35:37.2825624Z","status":"PASS"}

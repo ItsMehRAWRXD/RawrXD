@@ -2,6 +2,9 @@
 
 ## Phase H.2 Batch 5/5: GitHub Releases Distribution
 
+**STATUS:** `HELD` · **PROMOTE=0** · **CERTIFIED=0** · Unchecked boxes = `NOT_RUN` (not PASS).  
+Authority: `evidence/PRODUCTION_MATURITY_TOP25_001/TOP25_RECOGNITION_OPS_001/`.
+
 ### Pre-Release
 
 - [ ] All tests passing (unit, integration, e2e)

@@ -1,0 +1,67 @@
+﻿{
+    "track":  "COMPETITIVE_TEST_001",
+    "asof_utc":  "2026-11-13T19:35:47.2154737Z",
+    "promote":  0,
+    "certified":  0,
+    "tip_climb":  "HOLD",
+    "minimax_full":  "FORBIDDEN",
+    "quality_curve":  "FORBIDDEN",
+    "suites":  [
+                   {
+                       "id":  "IDE_BENCH_PROXY",
+                       "status":  "FAIL",
+                       "exit_code":  1,
+                       "log":  "G:\\~dev\\rawrxd\\evidence\\COMPETITIVE_TEST_001\\logs\\ide_bench_proxy_20261113_143547.log",
+                       "harness":  "G:\\~dev\\rawrxd\\scripts\\Smoke-IDE-TurnKey.ps1",
+                       "score_note":  "NOT_SCORED — proxy smoke PASS/FAIL only",
+                       "ms":  3468,
+                       "maps_to":  "IDE-Bench (local turnkey smoke proxy; not public IDE-Bench suite)",
+                       "ide_exe":  "G:\\~dev\\rawrxd\\build-win32\\bin\\RawrXD-Win32IDE.exe",
+                       "score":  null,
+                       "ide_sha256":  "8E54D3C19AD84432D8402141A033A002FA6E5AE5801DCAB8997980D0C69111F5"
+                   },
+                   {
+                       "id":  "TERMINAL_BENCH_PROXY",
+                       "status":  "FAIL",
+                       "log":  "G:\\~dev\\rawrxd\\evidence\\COMPETITIVE_TEST_001\\logs\\terminal_bench_proxy_20261113_143547.log",
+                       "maps_to":  "Terminal-Bench (local ConPTY terminal_gate proxy; not public Terminal-Bench)",
+                       "sha256":  "5125CFE10FE6C89F649B401A216EA976BC44DB06D44D1EA401E41411D579094D",
+                       "ms":  27326,
+                       "score":  null,
+                       "exit_code":  1,
+                       "score_note":  "NOT_SCORED — harness assertions PASS/FAIL only",
+                       "harness":  "G:\\~dev\\rawrxd\\evidence\\FOUR_PANEL_COMPLETION_001\\bin\\terminal_gate.exe"
+                   },
+                   {
+                       "id":  "CODING_TASK_SWEBENCH",
+                       "status":  "MEASURED_ZERO",
+                       "agent_mode":  "null (no --real-agent; no MiniMax)",
+                       "score_note":  "Measured null-agent baseline; NOT competitive agent score",
+                       "maps_to":  "coding-task suite (RawrXD-SWEBench seed4; null-agent self-test)",
+                       "score_overall_pct":  0,
+                       "seed":  "G:\\~dev\\rawrxd\\data\\swebench_seed4.jsonl",
+                       "ms":  22,
+                       "sha256":  "46DEC883D518BF6327D465ADAF4C8E50394E86E3E93AFA7B95608B798CF7A3EB",
+                       "exit_code":  0,
+                       "log":  "G:\\~dev\\rawrxd\\evidence\\COMPETITIVE_TEST_001\\logs\\coding_task_swebench_20261113_143547.log",
+                       "harness":  "G:\\~dev\\rawrxd\\build-ninja-ctx2\\bin\\RawrXD-SWEBench.exe"
+                   },
+                   {
+                       "id":  "GAME_DEV_SUNSHINEFPS",
+                       "status":  "NOT_RUN",
+                       "log":  "G:\\~dev\\rawrxd\\evidence\\COMPETITIVE_TEST_001\\logs\\game_dev_sunshinefps_20261113_143547.log",
+                       "score_note":  "Launch probe only; no gameplay scoring suite sealed",
+                       "ms":  80,
+                       "pe_machine":  "0x8664",
+                       "pe_opt_magic":  "0x020B",
+                       "sunshine_exe":  "g:\\~dev\\SunshineFPS\\SunshineFPS.exe",
+                       "demo_project_present":  true,
+                       "maps_to":  "real game-development project fixture",
+                       "demo_project":  "g:\\~dev\\demo_project\\project.json",
+                       "blocker":  "OS refuses launch (Win32 mode); fixture PE present but not executable here",
+                       "exit_code":  2,
+                       "sha256":  "0E3A76A6D66A67C6060C77C5F892B656F97775C7E3E109B7A465DCD2E92CFA78",
+                       "score":  null
+                   }
+               ]
+}

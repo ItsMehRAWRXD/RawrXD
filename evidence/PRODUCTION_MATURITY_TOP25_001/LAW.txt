@@ -1,0 +1,29 @@
+PRODUCTION_MATURITY_TOP25_001
+ASOF_LOCAL=2026-11-13
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+TIP_CLIMB=HOLD
+CROSS_SHA_ACCEPTANCE=PROHIBITED
+NOT_RUN!=PASS
+INVENT_PASS=0
+
+SCOPE
+  CLI + GUI equivalent production maturity (measured), local-first.
+  No mandatory cloud models / APIs / subscriptions / hosted inference.
+  CLI may lead on TPS/automation/headless; GUI on interactive IDE/Sunshine.
+  100% must be earned by measurements — feature checklists ≠ production %.
+
+AUTHORITY_ANCHORS
+  MiniMax B03 semantic: evidence/REAP_MULTI_MODEL_001/B03_FORWARD/STATUS.md
+  Kimi QUALITY_149: evidence/G09_REAP_PHYSICAL_20261113/QUALITY_149.txt
+  K2 REAP tip: evidence/REAP_TIP_PORT_001/FINAL_RECEIPT.md
+    NEXT_GATE=REFERENCE_PARITY_OR_FULL61_GPU
+  GUI four-panel: evidence/FOUR_PANEL_COMPLETION_001/STATUS.md
+  Stale valuation: evidence/VALUATION_TECHNICAL_2026-08-29 (NOT current cert)
+  Dense smoke this pack: cli_llama32_smoke.* on EXE_SHA256.txt
+
+FAIL_CLOSED
+  SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+  PRODUCT_E2E token-commit PASS != STREAM_CORRECTNESS semantic PASS
+  Historical CLI 44/45 and GUI 54/54 ≠ current production maturity %

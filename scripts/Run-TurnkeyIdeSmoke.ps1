@@ -4,12 +4,12 @@
   Canonical turnkey smoke: Copilot/agentic source parity + UI marshalling + routing + optional Lane B CLI + Win32 --agentic-smoke + optional TPS.
 
 .DESCRIPTION
-  1) Test-ChatCopilotParitySmoke.ps1 — persistence, TPS metrics, minimal-agent glue, CLI JSON symbols.
-  2) Test-ChatAgenticUiMarshalling.ps1 — unless -SkipUiMarshalling.
-  3) Smoke-AgenticChatParity.ps1 — /agent routing (unless -SkipAgenticChatParity).
-  4) RawrEngine --copilot-smoke — headless throughput JSON (unless -SkipCopilotCli); -RequireCopilotCli fails if exe missing.
-  5) Ship/Run-ChatAgenticSmoke.ps1 — RawrXD-Win32IDE --agentic-smoke (unless -SkipAgenticExe).
-  6) RawrXD-TpsSmoke — when -RunTpsSmoke or RAWRXD_SMOKE_MODEL; -StrictTps fails on non-zero run.
+  1) Test-ChatCopilotParitySmoke.ps1 - persistence, TPS metrics, minimal-agent glue, CLI JSON symbols.
+  2) Test-ChatAgenticUiMarshalling.ps1 - unless -SkipUiMarshalling.
+  3) Smoke-AgenticChatParity.ps1 - /agent routing (unless -SkipAgenticChatParity).
+  4) RawrEngine --copilot-smoke - headless throughput JSON (unless -SkipCopilotCli); -RequireCopilotCli fails if exe missing.
+  5) Ship/Run-ChatAgenticSmoke.ps1 - RawrXD-Win32IDE --agentic-smoke (unless -SkipAgenticExe).
+  6) RawrXD-TpsSmoke - when -RunTpsSmoke or RAWRXD_SMOKE_MODEL; -StrictTps fails on non-zero run.
 
   Live Ollama: set RAWRXD_AGENTIC_SMOKE_LIVE=1 before running so Win32IDE --agentic-smoke exercises /api/tags and /api/chat (Ollama must be running).
 
@@ -82,7 +82,7 @@ function Invoke-Step([string]$name, [scriptblock]$block) {
     catch {
         ${script:steps}[$name] = "fail: $($_.Exception.Message)"
         ${script:failed} = $true
-        Write-Host "[turnkey] FAIL: $name — $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "[turnkey] FAIL: $name - $($_.Exception.Message)" -ForegroundColor Red
     }
 }
 
@@ -157,12 +157,12 @@ if (-not $SkipCopilotCli) {
             $out = & $engine --copilot-smoke 2>&1
             $ex = $LASTEXITCODE
             if ($null -ne $prevFast) { ${env:RAWRXD_COPILOT_SMOKE_FAST_EXIT} = $prevFast } else { Remove-Item Env:RAWRXD_COPILOT_SMOKE_FAST_EXIT -ErrorAction SilentlyContinue }
-            $txt = $(if ($out -is [array]) { $out -join "`n" } else { [string]$out }
+            $txt = $(if ($out -is [array]) { $out -join "`n" } else { [string]$out })
             $ok = ($txt -match 'COPILOT_SMOKE_JSON:.*"ok"\s*:\s*true') -and ($txt -match 'EXIT=0')
             if (-not $ok -and $ex -ne 0) { throw "RawrEngine exit $ex`n$txt" }
             if (-not $ok) { throw "missing COPILOT_SMOKE_JSON ok:true and EXIT=0 in stdout`n$txt" }
             if ($ex -ne 0) {
-                Write-Host "[turnkey] WARN: RawrEngine exit=$ex but stdout indicates copilot success (set RAWRXD_COPILOT_SMOKE_FAST_EXIT=1 — scripts do this automatically)." -ForegroundColor Yellow
+                Write-Host "[turnkey] WARN: RawrEngine exit=$ex but stdout indicates copilot success (set RAWRXD_COPILOT_SMOKE_FAST_EXIT=1 - scripts do this automatically)." -ForegroundColor Yellow
             }
         }
     }
@@ -266,9 +266,9 @@ $obj = [ordered]@{
     steps      = $steps
     envHints   = @{
         liveAgenticOllama = "RAWRXD_AGENTIC_SMOKE_LIVE=1"
-        tpsModel          = "RAWRXD_SMOKE_MODEL=<path.gguf>"
+        tpsModel          = 'RAWRXD_SMOKE_MODEL=path.gguf'
         tpsRef            = "RAWRXD_TPS_REF"
-        laneBCli          = "cmake --build <RAWRXD_BUILD_DIR|build-win32|build-ninja> --target RawrEngine ; <build-dir>\bin\RawrEngine.exe --copilot-smoke"
+        laneBCli          = 'cmake --build RAWRXD_BUILD_DIR|build-win32|build-ninja --target RawrEngine ; build-dir\bin\RawrEngine.exe --copilot-smoke'
         ideModelAutonomy  = "ctest -C Debug -R test_ide_model_autonomy --output-on-failure (from configured build dir)"
         fullChatParity    = "pwsh -File Ship/smoke_agentic_chat_parity.ps1"
         fastSourceOnly    = "pwsh -File scripts/Smoke-IDE-TurnKey.ps1"

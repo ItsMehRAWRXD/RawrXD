@@ -1,0 +1,37 @@
+TOP25_RECOGNITION_OPS_001
+PARENT=PRODUCTION_MATURITY_TOP25_001
+ASOF_LOCAL=2026-11-13
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+TIP_CLIMB=HOLD
+NOT_RUN!=PASS
+INVENT_PASS=0
+
+TRACK
+  Top-25 recognition axes (product ops, not IDE feature parity alone):
+    1 INSTALLATION
+    2 DOCUMENTATION
+    3 DISTRIBUTION
+    4 USER_RETENTION
+    5 COMPETITIVE_PERFORMANCE
+
+AUTHORITY
+  Parent LAW: evidence/PRODUCTION_MATURITY_TOP25_001/LAW.txt
+  Parent SCOREBOARD: evidence/PRODUCTION_MATURITY_TOP25_001/SCOREBOARD.md
+  IDE surface gaps: evidence/RAWRXD_PERFORMANCE_001/G3_IDE_TOP25_PARITY_001/LAW.txt
+  This pack measures install/docs/dist/retention/competitive ops honesty.
+
+FAIL_CLOSED
+  Manifest present != published
+  PLACEHOLDER_SHA != installable package
+  Release zip present != MSI/DEB/DMG claimed by docs
+  winget/choco/brew recipe != community index listing
+  Doc "Quick Start" != RUNTIME_REACHED product path
+  Competitive claims != measured SCOREBOARD gates
+  Retention schema != measured cohort metrics
+
+DO_NOT
+  Run MiniMax FULL loads in this pack
+  Invent TOP25_PARITY=PASS / CERTIFIED=1 / PROMOTE=1
+  Rewrite sealed MiniMax numeric seals

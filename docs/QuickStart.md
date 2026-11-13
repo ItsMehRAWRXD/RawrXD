@@ -2,6 +2,10 @@
 
 Get up and running with RawrXD in 5 minutes.
 
+> **Fail-closed (2026-11-13):** Prefer repo-root [`INSTALL.md`](../INSTALL.md).  
+> Pre-built URL examples below may not match current GitHub assets (`NOT_RUN!=PASS`).  
+> Package managers: [`distribution/README.md`](../distribution/README.md) (`NOT_PUBLISHED`).
+
 ## Prerequisites
 
 - **OS**: Windows 10/11, Ubuntu 20.04+, macOS 12+

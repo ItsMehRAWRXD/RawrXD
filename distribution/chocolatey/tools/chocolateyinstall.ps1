@@ -1,5 +1,10 @@
-# chocolateyinstall.ps1
+﻿# chocolateyinstall.ps1
 # Phase H.2 Batch 2/5: Chocolatey Installation Script
+#
+# STATUS: NOT_PUBLISHED · PROMOTE=0 · CERTIFIED=0
+# checksum64 is PLACEHOLDER; claimed MSI was ABSENT on v1.0.0 (zip only).
+# Do not run as a production install path until SHA + asset bind.
+# Authority: evidence/PRODUCTION_MATURITY_TOP25_001/TOP25_RECOGNITION_OPS_001/
 
 $ErrorActionPreference = 'Stop'
 

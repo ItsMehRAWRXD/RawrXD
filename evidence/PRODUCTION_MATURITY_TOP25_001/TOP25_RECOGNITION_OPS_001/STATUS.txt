@@ -1,0 +1,61 @@
+TOP25_RECOGNITION_OPS_001
+ASOF_LOCAL=2026-11-13
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+TIP_CLIMB=HOLD
+NOT_RUN!=PASS
+
+## Axis disposition (fail-closed)
+
+INSTALLATION=MEASURED_PARTIAL
+  local_rawr_help=RUNTIME_REACHED
+  package_manager_install=OPEN (winget NO_PACKAGE_FOUND; SHA placeholders)
+
+DOCUMENTATION=MEASURED_PARTIAL
+  honesty_landing=LANDED (LOCAL_INSTALL + INSTALL/GETTING_STARTED banners)
+  asset_name_match=OPEN (historical zip tags ≠ prior MSI/deb/dmg claims)
+
+DISTRIBUTION=DRAFT_NOT_PUBLISHED
+  manifests=PRESENT
+  PLACEHOLDER_SHA256=3
+  published_index=0
+  claimed_msi_on_v1.0.0=ABSENT
+
+USER_RETENTION=OPEN
+  schema=LANDED (RETENTION_METRICS.schema.json)
+  cohort_measure=NOT_RUN
+
+COMPETITIVE_PERFORMANCE=OPEN
+  pointer=../SCOREBOARD.md
+  MiniMax_FULL_this_pack=NOT_RUN (forbidden)
+  STREAM_CORRECTNESS=NOT_PASS (parent)
+
+TOP25_PARITY_ROLLUP=MEASURED_PARTIAL
+  meaning=ops gaps measured; ≠ certified Top-25 recognition
+  CERTIFIED=0
+  PROMOTE=0
+
+## Landed this turn
+
+- LAW.txt / MEASURE.txt / GAP_BOARD.md / STATUS.txt / VERIFY_LOCAL.txt
+- distribution/README.md + NOT_PUBLISHED banners on winget/choco/homebrew
+- docs/guides/LOCAL_INSTALL.md + GETTING_STARTED / QuickStart honesty
+- README.md merge conflict CLOSED (fail-closed product entry)
+- RETENTION_METRICS.schema.json + RETENTION_STATUS.txt (cohort NOT_RUN)
+- parent RETENTION.txt + STATUS/SCOREBOARD/P4 gap updates
+- Verify-RawrLocalInstall PASS_LOCAL_VERIFY (build_ninja; SHA in VERIFY_LOCAL.txt)
+
+## Remaining OPEN
+
+1. Bind real InstallerSha256 to an existing release asset (zip or future MSI)
+2. Publish winget/choco/brew only after SHA bind + clean-VM install witness
+3. Align secondary install docs / DISTRIBUTION_MANIFEST placeholders
+4. Run retention cohort measure (D1/D7/D30) — NOT_RUN
+5. Competitive cert — depends on parent semantic/performance gates (no invent; no MiniMax FULL)
+
+```
+PROMOTE=0
+CERTIFIED=0
+NOT_RUN!=PASS
+```

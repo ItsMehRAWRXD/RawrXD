@@ -9,8 +9,11 @@ RELEASE=HELD
 2. Operator docs: INSTALL.md (repo root) + this evidence pack STATUS
 3. Verify script: scripts/Verify-RawrLocalInstall.ps1
 4. Optional PATH helper: scripts/Install-RawrDevPath.ps1 (User PATH only)
+5. distribution/README.md — channel inventory with NOT_PUBLISHED=1
+6. Local verify witness: TOP25_RECOGNITION_OPS_001/VERIFY_LOCAL.txt (help smoke)
 
 No sealed binary release receipt (SHA + smoke + version tag) is attached to this pack.
+Measured note: winget search RawrXD = NO_PACKAGE_FOUND; winget/choco/brew SHAs = PLACEHOLDER.
 
 ## Non-authoritative / do-not-ship-as-cert
 | Artifact | Why held |

@@ -1,0 +1,74 @@
+TOP25_OPS_001
+ASOF_LOCAL=2026-11-13
+PROMOTE=0
+CERTIFIED=0
+RELEASE=HELD
+TIP_CLIMB=HOLD
+INVENT_PASS=0
+PARENT_PACK=evidence/PRODUCTION_MATURITY_TOP25_001 (LAW.txt present; PROMOTE=0)
+SIBLING=evidence/PRODUCTION_MATURITY_TOP25_001/TOP25_RECOGNITION_OPS_001
+COMPETITIVE=evidence/COMPETITIVE_BENCH_001/STATUS.txt
+
+PURPOSE
+  Install / docs / distribution / retention gap inventory for Top-25 recognition prep.
+  Concrete next actions only. Feature checklists ≠ production %.
+
+GAP_LIST
+  G1 INSTALL_DOCS_DRIFT
+    Root INSTALL.md rewritten fail-closed (ASOF 2026-11-13, PROMOTE=0) to local
+    build_ninja\bin\rawr.exe path — SAFE_FIX_LANDED.
+    REMAINING: docs/guides/installation.md + release-assets/INSTALL.md +
+    archive guides still advertise winget/Homebrew/v14.7.3 ZIP URLs.
+    version.txt still = 1.0.0 while release\ has RawrXD-v15.0.4.
+    ACTION: mark secondary install guides HISTORICAL or redirect to root INSTALL.md;
+            align version.txt with measured release tag when one is sealed.
+
+  G2 WINGET_MISSING
+    winget search RawrXD => No package found
+    ACTION: either publish winget manifest OR remove winget claim from INSTALL docs.
+
+  G3 DISTRIBUTION_FRAGMENTATION
+    Remotes: origin/rawrxd-gh -> RawrXD.git; closure-origin -> IDE-Win32-Gui-CLI-HTML;
+             final -> RawrXD-IDE-Final; rawrxda; puremasm
+    GitHub releases on RawrXD.git include v14.7.3, v1.0.0-trifecta-complete, etc.
+    No single Top-25 "download this" channel verified this turn.
+    ACTION: pick one public channel + one SHA-pinned Windows zip; publish checksum.
+
+  G4 RETENTION_UNOWNED
+    PRODUCTION_MATURITY_TOP25_001 holds large MiniMax/REAP run artifacts (GB-scale)
+    No retention policy file (keep/archive/delete) at pack root.
+    ACTION: add RETENTION.txt with keep=STATUS+LAW+SHA receipts; archive bulky *.out/*.bin.
+
+  G5 COMPETITIVE_SUITES_ABSENT
+    IDE-Bench / Terminal-Bench not in tree (see COMPETITIVE_BENCH_001).
+    SWE-bench null smoke SCORE=0.0% (not competitive).
+    ACTION: schedule independent competitive suite ingest after install channel stabilizes.
+
+  G6 GAME_DEV_FIXTURES_ABSENT
+    Doc only: docs/REVERSE_ENGINEERING_GAME_DEVELOPMENT.md
+    No game-dev project fixtures under fixtures/ (agent/obj fixtures only).
+    ACTION: add one minimal Unity/Unreal/Godot (or engine-agnostic) coding fixture if Top-25 claims game-dev.
+
+  G7 PRODUCT_SMOKE_VS_OPS
+    Dense product smoke exists under PRODUCTION_MATURITY_TOP25_001 (cli_llama32_smoke EXIT=0 historical)
+    Ops/install path not exercised by that smoke (binary help/install/winget).
+    ACTION: add install-path smoke: extract release zip -> rawr --help / --version -> record EXIT+SHA.
+
+  G8 CERTIFICATION_HELD
+    LAW.txt: CERTIFIED=0 RELEASE=HELD CROSS_SHA_ACCEPTANCE=PROHIBITED
+    ACTION: do not claim Top-25 recognition until PROMOTE conjunction closes elsewhere;
+            this pack stays ops/gap tracking only.
+
+NEXT_ACTIONS_ORDERED
+  1. INSTALL.md canonicalization — DONE (local-first).
+  2. Decide public download channel + checksum for a measured Windows zip.
+  3. Remove or implement winget claim (manifests marked NOT_PUBLISHED).
+  4. RETENTION.txt under PRODUCTION_MATURITY_TOP25_001 — DONE (user cohort still NOT_RUN).
+  5. Ingest IDE-Bench/Terminal-Bench or mark permanently OUT_OF_SCOPE with rationale.
+  6. Optional: one game-dev fixture project for recognition demos.
+
+SAFE_FIXES_THIS_TURN
+  - INSTALL.md: fail-closed local-path rewrite (PROMOTE=0; winget/MSI unverified).
+  - evidence/COMPETITIVE_BENCH_001/STATUS.txt + smoke_runs/* with real EXIT/SCORE.
+  - evidence/TOP25_OPS_001/STATUS.txt (this file).
+  - README conflict closed; distribution NOT_PUBLISHED; TOP25_RECOGNITION_OPS_001; local verify PASS.

@@ -25,7 +25,17 @@ if (-not $RepoRoot) {
     $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 }
 if (-not $ExePath) {
-    $ExePath = Join-Path $RepoRoot "build_ninja\bin\rawr.exe"
+    $candidates = @(
+        (Join-Path $RepoRoot "build_ninja\bin\rawr.exe"),
+        (Join-Path $RepoRoot "build_clean\bin\rawr.exe"),
+        (Join-Path $RepoRoot "build-fd\bin\rawr.exe")
+    )
+    foreach ($c in $candidates) {
+        if (Test-Path -LiteralPath $c) { $ExePath = $c; break }
+    }
+    if (-not $ExePath) {
+        $ExePath = $candidates[0]
+    }
 }
 
 Write-Host "Verify-RawrLocalInstall  PROMOTE=0  ASOF=$(Get-Date -Format o)"
@@ -37,6 +47,7 @@ Write-Check "EXE_PRESENT" $exists $ExePath
 if (-not $exists) {
     Write-Host "HINT: cmake -G Ninja -S . -B build_ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo"
     Write-Host "HINT: ninja -C build_ninja bin/rawr.exe"
+    Write-Host "HINT: also accepts build_clean\bin\rawr.exe or build-fd\bin\rawr.exe"
     Write-Host "RESULT=FAIL  EXIT=2"
     exit 2
 }

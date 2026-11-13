@@ -1,6 +1,10 @@
 # rawrxd.rb
 # Phase H.2 Batch 3/5: Homebrew Formula
 # Usage: brew install --cask rawrxd
+#
+# STATUS: NOT_PUBLISHED · PROMOTE=0 · CERTIFIED=0
+# sha256 is PLACEHOLDER — formula is draft only until real artifact + checksum bind.
+# Authority: evidence/PRODUCTION_MATURITY_TOP25_001/TOP25_RECOGNITION_OPS_001/
 
 class Rawrxd < Formula
   desc "Sovereign AI runtime with autonomous capabilities"

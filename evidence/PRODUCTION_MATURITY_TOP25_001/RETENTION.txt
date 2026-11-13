@@ -1,0 +1,32 @@
+PRODUCTION_MATURITY_TOP25_001 — artifact retention policy
+ASOF_LOCAL=2026-11-13
+PROMOTE=0
+CERTIFIED=0
+STATUS=POLICY_LANDED
+COHORT_USER_RETENTION=NOT_RUN
+NOTE=This file is evidence-pack retention (disk hygiene), not end-user D1/D7/D30 metrics.
+User retention schema: TOP25_RECOGNITION_OPS_001/RETENTION_METRICS.schema.json (STATUS=NOT_RUN).
+
+## KEEP (do not delete without owner)
+- LAW.txt
+- SCOREBOARD.md
+- STATUS.txt
+- P4_RECOGNITION_GAPS.txt
+- DISTRIBUTION_NOTES.txt
+- ONBOARDING_RETENTION_GAPS.txt
+- EXE_SHA256.txt / sealed *.verdict.txt / INDEP_SMOKE_SEAL.txt
+- TOP25_RECOGNITION_OPS_001/{LAW,STATUS,MEASURE,GAP_BOARD,RETENTION_*}
+- RE_* summary text seals (not multi-MB dumps)
+
+## ARCHIVE_OR_GITIGNORE_CANDIDATES (bulky)
+- **/*.out.txt / **/*.err.txt multi-MB run logs (keep short seals)
+- **/q4k_dump/*.bin tensor dumps
+- REAP export GGUF shards under exports/ (regenerable)
+- __pycache__/
+
+## DELETE_ONLY_WITH_EXPLICIT_OWNER
+- Anything marked SEALED or CROSS_SHA_ACCEPTANCE-bound
+- Parent SCOREBOARD cited witnesses
+
+FAKE_MATURITY_SEAL=0
+NOT_RUN!=PASS

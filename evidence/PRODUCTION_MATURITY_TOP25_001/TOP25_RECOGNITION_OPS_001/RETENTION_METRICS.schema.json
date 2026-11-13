@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rawrxd.top25.retention_metrics.v1",
+  "title": "RawrXD Top-25 user retention metrics (fail-closed)",
+  "description": "Schema only. STATUS=NOT_RUN until a real cohort witness populates values. Empty/default objects ≠ PASS.",
+  "type": "object",
+  "required": ["schema", "status", "asof", "promote", "certified", "cohort"],
+  "properties": {
+    "schema": { "const": "rawrxd.top25.retention_metrics.v1" },
+    "status": {
+      "type": "string",
+      "enum": ["NOT_RUN", "PARTIAL", "MEASURED_OPEN", "PASS"],
+      "description": "NOT_RUN is default. PASS requires real cohort counts."
+    },
+    "asof": { "type": "string", "format": "date-time" },
+    "promote": { "const": 0 },
+    "certified": { "const": 0 },
+    "cohort": {
+      "type": "object",
+      "required": ["definition", "n_install", "d1", "d7", "d30"],
+      "properties": {
+        "definition": { "type": "string" },
+        "n_install": { "type": "integer", "minimum": 0 },
+        "d1": { "type": "number", "minimum": 0, "maximum": 1 },
+        "d7": { "type": "number", "minimum": 0, "maximum": 1 },
+        "d30": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "onboarding": {
+      "type": "object",
+      "properties": {
+        "first_run_help_ok": { "type": "integer", "minimum": 0 },
+        "first_inference_ok": { "type": "integer", "minimum": 0 },
+        "return_session_ok": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "notes": { "type": "string" }
+  },
+  "examples": [
+    {
+      "schema": "rawrxd.top25.retention_metrics.v1",
+      "status": "NOT_RUN",
+      "asof": "2026-11-13T00:00:00-05:00",
+      "promote": 0,
+      "certified": 0,
+      "cohort": {
+        "definition": "UNMEASURED",
+        "n_install": 0,
+        "d1": 0,
+        "d7": 0,
+        "d30": 0
+      },
+      "notes": "Schema landed under TOP25_RECOGNITION_OPS_001. Cohort measure OPEN."
+    }
+  ]
+}

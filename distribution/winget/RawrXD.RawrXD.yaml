@@ -1,6 +1,11 @@
 # RawrXD.RawrXD.yaml
 # Phase H.2 Batch 1/5: Windows Package Manager (Winget) Manifest
 # https://docs.microsoft.com/en-us/windows/package-manager/package/
+#
+# STATUS: NOT_PUBLISHED · PROMOTE=0 · CERTIFIED=0
+# InstallerSha256 is PLACEHOLDER — do not claim winget install works.
+# Measured 2026-11-13: winget search RawrXD → no package; v1.0.0 asset is zip not MSI.
+# Authority: evidence/PRODUCTION_MATURITY_TOP25_001/TOP25_RECOGNITION_OPS_001/
 
 PackageIdentifier: RawrXD.RawrXD
 PackageVersion: 1.0.0
