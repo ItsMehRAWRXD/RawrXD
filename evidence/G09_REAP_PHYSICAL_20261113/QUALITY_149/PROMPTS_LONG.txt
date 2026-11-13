@@ -1,0 +1,12 @@
+﻿CODING<<
+Write a complete Python function is_prime(n) that returns True iff n is prime. Include a short docstring, handle n less than 2, and add three assert self-checks for 2, 17, and 1. Output only the function and asserts — no markdown.
+>>
+REASONING<<
+A bat and a ball cost $1.10 in total. The bat costs $1.00 more than the ball. How much does the ball cost? Show each algebraic step, then give the final answer on its own line as ANSWER: <dollars>.
+>>
+N_CODING=48
+N_REASONING=32
+TEMP=0 RAWRXD_GREEDY=1
+EXE=G:\~dev\rawrxd\build_ninja\bin\rawr_149_rebound.exe
+EXE_SHA256=23978A6AC03068073937F7861E01B7E065E288C1A5940714C1B8CA2C0D3D3E04
+MODEL=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf

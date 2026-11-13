@@ -1,39 +1,92 @@
-G09_REAP QUALITY_149 20261113
+G09_REAP QUALITY_149 20261113 (LONG coding+reasoning; rebound CLOSED — QUALITY only)
 PROMOTE=0 CERTIFIED=0 CROSS_SHA_CREDIT=0
 QUALITY_RETENTION=OPEN
+COHERENT_USEFUL=0
 EXE_SHA256=23978A6AC03068073937F7861E01B7E065E288C1A5940714C1B8CA2C0D3D3E04
-GIT=239279a608 + ReapPhysicalReduce loadTensors=false
+EXE_REHASH=PASS (pre-run)
+EXE=G:\~dev\rawrxd\build_ninja\bin\rawr_149_rebound.exe
+GIT_PRODUCT_AT_EXE_BUILD=239279a608 (+ loadTensors=false inventory; rebound tip 1ef884f7be)
+GIT_WT_AT_QUALITY_WRITE=6e5457bc55 (tip advanced with unrelated MiniMax; QUALITY does not claim those SHAs)
+TEMP=0 RAWRXD_GREEDY=1 WEIGHT_BUDGET=E8B0M --reap 30GB/8
+DEEP2_GEN_QUALITY_TRACE=QUALITY_149/long_*.tokens.txt (K2_STREAM token_ordinal+id)
+LOGITS_FINITE_METHOD=ARGMAX_VALUE_PARSEABLE + nan_hits=0 + LOGITS_CALLS==N (K2 path bypasses sampleToken finite probe)
 
-## Prompt (same both arms)
-PROMPT=Write a Python function is_prime(n) that returns True if n is prime. Include a short docstring and handle n < 2. Output only the function.
-N=24 --reap 30GB/8
+## Prompts (same both arms)
+CODING N=48:
+Write a complete Python function is_prime(n) that returns True iff n is prime. Include a short docstring, handle n less than 2, and add three assert self-checks for 2, 17, and 1. Output only the function and asserts — no markdown.
 
-## Arm A ? Tip15 retain-149 (RAWRXD_REAP_RETAINED=149)
-RECEIPT=QUALITY_149/quality_149.json
+REASONING N=32:
+A bat and a ball cost $1.10 in total. The bat costs $1.00 more than the ball. How much does the ball cost? Show each algebraic step, then give the final answer on its own line as ANSWER: <dollars>.
+
+## Arm A — Tip15 retain-149 (RAWRXD_REAP_RETAINED=149) SAME EXE SHA
+### coding_149
+RECEIPT=QUALITY_149/long_coding_149.json
+TRACE=QUALITY_149/long_coding_149.tokens.txt
 RETAINED_EXPERT_COUNT=149
-TOKENS=24
-ACQUIRE_OK=11520
-ACQUIRE_DENIED=0
+TOKENS=48 ACQUIRE_OK=23040 ACQUIRE_DENIED=0 ROUTE_OK=23040 ROUTE_DENIED=0
+LOGITS_CALLS=48 LOGITS_ARGMAX_CALLS=48 ARGMAX_TOKEN=108933 ARGMAX_VALUE=9.29821
+LOGITS_FINITE=1 (argmax finite; nan_hits=0)
+TOKEN_IDS=82406,82406,82406,123595,123595,123595,123595,123595,123595,123595,123595,123595,123595,82406,82406,82406,82406,82406,82406,82406,82406,82406,82406,158695,82406,6789,82406,82406,82406,36118,159874,82406,82406,82406,82406,82406,82406,82406,159874,82406,82406,82406,6789,82406,82406,108933,82406,108933
 OUTPUT<<
- Ras Ras Rasonkonkonkonkonkonkonkonkonkonk Ras Ras Ras Ras Ras Ras Ras Ras Ras RasRoy
+ Ras Ras Rasonkonkonkonkonkonkonkonkonkonk Ras Ras Ras Ras Ras Ras Ras Ras Ras RasRoy Rasroy Ras Ras Ras Roy Bai Ras Ras Ras Ras Ras Ras Ras Bai Ras Ras Rasroy Ras Rasenco Rasenco
 >>
 COHERENT_USEFUL_PYTHON=0
 
-## Arm B ? budget retain-8 (no RAWRXD_REAP_RETAINED)
-RECEIPT=QUALITY_149/quality_retain8.json
-RETAINED_EXPERT_COUNT=8
-TOKENS=24
-ACQUIRE_OK=11520
-ACQUIRE_DENIED=0
+### reasoning_149
+RECEIPT=QUALITY_149/long_reasoning_149.json
+TRACE=QUALITY_149/long_reasoning_149.tokens.txt
+RETAINED_EXPERT_COUNT=149
+TOKENS=32 ACQUIRE_OK=15360 ACQUIRE_DENIED=0 ROUTE_OK=15360 ROUTE_DENIED=0
+LOGITS_CALLS=32 LOGITS_ARGMAX_CALLS=32 ARGMAX_TOKEN=82406 ARGMAX_VALUE=9.8007
+LOGITS_FINITE=1 (argmax finite; nan_hits=0)
+TOKEN_IDS=82406,82406,82406,123595,123595,123595,123595,123595,123595,123595,123595,123595,123595,82406,82406,82406,82406,82406,82406,82406,82406,82406,82406,158695,82406,6789,82406,82406,82406,36118,159874,82406
 OUTPUT<<
-literalliteralliteralliteralliteralliteralliteralliteralliteralliteralChunk???????????????????????????????Chunk???????Chunk???
+ Ras Ras Rasonkonkonkonkonkonkonkonkonkonk Ras Ras Ras Ras Ras Ras Ras Ras Ras RasRoy Rasroy Ras Ras Ras Roy Bai Ras
+>>
+COHERENT_USEFUL_REASONING=0
+
+## Arm B — budget retain-8 (no RAWRXD_REAP_RETAINED) SAME EXE SHA (not CROSS_SHA)
+### coding_r8
+RECEIPT=QUALITY_149/long_coding_r8.json
+TRACE=QUALITY_149/long_coding_r8.tokens.txt
+RETAINED_EXPERT_COUNT=8
+TOKENS=48 ACQUIRE_OK=23040 ACQUIRE_DENIED=0 ROUTE_OK=23040 ROUTE_DENIED=0
+LOGITS_CALLS=48 LOGITS_ARGMAX_CALLS=48 ARGMAX_TOKEN=14032 ARGMAX_VALUE=8.93752
+LOGITS_FINITE=1 (argmax finite; nan_hits=0)
+TOKEN_IDS=82319,82319,82319,82319,82319,82319,82319,82319,82319,82319,23453,82939,136205,136205,136205,136205,136205,136205,136205,23453,82939,136205,23453,82939,23453,23453,23453,23453,82939,23453,82939,23453,82939,23453,82939,23453,23453,82939,14032,14032,23453,82939,14032,23453,14032,14032,14032,14032
+OUTPUT<<
+literalliteralliteralliteralliteralliteralliteralliteralliteralliteralChunk仪式上数据来源数据来源数据来源数据来源数据来源数据来源数据来源Chunk仪式上数据来源Chunk仪式上ChunkChunkChunkChunk仪式上Chunk仪式上Chunk仪式上Chunk仪式上ChunkChunk仪式上仪式仪式Chunk仪式上仪式Chunk仪式仪式仪式仪式
 >>
 COHERENT_USEFUL_PYTHON=0
+
+### reasoning_r8
+RECEIPT=QUALITY_149/long_reasoning_r8.json
+TRACE=QUALITY_149/long_reasoning_r8.tokens.txt
+RETAINED_EXPERT_COUNT=8
+TOKENS=32 ACQUIRE_OK=15360 ACQUIRE_DENIED=0 ROUTE_OK=15360 ROUTE_DENIED=0
+LOGITS_CALLS=32 LOGITS_ARGMAX_CALLS=32 ARGMAX_TOKEN=23453 ARGMAX_VALUE=8.78162
+LOGITS_FINITE=1 (argmax finite; nan_hits=0)
+TOKEN_IDS=82319,82319,82319,82319,82319,82319,82319,82319,82319,82319,23453,82939,136205,136205,136205,136205,136205,136205,136205,23453,82939,136205,23453,82939,23453,23453,23453,23453,82939,23453,82939,23453
+OUTPUT<<
+literalliteralliteralliteralliteralliteralliteralliteralliteralliteralChunk仪式上数据来源数据来源数据来源数据来源数据来源数据来源数据来源Chunk仪式上数据来源Chunk仪式上ChunkChunkChunkChunk仪式上Chunk仪式上Chunk
+>>
+COHERENT_USEFUL_REASONING=0
+
+## Retention compare (exact parity NOT required)
+QUALITY_COMPARE_MEASURED=1
+BOTH_ARMS_STREAM_CORRECT=1 (ACQUIRE_DENIED=0 ROUTE_DENIED=0)
+BOTH_ARMS_LOGITS_FINITE=1
+BOTH_ARMS_COHERENT=0
+149_vs_8_DECODED_TEXT=DIFFERENT (149→Ras-family; 8→literal/Chunk-family)
+149_vs_8_TOKEN_PREFIX=DIFFERENT (82406… vs 82319…)
 FULL_384_PATH=NOT_RUN
+LLAMA_REFERENCE_PARITY=BLOCKED (unchanged; not claimed)
 
 ## Verdict
 QUALITY_RETENTION=OPEN
-QUALITY_COMPARE_MEASURED=1
 COHERENT_USEFUL=0
 CERTIFIED=0
 PROMOTE=0
+REBOUND_REOPENED=0
+CROSS_SHA_CREDIT=0
+NOTE=Longer deterministic prompts measured; non-coherent on both retain-149 and retain-8 physical paths. Do not invent coherent.
