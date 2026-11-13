@@ -1,0 +1,16 @@
+KIMI_TOKGAP_CHECK (brief)
+DATE=2026-11-13
+PROMOTE=0
+
+Paths scanned:
+- evidence/PRODUCTION_MATURITY_TOP25_001/REAP_ALL_16GB_001/kimi_inv.*.txt
+- evidence/DEEP2_KIMI_K2_001/*
+- evidence/REAP_TIP_PORT_001/*/kimi*
+
+Finding:
+- Kimi logs emit ARGMAX_TOKEN / LOGITS_ARGMAX_END (e.g. kimi_inv ARGMAX_TOKEN=59).
+- No MiniMax-class tok-boundary pair found with L17_INPUT_FNV match tok1-3 then mismatch tok4 + FFN_DOWN_1@pos3.
+- Closest related: DEEP2_KIMI_K2_001 receipt NUMERICAL_PARITY=OPEN FIRST_DIVERGENT_LAYER=1 (different defect class: early layer, not tok3/4 MoE body under equal norm).
+
+SAME_CLASS_TOK_BOUNDARY_BUG_ON_KIMI=NOT_EVIDENCED_IN_TREE
+PROMOTE=0

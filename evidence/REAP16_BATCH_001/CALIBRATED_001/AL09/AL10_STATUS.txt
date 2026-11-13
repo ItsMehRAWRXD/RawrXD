@@ -1,41 +1,51 @@
-AL10_BOUNDARY — status
+AL10_BOUNDARY — coalesced status
 DATE=2026-11-13
 PROMOTE=0 CERTIFIED=0 CROSS_SHA_CREDIT=0 TIP_CLIMB=HOLD
 NOT_RUN!=PASS
+EXE_SHA_AUTHORITY=0C531CA21E5C590EF645553E3EB0E09E2F5AA34C8B1D88847EDCDEECBF41B7CA
+PEER=PRODUCTION_MATURITY_TOP25_001/REAP_ALL_16GB_001/AL10_AL14/
 
-## Sealed boundary (do not reopen as decode ARGMAX)
+## AL10_BOUNDARY SEALED (prefill fixed IDs — not decode ARGMAX)
+prompt_tokens=39 chat template Hello.
+tok1..4 PREFILL input IDs (pos0..3): 200034, 200019, 28463, 10
+ARGMAX lines ABSENT both arms on authority SHA.
+EMBED_PROXY_POS3 EQUAL fnv=dca8c3318f355f60 (both-present).
+CLASSIFICATION=TOKEN_IDENTITY_EQUAL_BY_EMBED; divergence is hidden-state/KV path.
 
-prompt_tokens=39 chat template (Hello).
-First four PREFILL input IDs (0-based pos 0..3 / al09 tok 1..4):
-  tok1 id=200034
-  tok2 id=200019
-  tok3 id=28463
-  tok4 id=10
-These are FIXED chat-template prompt IDs — NOT decode ARGMAX / selected tokens.
-TOK3_SELECTED_ID equality is therefore trivial; investigate KV/hidden divergence
-in execution order inside OPEN_INTERVAL.
-
-## Inherited AL09 seals (unchanged)
+## Inherited AL09 (unchanged)
 LAST_EXACT=LAYER17_OUT@tok=3
-FIRST_MISMATCH=L16_MOE_IN@tok=4
-L17 router flip = SYMPTOM
-AL04 remapping router/bias/up PASS on equal inputs
-OPEN_INTERVAL = tok3 L18..61 + tok4 L0..16
+FIRST_MISMATCH_OBSERVED=L16_MOE_IN@tok=4
+L17_ROUTER=SYMPTOM
+OPEN_INTERVAL=tok3 L18..61 + tok4 L0..16
 
-## AL10 instrumentation (this turn)
-Env: RAWRXD_AL10=1 RAWRXD_AL10_MAX_TOK=4 (+ RAWRXD_AL09=1 for MOE_IN/ROUTER)
-Emits: AL10_INPUT_ID per prefill Tok(); AL10_LAYER_OUT FNV on OPEN_INTERVAL
-       (+ L17); AL10_EARLY_EXIT / AL10_PREFILL_ABORT_CLEAN after tok=4
-Optional: RAWRXD_KV_PROBE=1 for KV write digests
+## FIRST_DIVERGENT_OP (coalesced peer AL11 — BOUNDED_OPEN)
+STAGE=FFN_DOWN_1
+POS=3 AL09_TOK=4
+FULL_FNV=0a38208b6642f3d6
+PHYS_FNV=020e34f17b2bbf8a
+LAST_EXACT_STAGE=FFN_NORM_1@pos3 fnv=a2334583d009d20c
+LAYER0_OUT@pos3=MATCH
+ATTN_PATH through FFN_NORM_1@pos3=MATCH
+ROUTE_AT_BREAK=score-order MATCH (FULL orig IDs vs PHYS slots)
+ROOT_CLASS=MOE_EXPERT_BODY_OR_ACCUM_UNDER_EQUAL_NORM
+CAVEAT=FULL LAYER_OUT sweep L18..61@tok3 ABSENT (RESOURCE/EXIT=-1) → not dual CLEAN_EXIT reseal.
+FIX_APPLIED=0 (no clipping; GGUF SHA preserved)
 
-## A/B arms (exclusive)
-PHYS = F:\ollamamodels\MiniMax-M2.7-REAP16-CALIB-ROUTE27\...
-FULL = MiniMax full + RAWR_REAP_SELECTION_MANIFEST=selection_calib_top27.json
-       RAWRXD_REAP_RETAINED=256 --reap 30GB/8
-WEIGHT_BUDGET_MIB=32768
+## Instrumentation landed this worker (source)
+Al10Probe.hpp: RAWRXD_AL10=1 + RAWRXD_AL10_MAX_TOK=4
+  AL10_INPUT_ID / AL10_LAYER_OUT(OPEN_INTERVAL) / AL10_EARLY_EXIT / clean prefill abort
+Deep2Engine.cpp: wire DumpInputId + DumpLayerOut + early-exit after tok=N
+NEW_EXE tip attempted 4CFE7EAF… → ABORT_LAYER0 / EXIT=-1 under concurrency — NOT_RUN for repair bind.
+
+## Concurrency coalesce (this turn)
+PID 8580 MiniMax-REAP16 Hello t32: GONE at coalesce time.
+HALT_CONCURRENCY OWNER=QUALITY_CURVE_001 EXCLUSIVE=1 → NO third full MiniMax load started.
+rawr_cert_pin present on Qwen matrix path (non-CALIB) — left alone.
 
 ## Disposition
 AL10_BOUNDARY=SEALED_PREFILL_FIXED_IDS
-FIRST_DIVERGENT_OP=OPEN (await exclusive A/B LAYER_OUT walk)
+FIRST_DIVERGENT_OP=FFN_DOWN_1@pos3 (BOUNDED_OPEN; root repair OPEN)
+AL11_CRASH=FULL RESOURCE_ABORT ≠ PHYS (classify separate)
+AL13/AL14=PEER_OWNED (mapping FAIL router family noted; Hello quality deferred)
 PROMOTE=0
 CERTIFIED=0

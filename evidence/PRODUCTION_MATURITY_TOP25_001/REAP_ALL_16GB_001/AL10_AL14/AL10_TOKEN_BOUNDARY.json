@@ -63,6 +63,15 @@
   "exclusive_rerun": {
     "required_by_missing_argmax_kv": true,
     "attempted": true,
-    "detail_file": "AL10_EXCLUSIVE_RERUN_STATUS.txt"
+    "killed_rawr_first": true,
+    "env": {
+      "WEIGHT_BUDGET_MIB": 32768,
+      "RAWR_SKIP_AUTO_BACKEND": "1",
+      "RAWRXD_STAGE_DIGEST": "1",
+      "manifest": "selection_calib_top27.json"
+    },
+    "result": "ARGMAX still 0; phys EXIT=-1; full incomplete/CROSS_SHA EXE observed 4CFE7EAF… — no credit",
+    "detail_file": "AL10_EXCLUSIVE_RERUN_STATUS.txt",
+    "CROSS_SHA_CREDIT": 0
   }
 }

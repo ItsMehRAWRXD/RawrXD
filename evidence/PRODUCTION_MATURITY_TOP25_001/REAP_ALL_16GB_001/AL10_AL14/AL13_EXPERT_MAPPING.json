@@ -496,5 +496,25 @@
     }
   ],
   "note": "expert_count metadata on FULL expected 256; PHYS tensors compacted to E=27 per layer",
-  "overall": "FAIL"
+  "overall": "FAIL",
+  "gate_inp_order_recheck": {
+    "sorted_bad_per_layer": {
+      "L0": 27,
+      "L1": 27,
+      "L17": 27
+    },
+    "hit_order_bad_per_layer": {
+      "L0": 27,
+      "L1": 27,
+      "L17": 27
+    },
+    "bias_sorted": "PASS",
+    "note": "Static ffn_gate_inp columns do not match FULL[:,expert] under sorted or hit-order packing; runtime L1 route scores still bit-align FULL orig vs PHYS slots. Expert FFN body (gate/up/down exps)+bias PASS under sorted calib. shexp ABSENT."
+  },
+  "expert_count_metadata": {
+    "full_minimax-m2.expert_count": 256,
+    "phys_minimax-m2.expert_count": 27,
+    "tensors_E": "FULL exps last-dim 256; PHYS exps last-dim 27"
+  },
+  "disposition": "EXPERT_BODY_PASS_ROUTER_STATIC_FAIL_RUNTIME_SCORES_MATCH"
 }

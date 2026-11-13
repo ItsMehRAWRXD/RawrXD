@@ -1,0 +1,12 @@
+{
+  "gate": "AL14",
+  "title": "Chat semantic (only if clean dual-arm exits)",
+  "DATE": "2026-11-13",
+  "PROMOTE": 0,
+  "CERTIFIED": 0,
+  "status": "OPEN",
+  "reason": "No clean dual-arm CLEAN_EXIT on same EXE SHA 0C531CA2 with ARGMAX/generation complete. Exclusive AL10 re-run EXIT=-1 / CROSS_SHA. Prior AL06 semantic already FAIL on both arms.",
+  "clean_dual_arm_exits": false,
+  "chat_semantic_run": "NOT_RUN",
+  "prior_AL06": "FAIL_SEMANTIC (allowlist + phys both incoherent)"
+}

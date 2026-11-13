@@ -1,0 +1,60 @@
+{
+  "gate": "AL12",
+  "title": "Crash / abort classification (FULL explosion != PHYS crash)",
+  "DATE": "2026-11-13",
+  "PROMOTE": 0,
+  "CERTIFIED": 0,
+  "host_snapshot": "AL11_HOST_SNAPSHOT.json",
+  "host_after_kill": "AL12_HOST_AFTER_KILL.json",
+  "classes": [
+    {
+      "id": "A",
+      "name": "LAYER0_POST_FFN_MAGNITUDE",
+      "exception_code": null,
+      "arms": ["FULL", "PHYS"],
+      "evidence": "[B3_FIRST_BAD] phase=LAYER0_POST_FFN pos=0 l2~1.27e3 nan=0 inf=0 finite=3072",
+      "class": "NUMERICAL_MAGNITUDE_WARNING_NOT_CRASH",
+      "shared_both_arms": true,
+      "relation_to_first_divergent": "INDEPENDENT (pos0; FFN_DOWN_1 break is pos3)"
+    },
+    {
+      "id": "B",
+      "name": "PHYS_EARLY_LOAD_ABORT",
+      "exception_code": null,
+      "exit": -1,
+      "arms": ["PHYS_digest", "bound_phys", "al09_phys_first"],
+      "evidence": "Short err logs (~4KB) stop after MODEL_DIGESTION / ROOT_MATERIALIZE; no exception code; no 0xC000xxxx",
+      "class": "LOAD_OR_ENV_ABORT_NOT_FORWARD_CRASH",
+      "commit_vs_ram": "AL11_HOST_SNAPSHOT FreePhys_GB~42 Commit_GB~38; not a commit explosion signature",
+      "note": "Distinct from FULL mid-forward abort"
+    },
+    {
+      "id": "C",
+      "name": "FULL_ALLOW_MID_FORWARD_ABORT",
+      "exception_code": null,
+      "exit": -1,
+      "arms": ["al09_full_cmd", "bound_full", "al09_full_layer"],
+      "evidence": "meta EXIT=-1; logs truncate mid LAYER_ENTER/EXIT; no SEH/exception code in log",
+      "class": "RESOURCE_ABORT_INCOMPLETE_FORWARD",
+      "commit_vs_ram": "Historically FreePhys ~28-36GB under WEIGHT_BUDGET_MIB=32768; AL09_STATUS cites commit pressure",
+      "neq_phys_crash": true,
+      "note": "FULL explosion/incomplete != PHYS load abort; numerical first-divergent observed on completed STAGE_DIGEST pair before abort"
+    },
+    {
+      "id": "D",
+      "name": "AL10_EXCLUSIVE_RERUN",
+      "exception_code": null,
+      "exit": -1,
+      "arms": ["al10_phys", "al10_full"],
+      "exe_sha_observed": "4CFE7EAF… (CROSS_SHA; not AL09 authority 0C531CA2)",
+      "class": "ABORT_LAYER0_OR_CONTAMINATED_ENV",
+      "ARGMAX_captured": false,
+      "CROSS_SHA_CREDIT": 0
+    }
+  ],
+  "summary": {
+    "seh_exception_codes_seen": [],
+    "full_explosion_eq_phys_crash": false,
+    "dominant_abort": "EXIT=-1 without exception code; resource/incomplete vs early PHYS load"
+  }
+}

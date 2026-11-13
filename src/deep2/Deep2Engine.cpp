@@ -17,8 +17,6 @@
 #include "lavapath/ParseMibBudget.hpp"
 #include "Al09Probe.hpp"
 #include "Al10Probe.hpp"
-#include "Al10Probe.hpp"
-#include "Al10Probe.hpp"
 #include "MoEExpertResidencyPlace.hpp"
 #include "MoEPlaceLiveCounters.hpp"
 #include "Deep2GpuCounterSnapshot.hpp"
@@ -7092,21 +7090,6 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             printf("[B3_LOGITS] AFTER sampleToken token=%d\n", nextToken);
             printf("[B3_LOGITS] Storing token %d at index %zu\n", nextToken, tokensGenerated);
             fflush(stdout);
-        }
-        if (Deep2::al10::On()) {
-            int al10Argmax = 0;
-            float al10Best = logits[0];
-            for (size_t ai = 1; ai < config.vocabSize; ++ai) {
-                if (std::isfinite(logits[ai]) &&
-                    (!std::isfinite(al10Best) || logits[ai] > al10Best)) {
-                    al10Best = logits[ai];
-                    al10Argmax = (int)ai;
-                }
-            }
-            Deep2::al10::DumpBoundary(position, tokensGenerated,
-                                     persistentKvLength(), nextToken,
-                                     al10Argmax, al10Best, logits,
-                                     config.vocabSize, h, config.hiddenDim);
         }
         if (Deep2::al10::On()) {
             int al10Argmax = 0;

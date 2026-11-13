@@ -1,0 +1,20 @@
+AL10–AL14 SUMMARY — MiniMax FULL+allowlist vs PHYS CALIB
+DATE=2026-11-13
+EXE_SHA_AUTHORITY=0C531CA21E5C590EF645553E3EB0E09E2F5AA34C8B1D88847EDCDEECBF41B7CA
+PROMOTE=0 CERTIFIED=0 CROSS_SHA_CREDIT=0 TIP_CLIMB=HOLD
+Sealed AL01–AL08 under REAP_ALL_16GB_001\AL0*.json: NOT ALTERED
+
+TOK3_SELECTED match: Y (embed/FINAL_NORM proxy; ARGMAX id lines absent)
+first divergent key: FFN_DOWN_1 @ pos=3 (AL09 tok=4)
+crash class: FULL RESOURCE_ABORT EXIT=-1 (no SEH) ≠ PHYS early LOAD_ABORT; magnitude warn shared@L0
+AL13: expert_count meta FULL=256 PHYS=27; gate/up/down exps+bias PASS (sorted); gate_inp static FAIL; runtime scores match
+AL14: OPEN (no clean dual-arm exits)
+Kimi same-class tok-boundary: NOT_EVIDENCED
+
+Artifacts:
+  AL10_TOKEN_BOUNDARY.json + AL10_STATUS.txt
+  AL11_FIRST_DIVERGENT.json
+  AL12_CRASH_CLASS.json
+  AL13_EXPERT_MAPPING.json
+  AL14_SEMANTIC.json
+  KIMI_TOKGAP_CHECK.txt
