@@ -335,8 +335,8 @@ void Deep2Bridge::GenerationWorker(const std::string& prompt, int maxTokens)
             m_espBus->publish(rawrxd::esp::Kind::PrefillEnd, "tokens=0", m_espRequestId);
         }
 
-        // Configure generation parameters
-        m_cpuEngine->ConfigureGeneration(m_temperature, m_topP, static_cast<uint32_t>(m_topK), 1.1f, 0);
+        // CPUInferenceEngine: SetSamplerConfig (not ConfigureGeneration)
+        m_cpuEngine->SetSamplerConfig(m_temperature, m_topP, static_cast<int>(m_topK), 1.1f, 0);
         
         std::string fullResponse;
         
@@ -456,9 +456,10 @@ std::string Deep2Bridge::GenerateSync(const std::string& prompt, int maxTokens)
             return "Error: CPU engine not available";
         }
         
-        // Configure and use the sync inference
-        m_cpuEngine->ConfigureGeneration(m_temperature, m_topP, static_cast<uint32_t>(m_topK), 1.1f, 0);
-        return m_cpuEngine->infer(prompt);
+        // CPUInferenceEngine: SetSamplerConfig + Generate/Detokenize (no infer())
+        m_cpuEngine->SetSamplerConfig(m_temperature, m_topP, static_cast<int>(m_topK), 1.1f, 0);
+        const auto ids = m_cpuEngine->Generate(m_cpuEngine->Tokenize(prompt), maxTokens);
+        return m_cpuEngine->Detokenize(ids);
 #endif
     }
     catch (const std::exception& e) {

@@ -1,0 +1,1 @@
+vram_total_mb=31707.6 used_mb=0.0 avail_mb=31707.6 offload=4 evicted=1

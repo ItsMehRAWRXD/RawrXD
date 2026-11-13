@@ -1,0 +1,13 @@
+side=deep2
+stage=K_PRE_ROPE_2
+pos=1
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=256
+nbytes=1024
+fnv=5558b393e7fbb7d5
+l2=15.506927966995708
+seq=107
+path=G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_vkspv_q6kint\deep2_K_PRE_ROPE_2_pos1_layer0_full_n256_seq107.bin

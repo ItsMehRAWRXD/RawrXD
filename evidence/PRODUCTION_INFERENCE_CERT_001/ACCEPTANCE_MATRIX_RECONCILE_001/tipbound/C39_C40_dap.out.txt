@@ -1,0 +1,1 @@
+BACKEND=WaitForDebugEvent launched=1 stopped_bp=1 stack=4 vars=4 continue=1 exited=1 exit_code=7 watch=42 SESSION_REAL=1

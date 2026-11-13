@@ -1,0 +1,13 @@
+side=deep2
+stage=FFN_NORM_1
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=77e396e7ee22f053
+l2=4.7737029284373671
+seq=33
+path=G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_vkspv_q6kint\deep2_FFN_NORM_1_pos0_layer0_full_n2048_seq033.bin

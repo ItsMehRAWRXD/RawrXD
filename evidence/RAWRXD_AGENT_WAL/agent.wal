@@ -4,3 +4,7 @@
 1	OPEN	smoke_20261028172430	52E54630
 2	STEP	cli_smoke	5AF417C3
 3	COMMIT	smoke_20261028172430	B08C958D
+1	CMD_RUN_OK	G:\~dev\rawrxd\models\tinyllama.gguf	E63C436F
+1	CMD_RUN_OK	G:\~dev\rawrxd\models\tinyllama.gguf	E63C436F
+1	CMD_RUN_OK	G:\~dev\rawrxd\models\tinyllama.gguf	E63C436F
+1	CMD_RUN_OK	G:\~dev\rawrxd\models\tinyllama.gguf	E63C436F

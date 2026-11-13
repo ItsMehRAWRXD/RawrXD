@@ -1,0 +1,13 @@
+side=deep2
+stage=ATTN_OUT_0
+pos=1
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=6b7b05ca5863aec1
+l2=0.2740072631110248
+seq=73
+path=G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_vkspv_q6kint\deep2_ATTN_OUT_0_pos1_layer0_full_n2048_seq073.bin

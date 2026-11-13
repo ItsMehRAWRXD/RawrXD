@@ -1,0 +1,1 @@
+ok=1 size=71717 path=F:\rawrxd\evidence\crash_dumps\rawr-c49-self.dmp seh_filter=1

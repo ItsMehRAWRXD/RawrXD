@@ -1,0 +1,1 @@
+load_ok=1 activate_ok=1 api_ok=1 host_running=1 host_pid=44348 receipt_load=1 receipt_activate=1 PRODUCT_API=1 adapter=product_extension_runtime

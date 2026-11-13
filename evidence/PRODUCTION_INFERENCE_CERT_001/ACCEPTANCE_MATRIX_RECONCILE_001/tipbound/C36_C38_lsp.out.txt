@@ -1,0 +1,1 @@
+BACKEND=RawrXDLSPServer caps=1 completions=1 hover=1 definitions=1 diagnostics=1 rename_edits=1 code_actions=1 symbols=4 SESSION_REAL=1

@@ -1,0 +1,12 @@
+RawrXD doctor
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  [ PASS ] inference_backend - 127.0.0.1:11434 (ollama) answered a completion request
+  [ PASS ] cmake_available - cmake version 4.4.2
+  [ PASS ] git_available - evidence/reap-multi-model-20261113
+
+  [ PASS ] tool_registry - 11 tools registered
+  [ PASS ] workspace_path_scoping - path traversal rejected: ERROR: file outside workspace or not found: ..\..\Windows\System32\drivers\etc\hosts
+  [ PASS ] mode_permission_enforcement - ask mode was denied write_file as expected
+  [ PASS ] workspace_writable - evidence/ is writable
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+VERDICT: PASS (0 failure(s))

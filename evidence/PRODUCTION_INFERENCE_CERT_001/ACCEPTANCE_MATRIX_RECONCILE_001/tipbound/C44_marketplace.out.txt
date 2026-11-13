@@ -1,0 +1,1 @@
+install_ok=1 catalog_n=3 path=F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\oneshot-ext-smoke.vsix msg=Installed (local limited): C:\Users\Garrett\AppData\Local\RawrXD\extensions\oneshot-ext-smoke.vsix

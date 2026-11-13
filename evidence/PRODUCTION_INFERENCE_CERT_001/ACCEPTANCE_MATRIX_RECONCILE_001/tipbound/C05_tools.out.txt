@@ -1,0 +1,12 @@
+Registered tools (11), filtered by mode 'code':
+  edit_files [w] available=yes - Replace exact unique text in a workspace file
+  git_diff [x] available=yes - Show git diff for the workspace
+  git_status [x] available=yes - Read-only porcelain git status for the workspace
+  list_repo [r] available=yes - Recursively list files under a workspace-relative path
+  read_file [r] available=yes - Read up to 60KB of a workspace file
+  rollback_edit [w] available=yes - Restore last edit_files snapshot for a workspace path
+  run_build [x] available=yes - Invoke the CMake build for the workspace
+  run_shell [x] available=yes - Run a short command in the workspace (cmd.exe /c, cancel-aware)
+  run_tests [x] available=yes - Invoke the CTest suite for the workspace
+  search_text [s] available=yes - Case-insensitive text search across the workspace
+  write_file [w] available=yes - Create/modify a workspace file (overwrite is backed up first)

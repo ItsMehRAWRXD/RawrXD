@@ -1,0 +1,13 @@
+side=deep2
+stage=K_LINEAR_1
+pos=1
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=256
+nbytes=1024
+fnv=7a3dd780d5b862f9
+l2=5.400486349339026
+seq=85
+path=G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_vkspv_q6kint\deep2_K_LINEAR_1_pos1_layer0_full_n256_seq085.bin

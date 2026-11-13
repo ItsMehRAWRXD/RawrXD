@@ -1,0 +1,207 @@
+ACCEPTANCE_MATRIX_RECONCILE_001 — STATUS
+ASOF_LOCAL=2026-11-13T16:45:00-05:00
+MOTD_ACK=1
+GATE=A
+TRACKING=GitHub Issue #83 (no competing issues created)
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+VALUATION_100=NOT_CLAIMED
+CROSS_SHA_CREDIT=0
+INVENT_PASS=0
+NOT_RUN!=PASS
+GPU_ARITHMETIC_TOUCHED=0
+
+## Baseline seal (authoritative claim)
+SEAL_ID=20261112_114906
+SEAL_PATH_CLAIMED=F:\rawrxd\evidence\TOP25_ML_IDE_VALUATION_20261112_114906
+SEAL_DIR_ON_DISK=ABSENT
+  # MATRIX.json / SUMMARY.txt wiped from F:\rawrxd\evidence\TOP25_ML_*
+  # Disposition recovered from agent-transcripts/7f2907c4-7060-4264-98c9-8a44de823b8f.jsonl L73
+  # + surviving CONTINUE tip/logs under TOP25_CLI_GUI_CONTINUE_20261112_113146
+PRIOR_SEAL=TOP25_ML_IDE_VALUATION_20261112_112049 (CLI 35/45 GUI 49/54)
+CONTINUE=F:\rawrxd\evidence\TOP25_CLI_GUI_CONTINUE_20261112_113146
+GUI_TIP_SHA=7A55D5775E7023631C8D3EEEF8D74D5CFE06CCD75D678D25342B415D7874670A
+GUI_TIP_PATH=F:\rawrxd\evidence\TOP25_CLI_GUI_CONTINUE_20261112_113146\RawrXD-Win32IDE-Native.TIP.exe
+GUI_TIP_HASH_VERIFIED=1
+CLI_TIP_SHA=622E9859A0811AB7B530237C6084C2406DC40E17391C677E4BAD9EEAA3D50002
+CLI_TIP_PATH=F:\rawrxd\evidence\TOP25_CLI_GUI_CONTINUE_20261112_012700\rawr.exe
+CLI_TIP_HASH_VERIFIED=1
+  # 112049 CONTROLLING brief; 114906 CLI% unchanged vs that tip
+GIT_HEAD_AT_RECONCILE=6f9ad15a5c1d9cad691212a7bb1f5f4ec978afb2
+
+## Scoreboard (seal claim; fail-closed — not re-invented)
+GUI_ACCEPTANCE=53/54 = 98.15%
+CLI_ACCEPTANCE=35/45 = 77.78%
+COMBINED_ACCEPTANCE=88/99 = 88.89%
+GUI_REMAINING=C36 (clangd initialize/hover/completion NOT_VERIFIED)
+CLI_DELTA_VS_112049=none
+GUI_DELTA_VS_112049=+C38+C44+C46+C47
+
+## Two unexplained GUI gains
+UNEXPLAINED_GUI_GAINS=C46,C47
+WHY=
+  Prior OPEN listed C46=PARTIAL and C47=FAIL; seal credited both VERIFIED_PASS via WM_COMMAND 9628/9629.
+  Surviving tip-bound logs are thin:
+    TOP25_C46_COLLAB.log → crdt_ok=1 panel=1 hub_running=1
+    TOP25_C47_INSTALLER.log → present=1 launched=1 exit_code=0
+  No durable MATRIX evidence_gui rows on disk (seal wiped).
+  Contrast: C38 has rename_applied=1; C44 has VSIX install path — better anchored.
+  G_PROVE_RUN.log initially FAIL C38; only G_PROVE_RUN5.log lists PASS=C38,C44,C46,C47.
+DISPOSITION=Do not invent PASS; C46/C47 remain SEAL_CLAIMED pending tip-bound E2E re-prove on GUI tip 7A55.
+
+## Ten CLI outstanding (114906)
+KNOWN_5=C39,C40,C45,C49,C54
+RECONCILED_UNNAMED_5=C36,C38,C44,C46,C47
+ALL_10=C36,C38,C39,C40,C44,C45,C46,C47,C49,C54
+DETAIL:
+  C36 cli=ABSENT (gui NOT_VERIFIED; clangd init fail — TOP25_C36_LSP.log)
+  C38 cli=ABSENT (gui SEAL_CLAIMED rename; CLI path not credited)
+  C39 cli=ABSENT DAP breakpoint/step (gui had SESSION_REAL; no CLI DAP product path at seal)
+  C40 cli=ABSENT (paired with C39)
+  C44 cli=ABSENT (gui SEAL_CLAIMED VSIX; CLI marketplace not in 35/45)
+  C45 cli=PARTIAL computer-use
+  C46 cli=PARTIAL collab (gui SEAL_CLAIMED)
+  C47 cli=FAIL installer (gui SEAL_CLAIMED)
+  C49 cli=PARTIAL crashdump/minidump
+  C54 cli=NOT_VERIFIED @-mention
+
+## NOTE later merge-max (not this baseline)
+SEAL_115010 claimed CLI 41/45 tip ED17468F… / GUI 53/54 tip 7A55… (CLI open C44/C45/C46/C47).
+Gate A baseline remains 114906 per parent brief; do not silently promote 115010 scores here.
+
+## Source matrix locations searched
+F:\rawrxd\evidence\TOP25_ML_IDE_VALUATION_* = ABSENT (wiped)
+F:\rawrxd\evidence\TOP25_CLI_GUI_CONTINUE_20261112_113146 = PRESENT (GUI tip + prove logs)
+G:\~dev\rawrxd\evidence\IDE_DAILY_USE_001 = PRESENT (GPU_DEFAULT; not C-matrix)
+G:\~dev\rawrxd\evidence\IDE_DAILY_USE_E2E_001 = PRESENT (four-panel FAIL_CLOSED)
+G:\~dev\rawrxd\evidence\FOUR_PANEL_COMPLETION_001 = PRESENT (panel gates)
+G:\~dev\rawrxd\evidence\COMPETITIVE_TEST_001 / COMPETITIVE_BENCH_001 = PRESENT (not C01–C55)
+G:\~dev\rawrxd\evidence\PRODUCTION_MATURITY_TOP25_001\VALUATION_* = different C01–C10 scoreboard
+Authority: transcript 7f2907c4 L73 + CONTINUE_20261112_113146 logs
+
+## Denominators
+C10 = cloud_optional_bonus EXCLUDED from GUI 54 and CLI 45
+GUI_ONLY (not in CLI 45)=C22,C23,C24,C26,C27,C28,C31,C33,C52
+CLI_SET=C01–C09,C11–C21,C25,C29,C30,C32,C34–C51,C53–C55
+
+## GUI matrix (54) — ID|NAME|STATUS|EXE_SHA|GAP
+C01|Install/local build path|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C02|Doctor/health|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C03|Chat multiturn|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C04|Models list/select|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C05|Doctor deep|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C06|Backend select|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C07|File ops basics|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C08|Deep2 model path|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C09|Native GGUF generate|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C11|Agent tools invoke|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C12|Multi-file edit|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C13|Plan/Ask modes|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C14|Diff apply/reject|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C15|Rollback/undo|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C16|Cloud consent / GhostText allow|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C17|Swarm multi-agent|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C18|Subagent spawn/join|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C19|Search/index|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C20|Pref/settings persist|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C21|Cancel-survive / isolation|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C22|GhostText E2E|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|GUI-only; MATRIX wiped
+C23|GhostText race|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|GUI-only; MATRIX wiped
+C24|Editor daily (GUI)|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|GUI-only; MATRIX wiped
+C25|Build/test invoke|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C26|Editor advanced (GUI)|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|GUI-only; MATRIX wiped
+C27|Syntax highlight|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|GUI-only; MATRIX wiped
+C28|Multi-cursor|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|GUI-only; MATRIX wiped
+C29|File tree|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C30|Find/search invoke|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C31|Command palette|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|GUI-only; MATRIX wiped
+C32|Deep2 select/persist|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C33|Terminal panel|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|GUI-only; MATRIX wiped
+C34|Shell/agent cancel|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C35|Git status|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C36|LSP clangd hover/completion|NOT_VERIFIED|7A55D577…|TOP25_C36_LSP.log lsp_running=0 initialize handshake failed
+C37|LSP diagnostics/defs|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C38|Rename/code actions|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|TOP25_C38_RENAME.log rename_applied=1 (G_PROVE_RUN5)
+C39|DAP breakpoint/step|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|gui PASS per seal brief; CLI ABSENT separate
+C40|DAP vars/disconnect|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|gui PASS per seal brief; CLI ABSENT separate
+C41|Extensions list|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C42|Extension activate|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C43|ExtensionHost product API|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C44|Marketplace/VSIX install|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|TOP25_C44_VSIX.log install_ok=1
+C45|Computer-use|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C46|Collab/CRDT|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|UNEXPLAINED_GAIN; thin TOP25_C46_COLLAB.log
+C47|Installer|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|UNEXPLAINED_GAIN; thin TOP25_C47_INSTALLER.log
+C48|Airgap/offline gate|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C49|Crashdump/minidump|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C50|Self-audit|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C51|Airgap audit|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C52|Accessibility|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|GUI-only; MATRIX wiped
+C53|RAG index|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C54|@-mention|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+C55|VRAM/offload|SEAL_CLAIMED_VERIFIED_PASS|7A55D577…|MATRIX wiped; not re-proved this reconcile
+
+## CLI matrix (45) — ID|NAME|STATUS|EXE_SHA|GAP
+C01|Install/local build path|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C02|Doctor/health|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C03|Chat multiturn|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C04|Models list/select|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C05|Doctor deep|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C06|Backend select|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C07|File ops basics|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C08|Deep2 model path|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C09|Native GGUF generate|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C11|Agent tools invoke|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C12|Multi-file edit|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C13|Plan/Ask modes|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C14|Diff apply/reject|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C15|Rollback/undo|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C16|Cloud consent / GhostText allow|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C17|Swarm multi-agent|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C18|Subagent spawn/join|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C19|Search/index|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C20|Pref/settings persist|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C21|Cancel-survive / isolation|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C25|Build/test invoke|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C29|File tree|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C30|Find/search invoke|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C32|Deep2 select/persist|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C34|Shell/agent cancel|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C35|Git status|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C36|LSP clangd hover/completion|ABSENT|622E9859…|outstanding; gui also NOT_VERIFIED
+C37|LSP diagnostics/defs|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C38|Rename/code actions|ABSENT|622E9859…|outstanding (gui sealed; CLI not)
+C39|DAP breakpoint/step|ABSENT|622E9859…|outstanding; no CLI DAP product path at seal
+C40|DAP vars/disconnect|ABSENT|622E9859…|outstanding; paired C39
+C41|Extensions list|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C42|Extension activate|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C43|ExtensionHost product API|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C44|Marketplace/VSIX install|ABSENT|622E9859…|outstanding (gui sealed; CLI not)
+C45|Computer-use|PARTIAL|622E9859…|outstanding
+C46|Collab/CRDT|PARTIAL|622E9859…|outstanding (gui SEAL_CLAIMED)
+C47|Installer|FAIL|622E9859…|outstanding (gui SEAL_CLAIMED)
+C48|Airgap/offline gate|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C49|Crashdump/minidump|PARTIAL|622E9859…|outstanding
+C50|Self-audit|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C51|Airgap audit|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C53|RAG index|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+C54|@-mention|NOT_VERIFIED|622E9859…|outstanding
+C55|VRAM/offload|SEAL_CLAIMED_VERIFIED_PASS|622E9859…|MATRIX wiped; not re-proved this reconcile
+
+## Unresolved IDs (actionable)
+GUI_UNRESOLVED=C36
+GUI_UNEXPLAINED_GAINS=C46,C47
+CLI_UNRESOLVED=C36,C38,C39,C40,C44,C45,C46,C47,C49,C54
+
+## Parallel probe notes (NOT credited to 114906)
+runs/* under this folder include sibling retests on EXE SHA C865CACE… ≠ baseline CLI tip 622E9859…
+CROSS_SHA_CREDIT=0 — do not lift 114906 scores from those outs.
+
+## Next executable gates
+1) Restore/regenerate MATRIX.json from tip-bound receipts on exact SHAs above
+2) GUI C36 real clangd init/hover/completion on tip 7A55
+3) Re-prove GUI C46/C47 tip-bound E2E (clear UNEXPLAINED)
+4) CLI close ALL_10 on one CLI tip SHA
+
+PROMOTE=0
+CERTIFIED=0

@@ -1,0 +1,13 @@
+side=deep2
+stage=FINAL_NORM
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=583b7ff51d3f8e63
+l2=64.339548057313351
+seq=60
+path=G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_vkspv_q6k\deep2_FINAL_NORM_pos0_layer0_full_n2048_seq060.bin

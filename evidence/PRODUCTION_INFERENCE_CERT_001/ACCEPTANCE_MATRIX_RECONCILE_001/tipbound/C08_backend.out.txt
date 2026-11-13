@@ -1,0 +1,9 @@
+Backend router
+  primary     : deep2
+  backup      : ollama
+  selected    : native
+  route       : deep2
+  active      : deep2-native GGUF models/tinyllama.gguf
+  endpoint    : in-process://Deep2Engine
+  reachable   : yes
+  persisted   : F:\rawrxd\.rawrxd\cli_backend_pref.txt
