@@ -1,25 +1,35 @@
 {
   "pack": "PRODUCTION_MATURITY_TOP25_001",
-  "asof_local": "2026-11-13T17:12:00-05:00",
-  "branch": "feature/ide-agentic-product-path-20261026",
+  "asof_local": "2026-11-13T17:35:00-05:00",
   "promote": 0,
   "certified": 0,
   "tip_climb": "HOLD",
   "invent_pass": 0,
+  "not_run_ne_pass": 1,
   "scores": {
-    "CLI_SCORE_PCT": 48,
-    "GUI_SCORE_PCT": 32,
-    "OVERALL_PCT": 32,
+    "CLI_SCORE_PCT": 51,
+    "GUI_SCORE_PCT": 40,
+    "OVERALL_PCT": 40,
     "CONJUNCTION_PASS": 0
   },
   "tracks": {
     "CLI_COMPLETE": 0,
     "GUI_COMPLETE": 0,
-    "DENSE_GPU_CANARY_SEALED": 1,
-    "EXE_RELINK": "PENDING_LINK",
-    "EXE_SHA256": "D9589D9A665E07F93E906A637B9D4ADB80D99BFD9604103A882E6AC79078BC08",
-    "DEEP2BRIDGE_C2039_FIX_SOURCE": 1,
+    "JOINT_COMPLETE": 0,
+    "EXE_SHA256": "6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431",
+    "WORKER_PRIVATE_SHA256": "3E8BA27337D0F0A5F7C599DB2885A10308C7662378EE6C042F6C0B2F9D59DD88",
     "EXE_ABSORB_GPU_DEFAULT": 0,
-    "REJECT_GUI60_INVENT": 1
-  }
+    "FOUR_PANEL_HWND_E2E": "PARTIAL_MAIN_ONLY",
+    "TERMINAL_GATE": 0,
+    "OUTPUT_GATE": 0,
+    "PROBLEMS_GATE": 0,
+    "DEBUG_CONSOLE_GATE": 1
+  },
+  "raised_gui_basis": [
+    "tip unsuffixed EXE PE present+launch",
+    "HWND RawrXD_IDE_MainWindow",
+    "terminal/output/problems logic EXIT=0",
+    "debug still FAIL_CLOSED"
+  ],
+  "auth": "VALUATION_GUI.txt + FOUR_PANEL_COMPLETION_001 + IDE_DAILY_USE_001"
 }

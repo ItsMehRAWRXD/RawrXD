@@ -1,14 +1,15 @@
-﻿PRODUCTION_MATURITY_TOP25_001 ? VALUATION_CLI
-ASOF_LOCAL=2026-11-13T16:52-05:00
+﻿PRODUCTION_MATURITY_TOP25_001 — VALUATION_CLI
+ASOF_LOCAL=2026-11-13T17:32-05:00
 WORKSTREAM=CLI_TOP25_MATURITY_VALUATION
+BRANCH_TARGET=feature/ide-agentic-product-path-20261026
 CLI_CAN_FINISH_WITHOUT_GUI=1
 PROMOTE=0
 CERTIFIED=0
 CLI_MATURITY_COMPLETE=0
 REJECTED_CLI_COMPLETE_AT_SUB100=1
 CLI_COMPLETE=0
-CLI_COMPLETE_BASIS=help EXIT=0 + TinyLlama AUTO_BACKEND=VulkanPrimary HOST_DECODE=0 EXIT=0 GENERATED_TOKENS=8
-CLI_COMPLETE_WITNESS=CLI_TOP25_VALUATION_001/STATUS.txt
+CLI_COMPLETE_BASIS=FAIL_CLOSED until all cats RUNTIME_REACHED; dense GEN=8 seals path only
+CLI_COMPLETE_WITNESS=VALUATION_SCOREBOARD.txt CLI_COMPLETE=0
 READY_FOR_PEER=0
 TIP_CLIMB=HOLD
 NOT_RUN!=PASS
@@ -16,62 +17,77 @@ INVENT_PASS=0
 NO_CPU_ONLY_PRODUCT_PATH=1
 HOST_CPU_RAM_ONLY=INVALID_FOR_COMPETITIVE_SCORE
 AUTH_PACK=evidence/PRODUCTION_MATURITY_TOP25_001/
-EXE_SHA256=F28F10B9E510C6F6C87050949B1726DB90C81ED8DC19F1BFC8BB2270D226360B
+EXE_SHA256_HELP_STATUS=BE3EC3464B248E9B8EE7B838F684240A5A2FBE3C5FE6D6C9FFF92F46225FF018
+EXE_SHA256_DENSE=F28F10B9E510C6F6C87050949B1726DB90C81ED8DC19F1BFC8BB2270D226360B
 
 ## Law
 SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
 Category % = min of sealed gates (fail-closed).
 CLI_OVERALL_% = unweighted mean; 100% only if every category seals.
-CLI_COMPLETE (dispatch) ? CLI_MATURITY_COMPLETE (100% matrix).
+CLI_COMPLETE (dispatch) ≠ CLI_MATURITY_COMPLETE (100% matrix).
 
 ## Category matrix (honest, fail-closed)
 
 | # | Category | SOURCE_WIRED | RUNTIME_REACHED | TOKEN_SURVIVED | PERFORMANCE vs Top-25 | % | Blocker |
 |---|----------|--------------|-----------------|----------------|-----------------------|---|---------|
-| 1 | Install (local build?rawr) | Y | Y (help EXIT=0) | N/A | PARTIAL | 60 | Clean-VM; ZIP gaps |
+| 1 | Install (local build→rawr) | Y | Y (help EXIT=0) | N/A | PARTIAL | 60 | Clean-VM; draft ZIP gaps |
 | 2 | Install docs honesty | Y | Y | N/A | PARTIAL | 70 | Secondary guides legacy |
-| 3 | Distribution channel | Y | PARTIAL | N/A | OPEN | 48 | NOT_PUBLISHED; CLEAN_VM ABSENT |
-| 4 | Agentic CLI | Y | OPEN | OPEN | OPEN | 30 | agent TIMEOUT |
+| 3 | Distribution channel | Y | Y (zip help EXIT=0) | N/A | PARTIAL | 58 | CLEAN_VM ABSENT; draft zips lack rawr.exe |
+| 4 | Agentic CLI | Y | Y (agent status EXIT=0) | OPEN chat GEN | OPEN | 45 | chat oneshot GEN blocked (F28F no -p; BE3EC AV; rebuild q8K) |
 | 5 | Terminal / ConPTY | Y | Y (terminal_gate v5) | N/A | MEASURED | 75 | Terminal-Bench NOT_IN_TREE |
 | 6 | Debugger (CLI) | PARTIAL | NOT_RUN | N/A | NOT_RUN | 15 | No CLI debugger E2E |
-| 7 | Local GPU decode Dense | Y | Y | Y GEN=8 | PARTIAL MATCH=0 | 75 | Top-25 TPS/MATCH open |
+| 7 | Local GPU decode Dense | Y | Y | Y GEN=8 | PARTIAL MATCH=0 | 78 | Top-25 TPS/MATCH open |
 | 8 | Local GPU decode MoE | Y | PARTIAL | SEMANTIC FAIL | OPEN | 30 | MiniMax held |
 | 9 | REAP export | Y | Y | PARTIAL | OPEN | 45 | Coherence FAIL |
 | 10 | Recovery | Y | PARTIAL | N/A | PARTIAL | 50 | Agent recovery hang |
-| 11 | Competitive GPU canaries | Y | Y (dense) | PARTIAL | OPEN | 28 | H2H NOT_SEALED |
+| 11 | Competitive GPU canaries | Y | Y (dense TPS) | PARTIAL | OPEN | 42 | H2H NOT_SEALED; TPS≪peers |
 
-## Dense GPU seal (cat7 + CLI_COMPLETE authority)
-WITNESS=CLI_TOP25_VALUATION_001/gpu/tiny_gpu.*
+## Raised this turn (≥2 cats RUNTIME_REACHED)
+CAT3_Distribution: 48→58 witness=runs/zip_help_r13 EXIT=0 + product_zip_channel/bin/rawr.exe BE3EC
+CAT4_Agentic: 30→45 witness=runs/agent_status_r13 EXIT=0 AGENT_STATUS_OK=1; chat GEN still OPEN
+CAT7_Dense: 75→78 witness=gpu/tiny_dense_r17 EXIT=0 GEN=8 HOST_DECODE=0 VulkanPrimary
+CAT11_Competitive: 28→42 witness=COMPETITIVE_GPU_MATCH_001/TPS_FROM_TINY_GPU.txt DECODE_TPS_REAL=0.998
+
+## Dense GPU seal (cat7 + competitive authority)
+WITNESS=CLI_TOP25_VALUATION_001/gpu/tiny_dense_r17.*
   AUTO_BACKEND=VulkanPrimary
   HOST_DECODE=0 ALLOW_GPU=1 FORCE_GPU=1 NO_CPU_FALLBACK=1
   GENERATED_TOKENS=8 CLEAN_EXIT=1 EXIT=0
+  DECODE_TPS_REAL=0.998
   STDOUT=Sure, here's an example
   EXE_SHA256=F28F10B9E510C6F6C87050949B1726DB90C81ED8DC19F1BFC8BB2270D226360B
-HELP=runs/help.exit.txt EXIT=0
-CROSS=CLI_LOCAL_GPU_MATURITY_001/STATUS.txt
+HELP=runs/zip_help_r13.exit.txt EXIT=0
 HOST_ONLY=INVALID
 
+## Blockers (honest)
+- Agentic chat GPU GEN>0: NOT_SEALED (F28F chat lacks oneshot -p; BE3EC AV on INIT; ninja rebuild blocked block_q8_K)
+- MATCH=0 vs llama ref
+- CLEAN_VM ABSENT
+- Debugger NOT_RUN
+- CLI_COMPLETE remains 0
+
 ## Rollup
-CLI_OVERALL_PCT=48
-METHOD=floor(mean)=(60+70+48+30+75+15+75+30+45+50+28)/11=48
+CLI_OVERALL_PCT=51
+METHOD=floor(mean)=(60+70+58+45+75+15+78+30+45+50+42)/11=51
 CLI_MATURITY_COMPLETE=0
 REJECTED_CLI_COMPLETE_AT_SUB100=1
 CLI_COMPLETE=0
 READY_FOR_PEER=0
 WHY_NOT_MATURITY_100=
   - Dense GPU MATCH=0 / TPS << peers
+  - Agentic chat GEN OPEN
   - MoE / competitive H2H OPEN
-  - Distribution + agentic OPEN
+  - Distribution CLEAN_VM ABSENT
   - Debugger NOT_RUN
 
 ## NEXT_EXECUTABLE_GATE
-  GATE=AGENTIC_CLI_GPU_TOKENS_OR_MATCH
-  CLOSED_THIS_PACK=HELP_EXIT0 + DENSE_GPU VulkanPrimary + tokens + process EXIT=0
+  GATE=AGENTIC_CHAT_ONESHOT_GEN_OR_TIP_RELINK_WITHOUT_Q8K_BREAK
+  CLOSED_THIS_PACK=ZIP_HELP_EXIT0 + AGENT_STATUS_EXIT0 + DENSE_GPU VulkanPrimary GEN=8 HOST_DECODE=0 TPS
   PROMOTE=0
 
 PROMOTE=0
 CERTIFIED=0
-CLI_OVERALL_PCT=48
+CLI_OVERALL_PCT=51
 CLI_COMPLETE=0
 CLI_MATURITY_COMPLETE=0
 REJECTED_CLI_COMPLETE_AT_SUB100=1
@@ -79,4 +95,3 @@ TIP_CLIMB=HOLD
 NOT_RUN!=PASS
 
 FAILCLOSED_NOTE=CLI_COMPLETE_REQUIRES_ALL_CAT_RUNTIME_REACHED dense_canary_ne_complete
-

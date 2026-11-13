@@ -10,11 +10,14 @@ Prior retain-256 theta EXE: `EA4E20229633F9671F1B43620A3B6F27D21667F57A784B06830
 
 | Score | Status | Measured basis |
 |-------|--------|----------------|
-| CLI_MATURITY | **Not certified** | Dense unload PASS (`cli_llama32_smoke_post.*`). MiniMax semantic NOT_PASS. |
-| GUI_MATURITY | **Not certified** | Four-panel FAIL_CLOSED. |
+| CLI_PCT | **51** · CLI_COMPLETE=**0** | 11-cat floor mean (`VALUATION_CLI.txt`); zip/help+status+dense TPS raised. ≠ certified. |
+| GUI_PCT | **32** · GUI_COMPLETE=**0** | EXE_RELINK tip `6754616E…` 332MB; EXE_ABSORB_GPU_DEFAULT=0; HWND=NOT_RUN; no invent climb. |
+| COMPOSITE_PCT | **32** | `min(51,32)` fail-closed — rollup `VALUATION_SCOREBOARD.txt` |
+| CLI_MATURITY | **Not certified** | Dense r17 GEN=8 HOST_DECODE=0; MATCH=0; chat GEN OPEN; agent status EXIT=0. |
+| GUI_MATURITY | **Not certified** | Unsuffixed tip MISSING; stub 5647F05E REJECT; FOUR_PANEL NOT_RUN; EXE_ABSORB_GPU_DEFAULT=0. |
 | TOP25_PARITY | **MEASURED_PARTIAL** | Ops audited (`TOP25_RECOGNITION_OPS_001` + `TOP25_OPS_001`). No sealed peer IDE/perf parity. ≠ certified. |
 | TOP25_RECOGNITION | **NOT_READY** | DRAFT_SHA_BOUND (v14.7.3/v1.0.0 zips); NOT_PUBLISHED; clean-VM ABSENT; PROMOTE=0. |
-| COMMERCIAL_VALUATION | **Unverified** | Stale Aug-2026 ≠ cert. |
+| COMMERCIAL_VALUATION | **ESTIMATE** `$75M–$125M` | CERTIFIED=0. Stale Aug-2026 ≠ cert. |
 
 ## Competitive throughput (citations only — not a ranking)
 
