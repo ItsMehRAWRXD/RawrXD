@@ -1,0 +1,6 @@
+t=5s WS=0.95GiB PB=2.38GiB freePhys=42.82GiB
+t=10s WS=1.49GiB PB=2.94GiB freePhys=41.95GiB
+t=15s WS=2.24GiB PB=3.67GiB freePhys=41.3GiB
+t=20s WS=2.84GiB PB=4.28GiB freePhys=40.4GiB
+t=25s WS=3.49GiB PB=4.93GiB freePhys=39GiB
+t=30s WS=4.14GiB PB=5.58GiB freePhys=38.87GiB

@@ -272,6 +272,10 @@ namespace Deep2
         bool useRoPE = true;
         float ropeTheta = 10000.0f;
         float ropeScaling = 1.0f;
+        // false = NORM adjacent pairs (llama/deepseek); true = NEOX (qwen/gemma/phi).
+        // RC2-05 tip2: qwen2 MUST be NEOX — NORM matches Q/K/V pre-rope but breaks
+        // scores/softmax/AV (ATTN_PRE_O maxAbs~6.78e-1 @ pos10).
+        bool ropeNeox = false;
         float normEps = 1e-6f;
 
         // Gemma logit soft-capping (cap * tanh(logits / cap)). 0 = disabled.
@@ -514,8 +518,8 @@ namespace Deep2
         void setAsyncPrefetchEnabled(bool enable) { asyncPrefetchEnabled_ = enable; }
         bool isAsyncPrefetchEnabled() const { return asyncPrefetchEnabled_; }
 
-        // Runtime REAP injection. This stages a non-destructive residency and
-        // MoE top-k policy for the next model load. It never rewrites GGUF.
+        // Runtime REAP injection. Default: residency + MoE top-k. With
+        // physicalExclude: retained-expert router remap (still no GGUF rewrite).
         bool configureReapRuntimeInjection(
             const RawrXD::Reap::RuntimeInjection& injection);
         const RawrXD::Reap::RuntimeInjectionReceipt& reapRuntimeReceipt() const {
@@ -750,6 +754,12 @@ namespace Deep2
         // Linear using WeightTensor directly
         void LinearW(const WeightTensor &wt, const float *input, const float *bias,
                      float *output, size_t outDim);
+
+        // RC2-05: multi-row Q4_K/Q6_K GEMM for layer-major prefill (llama ubatch).
+        // inputBatch [batch*cols], outputBatch [batch*outDim]. Counts OnBatchedMatMul.
+        void LinearWBatched(const WeightTensor &wt, const float *inputBatch,
+                            float *outputBatch, size_t batch, size_t outDim,
+                            const float *bias);
 
         // Parallel version using ThreadPool
         void LinearParallel(int weightIdx, const float *input, const float *bias,

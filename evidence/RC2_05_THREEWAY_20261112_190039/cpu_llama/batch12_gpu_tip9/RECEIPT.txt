@@ -1,0 +1,34 @@
+BATCH12 GPU@9 residual (fail-closed)
+ASOF=2026-11-12T22:15:00-05:00
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD DO_NOT_REOPEN_Q4K_ACT=1
+CROSS_SHA_CREDIT=0 SPV_TOUCHED=0 ADA48968
+NEOX + F16 KV held. BATCH11 gate !vulkan batched-prefill held.
+
+PRE EXE (credit): 0AC0481DD26979FF3155D1F427C32BA94E932B9A7395D9EC8CB668C5B84371F4 MATCH=1
+POST EXE: D24DFC60A52DC1E70714E6A4FF0893089F7EAE0761F0A0D0668B54613F90B530
+
+DUMP (01B pos9 + pos17 under 0AC0481D device attn):
+  Q/K/V POSTBIAS+POSTROPE+KV_WRITE: MATCH (~1e-5..3e-5)
+  ATTN_OUT: FIRST_CLEAR_MIS maxAbs=7.34e-3 @pos9 / 5.70e-3 @pos17
+  O_PROJ / AFTER_ATTN_RESIDUAL: amplify ~6e-3 / ~4e-3
+FIRST_OP=GPU_ATTN_OUT (DispatchAttnDecode / OP_ATTN)
+  after matched Q/K/V/RoPE/current-KV_WRITE; history scores/softmax/weighted-V
+A/B: CPU DEEP2_KV_F32=1 still tip9=821 (F16 alone != tip9 flip on host path)
+
+HOST MITIGATION (no SPV):
+  GPU_HOST_ATTN=1 default: dual-write F16 host KV + AttentionWithCache; skip device OP_ATTN
+  Remeasure ATTN_OUT @pos17: maxAbs 5.70e-3 -> 6.44e-4 (closed most of attn gap)
+  tip9 STILL 16895 — residual KV-history / O_PROJ+FFN amplify (O_PROJ maxAbs~2e-3)
+  Host O+FFN attempt: second FlushFusedRestart wiped arenas (tip0=13 / hidden=0) -> REVERTED
+  Opt-out: DEEP2_GPU_DEVICE_ATTN=1
+
+POST remasure (2nd gen; D24DFC60):
+  GPU_16=576,23192,16895,63762,374,279,2790,1372,315,16895,7525,10660,553,264,1849,11
+  CPU_16=576,23192,16895,63762,374,279,2790,1372,315,821,27035,429,646,387,15233,553
+  LLAMA_FAOFF_16=CPU_16 EXACT16_CPU=1
+  FIRST_MIS=@9 (16895 vs 821)
+  THREE_WAY=0 RC2_05_PASS=0
+  tip2=16895 PASS; batchedMatMulCount CPU=196 GPU=0
+
+NEXT=close remaining ATTN_OUT~6e-4 (KV history) or host O without 2nd fused flush; no blind SPIR-V.
+PROMOTE=0

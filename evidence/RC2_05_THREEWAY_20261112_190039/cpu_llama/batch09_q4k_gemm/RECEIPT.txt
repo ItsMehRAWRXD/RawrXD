@@ -1,0 +1,21 @@
+BATCH09 LinearWBatched Q4_K×Q8_K multi-row prefill
+ASOF=2026-11-12T21:20:00-05:00
+EXE_SHA256=E6A387C3272E4B0A3E1EC44FE96DB7B2DEDE5E4CB4B3E0E6108620F6DA7452B7
+PRIOR_BATCH08_EXE=BE6E5439... (CROSS_SHA_CREDIT=0)
+F32_DEQUANT_DIAG_EXE=EF59FCBA04C927F809BA5536B8D03BA20E0B1BC8ABF14F16F0639D00304CD597
+F32_DEQUANT_DIAG=tip14=10660 FIRST_MIS@9 (==GPU_16 basin) REJECTED
+WIRE=
+  LinearWBatched: GetGEMV shared-W across batch cols; OnBatchedMatMul++
+  forwardLayerBatched: Q/K/V/O + dense FFN via LinearWBatched
+MEASURE (2nd generate block, RAWR_REAP_CPU_ONLY=1):
+  PREFILL_BATCHED=1 prompt=9 chunk=9
+  batchedMatMulCount=196
+  tip2=16895 PASS
+  tip14=15233 (target 29213) FAIL
+  CPU_16=576,23192,16895,63762,374,279,2790,1372,315,821,27035,429,646,387,15233,553
+  LLAMA_16=...387,29213,323
+  FIRST_MIS=@14 EXACT16=0
+NOTE=Q4×Q8 multi-row algebraically = per-col GEMV (same vec_dot); cannot alone
+  flip tip14 into llama default-ubatch basin. F32-dequant GEMM ? llama (GPU basin).
+NEXT=llama default-ubatch residual beyond Linear (attn/graph); remasure llama cont tip14
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD DO_NOT_REOPEN_Q4K_ACT=1 SPV=ADA48968 untouched

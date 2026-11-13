@@ -1,9 +1,9 @@
 #pragma once
 
-// Runtime REAP is a non-destructive execution policy.  It changes the
-// resident expert working set and router top-k for the current engine session;
-// it never rewrites GGUF bytes.  The older candidate-writer path remains
-// separate and is intentionally not called by this interface.
+// Runtime REAP default is non-destructive residency + router top-k. Optional
+// physicalExclude remaps router cardinality to a retained expert set and
+// excludes pruned experts from the execute path; it still never rewrites GGUF.
+// Offline physical repack remains ReapMoETransformer (admission-gated).
 
 #include <cstdint>
 #include <string>
@@ -50,6 +50,10 @@ struct RuntimeInjection {
     uint64_t expertCount = 0;
     uint64_t workingSetBytes = 0;
     bool enabled = false;
+    // When true: expertCount = retained expert cardinality; router is remapped
+    // to that set and pruned experts are excluded from load/execute. Still does
+    // not rewrite GGUF (sourceImmutable). Offline repack remains separate.
+    bool physicalExclude = false;
 };
 
 struct RuntimeInjectionReceipt {
@@ -58,9 +62,12 @@ struct RuntimeInjectionReceipt {
     bool streamerConfigured = false;
     bool workingSetConfigured = false;
     bool sourceImmutable = true;
+    bool physicalExclude = false;
+    bool residencyOnly = true;
     uint64_t requestedParameters = 0;
     uint64_t requestedExperts = 0;
     uint64_t effectiveExperts = 0;
+    uint64_t retainedExperts = 0;
     uint64_t workingSetBytes = 0;
     std::string status = "NOT_CONFIGURED";
     std::string reason;

@@ -9,6 +9,7 @@
 // #define B3_CONTINUE_FOR_RESIDENCY_BASELINE
 
 #include "Deep2Engine.h"
+#include "Rc201bAttnDump.hpp"
 #include "execution_policy/ExecutionPolicyBridge.hpp"
 #include "Deep2Log.hpp"   // Logf_()-style logger shared with the agentic-loop tool
 #include "../sampling/advanced_sampler.hpp"
@@ -917,6 +918,76 @@ static inline float fp16ToFloat(uint16_t h)
     float result;
     memcpy(&result, &f, sizeof(float));
     return result;
+}
+
+// FP32 -> FP16 (IEEE754 RNE). Used for llama-compatible KV cache writes
+// (RAWRXD_KV_F16_CACHE_001 / RC2-05 L0_ATTN_AFTER_V): default type_k/type_v
+// is F16; F32 store makes ATTN_PRE_O diverge by ~2e-4 at pos0 and amplifies.
+static inline uint16_t floatToFp16(float val)
+{
+    uint32_t x;
+    memcpy(&x, &val, sizeof(x));
+    const uint32_t sign = (x >> 16) & 0x8000u;
+    const uint32_t exp = (x >> 23) & 0xFFu;
+    const uint32_t mant = x & 0x7FFFFFu;
+    if (exp == 0xFFu)
+        return (uint16_t)(sign | 0x7C00u | (mant ? 0x200u : 0u));
+    const int e = (int)exp - 127 + 15;
+    if (e >= 31)
+        return (uint16_t)(sign | 0x7C00u);
+    if (e <= 0)
+    {
+        if (e < -10)
+            return (uint16_t)sign;
+        uint32_t m = mant | 0x800000u;
+        const int rshift = 14 - e;
+        uint32_t q = m >> rshift;
+        const uint32_t rem = m & ((1u << rshift) - 1u);
+        const uint32_t half = 1u << (rshift - 1);
+        if (rem > half || (rem == half && (q & 1u)))
+            ++q;
+        return (uint16_t)(sign | q);
+    }
+    uint32_t he = (uint32_t)e << 10;
+    uint32_t hm = mant >> 13;
+    const uint32_t rem = mant & 0x1FFFu;
+    if (rem > 0x1000u || (rem == 0x1000u && (hm & 1u)))
+    {
+        ++hm;
+        if (hm == 0x400u)
+        {
+            hm = 0;
+            he += 0x400u;
+            if (he >= 0x7C00u)
+                return (uint16_t)(sign | 0x7C00u);
+        }
+    }
+    return (uint16_t)(sign | he | hm);
+}
+
+static bool Deep2KvKeepF32()
+{
+    static int cached = -1;
+    if (cached < 0)
+    {
+        const char* e = std::getenv("DEEP2_KV_F32");
+        cached = (e && e[0] && e[0] != '0') ? 1 : 0;
+    }
+    return cached != 0;
+}
+
+// Round-trip FP32→F16→FP32 into dst (llama default KV). DEEP2_KV_F32=1 = memcpy.
+static void storeKvRoundTrip(float* dst, const float* src, size_t nFloats)
+{
+    if (!dst || !src || nFloats == 0)
+        return;
+    if (Deep2KvKeepF32())
+    {
+        memcpy(dst, src, nFloats * sizeof(float));
+        return;
+    }
+    for (size_t i = 0; i < nFloats; ++i)
+        dst[i] = fp16ToFloat(floatToFp16(src[i]));
 }
 
 // ============================================================================
@@ -1904,8 +1975,14 @@ bool Deep2Engine::configureReapRuntimeInjection(
     reapRuntimeReceipt_.requestedParameters = injection.parameterCount;
     reapRuntimeReceipt_.requestedExperts = injection.expertCount;
     reapRuntimeReceipt_.workingSetBytes = injection.workingSetBytes;
+    reapRuntimeReceipt_.physicalExclude = injection.physicalExclude;
+    reapRuntimeReceipt_.residencyOnly = !injection.physicalExclude;
+    reapRuntimeReceipt_.retainedExperts =
+        injection.physicalExclude ? injection.expertCount : 0;
     reapRuntimeReceipt_.status = "STAGED";
-    reapRuntimeReceipt_.reason = "APPLY_ON_NEXT_MODEL_LOAD";
+    reapRuntimeReceipt_.reason = injection.physicalExclude
+        ? "APPLY_PHYSICAL_EXCLUDE_ON_NEXT_MODEL_LOAD"
+        : "APPLY_ON_NEXT_MODEL_LOAD";
     return true;
 }
 
@@ -3032,6 +3109,23 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
         std::string arch = ggufResult.metadata.architecture;
         for (char& c : arch)
             c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+        // Match runtime_graph_executor OpAttention rope_adjacent family split
+        // (llama.cpp llama_model_rope_type): NORM for llama/deepseek/... else NEOX.
+        const bool ropeAdjacent =
+            arch == "deepseek" || arch.rfind("deepseek", 0) == 0 ||
+            arch == "llama" || arch.rfind("llama", 0) == 0 ||
+            arch == "granite" || arch.rfind("granite", 0) == 0 ||
+            arch == "starcoder" || arch == "mistral" || arch.rfind("mistral", 0) == 0 ||
+            arch == "cohere" || arch.rfind("cohere", 0) == 0 ||
+            arch == "command-r" || arch == "internlm2" || arch.rfind("internlm", 0) == 0 ||
+            arch == "baichuan" || arch.rfind("baichuan", 0) == 0 ||
+            arch == "xverse" || arch == "minicpm" || arch.rfind("minicpm", 0) == 0 ||
+            arch == "arctic" || arch == "olmo" || arch.rfind("olmo", 0) == 0 ||
+            arch == "chameleon" || arch.rfind("bailingmoe", 0) == 0;
+        config.ropeNeox = !ropeAdjacent;
+        printf("[Deep2Engine] ROPE_PAIRING=%s arch=%s\n",
+               config.ropeNeox ? "NEOX" : "NORM",
+               ggufResult.metadata.architecture.c_str());
         if (arch.find("gemma") != std::string::npos)
         {
             float finalCap = 0.0f;
@@ -4346,6 +4440,24 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                 moeConfig_.numActiveExperts = reapRuntimeInjection_.enabled
                     ? static_cast<size_t>(reapRuntimeInjection_.expertCount)
                     : modelWeights.numExpertsPerToken;
+                if (reapRuntimeInjection_.enabled &&
+                    reapRuntimeInjection_.physicalExclude)
+                {
+                    // Retained cardinality shrinks router geometry; top-k caps
+                    // at the model's experts-per-token (not residency LRU).
+                    const size_t retained =
+                        static_cast<size_t>(reapRuntimeInjection_.expertCount);
+                    moeConfig_.numExperts = retained;
+                    const size_t topk = modelWeights.numExpertsPerToken
+                        ? modelWeights.numExpertsPerToken
+                        : retained;
+                    moeConfig_.numActiveExperts =
+                        topk < retained ? topk : retained;
+                    reapRuntimeReceipt_.retainedExperts = retained;
+                    reapRuntimeReceipt_.physicalExclude = true;
+                    reapRuntimeReceipt_.residencyOnly = false;
+                    moeWeightsLoader_->SetPhysicalExpertLimit(retained);
+                }
                 moeConfig_.useSharedExpert = modelWeights.numSharedExperts > 0;
                 moeConfig_.expertDim = modelWeights.moeIntermediateDim > 0 ? modelWeights.moeIntermediateDim : config.intermediateDim;
                 // Shared expert GGUF packs n_shared * expert_ff into one shexp tensor
@@ -4382,7 +4494,20 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                     const auto& lw = modelWeights.layers[layerIdx];
                     if (lw.moeRouter.data && lw.moeRouter.type == (int)GGMLType::GGML_TYPE_F32)
                     {
-                        router->SetRouterWeights((const float*)lw.moeRouter.data, lw.moeRouter.rows, lw.moeRouter.cols);
+                        const float* src = (const float*)lw.moeRouter.data;
+                        size_t rows = lw.moeRouter.rows;
+                        size_t cols = lw.moeRouter.cols;
+                        // Physical exclude: keep deterministic prefix expert
+                        // rows (POLICY_DETERMINISTIC_PREFIX). Layout is
+                        // [numExperts][hiddenDim] matching MoERouter::Route.
+                        if (reapRuntimeInjection_.enabled &&
+                            reapRuntimeInjection_.physicalExclude &&
+                            rows > moeConfig_.numExperts &&
+                            cols == moeConfig_.hiddenDim)
+                        {
+                            rows = moeConfig_.numExperts;
+                        }
+                        router->SetRouterWeights(src, rows, cols);
                     }
                     else if (lw.moeRouter.data)
                     {
@@ -4471,10 +4596,18 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                             if (dequantFn)
                             {
                                 dequantFn((const uint8_t*)tmpWt.data, dequant.data(), rows * cols);
-                                router->SetRouterWeights(dequant.data(), rows, cols);
+                                size_t setRows = rows;
+                                if (reapRuntimeInjection_.enabled &&
+                                    reapRuntimeInjection_.physicalExclude &&
+                                    setRows > moeConfig_.numExperts &&
+                                    cols == moeConfig_.hiddenDim)
+                                {
+                                    setRows = moeConfig_.numExperts;
+                                }
+                                router->SetRouterWeights(dequant.data(), setRows, cols);
                                 printf("[Deep2Engine] Layer %zu router weights dequantized via registry from type=%d "
                                        "to FP32 (%zux%zu)\n",
-                                       layerIdx, lw.moeRouter.type, rows, cols);
+                                       layerIdx, lw.moeRouter.type, setRows, cols);
                             }
                             else
                             {
@@ -4493,11 +4626,18 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
 
                 // Initialize residency telemetry for router-driven prefetch pipeline
                 residencyTelemetry_ = std::make_unique<RouterPrefetchTelemetry>();
-                residencyTelemetry_->Initialize(static_cast<int>(modelWeights.numLayers),
-                                                static_cast<int>(modelWeights.numExperts));
-                telemetryEnabled_ = true;
-                printf("[Deep2Engine] RouterPrefetchTelemetry initialized: %zu layers x %u experts\n",
-                       modelWeights.numLayers, meta.numExperts);
+                {
+                    const int teleExperts =
+                        (reapRuntimeInjection_.enabled &&
+                         reapRuntimeInjection_.physicalExclude)
+                            ? static_cast<int>(moeConfig_.numExperts)
+                            : static_cast<int>(modelWeights.numExperts);
+                    residencyTelemetry_->Initialize(
+                        static_cast<int>(modelWeights.numLayers), teleExperts);
+                    telemetryEnabled_ = true;
+                    printf("[Deep2Engine] RouterPrefetchTelemetry initialized: %zu layers x %d experts\n",
+                           modelWeights.numLayers, teleExperts);
+                }
 
                 moeInitialized_ = true;
                 if (reapRuntimeInjection_.enabled)
@@ -4506,8 +4646,19 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                     reapRuntimeReceipt_.streamerConfigured = true;
                     reapRuntimeReceipt_.workingSetConfigured = true;
                     reapRuntimeReceipt_.active = true;
-                    reapRuntimeReceipt_.status = "ACTIVE_RUNTIME_INJECTION";
-                    reapRuntimeReceipt_.reason = "MOE_ROUTER_TOPK_AND_STREAMER_CACHE_APPLIED";
+                    if (reapRuntimeInjection_.physicalExclude)
+                    {
+                        reapRuntimeReceipt_.status =
+                            "ACTIVE_PHYSICAL_EXCLUDE_STREAM";
+                        reapRuntimeReceipt_.reason =
+                            "ROUTER_REMAP_AND_RETAINED_EXPERT_EXECUTE_PATH";
+                    }
+                    else
+                    {
+                        reapRuntimeReceipt_.status = "ACTIVE_RUNTIME_INJECTION";
+                        reapRuntimeReceipt_.reason =
+                            "MOE_ROUTER_TOPK_AND_STREAMER_CACHE_APPLIED";
+                    }
                 }
             }
         }
@@ -4518,6 +4669,21 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             moeConfig_.numActiveExperts = reapRuntimeInjection_.enabled
                 ? static_cast<size_t>(reapRuntimeInjection_.expertCount)
                 : modelWeights.numExpertsPerToken;
+            if (reapRuntimeInjection_.enabled &&
+                reapRuntimeInjection_.physicalExclude)
+            {
+                const size_t retained =
+                    static_cast<size_t>(reapRuntimeInjection_.expertCount);
+                moeConfig_.numExperts = retained;
+                const size_t topk = modelWeights.numExpertsPerToken
+                    ? modelWeights.numExpertsPerToken
+                    : retained;
+                moeConfig_.numActiveExperts =
+                    topk < retained ? topk : retained;
+                reapRuntimeReceipt_.retainedExperts = retained;
+                reapRuntimeReceipt_.physicalExclude = true;
+                reapRuntimeReceipt_.residencyOnly = false;
+            }
             moeConfig_.useSharedExpert = meta.numSharedExperts > 0;
             moeConfig_.expertDim = meta.moeIntermediateSize > 0 ? meta.moeIntermediateSize : meta.intermediateSize;
             if (meta.sharedExpertIntermediateSize > 0)
@@ -4554,12 +4720,25 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                     residencyCache_->resident_budget_bytes() ==
                         reapRuntimeInjection_.workingSetBytes;
                 reapRuntimeReceipt_.active = reapRuntimeReceipt_.streamerConfigured;
-                reapRuntimeReceipt_.status = reapRuntimeReceipt_.streamerConfigured
-                    ? "ACTIVE_RUNTIME_ROUTER_RESIDENCY"
-                    : "STREAMER_UNAVAILABLE";
-                reapRuntimeReceipt_.reason = reapRuntimeReceipt_.streamerConfigured
-                    ? "MOE_ROUTER_TOPK_AND_MULTISHARD_RESIDENCY_BYTE_BUDGET_APPLIED"
-                    : "MULTISHARD_RESIDENCY_CACHE_NOT_INITIALIZED";
+                if (reapRuntimeInjection_.physicalExclude &&
+                    reapRuntimeReceipt_.streamerConfigured)
+                {
+                    reapRuntimeReceipt_.status =
+                        "ACTIVE_PHYSICAL_EXCLUDE_MULTISHARD";
+                    reapRuntimeReceipt_.reason =
+                        "RETAINED_ROUTER_CARDINALITY_PLUS_RESIDENCY_BUDGET";
+                }
+                else
+                {
+                    reapRuntimeReceipt_.status =
+                        reapRuntimeReceipt_.streamerConfigured
+                            ? "ACTIVE_RUNTIME_ROUTER_RESIDENCY"
+                            : "STREAMER_UNAVAILABLE";
+                    reapRuntimeReceipt_.reason =
+                        reapRuntimeReceipt_.streamerConfigured
+                            ? "MOE_ROUTER_TOPK_AND_MULTISHARD_RESIDENCY_BYTE_BUDGET_APPLIED"
+                            : "MULTISHARD_RESIDENCY_CACHE_NOT_INITIALIZED";
+                }
             }
         }
     }
@@ -6094,6 +6273,68 @@ void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads,
 {
     if (scaling <= 0.0f)
         scaling = 1.0f;
+    if (headDim < 2)
+        return;
+
+    // ── RoPE energy invariant: rotation must preserve pair norm ──
+    auto pair_energy = [](float a, float b) -> double { return double(a) * a + double(b) * b; };
+
+    // RC2-05: qwen2/qwen3/gemma/phi use NEOX pairing (i, i+n/2). Prior NORM
+    // adjacent path matched pre-rope Q/K/V dumps but diverged at ATTN_PRE_O
+    // once attend>1 (tip2 pos10 maxAbs~6.78e-1). Pos0 hides the defect.
+    if (config.ropeNeox)
+    {
+        const size_t nOff = headDim / 2;
+        const float invScale = 1.0f / scaling;
+        const float effectivePos = static_cast<float>(pos) * invScale;
+        auto rotateNeox = [&](float* hvec, size_t heads, const char* tag) {
+            if (!hvec || heads == 0)
+                return;
+            for (size_t h = 0; h < heads; ++h)
+            {
+                float* p = hvec + h * headDim;
+                for (size_t i = 0; i < nOff; ++i)
+                {
+                    const float freq =
+                        1.0f / powf(theta, (2.0f * static_cast<float>(i)) / static_cast<float>(headDim));
+                    const float angle = effectivePos * freq;
+                    const float cosA = cosf(angle);
+                    const float sinA = sinf(angle);
+                    const float a = p[i];
+                    const float b = p[i + nOff];
+                    const double before = pair_energy(a, b);
+                    p[i] = a * cosA - b * sinA;
+                    p[i + nOff] = a * sinA + b * cosA;
+                    const double after = pair_energy(p[i], p[i + nOff]);
+                    const double err =
+                        std::fabs(after - before) / std::max(1.0e-20, std::fabs(before));
+                    if (err > 1.0e-5)
+                    {
+                        fprintf(stderr,
+                                "[D2_ROPE_FAIL] %s NEOX pos=%zu head=%zu pair=%zu "
+                                "before=%.17g after=%.17g rel=%.9g\n",
+                                tag, pos, h, i, before, after, err);
+                        std::abort();
+                    }
+                }
+            }
+        };
+        if (layerIdx == 0 && pos == 10)
+        {
+            static int once = 0;
+            if (!once)
+            {
+                once = 1;
+                fprintf(stderr,
+                        "ROPE_NEOX_TIP2=1 headDim=%zu nOff=%zu theta=%.1f pos=%zu\n",
+                        headDim, nOff, theta, pos);
+                fflush(stderr);
+            }
+        }
+        rotateNeox(q, numHeads, "Q");
+        rotateNeox(k, numKVHeads, "K");
+        return;
+    }
 
     // Ensure tables are initialized for this (headDim, theta, scaling) contract
     if (g_ropeMaxSeqLen == 0 || g_ropeHeadDim != headDim || g_ropeTheta != theta || g_ropeScaling != scaling ||
@@ -6114,7 +6355,7 @@ void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads,
     const float* sinTable = &g_ropeSinTable[pos * headDim];
 
     // ── Layer 12 RoPE diagnostic: pre-scan ALL K heads for NaN ──
-    if (Deep2DebugEnabled() && layerIdx == 12)
+    if (Deep2DebugEnabled() && layerIdx == 12 && k)
     {
         fprintf(stderr,
                 "[L12_ROPE_DIAG] pos=%zu headDim=%zu numHeads=%zu numKVHeads=%zu theta=%.6e scaling=%.6e\n",
@@ -6146,11 +6387,10 @@ void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads,
         fflush(stderr);
     }
 
-    // ── RoPE energy invariant: rotation must preserve pair norm ──
-    auto pair_energy = [](float a, float b) -> double { return double(a) * a + double(b) * b; };
-
     for (size_t h = 0; h < numHeads; ++h)
     {
+        if (!q)
+            break;
         float* qh = q + h * headDim;
         for (size_t i = 0; i < headDim; i += 2)
         {
@@ -6173,6 +6413,8 @@ void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads,
     }
     for (size_t h = 0; h < numKVHeads; ++h)
     {
+        if (!k)
+            break;
         float* kh = k + h * headDim;
 
         // ── Layer 12 RoPE diagnostic: K input values ──
@@ -6222,7 +6464,7 @@ void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads,
     }
 
     // ── Layer 12 RoPE diagnostic: post-scan ALL K heads for NaN ──
-    if (Deep2DebugEnabled() && layerIdx == 12)
+    if (Deep2DebugEnabled() && layerIdx == 12 && k)
     {
         size_t kTotal = numKVHeads * headDim;
         size_t firstBadK = SIZE_MAX;
@@ -6980,18 +7222,31 @@ if (bias)
     {
         LinearW_Range(wtEffective, input, output, 0, rows, cols);
     }
-    // S07 diagnostic: dump raw GEMV result (before bias) for layer-0 wq.
+    // S07/RC2-02: dump layer-0 wq GEMV. Default once (prefill pos0).
+    // RAWRXD_GEMV_DUMP_DECODE=1 also dumps every blk.0.attn_q call.
     if (wt.name.find("blk.0.attn_q") != std::string::npos)
     {
-        static bool s_gemvDump = false;
-        if (!s_gemvDump)
+        static int s_gemvN = 0;
+        static int s_gemvDecode = -1;
+        if (s_gemvDecode < 0) {
+            const char* e = std::getenv("RAWRXD_GEMV_DUMP_DECODE");
+            s_gemvDecode = (e && e[0] == '1') ? 1 : 0;
+        }
+        if (s_gemvN == 0 || s_gemvDecode == 1)
         {
-            s_gemvDump = true;
-            std::fprintf(stderr, "[GEMV_DUMP] %s y0..5=%.6e %.6e %.6e %.6e %.6e %.6e\n",
-                         wt.name.c_str(), output[0], output[1], output[2], output[3], output[4],
+            std::fprintf(stderr,
+                         "[LAYER0_NORMED] n=%d dl=1 flush=0 n0..5=%.6e %.6e %.6e %.6e %.6e %.6e\n",
+                         s_gemvN, input[0], input[1], input[2], input[3], input[4], input[5]);
+            std::fprintf(stderr, "[GEMV_DUMP] n=%d %s y0..5=%.6e %.6e %.6e %.6e %.6e %.6e\n",
+                         s_gemvN, wt.name.c_str(), output[0], output[1], output[2], output[3],
+                         output[4], output[5]);
+            std::fprintf(stderr,
+                         "[LAYER0_Q_PREBIAS] n=%d dl=1 q0..5=%.6e %.6e %.6e %.6e %.6e %.6e\n",
+                         s_gemvN, output[0], output[1], output[2], output[3], output[4],
                          output[5]);
             std::fflush(stderr);
         }
+        ++s_gemvN;
     }
     // NOTE: the authoritative bias add is the original "Add bias" block at the end
     // of LinearW (after the NaN guard, ~line 7076). An earlier duplicate bias add
@@ -7094,6 +7349,21 @@ if (bias)
             output[i] += bias[i];
         }
     }
+    // RC2-01A: CPU post-bias vs GPU LAYER0_Q_POSTBIAS (attn_q only, once).
+    if (wt.name.find("blk.0.attn_q") != std::string::npos) {
+        static bool s_postBiasDump = false;
+        if (!s_postBiasDump) {
+            s_postBiasDump = true;
+            std::fprintf(stderr,
+                "[LAYER0_Q_POSTBIAS] dl=1 flush=0 q0..5=%.6e %.6e %.6e %.6e %.6e %.6e\n",
+                output[0], output[1], output[2], output[3], output[4], output[5]);
+            std::fprintf(stderr,
+                "[POSTBIAS_DUMP] %s y0..5=%.6e %.6e %.6e %.6e %.6e %.6e bias0=%.6e\n",
+                wt.name.c_str(), output[0], output[1], output[2], output[3], output[4],
+                output[5], bias ? bias[0] : 0.0f);
+            std::fflush(stderr);
+        }
+    }
 
     // --- Profiler: record quant attribution ---
     if (profilingEnabled_ && profiler_)
@@ -7119,6 +7389,62 @@ if (bias)
         const float scale = (float)std::sqrt(std::max(inEnergy, 1e-12));
         LivePath_RecordPinball((float)std::sqrt(outEnergy), scale);
     }
+}
+
+// RC2-05: multi-row Q4_K/Q6_K GEMM for prefill — same Q×Q8 mul_mat math as
+// LinearW/GetGEMV (NOT F32-dequant; that entered the GPU basin). Weight ptr
+// shared across batch cols; OnBatchedMatMul once per call when batch>1.
+void Deep2Engine::LinearWBatched(const WeightTensor& wt, const float* inputBatch,
+                                 float* outputBatch, size_t batch, size_t outDim,
+                                 const float* bias)
+{
+    if (!wt.data || !inputBatch || !outputBatch || outDim == 0 || batch == 0)
+        throw std::runtime_error("LinearWBatched: invalid args name=" + wt.name);
+    if (batch == 1)
+    {
+        LinearW(wt, inputBatch, bias, outputBatch, outDim);
+        return;
+    }
+    WeightTensor wtEffective = wt;
+    Deep2::ElasticResidencyManager::ResidencyHandle resHandle;
+    bool acquired = false;
+    if (elasticResidencyEnabled_ && elasticResidency_ && !wt.name.empty() && !vulkanEnabled_)
+    {
+        auto st = elasticResidency_->AcquireTensor(wt.name, 0, 0, resHandle);
+        if (st == Deep2::ElasticResidencyManager::AcquireStatus::Ready && resHandle.ready)
+        {
+            wtEffective.data = resHandle.cpuPtr;
+            acquired = true;
+        }
+    }
+    if (wtEffective.rows < outDim)
+        throw std::runtime_error("LinearWBatched: rows < outDim name=" + wt.name);
+    const size_t cols = wtEffective.cols;
+    auto& registry = Deep2::QuantKernelRegistry::Instance();
+    registry.Initialize();
+    auto gemv = registry.GetGEMV(wtEffective.type);
+    std::memset(outputBatch, 0, batch * outDim * sizeof(float));
+    if (gemv)
+    {
+        const uint8_t* w = static_cast<const uint8_t*>(wtEffective.data);
+        for (size_t b = 0; b < batch; ++b)
+            gemv(w, inputBatch + b * cols, outputBatch + b * outDim, outDim, cols);
+    }
+    else
+    {
+        for (size_t b = 0; b < batch; ++b)
+            LinearW_Range(wtEffective, inputBatch + b * cols,
+                          outputBatch + b * outDim, 0, outDim, cols);
+    }
+    if (bias)
+    {
+        for (size_t b = 0; b < batch; ++b)
+            for (size_t r = 0; r < outDim; ++r)
+                outputBatch[b * outDim + r] += bias[r];
+    }
+    ResidencyCounters::OnBatchedMatMul();
+    if (acquired && elasticResidency_ && !wt.name.empty())
+        elasticResidency_->ReleaseTensor(wt.name);
 }
 
 // ============================================================================
@@ -8080,8 +8406,39 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
         prefill_scope_id = flight_recorder_->begin("prefill");
     }
 
-        // Process prompt tokens (prefill)
-    for (size_t t = 0; t < promptLen && t < config.maxSeqLen; ++t)
+    // RC2-05 tip26 FIRST_OP=L0_ATTN_OUT under CPU batched prefill (F32-in-chunk
+    // then post-attn F16 seal). Prefix tip0..25 MATCH; tip26 897 vs llama/GPU
+    // 18266. AB on EXE DCF607E4: DEEP2_BATCHED_PREFILL=0 → CPU_TOK32 exact ==
+    // GPU_32 == LLAMA_FAOFF_32. Default tokenwise for FA-off CONT32; env=1
+    // retains ubatch experiment path. GPU already tokenwise (HOST_KV_HANDOFF).
+    // tip17 GPU==llama HOLD; SPV/Q4K untouched. PROMOTE=0.
+    enableBatchedPrefill(false, prefillChunkSize_);
+    const bool useBatchedPrefill =
+        batchedPrefillEnabled_ && promptLen > 1 && !B3_StageDigestEnabled() &&
+        !vulkanEnabled_;
+    if (vulkanEnabled_ && batchedPrefillEnabled_ && promptLen > 1)
+    {
+        fprintf(stderr,
+                "PREFILL_BATCHED=0 reason=GPU_HOST_KV_HANDOFF (CPU opt-in batched ignored)\n");
+        fflush(stderr);
+    }
+    if (useBatchedPrefill)
+    {
+        std::vector<float> hiddenOut(promptLen * config.hiddenDim, 0.0f);
+        const size_t done = prefillBatched(promptTokens, promptLen, hiddenOut.data(),
+                                           prefillChunkSize_ ? prefillChunkSize_ : 0);
+        if (done != promptLen)
+        {
+            fprintf(stderr, "[B3_ABORT] prefillBatched done=%zu want=%zu\n", done, promptLen);
+            fflush(stderr);
+            m_generationStop = GenerationStopReason::FORWARD_FAULT;
+            return 0;
+        }
+        fprintf(stderr, "PREFILL_BATCHED=1 prompt=%zu chunk=%zu (llama ubatch parity path)\n",
+                promptLen, prefillChunkSize_ ? prefillChunkSize_ : done);
+        fflush(stderr);
+    }
+    else for (size_t t = 0; t < promptLen && t < config.maxSeqLen; ++t)
     {
         // Embed token using real embedding table
         float* h = hiddenStates + t * config.hiddenDim;
@@ -8245,6 +8602,10 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
         {
             kvCache->advance();
         }
+        if (compressedKVEnabled_ && compressedKV_ && !vulkanEnabled_)
+        {
+            compressedKV_->advance();
+        }
     }
 
     auto prefillEnd = std::chrono::high_resolution_clock::now();
@@ -8305,6 +8666,69 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
                 const float embScale = std::sqrt(static_cast<float>(config.hiddenDim));
                 for (size_t i = 0; i < config.hiddenDim; ++i)
                     h[i] *= embScale;
+            }
+
+            // RC2-02: dump decode-step KV/pos before forward (earliest transition).
+            {
+                const char* e = std::getenv("RAWRXD_RC2_02_STEP_DUMP");
+                if (e && e[0] == '1')
+                {
+                    const size_t kvLen = kvCache ? kvCache->currentLength() : 0;
+                    double embNorm = 0.0;
+                    for (size_t i = 0; i < config.hiddenDim; ++i)
+                        embNorm += static_cast<double>(h[i]) * h[i];
+                    embNorm = std::sqrt(embNorm);
+                    std::fprintf(stderr,
+                        "[RC2_02_STEP] t=%zu inputPos=%zu forwardSeq=%zu kvLen=%zu "
+                        "inputTok=%d embNorm=%.6e h0..5=%.6e %.6e %.6e %.6e %.6e %.6e\n",
+                        t, inputPos, inputPos + 1, kvLen, inputToken, embNorm,
+                        h[0], h[1], h[2], h[3], h[4], h[5]);
+                    const size_t kvDim =
+                        (config.numKVHeads ? config.numKVHeads : config.numHeads) *
+                        config.headDim;
+                    if (kvCache && kvDim > 0 && t == 1) {
+                        for (size_t p = 0; p < kvLen && p < 16; ++p) {
+                            const float* k0 = kvCache->getK(0, 0, p);
+                            double kn = 0.0;
+                            if (k0) {
+                                for (size_t i = 0; i < kvDim; ++i)
+                                    kn += static_cast<double>(k0[i]) * k0[i];
+                            }
+                            std::fprintf(stderr,
+                                "[RC2_02_HOST_KV] layer=0 pos=%zu kNorm=%.6e "
+                                "k0..3=%.6e %.6e %.6e %.6e\n",
+                                p, std::sqrt(kn),
+                                k0 ? k0[0] : 0.f, k0 ? k0[1] : 0.f,
+                                k0 ? k0[2] : 0.f, k0 ? k0[3] : 0.f);
+                        }
+                    }
+                    if (vulkanEnabled_ && t == 1 && kvLen > 0 && kvDim > 0) {
+                        if (auto* gpu = getVulkanComputeSlot(0)) {
+                            const size_t nFloat = kvLen * kvDim;
+                            std::vector<float> kc(nFloat, 0.f);
+                            const bool ok = gpu->DownloadBuf(
+                                gpu->ArenaKCache(), kc.data(),
+                                static_cast<uint32_t>(nFloat));
+                            std::fprintf(stderr,
+                                "[RC2_02_GPU_KV] dl=%d kvLen=%zu kvDim=%zu\n",
+                                ok ? 1 : 0, kvLen, kvDim);
+                            if (ok) {
+                                for (size_t p = 0; p < kvLen && p < 16; ++p) {
+                                    const float* k0 = kc.data() + p * kvDim;
+                                    double kn = 0.0;
+                                    for (size_t i = 0; i < kvDim; ++i)
+                                        kn += static_cast<double>(k0[i]) * k0[i];
+                                    std::fprintf(stderr,
+                                        "[RC2_02_GPU_KV] layer=0 pos=%zu kNorm=%.6e "
+                                        "k0..3=%.6e %.6e %.6e %.6e\n",
+                                        p, std::sqrt(kn),
+                                        k0[0], k0[1], k0[2], k0[3]);
+                                }
+                            }
+                        }
+                    }
+                    std::fflush(stderr);
+                }
             }
 
             if (!B3_StageDigestEnabled())
@@ -8397,6 +8821,10 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
             if (kvCache)
             {
                 kvCache->advance();
+            }
+            if (compressedKVEnabled_ && compressedKV_ && !vulkanEnabled_)
+            {
+                compressedKV_->advance();
             }
         }
 
@@ -9449,6 +9877,32 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     {
         const std::uint32_t pos = static_cast<std::uint32_t>(kvCache ? kvCache->currentLength() : 0);
         AttnCert::record(AttnCert::Stage::ResidualHint, 0, pos, output, hiddenDim);
+        const char* l0dump = std::getenv("DEEP2_LAYER0_PARITY_DUMP");
+        const char* l0dec = std::getenv("DEEP2_LAYER0_DECODE_DUMP");
+        const char* l0posEnv = std::getenv("DEEP2_LAYER0_DUMP_POS");
+        const uint32_t l0DumpPos = (l0posEnv && l0posEnv[0])
+            ? static_cast<uint32_t>(std::strtoul(l0posEnv, nullptr, 10))
+            : 9u;
+        const bool dumpPrefill = (l0dump && l0dump[0] == '1' && pos == 0);
+        const bool dumpDecode = (l0dec && l0dec[0] == '1' && pos == l0DumpPos);
+        if (dumpPrefill || dumpDecode) {
+            static uint32_t s_l0AttnPos = UINT32_MAX;
+            if (s_l0AttnPos != pos) {
+                s_l0AttnPos = pos;
+                double rNorm = 0.0;
+                for (size_t i = 0; i < hiddenDim; ++i)
+                    rNorm += static_cast<double>(output[i]) * output[i];
+                rNorm = std::sqrt(rNorm);
+                std::fprintf(stderr,
+                    "[LAYER0_AFTER_ATTN] pos=%u dl=1 flush=0 rNorm=%.6e r0..5=%.6e %.6e %.6e %.6e %.6e %.6e\n",
+                    pos, rNorm,
+                    output[0], output[1], output[2], output[3], output[4], output[5]);
+                std::fflush(stderr);
+            }
+        }
+        // RC2-01B-5: residual after O-proj (measurement only).
+        if (Rc201b::Enabled() && Rc201b::WantPos(pos))
+            Rc201b::DumpF32("AFTER_ATTN_RESIDUAL", 0, pos, output, hiddenDim);
     }
 #if 1
     {
@@ -9501,6 +9955,12 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
             profiler_->endFFNNorm();
     }
     B3_TraceState("FFN_NORM", layer, layerTemp, hiddenDim);
+    if (layer == 0 && Rc201b::Enabled()) {
+        const std::uint32_t p =
+            static_cast<std::uint32_t>(kvCache ? kvCache->currentLength() : 0);
+        if (Rc201b::WantPos(p))
+            Rc201b::DumpF32("FFN_NORM", 0, p, layerTemp, hiddenDim);
+    }
     if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer))
     {
         const size_t tokPos = kvCache ? kvCache->currentLength() : (seqLen > 0 ? seqLen - 1 : 0);
@@ -9625,6 +10085,19 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     }
     if (profilingEnabled_ && profiler_ && hasMixer)
         profiler_->endFFNResidual();
+    if (layer == 0) {
+        const char* l0dump = std::getenv("DEEP2_LAYER0_PARITY_DUMP");
+        if (l0dump && l0dump[0] == '1') {
+            static bool s_l0Out = false;
+            if (!s_l0Out) {
+                s_l0Out = true;
+                std::fprintf(stderr,
+                    "[LAYER0_OUT] dl=1 flush=0 h0..5=%.6e %.6e %.6e %.6e %.6e %.6e\n",
+                    output[0], output[1], output[2], output[3], output[4], output[5]);
+                std::fflush(stderr);
+            }
+        }
+    }
 #if 1
     {
         char phase[32];
@@ -9640,6 +10113,12 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         B3_StageDigest(key, tokPos, output, hiddenDim);
     }
     Deep2ValidateVector("POST_FFN_RESIDUAL", layer, output, hiddenDim);
+    if (layer == 0 && Rc201b::Enabled()) {
+        const std::uint32_t p =
+            static_cast<std::uint32_t>(kvCache ? kvCache->currentLength() : 0);
+        if (Rc201b::WantPos(p))
+            Rc201b::DumpF32("AFTER_FFN", 0, p, output, hiddenDim);
+    }
 
     // Real layer execution mark: this forwardLayer completed on its planned device.
     if (multiGpuLayerPlan_.active)
@@ -10251,11 +10730,27 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         }
 
         // V projection: [hiddenDim] -> [kvDim]
-        LinearW(lw.wv, input,
-                (lw.bv.data && lw.bv.type == (int)GGMLType::GGML_TYPE_F32)
-                    ? static_cast<const float*>(lw.bv.data)
-                    : nullptr,
-                vProj, vDim);
+        // RC2-01C: GEMV without bias so V_PREBIAS is measurable before bias add.
+        // Q/K keep LinearW(+bias); only V is split. Arithmetic identical to
+        // LinearW(wv, input, bv, ...) — bias applied once below.
+        if (layer == 0 && Rc201b::Enabled()) {
+            const std::uint32_t pNorm =
+                static_cast<std::uint32_t>(kvCache ? kvCache->currentLength() : 0);
+            if (Rc201b::WantPos(pNorm))
+                Rc201b::DumpF32("NORMED", 0, pNorm, input, hiddenDim);
+        }
+        LinearW(lw.wv, input, nullptr, vProj, vDim);
+        if (layer == 0 && Rc201b::Enabled()) {
+            const std::uint32_t pPre =
+                static_cast<std::uint32_t>(kvCache ? kvCache->currentLength() : 0);
+            if (Rc201b::WantPos(pPre))
+                Rc201b::DumpF32("V_PREBIAS", 0, pPre, vProj, vDim);
+        }
+        if (lw.bv.data && lw.bv.type == (int)GGMLType::GGML_TYPE_F32) {
+            const float* bv = static_cast<const float*>(lw.bv.data);
+            for (size_t i = 0; i < vDim; ++i)
+                vProj[i] += bv[i];
+        }
 
         // S07 diagnostic: dump Q/K/V projection first 6 values (layer 0, first call).
         {
@@ -10273,6 +10768,23 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                 dump6("q", qProj);
                 dump6("k", kProj);
                 dump6("v", vProj);
+                std::fflush(stderr);
+            }
+        }
+        // RC2-01B-1: Q/K/V after bias, before QK-norm/RoPE.
+        if (layer == 0 && Rc201b::Enabled()) {
+            const std::uint32_t p =
+                static_cast<std::uint32_t>(kvCache ? kvCache->currentLength() : 0);
+            if (Rc201b::WantPos(p)) {
+                Rc201b::DumpF32("Q_POSTBIAS", 0, p, qProj, projectedQDim);
+                Rc201b::DumpF32("K_POSTBIAS", 0, p, kProj, kvDim);
+                Rc201b::DumpF32("V_POSTBIAS", 0, p, vProj, vDim);
+                std::fprintf(stderr,
+                    "[01B_GQA] side=%s pos=%u qHeads=%zu kvHeads=%zu headDim=%zu "
+                    "group=%zu map=kvHead=qHead/%zu\n",
+                    Rc201b::Side(), p, numHeads, numKVHeads, headDim,
+                    numHeads / (numKVHeads ? numKVHeads : 1),
+                    numHeads / (numKVHeads ? numKVHeads : 1));
                 std::fflush(stderr);
             }
         }
@@ -10412,6 +10924,12 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
           AttnCert::record(AttnCert::Stage::QProj, 0, pos, qProj, projectedQDim);
           AttnCert::record(AttnCert::Stage::KProj, 0, pos, kProj, kvDim);
         AttnCert::record(AttnCert::Stage::VProj, 0, pos, vProj, kvDim);
+        // RC2-01B: post QK-norm (may equal POSTBIAS if no q/k norm).
+        if (Rc201b::Enabled() && Rc201b::WantPos(pos)) {
+            Rc201b::DumpF32("Q_PREROPE", 0, pos, qProj, projectedQDim);
+            Rc201b::DumpF32("K_PREROPE", 0, pos, kProj, kvDim);
+            Rc201b::DumpF32("V_PREROPE", 0, pos, vProj, kvDim);
+        }
     }
 
     // Apply RoPE if enabled
@@ -10449,6 +10967,18 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                   ropeScaleUse, layer);
         if (profilingEnabled_ && profiler_)
             profiler_->endRoPE();
+        // RC2-01B-2: CPU Q/K post-RoPE (measurement only).
+        if (layer == 0 && Rc201b::Enabled() &&
+            Rc201b::WantPos(static_cast<uint32_t>(pos))) {
+            Rc201b::DumpF32("Q_POSTROPE", 0, static_cast<uint32_t>(pos),
+                            qProj, projectedQDim);
+            Rc201b::DumpF32("K_POSTROPE", 0, static_cast<uint32_t>(pos),
+                            kProj, numKVHeads * headDim);
+            std::fprintf(stderr,
+                "[01B_ROPE] side=%s pos=%zu theta=%.6e scale=%.6e headDim=%zu\n",
+                Rc201b::Side(), pos, ropeThetaUse, ropeScaleUse, headDim);
+            std::fflush(stderr);
+        }
     }
     B3_TraceState("ATTN_ROPE", layer, qProj, projectedQDim);
     emitMiniMaxQDiag("Q_POST_ROPE", qProj, projectedQDim);
@@ -10489,6 +11019,25 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             B3_StageDigest("Q_POST_ROPE_0", pos, qProj, projectedQDim);
             B3_StageDigest("K_POST_ROPE_0", pos, kProj, kvDim);
         }
+        const char* l0dec = std::getenv("DEEP2_LAYER0_DECODE_DUMP");
+        const char* l0posEnv = std::getenv("DEEP2_LAYER0_DUMP_POS");
+        const uint32_t l0DumpPos = (l0posEnv && l0posEnv[0])
+            ? static_cast<uint32_t>(std::strtoul(l0posEnv, nullptr, 10))
+            : 9u;
+        if (l0dec && l0dec[0] == '1' && pos == l0DumpPos) {
+            double qn = 0.0, kn = 0.0;
+            for (size_t i = 0; i < projectedQDim; ++i)
+                qn += static_cast<double>(qProj[i]) * qProj[i];
+            for (size_t i = 0; i < kvDim; ++i)
+                kn += static_cast<double>(kProj[i]) * kProj[i];
+            std::fprintf(stderr,
+                "[LAYER0_POST_ROPE] pos=%u dlQ=1 dlK=1 qNorm=%.6e kNorm=%.6e "
+                "q0..3=%.6e %.6e %.6e %.6e k0..3=%.6e %.6e %.6e %.6e\n",
+                pos, std::sqrt(qn), std::sqrt(kn),
+                qProj[0], qProj[1], qProj[2], qProj[3],
+                kProj[0], kProj[1], kProj[2], kProj[3]);
+            std::fflush(stderr);
+        }
     }
 
     // Store K, V into KV cache
@@ -10497,23 +11046,27 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         if (profilingEnabled_ && profiler_)
             profiler_->beginKVStore();
 
-        // Use CompressedKVCache if enabled
+        // Use CompressedKVCache if enabled.
+        // Advance once per token (with host kvCache), not per layer: every
+        // layer must write the same absolute position into its own slot.
+        // Per-layer advance made layer N store at pos=N for token 0 and
+        // poisoned every later decode step (RC2-02 full-sequence divergence).
         if (compressedKVEnabled_ && compressedKV_ && !vulkanEnabled_)
         {
+            const size_t pos = compressedKV_->currentLength();
             for (size_t h = 0; h < numKVHeads; ++h)
             {
-                size_t pos = compressedKV_->currentLength();
                 compressedKV_->storeKV(layer, h, pos, kProj + h * headDim, vProj + h * headDim);
             }
-            compressedKV_->advance();
             if (layer == 0)
             {
-                const std::uint32_t written = static_cast<std::uint32_t>(compressedKV_->currentLength());
-                AttnCert::record(AttnCert::Stage::KvWrite, 0, written > 0 ? written - 1 : 0, kProj,
-                                 numKVHeads * headDim, static_cast<double>(numKVHeads * headDim));
-                // aux = length after this write (compressed path advances inline)
-                AttnCert::record(AttnCert::Stage::KvLength, 0, written > 0 ? written - 1 : 0, nullptr, 0,
-                                 static_cast<double>(written));
+                AttnCert::record(AttnCert::Stage::KvWrite, 0,
+                                 static_cast<std::uint32_t>(pos), kProj,
+                                 numKVHeads * headDim,
+                                 static_cast<double>(numKVHeads * headDim));
+                AttnCert::record(AttnCert::Stage::KvLength, 0,
+                                 static_cast<std::uint32_t>(pos), nullptr, 0,
+                                 static_cast<double>(pos + 1));
             }
         }
         else if (kvCache && !lw.hasSSM)
@@ -10538,10 +11091,24 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             // poison every later decode step even if this token's logits
             // happen to remain finite.
             Deep2ValidateVector("ATTN_V_PRE_KV", layer, vProj, kvDim);
+            // RC2-05: F16 round-trip on write (llama type_k/type_v default).
+            // Proven: eng PRE_O==tile(F32 V) while d2_tf/llama attn_out==tile(F16(V))
+            // maxAbs~2.38e-4 @ pos0; FFN amplifies → idx2 tip flip.
+            const size_t nKv = kvBytes / sizeof(float);
             if (kBase)
-                memcpy(kBase, kProj, kvBytes);
+                storeKvRoundTrip(kBase, kProj, nKv);
             if (vBase)
-                memcpy(vBase, vProj, kvBytes);
+                storeKvRoundTrip(vBase, vProj, nKv);
+            if (layer == 0 && writePos == 0 && !Deep2KvKeepF32())
+            {
+                static int once = 0;
+                if (!once)
+                {
+                    once = 1;
+                    fprintf(stderr, "KV_F16_ROUNDTRIP=1 (llama-compatible; DEEP2_KV_F32=1 to disable)\n");
+                    fflush(stderr);
+                }
+            }
             if (miniMaxQDiag)
             {
                 std::fprintf(stderr, "[MINIMAX_Q_DIAG] stage=KV_WRITE_OK bytes=%zu\n", kvBytes);
@@ -10566,6 +11133,14 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                                  static_cast<double>(lw.wk.rows));
                 // Length after write: advance() happens after all layers; report writePos+1.
                 AttnCert::record(AttnCert::Stage::KvLength, 0, writePos, nullptr, 0, static_cast<double>(writePos + 1));
+                // RC2-01B-3: KV append contents at writePos.
+                if (Rc201b::Enabled() && Rc201b::WantPos(writePos)) {
+                    Rc201b::DumpF32("KV_WRITE_K", 0, writePos, kProj, lw.wk.rows);
+                    Rc201b::DumpF32("KV_WRITE_V", 0, writePos, vProj, lw.wv.rows);
+                    std::fprintf(stderr, "[01B_KV] side=%s pos=%u seqLen=%u kvDim=%zu\n",
+                                 Rc201b::Side(), writePos, writePos + 1, lw.wk.rows);
+                    std::fflush(stderr);
+                }
             }
         }
 
@@ -10998,6 +11573,20 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                         : hiddenDim;
     Deep2ValidateVector("ATTN_PRE_WO", layer, output, preOCount);
 
+    // RC2-01B-4: AttnDecode output (pre O-proj), GQA-expanded.
+    if (layer == 0 && Rc201b::Enabled()) {
+        const std::uint32_t p =
+            static_cast<std::uint32_t>(kvCache ? kvCache->currentLength() : 0);
+        if (Rc201b::WantPos(p)) {
+            Rc201b::DumpF32("ATTN_OUT", 0, p, output, attnConcat);
+            std::fprintf(stderr,
+                "[01B_ATTN] side=%s pos=%u seqLen=%u scale=%.8e heads=%zu kvHeads=%zu\n",
+                Rc201b::Side(), p, p + 1u,
+                1.0f / std::sqrt(static_cast<float>(headDim)), numHeads, numKVHeads);
+            std::fflush(stderr);
+        }
+    }
+
     // Output projection: attn concat -> residual (wo: [hiddenDim, attnConcat]).
     // Qwen fused QKV may omit a separate O proj; MLA uses attnO.
     if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer))
@@ -11031,6 +11620,13 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         LinearW(*attnOutWeight, output, nullptr, tempOut, hiddenDim);
         if (profilingEnabled_ && profiler_)
             profiler_->endAttnOutProj();
+        // RC2-01B-5: O-proj before residual.
+        if (layer == 0 && Rc201b::Enabled()) {
+            const std::uint32_t p =
+                static_cast<std::uint32_t>(kvCache ? kvCache->currentLength() : 0);
+            if (Rc201b::WantPos(p))
+                Rc201b::DumpF32("O_PROJ", 0, p, tempOut, hiddenDim);
+        }
         std::memcpy(output, tempOut, hiddenDim * sizeof(float));
     }
 
@@ -11286,6 +11882,15 @@ if (hasGate)
     if (profilingEnabled_ && profiler_)
         profiler_->endFFNDown();
     B3_TraceState("FFN_DOWN", layer, output, hiddenDim);
+    if (layer == 0 && Rc201b::Enabled()) {
+        const std::uint32_t p =
+            static_cast<std::uint32_t>(kvCache ? kvCache->currentLength() : 0);
+        if (Rc201b::WantPos(p)) {
+            Rc201b::DumpF32("FFN_UP", 0, p, upBuf, intermediateDim);
+            Rc201b::DumpF32("FFN_ACT", 0, p, gateBuf, intermediateDim);
+            Rc201b::DumpF32("FFN_DOWN", 0, p, output, hiddenDim);
+        }
+    }
 }
 
 // ============================================================================
@@ -11842,6 +12447,13 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
 
         if (expertId < 0)
             continue;
+        // Physical REAP: never execute/acquire pruned expert IDs even if a
+        // stale router or prefetch leaks them (multi-shard + streamer paths).
+        if (reapRuntimeInjection_.enabled &&
+            reapRuntimeInjection_.physicalExclude &&
+            static_cast<uint64_t>(expertId) >=
+                reapRuntimeInjection_.expertCount)
+            continue;
 
         auto tAcquire0 = std::chrono::high_resolution_clock::now();
 
@@ -12233,25 +12845,39 @@ void Deep2Engine::computeLogits(const float* hiddenState, float* logits)
     // lm_head: [vocabSize, hiddenDim] * hiddenState -> [vocabSize]
     LinearW(modelWeights.lmHead, hiddenState, nullptr, logits, config.vocabSize);
 
-    // S07 diagnostic: dump top-5 logits once (first forward's logits).
+    // RC2-02: LOGIT_DIAG every decode step when RAWRXD_LOGIT_DIAG=1;
+    // otherwise keep legacy once-only tip dump.
     {
-        static bool s_logitDiag = false;
-        if (!s_logitDiag)
+        static int s_logitStep = 0;
+        static int s_logitEvery = -1;
+        if (s_logitEvery < 0) {
+            const char* e = std::getenv("RAWRXD_LOGIT_DIAG");
+            s_logitEvery = (e && e[0] == '1') ? 1 : 0;
+        }
+        const bool dump = (s_logitEvery == 1) || (s_logitStep == 0);
+        if (dump)
         {
-            s_logitDiag = true;
             std::vector<std::pair<float, int>> top;
             top.reserve(config.vocabSize);
             for (size_t i = 0; i < config.vocabSize; ++i)
                 top.emplace_back(logits[i], static_cast<int>(i));
-            std::partial_sort(top.begin(), top.begin() + 5, top.end(),
-                              [](const std::pair<float, int>& a, const std::pair<float, int>& b)
-                              { return a.first > b.first; });
-            std::fprintf(stderr, "[LOGIT_DIAG] top5:");
-            for (int i = 0; i < 5 && i < static_cast<int>(top.size()); ++i)
+            const size_t k = (std::min)(size_t{5}, top.size());
+            if (k > 0)
+                std::partial_sort(top.begin(), top.begin() + static_cast<std::ptrdiff_t>(k), top.end(),
+                                  [](const std::pair<float, int>& a, const std::pair<float, int>& b)
+                                  { return a.first > b.first; });
+            const int id15 = 15;
+            const int id23192 = 23192;
+            const float l15 = (static_cast<size_t>(id15) < config.vocabSize) ? logits[id15] : 0.f;
+            const float l23192 = (static_cast<size_t>(id23192) < config.vocabSize) ? logits[id23192] : 0.f;
+            std::fprintf(stderr, "[LOGIT_DIAG] step=%d top5:", s_logitStep);
+            for (size_t i = 0; i < k; ++i)
                 std::fprintf(stderr, " %d=%.6f", top[i].second, top[i].first);
-            std::fprintf(stderr, "\n");
+            std::fprintf(stderr, " probe15=%.6f probe23192=%.6f margin15_23192=%.6f\n",
+                         l15, l23192, l23192 - l15);
             std::fflush(stderr);
         }
+        ++s_logitStep;
     }
 
     // ── Gemma logit soft-capping (cap * tanh(logits / cap)) ─────────────
@@ -12286,11 +12912,55 @@ int Deep2Engine::sampleToken(const float* logits)
     // chamber override, or stochastic sampler in this branch.
     if (deterministicGreedy_)
     {
-        int bestToken = 0;
-        float bestLogit = logits[0];
-        for (size_t i = 1; i < config.vocabSize; ++i)
+        // RC2-05: llama.cpp default applies -inf logit-bias to EOG tokens
+        // (endoftext/im_end/…). Without it, F16-KV tip0 can flip EOS vs 576
+        // by ~0.1 while non-EOG ranking matches. Opt-out: RAWRXD_LLAMA_EOG_BIAS=0.
+        static int eogBias = -1;
+        if (eogBias < 0)
         {
-            if (std::isfinite(logits[i]) && (!std::isfinite(bestLogit) || logits[i] > bestLogit))
+            const char* e = std::getenv("RAWRXD_LLAMA_EOG_BIAS");
+            eogBias = (!e || e[0] != '0') ? 1 : 0;
+            if (eogBias)
+            {
+                fprintf(stderr, "LLAMA_EOG_BIAS=1 (greedy -inf on EOG; RAWRXD_LLAMA_EOG_BIAS=0 to disable)\n");
+                fflush(stderr);
+            }
+        }
+        auto isEog = [&](size_t id) -> bool
+        {
+            if (!eogBias)
+                return false;
+            if (tokenizer && id == (size_t)tokenizer->GetSpecialTokens().eosId)
+                return true;
+            // Qwen2 / Qwen2.5 EOG family used by llama-cli default bias.
+            switch (id)
+            {
+            case 151643: // <|endoftext|>
+            case 151644: // <|im_start|>
+            case 151645: // <|im_end|>
+            case 151646: // <|fim_prefix|> / repo family varies; keep common pads
+            case 151647:
+            case 151648:
+            case 151649:
+            case 151650:
+            case 151651:
+            case 151652:
+            case 151653:
+            case 151654:
+            case 151655:
+            case 151656:
+                return true;
+            default:
+                return false;
+            }
+        };
+        int bestToken = 0;
+        float bestLogit = -std::numeric_limits<float>::infinity();
+        for (size_t i = 0; i < config.vocabSize; ++i)
+        {
+            if (isEog(i))
+                continue;
+            if (std::isfinite(logits[i]) && logits[i] > bestLogit)
             {
                 bestLogit = logits[i];
                 bestToken = static_cast<int>(i);
@@ -13521,10 +14191,41 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input, floa
         return false;
     }
 
+    // RC2-05-04: Q6_K must use Q6×Q8_K (llama/RuntimeGraph), not FP32 dequant·x.
+    // RC2-01C routed Q6 through F32 expand to match then-wrong CPU FP32 reference;
+    // that locked GPU to the L0_V split (maxAbs~1e-2). Prefer packed Q6; on miss
+    // return false so LinearW_Range hits QuantKernelRegistry Q8_K GEMV.
+    // Q4_K packed path preserved (FFN+Q/K). Opt-out: RAWRXD_DEEP2_Q6K_FORCE_F32_GPU=1.
+    {
+        const char* q6F32 = std::getenv("RAWRXD_DEEP2_Q6K_FORCE_F32_GPU");
+        const bool forceQ6F32 = q6F32 && q6F32[0] == '1';
+        if (!forceQ6F32 && wt.type == (int)GGMLType::GGML_TYPE_Q6_K && wt.data && wt.sizeBytes)
+        {
+            const bool ok = vc->DispatchGEMVQuant(wt.type, wt.data, wt.sizeBytes, input, output,
+                                                  static_cast<uint32_t>(wt.rows),
+                                                  static_cast<uint32_t>(wt.cols), cacheKey);
+            if (ok)
+            {
+                ++vulkanGemvOk_;
+                ++gpuFwd_.q6kPackedOps;
+                vulkanGpuWeightBytes_ += wt.sizeBytes;
+                vulkanGpuTensorBytes_ +=
+                    wt.sizeBytes + wt.cols * sizeof(float) + wt.rows * sizeof(float);
+                if (!wt.name.empty() && vulkanWeightSeen_.emplace(wt.name, 1).second)
+                    ++vulkanRealWeightLayers_;
+                QuantKernelRegistry::Instance().GetBatch21Counters().vulkanComputeSubmissions.fetch_add(
+                    1, std::memory_order_relaxed);
+                return true;
+            }
+            // Packed Q6 unavailable — CPU LinearW_Range Q6×Q8_K (not F32 expand).
+            ++vulkanGemvFail_;
+            return false;
+        }
+    }
     if (wt.data && wt.sizeBytes &&
         (wt.type == (int)GGMLType::GGML_TYPE_Q8_0 || wt.type == (int)GGMLType::GGML_TYPE_Q2_K ||
          wt.type == (int)GGMLType::GGML_TYPE_Q3_K || wt.type == (int)GGMLType::GGML_TYPE_Q4_K ||
-         wt.type == (int)GGMLType::GGML_TYPE_Q5_K || wt.type == (int)GGMLType::GGML_TYPE_Q6_K))
+         wt.type == (int)GGMLType::GGML_TYPE_Q5_K))
     {
         const bool ok = vc->DispatchGEMVQuant(wt.type, wt.data, wt.sizeBytes, input, output,
                                               static_cast<uint32_t>(wt.rows), static_cast<uint32_t>(wt.cols), cacheKey);
@@ -13533,8 +14234,6 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input, floa
             ++vulkanGemvOk_;
             if (wt.type == (int)GGMLType::GGML_TYPE_Q4_K)
                 ++gpuFwd_.q4kPackedOps;
-            if (wt.type == (int)GGMLType::GGML_TYPE_Q6_K)
-                ++gpuFwd_.q6kPackedOps;
             vulkanGpuWeightBytes_ += wt.sizeBytes;
             vulkanGpuTensorBytes_ += wt.sizeBytes + wt.cols * sizeof(float) + wt.rows * sizeof(float);
             if (!wt.name.empty() && vulkanWeightSeen_.emplace(wt.name, 1).second)

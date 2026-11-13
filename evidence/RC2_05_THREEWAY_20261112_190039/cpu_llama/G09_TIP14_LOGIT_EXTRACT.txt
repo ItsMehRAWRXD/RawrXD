@@ -1,0 +1,16 @@
+﻿G09_TIP14_LOGIT_EXTRACT 2026-11-12
+SOURCE=batch07_tip14_tf dumps (re-read after PATH fix; python.exe Store stub -> Python313)
+NOTE_EXE_OF_DUMPS=BATCH07_PREEXISTING_NOT_REHASHED_HERE
+LIVE_SMOKE_SHA=0C29A6F882CDE811AD042482DCBC4787F703BA14657E29FD770940E842A32761
+CROSS_SHA_CREDIT=0
+TIP14_POS=22 (0-based in dump set; eng dump labeled pos23 for tip14 gen step)
+
+d2_rt  pos22: argmax=15233  15233=22.640949  29213=22.463865  margin=+0.177084
+eng    tip14: argmax=15233  15233=22.570240  29213=22.350311  margin=+0.219929
+llama_tf pos22: argmax=15233  15233=22.492813  29213=22.445854  margin=+0.046959
+
+INTERPRETATION:
+- Teacher-force tip14: Engine ~= RuntimeGraph ~= llama_tf all prefer 15233 (near-tie).
+- Continuous llama_cli still emits 29213 at tip14 — continuous vs TF / decode-path residual, not Engine-vs-RT.
+- EXACT16 / RC2_05_PASS still 0. PROMOTE=0 CERTIFIED=0.
+PRIOR_SHELL_FAIL=exit_9009 (python not on PATH)

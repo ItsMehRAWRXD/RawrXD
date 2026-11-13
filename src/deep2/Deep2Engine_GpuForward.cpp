@@ -13,6 +13,9 @@
 #include "Deep2MultiGpuLayerPlan.hpp"
 #include "GpuTransferCounters.hpp"
 #include "QuantKernelRegistry.hpp"
+#include "Rc201bAttnDump.hpp"
+#include "KVCache.h"
+#include "BatchedPrefill.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -338,7 +341,42 @@ bool Deep2Engine::forwardLayerGpuResident(
     auto gemv = [&](const WeightTensor& wt, DeviceBuf& input,
                     DeviceBuf& output, uint32_t rows, uint32_t cols) -> bool {
         if (!supportedDenseWeight(wt)) return false;
-        const bool packed = gpuPackedType(wt.type);
+        // RC2-05-04: Q6_K authority is llama/RuntimeGraph Q6×Q8_K, not FP32
+        // dequant·x. RC2-01C F32 expand aligned GPU to then-wrong product CPU
+        // FP32 reference (L0_V maxAbs~1e-2). Default: packed Q6. Opt-in revert:
+        // RAWRXD_DEEP2_Q6K_FORCE_F32_GPU=1. Do NOT touch Q4_K act / SPIR-V.
+        // RC2-01C L1_FFN_POST: ALL-FFN Q4→F32 expand collapses tip0→EOS
+        // (CPU Q4 authority is Q8-act, not FP32 dequant). Keep Q4 FFN packed
+        // unless opt-in. Opt-in A/B: RAWRXD_DEEP2_Q4K_FORCE_F32_GPU=1 all Q4;
+        // RAWRXD_DEEP2_L1_FFN_Q4K_FORCE_F32=1 expands only layer-1 FFN Q4.
+        static int s_q4ForceF32 = -1;
+        if (s_q4ForceF32 < 0) {
+            const char* e = std::getenv("RAWRXD_DEEP2_Q4K_FORCE_F32_GPU");
+            s_q4ForceF32 = (e && e[0] == '1') ? 1 : 0;
+        }
+        static int s_l1FfnQ4ForceF32 = -1;
+        if (s_l1FfnQ4ForceF32 < 0) {
+            const char* e = std::getenv("RAWRXD_DEEP2_L1_FFN_Q4K_FORCE_F32");
+            s_l1FfnQ4ForceF32 = (e && e[0] == '1') ? 1 : 0;
+        }
+        static int s_q6ForceF32 = -1;
+        if (s_q6ForceF32 < 0) {
+            const char* e = std::getenv("RAWRXD_DEEP2_Q6K_FORCE_F32_GPU");
+            s_q6ForceF32 = (e && e[0] == '1') ? 1 : 0;
+        }
+        const bool q6ForceF32 =
+            s_q6ForceF32 == 1 &&
+            wt.type == static_cast<int>(GGMLType::GGML_TYPE_Q6_K);
+        const bool isFfnWt =
+            (&wt == &lw.wGate) || (&wt == &lw.wUp) || (&wt == &lw.wDown);
+        const bool q4FfnForceF32 =
+            s_l1FfnQ4ForceF32 == 1 && layer == 1 && isFfnWt &&
+            wt.type == static_cast<int>(GGMLType::GGML_TYPE_Q4_K);
+        const bool q4ForceF32 =
+            (s_q4ForceF32 == 1 || q4FfnForceF32) &&
+            wt.type == static_cast<int>(GGMLType::GGML_TYPE_Q4_K);
+        const bool packed =
+            gpuPackedType(wt.type) && !q6ForceF32 && !q4ForceF32;
         bool ok = false;
         if (packed) {
             ok = gpu->DispatchGemvQuant(wt.type, wt.data, wt.sizeBytes,
@@ -347,8 +385,6 @@ bool Deep2Engine::forwardLayerGpuResident(
             if (ok) {
                 if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_Q4_K))
                     ++counters.q4kPackedOps;
-                else if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_Q6_K))
-                    ++counters.q6kPackedOps;
                 else if (wt.type == static_cast<int>(GGMLType::GGML_TYPE_Q2_K))
                     ++counters.q2kPackedOps;
             }
@@ -372,6 +408,98 @@ bool Deep2Engine::forwardLayerGpuResident(
         return fail();
     counters.qkvOps += 3;
 
+    // RC2-01/02 layer-0 probe (env DEEP2_LAYER0_PARITY_DUMP=1) — prefill pos0 only.
+    // RC2-02 decode probe: DEEP2_LAYER0_DECODE_DUMP=1 AND optional
+    // DEEP2_LAYER0_DUMP_POS=<n> (default: first pos>0 that equals host kv tip
+    // after prefill — do NOT dump every prefill pos; FlushFusedRestart mid-CB
+    // on every pos poisons fused recordings).
+    const char* l0dump = std::getenv("DEEP2_LAYER0_PARITY_DUMP");
+    const char* l0dec = std::getenv("DEEP2_LAYER0_DECODE_DUMP");
+    const char* l0posEnv = std::getenv("DEEP2_LAYER0_DUMP_POS");
+    const uint32_t l0DumpPos = (l0posEnv && l0posEnv[0])
+        ? static_cast<uint32_t>(std::strtoul(l0posEnv, nullptr, 10))
+        : UINT32_MAX;
+    const bool wantL0Prefill = (layer == 0 && l0dump && l0dump[0] == '1' && pos == 0);
+    // Default decode dump target: pos==9 for the sealed 9-token prompt tip+1,
+    // or exact DEEP2_LAYER0_DUMP_POS when set.
+    const bool wantL0Decode = (layer == 0 && l0dec && l0dec[0] == '1' &&
+        ((l0DumpPos != UINT32_MAX) ? (pos == l0DumpPos) : (pos == 9u)));
+    const bool wantL0 = wantL0Prefill || wantL0Decode;
+    if (wantL0) {
+        static uint32_t s_l0PrePos = UINT32_MAX;
+        if (s_l0PrePos != pos) {
+            s_l0PrePos = pos;
+            const bool flushed = gpu->FlushFusedRestart();
+            std::vector<float> nh(hidden), qh(lw.wq.rows);
+            const bool nd = flushed &&
+                gpu->DownloadBuf(gpu->ArenaNormed(), nh.data(), hidden);
+            const bool qd = flushed &&
+                gpu->DownloadBuf(gpu->ArenaQ(), qh.data(),
+                                 static_cast<uint32_t>(lw.wq.rows));
+            std::fprintf(stderr,
+                "[LAYER0_NORMED] pos=%u dl=%d flush=%d n0..5=%.6e %.6e %.6e %.6e %.6e %.6e\n",
+                pos, nd ? 1 : 0, flushed ? 1 : 0,
+                nh[0], nh[1], nh[2], nh[3], nh[4], nh[5]);
+            std::fprintf(stderr,
+                "[LAYER0_Q_PREBIAS] pos=%u dl=%d q0..5=%.6e %.6e %.6e %.6e %.6e %.6e\n",
+                pos, qd ? 1 : 0, qh[0], qh[1], qh[2], qh[3], qh[4], qh[5]);
+            std::fflush(stderr);
+        }
+    }
+
+    // RC2-03/01C: V/K/Q after GEMV before bias (measurement only).
+    // 01C-3: also dump NORMED and host-recompute V from wv + NORMED so the
+    // first divergent op is split (act match vs weight/GEMV).
+    if (layer == 0 && Rc201b::Enabled() && Rc201b::WantPos(pos)) {
+        const bool flushed = gpu->FlushFusedRestart();
+        std::vector<float> qh(heads * headDim), kh(kvDim), vh(kvDim), nh(hidden);
+        if (flushed &&
+            gpu->DownloadBuf(gpu->ArenaNormed(), nh.data(), hidden) &&
+            gpu->DownloadBuf(gpu->ArenaQ(), qh.data(), heads * headDim) &&
+            gpu->DownloadBuf(gpu->ArenaK(), kh.data(), kvDim) &&
+            gpu->DownloadBuf(gpu->ArenaV(), vh.data(), kvDim)) {
+            Rc201b::DumpF32("NORMED", 0, pos, nh.data(), nh.size());
+            Rc201b::DumpF32("Q_PREBIAS", 0, pos, qh.data(), qh.size());
+            Rc201b::DumpF32("K_PREBIAS", 0, pos, kh.data(), kh.size());
+            Rc201b::DumpF32("V_PREBIAS", 0, pos, vh.data(), vh.size());
+            // Host Q4_K×Q8-act recompute of V against the GPU-downloaded act.
+            if (lw.wv.data &&
+                lw.wv.type == static_cast<int>(GGMLType::GGML_TYPE_Q4_K) &&
+                lw.wv.rows == kvDim && lw.wv.cols == hidden) {
+                std::vector<float> hostV(kvDim, 0.f);
+                auto gemv = QuantKernelRegistry::Instance().GetGEMV(
+                    static_cast<int>(GGMLType::GGML_TYPE_Q4_K));
+                if (gemv) {
+                    gemv(static_cast<const uint8_t*>(lw.wv.data), nh.data(),
+                         hostV.data(), kvDim, hidden);
+                    Rc201b::DumpF32("V_HOST_RECOMP", 0, pos, hostV.data(),
+                                    hostV.size());
+                    double maxAbs = 0.0, sumSq = 0.0;
+                    size_t first = SIZE_MAX, worst = 0;
+                    for (size_t i = 0; i < kvDim; ++i) {
+                        const double d = std::fabs(static_cast<double>(hostV[i]) -
+                                                   vh[i]);
+                        if (d > maxAbs) {
+                            maxAbs = d;
+                            worst = i;
+                        }
+                        sumSq += d * d;
+                        if (first == SIZE_MAX && d > 1e-5) first = i;
+                    }
+                    std::fprintf(stderr,
+                        "[01C_V_HOST_RECOMP] pos=%u n=%zu maxAbs=%.6e rms=%.6e "
+                        "firstDiv=%zu worst=%zu host0=%.6e gpu0=%.6e "
+                        "hostW=%.6e gpuW=%.6e\n",
+                        pos, kvDim, maxAbs,
+                        std::sqrt(sumSq / static_cast<double>(kvDim)),
+                        first, worst, hostV[0], vh[0],
+                        hostV[worst], vh[worst]);
+                    std::fflush(stderr);
+                }
+            }
+        }
+    }
+
     // S08: record Q/K/V bias adds into the fused command buffer only.
     // Bias buffers were resolved resident above; do not UploadBuf here.
     {
@@ -394,45 +522,345 @@ bool Deep2Engine::forwardLayerGpuResident(
             !gpu->DispatchResidualAdd(gpu->ArenaV(), bvDev, gpu->ArenaV(), kvDim))
             return fail();
     }
+    if (wantL0) {
+        static uint32_t s_l0PostPos = UINT32_MAX;
+        if (s_l0PostPos != pos) {
+            s_l0PostPos = pos;
+            const bool flushed = gpu->FlushFusedRestart();
+            std::vector<float> qh(lw.wq.rows);
+            const bool qd = flushed &&
+                gpu->DownloadBuf(gpu->ArenaQ(), qh.data(),
+                                 static_cast<uint32_t>(lw.wq.rows));
+            std::fprintf(stderr,
+                "[LAYER0_Q_POSTBIAS] pos=%u dl=%d flush=%d q0..5=%.6e %.6e %.6e %.6e %.6e %.6e\n",
+                pos, qd ? 1 : 0, flushed ? 1 : 0,
+                qh[0], qh[1], qh[2], qh[3], qh[4], qh[5]);
+            std::fflush(stderr);
+        }
+    }
+
+    // RC2-01B-1 measurement: full Q/K/V post-bias (no arithmetic change).
+    if (layer == 0 && Rc201b::Enabled() && Rc201b::WantPos(pos)) {
+        const bool flushed = gpu->FlushFusedRestart();
+        std::vector<float> qh(heads * headDim), kh(kvDim), vh(kvDim);
+        if (flushed &&
+            gpu->DownloadBuf(gpu->ArenaQ(), qh.data(), heads * headDim) &&
+            gpu->DownloadBuf(gpu->ArenaK(), kh.data(), kvDim) &&
+            gpu->DownloadBuf(gpu->ArenaV(), vh.data(), kvDim)) {
+            Rc201b::DumpF32("Q_POSTBIAS", 0, pos, qh.data(), qh.size());
+            Rc201b::DumpF32("K_POSTBIAS", 0, pos, kh.data(), kh.size());
+            Rc201b::DumpF32("V_POSTBIAS", 0, pos, vh.data(), vh.size());
+            std::fprintf(stderr,
+                "[01B_GQA] side=%s pos=%u qHeads=%u kvHeads=%u headDim=%u "
+                "group=%u map=kvHead=qHead/%u\n",
+                Rc201b::Side(), pos, heads, kvHeads, headDim,
+                heads / (kvHeads ? kvHeads : 1u),
+                heads / (kvHeads ? kvHeads : 1u));
+            std::fflush(stderr);
+        }
+    }
 
     // The active adapter preserves the historical parameter names
     // (nHeads,nope,rope), but forwards them to the backend as
     // (heads,kvHeads,pos).  Standard MHA/GQA therefore supplies kvHeads and
     // the actual token position here.  MLA remains outside this dense lane.
-    if (!gpu->DispatchRope(gpu->ArenaQ(), gpu->ArenaK(), headDim, heads,
-                           kvHeads, pos, modelWeights.ropeTheta))
+    //
+    // RC2-05: sealed SPV OP_ROPE is NORM-adjacent only (ADA48968 hold).
+    // Qwen2/NEOX models must host-apply RoPE — do not touch SPV.
+    if (config.ropeNeox) {
+        if (!gpu->FlushFusedRestart())
+            return fail();
+        std::vector<float> qh(heads * headDim), kh(kvDim);
+        if (!gpu->DownloadBuf(gpu->ArenaQ(), qh.data(), heads * headDim) ||
+            !gpu->DownloadBuf(gpu->ArenaK(), kh.data(), kvDim))
+            return fail();
+        applyRoPE(qh.data(), kh.data(), headDim, heads, kvHeads, pos,
+                  modelWeights.ropeTheta,
+                  modelWeights.ropeScaling > 0.0f
+                      ? static_cast<float>(modelWeights.ropeScaling)
+                      : 1.0f,
+                  layer);
+        if (!gpu->UploadBuf(gpu->ArenaQ(), qh.data(), heads * headDim) ||
+            !gpu->UploadBuf(gpu->ArenaK(), kh.data(), kvDim))
+            return fail();
+        static int s_neoxOnce = 0;
+        if (!s_neoxOnce) {
+            s_neoxOnce = 1;
+            std::fprintf(stderr,
+                         "GPU_ROPE_NEOX_HOST=1 (SPV NORM held; ADA48968 untouched)\n");
+            std::fflush(stderr);
+        }
+    } else if (!gpu->DispatchRope(gpu->ArenaQ(), gpu->ArenaK(), headDim, heads,
+                                  kvHeads, pos, modelWeights.ropeTheta)) {
         return fail();
+    }
     ++counters.ropeOps;
 
-    // The adapter's final argument is the cache layer selector even though
-    // its historical parameter name is nHeads.  Pass the actual layer so
-    // each layer owns a disjoint K/V region.
+    if (wantL0Decode) {
+        static uint32_t s_ropePos = UINT32_MAX;
+        if (s_ropePos != pos) {
+            s_ropePos = pos;
+            const bool flushed = gpu->FlushFusedRestart();
+            std::vector<float> qh(heads * headDim), kh(kvDim);
+            const bool qd = flushed &&
+                gpu->DownloadBuf(gpu->ArenaQ(), qh.data(), heads * headDim);
+            const bool kd = flushed &&
+                gpu->DownloadBuf(gpu->ArenaK(), kh.data(), kvDim);
+            auto l2 = [](const std::vector<float>& v) {
+                double s = 0.0;
+                for (float x : v) s += static_cast<double>(x) * x;
+                return std::sqrt(s);
+            };
+            std::fprintf(stderr,
+                "[LAYER0_POST_ROPE] pos=%u dlQ=%d dlK=%d qNorm=%.6e kNorm=%.6e "
+                "q0..3=%.6e %.6e %.6e %.6e k0..3=%.6e %.6e %.6e %.6e\n",
+                pos, qd ? 1 : 0, kd ? 1 : 0, l2(qh), l2(kh),
+                qh[0], qh[1], qh[2], qh[3], kh[0], kh[1], kh[2], kh[3]);
+            std::fflush(stderr);
+        }
+    }
+
+    // RC2-01B-2 measurement: Q/K post-RoPE.
+    if (layer == 0 && Rc201b::Enabled() && Rc201b::WantPos(pos)) {
+        const bool flushed = gpu->FlushFusedRestart();
+        std::vector<float> qh(heads * headDim), kh(kvDim);
+        if (flushed &&
+            gpu->DownloadBuf(gpu->ArenaQ(), qh.data(), heads * headDim) &&
+            gpu->DownloadBuf(gpu->ArenaK(), kh.data(), kvDim)) {
+            Rc201b::DumpF32("Q_POSTROPE", 0, pos, qh.data(), qh.size());
+            Rc201b::DumpF32("K_POSTROPE", 0, pos, kh.data(), kh.size());
+            std::fprintf(stderr, "[01B_ROPE] side=%s pos=%u theta=%.6e headDim=%u\n",
+                         Rc201b::Side(), pos, modelWeights.ropeTheta, headDim);
+            std::fflush(stderr);
+        }
+    }
+
+    // RC2-05 BATCH14: host AttentionWithCache. Device packed wo GEMV amplifies
+    // ATTN residual (O maxAbs 1.99e-3). LinearW under vulkan routes to
+    // tryVulkanGEMV → tip*=15. Fix: QuantKernelRegistry::GetGEMV (CPU Q4×Q8,
+    // same as LinearW quant path) for O under HOST_ATTN. Opt out:
+    // DEEP2_GPU_DEVICE_O=1 / DEEP2_GPU_DEVICE_ATTN=1.
+    const char* devAttnEnv = std::getenv("DEEP2_GPU_DEVICE_ATTN");
+    const bool useDeviceAttn = (devAttnEnv && devAttnEnv[0] == '1');
+    const char* devOEnv = std::getenv("DEEP2_GPU_DEVICE_O");
+    const bool useDeviceO = (devOEnv && devOEnv[0] == '1');
+    bool hostAttnDone = false;
+    bool hostODone = false;
+    std::vector<float> attnHostHold;
+    if (kvCache && !useDeviceAttn) {
+        if (!gpu->FlushFusedRestart())
+            return fail();
+        std::vector<float> qh(heads * headDim), kh(kvDim), vh(kvDim), hIn(hidden);
+        if (!gpu->DownloadBuf(gpu->ArenaQ(), qh.data(), heads * headDim) ||
+            !gpu->DownloadBuf(gpu->ArenaK(), kh.data(), kvDim) ||
+            !gpu->DownloadBuf(gpu->ArenaV(), vh.data(), kvDim) ||
+            !gpu->DownloadHidden(hIn.data(), hidden))
+            return fail();
+        const size_t kl = kvLayerIdx(layer);
+        if (kl == SIZE_MAX)
+            return fail();
+        const size_t cacheHeads = kvCache->headCount();
+        for (size_t h = 0; h < cacheHeads && h < kvHeads; ++h) {
+            float* kd = kvCache->keyPtr(kl, h, pos);
+            float* vd = kvCache->valuePtr(kl, h, pos);
+            if (!kd || !vd)
+                return fail();
+            if (KvKeepF32Env()) {
+                std::memcpy(kd, kh.data() + h * headDim, headDim * sizeof(float));
+                std::memcpy(vd, vh.data() + h * headDim, headDim * sizeof(float));
+            } else {
+                for (size_t d = 0; d < headDim; ++d) {
+                    kd[d] = fp16RoundTripLocal(kh[h * headDim + d]);
+                    vd[d] = fp16RoundTripLocal(vh[h * headDim + d]);
+                }
+            }
+        }
+        if (layer == 0 && Rc201b::Enabled() && Rc201b::WantPos(pos)) {
+            Rc201b::DumpF32("KV_WRITE_K", 0, pos, kh.data(), kh.size());
+            Rc201b::DumpF32("KV_WRITE_V", 0, pos, vh.data(), vh.size());
+            std::fprintf(stderr, "[01B_KV] side=%s pos=%u seqLen=%u kvDim=%u host=1\n",
+                         Rc201b::Side(), pos, pos + 1, kvDim);
+            std::fflush(stderr);
+        }
+        attnHostHold.assign(heads * headDim, 0.0f);
+        const size_t groupSize = heads / (kvHeads ? kvHeads : 1u);
+        const size_t attend = static_cast<size_t>(pos) + 1;
+        for (uint32_t h = 0; h < heads; ++h) {
+            const size_t kvHead = h / groupSize;
+            if (!AttentionWithCache(qh.data() + h * headDim, *kvCache, kl, kvHead,
+                                    attnHostHold.data() + h * headDim, attend))
+                return fail();
+        }
+        if (!gpu->UploadBuf(gpu->ArenaAttn(), attnHostHold.data(), heads * headDim))
+            return fail();
+        ++counters.attnScoreOps;
+        ++counters.softmaxOps;
+        ++counters.attnValueOps;
+        hostAttnDone = true;
+        if (!useDeviceO && wo.data) {
+            QuantKernelRegistry::Instance().Initialize();
+            auto gemvCpu = QuantKernelRegistry::Instance().GetGEMV(wo.type);
+            if (!gemvCpu)
+                return fail();
+            std::vector<float> oOut(hidden, 0.0f), resid(hidden);
+            gemvCpu(static_cast<const uint8_t*>(wo.data), attnHostHold.data(),
+                    oOut.data(), static_cast<size_t>(hidden),
+                    static_cast<size_t>(hidden));
+            for (uint32_t i = 0; i < hidden; ++i)
+                resid[i] = hIn[i] + oOut[i];
+            if (layer == 0 && pos == 0) {
+                double hN = 0, oN = 0, aN = 0;
+                for (uint32_t i = 0; i < hidden; ++i) {
+                    hN += static_cast<double>(hIn[i]) * hIn[i];
+                    oN += static_cast<double>(oOut[i]) * oOut[i];
+                }
+                for (float x : attnHostHold)
+                    aN += static_cast<double>(x) * x;
+                std::fprintf(stderr,
+                    "[HOST_O_GEMV] woType=%d aNorm=%.6e hNorm=%.6e oNorm=%.6e\n",
+                    wo.type, std::sqrt(aN), std::sqrt(hN), std::sqrt(oN));
+                std::fflush(stderr);
+            }
+            if (layer == 0 && Rc201b::Enabled() && Rc201b::WantPos(pos)) {
+                Rc201b::DumpF32("ATTN_OUT", 0, pos, attnHostHold.data(),
+                                attnHostHold.size());
+                Rc201b::DumpF32("O_PROJ", 0, pos, oOut.data(), oOut.size());
+                Rc201b::DumpF32("AFTER_ATTN_RESIDUAL", 0, pos, resid.data(),
+                                resid.size());
+            }
+            if (!gpu->UploadBuf(gpu->ArenaResidual(), resid.data(), hidden) ||
+                !gpu->FlushFusedRestart())
+                return fail();
+            ++counters.oProjOps;
+            ++counters.residualOps;
+            hostODone = true;
+        }
+        static int s_hostAttnOnce = 0;
+        if (!s_hostAttnOnce) {
+            s_hostAttnOnce = 1;
+            std::fprintf(stderr,
+                "GPU_HOST_ATTN=1 HOST_O_GEMV=%d FIRST_OP=O_PROJ "
+                "(DEEP2_GPU_DEVICE_O/ATTN=1 restores device)\n",
+                hostODone ? 1 : 0);
+            std::fflush(stderr);
+        }
+    }
+
+    // Device KV append kept for optional device-attn / diagnostics.
     if (!gpu->AppendKV(gpu->ArenaK(), gpu->ArenaV(), kvDim, pos, layer)) {
         gpuForwardTrace("layer fail: AppendKV");
         return fail();
     }
-    // The adapter retains the historical parameter name `kvDim`, but its
-    // implementation forwards this value as the backend's KV-head count.
-    // Pass kvHeads here; the flattened width was already used by AppendKV.
-    if (!gpu->DispatchAttnDecode(gpu->ArenaQ(), gpu->ArenaKCache(),
-                                 gpu->ArenaVCache(), gpu->ArenaAttn(), pos + 1,
-                                 headDim, heads, kvHeads,
-                                 1.0f / std::sqrt(static_cast<float>(headDim)),
-                                 layer)) {
-        gpuForwardTrace("layer fail: DispatchAttnDecode");
-        return fail();
+
+    if (!hostAttnDone) {
+        if (layer == 0 && Rc201b::Enabled() && Rc201b::WantPos(pos)) {
+            const bool flushed = gpu->FlushFusedRestart();
+            std::vector<float> kh(kvDim), vh(kvDim);
+            if (flushed &&
+                gpu->DownloadBuf(gpu->ArenaK(), kh.data(), kvDim) &&
+                gpu->DownloadBuf(gpu->ArenaV(), vh.data(), kvDim)) {
+                Rc201b::DumpF32("KV_WRITE_K", 0, pos, kh.data(), kh.size());
+                Rc201b::DumpF32("KV_WRITE_V", 0, pos, vh.data(), vh.size());
+                std::fprintf(stderr, "[01B_KV] side=%s pos=%u seqLen=%u kvDim=%u\n",
+                             Rc201b::Side(), pos, pos + 1, kvDim);
+                std::fflush(stderr);
+            }
+        }
+        if (!gpu->DispatchAttnDecode(gpu->ArenaQ(), gpu->ArenaKCache(),
+                                     gpu->ArenaVCache(), gpu->ArenaAttn(), pos + 1,
+                                     headDim, heads, kvHeads,
+                                     1.0f / std::sqrt(static_cast<float>(headDim)),
+                                     layer)) {
+            gpuForwardTrace("layer fail: DispatchAttnDecode");
+            return fail();
+        }
+        ++counters.attnScoreOps;
+        ++counters.softmaxOps;
+        ++counters.attnValueOps;
     }
-    ++counters.attnScoreOps;
-    ++counters.softmaxOps;
-    ++counters.attnValueOps;
 
-    if (!gemv(wo, gpu->ArenaAttn(), gpu->ArenaDown(), hidden, hidden) ||
-        !gpu->DispatchResidualAdd(gpu->ArenaHidden(), gpu->ArenaDown(),
-                                  gpu->ArenaResidual(), hidden))
-        return fail();
-    ++counters.oProjOps;
-    ++counters.residualOps;
+    // RC2-01B-4: attn before O — skip extra flush when host path already dumped.
+    if (!hostODone && layer == 0 && Rc201b::Enabled() && Rc201b::WantPos(pos)) {
+        const bool flushed = gpu->FlushFusedRestart();
+        std::vector<float> ah(heads * headDim);
+        if (flushed &&
+            gpu->DownloadBuf(gpu->ArenaAttn(), ah.data(), heads * headDim)) {
+            Rc201b::DumpF32("ATTN_OUT", 0, pos, ah.data(), ah.size());
+            std::fprintf(stderr,
+                "[01B_ATTN] side=%s pos=%u seqLen=%u scale=%.8e heads=%u kvHeads=%u\n",
+                Rc201b::Side(), pos, pos + 1,
+                1.0f / std::sqrt(static_cast<float>(headDim)), heads, kvHeads);
+            std::fflush(stderr);
+        }
+    }
 
+    // RC2-02: after first decode attn, dump Q/K/attn norms (layer 0 only).
+    if (!hostODone && wantL0Decode) {
+        static uint32_t s_l0AttnPos = UINT32_MAX;
+        if (s_l0AttnPos != pos) {
+            s_l0AttnPos = pos;
+            const bool flushed = gpu->FlushFusedRestart();
+            std::vector<float> qh(heads * headDim), kh(kvDim), ah(heads * headDim);
+            const bool qd = flushed &&
+                gpu->DownloadBuf(gpu->ArenaQ(), qh.data(), heads * headDim);
+            const bool kd = flushed &&
+                gpu->DownloadBuf(gpu->ArenaK(), kh.data(), kvDim);
+            const bool ad = flushed &&
+                gpu->DownloadBuf(gpu->ArenaAttn(), ah.data(), heads * headDim);
+            auto l2 = [](const std::vector<float>& v) {
+                double s = 0.0;
+                for (float x : v) s += static_cast<double>(x) * x;
+                return std::sqrt(s);
+            };
+            std::fprintf(stderr,
+                "[LAYER0_DECODE_ATTN] pos=%u seq=%u dlQ=%d dlK=%d dlA=%d "
+                "qNorm=%.6e kNorm=%.6e attnNorm=%.6e "
+                "q0..3=%.6e %.6e %.6e %.6e a0..3=%.6e %.6e %.6e %.6e\n",
+                pos, pos + 1, qd ? 1 : 0, kd ? 1 : 0, ad ? 1 : 0,
+                l2(qh), l2(kh), l2(ah),
+                qh[0], qh[1], qh[2], qh[3], ah[0], ah[1], ah[2], ah[3]);
+            std::fflush(stderr);
+        }
+    }
+
+    if (!hostODone) {
+        if (!gemv(wo, gpu->ArenaAttn(), gpu->ArenaDown(), hidden, hidden) ||
+            !gpu->DispatchResidualAdd(gpu->ArenaHidden(), gpu->ArenaDown(),
+                                      gpu->ArenaResidual(), hidden))
+            return fail();
+        ++counters.oProjOps;
+        ++counters.residualOps;
+        {
+            const bool want01b = (layer == 0 && Rc201b::Enabled() && Rc201b::WantPos(pos));
+            static uint32_t s_l0AttnPos = UINT32_MAX;
+            const bool doL0 = wantL0 && s_l0AttnPos != pos;
+            if (doL0 || want01b) {
+                if (doL0) s_l0AttnPos = pos;
+                const bool flushed = gpu->FlushFusedRestart();
+                std::vector<float> rh(hidden), oh(hidden);
+                const bool rd = flushed &&
+                    gpu->DownloadBuf(gpu->ArenaResidual(), rh.data(), hidden);
+                const bool od = flushed &&
+                    gpu->DownloadBuf(gpu->ArenaDown(), oh.data(), hidden);
+                if (doL0) {
+                    double rNorm = 0.0;
+                    for (float x : rh) rNorm += static_cast<double>(x) * x;
+                    rNorm = std::sqrt(rNorm);
+                    std::fprintf(stderr,
+                        "[LAYER0_AFTER_ATTN] pos=%u dl=%d flush=%d rNorm=%.6e "
+                        "r0..5=%.6e %.6e %.6e %.6e %.6e %.6e\n",
+                        pos, rd ? 1 : 0, flushed ? 1 : 0, rNorm,
+                        rh[0], rh[1], rh[2], rh[3], rh[4], rh[5]);
+                    std::fflush(stderr);
+                }
+                if (want01b && od)
+                    Rc201b::DumpF32("O_PROJ", 0, pos, oh.data(), oh.size());
+                if (want01b && rd)
+                    Rc201b::DumpF32("AFTER_ATTN_RESIDUAL", 0, pos, rh.data(),
+                                    rh.size());
+            }
+        }
+    }
     if (!gpu->DispatchRmsNorm(gpu->ArenaResidual(), ffnNormDevice,
                               gpu->ArenaNormed(), hidden, modelWeights.normEps) ||
         !gemv(lw.wGate, gpu->ArenaNormed(), gpu->ArenaGate(), intermediate, hidden) ||
@@ -446,6 +874,43 @@ bool Deep2Engine::forwardLayerGpuResident(
     ++counters.ffnNormOps;
     ++counters.ffnActOps;
     ++counters.ffnResidualOps;
+    // BATCH13: FFN stage dumps at L0 WantPos (after full FFN residual).
+    if (layer == 0 && Rc201b::Enabled() && Rc201b::WantPos(pos)) {
+        const bool flushed = gpu->FlushFusedRestart();
+        std::vector<float> nn(hidden), gg(intermediate), uu(intermediate),
+            aa(intermediate), dd(hidden), hh(hidden);
+        if (flushed &&
+            gpu->DownloadBuf(gpu->ArenaNormed(), nn.data(), hidden) &&
+            gpu->DownloadBuf(gpu->ArenaGate(), gg.data(), intermediate) &&
+            gpu->DownloadBuf(gpu->ArenaUp(), uu.data(), intermediate) &&
+            gpu->DownloadBuf(gpu->ArenaFFNAct(), aa.data(), intermediate) &&
+            gpu->DownloadBuf(gpu->ArenaDown(), dd.data(), hidden) &&
+            gpu->DownloadBuf(gpu->ArenaHidden(), hh.data(), hidden)) {
+            // Gate pre-SiLU was overwritten by SwiGLU into FFNAct; dump act/up/down/out.
+            Rc201b::DumpF32("FFN_NORM", 0, pos, nn.data(), nn.size());
+            Rc201b::DumpF32("FFN_UP", 0, pos, uu.data(), uu.size());
+            Rc201b::DumpF32("FFN_ACT", 0, pos, aa.data(), aa.size());
+            Rc201b::DumpF32("FFN_DOWN", 0, pos, dd.data(), dd.size());
+            Rc201b::DumpF32("AFTER_FFN", 0, pos, hh.data(), hh.size());
+            (void)gg;
+        }
+    }
+
+    if (wantL0) {
+        static uint32_t s_l0OutPos = UINT32_MAX;
+        if (s_l0OutPos != pos) {
+            s_l0OutPos = pos;
+            const bool flushed = gpu->FlushFusedRestart();
+            std::vector<float> oh(hidden);
+            const bool od = flushed &&
+                gpu->DownloadBuf(gpu->ArenaHidden(), oh.data(), hidden);
+            std::fprintf(stderr,
+                "[LAYER0_OUT] pos=%u dl=%d flush=%d h0..5=%.6e %.6e %.6e %.6e %.6e %.6e\n",
+                pos, od ? 1 : 0, flushed ? 1 : 0,
+                oh[0], oh[1], oh[2], oh[3], oh[4], oh[5]);
+            std::fflush(stderr);
+        }
+    }
 
     if (ownRecording && !gpu->EndFusedLayer()) return false;
     ++counters.forwardLayers;
@@ -479,24 +944,35 @@ bool Deep2Engine::forwardGpuContiguousRange(
         return false;
     }
     ++gpuFwd_.hostSyncBoundaries;
-    // Record the complete token's layer graph into one command buffer.  The
-    // old path opened/submitted/waited a fused command buffer for every layer,
-    // turning one token into N queue fences.  The device-resident operands and
-    // per-dispatch barriers already provide ordering within a recording, so a
-    // single terminal fence is both safe and substantially cheaper.
-    if (!gpu->BeginFusedLayer()) {
-        gpuForwardTrace("reject: contiguousRange BeginFusedLayer");
-        return false;
-    }
-    for (uint32_t layer = lo; layer <= hi; ++layer) {
-        if (!forwardLayerGpuResident(layer, slot, false, false, false)) {
-            (void)gpu->EndFusedLayer();
+    // RC2-02: optional per-layer fuse (DEEP2_GPU_PER_LAYER_FUSE=1) to isolate
+    // fused multi-layer KV/copy/attn ordering bugs. Default remains one CB.
+    const char* perLayerEnv = std::getenv("DEEP2_GPU_PER_LAYER_FUSE");
+    const bool perLayerFuse = (perLayerEnv && perLayerEnv[0] == '1');
+    if (perLayerFuse) {
+        for (uint32_t layer = lo; layer <= hi; ++layer) {
+            if (!forwardLayerGpuResident(layer, slot, false, false, true))
+                return false;
+        }
+    } else {
+        // Record the complete token's layer graph into one command buffer.  The
+        // old path opened/submitted/waited a fused command buffer for every layer,
+        // turning one token into N queue fences.  The device-resident operands and
+        // per-dispatch barriers already provide ordering within a recording, so a
+        // single terminal fence is both safe and substantially cheaper.
+        if (!gpu->BeginFusedLayer()) {
+            gpuForwardTrace("reject: contiguousRange BeginFusedLayer");
             return false;
         }
-    }
-    if (!gpu->EndFusedLayer()) {
-        gpuForwardTrace("reject: contiguousRange EndFusedLayer");
-        return false;
+        for (uint32_t layer = lo; layer <= hi; ++layer) {
+            if (!forwardLayerGpuResident(layer, slot, false, false, false)) {
+                (void)gpu->EndFusedLayer();
+                return false;
+            }
+        }
+        if (!gpu->EndFusedLayer()) {
+            gpuForwardTrace("reject: contiguousRange EndFusedLayer");
+            return false;
+        }
     }
     if (!gpu->DownloadHidden(hostOut, static_cast<uint32_t>(modelWeights.hiddenDim))) {
         gpuForwardTrace("reject: contiguousRange DownloadHidden");
