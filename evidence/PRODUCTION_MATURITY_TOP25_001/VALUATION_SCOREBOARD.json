@@ -1,13 +1,25 @@
 {
-  "asof_local": "2026-11-13T16:56:00-05:00",
+  "pack": "PRODUCTION_MATURITY_TOP25_001",
+  "asof_local": "2026-11-13T17:12:00-05:00",
+  "branch": "feature/ide-agentic-product-path-20261026",
   "promote": 0,
   "certified": 0,
   "tip_climb": "HOLD",
-  "scores": {"CLI_SCORE_PCT": 48, "GUI_SCORE_PCT": 60, "OVERALL_PCT": 48, "CONJUNCTION_PASS": 0},
-  "tracks": {"CLI_COMPLETE": 0, "GUI_COMPLETE": 0, "EXE_ABSORB_GPU_DEFAULT": 0, "FOUR_PANEL_HWND_E2E": "CLOSED_HWND_BP_OPEN", "GUI_AHEAD_OF_CLI": 1},
-  "blockers": {"B2": "CLOSED_HWND", "B3": "CLOSED_HWND_BP_OPEN", "B4": "OPEN"},
-  "exe_sha256": "D9589D9A665E07F93E906A637B9D4ADB80D99BFD9604103A882E6AC79078BC08",
-  "cross_sha_credit": 0,
-  "gui_auth": "GUI_TOP25_VALUATION_001",
-  "commit": "58040deca5"
+  "invent_pass": 0,
+  "scores": {
+    "CLI_SCORE_PCT": 48,
+    "GUI_SCORE_PCT": 32,
+    "OVERALL_PCT": 32,
+    "CONJUNCTION_PASS": 0
+  },
+  "tracks": {
+    "CLI_COMPLETE": 0,
+    "GUI_COMPLETE": 0,
+    "DENSE_GPU_CANARY_SEALED": 1,
+    "EXE_RELINK": "PENDING_LINK",
+    "EXE_SHA256": "D9589D9A665E07F93E906A637B9D4ADB80D99BFD9604103A882E6AC79078BC08",
+    "DEEP2BRIDGE_C2039_FIX_SOURCE": 1,
+    "EXE_ABSORB_GPU_DEFAULT": 0,
+    "REJECT_GUI60_INVENT": 1
+  }
 }
