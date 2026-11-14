@@ -1,0 +1,60 @@
+MULTI_FAMILY_LLAMA32_QDIM084_FROZEN617_RESTORE_001
+ASOF_LOCAL=2026-11-13T23:43:00-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 NOT_RUN!=PASS
+FORCE=0 HOST_DECODE=0 REJECT_FORCE_ABSORB=1 TIP_ABSORB=N
+CROSS_SHA_CREDIT=0
+DURABLE=0
+ENTERPRISE_CERT=0/128 (RELATED/NOT_RUN only; no PASS invent)
+GATE_CLOSED=0
+
+## Hash verify
+LOCKED_617F_SNAP=clean_link/LOCKED/RawrXD-Win32IDE_gemma_qdim084_617F784E.exe
+EXE_SHA256=617F784ED72938E029BA57FF0B63D8EAF1C16994860468A3BA62E08ECCE7DD1E
+HASH_VERIFY=PASS
+TIP_BIN=bin/RawrXD-Win32IDE.exe
+TIP_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431
+TIP_STILL_6754=1 TIP_RO=1 TIP_UNTOUCHED=1
+
+## Corpus note (path a)
+Exact archived obj set that bit-produced 617F784E was NOT found on disk.
+Nearest frozen link corpus used instead:
+  base_rsp=obj084_m1m2_hotseh/link084.rsp (22:30 era; HotPatcher+elastic+probe stubs)
+  Deep2Engine=Restore-only /Zi AVX512 on 617Fbase+Restore (obj084_frozen617; 16973655B)
+  product_deep2_infer_seh=obj078 bak_pre_seh078 (pre-617F)
+  Elastic=obj083_elastic_idemp
+  cmake companions mostly mtime<=22:28 (940/947)
+Avoided drifted link084_qdim.rsp mars_keep absolute companions.
+
+## Private cand
+EXE=clean_link/LOCKED/RawrXD-Win32IDE_gemma_qdim084_frozen617_restore.exe
+EXE_SHA256=4635C4E69422D80C66397F00AC54FAC7679EE45BA38CEA6D3FDE63651D8AE5AD
+SHA16=4635C4E69422D80C
+STRINGS=RESTORE=1 KEEP_GPU=0
+DELTA=TOKEN_EMBD_STREAM_RESTORE only on 617Fbase Engine; linked on frozen m1m2-class corpus
+
+## Measured 2× llama32 Q2_K headless
+| Run | OPEN | OPEN_SEH | EVICT | STREAM_ENTER | STREAM_SEH | TOK | Notes |
+|-----|-----:|---------:|------:|-------------:|-----------:|----:|-------|
+| #1 234148 | 0 | 0 | 0 | 0 | 0 | 0 | POST_LOAD gguf=0; ALLOC=1; EXIT=NULL |
+| #2 234202 | 0 | 0 | 0 | 0 | 0 | 0 | same |
+
+TOK_X2=0×2
+DURABLE_TOKEN_SURVIVED=0
+DURABLE=0
+
+## ROOT one-liner
+Frozen m1m2-class corpus + Restore-only Engine clears prior OPEN_SEH (VA=-8), but
+RAW_RUN_OPEN fails stage=POST_LOAD gguf=0 (no Body POST_LOAD_ROOTS on this rsp) →
+OPEN_PASS=0; Restore never reached. Exact 617F obj archive still absent;
+path (b) in-image Restore on LOCKED 617F (OPEN=1 baseline) remains open.
+
+## NEXT_OWNER
+PRIVATE_CAND_INIMAGE_RESTORE_ON_LOCKED_617F_OR_FROZEN_PLUS_POST_LOAD_BODY
+= (b) in-image Restore inject on LOCKED 617F784E snap (OPEN=1 ENTER=1 baseline), OR
+  (a2) frozen corpus + RawrRunSession_Body POST_LOAD_ROOTS (no keepGPU) then remasure 2×
+
+WITNESS=ide_mf_qdim084_frozen617_restore_llama32_4635C4E69422D80C_*_LATEST.meta.txt
+
+PROMOTE=0
+TIP_CLIMB=HOLD
+END
