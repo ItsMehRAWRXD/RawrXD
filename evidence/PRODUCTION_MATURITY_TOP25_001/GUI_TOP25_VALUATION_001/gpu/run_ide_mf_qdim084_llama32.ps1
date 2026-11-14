@@ -2,10 +2,10 @@
 param([int]$MaxTok = 8)
 $ErrorActionPreference = "Continue"
 $ev = "G:\~dev\rawrxd\evidence\PRODUCTION_MATURITY_TOP25_001\GUI_TOP25_VALUATION_001\gpu"
-$exe = "G:\~dev\rawrxd\evidence\PRODUCTION_MATURITY_TOP25_001\GUI_TOP25_VALUATION_001\clean_link\RawrXD-Win32IDE_gemma_qdim084.exe"
+$exe = "G:\~dev\rawrxd\evidence\PRODUCTION_MATURITY_TOP25_001\GUI_TOP25_VALUATION_001\clean_link\LOCKED\RawrXD-Win32IDE_gemma_qdim084.exe"
 $model = "G:\~dev\rawrxd\models\llama3.2-3b-Q2_K.gguf"
 $tip = "G:\~dev\rawrxd\bin\RawrXD-Win32IDE.exe"
-$expect = "4F76D501D2399315AE1A7936D96159FFD741E5ED8151990F12323440265D5890"
+$expect = "23B5115FC108D8F7EBE72A2C948D1D6A7C6443ABF54C08295D86559E21A32232"
 $tipExpect = "6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431"
 if (-not (Test-Path $exe)) { throw "EXE_MISSING" }
 if (-not (Test-Path $model)) { throw "MODEL_MISSING" }

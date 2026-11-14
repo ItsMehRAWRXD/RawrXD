@@ -118,6 +118,9 @@ VRAMLease* VRAMManager::Allocate(
 }
 
 bool VRAMManager::Evict(VRAMLease* lease) {
+    /* Do not refuse pinned/non-hotpatchable here: Host-policy Evict during
+     * placeAll must succeed for token_embd so OPEN/POST_LOAD stays green
+     * (keep-at-place → gguf=0 OPEN_FAIL on llama32). Stream path Restores. */
     if (!lease || !lease->IsResident()) {
         return false;
     }

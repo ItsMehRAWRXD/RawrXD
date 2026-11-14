@@ -100,6 +100,7 @@
 #include "SlidingWindowEngine.h"
 #include "MoEWeightsLoader.hpp"
 #include "HotPatcher.hpp"
+#include "HotPatcherSafety.hpp"
 #include "Deep2LivePath.hpp"
 #include "Deep2LivePath_Internal.hpp"
 #include "DecodeFeedbackProbe.hpp"
@@ -1540,6 +1541,11 @@ Deep2Engine::~Deep2Engine() {
     // Cyclone/elastic threads MUST stop before any heap they touch is freed.
     std::fprintf(stderr, "[LIFE] ~Deep2Engine BEGIN\n");
     std::fflush(stderr);
+    /* Disarm HotPatcher UEF before teardown — open-fail path AVs were nesting
+     * into emergencyRollback (WER FaultOffset 0x120ed2/0x120f4d on 187BFC4C). */
+    CrashRecovery::shutdown();
+    std::fprintf(stderr, "[LIFE] CrashRecovery disarmed\n");
+    std::fflush(stderr);
     resetGenQualityProbe();
 
     std::fprintf(stderr, "[LIFE] disableMARS\n");
@@ -1747,6 +1753,16 @@ bool Deep2Engine::initialize(const EngineConfig& cfg) {
 
     initialized = true;
     enableAllEnhancements();
+    /* Repair: enhancement FATAL/COMDAT skew can clear loaded while roots remain
+     * — POST_LOAD gguf=0 then blocks GENERATE_STREAM_ENTER. */
+    if (!modelWeights.loaded && modelWeights.numLayers > 0 &&
+        (modelWeights.tokenEmbed.data || modelWeights.tokenEmbed.hasFileBacking ||
+         modelWeights.tokenEmbed.sizeBytes > 0)) {
+        modelWeights.loaded = true;
+        std::fprintf(stderr, "MODEL_LOADED_REPAIR=1 after_enhance layers=%zu\n",
+                     modelWeights.numLayers);
+        std::fflush(stderr);
+    }
     printf("[Deep2Engine] Initialization complete\n");
     return true;
 }
@@ -5034,14 +5050,18 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight, const float* input,
             nW = normWeight.rows;
     }
 
-    // ATTN_PRE_O_1: match ggml_rms_norm float sum-of-squares (not double).
-    // Double sum left ATTN_NORM_1 residual that flipped V_1 FP16 RNE @dim59.
-    float sumSq = 0.0f;
+    /* Match ggml_compute_forward_rms_norm_f32:
+       sum += (ggml_float)(x[i]*x[i]) with ggml_float=double; mean=(float)(sum/n);
+       scale=1.0f/sqrtf(mean+eps). Float-only sumSq (51e89df) regressed
+       FFN_DOWN_0@pos0 (~7.5e-5) → V_1@pos0 → ATTN_PRE_O_1@pos1. */
+    double sumSq = 0.0;
     size_t i = 0;
-    for (; i < dim; ++i)
-        sumSq += input[i] * input[i];
-    float meanSq = sumSq / static_cast<float>(dim);
-    float invRms = 1.0f / std::sqrt(meanSq + eps);
+    for (; i < dim; ++i) {
+        const float xi = input[i];
+        sumSq += static_cast<double>(xi * xi);
+    }
+    const float meanSq = static_cast<float>(sumSq / static_cast<double>(dim));
+    const float invRms = 1.0f / sqrtf(meanSq + eps);
     __m256 vinvRms = _mm256_set1_ps(invRms);
 
     // Apply normalization + weight with AVX2
@@ -7625,6 +7645,43 @@ Deep2::GenerationResult Deep2Engine::generateStream(
     rawr::batch007::A().maxTokensReq = options.maxTokens;
     rawr::batch007::A().ctxSize = config.maxSeqLen;
     rawr::batch007::A().vocabExt = 1;
+    /* After open Host-Evict of token_embd: Restore before stream so GPU
+     * product decode does not SEH on VA=-1. Does not change POST_LOAD. */
+    {
+        const char* hd = std::getenv("RAWRXD_HOST_DECODE");
+        const bool hostDecode = (hd && hd[0] == '1');
+        if (!hostDecode && marsEnabled_ && marsController_) {
+            auto* vm = marsController_->GetVRAMManager();
+            if (vm) {
+                for (auto* lease : vm->SnapshotLeases()) {
+                    if (!lease) continue;
+                    if (lease->name != "token_embd.weight" &&
+                        lease->name != "token_embeddings.weight")
+                        continue;
+                    if (lease->state == Deep2::MARS::LeaseState::EVICTED) {
+                        if (vm->Restore(lease, 0)) {
+                            lease->pinned = true;
+                            std::fprintf(stderr,
+                                "TOKEN_EMBD_STREAM_RESTORE=1 gpu=%d\n",
+                                lease->currentGPU);
+                            std::fflush(stderr);
+                        } else {
+                            std::fprintf(stderr,
+                                "TOKEN_EMBD_STREAM_RESTORE=0\n");
+                            std::fflush(stderr);
+                        }
+                    } else if (lease->IsResident()) {
+                        lease->pinned = true;
+                        std::fprintf(stderr,
+                            "TOKEN_EMBD_STREAM_RESIDENT=1 gpu=%d\n",
+                            lease->currentGPU);
+                        std::fflush(stderr);
+                    }
+                    break;
+                }
+            }
+        }
+    }
     choreo::ApplyLawEnv();
     const auto productWallT0 = std::chrono::high_resolution_clock::now();
     /* EV512 observational only ? product stream does not require DEEP2_EV512. */
@@ -11192,10 +11249,26 @@ void Deep2Engine::computeLogits(const float* hiddenState, float* logits) {
 void Deep2Engine::resetGenQualityProbe() {
     genQualityOrdinal_ = 0;
     genQualityTokRoundtrip_ = 1;
-    if (genQualityProbe_) {
-        delete static_cast<D2GenQualityProbe*>(genQualityProbe_);
-        genQualityProbe_ = nullptr;
+    // AVFIX083: STREAM_SEH READ VA=-1 in ucrt fclose — poison FILE* or wild
+    // genQualityProbe_ after llama32 elastic heap thrash. Disarm; never fclose.
+    void* raw = genQualityProbe_;
+    genQualityProbe_ = nullptr;
+    if (!raw) return;
+#ifdef _WIN32
+    MEMORY_BASIC_INFORMATION mbi{};
+    if (VirtualQuery(raw, &mbi, sizeof(mbi)) == 0 || mbi.State != MEM_COMMIT ||
+        !(mbi.Protect & (PAGE_READONLY | PAGE_READWRITE | PAGE_WRITECOPY |
+                         PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE |
+                         PAGE_EXECUTE_WRITECOPY))) {
+        std::fprintf(stderr, "AVFIX083_SKIP_WILD_PROBE=%p\n", raw);
+        std::fflush(stderr);
+        return;
     }
+#endif
+    auto* p = static_cast<D2GenQualityProbe*>(raw);
+    p->f = nullptr;
+    p->owned = false;
+    delete p;
 }
 
 void Deep2Engine::armGenQualityProbe() {
@@ -13683,34 +13756,18 @@ Deep2Engine::MARSPlacementReport Deep2Engine::placeAllModelTensorsMARS() {
             report.oom++;
             return;
         }
-        // Honor ExecutionPolicy device. AutoDetect defaults embeddings→Host,
-        // so Place then Evicts token_embd (~300MB) before stream — llama32
-        // EXIT=NULL / STREAM_SEH. Keep ONLY token_embd resident under GPU
-        // product (name-exact). Broad keepGPU (pin||IsPinnedPattern) rejected:
-        // 1EFF8608 POST_LOAD/OPEN_FAIL.
+        // Honor ExecutionPolicy device. embeddings AutoDetect=Host → Place then
+        // Evict token_embd during open (required for llama32 POST_LOAD/OPEN).
+        // keep-at-place / keepGPU rejected: 1EFF+F73F gguf=0 OPEN_FAIL.
+        // Stream path Restores embd before GENERATE_STREAM_ENTER.
         {
             using namespace Deep2::Exec;
             EnsurePolicyLoaded();
             const DeviceKind want =
                 PlannedDeviceForTensor(ActivePolicy(), name, layer);
             const int wantGpu = DeviceKindToGpuIndex(want);
-            const char* fg = std::getenv("RAWR_FORCE_GPU");
-            const char* ag = std::getenv("RAWRXD_ALLOW_GPU");
-            const char* hd = std::getenv("RAWRXD_HOST_DECODE");
-            const bool gpuProduct =
-                vulkanEnabled_ ||
-                (fg && fg[0] == '1') || (ag && ag[0] == '1');
-            const bool hostDecode = (hd && hd[0] == '1');
-            const bool keepTokenEmbd =
-                gpuProduct && !hostDecode && pin &&
-                (name == "token_embd.weight" ||
-                 name == "token_embeddings.weight");
-            if (keepTokenEmbd) {
-                lease->pinned = true;
-                printf("[Deep2Engine] MARS token_embd GPU-resident "
-                       "(skip Host Evict; name-exact)\n");
-            } else if (want == DeviceKind::Stream || want == DeviceKind::Disk ||
-                       want == DeviceKind::Host) {
+            if (want == DeviceKind::Stream || want == DeviceKind::Disk ||
+                want == DeviceKind::Host) {
                 if (lease->currentGPU >= 0)
                     marsController_->GetVRAMManager()->Evict(lease);
             } else if (wantGpu >= 0 && lease->currentGPU != wantGpu) {

@@ -120,6 +120,17 @@ inline bool RAWR_RUN_OPEN_NAME(Deep2Engine& e, const char* alias, RunWitness& w)
         return false;
     }
     w.ggufOpened = e.isModelLoaded() ? 1 : 0;
+    if (!w.ggufOpened) {
+        const auto& mwRepair = e.getModelWeights();
+        if (mwRepair.numLayers > 0 &&
+            (mwRepair.tokenEmbed.data || mwRepair.tokenEmbed.hasFileBacking ||
+             mwRepair.tokenEmbed.sizeBytes > 0)) {
+            w.ggufOpened = 1;
+            std::fprintf(stderr, "POST_LOAD_ROOTS_REPAIR=1 layers=%zu\n",
+                         mwRepair.numLayers);
+            std::fflush(stderr);
+        }
+    }
     w.tokenizerReady = e.tokenize("hi").empty() ? 0 : 1;
     auto ct = ChatTemplate::detectFromModel(e.getModelMetadata().architecture,
                                             ar.alias.c_str());
