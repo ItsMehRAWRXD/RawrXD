@@ -1,0 +1,1 @@
+trial=4 name=p4r4 start_exit=0 start_ok=1 pid=4332 out_exit=8 out_ok=0 marker=0 stop_exit=0 stop_ok=1 cleanup_ok=1 list=p4r2 pid=34264 alive=1 exit=-1 | idem_stop_exit=8 idem_stop_ok=0

@@ -32,6 +32,8 @@ Historical / private-cand / partial RUNTIME — cite only. `CROSS_SHA_CREDIT=0`.
 | receipts/G02-08_20261113_P2_LLAMA32_RELATED.md | G02-08 | private OPEN; CERT NOT_RUN |
 | receipts/G06-06_20261113_P2_LLAMA32_RELATED.md | G06-06 | tipbound GEN still OPEN |
 | BR_P2_MARS_KEEP_GPU_AMPLIFIER_001 | G02-08 G06-06 | Host-Evict amplifier SOURCE_WIRED |
+| BR_ATTN_NORM_1_CASCADE_OWNER_R62 D282E57C | G02-04 G02-05 G03-08 | OWNER=ATTN_NORM_1@dim1072; CLOSE=0 |
+| BR_AA4F8530_HOTPATCHER_ROLLBACK_R62 | G02 G03 | AV emergencyRollback+0x88; remasure addrOk |
 
 Update this index when new RELATED receipts land. Never auto-PASS.
 
