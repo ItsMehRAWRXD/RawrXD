@@ -6,7 +6,7 @@ Authority: pasted RAWRXD_ENTERPRISE_PRODUCT_CERT_001 checklist · 0/128 · HELD 
 |----------|--------|-----------|-------------|
 | P0 | Gemma AA4F/tip_land AV (addrOk remasure) | G02-06 G06-06 | C9FB0B48 mid-VRAM; isoA bak→STREAM_SEH; AV_CLOSED=0 |
 | P0 | GPU/ref ATTN_PRE_O_1 V_1 + FFN cascade | G02-04 G02-05 G03-08 | V1 OWNER=ATTN_NORM_1@dim1072 CLOSED=0 maxULP=1; pos1 FA CLOSED (1CAEA762) |
-| P0 | Multi-family OPEN durable (084 remasure) | G02-08 G04-01 G06-06 | SEH=0 but authPASS=0 POST_LOAD; TOK=0 ENTER=0 |
+| P0 | Multi-family STREAM after OPEN (qdim084) | G02-08 G04-01 G06-06 | keepGPU→bad_alloc 23B5115F; 617F Evict path |
 | P1 | C36 LSP startup hangs | G07-01 G07-04 | cand INIT_OK RELATED; tip OPEN |
 | P1 | ConPTY terminal-stop reliability | G05-05 G06-05 | cand PASS RELATED; tip remasure OPEN |
 | P1 | M3 MODEL_SELECTED_TOOL / tipbound | G05-06 G08-01 | FORCE_TOOL PASS; model-select=0 |
@@ -17,9 +17,10 @@ Authority: pasted RAWRXD_ENTERPRISE_PRODUCT_CERT_001 checklist · 0/128 · HELD 
 
 | Pin | OPEN | STREAM_ENTER | TOK | Note |
 |-----|------|--------------|-----|------|
-| 617F784E LOCKED | PASS | 0 | 0 | embd Alloc→Evict (binary pre-keepPinned); EXIT=NULL after HEADLESS_READY |
-| 1EFF8608 keepGPU | FAIL POST_LOAD tensors=31 | 0 | 0 | keep-GPU pin regresses session; do not tip-land |
+| 617F784E LOCKED | PASS | 0/1 | 0 | no keep-GPU string; Evict embed → EXIT=NULL or AV VA=-1 |
+| 1EFF8608 keepGPU | FAIL POST_LOAD | 0 | 0 | keep-GPU regresses session |
+| 23B5115F keepGPU | OPEN+pin | 0 | 0 | bad_alloc 0xE06D7363 @ ProductRun before ENTER |
 
-`NEXT_OWNER=STREAM_AFTER_OPEN` · `DURABLE=0` · `CROSS_SHA_CREDIT=0` · `TIP_CLIMB=HOLD`
+`NEXT_OWNER=PRODUCTRUN_BAD_ALLOC_AFTER_KEEPGPU` · `DURABLE=0` · `CROSS_SHA_CREDIT=0` · `TIP_CLIMB=HOLD`
 
 PROMOTE=0 until all 128 gates PASS with independent sign-off.
