@@ -4,7 +4,7 @@ Authority: pasted RAWRXD_ENTERPRISE_PRODUCT_CERT_001 checklist · 0/128 · HELD 
 
 | Priority | Defect | Near GATE | Disposition |
 |----------|--------|-----------|-------------|
-| P0 | Gemma `INFER_STREAM_SEH` / tip OPEN_SEH AV | G02-06 G06-06 | private OPEN_SKIP TOK=8 on 7FD1; tip 6754616E RO |
+| P0 | Gemma AA4F/tip_land AV (addrOk remasure) | G02-06 G06-06 | C9FB0B48 mid-VRAM; isoA bak→STREAM_SEH; AV_CLOSED=0 |
 | P0 | GPU/ref numerical (FFN_ACT_2 / ATTN_OUT cascade) | G02-04 G02-05 G03-08 | ATTN_PRE_O@pos1 FA CLOSED (1CAEA762); FFN/OUT still OPEN |
 | P0 | Multi-family GUI acceptance (llama32 stream-after-open) | G02-08 G04-01 G06-06 | Elastic+MARS ROOT_CLEAR; DURABLE=0; see STREAM residual |
 | P1 | C36 LSP startup hangs | G07-01 G07-04 | cand INIT_OK RELATED; tip OPEN |
