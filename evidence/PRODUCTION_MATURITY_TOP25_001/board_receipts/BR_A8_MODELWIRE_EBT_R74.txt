@@ -1,0 +1,69 @@
+BR_A8_MODELWIRE_EBT_R74
+GATE_ID=A8_MODEL_WIRE_PEER_EDIT_BUILD_TEST
+ASOF_LOCAL=2026-11-14T06:04:30-05:00
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0 INVENT_PASS=0 CROSS_SHA_CREDIT=0 CAT11=25
+
+PRIOR=BR_A8_MODELWIRE_EBT_R73
+PRIOR_BLOCKER=PARTIAL_EBT_CRUMBS_ONLY (C0000409@~112tok / C0000374; no TOOL_CALL)
+RESUME=A8_EBT_TOOL_CALL_EMIT_AFTER_DECODE_STABLE_NO_C0000409_C0000374
+
+COMMAND=rebuild_a8_ebt_r74.bat (BO ProductDeep2InferStream tok_cap=24 + TOOL_CALL early-stop + completion seed;
+  AOC TinyLlama-chat TOOL_CALL path prefill; AgentPanel _beginthreadex 4MB + budget/bunnyhop/LIVE_MECH env;
+  harness WEIGHT_BUDGET=8192 + BUNNYHOP=0 + stale crumb clear; sizeof 0x2868; no 16MB TU; /FORCE:MULTIPLE peer only)
+  ; harness_a8_remeasure.ps1 → remasure_r74h.log
+EXIT=harness 0; peer EXIT_HEX=0xC0000409
+
+PEER_EXE=GUI_TOP25_VALUATION_001/A8_MODEL_WIRE_PEER/RawrXD-Win32IDE_tip_land_a8_modelwire.exe
+PEER_EXE_SHA256=F170C1BF53F13B6E5023E8E94F08A374247C4856015668510604AC683F953C72
+BEST_PRIOR_SAME_LANE=A8CF69492E866FC170854D0C971B9E4EA53655C08D19BA9CA4ACF0096F653A86 (remeasure_r74e; CROSS_SHA_CREDIT=0)
+TIP_BIND_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431
+TIP_PATH=rawrxd/build_win32ide_link001/bin/RawrXD-Win32IDE.exe
+TIP_UNTOUCHED=1
+TIP_PROOF=Get-FileHash tip EXE == 6754616E… after peer rebuild (tip_sha_after_r74 + live)
+
+ABI:
+  SIZEOF_DEEP2ENGINE=0x2868
+  OFFSETOF_EXT=0x2868
+  PAD=sehAbiPad083_[8]
+
+ROOT_CAUSE (fail-closed):
+  1) R73 long decode (maxTokens=256) → 0xC0000409 mid-layer ReconstructCompression under
+     LivePath STREAM force-arm of NVMe REVERSE_BUNNYHOP (8.72GB/layer reconstruct spam).
+  2) tok_cap=24 + TOOL_CALL stream early-stop + chat-template path prefill → decode STABLE to
+     TOKENS_COMMITTED=4 (first piece=note) — TOOL_CALL JSON closes — then process failfast
+     0xC0000409 mid ProductE2EEmit MEAN_TOKEN_WALL_NS fprintf (post-decode seal teardown).
+  3) Rejected attempts (regress MENU/dialog or early heap): NVMeStream.cpp refuse TU recompile;
+     ProductRunDecode A8_MIN_TEARDOWN TU under peer /FORCE; HOST_DECODE=1 flip after GPU ProductOpen.
+
+FIX_LANDED_SOURCE (peer wire; tip untouched):
+  BackendOrchestrator::RunNativeInferenceSync → ProductDeep2InferStream tok_cap=24 + early-stop
+    on complete TOOL_CALL JSON; completion seed mirrors prompt suffix (not INVENT_FORCE_TOOL)
+  AgentOllamaClient TinyLlama-chat template + TOOL_CALL path prefill
+  AgentPanel _beginthreadex 4MB stack; WEIGHT_BUDGET=8192; BUNNYHOP/LIVE_MECH neutralize env
+  harness pins budget+bunnyhop=0; clears stale MODEL_RESIDENT crumb
+
+CRUMBS (seal run_20261114_060304 on F170C1BF):
+  MENU_READY=1
+  POST_4120=1
+  BOUNDED_DIALOG_FILLED=1
+  MODEL_RESIDENT=1
+  LLM_ERROR_SEEN=0
+  GEN_DEBUG maxTokens=24 remCtx=1988 promptN=60
+  TOKEN piece=note → TOKENS_COMMITTED=4 (TOOL_CALL early-stop)
+  FILES_READ=0 PATCH_APPLIED=0 BUILD_COMPLETED=0 TEST_EXECUTED=0 AGENT_RESULT5=0
+  EDIT_BUILD_TEST_PASS=0
+  EXIT_HEX=0xC0000409
+  BLOCKER=POST_DECODE_SEAL_TEARDOWN_C0000409_AFTER_TOOL_CALL_EARLY_STOP
+
+RESULT=FAIL
+  MENU=1 DIALOG=1 MODEL_RESIDENT=1 proven
+  LLM_ERROR=0; decode advanced with tok_cap=24; TOOL_CALL path emitted/closed (4 tok) then
+  failfast before tool handlers → FILES_READ=0; NOT_RUN≠PASS; CAT11=25 held
+  PROMOTE=0 CERTIFIED=0 CROSS_SHA_CREDIT=0 INVENT_FORCE_TOOL=0
+
+ARTIFACTS=run_20261114_060304/; remasure_r74h.log; remasure_r74e.log (A8CF prior);
+  rebuild_a8_ebt_r74.log; sizeof_r74.txt; logs/MODEL_RESIDENT_CRUMB.txt
+NEXT_GATE=A8_EBT_SURVIVE_POST_DECODE_MEAN_TOKEN_WALL_SEAL_THEN_TOOL_EXEC_FILES_READ
+PROMOTE=0 CERTIFIED=0 CROSS_SHA_CREDIT=0 INVENT_FORCE_TOOL=0
+TIMESTAMP=2026-11-14T06:04:30-05:00
+END

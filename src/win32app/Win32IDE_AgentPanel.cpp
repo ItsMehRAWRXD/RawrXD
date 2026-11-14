@@ -43,7 +43,7 @@
 #include <cstring>
 #include <new>
 #include <string>
-#include <thread>
+#include <process.h>
 #include <windows.h>
 #include "gguf_loader.h"
 
@@ -66,39 +66,73 @@ static int a8ProductOpenSeh(const char* path, unsigned long* sehCodeOut) noexcep
     }
 }
 
-/* Inline worker — no separate 16MB TU /FORCE (MENU=0). Default PE /STACK. */
-static void a8SpawnBoundedLoadInline(HWND hwndNotify, const std::string& path) {
-    std::thread([hwndNotify, path]() {
-        int resident = 0;
-        unsigned long sehCode = 0;
-        _putenv_s("RAWRXD_FORCE_CPU_INFERENCE", "0");
-        _putenv_s("RAWR_FORCE_CPU", "0");
-        _putenv_s("RAWRXD_BRIDGE_CPU_ONLY", "0");
-        _putenv_s("RAWRXD_ALLOW_GPU", "1");
-        _putenv_s("RAWR_FORCE_GPU", "1");
-        _putenv_s("RAWR_NO_CPU_FALLBACK", "1");
-        _putenv_s("RAWRXD_HOST_DECODE", "0");
-        _putenv_s("RAWRXD_PRODUCT_MODEL", path.c_str());
-        const char* how = "ProductOpen_fail";
-        if (a8ProductOpenSeh(path.c_str(), &sehCode)) {
-            resident = 1;
-            how = "ProductOpenSession_direct";
-        } else if (sehCode != 0) {
-            how = "ProductOpen_SEH";
-        }
-        fprintf(stderr, "[BoundedAgent] worker done resident=%d how=%s seh=0x%08lX\n",
-                resident, how, sehCode);
-        fflush(stderr);
-        auto* pathHeap = new (std::nothrow) std::string(path);
-        if (hwndNotify && IsWindow(hwndNotify) && pathHeap) {
-            if (!PostMessageA(hwndNotify, WM_APP + 207, static_cast<WPARAM>(resident),
-                              reinterpret_cast<LPARAM>(pathHeap))) {
-                delete pathHeap;
-            }
-        } else {
+/* 4MB stack via _beginthreadex — no 16MB TU /FORCE (MENU=0). Tip untouched. */
+struct A8LoadArgs {
+    HWND hwndNotify;
+    char path[520];
+};
+static unsigned __stdcall a8BoundedLoadProc(void* p) {
+    auto* args = static_cast<A8LoadArgs*>(p);
+    const char* path = args ? args->path : "";
+    HWND hwndNotify = args ? args->hwndNotify : nullptr;
+    int resident = 0;
+    unsigned long sehCode = 0;
+    _putenv_s("RAWRXD_FORCE_CPU_INFERENCE", "0");
+    _putenv_s("RAWR_FORCE_CPU", "0");
+    _putenv_s("RAWRXD_BRIDGE_CPU_ONLY", "0");
+    _putenv_s("RAWRXD_ALLOW_GPU", "1");
+    _putenv_s("RAWR_FORCE_GPU", "1");
+    _putenv_s("RAWR_NO_CPU_FALLBACK", "1");
+    _putenv_s("RAWRXD_HOST_DECODE", "0");
+    /* Neutralize ArmSpeed E8B0M (59568MiB) — R75 mid-decode trunc / heap risk. */
+    _putenv_s("WEIGHT_BUDGET_MIB", "8192");
+    _putenv_s("DEEP2_WEIGHT_BUDGET_MIB", "8192");
+    /* R74: ArmSpeed SetEnvIfUnset(BUNNYHOP=1) + LivePath STREAM force-arm →
+     * ReconstructCompression 8.72GB/layer → 0xC0000409. Kill STREAM+bunnyhop. */
+    _putenv_s("RAWRXD_NVME_REVERSE_BUNNYHOP", "0");
+    _putenv_s("DEEP2_LIVE_PATH", "0");
+    _putenv_s("RAWRXD_LIVE_PATH", "0");
+    _putenv_s("DEEP2_LIVE_POLICY", "OFF");
+    _putenv_s("DEEP2_LIVE_MECH", "none");
+    _putenv_s("RAWRXD_PRODUCT_MODEL", path);
+    const char* how = "ProductOpen_fail";
+    if (a8ProductOpenSeh(path, &sehCode)) {
+        resident = 1;
+        how = "ProductOpenSession_direct";
+    } else if (sehCode != 0) {
+        how = "ProductOpen_SEH";
+    }
+    fprintf(stderr, "[BoundedAgent] worker done resident=%d how=%s seh=0x%08lX\n",
+            resident, how, sehCode);
+    fflush(stderr);
+    auto* pathHeap = new (std::nothrow) std::string(path);
+    if (hwndNotify && IsWindow(hwndNotify) && pathHeap) {
+        if (!PostMessageA(hwndNotify, WM_APP + 207, static_cast<WPARAM>(resident),
+                          reinterpret_cast<LPARAM>(pathHeap))) {
             delete pathHeap;
         }
-    }).detach();
+    } else {
+        delete pathHeap;
+    }
+    delete args;
+    return 0;
+}
+static void a8SpawnBoundedLoadInline(HWND hwndNotify, const std::string& path) {
+    auto* args = new (std::nothrow) A8LoadArgs{};
+    if (!args) return;
+    args->hwndNotify = hwndNotify;
+    const size_t n = path.size() < sizeof(args->path) - 1 ? path.size()
+                                                         : sizeof(args->path) - 1;
+    memcpy(args->path, path.data(), n);
+    args->path[n] = 0;
+    constexpr unsigned kStack = 4u * 1024u * 1024u;
+    uintptr_t th = _beginthreadex(nullptr, kStack, a8BoundedLoadProc, args, 0,
+                                  nullptr);
+    if (!th) {
+        delete args;
+        return;
+    }
+    CloseHandle(reinterpret_cast<HANDLE>(th));
 }
 
 // ============================================================================
@@ -692,7 +726,7 @@ void Win32IDE::startAgentSession(const std::string& prompt) {
         df.flush();
     } catch (...) {
     }
-    // Inline std::thread ProductOpen — no 16MB TU /FORCE (MENU=0 regression).
+    // _beginthreadex 4MB ProductOpen — no 16MB TU /FORCE (MENU=0 regression).
     a8SpawnBoundedLoadInline(hwndNotify, pathCopy);
 }
 

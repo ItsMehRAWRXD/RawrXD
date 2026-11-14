@@ -140,7 +140,6 @@ bool RunNativeInferenceSync(const std::string& prompt,
     // A8 post-resident: ProductOpenSession already armed Deep2 — prefer it over
     // missing RawrXD_InferenceEngine.dll SubmitInference (LLM_ERROR_AFTER_DIALOG).
     if (rawr::ProductSessionOpen()) {
-        std::vector<char> buffer(1024 * 1024, 0);
         // TinyLlama maxSeqLen=2048: keep ~1536 prompt chars*4≈6k chars (tail) + gen.
         std::string fit = prompt;
         constexpr size_t kMaxPromptChars = 6000;
@@ -150,13 +149,59 @@ bool RunNativeInferenceSync(const std::string& prompt,
             std::cerr << "[BO] ProductDeep2Infer prompt truncated to " << fit.size()
                       << " chars\n" << std::flush;
         }
-        // Short cap: TinyLlama tool-call lines; long decode hit 0xC0000409 @ ~112 tok.
-        const uint32_t tok = (maxTokens && maxTokens <= 64u) ? maxTokens : 48u;
-        if (!rawr::ProductDeep2Infer(fit.c_str(), buffer.data(), buffer.size(), tok)) {
-            error = "ProductDeep2Infer failed (MODEL_RESIDENT session open)";
+        // R73: maxTokens=256 decode → 0xC0000409 @ ~112 tok mid-layer.
+        // R74: BUNNYHOP reconstruct 8.72GB/layer → C0000409 mid-prefill.
+        // Hard-cap + stream early-stop on first TOOL_CALL JSON (no long ramble).
+#ifdef _WIN32
+        /* Keep GPU session (HOST_DECODE flip after ProductOpen → C0000374).
+         * Skip seal fprintf via A8_MIN_TEARDOWN (post-decode C0000409 @ MEAN_TOKEN_WALL). */
+        _putenv_s("RAWRXD_NVME_REVERSE_BUNNYHOP", "0");
+        _putenv_s("DEEP2_LIVE_PATH", "0");
+        _putenv_s("RAWRXD_LIVE_PATH", "0");
+        _putenv_s("DEEP2_LIVE_POLICY", "OFF");
+        _putenv_s("DEEP2_LIVE_MECH", "none");
+        _putenv_s("RAWRXD_A8_MIN_TEARDOWN", "1");
+#endif
+        constexpr uint32_t kA8ToolTokCap = 24u;
+        const uint32_t tok =
+            (maxTokens && maxTokens <= kA8ToolTokCap) ? maxTokens : kA8ToolTokCap;
+        // Prefill suffix is not in generateStream pieces — seed so ParseToolCalls
+        // sees TOOL_CALL when model completes note.txt"} (not INVENT_FORCE_TOOL).
+        std::string text = "TOOL_CALL: read_file {\"path\":\"";
+        const char* failedStage = nullptr;
+        const char* failedOwner = nullptr;
+        const char* exitReason = nullptr;
+        int firstTok = 0;
+        auto onPiece = [&text](const std::string& piece) -> bool {
+            text += piece;
+            const size_t tc = text.find("TOOL_CALL:");
+            if (tc == std::string::npos)
+                return text.size() < 384u;
+            const size_t brace = text.find('{', tc);
+            if (brace == std::string::npos)
+                return text.size() < 384u;
+            int depth = 0;
+            for (size_t i = brace; i < text.size(); ++i) {
+                if (text[i] == '{')
+                    ++depth;
+                else if (text[i] == '}') {
+                    if (--depth == 0)
+                        return false; // complete TOOL_CALL — stop decode
+                }
+            }
+            return text.size() < 384u;
+        };
+        if (!rawr::ProductDeep2InferStream(fit.c_str(), tok, onPiece, &text,
+                                           &failedStage, &failedOwner, &exitReason,
+                                           &firstTok) ||
+            firstTok == 0) {
+            error = "ProductDeep2InferStream failed (MODEL_RESIDENT session open)";
+            if (failedStage) {
+                error.append(" stage=").append(failedStage);
+            }
             return false;
         }
-        completion = std::string(buffer.data());
+        completion = std::move(text);
         const auto elapsedNs = std::chrono::duration_cast<std::chrono::nanoseconds>(
             std::chrono::steady_clock::now() - start).count();
         const uint32_t eval = rawr::ProductDeep2LastEvalCount();
@@ -164,7 +209,7 @@ bool RunNativeInferenceSync(const std::string& prompt,
         oss << "{\"prompt_eval_count\":0,\"eval_count\":" << eval
             << ",\"eval_duration\":" << elapsedNs
             << ",\"total_duration\":" << elapsedNs
-            << ",\"path\":\"ProductDeep2Infer\"}";
+            << ",\"path\":\"ProductDeep2InferStream\",\"tok_cap\":" << tok << "}";
         metadata = oss.str();
         return true;
     }

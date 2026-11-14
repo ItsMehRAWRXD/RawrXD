@@ -91,6 +91,17 @@ $psi.EnvironmentVariables['RAWRXD_SKIP_DEFERRED_MODEL_LOAD']='1'
 $psi.EnvironmentVariables['SKIP_DEFERRED_MODEL_LOAD']='1'
 $psi.EnvironmentVariables['RAWRXD_DEFAULT_MODEL']=$model
 $psi.EnvironmentVariables['RAWRXD_PRODUCT_MODEL']=$model
+# Pin residency — neutralize ArmSpeed E8B0M (59568MiB) before ProductOpen.
+$psi.EnvironmentVariables['WEIGHT_BUDGET_MIB']='8192'
+$psi.EnvironmentVariables['DEEP2_WEIGHT_BUDGET_MIB']='8192'
+$psi.EnvironmentVariables['WEIGHT_BUDGET_INPUT']='8192'
+# Kill reverse bunnyhop reconstruct (R74 C0000409 mid-prefill on TinyLlama).
+$psi.EnvironmentVariables['RAWRXD_NVME_REVERSE_BUNNYHOP']='0'
+# Clear stale MODEL_RESIDENT crumb from prior peer runs (R73e false-positive).
+$staleCrumb = Join-Path $peerRoot 'logs\MODEL_RESIDENT_CRUMB.txt'
+if (Test-Path $staleCrumb) { Remove-Item $staleCrumb -Force -EA SilentlyContinue }
+$staleDisp = Join-Path $peerRoot 'logs\MODEL_LOAD_DISPATCH.txt'
+if (Test-Path $staleDisp) { Remove-Item $staleDisp -Force -EA SilentlyContinue }
 $sw=[Diagnostics.Stopwatch]::StartNew()
 $proc=[Diagnostics.Process]::Start($psi)
 WLog "SPAWN_PID=$($proc.Id)"

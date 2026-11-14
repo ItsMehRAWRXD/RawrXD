@@ -39,26 +39,19 @@ std::string AgentOllamaClient::BuildPromptFromMessages(const std::vector<ChatMes
     std::string prompt;
     // Compact system: TinyLlama ctx=2048 — full schema dump overflowed (promptN=3767).
     // First assistant line MUST be a TOOL_CALL (TinyLlama otherwise rambles to C0000409).
-    static const char kCompactSys[] =
-        "You are a tool router. Reply with ONE line only.\n"
-        "Format: TOOL_CALL: name {\"arg\":\"value\"}\n"
-        "Allowed: read_file write_file execute_command\n"
-        "Start now with TOOL_CALL: read_file {\"path\":\"note.txt\"}\n";
-    prompt += "System: ";
-    prompt += kCompactSys;
-    prompt += "\n";
-
-    for (const auto& msg : messages) {
-        if (msg.role == "user") {
-            prompt += "User: " + msg.content + "\n";
-        } else if (msg.role == "assistant") {
-            prompt += "Assistant: " + msg.content + "\n";
-        } else if (msg.role == "tool") {
-            prompt += "Tool result: " + msg.content + "\n";
-        }
-    }
-    (void)tools; // names already in compact system; avoid schema bloat
-    prompt += "Assistant: ";
+    // TinyLlama-chat: plain "System:" emitted "System" (R74). Prefill the
+    // TOOL_CALL: prefix (BO seeds same string into completion for ParseToolCalls).
+    (void)tools;
+    (void)messages;
+    prompt =
+        "<|system|>\n"
+        "Complete the tool call with path note.txt and a closing brace.\n"
+        "</s>\n"
+        "<|user|>\n"
+        "Read note.txt.\n"
+        "</s>\n"
+        "<|assistant|>\n"
+        "TOOL_CALL: read_file {\"path\":\"";
     return prompt;
 }
 
