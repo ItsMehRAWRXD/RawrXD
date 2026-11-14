@@ -19,6 +19,8 @@ Historical / private-cand / partial RUNTIME — cite only. `CROSS_SHA_CREDIT=0`.
 | M4 Authenticode remasure 20261113_222135 | G12-02 | NotSigned MSI+SetupWizard; signed-cert blocker |
 | M4 CLEAN_VM | G12-03 | NOT_RUN (no hypervisor surface) |
 | FIRST_DIVERGE_001 seals | G02 G03 | remasure chain |
+| FFN_DOWN_2 SPV trials 6aeb325756 / BR_R72 | G02-04 G03-08 | NOT_CLOSABLE; FP64/Kahan REFUTED; RELATED≠PASS |
+| receipts/G02-04_G03-08_20261113_FFN_DOWN_2_SPV_TRIALS_RELATED.md | G02-04 G03-08 | pin 4548 restored; next C740 Q8K host OR bitexact |
 | G01-01/02/03 SELF_MEASURE EVIDENCE_PARTIAL @ 3d0928e74888 | G01 | Freeze + license stub + failed CLI rebuild; ≠ PASS |
 | build_ninja/bin/rawr.exe E5F2D304… preexisting | G01-03 G01-06 | Stale binary after rebuild EXIT=2; forensics only |
 | BR_MARS_DEDUP_LLAMA32_001 @ b61f03972e | G02 G04 | SOURCE_WIRED; remasure TOK |
