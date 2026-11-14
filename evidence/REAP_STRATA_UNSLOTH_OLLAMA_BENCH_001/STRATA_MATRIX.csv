@@ -1,0 +1,7 @@
+Name,OllamaTag,OllamaTps,OllamaDisp,Deep2Disp,UnslothSrc,Peer,PeerTps,PeerDisp,Disposition,GiB,Notes
+MiniMax-M2_7-Q4_K_M-REAP24,reap16-minimax-m2_7,0,FAIL,NOT_RUN,0,,0,,FAIL,14.123,CREATE_FAIL split GGUF 1/3
+Qwen3_6-35B-A3B-GGUF-REAP199,reap16-qwen3_6-35b,25.545,PASS,FAIL,0,FULL_OLLAMA,129.313,PASS,PASS,15.651,H2H peer paired
+GLM-4_7-Flash-GGUF-REAP59,reap16-glm-4_7-flash,0,FAIL,FAIL,0,,0,,FAIL,15.665,llama-server 0xc0000409 GGML_ASSERT
+nemotron-3_5-lightning-30b-REAP81,reap16-nemotron-3_5,0,FAIL,FAIL,0,FULL_OLLAMA,136.387,PASS,FAIL,15.566,REAP FAIL; peer PASS
+ornith-1_5-35b-REAP194,reap16-ornith-1_5,127.401,PASS,FAIL,0,FULL_OLLAMA,132.658,PASS,PASS,15.686,H2H peer paired
+laguna-s-2_1-Q4_K_M-REAP35,reap16-laguna-s-2_1,30.611,PASS,FAIL,0,FULL_OLLAMA,3.144,PASS,PASS,15.629,H2H peer paired
