@@ -21,7 +21,7 @@ Fail-closed: `SOURCE_WIRED ≠ RUNTIME_REACHED ≠ TOKEN_SURVIVED ≠ PERFORMANC
 | MOVES_36_50 | CLOSED | CLOSED | yes |
 | FORCED_AGENT_LOOP | PASS | PASS (Move 50 FORCE_TOOL) | yes |
 | MODEL_SELECTED_AGENT | PASS | **PASS** (Method C) | yes |
-| Q6K_VULKAN_SPV_REPAIR | OPEN (honest) | OPEN | yes (must stay OPEN) |
+| Q6K_VULKAN_SPV_REPAIR | RELATED≠SPV product PASS | RELATED (R103 E7797EE8) | yes (must not claim SPV PASS) |
 | GATE_STOP | 1 | 1 | yes |
 | TIP_CLIMB | HOLD | HOLD | yes |
 | PROMOTE | 0 | 0 | yes |
@@ -106,8 +106,9 @@ Wire: `src/cli/rawr_agent_executor.hpp` — runtime chat template (no broken man
 |------|------|
 | COMPLETE=1 | **CLOSED** via Method C MODEL_SELECTED PASS |
 | Move 51+ | Optional product ladder; not authorized to invent PASS |
-| Q6K_VULKAN_SPV_REPAIR | Remains OPEN; host hybrid ≠ SPV fixed |
+| Q6K_VULKAN_SPV_REPAIR | RELATED (R103); host hybrid ≠ SPV product cert |
 | REAP_LAGUNA | LEFT_OPEN |
+| NEXT_OWNER | POST_Q6K_SPV_PRODUCT_MULTIFAMILY_OR_HOLD + Ornith L3 ULP |
 | 8 TPS climb | FORBIDDEN while GATE_STOP=1 |
 | PROMOTE | 0 |
 
@@ -123,7 +124,7 @@ TIP_CLIMB=HOLD
 PROMOTE=0
 CERTIFIED=0
 ENTERPRISE=0/128
-Q6K_VULKAN_SPV_REPAIR=OPEN
+Q6K_VULKAN_SPV_REPAIR=RELATED
 COMPLETE=1
-NEXT_OWNER=Q6K_VULKAN_SPV_REPAIR|REAP_LAGUNA|Move51+
+NEXT_OWNER=POST_Q6K_SPV_PRODUCT_MULTIFAMILY_OR_HOLD|ORNITH_PACKED_GEMV_L3_ULP
 ```
