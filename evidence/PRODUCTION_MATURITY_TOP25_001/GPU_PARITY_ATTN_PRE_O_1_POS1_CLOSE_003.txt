@@ -1,0 +1,98 @@
+GPU_PARITY_ATTN_PRE_O_1_POS1_CLOSE_003
+DATE=2026-11-13
+ASOF_LOCAL=2026-11-13T23:50:00-05:00
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+CROSS_SHA_CREDIT=0
+INVENT_PASS=0
+NOT_RUN!=PASS
+SCOREBOARD_CLI_GUI_PCT_UNCHANGED=1
+ATTN_PRE_O_1_POS1_CLOSED=0
+CLOSED=0
+
+## Authority
+PRIOR_OPEN=GPU_PARITY_ATTN_PRE_O_1_POS1_CLOSE_002.txt
+  ATTN_PRE_O_1@pos1 OPEN maxAbs=2.754107e-05
+  owner=Q4K_SPV_bitexact_wq (FA-amplified ULP; host square REJECT)
+PRIOR_HOLD=GPU_PARITY_FFN_DOWN_0_POS0_CLOSE_001.txt
+  FFN_DOWN_0@pos0 CLOSED via precise SPV 4548BCF1…/16868
+BRANCH=work/v0-first-divergence
+TOL_ABS=1e-6 TOL_REL=1e-5
+CONTROLLING_Q4K_SPV (restored): bytes=16868
+  SHA256=4548BCF1EF5C4ED714041D6EFD7C32570A4EEFC431B008A6D6427CCE902FFF86
+TRIAL_Q4K_SPV (this turn remasure): bytes=17556
+  SHA256=0EECA02F4A8EC295F7DD55A6985BCBE5D2C101F88467B80A658724FBE93C1435
+  gemv_q4k.comp: precise Q8 prequant + FP64 lane accumulate of f32 MAC terms
+  + shaderFloat64 device feature in vulkan_compute.cpp
+TIP_EXE_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431 RO (untouched)
+absorb074 untouched; CLI/GUI % NOT raised
+VALUATION_SCOREBOARD_LIVE / JOINT_STATUS_LIVE / BOARD_SINGLE_WRITER CONTROLLING_% NOT rewritten
+
+## Isolate (before FA)
+Q_PRE_ROPE_1@pos1 vs REF (4548 ctrl): maxAbs=9.536743e-07 UNDER_TOL; nz~1816
+  head11 Q ULP tops: 2–4 ULP (idx704..715)
+Offline host(GPU_ATTN_NORM)×wq vs SPV Q_LINEAR: maxAbs=7.15e-07 nz=1393
+  → SPV≠host accumulate on same input (not only NORM cascade)
+Offline host(REF_NORM)×wq vs REF_Q: NOT bitexact (nz~1432) — llama AVX≠generic
+Ablation prior: REF_Q+gpuKV closes head11; gpuQ keeps full PRE_O residual
+PRIVATE Q4_HOST_ATTN=1: REJECT (poisons FFN_DOWN_0; not product default)
+
+## Remeasure (product env; trial FP64 SPV)
+CAND=pin/rawr_attn_pre_o_1_pos1_q4host.exe
+SHA256=D855FA3E4C045182C97936469BB63EF7B1069A64A38F71C3D5E6FCABC2B601EA
+  (rebuild with shaderFloat64 enable; tip 6754616E untouched)
+DUMP=FIRST_DIVERGE_001/stage_dump_attn_pre_o_1_pos1_close003
+REF=FIRST_DIVERGE_001/stage_dump_ref_matched
+COMPARE=FIRST_DIVERGE_001/GPU_PARITY_ATTN_PRE_O_1_POS1_CLOSE_003.compare.log
+CMD=remeasure_attn_pre_o_1_pos1_close003.cmd
+ENV=RAWRXD_FORCE_VULKAN_QUANT_GEMV=1 RAWRXD_QUANT_HOST_Q8K_PARITY=0
+    RAWRXD_Q6_HOST_FFN_DOWN=0 RAWRXD_Q4_HOST_ATTN=0 RAWRXD_Q4_HOST_FFN_DOWN=0
+    RAWRXD_KV_FP16_ROUNDTRIP=1 RAWRXD_GPU_FWD=0
+    HOTPATH_ATTN=CPU FA_F16=1
+PROMPT_IDS=1,15043
+RUNTIME_Q4K_SPV_BYTES=17556 (err log)
+
+## Target
+ATTN_PRE_O_1@pos1 maxAbs=2.754107e-05 rel=7.653156e-04 @idx704
+  n_gt=30/2048 UNDER_TOL=0
+MAXDIFF_BEFORE=2.754107e-05
+MAXDIFF_AFTER=2.754107e-05
+PRE_O@idx704 BIT-IDENTICAL vs 4548 ctrl dump (0x3d1366a3)
+  FP64 trial moved other Q lanes (Q maxAbs vs REF 9.54e-7→7.15e-7)
+  but NOT the FA-amplified head11 PRE_O residual
+
+## Cascade / regression (must hold)
+FFN_DOWN_0@pos0 UNDER_TOL maxAbs=1.490116e-08 (NOT reopened)
+V_1@pos0 UNDER_TOL maxAbs=1.490116e-08
+ATTN_PRE_O_0@pos0 BITEXACT; @pos1 UNDER_TOL 3.488640e-08
+ATTN_OUT_1@pos1 UNDER_TOL maxAbs=2.235174e-08
+Q_PRE_ROPE_1@pos1 UNDER_TOL maxAbs=7.152557e-07
+ATTN_PRE_O_1@pos0 UNDER_TOL maxAbs=1.192093e-07 (was bitexact on 4548; still UNDER)
+
+## Root (numeric-first)
+CLASS=ATTN_Q_SPV_ULP_FA_F16_AMPLIFY
+REFUTED_FP64_LANE_ACCUM_CLOSES_PRE_O_1_POS1=1
+  (codegen+runtime delta on Q; PRE_O@704 unchanged)
+Chain unchanged:
+  Q_PRE_ROPE UNDER_TOL → FA F16 amplifies head11 → PRE_O 2.754107e-05
+Host square Q4 under FORCE = REJECT (FFN_DOWN_0 poison)
+NEXT engineering beyond this seal:
+  FA-path / Q-post-rope bitexact vs REF for head11, OR deeper SPV that
+  moves idx704 specifically without reopening FFN_DOWN_0 / PRE_O_0
+
+## Fix@source (trial; controlling pin restored)
+src/backend/gemv_q4k.comp + .spv: FP64 trial 0EECA02F…/17556 remasured;
+  CONTROLLING pin restored to 4548BCF1…/16868 (FFN_DOWN_0 seal)
+src/vulkan_compute.cpp: shaderFloat64 probe/enable (kept; inert for 4548 SPV)
+No tip rewrite. No CONTROLLING_% rewrite. No host square Q4 default.
+
+## Verdict
+ATTN_PRE_O_1_POS1_CLOSED=0
+UNDER_TOL=0
+NEXT_OPEN=ATTN_PRE_O_1@pos1 maxAbs=2.754107e-05
+  owner=Q4K_SPV_bitexact_wq / FA_F16_HEAD11 (FP64 accum REFUTED for @704)
+  OR FFN_DOWN_2 (L2 material; separate seal)
+≠ PERFORMANCE_PASS ≠ PROMOTE
+PROMOTE=0
+TIP_CLIMB=HOLD
