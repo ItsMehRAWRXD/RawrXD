@@ -3632,10 +3632,22 @@ static int OllamaAgentRun(const Args& args)
     std::error_code ec;
     std::filesystem::create_directories(args.workdir, ec);
     const std::string targetPath = SafeWorkPath(args.workdir, args.target_file);
-    if (targetPath.empty() || ReadFile(targetPath).empty())
+    // An unsafe path is always fatal: it is the traversal guard and must not be
+    // relaxed. A MISSING file is NOT fatal — it means this is a creation task, and
+    // the agent's whole purpose is to write that file. The previous code required
+    // ReadFile(targetPath) to be non-empty, so a fresh task could never start and
+    // every run aborted here with "target file is missing or unsafe". Whether the
+    // file pre-exists now selects create-vs-repair mode instead of gating the run.
+    if (targetPath.empty())
     {
-        Logf_("OLLAMA_AGENT_VERDICT FAIL: target file is missing or unsafe: %s\n", args.target_file.c_str());
+        Logf_("OLLAMA_AGENT_VERDICT FAIL: target path is unsafe: %s\n", args.target_file.c_str());
         return 1;
+    }
+    const bool targetExists = std::filesystem::exists(targetPath, ec);
+    if (!targetExists)
+    {
+        Logf_("[ollama] target file does not exist yet; running in CREATE mode for %s\n",
+              targetPath.c_str());
     }
     const std::string buildCmd = args.build_command;
     const std::string runCmd = args.run_command;
