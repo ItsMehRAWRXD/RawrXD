@@ -1,5 +1,5 @@
 BOARD_PROPOSAL_TIP6754_OPEN_SEH_ABSORB_001
-ASOF_LOCAL=2026-11-13T22:32:00-05:00
+ASOF_LOCAL=2026-11-13T22:10:30-05:00
 PEER_PROPOSE=1 PARENT_MERGE_ONLY=1
 PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 FORCE=0 HOST_DECODE=0
 REJECT_FORCE_ABSORB=1 REJECT_FORCE_OVERWRITE_TIP_WITH_7FD1F270=1
@@ -7,34 +7,31 @@ REJECT_WRITE_PARENT_PCT=1 REJECT_CROSS_SHA_BLEND_INTO_CONTROLLING=1
 
 ## Ask (auth only — no tip thrash this turn)
 AUTHORIZE tip-bind absorb of OPEN_SEH closure wires already proven on private
-cand tip6754_open_skip / 7FD1F270, then remeasure TOKEN_SURVIVED on tip SHA 6754616E.
+cand 7FD1F270, then remeasure TOKEN_SURVIVED on tip SHA 6754616E.
 
 ## Tip freeze (must remain until board auth)
 TIP_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431
-TIP_STILL_6754=Y
+TIP_STILL_6754=1
 TIP_OVERWRITE=N
 
-## Private land closed (not tip credit)
-EXE=clean_link/RawrXD-Win32IDE_tip6754_open_skip.exe
+## Measured private cand (not tip credit)
+EXE=clean_link/RawrXD-Win32IDE_gemma_qdim077.exe
 EXE_SHA256=7FD1F27095388585D03DFB68C70E033B126D6406E8DE23C4F21F10D1EF8323C6
-SAME_IMAGE=clean_link/RawrXD-Win32IDE_gemma_qdim077.exe
-SEAL=gpu/TIP6754_OPEN_SKIP_PRIVATE_LAND_001.txt
-WITNESS=gpu/TIP6754_OPEN_SKIP_PRIVATE_LAND_001/ide_tip6754_open_skip_tinyllama_7FD1F27095388585_*.meta.txt
+WITNESS=gpu/ide_mf_qdim077_tinyllama_7FD1F27095388585_20261113_220421.meta.txt
 OPEN_SEH=0 TOKEN_SURVIVED=1 GEN=8 GPU_RESIDENT=1 HOST_DECODE=0
-OPEN_SKIP_SEEN=1 OPEN_BODY_GATE_SEEN=1
 RC_SEAL=gpu/TIP6754_OPEN_SEH_001.txt
 FAIL_SEAL=gpu/TIP6754_MF_BIND_001.txt
-ABSORB_AUTH_STILL_REQUIRED=1
 
 ## Exact wires to absorb (minimal; not whole EXE)
 1. ProductRuntime_Open_052.cpp — OPEN_SKIP_STREAMABLE_OK (never StreamableOk after load)
 2. product_deep2_infer_open.hpp — TensorsResident without Evaluate; OPEN_BODY_GATE
 3. ProductOpenStreamable.cpp — out-of-line AcquireWorkingSet LOADED/MMAP/GPU short-circuit
-OPTIONAL_LINEAGE=qDim GpuForward (for GPU_RESIDENT/TOK durability on tip after OPEN_SEH close)
+OPTIONAL_LINEAGE=qDim GpuForward (for GPU_RESIDENT durability; OPEN_SEH close does not require
+  full 7FD1F270 image overwrite)
 
 ## Forbidden
 - Copy/overwrite bin/RawrXD-Win32IDE.exe with 7FD1F270
-- Credit tip TOK from private MF / private land
+- Credit tip TOK from private MF 4/4
 - Invent TIP6754_LINEAGE_GPU_RESIDENT=1 before tip remeasure
 
 ## Acceptance after board auth
