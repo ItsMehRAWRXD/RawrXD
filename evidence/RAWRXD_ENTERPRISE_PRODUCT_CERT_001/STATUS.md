@@ -29,7 +29,7 @@ See `LAW.txt`. `NOT_RUN != PASS`. `EVIDENCE_PARTIAL != PASS`. Scoreboard ≠ che
 | C36 LSP hang | G07 | tip HANG/TIMEOUT RELATED (R73); stage INIT_OK crumb ≠ PASS |
 | GPU/ref numerical | G02 / G03 | FFN_DOWN_2 CLOSED maxAbs=2.145767e-06 SPV40E76D2A (R73 RELATED≠PASS); next ATTN_PRE_O_1_POS1 OPEN; V_1/ATTN_NORM CLOSED RELATED |
 | ConPTY / HELP_TERM | G05 / G06 | tip-era stop PASS RELATED (R70); cand PASS RELATED; ≠ CERT PASS |
-| Multi-family GUI / qdim084 STREAM | G02 / G04 / G06 | R82: F44D053D tip-absorb OPEN=1 ENTER=1 TOK=2 SEH=0 AUTH_HOLD RELATED; tip 6754 RO |
+| Multi-family GUI / qdim084 STREAM | G02 / G04 / G06 | R76: 68CC STREAM_REBIND NOT_CLOSABLE (__std_fs_get_file_id HANDLE=-1) RELATED; R82 F44D tip-absorb AUTH_HOLD RELATED; tip 6754 RO |
 | Offline signed install | G12 | Authenticode ABSENT; CLEAN_VM NOT_RUN |
 | Model-selected agent EBT | G05 / G08 | FORCE PASS; MODEL_SELECTED=0; wire SOURCE_WIRED RUNTIME=0 |
 | CLI clean rebuild | G01-03 | BUILD_OK=1 EXIT=0 A95A1254… (R75); CLEAN_MACHINE=0 ≠ PASS |
@@ -39,4 +39,4 @@ See `LAW.txt`. `NOT_RUN != PASS`. `EVIDENCE_PARTIAL != PASS`. Scoreboard ≠ che
 `../PRODUCTION_MATURITY_TOP25_001/VALUATION_SCOREBOARD_CANON.txt` — PCT invent forbidden here.
 
 ## Next
-G01-05 dual-build vs freeze pair; tip-absorb AUTH_HOLD (pump-skip private); independent review of G01 EVIDENCE_PARTIAL; PASS_COUNT=0 · PROMOTE=0.
+ATTN_PRE_O_1_POS1 next; G01-05 dual-build; tip AUTH_HOLD R82 RELATED (no tip climb); PASS_COUNT=0 · PROMOTE=0.
