@@ -107,6 +107,10 @@ void VulkanCompute::Cleanup() {
                 p = nullptr;
             }
         }
+        if (q4k_avx_wq_pipe_) {
+            vkDestroyPipeline(device_, q4k_avx_wq_pipe_, nullptr);
+            q4k_avx_wq_pipe_ = nullptr;
+        }
         if (q4k_pipe_) {
             vkDestroyPipeline(device_, q4k_pipe_, nullptr);
             q4k_pipe_ = nullptr;
@@ -971,6 +975,14 @@ bool VulkanCompute::CreateLogicalDevice() {
     queueCreateInfo.pQueuePriorities = prios;
 
     VkPhysicalDeviceFeatures deviceFeatures{};
+    /* gemv_q4k.comp GL_ARB_gpu_shader_fp64: Q4K×Q8K bitexact accumulate
+     * (FFN_DOWN_2 / ATTN wq). Probe support; enable only when present. */
+    {
+        VkPhysicalDeviceFeatures avail{};
+        vkGetPhysicalDeviceFeatures(physical_device_, &avail);
+        if (avail.shaderFloat64)
+            deviceFeatures.shaderFloat64 = VK_TRUE;
+    }
     VkDeviceCreateInfo deviceCreateInfo{};
     deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     deviceCreateInfo.queueCreateInfoCount = 1;

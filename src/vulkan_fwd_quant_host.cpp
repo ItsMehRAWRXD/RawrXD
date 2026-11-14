@@ -67,6 +67,7 @@ bool VulkanCompute::DispatchGEMVQuant(int ggmlType, const void* packed, size_t b
             /* Host bypass must not leave SPV input-reuse armed — mixed
              * host(wq/wo)+SPV(FFN) otherwise reuses stale gemv_in. */
             gemv_reuse_in_next_ = false;
+            gemv_avx_wq_next_ = false; /* R90: never sticky-arm FFN after host */
             gemv_in_live_cols_ = 0;
             std::memset(output, 0, (size_t)rows * sizeof(float));
             gemv(static_cast<const uint8_t*>(packed), input, output, rows, cols);
@@ -87,6 +88,18 @@ bool VulkanCompute::DispatchGEMVQuant(int ggmlType, const void* packed, size_t b
     VkPipeline pipe = nullptr; uint64_t* ops = nullptr;
     if (!SelectPackedPipe(ggmlType, pipe, ops) || !input || !output || !bytes)
         return false;
+    /* R90 hazard barrier: WQ AVX dualpipe only; FFN/GATE stay on q4k_pipe_ (40E). */
+    if (gemv_avx_wq_next_) {
+        if (ggmlType == 12 && rows == cols) {
+            if (!EnsureQ4kAvxWqPipeline()) {
+                gemv_avx_wq_next_ = false;
+                return false;
+            }
+            pipe = q4k_avx_wq_pipe_;
+        } else {
+            gemv_avx_wq_next_ = false;
+        }
+    }
     /* Pin-hit may omit host packed (HOST_BYTES_FOR_HIT=0). */
     if (!packed &&
         !(pinKey && WantWeightPin() &&

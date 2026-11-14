@@ -253,7 +253,7 @@ public:
     // input copy when the next GEMV consumes the same device-side vector
     // (Q_A then KV_A both read hidden).
     void GemvReuseInputNext();
-    /* R88: next Q4 square GEMV uses llama-AVX lane order (attn_q.weight only). */
+    /* R88/R90: next Q4 square GEMV → AVX WQ pipe only (not FFN/WO). */
     void GemvAvxWqNext();
     // O_PROJ: next host readback does dst[i] = residual[i] + gemv[i] (one pass).
     void GemvFuseResidualNext(const float* residual);
@@ -582,6 +582,7 @@ private:
     uint64_t q2k_packed_ops_ = 0;
     uint64_t q8_packed_ops_ = 0;
     bool EnsureQ4kPipeline();
+    bool EnsureQ4kAvxWqPipeline(); /* R90: gemv_q4k_r88_dualpipe.spv */
     bool EnsureQ4kFusedPipeline();
     bool EnsureQ4kOprojPipeline();
     bool EnsureQ4kKvaPipeline();
@@ -705,7 +706,7 @@ private:
     size_t gemv_in_cap_ = 0;
     uint32_t gemv_in_live_cols_ = 0;
     bool gemv_reuse_in_next_ = false;
-    bool gemv_avx_wq_next_ = false; /* attn_q AVX square pipe (R88) */
+    bool gemv_avx_wq_next_ = false; /* attn_q → q4k_avx_wq_pipe_ (R90) */
     const float* gemv_residual_add_ = nullptr; // O_PROJ fused residual
     uint64_t gemv_in_reuse_hits_ = 0;
     VkBuffer gemv_out_buf_ = nullptr;
@@ -788,6 +789,8 @@ private:
     VkDescriptorSet mla_attn_ds_ = nullptr;
     uint32_t mla_n_heads_ = 0, mla_qk_ = 0, mla_v_ = 0;
     uint32_t mla_max_seq_ = 0, mla_n_layers_ = 0;
+    /* R90 append-only: WQ AVX dualpipe; FFN/GATE remain on q4k_pipe_ (40E). */
+    VkPipeline q4k_avx_wq_pipe_ = nullptr;
 
 public:
     uint64_t GemvDescriptorAllocations() const { return gemv_desc_allocs_; }

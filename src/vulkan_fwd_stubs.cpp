@@ -44,6 +44,7 @@ bool VulkanCompute::DispatchGEMVFusedQ8Kva(const void*, size_t, const float*, fl
 }
 void VulkanCompute::GemvReuseInputNext() {}
 void VulkanCompute::GemvAvxWqNext() {}
+bool VulkanCompute::EnsureQ4kAvxWqPipeline() { return false; }
 void VulkanCompute::GemvFuseResidualNext(const float*) {}
 uint64_t VulkanCompute::GemvInputReuseHits() const { return 0; }
 bool VulkanCompute::EnsureQ6kPipeline() { return false; }

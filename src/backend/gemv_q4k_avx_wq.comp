@@ -1,8 +1,8 @@
 #version 450
-// gemv_q4k.comp — Q4_K×Q8_K dual-pipe. PROMOTE=0
-// downShape: ggml generic + xd one-div (FFN_DOWN hold).
-// flags&1 + square: llama-AVX lane/reduction (attn_q via GemvAvxWqNext).
-// else: ggml generic + 1/iscale (GATE/UP/WO/WK).
+// gemv_q4k_avx_wq — Q4_K×Q8_K WQ AVX dual-pipe. PROMOTE=0
+// R90: loaded only as q4k_avx_wq_pipe_ (attn_q). FFN/GATE stay on 40E.
+// flags&1 + square: llama-AVX lane/reduction (GemvAvxWqNext).
+// else: ggml generic + 1/iscale (should not run FFN on this module).
 layout(local_size_x = 64) in;
 layout(binding = 0) readonly buffer W { uint packed[]; };
 layout(binding = 1) readonly buffer In { float x[]; };

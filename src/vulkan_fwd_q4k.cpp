@@ -92,7 +92,9 @@ bool VulkanCompute::BindGemvStorage(VkBuffer wbuf, size_t wbytes, VkBuffer inb, 
     }
     w[0].pBufferInfo = &dbiW; w[1].pBufferInfo = &dbiI; w[2].pBufferInfo = &dbiO;
     vkUpdateDescriptorSets(device_, 3, w, 0, nullptr);
-    const uint32_t avx = gemv_avx_wq_next_ ? 1u : 0u;
+    /* R90: AVX flag only on square; FFN/GATE never inherit sticky WQ bit. */
+    const uint32_t avx =
+        (gemv_avx_wq_next_ && rows == cols) ? 1u : 0u;
     gemv_avx_wq_next_ = false;
     uint32_t pc[4] = {rows, cols, avx, 0u};
     return RecordCompute(pipe, gemv_pipeline_layout_, ds, pc, sizeof(pc), groups);
@@ -144,8 +146,18 @@ bool VulkanCompute::DispatchGemvPacked(const void* packed, size_t bytes,
         }
         if (!StreamWeightToSlot(packed, bytes, wbuf)) return false;
     }
+    VkPipeline pipe = q4k_pipe_;
+    if (gemv_avx_wq_next_ && rows == cols) {
+        if (!EnsureQ4kAvxWqPipeline()) {
+            gemv_avx_wq_next_ = false;
+            return false;
+        }
+        pipe = q4k_avx_wq_pipe_;
+    } else if (gemv_avx_wq_next_) {
+        gemv_avx_wq_next_ = false;
+    }
     if (!BindGemvStorage(wbuf, bytes, in.buffer, (size_t)cols * 4, out.buffer,
-                         (size_t)rows * 4, q4k_pipe_, rows, cols,
+                         (size_t)rows * 4, pipe, rows, cols,
                          (rows + 63u) / 64u))
         return false;
     ++q4k_packed_ops_;
