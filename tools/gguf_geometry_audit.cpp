@@ -189,23 +189,44 @@ int main(int argc, char** argv) {
     for (int i = 2; i < argc; ++i)
         if (!std::strcmp(argv[i], "--json") && i + 1 < argc) jsonPath = argv[++i];
 
-    // ── read the whole file ────────────────────────────────────────────────
+    // ── size the file, then read only the header region ───────────────────
+    // Two bugs lived here. (1) ftell() returns a 32-bit long on Windows, so
+    // any model over 2 GiB wrapped negative and was reported as "is empty" —
+    // which silently failed every real GGUF. (2) The whole file was slurped
+    // into RAM, so a 16 GiB export demanded 16 GiB of address space even
+    // though only the header, metadata and tensor infos are ever parsed.
+    // GGUF puts all of those at the front; the tensor payload is never read.
     FILE* f = fopen(path, "rb");
     if (!f) {
         printf("  [FAIL] cannot open %s\n", path);
         printf("PARITY_STATUS=FAIL\n");
         return 4;
     }
-    fseek(f, 0, SEEK_END);
-    long fsize = ftell(f);
-    fseek(f, 0, SEEK_SET);
-    if (fsize <= 0) {
+#ifdef _WIN32
+    _fseeki64(f, 0, SEEK_END);
+    const long long fsizeWide = _ftelli64(f);
+    _fseeki64(f, 0, SEEK_SET);
+#else
+    fseeko(f, 0, SEEK_END);
+    const long long fsizeWide = static_cast<long long>(ftello(f));
+    fseeko(f, 0, SEEK_SET);
+#endif
+    if (fsizeWide <= 0) {
         printf("  [FAIL] %s is empty\n", path);
         fclose(f);
         printf("PARITY_STATUS=FAIL\n");
         return 4;
     }
-    std::vector<uint8_t> data(static_cast<size_t>(fsize));
+    const uint64_t fsize = static_cast<uint64_t>(fsizeWide);
+
+    // 256 MiB covers every realistic metadata block (the largest Qwen3.5-class
+    // vocabularies are ~250k tokens, a few MB) plus every tensor info. If the
+    // infos ever run past this, parsing fails loudly below rather than
+    // silently auditing a truncated view.
+    const uint64_t kPrefixBytes = 256ull * 1024ull * 1024ull;
+    const size_t prefixLen =
+        static_cast<size_t>(fsize < kPrefixBytes ? fsize : kPrefixBytes);
+    std::vector<uint8_t> data(prefixLen);
     if (fread(data.data(), 1, data.size(), f) != data.size()) {
         printf("  [FAIL] short read on %s\n", path);
         fclose(f);
@@ -213,7 +234,8 @@ int main(int argc, char** argv) {
         return 4;
     }
     fclose(f);
-    printf("=== GGUF geometry audit: %s (%ld bytes) ===\n", path, fsize);
+    printf("=== GGUF geometry audit: %s (%llu bytes) ===\n", path,
+           static_cast<unsigned long long>(fsize));
     fflush(stdout);
 
     // ── 1. header ─────────────────────────────────────────────────────────
@@ -351,7 +373,7 @@ int main(int argc, char** argv) {
 
     // ── 6. alignment of the data section start ────────────────────────────
     const uint64_t dataStart = (r.pos + alignment - 1) / alignment * alignment;
-    report(dataStart <= data.size(),
+    report(dataStart <= fsize,
            "tensor data section start " + std::to_string(dataStart) +
            " is within the file");
     printf("           data section starts at offset %llu\n",
@@ -359,6 +381,7 @@ int main(int argc, char** argv) {
     fflush(stdout);
 
     // ── 7. per-tensor offsets, bounds, overlaps, truncation ───────────────
+    // Bounds are checked against the true file size, not the in-memory prefix.
     uint64_t maxEnd = 0, minOffset = UINT64_MAX;
     std::vector<std::pair<uint64_t, uint64_t>> spans;
     spans.reserve(tensors.size());
@@ -376,11 +399,11 @@ int main(int argc, char** argv) {
         bool allInBounds = true;
         std::string bad;
         for (const auto& t : tensors) {
-            if (t.absOffset > data.size() || t.absOffset + t.totalBytes > data.size()) {
+            if (t.absOffset > fsize || t.absOffset + t.totalBytes > fsize) {
                 allInBounds = false;
                 bad = "tensor '" + t.name + "' ends at " +
                       std::to_string(t.absOffset + t.totalBytes) +
-                      " but the file is " + std::to_string(data.size());
+                      " but the file is " + std::to_string(fsize);
                 break;
             }
         }
@@ -409,9 +432,9 @@ int main(int argc, char** argv) {
     {
         // Truncation: the last tensor must not run past EOF, and the data
         // region must actually cover every tensor.
-        report(maxEnd <= data.size(),
+        report(maxEnd <= fsize,
                "highest tensor end " + std::to_string(maxEnd) +
-               " is covered by the file (" + std::to_string(data.size()) + ")");
+               " is covered by the file (" + std::to_string(fsize) + ")");
     }
 
     {
@@ -461,8 +484,8 @@ int main(int argc, char** argv) {
     if (jsonPath) {
         FILE* j = fopen(jsonPath, "wb");
         if (j) {
-            fprintf(j, "{\n  \"file\": \"%s\",\n  \"file_bytes\": %zu,\n",
-                    path, data.size());
+            fprintf(j, "{\n  \"file\": \"%s\",\n  \"file_bytes\": %llu,\n",
+                    path, static_cast<unsigned long long>(fsize));
             fprintf(j, "  \"version\": %u,\n", version);
             fprintf(j, "  \"tensor_count\": %llu,\n",
                     static_cast<unsigned long long>(tensorCount));
