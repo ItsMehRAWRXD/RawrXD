@@ -193,12 +193,19 @@ bool RunNativeInferenceSync(const std::string& prompt,
             }
             return text.size() < 384u;
         };
+        /* outText=nullptr: keep TOOL_CALL seed in `text` (StreamBody overwrite). */
         const bool streamOk = rawr::ProductDeep2InferStream(
-            fit.c_str(), tok, onPiece, &text, &failedStage, &failedOwner,
+            fit.c_str(), tok, onPiece, nullptr, &failedStage, &failedOwner,
             &exitReason, &firstTok);
         /* Early-stop CANCELLED → productPass=0; TOOL_CALL text still usable. */
         const bool toolEmit =
             firstTok != 0 && text.find("TOOL_CALL:") != std::string::npos;
+        std::fprintf(stderr,
+                     "[BO] A8_STREAM streamOk=%d toolEmit=%d firstTok=%d "
+                     "text_len=%zu exit=%s\n",
+                     streamOk ? 1 : 0, toolEmit ? 1 : 0, firstTok,
+                     text.size(), exitReason ? exitReason : "?");
+        std::fflush(stderr);
         if ((!streamOk && !toolEmit) || firstTok == 0) {
             error = "ProductDeep2InferStream failed (MODEL_RESIDENT session open)";
             if (failedStage) {
@@ -207,6 +214,9 @@ bool RunNativeInferenceSync(const std::string& prompt,
             return false;
         }
         completion = std::move(text);
+        std::fprintf(stderr, "[BO] A8_STREAM_OK completion_len=%zu\n",
+                     completion.size());
+        std::fflush(stderr);
         const auto elapsedNs = std::chrono::duration_cast<std::chrono::nanoseconds>(
             std::chrono::steady_clock::now() - start).count();
         const uint32_t eval = rawr::ProductDeep2LastEvalCount();

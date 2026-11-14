@@ -99,6 +99,7 @@ $psi.EnvironmentVariables['WEIGHT_BUDGET_INPUT']='8192'
 $psi.EnvironmentVariables['RAWRXD_NVME_REVERSE_BUNNYHOP']='0'
 # R75: skip ProductPathSeal/product::Emit (A2) — post-decode MEAN_TOKEN_WALL GS.
 $psi.EnvironmentVariables['RAWRXD_A8_MIN_TEARDOWN']='1'
+$psi.EnvironmentVariables['RAWRXD_A8_WORKSPACE']=$ws
 $psi.EnvironmentVariables['DEEP2_ISOLATION_RUN']='A2'
 # Clear stale MODEL_RESIDENT crumb from prior peer runs (R73e false-positive).
 $staleCrumb = Join-Path $peerRoot 'logs\MODEL_RESIDENT_CRUMB.txt'
@@ -149,11 +150,13 @@ if($menu -eq 1){
     $crumbHits = @(
       (Join-Path $ws '.rawrxd\MODEL_RESIDENT_CRUMB.txt'),
       (Join-Path $ws '.rawrxd\MODEL_LOAD_DISPATCH.txt'),
+      (Join-Path $ws '.rawrxd\FILES_READ_CRUMB.txt'),
       (Join-Path $peerRoot 'logs\MODEL_RESIDENT_CRUMB.txt')
     )
     foreach($cf in $crumbHits){
       if(-not (Test-Path $cf)){ continue }
       if($cf -match 'MODEL_LOAD_DISPATCH'){ $r.MODEL_LOAD_SEEN=1; continue }
+      if($cf -match 'FILES_READ_CRUMB'){ $r.FILES_READ=1; continue }
       $cb = Get-Content $cf -Raw -EA SilentlyContinue
       if($cb -match 'MODEL_RESIDENT=1'){ $r.MODEL_RESIDENT_CRUMB=1 }
       elseif($cb -match 'MODEL_RESIDENT=0' -and $r.MODEL_RESIDENT_CRUMB -ne 1){ $r.LLM_ERROR_SEEN=1 }

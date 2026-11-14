@@ -3288,10 +3288,20 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                 else if (name.find("attn_o") != std::string::npos)
                     lw.attnO = wt;
                 else if (name.find("attn_gate") != std::string::npos) {
-                    // Qwen-style attention output projection (NOT FFN gate)
-                    lw.attnO = wt;
-                    printf("[ATTN_GATE] Mapped %s to attnO (rows=%zu cols=%zu type=%d)\n",
-                           name.c_str(), wt.rows, wt.cols, wt.type);
+                    /* Laguna SWA gate is [heads, hidden] (mn<<256). Qwen O-as-gate is full. */
+                    const size_t mn = (wt.rows < wt.cols) ? wt.rows : wt.cols;
+                    const size_t mx = (wt.rows > wt.cols) ? wt.rows : wt.cols;
+                    const bool looksLikeO = !lw.wo.data && mn >= 256 && mx >= 256;
+                    if (looksLikeO) {
+                        lw.attnO = wt;
+                        printf("[ATTN_GATE] Mapped %s to attnO (rows=%zu cols=%zu type=%d)
+",
+                               name.c_str(), wt.rows, wt.cols, wt.type);
+                    } else {
+                        printf("[ATTN_GATE] SKIP %s (wo=%d mn=%zu mx=%zu) not O-proj
+",
+                               name.c_str(), lw.wo.data ? 1 : 0, mn, mx);
+                    }
                 }
                 else if (name.find("attn_proj") != std::string::npos) {
                     // Qwen-style attention output projection
@@ -7574,29 +7584,41 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         }
     }
     // #endregion
-    emitLiveDecodeWitnesses(nullptr);
-
-    // -- VAL-051.7: Print residency counters -------------------------
-    ResidencyCounters::Print();
-    Deep2_ReportLinearWStats();
-
-    // -- Batch 15: Print ElasticResidencyManager telemetry ----------
-    if (elasticResidencyEnabled_ && elasticResidency_) {
-        elasticResidency_->PrintTelemetry();
-    }
-
-    // -- Deep2 Active Telemetry: Evaluate and route -----------------
-    if (telemetryControllerEnabled_ && telemetryController_) {
-        auto health = telemetryController_->evaluate_and_route();
-        const char* healthStr = "UNKNOWN";
-        switch (health) {
-            case SystemHealth::HEALTHY_PREFETCH: healthStr = "HEALTHY_PREFETCH"; break;
-            case SystemHealth::PCIE_HOST_BOTTLENECK: healthStr = "PCIE_HOST_BOTTLENECK"; break;
-            case SystemHealth::VRAM_BW_SATURATED: healthStr = "VRAM_BW_SATURATED"; break;
-            case SystemHealth::COMPUTE_BOUND: healthStr = "COMPUTE_BOUND"; break;
-            case SystemHealth::UNKNOWN: healthStr = "UNKNOWN"; break;
+    {
+        const char* a8 = std::getenv("RAWRXD_A8_MIN_TEARDOWN");
+        if (!(a8 && a8[0] == '1')) {
+            emitLiveDecodeWitnesses(nullptr);
+            ResidencyCounters::Print();
+            Deep2_ReportLinearWStats();
+            if (elasticResidencyEnabled_ && elasticResidency_)
+                elasticResidency_->PrintTelemetry();
+            if (telemetryControllerEnabled_ && telemetryController_) {
+                auto health = telemetryController_->evaluate_and_route();
+                const char* healthStr = "UNKNOWN";
+                switch (health) {
+                    case SystemHealth::HEALTHY_PREFETCH:
+                        healthStr = "HEALTHY_PREFETCH";
+                        break;
+                    case SystemHealth::PCIE_HOST_BOTTLENECK:
+                        healthStr = "PCIE_HOST_BOTTLENECK";
+                        break;
+                    case SystemHealth::VRAM_BW_SATURATED:
+                        healthStr = "VRAM_BW_SATURATED";
+                        break;
+                    case SystemHealth::COMPUTE_BOUND:
+                        healthStr = "COMPUTE_BOUND";
+                        break;
+                    case SystemHealth::UNKNOWN:
+                        healthStr = "UNKNOWN";
+                        break;
+                }
+                printf("[Deep2Engine] Telemetry health: %s\n", healthStr);
+            }
+        } else {
+            std::fprintf(stderr,
+                         "A8_MIN_TEARDOWN=1 SKIP_POST_GENERATE_WITNESSES=1\n");
+            std::fflush(stderr);
         }
-        printf("[Deep2Engine] Telemetry health: %s\n", healthStr);
     }
 
     return tokensGenerated;
@@ -9426,9 +9448,26 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     size_t numHeads = modelWeights.numHeads;
     size_t numKVHeads = modelWeights.numKVHeads;
     size_t headDim = modelWeights.headDim;
+    /* Laguna hybrid SWA: attention.head_count is per-layer; Q out is SSOT. */
+    if (lw.wq.data && headDim > 0 && lw.wq.rows > 0 &&
+        (lw.wq.rows % headDim) == 0) {
+        const size_t inferred = lw.wq.rows / headDim;
+        if (inferred > 0 && inferred != numHeads) {
+            fprintf(stderr,
+                    "[HEADS_LAYER] ly=%zu meta=%zu inferred=%zu wq.rows=%zu\n",
+                    layer, numHeads, inferred, lw.wq.rows);
+            numHeads = inferred;
+        }
+    }
+    if (numKVHeads > 0 && numHeads % numKVHeads != 0) {
+        fprintf(stderr,
+                "[HEADS_LAYER] ly=%zu FAIL heads%%kv heads=%zu kv=%zu\n",
+                layer, numHeads, numKVHeads);
+        throw std::runtime_error("per-layer heads not divisible by kv_heads");
+    }
     size_t groupSize = (numKVHeads > 0) ? (numHeads / numKVHeads) : 1;
     float* headScratch = attnHeadScratch_ ? attnHeadScratch_ : output;
-    const size_t headConcat = numHeads * headDim;
+    size_t headConcat = numHeads * headDim;
 
     // --- MLA (K2) path: production dispatch to MlaAttentionComplete ---
     // Shard stack uses forwardTokenAllLayers ? ForwardHiddenMla; host tensors

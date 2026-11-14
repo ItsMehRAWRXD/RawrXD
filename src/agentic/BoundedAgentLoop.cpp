@@ -18,7 +18,11 @@
 
 #include "BoundedAgentLoop.h"
 #include "AgentOllamaClient.h"
+#include "AgentToolHandlers.h"
 
+#include <cstdio>
+#include <cstdlib>
+#include <filesystem>
 #include <sstream>
 #include <thread>
 #include <chrono>
@@ -99,11 +103,49 @@ std::string BoundedAgentLoop::Execute(const std::string& userPrompt) {
     m_transcript.SetModel(m_config.model);
     m_transcript.SetWorkingDirectory(m_config.workingDirectory);
 
+    /* A8: cap steps + bind harness workspace (IDE cwd ≠ run ws). */
+    if (const char* a8 = std::getenv("RAWRXD_A8_MIN_TEARDOWN");
+        a8 && a8[0] == '1') {
+        m_config.maxSteps = 2;
+        if (const char* ws = std::getenv("RAWRXD_A8_WORKSPACE");
+            ws && ws[0]) {
+            m_config.workingDirectory = ws;
+        } else if (m_config.workingDirectory.empty()) {
+            try {
+                m_config.workingDirectory =
+                    std::filesystem::current_path().string();
+            } catch (...) {
+                m_config.workingDirectory = ".";
+            }
+        }
+        {
+            ToolGuardrails g = AgentToolHandlers::GetGuardrails();
+            g.allowedRoots.clear();
+            g.allowedRoots.push_back(m_config.workingDirectory);
+            AgentToolHandlers::SetGuardrails(g);
+        }
+        m_config.transcriptPath =
+            m_config.workingDirectory + "/.rawrxd/transcripts/a8_agent.json";
+        try {
+            std::filesystem::create_directories(
+                std::filesystem::path(m_config.transcriptPath).parent_path());
+        } catch (...) {
+        }
+        std::fprintf(stderr,
+                     "[BoundedAgent] A8_MIN maxSteps=2 wd=%s transcript=%s\n",
+                     m_config.workingDirectory.c_str(),
+                     m_config.transcriptPath.c_str());
+        std::fflush(stderr);
+    }
+
     std::string result = RunLoop(userPrompt);
 
     // Save transcript if path configured
     if (!m_config.transcriptPath.empty()) {
         m_transcript.SaveToFile(m_config.transcriptPath);
+        std::fprintf(stderr, "[BoundedAgent] TRANSCRIPT_SAVED path=%s steps=%zu\n",
+                     m_config.transcriptPath.c_str(), m_transcript.StepCount());
+        std::fflush(stderr);
     }
 
     return result;

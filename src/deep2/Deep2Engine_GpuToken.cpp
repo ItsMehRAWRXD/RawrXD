@@ -225,6 +225,13 @@ void Deep2Engine::emitHotpathWitnesses() {
 }
 
 void Deep2Engine::emitLiveDecodeWitnesses(FILE* f) {
+    /* A8 R76: skip dual stdout/stderr GPU receipts — R75 C0000409 after PRODUCT_RUN. */
+    if (const char* m = std::getenv("RAWRXD_A8_MIN_TEARDOWN");
+        m && m[0] == '1') {
+        std::fprintf(stderr, "A8_MIN_TEARDOWN=1 SKIP_LIVE_DECODE_WITNESSES=1\n");
+        std::fflush(stderr);
+        return;
+    }
     uint64_t ops = 0, layers = 0;
     for (unsigned s = 0; s < vulkanDeviceCount(); ++s) {
         auto* vc = getVulkanComputeSlot(s);

@@ -1,0 +1,74 @@
+BR_A8_MODELWIRE_EBT_R76
+GATE_ID=A8_MODEL_WIRE_PEER_EDIT_BUILD_TEST
+ASOF_LOCAL=2026-11-14T07:47:30-05:00
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0 INVENT_PASS=0 CROSS_SHA_CREDIT=0 CAT11=25
+
+PRIOR=BR_A8_MODELWIRE_EBT_R75
+PRIOR_BLOCKER=POST_A2_SKIP_STILL_C0000409_AFTER_PRODUCT_RUN_BEFORE_FILES_READ
+RESUME=A8_EBT_SURVIVE_PRODUCTRUN_RETURN_AFTER_A2_SKIP_THEN_TOOL_EXEC_FILES_READ
+
+COMMAND=rebuild_a8_ebt_r76g.bat (ProductRun strong override + StreamSeh cancelOk;
+  Deep2Engine A8_MIN post-generate skip; GpuToken witnesses skip; BO outText=null;
+  BoundedAgentLoop A8 maxSteps=2 + RAWRXD_A8_WORKSPACE bind; ToolReadFile crumb;
+  frozen seh_r72 + AgentPanel_r71; no PRD rebuild; sizeof 0x2868; tip untouched)
+  ; harness_a8_remeasure.ps1 → remasure_r76g2.log (seal run_20261114_074544)
+EXIT=harness 0; peer EXIT_HEX=0xC0000409 (post FILES_READ)
+
+PEER_EXE=GUI_TOP25_VALUATION_001/A8_MODEL_WIRE_PEER/RawrXD-Win32IDE_tip_land_a8_modelwire.exe
+PEER_EXE_SHA256=47D06B33572500021C373C08AE2518E48FD3D8691554459D50BC6C85BF3408C6
+TIP_BIND_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431
+TIP_PATH=rawrxd/build_win32ide_link001/bin/RawrXD-Win32IDE.exe
+TIP_UNTOUCHED=1
+TIP_PROOF=Get-FileHash tip EXE == 6754616E… after peer rebuild (tip_sha_after_r76g + live)
+
+ABI:
+  SIZEOF_DEEP2ENGINE=0x2868
+  OFFSETOF_EXT=0x2868
+  PAD=sehAbiPad083_[8]
+
+ROOT_CAUSE (fail-closed):
+  1) R75: A2 skipped MEAN_TOKEN_WALL; still C0000409 after PRODUCT_RUN before tools.
+  2) R76: ProductRun return survives (PRODUCT_RUN_RETURN=1 a8min=1). Crash moved to
+     post-stream agent path. StreamBody productPass=0 on CANCELLED hid success until
+     StreamSeh_a8 override (cancelOk). BO outText=null keeps TOOL_CALL seed.
+  3) Agent loop maxSteps=10 re-ran decode 10×; completeCb ShowWindow from worker
+     → C0000409. Empty/mismatched workingDirectory → read_file NOT_FOUND on
+     G:\~dev\rawrxd\note.txt (not run ws). Fixed via RAWRXD_A8_WORKSPACE + maxSteps=2.
+  4) Rejected: seh/PRD TU rebuild (DIALOG=0); AgentPanel TU rebuild (DIALOG=0/C0000374).
+
+FIX_LANDED_SOURCE (peer wire; tip untouched):
+  ProductRun.hpp: skip AutoBackend when session open; skip lastReceipt under A8_MIN
+  ProductRun_a8_r76.cpp + StreamSeh_a8_r76.cpp: /FORCE overrides (frozen seh_r72 kept)
+  Deep2Engine + GpuToken: A8_MIN skip post-generate witnesses
+  BackendOrchestrator: outText=nullptr; streamOk breadcrumbs
+  BoundedAgentLoop: A8 maxSteps=2 + RAWRXD_A8_WORKSPACE guardrails rebind
+  AgentToolHandlers::ToolReadFile: FILES_READ crumb
+  harness: RAWRXD_A8_WORKSPACE=$ws + FILES_READ_CRUMB detect
+  KEEP A2 skip + tok_cap early-stop; sizeof 0x2868; no /FORCE MENU death
+
+CRUMBS (seal run_20261114_074544 on 47D06B33):
+  MENU_READY=1
+  POST_4120=1
+  BOUNDED_DIALOG_FILLED=1
+  MODEL_RESIDENT=1
+  LLM_ERROR_SEEN=0
+  PRODUCT_RUN_RETURN=1 a8min=1
+  STREAM_SEH_R76 ok=1 cancelOk=1 tok=4
+  BO A8_STREAM_OK toolEmit=1
+  FILES_READ=1 (note.txt under run ws) TRANSCRIPT_CRUMB=1
+  PATCH_APPLIED=0 BUILD_COMPLETED=0 TEST_EXECUTED=0 AGENT_RESULT5=0
+  EDIT_BUILD_TEST_PASS=0
+  EXIT_HEX=0xC0000409
+  BLOCKER=POST_FILES_READ_STILL_C0000409_ON_AGENT_COMPLETECB_OR_STEP2
+
+RESULT=FAIL (gate advance: FILES_READ≥1 RUNTIME_REACHED; EBT still incomplete)
+  MENU=1 DIALOG=1 MODEL_RESIDENT=1; PRODUCT_RUN return survived; tool exec FILES_READ=1
+  process still failfast after tools (completeCb/HWND worker); NOT_RUN≠PASS; CAT11=25 held
+  PROMOTE=0 CERTIFIED=0 CROSS_SHA_CREDIT=0 INVENT_FORCE_TOOL=0
+
+ARTIFACTS=run_20261114_074544/; remasure_r76g2.log; rebuild_a8_ebt_r76g.log;
+  tip_sha_after_r76g.txt; peer_sha_r76g.txt
+NEXT_GATE=A8_EBT_SURVIVE_POST_FILES_READ_COMPLETECB_THEN_PATCH_BUILD_TEST
+PROMOTE=0 CERTIFIED=0 CROSS_SHA_CREDIT=0 INVENT_FORCE_TOOL=0
+TIMESTAMP=2026-11-14T07:47:30-05:00
+END

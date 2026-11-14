@@ -11,6 +11,7 @@
 
 #include "AgentToolHandlers.h"
 
+#include <cstdio>
 #include <fstream>
 #include <sstream>
 #include <filesystem>
@@ -255,15 +256,21 @@ std::string AgentToolHandlers::CreateBackup(const std::string& path) {
 
 ToolCallResult AgentToolHandlers::ToolReadFile(const json& args) {
     if (!args.contains("path") || !args["path"].is_string()) {
+        std::fprintf(stderr, "FILES_READ=0 why=VALIDATION\n");
+        std::fflush(stderr);
         return ToolCallResult::Validation("read_file requires 'path' (string)");
     }
 
     std::string path = NormalizePath(args["path"].get<std::string>());
     if (!IsPathAllowed(path)) {
+        std::fprintf(stderr, "FILES_READ=0 why=SANDBOX path=%s\n", path.c_str());
+        std::fflush(stderr);
         return ToolCallResult::Sandbox("Path not in workspace allowlist: " + path);
     }
 
     if (!fs::exists(path)) {
+        std::fprintf(stderr, "FILES_READ=0 why=NOT_FOUND path=%s\n", path.c_str());
+        std::fflush(stderr);
         return ToolCallResult::Error("File not found: " + path);
     }
 
@@ -290,6 +297,20 @@ ToolCallResult AgentToolHandlers::ToolReadFile(const json& args) {
     ToolCallResult result = ToolCallResult::Ok(content, res_metadata);
     result.filePath = path;
     result.bytesRead = content.size();
+    /* A8 harness FILES_READ crumb (transcript may lag / completeCb crash). */
+    try {
+        const fs::path crumb =
+            fs::path(s_guardrails.allowedRoots.empty() ? "." : s_guardrails.allowedRoots.front()) /
+            ".rawrxd" / "FILES_READ_CRUMB.txt";
+        fs::create_directories(crumb.parent_path());
+        std::ofstream cf(crumb, std::ios::app);
+        cf << "FILES_READ=1\npath=" << path << "\nbytes=" << content.size() << "\n";
+        cf.flush();
+        std::fprintf(stderr, "FILES_READ=1 path=%s bytes=%zu\n", path.c_str(),
+                     content.size());
+        std::fflush(stderr);
+    } catch (...) {
+    }
     return result;
 }
 

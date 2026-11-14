@@ -1,0 +1,60 @@
+@echo off
+setlocal
+call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat" >nul
+set CL=
+set ROOT=G:\~dev\rawrxd
+set PEER=G:\~dev\rawrxd\evidence\PRODUCTION_MATURITY_TOP25_001\GUI_TOP25_VALUATION_001\A8_MODEL_WIRE_PEER
+set BUILD=G:\~dev\rawrxd\build_win32ide_link001
+set LOG=%PEER%\rebuild_a8_ebt_r76f.log
+echo BEGIN %DATE% %TIME%> "%LOG%"
+powershell -NoProfile -Command "(Get-FileHash -Algorithm SHA256 '%ROOT%\build_win32ide_link001\bin\RawrXD-Win32IDE.exe').Hash" > "%PEER%\tip_sha_before_r76f.txt"
+cd /d "%BUILD%"
+set CLFLAGS=/nologo /TP -DHAS_BRUTAL_GZIP_MASM=1 -DHAVE_DEEP2_ENGINE=1 -DNOMINMAX -DRAWRXD_DISABLE_DUPLICATE_SHIMS=1 -DRAWRXD_HAS_ASM_PYRE=1 -DRAWRXD_HAS_MW_KERNEL=1 -DRAWRXD_HAS_PROMPT_ENGINE=1 -DRAWRXD_HAS_SOVEREIGN_GPU_ASM=0 -DRAWRXD_INFRA_AVAILABLE=1 -DRAWRXD_LINK_ADVANCED_DEOBFUSCATOR_ASM=1 -DRAWRXD_LINK_ANALYZER_DISTILLER_ASM=0 -DRAWRXD_LINK_CODEBASE_AUDIT_SYSTEM_ASM=0 -DRAWRXD_LINK_DUAL_ENGINE_QUANTUM_BEACON_ASM=0 -DRAWRXD_LINK_INFERENCE_KERNELS_ASM=1 -DRAWRXD_LINK_PATTERN_RECONSTRUCTOR_ASM=1 -DRAWRXD_LINK_PROMETHEUS_EXPORTER_ASM=1 -DRAWRXD_LINK_QUADBUFFER_ASM=1 -DRAWRXD_LINK_REVERSE_ENGINEERED_ASM=1 -DRAWRXD_LINK_SELFPATCH_AGENT_ASM=1 -DRAWRXD_LINK_SOURCEEDIT_KERNEL_ASM=1 -DRAWRXD_LINK_STREAMING_ORCHESTRATOR_ASM=0 -DRAWRXD_LINK_TELEMETRY_KERNEL_ASM=1 -DRAWRXD_LINK_UNIFIED_OVERCLOCK_GOVERNOR_ASM=0 -DRAWRXD_LINK_VISION_PROJECTION_ASM=0 -DRAWRXD_MASM_GLOBALS_LINKED=1 -DRAWRXD_PRODUCT100=1 -DRAWRXD_PRODUCTION_STRIP_STUB_SOURCES=0 -DRAWRXD_STRICT_PRODUCTION_PROFILE=0 -DRAWRXD_USE_DEDICATED_CODELENS=1 -DRAWRXD_USE_DEDICATED_HOVER=1 -DRAWRXD_USE_DEDICATED_INLAY=1 -DRAWRXD_USE_DEDICATED_MINIMAP=1 -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HAS_MASM=1 -DRAWR_HAS_MODEL_ANATOMY=1 -DRAWR_HAS_NATIVE_E2E=1 -DRAWR_HAS_QUICKJS=1 -DRAWR_HAS_RAWR_INFERENCE=1 -DRAWR_HAS_SOVEREIGN_ENGINES=0 -DRAWR_HAS_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_QUICKJS_STUB=0 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DUNICODE -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS -D_UNICODE -IG:\~dev\rawrxd\include -IG:\~dev\rawrxd\Ship -IG:\~dev\rawrxd\src\masm -IG:\~dev\rawrxd\src\sovereign_autonomy -IG:\~dev\rawrxd\src\runtime -IG:\~dev\rawrxd\src\project_wizard -IG:\~dev\rawrxd\src\snap -IG:\~dev\rawrxd\src\deep2\watchdog -IG:\~dev\rawrxd\tools\agent_esp\rawrxd_agent_esp -IG:\~dev\rawrxd\external\rawr_infra\Headers -IG:\~dev\rawrxd\external\rawr_infra\Source -IC:\VulkanSDK\1.4.357.0\include -IG:\~dev\rawrxd\native_e2e -IG:\~dev\rawrxd\build_win32ide_link001\_deps\nlohmann_json-src\include -IG:\~dev\rawrxd\src -IG:\~dev\rawrxd\src\engine -IG:\~dev\rawrxd\src\core -IG:\~dev\rawrxd\src\server -IG:\~dev\rawrxd\src\agent -IG:\~dev\rawrxd\src\agentic -IG:\~dev\rawrxd\src\cli -IG:\~dev\rawrxd\src\win32app -IG:\~dev\rawrxd\src\modules -IG:\~dev\rawrxd\src\utils -IG:\~dev\rawrxd\src\config -IG:\~dev\rawrxd\src\asm -IG:\~dev\rawrxd\src\lsp -IG:\~dev\rawrxd\src\plugin_system -IG:\~dev\rawrxd\src\ide -IG:\~dev\rawrxd\src\llm_adapter -IG:\~dev\rawrxd\src\auth -IG:\~dev\rawrxd\src\context -IG:\~dev\rawrxd\src\multimodal_engine -IG:\~dev\rawrxd\src\telemetry -IG:\~dev\rawrxd\src\ui -IG:\~dev\rawrxd\src\git -IG:\~dev\rawrxd\src\sovereign -IG:\~dev\rawrxd\src\sovereign\spine -IG:\~dev\rawrxd\src\sovereign\terminal -IG:\~dev\rawrxd\src\sovereign\build -IG:\~dev\rawrxd\src\sovereign\agent -IG:\~dev\rawrxd\src\sovereign\bus -IG:\~dev\rawrxd\src\sovereign\compression -IG:\~dev\rawrxd\src\sovereign\awareness -IG:\~dev\rawrxd\src\sovereign\validator -IG:\~dev\rawrxd\src\sovereign\recovery -IG:\~dev\rawrxd\src\sovereign\control -IG:\~dev\rawrxd\src\sovereign\capsule -IG:\~dev\rawrxd\src\sovereign\ide -IG:\~dev\rawrxd\cmake\..\include -IG:\~dev\rawrxd\3rdparty\quickjs_ng -IG:\~dev\rawrxd\src\reverse_engineering -IG:\~dev\rawrxd\src\reverse_engineering\pe_tools -IG:\~dev\rawrxd\src\deep2 -IG:\~dev\rawrxd\src\inference -IG:\~dev\rawrxd\src\codec -IG:\~dev\rawrxd\src\runtime\governance -IG:\~dev\rawrxd\rguf_source -IG:\~dev\rawrxd\src\product -IG:\~dev\rawrxd\src\product\gateway /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl- /W0 /arch:AVX2 /Zi /FS
+
+REM Restore dialog-stable AgentPanel (r71) — do NOT rebuild AgentPanel TU
+copy /Y "%PEER%\Win32IDE_AgentPanel_r71.obj" "CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AgentPanel.cpp.obj" >> "%LOG%" 2>&1
+copy /Y "G:\~dev\rawrxd\evidence\PRODUCTION_MATURITY_TOP25_001\GUI_TOP25_VALUATION_001\clean_link\obj096_decode_win\ProductRunDecode.cpp.obj" "CMakeFiles\RawrXD-Win32IDE.dir\src\deep2\lavapath\ProductRunDecode.cpp.obj" >> "%LOG%" 2>&1
+
+cl.exe %CLFLAGS% /FoCMakeFiles\RawrXD-Win32IDE.dir\src\BackendOrchestrator.cpp.obj /Fd"%PEER%\BO_a8_r76f.pdb" -c "%ROOT%\src\BackendOrchestrator.cpp" >> "%LOG%" 2>&1
+if errorlevel 1 goto :fail
+cl.exe %CLFLAGS% /FoCMakeFiles\RawrXD-Win32IDE.dir\src\agentic\AgentToolHandlers.cpp.obj /Fd"%PEER%\ToolHandlers_a8_r76f.pdb" -c "%ROOT%\src\agentic\AgentToolHandlers.cpp" >> "%LOG%" 2>&1
+if errorlevel 1 goto :fail
+cl.exe %CLFLAGS% /FoCMakeFiles\RawrXD-Win32IDE.dir\src\agentic\BoundedAgentLoop.cpp.obj /Fd"%PEER%\BoundedAgent_a8_r76f.pdb" -c "%ROOT%\src\agentic\BoundedAgentLoop.cpp" >> "%LOG%" 2>&1
+if errorlevel 1 goto :fail
+cl.exe %CLFLAGS% /Fo"%PEER%\ProductRun_a8_r76.obj" -c "%PEER%\ProductRun_a8_r76.cpp" >> "%LOG%" 2>&1
+if errorlevel 1 goto :fail
+cl.exe %CLFLAGS% /Fo"%PEER%\StreamSeh_a8_r76.obj" -c "%PEER%\StreamSeh_a8_r76.cpp" >> "%LOG%" 2>&1
+if errorlevel 1 goto :fail
+cl.exe /nologo /TP /c /O2 /MT /GS- /Fo"%PEER%\gemv_avx_wq_stub_r75.obj" "%PEER%\gemv_avx_wq_stub_r75.cpp" >> "%LOG%" 2>&1
+copy /Y "%BUILD%\InferenceEngine_sehfix.lib" "%BUILD%\InferenceEngine.lib" >> "%LOG%" 2>&1
+
+if exist "%PEER%\RawrXD-Win32IDE_tip_land_a8_modelwire.exe" del /f /q "%PEER%\RawrXD-Win32IDE_tip_land_a8_modelwire.exe"
+link /nologo ^
+  "%PEER%\StreamSeh_a8_r76.obj" ^
+  "%PEER%\ProductRun_a8_r76.obj" ^
+  "%PEER%\RawrRunSession_Body_r72.obj" ^
+  "%PEER%\SovereignRuntime_decls_r72.obj" ^
+  "%PEER%\product_deep2_infer_seh_r72.obj" ^
+  "%PEER%\product_deep2_infer_r72.obj" ^
+  "%PEER%\Deep2Engine_GpuToken_r76.obj" ^
+  "%PEER%\gemv_avx_wq_stub_r75.obj" ^
+  @"CMakeFiles\RawrXD-Win32IDE.rsp" ^
+  "%PEER%\Issue49_stub.obj" ^
+  "G:\~dev\rawrxd\evidence\PRODUCTION_MATURITY_TOP25_001\GUI_TOP25_VALUATION_001\clean_link\obj_weakcats075\Win32IDE_WeakCats_Edit.cpp.obj" ^
+  "G:\~dev\rawrxd\evidence\PRODUCTION_MATURITY_TOP25_001\GUI_TOP25_VALUATION_001\clean_link\obj_weakcats075\Win32IDE_WeakCats_Pack.cpp.obj" ^
+  "CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_DapE2EProbe_Stub.cpp.obj" ^
+  "CMakeFiles\RawrXD-Win32IDE.dir\src\deep2\lavapath\ProductRuntime_Open.cpp.obj" ^
+  /out:"%PEER%\RawrXD-Win32IDE_tip_land_a8_modelwire.exe" ^
+  /implib:"%PEER%\RawrXD-Win32IDE_a8_modelwire.lib" ^
+  /pdb:"%PEER%\RawrXD-Win32IDE_tip_land_a8_modelwire.pdb" ^
+  /machine:x64 /INCREMENTAL:NO /subsystem:windows /LTCG /LARGEADDRESSAWARE /DEBUG:FULL /MANIFEST:NO /FORCE:MULTIPLE /STACK:4194304 >> "%LOG%" 2>&1
+if not exist "%PEER%\RawrXD-Win32IDE_tip_land_a8_modelwire.exe" goto :fail
+powershell -NoProfile -Command "(Get-FileHash -Algorithm SHA256 '%PEER%\RawrXD-Win32IDE_tip_land_a8_modelwire.exe').Hash" > "%PEER%\peer_sha_r76f.txt"
+powershell -NoProfile -Command "(Get-FileHash -Algorithm SHA256 '%ROOT%\build_win32ide_link001\bin\RawrXD-Win32IDE.exe').Hash" > "%PEER%\tip_sha_after_r76f.txt"
+type "%PEER%\peer_sha_r76f.txt" >> "%LOG%"
+type "%PEER%\tip_sha_after_r76f.txt" >> "%LOG%"
+echo OK>> "%LOG%"
+exit /b 0
+:fail
+echo FAIL>> "%LOG%"
+exit /b 1
