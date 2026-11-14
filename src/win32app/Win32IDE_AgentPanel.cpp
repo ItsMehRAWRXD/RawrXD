@@ -532,9 +532,10 @@ void Win32IDE::startAgentSession(const std::string& prompt) {
         s_agentSession = std::make_unique<AgentEditSession>();
     }
     s_agentSession->SetUserPrompt(prompt);
+    m_pendingBoundedAgentPrompt = prompt;
 
-    // LOCAL_ONLY: register GGUF on BackendOrchestrator before BoundedAgent tools.
-    // settings LastModelPath alone leaves GetLoadedModelTags empty → NO_MODEL_RESIDENT.
+    // LOCAL_ONLY: resolve GGUF path on UI; LoadModel must NOT run in user-callback
+    // (0xC000041D FATAL_USER_CALLBACK — peer fault RVA→CRT __std_search_impl leaf).
     auto resolveBoundedModelPath = [this]() -> std::string {
         std::string p = getLoadedModelPath();
         if (p.empty()) {
@@ -553,30 +554,8 @@ void Win32IDE::startAgentSession(const std::string& prompt) {
         return p;
     };
     const std::string modelPath = resolveBoundedModelPath();
-    int modelResident = 0;
-    if (!modelPath.empty() && fs::exists(modelPath)) {
-        auto& bo = RawrXD::BackendOrchestrator::Instance();
-        if (!bo.IsInitialized()) bo.Initialize();
-        const std::string tag = fs::path(modelPath).stem().string();
-        const std::string useTag = tag.empty() ? "default" : tag;
-        if (bo.LoadModel(modelPath, useTag)) {
-            bo.SwapToModel(useTag);
-            modelResident = bo.GetLoadedModelTags().empty() ? 0 : 1;
-        }
-        if (!ensureAgenticBridgeHasModel(modelPath)) {
-            appendToOutput("[BoundedAgent] AgenticBridge LoadModel soft-fail; BO tags kept\n",
-                           "Agent", OutputSeverity::Warning);
-        }
-        _putenv_s("RAWRXD_PRODUCT_MODEL", modelPath.c_str());
-    } else {
-        appendToOutput("[BoundedAgent] NO_MODEL_RESIDENT path empty/missing\n",
-                       "Agent", OutputSeverity::Warning);
-    }
-    appendToOutput(std::string("[BoundedAgent] MODEL_RESIDENT=") +
-                       (modelResident ? "1" : "0") + " path=" + modelPath.substr(0, 180),
-                   "Agent", OutputSeverity::Info);
 
-    // Configure the bounded agent loop
+    // Configure the bounded agent loop (UI-safe)
     if (!s_agentLoop) {
         s_agentLoop = std::make_unique<BoundedAgentLoop>();
 
@@ -586,22 +565,20 @@ void Win32IDE::startAgentSession(const std::string& prompt) {
         config.ollamaBaseUrl = m_ollamaBaseUrl.empty() ? "" : m_ollamaBaseUrl;
         config.workingDirectory = m_settings.workingDirectory;
 
-        // Populate open files
         for (const auto& tab : m_editorTabs) {
             config.openFiles.push_back(tab.filePath);
         }
 
-        // Configure guardrails
         ToolGuardrails guards;
         guards.allowedRoots.push_back(config.workingDirectory);
         guards.maxFileSizeBytes = 10 * 1024 * 1024;
-        guards.commandTimeoutMs = static_cast<unsigned int>(IDEConfig::getInstance().getTerminalTimeoutMs(true));
+        guards.commandTimeoutMs = static_cast<unsigned int>(
+            IDEConfig::getInstance().getTerminalTimeoutMs(true));
         guards.requireBackupOnWrite = true;
         AgentToolHandlers::SetGuardrails(guards);
 
         s_agentLoop->Configure(config);
 
-        // Progress callback → update output panel
         s_agentLoop->SetProgressCallback(
             [this](int step, int maxSteps, const std::string& status, const std::string& detail) {
                 std::string msg = "[Agent Step " + std::to_string(step) + "/" +
@@ -612,7 +589,6 @@ void Win32IDE::startAgentSession(const std::string& prompt) {
                 appendToOutput(msg, "Agent", OutputSeverity::Info);
             });
 
-        // Complete callback → show results in diff panel
         s_agentLoop->SetCompleteCallback(
             [this](const std::string& answer, const AgentTranscript& transcript) {
                 appendToOutput("[Agent] Complete: " + answer.substr(0, 500),
@@ -622,15 +598,12 @@ void Win32IDE::startAgentSession(const std::string& prompt) {
                                " | Errors: " + std::to_string(transcript.ErrorCount()),
                                "Agent", OutputSeverity::Info);
 
-                // Save transcript
                 std::string transcriptDir = m_settings.workingDirectory + "/.rawrxd/transcripts/";
                 fs::create_directories(transcriptDir);
                 transcript.SaveToFile(transcriptDir + transcript.GetSessionId() + ".json");
 
-                // Refresh the agent diff panel to show proposed edits
                 refreshAgentDiffDisplay();
 
-                // Show the agent panel controls
                 if (m_hwndAgentDiffPanel)   ShowWindow(m_hwndAgentDiffPanel, SW_SHOW);
                 if (m_hwndAgentStatusLabel)  ShowWindow(m_hwndAgentStatusLabel, SW_SHOW);
                 if (m_hwndAgentAcceptAllBtn) ShowWindow(m_hwndAgentAcceptAllBtn, SW_SHOW);
@@ -640,7 +613,70 @@ void Win32IDE::startAgentSession(const std::string& prompt) {
             });
     }
 
-    // Fire async
+    if (modelPath.empty() || !fs::exists(modelPath)) {
+        appendToOutput("[BoundedAgent] NO_MODEL_RESIDENT path empty/missing\n",
+                       "Agent", OutputSeverity::Warning);
+        continueBoundedAgentAfterModelLoad(0, modelPath);
+        return;
+    }
+
+    if (!m_agenticBridge)
+        initializeAgenticBridge();
+    AgenticBridge* bridge = m_agenticBridge;
+    HWND hwndNotify = m_hwndMain;
+    const std::string pathCopy = modelPath;
+    const std::string useTag = [&]() {
+        const std::string tag = fs::path(pathCopy).stem().string();
+        return tag.empty() ? std::string("default") : tag;
+    }();
+    _putenv_s("RAWRXD_PRODUCT_MODEL", pathCopy.c_str());
+    appendToOutput("[BoundedAgent] LoadModel worker dispatch path=" + pathCopy.substr(0, 180),
+                   "Agent", OutputSeverity::Info);
+
+    // Mirror command-home WM_APP+206: LoadModel off UI to avoid C000041D.
+    std::thread([bridge, pathCopy, useTag, hwndNotify]() {
+        int resident = 0;
+        try {
+            auto& bo = RawrXD::BackendOrchestrator::Instance();
+            if (!bo.IsInitialized())
+                bo.Initialize();
+            if (bo.LoadModel(pathCopy, useTag)) {
+                bo.SwapToModel(useTag);
+                resident = bo.GetLoadedModelTags().empty() ? 0 : 1;
+            }
+            if (bridge && bridge->LoadModel(pathCopy))
+                resident = 1;
+        } catch (...) {
+            resident = 0;
+        }
+        auto* pathHeap = new (std::nothrow) std::string(pathCopy);
+        if (hwndNotify && IsWindow(hwndNotify) && pathHeap)
+            PostMessageA(hwndNotify, WM_APP + 207, static_cast<WPARAM>(resident),
+                         reinterpret_cast<LPARAM>(pathHeap));
+        else
+            delete pathHeap;
+    }).detach();
+}
+
+void Win32IDE::continueBoundedAgentAfterModelLoad(int modelResident,
+                                                    const std::string& modelPath) {
+    onBoundedAgentModelLoadDone(modelResident, modelPath);
+}
+
+void Win32IDE::onBoundedAgentModelLoadDone(int modelResident, const std::string& modelPath) {
+    if (modelResident && !modelPath.empty())
+        setLoadedModelPath(modelPath);
+    appendToOutput(std::string("[BoundedAgent] MODEL_RESIDENT=") +
+                       (modelResident ? "1" : "0") + " path=" + modelPath.substr(0, 180),
+                   "Agent", OutputSeverity::Info);
+    if (!modelResident && !modelPath.empty()) {
+        appendToOutput("[BoundedAgent] AgenticBridge/BO LoadModel soft-fail on worker\n",
+                       "Agent", OutputSeverity::Warning);
+    }
+    const std::string prompt = m_pendingBoundedAgentPrompt;
+    m_pendingBoundedAgentPrompt.clear();
+    if (prompt.empty() || !s_agentLoop)
+        return;
     appendToOutput("[Agent] Starting session: " + prompt.substr(0, 200),
                    "Agent", OutputSeverity::Info);
     s_agentLoop->ExecuteAsync(prompt);

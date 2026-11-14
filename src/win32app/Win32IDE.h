@@ -350,6 +350,7 @@ class Win32IDE
     bool loadModelForInference(const std::string& filepath);
     bool finishLoadModelForInferenceUI(const std::string& filepath, bool bridgeOk);
     void onCommandModelLoadWorkerDone(bool ok, const std::string& path);
+    void onBoundedAgentModelLoadDone(int modelResident, const std::string& modelPath);
 
     // Test agent access
     HWND getMainWindow() const { return m_hwndMain; }
@@ -2807,6 +2808,8 @@ class Win32IDE
     // ========================================================================
     void initAgentPanel();
     void startAgentSession(const std::string& userGoal);
+    void continueBoundedAgentAfterModelLoad(int modelResident, const std::string& modelPath);
+    std::string m_pendingBoundedAgentPrompt;
     void agentAcceptHunk(int fileIndex, int hunkIndex);
     void agentRejectHunk(int fileIndex, int hunkIndex);
     void agentAcceptAll();

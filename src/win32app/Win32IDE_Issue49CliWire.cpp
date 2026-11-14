@@ -43,7 +43,9 @@ bool Win32IDE::launchCliAgentIssue49Task(const std::string& taskIn)
         cfg.modelPath = m;
     else
         cfg.modelPath = "tinyllama.gguf";
-    if (!m_projectRoot.empty())
+    if (const char* ws = std::getenv("RAWRXD_WORKSPACE"))
+        cfg.workDir = ws;
+    else if (!m_projectRoot.empty())
         cfg.workDir = m_projectRoot;
     else if (!m_explorerRootPath.empty())
         cfg.workDir = m_explorerRootPath;
