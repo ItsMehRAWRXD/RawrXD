@@ -25,6 +25,7 @@ Authority: pasted RAWRXD_ENTERPRISE_PRODUCT_CERT_001 checklist · 0/128 · HELD 
 |-----|------|--------------|-----|------|
 | 617F784E LOCKED | PASS | 0/1 | 0 | no keep-GPU string; Evict embed → EXIT=NULL or AV VA=-1 |
 | 617F INIMAGE Restore 68CC | RELATED | 0/1 | 0 | RESTORE=1×2 OPEN=1 ENTER=1; soft Restore after onEvict → STREAM_SEH VA=-1 TOK=0 |
+| 617F STREAM_REBIND R76 | RELATED | 0/1 | 0 | NOT_CLOSABLE: R74≡R75 SEH; RIP=__std_fs_get_file_id HANDLE=-1 (not embed rebind) |
 | 1EFF8608 keepGPU | FAIL POST_LOAD | 0 | 0 | keep-GPU regresses session |
 | 23B5115F keepGPU | OPEN+pin | 0 | 0 | bad_alloc 0xE06D7363 @ ProductRun before ENTER |
 | 9181073D keepGPU | PASS auth=1 | 0 | 0 | OPEN closed; STREAM SEH 0xE06D7363 TOK=0 |
@@ -34,6 +35,6 @@ Authority: pasted RAWRXD_ENTERPRISE_PRODUCT_CERT_001 checklist · 0/128 · HELD 
 | F44D053D tip-absorb | PASS | 1 | 2 | R82 PUMP_SKIP ODR private; SEH=0 AUTH_HOLD RELATED ≠ tip |
 | B8E5F6E5 PrivateCand | 1 | 1 | 8 | R75 EXIT=NULL closed; SEH=0 AV_CLOSED=1 RELATED ≠ tip |
 
-`NEXT_OWNER=ATTN_PRE_O_1_POS1` · BR_TIP_ABSORB_AUTH_HOLD_R82 (F44D053D RELATED AUTH_HOLD) · llama32 inimage residual R74 68CC held separate · `TIP_CLIMB=HOLD`
+`NEXT_OWNER` (split): llama32 `PRIVATE_CAND_617F_STREAM_FS_HANDLE_OR_NON617F_REBUILD_NO_CROSS_CREDIT` (R76 NOT_CLOSABLE) · ATTN_PRE_O_1 / tip-absorb AUTH_HOLD (R82 F44D) · `TIP_CLIMB=HOLD`
 
 PROMOTE=0 until all 128 gates PASS with independent sign-off.

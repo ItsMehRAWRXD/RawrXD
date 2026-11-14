@@ -1,0 +1,71 @@
+MULTI_FAMILY_LLAMA32_QDIM084_617F_STREAM_REBIND_001
+ASOF_LOCAL=2026-11-14T00:25:00-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 NOT_RUN!=PASS
+FORCE=0 HOST_DECODE=0 REJECT_FORCE_ABSORB=1 TIP_ABSORB=N
+CROSS_SHA_CREDIT=0
+DURABLE=0
+ENTERPRISE_CERT=0/128 (RELATED/NOT_RUN only; no PASS invent)
+GATE_CLOSED=0
+INIMAGE=1
+DISPOSITION=NOT_CLOSABLE
+
+## Hash verify
+LOCKED_617F_SNAP=clean_link/LOCKED/RawrXD-Win32IDE_gemma_qdim084_617F784E.exe
+EXE_SHA256=617F784ED72938E029BA57FF0B63D8EAF1C16994860468A3BA62E08ECCE7DD1E
+HASH_VERIFY=PASS
+TIP_BIN=bin/RawrXD-Win32IDE.exe
+TIP_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431
+TIP_STILL_6754=1 TIP_RO=1 TIP_UNTOUCHED=1
+
+## Prior controlling cands (remeasure authority; no new EXE)
+| Lane | SHA16 | Inject | OPEN | ENTER | EVICT | RESTORED | STREAM_SEH | TOK×2 |
+|------|-------|--------|-----:|------:|------:|---------:|-----------:|------:|
+| R74 soft Restore | 68CCBE645E034C7E | Evict-tail Restore+pin | 1 | 1 | 1 | 1 | 1 VA=-1 | 0×2 |
+| R75 Evict-skip | CA51E347A57BCAB7 | Evict early-out token_embd | 1 | 1 | 0 | 0 | 1 VA=-1 | 0×2 |
+
+CONTROLLING_EXE=clean_link/LOCKED/RawrXD-Win32IDE_gemma_qdim084_617F_inimage_restore.exe
+EXE_SHA256=68CCBE645E034C7EB6B5D451E663608BA28A3FCCAAFC60A3EAE590C8FD24F810
+SHA16=68CCBE645E034C7E
+
+## SEH isomorphism refute (new this turn)
+R74 and R75 STREAM_SEH stacks are RVA-identical after ASLR rebase:
+  RIP_RVA=0x1F405CD  ACCESS=READ VA=FFFFFFFFFFFFFFFF  CODE=0xC0000005
+  after GENERATE_STREAM_ENTER=1 on both lanes.
+
+Fault site on LOCKED 617F/68CC image bytes @ RVA 0x1F405B0:
+  __std_fs_get_file_id (libcpmt) — mov eax,[rcx+14h] with rcx=INVALID_HANDLE (-1)
+  caller __std_fs_get_stats @ 0x1F40690+delta
+NOT a token_embd WeightTensor / GPU embed buffer dereference.
+
+Therefore:
+  soft VRAMManager::Restore after onEvict (lease RESIDENT+pin) ≠ decode fix
+  Evict early-out (lease never Evicted) ≠ decode fix
+  lease bookkeeping / embed-ptr rebind on 617F image cannot clear this SEH
+
+Peer durable 3792BAA7 (keepGPU private rebuild) closes STREAM on a different EXE
+lineage — CROSS_SHA_CREDIT=0; does not close LOCKED 617F STREAM residual.
+
+## Measured (controlling R74 2×; no invent)
+TOK_X2=0×2
+DURABLE_TOKEN_SURVIVED=0
+DURABLE=0
+OPEN=1 OPEN_SEH=0 RESTORE=1 ENTER=1 STREAM_SEH=1 VA=-1 EXIT=0
+
+## ROOT one-liner
+PRIVATE_CAND_INIMAGE_STREAM_REBIND_AFTER_ONEVICT is NOT_CLOSABLE on LOCKED 617F:
+STREAM_SEH is CRT filesystem get_file_id(HANDLE=-1) isomorphic under
+Evict+Restore and Evict-skip; lease/embed rebind is insufficient.
+
+## NEXT_OWNER
+PRIVATE_CAND_617F_STREAM_FS_HANDLE_OR_NON617F_REBUILD_NO_CROSS_CREDIT
+= identify/fix product caller that feeds INVALID_HANDLE into std::filesystem
+  on 617F after ENTER, OR private rebuild outside 617F image (no tip absorb;
+  CROSS_SHA_CREDIT=0 vs 3792)
+
+WITNESS_R74=ide_mf_qdim084_617F_inimage_restore_llama32_68CCBE645E034C7E_*
+WITNESS_R75=ide_mf_qdim084_inimage617_restore_llama32_CA51E347A57BCAB7_*
+BR=board_receipts/BR_LLAMA32_617F_STREAM_REBIND_NOT_CLOSABLE_R76.txt
+
+PROMOTE=0
+TIP_CLIMB=HOLD
+END
