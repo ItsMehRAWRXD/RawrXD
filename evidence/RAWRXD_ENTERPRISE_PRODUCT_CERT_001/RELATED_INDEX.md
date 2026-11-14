@@ -23,6 +23,7 @@ Historical / private-cand / partial RUNTIME — cite only. `CROSS_SHA_CREDIT=0`.
 | receipts/G02-04_G03-08_20261113_FFN_DOWN_2_SPV_TRIALS_RELATED.md | G02-04 G03-08 | pin 4548 restored; next C740 Q8K host OR bitexact |
 | FFN_DOWN_2 xd-onediv CLOSE aeffdf56c6 / BR_R73 | G02-04 G03-08 | CLOSED UNDER_TOL; SPV40E76D2A; RELATED≠PASS |
 | receipts/G02-04_G03-08_20261114_FFN_DOWN_2_XDONEDIV_CLOSE_RELATED.md | G02-04 G03-08 | next ATTN_PRE_O_1_POS1; tip RO |
+| receipts/G02-04_G03-08_20261114_FFN_DOWN_2_CLOSED_RELATED.md | G02-04 G03-08 | origin 306d1c2297; SPV40E76D2A; RELATED≠PASS; CLOSE_004 in flight |
 | G01-01/02/03 SELF_MEASURE EVIDENCE_PARTIAL @ 3d0928e74888 | G01 | Freeze + license stub + failed CLI rebuild; ≠ PASS |
 | build_ninja/bin/rawr.exe E5F2D304… preexisting | G01-03 G01-06 | Stale binary after rebuild EXIT=2; forensics only |
 | BR_MARS_DEDUP_LLAMA32_001 @ b61f03972e | G02 G04 | SOURCE_WIRED; remasure TOK |

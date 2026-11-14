@@ -1,0 +1,6 @@
+gpuQ_gpuKV_F16: vsREF maxAbs=4.309962e-02 @idx1944 head11=2.272028e-03 vsPROD=4.309962e-02
+refQ_gpuKV_F16: vsREF maxAbs=4.309962e-02 @idx1944 head11=2.272028e-03 vsPROD=4.309962e-02
+gpuQ_gpuKV_Qf32: vsREF maxAbs=4.310517e-02 @idx1944 head11=2.272367e-03 vsPROD=4.310517e-02
+gpuQ_gpuKV_F32acc: vsREF maxAbs=4.310292e-02 @idx1944 head11=2.268368e-03 vsPROD=4.310292e-02
+gpuQ_gpuKV_allF32: vsREF maxAbs=4.306903e-02 @idx1944 head11=2.277147e-03 vsPROD=4.306903e-02
+refQ_refKV_F16: vsREF maxAbs=4.309962e-02 @idx1944 head11=2.272028e-03 vsPROD=4.309962e-02

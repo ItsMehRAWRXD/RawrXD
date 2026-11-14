@@ -9719,21 +9719,26 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     }
     B3_TraceState("ATTN_ROPE", layer, qProj, hiddenDim);
     layerProbeCheckpoint("L12_ROPE", layer, qProj, hiddenDim, (const void*)qProj);
-    if (layer == 0) {
+    {
         const std::uint32_t pos =
             static_cast<std::uint32_t>(kvCache ? kvCache->currentLength() : (seqLen > 0 ? seqLen - 1 : 0));
         const size_t kvDim = numKVHeads * headDim;
-        AttnCert::record(AttnCert::Stage::RopeQ, 0, pos, qProj,
-                         numHeads * headDim);
-        AttnCert::record(AttnCert::Stage::RopeK, 0, pos, kProj, kvDim);
-        if (B3_StageDigestEnabled()) {
-            /* qDim from wq.rows (MiniMax 48*128=6144); not hiddenDim. */
+        if (layer == 0) {
+            AttnCert::record(AttnCert::Stage::RopeQ, 0, pos, qProj,
+                             numHeads * headDim);
+            AttnCert::record(AttnCert::Stage::RopeK, 0, pos, kProj, kvDim);
+        }
+        /* L1+ POST_ROPE dumps required for FA head11 offline ablation (CLOSE_004). */
+        if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer)) {
             const size_t qDump = (layer < modelWeights.layers.size() &&
                                   modelWeights.layers[layer].wq.rows > 0)
                                      ? modelWeights.layers[layer].wq.rows
                                      : (numHeads * headDim);
-            B3_StageDigest("Q_POST_ROPE_0", pos, qProj, qDump);
-            B3_StageDigest("K_POST_ROPE_0", pos, kProj, kvDim);
+            char qkey[64], kkey[64];
+            std::snprintf(qkey, sizeof(qkey), "Q_POST_ROPE_%zu", layer);
+            std::snprintf(kkey, sizeof(kkey), "K_POST_ROPE_%zu", layer);
+            B3_StageDigest(qkey, pos, qProj, qDump);
+            B3_StageDigest(kkey, pos, kProj, kvDim);
         }
     }
 
