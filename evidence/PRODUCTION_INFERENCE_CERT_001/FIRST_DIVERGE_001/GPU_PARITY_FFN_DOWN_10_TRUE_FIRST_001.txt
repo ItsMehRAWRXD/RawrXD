@@ -1,0 +1,54 @@
+GPU_PARITY_FFN_DOWN_10_TRUE_FIRST_001
+ASOF_LOCAL=2026-11-14T00:25:00-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 MATCH_PASS=0 DENSE_MATCH=HOLD
+PRIOR_PUSH=27c0b7731a (FFN_DOWN_2 CLOSED; cascade ATTN/FINAL OPEN)
+ORIGIN_HAS_27c0b7731a=1
+
+## Runtime pin (unchanged)
+EXE=build_ninja/bin/rawr_gpufwd_C7402085.exe
+RUNTIME_SPV_SHA=40E76D2ACBFC2380C0221CE55EA2345336264A3CF470341478E351406F42B403
+RUNTIME_SPV_LEN=17272
+NE_4548=1
+RAWRXD_Q4K_SPV=G:/~dev/rawrxd/src/backend/gemv_q4k.spv
+DUMP=stage_dump_ffn_down_2_xdonediv_cascade
+REF=stage_dump_gpu_ref (best-match llama_* when duplicate seq dumps exist)
+
+## TRUE_FIRST after FFN_DOWN_2 CLOSED
+Scan L0..L21 best-match llama refs (duplicate seq dumps mislead sorted-first):
+  L0..L9 FFN_DOWN / ATTN under class tol (Q6 + Q4 post-xdonediv)
+  L2 FFN_DOWN maxAbs=2.145767e-06 UNDER_TOL CLOSED (prior)
+  L10 FFN_DOWN maxAbs=1.524854e-05 n_gt=28 FUNCTIONAL_FAIL=1 ← TRUE_FIRST
+  L10 LAYER_OUT maxAbs=1.469254e-05 UNDER ATTN/LAYER 1e-4
+  L11 ATTN_PRE_O maxAbs=1.983643e-04 FUNCTIONAL_FAIL=1 (first ATTN-class)
+  L14 ATTN_OUT maxAbs=6.035976e-04 FUNCTIONAL_FAIL=1 (prior cascade witness)
+  FINAL_NORM maxAbs=2.236689e+00 FUNCTIONAL_FAIL=1
+
+TRUE_FIRST_SITE=FFN_DOWN_10@pos0
+WEIGHT=blk.10.ffn_down.weight TYPE=Q4_K(12) rows=2048 cols=5632
+
+## Closability (QuantKernelRegistry GetGEMV)
+PROBE=_probe_ffn_down_10_q4.exe
+  ACT deep vs llama maxAbs=8.195639e-08 (UNDER FFN tol)
+  host(ACT_d) vs deep2_DOWN maxAbs=1.490116e-08 → SPV==HOST
+  host(ACT_l) vs llama_DOWN maxAbs=1.071021e-08 → HOST==LLAMA on REF ACT
+  host(ACT_d) vs llama_DOWN maxAbs=1.524808e-05 n_gt=28
+ROOT=Q4KxQ8K_AMPLIFY_OF_ACT_YD_RESIDUAL
+FFN_DOWN_10_SPV_CLOSABLE=0
+FFN_DOWN_10_CLOSED=0
+OR_MATERIAL=1 (class tol breach; not SPV gap)
+
+## Cascade remasure (same dump; SPV40E76D2A loaded)
+| Site | maxAbs | Class tol | FUNCTIONAL_FAIL |
+|------|--------|-----------|-----------------|
+| FFN_DOWN_2 | 2.145767e-06 | 1e-5 | 0 CLOSED |
+| FFN_DOWN_10 | 1.524854e-05 | 1e-5 | 1 TRUE_FIRST |
+| ATTN_PRE_O_11 | 1.983643e-04 | 1e-4 | 1 |
+| ATTN_OUT_14 | 6.035976e-04 | 1e-4 | 1 |
+| FINAL_NORM | 2.236689e+00 | 1e-4 | 1 |
+
+NEXT_ATTN_SITE=ATTN_PRE_O_11 (FA amplify of L10 residual)
+PRIOR_WITNESS_ATTN_OUT_14 remains OPEN (not first)
+DOWN_0 / L2 CLOSED not reopened
+DENSE_MATCH=HOLD TIP_6754616E=HOLD C740_PIN_UNTOUCHED=1
+PROMOTE=0 TIP_CLIMB=HOLD
+END

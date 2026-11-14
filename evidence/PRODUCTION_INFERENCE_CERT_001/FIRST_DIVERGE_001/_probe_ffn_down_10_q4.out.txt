@@ -1,0 +1,17 @@
+[QuantKernelRegistry] Q4_K GEMV=00007FF60F2B88F0 dequant=00007FF60F2B5F80 GetGEMV(12)=00007FF60F2B88F0 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 22 GEMV kernels, 22 dequant kernels
+ffn_down_10 Q4_K rows=2048 cols=5632 bytes=6488064
+ACT deep vs llama maxAbs=8.195639e-08 peak=-1
+DOWN deep vs llama maxAbs=1.524854e-05 peak=4474
+host(ACT_d) vs deep2_DOWN maxAbs=1.490116e-08 peak=1507
+host(ACT_d) vs llama_DOWN maxAbs=1.524808e-05 peak=411
+host(ACT_l) vs llama_DOWN maxAbs=1.071021e-08 peak=1507
+host(ACT_l) vs deep2_DOWN maxAbs=1.524854e-05 peak=883
+host(ACT_d) vs llama n_gt_1e-5=28
+VERDICT=SPV_EQ_HOST_NE_LLAMA
+ROOT=LLAMA_AVX_OR_REF_KERNEL_GAP_NOT_SPV
+FFN_DOWN_10_SPV_CLOSABLE=0
+PROMOTE=0 TIP_CLIMB=HOLD
