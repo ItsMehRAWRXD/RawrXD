@@ -1,0 +1,2 @@
+runs/digest_tok8/dumps/*.bin
+runs/**/*.bin

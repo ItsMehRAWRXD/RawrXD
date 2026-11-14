@@ -1,0 +1,4 @@
+EXE=g:\~dev\rawrxd\evidence\REAP_STRATA_UNSLOTH_OLLAMA_BENCH_001\bin_pin\probe_rawr.exe.r103_moe.exe
+ENV=SSM=1;STAGE_DIGEST=1;DUMP_MAX_LAYER=0;MOE_ROUTE_TRACE=1
+ARGS=--max-tokens 8
+NOTE=Reproduce R103-like env; dump L0 only; tip 340E56D7

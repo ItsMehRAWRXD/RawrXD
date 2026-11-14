@@ -1,0 +1,20 @@
+ORNITH_BEYOND_L3_001 — LAW
+
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 CROSS_SHA_CREDIT=0
+
+1. R104 ULP_CLOSED_VS_F32_ORACLE is sealed. R103 maxULP=4962 was f64-oracle
+   artifact. Do not reopen PACKED_GEMV as MISMATCH on that basis.
+
+2. SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != SEMANTIC_PASS
+   PREFILL_FINITE L0..L40 != GENERATED_TOKENS>0 != coherent greeting.
+
+3. GPU contention can explode L0 post-SSM while POST_ATTN stays sane.
+   Contention FORWARD_FAIL ≠ product ULP regression.
+
+4. bak_r92 TOK=8 degenerate ("some"×8) is CROSS_SHA=0 control only.
+   TOK>0 ≠ SEMANTIC_PASS.
+
+5. llama hybrid LOAD PASS (R105) ≠ Deep2 experimental-SSM SEMANTIC CERT.
+
+6. NOT_RUN != PASS. HEAP 0xC0000374 with TOK=0 → SEMANTIC=FAIL (honest).
+END
