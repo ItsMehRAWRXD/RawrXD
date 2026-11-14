@@ -1,0 +1,45 @@
+GPU_PARITY_ATTN_OUT_14_CLOSE_001
+ASOF_LOCAL=2026-11-14T05:33:00-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 MATCH_PASS=0 DENSE_MATCH=HOLD
+PRIOR_PUSH=a92814d8c2 GPU_PARITY_ATTN_PRE_O_11_POS0_CLOSE_001 NOT_CLOSABLE
+PRIOR_OPROJ=GPU_PARITY_ATTN_OUT_14_OPROJ_001 REFUTED (host bitexact; L2 OUT ~1.19e-07)
+SPV_PIN=40E76D2ACBFC2380C0221CE55EA2345336264A3CF470341478E351406F42B403 LEN=17272 HELD=1
+TIP_EXE_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431 RO HOLD
+DUMP=stage_dump_ffn_down_2_xdonediv_cascade
+REF=stage_dump_gpu_ref (best-match)
+PROBE=_probe_attn_out_14_close.py
+
+## Attempt: close ATTN_OUT_14@pos0 via O-proj / residual / PRE_O ownership
+| Site | maxAbs | tol | FUNCTIONAL_FAIL |
+|------|--------|-----|-----------------|
+| LAYER13_OUT | 1.191497e-03 | 1e-4 | 1 (upstream cascade) |
+| ATTN_NORM_14 | 1.894920e-04 | 1e-4 | 1 |
+| V_14 | 3.126170e-04 | 1e-4 | 1 |
+| ATTN_PRE_O_14 | 3.128052e-04 | 1e-4 | 1 |
+| ATTN_OUT_14 | 6.035976e-04 | 1e-4 | 1 |
+| FFN_INP_14 | 1.267456e-03 | 1e-4 | 1 |
+| FINAL_NORM | 2.236689e+00 | 1e-4 | 1 |
+
+## Subsystem tests
+Residual add: deep2 FFN_INP == ATTN_OUT+LAYER13_OUT maxAbs=0 BITEXACT=1
+delta(FFN) vs delta(OUT)+delta(L13) maxAbs=3.151596e-06 UNDER_TOL=1 → add path not owner
+OUT_vs_PRE_O amp_ratio=1.929628e+00 (Q4K×Q8K amplify of PRE_O residual)
+Prior O-proj REFUTED: weight/layout/accum/SPV≠host; L2 ATTN_OUT under tol on clean inputs
+
+## Closability
+ATTN_OUT_14_CLOSABLE=0
+O_PROJ_CLOSABLE=0 (REFUTED prior; kernel OK when PRE_O clean)
+RESIDUAL_ADD_CLOSABLE=0 (already BITEXACT)
+ROOT=O_PROJ_AMPLIFY_OF_PRE_O_14_PLUS_LAYER13_CASCADE__OPROJ_REFUTED
+Closing OUT requires bitexact PRE_O_14 (+ LAYER13); PRE_O_14 residual is upstream cascade
+(from FFN_DOWN_10 / PRE_O_11 carrier class) — not a standalone wo bug
+
+## Remeasure cascade (same dump; SPV40E76D2A held)
+ATTN_OUT_14 maxAbs=6.035976e-04 FUNCTIONAL_FAIL=1
+ATTN_PRE_O_14 maxAbs=3.128052e-04 FUNCTIONAL_FAIL=1
+FINAL_NORM maxAbs=2.236689e+00 FUNCTIONAL_FAIL=1
+
+TRUE_NEXT=FINAL_NORM (next hard OPEN after ATTN_OUT_14 sealed NOT_CLOSABLE)
+DENSE_MATCH=HOLD TIP_6754616E=HOLD PCT_HELD=67/48/48 MF_qdim099=HOLD
+PROMOTE=0 TIP_CLIMB=HOLD
+END
