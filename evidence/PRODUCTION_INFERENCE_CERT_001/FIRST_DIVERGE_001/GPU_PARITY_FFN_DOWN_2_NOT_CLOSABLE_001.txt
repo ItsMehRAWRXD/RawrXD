@@ -1,0 +1,52 @@
+GPU_PARITY_FFN_DOWN_2_NOT_CLOSABLE_001
+ASOF_LOCAL=2026-11-13T23:23:30-05:00
+PROMOTE=0 TIP_CLIMB=HOLD MATCH_PASS=0 INVENT_PASS=0
+SEAL_KIND=NOT_CLOSABLE
+NO_CLASS_TOL_PCT=1
+NO_ENTERPRISE_CERT_INVENT=1
+
+## Pins (hash-verified this turn)
+C740=C74020852AC324FC6827A896060E5508F74569C7F53EB7198B9CDB92DEAEB750 PASS
+SPV_Q4K=4548BCF1EF5C4ED714041D6EFD7C32570A4EEFC431B008A6D6427CCE902FFF86 LEN=16868 PASS
+  path=src/backend/gemv_q4k.spv (+ pin/gemv_q4k.spv)
+HOLD_15A119=UNTOUCHED TIP_6754616E=UNTOUCHED RO
+FFN_DOWN_0_POS0=CLOSED (a2bdf78bf9 → 2.235174e-08) NOT_REOPENED=1
+
+## Authority
+PARENT=GPU_PARITY_LAYER2_PLUS_REMEASURE_SPV4548_001 / BR_LAYER2_PLUS_REMEASURE_SPV4548_R67
+PUSH_PRIOR=385a47eecb
+FFN_ACT_2=CLOSED maxAbs=2.384186e-07 UNDER_TOL=Y (R66 SPV precise)
+
+## Remeasure (before = after; no product delta)
+EXE=rawr_gpufwd_C7402085.exe FORCE_VULKAN PARITY=0 NO_REBUILD
+CMD=remeasure_layer2_plus_spv4548.cmd
+DUMP=stage_dump_layer2_plus_spv4548 vs stage_dump_gpu_ref(=gpu_fix)
+HOTPATH_GEMV=VULKAN Q4K_SPV bytes=16868 Q4K_OPS=268 Q6K_OPS=41
+BEFORE FFN_DOWN_2 maxAbs=1.525879e-05 UNDER_TOL=N n_gt=2/2048
+AFTER  FFN_DOWN_2 maxAbs=1.525879e-05 UNDER_TOL=N n_gt=2/2048
+AFTER  FFN_ACT_2  maxAbs=2.980232e-07 UNDER_TOL=Y
+WORST_IDX=1661,624 (1 FP32 ULP at |y|~99..135)
+
+## Root (numeric-first)
+CLASS=ACT_PEAK_ULP__Q8_DSCALE_AMPLIFY__Q6KxQ8K_FFN_DOWN
+NOT Q4K×Q8K integer-mul bug on ffn_down (TinyLlama blk.2.ffn_down = Q6_K).
+NOT Q6 SPV qs bug: offline Q8 qs(GPU_ACT)==Q8 qs(REF_ACT) = 0/5632 diffs.
+NOT invent act-kernel; host-Q4 GATE/UP previously REJECTED (hostq4_r64).
+Chain:
+  Q4 GATE/UP SPV 4548 (precise sums) → GATE maxAbs=1.907e-6 UNDER_TOL
+  → ACT float UNDER_TOL (≤3e-7) but peak ULP in 14/22 Q8 blocks
+  → Q8 qs bitexact; Q8 d-scale drifts 14/22 (rel_d ~1e-7)
+  → Q6_K×Q8_K DOWN amplifies to 1 ULP → OR-law MATERIAL at abs_tol=1e-5
+Attempted: precise amax/maxv/iscale on gemv_q4k.comp Q8 prequant
+  → glslang SPV hash UNCHANGED (still 4548BCF1…/16868); no runtime delta.
+
+## Verdict
+FFN_DOWN_2_CLOSED=0
+UNDER_TOL=N
+NOT_CLOSABLE_UNDER_ABS_TOL_1e-5_WITHOUT_BITEXACT_ACT_PEAKS=1
+NEXT_OWNER=SPV_Q4KxQ8K_GATE_UP_ACT_PEAK_BITEXACT
+  (drive ACT block-maxv 0-ULP so Q8 d matches REF; then Q6 DOWN follows)
+  ≠ FFN_DOWN_0 reopen ≠ class-tol PCT ≠ invent act-kernel
+PROMOTE=0
+TIP_CLIMB=HOLD
+END

@@ -4,26 +4,26 @@ EXE=build_ninja/bin/rawr_gpufwd_C7402085.exe SHA256=C7402085… FORCE_VULKAN SPV
 MATERIAL_IF=(maxAbs>ABS_TOL) OR (rel_rms>REL_TOL)
 PRIOR_BEFORE=GPU_PARITY_LAYER2_PLUS_C7402085_001 FIRST_MATERIAL=FFN_ACT_2 maxAbs=4.577637e-05
 PARENT_CLOSE=GPU_PARITY_FFN_ACT_2_REMEDIATE_001 CLOSED after=2.384186e-07
-ASOF=2026-11-13T23:11:13
+ASOF=2026-11-13T23:23:07
 SCAN_LAYERS=2..21 STAGE_DUMP_MAX_LAYER=21
-ATTN_NORM_2: class=NORM kind=BITWISE_DIFF maxAbs=8.642673e-07 rel_rms=9.797379e-09 UNDER_TOL=Y n_gt_abs=0/2048 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=cf8d32a9bf55b91d ref_fnv=0ff18abc923ec09f gpu=deep2_ATTN_NORM_2_pos0_layer0_full_n2048_seq040.bin ref=llama_ATTN_NORM_2_pos0_layer0_full_n2048_seq153.bin
+ATTN_NORM_2: class=NORM kind=BITWISE_DIFF maxAbs=8.344650e-07 rel_rms=8.515850e-09 UNDER_TOL=Y n_gt_abs=0/2048 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=9bae8bbc62f62e23 ref_fnv=0ff18abc923ec09f gpu=deep2_ATTN_NORM_2_pos0_layer0_full_n2048_seq040.bin ref=llama_ATTN_NORM_2_pos0_layer0_full_n2048_seq153.bin
 Q_PRE_ROPE_2: SKIP_REF_ABSENT g=True r=False class=LINEAR
 V_2: SKIP_REF_ABSENT g=True r=False class=LINEAR
-ATTN_PRE_O_2: class=ATTN kind=BITWISE_DIFF maxAbs=5.960464e-08 rel_rms=2.602173e-09 UNDER_TOL=Y n_gt_abs=0/2048 abs_tol=0.0001 rel_tol=0.001 gpu_fnv=b44d13467ea37245 ref_fnv=266cfc9ef52632c5 gpu=deep2_ATTN_PRE_O_2_pos0_layer0_full_n2048_seq048.bin ref=llama_ATTN_PRE_O_2_pos0_layer0_full_n2048_seq275.bin
+ATTN_PRE_O_2: class=ATTN kind=BITWISE_DIFF maxAbs=3.051758e-05 rel_rms=1.332315e-06 UNDER_TOL=Y n_gt_abs=0/2048 abs_tol=0.0001 rel_tol=0.001 gpu_fnv=f32ef898ff9f6045 ref_fnv=266cfc9ef52632c5 gpu=deep2_ATTN_PRE_O_2_pos0_layer0_full_n2048_seq048.bin ref=llama_ATTN_PRE_O_2_pos0_layer0_full_n2048_seq275.bin
 ATTN_OUT_2: class=ATTN kind=BITWISE_DIFF maxAbs=1.192093e-07 rel_rms=1.054135e-08 UNDER_TOL=Y n_gt_abs=0/2048 abs_tol=0.0001 rel_tol=0.001 gpu_fnv=4d6bfe13d2047f2a ref_fnv=13a753fe785b3136 gpu=deep2_ATTN_OUT_2_pos0_layer0_full_n2048_seq049.bin ref=llama_ATTN_OUT_2_pos0_layer0_full_n2048_seq277.bin
-FFN_INP_2: class=FFN kind=BITWISE_DIFF maxAbs=3.278255e-07 rel_rms=9.758071e-09 UNDER_TOL=Y n_gt_abs=0/2048 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=188850b385134ee9 ref_fnv=d5daa0fa3bf9f21b gpu=deep2_FFN_INP_2_pos0_layer0_full_n2048_seq050.bin ref=llama_FFN_INP_2_pos0_layer0_full_n2048_seq279.bin
-FFN_NORM_2: class=NORM kind=BITWISE_DIFF maxAbs=7.152557e-07 rel_rms=8.982597e-09 UNDER_TOL=Y n_gt_abs=0/2048 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=f86adb7159dcb75a ref_fnv=0f0e48d520a407dd gpu=deep2_FFN_NORM_2_pos0_layer0_full_n2048_seq051.bin ref=llama_FFN_NORM_2_pos0_layer0_full_n2048_seq281.bin
-FFN_GATE_2: class=FFN kind=BITWISE_DIFF maxAbs=1.907349e-06 rel_rms=2.251159e-09 UNDER_TOL=Y n_gt_abs=0/5632 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=f214a5e448f47e7e ref_fnv=28e9a2b018e21424 gpu=deep2_FFN_GATE_2_pos0_layer0_full_n5632_seq052.bin ref=llama_FFN_GATE_2_pos0_layer0_full_n5632_seq283.bin
-FFN_UP_2: class=FFN kind=BITWISE_DIFF maxAbs=9.536743e-07 rel_rms=3.665719e-09 UNDER_TOL=Y n_gt_abs=0/5632 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=baa8bc7836a1dd2d ref_fnv=fa859bd8efee7547 gpu=deep2_FFN_UP_2_pos0_layer0_full_n5632_seq053.bin ref=llama_FFN_UP_2_pos0_layer0_full_n5632_seq285.bin
-FFN_ACT_2: class=FFN kind=BITWISE_DIFF maxAbs=2.384186e-07 rel_rms=8.043278e-11 UNDER_TOL=Y n_gt_abs=0/5632 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=3921984acc400da8 ref_fnv=43d3cace5db68044 gpu=deep2_FFN_ACT_2_pos0_layer0_full_n5632_seq054.bin ref=llama_FFN_ACT_2_pos0_layer0_full_n5632_seq287.bin
-FFN_DOWN_2: class=FFN kind=MATERIAL_DIVERGENCE maxAbs=1.525879e-05 rel_rms=4.317886e-09 UNDER_TOL=N n_gt_abs=2/2048 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=29f0e0fa9e0ae587 ref_fnv=e3e5672ba4ee0a52 gpu=deep2_FFN_DOWN_2_pos0_layer0_full_n2048_seq055.bin ref=llama_FFN_DOWN_2_pos0_layer0_full_n2048_seq289.bin
-LAYER2_OUT: class=FFN kind=MATERIAL_DIVERGENCE maxAbs=1.525879e-05 rel_rms=4.308068e-09 UNDER_TOL=N n_gt_abs=2/2048 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=8808b5501ed144b1 ref_fnv=cf10e07eff4e8c38 gpu=deep2_LAYER2_OUT_pos0_layer0_full_n2048_seq057.bin ref=llama_LAYER2_OUT_pos0_layer0_full_n2048_seq291.bin
+FFN_INP_2: class=FFN kind=BITWISE_DIFF maxAbs=1.788139e-07 rel_rms=7.884471e-09 UNDER_TOL=Y n_gt_abs=0/2048 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=2e87e1aacdcc9fda ref_fnv=d5daa0fa3bf9f21b gpu=deep2_FFN_INP_2_pos0_layer0_full_n2048_seq050.bin ref=llama_FFN_INP_2_pos0_layer0_full_n2048_seq279.bin
+FFN_NORM_2: class=NORM kind=BITWISE_DIFF maxAbs=3.576279e-07 rel_rms=7.614540e-09 UNDER_TOL=Y n_gt_abs=0/2048 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=57c144c8dc690d97 ref_fnv=0f0e48d520a407dd gpu=deep2_FFN_NORM_2_pos0_layer0_full_n2048_seq051.bin ref=llama_FFN_NORM_2_pos0_layer0_full_n2048_seq281.bin
+FFN_GATE_2: class=FFN kind=BITWISE_DIFF maxAbs=1.907349e-06 rel_rms=2.265697e-09 UNDER_TOL=Y n_gt_abs=0/5632 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=f5d3e3230b257f4d ref_fnv=28e9a2b018e21424 gpu=deep2_FFN_GATE_2_pos0_layer0_full_n5632_seq052.bin ref=llama_FFN_GATE_2_pos0_layer0_full_n5632_seq283.bin
+FFN_UP_2: class=FFN kind=BITWISE_DIFF maxAbs=9.536743e-07 rel_rms=3.752330e-09 UNDER_TOL=Y n_gt_abs=0/5632 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=a9030c076c1b5ff9 ref_fnv=fa859bd8efee7547 gpu=deep2_FFN_UP_2_pos0_layer0_full_n5632_seq053.bin ref=llama_FFN_UP_2_pos0_layer0_full_n5632_seq285.bin
+FFN_ACT_2: class=FFN kind=BITWISE_DIFF maxAbs=2.980232e-07 rel_rms=8.140840e-11 UNDER_TOL=Y n_gt_abs=0/5632 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=084eb16d7071bf0c ref_fnv=43d3cace5db68044 gpu=deep2_FFN_ACT_2_pos0_layer0_full_n5632_seq054.bin ref=llama_FFN_ACT_2_pos0_layer0_full_n5632_seq287.bin
+FFN_DOWN_2: class=FFN kind=MATERIAL_DIVERGENCE maxAbs=1.525879e-05 rel_rms=4.309538e-09 UNDER_TOL=N n_gt_abs=2/2048 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=bb8a07c7428f4415 ref_fnv=e3e5672ba4ee0a52 gpu=deep2_FFN_DOWN_2_pos0_layer0_full_n2048_seq055.bin ref=llama_FFN_DOWN_2_pos0_layer0_full_n2048_seq289.bin
+LAYER2_OUT: class=FFN kind=MATERIAL_DIVERGENCE maxAbs=1.525879e-05 rel_rms=4.303426e-09 UNDER_TOL=N n_gt_abs=2/2048 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=a71fb40e21a36984 ref_fnv=cf10e07eff4e8c38 gpu=deep2_LAYER2_OUT_pos0_layer0_full_n2048_seq057.bin ref=llama_LAYER2_OUT_pos0_layer0_full_n2048_seq291.bin
 COMPARED_ROWS=10
 MISSING_OR_SKIP_ROWS=2
 SCANNED_LAYERS=2
 FIRST_MATERIAL_LAYER2_PLUS=FFN_DOWN_2
 FIRST_MATERIAL_MAXABS=1.525879e-05
-FIRST_MATERIAL_REL_RMS=4.317886e-09
+FIRST_MATERIAL_REL_RMS=4.309538e-09
 NEXT_MATERIAL=FFN_DOWN_2
 ALL_UNDER_TOL=N
 MATCH_PASS=0

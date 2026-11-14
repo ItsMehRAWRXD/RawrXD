@@ -40,13 +40,15 @@ void main() {
   for (uint b = 0u; b < nblk; ++b) {
     uint base = b * 256u;
     // quantize_row_q8_K for this 256-wide activation tile
-    float amax = 0.0, maxv = 0.0;
+    // precise amax/maxv/iscale: GATE residual ULP → ACT peak → Q8 d-scale
+    // amplifies into Q6_K FFN_DOWN (qs may stay bitexact while d drifts).
+    precise float amax = 0.0, maxv = 0.0;
     for (uint j = 0u; j < 256u; ++j) {
-      float ax = abs(x[base + j]);
+      precise float ax = abs(x[base + j]);
       if (ax > amax) { amax = ax; maxv = x[base + j]; }
     }
-    float xd = 0.0;
-    float iscale = 0.0;
+    precise float xd = 0.0;
+    precise float iscale = 0.0;
     int q8[256];
     int bsums[16];
     for (uint j = 0u; j < 256u; ++j) q8[j] = 0;
