@@ -1,0 +1,57 @@
+MULTI_FAMILY_LLAMA32_QDIM084_STREAM_MIN617_001
+ASOF_LOCAL=2026-11-13T23:24:00-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 NOT_RUN!=PASS
+FORCE=0 HOST_DECODE=0 REJECT_FORCE_ABSORB=1 TIP_ABSORB=N
+CROSS_SHA_CREDIT=0
+DURABLE=0
+ENTERPRISE_CERT=0/128 (RELATED/NOT_RUN only; no PASS invent)
+GATE_CLOSED=0
+
+## Hash verify
+LOCKED_617F_SNAP=clean_link/LOCKED/RawrXD-Win32IDE_gemma_qdim084_617F784E.exe
+EXE_SHA256=617F784ED72938E029BA57FF0B63D8EAF1C16994860468A3BA62E08ECCE7DD1E
+HASH_VERIFY=PASS
+TIP_BIN=bin/RawrXD-Win32IDE.exe
+TIP_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431
+TIP_STILL_6754=1 TIP_UNTOUCHED=1
+
+## Private cand (Restore-only on 617F-base source)
+EXE=clean_link/LOCKED/RawrXD-Win32IDE_gemma_qdim084_stream_min617.exe
+EXE_SHA256=F5DCEC4E59E0FBE022B50DD1627FD34E39DDBCEC1E41C02F99E6BEC1783310CD
+SHA16=F5DCEC4E59E0FBE0
+DELTA=Deep2Engine generateStream TOKEN_EMBD_STREAM_RESTORE only on parent 585379bd
+     (no CrashRecovery::shutdown, no alreadyClosed, no place-time keepGPU,
+      no HotPatcher/genQuality WT surface; Body=a178^ POST_LOAD_ROOTS path)
+STRINGS=RESTORE=1 CRASHDISARM=0 ALREADY=0
+LINK=full link084_qdim.rsp (617F-class size 332325376; not 18B 307MB truncated)
+
+## Measured 2× llama32 Q2_K headless
+| Run | OPEN | EVICT | STREAM_ENTER | STREAM_SEH | OPEN_SEH | TOK | Notes |
+|-----|-----:|------:|-------------:|-----------:|---------:|----:|-------|
+| 617F sealctrl prior | 1 | 1 | 1 | 1 VA=-1 | 0 | 0 | baseline |
+| 617F ctrl this turn | 1 | ? | 1 | 1 | 0 | 0 | EXIT heap on teardown only |
+| F5DCEC4E #1 | 0 | 0 | 0 | 0 | 1 READ VA=-8 | 0 | OPEN_SEH before place |
+| F5DCEC4E #2 | 0 | 0 | 0 | 0 | 1 | 0 | same |
+
+TOK_X2=0×2
+DURABLE_TOKEN_SURVIVED=0
+DURABLE=0
+
+## ROOT one-liner
+Restore-only Engine rebuilt from 585379bd + Restore block is SOURCE_WIRED, but current
+link084_qdim.rsp companion objs have drifted vs frozen 617F snap → ProductOpen SEH
+0xC0000005 READ VA=FFFFFFFFFFFFFFF8 (OPEN_SEH=1). Restore path never reached.
+Dedupctrl (dedup Deep2Engine @10:24, no Restore) also OPEN_SEH=1 on same rsp → not Restore-delta alone.
+
+## NEXT_OWNER
+PRIVATE_CAND_STREAM_RESTORE_ON_FROZEN_617F_LINK_CORPUS
+= either (a) restore exact object set that produced 617F784E and swap Restore-only
+  Deep2Engine.obj, or (b) in-image Restore inject on LOCKED 617F784E snap itself
+THEN remasure 2× TOK>0 for DURABLE=1
+
+WITNESS=ide_mf_qdim084_stream_min617_llama32_F5DCEC4E*_LATEST.meta.txt
+WITNESS_617F_CTRL=_ctrl617.err.txt (OPEN=1 ENTER=1 this turn)
+
+PROMOTE=0
+TIP_CLIMB=HOLD
+END

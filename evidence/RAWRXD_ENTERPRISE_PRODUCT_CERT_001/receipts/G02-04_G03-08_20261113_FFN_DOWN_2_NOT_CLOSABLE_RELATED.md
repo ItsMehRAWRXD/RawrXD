@@ -11,8 +11,9 @@
 | maxAbs after | 1.525879e-05 |
 | UNDER_TOL | N (n_gt=2/2048) |
 | FFN_ACT_2 | UNDER_TOL=Y (≤2.98e-07) |
-| ROOT | ACT peak ULP → Q8 d-scale amplify → Q6_K×Q8_K DOWN (qs 0/5632) |
-| NEXT_OWNER | SPV_Q4KxQ8K_GATE_UP_ACT_PEAK_BITEXACT |
+| WEIGHT | blk.2.ffn_down Q4_K 6488064B (≠ Q6) |
+| ROOT | SPV Q4K×Q8K FFN_DOWN 1 ULP (host(GPU_ACT)==REF @624/1661) |
+| NEXT_OWNER | SPV_Q4KxQ8K_BITEXACT |
 | EXE_SHA256 | C74020852AC324FC6827A896060E5508F74569C7F53EB7198B9CDB92DEAEB750 |
 | SPV_SHA256 | 4548BCF1EF5C4ED714041D6EFD7C32570A4EEFC431B008A6D6427CCE902FFF86 |
 | FFN_DOWN_0@pos0 | CLOSED — not reopened |
@@ -21,4 +22,4 @@
 | TIP_CLIMB | HOLD |
 | CERTIFIED | 0 · 0/128 |
 
-NOTE: No class-tol PCT. No invent act-kernel. SPV precise-Q8-prequant annotate → bytecode still 4548.
+NOTE: No class-tol PCT. No invent act-kernel. Corrects prior RELATED that mislabeled Q6 / ACT-peak owner.

@@ -40,8 +40,8 @@ void main() {
   for (uint b = 0u; b < nblk; ++b) {
     uint base = b * 256u;
     // quantize_row_q8_K for this 256-wide activation tile
-    // precise amax/maxv/iscale: GATE residual ULP → ACT peak → Q8 d-scale
-    // amplifies into Q6_K FFN_DOWN (qs may stay bitexact while d drifts).
+    // precise amax/maxv/iscale (annotate-only; SPV hash still 4548BCF1/16868).
+    // FFN_DOWN_2 MATERIAL owner = SPV Q4K×Q8K accumulate 1ULP (blk.2 down=Q4_K).
     precise float amax = 0.0, maxv = 0.0;
     for (uint j = 0u; j < 256u; ++j) {
       precise float ax = abs(x[base + j]);
