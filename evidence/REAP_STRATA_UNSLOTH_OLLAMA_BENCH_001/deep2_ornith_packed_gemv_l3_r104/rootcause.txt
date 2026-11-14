@@ -1,0 +1,24 @@
+PACKED_GEMV_L3_ULP_CLOSE R104 ROOTCAUSE
+PROMOTE=0 INVENT_PASS=0 CROSS_SHA_CREDIT=0
+
+## Symptom (R103)
+MOE_GATE_L3 firstDiff; E37 maxAbs=4.65e-7 maxULP=4962 ABS_NEAR≠ULP_OK
+E33 maxAbs=4.49e-7 maxULP=4304
+QUANT path / scale / expert slice / act layout were suspects.
+
+## Refuted
+- Expert weight slice wrong: GATE/UP BITEXACT under f32 → slice OK
+- Q4_K scale/nibble layout wrong: bitexact under f32 → layout OK
+- Act layout / MoE IN wrong: same IN dump produces bitexact GATE/UP
+- Product GEMV bug: QuantKernelRegistry f32 path matches ggml mul_mat class
+
+## Confirmed root
+R103 oracle_packed_gemv_l3.py used Python float64 for Q4/Q6×Q8_K accum.
+Deep2 runtime uses float32 (vec_dot_q4_K_q8_K / vec_dot_q6_K_q8_K).
+Abs residual ~4e-7 is f64↔f32 accum noise; ULP inflated on smaller-magnitude rows.
+DOWN also required XR SiLU association: silu=gate/(1+exp(-gate)); out=silu*up (f32).
+
+## Disposition
+FIX=oracle f32 authority (oracle_packed_gemv_l3_f32.py)
+REMEASURE vs same R103 dumps + same EXE 340E56D7 → BITEXACT E37/E33
+NO product binary change. llama REF_LOAD still BLOCKED (ssm_conv1d L40).

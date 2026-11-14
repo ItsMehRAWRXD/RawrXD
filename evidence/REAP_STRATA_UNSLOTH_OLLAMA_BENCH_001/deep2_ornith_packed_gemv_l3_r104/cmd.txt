@@ -1,0 +1,9 @@
+GATE=ORNITH_PACKED_GEMV_L3_R104
+ASOF=2026-11-14T11:21-05:00
+DUMP_DIR=../deep2_ornith_packed_gemv_l3_r103/dumps
+GGUF=F:\OllamaModels\_REAP16\ornith-1_5-35b-REAP194\sha256-aaeb640f98a892980ef54876024293cc8d6987a86523aa1b947ffa9274ef800a
+EXE=../bin_pin/probe_rawr.exe.r103_moe.exe
+EXE_SHA256=340E56D7D50291D341ECF391CA6B0A834DD43112773284B90554FBD88EE81699
+CMD=py -3 oracle_packed_gemv_l3_f32.py --dump-dir <DUMP_DIR> --gguf <GGUF> --expert 37
+CMD=py -3 oracle_packed_gemv_l3_f32.py --dump-dir <DUMP_DIR> --gguf <GGUF> --expert 33
+NOTE=No product rebuild; remasure only. PROMOTE=0
