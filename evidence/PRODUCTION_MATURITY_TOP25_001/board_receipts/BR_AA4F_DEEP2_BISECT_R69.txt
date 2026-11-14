@@ -1,0 +1,25 @@
+BR_AA4F_DEEP2_BISECT_R69
+ASOF_LOCAL=2026-11-13T22:59-05:00
+AUTH=PARENT_BOARD_AUTHORITY / BOARD_SINGLE_WRITER
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 CROSS_SHA_CREDIT=0
+PCT_HELD=CLI67/GUI48/OVERALL48
+GATE_MATRIX_PASS=0
+
+## Absorbed (worker c0810162-31a9-4f8d-98fc-dcf9b38ecbdc)
+PUSH=38debc0796
+EXE_isoB=F0117A8DB143A1B8C98F76FFB3E12D3A48B2D897213636033C2D97EA702F77FB
+AV_CLOSED=0 TOK=0 SEH=1 tip=6754616E RO
+
+## Bisect split
+CURRENT Deep2 (721011F6): mid-VRAM hard AV ~blk.23 (no stream enter)
+bak/embd Deep2: past VRAM → STREAM_SEH leaf ROOT_OBJ=libucrt:fclose.obj (_fclose_*, READ VA=-1)
+GpuForward: same both rsps — NOT delta
+embd-resident / old HotPatcher / IE qdim077 / bunnyhop=0: did not close AV
+Control 7FD1 TOK=8 SEH=0 (CROSS_SHA=0)
+
+## Next
+NEXT_A=DEEP2ENGINE_CURRENT_MID_VRAM_DELTA vs bak (owner of blk.23 truncate)
+NEXT_B=FILE*_LIFETIME before fclose after stream/open (VA=-1 leaf)
+Prefer A then B for TOK>0 path matching 7FD1 without tip overwrite
+PROMOTE=0
+END
