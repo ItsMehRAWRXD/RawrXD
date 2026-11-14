@@ -32,12 +32,18 @@
 #include "../agentic/AgentTranscript.h"
 #include "../agentic/BoundedAgentLoop.h"
 #include "../BackendOrchestrator.h"
+#include "../product/gateway/product_deep2_infer.hpp"
 
 #include <fstream>
 #include <sstream>
 #include <algorithm>
 #include <filesystem>
 #include <cstdlib>
+#include <cstdio>
+#include <cstring>
+#include <new>
+#include <string>
+#include <thread>
 #include <windows.h>
 #include "gguf_loader.h"
 
@@ -47,6 +53,53 @@ using namespace RawrXD::Diff;
 
 // File-static: do NOT add Win32IDE data members (peer tip-land partial relink).
 static std::string s_pendingBoundedAgentPrompt;
+
+/* SEH-only frame: ProductOpen cookie failfast is not catchable; still soft-fail. */
+static int a8ProductOpenSeh(const char* path, unsigned long* sehCodeOut) noexcept {
+    if (sehCodeOut) *sehCodeOut = 0;
+    if (!path || !path[0]) return 0;
+    __try {
+        return rawr::ProductOpenSession(path) ? 1 : 0;
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+        if (sehCodeOut) *sehCodeOut = GetExceptionCode();
+        return 0;
+    }
+}
+
+/* Inline worker — no separate 16MB TU /FORCE (MENU=0). Default PE /STACK. */
+static void a8SpawnBoundedLoadInline(HWND hwndNotify, const std::string& path) {
+    std::thread([hwndNotify, path]() {
+        int resident = 0;
+        unsigned long sehCode = 0;
+        _putenv_s("RAWRXD_FORCE_CPU_INFERENCE", "0");
+        _putenv_s("RAWR_FORCE_CPU", "0");
+        _putenv_s("RAWRXD_BRIDGE_CPU_ONLY", "0");
+        _putenv_s("RAWRXD_ALLOW_GPU", "1");
+        _putenv_s("RAWR_FORCE_GPU", "1");
+        _putenv_s("RAWR_NO_CPU_FALLBACK", "1");
+        _putenv_s("RAWRXD_HOST_DECODE", "0");
+        _putenv_s("RAWRXD_PRODUCT_MODEL", path.c_str());
+        const char* how = "ProductOpen_fail";
+        if (a8ProductOpenSeh(path.c_str(), &sehCode)) {
+            resident = 1;
+            how = "ProductOpenSession_direct";
+        } else if (sehCode != 0) {
+            how = "ProductOpen_SEH";
+        }
+        fprintf(stderr, "[BoundedAgent] worker done resident=%d how=%s seh=0x%08lX\n",
+                resident, how, sehCode);
+        fflush(stderr);
+        auto* pathHeap = new (std::nothrow) std::string(path);
+        if (hwndNotify && IsWindow(hwndNotify) && pathHeap) {
+            if (!PostMessageA(hwndNotify, WM_APP + 207, static_cast<WPARAM>(resident),
+                              reinterpret_cast<LPARAM>(pathHeap))) {
+                delete pathHeap;
+            }
+        } else {
+            delete pathHeap;
+        }
+    }).detach();
+}
 
 // ============================================================================
 // STRUCTURES
@@ -623,42 +676,24 @@ void Win32IDE::startAgentSession(const std::string& prompt) {
         return;
     }
 
-    if (!m_agenticBridge)
-        initializeAgenticBridge();
-    AgenticBridge* bridge = m_agenticBridge;
     HWND hwndNotify = m_hwndMain;
     const std::string pathCopy = modelPath;
-    const std::string useTag = [&]() {
-        const std::string tag = fs::path(pathCopy).stem().string();
-        return tag.empty() ? std::string("default") : tag;
-    }();
     _putenv_s("RAWRXD_PRODUCT_MODEL", pathCopy.c_str());
     appendToOutput("[BoundedAgent] LoadModel worker dispatch path=" + pathCopy.substr(0, 180),
                    "Agent", OutputSeverity::Info);
-
-    // Mirror command-home WM_APP+206: LoadModel off UI to avoid C000041D.
-    std::thread([bridge, pathCopy, useTag, hwndNotify]() {
-        int resident = 0;
-        try {
-            auto& bo = RawrXD::BackendOrchestrator::Instance();
-            if (!bo.IsInitialized())
-                bo.Initialize();
-            if (bo.LoadModel(pathCopy, useTag)) {
-                bo.SwapToModel(useTag);
-                resident = bo.GetLoadedModelTags().empty() ? 0 : 1;
-            }
-            if (bridge && bridge->LoadModel(pathCopy))
-                resident = 1;
-        } catch (...) {
-            resident = 0;
-        }
-        auto* pathHeap = new (std::nothrow) std::string(pathCopy);
-        if (hwndNotify && IsWindow(hwndNotify) && pathHeap)
-            PostMessageA(hwndNotify, WM_APP + 207, static_cast<WPARAM>(resident),
-                         reinterpret_cast<LPARAM>(pathHeap));
-        else
-            delete pathHeap;
-    }).detach();
+    fprintf(stderr, "[BoundedAgent] LoadModel worker dispatch path=%s\n", pathCopy.c_str());
+    fflush(stderr);
+    try {
+        fs::create_directories(fs::path(m_settings.workingDirectory) / ".rawrxd");
+        std::ofstream df(fs::path(m_settings.workingDirectory) / ".rawrxd" /
+                             "MODEL_LOAD_DISPATCH.txt",
+                         std::ios::trunc);
+        df << "DISPATCH=1\nPATH=" << pathCopy << "\nSTACK_MB=PE_DEFAULT\n";
+        df.flush();
+    } catch (...) {
+    }
+    // Inline std::thread ProductOpen — no 16MB TU /FORCE (MENU=0 regression).
+    a8SpawnBoundedLoadInline(hwndNotify, pathCopy);
 }
 
 void Win32IDE::continueBoundedAgentAfterModelLoad(int modelResident,
@@ -669,17 +704,42 @@ void Win32IDE::continueBoundedAgentAfterModelLoad(int modelResident,
 void Win32IDE::onBoundedAgentModelLoadDone(int modelResident, const std::string& modelPath) {
     if (modelResident && !modelPath.empty())
         setLoadedModelPath(modelPath);
-    appendToOutput(std::string("[BoundedAgent] MODEL_RESIDENT=") +
-                       (modelResident ? "1" : "0") + " path=" + modelPath.substr(0, 180),
-                   "Agent", OutputSeverity::Info);
+    const std::string crumb = std::string("[BoundedAgent] MODEL_RESIDENT=") +
+                              (modelResident ? "1" : "0") + " path=" + modelPath.substr(0, 180);
+    appendToOutput(crumb, "Agent", OutputSeverity::Info);
+    fprintf(stderr, "%s\n", crumb.c_str());
+    fflush(stderr);
+    try {
+        const fs::path wsDir =
+            fs::path(m_settings.workingDirectory.empty() ? "." : m_settings.workingDirectory) /
+            ".rawrxd";
+        fs::create_directories(wsDir);
+        std::ofstream cf(wsDir / "MODEL_RESIDENT_CRUMB.txt", std::ios::trunc);
+        cf << "MODEL_RESIDENT=" << (modelResident ? 1 : 0) << "\n"
+           << "PATH=" << modelPath << "\nWM_APP_207=1\n" << crumb << "\n";
+        char exePath[MAX_PATH] = {};
+        if (GetModuleFileNameA(nullptr, exePath, MAX_PATH) > 0) {
+            fs::path peerLog = fs::path(exePath).parent_path() / "logs";
+            fs::create_directories(peerLog);
+            std::ofstream lf(peerLog / "MODEL_RESIDENT_CRUMB.txt", std::ios::trunc);
+            lf << "MODEL_RESIDENT=" << (modelResident ? 1 : 0) << "\nPATH=" << modelPath << "\n";
+        }
+    } catch (...) {
+    }
     if (!modelResident && !modelPath.empty()) {
-        appendToOutput("[BoundedAgent] AgenticBridge/BO LoadModel soft-fail on worker\n",
+        appendToOutput("[BoundedAgent] ProductOpen LoadModel soft-fail on worker\n",
                        "Agent", OutputSeverity::Warning);
     }
     const std::string prompt = s_pendingBoundedAgentPrompt;
     s_pendingBoundedAgentPrompt.clear();
     if (prompt.empty() || !s_agentLoop)
         return;
+    // Fail-closed: do not ExecuteAsync without MODEL_RESIDENT (avoids C0000409 after soft-fail).
+    if (!modelResident) {
+        appendToOutput("[BoundedAgent] HOLD ExecuteAsync MODEL_RESIDENT=0\n",
+                       "Agent", OutputSeverity::Warning);
+        return;
+    }
     appendToOutput("[Agent] Starting session: " + prompt.substr(0, 200),
                    "Agent", OutputSeverity::Info);
     s_agentLoop->ExecuteAsync(prompt);
@@ -857,6 +917,8 @@ void Win32IDE::onBoundedAgentLoop() {
 
     EnableWindow(m_hwndMain, FALSE);
 
+    // STATIC popup (A8-safe). BN_CLICKED uses SendMessage→DefWindowProc (misses
+    // GetMessage filter). Harness PostMessage(WM_COMMAND,IDOK) hits the filter.
     HWND hwndDlg = CreateWindowExA(WS_EX_DLGMODALFRAME, "STATIC", "Bounded Agent Loop",
         WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
         dlgX, dlgY, dlgWidth, dlgHeight, m_hwndMain, nullptr, m_hInstance, nullptr);
@@ -874,7 +936,7 @@ void Win32IDE::onBoundedAgentLoop() {
         WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_LEFT,
         10, 35, dlgWidth - 30, 24, hwndDlg, (HMENU)2001, m_hInstance, nullptr);
 
-    HWND hwndOk = CreateWindowExA(0, "BUTTON", "Run Agent",
+    CreateWindowExA(0, "BUTTON", "Run Agent",
         WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
         dlgWidth - 210, dlgHeight - 55, 95, 30,
         hwndDlg, (HMENU)IDOK, m_hInstance, nullptr);
