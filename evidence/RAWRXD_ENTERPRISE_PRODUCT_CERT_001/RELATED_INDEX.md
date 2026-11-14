@@ -62,6 +62,7 @@ Historical / private-cand / partial RUNTIME — cite only. `CROSS_SHA_CREDIT=0`.
 | cand_c36_conpty 0C6A965A | G07-01 G07-04 G05-05 G06-05 | LSP INIT_OK + ConPTY stop PASS on cand; tip6754 RO unchanged |
 | tip6754 C36 remasure 20261113_230552 | G07-01 G07-04 | tip C36_INIT=HANG/TIMEOUT; cand INIT_OK RELATED only |
 | tipera ConPTY stop 20261113_230700 | G05-05 G06-05 | tip-era TM stop PASS host RELATED; tip EXE RO |
+| BR_P4_CONPTY_STOP_R94 / G05-05+G06-05_20261114_priv_r94 | G05-05 G06-05 | private termctl+host PASS 5/5 EXIT=0; Win32 TM PASS; tip 15A119 RO; ≠ CERT PASS |
 | M3 model-select tipbound diag 20261113_230900 | G08-01 | MODEL_SELECTED=0 unk; FORCE≠select; wire SOURCE_WIRED RUNTIME=0 |
 | BR_C36_CONPTY_M3_TIP_R70 | G05 G06 G07 G08 | P1 tip remasure board receipt |
 | P2 llama32 Elastic+MARS qdim083/084 | G02-08 G06-06 | ROOT_CLEAR; DURABLE TOK=0; RELATED≠PASS |

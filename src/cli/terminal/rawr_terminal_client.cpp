@@ -42,25 +42,39 @@ bool EnsureHostRunning(const std::string& hostExePath) {
 
 bool TermClientTransact(const std::string& req, std::string& rsp) {
     rsp.clear();
-    HANDLE h = CreateFileA(HostPipeName(), GENERIC_READ | GENERIC_WRITE, 0,
-                           nullptr, OPEN_EXISTING, 0, nullptr);
-    if (h == INVALID_HANDLE_VALUE) return false;
     std::string line = req;
     if (line.empty() || line.back() != '\n') line.push_back('\n');
-    DWORD wr = 0;
-    if (!WriteFile(h, line.data(), (DWORD)line.size(), &wr, nullptr)) {
+    // Retry pipe connect/IO: tip term stop EXIT=8 flake when instance
+    // is between Accept swaps (STOP is now idempotent on host).
+    for (int attempt = 0; attempt < 40; ++attempt) {
+        HANDLE h = CreateFileA(HostPipeName(), GENERIC_READ | GENERIC_WRITE, 0,
+                               nullptr, OPEN_EXISTING, 0, nullptr);
+        if (h == INVALID_HANDLE_VALUE) {
+            DWORD e = GetLastError();
+            if (e == ERROR_PIPE_BUSY || e == ERROR_FILE_NOT_FOUND) {
+                Sleep(25);
+                continue;
+            }
+            return false;
+        }
+        DWORD wr = 0;
+        if (!WriteFile(h, line.data(), (DWORD)line.size(), &wr, nullptr)) {
+            CloseHandle(h);
+            Sleep(25);
+            continue;
+        }
+        char buf[65536];
+        DWORD rd = 0;
+        if (!ReadFile(h, buf, sizeof(buf), &rd, nullptr) || rd == 0) {
+            CloseHandle(h);
+            Sleep(25);
+            continue;
+        }
+        rsp.assign(buf, buf + rd);
         CloseHandle(h);
-        return false;
+        return true;
     }
-    char buf[65536];
-    DWORD rd = 0;
-    if (!ReadFile(h, buf, sizeof(buf), &rd, nullptr) || rd == 0) {
-        CloseHandle(h);
-        return false;
-    }
-    rsp.assign(buf, buf + rd);
-    CloseHandle(h);
-    return true;
+    return false;
 }
 
 static bool parseData(const std::string& rsp, std::string& data) {

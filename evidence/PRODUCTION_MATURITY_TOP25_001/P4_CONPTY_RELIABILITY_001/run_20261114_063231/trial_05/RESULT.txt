@@ -1,0 +1,1 @@
+trial=5 name=p4r5 start_exit=0 start_ok=1 pid=33352 out_exit=0 out_ok=1 marker=1 stop_exit=0 stop_ok=1 cleanup_ok=1 list= idem_stop_exit=0 idem_stop_ok=1

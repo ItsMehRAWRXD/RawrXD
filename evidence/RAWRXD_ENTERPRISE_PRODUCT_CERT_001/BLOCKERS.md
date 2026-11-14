@@ -14,7 +14,7 @@ Authority: pasted RAWRXD_ENTERPRISE_PRODUCT_CERT_001 checklist · 0/128 · HELD 
 | P0 | LOGITS (post FINAL_NORM) | G02-04 G03-08 | R91: FUNCTIONAL_FAIL=1 maxAbs=3.432989e-01 ARGMAX_MATCH=1; residual-budget/ARGMAX-only; Dense HOLD ≠ invent MATCH; TRUE_NEXT=residual-budget |
 | P0 | Multi-family STREAM / M1M2 TOK | G02-08 G04-01 G06-06 | F44D053D tip-absorb R82 OPEN=1 ENTER=1 TOK=2 SEH=0 RELATED; tip RO; 085f TOK=0; qdim099 MF HOLD candidate 023005C2 |
 | P1 | C36 tip LSP RUNTIME_REACHED | G07-01 G07-04 | **NEXT_BLOCKER** tip6754 still RUNTIME_REACHED=0; private tip-lineage D448288B R93 RUNTIME_REACHED=1 SEAL=RUNTIME_REACHED; tip absorb BOARD_PROPOSAL_ONLY (SHA≠6754); CROSS_SHA=0 PROMOTE=0; ≠ tip PASS |
-| P1 | ConPTY terminal-stop reliability | G05-05 G06-05 | tip-era PASS RELATED (R70); cand PASS RELATED; ≠ CERT PASS; secondary to C36 tip RUNTIME |
+| P1 | ConPTY terminal-stop reliability | G05-05 G06-05 | R94 private termctl+host PASS RELATED EXIT=0 (5/5 idem); Win32 TM PASS; tip 15A119 RO flake residual; ≠ CERT PASS |
 | P1 | M3 MODEL_SELECTED_TOOL / tipbound | G05-06 G08-01 | FORCE PASS; model-select=0 unk; wire SOURCE_WIRED RUNTIME=0 |
 | P2 | M4 Authenticode + CLEAN_VM | G12-02 G12-03 | ABSENT / NOT_RUN (no hypervisor) |
 | P2 | CLI clean rebuild | G01-03 | BUILD_OK=1 EXIT=0 EXE A95A1254…; CLEAN_MACHINE=0; EVIDENCE_PARTIAL ≠ PASS |

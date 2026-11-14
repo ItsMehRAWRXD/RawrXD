@@ -34,7 +34,8 @@ struct TerminalSupervisor {
     bool stop(const std::string& name) {
         std::lock_guard<std::mutex> lk(mu);
         auto it = map.find(name);
-        if (it == map.end()) return false;
+        // Idempotent: already-absent is success (tip term stop EXIT=8 residual).
+        if (it == map.end()) return true;
         bool ok = SessionStop(*it->second);
         map.erase(it);
         return ok;

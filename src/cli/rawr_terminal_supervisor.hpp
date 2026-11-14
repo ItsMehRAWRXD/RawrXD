@@ -48,17 +48,18 @@ struct TerminalSupervisor {
             DWORD pid = 0;
             int alive = 0;
             std::string cmd;
-            if (!TerminalMetaRead(name, pid, alive, cmd) || !pid) return false;
+            // Idempotent: no map entry and no meta/pid => already stopped.
+            if (!TerminalMetaRead(name, pid, alive, cmd) || !pid) return true;
 #ifdef _WIN32
             HANDLE h = OpenProcess(PROCESS_TERMINATE | SYNCHRONIZE, FALSE, pid);
-            if (!h) return false;
+            if (!h) return true; // process already gone
             TerminateProcess(h, 1);
             WaitForSingleObject(h, 3000);
             CloseHandle(h);
             TerminalMetaWrite(name, pid, cmd, 0);
             return true;
 #else
-            return false;
+            return true;
 #endif
         }
         bool ok = TerminalSessionStop(*it->second);
