@@ -12,7 +12,8 @@ ORNITH=NOT_TOUCHED
 
 ## EXE (this pack — ≠ frozen smoke 0E53D810; ≠ prior diag 9797521C as PASS)
 EXE=G:\~dev\rawrxd\build_ninja\bin\rawr.exe
-EXE_SHA256=8307A73610A31EADDE31D84148D1FB27BFE829C1D705AFEB1CED4786BDAF968D
+EXE_SHA256=E7797EE8FC5C28F4F1DD4896B81CF9B5E585148D662009CF286649BC4C3579EE
+EXE_SHA_INTERIM_8307A736=superseded_by_relink_resmoke (same fix; CROSS_SHA=0)
 MODEL=G:\~dev\rawrxd\models\tinyllama.gguf
 PROMPT=2+2=
 SMOKE_0E53D810=NOT_CREDITED
@@ -42,7 +43,8 @@ HOST_DEFAULT=RETAINED (!DEEP2_Q6K_FORCE_VULKAN_SPV → Q6K_HOST_GEMV)
 ## Product path smoke (new SHA)
 FORCE_SPV=
   ENV=RAWRXD_GPU_LAYER_FINITE=1 DEEP2_Q6K_FORCE_VULKAN_SPV=1 RAWRXD_GPU_POLICY=SOLO
-  runs/force_spv_solo_postfix.err.txt
+  runs/force_spv_solo_resmoke.err.txt (authority EXE=E7797EE8)
+  also: runs/force_spv_solo_postfix.* (interim 8307A736)
   v_proj ly0 finite=256/256 nonFinite=0 norm=7.974118e-02 (matches host probe)
   NO FIRST_NONFINITE / NO FORWARD_FAIL
   STDOUT="Yes, 2 + 2 =" EXIT=0
