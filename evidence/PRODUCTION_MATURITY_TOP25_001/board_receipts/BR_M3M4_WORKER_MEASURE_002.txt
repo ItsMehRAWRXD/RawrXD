@@ -1,0 +1,48 @@
+BR_M3M4_WORKER_MEASURE_002
+ASOF_LOCAL=2026-11-13T21:58:00-05:00
+WORKER=M3M4_CONTINUE (subagent)
+AUTH=BOARD_SINGLE_WRITER.txt
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 NOT_RUN!=PASS
+CANON_HELD=CLI67 GUI48 OVERALL48 (NO PCT WRITE THIS TURN)
+TIP_BIND=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431 RO HASH_MATCH=1
+CLI_TIP_PIN=build_ninja/bin/rawr_gpufwd_30DCB4B1.exe
+CLI_TIP_SHA=30DCB4B12DCA0F13542C14CCC6C4038E70DBFE2555DE65AB005093A1FF60F24D HASH_MATCH=1
+PREV_HOLD_15A119=15A119D148572A4B3011AA9A8AFFE605F8FF40D64B7BF83673ECC10A9393C967
+
+## M3 measured this turn
+  FORCE_TOOL EBT on hash-pinned 30DCB4B1: PATCH=1 BUILD=1 TOOL_EXEC=3 AGENT_LOOP=PASS
+    seal=CLI_TOP25_VALUATION_001/runs/M3_CLI_FORCE_TOOL_30DCB4_REMEASURE_001.txt
+    receipt=board_receipts/BR_M3_CLI_FORCE_TOOL_30DCB4_REMEASURE_001.txt
+  deep2_agentic_loop=ABSENT (DEEP2_HITS=0)
+  MODEL_SELECTED_TOOL=0 (force skip_model_load path)
+  help: chat/run/agent exit0; term usage seen exit=8
+  tip6754 HWND/C36 controlling: still OPEN (prior A8 RUN_PARTIAL; C36 hang on tip bind)
+  peer C36 tip-lineage seals held (CROSS_SHA_CREDIT=0 vs tip 6754616E)
+M3_COMPLETE=0 M3_PCT_RAISE=0
+
+## M4 measured this turn
+  Built MSI hashes re-verified (tip+full)
+  Silent tip-MSI reinstall/uninstall host RUNTIME_REACHED again
+  SIGNTOOL present; code-signing cert ABSENT → Authenticode channel ABSENT
+  CLEAN_VM=0 NOT_RUN
+  seal=GUI_TOP25_VALUATION_001/packaging/M4_SIGNED_AND_MSI_REMEASURE_001.txt
+  receipt=board_receipts/BR_M4_SIGNED_MSI_REMEASURE_001.txt
+M4_COMPLETE=0 M4_PCT_RAISE=0
+
+## Closed this turn (evidence only; not CANON %)
+C_M3_FORCE_TOOL_EBT_ON_30DCB4_REMEASURE=1
+C_M4_BUILT_MSI_HASH_AND_SILENT_REMEASURE=1
+C_M4_AUTHENTICODE_PROBE_ABSENT=1 (measured ABSENT ≠ invent PASS)
+
+## Remaining OPEN
+O1. MODEL_SELECTED_TOOL edit→build→test (non-force) on tip CLI
+O2. tip6754 HWND agentic edit→build→test (controlling SHA)
+O3. tip6754 C36/Cat10 LSP RUNTIME_REACHED on controlling 6754616E
+O4. CLEAN_VM offline/MSI silent witness
+O5. Authenticode signed release (cert channel)
+O6. #57 E57 inventory 0/45 PASS
+O7. filename thrash: do not claim 15A119D1.exe without hash verify
+
+NEXT_GATE=MODEL_EBT_OR_TIP6754_HWND_C36 + M4_CLEAN_VM_OR_SIGNED_CERT
+PROMOTE=0
+END

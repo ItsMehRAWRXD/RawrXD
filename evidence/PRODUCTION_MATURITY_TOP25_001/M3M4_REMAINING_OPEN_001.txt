@@ -1,35 +1,40 @@
 M3M4_REMAINING_OPEN_001
-ASOF_LOCAL=2026-11-13T21:37:00-05:00
+ASOF_LOCAL=2026-11-13T21:58:00-05:00
 CANON=CLI67 GUI48 OVERALL48 (held; no PCT write)
 PROMOTE=0 TIP_CLIMB=HOLD
-RECEIPT=board_receipts/BR_M3M4_WORKER_MEASURE_001.txt
+RECEIPT=board_receipts/BR_M3M4_WORKER_MEASURE_002.txt
+PRIOR=board_receipts/BR_M3M4_WORKER_MEASURE_001.txt
 
 ## Measured results (this worker)
-M3_CLI_HELP_SURFACES=PASS (chat/run/term/agent on tip 15A119 HOLD)
+M3_CLI_HELP_SURFACES=PARTIAL (chat/run/agent=1; term usage=1 exit=8)
 M3_DEEP2_AGENTIC_LOOP=ABSENT
-M3_FORCE_TOOL_TIP=ABSENT
-M3_CLI_EBT_NOMODEL=TIMEOUT → FAIL_CLOSED_PARTIAL (EDIT_BUILD_TEST_PASS=0)
-M3_GUI_HWND_EBT=NOT_RUN (prior A4)
-M3_C36_TIP6754=OPEN (prior hang; CROSS_SHA 075c ≠ tip credit)
+M3_FORCE_TOOL_TIP=PRESENT on 30DCB4B1 (HASH_MATCH=1)
+M3_CLI_EBT_FORCE_TOOL=PASS (PATCH/BUILD/TEST force path; MODEL_SELECTED_TOOL=0)
+M3_CLI_EBT_NOMODEL_NONFORCE=prior TIMEOUT held (not re-run invent)
+M3_GUI_HWND_EBT=RUN_PARTIAL prior A8 (EDIT_BUILD_TEST_PASS=0)
+M3_C36_TIP6754_CONTROLLING=OPEN (hang); peer tip-lineage C36 RUNTIME_REACHED CROSS_SHA_CREDIT=0
 M3_COMPLETE=0
 
-M4_A6_ZIP_SHA=D4DF3ED526C7037A309F41062CA17C5C83E1D0FC05C5399E9252DEBFA4AB9129 VERIFY=1
-M4_COPYFILE_SILENT_HOST=RUNTIME_REACHED (install+launch+uninstall)
+M4_A6_ZIP_SHA=D4DF3ED526C7037A309F41062CA17C5C83E1D0FC05C5399E9252DEBFA4AB9129 VERIFY=1 (prior)
+M4_COPYFILE_SILENT_HOST=RUNTIME_REACHED (prior held)
+M4_BUILT_MSI=1 (tip F6646E34… + full E689453F… hash remeasure MATCH)
+M4_BUILT_MSI_SILENT_HOST=RUNTIME_REACHED (remeasure install+usage+uninstall)
 M4_CLEAN_VM=0 NOT_RUN
-M4_MSI_BUILT=0 TOOLCHAIN_ABSENT
-M4_SIGNED=0
-M4_E57_PASS=0/45
+M4_SIGNED=0 AUTHENTICODE_CHANNEL=ABSENT (signtool present; cert=0; verify fail measured)
+M4_E57_PASS=0/45 (prior held)
 M4_COMPLETE=0
 
 ## Remaining OPEN list
-1. deep2_agentic_loop tip bind (CLI 15A119) — ABSENT
-2. tip FORCE_TOOL or true model-selected edit→build→test
-3. tip6754 HWND agentic edit→build→test
-4. tip6754 C36/Cat10 LSP RUNTIME_REACHED (not 075c)
-5. #49 A49-* product-final gates NOT_RUN
-6. CLEAN_VM offline install witness
-7. WiX/Inno/NSIS built silent MSI/EXE
-8. Authenticode signed release
-9. #57 E57-* 0/45 PASS (4 OPEN + 41 NOT_RUN)
+1. model-selected (non-force) edit→build→test on tip CLI 30DCB4B1
+2. tip6754 HWND agentic edit→build→test (controlling)
+3. tip6754 C36/Cat10 LSP RUNTIME_REACHED (controlling; not peer)
+4. #49 A49-* product-final gates NOT_RUN
+5. CLEAN_VM offline/MSI install witness
+6. Authenticode signed release channel (cert)
+7. #57 E57-* 0/45 PASS (4 OPEN + 41 NOT_RUN)
+
+## Closed since prior open list (evidence only)
+- tip FORCE_TOOL bind + force EBT on SHA 30DCB4B1 (remeasured)
+- WiX built silent MSI path + hash remeasure (CLEAN_VM still OPEN)
 
 END

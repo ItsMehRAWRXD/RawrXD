@@ -1,0 +1,6 @@
+
+Verifying: g:\~dev\rawrxd\evidence\PRODUCTION_MATURITY_TOP25_001\GUI_TOP25_VALUATION_001\packaging\RawrXD_M4_FullInstaller_perUser_7.4.0.msi
+
+Number of files successfully Verified: 0
+Number of warnings: 0
+Number of errors: 1
