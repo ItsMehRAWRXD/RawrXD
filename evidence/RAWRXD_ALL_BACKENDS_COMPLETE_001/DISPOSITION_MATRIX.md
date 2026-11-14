@@ -23,6 +23,6 @@ Status legend: **OPEN** | **RELATED** | **PARTIAL** | **CERTIFIED** | **EXPLICIT
 | Strata | PARTIAL | W7: HIP runtime+memcpy PASS (`amdhip64_6`); loaders wired; model E2E EXPLICIT_UNSUPPORTED |
 | Ollama | PASS | W7: local :11434 + agent tool emission PASS; PROMOTE=0 |
 | Large models 70B/80B/120B | PARTIAL | 3 GGUFs on disk; host load FAIL OOM (TOK=0); DualStick/ICD HOLD; `W3_LARGE_MODEL_NATIVE_001` PROMOTE=0 |
-| Multi-agent | PARTIAL | W8 absorb + `CLI_AGENT_CONCURRENCY_001`: dual-ws ISO PASS; cancel OPEN; concurrent infer EXPLICIT_UNSUPPORTED (MODEL_LOADED=0) |
+| Multi-agent | RELATED_PARTIAL | `MULTIAGENT_CLI_GUI_PACKAGING_001`: concurrent PASS; cancel PARTIAL; packaging RELATED; GUI E2E NOT_RUN; ≠CERT |
 
 Critical path owner order: Laguna → MiniMax/REAP → large-model → multifamily CLI/GUI → independent CERT.

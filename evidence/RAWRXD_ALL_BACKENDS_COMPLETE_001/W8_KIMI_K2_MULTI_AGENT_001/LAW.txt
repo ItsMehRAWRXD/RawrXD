@@ -1,0 +1,32 @@
+W8_KIMI_K2_MULTI_AGENT_001 — LAW
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0
+PROGRAM=RAWRXD_ALL_BACKENDS_COMPLETE_001
+LANE=W8 (Kimi K2 + Multi-agent)
+CAPACITY_PROOF_REOPEN=0
+K3_RUNTIME_ADOPTION=0
+DUALSTICK=OFF_UNLESS_PROVEN
+INVENT_PASS=0
+NOT_RUN!=PASS
+CROSS_SHA_CREDIT=0
+
+SCOPE
+-----
+1. Kimi-K2-Instruct-0905 native multi-shard load/generation on tip product EXE.
+2. Multi-agent concurrent inference, cancellation, and resource isolation.
+3. Seal honest disposition: PASS levels only if measured; else EXPLICIT_UNSUPPORTED
+   / BLOCKED — never invent PASS.
+
+INVARIANTS
+----------
+- DualStick not reopened (DEEP2_DUALSTICK_ARM=0).
+- Capacity-proof DualStick shrink not reopened (CAPACITY_PROOF_REOPEN=0).
+- K3 runtime not adopted (K3_RUNTIME_ADOPTION=0).
+- Index-open ≠ generation PASS.
+- FORCE_TOOL / Method-C agent smoke ≠ concurrent inference isolation.
+- multi_agent_parallel thread pool SOURCE_WIRED ≠ resource isolation E2E.
+
+AUTHORITY
+---------
+Parent: evidence/RAWRXD_ALL_BACKENDS_COMPLETE_001/{LAW,STATUS,MATRIX,DISPOSITION_MATRIX}
+Related: DEEP2_KIMI_K2_001 (index), K2_FULL_PRODUCT_GEN_001/002 (historical BLOCKED_OOM),
+         CLI_AGENT_SMOKE_001 / CLI_AGENT_MODEL_SELECTED_001 (agent RELATED≠concurrency).

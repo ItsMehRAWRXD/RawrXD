@@ -1,0 +1,7 @@
+PRIOR=deep2_ornith_ffn_norm_gemv_r101
+EXE_SHA=E7A7EE9F… (bak_r92) CROSS_SHA_VS_340E56D7=0
+PROMPT=Say hi in one short sentence.
+GENERATED_TOKENS=2 CLEAN_EXIT=1
+STDOUT=<<isos️>>
+SEMANTIC_COHERENCE=FAIL
+NOTE=held as coherence witness only; does not transfer to pin 340E56D7
