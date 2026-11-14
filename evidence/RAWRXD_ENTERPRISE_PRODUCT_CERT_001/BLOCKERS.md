@@ -6,7 +6,7 @@ Authority: pasted RAWRXD_ENTERPRISE_PRODUCT_CERT_001 checklist · 0/128 · HELD 
 |----------|--------|-----------|-------------|
 | P0 | Gemma AA4F / tip_land AV | G02-06 G06-06 | B8E5 R75 TOK=8 RELATED (314771e525); tip 6754 RO; ≠ CERT PASS |
 | P0 | GPU/ref V_1 / ATTN_NORM_1@dim1072 | G02-04 G02-05 G03-08 | CLOSED=1 maxULP=0 F0A8018F RELATED (R78); ≠ matrix PASS |
-| P0 | ATTN_PRE_O_1@pos1 (post R86 PRE_O_0) | G02-04 G03-08 | R88: FA006 OPEN 2.754107e-05 @idx704; host AVX closes 747; all-square REFUTED; NEXT WQ-only clean pin RELATED ≠ PASS |
+| P0 | ATTN_PRE_O_1@pos1 (post R86 PRE_O_0) | G02-04 G03-08 | R89 BLOCKED: WQ-only clean pin EXE 1E9470BA + SPV BE085; FFN_GATE_0@pos1 hazard reopens FFN_DOWN_2; PRE_O_1 1.62e-03 @626; CTRL 5CD5/40E held; ≠ PASS |
 | P0 | FFN_DOWN_10 TRUE_FIRST (post L2 CLOSE) | G02-04 G03-08 | R87: OPEN 1.524854e-05; UP→ACT Q8 amplify NOT_CLOSABLE; SPV40E held; ≠ PASS |
 | P0 | ATTN_PRE_O_11@pos0 | G02-04 G03-08 | R88 a92814d8c2: NOT_CLOSABLE 1.98e-04; V Q4K amplify; ≠ PASS |
 | P0 | ATTN_OUT_14@pos0 | G02-04 G03-08 | R89: NOT_CLOSABLE 6.035976e-04; OPROJ REFUTED; ≠ PASS |
@@ -42,6 +42,6 @@ Authority: pasted RAWRXD_ENTERPRISE_PRODUCT_CERT_001 checklist · 0/128 · HELD 
 | non617F 67350F71 R78 | 1 | 0 | 0 | OPEN_FAIL STREAM_SEH RVA=0x6B0FA (superseded by R79) |
 | non617F 1EC00779 R79 | 1 | 1 | 2 | STREAM_SEH CLOSED DURABLE=1 private; tip RO RELATED ≠ CERT PASS |
 
-`NEXT_OWNER` (split): GPU `ATTN_Q_SPV_WQ_ONLY_AVX_PIPE_CLEAN_RELINK` (R88 host AVX@747) · product `C36_TIP_LSP_RUNTIME_REACHED` (R91) · GPU dense `residual-budget` · llama32 `TIP_ABSORB_AUTH_HOLD` · `TIP_CLIMB=HOLD`
+`NEXT_OWNER` (split): GPU `ATTN_Q_SPV_WQ_AVX_FFN_GATE0_HAZARD_BARRIER` (R89 WQ-only BLOCKED) · product `C36_TIP_LSP_RUNTIME_REACHED` (R91) · GPU dense `residual-budget` · llama32 `TIP_ABSORB_AUTH_HOLD` · `TIP_CLIMB=HOLD`
 
 PROMOTE=0 until all 128 gates PASS with independent sign-off.
