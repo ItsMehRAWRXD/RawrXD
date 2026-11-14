@@ -1,0 +1,54 @@
+REAP_LAGUNA_ATTN_GATE_001 — TENSOR_MAP
+ASOF_LOCAL=2026-11-14
+PROMOTE=0 CERTIFIED=0 CROSS_SHA_CREDIT=0
+MODEL=F:\OllamaModels\_REAP16\laguna-s-2_1-Q4_K_M-REAP35\sha256-948255a146c07678678183af4cb1234a124e945e48c85c2006598ef4696552c8
+GGUF_VERSION=3 N_TENSORS=814 N_META=59
+ARCH=laguna NAME="Laguna S 2.1"
+block_count=48 embedding_length=3072
+head_count=ARRAY[I32x48] unique={48,72}
+head_count_kv=8 key_length=128 value_length=128
+file_type=7 (Q8_0 family tensors below; GGUF type codes as dumped)
+
+## Convention
+GGUF dims listed storage-order; Deep2 rows/cols = dims[1]/dims[0] for 2D
+(attn_gate [heads,hidden] → rows=heads cols=hidden).
+
+## Layer 0 (SWA heads=48)
+name                              dims              rows   cols   type  type_name
+blk.0.attn_gate.weight            [3072, 48]          48   3072      8  Q8_0
+blk.0.attn_q.weight               [3072, 6144]      6144   3072      8  Q8_0
+blk.0.attn_k.weight               [3072, 1024]      1024   3072      8  Q8_0
+blk.0.attn_v.weight               [3072, 1024]      1024   3072      8  Q8_0
+blk.0.attn_output.weight          [6144, 3072]      3072   6144      8  Q8_0
+blk.0.attn_norm.weight            [3072]               1   3072      0  F32
+blk.0.attn_q_norm.weight          [128]                1    128      0  F32
+blk.0.attn_k_norm.weight          [128]                1    128      0  F32
+
+## Layer 1 (full heads=72)
+name                              dims              rows   cols   type  type_name
+blk.1.attn_gate.weight            [3072, 72]          72   3072      8  Q8_0
+blk.1.attn_q.weight               [3072, 9216]      9216   3072      8  Q8_0
+blk.1.attn_k.weight               [3072, 1024]      1024   3072      8  Q8_0
+blk.1.attn_v.weight               [3072, 1024]      1024   3072      8  Q8_0
+blk.1.attn_output.weight          [9216, 3072]      3072   9216      8  Q8_0
+blk.1.attn_norm.weight            [3072]               1   3072      0  F32
+blk.1.attn_q_norm.weight          [128]                1    128      0  F32
+blk.1.attn_k_norm.weight          [128]                1    128      0  F32
+
+## Layer 40 (SWA heads=48)
+name                              dims              rows   cols   type  type_name
+blk.40.attn_gate.weight           [3072, 48]          48   3072      8  Q8_0
+blk.40.attn_q.weight              [3072, 6144]      6144   3072      8  Q8_0
+blk.40.attn_k.weight              [3072, 1024]      1024   3072      8  Q8_0
+blk.40.attn_v.weight              [3072, 1024]      1024   3072      8  Q8_0
+blk.40.attn_output.weight         [6144, 3072]      3072   6144      8  Q8_0
+blk.40.attn_norm.weight           [3072]               1   3072      0  F32
+blk.40.attn_q_norm.weight         [128]                1    128      0  F32
+blk.40.attn_k_norm.weight         [128]                1    128      0  F32
+
+## Bind law (Deep2)
+attn_gate rows=heads << hidden → BIND lw.attnGate (per-head softplus), NOT attnO
+attn_output → wo / attnO O-proj
+No wo absent / large-gate O remap on this GGUF (gate always [heads,3072])
+
+DUMP_METHOD=Python GGUF tensor-info parse (header only; no weight decode)

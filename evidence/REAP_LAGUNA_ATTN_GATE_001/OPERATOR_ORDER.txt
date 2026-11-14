@@ -1,0 +1,42 @@
+REAP_LAGUNA_ATTN_GATE_001 — OPERATOR_ORDER
+PROMOTE=0 CERTIFIED=0 CROSS_SHA_CREDIT=0
+
+## Deep2 computeAttention (Deep2Engine.cpp ~10276)
+1. SDPA / AttentionWithCache → headScratch[numHeads*headDim]
+2. ATTN_PRE_GATE digest (instrumented)
+3. LinearW(attnGate, input) → gateLogits[numHeads]
+4. applyPerHeadSoftplus(headScratch, gateLogits)  // head *= softplus(g)
+5. ATTN_POST_GATE + ATTN_PRE_O digests (instrumented; PRE_O==POST_GATE)
+6. LinearW(attn_output/wo, headScratch) → output[hidden]
+7. ATTN_POST_O digest (instrumented)
+
+ORDER_CLAIM=SDPA → softplus(g_proj(x)) per-head → O-proj
+GATE_AFTER_O=0  (explicitly rejected; do not apply post-O)
+
+## Reference: HuggingFace / poolside modeling_laguna.py
+Comment: "Laguna-specific: apply gating BEFORE o_proj"
+  attn = SDPA(...)
+  gate = softplus(g_proj(hidden_states))
+  if gate_per_head: attn *= gate.unsqueeze(-1)  # broadcast head_dim
+  else: attn *= gate
+  out = o_proj(attn)
+REF_ORDER=SDPA → softplus(g_proj) → o_proj
+REF_ACT=softplus
+REF_MODE=per-head (GGUF attn_gate rows=heads → gate_per_head)
+
+## Reference: sglang laguna.py
+Same: softplus(g_proj) then o_proj; per-head broadcast.
+
+## Adjacent (NOT Laguna authority)
+llama.cpp step35-iswa.cpp: SDPA → sigmoid(g_proj) → O-proj
+  Same ORDER; DIFFERENT ACT (sigmoid). Step35 ≠ Laguna softplus.
+  Do not apply Step35 sigmoid to Laguna.
+
+## Tensor-map vs order
+attn_gate [heads,hidden] + separate attn_output present
+⇒ gate is NOT a fused O-proj; O remains attn_output.
+⇒ Current Deep2 order matches Laguna HF/sglang. NO order swap.
+
+ORDER_PARITY_VS_LAGUNA_REF=MATCH
+ACT_PARITY_VS_LAGUNA_REF=MATCH (softplus)
+SOURCE_FIX_APPLIED=0 (order not wrong)

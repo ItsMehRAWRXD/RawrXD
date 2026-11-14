@@ -1,0 +1,2407 @@
+[MODEL_RESOLUTION] F:\OllamaModels\_REAP16\laguna-s-2_1-Q4_K_M-REAP35\sha256-948255a146c07678678183af4cb1234a124e945e48c85c2006598ef4696552c8
+GGUF_LOAD_STAGE=enter path="F:\OllamaModels\_REAP16\laguna-s-2_1-Q4_K_M-REAP35\sha256-948255a146c07678678183af4cb1234a124e945e48c85c2006598ef4696552c8" loadTensors=0 mmap=0
+GGUF_LOAD_STAGE=validated size=16781033568 dataOff=3734272
+GGUF_LOAD_STAGE=fopen_ok
+GGUF_LOAD_STAGE=header_ok ver=3 tensors=814 kv=59
+[AUTO_BACKEND] model=F:\OllamaModels\_REAP16\laguna-s-2_1-Q4_K_M-REAP35\sha256-948255a146c07678678183af4cb1234a124e945e48c85c2006598ef4696552c8 weights=16000MB kv=768MB scratch=2MB moe=1 experts=35 ctx=2048
+[AUTO_BACKEND] host RAM=11085MB commit=96708MB
+[AUTO_BACKEND] GPU Virtual Display Driver status=25174027 problem=0 healthy=1
+[AUTO_BACKEND] GPU AMD Radeon(TM) Graphics status=25175040 problem=43 healthy=0
+[AUTO_BACKEND] GPU AMD Radeon AI PRO R9700 status=25174026 problem=0 healthy=1
+[AUTO_BACKEND] GPU AMD Radeon RX 7800 XT status=25174026 problem=0 healthy=1
+[AUTO_BACKEND] Vulkan ICD ready
+[AUTO_BACKEND] primaryReady=1 primaryValidated=1 secondaryReady=1 secondaryValidated=1 vramPriMB=32768
+[AUTO_BACKEND] decision=VulkanPrimary reason=Primary GPU fits weights+KV+scratch
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+KEN_MARS_ACTIVE=1 DEEP2_MARS=1 HOST_DECODE=0 GPU_POLICY=MULTI GPU_DEVICE_CLASS=DISCRETE NO_TRUNCATE_NEEDLE=1 PRODUCT_STREAMER_ARM=1
+PRODUCT_STREAMER_TIP_MINIMAL_PREP=1
+PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1
+RAWRXD_GPU_PREFLIGHT_BEGIN
+GPU_0=R9700
+GPU_0_WINDOWS_HEALTH=PASS
+GPU_0_PROBLEM_CODE=0
+GPU_0_CODE31=0
+GPU_1=RX_7800_XT
+GPU_1_WINDOWS_HEALTH=PASS
+GPU_1_PROBLEM_CODE=0
+GPU_1_CODE31=0
+GPU_PREFLIGHT=PASS
+PIN_BUDGET_SET site=DUALSTICK_BIND old=0 new=4294967296 owner=DUALSTICK_BIND moe_reserved=4294967296
+PIN_BUDGET_FINAL stick=0 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+LOADMODEL_STAGE=pre_reverse reverse_opt_in=0
+LOADMODEL_STAGE=gguf_loader_enter path="F:\OllamaModels\_REAP16\laguna-s-2_1-Q4_K_M-REAP35\sha256-948255a146c07678678183af4cb1234a124e945e48c85c2006598ef4696552c8"
+GGUF_LOAD_STAGE=enter path="F:\OllamaModels\_REAP16\laguna-s-2_1-Q4_K_M-REAP35\sha256-948255a146c07678678183af4cb1234a124e945e48c85c2006598ef4696552c8" loadTensors=0 mmap=0
+GGUF_LOAD_STAGE=validated size=16781033568 dataOff=3734272
+GGUF_LOAD_STAGE=fopen_ok
+GGUF_LOAD_STAGE=header_ok ver=3 tensors=814 kv=59
+LOADMODEL_STAGE=gguf_meta_ok tensors=814
+LOADMODEL_STAGE=gguf_tensors_enter mmap=0
+GGUF_LOAD_STAGE=enter path="F:\OllamaModels\_REAP16\laguna-s-2_1-Q4_K_M-REAP35\sha256-948255a146c07678678183af4cb1234a124e945e48c85c2006598ef4696552c8" loadTensors=1 mmap=0
+GGUF_LOAD_STAGE=validated size=16781033568 dataOff=3734272
+GGUF_LOAD_STAGE=fopen_ok
+GGUF_LOAD_STAGE=header_ok ver=3 tensors=814 kv=59
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+DEEP2_DEVICE_COUNT_DETECTED=2
+DEEP2_DEVICE_COUNT_OPENED=1
+DEEP2_COMPUTE_BACKEND=GPU
+DEEP2_EXEC_PATH=SINGLE_GPU
+DEEP2_EXEC_MODE=1
+DEEP2_GPU_POLICY=2
+DEEP2_PLAN_REASON=auto_best_compute
+DEEP2_PRIMARY_INDEX=0
+DEEP2_PRIMARY_STABLE_ID=1002:7551:000000000001681D
+DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_VENDOR=AMD
+DEEP2_DEVICE_0_STABLE_ID=1002:7551:000000000001681D
+DEEP2_DEVICE_0_VRAM_BYTES=34057322496
+DEEP2_DEVICE_0_SCORE=133
+DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
+DEEP2_DEVICE_1_NAME=AMD Radeon RX 7800 XT
+DEEP2_DEVICE_1_VENDOR=AMD
+DEEP2_DEVICE_1_STABLE_ID=1002:747E:0000000000019576
+DEEP2_DEVICE_1_VRAM_BYTES=16962633728
+DEEP2_DEVICE_1_SCORE=116
+DEEP2_DEVICE_1_DUTY=DETECTED/UNUSED
+[VulkanCompute] DETECTED phys[0] type=2 AMD Radeon AI PRO R9700
+[VulkanCompute] DETECTED phys[1] type=2 Microsoft Direct3D12 (AMD Radeon AI PRO R9700)
+[VulkanCompute] SKIP_WARP_ICD phys[1] Microsoft Direct3D12 (AMD Radeon AI PRO R9700)
+[VulkanCompute] DETECTED phys[2] type=2 AMD Radeon RX 7800 XT
+[VulkanCompute] DETECTED phys[3] type=2 Microsoft Direct3D12 (AMD Radeon RX 7800 XT)
+[VulkanCompute] SKIP_WARP_ICD phys[3] Microsoft Direct3D12 (AMD Radeon RX 7800 XT)
+[VulkanCompute] DETECTED phys[4] type=4 Microsoft Direct3D12 (Microsoft Basic Render Driver)
+[VulkanCompute] SKIP_WARP_ICD phys[4] Microsoft Direct3D12 (Microsoft Basic Render Driver)
+[VulkanCompute] OPEN_ONE AMD Radeon AI PRO R9700 (others unused)
+[VulkanCompute] QUEUES compute=0 transfer=1 dual=1
+[VulkanCompute] FREETOKEN_STICK_RUB transfer_q=1 waw_ready_gate=1 helpframe_nway=4
+[Deep2Engine] Vulkan single-GPU open: AMD Radeon AI PRO R9700 (needle=AMD Radeon AI PRO R9700)
+LIVE_GPU0=AMD Radeon AI PRO R9700
+LIVE_GPU1=AMD Radeon RX 7800 XT
+[Deep2Engine] BATCH2_SSVK_PACKED_DUAL_OPEN=1
+[Deep2Engine] BATCH2_SSVK_PACKED_DUAL_BOUND=1
+[Deep2Engine] BIND16_SSVK_PRODUCT_BOUND=1
+[Deep2Engine] Loading model from: F:\OllamaModels\_REAP16\laguna-s-2_1-Q4_K_M-REAP35\sha256-948255a146c07678678183af4cb1234a124e945e48c85c2006598ef4696552c8
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Model path content-resolve (ext-agnostic blob/gguf)...
+[Deep2Engine] Found GGUF at offset 0 in blob
+[Deep2Engine] Using blob directly (GGUF at offset 0)
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\OllamaModels\_REAP16\laguna-s-2_1-Q4_K_M-REAP35)
+[Deep2Engine] REVERSE_HOTPATCH=OFF ? raw GGUF load (opt-in via RAWRXD_REVERSE_HOTPATCH=1)
+[GGUF] WARNING: Tensor 'blk.1.ffn_down_exps.weight' offset not 64-byte aligned: 893238688
+[GGUF] WARNING: Tensor 'blk.1.ffn_down_shexp.weight' offset not 64-byte aligned: 955170208
+[GGUF] WARNING: Tensor 'blk.1.ffn_gate_exps.weight' offset not 64-byte aligned: 958512544
+[GGUF] WARNING: Tensor 'blk.1.ffn_gate_inp.weight' offset not 64-byte aligned: 1020444064
+[GGUF] WARNING: Tensor 'blk.1.ffn_gate_shexp.weight' offset not 64-byte aligned: 1020874144
+[GGUF] WARNING: Tensor 'blk.1.ffn_norm.weight' offset not 64-byte aligned: 1024216480
+[GGUF] WARNING: Tensor 'blk.1.ffn_up_exps.weight' offset not 64-byte aligned: 1024228768
+[GGUF] WARNING: Tensor 'blk.1.ffn_up_shexp.weight' offset not 64-byte aligned: 1086160288
+[GGUF] WARNING: Tensor 'blk.2.attn_gate.weight' offset not 64-byte aligned: 1089502624
+[GGUF] WARNING: Tensor 'blk.2.attn_k.weight' offset not 64-byte aligned: 1089737632
+[GGUF] WARNING: Tensor 'blk.2.attn_k_norm.weight' offset not 64-byte aligned: 1093079968
+[GGUF] WARNING: Tensor 'blk.2.attn_norm.weight' offset not 64-byte aligned: 1093080480
+[GGUF] WARNING: Tensor 'blk.2.attn_output.weight' offset not 64-byte aligned: 1093092768
+[GGUF] WARNING: Tensor 'blk.2.attn_q.weight' offset not 64-byte aligned: 1123173792
+[GGUF] WARNING: Tensor 'blk.2.attn_q_norm.weight' offset not 64-byte aligned: 1153254816
+[GGUF] WARNING: Tensor 'blk.2.attn_v.weight' offset not 64-byte aligned: 1153255328
+[GGUF] WARNING: Tensor 'blk.2.exp_probs_b.bias' offset not 64-byte aligned: 1156597664
+[GGUF] WARNING: Tensor 'blk.3.ffn_down_exps.weight' offset not 64-byte aligned: 1419956960
+[GGUF] WARNING: Tensor 'blk.3.ffn_down_shexp.weight' offset not 64-byte aligned: 1481888480
+[GGUF] WARNING: Tensor 'blk.3.ffn_gate_exps.weight' offset not 64-byte aligned: 1485230816
+[GGUF] WARNING: Tensor 'blk.3.ffn_gate_inp.weight' offset not 64-byte aligned: 1547162336
+[GGUF] WARNING: Tensor 'blk.3.ffn_gate_shexp.weight' offset not 64-byte aligned: 1547592416
+[GGUF] WARNING: Tensor 'blk.3.ffn_norm.weight' offset not 64-byte aligned: 1550934752
+[GGUF] WARNING: Tensor 'blk.3.ffn_up_exps.weight' offset not 64-byte aligned: 1550947040
+[GGUF] WARNING: Tensor 'blk.3.ffn_up_shexp.weight' offset not 64-byte aligned: 1612878560
+[GGUF] WARNING: Tensor 'blk.4.attn_gate.weight' offset not 64-byte aligned: 1616220896
+[GGUF] WARNING: Tensor 'blk.4.attn_k.weight' offset not 64-byte aligned: 1616377568
+[GGUF] WARNING: Tensor 'blk.4.attn_k_norm.weight' offset not 64-byte aligned: 1619719904
+[GGUF] WARNING: Tensor 'blk.4.attn_norm.weight' offset not 64-byte aligned: 1619720416
+[GGUF] WARNING: Tensor 'blk.4.attn_output.weight' offset not 64-byte aligned: 1619732704
+[GGUF] WARNING: Tensor 'blk.4.attn_q.weight' offset not 64-byte aligned: 1639786720
+[GGUF] WARNING: Tensor 'blk.4.attn_q_norm.weight' offset not 64-byte aligned: 1659840736
+[GGUF] WARNING: Tensor 'blk.4.attn_v.weight' offset not 64-byte aligned: 1659841248
+[GGUF] WARNING: Tensor 'blk.4.exp_probs_b.bias' offset not 64-byte aligned: 1663183584
+[GGUF] WARNING: Tensor 'blk.5.ffn_down_exps.weight' offset not 64-byte aligned: 1926542880
+[GGUF] WARNING: Tensor 'blk.5.ffn_down_shexp.weight' offset not 64-byte aligned: 1988474400
+[GGUF] WARNING: Tensor 'blk.5.ffn_gate_exps.weight' offset not 64-byte aligned: 1991816736
+[GGUF] WARNING: Tensor 'blk.5.ffn_gate_inp.weight' offset not 64-byte aligned: 2053748256
+[GGUF] WARNING: Tensor 'blk.5.ffn_gate_shexp.weight' offset not 64-byte aligned: 2054178336
+[GGUF] WARNING: Tensor 'blk.5.ffn_norm.weight' offset not 64-byte aligned: 2057520672
+[GGUF] WARNING: Tensor 'blk.5.ffn_up_exps.weight' offset not 64-byte aligned: 2057532960
+[GGUF] WARNING: Tensor 'blk.5.ffn_up_shexp.weight' offset not 64-byte aligned: 2119464480
+[GGUF] WARNING: Tensor 'blk.6.attn_gate.weight' offset not 64-byte aligned: 2122806816
+[GGUF] WARNING: Tensor 'blk.6.attn_k.weight' offset not 64-byte aligned: 2123041824
+[GGUF] WARNING: Tensor 'blk.6.attn_k_norm.weight' offset not 64-byte aligned: 2126384160
+[GGUF] WARNING: Tensor 'blk.6.attn_norm.weight' offset not 64-byte aligned: 2126384672
+[GGUF] WARNING: Tensor 'blk.6.attn_output.weight' offset not 64-byte aligned: 2126396960
+[GGUF] WARNING: Tensor 'blk.6.attn_q.weight' offset not 64-byte aligned: 2156477984
+[GGUF] WARNING: Tensor 'blk.6.attn_q_norm.weight' offset not 64-byte aligned: 2186559008
+[GGUF] WARNING: Tensor 'blk.6.attn_v.weight' offset not 64-byte aligned: 2186559520
+[GGUF] WARNING: Tensor 'blk.6.exp_probs_b.bias' offset not 64-byte aligned: 2189901856
+[GGUF] WARNING: Tensor 'blk.7.ffn_down_exps.weight' offset not 64-byte aligned: 2453261152
+[GGUF] WARNING: Tensor 'blk.7.ffn_down_shexp.weight' offset not 64-byte aligned: 2515192672
+[GGUF] WARNING: Tensor 'blk.7.ffn_gate_exps.weight' offset not 64-byte aligned: 2518535008
+[GGUF] WARNING: Tensor 'blk.7.ffn_gate_inp.weight' offset not 64-byte aligned: 2580466528
+[GGUF] WARNING: Tensor 'blk.7.ffn_gate_shexp.weight' offset not 64-byte aligned: 2580896608
+[GGUF] WARNING: Tensor 'blk.7.ffn_norm.weight' offset not 64-byte aligned: 2584238944
+[GGUF] WARNING: Tensor 'blk.7.ffn_up_exps.weight' offset not 64-byte aligned: 2584251232
+[GGUF] WARNING: Tensor 'blk.7.ffn_up_shexp.weight' offset not 64-byte aligned: 2646182752
+[GGUF] WARNING: Tensor 'blk.8.attn_gate.weight' offset not 64-byte aligned: 2649525088
+[GGUF] WARNING: Tensor 'blk.8.attn_k.weight' offset not 64-byte aligned: 2649681760
+[GGUF] WARNING: Tensor 'blk.8.attn_k_norm.weight' offset not 64-byte aligned: 2653024096
+[GGUF] WARNING: Tensor 'blk.8.attn_norm.weight' offset not 64-byte aligned: 2653024608
+[GGUF] WARNING: Tensor 'blk.8.attn_output.weight' offset not 64-byte aligned: 2653036896
+[GGUF] WARNING: Tensor 'blk.8.attn_q.weight' offset not 64-byte aligned: 2673090912
+[GGUF] WARNING: Tensor 'blk.8.attn_q_norm.weight' offset not 64-byte aligned: 2693144928
+[GGUF] WARNING: Tensor 'blk.8.attn_v.weight' offset not 64-byte aligned: 2693145440
+[GGUF] WARNING: Tensor 'blk.8.exp_probs_b.bias' offset not 64-byte aligned: 2696487776
+[GGUF] WARNING: Tensor 'blk.9.ffn_down_exps.weight' offset not 64-byte aligned: 2959847072
+[GGUF] WARNING: Tensor 'blk.9.ffn_down_shexp.weight' offset not 64-byte aligned: 3021778592
+[GGUF] WARNING: Tensor 'blk.9.ffn_gate_exps.weight' offset not 64-byte aligned: 3025120928
+[GGUF] WARNING: Tensor 'blk.9.ffn_gate_inp.weight' offset not 64-byte aligned: 3087052448
+[GGUF] WARNING: Tensor 'blk.9.ffn_gate_shexp.weight' offset not 64-byte aligned: 3087482528
+[GGUF] WARNING: Tensor 'blk.9.ffn_norm.weight' offset not 64-byte aligned: 3090824864
+[GGUF] WARNING: Tensor 'blk.9.ffn_up_exps.weight' offset not 64-byte aligned: 3090837152
+[GGUF] WARNING: Tensor 'blk.9.ffn_up_shexp.weight' offset not 64-byte aligned: 3152768672
+[GGUF] WARNING: Tensor 'blk.10.attn_gate.weight' offset not 64-byte aligned: 3156111008
+[GGUF] WARNING: Tensor 'blk.10.attn_k.weight' offset not 64-byte aligned: 3156346016
+[GGUF] WARNING: Tensor 'blk.10.attn_k_norm.weight' offset not 64-byte aligned: 3159688352
+[GGUF] WARNING: Tensor 'blk.10.attn_norm.weight' offset not 64-byte aligned: 3159688864
+[GGUF] WARNING: Tensor 'blk.10.attn_output.weight' offset not 64-byte aligned: 3159701152
+[GGUF] WARNING: Tensor 'blk.10.attn_q.weight' offset not 64-byte aligned: 3189782176
+[GGUF] WARNING: Tensor 'blk.10.attn_q_norm.weight' offset not 64-byte aligned: 3219863200
+[GGUF] WARNING: Tensor 'blk.10.attn_v.weight' offset not 64-byte aligned: 3219863712
+[GGUF] WARNING: Tensor 'blk.10.exp_probs_b.bias' offset not 64-byte aligned: 3223206048
+[GGUF] WARNING: Tensor 'blk.11.ffn_down_exps.weight' offset not 64-byte aligned: 3486565344
+[GGUF] WARNING: Tensor 'blk.11.ffn_down_shexp.weight' offset not 64-byte aligned: 3548496864
+[GGUF] WARNING: Tensor 'blk.11.ffn_gate_exps.weight' offset not 64-byte aligned: 3551839200
+[GGUF] WARNING: Tensor 'blk.11.ffn_gate_inp.weight' offset not 64-byte aligned: 3613770720
+[GGUF] WARNING: Tensor 'blk.11.ffn_gate_shexp.weight' offset not 64-byte aligned: 3614200800
+[GGUF] WARNING: Tensor 'blk.11.ffn_norm.weight' offset not 64-byte aligned: 3617543136
+[GGUF] WARNING: Tensor 'blk.11.ffn_up_exps.weight' offset not 64-byte aligned: 3617555424
+[GGUF] WARNING: Tensor 'blk.11.ffn_up_shexp.weight' offset not 64-byte aligned: 3679486944
+[GGUF] WARNING: Tensor 'blk.12.attn_gate.weight' offset not 64-byte aligned: 3682829280
+[GGUF] WARNING: Tensor 'blk.12.attn_k.weight' offset not 64-byte aligned: 3682985952
+[GGUF] WARNING: Tensor 'blk.12.attn_k_norm.weight' offset not 64-byte aligned: 3686328288
+[GGUF] WARNING: Tensor 'blk.12.attn_norm.weight' offset not 64-byte aligned: 3686328800
+[GGUF] WARNING: Tensor 'blk.12.attn_output.weight' offset not 64-byte aligned: 3686341088
+[GGUF] WARNING: Tensor 'blk.12.attn_q.weight' offset not 64-byte aligned: 3706395104
+[GGUF] WARNING: Tensor 'blk.12.attn_q_norm.weight' offset not 64-byte aligned: 3726449120
+[GGUF] WARNING: Tensor 'blk.12.attn_v.weight' offset not 64-byte aligned: 3726449632
+[GGUF] WARNING: Tensor 'blk.12.exp_probs_b.bias' offset not 64-byte aligned: 3729791968
+[GGUF] WARNING: Tensor 'blk.13.ffn_down_exps.weight' offset not 64-byte aligned: 3993151264
+[GGUF] WARNING: Tensor 'blk.13.ffn_down_shexp.weight' offset not 64-byte aligned: 4055082784
+[GGUF] WARNING: Tensor 'blk.13.ffn_gate_exps.weight' offset not 64-byte aligned: 4058425120
+[GGUF] WARNING: Tensor 'blk.13.ffn_gate_inp.weight' offset not 64-byte aligned: 4120356640
+[GGUF] WARNING: Tensor 'blk.13.ffn_gate_shexp.weight' offset not 64-byte aligned: 4120786720
+[GGUF] WARNING: Tensor 'blk.13.ffn_norm.weight' offset not 64-byte aligned: 4124129056
+[GGUF] WARNING: Tensor 'blk.13.ffn_up_exps.weight' offset not 64-byte aligned: 4124141344
+[GGUF] WARNING: Tensor 'blk.13.ffn_up_shexp.weight' offset not 64-byte aligned: 4186072864
+[GGUF] WARNING: Tensor 'blk.14.attn_gate.weight' offset not 64-byte aligned: 4189415200
+[GGUF] WARNING: Tensor 'blk.14.attn_k.weight' offset not 64-byte aligned: 4189650208
+[GGUF] WARNING: Tensor 'blk.14.attn_k_norm.weight' offset not 64-byte aligned: 4192992544
+[GGUF] WARNING: Tensor 'blk.14.attn_norm.weight' offset not 64-byte aligned: 4192993056
+[GGUF] WARNING: Tensor 'blk.14.attn_output.weight' offset not 64-byte aligned: 4193005344
+[GGUF] WARNING: Tensor 'blk.14.attn_q.weight' offset not 64-byte aligned: 4223086368
+[GGUF] WARNING: Tensor 'blk.14.attn_q_norm.weight' offset not 64-byte aligned: 4253167392
+[GGUF] WARNING: Tensor 'blk.14.attn_v.weight' offset not 64-byte aligned: 4253167904
+[GGUF] WARNING: Tensor 'blk.14.exp_probs_b.bias' offset not 64-byte aligned: 4256510240
+[GGUF] WARNING: Tensor 'blk.15.ffn_down_exps.weight' offset not 64-byte aligned: 4519869536
+[GGUF] WARNING: Tensor 'blk.15.ffn_down_shexp.weight' offset not 64-byte aligned: 4581801056
+[GGUF] WARNING: Tensor 'blk.15.ffn_gate_exps.weight' offset not 64-byte aligned: 4585143392
+[GGUF] WARNING: Tensor 'blk.15.ffn_gate_inp.weight' offset not 64-byte aligned: 4647074912
+[GGUF] WARNING: Tensor 'blk.15.ffn_gate_shexp.weight' offset not 64-byte aligned: 4647504992
+[GGUF] WARNING: Tensor 'blk.15.ffn_norm.weight' offset not 64-byte aligned: 4650847328
+[GGUF] WARNING: Tensor 'blk.15.ffn_up_exps.weight' offset not 64-byte aligned: 4650859616
+[GGUF] WARNING: Tensor 'blk.15.ffn_up_shexp.weight' offset not 64-byte aligned: 4712791136
+[GGUF] WARNING: Tensor 'blk.16.attn_gate.weight' offset not 64-byte aligned: 4716133472
+[GGUF] WARNING: Tensor 'blk.16.attn_k.weight' offset not 64-byte aligned: 4716290144
+[GGUF] WARNING: Tensor 'blk.16.attn_k_norm.weight' offset not 64-byte aligned: 4719632480
+[GGUF] WARNING: Tensor 'blk.16.attn_norm.weight' offset not 64-byte aligned: 4719632992
+[GGUF] WARNING: Tensor 'blk.16.attn_output.weight' offset not 64-byte aligned: 4719645280
+[GGUF] WARNING: Tensor 'blk.16.attn_q.weight' offset not 64-byte aligned: 4739699296
+[GGUF] WARNING: Tensor 'blk.16.attn_q_norm.weight' offset not 64-byte aligned: 4759753312
+[GGUF] WARNING: Tensor 'blk.16.attn_v.weight' offset not 64-byte aligned: 4759753824
+[GGUF] WARNING: Tensor 'blk.16.exp_probs_b.bias' offset not 64-byte aligned: 4763096160
+[GGUF] WARNING: Tensor 'blk.17.ffn_down_exps.weight' offset not 64-byte aligned: 5026455456
+[GGUF] WARNING: Tensor 'blk.17.ffn_down_shexp.weight' offset not 64-byte aligned: 5088386976
+[GGUF] WARNING: Tensor 'blk.17.ffn_gate_exps.weight' offset not 64-byte aligned: 5091729312
+[GGUF] WARNING: Tensor 'blk.17.ffn_gate_inp.weight' offset not 64-byte aligned: 5153660832
+[GGUF] WARNING: Tensor 'blk.17.ffn_gate_shexp.weight' offset not 64-byte aligned: 5154090912
+[GGUF] WARNING: Tensor 'blk.17.ffn_norm.weight' offset not 64-byte aligned: 5157433248
+[GGUF] WARNING: Tensor 'blk.17.ffn_up_exps.weight' offset not 64-byte aligned: 5157445536
+[GGUF] WARNING: Tensor 'blk.17.ffn_up_shexp.weight' offset not 64-byte aligned: 5219377056
+[GGUF] WARNING: Tensor 'blk.18.attn_gate.weight' offset not 64-byte aligned: 5222719392
+[GGUF] WARNING: Tensor 'blk.18.attn_k.weight' offset not 64-byte aligned: 5222954400
+[GGUF] WARNING: Tensor 'blk.18.attn_k_norm.weight' offset not 64-byte aligned: 5226296736
+[GGUF] WARNING: Tensor 'blk.18.attn_norm.weight' offset not 64-byte aligned: 5226297248
+[GGUF] WARNING: Tensor 'blk.18.attn_output.weight' offset not 64-byte aligned: 5226309536
+[GGUF] WARNING: Tensor 'blk.18.attn_q.weight' offset not 64-byte aligned: 5256390560
+[GGUF] WARNING: Tensor 'blk.18.attn_q_norm.weight' offset not 64-byte aligned: 5286471584
+[GGUF] WARNING: Tensor 'blk.18.attn_v.weight' offset not 64-byte aligned: 5286472096
+[GGUF] WARNING: Tensor 'blk.18.exp_probs_b.bias' offset not 64-byte aligned: 5289814432
+[GGUF] WARNING: Tensor 'blk.19.ffn_down_exps.weight' offset not 64-byte aligned: 5553173728
+[GGUF] WARNING: Tensor 'blk.19.ffn_down_shexp.weight' offset not 64-byte aligned: 5615105248
+[GGUF] WARNING: Tensor 'blk.19.ffn_gate_exps.weight' offset not 64-byte aligned: 5618447584
+[GGUF] WARNING: Tensor 'blk.19.ffn_gate_inp.weight' offset not 64-byte aligned: 5680379104
+[GGUF] WARNING: Tensor 'blk.19.ffn_gate_shexp.weight' offset not 64-byte aligned: 5680809184
+[GGUF] WARNING: Tensor 'blk.19.ffn_norm.weight' offset not 64-byte aligned: 5684151520
+[GGUF] WARNING: Tensor 'blk.19.ffn_up_exps.weight' offset not 64-byte aligned: 5684163808
+[GGUF] WARNING: Tensor 'blk.19.ffn_up_shexp.weight' offset not 64-byte aligned: 5746095328
+[GGUF] WARNING: Tensor 'blk.20.attn_gate.weight' offset not 64-byte aligned: 5749437664
+[GGUF] WARNING: Tensor 'blk.20.attn_k.weight' offset not 64-byte aligned: 5749594336
+[GGUF] WARNING: Tensor 'blk.20.attn_k_norm.weight' offset not 64-byte aligned: 5752936672
+[GGUF] WARNING: Tensor 'blk.20.attn_norm.weight' offset not 64-byte aligned: 5752937184
+[GGUF] WARNING: Tensor 'blk.20.attn_output.weight' offset not 64-byte aligned: 5752949472
+[GGUF] WARNING: Tensor 'blk.20.attn_q.weight' offset not 64-byte aligned: 5773003488
+[GGUF] WARNING: Tensor 'blk.20.attn_q_norm.weight' offset not 64-byte aligned: 5793057504
+[GGUF] WARNING: Tensor 'blk.20.attn_v.weight' offset not 64-byte aligned: 5793058016
+[GGUF] WARNING: Tensor 'blk.20.exp_probs_b.bias' offset not 64-byte aligned: 5796400352
+[GGUF] WARNING: Tensor 'blk.21.ffn_down_exps.weight' offset not 64-byte aligned: 6059759648
+[GGUF] WARNING: Tensor 'blk.21.ffn_down_shexp.weight' offset not 64-byte aligned: 6121691168
+[GGUF] WARNING: Tensor 'blk.21.ffn_gate_exps.weight' offset not 64-byte aligned: 6125033504
+[GGUF] WARNING: Tensor 'blk.21.ffn_gate_inp.weight' offset not 64-byte aligned: 6186965024
+[GGUF] WARNING: Tensor 'blk.21.ffn_gate_shexp.weight' offset not 64-byte aligned: 6187395104
+[GGUF] WARNING: Tensor 'blk.21.ffn_norm.weight' offset not 64-byte aligned: 6190737440
+[GGUF] WARNING: Tensor 'blk.21.ffn_up_exps.weight' offset not 64-byte aligned: 6190749728
+[GGUF] WARNING: Tensor 'blk.21.ffn_up_shexp.weight' offset not 64-byte aligned: 6252681248
+[GGUF] WARNING: Tensor 'blk.22.attn_gate.weight' offset not 64-byte aligned: 6256023584
+[GGUF] WARNING: Tensor 'blk.22.attn_k.weight' offset not 64-byte aligned: 6256258592
+[GGUF] WARNING: Tensor 'blk.22.attn_k_norm.weight' offset not 64-byte aligned: 6259600928
+[GGUF] WARNING: Tensor 'blk.22.attn_norm.weight' offset not 64-byte aligned: 6259601440
+[GGUF] WARNING: Tensor 'blk.22.attn_output.weight' offset not 64-byte aligned: 6259613728
+[GGUF] WARNING: Tensor 'blk.22.attn_q.weight' offset not 64-byte aligned: 6289694752
+[GGUF] WARNING: Tensor 'blk.22.attn_q_norm.weight' offset not 64-byte aligned: 6319775776
+[GGUF] WARNING: Tensor 'blk.22.attn_v.weight' offset not 64-byte aligned: 6319776288
+[GGUF] WARNING: Tensor 'blk.22.exp_probs_b.bias' offset not 64-byte aligned: 6323118624
+[GGUF] WARNING: Tensor 'blk.23.ffn_down_exps.weight' offset not 64-byte aligned: 6586477920
+[GGUF] WARNING: Tensor 'blk.23.ffn_down_shexp.weight' offset not 64-byte aligned: 6648409440
+[GGUF] WARNING: Tensor 'blk.23.ffn_gate_exps.weight' offset not 64-byte aligned: 6651751776
+[GGUF] WARNING: Tensor 'blk.23.ffn_gate_inp.weight' offset not 64-byte aligned: 6713683296
+[GGUF] WARNING: Tensor 'blk.23.ffn_gate_shexp.weight' offset not 64-byte aligned: 6714113376
+[GGUF] WARNING: Tensor 'blk.23.ffn_norm.weight' offset not 64-byte aligned: 6717455712
+[GGUF] WARNING: Tensor 'blk.23.ffn_up_exps.weight' offset not 64-byte aligned: 6717468000
+[GGUF] WARNING: Tensor 'blk.23.ffn_up_shexp.weight' offset not 64-byte aligned: 6779399520
+[GGUF] WARNING: Tensor 'blk.24.attn_gate.weight' offset not 64-byte aligned: 6782741856
+[GGUF] WARNING: Tensor 'blk.24.attn_k.weight' offset not 64-byte aligned: 6782898528
+[GGUF] WARNING: Tensor 'blk.24.attn_k_norm.weight' offset not 64-byte aligned: 6786240864
+[GGUF] WARNING: Tensor 'blk.24.attn_norm.weight' offset not 64-byte aligned: 6786241376
+[GGUF] WARNING: Tensor 'blk.24.attn_output.weight' offset not 64-byte aligned: 6786253664
+[GGUF] WARNING: Tensor 'blk.24.attn_q.weight' offset not 64-byte aligned: 6806307680
+[GGUF] WARNING: Tensor 'blk.24.attn_q_norm.weight' offset not 64-byte aligned: 6826361696
+[GGUF] WARNING: Tensor 'blk.24.attn_v.weight' offset not 64-byte aligned: 6826362208
+[GGUF] WARNING: Tensor 'blk.24.exp_probs_b.bias' offset not 64-byte aligned: 6829704544
+[GGUF] WARNING: Tensor 'blk.25.ffn_down_exps.weight' offset not 64-byte aligned: 7093063840
+[GGUF] WARNING: Tensor 'blk.25.ffn_down_shexp.weight' offset not 64-byte aligned: 7154995360
+[GGUF] WARNING: Tensor 'blk.25.ffn_gate_exps.weight' offset not 64-byte aligned: 7158337696
+[GGUF] WARNING: Tensor 'blk.25.ffn_gate_inp.weight' offset not 64-byte aligned: 7220269216
+[GGUF] WARNING: Tensor 'blk.25.ffn_gate_shexp.weight' offset not 64-byte aligned: 7220699296
+[GGUF] WARNING: Tensor 'blk.25.ffn_norm.weight' offset not 64-byte aligned: 7224041632
+[GGUF] WARNING: Tensor 'blk.25.ffn_up_exps.weight' offset not 64-byte aligned: 7224053920
+[GGUF] WARNING: Tensor 'blk.25.ffn_up_shexp.weight' offset not 64-byte aligned: 7285985440
+[GGUF] WARNING: Tensor 'blk.26.attn_gate.weight' offset not 64-byte aligned: 7289327776
+[GGUF] WARNING: Tensor 'blk.26.attn_k.weight' offset not 64-byte aligned: 7289562784
+[GGUF] WARNING: Tensor 'blk.26.attn_k_norm.weight' offset not 64-byte aligned: 7292905120
+[GGUF] WARNING: Tensor 'blk.26.attn_norm.weight' offset not 64-byte aligned: 7292905632
+[GGUF] WARNING: Tensor 'blk.26.attn_output.weight' offset not 64-byte aligned: 7292917920
+[GGUF] WARNING: Tensor 'blk.26.attn_q.weight' offset not 64-byte aligned: 7322998944
+[GGUF] WARNING: Tensor 'blk.26.attn_q_norm.weight' offset not 64-byte aligned: 7353079968
+[GGUF] WARNING: Tensor 'blk.26.attn_v.weight' offset not 64-byte aligned: 7353080480
+[GGUF] WARNING: Tensor 'blk.26.exp_probs_b.bias' offset not 64-byte aligned: 7356422816
+[GGUF] WARNING: Tensor 'blk.27.ffn_down_exps.weight' offset not 64-byte aligned: 7619782112
+[GGUF] WARNING: Tensor 'blk.27.ffn_down_shexp.weight' offset not 64-byte aligned: 7681713632
+[GGUF] WARNING: Tensor 'blk.27.ffn_gate_exps.weight' offset not 64-byte aligned: 7685055968
+[GGUF] WARNING: Tensor 'blk.27.ffn_gate_inp.weight' offset not 64-byte aligned: 7746987488
+[GGUF] WARNING: Tensor 'blk.27.ffn_gate_shexp.weight' offset not 64-byte aligned: 7747417568
+[GGUF] WARNING: Tensor 'blk.27.ffn_norm.weight' offset not 64-byte aligned: 7750759904
+[GGUF] WARNING: Tensor 'blk.27.ffn_up_exps.weight' offset not 64-byte aligned: 7750772192
+[GGUF] WARNING: Tensor 'blk.27.ffn_up_shexp.weight' offset not 64-byte aligned: 7812703712
+[GGUF] WARNING: Tensor 'blk.28.attn_gate.weight' offset not 64-byte aligned: 7816046048
+[GGUF] WARNING: Tensor 'blk.28.attn_k.weight' offset not 64-byte aligned: 7816202720
+[GGUF] WARNING: Tensor 'blk.28.attn_k_norm.weight' offset not 64-byte aligned: 7819545056
+[GGUF] WARNING: Tensor 'blk.28.attn_norm.weight' offset not 64-byte aligned: 7819545568
+[GGUF] WARNING: Tensor 'blk.28.attn_output.weight' offset not 64-byte aligned: 7819557856
+[GGUF] WARNING: Tensor 'blk.28.attn_q.weight' offset not 64-byte aligned: 7839611872
+[GGUF] WARNING: Tensor 'blk.28.attn_q_norm.weight' offset not 64-byte aligned: 7859665888
+[GGUF] WARNING: Tensor 'blk.28.attn_v.weight' offset not 64-byte aligned: 7859666400
+[GGUF] WARNING: Tensor 'blk.28.exp_probs_b.bias' offset not 64-byte aligned: 7863008736
+[GGUF] WARNING: Tensor 'blk.29.ffn_down_exps.weight' offset not 64-byte aligned: 8126368032
+[GGUF] WARNING: Tensor 'blk.29.ffn_down_shexp.weight' offset not 64-byte aligned: 8188299552
+[GGUF] WARNING: Tensor 'blk.29.ffn_gate_exps.weight' offset not 64-byte aligned: 8191641888
+[GGUF] WARNING: Tensor 'blk.29.ffn_gate_inp.weight' offset not 64-byte aligned: 8253573408
+[GGUF] WARNING: Tensor 'blk.29.ffn_gate_shexp.weight' offset not 64-byte aligned: 8254003488
+[GGUF] WARNING: Tensor 'blk.29.ffn_norm.weight' offset not 64-byte aligned: 8257345824
+[GGUF] WARNING: Tensor 'blk.29.ffn_up_exps.weight' offset not 64-byte aligned: 8257358112
+[GGUF] WARNING: Tensor 'blk.29.ffn_up_shexp.weight' offset not 64-byte aligned: 8319289632
+[GGUF] WARNING: Tensor 'blk.30.attn_gate.weight' offset not 64-byte aligned: 8322631968
+[GGUF] WARNING: Tensor 'blk.30.attn_k.weight' offset not 64-byte aligned: 8322866976
+[GGUF] WARNING: Tensor 'blk.30.attn_k_norm.weight' offset not 64-byte aligned: 8326209312
+[GGUF] WARNING: Tensor 'blk.30.attn_norm.weight' offset not 64-byte aligned: 8326209824
+[GGUF] WARNING: Tensor 'blk.30.attn_output.weight' offset not 64-byte aligned: 8326222112
+[GGUF] WARNING: Tensor 'blk.30.attn_q.weight' offset not 64-byte aligned: 8356303136
+[GGUF] WARNING: Tensor 'blk.30.attn_q_norm.weight' offset not 64-byte aligned: 8386384160
+[GGUF] WARNING: Tensor 'blk.30.attn_v.weight' offset not 64-byte aligned: 8386384672
+[GGUF] WARNING: Tensor 'blk.30.exp_probs_b.bias' offset not 64-byte aligned: 8389727008
+[GGUF] WARNING: Tensor 'blk.31.ffn_down_exps.weight' offset not 64-byte aligned: 8653086304
+[GGUF] WARNING: Tensor 'blk.31.ffn_down_shexp.weight' offset not 64-byte aligned: 8715017824
+[GGUF] WARNING: Tensor 'blk.31.ffn_gate_exps.weight' offset not 64-byte aligned: 8718360160
+[GGUF] WARNING: Tensor 'blk.31.ffn_gate_inp.weight' offset not 64-byte aligned: 8780291680
+[GGUF] WARNING: Tensor 'blk.31.ffn_gate_shexp.weight' offset not 64-byte aligned: 8780721760
+[GGUF] WARNING: Tensor 'blk.31.ffn_norm.weight' offset not 64-byte aligned: 8784064096
+[GGUF] WARNING: Tensor 'blk.31.ffn_up_exps.weight' offset not 64-byte aligned: 8784076384
+[GGUF] WARNING: Tensor 'blk.31.ffn_up_shexp.weight' offset not 64-byte aligned: 8846007904
+[GGUF] WARNING: Tensor 'blk.32.attn_gate.weight' offset not 64-byte aligned: 8849350240
+[GGUF] WARNING: Tensor 'blk.32.attn_k.weight' offset not 64-byte aligned: 8849506912
+[GGUF] WARNING: Tensor 'blk.32.attn_k_norm.weight' offset not 64-byte aligned: 8852849248
+[GGUF] WARNING: Tensor 'blk.32.attn_norm.weight' offset not 64-byte aligned: 8852849760
+[GGUF] WARNING: Tensor 'blk.32.attn_output.weight' offset not 64-byte aligned: 8852862048
+[GGUF] WARNING: Tensor 'blk.32.attn_q.weight' offset not 64-byte aligned: 8872916064
+[GGUF] WARNING: Tensor 'blk.32.attn_q_norm.weight' offset not 64-byte aligned: 8892970080
+[GGUF] WARNING: Tensor 'blk.32.attn_v.weight' offset not 64-byte aligned: 8892970592
+[GGUF] WARNING: Tensor 'blk.32.exp_probs_b.bias' offset not 64-byte aligned: 8896312928
+[GGUF] WARNING: Tensor 'blk.33.ffn_down_exps.weight' offset not 64-byte aligned: 9159672224
+[GGUF] WARNING: Tensor 'blk.33.ffn_down_shexp.weight' offset not 64-byte aligned: 9221603744
+[GGUF] WARNING: Tensor 'blk.33.ffn_gate_exps.weight' offset not 64-byte aligned: 9224946080
+[GGUF] WARNING: Tensor 'blk.33.ffn_gate_inp.weight' offset not 64-byte aligned: 9286877600
+[GGUF] WARNING: Tensor 'blk.33.ffn_gate_shexp.weight' offset not 64-byte aligned: 9287307680
+[GGUF] WARNING: Tensor 'blk.33.ffn_norm.weight' offset not 64-byte aligned: 9290650016
+[GGUF] WARNING: Tensor 'blk.33.ffn_up_exps.weight' offset not 64-byte aligned: 9290662304
+[GGUF] WARNING: Tensor 'blk.33.ffn_up_shexp.weight' offset not 64-byte aligned: 9352593824
+[GGUF] WARNING: Tensor 'blk.34.attn_gate.weight' offset not 64-byte aligned: 9355936160
+[GGUF] WARNING: Tensor 'blk.34.attn_k.weight' offset not 64-byte aligned: 9356171168
+[GGUF] WARNING: Tensor 'blk.34.attn_k_norm.weight' offset not 64-byte aligned: 9359513504
+[GGUF] WARNING: Tensor 'blk.34.attn_norm.weight' offset not 64-byte aligned: 9359514016
+[GGUF] WARNING: Tensor 'blk.34.attn_output.weight' offset not 64-byte aligned: 9359526304
+[GGUF] WARNING: Tensor 'blk.34.attn_q.weight' offset not 64-byte aligned: 9389607328
+[GGUF] WARNING: Tensor 'blk.34.attn_q_norm.weight' offset not 64-byte aligned: 9419688352
+[GGUF] WARNING: Tensor 'blk.34.attn_v.weight' offset not 64-byte aligned: 9419688864
+[GGUF] WARNING: Tensor 'blk.34.exp_probs_b.bias' offset not 64-byte aligned: 9423031200
+[GGUF] WARNING: Tensor 'blk.35.ffn_down_exps.weight' offset not 64-byte aligned: 9686390496
+[GGUF] WARNING: Tensor 'blk.35.ffn_down_shexp.weight' offset not 64-byte aligned: 9748322016
+[GGUF] WARNING: Tensor 'blk.35.ffn_gate_exps.weight' offset not 64-byte aligned: 9751664352
+[GGUF] WARNING: Tensor 'blk.35.ffn_gate_inp.weight' offset not 64-byte aligned: 9813595872
+[GGUF] WARNING: Tensor 'blk.35.ffn_gate_shexp.weight' offset not 64-byte aligned: 9814025952
+[GGUF] WARNING: Tensor 'blk.35.ffn_norm.weight' offset not 64-byte aligned: 9817368288
+[GGUF] WARNING: Tensor 'blk.35.ffn_up_exps.weight' offset not 64-byte aligned: 9817380576
+[GGUF] WARNING: Tensor 'blk.35.ffn_up_shexp.weight' offset not 64-byte aligned: 9879312096
+[GGUF] WARNING: Tensor 'blk.36.attn_gate.weight' offset not 64-byte aligned: 9882654432
+[GGUF] WARNING: Tensor 'blk.36.attn_k.weight' offset not 64-byte aligned: 9882811104
+[GGUF] WARNING: Tensor 'blk.36.attn_k_norm.weight' offset not 64-byte aligned: 9886153440
+[GGUF] WARNING: Tensor 'blk.36.attn_norm.weight' offset not 64-byte aligned: 9886153952
+[GGUF] WARNING: Tensor 'blk.36.attn_output.weight' offset not 64-byte aligned: 9886166240
+[GGUF] WARNING: Tensor 'blk.36.attn_q.weight' offset not 64-byte aligned: 9906220256
+[GGUF] WARNING: Tensor 'blk.36.attn_q_norm.weight' offset not 64-byte aligned: 9926274272
+[GGUF] WARNING: Tensor 'blk.36.attn_v.weight' offset not 64-byte aligned: 9926274784
+[GGUF] WARNING: Tensor 'blk.36.exp_probs_b.bias' offset not 64-byte aligned: 9929617120
+[GGUF] WARNING: Tensor 'blk.37.ffn_down_exps.weight' offset not 64-byte aligned: 10192976416
+[GGUF] WARNING: Tensor 'blk.37.ffn_down_shexp.weight' offset not 64-byte aligned: 10254907936
+[GGUF] WARNING: Tensor 'blk.37.ffn_gate_exps.weight' offset not 64-byte aligned: 10258250272
+[GGUF] WARNING: Tensor 'blk.37.ffn_gate_inp.weight' offset not 64-byte aligned: 10320181792
+[GGUF] WARNING: Tensor 'blk.37.ffn_gate_shexp.weight' offset not 64-byte aligned: 10320611872
+[GGUF] WARNING: Tensor 'blk.37.ffn_norm.weight' offset not 64-byte aligned: 10323954208
+[GGUF] WARNING: Tensor 'blk.37.ffn_up_exps.weight' offset not 64-byte aligned: 10323966496
+[GGUF] WARNING: Tensor 'blk.37.ffn_up_shexp.weight' offset not 64-byte aligned: 10385898016
+[GGUF] WARNING: Tensor 'blk.38.attn_gate.weight' offset not 64-byte aligned: 10389240352
+[GGUF] WARNING: Tensor 'blk.38.attn_k.weight' offset not 64-byte aligned: 10389475360
+[GGUF] WARNING: Tensor 'blk.38.attn_k_norm.weight' offset not 64-byte aligned: 10392817696
+[GGUF] WARNING: Tensor 'blk.38.attn_norm.weight' offset not 64-byte aligned: 10392818208
+[GGUF] WARNING: Tensor 'blk.38.attn_output.weight' offset not 64-byte aligned: 10392830496
+[GGUF] WARNING: Tensor 'blk.38.attn_q.weight' offset not 64-byte aligned: 10422911520
+[GGUF] WARNING: Tensor 'blk.38.attn_q_norm.weight' offset not 64-byte aligned: 10452992544
+[GGUF] WARNING: Tensor 'blk.38.attn_v.weight' offset not 64-byte aligned: 10452993056
+[GGUF] WARNING: Tensor 'blk.38.exp_probs_b.bias' offset not 64-byte aligned: 10456335392
+[GGUF] WARNING: Tensor 'blk.39.ffn_down_exps.weight' offset not 64-byte aligned: 10719694688
+[GGUF] WARNING: Tensor 'blk.39.ffn_down_shexp.weight' offset not 64-byte aligned: 10781626208
+[GGUF] WARNING: Tensor 'blk.39.ffn_gate_exps.weight' offset not 64-byte aligned: 10784968544
+[GGUF] WARNING: Tensor 'blk.39.ffn_gate_inp.weight' offset not 64-byte aligned: 10846900064
+[GGUF] WARNING: Tensor 'blk.39.ffn_gate_shexp.weight' offset not 64-byte aligned: 10847330144
+[GGUF] WARNING: Tensor 'blk.39.ffn_norm.weight' offset not 64-byte aligned: 10850672480
+[GGUF] WARNING: Tensor 'blk.39.ffn_up_exps.weight' offset not 64-byte aligned: 10850684768
+[GGUF] WARNING: Tensor 'blk.39.ffn_up_shexp.weight' offset not 64-byte aligned: 10912616288
+[GGUF] WARNING: Tensor 'blk.40.attn_gate.weight' offset not 64-byte aligned: 10915958624
+[GGUF] WARNING: Tensor 'blk.40.attn_k.weight' offset not 64-byte aligned: 10916115296
+[GGUF] WARNING: Tensor 'blk.40.attn_k_norm.weight' offset not 64-byte aligned: 10919457632
+[GGUF] WARNING: Tensor 'blk.40.attn_norm.weight' offset not 64-byte aligned: 10919458144
+[GGUF] WARNING: Tensor 'blk.40.attn_output.weight' offset not 64-byte aligned: 10919470432
+[GGUF] WARNING: Tensor 'blk.40.attn_q.weight' offset not 64-byte aligned: 10939524448
+[GGUF] WARNING: Tensor 'blk.40.attn_q_norm.weight' offset not 64-byte aligned: 10959578464
+[GGUF] WARNING: Tensor 'blk.40.attn_v.weight' offset not 64-byte aligned: 10959578976
+[GGUF] WARNING: Tensor 'blk.40.exp_probs_b.bias' offset not 64-byte aligned: 10962921312
+[GGUF] WARNING: Tensor 'blk.41.ffn_down_exps.weight' offset not 64-byte aligned: 11701088928
+[GGUF] WARNING: Tensor 'blk.41.ffn_down_shexp.weight' offset not 64-byte aligned: 11921289888
+[GGUF] WARNING: Tensor 'blk.41.ffn_gate_exps.weight' offset not 64-byte aligned: 11924632224
+[GGUF] WARNING: Tensor 'blk.41.ffn_gate_inp.weight' offset not 64-byte aligned: 12144833184
+[GGUF] WARNING: Tensor 'blk.41.ffn_gate_shexp.weight' offset not 64-byte aligned: 12145263264
+[GGUF] WARNING: Tensor 'blk.41.ffn_norm.weight' offset not 64-byte aligned: 12148605600
+[GGUF] WARNING: Tensor 'blk.41.ffn_up_exps.weight' offset not 64-byte aligned: 12148617888
+[GGUF] WARNING: Tensor 'blk.41.ffn_up_shexp.weight' offset not 64-byte aligned: 12368818848
+[GGUF] WARNING: Tensor 'blk.42.attn_gate.weight' offset not 64-byte aligned: 12372161184
+[GGUF] WARNING: Tensor 'blk.42.attn_k.weight' offset not 64-byte aligned: 12372396192
+[GGUF] WARNING: Tensor 'blk.42.attn_k_norm.weight' offset not 64-byte aligned: 12375738528
+[GGUF] WARNING: Tensor 'blk.42.attn_norm.weight' offset not 64-byte aligned: 12375739040
+[GGUF] WARNING: Tensor 'blk.42.attn_output.weight' offset not 64-byte aligned: 12375751328
+[GGUF] WARNING: Tensor 'blk.42.attn_q.weight' offset not 64-byte aligned: 12405832352
+[GGUF] WARNING: Tensor 'blk.42.attn_q_norm.weight' offset not 64-byte aligned: 12435913376
+[GGUF] WARNING: Tensor 'blk.42.attn_v.weight' offset not 64-byte aligned: 12435913888
+[GGUF] WARNING: Tensor 'blk.42.exp_probs_b.bias' offset not 64-byte aligned: 12439256224
+[GGUF] WARNING: Tensor 'blk.43.ffn_down_exps.weight' offset not 64-byte aligned: 13177423840
+[GGUF] WARNING: Tensor 'blk.43.ffn_down_shexp.weight' offset not 64-byte aligned: 13397624800
+[GGUF] WARNING: Tensor 'blk.43.ffn_gate_exps.weight' offset not 64-byte aligned: 13400967136
+[GGUF] WARNING: Tensor 'blk.43.ffn_gate_inp.weight' offset not 64-byte aligned: 13621168096
+[GGUF] WARNING: Tensor 'blk.43.ffn_gate_shexp.weight' offset not 64-byte aligned: 13621598176
+[GGUF] WARNING: Tensor 'blk.43.ffn_norm.weight' offset not 64-byte aligned: 13624940512
+[GGUF] WARNING: Tensor 'blk.43.ffn_up_exps.weight' offset not 64-byte aligned: 13624952800
+[GGUF] WARNING: Tensor 'blk.43.ffn_up_shexp.weight' offset not 64-byte aligned: 13845153760
+[GGUF] WARNING: Tensor 'blk.44.attn_gate.weight' offset not 64-byte aligned: 13848496096
+[GGUF] WARNING: Tensor 'blk.44.attn_k.weight' offset not 64-byte aligned: 13848652768
+[GGUF] WARNING: Tensor 'blk.44.attn_k_norm.weight' offset not 64-byte aligned: 13851995104
+[GGUF] WARNING: Tensor 'blk.44.attn_norm.weight' offset not 64-byte aligned: 13851995616
+[GGUF] WARNING: Tensor 'blk.44.attn_output.weight' offset not 64-byte aligned: 13852007904
+[GGUF] WARNING: Tensor 'blk.44.attn_q.weight' offset not 64-byte aligned: 13872061920
+[GGUF] WARNING: Tensor 'blk.44.attn_q_norm.weight' offset not 64-byte aligned: 13892115936
+[GGUF] WARNING: Tensor 'blk.44.attn_v.weight' offset not 64-byte aligned: 13892116448
+[GGUF] WARNING: Tensor 'blk.44.exp_probs_b.bias' offset not 64-byte aligned: 13895458784
+[GGUF] WARNING: Tensor 'blk.45.ffn_down_exps.weight' offset not 64-byte aligned: 14633626400
+[GGUF] WARNING: Tensor 'blk.45.ffn_down_shexp.weight' offset not 64-byte aligned: 14853827360
+[GGUF] WARNING: Tensor 'blk.45.ffn_gate_exps.weight' offset not 64-byte aligned: 14857169696
+[GGUF] WARNING: Tensor 'blk.45.ffn_gate_inp.weight' offset not 64-byte aligned: 15077370656
+[GGUF] WARNING: Tensor 'blk.45.ffn_gate_shexp.weight' offset not 64-byte aligned: 15077800736
+[GGUF] WARNING: Tensor 'blk.45.ffn_norm.weight' offset not 64-byte aligned: 15081143072
+[GGUF] WARNING: Tensor 'blk.45.ffn_up_exps.weight' offset not 64-byte aligned: 15081155360
+[GGUF] WARNING: Tensor 'blk.45.ffn_up_shexp.weight' offset not 64-byte aligned: 15301356320
+[GGUF] WARNING: Tensor 'blk.46.attn_gate.weight' offset not 64-byte aligned: LOADMODEL_STAGE=gguf_loader_ok tensors=814
+LOADMODEL_STAGE=geometry_ok
+LOADMODEL_STAGE=digest_skip
+[ModelOpenCompat] repaired metadata: arch=0 vocab=0 hidden=0 layers=0 inter=1 heads=1 kvHeads=0
+[LAGUNA_SWA] window=512 ropeDim=64 ropeDimSwa=128 theta=500000 thetaSwa=10000
+GEMMA4_SCHEMA_BIND root=output.weight rows=100352 cols=3072 type=8
+GEMMA4_SCHEMA_BIND root=output_norm.weight rows=3072 cols=1 type=0
+15304698656
+[GGUF] WARNING: Tensor 'blk.46.attn_k.weight' offset not 64-byte aligned: 15304933664
+[GGUF] WARNING: Tensor 'blk.46.attn_k_norm.weight' offset not 64-byte aligned: 15308276000
+[GGUF] WARNING: Tensor 'blk.46.attn_norm.weight' offset not 64-byte aligned: 15308276512
+[GGUF] WARNING: Tensor 'blk.46.attn_output.weight' offset not 64-byte aligned: 15308288800
+[GGUF] WARNING: Tensor 'blk.46.attn_q.weight' offset not 64-byte aligned: 15338369824
+[GGUF] WARNING: Tensor 'blk.46.attn_q_norm.weight' offset not 64-byte aligned: 15368450848
+[GGUF] WARNING: Tensor 'blk.46.attn_v.weight' offset not 64-byte aligned: 15368451360
+[GGUF] WARNING: Tensor 'blk.46.exp_probs_b.bias' offset not 64-byte aligned: 15371793696
+[GGUF] WARNING: Tensor 'blk.47.ffn_down_exps.weight' offset not 64-byte aligned: 16109961312
+[GGUF] WARNING: Tensor 'blk.47.ffn_down_shexp.weight' offset not 64-byte aligned: 16330162272
+[GGUF] WARNING: Tensor 'blk.47.ffn_gate_exps.weight' offset not 64-byte aligned: 16333504608
+[GGUF] WARNING: Tensor 'blk.47.ffn_gate_inp.weight' offset not 64-byte aligned: 16553705568
+[GGUF] WARNING: Tensor 'blk.47.ffn_gate_shexp.weight' offset not 64-byte aligned: 16554135648
+[GGUF] WARNING: Tensor 'blk.47.ffn_norm.weight' offset not 64-byte aligned: 16557477984
+[GGUF] WARNING: Tensor 'blk.47.ffn_up_exps.weight' offset not 64-byte aligned: 16557490272
+[GGUF] WARNING: Tensor 'blk.47.ffn_up_shexp.weight' offset not 64-byte aligned: 16777691232
+[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=PASS arch=laguna L=48 H=3072 FFN=12288 heads=72 kv=8 hd=128 ctx=262144 ropeBase=500000 ropeDim=64
+[Deep2Engine] AUTHORITY_LADDER=DEFER_UNTIL_RUNTIME_RECEIPT
+[Deep2Engine] GGUF architecture: 'laguna'  hidden=3072 layers=48 heads=72 kvHeads=8 inter=12288 vocab=100352
+[Deep2Engine] Tokenizer loaded: vocab=100352 bos=2 eos=2 (Spm::encode)
+[ATTN_GATE] BIND blk.0.attn_gate.weight rows=48 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.1.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.2.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.3.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.4.attn_gate.weight rows=48 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.5.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.6.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.7.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.8.attn_gate.weight rows=48 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.9.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.10.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.11.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.12.attn_gate.weight rows=48 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.13.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.14.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.15.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.16.attn_gate.weight rows=48 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.17.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.18.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.19.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.20.attn_gate.weight rows=48 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.21.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.22.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.23.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.24.attn_gate.weight rows=48 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.25.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.26.attn_gate.wWEIGHT_BUDGET_ENV_PRESENT=1
+WEIGHT_BUDGET_ENV_RAW="8192"
+WEIGHT_BUDGET_PARSE_OK=1
+WEIGHT_BUDGET_INPUT_MIB=8192
+WEIGHT_BUDGET_EFFECTIVE_MIB=8192
+RESIDENCY_BUDGET_MIB=8192
+BUDGET_RELATION_VALID=1
+eight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.27.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.28.attn_gate.weight rows=48 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.29.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.30.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.31.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.32.attn_gate.weight rows=48 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.33.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.34.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.35.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.36.attn_gate.weight rows=48 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.37.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.38.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.39.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.40.attn_gate.weight rows=48 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.41.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.42.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.43.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.44.attn_gate.weight rows=48 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.45.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.46.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ATTN_GATE] BIND blk.47.attn_gate.weight rows=72 cols=3072 type=8 (per-head softplus)
+[ResidencyManager] Initialized: maxResidentBytes=8589934592, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=8192 MB
+[ResidencyManager] this=000002C9D985CD80  Registered 'output.weight': shard=0 offset=3734272 bytes=327548928  |  registry_size=1  registeredBytes=327548928  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=000002C9D985CD80  Registered 'blk.5.ffn_up_shexp.weight': shard=0 offset=2119464480 bytes=3342336  |  registry_size=100  registeredBytes=2119072444  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=000002C9D985CD80  Registered 'blk.11.ffn_norm.weight': shard=0 offset=3617543136 bytes=12288  |  registry_size=200  registeredBytes=3613820932  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=000002C9D985CD80  Registered 'blk.17.ffn_gate_inp.weight': shard=0 offset=5153660832 bytes=430080  |  registry_size=300  registeredBytes=5150356300  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=000002C9D985CD80  Registered 'blk.23.ffn_down_shexp.weight': shard=0 offset=6648409440 bytes=3342336  |  registry_size=400  registeredBytes=6648017044  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=000002C9D985CD80  Registered 'blk.29.exp_probs_b.bias': shard=0 offset=8126367872 bytes=140  |  registry_size=500  registeredBytes=8122633180  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=000002C9D985CD80  Registered 'blk.29.ffn_down_exps.weight': shard=0 offset=8126368032 bytes=61931520  |  registry_size=501  registeredBytes=8184564700  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=000002C9D985CD80  Registered 'blk.29.ffn_down_shexp.weight': shard=0 offset=8188299552 bytes=3342336  |  registry_size=502  registeredBytes=8187907036  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=000002C9D985CD80  Registered 'blk.29.ffn_gate_exps.weight': shard=0 offset=8191641888 bytes=61931520  |  registry_size=503  registeredBytes=8249838556  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=000002C9D985CD80  Registered 'blk.29.ffn_gate_inp.weight': shard=0 offset=8253573408 bytes=430080  |  registry_size=504  registeredFFN_INTER_INFERRED ok=1 why=SPLIT_GATE_MATCHES_DOWN inter=12288 old_meta=12288 old_model=12288 old_config=12288
+PHI3_FUSED_FFN_RUNTIME layers=48 repaired=0 authority=UNOBSERVED
+GEMMA4_SCHEMA_BINDER ok=0 why=NO_FFN_GEOM hidden=3072 layers=48 vocab=100352 tokenEmbed=1
+GEMMA4_LAYER_TOPOLOGY_BIND ok=1 why=GEOM_READY_UNIFORM layers=48 split=48 fused_qkv=0 projector=0 ssm=0 ffn_only=0 ffn=48 unknown=0
+GEMMA4_BIND_LLAMA_FALLBACK ok=0 why=NO_FFN_ALIAS_BOUND tokenEmbed=1 hidden=3072 vocab=100352 layers=48
+MODEL_PROVENANCE_BEGIN=1
+MODEL_LOCATION=
+MODEL_CANONICAL=
+MODEL_EXISTS=0 MODEL_IS_DIRECTORY=0 MODEL_BYTES=0 MODEL_WRITE_STAMP=0
+MODEL_LOCATOR_HASH=0 TENSOR_NAME_SHAPE_HASH=0 MODEL_EXPECTED_FP=11753875096244137027
+DIGEST_FP=0 MANIFEST_FP=0 BIND_FP=11753875096244137027 AUTHORITY_FP=11753875096244137027 RUNTIME_FP=11753875096244137027
+MANIFEST_LOADED=0 MANIFEST_THIS_RUN=0 MANIFEST_ID=none
+SCHEMA_ALIAS_FALLBACK_USED=0 INHERITED_SCHEMA_AUTHORITY=0 RUNTIME_OVERLAY_SEPARATE=1
+MODEL_PROVENANCE_MATCH=0 BLOCKED_AT=PROVENANCE_MISMATCH WHY=MODEL_LOCATION_NOT_FOUND
+AUTHORITY_CLASS=DISCOVERY_PROVENANCE PROMOTE=0
+MODEL_PROVENANCE_END=1
+MODEL_OPEN=PASS
+MODEL_PROVENANCE_MATCH=0
+AUTHORITY_LADDER=BLOCKED
+BLOCKED_AT=PROVENANCE_MISMATCH
+PROMOTE=0
+SEAL_FROM_LOAD_HEAL=1 via_session_geom arch=laguna FFN=12288
+[BUF] hidden=3072 heads=72 headDim=128 qOut=9216 headScratch=9216 kvDim=1024 ffn=12288 ffnGateScratch=12288
+SSM_BUF stPer=32 cvPer=12288 inner=0 state=0 NOTE=STATE_NE_HEADS
+SSM_MAMBA2_ARM=0 reason=GEO_OR_BUF
+ParseIndex: tensors=814 kv=59
+[BUF] hidden=3072 heads=72 headDim=128 qOut=9216 headScratch=9216 kvDim=1024 ffn=12288 ffnGateScratch=12288
+SSM_BUF stPer=32 cvPer=12288 inner=0 state=0 NOTE=STATE_NE_HEADS
+SSM_MAMBA2_ARM=0 reason=GEO_OR_BUF
+Bytes=8250268636  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=000002C9D985CD80  Registered 'blk.29.ffn_gate_shexp.weight': shard=0 offset=8254003488 bytes=3342336  |  registry_size=505  registeredBytes=8253610972  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=000002C9D985CD80  Registered 'blk.29.ffn_norm.weight': shard=0 offset=8257345824 bytes=12288  |  registry_size=506  registeredBytes=8253623260  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=000002C9D985CD80  Registered 'blk.29.ffn_up_exps.weight': shard=0 offset=8257358112 bytes=61931520  |  registry_size=507  registeredBytes=8315554780  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=000002C9D985CD80  Registered 'blk.29.ffn_up_shexp.weight': shard=0 offset=8319289632 bytes=3342336  |  registry_size=508  registeredBytes=8318897116  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=000002C9D985CD80  Registered 'blk.30.attn_gate.weight': shard=0 offset=8322631968 bytes=235008  |  registry_size=509  registeredBytes=8319132124  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=000002C9D985CD80  Registered 'blk.35.attn_q_norm.weight': shard=0 offset=9683047488 bytes=512  |  registry_size=600  registeredBytes=9679313048  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=000002C9D985CD80  Registered 'blk.41.attn_output.weight': shard=0 offset=11637583872 bytes=30081024  |  registry_size=700  registeredBytes=11663929824  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=000002C9D985CD80  Registered 'blk.47.attn_k_norm.weight': shard=0 offset=16046443456 bytes=512  |  registry_size=800  registeredBytes=16042708776  zeroOffset=0  maxResidentBytes=8589934592
+RMV_MOUNT_001
+TENSORS_DISCOVERED=814
+TENSORS_ADDRESSED=814
+TENSORS_REGISTERED=814
+INVALID_SHARD=0
+INVALID_RANGE=0
+OVERFLOW_RANGE=0
+ZERO_SIZE=0
+UNADDRESSED=0
+RMV_MOUNT_001=PASS
+[Deep2Engine] ResidencyManager: this=000002C9D985CD80  registered=814 tensors  bytes=16777298356  max=8589934592
+[RMV_MOUNT_001]=PASS
+[Deep2Engine] AUTHORITY_LADDER=BLOCKED
+BLOCKED_AT=PROVENANCE_MISMATCH
+BLOCKED_OWNER=MODEL_PROVENANCE
+MODEL_OPEN=PASS
+PROMOTE=0
+[ThreadPool] Initializing with 32 threads...
+[ThreadPool] Initialized 32 worker threads
+[ThreadPool] Reinitializing with 32 threads...
+[ThreadPool] Reinitialized 32 worker threads
+[Deep2Engine] ThreadPool (loadModel): 32 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF750B2DA10 dequant=00007FF750B2B0A0 GetGEMV(12)=00007FF750B2DA10 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 22 GEMV kernels, 22 dequant kernels
+[KVCache] Lazy pages: layers=48 page=8 virtualMax=262144 heads=8 dim=128
+[KVCache] HOT_BYTES=3145728 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] Model loaded successfully (814 tensors)
+[Deep2Engine] MoE model: 35 experts, top-10, 1 shared
+[Deep2Engine] MoE streaming loader ready
+[Deep2Engine] Injected router weights for 48 layers
+[Deep2Engine] RouterPrefetchTelemetry initialized: 48 layers x 35 experts
+[Deep2Engine] Initializing production inference engine...
+  Hidden Dim: 3072
+  Num Layers: 48
+  Num Heads: 72
+  Num KV Heads: 8
+  Head Dim: 128
+  Max Seq Len: 4096
+  Use ThreadPool: YES
+  Use KV Cache: YES
+  Use RoPE: YES
+[ThreadPool] Shutdown complete
+[ThreadPool] Initializing with 32 threads...
+[ThreadPool] Initialized 32 worker threads
+[ThreadPool] Reinitializing with 32 threads...
+[ThreadPool] Reinitialized 32 worker threads
+  ThreadPool: 32 threads (auto-detected)
+[KVCache] Addressable: layers=48 virtualSeq=4096 kv_heads=8 headDim=128 (hot pages only)
+[KVCache] Lazy pages: layers=48 page=8 virtualMax=4096 heads=8 dim=128
+[KVCache] HOT_BYTES=3145728 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[HotPatcher] CrashRecovery UEF skipped (product default)
+[HotPatcher] Initialized - The Bottle is ready (with safety systems)
+[Deep2Engine] HotPatcher initialized - The Bottle is ready
+[QuantKernelRegistry] Q4_K GEMV=00007FF750B2DA10 dequant=00007FF750B2B0A0 GetGEMV(12)=00007FF750B2DA10 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 22 GEMV kernels, 22 dequant kernels
+[Deep2Engine] Telemetry controller initialized (PCIe stall + bandwidth + residency)
+[Deep2Engine] ENHANCEMENT STACK: ON
+ELASTIC_DYNAMIC warm=0MB staged=0MB hot=6912MB la=1 ramAvail=0MB vram=32479MB L=48 pressure=0
+FREETOKEN_MICROZONE live=1 zones=8 zone_mb=64 sticks=4 active=0 overwrites=0 hits=0 misses=0 hit_pct=0.00 stick0_rpm=0 stick1_rpm=0 allocs_after_init=0 key=address_id waw_ready_gate=1 helpframe_nway=4 eat_gt2=1 metric=fetch_not_fit models=20/35/70/120/300/671+ unbounded=1 public_gap=amd_xfer_waw+prescope_dual_only
+ADDRESSABILITY_OWNER=FUTURE_CONSUMER_SPACE
+RESIDENCY_OWNER=FIXED_FREETOKEN_POOL
+EVICTION_POLICY=NONE
+REASSIGNMENT_POLICY=ADVANCE_OWNERSHIP
+CACHE_POLICY=TIME_UNTIL_CONSUMER
+PHYSICAL_POOL_BYTES=536870912
+PHYSICAL_POOL_GROWS=0
+FUTURE_CONSUMER_SPACE_GROWS=1
+LOGICAL_ADDRESS_SPACE_GROWS=1
+PHYSICAL_PAGE_POOL_GROWS=0
+HOTPATH_ALLOCATIONS=0
+FREE_REQUIRED=0
+REUSE_REQUIRED=1
+LOGICAL_CONSUMERS=0
+LOGICAL_ADDRESS_BYTES=0
+PHYSICAL_PAGE_POOL_BYTES=536870912
+PHYSICAL_PAGES=8
+OWNERSHIP_ADVANCES=0
+PAST_OWNER_TO_FUTURE_OWNER=1
+CACHE_METRIC=TIME_UNTIL_CONSUMER
+PIN_BUDGET_SET site=ENGINE_MAX_HOT old=4294967296 new=7247757312 owner=ENGINE_MAX_HOT moe_reserved=4294967296
+KV_WORKING_SEQ_BOUND=4096 ckv_torus (gguf_ctx=4096)
+[ElasticResidencyManager] PASSIVE vulkan/DualStick (no scheduler, no GhostCache)
+[ElasticResidencyManager] Initialized: warmCompressed=0 MB, warmStaged=0 MB, hot=6912 MB, lookahead=1
+[Deep2Engine] ElasticResidencyManager DYNAMIC warm=0 staged=0 hot=6912 la=1
+[Deep2Engine] ElasticResidencyManager: late-registered model tensors
+[Deep2Engine] CycloneScheduler armed for live generate
+[Deep2Engine] Residency telemetry: ENABLED
+[Deep2Engine] Medusa speculative decoding: ENABLED
+[Deep2Engine] NU fused packing: ENABLED
+[Deep2Engine] Warmup scheduler: ENABLED
+[Deep2Engine] Compressed KV cache: ENABLED (Q8_0)
+[Deep2Engine] NVMe streaming: ENABLED
+[Deep2Engine] Sliding window: ENABLED (size=4096)
+[Deep2Engine] Chamber (SM0-DSP) initialized
+[Deep2Engine] Chamber: ENABLED
+[Deep2Engine] PlasmaGovernor initialized
+[Deep2Engine] PlasmaGovernor: ENABLED
+[Deep2Engine] SovereignOutOfCoreRuntime initialized (8GB RAM / 32GB VRAM)
+[Deep2Engine] SovereignOutOfCoreRuntime: ENABLED
+[Deep2Engine] ToroidalKVCache initialized: 4096 tokens, 48 layers, 72 heads, 128 dim
+[Deep2Engine] ToroidalKVCache: ENABLED
+[MARS] Initializing controller...
+[VRAMManager] Initialized: GPU0=31.86 GB, GPU1=16.00 GB
+[DualGPUBackend] Initializing dual-GPU queues...
+[DualGPUBackend] Queues ready
+[MARS] Controller ready: GPU0=31.86 GB, GPU1=16.00 GB
+[Deep2Engine] MARS enabled: GPU0=31.86 GB, GPU1=16.00 GB
+KEN_MARS_ACTIVE=1 budget_env=8192
+[VRAMManager] Allocated 'token_embd.weight' (327548928 bytes) on GPU 0
+[Deep2Engine] MARS keep-GPU pin 'token_embd.weight' (skip Host/Stream Evict under GPU product)
+[VRAMManager] Allocated 'output.weight' (327548928 bytes) on GPU 0
+[VRAMManager] Allocated 'output_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.attn_q.weight' (20054016 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.attn_output.weight' (20054016 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.ffn_gate.weight' (40108032 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.ffn_up.weight' (40108032 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.ffn_down.weight' (40108032 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.attn_q_norm.weight' (512 bytes) on GPU 0
+[DualGPUBackend] Worker 1 started
+[DualGPUBackend] Worker 0 started
+[VRAMManager] Allocated 'blk.1.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.attn_q.weight' (20054016 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.attn_output.weight' (20054016 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.attn_q.weight' (20054016 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.attn_output.weight' (20054016 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.attn_q.weight' (20054016 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.attn_output.weight' (20054016 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.attn_q.weight' (20054016 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.attn_output.weight' (20054016 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.attn_q.weight' (20054016 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.attn_output.weight' (20054016 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.attn_q.weight' (20054016 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.attn_output.weight' (20054016 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.26.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.26.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.26.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.26.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.26.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.26.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.26.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.26.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.26.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.26.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.26.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.26.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.26.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.26.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.27.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.27.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.27.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.27.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.27.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.27.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.27.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.27.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.27.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.27.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.27.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.27.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.27.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.27.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.28.attn_q.weight' (20054016 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.28.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.28.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.28.attn_output.weight' (20054016 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.28.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.28.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.28.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.28.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.28.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.28.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.28.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.28.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.28.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.28.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.29.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.29.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.29.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.29.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.29.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.29.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.29.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.29.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.29.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.29.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.29.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.29.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.29.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.29.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.30.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.30.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.30.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.30.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.30.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.30.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.30.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.30.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.30.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.30.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.30.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.30.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.30.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.30.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.31.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.31.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.31.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.31.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.31.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.31.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.31.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.31.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.31.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.31.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.31.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.31.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.31.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.31.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.32.attn_q.weight' (20054016 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.32.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.32.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.32.attn_output.weight' (20054016 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.32.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.32.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.32.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.32.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.32.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.32.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.32.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.32.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.32.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.32.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.33.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.33.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.33.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.33.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.33.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.33.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.33.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.33.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.33.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.33.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.33.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.33.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.33.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.33.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.34.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.34.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.34.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.34.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.34.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.34.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.34.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.34.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.34.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.34.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.34.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.34.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.34.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.34.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.35.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.35.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.35.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.35.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.35.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.35.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.35.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.35.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.35.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.35.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.35.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.35.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.35.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.35.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.36.attn_q.weight' (20054016 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.36.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.36.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.36.attn_output.weight' (20054016 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.36.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.36.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.36.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.36.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.36.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.36.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.36.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.36.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.36.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.36.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.37.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.37.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.37.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.37.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.37.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.37.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.37.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.37.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.37.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.37.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.37.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.37.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.37.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.37.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.38.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.38.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.38.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.38.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.38.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.38.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.38.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.38.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.38.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.38.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.38.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.38.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.38.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.38.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.39.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.39.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.39.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.39.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.39.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.39.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.39.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.39.ffn_up_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.39.ffn_down_exps.weight' (61931520 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.39.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.39.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.39.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.39.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.39.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.40.attn_q.weight' (20054016 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.40.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.40.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.40.attn_output.weight' (20054016 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.40.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.40.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.40.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.40.ffn_up_exps.weight' (220200960 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.40.ffn_down_exps.weight' (220200960 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.40.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.40.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.40.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.40.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.40.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.41.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.41.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.41.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.41.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.41.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.41.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.41.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.41.ffn_up_exps.weight' (220200960 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.41.ffn_down_exps.weight' (220200960 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.41.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.41.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.41.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.41.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.41.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.42.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.42.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.42.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.42.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.42.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.42.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.42.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.42.ffn_up_exps.weight' (220200960 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.42.ffn_down_exps.weight' (220200960 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.42.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.42.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.42.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.42.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.42.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.43.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.43.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.43.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.43.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.43.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.43.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.43.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.43.ffn_up_exps.weight' (220200960 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.43.ffn_down_exps.weight' (220200960 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.43.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.43.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.43.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.43.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.43.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.44.attn_q.weight' (20054016 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.44.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.44.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.44.attn_output.weight' (20054016 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.44.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.44.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.44.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.44.ffn_up_exps.weight' (220200960 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.44.ffn_down_exps.weight' (220200960 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.44.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.44.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.44.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.44.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.44.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.45.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.45.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.45.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.45.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.45.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.45.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.45.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.45.ffn_up_exps.weight' (220200960 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.45.ffn_down_exps.weight' (220200960 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.45.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.45.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.45.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.45.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.45.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.46.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.46.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.46.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.46.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.46.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.46.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.46.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.46.ffn_up_exps.weight' (220200960 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.46.ffn_down_exps.weight' (220200960 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.46.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.46.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.46.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.46.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.46.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.47.attn_q.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.47.attn_k.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.47.attn_v.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.47.attn_output.weight' (30081024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.47.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.47.attn_q_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.47.attn_k_norm.weight' (512 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.47.ffn_up_exps.weight' (220200960 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.47.ffn_down_exps.weight' (220200960 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.47.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.47.ffn_gate_inp.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.47.ffn_gate_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.47.ffn_up_shexp.weight' (3342336 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.47.ffn_down_shexp.weight' (3342336 bytes) on GPU 0
+[Deep2Engine] MARS placed 672 tensors (oom=0 skip=963) GPU0=12006.77 MB GPU1=0.00 MB
+[Deep2Engine] Initializing VAL-000 advanced features...
+[MedusaDecoder] Initialized: 4 heads, topK=10, maxTree=40
+[Deep2Engine] Medusa decoder initialized (4 heads)
+[Deep2Engine] NU Fused Packer initialized
+[WarmupScheduler] Initialized: depth=3, history=100, threshold=0.15
+[Deep2Engine] Warmup scheduler initialized
+[CompressedKVCache] Initialized: 431 MB compressed (vs 1536 MB F32, 3.6x ratio)
+[Deep2Engine] Compressed KV cache initialized (Q8_0)
+[NVMeStream] RAWRXD_NVME_REVERSE_BUNNYHOP=1 → force reverse bunnyhop
+[NVMeBunnyHop] UNLAIDOUT_REVERSE_CHUNK_HOTPATCH_BUNNYHOP F:\OllamaModels\_REAP16\laguna-s-2_1-Q4_K_M-REAP35\sha256-948255a146c07678678183af4cb1234a124e945e48c85c2006598ef4696552c8 16.78GB c=4194304 u=1 hp=1
+[NVMeStream] REVERSE_BUNNYHOP UNLAIDOUT_REVERSE_CHUNK_HOTPATCH_BUNNYHOP
+[Deep2Engine] NVMe REVERSE_BUNNYHOP (unlaidout hotpatch)
+[SlidingWindow] Initialized: window=4096, overlap=512, chunk=2048PIN_BUDGET_SET site=DUALSTICK_BIND old=7247757312 new=4294967296 owner=DUALSTICK_BIND moe_reserved=4294967296
+PIN_BUDGET_FINAL stick=0 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+GEN=0 BIND16_LINKED=1 PACKED_Q2K_READY=1 SSVK_READY=1 DUALSTICK_ARMED=0 GPU_RESIDENT=1 MODEL_LOADED=1 DEVICE_COUNT=1 FWD_G0=0 FWD_G1=0 RESIDENCY_EPOCH=1 MODEL_EPOCH=1
+CONTINUITY_POINT=AFTER_FN_RESET
+GENERATE_STREAM_PRE_CONFIG=1
+CFG_GEN_BEFORE_STICK=1
+CFG_GEN_AFTER_STICK=1
+CFG_GEN_GREEDY_SKIP_SAMPLER=1
+CFG_GEN_GREEDY_RETURN=1
+GENERATE_STREAM_POST_CONFIG=1
+GENERATE_STREAM_POST_BATCH007=1
+TOKEN_EMBD_STREAM_RESTORE_SKIP=1
+GENERATE_STREAM_POST_MARS_PIN=1
+GENERATE_STREAM_POST_CHOREO=1
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+STREAM_STATUS=READY
+NEXT_ACTION=CALL_GENERATE_STREAM
+GENERATE_STREAM_ENTER=1 ARCH=laguna LAYERS=48 KV_HEADS=8 HEAD_DIM=128
+[GEN_DEBUG] opts.maxTokens=1 remCtx=4094 maxTokens=1 promptN=2 maxSeqLen=4096 contextLimited=0
+
+[Deep2Engine] Sliding window initialized (size=4096)
+[Deep2Engine] Advanced features initialization complete
+[Deep2Engine] STACK vk=1 mars=1 elastic=1 cyclone=1 medusa=1 nu=1 warmup=1 ckv=1 nvme=1 slide=1 chamber=1 torus=1 plasma=1 sov=1 prefetch=1 devices=1
+[Deep2Engine] Initialization complete
+[Deep2Engine] Medusa speculative decoding: DISABLED
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[ChatTemplate] No template detected, using raw_bos fallback
+[AGENT] PREFILL_BEGIN prompt_tokens=2
+HOTPATH_GEMV=VULKAN
+HOTPATH_RMSNORM=GPU
+HOTPATH_ATTN=GPU
+HOTPATH_FFN=GPU_RESIDENT
+HOTPATH_MEDUSA=0
+HOTPATH_ELASTIC=0
+HOTPATH_CYCLONE=1
+HOTPATH_CKV=0
+HOTPATH_GPU_FWD_ENABLED=1
+GEN=0 BIND16_LINKED=1 PACKED_Q2K_READY=1 SSVK_READY=1 DUALSTICK_ARMED=0 GPU_RESIDENT=1 MODEL_LOADED=1 DEVICE_COUNT=1 FWD_G0=0 FWD_G1=0 RESIDENCY_EPOCH=1 MODEL_EPOCH=1
+CONTINUITY_POINT=AFTER_FN_RESET
+AUTO_POLICY_ACTIVE=0
+MANUAL_ARM_FORCING=1
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=manual_preserve_mech
+K2_LIVE_POLICY_REUSE_STEPS=48
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=48 TOKENS=1
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=2654400000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=1 MECH_ENV=trampoline,cyclone,elastic,stream WANTED=1
+[HotPatcher] GENERATE_DECODER_ALG=0 HEAT=lukewarm SKIP_HOTPATCH=1
+[Deep2Engine] NVMe streaming: ENABLED
+[Deep2Engine] Initializing VAL-000 advanced features...
+[Deep2Engine] Advanced features initialization complete
+[LivePath] GENERATE_ALG_MASK=0x0000010E random=0
+[StreamEngine] Initialized: 48 layers, even compression, ON reuse, ON reconstruct, ON dense
+[StreamEngine] VRAM budget: 16.00 GB
+[StreamEngine] Chunk size: 1.09 GB compressed, 8.72 GB original, 0.48 GB reconstructed
+[unreverseHot] streamDead(0) → Reverse0 (layers=48)
+[Deep2Engine] embedToken: type=8 vocabSize=100352 hiddenDim=3072 data=000002C940000000 sizeBytes=327548928
+[STAGE_DIGEST] side=deep2 key=PROMPT_EMBED pos=0 n=3072 l2=1.808600469e+01 max_abs=4.092773438e+00 min=-4.092773438e+00 max=3.906738281e+00 sum=3.258323860e+01 fnv=bc55a939f2a56977 nf=0
+WEIGHT_BUDGET_INPUT=8192
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=8192
+WEIGHT_BUDGET_BYTES=8589934592
+WEIGHT_BUDGET_SOURCE=ENV
+[GPU_FINITE] op=rms_attn ly=0 finite=3072/3072 nonFinite=0 norm=8.716308e-01
+[GPU_FINITE] op=q_proj ly=0 finite=6144/6144 nonFinite=0 norm=2.311353e+00
+[GPU_FINITE] op=k_proj ly=0 finite=1024/1024 nonFinite=0 norm=1.120366e+00
+[GPU_FINITE] op=v_proj ly=0 finite=1024/1024 nonFinite=0 norm=1.393995e+00
+[GPU_FINITE] op=rope_q ly=0 finite=6144/6144 nonFinite=0 norm=2.311353e+00
+[GPU_FINITE] op=rope_k ly=0 finite=1024/1024 nonFinite=0 norm=1.120366e+00
+[GPU_FINITE] op=attn_out ly=0 finite=6144/6144 nonFinite=0 norm=3.322119e+00
+[GPU_FINITE] op=o_proj ly=0 finite=3072/3072 nonFinite=0 norm=4.717011e+00
+[GPU_FINITE] op=attn_res ly=0 finite=3072/3072 nonFinite=0 norm=1.851421e+01
+[GPU_FINITE] op=rms_ffn ly=0 finite=3072/3072 nonFinite=0 norm=3.948421e-01
+[GPU_FINITE] op=ffn_gate ly=0 finite=12288/12288 nonFinite=0 norm=1.487160e+00
+[GPU_FINITE] op=ffn_up ly=0 finite=12288/12288 nonFinite=0 norm=1.558263e+00
+[GPU_FINITE] op=swiglu ly=0 finite=12288/12288 nonFinite=0 norm=2.191413e-02
+[GPU_FINITE] op=ffn_down ly=0 finite=3072/3072 nonFinite=0 norm=7.955038e-02
+[GPU_FINITE] op=ffn_res ly=0 finite=3072/3072 nonFinite=0 norm=1.851599e+01
+GPU_RESIDENT_LAYER_MISS layer=1 slot=0 wq=000002C9FA300000 gate=0000000000000000
+TRY_GPU_TOKEN_FORWARD=FAIL multi=0 slots=0 layers=48
+TRY_GPU_FALLBACK_HOST=1
+[LAYER_ENTER] ly=0
+[ResolveReverse0] layer 0: neutral resolved → direction chosen
+[ReconstructCompression] layer 0: 4/72 slices active, 8.72 GB → 0.48 GB
+[ResolveReverse0] layer 0: neutral resolved → direction chosen
+[ReconstructCompression] layer 0: 4/72 slices active, 8.72 GB → 0.48 GB
+[Deep2Engine] Layer 0 weights: wq.data=000002C9EF990000 type=8 wk.data=000002C9EE320000 wv.data=000002C9F0CC0000 wo.data=000002C9EE670000 wqkv.data=0000000000000000 attnO.data=000002C9EE670000
+[Deep2Engine] Layer 0 weights: attnNorm.data=000002C9EE660000 ffnNorm.data=000002C9F5C70000
+[STAGE_DIGEST] side=deep2 key=ATTN_NORM_0 pos=0 n=3072 l2=8.716307544e-01 max_abs=2.090444565e-01 min=-2.022469193e-01 max=2.090444565e-01 sum=7.543779184e-01 fnv=41e10d81f07dbcf2 nf=0
+[HEADS_LAYER] ly=0 meta=72 inferred=48 wq.rows=6144
+[STAGE_DIGEST] rms_norm_epsilon_source=llama.attention.layer_norm_rms_epsilon
+[STAGE_DIGEST] rms_norm_epsilon=9.999999975e-07
+[STAGE_DIGEST] NORM_EPS=9.999999975e-07 attnNorm.type=0
+[STAGE_DIGEST] side=deep2 key=V_0 pos=0 n=1024 l2=1.393994674e+00 max_abs=1.659831554e-01 min=-1.590876132e-01 max=1.659831554e-01 sum=1.691277066e+00 fnv=6b42908bebf2d28e nf=0
+[STAGE_DIGEST] side=deep2 key=Q_LINEAR_0 pos=0 n=6144 l2=2.311353049e+00 max_abs=2.723557055e-01 min=-2.723557055e-01 max=2.682362795e-01 sum=-7.520009993e+00 fnv=9c7c90ae6285db31 nf=0
+[STAGE_DIGEST] side=deep2 key=K_LINEAR_0 pos=0 n=1024 l2=1.120365516e+00 max_abs=3.243611753e-01 min=-3.243611753e-01 max=3.025290370e-01 sum=-1.411129075e+00 fnv=8fc9a097004931e1 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_NORM_0 pos=0 n=6144 l2=6.015349625e+01 max_abs=8.194034576e+00 min=-8.194034576e+00 max=7.432578087e+00 sum=-1.800554814e+02 fnv=bc70c296635bde75 nf=0
+[STAGE_DIGEST] side=deep2 key=K_NORM_0 pos=0 n=1024 l2=2.390993998e+01 max_abs=8.216387749e+00 min=-8.216387749e+00 max=5.245323181e+00 sum=-3.337715543e+01 fnv=48dc14e86ee3d12a nf=0
+[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_0 pos=0 n=6144 l2=6.015349625e+01 max_abs=8.194034576e+00 min=-8.194034576e+00 max=7.432578087e+00 sum=-1.800554814e+02 fnv=bc70c296635bde75 nf=0
+[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_0 pos=0 n=1024 l2=2.390993998e+01 max_abs=8.216387749e+00 min=-8.216387749e+00 max=5.245323181e+00 sum=-3.337715543e+01 fnv=48dc14e86ee3d12a nf=0
+B03_QKV_MAXABS layer=0 post_qk_norm q=8.194035e+00 k=8.216388e+00 v=1.659832e-01 qL2=6.015350e+01 kL2=2.390994e+01 ropeDim=64 headDim=128 qnorm_data=000002C9F0CB0000
+[STAGE_DIGEST] side=deep2 key=Q_POST_ROPE_0 pos=0 n=6144 l2=6.015349625e+01 max_abs=8.194034576e+00 min=-8.194034576e+00 max=7.432578087e+00 sum=-1.800554814e+02 fnv=bc70c296635bde75 nf=0
+[STAGE_DIGEST] side=deep2 key=K_POST_ROPE_0 pos=0 n=1024 l2=2.390993998e+01 max_abs=8.216387749e+00 min=-8.216387749e+00 max=5.245323181e+00 sum=-3.337715543e+01 fnv=48dc14e86ee3d12a nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_GATE_0 pos=0 n=6144 l2=3.414575656e+00 max_abs=1.659831554e-01 min=-1.590876132e-01 max=1.659831554e-01 sum=1.014766240e+01 fnv=46231e2d0ff594e5 nf=0
+[ATTN_GATE] APPLY softplus per-head ly=0 heads=48 hd=128 g0=-0.754942 s0=0.385288 (pre-O)
+[STAGE_DIGEST] side=deep2 key=ATTN_POST_GATE_0 pos=0 n=6144 l2=1.352045768e+00 max_abs=9.121011943e-02 min=-8.874704689e-02 max=9.121011943e-02 sum=4.091564631e+00 fnv=5046ea4527ff50ef nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_0 pos=0 n=6144 l2=1.352045768e+00 max_abs=9.121011943e-02 min=-8.874704689e-02 max=9.121011943e-02 sum=4.091564631e+00 fnv=5046ea4527ff50ef nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_POST_O_0 pos=0 n=3072 l2=3.299630379e+00 max_abs=8.246554732e-01 min=-8.246554732e-01 max=6.278139949e-01 sum=-3.412747213e-01 fnv=78379eb8d91283e0 nf=0
+[POST_ATTN] ly=0 output[0..7]= -0.0235703 0.0162712 -0.0160375 -0.0438205 -0.0297221 0.029538 0.00153024 -0.00760363 
+[STAGE_DIGEST] side=deep2 key=ATTN_OUT_0 pos=0 n=3072 l2=3.299630379e+00 max_abs=8.246554732e-01 min=-8.246554732e-01 max=6.278139949e-01 sum=-3.412747213e-01 fnv=78379eb8d91283e0 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_INP_0 pos=0 n=3072 l2=1.817510700e+01 max_abs=4.152723312e+00 min=-4.152723312e+00 max=3.974891424e+00 sum=3.224196347e+01 fnv=d06ad3c543f7d57e nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_NORM_0 pos=0 n=3072 l2=3.463327160e-01 max_abs=1.047197729e-01 min=-6.772896647e-02 max=1.047197729e-01 sum=1.199362903e-01 fnv=032d1314386b00a8 nf=0
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=12288 physical=12288 schema=SEPARATE_GATE
+[STAGE_DIGEST] side=deep2 key=FFN_GATE_0 pos=0 n=12288 l2=1.312539556e+00 max_abs=8.828008175e-02 min=-8.828008175e-02 max=8.553178608e-02 sum=-2.735417686e+01 fnv=bfe95dad034cd7bd nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_UP_0 pos=0 n=12288 l2=1.207509013e+00 max_abs=9.460156411e-02 min=-8.298224956e-02 max=9.460156411e-02 sum=-1.321913174e+00 fnv=f0eef894d0384079 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_ACT_0 pos=0 n=12288 l2=1.157754044e-02 max_abs=2.655208344e-03 min=-1.407681615e-03 max=2.655208344e-03 sum=-9.108656215e-03 fnv=5b2d4744d9334a60 nf=0
+[FFN_WEIGHT_DIAG] ly=0 intermediateDim=12288 gateBufNorm=1.157754e-02 gateBufNonFinite=0 wDownRows=3072 wDownCols=12288 wDownType=8
+[FFN_EXIT] ly=0 (normal path)
+[STAGE_DIGEST] side=deep2 key=FFN_DOWN_0 pos=0 n=3072 l2=4.685258303e-02 max_abs=1.268545166e-02 min=-7.444486953e-03 max=1.268545166e-02 sum=-3.951910167e-02 fnv=b558b09c07531548 nf=0
+[STAGE_DIGEST] side=deep2 key=POST_FFN_0 pos=0 n=3072 l2=1.817667280e+01 max_abs=4.153776646e+00 min=-4.153776646e+00 max=3.974481821e+00 sum=3.220244454e+01 fnv=3b483ac8ff3e3961 nf=0
+[STAGE_DIGEST] side=deep2 key=LAYER0_OUT pos=0 n=3072 l2=1.817667280e+01 max_abs=4.153776646e+00 min=-4.153776646e+00 max=3.974481821e+00 sum=3.220244454e+01 fnv=3b483ac8ff3e3961 nf=0
+[LAYER_EXIT] ly=0
+[FINAL_OUT] ly=0 norm=1.817667e+01 finite=3072/3072 output[0..7]= 0.212119 -0.0600938 0.0599912 -0.171757 0.380661 -0.597202 -0.0746464 0.0182775 
+[LAYER_ENTER] ly=1
+[ResolveReverse0] layer 1: neutral resolved → direction chosen
+[ReconstructCompression] layer 1: 4/72 slices active, 8.72 GB → 0.48 GB
+[STAGE_DIGEST] side=deep2 key=ATTN_NORM_1 pos=0 n=3072 l2=1.760333854e+00 max_abs=5.602052212e-01 min=-3.677026331e-01 max=5.602052212e-01 sum=3.161290067e+00 fnv=a2ac13ee683368d9 nf=0
+[STAGE_DIGEST] side=deep2 key=V_1 pos=0 n=1024 l2=1.911953030e+00 max_abs=2.192644179e-01 min=-1.952418387e-01 max=2.192644179e-01 sum=7.471570366e-01 fnv=cb84b28fb5858e37 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_LINEAR_1 pos=0 n=9216 l2=4.932987948e+00 max_abs=4.265481234e-01 min=-4.045037627e-01 max=4.265481234e-01 sum=1.131792852e+01 fnv=dd9a316cd9466c2f nf=0
+[STAGE_DIGEST] side=deep2 key=K_LINEAR_1 pos=0 n=1024 l2=2.327054561e+00 max_abs=8.190529346e-01 min=-8.190529346e-01 max=3.425187767e-01 sum=-5.358316395e-01 fnv=24ca741b461ed8a8 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_NORM_1 pos=0 n=9216 l2=8.026856029e+01 max_abs=8.763657570e+00 min=-8.763657570e+00 max=6.777940750e+00 sum=1.715610121e+02 fnv=c3c96da4de7a1d51 nf=0
+[STAGE_DIGEST] side=deep2 key=K_NORM_1 pos=0 n=1024 l2=2.555922664e+01 max_abs=6.498324394e+00 min=-6.498324394e+00 max=5.860766888e+00 sum=-2.298182195e+00 fnv=0981061873ece6c5 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_1 pos=0 n=9216 l2=8.026856029e+01 max_abs=8.763657570e+00 min=-8.763657570e+00 max=6.777940750e+00 sum=1.715610121e+02 fnv=c3c96da4de7a1d51 nf=0
+[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_1 pos=0 n=1024 l2=2.555922664e+01 max_abs=6.498324394e+00 min=-6.498324394e+00 max=5.860766888e+00 sum=-2.298182195e+00 fnv=0981061873ece6c5 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_POST_ROPE_1 pos=0 n=9216 l2=8.026856029e+01 max_abs=8.763657570e+00 min=-8.763657570e+00 max=6.777940750e+00 sum=1.715610121e+02 fnv=c3c96da4de7a1d51 nf=0
+[STAGE_DIGEST] side=deep2 key=K_POST_ROPE_1 pos=0 n=1024 l2=2.555922664e+01 max_abs=6.498324394e+00 min=-6.498324394e+00 max=5.860766888e+00 sum=-2.298182195e+00 fnv=0981061873ece6c5 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_GATE_1 pos=0 n=9216 l2=5.735859089e+00 max_abs=2.192644179e-01 min=-1.952418387e-01 max=2.192644179e-01 sum=6.724413329e+00 fnv=311db28bd397ebb7 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_POST_GATE_1 pos=0 n=9216 l2=1.397978285e+00 max_abs=6.369370967e-02 min=-6.324728578e-02 max=6.369370967e-02 sum=1.261337693e+00 fnv=7e0cdd54035c6ab1 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_1 pos=0 n=9216 l2=1.397978285e+00 max_abs=6.369370967e-02 min=-6.324728578e-02 max=6.369370967e-02 sum=1.261337693e+00 fnv=7e0cdd54035c6ab1 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_POST_O_1 pos=0 n=3072 l2=3.770011156e+00 max_abs=1.124432564e+00 min=-1.124432564e+00 max=1.025247335e+00 sum=-3.871687336e+00 fnv=ea77ee8b8cdc963c nf=0
+[POST_ATTN] ly=1 output[0..7]= -0.00474885 0.0240472 0.00557383 -0.0324828 -0.0143002 0.0774584 0.0211129 -0.0354801 
+[STAGE_DIGEST] side=deep2 key=ATTN_OUT_1 pos=0 n=3072 l2=3.770011156e+00 max_abs=1.124432564e+00 min=-1.124432564e+00 max=1.025247335e+00 sum=-3.871687336e+00 fnv=ea77ee8b8cdc963c nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_INP_1 pos=0 n=3072 l2=1.811667248e+01 max_abs=4.243851185e+00 min=-4.243851185e+00 max=4.075441360e+00 sum=2.833075722e+01 fnv=a9170401ba9de60a nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_NORM_1 pos=0 n=3072 l2=1.825526234e+00 max_abs=3.970736563e-01 min=-3.867142498e-01 max=3.970736563e-01 sum=3.697542435e+00 fnv=8ebb9781ecaa52fa nf=0
+B03_MOE_ROUTE_ENTER layer=1
+B03_MOE_ROUTE_OK layer=1 topk=10
+B011_FETCH_COST router_layer=1 next=2 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=2 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+B03_MOE_ACQUIRE_OK layer=1 expert=6 bytes=5308416 q=12 g=12 u=12 d=12 expertDim=1024
+[STAGE_DIGEST] side=deep2 key=MOE_IN_L1_E6 pos=0 n=3072 l2=1.825526234e+00 max_abs=3.970736563e-01 min=-3.867142498e-01 max=3.970736563e-01 sum=3.697542435e+00 fnv=8ebb9781ecaa52fa nf=0
+[STAGE_DIGEST] side=deep2 key=MOE_GATE_L1_E6 pos=0 n=1024 l2=2.184179619e+00 max_abs=2.372911870e-01 min=-2.368193120e-01 max=2.372911870e-01 sum=-1.307780255e+00 fnv=728e922bdfe4ad81 nf=0
+[STAGE_DIGEST] side=deep2 key=MOE_UP_L1_E6 pos=0 n=1024 l2=2.150116822e+00 max_abs=3.004185259e-01 min=-1.916405857e-01 max=3.004185259e-01 sum=1.969229646e+00 fnv=75570455b6a33ce2 nf=0
+[STAGE_DIGEST] side=deep2 key=MOE_DOWN_L1_E6 pos=0 n=3072 l2=1.525227557e-01 max_abs=1.405892801e-02 min=-1.283782348e-02 max=1.405892801e-02 sum=1.467447923e-01 fnv=96d9ebee942f040f nf=0
+B03_MOE_ACQUIRE_OK layer=1 expert=8 bytes=5308416 q=12 g=12 u=12 d=12 expertDim=1024
+[STAGE_DIGEST] side=deep2 key=MOE_IN_L1_E8 pos=0 n=3072 l2=1.825526234e+00 max_abs=3.970736563e-01 min=-3.867142498e-01 max=3.970736563e-01 sum=3.697542435e+00 fnv=8ebb9781ecaa52fa nf=0
+[STAGE_DIGEST] side=deep2 key=MOE_GATE_L1_E8 pos=0 n=1024 l2=1.697609929e+00 max_abs=2.898917496e-01 min=-2.404735684e-01 max=2.898917496e-01 sum=7.175897970e+00 fnv=65e4acdb8f9bd593 nf=0
+[STAGE_DIGEST] side=deep2 key=MOE_UP_L1_E8 pos=0 n=1024 l2=1.619249449e+00 max_abs=2.219761163e-01 min=-1.754810661e-01 max=2.219761163e-01 sum=1.568927207e+00 fnv=3efc76f73449152a nf=0
+[STAGE_DIGEST] side=deep2 key=MOE_DOWN_L1_E8 pos=0 n=3072 l2=1.604161129e-01 max_abs=2.842609026e-02 min=-1.651606709e-02 max=2.842609026e-02 sum=9.337368559e-02 fnv=214fcad6c16bbf93 nf=0
+B03_MOE_ACQUIRE_OK layer=1 expert=0 bytes=5308416 q=12 g=12 u=12 d=12 expertDim=1024
+B03_MOE_ACQUIRE_OK layer=1 expert=34 bytes=5308416 q=12 g=12 u=12 d=12 expertDim=1024
+B03_MOE_ACQUIRE_OK layer=1 expert=23 bytes=5308416 q=12 g=12 u=12 d=12 expertDim=1024
+B03_MOE_ACQUIRE_OK layer=1 expert=15 bytes=5308416 q=12 g=12 u=12 d=12 expertDim=1024
+B03_MOE_ACQUIRE_OK layer=1 expert=30 bytes=5308416 q=12 g=12 u=12 d=12 expertDim=1024
+B03_MOE_ACQUIRE_OK layer=1 expert=27 bytes=5308416 q=12 g=12 u=12 d=12 expertDim=1024
+[STAGE_DIGEST] side=deep2 key=FFN_DOWN_1 pos=0 n=3072 l2=1.289201473e-01 max_abs=3.269113973e-02 min=-2.085683309e-02 max=3.269113973e-02 sum=1.608403735e-01 fnv=c4a404c583353a87 nf=0
+[STAGE_DIGEST] side=deep2 key=POST_FFN_1 pos=0 n=3072 l2=1.811297003e+01 max_abs=4.242503643e+00 min=-4.242503643e+00 max=4.074737072e+00 sum=2.849159783e+01 fnv=42ba003f615a1c72 nf=0
+[STAGE_DIGEST] side=deep2 key=LAYER1_OUT pos=0 n=3072 l2=1.811297003e+01 max_abs=4.242503643e+00 min=-4.242503643e+00 max=4.074737072e+00 sum=2.849159783e+01 fnv=42ba003f615a1c72 nf=0
+[LAYER_EXIT] ly=1
+[FINAL_OUT] ly=1 norm=1.811297e+01 finite=3072/3072 output[0..7]= 0.207988 -0.0354821 0.0656447 -0.2025 0.368365 -0.518358 -0.0520123 -0.0171965 
+[LAYER_ENTER] ly=2
+[ResolveReverse0] layer 2: neutral resolved → direction chosen
+[ReconstructCompression] layer 2: 4/72 slices active, 8.72 GB → 0.48 GB
+[STAGE_DIGEST] side=deep2 key=ATTN_NORM_2 pos=0 n=3072 l2=1.765935199e+00 max_abs=4.462338984e-01 min=-4.462338984e-01 max=3.262106478e-01 sum=1.501403815e+00 fnv=c4f6a673fbc0531e nf=0
+[STAGE_DIGEST] side=deep2 key=V_2 pos=0 n=1024 l2=1.756108224e+00 max_abs=2.651843727e-01 min=-2.361580133e-01 max=2.651843727e-01 sum=1.534330860e-02 fnv=3048113d24f5664b nf=0
+[STAGE_DIGEST] side=deep2 key=Q_LINEAR_2 pos=0 n=9216 l2=5.110408807e+00 max_abs=4.015499949e-01 min=-4.015499949e-01 max=3.500056863e-01 sum=-2.824641863e+00 fnv=16bae3b155611816 nf=0
+[STAGE_DIGEST] side=deep2 key=K_LINEAR_2 pos=0 n=1024 l2=2.826467745e+00 max_abs=5.218397975e-01 min=-4.454747438e-01 max=5.218397975e-01 sum=-4.147837775e+00 fnv=96a6d228c429a3df nf=0
+[STAGE_DIGEST] side=deep2 key=Q_NORM_2 pos=0 n=9216 l2=8.101218784e+01 max_abs=7.481492996e+00 min=-7.481492996e+00 max=6.372214317e+00 sum=-4.894870345e+01 fnv=ca4972ede142e785 nf=0
+[STAGE_DIGEST] side=deep2 key=K_NORM_2 pos=0 n=1024 l2=2.577417391e+01 max_abs=4.970609665e+00 min=-4.135233879e+00 max=4.970609665e+00 sum=-3.210947656e+01 fnv=19dad696ae1e3930 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_2 pos=0 n=9216 l2=8.101218784e+01 max_abs=7.481492996e+00 min=-7.481492996e+00 max=6.372214317e+00 sum=-4.894870345e+01 fnv=ca4972ede142e785 nf=0
+[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_2 pos=0 n=1024 l2=2.577417391e+01 max_abs=4.970609665e+00 min=-4.135233879e+00 max=4.970609665e+00 sum=-3.210947656e+01 fnv=19dad696ae1e3930 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_POST_ROPE_2 pos=0 n=9216 l2=8.101218784e+01 max_abs=7.481492996e+00 min=-7.481492996e+00 max=6.372214317e+00 sum=-4.894870345e+01 fnv=ca4972ede142e785 nf=0
+[STAGE_DIGEST] side=deep2 key=K_POST_ROPE_2 pos=0 n=1024 l2=2.577417391e+01 max_abs=4.970609665e+00 min=-4.135233879e+00 max=4.970609665e+00 sum=-3.210947656e+01 fnv=19dad696ae1e3930 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_GATE_2 pos=0 n=9216 l2=5.268324672e+00 max_abs=2.651843727e-01 min=-2.361580133e-01 max=2.651843727e-01 sum=1.380897774e-01 fnv=cbacded14627162b nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_POST_GATE_2 pos=0 n=9216 l2=2.268196579e+00 max_abs=3.451340199e-01 min=-3.073565662e-01 max=3.451340199e-01 sum=9.505954975e-02 fnv=44200bd5f7f397fe nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_2 pos=0 n=9216 l2=2.268196579e+00 max_abs=3.451340199e-01 min=-3.073565662e-01 max=3.451340199e-01 sum=9.505954975e-02 fnv=44200bd5f7f397fe nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_POST_O_2 pos=0 n=3072 l2=5.642914362e+00 max_abs=3.564481974e+00 min=-7.731787562e-01 max=3.564481974e+00 sum=-1.443097802e+00 fnv=52cb69b81ab00867 nf=0
+[POST_ATTN] ly=2 output[0..7]= -0.100776 0.0129011 0.106509 0.0492308 0.211853 -0.0495818 0.0229033 -0.0493155 
+[STAGE_DIGEST] side=deep2 key=ATTN_OUT_2 pos=0 n=3072 l2=5.642914362e+00 max_abs=3.564481974e+00 min=-7.731787562e-01 max=3.564481974e+00 sum=-1.443097802e+00 fnv=52cb69b81ab00867 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_INP_2 pos=0 n=3072 l2=1.772749560e+01 max_abs=3.894626141e+00 min=-3.894626141e+00 max=3.816934824e+00 sum=2.704849982e+01 fnv=515813b7b440ecf4 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_NORM_2 pos=0 n=3072 l2=5.486654393e+00 max_abs=1.166271567e+00 min=-1.129667163e+00 max=1.166271567e+00 sum=9.662797459e+00 fnv=7bf48786ac79e5cc nf=0
+B03_MOE_ROUTE_ENTER layer=2
+B03_MOE_ROUTE_OK layer=2 topk=10
+B011_FETCH_COST router_layer=2 next=3 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=3 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[STAGE_DIGEST] side=deep2 key=FFN_DOWN_2 pos=0 n=3072 l2=2.721240142e+01 max_abs=2.417534256e+01 min=-4.179174423e+00 max=2.417534256e+01 sum=3.645964726e+01 fnv=b04c381c30d8450a nf=0
+[STAGE_DIGEST] side=deep2 key=POST_FFN_2 pos=0 n=3072 l2=3.381664008e+01 max_abs=2.617458344e+01 min=-5.468350410e+00 max=2.617458344e+01 sum=6.350814762e+01 fnv=be63b629c7d84721 nf=0
+[STAGE_DIGEST] side=deep2 key=LAYER2_OUT pos=0 n=3072 l2=3.381664008e+01 max_abs=2.617458344e+01 min=-5.468350410e+00 max=2.617458344e+01 sum=6.350814762e+01 fnv=be63b629c7d84721 nf=0
+[LAYER_EXIT] ly=2
+[FINAL_OUT] ly=2 norm=3.381664e+01 finite=3072/3072 output[0..7]= 0.15732 -0.0740313 0.0511067 -0.224734 0.303337 -0.50379 0.133956 -0.158055 
+[LAYER_ENTER] ly=3
+[ResolveReverse0] layer 3: neutral resolved → direction chosen
+[ReconstructCompression] layer 3: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=3 output[0..7]= -0.0291216 0.0431493 -0.127236 0.176749 -0.089143 -0.337227 0.027751 0.190461 
+B03_MOE_ROUTE_ENTER layer=3
+B03_MOE_ROUTE_OK layer=3 topk=10
+B011_FETCH_COST router_layer=3 next=4 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=4 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=3
+[FINAL_OUT] ly=3 norm=6.802908e+01 finite=3072/3072 output[0..7]= 0.184951 0.0482517 -0.0931421 0.0263851 0.223774 -0.947776 0.161741 0.0657522 
+[LAYER_ENTER] ly=4
+[ResolveReverse0] layer 4: neutral resolved → direction chosen
+[ReconstructCompression] layer 4: 4/72 slices active, 8.72 GB → 0.48 GB
+[HEADS_LAYER] ly=4 meta=72 inferred=48 wq.rows=6144
+[POST_ATTN] ly=4 output[0..7]= -0.0363414 -0.0221529 0.0466367 0.0458542 -0.00585907 0.0926609 0.017144 -0.0380773 
+B03_MOE_ROUTE_ENTER layer=4
+B03_MOE_ROUTE_OK layer=4 topk=10
+B011_FETCH_COST router_layer=4 next=5 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=5 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=4
+[FINAL_OUT] ly=4 norm=6.922055e+01 finite=3072/3072 output[0..7]= 0.148133 0.0263945 -0.0476782 0.0716 0.212117 -0.854263 0.180272 0.0313193 
+[LAYER_ENTER] ly=5
+[ResolveReverse0] layer 5: neutral resolved → direction chosen
+[ReconstructCompression] layer 5: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=5 output[0..7]= -0.165611 -0.00918452 -0.0764804 0.162061 0.0189561 -0.0160305 0.0093513 0.126905 
+B03_MOE_ROUTE_ENTER layer=5
+B03_MOE_ROUTE_OK layer=5 topk=10
+B011_FETCH_COST router_layer=5 next=6 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=6 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=5
+[FINAL_OUT] ly=5 norm=7.012462e+01 finite=3072/3072 output[0..7]= -0.0171896 0.0168092 -0.12676 0.232172 0.233901 -0.870102 0.189352 0.1602 
+[LAYER_ENTER] ly=6
+[ResolveReverse0] layer 6: neutral resolved → direction chosen
+[ReconstructCompression] layer 6: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=6 output[0..7]= -0.160403 -0.00635087 0.0357366 0.0341273 0.027711 -0.00336206 0.0308397 0.0905221 
+B03_MOE_ROUTE_ENTER layer=6
+B03_MOE_ROUTE_OK layer=6 topk=10
+B011_FETCH_COST router_layer=6 next=7 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=7 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=6
+[FINAL_OUT] ly=6 norm=6.999072e+01 finite=3072/3072 output[0..7]= -0.176289 0.0112973 -0.0869042 0.264525 0.259845 -0.875764 0.221932 0.251738 
+[LAYER_ENTER] ly=7
+[ResolveReverse0] layer 7: neutral resolved → direction chosen
+[ReconstructCompression] layer 7: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=7 output[0..7]= -0.0148935 0.0150943 -0.0961167 -0.0245628 0.0274341 0.0531427 -0.0355302 0.00364326 
+B03_MOE_ROUTE_ENTER layer=7
+B03_MOE_ROUTE_OK layer=7 topk=10
+B011_FETCH_COST router_layer=7 next=8 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=8 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=7
+[FINAL_OUT] ly=7 norm=7.031389e+01 finite=3072/3072 output[0..7]= -0.191185 0.0298638 -0.182363 0.242568 0.288851 -0.822621 0.18665 0.253464 
+[LAYER_ENTER] ly=8
+[ResolveReverse0] layer 8: neutral resolved → direction chosen
+[ReconstructCompression] layer 8: 4/72 slices active, 8.72 GB → 0.48 GB
+[HEADS_LAYER] ly=8 meta=72 inferred=48 wq.rows=6144
+[POST_ATTN] ly=8 output[0..7]= -0.0195879 0.00157291 -0.0225882 0.0325124 -0.0169311 0.0548392 -0.0184047 -0.00072357 
+B03_MOE_ROUTE_ENTER layer=8
+B03_MOE_ROUTE_OK layer=8 topk=10
+B011_FETCH_COST router_layer=8 next=9 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=9 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=8
+[FINAL_OUT] ly=8 norm=7.122383e+01 finite=3072/3072 output[0..7]= -0.210997 0.0297668 -0.200835 0.279256 0.269424 -0.766775 0.165367 0.26036 
+[LAYER_ENTER] ly=9
+[ResolveReverse0] layer 9: neutral resolved → direction chosen
+[ReconstructCompression] layer 9: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=9 output[0..7]= 0.0205926 -0.0125071 0.0107538 0.00867622 -0.0442638 0.00680245 0.0587928 0.0674336 
+B03_MOE_ROUTE_ENTER layer=9
+B03_MOE_ROUTE_OK layer=9 topk=10
+B011_FETCH_COST router_layer=9 next=10 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=10 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=9
+[FINAL_OUT] ly=9 norm=7.212348e+01 finite=3072/3072 output[0..7]= -0.195956 0.0176878 -0.188032 0.289422 0.230983 -0.755087 0.22349 0.328686 
+[LAYER_ENTER] ly=10
+[ResolveReverse0] layer 10: neutral resolved → direction chosen
+[ReconstructCompression] layer 10: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=10 output[0..7]= -0.0128883 0.00753108 -0.0303123 0.0598505 0.0180846 -0.00407686 -0.0844553 0.177137 
+B03_MOE_ROUTE_ENTER layer=10
+B03_MOE_ROUTE_OK layer=10 topk=10
+B011_FETCH_COST router_layer=10 next=11 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=11 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=10
+[FINAL_OUT] ly=10 norm=7.311999e+01 finite=3072/3072 output[0..7]= -0.199252 0.0240692 -0.200795 0.350088 0.239776 -0.772494 0.143038 0.496351 
+[LAYER_ENTER] ly=11
+[ResolveReverse0] layer 11: neutral resolved → direction chosen
+[ReconstructCompression] layer 11: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=11 output[0..7]= 0.047931 -0.00561525 -0.0123208 0.0179392 -0.0705333 -0.0717419 -0.0799795 0.0350397 
+B03_MOE_ROUTE_ENTER layer=11
+B03_MOE_ROUTE_OK layer=11 topk=10
+B011_FETCH_COST router_layer=11 next=12 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=12 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=11
+[FINAL_OUT] ly=11 norm=7.373849e+01 finite=3072/3072 output[0..7]= -0.152121 0.0171698 -0.206631 0.37219 0.173089 -0.845508 0.0577162 0.530669 
+[LAYER_ENTER] ly=12
+[ResolveReverse0] layer 12: neutral resolved → direction chosen
+[ReconstructCompression] layer 12: 4/72 slices active, 8.72 GB → 0.48 GB
+[HEADS_LAYER] ly=12 meta=72 inferred=48 wq.rows=6144
+[POST_ATTN] ly=12 output[0..7]= 0.0194677 -0.0243622 -0.0431878 -0.0498009 -0.0922219 -0.00205823 0.00649568 0.0590846 
+B03_MOE_ROUTE_ENTER layer=12
+B03_MOE_ROUTE_OK layer=12 topk=10
+B011_FETCH_COST router_layer=12 next=13 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=13 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=12
+[FINAL_OUT] ly=12 norm=7.500145e+01 finite=3072/3072 output[0..7]= -0.133285 -0.00191641 -0.246327 0.328817 0.086515 -0.853219 0.0635571 0.591462 
+[LAYER_ENTER] ly=13
+[ResolveReverse0] layer 13: neutral resolved → direction chosen
+[ReconstructCompression] layer 13: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=13 output[0..7]= -0.0832136 -0.0380408 -0.0730136 -0.0873287 -0.104438 -0.0294119 0.146858 0.00350551 
+B03_MOE_ROUTE_ENTER layer=13
+B03_MOE_ROUTE_OK layer=13 topk=10
+B011_FETCH_COST router_layer=13 next=14 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=14 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=13
+[FINAL_OUT] ly=13 norm=7.317140e+01 finite=3072/3072 output[0..7]= -0.217186 -0.0382228 -0.321343 0.2518 -0.0183823 -0.894259 0.198703 0.585914 
+[LAYER_ENTER] ly=14
+[ResolveReverse0] layer 14: neutral resolved → direction chosen
+[ReconstructCompression] layer 14: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=14 output[0..7]= 0.00164389 -0.0617693 -0.0286732 -0.0453624 -0.0437591 -0.0396144 0.0868923 0.0403925 
+B03_MOE_ROUTE_ENTER layer=14
+B03_MOE_ROUTE_OK layer=14 topk=10
+B011_FETCH_COST router_layer=14 next=15 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=15 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=14
+[FINAL_OUT] ly=14 norm=7.224919e+01 finite=3072/3072 output[0..7]= -0.20614 -0.0890437 -0.329085 0.208171 -0.0571208 -0.947264 0.269106 0.613918 
+[LAYER_ENTER] ly=15
+[ResolveReverse0] layer 15: neutral resolved → direction chosen
+[ReconstructCompression] layer 15: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=15 output[0..7]= 0.0127774 0.00629969 -0.0495771 -0.113162 -0.1441 0.121321 -0.0114449 -0.0357828 
+B03_MOE_ROUTE_ENTER layer=15
+B03_MOE_ROUTE_OK layer=15 topk=10
+B011_FETCH_COST router_layer=15 next=16 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=16 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=15
+[FINAL_OUT] ly=15 norm=7.257186e+01 finite=3072/3072 output[0..7]= -0.186436 -0.0824485 -0.36747 0.104606 -0.201471 -0.862233 0.28011 0.594104 
+[LAYER_ENTER] ly=16
+[ResolveReverse0] layer 16: neutral resolved → direction chosen
+[ReconstructCompression] layer 16: 4/72 slices active, 8.72 GB → 0.48 GB
+[HEADS_LAYER] ly=16 meta=72 inferred=48 wq.rows=6144
+[POST_ATTN] ly=16 output[0..7]= -0.00867327 0.0321654 0.0325119 -0.00800718 0.0443484 -0.0405424 -0.0213961 0.0518733 
+B03_MOE_ROUTE_ENTER layer=16
+B03_MOE_ROUTE_OK layer=16 topk=10
+B011_FETCH_COST router_layer=16 next=17 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=17 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=16
+[FINAL_OUT] ly=16 norm=7.423695e+01 finite=3072/3072 output[0..7]= -0.179831 -0.0564984 -0.335583 0.111317 -0.150869 -0.95641 0.267981 0.68169 
+[LAYER_ENTER] ly=17
+[ResolveReverse0] layer 17: neutral resolved → direction chosen
+[ReconstructCompression] layer 17: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=17 output[0..7]= -0.0962472 -0.0643109 0.0122654 -0.081155 0.116802 -0.0474029 0.00878383 0.189993 
+B03_MOE_ROUTE_ENTER layer=17
+B03_MOE_ROUTE_OK layer=17 topk=10
+B011_FETCH_COST router_layer=17 next=18 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=18 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=17
+[FINAL_OUT] ly=17 norm=7.779051e+01 finite=3072/3072 output[0..7]= -0.334085 -0.260844 -0.233221 0.0367043 0.102404 -1.13 0.256368 0.962247 
+[LAYER_ENTER] ly=18
+[ResolveReverse0] layer 18: neutral resolved → direction chosen
+[ReconstructCompression] layer 18: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=18 output[0..7]= -0.0383977 0.0453673 -0.0942478 -0.0696511 -0.0820508 0.0946954 0.0371543 0.103197 
+B03_MOE_ROUTE_ENTER layer=18
+B03_MOE_ROUTE_OK layer=18 topk=10
+B011_FETCH_COST router_layer=18 next=19 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=19 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=18
+[FINAL_OUT] ly=18 norm=7.887342e+01 finite=3072/3072 output[0..7]= -0.434257 -0.284206 -0.307173 0.0554568 -0.0631127 -1.12689 0.367659 1.0606 
+[LAYER_ENTER] ly=19
+[ResolveReverse0] layer 19: neutral resolved → direction chosen
+[ReconstructCompression] layer 19: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=19 output[0..7]= -0.0863146 -0.0543967 0.191912 0.24858 -0.138507 0.1373 -0.0281545 0.0219755 
+B03_MOE_ROUTE_ENTER layer=19
+B03_MOE_ROUTE_OK layer=19 topk=10
+B011_FETCH_COST router_layer=19 next=20 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=20 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=19
+[FINAL_OUT] ly=19 norm=7.910092e+01 finite=3072/3072 output[0..7]= -0.603099 -0.413937 -0.175219 0.276508 -0.170849 -1.04903 0.362758 1.02947 
+[LAYER_ENTER] ly=20
+[ResolveReverse0] layer 20: neutral resolved → direction chosen
+[ReconstructCompression] layer 20: 4/72 slices active, 8.72 GB → 0.48 GB
+[HEADS_LAYER] ly=20 meta=72 inferred=48 wq.rows=6144
+[POST_ATTN] ly=20 output[0..7]= -0.0423787 0.00203279 0.0130536 0.0326326 0.139877 0.044122 -0.0354444 0.0205687 
+B03_MOE_ROUTE_ENTER layer=20
+B03_MOE_ROUTE_OK layer=20 topk=10
+B011_FETCH_COST router_layer=20 next=21 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=21 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=20
+[FINAL_OUT] ly=20 norm=8.022285e+01 finite=3072/3072 output[0..7]= -0.691841 -0.374549 -0.198941 0.302826 0.121777 -0.9609 0.377957 1.13064 
+[LAYER_ENTER] ly=21
+[ResolveReverse0] layer 21: neutral resolved → direction chosen
+[ReconstructCompression] layer 21: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=21 output[0..7]= -0.147314 -0.10963 -0.0225047 0.0476836 0.091148 0.165478 -0.10968 0.0903056 
+B03_MOE_ROUTE_ENTER layer=21
+B03_MOE_ROUTE_OK layer=21 topk=10
+B011_FETCH_COST router_layer=21 next=22 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=22 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=21
+[FINAL_OUT] ly=21 norm=9.328556e+01 finite=3072/3072 output[0..7]= -1.37143 -0.679924 -0.408024 0.442823 0.369191 -1.12492 0.789796 1.39705 
+[LAYER_ENTER] ly=22
+[ResolveReverse0] layer 22: neutral resolved → direction chosen
+[ReconstructCompression] layer 22: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=22 output[0..7]= -0.130973 -0.135293 0.0498234 -0.0840272 -0.0215022 0.135228 -0.182783 0.116248 
+B03_MOE_ROUTE_ENTER layer=22
+B03_MOE_ROUTE_OK layer=22 topk=10
+B011_FETCH_COST router_layer=22 next=23 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=23 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=22
+[FINAL_OUT] ly=22 norm=9.791796e+01 finite=3072/3072 output[0..7]= -1.41594 -0.906575 -0.118159 0.405652 0.199506 -1.10429 0.445579 1.40386 
+[LAYER_ENTER] ly=23
+[ResolveReverse0] layer 23: neutral resolved → direction chosen
+[ReconstructCompression] layer 23: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=23 output[0..7]= 0.0397442 -0.139611 -0.0886806 0.0570076 0.179526 0.1077 0.0153096 0.0899352 
+B03_MOE_ROUTE_ENTER layer=23
+B03_MOE_ROUTE_OK layer=23 topk=10
+B011_FETCH_COST router_layer=23 next=24 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=24 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=23
+[FINAL_OUT] ly=23 norm=1.108788e+02 finite=3072/3072 output[0..7]= -1.85844 -0.658522 0.132072 0.305535 0.276713 -1.26063 0.378761 1.43049 
+[LAYER_ENTER] ly=24
+[ResolveReverse0] layer 24: neutral resolved → direction chosen
+[ReconstructCompression] layer 24: 4/72 slices active, 8.72 GB → 0.48 GB
+[HEADS_LAYER] ly=24 meta=72 inferred=48 wq.rows=6144
+[POST_ATTN] ly=24 output[0..7]= 0.0373376 -0.0851952 0.0876078 0.0801572 0.0848437 0.163469 -0.0692993 -0.0840877 
+B03_MOE_ROUTE_ENTER layer=24
+B03_MOE_ROUTE_OK layer=24 topk=10
+B011_FETCH_COST router_layer=24 next=25 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=25 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=24
+[FINAL_OUT] ly=24 norm=1.147106e+02 finite=3072/3072 output[0..7]= -1.81052 -0.876478 0.346192 0.650241 0.589344 -1.07434 0.167769 1.62747 
+[LAYER_ENTER] ly=25
+[ResolveReverse0] layer 25: neutral resolved → direction chosen
+[ReconstructCompression] layer 25: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=25 output[0..7]= 0.00836542 -0.0418341 0.0858901 0.0354044 0.0468163 -0.0639176 -0.149264 0.158393 
+B03_MOE_ROUTE_ENTER layer=25
+B03_MOE_ROUTE_OK layer=25 topk=10
+B011_FETCH_COST router_layer=25 next=26 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=26 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=25
+[FINAL_OUT] ly=25 norm=1.151478e+02 finite=3072/3072 output[0..7]= -1.72829 -0.971027 0.363172 0.610592 0.691282 -1.1663 0.00169192 1.75348 
+[LAYER_ENTER] ly=26
+[ResolveReverse0] layer 26: neutral resolved → direction chosen
+[ReconstructCompression] layer 26: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=26 output[0..7]= -0.0382334 -0.00134999 -0.0134443 0.108074 0.08678 0.0107014 0.0138798 0.00527472 
+B03_MOE_ROUTE_ENTER layer=26
+B03_MOE_ROUTE_OK layer=26 topk=10
+B011_FETCH_COST router_layer=26 next=27 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=27 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=26
+[FINAL_OUT] ly=26 norm=2.119435e+02 finite=3072/3072 output[0..7]= -1.43264 0.126156 0.700668 2.51247 -1.54352 -1.68666 -0.243418 1.69406 
+[LAYER_ENTER] ly=27
+[ResolveReverse0] layer 27: neutral resolved → direction chosen
+[ReconstructCompression] layer 27: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=27 output[0..7]= -0.0434911 0.0675609 -0.176644 0.175437 0.0757655 -0.193243 -0.0102467 -0.0178347 
+B03_MOE_ROUTE_ENTER layer=27
+B03_MOE_ROUTE_OK layer=27 topk=10
+B011_FETCH_COST router_layer=27 next=28 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=28 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=27
+[FINAL_OUT] ly=27 norm=2.182454e+02 finite=3072/3072 output[0..7]= -1.58633 0.0670984 1.01332 2.98932 -1.55449 -2.21182 -0.328439 1.63873 
+[LAYER_ENTER] ly=28
+[ResolveReverse0] layer 28: neutral resolved → direction chosen
+[ReconstructCompression] layer 28: 4/72 slices active, 8.72 GB → 0.48 GB
+[HEADS_LAYER] ly=28 meta=72 inferred=48 wq.rows=6144
+[POST_ATTN] ly=28 output[0..7]= -0.0564284 0.0381542 0.0531756 0.00551048 -0.0648148 0.156291 -0.0413552 -0.121562 
+B03_MOE_ROUTE_ENTER layer=28
+B03_MOE_ROUTE_OK layer=28 topk=10
+B011_FETCH_COST router_layer=28 next=29 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=29 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=28
+[FINAL_OUT] ly=28 norm=2.169622e+02 finite=3072/3072 output[0..7]= -1.62543 0.171895 0.947372 2.8922 -1.68534 -2.00005 -0.401336 1.47585 
+[LAYER_ENTER] ly=29
+[ResolveReverse0] layer 29: neutral resolved → direction chosen
+[ReconstructCompression] layer 29: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=29 output[0..7]= 0.00219245 -0.0968593 -0.0560965 -0.0184471 -0.0535209 -0.066117 -0.146416 0.0441471 
+B03_MOE_ROUTE_ENTER layer=29
+B03_MOE_ROUTE_OK layer=29 topk=10
+B011_FETCH_COST router_layer=29 next=30 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=30 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=29
+[FINAL_OUT] ly=29 norm=2.207595e+02 finite=3072/3072 output[0..7]= -1.75787 0.0207823 0.848605 2.70925 -1.83861 -2.22498 -0.468161 1.22531 
+[LAYER_ENTER] ly=30
+[ResolveReverse0] layer 30: neutral resolved → direction chosen
+[ReconstructCompression] layer 30: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=30 output[0..7]= 0.0569815 -0.0571918 -0.217169 -0.311355 0.0638425 -0.221456 0.0800847 -0.0194778 
+B03_MOE_ROUTE_ENTER layer=30
+B03_MOE_ROUTE_OK layer=30 topk=10
+B011_FETCH_COST router_layer=30 next=31 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=31 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=30
+[FINAL_OUT] ly=30 norm=3.419466e+02 finite=3072/3072 output[0..7]= -2.48985 2.33885 0.815384 4.81443 -3.00673 -3.01279 2.17776 1.91145 
+[LAYER_ENTER] ly=31
+[ResolveReverse0] layer 31: neutral resolved → direction chosen
+[ReconstructCompression] layer 31: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=31 output[0..7]= -0.161234 -0.0871858 -0.108521 -0.107532 -0.102528 -0.10147 0.10841 0.251335 
+B03_MOE_ROUTE_ENTER layer=31
+B03_MOE_ROUTE_OK layer=31 topk=10
+B011_FETCH_COST router_layer=31 next=32 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=32 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=31
+[FINAL_OUT] ly=31 norm=3.463904e+02 finite=3072/3072 output[0..7]= -2.6147 2.13033 0.624278 4.74409 -3.05148 -3.21305 2.41607 2.44055 
+[LAYER_ENTER] ly=32
+[ResolveReverse0] layer 32: neutral resolved → direction chosen
+[ReconstructCompression] layer 32: 4/72 slices active, 8.72 GB → 0.48 GB
+[HEADS_LAYER] ly=32 meta=72 inferred=48 wq.rows=6144
+[POST_ATTN] ly=32 output[0..7]= 0.0842206 -0.0225227 0.238991 -0.212855 -0.189915 0.0378014 0.0478219 -0.011208 
+B03_MOE_ROUTE_ENTER layer=32
+B03_MOE_ROUTE_OK layer=32 topk=10
+B011_FETCH_COST router_layer=32 next=33 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=33 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=32
+[FINAL_OUT] ly=32 norm=3.452405e+02 finite=3072/3072 output[0..7]= -2.41265 1.9854 0.643826 4.69282 -3.52269 -3.05896 2.53496 2.36738 
+[LAYER_ENTER] ly=33
+[ResolveReverse0] layer 33: neutral resolved → direction chosen
+[ReconstructCompression] layer 33: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=33 output[0..7]= -0.122578 -0.120455 0.191355 -0.171954 0.571674 0.11445 -0.457071 -0.159663 
+B03_MOE_ROUTE_ENTER layer=33
+B03_MOE_ROUTE_OK layer=33 topk=10
+B011_FETCH_COST router_layer=33 next=34 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=34 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=33
+[FINAL_OUT] ly=33 norm=3.755332e+02 finite=3072/3072 output[0..7]= -1.14987 0.886528 1.08052 4.52817 -3.03308 -2.98623 2.27309 1.71376 
+[LAYER_ENTER] ly=34
+[ResolveReverse0] layer 34: neutral resolved → direction chosen
+[ReconstructCompression] layer 34: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=34 output[0..7]= 0.315165 0.0287079 -0.0396698 -0.157506 0.00205202 -0.0722277 0.110761 0.198052 
+B03_MOE_ROUTE_ENTER layer=34
+B03_MOE_ROUTE_OK layer=34 topk=10
+B011_FETCH_COST router_layer=34 next=35 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=35 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=34
+[FINAL_OUT] ly=34 norm=3.753442e+02 finite=3072/3072 output[0..7]= -0.660019 0.954913 1.04927 4.34483 -3.01468 -3.04765 2.43201 1.79131 
+[LAYER_ENTER] ly=35
+[ResolveReverse0] layer 35: neutral resolved → direction chosen
+[ReconstructCompression] layer 35: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=35 output[0..7]= 0.0156071 -0.101798 0.00460951 -0.106893 0.118788 0.00893931 -0.0539761 0.0484159 
+B03_MOE_ROUTE_ENTER layer=35
+B03_MOE_ROUTE_OK layer=35 topk=10
+B011_FETCH_COST router_layer=35 next=36 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=36 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=35
+[FINAL_OUT] ly=35 norm=5.937806e+02 finite=3072/3072 output[0..7]= 2.34995 -0.74297 -2.71705 6.91328 -4.08426 -3.59306 4.1301 1.06373 
+[LAYER_ENTER] ly=36
+[ResolveReverse0] layer 36: neutral resolved → direction chosen
+[ReconstructCompression] layer 36: 4/72 slices active, 8.72 GB → 0.48 GB
+[HEADS_LAYER] ly=36 meta=72 inferred=48 wq.rows=6144
+[POST_ATTN] ly=36 output[0..7]= -0.00685248 -0.139634 -0.0227213 0.146553 0.0133246 0.128355 0.0127039 -0.0659318 
+B03_MOE_ROUTE_ENTER layer=36
+B03_MOE_ROUTE_OK layer=36 topk=10
+B011_FETCH_COST router_layer=36 next=37 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=37 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=36
+[FINAL_OUT] ly=36 norm=6.862737e+02 finite=3072/3072 output[0..7]= 1.43065 -0.530496 -3.15948 10.2548 -10.2543 -4.15479 5.84855 -1.7946 
+[LAYER_ENTER] ly=37
+[ResolveReverse0] layer 37: neutral resolved → direction chosen
+[ReconstructCompression] layer 37: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=37 output[0..7]= -0.0392974 -0.385988 0.264708 -0.676907 0.278775 0.206483 0.00927626 0.375134 
+B03_MOE_ROUTE_ENTER layer=37
+B03_MOE_ROUTE_OK layer=37 topk=10
+B011_FETCH_COST router_layer=37 next=38 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=38 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=37
+[FINAL_OUT] ly=37 norm=6.990927e+02 finite=3072/3072 output[0..7]= 2.31569 -1.53222 -3.72714 9.66358 -9.74399 -4.38366 5.84419 -1.14283 
+[LAYER_ENTER] ly=38
+[ResolveReverse0] layer 38: neutral resolved → direction chosen
+[ReconstructCompression] layer 38: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=38 output[0..7]= -0.0279476 -0.0880991 -0.0466882 -0.316266 0.359395 -0.15681 -0.100644 -0.0826089 
+B03_MOE_ROUTE_ENTER layer=38
+B03_MOE_ROUTE_OK layer=38 topk=10
+B011_FETCH_COST router_layer=38 next=39 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=39 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=38
+[FINAL_OUT] ly=38 norm=7.037077e+02 finite=3072/3072 output[0..7]= 2.63326 -1.61427 -3.50129 9.4548 -9.34112 -4.55001 5.78691 -1.41463 
+[LAYER_ENTER] ly=39
+[ResolveReverse0] layer 39: neutral resolved → direction chosen
+[ReconstructCompression] layer 39: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=39 output[0..7]= 0.296986 -0.0457889 -0.0698674 -0.859127 -0.877871 0.869147 -0.256101 -0.253268 
+B03_MOE_ROUTE_ENTER layer=39
+B03_MOE_ROUTE_OK layer=39 topk=10
+B011_FETCH_COST router_layer=39 next=40 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=40 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=39
+[FINAL_OUT] ly=39 norm=7.981017e+02 finite=3072/3072 output[0..7]= 4.16 0.390208 -6.28339 8.42791 -11.353 -3.02085 8.10973 -0.282882 
+[LAYER_ENTER] ly=40
+[ResolveReverse0] layer 40: neutral resolved → direction chosen
+[ReconstructCompression] layer 40: 4/72 slices active, 8.72 GB → 0.48 GB
+[STAGE_DIGEST] side=deep2 key=ATTN_NORM_40 pos=0 n=3072 l2=4.347125663e+00 max_abs=9.818416834e-01 min=-6.369824409e-01 max=9.818416834e-01 sum=8.728856408e+00 fnv=3325505506c74eab nf=0
+[HEADS_LAYER] ly=40 meta=72 inferred=48 wq.rows=6144
+[STAGE_DIGEST] side=deep2 key=V_40 pos=0 n=1024 l2=2.726916846e+00 max_abs=4.214065671e-01 min=-2.729547024e-01 max=4.214065671e-01 sum=-1.243711792e-01 fnv=30964070e49894f4 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_LINEAR_40 pos=0 n=6144 l2=8.614242968e+00 max_abs=1.106154323e+00 min=-8.225811124e-01 max=1.106154323e+00 sum=1.288576876e+01 fnv=bbcafc1febd10c41 nf=0
+[STAGE_DIGEST] side=deep2 key=K_LINEAR_40 pos=0 n=1024 l2=6.269084026e+00 max_abs=1.276324034e+00 min=-1.276324034e+00 max=1.033611298e+00 sum=-1.084027756e+00 fnv=3220b7339702ac73 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_NORM_40 pos=0 n=6144 l2=1.001597747e+02 max_abs=1.050088978e+01 min=-1.050088978e+01 max=7.467888832e+00 sum=1.435982491e+02 fnv=d03ca4bb93d78483 nf=0
+[STAGE_DIGEST] side=deep2 key=K_NORM_40 pos=0 n=1024 l2=4.456128995e+01 max_abs=9.435948372e+00 min=-9.435948372e+00 max=7.942631245e+00 sum=1.257103691e+01 fnv=3606b907f4bea847 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_40 pos=0 n=6144 l2=1.001597747e+02 max_abs=1.050088978e+01 min=-1.050088978e+01 max=7.467888832e+00 sum=1.435982491e+02 fnv=d03ca4bb93d78483 nf=0
+[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_40 pos=0 n=1024 l2=4.456128995e+01 max_abs=9.435948372e+00 min=-9.435948372e+00 max=7.942631245e+00 sum=1.257103691e+01 fnv=3606b907f4bea847 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_POST_ROPE_40 pos=0 n=6144 l2=1.001597747e+02 max_abs=1.050088978e+01 min=-1.050088978e+01 max=7.467888832e+00 sum=1.435982491e+02 fnv=d03ca4bb93d78483 nf=0
+[STAGE_DIGEST] side=deep2 key=K_POST_ROPE_40 pos=0 n=1024 l2=4.456128995e+01 max_abs=9.435948372e+00 min=-9.435948372e+00 max=7.942631245e+00 sum=1.257103691e+01 fnv=3606b907f4bea847 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_GATE_40 pos=0 n=6144 l2=6.679554843e+00 max_abs=4.214065671e-01 min=-2.729547024e-01 max=4.214065671e-01 sum=-7.462270750e-01 fnv=8b3d99468a17a1e5 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_POST_GATE_40 pos=0 n=6144 l2=7.141634909e+00 max_abs=6.291064620e-01 min=-6.226808429e-01 max=6.291064620e-01 sum=-5.629915619e+00 fnv=f675b0e2d3a050ee nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_40 pos=0 n=6144 l2=7.141634909e+00 max_abs=6.291064620e-01 min=-6.226808429e-01 max=6.291064620e-01 sum=-5.629915619e+00 fnv=f675b0e2d3a050ee nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_POST_O_40 pos=0 n=3072 l2=1.112323648e+01 max_abs=5.692247391e+00 min=-1.278138161e+00 max=5.692247391e+00 sum=1.418101114e+01 fnv=56c973f5b4192981 nf=0
+[POST_ATTN] ly=40 output[0..7]= 0.124123 -0.0420859 0.0263646 0.25906 0.0474997 -0.339689 -0.0112858 -0.121939 
+[STAGE_DIGEST] side=deep2 key=ATTN_OUT_40 pos=0 n=3072 l2=1.112323648e+01 max_abs=5.692247391e+00 min=-1.278138161e+00 max=5.692247391e+00 sum=1.418101114e+01 fnv=56c973f5b4192981 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_INP_40 pos=0 n=3072 l2=7.995390639e+02 max_abs=4.957982788e+02 min=-6.600323486e+01 max=4.957982788e+02 sum=1.754559121e+03 fnv=e5c7b23a9ab12abf nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_NORM_40 pos=0 n=3072 l2=2.073411731e+01 max_abs=3.389981747e+00 min=-1.172020555e+00 max=3.389981747e+00 sum=4.000452233e+01 fnv=9cded9c70fb27e1e nf=0
+B03_MOE_ROUTE_ENTER layer=40
+B03_MOE_ROUTE_OK layer=40 topk=10
+B011_FETCH_COST router_layer=40 next=41 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=41 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[STAGE_DIGEST] side=deep2 key=FFN_DOWN_40 pos=0 n=3072 l2=3.434878951e+02 max_abs=2.115625763e+02 min=-1.535412693e+01 max=2.115625763e+02 sum=-2.089627707e+02 fnv=05c22ee2e558187b nf=0
+[STAGE_DIGEST] side=deep2 key=POST_FFN_40 pos=0 n=3072 l2=1.041300729e+03 max_abs=5.662753906e+02 min=-8.092980194e+01 max=5.662753906e+02 sum=1.545596400e+03 fnv=244d3281fdc203b5 nf=0
+[STAGE_DIGEST] side=deep2 key=LAYER40_OUT pos=0 n=3072 l2=1.041300729e+03 max_abs=5.662753906e+02 min=-8.092980194e+01 max=5.662753906e+02 sum=1.545596400e+03 fnv=244d3281fdc203b5 nf=0
+[LAYER_EXIT] ly=40
+[FINAL_OUT] ly=40 norm=1.041301e+03 finite=3072/3072 output[0..7]= 1.70107 0.843889 -10.986 6.2535 -12.4172 1.43898 6.63777 -0.27885 
+[LAYER_ENTER] ly=41
+[ResolveReverse0] layer 41: neutral resolved → direction chosen
+[ReconstructCompression] layer 41: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=41 output[0..7]= 0.43959 -0.290441 -0.00827382 -0.295658 -0.474774 -0.0788506 0.264217 -0.184024 
+B03_MOE_ROUTE_ENTER layer=41
+B03_MOE_ROUTE_OK layer=41 topk=10
+B011_FETCH_COST router_layer=41 next=42 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=42 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[B3_FIRST_BAD] phase=LAYER41_POST_FFN pos=41 l2=1.231231376e+03 min=-9.989686584e+01 max=6.867001953e+02 nan=0 inf=0 finite=3072
+[LAYER_EXIT] ly=41
+[FINAL_OUT] ly=41 norm=1.231231e+03 finite=3072/3072 output[0..7]= 5.21806 -0.470096 -16.1209 1.00317 -12.3525 3.55078 11.1609 1.36931 
+[LAYER_ENTER] ly=42
+[ResolveReverse0] layer 42: neutral resolved → direction chosen
+[ReconstructCompression] layer 42: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=42 output[0..7]= -0.765792 -0.316421 1.42193 -0.748353 1.19426 -0.602657 -0.735102 -0.404292 
+B03_MOE_ROUTE_ENTER layer=42
+B03_MOE_ROUTE_OK layer=42 topk=10
+B011_FETCH_COST router_layer=42 next=43 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=43 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=42
+[FINAL_OUT] ly=42 norm=1.230373e+03 finite=3072/3072 output[0..7]= 4.09938 -0.934641 -14.1711 0.227826 -10.6811 2.67867 9.96782 1.578 
+[LAYER_ENTER] ly=43
+[ResolveReverse0] layer 43: neutral resolved → direction chosen
+[ReconstructCompression] layer 43: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=43 output[0..7]= -0.28217 -0.110547 -0.625176 0.0926827 0.324205 0.0461513 0.342508 1.29821 
+B03_MOE_ROUTE_ENTER layer=43
+B03_MOE_ROUTE_OK layer=43 topk=10
+B011_FETCH_COST router_layer=43 next=44 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=44 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=43
+[FINAL_OUT] ly=43 norm=1.284409e+03 finite=3072/3072 output[0..7]= 3.20427 -0.618694 -15.1488 0.70661 -10.4437 3.17362 9.9432 2.84973 
+[LAYER_ENTER] ly=44
+[ResolveReverse0] layer 44: neutral resolved → direction chosen
+[ReconstructCompression] layer 44: 4/72 slices active, 8.72 GB → 0.48 GB
+[HEADS_LAYER] ly=44 meta=72 inferred=48 wq.rows=6144
+[POST_ATTN] ly=44 output[0..7]= 0.146553 -0.117627 0.365185 -1.38413 0.631094 0.372256 0.307631 1.30793 
+B03_MOE_ROUTE_ENTER layer=44
+B03_MOE_ROUTE_OK layer=44 topk=10
+B011_FETCH_COST router_layer=44 next=45 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=45 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=44
+[FINAL_OUT] ly=44 norm=1.375297e+03 finite=3072/3072 output[0..7]= -1.14984 0.0416518 -13.7021 -1.80974 -10.4066 5.41969 9.24946 5.58182 
+[LAYER_ENTER] ly=45
+[ResolveReverse0] layer 45: neutral resolved → direction chosen
+[ReconstructCompression] layer 45: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=45 output[0..7]= 0.503512 -0.409465 0.376137 -0.222042 0.0552903 -0.742096 0.40834 0.391934 
+B03_MOE_ROUTE_ENTER layer=45
+B03_MOE_ROUTE_OK layer=45 topk=10
+B011_FETCH_COST router_layer=45 next=46 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=46 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=45
+[FINAL_OUT] ly=45 norm=1.301105e+03 finite=3072/3072 output[0..7]= -2.21757 0.58458 -13.848 -3.51521 -12.4937 4.60659 10.9585 3.48123 
+[LAYER_ENTER] ly=46
+[ResolveReverse0] layer 46: neutral resolved → direction chosen
+[ReconstructCompression] layer 46: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=46 output[0..7]= 4.27664 -0.475136 0.279396 -2.46307 2.65485 -1.50076 0.153262 1.75704 
+B03_MOE_ROUTE_ENTER layer=46
+B03_MOE_ROUTE_OK layer=46 topk=10
+B011_FETCH_COST router_layer=46 next=47 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=47 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=46
+[FINAL_OUT] ly=46 norm=1.174008e+03 finite=3072/3072 output[0..7]= 0.533877 -1.28721 -8.58549 -12.6778 -10.8646 1.39645 12.4701 4.14272 
+[LAYER_ENTER] ly=47
+[ResolveReverse0] layer 47: neutral resolved → direction chosen
+[ReconstructCompression] layer 47: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=47 output[0..7]= 1.90565 -2.13565 -0.658862 -0.746526 -0.59879 2.77784 -2.30517 0.307172 
+B03_MOE_ROUTE_ENTER layer=47
+B03_MOE_ROUTE_OK layer=47 topk=10
+[LAYER_EXIT] ly=47
+[FINAL_OUT] ly=47 norm=2.661770e+03 finite=3072/3072 output[0..7]= -19.4253 -36.087 -7.78113 15.5294 -17.6138 37.7009 15.7785 -27.5499 
+HEAP_OK_AFTER_FORWARD_LAYERS=1
+[STAGE_DIGEST] side=deep2 key=PROMPT_POST_LAYERS pos=0 n=3072 l2=2.661770438e+03 max_abs=1.425952515e+03 min=-1.768268280e+02 max=1.425952515e+03 sum=5.549665751e+03 fnv=2e6ed7d3216b41b3 nf=0
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=000002CD95237060
+FINAL_NORM_DST_PTR=000002CD95237060
+FINAL_NORM_WEIGHT_PTR=000002C9EE2E0000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.5546875
+FINAL_NORM_WEIGHT_1=1.5234375
+FINAL_NORM_WEIGHT_2=1.5234375
+FINAL_NORM_WEIGHT_3=1.5390625
+FINAL_NORM_WEIGHT_L2=83.3184597
+FINAL_NORM_SUMSQ=7085021.87
+FINAL_NORM_MEAN_SQ=2306.32222
+FINAL_NORM_EPS=9.99999997e-07
+FINAL_NORM_INV_RMS=0.0208228417
+FINAL_NORM_SRC_0=-19.4252548
+FINAL_NORM_DST_0=-0.628854036
+FINAL_NORM_AFTER_L2=67.6447425
+HEAP_OK_FINAL_NORM_AFTER=1
+[STAGE_DIGEST] side=deep2 key=PROMPT_FINAL_NORM pos=0 n=3072 l2=6.764474249e+01 max_abs=5.670124531e+00 min=-3.962808371e+00 max=5.670124531e+00 sum=1.070729198e+02 fnv=63ac72a18b2c05e0 nf=0
+[STAGE_DIGEST] side=deep2 key=FINAL_NORM pos=0 n=3072 l2=6.764474249e+01 max_abs=5.670124531e+00 min=-3.962808371e+00 max=5.670124531e+00 sum=1.070729198e+02 fnv=63ac72a18b2c05e0 nf=0
+[STAGE_DIGEST] side=deep2 key=PROMPT_EMBED pos=1 n=3072 l2=5.704988483e+00 max_abs=4.239082336e-01 min=-3.945980072e-01 max=4.239082336e-01 sum=-6.505353928e+00 fnv=bf24ee3ea874bf25 nf=0
+[GPU_FINITE] op=rms_attn ly=0 finite=3072/3072 nonFinite=0 norm=1.792286e+00
+[GPU_FINITE] op=q_proj ly=0 finite=6144/6144 nonFinite=0 norm=4.797041e+00
+[GPU_FINITE] op=k_proj ly=0 finite=1024/1024 nonFinite=0 norm=2.899694e+00
+[GPU_FINITE] op=v_proj ly=0 finite=1024/1024 nonFinite=0 norm=1.892303e+00
+[GPU_FINITE] op=rope_q ly=0 finite=6144/6144 nonFinite=0 norm=4.797041e+00
+[GPU_FINITE] op=rope_k ly=0 finite=1024/1024 nonFinite=0 norm=2.899694e+00
+[GPU_FINITE] op=attn_out ly=0 finite=6144/6144 nonFinite=0 norm=3.274276e+00
+[GPU_FINITE] op=o_proj ly=0 finite=3072/3072 nonFinite=0 norm=4.717180e+00
+[GPU_FINITE] op=attn_res ly=0 finite=3072/3072 nonFinite=0 norm=7.294285e+00
+[GPU_FINITE] op=rms_ffn ly=0 finite=3072/3072 nonFinite=0 norm=8.694528e-01
+[GPU_FINITE] op=ffn_gate ly=0 finite=12288/12288 nonFinite=0 norm=3.727269e+00
+[GPU_FINITE] op=ffn_up ly=0 finite=12288/12288 nonFinite=0 norm=3.791368e+00
+[GPU_FINITE] op=swiglu ly=0 finite=12288/12288 nonFinite=0 norm=1.459142e-01
+[GPU_FINITE] op=ffn_down ly=0 finite=3072/3072 nonFinite=0 norm=6.056128e-01
+[GPU_FINITE] op=ffn_res ly=0 finite=3072/3072 nonFinite=0 norm=7.338128e+00
+GPU_RESIDENT_LAYER_MISS layer=1 slot=0 wq=000002C9FA300000 gate=0000000000000000
+TRY_GPU_TOKEN_FORWARD=FAIL multi=0 slots=0 layers=48
+TRY_GPU_FALLBACK_HOST=1
+[LAYER_ENTER] ly=0
+[ResolveReverse0] layer 0: neutral resolved → direction chosen
+[ReconstructCompression] layer 0: 4/72 slices active, 8.72 GB → 0.48 GB
+[ResolveReverse0] layer 0: neutral resolved → direction chosen
+[ReconstructCompression] layer 0: 4/72 slices active, 8.72 GB → 0.48 GB
+[STAGE_DIGEST] side=deep2 key=ATTN_NORM_0 pos=1 n=3072 l2=1.792286015e+00 max_abs=7.089150548e-01 min=-7.089150548e-01 max=6.394122243e-01 sum=3.456589752e-01 fnv=2d25c726543b41b4 nf=0
+[HEADS_LAYER] ly=0 meta=72 inferred=48 wq.rows=6144
+[STAGE_DIGEST] side=deep2 key=V_0 pos=1 n=1024 l2=1.892303000e+00 max_abs=2.850557268e-01 min=-2.284128964e-01 max=2.850557268e-01 sum=2.434979043e-01 fnv=288152fa895e90bc nf=0
+[STAGE_DIGEST] side=deep2 key=Q_LINEAR_0 pos=1 n=6144 l2=4.797040592e+00 max_abs=7.408795953e-01 min=-4.501982033e-01 max=7.408795953e-01 sum=-4.925348653e+00 fnv=7d17624cbac2081c nf=0
+[STAGE_DIGEST] side=deep2 key=K_LINEAR_0 pos=1 n=1024 l2=2.899693291e+00 max_abs=9.786316156e-01 min=-9.786316156e-01 max=5.562163591e-01 sum=9.594252963e-01 fnv=2df2470b53e7934c nf=0
+[STAGE_DIGEST] side=deep2 key=Q_NORM_0 pos=1 n=6144 l2=5.909026414e+01 max_abs=9.661458969e+00 min=-9.661458969e+00 max=7.730605125e+00 sum=-1.259762647e+02 fnv=e093c12057801265 nf=0
+[STAGE_DIGEST] side=deep2 key=K_NORM_0 pos=1 n=1024 l2=2.467254924e+01 max_abs=7.034941673e+00 min=-6.576746941e+00 max=7.034941673e+00 sum=1.027634866e+01 fnv=b9f8c4d16e7e8ed2 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_0 pos=1 n=6144 l2=5.909026414e+01 max_abs=9.661458969e+00 min=-9.661458969e+00 max=7.730605125e+00 sum=-1.259762647e+02 fnv=e093c12057801265 nf=0
+[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_0 pos=1 n=1024 l2=2.467254924e+01 max_abs=7.034941673e+00 min=-6.576746941e+00 max=7.034941673e+00 sum=1.027634866e+01 fnv=b9f8c4d16e7e8ed2 nf=0
+B03_QKV_MAXABS layer=0 post_qk_norm q=9.661459e+00 k=7.034942e+00 v=2.850557e-01 qL2=5.909026e+01 kL2=2.467255e+01 ropeDim=64 headDim=128 qnorm_data=000002C9F0CB0000
+[STAGE_DIGEST] side=deep2 key=Q_POST_ROPE_0 pos=1 n=6144 l2=5.909026383e+01 max_abs=9.661179543e+00 min=-9.661179543e+00 max=7.730392933e+00 sum=-1.264193033e+02 fnv=ee36b055dd469dcd nf=0
+[STAGE_DIGEST] side=deep2 key=K_POST_ROPE_0 pos=1 n=1024 l2=2.467254910e+01 max_abs=7.035126209e+00 min=-6.576739311e+00 max=7.035126209e+00 sum=1.012954432e+01 fnv=503ad8382efc707d nf=0
+ATTN_GGML_FA_F16=1 attend=2 headDim=128
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_GATE_0 pos=1 n=6144 l2=3.450969343e+00 max_abs=1.689243615e-01 min=-1.689243615e-01 max=1.624760479e-01 sum=9.062816085e+00 fnv=fa9dee4b65ad8f7e nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_POST_GATE_0 pos=1 n=6144 l2=7.989006722e-01 max_abs=7.530536503e-02 min=-7.011400163e-02 max=7.530536503e-02 sum=2.306682813e+00 fnv=42c05bfc6025d0e1 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_0 pos=1 n=6144 l2=7.989006722e-01 max_abs=7.530536503e-02 min=-7.011400163e-02 max=7.530536503e-02 sum=2.306682813e+00 fnv=42c05bfc6025d0e1 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_POST_O_0 pos=1 n=3072 l2=2.162163854e+00 max_abs=5.927704573e-01 min=-5.927704573e-01 max=4.592291117e-01 sum=4.126400431e-02 fnv=65e01aa569ec9d60 nf=0
+[POST_ATTN] ly=0 output[0..7]= -0.0237357 0.0101404 -0.012267 -0.0233345 -0.019414 0.0175489 0.00383649 -0.0281454 
+[STAGE_DIGEST] side=deep2 key=ATTN_OUT_0 pos=1 n=3072 l2=2.162163854e+00 max_abs=5.927704573e-01 min=-5.927704573e-01 max=4.592291117e-01 sum=4.126400431e-02 fnv=65e01aa569ec9d60 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_INP_0 pos=1 n=3072 l2=5.862501021e+00 max_abs=7.189031839e-01 min=-5.641916990e-01 max=7.189031839e-01 sum=-6.464089956e+00 fnv=3959cffb9822e5c5 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_NORM_0 pos=1 n=3072 l2=6.207278735e-01 max_abs=1.700345725e-01 min=-1.700345725e-01 max=1.684775054e-01 sum=4.771782480e-02 fnv=5c689b10c920989c nf=0
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=12288 physical=12288 schema=SEPARATE_GATE
+[STAGE_DIGEST] side=deep2 key=FFN_GATE_0 pos=1 n=12288 l2=2.561252718e+00 max_abs=2.156902999e-01 min=-1.444979310e-01 max=2.156902999e-01 sum=-5.654690751e+01 fnv=588c7276b32a1dff nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_UP_0 pos=1 n=12288 l2=2.333708766e+00 max_abs=2.197465748e-01 min=-2.062940896e-01 max=2.197465748e-01 sum=1.352073765e+00 fnv=693de1378514cf6b nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_ACT_0 pos=1 n=12288 l2=5.304449398e-02 max_abs=1.710845903e-02 min=-1.710845903e-02 max=5.818625912e-03 sum=-1.245226935e-01 fnv=13bd7ab8458b8642 nf=0
+[FFN_WEIGHT_DIAG] ly=0 intermediateDim=12288 gateBufNorm=5.304449e-02 gateBufNonFinite=0 wDownRows=3072 wDownCols=12288 wDownType=8
+[FFN_EXIT] ly=0 (normal path)
+[STAGE_DIGEST] side=deep2 key=FFN_DOWN_0 pos=1 n=3072 l2=2.201457443e-01 max_abs=4.707201570e-02 min=-4.707201570e-02 max=4.613382369e-02 sum=2.310124495e-01 fnv=c778db366ff1852b nf=0
+[STAGE_DIGEST] side=deep2 key=POST_FFN_0 pos=1 n=3072 l2=5.872712518e+00 max_abs=7.228317857e-01 min=-5.938207507e-01 max=7.228317857e-01 sum=-6.233077465e+00 fnv=9e09315a045fec9e nf=0
+[STAGE_DIGEST] side=deep2 key=LAYER0_OUT pos=1 n=3072 l2=5.872712518e+00 max_abs=7.228317857e-01 min=-5.938207507e-01 max=7.228317857e-01 sum=-6.233077465e+00 fnv=9e09315a045fec9e nf=0
+[LAYER_EXIT] ly=0
+[FINAL_OUT] ly=0 norm=5.872713e+00 finite=3072/3072 output[0..7]= 0.0419148 -0.0325337 -0.188797 0.00502317 -0.0175992 -0.00410017 -0.176222 -0.0613474 
+[LAYER_ENTER] ly=1
+[ResolveReverse0] layer 1: neutral resolved → direction chosen
+[ReconstructCompression] layer 1: 4/72 slices active, 8.72 GB → 0.48 GB
+[STAGE_DIGEST] side=deep2 key=ATTN_NORM_1 pos=1 n=3072 l2=2.894836930e+00 max_abs=1.323800087e+00 min=-7.999832630e-01 max=1.323800087e+00 sum=1.038592716e+00 fnv=acc6074e70f1445a nf=0
+[STAGE_DIGEST] side=deep2 key=V_1 pos=1 n=1024 l2=2.689741533e+00 max_abs=3.676909804e-01 min=-3.114258647e-01 max=3.676909804e-01 sum=2.864286955e+00 fnv=62b7b77bb528d40e nf=0
+[STAGE_DIGEST] side=deep2 key=Q_LINEAR_1 pos=1 n=9216 l2=8.751718475e+00 max_abs=8.142445683e-01 min=-8.142445683e-01 max=7.702640891e-01 sum=2.755675187e+00 fnv=05e1c73a4c107681 nf=0
+[STAGE_DIGEST] side=deep2 key=K_LINEAR_1 pos=1 n=1024 l2=3.462353839e+00 max_abs=1.109676242e+00 min=-1.109676242e+00 max=6.774237156e-01 sum=2.265828284e+00 fnv=7803da48017249dc nf=0
+[STAGE_DIGEST] side=deep2 key=Q_NORM_1 pos=1 n=9216 l2=7.783802197e+01 max_abs=9.664313316e+00 min=-9.664313316e+00 max=5.288399220e+00 sum=-1.947120296e+01 fnv=e1de87457f860582 nf=0
+[STAGE_DIGEST] side=deep2 key=K_NORM_1 pos=1 n=1024 l2=2.829596477e+01 max_abs=6.474106312e+00 min=-6.474106312e+00 max=5.228345871e+00 sum=1.158400604e+01 fnv=5f14692e3dec06b4 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_1 pos=1 n=9216 l2=7.783802197e+01 max_abs=9.664313316e+00 min=-9.664313316e+00 max=5.288399220e+00 sum=-1.947120296e+01 fnv=e1de87457f860582 nf=0
+[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_1 pos=1 n=1024 l2=2.829596477e+01 max_abs=6.474106312e+00 min=-6.474106312e+00 max=5.228345871e+00 sum=1.158400604e+01 fnv=5f14692e3dec06b4 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_POST_ROPE_1 pos=1 n=9216 l2=7.783802198e+01 max_abs=9.664313316e+00 min=-9.664313316e+00 max=5.288399220e+00 sum=-1.999053437e+01 fnv=207b95b7af8c7127 nf=0
+[STAGE_DIGEST] side=deep2 key=K_POST_ROPE_1 pos=1 n=1024 l2=2.829596475e+01 max_abs=6.474106312e+00 min=-6.474106312e+00 max=5.228350163e+00 sum=1.144348500e+01 fnv=f51673c4aa7ab822 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_GATE_1 pos=1 n=9216 l2=5.627516544e+00 max_abs=3.413752019e-01 min=-2.852496803e-01 max=3.413752019e-01 sum=8.927180598e+00 fnv=e88ed2cf5d58f735 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_POST_GATE_1 pos=1 n=9216 l2=7.205292630e-01 max_abs=6.575353444e-02 min=-5.268761888e-02 max=6.575353444e-02 sum=5.748647192e-01 fnv=3736e241eb130e22 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_1 pos=1 n=9216 l2=7.205292630e-01 max_abs=6.575353444e-02 min=-5.268761888e-02 max=6.575353444e-02 sum=5.748647192e-01 fnv=3736e241eb130e22 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_POST_O_1 pos=1 n=3072 l2=2.067801697e+00 max_abs=6.964948773e-01 min=-6.964948773e-01 max=3.959462941e-01 sum=-2.052651393e+00 fnv=4c45c0761093db37 nf=0
+[POST_ATTN] ly=1 output[0..7]= -0.0151246 -0.00156959 0.0356048 0.0216144 -0.0155112 0.0475593 0.035479 -0.0423709 
+[STAGE_DIGEST] side=deep2 key=ATTN_OUT_1 pos=1 n=3072 l2=2.067801697e+00 max_abs=6.964948773e-01 min=-6.964948773e-01 max=3.959462941e-01 sum=-2.052651393e+00 fnv=4c45c0761093db37 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_INP_1 pos=1 n=3072 l2=5.918570493e+00 max_abs=1.135081291e+00 min=-1.135081291e+00 max=5.560778975e-01 sum=-8.285728971e+00 fnv=df847227e41429ee nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_NORM_1 pos=1 n=3072 l2=2.463136549e+00 max_abs=5.082527995e-01 min=-3.701010048e-01 max=5.082527995e-01 sum=-1.543266812e+00 fnv=e5a11a9767ef0a8c nf=0
+B03_MOE_ROUTE_ENTER layer=1
+B03_MOE_ROUTE_OK layer=1 topk=10
+B011_FETCH_COST router_layer=1 next=2 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=2 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[STAGE_DIGEST] side=deep2 key=FFN_DOWN_1 pos=1 n=3072 l2=4.385971451e-01 max_abs=9.641533345e-02 min=-5.765255541e-02 max=9.641533345e-02 sum=5.208579518e-01 fnv=bc4836da8705c78f nf=0
+[STAGE_DIGEST] side=deep2 key=POST_FFN_1 pos=1 n=3072 l2=5.872147608e+00 max_abs=1.164813519e+00 min=-1.164813519e+00 max=5.685917139e-01 sum=-7.764871112e+00 fnv=54757967fc9da482 nf=0
+[STAGE_DIGEST] side=deep2 key=LAYER1_OUT pos=1 n=3072 l2=5.872147608e+00 max_abs=1.164813519e+00 min=-1.164813519e+00 max=5.685917139e-01 sum=-7.764871112e+00 fnv=54757967fc9da482 nf=0
+[LAYER_EXIT] ly=1
+[FINAL_OUT] ly=1 norm=5.872148e+00 finite=3072/3072 output[0..7]= 0.0287357 -0.0320076 -0.158642 0.0393484 -0.0415035 0.0558469 -0.131488 -0.112348 
+[LAYER_ENTER] ly=2
+[ResolveReverse0] layer 2: neutral resolved → direction chosen
+[ReconstructCompression] layer 2: 4/72 slices active, 8.72 GB → 0.48 GB
+[STAGE_DIGEST] side=deep2 key=ATTN_NORM_2 pos=1 n=3072 l2=2.874218170e+00 max_abs=8.437635303e-01 min=-6.561645865e-01 max=8.437635303e-01 sum=-2.413114133e+00 fnv=baaba6c39fb8d65d nf=0
+[STAGE_DIGEST] side=deep2 key=V_2 pos=1 n=1024 l2=3.056379924e+00 max_abs=4.634156227e-01 min=-4.634156227e-01 max=3.183731437e-01 sum=-3.449835805e+00 fnv=033f0839cc812b9c nf=0
+[STAGE_DIGEST] side=deep2 key=Q_LINEAR_2 pos=1 n=9216 l2=9.263990729e+00 max_abs=8.645771742e-01 min=-8.645771742e-01 max=8.298053145e-01 sum=-2.277759957e+01 fnv=6634590b1ce307ae nf=0
+[STAGE_DIGEST] side=deep2 key=K_LINEAR_2 pos=1 n=1024 l2=4.393481331e+00 max_abs=1.204590201e+00 min=-1.183324099e+00 max=1.204590201e+00 sum=4.028390652e+00 fnv=0817e3b5ace70876 nf=0
+[STAGE_DIGEST] side=deep2 key=Q_NORM_2 pos=1 n=9216 l2=8.062921077e+01 max_abs=8.394296646e+00 min=-8.394296646e+00 max=6.140373230e+00 sum=-1.953571596e+02 fnv=9545f7941c06ad64 nf=0
+[STAGE_DIGEST] side=deep2 key=K_NORM_2 pos=1 n=1024 l2=3.062891092e+01 max_abs=7.300428391e+00 min=-7.088314533e+00 max=7.300428391e+00 sum=3.859613093e+01 fnv=7c6ba0cbad5508cb nf=0
+[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_2 pos=1 n=9216 l2=8.062921077e+01 max_abs=8.394296646e+00 min=-8.394296646e+00 max=6.140373230e+00 sum=-1.953571596e+02 fnv=9545f7941c06ad64 nf=0
+[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_2 pos=1 n=1024 l2=3.062891092e+01 max_abs=7.300428391e+00 min=-7.088314533e+00 max=7.300428391e+00 sum=3.859613093e+01 fnv=7c6ba0cbad5508cb nf=0
+[STAGE_DIGEST] side=deep2 key=Q_POST_ROPE_2 pos=1 n=9216 l2=8.062921078e+01 max_abs=8.394301414e+00 min=-8.394301414e+00 max=6.140367031e+00 sum=-1.938512311e+02 fnv=50b348c70b77175c nf=0
+[STAGE_DIGEST] side=deep2 key=K_POST_ROPE_2 pos=1 n=1024 l2=3.062891089e+01 max_abs=7.300428391e+00 min=-7.088314533e+00 max=7.300428391e+00 sum=3.880057750e+01 fnv=43f6baac2ab8745f nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_GATE_2 pos=1 n=9216 l2=5.588021117e+00 max_abs=4.322597682e-01 min=-4.322597682e-01 max=2.888454199e-01 sum=-9.716270673e+00 fnv=edca3332ed526cb3 nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_POST_GATE_2 pos=1 n=9216 l2=1.085835915e+00 max_abs=1.420256793e-01 min=-1.420256793e-01 max=9.178728610e-02 sum=-1.754685536e+00 fnv=7c72465fee78bf2b nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_2 pos=1 n=9216 l2=1.085835915e+00 max_abs=1.420256793e-01 min=-1.420256793e-01 max=9.178728610e-02 sum=-1.754685536e+00 fnv=7c72465fee78bf2b nf=0
+[STAGE_DIGEST] side=deep2 key=ATTN_POST_O_2 pos=1 n=3072 l2=2.941972044e+00 max_abs=4.673870504e-01 min=-4.673870504e-01 max=3.002412021e-01 sum=-4.378114452e+00 fnv=9ce44a24a88ab869 nf=0
+[POST_ATTN] ly=2 output[0..7]= -0.0266641 0.00301844 0.0390339 0.0305015 0.054858 0.0251196 0.11595 -0.0336344 
+[STAGE_DIGEST] side=deep2 key=ATTN_OUT_2 pos=1 n=3072 l2=2.941972044e+00 max_abs=4.673870504e-01 min=-4.673870504e-01 max=3.002412021e-01 sum=-4.378114452e+00 fnv=9ce44a24a88ab869 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_INP_2 pos=1 n=3072 l2=5.767015355e+00 max_abs=1.090368509e+00 min=-1.090368509e+00 max=4.867250621e-01 sum=-1.214298580e+01 fnv=92feaf551ad380d3 nf=0
+[STAGE_DIGEST] side=deep2 key=FFN_NORM_2 pos=1 n=3072 l2=5.316304307e+00 max_abs=7.026472092e-01 min=-7.026472092e-01 max=5.699687004e-01 sum=-9.888749393e+00 fnv=6537de4e1e6787d7 nf=0
+B03_MOE_ROUTE_ENTER layer=2
+B03_MOE_ROUTE_OK layer=2 topk=10
+B011_FETCH_COST router_layer=2 next=3 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=3 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[STAGE_DIGEST] side=deep2 key=FFN_DOWN_2 pos=1 n=3072 l2=6.890495833e-01 max_abs=2.162563056e-01 min=-2.162563056e-01 max=7.991652191e-02 sum=-1.017879692e+00 fnv=cf13b05c0c2849eb nf=0
+[STAGE_DIGEST] side=deep2 key=POST_FFN_2 pos=1 n=3072 l2=5.832270371e+00 max_abs=1.306624770e+00 min=-1.306624770e+00 max=5.365532637e-01 sum=-1.316086531e+01 fnv=680f6b7e6d1fcbb4 nf=0
+[STAGE_DIGEST] side=deep2 key=LAYER2_OUT pos=1 n=3072 l2=5.832270371e+00 max_abs=1.306624770e+00 min=-1.306624770e+00 max=5.365532637e-01 sum=-1.316086531e+01 fnv=680f6b7e6d1fcbb4 nf=0
+[LAYER_EXIT] ly=2
+[FINAL_OUT] ly=2 norm=5.832270e+00 finite=3072/3072 output[0..7]= 0.0200426 -0.0476649 -0.120547 0.068697 0.0230796 0.0690167 -0.0220919 -0.137836 
+[LAYER_ENTER] ly=3
+[ResolveReverse0] layer 3: neutral resolved → direction chosen
+[ReconstructCompression] layer 3: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=3 output[0..7]= -0.0152963 -0.025807 0.00306854 0.0334231 0.00736221 -0.0457405 0.0398688 -0.029655 
+B03_MOE_ROUTE_ENTER layer=3
+B03_MOE_ROUTE_OK layer=3 topk=10
+B011_FETCH_COST router_layer=3 next=4 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=4 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=3
+[FINAL_OUT] ly=3 norm=6.073864e+00 finite=3072/3072 output[0..7]= -0.00394764 -0.0941065 -0.110282 0.0898254 0.0291864 0.0349028 -0.0169003 -0.172297 
+[LAYER_ENTER] ly=4
+[ResolveReverse0] layer 4: neutral resolved → direction chosen
+[ReconstructCompression] layer 4: 4/72 slices active, 8.72 GB → 0.48 GB
+[HEADS_LAYER] ly=4 meta=72 inferred=48 wq.rows=6144
+[POST_ATTN] ly=4 output[0..7]= -0.0161043 -0.0129176 0.00161829 0.0135631 0.0146161 0.0267488 0.006984 -0.0213679 
+B03_MOE_ROUTE_ENTER layer=4
+B03_MOE_ROUTE_OK layer=4 topk=10
+B011_FETCH_COST router_layer=4 next=5 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=5 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=4
+[FINAL_OUT] ly=4 norm=6.068086e+00 finite=3072/3072 output[0..7]= -0.0167908 -0.114333 -0.122378 0.0974383 0.0465137 0.0699015 0.000309064 -0.196737 
+[LAYER_ENTER] ly=5
+[ResolveReverse0] layer 5: neutral resolved → direction chosen
+[ReconstructCompression] layer 5: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=5 output[0..7]= -0.0309903 0.0306338 -0.00252087 0.0440732 0.000933374 0.0319007 0.01272 0.0260534 
+B03_MOE_ROUTE_ENTER layer=5
+B03_MOE_ROUTE_OK layer=5 topk=10
+B011_FETCH_COST router_layer=5 next=6 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=6 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=5
+[FINAL_OUT] ly=5 norm=6.084252e+00 finite=3072/3072 output[0..7]= -0.0496967 -0.0782142 -0.146859 0.148843 0.0459208 0.116533 0.00892169 -0.16224 
+[LAYER_ENTER] ly=6
+[ResolveReverse0] layer 6: neutral resolved → direction chosen
+[ReconstructCompression] layer 6: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=6 output[0..7]= -0.0460262 0.0293102 0.0265946 0.0070108 -0.0229204 0.00232245 0.0227471 0.0352683 
+B03_MOE_ROUTE_ENTER layer=6
+B03_MOE_ROUTE_OK layer=6 topk=10
+B011_FETCH_COST router_layer=6 next=7 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=7 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=6
+[FINAL_OUT] ly=6 norm=6.224934e+00 finite=3072/3072 output[0..7]= -0.123116 -0.0495397 -0.11458 0.178907 0.0427369 0.124128 0.0287892 -0.113724 
+[LAYER_ENTER] ly=7
+[ResolveReverse0] layer 7: neutral resolved → direction chosen
+[ReconstructCompression] layer 7: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=7 output[0..7]= 0.0546543 -0.00608858 -0.0346565 0.0132513 0.0183537 0.031599 0.0389409 -0.0214681 
+B03_MOE_ROUTE_ENTER layer=7
+B03_MOE_ROUTE_OK layer=7 topk=10
+B011_FETCH_COST router_layer=7 next=8 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=8 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=7
+[FINAL_OUT] ly=7 norm=6.552447e+00 finite=3072/3072 output[0..7]= -0.0549968 -0.0460796 -0.122773 0.182038 0.0657615 0.142611 0.049958 -0.155082 
+[LAYER_ENTER] ly=8
+[ResolveReverse0] layer 8: neutral resolved → direction chosen
+[ReconstructCompression] layer 8: 4/72 slices active, 8.72 GB → 0.48 GB
+[HEADS_LAYER] ly=8 meta=72 inferred=48 wq.rows=6144
+[POST_ATTN] ly=8 output[0..7]= -0.0106498 -0.00520336 -0.0284542 0.0026811 0.0486906 -0.00971555 -0.0205507 -0.0201185 
+B03_MOE_ROUTE_ENTER layer=8
+B03_MOE_ROUTE_OK layer=8 topk=10
+B011_FETCH_COST router_layer=8 next=9 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=9 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=8
+[FINAL_OUT] ly=8 norm=7.098522e+00 finite=3072/3072 output[0..7]= -0.0636101 -0.0300957 -0.112744 0.194361 0.103622 0.134336 0.0582489 -0.161972 
+[LAYER_ENTER] ly=9
+[ResolveReverse0] layer 9: neutral resolved → direction chosen
+[ReconstructCompression] layer 9: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=9 output[0..7]= 0.0187656 -0.0260784 -0.0100503 -0.0242235 -0.0303724 -0.00267608 0.0482678 0.0596083 
+B03_MOE_ROUTE_ENTER layer=9
+B03_MOE_ROUTE_OK layer=9 topk=10
+B011_FETCH_COST router_layer=9 next=10 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=10 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=9
+[FINAL_OUT] ly=9 norm=7.578356e+00 finite=3072/3072 output[0..7]= -0.0914107 -0.0903431 -0.109843 0.149447 0.115423 0.150025 0.0851791 -0.0392139 
+[LAYER_ENTER] ly=10
+[ResolveReverse0] layer 10: neutral resolved → direction chosen
+[ReconstructCompression] layer 10: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=10 output[0..7]= 0.012304 0.0079189 -0.0487086 -0.00275245 0.0294813 0.0161247 -0.0508023 0.0448901 
+B03_MOE_ROUTE_ENTER layer=10
+B03_MOE_ROUTE_OK layer=10 topk=10
+B011_FETCH_COST router_layer=10 next=11 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=11 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=10
+[FINAL_OUT] ly=10 norm=8.185003e+00 finite=3072/3072 output[0..7]= -0.0760657 -0.107125 -0.195253 0.138337 0.214156 0.158554 0.00245811 -0.0242837 
+[LAYER_ENTER] ly=11
+[ResolveReverse0] layer 11: neutral resolved → direction chosen
+[ReconstructCompression] layer 11: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=11 output[0..7]= 0.0919386 -0.0158989 -0.0131699 0.144508 -0.014229 -0.027207 0.0423063 0.0462799 
+B03_MOE_ROUTE_ENTER layer=11
+B03_MOE_ROUTE_OK layer=11 topk=10
+B011_FETCH_COST router_layer=11 next=12 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=12 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=11
+[FINAL_OUT] ly=11 norm=9.210883e+00 finite=3072/3072 output[0..7]= 0.00845329 -0.152838 -0.175161 0.295242 0.229226 0.123805 0.00714445 0.0489075 
+[LAYER_ENTER] ly=12
+[ResolveReverse0] layer 12: neutral resolved → direction chosen
+[ReconstructCompression] layer 12: 4/72 slices active, 8.72 GB → 0.48 GB
+[HEADS_LAYER] ly=12 meta=72 inferred=48 wq.rows=6144
+[POST_ATTN] ly=12 output[0..7]= 0.00530183 -0.0116083 -0.00206757 -0.0586079 -0.0384393 -0.0636514 -0.00202601 0.00421645 
+B03_MOE_ROUTE_ENTER layer=12
+B03_MOE_ROUTE_OK layer=12 topk=10
+B011_FETCH_COST router_layer=12 next=13 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=13 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=12
+[FINAL_OUT] ly=12 norm=9.376022e+00 finite=3072/3072 output[0..7]= -0.00734496 -0.150341 -0.185759 0.255321 0.149195 0.0644268 -0.013405 0.0284473 
+[LAYER_ENTER] ly=13
+[ResolveReverse0] layer 13: neutral resolved → direction chosen
+[ReconstructCompression] layer 13: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=13 output[0..7]= 0.0511092 0.000301686 -0.00147469 -0.0411348 -0.112131 0.0263652 0.0886795 0.0347778 
+B03_MOE_ROUTE_ENTER layer=13
+B03_MOE_ROUTE_OK layer=13 topk=10
+B011_FETCH_COST router_layer=13 next=14 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=14 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=13
+[FINAL_OUT] ly=13 norm=1.035601e+01 finite=3072/3072 output[0..7]= 0.0450638 -0.153539 -0.214073 0.190094 0.0523675 0.0800258 0.0837888 0.0516148 
+[LAYER_ENTER] ly=14
+[ResolveReverse0] layer 14: neutral resolved → direction chosen
+[ReconstructCompression] layer 14: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=14 output[0..7]= -0.00728588 -0.0272393 -0.0251893 -0.0293232 -0.007544 -0.0893275 0.0189346 -0.0312696 
+B03_MOE_ROUTE_ENTER layer=14
+B03_MOE_ROUTE_OK layer=14 topk=10
+B011_FETCH_COST router_layer=14 next=15 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=15 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=14
+[FINAL_OUT] ly=14 norm=1.120982e+01 finite=3072/3072 output[0..7]= 0.0822053 -0.1624 -0.272083 0.187562 0.0445827 -0.00598343 0.14264 -0.0105557 
+[LAYER_ENTER] ly=15
+[ResolveReverse0] layer 15: neutral resolved → direction chosen
+[ReconstructCompression] layer 15: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=15 output[0..7]= 0.0468202 0.0222328 0.0100792 -0.0044791 -0.0240746 0.0106844 -0.00992161 -0.014949 
+B03_MOE_ROUTE_ENTER layer=15
+B03_MOE_ROUTE_OK layer=15 topk=10
+B011_FETCH_COST router_layer=15 next=16 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=16 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=15
+[FINAL_OUT] ly=15 norm=1.167302e+01 finite=3072/3072 output[0..7]= 0.10424 -0.124334 -0.270495 0.255727 0.00757493 -0.00809814 0.163807 0.0271076 
+[LAYER_ENTER] ly=16
+[ResolveReverse0] layer 16: neutral resolved → direction chosen
+[ReconstructCompression] layer 16: 4/72 slices active, 8.72 GB → 0.48 GB
+[HEADS_LAYER] ly=16 meta=72 inferred=48 wq.rows=6144
+[POST_ATTN] ly=16 output[0..7]= -0.0275056 -0.000111455 -0.0194815 -0.0157971 0.073985 -0.0433861 0.0161084 0.073574 
+B03_MOE_ROUTE_ENTER layer=16
+B03_MOE_ROUTE_OK layer=16 topk=10
+B011_FETCH_COST router_layer=16 next=17 experts=10 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=17 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=16
+[FINAL_OUT] ly=16 norm=1.171550e+01 finite=3072/3072 output[0..7]= 0.134524 -0.164069 -0.253038 0.300688 0.108978 -0.0790174 0.212326 0.125904 
+[LAYER_ENTER] ly=17
+[ResolveReverse0] layer 17: neutral resolved → direction chosen
+[ReconstructCompression] layer 17: 4/72 slices active, 8.72 GB → 0.48 GB
+[POST_ATTN] ly=17 output[0..7]= 0.00857938 0.0771628 -0.0999853 -0.135861 0.0669133 -0.0131211 0.0618934 0.0427081 
+B03_MOE_ROUTE_ENTER layer=17
+B03_MOE_ROUTE_OK layer=17 topk=10
+B011_FETCH_COST router_layer=17 next=18 experts=10 hit_rate=0.00% ref~79.96%

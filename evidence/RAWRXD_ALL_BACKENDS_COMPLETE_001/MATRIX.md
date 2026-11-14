@@ -31,7 +31,7 @@ Certification levels: Build � Load � Numerics � Generation � Performance
 | W11 | Strata (HIP) | PARTIAL | Runtime+memcpy PASS (`amdhip64_6` n=2); product loaders wired; model E2E EXPLICIT_UNSUPPORTED (no hipcc kernels) | HIP kernel/model forward path | W7_STRATA_HIP_OLLAMA_001 |
 | W12 | Ollama | PASS | Local version/tags/generate PASS; agent tool emission PASS (calculator); roundtrip final TIMEOUT not credited | Concurrency/cancel TBD | W7_STRATA_HIP_OLLAMA_001 |
 | W13 | Large models 70/80/120B | PARTIAL | 3 GGUFs tried host-floor; LOAD_FAIL OOM; TOK=0; DualStick/ICD HOLD | Host residency or authorized DualStick | W3_LARGE_MODEL_NATIVE_001 |
-| W14 | Multi-agent | PARTIAL | dual-ws ISO PASS (FORCE_TOOL); cancel OPEN; concurrent infer EXPLICIT_UNSUPPORTED (MODEL_LOADED=0) | Product cancel + MODEL_LOADED dual infer | W8_KIMI_K2_MULTI_AGENT_001 + CLI_AGENT_CONCURRENCY_001 |
+| W14 | Multi-agent | PARTIAL | MODEL_LOADED concurrent PASS (CEBA0DE4); cancel PARTIAL; lanes PASS; packaging RELATED; GUI select NOT_RUN | in-proc CancelGeneration + GUI multifamily E2E + gemma3 | MULTIAGENT_CLI_GUI_PACKAGING_001 |
 
 ---
 
@@ -46,7 +46,7 @@ Certification levels: Build � Load � Numerics � Generation � Performance
 | L5 | K2 multi-shard + large-model load | P1 — W8+L5: index OBSERVED; gen EXPLICIT_UNSUPPORTED on host |
 | L6 | Strata HIP native + benchmark | P2 |
 | L7 | Ollama integration + agent tool | P2 |
-| L8 | Multi-agent concurrency / cancel / isolation | P2 — W8 absorb: ISO RELATED PASS; cancel OPEN; infer EXPLICIT_UNSUPPORTED |
+| L8 | Multi-agent concurrency / cancel / isolation | P2 — WS8 MULTIAGENT pack: concurrent PASS; cancel PARTIAL; packaging RELATED |
 
 ---
 
