@@ -1812,6 +1812,8 @@ bool Deep2Engine::allocateBuffers() {
     upBuf           = alignedAlloc(ffnDim);
     layerTemp       = alignedAlloc(hiddenSize);
     moeExpertOut_   = alignedAlloc(hiddenSize);
+    layerChainBuf_  = alignedAlloc(hiddenSize);
+    layerChainValid_ = false;
     fprintf(stderr,
         "[BUF] hidden=%zu heads=%zu headDim=%zu qOut=%zu headScratch=%zu "
         "kvDim=%zu ffn=%zu ffnGateScratch=%zu\n",
@@ -1950,6 +1952,9 @@ void Deep2Engine::deallocateBuffers() {
     alignedFree(gateBuf);
     alignedFree(upBuf);
     alignedFree(layerTemp);
+    alignedFree(layerChainBuf_);
+    layerChainBuf_ = nullptr;
+    layerChainValid_ = false;
     alignedFree(mlaQ_a);
     alignedFree(mlaKV_a);
     alignedFree(mlaQ_b);
@@ -1965,7 +1970,8 @@ void Deep2Engine::deallocateBuffers() {
     ssmMambaArmed_ = 0;
     hiddenStates = attentionOutput = attnHeadScratch_ = ffnOutput = nullptr;
     logits = qProj = kProj = vProj = gateBuf = upBuf = layerTemp = nullptr;
-    moeExpertOut_ = nullptr;
+    moeExpertOut_ = layerChainBuf_ = nullptr;
+    layerChainValid_ = false;
     mlaQ_a = mlaKV_a = mlaQ_b = mlaK_b = mlaV_b = nullptr;
     ssmState = ssmConvState = ssmX = ssmY = ssmTemp = nullptr;
 }
@@ -8536,6 +8542,24 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     const auto& lw = modelWeights.layers[layer];
     size_t hiddenDim = config.hiddenDim;
 
+    /* L1+ must see prior layer residual. Stale PROMPT_EMBED here was ATTN_NORM_1 HARD. */
+    const float* xin = input;
+    if (layer >= 1 && layerChainValid_ && layerChainBuf_ && input) {
+        float mad = 0.f;
+        const size_t nprobe = hiddenDim < 32 ? hiddenDim : 32;
+        for (size_t i = 0; i < nprobe; ++i) {
+            const float d = std::fabs(input[i] - layerChainBuf_[i]);
+            if (d > mad) mad = d;
+        }
+        if (mad > 1e-4f) {
+            std::fprintf(stderr,
+                "B03_LAYER_CHAIN_REPAIR layer=%zu mad=%.6e -> layerChainBuf_ PROMOTE=0\n",
+                layer, (double)mad);
+            std::fflush(stderr);
+            xin = layerChainBuf_;
+        }
+    }
+
     // --- Per-operator timing (opt-in via RAWRXD_DEEP2_OP_TIMING=1) ---
     bool opTiming = (std::getenv("RAWRXD_DEEP2_OP_TIMING") != nullptr &&
                      std::getenv("RAWRXD_DEEP2_OP_TIMING")[0] == '1');
@@ -8545,13 +8569,16 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     double opFfnSwiGLUUs = 0, opFfnDownUs = 0, opFfnResidualUs = 0;
 
     if (Deep2::gemma4_topology::TryExecuteProjectorBlock(
-            lw, input, output, layerTemp, hiddenDim, modelWeights.normEps,
+            lw, xin, output, layerTemp, hiddenDim, modelWeights.normEps,
             [&](const WeightTensor& w, const float* x, float* y, size_t n, float eps) {
                 RMSNormW(w, x, y, n, eps);
             },
             [&](const WeightTensor& w, const float* x, const float* b, float* y, size_t n) {
                 LinearW(w, x, b, y, n);
             }, layer == 0 ? stderr : nullptr)) {
+        if (layerChainBuf_ && output && hiddenDim)
+            std::memcpy(layerChainBuf_, output, hiddenDim * sizeof(float));
+        layerChainValid_ = (layerChainBuf_ != nullptr);
         if (LivePath_Active())
             LivePath_OnLayerEnd(cycloneEnabled_ ? cyclone_.get() : nullptr,
                                 static_cast<uint32_t>(layer), liveSeq, 0);
@@ -8563,18 +8590,21 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         if (profilingEnabled_ && profiler_) profiler_->beginAttnNorm();
         /* Block prenorm is attn_norm [hidden]; ssm_norm is gated [8x960] ? never swap. */
         if (lw.attnNorm.data) {
-            RMSNormW(lw.attnNorm, input, layerTemp, hiddenDim, modelWeights.normEps);
+            RMSNormW(lw.attnNorm, xin, layerTemp, hiddenDim, modelWeights.normEps);
         } else {
             fprintf(stderr,
                     "[SSM_PRENORM_MISSING] layer=%zu copy_input "
                     "NOTE=ssm_norm_ne_3136_prenorm\n",
                     layer);
-            memcpy(layerTemp, input, hiddenDim * sizeof(float));
+            memcpy(layerTemp, xin, hiddenDim * sizeof(float));
         }
         if (profilingEnabled_ && profiler_) profiler_->endAttnNorm();
         computeSSM(layer, layerTemp, ffnOutput);
         for (size_t i = 0; i < hiddenDim; ++i)
-            output[i] = input[i] + ffnOutput[i];
+            output[i] = xin[i] + ffnOutput[i];
+        if (layerChainBuf_ && output && hiddenDim)
+            std::memcpy(layerChainBuf_, output, hiddenDim * sizeof(float));
+        layerChainValid_ = (layerChainBuf_ != nullptr);
         if (LivePath_Active())
             LivePath_OnLayerEnd(cycloneEnabled_ ? cyclone_.get() : nullptr,
                                 static_cast<uint32_t>(layer), liveSeq, 0);
@@ -8587,7 +8617,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
                 layer, lw.wUp.data, lw.wDown.data, modelWeights.intermediateDim);
         fflush(stderr);
         if (profilingEnabled_ && profiler_) profiler_->beginAttnNorm();
-        RMSNormW(lw.attnNorm, input, layerTemp, hiddenDim, modelWeights.normEps);
+        RMSNormW(lw.attnNorm, xin, layerTemp, hiddenDim, modelWeights.normEps);
         fprintf(stderr, "[FFN_ONLY] layer=%zu norm_ok\n", layer);
         fflush(stderr);
         if (profilingEnabled_ && profiler_) profiler_->endAttnNorm();
@@ -8598,12 +8628,15 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
             fprintf(stderr, "[FFN_ONLY] layer=%zu IDENTITY=1 PRODUCTION_DECODE_PATH=0\n",
                     layer);
             fflush(stderr);
-            memcpy(output, input, hiddenDim * sizeof(float));
+            memcpy(output, xin, hiddenDim * sizeof(float));
         } else {
             computeFFN(layer, layerTemp, ffnOutput);
             for (size_t i = 0; i < hiddenDim; ++i)
-                output[i] = input[i] + ffnOutput[i];
+                output[i] = xin[i] + ffnOutput[i];
         }
+        if (layerChainBuf_ && output && hiddenDim)
+            std::memcpy(layerChainBuf_, output, hiddenDim * sizeof(float));
+        layerChainValid_ = (layerChainBuf_ != nullptr);
         if (LivePath_Active())
             LivePath_OnLayerEnd(cycloneEnabled_ ? cyclone_.get() : nullptr,
                                 static_cast<uint32_t>(layer), liveSeq, 0);
@@ -8677,8 +8710,8 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         }
     }
     if (profilingEnabled_ && profiler_) profiler_->beginAttnNorm();
-    if (opTiming) { auto _t0 = opNow(); RMSNormW(lw.attnNorm, input, layerTemp, hiddenDim, modelWeights.normEps); auto _t1 = opNow(); opAttnNormUs = std::chrono::duration<double, std::micro>(_t1 - _t0).count(); }
-    else RMSNormW(lw.attnNorm, input, layerTemp, hiddenDim, modelWeights.normEps);
+    if (opTiming) { auto _t0 = opNow(); RMSNormW(lw.attnNorm, xin, layerTemp, hiddenDim, modelWeights.normEps); auto _t1 = opNow(); opAttnNormUs = std::chrono::duration<double, std::micro>(_t1 - _t0).count(); }
+    else RMSNormW(lw.attnNorm, xin, layerTemp, hiddenDim, modelWeights.normEps);
     if (profilingEnabled_ && profiler_) profiler_->endAttnNorm();
     B3_TraceState("ATTN_NORM", layer, layerTemp, hiddenDim);
     if (layer == 0) {
@@ -8740,17 +8773,17 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         size_t i = 0;
         for (; i + 7 < hiddenDim; i += 8) {
             __m256 outv = _mm256_loadu_ps(output + i);
-            __m256 inv = _mm256_loadu_ps(input + i);
+            __m256 inv = _mm256_loadu_ps(xin + i);
             _mm256_storeu_ps(output + i, _mm256_add_ps(outv, inv));
         }
         for (; i < hiddenDim; ++i) {
-            output[i] += input[i];
+            output[i] += xin[i];
         }
     } else
     #endif
     {
         for (size_t i = 0; i < hiddenDim; ++i) {
-            output[i] += input[i];
+            output[i] += xin[i];
         }
     }
     auto _t1 = opNow(); opAttnResidualUs = std::chrono::duration<double, std::micro>(_t1 - _t0).count(); }
@@ -8760,17 +8793,17 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         size_t i = 0;
         for (; i + 7 < hiddenDim; i += 8) {
             __m256 outv = _mm256_loadu_ps(output + i);
-            __m256 inv = _mm256_loadu_ps(input + i);
+            __m256 inv = _mm256_loadu_ps(xin + i);
             _mm256_storeu_ps(output + i, _mm256_add_ps(outv, inv));
         }
         for (; i < hiddenDim; ++i) {
-            output[i] += input[i];
+            output[i] += xin[i];
         }
     } else
     #endif
     {
         for (size_t i = 0; i < hiddenDim; ++i) {
-            output[i] += input[i];
+            output[i] += xin[i];
         }
     }
     if (profilingEnabled_ && profiler_) profiler_->endAttnResidual();
@@ -8970,6 +9003,10 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
             layer, opAttnNormUs, opAttnQKVUs, opAttnResidualUs,
             opFfnNormUs, opFfnGateUs, opFfnResidualUs, opTotalUs);
         fflush(stderr);
+    }
+    if (layerChainBuf_ && output && hiddenDim) {
+        std::memcpy(layerChainBuf_, output, hiddenDim * sizeof(float));
+        layerChainValid_ = true;
     }
     fprintf(stderr, "[LAYER_EXIT] ly=%zu\n", layer);
     fflush(stderr);
@@ -11342,8 +11379,13 @@ void Deep2Engine::enableElasticResidency(bool enable) {
         resConfig.useQuantizedGpuPath = true;
         {
             const char* ds = std::getenv("DEEP2_DUALSTICK_ARM");
+            const char* fg = std::getenv("RAWR_FORCE_GPU");
+            const char* ag = std::getenv("RAWRXD_ALLOW_GPU");
+            /* Elastic may arm before Vulkan slot is live (INIT_PREARM_VULKAN=NO).
+             * Honor GPU env so large tied embeds are not host↔VRAM thrashed. */
             resConfig.suppressHostVramMoves =
-                vulkanEnabled_ || (ds && ds[0] == '1');
+                vulkanEnabled_ || (ds && ds[0] == '1') ||
+                (fg && fg[0] == '1') || (ag && ag[0] == '1');
         }
         ElasticBudget_Emit(stdout, resConfig, probe);
         if (!elasticResidency_->Initialize(resConfig)) {

@@ -1,0 +1,2 @@
+AGENT_FIXTURE_V1
+patched_by_m3_forcetool_candidate

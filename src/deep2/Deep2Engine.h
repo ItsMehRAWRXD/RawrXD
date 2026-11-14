@@ -968,6 +968,9 @@ private:
     float* layerTemp = nullptr;  // Dedicated temp buffer for forwardLayer()
     float* attnHeadScratch_ = nullptr; // [numHeads*headDim] pre-O concat
     float* moeExpertOut_ = nullptr; /* MoE expert scratch — never alias attentionOutput */
+    /* Prior-layer residual snapshot — repairs stale embed fed into L1+ (ATTN_NORM_1). */
+    float* layerChainBuf_ = nullptr;
+    bool layerChainValid_ = false;
 
     // MLA (K2) buffers
     float* mlaQ_a = nullptr;      // [qLoraRank]

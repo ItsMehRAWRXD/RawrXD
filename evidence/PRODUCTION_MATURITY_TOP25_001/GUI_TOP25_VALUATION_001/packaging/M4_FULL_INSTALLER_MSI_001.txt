@@ -1,0 +1,79 @@
+M4_FULL_INSTALLER_MSI_001 (M4d)
+ASOF_LOCAL=2026-11-13T21:50:28-05:00
+WORKER=M4d_FIX_WIX0104_FULL_INSTALLER_MSI
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 CERTIFIED=0
+BOARD_WRITE=APPEND_SEAL_ONLY (no JOINT/PARENT/CONTROLLING PCT; Cat8 stays BOARD_PROPOSAL)
+PRIOR_IMMUTABLE=
+  Seal packaging/M4_MSI_TOOLCHAIN_001.txt
+  tip-CLI MSI packaging/RawrXD_M4_TipCLI_15A119D1.msi
+    SHA=F6646E345D77E9DCED2CC4C2A26455D27A67339F1526CDB737EA37BD2EE3D8AC
+  WiX CLI 7.0.1 acquired; CLEAN_VM still OPEN
+
+## 1) WIX0104 fix (product WXS)
+FULL_WXS=g:\~dev\rawrxd\installer\RawrXD_Installer.wxs
+FIX=moved semicolon `;` prolog to XML comment AFTER `<?xml` (WIX0104 root-level invalid data)
+WIX0104_CLEARED=1
+V14_WXS=g:\~dev\rawrxd\installer\RawrXD_Installer_v14.6.0.wxs
+V14_NOTE=no WIX0104; needs -d ProductVersion/BuildDir/SourceDir
+
+## 2) Builds (wix 7.0.1+642f1a0; INVENT_MSI=0)
+PAYLOAD_STAGE=packaging/M4_FULL_INSTALLER_WORK/{BuildDir,SourceDir}
+  Gold=release_out/v14.6.0/staging/RawrXD_Gold.exe SHA=CB1F1566…
+  Win32IDE=…/RawrXD-Win32IDE.exe SHA=740E9DC6…
+  RawrEngine=RawrXD_Release_v1.0.0/bin/RawrEngine.exe (repo stub 35B replaced for build)
+  tip rawr.exe SHA=15A119D1… (USAGE_SEEN smoke; same tip-CLI payload)
+  LICENSE + staged version.json + resources/rawrxd.ico (from RawrXD.ico)
+
+PRODUCT_PERMACHINE_BUILD=OK
+  MSI=packaging/M4_FULL_INSTALLER_WORK/out/RawrXD_M4_FullInstaller_7.4.0.msi
+  SHA256=2C30AB7475759DD8F96E275685DBCF90B41720D61A9736B6751072B8B7F89E7A
+  SIZE=15409152
+  Scope=perMachine (product WXS unchanged)
+
+V14_BUILD=OK
+  MSI=packaging/M4_FULL_INSTALLER_WORK/out/RawrXD_M4_v14.6.0.msi
+  SHA256=8D7BFAD229E9D2155A65718C77645E3AD80386B43F34E95C104A1FBA5F6D184A
+  SIZE=14159872
+
+PERUSER_STAGE_BUILD=OK (silent non-admin path; mirrors tip-CLI perUser lesson)
+  WXS=packaging/M4_FULL_INSTALLER_WORK/RawrXD_M4_FullInstaller_perUser.wxs
+  MSI_PATH=packaging/RawrXD_M4_FullInstaller_perUser_7.4.0.msi
+  MSI_WORK_PATH=packaging/M4_FULL_INSTALLER_WORK/out/RawrXD_M4_FullInstaller_perUser_7.4.0.msi
+  MSI_SHA256=E689453FE371D071643189B7E30774FCB8AEF6A6868E7416946B27F11F95ED71
+  MSI_SIZE=17215488
+  NOTE_PRIOR_PERMACHINE_STAGE=product Scope=perMachine → msiexec 1603 / Error 1406 HKLM write (non-admin)
+
+## 3) Silent install → stage (CLEAN_VM=0)
+CLEAN_VM=0
+CLEAN_VM_STATUS=OPEN
+STAGE=packaging/M4_FULL_INSTALLER_WORK/stage_silent
+INSTALL_CMD=msiexec /i <perUser msi> /qn /norestart ALLUSERS=2 MSIINSTALLPERUSER=1 INSTALLFOLDER=<stage>\
+INSTALL_EXIT=0
+INSTALL_OK=1
+FILE_COPY_HASH_MATCH=1
+  INSTALLED_GOLD_SHA256=CB1F1566C1989CC5B9E3E98B6C698C418365A53C8093A11CFCAE42E98DFED5C1
+  INSTALLED_WIN32_SHA256=740E9DC658F84449EB0ED942AFC8C7790C52E379BA97A948F244B003BE8EEDEC
+  INSTALLED_RAWR_SHA256=15A119D148572A4B3011AA9A8AFFE605F8FF40D64B7BF83673ECC10A9393C967
+USAGE_SEEN=1 (Usage: rawr list|show|paths|run|…)
+USAGE_LOG=packaging/M4_FULL_INSTALLER_WORK/logs/usage_seen.log
+UNINSTALL_CMD=msiexec /x <msi> /qn /norestart
+UNINSTALL_EXIT=0
+ROLLBACK_OK=1
+STAGE_RAWR_GONE=1
+UNINSTALL_CRUMB=packaging/M4_FULL_INSTALLER_WORK/UNINSTALL_CRUMB.txt
+INSTALL_LOG=packaging/M4_FULL_INSTALLER_WORK/logs/msiexec_peruser_silent_install.log
+
+## Cat8 disposition
+CAT8_MSI_CLOSED=0 (CLEAN_VM still OPEN; signed channel ABSENT; no CONTROLLING PCT write)
+BOARD_PROPOSAL_ONLY=1 → BOARD_PROPOSAL_CAT8_M4_MSI.txt
+NO_JOINT_PARENT_CONTROLLING_PCT=1
+
+## Exact next gate
+NEXT_GATE=BUILT_MSI_SILENT_ON_CLEAN_VM
+GAP=
+  - CLEAN_VM=1 witness of msiexec silent install/uninstall (this seal CLEAN_VM=0)
+  - Product perMachine MSI still needs admin/HKLM for non-stage install (Error 1406 without elevation)
+  - Authenticode / signed release channel still ABSENT
+
+PROMOTE=0
+END

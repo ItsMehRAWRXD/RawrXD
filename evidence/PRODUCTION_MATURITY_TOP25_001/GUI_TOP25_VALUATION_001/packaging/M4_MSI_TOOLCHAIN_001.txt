@@ -1,0 +1,86 @@
+M4_MSI_TOOLCHAIN_001 (M4c)
+ASOF_LOCAL=2026-11-13T21:38:39-05:00
+WORKER=M4c_ACQUIRE_TOOLCHAIN_BUILD_MSI
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 CERTIFIED=0
+BOARD_WRITE=APPEND_SEAL_ONLY (no JOINT/PARENT/CONTROLLING PCT; Cat8 stays BOARD_PROPOSAL)
+PRIOR_IMMUTABLE=
+  SetupWizard SHA=1E362C8780AB6F936748BCFF2B325542F7C38581DE5B84712F708944ABBC33D7
+  Offline zip packaging/RawrXD_M4_OfflineHost_15A119D1.zip SHA=763DEE7C…
+  Seal packaging/M4_BUILT_MSI_SILENT_INSTALL_001.txt (BUILT_MSI_COUNT=0 at that seal)
+  BOARD_PROPOSAL_CAT8_M4b_COPYFILE.txt (do not invent CONTROLLING raise)
+
+## 1) Toolchain acquire
+TOOLCHAIN_ACQUIRED=Y
+METHOD=winget install --id WiXToolset.WiXCLI --version 7.0.1.0 --disable-interactivity
+WIX_CLI=C:\Program Files\WiX Toolset v7.0\bin\wix.exe
+WIX_VERSION=7.0.1+642f1a0
+EULA=wix eula accept wix7 (OSMF) EXIT=0
+candle=MISSING
+light=MISSING
+iscc=MISSING
+makensis=MISSING
+wix=PRESENT
+
+### Blocked classic WiX v3 (candle|light)
+ATTEMPT=winget install --id WiXToolset.WiXToolset --version 3.14.1.8722 --disable-interactivity -e
+WINGET_EXIT=-1978335207
+REASON=requires administrator privileges + Windows Feature NetFx3 dependency
+TOOLCHAIN_INSTALL_BLOCKED_V3=1 (candle|light path)
+TOOLCHAIN_INSTALL_OK_V7_CLI=1 (wix path used for build)
+
+choco=ABSENT (not probed further)
+
+## 2) Product wxs attempts
+FULL_WXS=g:\~dev\rawrxd\installer\RawrXD_Installer.wxs
+FULL_BUILD=FAIL WIX0104 (comment/prolog before XML root; not a valid source file)
+V14_WXS=installer/RawrXD_Installer_v14.6.0.wxs NOT used (needs Gold/resources vars; tip-CLI path preferred)
+TIP_WXS=packaging/M4_MSI_TOOLCHAIN_WORK/RawrXD_M4_TipCLI.wxs
+  (WiX v4/v7 Package schema aligned with RawrXD_Installer.wxs; Scope=perUser for non-admin stage)
+  Payload=tip CLI SHA 15A119D1… (not live build_ninja\bin\rawr.exe which drifted to 30DCB4B1…)
+
+## 3) Built MSI (real; toolchain present — INVENT_MSI=0)
+BUILT_MSI_COUNT=1
+INVENTED_MSI=0
+MSI_PATH=packaging/RawrXD_M4_TipCLI_15A119D1.msi
+MSI_WORK_PATH=packaging/M4_MSI_TOOLCHAIN_WORK/out/RawrXD_M4_TipCLI_15A119D1.msi
+MSI_SHA256=F6646E345D77E9DCED2CC4C2A26455D27A67339F1526CDB737EA37BD2EE3D8AC
+MSI_SIZE=1662976
+PAYLOAD_RAWR_SHA256=15A119D148572A4B3011AA9A8AFFE605F8FF40D64B7BF83673ECC10A9393C967
+BUILD_CMD=wix build -arch x64 -o <msi> RawrXD_M4_TipCLI.wxs -d PayloadDir=<payload>
+BUILD_EXIT=0
+
+## 4) Silent install → stage (CLEAN_VM=0 OK)
+CLEAN_VM=0
+CLEAN_VM_STATUS=OPEN
+STAGE=packaging/M4_MSI_TOOLCHAIN_WORK/stage_silent
+INSTALL_CMD=msiexec /i <msi> /qn /norestart ALLUSERS=2 MSIINSTALLPERUSER=1 INSTALLFOLDER=<stage>\
+INSTALL_EXIT=0
+INSTALL_OK=1
+NOTE_PRIOR_PERMACHINE=first build Scope=perMachine → Error 1925 / msiexec 1603 (non-admin); rebuilt perUser
+INSTALLED_RAWR=stage_silent\bin\rawr.exe
+INSTALLED_RAWR_SHA256=15A119D148572A4B3011AA9A8AFFE605F8FF40D64B7BF83673ECC10A9393C967
+FILE_COPY_HASH_MATCH=1
+USAGE_SEEN=1 (Usage: rawr list|show|paths|run|…)
+USAGE_LOG=packaging/M4_MSI_TOOLCHAIN_WORK/logs/usage_seen.log
+UNINSTALL_CMD=msiexec /x <msi> /qn /norestart
+UNINSTALL_EXIT=0
+ROLLBACK_OK=1
+STAGE_RAWR_GONE=1
+UNINSTALL_CRUMB=packaging/M4_MSI_TOOLCHAIN_WORK/UNINSTALL_CRUMB.txt
+INSTALL_LOG=packaging/M4_MSI_TOOLCHAIN_WORK/logs/msiexec_silent_install.log
+
+## Cat8 disposition
+CAT8_MSI_CLOSED=0 (CLEAN_VM still OPEN; signed channel ABSENT; no CONTROLLING PCT write)
+BOARD_PROPOSAL_ONLY=1 (Cat8 raise remains BOARD_PROPOSAL_CAT8_M4b_COPYFILE.txt + this seal)
+NO_JOINT_PARENT_CONTROLLING_PCT=1
+
+## Exact next gate
+NEXT_GATE=BUILT_MSI_SILENT_ON_CLEAN_VM
+GAP=
+  - CLEAN_VM=1 witness of msiexec silent install/uninstall (this seal CLEAN_VM=0)
+  - Optional: elevate + NetFx3 to acquire candle|light (v3) if required by policy
+  - Repair/convert full RawrXD_Installer.wxs (WIX0104) for product MSI beyond tip-CLI smoke
+  - Authenticode / signed release channel still ABSENT
+
+PROMOTE=0
+END
