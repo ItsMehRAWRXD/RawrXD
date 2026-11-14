@@ -44,6 +44,6 @@ Authority: pasted RAWRXD_ENTERPRISE_PRODUCT_CERT_001 checklist · 0/128 · HELD 
 | non617F 67350F71 R78 | 1 | 0 | 0 | OPEN_FAIL STREAM_SEH RVA=0x6B0FA (superseded by R79) |
 | non617F 1EC00779 R79 | 1 | 1 | 2 | STREAM_SEH CLOSED DURABLE=1 private; tip RO RELATED ≠ CERT PASS |
 
-`NEXT_OWNER` (split): **Ornith** `FFN_NORM → PACKED_GEMV → FIRST_DIVERGENCE` (then PROD_PROVENANCE / SEMANTIC_ACCEPTANCE) · PRE_O_1 head11 / FFN_NORM_ULP (GPU parity lane; separate until shared op proven) · `LAGUNA_H2H_EQUIV_WORKLOAD` · TinyLlama `CLI_COHERENCE_UNK` nonfinite (separate) · `TIP_CLIMB=HOLD`
+`NEXT_OWNER` (split): **TinyLlama** `FIRST_INVALID_LAYER` in `forwardGpuMultiMap` vs contiguous GPU (rebuild EXE acceptance OPEN) · **Ornith** `FFN_NORM → PACKED_GEMV → FIRST_DIVERGENCE` (separate) · PRE_O_1 head11 · `LAGUNA_H2H_EQUIV_WORKLOAD` · PERF climb=NONE (`COMPLETE_002` retain 4.329) · `TIP_CLIMB=HOLD`
 
 PROMOTE=0 until all 128 gates PASS with independent sign-off.
