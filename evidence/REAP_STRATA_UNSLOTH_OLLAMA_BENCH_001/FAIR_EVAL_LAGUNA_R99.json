@@ -1,0 +1,60 @@
+{
+  "ASOF_LOCAL": "2026-11-14T07:55:06-05:00",
+  "PROMOTE": 0,
+  "TIP_CLIMB": "HOLD",
+  "INVENT_PASS": 0,
+  "PERFORMANCE_PASS": 0,
+  "NO_INVENT_9_7X": 1,
+  "REAP": {
+    "tag": "reap16-laguna-s-2_1",
+    "num_predict": 32,
+    "eval_count": 32,
+    "eval_duration_ns": 1052583000,
+    "tok_per_s": 30.401,
+    "done": true,
+    "wall_ms": 24963,
+    "http_ok": true,
+    "log": "G:\\~dev\\rawrxd\\evidence\\REAP_STRATA_UNSLOTH_OLLAMA_BENCH_001\\ollama\\fair_r99_laguna_reap_np32.json"
+  },
+  "PEER_NP32": {
+    "tag": "laguna-s-2.1:Q4_K_M",
+    "num_predict": 32,
+    "eval_count": 11,
+    "eval_duration_ns": 3603921000,
+    "tok_per_s": 3.052,
+    "done": true,
+    "wall_ms": 150783,
+    "http_ok": true,
+    "log": "G:\\~dev\\rawrxd\\evidence\\REAP_STRATA_UNSLOTH_OLLAMA_BENCH_001\\ollama\\fair_r99_laguna_peer_np32.json"
+  },
+  "PEER_NP11": {
+    "tag": "laguna-s-2.1:Q4_K_M",
+    "num_predict": 11,
+    "eval_count": 11,
+    "eval_duration_ns": 1453253000,
+    "tok_per_s": 7.569,
+    "done": true,
+    "wall_ms": 2184,
+    "http_ok": true,
+    "log": "G:\\~dev\\rawrxd\\evidence\\REAP_STRATA_UNSLOTH_OLLAMA_BENCH_001\\ollama\\fair_r99_laguna_peer_np11.json"
+  },
+  "RATIOS": {
+    "reap_vs_peer_np32": {
+      "equal_eval": 0,
+      "reap_eval": 32,
+      "peer_eval": 11,
+      "ratio": 9.961009,
+      "workload_equivalent": 0
+    },
+    "reap32_vs_peer11_naive": {
+      "equal_eval": 0,
+      "reap_eval": 32,
+      "peer_eval": 11,
+      "ratio": 4.016515,
+      "workload_equivalent": 0,
+      "note": "naive only if eval mismatch; do not invent 9.7x PASS"
+    }
+  },
+  "REAP_measured_x_or_OPEN": "OPEN",
+  "REASON": "no equal-eval_count REAP/peer H2H this run"
+}
