@@ -1,0 +1,37 @@
+MULTI_FAMILY_QDIM077_001
+ASOF_LOCAL=2026-11-13T21:49:30-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 HOST_DECODE=0 REJECT_FORCE_ABSORB=1
+EXE=GUI_TOP25_VALUATION_001/clean_link/RawrXD-Win32IDE_gemma_qdim077.exe
+EXE_SHA256=7FD1F27095388585D03DFB68C70E033B126D6406E8DE23C4F21F10D1EF8323C6
+SHA16=7FD1F27095388585
+TIP_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431
+TIP_STILL_6754=1
+FORCE=0
+PRIOR_FORENSICS=gpu/GEMMA_AV_FORENSICS_001/SEAL.txt
+EXIT_NULL_DIAG=Start-Process ExitCode often unset; CLEAN_EXIT/EXIT_CODE in log is authority when TOKEN_SURVIVED. Harness now Refresh+CLEAN_EXIT fallback (run_ide_multifamily_qdim077.ps1). HEAP abort 0xC0000374 also yields EXIT=NULL.
+
+## Families (this certify session; fail-closed)
+
+| Family | Model | GEN | TOK_SURV | HD | SEH | GPU_RESIDENT | Disposition | Witness |
+|--------|-------|----:|---------:|--:|----:|-------------:|-------------|---------|
+| tinyllama | models\tinyllama.gguf | 8 | 1 | 0 | 0 | 1 | PASS | ide_mf_qdim077_tinyllama_7FD1F27095388585_20261113_210116.meta.txt |
+| phi3 | models\phi3-mini-Q2_K.gguf | 8 | 1 | 0 | 0 | 1 | PASS | ide_mf_qdim077_phi3_7FD1F27095388585_20261113_210143.meta.txt |
+| gemma3 | models\gemma3-1b-Q2_K.gguf | 8 | 1 | 0 | 0 | 1 | PASS (remeasure TOK=8 SEH=0 SESSION_EXIT=1; PROCESS_EXIT harness-null; CLEAN_EXIT in err) | ide_mf_qdim077_gemma3_7FD1F27095388585_20261113_213344.meta.txt |
+| llama32 | models\llama3.2-3b-Q2_K.gguf | 0 | 0 | 0 | 0/1 | 0 | FAIL_CLOSED — open/elastic hard-exit; App Error 0xC0000374 HEAP_CORRUPTION; intermittent OPEN_SEH 0xE06D7363; mid-VRAM truncation also observed | ide_mf_qdim077_llama32_7FD1F27095388585_20261113_214757.meta.txt |
+
+FAMILIES_RUN=4
+FAMILIES_TOKEN_SURVIVED_THIS_SESSION=3
+FAMILIES_PASS_STRICT=3/4
+REJECT_INVENT_4OF4=1
+REJECT_TRANSFER_ABSORB074_LLAMA32_AS_QDIM077_PASS=1
+LLAMA32_ROOTCAUSE=HEAP_CORRUPTION_0xC0000374_AT_ELASTIC_OPEN (WER Application Error on RawrXD-Win32IDE_gemma_qdim077.exe); concurrent 8–34GB zombie qdim077 procs amplify flake; tip 6754616E untouched
+NOTE=one clean-budget llama32 open reached VRAM upload then died TOK=0 (213446); not TOKEN_SURVIVED
+
+## Floors
+ABSORB074_MF_FLOOR=HOLD (MULTI_FAMILY_ABSORB074_002.txt 3/4)
+TIP6754_LINEAGE_GPU_RESIDENT=0
+NO_TIP_LAND=1
+
+NEXT_GAP=QDIM077_LLAMA32_HEAP_OPEN_DURABLE_FIX_PRIVATE_CAND
+PROMOTE=0
+END
