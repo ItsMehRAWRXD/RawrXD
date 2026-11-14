@@ -1425,6 +1425,10 @@ private:
     bool createBuffer(VkDeviceSize bytes, VkBufferUsageFlags usage,
                       VkMemoryPropertyFlags required,
                       DeviceBuf& out);
+    // Return a reusable DEVICE_LOCAL buffer of at least `bytes`, creating it on
+    // first use. Never destroys; entries live until the device is torn down.
+    bool getScratchBuffer(VkDeviceSize bytes, VkBufferUsageFlags usage,
+                          VkMemoryPropertyFlags required, DeviceBuf& out);
     void destroyBuffer(DeviceBuf& b);
     bool uploadToBuffer(DeviceBuf& dst, const void* src, size_t bytes);
     bool downloadFromBuffer(const DeviceBuf& src, void* dst, size_t bytes);
@@ -1630,6 +1634,17 @@ private:
     // owner/block identity supplied by RuntimeGraphExecutor. A state buffer
     // is never reused across a geometry change or an explicit reset.
     std::unordered_map<uint64_t, DeviceBuf> gdnStates_;
+
+    // Reusable DEVICE_LOCAL scratch buffers keyed by exact byte size.
+    //
+    // GDN stateful dispatch previously created and destroyed eight buffers per
+    // call. With one call per token per layer, a prefill produced thousands of
+    // vkAllocateMemory/vkFreeMemory cycles on DEVICE_LOCAL memory, which both
+    // fragmented VRAM and exhausted it (VK_ERROR_OUT_OF_DEVICE_MEMORY, rc=-2)
+    // on large models. These entries are long-lived and reused in place, so the
+    // steady state performs no device allocation at all. Each dispatch submits
+    // and waits before returning (endSubmitWait), so reuse is race-free.
+    std::unordered_map<VkDeviceSize, DeviceBuf> scratchBuffers_;
 
     uint64_t gemvSuccess_ = 0;
     uint64_t weightUploads_ = 0;
