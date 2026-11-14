@@ -1,5 +1,5 @@
 EXPERIMENTAL_INFERENCE_BACKENDS_FINISH_001
-ASOF_LOCAL=2026-11-14T12:10:00-05:00
+ASOF_LOCAL=2026-11-14T12:35:00-05:00
 PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD ENTERPRISE=0/128
 INVENT_PASS=0 CROSS_SHA_CREDIT=0 NOT_RUN!=PASS
 EXPERIMENTAL_NEQ_SSM_CERTIFIED_IMPL=1
@@ -8,20 +8,22 @@ GATE_STOP=1 PERF_RETAIN=4.329
 NO_REOPEN=R101|R102 NO_REABSORB=R103|R104
 DO_NOT_FABRICATE=blk.40.ssm_conv1d.weight
 
-## Tip EXE (this finish)
+## Tip EXE (this finish — controlling)
 EXE=build_ninja/bin/rawr.exe
-EXE_SHA256=4743825156D9B012EDBB4F28F8249F2730A6B816BD6538B1FA82BCEA8754633D
+EXE_SHA256=D029E0FF60F5708B19B53B2A4409AD23BFDF87EFF02E75A4359952E1FF63B42E
+PIN=evidence/EXPERIMENTAL_INFERENCE_BACKENDS_FINISH_001/rawr_finish.exe
 WIRE=Deep2Engine.cpp remove ALLOW_EXPERIMENTAL_SSM&&false IDENTITY dead branch
   (FFN-only always computeFFN; SSM via computeSSM under auth)
-PRIOR_CEBA0DE4=held CROSS_SHA=0 (independent remasure)
+PRIOR_47438251=intermediate rebuild (CROSS_SHA=0; D029 remasured independently)
+PRIOR_CEBA0DE4=held CROSS_SHA=0
 
 ## Disposition summary
 See DISPOSITION_MATRIX.md
 
 PROGRAM_COMPLETE=0
-  CLOSED_LANES=Experimental_SSM_Nemotron | Q6K_SPV_product_default | Q6K_SPV_numeric | Ornith_llama_hybrid_load
-  OPEN_LANES=Ornith_Deep2_semantic | Ornith_tip_FORWARD_FAIL | Fair_H2H | Multifamily_Q6K
-  NOT_CLOSABLE=Ornith_vs_llama_layer_parity_without_ref (historical; REF_LOAD now PASS)
+  CLOSED_LANES=Experimental_SSM_Nemotron | Q6K_SPV_product_default | Q6K_SPV_numeric | Ornith_llama_hybrid_load | Dead_branch_cleanup
+  OPEN_LANES=Ornith_Deep2_semantic | Ornith_Mamba2_geo_arm | Fair_H2H | Multifamily_Q6K | PROVENANCE_MISMATCH_residual
+  NOT_CLOSABLE=SSM_CERT_001_claim (held NOT_CERTIFIED by law)
   N/A=Medusa/Trampoline_product_stack | GPU_Multimap_policy
 
 PROMOTE=0
