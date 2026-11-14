@@ -170,4 +170,5 @@ Update this index when new RELATED receipts land. Never auto-PASS.
 | MULTIAGENT_CLI_GUI_PACKAGING_001 | G05 G08 G09 | WS8: Method C SHA SEAL_OK_BINARY_ABSENT; concurrent MODEL_LOADED PASS CEBA0DE4; cancel PARTIAL; unload/reload PASS; lanes PASS; multifamily CLI PARTIAL; M4 packaging RELATED; GUI select NOT_RUN; RELATED≠CERT PASS; ENTERPRISE=0/128; PROMOTE=0 |
 | W4_MULTIFAMILY_CLI_GUI_INTEGRATION_001 | G05 G08 G09 | W4: families tinyllama/gemma3/llama32; CLI PARTIAL tip 1BE8F02A; GUI FAIL tip 6754616E; Method C/Q6K retained exact-SHA CROSS_SHA=0; identical parity=0; RELATED≠CERT; PROMOTE=0 |
 | W2_MINIMAX_REAP_SEMANTIC | G02 G09 | Router MATCH; AL12 map OK; AL13 gate_inp STATIC PASS; FFN_DOWN_1@pos3 BOUNDED_OPEN; AL14 OPEN; REAP24 3/3+split.count=3; Ollama create FAIL sibling-discovery; rewrite_authorized=0; SEMANTIC_PASS=0; PROMOTE=0 |
+| MINIMAX_REAP_BACKEND_001 | G02 G09 | WS2 runtime SSOT; EXE D029E0FF REAP16 TOK=8 router inject 62/62 non-uniform topk=8; SEMANTIC=FAIL; REAP27/24/32 used_count==E BLOCKED_UNSUPPORTED; NEXT=exp_probs_b+semantic; RELATED≠CERT PASS; PROMOTE=0 |
 
