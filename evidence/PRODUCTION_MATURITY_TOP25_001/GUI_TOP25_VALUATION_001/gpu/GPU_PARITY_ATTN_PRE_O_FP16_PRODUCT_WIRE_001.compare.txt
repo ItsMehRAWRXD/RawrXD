@@ -1,0 +1,45 @@
+GPU_PARITY_ATTN_PRE_O_FP16_PRODUCT_WIRE_001.compare
+PAIR=stage_dump_attn_pre_o_product_wire vs stage_dump_ref_matched
+EXE=pin/rawr_attn_pre_o_fp16_product_wire.exe SHA256=C7402085… FORCE_VULKAN SPV=16292 Q4_KxQ8_K + PRE_O FP16 RT product-wire
+MATERIAL_IF=(maxAbs>ABS_TOL) OR (rel_rms>REL_TOL)
+BEFORE_AUTHORITY=GPU_PARITY_Q4K_SPV_PRODUCT_WIRE_001.compare (F28F pin; PRE_O RT absent)
+ASOF=2026-11-13T21:56:58
+PROMPT_EMBED: class=EMBED kind=EXACT maxAbs=0.000000e+00 rel_rms=0.000000e+00 n_gt_abs=0/2048 abs_tol=1e-06 rel_tol=1e-05 gpu_fnv=13123758da8b244a ref_fnv=13123758da8b244a gpu=deep2_PROMPT_EMBED_pos0_layer0_full_n2048_seq001.bin ref=llama_PROMPT_EMBED_pos0_layer0_full_n2048_seq001.bin
+ATTN_NORM_0: class=NORM kind=EXACT maxAbs=0.000000e+00 rel_rms=0.000000e+00 n_gt_abs=0/2048 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=b4ca919612be6c51 ref_fnv=b4ca919612be6c51 gpu=deep2_ATTN_NORM_0_pos0_layer0_full_n2048_seq002.bin ref=llama_ATTN_NORM_0_pos0_layer0_full_n2048_seq003.bin
+V_0: class=LINEAR kind=BITWISE_DIFF maxAbs=4.656613e-09 rel_rms=9.261183e-09 n_gt_abs=0/256 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=d896c26cc6c0e465 ref_fnv=d4e2dce085d5d6e4 gpu=deep2_V_0_pos0_layer0_full_n256_seq003.bin ref=llama_V_0_pos0_layer0_full_n256_seq011.bin
+Q_PRE_ROPE_0: class=LINEAR kind=BITWISE_DIFF maxAbs=1.043081e-07 rel_rms=4.420789e-09 n_gt_abs=0/2048 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=a343b918d7653153 ref_fnv=8d53927ede5ddb3f gpu=deep2_Q_PRE_ROPE_0_pos0_layer0_full_n2048_seq008.bin ref=llama_Q_PRE_ROPE_0_pos0_layer0_full_n2048_seq005.bin
+K_PRE_ROPE_0: class=LINEAR kind=BITWISE_DIFF maxAbs=8.195639e-08 rel_rms=1.229139e-08 n_gt_abs=0/256 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=2d846feee275abff ref_fnv=f065873c7d34fcfd gpu=deep2_K_PRE_ROPE_0_pos0_layer0_full_n256_seq009.bin ref=llama_K_PRE_ROPE_0_pos0_layer0_full_n256_seq015.bin
+ATTN_PRE_O_0: class=ATTN kind=EXACT maxAbs=0.000000e+00 rel_rms=0.000000e+00 n_gt_abs=0/2048 abs_tol=0.0001 rel_tol=0.001 gpu_fnv=4adca0fa1f8e7095 ref_fnv=4adca0fa1f8e7095 gpu=deep2_ATTN_PRE_O_0_pos0_layer0_full_n2048_seq012.bin ref=llama_ATTN_PRE_O_0_pos0_layer0_full_n2048_seq059.bin
+ATTN_OUT_0: class=ATTN kind=BITWISE_DIFF maxAbs=5.587935e-09 rel_rms=5.402222e-09 n_gt_abs=0/2048 abs_tol=0.0001 rel_tol=0.001 gpu_fnv=15c4ede4dbc7f345 ref_fnv=5fe8f56aa443709d gpu=deep2_ATTN_OUT_0_pos0_layer0_full_n2048_seq013.bin ref=llama_ATTN_OUT_0_pos0_layer0_full_n2048_seq063.bin
+FFN_INP_0: class=FFN kind=BITWISE_DIFF maxAbs=5.587935e-09 rel_rms=4.226903e-09 n_gt_abs=0/2048 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=eb6ce146bd98d15f ref_fnv=2386a5737e9b94b7 gpu=deep2_FFN_INP_0_pos0_layer0_full_n2048_seq014.bin ref=llama_FFN_INP_0_pos0_layer0_full_n2048_seq065.bin
+FFN_NORM_0: class=NORM kind=BITWISE_DIFF maxAbs=2.682209e-07 rel_rms=3.433269e-09 n_gt_abs=0/2048 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=96774d602ac585da ref_fnv=f519cbfd6d1f2cbb gpu=deep2_FFN_NORM_0_pos0_layer0_full_n2048_seq015.bin ref=llama_FFN_NORM_0_pos0_layer0_full_n2048_seq067.bin
+FFN_GATE_0: class=FFN kind=BITWISE_DIFF maxAbs=2.384186e-07 rel_rms=2.236943e-09 n_gt_abs=0/5632 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=bc6e37208a6d655e ref_fnv=a8f3c6c6ce2b2153 gpu=deep2_FFN_GATE_0_pos0_layer0_full_n5632_seq016.bin ref=llama_FFN_GATE_0_pos0_layer0_full_n5632_seq069.bin
+FFN_UP_0: class=FFN kind=BITWISE_DIFF maxAbs=1.192093e-07 rel_rms=3.420837e-09 n_gt_abs=0/5632 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=15103139fec53be5 ref_fnv=5624bcf24367c435 gpu=deep2_FFN_UP_0_pos0_layer0_full_n5632_seq017.bin ref=llama_FFN_UP_0_pos0_layer0_full_n5632_seq071.bin
+FFN_ACT_0: class=FFN kind=BITWISE_DIFF maxAbs=7.450581e-08 rel_rms=3.458168e-09 n_gt_abs=0/5632 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=f2fe0c3b6fe14aff ref_fnv=9d0777262a48ef1f gpu=deep2_FFN_ACT_0_pos0_layer0_full_n5632_seq018.bin ref=llama_FFN_ACT_0_pos0_layer0_full_n5632_seq073.bin
+FFN_DOWN_0: class=FFN kind=BITWISE_DIFF maxAbs=3.352761e-08 rel_rms=6.741047e-09 n_gt_abs=0/2048 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=b73ea9e419d9b92d ref_fnv=164e8e9bfd99f7e8 gpu=deep2_FFN_DOWN_0_pos0_layer0_full_n2048_seq019.bin ref=llama_FFN_DOWN_0_pos0_layer0_full_n2048_seq075.bin
+LAYER0_OUT: class=FFN kind=BITWISE_DIFF maxAbs=4.470348e-08 rel_rms=6.511969e-09 n_gt_abs=0/2048 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=c1d036efab2b280d ref_fnv=d1a7d1749916f1b8 gpu=deep2_LAYER0_OUT_pos0_layer0_full_n2048_seq021.bin ref=llama_LAYER0_OUT_pos0_layer0_full_n2048_seq077.bin
+ATTN_NORM_1: class=NORM kind=BITWISE_DIFF maxAbs=7.152557e-07 rel_rms=5.164864e-09 n_gt_abs=0/2048 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=753b9194f2064071 ref_fnv=177b9a4b69e72bed gpu=deep2_ATTN_NORM_1_pos0_layer0_full_n2048_seq022.bin ref=llama_ATTN_NORM_1_pos0_layer0_full_n2048_seq079.bin
+Q_PRE_ROPE_1: class=LINEAR kind=BITWISE_DIFF maxAbs=4.768372e-07 rel_rms=2.479197e-09 n_gt_abs=0/2048 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=7bf1deba15920942 ref_fnv=1af7b03974f6929a gpu=deep2_Q_PRE_ROPE_1_pos0_layer0_full_n2048_seq028.bin ref=llama_Q_PRE_ROPE_1_pos0_layer0_full_n2048_seq081.bin
+V_1: class=LINEAR kind=BITWISE_DIFF maxAbs=2.607703e-08 rel_rms=2.213153e-08 n_gt_abs=0/256 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=8ebe592c478a1442 ref_fnv=7e34a8c9eb9280eb gpu=deep2_V_1_pos0_layer0_full_n256_seq023.bin ref=llama_V_1_pos0_layer0_full_n256_seq087.bin
+ATTN_PRE_O_1: class=ATTN kind=BITWISE_DIFF maxAbs=1.192093e-07 rel_rms=7.671417e-09 n_gt_abs=0/2048 abs_tol=0.0001 rel_tol=0.001 gpu_fnv=a8348a99f2ef3f15 ref_fnv=952f5a1248cee815 gpu=deep2_ATTN_PRE_O_1_pos0_layer0_full_n2048_seq030.bin ref=llama_ATTN_PRE_O_1_pos0_layer0_full_n2048_seq135.bin
+ATTN_OUT_1: class=ATTN kind=BITWISE_DIFF maxAbs=4.470348e-08 rel_rms=1.505374e-08 n_gt_abs=0/2048 abs_tol=0.0001 rel_tol=0.001 gpu_fnv=e7b0cd055158c38a ref_fnv=a19941e878c0a95c gpu=deep2_ATTN_OUT_1_pos0_layer0_full_n2048_seq031.bin ref=llama_ATTN_OUT_1_pos0_layer0_full_n2048_seq137.bin
+FFN_INP_1: class=FFN kind=BITWISE_DIFF maxAbs=5.960464e-08 rel_rms=7.802053e-09 n_gt_abs=0/2048 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=03b8875a90a43711 ref_fnv=8226fee6d0a0b298 gpu=deep2_FFN_INP_1_pos0_layer0_full_n2048_seq032.bin ref=llama_FFN_INP_1_pos0_layer0_full_n2048_seq139.bin
+FFN_NORM_1: class=NORM kind=BITWISE_DIFF maxAbs=4.768372e-07 rel_rms=7.878686e-09 n_gt_abs=0/2048 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=23214d20d0800abd ref_fnv=cc5d3e441ca5f9ac gpu=deep2_FFN_NORM_1_pos0_layer0_full_n2048_seq033.bin ref=llama_FFN_NORM_1_pos0_layer0_full_n2048_seq141.bin
+FFN_GATE_1: class=FFN kind=BITWISE_DIFF maxAbs=4.768372e-07 rel_rms=5.348553e-09 n_gt_abs=0/5632 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=5a7f99999a4ef268 ref_fnv=31494d60492e9acc gpu=deep2_FFN_GATE_1_pos0_layer0_full_n5632_seq034.bin ref=llama_FFN_GATE_1_pos0_layer0_full_n5632_seq143.bin
+LAYER1_OUT: class=FFN kind=BITWISE_DIFF maxAbs=3.874302e-07 rel_rms=1.271405e-08 n_gt_abs=0/2048 abs_tol=1e-05 rel_tol=0.0001 gpu_fnv=b013b6ad7f67ffa9 ref_fnv=da5ea21dd14c7765 gpu=deep2_LAYER1_OUT_pos0_layer0_full_n2048_seq039.bin ref=llama_LAYER1_OUT_pos0_layer0_full_n2048_seq151.bin
+ATTN_PRE_O_0_EXACT=1
+FFN_INP_0_MATERIAL_CLEARED=1
+FFN_NORM_0_CASCADE_CLEARED=1
+FIRST_MATERIAL_OVERALL=NONE
+FIRST_MATERIAL_LAYER1_SCAN=NONE
+NEXT_MATERIAL=NONE
+MATCH_PASS=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+---BEFORE_AFTER---
+ATTN_PRE_O_0: BEFORE maxAbs=6.139278e-06 rel_rms=4.168321e-06 | AFTER maxAbs=0.000000e+00 rel_rms=0.000000e+00 kind=EXACT
+ATTN_OUT_0: BEFORE maxAbs=8.446723e-05 rel_rms=4.572989e-05 | AFTER maxAbs=5.587935e-09 rel_rms=5.402222e-09 kind=BITWISE_DIFF
+FFN_INP_0: BEFORE maxAbs=8.446723e-05 rel_rms=3.523306e-05 | AFTER maxAbs=5.587935e-09 rel_rms=4.226903e-09 kind=BITWISE_DIFF
+FFN_NORM_0: BEFORE maxAbs=1.118350e-02 rel_rms=5.989661e-05 | AFTER maxAbs=2.682209e-07 rel_rms=3.433269e-09 kind=BITWISE_DIFF
+FFN_GATE_0: BEFORE maxAbs=5.026594e-03 rel_rms=6.361142e-05 | AFTER maxAbs=2.384186e-07 rel_rms=2.236943e-09 kind=BITWISE_DIFF
+LAYER0_OUT: BEFORE maxAbs=9.901747e-04 rel_rms=2.436826e-04 | AFTER maxAbs=4.470348e-08 rel_rms=6.511969e-09 kind=BITWISE_DIFF

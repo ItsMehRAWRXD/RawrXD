@@ -1,0 +1,35 @@
+BOARD_PROPOSAL_ATTN_PRE_O_FP16_PRODUCT_WIRE_001
+TO=PARENT_COORDINATOR / JOINT (proposal only; NO direct LIVE/CANON/JOINT/PARENT PCT write)
+FROM=M1_PRODUCT_WIRE_FOLLOWON
+DATE=2026-11-13
+PROMOTE=0
+TIP_CLIMB=HOLD
+INVENT_PASS=0
+MATCH_PASS=0
+PEERS_MAY_WRITE_SCOREBOARD=0
+TIP_BIND=6754616E
+CLI_BOARD_TIP_PIN=15A119D1
+
+## Proposal (parent decides)
+M1 product-wire of Deep2Engine FP16 PRE_O RT is DONE on FORCE=0 tip CLI rebuild
+SHA C7402085 (beside HOLD; HOLD/15A119/6754616E/F28F untouched).
+FORCE_VULKAN remasure reconfirms FFN_INP_0 + FFN_NORM_0 cleared; layer1 scan
+shows no MATERIAL under class tol.
+Do NOT invent MATCH_PASS. Do NOT climb tip. Do NOT rewrite CONTROLLING PCT here.
+Absorb of C7402085 onto tip name remains fail-closed (hash-verify rename only).
+
+## Witness
+SEAL=GUI_TOP25_VALUATION_001/gpu/GPU_PARITY_ATTN_PRE_O_FP16_PRODUCT_WIRE_001.txt
+COMPARE=PRODUCTION_INFERENCE_CERT_001/FIRST_DIVERGE_001/GPU_PARITY_ATTN_PRE_O_FP16_PRODUCT_WIRE_001.compare.txt
+DUMP=PRODUCTION_INFERENCE_CERT_001/FIRST_DIVERGE_001/stage_dump_attn_pre_o_product_wire
+PRODUCT_EXE=build_ninja/bin/rawr_gpufwd_C7402085.exe
+SHA256=C74020852AC324FC6827A896060E5508F74569C7F53EB7198B9CDB92DEAEB750
+NEXT_MATERIAL=NONE (layer0+1 scanned; layer2+ open)
+
+## Suggested parent action (not applied here)
+IF accept: mark M1 PRE_O product-wire closed; keep PCT fail-closed; tip absorb optional later.
+REJECT invent MATCH=1 / PROMOTE=1 / tip thrash from this seal alone.
+
+PROMOTE=0
+TIP_CLIMB=HOLD
+END
