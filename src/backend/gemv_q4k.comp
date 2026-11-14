@@ -4,6 +4,7 @@
 // FIRST_DIVERGE_001: prior FP32 dequant·x matched dequantize_row_q4_K but
 // HARD_L2 vs llama at Q_PRE_ROPE_0 (maxAbs~1.94e-3). Host QuantKernelRegistry
 // already uses Q8_K; SPV must match that path (same class as gemv_q6k.comp).
+// FFN_DOWN_2 SPV_HOST_001: FP64 REJECT; f16decode RUNTIME_NOP; prefer FORCE→SPV. PROMOTE=0.
 layout(local_size_x = 64) in;
 layout(binding = 0) readonly buffer W { uint packed[]; };
 layout(binding = 1) readonly buffer In { float x[]; };

@@ -1,0 +1,65 @@
+GPU_PARITY_FFN_DOWN_2_SPV_HOST_001
+ASOF_LOCAL=2026-11-14T00:00:00-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 MATCH_PASS=0
+PRIOR_PUSH=2a26fba334 (FFN_DOWN_2 Q4 host isolate OPEN; OR-law MATERIAL)
+ORIGIN_HAS_2a26fba334=1
+3b6a63de81_ANCESTOR=1
+
+## Question
+Bring C740 gemv/SPV FFN_DOWN (Q4_K) into host parity under FORCE_VULKAN
+(fix shader / dispatch / dequant / accumulate). Prefer SPV==host.
+
+## Pins
+C740=C74020852AC324FC6827A896060E5508F74569C7F53EB7198B9CDB92DEAEB750 PASS
+SPV_Q4K=4548BCF1EF5C4ED714041D6EFD7C32570A4EEFC431B008A6D6427CCE902FFF86 LEN=16868 RESTORED
+HOLD_15A119=UNTOUCHED TIP_6754616E=UNTOUCHED C740_PIN_UNTOUCHED=1
+FFN_DOWN_0_POS0=CLOSED (2.235174e-08) NOT_REOPENED=1
+
+## Offline (authoritative algorithm)
+PROBE=_probe_ffn_down_2_q4.exe + _isolate_row624_accum.py
+| Check | maxAbs | Verdict |
+|-------|--------|---------|
+| host(ACT_d) vs llama_DOWN | 2.145767e-06 | UNDER_TOL |
+| host float32/kahan/f64/single @row624 | 0 vs llama | BITEXACT C3076AE6 |
+| deep2_SPV @row624 | 1.525879e-05 vs llama | 1 ULP C3076AE7 |
+
+VERDICT=GPU_SPV_EXEC_NE_HOST_ALGORITHM
+(Python/host IEEE path bitexact; C740 SPV output ≠ same source semantics)
+
+## Attempts this turn (FORCE_VULKAN / C740)
+1) FP64 accumulate SPV (GL_ARB_gpu_shader_fp64) LEN=16856 HASH=4D7DD34B…
+   FFN_DOWN_2 maxAbs→2.740631e-01; FFN_DOWN_0→7.500499e-05 REOPEN. REJECT.
+2) Host-matched f16 decode + ggml aux16 split SPV LEN=18920 HASH=8C014AF1…
+   Remeasure DUMP=stage_dump_ffn_down_2_f16dec vs 4548: BITEXACT (RUNTIME_NOP).
+   FFN_DOWN_2 unchanged 1.525879e-05. Restored SPV pin 4548.
+3) Tip GetGEMV Q8 host (A10D6C04) — ATTN_PRE_O_0 first diverge vs C740
+   (maxAbs~6.14e-06); not C740-parity. REJECT for close credit.
+4) C740 FP32-host trampoline (prior) — REJECT (≠ Q8 registry).
+
+## Controlling remasure (C740 + 4548 FORCE_VULKAN)
+| Site | maxAbs | Class tol | FUNCTIONAL_FAIL |
+|------|--------|-----------|-----------------|
+| FFN_ACT_2 | 2.980232e-07 | FFN 1e-5 | 0 |
+| FFN_DOWN_2 | 1.525879e-05 | FFN 1e-5 | 0 AND-law; OR-law MATERIAL (1 ULP) |
+| ATTN_PRE_O_14 | 4.272461e-04 | ATTN 1e-4 | 1 |
+| ATTN_OUT_14 | 9.564720e-04 | ATTN 1e-4 | 1 |
+| FINAL_NORM | 6.930475e-01 | HARD 1e-4 | 1 |
+
+## Seal fields
+FFN_DOWN_2_MAX_ABS=1.525879e-05
+FFN_DOWN_2_OR_LAW_MATERIAL=1
+FFN_DOWN_2_FUNCTIONAL_FAIL=0
+FFN_DOWN_2_CLOSED=0
+ATTN_OUT_14_MAX_ABS=9.564720e-04
+ATTN_OUT_14_FUNCTIONAL_FAIL=1
+FINAL_NORM_MAX_ABS=6.930475e-01
+FINAL_NORM_FUNCTIONAL_FAIL=1
+SEAL_KIND=OPEN
+NEXT_TRUE_SITE=FFN_DOWN_2
+NEXT_ENGINEERING=C740_LINEAGE_GETGEMV_Q8_FFN_DOWN_OR_GPU_FIDELITY_SPV
+SOURCE_WIRED=1 (Q4_HOST_FFN_DOWN opt-in=1 only; FORCE→SPV default)
+RUNTIME_REACHED=1 (f16decode+FP64 trials on C740)
+DENSE_MATCH=HOLD
+TIP_BIND=6754616E HOLD
+PROMOTE=0 TIP_CLIMB=HOLD
+END

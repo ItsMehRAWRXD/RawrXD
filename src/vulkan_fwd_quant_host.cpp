@@ -21,9 +21,10 @@ bool VulkanCompute::DispatchGEMVQuant(int ggmlType, const void* packed, size_t b
      *   RAWRXD_Q4_HOST_ATTN=1 for private PRE_O_1@pos1 A-B only.
      * Q4 FFN gate/up (rows>cols): PARITY=1 host (FORCE still SPV). R65 REJECT
      *   host-under-FORCE for ACT_2; keep SPV for ACT unless PARITY=1.
-     * Q4 FFN_DOWN (rows<cols, type12): host under FORCE by default —
-     *   SPV Q4K×Q8K +1 ULP on FFN_DOWN_2 (NOT_CLOSABLE SPV-only). Offline
-     *   host==REF @material. RAWRXD_Q4_HOST_FFN_DOWN=0 keeps SPV.
+     * Q4 FFN_DOWN (rows<cols, type12): FORCE → SPV by default (prefer
+     *   SPV==host). Offline host Q8==REF; C740 SPV +1 ULP MATERIAL.
+     *   Opt-in host: RAWRXD_Q4_HOST_FFN_DOWN=1 (tip GetGEMV; C740 FP32
+     *   host REJECT). FP64 SPV REJECT (reopens FFN_DOWN_0).
      * Q6 attn_v: FORCE → SPV. Q6 FFN_DOWN: FORCE → SPV (precise Q4 ACT +
      *   SPV DOWN → maxULP_f16=0 @V59). Host FFN_DOWN under FORCE REJECT
      *   (V59 1 ULP lo). Opt-in: RAWRXD_Q6_HOST_FFN_DOWN=1 or PARITY=1. */
@@ -53,9 +54,9 @@ bool VulkanCompute::DispatchGEMVQuant(int ggmlType, const void* packed, size_t b
                            rows > cols; /* gate/up */
     const bool q4FfnDownShape =
         ggmlType == 12 && rows >= 1024u && cols > rows;
+    /* Prefer SPV under FORCE; opt-in host only when explicitly =1. */
     const bool hostQ4FfnDown =
-        q4FfnDownShape && force &&
-        !(q4DownHost && q4DownHost[0] == '0');
+        q4FfnDownShape && (q4DownHost && q4DownHost[0] == '1');
     const bool wantHost =
         hostQ6 || hostQ4Attn || hostQ4Ffn || hostQ4FfnDown;
     if (wantHost && (ggmlType == 12 || ggmlType == 14) && packed && input &&
