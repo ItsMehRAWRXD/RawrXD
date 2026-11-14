@@ -16,7 +16,8 @@ RuntimeResult RocmDynamicLoader::load() {
         return {};
     }
     // ROCm on Windows ships user-mode HIP in various layouts; try common names.
-    const wchar_t* candidates[] = {L"amdhip64.dll", L"hip.dll", L"hiprtc.dll"};
+    const wchar_t* candidates[] = {L"amdhip64.dll", L"amdhip64_6.dll", L"hip.dll",
+                                   L"hiprtc.dll"};
     for (const wchar_t* name : candidates) {
         m_dll = LoadLibraryW(name);
         if (m_dll != nullptr) {

@@ -1,0 +1,1 @@
+{"model":"llama3.2:3b","prompt":"Tool returned 4 for 2+2. Final answer:","stream":false,"options":{"num_predict":16}}

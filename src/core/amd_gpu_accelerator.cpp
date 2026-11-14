@@ -941,13 +941,10 @@ AccelResult AMDGPUAccelerator::initVulkan()
 
 AccelResult AMDGPUAccelerator::initROCm()
 {
-    // ROCm/HIP runtime — try loading amdhip64.dll
+    // ROCm/HIP runtime — amdhip64 / HIP6 / hiprt
     HMODULE hHIP = LoadLibraryA("amdhip64.dll");
-    if (!hHIP)
-    {
-        // Try alternative name
-        hHIP = LoadLibraryA("hiprt64.dll");
-    }
+    if (!hHIP) hHIP = LoadLibraryA("amdhip64_6.dll"); /* W7 HIP6 */
+    if (!hHIP) hHIP = LoadLibraryA("hiprt64.dll");
     if (!hHIP)
     {
         return AccelResult::error("ROCm/HIP runtime not found (amdhip64.dll)");

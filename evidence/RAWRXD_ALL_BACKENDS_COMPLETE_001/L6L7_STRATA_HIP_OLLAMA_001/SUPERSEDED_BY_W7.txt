@@ -1,0 +1,6 @@
+L6L7_STRATA_HIP_OLLAMA_001 RELATED witness retained.
+Controlling WS7 seal advanced to W7_STRATA_HIP_OLLAMA_001:
+  STRATA_HIP=PARTIAL (runtime+memcpy PASS; model E2E EXPLICIT_UNSUPPORTED)
+  OLLAMA=PASS (local+tool emission)
+  PRODUCT_WIRE=amdhip64_6.dll
+PROMOTE=0

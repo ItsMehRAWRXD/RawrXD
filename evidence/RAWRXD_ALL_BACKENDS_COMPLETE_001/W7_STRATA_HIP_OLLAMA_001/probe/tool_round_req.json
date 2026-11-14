@@ -1,0 +1,1 @@
+{"model":"llama3.2:3b","messages":[{"role":"user","content":"What is 2+2? Use the calculator tool."},{"role":"assistant","content":"","tool_calls":[{"id":"call_w7","function":{"name":"calculator","arguments":{"expression":"2+2"}}}]},{"role":"tool","tool_name":"calculator","content":"4"}],"stream":false}

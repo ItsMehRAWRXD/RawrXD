@@ -1075,12 +1075,9 @@ void HIPBackend::Shutdown() {
 bool HIPBackend::LoadHIPLibrary() {
     // Try different HIP library names
     m_hipLib = LoadLibraryA("amdhip64.dll");
-    if (!m_hipLib) {
-        m_hipLib = LoadLibraryA("hiprt64.dll");
-    }
-    if (!m_hipLib) {
-        m_hipLib = LoadLibraryA("hip.dll");
-    }
+    if (!m_hipLib) m_hipLib = LoadLibraryA("amdhip64_6.dll"); /* W7 HIP6 */
+    if (!m_hipLib) m_hipLib = LoadLibraryA("hiprt64.dll");
+    if (!m_hipLib) m_hipLib = LoadLibraryA("hip.dll");
 
     return m_hipLib != nullptr;
 }

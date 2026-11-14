@@ -211,6 +211,7 @@ bool GpuManager::DetectHIP() {
     // In production: call hipGetDeviceCount
 #ifdef _WIN32
     HMODULE hip = LoadLibraryA("amdhip64.dll");
+    if (!hip) hip = LoadLibraryA("amdhip64_6.dll"); /* W7 HIP6 */
     if (hip) {
         FreeLibrary(hip);
         return true;

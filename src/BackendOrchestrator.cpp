@@ -1162,6 +1162,7 @@ void BackendOrchestrator::RefreshBackendHealth(BackendKind k) {
     }
     case BackendKind::HIP: {
         HMODULE hip = LoadLibraryA("amdhip64.dll");
+        if (!hip) hip = LoadLibraryA("amdhip64_6.dll"); /* W7 HIP6 */
         h.available = (hip != nullptr);
         h.healthy   = h.available;
         if (hip) { FreeLibrary(hip); h.vram_total_mb = 16384.f; }

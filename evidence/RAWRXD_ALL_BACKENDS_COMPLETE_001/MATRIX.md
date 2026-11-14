@@ -23,15 +23,15 @@ Certification levels: Build � Load � Numerics � Generation � Performance
 | W03 | Q4_K / Q6_K / Q8 kernels | PARTIAL | Q6K+Q4 TinyLlama RELATED; Q8/Q5/Q3 NOT_RUN (no model); Q2 MEASURED_ABORT | Kernel-family validation pack | L4_P1_KERNEL_SHAPES_001 + BR_CLI_Q6K_SPV_R103 |
 | W04 | Packed GEMV / GEMM | PARTIAL | Ornith L3 ULP CLOSED; sx/kva/oproj/fused/batch NOT_RUN; Q2 abort sealed | Broader shape/batch + Q2 rootcause | L4_P1_KERNEL_SHAPES_001 + BR_ORNITH_PACKED_GEMV_L3_R104 |
 | W05 | Attention / KV cache | OPEN | TinyLlama short-ctx OK; Laguna rope/SWA OPEN | Long-context + Laguna rope/SWA + ATTN_GATE_PARITY | REAP_LAGUNA_001 PARTIAL / FIRST_DIVERGE |
-| W06 | Ornith | PARTIAL | L3 ULP closed; SEMANTIC / full decode OPEN | SEMANTIC + PROD_PROVENANCE | ORNITH R101�R104 |
-| W07 | Laguna / Qwen3.5 | PARTIAL | WS1 PARTIAL: provenance PARTIAL; arch order WIRED; ATTN_GATE_PARITY=NOT_RUN | Stage digests + tolerances vs ref | REAP_LAGUNA_001 GATE_RECORD |
+| W06 | Ornith | PARTIAL | L3 ULP closed; SEMANTIC=FAIL (8tok HEAP/TOK=0; R101 incoherence); PROD_DECODE=0 | PROD_DECODE REAL=21 / heap / PROD_PROVENANCE / hybrid load | ORNITH_SEMANTIC_BEYOND_L3_001 + R101-R104 |
+| W07 | Laguna / Qwen3.5 | PARTIAL | Gate BIND+pre-O APPLY; TOK tip CEBA0DE4; ULP OPEN | Stage digests + gate_act settle | W1_LAGUNA_NUMERICAL_PARITY_001 |
 | W08 | MiniMax MoE | PARTIAL | Router MATCH+AL12/13; tip CEBA0DE4 LOAD/MoE OK; FAIL_MID_PREFILL ly=15 TOK=0 SEMANTIC=NOT_RUN; Ollama create FAIL | Survive 62L->TOK>0 + FFN_DOWN_1 GPU A/B + AL14 | W2_MINIMAX_REAP_SEMANTIC + FAIR_H2H P0-D |
 | W09 | Kimi K2 | PARTIAL / EXPLICIT_UNSUPPORTED gen | Tip INDEX 13/13; ProductOpen FAIL DualStick=OFF; GENERATED_TOKENS=0 | Streamable working-set + native gen | W8_KIMI_K2_MULTI_AGENT_001 + K2_L5_P1_TIP_LOAD_001 |
 | W10 | REAP | PARTIAL | Physical exports rewrite_authorized=0; Laguna TOK peer; MiniMax tip TOK=0; Ollama create FAIL; quality!=competitive | Fair H2H after TOK32; MiniMax SEMANTIC | W2_MINIMAX_REAP_SEMANTIC / REAP_STRATA_* |
 | W11 | Strata (HIP) | PARTIAL | Runtime+memcpy PASS (`amdhip64_6` n=2); product loaders wired; model E2E EXPLICIT_UNSUPPORTED (no hipcc kernels) | HIP kernel/model forward path | W7_STRATA_HIP_OLLAMA_001 |
 | W12 | Ollama | PASS | Local version/tags/generate PASS; agent tool emission PASS (calculator); roundtrip final TIMEOUT not credited | Concurrency/cancel TBD | W7_STRATA_HIP_OLLAMA_001 |
 | W13 | Large models 70/80/120B | PARTIAL | 3 GGUFs tried host-floor; LOAD_FAIL OOM; TOK=0; DualStick/ICD HOLD | Host residency or authorized DualStick | W3_LARGE_MODEL_NATIVE_001 |
-| W14 | Multi-agent | PARTIAL | FORCE_TOOL PASS; Method C tip PASS (retained); dual-ws isolation PASS on CEBA0DE4; cancel OPEN | Product cancel (acceptSteer + steer pipe) | CLI_AGENT_CONCURRENCY_001 |
+| W14 | Multi-agent | PARTIAL | dual-ws ISO PASS (FORCE_TOOL); cancel OPEN; concurrent infer EXPLICIT_UNSUPPORTED (MODEL_LOADED=0) | Product cancel + MODEL_LOADED dual infer | W8_KIMI_K2_MULTI_AGENT_001 + CLI_AGENT_CONCURRENCY_001 |
 
 ---
 
@@ -39,7 +39,7 @@ Certification levels: Build � Load � Numerics � Generation � Performance
 
 | Lane | Owns | Critical-path priority |
 |------|------|------------------------|
-| L1 | Laguna attn_gate parity digests (order WIRED; parity NOT_RUN) | **P0 today** |
+| L1 | Laguna first-divergence ULP (order CLOSED; parity residual) | **P0 residual** |
 | L2 | MiniMax MoE router/experts + REAP semantic | P0 |
 | L3 | Ornith SEMANTIC beyond L3 ULP | P1 |
 | L4 | Vulkan Q-family + packed GEMV shape matrix | P1 |
@@ -57,6 +57,6 @@ PROGRAM_COMPLETE=0
 ANY_TRACK_CERTIFIED=0
 ENTERPRISE=0/128
 SAME_DAY_FULL_CERT=NOT_GUARANTEED
-NEXT_LEGAL=Laguna ATTN_GATE_PARITY (WS1 stop@3) ? MiniMax/REAP semantic ? large-model native ? multifamily CLI/GUI ? independent cert
-WS1_ABSORB=REAP_LAGUNA=PARTIAL EXE=CEBA0DE4� PERF_CREDIT=0
+NEXT_LEGAL=Laguna FIRST_DIVERGENCE_ULP → MiniMax/REAP semantic → large-model native → multifamily CLI/GUI → independent cert
+WS1_ABSORB=W1_LAGUNA_NUMERICAL_PARITY_001 PARTIAL EXE=CEBA0DE4 tip + 30896EA4 trial PERF_CREDIT=0
 ```

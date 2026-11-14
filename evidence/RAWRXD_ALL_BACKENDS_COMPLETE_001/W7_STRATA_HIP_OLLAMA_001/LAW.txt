@@ -1,0 +1,14 @@
+W7_STRATA_HIP_OLLAMA_001 — LAW
+PROGRAM=RAWRXD_ALL_BACKENDS_COMPLETE_001
+PROMOTE=0 TIP_CLIMB=HOLD GATE_STOP=1 CERTIFIED=0
+INVENT_PASS=0 NOT_RUN!=PASS CROSS_SHA_CREDIT=0
+
+1. Strata HIP: if AMD HIP-capable hardware present, measure native HIP
+   runtime + memcopy bench + model path. Else EXPLICIT_UNSUPPORTED.
+2. Product must resolve the live Windows HIP DLL name (amdhip64_6.dll).
+   Loading only amdhip64.dll while HIP6 is present is a product gap.
+3. Host-fallback compute ≠ HIP kernel model PASS. No hipcc / no compiled
+   Strata HIP kernels ⇒ NATIVE_MODEL_E2E=EXPLICIT_UNSUPPORTED.
+4. Ollama: local loopback reliability + agent tool emission measured on
+   127.0.0.1:11434. Native AgentOllamaClient (port=0) ≠ this Ollama seal.
+5. This pack seals WS7 only. Does not CERTIFY the all-backends program.

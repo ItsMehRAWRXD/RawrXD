@@ -1,0 +1,722 @@
+[MODEL_RESOLUTION] F:\OllamaModels\_REAP16\MiniMax-M2_7-Q4_K_M-REAP24\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf
+GGUF_LOAD_STAGE=enter path="F:\OllamaModels\_REAP16\MiniMax-M2_7-Q4_K_M-REAP24\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf" loadTensors=0 mmap=0
+GGUF_LOAD_STAGE=validated size=5911450496 dataOff=8255296
+GGUF_LOAD_STAGE=fopen_ok
+GGUF_LOAD_STAGE=header_ok ver=3 tensors=288 kv=44
+[AUTO_BACKEND] model=F:\OllamaModels\_REAP16\MiniMax-M2_7-Q4_K_M-REAP24\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf weights=5629MB kv=992MB scratch=2MB moe=1 experts=24 ctx=2048
+[AUTO_BACKEND] host RAM=735MB commit=56786MB
+[AUTO_BACKEND] GPU Virtual Display Driver status=25174027 problem=0 healthy=1
+[AUTO_BACKEND] GPU AMD Radeon(TM) Graphics status=25175040 problem=43 healthy=0
+[AUTO_BACKEND] GPU AMD Radeon AI PRO R9700 status=25174026 problem=0 healthy=1
+[AUTO_BACKEND] GPU AMD Radeon RX 7800 XT status=25174026 problem=0 healthy=1
+[AUTO_BACKEND] Vulkan ICD ready
+[AUTO_BACKEND] primaryReady=1 primaryValidated=1 secondaryReady=1 secondaryValidated=1 vramPriMB=32768
+[AUTO_BACKEND] decision=VulkanPrimary reason=Primary GPU fits weights+KV+scratch
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+KEN_MARS_ACTIVE=1 DEEP2_MARS=1 HOST_DECODE=0 GPU_POLICY=MULTI GPU_DEVICE_CLASS=DISCRETE NO_TRUNCATE_NEEDLE=1 PRODUCT_STREAMER_ARM=1
+PRODUCT_STREAMER_TIP_MINIMAL_PREP=1
+PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1
+RAWRXD_GPU_PREFLIGHT_BEGIN
+GPU_0=R9700
+GPU_0_WINDOWS_HEALTH=PASS
+GPU_0_PROBLEM_CODE=0
+GPU_0_CODE31=0
+GPU_1=RX_7800_XT
+GPU_1_WINDOWS_HEALTH=PASS
+GPU_1_PROBLEM_CODE=0
+GPU_1_CODE31=0
+GPU_PREFLIGHT=PASS
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+DEEP2_DEVICE_COUNT_DETECTED=2
+DEEP2_DEVICE_COUNT_OPENED=2
+DEEP2_COMPUTE_BACKEND=MULTIGPU
+DEEP2_EXEC_PATH=MULTIGPU
+DEEP2_EXEC_MODE=2
+DEEP2_GPU_POLICY=3
+DEEP2_PLAN_REASON=auto_multi_device_class
+DEEP2_PRIMARY_INDEX=0
+DEEP2_PRIMARY_STABLE_ID=1002:7551:000000000001681D
+DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_VENDOR=AMD
+DEEP2_DEVICE_0_STABLE_ID=1002:7551:000000000001681D
+DEEP2_DEVICE_0_VRAM_BYTES=34057322496
+DEEP2_DEVICE_0_SCORE=133
+DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
+DEEP2_DEVICE_1_NAME=AMD Radeon RX 7800 XT
+DEEP2_DEVICE_1_VENDOR=AMD
+DEEP2_DEVICE_1_STABLE_ID=1002:747E:0000000000019576
+DEEP2_DEVICE_1_VRAM_BYTES=16962633728
+DEEP2_DEVICE_1_SCORE=116
+DEEP2_DEVICE_1_DUTY=COMPUTE_SECONDARY
+DEEP2_COST_T_BEST=0.107467
+DEEP2_COST_CUT=12
+DEEP2_COST_KEEP=0
+DEEP2_COST_WINNER=SPLIT
+DEEP2_COST_MODEL=PIPELINE_V2
+DEEP2_COST_DUAL_DEVICES_KEPT=2
+DEEP2_COST_SLOT0_LAYERS=0-11
+DEEP2_COST_SLOT1_LAYERS=12-21
+DEEP2_COST_VRAM_GATE=0
+[VulkanCompute] DETECTED phys[0] type=2 AMD Radeon AI PRO R9700
+[VulkanCompute] DETECTED phys[1] type=2 Microsoft Direct3D12 (AMD Radeon AI PRO R9700)
+[VulkanCompute] SKIP_WARP_ICD phys[1] Microsoft Direct3D12 (AMD Radeon AI PRO R9700)
+[VulkanCompute] DETECTED phys[2] type=2 AMD Radeon RX 7800 XT
+[VulkanCompute] DETECTED phys[3] type=2 Microsoft Direct3D12 (AMD Radeon RX 7800 XT)
+[VulkanCompute] SKIP_WARP_ICD phys[3] Microsoft Direct3D12 (AMD Radeon RX 7800 XT)
+[VulkanCompute] DETECTED phys[4] type=4 Microsoft Direct3D12 (Microsoft Basic Render Driver)
+[VulkanCompute] SKIP_WARP_ICD phys[4] Microsoft Direct3D12 (Microsoft Basic Render Driver)
+[VulkanCompute] OPEN_ONE AMD Radeon AI PRO R9700 (others unused)
+[VulkanCompute] QUEUES compute=0 transfer=1 dual=1
+[VulkanCompute] FREETOKEN_STICK_RUB transfer_q=1 waw_ready_gate=1 helpframe_nway=4
+[Deep2Engine] LAYER_EXEC OPEN slot=0 AMD Radeon AI PRO R9700 layers=0-11 kind=GPU
+[VulkanCompute] DETECTED phys[0] type=2 AMD Radeon AI PRO R9700
+[VulkanCompute] DETECTED phys[1] type=2 Microsoft Direct3D12 (AMD Radeon AI PRO R9700)
+[VulkanCompute] SKIP_WARP_ICD phys[1] Microsoft Direct3D12 (AMD Radeon AI PRO R9700)
+[VulkanCompute] DETECTED phys[2] type=2 AMD Radeon RX 7800 XT
+[VulkanCompute] DETECTED phys[3] type=2 Microsoft Direct3D12 (AMD Radeon RX 7800 XT)
+[VulkanCompute] SKIP_WARP_ICD phys[3] Microsoft Direct3D12 (AMD Radeon RX 7800 XT)
+[VulkanCompute] DETECTED phys[4] type=4 Microsoft Direct3D12 (Microsoft Basic Render Driver)
+[VulkanCompute] SKIP_WARP_ICD phys[4] Microsoft Direct3D12 (Microsoft Basic Render Driver)
+[VulkanCompute] OPEN_ONE AMD Radeon RX 7800 XT (others unused)
+[VulkanCompute] QUEUES compute=0 transfer=1 dual=1
+[VulkanCompute] FREETOKEN_STICK_RUB transfer_q=1 waw_ready_gate=1 helpframe_nway=4
+[Deep2Engine] LAYER_EXEC OPEN slot=1 AMD Radeon RX 7800 XT layers=12-21 kind=GPU
+DEEP2_MULTI_GPU_PLAN=ACTIVE
+DEEP2_HYBRID_PLAN=INACTIVE
+DEEP2_DEVICE_OPENED_COUNT=2
+DEEP2_DEVICE_PLANNED_COUNT=2
+DEEP2_DEVICE_EXECUTING_COUNT=0
+DEEP2_LAYERS_EXECUTED=0
+DEEP2_REAL_GPU_LAYER_EXEC=0
+DEEP2_REAL_GPU_LAYER_COVERAGE=0
+DEEP2_PLAN_DEVICE_COUNT=2
+DEEP2_PLAN_NUM_LAYERS=22
+DEEP2_PLAN_SLOT_0_STABLE_ID=1002:7551:000000000001681D
+DEEP2_PLAN_SLOT_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_PLAN_SLOT_0_KIND=GPU
+DEEP2_PLAN_SLOT_0_LAYER_RANGE=0-11
+DEEP2_PLAN_SLOT_0_LAYER_EXECS=0
+DEEP2_PLAN_SLOT_0_SCORE=133
+DEEP2_PLAN_SLOT_1_STABLE_ID=1002:747E:0000000000019576
+DEEP2_PLAN_SLOT_1_NAME=AMD Radeon RX 7800 XT
+DEEP2_PLAN_SLOT_1_KIND=GPU
+DEEP2_PLAN_SLOT_1_LAYER_RANGE=12-21
+DEEP2_PLAN_SLOT_1_LAYER_EXECS=0
+DEEP2_PLAN_SLOT_1_SCORE=116
+DEEP2_LAYER_0_DEVICE=1002:7551:000000000001681D
+DEEP2_LAYER_0_EXECUTED=0
+DEEP2_LAYER_1_DEVICE=1002:7551:000000000001681D
+DEEP2_LAYER_1_EXECUTED=0
+DEEP2_LAYER_2_DEVICE=1002:7551:000000000001681D
+DEEP2_LAYER_2_EXECUTED=0
+DEEP2_LAYER_3_DEVICE=1002:7551:000000000001681D
+DEEP2_LAYER_3_EXECUTED=0
+DEEP2_LAYER_4_DEVICE=1002:7551:000000000001681D
+DEEP2_LAYER_4_EXECUTED=0
+DEEP2_LAYER_5_DEVICE=1002:7551:0000PIN_BUDGET_SET site=DUALSTICK_BIND old=0 new=4294967296 owner=DUALSTICK_BIND moe_reserved=4294967296
+PIN_BUDGET_FINAL stick=0 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+PIN_BUDGET_SET site=DUALSTICK_BIND old=0 new=4294967296 owner=DUALSTICK_BIND moe_reserved=4294967296
+PIN_BUDGET_FINAL stick=1 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+LOADMODEL_STAGE=pre_reverse reverse_opt_in=0
+LOADMODEL_STAGE=gguf_loader_enter path="F:\OllamaModels\_REAP16\MiniMax-M2_7-Q4_K_M-REAP24\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf"
+GGUF_LOAD_STAGE=enter path="F:\OllamaModels\_REAP16\MiniMax-M2_7-Q4_K_M-REAP24\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf" loadTensors=0 mmap=0
+GGUF_LOAD_STAGE=validated size=5911450496 dataOff=8255296
+GGUF_LOAD_STAGE=fopen_ok
+GGUF_LOAD_STAGE=header_ok ver=3 tensors=288 kv=44
+LOADMODEL_STAGE=gguf_meta_ok tensors=288
+LOADMODEL_STAGE=gguf_loader_ok tensors=288
+LOADMODEL_STAGE=geometry_ok
+LOADMODEL_STAGE=digest_skip
+GGUF_LOAD_STAGE=enter path="F:\OllamaModels\_REAP16\MiniMax-M2_7-Q4_K_M-REAP24\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf" loadTensors=0 mmap=1
+GGUF_LOAD_STAGE=validated size=5911450496 dataOff=8255296
+GGUF_LOAD_STAGE=fopen_ok
+GGUF_LOAD_STAGE=header_ok ver=3 tensors=288 kv=44
+[K2Index] shard=0 tensors=288 data_start=8255296 file_size=5911450496 path=F:\OllamaModels\_REAP16\MiniMax-M2_7-Q4_K_M-REAP24\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf
+GGUF_LOAD_STAGE=enter path="F:\OllamaModels\_REAP16\MiniMax-M2_7-Q4_K_M-REAP24\MiniMax-M2.7-Q4_K_M-00002-of-00003.gguf" loadTensors=0 mmap=1
+GGUF_LOAD_STAGE=validated size=5183218240 dataOff=18848
+GGUF_LOAD_STAGE=fopen_ok
+GGUF_LOAD_STAGE=header_ok ver=3 tensors=299 kv=4
+[K2Index] shard=1 tensors=299 data_start=18848 file_size=5183218240 path=F:\OllamaModels\_REAP16\MiniMax-M2_7-Q4_K_M-REAP24\MiniMax-M2.7-Q4_K_M-00002-of-00003.gguf
+GGUF_LOAD_STAGE=enter path="F:\OllamaModels\_REAP16\MiniMax-M2_7-Q4_K_M-REAP24\MiniMax-M2.7-Q4_K_M-00003-of-00003.gguf" loadTensors=0 mmap=1
+GGUF_LOAD_STAGE=validated size=4069600576 dataOff=14048
+GGUF_LOAD_STAGE=fopen_ok
+GGUF_LOAD_STAGE=header_ok ver=3 tensors=222 kv=4
+[K2Index] shard=2 tensors=222 data_start=14048 file_size=4069600576 path=F:\OllamaModels\_REAP16\MiniMax-M2_7-Q4_K_M-REAP24\MiniMax-M2.7-Q4_K_M-00003-of-00003.gguf
+MULTISHARD_SHARDS_INDEXED=3/3
+MULTISHARD_TENSORS_INDEXED=809
+MULTISHARD_DUPLICATES=0
+MODEL_DIGESTION_STREAM_BEGIN=1
+MODEL_PATH=
+ARCH=
+HIDDEN=0 LAYERS=0 HEADS=0 KV_HEADS=0 HEAD_DIM=128 VOCAB=0 INTERMEDIATE=0
+SPLIT_QKV_LAYERS=62 FUSED_QKV_LAYERS=0 PROJECTOR_BLOCK_LAYERS=0 MLA_LAYERS=0 BLOCKED_LAYERS=0
+SPLIT_FFN_LAYERS=62 FUSED_FFN_LAYERS=0
+ROOT_EMBED=token_embd.weight ROOT_FINAL_NORM=output_norm.weight ROOT_LM_HEAD=output.weight
+MANIFEST_READY=1 BLOCKED_AT=NONE
+AUTHORITY_CLASS=DISCOVERY_ONLY
+PROMOTE=0
+MODEL_DIGESTION_STREAM_END=1
+B03_MULTISHARD_TOPOLOGY ready=1 blocked=NONE layers=0 headDim=128 (geom_hd=128)
+B03_ROPE_LAYOUT=NEOX arch=minimax-m2 ropeDim=64 headDim=128
+B02_INDEX_LOOKUP emb=1 shard=0 out=1 shard=0 nrm=1 global_tensors=809
+B02_ROOT_MATERIALIZE=1 name=token_embd.weight shard=0 off=512428864 bytes=345710592 rows=200064 cols=3072 type=12 head4=c1081d14
+B02_ROOT_MATERIALIZE=1 name=output.weight shard=0 off=8255296 bytes=504161280 rows=200064 cols=3072 type=14 head4=5d70d4bb
+B02_ROOT_MATERIALIZE=1 name=output_norm.weight shard=0 off=512416576 bytes=12288 rows=3072 cols=1 type=0 head4=00003940
+B03_L0_BIND slot=attn_norm name=blk.0.attn_norm.weight shard=0 rows=3072 cols=1 type=0 bytes=12288 data=0 fileBack=1
+B03_L0_BIND slot=wq name=blk.0.attn_q.weight shard=0 rows=6144 cols=3072 type=12 bytes=10616832 data=0 fileBack=1
+B03_L0_BIND slot=wk name=blk.0.attn_k.weight shard=0 rows=1024 cols=3072 type=12 bytes=1769472 data=0 fileBack=1
+B03_L0_BIND slot=wv name=blk.0.attn_v.weight shard=0 rows=1024 cols=3072 type=14 bytes=2580480 data=0 fileBack=1
+B03_L0_BIND slot=wo name=blk.0.attn_output.weight shard=0 rows=3072 cols=6144 type=12 bytes=10616832 data=0 fileBack=1
+B03_L0_BIND slot=attn_q_norm name=blk.0.attn_q_norm.weight shard=0 rows=6144 cols=1 type=0 bytes=24576 data=0 fileBack=1
+B03_L0_BIND slot=attn_k_norm name=blk.0.attn_k_norm.weight shard=0 rows=1024 cols=1 type=0 bytes=4096 data=0 fileBack=1
+B03_L0_BIND slot=ffn_norm name=blk.0.ffn_norm.weight shard=0 rows=3072 cols=1 type=0 bytes=12288 data=0 fileBack=1
+B03_L0_BIND slot=moe_router name=blk.0.ffn_gate_inp.weight shard=0 rows=24 cols=3072 type=0 bytes=294912 data=0 fileBack=1
+B03_LAYER_TENSORS_VALID=62/62
+B03_ATTENTION_BIND_VALID=1
+B02_BIND_RESULT emb=1 lm=1 nrm=1 layers=62 layers_meta_ok=1 L0_wq_bound=1
+WEIGHT_BUDGET_ENV_PRESENT=1
+WEIGHT_BUDGET_ENV_RAW="8192"
+WEIGHT_BUDGET_PARSE_OK=1
+WEIGHT_BUDGET_INPUT_MIB=8192
+WEIGHT_BUDGET_EFFECTIVE_MIB=8192
+RESIDENCY_BUDGET_MIB=8192
+BUDGET_RELATION_VALID=1
+00000001681D
+DEEP2_LAYER_5_EXECUTED=0
+DEEP2_LAYER_6_DEVICE=1002:7551:000000000001681D
+DEEP2_LAYER_6_EXECUTED=0
+DEEP2_LAYER_7_DEVICE=1002:7551:000000000001681D
+DEEP2_LAYER_7_EXECUTED=0
+DEEP2_LAYER_8_DEVICE=1002:7551:000000000001681D
+DEEP2_LAYER_8_EXECUTED=0
+DEEP2_LAYER_9_DEVICE=1002:7551:000000000001681D
+DEEP2_LAYER_9_EXECUTED=0
+DEEP2_LAYER_10_DEVICE=1002:7551:000000000001681D
+DEEP2_LAYER_10_EXECUTED=0
+DEEP2_LAYER_11_DEVICE=1002:7551:000000000001681D
+DEEP2_LAYER_11_EXECUTED=0
+DEEP2_LAYER_12_DEVICE=1002:747E:0000000000019576
+DEEP2_LAYER_12_EXECUTED=0
+DEEP2_LAYER_13_DEVICE=1002:747E:0000000000019576
+DEEP2_LAYER_13_EXECUTED=0
+DEEP2_LAYER_14_DEVICE=1002:747E:0000000000019576
+DEEP2_LAYER_14_EXECUTED=0
+DEEP2_LAYER_15_DEVICE=1002:747E:0000000000019576
+DEEP2_LAYER_15_EXECUTED=0
+DEEP2_LAYER_16_DEVICE=1002:747E:0000000000019576
+DEEP2_LAYER_16_EXECUTED=0
+DEEP2_LAYER_17_DEVICE=1002:747E:0000000000019576
+DEEP2_LAYER_17_EXECUTED=0
+DEEP2_LAYER_18_DEVICE=1002:747E:0000000000019576
+DEEP2_LAYER_18_EXECUTED=0
+DEEP2_LAYER_19_DEVICE=1002:747E:0000000000019576
+DEEP2_LAYER_19_EXECUTED=0
+DEEP2_LAYER_20_DEVICE=1002:747E:0000000000019576
+DEEP2_LAYER_20_EXECUTED=0
+DEEP2_LAYER_21_DEVICE=1002:747E:0000000000019576
+DEEP2_LAYER_21_EXECUTED=0
+[Deep2Engine] MULTI contiguous layers ACTIVE devices=2 strict=1
+LIVE_GPU0=AMD Radeon AI PRO R9700
+LIVE_GPU1=AMD Radeon RX 7800 XT
+[Deep2Engine] BATCH2_SSVK_PACKED_DUAL_OPEN=1
+[Deep2Engine] BATCH2_SSVK_PACKED_DUAL_BOUND=1
+[Deep2Engine] BIND16_SSVK_PRODUCT_BOUND=1
+[Deep2Engine] Loading model from: F:\OllamaModels\_REAP16\MiniMax-M2_7-Q4_K_M-REAP24\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Model path content-resolve (ext-agnostic blob/gguf)...
+[Deep2Engine] Found GGUF at offset 0 in blob
+[Deep2Engine] Using blob directly (GGUF at offset 0)
+[Deep2Engine] Multi-shard detected: YES (3 files in F:\OllamaModels\_REAP16\MiniMax-M2_7-Q4_K_M-REAP24)
+[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=PASS arch=minimax-m2 L=62 H=3072 FFN=1536 heads=48 kv=8 hd=128 ctx=196608 ropeBase=5000000 ropeDim=64
+[Deep2Engine] AUTHORITY_LADDER=DEFER_UNTIL_RUNTIME_RECEIPT
+[Deep2Engine] GlobalTensorIndex built: 809 tensors across 3 shards
+[Deep2Engine] TensorResidencyCache ready (3 shards registered)
+[Deep2Engine] GGUF architecture: 'minimax-m2'  hidden=3072 layers=62 heads=48 kvHeads=8 inter=1536 vocab=200064
+[Deep2Engine] Tokenizer loaded: vocab=200064 bos=200034 eos=200020 (Spm::encode)
+[ResidencyManager] Initialized: maxResidentBytes=8589934592, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=8192 MB
+[ResidencyManager] this=00000174E5F24D00  Registered 'blk.0.attn_k_norm.weight': shard=0 offset=859908928 bytes=4096  |  registry_size=1  registeredBytes=4096  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=00000174E5F24D00  Registered 'blk.2.ffn_gate_exps.weight': shard=0 offset=1469123680 bytes=63700992  |  registry_size=100  registeredBytes=2831169088  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=00000174E5F24D00  Registered 'blk.8.attn_v.weight': shard=0 offset=2821025344 bytes=1769472  |  registry_size=200  registeredBytes=4226358048  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=00000174E5F24D00  Registered 'blk.12.attn_v.weight': shard=0 offset=3715928000 bytes=2580480  |  registry_size=300  registeredBytes=5817151104  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=00000174E5F24D00  Registered 'blk.17.ffn_norm.weight': shard=0 offset=4986528256 bytes=12288  |  registry_size=400  registeredBytes=7905554912  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=00000174E5F24D00  Registered 'blk.26.attn_k.weight': shard=1 offset=958622496 bytes=1769472  |  registry_size=500  registeredBytes=9421599776  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=00000174E5F24D00  Registered 'blk.46.attn_k_norm.weight': shard=2 offset=311715648 bytes=4096  |  registrFFN_INTER_INFERRED ok=1 why=META_EXISTING inter=1536 old_meta=1536 old_model=1536 old_config=1536
+PHI3_FUSED_FFN_RUNTIME layers=62 repaired=0 authority=UNOBSERVED
+GEMMA4_SCHEMA_BINDER ok=0 why=NO_ATTN_GEOM hidden=3072 layers=62 vocab=200064 tokenEmbed=1
+GEMMA4_LAYER_TOPOLOGY_BIND ok=0 why=NO_LAYER_ATTENTION_OR_PROJECTOR_TOPOLOGY layers=62 split=0 fused_qkv=0 projector=0 ssm=0 ffn_only=0 ffn=0 unknown=62
+GEMMA4_BIND_LLAMA_FALLBACK ok=0 why=NO_ATTN_ALIAS_BOUND tokenEmbed=1 hidden=3072 vocab=200064 layers=62
+MODEL_PROVENANCE_BEGIN=1
+MODEL_LOCATION=
+MODEL_CANONICAL=
+MODEL_EXISTS=0 MODEL_IS_DIRECTORY=0 MODEL_BYTES=0 MODEL_WRITE_STAMP=0
+MODEL_LOCATOR_HASH=0 TENSOR_NAME_SHAPE_HASH=0 MODEL_EXPECTED_FP=11753875096244137027
+DIGEST_FP=0 MANIFEST_FP=0 BIND_FP=11753875096244137027 AUTHORITY_FP=11753875096244137027 RUNTIME_FP=11753875096244137027
+MANIFEST_LOADED=0 MANIFEST_THIS_RUN=0 MANIFEST_ID=none
+SCHEMA_ALIAS_FALLBACK_USED=0 INHERITED_SCHEMA_AUTHORITY=0 RUNTIME_OVERLAY_SEPARATE=1
+MODEL_PROVENANCE_MATCH=0 BLOCKED_AT=PROVENANCE_MISMATCH WHY=MODEL_LOCATION_NOT_FOUND
+AUTHORITY_CLASS=DISCOVERY_PROVENANCE PROMOTE=0
+MODEL_PROVENANCE_END=1
+MODEL_OPEN=PASS
+MODEL_PROVENANCE_MATCH=0
+AUTHORITY_LADDER=BLOCKED
+BLOCKED_AT=PROVENANCE_MISMATCH
+PROMOTE=0
+[BUF] hidden=3072 heads=48 headDim=128 qOut=6144 headScratch=6144 kvDim=1024 ffn=1536 ffnGateScratch=1536
+SSM_BUF stPer=32 cvPer=12288 inner=0 state=0 NOTE=STATE_NE_HEADS
+SSM_MAMBA2_ARM=0 reason=GEO_OR_BUF
+B03_MOE_GATE_FORCE func=sigmoid arch=minimax-m2
+B03_MOE_CFG gating_func=2 scale=1.0000 experts=24 topk=24
+ParseIndex: tensors=288 kv=44
+B03_MOE_SHARD_OPEN ok=MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf experts=24 layers=22
+ParseIndex: tensors=299 kv=4
+B03_MOE_SHARD_OPEN ok=MiniMax-M2.7-Q4_K_M-00002-of-00003.gguf experts=24 layers=24
+ParseIndex: tensors=222 kv=4
+B03_MOE_SHARD_OPEN ok=MiniMax-M2.7-Q4_K_M-00003-of-00003.gguf experts=24 layers=18
+B03_MOE_PROXY_ATTACH shards=3
+y_size=501  registeredBytes=9421603872  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=00000174E5F24D00  Registered 'blk.26.attn_norm.weight': shard=1 offset=960396064 bytes=12288  |  registry_size=502  registeredBytes=9421616160  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=00000174E5F24D00  Registered 'blk.35.ffn_gate_inp.weight': shard=1 offset=3146874592 bytes=294912  |  registry_size=503  registeredBytes=9421911072  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=00000174E5F24D00  Registered 'blk.26.attn_output.weight': shard=1 offset=960408352 bytes=10616832  |  registry_size=504  registeredBytes=9432527904  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=00000174E5F24D00  Registered 'blk.32.attn_k_norm.weight': shard=1 offset=2317749600 bytes=4096  |  registry_size=505  registeredBytes=9432532000  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=00000174E5F24D00  Registered 'blk.28.attn_k.weight': shard=1 offset=1421077472 bytes=1769472  |  registry_size=506  registeredBytes=9434301472  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=00000174E5F24D00  Registered 'blk.26.attn_q.weight': shard=1 offset=971025184 bytes=10616832  |  registry_size=507  registeredBytes=9444918304  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=00000174E5F24D00  Registered 'blk.27.attn_output.weight': shard=1 offset=1176632192 bytes=10616832  |  registry_size=508  registeredBytes=9455535136  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=00000174E5F24D00  Registered 'blk.26.ffn_gate_inp.weight': shard=1 offset=1110838144 bytes=294912  |  registry_size=509  registeredBytes=9455830048  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=00000174E5F24D00  Registered 'blk.39.attn_k.weight': shard=1 offset=3889561600 bytes=1769472  |  registry_size=600  registeredBytes=10948618016  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=00000174E5F24D00  Registered 'blk.47.attn_q.weight': shard=2 offset=538572704 bytes=10616832  |  registry_size=700  registeredBytes=12985026816  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=00000174E5F24D00  Registered 'blk.60.attn_k.weight': shard=2 offset=3577138304 bytes=1769472  |  registry_size=800  registeredBytes=14977805024  zeroOffset=0  maxResidentBytes=8589934592
+RMV_MOUNT_001
+TENSORS_DISCOVERED=809
+TENSORS_ADDRESSED=809
+TENSORS_REGISTERED=809
+INVALID_SHARD=0
+INVALID_RANGE=0
+OVERFLOW_RANGE=0
+ZERO_SIZE=0
+UNADDRESSED=0
+RMV_MOUNT_001=PASS
+[Deep2Engine] ResidencyManager: this=00000174E5F24D00  registered=809 tensors  bytes=15155981120  max=8589934592
+[RMV_MOUNT_001]=PASS
+[Deep2Engine] AUTHORITY_LADDER=BLOCKED
+BLOCKED_AT=PROVENANCE_MISMATCH
+BLOCKED_OWNER=MODEL_PROVENANCE
+MODEL_OPEN=PASS
+PROMOTE=0
+[ThreadPool] Initializing with 32 threads...
+[ThreadPool] Initialized 32 worker threads
+[ThreadPool] Reinitializing with 32 threads...
+[ThreadPool] Reinitialized 32 worker threads
+[Deep2Engine] ThreadPool (loadModel): 32 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF6D99DD840 dequant=00007FF6D99DAED0 GetGEMV(12)=00007FF6D99DD840 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 22 GEMV kernels, 22 dequant kernels
+[KVCache] Lazy pages: layers=62 page=8 virtualMax=196608 heads=8 dim=128
+[KVCache] HOT_BYTES=4063232 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] Model loaded successfully (809 tensors)
+[Deep2Engine] MoE model: 24 experts, top-24, 0 shared
+[Deep2Engine] MoE multi-shard: using GlobalTensorIndex + residency cache
+[Deep2Engine] Created 62 per-layer routers (multi-shard) gating_func=2
+[Deep2Engine] Initializing production inference engine...
+  Hidden Dim: 3072
+  Num Layers: 62
+  Num Heads: 48
+  Num KV Heads: 8
+  Head Dim: 128
+  Max Seq Len: 4096
+  Use ThreadPool: YES
+  Use KV [BUF] hidden=3072 heads=48 headDim=128 qOut=6144 headScratch=6144 kvDim=1024 ffn=12288 ffnGateScratch=12288
+SSM_BUF stPer=32 cvPer=12288 inner=0 state=0 NOTE=STATE_NE_HEADS
+SSM_MAMBA2_ARM=0 reason=GEO_OR_BUF
+Cache: YES
+  Use RoPE: YES
+[ThreadPool] Shutdown complete
+[ThreadPool] Initializing with 32 threads...
+[ThreadPool] Initialized 32 worker threads
+[ThreadPool] Reinitializing with 32 threads...
+[ThreadPool] Reinitialized 32 worker threads
+  ThreadPool: 32 threads (auto-detected)
+[KVCache] Addressable: layers=62 virtualSeq=4096 kv_heads=8 headDim=128 (hot pages only)
+[KVCache] Lazy pages: layers=62 page=8 virtualMax=4096 heads=8 dim=128
+[KVCache] HOT_BYTES=4063232 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[HotPatcher] CrashRecovery UEF skipped (product default)
+[HotPatcher] Initialized - The Bottle is ready (with safety systems)
+[Deep2Engine] HotPatcher initialized - The Bottle is ready
+[QuantKernelRegistry] Q4_K GEMV=00007FF6D99DD840 dequant=00007FF6D99DAED0 GetGEMV(12)=00007FF6D99DD840 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 22 GEMV kernels, 22 dequant kernels
+[Deep2Engine] Telemetry controller initialized (PCIe stall + bandwidth + residency)
+[Deep2Engine] ENHANCEMENT STACK: ON
+ELASTIC_DYNAMIC warm=6MB staged=1MB hot=8928MB la=1 ramAvail=10MB vram=32479MB L=62 pressure=0
+FREETOKEN_MICROZONE live=1 zones=8 zone_mb=64 sticks=4 active=0 overwrites=0 hits=0 misses=0 hit_pct=0.00 stick0_rpm=0 stick1_rpm=0 allocs_after_init=0 key=address_id waw_ready_gate=1 helpframe_nway=4 eat_gt2=1 metric=fetch_not_fit models=20/35/70/120/300/671+ unbounded=1 public_gap=amd_xfer_waw+prescope_dual_only
+ADDRESSABILITY_OWNER=FUTURE_CONSUMER_SPACE
+RESIDENCY_OWNER=FIXED_FREETOKEN_POOL
+EVICTION_POLICY=NONE
+REASSIGNMENT_POLICY=ADVANCE_OWNERSHIP
+CACHE_POLICY=TIME_UNTIL_CONSUMER
+PHYSICAL_POOL_BYTES=536870912
+PHYSICAL_POOL_GROWS=0
+FUTURE_CONSUMER_SPACE_GROWS=1
+LOGICAL_ADDRESS_SPACE_GROWS=1
+PHYSICAL_PAGE_POOL_GROWS=0
+HOTPATH_ALLOCATIONS=0
+FREE_REQUIRED=0
+REUSE_REQUIRED=1
+LOGICAL_CONSUMERS=0
+LOGICAL_ADDRESS_BYTES=0
+PHYSICAL_PAGE_POOL_BYTES=536870912
+PHYSICAL_PAGES=8
+OWNERSHIP_ADVANCES=0
+PAST_OWNER_TO_FUTURE_OWNER=1
+CACHE_METRIC=TIME_UNTIL_CONSUMER
+PIN_BUDGET_SET site=ENGINE_MAX_HOT old=4294967296 new=9361686528 owner=ENGINE_MAX_HOT moe_reserved=4294967296
+KV_WORKING_SEQ_BOUND=4096 ckv_torus (gguf_ctx=4096)
+PIN_BUDGET_SET site=DUALSTICK_BIND old=9361686528 new=4294967296 owner=DUALSTICK_BIND moe_reserved=4294967296
+PIN_BUDGET_FINAL stick=0 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+PIN_BUDGET_SET site=DUALSTICK_BIND old=4294967296 new=4294967296 owner=DUALSTICK_BIND moe_reserved=4294967296
+PIN_BUDGET_FINAL stick=1 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+GEN=0 BIND16_LINKED=1 PACKED_Q2K_READY=1 SSVK_READY=1 DUALSTICK_ARMED=0 GPU_RESIDENT=1 MODEL_LOADED=1 DEVICE_COUNT=2 FWD_G0=0 FWD_G1=0 RESIDENCY_EPOCH=1 MODEL_EPOCH=1
+CONTINUITY_POINT=AFTER_FN_RESET
+GENERATE_STREAM_PRE_CONFIG=1
+CFG_GEN_BEFORE_STICK=1
+CFG_GEN_AFTER_STICK=1
+CFG_GEN_GREEDY_SKIP_SAMPLER=1
+CFG_GEN_GREEDY_RETURN=1
+GENERATE_STREAM_POST_CONFIG=1
+GENERATE_STREAM_POST_BATCH007=1
+TOKEN_EMBD_STREAM_RESTORE_SKIP=1
+GENERATE_STREAM_POST_MARS_PIN=1
+GENERATE_STREAM_POST_CHOREO=1
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+STREAM_STATUS=READY
+NEXT_ACTION=CALL_GENERATE_STREAM
+GENERATE_STREAM_ENTER=1 ARCH=minimax-m2 LAYERS=62 KV_HEADS=8 HEAD_DIM=128
+[GEN_DEBUG] opts.maxTokens=8 remCtx=4072 maxTokens=8 promptN=24 maxSeqLen=4096 contextLimited=0
+[ElasticResidencyManager] PASSIVE vulkan/DualStick (no scheduler, no GhostCache)
+[ElasticResidencyManager] Initialized: warmCompressed=6 MB, warmStaged=1 MB, hot=8928 MB, lookahead=1
+[Deep2Engine] ElasticResidencyManager DYNAMIC warm=6 staged=1 hot=8928 la=1
+[Deep2Engine] ElasticResidencyManager: late-registered model tensors
+[Deep2Engine] CycloneScheduler armed for live generate
+[Deep2Engine] Residency telemetry: ENABLED
+[Deep2Engine] Medusa speculative decoding: ENABLED
+[Deep2Engine] NU fused packing: ENABLED
+[Deep2Engine] Warmup scheduler: ENABLED
+[Deep2Engine] Compressed KV cache: ENABLED (Q8_0)
+[Deep2Engine] NVMe streaming: ENABLED
+[Deep2Engine] Sliding window: ENABLED (size=4096)
+[Deep2Engine] Chamber (SM0-DSP) initialized
+[Deep2Engine] Chamber: ENABLED
+[Deep2Engine] PlasmaGovernor initialized
+[Deep2Engine] PlasmaGovernor: ENABLED
+[Deep2Engine] SovereignOutOfCoreRuntime initialized (8GB RAM / 32GB VRAM)
+[Deep2Engine] SovereignOutOfCoreRuntime: ENABLED
+[Deep2Engine] ToroidalKVCache initialized: 4096 tokens, 62 layers, 48 heads, 128 dim
+[Deep2Engine] ToroidalKVCache: ENABLED
+[Deep2Engine] RESIDENCY_BRAID stamped=496 slots=2 (Router?Expert?Residency?Transfer?GPU cache)
+[MARS] Initializing controller...
+[VRAMManager] Initialized: GPU0=31.86 GB, GPU1=15.98 GB
+[DualGPUBackend] Initializing dual-GPU queues...
+[DualGPUBackend] Queues ready
+[MARS] Controller ready: GPU0=31.86 GB, GPU1=15.98 GB
+[Deep2Engine] MARS enabled: GPU0=31.86 GB, GPU1=15.98 GB
+KEN_MARS_ACTIVE=1 budget_env=8192
+[VRAMManager] Allocated 'token_embd.weight' (345710592 bytes) on GPU 0
+[Deep2Engine] MARS keep-GPU pin 'token_embd.weight' (skip Host/Stream Evict under GPU product)
+[VRAMManager] Allocated 'output.weight' (504161280 bytes) on GPU 0
+[VRAMManager] Allocated 'output_norm.weight' (12288 bytes) on GPU 0
+[Deep2Engine] MARS placed 3 tensors (oom=0 skip=2108) GPU0=810.51 MB GPU1=0.00 MB
+[Deep2Engine] Initializing VAL-000 advanced features...
+[MedusaDecoder] Initialized: 4 heads, topK=10, maxTree=40
+[Deep2Engine] Medusa decoder initialized (4 heads)
+[Deep2Engine] NU Fused Packer initialized
+[WarmupScheduler] Initialized: depth=3, history=100, threshold=0.15
+[Deep2Engine] Warmup scheduler initialized
+[DualGPUBackend] Worker 1 started
+[DualGPUBackend] Worker 0 started
+[CompressedKVCache] Initialized: 557 MB compressed (vs 1984 MB F32, 3.6x ratio)
+[Deep2Engine] Compressed KV cache initialized (Q8_0)
+[NVMeStream] RAWRXD_NVME_REVERSE_BUNNYHOP=1 → force reverse bunnyhop
+[NVMeBunnyHop] UNLAIDOUT_REVERSE_CHUNK_HOTPATCH_BUNNYHOP F:\OllamaModels\_REAP16\MiniMax-M2_7-Q4_K_M-REAP24\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf 5.91GB c=4194304 u=1 hp=1
+[NVMeStream] REVERSE_BUNNYHOP UNLAIDOUT_REVERSE_CHUNK_HOTPATCH_BUNNYHOP
+[Deep2Engine] NVMe REVERSE_BUNNYHOP (unlaidout hotpatch)
+[SlidingWindow] Initialized: window=4096, overlap=512, chunk=2048
+[Deep2Engine] Sliding window initialized (size=4096)
+[Deep2Engine] Advanced features initialization complete
+[Deep2Engine] STACK vk=1 mars=1 elastic=1 cyclone=1 medusa=1 nu=1 warmup=1 ckv=1 nvme=1 slide=1 chamber=1 torus=1 plasma=1 sov=1 prefetch=1 devices=2
+[Deep2Engine] Initialization complete
+[Deep2Engine] Medusa speculative decoding: DISABLED
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[ChatTemplate] Forced 'deepseek' from arch/name (arch=minimax-m2)
+[AGENT] PREFILL_BEGIN prompt_tokens=24
+HOTPATH_GEMV=VULKAN
+HOTPATH_RMSNORM=GPU
+HOTPATH_ATTN=GPU
+HOTPATH_FFN=GPU_RESIDENT
+HOTPATH_MEDUSA=0
+HOTPATH_ELASTIC=0
+HOTPATH_CYCLONE=1
+HOTPATH_CKV=0
+HOTPATH_GPU_FWD_ENABLED=1
+GEN=0 BIND16_LINKED=1 PACKED_Q2K_READY=1 SSVK_READY=1 DUALSTICK_ARMED=0 GPU_RESIDENT=1 MODEL_LOADED=1 DEVICE_COUNT=2 FWD_G0=0 FWD_G1=0 RESIDENCY_EPOCH=1 MODEL_EPOCH=1
+CONTINUITY_POINT=AFTER_FN_RESET
+AUTO_POLICY_ACTIVE=0
+MANUAL_ARM_FORCING=1
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=manual_preserve_mech
+K2_LIVE_POLICY_REUSE_STEPS=496
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=62 TOKENS=8
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=3428600000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=1 MECH_ENV=trampoline,cyclone,elastic,stream WANTED=1
+[HotPatcher] GENERATE_DECODER_ALG=0 HEAT=lukewarm SKIP_HOTPATCH=1
+[Deep2Engine] NVMe streaming: ENABLED
+[Deep2Engine] Initializing VAL-000 advanced features...
+[Deep2Engine] Advanced features initialization complete
+[LivePath] GENERATE_ALG_MASK=0x0000010E random=0
+WEIGHT_BUDGET_INPUT=8192
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=8192
+WEIGHT_BUDGET_BYTES=8589934592
+WEIGHT_BUDGET_SOURCE=ENV
+GPU_ARENA_WINDOW_FAIL slot=0 maxB=504161280 budget=8589934592 arena=2080524288 ov=0
+GPU_MULTIMAP_FAIL why=arena slot=0
+TRY_GPU_TOKEN_FORWARD=FAIL multi=1 slots=2 layers=62
+TRY_GPU_FALLBACK_HOST=1
+[LAYER_ENTER] ly=0
+B03_PRENORM_MATERIALIZE layer=0 slots=9 attnNorm=00000174E93C0000 ffnNorm=00000174E93F0000 qNorm=00000174E93D0000 kNorm=00000174E93E0000 PROMOTE=0
+B03_ATTN_BEGIN layer=0 wq=0000017598D10000 wv=00000175998E0000 type_q=12 type_v=14
+[VulkanCompute] QUANT_GEMV_MISS type=12 'blk.0.attn_q.weight' ? GPU_F32_DEQUANT
+[LAYER_EXEC] FATAL: GPU LinearW failed for 'blk.0.attn_q.weight' (type=12 rows=6144 cols=3072) � CPU fallback forbidden
+[VulkanCompute] QUANT_GEMV_MISS type=12 'blk.0.attn_k.weight' ? GPU_F32_DEQUANT
+[LAYER_EXEC] FATAL: GPU LinearW failed for 'blk.0.attn_k.weight' (type=12 rows=1024 cols=3072) � CPU fallback forbidden
+[VulkanCompute] Q6K_LOGITS_MISS 'blk.0.attn_v.weight' ? packed/F32 paths
+[VulkanCompute] QUANT_GEMV_MISS type=14 'blk.0.attn_v.weight' ? GPU_F32_DEQUANT
+[LAYER_EXEC] FATAL: GPU LinearW failed for 'blk.0.attn_v.weight' (type=14 rows=1024 cols=3072) � CPU fallback forbidden
+B03_QKV_MAXABS layer=0 post_qk_norm q=0.000000e+00 k=0.000000e+00 v=0.000000e+00 qL2=0.000000e+00 kL2=0.000000e+00 ropeDim=64 headDim=128 qnorm_data=00000174E93D0000
+B03_ROPE_APPLY layout=NEOX ropeDim=64 headDim=128 theta=5000000 scaling=1
+B03_ROPE_THETA=5000000 mw.ropeTheta=5000000 expect_minimax=5000000
+B03_ROPE_L2_FAIL pos=0 qL2=0->0 rat=0 kL2=0->0 rat=0 (NeoX must preserve L2)
+[VulkanCompute] QUANT_GEMV_MISS type=12 'blk.0.attn_output.weight' ? GPU_F32_DEQUANT
+[LAYER_EXEC] FATAL: GPU LinearW failed for 'blk.0.attn_output.weight' (type=12 rows=3072 cols=6144) � CPU fallback forbidden
+[POST_ATTN] ly=0 output[0..7]= 0 0 0 0 0 0 0 0 
+B03_MOE_ROUTE_ENTER layer=0
+B03_MOE_ROUTE_OK layer=0 topk=24
+B011_FETCH_COST router_layer=0 next=1 experts=24 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=1 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+B03_MOE_ACQUIRE_OK layer=0 expert=18 bytes=9179136 q=12 g=12 u=12 d=14 expertDim=1536
+B03_MOE_ACQUIRE_OK layer=0 expert=22 bytes=9179136 q=12 g=12 u=12 d=14 expertDim=1536
+B03_MOE_ACQUIRE_OK layer=0 expert=10 bytes=9179136 q=12 g=12 u=12 d=14 expertDim=1536
+B03_MOE_ACQUIRE_OK layer=0 expert=16 bytes=9179136 q=12 g=12 u=12 d=14 expertDim=1536
+B03_MOE_ACQUIRE_OK layer=0 expert=12 bytes=9179136 q=12 g=12 u=12 d=14 expertDim=1536
+B03_MOE_ACQUIRE_OK layer=0 expert=8 bytes=9179136 q=12 g=12 u=12 d=14 expertDim=1536
+B03_MOE_ACQUIRE_OK layer=0 expert=20 bytes=9179136 q=12 g=12 u=12 d=14 expertDim=1536
+B03_MOE_ACQUIRE_OK layer=0 expert=4 bytes=9179136 q=12 g=12 u=12 d=14 expertDim=1536
+[LAYER_EXIT] ly=0
+[FINAL_OUT] ly=0 norm=1.611708e+01 finite=3072/3072 output[0..7]= 0.0376804 -0.129438 -0.142385 0.264394 0.198791 0.14506 0.602499 -0.247621 
+[LAYER_ENTER] ly=1
+B03_PRENORM_MATERIALIZE layer=1 slots=9 attnNorm=00000174E9450000 ffnNorm=00000174E9480000 qNorm=00000174E9460000 kNorm=00000174E9470000 PROMOTE=0
+B03_ATTN_BEGIN layer=1 wq=0000017CA9030000 wv=0000017CA9A50000 type_q=12 type_v=14
+[VulkanCompute] QUANT_GEMV_MISS type=12 'blk.1.attn_q.weight' ? GPU_F32_DEQUANT
+[LAYER_EXEC] FATAL: GPU LinearW failed for 'blk.1.attn_q.weight' (type=12 rows=6144 cols=3072) � CPU fallback forbidden
+[VulkanCompute] QUANT_GEMV_MISS type=12 'blk.1.attn_k.weight' ? GPU_F32_DEQUANT
+[LAYER_EXEC] FATAL: GPU LinearW failed for 'blk.1.attn_k.weight' (type=12 rows=1024 cols=3072) � CPU fallback forbidden
+[VulkanCompute] Q6K_LOGITS_MISS 'blk.1.attn_v.weight' ? packed/F32 paths
+[VulkanCompute] QUANT_GEMV_MISS type=14 'blk.1.attn_v.weight' ? GPU_F32_DEQUANT
+[LAYER_EXEC] FATAL: GPU LinearW failed for 'blk.1.attn_v.weight' (type=14 rows=1024 cols=3072) � CPU fallback forbidden
+B03_ROPE_L2_FAIL pos=0 qL2=0->0 rat=0 kL2=0->0 rat=0 (NeoX must preserve L2)
+[VulkanCompute] QUANT_GEMV_MISS type=12 'blk.1.attn_output.weight' ? GPU_F32_DEQUANT
+[LAYER_EXEC] FATAL: GPU LinearW failed for 'blk.1.attn_output.weight' (type=12 rows=3072 cols=6144) � CPU fallback forbidden
+[POST_ATTN] ly=1 output[0..7]= 0 0 0 0 0 0 0 0 
+B03_MOE_ROUTE_ENTER layer=1
+B03_MOE_ROUTE_OK layer=1 topk=24
+B011_FETCH_COST router_layer=1 next=2 experts=24 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=2 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=1
+[FINAL_OUT] ly=1 norm=2.235711e+02 finite=3072/3072 output[0..7]= -4.72842 3.61985 -0.592013 1.40048 -5.80923 -0.0836921 2.93678 -1.05907 
+[LAYER_ENTER] ly=2
+B03_PRENORM_MATERIALIZE layer=2 slots=9 attnNorm=00000174E94E0000 ffnNorm=00000174EAA80000 qNorm=00000174EAA60000 kNorm=00000174EAA70000 PROMOTE=0
+B03_ATTN_BEGIN layer=2 wq=0000017CBC400000 wv=0000017CBCFD0000 type_q=12 type_v=14
+B03_ROPE_L2_OK pos=0 qL2=89.4147928 rat=1 kL2=53.5462763 rat=1
+[POST_ATTN] ly=2 output[0..7]= 0.0664016 -0.125088 0.172644 0.0173968 0.380314 1.21968 -0.409283 -0.856882 
+B03_MOE_ROUTE_ENTER layer=2
+B03_MOE_ROUTE_OK layer=2 topk=24
+B011_FETCH_COST router_layer=2 next=3 experts=24 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=3 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=2
+[FINAL_OUT] ly=2 norm=2.895156e+02 finite=3072/3072 output[0..7]= -4.87659 3.89891 -0.373953 1.29094 -5.17501 1.28439 2.29885 -1.89895 
+[LAYER_ENTER] ly=3
+B03_PRENORM_MATERIALIZE layer=3 slots=9 attnNorm=00000174EAAF0000 ffnNorm=00000174ED2D0000 qNorm=00000174ED2B0000 kNorm=00000174ED2C0000 PROMOTE=0
+B03_ATTN_BEGIN layer=3 wq=0000017CDD050000 wv=0000017CDDC20000 type_q=12 type_v=14
+B03_ROPE_L2_OK pos=0 qL2=95.750065 rat=1 kL2=51.1216973 rat=1
+[POST_ATTN] ly=3 output[0..7]= -0.00698745 -0.155409 0.0444663 -0.12526 -0.210114 0.489616 0.0236324 -0.0180173 
+B03_MOE_ROUTE_ENTER layer=3
+B03_MOE_ROUTE_OK layer=3 topk=24
+B011_FETCH_COST router_layer=3 next=4 experts=24 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=4 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=3
+[FINAL_OUT] ly=3 norm=3.599519e+02 finite=3072/3072 output[0..7]= -4.806 4.03013 -0.464625 1.26338 -5.44224 1.99792 2.52983 -1.91147 
+[LAYER_ENTER] ly=4
+B03_PRENORM_MATERIALIZE layer=4 slots=9 attnNorm=000001759CB80000 ffnNorm=0000017C90A70000 qNorm=000001759CB90000 kNorm=000001759CBA0000 PROMOTE=0
+B03_ATTN_BEGIN layer=4 wq=0000017CECC20000 wv=0000017CED7F0000 type_q=12 type_v=14
+B03_ROPE_L2_OK pos=0 qL2=101.753587 rat=1 kL2=51.0580035 rat=1
+[POST_ATTN] ly=4 output[0..7]= 0.321293 -0.202654 -0.487448 0.355406 0.107767 0.132746 -0.0375017 0.202415 
+B03_MOE_ROUTE_ENTER layer=4
+B03_MOE_ROUTE_OK layer=4 topk=24
+B011_FETCH_COST router_layer=4 next=5 experts=24 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=5 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=4
+[FINAL_OUT] ly=4 norm=3.993188e+02 finite=3072/3072 output[0..7]= -4.54049 3.92065 -1.08901 1.63834 -5.33377 2.40197 2.44555 -1.467 
+[LAYER_ENTER] ly=5
+B03_PRENORM_MATERIALIZE layer=5 slots=9 attnNorm=0000017C90A80000 ffnNorm=0000017CFD1B0000 qNorm=0000017CFD190000 kNorm=0000017CFD1A0000 PROMOTE=0
+B03_ATTN_BEGIN layer=5 wq=0000017CFB920000 wv=0000017CFC4F0000 type_q=12 type_v=14
+B03_ROPE_L2_OK pos=0 qL2=92.6401876 rat=1 kL2=51.8864751 rat=1
+[POST_ATTN] ly=5 output[0..7]= 0.0208651 -0.00536475 -0.218397 -0.292836 0.116745 0.206294 -0.0101095 0.0460133 
+B03_MOE_ROUTE_ENTER layer=5
+B03_MOE_ROUTE_OK layer=5 topk=24
+B011_FETCH_COST router_layer=5 next=6 experts=24 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=6 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=5
+[FINAL_OUT] ly=5 norm=4.204700e+02 finite=3072/3072 output[0..7]= -4.55715 3.90638 -1.1511 1.4482 -5.18535 2.60288 2.47007 -1.52185 
+[LAYER_ENTER] ly=6
+B03_PRENORM_MATERIALIZE layer=6 slots=9 attnNorm=0000017D05650000 ffnNorm=0000017CAEEE0000 qNorm=0000017CAEEC0000 kNorm=0000017CAEED0000 PROMOTE=0
+B03_ATTN_BEGIN layer=6 wq=0000017D05660000 wv=0000017D06230000 type_q=12 type_v=14
+B03_ROPE_L2_OK pos=0 qL2=93.2670208 rat=1 kL2=38.3313449 rat=1
+[POST_ATTN] ly=6 output[0..7]= -0.0868473 0.131888 0.0367662 -0.145286 0.128765 -0.157328 -0.190952 -0.144329 
+B03_MOE_ROUTE_ENTER layer=6
+B03_MOE_ROUTE_OK layer=6 topk=24
+B011_FETCH_COST router_layer=6 next=7 experts=24 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=7 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=6
+[FINAL_OUT] ly=6 norm=4.384292e+02 finite=3072/3072 output[0..7]= -4.65983 4.08874 -1.17627 1.40503 -5.00631 2.39932 2.31617 -1.65091 
+[LAYER_ENTER] ly=7
+B03_PRENORM_MATERIALIZE layer=7 slots=9 attnNorm=0000017D126E0000 ffnNorm=0000017D13EB0000 qNorm=0000017D13E90000 kNorm=0000017D13EA0000 PROMOTE=0
+B03_ATTN_BEGIN layer=7 wq=0000017D126F0000 wv=0000017D132C0000 type_q=12 type_v=12
+B03_ROPE_L2_OK pos=0 qL2=100.219367 rat=1 kL2=48.2237048 rat=1
+[POST_ATTN] ly=7 output[0..7]= 0.244553 0.0563846 -0.0537301 -0.0517239 0.491632 0.00587294 -0.041854 -0.0154594 
+B03_MOE_ROUTE_ENTER layer=7
+B03_MOE_ROUTE_OK layer=7 topk=24
+B011_FETCH_COST router_layer=7 next=8 experts=24 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=8 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=7
+[FINAL_OUT] ly=7 norm=4.479525e+02 finite=3072/3072 output[0..7]= -4.4356 4.26581 -1.30496 1.28339 -4.57708 2.40922 2.16836 -1.57277 
+[LAYER_ENTER] ly=8
+B03_PRENORM_MATERIALIZE layer=8 slots=9 attnNorm=0000017D1F6D0000 ffnNorm=0000017D20EA0000 qNorm=0000017D20E80000 kNorm=0000017D20E90000 PROMOTE=0
+B03_ATTN_BEGIN layer=8 wq=0000017D1F6E0000 wv=0000017D202B0000 type_q=12 type_v=12
+B03_ROPE_L2_OK pos=0 qL2=110.878706 rat=1 kL2=52.3437168 rat=1
+[POST_ATTN] ly=8 output[0..7]= 0.0474191 0.0533138 -0.376867 0.165673 0.0815126 -0.254726 0.442486 0.422937 
+B03_MOE_ROUTE_ENTER layer=8
+B03_MOE_ROUTE_OK layer=8 topk=24
+B011_FETCH_COST router_layer=8 next=9 experts=24 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=9 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=8
+[FINAL_OUT] ly=8 norm=4.465306e+02 finite=3072/3072 output[0..7]= -4.43011 4.27778 -1.7211 1.47884 -4.58181 2.11106 2.7318 -1.14849 
+[LAYER_ENTER] ly=9
+B03_PRENORM_MATERIALIZE layer=9 slots=9 attnNorm=0000017D2E2A0000 ffnNorm=0000017D2FB40000 qNorm=0000017D2FB20000 kNorm=0000017D2FB30000 PROMOTE=0
+B03_ATTN_BEGIN layer=9 wq=0000017D2E2B0000 wv=0000017D2EE80000 type_q=12 type_v=14
+B03_ROPE_L2_OK pos=0 qL2=113.202837 rat=1 kL2=50.844467 rat=1
+[POST_ATTN] ly=9 output[0..7]= -0.0937868 0.738474 -0.054769 0.0822788 -0.0835469 0.325672 0.101575 0.824007 
+B03_MOE_ROUTE_ENTER layer=9
+B03_MOE_ROUTE_OK layer=9 topk=24
+B011_FETCH_COST router_layer=9 next=10 experts=24 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=10 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=9
+[FINAL_OUT] ly=9 norm=4.453119e+02 finite=3072/3072 output[0..7]= -4.497 5.00585 -1.73704 1.52715 -4.75251 2.38659 2.85221 -0.382676 
+[LAYER_ENTER] ly=10
+B03_PRENORM_MATERIALIZE layer=10 slots=9 attnNorm=0000017D3B370000 ffnNorm=0000017D3CB40000 qNorm=0000017D3CB20000 kNorm=0000017D3CB30000 PROMOTE=0
+B03_ATTN_BEGIN layer=10 wq=0000017D3B380000 wv=0000017D3BF50000 type_q=12 type_v=12
+B03_ROPE_L2_OK pos=0 qL2=83.1815882 rat=1 kL2=38.7028225 rat=1
+[POST_ATTN] ly=10 output[0..7]= 0.272809 -0.00812542 0.0420026 -0.438008 -0.0112789 0.0730301 -0.340589 -0.0344862 
+B03_MOE_ROUTE_ENTER layer=10
+B03_MOE_ROUTE_OK layer=10 topk=24
+B011_FETCH_COST router_layer=10 next=11 experts=24 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=11 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=10
+[FINAL_OUT] ly=10 norm=4.578059e+02 finite=3072/3072 output[0..7]= -4.34655 4.97235 -1.79157 1.1092 -4.77526 2.45592 2.52685 -0.494101 
+[LAYER_ENTER] ly=11
+B03_PRENORM_MATERIALIZE layer=11 slots=9 attnNorm=0000017D48390000 ffnNorm=0000017D49B60000 qNorm=0000017D49B40000 kNorm=0000017D49B50000 PROMOTE=0
+B03_ATTN_BEGIN layer=11 wq=0000017D483A0000 wv=0000017D48F70000 type_q=12 type_v=12
+B03_ROPE_L2_OK pos=0 qL2=105.420848 rat=1 kL2=52.769823 rat=1
+[POST_ATTN] ly=11 output[0..7]= -0.137231 0.369286 -0.183709 0.296146 0.230147 0.213013 0.045108 0.219493 
+B03_MOE_ROUTE_ENTER layer=11
+B03_MOE_ROUTE_OK layer=11 topk=24
+B011_FETCH_COST router_layer=11 next=12 experts=24 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=12 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=11
+[FINAL_OUT] ly=11 norm=4.569712e+02 finite=3072/3072 output[0..7]= -4.50363 5.31467 -2.0473 1.41489 -4.49712 2.70181 2.61518 -0.300394 
+[LAYER_ENTER] ly=12
+B03_PRENORM_MATERIALIZE layer=12 slots=9 attnNorm=0000017C95090000 ffnNorm=0000017C95270000 qNorm=0000017C95250000 kNorm=0000017C95260000 PROMOTE=0
+B03_ATTN_BEGIN layer=12 wq=0000017D54340000 wv=0000017D54D60000 type_q=12 type_v=14
+B03_ROPE_L2_OK pos=0 qL2=109.767128 rat=1 kL2=54.1656777 rat=1
+[POST_ATTN] ly=12 output[0..7]= -0.231969 -0.107663 -0.22183 -0.0591688 0.19283 0.0869044 0.117909 -0.0958288 
+B03_MOE_ROUTE_ENTER layer=12
+B03_MOE_ROUTE_OK layer=12 topk=24
+B011_FETCH_COST router_layer=12 next=13 experts=24 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=13 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=12
+[FINAL_OUT] ly=12 norm=4.521198e+02 finite=3072/3072 output[0..7]= -4.70017 5.26983 -2.26543 1.27329 -4.26154 2.82475 2.6481 -0.308791 
+[LAYER_ENTER] ly=13
+B03_PRENORM_MATERIALIZE layer=13 slots=9 attnNorm=0000017C9BC60000 ffnNorm=0000017C9BFF0000 qNorm=0000017C9BFD0000 kNorm=0000017C9BFE0000 PROMOTE=0
+B03_ATTN_BEGIN layer=13 wq=0000017D76BC0000 wv=0000017C9BE20000 type_q=12 type_v=12
+B03_ROPE_L2_OK pos=0 qL2=92.3368845 rat=1 kL2=45.529853 rat=1
+[POST_ATTN] ly=13 output[0..7]= 0.229333 -0.111874 0.218482 -0.327235 0.028625 -0.128785 -0.409744 -0.142676 
+B03_MOE_ROUTE_ENTER layer=13
+B03_MOE_ROUTE_OK layer=13 topk=24
+B011_FETCH_COST router_layer=13 next=14 experts=24 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=14 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=13
+[FINAL_OUT] ly=13 norm=4.493372e+02 finite=3072/3072 output[0..7]= -4.41806 5.23816 -1.98521 0.888118 -4.19861 2.73959 2.28354 -0.456065 
+[LAYER_ENTER] ly=14
+B03_PRENORM_MATERIALIZE layer=14 slots=9 attnNorm=0000017CA69F0000 ffnNorm=0000017CA7440000 qNorm=0000017CA7420000 kNorm=0000017CA7430000 PROMOTE=0
+B03_ATTN_BEGIN layer=14 wq=0000017CA6A00000 wv=0000017D79100000 type_q=12 type_v=12
+B03_ROPE_L2_OK pos=0 qL2=97.0621334 rat=1 kL2=47.7701864 rat=1
+[POST_ATTN] ly=14 output[0..7]= -0.222761 0.216614 0.215725 -0.0845961 -0.428264 0.0029269 -0.0191356 0.00423436 
+B03_MOE_ROUTE_ENTER layer=14
+B03_MOE_ROUTE_OK layer=14 topk=24
+B011_FETCH_COST router_layer=14 next=15 experts=24 hit_rate=0.00% ref~79.96%
+FREETOKEN_HELPFRAME layer=15 help1=1 help2=1 nway=4 roles=COMPUTE|HELP1|HELP2|FILL eat_gt2=1 public_gap=prescope_dual_only
+[LAYER_EXIT] ly=14
+[FINAL_OUT] ly=14 norm=4.537954e+02 finite=3072/3072 output[0..7]= -4.62637 5.41783 -1.70275 0.797831 -4.66207 2.70956 2.19897 -0.480887 
+[LAYER_ENTER] ly=15
+B03_PRENORM_MATERIALIZE layer=15 slots=9 attnNorm=0000017C99040000 ffnNorm=0000017C99EC0000 qNorm=0000017C99EA0000 kNorm=0000017C99EB0000 PROMOTE=0
+B03_ATTN_BEGIN layer=15 wq=0000017C99050000 wv=0000017C99C20000 type_q=12 type_v=14
+B03_ROPE_L2_OK pos=0 qL2=101.869215 rat=1 kL2=51.6953599 rat=1
+[POST_ATTN] ly=15 output[0..7]= 0.0200506 0.167568 0.267724 -0.038471 0.0698206 0.228549 -0.0131938 0.376298 
+B03_MOE_ROUTE_ENTER layer=15
+B03_MOE_ROUTE_OK layer=15 topk=24
+B011_FETCH_COST router_layer=15 next=16 experts=24 hit_rate=0.00% ref~79.96%

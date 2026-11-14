@@ -3327,7 +3327,8 @@ CommandResult handleGovStatus(const CommandContext& ctx)
 
     const bool hasVulkan = isDllResolvable("vulkan-1.dll");
     const bool hasCuda = isDllResolvable("nvcuda.dll");
-    const bool hasRocm = isDllResolvable("amdhip64.dll") || isDllResolvable("hiprtc64.dll");
+    const bool hasRocm = isDllResolvable("amdhip64.dll") || isDllResolvable("amdhip64_6.dll")
+        || isDllResolvable("hiprtc64.dll");
     const GovernorStats stats = execGov.getStats();
     const auto active = execGov.getActiveTaskDescriptions();
 

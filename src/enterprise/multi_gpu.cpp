@@ -66,6 +66,7 @@ MultiGPUResult MultiGPUManager::enumerateDevices() {
 
     // Try to load AMD HIP runtime
     HMODULE hipModule = LoadLibraryA("amdhip64.dll");
+    if (!hipModule) hipModule = LoadLibraryA("amdhip64_6.dll"); /* W7 HIP6 */
     if (hipModule) {
         hipGetDeviceCount_t hipGetDeviceCount = 
             reinterpret_cast<hipGetDeviceCount_t>(GetProcAddress(hipModule, "hipGetDeviceCount"));

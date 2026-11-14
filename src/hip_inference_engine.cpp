@@ -35,12 +35,9 @@ std::unique_ptr<HIPInferenceEngine> HIPInferenceEngine::TryCreate() {
 bool HIPInferenceEngine::InitializeHIP() {
     // Load HIP runtime
     m_hipLib = LoadLibraryA("hiprt64.dll");
-    if (!m_hipLib) {
-        m_hipLib = LoadLibraryA("amdhip64.dll");
-        if (!m_hipLib) {
-            return false;
-        }
-    }
+    if (!m_hipLib) m_hipLib = LoadLibraryA("amdhip64.dll");
+    if (!m_hipLib) m_hipLib = LoadLibraryA("amdhip64_6.dll"); /* W7 HIP6 */
+    if (!m_hipLib) return false;
 
     // Get hipInit
     using PFN_hipInit = int (__stdcall *)(unsigned int);

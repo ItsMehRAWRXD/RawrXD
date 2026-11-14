@@ -1,0 +1,8 @@
+{
+    "HIP_MEMCOPY":  1,
+    "OLLAMA_GEN":  1,
+    "OLLAMA_TOOL":  1,
+    "ASOF":  "2026-11-14T12:02:05-05:00",
+    "TIP":  "966783dc64c0",
+    "GPUS":  "Virtual Display Driver | AMD Radeon(TM) Graphics | AMD Radeon AI PRO R9700 | AMD Radeon RX 7800 XT"
+}

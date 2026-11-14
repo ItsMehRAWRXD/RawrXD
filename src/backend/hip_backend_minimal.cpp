@@ -156,6 +156,7 @@ bool LoadHIPRuntime(HIPRuntime& hip) {
     // Try to load HIP DLL
     const char* dllPaths[] = {
         "amdhip64.dll",
+        "amdhip64_6.dll",  /* W7: Windows HIP 6 runtime name */
         "hiprt64.dll",
         "C:\\Program Files\\AMD\\ROCm\\5.7\\bin\\amdhip64.dll",
         "C:\\Program Files\\AMD\\ROCm\\6.0\\bin\\amdhip64.dll",

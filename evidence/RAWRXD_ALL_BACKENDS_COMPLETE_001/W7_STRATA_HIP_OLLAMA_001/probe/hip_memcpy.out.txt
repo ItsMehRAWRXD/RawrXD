@@ -1,0 +1,10 @@
+dll=amdhip64_6.dll load=1
+syms init=1 count=1 set=1 malloc=1 free=1 memcpy=1 sync=1
+hipInit_rc=0
+devcount_rc=0 n=2
+setDevice0_rc=0
+malloc_rc=0 ptr=0000000304000000
+h2d_rc=0 ms=32.475
+d2h_rc=0 ms=19.397
+verify_ok=1
+HIP_MEMCOPY_BENCH=PASS
