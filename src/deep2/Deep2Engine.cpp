@@ -100,7 +100,7 @@
 #include "SlidingWindowEngine.h"
 #include "MoEWeightsLoader.hpp"
 #include "HotPatcher.hpp"
-#include "HotPatcherSafety.hpp"
+#include "HotPatcherSafety.hpp" /* CrashRecovery::shutdown in ~Deep2Engine */
 #include "Deep2LivePath.hpp"
 #include "Deep2LivePath_Internal.hpp"
 #include "DecodeFeedbackProbe.hpp"
@@ -1753,16 +1753,8 @@ bool Deep2Engine::initialize(const EngineConfig& cfg) {
 
     initialized = true;
     enableAllEnhancements();
-    /* Repair: enhancement FATAL/COMDAT skew can clear loaded while roots remain
-     * — POST_LOAD gguf=0 then blocks GENERATE_STREAM_ENTER. */
-    if (!modelWeights.loaded && modelWeights.numLayers > 0 &&
-        (modelWeights.tokenEmbed.data || modelWeights.tokenEmbed.hasFileBacking ||
-         modelWeights.tokenEmbed.sizeBytes > 0)) {
-        modelWeights.loaded = true;
-        std::fprintf(stderr, "MODEL_LOADED_REPAIR=1 after_enhance layers=%zu\n",
-                     modelWeights.numLayers);
-        std::fflush(stderr);
-    }
+    /* Enhancement FATAL/COMDAT skew can clear loaded while roots remain. */
+    (void)repairModelLoadedFromRoots();
     printf("[Deep2Engine] Initialization complete\n");
     return true;
 }
@@ -6016,6 +6008,33 @@ void Deep2Engine::emitContinuitySnap(FILE* f, uint32_t gen) const {
         (unsigned long long)residencyEpoch_,
         (unsigned long long)modelLoadEvents_);
     std::fflush(f);
+}
+
+bool Deep2Engine::isModelLoaded() const { return modelWeights.loaded; }
+
+const ModelWeights& Deep2Engine::getModelWeights() const {
+    return modelWeights;
+}
+
+const rawr::olma::AuthorityBundle& Deep2Engine::sessionAuthority() const {
+    return sessionAuth_;
+}
+
+bool Deep2Engine::sessionAuthorityPass() const {
+    return sessionAuth_.PASS != 0;
+}
+
+bool Deep2Engine::repairModelLoadedFromRoots() {
+    if (modelWeights.loaded) return true;
+    if (modelWeights.numLayers == 0) return false;
+    if (!(modelWeights.tokenEmbed.data || modelWeights.tokenEmbed.hasFileBacking ||
+          modelWeights.tokenEmbed.sizeBytes > 0))
+        return false;
+    modelWeights.loaded = true;
+    std::fprintf(stderr, "MODEL_LOADED_REPAIR=1 roots layers=%zu\n",
+                 modelWeights.numLayers);
+    std::fflush(stderr);
+    return true;
 }
 
 bool Deep2Engine::resealSessionAuthority() {
@@ -13756,10 +13775,9 @@ Deep2Engine::MARSPlacementReport Deep2Engine::placeAllModelTensorsMARS() {
             report.oom++;
             return;
         }
-        // Honor ExecutionPolicy device. embeddings AutoDetect=Host → Place then
-        // Evict token_embd during open (required for llama32 POST_LOAD/OPEN).
-        // keep-at-place / keepGPU rejected: 1EFF+F73F gguf=0 OPEN_FAIL.
-        // Stream path Restores embd before GENERATE_STREAM_ENTER.
+        /* Honor ExecutionPolicy. embeddings AutoDetect=Host → Place+Evict
+         * token_embd during open (keep-at-place → gguf=0 OPEN_FAIL on
+         * 1EFF/F73F). Stream Restores embd before GENERATE_STREAM_ENTER. */
         {
             using namespace Deep2::Exec;
             EnsurePolicyLoaded();

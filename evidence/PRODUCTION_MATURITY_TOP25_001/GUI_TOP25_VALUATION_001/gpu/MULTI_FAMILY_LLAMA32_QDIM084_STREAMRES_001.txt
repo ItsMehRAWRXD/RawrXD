@@ -1,0 +1,51 @@
+MULTI_FAMILY_LLAMA32_QDIM084_STREAMRES_001
+ASOF_LOCAL=2026-11-13T22:55:00-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 NOT_RUN!=PASS
+FORCE=0 HOST_DECODE=0 REJECT_FORCE_ABSORB=1 TIP_ABSORB=N
+CROSS_SHA_CREDIT=0
+DURABLE=0
+ENTERPRISE_CERT=0/128 (RELATED/NOT_RUN only; no PASS invent)
+GATE_CLOSED=0
+
+## Hash verify
+LOCKED_617F_SNAP=clean_link/LOCKED/RawrXD-Win32IDE_gemma_qdim084_617F784E.exe
+EXE_SHA256=617F784ED72938E029BA57FF0B63D8EAF1C16994860468A3BA62E08ECCE7DD1E
+HASH_VERIFY=PASS
+TIP_BIN=bin/RawrXD-Win32IDE.exe
+TIP_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431
+TIP_STILL_6754=1 TIP_UNTOUCHED=1
+
+## ROOT one-liner
+AutoDetect embeddings=Host → MARS Place then Host-Evict token_embd (~323MB); stream GPU decode SEH READ VA=-1. Place-time keep-resident (keepGPU/name-exact) preserves embd but clears POST_LOAD ggufOpened (OPEN_FAIL).
+
+## Measured private cands (fail-closed)
+| Cand | SHA16 | OPEN | EVICT | STREAM_ENTER | STREAM_SEH | TOK | Notes |
+|------|-------|-----:|------:|-------------:|-----------:|----:|-------|
+| 617F LOCKED snap | 617F784E | 1 | 1 | 1 | 1 (0xC0000005 VA=-1) | 0 | sealctrl 2255; OPEN baseline |
+| keepGPU 1EFF | 1EFF8608 | 0 | 0 | 0 | 0 | 0 | REJECT: POST_LOAD gguf=0 |
+| embdres name-exact | F73F3A73 | 0 | 0 | 0 | 0 | 0 | ALLOC=1 EVICT=0; OPEN_FAIL same class |
+| streamres Restore | 18B3508B | 0 | 0 | 0 | 0 | 0 | SOURCE_WIRED Restore; rebuild regresses mid-elastic vs 617F |
+
+## Durable gate
+TOK_X2=0×2
+DURABLE_TOKEN_SURVIVED=0
+DURABLE=0
+
+## SOURCE_WIRED (working tree; not tip)
+1) Deep2Engine::generateStream — TOKEN_EMBD_STREAM_RESTORE via VRAMManager::Restore before ENTER
+2) placeAll — no place-time keepGPU (Host Evict allowed for OPEN)
+3) VRAMManager::Evict — no pinned refuse (place-time Evict must succeed)
+4) MODEL_LOADED_REPAIR after enableAllEnhancements (POST_LOAD gguf guard)
+
+## NEXT_OWNER
+PRIVATE_CAND_STREAM_RESTORE_MINIMAL_ON_617F_OPEN
+= rebuild private exe with ONLY stream-Restore delta on 617F-equivalent placeAll
+(no HotPatcher/CrashRecovery/genQuality extra surface that regressed 18B3508B OPEN)
+THEN remasure 2× TOK>0 for DURABLE=1
+
+WITNESS_617F_SEALCTRL=ide_mf_qdim084_617F_sealctrl_* (OPEN=1 ENTER=1 SEH VA=-1 TOK=0)
+WITNESS_STREAMRES=ide_mf_qdim084_streamres_llama32_18B3508B*_LATEST.meta.txt
+
+PROMOTE=0
+TIP_CLIMB=HOLD
+END
