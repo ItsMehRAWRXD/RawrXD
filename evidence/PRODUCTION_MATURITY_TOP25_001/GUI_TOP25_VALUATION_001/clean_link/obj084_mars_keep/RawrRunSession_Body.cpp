@@ -1,8 +1,6 @@
-/* RawrRunSession_Body ? ODR OpenSession/InitFromPath with POST_LOAD_ROOTS_REPAIR. */
+/* Private-link copy — keep in sync with src/deep2/RawrRunSession_Body.cpp. */
 #define RAWR_RUN_SESSION_DECLS_ONLY 1
-#include "RawrRunSession.hpp"
-#include "Deep2Engine.h"
-#include <cstdio>
+#include "G:/~dev/rawrxd/src/deep2/RawrRunSession.hpp"
 
 namespace Deep2 {
 namespace rawr_run {
@@ -17,6 +15,7 @@ bool InitFromPath(Deep2Engine& e, const std::string& path, size_t maxSeq) {
     }
     if (e.isInitialized() && e.isModelLoaded()) {
         e.enableAllEnhancements();
+        (void)e.repairModelLoadedFromRoots();
         const long long rc = e.isModelLoaded() ? 1 : 0;
         std::fprintf(stderr, "PRODUCT_OPEN INIT_EXIT rc=%lld\n", rc);
         std::fflush(stderr);
@@ -69,21 +68,17 @@ bool OpenSession(Deep2Engine& e, const char* alias, RunWitness& w) {
     if (!InitFromPath(e, ar.path)) {
         std::fprintf(stderr, "RAW_RUN_OPEN=FAIL stage=INIT_FROM_PATH path=%s\n",
                      ar.path.c_str());
-        std::fprintf(stderr, "PRODUCT_OPEN SESSION_EXIT ok=0 stage=INIT_FROM_PATH\n");
+        std::fprintf(stderr,
+                     "PRODUCT_OPEN SESSION_EXIT ok=0 stage=INIT_FROM_PATH\n");
         std::fflush(stderr);
         return false;
     }
     w.ggufOpened = e.isModelLoaded() ? 1 : 0;
-    if (!w.ggufOpened) {
-        const auto& mwRepair = e.getModelWeights();
-        if (mwRepair.numLayers > 0 &&
-            (mwRepair.tokenEmbed.data || mwRepair.tokenEmbed.hasFileBacking ||
-             mwRepair.tokenEmbed.sizeBytes > 0)) {
-            w.ggufOpened = 1;
-            std::fprintf(stderr, "POST_LOAD_ROOTS_REPAIR=1 layers=%zu\n",
-                         mwRepair.numLayers);
-            std::fflush(stderr);
-        }
+    if (!w.ggufOpened && e.repairModelLoadedFromRoots()) {
+        w.ggufOpened = 1;
+        std::fprintf(stderr, "POST_LOAD_ROOTS_REPAIR=1 layers=%zu\n",
+                     e.getModelWeights().numLayers);
+        std::fflush(stderr);
     }
     w.tokenizerReady = e.tokenize("hi").empty() ? 0 : 1;
     auto ct = ChatTemplate::detectFromModel(e.getModelMetadata().architecture,
