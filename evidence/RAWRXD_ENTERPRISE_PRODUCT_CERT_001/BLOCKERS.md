@@ -7,7 +7,7 @@ Authority: pasted RAWRXD_ENTERPRISE_PRODUCT_CERT_001 checklist · 0/128 · HELD 
 | P0 | Gemma AA4F/tip_land AV (Deep2 bisect) | G02-06 G06-06 | CURRENT=mid-VRAM; bak→STREAM_SEH leaf fclose VA=-1 |
 | P0 | GPU/ref ATTN_PRE_O_1 / FFN_DOWN cascade | G02-04 G02-05 G03-08 | FFN_ACT_2 CLOSED (SPV 4548BCF1); next LAYER2+/FFN_DOWN_0; PRE_O_1@pos1 OPEN |
 | P0 | Multi-family STREAM after OPEN (qdim084) | G02-08 G04-01 G06-06 | authPASS/OPEN=1 on 9181073D/CC621549; STREAM SEH 0xE06D7363 TOK=0 |
-| P1 | C36 LSP startup hangs | G07-01 G07-04 | tip 6754616E INIT_OK RELATED (R70); kill-after-mark; ≠ PASS |
+| P1 | C36 LSP startup hangs | G07-01 G07-04 | tip6754 HANG/TIMEOUT RELATED (R70); cand INIT_OK RELATED only |
 | P1 | ConPTY terminal-stop reliability | G05-05 G06-05 | tip-era PASS RELATED (R70); cand PASS RELATED; ≠ CERT PASS |
 | P1 | M3 MODEL_SELECTED_TOOL / tipbound | G05-06 G08-01 | FORCE PASS; model-select=0 unk; wire SOURCE_WIRED RUNTIME=0 |
 | P2 | M4 Authenticode + CLEAN_VM | G12-02 G12-03 | ABSENT / NOT_RUN (no hypervisor) |
@@ -24,7 +24,9 @@ Authority: pasted RAWRXD_ENTERPRISE_PRODUCT_CERT_001 checklist · 0/128 · HELD 
 | 617F784E LOCKED | PASS | 0/1 | 0 | no keep-GPU string; Evict embed → EXIT=NULL or AV VA=-1 |
 | 1EFF8608 keepGPU | FAIL POST_LOAD | 0 | 0 | keep-GPU regresses session |
 | 23B5115F keepGPU | OPEN+pin | 0 | 0 | bad_alloc 0xE06D7363 @ ProductRun before ENTER |
+| 9181073D keepGPU | PASS auth=1 | 0 | 0 | OPEN closed; STREAM SEH 0xE06D7363 TOK=0 |
+| CC621549 keepGPU | PASS auth=1 | 0 | 0 | gemma OPEN closed; stream not durable |
 
-`NEXT_OWNER=PRODUCTRUN_BAD_ALLOC_AFTER_KEEPGPU` · `DURABLE=0` · `CROSS_SHA_CREDIT=0` · `TIP_CLIMB=HOLD`
+`NEXT_OWNER=PRODUCTRUN_STREAM_AFTER_AUTHPASS` · `DURABLE=0` · `CROSS_SHA_CREDIT=0` · `TIP_CLIMB=HOLD`
 
 PROMOTE=0 until all 128 gates PASS with independent sign-off.
