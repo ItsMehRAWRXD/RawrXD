@@ -255,26 +255,41 @@ wit.modelInferenceCalls++;
         std::string plan = a.session.lastPlan;
         if (plan.size() >= 2 && plan.front() == '"' && plan.back() == '"')
             plan = plan.substr(1, plan.size() - 2);
-        /* Chat-style force: bare "JSON:" suffix produced all-<unk> on TinyLlama. */
+        /* M3: do NOT partial-prefill {"tool": — TinyLlama then emits <unk>×N
+           (G08-01). Ask for a full JSON object; cancel on unk streak. */
         std::string prompt =
+            "<|system|>\n"
+            "You are a tool router. Output one JSON object only.\n"
             "<|user|>\n"
-            "Reply with ONLY this JSON (no other text): "
-            "{\"tool\":\"read\",\"path\":\"README.md\"}\n"
+            "Return exactly: {\"tool\":\"read\",\"path\":\"README.md\"}\n"
             "Task: " + plan + "\n";
         if (!observation.empty())
             prompt += "Observation: " + observation.substr(0, 400) + "\n";
-        prompt += "<|assistant|>\n{\"tool\":";
-        fprintf(stderr, "[AGENT_MODEL] prompt='%s' EARLY_VALID_ARM=1 TOOL_FORCE=1\n",
+        prompt += "<|assistant|>\n";
+        fprintf(stderr, "[AGENT_MODEL] prompt='%s' EARLY_VALID_ARM=1 NO_JSON_PREFILL=1\n",
                 prompt.c_str());
         fflush(stderr);
-        /* Prefill counted toward parse only — completion continues after. */
-        modelOutput = "{\"tool\":";
+        modelOutput.clear();
+        uint32_t unkStreak = 0;
+        Deep2::TokenCallback agentCbUnk = [&](int32_t tokenId, const std::string& tok) -> bool {
+            if (tok == "<unk>" || tokenId == 0) {
+                ++unkStreak;
+                if (unkStreak >= 8) {
+                    fprintf(stderr, "[AGENT_MODEL] UNK_STREAK_ABORT n=%u\n", unkStreak);
+                    this->engine.requestCancel();
+                    return false;
+                }
+            } else {
+                unkStreak = 0;
+            }
+            return agentCb(tokenId, tok);
+        };
         Deep2::GenerationOptions opts{};
         opts.maxTokens = decideCap;
         opts.temperature = 0.0f;
         opts.topK = 1;
         opts.seed = 42;
-        auto gr = this->engine.generateStreamReceipt(prompt, opts, agentCb);
+        auto gr = this->engine.generateStreamReceipt(prompt, opts, agentCbUnk);
         fprintf(stderr,
             "GENERATED_TOKENS=%llu\nTOKEN_COMMIT_PASS=%d\nAGENT_DECIDE_TOKENS=%u\nEARLY_VALID=%d\n",
             (unsigned long long)gr.generatedTokens,
