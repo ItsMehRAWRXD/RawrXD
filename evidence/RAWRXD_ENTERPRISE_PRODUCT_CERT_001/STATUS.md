@@ -1,23 +1,25 @@
 # RAWRXD_ENTERPRISE_PRODUCT_CERT_001
 
-**Version:** 1.0 · **ASOF:** 2026-11-13T22:16-05:00  
+**Version:** 1.0 · **ASOF:** 2026-11-13T22:22:48-05:00  
 **Objective:** Production-ready fully local AI workstation certification (CLI + Win32 GUI + native inference + autonomous coding + Sunshine).
 
 | Field | Value |
 |-------|-------|
 | Checklist verified PASS | **0 / 128** |
 | Checklist % | **0%** |
+| EVIDENCE_PARTIAL | **3** (G01-01..G01-03 SELF_MEASURE; ≠ PASS) |
 | Scoreboard maturity (separate) | CLI **67** · GUI **48** · OVERALL **48** (`VALUATION_SCOREBOARD_CANON`) |
 | Release | **HELD** |
 | PROMOTE | **0** |
 | CERTIFIED | **0** |
 | INVENT_PASS | **0** |
+| Candidate GIT_SHA | `3d0928e748885a20968d9f3283c7faf720ec8c05` |
 
 ## Law
-See `LAW.txt`. `NOT_RUN != PASS`. Scoreboard ≠ checklist. Cross-SHA credit forbidden for PASS.
+See `LAW.txt`. `NOT_RUN != PASS`. `EVIDENCE_PARTIAL != PASS`. Scoreboard ≠ checklist. Cross-SHA credit forbidden for PASS.
 
 ## Matrix
-`GATE_MATRIX.csv` — all 128 gates seeded `RESULT=NOT_RUN`.
+`GATE_MATRIX.csv` — 125 `NOT_RUN` · 3 `EVIDENCE_PARTIAL` · 0 `PASS`.
 
 ## Priority blockers (engineering record → checklist)
 | Blocker | Maps near | Status |
