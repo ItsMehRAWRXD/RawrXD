@@ -1,0 +1,43 @@
+LLAMA32_HEAP_OPEN_ROOTCAUSE_001
+ASOF_LOCAL=2026-11-13T22:12:30-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0
+PRIOR_EXE_SHA256=7FD1F27095388585D03DFB68C70E033B126D6406E8DE23C4F21F10D1EF8323C6
+HASH_VERIFY_THIS_SESSION=PASS
+MODEL=models/llama3.2-3b-Q2_K.gguf
+HOST_DECODE=0 GPU_RESIDENT_TARGET=1 TIP_STILL_6754=1
+DURABLE=0
+
+## This-session exclusive proof (2 consecutive TOK=0)
+PRE: killed concurrent RawrXD-Win32IDE_tip_land_avfix081 (WS~1GB) before run2; run1 had concurrent Vulkan competitor.
+| Run | PID | TOK | SEH | EXIT | WALL_MS | Last stderr |
+|-----|----:|----:|----:|------|--------:|-------------|
+| 220949 | 41600 | 0 | 0 | NULL | 65767 | ElasticResidencyManager WARNING: tensor 'token_embd.weight' already registered |
+| 221127 | 36684 | 0 | 0 | NULL | 9899 | ElasticResidencyManager WARNING: tensor 'token_embd.weight' already registered |
+
+STREAM=NOT_REACHED (no GENERATE_STREAM_ENTER)
+PRODUCT_DEEP2_OPEN_SEH=0 INFER_STREAM_SEH=0 (markers not reached / not emitted)
+WER_FOR_THESE_PIDS=0 (no Id=1000 hit for qdim077 this window)
+CRASHDUMP_FOR_THESE_PIDS=0 (latest qdim077 dump remains 2026-11-13 21:42:17)
+OUT_TAIL_BOTH=ELASTIC_DYNAMIC warm/staged/hot … L=28 then hard stop
+
+## Root cause class (fail-closed)
+SITE=elastic open / ElasticResidencyManager after PIN_BUDGET_SET ENGINE_MAX_HOT
+TRIGGER_MARK=duplicate register of token_embd.weight (tied-embed / lmHead path)
+ABORT_MODE=EXIT=NULL hard abort before PRODUCT_OPEN stream (OPEN path)
+PRIOR_WER_CLASS=0xC0000374 STATUS_HEAP_CORRUPTION (ntdll) on earlier 077/081/082 windows — compatible with heap corruption at elastic open; not re-logged for 220949/221127
+INTERMITTENT_PRIOR_TOK_GT0=214122/214623 NOT durable close
+MULTI_FAMILY_QDIM077_M2_002 MF4/4 NOT durable close this window
+CONTROLLING_SEAL=MULTI_FAMILY_LLAMA32_QDIM077_001.txt OPEN DURABLE=0
+
+## Private cand note (immutable; not tip)
+Earlier qdim081/082 private cands: open hygiene improved OPEN_SEH=0 but stream AV remained; TOKEN_SURVIVED=0.
+Do not invent 077 PASS from private cand progress.
+
+## Disposition
+DURABLE_TOKEN_SURVIVED=0
+MF_4OF4=0
+REJECT_INVENT_GUI_RAISE=1
+PROPOSE_GUI_PCT=48 DELTA=0
+TIP_CLIMB=HOLD
+PROMOTE=0
+END
