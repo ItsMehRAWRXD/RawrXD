@@ -1,0 +1,66 @@
+GPU_PARITY_ATTN_PRE_O_POS1_T2_KERNEL_001
+IMMUTABLE_RECEIPT=1
+DATE=2026-11-13
+ASOF_LOCAL=2026-11-13T22:20:00-05:00
+OWNER=M1_ATTN_PRE_O_POS1_T2_KERNEL
+PACK=PRODUCTION_MATURITY_TOP25_001 / GUI_TOP25_VALUATION_001/gpu
+PROMOTE=0
+TIP_CLIMB=HOLD
+INVENT_PASS=0
+NOT_RUN!=PASS
+CERTIFIED=0
+ATTN_PRE_O_0_POS1_CLOSED=0
+JOINT_PCT_WRITE=0
+PARENT_PCT_WRITE=0
+SCOREBOARD_REWRITE=0
+TIP_BIND=6754616E
+CLI_BOARD_TIP_PIN=15A119D1
+
+## Parent authority (immutable; not rewritten)
+GPU_PARITY_ATTN_PRE_O_CLOSE_001.txt ATTN_PRE_O_0@pos0 BITEXACT CLOSED
+GPU_PARITY_ATTN_PRE_O_POS1_001.txt OPEN maxAbs=2.292544e-05 DELTA=0 on C7402085
+BOARD_SINGLE_WRITER / JOINT_STATUS_LIVE controlling PCT untouched
+HOLD tip6754 / 15A119 untouched
+
+## Scope
+Isolate llama kqv_out T=2 vs host AttentionWithCache SDPA after POS1_001.
+PRODUCT_EXE pin C7402085 (rawr_gpufwd_C7402085 / product-wire) FORCE=0
+HOTPATH_GEMV=VULKAN HOST_ATTN=CPU AttentionWithCache RAWRXD_GPU_FWD=0
+
+## Offline isolation (matched REF dumps)
+GPU=FIRST_DIVERGE_001/stage_dump_attn_pre_o_product_wire
+REF=FIRST_DIVERGE_001/stage_dump_ref_matched
+Q/K/V@pos1 INPUT_IDENTICAL under TOL (best-match REF n2048/n256):
+  Q_POST maxAbs=9.536743e-07
+  K_POST pos0/pos1 maxAbs<=9.536743e-07
+  V pos0/pos1 maxAbs<=9.313226e-09
+ATTN_PRE_O_0@pos1 product vs REF: maxAbs=2.292544e-05 @idx524 n_gt=476
+
+## Numerics
+1) f16(softmax(Q@K_f16)@V_f16) on GPU operands BITEXACT == product ATTN_PRE_O dump
+2) Same formula on matched REF Q/K/V BITEXACT == product dump (≠ REF kqv_out)
+3) Host variant sweep (fp32 KV, f16 Q, softcap30, prescale-Q, score_f16, w_f16,
+   acc_f64, flash-online, nof16out) — none under TOL; best nof16out≈2.013892e-05
+4) Oracle convex fit f16(w·V0+(1-w)·V1) floor≈7.592e-06 still >1e-6
+5) Canonical GQA map (q_head=out_head, kv=h//8) is best; layout not the owner
+6) llama graph owner: llama-graph.cpp build_attn_mha → cb(kqv_out)
+   (soft_max_ext+mul_mat or flash_attn_ext; REF probe n_gpu_layers=0)
+
+## Before / after
+BEFORE (POS1_001 board OPEN): maxAbs=2.292544e-05
+AFTER (this isolation; no product patch): maxAbs=2.292544e-05
+DELTA=0
+MINIMAL_FIX_APPLIED=0 (fail-closed; host SDPA family cannot close)
+
+## Verdict
+ROOT_CAUSE_CLEAR=1
+ROOT=LLAMA_GGML_KQV_OUT_T2_KERNEL_NUMERICS_NE_HOST_ATTENTIONWITHCACHE_SDPA
+IRREDUCIBLE_HOST_SDPA=1
+ATTN_PRE_O_0_POS1_CLOSED=0
+UNDER_TOL=0
+UNDER_ATTN_CLASS_TOL_1e-4=1 (2.292544e-05 < 1e-4; absorb = parent-only)
+NEXT_GATE=ATTN_PRE_O_POS1_GGML_KERNEL_PORT_OR_CLASS_TOL_ABSORB
+≠ PERFORMANCE_PASS ≠ tip-land ≠ CANON/LIVE/JOINT PCT write
+PROMOTE=0
+TIP_CLIMB=HOLD
+END
