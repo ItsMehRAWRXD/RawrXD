@@ -1,0 +1,3 @@
+METHOD=CONTROL_RAWR_RUN
+MODEL=tinyllama.gguf
+NOTE=markdown JSON emit OK outside agent decide; not MODEL_SELECTED seal

@@ -2,7 +2,7 @@
 
 ```text
 PACK=MOVES_1_COMPLETE_001
-ASOF_LOCAL=2026-11-14T09:40:00-05:00
+ASOF_LOCAL=2026-11-14T10:05:00-05:00
 PROMOTE=0 CERTIFIED=0 ENTERPRISE=0/128
 GATE_STOP=1 TIP_CLIMB=HOLD
 INVENT_PASS=0 NOT_RUN!=PASS CROSS_SHA_CREDIT=0
@@ -84,19 +84,20 @@ Legal under STOP: disposition/docs only. Forbidden: rainbow live search, tip cli
 ## MODEL_SELECTED unforced agent
 
 **Pack:** `evidence/CLI_AGENT_MODEL_SELECTED_001/`  
-**Disposition:** `FAIL` (honest)
+**Disposition:** `FAIL` (honest)  
+**Methods:** A via `-p` + HOST_DECODE; B phi3 + llama3.2; C held (pin)
 
 | Criterion | Result |
 |-----------|--------|
-| SHA 9797521C only | SHA_MATCH=1 |
+| SHA 9797521C only | SHA_MATCH=1 (tip restored from pin) |
 | No RAWR_AGENT_FORCE_TOOL | ABSENT |
 | MODEL_LOADED=1 | 1 |
 | MODEL_SELECTED_TOOL=1 | **0** |
 | tool exec + observation | DETERMINISTIC_TOOL_READ fallback only (≠ model-selected) |
-| verifiable task close | EXIT=-1; parse FAIL (no JSON `"tool"` key) |
+| verifiable task close | no model-selected tool; agent decide → Python/prose |
 
-Blocker: TinyLlama does not emit tool-JSON → `MODEL_SELECTED_TOOL` never arms.  
-Next owner: `MODEL_SELECTED_AGENT` (tool-schema compliance or stronger instruct model on same SHA).
+Blocker: `AGENT_DECIDE_PROMPT_NO_QUOTED_TOOL_JSON_ON_9797521C` — frozen agent chat prompt yields Python/`tool=path`; stronger GGUFs fail; `rawr run` can emit JSON ≠ agent seal.  
+Next owner: `MODEL_SELECTED_AGENT` (EXE Method A/C beyond pin, or GGUF that emits quoted tool JSON under frozen prompt).
 
 ---
 
