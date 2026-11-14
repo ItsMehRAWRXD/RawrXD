@@ -1,0 +1,28 @@
+BR_CLI_TIP_15A119_PIN_VERIFY_001
+ASOF_LOCAL=2026-11-13T21:35-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0
+PRIOR_SHELL=87140 (recurse hash crashed mid-run after partial MATCH)
+
+## Controlling pin
+NEED_SHA256=15A119D148572A4B3011AA9A8AFFE605F8FF40D64B7BF83673ECC10A9393C967
+
+## Measured
+rawr_tip_15A119_HOLD.exe SHA=15A119… MATCH=1 LEN=10723328
+rawr_gpufwd_15A119D1.exe SHA=30DCB4B12DCA0F13… MATCH=0 LEN=10744320
+  NOTE=filename still says 15A119D1 but content DRIFTED — do not use as controlling pin
+ALSO_MATCH=rawr_unify.exe; zip/r37_stage/bin/rawr.exe; zip/r38_stage/bin/rawr.exe
+
+## Strings on HOLD pin (re-verified 21:37; not product PASS)
+deep2_agentic_loop=ABSENT
+FORCE_TOOL=ABSENT
+RAWR_AGENT_FORCE_TOOL=ABSENT
+NOTE=earlier findstr PRESENT was false lead; BR_M3M4 + parent recheck ABSENT
+edit-build-test=ABSENT
+
+
+## Disposition
+CLI_CONTROLLING_EXE=build_ninja/bin/rawr_tip_15A119_HOLD.exe
+REJECT_USE_DRIFTED_gpufwd_15A119D1_AS_PIN=1
+ISSUE49_deep2_agentic_loop=ABSENT (aligns R47 PRODUCT_PASS=0)
+PROMOTE=0
+END

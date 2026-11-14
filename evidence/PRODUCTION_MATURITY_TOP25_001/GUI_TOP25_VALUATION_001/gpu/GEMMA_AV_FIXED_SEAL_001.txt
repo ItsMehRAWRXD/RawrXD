@@ -1,0 +1,65 @@
+GEMMA_AV_FIXED_SEAL_001
+ASOF_LOCAL=2026-11-13T21:44:00-05:00
+PROMOTE=0
+TIP_CLIMB=HOLD
+INVENT_PASS=0
+CROSS_SHA_CREDIT=0
+TIP_BIND=6754616E
+TIP_STILL_6754=1
+NO_JOINT_PCT=1
+
+## Controlling fault (immutable prior)
+PRIOR=GEMMA_AV_FAULT_001
+PRIOR_EXE=clean_link/RawrXD-Win32IDE_gemma_avfault078.exe
+PRIOR_EXE_SHA256=9E947FB735C9C88E6F696BB4F60F1F69A7118D4CC4D9B9C95DCEC526CD77E714
+PRIOR_CODE=0xC0000005 READ
+PRIOR_MAP_SYMBOL=?WeightContentFingerprint@VulkanCompute@CPUInference@@SA_KPEBX_K@Z
+PRIOR_MAP_OBJ=InferenceEngine_noforce064:vulkan_weight_window.cpp.obj
+PRIOR_OFF=+0x3D
+PRIOR_TOK=0 PRIOR_SEH=1
+
+## Fix site
+FILE=src/vulkan_weight_window.cpp
+FN=VulkanCompute::WeightContentFingerprint
+GUARD=VirtualQuery null/empty/unmapped host window → return 0 (never AV READ)
+ALSO=src/vulkan_weight_prefetch.cpp PrefetchWeight: key==0 → return false (no staging memcpy)
+ALSO=src/vulkan_weight_window.cpp EnsurePinnedPackedWeight / StreamWeightToSlot: fp/key==0 fail-closed
+LINEAGE=qdim077 GpuForward (qDim=lw.wq.rows; oIn=wo.cols) + guarded window/prefetch objs + SEH TU
+BUILD=clean_link/obj079_avfix/build079.bat + mk_link079.ps1
+LIB=InferenceEngine_avfix079.lib (from qdim077; /REMOVE window+prefetch; inject objs)
+
+## Measure (exclusive; kill competing RawrXD-* first)
+EXE=clean_link/RawrXD-Win32IDE_gemma_avfix079.exe
+EXE_SHA256=132AB70044A89F556FE87C8E6C5811AE30940ABC8E773A7FAA41F23FC6050D5A
+SHA16=132AB70044A89F55
+MODEL=models/gemma3-1b-Q2_K.gguf
+WITNESS=ide_mf_avfix079_gemma3_132AB70044A89F55_20261113_214301
+GENERATED_TOKENS=8
+TOKEN_SURVIVED=1
+INFER_STREAM_SEH=0
+PRODUCT_OPEN_PASS=1
+GPU_RESIDENT=1
+HOST_DECODE=0
+GPU_ARENA_WINDOW_FAIL=0
+WALL_MS=38337
+ENV=WEIGHT_BUDGET_MIB=8192 DEEP2_WEIGHT_BUDGET_MIB=8192 GPU_POLICY=SOLO DUALSTICK=0
+
+## Root (why packed/weights VA was unmapped)
+1) SEH site = PrefetchWeight → WeightContentFingerprint READ of non-null unmapped host VA
+   (FAULT_001 AV_va class; not invent).
+2) Related gemma geometry class (CLI DIAGNOSIS.md / qdim077): noforce064 GpuForward used
+   Q rows=H (1152) vs ArenaQ sized qDim=1024 → hostile GPU forward on gemma3; qdim lineage
+   required for TOK>0 (SOURCE_WIRED in Deep2Engine_GpuForward.cpp).
+3) Concurrent RawrXD-* (observed live qdim077 PID during both avfix attempts) contends VRAM /
+   weight-window init → GPU_ARENA_WINDOW_FAIL / EXIT=NULL remasure flake; exclusive kill required.
+4) Fail-closed VirtualQuery stops fingerprint AV; PrefetchWeight must not memcpy when key==0.
+   Unmapped host window at PrefetchWeight is the direct READ cause; qDim + exclusive clears
+   the product path to TOK>0.
+
+## Disposition
+DISPOSITION=FIXED_SEAL
+INFER_STREAM_SEH=0
+GENERATED_TOKENS=8
+PROMOTE=0
+NEXT=absorb private cand only under separate tip-land authority; tip 6754616E untouched
+END

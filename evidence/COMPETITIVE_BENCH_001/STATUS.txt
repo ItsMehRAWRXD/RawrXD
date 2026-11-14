@@ -1,67 +1,62 @@
-﻿COMPETITIVE_BENCH_001
-ASOF_LOCAL=2026-11-13T16:32:22-05:00
+COMPETITIVE_BENCH_001
+ASOF_LOCAL=2026-11-13T19:26:19-05:00
 PROMOTE=0
 CERTIFIED=0
 INVENT_PASS=0
 CROSS_SHA_CREDIT=0
 NOT_RUN!=PASS
-HEAD_TO_HEAD=NOT_SEALED
+HEAD_TO_HEAD=SEALED_MATCH_OPEN
 TIP_CLIMB=HOLD
 COMPETITIVE_PASS=0
-MINIMAX_QC_EXCLUSIVE=1 (AL10 HOLD — FreePhys≈28.7GB; no giant MoE this pack)
+MINIMAX_QC_EXCLUSIVE=1 (AL10 HOLD — MiniMax REAP EXIT=12; Qwen MoE exclusive TOKEN_SURVIVED separate CLI CAT8)
 
 PURPOSE
   Independent competitive testing inventory + smallest runnable smoke.
   Do not invent benchmark PASS. Empty EXIT / null-agent 0% ≠ competitive win.
 
-## Tip CLI vulkan (product-owned; 2026-11-13T16:32:22)
-EXE=build_ninja\bin\rawr.exe
-EXE_SHA=78435C9B42FD7C268EACC815BE159CC5E8905C7093AC065540930CA37C5F429D
+## Tip CLI vulkan 15A119 R37 (2026-11-13T19:26:19)
+EXE=build_ninja\bin\rawr_gpufwd_15A119D1.exe
+EXE_SHA=15A119D148572A4B3011AA9A8AFFE605F8FF40D64B7BF83673ECC10A9393C967
 CMD=rawr run models\tinyllama.gguf -p 2+2= --max-tokens 4 --vulkan
-ENV=RAWRXD_ALLOW_GPU=1 RAWR_FORCE_GPU=1 RAWR_NO_CPU_FALLBACK=1 HOST_DECODE unset
-LOG=logs/cli_vulkan_tip_20261113_163222.*
-DECISION=VulkanPrimary
-HOST_DECODE=0 ALLOW_GPU=1 GPU_RESIDENT=1
-STDOUT=Yes, 2
-DISPOSITION=PASS_RUNTIME (product GPU CLI path; ≠ full COMPETITIVE_PASS)
+HOST_DECODE=0 ALLOW_GPU=1
+LOG=logs/cli_vulkan_tip_15A119_R37_20261113_192551.*
+DISPOSITION=PASS_RUNTIME GEN=4 EXIT=0
+COMPETITIVE_PASS=0
+PROMOTE=0
+
+## H2H local dual R37
+LOG=../PRODUCTION_MATURITY_TOP25_001/CLI_TOP25_VALUATION_001/match/h2h_tiny_local_dual_R37.FINAL.meta.txt
+MATCH=0 TIP_UNK_REF_ALPHA
+CONTROLLING_PRIOR=h2h_llama32/phi3 coherent BOTH_ALPHA_EN MATCH=0 CAT11=55
 
 ## Prior suite run (2026-11-13T14:50:45) — COMPETITIVE_PASS=0
 SCRIPT=benchmarks/competitive/Run-CompetitiveBench.ps1
 LOG=logs/run_competitive_bench_20261113_145044.out.txt
-
-| Suite | Disposition | EXIT/note | Evidence |
-|-------|-------------|-----------|----------|
-| cli_vulkan_tip (NEW) | PASS_RUNTIME | VulkanPrimary; OUT=Yes, 2 | logs/cli_vulkan_tip_20261113_163222.* |
-| terminal_bench (stub→terminal_gate v5) | PASS | fail_count=0; ConPTY compile+run PASS | logs/terminal_bench_20261113_145045_out.txt |
-| cli_status | PASS | 9/9 kernels | logs/cli_status_20261113_145055_out.txt |
-| cli_validate | FAIL | 1/2; RMSNorm FAIL; ResidualAdd PASS | logs/cli_validate_20261113_145055_out.txt |
-| cli_benchmark | PARTIAL | RMSNorm+ResidualAdd timed; LayerNorm+Q4K SKIPPED | logs/cli_benchmark_20261113_145056_out.txt |
-| cli_health | PASS | Quick Test PASSED | logs/cli_health_20261113_145056_out.txt |
-| ide_entrypoint_present | FAIL | TIMEOUT --help 5s | logs/ide_entrypoint_present_20261113_145056_meta.json |
-| ide_bench | PRESENCE_OK | binary present; GUI_E2E=NOT_RUN | logs/ide_bench_presence_meta.json |
-| coding_task | FAIL | intentional multi-error fixture; autofix NOT_RUN | logs/coding_task_multierror_calc.txt |
-| game_dev | NOT_RUN | no game fixtures | logs/game_dev_meta.json |
-| External IDE-Bench / Terminal-Bench pkgs | NOT_RUN | NOT_IN_TREE | — |
-| SWE-bench --real-agent | NOT_RUN | needs live model | prior null-agent 0.0% ≠ PASS |
-| Ollama/vLLM/llama.cpp H2H | NOT_RUN | HEAD_TO_HEAD=NOT_SEALED | — |
+NOTE=Suite matrix unchanged; product-owned vulkan tip refreshed on 15A119 R37.
 
 OPEN (product-owned drive-to-EXIT=0 remaining)
   cli_validate RMSNorm
   ide --help contract / timeout
   coding autofix agent path
-  peer H2H + SWE real-agent (optional for local-only complete)
-
-AUTHORITY
-  Valuation: PRODUCTION_MATURITY_TOP25_001/VALUATION_TOP25_CLI_GUI_001
-  Recognition: PRODUCTION_MATURITY_TOP25_001 (TOP25_RECOGNITION=NOT_READY)
-
-## GPU arm table (CLI_VULKAN_SMOKE — fail-closed)
-| Arm | HOST_DECODE | VK | CLEAN_EXIT | GENERATED_TOKENS | MATCH | Credit |
-|-----|-------------|----|------------|------------------|-------|--------|
-| TinyLlama rawr | 0 | VulkanPrimary | 1 | 8 | 0 vs llama-cli | PASS_RUNTIME |
-| TinyLlama llama-cli -ngl99 | n/a | R9700 | 1 | >0 | ref | compare only |
-WITNESS=../PRODUCTION_INFERENCE_CERT_001/CLI_VULKAN_SMOKE_001/
-HOST_ONLY=INVALID
-COMPETITIVE_PASS=0
+  peer H2H semantic MATCH + SWE real-agent (optional for local-only complete)
 
 PROMOTE=0 · TIP_CLIMB=HOLD · CERTIFIED=0 · COMPETITIVE_PASS=0
+## Tip CLI vulkan 15A119 R38 (2026-11-13T19:41)
+EXE=build_ninja\bin\rawr_gpufwd_15A119D1.exe
+EXE_SHA=15A119D148572A4B3011AA9A8AFFE605F8FF40D64B7BF83673ECC10A9393C967
+CMD=rawr run models\tinyllama.gguf -p 2+2= --max-tokens 4 --vulkan
+HOST_DECODE=0 ALLOW_GPU=1
+LOG=cli_vulkan_tip_15A119_R38.meta.txt
+DISPOSITION=PASS_RUNTIME GEN=4 EXIT=0
+COMPETITIVE_PASS=0
+MATCH=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+## A7 pointer (scaffold + open-gaps; no peer scores; no PARENT PCT)
+MATRIX=../PRODUCTION_MATURITY_TOP25_001/COMPETITIVE_25_PRODUCT_MATRIX_001/MATRIX.md
+OPEN_GAPS=../PRODUCTION_MATURITY_TOP25_001/COMPETITIVE_25_PRODUCT_MATRIX_001/OPEN_GAPS_MATRIX.md
+RAWRXD_FILLED=12 RAWRXD_NOT_RUN=0 PEER_NOT_RUN=288
+INVENT_PEER_SCORE=0 COMPETITIVE_PASS=0 PROMOTE=0 LIVE=0 CANON=0
+CANON_OVERALL_ACK=48=min(CLI67,GUI48) PARENT_PCT_WRITE=0
+TOP5=CLI_DAP15Δ85 · GUI_LSP20Δ80 · GUI_AGENTIC_EDIT25Δ75 · GUI_PKG30Δ70 · TIP6754_GPU_RESIDENT=0

@@ -1,0 +1,101 @@
+PRODUCTION_MATURITY_TOP25_001 — CLI_TOP25 R49 PARENT-MERGEABLE CAT6 DAP HOLD
+ASOF_LOCAL=2026-11-13T21:37:30-05:00
+PROMOTE=0 TIP_CLIMB=HOLD NOT_RUN!=PASS INVENT_PASS=0 CLAIM_CAT6_100=0
+HOST_DECODE=0 CLOUD=0 CLOUD_MANDATORY=0
+TIP_SHA256=15A119D148572A4B3011AA9A8AFFE605F8FF40D64B7BF83673ECC10A9393C967
+TIP_EXE=build_ninja/bin/rawr_tip_15A119_HOLD.exe
+TIP_HASH_VERIFY=PASS
+PATH_NOTE=filename rawr_gpufwd_15A119D1.exe currently SHA=30DCB4…; canon measure used HOLD pin
+build_win32ide_*=UNTOUCHED
+CLI_CAN_FINISH_WITHOUT_GUI=1
+NO_LIVE_WRITE=1
+NO_JOINT_WRITE=1
+NO_PARENT_WRITE=1
+PARENT_MERGEABLE=1
+CROSS_SHA_CREDIT=0
+
+## Authority cited (A7 #1 maturity Δ=85)
+AUTH_FLOOR=runs/R46_COMBINED_MERGE_SEAL.txt  (CAT6=15 SUM=811 CLI_PCT=67)
+AUTH_HELD=runs/R46_HELD_DISPOSITIONS.txt     (CAT6_DEBUGGER=DAP_CLI=ABSENT holds 15)
+PRIOR_META=runs/debugger_cli_tip_15A119_R44.meta.txt
+             runs/debugger_cli_tip_15A119_R43.meta.txt
+             runs/debugger_cli_tip_15A119_R38.meta.txt
+A7_RECEIPT=../board_receipts/BR_A7_TOP5_FOLLOWUP_001.txt
+GOAL=measured DAP_CLI WaitForDebugEvent / BP hit / step on controlling tip
+
+## Measured this round (fail-closed)
+RUN_ID=R49_DEBUGGER_A4_20261113_213658
+META=runs/debugger_cli_tip_15A119_A4_20261113_213658.meta.txt
+META_ALIAS=runs/debugger_cli_tip_15A119_R49.meta.txt
+WITNESS=
+  runs/debugger_help_a4_20261113_213658.*
+  runs/debugger_dap_a4_20261113_213658.*
+  runs/debugger_debug_a4_20261113_213658.*
+  runs/debugger_dap_bare_a4_20261113_213658.*
+  runs/debugger_status_a4_20261113_213658.*
+  runs/debugger_debughelp_a4_20261113_213658.*
+
+HELP_HAS_DEBUG=0
+HELP_HAS_DAP=0
+DAP_CLI=ABSENT
+DAP_ADAPTER_SIBLING_PRESENT=0
+RUNTIME_REACHED=NOT_RUN
+WaitForDebugEvent_STRING_IN_TIP=0
+WaitForDebugEvent_RUNTIME=0
+BP_HIT=0
+STEP_HIT=0
+BP_STEP_VARS=NOT_RUN
+SESSION_REAL=0
+SOURCE_WIRED=0   # tree has rawr_commands.cpp CmdDebug; tip binary does not export it
+SOURCE_WIRED_NE_RUNTIME_REACHED=1
+
+CMD_PROBES (all EXIT=1 → PrintUsage; no debug front door):
+  debug dap | debug | dap | debug status | debug help
+
+## HOLD reason (≠ invent raise)
+CAT6_RAISE=0
+CAT6_PCT_HOLD=15
+CAT6_PCT_CAND=15
+REJECT_INVENT_CAT6_100=1
+REJECT_CROSS_SHA_30DCB4_CREDIT=1
+  (peer rawr_gpufwd_30DCB4B1 has `rawr debug` front door + DAP_PROBE but
+   DAP_ADAPTER_PRESENT=0 and no WFDE/BP/step E2E; controlling SHA remains 15A119)
+REJECT_EXTERNAL_WFDE_AS_DAP_CLI=1
+  (harness WaitForDebugEvent against tip-as-debuggee ≠ product DAP_CLI)
+
+BLOCKER=DAP_CLI=ABSENT on tip 15A119D1; TIP_CLIMB=HOLD forbids tip rebuild
+NEXT_GATE=TIP_CLIMB_OR_DAP_CLI_BIND_ON_CONTROLLING_SHA
+  then measure WaitForDebugEvent + BP_HIT + STEP before any Cat6 raise
+
+## Proposed arithmetic only (parent merge; peer does not write PCT)
+PRIOR_R46_SUM=811
+PRIOR_CAT6=15
+DELTA_CAT6=+0
+PROPOSED_SUM=811
+PROPOSED_CLI_SCORE_PCT=floor(811/12)=67
+PROPOSED_CLI_PCT=67
+DELTA_VS_R46_FLOOR_67=+0
+PROPOSED_OVERALL_BASIS=min(67,48)=48  (GUI read-only; no JOINT write)
+CLI_COMPLETE=0
+JOINT_COMPLETE=0
+
+IF_FUTURE_E2E_EARNED (not this round; illustrative only; NOT applied):
+  IF DAP_CLI=PRESENT && WaitForDebugEvent_RUNTIME=1 && BP_HIT=1 && STEP_HIT=1
+  THEN CAT6_PCT_CAND<=55 (reject invent 100) → SUM<=811-15+55=851 → floor(851/12)=70
+  ELSE HOLD 15
+
+## Explicit rejects
+REJECT_INVENT_PASS=1
+REJECT_INVENT_CAT6_100=1
+REJECT_PARENT_PCT_EDIT_BY_PEER=1
+REJECT_JOINT_WRITE=1
+REJECT_TIP_CLIMB=1
+REJECT_CROSS_SHA_TOOL_CREDIT=1
+REJECT_CLAIM_OVERALL_100=1
+
+## Rollup
+SEAL_KIND=PARENT_MERGEABLE_HOLD
+MEASURED_NEW_CATEGORY_CLOSE_THIS_ROUND=0
+CAT6_DEBUGGER=@15 HOLD (remeasure confirms R46)
+PROMOTE=0 TIP_CLIMB=HOLD
+END

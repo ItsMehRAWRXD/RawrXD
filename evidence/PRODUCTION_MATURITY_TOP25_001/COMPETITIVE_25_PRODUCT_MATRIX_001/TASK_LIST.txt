@@ -1,0 +1,23 @@
+TASK_LIST — identical axes (CAT1–CAT12)
+ASOF_LOCAL=2026-11-13T20:55:00-05:00
+AUTH=CLI_TOP25_VALUATION_001 LAW + VALUATION_CLI.txt
+N_TASKS=12
+PROMOTE=0
+
+T01=CAT1 Install (local build→product)
+T02=CAT2 Install docs honesty
+T03=CAT3 Distribution channel
+T04=CAT4 Agentic CLI / agent surface
+T05=CAT5 Terminal / ConPTY
+T06=CAT6 Debugger / DAP
+T07=CAT7 Local GPU decode Dense
+T08=CAT8 Local GPU decode MoE
+T09=CAT9 REAP export
+T10=CAT10 Recovery
+T11=CAT11 Competitive GPU canaries / H2H
+T12=CAT12 Offline autonomy
+
+RULE=Every product row uses the same T01–T12 columns.
+PEER_DEFAULT=NOT_RUN
+RAWRXD_FILL=SEAL_CITED only when a seal path exists (see RAWRXD_SEAL_INDEX.txt)
+END

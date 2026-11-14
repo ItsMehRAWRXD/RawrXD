@@ -1,0 +1,57 @@
+LINEAGE_PIN_23A0_AND_GEMMA_FAULT_001
+ASOF_LOCAL=2026-11-13T21:32:00-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 CLAIM_OVERALL_100=0
+PURPOSE=Answer "23A0E7A2 branch/commit + Gemma crash stack" for source-targeted fixes
+
+## Git (source tree)
+BRANCH=work/v0-first-divergence
+COMMIT=ae418355d1973b50af487cd5c084a0ff81378a64
+REMOTE_TRACKING=origin/work/v0-first-divergence
+ORIGIN=https://github.com/ItsMehRAWRXD/RawrXD.git
+NOTE=23A0E7A2 is NOT a git commit object (rev-parse fails). It is an EXE SHA16.
+
+## EXE lineage 23A0E7A2 (superseded tip-land candidate; REJECT column)
+EXE_SHA256=23A0E7A26D3F228AD019B6205619E1FE24D8420C10D7C697C7B337F501F95F99
+SHA16=23A0E7A26D3F228A
+PIN_SEAL=GUI_TOP25_VALUATION_001/gpu/TIP_LAND_FRESHENG_23A0_001.txt
+BIN_REJECT=bin/RawrXD-Win32IDE_REJECT_23A0E7A2.exe
+RECIPE=COPY_LOCKED_FRESHENG_TO_TIP_BIND (historical)
+MEASURED_ON_23A0=TOK=4 SEH=0 HOST_DECODE=0 HWND main+editor PASS; terminal/debugger/agent FAIL
+
+## Controlling tip bind (CANON — use this for GUI tip lineage)
+TIP_BIND_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431
+ROLLBACK=bin/RawrXD-Win32IDE_tip_land_6754616E.exe (RO intact)
+NOTE=Live bin/RawrXD-Win32IDE.exe may currently be qdim 7FD1F270… (RO); do not destroy 6754 rollback
+
+## Controlling CLI
+CLI_SHA256=15A119D148572A4B3011AA9A8AFFE605F8FF40D64B7BF83673ECC10A9393C967
+CLI_PCT=67 GUI_PCT=48 OVERALL=min(67,48)=48
+AUTH=VALUATION_SCOREBOARD_CANON.txt / JOINT_STATUS_LIVE.txt
+
+## Gemma INFER_STREAM_SEH fault (controlling capture)
+FAULT=GUI_TOP25_VALUATION_001/gpu/GEMMA_AV_FAULT_001/FAULT.txt
+EXE=clean_link/RawrXD-Win32IDE_gemma_avfault078.exe
+EXE_SHA256=9E947FB735C9C88E6F696BB4F60F1F69A7118D4CC4D9B9C95DCEC526CD77E714
+CODE=0xC0000005 AV_rw=READ AV_va=00000185C1CFE058
+RVA=0x1E4F4DD
+MAP_SYMBOL=?WeightContentFingerprint@VulkanCompute@CPUInference@@SA_KPEBX_K@Z
+MAP_OBJ=InferenceEngine_noforce064:vulkan_weight_window.cpp.obj
+MAP_SYM_OFF=+0x3D
+SRC=src/vulkan_weight_window.cpp :: VulkanCompute::WeightContentFingerprint
+STACK=n=16 (see FAULT.txt)
+NEXT=null/bad-ptr guard or correct weight-window bind; then gemma TOK>0 SEH=0
+
+## qDim survivor column (separate EXE; not tip6754)
+QDIM077_SHA256=7FD1F27095388585D03DFB68C70E033B126D6406E8DE23C4F21F10D1EF8323C6
+WITNESS_TOK8=ide_mf_gemma_qdim077b_gemma3_7FD1F27095388585_20261113_204436
+FIX_CLASS=GpuForward qDim=wq.rows (Deep2Engine_GpuForward.cpp)
+
+## Milestone agents dispatched (Cursor Task)
+A1=GPU hard L2 Q_PRE_ROPE
+A2=Gemma WeightContentFingerprint AV
+A3=Win32 LSP/HWND E2E
+A4=CLI agent/terminal climb
+A6=offline installer CLEAN_VM
+A7=competitive Top25 gap matrix
+PROMOTE=0
+END

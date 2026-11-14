@@ -1,0 +1,12 @@
+M1_HANDOFF_WQ_GEMV_20261113
+FOR_WORKER=e2c1f2b8
+ASOF_LOCAL=2026-11-13T20:58-05:00
+PROMOTE=0 TIP_CLIMB=HOLD
+
+PIVOT: do not chase RoPE or Q_NORM on this fixture.
+ROOT: layer0 wq/wk Vulkan LinearW GEMV vs llama (Q/K material; V≈exact).
+RECEIPT=M1_Q_PRE_ROPE_IS_Q_LINEAR_ALIAS_20261113.txt
+DUMPS=PRODUCTION_INFERENCE_CERT_001/FIRST_DIVERGE_001/stage_dump_vkspv_f28f vs stage_dump_ref_matched
+TARGET_SEAL=GPU_PARITY_Q_LINEAR_FIX_* (measured maxAbs/rel; NOT_RUN!=PASS)
+TIP_RO=6754616E private cand only; no CANON PCT write
+END

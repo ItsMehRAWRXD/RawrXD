@@ -1,0 +1,17 @@
+A1_HARD_L2_Q_PRE_ROPE_remeasure.compare
+METHOD=Deep2TensorCompare AND (abs>1e-4 && rel>1e-3)
+PAIR=stage_dump_q4kq8k_spv vs stage_dump_ref_matched
+ASOF=2026-11-13T21:34:42
+PROMPT_EMBED: FNV_DIFF=0 FUNCTIONAL_FAIL=0 MAX_ABS=0.000000e+00 MAX_REL=0.000000e+00 first_bad=None fails=0 gpu=deep2_PROMPT_EMBED_pos0_layer0_full_n2048_seq001.bin ref=llama_PROMPT_EMBED_pos0_layer0_full_n2048_seq001.bin fnvA=13123758da8b244a fnvB=13123758da8b244a
+ATTN_NORM_0: FNV_DIFF=0 FUNCTIONAL_FAIL=0 MAX_ABS=0.000000e+00 MAX_REL=0.000000e+00 first_bad=None fails=0 gpu=deep2_ATTN_NORM_0_pos0_layer0_full_n2048_seq002.bin ref=llama_ATTN_NORM_0_pos0_layer0_full_n2048_seq003.bin fnvA=b4ca919612be6c51 fnvB=b4ca919612be6c51
+V_0: FNV_DIFF=1 FUNCTIONAL_FAIL=0 MAX_ABS=4.656613e-09 MAX_REL=5.686947e-05 first_bad=None fails=0 gpu=deep2_V_0_pos0_layer0_full_n256_seq003.bin ref=llama_V_0_pos0_layer0_full_n256_seq011.bin fnvA=d896c26cc6c0e465 fnvB=d4e2dce085d5d6e4
+Q_PRE_ROPE_0: FNV_DIFF=1 FUNCTIONAL_FAIL=0 MAX_ABS=1.043081e-07 MAX_REL=6.060606e-03 first_bad=None fails=0 gpu=deep2_Q_PRE_ROPE_0_pos0_layer0_full_n2048_seq008.bin ref=llama_Q_PRE_ROPE_0_pos0_layer0_full_n2048_seq005.bin fnvA=a343b918d7653153 fnvB=8d53927ede5ddb3f
+  idx2: a=-1.537436e-02 b=-1.537436e-02 abs=2.793968e-09 rel=1.817291e-07 HARD_ELEM=0
+K_PRE_ROPE_0: FNV_DIFF=1 FUNCTIONAL_FAIL=0 MAX_ABS=8.195639e-08 MAX_REL=2.467917e-05 first_bad=None fails=0 gpu=deep2_K_PRE_ROPE_0_pos0_layer0_full_n256_seq009.bin ref=llama_K_PRE_ROPE_0_pos0_layer0_full_n256_seq015.bin fnvA=2d846feee275abff fnvB=f065873c7d34fcfd
+ATTN_OUT_0: FNV_DIFF=1 FUNCTIONAL_FAIL=0 MAX_ABS=8.446723e-05 MAX_REL=1.737320e+00 first_bad=None fails=0 gpu=deep2_ATTN_OUT_0_pos0_layer0_full_n2048_seq013.bin ref=llama_ATTN_OUT_0_pos0_layer0_full_n2048_seq063.bin fnvA=c9b6de83f1709070 fnvB=5fe8f56aa443709d
+FFN_NORM_0: FNV_DIFF=1 FUNCTIONAL_FAIL=1 MAX_ABS=1.118350e-02 MAX_REL=1.544048e+00 first_bad=9 fails=310 gpu=deep2_FFN_NORM_0_pos0_layer0_full_n2048_seq015.bin ref=llama_FFN_NORM_0_pos0_layer0_full_n2048_seq067.bin fnvA=7a52bcf3a2d4db4b fnvB=f519cbfd6d1f2cbb
+LAYER0_OUT: FNV_DIFF=1 FUNCTIONAL_FAIL=1 MAX_ABS=9.901747e-04 MAX_REL=1.673424e+00 first_bad=0 fails=1388 gpu=deep2_LAYER0_OUT_pos0_layer0_full_n2048_seq021.bin ref=llama_LAYER0_OUT_pos0_layer0_full_n2048_seq077.bin fnvA=a481b154b3d3bd27 fnvB=d1a7d1749916f1b8
+Q_PRE_ROPE_0_BEFORE: FUNCTIONAL_FAIL=1 MAX_ABS=1.941442e-03 first_bad=2 idx2_abs=3.640205e-04
+SPV_SHA256=AB7212EC2A30839EF51B9847F90C62CB2EEBCF4A010E122D0CBE0F228C8AC5D5 LEN=16292
+Q_PRE_ROPE_0_HARD_L2_PASS=1
+Q_PRE_ROPE_0_MAX_ABS_ERR=1.043081e-07

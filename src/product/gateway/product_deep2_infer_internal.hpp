@@ -50,7 +50,9 @@ inline bool StreamBody(const StreamPack& p) {
     _putenv_s("RAWRXD_GREEDY", "1");
     _putenv_s("RAWRXD_DECODE_FEEDBACK", "0");
 #endif
-    if (!Rt().IsOpen() && !OpenSeh(Alias())) return false;
+    if (!Rt().IsOpen() && StickySessionOpen().load() == 0 &&
+        !OpenSeh(Alias()))
+        return false;
     const std::string user = p.prompt && p.prompt[0] ? p.prompt : "complete";
     product_run::Request req{};
     req.modelAlias = Alias();

@@ -1,0 +1,41 @@
+COMPETITIVE_25_PRODUCT_MATRIX_001 — LAW
+PARENT=PRODUCTION_MATURITY_TOP25_001
+CROSS_LINK=../../COMPETITIVE_BENCH_001
+ASOF_LOCAL=2026-11-13T20:55:00-05:00
+KIND=FAIL_CLOSED_SCAFFOLD
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+COMPETITIVE_PASS=0
+INVENT_PASS=0
+INVENT_PEER_SCORE=0
+NOT_RUN!=PASS
+LIVE=FORBIDDEN
+CANON=FORBIDDEN
+CROSS_SHA_CREDIT=0
+
+## Purpose
+Scaffold: 25 IDE products × identical task list (CAT1–CAT12).
+RawrXD cells may cite existing seals only.
+Peer product cells default NOT_RUN until a matched same-task seal exists.
+No invented competitive wins. No LIVE/CANON writers.
+
+## Cell law
+CELL ∈ { NOT_RUN, SEAL_CITED }
+SEAL_CITED ⇒ seal path + measured disposition recorded; ≠ peer win; ≠ PROMOTE.
+NOT_RUN ⇒ no seal for that (product, task); never rewrite as PASS.
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+
+## Roster authority
+PRODUCT_ROSTER.txt — RawrXD + 24 peers from
+  evidence/IDE_PRODUCT_FINISH_BATCH_085/EXTENSION_TOP25_CATALOG.txt
+  (Lapce omitted to keep N=25 with RawrXD inserted). Roster = inventory, not rank.
+
+## Task authority
+TASK_LIST.txt — identical CAT1–CAT12 axes from CLI_TOP25_VALUATION_001
+  (VALUATION_CLI.txt / R46_COMBINED_MERGE_SEAL.txt).
+
+## Forbidden
+Invent peer PASS/scores; claim Top-25 recognition; write LIVE/CANON;
+raise PARENT board PCT; alter sealed certification evidence.
+END

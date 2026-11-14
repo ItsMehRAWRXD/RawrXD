@@ -1,7 +1,9 @@
 #version 450
-// gemv_q4k.comp — Q4_K dequant+dot matching ggml dequantize_row_q4_K /
-// Deep2Engine::dequantizeQ4KBlock (paired scales over 32-byte qs chunks).
-// PRIOR bug: per-subblock 16B lo/hi interleave ≠ host → V_0@pos0 DIFF.
+// gemv_q4k.comp — Q4_K×Q8_K integer mul_mat (ggml vec_dot_q4_K_q8_K_generic).
+// In = float x; each 256-col block is quantize_row_q8_K'd then integer-dotted.
+// FIRST_DIVERGE_001: prior FP32 dequant·x matched dequantize_row_q4_K but
+// HARD_L2 vs llama at Q_PRE_ROPE_0 (maxAbs~1.94e-3). Host QuantKernelRegistry
+// already uses Q8_K; SPV must match that path (same class as gemv_q6k.comp).
 layout(local_size_x = 64) in;
 layout(binding = 0) readonly buffer W { uint packed[]; };
 layout(binding = 1) readonly buffer In { float x[]; };
@@ -13,56 +15,116 @@ uint u8(uint off) {
   return (w >> ((off & 3u) * 8u)) & 0xFFu;
 }
 float f16(uint h) { return unpackHalf2x16(h).x; }
-
-void scmin(uint base, uint j, out uint sc, out uint m) {
-  if (j < 4u) {
-    sc = u8(base + j) & 63u;
-    m = u8(base + j + 4u) & 63u;
-  } else {
-    uint a = u8(base + j + 4u);
-    uint b = u8(base + j - 4u);
-    uint c = u8(base + j);
-    sc = (a & 15u) | ((b >> 6) << 4);
-    m = (a >> 4) | ((c >> 6) << 4);
-  }
+int nearest_int_q8k(float fval) {
+  float val = fval + 12582912.0;
+  uint bits = floatBitsToUint(val);
+  return int(bits & 0x007fffffu) - 0x00400000;
 }
 
 void main() {
   uint row = gl_GlobalInvocationID.x;
   if (row >= pc.rows) return;
-  uint nblk = (pc.cols + 255u) / 256u;
+  uint nblk = pc.cols / 256u;
+  if (nblk == 0u || (pc.cols % 256u) != 0u) { y[row] = 0.0; return; }
+
+  const uint kmask1 = 0x3f3f3f3fu;
+  const uint kmask2 = 0x0f0f0f0fu;
+  const uint kmask3 = 0x03030303u;
+
   uint rowOff = row * nblk * 144u;
-  float sum = 0.0;
+  float sumf = 0.0;
+  float sums[8];
+  for (uint i = 0u; i < 8u; ++i) sums[i] = 0.0;
+
   for (uint b = 0u; b < nblk; ++b) {
+    uint base = b * 256u;
+    // quantize_row_q8_K for this 256-wide activation tile
+    float amax = 0.0, maxv = 0.0;
+    for (uint j = 0u; j < 256u; ++j) {
+      float ax = abs(x[base + j]);
+      if (ax > amax) { amax = ax; maxv = x[base + j]; }
+    }
+    float xd = 0.0;
+    float iscale = 0.0;
+    int q8[256];
+    int bsums[16];
+    for (uint j = 0u; j < 256u; ++j) q8[j] = 0;
+    for (uint j = 0u; j < 16u; ++j) bsums[j] = 0;
+    if (amax != 0.0) {
+      iscale = -127.0 / maxv;
+      xd = 1.0 / iscale;
+      for (uint j = 0u; j < 256u; ++j) {
+        int v = nearest_int_q8k(iscale * x[base + j]);
+        q8[j] = (v > 127) ? 127 : v;
+      }
+      for (uint j = 0u; j < 16u; ++j) {
+        int s = 0;
+        for (uint ii = 0u; ii < 16u; ++ii) s += q8[j * 16u + ii];
+        bsums[j] = s;
+      }
+    }
+
     uint blk = rowOff + b * 144u;
     float d = f16(u8(blk) | (u8(blk + 1u) << 8));
     float dmin = f16(u8(blk + 2u) | (u8(blk + 3u) << 8));
-    uint scb = blk + 4u;
     uint qbase = blk + 16u;
-    uint elem = b * 256u;
-    // ggml: is = 0,2,4,6 — 32 lo-nibbles then 32 hi-nibbles from same 32 qs bytes
-    for (uint pair = 0u; pair < 4u; ++pair) {
-      uint is0 = pair * 2u;
-      uint sc0, m0, sc1, m1;
-      scmin(scb, is0, sc0, m0);
-      scmin(scb, is0 + 1u, sc1, m1);
-      float d1 = d * float(sc0);
-      float min1 = dmin * float(m0);
-      float d2 = d * float(sc1);
-      float min2 = dmin * float(m1);
-      uint qo = qbase + pair * 32u;
-      uint loBase = elem + pair * 64u;
-      uint hiBase = loBase + 32u;
-      for (uint l = 0u; l < 32u; ++l) {
-        uint byte = u8(qo + l);
-        uint ilo = loBase + l;
-        uint ihi = hiBase + l;
-        if (ilo < pc.cols)
-          sum += (d1 * float(byte & 15u) - min1) * x[ilo];
-        if (ihi < pc.cols)
-          sum += (d2 * float((byte >> 4) & 15u) - min2) * x[ihi];
+
+    // Expand Q4 nibbles → aux8[256] (grouped lo/hi per 32 qs bytes)
+    int aux8[256];
+    uint a = 0u;
+    for (uint j = 0u; j < 4u; ++j) {
+      uint qo = qbase + j * 32u;
+      for (uint l = 0u; l < 32u; ++l)
+        aux8[a + l] = int(u8(qo + l) & 15u);
+      a += 32u;
+      for (uint l = 0u; l < 32u; ++l)
+        aux8[a + l] = int(u8(qo + l) >> 4);
+      a += 32u;
+    }
+
+    // Scale/min unpack — ggml vec_dot_q4_K_q8_K_generic utmp dance
+    uint utmp0 = u8(blk + 4u) | (u8(blk + 5u) << 8) | (u8(blk + 6u) << 16) | (u8(blk + 7u) << 24);
+    uint utmp1 = u8(blk + 8u) | (u8(blk + 9u) << 8) | (u8(blk + 10u) << 16) | (u8(blk + 11u) << 24);
+    uint utmp2 = u8(blk + 12u) | (u8(blk + 13u) << 8) | (u8(blk + 14u) << 16) | (u8(blk + 15u) << 24);
+    uint utmp3 = ((utmp2 >> 4) & kmask2) | (((utmp1 >> 6) & kmask3) << 4);
+    uint uaux = utmp1 & kmask1;
+    utmp1 = (utmp2 & kmask2) | (((utmp0 >> 6) & kmask3) << 4);
+    utmp2 = uaux;
+    utmp0 &= kmask1;
+
+    uint scales[8];
+    uint mins[8];
+    scales[0] = utmp0 & 0xFFu; scales[1] = (utmp0 >> 8) & 0xFFu;
+    scales[2] = (utmp0 >> 16) & 0xFFu; scales[3] = (utmp0 >> 24) & 0xFFu;
+    scales[4] = utmp1 & 0xFFu; scales[5] = (utmp1 >> 8) & 0xFFu;
+    scales[6] = (utmp1 >> 16) & 0xFFu; scales[7] = (utmp1 >> 24) & 0xFFu;
+    mins[0] = utmp2 & 0xFFu; mins[1] = (utmp2 >> 8) & 0xFFu;
+    mins[2] = (utmp2 >> 16) & 0xFFu; mins[3] = (utmp2 >> 24) & 0xFFu;
+    mins[4] = utmp3 & 0xFFu; mins[5] = (utmp3 >> 8) & 0xFFu;
+    mins[6] = (utmp3 >> 16) & 0xFFu; mins[7] = (utmp3 >> 24) & 0xFFu;
+
+    int sumi = 0;
+    for (uint j = 0u; j < 16u; ++j)
+      sumi += bsums[j] * int(mins[j / 2u]);
+
+    int aux32[8];
+    for (uint i = 0u; i < 8u; ++i) aux32[i] = 0;
+    uint qi = 0u;
+    uint ai = 0u;
+    for (uint j = 0u; j < 8u; ++j) {
+      int scale = int(scales[j]);
+      for (uint r = 0u; r < 4u; ++r) {
+        for (uint l = 0u; l < 8u; ++l)
+          aux32[l] += scale * (q8[qi + l] * aux8[ai + l]);
+        qi += 8u;
+        ai += 8u;
       }
     }
+
+    float dw = d * xd;
+    for (uint l = 0u; l < 8u; ++l) sums[l] += dw * float(aux32[l]);
+    sumf -= (dmin * xd) * float(sumi);
   }
-  y[row] = sum;
+  for (uint l = 0u; l < 8u; ++l) sumf += sums[l];
+  y[row] = sumf;
 }

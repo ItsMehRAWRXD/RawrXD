@@ -192,6 +192,27 @@ bool VulkanCompute::WantWeightPin() {
 }
 
 uintptr_t VulkanCompute::WeightContentFingerprint(const void* p, size_t bytes) {
+    /* Fail-closed: null/empty OR unmapped host window → 0 (miss), never AV.
+     * Gemma AV: MAP WeightContentFingerprint+0x3D READ bad VA (FAULT_001). */
+    if (!p || bytes == 0) return 0;
+#ifdef _WIN32
+    {
+        MEMORY_BASIC_INFORMATION mbi = {};
+        const uint8_t* pb = static_cast<const uint8_t*>(p);
+        if (!VirtualQuery(pb, &mbi, sizeof(mbi)) ||
+            mbi.State != MEM_COMMIT ||
+            !(mbi.Protect & (PAGE_READONLY | PAGE_READWRITE | PAGE_EXECUTE_READ |
+                             PAGE_EXECUTE_READWRITE | PAGE_WRITECOPY |
+                             PAGE_EXECUTE_WRITECOPY)))
+            return 0;
+        if (bytes > 8) {
+            const uint8_t* pe = pb + bytes - 1;
+            MEMORY_BASIC_INFORMATION mbi2 = {};
+            if (!VirtualQuery(pe, &mbi2, sizeof(mbi2)) || mbi2.State != MEM_COMMIT)
+                return 0;
+        }
+    }
+#endif
     const uint8_t* b = static_cast<const uint8_t*>(p);
     uint64_t h = 14695981039346656037ull ^ (uint64_t)bytes * 0x9e3779b97f4a7c15ull;
     auto mix = [&](uint64_t v) { h = (h ^ v) * 1099511628211ull; };
@@ -319,6 +340,8 @@ bool VulkanCompute::EnsurePinnedPackedWeight(const void* packed, size_t bytes,
     }
     if (!packed) return false; /* miss requires host packed bytes */
     const uintptr_t fpNow = WeightContentFingerprint(packed, bytes);
+    /* Fail-closed: unmapped host window → fingerprint 0; never UploadToDeviceLocal. */
+    if (!fpNow) return false;
     if (it != gemv_weight_cache_.end() && it->second.bytes == bytes &&
         it->second.rows == rows && it->second.cols == cols && it->second.buffer &&
         it->second.contentFp == fpNow) {
@@ -484,6 +507,7 @@ bool VulkanCompute::EnsurePinnedF32(const float* data, uint32_t n, VkBuffer& out
 bool VulkanCompute::StreamWeightToSlot(const void* weights, size_t bytes, VkBuffer& outDev) {
     if (!ww_active_ || !weights || bytes == 0 || bytes > ww_slot_bytes_) return false;
     const uintptr_t key = WeightContentFingerprint(weights, bytes);
+    if (!key) return false; /* unmapped host window — miss, never AV */
     for (uint32_t j = 0; j < ww_slot_count_; ++j) {
         WeightSlot& h = ww_slots_[j];
         if (h.hasContent && h.contentKey == key && h.contentBytes == bytes && !h.busy) {

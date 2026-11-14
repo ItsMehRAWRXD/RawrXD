@@ -107,6 +107,14 @@ bool Deep2Engine::ensureGpuForwardArena(unsigned slot) {
         if (v > 0) arenaSeq = std::min<uint32_t>(config.maxSeqLen ? config.maxSeqLen : 4096u,
                                                  static_cast<uint32_t>(v));
     }
+    if (H == 0 || modelWeights.numHeads == 0 || modelWeights.numKVHeads == 0 ||
+        modelWeights.headDim == 0) {
+        std::fprintf(stderr,
+            "GPU_ARENA_GEOM_FAIL slot=%u H=%u heads=%zu kv=%zu hd=%zu PROMOTE=0\n",
+            slot, H, modelWeights.numHeads, modelWeights.numKVHeads,
+            modelWeights.headDim);
+        return false;
+    }
     if (!vc->EnsureForwardArena(
         H, inter ? inter : H * 4,
         (uint32_t)modelWeights.numHeads,
@@ -188,6 +196,16 @@ bool Deep2Engine::forwardLayerGpuResident(
     const uint32_t kvDim = nKv * headDim;
     const uint32_t inter = (uint32_t)(lw.wGate.rows ? lw.wGate.rows
                                                     : modelWeights.intermediateDim);
+    /* Gemma3-1b Q2_K A5b: HEADS=0 / null arena → ACCESS_VIOLATION mid-prefill.
+     * Fail closed with witness instead of silent AV (PROMOTE=0). */
+    if (H == 0 || nHeads == 0 || nKv == 0 || headDim == 0) {
+        std::fprintf(stderr,
+            "GPU_RESIDENT_GEOM_FAIL layer=%u slot=%u H=%u heads=%u kv=%u hd=%u "
+            "ARCH_HINT=gemma3_q2k_av_guard PROMOTE=0\n",
+            layer, slot, H, nHeads, nKv, headDim);
+        std::fflush(stderr);
+        return false;
+    }
     if (!lw.wq.data || !lw.wk.data || !lw.wv.data ||
         !(lw.wo.data || lw.attnO.data) ||
         !lw.wGate.data || !lw.wUp.data || !lw.wDown.data) {
@@ -455,10 +473,14 @@ bool Deep2Engine::forwardLayerGpuResident(
     ++c.rmsNormOps;
 
     const uint32_t pos = kvCache ? (uint32_t)kvCache->currentLength() : 0;
+    /* Host authority (~9155): Q out = wq.rows (heads*headDim), not H.
+     * Gemma3: H=1152, qDim=1024 — writing H into ArenaQ AV'd A5b. */
+    const uint32_t qDim =
+        lw.wq.rows ? (uint32_t)lw.wq.rows : (nHeads * headDim);
     {
         DEEP2_GPU_CHILD_SCOPE(qkvScope, QKV);
         if (!gemvOverlap3(lw.wq, lw.wk, lw.wv, vc->ArenaNormed(),
-                          vc->ArenaQ(), vc->ArenaK(), vc->ArenaV(), H, kvDim, kvDim, H))
+                          vc->ArenaQ(), vc->ArenaK(), vc->ArenaV(), qDim, kvDim, kvDim, H))
             return fail("qkv");
         c.qkvOps += 3;
     }
@@ -484,7 +506,10 @@ bool Deep2Engine::forwardLayerGpuResident(
     }
     {
         DEEP2_GPU_CHILD_SCOPE(oProjScope, AttentionOutputProj);
-        if (!gemv(*woWt, vc->ArenaAttn(), vc->ArenaDown(), H, H))
+        /* O-proj input width = wo.cols / qDim (heads*headDim), not H. */
+        const uint32_t oIn =
+            woWt->cols ? (uint32_t)woWt->cols : qDim;
+        if (!gemv(*woWt, vc->ArenaAttn(), vc->ArenaDown(), H, oIn))
             return fail("o_proj");
         ++c.oProjOps;
         if (!vc->DispatchResidualAdd(vc->ArenaHidden(), vc->ArenaDown(),

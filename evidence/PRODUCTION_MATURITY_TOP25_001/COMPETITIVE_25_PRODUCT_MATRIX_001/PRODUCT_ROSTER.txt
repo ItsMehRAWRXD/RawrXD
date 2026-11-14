@@ -1,0 +1,36 @@
+PRODUCT_ROSTER — COMPETITIVE_25_PRODUCT_MATRIX_001
+ASOF_LOCAL=2026-11-13T20:55:00-05:00
+N=25
+RANKING=NONE
+PROMOTE=0
+SOURCE=IDE_PRODUCT_FINISH_BATCH_085/EXTENSION_TOP25_CATALOG.txt + RawrXD subject
+NOTE=Inventory scaffold only. Peer presence ≠ measured. All peers NOT_RUN until sealed.
+
+P01=RawrXD
+P02=Cursor
+P03=Windsurf
+P04=VS Code
+P05=VSCodium
+P06=Zed
+P07=IntelliJ IDEA
+P08=PyCharm
+P09=WebStorm
+P10=CLion
+P11=GoLand
+P12=PhpStorm
+P13=Rider
+P14=RubyMine
+P15=Android Studio
+P16=Fleet
+P17=Neovim
+P18=GNU Emacs
+P19=Sublime Text
+P20=Visual Studio
+P21=Eclipse
+P22=NetBeans
+P23=Qt Creator
+P24=Nova
+P25=Xcode
+
+OMITTED_FROM_CATALOG_FOR_N25=Lapce
+END

@@ -1,0 +1,27 @@
+M1_Q_PRE_ROPE_IS_Q_LINEAR_ALIAS_20261113
+ASOF_LOCAL=2026-11-13T20:58-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 NOT_RUN!=PASS
+AUTH_PRIOR=GPU_PARITY_FIRST_SIGNIFICANT_DIVERGE_001.txt
+EXE_COMPARE=F28F10B9 (vkspv_f28f) vs llama stage_dump_ref_matched
+WORKER_FOLLOWON=e2c1f2b8
+
+## Measured (parent, dump-only; no rebuild)
+ATTN_NORM_0 gpu vs llama maxAbs=0
+V_0 gpu vs llama maxAbs=4.656613e-09 (FNV_DIFF_ONLY; under tol)
+GPU Q_LINEAR_0 == Q_NORM_0 == Q_PRE_ROPE_0 maxAbs=0
+  ⇒ QK-norm is NO-OP on this fixture (no material attn_q_norm apply)
+GPU Q_LINEAR_0 vs llama Q_PRE_ROPE_0 maxAbs=1.941442e-03 @idx1450 n=2048
+  = same FIRST_SIGNIFICANT as sealed Q_PRE_ROPE_0
+K_LINEAR_0 == K_PRE_ROPE_0 on gpu (identity); K vs llama material (see prior seal)
+
+## Classification
+FIRST_MATERIAL_OP = Q_LINEAR / wq Vulkan GEMV (not RoPE, not Q_NORM)
+Q_PRE_ROPE dump name is post-QK-norm alias; with q_norm absent it equals Q_LINEAR
+llama fixture lacks llama_Q_LINEAR_* dumps → paired name is Q_PRE_ROPE
+
+## Next engineering (M1 worker)
+1) Isolate wq Q4_K (or active quant) Vulkan GEMV vs host/llama for layer0 Q only
+2) Contrast with V path (near-exact) — same LinearW entry, different weight tensor
+3) Private cand fix only; tip 6754616E RO; do not write CANON PCT
+PROMOTE=0
+END
