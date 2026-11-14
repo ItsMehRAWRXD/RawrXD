@@ -419,32 +419,39 @@ int main(int argc, char* argv[]) {
         // These rules NAME a suspect so the next run is targeted. They do not prove
         // a cause: a zero-submission run is a dispatch fact, not a memory fact, and
         // churn versus leak needs the per-position MEM lines above to separate.
+        // CRITICAL FIX: Separate initial weight upload (position 0) from steady-state churn.
+        // Weight upload happens during bind/prefill and causes a large one-time allocation spike.
+        // Steady-state churn should only count allocations after the initial weight upload.
         {
-            const uint64_t run_allocs = bs.buffer_allocations - bs0.buffer_allocations;
+            const uint64_t initial_weight_load = bs1.buffer_allocations - bs0.buffer_allocations;
+            const uint64_t steady_state_allocs = bs.buffer_allocations - bs1.buffer_allocations;
             const uint64_t run_alloc_fail =
                 bs.descriptor_alloc_failures - bs0.descriptor_alloc_failures;
             const uint64_t run_cache_hits = bs.weight_cache_hits - bs0.weight_cache_hits;
             const uint64_t run_cache_miss = bs.weight_cache_misses - bs0.weight_cache_misses;
             const double live_mb = (double)bs.device_bytes_live / 1048576.0;
             const double peak_mb = (double)bs.device_bytes_peak / 1048576.0;
-            std::printf("RUN%zu: ALLOC buffer_allocs=%llu device_live=%.1f MB "
-                        "device_peak=%.1f MB alloc_failures=%llu cache_hits=%llu "
-                        "cache_misses=%llu\n",
-                        run, (unsigned long long)run_allocs, live_mb, peak_mb,
+            std::printf("RUN%zu: ALLOC initial_weight_load=%llu steady_state_allocs=%llu "
+                        "device_live=%.1f MB device_peak=%.1f MB alloc_failures=%llu "
+                        "cache_hits=%llu cache_misses=%llu\n",
+                        run, (unsigned long long)initial_weight_load,
+                        (unsigned long long)steady_state_allocs,
+                        live_mb, peak_mb,
                         (unsigned long long)run_alloc_fail,
-                        (unsigned long long)run_cache_hits,
-                        (unsigned long long)run_cache_miss);
+                        (unsigned long long)(bs.weight_cache_hits - bs0.weight_cache_hits),
+                        (unsigned long long)(bs.weight_cache_misses - bs0.weight_cache_misses));
             if (run_submits == 0)
                 std::printf("RUN%zu: SUSPECT=NO_GPU_SUBMISSION GPU_TPS_VALID=0\n", run);
             if (run_alloc_fail != 0)
                 std::printf("RUN%zu: SUSPECT=ALLOCATION_FAILURE count=%llu\n", run,
                             (unsigned long long)run_alloc_fail);
-            if (exec_positions > 0 && run_allocs > exec_positions)
-                std::printf("RUN%zu: SUSPECT=ALLOCATION_CHURN allocs_per_position=%.1f\n",
-                            run, (double)run_allocs / exec_positions);
-            if (run_cache_miss > 0 && run_submits == 0)
+            // Only flag churn for steady-state allocations (after initial weight load)
+            if (exec_positions > 0 && steady_state_allocs > exec_positions)
+                std::printf("RUN%zu: SUSPECT=ALLOCATION_CHURN steady_state_allocs_per_position=%.1f\n",
+                            run, (double)steady_state_allocs / exec_positions);
+            if ((bs.weight_cache_misses - bs0.weight_cache_misses) > 0 && run_submits == 0)
                 std::printf("RUN%zu: NOTE=UPLOAD_WITHOUT_SUBMISSION misses=%llu\n", run,
-                            (unsigned long long)run_cache_miss);
+                            (unsigned long long)(bs.weight_cache_misses - bs0.weight_cache_misses));
         }
         std::printf("RUN%zu GENSTREAM:", run);
         for (uint32_t t : gen) std::printf(" %u", t);
