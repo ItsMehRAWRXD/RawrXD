@@ -1,0 +1,41 @@
+BR_A8_MODELWIRE_C0000409_FORENSICS_R70
+ASOF_LOCAL=2026-11-13T23:40:00-05:00
+PROMOTE=0 TIP_CLIMB=HOLD CAT11=25
+PRIOR=BR_A8_MODELWIRE_88BCD_DIALOG_FAILFAST_R69
+PRIOR_SEAL=A8_MODEL_WIRE_PEER/run_20261113_232300
+DUMP=CrashDumps/RawrXD-Win32IDE_tip_land_a8_modelwire.exe.9992.dmp PID=9992
+
+FORENSICS_0xC0000409:
+  ExceptionCode=0xC0000409 STATUS_STACK_BUFFER_OVERRUN
+  ExceptionInformation[0]=0x5 FAST_FAIL_STACK_COOKIE_CHECK_FAILURE
+  FAULT=_invoke_watson @ peer+0x1F879F0 (map: libucrt invalid_parameter)
+  STACK_NEAR=Deep2::GGUFLoadResult::~GGUFLoadResult (Deep2IDEIntegration)
+             _free_base
+             Deep2::Deep2Engine::~Deep2Engine
+  ROOT_HYPOTHESIS=ProductOpen/Deep2 OpenSession on default ~1MB std::thread stack
+                  → cookie fail during GGUFLoadResult teardown (SEH cannot catch GS)
+
+ATTEMPTED_FIX:
+  _beginthreadex 16MB worker TU + HOLD ExecuteAsync + single ProductOpenSeh
+  → /FORCE peer C230/141C MENU_READY=0 EXIT -1 (startup dead)
+  modelresident re-link DD2CB MENU=1 but fill-wait HEAP 0xC0000374 (DIALOG=0)
+
+RESTORED_PEER:
+  SHA256=3497042A2F027F7BA5680BEB3AE4C333BC0667900CFE2A21B4E6F62E2055DD2E
+  SEAL=A8_MODEL_WIRE_PEER/run_20261113_233907
+  CRUMBS=MENU=1 POST_4120=1 BOUNDED_DIALOG_FILLED=1
+         MODEL_LOAD_SEEN=0 MODEL_RESIDENT=0
+  EXIT_HEX=0xFFFFFFFF (~5s after fill; no WER dump for PID 42324)
+  BLOCKER=NO_MODEL_RESIDENT_OR_NO_TRANSCRIPT
+  EDIT_BUILD_TEST_PASS=0
+
+TIP_BIND=6754616E UNCHANGED
+PDH_GATE=prefer keep (3497042A has RAWRXD_ENABLE_AMD_PDH_POWER default-off)
+EXIT_HEX_CAST=FIXED (BitConverter; -1→0xFFFFFFFF)
+
+SEAL_DISPOSITION=FAIL MODEL_RESIDENT
+  exact_site=ProductOpen→Deep2 GGUFLoadResult dtor / _invoke_watson FAST_FAIL 5
+  (controlling evidence dump 9992 / run_232300)
+NEXT=Land 16MB ProductOpen worker without /FORCE MENU regression; remasure MODEL_RESIDENT=1
+PROMOTE=0 CERTIFIED=0
+END
