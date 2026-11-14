@@ -1,0 +1,85 @@
+GPU_PARITY_ATTN_PRE_O_1_001
+DATE=2026-11-13
+ASOF_LOCAL=2026-11-13T21:55:00-05:00
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+CROSS_SHA_CREDIT=0
+INVENT_PASS=0
+NOT_RUN!=PASS
+SCOREBOARD_CLI_GUI_PCT_UNCHANGED=1
+JOINT_PCT_WRITE=0
+CANON_PCT_WRITE=0
+LIVE_PCT_WRITE=0
+
+## Authority
+PRIOR_SEAL=GPU_PARITY_ATTN_PRE_O_CLOSE_001.txt
+PRIOR_ATTN_PRE_O_0_LIVE_CLOSED=1 (private cand C72A48E9)
+BRANCH=work/v0-first-divergence (private cand only)
+TIP_EXE_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431
+TIP_EXE=RO (untouched; no tip promote)
+TOL_ABS=1e-6 TOL_REL=1e-5
+CAND_SHA256=C72A48E960D4DCAEC5DDC6ACF9BBD18258E1449860EE39D35D13575F0267441C
+CAND_EXE=pin/rawr_attn_pre_o_fp16kv.exe
+PAIR=stage_dump_attn_pre_o_fp16kv vs stage_dump_ref_matched
+PROMPT_IDS=1,15043 INPUT_IDENTICAL=1
+
+## Ordered walk (pos0) — MEASURED
+Layer0 (CONFIRM prior close):
+  PROMPT_EMBED / ATTN_NORM_0 MATCH
+  V_0..K_POST_ROPE_0 / ATTN_PRE_O_0 / ATTN_OUT_0 / FFN_*_0 / LAYER0_OUT
+    all MATCH or FNV_ONLY under TOL (ATTN_PRE_O_0 bitexact)
+Layer1+:
+  ATTN_NORM_1 FNV_ONLY maxAbs=7.152557e-07
+  V_1 FNV_ONLY maxAbs=2.607703e-08
+  Q_PRE_ROPE_1 FNV_ONLY maxAbs=4.768372e-07
+  K_PRE_ROPE_1 FNV_ONLY maxAbs=9.536743e-07
+  ATTN_PRE_O_1 NUM_FAIL maxAbs=1.192093e-07 rel=8.904720e-04 @idx59
+    n_gt_abs=0/2048 n_rel_gt=8/2048  ← FIRST_SIGNIFICANT
+  ATTN_OUT_1 FNV_ONLY maxAbs=4.470348e-08 (cascade abs still under TOL)
+  FFN_*_1 / LAYER1_OUT FNV_ONLY under TOL
+FINAL_NORM_pos0 NUM_FAIL maxAbs=1.511019e+01 rel=7.837394e-01 (LATER; not first)
+LOGITS_pos0 GPU_MISSING (GPU dumps LOGITS_pos2 only; REF LOGITS_pos0 — unpaired)
+LAYER2_OUT REF_MISSING (GPU dumped; no llama LAYER2 pair)
+
+COMPARE_LOG=GPU_PARITY_ATTN_PRE_O_1_001_compare.log
+GPU=deep2_ATTN_PRE_O_1_pos0_layer0_full_n2048_seq030.bin
+REF=llama_ATTN_PRE_O_1_pos0_layer0_full_n2048_seq135.bin
+fnvA=a8348a99f2ef3f15 fnvB=952f5a1248cee815
+
+## Root cause
+FIRST_SIGNIFICANT = ATTN_PRE_O_1 (rel>1e-5; maxAbs still <1e-6).
+At pos0 attend=1: ATTN_PRE_O_1 == f16_RNE(V_1) GQA-expand on BOTH arms (bitexact vs own V).
+V_1 under TOL vs REF (maxAbs≈2.61e-08; @idx59 Δ≈2.87e-09).
+That sub-TOL V residual sits across an FP16 RNE bucket boundary:
+  f16(V_gpu[59]) = 1.337528e-04
+  f16(V_ref[59]) = 1.338720e-04
+  Δ = 1.192093e-07 (1 FP16 ULP as f32) → rel≈8.90e-04
+GQA expand duplicates dim59 across KV-head0’s 8 Q heads:
+  idxs 59,123,187,251,315,379,443,507 (stride=headDim=64) — exactly the 8 nonzero diffs.
+headScratch kvCacheFp16RoundTrip (C72 close) is WORKING as designed; it faithfully
+propagates the V_1 f16 bucket flip into ATTN_PRE_O_1.
+≠ layer0 PRE_O bug reopen (layer0 PRE_O remains bitexact on this fixture).
+
+## Private cand fix path (tip 6754616E RO)
+GOAL: eliminate f16 bucket flip at V_1 (wv) so f16(V_gpu)==f16(V_ref) on this fixture.
+OWNER_FILE=src/deep2/Deep2Engine.cpp (+ gemv_q4k.spv path already AB7212EC)
+NEXT_STEPS:
+  1) Dump/compare V_1 pre- and post-KV f16 RT vs llama V_1; confirm only bucket-edge elems.
+  2) Tighten layer1 wv Q4_KxQ8_K GEMV residual (same integer-dot family as Q close) until
+     |V_gpu-V_ref| < half FP16 ULP at magnitude ~1.3e-4 (≈6e-8) for all elems — or bitexact.
+  3) Relink private cand only; remasure ordered walk; expect ATTN_PRE_O_1 → under TOL.
+  4) Then continue walk: LAYER2+ (need REF dumps) / FINAL_NORM / pos-matched LOGITS.
+DO_NOT: tip-land · CANON/LIVE/JOINT PCT write · invent PERFORMANCE_PASS · PROMOTE
+
+## Verdict
+FIRST_SIGNIFICANT=ATTN_PRE_O_1_pos0
+maxAbs=1.192093e-07 rel=8.904720e-04 @idx59
+LAYER0_FIXTURE_UNDER_TOL=0 (layer0 stages under TOL, but fixture walk finds later first-sig)
+GPU_PARITY_LAYER0_FIXTURE_UNDER_TOL_001=NOT_WRITTEN (FIRST_SIGNIFICANT exists)
+ROOT=FP16_BUCKET_FLIP_FROM_V_1_SUB_TOL_RESIDUAL
+FIX_PATH=private cand: close V_1/wv residual below FP16 half-ULP; tip RO
+SEAL_PATH=evidence/PRODUCTION_INFERENCE_CERT_001/FIRST_DIVERGE_001/GPU_PARITY_ATTN_PRE_O_1_001.txt
+≠ PERFORMANCE_PASS ≠ tip-land ≠ CANON/LIVE/JOINT PCT write
+PROMOTE=0
+TIP_CLIMB=HOLD

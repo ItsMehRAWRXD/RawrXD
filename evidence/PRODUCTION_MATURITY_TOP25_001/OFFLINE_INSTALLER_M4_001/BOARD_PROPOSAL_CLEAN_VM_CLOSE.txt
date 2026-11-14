@@ -1,0 +1,77 @@
+BOARD PROPOSAL — M4 CLEAN_VM close path (proposal only; not a PASS)
+ASOF=2026-11-13T21:57:30-05:00
+GIT_HEAD_AT_PROBE=40297da7126cb61b4a716c27d68afba6a9449591
+BRANCH=work/v0-first-divergence
+PROMOTE=0
+TIP_CLIMB=HOLD
+INVENT_CLEAN_VM=0
+INVENT_JOINT_PCT=0
+M4_PCT_RAISE=0
+CLEAN_VM=0
+CLEAN_VM_STATUS=NOT_RUN
+LAW=NOT_RUN!=PASS; host-local!=CLEAN_VM; BOARD proposals only
+
+## Measured blocker (this host) — reconfirmed
+PACKAGE_SHA=D4DF3ED526C7037A309F41062CA17C5C83E1D0FC05C5399E9252DEBFA4AB9129
+WITNESS_SCRIPT=scripts/Invoke-RawrOfflineCleanVmWitness.ps1
+WITNESS_EXIT=2 (BLOCKED; ConfirmCleanGuest_not_set — correct on host)
+BLOCKED=CLEAN_VM_WITNESS_001/BLOCKED.txt
+PROBE=clean_vm_gate_probe/hypervisor_probe.json
+
+HYPERVISOR_SURFACE:
+  WINDOWS_SANDBOX_EXE=0 (System32\WindowsSandbox.exe absent)
+  HYPER_V_GET_VM_CMDLET=0
+  HYPER_V_MODULE=0
+  VBOXMANAGE=0
+  VMWARE_VMRUN=0
+  QEMU_SYSTEM_X86_64=0
+  IS_ELEVATED=0
+  OPTIONAL_FEATURE_PROBE=REQUIRES_ELEVATION (Get-WindowsOptionalFeature blocked)
+
+CLEAN_VM_EXECUTABLE_NOW=0
+REASON=No isolated Hyper-V VM / Windows Sandbox / equivalent clean guest on this machine.
+       Witness correctly refuses host-local ConfirmCleanGuest.
+
+## What is already sealed (does NOT close CLEAN_VM)
+  M4 offline zip PACKAGE_SHA above · SEAL.txt · host clean_vm_gate_probe INSTALL_EXIT=0 HELP_SMOKE=PASS
+  LAW=host extract+Install-RawrOffline ≠ CLEAN_VM PASS
+  CLEAN_MACHINE_SANDBOX ≠ CLEAN_VM PASS (if/when sandbox seal exists)
+
+## BOARD PROPOSAL (minimal executable close — operator / elevated host)
+PROPOSAL_ID=BP_M4_CLEAN_VM_HYPERVISOR_001
+STATUS=OPEN
+OWNER=operator_with_hypervisor_or_elevated_feature_enable
+PASS_CLAIMS=0 until SEAL.txt under CLEAN_VM_WITNESS_001 measured with CLEAN_VM=1
+
+STEP_MINIMAL:
+  1. Enable ONE guest surface (pick first available):
+     a. Windows Sandbox: elevated → Enable-WindowsOptionalFeature -Online
+        -FeatureName Containers-DisposableClientVM -All ; reboot if required
+        OR
+     b. Hyper-V: elevated → Enable-WindowsOptionalFeature -Online
+        -FeatureName Microsoft-Hyper-V-All -All ; create clean Win10/11 VM
+        OR
+     c. External clean Windows image / VM (no prior RawrXD under %LOCALAPPDATA%\RawrXD;
+        no tip PATH pollution)
+  2. Transfer ONLY sealed zip (PACKAGE_SHA above) into guest — no network install path,
+     no winget/choco, no cloud model fetch.
+  3. Inside guest:
+       Expand-Archive → pwsh -File scripts\Install-RawrOffline.ps1 -TargetDir <guest_target>
+     Prefer witness:
+       pwsh -File scripts\Invoke-RawrOfflineCleanVmWitness.ps1 -ConfirmCleanGuest `
+         -PackageZip <transferred_zip> -TargetDir <guest_target>
+  4. Require measured: INSTALL_EXIT=0 · HELP_SMOKE=PASS · CLI/GUI SHA match pins ·
+     ROLLBACK_OK=1 · NETWORK_REQUIRED_FOR_INSTALL=0
+  5. Land CLEAN_VM_WITNESS_001/SEAL.txt with CLEAN_VM=1 only if step 4 measured.
+  6. Update A6 / M4 SEAL CLEAN_VM fields from that witness.
+     Still PROMOTE=0 · no JOINT/CAT PCT invent from CLEAN_VM alone.
+
+## Explicit non-proposals (do not board as PASS)
+  - Re-running host probe / host install smoke
+  - Setting ConfirmCleanGuest on the polluted tip host
+  - Declaring CLEAN_MACHINE_SANDBOX as CLEAN_VM
+  - Raising M4_PCT / JOINT without independent promote conjunction
+
+NEXT_EXECUTABLE_GATE=HYPERVISOR_CLEAN_VM_INSTALL_ROLLBACK_WITNESS
+GATE_DOC=CLEAN_VM_REMAINING_GATE.txt
+END

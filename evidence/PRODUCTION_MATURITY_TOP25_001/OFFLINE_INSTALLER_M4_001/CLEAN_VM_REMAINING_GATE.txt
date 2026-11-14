@@ -1,6 +1,6 @@
 A6 / M4 — CLEAN_VM remaining executable gate
-ASOF=2026-11-13T21:34:13-05:00
-GIT_HEAD=ae418355d1973b50af487cd5c084a0ff81378a64
+ASOF=2026-11-13T21:57:30-05:00
+GIT_HEAD=40297da7126cb61b4a716c27d68afba6a9449591
 PROMOTE=0
 TIP_CLIMB=HOLD
 INVENT_CLEAN_VM=0
@@ -29,12 +29,18 @@ CLEAN_VM=0
 CLEAN_VM_STATUS=NOT_RUN
 LAW=host extract+Install-RawrOffline ≠ CLEAN_VM PASS
 
-## Hypervisor probe (this machine) — blocker
+## Hypervisor probe (this machine) — blocker (reconfirmed 2026-11-13T21:56:27-05:00)
 WINDOWS_SANDBOX_EXE=0 (System32\WindowsSandbox.exe absent)
 HYPER_V_GET_VM_CMDLET=0
 HYPER_V_MODULE=0
+VBOXMANAGE=0
+VMWARE_VMRUN=0
+QEMU=0
+IS_ELEVATED=0
 ELEVATION_FOR_OPTIONAL_FEATURES=REQUIRED (Get-WindowsOptionalFeature blocked without elevation)
 CLEAN_VM_EXECUTABLE_NOW=0
+WITNESS_HOST_EXIT=2 BLOCKED (ConfirmCleanGuest_not_set — correct)
+BOARD_PROPOSAL=BOARD_PROPOSAL_CLEAN_VM_CLOSE.txt
 
 ## Exact remaining gate (executable)
 NEXT_EXECUTABLE_GATE=HYPERVISOR_CLEAN_VM_INSTALL_ROLLBACK_WITNESS
@@ -59,6 +65,7 @@ NOT_SUFFICIENT_FOR_CLEAN_VM_PASS:
   - CLEAN_MACHINE_SANDBOX (sandbox ≠ hypervisor clean VM)
   - SetupWizard path absent from THIS sealed zip (6-file Install-RawrOffline package)
   - Documentation-only claims
+  - BOARD proposals without measured CLEAN_VM_WITNESS_001/SEAL.txt
 
 ## Reproducible offline path (no cloud) — already SEALED
 M4_OFFLINE_HOST=SEALED
