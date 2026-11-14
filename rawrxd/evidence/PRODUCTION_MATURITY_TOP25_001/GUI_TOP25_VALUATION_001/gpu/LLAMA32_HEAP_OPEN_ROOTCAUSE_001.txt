@@ -1,0 +1,35 @@
+LLAMA32_HEAP_OPEN_ROOTCAUSE_001
+ASOF_LOCAL=2026-11-13T22:33:30-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0
+PRIOR_EXE_SHA256=7FD1F27095388585D03DFB68C70E033B126D6406E8DE23C4F21F10D1EF8323C6
+HASH_VERIFY_THIS_SESSION=PASS
+MODEL=models/llama3.2-3b-Q2_K.gguf
+HOST_DECODE=0 GPU_RESIDENT_TARGET=1 TIP_STILL_6754=1
+DURABLE=0
+ROOT_CAUSE_CLEAR=1
+
+## Root cause class (fail-closed; confirmed)
+SITE=elastic open / ElasticResidencyManager + MARS place after PIN_BUDGET_SET ENGINE_MAX_HOT
+TRIGGER_MARK=duplicate register / double-place of token_embd.weight (tied-embed / lmHead path)
+ABORT_MODE_PIN=EXIT=NULL hard abort before PRODUCT_OPEN stream (OPEN path) on 7FD1F270
+PRIOR_WER_CLASS=0xC0000374 STATUS_HEAP_CORRUPTION (ntdll) — compatible with thrash at elastic open
+
+## Pin 7FD1F270 exclusive proof (2 consecutive TOK=0) — immutable
+| Run | TOK | SEH | EXIT | WALL_MS | Last stderr |
+|-----|----:|----:|------|--------:|-------------|
+| 220949 | 0 | 0 | NULL | 65767 | ElasticResidencyManager WARNING: tensor 'token_embd.weight' already registered |
+| 221127 | 0 | 0 | NULL | 9899 | ElasticResidencyManager WARNING: tensor 'token_embd.weight' already registered |
+
+## Private cand proof (OPEN cleared; TOK durable still OPEN)
+QDIM083 E649DF99: DUP_WARN=0 STREAM_ENTER=1 STREAM_SEH=0xC0000005 TOK=0
+QDIM084 617F784E: DUP_WARN=0 THRASH=0 ALLOC/EVICT=1/1 MARS skip=701 OPEN_PASS=1 TOK=0×2
+QDIM086 7E4CE26B: tip 31a0dc36a3 Deep2+Elastic SOURCE_WIRED; OPEN_PASS STREAM_SEH VA=-1 TOK=0; RESIDENT_CACHE still SEH
+CONTROLLING_SEAL=MULTI_FAMILY_QDIM086_TIP_ELASTIC_001.txt OPEN DURABLE=0
+
+## Disposition
+DURABLE_TOKEN_SURVIVED=0
+MF_4OF4=0
+REJECT_INVENT_GUI_RAISE=1
+TIP_CLIMB=HOLD
+PROMOTE=0
+END
