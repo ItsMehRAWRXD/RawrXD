@@ -1,0 +1,224 @@
+[MODEL_RESOLUTION] g:\~dev\rawrxd\models\tinyllama.gguf
+GGUF_LOAD_STAGE=enter path="g:\~dev\rawrxd\models\tinyllama.gguf" loadTensors=0 mmap=0
+GGUF_LOAD_STAGE=validated size=668788096 dataOff=1709440
+GGUF_LOAD_STAGE=fopen_ok
+GGUF_LOAD_STAGE=header_ok ver=3 tensors=201 kv=23
+[AUTO_BACKEND] model=g:\~dev\rawrxd\models\tinyllama.gguf weights=636MB kv=176MB scratch=0MB moe=0 experts=0 ctx=2048
+[AUTO_BACKEND] host RAM=665MB commit=64947MB
+[AUTO_BACKEND] GPU Virtual Display Driver status=25174027 problem=0 healthy=1
+[AUTO_BACKEND] GPU AMD Radeon(TM) Graphics status=25175040 problem=43 healthy=0
+[AUTO_BACKEND] GPU AMD Radeon AI PRO R9700 status=25174026 problem=0 healthy=1
+[AUTO_BACKEND] GPU AMD Radeon RX 7800 XT status=25174026 problem=0 healthy=1
+[AUTO_BACKEND] Vulkan ICD ready
+[AUTO_BACKEND] primaryReady=1 primaryValidated=1 secondaryReady=1 secondaryValidated=1 vramPriMB=32768
+[AUTO_BACKEND] decision=VulkanPrimary reason=Primary GPU fits weights+KV+scratch
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+KEN_MARS_ACTIVE=1 DEEP2_MARS=1 HOST_DECODE=1 GPU_POLICY=MULTI GPU_DEVICE_CLASS=DISCRETE NO_TRUNCATE_NEEDLE=1 PRODUCT_STREAMER_ARM=1
+WEIGHT_BUDGET_INPUT=8192
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=8192
+WEIGHT_BUDGET_BYTES=8589934592
+WEIGHT_BUDGET_SOURCE=USER_WEIGHT_BUDGET_MIB
+WEIGHT_BUDGET_PRE_FLOOR_SRC=ARMSPEED_SETENVIFUNSET_OR_USER
+WEIGHT_BUDGET_PRE_FLOOR_RAW="8192"
+WEIGHT_BUDGET_PRE_FLOOR_MIB=8192
+WEIGHT_BUDGET_POST_FLOOR_SRC=USER_WEIGHT_BUDGET_MIB
+WEIGHT_BUDGET_ENV_PRESENT=1
+WEIGHT_BUDGET_ENV_RAW="8192"
+WEIGHT_BUDGET_PARSE_OK=1
+WEIGHT_BUDGET_INPUT_MIB=8192
+WEIGHT_BUDGET_EFFECTIVE_MIB=8192
+RESIDENCY_BUDGET_MIB=8192
+BUDGET_RELATION_VALID=1
+NOTE=REAP_TARGET_NE_RESIDENCY_BUDGET; ARMSPEED_E8B0M_IS_SETENVIFUNSET_DEFAULT; MODEL_SIZE_NE_PHYSICAL_RESIDENCY
+PRODUCT_LAA=1 HOST_DECODE=1 DUALSTICK_ARM=0 MINIMAL_ENHANCE=1 VK_ICD=BLOCKED WHY=R1_HOST_FLOOR
+PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1
+RAWRXD_GPU_PREFLIGHT_BEGIN
+GPU_0=R9700
+GPU_0_WINDOWS_HEALTH=PASS
+GPU_0_PROBLEM_CODE=0
+GPU_0_CODE31=0
+GPU_1=RX_7800_XT
+GPU_1_WINDOWS_HEALTH=PASS
+GPU_1_PROBLEM_CODE=0
+GPU_1_CODE31=0
+GPU_PREFLIGHT=PASS
+[Deep2Engine] GPU open failed slot 0 (AMD Radeon AI PRO R9700) ? keep opened sticks (no clear-all)
+[Deep2Engine] GPU open failed slot 1 (AMD Radeon RX 7800 XT) ? keep opened sticks (no clear-all)
+[Deep2Engine] Vulkan open failed ? GPU inference required (RAWRXD_HOST_DECODE=1 for CPU opt-in only)
+LOADMODEL_STAGE=pre_reverse reverse_opt_in=0
+LOADMODEL_STAGE=gguf_loader_enter path="g:\~dev\rawrxd\models\tinyllama.gguf"
+GGUF_LOAD_STAGE=enter path="g:\~dev\rawrxd\models\tinyllama.gguf" loadTensors=0 mmap=0
+GGUF_LOAD_STAGE=validated size=668788096 dataOff=1709440
+GGUF_LOAD_STAGE=fopen_ok
+GGUF_LOAD_STAGE=header_ok ver=3 tensors=201 kv=23
+LOADMODEL_STAGE=gguf_meta_ok tensors=201
+LOADMODEL_STAGE=gguf_tensors_enter mmap=0
+GGUF_LOAD_STAGE=enter path="g:\~dev\rawrxd\models\tinyllama.gguf" loadTensors=1 mmap=0
+GGUF_LOAD_STAGE=validated size=668788096 dataOff=1709440
+GGUF_LOAD_STAGE=fopen_ok
+GGUF_LOAD_STAGE=header_ok ver=3 tensors=201 kv=23
+LOADMODEL_STAGE=gguf_loader_ok tensors=201
+LOADMODEL_STAGE=geometry_ok
+LOADMODEL_STAGE=digest_skip
+[ModelOpenCompat] repaired metadata: arch=0 vocab=0 hidden=0 layers=0 inter=1 heads=0 kvHeads=0
+GEMMA4_SCHEMA_BIND root=output.weight rows=32000 cols=2048 type=14
+GEMMA4_SCHEMA_BIND root=output_norm.weight rows=2048 cols=1 type=0
+WEIGHT_BUDGET_ENV_PRESENT=1
+WEIGHT_BUDGET_ENV_RAW="8192"
+WEIGHT_BUDGET_PARSE_OK=1
+WEIGHT_BUDGET_INPUT_MIB=8192
+WEIGHT_BUDGET_EFFECTIVE_MIB=15773
+RESIDENCY_BUDGET_MIB=15773
+BUDGET_RELATION_VALID=1
+FFN_INTER_INFERRED ok=1 why=SPLIT_GATE_MATCHES_DOWN inter=5632 old_meta=5632 old_model=5632 old_config=5632
+PHI3_FUSED_FFN_RUNTIME layers=22 repaired=0 authority=UNOBSERVED
+GEMMA4_SCHEMA_BINDER ok=1 why=GEOM_READY hidden=2048 layers=22 vocab=32000 tokenEmbed=1
+GEMMA4_LAYER_TOPOLOGY_BIND ok=1 why=GEOM_READY_UNIFORM layers=22 split=22 fused_qkv=0 projector=0 ssm=0 ffn_only=0 ffn=22 unknown=0
+GEMMA4_BIND_LLAMA_FALLBACK ok=1 why=ALIAS_BOUND_GEOM_READY tokenEmbed=1 hidden=2048 vocab=32000 layers=22
+MODEL_PROVENANCE_BEGIN=1
+MODEL_LOCATION=
+MODEL_CANONICAL=
+MODEL_EXISTS=0 MODEL_IS_DIRECTORY=0 MODEL_BYTES=0 MODEL_WRITE_STAMP=0
+MODEL_LOCATOR_HASH=0 TENSOR_NAME_SHAPE_HASH=0 MODEL_EXPECTED_FP=11753875096244137027
+DIGEST_FP=0 MANIFEST_FP=0 BIND_FP=11753875096244137027 AUTHORITY_FP=11753875096244137027 RUNTIME_FP=11753875096244137027
+MANIFEST_LOADED=0 MANIFEST_THIS_RUN=0 MANIFEST_ID=none
+SCHEMA_ALIAS_FALLBACK_USED=1 INHERITED_SCHEMA_AUTHORITY=0 RUNTIME_OVERLAY_SEPARATE=1
+MODEL_PROVENANCE_MATCH=0 BLOCKED_AT=PROVENANCE_MISMATCH WHY=MODEL_LOCATION_NOT_FOUND
+AUTHORITY_CLASS=DISCOVERY_PROVENANCE PROMOTE=0
+MODEL_PROVENANCE_END=1
+MODEL_OPEN=PASS
+MODEL_PROVENANCE_MATCH=0
+AUTHORITY_LADDER=BLOCKED
+BLOCKED_AT=PROVENANCE_MISMATCH
+PROMOTE=0
+[BUF] hidden=2048 heads=32 headDim=64 qOut=2048 headScratch=2048 kvDim=256 ffn=5632 ffnGateScratch=5632
+SSM_BUF stPer=32 cvPer=8192 inner=0 state=0 NOTE=STATE_NE_HEADS
+SSM_MAMBA2_ARM=0 reason=GEO_OR_BUF
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+DEEP2_DEVICE_COUNT_DETECTED=2
+DEEP2_DEVICE_COUNT_OPENED=2
+DEEP2_COMPUTE_BACKEND=MULTIGPU
+DEEP2_EXEC_PATH=MULTIGPU
+DEEP2_EXEC_MODE=2
+DEEP2_GPU_POLICY=3
+DEEP2_PLAN_REASON=auto_multi_device_class
+DEEP2_PRIMARY_INDEX=0
+DEEP2_PRIMARY_STABLE_ID=1002:7551:000000000001681D
+DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_VENDOR=AMD
+DEEP2_DEVICE_0_STABLE_ID=1002:7551:000000000001681D
+DEEP2_DEVICE_0_VRAM_BYTES=34057322496
+DEEP2_DEVICE_0_SCORE=133
+DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
+DEEP2_DEVICE_1_NAME=AMD Radeon RX 7800 XT
+DEEP2_DEVICE_1_VENDOR=AMD
+DEEP2_DEVICE_1_STABLE_ID=1002:747E:0000000000019576
+DEEP2_DEVICE_1_VRAM_BYTES=16962633728
+DEEP2_DEVICE_1_SCORE=116
+DEEP2_DEVICE_1_DUTY=COMPUTE_SECONDARY
+DEEP2_COST_T_BEST=0.107467
+DEEP2_COST_CUT=12
+DEEP2_COST_KEEP=0
+DEEP2_COST_WINNER=SPLIT
+DEEP2_COST_MODEL=PIPELINE_V2
+DEEP2_COST_DUAL_DEVICES_KEPT=2
+DEEP2_COST_SLOT0_LAYERS=0-11
+DEEP2_COST_SLOT1_LAYERS=12-21
+DEEP2_COST_VRAM_GATE=0
+[VulkanCompute] vkCreateInstance failed
+[VulkanCompute] vkCreateInstance failed
+[VulkanCompute] vkCreateInstance failed
+[Deep2Engine] Loading model from: g:\~dev\rawrxd\models\tinyllama.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Multi-shard detected: NO (1 files in g:\~dev\rawrxd\models)
+[Deep2Engine] REVERSE_HOTPATCH=OFF ? raw GGUF load (opt-in via RAWRXD_REVERSE_HOTPATCH=1)
+[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=PASS arch=llama L=22 H=2048 FFN=5632 heads=32 kv=4 hd=64 ctx=2048 ropeBase=10000 ropeDim=64
+[Deep2Engine] AUTHORITY_LADDER=DEFER_UNTIL_RUNTIME_RECEIPT
+[Deep2Engine] GGUF architecture: 'llama'  hidden=2048 layers=22 heads=32 kvHeads=4 inter=5632 vocab=32000
+[Deep2Engine] Tokenizer loaded: vocab=32000 bos=1 eos=2 (Spm::encode)
+[ResidencyManager] Initialized: maxResidentBytes=16539546624, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=15773 MB
+[ResidencyManager] this=00000202FCDDAF90  Registered 'output.weight': shard=0 offset=1709440 bytes=53760000  |  registry_size=1  registeredBytes=53760000  zeroOffset=0  maxResidentBytes=16539546624
+[ResidencyManager] this=00000202FCDDAF90  Registered 'blk.18.attn_q.weight': shard=0 offset=377767296 bytes=2359296  |  registry_size=100  registeredBytes=378417152  zeroOffset=0  maxResidentBytes=16539546624
+[ResidencyManager] this=00000202FCDDAF90  Registered 'blk.9.attn_v.weight': shard=0 offset=668349824 bytes=430080  |  registry_size=200  registeredBytes=667070464  zeroOffset=0  maxResidentBytes=16539546624
+RMV_MOUNT_001
+TENSORS_DISCOVERED=201
+TENSORS_ADDRESSED=201
+TENSORS_REGISTERED=201
+INVALID_SHARD=0
+INVALID_RANGE=0
+OVERFLOW_RANGE=0
+ZERO_SIZE=0
+UNADDRESSED=0
+RMV_MOUNT_001=PASS
+[Deep2Engine] ResidencyManager: this=00000202FCDDAF90  registered=201 tensors  bytes=667078656  max=16539546624
+[RMV_MOUNT_001]=PASS
+[Deep2Engine] AUTHORITY_LADDER=BLOCKED
+BLOCKED_AT=PROVENANCE_MISMATCH
+BLOCKED_OWNER=MODEL_PROVENANCE
+MODEL_OPEN=PASS
+PROMOTE=0
+[Deep2Engine] AUTHORITY_LADDER=SESSION_SEAL_ONLY provenance_blocks_promote=1 schema=201
+[ThreadPool] Initializing with 32 threads...
+[ThreadPool] Initialized 32 worker threads
+[ThreadPool] Reinitializing with 32 threads...
+[ThreadPool] Reinitialized 32 worker threads
+[Deep2Engine] ThreadPool (loadModel): 32 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF7A784DA20 dequant=00007FF7A784B0B0 GetGEMV(12)=00007FF7A784DA20 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 22 GEMV kernels, 22 dequant kernels
+[KVCache] Lazy pages: layers=22 page=8 virtualMax=2048 heads=4 dim=64
+[KVCache] HOT_BYTES=360448 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] Model loaded successf[BUF] hidden=2048 heads=32 headDim=64 qOut=2048 headScratch=2048 kvDim=256 ffn=8192 ffnGateScratch=8192
+SSM_BUF stPer=32 cvPer=8192 inner=0 state=0 NOTE=STATE_NE_HEADS
+SSM_MAMBA2_ARM=0 reason=GEO_OR_BUF
+ully (201 tensors)
+[Deep2Engine] Initializing production inference engine...
+  Hidden Dim: 2048
+  Num Layers: 22
+  Num Heads: 32
+  Num KV Heads: 4
+  Head Dim: 64
+  Max Seq Len: 4096
+  Use ThreadPool: YES
+  Use KV Cache: YES
+  Use RoPE: YES
+[ThreadPool] Shutdown complete
+[ThreadPool] Initializing with 32 threads...
+[ThreadPool] Initialized 32 worker threads
+[ThreadPool] Reinitializing with 32 threads...
+[ThreadPool] Reinitialized 32 worker threads
+  ThreadPool: 32 threads (auto-detected)
+[KVCache] Addressable: layers=22 virtualSeq=4096 kv_heads=4 headDim=64 (hot pages only)
+[KVCache] Lazy pages: layers=22 page=8 virtualMax=4096 heads=4 dim=64
+[KVCache] HOT_BYTES=360448 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[HotPatcher] CrashRecovery UEF skipped (product default)
+[HotPatcher] Initialized - The Bottle is ready (with safety systems)
+[Deep2Engine] HotPatcher initialized - The Bottle is ready
+[QuantKernelRegistry] Q4_K GEMV=00007FF7A784DA20 dequant=00007FF7A784B0B0 GetGEMV(12)=00007FF7A784DA20 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 22 GEMV kernels, 22 dequant kernels
+[Deep2Engine] Telemetry controller initialized (PCIe stall + bandwidth + residency)
+[Deep2Engine] ENHANCEMENT STACK: HOST_DECODE (CPU; skip vulkan/speed)
+[Deep2Engine] NVMe streaming: ENABLED
+[NVMeStream] Mapped g:\~dev\rawrxd\models\tinyllama.gguf (0.62 GB)
+[NVMeStream] Max resident: 4.00 GB
+[Deep2Engine] GPU open failed slot 0 (AMD Radeon AI PRO R9700) ? keep opened sticks (no clear-all)
+[Deep2Engine] GPU open failed slot 1 (AMD Radeon RX 7800 XT) ? keep opened sticks (no clear-all)

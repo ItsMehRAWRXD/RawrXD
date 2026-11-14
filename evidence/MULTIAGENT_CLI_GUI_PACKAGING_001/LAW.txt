@@ -1,0 +1,15 @@
+MULTIAGENT_CLI_GUI_PACKAGING_001 — LAW
+PROMOTE=0 CERTIFIED=0 ENTERPRISE=0/128 GATE_STOP=1 TIP_CLIMB=HOLD
+CROSS_SHA_CREDIT=0 INVENT_PASS=0 NOT_RUN!=PASS
+
+1. SCOPE (WS8 / RAWRXD_ALL_BACKENDS_COMPLETE_001):
+   multi-agent concurrent inference, cancellation, resource isolation,
+   multifamily CLI/GUI selection+execution, reproducible offline packaging
+   without cloud model deps.
+2. Method C tip 7C9680CB is REPORTED — exact-SHA verify required.
+   Seal-file consistency ≠ on-disk binary present ≠ tip-now equality.
+3. Concurrent process PASS ≠ in-proc CancelGeneration CERT.
+   Lane-root isolation ≠ enterprise multi-tenant CERT.
+4. Offline M4 package RELATED ≠ winget/choco published ≠ CLEAN_VM PASS.
+5. RELATED ≠ CERT. Do not claim enterprise CERT from this pack.
+6. CROSS_SHA_CREDIT=0 across Method C / CEBA0 / W1 / FIX pins.
