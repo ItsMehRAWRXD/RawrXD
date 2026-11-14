@@ -17,4 +17,7 @@ FFN_ACT_2 maxAbs=2.980232e-07 UNDER_TOL=Y (control)
 CMD=remeasure_ffn_down_2_fp64.cmd / _kahan.cmd / _downkahan.cmd
 NEXT_OWNER=SPV_Q4KxQ8K_BITEXACT_OR_C740_LINEAGE_Q8K_HOST_FFN_DOWN
 PROMOTE=0
+## Disposition note (2026-11-14; does not rewrite trial REFUTE rows)
+SUPERSEDED_BY=GPU_PARITY_FFN_DOWN_2_CLOSE_001 (DOWN-only xd=-maxv/127 → UNDER_TOL=Y)
+PUSH_CLOSE=306d1c2297
 END
