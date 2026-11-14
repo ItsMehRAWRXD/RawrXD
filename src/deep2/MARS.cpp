@@ -2,6 +2,9 @@
 // MARS.cpp - Memory Allocation + Routing System Implementation
 // ============================================================================
 #include "MARS.hpp"
+#ifdef _WIN32
+#include <windows.h>
+#endif
 #include <cstdio>
 #include <cstring>
 #include <algorithm>
@@ -596,9 +599,13 @@ void* MARSController::AllocateDeviceMemory(size_t bytes) {
 }
 
 void MARSController::FreeDeviceMemory(void* ptr) {
-    if (ptr) {
-        std::free(ptr);
-    }
+    if (!ptr) return;
+#ifdef _WIN32
+    MEMORY_BASIC_INFORMATION mbi{};
+    if (VirtualQuery(ptr, &mbi, sizeof(mbi)) == 0) return;
+    if (mbi.State != MEM_COMMIT) return;
+#endif
+    std::free(ptr);
 }
 
 void MARSController::ResetRunTelemetry() {

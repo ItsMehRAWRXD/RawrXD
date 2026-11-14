@@ -349,11 +349,15 @@ static LONG WINAPI exceptionHandler(EXCEPTION_POINTERS* info) {
     printf("[SAFETY] CRASH DETECTED: type=%d, patch=%s, op=%s\n",
            static_cast<int>(ctx.type), ctx.patchId.c_str(), ctx.operation.c_str());
     
-    if (CrashRecovery::accessUserHandler()) {
+    /* Open-fail / ~Deep2Engine AVs must NOT nest emergencyRollback.
+     * Only invoke user handler when a patch operation context is armed. */
+    if (!ctx.patchId.empty() && CrashRecovery::accessUserHandler()) {
         CrashRecovery::accessUserHandler()(ctx);
+    } else {
+        printf("[SAFETY] skip rollback (no patch context)\n");
     }
     
-    return EXCEPTION_EXECUTE_HANDLER;
+    return EXCEPTION_CONTINUE_SEARCH;
 }
 #else
 static void signalHandler(int sig, siginfo_t* info, void* context) {
@@ -838,3 +842,4 @@ private:
 };
 
 } // namespace Deep2
+

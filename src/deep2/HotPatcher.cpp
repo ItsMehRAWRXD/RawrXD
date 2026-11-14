@@ -229,19 +229,26 @@ public:
             return false;
         }
         
-        // Safety: Initialize crash recovery
-        CrashRecovery::initialize([](const CrashRecovery::CrashContext& ctx) {
-            printf("[SAFETY] Crash detected during patch operation!\n");
-            printf("  Patch: %s\n", ctx.patchId.c_str());
-            printf("  Operation: %s\n", ctx.operation.c_str());
-            printf("  Type: %d\n", static_cast<int>(ctx.type));
-            
-            // Auto-rollback if enabled
-            if (GetHotPatcher().isAutoRollbackEnabled()) {
-                printf("[SAFETY] Initiating emergency rollback...\n");
-                GetHotPatcher().emergencyRollback();
-            }
-        });
+        /* Product default: do NOT install CrashRecovery UEF. Open-fail
+         * ~Deep2Engine AVs nested into emergencyRollback (187BFC4C WER
+         * FaultOffset 0x120ed2/0x120f4d). Opt-in: RAWRXD_HOTPATCHER_CRASH_RECOVERY=1. */
+        const char* cr = std::getenv("RAWRXD_HOTPATCHER_CRASH_RECOVERY");
+        if (cr && cr[0] == '1') {
+            CrashRecovery::initialize([](const CrashRecovery::CrashContext& ctx) {
+                printf("[SAFETY] Crash detected during patch operation!\n");
+                printf("  Patch: %s\n", ctx.patchId.c_str());
+                printf("  Operation: %s\n", ctx.operation.c_str());
+                printf("  Type: %d\n", static_cast<int>(ctx.type));
+                if (!ctx.patchId.empty() &&
+                    GetHotPatcher().isAutoRollbackEnabled()) {
+                    printf("[SAFETY] Initiating emergency rollback...\n");
+                    GetHotPatcher().emergencyRollback();
+                }
+            });
+            printf("[HotPatcher] CrashRecovery UEF armed (opt-in)\n");
+        } else {
+            printf("[HotPatcher] CrashRecovery UEF skipped (product default)\n");
+        }
         
         initialized = true;
         printf("[HotPatcher] Initialized - The Bottle is ready (with safety systems)\n");
@@ -752,35 +759,67 @@ PatchMetadata HotPatcher::getMetadata(const std::string& patchId) {
     return PatchMetadata{};
 }
 
+#ifdef _WIN32
+/* SEH island: C++ EH objects forbidden in same function as __try. */
+static int HotPatcherEmergencyRollbackSeh(HotPatcher* self) {
+    __try {
+        return self->emergencyRollbackBody() ? 1 : 0;
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+        printf("[HotPatcher] EMERGENCY ROLLBACK SEH swallowed\n");
+        return 0;
+    }
+}
+#endif
+
+bool HotPatcher::emergencyRollbackBody() {
+    /* Validate Impl mapping before field touch — gemma WER @ +0x42 was
+     * cmp [impl_+0x180] on dangling Impl (llama @ +0xBD bad PatchImpl*). */
+    if (!impl_) {
+        printf("[HotPatcher] EMERGENCY ROLLBACK skip (null impl)\n");
+        return false;
+    }
+    if (!MemoryProtector::addrOk(impl_.get(), sizeof(bool) + 0x180)) {
+        printf("[HotPatcher] EMERGENCY ROLLBACK skip (impl unmapped)\n");
+        return false;
+    }
+    if (!impl_->initialized) {
+        printf("[HotPatcher] EMERGENCY ROLLBACK skip (not init)\n");
+        return false;
+    }
+    printf("[HotPatcher] EMERGENCY ROLLBACK initiated\n");
+    bool success = true;
+    std::vector<std::string> active;
+    {
+        std::lock_guard<std::recursive_mutex> lock(impl_->mutex);
+        for (const auto& [id, patch] : impl_->patches) {
+            if (!patch) continue;
+            if (!MemoryProtector::addrOk(patch.get(), 0x164)) continue;
+            if (patch->status == PatchStatus::ACTIVE) active.push_back(id);
+        }
+    }
+    for (const auto& id : active) {
+        if (!rollback(id)) success = false;
+    }
+    printf("[HotPatcher] Emergency rollback %s\n",
+           success ? "COMPLETE" : "PARTIAL");
+    return success;
+}
+
 bool HotPatcher::emergencyRollback() {
-    /* M1M2_081b WER FaultOffset landed here during gemma VRAM AV cleanup.
-     * Re-entrancy / bad target must not nest another 0xC0000005. */
+    /* M1M2_084 WER FaultOffset inside emergencyRollback during ~Deep2Engine
+     * after open-fail — re-enter / dangling Impl must not nest AV. */
     static std::atomic<int> s_inEmergency{0};
     int expected = 0;
     if (!s_inEmergency.compare_exchange_strong(expected, 1)) {
         printf("[HotPatcher] EMERGENCY ROLLBACK re-enter skipped\n");
         return false;
     }
-    bool success = true;
-    if (!impl_ || !impl_->initialized) {
-        printf("[HotPatcher] EMERGENCY ROLLBACK skip (not init)\n");
-        success = false;
-    } else {
-        printf("[HotPatcher] EMERGENCY ROLLBACK initiated\n");
-        std::vector<std::string> active;
-        {
-            std::lock_guard<std::recursive_mutex> lock(impl_->mutex);
-            for (const auto& [id, patch] : impl_->patches) {
-                if (patch && patch->status == PatchStatus::ACTIVE)
-                    active.push_back(id);
-            }
-        }
-        for (const auto& id : active) {
-            if (!rollback(id)) success = false;
-        }
-        printf("[HotPatcher] Emergency rollback %s\n",
-               success ? "COMPLETE" : "PARTIAL");
-    }
+    bool success = false;
+#ifdef _WIN32
+    success = HotPatcherEmergencyRollbackSeh(this) != 0;
+#else
+    success = emergencyRollbackBody();
+#endif
     s_inEmergency.store(0);
     return success;
 }

@@ -130,6 +130,7 @@
 #include <cmath>
 #include <cstring>
 #include <stdexcept>
+#include <new>
 #include <chrono>
 #include <algorithm>
 #include <cctype>
@@ -12256,10 +12257,21 @@ void Deep2Engine::enableToroidalKV(bool enable, size_t maxTokens) {
         size_t headDim = modelWeights.headDim;
         size_t numHeads = modelWeights.numHeads;
         size_t numLayers = modelWeights.numLayers;
-        toroidalKV_ = std::make_unique<rawrxd::ToroidalKVCache>(
-            headDim, numHeads, maxTokens, numLayers);
-        printf("[Deep2Engine] ToroidalKVCache initialized: %zu tokens, %zu layers, %zu heads, %zu dim\n",
-               maxTokens, numLayers, numHeads, headDim);
+        try {
+            toroidalKV_ = std::make_unique<rawrxd::ToroidalKVCache>(
+                headDim, numHeads, maxTokens, numLayers);
+            printf("[Deep2Engine] ToroidalKVCache initialized: %zu tokens, "
+                   "%zu layers, %zu heads, %zu dim\n",
+                   maxTokens, numLayers, numHeads, headDim);
+        } catch (const std::bad_alloc&) {
+            toroidalKV_.reset();
+            toroidalKVEnabled_ = false;
+            std::fprintf(stderr,
+                "TOROIDAL_KV_BAD_ALLOC=1 tokens=%zu FAIL_CLOSED\n", maxTokens);
+            std::fflush(stderr);
+            printf("[Deep2Engine] ToroidalKVCache: DISABLED (bad_alloc)\n");
+            return;
+        }
     }
     printf("[Deep2Engine] ToroidalKVCache: %s\n", enable ? "ENABLED" : "DISABLED");
 }

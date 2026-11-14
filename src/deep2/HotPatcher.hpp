@@ -342,6 +342,7 @@ public:
     
     // Emergency rollback all patches
     bool emergencyRollback();
+    bool emergencyRollbackBody(); /* SEH island; prefer emergencyRollback() */
     
     // Verify system integrity
     bool verifyIntegrity();
@@ -416,3 +417,5 @@ HotPatcher& GetHotPatcher();
 } // namespace Deep2
 
 #endif // DEEP2_HOTPATCHER_HPP
+
+
