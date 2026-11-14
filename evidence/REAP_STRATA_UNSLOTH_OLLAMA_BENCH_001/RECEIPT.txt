@@ -1,5 +1,5 @@
 RECEIPT REAP_STRATA_UNSLOTH_OLLAMA_BENCH_001
-ASOF=2026-11-14T07:03:39-05:00
+ASOF=2026-11-14T07:35:30-05:00
 HOST=local Ollama :11434 + rawr.exe build_ninja\bin
 PROMPT=Say hi in one short sentence.
 NUM_PREDICT=32 TEMPERATURE=0
@@ -8,10 +8,13 @@ PROMOTE=0 CERTIFIED=0 COMPETITIVE_PASS=0 INVENT_PASS=0
 OLLAMA_REAP_PASS=3 FAIL=3
   PASS: qwen3_6-35b@25.545 ornith-1_5@127.401 laguna-s-2_1@30.611
   FAIL: minimax create_split; glm GGML_ASSERT; nemotron GGML_ASSERT
-FULL_OLLAMA_PEER_PASS=4
+FULL_OLLAMA_PEER_PASS=4 (+ laguna r97 rebench eval=11 tps=1.949)
   qwen36-reference-local@129.313 nemotron-3.5-lightning:30b@136.387
-  ornith-1.5:35b@132.658 laguna-s-2.1:Q4_K_M@3.144 (eval_count=11)
-DEEP2_PASS=0 FAIL=5 NOT_RUN=1
+  ornith-1.5:35b@132.658 laguna-s-2.1:Q4_K_M@1.949 (r97; eval_count=11)
+DEEP2_PASS=0 PARTIAL=1 (Qwen SSM-auth R97 TOK=32) FAIL=4 NOT_RUN=1
+H2H_RATIOS=H2H_RATIOS.csv (measured; NO_INVENT_9_7X=1)
 UNSLOTH_SRC=0 for all probed GGUFs (no KV/path proof)
-HEAD_TO_HEAD=PARTIAL (Ollama REAP↔peer pairs) · Deep2 H2H NOT_SEALED
-LOGS=runs/bench_all2.log ollama/*.json deep2/*.err.log
+HEAD_TO_HEAD=PARTIAL (Ollama pairs + Deep2 Qwen TOK scaffold)
+LOGS=runs/ deep2/*_ssmauth_r97.* ollama/*_r97.*
+SEAL=DEEP2_SSM_AUTH_QWEN_R97.txt
+BOARD=../PRODUCTION_MATURITY_TOP25_001/board_receipts/BR_REAP_H2H_DEEP2_SSM_AUTH_R97.txt

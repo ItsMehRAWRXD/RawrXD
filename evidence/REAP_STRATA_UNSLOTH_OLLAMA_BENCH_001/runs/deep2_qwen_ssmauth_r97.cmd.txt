@@ -1,0 +1,4 @@
+EXE=G:\~dev\rawrxd\build_ninja\bin\rawr.exe
+GGUF=F:\OllamaModels\_REAP16\Qwen3_6-35B-A3B-GGUF-REAP199\Qwen3.6-35B-A3B-Q4_K_M.gguf
+ENV=RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM=1
+ARGS=run ... -p Say hi... --max-tokens 32

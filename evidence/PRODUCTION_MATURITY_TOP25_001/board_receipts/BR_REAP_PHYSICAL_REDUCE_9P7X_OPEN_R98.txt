@@ -1,0 +1,50 @@
+BR_REAP_PHYSICAL_REDUCE_9P7X_OPEN_R98
+ASOF_LOCAL=2026-11-14T07:35:00-05:00
+AUTH=BOARD_SINGLE_WRITER / R47
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 CROSS_SHA_CREDIT=0
+PCT_HELD=67/48/48 NO_PCT_REWRITE=1
+RESULT=REAP_9P7X_OPEN_HONEST
+PERFORMANCE_PASS=0
+NOT_RUN!=PASS
+
+## Authority pack (exact SHAs / commits)
+PACK=evidence/REAP_STRATA_UNSLOTH_OLLAMA_BENCH_001/
+PACK_COMMIT=05cbb704a4ebf8f1b7e7cddf73628fc54bcf47a4
+ASSESS_RECEIPT=BR_REAP_BENCH_ASSESS_R97
+STATUS=REAP_STRATA_UNSLOTH_OLLAMA_BENCH_001/STATUS.txt
+MATRIX=REAP_STRATA_UNSLOTH_OLLAMA_BENCH_001/OLLAMA_MATRIX.csv
+
+## Measured H2H TPS (Ollama REAP16 vs FULL peer; num_predict target 32)
+# ratio = REAP_tok/s ÷ peer_tok/s when both PASS + comparable eval_count
+PAIR_QWEN=
+  REAP=25.545 tok/s eval_count=32
+  PEER=129.313 tok/s eval_count=32
+  RATIO=0.197× (REAP slower; ≠ speedup)
+PAIR_ORNITH=
+  REAP=127.401 tok/s eval_count=32
+  PEER=132.658 tok/s eval_count=32
+  RATIO=0.960× (~parity; ≠ 9.7×)
+PAIR_LAGUNA=
+  REAP=30.611 tok/s eval_count=32
+  PEER=3.144 tok/s eval_count=11
+  NAIVE_RATIO=9.74×
+  WORKLOAD_EQUIVALENT=0 (eval_count 32≠11)
+  LAGUNA_9_7X=NOT_EQUIVALENT_WORKLOAD
+  ≠ invent PERFORMANCE_PASS / ≠ claim measured 9.7×
+
+## Failures / gaps (fail-closed)
+OLLAMA_REAP_GENERATION=PARTIAL_PASS 3/6
+DEEP2_REAP_GENERATION=FAIL TOK=0 DEEP2_PASS=0
+UNSLOTH_SRC_PROVEN=0
+PHYSICAL_REDUCE_PRODUCT_PATH=
+  src/reap/ReapPhysicalReduce*.{hpp,cpp} SOURCE_WIRED
+  RUNTIME TTFT/TPS/footprint vs baseline on product EXE+MODEL SHAs = NOT_SEALED_TO_9P7X
+G09=REAP_TIP_PORT_001/k2gen/G09_DISPOSITION.md QUALITY_PASS=0 HOST_GPU_TOKEN_MATCH=0/8
+
+## Disposition
+REAP_measured_x_or_OPEN=OPEN
+REASON=no equivalent-workload measured ≥9.7× on sealed EXE/MODEL SHAs;
+  Laguna naive ~9.74× invalidated by eval_count mismatch; Deep2 REAP TOK=0
+NEXT_OWNER=DEEP2_REAP_TOK then equal-eval_count H2H footprint+TTFT+TPS seal
+PROMOTE=0
+END

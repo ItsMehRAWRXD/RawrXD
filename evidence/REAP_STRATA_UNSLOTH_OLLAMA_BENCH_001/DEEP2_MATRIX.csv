@@ -5,3 +5,4 @@ GLM-4_7-Flash-GGUF-REAP59,G:\~dev\rawrxd\build_ninja\bin\rawr.exe,,0,,FAIL,STREA
 nemotron-3_5-lightning-30b-REAP81,G:\~dev\rawrxd\build_ninja\bin\rawr.exe,11,0,,FAIL,SSM-CERT-001 refuse experimental SSM (23 layers),deep2/nemotron-3_5-lightning-30b-REAP81.err.log
 ornith-1_5-35b-REAP194,G:\~dev\rawrxd\build_ninja\bin\rawr.exe,11,0,,FAIL,SSM-CERT-001 refuse experimental SSM (30 layers),deep2/ornith-1_5-35b-REAP194.err.log
 laguna-s-2_1-Q4_K_M-REAP35,G:\~dev\rawrxd\build_ninja\bin\rawr.exe,11,0,,FAIL,GGUF_DYNAMIC_GEOMETRY BLOCKED_AT=HEADS,deep2/laguna-s-2_1-Q4_K_M-REAP35.err.log
+Qwen3_6-35B-A3B-GGUF-REAP199_ssmauth_r97,G:\~dev\rawrxd\build_ninja\bin\rawr.exe,NULL,32,0.207257,PARTIAL,EXPERIMENTAL_SSM_AUTH=1 PROD_DECODE=0 CLEAN_EXIT_LOG=1 PROCESS_EXIT=NULL BLOCKED_AT=PROVENANCE_MISMATCH,deep2/Qwen3_6-35B-A3B-GGUF-REAP199_ssmauth_r97.err.log
