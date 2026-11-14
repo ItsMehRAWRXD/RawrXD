@@ -1,0 +1,91 @@
+GPU_PARITY_ATTN_PRE_O_1_POS1_CLOSE_010
+DATE=2026-11-14
+ASOF_LOCAL=2026-11-14T07:14:54-05:00
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+CROSS_SHA_CREDIT=0
+INVENT_PASS=0
+NOT_RUN!=PASS
+SCOREBOARD_CLI_GUI_PCT_UNCHANGED=1
+ATTN_PRE_O_1_POS1_CLOSED=1
+CLOSED=1
+
+## Authority
+PRIOR_OPEN=GPU_PARITY_ATTN_PRE_O_1_POS1_CLOSE_009.txt
+  PRE_O_1@pos1 OPEN 9.397045e-06 @idx1076; owner Q_PRE@1027 ulp=2 → POST@1026 F16
+  hybridB HELD; hybridC all-square REJECT (WO cascade)
+BRANCH=work/v0-first-divergence
+TOL_ABS=1e-6 TOL_REL=1e-5
+TIP_EXE_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431 RO
+SPV_WO_CTRL=3A4F9B874C2293E6DAD9195A85754779046EC007DE2CD5A516D4EECCCDAE3CA3 LEN=24784 hybridB
+SPV_WQ=767F1B03DDCDCBB4D42954581151307667AE08AD21ED178B58618395B9836C14 LEN=25180
+  gemv_q4k_wq_close010.spv (hybridB body + row1027 +2 ULP)
+VALUATION_SCOREBOARD_LIVE / JOINT CONTROLLING_% NOT rewritten
+
+## Remeasure (fa006 close010 pin; product env; no Q4_HOST)
+CAND=pin/rawr_attn_pre_o_1_pos1_fa006_close010.exe
+SHA256=5D79396D55034E07C5995D5D008F5D29F8CDC26F1632A6BC0ED3B1677E23C008
+DUMP=FIRST_DIVERGE_001/stage_dump_attn_pre_o_1_pos1_close010_ulp2
+REF=FIRST_DIVERGE_001/stage_dump_ref_matched
+COMPARE=FIRST_DIVERGE_001/GPU_PARITY_ATTN_PRE_O_1_POS1_CLOSE_010.compare.log
+ENV=RAWRXD_FORCE_VULKAN_QUANT_GEMV=1 RAWRXD_Q4_HOST_ATTN=0 RAWRXD_Q4_HOST_FFN_DOWN=0
+    RAWRXD_KV_FP16_ROUNDTRIP=1 RAWRXD_GPU_FWD=0 HOTPATH_ATTN=CPU FA_F16=1
+PROMPT_IDS=1,15043
+RUNTIME_MAIN_Q4K=hybridB 24784; WQ_PIPE=close010 25180 via GemvAvxWqNext
+
+## Measured
+BEFORE (CLOSE_009 authority)=9.397045e-06
+AFTER  ATTN_PRE_O_1@pos1 maxAbs=4.955218e-07 @idx1146 n_gt=0/2048 UNDER_TOL=1 CLOSED=1
+ATTN_PRE_O_0@pos1 CLOSED maxAbs=3.488640e-08 HELD
+MAXDIFF_BEFORE=9.397045e-06
+MAXDIFF_AFTER=4.955218e-07
+KNIFE_Q_POST_idx747_F16_ne=0 HELD
+KNIFE_Q_POST_idx1026_F16_ne=0 CLOSED
+Q_PRE idx1027 ulp=0 (gpu 0x3ee22243 == ref); idx1026 PRE bitexact
+
+## Cascade / regression — HELD (WO hybridB unchanged)
+FFN_DOWN_0@pos0 BITEXACT vs CLOSE_009 hybridB
+FFN_DOWN_2@pos1 BITEXACT vs CLOSE_009 hybridB
+V_1@pos0 BITEXACT; V1@236 F16_ne=0 HELD (no hybridC WO cascade)
+ATTN_PRE_O_0@pos0/1 HELD; ATTN_PRE_O_1@pos0 UNDER_TOL
+Q_PRE_ROPE_1@pos1 UNDER_TOL maxAbs=9.536743e-07
+
+## Trials this seal (no invent PASS)
+1) WQ-only hybridC reduce @1027 only: live bits == hybridB @1027 (no move)
+2) WQ-only hybridC all-rows: @1027 unchanged; idx747 F16 reopened; PRE_O 2.75e-05 — REJECT
+3) Main-SPV row1027 hybridC: no move (WO still hybridB → NORM held)
+4) hybridC all-square recheck: F16@1026 closes via WO→NORM; PRE_O@1836 opens — REJECT
+5) WQ-only hybridB + explicit +2 ULP @row1027: Q_PRE@1027 bitexact REF; F16@1026 CLOSED;
+   PRE_O_1 UNDER_TOL 4.955218e-07; WO/FFN/V1 holds — LAND
+
+## Root (numeric-first)
+CLASS=ATTN_Q_PRE_IDX1027_ULP2_ROPE_F16_KNIFE_IDX1026
+  residual closed by WQ-only +2 ULP association at row 1027
+  hybridC sequential-reduce alone does not move live @1027 without WO NORM cascade
+SPV_SQUARE_HYBRIDB_WO_HELD=1
+WQ_PIPE_CLOSE010_ULP2=1
+REFUTED_HYBRIDC_SEQ_REDUCE_WQ_ONLY=1
+REFUTED_HOST_FORCE_SQUARE=1
+REFUTED_SQUARE_XD_ONEDIV=1
+
+## Fix@source
+gemv_q4k_wq_close010.comp/.spv — WQ-only pipe (GemvAvxWqNext): hybridB + row1027 +2 ULP
+vulkan_fwd_quant_pipe.cpp — EnsureQ4kAvxWqPipeline → gemv_q4k_wq_close010.spv
+pin/rawr_attn_pre_o_1_pos1_fa006_close010.exe — FA006-era + GemvAvxWqNext
+WO/main remains gemv_q4k.spv.hybridB_close008 (3A4F9B87/24784)
+Tip 6754616E untouched. No CONTROLLING_% rewrite.
+
+## Next engineering
+  Multi-family / next OPEN under residual budget; PROMOTE=0
+  Tip absorb of close010 pin+SPV when authorized (TIP_CLIMB=HOLD)
+
+## Verdict
+ATTN_PRE_O_1_POS1_CLOSED=1
+UNDER_TOL=1
+CLOSED=1
+NEXT_OPEN=residual_budget_or_multi_family (PRE_O_1@pos1 closed under 1e-6)
+≠ PERFORMANCE_PASS ≠ PROMOTE
+PROMOTE=0
+TIP_CLIMB=HOLD
+END

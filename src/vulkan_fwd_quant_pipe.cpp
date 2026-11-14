@@ -50,7 +50,7 @@ bool VulkanCompute::EnsureQ3kPipeline() { return CreateGemvPipe("gemv_q3k.spv", 
 bool VulkanCompute::EnsureQ2kPipeline() { return CreateGemvPipe("gemv_q2k.spv", q2k_pipe_); }
 bool VulkanCompute::EnsureQ8Pipeline() { return CreateGemvPipe("gemv_q8.spv", q8_pipe_); }
 bool VulkanCompute::EnsureQ4kAvxWqPipeline() {
-    /* CLOSE_010: WQ-only hybridB + row1027 hybridC reduce (not R88 full AVX). */
+    /* CLOSE_010: WQ-only hybridB + row1027 +2 ULP (WO stays hybridB_close008). */
     return CreateGemvPipe("gemv_q4k_wq_close010.spv", q4k_avx_wq_pipe_);
 }
 
