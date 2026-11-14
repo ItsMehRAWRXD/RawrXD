@@ -17,15 +17,20 @@ bool VulkanCompute::DispatchGEMVQuant(int ggmlType, const void* packed, size_t b
                                       uint64_t pinKey) {
     /* FIRST_DIVERGE_001 / BATCH2_Q4K_GEMV_001:
      * Q4 attn (12): FORCE_VULKAN still wins (ATTN_PRE_O_0 SPV close).
-     * Q4 FFN gate/up (rows>cols): host wins even under FORCE (FFN_ACT ULP).
-     * Q6 (14): FORCE wins — host-Q6 override moves V_1[59] farther from FP16
-     *   RNE boundary (ATTN_NORM_1 cascade owns the bucket; see ATTN_PRE_O_1). */
+     * Q4 FFN gate/up (rows>cols): PARITY=1 host (FORCE still SPV). R65 measured
+     *   HOST-under-FORCE REJECT (ACT_2 9e-1 >> SPV 4.6e-5); next=SPV bitexact.
+     * Q6 attn_v: FORCE → SPV. Q6 FFN_DOWN: RAWRXD_Q6_HOST_FFN_DOWN=1 opt-in. */
     const char* hostPar = std::getenv("RAWRXD_QUANT_HOST_Q8K_PARITY");
     const char* forceVk = std::getenv("RAWRXD_FORCE_VULKAN_QUANT_GEMV");
-    const bool hostQ6 = hostPar && hostPar[0] == '1' && ggmlType == 14 &&
-                        !(forceVk && forceVk[0] == '1');
+    const char* ffnDownHost = std::getenv("RAWRXD_Q6_HOST_FFN_DOWN");
+    const bool force = forceVk && forceVk[0] == '1';
+    const bool hostQ6FfnDown = ffnDownHost && ffnDownHost[0] == '1' &&
+                               ggmlType == 14 && rows >= 1024u && cols > rows;
+    const bool hostQ6 =
+        (hostPar && hostPar[0] == '1' && ggmlType == 14 && !force) ||
+        hostQ6FfnDown;
     const bool hostQ4Attn = hostPar && hostPar[0] == '1' && ggmlType == 12 &&
-                            !(forceVk && forceVk[0] == '1');
+                            !force;
     const bool hostQ4Ffn = hostPar && hostPar[0] == '1' && ggmlType == 12 &&
                            rows > cols; /* gate/up; not down (rows<=cols) */
     const bool wantHost = hostQ6 || hostQ4Attn || hostQ4Ffn;
@@ -37,9 +42,9 @@ bool VulkanCompute::DispatchGEMVQuant(int ggmlType, const void* packed, size_t b
             gemv(static_cast<const uint8_t*>(packed), input, output, rows, cols);
             std::fprintf(stderr,
                          "QUANT_GEMV_HOST_Q8K_PARITY type=%d rows=%u cols=%u "
-                         "(FFN-Q4 rows>cols overrides FORCE; Q6 respects FORCE) "
-                         "PROMOTE=0\n",
-                         ggmlType, rows, cols);
+                         "q6_ffn_down=%d force=%d PROMOTE=0\n",
+                         ggmlType, rows, cols, hostQ6FfnDown ? 1 : 0,
+                         force ? 1 : 0);
             std::fflush(stderr);
             if (ggmlType == 12) ++q4k_packed_ops_;
             if (ggmlType == 14) ++q6k_packed_ops_;

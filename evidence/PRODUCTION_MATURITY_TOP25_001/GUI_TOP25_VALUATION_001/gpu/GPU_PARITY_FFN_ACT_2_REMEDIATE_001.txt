@@ -1,7 +1,7 @@
 GPU_PARITY_FFN_ACT_2_REMEDIATE_001
 IMMUTABLE_RECEIPT=1
 DATE=2026-11-13
-ASOF_LOCAL=2026-11-13T22:38:52-05:00
+ASOF_LOCAL=2026-11-13T22:50:00-05:00
 OWNER=M1_FFN_ACT_2_REMEDIATE
 PACK=PRODUCTION_MATURITY_TOP25_001 / GUI_TOP25_VALUATION_001/gpu
 PROMOTE=0
@@ -14,92 +14,53 @@ SEAL_KIND=OPEN
 TIP_BIND=6754616E (UNCHANGED; tip EXE RO)
 CLI_BOARD_TIP_PIN=15A119D1 (UNCHANGED; rawr_tip_15A119_HOLD.exe immutable)
 ABSORB_NEW_TIP=HELD
+PARENT_CHOICE=A_GATE_UP_RESIDUAL_TIGHTEN
+REJECT_B_SILENT_CLASS_TOL_PCT=1
 
 ## Parent authority (immutable)
 GPU_PARITY_LAYER2_PLUS_C7402085_001.txt
   FIRST_MATERIAL=FFN_ACT_2 maxAbs=4.577637e-05 (FFN abs_tol=1e-5)
-  FFN_GATE_2+FFN_UP_2 under tol; cascade FFN_DOWN_2+LAYER2_OUT
-GPU_PARITY_ATTN_PRE_O_FP16_PRODUCT_WIRE_001.txt (layer0+1 PRE_O product-wire)
-GPU_PARITY_FIRST_MATERIAL_DIVERGENCE_001.txt (class abs/rel law)
+GPU_PARITY_ATTN_PRE_O_FP16_PRODUCT_WIRE_001.txt
+GPU_PARITY_FIRST_MATERIAL_DIVERGENCE_001.txt
 
-## Cand EXE (hash-verified this turn; NO rebuild)
+## Cand EXE (hash-verified; NO tip/C740 thrash)
 PRODUCT_EXE=build_ninja/bin/rawr_gpufwd_C7402085.exe
-PRODUCT_PIN=FIRST_DIVERGE_001/pin/rawr_attn_pre_o_fp16_product_wire.exe
 SHA256=C74020852AC324FC6827A896060E5508F74569C7F53EB7198B9CDB92DEAEB750
-SHA_VERIFY=PASS (both paths same digest)
-SPV_SHA256=AB7212EC2A30839EF51B9847F90C62CB2EEBCF4A010E122D0CBE0F228C8AC5D5 LEN=16292
+SHA_VERIFY=PASS
+SPV=pin/gemv_q4k.spv SHA256=AB7212EC2A30839EF51B9847F90C62CB2EEBCF4A010E122D0CBE0F228C8AC5D5 LEN=16292
 HOLD_IMMUTABLE=15A119D148572A4B3011AA9A8AFFE605F8FF40D64B7BF83673ECC10A9393C967
 TIP_IMMUTABLE=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431
-NO_REBUILD=1
-NO_LINK_THRASH=1
 
-## ROOT_CAUSE_CLEAR=Y
-HYPOTHESIS_SiLU_GELU_ACT_KERNEL=REFUTED
-HYPOTHESIS_FP16_RT_OR_BROADCAST_ON_ACT=REFUTED
-HOTPATH_FFN=CPU (XR_SwiGLU_F32 / XR_SiLU_F32); HOTPATH_GEMV=VULKAN Q4_KxQ8_K
-EVIDENCE=
-  1. GPU FFN_ACT_2 == silu(FFN_GATE_2)*FFN_UP_2 bitexact (|gpu-pred|=0 at peak)
-  2. REF FFN_ACT_2 == silu(REF_GATE)*REF_UP bitexact
-  3. Peak i=5475: gate Δ=2 F32 ULPs, up Δ=1 ULP, act Δ=3 ULPs
-  4. |act|≈161.118 → F32 ULP=1.5258789e-5 > abs_tol 1e-5
-  5. maxAbs=4.5776367e-05 == exactly 3*ULP(161)
-  6. n_gt_abs=1/5632; rel_rms=3.790e-9 << rel_tol 1e-4
-  7. FP16 RT of gate/up/act vs REF: WORSE (maxAbs ~6e-3..9e-2)
-  8. L0/L1 ACT under tol because |gate|*|up| small (no ULP-floor breach)
-
+## ROOT_CAUSE_CLEAR=Y (unchanged)
 OWNER=Q4_K×Q8_K GATE/UP ULP residual (FORCE_VULKAN SPV) product-amplified by correct SiLU
-NOT_OWNER=SiLU/SwiGLU formula, GELU mis-dispatch, FP16 act round-trip, broadcast layout
+HOTPATH_FFN_ACT=CPU silu(gate)*up bitexact; HOTPATH_GEMV=VULKAN gemv_q4k.spv
+Peak i=5475: gate Δ=2 ULP, up Δ=1 ULP, act Δ=3 ULP
+|act|≈161.118 → F32 ULP=1.5258789e-5 > abs_tol 1e-5
+maxAbs=4.5776367e-05 == exactly 3*ULP(161)
 
-## Remeasure (this turn — C740 pin FORCE_VULKAN; no private link)
-EXE=build_ninja/bin/rawr_gpufwd_C7402085.exe
-ENV=RAWRXD_FORCE_VULKAN_QUANT_GEMV=1 RAWRXD_QUANT_HOST_Q8K_PARITY=0
-    RAWRXD_PROMPT_TOKEN_IDS=1,15043 RAWRXD_STAGE_DIGEST=1
-    RAWRXD_STAGE_DUMP_DIR=…/stage_dump_ffn_act2_c740_after
-    RAWRXD_STAGE_DUMP_MAX_LAYER=2
-CMD=FIRST_DIVERGE_001/remeasure_ffn_act2_c740_after.cmd
-COMPARE=GPU_PARITY_FFN_ACT_2_REMEDIATE_001.remeasure_after.compare.txt
-REF_SNAPSHOT=stage_dump_ffn_act2_c740_after_ref (seq283/285/287)
-DUMP_BITEXACT_VS_PRIOR_L2PLUS=Y (GATE/UP/ACT SHA256 match stage_dump_layer2_plus_C7402085)
-
-BEFORE maxAbs(FFN_ACT_2)=4.577637e-05
-AFTER  maxAbs(FFN_ACT_2)=4.577637e-05
-UNDER_TOL=N
-RUNTIME_REACHED=1
-TOKEN_SURVIVED=1 (GENERATED_TOKENS=1)
-MATCH_PASS=0
-INVENT_PASS=0
-
-| Tensor     | maxAbs      | UNDER_TOL | Kind                |
-|------------|-------------|-----------|---------------------|
-| FFN_GATE_2 | 3.814697e-06| Y         | BITWISE_DIFF        |
-| FFN_UP_2   | 9.536743e-07| Y         | BITWISE_DIFF        |
-| FFN_ACT_2  | 4.577637e-05| N         | MATERIAL_DIVERGENCE |
-
-## Proposal (still MATERIAL; no act-kernel invent; no PCT rewrite)
-A) GATE/UP residual tighten: reduce Q4_K×Q8_K SPV ULP on FFN gate/up
-   (rows=5632 cols=2048) so product silu(gate)*up stays ≤1e-5 at |act|~161
-   (budget ≈ ≤1 ULP combined after amplify), OR
-B) Class-tol parent absorb: FFN abs_tol parent law absorb ULP-floor at large
-   |act| (e.g. max(abs_tol, k*ulp(|x|))) — parent decides; do NOT rewrite PCT here.
-REJECT invent MATCH_PASS / CLOSE / PROMOTE from remasure alone.
-HOST_Q4_ROWS_GT_COLS remains SOURCE_WIRED only (unlinked; not exercised).
-
-## Explicit non-claims
-Do NOT invent MATCH_PASS / CLOSE from remasure alone.
-Do NOT absorb over HOLD 15A119 / tip 6754616E.
-Do NOT raise PROMOTE.
-Do NOT invent act-kernel fix (ROOT_CAUSE_CLEAR: ULP cascade from GATE/UP).
-NEXT_GATE=PARENT_CHOOSE_GATE_UP_TIGHTEN_OR_CLASS_TOL_ABSORB
+## Parent A attempt this turn
+1) C740 remasure FORCE=1 PARITY=0: before=after=4.577637e-05 UNDER_TOL=N (R62)
+2) HOST_Q4_ROWS_GT_COLS under FORCE exercised (cand SHA256=3892009339AE6CB6…):
+   q4_ffn=1 logged rows=5632 cols=2048; RUNTIME_REACHED=1 GENERATED_TOKENS=1
+   GATE_0 host-ref=5.027e-3 >> SPV-ref=2.384e-7
+   ACT_2 after=9.013e-01 UNDER_TOL=N (WORSE)
+   HOST_PATH_REJECTED_AS_TIGHTEN=1
+3) ULP floor law: tol/ULP(161)=0.655 ⇒ UNDER_TOL requires bitexact GATE/UP
+   (≤0 ULP on act). SPV currently 3 ULP — not closable by ≤1-ULP budget alone.
 
 ## Verdict
-ROOT_CAUSE_CLEAR=Y
-SEAL_KIND=OPEN
-SOURCE_WIRED=1 (host Q4 rows>cols; unlinked)
-RUNTIME_REACHED=1 (C740 FORCE_VULKAN remasure)
-maxAbs before=4.577637e-05 after=4.577637e-05 UNDER_TOL=N
+BEFORE maxAbs(FFN_ACT_2)=4.577637e-05
+AFTER  maxAbs(FFN_ACT_2)=4.577637e-05 (SPV/C740 authority; host trial rejected)
+UNDER_TOL=N
 MATCH_PASS=0
+NOT_CLOSABLE_THIS_TURN=1
+NEXT_OWNER=SPV_Q4KxQ8K_BITEXACT (gemv_q4k.comp / .spv float-contract or
+  serial-reduce to 0 ULP vs llama mul_mat on 5632×2048 gate/up)
+REJECT_HOST_Q4_ROWS_GT_COLS_FORCE=1 (measured worse)
+NO_CLASS_TOL_PCT=1
 PROMOTE=0
 TIP_CLIMB=HOLD
-TIP_BIND=6754616E
-CLI_BOARD_TIP_PIN=15A119D1
 RECEIPT_COMPLETE=1
+COMPARE_SPV=GPU_PARITY_FFN_ACT_2_REMEDIATE_001.remeasure_after.compare.txt
+COMPARE_HOST_REJECT=GPU_PARITY_FFN_ACT_2_REMEDIATE_001.hostq4_r64.compare.txt
+BOARD=BR_FFN_ACT_2_GATE_UP_TIGHTEN_R65.txt

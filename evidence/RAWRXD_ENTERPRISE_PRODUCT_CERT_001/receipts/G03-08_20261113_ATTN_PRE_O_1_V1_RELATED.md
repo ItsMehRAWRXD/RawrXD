@@ -9,7 +9,7 @@ CROSS_SHA_CREDIT=0
 
 ## Why RELATED
 
-Numerical correctness under Vulkan Q4/Q6 GEMV + KV FP16 RT: ATTN_PRE_O_1 still fails strict TOL_REL due to V_1 FP16 bucket (owner=ATTN_NORM_1 cascade @dim1072). Q6 host FORCE override measured CLOSE=0.
+Numerical correctness under Vulkan Q4/Q6 GEMV + KV FP16 RT: ATTN_PRE_O_1 still fails strict TOL_REL due to V_1 FP16 bucket (owner=ATTN_NORM_1 cascade @dim1072). `RAWRXD_Q6_HOST_FFN_DOWN=1` measured CLOSED=0 (host FFN_DOWN residual insufficient vs REF FD).
 
 ## Evidence
 

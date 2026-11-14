@@ -9,7 +9,7 @@ CROSS_SHA_CREDIT=0
 
 ## Why RELATED
 
-Multi-token / KV reuse parity still blocked at layer1 ATTN_PRE_O_1@pos0: FP16 RNE bucket flip on V_1[59] (GQA×8). Pos1 ATTN_PRE_O_0 T=2 remains a separate OPEN.
+Multi-token / KV reuse parity still blocked at layer1 ATTN_PRE_O_1@pos0: FP16 RNE bucket flip on V_1[59] (GQA×8). Owner remains ATTN_NORM_1@dim1072 cascade. FFN_DOWN host opt-in remasure CLOSED=0.
 
 ## Evidence
 

@@ -5,7 +5,7 @@ Authority: pasted RAWRXD_ENTERPRISE_PRODUCT_CERT_001 checklist · 0/128 · HELD 
 | Priority | Defect | Near GATE | Disposition |
 |----------|--------|-----------|-------------|
 | P0 | Gemma AA4F/tip_land AV (addrOk remasure) | G02-06 G06-06 | C9FB0B48 mid-VRAM; isoA bak→STREAM_SEH; AV_CLOSED=0 |
-| P0 | GPU/ref numerical (FFN_ACT_2 / ATTN_OUT cascade) | G02-04 G02-05 G03-08 | ATTN_PRE_O@pos1 FA CLOSED (1CAEA762); FFN/OUT still OPEN |
+| P0 | GPU/ref ATTN_PRE_O_1 V_1 + FFN cascade | G02-04 G02-05 G03-08 | V1 OWNER=ATTN_NORM_1@dim1072 CLOSED=0 maxULP=1; pos1 FA CLOSED (1CAEA762) |
 | P0 | Multi-family OPEN durable (084 remasure) | G02-08 G04-01 G06-06 | SEH=0 but authPASS=0 POST_LOAD; TOK=0 ENTER=0 |
 | P1 | C36 LSP startup hangs | G07-01 G07-04 | cand INIT_OK RELATED; tip OPEN |
 | P1 | ConPTY terminal-stop reliability | G05-05 G06-05 | cand PASS RELATED; tip remasure OPEN |

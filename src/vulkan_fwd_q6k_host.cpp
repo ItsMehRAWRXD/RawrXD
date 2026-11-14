@@ -16,14 +16,18 @@ bool VulkanCompute::DispatchGEMVQ6kPacked(const void* packed, size_t bytes,
                                           const float* input, float* output,
                                           uint32_t rows, uint32_t cols) {
     /* BATCH2_V_PROJ_001: TinyLlama attn_v/ffn_down are Q6_K.
-     * ATTN_PRE_O_1: V_1 FP16 bucket is owned by ATTN_NORM_1 cascade (dim1072),
-     * not Q6 GEMV — host Q6 under FORCE moves idx59 farther from RNE boundary.
-     * Keep FORCE_VULKAN → SPV for type-14; FFN gate/up Q4 host is separate. */
+     * ATTN_PRE_O_1 / V_1: OWNER=ATTN_NORM_1 cascade @dim1072 via FFN_DOWN.
+     * Host Q6 on attn_v under FORCE moves idx59 off RNE. Opt-in host Q6 for
+     * FFN_DOWN only: RAWRXD_Q6_HOST_FFN_DOWN=1 (rows>=1024 && cols>rows), so
+     * Q4 gate/up can stay SPV under FORCE (fp16kv close fixture). */
     const char* hostPar = std::getenv("RAWRXD_QUANT_HOST_Q8K_PARITY");
     const char* forceVk = std::getenv("RAWRXD_FORCE_VULKAN_QUANT_GEMV");
+    const char* ffnDownHost = std::getenv("RAWRXD_Q6_HOST_FFN_DOWN");
+    const bool force = forceVk && forceVk[0] == '1';
+    const bool hostFfnDown = ffnDownHost && ffnDownHost[0] == '1' &&
+                             rows >= 1024u && cols > rows;
     const bool wantHost =
-        hostPar && hostPar[0] == '1' &&
-        !(forceVk && forceVk[0] == '1');
+        (hostPar && hostPar[0] == '1' && !force) || hostFfnDown;
     if (wantHost && packed && input && output && bytes && rows && cols &&
         (cols % 256u) == 0u) {
         auto gemv = Deep2::QuantKernelRegistry::Instance().GetGEMV(14);
@@ -32,8 +36,8 @@ bool VulkanCompute::DispatchGEMVQ6kPacked(const void* packed, size_t bytes,
             gemv(static_cast<const uint8_t*>(packed), input, output, rows, cols);
             std::fprintf(stderr,
                          "Q6K_HOST_Q8K_PARITY rows=%u cols=%u "
-                         "(bypass gemv_q6k.spv) PROMOTE=0\n",
-                         rows, cols);
+                         "ffn_down=%d force=%d (bypass gemv_q6k.spv) PROMOTE=0\n",
+                         rows, cols, hostFfnDown ? 1 : 0, force ? 1 : 0);
             std::fflush(stderr);
             ++q6k_packed_ops_;
             ++gemv_success_;
