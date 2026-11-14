@@ -1,0 +1,64 @@
+GPU_PARITY_ATTN_PRE_O_POS1_KQV_001
+DATE=2026-11-13
+ASOF_LOCAL=2026-11-13T22:41:30-05:00
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+CROSS_SHA_CREDIT=0
+INVENT_PASS=0
+NOT_RUN!=PASS
+SCOREBOARD_CLI_GUI_PCT_UNCHANGED=1
+ATTN_PRE_O_0_POS1_CLOSED=1
+
+## Authority
+PRIOR_OPEN=GPU_PARITY_ATTN_PRE_O_POS1_CLOSE_001.txt
+  maxAbs_after=2.013892e-05 (seqLen<=1 headScratch f16rt gate; still OPEN)
+PRIOR_BEFORE_F16OUT=2.292544e-05
+BRANCH=work/v0-first-divergence
+TOL_ABS=1e-6 TOL_REL=1e-5
+Q4K_SPV active: bytes=16292 SHA256=AB7212EC2A30839EF51B9847F90C62CB2EEBCF4A010E122D0CBE0F228C8AC5D5
+TIP_EXE_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431 RO (untouched)
+absorb074 untouched; CLI/GUI % NOT raised
+VALUATION_SCOREBOARD_LIVE / JOINT_STATUS_LIVE / BOARD_SINGLE_WRITER CONTROLLING_% NOT rewritten
+
+## Root (closed)
+CLASS=LLAMA_FLASH_ATTN_EXT_F16_VKQ_ONLINE_ACCUM
+llama.cpp build_attn_mha (flash_attn=auto→enabled, n_gpu_layers=0) uses
+ggml_flash_attn_ext with F16 V → F16 VKQ online mad + F32 /S; Q promoted to F16
+for vec_dot. Host SDPA (fp32 softmax+AV) cannot match REF kqv_out (oracle span
+floor ≈1.7e-5). Minimal fix: AttentionWithCache attend>=2 → same F16 online path.
+
+## Fix@source
+src/deep2/KVCache.cpp — AttentionWithCache:
+  T=1 retain host SDPA (pos0 BITEXACT)
+  T>=2 ggml FA F16 VKQ online (Q f16, K/V f16 RT, F16 accum, F32 invS)
+src/deep2/Deep2Engine.cpp — headScratch kvCacheFp16RoundTrip only when attnT<=1
+KV write f16rt (RAWRXD_KV_FP16_ROUNDTRIP=1) + gemv_q4k Q4K×Q8K SPV unchanged
+
+## Before / after (ATTN_PRE_O_0@pos1 n=2048)
+BEFORE (OPEN seal CLOSE_001 after): maxAbs=2.013892e-05  UNDER_TOL=0
+  (board prior f16out BEFORE=2.292544e-05)
+AFTER (pin rawr_attn_pre_o_pos1_kqv.exe
+       SHA256=877211B18A6EEC2BDC3B0B4E39A8F7E0BA9CB1BD73AD63DA5F55D4FCDF1AE5C9
+       stage_dump_attn_pre_o_pos1_kqv; ATTN_GGML_FA_F16=1 attend=2):
+  maxAbs=3.864989e-08  rel=6.115364e-06  @idx140  n_gt=0/2048  UNDER_TOL=1
+  fnvA=2efdd7b1602c093f fnvB=1fc70805b5a7d70e
+POS0 REGRESSION CHECK: maxAbs=0 BITEXACT retained (fnv=4adca0fa1f8e7095)
+
+## Compare / remasure
+COMPARE=FIRST_DIVERGE_001/GPU_PARITY_ATTN_PRE_O_POS1_KQV_001.compare.log
+REMEASURE=FIRST_DIVERGE_001/remeasure_attn_pre_o_pos1_kqv.err.txt
+DUMP_AFTER=FIRST_DIVERGE_001/stage_dump_attn_pre_o_pos1_kqv
+HOTPATH_GEMV=VULKAN Q4K_SPV=16292 RAWRXD_GPU_FWD=0 HOTPATH_ATTN=CPU
+RAWRXD_KV_FP16_ROUNDTRIP=1
+
+## Verdict
+ATTN_PRE_O_0_POS1_CLOSED=1
+MAXDIFF_BEFORE=2.013892e-05
+MAXDIFF_AFTER=3.864989e-08
+UNDER_TOL=1
+POS0_BITEXACT=1
+NEXT_OPEN=ATTN_OUT_0@pos1 (cascade; prior ≈2.89e-05) OR FFN_ACT_2
+≠ PERFORMANCE_PASS ≠ PROMOTE
+PROMOTE=0
+TIP_CLIMB=HOLD

@@ -13683,9 +13683,11 @@ Deep2Engine::MARSPlacementReport Deep2Engine::placeAllModelTensorsMARS() {
             report.oom++;
             return;
         }
-        // Honor ExecutionPolicy device — except GPU product path must not
-        // alloc-then-Evict pinned embeds (default policy Host). That thrash
-        // is the llama32 OPEN/heap / STREAM_SEH amplifier (token_embd).
+        // Honor ExecutionPolicy device. AutoDetect defaults embeddings→Host,
+        // so Place then Evicts token_embd (~300MB) before stream — llama32
+        // EXIT=NULL / STREAM_SEH. Keep ONLY token_embd resident under GPU
+        // product (name-exact). Broad keepGPU (pin||IsPinnedPattern) rejected:
+        // 1EFF8608 POST_LOAD/OPEN_FAIL.
         {
             using namespace Deep2::Exec;
             EnsurePolicyLoaded();
@@ -13699,14 +13701,14 @@ Deep2Engine::MARSPlacementReport Deep2Engine::placeAllModelTensorsMARS() {
                 vulkanEnabled_ ||
                 (fg && fg[0] == '1') || (ag && ag[0] == '1');
             const bool hostDecode = (hd && hd[0] == '1');
-            const bool keepPinnedOnGpu =
-                gpuProduct && !hostDecode &&
-                (pin || IsPinnedPattern(ActivePolicy(), name));
-            if (keepPinnedOnGpu) {
+            const bool keepTokenEmbd =
+                gpuProduct && !hostDecode && pin &&
+                (name == "token_embd.weight" ||
+                 name == "token_embeddings.weight");
+            if (keepTokenEmbd) {
                 lease->pinned = true;
-                printf("[Deep2Engine] MARS keep-GPU pin '%s' "
-                       "(skip Host/Stream Evict under GPU product)\n",
-                       name.c_str());
+                printf("[Deep2Engine] MARS token_embd GPU-resident "
+                       "(skip Host Evict; name-exact)\n");
             } else if (want == DeviceKind::Stream || want == DeviceKind::Disk ||
                        want == DeviceKind::Host) {
                 if (lease->currentGPU >= 0)
