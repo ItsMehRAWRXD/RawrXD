@@ -1,0 +1,35 @@
+AGENT_RESULT5_LANDABLE_DIAG_001
+ASOF_LOCAL=2026-11-13T21:58:00-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 NOT_RUN!=PASS
+GUI_EBT_FULL=0 AGENT_RESULT5=0 BUILD_TEST_CRUMB=0
+
+## Pins measured
+GUI_ABSORB075c_SHA=E7189EA8D67C8DACD54F7DB3FAA267A2311DD09688AFD3F8E42D600F99A082A7
+GUI_TIP_6754616E_SHA=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431
+TIP_LAND_ABSORB075c_SHA=4AEFF4068DA2A6DF3BC5BDB54297F523AEA868B9CD9DA560C6E601714C9E1E5F
+STAGED_RAWR_BESIDE_IDE=15A119D148572A4B3011AA9A8AFFE605F8FF40D64B7BF83673ECC10A9393C967
+DEEP2_AGENTIC_LOOP=ABSENT (repo-wide glob 0)
+TIP6754_THRASHED=0
+
+## Prior harness (m3_gui_issue49_075c)
+MENU_READY=1 POST_4120=1 BOUNDED_DIALOG_FILLED=1
+POST_4100=1 POST_14003=1 POST_9618=1
+APPLY=1 AGENTIC_RR=1
+AGENT_RESULT5=0 BUILD_TEST_CRUMB=0 GUI_EBT_FULL=0
+WITNESS=run.meta.txt / RUNLOG.txt / RESULT.txt
+
+## Why AGENT_RESULT=5 still open (fail-closed)
+1) BoundedAgentLoop (4120) on absorb075c filled dialog but did not emit on-disk AGENT_RESULT=5 or bug.exe crumb.
+2) AgenticLoopBridge Issue#49 path requires deep2_agentic_loop.exe OR useCliAgent→rawr.exe with verified read/edit/build/test; deep2 ABSENT; staged tip CLI 15A119 lacks FORCE_TOOL wire (FORCE strings ABSENT) — model-selected EBT not demonstrated.
+3) tip6754 bind target: C14 ABSENT → tip6754_GUI_E2E=0; do not credit from 4AEFF406 CROSS_SHA.
+4) tip_land 4AEFF406: GUI_E2E=1 edit/conpty basis tip_land_absorb075c — ≠ AGENT_RESULT=5 Issue#49 close; ≠ tip6754 credit.
+
+## Landable paths (BOARD propose only; NOT PASS)
+A) E7189EA8 absorb075c: stage FORCE-capable CLI (C7402085… or 30DCB4…) as clean_link/rawr.exe + drive AgenticLoopBridge useCliAgent StartTask (4100) with local GGUF / FORCE_TOOL env inherited — measure AGENT_RESULT=5 + BUILD_TEST_CRUMB before claiming GUI_EBT_FULL. Current harness rejects assist 30DCB4 staging as tip; board must authorize assist staging OR tip-climb absorb.
+B) Tip-absorb 075c WeakCats_Edit/C14 onto 6754616E lineage (NO FORCE LNK4088) then re-measure tip6754 GUI path — prior tip_land produced 4AEFF406 ≠ 6754616E (CROSS_SHA_CREDIT=0).
+C) Restore deep2_agentic_loop.exe beside IDE package (currently ABSENT) for non-CLI AgenticLoopBridge lane.
+
+REJECT: invent PASS from Cat11 APPLY alone; cross-credit CLI FORCE_TOOL seals as GUI; thrash tip6754 EXE; FORCE LNK4088.
+
+NEXT_EXECUTABLE_GATE=A or B with real AGENT_RESULT5=1 crumb under evidence/PRODUCTION_MATURITY_TOP25_001/
+END
