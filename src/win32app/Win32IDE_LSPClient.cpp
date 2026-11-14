@@ -31,14 +31,34 @@
 #include "Win32IDE_Types.h"
 #include "core/problems_aggregator.hpp"
 #include <algorithm>
+#include <atomic>
 #include <cctype>
 #include <chrono>
 #include <condition_variable>
+#include <cstdio>
 #include <filesystem>
 #include <fstream>
 #include <richedit.h>
 #include <sstream>
 #include <thread>
+
+// C36 hang discrimination crumbs (RELATED ≠ tip promote). PROMOTE=0.
+static void c36StageAppend(const char* stage, const char* detail)
+{
+    char line[768];
+    _snprintf_s(line, _TRUNCATE, "C36_LSP_STAGE=%s detail=%s ts=%lu\n",
+                stage ? stage : "?", detail ? detail : "-",
+                (unsigned long)GetTickCount());
+    OutputDebugStringA(line);
+    CreateDirectoryA("G:\\~dev\\rawrxd\\evidence\\GUI_ACCEPTANCE_C36_001", nullptr);
+    FILE* f = nullptr;
+    if (fopen_s(&f, "G:\\~dev\\rawrxd\\evidence\\GUI_ACCEPTANCE_C36_001\\c36_stage.txt",
+                "a") == 0 &&
+        f) {
+        fputs(line, f);
+        fclose(f);
+    }
+}
 
 // ============================================================================
 // SEMANTIC TOKENS — Full delta-capable implementation
@@ -204,6 +224,7 @@ bool Win32IDE::startLSPServer(LSPLanguage lang)
     logInfo("[LSP] Starting " + cfg.name + " (" + cfg.executablePath + ")...");
     status.state = LSPServerState::Starting;
     status.lastError = "";
+    c36StageAppend("START", cfg.name.c_str());
 
     // ---- Create pipes for stdin/stdout communication -----------------------
     SECURITY_ATTRIBUTES sa = {};
@@ -219,12 +240,12 @@ bool Win32IDE::startLSPServer(LSPLanguage lang)
         status.state = LSPServerState::Error;
         status.lastError = "Failed to create pipes: " + std::to_string(GetLastError());
         logError("startLSPServer", status.lastError);
+        c36StageAppend("PIPE FAIL", status.lastError.c_str());
         return false;
     }
-
-    // Ensure our ends of the pipes are not inherited
     SetHandleInformation(hStdinWrite, HANDLE_FLAG_INHERIT, 0);
     SetHandleInformation(hStdoutRead, HANDLE_FLAG_INHERIT, 0);
+    c36StageAppend("PIPE OK", "CreatePipe");
 
     // ---- Build command line ------------------------------------------------
     std::string cmdLine = "\"" + cfg.executablePath + "\"";
@@ -233,30 +254,27 @@ bool Win32IDE::startLSPServer(LSPLanguage lang)
         cmdLine += " " + arg;
     }
 
-    // ---- Launch child process ----------------------------------------------
+    // Keep stderr off the JSON-RPC stdout pipe — clangd log lines otherwise
+    // corrupt Content-Length framing and stall initialize past timeout (C36).
+    HANDLE hNul = CreateFileA("NUL", GENERIC_WRITE, FILE_SHARE_WRITE, &sa, OPEN_EXISTING,
+                              FILE_ATTRIBUTE_NORMAL, nullptr);
     STARTUPINFOA si = {};
     si.cb = sizeof(si);
     si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
     si.hStdInput = hStdinRead;
     si.hStdOutput = hStdoutWrite;
-    si.hStdError = hStdoutWrite;  // Merge stderr into stdout
+    si.hStdError = (hNul != INVALID_HANDLE_VALUE) ? hNul : hStdoutWrite;
     si.wShowWindow = SW_HIDE;
 
     PROCESS_INFORMATION pi = {};
+    c36StageAppend("PROCESS BEGIN", cmdLine.c_str());
+    BOOL created = CreateProcessA(nullptr, const_cast<char*>(cmdLine.c_str()), nullptr, nullptr, TRUE,
+                                  CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi);
 
-    BOOL created = CreateProcessA(nullptr,                             // lpApplicationName
-                                  const_cast<char*>(cmdLine.c_str()),  // lpCommandLine
-                                  nullptr,                             // lpProcessAttributes
-                                  nullptr,                             // lpThreadAttributes
-                                  TRUE,                                // bInheritHandles
-                                  CREATE_NO_WINDOW,                    // dwCreationFlags
-                                  nullptr,                             // lpEnvironment
-                                  nullptr,                             // lpCurrentDirectory
-                                  &si, &pi);
-
-    // Close the child-side pipe handles (we keep the parent-side)
     CloseHandle(hStdinRead);
     CloseHandle(hStdoutWrite);
+    if (hNul != INVALID_HANDLE_VALUE)
+        CloseHandle(hNul);
 
     if (!created)
     {
@@ -267,31 +285,32 @@ bool Win32IDE::startLSPServer(LSPLanguage lang)
         status.lastError = "CreateProcess failed for '" + cfg.executablePath + "' (error " + std::to_string(err) +
                            "). Is it installed and on PATH?";
         logError("startLSPServer", status.lastError);
+        c36StageAppend("PROCESS FAIL", status.lastError.c_str());
         appendToOutput("[LSP] Failed to start " + cfg.name + ": " + status.lastError, "General",
                        OutputSeverity::Warning);
         return false;
     }
 
-    // Store handles
-    CloseHandle(pi.hThread);  // Don't need the thread handle
+    CloseHandle(pi.hThread);
     status.hProcess = pi.hProcess;
     status.hStdinWrite = hStdinWrite;
     status.hStdoutRead = hStdoutRead;
     status.pid = pi.dwProcessId;
     status.startedEpochMs = currentEpochMs();
+    c36StageAppend("PROCESS OK", ("pid=" + std::to_string(status.pid)).c_str());
 
     logInfo("[LSP] " + cfg.name + " spawned (pid=" + std::to_string(status.pid) + ")");
 
-    // ---- Start reader thread -----------------------------------------------
     m_lspReaderThreads.emplace_back(&Win32IDE::lspReaderThread, this, lang);
 
-    // ---- Send initialize handshake -----------------------------------------
     bool initOk = sendInitialize(lang);
     if (!initOk)
     {
         status.state = LSPServerState::Error;
-        status.lastError = "Initialize handshake failed or timed out";
+        if (status.lastError.empty())
+            status.lastError = "Initialize handshake failed or timed out";
         logError("startLSPServer", status.lastError);
+        c36StageAppend("INIT_WAIT FAIL", status.lastError.c_str());
         appendToOutput("[LSP] " + cfg.name + " started but initialize handshake failed.", "General",
                        OutputSeverity::Warning);
         return false;
@@ -300,6 +319,7 @@ bool Win32IDE::startLSPServer(LSPLanguage lang)
     sendInitialized(lang);
     status.state = LSPServerState::Running;
     status.initialized = true;
+    c36StageAppend("INIT_WAIT OK class=INIT_OK", cfg.name.c_str());
 
     logInfo("[LSP] " + cfg.name + " initialized successfully");
     appendToOutput("[LSP] " + cfg.name + " ready (pid=" + std::to_string(status.pid) + ")", "General",
@@ -409,7 +429,9 @@ int Win32IDE::sendLSPRequest(LSPLanguage lang, const std::string& method, const 
         return -1;
     auto& status = m_lspStatuses[(size_t)lang];
 
-    if (!status.hStdinWrite || status.state != LSPServerState::Running)
+    // Allow Starting so initialize can be sent before Running (C36 hang root).
+    if (!status.hStdinWrite ||
+        (status.state != LSPServerState::Running && status.state != LSPServerState::Starting))
     {
         return -1;
     }
@@ -654,9 +676,20 @@ bool Win32IDE::sendInitialize(LSPLanguage lang)
 
     nlohmann::json params;
     params["processId"] = (int)GetCurrentProcessId();
-    params["rootUri"] = cfg.rootUri;
+    if (cfg.rootUri.empty()) {
+        params["rootUri"] = nullptr;
+        params["rootPath"] = nullptr;
+    } else {
+        params["rootUri"] = cfg.rootUri;
+        params["rootPath"] = uriToFilePath(cfg.rootUri);
+    }
+    {
+        nlohmann::json folder;
+        folder["uri"] = cfg.rootUri.empty() ? "" : cfg.rootUri;
+        folder["name"] = "workspace";
+        params["workspaceFolders"] = nlohmann::json::array({folder});
+    }
 
-    // Client capabilities — declare what we support
     nlohmann::json textDocCaps;
     textDocCaps["synchronization"]["dynamicRegistration"] = false;
     textDocCaps["synchronization"]["willSave"] = false;
@@ -665,26 +698,46 @@ bool Win32IDE::sendInitialize(LSPLanguage lang)
     textDocCaps["references"]["dynamicRegistration"] = false;
     textDocCaps["rename"]["dynamicRegistration"] = false;
     textDocCaps["hover"]["dynamicRegistration"] = false;
+    textDocCaps["completion"]["dynamicRegistration"] = false;
     textDocCaps["publishDiagnostics"]["relatedInformation"] = false;
 
     nlohmann::json caps;
     caps["textDocument"] = textDocCaps;
+    caps["workspace"]["workspaceFolders"] = true;
     params["capabilities"] = caps;
 
     params["clientInfo"] = {{"name", "RawrXD-IDE"}, {"version", "7.7.0"}};
 
+    c36StageAppend("INIT_SEND BEGIN", "method=initialize");
     int id = sendLSPRequest(lang, "initialize", params);
-    if (id < 0)
+    if (id < 0) {
+        m_lspStatuses[(size_t)lang].lastError =
+            "Initialize send failed (server not Starting/Running)";
+        c36StageAppend("INIT_SEND FAIL", m_lspStatuses[(size_t)lang].lastError.c_str());
         return false;
+    }
+    c36StageAppend("INIT_SEND OK", ("id=" + std::to_string(id)).c_str());
 
-    nlohmann::json resp = readLSPResponse(lang, id, cfg.initTimeoutMs);
+    // Floor 15s / never unbounded — fail-closed for tipbound C36.
+    int timeoutMs = cfg.initTimeoutMs;
+    if (timeoutMs < 15000)
+        timeoutMs = 15000;
+    if (timeoutMs > 60000)
+        timeoutMs = 60000;
+    c36StageAppend("INIT_WAIT BEGIN", ("timeout_ms=" + std::to_string(timeoutMs)).c_str());
+    nlohmann::json resp = readLSPResponse(lang, id, timeoutMs);
     if (resp.contains("error"))
     {
-        m_lspStatuses[(size_t)lang].lastError = "Initialize error: " + resp["error"].value("message", "unknown");
+        const std::string em = resp["error"].value("message", std::string("unknown"));
+        m_lspStatuses[(size_t)lang].lastError = "Initialize error: " + em;
+        c36StageAppend("INIT_WAIT FAIL", em.c_str());
         return false;
     }
 
-    return resp.contains("result");
+    const bool ok = resp.contains("result");
+    c36StageAppend(ok ? "INIT_WAIT OK class=INIT_OK" : "INIT_WAIT FAIL class=HANDSHAKE_UNFULFILLED",
+                   ("id=" + std::to_string(id)).c_str());
+    return ok;
 }
 
 void Win32IDE::sendInitialized(LSPLanguage lang)
@@ -1210,7 +1263,25 @@ void Win32IDE::onDiagnosticsReceived(const std::string& uri, const std::vector<L
         m_lspDiagnostics[uri] = diagnostics;
     }
 
-    // Bridge to Problems panel (Output > Problems tab)
+    // Reader thread must not SendMessage into UI while UI waits in readLSPResponse
+    // (C36 deadlock: log/diag → UI ↔ init wait). Store only; UI refresh deferred.
+    if (m_hwndMain && IsWindow(m_hwndMain)) {
+        const DWORD uiTid = GetWindowThreadProcessId(m_hwndMain, nullptr);
+        if (uiTid != GetCurrentThreadId()) {
+            auto& agg = RawrXD::ProblemsAggregator::instance();
+            agg.clear("LSP");
+            for (const auto& d : diagnostics) {
+                int sev = (d.severity == 1) ? 1 : (d.severity == 2) ? 2 : 3;
+                std::string code = d.code.empty() ? "LSP" : d.code;
+                std::string source = d.source.empty() ? "lsp" : d.source;
+                agg.add("LSP", uriToFilePath(uri), d.range.start.line + 1, d.range.start.character + 1,
+                        d.message, sev, code, source);
+            }
+            return;
+        }
+    }
+
+    // Bridge to Problems panel (Output > Problems tab) — UI thread only
     std::string filePath = uriToFilePath(uri);
     if (!filePath.empty() && m_hwndProblemsListView)
     {
@@ -2231,4 +2302,128 @@ void Win32IDE::handleLSPDiagnosticsEndpoint(SOCKET client)
                        "Content-Length: " +
                        std::to_string(body.size()) + "\r\n\r\n" + body;
     send(client, resp.c_str(), (int)resp.size(), 0);
+}
+
+// C36 GUI acceptance: clangd init/didOpen/hover/completion tipbound probe
+// Runs on the calling thread so Crumb always writes even if clangd fails.
+void Win32IDE::runC36ClangdAcceptanceProbe()
+{
+    static std::atomic<int> busy{0};
+    if (busy.exchange(1) != 0)
+        return;
+
+    CreateDirectoryA("G:\\~dev\\rawrxd\\evidence\\GUI_ACCEPTANCE_C36_001", nullptr);
+    const char* logPath =
+        "G:\\~dev\\rawrxd\\evidence\\GUI_ACCEPTANCE_C36_001\\TOP25_C36_LSP.log";
+    const char* busyPath =
+        "G:\\~dev\\rawrxd\\evidence\\GUI_ACCEPTANCE_C36_001\\TOP25_C36_LSP.busy";
+    const char* tipLog = "F:\\rawrxd\\evidence\\TOP25_C36_LSP.log";
+    {
+        FILE* f = nullptr;
+        if (fopen_s(&f, busyPath, "w") == 0 && f) {
+            fputs("1\n", f);
+            fclose(f);
+        }
+        DeleteFileA(logPath);
+        DeleteFileA(tipLog);
+        DeleteFileA("G:\\~dev\\rawrxd\\evidence\\GUI_ACCEPTANCE_C36_001\\c36_stage.txt");
+    }
+
+    struct Crumb {
+        int lspRun = 0, hoverOk = 0, compN = 0, defN = 0, hybridN = 0;
+        std::string lspErr = "enter";
+        const char* logPath = nullptr;
+        const char* busyPath = nullptr;
+        const char* tipLog = nullptr;
+        std::atomic<int>* busy = nullptr;
+        ~Crumb() {
+            auto writeLog = [&](const char* path) {
+                FILE* f = nullptr;
+                if (path && fopen_s(&f, path, "w") == 0 && f) {
+                    fprintf(f,
+                            "lsp_running=%d hover_valid=%d "
+                            "completion_n=%d def_n=%d hybrid_n=%d "
+                            "RUNTIME_REACHED=%d err=%s\n",
+                            lspRun, hoverOk, compN, defN, hybridN, lspRun,
+                            lspErr.c_str());
+                    fclose(f);
+                }
+            };
+            writeLog(logPath);
+            writeLog(tipLog);
+            {
+                FILE* mf = nullptr;
+                if (fopen_s(&mf,
+                            "G:\\~dev\\rawrxd\\evidence\\GUI_ACCEPTANCE_C36_001\\c36_mark.txt",
+                            "w") == 0 &&
+                    mf) {
+                    fprintf(mf, "RUNTIME_REACHED=%d CLASS=%s\n", lspRun,
+                            lspRun ? "INIT_OK" : "FAIL");
+                    fclose(mf);
+                }
+            }
+            if (busyPath)
+                DeleteFileA(busyPath);
+            if (busy)
+                busy->store(0);
+        }
+    } crumb;
+    crumb.logPath = logPath;
+    crumb.busyPath = busyPath;
+    crumb.tipLog = tipLog;
+    crumb.busy = &busy;
+
+    const char* probeDir =
+        "G:\\~dev\\rawrxd\\evidence\\GUI_ACCEPTANCE_C36_001\\_c36_probe";
+    const char* probePath =
+        "G:\\~dev\\rawrxd\\evidence\\GUI_ACCEPTANCE_C36_001\\_c36_probe\\probe.cpp";
+    const char* probeSrc =
+        "int probe_alpha(int x) { return x + 1; }\n"
+        "int main() { return probe_alpha(41); }\n";
+    CreateDirectoryA(probeDir, nullptr);
+    {
+        std::ofstream fl(std::string(probeDir) + "\\compile_flags.txt", std::ios::trunc);
+        if (fl)
+            fl << "-xc++\n-std=c++17\n";
+        std::ofstream out(probePath, std::ios::trunc);
+        if (out)
+            out << probeSrc;
+    }
+    try {
+        crumb.lspErr = "init";
+        initLSPClient();
+        stopLSPServer(LSPLanguage::Cpp);
+        auto& cppCfg = m_lspConfigs[(size_t)LSPLanguage::Cpp];
+        if (GetFileAttributesA("C:\\Program Files\\LLVM\\bin\\clangd.exe") !=
+            INVALID_FILE_ATTRIBUTES) {
+            cppCfg.executablePath = "C:\\Program Files\\LLVM\\bin\\clangd.exe";
+        }
+        cppCfg.enabled = true;
+        cppCfg.args = {"--background-index=false", "--header-insertion=never", "--log=error"};
+        cppCfg.initTimeoutMs = 20000;
+        cppCfg.rootUri = filePathToUri(probeDir);
+        crumb.lspErr = "start";
+        crumb.lspRun = startLSPServer(LSPLanguage::Cpp) ? 1 : 0;
+        if (!crumb.lspRun) {
+            crumb.lspErr = m_lspStatuses[(size_t)LSPLanguage::Cpp].lastError;
+            if (crumb.lspErr.empty())
+                crumb.lspErr = "start_failed";
+            stopLSPServer(LSPLanguage::Cpp);
+            return;
+        }
+        const std::string uri = filePathToUri(probePath);
+        crumb.lspErr = "open";
+        sendDidOpen(LSPLanguage::Cpp, uri, "cpp", probeSrc);
+        Sleep(1500);
+        crumb.hoverOk = lspHover(uri, 0, 8).valid ? 1 : 0;
+        crumb.compN = static_cast<int>(lspCompletion(uri, 1, 20).size());
+        crumb.defN = static_cast<int>(lspGotoDefinition(uri, 1, 18).size());
+        crumb.hybridN = static_cast<int>(requestHybridCompletion(probePath, 1, 10).size());
+        crumb.lspErr = "-";
+        stopLSPServer(LSPLanguage::Cpp);
+    } catch (const std::exception& ex) {
+        crumb.lspErr = std::string("exception:") + ex.what();
+    } catch (...) {
+        crumb.lspErr = "exception:unknown";
+    }
 }

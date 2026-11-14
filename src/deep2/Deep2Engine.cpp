@@ -13674,15 +13674,32 @@ Deep2Engine::MARSPlacementReport Deep2Engine::placeAllModelTensorsMARS() {
             report.oom++;
             return;
         }
-        // Honor ExecutionPolicy device: if plan says host/stream, evict off GPU.
+        // Honor ExecutionPolicy device — except GPU product path must not
+        // alloc-then-Evict pinned embeds (default policy Host). That thrash
+        // is the llama32 OPEN/heap / STREAM_SEH amplifier (token_embd).
         {
             using namespace Deep2::Exec;
             EnsurePolicyLoaded();
             const DeviceKind want =
                 PlannedDeviceForTensor(ActivePolicy(), name, layer);
             const int wantGpu = DeviceKindToGpuIndex(want);
-            if (want == DeviceKind::Stream || want == DeviceKind::Disk ||
-                want == DeviceKind::Host) {
+            const char* fg = std::getenv("RAWR_FORCE_GPU");
+            const char* ag = std::getenv("RAWRXD_ALLOW_GPU");
+            const char* hd = std::getenv("RAWRXD_HOST_DECODE");
+            const bool gpuProduct =
+                vulkanEnabled_ ||
+                (fg && fg[0] == '1') || (ag && ag[0] == '1');
+            const bool hostDecode = (hd && hd[0] == '1');
+            const bool keepPinnedOnGpu =
+                gpuProduct && !hostDecode &&
+                (pin || IsPinnedPattern(ActivePolicy(), name));
+            if (keepPinnedOnGpu) {
+                lease->pinned = true;
+                printf("[Deep2Engine] MARS keep-GPU pin '%s' "
+                       "(skip Host/Stream Evict under GPU product)\n",
+                       name.c_str());
+            } else if (want == DeviceKind::Stream || want == DeviceKind::Disk ||
+                       want == DeviceKind::Host) {
                 if (lease->currentGPU >= 0)
                     marsController_->GetVRAMManager()->Evict(lease);
             } else if (wantGpu >= 0 && lease->currentGPU != wantGpu) {

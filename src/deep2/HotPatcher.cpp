@@ -19,6 +19,7 @@
 #include "HotPatcher.hpp"
 #include "HotPatcherSafety.hpp"
 #include <algorithm>
+#include <atomic>
 #include <sstream>
 #include <iomanip>
 #include <random>
@@ -38,26 +39,46 @@ namespace Deep2 {
 
 class MemoryProtector {
 public:
+    /* Fail closed on null/unmapped targets — crash-path rollback must not AV. */
+    static bool addrOk(void* addr, size_t len) {
+        if (!addr || len == 0) return false;
+#ifdef _WIN32
+        MEMORY_BASIC_INFORMATION mbi{};
+        if (VirtualQuery(addr, &mbi, sizeof(mbi)) == 0) return false;
+        if (mbi.State != MEM_COMMIT) return false;
+        const uintptr_t base = (uintptr_t)mbi.BaseAddress;
+        const uintptr_t end = base + mbi.RegionSize;
+        const uintptr_t a0 = (uintptr_t)addr;
+        if (a0 < base || a0 + len < a0 || a0 + len > end) return false;
+        return true;
+#else
+        (void)len;
+        return true;
+#endif
+    }
+
     static bool makeWritable(void* addr, size_t len) {
+        if (!addrOk(addr, len)) return false;
 #ifdef _WIN32
         DWORD oldProtect;
         return VirtualProtect(addr, len, PAGE_EXECUTE_READWRITE, &oldProtect) != 0;
 #else
         size_t pageSize = sysconf(_SC_PAGESIZE);
-        void* pageStart = (void*)(((uintptr_t)addr + pageSize - 1) & ~(pageSize - 1));
+        void* pageStart = (void*)(((uintptr_t)addr) & ~(pageSize - 1));
         size_t pageLen = len + ((uintptr_t)addr - (uintptr_t)pageStart);
         return mprotect(pageStart, pageLen, PROT_READ | PROT_WRITE | PROT_EXEC) == 0;
 #endif
     }
     
     static bool restoreProtection(void* addr, size_t len, int prot) {
+        if (!addrOk(addr, len)) return false;
 #ifdef _WIN32
         DWORD oldProtect;
         DWORD winProt = (prot == 0) ? PAGE_EXECUTE_READ : PAGE_EXECUTE_READWRITE;
         return VirtualProtect(addr, len, winProt, &oldProtect) != 0;
 #else
         size_t pageSize = sysconf(_SC_PAGESIZE);
-        void* pageStart = (void*)(((uintptr_t)addr + pageSize - 1) & ~(pageSize - 1));
+        void* pageStart = (void*)(((uintptr_t)addr) & ~(pageSize - 1));
         size_t pageLen = len + ((uintptr_t)addr - (uintptr_t)pageStart);
         int flags = (prot == 0) ? (PROT_READ | PROT_EXEC) : (PROT_READ | PROT_WRITE | PROT_EXEC);
         return mprotect(pageStart, pageLen, flags) == 0;
@@ -65,6 +86,7 @@ public:
     }
     
     static void flushCache(void* addr, size_t len) {
+        if (!addrOk(addr, len)) return;
 #ifdef _WIN32
         FlushInstructionCache(GetCurrentProcess(), addr, len);
 #elif defined(__APPLE__)
@@ -731,26 +753,35 @@ PatchMetadata HotPatcher::getMetadata(const std::string& patchId) {
 }
 
 bool HotPatcher::emergencyRollback() {
-    printf("[HotPatcher] EMERGENCY ROLLBACK initiated\n");
-    
-    std::vector<std::string> active;
-    {
-        std::lock_guard<std::recursive_mutex> lock(impl_->mutex);
-        for (const auto& [id, patch] : impl_->patches) {
-            if (patch->status == PatchStatus::ACTIVE) {
-                active.push_back(id);
+    /* M1M2_081b WER FaultOffset landed here during gemma VRAM AV cleanup.
+     * Re-entrancy / bad target must not nest another 0xC0000005. */
+    static std::atomic<int> s_inEmergency{0};
+    int expected = 0;
+    if (!s_inEmergency.compare_exchange_strong(expected, 1)) {
+        printf("[HotPatcher] EMERGENCY ROLLBACK re-enter skipped\n");
+        return false;
+    }
+    bool success = true;
+    if (!impl_ || !impl_->initialized) {
+        printf("[HotPatcher] EMERGENCY ROLLBACK skip (not init)\n");
+        success = false;
+    } else {
+        printf("[HotPatcher] EMERGENCY ROLLBACK initiated\n");
+        std::vector<std::string> active;
+        {
+            std::lock_guard<std::recursive_mutex> lock(impl_->mutex);
+            for (const auto& [id, patch] : impl_->patches) {
+                if (patch && patch->status == PatchStatus::ACTIVE)
+                    active.push_back(id);
             }
         }
-    }
-    
-    bool success = true;
-    for (const auto& id : active) {
-        if (!rollback(id)) {
-            success = false;
+        for (const auto& id : active) {
+            if (!rollback(id)) success = false;
         }
+        printf("[HotPatcher] Emergency rollback %s\n",
+               success ? "COMPLETE" : "PARTIAL");
     }
-    
-    printf("[HotPatcher] Emergency rollback %s\n", success ? "COMPLETE" : "PARTIAL");
+    s_inEmergency.store(0);
     return success;
 }
 
