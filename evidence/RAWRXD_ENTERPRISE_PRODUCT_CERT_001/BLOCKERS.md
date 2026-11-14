@@ -11,9 +11,9 @@ Authority: pasted RAWRXD_ENTERPRISE_PRODUCT_CERT_001 checklist · 0/128 · HELD 
 | P1 | ConPTY terminal-stop reliability | G05-05 G06-05 | tip-era PASS RELATED (R70); cand PASS RELATED; ≠ CERT PASS |
 | P1 | M3 MODEL_SELECTED_TOOL / tipbound | G05-06 G08-01 | FORCE PASS; model-select=0 unk; wire SOURCE_WIRED RUNTIME=0 |
 | P2 | M4 Authenticode + CLEAN_VM | G12-02 G12-03 | ABSENT / NOT_RUN (no hypervisor) |
-| P2 | CLI clean rebuild | G01-03 | EXIT=2 @d88239; k2_digest/stubs; CLEAN_MACHINE=0; SUCCESS_EXE=NONE |
-| P2 | Win32 GUI same freeze | G01-04 | NOT_RUN (CLI fail + GUI rebuild too heavy) |
-| P2 | Deterministic dual-build | G01-05 | NOT_RUN (blocked by G01-03) |
+| P2 | CLI clean rebuild | G01-03 | BUILD_OK=1 EXIT=0 EXE A95A1254…; CLEAN_MACHINE=0; EVIDENCE_PARTIAL ≠ PASS |
+| P2 | Win32 GUI same freeze | G01-04 | NOT_RUN (CLI unblocked; GUI rebuild heavy / next) |
+| P2 | Deterministic dual-build | G01-05 | NOT_RUN (need dual-build after G01-04) |
 | P2 | CI Windows + secondary | G01-07 | NOT_RUN (workflows inventoried; not dispatched) |
 
 

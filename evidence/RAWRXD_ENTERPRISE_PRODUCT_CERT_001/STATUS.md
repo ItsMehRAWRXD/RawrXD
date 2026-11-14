@@ -32,7 +32,7 @@ See `LAW.txt`. `NOT_RUN != PASS`. `EVIDENCE_PARTIAL != PASS`. Scoreboard ≠ che
 | Multi-family GUI / qdim084 STREAM | G02 / G04 / G06 | authPASS/OPEN=1 (R72); STREAM 0xE06D7363 TOK=0 RELATED |
 | Offline signed install | G12 | Authenticode ABSENT; CLEAN_VM NOT_RUN |
 | Model-selected agent EBT | G05 / G08 | FORCE PASS; MODEL_SELECTED=0; wire SOURCE_WIRED RUNTIME=0 |
-| CLI clean rebuild | G01-03 | EXIT=2 @d88239; CLEAN_MACHINE=0; stale CD84354D |
+| CLI clean rebuild | G01-03 | BUILD_OK=1 EXIT=0 A95A1254… (R75); CLEAN_MACHINE=0 ≠ PASS |
 
 ## Authority scoreboard
 `../PRODUCTION_MATURITY_TOP25_001/VALUATION_SCOREBOARD_CANON.txt` — PCT invent forbidden here.
