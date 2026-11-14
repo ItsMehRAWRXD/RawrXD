@@ -9,16 +9,27 @@ COMPARE_TIP_OFFSET=0x1F99DB4 (tip_land_6754616E model-retry)
 DUMP=%LOCALAPPDATA%\CrashDumps\RawrXD-Win32IDE_tip_land_a8_modelwire.exe.32924.dmp
 WER=C:\ProgramData\Microsoft\Windows\WER\ReportArchive\AppCrash_RawrXD-Win32IDE__3f1b872828a1691d4d5611d3953a48c44b71c_f8f5dd80_777248e8-eba1-41a5-bf08-b0cee56cc24b
 NOTE=LNK4088 /FORCE image; dialog filled then fatal user callback; MODEL_RESIDENT crumb not observed
+
+## Symbol (outer RIP)
 MAP_NEAREST_VA=0000000141f42180
 MAP_SYMBOL=??$__std_search_impl@U_Find_traits_2@?A0x8417fefe@@G@?A0x8417fefe@@YAPEBXPEBXQEBX1_K@Z
 MAP_OBJ=libcpmt:vector_algorithms.obj
 MAP_DELTA=+4
-NOTE2=0xC000041D fault VA lands in CRT std::search helper ? secondary fail-fast site, not product root
-DUMP_OUTER=Code=0xC000041D Flags=0x11(NONCONTINUABLE|NESTED_CALL) RIP=RVA+0x1F42184 NestedPtr=RBX
-NESTED_ER_PTR=0xC5165A8CB0 (RBX=ExceptionRecord; 2136 bytes BELOW minidump Stack window start ? NOT CAPTURED)
-STACK_RESIDUE_PRIOR_ER=EXCEPTION_RECORD C0000005 flags=0 addr=ntdll.dll+0x5B325 NumberParameters=2 ExceptionInformation=[0=READ,1=VA 0x24] NEAR_NULL_DEREF
-RBP_WALK=CORRUPT (saved ret = Win32IDE_LicenseCreator string; next fp=0x26)
-PRODUCT_TRIGGER=crashed peer SHA97A7EF29 strings prove sync UI-thread BackendOrchestrator::LoadModel inside startAgentSession during dialog user-callback (MISS 'LoadModel worker dispatch')
-ROOT_FIX_SOURCE=Win32IDE_AgentPanel.cpp offloads LoadModel to std::thread + PostMessage WM_APP+207; Win32IDE_Core.cpp handles WM_APP+207 -> onBoundedAgentModelLoadDone (SOURCE present; PEER EXE/OBJ stale at crash)
-TIP_BIND=6754616E UNCHANGED
-PROMOTE=0 CERTIFIED=0
+PDB_LLVM_SYMBOL=`anonymous namespace'::__std_minmax_element_impl<3,_Minmax_traits_scalar<_Minmax_traits_4_base>>
+PDB_LLVM_FILE=vector_algorithms.cpp:1784
+NOTE2=Outer RIP is CRT vector_algorithms leaf (map search_impl vs PDB minmax_element) — secondary site
+
+## Prior chain (minidump API; cdb ABSENT; WinDbgX analyze TIMEOUT)
+DUMP_OUTER=Code=0xC000041D Flags=0x11(NONCONTINUABLE|NESTED_CALL) RIP=RVA+0x1F42184
+NESTED_ER_PTR=0xC5165A8CB0 (RBX=ExceptionRecord; 2136 bytes BELOW minidump Stack window — NOT CAPTURED)
+PRIOR_RESIDUE_ER=VA 0xC5165AB9B0 (rsp+0x24A8) CODE=0xC0000005 flags=0
+  ExceptionAddress=ntdll.dll+0x5B325 NumberParameters=2 info=[READ, VA 0x24] NEAR_NULL_DEREF
+PRIOR_CHAIN_SEAL=PRIOR_EXCEPTION_CHAIN.txt
+PRODUCT_STACK_RESIDUE=vector<DiffEntry>::_Change_array+0xB2 ; Deep2::K2ValidateLineage+0xF3
+RBP_WALK=CORRUPT
+
+## Trigger / fix posture
+PRODUCT_TRIGGER=peer SHA97A7EF29 sync UI-thread LoadModel in startAgentSession during dialog callback
+ROOT_FIX_SOURCE=Win32IDE_AgentPanel.cpp worker+WM_APP+207 (SOURCE present; crash EXE pre-fix)
+TIP_BIND=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431 UNCHANGED=1
+PROMOTE=0 CERTIFIED=0 EDIT_BUILD_TEST_PASS=0 CAT11=25 HOLD

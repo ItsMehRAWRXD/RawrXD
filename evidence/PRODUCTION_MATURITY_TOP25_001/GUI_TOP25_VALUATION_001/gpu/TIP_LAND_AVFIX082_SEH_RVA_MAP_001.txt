@@ -1,0 +1,16 @@
+TIP_LAND_AVFIX082_SEH_RVA_MAP_001
+ASOF_LOCAL=2026-11-13T22:41:00-05:00
+PROMOTE=0 CROSS_SHA_CREDIT=0
+PEER_SHA256=F59979108B987DA85AE8BF6044232F994598E9049C46AFFD7FA66A84AAF602F5
+MAP=clean_link/LOCKED/RawrXD-Win32IDE_tip_land_avfix082.map
+PDB=ABSENT
+FAULT_RVA=0x1F3A82D
+FAULT_VA_PREFERRED=0x141F3A82D
+NEAREST_LE=__stdio_common_vfprintf_s @ 0x141F3A830 (libucrt:output.obj)
+DELTA_INTO=+0xFD
+NOTE=SEH RIP lands inside CRT vfprintf_s — secondary site during format/log with bad pointer (VA=-1). Product null root is earlier on GENERATE stream stack; need prior frame product symbols (stack RVAs 0x1A00D etc.) once map parse completes.
+DEBUGGERS_FOUND=WinDbgX.exe; llvm-symbolizer.exe; llvm-pdbutil.exe; vsdbg (cdb ABSENT)
+TIP_BIND=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431 INTACT
+DUMP_A8_BYTES=296049685
+PROMOTE=0
+END

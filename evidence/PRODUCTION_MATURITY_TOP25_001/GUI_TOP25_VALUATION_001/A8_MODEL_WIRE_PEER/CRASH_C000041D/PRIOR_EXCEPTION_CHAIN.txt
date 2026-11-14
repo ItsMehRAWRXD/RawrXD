@@ -1,0 +1,81 @@
+A8_MODEL_WIRE_PEER PRIOR_EXCEPTION_CHAIN
+ASOF_LOCAL=2026-11-13T22:40:00-05:00
+METHOD=minidump_API_parse + .map nearest + llvm-symbolizer(PDB) + WER Report.wer
+DEBUGGER=cdb.exe ABSENT; WinDbgX PRESENT but -z !analyze TIMEOUT (no usable log);
+  llvm-symbolizer.exe PRESENT; llvm-pdbutil.exe PRESENT; vsdbg PRESENT (no dump mode used)
+PROMOTE=0 CERTIFIED=0 TIP_BIND=6754616E UNCHANGED
+INVENT_PASS=0 NOT_RUN!=PASS
+
+## Dump
+PATH=%LOCALAPPDATA%\CrashDumps\RawrXD-Win32IDE_tip_land_a8_modelwire.exe.32924.dmp
+SIZE=296049685
+PEER_SHA256=97A7EF29FF7608C0BE44D8D753ACA31907AE9B93958B947DEE1DA456D22082BC
+EXE_BASE_AT_CRASH=0x7FF77C870000
+TID=23068 TEB=0xC5161A5000 ExceptionList=0 StackBase=0xC516600000 StackLimit=0xC5165A4000
+
+## Chain (outer → prior residue)
+
+### [0] OUTER — STATUS_FATAL_USER_CALLBACK_EXCEPTION
+CODE=0xC000041D
+FLAGS=0x11 (EXCEPTION_NONCONTINUABLE | EXCEPTION_NESTED_CALL)
+RIP=0x7FF77E7B2184  RVA=0x1F42184  MODULE=self
+ExceptionRecord/RBX=0xC5165A8CB0  (NESTED ER POINTER)
+WER_SIG_MATCH=Exception Code=c000041d Offset=0000000001f42184
+
+OUTER_FAULT_SYMBOL (authoritative PDB/llvm-symbolizer @ preferred VA 0x141F42184):
+  `anonymous namespace'::__std_minmax_element_impl<3,_Minmax_traits_scalar<_Minmax_traits_4_base>>
+  FILE=vector_algorithms.cpp:1784  (MSVC STL CRT)
+OUTER_FAULT_SYMBOL (map nearest @ 0x141F42180 +4):
+  ??$__std_search_impl@U_Find_traits_2@...@@YAPEBXPEBXQEBX1_K@Z
+  OBJ=libcpmt:vector_algorithms.obj
+NOTE=MAP vs PDB disagree on which CRT vector helper; both are CRT leaf sites inside
+  vector_algorithms — SECONDARY fail-fast / nested-callback landing, NOT product root.
+
+### [1] NESTED EXCEPTION_RECORD @ 0xC5165A8CB0 — NOT CAPTURED
+CAPTURE_GAP=NESTED_ER is 0x850 (2136) bytes BELOW minidump MemoryList stack window start
+  (window starts at RSP=0xC5165A9508; nested at 0xC5165A8CB0; StackLimit=0xC5165A4000
+   so nested WAS on live stack but below WER minidump stack snapshot).
+STATUS=UNREADABLE_IN_DUMP — cannot decode prior ExceptionCode/Address from ER itself.
+
+### [2] PRIOR RESIDUE ER on captured stack (rsp+0x24A8 / VA 0xC5165AB9B0)
+CODE=0xC0000005 ACCESS_VIOLATION
+FLAGS=0x0
+ExceptionAddress=0x7FFCBFC8B325 = ntdll.dll+0x5B325 (ntdll.pdb ABSENT locally)
+NumberParameters=2
+  ExceptionInformation[0]=0x0  (READ)
+  ExceptionInformation[1]=0x24 (NEAR_NULL — deref null-object +0x24)
+NestRecord=0
+DISPOSITION=BEST_AVAILABLE_PRIOR before C000041D promotion;
+  classic near-null AV elevated to FATAL_USER_CALLBACK when unhandled inside UI callback.
+
+## Product stack residue (RSP slots → map nearest; CRT filtered)
+rsp+0x080  std::vector<RawrXD::DiffEntry>::_Change_array +0xB2
+           OBJ=RawrXD-ModelAnalysisLib:neurological_diff.cpp.obj
+rsp+0x0C0  Deep2::K2ValidateLineage +0xF3
+           OBJ=deep2_c1_c9:K2C1C9.cpp.obj
+rsp+0x18B0 Win32IDE::handleToolsCommand +0x145F0  (large delta — treat as weak/near-miss)
+rsp+0x1940 Deep2::NU_GemvCpu +0x1E4
+RBP_WALK=CORRUPT (saved return landed on Win32IDE string literal)
+
+## Product trigger (corroboration, not dump-proven callstack frame)
+Crash peer SHA97A7EF29 measured AFTER BOUNDED_DIALOG_FILLED=1 with sync UI-thread
+  BackendOrchestrator::LoadModel + AgenticBridge::LoadModel inside startAgentSession
+  (SOURCE later moved to worker+WM_APP+207; crash image lacks that string).
+UI-thread LoadModel under user-callback matches C000041D class (same as tip +0x1F99DB4).
+
+## Tooling outcome
+cdb/dumpchk=ABSENT
+WinDbgX=!analyze TIMEOUT (no sealed analyze transcript)
+llvm-symbolizer=OUTER CRT symbol OK; ntdll.pdb missing → ntdll+0x5B325 UNRESOLVED_BY_NAME
+minidump_API=OUTER+PRIOR_RESIDUE sealed below
+
+## Seal disposition
+SEAL=FAIL_CLOSED_PRIOR_PARTIAL
+PRIOR_CODE=0xC0000005
+PRIOR_FAULT=ntdll.dll+0x5B325 READ VA=0x24
+OUTER_SYMBOL_PDB=__std_minmax_element_impl (vector_algorithms.cpp:1784)
+OUTER_SYMBOL_MAP=__std_search_impl +4
+NESTED_ER_BODY=NOT_IN_DUMP
+EDIT_BUILD_TEST_PASS=0 CAT11=25 HOLD
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD
+END
