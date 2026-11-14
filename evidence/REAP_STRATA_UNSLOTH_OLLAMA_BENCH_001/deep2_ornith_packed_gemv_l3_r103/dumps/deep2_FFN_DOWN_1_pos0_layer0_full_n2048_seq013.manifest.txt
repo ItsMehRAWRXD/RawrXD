@@ -1,0 +1,13 @@
+side=deep2
+stage=FFN_DOWN_1
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=47bb6a16a26f9b3d
+l2=10.381453458479099
+seq=13
+path=g:\~dev\rawrxd\evidence\REAP_STRATA_UNSLOTH_OLLAMA_BENCH_001\deep2_ornith_packed_gemv_l3_r103\dumps\deep2_FFN_DOWN_1_pos0_layer0_full_n2048_seq013.bin

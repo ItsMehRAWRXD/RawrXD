@@ -1,0 +1,13 @@
+side=deep2
+stage=PROMPT_EMBED
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=afa82ce89bc01456
+l2=0.54371959705964146
+seq=1
+path=g:\~dev\rawrxd\evidence\REAP_STRATA_UNSLOTH_OLLAMA_BENCH_001\deep2_ornith_packed_gemv_l3_r103\dumps\deep2_PROMPT_EMBED_pos0_layer0_full_n2048_seq001.bin

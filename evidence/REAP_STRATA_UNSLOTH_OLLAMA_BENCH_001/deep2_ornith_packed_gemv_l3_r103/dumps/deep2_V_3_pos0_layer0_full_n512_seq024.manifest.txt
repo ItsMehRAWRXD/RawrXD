@@ -1,0 +1,13 @@
+side=deep2
+stage=V_3
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=512
+nbytes=2048
+fnv=5c6724c9ccadd467
+l2=12.043028381869471
+seq=24
+path=g:\~dev\rawrxd\evidence\REAP_STRATA_UNSLOTH_OLLAMA_BENCH_001\deep2_ornith_packed_gemv_l3_r103\dumps\deep2_V_3_pos0_layer0_full_n512_seq024.bin

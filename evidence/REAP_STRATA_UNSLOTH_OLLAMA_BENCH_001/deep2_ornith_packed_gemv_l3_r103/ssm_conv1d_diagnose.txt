@@ -1,0 +1,17 @@
+GGUF=F:\OllamaModels\_REAP16\ornith-1_5-35b-REAP194\sha256-aaeb640f98a892980ef54876024293cc8d6987a86523aa1b947ffa9274ef800a
+VER=3 N_TENSORS=753 ARCH=qwen35moe
+DATA_START=10990656
+EXACT_blk.40.ssm_conv1d.weight_COUNT=0
+ALT_blk40_ssm_or_conv_COUNT=0
+ssm_conv1d.weight_LAYERS=[0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14, 16, 17, 18, 20, 21, 22, 24, 25, 26, 28, 29, 30, 32, 33, 34, 36, 37, 38]
+ssm_conv1d.weight_HAS_40=False
+ssm_conv1d.weight_COUNT=30 MAX=38
+HYBRID_PATTERN=3_SSM_then_1_MOE repeating; L39=MoE(no ssm); L40=final MoE-ish (20 tensors, no ssm*)
+blk.0/1/2 ssmish=PRESENT (incl ssm_conv1d.weight)
+blk.3/39 ssmish=[] (MoE)
+blk.40 ssmish=[] tensor_count=20
+RENAME_CANDIDATES=NONE (no blk.40.*ssm* / *conv*)
+FINDING=ABSENT_NOT_RENAME
+ROOT_CAUSE=ARCH_HYBRID_SCHEDULE — llama.cpp qwen35moe loader expects blk.40.ssm_conv1d.weight; REAP194 GGUF correctly omits SSM tensors on MoE/final layers
+NOTE=do_not_fabricate_tensor; Deep2 maps present SSM layers (L0+) OK; vs llama REF_LOAD remains NOT_CLOSABLE
+PROMOTE=0

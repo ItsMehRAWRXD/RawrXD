@@ -1,0 +1,13 @@
+side=deep2
+stage=ATTN_NORM_2
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=34110b34d9085612
+l2=45.37639724195386
+seq=16
+path=g:\~dev\rawrxd\evidence\REAP_STRATA_UNSLOTH_OLLAMA_BENCH_001\deep2_ornith_packed_gemv_l3_r103\dumps\deep2_ATTN_NORM_2_pos0_layer0_full_n2048_seq016.bin

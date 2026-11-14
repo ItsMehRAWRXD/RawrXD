@@ -11348,11 +11348,14 @@ void Deep2Engine::computeExpertFFN(const MoEWeightHandle& handle,
         std::memset(gateOut, 0, expertDim * sizeof(float));
         kGate((const uint8_t*)handle.gateWeights, input, gateOut, expertDim,
               hiddenDim);
-        /* PACKED_GEMV dump: first experts any layer (Ornith MoE≠L0 SSM). SOURCE_WIRED≠PASS. */
+        /* PACKED_GEMV L3+: first experts (Ornith L0–2=SSM). Dump IN/GATE/UP/DOWN. */
         if (B3_StageDigestEnabled()) {
             static int moeGemvDumps = 0;
             if (moeGemvDumps < 2) {
                 char key[72];
+                std::snprintf(key, sizeof(key), "MOE_IN_L%d_E%d",
+                              handle.layer, handle.expertId);
+                B3_StageDigest(key, 0, input, hiddenDim);
                 std::snprintf(key, sizeof(key), "MOE_GATE_L%d_E%d",
                               handle.layer, handle.expertId);
                 B3_StageDigest(key, 0, gateOut, expertDim);

@@ -1,0 +1,13 @@
+side=deep2
+stage=MOE_GATE_L3_E37
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=512
+nbytes=2048
+fnv=5d178c87d794ee39
+l2=11.676225859227703
+seq=38
+path=g:\~dev\rawrxd\evidence\REAP_STRATA_UNSLOTH_OLLAMA_BENCH_001\deep2_ornith_packed_gemv_l3_r103\dumps\deep2_MOE_GATE_L3_E37_pos0_layer0_full_n512_seq038.bin
