@@ -11,21 +11,43 @@
 
 namespace CPUInference {
 namespace {
+uint64_t Fnv64Spv(const uint32_t* w, size_t nWords) {
+    uint64_t h = 14695981039346656037ull;
+    const uint8_t* p = reinterpret_cast<const uint8_t*>(w);
+    const size_t n = nWords * 4u;
+    for (size_t i = 0; i < n; ++i) {
+        h ^= p[i];
+        h *= 1099511628211ull;
+    }
+    return h;
+}
 bool LoadQ4kSpv(std::vector<uint32_t>& code) {
-    const char* paths[] = {
-        "G:/~dev/rawrxd/src/backend/gemv_q4k.spv",
-        "G:\\~dev\\rawrxd\\src\\backend\\gemv_q4k.spv",
-        "G:/~dev/rawrxd/build-ninja/bin/gemv_q4k.spv",
-        "gemv_q4k.spv", "bin/gemv_q4k.spv",
-    };
-    for (const char* p : paths) {
+    /* C740 loads disk SPV (no embed). Order: env override, then absolute
+     * src/backend, then cwd/bin copies. Bytes alone ≠ SHA — print FNV64 of
+     * loaded image so a candidate cannot silently look like pin 4548BCF1. */
+    const char* envPath = std::getenv("RAWRXD_Q4K_SPV");
+    const char* paths[8];
+    int nPath = 0;
+    if (envPath && envPath[0]) paths[nPath++] = envPath;
+    paths[nPath++] = "G:/~dev/rawrxd/src/backend/gemv_q4k.spv";
+    paths[nPath++] = "G:\\~dev\\rawrxd\\src\\backend\\gemv_q4k.spv";
+    paths[nPath++] = "G:/~dev/rawrxd/build_ninja/bin/gemv_q4k.spv";
+    paths[nPath++] = "G:/~dev/rawrxd/build-ninja/bin/gemv_q4k.spv";
+    paths[nPath++] = "gemv_q4k.spv";
+    paths[nPath++] = "bin/gemv_q4k.spv";
+    for (int i = 0; i < nPath; ++i) {
+        const char* p = paths[i];
         std::ifstream f(p, std::ios::binary | std::ios::ate);
         if (!f.is_open()) continue;
-        size_t n = (size_t)f.tellg(); f.seekg(0);
+        size_t n = (size_t)f.tellg();
+        f.seekg(0);
+        if (n < 4 || (n % 4) != 0) continue;
         code.resize(n / 4);
         f.read(reinterpret_cast<char*>(code.data()), (std::streamsize)n);
         if (!code.empty()) {
-            printf("[VulkanCompute] Q4K_SPV=%s bytes=%zu\n", p, n);
+            const uint64_t fnv = Fnv64Spv(code.data(), code.size());
+            printf("[VulkanCompute] Q4K_SPV=%s bytes=%zu fnv64=%016llX\n", p, n,
+                   (unsigned long long)fnv);
             return true;
         }
     }
