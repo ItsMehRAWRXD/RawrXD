@@ -2,8 +2,8 @@
 
 | Priority | Defect | Near GATE | Disposition |
 |----------|--------|-----------|-------------|
-| P0 | Gemma INFER_STREAM_SEH / M1M2 combine AV | G02-06 G03-08 | Fix AV on AA4F8530 combine; tip-bind qDim |
-| P0 | GPU/ref numerical ATTN_PRE_O_1 V_1 | G02-04 G02-05 G03-08 | OPEN: ATTN_NORM_1 cascade @dim1072; maxULP_f16=1; GATE_MATRIX NOT_RUN |
+| P0 | Gemma AA4F8530 AV @ HotPatcher::emergencyRollback+0x88 | G02-06 G03-08 | Deep2Engine.obj delta vs 7FD1; remasure addrOk land |
+| P0 | GPU/ref ATTN_PRE_O_1 V_1 | G02-04 G02-05 G03-08 | OWNER=ATTN_NORM_1@dim1072 (not Q6); maxULP_f16=1 CLOSE=0 |
 | P0 | Multi-family GUI acceptance | G04-01 G06-06 | Win32 path; no CROSS_SHA |
 | P1 | C36 LSP startup hang | G07-01 G07-04 | cand INIT_OK RELATED; tip6754 RO OPEN |
 | P1 | ConPTY terminal-stop | G05-05 G06-05 | cand stop PASS RELATED; matrix NOT_RUN |
