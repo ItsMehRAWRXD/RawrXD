@@ -470,6 +470,8 @@ public:
 #else
     bool isModelLoaded() const { return modelWeights.loaded; }
 #endif
+    /* POST_LOAD roots repair — Deep2Engine.cpp (RawrRunSession). */
+    bool repairModelLoadedFromRoots();
     ModelState modelState() const { return modelState_; }
     bool hostQ8GemvSafe() const { return hostQ8GemvSafe_; }
     void emitHostQ8GemvReceipts(FILE* f) const {
@@ -1060,12 +1062,8 @@ private:
                              int argmaxId, float argmaxLogit);
     void resetGenQualityProbe();
     void armGenQualityProbe();
-
-    // Observe-only decode-quality seam (DEEP2_GEN_QUALITY_TRACE)
-    uint64_t genQualityOrdinal_ = 0;
-    int genQualityChatValid_ = 0;
-    int genQualityTokRoundtrip_ = 1;
-    void* genQualityProbe_ = nullptr; /* D2GenQualityProbe* opaque */
+    /* AVFIX083: quality is D2GenQualitySlotFor(this) only — no Eng members.
+     * seh ProductRuntime bakes sizeof(Deep2Engine)==0x2868; ext@+0x2868. */
 
     // Find tensor in GGUF by name pattern
     WeightTensor* findTensor(const std::string& namePattern);

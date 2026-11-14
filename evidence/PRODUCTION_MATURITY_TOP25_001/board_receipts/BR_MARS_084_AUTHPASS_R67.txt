@@ -1,0 +1,25 @@
+BR_MARS_084_AUTHPASS_R67
+ASOF_LOCAL=2026-11-13T23:11-05:00
+AUTH=PARENT_BOARD_AUTHORITY / BOARD_SINGLE_WRITER
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 CROSS_SHA_CREDIT=0
+PCT_HELD=CLI67/GUI48/OVERALL48
+GATE_MATRIX_PASS=0
+
+## Absorbed
+RECEIPT=receipts/G02-08_20261113_MARS_DEDUP_084_AUTHPASS_REMEASURE_RELATED.md
+TIP=6754616E RO
+
+| Lane | EXE_SHA256 | OPEN_PASS | authPASS | TOK | STREAM_SEH | KEEP |
+|------|------------|-----------|----------|-----|------------|------|
+| llama32 qdim084 | 9181073D… | 1 | 1 | 0 | 1 (0xE06D7363) | 1 |
+| gemma tip_land avfix084 | CC621549… | 1 | 1 | 0 | 0 / EXIT=NULL | 1 |
+
+## Diagnosis closed
+POST_LOAD gguf=0 → auth never copied; Eng strong sessionAuthority* + repairModelLoadedFromRoots
+LNK4006: Eng accessors beat product_deep2_infer_seh COMDATs
+
+## Next
+NEXT=STREAM_SEH_E06D7363_GENERATE_ENTER_TOK
+≠ tip absorb until TOK>0 on controlling tip SHA
+PROMOTE=0
+END

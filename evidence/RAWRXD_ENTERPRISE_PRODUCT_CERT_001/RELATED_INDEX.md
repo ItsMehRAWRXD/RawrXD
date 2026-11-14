@@ -19,10 +19,8 @@ Historical / private-cand / partial RUNTIME — cite only. `CROSS_SHA_CREDIT=0`.
 | M4 Authenticode remasure 20261113_222135 | G12-02 | NotSigned MSI+SetupWizard; signed-cert blocker |
 | M4 CLEAN_VM | G12-03 | NOT_RUN (no hypervisor surface) |
 | FIRST_DIVERGE_001 seals | G02 G03 | remasure chain |
-| G01-01/02/03 SELF_MEASURE EVIDENCE_PARTIAL @ 3d0928e74888 | G01 | Prior freeze; superseded by dde963941aa4 |
-| G01-01..08 SELF_MEASURE @ dde963941aa4 (BR_G01_SOURCE_INTEGRITY_R70) | G01 | 5 EVIDENCE_PARTIAL + 3 NOT_RUN; PASS=0 |
-| build_ninja/bin/rawr.exe CD84354D… preexisting | G01-03 G01-06 | Stale binary after rebuild EXIT=2; forensics only |
-
+| G01-01/02/03 SELF_MEASURE EVIDENCE_PARTIAL @ 3d0928e74888 | G01 | Freeze + license stub + failed CLI rebuild; ≠ PASS |
+| build_ninja/bin/rawr.exe E5F2D304… preexisting | G01-03 G01-06 | Stale binary after rebuild EXIT=2; forensics only |
 | BR_MARS_DEDUP_LLAMA32_001 @ b61f03972e | G02 G04 | SOURCE_WIRED; remasure TOK |
 | G08_M3_ISSUE49_SOURCE_WIRE_001 | G05 G08 | useCliAgent wire; EXE remasure OPEN |
 | BR_ATTN_PRE_O_POS1_T2_KERNEL_R60 | G02 G03 | ROOT_CLEAR; CLOSED=0 |
@@ -31,8 +29,13 @@ Historical / private-cand / partial RUNTIME — cite only. `CROSS_SHA_CREDIT=0`.
 | qdim084 llama32 4F76D501 | G02 G04 | MARS dedup+keep; OPEN_SEH=0 STREAM_SEH=0 TOK=0 OPEN_PASS=0 |
 | tip_land avfix084 gemma 1108BF01 | G02 | MARS dedup+keep; STREAM_SEH=0 TOK=0 OPEN_PASS=0 |
 | receipts/G02-08_20261113_MARS_DEDUP_084_REMEASURE_RELATED.md | G02-08 | private 084 remasure RELATED≠PASS |
+| receipts/G02-08_20261113_MARS_DEDUP_084_AUTHPASS_REMEASURE_RELATED.md | G02-08 | authPASS/OPEN_PASS=1; STREAM/TOK residual |
 
 | cand_c36_conpty 0C6A965A | G07-01 G07-04 G05-05 G06-05 | LSP INIT_OK + ConPTY stop PASS on cand; tip6754 RO unchanged |
+| tip6754 C36 remasure 20261113_230552 | G07-01 G07-04 | tip C36_INIT=HANG/TIMEOUT; cand INIT_OK RELATED only |
+| tipera ConPTY stop 20261113_230700 | G05-05 G06-05 | tip-era TM stop PASS host RELATED; tip EXE RO |
+| M3 model-select tipbound diag 20261113_230900 | G08-01 | MODEL_SELECTED=0 unk; FORCE≠select; wire SOURCE_WIRED RUNTIME=0 |
+| BR_C36_CONPTY_M3_TIP_R70 | G05 G06 G07 G08 | P1 tip remasure board receipt |
 | P2 llama32 Elastic+MARS qdim083/084 | G02-08 G06-06 | ROOT_CLEAR; DURABLE TOK=0; RELATED≠PASS |
 | receipts/G02-08_20261113_P2_LLAMA32_RELATED.md | G02-08 | private OPEN; CERT NOT_RUN |
 | receipts/G06-06_20261113_P2_LLAMA32_RELATED.md | G06-06 | tipbound GEN still OPEN |

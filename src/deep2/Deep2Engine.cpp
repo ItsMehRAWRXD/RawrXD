@@ -1597,7 +1597,7 @@ Deep2Engine::~Deep2Engine() {
         for (auto& s : moeShardLoaders_) (void)s.release();
         moeShardLoaders_.clear();
         moePinnedHandles_.clear();
-        genQualityProbe_ = nullptr;
+        D2GenQualitySlotFor(this).probe = nullptr;
         std::fprintf(stderr, "[LIFE] ~Deep2Engine END\n");
         std::fflush(stderr);
         Td(11, "CLEAN_EXIT");
@@ -5104,18 +5104,31 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight, const float* input,
             nW = normWeight.rows;
     }
 
-    /* Match ggml_compute_forward_rms_norm_f32:
-       sum += (ggml_float)(x[i]*x[i]) with ggml_float=double; mean=(float)(sum/n);
-       scale=1.0f/sqrtf(mean+eps). Float-only sumSq (51e89df) regressed
-       FFN_DOWN_0@pos0 (~7.5e-5) → V_1@pos0 → ATTN_PRE_O_1@pos1. */
-    double sumSq = 0.0;
-    size_t i = 0;
-    for (; i < dim; ++i) {
-        const float xi = input[i];
-        sumSq += static_cast<double>(xi * xi);
+    /* Default: ggml_float=double sumSq. TinyLlama REF ATTN_NORM dumps from
+       llama.cpp match float32 sumSq bitexact; double leaves AN@dim1072 on the
+       wrong FP16 RNE side for V_1[59]. Opt-in RAWRXD_RMSNORM_F32_SUM=1 for
+       ATTN_NORM_1 bitexact isolate (PROMOTE=0). Float-only default previously
+       regressed FFN_DOWN_0 (~7.5e-5) — keep double unless env set. */
+    const char* f32Sum = std::getenv("RAWRXD_RMSNORM_F32_SUM");
+    const bool useF32Sum = f32Sum && f32Sum[0] == '1';
+    float meanSq;
+    if (useF32Sum) {
+        float sumSqF = 0.f;
+        for (size_t j = 0; j < dim; ++j) {
+            const float xi = input[j];
+            sumSqF += xi * xi;
+        }
+        meanSq = sumSqF / static_cast<float>(dim);
+    } else {
+        double sumSq = 0.0;
+        for (size_t j = 0; j < dim; ++j) {
+            const float xi = input[j];
+            sumSq += static_cast<double>(xi * xi);
+        }
+        meanSq = static_cast<float>(sumSq / static_cast<double>(dim));
     }
-    const float meanSq = static_cast<float>(sumSq / static_cast<double>(dim));
     const float invRms = 1.0f / sqrtf(meanSq + eps);
+    size_t i = 0;
     __m256 vinvRms = _mm256_set1_ps(invRms);
 
     // Apply normalization + weight with AVX2
@@ -6072,6 +6085,7 @@ void Deep2Engine::emitContinuitySnap(FILE* f, uint32_t gen) const {
     std::fflush(f);
 }
 
+#if defined(RAWR_PRODUCT_RUNTIME_OPEN_MIN)
 bool Deep2Engine::isModelLoaded() const { return modelWeights.loaded; }
 
 const ModelWeights& Deep2Engine::getModelWeights() const {
@@ -6085,6 +6099,7 @@ const rawr::olma::AuthorityBundle& Deep2Engine::sessionAuthority() const {
 bool Deep2Engine::sessionAuthorityPass() const {
     return sessionAuth_.PASS != 0;
 }
+#endif
 
 bool Deep2Engine::repairModelLoadedFromRoots() {
     if (modelWeights.loaded) return true;
@@ -7874,7 +7889,7 @@ Deep2::GenerationResult Deep2Engine::generateStream(
         const bool usable =
             !forceRaw &&
             (ty != ChatTemplateType::UNKNOWN && ty != ChatTemplateType::RAW_BOS);
-        if (auto* qp = static_cast<D2GenQualityProbe*>(genQualityProbe_))
+        if (auto* qp = D2GenQualitySlotFor(this).probe)
             qp->chatValid = usable ? 1 : (forceRaw ? 1 : 0);
         if (usable) {
             // The native HTTP adapter may already serialize the complete
@@ -7980,10 +7995,8 @@ Deep2::GenerationResult Deep2Engine::generateStream(
                             "piece_bytes=%zu chat_template_valid=%d "
                             "path=K2_STREAM\n",
                             s->count, (int)id, piece.size(),
-                            (s->eng && s->eng->genQualityProbe_)
-                                ? static_cast<D2GenQualityProbe*>(
-                                      s->eng->genQualityProbe_)
-                                      ->chatValid
+                            (s->eng && D2GenQualitySlotFor(s->eng).probe)
+                                ? D2GenQualitySlotFor(s->eng).probe->chatValid
                                 : 0);
                         std::fclose(qf);
                     }
@@ -11333,22 +11346,43 @@ void Deep2Engine::computeLogits(const float* hiddenState, float* logits) {
 }
 
 void Deep2Engine::resetGenQualityProbe() {
-    // AVFIX083: tip-land seh ProductRuntime::Eng() uses sizeof(Deep2Engine)==0x2868
-    // so ProductRuntime::ext lives at +0x2868. Writing genQualityOrdinal_/
-    // tokRoundtrip_/probe_ at +0x2860/+0x286C/+0x2870 poisons ext→0x100000000
-    // and modelAlias; teardown fclose's string bytes as FILE*
-    // (F599 RIP RVA 0x1F3A82D READ VA=-1). No-op until sizeof ABI sync.
+    auto& slot = D2GenQualitySlotFor(this);
+    D2GenQualityProbe* raw = slot.probe;
+    slot.probe = nullptr;
+    if (!raw) return;
+#ifdef _WIN32
+    MEMORY_BASIC_INFORMATION mbi{};
+    if (VirtualQuery(raw, &mbi, sizeof(mbi)) == 0 || mbi.State != MEM_COMMIT ||
+        !(mbi.Protect & (PAGE_READONLY | PAGE_READWRITE | PAGE_WRITECOPY |
+                         PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE |
+                         PAGE_EXECUTE_WRITECOPY))) {
+        std::fprintf(stderr, "AVFIX083_SKIP_WILD_PROBE=%p\n",
+                     (void*)raw);
+        std::fflush(stderr);
+        return;
+    }
+#endif
+    raw->f = nullptr;
+    raw->owned = false;
+    delete raw;
 }
 
 void Deep2Engine::armGenQualityProbe() {
     resetGenQualityProbe();
-    // AVFIX083: refuse arm while quality offsets alias ProductRuntime::ext.
-    (void)std::getenv("DEEP2_GEN_QUALITY_TRACE");
+    const char* path = std::getenv("DEEP2_GEN_QUALITY_TRACE");
+    if (!path || !path[0]) return;
+    auto* p = new D2GenQualityProbe();
+    if (!p->open(path)) {
+        delete p;
+        return;
+    }
+    D2GenQualitySlotFor(this).probe = p;
 }
 
 void Deep2Engine::emitGenQualityProbe(int selected, const float* logits,
                                       int argmaxId, float argmaxLogit) {
-    if (!genQualityProbe_ || !logits) return;
+    auto* p = D2GenQualitySlotFor(this).probe;
+    if (!p || !logits) return;
     float mx = argmaxLogit;
     double sum = 0.0;
     for (size_t i = 0; i < config.vocabSize; ++i) {
@@ -11363,7 +11397,7 @@ void Deep2Engine::emitGenQualityProbe(int selected, const float* logits,
          std::isfinite(selLogit))
             ? (std::exp((double)selLogit - (double)mx) / sum)
             : 0.0;
-    bool tokRt = genQualityTokRoundtrip_ != 0;
+    bool tokRt = p->tokRoundtrip != 0;
     if (tokenizer && selected >= 0) {
         const std::string piece = tokenizer->Decode(selected);
         auto again = tokenizer->Encode(piece);
@@ -11372,14 +11406,13 @@ void Deep2Engine::emitGenQualityProbe(int selected, const float* logits,
         } else if (piece.empty()) {
             tokRt = false;
         }
-        genQualityTokRoundtrip_ = tokRt ? 1 : 0;
+        p->tokRoundtrip = tokRt ? 1 : 0;
     }
     const bool samplerValid =
         selected >= 0 && (size_t)selected < config.vocabSize &&
         std::isfinite(selLogit) && std::isfinite(argmaxLogit);
-    auto* p = static_cast<D2GenQualityProbe*>(genQualityProbe_);
-    p->emit(genQualityOrdinal_++, selected, selLogit, selProb, argmaxId,
-            argmaxLogit, samplerValid, tokRt != 0, genQualityChatValid_ != 0);
+    p->emit(p->ordinal++, selected, selLogit, selProb, argmaxId, argmaxLogit,
+            samplerValid, tokRt != 0, p->chatValid != 0);
 }
 
 // ============================================================================
