@@ -1,0 +1,38 @@
+﻿L6L7_STRATA_HIP_OLLAMA_001 — STATUS
+ASOF_LOCAL=2026-11-14T11:45:54-05:00
+LANE=L6+L7 P2
+BOARD=RAWRXD_ALL_BACKENDS_COMPLETE_001
+PROMOTE=0 CERTIFIED=0 ENTERPRISE=0/128
+TIP_CLIMB=HOLD GATE_STOP=1 INVENT_PASS=0 NOT_RUN!=PASS
+
+## W11 Strata (HIP) — DISPOSITION=NOT_RUN
+PRODUCT_PROBE_amdhip64.dll=FAIL (LoadLibrary err=126; L6 remasure + W7 hip_probe)
+VERSIONED_RUNTIME=AVAILABLE
+  amdhip64_7.dll Load=1 hipInit_sym=1
+  amdhip64_6.dll Load=1 hipInit_rc=0 hipGetDeviceCount n=2 (W7 hip_probe2)
+NATIVE_HIP_INFERENCE_E2E=NOT_RUN
+FEATURE_HIPBackend=NOT_IMPL (enterprise_license_unified_creator)
+REAP_STRATA_BENCH=RELATED_ONLY (Ollama/Deep2 H2H; not HIP kernels)
+LEVELS_CLEARED=none (Build/Load/Numerics/Gen/Perf/Rel/Int/Pkg all uncleared for HIP)
+BLOCKING_NEXT=product loader versioned-DLL + native HIP forward E2E on real model
+EXPLICIT_UNSUPPORTED=0 (runtime present via versioned DLL; path not implemented)
+
+## W12 Ollama — DISPOSITION=PARTIAL
+LOCAL_HTTP_ALIVE=1 tags=49 (remeasure 2026-11-14T11:45:54-05:00)
+GENERATE_REMEASURE=PASS model=reap16-ornith-1_5:latest eval=32 TPS=116.118 (num_predict=32 temp=0)
+W7_SMOKE_GEN=PASS model=llama3.2:3b response=OK done=1
+W7_SMOKE_TOOLS_API=PASS model=llama3.2:3b tool_calls=calculator expression=2+2
+PRIOR_REAP_H2H=PARTIAL OLLAMA_REAP_PASS=3/6 (held; COMPETITIVE_PASS=0)
+PRODUCT_AGENT_OLLAMA_E2E=OPEN (AgentOllamaClient source wired; this pack did not seal tip product agent path)
+LEVELS_CLEARED=Integration(local HTTP smoke) partial; Reliability/Packaging/agent-product OPEN
+BLOCKING_NEXT=reliable product AgentOllama tool path on tip EXE SHA + full REAP create matrix close
+
+## Pointers
+  remasure/hip_dll_probe.txt
+  remasure/ollama_generate_remeasure.json
+  remasure/w7_hip_probe2.out.txt
+  remasure/w7_ollama_tool.json
+  ../W7_STRATA_HIP_OLLAMA_001/probe/*
+  ../../REAP_STRATA_UNSLOTH_OLLAMA_BENCH_001/{STATUS,OLLAMA_MATRIX,STRATA_MATRIX,RECEIPT}.txt|csv
+
+PROMOTE=0

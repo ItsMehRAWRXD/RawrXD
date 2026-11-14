@@ -28,8 +28,8 @@ Certification levels: Build · Load · Numerics · Generation · Performance · 
 | W08 | MiniMax MoE | NOT_RUN | — | Router/expert map + semantic | REAP_STRATA P0-D |
 | W09 | Kimi K2 | OPEN | Multi-shard wiring historical; tip remasure NOT_RUN this program | Native multi-shard gen | K2 evidence tree |
 | W10 | REAP | PARTIAL | Physical/export + Laguna TOK peer; quality≠competitive | Fair H2H sealed matrix | REAP_STRATA_* |
-| W11 | Strata (HIP) | OPEN / NOT_RUN | Bench packs partial | Native HIP E2E | Strata evidence |
-| W12 | Ollama | PARTIAL | Local H2H ratios measured; agent tool use incomplete | Reliable agent tool path | UNSLOTH_OLLAMA_BENCH |
+| W11 | Strata (HIP) | NOT_RUN | Product `amdhip64.dll` probe FAIL; versioned HIP DLL+2 devices available; Feature HIP NOT_IMPL; no native HIP E2E | Product versioned-DLL loader + native HIP forward E2E | L6L7_STRATA_HIP_OLLAMA_001 |
+| W12 | Ollama | PARTIAL | Local gen remasure PASS (ornith 116.1 tps); HTTP tools smoke PASS; REAP H2H 3/6 held; product AgentOllama E2E OPEN | Tip AgentOllama tool path + REAP create close | L6L7_STRATA_HIP_OLLAMA_001 + REAP_STRATA_* |
 | W13 | Large models 70/80/120B | NOT_RUN | — | Load/decode validation | — |
 | W14 | Multi-agent | PARTIAL | FORCE_TOOL PASS; unforced Method C tip PASS; concurrency isolation OPEN | Concurrent cancel/isolation | CLI_AGENT_* |
 

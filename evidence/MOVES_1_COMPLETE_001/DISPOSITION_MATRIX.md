@@ -107,8 +107,8 @@ Wire: `src/cli/rawr_agent_executor.hpp` — runtime chat template (no broken man
 | COMPLETE=1 | **CLOSED** via Method C MODEL_SELECTED PASS |
 | Move 51+ | Optional product ladder; not authorized to invent PASS |
 | Q6K_VULKAN_SPV_REPAIR | **PASS** FORCE_SPV pack `Q6K_VULKAN_SPV_REPAIR_001` (7C9680CB + CEBA0DE4 remasure); sister default SPV `POST_Q6K_SPV_PRODUCT_DEFAULT_001`; ≠ PROMOTE |
-| REAP_LAGUNA | LEFT_OPEN (**NEXT_OWNER**) |
-| Ornith L3 ULP / Move 51+ / MULTIFAMILY | Optional; not authorized to invent PASS |
+| REAP_LAGUNA | **PASS** SSOT `REAP_LAGUNA_001` tip CEBA0DE4 HEADS+LAYER_NAN=0+TOK=8; COMPETITIVE residual OPEN; ≠ PROMOTE |
+| Ornith L3 ULP / Move 51+ / MULTIFAMILY | **NEXT_OWNER**; not authorized to invent PASS |
 | 8 TPS climb | FORBIDDEN while GATE_STOP=1 |
 | PROMOTE | 0 |
 
@@ -125,6 +125,7 @@ PROMOTE=0
 CERTIFIED=0
 ENTERPRISE=0/128
 Q6K_VULKAN_SPV_REPAIR=PASS
+REAP_LAGUNA=PASS
 COMPLETE=1
-NEXT_OWNER=REAP_LAGUNA|ORNITH_PACKED_GEMV_L3_ULP|Move51+|MULTIFAMILY_EXPAND
+NEXT_OWNER=ORNITH_PACKED_GEMV_L3_ULP|Move51+|MULTIFAMILY_EXPAND
 ```

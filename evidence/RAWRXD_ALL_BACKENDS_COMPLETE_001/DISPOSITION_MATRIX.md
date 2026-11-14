@@ -20,8 +20,8 @@ Status legend: **OPEN** | **RELATED** | **PARTIAL** | **CERTIFIED** | **EXPLICIT
 | MiniMax MoE | OPEN | router/expert/semantic TBD |
 | Kimi K2 | OPEN | multi-shard native TBD; DualStick/GPU ICD off unless proven |
 | REAP | PARTIAL | H2H OBSERVED_ONLY; physical export/quality OPEN |
-| Strata | OPEN | HIP native TBD |
-| Ollama | PARTIAL | local integration/agent TBD |
+| Strata | NOT_RUN | HIP native E2E NOT_RUN; product amdhip64.dll FAIL; versioned runtime AVAILABLE (n=2); Feature NOT_IMPL; L6L7_STRATA_HIP_OLLAMA_001 |
+| Ollama | PARTIAL | local HTTP gen remasure PASS + tools API smoke PASS; REAP H2H PARTIAL 3/6; product AgentOllama E2E OPEN; L6L7_STRATA_HIP_OLLAMA_001 |
 | Large models 70B/80B/120B | OPEN | load/decode TBD |
 | Multi-agent | OPEN | concurrent/cancel/isolation TBD |
 

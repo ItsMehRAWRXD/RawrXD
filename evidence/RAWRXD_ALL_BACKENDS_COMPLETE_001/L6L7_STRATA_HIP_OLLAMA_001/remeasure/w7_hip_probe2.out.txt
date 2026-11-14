@@ -1,0 +1,7 @@
+amdhip64.dll load=0 err=126
+amdhip64_6.dll load=1 err=0
+  hipInit=1
+  hipInit_rc=0
+  hipGetDeviceCount=1
+  devcount_rc=0 n=2
+hiprt64.dll load=0 err=126

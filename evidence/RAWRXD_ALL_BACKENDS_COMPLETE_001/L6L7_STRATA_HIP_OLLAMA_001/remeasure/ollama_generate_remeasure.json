@@ -1,0 +1,12 @@
+{
+    "ASOF":  "2026-11-14T11:41:49-05:00",
+    "model":  "reap16-ornith-1_5:latest",
+    "HttpOk":  true,
+    "eval_count":  32,
+    "eval_duration_ns":  275582000,
+    "TokPerSec":  116.118,
+    "total_wall_ms":  30057,
+    "done":  true,
+    "response_len":  145,
+    "Disposition":  "PASS"
+}

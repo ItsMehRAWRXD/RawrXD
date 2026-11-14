@@ -22,15 +22,16 @@ CLOSED:
   HEADS_LAYER: computeAttention infers per-layer heads from wq.rows (SWA 48 vs full 72)
   ATTN_GATE_BIND: skip mapping Laguna [heads,hidden] gate onto attnO (was false O-proj)
 
-OPEN / FAIL (honest):
-  GENERATED_TOKENS=0 EXIT=12
-  ROOT_CAUSE=LAYER_NAN ly=40 FFN output non-finite during prefill pos=0 (B3_ABORT)
-  NEXT_OWNERS:
-    1) apply Laguna attn_gate (per-head) after O-proj — currently SKIP/unbound
-    2) partial RoPE: rope.dimension_count=64 vs head_dim=128 (+ SWA rope_dim=128)
-    3) sliding_window=512 on SWA layers
-  ARTIFACTS: deep2/laguna_p0a_smoke5.err.log (SKIP gates + HEADS_LAYER + LAYER_NAN@40)
-  PROMOTE=0 CERTIFIED=0
+CLOSED (tip remasure — SSOT evidence/REAP_LAGUNA_001/):
+  GENERATED_TOKENS=8 PRODUCT_PASS=1 LAYER_NAN=0 ATTN_GATE=BIND+APPLY
+  EXE_SHA=CEBA0DE4734A3897B96A825C5CE16685161DB8A3C570C22F6B06B3DE4368A3C5
+  PRIOR_OPEN smoke5 LAYER_NAN@40 / SKIP gate — superseded (smoke6+REAP_LAGUNA_001)
+  PROMOTE=0 CERTIFIED=0 COMPETITIVE_PASS=0
+
+OPEN residual (≠ REAP_LAGUNA reopen):
+  1) DEEP2_REAP_LAGUNA_TPS_OR_COMPETITIVE_H2H (TPS≪Ollama)
+  2) partial RoPE fidelity / sliding_window=512 (not TOK-blocking)
+  ARTIFACTS: deep2/laguna_p0a_smoke5.err.log (historical); REAP_LAGUNA_001/runs/
 
 ## P0-B GLM
 STATUS=OPEN FAIL TOK=0

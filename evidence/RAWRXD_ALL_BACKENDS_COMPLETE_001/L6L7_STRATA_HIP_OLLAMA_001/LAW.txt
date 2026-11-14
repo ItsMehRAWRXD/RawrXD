@@ -1,0 +1,16 @@
+﻿L6L7_STRATA_HIP_OLLAMA_001 — LAW
+PROMOTE=0 CERTIFIED=0 ENTERPRISE=0/128 TIP_CLIMB=HOLD GATE_STOP=1
+INVENT_PASS=0 NOT_RUN!=PASS CROSS_SHA_CREDIT=0 COMPETITIVE_PASS=0
+
+SCOPE
+  Lane L6 = W11 Strata (HIP) native path + benchmark honesty.
+  Lane L7 = W12 Ollama local integration + agent tool honesty.
+  Absorb prior REAP_STRATA_UNSLOTH_OLLAMA_BENCH_001 as RELATED H2H only
+  (REAP strata ≠ AMD HIP native inference).
+
+FAIL_CLOSED
+  Product BackendKind::HIP probes amdhip64.dll only — versioned DLL load
+  is inventory, not product PATH_PASS.
+  FeatureID::HIPBackend remains NOT IMPL until native forward E2E exists.
+  Ollama HTTP /api/generate or /api/chat tools smoke ≠ product AgentOllama
+  E2E CERT; ≠ COMPETITIVE_PASS; ≠ ALL_BACKENDS CERTIFIED.

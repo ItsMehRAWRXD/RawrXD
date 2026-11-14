@@ -1,0 +1,2 @@
+INFERRED_EXIT=0
+NOTE=Start-Process.ExitCode empty; inferred from CLEAN_EXIT markers

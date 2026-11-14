@@ -1,4 +1,4 @@
-﻿# RELATED seals (≠ PASS on CERT_001 gates)
+# RELATED seals (≠ PASS on CERT_001 gates)
 
 Historical / private-cand / partial RUNTIME — cite only. `CROSS_SHA_CREDIT=0`.
 

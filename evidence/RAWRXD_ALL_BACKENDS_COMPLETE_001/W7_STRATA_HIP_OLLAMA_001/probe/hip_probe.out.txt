@@ -1,0 +1,3 @@
+amdhip64_load=0
+err=126
+hip_exit=

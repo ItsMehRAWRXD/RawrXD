@@ -1,0 +1,4 @@
+EXE=G:\~dev\rawrxd\build_ninja\bin\rawr.exe
+MODEL=F:\OllamaModels\_REAP16\laguna-s-2_1-Q4_K_M-REAP35\sha256-948255a146c07678678183af4cb1234a124e945e48c85c2006598ef4696552c8
+PROMPT=Say hi in one short sentence.
+MAX_TOKENS=8
