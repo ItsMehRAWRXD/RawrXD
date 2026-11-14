@@ -1,0 +1,64 @@
+MULTI_FAMILY_LLAMA32_QDIM084_NON617F_1EC00779_STREAM_SEH_CLOSED_001
+ASOF_LOCAL=2026-11-14T05:33:30-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 NOT_RUN!=PASS
+FORCE=0 HOST_DECODE=0 REJECT_FORCE_ABSORB=1 TIP_ABSORB=0
+CROSS_SHA_CREDIT=0 (≠3792BAA7 ≠F44D053D ≠023005C2 ≠67350F71)
+DURABLE=1
+ENTERPRISE_CERT=0/128 (RELATED only; no PASS invent on enterprise ladder)
+GATE_CLOSED=1 (private NON617F STREAM_SEH owner closed; PROMOTE still 0)
+DISPOSITION=CLOSED_PRIVATE_CAND
+SPV_CLOBBER=0 CTRL_SPV=40E76D2A…/17272 UNTOUCHED (no SPV write this lane)
+PRIOR_R78=MULTI_FAMILY_LLAMA32_QDIM084_NON617F_67350_REMEASURE_001 OPEN_FAIL
+
+## Hash verify
+EXE=clean_link/RawrXD-Win32IDE_gemma_qdim084_non617f_r79.exe
+EXE_SHA256=1EC00779887F502308332010F60FDE645B6B700285D26545D866A167DB6222C4
+SHA16=1EC00779887F5023
+PRIOR_R78_EXE_SHA16=67350F7113D305CD
+TIP_BIN=bin/RawrXD-Win32IDE.exe
+TIP_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431
+TIP_STILL_6754=1 TIP_RO=1 TIP_UNTOUCHED=1
+
+## Root cause (RVA 0x6B0FA on 67350)
+MAP: preferred 0x14006B0FA → AssessNemotronSsmMap@Deep2 (+hasSSM)
+DISASM: imul rax,r9,0x1030; add rax,r10; cmp byte ptr [rax+0x1028], dil
+  = LayerWeights stride 0x1030, offsetof(hasSSM)=0x1028
+CALLER: generateStream @ receipt block after POST_CHOREO before GENERATE_STREAM_ENTER
+WITNESS_R78: DECODE_ENG_PIN=ext(heap) ≠ embedded; Open loads embedded; FORCE ABI-skew
+  left plausible wild ext → generateStream on non-session engine → layers READ AV
+≠ 617F FS SEH __std_fs_get_file_id RVA 0x1F405CD — CROSS_SHA_CREDIT=0
+
+## Private fix (NON617F lineage; tip not overwritten)
+1. ProductRunDecode + ProductRuntime::Eng prefer embedded when isModelLoaded()
+2. Recompile ProductRuntime_Open_min + product_deep2_infer(+seh) + Deep2Engine + Decode
+3. AssessNemotron layers VirtualQuery guard (belt)
+REBUILD=obj084_mars_keep/rebuild_non617f_r79.bat
+OUT=RawrXD-Win32IDE_gemma_qdim084_non617f_r79.exe
+
+## Measured llama32 Q2_K headless ×2 consecutive (no invent)
+| Run | OPEN | OPEN_SEH | ENTER | STREAM_SEH | TOK | EXIT | WALL_MS | PIN |
+|----:|-----:|---------:|------:|-----------:|----:|-----:|--------:|-----|
+| 1 | 1 | 0 | 1 | 0 | 2 | 0 | 34225 | embedded ext=0 |
+| 2 | 1 | 0 | 1 | 0 | 2 | 0 | 26863 | (same lane) |
+
+TOK_X2=2×2
+DURABLE_TOKEN_SURVIVED=1
+DURABLE=1
+KEEP_GPU_PIN=1×2 RESTORE_SKIP=1×2
+GENERATE_STREAM_ENTER=1×2
+PASS_CRITERIA=OPEN=1 OPEN_SEH=0 ENTER=1 STREAM_SEH=0 TOK≥1 ×2 EXIT_clean DURABLE=1 → PASS (private cand only)
+
+WITNESS_R1=ide_mf_qdim084_non617f_r79_llama32_1EC00779887F5023_20261114_053058_r1.{meta,err,out,exit}.txt
+WITNESS_R2=ide_mf_qdim084_non617f_r79_llama32_1EC00779887F5023_20261114_053138_r2.{meta,err,out,exit}.txt
+AGG=ide_mf_qdim084_non617f_r79_llama32_DURABLE_X2_20261114_053056.agg.txt
+R1_DECODE_ENG_PIN=embedded=00007FF68A5A9130 ext=0
+
+## NEXT_OWNER
+BOARD_ABSORB_NON617F_1EC00779_RELATED_ONLY
+= parent board may RELATED-absorb private cand; no tip climb; PROMOTE=0
+  multi-family enterprise ladder still independent
+
+BR=board_receipts/BR_LLAMA32_NON617F_1EC00779_STREAM_SEH_CLOSED_R79.txt
+PROMOTE=0
+TIP_CLIMB=HOLD
+END
