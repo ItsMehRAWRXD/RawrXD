@@ -4116,6 +4116,7 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/cpu_inference_engine_impl.cpp
         src/utils/ErrorReporter.cpp
         src/utils/Diagnostics.cpp
+        src/cloud_api_client.cpp
     )
     set(RAWRXD_NATIVE_IDE_COMPLETE TRUE)
     foreach(_src ${RAWRXD_NATIVE_IDE_SOURCES})
@@ -6197,6 +6198,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/rawr_cli.cpp")
     # with LNK1181 even after deep2_engine_lib has built successfully.
     if(TARGET deep2_engine_lib)
         target_link_libraries(RawrXD-CLI-V2 PRIVATE deep2_engine_lib)
+        target_compile_definitions(RawrXD-CLI-V2 PRIVATE RAWRXD_HAS_DEEP2_ENGINE=1)
         target_link_directories(RawrXD-CLI-V2 PRIVATE
             "${CMAKE_BINARY_DIR}/Release"
             "${CMAKE_BINARY_DIR}/Debug"

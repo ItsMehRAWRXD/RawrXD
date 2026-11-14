@@ -2412,11 +2412,11 @@ bool Win32IDE::createWindow()
     wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.lpfnWndProc = WindowProc;
     wc.hInstance = m_hInstance;
-    wc.hIcon = LoadIconA(nullptr, IDI_APPLICATION);
-    wc.hCursor = LoadCursorA(nullptr, IDC_ARROW);
+    wc.hIcon = LoadIconA(nullptr, MAKEINTRESOURCEA(32512));  // IDI_APPLICATION
+    wc.hCursor = LoadCursorA(nullptr, MAKEINTRESOURCEA(32512));  // IDC_ARROW
     wc.hbrBackground = reinterpret_cast<HBRUSH>(static_cast<intptr_t>(COLOR_WINDOW) + 1);
     wc.lpszClassName = kWindowClass;
-    wc.hIconSm = LoadIconA(nullptr, IDI_APPLICATION);
+    wc.hIconSm = LoadIconA(nullptr, MAKEINTRESOURCEA(32512));  // IDI_APPLICATION
 
     if (!RegisterClassExA(&wc)) {
         const DWORD err = GetLastError();

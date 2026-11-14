@@ -83,6 +83,13 @@
 #include "Deep2CertBridge.hpp"
 #endif
 
+// Prevent any macro named 'emit' from expanding the ModelFitPlan::emit() method.
+// Some transitive header (e.g. a Qt/Windows shim) may define 'emit' as an empty
+// macro, which silently breaks plan.emit(stderr) calls with C2059 syntax errors.
+#ifdef emit
+#undef emit
+#endif
+
 // ============================================================================
 // BOLT_FIRST_TOKEN_001 instrumentation — trace activation stats at layer 86
 // ============================================================================

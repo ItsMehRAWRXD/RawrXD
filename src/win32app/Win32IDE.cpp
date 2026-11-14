@@ -4822,7 +4822,7 @@ void Win32IDE::createOutputTabs()
                     return DefSubclassProc(splitter, message, wParam, lParam);
                 }
                 if (message == WM_SETCURSOR) {
-                    SetCursor(LoadCursorA(nullptr, IDC_SIZENS));
+                    SetCursor(LoadCursorW(nullptr, IDC_SIZENS));
                     return TRUE;
                 }
                 if (message == WM_LBUTTONDOWN) {
