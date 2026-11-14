@@ -13,7 +13,11 @@ Historical / private-cand / partial RUNTIME — cite only. `CROSS_SHA_CREDIT=0`.
 | GPU_PARITY Q_PRE_ROPE + ATTN_PRE_O_0 C72A48E9 | G02 G03 | LIVE_CLOSED cand |
 | ATTN_PRE_O_1 | G02-04 G02-05 G03-08 | V_1 FP16 bucket OPEN; CLOSE_001 LIVE_CLOSED=0 maxULP_f16=1 |
 | BR_M3 FORCE_TOOL | G05 G08 | force-path only; MODEL_SELECTED=0 |
+| M3 FORCE remasure 30DCB4 20261113_222135 | G05-06 | FORCE_TOOL EBT PASS force-path; MODEL_SELECTED=0 |
+| M3 MODEL_SELECT attempt 30DCB4 20261113_222135 | G08-01 | MODEL_SELECTED_TOOL=0 (unk parse; timeout) |
 | M4 MSI silent | G12 | Authenticode ABSENT; CLEAN_VM NOT_RUN |
+| M4 Authenticode remasure 20261113_222135 | G12-02 | NotSigned MSI+SetupWizard; signed-cert blocker |
+| M4 CLEAN_VM | G12-03 | NOT_RUN (no hypervisor surface) |
 | FIRST_DIVERGE_001 seals | G02 G03 | remasure chain |
 | G01-01/02/03 SELF_MEASURE EVIDENCE_PARTIAL @ 3d0928e74888 | G01 | Freeze + license stub + failed CLI rebuild; ≠ PASS |
 | build_ninja/bin/rawr.exe E5F2D304… preexisting | G01-03 G01-06 | Stale binary after rebuild EXIT=2; forensics only |

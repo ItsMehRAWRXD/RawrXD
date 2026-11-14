@@ -1,0 +1,1191 @@
+﻿=== TRIMMED_WITNESS full_lines=43952 kept_diag=43829 ===
+AGENT_WAL_APPEND=1
+SESSION_CREATED=1
+agent session=sess_1794626533 workspace=g:\~dev\rawrxd\evidence\RAWRXD_ENTERPRISE_PRODUCT_CERT_001\receipts\m3_model_select_30dcb4_20261113_222135\ws auto=full model=tinyllama
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+KEN_MARS_ACTIVE=1 DEEP2_MARS=1 HOST_DECODE=0 GPU_POLICY=MULTI GPU_DEVICE_CLASS=DISCRETE NO_TRUNCATE_NEEDLE=1 PRODUCT_STREAMER_ARM=1
+PRODUCT_STREAMER_TIP_MINIMAL_PREP=1
+PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1
+GGUF_LOAD_STAGE=enter path="G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf" loadTensors=0 mmap=0
+GGUF_LOAD_STAGE=validated size=668788096 dataOff=1709440
+GGUF_LOAD_STAGE=fopen_ok
+GGUF_LOAD_STAGE=header_ok ver=3 tensors=201 kv=23
+[AUTO_BACKEND] model=G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf weights=636MB kv=176MB scratch=0MB moe=0 experts=0 ctx=2048
+[AUTO_BACKEND] host RAM=33904MB commit=131459MB
+[AUTO_BACKEND] GPU Virtual Display Driver status=25174027 problem=0 healthy=1
+[AUTO_BACKEND] GPU AMD Radeon(TM) Graphics status=25174026 problem=0 healthy=1
+[AUTO_BACKEND] GPU AMD Radeon AI PRO R9700 status=25174026 problem=0 healthy=1
+[AUTO_BACKEND] GPU AMD Radeon RX 7800 XT status=25174026 problem=0 healthy=1
+[AUTO_BACKEND] Vulkan ICD ready
+[AUTO_BACKEND] primaryReady=1 primaryValidated=1 secondaryReady=1 secondaryValidated=1 vramPriMB=32768
+[AGENT_AUTO_BACKEND] decision=VulkanPrimary reason=Primary GPU fits weights+KV+scratch
+[Deep2Engine] GPU open failed slot 1 (AMD Radeon(TM) Graphics) ? keep opened sticks (no clear-all)
+[Deep2Engine] MULTI partial open 2/3 ? keeping opened; plan deferred
+PIN_BUDGET_FINAL stick=0 mib=0 owner=NONE resident=0
+PIN_BUDGET_FINAL stick=1 mib=0 owner=NONE resident=0
+PRODUCT_OPEN INIT_ENTER path="G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
+LOADMODEL_STAGE=pre_reverse reverse_opt_in=0
+LOADMODEL_STAGE=gguf_loader_enter path="G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
+GGUF_LOAD_STAGE=enter path="G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf" loadTensors=0 mmap=0
+GGUF_LOAD_STAGE=validated size=668788096 dataOff=1709440
+GGUF_LOAD_STAGE=fopen_ok
+GGUF_LOAD_STAGE=header_ok ver=3 tensors=201 kv=23
+=== ... residency/token spam omitted ... ===
+AGENT_WAL_APPEND=1
+SESSION_CREATED=1
+agent session=sess_1794626533 workspace=g:\~dev\rawrxd\evidence\RAWRXD_ENTERPRISE_PRODUCT_CERT_001\receipts\m3_model_select_30dcb4_20261113_222135\ws auto=full model=tinyllama
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+KEN_MARS_ACTIVE=1 DEEP2_MARS=1 HOST_DECODE=0 GPU_POLICY=MULTI GPU_DEVICE_CLASS=DISCRETE NO_TRUNCATE_NEEDLE=1 PRODUCT_STREAMER_ARM=1
+PRODUCT_STREAMER_TIP_MINIMAL_PREP=1
+PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1
+GGUF_LOAD_STAGE=enter path="G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf" loadTensors=0 mmap=0
+GGUF_LOAD_STAGE=validated size=668788096 dataOff=1709440
+GGUF_LOAD_STAGE=fopen_ok
+GGUF_LOAD_STAGE=header_ok ver=3 tensors=201 kv=23
+[AUTO_BACKEND] model=G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf weights=636MB kv=176MB scratch=0MB moe=0 experts=0 ctx=2048
+[AUTO_BACKEND] host RAM=33904MB commit=131459MB
+[AUTO_BACKEND] GPU Virtual Display Driver status=25174027 problem=0 healthy=1
+[AUTO_BACKEND] GPU AMD Radeon(TM) Graphics status=25174026 problem=0 healthy=1
+[AUTO_BACKEND] GPU AMD Radeon AI PRO R9700 status=25174026 problem=0 healthy=1
+[AUTO_BACKEND] GPU AMD Radeon RX 7800 XT status=25174026 problem=0 healthy=1
+[AUTO_BACKEND] Vulkan ICD ready
+[AUTO_BACKEND] primaryReady=1 primaryValidated=1 secondaryReady=1 secondaryValidated=1 vramPriMB=32768
+[AGENT_AUTO_BACKEND] decision=VulkanPrimary reason=Primary GPU fits weights+KV+scratch
+[Deep2Engine] GPU open failed slot 1 (AMD Radeon(TM) Graphics) ? keep opened sticks (no clear-all)
+[Deep2Engine] MULTI partial open 2/3 ? keeping opened; plan deferred
+PIN_BUDGET_FINAL stick=0 mib=0 owner=NONE resident=0
+PIN_BUDGET_FINAL stick=1 mib=0 owner=NONE resident=0
+PRODUCT_OPEN INIT_ENTER path="G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
+LOADMODEL_STAGE=pre_reverse reverse_opt_in=0
+LOADMODEL_STAGE=gguf_loader_enter path="G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
+LOADMODEL_STAGE=gguf_meta_ok tensors=201
+LOADMODEL_STAGE=gguf_tensors_enter mmap=0
+GGUF_LOAD_STAGE=enter path="G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf" loadTensors=1 mmap=0
+LOADMODEL_STAGE=gguf_loader_ok tensors=201
+LOADMODEL_STAGE=geometry_ok
+LOADMODEL_STAGE=digest_skip
+[ModelOpenCompat] repaired metadata: arch=0 vocab=0 hidden=0 layers=0 inter=1 heads=0 kvHeads=0
+GEMMA4_SCHEMA_BIND root=output.weight rows=32000 cols=2048 type=14
+GEMMA4_SCHEMA_BIND root=output_norm.weight rows=2048 cols=1 type=0
+WEIGHT_BUDGET_ENV_PRESENT=1
+WEIGHT_BUDGET_ENV_RAW="59568"
+WEIGHT_BUDGET_PARSE_OK=1
+WEIGHT_BUDGET_INPUT_MIB=59568
+WEIGHT_BUDGET_EFFECTIVE_MIB=512
+RESIDENCY_BUDGET_MIB=512
+BUDGET_RELATION_VALID=1
+FFN_INTER_INFERRED ok=1 why=SPLIT_GATE_MATCHES_DOWN inter=5632 old_meta=5632 old_model=5632 old_config=5632
+PHI3_FUSED_FFN_RUNTIME layers=22 repaired=0 authority=UNOBSERVED
+GEMMA4_SCHEMA_BINDER ok=1 why=GEOM_READY hidden=2048 layers=22 vocab=32000 tokenEmbed=1
+GEMMA4_LAYER_TOPOLOGY_BIND ok=1 why=GEOM_READY_UNIFORM layers=22 split=22 fused_qkv=0 projector=0 ssm=0 ffn_only=0 ffn=22 unknown=0
+GEMMA4_BIND_LLAMA_FALLBACK ok=1 why=ALIAS_BOUND_GEOM_READY tokenEmbed=1 hidden=2048 vocab=32000 layers=22
+MODEL_PROVENANCE_BEGIN=1
+MODEL_LOCATION=
+MODEL_CANONICAL=
+MODEL_EXISTS=0 MODEL_IS_DIRECTORY=0 MODEL_BYTES=0 MODEL_WRITE_STAMP=0
+MODEL_LOCATOR_HASH=0 TENSOR_NAME_SHAPE_HASH=0 MODEL_EXPECTED_FP=11753875096244137027
+DIGEST_FP=0 MANIFEST_FP=0 BIND_FP=11753875096244137027 AUTHORITY_FP=11753875096244137027 RUNTIME_FP=11753875096244137027
+MANIFEST_LOADED=0 MANIFEST_THIS_RUN=0 MANIFEST_ID=none
+SCHEMA_ALIAS_FALLBACK_USED=1 INHERITED_SCHEMA_AUTHORITY=0 RUNTIME_OVERLAY_SEPARATE=1
+MODEL_PROVENANCE_MATCH=0 BLOCKED_AT=PROVENANCE_MISMATCH WHY=MODEL_LOCATION_NOT_FOUND
+AUTHORITY_CLASS=DISCOVERY_PROVENANCE PROMOTE=0
+MODEL_PROVENANCE_END=1
+MODEL_OPEN=PASS
+MODEL_PROVENANCE_MATCH=0
+AUTHORITY_LADDER=BLOCKED
+BLOCKED_AT=PROVENANCE_MISMATCH
+PROMOTE=0
+[BUF] hidden=2048 heads=32 headDim=64 qOut=2048 headScratch=2048 kvDim=256 ffn=5632 ffnGateScratch=5632
+SSM_BUF stPer=32 cvPer=8192 inner=0 state=0 NOTE=STATE_NE_HEADS
+SSM_MAMBA2_ARM=0 reason=GEO_OR_BUF
+FREETOKEN_MICROZONE live=1 zones=8 zone_mb=64 sticks=4 active=0 overwrites=0 hits=0 misses=0 hit_pct=0.00 stick0_rpm=0 stick1_rpm=0 allocs_after_init=0 key=address_id waw_ready_gate=1 helpframe_nway=4 eat_gt2=1 metric=fetch_not_fit models=20/35/70/120/300/671+ unbounded=1 public_gap=amd_xfer_waw+prescope_dual_only
+ADDRESSABILITY_OWNER=FUTURE_CONSUMER_SPACE
+RESIDENCY_OWNER=FIXED_FREETOKEN_POOL
+EVICTION_POLICY=NONE
+REASSIGNMENT_POLICY=ADVANCE_OWNERSHIP
+CACHE_POLICY=TIME_UNTIL_CONSUMER
+PHYSICAL_POOL_BYTES=536870912
+PHYSICAL_POOL_GROWS=0
+FUTURE_CONSUMER_SPACE_GROWS=1
+LOGICAL_ADDRESS_SPACE_GROWS=1
+PHYSICAL_PAGE_POOL_GROWS=0
+HOTPATH_ALLOCATIONS=0
+FREE_REQUIRED=0
+REUSE_REQUIRED=1
+LOGICAL_CONSUMERS=0
+LOGICAL_ADDRESS_BYTES=0
+PHYSICAL_PAGE_POOL_BYTES=536870912
+PHYSICAL_PAGES=8
+OWNERSHIP_ADVANCES=0
+PAST_OWNER_TO_FUTURE_OWNER=1
+CACHE_METRIC=TIME_UNTIL_CONSUMER
+PIN_BUDGET_SET site=ENGINE_MAX_HOT old=0 new=4831838208 owner=ENGINE_MAX_HOT moe_reserved=0
+PRODUCT_OPEN INIT_EXIT rc=1
+[AGENT_MODEL] loaded alias=tinyllama path=G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+[AGENT_MODEL] prompt='<|user|>
+Reply with ONLY this JSON (no other text): {"tool":"read","path":"README.md"}
+Task: agent default
+<|assistant|>
+{"tool":' EARLY_VALID_ARM=1 TOOL_FORCE=1
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+GENERATE_STREAM_ENTER=1 ARCH=llama LAYERS=22 KV_HEADS=4 HEAD_DIM=64
+[GEN_DEBUG] opts.maxTokens=96 remCtx=2001 maxTokens=96 promptN=47 maxSeqLen=2048 contextLimited=0
+GEN=0 BIND16_LINKED=1 PACKED_Q2K_READY=1 SSVK_READY=1 DUALSTICK_ARMED=0 GPU_RESIDENT=1 MODEL_LOADED=1 DEVICE_COUNT=2 FWD_G0=0 FWD_G1=0 RESIDENCY_EPOCH=1 MODEL_EPOCH=1
+CONTINUITY_POINT=AFTER_FN_RESET
+[FORWARD_WARN] hidden non-finite count=2048/2048 zeroed continuing
+[FORWARD_WARN] hidden zero norm layers=22 dim=2048 continuing
+HEAP_OK_AFTER_FORWARD_LAYERS=1
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=0000029EF2D8F060
+FINAL_NORM_DST_PTR=0000029EF2D8F060
+FINAL_NORM_WEIGHT_PTR=0000029EF2D70000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=8192
+FINAL_NORM_WEIGHT_0=1.921875
+FINAL_NORM_WEIGHT_1=1.8203125
+FINAL_NORM_WEIGHT_2=1.9453125
+FINAL_NORM_WEIGHT_3=1.984375
+FINAL_NORM_WEIGHT_L2=86.877581
+FINAL_NORM_SUMSQ=0
+FINAL_NORM_MEAN_SQ=0
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=316.227783
+FINAL_NORM_SRC_0=0
+FINAL_NORM_DST_0=0
+FINAL_NORM_AFTER_L2=0
+HEAP_OK_FINAL_NORM_AFTER=1
+FINAL_NORM_SRC_PTR=0000029EF2D91060
+FINAL_NORM_DST_PTR=0000029EF2D91060
+FINAL_NORM_SRC_PTR=0000029EF2D93060
+FINAL_NORM_DST_PTR=0000029EF2D93060
+FINAL_NORM_SRC_PTR=0000029EF2D95060
+FINAL_NORM_DST_PTR=0000029EF2D95060
+FINAL_NORM_SRC_PTR=0000029EF2D97060
+FINAL_NORM_DST_PTR=0000029EF2D97060
+FINAL_NORM_SRC_PTR=0000029EF2D99060
+FINAL_NORM_DST_PTR=0000029EF2D99060
+FINAL_NORM_SRC_PTR=0000029EF2D9B060
+FINAL_NORM_DST_PTR=0000029EF2D9B060
+FINAL_NORM_SRC_PTR=0000029EF2D9D060
+FINAL_NORM_DST_PTR=0000029EF2D9D060
+FINAL_NORM_SRC_PTR=0000029EF2D9F060
+FINAL_NORM_DST_PTR=0000029EF2D9F060
+FINAL_NORM_SRC_PTR=0000029EF2DA1060
+FINAL_NORM_DST_PTR=0000029EF2DA1060
+FINAL_NORM_SRC_PTR=0000029EF2DA3060
+FINAL_NORM_DST_PTR=0000029EF2DA3060
+FINAL_NORM_SRC_PTR=0000029EF2DA5060
+FINAL_NORM_DST_PTR=0000029EF2DA5060
+FINAL_NORM_SRC_PTR=0000029EF2DA7060
+FINAL_NORM_DST_PTR=0000029EF2DA7060
+FINAL_NORM_SRC_PTR=0000029EF2DA9060
+FINAL_NORM_DST_PTR=0000029EF2DA9060
+FINAL_NORM_SRC_PTR=0000029EF2DAB060
+FINAL_NORM_DST_PTR=0000029EF2DAB060
+FINAL_NORM_SRC_PTR=0000029EF2DAD060
+FINAL_NORM_DST_PTR=0000029EF2DAD060
+FINAL_NORM_SRC_PTR=0000029EF2DAF060
+FINAL_NORM_DST_PTR=0000029EF2DAF060
+FINAL_NORM_SRC_PTR=0000029EF2DB1060
+FINAL_NORM_DST_PTR=0000029EF2DB1060
+FINAL_NORM_SRC_PTR=0000029EF2DB3060
+FINAL_NORM_DST_PTR=0000029EF2DB3060
+FINAL_NORM_SRC_PTR=0000029EF2DB5060
+FINAL_NORM_DST_PTR=0000029EF2DB5060
+FINAL_NORM_SRC_PTR=0000029EF2DB7060
+FINAL_NORM_DST_PTR=0000029EF2DB7060
+FINAL_NORM_SRC_PTR=0000029EF2DB9060
+FINAL_NORM_DST_PTR=0000029EF2DB9060
+FINAL_NORM_SRC_PTR=0000029EF2DBB060
+FINAL_NORM_DST_PTR=0000029EF2DBB060
+FINAL_NORM_SRC_PTR=0000029EF2DBD060
+FINAL_NORM_DST_PTR=0000029EF2DBD060
+FINAL_NORM_SRC_PTR=0000029EF2DBF060
+FINAL_NORM_DST_PTR=0000029EF2DBF060
+FINAL_NORM_SRC_PTR=0000029EF2DC1060
+FINAL_NORM_DST_PTR=0000029EF2DC1060
+FINAL_NORM_SRC_PTR=0000029EF2DC3060
+FINAL_NORM_DST_PTR=0000029EF2DC3060
+FINAL_NORM_SRC_PTR=0000029EF2DC5060
+FINAL_NORM_DST_PTR=0000029EF2DC5060
+FINAL_NORM_SRC_PTR=0000029EF2DC7060
+FINAL_NORM_DST_PTR=0000029EF2DC7060
+FINAL_NORM_SRC_PTR=0000029EF2DC9060
+FINAL_NORM_DST_PTR=0000029EF2DC9060
+FINAL_NORM_SRC_PTR=0000029EF2DCB060
+FINAL_NORM_DST_PTR=0000029EF2DCB060
+FINAL_NORM_SRC_PTR=0000029EF2DCD060
+FINAL_NORM_DST_PTR=0000029EF2DCD060
+FINAL_NORM_SRC_PTR=0000029EF2DCF060
+FINAL_NORM_DST_PTR=0000029EF2DCF060
+FINAL_NORM_SRC_PTR=0000029EF2DD1060
+FINAL_NORM_DST_PTR=0000029EF2DD1060
+FINAL_NORM_SRC_PTR=0000029EF2DD3060
+FINAL_NORM_DST_PTR=0000029EF2DD3060
+FINAL_NORM_SRC_PTR=0000029EF2DD5060
+FINAL_NORM_DST_PTR=0000029EF2DD5060
+FINAL_NORM_SRC_PTR=0000029EF2DD7060
+FINAL_NORM_DST_PTR=0000029EF2DD7060
+FINAL_NORM_SRC_PTR=0000029EF2DD9060
+FINAL_NORM_DST_PTR=0000029EF2DD9060
+FINAL_NORM_SRC_PTR=0000029EF2DDB060
+FINAL_NORM_DST_PTR=0000029EF2DDB060
+FINAL_NORM_SRC_PTR=0000029EF2DDD060
+FINAL_NORM_DST_PTR=0000029EF2DDD060
+FINAL_NORM_SRC_PTR=0000029EF2DDF060
+FINAL_NORM_DST_PTR=0000029EF2DDF060
+FINAL_NORM_SRC_PTR=0000029EF2DE1060
+FINAL_NORM_DST_PTR=0000029EF2DE1060
+FINAL_NORM_SRC_PTR=0000029EF2DE3060
+FINAL_NORM_DST_PTR=0000029EF2DE3060
+FINAL_NORM_SRC_PTR=0000029EF2DE5060
+FINAL_NORM_DST_PTR=0000029EF2DE5060
+FINAL_NORM_SRC_PTR=0000029EF2DE7060
+FINAL_NORM_DST_PTR=0000029EF2DE7060
+FINAL_NORM_SRC_PTR=0000029EF2DE9060
+FINAL_NORM_DST_PTR=0000029EF2DE9060
+FINAL_NORM_SRC_PTR=0000029EF2DEB060
+FINAL_NORM_DST_PTR=0000029EF2DEB060
+HEAP_OK_AFTER_PREFILL=1
+HEAP_OK_DECODE_ENTER=1
+HEAP_OK_DECODE_FEEDBACK_INIT=1
+HEAP_OK_DECODE_STEP0_ENTER=1
+DECODE_STEP0_PTRS h=0000029EF2DEB060 logits=0000029EC7ABB020 lmHead=0000029ECAD10000 vocab=32000 hiddenDim=2048 promptLen=47
+HEAP_OK_DECODE_STEP0_H_READY=1
+HEAP_OK_LOGITS_BEFORE=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+B03_LOGITS_TOPK hNorm=0.000000e+00 lm_type=14 rows=32000 cols=2048 nonFinite=0 top=0:0.0000,1:0.0000,2:0.0000,3:0.0000,4:0.0000,5:0.0000,6:0.0000,7:0.0000
+HEAP_OK_LOGITS_AFTER=1
+[B3_WARN] hidden state invalid pos=47 norm=0.000000000e+00 continuing anyway
+B3_NORM_BAND_ARCH=llama SQRT_H=45.255 WARN_GT=100.0 EXPL_GT=1000.0 OBS_NORM=0.000 B3_NORM_EXPLOSION=0
+HEAP_OK_SAMPLE_BEFORE=1
+HEAP_OK_SAMPLE_AFTER=1
+[AGENT] TOKEN id=0 piece=<unk>
+GEN=1 BIND16_LINKED=1 PACKED_Q2K_READY=1 SSVK_READY=1 DUALSTICK_ARMED=0 GPU_RESIDENT=1 MODEL_LOADED=1 DEVICE_COUNT=2 FWD_G0=1034 FWD_G1=0 RESIDENCY_EPOCH=1 MODEL_EPOCH=1
+CONTINUITY_POINT=BEFORE_FIRST_BIND16_DISPATCH
+FINAL_NORM_SRC_PTR=0000029EF2DED060
+FINAL_NORM_DST_PTR=0000029EF2DED060
+[B3_WARN] hidden state invalid pos=48 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=1 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=1 kv=48 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=1 kv=48 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=7393 weight_hit=1 content_hit=0 reload_B=27076042752 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2DEF060
+FINAL_NORM_DST_PTR=0000029EF2DEF060
+[B3_WARN] hidden state invalid pos=49 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=2 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=2 kv=49 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=2 kv=49 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=7547 weight_hit=2 content_hit=0 reload_B=27652128768 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2DF1060
+FINAL_NORM_DST_PTR=0000029EF2DF1060
+[B3_WARN] hidden state invalid pos=50 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=3 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=3 kv=50 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=3 kv=50 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=7701 weight_hit=3 content_hit=0 reload_B=28228214784 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2DF3060
+FINAL_NORM_DST_PTR=0000029EF2DF3060
+[B3_WARN] hidden state invalid pos=51 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=4 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=4 kv=51 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=4 kv=51 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=7855 weight_hit=4 content_hit=0 reload_B=28804300800 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2DF5060
+FINAL_NORM_DST_PTR=0000029EF2DF5060
+[B3_WARN] hidden state invalid pos=52 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=5 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=5 kv=52 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=5 kv=52 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=8009 weight_hit=5 content_hit=0 reload_B=29380386816 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2DF7060
+FINAL_NORM_DST_PTR=0000029EF2DF7060
+[B3_WARN] hidden state invalid pos=53 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=6 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=6 kv=53 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=6 kv=53 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=8163 weight_hit=6 content_hit=0 reload_B=29956472832 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2DF9060
+FINAL_NORM_DST_PTR=0000029EF2DF9060
+[B3_WARN] hidden state invalid pos=54 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=7 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=7 kv=54 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=7 kv=54 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=8317 weight_hit=7 content_hit=0 reload_B=30532558848 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2DFB060
+FINAL_NORM_DST_PTR=0000029EF2DFB060
+[B3_WARN] hidden state invalid pos=55 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=8 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=8 kv=55 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=8 kv=55 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=8471 weight_hit=8 content_hit=0 reload_B=31108644864 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2DFD060
+FINAL_NORM_DST_PTR=0000029EF2DFD060
+[B3_WARN] hidden state invalid pos=56 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=9 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=9 kv=56 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=9 kv=56 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=8625 weight_hit=9 content_hit=0 reload_B=31684730880 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2DFF060
+FINAL_NORM_DST_PTR=0000029EF2DFF060
+[B3_WARN] hidden state invalid pos=57 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=10 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=10 kv=57 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=10 kv=57 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=8779 weight_hit=10 content_hit=0 reload_B=32260816896 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E01060
+FINAL_NORM_DST_PTR=0000029EF2E01060
+[B3_WARN] hidden state invalid pos=58 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=11 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=11 kv=58 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=11 kv=58 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=8933 weight_hit=11 content_hit=0 reload_B=32836902912 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E03060
+FINAL_NORM_DST_PTR=0000029EF2E03060
+[B3_WARN] hidden state invalid pos=59 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=12 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=12 kv=59 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=12 kv=59 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=9087 weight_hit=12 content_hit=0 reload_B=33412988928 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E05060
+FINAL_NORM_DST_PTR=0000029EF2E05060
+[B3_WARN] hidden state invalid pos=60 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=13 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=13 kv=60 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=13 kv=60 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=9241 weight_hit=13 content_hit=0 reload_B=33989074944 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E07060
+FINAL_NORM_DST_PTR=0000029EF2E07060
+[B3_WARN] hidden state invalid pos=61 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=14 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=14 kv=61 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=14 kv=61 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=9395 weight_hit=14 content_hit=0 reload_B=34565160960 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E09060
+FINAL_NORM_DST_PTR=0000029EF2E09060
+[B3_WARN] hidden state invalid pos=62 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=15 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=15 kv=62 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=15 kv=62 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=9549 weight_hit=15 content_hit=0 reload_B=35141246976 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E0B060
+FINAL_NORM_DST_PTR=0000029EF2E0B060
+[B3_WARN] hidden state invalid pos=63 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=16 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=16 kv=63 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=16 kv=63 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=9703 weight_hit=16 content_hit=0 reload_B=35717332992 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E0D060
+FINAL_NORM_DST_PTR=0000029EF2E0D060
+[B3_WARN] hidden state invalid pos=64 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=17 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=17 kv=64 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=17 kv=64 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=9857 weight_hit=17 content_hit=0 reload_B=36293419008 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E0F060
+FINAL_NORM_DST_PTR=0000029EF2E0F060
+[B3_WARN] hidden state invalid pos=65 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=18 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=18 kv=65 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=18 kv=65 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=10011 weight_hit=18 content_hit=0 reload_B=36869505024 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E11060
+FINAL_NORM_DST_PTR=0000029EF2E11060
+[B3_WARN] hidden state invalid pos=66 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=19 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=19 kv=66 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=19 kv=66 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=10165 weight_hit=19 content_hit=0 reload_B=37445591040 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E13060
+FINAL_NORM_DST_PTR=0000029EF2E13060
+[B3_WARN] hidden state invalid pos=67 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=20 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=20 kv=67 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=20 kv=67 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=10319 weight_hit=20 content_hit=0 reload_B=38021677056 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E15060
+FINAL_NORM_DST_PTR=0000029EF2E15060
+[B3_WARN] hidden state invalid pos=68 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=21 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=21 kv=68 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=21 kv=68 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=10473 weight_hit=21 content_hit=0 reload_B=38597763072 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E17060
+FINAL_NORM_DST_PTR=0000029EF2E17060
+[B3_WARN] hidden state invalid pos=69 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=22 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=22 kv=69 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=22 kv=69 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=10627 weight_hit=22 content_hit=0 reload_B=39173849088 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E19060
+FINAL_NORM_DST_PTR=0000029EF2E19060
+[B3_WARN] hidden state invalid pos=70 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=23 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=23 kv=70 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=23 kv=70 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=10781 weight_hit=23 content_hit=0 reload_B=39749935104 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E1B060
+FINAL_NORM_DST_PTR=0000029EF2E1B060
+[B3_WARN] hidden state invalid pos=71 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=24 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=24 kv=71 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=24 kv=71 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=10935 weight_hit=24 content_hit=0 reload_B=40326021120 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E1D060
+FINAL_NORM_DST_PTR=0000029EF2E1D060
+[B3_WARN] hidden state invalid pos=72 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=25 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=25 kv=72 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=25 kv=72 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=11089 weight_hit=25 content_hit=0 reload_B=40902107136 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E1F060
+FINAL_NORM_DST_PTR=0000029EF2E1F060
+[B3_WARN] hidden state invalid pos=73 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=26 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=26 kv=73 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=26 kv=73 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=11243 weight_hit=26 content_hit=0 reload_B=41478193152 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E21060
+FINAL_NORM_DST_PTR=0000029EF2E21060
+[B3_WARN] hidden state invalid pos=74 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=27 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=27 kv=74 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=27 kv=74 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=11397 weight_hit=27 content_hit=0 reload_B=42054279168 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E23060
+FINAL_NORM_DST_PTR=0000029EF2E23060
+[B3_WARN] hidden state invalid pos=75 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=28 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=28 kv=75 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=28 kv=75 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=11551 weight_hit=28 content_hit=0 reload_B=42630365184 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E25060
+FINAL_NORM_DST_PTR=0000029EF2E25060
+[B3_WARN] hidden state invalid pos=76 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=29 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=29 kv=76 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=29 kv=76 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=11705 weight_hit=29 content_hit=0 reload_B=43206451200 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E27060
+FINAL_NORM_DST_PTR=0000029EF2E27060
+[B3_WARN] hidden state invalid pos=77 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=30 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=30 kv=77 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=30 kv=77 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=11859 weight_hit=30 content_hit=0 reload_B=43782537216 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E29060
+FINAL_NORM_DST_PTR=0000029EF2E29060
+[B3_WARN] hidden state invalid pos=78 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=31 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=31 kv=78 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=31 kv=78 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=12013 weight_hit=31 content_hit=0 reload_B=44358623232 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E2B060
+FINAL_NORM_DST_PTR=0000029EF2E2B060
+[B3_WARN] hidden state invalid pos=79 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=32 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=32 kv=79 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=32 kv=79 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=12167 weight_hit=32 content_hit=0 reload_B=44934709248 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E2D060
+FINAL_NORM_DST_PTR=0000029EF2E2D060
+[B3_WARN] hidden state invalid pos=80 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=33 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=33 kv=80 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=33 kv=80 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=12321 weight_hit=33 content_hit=0 reload_B=45510795264 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E2F060
+FINAL_NORM_DST_PTR=0000029EF2E2F060
+[B3_WARN] hidden state invalid pos=81 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=34 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=34 kv=81 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=34 kv=81 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=12475 weight_hit=34 content_hit=0 reload_B=46086881280 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E31060
+FINAL_NORM_DST_PTR=0000029EF2E31060
+[B3_WARN] hidden state invalid pos=82 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=35 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=35 kv=82 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=35 kv=82 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=12629 weight_hit=35 content_hit=0 reload_B=46662967296 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E33060
+FINAL_NORM_DST_PTR=0000029EF2E33060
+[B3_WARN] hidden state invalid pos=83 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=36 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=36 kv=83 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=36 kv=83 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=12783 weight_hit=36 content_hit=0 reload_B=47239053312 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E35060
+FINAL_NORM_DST_PTR=0000029EF2E35060
+[B3_WARN] hidden state invalid pos=84 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=37 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=37 kv=84 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=37 kv=84 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=12937 weight_hit=37 content_hit=0 reload_B=47815139328 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E37060
+FINAL_NORM_DST_PTR=0000029EF2E37060
+[B3_WARN] hidden state invalid pos=85 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=38 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=38 kv=85 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=38 kv=85 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=13091 weight_hit=38 content_hit=0 reload_B=48391225344 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E39060
+FINAL_NORM_DST_PTR=0000029EF2E39060
+[B3_WARN] hidden state invalid pos=86 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=39 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=39 kv=86 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=39 kv=86 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=13245 weight_hit=39 content_hit=0 reload_B=48967311360 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E3B060
+FINAL_NORM_DST_PTR=0000029EF2E3B060
+[B3_WARN] hidden state invalid pos=87 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=40 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=40 kv=87 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=40 kv=87 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=13399 weight_hit=40 content_hit=0 reload_B=49543397376 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E3D060
+FINAL_NORM_DST_PTR=0000029EF2E3D060
+[B3_WARN] hidden state invalid pos=88 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=41 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=41 kv=88 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=41 kv=88 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=13553 weight_hit=41 content_hit=0 reload_B=50119483392 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E3F060
+FINAL_NORM_DST_PTR=0000029EF2E3F060
+[B3_WARN] hidden state invalid pos=89 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=42 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=42 kv=89 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=42 kv=89 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=13707 weight_hit=42 content_hit=0 reload_B=50695569408 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E41060
+FINAL_NORM_DST_PTR=0000029EF2E41060
+[B3_WARN] hidden state invalid pos=90 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=43 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=43 kv=90 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=43 kv=90 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=13861 weight_hit=43 content_hit=0 reload_B=51271655424 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E43060
+FINAL_NORM_DST_PTR=0000029EF2E43060
+[B3_WARN] hidden state invalid pos=91 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=44 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=44 kv=91 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=44 kv=91 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=14015 weight_hit=44 content_hit=0 reload_B=51847741440 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E45060
+FINAL_NORM_DST_PTR=0000029EF2E45060
+[B3_WARN] hidden state invalid pos=92 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=45 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=45 kv=92 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=45 kv=92 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=14169 weight_hit=45 content_hit=0 reload_B=52423827456 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E47060
+FINAL_NORM_DST_PTR=0000029EF2E47060
+[B3_WARN] hidden state invalid pos=93 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=46 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=46 kv=93 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=46 kv=93 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=14323 weight_hit=46 content_hit=0 reload_B=52999913472 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E49060
+FINAL_NORM_DST_PTR=0000029EF2E49060
+[B3_WARN] hidden state invalid pos=94 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=47 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=47 kv=94 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=47 kv=94 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=14477 weight_hit=47 content_hit=0 reload_B=53575999488 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E4B060
+FINAL_NORM_DST_PTR=0000029EF2E4B060
+[B3_WARN] hidden state invalid pos=95 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=48 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=48 kv=95 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=48 kv=95 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=14631 weight_hit=48 content_hit=0 reload_B=54152085504 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E4D060
+FINAL_NORM_DST_PTR=0000029EF2E4D060
+[B3_WARN] hidden state invalid pos=96 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=49 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=49 kv=96 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=49 kv=96 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=14785 weight_hit=49 content_hit=0 reload_B=54728171520 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E4F060
+FINAL_NORM_DST_PTR=0000029EF2E4F060
+[B3_WARN] hidden state invalid pos=97 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=50 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=50 kv=97 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=50 kv=97 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=14939 weight_hit=50 content_hit=0 reload_B=55304257536 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E51060
+FINAL_NORM_DST_PTR=0000029EF2E51060
+[B3_WARN] hidden state invalid pos=98 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=51 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=51 kv=98 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=51 kv=98 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=15093 weight_hit=51 content_hit=0 reload_B=55880343552 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E53060
+FINAL_NORM_DST_PTR=0000029EF2E53060
+[B3_WARN] hidden state invalid pos=99 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=52 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=52 kv=99 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=52 kv=99 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=15247 weight_hit=52 content_hit=0 reload_B=56456429568 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E55060
+FINAL_NORM_DST_PTR=0000029EF2E55060
+[B3_WARN] hidden state invalid pos=100 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=53 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=53 kv=100 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=53 kv=100 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=15401 weight_hit=53 content_hit=0 reload_B=57032515584 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E57060
+FINAL_NORM_DST_PTR=0000029EF2E57060
+[B3_WARN] hidden state invalid pos=101 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=54 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=54 kv=101 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=54 kv=101 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=15555 weight_hit=54 content_hit=0 reload_B=57608601600 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E59060
+FINAL_NORM_DST_PTR=0000029EF2E59060
+[B3_WARN] hidden state invalid pos=102 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=55 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=55 kv=102 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=55 kv=102 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=15709 weight_hit=55 content_hit=0 reload_B=58184687616 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E5B060
+FINAL_NORM_DST_PTR=0000029EF2E5B060
+[B3_WARN] hidden state invalid pos=103 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=56 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=56 kv=103 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=56 kv=103 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=15863 weight_hit=56 content_hit=0 reload_B=58760773632 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E5D060
+FINAL_NORM_DST_PTR=0000029EF2E5D060
+[B3_WARN] hidden state invalid pos=104 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=57 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=57 kv=104 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=57 kv=104 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=16017 weight_hit=57 content_hit=0 reload_B=59336859648 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E5F060
+FINAL_NORM_DST_PTR=0000029EF2E5F060
+[B3_WARN] hidden state invalid pos=105 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=58 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=58 kv=105 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=58 kv=105 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=16171 weight_hit=58 content_hit=0 reload_B=59912945664 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E61060
+FINAL_NORM_DST_PTR=0000029EF2E61060
+[B3_WARN] hidden state invalid pos=106 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=59 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=59 kv=106 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=59 kv=106 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=16325 weight_hit=59 content_hit=0 reload_B=60489031680 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E63060
+FINAL_NORM_DST_PTR=0000029EF2E63060
+[B3_WARN] hidden state invalid pos=107 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=60 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=60 kv=107 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=60 kv=107 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=16479 weight_hit=60 content_hit=0 reload_B=61065117696 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E65060
+FINAL_NORM_DST_PTR=0000029EF2E65060
+[B3_WARN] hidden state invalid pos=108 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=61 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=61 kv=108 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=61 kv=108 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=16633 weight_hit=61 content_hit=0 reload_B=61641203712 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E67060
+FINAL_NORM_DST_PTR=0000029EF2E67060
+[B3_WARN] hidden state invalid pos=109 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=62 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=62 kv=109 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=62 kv=109 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=16787 weight_hit=62 content_hit=0 reload_B=62217289728 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E69060
+FINAL_NORM_DST_PTR=0000029EF2E69060
+[B3_WARN] hidden state invalid pos=110 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=63 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=63 kv=110 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=63 kv=110 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=16941 weight_hit=63 content_hit=0 reload_B=62793375744 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E6B060
+FINAL_NORM_DST_PTR=0000029EF2E6B060
+[B3_WARN] hidden state invalid pos=111 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=64 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=64 kv=111 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=64 kv=111 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=17095 weight_hit=64 content_hit=0 reload_B=63369461760 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E6D060
+FINAL_NORM_DST_PTR=0000029EF2E6D060
+[B3_WARN] hidden state invalid pos=112 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=65 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=65 kv=112 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=65 kv=112 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=17249 weight_hit=65 content_hit=0 reload_B=63945547776 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E6F060
+FINAL_NORM_DST_PTR=0000029EF2E6F060
+[B3_WARN] hidden state invalid pos=113 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=66 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=66 kv=113 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=66 kv=113 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=17403 weight_hit=66 content_hit=0 reload_B=64521633792 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E71060
+FINAL_NORM_DST_PTR=0000029EF2E71060
+[B3_WARN] hidden state invalid pos=114 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=67 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=67 kv=114 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=67 kv=114 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=17557 weight_hit=67 content_hit=0 reload_B=65097719808 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E73060
+FINAL_NORM_DST_PTR=0000029EF2E73060
+[B3_WARN] hidden state invalid pos=115 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=68 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=68 kv=115 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=68 kv=115 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=17711 weight_hit=68 content_hit=0 reload_B=65673805824 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E75060
+FINAL_NORM_DST_PTR=0000029EF2E75060
+[B3_WARN] hidden state invalid pos=116 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=69 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=69 kv=116 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=69 kv=116 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=17865 weight_hit=69 content_hit=0 reload_B=66249891840 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E77060
+FINAL_NORM_DST_PTR=0000029EF2E77060
+[B3_WARN] hidden state invalid pos=117 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=70 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=70 kv=117 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=70 kv=117 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=18019 weight_hit=70 content_hit=0 reload_B=66825977856 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E79060
+FINAL_NORM_DST_PTR=0000029EF2E79060
+[B3_WARN] hidden state invalid pos=118 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=71 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=71 kv=118 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=71 kv=118 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=18173 weight_hit=71 content_hit=0 reload_B=67402063872 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E7B060
+FINAL_NORM_DST_PTR=0000029EF2E7B060
+[B3_WARN] hidden state invalid pos=119 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=72 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=72 kv=119 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=72 kv=119 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=18327 weight_hit=72 content_hit=0 reload_B=67978149888 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E7D060
+FINAL_NORM_DST_PTR=0000029EF2E7D060
+[B3_WARN] hidden state invalid pos=120 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=73 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=73 kv=120 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=73 kv=120 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=18481 weight_hit=73 content_hit=0 reload_B=68554235904 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E7F060
+FINAL_NORM_DST_PTR=0000029EF2E7F060
+[B3_WARN] hidden state invalid pos=121 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=74 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=74 kv=121 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=74 kv=121 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=18635 weight_hit=74 content_hit=0 reload_B=69130321920 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E81060
+FINAL_NORM_DST_PTR=0000029EF2E81060
+[B3_WARN] hidden state invalid pos=122 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=75 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=75 kv=122 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=75 kv=122 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=18789 weight_hit=75 content_hit=0 reload_B=69706407936 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E83060
+FINAL_NORM_DST_PTR=0000029EF2E83060
+[B3_WARN] hidden state invalid pos=123 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=76 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=76 kv=123 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=76 kv=123 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=18943 weight_hit=76 content_hit=0 reload_B=70282493952 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E85060
+FINAL_NORM_DST_PTR=0000029EF2E85060
+[B3_WARN] hidden state invalid pos=124 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=77 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=77 kv=124 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=77 kv=124 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=19097 weight_hit=77 content_hit=0 reload_B=70858579968 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E87060
+FINAL_NORM_DST_PTR=0000029EF2E87060
+[B3_WARN] hidden state invalid pos=125 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=78 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=78 kv=125 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=78 kv=125 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=19251 weight_hit=78 content_hit=0 reload_B=71434665984 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E89060
+FINAL_NORM_DST_PTR=0000029EF2E89060
+[B3_WARN] hidden state invalid pos=126 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=79 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=79 kv=126 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=79 kv=126 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=19405 weight_hit=79 content_hit=0 reload_B=72010752000 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E8B060
+FINAL_NORM_DST_PTR=0000029EF2E8B060
+[B3_WARN] hidden state invalid pos=127 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=80 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=80 kv=127 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=80 kv=127 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=19559 weight_hit=80 content_hit=0 reload_B=72586838016 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E8D060
+FINAL_NORM_DST_PTR=0000029EF2E8D060
+[B3_WARN] hidden state invalid pos=128 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=81 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=81 kv=128 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=81 kv=128 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=19713 weight_hit=81 content_hit=0 reload_B=73162924032 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E8F060
+FINAL_NORM_DST_PTR=0000029EF2E8F060
+[B3_WARN] hidden state invalid pos=129 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=82 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=82 kv=129 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=82 kv=129 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=19867 weight_hit=82 content_hit=0 reload_B=73739010048 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E91060
+FINAL_NORM_DST_PTR=0000029EF2E91060
+[B3_WARN] hidden state invalid pos=130 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=83 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=83 kv=130 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=83 kv=130 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=20021 weight_hit=83 content_hit=0 reload_B=74315096064 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E93060
+FINAL_NORM_DST_PTR=0000029EF2E93060
+[B3_WARN] hidden state invalid pos=131 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=84 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=84 kv=131 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=84 kv=131 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=20175 weight_hit=84 content_hit=0 reload_B=74891182080 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E95060
+FINAL_NORM_DST_PTR=0000029EF2E95060
+[B3_WARN] hidden state invalid pos=132 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=85 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=85 kv=132 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=85 kv=132 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=20329 weight_hit=85 content_hit=0 reload_B=75467268096 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E97060
+FINAL_NORM_DST_PTR=0000029EF2E97060
+[B3_WARN] hidden state invalid pos=133 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=86 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=86 kv=133 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=86 kv=133 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=20483 weight_hit=86 content_hit=0 reload_B=76043354112 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E99060
+FINAL_NORM_DST_PTR=0000029EF2E99060
+[B3_WARN] hidden state invalid pos=134 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=87 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=87 kv=134 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=87 kv=134 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=20637 weight_hit=87 content_hit=0 reload_B=76619440128 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E9B060
+FINAL_NORM_DST_PTR=0000029EF2E9B060
+[B3_WARN] hidden state invalid pos=135 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=88 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=88 kv=135 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=88 kv=135 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=20791 weight_hit=88 content_hit=0 reload_B=77195526144 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E9D060
+FINAL_NORM_DST_PTR=0000029EF2E9D060
+[B3_WARN] hidden state invalid pos=136 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=89 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=89 kv=136 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=89 kv=136 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=20945 weight_hit=89 content_hit=0 reload_B=77771612160 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2E9F060
+FINAL_NORM_DST_PTR=0000029EF2E9F060
+[B3_WARN] hidden state invalid pos=137 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=90 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=90 kv=137 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=90 kv=137 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=21099 weight_hit=90 content_hit=0 reload_B=78347698176 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2EA1060
+FINAL_NORM_DST_PTR=0000029EF2EA1060
+[B3_WARN] hidden state invalid pos=138 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=91 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=91 kv=138 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=91 kv=138 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=21253 weight_hit=91 content_hit=0 reload_B=78923784192 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2EA3060
+FINAL_NORM_DST_PTR=0000029EF2EA3060
+[B3_WARN] hidden state invalid pos=139 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=92 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=92 kv=139 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=92 kv=139 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=21407 weight_hit=92 content_hit=0 reload_B=79499870208 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2EA5060
+FINAL_NORM_DST_PTR=0000029EF2EA5060
+[B3_WARN] hidden state invalid pos=140 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=93 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=93 kv=140 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=93 kv=140 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=21561 weight_hit=93 content_hit=0 reload_B=80075956224 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2EA7060
+FINAL_NORM_DST_PTR=0000029EF2EA7060
+[B3_WARN] hidden state invalid pos=141 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=94 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=94 kv=141 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=94 kv=141 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=21715 weight_hit=94 content_hit=0 reload_B=80652042240 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2EA9060
+FINAL_NORM_DST_PTR=0000029EF2EA9060
+[B3_WARN] hidden state invalid pos=142 norm=0.000000000e+00 continuing anyway
+BIND16_COMMIT_FAIL tok=95 q2=0/0 ok=1 dual=0 host=0/0/0 slot=22/0 real=1 short=1000 crit=1000 tail=1/1/1/1
+PERSISTENT_DECODE_TOKEN t=95 kv=142 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=95 kv=142 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=21869 weight_hit=95 content_hit=0 reload_B=81228128256 pin_evict=0 pin_rej=0 res_B=0
+GPU_FORWARD_CHILD_ONE_IGNORE
+GPU_ISO_RUN=G0
+IGNORED_GPU_OWNER=NONE
+DIAGNOSTIC_ONLY=1
+GPU_FORWARD_CHILD_ONE_IGNORE_END=1
+GPU_FORWARD_CHILD_IGNORE_DROP=1
+GPU_FORWARD_IGNORE_ARMED=1
+GPU_FORWARD_IGNORE_VALID=1
+GPU_FORWARD_IGNORE_CHILD=NONE
+GPU_FORWARD_ONE_IGNORE_ONLY=1
+GPU_FORWARD_LAYERS=3124
+GPU_CHILD=QKV ATTEMPTED=3124 EXECUTED=3124 IGNORED=0 NS=11140850900 MS=11140.851
+GPU_CHILD=KV_UPDATE ATTEMPTED=3124 EXECUTED=3124 IGNORED=0 NS=1761839700 MS=1761.840
+GPU_CHILD=DEVICE_ATTN ATTEMPTED=3124 EXECUTED=3124 IGNORED=0 NS=6593978300 MS=6593.978
+GPU_CHILD=ATTN_OUTPUT_PROJ ATTEMPTED=3124 EXECUTED=3124 IGNORED=0 NS=4362471500 MS=4362.471
+GPU_CHILD=FFN ATTEMPTED=3124 EXECUTED=3124 IGNORED=0 NS=21565929900 MS=21565.930
+GPU_CHILD=SYNC_WAIT ATTEMPTED=3124 EXECUTED=3124 IGNORED=0 NS=8809000 MS=8.809
+GPU_CHILD=READBACK_D2H ATTEMPTED=142 EXECUTED=142 IGNORED=0 NS=33673600 MS=33.674
+SELECTED_CHILD_EVIDENCE_FIRED=0
+CLAIM_AUTHORITY=OWN_RUNTIME_EMISSION_ONLY
+GATE=G0_REFERENCE
+DEEP2_GPU_ISO_RUN=1
+GPU_FORWARD_CHILD_IGNORE=NONE
+GPU_FORWARD_CALLS=3124
+GPU_FORWARD_MS=80006.449
+QKV_CALLS=3124
+QKV_MS=11140.851
+QKV_IGNORE_REQUESTED=0
+QKV_IGNORE_APPLIED=0
+DEVICE_ATTENTION_CALLS=3124
+DEVICE_ATTENTION_MS=6593.978
+DEVICE_ATTENTION_IGNORE_REQUESTED=0
+DEVICE_ATTENTION_IGNORE_APPLIED=0
+FFN_CALLS=3124
+FFN_MS=21565.930
+FFN_IGNORE_REQUESTED=0
+FFN_IGNORE_APPLIED=0
+GEMV_CALLS=0
+GEMV_MS=0.000
+GEMV_IGNORE_REQUESTED=0
+GEMV_IGNORE_APPLIED=0
+OUTPUT_PROJECTION_CALLS=3124
+OUTPUT_PROJECTION_MS=4362.471
+OUTPUT_PROJECTION_IGNORE_REQUESTED=0
+OUTPUT_PROJECTION_IGNORE_APPLIED=0
+KV_CALLS=3124
+KV_MS=1761.840
+KV_IGNORE_REQUESTED=0
+KV_IGNORE_APPLIED=0
+SYNC_CALLS=3124
+SYNC_MS=8.809
+SYNC_IGNORE_REQUESTED=0
+SYNC_IGNORE_APPLIED=0
+READBACK_CALLS=142
+READBACK_MS=33.674
+READBACK_IGNORE_REQUESTED=0
+READBACK_IGNORE_APPLIED=0
+IGNORE_REQUESTED=0
+IGNORE_APPLIED=0
+BLOCKED_AT=NONE
+GATE_BLOCKED_AT=NONE
+RUNTIME_AUTHORITY=1
+OLLAMA_HTTP=0
+TOKENS_COMMITTED=96
+PRODUCT_ENTRY_PATH=1
+STREAM_RUNTIME_PATH=1
+MODEL_GRAPH_COMPLETE=1
+NEMOTRON_SSM_REAL=0
+SSM_REAL_LAYERS=0 SSM_IDENTITY_LAYERS=0 SSM_HYBRID_LAYERS=0 SSM_MAMBA_ARMED=0
+NUMERIC_PARITY=UNPROVEN
+FUNCTIONAL_MODEL_PASS=0
+GATE=NEMOTRON_H_REAL_SSM_001
+PRODUCTION_DECODE_PATH=0
+SSM_CERT=NOT_CERTIFIED
+RAWRXD_PRODUCT_PATH_001=1
+PRODUCT_PATH=CLI|IDE|Bridge→Deep2Engine::generateStream→token_commit→stream→receipt
+SYNTHETIC_TOKEN_PATH=0
+PATH=generateStream
+MODEL=llama
+RAWRXD_FUNCTIONAL_CHAMPION_001
+RAWRXD_TPS_KILLER_SEAL_001
+TOKENS_REQUESTED=96
+GENERATION_WALL_NS=82813194200
+DECODE_TPS_REAL=1.159236
+PRODUCT_FLOOR_TPS=5.000
+PRODUCT_WALL_MAX_NS=12800000000
+PARITY_PASS=0
+FUNCTIONAL_PASS=0
+CANDIDATE_BEATS_CHAMPION=0
+CANDIDATE_KILLED=1
+FUNCTIONAL_CHAMPION=0
+TPS_PRODUCT_SEAL=0
+SPIN_CLOSE_BLOCKER=NONE
+SPIN_CLOSE_BLOCKER_OWNER=NONE
+SPIN_CLOSE_BLOCKER_US=0
+BLOCKED_AT=PRODUCTION_DECODE_PATH
+DO_NOT_REOPEN=KvaInversion
+DO_NOT_REOPEN=KVA_CLIMB
+DO_NOT_REOPEN=BATCH_007
+RAWRXD_PERFORMANCE_001=OPEN
+RAWRXD_PRODUCT_TPS_001=OPEN
+NOTE=TPS_PRODUCT_SEAL_NE_PRODUCT_PASS;FINAL_READY=PRODUCT_OPEN_PASS&&SESSION_ENTER_PASS&&GENERATED_TOKENS>0&&TOKEN_COMMIT_PASS
+RECEIPT_END=RAWRXD_TPS_KILLER_SEAL_001
+DECODE_LOOP_ATTRIBUTION_BEGIN=1
+TOKENS_DECODED=96
+TOKENIZER_SINGLE_CALLS=96
+TOKENIZER_SEQUENCE_CALLS=0
+DETOK_WALL_NS=120300
+CALLBACK_WALL_NS=70141800
+DETOK_RAW_BYTES=480
+DETOK_EMITTED_BYTES=480
+DETOK_UTF8_PENDING_BYTES=0
+DETOK_UTF8_ERRORS=0
+DECODE_REPLAY_FACTOR=1.000000
+DECODE_LOOP_ATTRIBUTION_END=1
+MODEL_RUNTIME_OVERLAY_BEGIN=1
+MODEL_FINGERPRINT=11753875096244137027 RUN_ID=generateStream
+PREFILL=OBSERVED DECODE=OBSERVED TOKENS_COMMITTED=96
+STREAMER_TPS=1.147160 FORWARD_MS=0.000 LOGITS_MS=0.000 SAMPLE_MS=0.000 DETOK_MS=0.000 CALLBACK_MS=0.000 RECEIPT_MS=0.000
+CLEAN_EXIT=0 CRASH_OBSERVED=0 BLOCKED_AT=PROVENANCE_MISMATCH DISPOSITION=INCOMPLETE
+DISCOVERY_MUTATION=0 AUTHORITY_CLASS=RUNTIME_OVERLAY PROMOTE=0
+MODEL_RUNTIME_OVERLAY_END=1
+ONE_BY_ONE_IGNORE_LADDER_001
+ISOLATION_RUN=A0
+IGNORED_OWNER=NONE
+TOTAL_WALL_MS=82807.592
+PREFILL_MS=25725.492
+DECODE_MS=56935.760
+FORWARD_MS=80006.449
+LOGITS_MS=669.661
+SAMPLE_MS=12.284
+DETOK_MS=0.218
+CALLBACK_MS=70.142
+RECEIPT_MS=13.848
+KV_MS=24.808
+TPS=1.669
+DELTA_VS_BASELINE_PCT=0.000
+ONE_BY_ONE_IGNORE_LADDER_END=1
+DECODE_BLOCKER_ATTRIBUTION_BEGIN=1
+IGNORED_OWNER=NONE DIAGNOSTIC_ONLY=1 PROMOTE=0
+TOKENS_REQUESTED=96 TOKENS_COMMITTED=96 TOKENS_DECODED=96
+TOKENIZER_SINGLE_CALLS=96 TOKENIZER_SEQUENCE_CALLS=0 DECODE_REPLAY_FACTOR=1.000000
+TOTAL_WALL_MS=82813.194 PREFILL_MS=25725.492 DECODE_MS=56935.760 ACCOUNTED_MS=81263.457
+FORWARD_MS=80472.336 LOGITS_MS=669.673 SAMPLE_MS=12.286 DETOK_MS=0.357 CALLBACK_MS=70.149 RECEIPT_MS=13.848 KV_MS=24.808 OTHER_MS=0.000
+DECODE_OWNER=FORWARD
+DECODE_BLOCKER_ATTRIBUTION_END=1
+RXEV_SURFACE ARMED=0 DISPOSITION=NO_RUN_STATE
+RXOW stage=NONE br=BR_NO_RUN_STATE layers=0 tensors=0 graph=0 decode0=0 note=norun_unclassified
+GENERATED_TOKENS=96
+TOKEN_COMMIT_PASS=1
+AGENT_DECIDE_TOKENS=96
+EARLY_VALID=0
+[AGENT_MODEL] gr.callbackCancelled=1 gr.completed=0 gr.generatedTokens=96 gr.promptTokens=47 gr.stopReason=cancel gr.eosObserved=0 gr.callbackCancelled=1 gr.engineError=0
+[AGENT_MODEL] gen tokens=96 stop_reason=cancel output='{"tool":<unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk>'
+[AGENT_MODEL] parse FAILED: No "tool" key found in JSON output output='{"tool":<unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk><unk>'
+[AGENT_LOOP] model decision invalid: No "tool" key found in JSON output, DETERMINISTIC_TOOL_READ=1
+[agent phase=1 step=1] search relevant files
+Observation: READ g:\~dev\rawrxd\evidence\RAWRXD_ENTERPRISE_PRODUCT_CERT_001\receipts\m3_model_select_30dcb4_20261113_222135\ws\README.md (23 bytes):
+# model-select fixture
+
+[GEN_DEBUG] opts.maxTokens=96 remCtx=1908 maxTokens=96 promptN=140 maxSeqLen=2048 contextLimited=0
+DECODE_STEP0_PTRS h=0000029EF2EA5060 logits=0000029EC7ABB020 lmHead=0000029ECAD10000 vocab=32000 hiddenDim=2048 promptLen=140
+GEN=1 BIND16_LINKED=1 PACKED_Q2K_READY=1 SSVK_READY=1 DUALSTICK_ARMED=0 GPU_RESIDENT=1 MODEL_LOADED=1 DEVICE_COUNT=2 FWD_G0=3080 FWD_G1=0 RESIDENCY_EPOCH=1 MODEL_EPOCH=1
+PERSISTENT_DECODE_TOKEN t=1 kv=141 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=1 kv=141 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=43583 weight_hit=97 content_hit=0 reload_B=80652042240 pin_evict=0 pin_rej=0 res_B=0
+PERSISTENT_DECODE_TOKEN t=2 kv=142 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=2 kv=142 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=43737 weight_hit=98 content_hit=0 reload_B=81228128256 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2EAB060
+FINAL_NORM_DST_PTR=0000029EF2EAB060
+[B3_WARN] hidden state invalid pos=143 norm=0.000000000e+00 continuing anyway
+PERSISTENT_DECODE_TOKEN t=3 kv=143 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=3 kv=143 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=43891 weight_hit=99 content_hit=0 reload_B=81804214272 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2EAD060
+FINAL_NORM_DST_PTR=0000029EF2EAD060
+[B3_WARN] hidden state invalid pos=144 norm=0.000000000e+00 continuing anyway
+PERSISTENT_DECODE_TOKEN t=4 kv=144 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=4 kv=144 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=44045 weight_hit=100 content_hit=0 reload_B=82380300288 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2EAF060
+FINAL_NORM_DST_PTR=0000029EF2EAF060
+[B3_WARN] hidden state invalid pos=145 norm=0.000000000e+00 continuing anyway
+PERSISTENT_DECODE_TOKEN t=5 kv=145 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=5 kv=145 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=44199 weight_hit=101 content_hit=0 reload_B=82956386304 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2EB1060
+FINAL_NORM_DST_PTR=0000029EF2EB1060
+[B3_WARN] hidden state invalid pos=146 norm=0.000000000e+00 continuing anyway
+PERSISTENT_DECODE_TOKEN t=6 kv=146 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=6 kv=146 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=44353 weight_hit=102 content_hit=0 reload_B=83532472320 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2EB3060
+FINAL_NORM_DST_PTR=0000029EF2EB3060
+[B3_WARN] hidden state invalid pos=147 norm=0.000000000e+00 continuing anyway
+PERSISTENT_DECODE_TOKEN t=7 kv=147 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=7 kv=147 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=44507 weight_hit=103 content_hit=0 reload_B=84108558336 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2EB5060
+FINAL_NORM_DST_PTR=0000029EF2EB5060
+[B3_WARN] hidden state invalid pos=148 norm=0.000000000e+00 continuing anyway
+PERSISTENT_DECODE_TOKEN t=8 kv=148 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=8 kv=148 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=44661 weight_hit=104 content_hit=0 reload_B=84684644352 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2EB7060
+FINAL_NORM_DST_PTR=0000029EF2EB7060
+[B3_WARN] hidden state invalid pos=149 norm=0.000000000e+00 continuing anyway
+PERSISTENT_DECODE_TOKEN t=9 kv=149 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=9 kv=149 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=44815 weight_hit=105 content_hit=0 reload_B=85260730368 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2EB9060
+FINAL_NORM_DST_PTR=0000029EF2EB9060
+[B3_WARN] hidden state invalid pos=150 norm=0.000000000e+00 continuing anyway
+PERSISTENT_DECODE_TOKEN t=10 kv=150 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=10 kv=150 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=44969 weight_hit=106 content_hit=0 reload_B=85836816384 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2EBB060
+FINAL_NORM_DST_PTR=0000029EF2EBB060
+[B3_WARN] hidden state invalid pos=151 norm=0.000000000e+00 continuing anyway
+PERSISTENT_DECODE_TOKEN t=11 kv=151 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=11 kv=151 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=45123 weight_hit=107 content_hit=0 reload_B=86412902400 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2EBD060
+FINAL_NORM_DST_PTR=0000029EF2EBD060
+[B3_WARN] hidden state invalid pos=152 norm=0.000000000e+00 continuing anyway
+PERSISTENT_DECODE_TOKEN t=12 kv=152 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=12 kv=152 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=45277 weight_hit=108 content_hit=0 reload_B=86988988416 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2EBF060
+FINAL_NORM_DST_PTR=0000029EF2EBF060
+[B3_WARN] hidden state invalid pos=153 norm=0.000000000e+00 continuing anyway
+PERSISTENT_DECODE_TOKEN t=13 kv=153 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=13 kv=153 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=45431 weight_hit=109 content_hit=0 reload_B=87565074432 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2EC1060
+FINAL_NORM_DST_PTR=0000029EF2EC1060
+[B3_WARN] hidden state invalid pos=154 norm=0.000000000e+00 continuing anyway
+PERSISTENT_DECODE_TOKEN t=14 kv=154 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=14 kv=154 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=45585 weight_hit=110 content_hit=0 reload_B=88141160448 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2EC3060
+FINAL_NORM_DST_PTR=0000029EF2EC3060
+[B3_WARN] hidden state invalid pos=155 norm=0.000000000e+00 continuing anyway
+PERSISTENT_DECODE_TOKEN t=15 kv=155 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=15 kv=155 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=45739 weight_hit=111 content_hit=0 reload_B=88717246464 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2EC5060
+FINAL_NORM_DST_PTR=0000029EF2EC5060
+[B3_WARN] hidden state invalid pos=156 norm=0.000000000e+00 continuing anyway
+PERSISTENT_DECODE_TOKEN t=16 kv=156 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=16 kv=156 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=45893 weight_hit=112 content_hit=0 reload_B=89293332480 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2EC7060
+FINAL_NORM_DST_PTR=0000029EF2EC7060
+[B3_WARN] hidden state invalid pos=157 norm=0.000000000e+00 continuing anyway
+PERSISTENT_DECODE_TOKEN t=17 kv=157 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=17 kv=157 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=46047 weight_hit=113 content_hit=0 reload_B=89869418496 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2EC9060
+FINAL_NORM_DST_PTR=0000029EF2EC9060
+[B3_WARN] hidden state invalid pos=158 norm=0.000000000e+00 continuing anyway
+PERSISTENT_DECODE_TOKEN t=18 kv=158 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=18 kv=158 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=46201 weight_hit=114 content_hit=0 reload_B=90445504512 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2ECB060
+FINAL_NORM_DST_PTR=0000029EF2ECB060
+[B3_WARN] hidden state invalid pos=159 norm=0.000000000e+00 continuing anyway
+PERSISTENT_DECODE_TOKEN t=19 kv=159 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=19 kv=159 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=46355 weight_hit=115 content_hit=0 reload_B=91021590528 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2ECD060
+FINAL_NORM_DST_PTR=0000029EF2ECD060
+[B3_WARN] hidden state invalid pos=160 norm=0.000000000e+00 continuing anyway
+PERSISTENT_DECODE_TOKEN t=20 kv=160 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=20 kv=160 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=46509 weight_hit=116 content_hit=0 reload_B=91597676544 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2ECF060
+FINAL_NORM_DST_PTR=0000029EF2ECF060
+[B3_WARN] hidden state invalid pos=161 norm=0.000000000e+00 continuing anyway
+PERSISTENT_DECODE_TOKEN t=21 kv=161 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=21 kv=161 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=46663 weight_hit=117 content_hit=0 reload_B=92173762560 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2ED1060
+FINAL_NORM_DST_PTR=0000029EF2ED1060
+[B3_WARN] hidden state invalid pos=162 norm=0.000000000e+00 continuing anyway
+PERSISTENT_DECODE_TOKEN t=22 kv=162 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=22 kv=162 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=46817 weight_hit=118 content_hit=0 reload_B=92749848576 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2ED3060
+FINAL_NORM_DST_PTR=0000029EF2ED3060
+[B3_WARN] hidden state invalid pos=163 norm=0.000000000e+00 continuing anyway
+PERSISTENT_DECODE_TOKEN t=23 kv=163 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=23 kv=163 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=46971 weight_hit=119 content_hit=0 reload_B=93325934592 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2ED5060
+FINAL_NORM_DST_PTR=0000029EF2ED5060
+[B3_WARN] hidden state invalid pos=164 norm=0.000000000e+00 continuing anyway
+PERSISTENT_DECODE_TOKEN t=24 kv=164 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=24 kv=164 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=47125 weight_hit=120 content_hit=0 reload_B=93902020608 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2ED7060
+FINAL_NORM_DST_PTR=0000029EF2ED7060
+[B3_WARN] hidden state invalid pos=165 norm=0.000000000e+00 continuing anyway
+PERSISTENT_DECODE_TOKEN t=25 kv=165 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=25 kv=165 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=47279 weight_hit=121 content_hit=0 reload_B=94478106624 pin_evict=0 pin_rej=0 res_B=0
+FINAL_NORM_SRC_PTR=0000029EF2ED9060
+FINAL_NORM_DST_PTR=0000029EF2ED9060
+[B3_WARN] hidden state invalid pos=166 norm=0.000000000e+00 continuing anyway
+PERSISTENT_DECODE_TOKEN t=26 kv=166 devices=2 model=1 gpu_res=1 ssvk=1 bind=0 sealed=0 dev_create=1 model_load=1 cmd_rebuild=0 ds_reset=0
+RESIDENCY_TOKEN t=26 kv=166 devices=2 model=1 gpu_res=1 dev_create=1 model_load=1 weight_up=47433 weight_hit=122 content_hit=0 reload_B=95054192640 pin_evict=0 pin_rej=0 res_B=0
+=== ERR_TAIL ===
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV

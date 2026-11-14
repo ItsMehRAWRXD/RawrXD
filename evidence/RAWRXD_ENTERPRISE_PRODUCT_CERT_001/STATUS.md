@@ -1,6 +1,6 @@
 # RAWRXD_ENTERPRISE_PRODUCT_CERT_001
 
-**Version:** 1.0 · **ASOF:** 2026-11-13T22:22:48-05:00  
+**Version:** 1.0 · **ASOF:** 2026-11-13T22:36-05:00  
 **Objective:** Production-ready fully local AI workstation certification (CLI + Win32 GUI + native inference + autonomous coding + Sunshine).
 
 | Field | Value |
@@ -29,8 +29,8 @@ See `LAW.txt`. `NOT_RUN != PASS`. `EVIDENCE_PARTIAL != PASS`. Scoreboard ≠ che
 | GPU/ref numerical | G02 / G03 | Q_PRE_ROPE + ATTN_PRE_O_0 CLOSED on cand; ATTN_PRE_O_1 OPEN |
 | ConPTY / HELP_TERM | G05 / G06 | partial |
 | Multi-family GUI | G02 / G04 / G06 | absorb074 MF; MoE MATCH HOLD |
-| Offline signed install | G12 | MSI silent RUNTIME_REACHED; Authenticode ABSENT; CLEAN_VM NOT_RUN |
-| Model-selected agent EBT | G05 / G08 | FORCE_TOOL remasured; MODEL_SELECTED_TOOL=0 |
+| Offline signed install | G12 | MSI silent RUNTIME_REACHED; Authenticode ABSENT (remeasured); CLEAN_VM NOT_RUN; SetupWizard offline rebuild NotSigned |
+| Model-selected agent EBT | G05 / G08 | FORCE_TOOL remasured PASS on 30DCB4B1 force-path; MODEL_SELECTED_TOOL=0 (tinyllama unk/timeout) |
 
 ## Authority scoreboard
 `../PRODUCTION_MATURITY_TOP25_001/VALUATION_SCOREBOARD_CANON.txt` — PCT invent forbidden here.
