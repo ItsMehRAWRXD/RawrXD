@@ -1,5 +1,6 @@
 #version 450
-// gemv_q6k.comp — Q6_K×Q8_K integer mul_mat; In=float x (quantize_row_q8_K on GPU)
+// gemv_q6k.comp — Q6_K×Q8_K integer mul_mat (ggml_vec_dot_q6_K_q8_K_generic).
+// ATTN_PRE_O_1: match host sums[8]+prequant (wv/ffn_down are Q6_K on TinyLlama).
 layout(local_size_x = 64) in;
 layout(binding = 0) readonly buffer W { uint packed[]; };
 layout(binding = 1) readonly buffer In { float x[]; };
@@ -22,7 +23,8 @@ void main() {
   uint nblk = pc.cols / 256u;
   if (nblk == 0u || (pc.cols % 256u) != 0u) { y[row] = 0.0; return; }
   uint rowOff = row * nblk * 210u;
-  float sum = 0.0;
+  precise float sums[8];
+  for (uint i = 0u; i < 8u; ++i) sums[i] = 0.0;
   for (uint b = 0u; b < nblk; ++b) {
     uint base = b * 256u;
     float amax = 0.0, maxv = 0.0;
@@ -32,9 +34,15 @@ void main() {
     }
     float xd = 0.0;
     float iscale = 0.0;
+    int q8[256];
+    for (uint j = 0u; j < 256u; ++j) q8[j] = 0;
     if (amax != 0.0) {
       iscale = -127.0 / maxv;
       xd = 1.0 / iscale;
+      for (uint j = 0u; j < 256u; ++j) {
+        int v = nearest_int_q8k(iscale * x[base + j]);
+        q8[j] = (v > 127) ? 127 : v;
+      }
     }
     uint blk = rowOff + b * 210u;
     float d = f16(u8(blk + 208u) | (u8(blk + 209u) << 8));
@@ -56,19 +64,16 @@ void main() {
     for (uint j = 0u; j < 16u; ++j) {
       int scale = i8(u8(scb + j));
       for (uint r = 0u; r < 2u; ++r) {
-        for (uint l = 0u; l < 8u; ++l) {
-          int q8 = 0;
-          if (amax != 0.0) {
-            int v = nearest_int_q8k(iscale * x[base + qi + l]);
-            q8 = (v > 127) ? 127 : v;
-          }
-          aux32[l] += scale * (q8 * aux8[qi + l]);
-        }
+        for (uint l = 0u; l < 8u; ++l)
+          aux32[l] += scale * (q8[qi + l] * aux8[qi + l]);
         qi += 8u;
       }
     }
-    float dwdx = d * xd;
-    for (uint l = 0u; l < 8u; ++l) sum += dwdx * float(aux32[l]);
+    precise float dwdx = d * xd;
+    for (uint l = 0u; l < 8u; ++l)
+      sums[l] = sums[l] + dwdx * float(aux32[l]);
   }
-  y[row] = sum;
+  precise float sumf = 0.0;
+  for (uint l = 0u; l < 8u; ++l) sumf = sumf + sums[l];
+  y[row] = sumf;
 }
