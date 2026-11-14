@@ -27,9 +27,9 @@ See `LAW.txt`. `NOT_RUN != PASS`. `EVIDENCE_PARTIAL != PASS`. Scoreboard ≠ che
 |---------|-----------|--------|
 | Gemma AA4F / tip_land AV | G02 / G06 | B8E5F6E5 TOK=8 SEH=0 EXIT=0 AV_CLOSED=1 RELATED (R75 EXIT_NULL; tip RO) |
 | C36 LSP hang | G07 | tip HANG/TIMEOUT RELATED (R73); stage INIT_OK crumb ≠ PASS |
-| GPU/ref numerical | G02 / G03 | FFN_DOWN_2 NOT_CLOSABLE maxAbs=1.525879e-05 (R72 SPV trials REFUTED RELATED); V_1/ATTN_NORM CLOSED RELATED |
+| GPU/ref numerical | G02 / G03 | FFN_DOWN_2 CLOSED maxAbs=2.145767e-06 SPV40E76D2A (R73 RELATED≠PASS); next ATTN_PRE_O_1_POS1 OPEN; V_1/ATTN_NORM CLOSED RELATED |
 | ConPTY / HELP_TERM | G05 / G06 | tip-era stop PASS RELATED (R70); cand PASS RELATED; ≠ CERT PASS |
-| Multi-family GUI / qdim084 STREAM | G02 / G04 / G06 | R80: 3792BAA7 ENTER=1 TOK=2 SEH=0 RELATED; tip 6754 RO |
+| Multi-family GUI / qdim084 STREAM | G02 / G04 / G06 | R81: 3792BAA7 DURABLE=1 ENTER=1 TOK=2 SEH=0 RELATED; gemma TOK=8; tip 6754 RO |
 | Offline signed install | G12 | Authenticode ABSENT; CLEAN_VM NOT_RUN |
 | Model-selected agent EBT | G05 / G08 | FORCE PASS; MODEL_SELECTED=0; wire SOURCE_WIRED RUNTIME=0 |
 | CLI clean rebuild | G01-03 | BUILD_OK=1 EXIT=0 A95A1254… (R75); CLEAN_MACHINE=0 ≠ PASS |
