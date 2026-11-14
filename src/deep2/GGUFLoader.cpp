@@ -269,12 +269,17 @@ if (subkey == "vocab_size") {
                                subkey == "attention.layer_norm_rms_epsilon" ||
                                subkey == "attention.layer_norm_epsilon") {
                         metadata.rmsNormEps = (float)atof(valueStr.c_str());
+                    } else if (subkey == "rope.freq_base_swa") {
+                        metadata.ropeThetaSwa = (float)atof(valueStr.c_str());
                     } else if (subkey == "rope.freq_base" ||
                                subkey == "rope.global.freq_base") {
                         metadata.ropeTheta = (float)atof(valueStr.c_str());
                     } else if (subkey == "rope.local.freq_base") {
                         if (!(metadata.ropeTheta > 0.0f))
                             metadata.ropeTheta = (float)atof(valueStr.c_str());
+                    } else if (subkey == "attention.sliding_window") {
+                        metadata.slidingWindow =
+                            (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
                     } else if (subkey == "context_length") {
                         metadata.maxPositionEmbeddings = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
                     } else if (subkey == "expert_count") {
@@ -301,10 +306,18 @@ if (subkey == "vocab_size") {
                         metadata.keyLengthMla = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
                     } else if (subkey == "attention.value_length_mla") {
                         metadata.valueLengthMla = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                    } else if (subkey == "rope.dimension_count_swa") {
+                        metadata.ropeDimensionCountSwa =
+                            (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
                     } else if (subkey == "rope.dimension_count") {
                         metadata.ropeDimensionCount = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
                     } else if (subkey == "expert_shared_count") {
                         metadata.numSharedExperts = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                    } else if (subkey == "expert_shared_feed_forward_length") {
+                        /* Laguna: shexp present without shared_expert_count. */
+                        if (metadata.numSharedExperts == 0 &&
+                            strtoul(valueStr.c_str(), nullptr, 10) > 0)
+                            metadata.numSharedExperts = 1;
                     }
                 }
             }

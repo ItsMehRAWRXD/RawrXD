@@ -195,6 +195,9 @@ struct ModelMetadata {
     uint32_t keyLengthMla = 0;
     uint32_t valueLengthMla = 0;
     uint32_t ropeDimensionCount = 0;
+    uint32_t ropeDimensionCountSwa = 0; // rope.dimension_count_swa
+    float    ropeThetaSwa = 0.0f;       // rope.freq_base_swa
+    uint32_t slidingWindow = 0;         // attention.sliding_window
 
     // Tokenizer vocabulary (extracted from tokenizer.ggml.tokens)
     std::vector<std::string> vocab;

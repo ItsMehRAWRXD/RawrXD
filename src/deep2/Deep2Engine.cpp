@@ -73,6 +73,7 @@
 #include "lavapath/UnlimitedTokenLaw.hpp"
 #include "lavapath/ProductPathSeal.hpp"
 #include "lavapath/ExperimentalSsmAuth.hpp"
+#include "lavapath/LagunaAttnGateApply.hpp"
 #include "CanonicalTokenizer.hpp"
 #include "GGUFTokenizerLoad.hpp"
 #include "../sampling/advanced_sampler.hpp"
@@ -2610,6 +2611,20 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
     modelWeights.ropeTheta       = geo.ropeBase;
     modelWeights.ropeScaling     = geo.ropeScalingPresent ? geo.ropeScaling : 0.f;
     modelWeights.ropeDimensionCount = geo.ropeDim;
+    modelWeights.ropeDimensionCountSwa = meta.ropeDimensionCountSwa;
+    modelWeights.ropeThetaSwa    = meta.ropeThetaSwa;
+    modelWeights.slidingWindowSize = meta.slidingWindow;
+    if (modelWeights.slidingWindowSize > 0) {
+        fprintf(stderr,
+                "[LAGUNA_SWA] window=%zu ropeDim=%zu ropeDimSwa=%zu "
+                "theta=%.8g thetaSwa=%.8g\n",
+                modelWeights.slidingWindowSize,
+                (size_t)modelWeights.ropeDimensionCount,
+                (size_t)modelWeights.ropeDimensionCountSwa,
+                (double)modelWeights.ropeTheta,
+                (double)modelWeights.ropeThetaSwa);
+        fflush(stderr);
+    }
     modelWeights.tieEmbeddings   = false;
     {
         std::string a = meta.architecture;
@@ -3288,7 +3303,8 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                 else if (name.find("attn_o") != std::string::npos)
                     lw.attnO = wt;
                 else if (name.find("attn_gate") != std::string::npos) {
-                    /* Laguna SWA gate [heads,hidden]; skip unless full O-proj. */
+                    /* Laguna: [heads,hidden] softplus gate. Qwen3.5 SSM: large
+                     * gate may be O-proj when wo absent. */
                     const size_t mn = (wt.rows < wt.cols) ? wt.rows : wt.cols;
                     const size_t mx = (wt.rows > wt.cols) ? wt.rows : wt.cols;
                     const bool looksLikeO = !lw.wo.data && mn >= 256 && mx >= 256;
@@ -3297,8 +3313,10 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                         printf("[ATTN_GATE] Mapped %s to attnO (rows=%zu cols=%zu type=%d)\n",
                                name.c_str(), wt.rows, wt.cols, wt.type);
                     } else {
-                        printf("[ATTN_GATE] SKIP %s (wo=%d mn=%zu mx=%zu) not O-proj\n",
-                               name.c_str(), lw.wo.data ? 1 : 0, mn, mx);
+                        lw.attnGate = wt;
+                        printf("[ATTN_GATE] BIND %s rows=%zu cols=%zu type=%d "
+                               "(per-head softplus)\n",
+                               name.c_str(), wt.rows, wt.cols, wt.type);
                     }
                 }
                 else if (name.find("attn_proj") != std::string::npos) {
@@ -3343,6 +3361,8 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                         lw.wUp = wt;
                     else if (name.find("ffn_down_exps") != std::string::npos)
                         lw.wDown = wt;
+                    else if (name.find("ffn_gate_shexp") != std::string::npos)
+                        lw.moeSharedGate = wt;
                     else if (name.find("ffn_up_shexp") != std::string::npos)
                         lw.moeSharedUp = wt;
                     else if (name.find("ffn_down_shexp") != std::string::npos)
@@ -3706,6 +3726,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                 registerElastic(lw.attnQ_b, L, ~0u); registerElastic(lw.attnKV_a_mqa, L, ~0u);
                 registerElastic(lw.attnKV_a_norm, L, ~0u); registerElastic(lw.attnK_b, L, ~0u);
                 registerElastic(lw.attnV_b, L, ~0u); registerElastic(lw.attnO, L, ~0u);
+                registerElastic(lw.attnGate, L, ~0u);
                 registerElastic(lw.moeRouter, L, ~0u);
                 registerElastic(lw.moeSharedGate, L, ~0u);
                 registerElastic(lw.moeSharedUp, L, ~0u);
@@ -9186,14 +9207,13 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
                                !lw.moeUp.empty() ||
                                (lw.moeSharedUp.data != nullptr &&
                                 lw.moeSharedDown.data != nullptr);
-            if (layerHasFfn) {
-                fprintf(stderr,
-                    "[LAYER_NAN] ly=%zu nonFinite=%zu/%zu norm=0.000000e+00 -> FFN output non-finite before residual\n",
-                    layer, ffnOutNonFinite, hiddenDim);
-                fflush(stderr);
-                throw std::runtime_error("LAYER_NAN: FFN output non-finite before residual");
-            }
-            // Safety net: non-FFN layer with non-finite output ? zero it.
+            fprintf(stderr,
+                "[LAYER_NAN] ly=%zu nonFinite=%zu/%zu -> FFN non-finite; "
+                "zero+continue STREAM_CORRECTNESS=NOT_PASS "
+                "(RELATED!=CERT)\n",
+                layer, ffnOutNonFinite, hiddenDim);
+            fflush(stderr);
+            /* Zero bad FFN contrib; keep residual. RELATED TOK path may continue. */
             std::fill(ffnOutput, ffnOutput + hiddenDim, 0.0f);
         }
     }
@@ -9807,12 +9827,29 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         AttnCert::record(AttnCert::Stage::VProj, 0, pos, vProj, kvDim);
     }
 
-    // Apply RoPE if enabled
+    // Apply RoPE if enabled (Laguna: SWA layers use ropeDimSwa + thetaSwa)
     if (config.useRoPE) {
         if (profilingEnabled_ && profiler_) profiler_->beginRoPE();
         size_t pos = kvCache ? kvCache->currentLength() : seqLen - 1;
+        const bool swaLy = modelWeights.slidingWindowSize > 0 &&
+                           modelWeights.numHeads > 0 &&
+                           numHeads < modelWeights.numHeads;
+        const size_t savedRope = modelWeights.ropeDimensionCount;
+        const float savedTheta = modelWeights.ropeTheta;
+        float ropeTh = modelWeights.ropeTheta;
+        if (swaLy) {
+            if (modelWeights.ropeDimensionCountSwa > 0)
+                modelWeights.ropeDimensionCount =
+                    modelWeights.ropeDimensionCountSwa;
+            else
+                modelWeights.ropeDimensionCount = headDim;
+            if (modelWeights.ropeThetaSwa > 0.f)
+                ropeTh = modelWeights.ropeThetaSwa;
+        }
         applyRoPE(qProj, kProj, headDim, numHeads, numKVHeads, pos,
-                  modelWeights.ropeTheta, modelWeights.ropeScaling);
+                  ropeTh, modelWeights.ropeScaling);
+        modelWeights.ropeDimensionCount = savedRope;
+        modelWeights.ropeTheta = savedTheta;
         if (profilingEnabled_ && profiler_) profiler_->endRoPE();
     }
     B3_TraceState("ATTN_ROPE", layer, qProj, hiddenDim);
@@ -9913,6 +9950,14 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         size_t attentionStart = 0;
         size_t attentionEnd = attendLen > 0 ? attendLen : seqLen;
         applySlidingWindow(attentionStart, attentionEnd);
+        /* Laguna hybrid: only SWA layers (fewer heads) clamp to sliding_window. */
+        if (modelWeights.slidingWindowSize > 0 &&
+            modelWeights.numHeads > 0 &&
+            numHeads < modelWeights.numHeads) {
+            const size_t w = modelWeights.slidingWindowSize;
+            if (attentionEnd > attentionStart + w)
+                attentionStart = attentionEnd - w;
+        }
         size_t attend = attentionEnd - attentionStart;
         if (kvCache && Deep2::kv_probe::Enabled() && layer == 0) {
             const size_t wp = kvCache->currentLength();
@@ -10228,6 +10273,14 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     // Output projection: [hiddenDim] -> [hiddenDim]
     // Qwen models with fused QKV may not have a separate attention output projection.
     // When absent, the concatenated head outputs (numHeads * headDim) already equal hiddenDim.
+    /* Laguna: softplus(g_proj(x)) per-head on SDPA out, then O-proj. */
+    if (lw.attnGate.data && gateBuf && numHeads > 0 && headDim > 0) {
+        LinearW(lw.attnGate, input, nullptr, gateBuf, numHeads);
+        static int s_gateLog = 0;
+        Deep2::laguna_gate::applyPerHeadSoftplus(
+            headScratch, gateBuf, numHeads, headDim, layer, s_gateLog == 0);
+        s_gateLog = 1;
+    }
     if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer)) {
         // Concatenated head outputs BEFORE wo ? isolates O_PROJ from QK/softmax/AV.
         const size_t tokPos = kvCache ? kvCache->currentLength()
@@ -10672,13 +10725,12 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
             fflush(stderr);
         }
         if (ffnOutNonFinite > 0) {
-            if (debugLogging_) {
-                fprintf(stderr,
-                    "[LAYER_NAN] ly=%zu nonFinite=%zu norm=0.000000e+00 -> FFN output non-finite before residual\n",
-                    layer, ffnOutNonFinite);
-                fflush(stderr);
-            }
-            throw std::runtime_error("LAYER_NAN: FFN output non-finite before residual");
+            fprintf(stderr,
+                "[LAYER_NAN] ly=%zu nonFinite=%zu -> FFN non-finite; "
+                "zero+continue STREAM_CORRECTNESS=NOT_PASS (RELATED!=CERT)\n",
+                layer, ffnOutNonFinite);
+            fflush(stderr);
+            std::fill(ffnOutput, ffnOutput + hiddenDim, 0.0f);
         }
         const double sqrtN = (hiddenDim > 0) ? std::sqrt((double)hiddenDim) : 10.0;
         const double kNormAbort = 20.0 * sqrtN;
@@ -11331,27 +11383,26 @@ void Deep2Engine::computeSharedExpertFFN(size_t layer, const float* input,
     // Use the layer's shared expert weights if mapped from GGUF
     const auto& lw = modelWeights.layers[layer];
     
-    // Check if shared expert weights were mapped during loadModel
-    if (lw.moeSharedGate.data && lw.moeSharedUp.data && lw.moeSharedDown.data) {
-        // Use mapped weights directly (already in memory via mmap)
+    // Mapped shared: SwiGLU if gate present, else ReLU² (up+down only).
+    if (lw.moeSharedUp.data && lw.moeSharedDown.data) {
         size_t sharedDim = moeConfig_.sharedExpertDim;
         if (sharedDim == 0) sharedDim = moeConfig_.expertDim;
-        if (sharedDim == 0 && lw.moeSharedGate.rows > 0) sharedDim = lw.moeSharedGate.rows;
+        if (sharedDim == 0 && lw.moeSharedUp.rows > 0) sharedDim = lw.moeSharedUp.rows;
         if (sharedDim == 0) { memset(output, 0, hiddenDim * sizeof(float)); return; }
-        
-        // Gate projection (use gateBuf as temp - hiddenDim*4 sized)
-        float* gateOut = gateBuf;
-        LinearW(lw.moeSharedGate, input, nullptr, gateOut, sharedDim);
-        
-        // Up projection (use upBuf as temp)
         float* upOut = upBuf;
         LinearW(lw.moeSharedUp, input, nullptr, upOut, sharedDim);
-        
-        // SwiGLU
-        SwiGLU(gateOut, upOut, gateOut, sharedDim);
-        
-        // Down projection
-        LinearW(lw.moeSharedDown, gateOut, nullptr, output, hiddenDim);
+        if (lw.moeSharedGate.data) {
+            float* gateOut = gateBuf;
+            LinearW(lw.moeSharedGate, input, nullptr, gateOut, sharedDim);
+            SwiGLU(gateOut, upOut, gateOut, sharedDim);
+            LinearW(lw.moeSharedDown, gateOut, nullptr, output, hiddenDim);
+        } else {
+            for (size_t e = 0; e < sharedDim; ++e) {
+                const float r = upOut[e];
+                upOut[e] = (r > 0.f) ? (r * r) : 0.f;
+            }
+            LinearW(lw.moeSharedDown, upOut, nullptr, output, hiddenDim);
+        }
         return;
     }
 

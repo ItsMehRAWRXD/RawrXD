@@ -103,6 +103,7 @@ struct LayerWeights {
     WeightTensor attnNorm;    // [hiddenDim] RMSNorm weights
     WeightTensor attnQNorm;   // [headDim] per-head Q RMSNorm (Qwen3.5)
     WeightTensor attnKNorm;   // [headDim] per-head K RMSNorm (Qwen3.5)
+    WeightTensor attnGate;    // Laguna: [numHeads, hidden] softplus gate
 
     // MLA (Multi-Latent Attention) — K2 factorized attention
     // Q-path: hidden → q_a (GEMV) → RMSNorm → q_b (GEMV)
@@ -181,9 +182,12 @@ struct ModelWeights {
     size_t keyLengthMla   = 0;
     size_t valueLengthMla = 0;
     size_t ropeDimensionCount = 0;
+    size_t ropeDimensionCountSwa = 0; // Laguna SWA layers (often == headDim)
+    size_t slidingWindowSize = 0;     // Laguna SWA window; 0 = disabled
     bool   useMLA         = false;
 
     float  ropeTheta      = 0.0f;   // unset until GGUF dynamic geometry
+    float  ropeThetaSwa   = 0.0f;   // Laguna SWA rope.freq_base_swa
     float  ropeScaling    = 0.0f;   // 0 + !present => no scale (not a guessed 1.0)
     float  normEps        = 0.0f;   // unset until GGUF dynamic geometry
     bool   ropeNeox       = false;  // MiniMax/NeoX pair layout when set by loader

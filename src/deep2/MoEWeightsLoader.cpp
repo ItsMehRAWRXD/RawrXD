@@ -4,6 +4,7 @@
 // ============================================================================
 
 #include "MoEWeightsLoader.hpp"
+#include "QuantTypeTable.hpp"
 #include <cstdio>
 #include <cstring>
 #include <chrono>
@@ -216,62 +217,19 @@ bool MoEWeightsLoader::ReadAt(uint64_t offset, void* buffer, size_t size) {
 }
 
 size_t GGMLTypeBlockSizeStatic(GGMLType type) {
-    switch (type) {
-        case Deep2::GGMLType::GGML_TYPE_F32:     return 1;
-        case Deep2::GGMLType::GGML_TYPE_F16:     return 1;
-        case Deep2::GGMLType::GGML_TYPE_Q4_0:    return QK4_0;
-        case Deep2::GGMLType::GGML_TYPE_Q4_1:    return QK4_1;
-        case Deep2::GGMLType::GGML_TYPE_Q5_0:    return QK5_0;
-        case Deep2::GGMLType::GGML_TYPE_Q5_1:    return QK5_1;
-        case Deep2::GGMLType::GGML_TYPE_Q8_0:    return QK8_0;
-        case Deep2::GGMLType::GGML_TYPE_Q2_K:    return QK_K;
-        case Deep2::GGMLType::GGML_TYPE_Q3_K:    return QK_K;
-        case Deep2::GGMLType::GGML_TYPE_Q4_K:    return QK_K;
-        case Deep2::GGMLType::GGML_TYPE_Q5_K:    return QK_K;
-        case Deep2::GGMLType::GGML_TYPE_Q6_K:    return QK_K;
-        case Deep2::GGMLType::GGML_TYPE_Q8_K:    return QK_K;
-        case Deep2::GGMLType::GGML_TYPE_IQ2_XXS: return QK_K;
-        case Deep2::GGMLType::GGML_TYPE_IQ2_XS:  return QK_K;
-        case Deep2::GGMLType::GGML_TYPE_IQ3_XXS: return QK_K;
-        case Deep2::GGMLType::GGML_TYPE_IQ1_S:   return QK_K;
-        case Deep2::GGMLType::GGML_TYPE_IQ4_NL:  return QK4_NL;
-        case Deep2::GGMLType::GGML_TYPE_IQ3_S:   return QK_K;
-        case Deep2::GGMLType::GGML_TYPE_IQ2_S:   return QK_K;
-        case Deep2::GGMLType::GGML_TYPE_IQ4_XS:  return QK_K;
-        default:                return 1;
-    }
+    /* Authority = QuantTypeTable (BF16=1). Legacy switch missed BF16 → OK
+     * (default 1), but keep table-first so IQ/TQ drift cannot recur. */
+    if (const QuantTypeDescriptor* d = LookupQuantType(type))
+        return d->blockElements;
+    return 1;
 }
 
 size_t GGMLTypeSizeStatic(GGMLType type) {
-    switch (type) {
-        case Deep2::GGMLType::GGML_TYPE_F32:     return 4;
-        case Deep2::GGMLType::GGML_TYPE_F16:     return 2;
-        case Deep2::GGMLType::GGML_TYPE_Q4_0:    return sizeof(block_q4_0);
-        case Deep2::GGMLType::GGML_TYPE_Q4_1:    return sizeof(block_q4_1);
-        case Deep2::GGMLType::GGML_TYPE_Q5_0:    return sizeof(block_q5_0);
-        case Deep2::GGMLType::GGML_TYPE_Q5_1:    return sizeof(block_q5_1);
-        case Deep2::GGMLType::GGML_TYPE_Q8_0:    return sizeof(block_q8_0);
-        case Deep2::GGMLType::GGML_TYPE_Q2_K:    return sizeof(block_q2_K);
-        case Deep2::GGMLType::GGML_TYPE_Q3_K:    return sizeof(block_q3_K);
-        case Deep2::GGMLType::GGML_TYPE_Q4_K:    return sizeof(block_q4_K);
-        case Deep2::GGMLType::GGML_TYPE_Q5_K:    return sizeof(block_q5_K);
-        case Deep2::GGMLType::GGML_TYPE_Q6_K:    return sizeof(block_q6_K);
-        case Deep2::GGMLType::GGML_TYPE_Q8_K:    return sizeof(block_q8_K);
-        case Deep2::GGMLType::GGML_TYPE_IQ2_XXS: return sizeof(block_iq2_xxs);
-        case Deep2::GGMLType::GGML_TYPE_IQ2_XS:  return sizeof(block_iq2_xs);
-        case Deep2::GGMLType::GGML_TYPE_IQ3_XXS: return sizeof(block_iq3_xxs);
-        case Deep2::GGMLType::GGML_TYPE_IQ1_S:   return sizeof(block_iq1_s);
-        case Deep2::GGMLType::GGML_TYPE_IQ4_NL:  return sizeof(block_iq4_nl);
-        case Deep2::GGMLType::GGML_TYPE_IQ3_S:   return sizeof(block_iq3_s);
-        case Deep2::GGMLType::GGML_TYPE_IQ2_S:   return sizeof(block_iq2_s);
-        case Deep2::GGMLType::GGML_TYPE_IQ4_XS:  return sizeof(block_iq4_xs);
-        case Deep2::GGMLType::GGML_TYPE_I8:      return 1;
-        case Deep2::GGMLType::GGML_TYPE_I16:     return 2;
-        case Deep2::GGMLType::GGML_TYPE_I32:     return 4;
-        case Deep2::GGMLType::GGML_TYPE_I64:     return 8;
-        case Deep2::GGMLType::GGML_TYPE_F64:     return 8;
-        default:                return 4;
-    }
+    /* Laguna REAP35 L40+: ffn_*_exps are BF16 (ggml id 30). Legacy default
+     * returned 4 (F32) → bytesPerExpert 2× → mis-sliced experts → LAYER_NAN. */
+    if (const QuantTypeDescriptor* d = LookupQuantType(type))
+        return d->blockBytes;
+    return 4;
 }
 
 size_t CalculateTensorBytesStatic(const TensorInfo& t) {
