@@ -1,0 +1,4 @@
+GGUF_LOAD_STAGE=enter path="g:\~dev\rawrxd\models\tinyllama.gguf" loadTensors=1 mmap=1
+GGUF_LOAD_STAGE=validated size=668788096 dataOff=1709440
+GGUF_LOAD_STAGE=fopen_ok
+GGUF_LOAD_STAGE=header_ok ver=3 tensors=201 kv=23

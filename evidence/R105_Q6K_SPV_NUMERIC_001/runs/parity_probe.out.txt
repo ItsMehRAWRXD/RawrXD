@@ -1,0 +1,25 @@
+ATTN_V_Q6K_SPV_HOST_PARITY
+model=g:\~dev\rawrxd\models\tinyllama.gguf
+tensor=blk.0.attn_v.weight type=14 bytes=430080 rows=256 cols=2048
+input=ATTN_NORM_0_frozen
+[QuantKernelRegistry] Q4_K GEMV=00007FF6B96C0A80 dequant=00007FF6B96BDE50 GetGEMV(12)=00007FF6B96C0A80 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 22 GEMV kernels, 22 dequant kernels
+HOST finite=256/256 norm=7.974118e-02
+[VulkanCompute] DETECTED phys[0] type=2 AMD Radeon AI PRO R9700
+[VulkanCompute] DETECTED phys[1] type=2 Microsoft Direct3D12 (AMD Radeon AI PRO R9700)
+[VulkanCompute] SKIP_WARP_ICD phys[1] Microsoft Direct3D12 (AMD Radeon AI PRO R9700)
+[VulkanCompute] DETECTED phys[2] type=2 AMD Radeon RX 7800 XT
+[VulkanCompute] DETECTED phys[3] type=2 Microsoft Direct3D12 (AMD Radeon RX 7800 XT)
+[VulkanCompute] SKIP_WARP_ICD phys[3] Microsoft Direct3D12 (AMD Radeon RX 7800 XT)
+[VulkanCompute] DETECTED phys[4] type=4 Microsoft Direct3D12 (Microsoft Basic Render Driver)
+[VulkanCompute] SKIP_WARP_ICD phys[4] Microsoft Direct3D12 (Microsoft Basic Render Driver)
+[VulkanCompute] OPEN_ONE AMD Radeon AI PRO R9700 (others unused)
+[VulkanCompute] QUEUES compute=0 transfer=1 dual=1
+[VulkanCompute] FREETOKEN_STICK_RUB transfer_q=1 waw_ready_gate=1 helpframe_nway=4
+SPV  finite=256/256 nonFinite=0
+CMP  bothFinite=256 maxAbs=1.862645e-09 maxULP=640 rms=3.715873e-10 firstBad=-1 firstNan=-1 gate=PARITY_OK
+y0 host=-0.00079942972 spv=-0.00079942984
+DISPOSITION_HINT=SPV_PARITY_CANDIDATE
