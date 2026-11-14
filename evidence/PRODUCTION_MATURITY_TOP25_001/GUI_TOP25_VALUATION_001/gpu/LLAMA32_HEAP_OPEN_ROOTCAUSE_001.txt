@@ -1,34 +1,16 @@
-LLAMA32_HEAP_OPEN_ROOTCAUSE_001
-ASOF_LOCAL=2026-11-13T22:33:30-05:00
+﻿LLAMA32_HEAP_OPEN_ROOTCAUSE_001
+ASOF_LOCAL=2026-11-13T23:15:37-05:00
 PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0
 PRIOR_EXE_SHA256=7FD1F27095388585D03DFB68C70E033B126D6406E8DE23C4F21F10D1EF8323C6
-HASH_VERIFY_THIS_SESSION=PASS
-MODEL=models/llama3.2-3b-Q2_K.gguf
-HOST_DECODE=0 GPU_RESIDENT_TARGET=1 TIP_STILL_6754=1
+PRIVATE_CAND_087=7154BF59F4DA8834AB98D592790785560F44D23ED8A1EF9DAEE97031B8C2CBB8
+TIP_STILL_6754=1 HOST_DECODE=0
 DURABLE=0
 ROOT_CAUSE_CLEAR=1
 
-## Root cause class (fail-closed; confirmed)
-SITE=elastic open / ElasticResidencyManager + MARS place after PIN_BUDGET_SET ENGINE_MAX_HOT
-TRIGGER_MARK=duplicate register / double-place of token_embd.weight (tied-embed / lmHead path)
-ABORT_MODE_PIN=EXIT=NULL hard abort before PRODUCT_OPEN stream (OPEN path) on 7FD1F270
-PRIOR_WER_CLASS=0xC0000374 STATUS_HEAP_CORRUPTION (ntdll) — compatible with thrash at elastic open
-
-## Pin 7FD1F270 exclusive proof (2 consecutive TOK=0) — immutable
-| Run | TOK | SEH | EXIT | WALL_MS | Last stderr |
-|-----|----:|----:|------|--------:|-------------|
-| 220949 | 0 | 0 | NULL | 65767 | ElasticResidencyManager WARNING: tensor 'token_embd.weight' already registered |
-| 221127 | 0 | 0 | NULL | 9899 | ElasticResidencyManager WARNING: tensor 'token_embd.weight' already registered |
-
-## Private cand proof (OPEN cleared; TOK durable still OPEN)
-QDIM083 E649DF99: DUP_WARN=0 STREAM_ENTER=1 STREAM_SEH=0xC0000005 TOK=0
-QDIM084 617F784E: DUP_WARN=0 THRASH=0 ALLOC/EVICT=1/1 MARS skip=701 OPEN_PASS=1 TOK=0×2
-CONTROLLING_SEAL=MULTI_FAMILY_LLAMA32_QDIM077_001.txt OPEN DURABLE=0
-
-## Disposition
-DURABLE_TOKEN_SURVIVED=0
-MF_4OF4=0
-REJECT_INVENT_GUI_RAISE=1
-TIP_CLIMB=HOLD
-PROMOTE=0
+## Stream SEH chain (this session)
+1) VA=-1 fclose @ resetGenQualityProbe — AVFIX083 SOURCE_WIRED (qdim087)
+2) VA=0x1000002AA Eng().isCancelRequested via poisoned ProductRuntime.ext — OPEN path OK on 087; TOK durable still 0
+CONTROLLING=QDIM087_AVFIX083_LLAMA32_STREAM_SEH_001.txt
+MF_4OF4=0 REJECT_INVENT_FROM_7FD1=1
+PROMOTE=0 TIP_CLIMB=HOLD
 END

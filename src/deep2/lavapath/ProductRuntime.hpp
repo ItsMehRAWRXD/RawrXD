@@ -10,6 +10,7 @@
 #include "RxRunStateHooks.hpp"
 #include <atomic>
 #include <cstdio>
+#include <cstdint>
 #include <string>
 
 namespace rawr::product_run {
@@ -25,6 +26,13 @@ struct ProductRuntime {
     Result lastReceipt{};
     uint32_t graphNodes = 0;
 
+    /* Decode pin uses this — reject only non-canonical ext before pin. */
+    static bool ExtPlausible(const Deep2::Deep2Engine* p) noexcept {
+        if (!p) return false;
+        const auto u = reinterpret_cast<uintptr_t>(p);
+        return u > 0x10000ull && (u & 0x7ull) == 0 &&
+               u < (static_cast<uintptr_t>(-1) - 0x1000ull);
+    }
     Deep2::Deep2Engine& Eng() { return ext ? *ext : engine; }
     const Deep2::Deep2Engine& Eng() const { return ext ? *ext : engine; }
     bool AuthorityComplete() const { return auth.PASS != 0; }

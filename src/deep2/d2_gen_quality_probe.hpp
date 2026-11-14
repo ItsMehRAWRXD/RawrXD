@@ -8,16 +8,24 @@
 struct D2GenQualityProbe {
     FILE* f = nullptr;
     bool owned = false;
+    /* AA4F/AVFIX083: keep counters HERE — not on Deep2Engine tail.
+     * Tip-land ProductRuntime embeds sizeof(Deep2Engine)==0x2868; +0x10
+     * engine-tail fields overlapped ext@+0x2868 → fclose(modelAlias) VA=-1. */
+    uint64_t ordinal = 0;
+    int chatValid = 0;
+    int tokRoundtrip = 1;
 
     bool open(const char* path) {
         close();
         f = std::fopen(path, "wb");
         owned = (f != nullptr);
+        ordinal = 0;
+        tokRoundtrip = 1;
         return owned;
     }
     void attach(FILE* stream) { close(); f = stream; owned = false; }
 
-    void emit(uint64_t ordinal,
+    void emit(uint64_t ord,
               int64_t selected_token_id,
               double selected_logit,
               double selected_prob,
@@ -30,7 +38,7 @@ struct D2GenQualityProbe {
         const bool finite = std::isfinite(selected_logit) && std::isfinite(selected_prob) && std::isfinite(argmax_logit);
         std::fprintf(f,
             "token_ordinal=%llu selected_token_id=%lld selected_logit=%.17g selected_prob=%.17g argmax_token_id=%lld argmax_logit=%.17g finite=%d sampler_valid=%d tokenizer_roundtrip=%d chat_template_valid=%d\n",
-            (unsigned long long)ordinal,
+            (unsigned long long)ord,
             (long long)selected_token_id,
             selected_logit,
             selected_prob,
@@ -43,9 +51,7 @@ struct D2GenQualityProbe {
         std::fflush(f);
     }
 
-    // AVFIX083: tip-land F599 SEH at resetGenQualityProbe→fclose with
-    // READ VA=FFFFFFFFFFFFFFFF (poison/sentinel FILE*). Reject non-plausible
-    // pointers; drop ownership (FILE leak until process exit is OK).
+    // AVFIX083: reject poison/sentinel FILE* (READ VA=-1). Leak OK.
     void close() {
         FILE* fp = f;
         const bool o = owned;
@@ -59,3 +65,12 @@ struct D2GenQualityProbe {
     }
     ~D2GenQualityProbe() { close(); }
 };
+
+/* AVFIX083: process-local slot so Deep2Engine sizeof matches seh 0x2868. */
+struct D2GenQualitySlot {
+    D2GenQualityProbe* probe = nullptr;
+};
+inline D2GenQualitySlot& D2GenQualitySlotFor(const void* /*eng*/) {
+    static D2GenQualitySlot s;
+    return s;
+}
