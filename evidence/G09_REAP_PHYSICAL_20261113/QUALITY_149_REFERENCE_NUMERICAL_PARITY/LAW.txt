@@ -1,0 +1,31 @@
+﻿LAW.txt
+GATE=QUALITY_149_REFERENCE_NUMERICAL_PARITY
+PROMOTE=0 CERTIFIED=0 CROSS_SHA_CREDIT=0
+COHERENT_USEFUL=0
+QUALITY_RETENTION=OPEN
+
+CONTROLLING_EXE_SHA256=23978A6AC03068073937F7861E01B7E065E288C1A5940714C1B8CA2C0D3D3E04
+EXE=G:\~dev\rawrxd\build_ninja\bin\rawr_149_rebound.exe
+MODEL=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+ARCH=deepseek2 (Kimi K2 MLA + MoE)
+RETAIN_FIRST=149 (RAWRXD_REAP_RETAINED=149)
+RETAIN_8_AFTER_149_COHERENT_ONLY=1
+
+ESTABLISHED:
+  retain149 AND retain8 coherent_useful=0
+  logits_finite=1 acquire_ok=1
+  retention_alone_neq_root_cause=1
+  LLAMA_REFERENCE_PARITY was BLOCKED in QUALITY_149.txt — this gate opens it
+
+COMPARE_ORDER:
+  router_logits -> expert_ids -> expert_weights -> attn_out -> expert_down -> hidden -> lm_head
+
+REF_CANDIDATES:
+  C:\llama.cpp\build\bin\Release\llama-cli.exe
+  F:\llama.cpp-ref\build\bin\llama-cli.exe
+
+NOT_MORE_TOKENS=1
+FIRST_DIVERGENT_OP=PENDING
+K2_STAGE_DIGEST_WIRED=1 (ForwardMLALayers; DIGEST_SHA≠23978A6A; CROSS_SHA=0)
+REFERENCE_GENERATION=NOT_RUN (CPU_REPACK|mmap_stall|VK_OOM)
+SEE=STATUS.txt FIRST_DIVERGENT_OP.txt DISPOSITION.txt DIGESTS_EXTRACTED.txt

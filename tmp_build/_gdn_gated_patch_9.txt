@@ -1,0 +1,9 @@
+OLD:
+        // Scratch for gated query half (query only) after LinearW into qProj.
+        std::vector<float> qwenGate;
+        if (qwenGatedAttn)
+            qwenGate.assign(numHeads * headDim, 0.0f);
+
+NEW:
+        if (qwenGatedAttn)
+            qwenGate.assign(numHeads * headDim, 0.0f);

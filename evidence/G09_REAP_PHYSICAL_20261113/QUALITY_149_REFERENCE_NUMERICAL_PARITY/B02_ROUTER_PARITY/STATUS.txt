@@ -1,0 +1,28 @@
+B02_ROUTER_PARITY
+PROMOTE=0 CERTIFIED=0 CROSS_SHA=0
+STATUS=MATCHED_PROMPT_SEMANTIC_DIVERGENCE_MEASURED
+NOTE=tensor-level llama digests still unavailable; first-token text/id diverge under matched raw prompt
+
+## Matched prompt (MEASURED)
+PROMPT=Hi
+DEEP2: RAWRXD_RAW_PROMPT=1 RAWRXD_REAP_RETAINED=384
+  EXE_SHA256=EA4E20229633F9671F1B43620A3B6F27D21667F57A784B06830986E3E2B94113
+  ARTIFACT=runs/hi2_r384_raw2.*
+  CHAT_TEMPLATE_SOURCE=raw-env POLICY=RAW_PROMPT_ALLOWED
+  PROMPT_TOKENS=1 GENERATED_TOKENS=2
+  EXPERT_IDS_1=[0,331,190,315,213,186,69,235] (==UNCONST, full topo)
+  ATTN_OUT_0 fnv=7b52723cae263d20
+  ROUTER_LOGITS_1 fnv=297ed5e8845bc6b8
+  ARGMAX_TOKEN(final)=19249 output=" Jo211"
+LLAMA: --no-jinja -p Hi -n 2 --temp 0 -cmoe -ngl4 -nr
+  EXE_SHA256=F7CDB198DA9DFC8EE9490653A91EF0AA4E7F5C502FB0294C1398ACDDF408D772
+  ARTIFACT=B01_REF_GEN/run_hi2_ngl4_cmoe_v2.*
+  OUTPUT_TEXT=Hi!
+
+## Disposition
+FIRST_DIVERGENT_OP still UNKNOWN at tensor granularity (no llama STAGE_DIGEST)
+BUT Hypothesis A SUPPORTED: under matched raw prompt + full 384 experts,
+Deep2 still fails semantically vs llama. Hypothesis B (prune-only) REJECTED as sole cause.
+
+NEXT_B02: obtain llama first-token id / router dumps OR offline oracle on same prompt token
+Do NOT alter REAP heuristics.

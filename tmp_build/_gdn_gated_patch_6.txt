@@ -1,0 +1,37 @@
+OLD:
+        // Q projection: input -> the actual tensor row count.  This may be
+        // wider than the residual stream for GQA models.
+        LinearW(lw.wq, input,
+                (lw.bq.data && lw.bq.type == (int)GGMLType::GGML_TYPE_F32)
+                    ? static_cast<const float*>(lw.bq.data)
+                    : nullptr,
+                qProj, projectedQDim);
+        // S07 diagnostic: dump qProj immediately after Q LinearW.
+
+NEW:
+        // Q projection: input -> the actual tensor row count.  This may be
+        // wider than the residual stream for GQA models. Qwen gated attn_q is
+        // 2*H*D (query+gate interleaved per head) then compacted to H*D.
+        const size_t qLinearOut =
+            qwenGatedAttn ? (2 * numHeads * headDim) : projectedQDim;
+        LinearW(lw.wq, input,
+                (lw.bq.data && lw.bq.type == (int)GGMLType::GGML_TYPE_F32)
+                    ? static_cast<const float*>(lw.bq.data)
+                    : nullptr,
+                qProj, qLinearOut);
+        if (qwenGatedAttn)
+        {
+            std::vector<float> qOnly(numHeads * headDim, 0.0f);
+            for (size_t h = 0; h < numHeads; ++h)
+            {
+                const size_t rawBase = h * headDim * 2;
+                const size_t headBase = h * headDim;
+                std::memcpy(qOnly.data() + headBase, qProj + rawBase,
+                            headDim * sizeof(float));
+                std::memcpy(qwenGate.data() + headBase, qProj + rawBase + headDim,
+                            headDim * sizeof(float));
+            }
+            std::memcpy(qProj, qOnly.data(), qOnly.size() * sizeof(float));
+            projectedQDim = numHeads * headDim;
+        }
+        // S07 diagnostic: dump qProj immediately after Q LinearW.

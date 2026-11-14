@@ -1,0 +1,39 @@
+﻿G09_REAP_PHYSICAL_AUDIT ASOF=2026-11-13T03:07:00-05:00
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD
+AUTHORITY=user_REAP_full_vs_physically_reduced_streaming
+
+VERDICT
+  PHYSICAL_REPACK=0
+  RESIDENCY_ONLY=1
+  ORIGINAL_GGUF_INTACT=1 (sourceImmutable / offline writer never modifies source shards — by contract)
+  TIP14_RUNTIME_REAP=RESIDENCY_AND_TOPK_INJECTION_NOT_PHYSICAL_PRUNE
+
+SOURCE_LAW (product)
+  Deep2Engine.cpp:~4362: Runtime REAP admission deliberately separate from offline GGUF rewriting;
+    controls resident working-set + router top-k; cannot select experts absent from model.
+  ReapRuntime.hpp: offline GGUF writer never modifies source shards.
+  rawrxd_cli_v2.cpp:~568: Runtime REAP is live streamer/router injection, not offline GGUF.
+  reapRuntimeReceipt reason ACTIVE: MOE_ROUTER_TOPK_AND_STREAMER_CACHE_APPLIED
+
+EVIDENCE_FIELDS (Tip14/--reap current)
+  ORIGINAL_MODEL_BYTES          | NOT_EMITTED_BY_RUNTIME_RECEIPT (inventory has shard sizes)
+  ORIGINAL_EXPERT_COUNT         | PARTIAL (topology detect / numExperts)
+  RETAINED_EXPERT_COUNT         | MISNAMED: effectiveExperts = top-k / active route count, NOT pruned inventory
+  PRUNED_PARAMETER_COUNT        | NOT_IMPLEMENTED
+  REPACKED_MODEL_BYTES          | NOT_IMPLEMENTED
+  ACTIVE_PARAMETERS_PER_TOKEN   | NOT_EMITTED (32B marketing figure must not substitute)
+  RESIDENT_RAM_BYTES            | PARTIAL (workingSetBytes injection)
+  RESIDENT_VRAM_BYTES           | NOT_PROVEN_IN_REAP_RECEIPT
+  TOKENS_COMMITTED              | SEPARATE_G09_RECEIPTS (8 reported; not REAP-size proof)
+  REAP_MODEL_SHA256             | NOT_IMPLEMENTED (no reduced artifact identity)
+
+GAP
+  Need offline/online path that selects retained experts, remaps router, excludes pruned expert
+  tensors from load/execute, optionally persists separate reduced GGUF, streams from that
+  representation. P_REAP = P_shared + sum retained experts — not 32B active/token.
+
+FIXTURE_KIMI
+  F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\…00001-of-00013.gguf
+  SHARDS=13 SHARD1_SHA=EB480519… ORIGINAL_GGUF must remain intact
+
+NEXT=implement physical prune+repack+router remap + evidence emitters; PROMOTE=0

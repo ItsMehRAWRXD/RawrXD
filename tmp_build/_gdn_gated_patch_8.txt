@@ -1,0 +1,15 @@
+OLD:
+        const size_t keyLen =
+            modelWeights.keyLength > 0 ? modelWeights.keyLength : headDim;
+        const bool qwenGatedAttn =
+            keyLen > 0 && lw.wq.rows == 2 * numHeads * keyLen &&
+            lw.attnQNorm.data != nullptr;
+        if (!qwenGatedAttn && (lw.wq.rows % numHeads) != 0)
+
+NEW:
+        const size_t keyLen =
+            modelWeights.keyLength > 0 ? modelWeights.keyLength : headDim;
+        qwenGatedAttn =
+            keyLen > 0 && lw.wq.rows == 2 * numHeads * keyLen &&
+            lw.attnQNorm.data != nullptr;
+        if (!qwenGatedAttn && (lw.wq.rows % numHeads) != 0)

@@ -1,0 +1,13 @@
+side=deep2
+stage=FFN_GATE_0
+pos=13
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=8960
+nbytes=35840
+fnv=d815eff9254af7b4
+l2=63.077638819752117
+seq=1560
+path=F:\rawrxd\evidence\RC2_05_THREEWAY_20261112_190039\cpu_llama\batch07_tip14_tf\stage_engine\deep2_FFN_GATE_0_pos13_layer0_full_n8960_seq1560.bin

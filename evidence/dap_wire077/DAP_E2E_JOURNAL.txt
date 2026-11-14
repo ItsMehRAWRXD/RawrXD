@@ -1,0 +1,13 @@
+DEBUG_SESSION_START
+ADAPTER_INITIALIZED backend=WaitForDebugEvent
+BREAKPOINT_VERIFIED export=break_site
+DEBUGGEE_PATH=G:\~dev\rawrxd\evidence\CLI_ACCEPTANCE_001\fixture\debuggee_fixture.exe
+PROCESS_LAUNCHED
+PROCESS_LAUNCHED_DETAIL pid=30536
+STOPPED_REASON=breakpoint rip=0x7FF6AC182801 reason=breakpoint:break_site
+STACK_FRAMES_RECEIVED count=5
+VARIABLES count=2 g_watch_value=42
+CONTINUE
+PROCESS_EXITED code=7
+DEBUG_SESSION_TERMINATED
+SESSION_REAL=1 bp=1 stack=5 vars=2 continue=1 exited=1 watch=42

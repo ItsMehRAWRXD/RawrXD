@@ -1,0 +1,33 @@
+B01_REF_GEN
+PROMOTE=0 CERTIFIED=0 CROSS_SHA=0
+GATE=QUALITY_149_REFERENCE_NUMERICAL_PARITY
+
+REF_CLI=G:\~dev\llama-direct\vulkan\llama-cli.exe
+REF_CLI_SHA256=F7CDB198DA9DFC8EE9490653A91EF0AA4E7F5C502FB0294C1398ACDDF408D772
+REF_BUILD=b8352-d23355afc
+MODEL=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+TOPOLOGY=full n_expert=384 expert_used=8 layers=61 quant=Q4_K_M
+WEIGHTS_UNMODIFIED=1
+
+## Unblock recipe (MEASURED)
+FLAGS=-ngl 4 -mg 0 -cmoe -nr/--no-repack --no-warmup --single-turn -c 256 --temp 0 --top-k 1 --seed 1
+PRIOR_BLOCKERS:
+  CPU -ngl0 + warmup = TIMEOUT after mmap success
+  Vulkan without -cmoe / high ngl = ErrorOutOfDeviceMemory
+WORKING: MoE on CPU (-cmoe), few non-MoE layers on GPU (-ngl 4), no repack
+
+## run_hi2_ngl4_cmoe_v2 (COMPLETED) ACCEPTANCE=PASS_EXEC
+PROMPT=Hi (raw, --no-jinja)
+OUTPUT_TEXT=Hi!
+GEN_TPS~0.2
+ACCEPTANCE_REF_GEN_EXECUTES=1
+
+## run_hi2_jinja_v3 (IN_FLIGHT PID=38424)
+PROMPT=Hi --jinja (match Deep2 chat class)
+NOTE=~47GiB RSS / high CPU; stdout still empty (load/decode in progress)
+
+## Inventory
+tensors=1096 shards=13 ~578.57 GiB
+expert_gating_func=sigmoid scale=2.827 vocab=163840 BOS=163584 EOS=163586
+
+Generation receipt != B02 tensor PASS.

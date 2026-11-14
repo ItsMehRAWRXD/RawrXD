@@ -1,0 +1,18 @@
+﻿MINIMAX_QUALITY_RCA_POST_S08.txt
+PROMOTE=0 CERTIFIED=0 CROSS_SHA=0 ORIGINAL_GGUF_INTACT=1
+ISSUE=https://github.com/ItsMehRAWRXD/RawrXD/issues/83
+
+FALSE_POSITIVE: S08 pre-LinearW K~1e24/V~1e12
+POST_LINEARW: Q/K/V finite ~1e-2 (FIRST_DIVERGENT_OP=NONE_AT_POST_LINEARW)
+
+ATTN_PATH (DEEP2_MINIMAX_Q_DIAG=1, EXE 73A108B6...):
+  Q_PRE_NORM l2~2.08
+  Q_POST_NORM l2~92.4 (expected ~sqrt(48*128)~78 for unit RMS)
+  Q_POST_ROPE l2~92.4 energy-preserved
+  ATTENTION/O_PROJ/HEAP validation OK
+  logits finite; stateNorm~1.2e2..1.45e2
+
+QUALITY_SYMPTOM: tokens 41563,2110,2110,... => 姬被被被 (mode collapse)
+REAP_CONTEXT: RETAINED_EXPERT_COUNT=29/256 BUDGET_UNIFORM_UNCERTIFIED
+NEXT_HYPOTHESIS: physical expert prune vs tokenizer/sampling — control with RAWRXD_REAP_RETAINED=256 or larger WS
+UTF16: 406 deep2 sources converted; REMAINING_BOM=0

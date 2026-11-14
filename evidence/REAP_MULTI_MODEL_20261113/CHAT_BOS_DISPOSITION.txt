@@ -1,0 +1,72 @@
+CHAT_BOS_DISPOSITION.txt
+UTC=2026-11-13T07:52:00-05:00
+MOTD_ACK=1
+ISSUE=#83
+GATE=MINIMAX_CHAT_TEMPLATE_BOS
+PROMOTE=0
+CERTIFIED=0
+CROSS_SHA=0
+SEALED_EXE_SHA=F50B94E64B77FCE4E7E20E72F2A688A19844616B36112D829466F98A5F064F89
+SEALED_EXE_OVERWRITE=0
+GGUF=F:\OllamaModels\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf
+
+## GGUF extract
+tokenizer.chat_template LEN=6512 (CHAT_BOS_CHAT_TEMPLATE.jinja)
+tokenizer.ggml.bos_token_id=200034
+tokenizer.ggml.eos_token_id=200020
+tokenizer.ggml.pre=minimax-m2
+tokenizer.ggml.add_bos_token=ABSENT
+tokenizer.ggml.add_eos_token=ABSENT
+minimax-m2.expert_gating_func=2
+KV_DUMP=CHAT_BOS_GGUF_KV.txt
+ALL_KEYS=CHAT_BOS_ALL_KV_KEYS.txt
+
+## Exact vocab IDs (tokenizer.ggml.tokens)
+]~!b[ = 200034 (= bos_token_id)
+[e~[  = 200020 (= eos_token_id)
+]~b]  = 200019
+<think> = 200050
+</think> = 200051
+Hello = 37964
+role pieces (not fused): system=28463 user=3995 ai=1361
+MARKER_FILE=CHAT_BOS_MARKER_IDS.txt
+SPECIALISH=CHAT_BOS_SPECIALISH_TOKENS.txt
+
+## Builtin ChatTemplate::formatMiniMax (source) for user=Hello
+]~!b[]~b]system\n{default identity}[e~[\n]~b]user\nHello[e~[\n]~b]ai\n<think>\n
+FILE=CHAT_BOS_FORMATTED_HELLO_BUILTIN.txt
+GGUF jinja uses same markers + add_generation_prompt -> ]~b]ai\n<think>\n
+FILE_TEMPLATE=CHAT_BOS_CHAT_TEMPLATE.jinja
+
+## Expected vs measured prefill
+EXPECTED_RAW_HELLO_IDS ~= [37964]  (single piece "Hello")
+EXPECTED_RAW_PREFILL_POSITIONS = [0]
+EXPECTED_FORMATTED_COUNT >> 1  (BOS/markers/system/user/Hello/eos/ai/think)
+EXPECTED_FORMATTED_START_ID = 200034 (]~!b[)
+
+MEASURED_NEOX_Hello_R8 prompt_tokens=1  (MINIMAX_NEOX_STDOUT/RECEIPT)
+MEASURED_NEOX_Hello_R256 prompt_tokens=1 (MINIMAX_NEOX_R256_*)
+MEASURED_NEOX_CHAT prompt_tokens=9     (MINIMAX_NEOX_CHAT_*; incomplete TOKENS_DECODED=0)
+HISTORICAL_ChatTemplate_Forced_minimax prompt_tokens=50 (PRODUCTION_MATURITY sigmoid runs; other EXE)
+
+## Parity disposition
+RAW_VS_FORMATTED_TOKEN_IDS=DIVERGENT_BY_CONSTRUCTION
+RUNTIME_APPLIED_FULL_CHAT_TEMPLATE_ON_NEOX_HELLO=0
+  evidence=prompt_tokens=1 matches raw Hello id 37964 only; not BOS-led chat string
+BOS_PREFIX_OBSERVED_ON_NEOX_HELLO=0
+EXACT_FORMATTED_SPM_ID_LIST_ON_SEALED_EXE=NOT_RUN
+  (offline full BPE w/o minimax-m2 pretokenizer skipped; marker IDs exact from GGUF vocab)
+CHAT_BOS_GATE=OPEN
+PASS=0
+PROMOTE=0
+CERTIFIED=0
+
+## Prefill position implication
+Raw Hello: positions={0} only
+Chat-formatted: positions={0..N-1} with N>>1; RoPE/NEOX sees different absolute positions
+NEOX_CHAT=9 is intermediate/control, still not historical-50 fidelity
+
+## Next
+1. On sealed or next SHA: DEEP2_CHAT_TRACE=1 dump exact prompt token IDs for Hello vs formatted
+2. Decide whether reap CLI should APPLY_TEMPLATE (historical Forced minimax) vs RAW_PROMPT
+3. Do not invent PASS; quality remains OPEN until coherent decode

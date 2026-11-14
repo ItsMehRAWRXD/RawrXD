@@ -1,0 +1,31 @@
+BATCH18 CPU tip26 FIRST_OP isolate + tokenwise default (fail-closed)
+ASOF=2026-11-12T23:21:15-05:00
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD DO_NOT_REOPEN_Q4K_ACT=1
+CROSS_SHA_CREDIT=0 SPV_TOUCHED=0 ADA48968 DEVICE_WO_OPEN=1
+
+PRIOR_EXE=DCF607E4821A890513B36257DF8D9E8D6750D0843846104BD7E39D9116B096DA
+NEW_EXE=80EFEE9B4608F2D22AAA59F427A29E6F1C29E9AC8C68DAEC98ADE414029352AF
+  (new remasure only; tip17 SHA not credited)
+
+FIRST_OP@26=L0_ATTN_OUT / CPU_BATCHED_PREFILL_F32_INCHUNK_THEN_F16_SEAL
+  Dump-driven on prior EXE DCF607E4 (batch17 + batch18 AB):
+  - tip0..25 MATCH GPU/llama; tip26 CPU_BAT=897 vs GPU/llama=18266
+  - P34 (pre-flip): Q/K/V/KV_WRITE MATCH (~1e-5); ATTN_OUT FIRST clear
+    jump maxAbs=6.065e-4; O/FFN amplify only
+  - P35 post-flip contaminated (different token fed) — secondary
+  - AB: DEEP2_BATCHED_PREFILL=0 → CPU_TOK32 EXACT == GPU_32 == LLAMA_FAOFF_32
+  Root: CPU batched prefill attends F32 within chunk then seals F16; GPU
+  (HOST_KV_HANDOFF) + llama FA-off are tokenwise. Residual seeds tip26.
+
+FIX=src/deep2/Deep2Engine.cpp enableBatchedPrefill(false) default
+  Env DEEP2_BATCHED_PREFILL=1 retains ubatch experiment path.
+  SPV untouched. Q4K act untouched. tip17 GPU==llama HOLD.
+
+REMEASURE (NEW EXE 80EFEE9B only):
+  CONT16 tip0..15 CPU=GPU=seal tip9=821 HOLD THREE_WAY_CONT16=1
+  CPU_32=GPU_32=LLAMA_FAOFF_32 EXACT
+  FIRST_MIS_GPU_CPU=@-1 FIRST_MIS_CPU_LLAMA=@-1 FIRST_MIS_GPU_LLAMA=@-1
+  EXACT32=1 THREE_WAY_CONT32=1 RC2_05_PASS=1 (token match only)
+  CERTIFIED=0 PROMOTE=0 TIP_CLIMB=HOLD (do not invent promote)
+
+NEXT=no tip9/tip17/FA/Q4K reopen; no promote; DEVICE_WO_OPEN held

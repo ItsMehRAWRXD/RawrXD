@@ -1,0 +1,11 @@
+load_backend: loaded RPC backend from G:\~dev\llama-direct\vulkan\ggml-rpc.dll
+ggml_vulkan: Found 3 Vulkan devices:
+ggml_vulkan: 0 = AMD Radeon AI PRO R9700 (AMD proprietary driver) | uma: 0 | fp16: 1 | bf16: 1 | warp size: 64 | shared memory: 32768 | int dot: 1 | matrix cores: KHR_coopmat
+ggml_vulkan: 1 = AMD Radeon(TM) Graphics (AMD proprietary driver) | uma: 1 | fp16: 1 | bf16: 0 | warp size: 32 | shared memory: 32768 | int dot: 1 | matrix cores: none
+ggml_vulkan: 2 = AMD Radeon RX 7800 XT (AMD proprietary driver) | uma: 0 | fp16: 1 | bf16: 1 | warp size: 64 | shared memory: 32768 | int dot: 1 | matrix cores: KHR_coopmat
+load_backend: loaded Vulkan backend from G:\~dev\llama-direct\vulkan\ggml-vulkan.dll
+load_backend: loaded CPU backend from G:\~dev\llama-direct\vulkan\ggml-cpu-zen4.dll
+llama_memory_breakdown_print: | memory breakdown [MiB]     | total    free      self    model   context   compute    unaccounted |
+llama_memory_breakdown_print: |   - Vulkan0 (AI PRO R9700) | 32624 = 31144 + (   483 =    304 +       0 +     178) +         996 |
+llama_memory_breakdown_print: |   - Vulkan2 (RX 7800 XT)   | 16368 = 14277 + (  1085 =    918 +       0 +     167) +        1004 |
+llama_memory_breakdown_print: |   - Host                   |                  591665 = 591530 +      16 +     118                |

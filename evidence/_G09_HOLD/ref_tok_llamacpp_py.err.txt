@@ -1,0 +1,23 @@
+Traceback (most recent call last):
+  File "C:\Users\Garrett\AppData\Local\Programs\Python\Python313\Lib\site-packages\llama_cpp\_ctypes_extensions.py", line 102, in load_shared_library
+    return ctypes.CDLL(str(lib_path), **cdll_args)  # type: ignore
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Garrett\AppData\Local\Programs\Python\Python313\Lib\ctypes\__init__.py", line 361, in __init__
+    self._handle = self._load_library(name, mode, handle, winmode)
+                   ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Garrett\AppData\Local\Programs\Python\Python313\Lib\ctypes\__init__.py", line 379, in _load_library
+    return _LoadLibrary(self._name, winmode)
+OSError: [WinError 127] The specified procedure could not be found
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "F:\rawrxd\evidence\G09_KIMI_K2_INDEP_PARITY_20261113\tok_vocab_only.py", line 3, in <module>
+    from llama_cpp import Llama
+  File "C:\Users\Garrett\AppData\Local\Programs\Python\Python313\Lib\site-packages\llama_cpp\__init__.py", line 1, in <module>
+    from .llama_cpp import *
+  File "C:\Users\Garrett\AppData\Local\Programs\Python\Python313\Lib\site-packages\llama_cpp\llama_cpp.py", line 43, in <module>
+    _lib = load_shared_library(_lib_base_name, _base_path)
+  File "C:\Users\Garrett\AppData\Local\Programs\Python\Python313\Lib\site-packages\llama_cpp\_ctypes_extensions.py", line 104, in load_shared_library
+    raise RuntimeError(f"Failed to load shared library '{lib_path}': {e}")
+RuntimeError: Failed to load shared library 'C:\Users\Garrett\AppData\Local\Programs\Python\Python313\Lib\site-packages\llama_cpp\lib\llama.dll': [WinError 127] The specified procedure could not be found

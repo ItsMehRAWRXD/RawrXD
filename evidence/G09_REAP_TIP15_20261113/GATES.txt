@@ -1,0 +1,66 @@
+G09_REAP_TIP15 GATES 20261113
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD CROSS_SHA_CREDIT=0
+TIP15_LANDED_SHA=80a4cf6551f37a353b3acb4031a5abba32b3be50
+TIP16_INVENTORY_SHA=ebef170ebd
+LIVE_SMOKE_EXE_SHA256=ECB45BC9D80FD8D303A733D2F9DA5EDCC1DF62EFC3065478A6539E8A5CF5E792
+LAWS=SOURCE_WIRED!=RUNTIME_REACHED!=TOKEN_SURVIVED!=PERFORMANCE_PASS; NOT_RUN!=PASS
+ORIGINAL_GGUF_INTACT=1
+19.4GB=PROXY_ONLY (see ACCOUNTING_RECONCILE.txt)
+
+## Disposition table
+
+GATE | DISPOSITION | STATUS | NOTES
+-----|-------------|--------|------
+1 Complete expert-byte inventory | MEASURED | CLOSED | 13-shard census; Tip15 19.4GB/149/26.9B reconciled as PROXY_ONLY
+2 Calibration-based selection | NOT_RUN | SOURCE_WIRED | RAWR_REAP_CALIBRATION + ReapPhysicalReduceCalib; missing measured ranks
+3 Streaming correctness | MEASURED | RUNTIME_REACHED | retain=8; ROUTE_OK=480 DENIED=0; ACQUIRE_OK=480 DENIED=0; TOPK_MISMATCH=0; TOKENS_COMMITTED=1 (this smoke); prior G09 also TOKENS=2
+4 Reduced-model export sidecar | NOT_RUN | SOURCE_WIRED | transformMoEGGUF admission BLOCKED; missing calib+parity manifest; ORIGINAL intact
+5 Quality / reference validation | NOT_RUN | OPEN | deterministic prompts vs full model not run; CERTIFIED=0
+
+## Gate 1 detail
+ORIGINAL_EXPERT_TENSOR_BYTES=612907352064 MEASURED
+SHARED_KEEP_BYTES=8330889216 MEASURED
+RETAINED_EXPERT_BYTES(retain8)=12768902400 MEASURED
+PRUNED_EXPERT_BYTES(retain8)=600138448896 MEASURED
+P_REAP(retain8)=21099792384 MEASURED PROXY_PLAN_SCOPE
+EVIDENCE=ACCOUNTING_RECONCILE.txt; tip15_gates_stream.json; tip16 GATE1_FULL_INVENTORY.json
+
+## Gate 2 detail
+SURFACE=RAWR_REAP_CALIBRATION env -> TryLoadCalibrationRanks
+MISSING_INPUT=calibration file with ordered expert importance ranks (>= retained ids)
+SELECTION_FALLBACK=BUDGET_UNIFORM_UNCERTIFIED
+BANK_REMAP_OF_CALIBRATED_IDS=NEXT_GATE (ranks load != CALIBRATED policy claim)
+
+## Gate 3 detail
+RECEIPT=F:\rawrxd\evidence\G09_REAP_TIP15_20261113\tip15_gates_stream.json
+CMD=rawr run <kimi-00001> --reap 30GB/8 -p Hello --max-tokens 1
+EXIT=0
+FREE_PHYSICAL_MEMORY≈40 GiB at run (prior 0.27 GiB gate cleared)
+stream_correctness.PASS=true
+TOKENS_COMMITTED=1 MEASURED (this run); G09 DISPOSITION also locks TOKENS_COMMITTED_8=2
+CROSS_SHA_NOTE=G09 Tip14 EXE SHAs remain separate; this smoke EXE=ECB45BC9
+
+## Gate 4 detail
+CMD=rawr-reap reap ... --output-model sidecar_out (no --calibration / no --authorize-rewrite)
+EXIT=4 status=BLOCKED
+reason=REAP_REWRITE_NOT_AUTHORIZED_BY_REFERENCE_PARITY
+MISSING_INPUT=calibration_complete + referenceParity + authorize-rewrite admission
+REAP_MODEL_SHA256=NOT_RUN
+PHYSICAL_REPACK=0
+SHARD1_BYTES_UNCHANGED=46304135840 MEASURED
+SURFACE_ALSO=RAWR_REAP_EXPORT_DIR + RAWR_REAP_SELECTION_MANIFEST on stream path (fail-closed)
+
+## Gate 5 detail
+MISSING_INPUT=deterministic prompt suite vs full-model reference on retained set
+PARITY_NOT_REQUIRED=1
+QUALITY_RETENTION=NOT_MEASURED
+PROMOTE=0
+
+## Summary
+GATE1=MEASURED
+GATE2=NOT_RUN
+GATE3=MEASURED
+GATE4=NOT_RUN
+GATE5=NOT_RUN
+PROMOTE=0
+TIP_CLIMB=HOLD

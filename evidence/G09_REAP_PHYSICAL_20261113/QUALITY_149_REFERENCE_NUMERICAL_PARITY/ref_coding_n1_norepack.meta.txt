@@ -1,0 +1,6 @@
+START=2026-11-13T08:01:52.8365948-05:00
+CLI=F:\OllamaModels\llama.cpp\llama-cli.exe
+ARGS=-nr -ngl 0 --no-warmup -n 1 --temp 0 -c 512
+PROMPT=coding_quality_149
+PID=38824
+EXIT= END=2026-11-13T08:01:53.4121221-05:00

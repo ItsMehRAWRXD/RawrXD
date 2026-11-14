@@ -1,0 +1,30 @@
+BATCH10 FIRST_OP beyond Linear = FLASH_ATTN (not ubatch/Linear)
+ASOF=2026-11-12T21:35:00-05:00
+EXE_SHA256=E6A387C3272E4B0A3E1EC44FE96DB7B2DEDE5E4CB4B3E0E6108620F6DA7452B7
+CROSS_SHA_CREDIT=0 (live remasure this EXE only)
+
+LLAMA CPU A/B (tmp_llama-cpp-cpu, -ngl 0, same prompt):
+  FA-off ub1  -> tip14=15233 'processed' 
+  FA-off ub9  -> tip14=15233 'processed'
+  FA-off ub512-> tip14=15233 'processed'
+  FA-on  ub9  -> tip14=29213 'decoded'
+PRIOR ub9 receipt had GPU offload + flash_attn=auto — CONTAMINATED as 'ubatch' attribution.
+
+LLAMA_CPU_FAOFF_16=
+576,23192,16895,63762,374,279,2790,1372,315,821,27035,429,646,387,15233,553
+LLAMA_FAON_16 (old fixture tip14)=
+576,23192,16895,63762,374,279,2790,1372,315,821,27035,429,646,387,29213,323
+ENG_CPU_16 (2nd gen)=
+576,23192,16895,63762,374,279,2790,1372,315,821,27035,429,646,387,15233,553
+
+vs_FAOFF EXACT16=1 tip2=16895 tip14=15233
+vs_FAON  FIRST_MIS=@14 EXACT16=0
+batchedMatMulCount=196
+PREFILL_BATCHED=1 prompt=9 chunk=9
+ROPE=NEOX storeKvRoundTrip=F16 SPV_TOUCHED=0
+
+FIRST_OP_BEYOND_LINEAR=FLASH_ATTN
+  (llama classic softmax attn = Engine; FA path flips tip14 near-tie)
+NO_ENGINE_FIX (blind FA/SPIR-V forbidden; dump proves FA not Linear residual)
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD DO_NOT_REOPEN_Q4K_ACT=1
+NEXT=optional FA host path only if product requires FA-on basin; else treat FA-off as CPU authority

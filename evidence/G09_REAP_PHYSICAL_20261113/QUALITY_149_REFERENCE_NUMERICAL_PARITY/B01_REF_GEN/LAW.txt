@@ -1,0 +1,11 @@
+B01_REF_GEN
+PROMOTE=0 CERTIFIED=0 CROSS_SHA=0
+GATE=QUALITY_149_REFERENCE_NUMERICAL_PARITY
+REF_CLI=G:\~dev\llama-direct\vulkan\llama-cli.exe
+REF_CLI_SHA256=F7CDB198DA9DFC8EE9490653A91EF0AA4E7F5C502FB0294C1398ACDDF408D772
+REF_BUILD=b8352-d23355afc
+MODEL=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+ARCH=deepseek2 experts=384 used=8 layers=61 quant=Q4_K_M
+ACCEPTANCE=reference generation executes on full topology (n_expert=384)
+PLAN=noninteractive Hi/-n2 --no-repack -cmoe -ngl 4 -mg 0 --temp 0 --seed 1
+NOTE=Do not alter REAP heuristics. Weights unmodified.

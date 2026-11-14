@@ -344,3 +344,23 @@ STDOUT_LINE F:\rawrxd\evidence\FULL_FEATURE_ONESHOT_001\fixtures\broken_multi.cp
 STDOUT_LINE [RAWRXD_PROBLEMS_FIXTURE_RESULT] DONE
 PROCESS_EXIT pid=135660 exit=0 disposition=success transport=1 stdout_bytes=886 stderr_bytes=0
 BUILD_RESULT=success
+PROCESS_EXIT pid=21328 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=2044 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=43668 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=27204 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=30584 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=27212 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=40668 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=36692 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=17796 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=15440 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success

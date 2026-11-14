@@ -1,0 +1,3 @@
+load_backend: loaded RPC backend from F:\OllamaModels\llama.cpp\ggml-rpc.dll
+load_backend: loaded CPU backend from F:\OllamaModels\llama.cpp\ggml-cpu-icelake.dll
+error: invalid argument: a

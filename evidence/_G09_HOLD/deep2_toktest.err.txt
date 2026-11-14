@@ -1,0 +1,8 @@
+[MOE_KEYS_DIAG] Scanning 59 metadata keys for expert/moe keys
+[MOE_KEYS_DIAG]   deepseek2.expert_count = 384
+[MOE_KEYS_DIAG]   deepseek2.expert_feed_forward_length = 2048
+[MOE_KEYS_DIAG]   deepseek2.expert_gating_func = 2
+[MOE_KEYS_DIAG]   deepseek2.expert_shared_count = 1
+[MOE_KEYS_DIAG]   deepseek2.expert_used_count = 8
+[MOE_KEYS_DIAG]   deepseek2.expert_weights_norm = 1
+[MOE_KEYS_DIAG]   deepseek2.expert_weights_scale = 2.827
