@@ -1,0 +1,345 @@
+2026-11-13 22:30:06 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap begin (no startup scan/index)
+2026-11-13 22:30:06 [INFO] [RuntimeSurface] [RawrXD::Quant] Layout Legend: Q4S (Signed 4-bit): UI '-4bit', Wire: val+8, Range [-8,7]. Q6S (Signed 6-bit): UI '-6bit', Wire: val+32, Range [-32,31]. Q4U/Q6U: Standard Unsigned Mapping.
+2026-11-13 22:30:06 [INFO] [RuntimeSurface] [CompressedPoolBudget] budget_bytes=0
+2026-11-13 22:30:06 [INFO] [RuntimeSurface] [ModularModelLoader] resident layer budget=0
+2026-11-13 22:30:06 [INFO] [RuntimeSurface] [RuntimeSurface] llama.cpp/exllamaV2 parity register entries=12
+2026-11-13 22:30:06 [INFO] [RuntimeSurface] [RuntimeSurface] four-lane gate ready (max 4 of 5 lanes unless explicit module)
+2026-11-13 22:30:06 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap complete
+RawrXD Headless IDE initializing...
+Loading model: G:\~dev\rawrxd\models\tinyllama.gguf
+WEIGHT_BUDGET_INPUT=2048
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=2048
+WEIGHT_BUDGET_BYTES=2147483648
+WEIGHT_BUDGET_SOURCE=ENV
+[Deep2Engine] Loading model from: G:\~dev\rawrxd\models\tinyllama.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Multi-shard detected: NO (1 files in G:\~dev\rawrxd\models)
+[Deep2Engine] REVERSE_HOTPATCH=OFF ? raw GGUF load (opt-in via RAWRXD_REVERSE_HOTPATCH=1)
+[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=PASS arch=llama L=22 H=2048 FFN=5632 heads=32 kv=4 hd=64 ctx=2048 ropeBase=10000 ropeDim=64
+[Deep2Engine] AUTHORITY_LADDER=DEFER_UNTIL_RUNTIME_RECEIPT
+[Deep2Engine] GGUF architecture: 'llama'  hidden=2048 layers=22 heads=32 kvHeads=4 inter=5632 vocab=32000
+[Deep2Engine] Tokenizer loaded: vocab=32000 bos=1 eos=2 (Spm::encode)
+[ResidencyManager] Initialized: maxResidentBytes=8589934592, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=8192 MB
+[ResidencyManager] this=000002143FB76C70  Registered 'output.weight': shard=0 offset=1709440 bytes=53760000  |  registry_size=1  registeredBytes=53760000  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=000002143FB76C70  Registered 'blk.18.attn_q.weight': shard=0 offset=377767296 bytes=2359296  |  registry_size=100  registeredBytes=378417152  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=000002143FB76C70  Registered 'blk.9.attn_v.weight': shard=0 offset=668349824 bytes=430080  |  registry_size=200  registeredBytes=667070464  zeroOffset=0  maxResidentBytes=8589934592
+RMV_MOUNT_001
+TENSORS_DISCOVERED=201
+TENSORS_ADDRESSED=201
+TENSORS_REGISTERED=201
+INVALID_SHARD=0
+INVALID_RANGE=0
+OVERFLOW_RANGE=0
+ZERO_SIZE=0
+UNADDRESSED=0
+RMV_MOUNT_001=PASS
+[Deep2Engine] ResidencyManager: this=000002143FB76C70  registered=201 tensors  bytes=667078656  max=8589934592
+[RMV_MOUNT_001]=PASS
+[Deep2Engine] AUTHORITY_LADDER=BLOCKED
+BLOCKED_AT=PROVENANCE_MISMATCH
+BLOCKED_OWNER=MODEL_PROVENANCE
+MODEL_OPEN=PASS
+PROMOTE=0
+[Deep2Engine] AUTHORITY_LADDER=SESSION_SEAL_ONLY provenance_blocks_promote=1 schema=201
+[ThreadPool] Initializing with 32 threads...
+[ThreadPool] Initialized 32 worker threads
+[ThreadPool] Reinitializing with 32 threads...
+[ThreadPool] Reinitialized 32 worker threads
+[Deep2Engine] ThreadPool (loadModel): 32 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF7EDA022D0 dequant=00007FF7ED9FF600 GetGEMV(12)=00007FF7EDA022D0 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 22 GEMV kernels, 22 dequant kernels
+[KVCache] Lazy pages: layers=22 page=8 virtualMax=2048 heads=4 dim=64
+[KVCache] HOT_BYTES=360448 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] Model loaded successfully (201 tensors)
+[Deep2Engine] ENHANCEMENT STACK: ON
+DEEP2_DEVICE_COUNT_DETECTED=3
+DEEP2_DEVICE_COUNT_OPENED=1
+DEEP2_COMPUTE_BACKEND=GPU
+DEEP2_EXEC_PATH=SINGLE_GPU
+DEEP2_EXEC_MODE=1
+DEEP2_GPU_POLICY=2
+DEEP2_PLAN_REASON=auto_best_compute
+DEEP2_PRIMARY_INDEX=0
+DEEP2_PRIMARY_STABLE_ID=1002:7551:0000000000016A19
+DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_VENDOR=AMD
+DEEP2_DEVICE_0_STABLE_ID=1002:7551:0000000000016A19
+DEEP2_DEVICE_0_VRAM_BYTES=34057322496
+DEEP2_DEVICE_0_SCORE=133
+DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
+DEEP2_DEVICE_1_NAME=AMD Radeon(TM) Graphics
+DEEP2_DEVICE_1_VENDOR=AMD
+DEEP2_DEVICE_1_STABLE_ID=1002:13C0:000000000001C2AC
+DEEP2_DEVICE_1_VRAM_BYTES=2119970816
+DEEP2_DEVICE_1_SCORE=101
+DEEP2_DEVICE_1_DUTY=DETECTED/UNUSED
+DEEP2_DEVICE_2_NAME=AMD Radeon RX 7800 XT
+DEEP2_DEVICE_2_VENDOR=AMD
+DEEP2_DEVICE_2_STABLE_ID=1002:747E:000000000001969F
+DEEP2_DEVICE_2_VRAM_BYTES=16962633728
+DEEP2_DEVICE_2_SCORE=116
+DEEP2_DEVICE_2_DUTY=DETECTED/UNUSED
+[VulkanCompute] DETECTED phys[0] type=2 AMD Radeon AI PRO R9700
+[VulkanCompute] DETECTED phys[1] type=2 Microsoft Direct3D12 (AMD Radeon AI PRO R9700)
+[VulkanCompute] SKIP_WARP_ICD phys[1] Microsoft Direct3D12 (AMD Radeon AI PRO R9700)
+[VulkanCompute] DETECTED phys[2] type=1 AMD Radeon(TM) Graphics
+[VulkanCompute] DETECTED phys[3] type=1 Microsoft Direct3D12 (AMD Radeon(TM) Graphics)
+[VulkanCompute] SKIP_WARP_ICD phys[3] Microsoft Direct3D12 (AMD Radeon(TM) Graphics)
+[VulkanCompute] DETECTED phys[4] type=2 AMD Radeon RX 7800 XT
+[VulkanCompute] DETECTED phys[5] type=2 Microsoft Direct3D12 (AMD Radeon RX 7800 XT)
+[VulkanCompute] SKIP_WARP_ICD phys[5] Microsoft Direct3D12 (AMD Radeon RX 7800 XT)
+[VulkanCompute] DETECTED phys[6] type=4 Microsoft Direct3D12 (Microsoft Basic Render Driver)
+[VulkanCompute] SKIP_WARP_ICD phys[6] Microsoft Direct3D12 (Microsoft Basic Render Driver)
+[VulkanCompute] OPEN_ONE AMD Radeon AI PRO R9700 (others unused)
+[VulkanCompute] QUEUES compute=0 transfer=1 dual=1
+[VulkanCompute] FREETOKEN_STICK_RUB transfer_q=1 waw_ready_gate=1 helpframe_nway=4
+[Deep2Engine] Vulkan single-GPU open: AMD Radeon AI PRO R9700 (needle=AMD Radeon AI PRO R9700)
+LIVE_GPU0=AMD Radeon AI PRO R9700
+LIVE_GPU1=AMD Radeon RX 7800 XT
+[Deep2Engine] BATCH2_SSVK_PACKED_DUAL_OPEN=1
+[Deep2Engine] BATCH2_SSVK_PACKED_DUAL_BOUND=1
+[Deep2Engine] BIND16_SSVK_PRODUCT_BOUND=1
+ELASTIC_DYNAMIC warm=2304MB staged=288MB hot=4608MB la=1 ramAvail=33365MB vram=32479MB L=22 pressure=0
+[ElasticResidencyManager] PASSIVE vulkan/DualStick (no scheduler, no GhostCache)
+[ElasticResidencyManager] Initialized: warmCompressed=2304 MB, warmStaged=288 MB, hot=4608 MB, lookahead=1
+[Deep2Engine] ElasticResidencyManager DYNAMIC warm=2304 staged=288 hot=4608 la=1
+[Deep2Engine] ElasticResidencyManager: late-registered model tensors
+[Deep2Engine] CycloneScheduler armed for live generate
+[Deep2Engine] Residency telemetry: ENABLED
+[Deep2Engine] Medusa speculative decoding: ENABLED
+[Deep2Engine] NU fused packing: ENABLED
+[Deep2Engine] Warmup scheduler: ENABLED
+[Deep2Engine] Compressed KV cache: ENABLED (Q8_0)
+[Deep2Engine] NVMe streaming: ENABLED
+[Deep2Engine] Sliding window: ENABLED (size=4096)
+[Deep2Engine] Chamber (SM0-DSP) initialized
+[Deep2Engine] Chamber: ENABLED
+[Deep2Engine] PlasmaGovernor initialized
+[Deep2Engine] PlasmaGovernor: ENABLED
+[Deep2Engine] SovereignOutOfCoreRuntime initialized (8GB RAM / 32GB VRAM)
+[Deep2Engine] SovereignOutOfCoreRuntime: ENABLED
+[Deep2Engine] ToroidalKVCache initialized: 2048 tokens, 22 layers, 32 heads, 64 dim
+[Deep2Engine] ToroidalKVCache: ENABLED
+[MARS] Initializing controller...
+[VRAMManager] Initialized: GPU0=31.86 GB, GPU1=16.00 GB
+[DualGPUBackend] Initializing dual-GPU queues...
+[DualGPUBackend] Queues ready
+[MARS] Controller ready: GPU0=31.86 GB, GPU1=16.00 GB
+[Deep2Engine] MARS enabled: GPU0=31.86 GB, GPU1=16.00 GB
+KEN_MARS_ACTIVE=1 budget_env=2048
+[VRAMManager] Allocated 'token_embd.weight' (36864000 bytes) on GPU 0
+[DualGPUBackend] Worker 0 started
+[DualGPUBackend] Worker 1 started
+[VRAMManager] Evicted 'token_embd.weight' (36864000 bytes) from GPU 0 to host
+[VRAMManager] Allocated 'output.weight' (53760000 bytes) on GPU 0
+[VRAMManager] Allocated 'output_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.attn_v.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.ffn_down.weight' (9461760 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.attn_v.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.ffn_down.weight' (9461760 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.attn_v.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.ffn_down.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.attn_v.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.ffn_down.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.attn_v.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.ffn_down.weight' (9461760 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.attn_v.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.ffn_down.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.attn_v.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.ffn_down.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.attn_v.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.ffn_down.weight' (9461760 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.attn_v.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.ffn_down.weight' (9461760 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.attn_v.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.ffn_down.weight' (9461760 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.attn_v.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.ffn_down.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.attn_v.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.ffn_down.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.attn_v.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.ffn_down.weight' (9461760 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.attn_v.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.ffn_down.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.attn_v.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.ffn_down.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.attn_v.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.ffn_down.weight' (9461760 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.attn_v.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.ffn_down.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.attn_v.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.ffn_down.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.attn_v.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.ffn_down.weight' (9461760 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.attn_v.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.ffn_down.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 
