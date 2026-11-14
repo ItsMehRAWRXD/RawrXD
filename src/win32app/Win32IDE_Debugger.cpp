@@ -156,19 +156,19 @@ void Win32IDE::createDebuggerUI()
     tie.mask = TCIF_TEXT;
     
     tie.pszText = const_cast<char*>("Breakpoints");
-    TabCtrl_InsertItem(m_hwndDebuggerTabs, 0, &tie);
+    SendMessageA(m_hwndDebuggerTabs, TCM_INSERTITEMA, 0, reinterpret_cast<LPARAM>(&tie));
     
     tie.pszText = const_cast<char*>("Watch");
-    TabCtrl_InsertItem(m_hwndDebuggerTabs, 1, &tie);
+    SendMessageA(m_hwndDebuggerTabs, TCM_INSERTITEMA, 1, reinterpret_cast<LPARAM>(&tie));
     
     tie.pszText = const_cast<char*>("Variables");
-    TabCtrl_InsertItem(m_hwndDebuggerTabs, 2, &tie);
+    SendMessageA(m_hwndDebuggerTabs, TCM_INSERTITEMA, 2, reinterpret_cast<LPARAM>(&tie));
     
     tie.pszText = const_cast<char*>("Stack Trace");
-    TabCtrl_InsertItem(m_hwndDebuggerTabs, 3, &tie);
+    SendMessageA(m_hwndDebuggerTabs, TCM_INSERTITEMA, 3, reinterpret_cast<LPARAM>(&tie));
     
     tie.pszText = const_cast<char*>("Memory");
-    TabCtrl_InsertItem(m_hwndDebuggerTabs, 4, &tie);
+    SendMessageA(m_hwndDebuggerTabs, TCM_INSERTITEMA, 4, reinterpret_cast<LPARAM>(&tie));
 
     // Create tab content windows
     m_hwndDebuggerBreakpoints = CreateWindowExA(

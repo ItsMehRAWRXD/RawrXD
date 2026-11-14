@@ -4773,7 +4773,11 @@ void Win32IDE::createOutputTabs()
 
     for (int i = 0; i < defCount; ++i) {
         TCITEMA tie{}; tie.mask = TCIF_TEXT; tie.pszText = const_cast<char*>(defs[i].text);
-        TabCtrl_InsertItem(m_hwndOutputTabs, i, &tie);
+        // TCM_INSERTITEMA (ANSI) — TabCtrl_InsertItem maps to the W variant under
+        // UNICODE, which would reinterpret this TCITEMA/pszText as UTF-16 and
+        // render the labels as CJK mojibake.
+        SendMessageA(m_hwndOutputTabs, TCM_INSERTITEMA, static_cast<WPARAM>(i),
+                     reinterpret_cast<LPARAM>(&tie));
 
         HWND hEdit = CreateWindowExA(WS_EX_CLIENTEDGE, RICHEDIT_CLASSA, "",
             WS_CHILD | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY,
@@ -4800,7 +4804,8 @@ void Win32IDE::createOutputTabs()
     TCITEMA powerShellTab{};
     powerShellTab.mask = TCIF_TEXT;
     powerShellTab.pszText = const_cast<char*>("PowerShell");
-    TabCtrl_InsertItem(m_hwndOutputTabs, defCount, &powerShellTab);
+    SendMessageA(m_hwndOutputTabs, TCM_INSERTITEMA, static_cast<WPARAM>(defCount),
+                 reinterpret_cast<LPARAM>(&powerShellTab));
     m_activeOutputTab = "Output";
     appendToOutput("Output ready. Select a channel to view build, tool, and runtime messages.\r\n",
                    "Output", OutputSeverity::Info);
@@ -8617,7 +8622,9 @@ void Win32IDE::updateChatSessionTabs()
             TCITEMA item{};
             item.mask = TCIF_TEXT;
             item.pszText = const_cast<char*>(session.label.c_str());
-            TabCtrl_InsertItem(m_hwndChatSessionTabs, static_cast<int>(i), &item);
+            // ANSI insert — see TCM_INSERTITEMA note in createOutputPanel().
+            SendMessageA(m_hwndChatSessionTabs, TCM_INSERTITEMA, static_cast<WPARAM>(i),
+                         reinterpret_cast<LPARAM>(&item));
         }
         if (m_activeChatSession >= 0 &&
             m_activeChatSession < static_cast<int>(m_chatSessions.size())) {

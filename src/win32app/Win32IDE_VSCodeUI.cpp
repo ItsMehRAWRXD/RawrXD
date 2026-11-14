@@ -653,14 +653,17 @@ void Win32IDE::createPanel(HWND hwndParent)
     
     // Add tabs: Terminal, Output, Problems, Debug Console
     TCITEMA tie = { TCIF_TEXT };
+    // TCM_INSERTITEMA (ANSI): the tab control is WC_TABCONTROLA and tie is
+    // TCITEMA. TabCtrl_InsertItem maps to the W variant under UNICODE and would
+    // read the narrow label bytes as UTF-16, producing CJK mojibake.
     tie.pszText = const_cast<char*>("TERMINAL");
-    TabCtrl_InsertItem(m_hwndPanelTabs, 0, &tie);
+    SendMessageA(m_hwndPanelTabs, TCM_INSERTITEMA, 0, reinterpret_cast<LPARAM>(&tie));
     tie.pszText = const_cast<char*>("OUTPUT");
-    TabCtrl_InsertItem(m_hwndPanelTabs, 1, &tie);
+    SendMessageA(m_hwndPanelTabs, TCM_INSERTITEMA, 1, reinterpret_cast<LPARAM>(&tie));
     tie.pszText = const_cast<char*>("PROBLEMS");
-    TabCtrl_InsertItem(m_hwndPanelTabs, 2, &tie);
+    SendMessageA(m_hwndPanelTabs, TCM_INSERTITEMA, 2, reinterpret_cast<LPARAM>(&tie));
     tie.pszText = const_cast<char*>("DEBUG CONSOLE");
-    TabCtrl_InsertItem(m_hwndPanelTabs, 3, &tie);
+    SendMessageA(m_hwndPanelTabs, TCM_INSERTITEMA, 3, reinterpret_cast<LPARAM>(&tie));
     
     // Create panel toolbar (right side)
     m_hwndPanelToolbar = CreateWindowExA(
@@ -1055,7 +1058,8 @@ void Win32IDE::updatePanelContent()
     
     TCITEMA tie = { TCIF_TEXT };
     tie.pszText = tabTextHeap;
-    TabCtrl_SetItem(m_hwndPanelTabs, 2, &tie);
+    // ANSI set-item — see TCM_INSERTITEMA note above.
+    SendMessageA(m_hwndPanelTabs, TCM_SETITEMA, 2, reinterpret_cast<LPARAM>(&tie));
 }
 
 #if 0 // DUP_addProblem BATCH17_DUP_DISABLE
