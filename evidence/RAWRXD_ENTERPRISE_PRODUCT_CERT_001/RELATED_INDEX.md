@@ -126,3 +126,4 @@ Update this index when new RELATED receipts land. Never auto-PASS.
 | BR_TIP_CONPTY_FLAKE_OPEN_R95 | G05-05 G06-05 | tip ConPTY flake residual SEAL=OPEN (superseded first-stop by R96); private R94 PASS held; ≠ CERT PASS |
 | BR_TIP_CONPTY_FIRST_STOP_CLOSED_R96 / G05-05_G06-05 tip R96 | G05-05 G06-05 | tip first-stop CLOSED STOP 10/10 host F661; tail residual OPEN 1/10; RELATED≠CERT PASS |
 | BR_M4_SETUPWIZARD_HOST_R96 | G12-02 G12-03 | SetupWizard host install+rollback PASS; CLEAN_VM=0 NOT_RUN; ≠ CERT PASS |
+| PERF_MOVES_1_35_IMMEDIATE_001 | — | §§1–35 disposition under GATE_STOP=1; SEARCH_BASELINE 4.329 INSTALLED; epoch measure BLOCKED; RELATED≠PASS; PROMOTE=0; 0/128 unchanged |
