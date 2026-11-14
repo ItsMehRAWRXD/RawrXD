@@ -13,11 +13,11 @@ NOT_RUN!=PASS
    STATE=peer tip_land_c36 RUNTIME_REACHED=1; controlling tip C36_LSP_STAGE=0; source instrument ABSENT
 3. GPU/reference numerical divergence
    MAP→ C02 stage parity · C03 numeric under perf opts · C16 inference-to-tool workflow
-   STATE=FA006 PRE_O_0@pos1 CLOSED; ATTN_PRE_O_1@pos1 OPEN; R90 barrier BLOCKED
-   ROOT=FFN_GATE_0@pos1 INPUT_ULP_CASCADE after WQ AVX (not AVX SPV routing)
-   NEXT_OWNER=ATTN_Q_WQ_AVX_ATTN_OUT_ULP_HOLD
-   NEXT_GATE=ATTN_Q_WQ_AVX_NO_FFN_NORM_ULP_CASCADE
-   BOARD=BR_ATTN_Q_WQ_FFN_GATE0_BARRIER_R90 BLOCKED≠PASS FFN_DOWN_2 REOPEN
+   STATE=CLOSE_010 PRE_O_1 CLOSED (close010 WQ); R91 BE085+ULP RELATED cascade break
+   ROOT=multi-family residual after PRE_O_1 close; R91 docs FFN_GATE ULP hold
+   NEXT_OWNER=MULTI_FAMILY_RESIDUAL_AFTER_CLOSE_010
+   NEXT_GATE=MULTI_FAMILY_RESIDUAL_AFTER_CLOSE_010
+   BOARD=BR_ATTN_Q_WQ_NO_FFN_NORM_ULP_R91 RELATED + CLOSE_010 CLOSED ≠CERT PASS
 4. ConPTY terminal-stop reliability
    MAP→ C05 ConPTY · C06 terminal HWND · C08 shell tools
    STATE=engineering residual; not checklist PASS
