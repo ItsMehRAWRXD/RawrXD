@@ -33,7 +33,8 @@ void main() {
   const uint kmask3 = 0x03030303u;
 
   uint rowOff = row * nblk * 144u;
-  // precise: disable FMA/reassoc (match gemv_q6k; GATE/UP 0-ULP vs llama)
+  // GATE/UP stock precise; FFN_DOWN (rows<cols) xd one-div (PROMOTE=0).
+  const bool downShape = pc.rows < pc.cols;
   precise float sumf = 0.0;
   precise float sums[8];
   for (uint i = 0u; i < 8u; ++i) sums[i] = 0.0;
@@ -41,22 +42,22 @@ void main() {
   for (uint b = 0u; b < nblk; ++b) {
     uint base = b * 256u;
     // quantize_row_q8_K for this 256-wide activation tile
-    // precise amax/maxv/iscale (annotate-only; SPV hash still 4548BCF1/16868).
-    // FFN_DOWN_2 MATERIAL owner = SPV Q4K×Q8K accumulate 1ULP (blk.2 down=Q4_K).
-    precise float amax = 0.0, maxv = 0.0;
+    float amax = 0.0, maxv = 0.0;
     for (uint j = 0u; j < 256u; ++j) {
-      precise float ax = abs(x[base + j]);
+      float ax = abs(x[base + j]);
       if (ax > amax) { amax = ax; maxv = x[base + j]; }
     }
-    precise float xd = 0.0;
-    precise float iscale = 0.0;
+    float xd = 0.0;
+    float iscale = 0.0;
     int q8[256];
     int bsums[16];
     for (uint j = 0u; j < 256u; ++j) q8[j] = 0;
     for (uint j = 0u; j < 16u; ++j) bsums[j] = 0;
     if (amax != 0.0) {
       iscale = -127.0 / maxv;
-      xd = 1.0 / iscale;
+      // DOWN: one-div xd (GPU 1/iscale was +1ULP vs host bitexact REF).
+      // GATE/UP keep ggml 1/iscale (FFN_ACT_2 closed on that path).
+      xd = downShape ? (-maxv / 127.0) : (1.0 / iscale);
       for (uint j = 0u; j < 256u; ++j) {
         int v = nearest_int_q8k(iscale * x[base + j]);
         q8[j] = (v > 127) ? 127 : v;
