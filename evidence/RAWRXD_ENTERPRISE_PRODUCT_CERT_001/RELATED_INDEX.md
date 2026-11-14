@@ -19,8 +19,10 @@ Historical / private-cand / partial RUNTIME — cite only. `CROSS_SHA_CREDIT=0`.
 | M4 Authenticode remasure 20261113_222135 | G12-02 | NotSigned MSI+SetupWizard; signed-cert blocker |
 | M4 CLEAN_VM | G12-03 | NOT_RUN (no hypervisor surface) |
 | FIRST_DIVERGE_001 seals | G02 G03 | remasure chain |
-| G01-01/02/03 SELF_MEASURE EVIDENCE_PARTIAL @ 3d0928e74888 | G01 | Freeze + license stub + failed CLI rebuild; ≠ PASS |
-| build_ninja/bin/rawr.exe E5F2D304… preexisting | G01-03 G01-06 | Stale binary after rebuild EXIT=2; forensics only |
+| G01-01/02/03 SELF_MEASURE EVIDENCE_PARTIAL @ 3d0928e74888 | G01 | Prior freeze; superseded by dde963941aa4 |
+| G01-01..08 SELF_MEASURE @ dde963941aa4 (BR_G01_SOURCE_INTEGRITY_R70) | G01 | 5 EVIDENCE_PARTIAL + 3 NOT_RUN; PASS=0 |
+| build_ninja/bin/rawr.exe CD84354D… preexisting | G01-03 G01-06 | Stale binary after rebuild EXIT=2; forensics only |
+
 | BR_MARS_DEDUP_LLAMA32_001 @ b61f03972e | G02 G04 | SOURCE_WIRED; remasure TOK |
 | G08_M3_ISSUE49_SOURCE_WIRE_001 | G05 G08 | useCliAgent wire; EXE remasure OPEN |
 | BR_ATTN_PRE_O_POS1_T2_KERNEL_R60 | G02 G03 | ROOT_CLEAR; CLOSED=0 |
