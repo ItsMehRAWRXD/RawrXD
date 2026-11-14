@@ -69,6 +69,25 @@ bool isBlockCountKey(const std::string& key) {
            key == "n_layer" || endsWith(key, ".n_layer");
 }
 
+bool isFfnLengthKey(const std::string& key) {
+    /* Dense + MoE expert FFN keys; applyKey prefers dense over expert. */
+    return endsWith(key, "feed_forward_length") ||
+           endsWith(key, "intermediate_size") ||
+           endsWith(key, "moe_intermediate_size");
+}
+
+bool isExpertFfnLengthKey(const std::string& key) {
+    return key.find("expert_") != std::string::npos ||
+           key.find("moe_intermediate_size") != std::string::npos;
+}
+
+bool isContextLengthKey(const std::string& key) {
+    /* YaRN: original_context_length must not clobber context_length. */
+    if (key.find("original_context_length") != std::string::npos) return false;
+    return endsWith(key, "context_length") ||
+           endsWith(key, "max_position_embeddings");
+}
+
 bool isHeadCountKey(const std::string& k) {
     if (endsWith(k, "attention.head_count_kv")) return false;
     return endsWith(k, "attention.head_count") ||

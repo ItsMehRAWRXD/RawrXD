@@ -29,11 +29,17 @@ void applyKey(Scratch& s, const std::string& key, const std::string& val) {
     else if (endsWith(key, "attention.head_count_kv") ||
              endsWith(key, "n_head_kv"))
         takeU32(s.hasKvHeads, s.kvHeads, val);
-    else if (endsWith(key, "feed_forward_length") ||
-             endsWith(key, "intermediate_size"))
-        takeU32(s.hasFfn, s.ffn, val);
-    else if (endsWith(key, "context_length") ||
-             endsWith(key, "max_position_embeddings"))
+    else if (isFfnLengthKey(key)) {
+        /* Dense FFN always wins; expert/moe only fills when dense absent
+         * (Ornith/Qwen MoE-only GGUFs have expert_feed_forward_length only). */
+        if (isExpertFfnLengthKey(key)) {
+            if (!s.hasFfn || s.ffn == 0)
+                takeU32(s.hasFfn, s.ffn, val);
+        } else {
+            takeU32(s.hasFfn, s.ffn, val);
+        }
+    }
+    else if (isContextLengthKey(key))
         takeU32(s.hasContext, s.context, val);
     else if (key.find("rms_norm_eps") != std::string::npos ||
              key.find("layer_norm_rms_epsilon") != std::string::npos ||
@@ -45,6 +51,10 @@ void applyKey(Scratch& s, const std::string& key, const std::string& val) {
     else if (endsWith(key, "rope.local.freq_base")) {
         if (!s.hasRopeBase || !(s.ropeBase > 0.f))
             takeF32(s.hasRopeBase, s.ropeBase, val);
+    } else if (endsWith(key, "rope.dimension_count_swa")) {
+        /* Laguna hybrid: SWA rope dim == attn head_dim (q/k_norm=128). */
+        if (!s.hasKeyLength || s.headDim == 0)
+            takeU32(s.hasKeyLength, s.headDim, val);
     } else if (endsWith(key, "rope.dimension_count"))
         takeU32(s.hasRopeDim, s.ropeDim, val);
     else if (endsWith(key, "rope.scaling.factor"))

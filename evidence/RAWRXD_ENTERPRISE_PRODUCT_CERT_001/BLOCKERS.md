@@ -13,6 +13,7 @@ Authority: pasted RAWRXD_ENTERPRISE_PRODUCT_CERT_001 checklist · 0/128 · HELD 
 | P0 | FINAL_NORM@pos0 | G02-04 G03-08 | R90: NOT_CLOSABLE 2.236689e+00; Apply CLOSED bitexact; cascade INPUT; TRUE_NEXT=LOGITS 3.43e-01; ≠ PASS |
 | P0 | LOGITS (post FINAL_NORM) | G02-04 G03-08 | R91: FUNCTIONAL_FAIL=1 maxAbs=3.432989e-01 ARGMAX_MATCH=1; residual-budget/ARGMAX-only; Dense HOLD ≠ invent MATCH; TRUE_NEXT=residual-budget |
 | P0 | Multi-family STREAM / M1M2 TOK | G02-08 G04-01 G06-06 | F44D053D tip-absorb R82 OPEN=1 ENTER=1 TOK=2 SEH=0 RELATED; tip RO; COMBINE R95 AB1B6B7B MF=4/4 private BOARD_PROPOSAL_ONLY (supersedes 023005C2 column); ≠ tip PASS |
+| P0 | Deep2 REAP TOK=0 (bench 05cbb704a4) | G02-08 G04-01 G04-08 | DEEP2_PASS=0: Laguna HEADS CLOSED (R99 peer 10536DB3 PASS geom; TOK=0); Qwen/Ornith/Nemotron EXIT=11 SSM-CERT-001; GLM TOK=0 heartbeat; MiniMax NOT_RUN; Ollama REAP PARTIAL; ≠ 9.7× invent |
 | P1 | C36 tip LSP RUNTIME_REACHED | G07-01 G07-04 | **NEXT_BLOCKER** tip6754 still RUNTIME_REACHED=0; COMBINE R95 AB1B6B7B C36_RUNTIME_REACHED=1 + MF=4/4 SAME_SHA; tip absorb BOARD_PROPOSAL_ONLY (SHA≠6754); CROSS_SHA=0 PROMOTE=0; ≠ tip PASS |
 | P1 | ConPTY terminal-stop reliability | G05-05 G06-05 | R94 private PASS; tip first-stop CLOSED R96 STOP 10/10 (BR_TIP_CONPTY_FIRST_STOP_CLOSED_R96); tip tail residual OPEN 1/10; ≠ CERT PASS |
 | P1 | M3 MODEL_SELECTED_TOOL / tipbound | G05-06 G08-01 | FORCE PASS; model-select=0 unk; wire SOURCE_WIRED RUNTIME=0 |
@@ -42,6 +43,6 @@ Authority: pasted RAWRXD_ENTERPRISE_PRODUCT_CERT_001 checklist · 0/128 · HELD 
 | non617F 67350F71 R78 | 1 | 0 | 0 | OPEN_FAIL STREAM_SEH RVA=0x6B0FA (superseded by R79) |
 | non617F 1EC00779 R79 | 1 | 1 | 2 | STREAM_SEH CLOSED DURABLE=1 private; tip RO RELATED ≠ CERT PASS |
 
-`NEXT_OWNER` (split): GPU `multi-family residual` (CLOSE_010 PRE_O_1 CLOSED) · R91 ULP-hold RELATED on BE085 path · product `C36_TIP_LSP_RUNTIME_REACHED` · GPU dense `residual-budget` · llama32 `TIP_ABSORB_AUTH_HOLD` · `TIP_CLIMB=HOLD`
+`NEXT_OWNER` (split): `DEEP2_REAP_TOK` (Laguna HEADS geometry + SSM-CERT opt-in path; PROMOTE=0) · GPU `multi-family residual` (CLOSE_010 RELATED) · product `C36_TIP_LSP_RUNTIME_REACHED` · `TIP_CLIMB=HOLD`
 
 PROMOTE=0 until all 128 gates PASS with independent sign-off.

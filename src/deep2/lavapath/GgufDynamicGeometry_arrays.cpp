@@ -29,8 +29,11 @@ static uint32_t rdArrElem(FILE* f, uint32_t et, bool& ok) {
 }
 
 bool isPerLayerGeomArrayKey(const std::string& key) {
-    return endsWith(key, "feed_forward_length") ||
-           endsWith(key, "intermediate_size") ||
+    /* Laguna / hybrid SWA: attention.head_count is a per-layer U32 array
+     * (e.g. 48/72 alternating). Skip left hasHeads=0 → BLOCKED_AT=HEADS.
+     * Authority = max positive (same as FFN/KV array law). */
+    return isHeadCountKey(key) ||
+           isFfnLengthKey(key) ||
            endsWith(key, "attention.head_count_kv") ||
            endsWith(key, "n_head_kv");
 }
