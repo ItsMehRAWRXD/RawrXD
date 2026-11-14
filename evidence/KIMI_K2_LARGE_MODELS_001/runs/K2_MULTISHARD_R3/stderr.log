@@ -1,0 +1,176 @@
+HEXMAG_BACKEND=MASM
+HEXMAG_LINKED=1
+HEXMAG_INIT=0
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+KEN_MARS_ACTIVE=1 DEEP2_MARS=1 HOST_DECODE=0 GPU_POLICY=MULTI GPU_DEVICE_CLASS=DISCRETE NO_TRUNCATE_NEEDLE=1 PRODUCT_STREAMER_ARM=1
+PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1
+PRODUCT_OPEN SESSION_ENTER alias="F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf"
+PRODUCT_OPEN INIT_ENTER path="F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M"
+MODEL_DIGESTION_STREAM_BEGIN=1
+MODEL_PATH=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+ARCH=deepseek2
+HIDDEN=7168 LAYERS=61 HEADS=64 KV_HEADS=1 HEAD_DIM=112 VOCAB=163840 INTERMEDIATE=18432
+SPLIT_QKV_LAYERS=0 FUSED_QKV_LAYERS=0 PROJECTOR_BLOCK_LAYERS=0 MLA_LAYERS=6 BLOCKED_LAYERS=0
+SPLIT_FFN_LAYERS=5 FUSED_FFN_LAYERS=0
+ROOT_EMBED=token_embd.weight ROOT_FINAL_NORM=output_norm.weight ROOT_LM_HEAD=output.weight
+MANIFEST_READY=1 BLOCKED_AT=NONE
+AUTHORITY_CLASS=DISCOVERY_ONLY
+PROMOTE=0
+MODEL_DIGESTION_STREAM_END=1
+MODEL_DIGESTION_STREAM_CACHE=G:\~dev\rawrxd\evidence\RAWRXD_MODEL_MANIFESTS\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf.ac7f10aa0.1dd25d7a505afe2.rmanifest.jsonl
+[ModelOpenCompat] repaired metadata: arch=0 vocab=0 hidden=0 layers=0 inter=1 heads=0 kvHeads=0
+[K2Index] shard=0 tensors=98 data_start=6917280 file_size=46304135840 path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+[K2Index] shard=1 tensors=78 data_start=5120 file_size=49211448320 path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00002-of-00013.gguf
+[K2Index] shard=2 tensors=90 data_start=5984 file_size=49548961120 path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00003-of-00013.gguf
+[K2Index] shard=3 tensors=86 data_start=5696 file_size=47810262080 path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00004-of-00013.gguf
+[K2Index] shard=4 tensors=88 data_start=5824 file_size=46366024896 path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00005-of-00013.gguf
+[K2Index] shard=5 tensors=78 data_start=5216 file_size=47758122080 path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00006-of-00013.gguf
+[K2Index] shard=6 tensors=86 data_start=5696 file_size=47810262080 path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00007-of-00013.gguf
+[K2Index] shard=7 tensors=90 data_start=5984 file_size=49548961120 path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00008-of-00013.gguf
+[K2Index] shard=8 tensors=88 data_start=5824 file_size=47819351232 path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00009-of-00013.gguf
+[K2Index] shard=9 tensors=90 data_start=5984 file_size=49548961120 path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00010-of-00013.gguf
+[K2Index] shard=10 tensors=78 data_start=5216 file_size=47758122080 path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00011-of-00013.gguf
+[K2Index] shard=11 tensors=84 data_start=5568 file_size=47533978560 path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00012-of-00013.gguf
+[K2Index] shard=12 tensors=62 data_start=4192 file_size=44226634336 path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00013-of-00013.gguf
+MULTISHARD_SHARDS_INDEXED=13/13
+MULTISHARD_TENSORS_INDEXED=1096
+MULTISHARD_DUPLICATES=0
+[K2Index] shard=0 tensors=98 data_start=6917280 file_size=46304135840 path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+[K2Index] shard=1 tensors=78 data_start=5120 file_size=49211448320 path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00002-of-00013.gguf
+[K2Index] shard=2 tensors=90 data_start=5984 file_size=49548961120 path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00003-of-00013.gguf
+[K2Index] shard=3 tensors=86 data_start=5696 file_size=47810262080 path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00004-of-00013.gguf
+[K2Index] shard=4 tensors=88 data_start=5824 file_size=46366024896 path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00005-of-00013.gguf
+[K2Index] shard=5 tensors=78 data_start=5216 file_size=47758122080 path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00006-of-00013.gguf
+[K2Index] shard=6 tensors=86 data_start=5696 file_size=47810262080 path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00007-of-00013.gguf
+[K2Index] shard=7 tensors=90 data_start=5984 file_size=49548961120 path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00008-of-00013.gguf
+[K2Index] shard=8 tensors=88 data_start=5824 file_size=47819351232 path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00009-of-00013.gguf
+[K2Index] shard=9 tensors=90 data_start=5984 file_size=49548961120 path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00010-of-00013.gguf
+[K2Index] shard=10 tensors=78 data_start=5216 file_size=47758122080 path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00011-of-00013.gguf
+[K2Index] shard=11 tensors=84 data_start=5568 file_size=47533978560 path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00012-of-00013.gguf
+[K2Index] shard=12 tensors=62 data_start=4192 file_size=44226634336 path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00013-of-00013.gguf
+MULTISHARD_SHARDS_INDEXED=13/13
+MULTISHARD_TENSORS_INDEXED=1096
+MULTISHARD_DUPLICATES=0
+K2_MLA_SCHEMA_DEFER=1 layers=61 vocab=163840
+[BUF] hidden=7168 heads=64 headDim=192 qOut=12288 headScratch=12288 kvDim=192 ffn=2048 ffnGateScratch=2048
+[MLA_ALLOC] hidden=7168 heads=64 headDim=192 qProjSize=12288 q_b=12288 kv_a=576 k_b=8192 v_b=8192
+SSM_BUF stPer=32 cvPer=28672 inner=0 state=0 NOTE=STATE_NE_HEADS
+SSM_MAMBA2_ARM=0 reason=GEO_OR_BUF
+PIN_BUDGET_SET site=DUALSTICK_BIND old=0 new=12884901888 owner=DUALSTICK_BIND moe_reserved=12884901888
+PIN_BUDGET_FINAL stick=0 mib=12288 owner=DUALSTICK_BIND resident=12884901888
+PIN_BUDGET_SET site=DUALSTICK_BIND old=0 new=12884901888 owner=DUALSTICK_BIND moe_reserved=12884901888
+PIN_BUDGET_FINAL stick=1 mib=12288 owner=DUALSTICK_BIND resident=12884901888
+PIN_BUDGET_SHRINK_BLOCKED owner=DUALSTICK_BIND old=12884901888 new=9210691584 site=ENGINE_MAX_HOT
+PRODUCT_OPEN INIT_EXIT rc=1 reason=INITIALIZE_OK
+RAW_RUN_OPEN=OK path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M gguf=1 tok=1
+PRODUCT_OPEN SESSION_EXIT ok=1
+OPEN_SEMANTIC=STREAMABLE
+OPEN_META_INDEXED=0
+OPEN_STORAGE_REACHABLE=1
+OPEN_WORKING_SET_ACQUIRABLE=0
+OPEN_WORKING_SET_ACQUIRE_LIVE=0
+OPEN_MMAP_BOUND=2100830272
+OPEN_FILE_BACKING=0
+OPEN_TENSOR_COUNT=0
+PRODUCT_OPEN_STREAMABLE=0
+NOTE=OPEN_NE_FULL_RESIDENCY; LAA_NOT_OPEN_GATE; PROMOTE=0; PROMOTE_IF=PRODUCT_OPEN_PASS&&SESSION_ENTER_PASS&&GENERATED_TOKENS>0&&TOKEN_COMMIT_PASS; MULTI_FAMILY=NEXT_INDEPENDENT_GATE
+PRODUCT_OPEN=FAIL reason=NOT_STREAMABLE meta=0 storage=1 ws=0 loaded=1
+RXOW stage=NONE br=BR_OPEN_FAILED layers=0 tensors=0 graph=0 decode0=0 note=NOT_STREAMABLE
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=0
+[LIFE] unloadModel FreeTensorData ggufResult (98 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+RXEV_SURFACE ARMED=0 DISPOSITION=NO_RUN_STATE
+RXOW stage=NONE br=BR_NO_RUN_STATE layers=0 tensors=0 graph=0 decode0=0 note=norun_unclassified
+PRODUCT_OPEN_SESSION=FAIL tensors=2 isOpen=0 DEEP2_RESIDENCY_ENTERED=0 path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+PRODUCT_OPEN_INIT_ENTER=1
+PRODUCT_OPEN_INIT_EXIT=1
+PRODUCT_OPEN_SESSION_ENTER=1
+PRODUCT_OPEN_SESSION_EXIT=1
+PRODUCT_OPEN_PE64=1
+PRODUCT_OPEN_PE_LAA=1
+PRODUCT_OPEN_VA_GT_2GB=1
+PRODUCT_OPEN_TENSOR_COUNT=2
+PRODUCT_OPEN_EMBED_PRESENT=1
+PRODUCT_OPEN_LMHEAD_PRESENT=1
+PRODUCT_OPEN_OUTPUT_PRESENT=1
+PRODUCT_OPEN_CRITICAL_TENSORS=PASS
+PRODUCT_OPEN_PASS=0
+SESSION_ENTER_PASS=1
+HEADLESS_READY=0
+HEADLESS_READY_SCOPE=PRODUCT_OPEN_ONLY
+PRODUCT_OPEN_LAA_FACT=1 NOTE=LAA_NOT_OPEN_GATE
+PROMOTE=0
+FINAL_READY_GATE=PRODUCT_OPEN_PASS&&SESSION_ENTER_PASS&&GENERATED_TOKENS>0&&TOKEN_COMMIT_PASS
+NEXT_INDEPENDENT_GATE=MULTI_FAMILY
+NOTE=TINYLLAMA_R25_PRODUCTOPEN_NE_MULTI_FAMILY
+R25_PRODUCTOPEN path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf verdict=FAIL PRODUCT_OPEN_SESSION=FAIL
+HEADLESS_LOADMODEL=FAIL path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+HEADLESS_READY=0
+[ERROR] ProductOpenSession failed (LocalOnly: no CIE dual-arm fallback)
+Headless init failed: Failed to load model (code 2)
+RXEV_SURFACE ARMED=0 DISPOSITION=NO_RUN_STATE
+RXOW stage=NONE br=BR_NO_RUN_STATE layers=0 tensors=0 graph=0 decode0=0 note=norun_unclassified
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] disableMARS
+[LIFE] shutdown cyclone before elastic
+[LIFE] elastic Shutdown early
+TD=03 KV_RELEASE_BEGIN
+TD=04 KV_RELEASE_END
+[LIFE] unloadModel
+GREEDY_DET TRACE_HASH=cbf29ce484222325 EXPERT_SEQUENCE_HASH=cbf29ce484222325 ARGMAX_STEPS=0 STICK_HASH_MODE=0
+D2_MOE_LIVE moe_ffn_enter=0 moe_place_enter=0 MOE_PLACE_CALLS=0 moe_router_calls=0 ffn_dispatch_moe=0 ffn_dispatch_dense=0 ffn_dispatch_ssm=0
+D2_MOE_LIVE experts_selected=0 experts_executed=0 parity=1 thrash_tokens=0
+D2_MOE_LIVE hits=N/A misses=N/A miss_bytes=N/A EXPERT_LOGICAL_MISS_BYTES=N/A_NOT_REACHED acquire_ok=0 acquire_fail=0 markhot=0
+D2_MOE_LIVE SHARED_EXPERT_CALLS=0 slice_layout_mismatch=0 stick_retains=0 stick_assigns=0
+D2_MOE_LIVE EXPERT_GPU_ACQUIRE=0 EXPERT_GPU_EXEC=0 HOST_GEMV_EXPERT=0
+D2_MOE_DECODE K2_MOE_LAYER_CALLS=0 MOE_PLACE_CALLS=0 EXPERTS_SELECTED=0 EXPERTS_EXECUTED=0 parity=1
+DUALSTICK_REQUESTED=1
+DUALSTICK_PLANNED=0
+DUALSTICK_ARMED=1
+DUALSTICK_ARM_COUNT=2
+DUALSTICK_ARM_ACQUIRES=2
+DUALSTICK_ARM_BYTES_WORKED=134217728
+DUALSTICK_ARM_EXEC=1
+DUALSTICK_RUNTIME_USED=0
+DUALSTICK_RUNTIME_DEVICE_COUNT=0
+DUALSTICK_FORWARD_CALLS_GPU0=0
+DUALSTICK_FORWARD_CALLS_GPU1=0
+DUALSTICK_RUNTIME_BYTES_WORKED=0
+DUALSTICK_TRUE_RUNTIME=0
+DUALSTICK_ARM_ONLY=1
+DUAL_STICK_ARMED=1
+DUAL_STICK_EXEC=0
+DUAL_STICK_ACQUIRES=2
+DUAL_STICK_CONSUMERS=2
+DUAL_STICK_OWNERSHIP_ADVANCES=2
+DUAL_STICK_BYTES_WORKED=134217728
+DUAL_STICK_EXEC_NOTE=alias_of_DUALSTICK_RUNTIME_USED
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=0
+[LIFE] unloadModel FreeTensorData ggufResult (0 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+RXEV_SURFACE ARMED=0 DISPOSITION=NO_RUN_STATE
+RXOW stage=NONE br=BR_NO_RUN_STATE layers=0 tensors=0 graph=0 decode0=0 note=norun_unclassified
+[LIFE] release MoE
+TD=05 WINDOW_RELEASE_BEGIN
+TD=06 WINDOW_RELEASE_END
+TD=07 GPU_DESTROY_BEGIN
+[LIFE] release vulkan devices
+TD=08 GPU_DESTROY_END
+[LIFE] stop telemetryController
+TD=09 MODEL_DESTROY_BEGIN
+TD=10 MODEL_DESTROY_END
+[LIFE] ~Deep2Engine END
+TD=11 CLEAN_EXIT
+[StreamEngine] Shutdown

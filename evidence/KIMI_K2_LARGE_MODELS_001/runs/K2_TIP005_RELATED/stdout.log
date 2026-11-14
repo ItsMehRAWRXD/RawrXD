@@ -1,0 +1,85 @@
+2026-11-14 12:24:17 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap begin (no startup scan/index)
+2026-11-14 12:24:17 [INFO] [RuntimeSurface] [RawrXD::Quant] Layout Legend: Q4S (Signed 4-bit): UI '-4bit', Wire: val+8, Range [-8,7]. Q6S (Signed 6-bit): UI '-6bit', Wire: val+32, Range [-32,31]. Q4U/Q6U: Standard Unsigned Mapping.
+2026-11-14 12:24:17 [INFO] [RuntimeSurface] [CompressedPoolBudget] budget_bytes=0
+2026-11-14 12:24:17 [INFO] [RuntimeSurface] [ModularModelLoader] resident layer budget=0
+2026-11-14 12:24:17 [INFO] [RuntimeSurface] [RuntimeSurface] llama.cpp/exllamaV2 parity register entries=12
+2026-11-14 12:24:17 [INFO] [RuntimeSurface] [RuntimeSurface] four-lane gate ready (max 4 of 5 lanes unless explicit module)
+2026-11-14 12:24:17 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap complete
+RawrXD Headless IDE initializing...
+[DEBUG] Session: headless-1794677057696
+[DEBUG] Version: 20.0.0-headless-enterprise
+[DEBUG] Backend manager initialized (headless) | LOCAL_ONLY_NO_OLLAMA=1 | Active: LocalGGUF [3us]
+[STATUS] backend_manager: active
+[STATUS] backend: LocalGGUF
+[DEBUG] LLM router initialized: 0/5 backends available [0us]
+[STATUS] llm_router: active
+[DEBUG] Failure detector initialized (headless) [0us]
+[STATUS] failure_detector: active
+[DEBUG] Agent history initialized (headless) [447us]
+[STATUS] agent_history: active
+[DEBUG] ASM semantic initialized (headless) [0us]
+[STATUS] asm_semantic: active
+[DEBUG] LSP client disabled in product-lean profile
+[DEBUG] Swarm init note: Distributed Swarm requires Enterprise license (feature 0x04)
+[DEBUG] Phase 11 (Distributed Swarm) initialized [16us]
+[STATUS] swarm: standby
+[DEBUG] Instructions provider disabled in product-lean profile
+Loading model: F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+[Deep2Engine] Loading model from: F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Multi-shard detected: YES (16 files in F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M)
+[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=PASS arch=deepseek2 L=61 H=7168 FFN=2048 heads=64 kv=1 hd=576 ctx=4096
+[Deep2Engine] AUTHORITY_LADDER=DEFER_UNTIL_RUNTIME_RECEIPT
+[Deep2Engine] GlobalTensorIndex built: 1096 tensors across 13 shards
+[Deep2Engine] TensorResidencyCache ready
+[Deep2Engine] GGUF architecture: 'deepseek2'  hidden=7168 layers=61 heads=64 kvHeads=1 inter=2048 vocab=163840
+[Deep2Engine] MLA detected: qLoraRank=1536 kvLoraRank=512 qkNope=128 qkRope=64 vHeadDim=128 headDim=192
+[NVMeStream] SHARD_IO bridge path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M warmed=13 (RANDOM_ACCESS)
+[Deep2Engine] NVMe lane armed via SHARD_IO (warmed=13)
+[Deep2Engine] K2 shard index open: 1096 tensors, 13 shards, arch=deepseek2 numExperts=384 expertsPerToken=8
+[Deep2Engine] K2 tokenizer loaded: vocab=163840 bos=163584 eos=163586
+[Deep2Engine] AUTHORITY_LADDER=PASS (K2_INDEX shard0)
+[Deep2Engine] loadModel=INDEX_AND_ADDRESS (F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M) ModelState=Indexed — weights not resident
+MODEL_SIZE_INDEPENDENT_LOAD=1
+RAWRXD_NO_TP=1
+QUANTIZED_STORAGE_PRESERVED=1
+FULL_MODEL_RESIDENCY_REQUIRED=0
+FULL_LAYER_RESIDENCY_REQUIRED=0
+VRAM_REQUIRED=0
+VRAM_BYTES_REQUIRED=0
+WEIGHT_RESIDENCY_BOUNDED=1
+KV_RESIDENCY_BOUNDED=1
+EXECUTION_OWNER_PER_TENSOR=1
+TENSOR_PARTITIONS=0
+CROSS_DEVICE_COLLECTIVES=0
+ALL_REDUCE_OPS=0
+ONE_TENSOR_ONE_OWNER=1
+WEIGHT_WINDOW_BYTES=0
+ACTIVATION_LIVE_BYTES=86016
+KV_HOT_BYTES=0
+SCRATCH_BYTES=28672
+WORKING_SET_BYTES=114688
+SPACE_CAPACITY_BYTES=536870912
+SPACE_OCCUPIED_BYTES=0
+SPACE_RECLAIMABLE_BYTES=0
+SPACE_SUFFICIENT=1
+[Deep2Engine] ENHANCEMENT STACK: HOST_DECODE (CPU; skip vulkan/speed)
+[Deep2Engine] NVMe streaming: ENABLED
+[NVMeStream] SHARD_IO bridge path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M warmed=13 (RANDOM_ACCESS)
+Model armed (ProductRun and/or CIE): Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+  Path: F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+  GGUF magic: OK
+  Load latency: 4653 ms
+
+[STATUS] model: Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+Headless IDE initialized successfully.
+[error] ProductRun+NativeCIE failed: no native LocalGGUF model is loaded
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[Scheduler] Shutdown complete
