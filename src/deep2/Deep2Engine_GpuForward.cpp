@@ -137,16 +137,38 @@ bool Deep2Engine::ensureGpuForwardArena(unsigned slot) {
     }
     acc(modelWeights.lmHead);
     if (maxB == 0) maxB = (size_t)H * (size_t)H * 4;
-    /* Hard parse: env set + FAIL → do not silently use 512. */
+    /* Hard parse: env set + FAIL → do not silently use 512.
+     * Prefer WEIGHT_BUDGET_MIB over ArmSpeed DEEP2_*=E8B0M (59568MiB).
+     * Emit receipt once — per-layer E8B0M spam truncated mid-decode (R75). */
     size_t budget = (size_t)512 << 20;
-    if (const char* be = std::getenv("DEEP2_WEIGHT_BUDGET_MIB")) {
-        MibParseResult pr = ParseMibTokenEx(be);
-        EmitWeightBudgetReceipt(stderr, pr, "ENV");
-        if (!pr.ok) {
-            std::fprintf(stderr, "GPU_ARENA_BUDGET_PARSE_FAIL slot=%u\n", slot);
-            return false;
+    {
+        const char* be = std::getenv("WEIGHT_BUDGET_MIB");
+        if (!be || !be[0]) be = std::getenv("DEEP2_WEIGHT_BUDGET_MIB");
+        if (be && be[0]) {
+            MibParseResult pr = ParseMibTokenEx(be);
+            static int onceBudEmit = 0;
+            if (!onceBudEmit) {
+                onceBudEmit = 1;
+                EmitWeightBudgetReceipt(stderr, pr, "ENV");
+            }
+            if (!pr.ok) {
+                std::fprintf(stderr, "GPU_ARENA_BUDGET_PARSE_FAIL slot=%u\n", slot);
+                return false;
+            }
+            uint64_t mib = pr.mib;
+            if (mib > 16384ull) {
+                if (onceBudEmit == 1) {
+                    onceBudEmit = 2;
+                    std::fprintf(stderr,
+                        "GPU_ARENA_BUDGET_CLAMP from=%llu to=8192 "
+                        "WHY=ARMSPEED_E8B0M_NE_DEVICE_PIN\n",
+                        (unsigned long long)mib);
+                    std::fflush(stderr);
+                }
+                mib = 8192ull;
+            }
+            budget = (size_t)mib << 20;
         }
-        budget = (size_t)pr.bytes;
     }
     /* Per-stick windows from dual-stick plan (7800XT gets full share, no starve). */
     if (const char* s0 = std::getenv("DEEP2_STICK0_BUDGET_MIB")) {

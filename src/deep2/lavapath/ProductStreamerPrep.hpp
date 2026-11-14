@@ -21,6 +21,22 @@ inline int ProductStreamerPrep() {
     static std::atomic<int> armed{0};
     if (armed.load() != 0) return 1;
     if (!StreamerArmSpeedEnvCore(stderr)) return 0;
+    /* R75 EXIT=NULL: ArmSpeed SetEnvIfUnset(E8B0M=59568MiB) must not drive the
+     * GPU weight window. ABSORB076: E8B0M spam truncated mid-decode → TOK=0.
+     * Honor WEIGHT_BUDGET_MIB; else clamp absurd ArmSpeed default to 8192. */
+    {
+        const char* userWb = std::getenv("WEIGHT_BUDGET_MIB");
+        if (userWb && userWb[0]) {
+            SetEnv("DEEP2_WEIGHT_BUDGET_MIB", userWb);
+        } else {
+            const char* d = std::getenv("DEEP2_WEIGHT_BUDGET_MIB");
+            MibParseResult pr = ParseMibTokenEx(d);
+            if (!d || !d[0] || !pr.ok || pr.mib > 16384ull) {
+                SetEnv("DEEP2_WEIGHT_BUDGET_MIB", "8192");
+                SetEnvIfUnset("WEIGHT_BUDGET_MIB", "8192");
+            }
+        }
+    }
     /* GPU-required product default (no CPU-only benches/IDE/CLI).
      * Opt into HOST_DECODE only via RAWRXD_HOST_DECODE=1 or RAWR_FORCE_CPU=1.
      * LAA:NO still forces host floor (VA). */
