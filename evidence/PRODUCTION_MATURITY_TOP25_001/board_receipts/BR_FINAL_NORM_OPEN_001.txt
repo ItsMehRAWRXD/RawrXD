@@ -1,0 +1,15 @@
+BR_FINAL_NORM_OPEN_001
+DATE=2026-11-13
+BRANCH=work/v0-first-divergence
+PROMOTE=0 TIP_CLIMB=HOLD
+ACTION=append-only board_receipt — FINAL_NORM still OPEN after ref repair + Apply double-mean
+PRIOR_SITE=FINAL_NORM@pos0 maxAbs=1.511019e+01 FUNCTIONAL_FAIL=1 (pos1-mislabel ref)
+POST_SITE=FINAL_NORM@pos0 maxAbs=5.380497e-01 FUNCTIONAL_FAIL=1
+ATTN_NORM_1_POST=FUNCTIONAL_FAIL=0 maxAbs=7.152557e-07
+FIX=FinalNormAcquire.hpp Apply inv=1/sqrt(meanSq+eps) double; ref_matched FINAL pos0 repaired
+NEXT=ATTN_OUT_14 O-proj / Q4_K late-layer cascade (FULL dump)
+BOARD_PCT_HOLD=67/48/48
+NO_LIVE_PCT=1
+DENSE_MATCH_RAISE=HOLD
+PROMOTE=0
+END

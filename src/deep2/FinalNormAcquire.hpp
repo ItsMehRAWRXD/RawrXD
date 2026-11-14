@@ -104,10 +104,14 @@ inline bool Apply(float* dst, const float* src, const View& v, size_t n,
                   float eps) {
     if (!dst || !src || !v.weight || !v.fulfilled || n == 0) return false;
     Deep2::heap::EmitOk(stderr, "FINAL_NORM_BEFORE");
+    /* Match Deep2Engine::RMSNormW / llama.cpp ggml_rms_norm:
+       mean in double, inv = 1/sqrt(meanSq+eps) — do NOT cast meanSq to
+       float before sqrt (prior FINAL_NORM path). */
     double sumSq = 0.0;
     for (size_t i = 0; i < n; ++i) sumSq += (double)src[i] * (double)src[i];
     const double meanSq = sumSq / (double)n;
-    const float inv = 1.0f / std::sqrt(static_cast<float>(meanSq) + eps);
+    const double rms = std::sqrt(meanSq + static_cast<double>(eps));
+    const float inv = static_cast<float>(1.0 / rms);
     std::fprintf(stderr,
         "FINAL_NORM_SRC_PTR=%p\nFINAL_NORM_DST_PTR=%p\n"
         "FINAL_NORM_WEIGHT_PTR=%p\nFINAL_NORM_WEIGHT_SOURCE=%s\n"

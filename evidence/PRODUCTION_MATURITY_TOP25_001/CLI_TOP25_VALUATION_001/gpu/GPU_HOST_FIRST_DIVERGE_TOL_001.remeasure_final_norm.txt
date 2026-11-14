@@ -1,0 +1,46 @@
+GPU_HOST_FIRST_DIVERGE_TOL_001.remeasure_final_norm — APPEND-ONLY
+DATE=2026-11-13
+ASOF_LOCAL=2026-11-13T22:20:00
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+NOT_RUN!=PASS
+INVENT_PASS=0
+PRIOR=GPU_HOST_FIRST_DIVERGE_TOL_001.remeasure_layer1_chain.txt
+CAND_EXE=pin/rawr_layer1_chain.exe
+CAND_SHA256=FA8E2613E3E7012BE428E59EA4EC602A4291912EEDF4DB53CC80120524F1B28D
+BOARD_PCT_NOTE=CLI/GUI/OVERALL held 67/48/48 — no LIVE PCT write this seal
+
+## Fix
+FILE=src/deep2/FinalNormAcquire.hpp::Apply
+BUG=FINAL_NORM inv used float(meanSq) before sqrt (≠ RMSNormW / ggml double mean path)
+FIX=inv = 1/sqrt(meanSq+eps) in double, then cast to float (match RMSNormW)
+REF_FIX=stage_dump_ref_matched llama_FINAL_NORM_pos0 was bit-identical to
+  llama_REF_FINAL_HIDDEN_pos1 (pos mislabel). Replaced with
+  stage_dump_gpu_fix/llama_REF_FINAL_HIDDEN_pos0 (seq2956).
+  PRIOR bogus MAX_ABS=1.511019e+01 was cross-pos compare artifact.
+TOL=ABS=0.0001;REL=0.001
+
+## Authority
+REF=FIRST_DIVERGE_001/stage_dump_ref_matched FINAL_NORM pos0 = REF_FINAL_HIDDEN pos0
+REJECT_PRIOR_REF=fnv 2ecc4cf679eb828f (pos1 mislabel)
+NEW_REF_FNV=59e51b2d30a02ab9
+DEEP2_FNV=cfe377d71cef42c4
+
+## Ordered walk (pos0) — same stages as layer1_chain seal
+PROMPT_EMBED..LAYER1_OUT: FUNCTIONAL_FAIL=0 (ATTN_NORM_1 CLOSED maxAbs=7.152557e-07)
+FINAL_NORM: FUNCTIONAL_FAIL=1 MAX_ABS=5.380497e-01 << FIRST (corrected ref)
+
+## Full-layer note (gpu_fix / layer2_plus, not in layer1_chain stage list)
+TRUE_EARLIER_SITE=ATTN_OUT_14@pos0 maxAbs=3.617927e-04 (ATTN_PRE_O_14 PASS)
+  cascade → LAYER21/POST Δ≈1.59e-01 → FINAL Δ≈5.38e-01
+  FinalNorm math vs RMSNorm(L21@2951) on llama side: maxAbs≈1e-6 (math OK)
+
+FIRST_DIVERGE_SITE=FINAL_NORM@pos0
+MAX_ABS_ERR=5.380497e-01
+FUNCTIONAL_FAIL=1
+DENSE_MATCH_RAISE=HOLD (first-diverge remains open)
+NO_LIVE_PCT=1
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
