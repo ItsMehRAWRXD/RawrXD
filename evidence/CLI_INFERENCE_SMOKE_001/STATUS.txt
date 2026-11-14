@@ -40,4 +40,6 @@ COMPETITIVE_PASS=0
 RELEASE=HELD
 
 ARTIFACTS=runs/tiny_vulkan.out.txt runs/tiny_vulkan.err.txt
-NEXT=coherent decode on same SHA (unk→real tokens) OR agent smoke only after COHERENCE≠FAIL
+UNK_ROOT_CAUSE=CLI_COHERENCE_UNK_001 (FORWARD all-nonfinite→zero hidden→zero logits→id=0; NOT tokenizer-map)
+NEXT=GPU forward non-finite root on SAME_SHA 0E53D810… OR agent smoke only after COHERENCE≠FAIL
+PROMOTE=0

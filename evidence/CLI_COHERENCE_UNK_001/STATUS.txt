@@ -1,0 +1,55 @@
+CLI_COHERENCE_UNK_001
+ASOF_LOCAL=2026-11-14T08:50:00-05:00
+PROMOTE=0
+CERTIFIED=0
+INVENT_PASS=0
+CROSS_SHA_CREDIT=0
+NOT_RUN!=PASS
+TIP_CLIMB=HOLD
+SAME_SHA_ONLY=1
+
+PARENT=CLI_INFERENCE_SMOKE_001
+EXE=G:\~dev\rawrxd\build_ninja\bin\rawr.exe
+EXE_SHA256=0E53D810712979A8ECB0853DA50BD1CABEC84015F183BC43B00B101EBEAEF5D0
+SHA_VERIFIED_THIS_PACK=1
+MODEL=G:\~dev\rawrxd\models\tinyllama.gguf
+CMD=rawr run tinyllama.gguf -p 2+2= --max-tokens 8 --vulkan
+
+## Observed (same smoke witnesses)
+STDOUT=<unk>x8
+GENERATED_TOKENS=8
+TOKENS_COMMITTED=8
+SEMANTIC_COHERENCE=FAIL
+GPU_PATH=VulkanPrimary R9700 MULTIGPU
+
+## Root cause (fail-closed; not tokenizer-map)
+CLASS=GPU_FORWARD_NONFINITE_ZERO_HIDDEN
+EVIDENCE=
+  runs/../CLI_INFERENCE_SMOKE_001/runs/tiny_vulkan.err.txt
+  "[FORWARD_WARN] hidden non-finite count=2048/2048 zeroed continuing"
+  "[FORWARD_WARN] hidden zero norm layers=22 dim=2048 continuing"
+  FINAL_NORM_SUMSQ=0 FINAL_NORM_SRC_0=0 FINAL_NORM_AFTER_L2=0
+  B03_LOGITS_TOPK hNorm=0.000000e+00 top=0:0.0000..7:0.0000
+  "[AGENT] TOKEN id=0 piece=<unk>"  (×8 greedy steps)
+CHAIN=
+  forward layers emit all-nonfinite hidden
+  → sanitize zeros entire hidden (Deep2Engine_GpuToken.cpp)
+  → final norm on zeros
+  → logits all ~0
+  → greedy argmax picks token id=0
+  → detokenize(0)=<unk>
+NOT_ROOT=
+  vocab/BOS/special-token detokenize bug (piece correctly maps id0→unk)
+  CROSS_SHA rebuild credit
+  PERF tip climb / SX reopen
+
+## Disposition
+COHERENCE=FAIL (unchanged)
+ROOT_CAUSE=SEALED
+FIX=NOT_APPLIED this pack (diagnosis only; rebuild would be NEW smoke SHA)
+NEXT_OWNER=GPU forward non-finite on TinyLlama Vulkan/MULTIGPU path (layer exec / residency / embed→first layer)
+  Prefer: find first layer where hidden goes nonfinite; do not credit PASS to different EXE SHA
+REAP_LAGUNA=LEFT_OPEN (orthogonal; LAYER_NAN@L40) → REAP_STRATA_FAIR_H2H_001
+
+ARTIFACTS=RECEIPT.txt STATUS.txt
+RELATED=CLI_INFERENCE_SMOKE_001 PARTIAL held

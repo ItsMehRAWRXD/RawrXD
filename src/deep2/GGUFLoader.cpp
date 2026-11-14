@@ -6,6 +6,7 @@
 #include <chrono>
 #include <cstdlib>
 #include <cstring>
+#include <limits>
 
 #ifdef _WIN32
     #include <windows.h>
@@ -24,10 +25,16 @@ namespace Deep2 {
 // ============================================================================
 
 std::string GGUFLoader::ReadString(FILE* fp) {
+    /* GGUF strings are u64-length; never narrow to int32 (overflow desync). */
+    constexpr uint64_t kMaxGgufStr = 1024ull * 1024ull;
     uint64_t len = ReadUint64(fp);
-    if (len == 0 || len > 1024 * 1024) return "";
-    std::string s(len, '\0');
-    if (fread(s.data(), 1, len, fp) != len) return "";
+    if (len == 0) return "";
+    if (len > kMaxGgufStr || len > (uint64_t)(std::numeric_limits<size_t>::max)())
+        return "";
+    std::string s;
+    s.resize(static_cast<size_t>(len));
+    if (fread(s.data(), 1, static_cast<size_t>(len), fp) != static_cast<size_t>(len))
+        return "";
     return s;
 }
 
@@ -176,11 +183,14 @@ bool GGUFLoader::ParseMetadataKV(FILE* fp, uint64_t kvCount, ModelMetadata& meta
             case GGUFValueType::ARRAY: {
                 uint32_t elemType = ReadUint32(fp);
                 uint64_t arrCount = ReadUint64(fp);
+                /* Fail-closed: never narrow arrCount through int32. */
+                constexpr uint64_t kMaxArrElems = 1ull << 26;
+                if (arrCount > kMaxArrElems) return false;
                 // Capture tokenizer vocabulary from GGUF metadata
                 bool isTokenizerTokens = (key == "tokenizer.ggml.tokens" ||
                                            key == "tokenizer.ggml.vocab");
                 if (isTokenizerTokens && elemType == (uint32_t)GGUFValueType::STRING) {
-                    metadata.vocab.reserve(arrCount);
+                    metadata.vocab.reserve(static_cast<size_t>(arrCount));
                     for (uint64_t j = 0; j < arrCount; ++j) {
                         std::string token = ReadString(fp);
                         metadata.vocab.push_back(token);
@@ -364,8 +374,13 @@ if (subkey == "vocab_size") {
                 if (key.find("attention.head_count_kv") != std::string::npos || key.find("n_head_kv") != std::string::npos) {
                     metadata.numKeyValueHeads = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
                 }
-                if (key.find("feed_forward_length") != std::string::npos || key.find("intermediate_size") != std::string::npos) {
-                    metadata.intermediateSize = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                /* Dense FFN only — expert_*/moe_* fill moeIntermediateSize below. */
+                if ((key.find("feed_forward_length") != std::string::npos ||
+                     key.find("intermediate_size") != std::string::npos) &&
+                    key.find("expert_") == std::string::npos &&
+                    key.find("moe_") == std::string::npos) {
+                    metadata.intermediateSize =
+                        (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
                 }
                 if (key.find("rms_norm_eps") != std::string::npos ||
                     key.find("layer_norm_rms_epsilon") != std::string::npos ||
@@ -439,6 +454,9 @@ if (subkey == "vocab_size") {
             }
         }
     }
+    /* MoE-only GGUFs (qwen35moe/Ornith): dense FFN absent → use expert FFN. */
+    if (metadata.intermediateSize == 0 && metadata.moeIntermediateSize > 0)
+        metadata.intermediateSize = metadata.moeIntermediateSize;
     return true;
 }
 

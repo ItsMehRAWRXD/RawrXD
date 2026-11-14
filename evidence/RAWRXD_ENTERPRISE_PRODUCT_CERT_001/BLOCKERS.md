@@ -7,7 +7,7 @@ Authority: pasted RAWRXD_ENTERPRISE_PRODUCT_CERT_001 checklist · 0/128 · HELD 
 | P0 | Gemma AA4F / tip_land AV | G02-06 G06-06 | B8E5 R75 TOK=8 RELATED (314771e525); tip 6754 RO; ≠ CERT PASS |
 | P0 | GPU/ref V_1 / ATTN_NORM_1@dim1072 | G02-04 G02-05 G03-08 | CLOSED=1 maxULP=0 F0A8018F RELATED (R78); ≠ matrix PASS |
 | P0 | ATTN_PRE_O_1@pos1 head11 residual | G02-04 G03-08 | OPEN 2.754107e-05 @Q_POST idx747; CLOSE_010 ≠ this gate; AVX≡SPV ulp_spv=0; WQ-only BLOCKED; FFN_NORM cascade OPEN hyp; ≠ PASS |
-| P0 | Ornith MoE FFN mapping | G02-08 G04-01 | qwen35moe expert_ffn=512 shared=512; dense feed_forward_length absent → BLOCKED_AT=FFN; R99 SSM-auth TOK=8 PARTIAL TPS=0.221; validate tensors before 512 subst; ≠ PASS |
+| P0 | Ornith MoE FFN mapping | G02-08 G04-01 | R98 RELATED: GEOMETRY_OK FFN=512 tensor-validated (gate/up 2048×512×194); OPEN=1 ENTER=1 TOK=8 SEH=0 EXE=E7A7EE9F; PROD_DECODE residual; ≠ PASS |
 | P0 | FFN_DOWN_10 TRUE_FIRST (post L2 CLOSE) | G02-04 G03-08 | R87: OPEN 1.524854e-05; UP→ACT Q8 amplify NOT_CLOSABLE; SPV40E held; ≠ PASS |
 | P0 | ATTN_PRE_O_11@pos0 | G02-04 G03-08 | R88 a92814d8c2: NOT_CLOSABLE 1.98e-04; V Q4K amplify; ≠ PASS |
 | P0 | ATTN_OUT_14@pos0 | G02-04 G03-08 | R89: NOT_CLOSABLE 6.035976e-04; OPROJ REFUTED; ≠ PASS |
@@ -44,6 +44,6 @@ Authority: pasted RAWRXD_ENTERPRISE_PRODUCT_CERT_001 checklist · 0/128 · HELD 
 | non617F 67350F71 R78 | 1 | 0 | 0 | OPEN_FAIL STREAM_SEH RVA=0x6B0FA (superseded by R79) |
 | non617F 1EC00779 R79 | 1 | 1 | 2 | STREAM_SEH CLOSED DURABLE=1 private; tip RO RELATED ≠ CERT PASS |
 
-`NEXT_OWNER` (split): `ORNITH_MOE_FFN_MAPPING` (tensor-validated expert/shared FFN; TOK durable) · `FFN_NORM_ULP_CASCADE` / PRE_O_1 head11 · `LAGUNA_H2H_EQUIV_WORKLOAD` (peer early-stop) · `TIP_CLIMB=HOLD`
+`NEXT_OWNER` (split): `FFN_NORM_ULP_CASCADE` / PRE_O_1 head11 · `DEEP2_REAP_PACKED_GEMV_OR_PROD_PROVENANCE` · `LAGUNA_H2H_EQUIV_WORKLOAD` (peer early-stop; SPEEDUP=OBSERVED_ONLY) · `TIP_CLIMB=HOLD` · Ornith MoE FFN map R98 RELATED (geometry+TOK; ≠ CERT)
 
 PROMOTE=0 until all 128 gates PASS with independent sign-off.
