@@ -76,3 +76,4 @@ Historical / private-cand / partial RUNTIME — cite only. `CROSS_SHA_CREDIT=0`.
 Update this index when new RELATED receipts land. Never auto-PASS.
 
 | receipts/G02-04_G03-08_20261114_ATTN_PRE_O_1_CLOSE_004_OPEN_RELATED.md | G02-04 G03-08 | CLOSED=0 2.75e-05; SPV40E76D2A; RELATED≠PASS |
+| receipts/G02-04_G03-08_20261114_ATTN_PRE_O_CLOSE_006_RELATED.md | G02-04 G03-08 | PRE_O_0 CLOSED FA; PRE_O_1 OPEN 2.75e-05; RELATED≠PASS |
