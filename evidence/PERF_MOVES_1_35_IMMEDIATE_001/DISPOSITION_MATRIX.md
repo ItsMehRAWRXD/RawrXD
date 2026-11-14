@@ -21,13 +21,13 @@ Supremacy: `GATE.txt` `GATE_STOP=1` / `NEXT_SPEND=NONE` blocks new rainbow live 
 | 2 | Purity Contract | SEALED | `PERF_WITNESS_PURITY.txt` CHRONO=LUKEWARM; FORCED_OFF/ON profile sealed |
 | 3 | Existing Authorities and Artifacts | SEALED | Contract §3 list present under `RAWRXD_PERFORMANCE_001/` + scripts/ |
 | 4 | Rainbow Search Authority | SEALED | `RAINBOW_TABLE_001/INDEX.txt` ENUMERATOR_AUTHORITY=SEALED; FINITE_PASS_SIZE=18; LIVE_MEASURE_AUTHORIZED=0 |
-| 5 | Coverage Law | INSTALLED | `COVERAGE_MATRIX_001/` UNIQUE_CONFIG_COUNT=18 DUPLICATE=0; MEASURED_UNIQUE=0 |
+| 5 | Coverage Law | INSTALLED | `COVERAGE_MATRIX_001/` UNIQUE=18; MANIFEST MEASURED_UNIQUE=18 (INDEX stale-0 reconciled) |
 | 6 | Epoch Law | INSTALLED | `COVERAGE_MATRIX_001/EPOCH0*` present; epoch accounting artifacts exist; no new epoch spend this pack |
 | 7 | Phase A — Reproduce Historical Champion | SEALED | `CHAMPION_ENV_BYTEWISE_REPRO_001/GATE.txt` PHASE_A_CLOSED=1 BYTEWISE_ENV_MATCH=1 |
 | 8 | Champion Reproduction Exit | SEALED | Exit **B Historical-only**: FAIL_WALL_REPRO; 5.904=HISTORICAL_ONLY / NO_REOPEN |
 | 9 | Establish the Search Baseline | INSTALLED | `SEARCH_BASELINE_001.txt` INSTALLED_SEARCH_BASELINE_TPS=4.329 SEALED |
 | 10 | Phase B — Enumerate 18 Unique | SEALED | `RAINBOW_TABLE_001` + `COVERAGE_MANIFEST.json` UNIQUE=18 |
-| 11 | Phase C — First Measurement Epoch | BLOCKED_BY_GATE_STOP | MEASURED_UNIQUE=0; GATE_STOP forbids new candidate measures (`NEXT_SPEND=NONE`) |
+| 11 | Phase C — First Measurement Epoch | SEALED_ACCOUNTING | MANIFEST MEASURED_UNIQUE=18 EPOCH0 receipts; new measures BLOCKED_BY_GATE_STOP |
 | 12 | Candidate Classification | BLOCKED_BY_GATE_STOP | Depends on §11 measures; not inventable |
 | 13 | Ranking Law | BLOCKED_BY_GATE_STOP | No measured epoch ranking under STOP |
 | 14 | Phase D — Winner Endurance | BLOCKED_BY_GATE_STOP | No winner; endurance forbidden until post-STOP |
@@ -38,7 +38,7 @@ Supremacy: `GATE.txt` `GATE_STOP=1` / `NEXT_SPEND=NONE` blocks new rainbow live 
 | 19 | No Directional Climb | SEALED | `TIP_CLIMB_001_HOLD.txt` TIP_CLIMB=HOLD; LIVE_TIP_CLIMB=HOLD |
 | 20 | Tip Bot Law | SEALED | INVOKE_PERF_TIP_BOT=0; MAX_ITERATIONS_256=NOT_AUTHORIZED |
 | 21 | Rainbow Cursor Law | SEALED | `RAINBOW_CURSOR.json` present; live advance blocked (LIVE_MEASURE_AUTHORIZED=0 + GATE_STOP) |
-| 22 | Epoch Completion Receipt | OPEN | Epoch0 not complete (MEASURED_UNIQUE=0); receipt not earned — ≠ PASS |
+| 22 | Epoch Completion Receipt | INSTALLED | Epoch0 MEASURED_UNIQUE=18 in MANIFEST; promotion still PROMOTE=0 / RETAIN_BASELINE |
 | 23 | Coverage Matrix | INSTALLED | Matrix OPEN for fill but spend frozen; accounting OK under STOP |
 | 24 | Evidence Preservation | SEALED | Existing seals retained; this pack additive only |
 | 25 | Manifest Truth Law | SEALED | Generators + PASS_MANIFEST paths under purity; no invented manifests this pack |

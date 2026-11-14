@@ -1,0 +1,12 @@
+FORWARD_FAIL_CLOSED_001
+ASOF_LOCAL=2026-11-14
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD GATE_STOP=1
+SOURCE=src/deep2/Deep2Engine_GpuToken.cpp
+CHANGE=nonfinite/zero-norm/exploded hidden → FORWARD_FAIL return false BEFORE mutate
+  host LAYER_WARN continuing → LAYER_FAIL return false
+  removed zeroing sanitize + B03_HIDDEN_SANITIZE continue path
+FROZEN_EXE_SHA=0E53D810712979A8ECB0853DA50BD1CABEC84015F183BC43B00B101EBEAEF5D0
+NOTE=Source correction only; frozen EXE unchanged until Move 47 rebuild
+  Does NOT fix upstream Vulkan first-nonfinite op (Moves 37–45 OPEN)
+  Prevents corrupted decode reported as PRODUCT success / unk collapse mask
+CROSS_SHA_CREDIT=0

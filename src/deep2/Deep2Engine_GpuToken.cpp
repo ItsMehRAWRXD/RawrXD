@@ -152,16 +152,17 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
             }
             if (postNonFinite > 0 || !(postN2 > 1.0e-24)) {
                 fprintf(stderr,
-                    "[LAYER_WARN] ly=%u nonFinite=%zu norm=%.6e continuing anyway\n",
+                    "[LAYER_FAIL] ly=%u nonFinite=%zu norm=%.6e\n",
                     ly, postNonFinite, postN2);
                 fflush(stderr);
+                rawr::iso_ladder::A().forwardNs += rawr::iso_ladder::Ns(f0);
+                return false;
             }
             std::memcpy(hidden, attentionOutput, H * sizeof(float));
         }
     }
     rawr::iso_ladder::A().forwardNs += rawr::iso_ladder::Ns(f0);
-    // Non-finite / exploded hidden: sanitize so logits/sample can run.
-    // STREAM_CORRECTNESS remains NOT_PASS until reference parity closes.
+    // Fail-closed: never sanitize nonfinite/zero-norm into fake-success decode.
     double n2 = 0.0;
     size_t nonFiniteCount = 0;
     float maxAbs = 0.f;
@@ -169,7 +170,6 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
         const float v = hidden[i];
         if (!std::isfinite(v)) {
             nonFiniteCount++;
-            hidden[i] = 0.f;
         } else {
             n2 += (double)v * (double)v;
             const float a = std::fabs(v);
@@ -178,27 +178,24 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
     }
     if (nonFiniteCount > 0) {
         fprintf(stderr,
-            "[FORWARD_WARN] hidden non-finite count=%zu/%zu zeroed continuing\n",
+            "[FORWARD_FAIL] nonfinite=%zu/%zu (no sanitize)\n",
             nonFiniteCount, config.hiddenDim);
         fflush(stderr);
-        n2 = 0.0;
-        for (size_t i = 0; i < config.hiddenDim; ++i)
-            n2 += (double)hidden[i] * (double)hidden[i];
-    }
-    if (maxAbs > 1.0e6f && n2 > 0.0) {
-        const float inv = 1.0f / std::sqrt(static_cast<float>(n2 / (double)config.hiddenDim) + 1e-6f);
-        for (size_t i = 0; i < config.hiddenDim; ++i) hidden[i] *= inv;
-        fprintf(stderr,
-            "B03_HIDDEN_SANITIZE maxAbs=%.3e -> unit_rms inv=%.6g "
-            "STREAM_CORRECTNESS=NOT_PASS\n",
-            (double)maxAbs, (double)inv);
-        fflush(stderr);
+        return false;
     }
     if (!(n2 > 1.0e-24)) {
         fprintf(stderr,
-            "[FORWARD_WARN] hidden zero norm layers=%zu dim=%zu continuing\n",
+            "[FORWARD_FAIL] hidden zero norm layers=%zu dim=%zu\n",
             modelWeights.numLayers, config.hiddenDim);
         fflush(stderr);
+        return false;
+    }
+    if (maxAbs > 1.0e6f) {
+        fprintf(stderr,
+            "[FORWARD_FAIL] hidden exploded maxAbs=%.3e (no sanitize)\n",
+            (double)maxAbs);
+        fflush(stderr);
+        return false;
     }
     Deep2::heap::EmitOk(stderr, "AFTER_FORWARD_LAYERS");
     return true;
