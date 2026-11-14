@@ -50,6 +50,8 @@ Historical / private-cand / partial RUNTIME — cite only. `CROSS_SHA_CREDIT=0`.
 | M3 model-select tipbound diag 20261113_230900 | G08-01 | MODEL_SELECTED=0 unk; FORCE≠select; wire SOURCE_WIRED RUNTIME=0 |
 | BR_C36_CONPTY_M3_TIP_R70 | G05 G06 G07 G08 | P1 tip remasure board receipt |
 | P2 llama32 Elastic+MARS qdim083/084 | G02-08 G06-06 | ROOT_CLEAR; DURABLE TOK=0; RELATED≠PASS |
+| 617F INIMAGE Restore 68CCBE64 / BR_R74 f028f97b59 | G02-08 G06-06 | OPEN=1 RESTORE=1 ENTER=1 STREAM_SEH VA=-1 TOK=0 RELATED |
+| receipts/G02-08_G06-06_20261114_617F_INIMAGE_RESTORE_RELATED.md | G02-08 G06-06 | soft Restore no embed rebind; next STREAM_REBIND |
 | receipts/G02-08_20261113_P2_LLAMA32_RELATED.md | G02-08 | private OPEN; CERT NOT_RUN |
 | receipts/G06-06_20261113_P2_LLAMA32_RELATED.md | G06-06 | tipbound GEN still OPEN |
 | BR_P2_MARS_KEEP_GPU_AMPLIFIER_001 | G02-08 G06-06 | Host-Evict amplifier SOURCE_WIRED |
