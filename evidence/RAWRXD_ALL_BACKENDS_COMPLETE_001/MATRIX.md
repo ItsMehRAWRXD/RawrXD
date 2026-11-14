@@ -18,11 +18,11 @@ Certification levels: Build � Load � Numerics � Generation � Performance
 
 | ID | Workstream | Status | Levels cleared (honest) | Blocking next | Evidence pointer |
 |----|------------|--------|-------------------------|---------------|------------------|
-| W01 | Deep2 CPU | PARTIAL | Build/Load/Gen on TinyLlama host paths; full quant parity OPEN | Host Q-family parity matrix | CLI_NUMERICAL / host GEMV |
-| W02 | Deep2 Vulkan | PARTIAL | Q6K CEBA0DE4 RELATED retained; Q2 gemma MEASURED_ABORT EXIT=-1; full shader CERT OPEN | Q2 abort root + Q5/Q3/Q8 + long-ctx | L4_P1_KERNEL_SHAPES_001 + POST_Q6K_SPV_PRODUCT_DEFAULT_001 |
-| W03 | Q4_K / Q6_K / Q8 kernels | PARTIAL | Q6K+Q4 TinyLlama RELATED; Q8/Q5/Q3 NOT_RUN (no model); Q2 MEASURED_ABORT | Kernel-family validation pack | L4_P1_KERNEL_SHAPES_001 + BR_CLI_Q6K_SPV_R103 |
-| W04 | Packed GEMV / GEMM | PARTIAL | Ornith L3 ULP CLOSED; sx/kva/oproj/fused/batch NOT_RUN; Q2 abort sealed | Broader shape/batch + Q2 rootcause | L4_P1_KERNEL_SHAPES_001 + BR_ORNITH_PACKED_GEMV_L3_R104 |
-| W05 | Attention / KV cache | PARTIAL | Laguna RoPE/SWA WIRED; first-diverg ULP OPEN | Long-context + ULP digests | W1_LAGUNA_NUMERICAL_PARITY_001 |
+| W01 | Deep2 CPU | PARTIAL | TinyLlama Q4_K host short+med CE=1 (WS5); full quant parity OPEN | Host Q-family parity + ref dump | ATTN_KV_DEEP2_CPU_001 + CLI_NUMERICAL |
+| W02 | Deep2 Vulkan | PARTIAL | Q6K unforced default remasured (W5 EXE 47438251); Q8 shapes PASS; long-ctx OPEN | Multifamily SPV + long-context | W5_DEEP2_VULKAN_KERNEL_FAMILIES_001 |
+| W03 | Q4_K / Q6_K / Q8 kernels | PARTIAL | Q6K SPV default+parity; Q4 shapes expanded; Q8 4-shape PASS (W5) | Packed GEMM batch + multifamily | W5_DEEP2_VULKAN_KERNEL_FAMILIES_001 |
+| W04 | Packed GEMV / GEMM | PARTIAL | Ornith L3 ULP CLOSED; W5 Q4 packed shapes PASS; GEMM batch OPEN | Broader batch/shape matrix | W5 + BR_ORNITH_PACKED_GEMV_L3_R104 |
+| W05 | Attention / KV cache | PARTIAL | TinyLlama short+medctx KV CE=1 (38 grows); PT1784 trunc; FIRST_DIVERGE attn RELATED; Laguna ULP OPEN | PT>=1024 CLEAN_EXIT + host ref dump + Laguna ULP | ATTN_KV_DEEP2_CPU_001 + FIRST_DIVERGE + W1_LAGUNA |
 | W06 | Ornith | PARTIAL | L3 ULP closed; SEMANTIC=FAIL (8tok HEAP/TOK=0; R101 incoherence); PROD_DECODE=0 | PROD_DECODE REAL=21 / heap / PROD_PROVENANCE / hybrid load | ORNITH_SEMANTIC_BEYOND_L3_001 + R101-R104 |
 | W07 | Laguna / Qwen3.5 | PARTIAL | WS1 PARTIAL stop@ATTN_GATE_PARITY; order MATCH; live EXE 47438251; TOK CEBA0DE4 RELATED | Bitexact ref digest compare | REAP_LAGUNA_001 GATE_RECORD |
 | W08 | MiniMax MoE | PARTIAL | Router MATCH+AL12/13; tip CEBA0DE4 LOAD/MoE OK; FAIL_MID_PREFILL ly=15 TOK=0 SEMANTIC=NOT_RUN; Ollama create FAIL | Survive 62L->TOK>0 + FFN_DOWN_1 GPU A/B + AL14 | W2_MINIMAX_REAP_SEMANTIC + FAIR_H2H P0-D |

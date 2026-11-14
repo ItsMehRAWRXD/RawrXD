@@ -11,9 +11,9 @@ Status legend: **OPEN** | **RELATED** | **PARTIAL** | **CERTIFIED** | **EXPLICIT
 | Workstream | Status | Notes / SSOT pointer |
 |------------|--------|----------------------|
 | Deep2 CPU | OPEN | quantized parity + perf TBD |
-| Deep2 Vulkan | PARTIAL | Q6K CEBA0DE4 RELATED retained; Q2 MEASURED_ABORT; full family CERT OPEN (L4_P1) |
-| Q4_K / Q6_K / Q8 | PARTIAL | Q6K+Q4 RELATED; Q8/Q5/Q3 NOT_RUN; Q2 MEASURED_ABORT ≠ PASS (L4_P1) |
-| Packed GEMV / GEMM | PARTIAL | Ornith L3 ULP_CLOSED; specialized sx/batch NOT_RUN; Q2 abort sealed (L4_P1) |
+| Deep2 Vulkan | RELATED | WS3 `DEEP2_VULKAN_QK_GEMV_FAMILY_001`; host fallback ≠ GPU cert |
+| Q4_K / Q6_K / Q8 | RELATED | Q6 FORCE_SPV CEBA exact-SHA; Q8 shapes PASS; Q4 numeric OK/GATE_FAIL |
+| Packed GEMV / GEMM | PARTIAL | Ornith L3 ULP_CLOSED; Q4/Q8 shapes expanded; GEMM multi-batch OPEN |
 | Attention / KV cache | OPEN | long-context stability TBD |
 | Ornith | RELATED | L3 ULP closed; hybrid load/semantic OPEN |
 | Laguna / Qwen3.5 | PARTIAL | W1: gate pre-O+TOK>0 tip CEBA0DE4; FIRST_DIVERGENCE_ULP OPEN; PROMOTE=0 |
