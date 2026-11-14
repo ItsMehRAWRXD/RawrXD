@@ -11348,32 +11348,29 @@ void Deep2Engine::computeExpertFFN(const MoEWeightHandle& handle,
         std::memset(gateOut, 0, expertDim * sizeof(float));
         kGate((const uint8_t*)handle.gateWeights, input, gateOut, expertDim,
               hiddenDim);
-        /* PACKED_GEMV dump: L0 first experts only (STAGE_DIGEST). SOURCE_WIRED≠PASS. */
-        if (B3_StageDigestEnabled() && handle.layer == 0 &&
-            B3_StageDumpLayer(0)) {
+        /* PACKED_GEMV dump: first experts any layer (Ornith MoE≠L0 SSM). SOURCE_WIRED≠PASS. */
+        if (B3_StageDigestEnabled()) {
             static int moeGemvDumps = 0;
             if (moeGemvDumps < 2) {
                 char key[72];
-                const size_t pos = 0;
-                std::snprintf(key, sizeof(key), "MOE_GATE_L0_E%d",
-                              handle.expertId);
-                B3_StageDigest(key, pos, gateOut, expertDim);
-                std::snprintf(key, sizeof(key), "MOE_UP_L0_E%d",
-                              handle.expertId);
-                B3_StageDigest(key, pos, upOut, expertDim);
+                std::snprintf(key, sizeof(key), "MOE_GATE_L%d_E%d",
+                              handle.layer, handle.expertId);
+                B3_StageDigest(key, 0, gateOut, expertDim);
+                std::snprintf(key, sizeof(key), "MOE_UP_L%d_E%d",
+                              handle.layer, handle.expertId);
+                B3_StageDigest(key, 0, upOut, expertDim);
                 ++moeGemvDumps;
             }
         }
         SwiGLU(gateOut, upOut, gateOut, expertDim);
         kDown((const uint8_t*)handle.downWeights, gateOut, output, hiddenDim,
               expertDim);
-        if (B3_StageDigestEnabled() && handle.layer == 0 &&
-            B3_StageDumpLayer(0)) {
+        if (B3_StageDigestEnabled()) {
             static int moeDownDumps = 0;
             if (moeDownDumps < 2) {
                 char key[72];
-                std::snprintf(key, sizeof(key), "MOE_DOWN_L0_E%d",
-                              handle.expertId);
+                std::snprintf(key, sizeof(key), "MOE_DOWN_L%d_E%d",
+                              handle.layer, handle.expertId);
                 B3_StageDigest(key, 0, output, hiddenDim);
                 ++moeDownDumps;
             }
