@@ -1,0 +1,3 @@
+﻿Name,EvalCount,EvalNs,TokPerSec,HttpOk,Disposition,Error,Log
+reap16-ornith-1_5:latest,32,410845000,77.888255,True,PASS,,g:\~dev\rawrxd\evidence\STRATA_HIP_OLLAMA_001\ollama\reap16-ornith-1_5_latest.json
+ornith-1.5:35b,32,3175873000,10.07597,True,PASS,,g:\~dev\rawrxd\evidence\STRATA_HIP_OLLAMA_001\ollama\ornith-1.5_35b.json

@@ -1,0 +1,12 @@
+﻿StratumOrTag,Kind,PresentLocal,PriorOllamaDisp,HipNativeDisp,Notes
+reap16-minimax-m2_7,REAP16,0,FAIL_create_split,RUNTIME_OK_MODEL_E2E_UNSUPPORTED,tags=
+reap16-qwen3_6-35b,REAP16,1,PASS,RUNTIME_OK_MODEL_E2E_UNSUPPORTED,tags=reap16-qwen3_6-35b:latest
+reap16-glm-4_7-flash,REAP16,1,FAIL_GGML_ASSERT,RUNTIME_OK_MODEL_E2E_UNSUPPORTED,tags=reap16-glm-4_7-flash:latest
+reap16-nemotron-3_5,REAP16,1,FAIL_GGML_ASSERT,RUNTIME_OK_MODEL_E2E_UNSUPPORTED,tags=reap16-nemotron-3_5:latest
+reap16-ornith-1_5,REAP16,1,PASS,RUNTIME_OK_MODEL_E2E_UNSUPPORTED,tags=reap16-ornith-1_5:latest
+reap16-laguna-s-2_1,REAP16,1,PASS,RUNTIME_OK_MODEL_E2E_UNSUPPORTED,tags=reap16-laguna-s-2_1:latest
+ornith-1.5:35b,FULL_OLLAMA_PEER,1,PRIOR_PEER,RUNTIME_OK_MODEL_E2E_UNSUPPORTED,tags=ornith-1.5:35b
+qwen36-reference-local:latest,FULL_OLLAMA_PEER,1,PRIOR_PEER,RUNTIME_OK_MODEL_E2E_UNSUPPORTED,tags=qwen36-reference-local:latest
+laguna-s-2.1:Q4_K_M,FULL_OLLAMA_PEER,1,PRIOR_PEER,RUNTIME_OK_MODEL_E2E_UNSUPPORTED,tags=laguna-s-2.1:Q4_K_M
+nemotron-3.5-lightning:30b,FULL_OLLAMA_PEER,1,PRIOR_PEER,RUNTIME_OK_MODEL_E2E_UNSUPPORTED,tags=nemotron-3.5-lightning:30b
+amdhip64.dll,HIP_RUNTIME,0,N/A,RUNTIME_VERSIONED_OK,unversioned amdhip64 MISSING; amdhip64_6 RESOLVABLE; model E2E EXPLICIT_UNSUPPORTED

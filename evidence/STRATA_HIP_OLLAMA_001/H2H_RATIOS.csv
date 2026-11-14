@@ -1,0 +1,2 @@
+﻿Stratum,REAP_tps,REAP_eval,PEER_tps,PEER_eval,RATIO_REAP_over_PEER,EQUAL_EVAL,Disposition,Notes
+ornith-1_5,77.888255,32,10.07597,32,7.7301,1,MEASURED_PAIR,load_order_caveat_REAP_hot_PEER_cold;COMPETITIVE_PASS=0

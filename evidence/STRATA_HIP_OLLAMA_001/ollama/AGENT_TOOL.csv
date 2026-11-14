@@ -1,0 +1,5 @@
+﻿Model,HttpOk,HasMessage,ToolCallsCount,Disposition,Error,Log,Notes
+qwen2.5-coder:1.5b-base,False,False,0,FAIL,The remote server returned an error: (400) Bad Request.,g:\~dev\rawrxd\evidence\STRATA_HIP_OLLAMA_001\ollama\agent_tool_qwen2.5-coder_1.5b-base.json,
+nemotron-3-nano:4b,False,False,0,FAIL,The operation has timed out,g:\~dev\rawrxd\evidence\STRATA_HIP_OLLAMA_001\ollama\agent_tool_nemotron-3-nano_4b.json,
+reap16-ornith-1_5:latest,False,False,0,FAIL,The operation has timed out,g:\~dev\rawrxd\evidence\STRATA_HIP_OLLAMA_001\ollama\agent_tool_reap16-ornith-1_5_latest.json,
+nemotron-3-nano:4b_retry,True,True,1,PASS_TOOL,,g:\~dev\rawrxd\evidence\STRATA_HIP_OLLAMA_001\ollama\agent_tool_nemotron-3-nano_4b_retry.json,post_warm
