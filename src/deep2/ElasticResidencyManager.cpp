@@ -198,9 +198,15 @@ bool ElasticResidencyManager::RegisterTensor(
         fprintf(stderr, "[ElasticResidencyManager] ERROR: not initialized\n");
         return false;
     }
-    if (tensors_.find(name) != tensors_.end()) {
-        fprintf(stderr, "[ElasticResidencyManager] WARNING: tensor '%s' already registered\n", name.c_str());
-        return true;  // idempotent
+    {
+        auto it = tensors_.find(name);
+        if (it != tensors_.end()) {
+            /* Idempotent: refresh sourceData if first reg was nullptr (IOCP then
+             * Batch-15). Do not warn — llama32 0xC0000374 thrash amplifier. */
+            if (sourceData && it->second && !it->second->sourceData)
+                it->second->sourceData = sourceData;
+            return true;
+        }
     }
 
     auto tensor = std::make_shared<ElasticResidentTensor>();

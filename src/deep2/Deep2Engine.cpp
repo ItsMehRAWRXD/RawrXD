@@ -1949,12 +1949,12 @@ void Deep2Engine::deallocateBuffers() {
     alignedFree(kProj);
     alignedFree(vProj);
     alignedFree(moeExpertOut_);
-    alignedFree(gateBuf);
-    alignedFree(upBuf);
-    alignedFree(layerTemp);
     alignedFree(layerChainBuf_);
     layerChainBuf_ = nullptr;
     layerChainValid_ = false;
+    alignedFree(gateBuf);
+    alignedFree(upBuf);
+    alignedFree(layerTemp);
     alignedFree(mlaQ_a);
     alignedFree(mlaKV_a);
     alignedFree(mlaQ_b);
@@ -8544,19 +8544,31 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
 
     /* L1+ must see prior layer residual. Stale PROMPT_EMBED here was ATTN_NORM_1 HARD. */
     const float* xin = input;
-    if (layer >= 1 && layerChainValid_ && layerChainBuf_ && input) {
-        float mad = 0.f;
-        const size_t nprobe = hiddenDim < 32 ? hiddenDim : 32;
-        for (size_t i = 0; i < nprobe; ++i) {
-            const float d = std::fabs(input[i] - layerChainBuf_[i]);
-            if (d > mad) mad = d;
+    if (layer >= 1 && layerChainValid_ && layerChainBuf_) {
+        xin = layerChainBuf_;
+        if (input) {
+            float mad = 0.f;
+            const size_t nprobe = hiddenDim < 32 ? hiddenDim : 32;
+            for (size_t i = 0; i < nprobe; ++i) {
+                const float d = std::fabs(input[i] - layerChainBuf_[i]);
+                if (d > mad) mad = d;
+            }
+            if (mad > 1e-4f) {
+                std::fprintf(stderr,
+                    "B03_LAYER_CHAIN_REPAIR layer=%zu mad=%.6e -> layerChainBuf_ PROMOTE=0\n",
+                    layer, (double)mad);
+                std::fflush(stderr);
+            }
         }
-        if (mad > 1e-4f) {
+    }
+    if (layer >= 1 && !lw.attnNorm.name.empty()) {
+        char expect[32];
+        std::snprintf(expect, sizeof(expect), "blk.%zu.", layer);
+        if (lw.attnNorm.name.find(expect) == std::string::npos) {
             std::fprintf(stderr,
-                "B03_LAYER_CHAIN_REPAIR layer=%zu mad=%.6e -> layerChainBuf_ PROMOTE=0\n",
-                layer, (double)mad);
+                "B03_ATTN_NORM_BIND_MISMATCH layer=%zu name=%s expect_prefix=%s PROMOTE=0\n",
+                layer, lw.attnNorm.name.c_str(), expect);
             std::fflush(stderr);
-            xin = layerChainBuf_;
         }
     }
 
@@ -8765,7 +8777,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         B3_StageDigest(key, tokPos, output, hiddenDim); // pre-residual attn (llama attn_out)
     }
 
-    // 3. Residual connection ? AVX2 vectorized
+    // 3. Residual connection ? AVX2 vectorized (xin = prior residual for L1+)
     if (profilingEnabled_ && profiler_) profiler_->beginAttnResidual();
     if (opTiming) { auto _t0 = opNow();
     #if defined(__AVX2__) || defined(_MSC_VER)

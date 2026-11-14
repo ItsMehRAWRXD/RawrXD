@@ -1,0 +1,30 @@
+BR_ATTN_NORM_1_LAYER_CHAIN_SOURCE_001
+ASOF_LOCAL=2026-11-13T22:10:00-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 NOT_RUN!=PASS
+ACTION=SOURCE_WIRED layer-chain + attnNorm bind check for ATTN_NORM_1
+PRIOR=CLI_TOP25_VALUATION_001/gpu/GPU_HOST_FIRST_DIVERGE_TOL_001.remeasure_layer1.txt
+PRIOR_SITE=ATTN_NORM_1@pos0/layer1 FUNCTIONAL_FAIL=1 maxAbs=2.747281e+00
+
+## Root class (held)
+DEEP2_ATTN_NORM_1 ≠ RMSNorm(LAYER0_OUT, blk.1.attn_norm) on prior dump
+GGUF_blk.1.attn_norm vs llama PASS; deep2 dump FAIL
+
+## Source landed (this seal)
+SRC=src/deep2/Deep2Engine.cpp + Deep2Engine.h + Deep2Engine_GpuToken.cpp
+- layerChainBuf_/layerChainValid_ residual snapshot after each layer
+- L1+ xin := layerChainBuf_ when valid (stale PROMPT_EMBED repair)
+- B03_ATTN_NORM_BIND_MISMATCH if layers[L].attnNorm.name lacks blk.L.
+- host decode memcpy chain: forwardLayer(ly, hidden, attnOut) then memcpy hidden
+
+## Disposition
+PRIOR_CLOSED_ON_TIP=board_receipts/BR_ATTN_NORM_1_CLOSED_001 + e5692fb GpuToken memcpy
+THIS_SEAL=defense-in-depth (unconditional xin=layerChainBuf_ + bind-name check)
+SOURCE_WIRED=1
+RUNTIME_REACHED=1 (prior remasure closed ATTN_NORM_1; FIRST_DIVERGE moved)
+BOARD_PCT_UNCHANGED=67/48/48
+REJECT_INVENT_DENSE_MATCH=1
+TIP_BIND_6754616E_INTACT=1
+
+NEXT_GATE=FFN_NORM_0_OR_ATTN_PRE_O_POS1 (post ATTN_NORM_1 close)
+PROMOTE=0
+END

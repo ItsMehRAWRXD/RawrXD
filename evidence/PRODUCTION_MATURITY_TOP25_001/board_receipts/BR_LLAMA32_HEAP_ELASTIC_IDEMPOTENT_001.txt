@@ -1,0 +1,29 @@
+BR_LLAMA32_HEAP_ELASTIC_IDEMPOTENT_001
+ASOF_LOCAL=2026-11-13T22:10:00-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 NOT_RUN!=PASS
+ACTION=SOURCE_WIRED durable elastic idempotent register (llama32 0xC0000374 path)
+PRIOR_ROOT=GUI_TOP25_VALUATION_001/gpu/LLAMA32_HEAP_OPEN_ROOTCAUSE_001.txt
+PRIOR_WER=0xC0000374 HEAP_CORRUPTION @ ntdll; token_embd.weight already registered
+PRIOR_MF_ENV_4OF4=GUI_TOP25_VALUATION_001/gpu/MULTI_FAMILY_QDIM077_M2_002.txt (environmental close)
+LATEST_FLAKE=ide_mf_qdim077_llama32_7FD1F27095388585_20261113_215605 GEN=0 TOK=0
+  (still warned token_embd already registered on pre-fix binary 7FD1F270)
+
+## Source landed (this seal)
+SRC=src/deep2/ElasticResidencyManager.cpp
+- RegisterTensor idempotent: silent; refresh sourceData if prior was nullptr
+- Removes WARNING spam that co-travels host↔VRAM thrash on tied embeds
+PRIOR_ALREADY_ON_TIP=skip late-register + tieEmbeddings lmHead guard + suppressHostVramMoves
+
+## Disposition
+SOURCE_WIRED=1
+RUNTIME_REACHED=0
+DURABLE_HEAP_FIX_REBUILD=REQUIRED (private qdim cand; tip 6754616E untouched)
+MF_4OF4_DURABLE=OPEN (env 4/4 witnessed; durable remeasure NOT_RUN on new source)
+REJECT_FORCE_ABSORB=1
+TIP_OVERWRITE_WITH_QDIM=0
+TIP_BIND_6754616E_INTACT=1
+BOARD_PCT_UNCHANGED=67/48/48
+
+NEXT_GATE=REBUILD_PRIVATE_QDIM_CAND + EXCLUSIVE_MF_LLAMA32_REMEASURE
+PROMOTE=0
+END
