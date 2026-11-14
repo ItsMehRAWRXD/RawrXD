@@ -13,7 +13,11 @@ NOT_RUN!=PASS
    STATE=peer tip_land_c36 RUNTIME_REACHED=1; controlling tip C36_LSP_STAGE=0; source instrument ABSENT
 3. GPU/reference numerical divergence
    MAP→ C02 stage parity · C03 numeric under perf opts · C16 inference-to-tool workflow
-   STATE=Q_PRE_ROPE CLOSED; ATTN_PRE_O@pos0 BITEXACT; @pos1 OPEN (llama T=2 kqv_out ≠ host SDPA)
+   STATE=FA006 PRE_O_0@pos1 CLOSED; ATTN_PRE_O_1@pos1 OPEN 2.754107e-05 @idx704
+   ROOT=ATTN_Q_SPV_ULP_FA_F16_KNIFE_IDX747 (head11 lane43)
+   NEXT_OWNER=ATTN_Q_LLAMA_AVX_SQUARE_WQ_OR_BITEXACT_IDX747
+   NEXT_GATE=ATTN_Q_SPV_BITEXACT_WQ_HEAD11_OR_DUAL_PIPE
+   BOARD=BR_ATTN_PRE_O_1_POS1_R87 RELATED≠PASS FFN_DOWN_2 HELD SPV40E
 4. ConPTY terminal-stop reliability
    MAP→ C05 ConPTY · C06 terminal HWND · C08 shell tools
    STATE=engineering residual; not checklist PASS

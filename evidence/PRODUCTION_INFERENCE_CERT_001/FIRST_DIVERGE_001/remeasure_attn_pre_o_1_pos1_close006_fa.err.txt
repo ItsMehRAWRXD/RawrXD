@@ -4,9 +4,9 @@ GGUF_LOAD_STAGE=validated size=668788096 dataOff=1709440
 GGUF_LOAD_STAGE=fopen_ok
 GGUF_LOAD_STAGE=header_ok ver=3 tensors=201 kv=23
 [AUTO_BACKEND] model=G:\~dev\rawrxd\models\tinyllama.gguf weights=636MB kv=176MB scratch=0MB moe=0 experts=0 ctx=2048
-[AUTO_BACKEND] host RAM=30432MB commit=82383MB
+[AUTO_BACKEND] host RAM=27787MB commit=52025MB
 [AUTO_BACKEND] GPU Virtual Display Driver status=25174027 problem=0 healthy=1
-[AUTO_BACKEND] GPU AMD Radeon(TM) Graphics status=25174026 problem=0 healthy=1
+[AUTO_BACKEND] GPU AMD Radeon(TM) Graphics status=25175040 problem=43 healthy=0
 [AUTO_BACKEND] GPU AMD Radeon AI PRO R9700 status=25174026 problem=0 healthy=1
 [AUTO_BACKEND] GPU AMD Radeon RX 7800 XT status=25174026 problem=0 healthy=1
 [AUTO_BACKEND] Vulkan ICD ready
@@ -57,79 +57,7 @@ WEIGHT_BUDGET_INPUT_MIB=59568
 WEIGHT_BUDGET_EFFECTIVE_MIB=59568
 RESIDENCY_BUDGET_MIB=59568
 BUDGET_RELATION_VALID=1
-WEIGHT_BUDGET_INPUT=E8B0M
-WEIGHT_BUDGET_PARSE=PASS
-WEIGHT_BUDGET_MIB=59568
-WEIGHT_BUDGET_BYTES=62461575168
-WEIGHT_BUDGET_SOURCE=ENV
-DEEP2_DEVICE_COUNT_DETECTED=3
-DEEP2_DEVICE_COUNT_OPENED=1
-DEEP2_COMPUTE_BACKEND=GPU
-DEEP2_EXEC_PATH=SINGLE_GPU
-DEEP2_EXEC_MODE=1
-DEEP2_GPU_POLICY=2
-DEEP2_PLAN_REASON=auto_best_compute
-DEEP2_PRIMARY_INDEX=0
-DEEP2_PRIMARY_STABLE_ID=1002:7551:0000000000016A19
-DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
-DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
-DEEP2_DEVICE_0_VENDOR=AMD
-DEEP2_DEVICE_0_STABLE_ID=1002:7551:0000000000016A19
-DEEP2_DEVICE_0_VRAM_BYTES=34057322496
-DEEP2_DEVICE_0_SCORE=133
-DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
-DEEP2_DEVICE_1_NAME=AMD Radeon(TM) Graphics
-DEEP2_DEVICE_1_VENDOR=AMD
-DEEP2_DEVICE_1_STABLE_ID=1002:13C0:000000000001C2AC
-DEEP2_DEVICE_1_VRAM_BYTES=2119970816
-DEEP2_DEVICE_1_SCORE=101
-DEEP2_DEVICE_1_DUTY=DETECTED/UNUSED
-DEEP2_DEVICE_2_NAME=AMD Radeon RX 7800 XT
-DEEP2_DEVICE_2_VENDOR=AMD
-DEEP2_DEVICE_2_STABLE_ID=1002:747E:000000000001969F
-DEEP2_DEVICE_2_VRAM_BYTES=16962633728
-DEEP2_DEVICE_2_SCORE=116
-DEEP2_DEVICE_2_DUTY=DETECTED/UNUSED
-[VulkanCompute] DETECTED phys[0] type=2 AMD Radeon AI PRO R9700
-[VulkanCompute] DETECTED phys[1] type=2 Microsoft Direct3D12 (AMD Radeon AI PRO R9700)
-[VulkanCompute] SKIP_WARP_ICD phys[1] Microsoft Direct3D12 (AMD Radeon AI PRO R9700)
-[VulkanCompute] DETECTED phys[2] type=1 AMD Radeon(TM) Graphics
-[VulkanCompute] DETECTED phys[3] type=1 Microsoft Direct3D12 (AMD Radeon(TM) Graphics)
-[VulkanCompute] SKIP_WARP_ICD phys[3] Microsoft Direct3D12 (AMD Radeon(TM) Graphics)
-[VulkanCompute] DETECTED phys[4] type=2 AMD Radeon RX 7800 XT
-[VulkanCompute] DETECTED phys[5] type=2 Microsoft Direct3D12 (AMD Radeon RX 7800 XT)
-[VulkanCompute] SKIP_WARP_ICD phys[5] Microsoft Direct3D12 (AMD Radeon RX 7800 XT)
-[VulkanCompute] DETECTED phys[6] type=4 Microsoft Direct3D12 (Microsoft Basic Render Driver)
-[VulkanCompute] SKIP_WARP_ICD phys[6] Microsoft Direct3D12 (Microsoft Basic Render Driver)
-[VulkanCompute] OPEN_ONE AMD Radeon AI PRO R9700 (others unused)
-[VulkanCompute] QUEUES compute=0 transfer=1 dual=1
-[VulkanCompute] FREETOKEN_STICK_RUB transfer_q=1 waw_ready_gate=1 helpframe_nway=4
-[Deep2Engine] Vulkan single-GPU open: AMD Radeon AI PRO R9700 (needle=AMD Radeon AI PRO R9700)
-LIVE_GPU0=AMD Radeon AI PRO R9700
-LIVE_GPU1=AMD Radeon RX 7800 XT
-[Deep2Engine] BATCH2_SSVK_PACKED_DUAL_OPEN=1
-[Deep2Engine] BATCH2_SSVK_PACKED_DUAL_BOUND=1
-[Deep2Engine] BIND16_SSVK_PRODUCT_BOUND=1
-[Deep2Engine] Loading model from: G:\~dev\rawrxd\models\tinyllama.gguf
-[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
-[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
-[Deep2Engine] Multi-shard detected: NO (1 files in G:\~dev\rawrxd\models)
-[Deep2Engine] REVERSE_HOTPATCH=OFF ? raw GGUF load (opt-in via RAWRXD_REVERSE_HOTPATCH=1)
-[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=PASS arch=llama L=22 H=2048 FFN=5632 heads=32 kv=4 hd=64 ctx=2048 ropeBase=10000 ropeDim=64
-[Deep2Engine] AUTHORITY_LADDER=DEFER_UNTIL_RUNTIME_RECEIPT
-[Deep2Engine] GGUF architecture: 'llama'  hidden=2048 layers=22 heads=32 kvHeads=4 inter=5632 vocab=32000
-[Deep2Engine] Tokenizer loaded: vocab=32000 bos=1 eos=2 (Spm::encode)
-[ResidencyManager] Initialized: maxResidentBytes=62461575168, alignment=4096, granularity=65536
-[Deep2Engine] ResidencyManager initialized: maxResidentBytes=59568 MB
-[ResidencyManager] this=0000024D2712BF60  Registered 'output.weight': shard=0 offset=1709440 bytes=53760000  |  registry_size=1  registeredBytes=53760000  zeroOffset=0  maxResidentBytes=62461575168
-[ResidencyManager] this=0000024D2712BF60  Registered 'blk.18.attn_q.weight': shard=0 offset=377767296 bytes=2359296  |  registry_size=100  registeredBytes=378417152  zeroOffset=0  maxResidentBytes=62461575168
-[ResidencyManager] this=0000024D2712BF60  Registered 'blk.9.attn_v.weight': shard=0 offset=668349824 bytes=430080  |  registry_size=200  registeredBytes=667070464  zeroOffset=0  maxResidentBytes=62461575168
-RMV_MOUNT_001
-TENSORS_DISCOVERED=201
-TENSORS_ADDRESSED=201
-TENSORS_REGISTERED=201
-INVALID_SHARD=0
-INVALID_RANGFFN_INTER_INFERRED ok=1 why=SPLIT_GATE_MATCHES_DOWN inter=5632 old_meta=5632 old_model=5632 old_config=5632
+FFN_INTER_INFERRED ok=1 why=SPLIT_GATE_MATCHES_DOWN inter=5632 old_meta=5632 old_model=5632 old_config=5632
 PHI3_FUSED_FFN_RUNTIME layers=22 repaired=0 authority=UNOBSERVED
 GEMMA4_SCHEMA_BINDER ok=1 why=GEOM_READY hidden=2048 layers=22 vocab=32000 tokenEmbed=1
 GEMMA4_LAYER_TOPOLOGY_BIND ok=1 why=GEOM_READY_UNIFORM layers=22 split=22 fused_qkv=0 projector=0 ssm=0 ffn_only=0 ffn=22 unknown=0
@@ -153,15 +81,75 @@ PROMOTE=0
 [BUF] hidden=2048 heads=32 headDim=64 qOut=2048 headScratch=2048 kvDim=256 ffn=5632 ffnGateScratch=5632
 SSM_BUF stPer=32 cvPer=8192 inner=0 state=0 NOTE=STATE_NE_HEADS
 SSM_MAMBA2_ARM=0 reason=GEO_OR_BUF
-[BUF] hidden=2048 heads=32 headDim=64 qOut=2048 headScratch=2048 kvDim=256 ffn=8192 ffnGateScratch=8192
-SSM_BUF stPer=32 cvPer=8192 inner=0 state=0 NOTE=STATE_NE_HEADS
-SSM_MAMBA2_ARM=0 reason=GEO_OR_BUF
-E=0
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+DEEP2_DEVICE_COUNT_DETECTED=2
+DEEP2_DEVICE_COUNT_OPENED=1
+DEEP2_COMPUTE_BACKEND=GPU
+DEEP2_EXEC_PATH=SINGLE_GPU
+DEEP2_EXEC_MODE=1
+DEEP2_GPU_POLICY=2
+DEEP2_PLAN_REASON=auto_best_compute
+DEEP2_PRIMARY_INDEX=0
+DEEP2_PRIMARY_STABLE_ID=1002:7551:000000000001681D
+DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_VENDOR=AMD
+DEEP2_DEVICE_0_STABLE_ID=1002:7551:000000000001681D
+DEEP2_DEVICE_0_VRAM_BYTES=34057322496
+DEEP2_DEVICE_0_SCORE=133
+DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
+DEEP2_DEVICE_1_NAME=AMD Radeon RX 7800 XT
+DEEP2_DEVICE_1_VENDOR=AMD
+DEEP2_DEVICE_1_STABLE_ID=1002:747E:0000000000019576
+DEEP2_DEVICE_1_VRAM_BYTES=16962633728
+DEEP2_DEVICE_1_SCORE=116
+DEEP2_DEVICE_1_DUTY=DETECTED/UNUSED
+[VulkanCompute] DETECTED phys[0] type=2 AMD Radeon AI PRO R9700
+[VulkanCompute] DETECTED phys[1] type=2 Microsoft Direct3D12 (AMD Radeon AI PRO R9700)
+[VulkanCompute] SKIP_WARP_ICD phys[1] Microsoft Direct3D12 (AMD Radeon AI PRO R9700)
+[VulkanCompute] DETECTED phys[2] type=2 AMD Radeon RX 7800 XT
+[VulkanCompute] DETECTED phys[3] type=2 Microsoft Direct3D12 (AMD Radeon RX 7800 XT)
+[VulkanCompute] SKIP_WARP_ICD phys[3] Microsoft Direct3D12 (AMD Radeon RX 7800 XT)
+[VulkanCompute] DETECTED phys[4] type=4 Microsoft Direct3D12 (Microsoft Basic Render Driver)
+[VulkanCompute] SKIP_WARP_ICD phys[4] Microsoft Direct3D12 (Microsoft Basic Render Driver)
+[VulkanCompute] OPEN_ONE AMD Radeon AI PRO R9700 (others unused)
+[VulkanCompute] QUEUES compute=0 transfer=1 dual=1
+[VulkanCompute] FREETOKEN_STICK_RUB transfer_q=1 waw_ready_gate=1 helpframe_nway=4
+[Deep2Engine] Vulkan single-GPU open: AMD Radeon AI PRO R9700 (needle=AMD Radeon AI PRO R9700)
+LIVE_GPU0=AMD Radeon AI PRO R9700
+LIVE_GPU1=AMD Radeon RX 7800 XT
+[Deep2Engine] BATCH2_SSVK_PACKED_DUAL_OPEN=1
+[Deep2Engine] BATCH2_SSVK_PACKED_DUAL_BOUND=1
+[Deep2Engine] BIND16_SSVK_PRODUCT_BOUND=1
+[Deep2Engine] Loading model from: G:\~dev\rawrxd\models\tinyllama.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Multi-shard detected: NO (1 files in G:\~dev\rawrxd\models)
+[Deep2Engine] REVERSE_HOTPATCH=OFF ? raw GGUF load (opt-in via RAWRXD_REVERSE_HOTPATCH=1)
+[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=PASS arch=llama L=22 H=2048 FFN=5632 heads=32 kv=4 hd=64 ctx=2048 ropeBase=10000 ropeDim=64
+[Deep2Engine] AUTHORITY_LADDER=DEFER_UNTIL_RUNTIME_RECEIPT
+[Deep2Engine] GGUF architecture: 'llama'  hidden=2048 layers=22 heads=32 kvHeads=4 inter=5632 vocab=32000
+[Deep2Engine] Tokenizer loaded: vocab=32000 bos=1 eos=2 (Spm::encode)
+[ResidencyManager] Initialized: maxResidentBytes=62461575168, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=59568 MB
+[ResidencyManager] this=000002388250AC30  Registered 'output.weight': shard=0 offset=1709440 bytes=53760000  |  registry_size=1  registeredBytes=53760000  zeroOffset=0  maxResidentBytes=62461575168
+[ResidencyManager] this=000002388250AC30  Registered 'blk.18.attn_q.weight': shard=0 offset=377767296 bytes=2359296  |  registry_size=100  registeredBytes=378417152  zeroOffset=0  maxResidentBytes=62461575168
+[ResidencyManager] this=000002388250AC30  Registered 'blk.9.attn_v.weight': shard=0 offset=668349824 bytes=430080  |  registry_size=200  registeredBytes=667070464  zeroOffset=0  maxResidentBytes=62461575168
+RMV_MOUNT_001
+TENSORS_DISCOVERED=201
+TENSORS_ADDRESSED=201
+TENSORS_REGISTERED=201
+INVALID_SHARD=0
+INVALID_RANGE=0
 OVERFLOW_RANGE=0
 ZERO_SIZE=0
 UNADDRESSED=0
 RMV_MOUNT_001=PASS
-[Deep2Engine] ResidencyManager: this=0000024D2712BF60  registered=201 tensors  bytes=667078656  max=62461575168
+[Deep2Engine] ResidencyManager: this=000002388250AC30  registered=201 tensors  bytes=667078656  max=62461575168
 [RMV_MOUNT_001]=PASS
 [Deep2Engine] AUTHORITY_LADDER=BLOCKED
 BLOCKED_AT=PROVENANCE_MISMATCH
@@ -169,12 +157,15 @@ BLOCKED_OWNER=MODEL_PROVENANCE
 MODEL_OPEN=PASS
 PROMOTE=0
 [Deep2Engine] AUTHORITY_LADDER=SESSION_SEAL_ONLY provenance_blocks_promote=1 schema=201
-[ThreadPool] Initializing with 32 threads...
+[ThreadPool] Initializing with 32 threads.[BUF] hidden=2048 heads=32 headDim=64 qOut=2048 headScratch=2048 kvDim=256 ffn=8192 ffnGateScratch=8192
+SSM_BUF stPer=32 cvPer=8192 inner=0 state=0 NOTE=STATE_NE_HEADS
+SSM_MAMBA2_ARM=0 reason=GEO_OR_BUF
+..
 [ThreadPool] Initialized 32 worker threads
 [ThreadPool] Reinitializing with 32 threads...
 [ThreadPool] Reinitialized 32 worker threads
 [Deep2Engine] ThreadPool (loadModel): 32 threads
-[QuantKernelRegistry] Q4_K GEMV=00007FF78CB06E10 dequant=00007FF78CB04150 GetGEMV(12)=00007FF78CB06E10 match=1
+[QuantKernelRegistry] Q4_K GEMV=00007FF77A456E10 dequant=00007FF77A454150 GetGEMV(12)=00007FF77A456E10 match=1
 [IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
 [IQKernels] IQ4_NL using AVX-512 path
 [QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
@@ -206,14 +197,14 @@ PROMOTE=0
 [HotPatcher] CrashRecovery UEF skipped (product default)
 [HotPatcher] Initialized - The Bottle is ready (with safety systems)
 [Deep2Engine] HotPatcher initialized - The Bottle is ready
-[QuantKernelRegistry] Q4_K GEMV=00007FF78CB06E10 dequant=00007FF78CB04150 GetGEMV(12)=00007FF78CB06E10 match=1
+[QuantKernelRegistry] Q4_K GEMV=00007FF77A456E10 dequant=00007FF77A454150 GetGEMV(12)=00007FF77A456E10 match=1
 [IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
 [IQKernels] IQ4_NL using AVX-512 path
 [QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
 [QuantKernelRegistry] Registered 22 GEMV kernels, 22 dequant kernels
 [Deep2Engine] Telemetry controller initialized (PCIe stall + bandwidth + residency)
 [Deep2Engine] ENHANCEMENT STACK: ON
-ELASTIC_DYNAMIC warm=2304MB staged=288MB hot=4608MB la=1 ramAvail=32179MB vram=32479MB L=22 pressure=0
+ELASTIC_DYNAMIC warm=2304MB staged=288MB hot=4608MB la=1 ramAvail=26844MB vram=32479MB L=22 pressure=0
 FREETOKEN_MICROZONE live=1 zones=8 zone_mb=64 sticks=4 active=0 overwrites=0 hits=0 misses=0 hit_pct=0.00 stick0_rpm=0 stick1_rpm=0 allocs_after_init=0 key=address_id waw_ready_gate=1 helpframe_nway=4 eat_gt2=1 metric=fetch_not_fit models=20/35/70/120/300/671+ unbounded=1 public_gap=amd_xfer_waw+prescope_dual_only
 ADDRESSABILITY_OWNER=FUTURE_CONSUMER_SPACE
 RESIDENCY_OWNER=FIXED_FREETOKEN_POOL
@@ -265,8 +256,8 @@ KV_WORKING_SEQ_BOUND=4096 ckv_torus (gguf_ctx=4096)
 [Deep2Engine] MARS enabled: GPU0=31.86 GB, GPU1=16.00 GB
 KEN_MARS_ACTIVE=1 budget_env=59568
 [VRAMManager] Allocated 'token_embd.weight' (36864000 bytes) on GPU 0
-[DualGPUBackend] Worker 1 started
 [DualGPUBackend] Worker 0 started
+[DualGPUBackend] Worker 1 started
 [Deep2Engine] MARS keep-GPU pin 'token_embd.weight' (skip Host/Stream Evict under GPU product)
 [VRAMManager] Allocated 'output.weight' (53760000 bytes) on GPU 0
 [VRAMManager] Allocated 'output_norm.weight' (8192 bytes) on GPU 0
@@ -561,15 +552,15 @@ LIVE_PATH_ENV=1 MECH_ENV=trampoline,cyclone,elastic,stream WANTED=1
 [StreamEngine] VRAM budget: 16.00 GB
 [StreamEngine] Chunk size: 1.09 GB compressed, 8.72 GB original, 1.09 GB reconstructed
 [unreverseHot] streamDead(0) → Reverse0 (layers=22)
-[Deep2Engine] embedToken: type=12 vocabSize=32000 hiddenDim=2048 data=0000024D3ACF0000 sizeBytes=36864000
+[Deep2Engine] embedToken: type=12 vocabSize=32000 hiddenDim=2048 data=0000023899760000 sizeBytes=36864000
 [STAGE_DIGEST] side=deep2 key=PROMPT_EMBED pos=0 n=2048 l2=1.008737855e-01 max_abs=7.818102837e-03 min=-7.818102837e-03 max=5.915760994e-03 sum=5.792212486e-02 fnv=13123758da8b244a nf=0
 [STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_1_pos1_close006_fa\deep2_PROMPT_EMBED_pos0_layer0_full_n2048_seq001.bin nelem=2048 head=-1 seq=001 fnv=13123758da8b244a
 TRY_GPU_FALLBACK_HOST=1
 [LAYER_ENTER] ly=0
 [ResolveReverse0] layer 0: neutral resolved → direction chosen
 [ReconstructCompression] layer 0: 4/32 slices active, 8.72 GB → 1.09 GB
-[Deep2Engine] Layer 0 weights: wq.data=0000024D3E840000 type=12 wk.data=0000024D3E5B0000 wv.data=0000024D3EA80000 wo.data=0000024D3E600000 wqkv.data=0000000000000000 attnO.data=0000024D3E600000
-[Deep2Engine] Layer 0 weights: attnNorm.data=0000024D3D020000 ffnNorm.data=0000024D3E5A0000
+[Deep2Engine] Layer 0 weights: wq.data=000002389D290000 type=12 wk.data=000002389D000000 wv.data=000002389D4D0000 wo.data=000002389D050000 wqkv.data=0000000000000000 attnO.data=000002389D050000
+[Deep2Engine] Layer 0 weights: attnNorm.data=000002388EC70000 ffnNorm.data=000002388EC80000
 [STAGE_DIGEST] side=deep2 key=ATTN_NORM_0 pos=0 n=2048 l2=8.105918780e-01 max_abs=3.308502138e-01 min=-3.308502138e-01 max=2.076931447e-01 sum=-1.899722029e+00 fnv=b4ca919612be6c51 nf=0
 [STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_1_pos1_close006_fa\deep2_ATTN_NORM_0_pos0_layer0_full_n2048_seq002.bin nelem=2048 head=-1 seq=002 fnv=b4ca919612be6c51
 [STAGE_DIGEST] rms_norm_epsilon_source=llama.attention.layer_norm_rms_epsilon
@@ -914,9 +905,9 @@ HEAP_OK_AFTER_FORWARD_LAYERS=1
 [STAGE_DIGEST] side=deep2 key=PROMPT_POST_LAYERS pos=0 n=2048 l2=1.625176868e+01 max_abs=2.581581116e+00 min=-2.581581116e+00 max=1.269928217e+00 sum=-4.679903500e-01 fnv=5824f09b77dba0fc nf=0
 [STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_1_pos1_close006_fa\deep2_PROMPT_POST_LAYERS_pos0_layer0_full_n2048_seq082.bin nelem=2048 head=-1 seq=082 fnv=5824f09b77dba0fc
 HEAP_OK_FINAL_NORM_BEFORE=1
-FINAL_NORM_SRC_PTR=0000024D61AFC060
-FINAL_NORM_DST_PTR=0000024D61AFC060
-FINAL_NORM_WEIGHT_PTR=0000024D5FA00000
+FINAL_NORM_SRC_PTR=00000239496A1060
+FINAL_NORM_DST_PTR=00000239496A1060
+FINAL_NORM_WEIGHT_PTR=00000238FFF30000
 FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
 FINAL_NORM_WEIGHT_FULFILLED=1
 FINAL_NORM_WEIGHT_BYTES=8192
@@ -1284,9 +1275,9 @@ HEAP_OK_AFTER_FORWARD_LAYERS=1
 [STAGE_DIGEST] side=deep2 key=PROMPT_POST_LAYERS pos=1 n=2048 l2=3.538580619e+01 max_abs=1.516803932e+01 min=-5.769028187e+00 max=1.516803932e+01 sum=-4.865236275e+00 fnv=0a3ad87a3a7d23ac nf=0
 [STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_1_pos1_close006_fa\deep2_PROMPT_POST_LAYERS_pos1_layer0_full_n2048_seq166.bin nelem=2048 head=-1 seq=166 fnv=0a3ad87a3a7d23ac
 HEAP_OK_FINAL_NORM_BEFORE=1
-FINAL_NORM_SRC_PTR=0000024D61AFE060
-FINAL_NORM_DST_PTR=0000024D61AFE060
-FINAL_NORM_WEIGHT_PTR=0000024D5FA00000
+FINAL_NORM_SRC_PTR=00000239496A3060
+FINAL_NORM_DST_PTR=00000239496A3060
+FINAL_NORM_WEIGHT_PTR=00000238FFF30000
 FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
 FINAL_NORM_WEIGHT_FULFILLED=1
 FINAL_NORM_WEIGHT_BYTES=8192
@@ -1309,13 +1300,13 @@ HEAP_OK_FINAL_NORM_AFTER=1
 [STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_1_pos1_close006_fa\deep2_FINAL_NORM_pos1_layer0_full_n2048_seq168.bin nelem=2048 head=-1 seq=168 fnv=ae8bd59e25e9d999
 [STAGE_DIGEST] side=deep2 key=TIP_FINAL_NORM pos=1 n=2048 l2=7.838376858e+01 max_abs=1.959764862e+01 min=-1.959764862e+01 max=1.617488861e+01 sum=-6.604877315e+01 fnv=ae8bd59e25e9d999 nf=0
 [STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_1_pos1_close006_fa\deep2_TIP_FINAL_NORM_pos1_layer0_full_n2048_seq169.bin nelem=2048 head=-1 seq=169 fnv=ae8bd59e25e9d999
-[AGENT] PREFILL_DONE prompt_tokens=2 prefill_ms=1391.380
+[AGENT] PREFILL_DONE prompt_tokens=2 prefill_ms=1331.884
 HEAP_OK_AFTER_PREFILL=1
 HEAP_OK_DECODE_ENTER=1
 [AGENT] DECODE_BEGIN max_out=1
 HEAP_OK_DECODE_FEEDBACK_INIT=1
 HEAP_OK_DECODE_STEP0_ENTER=1
-DECODE_STEP0_PTRS h=0000024D61AFE060 logits=0000024D36BF6080 lmHead=0000024D379A0000 vocab=32000 hiddenDim=2048 promptLen=2
+DECODE_STEP0_PTRS h=00000239496A3060 logits=0000023895625380 lmHead=0000023896410000 vocab=32000 hiddenDim=2048 promptLen=2
 HEAP_OK_DECODE_STEP0_H_READY=1
 HEAP_OK_LOGITS_BEFORE=1
 HEAP_OK_COMPUTE_LOGITS_ENTER=1
@@ -1360,7 +1351,7 @@ GATE=G0_REFERENCE
 DEEP2_GPU_ISO_RUN=1
 GPU_FORWARD_CHILD_IGNORE=NONE
 GPU_FORWARD_CALLS=0
-GPU_FORWARD_MS=1360.535
+GPU_FORWARD_MS=1307.237
 QKV_CALLS=0
 QKV_MS=0.000
 QKV_IGNORE_REQUESTED=0
@@ -1402,8 +1393,8 @@ RUNTIME_AUTHORITY=1
 OLLAMA_HTTP=0
 PROMOTE=0
 TOKENS_COMMITTED=1
-[Deep2Engine] Generation complete: 1 tokens in 1432.33 ms (E2E 0.70 TPS)
-[Deep2Engine] PREFILL: 2 tok in 1391.38 ms (1.44 tok/s) | DECODE: 1 tok in 40.64 ms (24.61 tok/s)
+[Deep2Engine] Generation complete: 1 tokens in 1367.42 ms (E2E 0.73 TPS)
+[Deep2Engine] PREFILL: 2 tok in 1331.88 ms (1.50 tok/s) | DECODE: 1 tok in 35.24 ms (28.38 tok/s)
 DEEP2_GPU_RMSNORM_OPS=0
 DEEP2_GPU_QKV_OPS=0
 DEEP2_GPU_ROPE_OPS=0
@@ -1441,7 +1432,7 @@ GATE=G0_REFERENCE
 DEEP2_GPU_ISO_RUN=1
 GPU_FORWARD_CHILD_IGNORE=NONE
 GPU_FORWARD_CALLS=0
-GPU_FORWARD_MS=1360.535
+GPU_FORWARD_MS=1307.237
 QKV_CALLS=0
 QKV_MS=0.000
 QKV_IGNORE_REQUESTED=0
@@ -1677,8 +1668,8 @@ MODEL=llama
 PATH=generateStream
 TOKENS_REQUESTED=1
 TOKENS_COMMITTED=1
-GENERATION_WALL_NS=1460527800
-DECODE_TPS_REAL=0.684684
+GENERATION_WALL_NS=1392643500
+DECODE_TPS_REAL=0.718059
 PRODUCT_FLOOR_TPS=5.000
 PRODUCT_WALL_MAX_NS=12800000000
 PARITY_PASS=1
@@ -1705,8 +1696,8 @@ TOKENS_COMMITTED=1
 TOKENS_DECODED=1
 TOKENIZER_SINGLE_CALLS=1
 TOKENIZER_SEQUENCE_CALLS=0
-DETOK_WALL_NS=300
-CALLBACK_WALL_NS=55400
+DETOK_WALL_NS=700
+CALLBACK_WALL_NS=63800
 DETOK_RAW_BYTES=1
 DETOK_EMITTED_BYTES=1
 DETOK_UTF8_PENDING_BYTES=0
@@ -1729,25 +1720,25 @@ PROMOTE=0
 TOKENS_REQUESTED=1
 TOKENS_COMMITTED=1
 TOKENS_DECODED=1
-TOTAL_WALL_MS=1457.976
-PREFILL_MS=1391.380
-DECODE_MS=40.636
-FORWARD_MS=1360.535
-LOGITS_MS=25.726
-SAMPLE_MS=0.077
+TOTAL_WALL_MS=1389.480
+PREFILL_MS=1331.884
+DECODE_MS=35.237
+FORWARD_MS=1307.237
+LOGITS_MS=23.378
+SAMPLE_MS=0.234
 DETOK_MS=0.002
-CALLBACK_MS=0.055
-RECEIPT_MS=0.195
+CALLBACK_MS=0.064
+RECEIPT_MS=0.573
 KV_MS=0.000
-TPS=0.686
+TPS=0.720
 DELTA_VS_BASELINE_PCT=0.000
 ONE_BY_ONE_IGNORE_LADDER_END=1
 DECODE_BLOCKER_ATTRIBUTION_BEGIN=1
 IGNORED_OWNER=NONE DIAGNOSTIC_ONLY=1 PROMOTE=0
 TOKENS_REQUESTED=1 TOKENS_COMMITTED=1 TOKENS_DECODED=1
 TOKENIZER_SINGLE_CALLS=1 TOKENIZER_SEQUENCE_CALLS=0 DECODE_REPLAY_FACTOR=1.000000
-TOTAL_WALL_MS=1460.528 PREFILL_MS=1391.380 DECODE_MS=40.636 ACCOUNTED_MS=1387.826
-FORWARD_MS=1361.769 LOGITS_MS=25.726 SAMPLE_MS=0.077 DETOK_MS=0.003 CALLBACK_MS=0.055 RECEIPT_MS=0.195 KV_MS=0.000 OTHER_MS=0.000
+TOTAL_WALL_MS=1392.643 PREFILL_MS=1331.884 DECODE_MS=35.237 ACCOUNTED_MS=1332.562
+FORWARD_MS=1308.310 LOGITS_MS=23.378 SAMPLE_MS=0.234 DETOK_MS=0.004 CALLBACK_MS=0.064 RECEIPT_MS=0.573 KV_MS=0.000 OTHER_MS=0.000
 DECODE_OWNER=FORWARD
 DECODE_BLOCKER_ATTRIBUTION_END=1
 RXEV_SURFACE ARMED=0 DISPOSITION=NO_RUN_STATE
@@ -1821,10 +1812,10 @@ COMPLETION_RECEIPT_PRESENT=1
 PRODUCT_OPEN_PASS=1
 SESSION_ENTER_PASS=1
 TOKEN_COMMIT_PASS=1
-MEAN_TOKEN_WALL_NS=1460527800
+MEAN_TOKEN_WALL_NS=1392643500
 TOKEN_WALL_TARGET_NS=6666667
 DEADLINE_OK=0
-DECODE_TPS_REAL=0.685
+DECODE_TPS_REAL=0.718
 NOTE=TPS_DISPLAY_ONLY
 FUNCTIONAL_PASS=1
 PRODUCT_PASS=1

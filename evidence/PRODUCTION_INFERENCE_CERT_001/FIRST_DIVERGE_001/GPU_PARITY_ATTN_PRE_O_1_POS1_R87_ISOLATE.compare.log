@@ -1,0 +1,24 @@
+ATTN_NORM_1_pos1: n=2048 g=2048 r=2048 maxAbs=9.536743e-07 @idx1454 head=22 n_gt=0/2048 UNDER=1
+  head11: maxAbs=2.980232e-08 @lane4 maxULP=37 lanes0-7ULP=0,3,0,7,2,13,11,7
+Q_PRE_ROPE_1_pos1: n=2048 g=2048 r=2048 maxAbs=9.536743e-07 @idx1327 head=20 n_gt=0/2048 UNDER=1
+  head11: maxAbs=4.768372e-07 @lane20 maxULP=16 lanes0-7ULP=2,4,6,2,4,0,3,0
+K_PRE_ROPE_1_pos0: n=256 g=256 r=256 maxAbs=7.152557e-07 @idx243 head=3 n_gt=0/256 UNDER=1
+K_PRE_ROPE_1_pos1: n=256 g=256 r=256 maxAbs=1.668930e-06 @idx59 head=0 n_gt=2/256 UNDER=0
+V_1_pos0: n=256 g=256 r=256 maxAbs=1.490116e-08 @idx75 head=1 n_gt=0/256 UNDER=1
+V_1_pos1: n=256 g=256 r=256 maxAbs=2.235174e-08 @idx216 head=3 n_gt=0/256 UNDER=1
+ATTN_PRE_O_1_pos0: n=2048 g=2048 r=2048 maxAbs=0.000000e+00 @idx0 head=0 n_gt=0/2048 UNDER=1
+  head11: maxAbs=0.000000e+00 @lane0 maxULP=0 lanes0-7ULP=0,0,0,0,0,0,0,0
+ATTN_PRE_O_1_pos1: n=2048 g=2048 r=2048 maxAbs=2.754107e-05 @idx704 head=11 n_gt=30/2048 UNDER=0
+  head11: maxAbs=2.754107e-05 @lane0 maxULP=15633 lanes0-7ULP=7393,1401,1357,1101,7103,853,791,1178
+ATTN_OUT_1_pos1: n=2048 g=2048 r=2048 maxAbs=1.862645e-08 @idx1454 head=22 n_gt=0/2048 UNDER=1
+  head11: maxAbs=1.210719e-08 @lane3 maxULP=1408 lanes0-7ULP=1408,160,2,208,0,80,40,2
+FFN_DOWN_0_pos0: n=2048 g=2048 r=2048 maxAbs=2.235174e-08 @idx616 head=9 n_gt=0/2048 UNDER=1
+  head11: maxAbs=1.490116e-08 @lane11 maxULP=62 lanes0-7ULP=0,3,36,0,2,6,2,4
+Q_POST_ROPE_1_pos1_nmatched: n=128 g=2048 r=128 maxAbs=1.437005e+00 @idx61 head=0 n_gt=64/128 UNDER=0
+NOTE=REF Q_POST_ROPE often n=128 layout; non-controlling for FA006
+FA_gpuQ_POST+gpuKV: vsREF maxAbs=2.754107e-05 @idx704 head11=2.754107e-05 vsPROD=4.143803e-07
+FA_refQ_PRE+gpuKV_POST: vsREF maxAbs=4.163007e-02 @idx1223 head11=1.492376e-02 vsPROD=4.163007e-02
+FA_hybrid_refQh11_PRE_on_POST: vsREF maxAbs=1.492376e-02 head11=1.492376e-02
+FIRST_SIZE_MATCHED_OPEN=('K_PRE_ROPE_1_pos1', 1.6689300537109375e-06, 59)
+CONTROLLING=ATTN_PRE_O_1@pos1 maxAbs=2.754107e-05 @idx704 head11
+PROMOTE=0 TIP_CLIMB=HOLD
