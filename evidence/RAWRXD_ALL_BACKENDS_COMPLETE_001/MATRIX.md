@@ -19,12 +19,12 @@ Certification levels: Build � Load � Numerics � Generation � Performance
 | ID | Workstream | Status | Levels cleared (honest) | Blocking next | Evidence pointer |
 |----|------------|--------|-------------------------|---------------|------------------|
 | W01 | Deep2 CPU | PARTIAL | TinyLlama Q4_K host short+med CE=1 (WS5); full quant parity OPEN | Host Q-family parity + ref dump | ATTN_KV_DEEP2_CPU_001 + CLI_NUMERICAL |
-| W02 | Deep2 Vulkan | PARTIAL | Q6K unforced default remasured (W5 EXE 47438251); Q8 shapes PASS; long-ctx OPEN | Multifamily SPV + long-context | W5_DEEP2_VULKAN_KERNEL_FAMILIES_001 |
-| W03 | Q4_K / Q6_K / Q8 kernels | PARTIAL | Q6K SPV default+parity; Q4 shapes expanded; Q8 4-shape PASS (W5) | Packed GEMM batch + multifamily | W5_DEEP2_VULKAN_KERNEL_FAMILIES_001 |
+| W02 | Deep2 Vulkan | RELATED | WS3 family; Q6 CEBA verified; Q8 PASS; ≠ CERT | Tip FORCE_SPV + long-ctx | DEEP2_VULKAN_QK_GEMV_FAMILY_001 | Multifamily SPV + long-context | W5_DEEP2_VULKAN_KERNEL_FAMILIES_001 |
+| W03 | Q4_K / Q6_K / Q8 kernels | RELATED | Q8/Q5/Q3/Q2 PASS; Q4 numeric OK/GATE_FAIL; Q6 PARITY_OK | Q4K tps / tip remasure | DEEP2_VULKAN_QK_GEMV_FAMILY_001 | Packed GEMM batch + multifamily | W5_DEEP2_VULKAN_KERNEL_FAMILIES_001 |
 | W04 | Packed GEMV / GEMM | PARTIAL | Ornith L3 ULP CLOSED; W5 Q4 packed shapes PASS; GEMM batch OPEN | Broader batch/shape matrix | W5 + BR_ORNITH_PACKED_GEMV_L3_R104 |
 | W05 | Attention / KV cache | PARTIAL | TinyLlama short+medctx KV CE=1 (38 grows); PT1784 trunc; FIRST_DIVERGE attn RELATED; Laguna ULP OPEN | PT>=1024 CLEAN_EXIT + host ref dump + Laguna ULP | ATTN_KV_DEEP2_CPU_001 + FIRST_DIVERGE + W1_LAGUNA |
-| W06 | Ornith | PARTIAL | L3 ULP closed; SEMANTIC=FAIL (8tok HEAP/TOK=0; R101 incoherence); PROD_DECODE=0 | PROD_DECODE REAL=21 / heap / PROD_PROVENANCE / hybrid load | ORNITH_SEMANTIC_BEYOND_L3_001 + R101-R104 |
-| W07 | Laguna / Qwen3.5 | PARTIAL | WS1 PARTIAL stop@ATTN_GATE_PARITY; order MATCH; live EXE 47438251; TOK CEBA0DE4 RELATED | Bitexact ref digest compare | REAP_LAGUNA_001 GATE_RECORD |
+| W06 | Ornith | PARTIAL | L3 ULP CLOSED; HYBRID_LOAD=PASS (no fabricate); SEMANTIC=PARTIAL (llama GEN=8); Deep2 prod semantic OPEN; layer parity OPEN | Deep2 PROD_DECODE / HYBRID_SEMANTIC_CLOSE | W6_ORNITH_HYBRID_COMPLETE + R101-R104 + BR_ORNITH_HYBRID_LOAD_R105 |
+| W07 | Laguna / Qwen3.5 | OPEN | Tensor map L0/1/40 CLOSED; order MATCH softplus-before-O; digests L0+L40 RUNTIME; NUMERIC_PARITY OPEN | `REAP_LAGUNA_ATTN_GATE_001` FIRST_DIVERGENT=OPEN_NUMERIC (NO_BITEXACT_REF_DIGEST_COMPARE) EXE=57D6EB21 | FAIR_H2H + R100 + ATTN_GATE_001 |
 | W08 | MiniMax MoE | PARTIAL | Router MATCH+AL12/13; tip CEBA0DE4 LOAD/MoE OK; FAIL_MID_PREFILL ly=15 TOK=0 SEMANTIC=NOT_RUN; Ollama create FAIL | Survive 62L->TOK>0 + FFN_DOWN_1 GPU A/B + AL14 | W2_MINIMAX_REAP_SEMANTIC + FAIR_H2H P0-D |
 | W09 | Kimi K2 | PARTIAL / EXPLICIT_UNSUPPORTED gen | Tip INDEX 13/13; ProductOpen FAIL DualStick=OFF; GENERATED_TOKENS=0 | Streamable working-set + native gen | W8_KIMI_K2_MULTI_AGENT_001 + K2_L5_P1_TIP_LOAD_001 |
 | W10 | REAP | PARTIAL | Physical exports rewrite_authorized=0; Laguna TOK peer; MiniMax tip TOK=0; Ollama create FAIL; quality!=competitive | Fair H2H after TOK32; MiniMax SEMANTIC | W2_MINIMAX_REAP_SEMANTIC / REAP_STRATA_* |

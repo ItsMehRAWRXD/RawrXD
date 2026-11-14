@@ -10,12 +10,12 @@ Status legend: **OPEN** | **RELATED** | **PARTIAL** | **CERTIFIED** | **EXPLICIT
 
 | Workstream | Status | Notes / SSOT pointer |
 |------------|--------|----------------------|
-| Deep2 CPU | OPEN | quantized parity + perf TBD |
+| Deep2 CPU | RELATED/PARTIAL | WS5 TinyLlama Q4_K host short+med CE=1; full quant matrix OPEN |
 | Deep2 Vulkan | RELATED | WS3 `DEEP2_VULKAN_QK_GEMV_FAMILY_001`; host fallback ≠ GPU cert |
 | Q4_K / Q6_K / Q8 | RELATED | Q6 FORCE_SPV CEBA exact-SHA; Q8 shapes PASS; Q4 numeric OK/GATE_FAIL |
 | Packed GEMV / GEMM | PARTIAL | Ornith L3 ULP_CLOSED; Q4/Q8 shapes expanded; GEMM multi-batch OPEN |
-| Attention / KV cache | OPEN | long-context stability TBD |
-| Ornith | RELATED | L3 ULP closed; hybrid load/semantic OPEN |
+| Attention / KV cache | PARTIAL | `ATTN_KV_DEEP2_CPU_001` medctx KV stable; PT1784 trunc; FIRST_DIVERGE RELATED |
+| Ornith | RELATED_PARTIAL | L3 ULP closed; HYBRID_LOAD=PASS; SEMANTIC=PARTIAL (llama GEN=8); Deep2 semantic OPEN; W6_ORNITH_HYBRID_COMPLETE |
 | Laguna / Qwen3.5 | PARTIAL | W1: gate pre-O+TOK>0 tip CEBA0DE4; FIRST_DIVERGENCE_ULP OPEN; PROMOTE=0 |
 | MiniMax MoE | PARTIAL | W2 AL12/13 + tip CEBA0DE4 LOAD/MoE OK; FAIL_MID_PREFILL ly=15 TOK=0 SEMANTIC=NOT_RUN; PROMOTE=0 |
 | Kimi K2 | PARTIAL / EXPLICIT_UNSUPPORTED gen | W8+L5 tip INDEX 13/13; ProductOpen FAIL DualStick=OFF CAPACITY_PROOF_REOPEN=0; gen=0 EXE `6754616E…` |
