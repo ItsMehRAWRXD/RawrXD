@@ -124,19 +124,19 @@ void Win32IDE::showRenamePreview(const std::string& oldName, const std::string& 
     SendMessageA(m_renamePreview.hwndList, WM_SETFONT, (WPARAM)m_renamePreview.hFont, TRUE);
 
     // Columns
-    LVCOLUMNA col = {};
+    LVCOLUMNW col = {};
     col.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_FMT;
 
-    col.pszText = (char*)"File";
+    col.pszText = const_cast<LPWSTR>(L"File");
     col.cx = dpiScale(180);
     col.fmt = LVCFMT_LEFT;
     ListView_InsertColumn(m_renamePreview.hwndList, 0, &col);
 
-    col.pszText = (char*)"Line";
+    col.pszText = const_cast<LPWSTR>(L"Line");
     col.cx = dpiScale(50);
     ListView_InsertColumn(m_renamePreview.hwndList, 1, &col);
 
-    col.pszText = (char*)"Context";
+    col.pszText = const_cast<LPWSTR>(L"Context");
     col.cx = dpiScale(340);
     ListView_InsertColumn(m_renamePreview.hwndList, 2, &col);
 
@@ -149,17 +149,18 @@ void Win32IDE::showRenamePreview(const std::string& oldName, const std::string& 
         size_t lastSlash = fileName.find_last_of("\\/");
         if (lastSlash != std::string::npos) fileName = fileName.substr(lastSlash + 1);
 
-        LVITEMA lvi = {};
+        LVITEMW lvi = {};
         lvi.mask = LVIF_TEXT | LVIF_PARAM;
         lvi.iItem = i;
         lvi.iSubItem = 0;
-        lvi.pszText = (char*)fileName.c_str();
+        std::wstring fileNameW(fileName.begin(), fileName.end());
+        lvi.pszText = fileNameW.data();
         lvi.lParam = (LPARAM)i;
         ListView_InsertItem(m_renamePreview.hwndList, &lvi);
 
         // Line number - use wide string for Unicode build
-        char lineStr[16];
-        sprintf_s(lineStr, "%d", change.line + 1);
+        wchar_t lineStr[16];
+        swprintf_s(lineStr, L"%d", change.line + 1);
         ListView_SetItemText(m_renamePreview.hwndList, i, 1, lineStr);
 
         // Context with highlighted old → new
@@ -172,8 +173,7 @@ void Win32IDE::showRenamePreview(const std::string& oldName, const std::string& 
                       newTextW + L"]" + context.substr(pos + oldTextW.size());
         }
         {
-            std::string contextA(context.begin(), context.end());
-            ListView_SetItemText(m_renamePreview.hwndList, i, 2, const_cast<char*>(contextA.c_str()));
+            ListView_SetItemText(m_renamePreview.hwndList, i, 2, context.data());
         }
 
         // Check by default
