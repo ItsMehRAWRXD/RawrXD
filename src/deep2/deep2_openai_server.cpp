@@ -662,7 +662,13 @@ bool OpenAIServer::run(uint16_t port) {
         return false;
     }
 
-    pImpl->listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    // Dual-stack listener. An AF_INET socket bound to 127.0.0.1 accepts only IPv4,
+    // so a client that resolves "localhost" to ::1 first gets a connection refusal
+    // (surfacing as HTTP 502 net::ERR_CONNECTION_REFUSED). AF_INET6 with
+    // IPV6_V6ONLY cleared accepts both ::1 and 127.0.0.1, so the literal
+    // "localhost" in an OpenAI-compatible base URL works regardless of which
+    // family the client picks.
+    pImpl->listenSocket = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
     if (pImpl->listenSocket == INVALID_SOCKET) {
         std::fprintf(stderr, "[OpenAI] socket() failed\n");
         WSACleanup();
@@ -674,10 +680,15 @@ bool OpenAIServer::run(uint16_t port) {
     setsockopt(pImpl->listenSocket, SOL_SOCKET, SO_REUSEADDR,
                reinterpret_cast<const char*>(&opt), sizeof(opt));
 
-    sockaddr_in addr{};
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    addr.sin_port = htons(port);
+    // Clear IPV6_V6ONLY so the single socket serves IPv4-mapped clients too.
+    int v6only = 0;
+    setsockopt(pImpl->listenSocket, IPPROTO_IPV6, IPV6_V6ONLY,
+               reinterpret_cast<const char*>(&v6only), sizeof(v6only));
+
+    sockaddr_in6 addr{};
+    addr.sin6_family = AF_INET6;
+    addr.sin6_addr = in6addr_any;
+    addr.sin6_port = htons(port);
 
     if (bind(pImpl->listenSocket, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) == SOCKET_ERROR) {
         std::fprintf(stderr, "[OpenAI] bind(port=%d) failed: %d\n", port, WSAGetLastError());
