@@ -1,0 +1,4 @@
+BUILD_START Fri 11/13/2026 21:07:26.55
+Win32IDE_LSPClient.cpp
+G:\~dev\rawrxd\src\win32app\Win32IDE_LSPClient.cpp(267): error C2065: 'g_c36Class': undeclared identifier
+CL_RC=2

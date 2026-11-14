@@ -1,0 +1,28 @@
+C36_LSP_STAGE_INSTRUMENT_001
+ASOF_LOCAL=2026-11-13T21:37:00-05:00
+PROMOTE=0 TIP_CLIMB=HOLD SOURCE_WIRED=1 RUNTIME_REACHED=1
+MEASURED_EXE=RawrXD-Win32IDE_phase_instrument001.exe
+EXE_SHA256=BA934923F3F143729D27163878015E980839A90B482AD69E980F767523960318
+CROSS_SHA_CREDIT=0
+
+## Instrumented (Win32IDE_LSPClient.cpp startLSPServer / sendInitialize)
+C36_LSP_STAGE=START          — enter startLSPServer
+C36_LSP_STAGE=PIPE OK|FAIL   — CreatePipe
+C36_LSP_STAGE=PROCESS OK|FAIL — CreateProcess
+C36_LSP_STAGE=INIT_SEND / INIT_SEND OK|FAIL — initialize request
+C36_LSP_STAGE=INIT_WAIT BEGIN — before readLSPResponse (bounded)
+C36_LSP_STAGE=INIT_WAIT OK class=INIT_OK|HANDSHAKE_UNFULFILLED|INIT_ERROR|DEADLOCK
+Durable append: evidence/GUI_ACCEPTANCE_C36_001/c36_stage.txt
+PHASE_STATUS=evidence/GUI_ACCEPTANCE_C36_001/PHASE_INSTRUMENT_001/STATUS.txt
+
+## Classification law (measured)
+DEADLOCK = hang with no stage progress / nested wait beyond cap without INIT_WAIT OK
+HANDSHAKE_UNFULFILLED = process alive (or wait timed out) without initialize result
+PROCESS_EXITED = child died before initialize result
+INIT_OK = resp.contains("result") — A3 measured class=INIT_OK
+
+## tip_land_6754616E
+C36_LSP_STAGE=0 (string absent) RUNTIME_REACHED=0 — do not blend instrument/075c into tip
+
+PROMOTE=0
+END

@@ -35,40 +35,46 @@ void Win32IDE::initializeLogging() {
 
 void Win32IDE::logMessage(const std::string& category, const std::string& message) {
     if (!g_logInitialized) initializeLogging();
-    
-    EnterCriticalSection(&g_logMutex);
-    
-    // Get timestamp
-    time_t now = time(nullptr);
-    struct tm timeinfo;
-    localtime_s(&timeinfo, &now);
-    
-    char timestamp[32];
-    strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", &timeinfo);
-    
-    // Format: [TIMESTAMP] [CATEGORY] Message
-    std::string logEntry = "[" + std::string(timestamp) + "] [" + category + "] " + message;
-    
-    // Write to file
-    if (g_logFile.is_open()) {
-        g_logFile << logEntry << std::endl;
-        g_logFile.flush();
+
+    // Format + file I/O under the log mutex. Never call into Win32 UI while
+    // holding g_logMutex — LSP reader threads log while the UI thread may be
+    // blocked in readLSPResponse (no message pump). Cross-thread SendMessage
+    // into RichEdit then deadlocks after init timeout (C36 / Cat10 hang).
+    std::string logEntry;
+    {
+        EnterCriticalSection(&g_logMutex);
+
+        time_t now = time(nullptr);
+        struct tm timeinfo;
+        localtime_s(&timeinfo, &now);
+
+        char timestamp[32];
+        strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", &timeinfo);
+
+        logEntry = "[" + std::string(timestamp) + "] [" + category + "] " + message;
+
+        if (g_logFile.is_open()) {
+            g_logFile << logEntry << std::endl;
+            g_logFile.flush();
+        }
+
+        LeaveCriticalSection(&g_logMutex);
     }
-    
-    // Also write to debug output
+
     OutputDebugStringA((logEntry + "\n").c_str());
-    
-    // Write to Output panel if available
+
+    // UI append only on the window thread (same-thread SendMessage is safe).
+    // Worker / LSP-reader threads: file + ODS only (fail-closed, no hang).
     if (m_hwndMain && IsWindow(m_hwndMain)) {
-        OutputSeverity severity = OutputSeverity::Debug;
-        if (category == "ERROR") severity = OutputSeverity::Error;
-        else if (category == "WARNING") severity = OutputSeverity::Warning;
-        else if (category == "INFO") severity = OutputSeverity::Info;
-        
-        appendToOutput(logEntry, "Debug", severity);
+        const DWORD uiTid = GetWindowThreadProcessId(m_hwndMain, nullptr);
+        if (uiTid == GetCurrentThreadId()) {
+            OutputSeverity severity = OutputSeverity::Debug;
+            if (category == "ERROR") severity = OutputSeverity::Error;
+            else if (category == "WARNING") severity = OutputSeverity::Warning;
+            else if (category == "INFO") severity = OutputSeverity::Info;
+            appendToOutput(logEntry, "Debug", severity);
+        }
     }
-    
-    LeaveCriticalSection(&g_logMutex);
 }
 
 void Win32IDE::logFunction(const std::string& functionName) {

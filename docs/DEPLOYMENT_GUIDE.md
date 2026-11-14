@@ -1,6 +1,12 @@
-# RawrXD Deployment Guide
+# RawrXD Deployment Guide — HISTORICAL / NON-AUTHORITATIVE
 
-Complete guide for deploying RawrXD v1.5.0 in production environments.
+> **Fail-closed (2026-11-13):** `STATUS=HISTORICAL` · `PROMOTE=0` · `CERTIFIED=0`.
+> `rawrxd --version`, package installs, and production deploy recipes below are
+> **NOT_RUN** / **NOT_PUBLISHED**. **CLEAN_VM=ABSENT**. Authority: repo-root
+> [`INSTALL.md`](../INSTALL.md) · [`distribution/README.md`](../distribution/README.md).
+
+Complete guide for deploying RawrXD v1.5.0 in production environments
+(**draft; not a recognition receipt**).
 
 ## Table of Contents
 

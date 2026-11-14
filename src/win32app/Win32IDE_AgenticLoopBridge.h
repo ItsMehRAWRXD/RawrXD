@@ -11,8 +11,25 @@
 #include <unordered_set>
 #include <condition_variable>
 #include "IDELogger.h"
-#include "agent_esp.hpp"
-#include "rawrxd_snap_detectors.hpp"
+#if defined(__has_include)
+#  if __has_include("agent_esp.hpp")
+#    include "agent_esp.hpp"
+#  elif __has_include("../../tools/agent_esp/rawrxd_agent_esp/agent_esp.hpp")
+#    include "../../tools/agent_esp/rawrxd_agent_esp/agent_esp.hpp"
+#  else
+#    error "agent_esp.hpp ABSENT — wire tools/agent_esp/rawrxd_agent_esp"
+#  endif
+#  if __has_include("rawrxd_snap_detectors.hpp")
+#    include "rawrxd_snap_detectors.hpp"
+#  elif __has_include("../snap/rawrxd_snap_detectors.hpp")
+#    include "../snap/rawrxd_snap_detectors.hpp"
+#  else
+#    error "rawrxd_snap_detectors.hpp ABSENT — wire src/snap"
+#  endif
+#else
+#  include "../../tools/agent_esp/rawrxd_agent_esp/agent_esp.hpp"
+#  include "../snap/rawrxd_snap_detectors.hpp"
+#endif
 #include "deep2_progress_watchdog.hpp"
 
 // Forward declaration (class — never a namespace). Guard against duplicate fwd.

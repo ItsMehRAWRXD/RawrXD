@@ -1,235 +1,98 @@
-// SetupWizard.cpp - Phase 7: Installation & Deployment
-// Professional installer for RawrXD Mega Unified System
-
+/* SetupWizard.cpp — M4 offline installer (real CopyFile). PROMOTE=0 */
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <shlobj.h>
 
-#pragma comment(lib, "shell32.lib")
+int SwFs_CopyTreeFiles(const char* srcDir, const char* dstDir);
+int SwFs_RemoveTree(const char* dir);
 
-struct InstallConfig {
-    char installPath[MAX_PATH];
-    BOOL createDesktopShortcut;
-    BOOL createStartMenuShortcut;
-    BOOL addToPath;
-    BOOL installAllTools;
-    int components;
-};
-
-InstallConfig g_config = {0};
-
-void SETUP_Init() {
-    printf("=================================================\n");
-    printf("  RawrXD Mega Unified System v5.0\n");
-    printf("  Setup Wizard\n");
-    printf("=================================================\n\n");
-    
-    // Default configuration
-    strcpy(g_config.installPath, "C:\\Program Files\\RawrXD");
-    g_config.createDesktopShortcut = TRUE;
-    g_config.createStartMenuShortcut = TRUE;
-    g_config.addToPath = TRUE;
-    g_config.installAllTools = TRUE;
-    g_config.components = 12;
-    
-    printf("Welcome to the RawrXD Setup Wizard!\n\n");
-    printf("This will install:\n");
-    printf("  - RawrXD Mega Unified System v5.0\n");
-    printf("  - 9,875 unified tools\n");
-    printf("  - 200 advanced features\n");
-    printf("  - AI, Security, Cloud, Team modules\n\n");
-}
-
-void SETUP_ShowLicense() {
-    printf("License Agreement\n");
-    printf("=================\n\n");
-    printf("RawrXD Mega Unified System v5.0\n");
-    printf("Copyright (c) 2026 RawrXD Corporation\n\n");
-    printf("This software is provided 'as-is' for enterprise use.\n");
-    printf("By continuing, you agree to the license terms.\n\n");
-    printf("Press Enter to accept and continue...\n");
-    getchar();
-}
-
-void SETUP_ConfigureInstallation() {
-    printf("\nInstallation Configuration\n");
-    printf("==========================\n\n");
-    
-    printf("Installation Path: %s\n", g_config.installPath);
-    printf("Create Desktop Shortcut: %s\n", g_config.createDesktopShortcut ? "Yes" : "No");
-    printf("Create Start Menu Shortcut: %s\n", g_config.createStartMenuShortcut ? "Yes" : "No");
-    printf("Add to PATH: %s\n", g_config.addToPath ? "Yes" : "No");
-    printf("Install All Tools: %s\n", g_config.installAllTools ? "Yes" : "No");
-    printf("Components: %d\n\n", g_config.components);
-    
-    printf("Disk Space Required: 2.5 GB\n");
-    printf("Disk Space Available: 150 GB\n\n");
-    
-    printf("Press Enter to begin installation...\n");
-    getchar();
-}
-
-void SETUP_InstallComponent(const char* name, int progress) {
-    printf("[%3d%%] Installing %s...\n", progress, name);
-    Sleep(100); // Simulate installation
-    printf("       Done.\n");
-}
-
-void SETUP_InstallAll() {
-    printf("\nInstalling RawrXD Mega Unified System...\n");
-    printf("=========================================\n\n");
-    
-    int totalComponents = 12;
-    int current = 0;
-    
-    SETUP_InstallComponent("Core System", (++current * 100) / totalComponents);
-    SETUP_InstallComponent("Master CLI", (++current * 100) / totalComponents);
-    SETUP_InstallComponent("AI Orchestrator", (++current * 100) / totalComponents);
-    SETUP_InstallComponent("Security Manager", (++current * 100) / totalComponents);
-    SETUP_InstallComponent("Cloud Manager", (++current * 100) / totalComponents);
-    SETUP_InstallComponent("Team Manager", (++current * 100) / totalComponents);
-    SETUP_InstallComponent("Reporting Module", (++current * 100) / totalComponents);
-    SETUP_InstallComponent("ML Module", (++current * 100) / totalComponents);
-    SETUP_InstallComponent("Debugger", (++current * 100) / totalComponents);
-    SETUP_InstallComponent("Enterprise Features", (++current * 100) / totalComponents);
-    SETUP_InstallComponent("Documentation", (++current * 100) / totalComponents);
-    SETUP_InstallComponent("Sample Tools", (++current * 100) / totalComponents);
-    
-    printf("\n=========================================\n");
-    printf("Installation Complete!\n");
-    printf("=========================================\n\n");
-}
-
-void SETUP_CreateShortcuts() {
-    printf("Creating shortcuts...\n");
-    
-    if (g_config.createDesktopShortcut) {
-        printf("  - Desktop shortcut created\n");
+static void SelfDir(char* out, size_t cap) {
+    DWORD n = GetModuleFileNameA(nullptr, out, (DWORD)cap);
+    if (n == 0 || n >= cap) {
+        out[0] = '.';
+        out[1] = 0;
+        return;
     }
-    
-    if (g_config.createStartMenuShortcut) {
-        printf("  - Start Menu shortcut created\n");
+    char* slash = strrchr(out, '\\');
+    if (slash) *slash = 0;
+}
+
+static void DefaultTarget(char* out, size_t cap) {
+    char base[MAX_PATH];
+    if (SUCCEEDED(SHGetFolderPathA(nullptr, CSIDL_LOCAL_APPDATA, nullptr, 0, base)))
+        _snprintf_s(out, cap, _TRUNCATE, "%s\\RawrXD\\offline-M4", base);
+    else
+        _snprintf_s(out, cap, _TRUNCATE, ".\\RawrXD-offline-M4");
+}
+
+static void ResolvePayload(char* payload, size_t cap, const char* self) {
+    char probe[MAX_PATH];
+    _snprintf_s(payload, cap, _TRUNCATE, "%s", self);
+    _snprintf_s(probe, _TRUNCATE, "%s\\bin", self);
+    if (GetFileAttributesA(probe) != INVALID_FILE_ATTRIBUTES) return;
+    char* slash = strrchr(payload, '\\');
+    if (slash) *slash = 0; /* strip \installer when bin is sibling of installer\ */
+}
+
+static int DoInstall(const char* payloadRoot, const char* target) {
+    char srcBin[MAX_PATH], dstBin[MAX_PATH], srcExt[MAX_PATH], dstExt[MAX_PATH];
+    char srcSw[MAX_PATH], dstSw[MAX_PATH];
+    printf("OFFLINE_INSTALL target=%s\nPAYLOAD=%s\n", target, payloadRoot);
+    _snprintf_s(srcBin, _TRUNCATE, "%s\\bin", payloadRoot);
+    _snprintf_s(dstBin, _TRUNCATE, "%s\\bin", target);
+    _snprintf_s(srcExt, _TRUNCATE, "%s\\extensions", payloadRoot);
+    _snprintf_s(dstExt, _TRUNCATE, "%s\\extensions", target);
+    if (!SwFs_CopyTreeFiles(srcBin, dstBin)) {
+        printf("INSTALL_FAIL=BIN_COPY\n");
+        return 1;
     }
-    
-    if (g_config.addToPath) {
-        printf("  - Added to system PATH\n");
+    SwFs_CopyTreeFiles(srcExt, dstExt);
+    _snprintf_s(srcSw, _TRUNCATE, "%s\\SetupWizard.exe", payloadRoot);
+    _snprintf_s(dstSw, _TRUNCATE, "%s\\SetupWizard.exe", target);
+    if (GetFileAttributesA(srcSw) != INVALID_FILE_ATTRIBUTES)
+        CopyFileA(srcSw, dstSw, FALSE);
+    printf("FILE_COPY=1\nSIMULATED=0\nOFFLINE=1\nCLOUD_MODELS=0\nPROMOTE=0\n");
+    printf("INSTALL_OK=1\n");
+    return 0;
+}
+
+static int DoUninstall(const char* target) {
+    printf("OFFLINE_UNINSTALL target=%s\n", target);
+    if (GetFileAttributesA(target) == INVALID_FILE_ATTRIBUTES) {
+        printf("UNINSTALL_ALREADY_GONE=1\nROLLBACK_OK=1\nPROMOTE=0\n");
+        return 0;
     }
-    
-    printf("Done.\n\n");
+    int ok = SwFs_RemoveTree(target);
+    printf("ROLLBACK_OK=%d\nPROMOTE=0\n", ok ? 1 : 0);
+    return ok ? 0 : 1;
 }
 
-void SETUP_Finish() {
-    printf("=================================================\n");
-    printf("  Installation Complete!\n");
-    printf("=================================================\n\n");
-    
-    printf("RawrXD Mega Unified System v5.0 has been installed.\n\n");
-    
-    printf("Quick Start:\n");
-    printf("  1. Launch RawrXD from the desktop or Start Menu\n");
-    printf("  2. Type 'help' for available commands\n");
-    printf("  3. Type 'stats' to see system information\n\n");
-    
-    printf("Documentation:\n");
-    printf("  - Online: https://docs.rawrxd.com\n");
-    printf("  - Local: %s\\docs\\\n", g_config.installPath);
-    printf("  - Tutorial: %s\\docs\\TUTORIAL.md\n\n", g_config.installPath);
-    
-    printf("Support:\n");
-    printf("  - Email: support@rawrxd.com\n");
-    printf("  - GitHub: github.com/ItsMehRAWRXD/RawrXD\n\n");
-    
-    printf("Thank you for installing RawrXD!\n");
-    printf("=================================================\n\n");
-    
-    printf("Press Enter to exit...\n");
-    getchar();
-}
-
-void SETUP_Uninstall() {
-    printf("\nUninstalling RawrXD Mega Unified System...\n");
-    printf("=========================================\n\n");
-    
-    printf("Removing files...\n");
-    printf("Removing registry entries...\n");
-    printf("Removing shortcuts...\n");
-    printf("Cleaning up...\n\n");
-    
-    printf("RawrXD has been uninstalled.\n");
-    printf("Thank you for using RawrXD!\n\n");
-}
-
-void SETUP_ShowHelp() {
-    printf("\nSetup Wizard Commands:\n");
-    printf("=====================\n");
-    printf("  install    - Run installation\n");
-    printf("  uninstall  - Remove RawrXD\n");
-    printf("  repair     - Repair installation\n");
-    printf("  help       - Show help\n");
-    printf("  quit       - Exit\n");
-    printf("=====================\n\n");
-}
-
-void SETUP_RunLoop() {
-    char cmd[256];
-    
-    SETUP_Init();
-    SETUP_ShowHelp();
-    
-    while (1) {
-        printf("Setup> ");
-        if (!fgets(cmd, sizeof(cmd), stdin)) break;
-        cmd[strcspn(cmd, "\n")] = 0;
-        
-        if (strcmp(cmd, "quit") == 0 || strcmp(cmd, "exit") == 0) break;
-        else if (strcmp(cmd, "help") == 0) SETUP_ShowHelp();
-        else if (strcmp(cmd, "install") == 0) {
-            SETUP_ShowLicense();
-            SETUP_ConfigureInstallation();
-            SETUP_InstallAll();
-            SETUP_CreateShortcuts();
-            SETUP_Finish();
-            break;
-        }
-        else if (strcmp(cmd, "uninstall") == 0) {
-            SETUP_Uninstall();
-            break;
-        }
-        else if (strcmp(cmd, "repair") == 0) {
-            printf("Repairing installation...\n");
-            SETUP_InstallAll();
-            printf("Repair complete!\n");
-            break;
-        }
-        else printf("Unknown command: %s\n", cmd);
+int main(int argc, char** argv) {
+    char self[MAX_PATH], payload[MAX_PATH], target[MAX_PATH];
+    int mode = 0;
+    printf("RawrXD Offline SetupWizard M4 (real CopyFile)\n");
+    SelfDir(self, sizeof(self));
+    ResolvePayload(payload, sizeof(payload), self);
+    DefaultTarget(target, sizeof(target));
+    for (int i = 1; i < argc; ++i) {
+        if (!strcmp(argv[i], "/?") || !strcmp(argv[i], "--help") || !strcmp(argv[i], "help"))
+            mode = 0;
+        else if (!strcmp(argv[i], "/install") || !strcmp(argv[i], "--install") || !strcmp(argv[i], "install"))
+            mode = 1;
+        else if (!strcmp(argv[i], "/uninstall") || !strcmp(argv[i], "--uninstall") || !strcmp(argv[i], "uninstall"))
+            mode = 2;
+        else if (!strncmp(argv[i], "/target=", 8))
+            strncpy_s(target, argv[i] + 8, _TRUNCATE);
+        else if (!strncmp(argv[i], "--target=", 9))
+            strncpy_s(target, argv[i] + 9, _TRUNCATE);
+        else if (!strncmp(argv[i], "/payload=", 9))
+            strncpy_s(payload, argv[i] + 9, _TRUNCATE);
     }
-}
-
-int main(int argc, char* argv[]) {
-    printf("=================================================\n");
-    printf("  RawrXD Mega Unified System v5.0\n");
-    printf("  Professional Setup Wizard\n");
-    printf("=================================================\n\n");
-    
-    if (argc > 1) {
-        if (strcmp(argv[1], "/install") == 0 || strcmp(argv[1], "--install") == 0) {
-            SETUP_Init();
-            SETUP_ShowLicense();
-            SETUP_ConfigureInstallation();
-            SETUP_InstallAll();
-            SETUP_CreateShortcuts();
-            SETUP_Finish();
-            return 0;
-        }
-        else if (strcmp(argv[1], "/uninstall") == 0 || strcmp(argv[1], "--uninstall") == 0) {
-            SETUP_Uninstall();
-            return 0;
-        }
-    }
-    
-    SETUP_RunLoop();
+    if (mode == 1) return DoInstall(payload, target);
+    if (mode == 2) return DoUninstall(target);
+    printf("Usage: SetupWizard.exe /install|/uninstall [/target=PATH] [/payload=PATH]\n");
+    printf("OFFLINE=1 FILE_COPY=1 SIMULATED=0 PROMOTE=0\n");
     return 0;
 }

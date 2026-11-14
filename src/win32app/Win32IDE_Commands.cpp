@@ -20,6 +20,7 @@
 #include "resource.h"
 #include "Win32IDE_Types.h"
 #include "Win32IDE_CommandFlight.hpp"
+#include "Win32IDE_CommandIDs.h"
 #include "win32_feature_adapter.h"
 
 extern "C" {
@@ -2434,6 +2435,10 @@ void Win32IDE::handleToolsCommand(int commandId)
 
         case IDM_LSP_HOVER_INFO:  // 5064
             cmdLSPHoverInfo();
+            break;
+
+        case IDM_LSP_HOVER_PROBE:  // 9625 — C36 clangd acceptance
+            runC36ClangdAcceptanceProbe();
             break;
 
         case IDM_LSP_SHOW_DIAGNOSTICS:  // 5065

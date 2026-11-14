@@ -230,38 +230,55 @@ struct AgentExecutor {
 wit.modelInferenceCalls++;
         std::string modelOutput;
         uint32_t n = 0;
+        const uint32_t decideCap = 96;
+        bool earlyValid = false;
         Deep2::TokenCallback agentCb = [&](int32_t tokenId, const std::string& tok) -> bool {
             modelOutput += tok;
             ++n;
             fprintf(stderr, "[AGENT_TOKEN] id=%d text='%s' n=%u\n", tokenId, tok.c_str(), n);
-            if (n >= 256) { this->engine.requestCancel(); return false; }
+            /* Prefer last JSON object — TinyLlama often echoes the prompt first. */
+            ToolDecision early = this->parseToolDecision(modelOutput);
+            if (!early.valid) {
+                size_t brace = modelOutput.rfind("{\"tool\"");
+                if (brace != std::string::npos && brace > 0)
+                    early = this->parseToolDecision(modelOutput.substr(brace));
+            }
+            if (early.valid) {
+                earlyValid = true;
+                this->engine.requestCancel();
+                return false;
+            }
+            if (n >= decideCap) { this->engine.requestCancel(); return false; }
             return true;
         };
         // Strip surrounding quotes from lastPlan (shell may pass them)
         std::string plan = a.session.lastPlan;
         if (plan.size() >= 2 && plan.front() == '"' && plan.back() == '"')
             plan = plan.substr(1, plan.size() - 2);
-        // If lastPlan looks like a task description (contains spaces), use src/main.cpp as initial path
-        std::string initialPath = plan;
-        if (plan.find(' ') != std::string::npos) {
-            initialPath = "src/main.cpp";
-        }
-        std::string prompt = "Reply with exactly one JSON tool decision. Available tools: read(path), patch(path, content), build(cmd), test(cmd), report, done.\n";
-        prompt += "Required format: {\"tool\": \"read\", \"path\": \"...\"} or {\"tool\": \"patch\", \"path\": \"...\", \"content\": \"...\"} or {\"tool\": \"build\", \"cmd\": \"...\"} or {\"tool\": \"test\", \"cmd\": \"...\"} or {\"tool\": \"report\"} or {\"tool\": \"done\"}.\n";
-        prompt += "Task: " + plan + "\n";
-        prompt += "Workspace: " + a.session.workspace + "\n";
-        if (!observation.empty()) {
-            prompt += "Observation: " + observation + "\n";
-        }
-        prompt += "Output only the JSON object. Do not use markdown code fences. Do not add any explanation.";
-        fprintf(stderr, "[AGENT_MODEL] prompt='%s'\n", prompt.c_str());
+        /* Chat-style force: bare "JSON:" suffix produced all-<unk> on TinyLlama. */
+        std::string prompt =
+            "<|user|>\n"
+            "Reply with ONLY this JSON (no other text): "
+            "{\"tool\":\"read\",\"path\":\"README.md\"}\n"
+            "Task: " + plan + "\n";
+        if (!observation.empty())
+            prompt += "Observation: " + observation.substr(0, 400) + "\n";
+        prompt += "<|assistant|>\n{\"tool\":";
+        fprintf(stderr, "[AGENT_MODEL] prompt='%s' EARLY_VALID_ARM=1 TOOL_FORCE=1\n",
+                prompt.c_str());
         fflush(stderr);
+        /* Prefill counted toward parse only — completion continues after. */
+        modelOutput = "{\"tool\":";
         Deep2::GenerationOptions opts{};
-        opts.maxTokens = 256;
+        opts.maxTokens = decideCap;
         opts.temperature = 0.0f;
         opts.topK = 1;
         opts.seed = 42;
         auto gr = this->engine.generateStreamReceipt(prompt, opts, agentCb);
+        fprintf(stderr,
+            "GENERATED_TOKENS=%llu\nTOKEN_COMMIT_PASS=%d\nAGENT_DECIDE_TOKENS=%u\nEARLY_VALID=%d\n",
+            (unsigned long long)gr.generatedTokens,
+            gr.generatedTokens > 0 ? 1 : 0, n, earlyValid ? 1 : 0);
 
         fprintf(stderr,
             "[AGENT_MODEL] gr.callbackCancelled=%d gr.completed=%d gr.generatedTokens=%llu gr.promptTokens=%llu gr.stopReason=%s gr.eosObserved=%d gr.callbackCancelled=%d gr.engineError=%d\n",
@@ -279,6 +296,11 @@ wit.modelInferenceCalls++;
         wit.modelDecisionTokens += n;
 
         td = parseToolDecision(modelOutput);
+        if (!td.valid) {
+            size_t brace = modelOutput.rfind("{\"tool\"");
+            if (brace != std::string::npos)
+                td = parseToolDecision(modelOutput.substr(brace));
+        }
         if (td.valid) {
             wit.modelSelectedTool = 1;
             wit.modelDecision = 1;

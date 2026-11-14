@@ -1,0 +1,80 @@
+GPU_PARITY_ATTN_PRE_O_001
+DATE=2026-11-13
+ASOF_LOCAL=2026-11-13T21:45:00-05:00
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+CROSS_SHA_CREDIT=0
+INVENT_PASS=0
+NOT_RUN!=PASS
+SCOREBOARD_CLI_GUI_PCT_UNCHANGED=1
+JOINT_PCT_WRITE=0
+CANON_PCT_WRITE=0
+LIVE_PCT_WRITE=0
+
+## Authority
+PRIOR_SEAL=GPU_PARITY_Q_PRE_ROPE_CLOSE_001.txt
+PRIOR_FIRST_SIGNIFICANT_AFTER=ATTN_PRE_O_0 maxAbs=6.139278e-06
+BRANCH=work/v0-first-divergence (private cand)
+TIP_EXE_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431
+TIP_EXE=RO (untouched)
+TOL_ABS=1e-6 TOL_REL=1e-5
+
+## INPUT_IDENTICAL
+PROMPT_IDS=1,15043 both arms
+PROMPT_EMBED / ATTN_NORM_0 bitexact vs REF
+V_0 / Q_PRE_ROPE_0 / K_PRE_ROPE_0 / Q_POST_ROPE_0 / K_POST_ROPE_0 under TOL (FNV_ONLY)
+Q_PRE_ROPE_0_CLOSED=1 (SPV AB7212EC bytes=16292)
+
+## Ordered stage walk (pos0, stage_dump_q4kq8k_spv vs stage_dump_ref_matched)
+PROMPT_EMBED MATCH
+ATTN_NORM_0 MATCH
+V_0 FNV_ONLY maxAbs=4.656613e-09
+Q_PRE_ROPE_0 FNV_ONLY maxAbs=1.043081e-07 (CLOSED)
+K_PRE_ROPE_0 FNV_ONLY maxAbs=8.195639e-08
+Q_POST_ROPE_0 FNV_ONLY maxAbs=1.043081e-07
+K_POST_ROPE_0 FNV_ONLY maxAbs=8.195639e-08
+ATTN_PRE_O_0 NUM_FAIL maxAbs=6.139278e-06 rel=4.033301e-03 @idx1563 n_gt=288/2048
+  ← FIRST_SIGNIFICANT_AFTER_Q_PRE_ROPE
+ATTN_OUT_0 NUM_FAIL maxAbs=8.446723e-05 (cascade)
+FFN_* / LAYER0_OUT cascade NUM_FAIL
+
+COMPARE_LOG=GPU_PARITY_ATTN_PRE_O_001_compare.log
+GPU=stage_dump_q4kq8k_spv/deep2_ATTN_PRE_O_0_pos0_layer0_full_n2048_seq012.bin
+REF=stage_dump_ref_matched/llama_ATTN_PRE_O_0_pos0_layer0_full_n2048_seq059.bin
+fnvA=a7e004ba11d8c0f5 fnvB=4adca0fa1f8e7095
+
+## Root cause
+FIRST_MATERIAL_OP = layer0 attention pre-O (kqv head-concat) F16 storage mismatch.
+Deep2 ATTN_PRE_O_0 == GQA_expand(V_d) EXACT (pos0 attend=1 → memcpy vProj).
+llama ATTN_PRE_O_0 == f16(GQA_expand(V_l)) BITEXACT (ggml default kqv_out F16).
+  also == ATTN_PRE_O_SRC1 (attn_out src) bitexact — not a dump-pairing error.
+V_d≈V_l under TOL (maxAbs=4.66e-9) → gap is solely FP16 RNE round-trip on PRE_O.
+Prior BATCH2 "llama dump hygiene" hypothesis superseded: REF is consistent with F16(expand(V)).
+
+## Fix (private cand only; tip EXE RO)
+FILE=src/deep2/Deep2Engine.cpp
+HELPERS_ALREADY_PRESENT:
+  floatToFp16 (IEEE754 RNE)
+  kvCacheFp16RoundTrip (already applied on KV write @ ~9554)
+SURGICAL_ADD:
+  kvCacheFp16RoundTrip(headScratch, headConcat);
+  immediately before ATTN_PRE_O StageDigest / wo LinearW
+  (headScratch still sourced from live FP32 vProj at pos0; KV write cast alone insufficient)
+
+## Measured AFTER (offline witness on sealed dumps)
+f16_RNE(deep2_ATTN_PRE_O_0) vs llama_ATTN_PRE_O_0:
+  maxAbs=0 exact=2048/2048 UNDER_TOL=1
+LIVE_REMEASURE_AFTER_CAND_RELINK=NOT_RUN
+≠ tip-land ≠ PERFORMANCE_PASS
+
+## Verdict
+FIRST_SIGNIFICANT_AFTER_Q_PRE_ROPE=ATTN_PRE_O_0
+MAXDIFF=6.139278e-06 REL=4.033301e-03 @idx1563
+ROOT=FP16_kqv_out_vs_FP32_expand_V
+FIX_PATH=rawrxd/src/deep2/Deep2Engine.cpp (kvCacheFp16RoundTrip on headScratch)
+SEAL_PATH=evidence/PRODUCTION_INFERENCE_CERT_001/FIRST_DIVERGE_001/GPU_PARITY_ATTN_PRE_O_001.txt
+ATTN_PRE_O_0_LIVE_CLOSED=0 (cand source landed; tip 6754616E RO; no invent PASS)
+NEXT_AFTER_RELINK=remeasure ATTN_PRE_O_0 then ATTN_OUT_0 cascade
+PROMOTE=0
+TIP_CLIMB=HOLD

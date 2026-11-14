@@ -5,6 +5,7 @@
 #include "rawr_session_store.hpp"
 #include "rawr_resume.hpp"
 #include "rawr_agent_loop.hpp"
+#include "rawr_agent_status.hpp"
 #include "rawr_steering_client.hpp"
 #include "rawr_evidence_writer.hpp"
 #include "rawr_product_serve.hpp"
@@ -16,6 +17,8 @@
 namespace rawr {
 
 int CmdAgent(const CliArgs& a) {
+    if (a.model == "status")
+        return CmdAgentStatus(a.sessionId.empty() ? a.prompt : a.sessionId);
     if (a.model.empty()) { PrintUsage(); return ExitCode::Usage; }
     AgentState ag{};
     ag.session.id = NewSessionId();
@@ -36,7 +39,10 @@ int CmdAgent(const CliArgs& a) {
          ag.session.id.c_str(), ag.session.workspace.c_str(),
          AutonomyName(a.autoLevel), a.model.c_str());
     AgentLiveWitness wit{};
-    int rc = RunAgentLoop(ag, a.autoLevel, 32, &wit, /*acceptSteer=*/true, a.model);
+    const int maxIters =
+        a.maxTokens ? (int)(a.maxTokens > 8u ? 8u : a.maxTokens) : 8;
+    int rc = RunAgentLoop(ag, a.autoLevel, maxIters, &wit,
+                          /*acceptSteer=*/false, a.model);
     SaveSession(ag.session);
     Diag("WORKSPACE_OPENED=%d FILES_READ=%d PLAN_CREATED=%d\n",
          wit.workspaceOpened, wit.filesRead, wit.planCreated);
@@ -89,7 +95,17 @@ int CmdResume(const CliArgs& a) {
          s.history.empty() && s.lastPlan.empty() ? 0 : 1);
     Diag("resumed %s model=%s turns=%zu plan=%s\n", s.id.c_str(),
          s.modelAlias.c_str(), s.history.size(), s.lastPlan.c_str());
-    return ExitCode::Ok;
+    if (a.prompt.empty()) return ExitCode::Ok;
+    CliArgs run = a;
+    run.cmd = "run";
+    run.model = !s.modelAlias.empty() ? s.modelAlias : a.model;
+    if (run.model.empty()) {
+        Diag("resume: no model on session for continue\n");
+        return ExitCode::Session;
+    }
+    Diag("RESUME_CONTINUE=1 model=%s max_tokens=%u\n", run.model.c_str(),
+         a.maxTokens ? a.maxTokens : 64u);
+    return CmdRun(run);
 }
 
 int CmdTerm(const CliArgs& a) {

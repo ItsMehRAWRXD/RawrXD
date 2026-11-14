@@ -328,7 +328,7 @@ extern "C" void Deep2_SwiGLU(const float* x, const float* y, float* out, size_t 
 }
 
 // RMSNorm - Production AVX2 implementation with two-pass algorithm
-// Computes: out[i] = x[i] / sqrt(mean(x²) + eps)
+// Computes: out[i] = x[i] / sqrt(mean(xï¿½) + eps)
 extern "C" void Deep2_RMSNorm(const float* x, float* out, size_t n, float eps) {
     if (n == 0) return;
     
@@ -462,10 +462,10 @@ extern "C" void Deep2_MedusaGEMV(const float* weights, const float* input, float
 // GGUF Q4_K Block Structure (144 bytes per 256 elements)
 //
 // Layout (from llama.cpp / ggml-quants.h):
-//   +0:   d (fp16)     — super-block scale
-//   +2:   dmin (fp16)  — super-block minimum
-//   +4:   scales[12]   — packed 6-bit scale/min pairs for 8 sub-blocks
-//   +16:  qs[128]      — packed 4-bit quants (2 per byte)
+//   +0:   d (fp16)     ï¿½ super-block scale
+//   +2:   dmin (fp16)  ï¿½ super-block minimum
+//   +4:   scales[12]   ï¿½ packed 6-bit scale/min pairs for 8 sub-blocks
+//   +16:  qs[128]      ï¿½ packed 4-bit quants (2 per byte)
 //
 // Total: 144 bytes per 256-element super-block
 //
@@ -484,7 +484,7 @@ namespace Deep2 {
 static bool EnhanceWanted(const char* name);
 
 
-// Aligned allocation helpers — count is NUMBER OF FLOATS (not bytes).
+// Aligned allocation helpers ï¿½ count is NUMBER OF FLOATS (not bytes).
 static float* alignedAlloc(size_t count) {
 #ifdef _WIN32
     float* ptr = (float*)_aligned_malloc(count * sizeof(float), 32);
@@ -547,6 +547,48 @@ static inline float fp16ToFloat(uint16_t h) {
     float result;
     memcpy(&result, &f, sizeof(float));
     return result;
+}
+
+/* IEEE754 RNE f32â†’f16 (llama.cpp / ggml cache-type f16). */
+static inline uint16_t floatToFp16(float val) {
+    uint32_t x;
+    memcpy(&x, &val, 4);
+    const uint32_t sign = (x >> 16) & 0x8000u;
+    const uint32_t exp = (x >> 23) & 0xFFu;
+    const uint32_t mant = x & 0x7FFFFFu;
+    if (exp == 0xFFu)
+        return (uint16_t)(sign | 0x7C00u | (mant ? 0x200u : 0u));
+    const int e = (int)exp - 127 + 15;
+    if (e >= 31) return (uint16_t)(sign | 0x7C00u);
+    if (e <= 0) {
+        if (e < -10) return (uint16_t)sign;
+        uint32_t m = mant | 0x800000u;
+        const int rshift = 14 - e;
+        uint32_t q = m >> rshift;
+        const uint32_t rem = m & ((1u << rshift) - 1u);
+        const uint32_t half = 1u << (rshift - 1);
+        if (rem > half || (rem == half && (q & 1u))) ++q;
+        return (uint16_t)(sign | q);
+    }
+    uint32_t he = (uint32_t)e << 10;
+    uint32_t hm = mant >> 13;
+    const uint32_t rem = mant & 0x1FFFu;
+    if (rem > 0x1000u || (rem == 0x1000u && (hm & 1u))) {
+        ++hm;
+        if (hm == 0x400u) {
+            hm = 0;
+            he += 0x400u;
+            if (he >= 0x7C00u) return (uint16_t)(sign | 0x7C00u);
+        }
+    }
+    return (uint16_t)(sign | he | hm);
+}
+
+/* Match llama default --cache-type-k/v f16 while storage stays float[]. */
+static inline void kvCacheFp16RoundTrip(float* p, size_t n) {
+    if (!p || n == 0) return;
+    for (size_t i = 0; i < n; ++i)
+        p[i] = fp16ToFloat(floatToFp16(p[i]));
 }
 
 // ============================================================================
@@ -665,7 +707,7 @@ static thread_local size_t g_q4kCalls     = 0;
 static thread_local size_t g_q4kBlocks    = 0;
 
 // ============================================================================
-// Q4_K GEMV — Fused AVX2 (ggml dequantize_row_q4_K nibble grouping)
+// Q4_K GEMV ï¿½ Fused AVX2 (ggml dequantize_row_q4_K nibble grouping)
 // For each scale pair (is, is+1): qs[0..31] lo ? group is, qs[0..31] hi ? group is+1.
 // Do NOT use per-16-byte interleaved lo/hi within one scale (pre-VAL-051 bug).
 // ============================================================================
@@ -833,7 +875,7 @@ static void dequantizeQ5KBlock(const block_q5_K* block, float* out) {
 }
 
 // ============================================================================
-// Q5_K GEMV — True SIMD unpack (10.5x speedup over scalar, no float buffer)
+// Q5_K GEMV ï¿½ True SIMD unpack (10.5x speedup over scalar, no float buffer)
 // ============================================================================
 static void q5kGEMV(const void* weights, const float* input,
                     float* output, size_t rows, size_t cols) {
@@ -1050,7 +1092,7 @@ static void dequantizeQ2KBlock(const block_q2_K* block, float* out) {
 }
 
 // ============================================================================
-// Q2_K GEMV — SIMD implementation (dequantize-then-dot with stack buffer)
+// Q2_K GEMV ï¿½ SIMD implementation (dequantize-then-dot with stack buffer)
 // ============================================================================
 static void q2kGEMV(const void* weights, const float* input,
                     float* output, size_t rows, size_t cols) {
@@ -1132,7 +1174,7 @@ static void dequantizeQ3KBlock(const block_q3_K* block, float* out) {
 }
 
 // ============================================================================
-// Q3_K GEMV — Scalar fallback (dequantize-then-dot with stack buffer)
+// Q3_K GEMV ï¿½ Scalar fallback (dequantize-then-dot with stack buffer)
 // ============================================================================
 static void q3kGEMV(const void* weights, const float* input,
                     float* output, size_t rows, size_t cols) {
@@ -1192,7 +1234,7 @@ static void dequantizeQ4_1Block(const block_q4_1* block, float* out) {
 }
 
 // ============================================================================
-// Q4_1 GEMV — Scalar fallback (dequantize-then-dot with stack buffer)
+// Q4_1 GEMV ï¿½ Scalar fallback (dequantize-then-dot with stack buffer)
 // ============================================================================
 static void q4_1GEMV(const void* weights, const float* input,
                      float* output, size_t rows, size_t cols) {
@@ -1254,7 +1296,7 @@ static void dequantizeQ5_0Block(const block_q5_0* block, float* out) {
 }
 
 // ============================================================================
-// Q5_0 GEMV — Scalar fallback (dequantize-then-dot with stack buffer)
+// Q5_0 GEMV ï¿½ Scalar fallback (dequantize-then-dot with stack buffer)
 // ============================================================================
 static void q5_0GEMV(const void* weights, const float* input,
                      float* output, size_t rows, size_t cols) {
@@ -1317,7 +1359,7 @@ static void dequantizeQ5_1Block(const block_q5_1* block, float* out) {
 }
 
 // ============================================================================
-// Q5_1 GEMV — Scalar fallback (dequantize-then-dot with stack buffer)
+// Q5_1 GEMV ï¿½ Scalar fallback (dequantize-then-dot with stack buffer)
 // ============================================================================
 static void q5_1GEMV(const void* weights, const float* input,
                      float* output, size_t rows, size_t cols) {
@@ -1372,7 +1414,7 @@ static void dequantizeQ8KBlock(const block_q8_K* block, float* out) {
 }
 
 // ============================================================================
-// Q8_K GEMV — Scalar fallback (dequantize-then-dot with stack buffer)
+// Q8_K GEMV ï¿½ Scalar fallback (dequantize-then-dot with stack buffer)
 // ============================================================================
 static void q8kGEMV(const void* weights, const float* input,
                     float* output, size_t rows, size_t cols) {
@@ -1716,7 +1758,7 @@ bool Deep2Engine::allocateBuffers() {
         size_t qkNopeHeadDim = config.qkNopeHeadDim > 0 ? config.qkNopeHeadDim : 128;
         size_t qkRopeHeadDim = config.qkRopeHeadDim > 0 ? config.qkRopeHeadDim : 64;
         size_t mlaHeadDim = qkNopeHeadDim + qkRopeHeadDim;
-        // K2_SEMANTIC_SEAL_001: Hard gate — mismatch here is a buffer-overflow CVE.
+        // K2_SEMANTIC_SEAL_001: Hard gate ï¿½ mismatch here is a buffer-overflow CVE.
         if (config.numHeads == 64 && mlaHeadDim != 192) {
             fprintf(stderr, "[K2_SEMANTIC_SEAL_001] FATAL: MLA headDim mismatch. expected=192 got=%zu\n", mlaHeadDim);
             return false;
@@ -1776,7 +1818,7 @@ bool Deep2Engine::allocateBuffers() {
         hiddenSize, config.numHeads, headDim, qOutDim, qOutDim, kvDim, ffnDim,
         ffnGateScratch);
 
-    // MLA (K2) buffers — only when explicitly allowed (incomplete attention otherwise).
+    // MLA (K2) buffers ï¿½ only when explicitly allowed (incomplete attention otherwise).
     if (config.useMLA) {
         size_t qLoraRank = config.qLoraRank > 0 ? config.qLoraRank : 1536;
         size_t kvLoraRank = config.kvLoraRank > 0 ? config.kvLoraRank : 512;
@@ -1981,7 +2023,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         EnsurePolicyLoaded();
         auto& store = ExecutionPolicyStore::Instance();
         const auto& eff = store.effective();
-        // IDE load seam already bound modelPath — idempotent re-bind must not bump version/SHA.
+        // IDE load seam already bound modelPath ï¿½ idempotent re-bind must not bump version/SHA.
         if (!eff.modelPath.present || eff.modelPath.value != ggufPath) {
             ExecutionPolicy pathDelta;
             pathDelta.modelPath.force(ggufPath, SettingAuthority::Session,
@@ -2181,12 +2223,19 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                                        std::filesystem::directory_iterator{}) : 1,
            shardDir.string().c_str());
 
-    // -- Stage 0: ReverseHotpatch pipeline (single shard only for now) --
-    // UNREVERSE_HOTPATCH: skip repair pipeline; load raw GGUF bytes as on disk.
+    // -- Stage 0: ReverseHotpatch ? OPT-IN only (RAWRXD_REVERSE_HOTPATCH=1).
+    // Default product path: raw GGUF load. Stage2 Parse AV'd on tinyllama
+    // (absorb066c: INIT_BEFORE=1 then SEH before INIT_AFTER). UNREVERSE/SKIP
+    // remain supported aliases for explicit skip.
     const bool unreverseHotpatch =
         envFlagEnabled("RAWRXD_UNREVERSE_HOTPATCH") ||
         envFlagEnabled("RAWRXD_SKIP_REVERSE_HOTPATCH");
-    if (!isMultiShard && !unreverseHotpatch) {
+    const bool reverseHotpatchOptIn =
+        envFlagEnabled("RAWRXD_REVERSE_HOTPATCH") && !unreverseHotpatch;
+    std::fprintf(stderr, "LOADMODEL_STAGE=pre_reverse reverse_opt_in=%d\n",
+                 reverseHotpatchOptIn ? 1 : 0);
+    std::fflush(stderr);
+    if (!isMultiShard && reverseHotpatchOptIn) {
         ReverseHotpatchEngine patcher;
         patcher.SetVerbose(false);
         patcher.SetAlignment(64);
@@ -2203,21 +2252,49 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                        repairs, corruptions);
             }
         }
-    } else if (!isMultiShard && unreverseHotpatch) {
-        printf("[Deep2Engine] UNREVERSE_HOTPATCH=1 — ReverseHotpatch skipped (raw load)\n");
+    } else if (!isMultiShard) {
+        printf("[Deep2Engine] REVERSE_HOTPATCH=OFF ? raw GGUF load (opt-in via "
+               "RAWRXD_REVERSE_HOTPATCH=1)\n");
     }
 
-    // -- Load metadata from first shard (no tensor data for multi-shard) -
+    // -- Load GGUF: metadata first, then tensor bytes (avoids mmap/AVX AV).
+    // absorb069: SEH at GGUFLoader::Load with loadTensors=1+mmap; 066c OK.
+    const std::string shardPath = firstShard.string();
+    std::fprintf(stderr, "LOADMODEL_STAGE=gguf_loader_enter path=\"%s\"\n",
+                 shardPath.c_str());
+    std::fflush(stderr);
     GGUFLoadOptions options;
-    options.loadTensors = !isMultiShard;  // Only load tensors for single-shard
+    options.loadTensors = false;
     options.verbose = false;
-    options.mmap = true;
-
-    GGUFLoadResult result = GGUFLoader::Load(firstShard.string().c_str(), options);
+    options.mmap = false;
+    GGUFLoadResult result = GGUFLoader::Load(shardPath.c_str(), options);
     if (!result.success) {
-        printf("[Deep2Engine] ERROR: Failed to load GGUF metadata: %s\n", result.error);
+        printf("[Deep2Engine] ERROR: Failed to load GGUF metadata: %s\n",
+               result.error);
         return false;
     }
+    std::fprintf(stderr, "LOADMODEL_STAGE=gguf_meta_ok tensors=%zu\n",
+                 result.tensors.size());
+    std::fflush(stderr);
+    if (!isMultiShard) {
+        options.loadTensors = true;
+        options.mmap = false; /* file read; mmap opt-in RAWRXD_GGUF_MMAP=1 */
+        const char* wantMap = std::getenv("RAWRXD_GGUF_MMAP");
+        if (wantMap && wantMap[0] == '1') options.mmap = true;
+        std::fprintf(stderr, "LOADMODEL_STAGE=gguf_tensors_enter mmap=%d\n",
+                     options.mmap ? 1 : 0);
+        std::fflush(stderr);
+        GGUFLoadResult withTensors = GGUFLoader::Load(shardPath.c_str(), options);
+        if (!withTensors.success) {
+            printf("[Deep2Engine] ERROR: Failed to load GGUF tensors: %s\n",
+                   withTensors.error);
+            return false;
+        }
+        result = std::move(withTensors);
+    }
+    std::fprintf(stderr, "LOADMODEL_STAGE=gguf_loader_ok tensors=%zu\n",
+                 result.tensors.size());
+    std::fflush(stderr);
 
     // ONE_LOCAL_MODEL_AUTHORITY: fail-closed dynamic geometry (no static fill)
     {
@@ -2235,43 +2312,59 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                "heads=%u kv=%u hd=%u ctx=%u ropeBase=%.8g ropeDim=%u\n",
                dyn.arch, dyn.layers, dyn.hidden, dyn.ffn, dyn.heads, dyn.kvHeads,
                dyn.headDim, dyn.context, (double)dyn.ropeBase, dyn.ropeDim);
+        std::fprintf(stderr, "LOADMODEL_STAGE=geometry_ok\n");
+        std::fflush(stderr);
     }
 
     // Store result for later tensor lookups
     ggufResult = std::move(result);
-
-    // MODEL_DIGESTION_STREAM_001 / DYNAMIC_PERSISTENT_MODEL_MANIFEST_DROP_001:
-    // Path is the only stable locator; all other fields derived + fingerprint-persisted.
     static rawr::manifest_dyn::DynamicManifest s_dynManifest;
-    s_dynManifest = rawr::manifest_dyn::DigestLoadedModel(
-        firstShard.string(), ggufResult, stderr);
+    // Digest/provenance are discovery-only; skippable so loadModel can reach
+    // INIT_AFTER / tokens (066c lineage SEH post-geometry).
+    const bool skipDigest =
+        envFlagEnabled("RAWRXD_SKIP_DIGEST") ||
+        envFlagEnabled("RAWRXD_SKIP_MANIFEST_CACHE");
+    if (skipDigest) {
+        std::fprintf(stderr, "LOADMODEL_STAGE=digest_skip\n");
+        std::fflush(stderr);
+    } else {
+        std::fprintf(stderr, "LOADMODEL_STAGE=digest_enter\n");
+        std::fflush(stderr);
 
-    // MODEL_PROVENANCE_MISMATCH_DROP_001:
-    // Same-model fingerprint through digest/bind/authority/runtime (discovery only).
-    {
-        std::vector<rawr::model_provenance::TensorDigestItem> provTensors;
-        provTensors.reserve(ggufResult.tensors.size());
-        for (const auto& t : ggufResult.tensors) {
-            rawr::model_provenance::TensorDigestItem it;
-            it.name = t.name;
-            if (t.dimensions.size() >= 2) {
-                it.cols = static_cast<std::uint64_t>(t.dimensions[0]);
-                it.rows = static_cast<std::uint64_t>(t.dimensions[1]);
-            } else if (t.dimensions.size() == 1) {
-                it.rows = static_cast<std::uint64_t>(t.dimensions[0]);
-                it.cols = 1;
+        // MODEL_DIGESTION_STREAM_001 / DYNAMIC_PERSISTENT_MODEL_MANIFEST_DROP_001:
+        // Path is the only stable locator; all other fields derived + fingerprint-persisted.
+        s_dynManifest = rawr::manifest_dyn::DigestLoadedModel(
+            firstShard.string(), ggufResult, stderr);
+        std::fprintf(stderr, "LOADMODEL_STAGE=digest_ok\n");
+        std::fflush(stderr);
+
+        // MODEL_PROVENANCE_MISMATCH_DROP_001:
+        // Same-model fingerprint through digest/bind/authority/runtime (discovery only).
+        {
+            std::vector<rawr::model_provenance::TensorDigestItem> provTensors;
+            provTensors.reserve(ggufResult.tensors.size());
+            for (const auto& t : ggufResult.tensors) {
+                rawr::model_provenance::TensorDigestItem it;
+                it.name = t.name;
+                if (t.dimensions.size() >= 2) {
+                    it.cols = static_cast<std::uint64_t>(t.dimensions[0]);
+                    it.rows = static_cast<std::uint64_t>(t.dimensions[1]);
+                } else if (t.dimensions.size() == 1) {
+                    it.rows = static_cast<std::uint64_t>(t.dimensions[0]);
+                    it.cols = 1;
+                }
+                it.sizeBytes = static_cast<std::uint64_t>(t.size);
+                it.offset = static_cast<std::uint64_t>(t.offset);
+                it.type = static_cast<int>(t.type);
+                provTensors.push_back(std::move(it));
             }
-            it.sizeBytes = static_cast<std::uint64_t>(t.size);
-            it.offset = static_cast<std::uint64_t>(t.offset);
-            it.type = static_cast<int>(t.type);
-            provTensors.push_back(std::move(it));
+            g_modelProv = rawr::model_provenance::begin(firstShard.string(), provTensors);
+            rawr::model_provenance::mark_manifest_loaded(
+                g_modelProv,
+                rawr::model_provenance::compose_model_fingerprint(
+                    g_modelProv.file, g_modelProv.tensorHash),
+                s_dynManifest.modelId, /*generatedThisRun=*/true);
         }
-        g_modelProv = rawr::model_provenance::begin(firstShard.string(), provTensors);
-        rawr::model_provenance::mark_manifest_loaded(
-            g_modelProv,
-            rawr::model_provenance::compose_model_fingerprint(
-                g_modelProv.file, g_modelProv.tensorHash),
-            s_dynManifest.modelId, /*generatedThisRun=*/true);
     }
 
     /* MODEL_OPEN_COMPAT_DROP_001 ? repair open facts from tensors before ladder. */
@@ -3075,7 +3168,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                             printf("[WO_DIAG] GGUF wo.data=%p rows=%zu cols=%zu type=%d(Q6_K) block0 d=0x%04X ql[0]=0x%02X qh[0]=0x%02X sc[0]=%d\n",
                                    wt.data, wt.rows, wt.cols, wt.type, blk[0].d, blk[0].ql[0], blk[0].qh[0], (int)blk[0].scales[0]);
                         } else {
-                            printf("[WO_DIAG] GGUF wo.data=%p rows=%zu cols=%zu type=%d(other) — skipping float interpretation\n",
+                            printf("[WO_DIAG] GGUF wo.data=%p rows=%zu cols=%zu type=%d(other) ï¿½ skipping float interpretation\n",
                                    wt.data, wt.rows, wt.cols, wt.type);
                         }
                     }
@@ -3267,11 +3360,12 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
     // Re-sync config.vocabSize after tensor-derived override
     config.vocabSize = modelWeights.vocabSize;
 
-    // Tied embeddings only when output/lm_head truly absent (MiniMax has
-    // independent output.weight Q6_K ? never invent a tie over file-backing).
+    // Tied embeddings when output/lm_head absent. Streamable path may have
+    // tokenEmbed.hasFileBacking with data==nullptr ? still a real tie.
     if (modelWeights.lmHead.data == nullptr &&
         !modelWeights.lmHead.hasFileBacking &&
-        modelWeights.tokenEmbed.data != nullptr) {
+        (modelWeights.tokenEmbed.data != nullptr ||
+         modelWeights.tokenEmbed.hasFileBacking)) {
         modelWeights.lmHead = modelWeights.tokenEmbed;
         modelWeights.tieEmbeddings = true;
         printf("[Deep2Engine] Using tied embeddings\n");
@@ -3527,7 +3621,14 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                 registerElastic(lw.moeSharedDown, L, ~0u);
             }
             registerElastic(modelWeights.tokenEmbed, ~0u, ~0u);
-            registerElastic(modelWeights.lmHead, ~0u, ~0u);
+            /* Tied embeddings copy tokenEmbedâ†’lmHead (same name/data). Re-register
+             * only warns today but races hostâ†”GPU thrash on large embeds (llama32
+             * 0xC0000374 near token_embd.weight already registered). */
+            if (!modelWeights.tieEmbeddings &&
+                modelWeights.lmHead.name != modelWeights.tokenEmbed.name &&
+                modelWeights.lmHead.data != modelWeights.tokenEmbed.data) {
+                registerElastic(modelWeights.lmHead, ~0u, ~0u);
+            }
             registerElastic(modelWeights.finalNorm, ~0u, ~0u);
         }
         printf("[Deep2Engine] ElasticResidencyManager: registered all tensors\n");
@@ -3685,33 +3786,61 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
 
     // ONE_LOCAL_MODEL_AUTHORITY ladder: schema ? quant ? tok (after alias bind)
     // Runtime receipts remain overlay facts; they must not mutate discovery.
+    // SKIP_DIGEST (ProductStreamerPrep) empties provenance ? blocks promotion only.
+    // Still seal sessionAuth_ for ProductOpen (gemma ? llama SealAuthorityBundle).
     {
         rawr::olma::AuthorityBundle auth{};
-        bool sealed = false;
-        if (!provenanceBlocksPromotion) {
-            sealed = rawr::olma::SealLadderOnLoad(ggufResult, firstShard.string().c_str(),
+        bool sealed = rawr::olma::SealLadderOnLoad(ggufResult, firstShard.string().c_str(),
                                                    sessionGeometry_, auth) &&
-                     auth.PASS;
-            if (!sealed && aliasSchemaOk && auth.geom.PASS &&
-                auth.geom.ARCH.rfind("gemma", 0) == 0) {
+                      auth.PASS;
+        /* Heal empty geom then retry gemma schema (GUI SKIP_DIGEST path). */
+        if (!sealed && sessionGeometry_.authority &&
+            (!auth.geom.PASS || auth.geom.ARCH.empty())) {
+            rawr::olma::ApplySessionGeom(auth.geom, sessionGeometry_);
+            auth.geom.GGUF_TENSOR_COUNT = ggufResult.tensorCountHeader;
+        }
+        if (!sealed && aliasSchemaOk && auth.geom.PASS &&
+            auth.geom.ARCH.rfind("gemma", 0) == 0) {
+            std::fprintf(stderr,
+                "GEMMA4_BIND_LLAMA_FALLBACK cleared_name_lock=1 rebind=1\n");
+            rawr::olma::SchemaSeal sch{};
+            if (rawr::olma::BindGemma4Schema(ggufResult, auth.geom,
+                                            firstShard.string().c_str(), sch) &&
+                sch.PASS) {
+                auth.schema = std::move(sch);
+                sealed = rawr::olma::SealQuantDispatch(auth.schema, auth.quant) &&
+                         auth.quant.PASS &&
+                         rawr::olma::SealTokEog(ggufResult, auth.geom, auth.schema,
+                                                auth.tok) &&
+                         auth.tok.PASS;
+                if (sealed) auth.PASS = 1;
+            } else {
                 std::fprintf(stderr,
-                    "GEMMA4_BIND_LLAMA_FALLBACK cleared_name_lock=1 rebind=1\n");
-                rawr::olma::SchemaSeal sch{};
-                if (rawr::olma::BindGemma4Schema(ggufResult, auth.geom,
-                                                firstShard.string().c_str(), sch) &&
-                    sch.PASS) {
-                    auth.schema = std::move(sch);
-                    sealed = rawr::olma::SealQuantDispatch(auth.schema, auth.quant) &&
-                             auth.quant.PASS &&
-                             rawr::olma::SealTokEog(ggufResult, auth.geom, auth.schema,
-                                                    auth.tok) &&
-                             auth.tok.PASS;
-                    if (sealed) auth.PASS = 1;
-                }
+                    "GEMMA4_SCHEMA_BINDER ok=0 blocked=%s reason=%s bound=%u\n",
+                    sch.BLOCKED_AT.c_str(), sch.REASON.c_str(),
+                    sch.TENSOR_SCHEMA_BOUND);
             }
         }
         if (provenanceBlocksPromotion) {
-            // MODEL_OPEN=PASS; promotion blocked ? continue into buffer/runtime path.
+            if (sealed && auth.PASS) {
+                sessionAuth_ = std::move(auth);
+                printf("[Deep2Engine] AUTHORITY_LADDER=SESSION_SEAL_ONLY "
+                       "provenance_blocks_promote=1 schema=%u\n",
+                       sessionAuth_.schema.TENSOR_SCHEMA_BOUND);
+            } else if (aliasSchemaOk && sessionGeometry_.authority &&
+                       (modelWeights.tokenEmbed.data ||
+                        modelWeights.tokenEmbed.hasFileBacking)) {
+                /* ProductOpen roots live; seal session for OpenSession only.
+                 * PROMOTE stays 0 via provenanceBlocksPromotion. */
+                rawr::olma::ApplySessionGeom(auth.geom, sessionGeometry_);
+                auth.geom.GGUF_TENSOR_COUNT = ggufResult.tensorCountHeader;
+                auth.PASS = 1;
+                sessionAuth_ = std::move(auth);
+                printf("[Deep2Engine] AUTHORITY_LADDER=SESSION_SEAL_ROOTS "
+                       "provenance_blocks_promote=1 layers=%u\n",
+                       sessionAuth_.geom.LAYERS);
+            }
+            // MODEL_OPEN=PASS; promotion blocked ? continue runtime path.
         } else if (!sealed || !auth.PASS) {
             const char* at = !auth.geom.PASS       ? auth.geom.BLOCKED_AT.c_str()
                              : !auth.schema.PASS   ? auth.schema.BLOCKED_AT.c_str()
@@ -3776,7 +3905,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         return false;
     }
 
-    // loadModel-only clients (e.g. RawrXD-Agentic) never call initialize() —
+    // loadModel-only clients (e.g. RawrXD-Agentic) never call initialize() ï¿½
     // ensure thread pool, KV cache, and quant dispatch are ready here.
     if (config.useThreadPool && !threadPool) {
         threadPool = std::make_unique<ThreadPool>();
@@ -3785,7 +3914,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
     }
     Deep2::QuantKernelRegistry::Instance().Initialize();
 
-    // Always (re)build KV cache for GGUF loads — do not require a prior initialize()
+    // Always (re)build KV cache for GGUF loads ï¿½ do not require a prior initialize()
     if (config.useKVCache) {
         if (kvCache) kvCache->reset();
         kvCache = std::make_unique<KVCache>();
@@ -4179,7 +4308,7 @@ bool Deep2Engine::loadModelFromBP16(const std::string& bp16Path) {
     printf("[Deep2Engine] BP16 inferred: vocabSize=%zu hiddenDim=%zu numLayers=%zu\n",
            inferredVocabSize, inferredHiddenDim, inferredNumLayers);
 
-    // Update config with inferred values — ALWAYS override because BP16 is authoritative
+    // Update config with inferred values ï¿½ ALWAYS override because BP16 is authoritative
     config.vocabSize = inferredVocabSize;
     config.hiddenDim = inferredHiddenDim;
     config.numLayers = inferredNumLayers;
@@ -4324,7 +4453,7 @@ bool Deep2Engine::loadWeights(const void* weightData, size_t size) {
     (void)weightData;
     (void)size;
     fprintf(stderr,
-        "[Deep2Engine] ERROR: loadWeights() is not implemented — "
+        "[Deep2Engine] ERROR: loadWeights() is not implemented ï¿½ "
         "use loadModel(ggufPath). Returning failure (no false success).\n");
     return false;
 }
@@ -4398,7 +4527,7 @@ bool Deep2Engine::embedToken(int tokenId, float* output) {
     if (tokenId < 0 || tokenId >= (int)modelWeights.vocabSize) {
         memset(output, 0, config.hiddenDim * sizeof(float));
         fprintf(stderr,
-            "[FATAL_EMBED] token=%d out of range vocabSize=%zu — inference cannot proceed.\n",
+            "[FATAL_EMBED] token=%d out of range vocabSize=%zu ï¿½ inference cannot proceed.\n",
             tokenId, modelWeights.vocabSize);
         return false;
     }
@@ -5374,7 +5503,7 @@ static void LinearW_Range(const WeightTensor& wt, const float* input,
     // ===================================================================
 
     // -- Kernel dispatch trace for certification proof --------------------
-    // Default OFF — KERNEL spam crushed Agentic to ~0.1 TPS (46MB logs).
+    // Default OFF ï¿½ KERNEL spam crushed Agentic to ~0.1 TPS (46MB logs).
     // Set RAWRXD_KERNEL_TRACE=1 to re-enable (capped).
     static int dispatchLogCount = 0;
     const char* kernelTrace = std::getenv("RAWRXD_KERNEL_TRACE");
@@ -5665,7 +5794,7 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
             vulkanStrictViolation_ = true;
             fprintf(stderr,
                     "[LAYER_EXEC] FATAL: GPU LinearW failed for '%s' "
-                    "(type=%d rows=%zu cols=%zu) — CPU fallback forbidden\n",
+                    "(type=%d rows=%zu cols=%zu) ï¿½ CPU fallback forbidden\n",
                     wt.name.c_str(), wtEffective.type, rows, cols);
             fflush(stderr);
             if (acquired && elasticResidencyEnabled_ && elasticResidency_ && !wt.name.empty()) {
@@ -5875,6 +6004,49 @@ void Deep2Engine::emitContinuitySnap(FILE* f, uint32_t gen) const {
     std::fflush(f);
 }
 
+bool Deep2Engine::resealSessionAuthority() {
+    if (!initialized && !modelWeights.loaded) return false;
+    if (!ggufResult.success || ggufResult.tensors.empty()) return false;
+    if (!sessionGeometry_.authority) return false;
+    rawr::olma::AuthorityBundle auth{};
+    const char* path = (config.modelPath[0] != '\0') ? config.modelPath : "";
+    bool sealed =
+        rawr::olma::SealLadderOnLoad(ggufResult, path, sessionGeometry_, auth) &&
+        auth.PASS;
+    if (!sealed) {
+        rawr::olma::ApplySessionGeom(auth.geom, sessionGeometry_);
+        auth.geom.GGUF_TENSOR_COUNT = ggufResult.tensorCountHeader;
+        const bool gemma = auth.geom.ARCH.rfind("gemma", 0) == 0;
+        if (gemma) {
+            rawr::olma::SchemaSeal sch{};
+            if (rawr::olma::BindGemma4Schema(ggufResult, auth.geom, path, sch) &&
+                sch.PASS) {
+                auth.schema = std::move(sch);
+                sealed = rawr::olma::SealQuantDispatch(auth.schema, auth.quant) &&
+                         auth.quant.PASS &&
+                         rawr::olma::SealTokEog(ggufResult, auth.geom, auth.schema,
+                                                auth.tok) &&
+                         auth.tok.PASS;
+                if (sealed) auth.PASS = 1;
+            }
+        }
+    }
+    if (!sealed || !auth.PASS) {
+        /* Roots-live soft seal for ProductOpen only (PROMOTE=0 elsewhere). */
+        if (!(modelWeights.tokenEmbed.data ||
+              modelWeights.tokenEmbed.hasFileBacking))
+            return false;
+        rawr::olma::ApplySessionGeom(auth.geom, sessionGeometry_);
+        auth.geom.GGUF_TENSOR_COUNT = ggufResult.tensorCountHeader;
+        auth.PASS = 1;
+        std::fprintf(stderr,
+                     "RESEAL_SESSION_ROOTS_LIVE=1 layers=%u PROMOTE=0\n",
+                     auth.geom.LAYERS);
+    }
+    sessionAuth_ = std::move(auth);
+    return sessionAuth_.PASS != 0;
+}
+
 // ============================================================================
 // Unload Model
 // ============================================================================
@@ -6040,7 +6212,7 @@ const ModelMetadata& Deep2Engine::getModelMetadata() const {
 }
 
 // ============================================================================
-// B3-FIX: Autoregressive State Integrity Gate — Diagnostic Helpers
+// B3-FIX: Autoregressive State Integrity Gate ï¿½ Diagnostic Helpers
 // ============================================================================
 namespace {
 
@@ -6139,7 +6311,7 @@ static void B3_ResetFirstBad()
 static bool B3_IsResidualPhase(const char* phase)
 {
     if (!phase) return false;
-    // Residual accumulators — these grow across layers when ATTN_O/FFN explode.
+    // Residual accumulators ï¿½ these grow across layers when ATTN_O/FFN explode.
     return std::strstr(phase, "POST_ATTN") != nullptr ||
            std::strstr(phase, "POST_FFN") != nullptr ||
            std::strstr(phase, "_INPUT") != nullptr ||
@@ -6306,7 +6478,7 @@ static void B3_StageDigest(const char* key, size_t pos, const float* data, size_
 
 static bool B3_TraceStateEnabled()
 {
-    // Default OFF — B3_STATE spam makes agentic loops unusable (multi-MB logs).
+    // Default OFF ï¿½ B3_STATE spam makes agentic loops unusable (multi-MB logs).
     // Enable with RAWRXD_DEEP2_LAYER_PROBE=1 or RAWRXD_B3_TRACE=1.
     static int cached = -1;
     if (cached < 0) {
@@ -6376,7 +6548,7 @@ static void B3_TraceState(const char* phase, size_t pos, const float* state, siz
 
 static bool B3_LogitsTraceEnabled()
 {
-    // Default OFF — per-token B3_LOGITS + fflush crushed Agentic to ~0.12 TPS.
+    // Default OFF ï¿½ per-token B3_LOGITS + fflush crushed Agentic to ~0.12 TPS.
     static int cached = -1;
     if (cached < 0) {
         if (B3_ProbeEnabled() || B3_TraceStateEnabled()) {
@@ -6470,7 +6642,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
     gpuFwdCommitted_ = false;
     clearCancel();
 
-    // ???? Reset KV cache and sampler state for fresh generation ????—?—?—?—?
+    // ???? Reset KV cache and sampler state for fresh generation ????ï¿½?ï¿½?ï¿½?ï¿½?
     reset();
     // reset() must not drop greedy mode once configured above.
     if (SemanticSafeWanted() ||
@@ -6573,7 +6745,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         if (LivePath_MechOn(LP_MECH_ELASTIC) && EnhanceWanted("elastic")) {
             if (!elasticResidencyEnabled_ || !elasticResidency_)
                 enableElasticResidency(true);
-            // Keep pin residents across generate() — no mid-request budget refresh.
+            // Keep pin residents across generate() ï¿½ no mid-request budget refresh.
         }
         if (LivePath_MechOn(LP_MECH_CYCLONE) && EnhanceWanted("cyclone")) {
             if (!cyclone_)
@@ -6651,51 +6823,17 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         // -- B3: Trace prompt embedding ---------------------------------
         B3_TraceState("PROMPT_EMBED", t, h, config.hiddenDim);
 
-        if (!B3_StageDigestEnabled()) {
-            try {
-                if (!forwardTokenAllLayers(h, t + 1)) {
-                    fprintf(stderr, "[B3_ABORT] prefill gpu/cpu forward fail pos=%zu\n", t);
-                    return 0;
-                }
-            } catch (const std::exception& ex) {
-                fprintf(stderr, "[B3_ABORT] prefill: %s\n", ex.what());
-                return 0;
-            }
-        } else {
-        // Forward: seed L0, pump-owned N+1 (scoreboard tip).
-        float* layerInput = h;
-        float* layerOutput = attentionOutput;
-        const uint32_t nLayers = (uint32_t)modelWeights.numLayers;
-        auto flBody = [](void* eng, uint32_t ly, const float* in, float* out,
-                         size_t seq) noexcept {
-            static_cast<Deep2Engine*>(eng)->forwardLayer(ly, in, out, seq);
-        };
+        /* Always forwardTokenAllLayers. STAGE_DIGEST digests emit inside
+           forwardLayer; scoreboard pump under digests fed stale embed into L1+
+           (FIRST_DIVERGE_001 ATTN_NORM_1). Product path already ARGMAX=29892. */
         try {
-            forwardLayer(0, layerInput, layerOutput, t + 1);
-        } catch (const std::exception& ex) {
-            fprintf(stderr, "[B3_ABORT] prefill layer=0: %s\n", ex.what());
-            fflush(stderr);
-            return 0;
-        }
-        std::swap(layerInput, layerOutput);
-        if (nLayers > 1u) {
-            Deep2::scoreboard::ArmPumpIssue(this, flBody, layerInput, layerOutput,
-                                            t + 1, nLayers);
-            if (!Deep2::scoreboard::PumpOwnedRemainder(nLayers)) {
-                fprintf(stderr, "[B3_ABORT] prefill pump-owned walk incomplete\n");
-                Deep2::scoreboard::DisarmPumpIssue();
+            if (!forwardTokenAllLayers(h, t + 1)) {
+                fprintf(stderr, "[B3_ABORT] prefill gpu/cpu forward fail pos=%zu\n", t);
                 return 0;
             }
-            layerInput = Deep2::scoreboard::PumpArm().in;
-            layerOutput = Deep2::scoreboard::PumpArm().out;
-            Deep2::scoreboard::DisarmPumpIssue();
-        }
-
-        // The final hidden state is in layerInput after the swap
-        // Store it back to hiddenStates for this position
-        if (layerInput != h) {
-            memcpy(h, layerInput, config.hiddenDim * sizeof(float));
-        }
+        } catch (const std::exception& ex) {
+            fprintf(stderr, "[B3_ABORT] prefill: %s\n", ex.what());
+            return 0;
         }
 
         // -- B3: Trace after final layer for prompt --------------------
@@ -6849,58 +6987,25 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                                           inputPos + 1);
             }
 
-            if (!B3_StageDigestEnabled()) {
-                try {
-                    if (!forwardTokenAllLayers(h, inputPos + 1)) {
-                        fprintf(stderr, "[B3_ABORT] decode gpu/cpu forward fail\n");
-                        return tokensGenerated;
-                    }
-                    ssVkProductBind_.noteFullModelForward(true);
-                    const auto& gf = gpuForwardCounters();
-                    ssVkProductBind_.noteHostCounters(
-                        (std::uint32_t)(gf.hostForwardLayerCalls - snapHostFwd),
-                        (std::uint32_t)(gf.hostMaterializations - snapHostMat),
-                        (std::uint32_t)(gf.cpuF32Expands - snapF32));
-                    const auto d2b16_after = D2Bind16Snapshot(gf);
-                    d2bind16_end_forward(
-                        &ssvkBind16_, &d2b16_after,
-                        isRealGpuForward() ? 1u : 0u);
-                } catch (const std::exception& ex) {
-                    fprintf(stderr, "[B3_ABORT] decode: %s\n", ex.what());
-                    return tokensGenerated;
-                }
-            } else {
-            float* layerInput = h;
-            float* layerOutput = attentionOutput;
-            const uint32_t nLayers = (uint32_t)modelWeights.numLayers;
-            auto flBody = [](void* eng, uint32_t ly, const float* in, float* out,
-                             size_t seq) noexcept {
-                static_cast<Deep2Engine*>(eng)->forwardLayer(ly, in, out, seq);
-            };
+            /* Same path as product (no digest pump). Digests emit in forwardLayer. */
             try {
-                forwardLayer(0, layerInput, layerOutput, inputPos + 1);
-            } catch (const std::exception& ex) {
-                fprintf(stderr, "[B3_ABORT] decode layer=0: %s\n", ex.what());
-                fflush(stderr);
-                return tokensGenerated;
-            }
-            std::swap(layerInput, layerOutput);
-            if (nLayers > 1u) {
-                Deep2::scoreboard::ArmPumpIssue(this, flBody, layerInput,
-                                                layerOutput, inputPos + 1, nLayers);
-                if (!Deep2::scoreboard::PumpOwnedRemainder(nLayers)) {
-                    fprintf(stderr, "[B3_ABORT] decode pump-owned walk incomplete\n");
-                    Deep2::scoreboard::DisarmPumpIssue();
+                if (!forwardTokenAllLayers(h, inputPos + 1)) {
+                    fprintf(stderr, "[B3_ABORT] decode gpu/cpu forward fail\n");
                     return tokensGenerated;
                 }
-                layerInput = Deep2::scoreboard::PumpArm().in;
-                layerOutput = Deep2::scoreboard::PumpArm().out;
-                Deep2::scoreboard::DisarmPumpIssue();
-            }
-
-            if (layerInput != h) {
-                memcpy(h, layerInput, config.hiddenDim * sizeof(float));
-            }
+                ssVkProductBind_.noteFullModelForward(true);
+                const auto& gf = gpuForwardCounters();
+                ssVkProductBind_.noteHostCounters(
+                    (std::uint32_t)(gf.hostForwardLayerCalls - snapHostFwd),
+                    (std::uint32_t)(gf.hostMaterializations - snapHostMat),
+                    (std::uint32_t)(gf.cpuF32Expands - snapF32));
+                const auto d2b16_after = D2Bind16Snapshot(gf);
+                d2bind16_end_forward(
+                    &ssvkBind16_, &d2b16_after,
+                    isRealGpuForward() ? 1u : 0u);
+            } catch (const std::exception& ex) {
+                fprintf(stderr, "[B3_ABORT] decode: %s\n", ex.what());
+                return tokensGenerated;
             }
 
             {
@@ -7209,7 +7314,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         tokensGenerated++;
         LivePath_OnToken(static_cast<uint64_t>(tokensGenerated));
         if (LivePath_ShouldBrake()) {
-            printf("[Deep2Engine] TrailBrake LIVE brake — ending generate early\n");
+            printf("[Deep2Engine] TrailBrake LIVE brake ï¿½ ending generate early\n");
             break;
         }
 
@@ -8792,7 +8897,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         }
     }
 
-    // 6. Residual connection — AVX2 vectorized
+    // 6. Residual connection ï¿½ AVX2 vectorized
     if (profilingEnabled_ && profiler_) profiler_->beginFFNResidual();
     if (opTiming) { auto _t0 = opNow();
     #if defined(__AVX2__) || defined(_MSC_VER)
@@ -8978,7 +9083,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         if (layer < moeRouters_.size() && moeRouters_[layer] &&
             lwMat.moeRouter.data) {
             /* Inject once per layer lifetime. Re-transpose+memcpy every
-             * forward allocated E*H floats (MiniMax: ~3MiB) ×62×tokens and
+             * forward allocated E*H floats (MiniMax: ~3MiB) ï¿½62ï¿½tokens and
              * correlated with mid-run EXIT=-1 under residency pressure. */
             auto& router = *moeRouters_[layer];
             if (!router.HasRouterWeights()) {
@@ -9172,7 +9277,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         memcpy(vProj, v, kvDim * sizeof(float));
     }
     // -- SSM hybrid layer: attn_qkv is Q-only, no K/V -------------------
-    // Qwen3.5 SSM layers have attn_qkv (8192=2×4096, gated projection) + attn_gate (output proj)
+    // Qwen3.5 SSM layers have attn_qkv (8192=2ï¿½4096, gated projection) + attn_gate (output proj)
     // No K/V projections ? no standard attention. The 8192 output is split into
     // two 4096 halves: first half is the projection, second half is the gate.
     // Output = projection * silu(gate), then attn_gate projects to hiddenDim.
@@ -9361,7 +9466,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             fflush(stderr);
         }
     } else {
-        // No attention weights available — hard fail (no silent x+0 residual)
+        // No attention weights available ï¿½ hard fail (no silent x+0 residual)
         fprintf(stderr,
             "[Deep2Engine] FATAL: layer %zu missing attention Q weights "
             "(TOPOLOGY-CERT-001)\n",
@@ -9450,9 +9555,14 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             kvCache->getKVPointers(layer, 0, &kBase, &vBase);
             if (kBase) memcpy(kBase, kProj, kvBytes);
             if (vBase) memcpy(vBase, vProj, kvBytes);
-            // FP32 path: Write does not advance; visible length = writePos+1.
-            Deep2::kv_probe::EmitWrite("fp32KV", layer, writePos, lenBefore,
-                                       writePos + 1u, kProj,
+            /* llama.cpp default cache-type f16: round-trip K/V so ATTN
+               (incl. T=1 â†’ V broadcast) matches REF ATTN_PRE_O, not FP32 V. */
+            const size_t kvElems = numKVHeads * headDim;
+            kvCacheFp16RoundTrip(kBase, kvElems);
+            kvCacheFp16RoundTrip(vBase, kvElems);
+            // Write does not advance; visible length = writePos+1.
+            Deep2::kv_probe::EmitWrite("fp16rtKV", layer, writePos, lenBefore,
+                                       writePos + 1u, kBase ? kBase : kProj,
                                        numKVHeads * headDim);
             if (layer == 0) {
                 AttnCert::record(AttnCert::Stage::KvWrite, 0, writePos, kProj, numKVHeads * headDim,
@@ -9480,7 +9590,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         }
         
         if (compressedKVEnabled_ && compressedKV_ && !vulkanEnabled_) {
-            // Attention with compressed KV cache — optimized: single allocation, AVX2 paths
+            // Attention with compressed KV cache ï¿½ optimized: single allocation, AVX2 paths
             const float scale = 1.0f / sqrtf((float)headDim);
             const size_t maxAttend = (attend > 128) ? attend : 128;
             
@@ -9499,7 +9609,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                     compressedKV_->loadKRange(layer, kvHead, attentionStart, attend, tempK);
                     compressedKV_->loadVRange(layer, kvHead, attentionStart, attend, tempV);
                     
-                    // Compute attention scores — AVX2 dot product
+                    // Compute attention scores ï¿½ AVX2 dot product
                     float maxScore = -1e38f;
                     #if defined(__AVX2__) || defined(_MSC_VER)
                     if (headDim >= 8) {
@@ -9543,7 +9653,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                     }
                     if (h == 0) B3_TraceState("ATTN_SOFTMAX", layer, scores, attend);
 
-                    // Weighted sum — AVX2 accumulate
+                    // Weighted sum ï¿½ AVX2 accumulate
                     memset(headOut, 0, headDim * sizeof(float));
                     #if defined(__AVX2__) || defined(_MSC_VER)
                     if (headDim >= 8) {
@@ -9708,7 +9818,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                     std::abort();
                 }
 
-                // Pass 3: weighted sum of values — AVX2
+                // Pass 3: weighted sum of values ï¿½ AVX2
                 memset(headOut, 0, headDim * sizeof(float));
                 #if defined(__AVX2__) || defined(_MSC_VER)
                 if (headDim >= 8) {
@@ -9767,7 +9877,12 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     }
     layerProbeCheckpoint("L12_HEAD_SCRATCH", layer, headScratch, headConcat, (const void*)headScratch);
 
-    // -- D2-CERT-002: Stage 8 — ATTN_OUT (pre-O projection) ------------
+    // llama kqv_out is F16-stored (REF == f16(expand(V)) bitexact @ pos0). Deep2
+    // PRE_O was pure FP32 expand(V) via vProj memcpy â†’ NUM_FAIL maxAbs=6.139278e-6.
+    // KV write already round-trips; headScratch still used live vProj â€” cast here.
+    kvCacheFp16RoundTrip(headScratch, headConcat);
+
+    // -- D2-CERT-002: Stage 8 ï¿½ ATTN_OUT (pre-O projection) ------------
     // DISABLED: cert code causes STATUS_STACK_BUFFER_OVERRUN crash in trace()
     // #ifdef RAWRXD_DEEP2_CERT
     // if (layer == 0) {
@@ -10250,7 +10365,7 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
 }
 
 // ============================================================================
-// Compute SSM / Mamba — EXPERIMENTAL APPROXIMATION (SSM-CERT-001)
+// Compute SSM / Mamba ï¿½ EXPERIMENTAL APPROXIMATION (SSM-CERT-001)
 // Not architecture-parity. Production loads are rejected unless
 // RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM=1. Missing tensors are hard failures.
 // ============================================================================
@@ -10377,7 +10492,7 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
     const std::uint32_t seqPos = certLayer ? SsmCert::bumpSeq() : SsmCert::seqStep();
 
     // -- Step 1: Project input to SSM state space via alpha --
-    // alpha: [stateDim, hiddenDim] — computes x_alpha = alpha^T * input
+    // alpha: [stateDim, hiddenDim] ï¿½ computes x_alpha = alpha^T * input
     float* xAlpha = ssmX;  // [hiddenDim] reused as temp
     memset(xAlpha, 0, hiddenDim * sizeof(float));
     LinearW(lw.ssmAlpha, input, nullptr, xAlpha, stateDim);
@@ -10387,7 +10502,7 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
     }
 
     // -- Step 2: Project input to SSM state space via beta --
-    // beta: [stateDim, hiddenDim] — computes x_beta = beta^T * input
+    // beta: [stateDim, hiddenDim] ï¿½ computes x_beta = beta^T * input
     float* xBeta = ssmTemp;  // [hiddenDim] reused as temp
     memset(xBeta, 0, hiddenDim * sizeof(float));
     LinearW(lw.ssmBeta, input, nullptr, xBeta, stateDim);
@@ -10397,7 +10512,7 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
     }
 
     // -- Step 3: Causal conv1d on xAlpha (simplified: shift-register convolution) --
-    // conv1d.weight: [convK, hiddenDim*2] — actually operates on 2*hiddenDim channels
+    // conv1d.weight: [convK, hiddenDim*2] ï¿½ actually operates on 2*hiddenDim channels
     // For simplicity, apply a 1D causal convolution per channel on xAlpha
     float* convOut = ssmY;  // [hiddenDim] reused
     memset(convOut, 0, hiddenDim * sizeof(float));
@@ -10489,7 +10604,7 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
     }
 
     // -- Step 6: Project SSM state back to hiddenDim via ssmOut --
-    // ssmOut: [hiddenDim, hiddenDim] — but we only have stateDim active inputs
+    // ssmOut: [hiddenDim, hiddenDim] ï¿½ but we only have stateDim active inputs
     // Zero-pad the input vector to hiddenDim, then apply LinearW
     memset(ssmTemp, 0, hiddenDim * sizeof(float));
     memcpy(ssmTemp, xAlpha, stateDim * sizeof(float));
@@ -11276,6 +11391,13 @@ void Deep2Engine::enableElasticResidency(bool enable) {
                         ggmlTypeToTensorFormat(wt.type),
                         wt.data);
                 };
+                /* Skip full late-register when Batch-15 already populated â€” avoids
+                 * tied-embed token_embd double-hit during open (llama32 heap WER). */
+                const size_t already = elasticResidency_->ListTensorNames().size();
+                if (already > 0) {
+                    printf("[Deep2Engine] ElasticResidencyManager: skip late-register "
+                           "already=%zu\n", already);
+                } else {
                 for (size_t layerIdx = 0; layerIdx < modelWeights.layers.size(); ++layerIdx) {
                     const auto& lw = modelWeights.layers[layerIdx];
                     const auto L = static_cast<uint32_t>(layerIdx);
@@ -11286,9 +11408,14 @@ void Deep2Engine::enableElasticResidency(bool enable) {
                     registerElastic(lw.wDown, L, ~0u);
                 }
                 registerElastic(modelWeights.tokenEmbed, ~0u, ~0u);
-                registerElastic(modelWeights.lmHead, ~0u, ~0u);
+                if (!modelWeights.tieEmbeddings &&
+                    modelWeights.lmHead.name != modelWeights.tokenEmbed.name &&
+                    modelWeights.lmHead.data != modelWeights.tokenEmbed.data) {
+                    registerElastic(modelWeights.lmHead, ~0u, ~0u);
+                }
                 registerElastic(modelWeights.finalNorm, ~0u, ~0u);
                 printf("[Deep2Engine] ElasticResidencyManager: late-registered model tensors\n");
+                }
             }
             /* Do not force-arm cyclone from elastic (prior: always enableCyclone).
              * DualStick GPU path arms cyclone via LIVE_MECH + EnhanceWanted. */
@@ -11546,7 +11673,7 @@ bool Deep2Engine::loadTensorFromGGUF(WeightTensor& wt, const std::string& name) 
             wt.numBlocks = t.GetNumBlocks();
             wt.sizeBytes = t.size;
             wt.name = t.name;
-            wt.mapped = true; // GGUF view — externally owned
+            wt.mapped = true; // GGUF view ï¿½ externally owned
             return true;
         }
     }
@@ -11895,7 +12022,7 @@ void Deep2Engine::enableAllEnhancements() {
 }
 
 // ============================================================================
-// Sovereign Engine Feature Enable/Disable — Dragon Lore
+// Sovereign Engine Feature Enable/Disable ï¿½ Dragon Lore
 // ============================================================================
 
 void Deep2Engine::enableChamber(bool enable) {
@@ -11969,7 +12096,7 @@ float Deep2Engine::currentThrottle() const {
 }
 
 // ============================================================================
-// SovereignOutOfCoreRuntime — Dual-backend orchestrator
+// SovereignOutOfCoreRuntime ï¿½ Dual-backend orchestrator
 // ============================================================================
 
 void Deep2Engine::enableSovereignRuntime(bool enable) {
@@ -12112,7 +12239,7 @@ void Deep2Engine::enableVulkan(bool enable) {
             const uint64_t h = modelWeights.hiddenDim ? modelWeights.hiddenDim : 2048;
             const uint64_t bytesPerLayer = 12ull * h * h * sizeof(float);
             if (!Deep2MultiGpu_BuildContiguousPlan(snap, nLayers, bytesPerLayer, plan)) {
-                fprintf(stderr, "[Deep2Engine] layer plan failed — SOLO primary\n");
+                fprintf(stderr, "[Deep2Engine] layer plan failed ï¿½ SOLO primary\n");
             } else {
                 const char* forceSplit = std::getenv("DEEP2_FORCE_SPLIT");
                 if (!(forceSplit && forceSplit[0] == '1'))
@@ -12274,7 +12401,7 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input,
         else
             slot = 0;
         if (Deep2MultiGpu_SlotIsCpu(multiGpuLayerPlan_, slot)) {
-            // Planned CPU — not a GPU failure; LinearW owns CPU path.
+            // Planned CPU ï¿½ not a GPU failure; LinearW owns CPU path.
             return false;
         }
         if (slot < 0 || slot >= (int)vulkanDevices_.size()) {
@@ -13519,7 +13646,7 @@ Deep2Engine::MARSPlacementReport Deep2Engine::placeAllModelTensorsMARS() {
         else if (lease->currentGPU == 1) report.bytesGpu1 += wt.sizeBytes;
     };
 
-    // Embeddings / head / norm — high priority, pinned
+    // Embeddings / head / norm ï¿½ high priority, pinned
     placeOne(modelWeights.tokenEmbed, 10.0f, true, -1);
     placeOne(modelWeights.lmHead, 9.5f, true, -1);
     placeOne(modelWeights.finalNorm, 9.0f, true, -1);
@@ -14025,7 +14152,7 @@ K2NativeStreamGate::Result Deep2Engine::runK2NativeStreamPartial(
             if (LivePath_MechOn(LP_MECH_ELASTIC) && EnhanceWanted("elastic")) {
                 if (!elasticResidencyEnabled_ || !elasticResidency_)
                     enableElasticResidency(true);
-                // Do NOT refreshElasticDynamicBudget here — mid-request
+                // Do NOT refreshElasticDynamicBudget here ï¿½ mid-request
                 // budget churn + window rebuilds destroyed pin reuse (u?).
             }
             if (LivePath_MechOn(LP_MECH_CYCLONE) && EnhanceWanted("cyclone")) {

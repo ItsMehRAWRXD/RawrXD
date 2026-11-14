@@ -1,0 +1,80 @@
+GPU_PARITY_Q_PRE_ROPE_CLOSE_001
+DATE=2026-11-13
+ASOF_LOCAL=2026-11-13T21:05:00-05:00
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+CROSS_SHA_CREDIT=0
+INVENT_PASS=0
+NOT_RUN!=PASS
+SCOREBOARD_CLI_GUI_PCT_UNCHANGED=1
+
+## Authority
+PRIOR_SEAL=GPU_PARITY_FIRST_SIGNIFICANT_DIVERGE_001.txt
+PRIOR_FIRST=Q_PRE_ROPE_0 MAXDIFF=1.941442e-03
+BRANCH=work/v0-first-divergence @ ae418355d1973b50af487cd5c084a0ff81378a64
+TOL_ABS=1e-6 TOL_REL=1e-5
+
+## INPUT_IDENTICAL verified? YES
+CAUTION on prior seal (GPU …seq008… vs REF …seq005…) was dump-counter naming, NOT prompt/seq mismatch.
+VERIFY:
+  PROMPT_IDS=1,15043 both arms (FIXTURE + STATUS_VKSPV_F28F + remasure)
+  PROMPT_TOKENS=2 BOUNDARY_TOKEN_INDEX=2
+  PROMPT_EMBED pos0 GPU SHA256 == REF SHA256 (bitexact; fnv=13123758da8b244a)
+  ATTN_NORM_0 pos0 GPU SHA256 == REF SHA256 (bitexact; fnv=b4ca919612be6c51)
+  seqNNN in filenames = STAGE_DUMP ordinal within a run (Q_PRE_ROPE often seq008 GPU /
+    seq005 llama because dump order differs); NOT context length / prompt length.
+INPUT_IDENTICAL=1 → safe to treat diverge as math/kernel, not fixture mismatch.
+NO reseal-with-matched-dumps required for this axis.
+
+## False-alarm held
+V_0 FNV_ONLY maxAbs=4.656613e-09 under TOL → NOT functional fail (unchanged).
+
+## Root cause
+FIRST_MATERIAL_OP = layer0 wq Q4_K Vulkan LinearW GEMV (Q_PRE_ROPE is Q_LINEAR alias;
+  q_norm NO-OP on TinyLlama; RoPE not implicated — Q_POST matches Q_PRE).
+Bug: gemv_q4k.spv FP32 dequant·x path matched dequantize_row_q4_K but NOT llama
+  mul_mat(Q4_K, Q8_K) integer vec_dot → HARD_L2 at Q_PRE_ROPE_0 (maxAbs≈1.94e-3).
+  V_0 stayed near-exact because wv GEMV residual happened to land under TOL on this
+  fixture; host Q8_K path already matched REF (maxAbs≈1.49e-7).
+Fix@source: src/backend/gemv_q4k.comp → Q4_K×Q8_K integer mul_mat (ggml
+  vec_dot_q4_K_q8_K_generic + quantize_row_q8_K); rebuilt gemv_q4k.spv
+  bytes=16292 SHA256=AB7212EC2A30839EF51B9847F90C62CB2EEBCF4A010E122D0CBE0F228C8AC5D5
+  (working tree M; tip product EXE still may ship prior SPV until relink).
+
+## Before / after (Q_PRE_ROPE_0 pos0 n=2048 vs llama)
+BEFORE (FORCE_VULKAN F28F FP32-dequant SPV bytes=8332):
+  maxAbs=1.941442e-03  rel=1.700430e-04  @idx1450  NUM_FAIL
+  fnvA=ee6f71817b0465b7 fnvB=8d53927ede5ddb3f
+  GPU=stage_dump_vkspv_f28f/deep2_Q_PRE_ROPE_0_pos0_layer0_full_n2048_seq008.bin
+  REF=stage_dump_ref_matched/llama_Q_PRE_ROPE_0_pos0_layer0_full_n2048_seq005.bin
+AFTER (HOTPATH_GEMV=VULKAN Q4K×Q8K SPV bytes=16292):
+  maxAbs=1.043081e-07  rel=4.602885e-07  @idx1520  FNV_ONLY (under TOL)
+  fnvA=a343b918d7653153 fnvB=8d53927ede5ddb3f
+  GPU=stage_dump_q4kq8k_spv/deep2_Q_PRE_ROPE_0_pos0_layer0_full_n2048_seq008.bin
+  REF=same llama dump
+K_PRE_ROPE_0 AFTER: maxAbs=8.195639e-08 (also under TOL; was 2.991e-03 before).
+
+## Compare receipt
+COMPARE_LOG=GPU_PARITY_Q_PRE_ROPE_CLOSE_001_compare.log
+REMEASURE=evidence/PRODUCTION_INFERENCE_CERT_001/FIRST_DIVERGE_001/remeasure_q4kq8k_spv.err.txt
+DUMP_DIR=…/stage_dump_q4kq8k_spv
+HOTPATH_GEMV=VULKAN Q4K_SPV=…/gemv_q4k.spv bytes=16292
+FIRST_FNV_DIFF=V_0 (FNV_ONLY; false alarm law held)
+FIRST_SIGNIFICANT_AFTER=ATTN_PRE_O_0 maxAbs=6.139278e-06 (≠ Q_PRE_ROPE; next gate)
+
+## Verdict
+Q_PRE_ROPE_0_CLOSED=1
+MAXDIFF_BEFORE=1.941442e-03
+MAXDIFF_AFTER=1.043081e-07
+UNDER_TOL=1
+FNV_DIFF_ONLY_AFTER=1
+≠ PERFORMANCE_PASS ≠ PROMOTE
+M1 numeric first-significant at Q_PRE_ROPE closed; cascade after ATTN_PRE_O remains OPEN.
+
+## Non-credits
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD
+CLI/GUI valuation % NOT modified
+PRODUCT_OPEN / SESSION_ENTER / TOKEN_COMMIT not claimed
+PROMOTE=0
+TIP_CLIMB=HOLD

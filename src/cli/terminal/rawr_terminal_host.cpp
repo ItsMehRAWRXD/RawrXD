@@ -62,27 +62,38 @@ std::string HandleHostRequest(TerminalSupervisor& sup, const std::string& line) 
     return ErrLine(9, "unknown");
 }
 
+static HANDLE makeListenPipe() {
+    return CreateNamedPipeA(
+        HostPipeName(), PIPE_ACCESS_DUPLEX,
+        PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
+        PIPE_UNLIMITED_INSTANCES, 1 << 16, 1 << 16, 0, nullptr);
+}
+
 int RunTerminalHost(int idleExitMs) {
     (void)idleExitMs;
     TerminalSupervisor& sup = TerminalSupervisor::instance();
+    HANDLE listen = makeListenPipe();
+    if (listen == INVALID_HANDLE_VALUE) return 1;
     for (;;) {
-        HANDLE h = CreateNamedPipeA(
-            HostPipeName(), PIPE_ACCESS_DUPLEX,
-            PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT, 1, 1 << 16, 1 << 16,
-            0, nullptr);
-        if (h == INVALID_HANDLE_VALUE) return 1;
-        BOOL ok = ConnectNamedPipe(h, nullptr)
+        BOOL ok = ConnectNamedPipe(listen, nullptr)
                       ? TRUE
                       : (GetLastError() == ERROR_PIPE_CONNECTED);
         if (!ok) {
-            CloseHandle(h);
+            CloseHandle(listen);
+            listen = makeListenPipe();
+            if (listen == INVALID_HANDLE_VALUE) return 1;
             continue;
         }
+        // Overlap next listener before tear-down so tip client never races
+        // against maxInstances=1 gap (tip tail EXIT=8 flaky root cause).
+        HANDLE next = makeListenPipe();
         char buf[8192]{};
         DWORD rd = 0;
-        if (!ReadFile(h, buf, sizeof(buf) - 1, &rd, nullptr) || !rd) {
-            DisconnectNamedPipe(h);
-            CloseHandle(h);
+        if (!ReadFile(listen, buf, sizeof(buf) - 1, &rd, nullptr) || !rd) {
+            DisconnectNamedPipe(listen);
+            CloseHandle(listen);
+            listen = (next != INVALID_HANDLE_VALUE) ? next : makeListenPipe();
+            if (listen == INVALID_HANDLE_VALUE) return 1;
             continue;
         }
         std::string req(buf, buf + rd);
@@ -90,12 +101,15 @@ int RunTerminalHost(int idleExitMs) {
             req.pop_back();
         std::string rsp = HandleHostRequest(sup, req);
         DWORD wr = 0;
-        WriteFile(h, rsp.data(), (DWORD)rsp.size(), &wr, nullptr);
-        FlushFileBuffers(h);
-        DisconnectNamedPipe(h);
-        CloseHandle(h);
+        WriteFile(listen, rsp.data(), (DWORD)rsp.size(), &wr, nullptr);
+        FlushFileBuffers(listen);
+        DisconnectNamedPipe(listen);
+        CloseHandle(listen);
+        listen = (next != INVALID_HANDLE_VALUE) ? next : makeListenPipe();
+        if (listen == INVALID_HANDLE_VALUE) return 1;
         if (req == "HOST_EXIT") break;
     }
+    CloseHandle(listen);
     return 0;
 }
 

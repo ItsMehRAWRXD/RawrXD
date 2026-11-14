@@ -1,4 +1,4 @@
-// vulkan_fwd_q6k_host.cpp — host-IO packed Q6_K GEMV (logits range; no ww thrash)
+﻿// vulkan_fwd_q6k_host.cpp — host-IO packed Q6_K GEMV (logits range; no ww thrash)
 #ifdef _WIN32
 #include <windows.h>
 #endif

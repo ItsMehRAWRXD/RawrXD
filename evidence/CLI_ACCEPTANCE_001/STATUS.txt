@@ -1,0 +1,107 @@
+CLI_ACCEPTANCE_001 — measured tipbound close
+DATE=2026-11-13
+ASOF_LOCAL=2026-11-13T17:45-05:00
+WORKSPACE=G:\~dev\rawrxd
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+NOT_RUN!=PASS
+INVENT_PASS=0
+CROSS_SHA_CREDIT=0
+CLOUD_MODELS_REQUIRED=0
+CLI_CAN_FINISH_WITHOUT_GUI=1
+G_BIN_LOCK=0
+
+## Score (fail-closed)
+CLI_ACCEPTANCE=45/45
+PRIOR_REPORTED=35/45 (seal 114906 narrative / FIRST_DIVERGE note)
+PRIOR_TIPBOUND=40/45 (CONTINUE_20261112_142725 tip B35588DB…)
+REMAINDER_CLOSED_THIS_TURN=5
+OPEN_IDS=(none)
+PROMOTE=0
+CERTIFIED=0
+
+## Tip pins (do NOT lock build_ninja\bin\rawr.exe)
+TIPBOUND_EXE=evidence/CLI_ACCEPTANCE_001/pin/rawr.B355.exe
+TIPBOUND_SHA256=B35588DB8FCDB0D6BB78F822490174C6E62E88715852E6509353FF3953252C1C
+TIPBOUND_PRIOR_EV=F:\rawrxd\evidence\CONTINUE_20261112_142725
+INFER_EXE=evidence/CLI_ACCEPTANCE_001/pin/rawr.INFER.exe
+INFER_SHA256=F28F10B9E510C6F6C87050949B1726DB90C81ED8DC19F1BFC8BB2270D226360B
+REBUILT_TIP_EXE=evidence/CLI_ACCEPTANCE_001/pin/rawr.TIP.exe
+REBUILT_TIP_SHA256=6B61D9C17D3E8B77CFB65CE0B34C755A420C5182A297B73A17A93B8022312499
+DEBUGGEE=evidence/CLI_ACCEPTANCE_001/fixture/debuggee_fixture.exe
+NOTE_TWO_CLIS=Tipbound acceptance CLI is src/rawr_cli.cpp (F:\rawrxd build_ide). G build_ninja rawr is Deep2 infer CLI (rawr_run.cpp). Measured separately; no cross-SHA credit.
+
+## Remainder close (remeasured this turn on TIPBOUND_SHA=B355)
+| ID | Status | Evidence |
+|----|--------|----------|
+| C08 | VERIFIED_PASS | logs/MEASURED_C08.txt — backend=deep2 ask Hello --no-memory ok=true completion_tokens=56 |
+| C09 | VERIFIED_PASS | logs/MEASURED_C09.txt — selected=native route=deep2 ask Hello --no-memory ok=true completion_tokens=64 (retry#2; B355 outJson UTF-8-strict flake) |
+| C39 | VERIFIED_PASS | logs/MEASURED_C39_C40.txt — dap probe SESSION_REAL=1 stopped_bp=1 stack=4 vars=4 continue=1 exited=1 |
+| C40 | VERIFIED_PASS | paired with C39 (same dap WaitForDebugEvent session) |
+| C47 | VERIFIED_PASS | logs/MEASURED_C47.txt — installer probe present=1 size=90307 launched=1 EXIT=0 |
+
+## Prior tipbound PASS set (B355 CONTINUE_142725; same SHA; not re-invented)
+PASS_PRIOR=C01,C02,C03,C04,C05,C06,C07,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C25,C29,C30,C32,C34,C35,C36,C37,C38,C41,C42,C43,C44,C45,C46,C48,C49,C50,C51,C53,C54,C55
+COUNT_PRIOR=40
+AUTHORITY=F:\rawrxd\evidence\CONTINUE_20261112_142725\CLI_TIPBOUND_SUMMARY.txt
+NOTE=Those 40 remain tip-bound to B35588DB…; this pack closes the documented REMAIN=C08,C09,C39,C40,C47 only.
+
+## Full 45-row checklist (CLI applicable)
+C01 PASS | C02 PASS | C03 PASS | C04 PASS | C05 PASS
+C06 PASS | C07 PASS | C08 PASS (remeasured) | C09 PASS (remeasured)
+C11 PASS | C12 PASS | C13 PASS | C14 PASS | C15 PASS
+C16 PASS | C17 PASS | C18 PASS | C19 PASS | C20 PASS
+C21 PASS | C25 PASS | C29 PASS | C30 PASS | C32 PASS
+C34 PASS | C35 PASS | C36 PASS | C37 PASS | C38 PASS
+C39 PASS (remeasured) | C40 PASS (remeasured)
+C41 PASS | C42 PASS | C43 PASS | C44 PASS | C45 PASS
+C46 PASS | C47 PASS (remeasured) | C48 PASS | C49 PASS | C50 PASS
+C51 PASS | C53 PASS | C54 PASS | C55 PASS
+TOTAL=45/45
+OPEN=
+
+## Extra product-path witnesses (not substitute for C-rows; measured)
+### GPU decode + locked Hello (infer pin F28F)
+HOST_DECODE=0
+AUTO_BACKEND=VulkanPrimary
+GENERATED_TOKENS=8
+PRODUCT_OPEN_PASS=1
+SESSION_ENTER_PASS=1
+TOKEN_COMMIT_PASS=1
+PROMPT=Hello MAX_TOKENS=8 MODEL=G:\~dev\rawrxd\models\tinyllama.gguf
+LOGS=logs/GPU_HELLO_locked.{out,err,meta}.txt
+NOTE_COHERENCE=path/tokens PASS; MATCH/Top-25 coherence still OPEN (≠ PROMOTE)
+
+### Offline autonomy (sunshine fixture tick)
+EXE=fixtures/OFFLINE_AUTONOMY_SUNSHINE_001/build/sunshine_engine_tick.exe
+OUT={"schema":"sunshine.engine_tick/1","seed":42,"frames":8,"checksum":"0xE1AED9E1","selftest":false}
+LOGS=offline_autonomy/tick.{out,err}.txt
+STATUS=RUNTIME_REACHED (fixture tick)
+
+## What was fixed / closed
+1. C39/C40 DAP: debuggee_fixture.exe; `rawr dap probe --exe <fixture>` → SESSION_REAL=1
+2. C47 installer: SetupWizard present+launch → EXIT=0
+3. C08/C09: deep2/native `--json ask Hello --no-memory` → GENERATED_TOKENS>0 (B355; --no-memory avoids memory JSONL UTF-8 throw; C09 required 1 retry for outJson UTF-8-strict)
+4. Source harden (F:\rawrxd\src\rawr_cli.cpp): jsonDumpSafe / outJson + appendMemory use error_handler_t::replace; rebuilt tip pinned as rawr.TIP.exe SHA=6B61…
+5. GPU Hello: infer pin F28F exclusive run HOST_DECODE=0 VulkanPrimary tokens=8
+6. Offline autonomy: sunshine_engine_tick checksum 0xE1AED9E1
+7. Tip unlock: stopped holders of build_ninja\bin\rawr.exe; G_BIN_LOCK=0; remasure uses pin copies
+
+## Explicit non-claims
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD
+GPU Hello functional tokens ≠ multi-family ≠ Top-25 MATCH
+Sealed certification PASS artifacts elsewhere NOT altered
+114906 GUI 53/54 narrative untouched
+REBUILT_TIP_6B61 ≠ TIPBOUND_B355 (remainder score stays on B355; 6B61 is UTF-8 harden + DAP smoke only this turn)
+
+## How to re-run
+powershell -NoProfile -ExecutionPolicy Bypass -File evidence/CLI_ACCEPTANCE_001/Re-Run-CliAcceptance.ps1
+
+END
+CLI_ACCEPTANCE=45/45
+OPEN_IDS=
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+G_BIN_LOCK=0

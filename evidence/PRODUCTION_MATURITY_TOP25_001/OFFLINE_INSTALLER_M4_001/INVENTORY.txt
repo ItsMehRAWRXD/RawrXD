@@ -1,0 +1,29 @@
+﻿INVENTORY — packaging real vs ABSENT (M4 / A6)
+ASOF=2026-11-13T21:03:00-05:00
+GIT_HEAD=ae418355d1973b50af487cd5c084a0ff81378a64
+PROMOTE=0
+PACKAGE_SHA=D4DF3ED526C7037A309F41062CA17C5C83E1D0FC05C5399E9252DEBFA4AB9129
+
+REAL
+  CLI tip 15A119D1 exe + local product zip r38 (CLI-only)
+  GUI tip 6754616E exe (bin/RawrXD-Win32IDE_tip_land_6754616E.exe)
+  M4 offline zip+recipe OFFLINE=1 CLOUD_MODELS=0 MODELS_SEPARATE=1
+  Install-RawrOffline.ps1 (Get-ChildItem copy; LiteralPath wildcard bug fixed)
+  Host verify: INSTALL_EXIT=0 HELP_EXIT=0 (CLEAN_VM still 0)
+  distribution/ winget+choco+brew DRAFT_SHA_BOUND to v14.7.3 zip
+  TOP25_RECOGNITION_OPS WINDOWS_ZIP_CHANNEL v14.7.3 pin
+  scripts/Verify-RawrLocalInstall.ps1 · Install-RawrDevPath.ps1
+  ENTERPRISE seal: ENTERPRISE_COMPLETION_PROGRAM_001/A6_OFFLINE_INSTALLER_M4_001.txt
+
+ABSENT / NOT_PUBLISHED
+  CLEAN_VM install witness = ABSENT (CLEAN_VM=0 / NOT_RUN)
+  winget publish = NOT_PUBLISHED
+  chocolatey publish = NOT_PUBLISHED
+  NSIS installer = ABSENT
+  MSI installer = ABSENT
+  Bundled model weights in M4 package = 0
+  rawr --version flag = ABSENT
+
+NOT this package
+  GitHub RawrXD-14.7.3-Windows-x64.zip legacy RawrXD.exe (help TIMEOUT)
+  absorb074 GUI EXE SHA 0B6229F2… (separate tip-land absorb; not packaged)

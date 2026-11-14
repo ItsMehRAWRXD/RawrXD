@@ -1,9 +1,17 @@
-# Phase F.1 — Production Release & Benchmark Execution
+# Phase F.1 — Production Release & Benchmark Execution — HISTORICAL
+
+> **Fail-closed (2026-11-13):** `STATUS=HISTORICAL` · `PROMOTE=0` · `CERTIFIED=0`.
+> Winget / choco / brew install commands, MSI/DMG/AppImage “Implementation Complete”
+> claims, and marketing publish lines below are **NOT_PUBLISHED** / **NOT_RUN**.
+> **CLEAN_VM=ABSENT** — invent forbidden. Authority: repo-root `INSTALL.md` ·
+> `distribution/README.md` · `evidence/PRODUCTION_MATURITY_TOP25_001/`.
+
 ## Batch 1/5: Installer Builder & Benchmark Pipeline
 
-**Status**: Implementation Complete  
-**Date**: 2026-07-13  
+**Status**: HISTORICAL (draft; not a recognition receipt)  
+**Date**: 2026-07-13 (draft) / honesty banner 2026-11-13  
 **Goal**: Transform RawrXD from validated architecture to distributable, provable product
+(draft text retained below — do not treat as PASS)
 
 ---
 

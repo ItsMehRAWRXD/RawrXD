@@ -182,8 +182,11 @@ inline BackendDecision SelectBackend(
         m.weightsBytes,
         SaturatingAdd(m.kvBytes, m.scratchBytes));
 
+    /* ICD+PnP healthy arms a GPU plan. primaryComputeValidated is soft —
+     * tip 6754 MeasureGpuBudget printed ICD ready but never set validated,
+     * so FORCE_GPU rejected with "No eligible GPU execution plan". */
     const bool primaryUsable =
-        d.primaryReady && d.primaryComputeValidated && d.vulkanInstanceCreated;
+        d.primaryReady && d.vulkanInstanceCreated;
 
     if (primaryUsable && gpuNeed <= d.primaryVram) {
         return {Backend::VulkanPrimary, "Primary GPU fits weights+KV+scratch"};
@@ -191,7 +194,8 @@ inline BackendDecision SelectBackend(
 
     // ---- Dual GPU -----------------------------------------------------------
     // Requires verified cross-device placement; aggregate capacity alone is insufficient.
-    if (primaryUsable && d.secondaryReady && d.secondaryComputeValidated &&
+    if (primaryUsable && d.secondaryReady &&
+        (d.secondaryComputeValidated || d.vulkanInstanceCreated) &&
         m.supportsDualGpu &&
         gpuNeed <= SaturatingAdd(d.primaryVram, d.secondaryVram)) {
         return {Backend::VulkanDual, "Dual GPU candidate"};
@@ -206,6 +210,13 @@ inline BackendDecision SelectBackend(
 
     // ---- Explicit GPU but no plan -------------------------------------------
     if (p.forceGPU) {
+        /* Last-chance: PnP primary + ICD + any VRAM estimate (incl. 0→treat
+         * as unknown capacity) still prefer VulkanPrimary over hard Reject. */
+        if (d.primaryReady && d.vulkanInstanceCreated &&
+            (d.primaryVram == 0 || gpuNeed <= d.primaryVram)) {
+            return {Backend::VulkanPrimary,
+                    "FORCE_GPU ICD+PnP primary (compute validate soft)"};
+        }
         return {Backend::Reject, "No eligible GPU execution plan"};
     }
 

@@ -6055,6 +6055,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/native_debugger_engine.cpp
         src/core/native_debugger_symbols.cpp
         src/win32app/Win32IDE_NativeDebugPanel.cpp
+        src/win32app/Win32NativeDebugBackend.cpp
+        src/win32app/Win32IDE_NativeDebugBackend_Wire.cpp
         
         # Three-Layer Hotpatch System (Phase 14.2)
         src/core/model_memory_hotpatch.cpp
@@ -6747,12 +6749,12 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/beacon_link_stub.cpp
     )
 
-    # AUTO provider: ssot_handlers.cpp and auto_feature_registry.cpp both define
-    # some command handlers. Use /FORCE:MULTIPLE on the linker to tolerate the
-    # duplicates (auto_feature_registry takes priority due to link order).
-    # We keep ssot_handlers.cpp because it also provides unique handlers
-    # (handleTier1AutoUpdateCheck, handleTier1UpdateDismiss, isBeaconFullActive, etc.)
-    # that auto_feature_registry.cpp does not define.
+    # NOFORCE ODR (INIT_SEH_ROOT_CAUSE_042): never rely on /FORCE:MULTIPLE for
+    # command-handler ownership. Prefer ONE definition set:
+    #   auto_feature_registry XOR ssot_handlers (keep BOTH only if LNK2005=0).
+    # Win32IDE default: keep auto_feature_registry; unique gaps via
+    # ssot_linker_gap_unique_038 (AIStop etc). Drop loose MoERouter/MoEWeightProxy
+    # and win32ide_watchdog_init stub collisions on clean noforce rsp.
 
     if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
         list(REMOVE_ITEM WIN32IDE_SOURCES
@@ -7527,11 +7529,14 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/asm/RawrXD_Telemetry_Kernel.asm
         src/asm/Code_Pattern_Reconstructor.asm)
     # UNLINKED_SYMBOLS_E2E LINK_WIN32IDE_002: real owners for LNK2001 gaps (not batch_018/019/020)
+    # NOFORCE ODR: exclude command_handlers_comprehensive — LNK2005 vs auto_feature/ssot.
+    # handleAIStopGeneration owned by ssot_linker_gap_unique_038 (or AUTO lane gap).
     list(APPEND WIN32IDE_SOURCES
-        # COMMAND_HANDLERS_FICTION_GATE_001: GATED_FICTION_EXPLICIT (fail-closed; ≠ PASS)
-        src/core/command_handlers_comprehensive.cpp  # handleAIStopGeneration + GateFiction×276
         src/SettingsManager.cpp                      # RawrXD::SettingsManager WindowState API
         src/gui/ModelConversionDialog.cpp            # ModelConversionDialog ctor/dtor/showModal
+    )
+    list(REMOVE_ITEM WIN32IDE_SOURCES
+        src/core/command_handlers_comprehensive.cpp
     )
     list(REMOVE_DUPLICATES WIN32IDE_SOURCES)
 
@@ -7648,12 +7653,15 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     endif()
 
     # Runtime feature gates for this target's source graph.
+    # HAVE_DEEP2_ENGINE=1 + RAWR_HAS_RAWR_INFERENCE=1: product GPU/Deep2 path in
+    # Win32IDE_Deep2Bridge (avoids CPUInferenceEngine ConfigureGeneration/infer C2039 lane).
     target_compile_definitions(RawrXD-Win32IDE PRIVATE
         UNICODE
         _UNICODE
+        HAVE_DEEP2_ENGINE=1
         RAWRXD_STRICT_PRODUCTION_PROFILE=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
         RAWR_HAS_SOVEREIGN_ENGINES=0
-        RAWR_HAS_RAWR_INFERENCE=0
+        RAWR_HAS_RAWR_INFERENCE=1
         RAWRXD_HAS_MW_KERNEL=${RAWRXD_HAS_MW_KERNEL_FLAG}
         RAWRXD_HAS_PROMPT_ENGINE=${RAWRXD_HAS_PROMPT_ENGINE_FLAG}
         RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>

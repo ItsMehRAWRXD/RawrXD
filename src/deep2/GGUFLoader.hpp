@@ -183,6 +183,8 @@ struct ModelMetadata {
     uint32_t numSharedExperts = 0;
     uint32_t moeIntermediateSize = 0;
     float ropeScaling = 1.0f;
+    float expertWeightsScale = 0.f;   // routed scaling (0 = unset)
+    uint32_t expertGatingFunc = 0;    // 0=softmax, 1/2=gated variants
 
     // MLA / DeepSeek2 metadata (real, parsed from GGUF)
     uint32_t leadingDenseBlockCount = 0;

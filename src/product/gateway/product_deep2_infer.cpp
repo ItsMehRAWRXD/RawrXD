@@ -48,7 +48,10 @@ void ProductCloseSession() {
 }
 
 bool ProductSessionOpen() {
-    return Run([&]() -> bool { return Rt().IsOpen(); });
+    return Run([&]() -> bool {
+        return Rt().IsOpen() ||
+               product_infer_detail::StickySessionOpen().load() != 0;
+    });
 }
 
 void ProductRequestCancel() {

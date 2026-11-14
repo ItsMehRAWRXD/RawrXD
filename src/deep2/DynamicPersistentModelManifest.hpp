@@ -521,6 +521,13 @@ inline DynamicManifest DigestLoadedModel(const std::string& modelPath,
         m.layers = m.layerFacts.size();
 
     FinalizeLayerFacts(m);
+    const char* skipCache = std::getenv("RAWRXD_SKIP_MANIFEST_CACHE");
+    if (skipCache && skipCache[0] == '1') {
+        EmitSummary(m, f);
+        std::fprintf(f, "MODEL_DIGESTION_STREAM_CACHE=SKIP\n");
+        std::fflush(f);
+        return m;
+    }
     const char* cacheRoot = std::getenv("RAWRXD_MANIFEST_CACHE");
     if (!cacheRoot || !cacheRoot[0])
         cacheRoot = "G:\\~dev\\rawrxd\\evidence\\RAWRXD_MODEL_MANIFESTS";

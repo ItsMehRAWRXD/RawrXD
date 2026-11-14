@@ -1,12 +1,14 @@
-# Getting Started with RawrXD Sovereign
+# Getting Started with RawrXD Sovereign — HISTORICAL / REDIRECT
 
-## Phase I Batch 2/5: User Guides
+**STATUS:** `HISTORICAL` · **ASOF:** 2026-11-13 · **PROMOTE=0** · **CERTIFIED=0** · **RELEASE=HELD**
 
-Welcome to RawrXD Sovereign - the production-grade AI inference runtime.
-
-> **Fail-closed (2026-11-13):** The package-manager / service blocks below are **NOT_PUBLISHED** drafts.  
-> Start with repo-root **[`INSTALL.md`](../../INSTALL.md)** (or [`LOCAL_INSTALL.md`](LOCAL_INSTALL.md)).  
-> Evidence: `evidence/PRODUCTION_MATURITY_TOP25_001/` · `PROMOTE=0` · `CERTIFIED=0`
+> **Fail-closed:** Package-manager, service, and HTTP-API blocks that once lived here are
+> **NOT_PUBLISHED** / **NOT_RUN**. Do not treat them as green install or inference paths.
+> **CLEAN_VM=ABSENT** (invent forbidden). Version drift documented only —
+> `evidence/PRODUCTION_MATURITY_TOP25_001/VERSION_DRIFT.txt`.
+>
+> **Authoritative install:** repo-root [`INSTALL.md`](../../INSTALL.md) · pointer [`LOCAL_INSTALL.md`](LOCAL_INSTALL.md)  
+> Evidence: `evidence/PRODUCTION_MATURITY_TOP25_001/` · `NOT_RUN != PASS`
 
 ---
 
@@ -19,220 +21,33 @@ Welcome to RawrXD Sovereign - the production-grade AI inference runtime.
 ```
 
 See [`INSTALL.md`](../../INSTALL.md) for build steps and measured release zip names.
+Product CLI path: `build_ninja\bin\rawr.exe` (not a winget/choco/brew install).
 
 ---
 
-## Package managers (NOT_PUBLISHED)
+## Package managers / services / HTTP API — HISTORICAL (NOT_PUBLISHED)
 
-Do **not** treat these as green install paths until `distribution/README.md` clears `NOT_PUBLISHED` (real SHA + index listing + clean-VM witness).
+Winget, Chocolatey, Homebrew, APT, Windows/macOS services, and `localhost:8080` curl/Python
+snippets previously shown in this guide are **non-authoritative drafts**. They have **no**
+clean-VM witness and **no** published index listing under this evidence pack.
 
-#### Windows (Winget) — DRAFT
-```powershell
-winget install RawrXD.RawrXD
-```
-
-#### Windows (Chocolatey) — DRAFT
-```powershell
-choco install rawrxd
-```
-
-#### macOS (Homebrew) — DRAFT
-```bash
-brew install rawrxd
-```
-
-#### Linux (APT) — UNPROVEN
-```bash
-curl -fsSL https://apt.rawrxd.ai/setup.sh | sudo bash
-sudo apt-get install rawrxd
-```
-
-### Service start (UNPROVEN on default desktop installs)
-
-#### Windows
-```powershell
-Start-Service RawrXD
-```
-
-#### macOS/Linux
-```bash
-sudo systemctl start rawrxd
-```
-
-### Verify (local CLI)
-
-```powershell
-.\build_clean\bin\rawr.exe --help
-```
+**Use instead:** local build → `build_ninja\bin\rawr.exe` per [`INSTALL.md`](../../INSTALL.md).  
+Distribution honesty: [`distribution/README.md`](../../distribution/README.md) (`NOT_PUBLISHED=1`).
 
 A fixed marketing `--version` string is **not** asserted here (`NOT_RUN!=PASS`).
 
 ---
 
-## First Inference
+## Legacy sections below this line — HISTORICAL (do not follow)
 
-### Using curl
+Prior revisions of this file advertised service YAML under `%ProgramData%` / `/etc/rawrxd`,
+`rawrxd-cli model pull`, HTTP `localhost:8080` load/health/metrics, Grafana `:3000`, and
+Linux service troubleshooting. Those paths are **NOT_RUN** under
+`evidence/PRODUCTION_MATURITY_TOP25_001/` and must not be cited as install or inference receipts.
 
-```bash
-curl -X POST http://localhost:8080/api/v1/inference \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "llama-3-8b",
-    "prompt": "Hello, RawrXD!",
-    "max_tokens": 100
-  }'
-```
-
-### Using Python
-
-```python
-import requests
-
-response = requests.post(
-    "http://localhost:8080/api/v1/inference",
-    json={
-        "model": "llama-3-8b",
-        "prompt": "Hello, RawrXD!",
-        "max_tokens": 100
-    }
-)
-
-print(response.json()["content"])
-```
+**Measured first inference (local CLI):** see [`INSTALL.md`](../../INSTALL.md) and tip pin
+`build_ninja\bin\rawr.exe` / `rawr_gpufwd_*.exe` under the CLI valuation pack.
 
 ---
 
-## Configuration
-
-Edit the configuration file:
-
-**Windows:**
-```
-%ProgramData%\RawrXD\config\rawrxd.yaml
-```
-
-**Linux/macOS:**
-```
-/etc/rawrxd/rawrxd.yaml
-```
-
-### Basic Configuration
-
-```yaml
-version: "1.0.0"
-
-server:
-  host: "0.0.0.0"
-  port: 8080
-
-inference:
-  default_model: "llama-3-8b"
-  max_tokens: 4096
-  temperature: 0.7
-  top_p: 0.9
-  top_k: 40
-
-models:
-  directory: "/opt/rawrxd/models"
-  preload: ["llama-3-8b"]
-
-logging:
-  level: "info"
-  file: "/var/log/rawrxd/service.log"
-
-features:
-  autonomous: true
-  hotpatch: true
-  telemetry: true
-```
-
----
-
-## Loading Models
-
-### Download a Model
-
-```bash
-rawrxd-cli model pull llama-3-8b
-```
-
-### Load a Model
-
-```bash
-curl -X POST http://localhost:8080/api/v1/models/load \
-  -H "Content-Type: application/json" \
-  -d '{"model_id": "llama-3-8b", "gpu_layers": 33}'
-```
-
----
-
-## Monitoring
-
-### Check Health
-
-```bash
-curl http://localhost:8080/api/v1/health
-```
-
-### View Metrics
-
-```bash
-curl http://localhost:8080/api/v1/metrics
-```
-
-### Access Grafana Dashboard
-
-Open http://localhost:3000 in your browser (if Grafana is configured).
-
----
-
-## Troubleshooting
-
-### Service Won't Start
-
-1. Check logs:
-   ```bash
-   tail -f /var/log/rawrxd/service.log
-   ```
-
-2. Verify configuration:
-   ```bash
-   rawrxd --config-check
-   ```
-
-3. Check port availability:
-   ```bash
-   netstat -tlnp | grep 8080
-   ```
-
-### Low Performance
-
-1. Check GPU utilization:
-   ```bash
-   nvidia-smi
-   ```
-
-2. Adjust batch size:
-   ```yaml
-   inference:
-     batch_size: 512
-   ```
-
-3. Enable GPU layers:
-   ```yaml
-   models:
-     gpu_layers: 33  # Adjust based on your GPU
-   ```
-
----
-
-## Next Steps
-
-- [API Reference](API_REFERENCE.md)
-- [Configuration Guide](CONFIGURATION.md)
-- [Deployment Guide](DEPLOYMENT.md)
-- [Troubleshooting](TROUBLESHOOTING.md)
-
----
-
-*RawrXD Getting Started Guide v1.0.0*
+*RawrXD Getting Started — HISTORICAL redirect · ASOF 2026-11-13 · PROMOTE=0*

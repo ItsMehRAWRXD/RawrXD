@@ -1,0 +1,77 @@
+GPU_PARITY_ATTN_PRE_O_CLOSE_001
+DATE=2026-11-13
+ASOF_LOCAL=2026-11-13T21:45:00-05:00
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+CROSS_SHA_CREDIT=0
+INVENT_PASS=0
+NOT_RUN!=PASS
+SCOREBOARD_CLI_GUI_PCT_UNCHANGED=1
+
+## Authority
+PRIOR_SEAL=GPU_PARITY_Q_PRE_ROPE_CLOSE_001.txt
+PRIOR_FIRST_SIGNIFICANT_AFTER=ATTN_PRE_O_0 MAXDIFF=6.139278e-06
+BRANCH=work/v0-first-divergence
+TOL_ABS=1e-6 TOL_REL=1e-5
+
+## INPUT_IDENTICAL verified? YES
+PROMPT_IDS=1,15043 both arms
+PROMPT_EMBED + ATTN_NORM_0 bitexact (fnv match)
+Q4K_SPV active hotpath: bytes=16292 SHA256=AB7212EC2A30839EF51B9847F90C62CB2EEBCF4A010E122D0CBE0F228C8AC5D5
+  (NOT 8332-byte FP32 dequant SPV; remasure log: Q4K_SPV=…/gemv_q4k.spv bytes=16292)
+V_0 FNV-only remains false alarm (maxAbs=4.656613e-09 UNDER_TOL)
+
+## Root cause
+ATTN_PRE_O_0@pos0 is T=1 attention → softmax([s])=[1] → headOut = V broadcast (GQA).
+GPU ATTN_PRE_O == GPU V (FP32) bitexact; REF ATTN_PRE_O == FP16(REF V) broadcast bitexact.
+Diverge maxAbs=6.139278e-06 was exactly llama default --cache-type-k/v f16 vs our FP32 KV store —
+NOT softmax/QK^T/scale/head-layout bug at pos0.
+Fix@source:
+  1) src/deep2/Deep2Engine.cpp — kvCacheFp16RoundTrip on host KV write (fp16rtKV)
+  2) src/backend/attn_decode.comp/.spv — f16rt() on K/V loads (GPU resident path)
+     attn_decode.spv bytes=4260 SHA256=305FC47879864BE045F4E9E26698E8EC0EEEC3C7D3885C49E7A73DDED3B0F8AA
+
+## Before / after (ATTN_PRE_O_0 pos0 n=2048 vs llama seq059)
+BEFORE (stage_dump_q4kq8k_spv FP32 KV; Q4K×Q8K SPV already active):
+  maxAbs=6.139278e-06  rel=3.621456e-04  @idx1563  NUM_FAIL
+  fnvA=a7e004ba11d8c0f5 fnvB=4adca0fa1f8e7095
+  GPU=…/stage_dump_q4kq8k_spv/deep2_ATTN_PRE_O_0_pos0_layer0_full_n2048_seq012.bin
+  REF=…/stage_dump_ref_matched/llama_ATTN_PRE_O_0_pos0_layer0_full_n2048_seq059.bin
+AFTER (private pin rawr_attn_pre_o_fp16kv.exe + RAWRXD_GPU_FWD=0 host AttentionWithCache):
+  maxAbs=0.000000e+00  BITEXACT MATCH
+  fnvA=fnvB=4adca0fa1f8e7095
+  SHA256 GPU==REF=72C49FFF91EBDB29A66DEAC3D43FB067C91F74E7F0C1A6E624F532A714270F5F
+  GPU=…/stage_dump_attn_pre_o_fp16kv/deep2_ATTN_PRE_O_0_pos0_layer0_full_n2048_seq012.bin
+  REF=same llama seq059
+
+## Cascade note (pos0 ordered; not claimed PROMOTE)
+LAYER0_OUT / LAYER1_OUT and matched layer0–1 stages all UNDER_TOL after this close
+(FNV_ONLY residuals only). FINAL_NORM REF dumps in stage_dump_ref_matched are
+fixture-mismatched (maxAbs~1e1) — not used as next gate.
+
+## Compare receipt
+COMPARE_LOG=GPU_PARITY_ATTN_PRE_O_CLOSE_001_compare.log
+REMEASURE=evidence/PRODUCTION_INFERENCE_CERT_001/FIRST_DIVERGE_001/remeasure_attn_pre_o_fp16kv.err.txt
+DUMP_DIR=…/stage_dump_attn_pre_o_fp16kv
+PIN_EXE=…/pin/rawr_attn_pre_o_fp16kv.exe
+PIN_EXE_SHA256=C72A48E960D4DCAEC5DDC6ACF9BBD18258E1449860EE39D35D13575F0267441C
+HOTPATH_GEMV=VULKAN Q4K_SPV=16292 RAWRXD_GPU_FWD=0 (host AttentionWithCache + Vulkan GEMV)
+FIRST_SIGNIFICANT_AFTER=ATTN_PRE_O_0@pos1 maxAbs=2.292544e-05 (T=2 path; OPEN)
+
+## Verdict
+ATTN_PRE_O_0_POS0_CLOSED=1
+MAXDIFF_BEFORE=6.139278e-06
+MAXDIFF_AFTER=0.000000e+00
+UNDER_TOL=1
+BITEXACT_AFTER=1
+≠ PERFORMANCE_PASS ≠ PROMOTE
+Tip product EXE / tip SPV bind NOT claimed; private remasure harness only.
+TIP_CLIMB=HOLD — do not clobber tip 6754616E controlling bind.
+
+## Non-credits
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD
+CLI/GUI valuation % NOT modified (parent single-writer boards untouched)
+PRODUCT_OPEN / SESSION_ENTER / TOKEN_COMMIT not claimed
+PROMOTE=0
+TIP_CLIMB=HOLD

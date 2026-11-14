@@ -1,0 +1,28 @@
+GPU_PARITY_NUMERIC_FIRST_LAW_001
+ASOF_LOCAL=2026-11-13T20:46:00-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0
+
+## Law
+FNV_DIFF ≠ FUNCTIONAL_FAIL.
+Functional fail requires FIRST numerically significant divergence on identical inputs.
+
+## Required compare fields
+INPUT_IDENTICAL=1
+TOL_ABS (default 1e-6 PASS / 1e-5 INSPECT / >1e-5 FAIL — see test_ladder_elemdiff)
+TOL_REL (optional; report if used)
+FIRST_STAGE / FIRST_TENSOR / FIRST_INDEX
+MAX_ABS_DIFF / RMS / MEAN_ABS
+FNV_A / FNV_B (secondary fingerprint only)
+FNV_DIFF_ONLY=1 ⇒ VERDICT=FINGERPRINT_ONLY_NOT_FAIL (do not raise MATCH=0 on this alone)
+NUMERIC_SIGNIFICANT=1 only if MAX_ABS_DIFF > TOL_ABS (or rel gate)
+
+## Harness authority
+src/deep2/test_ladder_elemdiff.cpp — gate(): maxAbs<=1e-6 PASS; <=1e-5 INSPECT; else FAIL
+src/deep2/Deep2QuantParityAudit.hpp — AuditQuantParity maxAbsDiff vs tol
+Prior sealed: Q_LINEAR_0 Batch01 maxdiff=2.24e-08 (PASS under 1e-6)
+
+## Worker deliverable
+GPU_PARITY_FIRST_SIGNIFICANT_DIVERGE_001.txt must fill the fields above before any
+MATCH/FAIL board write that cites FNV.
+
+END

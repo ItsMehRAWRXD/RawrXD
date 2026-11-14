@@ -1,0 +1,24 @@
+MILESTONE_PRIORITY_LOCK — Enterprise Production Completion
+ASOF_LOCAL=2026-11-13T21:31-05:00
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD INVENT_PASS=0
+BOARD=JOINT_STATUS_LIVE / BOARD_SINGLE_WRITER.txt CLI=67 GUI=48 OVERALL=48
+SINGLE_WRITER=1 PEERS_MAY_NOT_WRITE_PCT=1
+TIP_BIND=6754616E (restored; REJECT qdim077 tip thrash)
+
+## Ordered milestones
+M1 GPU_REFERENCE_NUMERICAL_DIVERGENCE
+  FIRST_MATERIAL=Q_PRE_ROPE_0 IDENTIFIED
+  REMEDIATE=GPU_PARITY_Q_PRE_ROPE_REMEDIATE_001 MATERIAL_CLEARED=1 (F28F pin)
+  NEXT=product-wire gemv_q4k.spv 16292B (replace stale 7592B) + next-stage material scan
+  MATCH_PASS=0
+M2 MULTI_FAMILY_LOCAL_INFERENCE
+  qdim077 private TOK=8 gemma; tip-land HELD; absorb074 MF 3/4 authority
+M3 AUTONOMOUS_EDIT_BUILD_TEST
+  FORCE_TOOL loop ≠ full cycle (FILES_READ/PATCH_APPLIED=0 observed)
+M4 OFFLINE_INSTALLER
+  stub SetupWizard sealed; real MSI blocked MISSING WiX/Inno/NSIS OR alternate host package
+
+## Non-goals
+Score inflation · invent PASS · tip thrash · cross-SHA blend
+PROMOTE=0
+END

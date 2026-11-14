@@ -822,14 +822,23 @@ static bool BindMmapTensors(GGUFLoadResult& result, const char* filepath,
 
 GGUFLoadResult GGUFLoader::Load(const char* filepath, const GGUFLoadOptions& options) {
     GGUFLoadResult result;
+    std::fprintf(stderr, "GGUF_LOAD_STAGE=enter path=\"%s\" loadTensors=%d mmap=%d\n",
+                 filepath ? filepath : "(null)",
+                 options.loadTensors ? 1 : 0, options.mmap ? 1 : 0);
+    std::fflush(stderr);
     auto startTime = std::chrono::high_resolution_clock::now();
 
     // Pre-validate file to catch issues early
     uint64_t fileSize = 0, dataOffset = 0;
     if (!ValidateFile(filepath, fileSize, dataOffset)) {
         snprintf(result.error, sizeof(result.error), "GGUF file validation failed");
+        std::fprintf(stderr, "GGUF_LOAD_STAGE=validate_fail\n");
+        std::fflush(stderr);
         return result;
     }
+    std::fprintf(stderr, "GGUF_LOAD_STAGE=validated size=%llu dataOff=%llu\n",
+                 (unsigned long long)fileSize, (unsigned long long)dataOffset);
+    std::fflush(stderr);
 
     if (options.verbose) {
         printf("[GGUF] File validated: %llu bytes, data offset: %llu\n",
@@ -839,8 +848,12 @@ GGUFLoadResult GGUFLoader::Load(const char* filepath, const GGUFLoadOptions& opt
     FILE* fp = fopen(filepath, "rb");
     if (!fp) {
         snprintf(result.error, sizeof(result.error), "Cannot open file: %s", filepath);
+        std::fprintf(stderr, "GGUF_LOAD_STAGE=fopen_fail\n");
+        std::fflush(stderr);
         return result;
     }
+    std::fprintf(stderr, "GGUF_LOAD_STAGE=fopen_ok\n");
+    std::fflush(stderr);
 
     // Parse header
     uint64_t tensorCount = 0, kvCount = 0;
@@ -848,8 +861,14 @@ GGUFLoadResult GGUFLoader::Load(const char* filepath, const GGUFLoadOptions& opt
     if (!ParseHeader(fp, version, tensorCount, kvCount)) {
         snprintf(result.error, sizeof(result.error), "Invalid GGUF header");
         fclose(fp);
+        std::fprintf(stderr, "GGUF_LOAD_STAGE=header_fail\n");
+        std::fflush(stderr);
         return result;
     }
+    std::fprintf(stderr, "GGUF_LOAD_STAGE=header_ok ver=%u tensors=%llu kv=%llu\n",
+                 version, (unsigned long long)tensorCount,
+                 (unsigned long long)kvCount);
+    std::fflush(stderr);
     result.ggufVersion = version;
     result.tensorCountHeader = tensorCount;
     result.metadataCountHeader = kvCount;

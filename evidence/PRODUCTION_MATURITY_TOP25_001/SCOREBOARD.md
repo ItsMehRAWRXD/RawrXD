@@ -10,11 +10,11 @@ Prior retain-256 theta EXE: `EA4E20229633F9671F1B43620A3B6F27D21667F57A784B06830
 
 | Score | Status | Measured basis |
 |-------|--------|----------------|
-| CLI_PCT | **55** · CLI_COMPLETE=**0** · CLI_MATURITY_COMPLETE=**0** | Agentic 70 (chat GEN=95 HD=0) + Dense 82 (r29 GEN=16 TPS=1.43). Dist55 held. ≠ certified. ≠ 100%. |
-| GUI_PCT | **40** · GUI_COMPLETE=**0** | EXE_ABSORB=FAIL_CLOSED (/FORCE LNK4088 SHA 6754616E). ≠ 100. |
-| COMPOSITE_PCT | **40** | `min(55,40)` fail-closed — `VALUATION_SCOREBOARD.txt` · JOINT_COMPLETE=0 · PROMOTE=0 |
-| CLI_MATURITY | **Not certified** | Dense r29 GEN=16; chat r30 GEN=95; MATCH=0; CLI_COMPLETE=0. |
-| GUI_MATURITY | **Not certified** | HWND PASS tip ED5CC466; absorb=0; BP_STEP_VARS=NOT_RUN. |
+| CLI_PCT | **60** · CLI_COMPLETE=**0** · CLI_MATURITY_COMPLETE=**0** | R38 floor(mean)=60 tip `15A119D1` (CAT2 secondary honesty 70→78). ≠ certified. ≠ 100%. |
+| GUI_PCT | **50** · GUI_COMPLETE=**0** | Private `F0B6E579` OPEN_SEH=0 TOKEN=0 (e3aef45f); tip land `6754616E` untouched. ≠ 100. |
+| COMPOSITE_PCT | **50** | `OVERALL=min(CLI,GUI)=min(60,50)` fail-closed — STALE 38 rejected · JOINT_COMPLETE=0 · PROMOTE=0 · NOT_RUN≠PASS |
+| CLI_MATURITY | **Not certified** | A2 PASS; A5b PASS CLEAN_EXIT=1 TOK=8; CAT2 secondary CLOSED; Debugger/MoE NOT_RUN/FAIL; MATCH=0 HELD; CLI_COMPLETE=0. |
+| GUI_MATURITY | **Not certified** | HWND PASS tip 6754616E; OPEN_SEH cleared private only; TOKEN_SURVIVED=0; BP_STEP_VARS=NOT_RUN. |
 | TOP25_PARITY | **MEASURED_PARTIAL** | Ops audited (`TOP25_RECOGNITION_OPS_001` + `TOP25_OPS_001`). No sealed peer IDE/perf parity. ≠ certified. |
 | TOP25_RECOGNITION | **NOT_READY** | DRAFT_SHA_BOUND (v14.7.3/v1.0.0 zips); NOT_PUBLISHED; clean-VM ABSENT; PROMOTE=0. |
 | COMMERCIAL_VALUATION | **ESTIMATE** `$75M–$125M` | CERTIFIED=0. Stale Aug-2026 ≠ cert. |
@@ -55,7 +55,8 @@ Prior retain-256 theta EXE: `EA4E20229633F9671F1B43620A3B6F27D21667F57A784B06830
 | MiniMax Q_LINEAR_0 Q4_K×Q8_K | **SEALED** | offline GEMV maxdiff=2.24e-08; FP32 1.25e-3=false lead — `RE_MINIMAX_QLINEAR0_SEAL_001` |
 | MiniMax lm_head vs llama FNV | **REFERENCE_BLOCKED** | llama-direct CPU TIMEOUT (walltime/load); DLL OK |
 | Kimi COHERENT_USEFUL | **OPEN** | `QUALITY_149.txt` |
-| GUI four-panel | **PASS_HWND_SURFACES** | `GUI_TOP25_VALUATION_001/hwnd/SUMMARY.txt` (ED5CC466); absorb=0 |
+| GUI four-panel | **PASS_HWND_SURFACES** | `GUI_TOP25_VALUATION_001/hwnd/SUMMARY.txt`; EXE_ABSORB_GPU_DEFAULT=0 |
+| GUI ProductDeep2 OPEN_SEH | **FAIL_CLOSED** | tip/037 SESSION_EXIT ok=1 then SEH 0xC0000005; 041 INIT_ENTER SEH (InitFromPath COMDAT order). Witness `gpu/EXE_ABSORB_GPU_DEFAULT.txt` |
 
 ## RE notes (this turn)
 

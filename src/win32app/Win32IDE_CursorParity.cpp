@@ -1087,16 +1087,8 @@ void Win32IDE::cmdLanguageSetForFile()
 
 // ============================================================================
 // 7. SEMANTIC INDEX
+// initSemanticIndex() definition lives in Win32IDE_SemanticIndex.cpp (single ODR).
 // ============================================================================
-void Win32IDE::initSemanticIndex()
-{
-    if (m_semanticIndexInitialized)
-        return;
-    auto& idx = RawrXD::SemanticIndex::SemanticIndexEngine::Instance();
-    idx.Initialize(".");
-    m_semanticIndexInitialized = true;
-    RAWRXD_LOG_INFO("SemanticIndexEngine initialized");
-}
 
 bool Win32IDE::handleSemanticIndexCommand(int commandId)
 {

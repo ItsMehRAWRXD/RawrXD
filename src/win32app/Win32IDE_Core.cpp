@@ -5271,6 +5271,29 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
     // real clickable items must use a non-zero registered ID.
     if (id == 0)
         return;
+    // C39/C40: tip-bound WaitForDebugEvent DAP E2E (BP/step/vars journal).
+    // IDM_DAP_E2E_PROBE == 9624 (Win32IDE_CommandIDs.h).
+    if (id == 9624) {
+        runDapE2EProbe();
+        return;
+    }
+    // Weak-cat product probes (lifecycle TU not in absorb link — wire here).
+    if (id == 9625) {  // IDM_LSP_HOVER_PROBE
+        runC36ClangdAcceptanceProbe();
+        return;
+    }
+    if (id == 9621) {  // IDM_MULTI_FILE_EDIT_PROBE
+        runMultiFileEditProbe();
+        return;
+    }
+    if (id == 9629) {  // IDM_INSTALLER_PACK_PROBE
+        runInstallerPackProbe();
+        return;
+    }
+    if (id == 14003) {  // IDM_AGENT_DIFF_APPLY — early wire (before panel btn path)
+        runAgentDiffApplyProbe();
+        return;
+    }
 
     // Handle editor notifications (EN_CHANGE, EN_VSCROLL, EN_SELCHANGE come via WM_COMMAND).
     // Require a non-null control HWND: menu commands use lParam=0, and IDC_EDITOR
@@ -5442,9 +5465,10 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         return;
     }
 
-    // Agent diff panel buttons (created in initAgentPanel)
+    // Agent diff panel buttons (created in initAgentPanel) + C14 apply crumb.
     if (id == 14003)
     {
+        runAgentDiffApplyProbe();
         agentAcceptAll();
         refreshAgentDiffDisplay();
         return;

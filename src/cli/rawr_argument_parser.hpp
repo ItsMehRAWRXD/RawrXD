@@ -76,13 +76,25 @@ inline CliArgs ParseArgs(int argc, char** argv) {
     if (a.cmd == "serve") {
         a.pipeName = "\\\\.\\pipe\\rawrxd_product";
         for (int i = 2; i < argc; ++i) {
-            if (argv[i] && !std::strcmp(argv[i], "--pipe") && i + 1 < argc)
+            if (!argv[i]) continue;
+            if (!std::strcmp(argv[i], "--help") || !std::strcmp(argv[i], "-h"))
+                a.help = true;
+            else if (!std::strcmp(argv[i], "--pipe") && i + 1 < argc)
                 a.pipeName = argv[++i];
-            else if (argv[i] && !std::strcmp(argv[i], "--http"))
+            else if (!std::strcmp(argv[i], "--http"))
                 a.httpPort = 11435;
-            else if (argv[i] && !std::strcmp(argv[i], "--port") && i + 1 < argc)
+            else if (!std::strcmp(argv[i], "--port") && i + 1 < argc)
                 a.httpPort = (unsigned short)std::atoi(argv[++i]);
         }
+        return a;
+    }
+    /* agent status [id] — reserved; must not bind model=status into agent loop. */
+    if (a.cmd == "agent" && argc >= 3 && argv[2] &&
+        !std::strcmp(argv[2], "status")) {
+        a.model = "status";
+        if (argc >= 4 && argv[3] && argv[3][0] != '-')
+            a.sessionId = argv[3];
+        if (a.workspace.empty()) a.workspace = "G:\\~dev\\rawrxd";
         return a;
     }
     for (int i = 2; i < argc; ++i) {
@@ -146,6 +158,8 @@ inline CliArgs ParseArgs(int argc, char** argv) {
                  !std::strncmp(s, "--tokens=", 9))
             a.maxTokens = (uint32_t)std::atoi(s + 13);
         else if (a.cmd == "resume" && a.sessionId.empty()) a.sessionId = s;
+        else if (a.cmd == "agent" && a.model == "status" && a.sessionId.empty())
+            a.sessionId = s;
         else if (a.cmd == "show" && a.model.empty()) a.model = s;
         else if (a.model.empty() && a.cmd != "steer" && a.cmd != "list" &&
                  a.cmd != "paths")
@@ -156,7 +170,8 @@ inline CliArgs ParseArgs(int argc, char** argv) {
             a.prompt += s;
         }
     }
-    if (a.cmd == "run") ReadStdinPrompt(a.prompt);
+    /* run + chat: non-TTY stdin feeds oneshot prompt (agentic seals). */
+    if (a.cmd == "run" || a.cmd == "chat") ReadStdinPrompt(a.prompt);
     if (a.workspace.empty()) a.workspace = "G:\\~dev\\rawrxd";
     return a;
 }

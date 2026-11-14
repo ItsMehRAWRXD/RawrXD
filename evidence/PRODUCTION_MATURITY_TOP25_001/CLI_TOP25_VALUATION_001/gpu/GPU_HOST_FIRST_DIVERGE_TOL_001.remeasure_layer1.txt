@@ -1,0 +1,57 @@
+GPU_HOST_FIRST_DIVERGE_TOL_001.remeasure_layer1 — APPEND-ONLY
+DATE=2026-11-13
+ASOF_LOCAL=2026-11-13T21:45:00-05:00
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+NOT_RUN!=PASS
+INVENT_PASS=0
+PRIOR=GPU_HOST_FIRST_DIVERGE_TOL_001.remeasure_ffn_norm.txt
+CLI_TIP_SHA256=15A119D148572A4B3011AA9A8AFFE605F8FF40D64B7BF83673ECC10A9393C967
+BOARD_PCT_NOTE=CLI/GUI/OVERALL held 67/48/48 — no LIVE PCT write this seal
+
+## Authority law
+REF=DEEP2_PARITY_PROBE_001/BATCH2_L10_GATE_SAME_OPERAND/llama (llama_* only)
+REJECT_POLLUTED=deep2_* files inside BATCH2 llama/ dir (diverge at PROMPT_EMBED — other run)
+GPU=PRODUCTION_INFERENCE_CERT_001/FIRST_DIVERGE_001/stage_dump_q4kq8k_spv
+TOL=ABS=1e-4;REL=1e-3
+CASCADE=llama stdout seq100 LAYER0_OUT → seq103 ATTN_NORM_1
+
+## Layer0 gate (unchanged)
+LAYER0_OUT vs llama seq100: FUNCTIONAL_FAIL=0 MAX_ABS=7.450581e-08
+FFN_NORM_0 CLOSED (prior) FIRST_DIVERGE=NONE_LAYER0
+
+## Wrong-authority hypothesis for ATTN_NORM_1 — REJECTED
+GGUF blk.1.attn_norm.weight · RMSNorm(our LAYER0_OUT):
+  vs llama ATTN_NORM_1 seq103: MAX_ABS=6.031e-07 FUNCTIONAL_FAIL=0
+  vs deep2 ATTN_NORM_1:         MAX_ABS=2.747e+00 FUNCTIONAL_FAIL=1
+⇒ llama ATTN_NORM_1 is correct same-operand authority; deep2 layer1 attn-norm is wrong.
+
+## Layer1+ ordered (pos0)
+LAYER0_OUT:   FUNCTIONAL_FAIL=0 MAX_ABS=7.450581e-08
+ATTN_NORM_1:  FUNCTIONAL_FAIL=1 MAX_ABS=2.747281e+00 first_bad=1  << FIRST
+V_1:          FUNCTIONAL_FAIL=1 MAX_ABS=9.080049e-02 (cascaded)
+
+## Seal fields
+INPUT_SHA=3862259EF97EB71077D11EA62624CCF902363ABAABCF3CD2EF88D3B5C4ED6014
+TOL=ABS=1e-4;REL=1e-3
+FIRST_DIVERGE_SITE=ATTN_NORM_1@pos0/layer1/index=1
+MAX_ABS_ERR=2.747281e+00
+FUNCTIONAL_FAIL=1
+FNV_DIFF=1
+FNV_NEQ_IMPLIES_FAIL=0
+AUTHORITY_CROSSCHECK=GGUF_blk.1.attn_norm PASS_vs_llama FAIL_vs_deep2
+
+## Root-cause class (open — not closed this seal)
+DEEP2_ATTN_NORM_1 ≠ RMSNorm(LAYER0_OUT, blk.1.attn_norm)
+Recovered scale from dump is signed / matches no GGUF F32 norm tensor
+Layer0 ATTN_NORM_0 still MATCH — layer≥1 attnNorm bind/materialize/hotpath suspect
+NEXT_FIX=trace layers[1].attnNorm.data type/mapping vs blk.1.attn_norm.weight
+
+## Dense MATCH
+BOARD_PROPOSAL=HOLD (layer1 ATTN_NORM functional fail; invent MATCH forbidden)
+NO_LIVE_PCT=1
+
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0

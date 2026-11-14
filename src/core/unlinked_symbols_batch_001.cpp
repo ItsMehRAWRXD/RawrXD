@@ -305,7 +305,8 @@ void asm_hwsynth_shutdown(void) {
     g_mag.epoch += 1;
 }
 
-int asm_watchdog_shutdown(void) {
+// ODR: RawrXD_Watchdog.obj owns exported asm_watchdog_shutdown (no /FORCE LNK2005).
+static int asm_watchdog_shutdown(void) {
     std::lock_guard<std::mutex> lock(g_mag.mtx);
     if (g_mag.watchdogRegion != nullptr && g_mag.watchdogBytes > 0) {
         SecureZeroMemory(g_mag.watchdogRegion, g_mag.watchdogBytes);

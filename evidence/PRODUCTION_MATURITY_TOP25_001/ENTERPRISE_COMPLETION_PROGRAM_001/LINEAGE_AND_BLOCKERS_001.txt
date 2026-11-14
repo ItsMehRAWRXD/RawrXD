@@ -1,0 +1,47 @@
+ENTERPRISE_COMPLETION_PROGRAM_001 / LINEAGE_AND_BLOCKERS_001
+ASOF_LOCAL=2026-11-13T20:52:30-05:00
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0 INVENT_PASS=0 CLAIM_OVERALL_100=0
+SINGLE_WRITER=1 AUTH=../PARENT_BOARD_AUTHORITY.txt
+
+## Source lineage (patch against this — not obsolete tip bytes alone)
+GIT_BRANCH=work/v0-first-divergence
+GIT_COMMIT=ae418355d1973b50af487cd5c084a0ff81378a64
+GIT_TRACKING=origin/work/v0-first-divergence
+GITHUB=
+  closure-origin https://github.com/ItsMehRAWRXD/RawrXD-IDE-Win32-Gui-CLI-HTML.git
+  final https://github.com/ItsMehRAWRXD/RawrXD-IDE-Final.git
+NOTE=Working tree dirty. HEAD commit message is historical; GpuForward qdim fix present in src + private cand.
+
+## EXE SHA16 map
+23A0E7A26D3F228A = LOCKED noforce071_FRESHENG (TinyLlama tip-land copy; pre-qdim)
+6754616EA30A5664 = bin/ tip bind now (TIP_TOKEN_SURVIVED=0)
+0B6229F295D4C249 = absorb074 GPU_RESIDENT controlling
+7FD1F27095388585 = gemma_qdim077 private (SEH=0 TOK=8) NOT tip
+4CF8747726663E9C = gemma_seal075 pre-qdim (SEH)
+crit076 forensics EXE = GEMMA_AV_FORENSICS capture target
+15A119D148572A4B = CLI rawr_gpufwd_15A119D1
+
+## Gemma crash stack (measured forensics)
+WITNESS=GUI_TOP25_VALUATION_001/gpu/GEMMA_AV_FORENSICS_001/capture_stdout.txt
+EXCEPTION_CODE=0xC0000005
+EXCEPTION_ADDRESS=0x00007FF760DEA6FD
+MODULE_RVA=0x1E4A6FD
+ACCESS_RW=READ ACCESS_VA=0x24941892058
+STACK:
+  WeightContentFingerprint+0x3D
+  PrefetchWeight+0x6B
+  … → forwardLayerGpuResident+0x72C
+  → tryGpuTokenForward → forwardTokenAllLayers → generate @ Deep2Engine.cpp:6781
+ROOT_CLASS=GpuForward_qDim_H_vs_wq_rows (DIAGNOSIS.md)
+FIX_LANDED_SRC=Deep2Engine_GpuForward.cpp qDim=lw.wq.rows oIn=wo.cols
+FIX_PRIVATE_EXE=gemma_qdim077 TOK=8 SEH=0
+TIP_LAND=OPEN
+
+## Board (evidence; not valuation)
+LIVE OVERALL=min(66,50)=50 (program may cite prior 48% snapshot)
+PROMOTE=0 until CLI+GUI acceptance gates + independent cert
+
+## GitHub foundation (requirements ≠ PASS)
+#83 #49 #57
+
+END

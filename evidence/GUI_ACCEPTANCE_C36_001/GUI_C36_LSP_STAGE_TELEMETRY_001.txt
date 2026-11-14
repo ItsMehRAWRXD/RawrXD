@@ -1,0 +1,54 @@
+﻿GUI_C36_LSP_STAGE_TELEMETRY_001
+ASOF_LOCAL=2026-11-13T21:05:00-05:00
+MOTD_ACK=1
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+INVENT_PASS=0
+NOT_RUN!=PASS
+
+## Instrument
+SOURCE=src/win32app/Win32IDE_LSPClient.cpp
+STAGES=PIPE|PROC|INIT_SEND|INIT_WAIT
+EMIT=LSP_STAGE=<stage> OK|FAIL|BEGIN err=<errno> detail=...
+LAW=hang after INIT_SEND OK + 0 bytes => UNFULFILLED_HANDSHAKE; hang with no INIT_SEND progress before wait => DEADLOCK
+
+## Build / run
+EXE=evidence/PRODUCTION_MATURITY_TOP25_001/GUI_TOP25_VALUATION_001/clean_link/RawrXD-Win32IDE_absorb075d_lsp_stage.exe
+EXE_SHA256=2B1032857057CFF72775E80F1B75BD203F732DBCCC2C88DB24F7856710C4E88C
+CL_LSP_RC=0
+LINK_RC=0
+FORCE=0
+RUN=--test-c36-lsp RAWRXD_C36_PROBE=1
+BUILD_LOG=clean_link/build_absorb075d_lsp_stage.txt
+
+## Measured stages (this run)
+LAST_STAGE=init_wait_ok
+LAST_LSP_STAGE=INIT_WAIT OK
+DISPOSITION=HANDSHAKE_OK
+DEADLOCK=0
+UNFULFILLED_HANDSHAKE=0
+TELEMETRY:
+LSP_STAGE=PIPE OK err=0 detail=ok CreatePipe_in=1/0 CreatePipe_out=1/0 SetHandleInfo_in=1/0 SetHandleInfo_out=1/0 parent_stdinW=00000000000004CC parent_stdoutR=00000000000004D0 (no DuplicateHandle)
+LSP_STAGE=PROC BEGIN err=0 detail="C:\Program Files\LLVM\bin\clangd.exe" --background-index=false --header-insertion=never --log=error
+LSP_STAGE=PROC OK err=0 detail=ok pid=50344
+LSP_STAGE=INIT_SEND BEGIN err=0 detail=method=initialize Content-Length=791 packet=814
+LSP_STAGE=INIT_SEND OK err=0 detail=method=initialize Content-Length=791 bytes_written=814 wall_ms=0 ok=1
+LSP_STAGE=INIT_WAIT BEGIN err=0 detail=timeout_ms=20000 id=1
+LSP_STAGE=INIT_WAIT OK err=0 detail=disp=HANDSHAKE_OK jsonrpc_id=1 bytes_read=2083 has_result=1 has_error=0
+
+
+## Probe crumb
+lsp_running=1 hover_valid=1 completion_n=100 def_n=0 hybrid_n=4 RUNTIME_REACHED=1 err=-
+
+
+## Paths
+TELEMETRY_LOG=evidence/GUI_ACCEPTANCE_C36_001/LSP_STAGE_TELEMETRY.log
+PHASE_LOG=evidence/GUI_ACCEPTANCE_C36_001/C36_LSP_PHASE.log
+PHASE_LAST=evidence/GUI_ACCEPTANCE_C36_001/c36_phase.txt
+PROBE_LOG=evidence/GUI_ACCEPTANCE_C36_001/TOP25_C36_LSP.log
+WEAK_COPY=evidence/PRODUCTION_MATURITY_TOP25_001/GUI_TOP25_VALUATION_001/weak_cats_absorb075d/
+
+NOTE=Prior absorb075b hang was DEADLOCK (logger/UI); absorb075c closed tipbound. This seal adds stage distinction only. PROMOTE=0.
+CROSS_SHA_TIP_CREDIT=0
+END

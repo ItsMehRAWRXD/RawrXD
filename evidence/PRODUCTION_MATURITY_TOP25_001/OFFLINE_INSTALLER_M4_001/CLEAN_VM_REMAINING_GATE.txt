@@ -1,0 +1,77 @@
+A6 / M4 — CLEAN_VM remaining executable gate
+ASOF=2026-11-13T21:34:13-05:00
+GIT_HEAD=ae418355d1973b50af487cd5c084a0ff81378a64
+PROMOTE=0
+TIP_CLIMB=HOLD
+INVENT_CLEAN_VM=0
+INVENT_JOINT_PCT=0
+M4_PCT_RAISE=0
+
+## Authority package (sealed, re-hashed this turn)
+PACKAGE_PATH=g:\~dev\rawrxd\evidence\PRODUCTION_MATURITY_TOP25_001\OFFLINE_INSTALLER_M4_001\RawrXD-offline-windows-x64-M4-15A119-675461.zip
+PACKAGE_SHA=D4DF3ED526C7037A309F41062CA17C5C83E1D0FC05C5399E9252DEBFA4AB9129
+PACKAGE_BYTES=21081653
+SEAL=ENTERPRISE_COMPLETION_PROGRAM_001/A6_OFFLINE_INSTALLER_M4_001.txt
+PACK_SEAL=OFFLINE_INSTALLER_M4_001/SEAL.txt
+RECIPE=scripts/New-RawrOfflineInstallPackage.ps1
+INSTALL=scripts/Install-RawrOffline.ps1 (inside package)
+OFFLINE=1
+CLOUD_MANDATORY=0
+NETWORK_REQUIRED_FOR_INSTALL=0
+
+## Measured this host (NOT clean VM)
+HOST_REINSTALL_PROBE=OFFLINE_INSTALLER_M4_001/clean_vm_gate_probe/PROBE.txt
+INSTALL_EXIT=0
+HELP_SMOKE=PASS
+POST_INSTALL_CLI_SHA=15A119D148572A4B3011AA9A8AFFE605F8FF40D64B7BF83673ECC10A9393C967
+POST_INSTALL_GUI_SHA=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431
+CLEAN_VM=0
+CLEAN_VM_STATUS=NOT_RUN
+LAW=host extract+Install-RawrOffline ≠ CLEAN_VM PASS
+
+## Hypervisor probe (this machine) — blocker
+WINDOWS_SANDBOX_EXE=0 (System32\WindowsSandbox.exe absent)
+HYPER_V_GET_VM_CMDLET=0
+HYPER_V_MODULE=0
+ELEVATION_FOR_OPTIONAL_FEATURES=REQUIRED (Get-WindowsOptionalFeature blocked without elevation)
+CLEAN_VM_EXECUTABLE_NOW=0
+
+## Exact remaining gate (executable)
+NEXT_EXECUTABLE_GATE=HYPERVISOR_CLEAN_VM_INSTALL_ROLLBACK_WITNESS
+
+PASS_IF_ALL (fail-closed; do not invent):
+  1. Isolated guest: Hyper-V VM OR Windows Sandbox OR equivalent clean Windows image
+     with no prior RawrXD install under %LOCALAPPDATA%\RawrXD and no tip PATH pollution.
+  2. Transfer ONLY the sealed zip (PACKAGE_SHA above) into the guest — no network,
+     no cloud model fetch, no winget/choco.
+  3. Expand-Archive → run package scripts\Install-RawrOffline.ps1 -TargetDir <guest_target>
+  4. Record: INSTALL_EXIT=0 · HELP_SMOKE=PASS · CLI/GUI SHA match pins ·
+     NETWORK_REQUIRED_FOR_INSTALL=0
+  5. Rollback: delete install target (and PATH entry if -AddUserPath used); target gone.
+  6. Land witness under:
+     evidence/PRODUCTION_MATURITY_TOP25_001/OFFLINE_INSTALLER_M4_001/CLEAN_VM_WITNESS_001/
+     with SEAL.txt setting CLEAN_VM=1 only after steps 1–5 measured.
+  7. Update A6 seal CLEAN_VM fields from measured witness — still PROMOTE=0 until
+     higher promote conjunction; no JOINT/CAT PCT invent from this alone.
+
+NOT_SUFFICIENT_FOR_CLEAN_VM_PASS:
+  - Host-local verify_extract / verify_install_target / clean_vm_gate_probe
+  - CLEAN_MACHINE_SANDBOX (sandbox ≠ hypervisor clean VM)
+  - SetupWizard path absent from THIS sealed zip (6-file Install-RawrOffline package)
+  - Documentation-only claims
+
+## Reproducible offline path (no cloud) — already SEALED
+M4_OFFLINE_HOST=SEALED
+Contents: bin/rawr.exe · bin/RawrXD-Win32IDE.exe · PINS · OFFLINE_MANIFEST ·
+  README · scripts/Install-RawrOffline.ps1
+MODELS_IN_PACKAGE=0 (operator-supplied; install smoke model-optional)
+
+## Held (unchanged)
+CLEAN_VM=0 NOT_RUN
+M4_PCT_RAISE=0
+WINGET=NOT_PUBLISHED
+CHOCO=NOT_PUBLISHED
+NSIS=ABSENT
+MSI=ABSENT
+PROMOTE=0
+END

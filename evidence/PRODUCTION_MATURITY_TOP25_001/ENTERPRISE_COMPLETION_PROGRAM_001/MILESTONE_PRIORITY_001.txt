@@ -1,0 +1,23 @@
+MILESTONE_PRIORITY_001
+ASOF_LOCAL=2026-11-13T20:56:00-05:00
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0 INVENT_PASS=0 CLAIM_OVERALL_100=0
+LINEAGE=work/v0-first-divergence @ ae418355d1973b50af487cd5c084a0ff81378a64
+
+## Ranked engineering value (user authority)
+M1 GPU/reference numerical divergence → reference parity (not FNV-only)
+M2 Coherent local inference across model families (dense/MoE/Gemma/…; HOST_DECODE=0)
+M3 Reliable autonomous code-edit/build/test in BOTH CLI and GUI
+M4 Reproducible offline installers (clean-machine, no cloud mandatory)
+
+## Mapped streams
+M1 ← A1 (GPU_PARITY_FIRST_SIGNIFICANT_DIVERGE + ladder elemdiff)
+M2 ← A2 tip-land qdim077 + A5 MoE/REAP matrix (queued after tip stable)
+M3 ← A3 C36 LSP + A4 CLI/GUI agentic edit-build-test (launch)
+M4 ← A6 enterprise offline installer (launch)
+A7 competitive-25 / A8 independent cert = after M1–M4 evidence exists
+
+## Board
+LIVE OVERALL=min(CLI,GUI) only from PARENT seals — not milestone completion.
+PROMOTE=0 until M1–M4 + independent cert conjunction.
+
+END

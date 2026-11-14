@@ -1,0 +1,87 @@
+GPU_PARITY_ATTN_PRE_O_CLOSE_001
+DATE=2026-11-13
+ASOF_LOCAL=2026-11-13T21:48:46-05:00
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+CROSS_SHA_CREDIT=0
+INVENT_PASS=0
+NOT_RUN!=PASS
+SCOREBOARD_CLI_GUI_PCT_UNCHANGED=1
+JOINT_PCT_WRITE=0
+CANON_PCT_WRITE=0
+LIVE_PCT_WRITE=0
+
+## Authority
+PRIOR_SEAL=GPU_PARITY_ATTN_PRE_O_001.txt
+PRIOR_FIRST_SIGNIFICANT=ATTN_PRE_O_0 maxAbs=6.139278e-06 rel=4.033301e-03 @idx1563
+BRANCH=work/v0-first-divergence (private cand only)
+TIP_EXE_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431
+TIP_EXE=RO (untouched; no tip promote)
+TOL_ABS=1e-6 TOL_REL=1e-5
+
+## Private cand relink
+CAND_EXE=pin/rawr_attn_pre_o_fp16kv.exe
+CAND_SHA256=C72A48E960D4DCAEC5DDC6ACF9BBD18258E1449860EE39D35D13575F0267441C
+OBJ=build_ninja/CMakeFiles/InferenceEngine.dir/src/deep2/Deep2Engine.cpp.obj
+FIX=kvCacheFp16RoundTrip(headScratch, headConcat) @ Deep2Engine.cpp:9876
+SPV_SHA256=AB7212EC2A30839EF51B9847F90C62CB2EEBCF4A010E122D0CBE0F228C8AC5D5 LEN=16292
+HOTPATH_GEMV=VULKAN HOST_DECODE=0
+PROMPT_IDS=1,15043
+
+## INPUT_IDENTICAL
+PROMPT_EMBED / ATTN_NORM_0 bitexact vs REF
+V_0 / Q_PRE_ROPE_0 / K_PRE_ROPE_0 / Q_POST_ROPE_0 / K_POST_ROPE_0 under TOL (FNV_ONLY)
+
+## Live remasure AFTER cand relink (ordered walk pos0)
+PAIR=stage_dump_attn_pre_o_fp16kv vs stage_dump_ref_matched
+PROMPT_EMBED MATCH maxAbs=0
+ATTN_NORM_0 MATCH maxAbs=0
+V_0 FNV_ONLY maxAbs=4.656613e-09
+Q_PRE_ROPE_0 FNV_ONLY maxAbs=1.043081e-07
+K_PRE_ROPE_0 FNV_ONLY maxAbs=8.195639e-08
+Q_POST_ROPE_0 FNV_ONLY maxAbs=1.043081e-07
+K_POST_ROPE_0 FNV_ONLY maxAbs=8.195639e-08
+ATTN_PRE_O_0 MATCH maxAbs=0.000000e+00 rel=0.000000e+00 @idx-1 n_gt=0/2048
+  fnvA=fnvB=4adca0fa1f8e7095 UNDER_TOL=1
+ATTN_OUT_0 FNV_ONLY maxAbs=5.587935e-09 rel=2.407711e-07 @idx624 n_gt=0/2048
+  (prior cascade maxAbs≈8.446723e-05 → now under TOL; next cascade stage note)
+FFN_* / LAYER0_OUT FNV_ONLY under TOL (cascade residual cleared numerically on this fixture)
+
+## Before / after (ATTN_PRE_O_0 pos0 n=2048 vs llama)
+BEFORE (tip/q4kq8k_spv without headScratch FP16 RT):
+  maxAbs=6.139278e-06 rel=4.033301e-03 @idx1563 NUM_FAIL n_gt=288/2048
+  fnvA=a7e004ba11d8c0f5 fnvB=4adca0fa1f8e7095
+AFTER (private cand + kvCacheFp16RoundTrip on headScratch):
+  maxAbs=0.000000e+00 rel=0.000000e+00 MATCH bitexact
+  fnvA=4adca0fa1f8e7095 fnvB=4adca0fa1f8e7095
+OFFLINE_WITNESS_PRIOR=f16_RNE maxAbs=0 (superseded by LIVE_REMEASURE)
+
+## Compare receipt
+COMPARE_LOG=GPU_PARITY_ATTN_PRE_O_CLOSE_001_compare.log
+REMEASURE=remeasure_attn_pre_o_fp16kv.err.txt exit=0
+DUMP_DIR=stage_dump_attn_pre_o_fp16kv
+GPU=deep2_ATTN_PRE_O_0_pos0_layer0_full_n2048_seq012.bin
+REF=llama_ATTN_PRE_O_0_pos0_layer0_full_n2048_seq059.bin
+LIVE_REMEASURE_AFTER_CAND_RELINK=1
+
+## Verdict
+ATTN_PRE_O_0_CLOSED=1
+ATTN_PRE_O_0_LIVE_CLOSED=1
+CLOSE=1
+MAXDIFF_BEFORE=6.139278e-06
+MAXDIFF_AFTER=0.000000e+00
+UNDER_TOL=1
+FNV_BITEXACT_AFTER=1
+ROOT=FP16_kqv_out_vs_FP32_expand_V (fixed via kvCacheFp16RoundTrip headScratch)
+NEXT_CASCADE_STAGE=ATTN_OUT_0 (prior maxAbs≈8.45e-05; live now FNV_ONLY maxAbs=5.587935e-09 under TOL — note only; no separate CLOSE invent)
+≠ PERFORMANCE_PASS ≠ tip-land ≠ CANON/LIVE/JOINT PCT write
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+## Non-credits
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD
+CLI/GUI valuation % NOT modified
+PRODUCT_OPEN / SESSION_ENTER / TOKEN_COMMIT not claimed
+TIP 6754616E untouched
+SEAL_PATH=evidence/PRODUCTION_INFERENCE_CERT_001/FIRST_DIVERGE_001/GPU_PARITY_ATTN_PRE_O_CLOSE_001.txt

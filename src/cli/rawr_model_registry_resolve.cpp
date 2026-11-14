@@ -7,6 +7,10 @@ namespace rawr {
 
 bool ModelRegistry::resolve(const std::string& name, ModelEntry& out) const {
     if (name.empty()) return false;
+    const bool looksPath =
+        name.find('\\') != std::string::npos ||
+        name.find('/') != std::string::npos ||
+        Deep2::GgufPath::HasGgufExt(name);
     if (Deep2::GgufPath::IsLoadableModelFile(name)) {
         out = {};
         out.name = name;
@@ -18,6 +22,9 @@ bool ModelRegistry::resolve(const std::string& name, ModelEntry& out) const {
         out.id = regutil::CheapId(name.c_str(), out.sizeBytes, out.modifiedTime);
         return true;
     }
+    /* Path-like missing/unloadable inputs must fail-closed — never fuzzy-match
+     * into a sibling GGUF (that path hung recovery smokes in scan/load). */
+    if (looksPath) return false;
     for (const auto& e : entries_) {
         if (_stricmp(e.name.c_str(), name.c_str()) == 0) {
             out = e;

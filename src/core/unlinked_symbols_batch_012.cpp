@@ -74,7 +74,8 @@ void RawrXD_Native_Log(const char* fmt, ...) {
     va_end(args);
 }
 
-void asm_spengine_cpu_optimize(void) {
+// static: spengine_bridge.cpp owns exported asm_spengine_cpu_optimize (no /FORCE LNK2005).
+static void asm_spengine_cpu_optimize(void) {
     uint64_t bits = 0;
 #ifdef _MSC_VER
     int cpuInfo[4] = {0};

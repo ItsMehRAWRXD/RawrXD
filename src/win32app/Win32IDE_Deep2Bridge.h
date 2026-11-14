@@ -8,13 +8,28 @@
 #include <atomic>
 #include <mutex>
 #include <thread>
-#include "agent_esp.hpp"
+#if defined(__has_include)
+#  if __has_include("agent_esp.hpp")
+#    include "agent_esp.hpp"
+#  elif __has_include("../../tools/agent_esp/rawrxd_agent_esp/agent_esp.hpp")
+#    include "../../tools/agent_esp/rawrxd_agent_esp/agent_esp.hpp"
+#  else
+#    error "agent_esp.hpp ABSENT — wire tools/agent_esp/rawrxd_agent_esp"
+#  endif
+#else
+#  include "../../tools/agent_esp/rawrxd_agent_esp/agent_esp.hpp"
+#endif
+#ifdef HAVE_DEEP2_ENGINE
 #include "Deep2Engine.h"
+#else
 #include "cpu_inference_engine.h"
+#endif
 
 // Forward declarations
 class Win32IDE;
+#ifndef HAVE_DEEP2_ENGINE
 namespace Deep2 { class Deep2Engine; }
+#endif
 
 // Deep2 Bridge response types
 enum class Deep2ResponseType {
@@ -95,8 +110,11 @@ private:
     void OnGenerationComplete(bool cancelled = false);
 
     Win32IDE* m_ide = nullptr;
+#ifdef HAVE_DEEP2_ENGINE
     Deep2::Deep2Engine* m_engine = nullptr;
+#else
     RawrXD::CPUInferenceEngine* m_cpuEngine = nullptr;
+#endif
     
     std::atomic<bool> m_initialized{false};
     std::atomic<bool> m_generating{false};

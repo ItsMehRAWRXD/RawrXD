@@ -6,6 +6,10 @@
 // Kimi K2 / Moonshot multi-shard model loading.
 // ============================================================================
 
+/* Sole InitFromPath/OpenSession bodies: RawrRunSession_Body.cpp (noforce ODR). */
+#define RAWR_PRODUCT_RUNTIME_OPEN_MIN 1
+#define RAWR_RUN_SESSION_DECLS_ONLY 1
+
 #include "Deep2IDEIntegration.hpp"
 #include "Deep2Engine.h"
 #include "Deep2Bridge.hpp"

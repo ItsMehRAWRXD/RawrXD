@@ -56,10 +56,18 @@ inline Result ProductRun(const ProductRequest& req) {
     Deep2::DeviceBudget budget{};
     Deep2::ExecutionPolicy policy{};
 
-    // CLI/env overrides
+    // CLI/env overrides — GPU-first; CPU only on explicit opt-in.
     if (const char* e = std::getenv("RAWR_FORCE_CPU")) policy.forceCPU = (e[0] == '1');
     if (const char* e = std::getenv("RAWR_FORCE_GPU")) policy.forceGPU = (e[0] == '1');
-    if (const char* e = std::getenv("RAWR_NO_CPU_FALLBACK")) policy.allowCPUFallback = (e[0] != '1');
+    if (const char* e = std::getenv("RAWR_NO_CPU_FALLBACK"))
+        policy.allowCPUFallback = (e[0] != '1');
+    else if (const char* hd = std::getenv("RAWRXD_HOST_DECODE");
+             hd && hd[0] == '1')
+        policy.allowCPUFallback = true;
+    else {
+        policy.forceGPU = true;
+        policy.allowCPUFallback = false;
+    }
     if (const char* e = std::getenv("RAWR_MIN_CPU_TPS")) policy.minimumCpuTPS = std::atof(e);
     if (const char* e = std::getenv("RAWR_PREFILL_TIMEOUT_MS")) policy.prefillTimeoutMs = std::atof(e);
     if (const char* e = std::getenv("RAWR_DECODE_TIMEOUT_MS")) policy.decodeTimeoutMs = std::atof(e);
@@ -88,6 +96,19 @@ inline Result ProductRun(const ProductRequest& req) {
     fflush(stderr);
 
     if (decision.backend == Deep2::Backend::Reject) {
+        /* Mirror CLI: ICD-ready + GPU-required → VulkanPrimary (tip SELECT gap). */
+        const char* skip = std::getenv("RAWR_SKIP_AUTO_BACKEND");
+        const bool gpuReq = policy.forceGPU || !policy.allowCPUFallback;
+        if (skip && skip[0] == '1' && gpuReq && budget.vulkanInstanceCreated) {
+            decision.backend = Deep2::Backend::VulkanPrimary;
+            decision.reason = "RAWR_SKIP_AUTO_BACKEND+GPU_REQUIRED+ICD";
+            fprintf(stderr, "[AUTO_BACKEND] override=%s reason=%s\n",
+                    Deep2::BackendName(decision.backend),
+                    decision.reason.c_str());
+            fflush(stderr);
+        }
+    }
+    if (decision.backend == Deep2::Backend::Reject) {
         r.failedStage = "BACKEND_SELECT";
         r.failedOwner = "NO_FEASIBLE_BACKEND";
         r.exitReason = decision.reason.c_str();
@@ -96,25 +117,25 @@ inline Result ProductRun(const ProductRequest& req) {
         return r;
     }
 
-    // Configure engine for selected backend
-    if (decision.backend == Deep2::Backend::CPU) {
-        rt->Eng().enableVulkan(false);
-    } else if (decision.backend == Deep2::Backend::VulkanPrimary ||
-               decision.backend == Deep2::Backend::VulkanDual ||
-               decision.backend == Deep2::Backend::MoEStreaming) {
-        rt->Eng().enableVulkan(true);
-    }
-
+    /* Never flip Vulkan under a live OpenSession — tip INFER_STREAM_SEH. */
     TokenBudget tokenBudget = ResolveTokenBudget(req.maxTokens);
-    rxow::Reset();
     if (req.engine && !req.runtime) rt->BindExternal(req.engine, alias, nullptr);
-    if (!rt->IsOpen() && !rt->OpenSession(alias)) {
-        r.failedStage = "LOAD"; 
-        r.failedOwner = "GGUF_OPEN";
-        r.exitReason = "FAIL";
-        rt->alreadyGenerating.store(0);
-        EmitReceipt(stderr, r);
-        return r;
+    if (!rt->IsOpen()) {
+        if (decision.backend == Deep2::Backend::CPU) {
+            rt->Eng().enableVulkan(false);
+        } else if (decision.backend == Deep2::Backend::VulkanPrimary ||
+                   decision.backend == Deep2::Backend::VulkanDual ||
+                   decision.backend == Deep2::Backend::MoEStreaming) {
+            rt->Eng().enableVulkan(true);
+        }
+        if (!rt->OpenSession(alias)) {
+            r.failedStage = "LOAD";
+            r.failedOwner = "GGUF_OPEN";
+            r.exitReason = "FAIL";
+            rt->alreadyGenerating.store(0);
+            EmitReceipt(stderr, r);
+            return r;
+        }
     }
     rxow::OnProductRunRequested();
     r.modelResolved = 1;

@@ -1,15 +1,15 @@
-; =============================================================================
-; RawrXD_Installer.wxs — WiX v4 Installer Bootstrapper
-; =============================================================================
-; VC++ Redist check, VulkanRT install, start menu shortcuts, PATH registration
-;
-; Build: wix build -o RawrXD-Setup.msi RawrXD_Installer.wxs
-; Prerequisites: wix.exe (WiX v4 CLI), heat.exe (dir harvesting)
-;
-; Rule: NO SOURCE FILE IS TO BE SIMPLIFIED
-; =============================================================================
-
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- =============================================================================
+     RawrXD_Installer.wxs — WiX v4 Installer Bootstrapper
+     =============================================================================
+     VC++ Redist check, VulkanRT install, start menu shortcuts, PATH registration
+
+     Build: wix build -o RawrXD-Setup.msi RawrXD_Installer.wxs
+     Prerequisites: wix.exe (WiX v4 CLI), heat.exe (dir harvesting)
+
+     Rule: NO SOURCE FILE IS TO BE SIMPLIFIED
+     (M4d: semicolon prolog before <?xml caused WIX0104; header moved to XML comment)
+     ============================================================================= -->
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
 
     <!-- ================================================================= -->

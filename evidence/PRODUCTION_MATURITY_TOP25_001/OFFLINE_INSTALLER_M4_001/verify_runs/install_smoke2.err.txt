@@ -1,0 +1,6 @@
+Copy-Item: G:\~dev\rawrxd\evidence\PRODUCTION_MATURITY_TOP25_001\OFFLINE_INSTALLER_M4_001\verify_extract\RawrXD-offline-windows-x64-M4-15A119-675461\scripts\Install-RawrOffline.ps1:22
+Line |
+  22 |  Copy-Item -LiteralPath (Join-Path $pkg "bin\*") -Destination (Join-Pa .
+     |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | Cannot find path
+     | 'G:\~dev\rawrxd\evidence\PRODUCTION_MATURITY_TOP25_001\OFFLINE_INSTALLER_M4_001\verify_extract\RawrXD-offline-windows-x64-M4-15A119-675461\bin\*' because it does not exist.

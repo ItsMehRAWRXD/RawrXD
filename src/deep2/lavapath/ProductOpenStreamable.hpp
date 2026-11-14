@@ -1,12 +1,9 @@
 #pragma once
-/* OPEN = meta indexed && storage reachable && working set acquirable. ≤99. */
+/* OPEN = meta indexed && storage reachable && working set acquirable. ≤99.
+ * Bodies live in ProductOpenStreamable.cpp / _Emit.cpp — single TU beats
+ * stale inline COMDATs (tip 6754616E OPEN_SEH after SESSION_EXIT). */
 #include "../Deep2Engine.h"
-#include "../NVMeStream.h"
 #include <cstdio>
-#include <cstdint>
-#ifdef _WIN32
-#include <windows.h>
-#endif
 
 namespace Deep2 {
 namespace product_open {
@@ -22,94 +19,10 @@ struct Facts {
     int open_pass = 0;
 };
 
-inline int AcquireWorkingSet(Deep2Engine& e, const ModelWeights& mw) {
-    const WeightTensor& w = mw.tokenEmbed.data || mw.tokenEmbed.hasFileBacking
-                                ? mw.tokenEmbed
-                                : mw.lmHead;
-    uint64_t n = w.sizeBytes ? w.sizeBytes : 4096ull;
-    if (n > (1ull << 20)) n = 1ull << 20;
-    if (NVMeStream* nv = e.HostNvme()) {
-        if (w.hasFileBacking && nv->prefetchRange(w.fileOffset, (size_t)n))
-            return 1;
-    }
-    /* GPU/file-backed OPEN: do not touch host pointers that may be device VA
-     * (AV 0xC0000005 after SESSION_EXIT ok=1 under FORCE_GPU). Backing/mmap
-     * already proves working-set reachability for streamable OPEN. */
-    if (w.hasFileBacking || e.GgufMmapBound()) return 1;
-    if (!w.data) return 0;
-#ifdef _WIN32
-    MEMORY_BASIC_INFORMATION mbi{};
-    if (VirtualQuery(w.data, &mbi, sizeof(mbi)) == 0) return 0;
-    if (!(mbi.State & MEM_COMMIT)) return 0;
-    if (!(mbi.Protect & (PAGE_READONLY | PAGE_READWRITE | PAGE_WRITECOPY |
-                         PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE |
-                         PAGE_EXECUTE_WRITECOPY)))
-        return 0;
-#endif
-    volatile char c = static_cast<const volatile char*>(w.data)[0];
-    (void)c;
-    return 1;
-}
-
-inline Facts Evaluate(Deep2Engine& e, const char* path) {
-    Facts f{};
-    if (e.isK2ShardIndexOpen()) {
-        f.meta_indexed = f.storage_reachable = f.working_set_acquirable =
-            f.acquire_live = f.file_backing = 1;
-        f.tensor_count = 1;
-        f.open_pass = e.isModelLoaded() ? 1 : 0;
-        return f;
-    }
-    const ModelWeights& mw = e.getModelWeights();
-    f.tensor_count = (int)mw.layers.size() + (mw.tokenEmbed.sizeBytes ? 1 : 0) +
-                     (mw.lmHead.sizeBytes ? 1 : 0);
-    f.meta_indexed = (mw.loaded && f.tensor_count > 0) ? 1 : 0;
-    f.file_backing = (mw.tokenEmbed.hasFileBacking || mw.lmHead.hasFileBacking) ? 1 : 0;
-    f.mmap_bound = e.GgufMmapBound();
-    const int ptr = (mw.tokenEmbed.data || mw.lmHead.data) ? 1 : 0;
-    f.storage_reachable =
-        (path && path[0] && (ptr || f.file_backing || f.mmap_bound)) ? 1 : 0;
-    f.acquire_live = AcquireWorkingSet(e, mw);
-    f.working_set_acquirable = f.acquire_live;
-    f.open_pass = (f.meta_indexed && f.storage_reachable &&
-                   f.working_set_acquirable && e.isModelLoaded())
-                      ? 1
-                      : 0;
-    return f;
-}
-
-inline void Emit(FILE* fp, const Facts& f) {
-    if (!fp) fp = stderr;
-    std::fprintf(fp,
-                 "OPEN_SEMANTIC=STREAMABLE\n"
-                 "OPEN_META_INDEXED=%d\nOPEN_STORAGE_REACHABLE=%d\n"
-                 "OPEN_WORKING_SET_ACQUIRABLE=%d\nOPEN_WORKING_SET_ACQUIRE_LIVE=%d\n"
-                 "OPEN_MMAP_BOUND=%d\nOPEN_FILE_BACKING=%d\n"
-                 "OPEN_TENSOR_COUNT=%d\nPRODUCT_OPEN_STREAMABLE=%d\n"
-                 "NOTE=OPEN_NE_FULL_RESIDENCY; LAA_NOT_OPEN_GATE; "
-                 "PROMOTE=0; "
-                 "PROMOTE_IF=PRODUCT_OPEN_PASS&&SESSION_ENTER_PASS&&"
-                 "GENERATED_TOKENS>0&&TOKEN_COMMIT_PASS; "
-                 "MULTI_FAMILY=NEXT_INDEPENDENT_GATE\n",
-                 f.meta_indexed, f.storage_reachable, f.working_set_acquirable,
-                 f.acquire_live, f.mmap_bound, f.file_backing, f.tensor_count,
-                 f.open_pass);
-    std::fflush(fp);
-}
-
-inline bool StreamableOk(Deep2Engine& e, const char* path, FILE* fp) {
-    Facts f = Evaluate(e, path);
-    Emit(fp, f);
-    if (!f.open_pass) {
-        std::fprintf(fp ? fp : stderr,
-                     "PRODUCT_OPEN=FAIL reason=NOT_STREAMABLE "
-                     "meta=%d storage=%d ws=%d loaded=%d\n",
-                     f.meta_indexed, f.storage_reachable, f.working_set_acquirable,
-                     e.isModelLoaded() ? 1 : 0);
-        std::fflush(fp ? fp : stderr);
-    }
-    return f.open_pass != 0;
-}
+int AcquireWorkingSet(Deep2Engine& e, const ModelWeights& mw);
+Facts Evaluate(Deep2Engine& e, const char* path);
+void Emit(FILE* fp, const Facts& f);
+bool StreamableOk(Deep2Engine& e, const char* path, FILE* fp);
 
 } /* namespace product_open */
 } /* namespace Deep2 */

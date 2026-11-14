@@ -117,12 +117,14 @@ bool SessionSend(TermSession& s, const std::string& input) {
 
 bool SessionStop(TermSession& s) {
     s.stopReq = true;
-    bool ok = WinProcessTerminate(s.proc, 1);
+    // Idempotent: short-lived cmd.exe /c echo is already dead → TerminateProcess
+    // fails and tip `term stop` used to return EXIT=8 (false residual).
+    if (WinProcessAlive(s.proc)) WinProcessTerminate(s.proc, 1);
     if (s.reader.joinable()) s.reader.join();
     s.exitCode = WinProcessExitCode(s.proc);
     s.alive = false;
     WriteTermMeta(s.name, s.proc.pid, 0, s.exitCode, s.cmd);
-    return ok;
+    return true;
 }
 
 void SessionPoll(TermSession& s) {

@@ -123,40 +123,15 @@ extern "C" {
 }
 
 // ============================================================================
-// Self-Host Engine — diagnostics
+// Self-Host / Orchestrator lifecycle — provided by RawrXD_SelfHost_Engine.obj
+// and RawrXD_AgenticOrchestrator.obj (no panic stubs: avoids LNK2005 without /FORCE).
 // ============================================================================
 extern "C" {
-    void asm_selfhost_init(void)
-    {
-        ASM_Fallback_Panic("asm_selfhost_init");
-    }
-
-    void asm_selfhost_shutdown(void)
-    {
-        ASM_Fallback_Panic("asm_selfhost_shutdown");
-    }
-
-    void asm_selfhost_get_stats(void* outStats, size_t statsSize)
-    {
-        ASM_Fallback_Panic("asm_selfhost_get_stats");
-        if (outStats && statsSize > 0)
-            memset(outStats, 0, statsSize);
-    }
-}
-
-// ============================================================================
-// ASM Orchestrator — lifecycle
-// ============================================================================
-extern "C" {
-    void asm_orchestrator_init(void)
-    {
-        ASM_Fallback_Panic("asm_orchestrator_init");
-    }
-
-    void asm_orchestrator_shutdown(void)
-    {
-        ASM_Fallback_Panic("asm_orchestrator_shutdown");
-    }
+    void asm_selfhost_init(void);
+    void asm_selfhost_shutdown(void);
+    void asm_selfhost_get_stats(void* outStats, size_t statsSize);
+    void asm_orchestrator_init(void);
+    void asm_orchestrator_shutdown(void);
 }
 
 // ============================================================================

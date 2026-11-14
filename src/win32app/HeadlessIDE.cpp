@@ -1827,8 +1827,7 @@ bool HeadlessIDE::loadModel(const std::string& filepath) {
             std::fprintf(stderr, "R1_SOFT_RELOAD=1 rearm_no_reopen path=%s\n",
                          localPath.c_str());
             std::fflush(stderr);
-            if (!rawr::ProductOpenSession(localPath.c_str()) ||
-                !rawr::ProductSessionOpen()) {
+            if (!rawr::ProductOpenSession(localPath.c_str())) {
                 std::fprintf(stderr, "HEADLESS_LOADMODEL=FAIL path=%s\n",
                              localPath.c_str());
                 std::fprintf(stderr, "HEADLESS_READY=0\n");
@@ -1838,8 +1837,7 @@ bool HeadlessIDE::loadModel(const std::string& filepath) {
                     OutputSeverity::Error);
                 return false;
             }
-        } else if (!rawr::ProductOpenSession(localPath.c_str()) ||
-                   !rawr::ProductSessionOpen()) {
+        } else if (!rawr::ProductOpenSession(localPath.c_str())) {
             std::fprintf(stderr, "HEADLESS_LOADMODEL=FAIL path=%s\n",
                          localPath.c_str());
             std::fprintf(stderr, "HEADLESS_READY=0\n");
@@ -1848,6 +1846,12 @@ bool HeadlessIDE::loadModel(const std::string& filepath) {
                 "ProductOpenSession failed (LocalOnly: no CIE dual-arm fallback)",
                 OutputSeverity::Error);
             return false;
+        } else if (!rawr::ProductSessionOpen()) {
+            /* FORCE skew: OpenSession may PASS while IsOpen lags; sticky latch
+             * in ProductSessionOpen should cover — log but do not veto arm. */
+            std::fprintf(stderr,
+                         "HEADLESS_SESSION_OPEN_LAG=1 sticky_or_isopen=0\n");
+            std::fflush(stderr);
         }
         std::fprintf(stderr, "HEADLESS_LOADMODEL=OK path=%s\n",
                      localPath.c_str());

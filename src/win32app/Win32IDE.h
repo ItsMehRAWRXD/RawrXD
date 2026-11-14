@@ -170,6 +170,7 @@ class ResourceGeneratorManager;
 namespace rawrxd
 {
 class OmegaOrchestrator;
+class NativeDebugBackend;
 enum class QualityMode : int;
 }  // namespace rawrxd
 
@@ -2571,6 +2572,18 @@ class Win32IDE
     void toggleDebugger();
     void attachDebugger();
     void detachDebugger();
+    // WaitForDebugEvent product backend (C39/C40 / IDM_DAP_E2E_PROBE).
+    // Backend lives in side-map (not a Win32IDE member) to keep tip obj layout.
+    void ensureNativeDebugBackend();
+    bool launchNativeDebuggee();
+    void runDapE2EProbe();
+    // Cat8/Cat11 weak-cat product probes (absorb075+ wire; FORCE=0).
+    void runInstallerPackProbe();
+    void runMultiFileEditProbe();
+    void runAgentDiffApplyProbe();
+    LRESULT handleNativeDebugState(WPARAM wParam, LPARAM lParam);
+    void stopNativeDebugBackend();
+    rawrxd::NativeDebugBackend* nativeDebugBackend();
     // ========================================================================
     // AI CHAT PANEL IMPLEMENTATION
     // ========================================================================
@@ -3598,8 +3611,11 @@ class Win32IDE
     void shutdownLSPClient();
     void loadLSPConfig();
     void saveLSPConfig();
-
-    // LSP Server management
+  public:
+    // C36 GUI acceptance: clangd init/didOpen/hover/completion tipbound probe
+    void runC36ClangdAcceptanceProbe();
+  private:
+    // LSP Server management (private mangling must match tip consumer objs)
     bool startLSPServer(LSPLanguage lang);
     void stopLSPServer(LSPLanguage lang);
     void restartLSPServer(LSPLanguage lang);

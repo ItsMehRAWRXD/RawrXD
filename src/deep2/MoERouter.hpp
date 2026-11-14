@@ -28,6 +28,8 @@ struct MoEConfig {
     size_t sharedExpertDim = 2048;  // Shared expert dimension
     bool useLoadBalancing = false;  /* inference: no RNG noise (greedy lock) */
     float capacityFactor = 1.25f;  // Expert capacity multiplier
+    uint32_t expertGatingFunc = 0; // 0=softmax, 1/2=gated variants
+    float routedScalingFactor = 1.f;
 };
 
 // Expert routing result
@@ -77,6 +79,14 @@ public:
 
     // Get expert weights (router parameters)
     void SetRouterWeights(const float* weights, size_t rows, size_t cols);
+    bool HasRouterWeights() const { return !routerWeights_.empty(); }
+    void SetExpertBias(const float* bias, size_t n) {
+        if (bias && n) {
+            expertBias_.assign(bias, bias + n);
+        } else {
+            expertBias_.clear();
+        }
+    }
 
     // Load balancing
     void UpdateLoadBalance();
@@ -105,7 +115,8 @@ private:
     
     // Router weights: [hiddenDim, numExperts]
     std::vector<float> routerWeights_;
-    
+    std::vector<float> expertBias_;
+
     // Expert load tracking
     std::vector<uint64_t> expertLoads_;
     std::vector<uint64_t> expertCapacities_;

@@ -4,8 +4,15 @@
 
 **ASOF:** 2026-11-13 · **PROMOTE=0** · **CERTIFIED=0**
 
+```
+CLEAN_VM=ABSENT
+NOT_PUBLISHED=1
+```
+
 Package managers remain **NOT_PUBLISHED** — see [`distribution/README.md`](../../distribution/README.md) and
 `evidence/PRODUCTION_MATURITY_TOP25_001/TOP25_RECOGNITION_OPS_001/`.
+Clean-VM install witness is **ABSENT** (do not invent). Tip-bound local build →
+`rawr.exe` is the measured path only.
 
 ## Short path
 

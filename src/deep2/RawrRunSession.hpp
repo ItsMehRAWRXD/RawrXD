@@ -37,45 +37,32 @@ struct RunWitness {
     std::string formattedPrompt;
 };
 
-inline bool InitFromPath(Deep2Engine& e, const std::string& path,
+#if defined(RAWR_RUN_SESSION_DECLS_ONLY) || defined(RAWR_PRODUCT_RUNTIME_OPEN_MIN)
+/* Decls only — bodies in RawrRunSession_Body.cpp (noforce ODR).
+ * Prefer RAWR_RUN_SESSION_DECLS_ONLY so Deep2Engine.h MIN accessors stay inline. */
+bool InitFromPath(Deep2Engine& e, const std::string& path, size_t maxSeq = 512);
+bool OpenSession(Deep2Engine& e, const char* alias, RunWitness& w);
+#else
+#ifndef RAWR_RUN_INIT_NAME
+#define RAWR_RUN_INIT_NAME InitFromPath
+#endif
+#ifndef RAWR_RUN_OPEN_NAME
+#define RAWR_RUN_OPEN_NAME OpenSession
+#endif
+
+inline bool RAWR_RUN_INIT_NAME(Deep2Engine& e, const std::string& path,
                          size_t maxSeq = 512) {
+    /* Tip 6754 shape: INIT_ENTER → loadModel → initialize (no vulkan prearm). */
     std::fprintf(stderr, "PRODUCT_OPEN INIT_ENTER path=\"%s\"\n", path.c_str());
     std::fflush(stderr);
-    long long rc = 0;
     if (!e.loadModel(path)) {
-        rc = -1;
-        std::fprintf(stderr, "PRODUCT_OPEN INIT_EXIT rc=%lld reason=LOAD_MODEL\n",
-                     rc);
+        std::fprintf(stderr, "PRODUCT_OPEN INIT_EXIT rc=-1 reason=LOAD_MODEL\n");
         std::fflush(stderr);
         return false;
     }
-    /* loadModel already arms ThreadPool/KV/buffers. A second initialize()
-     * tear-down/rebuild has caused heap C0000374 (SOLO). Skip when live.
-     * Still arm enhancement/Vulkan stack — loadModel alone leaves GPU cold. */
     if (e.isInitialized() && e.isModelLoaded()) {
         e.enableAllEnhancements();
-        const char* host = std::getenv("RAWRXD_HOST_DECODE");
-        const char* min = std::getenv("DEEP2_MINIMAL_ENHANCE");
-        const char* sem = std::getenv("RAWRXD_SEMANTIC_SAFE");
-        const bool cpuOpt = (host && host[0] == '1') || (min && min[0] == '1') ||
-                            (sem && sem[0] == '1');
-        if (!cpuOpt && !e.isVulkanEnabled()) {
-            fprintf(stderr,
-                    "INIT_FROM_PATH=FAIL reason=GPU_REQUIRED vulkan=0 "
-                    "(RAWRXD_HOST_DECODE=1 for CPU opt-in)\n");
-            e.unloadModel();
-            rc = -2;
-            std::fprintf(stderr,
-                         "PRODUCT_OPEN INIT_EXIT rc=%lld reason=GPU_REQUIRED\n",
-                         rc);
-            std::fflush(stderr);
-            return false;
-        }
-        if (maxSeq > 0 && e.getConfig().maxSeqLen != maxSeq) {
-            fprintf(stderr, "INIT_FROM_PATH=LOAD_ONLY maxSeq_req=%zu live=%zu\n",
-                    maxSeq, e.getConfig().maxSeqLen);
-        }
-        rc = e.isModelLoaded() ? 1 : 0;
+        const long long rc = e.isModelLoaded() ? 1 : 0;
         std::fprintf(stderr, "PRODUCT_OPEN INIT_EXIT rc=%lld\n", rc);
         std::fflush(stderr);
         return rc == 1;
@@ -100,14 +87,13 @@ inline bool InitFromPath(Deep2Engine& e, const std::string& path,
     cfg.useThreadPool = true;
     cfg.numThreads = 8;
     const bool ok = e.initialize(cfg);
-    rc = ok ? 1 : -3;
-    std::fprintf(stderr, "PRODUCT_OPEN INIT_EXIT rc=%lld reason=%s\n", rc,
-                 ok ? "INITIALIZE_OK" : "INITIALIZE_FAIL");
+    std::fprintf(stderr, "PRODUCT_OPEN INIT_EXIT rc=%lld reason=%s\n",
+                 ok ? 1LL : -3LL, ok ? "INITIALIZE_OK" : "INITIALIZE_FAIL");
     std::fflush(stderr);
     return ok;
 }
 
-inline bool OpenSession(Deep2Engine& e, const char* alias, RunWitness& w) {
+inline bool RAWR_RUN_OPEN_NAME(Deep2Engine& e, const char* alias, RunWitness& w) {
     std::fprintf(stderr, "PRODUCT_OPEN SESSION_ENTER alias=\"%s\"\n",
                  alias ? alias : "");
     std::fflush(stderr);
@@ -125,7 +111,7 @@ inline bool OpenSession(Deep2Engine& e, const char* alias, RunWitness& w) {
     w.shardsDiscovered = (int)ar.shards;
     w.ollamaProcessUsed = 0;
     w.networkUsed = 0;
-    if (!InitFromPath(e, ar.path)) {
+    if (!RAWR_RUN_INIT_NAME(e, ar.path)) {
         std::fprintf(stderr, "RAW_RUN_OPEN=FAIL stage=INIT_FROM_PATH path=%s\n",
                      ar.path.c_str());
         std::fprintf(stderr,
@@ -153,6 +139,7 @@ inline bool OpenSession(Deep2Engine& e, const char* alias, RunWitness& w) {
     std::fflush(stderr);
     return true;
 }
+#endif /* RAWR_RUN_SESSION_DECLS_ONLY || RAWR_PRODUCT_RUNTIME_OPEN_MIN */
 
 inline std::string FormatChatPrompt(Deep2Engine& e, const std::string& user,
                                     RunWitness* w) {

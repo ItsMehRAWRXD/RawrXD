@@ -74,5 +74,19 @@ inline void InjectRouterF32(MoERouter& router, const WeightTensor& wr,
                  wr.rows, wr.cols);
 }
 
+inline void InjectExpertBiasF32(MoERouter& router, const WeightTensor& wb,
+                                size_t numExperts) {
+    if (!wb.data || !numExperts) return;
+    if (wb.type != (int)GGMLType::GGML_TYPE_F32) {
+        std::fprintf(stderr,
+                     "B03_MOE_EXPERT_BIAS_TYPE_UNSUPPORTED type=%d\n", wb.type);
+        return;
+    }
+    const size_t n = wb.rows * wb.cols;
+    const size_t use = n < numExperts ? n : numExperts;
+    router.SetExpertBias((const float*)wb.data, use);
+    std::fprintf(stderr, "B03_MOE_EXPERT_BIAS_INJECT n=%zu\n", use);
+}
+
 } // namespace multishard_moe
 } // namespace Deep2

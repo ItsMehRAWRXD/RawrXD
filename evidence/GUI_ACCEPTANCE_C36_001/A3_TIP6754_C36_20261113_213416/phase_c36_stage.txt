@@ -1,0 +1,10 @@
+C36_LSP_STAGE=START detail=reset ts=23205045
+C36_LSP_STAGE=PIPE OK detail=ok CreatePipe_in=1/0 CreatePipe_out=1/0 SetHandleInfo_in=1/0 SetHandleInfo_out=1/0 parent_stdinW=00000000000004BC parent_stdoutR=00000000000004C0 (no DuplicateHandle) ts=23205052
+C36_LSP_STAGE=PROCESS BEGIN detail="C:\Program Files\LLVM\bin\clangd.exe" --background-index=false --header-insertion=never --log=error ts=23205058
+C36_LSP_STAGE=PROCESS OK detail=ok pid=45860 ts=23205077
+C36_LSP_STAGE=INIT_SEND BEGIN detail=method=initialize Content-Length=792 packet=815 ts=23205086
+C36_LSP_STAGE=INIT_SEND OK detail=method=initialize Content-Length=792 bytes_written=815 wall_ms=0 ok=1 ts=23205095
+C36_LSP_STAGE=INIT_WAIT BEGIN detail=timeout_ms=20000 id=1 ts=23205102
+C36_LSP_STAGE=INIT_WAIT BEGIN detail=deadline_ms=20000 id=1 bytes=0 partial=0 ts=23205109
+C36_LSP_STAGE=INIT_WAIT OK class=INIT_OK detail=id=1 bytes=2083 partial=2083 ts=23205241
+C36_LSP_STAGE=INIT_WAIT OK class=INIT_OK detail=disp=INIT_OK jsonrpc_id=1 bytes_read=2083 has_result=1 has_error=0 ts=23205256

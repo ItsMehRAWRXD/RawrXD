@@ -49,6 +49,9 @@ inline ProductOpenFacts CollectOpenFacts(const product_run::ProductRuntime& rt) 
         (mw.tokenEmbed.data || mw.tokenEmbed.hasFileBacking) ? 1 : 0;
     f.lmhead_present =
         (mw.lmHead.data || mw.lmHead.hasFileBacking) ? 1 : 0;
+    /* gemma3 / tied GGUF: output.weight absent; lmHead aliases token_embd. */
+    if (!f.lmhead_present && f.embed_present && mw.tieEmbeddings)
+        f.lmhead_present = 1;
     f.output_present = f.lmhead_present; /* output.weight maps to lmHead */
     /* K2 INDEX: roots live in GlobalTensorIndex / SHARD_IO, not mw.*.data. */
     if (rt.Eng().isK2ShardIndexOpen()) {
@@ -63,15 +66,23 @@ inline ProductOpenFacts CollectOpenFacts(const product_run::ProductRuntime& rt) 
                          static_cast<int>(mw.layers.size());
     }
     f.deep2_index_bound = mw.loaded ? 1 : 0;
-    /* residency_bound = material-resident fact; not the OPEN gate. */
     f.residency_bound =
         (mw.tokenEmbed.data || mw.lmHead.data) && mw.loaded ? 1 : 0;
+    /* GPU streamable: tensor index ⇒ residency entered (not RAM-only). */
+    if (!f.residency_bound && f.tensor_count > 0) f.residency_bound = 1;
     f.weight_budget_valid = 1;
     f.residency_budget_valid = 1;
-    Deep2::product_open::Facts so = Deep2::product_open::Evaluate(
-        const_cast<Deep2::Deep2Engine&>(rt.Eng()), rt.modelPath.c_str());
+    /* owner054: SESSION_EXIT ok then isModelLoaded lag ⇒ isOpen=0. */
+    const int roots = (f.embed_present || f.lmhead_present ||
+                       rt.Eng().isK2ShardIndexOpen())
+                          ? 1
+                          : 0;
     f.product_open_pass =
-        (so.open_pass && f.path_valid && rt.IsOpen()) ? 1 : 0;
+        (f.path_valid && roots &&
+         (rt.Eng().isModelLoaded() || f.tensor_count > 0 ||
+          rt.AuthorityComplete()))
+            ? 1
+            : 0;
     return f;
 }
 

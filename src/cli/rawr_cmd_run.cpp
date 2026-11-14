@@ -10,11 +10,19 @@
 #include "../deep2/lavapath/ProductStreamerPrep.hpp"
 #include "../deep2/GpuPreflight.hpp"
 #include "../deep2/RawrAutoBackendPolicy.hpp"
+#include "../deep2/GgufModelPath.hpp"
 #include "../reap/ReapRuntime.hpp"
 #include "../core/agent_wal.hpp"
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <string>
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#endif
 
 namespace rawr {
 namespace {
@@ -76,6 +84,21 @@ int CmdRun(const CliArgs& a) {
 
     /* Announce resolution start so the user sees progress instead of a hang. */
     Diag("[MODEL_RESOLUTION] %s\n", a.model.c_str());
+
+    /* Fail-closed before registry scan: path-like missing GGUF used to hang in
+     * recursive root scan / load instead of MODEL_NOT_FOUND. */
+    {
+        const bool looksPath =
+            a.model.find('\\') != std::string::npos ||
+            a.model.find('/') != std::string::npos ||
+            Deep2::GgufPath::HasGgufExt(a.model);
+        if (looksPath && !Deep2::GgufPath::IsLoadableModelFile(a.model)) {
+            Diag("[ERROR] MODEL_NOT_FOUND\n");
+            Diag("FAIL_CLOSED=1 REASON=missing_or_unloadable_path\n");
+            Diag("path=%s\n", a.model.c_str());
+            return ExitCode::ModelResolve;
+        }
+    }
 
     reg.scan(a.refresh);
     ModelEntry ent;
@@ -181,55 +204,76 @@ int CmdRun(const CliArgs& a) {
     }
 
     // ========================================================================
-    // Gate before ProductStreamerPrep ó prep/engine noise ? stderr.
+    // Gate before ProductStreamerPrep ? prep/engine noise ? stderr.
     // ========================================================================
     OutGate gate;
     if (!Deep2::ProductStreamerPrep()) return ExitCode::Runtime;
-    Deep2::Deep2Engine engine;
 
-    // GPU health preflight first ù Code 31 DevNode reset before Vulkan open.
-    if (!GpuPreflightCheck(!a.vulkan)) return ExitCode::Runtime;
+    int runRc = ExitCode::Runtime;
+    std::string walName;
+    {
+        Deep2::Deep2Engine engine;
 
-    // Configure engine for selected backend
-    if (decision.backend == Deep2::Backend::CPU) {
-        engine.enableVulkan(false);
-    } else if (decision.backend == Deep2::Backend::VulkanPrimary ||
-               decision.backend == Deep2::Backend::VulkanDual ||
-               decision.backend == Deep2::Backend::MoEStreaming) {
-        engine.enableVulkan(true);
-        // If explicit --vulkan was requested but policy selected CPU, reject
-        if (a.vulkan && decision.backend == Deep2::Backend::CPU) {
-            Diag("[ERROR] --vulkan requested but policy selected CPU\n");
+        // GPU health preflight first ? Code 31 DevNode reset before Vulkan open.
+        if (!GpuPreflightCheck(!a.vulkan)) return ExitCode::Runtime;
+
+        // Configure engine for selected backend
+        if (decision.backend == Deep2::Backend::CPU) {
+            engine.enableVulkan(false);
+        } else if (decision.backend == Deep2::Backend::VulkanPrimary ||
+                   decision.backend == Deep2::Backend::VulkanDual ||
+                   decision.backend == Deep2::Backend::MoEStreaming) {
+            engine.enableVulkan(true);
+            // If explicit --vulkan was requested but policy selected CPU, reject
+            if (a.vulkan && decision.backend == Deep2::Backend::CPU) {
+                Diag("[ERROR] --vulkan requested but policy selected CPU\n");
+                return ExitCode::Runtime;
+            }
+        }
+
+        if (a.vulkan) engine.enableVulkan(true);
+        Deep2StreamSession* s = d2_session_create();
+        if (!s) return ExitCode::Runtime;
+        if (a.verbose) d2_session_set_trace(s, 1);
+        if (!d2_session_bind_deep2_engine_ptr(s, &engine) ||
+            d2_session_backend_is_mock(s)) {
+            Diag("rawr: REAL_BIND failed (mock backend)\n");
+            d2_session_destroy(s);
             return ExitCode::Runtime;
         }
-    }
+        if (!d2_session_open_model(s, ent.path.c_str())) {
+            Diag("rawr: model open failed: %s\n", ent.path.c_str());
+            d2_session_destroy(s);
+            return ExitCode::ModelLoad;
+        }
+        D2GenerateRequest req{};
+        req.prompt = a.prompt.c_str();
+        req.max_tokens = maxTok;
+        req.temperature = 0.f;
+        req.seed = 42;
+        int ok = d2_session_generate(s, &req, OnTok, &gate);
+        d2_session_close_model(s);
+        d2_session_destroy(s);
+        if (!ok) {
+            Diag("rawr: generate failed\n");
+            return ExitCode::Runtime;
+        }
+        walName = ent.name;
+        runRc = ExitCode::Ok;
+    } /* ~Deep2Engine: decode teardown + TD=11 CLEAN_EXIT */
 
-    if (a.vulkan) engine.enableVulkan(true);
-    Deep2StreamSession* s = d2_session_create();
-    if (!s) return ExitCode::Runtime;
-    if (a.verbose) d2_session_set_trace(s, 1);
-    if (!d2_session_bind_deep2_engine_ptr(s, &engine) ||
-        d2_session_backend_is_mock(s)) {
-        Diag("rawr: REAL_BIND failed (mock backend)\n");
-        d2_session_destroy(s);
-        return ExitCode::Runtime;
+    if (runRc == ExitCode::Ok) {
+        rawrxd::agent_wal::Append(rawrxd::agent_wal::DefaultRoot(), 1,
+                                  "CMD_RUN_OK", walName.c_str());
+        Diag("CMD_RUN_CLEAN_EXIT=1\n");
+        std::fflush(stderr);
+        std::fflush(stdout);
+#ifdef _WIN32
+        /* Skip global StreamEngine g_stream static dtor hang (A2/A5b EXIT=-1).
+         * Engine stack lifetime already ended above; tokens committed. */
+        ::ExitProcess(static_cast<UINT>(ExitCode::Ok));
+#endif
     }
-    if (!d2_session_open_model(s, ent.path.c_str())) {
-        Diag("rawr: model open failed: %s\n", ent.path.c_str());
-        d2_session_destroy(s);
-        return ExitCode::ModelLoad;
-    }
-    D2GenerateRequest req{};
-    req.prompt = a.prompt.c_str();
-    req.max_tokens = maxTok;
-    req.temperature = 0.f;
-    req.seed = 42;
-    int ok = d2_session_generate(s, &req, OnTok, &gate);
-    d2_session_close_model(s);
-    d2_session_destroy(s);
-    if (!ok) { Diag("rawr: generate failed\n"); return ExitCode::Runtime; }
-    rawrxd::agent_wal::Append(rawrxd::agent_wal::DefaultRoot(), 1, "CMD_RUN_OK",
-                              ent.name.c_str());
-    return ExitCode::Ok;
+    return runRc;
 }
 } // namespace rawr

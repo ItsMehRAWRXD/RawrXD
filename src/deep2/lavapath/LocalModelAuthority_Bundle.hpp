@@ -2,6 +2,7 @@
 /* SealAuthority — geometry+schema+quant+tok on one path. ≤99. */
 #include "LocalModelAuthority_Seal.hpp"
 #include "TensorNameTypeBinding_Bind.hpp"
+#include "Gemma4SchemaBind.hpp"
 #include "QuantDispatch_Seal.hpp"
 #include "TokenizerTemplateEog_Seal.hpp"
 
@@ -20,7 +21,14 @@ inline bool SealAuthorityBundle(const char* path, AuthorityBundle& a) {
     if (!path || !path[0]) return false;
     if (!SealFromPath(path, a.geom) || !a.geom.PASS) return false;
     Deep2::GGUFLoadResult load = Deep2::GGUFLoader::LoadMetadata(path);
-    if (!BindLlamaSchema(load, a.geom, path, a.schema) || !a.schema.PASS) return false;
+    const bool gemma = a.geom.ARCH.rfind("gemma", 0) == 0;
+    /* ProductStreamerPrep SKIP_DIGEST ⇒ sessionAuth_ empty; gemma ≠ llama schema. */
+    if (gemma) {
+        if (!BindGemma4Schema(load, a.geom, path, a.schema) || !a.schema.PASS)
+            return false;
+    } else if (!BindLlamaSchema(load, a.geom, path, a.schema) || !a.schema.PASS) {
+        return false;
+    }
     if (!SealQuantDispatch(a.schema, a.quant) || !a.quant.PASS) return false;
     if (!SealTokEog(load, a.geom, a.schema, a.tok) || !a.tok.PASS) return false;
     a.PASS = 1;

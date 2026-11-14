@@ -1537,7 +1537,8 @@ static bool hasFeatureProbeFlag(LPSTR lpCmdLine)
            strstr(lpCmdLine, "--test-caret-animation") != nullptr ||
            strstr(lpCmdLine, "--test-tier-cosmetics") != nullptr ||
            strstr(lpCmdLine, "--test-ollama-client") != nullptr ||
-           strstr(lpCmdLine, "--test-model-discovery") != nullptr;
+           strstr(lpCmdLine, "--test-model-discovery") != nullptr ||
+           strstr(lpCmdLine, "--test-c36-lsp") != nullptr;
 }
 
 static bool queryLocalOllamaEndpoint(const wchar_t* endpoint, std::string& outBody)
@@ -2104,6 +2105,34 @@ static int runFeatureProbeCLI(HINSTANCE hInstance, LPSTR lpCmdLine)
                 pumpMessages();
         }
         assertBehavior(mainWnd != nullptr && IsWindow(mainWnd) != 0, "tier3_toggle_command_survived");
+    }
+
+    // C36 clangd acceptance probe (fail-closed measure via TOP25_C36_LSP.log)
+    {
+        const char* c36 = std::getenv("RAWRXD_C36_PROBE");
+        const bool c36Flag = lpCmdLine && strstr(lpCmdLine, "--test-c36-lsp");
+        if ((c36Flag || (c36 && c36[0] == '1')) && mainWnd && ide) {
+            ide->runC36ClangdAcceptanceProbe();  // joins; writes TOP25_C36_LSP.log
+            const char* logPath =
+                "G:\\~dev\\rawrxd\\evidence\\GUI_ACCEPTANCE_C36_001\\TOP25_C36_LSP.log";
+            char line[512] = {};
+            FILE* lf = nullptr;
+            bool lspOk = false, hoverOk = false, compOk = false;
+            if (fopen_s(&lf, logPath, "r") == 0 && lf) {
+                if (fgets(line, sizeof(line), lf)) {
+                    lspOk = strstr(line, "lsp_running=1") != nullptr;
+                    hoverOk = strstr(line, "hover_valid=1") != nullptr;
+                    int compN = 0;
+                    if (const char* p = strstr(line, "completion_n="))
+                        compN = atoi(p + 13);
+                    compOk = compN > 0;
+                }
+                fclose(lf);
+            }
+            assertBehavior(lspOk, "c36_clangd_lsp_running");
+            assertBehavior(hoverOk, "c36_clangd_hover_valid");
+            assertBehavior(compOk, "c36_clangd_completion_n");
+        }
     }
 
     if (probeOllamaClient)

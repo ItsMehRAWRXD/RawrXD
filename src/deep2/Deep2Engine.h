@@ -126,6 +126,7 @@ struct LayerWeights {
 
     // MoE (optional - if numExperts > 0)
     WeightTensor moeRouter;   // [numExperts, hiddenDim]
+    WeightTensor moeExpertBias; // [numExperts] optional routing bias
     std::vector<WeightTensor> moeGate;  // [numExperts][intermediateDim, hiddenDim]
     std::vector<WeightTensor> moeUp;    // [numExperts][intermediateDim, hiddenDim]
     std::vector<WeightTensor> moeDown;  // [numExperts][hiddenDim, intermediateDim]
@@ -185,6 +186,7 @@ struct ModelWeights {
     float  ropeTheta      = 0.0f;   // unset until GGUF dynamic geometry
     float  ropeScaling    = 0.0f;   // 0 + !present => no scale (not a guessed 1.0)
     float  normEps        = 0.0f;   // unset until GGUF dynamic geometry
+    bool   ropeNeox       = false;  // MiniMax/NeoX pair layout when set by loader
     bool   tieEmbeddings  = false;
     bool   isMoE          = false;
     bool   loaded         = false;
@@ -462,7 +464,12 @@ public:
     
     // Get engine info
     bool isInitialized() const { return initialized; }
+#if defined(RAWR_PRODUCT_RUNTIME_OPEN_MIN)
+    /* Min OpenSession TU: decls only → UNDEF (no FORCE COMDAT override). */
+    bool isModelLoaded() const;
+#else
     bool isModelLoaded() const { return modelWeights.loaded; }
+#endif
     ModelState modelState() const { return modelState_; }
     bool hostQ8GemvSafe() const { return hostQ8GemvSafe_; }
     void emitHostQ8GemvReceipts(FILE* f) const {
@@ -476,7 +483,11 @@ public:
         std::fflush(f);
     }
     const EngineConfig& getConfig() const { return config; }
+#if defined(RAWR_PRODUCT_RUNTIME_OPEN_MIN)
+    const ModelWeights& getModelWeights() const;
+#else
     const ModelWeights& getModelWeights() const { return modelWeights; }
+#endif
     
     // Backend identity for certification
     static constexpr const char* backendName() noexcept { return "Deep2Engine/Sovereign"; }
@@ -770,8 +781,15 @@ public:
     bool handleGPUFailure(int gpu);
 
     // ONE_LOCAL_MODEL_AUTHORITY — sealed on loadModel (SSOT for ProductRuntime).
+#if defined(RAWR_PRODUCT_RUNTIME_OPEN_MIN)
+    const rawr::olma::AuthorityBundle& sessionAuthority() const;
+    bool sessionAuthorityPass() const;
+#else
     const rawr::olma::AuthorityBundle& sessionAuthority() const { return sessionAuth_; }
     bool sessionAuthorityPass() const { return sessionAuth_.PASS != 0; }
+#endif
+    /* Re-seal from live ggufResult + sessionGeometry_ (gemma ProductOpen). */
+    bool resealSessionAuthority();
 
 private:
     EngineConfig config;

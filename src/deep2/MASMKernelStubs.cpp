@@ -17,7 +17,8 @@ extern "C" {
 // ============================================================================
 // Core inference stubs
 // ============================================================================
-void ggml_gemm_q4_0(int M, int N, int K, const float* A, const uint8_t* Bq4,
+// static: unlinked_symbols_batch_002.cpp owns the exported ggml_gemm_q4_0 (no /FORCE LNK2005).
+static void ggml_gemm_q4_0(int M, int N, int K, const float* A, const uint8_t* Bq4,
                      float scale, float* C) {
     // Real Q4_0 dequantization + GEMM
     // Q4_0 block: 32 weights (4-bit) + 1 scale (float32)
@@ -408,7 +409,9 @@ bool ReadStrAt(const std::vector<uint8_t>& buf, uint64_t* pos, char* out, size_t
 }
 
 // Skip a GGUF metadata value of the given type without decoding it.
-bool SkipValue(const std::vector<uint8_t>& buf, uint64_t* pos, uint32_t type) {
+// static: must not export C linkage SkipValue — collides with r25_productopen_masm.asm
+// PUBLIC SkipValue (LNK2005 without /FORCE:MULTIPLE).
+static bool SkipValue(const std::vector<uint8_t>& buf, uint64_t* pos, uint32_t type) {
     switch (type) {
         case 0: case 1: case 7:            *pos += 1; return *pos <= buf.size();
         case 2: case 3:                    *pos += 2; return *pos <= buf.size();

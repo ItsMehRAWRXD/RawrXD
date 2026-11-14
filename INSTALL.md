@@ -7,6 +7,17 @@ This guide documents the **measured local product path** used in
 Homebrew, Docker Hub, or MSI channels are verified. Those remain
 **UNVERIFIED** until a receipt lands under this evidence pack.
 
+```
+CLEAN_VM=ABSENT
+NOT_PUBLISHED=1
+INVENT_CLEAN_VM=0
+```
+
+A clean-machine install witness for the SHA-bound zip is **ABSENT**. Tip-bound
+local verify (`build_ninja\bin\rawr.exe` / `rawr_gpufwd_15A119D1.exe`) is not a
+Clean-VM substitute. Version drift (`version.txt` 1.0.0 vs zip tag v14.7.3 /
+tree v15.0.4) is **documented only** — see `VERSION_DRIFT.txt` (no silent align).
+
 Authority: `evidence/PRODUCTION_MATURITY_TOP25_001/LAW.txt` ·
 `NOT_RUN != PASS` · no invented maturity %.
 

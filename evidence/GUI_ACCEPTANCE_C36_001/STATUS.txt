@@ -1,0 +1,38 @@
+GUI_ACCEPTANCE_C36_001 — STATUS
+ASOF_LOCAL=2026-11-13T20:45:00-05:00
+MOTD_ACK=1
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+INVENT_PASS=0
+NOT_RUN!=PASS
+
+## Tipbound C36 — CLOSED on absorb075c
+TIP_EXE=evidence/PRODUCTION_MATURITY_TOP25_001/GUI_TOP25_VALUATION_001/clean_link/RawrXD-Win32IDE_absorb075c.exe
+TIP_SHA256=E7189EA8D67C8DACD54F7DB3FAA267A2311DD09688AFD3F8E42D600F99A082A7
+FORCE=0 LINK_RC=0 LNK4088=0
+RUN=--test-c36-lsp RAWRXD_C36_PROBE=1
+LOG=TOP25_C36_LSP.log
+MEASURED=lsp_running=1 hover_valid=1 completion_n=82 hybrid_n=4 RUNTIME_REACHED=1 err=-
+EXIT=0
+C36_TIPBOUND=PASS
+CROSS_SHA_WIRE_C36_PASS_CREDIT=0
+
+## Root cause + fix (landed tipbound)
+ROOT=LSP reader logInfo→appendToOutput(SendMessage) while UI thread in readLSPResponse + g_logMutex → deadlock past init timeout
+FIX_Logger=UI-thread-only append; never append under g_logMutex
+FIX_LSPClient=diagnostics UI deferred off reader; init timeout 15..60s; crumb RUNTIME_REACHED
+
+## Prior fail (absorb075b) — historical
+PRIOR_WEAK=RawrXD-Win32IDE_absorb075b.exe
+PRIOR_SHA256=4476E4123D9DAA0A1553BA404EEEF3AF1DBC14B2F80A5784076A2B81D2653A47
+PRIOR_RESULT=HANG mark=start busy left; no log (deadlock)
+
+## Product-wire clangd (NOT tipbound GUI credit alone)
+WIRE_EVIDENCE=evidence/IDE_DAILY_USE_001/C36_CLANGD_001/STATUS.txt
+WIRE_C36_PASS=1
+CROSS_SHA_CREDIT=0
+
+PROMOTE=0
+CERTIFIED=0
+GUI_COMPLETE=0

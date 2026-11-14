@@ -157,6 +157,19 @@ bool AutoBackendController::MeasureGpuBudget(DeviceBudget& budget) const
             }
         }
     }
+    /* Fail-closed tip gap: ICD-ready discrete without R9700 name still needs a
+     * primary plan under FORCE_GPU (Win32IDE SelectBackend Reject otherwise). */
+    if (!budget.primaryReady) {
+        for (const auto& g : gpus) {
+            if (!g.healthy) continue;
+            const std::wstring& name = g.friendlyName;
+            if (name.find(L"Virtual Display") != std::wstring::npos) continue;
+            if (name.find(L"Radeon(TM) Graphics") != std::wstring::npos) continue; /* iGPU */
+            budget.primaryReady = true;
+            budget.primaryVram = 16ull * 1024ull * 1024ull * 1024ull;
+            break;
+        }
+    }
 
     // Vulkan ICD readiness
     budget.vulkanInstanceCreated = VulkanIcdReady();

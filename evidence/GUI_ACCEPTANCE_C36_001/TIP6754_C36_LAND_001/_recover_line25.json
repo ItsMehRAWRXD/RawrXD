@@ -1,0 +1,4 @@
+{
+  "command": "(Get-Item \"g:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_LSPClient.cpp\").Length; (Get-Content \"g:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_LSPClient.cpp\" | Measure-Object -Line).Lines; Select-String -Path \"g:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_LSPClient.cpp\" -Pattern \"c36_stage|c36StageAppend|c36Phase|PIPE\u2192|init_wait_ok\" | Select-Object -First 25 LineNumber,Line",
+  "description": "Verify restored LSPClient.cpp content"
+}

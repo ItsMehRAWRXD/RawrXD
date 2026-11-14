@@ -5,7 +5,13 @@
 
 int main(int argc, char** argv) {
     rawr::CliArgs a = rawr::ParseArgs(argc, argv);
-    if (a.help || a.cmd.empty()) {
+    const bool cmdHelp =
+        a.cmd == "--help" || a.cmd == "-h" || a.cmd == "help";
+    if (a.help || cmdHelp) {
+        rawr::PrintUsage();
+        return rawr::ExitCode::Ok;
+    }
+    if (a.cmd.empty()) {
         rawr::PrintUsage();
         return rawr::ExitCode::Usage;
     }
@@ -19,6 +25,7 @@ int main(int argc, char** argv) {
     if (a.cmd == "resume") return rawr::CmdResume(a);
     if (a.cmd == "term") return rawr::CmdTerm(a);
     if (a.cmd == "serve") return rawr::CmdServe(a);
+    if (a.cmd == "debug") return rawr::CmdDebug(a);
     rawr::PrintUsage();
     return rawr::ExitCode::Usage;
 }

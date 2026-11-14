@@ -112,6 +112,10 @@ inline int ProductStreamerPrep() {
         SetEnv("DEEP2_MINIMAL_ENHANCE", "1");
         /* HOST_DECODE move is mmap NVMe→RAM, not reverse-chunk bunnyhop. */
         SetEnv("RAWRXD_NVME_REVERSE_BUNNYHOP", "0");
+        /* Product loadModel: ReverseHotpatch Stage2 AV on clean GGUF (066c). */
+        SetEnvIfUnset("RAWRXD_SKIP_REVERSE_HOTPATCH", "1");
+        /* Digest/provenance discovery-only; skip so INIT_AFTER can land. */
+        SetEnvIfUnset("RAWRXD_SKIP_DIGEST", "1");
         /* Force Vulkan loader off ICD scan (relative .\amdvlk64.dll + missing
          * System32 copy → ERROR_INVALID_PARAMETER / error 87 MessageBox). */
         SetEnv("VK_ICD_FILENAMES", "C:\\rawrxd_blocked_no_vulkan_icd.json");
@@ -131,29 +135,41 @@ inline int ProductStreamerPrep() {
         std::fflush(stderr);
         return 1;
     }
-    const char* armDs = std::getenv("DEEP2_DUALSTICK_ARM");
-    DualStickMarkRequested(!(armDs && armDs[0] == '0'));
-    DeviceManagerSnapshot snap{};
-    MibParseResult bud =
-        ParseMibTokenEx(std::getenv("DEEP2_WEIGHT_BUDGET_MIB"));
-    if (Deep2Device_Enumerate(snap)) {
-        (void)Deep2Device_ApplyPolicy(snap);
-        if (!(armDs && armDs[0] == '0')) {
+    /* tip 6754 receipt: ArmSpeed only before loadModel. Pre-load DualStick
+     * enum / FreeToken / Future / GPU_FWD force → INIT SEH on Win32IDE
+     * absorb (557F/8CCC/7BED). Opt-in full arm: RAWRXD_PRELOAD_FULL_ARM=1. */
+    const char* fullArm = std::getenv("RAWRXD_PRELOAD_FULL_ARM");
+    if (fullArm && fullArm[0] == '1') {
+        const char* armDs = std::getenv("DEEP2_DUALSTICK_ARM");
+        DualStickMarkRequested(!(armDs && armDs[0] == '0'));
+        DeviceManagerSnapshot snap{};
+        MibParseResult bud =
+            ParseMibTokenEx(std::getenv("DEEP2_WEIGHT_BUDGET_MIB"));
+        const char* skipDev = std::getenv("RAWRXD_SKIP_DEVICE_ENUM");
+        const bool noDs = (armDs && armDs[0] == '0');
+        if (!(skipDev && skipDev[0] == '1') && !noDs &&
+            Deep2Device_Enumerate(snap)) {
+            (void)Deep2Device_ApplyPolicy(snap);
             DualStickWindowPlan wp =
                 PlanDualStickWindows(snap, bud.bytes);
             ArmDualStickNoTruncate(wp);
         }
+        SetEnvIfUnset("DEEP2_GPU_FWD", "1");
+        SetEnvIfUnset("RAWRXD_GPU_FWD", "1");
+        SetEnv("RAWRXD_HOST_DECODE", "0");
+        freetoken::Init(FREETOKEN_ZONE_BYTES, 4);
+        future::InitFromPhysicalPool();
+    } else {
+        DualStickMarkRequested(false);
+        /* tip/minimal: still skip ReverseHotpatch (loadModel INIT_BEFORE SEH). */
+        SetEnvIfUnset("RAWRXD_SKIP_REVERSE_HOTPATCH", "1");
+        /* Digest/provenance discovery-only; skip so INIT_AFTER can land. */
+        SetEnvIfUnset("RAWRXD_SKIP_DIGEST", "1");
+        std::fprintf(stderr, "PRODUCT_STREAMER_TIP_MINIMAL_PREP=1\n");
+        std::fflush(stderr);
     }
-    SetEnvIfUnset("DEEP2_GPU_FWD", "1");
-    SetEnvIfUnset("RAWRXD_GPU_FWD", "1");
-    SetEnv("RAWRXD_HOST_DECODE", "0");
-    freetoken::Init(FREETOKEN_ZONE_BYTES, 4);
-    future::InitFromPhysicalPool();
     armed.store(1);
-    std::fprintf(stderr,
-                 "PRODUCT_LAA=%d HOST_DECODE=0 ALLOW_GPU=1 "
-                 "PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1 GPU_DEFAULT=1\n",
-                 ProcessIsLargeAddressAware() ? 1 : 0);
+    std::fprintf(stderr, "PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1\n");
     if (experimental_ssm::AllowFlag())
         experimental_ssm::EmitAuthResume(stderr, 0);
     std::fflush(stderr);

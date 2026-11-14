@@ -31,6 +31,10 @@ struct PhysicalReducePlan {
     uint64_t moeLayerCount = 0;
     uint64_t topK = 0;
     std::string reason;
+    std::string calibrationStatus = "NONE";
+    std::string exportStatus = "NONE";
+    std::string exportPath;
+    std::string exportSha256;
 };
 
 bool BuildPhysicalReducePlan(const RuntimePlan& runtime,

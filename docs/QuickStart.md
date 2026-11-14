@@ -1,135 +1,33 @@
-# RawrXD Quick Start Guide
+# RawrXD Quick Start — HISTORICAL / REDIRECT
 
-Get up and running with RawrXD in 5 minutes.
+**STATUS:** `HISTORICAL` · **ASOF:** 2026-11-13 · **PROMOTE=0** · **CERTIFIED=0** · **RELEASE=HELD**
 
-> **Fail-closed (2026-11-13):** Prefer repo-root [`INSTALL.md`](../INSTALL.md).  
-> Pre-built URL examples below may not match current GitHub assets (`NOT_RUN!=PASS`).  
-> Package managers: [`distribution/README.md`](../distribution/README.md) (`NOT_PUBLISHED`).
+> **Fail-closed:** Pre-built URL examples, `rawrxd --version`, `rawrxd model pull`,
+> and package-manager snippets previously shown here are **NOT_PUBLISHED** /
+> **NOT_RUN**. **Clean-VM install witness = ABSENT** (invent forbidden).
+> Prefer repo-root [`INSTALL.md`](../INSTALL.md).
 
-## Prerequisites
+**Authority:** [`INSTALL.md`](../INSTALL.md) · [`guides/LOCAL_INSTALL.md`](guides/LOCAL_INSTALL.md)  
+**Distribution:** [`distribution/README.md`](../distribution/README.md) (`NOT_PUBLISHED=1`)  
+**Version drift:** `evidence/PRODUCTION_MATURITY_TOP25_001/VERSION_DRIFT.txt` (document-only)
 
-- **OS**: Windows 10/11, Ubuntu 20.04+, macOS 12+
-- **Compiler**: C++17 compatible (MSVC 2019+, GCC 9+, Clang 10+)
-- **CMake**: 3.16 or higher
-- **Python**: 3.8+ (for scripts)
+## Measured first commands
 
-## Installation
-
-### Option 1: Pre-built Binaries (Recommended)
-
-```bash
-# Download latest release
-curl -L https://github.com/ItsMehRAWRXD/RawrXD/releases/latest/download/rawrxd-linux-x64.tar.gz | tar xz
-
-# Add to PATH
-export PATH="$PWD/rawrxd/bin:$PATH"
-
-# Verify installation
-rawrxd --version
+```powershell
+cmake -G Ninja -S . -B build_ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
+ninja -C build_ninja bin/rawr.exe
+.\scripts\Verify-RawrLocalInstall.ps1
+.\build_ninja\bin\rawr.exe --help
+.\build_ninja\bin\rawr.exe paths
 ```
 
-### Option 2: Build from Source
+First inference: see [`INSTALL.md`](../INSTALL.md). Do not cite this file for
+winget/choco/brew/MSI/DMG green paths.
 
-```bash
-# Clone repository
-git clone --recursive https://github.com/ItsMehRAWRXD/RawrXD.git
-cd RawrXD
+## Legacy sections — HISTORICAL (do not follow)
 
-# Configure build
-cmake -B build -DCMAKE_BUILD_TYPE=Release
+Older QuickStart bodies (curl tarball, `rawrxd chat`, invented C++ Runtime API
+snippets) are non-authoritative drafts. Git history retains them; product path
+is local `rawr.exe` only under the recognition evidence pack.
 
-# Build
-cmake --build build --parallel
-
-# Install
-sudo cmake --install build
-```
-
-## Your First Inference
-
-### 1. Download a Model
-
-```bash
-# Download a GGUF model (e.g., Llama 2 7B Q4_K_M)
-rawrxd model pull llama2-7b-q4km
-
-# Or use your own
-rawrxd model add /path/to/your/model.gguf --name my-model
-```
-
-### 2. Run Inference
-
-```bash
-# Interactive mode
-rawrxd chat --model llama2-7b-q4km
-
-# Single prompt
-rawrxd complete --model llama2-7b-q4km --prompt "Hello, world!"
-
-# From file
-rawrxd complete --model llama2-7b-q4km --file input.txt
-```
-
-### 3. Programmatic API (C++)
-
-```cpp
-#include <rawrxd/RawrXD.hpp>
-
-int main() {
-    // Initialize runtime
-    auto runtime = rawrxd::Runtime::Create();
-    runtime->Initialize();
-    
-    // Load model
-    auto model = runtime->LoadModel("llama2-7b-q4km");
-    
-    // Create session
-    auto session = runtime->CreateSession(model);
-    
-    // Generate text
-    auto result = session->Complete("Hello, world!");
-    if (result.IsOk()) {
-        std::cout << result.Value() << std::endl;
-    }
-    
-    return 0;
-}
-```
-
-## Configuration
-
-### Global Config
-
-```bash
-# Edit global config
-rawrxd config edit
-
-# Or set specific values
-rawrxd config set inference.threads 8
-rawrxd config set inference.gpu_layers 35
-```
-
-### Per-Session Config
-
-```cpp
-rawrxd::SessionConfig config;
-config.maxTokens = 512;
-config.temperature = 0.7f;
-config.topP = 0.9f;
-
-auto session = runtime->CreateSession(model, config);
-```
-
-## Next Steps
-
-- [Build Guide](Build.md) - Detailed build instructions
-- [Architecture Overview](Architecture.md) - Understand RawrXD design
-- [Examples](Examples.md) - More code samples
-- [API Reference](../include/rawrxd/) - Complete API documentation
-
-## Getting Help
-
-- **Issues**: [GitHub Issues](https://github.com/ItsMehRAWRXD/RawrXD/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/ItsMehRAWRXD/RawrXD/discussions)
-- **FAQ**: [Frequently Asked Questions](FAQ.md)
-- **Troubleshooting**: [Troubleshooting Guide](Troubleshooting.md)
+*RawrXD QuickStart — HISTORICAL redirect · ASOF 2026-11-13 · PROMOTE=0*
