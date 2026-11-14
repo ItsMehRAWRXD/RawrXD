@@ -6,6 +6,7 @@
 #include "K2MLA_FusedQ4KT.hpp"
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 
 namespace rawr::product_path {
 
@@ -17,6 +18,13 @@ inline uint64_t WallNsFromSpt() noexcept {
 
 inline void Emit(FILE* f, const Facts& xf) noexcept {
     if (!f) f = stderr;
+    if (const char* m = std::getenv("RAWRXD_A8_MIN_TEARDOWN");
+        m && m[0] == '1') {
+        std::fprintf(f, "A8_MIN_TEARDOWN=1 SKIP_PRODUCT_PATH_SEAL=1 "
+                        "TOKENS_COMMITTED=%u PROMOTE=0\n",
+                     xf.tokensCommitted);
+        return;
+    }
     std::fprintf(f,
                  "RAWRXD_PRODUCT_PATH_001=1\n"
                  "PRODUCT_PATH=CLI|IDE|Bridge→Deep2Engine::generateStream→"

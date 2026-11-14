@@ -154,13 +154,15 @@ bool RunNativeInferenceSync(const std::string& prompt,
         // Hard-cap + stream early-stop on first TOOL_CALL JSON (no long ramble).
 #ifdef _WIN32
         /* Keep GPU session (HOST_DECODE flip after ProductOpen → C0000374).
-         * Skip seal fprintf via A8_MIN_TEARDOWN (post-decode C0000409 @ MEAN_TOKEN_WALL). */
+         * R75: skip ProductPathSeal/product::Emit (A2) — R74 C0000409 mid
+         * MEAN_TOKEN_WALL_NS stdout flush after TOOL_CALL early-stop. */
         _putenv_s("RAWRXD_NVME_REVERSE_BUNNYHOP", "0");
         _putenv_s("DEEP2_LIVE_PATH", "0");
         _putenv_s("RAWRXD_LIVE_PATH", "0");
         _putenv_s("DEEP2_LIVE_POLICY", "OFF");
         _putenv_s("DEEP2_LIVE_MECH", "none");
         _putenv_s("RAWRXD_A8_MIN_TEARDOWN", "1");
+        _putenv_s("DEEP2_ISOLATION_RUN", "A2");
 #endif
         constexpr uint32_t kA8ToolTokCap = 24u;
         const uint32_t tok =
@@ -191,10 +193,13 @@ bool RunNativeInferenceSync(const std::string& prompt,
             }
             return text.size() < 384u;
         };
-        if (!rawr::ProductDeep2InferStream(fit.c_str(), tok, onPiece, &text,
-                                           &failedStage, &failedOwner, &exitReason,
-                                           &firstTok) ||
-            firstTok == 0) {
+        const bool streamOk = rawr::ProductDeep2InferStream(
+            fit.c_str(), tok, onPiece, &text, &failedStage, &failedOwner,
+            &exitReason, &firstTok);
+        /* Early-stop CANCELLED → productPass=0; TOOL_CALL text still usable. */
+        const bool toolEmit =
+            firstTok != 0 && text.find("TOOL_CALL:") != std::string::npos;
+        if ((!streamOk && !toolEmit) || firstTok == 0) {
             error = "ProductDeep2InferStream failed (MODEL_RESIDENT session open)";
             if (failedStage) {
                 error.append(" stage=").append(failedStage);

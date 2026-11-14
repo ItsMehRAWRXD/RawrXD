@@ -9,6 +9,7 @@
 #include "ProductE2EBlocker.hpp"
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 
 namespace rawr::product {
 
@@ -34,6 +35,14 @@ inline double DecodeTps(uint64_t tok, uint64_t wallNs) noexcept {
 }
 
 inline void Emit(const EmitArgs& a) noexcept {
+    /* A8 peer: skip heavy printf — R74 GS failfast @ MEAN_TOKEN_WALL_NS. */
+    if (const char* m = std::getenv("RAWRXD_A8_MIN_TEARDOWN");
+        m && m[0] == '1') {
+        std::fprintf(stderr, "A8_MIN_TEARDOWN=1 SKIP_PRODUCT_E2E_EMIT=1 "
+                             "TOKENS_COMMITTED=%llu PROMOTE=0\n",
+                     (unsigned long long)a.tokensCommitted);
+        return;
+    }
     const double tps = DecodeTps(a.tokensCommitted, a.wallNs);
     const uint64_t meanWall =
         (a.tokensCommitted && a.wallNs) ? (a.wallNs / a.tokensCommitted) : 0ull;

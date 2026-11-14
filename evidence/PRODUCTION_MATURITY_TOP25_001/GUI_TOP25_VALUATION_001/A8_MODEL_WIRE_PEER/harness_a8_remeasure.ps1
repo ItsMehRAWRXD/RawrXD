@@ -97,6 +97,9 @@ $psi.EnvironmentVariables['DEEP2_WEIGHT_BUDGET_MIB']='8192'
 $psi.EnvironmentVariables['WEIGHT_BUDGET_INPUT']='8192'
 # Kill reverse bunnyhop reconstruct (R74 C0000409 mid-prefill on TinyLlama).
 $psi.EnvironmentVariables['RAWRXD_NVME_REVERSE_BUNNYHOP']='0'
+# R75: skip ProductPathSeal/product::Emit (A2) — post-decode MEAN_TOKEN_WALL GS.
+$psi.EnvironmentVariables['RAWRXD_A8_MIN_TEARDOWN']='1'
+$psi.EnvironmentVariables['DEEP2_ISOLATION_RUN']='A2'
 # Clear stale MODEL_RESIDENT crumb from prior peer runs (R73e false-positive).
 $staleCrumb = Join-Path $peerRoot 'logs\MODEL_RESIDENT_CRUMB.txt'
 if (Test-Path $staleCrumb) { Remove-Item $staleCrumb -Force -EA SilentlyContinue }
