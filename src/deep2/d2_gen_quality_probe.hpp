@@ -43,6 +43,19 @@ struct D2GenQualityProbe {
         std::fflush(f);
     }
 
-    void close() { if (owned && f) std::fclose(f); f=nullptr; owned=false; }
+    // AVFIX083: tip-land F599 SEH at resetGenQualityProbe→fclose with
+    // READ VA=FFFFFFFFFFFFFFFF (poison/sentinel FILE*). Reject non-plausible
+    // pointers; drop ownership (FILE leak until process exit is OK).
+    void close() {
+        FILE* fp = f;
+        const bool o = owned;
+        f = nullptr;
+        owned = false;
+        if (!o || !fp) return;
+        const auto u = reinterpret_cast<uintptr_t>(fp);
+        if (u <= 0x10000ull || u >= (static_cast<uintptr_t>(-1) - 0x1000ull))
+            return;
+        std::fclose(fp);
+    }
     ~D2GenQualityProbe() { close(); }
 };

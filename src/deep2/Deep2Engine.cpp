@@ -1546,6 +1546,62 @@ Deep2Engine::~Deep2Engine() {
     CrashRecovery::shutdown();
     std::fprintf(stderr, "[LIFE] CrashRecovery disarmed\n");
     std::fflush(stderr);
+    /* CloseSession may already unloadModel (NOT_STREAMABLE) — second pass
+     * double-frees gguf/MARS/elastic → ntdll 0xC0000374 @ +0x112fc5. */
+    const bool alreadyClosed =
+        (modelState_ == ModelState::Closed) && !modelWeights.loaded;
+    std::fprintf(stderr, "[LIFE] alreadyClosed=%d\n", alreadyClosed ? 1 : 0);
+    std::fflush(stderr);
+    if (alreadyClosed) {
+        /* CloseSession already unloadModel'd — further free/Shutdown races
+         * ntdll 0xC0000374. Detach unique_ptrs (no deleters); process exit
+         * reclaims. Product open-fail path only; PROMOTE=0. */
+        std::fprintf(stderr, "[LIFE] alreadyClosed fast-exit\n");
+        std::fflush(stderr);
+        marsEnabled_ = false;
+        (void)marsController_.release();
+        marsLayerLeases_.clear();
+        (void)cyclone_.release();
+        (void)elasticResidency_.release();
+        (void)compressedKV_.release();
+        (void)toroidalKV_.release();
+        (void)vulkanCompute_.release();
+        for (auto& vc : vulkanDevices_) (void)vc.release();
+        vulkanDevices_.clear();
+        (void)telemetryController_.release();
+        (void)residencyTelemetry_.release();
+        (void)residencyManager_.release();
+        (void)residencyCache_.release();
+        (void)globalIndex_.release();
+        (void)threadPool.release();
+        (void)kvCache.release();
+        (void)sampler.release();
+        (void)medusaDecoder_.release();
+        (void)nuPacker_.release();
+        (void)warmupScheduler_.release();
+        (void)nvmeStream_.release();
+        (void)slidingWindow_.release();
+        (void)reverseIntegration_.release();
+        (void)bp16Streamer_.release();
+        (void)tokenizer.release();
+        (void)profiler_.release();
+        (void)chamber_.release();
+        (void)plasmaGovernor_.release();
+        (void)sovereignRuntime_.release();
+        (void)moeWeightProxy_.release();
+        (void)moeWeightsLoader_.release();
+        (void)moeLayer_.release();
+        for (auto& r : moeRouters_) (void)r.release();
+        moeRouters_.clear();
+        for (auto& s : moeShardLoaders_) (void)s.release();
+        moeShardLoaders_.clear();
+        moePinnedHandles_.clear();
+        genQualityProbe_ = nullptr;
+        std::fprintf(stderr, "[LIFE] ~Deep2Engine END\n");
+        std::fflush(stderr);
+        Td(11, "CLEAN_EXIT");
+        return;
+    }
     resetGenQualityProbe();
 
     std::fprintf(stderr, "[LIFE] disableMARS\n");
@@ -1576,10 +1632,15 @@ Deep2Engine::~Deep2Engine() {
     toroidalKVEnabled_ = false;
     Td(4, "KV_RELEASE_END");
 
-    std::fprintf(stderr, "[LIFE] unloadModel\n");
-    std::fflush(stderr);
-    MoEPlaceLiveEmit(stderr);
-    unloadModel();
+    if (alreadyClosed) {
+        std::fprintf(stderr, "[LIFE] skip unloadModel (already Closed)\n");
+        std::fflush(stderr);
+    } else {
+        std::fprintf(stderr, "[LIFE] unloadModel\n");
+        std::fflush(stderr);
+        MoEPlaceLiveEmit(stderr);
+        unloadModel();
+    }
 
     std::fprintf(stderr, "[LIFE] release MoE\n");
     std::fflush(stderr);
@@ -11266,40 +11327,17 @@ void Deep2Engine::computeLogits(const float* hiddenState, float* logits) {
 }
 
 void Deep2Engine::resetGenQualityProbe() {
-    genQualityOrdinal_ = 0;
-    genQualityTokRoundtrip_ = 1;
-    // AVFIX083: STREAM_SEH READ VA=-1 in ucrt fclose — poison FILE* or wild
-    // genQualityProbe_ after llama32 elastic heap thrash. Disarm; never fclose.
-    void* raw = genQualityProbe_;
-    genQualityProbe_ = nullptr;
-    if (!raw) return;
-#ifdef _WIN32
-    MEMORY_BASIC_INFORMATION mbi{};
-    if (VirtualQuery(raw, &mbi, sizeof(mbi)) == 0 || mbi.State != MEM_COMMIT ||
-        !(mbi.Protect & (PAGE_READONLY | PAGE_READWRITE | PAGE_WRITECOPY |
-                         PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE |
-                         PAGE_EXECUTE_WRITECOPY))) {
-        std::fprintf(stderr, "AVFIX083_SKIP_WILD_PROBE=%p\n", raw);
-        std::fflush(stderr);
-        return;
-    }
-#endif
-    auto* p = static_cast<D2GenQualityProbe*>(raw);
-    p->f = nullptr;
-    p->owned = false;
-    delete p;
+    // AVFIX083: tip-land seh ProductRuntime::Eng() uses sizeof(Deep2Engine)==0x2868
+    // so ProductRuntime::ext lives at +0x2868. Writing genQualityOrdinal_/
+    // tokRoundtrip_/probe_ at +0x2860/+0x286C/+0x2870 poisons ext→0x100000000
+    // and modelAlias; teardown fclose's string bytes as FILE*
+    // (F599 RIP RVA 0x1F3A82D READ VA=-1). No-op until sizeof ABI sync.
 }
 
 void Deep2Engine::armGenQualityProbe() {
     resetGenQualityProbe();
-    const char* path = std::getenv("DEEP2_GEN_QUALITY_TRACE");
-    if (!path || !path[0]) return;
-    auto* p = new D2GenQualityProbe();
-    if (!p->open(path)) {
-        delete p;
-        return;
-    }
-    genQualityProbe_ = p;
+    // AVFIX083: refuse arm while quality offsets alias ProductRuntime::ext.
+    (void)std::getenv("DEEP2_GEN_QUALITY_TRACE");
 }
 
 void Deep2Engine::emitGenQualityProbe(int selected, const float* logits,
@@ -12094,6 +12132,23 @@ void Deep2Engine::enableAllEnhancements() {
         config.numKVHeads ? config.numKVHeads : modelWeights.numKVHeads;
     compressedKVConfig_.headDim =
         config.headDim ? config.headDim : modelWeights.headDim;
+    /* Bound host CKV/torus window. Full GGUF ctx (e.g. 131072) → multi-GB
+     * CompressedKV (~8GB) then ProductRun bad_alloc 0xE06D7363 before ENTER
+     * after keep-GPU pin (23B5115F). Mirror GPU arena 4096 working window. */
+    {
+        size_t bound = 4096;
+        if (const char* e = std::getenv("DEEP2_KV_WORKING_SEQ")) {
+            const long v = std::strtol(e, nullptr, 10);
+            if (v > 0) bound = static_cast<size_t>(v);
+        }
+        if (compressedKVConfig_.maxSeqLen > bound)
+            compressedKVConfig_.maxSeqLen = bound;
+        std::fprintf(stderr,
+            "KV_WORKING_SEQ_BOUND=%zu ckv_torus (gguf_ctx=%zu)\n",
+            compressedKVConfig_.maxSeqLen,
+            config.maxSeqLen ? config.maxSeqLen : 0);
+        std::fflush(stderr);
+    }
     if (modelWeights.loaded) {
         const size_t torus = compressedKVConfig_.maxSeqLen;
         if (EnhanceWanted("torus"))
@@ -13776,16 +13831,32 @@ Deep2Engine::MARSPlacementReport Deep2Engine::placeAllModelTensorsMARS() {
             return;
         }
         /* Honor ExecutionPolicy. embeddings AutoDetect=Host → Place+Evict
-         * token_embd during open (keep-at-place → gguf=0 OPEN_FAIL on
-         * 1EFF/F73F). Stream Restores embd before GENERATE_STREAM_ENTER. */
+         * thrash → STREAM_SEH VA=-1. Broad keepGPU (pin||IsPinnedPattern)
+         * → 1EFF OPEN_FAIL. Name-exact token_embd keep under GPU product. */
         {
             using namespace Deep2::Exec;
             EnsurePolicyLoaded();
             const DeviceKind want =
                 PlannedDeviceForTensor(ActivePolicy(), name, layer);
             const int wantGpu = DeviceKindToGpuIndex(want);
-            if (want == DeviceKind::Stream || want == DeviceKind::Disk ||
-                want == DeviceKind::Host) {
+            const char* fg = std::getenv("RAWR_FORCE_GPU");
+            const char* ag = std::getenv("RAWRXD_ALLOW_GPU");
+            const char* hd = std::getenv("RAWRXD_HOST_DECODE");
+            const bool gpuProduct =
+                vulkanEnabled_ ||
+                (fg && fg[0] == '1') || (ag && ag[0] == '1');
+            const bool hostDecode = (hd && hd[0] == '1');
+            const bool keepTokenEmbd =
+                gpuProduct && !hostDecode && pin &&
+                (name == "token_embd.weight" ||
+                 name == "token_embeddings.weight");
+            if (keepTokenEmbd) {
+                lease->pinned = true;
+                printf("[Deep2Engine] MARS keep-GPU pin '%s' "
+                       "(skip Host/Stream Evict under GPU product)\n",
+                       name.c_str());
+            } else if (want == DeviceKind::Stream || want == DeviceKind::Disk ||
+                       want == DeviceKind::Host) {
                 if (lease->currentGPU >= 0)
                     marsController_->GetVRAMManager()->Evict(lease);
             } else if (wantGpu >= 0 && lease->currentGPU != wantGpu) {
