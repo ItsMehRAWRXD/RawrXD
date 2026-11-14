@@ -1,0 +1,61 @@
+AA4F8530_GEMMA_AV_FORENSICS_001
+ASOF_LOCAL=2026-11-13T22:22:00-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 NOT_RUN!=PASS
+CAND_SHA256=AA4F853099E1F022DC6F9461B833B993953E043DEC98B7838B5A7E8F30856BBA
+SHA8=AA4F8530
+EXE=clean_link/LOCKED/RawrXD-Win32IDE_tip_land_m1m2_081b.exe
+WITNESS_META=ide_tipland_m1m2_081b_gemma3_AA4F853099E1F022_20261113_220449.meta.txt
+TIP_RO=6754616E UNTOUCHED=1
+
+## EmitSehFacts (product_deep2_infer_seh.cpp)
+EMITSEH_CAPTURED=0
+WHY=crash after PRODUCT_OPEN SESSION_EXIT ok=1 during VRAM residency upload
+  (stdout truncates mid "[VRAMMana" / blk.25.ffn_*); outside OpenSeh/StreamSeh/CloseSeh
+  → PRODUCT_DEEP2_*_SEH lines absent; process dies 0xC0000005 before stream SEH
+
+## WER Application Error Id=1000
+TIME=2026-11-13T22:06:15-05:00
+REPORT_ID=9d70e079-5679-4d05-8830-df869dd510d9
+WER_ARCHIVE=C:\ProgramData\Microsoft\Windows\WER\ReportArchive\AppCrash_RawrXD-Win32IDE__603b323a1b559263d1c65b3d8e752286d4cff8_618df18d_72b77ece-fc64-44c6-91a7-0985d139952c
+Faulting application=RawrXD-Win32IDE_tip_land_m1m2_081b.exe
+Faulting module=self (same path)
+Exception code=0xc0000005
+Exception Offset / FaultOffset=0x00000000018cef48
+
+## Minidump (CrashDumps)
+DMP=C:\Users\Garrett\AppData\Local\CrashDumps\RawrXD-Win32IDE_tip_land_m1m2_081b.exe.34116.dmp
+EXCEPTION_CODE=0xC0000005
+EXCEPTION_ADDRESS=0x7FF6DA99EF48
+ACCESS=READ (ExceptionInformation[0]=0)
+VA=0x167 (ExceptionInformation[1]=0x167)  # near-NULL +0x167 field deref
+MODULE=G:\~dev\rawrxd\...\LOCKED\RawrXD-Win32IDE_tip_land_m1m2_081b.exe
+MODULE_BASE=0x7FF6D90D0000
+MODULE_SIZE=0x140B0000
+RVA=EXCEPTION_ADDRESS-MODULE_BASE=0x18CEF48  # matches WER FaultOffset
+
+## Map resolve (PreferredLoad=0x140000000; MAP=LOCKED/..._m1m2_081b.map)
+CONTAINING_SYM=?emergencyRollback@HotPatcher@Deep2@@QEAA_NXZ
+CONTAINING_OBJ=HotPatcher.cpp.obj
+SYM_RVA=0x18CEEC0  DELTA_INTO_SYM=+0x88
+NEAR=MemoryProtector::flushCache / HotPatcher::* cluster @ 0x18CE*
+≠ Deep2Engine_GpuForward  ≠ kvCacheFp16RoundTrip(headScratch) site (forward path not reached)
+
+## Stack
+STACK_FRAMES=NOT_CAPTURED
+  EmitSeh CaptureStackBackTrace = NOT_RUN (crash outside SEH filter)
+  cdb.exe = ABSENT on host this turn
+  WER Report.wer = signature only (no stack blob)
+NOTE=live RIP≡EXCEPTION_ADDRESS; map symbol is best static attribution
+
+## Runtime context
+GENERATED_TOKENS=0 TOKEN_SURVIVED=0
+PRODUCT_OPEN_CRITICAL_TENSORS=PASS SESSION_EXIT_OK=1
+CRASH_SITE_LOG=mid VRAM upload ~blk.25.ffn_*
+CONTROL_7FD1F270 gemma TOK=8 SEH=0 HD=0 (qDim-only tip_land pin)
+
+## Disposition
+FORENSICS_CLOSED=1 (ADDRESS/MODULE/RVA/ACCESS/VA + map SYM)
+ROOT_CAUSE_CLASS=READ_AV_NEAR_NULL_IN_HotPatcher_emergencyRollback_DURING_VRAM_BLK25
+  (HotPatcher may be cleanup/false-lead on corrupt this*; primary link delta sealed separately)
+PROMOTE=0 TIP_CLIMB=HOLD REJECT_TIP_PROMOTE=1
+END

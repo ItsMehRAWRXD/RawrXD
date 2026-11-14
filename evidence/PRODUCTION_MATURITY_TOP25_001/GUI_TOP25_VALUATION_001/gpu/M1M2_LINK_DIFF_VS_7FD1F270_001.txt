@@ -1,0 +1,59 @@
+M1M2_LINK_DIFF_VS_7FD1F270_001
+ASOF_LOCAL=2026-11-13T22:22:00-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 NOT_RUN!=PASS
+
+## Pins
+FAIL_CAND=AA4F8530 tip_land_m1m2_081b  LINK=obj075_gemma_seal/link081b_m1m2.rsp (wiped mid-turn; content recovered from prior read)
+PASS_CTRL=7FD1F270 gemma_qdim077 / tip_land_qdim_m2  LINK=obj075_gemma_seal/link077.rsp (also wiped mid-turn)
+TIP=6754616E RO=1
+
+## Same in both rsp heads (isolation)
+OBJ_GPUFWD=obj075_gemma_seal/Deep2Engine_GpuForward.cpp.obj (qDim=wq.rows)
+OBJ_DEEP2_PATH=obj075_gemma_seal/Deep2Engine.cpp.obj  # PATH same; BYTES differ across builds
+OBJ_BODY=obj064 RawrRunSession_Body + ProductRuntime_Open_min + Deep2IDEIntegration + MoE stub
+GpuForward stripped from IE lib in BOTH (ARCHIVEMEMBERS GpuForward count=0)
+
+## IE lib membership
+InferenceEngine_qdim077.lib     size=213392552 sha16=0554479D77C58DA2
+InferenceEngine_m1m2_081b.lib   size=213392552 sha16=1373123F558B7E11
+LIB_MEMBER_NAME_DIFF_COUNT=0
+EXTRACT_IDENTICAL=
+  Deep2Engine.cpp.obj (lib)     sha16=138973C3624A2C3D size=7806260  (both)
+  HotPatcher.cpp.obj            sha16=20FFE03127B5E3C1              (both)
+  VRAMManager.cpp.obj           sha16=DE6FDD424A0711F4              (both)
+  ElasticResidencyManager.cpp.obj sha16=4C3ECD167DC89406            (both)
+  Deep2Engine_GpuToken.cpp.obj  sha16=33E24AE44424D1C1              (both)
+⇒ heap/elastic/HotPatcher/VRAM archive members NOT the AA4F vs 7FD1 delta
+⇒ whole-lib SHA differs for non-critical archive metadata/other members only
+
+## Explicit Deep2Engine.cpp.obj (link-line override; primary delta)
+BAK_PRE_M1M2  size=16486295 sha16=5B9021D76BAB00BE  (freeze _freeze_083)
+CURRENT@freeze size=16488363 sha16=7D4DEBD81B64D94F  (grew under concurrent cl.exe)
+AA4F link-time obj ≠ lib member (16MB debug vs 7.8MB archive); both BAK+CURRENT export kvCacheFp16RoundTrip
+PRIOR_STRIP_LIB_0E99 also AV (Deep2Engine stripped from IE; same class)
+
+## Isolation verdict
+NOT_CAUSED_BY=IE lib HotPatcher/VRAM/Elastic member swap (byte-identical)
+NOT_CAUSED_BY=GpuForward lib membership (absent both)
+NOT_CAUSED_BY=rsp object order of non-Deep2Engine head (identical)
+ISOLATED_DELTA=explicit rebuilt Deep2Engine.cpp.obj on tip_land m1m2 link
+  → gemma AV 0xC0000005 READ VA=0x167 @ RVA 0x18CEF48 HotPatcher::emergencyRollback+0x88
+  during VRAM ~blk.25 (before FP16 headScratch forward executes)
+FP16_CALLSITE_NOT_RUNTIME_REACHED=1 (crash pre-generate)
+CONTROL_QDIM_ONLY_7FD1F270 still TOK=8 SEH=0 HD=0
+
+## Private ABI-stable combine cand (this turn)
+PRIVATE_CAND_RELINK=NOT_RUN
+BLOCKER=clean_link aux tree wiped mid-session: CMakeFiles was missing (junction restored to
+  D:\rawrxd\build-fd\CMakeFiles) but 200+ link083 inputs still missing
+  (quickjs_static.lib, rguf, MonacoCore, reverse_engineering libs, many Win32IDE objs)
+cdb=ABSENT → no live stack walk beyond minidump EXCEPTION_*
+
+## ATTN_PRE_O on tip_land surface
+ATTN_PRE_O_ON_TIPLAND=NOT_RUN
+MISSING=Win32IDE tip_land lacks FIRST_DIVERGE stage-dump harness (CLI peer C72A48E9 only; CROSS_SHA=0)
+
+NEXT_GATE=RESTORE_CLEAN_LINK_OBJ_TREE_THEN_ISO_A_BAK_DEEP2_PLUS_QDIM077_LIB
+  OR surgical Deep2Engine rebuild that keeps 7FD1 layout + headScratch FP16 without near-NULL rollback AV
+PROMOTE=0
+END

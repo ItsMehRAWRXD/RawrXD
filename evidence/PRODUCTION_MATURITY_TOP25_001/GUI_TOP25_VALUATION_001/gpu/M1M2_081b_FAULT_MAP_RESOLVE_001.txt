@@ -1,0 +1,22 @@
+M1M2_081b_FAULT_MAP_RESOLVE_001
+ASOF_LOCAL=2026-11-13T22:14-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0
+CAND=RawrXD-Win32IDE_tip_land_m1m2_081b.exe
+MAP=clean_link/LOCKED/RawrXD-Win32IDE_tip_land_m1m2_081b.map (336MB)
+PRIOR_SHELL=575925 FAILED (full-map PowerShell parse OOM/timeout on 336MB)
+
+## Resolve (streaming Select-String; PreferredLoad=0x140000000)
+WER_FaultOffset=0x18CEF48  (treated as image RVA)
+CONTAINING≈Deep2::HotPatcher::emergencyRollback
+  map: 0001:018CDEC0  abs=00000001418CEEC0  HotPatcher.cpp.obj
+  fault VA≈0x1418CEF48 → +0x88 into emergencyRollback
+NEAR:
+  flushCache@MemoryProtector 0001:018CE130 abs=1418CF130
+  HotPatcher::* cluster dominates 0x18CE*
+
+## Disposition
+FAULT_OBJ=HotPatcher.cpp.obj (not Deep2Engine_GpuForward / not headScratch site)
+NOTE=may be crash-path cleanup / false lead if FaultOffset≠image RVA; confirm with live RIP
+NEXT=EmitSehFacts RIP/stack on AA4F8530 gemma AV; correlate HotPatcher vs VRAM blk.25
+PROMOTE=0
+END
