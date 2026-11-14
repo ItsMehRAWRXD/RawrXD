@@ -1,0 +1,2 @@
+MODEL_RESIDENT=1
+PATH=G:\~dev\rawrxd\models\tinyllama.gguf

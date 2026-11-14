@@ -1014,7 +1014,10 @@ private:
     int hostQ8Finite_ = 1;
     int hostQ8Bounds_ = 1;
     int hostQ8Parity_ = 1;
-    
+    /* AVFIX083: bare Eng==0x2860 after quality-off; pad restores seh
+     * ProductRuntime::ext@+0x2868 (TIP_LAND_AVFIX083_PEER_SEAL_003). */
+    uint8_t sehAbiPad083_[8]{};
+
     // Internal methods
     bool allocateBuffers();
     void deallocateBuffers();
