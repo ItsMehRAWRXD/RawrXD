@@ -1,0 +1,38 @@
+BR_G01_04_GUI_BACKEND_R77
+ASOF_LOCAL=2026-11-14T00:08:34-05:00
+ACTION=RESTORE_WIN32_NATIVE_DEBUG_BACKEND_AND_REMEASURE_GUI
+CERT=RAWRXD_ENTERPRISE_PRODUCT_CERT_001
+BRANCH=work/v0-first-divergence
+BUILD_HEAD=306d1c229799a65d4c7562498ba51596b67c05cf
+PRIOR=BR_G01_04_GUI_REBUILD_R76 (worker a5f614a1 EXIT=1 EXE=NONE)
+
+ROOT_FIX=
+  Restored src/win32app/Win32NativeDebugBackend.{h,cpp} (product NativeDebugBackend API)
+  Restored src/win32app/Win32IDE_NativeDebugBackend_Wire.cpp (ensure/launch/DAP E2E 9624)
+  Restored src/win32app/Win32IDE_CommandIDs.h
+  Wired src/snap/deep2_snap.hpp + snap_process_guard.hpp from tools/
+  Private tree: build_win32ide_g0104 + host MSVC/ninja (not HiH8e WinGet path)
+  Remeasure link: absorb075c rsp + Wire/NDB objs + Issue49CliWire + G0104 closure stub
+    → private OUT build_win32ide_g0104/bin/RawrXD-Win32IDE_g0104_r77.exe
+
+RESULT=EVIDENCE_PARTIAL
+EXIT_CODE=0
+EXE_SHA256=E4B6A937881CB5E068BA3CE647D59CBCD510F15915B222E5A8B7B6E0BD05421E
+BUILD_OK=1
+CLEAN_MACHINE=0
+CLEAN_CHECKOUT=0
+PASS_COUNT=0
+CHECKLIST_PASS=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+INVENT_PASS=0
+CROSS_SHA_CREDIT=0
+GUI_TIP_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431
+TIP_UNTOUCHED=1
+TIP_RO_COPY=build_ninja/bin/tip_land_6754616E.exe
+GATE_RECEIPT=receipts/G01-04_20261113_dde963941aa4.md
+CAPTURES=receipts/_g01_04_r77_*
+REVIEWER=SELF_MEASURE
+NOTE=Do not invent PASS; BUILD_OK=1 ≠ GATE PASS; tip 6754616E forensics/RO only; private EXE ≠ tip
+NEXT=G01-05 dual-build still needs disposition vs freeze pair; PROMOTE=0
+END

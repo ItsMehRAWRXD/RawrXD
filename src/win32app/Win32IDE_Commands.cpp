@@ -1,4 +1,4 @@
-// Menu Command System Implementation for Win32IDE
+﻿// Menu Command System Implementation for Win32IDE
 // Centralized command routing with 25+ features
 
 #include "../../include/benchmark_menu_widget.hpp"
@@ -982,19 +982,13 @@ void Win32IDE::handleEditCommand(int commandId)
             showReplaceDialog();
             break;
 
-        // Edit menu IDs from Win32IDE.cpp (2012-2019) — same actions as above or specific handlers
-        case 2016:  // IDM_EDIT_FIND (menu)
-            showFindDialog();
-            break;
-        case 2017:  // IDM_EDIT_REPLACE (menu)
-            showReplaceDialog();
-            break;
-        case 2018:  // IDM_EDIT_FIND_NEXT
+        // Edit menu IDs 2016/2017 alias IDM_EDIT_FIND/REPLACE — handled above.
+        case IDM_EDIT_FIND_NEXT:
             findNext();
             if (m_hwndStatusBar)
                 SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "Find Next");
             break;
-        case 2019:  // IDM_EDIT_FIND_PREV
+        case IDM_EDIT_FIND_PREV:
             findPrevious();
             if (m_hwndStatusBar)
                 SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "Find Previous");

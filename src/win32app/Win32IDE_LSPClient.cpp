@@ -1275,7 +1275,7 @@ void Win32IDE::onDiagnosticsReceived(const std::string& uri, const std::vector<L
                 std::string code = d.code.empty() ? "LSP" : d.code;
                 std::string source = d.source.empty() ? "lsp" : d.source;
                 agg.add("LSP", uriToFilePath(uri), d.range.start.line + 1, d.range.start.character + 1,
-                        d.message, sev, code, source);
+                        sev, code, d.message, source);
             }
             return;
         }

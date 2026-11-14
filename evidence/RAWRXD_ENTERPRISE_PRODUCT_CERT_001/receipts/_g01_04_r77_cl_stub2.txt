@@ -1,0 +1,4 @@
+
+G:\~dev\rawrxd>call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=amd64  1>nul 
+Win32IDE_G0104_LinkClosureStubs.cpp
+CL_EXIT=0
