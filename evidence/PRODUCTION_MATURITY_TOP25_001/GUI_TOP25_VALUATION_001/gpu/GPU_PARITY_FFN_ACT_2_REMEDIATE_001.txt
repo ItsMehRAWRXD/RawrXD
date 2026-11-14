@@ -1,7 +1,7 @@
 GPU_PARITY_FFN_ACT_2_REMEDIATE_001
 IMMUTABLE_RECEIPT=1
 DATE=2026-11-13
-ASOF_LOCAL=2026-11-13T22:30:00-05:00
+ASOF_LOCAL=2026-11-13T22:38:52-05:00
 OWNER=M1_FFN_ACT_2_REMEDIATE
 PACK=PRODUCTION_MATURITY_TOP25_001 / GUI_TOP25_VALUATION_001/gpu
 PROMOTE=0
@@ -22,13 +22,16 @@ GPU_PARITY_LAYER2_PLUS_C7402085_001.txt
 GPU_PARITY_ATTN_PRE_O_FP16_PRODUCT_WIRE_001.txt (layer0+1 PRE_O product-wire)
 GPU_PARITY_FIRST_MATERIAL_DIVERGENCE_001.txt (class abs/rel law)
 
-## Cand EXE (hash-verified this turn)
+## Cand EXE (hash-verified this turn; NO rebuild)
+PRODUCT_EXE=build_ninja/bin/rawr_gpufwd_C7402085.exe
 PRODUCT_PIN=FIRST_DIVERGE_001/pin/rawr_attn_pre_o_fp16_product_wire.exe
 SHA256=C74020852AC324FC6827A896060E5508F74569C7F53EB7198B9CDB92DEAEB750
-SHA_VERIFY=PASS
+SHA_VERIFY=PASS (both paths same digest)
 SPV_SHA256=AB7212EC2A30839EF51B9847F90C62CB2EEBCF4A010E122D0CBE0F228C8AC5D5 LEN=16292
 HOLD_IMMUTABLE=15A119D148572A4B3011AA9A8AFFE605F8FF40D64B7BF83673ECC10A9393C967
 TIP_IMMUTABLE=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431
+NO_REBUILD=1
+NO_LINK_THRASH=1
 
 ## ROOT_CAUSE_CLEAR=Y
 HYPOTHESIS_SiLU_GELU_ACT_KERNEL=REFUTED
@@ -47,37 +50,54 @@ EVIDENCE=
 OWNER=Q4_K×Q8_K GATE/UP ULP residual (FORCE_VULKAN SPV) product-amplified by correct SiLU
 NOT_OWNER=SiLU/SwiGLU formula, GELU mis-dispatch, FP16 act round-trip, broadcast layout
 
-## Minimal fix (SOURCE_WIRED; RUNTIME_REACHED=0 this turn)
-FILE=src/vulkan_fwd_quant_host.cpp
-CHANGE=When RAWRXD_QUANT_HOST_Q8K_PARITY=1, Q4 GEMV with rows>cols (FFN gate/up)
-  uses host QuantKernelRegistry even under RAWRXD_FORCE_VULKAN_QUANT_GEMV=1.
-  Attn Q4 (rows<=cols) still FORCE_VULKAN SPV (preserve ATTN_PRE_O_0 close).
-  Q6 host-under-FORCE unchanged (V_1 / ffn_down).
-OBJ_WITNESS=InferenceEngine.dir/src/vulkan_fwd_quant_host.cpp.obj contains
-  "Q6/FFN-Q4 rows>cols override FORCE_VULKAN"; InferenceEngine.lib rebuilt 10:28
-PRIVATE_EXE_LINK=BLOCKED (ninja thrash: missing ProductRuntime_Open.cpp source /
-  rawr_agent_status / lavapath stubs; HOLD/15A119/6754616E/C740 pin untouched)
+## Remeasure (this turn — C740 pin FORCE_VULKAN; no private link)
+EXE=build_ninja/bin/rawr_gpufwd_C7402085.exe
+ENV=RAWRXD_FORCE_VULKAN_QUANT_GEMV=1 RAWRXD_QUANT_HOST_Q8K_PARITY=0
+    RAWRXD_PROMPT_TOKEN_IDS=1,15043 RAWRXD_STAGE_DIGEST=1
+    RAWRXD_STAGE_DUMP_DIR=…/stage_dump_ffn_act2_c740_after
+    RAWRXD_STAGE_DUMP_MAX_LAYER=2
+CMD=FIRST_DIVERGE_001/remeasure_ffn_act2_c740_after.cmd
+COMPARE=GPU_PARITY_FFN_ACT_2_REMEDIATE_001.remeasure_after.compare.txt
+REF_SNAPSHOT=stage_dump_ffn_act2_c740_after_ref (seq283/285/287)
+DUMP_BITEXACT_VS_PRIOR_L2PLUS=Y (GATE/UP/ACT SHA256 match stage_dump_layer2_plus_C7402085)
 
-## Remeasure
-BEFORE maxAbs(FFN_ACT_2)=4.577637e-05 (sealed C740 FORCE_VULKAN PARITY=0)
-AFTER maxAbs(FFN_ACT_2)=NOT_RUN
-RUNTIME_REACHED=0
-TOKEN_SURVIVED=n/a
+BEFORE maxAbs(FFN_ACT_2)=4.577637e-05
+AFTER  maxAbs(FFN_ACT_2)=4.577637e-05
+UNDER_TOL=N
+RUNTIME_REACHED=1
+TOKEN_SURVIVED=1 (GENERATED_TOKENS=1)
 MATCH_PASS=0
 INVENT_PASS=0
 
+| Tensor     | maxAbs      | UNDER_TOL | Kind                |
+|------------|-------------|-----------|---------------------|
+| FFN_GATE_2 | 3.814697e-06| Y         | BITWISE_DIFF        |
+| FFN_UP_2   | 9.536743e-07| Y         | BITWISE_DIFF        |
+| FFN_ACT_2  | 4.577637e-05| N         | MATERIAL_DIVERGENCE |
+
+## Proposal (still MATERIAL; no act-kernel invent; no PCT rewrite)
+A) GATE/UP residual tighten: reduce Q4_K×Q8_K SPV ULP on FFN gate/up
+   (rows=5632 cols=2048) so product silu(gate)*up stays ≤1e-5 at |act|~161
+   (budget ≈ ≤1 ULP combined after amplify), OR
+B) Class-tol parent absorb: FFN abs_tol parent law absorb ULP-floor at large
+   |act| (e.g. max(abs_tol, k*ulp(|x|))) — parent decides; do NOT rewrite PCT here.
+REJECT invent MATCH_PASS / CLOSE / PROMOTE from remasure alone.
+HOST_Q4_ROWS_GT_COLS remains SOURCE_WIRED only (unlinked; not exercised).
+
 ## Explicit non-claims
-Do NOT invent MATCH_PASS / CLOSE from SOURCE_WIRED alone.
+Do NOT invent MATCH_PASS / CLOSE from remasure alone.
 Do NOT absorb over HOLD 15A119 / tip 6754616E.
 Do NOT raise PROMOTE.
-NEXT_GATE=PRIVATE_REBUILD_LINK_THEN_REMEASURE_FFN_ACT_2
-  (PARITY=1 FORCE_VULKAN=1; expect host path on rows=5632 cols=2048)
+Do NOT invent act-kernel fix (ROOT_CAUSE_CLEAR: ULP cascade from GATE/UP).
+NEXT_GATE=PARENT_CHOOSE_GATE_UP_TIGHTEN_OR_CLASS_TOL_ABSORB
 
 ## Verdict
 ROOT_CAUSE_CLEAR=Y
 SEAL_KIND=OPEN
-SOURCE_WIRED=1 RUNTIME_REACHED=0
-maxAbs before=4.577637e-05 after=NOT_RUN
+SOURCE_WIRED=1 (host Q4 rows>cols; unlinked)
+RUNTIME_REACHED=1 (C740 FORCE_VULKAN remasure)
+maxAbs before=4.577637e-05 after=4.577637e-05 UNDER_TOL=N
+MATCH_PASS=0
 PROMOTE=0
 TIP_CLIMB=HOLD
 TIP_BIND=6754616E
