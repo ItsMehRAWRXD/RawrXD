@@ -1,0 +1,29 @@
+BR_FFN_ACT_2_HOSTQ4_R63
+ASOF_LOCAL=2026-11-13T22:59:08-05:00
+AUTH=PARENT_BOARD_AUTHORITY / BOARD_SINGLE_WRITER
+PROMOTE=0 TIP_CLIMB=HOLD MATCH_PASS=0 INVENT_PASS=0 PCT_RAISE=0
+PCT_HELD=CLI67/GUI48/OVERALL48
+
+## Closed this turn
+GATE_UP_ULP_TIGHTEN exercised on C740 lineage via host Q4 rows>cols under FORCE.
+FFN_ACT_2 maxAbs 4.577637e-05 → 1.525879e-05 (3 ULP → 1 ULP)
+GATE/UP under FFN abs_tol; LAYER13 under LAYER tol; ATTN_PRE_O_14 PASS held.
+OFFLINE_PROBE confirms host Q8_K tighter than SPV on matched FFN_NORM_2.
+
+## Still OPEN (fail-closed)
+FFN_ACT_2 OR-law MATERIAL at 1 ULP (UNDER_TOL=N)
+ATTN_OUT_14 FUNCTIONAL_FAIL=1 maxAbs=3.617927e-04 (unchanged TRUE_FIRST)
+FINAL_NORM FUNCTIONAL_FAIL=1 maxAbs≈5.381761e-01
+DENSE_MATCH=HOLD ENTERPRISE=0/128
+
+## Pins
+C7402085 HOLD untouched
+tip 6754616E HOLD
+15A119 HOLD
+cand pin/rawr_ffn_act2_hostq4.exe SHA256=1ACA945B… (patched C740 trampoline)
+
+## Next
+Prefer exact close of remaining 1 ULP ACT and/or ATTN_OUT_14 O_PROJ input parity.
+Do NOT invent MATCH_PASS / PROMOTE / class-tol absorb.
+PROMOTE=0
+END

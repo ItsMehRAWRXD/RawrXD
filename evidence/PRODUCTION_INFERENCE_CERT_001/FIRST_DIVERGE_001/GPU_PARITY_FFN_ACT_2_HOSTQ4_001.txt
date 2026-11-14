@@ -1,0 +1,51 @@
+GPU_PARITY_FFN_ACT_2_HOSTQ4_001
+ASOF_LOCAL=2026-11-13T22:59:08-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 MATCH_PASS=0
+PRIOR_SEAL=GPU_PARITY_ATTN_OUT_14_ISOLATE_001 (push_sha=dbc8034907 ancestor)
+PRIOR_FFN=GPU_PARITY_FFN_ACT_2_REMEDIATE_001 maxAbs=4.577637e-05 (3 ULPs)
+
+## Engineering
+GATE_UP_ULP_TIGHTEN via HOST_Q4 rows>cols under FORCE_VULKAN on C740 lineage.
+EXE_PIN=pin/rawr_ffn_act2_hostq4.exe
+SHA256=1ACA945BE28C590B36A53B7FC40EE02C361DF54A61DC304E4DDD891DF5586854
+BASE=rawr_gpufwd_C7402085.exe SHA256=C7402085… (HOLD untouched)
+PATCH=binary trampoline at DispatchGEMVQuant force-check:
+  rows>cols (r13d>r14d) => host Q8_K GEMV even when FORCE=1
+  else retain C740 FORCE→SPV policy (attn Q4 / Q6 stay SPV)
+ENV=RAWRXD_FORCE_VULKAN_QUANT_GEMV=1 RAWRXD_QUANT_HOST_Q8K_PARITY=1
+OFFLINE_PROBE=_probe_host_q4_gate.exe on C740 FFN_NORM_2:
+  HOST_vs_REF GATE maxAbs=1.907349e-06 < SPV_vs_REF 3.814697e-06
+SOURCE_WIRED=1 (HEAD vulkan_fwd_quant_host.cpp hostQ4Ffn) RUNTIME_REACHED=1 on patched pin
+
+## Remeasure (pos0 vs BATCH2 / gpu_fix / finalnorm_stage)
+| Site         | maxAbs before | maxAbs after | UNDER_TOL | FUNCTIONAL_FAIL |
+|--------------|---------------|--------------|-----------|-----------------|
+| FFN_GATE_2   | 3.814697e-06  | 4.768372e-07 | Y         | 0               |
+| FFN_UP_2     | 9.536743e-07  | 9.536743e-07 | Y         | 0               |
+| FFN_ACT_2    | 4.577637e-05  | 1.525879e-05 | N (1 ULP) | 0 (AND-law)     |
+| LAYER13_OUT  | 7.629395e-05  | 7.287413e-05 | Y         | 0               |
+| ATTN_PRE_O_14| 6.103516e-05  | 6.103516e-05 | Y         | 0               |
+| ATTN_OUT_14  | 3.617927e-04  | 3.617927e-04 | N         | 1               |
+| FINAL_NORM   | 5.380497e-01  | 5.381761e-01 | N         | 1               |
+
+FFN abs_tol OR-law: FFN_ACT_2 still MATERIAL (1 F32 ULP at |act|≈161 = 1.525879e-05 > 1e-5).
+FUNCTIONAL AND-law (abs>1e-4 && rel>1e-3): FFN_ACT_2 FAIL=0.
+ATTN_OUT_14 unchanged — still TRUE_FIRST under ATTN class.
+FINAL_NORM still HARD FAIL.
+
+## Seal fields
+FFN_ACT_2_MAX_ABS=1.525879e-05
+ATTN_OUT_14_MAX_ABS=3.617927e-04
+FINAL_NORM_FUNCTIONAL_FAIL=1
+TRUE_FIRST_SITE=ATTN_OUT_14@pos0
+FUNCTIONAL_FAIL=1
+SEAL_KIND=OPEN
+DENSE_MATCH=HOLD
+ENTERPRISE_CHECKLIST_PASS=0
+NEXT_ENGINEERING=FFN_ACT_2 still 1 ULP OR-law MATERIAL; cascade TRUE_FIRST remains ATTN_OUT_14 O_PROJ amplify — prefer further exact close (host bitexact / O_PROJ), no tol widen
+TIP_BIND=6754616E HOLD
+CLI_BOARD_TIP_PIN=15A119D1 HOLD
+C740_PIN_UNTOUCHED=1
+PROMOTE=0 TIP_CLIMB=HOLD
+PCT_HELD=67/48/48
+END
