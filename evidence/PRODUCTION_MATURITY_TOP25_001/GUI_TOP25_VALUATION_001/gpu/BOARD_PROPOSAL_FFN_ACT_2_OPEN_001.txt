@@ -1,0 +1,35 @@
+BOARD_PROPOSAL_FFN_ACT_2_OPEN_001
+TO=PARENT_COORDINATOR / JOINT (proposal only; NO direct LIVE/CANON/JOINT/PARENT PCT write)
+FROM=M1_FFN_ACT_2_REMEDIATE
+DATE=2026-11-13
+PROMOTE=0
+TIP_CLIMB=HOLD
+INVENT_PASS=0
+MATCH_PASS=0
+PEERS_MAY_WRITE_SCOREBOARD=0
+TIP_BIND=6754616E
+CLI_BOARD_TIP_PIN=15A119D1
+
+## Proposal (parent decides)
+ROOT_CAUSE_CLEAR=Y: FFN_ACT_2 MATERIAL is NOT a SiLU/GELU/act-kernel or FP16-RT/broadcast
+bug. Both sides compute silu(gate)*up bitexact from their operands. Breach is
+product amplification of under-tol GATE (2 ULP) + UP (1 ULP) at |act|~161 where
+1 F32 ULP=1.526e-5 > FFN abs_tol 1e-5 (maxAbs=3*ULP).
+
+SOURCE_WIRED minimal fix: vulkan_fwd_quant_host.cpp host Q4 for FFN gate/up
+(rows>cols) under FORCE_VULKAN when PARITY=1. Private EXE remasure BLOCKED this
+turn by build thrash (RUNTIME_REACHED=0). Seal OPEN — do not invent CLOSE/PASS.
+
+## Witness
+SEAL=GUI_TOP25_VALUATION_001/gpu/GPU_PARITY_FFN_ACT_2_REMEDIATE_001.txt
+PARENT=GPU_PARITY_LAYER2_PLUS_C7402085_001.txt
+CAND_SHA=C74020852AC324FC… (verified; beside HOLD)
+
+## Suggested parent action (not applied here)
+IF accept: keep OPEN until private cand links + remasures FFN_ACT_2 under
+  PARITY=1 FORCE_VULKAN; then CLOSE or escalate GATE/UP SPV ULP.
+REJECT invent MATCH=1 / PROMOTE=1 / tip absorb from this OPEN alone.
+
+PROMOTE=0
+TIP_CLIMB=HOLD
+END

@@ -1,0 +1,9 @@
+C36_LSP_STAGE=START detail=clangd ts=26392015
+C36_LSP_STAGE=PIPE OK detail=CreatePipe ts=26392015
+C36_LSP_STAGE=PROCESS BEGIN detail="C:\Program Files\LLVM\bin\clangd.exe" --background-index=false --header-insertion=never --log=error ts=26392015
+C36_LSP_STAGE=PROCESS OK detail=pid=39152 ts=26392046
+C36_LSP_STAGE=INIT_SEND BEGIN detail=method=initialize ts=26392046
+C36_LSP_STAGE=INIT_SEND OK detail=id=1 ts=26392062
+C36_LSP_STAGE=INIT_WAIT BEGIN detail=timeout_ms=20000 ts=26392062
+C36_LSP_STAGE=INIT_WAIT OK class=INIT_OK detail=id=1 ts=26392140
+C36_LSP_STAGE=INIT_WAIT OK class=INIT_OK detail=clangd ts=26392140

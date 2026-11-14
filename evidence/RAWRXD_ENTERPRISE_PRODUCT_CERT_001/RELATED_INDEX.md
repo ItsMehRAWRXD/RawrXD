@@ -1,4 +1,4 @@
-# RELATED seals (≠ PASS on CERT_001 gates)
+﻿# RELATED seals (≠ PASS on CERT_001 gates)
 
 Historical / private-cand / partial RUNTIME — cite only. `CROSS_SHA_CREDIT=0`.
 
@@ -23,4 +23,7 @@ Historical / private-cand / partial RUNTIME — cite only. `CROSS_SHA_CREDIT=0`.
 | tip_land avfix082 F5997910 gemma | G02 | INFER_STREAM_SEH=1 TOK=0 |
 | qdim083 llama32 E649DF99 | G02 G04 | SEH=0 TOK=0 ENTER=0 |
 
+| cand_c36_conpty 0C6A965A | G07-01 G07-04 G05-05 G06-05 | LSP INIT_OK + ConPTY stop PASS on cand; tip6754 RO unchanged |
+
 Update this index when new RELATED receipts land. Never auto-PASS.
+
