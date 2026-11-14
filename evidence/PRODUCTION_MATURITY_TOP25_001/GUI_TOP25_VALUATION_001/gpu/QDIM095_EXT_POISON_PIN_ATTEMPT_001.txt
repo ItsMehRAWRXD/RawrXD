@@ -1,0 +1,33 @@
+QDIM095_EXT_POISON_PIN_ATTEMPT_001
+ASOF_LOCAL=2026-11-13T23:40:00-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0
+TIP_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431
+TIP_STILL_6754=1
+PRIOR_PUSH=6f641d2f5339511a225d6dcea9750055720e8723 ON_ORIGIN=1
+
+## Root cause (confirmed)
+AVFIX083 CLOSED VA=-1 (resetGenQualityProbe→fclose) on qdim087 EXE=7154BF59…
+Residual STREAM_SEH: after first TOKEN id=19, READ VA=0x1000002AA
+  = Eng().isCancelRequested via poisoned ProductRuntime.ext≈0x100000001 (+0x2A9)
+  in RunDecodeStream lambda (qdim087 still uses pre-pin seh COMDAT).
+
+## Product-path fix (SOURCE_WIRED this turn)
+- ProductRunDecode.cpp: pin Eng* by value (engPinned); callback must not rt.Eng()
+- ProductRuntime::Eng(): ExtPlausible clear of wild ext
+- cmake/RawrXD_Product100.cmake: add ProductRunDecode.cpp to Win32IDE sources
+
+## Private rebuild attempts (fail-closed)
+qdim088 seh-only: OPEN ok, STREAM_SEH VA=0x2B ENTER=0 (OOL RunDecodeStream
+  unresolved under FORCE — null call)
+qdim091–094 seh±decode: OPEN regress / early HEXMAG exit / corrupt 2MB link
+qdim095 Deep2Engine+ProductRuntime fence (keep obj078 seh): OPEN_SEH=0 CRITICAL=PASS
+  but STREAM_SEH VA=0x2B ENTER=0 GPU_RES=0 (include-induced ABI skew) — REVERTED
+
+## Controlling exclusive llama32
+EXE=qdim087 7154BF59F4DA8834… TOK=0 SEH=1 MF=0/4
+DURABLE_TOKEN_SURVIVED=0
+NEXT=seh recompile matching tip ABI + link ProductRunDecode.obj without
+  Deep2Engine.h / ProductRuntime layout skew (or full ninja Win32IDE rebuild)
+
+PROMOTE=0 TIP_CLIMB=HOLD REJECT_FORCE_ABSORB=1
+END

@@ -10,6 +10,9 @@ ROOT_CAUSE_CLEAR=1
 ## Stream SEH chain (this session)
 1) VA=-1 fclose @ resetGenQualityProbe — AVFIX083 SOURCE_WIRED (qdim087)
 2) VA=0x1000002AA Eng().isCancelRequested via poisoned ProductRuntime.ext — OPEN path OK on 087; TOK durable still 0
+3) Product eng-pin SOURCE_WIRED (ProductRunDecode.cpp engPinned + Eng ExtPlausible +
+   Product100 cmake) — private seh relink still OPEN/ABI regress; see
+   QDIM095_EXT_POISON_PIN_ATTEMPT_001.txt
 CONTROLLING=QDIM087_AVFIX083_LLAMA32_STREAM_SEH_001.txt
 MF_4OF4=0 REJECT_INVENT_FROM_7FD1=1
 PROMOTE=0 TIP_CLIMB=HOLD

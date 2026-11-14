@@ -29,45 +29,51 @@ void RunDecodeStream(ProductRuntime& rt, const char* prompt, uint32_t maxTokens,
         std::fflush(stderr);
         rt.ext = nullptr;
     }
-    Deep2::Deep2Engine* engp =
+    Deep2::Deep2Engine* const engPinned =
         (rt.ext && ProductRuntime::ExtPlausible(rt.ext)) ? rt.ext : &rt.engine;
-    engp->clearCancel();
+    std::fprintf(stderr, "DECODE_ENG_PIN=%p ext=%p embedded=%p\n",
+                 (void*)engPinned, (void*)rt.ext, (void*)&rt.engine);
+    std::fflush(stderr);
+    engPinned->clearCancel();
     userCancel = 0;
     rxow::OnGenerateEntered();
     rxow::OnDecodeStep0();
     (void)Deep2::scoreboard::PumpProductDecode();
     const auto t0 = std::chrono::steady_clock::now();
     uint64_t lastCommitNs = 0;
-    engp->generateStream(prompt, opts, [&](int32_t tokenId,
-                                           const std::string& piece) {
-        if (IsCancelled(rt.control) || engp->isCancelRequested()) {
-            userCancel = 1;
-            return false;
-        }
-        r.text += piece;
-        ++r.generatedTokens;
-        if (r.generatedTokens == 1) {
-            r.firstToken = 1;
-            Deep2::scoreboard::P1Wit().tokenIn.store((uint32_t)tokenId,
-                                                    std::memory_order_release);
-        }
-        Deep2::scoreboard::MarkTokenCommit((uint32_t)tokenId);
-        {
-            const uint64_t now = Deep2::tokenwall::NowNs();
-            if (lastCommitNs)
-                Deep2::tokenwall::EmitCommitted(
-                    stderr, r.generatedTokens, r.generatedTokens - 1u,
-                    Deep2::tokenwall::DeltaNs(lastCommitNs, now), 1u);
-            lastCommitNs = now;
-        }
-        if (onPiece && !onPiece(piece)) {
-            userCancel = 1;
-            rt.control.RequestCancel();
-            engp->requestCancel();
-            return false;
-        }
-        return !(IsCancelled(rt.control) || engp->isCancelRequested());
-    });
+    engPinned->generateStream(
+        prompt, opts,
+        [engPinned, &rt, &r, &userCancel, &onPiece,
+         &lastCommitNs](int32_t tokenId, const std::string& piece) {
+            if (IsCancelled(rt.control) || engPinned->isCancelRequested()) {
+                userCancel = 1;
+                return false;
+            }
+            r.text += piece;
+            ++r.generatedTokens;
+            if (r.generatedTokens == 1) {
+                r.firstToken = 1;
+                Deep2::scoreboard::P1Wit().tokenIn.store(
+                    (uint32_t)tokenId, std::memory_order_release);
+            }
+            Deep2::scoreboard::MarkTokenCommit((uint32_t)tokenId);
+            {
+                const uint64_t now = Deep2::tokenwall::NowNs();
+                if (lastCommitNs)
+                    Deep2::tokenwall::EmitCommitted(
+                        stderr, r.generatedTokens, r.generatedTokens - 1u,
+                        Deep2::tokenwall::DeltaNs(lastCommitNs, now), 1u);
+                lastCommitNs = now;
+            }
+            if (onPiece && !onPiece(piece)) {
+                userCancel = 1;
+                rt.control.RequestCancel();
+                engPinned->requestCancel();
+                return false;
+            }
+            return !(IsCancelled(rt.control) ||
+                     engPinned->isCancelRequested());
+        });
     r.wallNs = (uint64_t)std::chrono::duration_cast<std::chrono::nanoseconds>(
                    std::chrono::steady_clock::now() - t0)
                    .count();

@@ -33,8 +33,19 @@ struct ProductRuntime {
         return u > 0x10000ull && (u & 0x7ull) == 0 &&
                u < (static_cast<uintptr_t>(-1) - 0x1000ull);
     }
-    Deep2::Deep2Engine& Eng() { return ext ? *ext : engine; }
-    const Deep2::Deep2Engine& Eng() const { return ext ? *ext : engine; }
+    Deep2::Deep2Engine& Eng() {
+        if (ext && !ExtPlausible(ext)) {
+            std::fprintf(stderr, "PRODUCT_RUNTIME_EXT_WILD=%p CLEAR=1\n",
+                         (void*)ext);
+            std::fflush(stderr);
+            ext = nullptr;
+        }
+        return ext ? *ext : engine;
+    }
+    const Deep2::Deep2Engine& Eng() const {
+        if (ext && !ExtPlausible(ext)) return engine;
+        return ext ? *ext : engine;
+    }
     bool AuthorityComplete() const { return auth.PASS != 0; }
 
     bool BuildExecutionGraph() {

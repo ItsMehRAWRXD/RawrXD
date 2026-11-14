@@ -25,7 +25,9 @@ WITNESS_B=ide_mf_qdim087_llama32_7154BF59F4DA8834_20261113_231120
   OPEN_SEH=0 STREAM_SEH=0 ENTER=1 TOK=0 GPU_RESIDENT=1 (hang/WEIGHT_BUDGET spam; EXIT=NULL)
 
 ROOT_CAUSE_2=ProductRuntime.ext poisoned mid-stream; callback re-resolves Eng() to wild*
-FIX_PARTIAL=AVFIX083 closes VA=-1; decode eng-pin / ool RunDecodeStream attempted (qdim088-091) — OPEN regressions / corrupt link; NOT durable TOK>0 yet
+FIX_PARTIAL=AVFIX083 closes VA=-1
+FIX_SOURCE=engPinned by-value + Eng ExtPlausible + ProductRunDecode in Product100 cmake
+FIX_RUNTIME=OPEN — private seh/ABI attempts qdim088-095 fail-closed (see QDIM095_…)
 
 MF_n/4=0/4 (llama32 exclusive gate; no invent from 7FD1)
 DURABLE_TOKEN_SURVIVED=0
