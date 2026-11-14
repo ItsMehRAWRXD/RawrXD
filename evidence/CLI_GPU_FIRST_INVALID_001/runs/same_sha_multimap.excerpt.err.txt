@@ -1,0 +1,40 @@
+﻿DEEP2_EXEC_PATH=MULTIGPU
+[Deep2Engine] LAYER_EXEC OPEN slot=0 AMD Radeon AI PRO R9700 layers=0-11 kind=GPU
+[Deep2Engine] LAYER_EXEC OPEN slot=1 AMD Radeon RX 7800 XT layers=12-21 kind=GPU
+[Deep2Engine] MULTI contiguous layers ACTIVE devices=2 strict=1
+[GPU_FINITE] op=rms_attn ly=0 finite=2048/2048 nonFinite=0 norm=8.105919e-01
+[GPU_FINITE] op=q_proj ly=0 finite=2048/2048 nonFinite=0 norm=1.940770e+00
+[GPU_FINITE] op=k_proj ly=0 finite=256/256 nonFinite=0 norm=1.321794e+00
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=7.925269e-02
+[GPU_FINITE] op=rms_attn ly=0 finite=2048/2048 nonFinite=0 norm=4.353094e+00
+[GPU_FINITE] op=q_proj ly=0 finite=2048/2048 nonFinite=0 norm=1.887198e+01
+[GPU_FINITE] op=k_proj ly=0 finite=256/256 nonFinite=0 norm=2.113663e+01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.284650e-01
+[GPU_FINITE] op=rms_attn ly=0 finite=2048/2048 nonFinite=0 norm=4.805059e+00
+[GPU_FINITE] op=q_proj ly=0 finite=2048/2048 nonFinite=0 norm=1.840941e+01
+[GPU_FINITE] op=k_proj ly=0 finite=256/256 nonFinite=0 norm=2.242249e+01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.090192e-01
+[GPU_FINITE] op=rms_attn ly=0 finite=2048/2048 nonFinite=0 norm=2.693741e+00
+[GPU_FINITE] op=q_proj ly=0 finite=2048/2048 nonFinite=0 norm=2.207263e+01
+[GPU_FINITE] op=k_proj ly=0 finite=256/256 nonFinite=0 norm=1.302371e+01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=1.475304e-01
+[GPU_FINITE] op=rms_attn ly=0 finite=2048/2048 nonFinite=0 norm=4.805059e+00
+[GPU_FINITE] op=q_proj ly=0 finite=2048/2048 nonFinite=0 norm=1.840941e+01
+[GPU_FINITE] op=k_proj ly=0 finite=256/256 nonFinite=0 norm=2.242249e+01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.090192e-01
+[GPU_FINITE] op=rms_attn ly=0 finite=2048/2048 nonFinite=0 norm=4.950447e+00
+[GPU_FINITE] op=q_proj ly=0 finite=2048/2048 nonFinite=0 norm=2.318351e+01
+[GPU_FINITE] op=k_proj ly=0 finite=256/256 nonFinite=0 norm=2.852507e+01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.667975e-01
+[GPU_FINITE] op=rms_attn ly=0 finite=2048/2048 nonFinite=0 norm=7.369479e+00
+[GPU_FINITE] op=q_proj ly=0 finite=2048/2048 nonFinite=0 norm=4.267599e+01
+[GPU_FINITE] op=k_proj ly=0 finite=256/256 nonFinite=0 norm=3.927125e+01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=4.013037e-01
+[GPU_FINITE] op=rms_attn ly=0 finite=2048/2048 nonFinite=0 norm=4.184025e+00
+[GPU_FINITE] op=q_proj ly=0 finite=2048/2048 nonFinite=0 norm=2.011968e+01
+[GPU_FINITE] op=k_proj ly=0 finite=256/256 nonFinite=0 norm=2.268964e+01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=1.805094e-01
+[GPU_FINITE] op=rms_attn ly=0 finite=2048/2048 nonFinite=0 norm=4.454835e+00
+[GPU_FINITE] op=q_proj ly=0 finite=2048/2048 nonFinite=0 norm=2.215225e+01
+[GPU_FINITE] op=k_proj ly=0 finite=256/256 nonFinite=0 norm=2.518942e+01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.238814e-01

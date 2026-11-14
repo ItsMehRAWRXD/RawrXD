@@ -1,0 +1,13 @@
+﻿DEEP2_EXEC_PATH=MULTIGPU
+[Deep2Engine] LAYER_EXEC OPEN slot=0 AMD Radeon AI PRO R9700 layers=0-11 kind=GPU
+[Deep2Engine] LAYER_EXEC OPEN slot=1 AMD Radeon RX 7800 XT layers=12-21 kind=GPU
+[Deep2Engine] MULTI contiguous layers ACTIVE devices=2 strict=1
+[GPU_FINITE] op=rms_attn ly=0 finite=2048/2048 nonFinite=0 norm=8.105919e-01
+[GPU_FINITE] op=q_proj ly=0 finite=2048/2048 nonFinite=0 norm=1.938517e+00
+[GPU_FINITE] op=k_proj ly=0 finite=256/256 nonFinite=0 norm=1.317965e+00
+[GPU_FINITE] op=v_proj ly=0 finite=0/256 nonFinite=256 norm=0.000000e+00
+FIRST_NONFINITE_LAYER=0 FIRST_NONFINITE_OP=v_proj nonFinite=256/256 PROMOTE=0
+B03_LOGITS_TOPK hNorm=8.364654e+01 lm_type=14 rows=32000 cols=2048 nonFinite=0 
+[AGENT] TOKEN id=29966 piece=<
+HOST_FORWARD_LAYER_CALLS=0
+HOST_FORWARD_LAYER_CALLS=0

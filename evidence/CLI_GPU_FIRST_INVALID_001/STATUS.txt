@@ -1,0 +1,68 @@
+﻿CLI_GPU_FIRST_INVALID_001
+ASOF_LOCAL=2026-11-14T09:08:51-05:00
+PROMOTE=0
+CERTIFIED=0
+INVENT_PASS=0
+CROSS_SHA_CREDIT=0
+NOT_RUN!=PASS
+TIP_CLIMB=HOLD
+CLI_GPU_ROOT_CLASS=ISOLATED
+PARENT=CLI_COHERENCE_UNK_001
+RELATED=CLI_NUMERICAL_MOVES_36_50_001/MOVE_37
+
+## EXE (this pack — ≠ frozen smoke 0E53D810)
+EXE=G:\~dev\rawrxd\build_ninja\bin\rawr.exe
+EXE_SHA256=9797521CEB517B92AC52C518FB2BDB783628ABEA59366DFBE6E784C1A72951A3
+SHA_STABLE_ACROSS_RUNS=1
+MODEL=G:\~dev\rawrxd\models\tinyllama.gguf
+PROMPT=2+2=
+FAIL_CLOSED_IN_EXE=1
+  strings: FIRST_NONFINITE_OP / [FORWARD_FAIL] / RAWRXD_GPU_LAYER_FINITE
+  runtime: force-SPV → [FORWARD_FAIL] nonfinite=2048/2048 (no sanitize); exit=12
+SMOKE_0E53D810=NOT_CREDITED (CROSS_SHA=0)
+NEW_SMOKE_STATUS=DIAGNOSTIC_ONLY_NOT_PASS
+
+## FIRST_INVALID_OP (SEALED)
+FIRST_INVALID_OP=v_proj
+FIRST_INVALID_LAYER=0
+FIRST_INVALID_TENSOR=blk.0.attn_v.weight
+FIRST_INVALID_QUANT=Q6_K (bytes=430080)
+FIRST_INVALID_KERNEL=gemv_q6k.spv (Vulkan packed GEMV)
+WITNESS_FORCE_SPV=
+  ENV=RAWRXD_GPU_LAYER_FINITE=1 DEEP2_Q6K_FORCE_VULKAN_SPV=1
+  Multimap: runs/force_spv_multimap.err.txt
+    DEEP2_EXEC_PATH=MULTIGPU devices=2 layers 0-11|12-21
+    rms_attn/q_proj/k_proj ly0 finite
+    v_proj ly0 finite=0/256 nonFinite=256/256
+    FIRST_NONFINITE_LAYER=0 FIRST_NONFINITE_OP=v_proj
+    [FORWARD_FAIL] nonfinite=2048/2048 (no sanitize)
+  Contiguous: runs/force_spv_solo.err.txt
+    DEEP2_EXEC_PATH=SINGLE_GPU Vulkan single-GPU R9700
+    identical latch: FIRST_NONFINITE_LAYER=0 FIRST_NONFINITE_OP=v_proj
+    [FORWARD_FAIL] nonfinite=2048/2048 (no sanitize)
+ALIGN_MOVE37=1 (CLI_NUMERICAL_MOVES_36_50_001)
+
+## MultiMap vs contiguous disposition (SEALED)
+DISPOSITION=SHARED_GPU_KERNEL_FAULT
+NOT=MULTI_GPU_MAPPING_FAULT
+EVIDENCE=
+  force-SPV: MultiMap ≡ Solo first invalid (L0 v_proj / gemv_q6k.spv)
+  default path (Q6 expand / host-Q6 for some tensors; SPV not forced):
+    same_sha_multimap + same_sha_solo: v_proj ly0 finite; HOST_FORWARD_LAYER_CALLS=0
+    STDOUT both "Yes, 2 + 2 =" — DIAGNOSTIC ONLY (≠ smoke PASS; ≠ ref-parity PASS; ≠ PROMOTE)
+  early mid-rebuild Multimap capture (multimap_finite.err.txt) also latched L0 v_proj
+    before SHA stabilize — retained as historical; authority = force_spv_* same SHA
+
+## Separations held
+ORNITH_FFN_NORM_GEMV=NOT_TOUCHED
+PERF_SEARCH=COMPLETE_RETAIN_BASELINE (4.329; GATE_STOP=1 NEXT_SPEND=NONE)
+TIP_CLIMB=HOLD
+ENTERPRISE=0/128 unchanged
+
+## Next
+NEXT_GATE=ATTN_V_Q6K_SPV_FIX_OR_DEFAULT_PATH_CERT
+  (fix gemv_q6k.spv NaN on TinyLlama attn_v; then new-SHA smoke — do not invent PASS)
+PROMOTE=0
+
+## Bulk-run note
+Full same_sha_*.err.txt retained locally (~1.7MiB GPU_FINITE spam); git seal uses *.excerpt.err.txt + full force_spv_*.err.txt.

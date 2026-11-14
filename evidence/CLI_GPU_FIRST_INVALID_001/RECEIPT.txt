@@ -1,0 +1,19 @@
+﻿CLI_GPU_FIRST_INVALID_001 RECEIPT
+ASOF_LOCAL=2026-11-14T09:08:51-05:00
+EXE_SHA256=9797521CEB517B92AC52C518FB2BDB783628ABEA59366DFBE6E784C1A72951A3
+FIRST_INVALID_OP=v_proj
+FIRST_INVALID_LAYER=0
+FIRST_INVALID_TENSOR=blk.0.attn_v.weight
+FIRST_INVALID_KERNEL=gemv_q6k.spv
+DISPOSITION=SHARED_GPU_KERNEL_FAULT
+MULTIMAP_VS_CONTIGUOUS=EQUIVALENT_UNDER_FORCE_SPV
+ARTIFACTS=
+  STATUS.txt
+  runs/EXE_SHA.txt
+  runs/force_spv_multimap.{out,err}.txt
+  runs/force_spv_solo.{out,err}.txt
+  runs/same_sha_multimap.{out,err}.txt
+  runs/same_sha_solo.{out,err}.txt
+  runs/multimap_finite.{out,err}.txt
+  runs/solo_contiguous_finite.{out,err}.txt
+PROMOTE=0 CERTIFIED=0 INVENT_PASS=0 CROSS_SHA_CREDIT=0
