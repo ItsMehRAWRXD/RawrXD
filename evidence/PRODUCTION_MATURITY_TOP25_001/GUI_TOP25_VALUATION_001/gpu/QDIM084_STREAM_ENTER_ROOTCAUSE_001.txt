@@ -75,3 +75,11 @@ greedy early-return (no sampler unique_ptr); post-POST_CONFIG SnapshotLeases
 AV VA=0x66858F closed via TOKEN_EMBD_STREAM_RESTORE_SKIP default.
 Controlling: ide_mf_qdim084_llama32_3792BAA70AA59F45_20261114_000057
 ENTER=1 TOK=2 SEH=0 KEEP=1 EXIT=0 PROMOTE=0 TIP_CLIMB=HOLD tip=6754616E RO.
+
+## DURABLE remasure R81 (2026-11-14T00:12-05)
+Same EXE 3792BAA7 at skipembd2 path (LOCKED currently peer CC18976E).
+llama32: ide_mf_qdim084_llama32_durable_3792BAA70AA59F45_20261114_000939
+ENTER=1 TOK=2 SEH=0 KEEP=1 EXIT=0 DURABLE=1
+gemma3 opt: ide_mf_qdim084_gemma3_durable_3792BAA70AA59F45_20261114_001041
+ENTER=1 TOK=8 SEH=0 KEEP=1 EXIT=0 DURABLE=1
+REGRESSION=0 (no reopen bad_alloc/sampler/SnapshotLeases). PROMOTE=0.
