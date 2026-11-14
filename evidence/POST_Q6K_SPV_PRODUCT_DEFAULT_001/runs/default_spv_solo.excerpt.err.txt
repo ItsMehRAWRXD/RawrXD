@@ -1,0 +1,32 @@
+DEEP2_EXEC_PATH=SINGLE_GPU
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=7.974118e-02
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.310586e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.070400e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=1.485151e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.070400e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.630353e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=3.916435e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=1.807782e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.234246e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=1.807782e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.409592e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=1.807782e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=3.916435e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.154264e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.070400e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=1.350755e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=1.418184e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.070400e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.630353e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=3.916435e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=1.485934e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.863162e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.187536e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=1.807782e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.146161e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.187536e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=1.807782e-01
+CLEAN_EXIT=1 CRASH_OBSERVED=0 BLOCKED_AT=PROVENANCE_MISMATCH DISPOSITION=CLEAN_EXIT
+CMD_RUN_CLEAN_EXIT=1
+PROMPT_TOKENS=20 GENERATED_TOKENS=8 BOUNDARY_TOKEN_INDEX=20 BOUNDARY_VALID=1
+GENERATED_TOKENS=8

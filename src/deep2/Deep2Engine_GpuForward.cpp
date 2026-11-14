@@ -347,11 +347,11 @@ bool Deep2Engine::forwardLayerGpuResident(
         const char* e = std::getenv("DEEP2_Q4K_FORCE_F32_VULKAN");
         return e && e[0] == '1';
     }();
-    /* CLI_NUMERICAL M37: FIRST_NONFINITE_OP=v_proj on TinyLlama Q6_K
-     * (gemv_q6k.spv → 256/256 NaN). Host Q6 GEMV matches BATCH2_V_PROJ_001.
-     * Opt-in SPV: DEEP2_Q6K_FORCE_VULKAN_SPV=1. */
-    const bool forceQ6kSpv = [&]() -> bool {
-        const char* e = std::getenv("DEEP2_Q6K_FORCE_VULKAN_SPV");
+    /* R103 prefetch ABI fixed: gemv_q6k.spv is product default for Q6_K.
+     * Opt-out host: DEEP2_Q6K_FORCE_HOST_GEMV=1 (legacy DEEP2_Q6K_FORCE_VULKAN_SPV
+     * kept as no-op success path — SPV is already default). */
+    const bool forceQ6kHost = [&]() -> bool {
+        const char* e = std::getenv("DEEP2_Q6K_FORCE_HOST_GEMV");
         return e && e[0] == '1';
     }();
 
@@ -369,7 +369,7 @@ bool Deep2Engine::forwardLayerGpuResident(
         const bool looksQ6 =
             wt.type == (int)GGMLType::GGML_TYPE_Q6_K ||
             (q6Bytes != 0u && wt.sizeBytes == q6Bytes);
-        if (usePacked && looksQ6 && !forceQ6kSpv && wt.data && wt.sizeBytes &&
+        if (usePacked && looksQ6 && forceQ6kHost && wt.data && wt.sizeBytes &&
             (cols % 256u) == 0u) {
             auto hostGemv = QuantKernelRegistry::Instance().GetGEMV(
                 (int)GGMLType::GGML_TYPE_Q6_K);
@@ -539,7 +539,7 @@ bool Deep2Engine::forwardLayerGpuResident(
                           (wc.type == (int)GGMLType::GGML_TYPE_Q4_K);
             if (anyQ4k) allPacked = false;
         }
-        if (allPacked && !forceQ6kSpv) {
+        if (allPacked && forceQ6kHost) {
             auto q6ish = [](const WeightTensor& w, uint32_t r, uint32_t c) {
                 if (w.type == (int)GGMLType::GGML_TYPE_Q6_K) return true;
                 if ((c % 256u) != 0u || !w.sizeBytes) return false;
@@ -547,7 +547,7 @@ bool Deep2Engine::forwardLayerGpuResident(
                 return e >= 256u && w.sizeBytes == (e / 256u) * 210u;
             };
             if (q6ish(wa, rA, cols) || q6ish(wb, rB, cols) || q6ish(wc, rC, cols))
-                allPacked = false; /* host/F32 Q6 via gemv() */
+                allPacked = false; /* host/F32 Q6 via gemv() opt-out */
         }
         if (allPacked) {
             auto bumpQ = [&](const WeightTensor& wt) {
