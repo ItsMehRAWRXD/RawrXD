@@ -1,59 +1,66 @@
 GPU_PARITY_FFN_DOWN_2_NOT_CLOSABLE_001
-ASOF_LOCAL=2026-11-13T23:28:00-05:00
+ASOF_LOCAL=2026-11-13T23:35:00-05:00
 PROMOTE=0 TIP_CLIMB=HOLD MATCH_PASS=0 INVENT_PASS=0
 SEAL_KIND=NOT_CLOSABLE
 NO_CLASS_TOL_PCT=1
 NO_ENTERPRISE_CERT_INVENT=1
-CORRECTS=64d639dc10/6c6d3ab839 mislabel Q6_K + ACT-peak owner
+CORRECTS=64d639dc10 ACT-peak/Q6 mislabel; 605f96a3fd owner→SPV_Q4KxQ8K_BITEXACT
 
 ## Pins (hash-verified this turn)
 C740=C74020852AC324FC6827A896060E5508F74569C7F53EB7198B9CDB92DEAEB750 PASS
 SPV_Q4K=4548BCF1EF5C4ED714041D6EFD7C32570A4EEFC431B008A6D6427CCE902FFF86 LEN=16868 PASS
-  path=src/backend/gemv_q4k.spv
+  path=src/backend/gemv_q4k.spv (+ pin/gemv_q4k.spv; NOT stale build_ninja prior AB7212EC)
 HOLD_15A119=UNTOUCHED TIP_6754616E=UNTOUCHED RO
 FFN_DOWN_0_POS0=CLOSED (a2bdf78bf9 → 2.235174e-08) NOT_REOPENED=1
 
 ## Authority
 PARENT=GPU_PARITY_LAYER2_PLUS_REMEASURE_SPV4548_001 / BR_LAYER2_PLUS_REMEASURE_SPV4548_R67
-PUSH_PRIOR=385a47eecb
-FFN_ACT_2=CLOSED maxAbs=2.384186e-07 UNDER_TOL=Y (R66 SPV precise)
+PUSH_PRIOR=64d639dc10 / 605f96a3fd
+FFN_ACT_2=CLOSED maxAbs=2.980232e-07 UNDER_TOL=Y
 
 ## Weight (authoritative)
 blk.2.ffn_down.weight type=12(Q4_K) nbytes=6488064
   Q4_K expect=6488064 Q6_K expect=9461760
-  ≠ Q6_K (prior seal mislabeled)
+  ≠ Q6_K
 
-## Remeasure (before = after; no product delta)
+## Remeasure (before = after; product delta=0)
 EXE=rawr_gpufwd_C7402085.exe FORCE_VULKAN PARITY=0 NO_REBUILD
 CMD=remeasure_layer2_plus_spv4548.cmd
 DUMP=stage_dump_layer2_plus_spv4548 vs stage_dump_gpu_ref
-HOTPATH_GEMV=VULKAN Q4K_SPV bytes=16868
+HOTPATH_GEMV=VULKAN Q4K_SPV
 BEFORE FFN_DOWN_2 maxAbs=1.525879e-05 UNDER_TOL=N n_gt=2/2048
 AFTER  FFN_DOWN_2 maxAbs=1.525879e-05 UNDER_TOL=N n_gt=2/2048
 AFTER  FFN_ACT_2  maxAbs=2.980232e-07 UNDER_TOL=Y
-WORST_IDX=1661,624 (1 FP32 ULP at |y|~99..135)
+WORST_IDX=624 (1 FP32 ULP 0xC3076AE7 vs 0xC3076AE6 |y|~135)
+         1661 (2 FP32 ULP 0xC2C6356B vs 0xC2C63569 |y|~99)
+FNV_DOWN=bb8a07c7428f4415 UNCHANGED across trial SPV
 
-## Root (numeric-first isolate)
+## Isolate (this turn)
+ACT peak / Q8 d-scale path:
+  ACT float UNDER_TOL (maxAbs=2.980232e-07); parent ACT-peak owner REFUTED
+  offline _probe_ffn_down_2_q4: host(GPU_ACT) vs llama UNDER_TOL (~2.1e-6)
+  host(GPU_ACT) vs SPV_DOWN maxAbs=1.525879e-05 → SPV≠host accumulate
+Attempted minimal fix: gemv_q4k.comp ggml aux16 + split precise MAC
+  → glslang SPV 6541C898…/17516 (HASH_CHANGED)
+  → runtime FFN_DOWN_2 FNV identical; maxAbs unchanged
+  → restored SPV pin 4548BCF1…/16868 (no pin thrash without close)
+
+## Root
 CLASS=SPV_Q4KxQ8K_FFN_DOWN_1ULP
-REFUTED_ACT_AMPLIFY=1
+REFUTED_ACT_PEAK_Q8_DSCALE=1
 REFUTED_Q6_DOWN=1
-PROOF:
-  Q8 qs(GPU_ACT)==Q8 qs(REF_ACT) diffs=0/5632
-  offline host Q4_K×Q8_K(GPU_ACT) @idx624/1661 == REF (abs=0)
-  offline host Q4_K×Q8_K(REF_ACT) @idx624/1661 == REF (abs=0)
-  GPU SPV DOWN @idx624/1661 = REF + 1.525879e-05 (1 ULP)
-  → MATERIAL residual is Vulkan SPV accumulate ≠ ACT→Q8 int8 ≠ Q6 path
-Attempted: precise amax/maxv/iscale annotate on gemv_q4k.comp
-  → glslang SPV hash UNCHANGED (4548BCF1…/16868); runtime delta=0
+REFUTED_GGML_AUX16_PRECISE_MAC_SPLIT=1 (codegen delta, runtime noop)
+MATERIAL residual = Vulkan SPV float-accumulate vs ggml vec_dot_q4_K_q8_K
+  on large-|y| FFN_DOWN rows under FORCE_VULKAN
 
 ## Verdict
 FFN_DOWN_2_CLOSED=0
 UNDER_TOL=N
 NOT_CLOSABLE_UNDER_ABS_TOL_1e-5_THIS_TURN=1
 NEXT_OWNER=SPV_Q4KxQ8K_BITEXACT
-  (gemv_q4k.comp/.spv float-accumulate bitexact vs ggml vec_dot_q4_K_q8_K
-   on FFN_DOWN large-|y| rows; FORCE_VULKAN hotpath)
-  ≠ FFN_DOWN_0 reopen ≠ ACT invent-kernel ≠ class-tol PCT
+  (deeper accumulate / NoContraction beyond structural ggml aux16 mirror;
+   keep FORCE_VULKAN hotpath; do not invent act-kernel; do not reopen FFN_DOWN_0)
+  ≠ GATE_UP_ACT_PEAK_BITEXACT (refuted) ≠ class-tol PCT
 PROMOTE=0
 TIP_CLIMB=HOLD
 END

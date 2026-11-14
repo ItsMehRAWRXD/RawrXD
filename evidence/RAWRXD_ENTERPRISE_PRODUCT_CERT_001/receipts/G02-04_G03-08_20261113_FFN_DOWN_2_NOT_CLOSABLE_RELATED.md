@@ -12,7 +12,8 @@
 | UNDER_TOL | N (n_gt=2/2048) |
 | FFN_ACT_2 | UNDER_TOL=Y (≤2.98e-07) |
 | WEIGHT | blk.2.ffn_down Q4_K 6488064B (≠ Q6) |
-| ROOT | SPV Q4K×Q8K FFN_DOWN 1 ULP (host(GPU_ACT)==REF @624/1661) |
+| ROOT | SPV Q4K×Q8K FFN_DOWN 1–2 ULP; ACT-peak REFUTED; aux16+precise-MAC trial runtime-noop |
+| TRIAL_SPV | 6541C898…/17516 → FNV identical; pin restored 4548BCF1…/16868 |
 | NEXT_OWNER | SPV_Q4KxQ8K_BITEXACT |
 | EXE_SHA256 | C74020852AC324FC6827A896060E5508F74569C7F53EB7198B9CDB92DEAEB750 |
 | SPV_SHA256 | 4548BCF1EF5C4ED714041D6EFD7C32570A4EEFC431B008A6D6427CCE902FFF86 |
@@ -22,4 +23,4 @@
 | TIP_CLIMB | HOLD |
 | CERTIFIED | 0 · 0/128 |
 
-NOTE: No class-tol PCT. No invent act-kernel. Corrects prior RELATED that mislabeled Q6 / ACT-peak owner.
+NOTE: No class-tol PCT. No invent act-kernel. Parent ACT-peak owner refuted; structural ggml aux16 mirror insufficient on this GPU.
