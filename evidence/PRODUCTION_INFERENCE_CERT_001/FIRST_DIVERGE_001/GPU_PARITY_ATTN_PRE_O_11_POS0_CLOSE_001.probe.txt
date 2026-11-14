@@ -1,0 +1,43 @@
+GPU_PARITY_ATTN_PRE_O_11_POS0_CLOSE_001.probe
+ASOF=2026-11-14T05:24:47
+PROMOTE=0 TIP_CLIMB=HOLD DENSE_MATCH=HOLD
+DUMP=G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_ffn_down_2_xdonediv_cascade
+REF=G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_gpu_ref (best-match llama_*)
+BATCH2=G:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L11_BODY_001
+SPV_PIN=40E76D2ACBFC2380C0221CE55EA2345336264A3CF470341478E351406F42B403 LEN=17272 HELD=1
+--- L11@pos0 best-match chain ---
+FFN_DOWN_10: maxAbs=1.524854e-05 @idx1507 n_gt=0/2048 tol=1e-05 FUNCTIONAL_FAIL=1 ref=llama_FFN_DOWN_10_pos0_layer0_full_n2048_seq1409.bin
+ATTN_NORM_11: maxAbs=1.650304e-06 @idx1496 n_gt=0/2048 tol=0.0001 FUNCTIONAL_FAIL=0 ref=llama_ATTN_NORM_11_pos0_layer0_full_n2048_seq1413.bin
+V_11: maxAbs=1.981016e-04 @idx7 n_gt=29/256 tol=0.0001 FUNCTIONAL_FAIL=1 ref=llama_TENS_Vcur_11_pos0_layer0_full_n256_seq1481.bin
+Q_LINEAR_11: maxAbs=6.251931e-04 @idx249 n_gt=762/2048 tol=0.0001 FUNCTIONAL_FAIL=1 ref=llama_TENS_Qcur_11_pos0_layer0_full_n2048_seq1415.bin
+K_LINEAR_11: maxAbs=8.032620e-04 @idx105 n_gt=148/256 tol=0.0001 FUNCTIONAL_FAIL=1 ref=llama_TENS_Kcur_11_(view)_pos0_layer0_full_n256_seq1497.bin
+Q_NORM_11: maxAbs=3.832877e-04 @idx10 n_gt=26/64 tol=0.0001 FUNCTIONAL_FAIL=1 ref=llama_TENS_Qcur_11_(view)_pos0_layer0_full_n64_seq1501.bin
+K_NORM_11: maxAbs=8.032620e-04 @idx105 n_gt=148/256 tol=0.0001 FUNCTIONAL_FAIL=1 ref=llama_TENS_Kcur_11_(view)_pos0_layer0_full_n256_seq1497.bin
+Q_PRE_ROPE_11: maxAbs=6.251931e-04 @idx249 n_gt=762/2048 tol=0.0001 FUNCTIONAL_FAIL=1 ref=llama_TENS_Qcur_11_pos0_layer0_full_n2048_seq1415.bin
+K_PRE_ROPE_11: maxAbs=8.032620e-04 @idx105 n_gt=148/256 tol=0.0001 FUNCTIONAL_FAIL=1 ref=llama_TENS_Kcur_11_(view)_pos0_layer0_full_n256_seq1497.bin
+ATTN_PRE_O_11: maxAbs=1.983643e-04 @idx7 n_gt=224/2048 tol=0.0001 FUNCTIONAL_FAIL=1 ref=llama_ATTN_PRE_O_11_pos0_layer0_full_n2048_seq1535.bin
+ATTN_OUT_11: maxAbs=7.834435e-04 @idx411 n_gt=1177/2048 tol=0.0001 FUNCTIONAL_FAIL=1 ref=llama_ATTN_OUT_11_pos0_layer0_full_n2048_seq1537.bin
+--- PRE_O vs expand(V) identity ---
+deep2_PRE_O_vs_expand(V): maxAbs=6.103516e-05 @idx523 n_gt=0/2048 BITEXACT=0 UNDER_TOL=1
+llama_PRE_O_vs_expand(V): maxAbs=1.016259e-04 @idx523 UNDER_TOL=0
+--- Counterfactual inject ---
+CF_expand(llama_V)_vs_llama_PRE_O: maxAbs=1.016259e-04 FAIL=1
+CF_deep2_V_vs_llama_V: maxAbs=1.981016e-04
+CF_layout_close_if_V_matched: UNDER_TOL=0 (PRE_O layout closable only if V/K/Q close)
+--- Cascade remasure (best-match) ---
+ATTN_PRE_O_11: maxAbs=1.983643e-04 @idx7 n_gt=224/2048 FUNCTIONAL_FAIL=1 ref=llama_ATTN_PRE_O_11_pos0_layer0_full_n2048_seq1535.bin
+ATTN_PRE_O_14: maxAbs=3.128052e-04 @idx548 n_gt=616/2048 FUNCTIONAL_FAIL=1 ref=llama_ATTN_PRE_O_14_pos0_layer0_full_n2048_seq1955.bin
+ATTN_OUT_14: maxAbs=6.035976e-04 @idx1044 n_gt=913/2048 FUNCTIONAL_FAIL=1 ref=llama_ATTN_OUT_14_pos0_layer0_full_n2048_seq1957.bin
+FINAL_NORM: maxAbs=2.236689e+00 @idx624 n_gt=2046/2048 FUNCTIONAL_FAIL=1 ref=llama_REF_FINAL_HIDDEN_pos0_layer0_full_n2048_seq2956.bin
+FFN_DOWN_10: maxAbs=1.524854e-05 @idx1507 n_gt=0/2048 FUNCTIONAL_FAIL=1 ref=llama_FFN_DOWN_10_pos0_layer0_full_n2048_seq1409.bin
+--- DISPOSITION ---
+ATTN_PRE_O_11 maxAbs=1.983643e-04 FUNCTIONAL_FAIL=1
+ATTN_OUT_14 maxAbs=6.035976e-04 FUNCTIONAL_FAIL=1
+FINAL_NORM maxAbs=2.236689e+00 FUNCTIONAL_FAIL=1
+FFN_DOWN_10 maxAbs=1.524854e-05 FUNCTIONAL_FAIL=1
+ATTN_PRE_O_11_CLOSABLE=0
+ROOT=FA_AMPLIFY_OF_L10_RESIDUAL_VIA_NORM_V
+TRUE_NEXT=ATTN_OUT_14
+SPV_40E76D2A=HELD TIP_6754616E=HOLD PCT=67/48/48 MF_qdim099=HOLD
+DENSE_MATCH=HOLD PROMOTE=0 TIP_CLIMB=HOLD
+END

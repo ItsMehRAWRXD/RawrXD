@@ -1,0 +1,51 @@
+GPU_PARITY_ATTN_PRE_O_11_POS0_CLOSE_001
+ASOF_LOCAL=2026-11-14T05:25:00-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 MATCH_PASS=0 DENSE_MATCH=HOLD
+PRIOR_ACT=472b4a80cd GPU_PARITY_FFN_DOWN_10_ACT_AMPLIFY_001
+BOARD_PACK_PUSH=9d05e7c687 (MF QDIM099 R84 RELATED)
+SPV_PIN=40E76D2ACBFC2380C0221CE55EA2345336264A3CF470341478E351406F42B403 LEN=17272 HELD=1
+TIP_EXE_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431 RO HOLD
+DUMP=stage_dump_ffn_down_2_xdonediv_cascade
+REF=stage_dump_gpu_ref (best-match)
+BATCH2=DEEP2_PARITY_PROBE_001/BATCH2_L11_BODY_001 (amplify law; L11 ATTN_OUT CLOSED historically on different pin)
+
+## Attempt: close ATTN_PRE_O_11@pos0 via K/Q/V / RoPE / layout
+PROBE=_probe_attn_pre_o_11_pos0.py
+
+| Site | maxAbs | tol | FUNCTIONAL_FAIL |
+|------|--------|-----|-----------------|
+| FFN_DOWN_10 | 1.524854e-05 | 1e-5 | 1 (prior TRUE_FIRST; ACT amplify held) |
+| ATTN_NORM_11 | 1.650304e-06 | 1e-4 | 0 UNDER |
+| V_11 | 1.981016e-04 | 1e-4 | 1 |
+| Q_LINEAR_11 | 6.251931e-04 | 1e-4 | 1 (not PRE_O@pos0 owner) |
+| K_LINEAR_11 | 8.032620e-04 | 1e-4 | 1 (not PRE_O@pos0 owner) |
+| Q_PRE_ROPE_11 | 6.251931e-04 | 1e-4 | 1 |
+| K_PRE_ROPE_11 | 8.032620e-04 | 1e-4 | 1 |
+| ATTN_PRE_O_11 | 1.983643e-04 | 1e-4 | 1 |
+| ATTN_OUT_11 | 7.834435e-04 | 1e-4 | 1 |
+| ATTN_OUT_14 | 6.035976e-04 | 1e-4 | 1 |
+| FINAL_NORM | 2.236689e+00 | 1e-4 | 1 |
+
+## Layout / RoPE / ownership
+deep2 PRE_O vs GQA_expand(V): maxAbs=6.103516e-05 UNDER_TOL=1 (LAYOUT_OK)
+PRE_O peak @idx7 ≈ V peak @idx7 (ratio 1.001); PO idx7 maps to V idx7
+RoPE@pos0: PRE_O identity path is expand(V); RoPE not PRE_O owner
+K/Q residuals larger but do not own PRE_O@pos0 (T=1 → expand(V))
+
+## Closability
+ATTN_PRE_O_11_CLOSABLE=0
+LAYOUT_CLOSABLE=0 (layout already matches expand(V))
+KQV_ROPE_CLOSABLE=0 (V residual = Q4K amplify of subthreshold NORM from L10 carrier)
+ROOT=V_Q4K_AMPLIFY_OF_SUBTHRESHOLD_ATTN_NORM_L10_CARRIER
+NORM_11 UNDER (1.65e-6) → V OVER (1.98e-4) ≈120x GEMV amplify (same class as FFN ACT→DOWN)
+Closing PRE_O requires bitexact V; bitexact V requires bitexact upstream residual (FFN_DOWN_10 held NOT_CLOSABLE)
+
+## Remeasure cascade (same dump; SPV40E76D2A held)
+ATTN_PRE_O_11 maxAbs=1.983643e-04 FUNCTIONAL_FAIL=1
+ATTN_OUT_14 maxAbs=6.035976e-04 FUNCTIONAL_FAIL=1
+FINAL_NORM maxAbs=2.236689e+00 FUNCTIONAL_FAIL=1
+
+TRUE_NEXT=ATTN_OUT_14 (next ATTN-class OPEN after PRE_O_11 sealed NOT_CLOSABLE)
+DENSE_MATCH=HOLD TIP_6754616E=HOLD PCT_HELD=67/48/48 MF_qdim099=HOLD
+PROMOTE=0 TIP_CLIMB=HOLD
+END
