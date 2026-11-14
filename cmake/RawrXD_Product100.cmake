@@ -20,6 +20,9 @@ if(TARGET RawrXD-Win32IDE)
     ${CMAKE_CURRENT_LIST_DIR}/../include
   )
   target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_PRODUCT100=1)
+  # ProductRunDecode must win RunDecodeStream under /FORCE:MULTIPLE (LNK4006).
+  target_link_options(RawrXD-Win32IDE PRIVATE
+    "/INCLUDE:?RunDecodeStream@product_run@rawr@@YAXAEAUProductRuntime@12@PEBDIAEBV?$function@$$A6A_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z@std@@AEAUResult@12@AEAH@Z")
   set_source_files_properties(
     ${CMAKE_CURRENT_LIST_DIR}/../src/asm/RawrXD_Product100_x64.asm
     PROPERTIES LANGUAGE ASM_MASM)

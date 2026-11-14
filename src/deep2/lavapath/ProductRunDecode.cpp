@@ -11,9 +11,9 @@
 #include <cstdlib>
 #include <cstdio>
 #include <string>
-
+/* Force this TU under /FORCE:MULTIPLE (beats IDE/stub LNK4006). */
+#pragma comment(linker, "/INCLUDE:?RunDecodeStream@product_run@rawr@@YAXAEAUProductRuntime@12@PEBDIAEBV?$function@$$A6A_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z@std@@AEAUResult@12@AEAH@Z")
 namespace rawr::product_run {
-
 void RunDecodeStream(ProductRuntime& rt, const char* prompt, uint32_t maxTokens,
                      const TokenFn& onPiece, Result& r, int& userCancel) {
     Deep2::GenerationOptions opts{};
@@ -21,9 +21,7 @@ void RunDecodeStream(ProductRuntime& rt, const char* prompt, uint32_t maxTokens,
     opts.temperature = 0.f;
     opts.topK = 1;
     opts.seed = 42;
-    rt.control.Clear();
-    /* Pin engine once. Callback must NOT call rt.Eng() — llama32 heap thrash
-     * poisons ext≈0x100000001 (STREAM_SEH READ VA=ext+0x2A9). */
+    /* Pin before Clear — ABI-skew Clear can poison post-engine strings. */
     if (rt.ext && !ProductRuntime::ExtPlausible(rt.ext)) {
         std::fprintf(stderr, "PRODUCT_RUNTIME_EXT_WILD=%p CLEAR=1 decode\n",
                      (void*)rt.ext);
@@ -35,6 +33,7 @@ void RunDecodeStream(ProductRuntime& rt, const char* prompt, uint32_t maxTokens,
     std::fprintf(stderr, "DECODE_ENG_PIN=%p ext=%p embedded=%p\n",
                  (void*)engPinned, (void*)rt.ext, (void*)&rt.engine);
     std::fflush(stderr);
+    rt.control.Clear();
     engPinned->clearCancel();
     userCancel = 0;
     rxow::OnGenerateEntered();
@@ -79,7 +78,6 @@ void RunDecodeStream(ProductRuntime& rt, const char* prompt, uint32_t maxTokens,
             return !(IsCancelled(rt.control) ||
                      engPinned->isCancelRequested());
         });
-    /* Mid-stream may poison ext; clear before ProductRun Eng() (old seh). */
     if (rt.ext && !ProductRuntime::ExtPlausible(rt.ext)) {
         std::fprintf(stderr, "PRODUCT_RUNTIME_EXT_WILD=%p CLEAR=1 post\n",
                      (void*)rt.ext);
@@ -97,5 +95,4 @@ void RunDecodeStream(ProductRuntime& rt, const char* prompt, uint32_t maxTokens,
     Deep2::scoreboard::EmitOwnershipSeal(stderr);
     Deep2::scoreboard::EmitProgressIndependenceSeal(stderr);
 }
-
 } // namespace rawr::product_run
