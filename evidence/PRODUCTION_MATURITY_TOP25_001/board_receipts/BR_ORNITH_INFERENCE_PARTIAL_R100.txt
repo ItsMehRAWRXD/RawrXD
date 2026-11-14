@@ -1,0 +1,38 @@
+BR_ORNITH_INFERENCE_PARTIAL_R100
+ASOF_LOCAL=2026-11-14T08:52-05:00
+AUTH=PARENT_BOARD_AUTHORITY / BOARD_SINGLE_WRITER
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD INVENT_PASS=0 CROSS_SHA_CREDIT=0
+PCT_HELD=CLI67/GUI48/OVERALL48
+RESULT=RELATED_NOT_PASS
+
+## User disposition (absorbed; fail-closed)
+ORNITH_FFN_GEOMETRY=PASS          # tensor-validated expert_ffn=512
+ORNITH_INFERENCE=PARTIAL          # TOK=8 steps ≠ numerical/semantic correctness
+FFN_NORM=OPEN
+PACKED_GEMV=OPEN
+PROD_PROVENANCE=OPEN
+SEMANTIC_ACCEPTANCE=OPEN
+OVERALL_ORNITH_CERT=RELATED
+
+## Reported authority (verify-before-credit)
+COMMIT_CLAIM=3745eff8ec
+EXE_SHA_CLAIM=E7A7EE9FDCB61757A65FE8ACCDC624FAE6F42EA84F33C57C887B0B34F91A48CF
+PRIOR_BOARD=BR_ORNITH_MOE_FFN_MAP_R98
+NOTE=Claims are board/user-reported; re-hash EXE before any PASS invent. CROSS_SHA=0.
+
+## Law
+TOK=8 demonstrates eight decode steps completed.
+TOK=8 ≠ correct inference ≠ CERT PASS.
+Do not merge with TinyLlama CLI_COHERENCE_UNK (nonfinite forward) until a shared failing op is proven.
+
+## Ordered next moves (highest value first)
+1 FFN_NORM — capture pre/post RMSNorm vs reference
+2 PACKED_GEMV — quant decode, expert select, strides, numeric out
+3 FIRST_DIVERGENCE — earliest Ornith≠ref op
+4 PROD_PROVENANCE — bind EXE+model+geometry+cfg+outputs one receipt
+5 SEMANTIC_ACCEPTANCE — ref token match + longer coherent/agent
+
+NEXT_GATE=FFN_NORM_THEN_PACKED_GEMV_NUMERICAL_PARITY
+SEPARATE_LANE=CLI_COHERENCE_UNK_001 TinyLlama
+PROMOTE=0
+END
