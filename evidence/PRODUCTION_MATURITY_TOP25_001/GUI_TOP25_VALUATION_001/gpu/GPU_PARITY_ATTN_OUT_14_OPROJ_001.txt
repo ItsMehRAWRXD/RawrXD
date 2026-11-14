@@ -1,0 +1,54 @@
+GPU_PARITY_ATTN_OUT_14_OPROJ_001
+ASOF_LOCAL=2026-11-13T23:20:00-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 MATCH_PASS=0
+PRIOR_PUSH=3b6a63de81 (FFN_ACT_2 hostQ4 3→1 ULP; ATTN_OUT_14 UNCHANGED 3.617927e-04)
+ORIGIN_HAS_3b6a63de81=1
+PRIOR_ISOLATE=GPU_PARITY_ATTN_OUT_14_ISOLATE_001
+PRIOR_FFN_SPV=GPU_PARITY_FFN_ACT_2_REMEDIATE_001 CLOSED maxAbs=2.384186e-07 (SPV 4548BCF1…)
+
+## Question
+Close ATTN_OUT_14@pos0 via O-proj (weight load / Q4×Q8 path / layout / accumulate)?
+
+## Offline O-proj probe (product QuantKernelRegistry Q4_K×Q8_K)
+PROBE=_probe_oproj_l14.exe / _probe_oproj_l14.cpp
+DUMP=stage_dump_attn_out14_oproj (== stage_dump_layer2_plus_spv4548 bitexact OUT)
+EXE=rawr_gpufwd_C7402085.exe SHA256=C7402085… FORCE_VULKAN SPV=4548BCF1…/16868
+| Check | maxAbs | Verdict |
+|-------|--------|---------|
+| host(pre_deep2) vs deep2_ATTN_OUT_14 | 0 | BITEXACT |
+| host(pre_llama) vs llama_ATTN_OUT_14 | 6.33e-08 | MATCH |
+| deep2_OUT vs llama_OUT | 9.564720e-04 | FUNCTIONAL_FAIL |
+| ATTN_PRE_O_14 vs llama | 4.272461e-04 | MATERIAL (no longer PASS) |
+
+REFUTED=O_PROJ_WEIGHT_LOAD_BUG · O_PROJ_LAYOUT_BUG · O_PROJ_ACCUMULATE_BUG · O_PROJ_SPV_NE_HOST_Q4K_Q8K
+(L2 ATTN_OUT still ~1.19e-07 under tol — kernel OK on clean inputs)
+
+## Remeasure PRE_O → OUT → FINAL_NORM (pos0)
+CMD=remeasure_attn_out14_oproj.cmd
+| Site | maxAbs | Class tol | FUNCTIONAL_FAIL |
+|------|--------|-----------|-----------------|
+| FFN_ACT_2 | 2.384186e-07 | FFN 1e-5 | 0 (CLOSED) |
+| FFN_DOWN_2 | 1.525879e-05 | FFN 1e-5 | 0 AND-law; OR-law MATERIAL (1 ULP) |
+| ATTN_PRE_O_14 | 4.272461e-04 | ATTN 1e-4 | 1 |
+| ATTN_OUT_14 | 9.564720e-04 | ATTN 1e-4 | 1 |
+| FINAL_NORM | 6.930475e-01 | HARD 1e-4 | 1 |
+
+vs isolate/hostQ4 lineage (3b6a63): ATTN_OUT_14 was 3.617927e-04 with PRE PASS 6.1e-05.
+SPV precise closed FFN_ACT but moved first OR-law MATERIAL to FFN_DOWN_2; PRE_O_14 now MATERIAL → OUT worse.
+
+## Seal fields
+ATTN_OUT_14_MAX_ABS=9.564720e-04
+ATTN_OUT_14_FUNCTIONAL_FAIL=1
+FINAL_NORM_MAX_ABS=6.930475e-01
+FINAL_NORM_FUNCTIONAL_FAIL=1
+ROOT_CAUSE=O_PROJ_REFUTED__Q4KxQ8K_AMPLIFY_OF_PRE_O_RESIDUAL__UPSTREAM_FFN_DOWN_2_CASCADE
+TRUE_FIRST_SITE_ATTN=ATTN_PRE_O_14@pos0 (now MATERIAL; OUT is amplify)
+FIRST_MATERIAL_LAYER2_PLUS=FFN_DOWN_2@pos0 maxAbs=1.525879e-05
+NEXT_ENGINEERING=FFN_DOWN_2 Q6_K×Q8_K / SPV precise (not O-proj); no tol widen
+SEAL_KIND=OPEN
+DENSE_MATCH=HOLD
+ENTERPRISE_CHECKLIST_PASS=0
+TIP_BIND=6754616E HOLD
+C740_PIN_UNTOUCHED=1
+PROMOTE=0 TIP_CLIMB=HOLD
+END
