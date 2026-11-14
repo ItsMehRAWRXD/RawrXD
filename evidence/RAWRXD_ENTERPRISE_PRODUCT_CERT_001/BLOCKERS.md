@@ -34,8 +34,9 @@ Authority: pasted RAWRXD_ENTERPRISE_PRODUCT_CERT_001 checklist · 0/128 · HELD 
 | 3792BAA7 keepGPU | PASS | 1 | 2 | R81 durable remasure; SEH=0 EXIT=0 DURABLE=1 RELATED ≠ tip |
 | F44D053D tip-absorb | PASS | 1 | 2 | R82 PUMP_SKIP ODR private; SEH=0 AUTH_HOLD RELATED ≠ tip |
 | B8E5F6E5 PrivateCand | 1 | 1 | 8 | R75 EXIT=NULL closed; SEH=0 AV_CLOSED=1 RELATED ≠ tip |
-| non617F 67350F71 R77 | 0 | 0 | 0 | EXIT=NULL partial; durable remasure incomplete RELATED |
+| non617F 67350F71 R77 | 0 | 0 | 0 | EXIT=NULL partial (superseded by R78) |
+| non617F 67350F71 R78 | 1 | 0 | 0 | OPEN_FAIL; STREAM_SEH×2 RVA=0x6B0FA pre-ENTER; META_WRITE=OK RELATED |
 
-`NEXT_OWNER` (split): GPU `ATTN_PRE_O_1_POS1` / `ATTN_Q_SPV_BITEXACT_WQ_HEAD11` residual 2.754107e-05 (R86 PRE_O_0 CLOSED on FA006; RELATED≠PASS) · qdim099 tip-absorb HOLD (R84 MF=4/4 private) · llama32 `PRIVATE_CAND_NON617F_67350F71_REMEASURE_TOK_X2_DURABLE` (R77) · `TIP_CLIMB=HOLD`
+`NEXT_OWNER` (split): llama32 `PRIVATE_CAND_NON617F_67350F71_STREAM_SEH_PRE_ENTER_RVA_6B0FA` (R78) · GPU ATTN residual / tip-absorb HOLD · `TIP_CLIMB=HOLD`
 
 PROMOTE=0 until all 128 gates PASS with independent sign-off.

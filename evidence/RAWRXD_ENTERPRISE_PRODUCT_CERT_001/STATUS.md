@@ -29,7 +29,7 @@ See `LAW.txt`. `NOT_RUN != PASS`. `EVIDENCE_PARTIAL != PASS`. Scoreboard ≠ che
 | C36 LSP hang | G07 | tip HANG/TIMEOUT RELATED (R73); stage INIT_OK crumb ≠ PASS |
 | GPU/ref numerical | G02 / G03 | R84 ATTN_PRE_O_0@pos1 OPEN 2.29e-05 C740 host-SDPA RELATED; next FA rebuild holding FFN_DOWN_2 |
 | ConPTY / HELP_TERM | G05 / G06 | tip-era stop PASS RELATED (R70); cand PASS RELATED; ≠ CERT PASS |
-| Multi-family GUI / qdim084 STREAM | G02 / G04 / G06 | R84 qdim099 MF4/4 cand 023005C2 RELATED (tip absorb HOLD); R77 non617F 67350 partial RELATED; tip 6754 RO |
+| Multi-family GUI / qdim084 STREAM | G02 / G04 / G06 | R78 non617F 67350 OPEN_FAIL STREAM_SEH pre-ENTER RVA=0x6B0FA RELATED; tip 6754 RO |
 | Offline signed install | G12 | Authenticode ABSENT; CLEAN_VM NOT_RUN |
 | Model-selected agent EBT | G05 / G08 | FORCE PASS; MODEL_SELECTED=0; wire SOURCE_WIRED RUNTIME=0 |
 | CLI clean rebuild | G01-03 | BUILD_OK=1 EXIT=0 A95A1254… (R75); CLEAN_MACHINE=0 ≠ PASS |
@@ -39,4 +39,4 @@ See `LAW.txt`. `NOT_RUN != PASS`. `EVIDENCE_PARTIAL != PASS`. Scoreboard ≠ che
 `../PRODUCTION_MATURITY_TOP25_001/VALUATION_SCOREBOARD_CANON.txt` — PCT invent forbidden here.
 
 ## Next
-ATTN FA rebuild hold FFN_DOWN_2 (R84) + non617F 67350 remasure (R77); tip AUTH_HOLD; PASS_COUNT=0 · PROMOTE=0.
+non617F STREAM_SEH pre-ENTER RVA 0x6B0FA (R78); tip AUTH_HOLD; PASS_COUNT=0 · PROMOTE=0.
