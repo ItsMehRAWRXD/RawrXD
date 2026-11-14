@@ -1,0 +1,31 @@
+﻿W4_MATRIX_START ASOF=2026-11-14T11:58:18.8784956-05:00
+CLI_SHA=1BE8F02A52916385F6B86F8441AACEDD8CAC978FE6070F751873F362BA3790B7
+GUI_SHA=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431
+cli/tinyllama_model_select=EXIT=0 PASS=1
+cli/tinyllama_inference=EXIT=0 PASS=1
+cli/tinyllama_cancel=ALIVE=1 PASS=1
+cli/tinyllama_agent_tool=EXIT=0 PASS=1
+cli/tinyllama_recovery=BAD=3 GOOD=0 PASS=1
+gui/tinyllama_model_select_inference=EXIT=2 PASS=1
+gui/tinyllama_cancel=ALIVE=0 PASS=0
+gui/tinyllama_recovery=BAD=2 GOOD=2 PASS=0
+cli/gemma3_model_select=EXIT=0 PASS=1
+cli/gemma3_inference=EXIT=0 PASS=1
+cli/gemma3_cancel=ALIVE=1 PASS=1
+cli/gemma3_agent_tool=EXIT=0 PASS=1
+cli/gemma3_recovery=BAD=3 GOOD=0 PASS=1
+gui/gemma3_model_select_inference=EXIT=2 PASS=1
+gui/gemma3_cancel=ALIVE=1 PASS=1
+gui/gemma3_recovery=BAD=2 GOOD=2 PASS=0
+cli/llama32_model_select=EXIT=0 PASS=1
+cli/llama32_inference=EXIT=0 PASS=1
+cli/llama32_cancel=ALIVE=1 PASS=1
+cli/llama32_agent_tool=EXIT=0 PASS=1
+cli/llama32_recovery=BAD=3 GOOD=12 PASS=0
+gui/llama32_model_select_inference=EXIT=2 PASS=1
+gui/llama32_cancel=ALIVE=1 PASS=1
+gui/llama32_recovery=BAD=2 GOOD=2 PASS=0
+gui/tinyllama_agent_tool=HTTP_PASS=0
+gui/gemma3_agent_tool=SAME_SURFACE_AS_TINYLLAMA_HTTP NOT_RERUN=1 PASS=0
+gui/llama32_agent_tool=SAME_SURFACE_AS_TINYLLAMA_HTTP NOT_RERUN=1 PASS=0
+W4_MATRIX_END ASOF=2026-11-14T12:08:09.7910828-05:00

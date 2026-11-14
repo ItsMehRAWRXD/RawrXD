@@ -1,0 +1,24 @@
+﻿AGENT_WAL_APPEND=1
+SESSION_CREATED=1
+agent session=sess_1794675859 workspace=g:\~dev\rawrxd\evidence\W4_MULTIFAMILY_CLI_GUI_INTEGRATION_001\ws auto=full model=g:\~dev\rawrxd\models\llama3.2-3b-Q2_K.gguf
+[AGENT_LOOP] FORCE_TOOL=read,report skip_model_load=1
+[AGENT_LOOP] FORCE_TOOL_SELECT tool=read path=g:\~dev\rawrxd\evidence\W4_MULTIFAMILY_CLI_GUI_INTEGRATION_001\ws\note.txt
+[agent phase=1 step=1] search relevant files
+[AGENT_LOOP] FORCE_TOOL_SELECT tool=report path=g:\~dev\rawrxd\evidence\W4_MULTIFAMILY_CLI_GUI_INTEGRATION_001\ws\note.txt
+[agent phase=1 step=1] report
+AGENT_LOOP_E2E=FAIL
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] CrashRecovery disarmed
+[LIFE] alreadyClosed=1
+[LIFE] alreadyClosed fast-exit
+[LIFE] ~Deep2Engine END
+TD=11 CLEAN_EXIT
+WORKSPACE_OPENED=0 FILES_READ=0 PLAN_CREATED=1
+PATCH_CREATED=0 PATCH_APPLIED=0 DIFF_RENDERED=0 UNDO_AVAILABLE=0
+BUILD_STARTED=0 BUILD_COMPLETED=0 BUILD_EXIT_CODE_CAPTURED=0
+AGENT_RESULT_EMITTED=1 AGENT_VERIFIED=0
+MODEL_LOADED=0 MODEL_INFERENCE_CALLS=0 MODEL_SELECTED_TOOL=0
+TOOL_EXECUTIONS=2 OBSERVATION_RETURNED=1 REPLAN_COUNT=2
+AGENT_LOOP=PASS
+[StreamEngine] Shutdown
+

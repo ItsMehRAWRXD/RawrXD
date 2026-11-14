@@ -1,0 +1,10 @@
+﻿name	g:\~dev\rawrxd\models\gemma3-1b-Q2_K.gguf
+tag	latest
+id	600277000bb1a8ba
+path	g:\~dev\rawrxd\models\gemma3-1b-Q2_K.gguf
+size	699066720
+arch	
+quant	
+shards	1
+valid	1
+

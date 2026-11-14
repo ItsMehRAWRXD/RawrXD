@@ -1,0 +1,83 @@
+W4_MULTIFAMILY_CLI_GUI_INTEGRATION_001
+ASOF_LOCAL=2026-11-14T12:10:00-05:00
+PROGRAM=RAWRXD_ALL_BACKENDS_COMPLETE_001
+KIND=WS8_MULTIFAMILY_CLI_GUI_INTEGRATION
+PROMOTE=0
+CERTIFIED=0
+ENTERPRISE=0/128
+GATE_STOP=1
+TIP_CLIMB=HOLD
+CROSS_SHA_CREDIT=0
+INVENT_PASS=0
+NOT_RUN!=PASS
+PCT_HELD=CLI67/GUI48/OVERALL48
+
+## Families covered
+FAMILY_1=tinyllama (arch=llama) models/tinyllama.gguf
+FAMILY_2=gemma3 (arch=gemma3) models/gemma3-1b-Q2_K.gguf
+FAMILY_3=llama3.2 (arch=llama) models/llama3.2-3b-Q2_K.gguf
+FAMILIES_N=3
+
+## Independent EXE hashes (verified at seal; binaries not git-stored)
+CLI_LIVE=build_ninja/bin/rawr.exe
+CLI_SHA256=1BE8F02A52916385F6B86F8441AACEDD8CAC978FE6070F751873F362BA3790B7
+GUI_LIVE=build_win32ide_link001/bin/RawrXD-Win32IDE.exe
+GUI_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431
+INDEPENDENT_EXE_HASHES=1
+SISTER_WS8=../MULTIAGENT_CLI_GUI_PACKAGING_001/ (RELATED; ≠ this W4 rescore)
+
+## Retained seals — exact-SHA verify (no CROSS_SHA credit)
+METHOD_C_RECORDED=7C9680CBF025FCD78AD48DFE40D26EB45ADB78FB3F9B41321346990C77E42027
+  EVIDENCE=../CLI_AGENT_MODEL_SELECTED_001/runs/c_method_runtime_template/exe.sha256.txt
+  TIP_BINARY_ON_DISK=0 (tip advanced; evidence retained)
+Q6K_SPV_RECORDED=CEBA0DE4734A3897B96A825C5CE16685161DB8A3C570C22F6B06B3DE4368A3C5
+  EVIDENCE=../POST_Q6K_SPV_PRODUCT_DEFAULT_001/runs/EXE_SHA.txt
+  LIVE_CLI_MATCH=0 (live tip=1BE8F02A… ≠ CEBA0DE4; Q6K not credited onto W4 tip)
+NUMERICAL_PIN_9797521C=MATCH pins via build_ninja/bin/rawr_FIX_Q6K_HOST_9797521C.exe
+SEE=sha/W4_SHA_VERIFY.txt sha/W4_PINNED_EXES.txt
+
+## Scenario matrix (fail-closed rescore from raw runs/)
+Scenarios: model-select | inference | cancel | agent-tool | recovery
+
+### CLI results (EXE=1BE8F02A…)
+| Family   | model-select | inference | cancel | agent-tool (FORCE) | recovery |
+|----------|--------------|-----------|--------|--------------------|----------|
+| tinyllama| PASS         | PASS TOK=8| PASS   | PASS TOOL_EXEC=2   | PASS     |
+| gemma3   | PASS         | PASS TOK=8| PASS   | PASS TOOL_EXEC=2   | PASS     |
+| llama32  | PASS         | PASS TOK=1| PASS   | PASS TOOL_EXEC=2   | FAIL (GOOD GENERATED_TOKENS=0 / exit=12 provenance) |
+
+CLI_NOTES=
+- inference: PRODUCT_PASS=1 GENERATED_TOKENS>0 measured in err
+- agent-tool: RAWR_AGENT_FORCE_TOOL=read,report (≠ Method C unforced MODEL_SELECTED); Method C retained separate
+- cancel: mid-run process kill while alive (WAS_ALIVE_AT_KILL=1)
+- llama32 recovery good path blocked PROVENANCE_MISMATCH GENERATED_TOKENS=0
+
+### GUI results (EXE=6754616E…)
+| Family   | model-select+infer | cancel | agent-tool | recovery |
+|----------|--------------------|--------|------------|----------|
+| tinyllama| FAIL (load only; GENERATED_TOKENS absent) | FAIL (finished before kill) | FAIL HTTP (Unable to connect; HEADLESS_READY=0) | FAIL (bad OK; good CLEAN_EXIT w/o GENERATED_TOKENS) |
+| gemma3   | FAIL (no GENERATED_TOKENS) | PASS kill-alive | FAIL (not re-run; same HTTP surface) | FAIL |
+| llama32  | FAIL (no GENERATED_TOKENS) | PASS kill-alive | FAIL (not re-run) | FAIL |
+
+GUI_NOTES=
+- Script initially marked gui/*_model_select_inference PASS via CLEAN_EXIT presence; fail-closed RESCORE=FAIL — zero GENERATED_TOKENS in gui inference artifacts
+- Headless oneshot exited after model init/unload without product token stream in captured logs
+- Agent HTTP: server listened :18765 but HEADLESS_READY=0; Invoke-WebRequest failed
+
+## Disposition
+W4_DISPOSITION=PARTIAL
+CLI_MULTIFAMILY=PARTIAL (2/3 families full 5-scenario; llama32 recovery open)
+GUI_MULTIFAMILY=OPEN_FAIL (inference/agent/recovery not product-token closed)
+IDENTICAL_CLI_GUI_PARITY=0
+WS8_MULTIAGENT_CLI_GUI_PACKAGING=PARTIAL
+ALL_BACKENDS_COMPLETE=0
+PROMOTE=0
+NEXT=GUI headless oneshot token path + /api/agent/run after HEADLESS_READY=1; llama32 provenance recovery
+
+## Artifacts
+runs/W4_MATRIX_LOG.txt
+runs/cli/* runs/gui/*
+run_w4_matrix.ps1
+sha/W4_SHA_VERIFY.txt
+sha/W4_PINNED_EXES.txt
+RECEIPT.txt LAW.txt MATRIX.md

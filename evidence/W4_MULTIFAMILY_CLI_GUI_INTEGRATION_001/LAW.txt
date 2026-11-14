@@ -1,0 +1,12 @@
+W4_MULTIFAMILY_CLI_GUI_INTEGRATION_001 — LAW
+PROMOTE=0 CERTIFIED=0 ENTERPRISE=0/128 GATE_STOP=1 TIP_CLIMB=HOLD
+
+1. Scope: identical model-select / inference / cancel / agent-tool / recovery
+   scenarios on CLI and GUI across ≥2 model families.
+2. CLI and GUI must use independent EXE SHA256 (CROSS_SHA_CREDIT=0).
+3. Method C + Q6K SPV seals are RETAINED via exact-SHA verify of recorded
+   evidence; they do not certify this W4 tip or GUI surface.
+4. NOT_RUN != PASS. CLEAN_EXIT alone ≠ inference PASS (requires GENERATED_TOKENS>0).
+5. FORCE_TOOL agent harness ≠ Method C unforced MODEL_SELECTED_TOOL.
+6. Process-kill cancel is measured cancel evidence; product cancel-API may be stronger.
+7. W4 PARTIAL does not lift ALL_BACKENDS_COMPLETE or enterprise 0/128.

@@ -1,0 +1,10 @@
+﻿name	g:\~dev\rawrxd\models\llama3.2-3b-Q2_K.gguf
+tag	latest
+id	c48cb838cecf8b9f
+path	g:\~dev\rawrxd\models\llama3.2-3b-Q2_K.gguf
+size	1363935456
+arch	
+quant	
+shards	1
+valid	1
+

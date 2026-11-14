@@ -1,0 +1,1375 @@
+﻿[MODEL_RESOLUTION] g:\~dev\rawrxd\models\llama3.2-3b-Q2_K.gguf
+GGUF_LOAD_STAGE=enter path="g:\~dev\rawrxd\models\llama3.2-3b-Q2_K.gguf" loadTensors=0 mmap=0
+GGUF_LOAD_STAGE=validated size=1363935456 dataOff=7837664
+GGUF_LOAD_STAGE=fopen_ok
+GGUF_LOAD_STAGE=header_ok ver=3 tensors=255 kv=30
+[AUTO_BACKEND] model=g:\~dev\rawrxd\models\llama3.2-3b-Q2_K.gguf weights=1293MB kv=448MB scratch=1MB moe=0 experts=0 ctx=2048
+[AUTO_BACKEND] host RAM=1866MB commit=68021MB
+[AUTO_BACKEND] GPU Virtual Display Driver status=25174027 problem=0 healthy=1
+[AUTO_BACKEND] GPU AMD Radeon(TM) Graphics status=25175040 problem=43 healthy=0
+[AUTO_BACKEND] GPU AMD Radeon AI PRO R9700 status=25174026 problem=0 healthy=1
+[AUTO_BACKEND] GPU AMD Radeon RX 7800 XT status=25174026 problem=0 healthy=1
+[AUTO_BACKEND] Vulkan ICD ready
+[AUTO_BACKEND] primaryReady=1 primaryValidated=1 secondaryReady=1 secondaryValidated=1 vramPriMB=32768
+[AUTO_BACKEND] decision=VulkanPrimary reason=Primary GPU fits weights+KV+scratch
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+KEN_MARS_ACTIVE=1 DEEP2_MARS=1 HOST_DECODE=0 GPU_POLICY=MULTI GPU_DEVICE_CLASS=DISCRETE NO_TRUNCATE_NEEDLE=1 PRODUCT_STREAMER_ARM=1
+PRODUCT_STREAMER_TIP_MINIMAL_PREP=1
+PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1
+RAWRXD_GPU_PREFLIGHT_BEGIN
+GPU_0=R9700
+GPU_0_WINDOWS_HEALTH=PASS
+GPU_0_PROBLEM_CODE=0
+GPU_0_CODE31=0
+GPU_1=RX_7800_XT
+GPU_1_WINDOWS_HEALTH=PASS
+GPU_1_PROBLEM_CODE=0
+GPU_1_CODE31=0
+GPU_PREFLIGHT=PASS
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+DEEP2_DEVICE_COUNT_DETECTED=2
+DEEP2_DEVICE_COUNT_OPENED=2
+DEEP2_COMPUTE_BACKEND=MULTIGPU
+DEEP2_EXEC_PATH=MULTIGPU
+DEEP2_EXEC_MODE=2
+DEEP2_GPU_POLICY=3
+DEEP2_PLAN_REASON=auto_multi_device_class
+DEEP2_PRIMARY_INDEX=0
+DEEP2_PRIMARY_STABLE_ID=1002:7551:000000000001681D
+DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_VENDOR=AMD
+DEEP2_DEVICE_0_STABLE_ID=1002:7551:000000000001681D
+DEEP2_DEVICE_0_VRAM_BYTES=34057322496
+DEEP2_DEVICE_0_SCORE=133
+DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
+DEEP2_DEVICE_1_NAME=AMD Radeon RX 7800 XT
+DEEP2_DEVICE_1_VENDOR=AMD
+DEEP2_DEVICE_1_STABLE_ID=1002:747E:0000000000019576
+DEEP2_DEVICE_1_VRAM_BYTES=16962633728
+DEEP2_DEVICE_1_SCORE=116
+DEEP2_DEVICE_1_DUTY=COMPUTE_SECONDARY
+DEEP2_COST_T_BEST=0.107467
+DEEP2_COST_CUT=12
+DEEP2_COST_KEEP=0
+DEEP2_COST_WINNER=SPLIT
+DEEP2_COST_MODEL=PIPELINE_V2
+DEEP2_COST_DUAL_DEVICES_KEPT=2
+DEEP2_COST_SLOT0_LAYERS=0-11
+DEEP2_COST_SLOT1_LAYERS=12-21
+DEEP2_COST_VRAM_GATE=0
+[VulkanCompute] DETECTED phys[0] type=2 AMD Radeon AI PRO R9700
+[VulkanCompute] DETECTED phys[1] type=2 Microsoft Direct3D12 (AMD Radeon AI PRO R9700)
+[VulkanCompute] SKIP_WARP_ICD phys[1] Microsoft Direct3D12 (AMD Radeon AI PRO R9700)
+[VulkanCompute] DETECTED phys[2] type=2 AMD Radeon RX 7800 XT
+[VulkanCompute] DETECTED phys[3] type=2 Microsoft Direct3D12 (AMD Radeon RX 7800 XT)
+[VulkanCompute] SKIP_WARP_ICD phys[3] Microsoft Direct3D12 (AMD Radeon RX 7800 XT)
+[VulkanCompute] DETECTED phys[4] type=4 Microsoft Direct3D12 (Microsoft Basic Render Driver)
+[VulkanCompute] SKIP_WARP_ICD phys[4] Microsoft Direct3D12 (Microsoft Basic Render Driver)
+[VulkanCompute] OPEN_ONE AMD Radeon AI PRO R9700 (others unused)
+[VulkanCompute] QUEUES compute=0 transfer=1 dual=1
+[VulkanCompute] FREETOKEN_STICK_RUB transfer_q=1 waw_ready_gate=1 helpframe_nway=4
+[Deep2Engine] LAYER_EXEC OPEN slot=0 AMD Radeon AI PRO R9700 layers=0-11 kind=GPU
+[VulkanCompute] DETECTED phys[0] type=2 AMD Radeon AI PRO R9700
+[VulkanCompute] DETECTED phys[1] type=2 Microsoft Direct3D12 (AMD Radeon AI PRO R9700)
+[VulkanCompute] SKIP_WARP_ICD phys[1] Microsoft Direct3D12 (AMD Radeon AI PRO R9700)
+[VulkanCompute] DETECTED phys[2] type=2 AMD Radeon RX 7800 XT
+[VulkanCompute] DETECTED phys[3] type=2 Microsoft Direct3D12 (AMD Radeon RX 7800 XT)
+[VulkanCompute] SKIP_WARP_ICD phys[3] Microsoft Direct3D12 (AMD Radeon RX 7800 XT)
+[VulkanCompute] DETECTED phys[4] type=4 Microsoft Direct3D12 (Microsoft Basic Render Driver)
+[VulkanCompute] SKIP_WARP_ICD phys[4] Microsoft Direct3D12 (Microsoft Basic Render Driver)
+[VulkanCompute] OPEN_ONE AMD Radeon RX 7800 XT (others unused)
+[VulkanCompute] QUEUES compute=0 transfer=1 dual=1
+[VulkanCompute] FREETOKEN_STICK_RUB transfer_q=1 waw_ready_gate=1 helpframe_nway=4
+[Deep2Engine] LAYER_EXEC OPEN slot=1 AMD Radeon RX 7800 XT layers=12-21 kind=GPU
+DEEP2_MULTI_GPU_PLAN=ACTIVE
+DEEP2_HYBRID_PLAN=INACTIVE
+DEEP2_DEVICE_OPENED_COUNT=2
+DEEP2_DEVICE_PLANNED_COUNT=2
+DEEP2_DEVICE_EXECUTING_COUNT=0
+DEEP2_LAYERS_EXECUTED=0
+DEEP2_REAL_GPU_LAYER_EXEC=0
+DEEP2_REAL_GPU_LAYER_COVERAGE=0
+DEEP2_PLAN_DEVICE_COUNT=2
+DEEP2_PLAN_NUM_LAYERS=22
+DEEP2_PLAN_SLOT_0_STABLE_ID=1002:7551:000000000001681D
+DEEP2_PLAN_SLOT_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_PLAN_SLOT_0_KIND=GPU
+DEEP2_PLAN_SLOT_0_LAYER_RANGE=0-11
+DEEP2_PLAN_SLOT_0_LAYER_EXECS=0
+DEEP2_PLAN_SLOT_0_SCORE=133
+DEEP2_PLAN_SLOT_1_STABLE_ID=1002:747E:0000000000019576
+DEEP2_PLAN_SLOT_1_NAME=AMD Radeon RX 7800 XT
+DEEP2_PLAN_SLOT_1_KIND=GPU
+DEEP2_PLAN_SLOT_1_LAYER_RANGE=12-21
+DEEP2_PLAN_SLOT_1_LAYER_EXECS=0
+DEEP2_PLAN_SLOT_1_SCORE=116
+DEEP2_LAYER_0_DEVICE=1002:7551:000000000001681D
+DEEP2_LAYER_0_EXECUTED=0
+DEEP2_LAYER_1_DEVICE=1002:7551:000000000001681D
+DEEP2_LAYER_1_EXECUTED=0
+DEEP2_LAYER_2_DEVICE=1002:7551:000000000001681D
+DEEP2_LAYER_2_EXECUTED=0
+DEEP2_LAYER_3_DEVICE=1002:7551:000000000001681D
+DEEP2_LAYER_3_EXECUTED=0
+DEEP2_LAYER_4_DEVICE=1002:7551:000000000001681D
+DEEP2_LAYER_4_EXECUTED=0
+DEEP2_LAYER_5_DEVICE=1002:7551:0000PIN_BUDGET_SET site=DUALSTICK_BIND old=0 new=4294967296 owner=DUALSTICK_BIND moe_reserved=4294967296
+PIN_BUDGET_FINAL stick=0 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+PIN_BUDGET_SET site=DUALSTICK_BIND old=0 new=4294967296 owner=DUALSTICK_BIND moe_reserved=4294967296
+PIN_BUDGET_FINAL stick=1 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+LOADMODEL_STAGE=pre_reverse reverse_opt_in=0
+LOADMODEL_STAGE=gguf_loader_enter path="g:\~dev\rawrxd\models\llama3.2-3b-Q2_K.gguf"
+GGUF_LOAD_STAGE=enter path="g:\~dev\rawrxd\models\llama3.2-3b-Q2_K.gguf" loadTensors=0 mmap=0
+GGUF_LOAD_STAGE=validated size=1363935456 dataOff=7837664
+GGUF_LOAD_STAGE=fopen_ok
+GGUF_LOAD_STAGE=header_ok ver=3 tensors=255 kv=30
+LOADMODEL_STAGE=gguf_meta_ok tensors=255
+LOADMODEL_STAGE=gguf_tensors_enter mmap=0
+GGUF_LOAD_STAGE=enter path="g:\~dev\rawrxd\models\llama3.2-3b-Q2_K.gguf" loadTensors=1 mmap=0
+GGUF_LOAD_STAGE=validated size=1363935456 dataOff=7837664
+GGUF_LOAD_STAGE=fopen_ok
+GGUF_LOAD_STAGE=header_ok ver=3 tensors=255 kv=30
+00000001681D
+DEEP2_LAYER_5_EXECUTED=0
+DEEP2_LAYER_6_DEVICE=1002:7551:000000000001681D
+DEEP2_LAYER_6_EXECUTED=0
+DEEP2_LAYER_7_DEVICE=1002:7551:000000000001681D
+DEEP2_LAYER_7_EXECUTED=0
+DEEP2_LAYER_8_DEVICE=1002:7551:000000000001681D
+DEEP2_LAYER_8_EXECUTED=0
+DEEP2_LAYER_9_DEVICE=1002:7551:000000000001681D
+DEEP2_LAYER_9_EXECUTED=0
+DEEP2_LAYER_10_DEVICE=1002:7551:000000000001681D
+DEEP2_LAYER_10_EXECUTED=0
+DEEP2_LAYER_11_DEVICE=1002:7551:000000000001681D
+DEEP2_LAYER_11_EXECUTED=0
+DEEP2_LAYER_12_DEVICE=1002:747E:0000000000019576
+DEEP2_LAYER_12_EXECUTED=0
+DEEP2_LAYER_13_DEVICE=1002:747E:0000000000019576
+DEEP2_LAYER_13_EXECUTED=0
+DEEP2_LAYER_14_DEVICE=1002:747E:0000000000019576
+DEEP2_LAYER_14_EXECUTED=0
+DEEP2_LAYER_15_DEVICE=1002:747E:0000000000019576
+DEEP2_LAYER_15_EXECUTED=0
+DEEP2_LAYER_16_DEVICE=1002:747E:0000000000019576
+DEEP2_LAYER_16_EXECUTED=0
+DEEP2_LAYER_17_DEVICE=1002:747E:0000000000019576
+DEEP2_LAYER_17_EXECUTED=0
+DEEP2_LAYER_18_DEVICE=1002:747E:0000000000019576
+DEEP2_LAYER_18_EXECUTED=0
+DEEP2_LAYER_19_DEVICE=1002:747E:0000000000019576
+DEEP2_LAYER_19_EXECUTED=0
+DEEP2_LAYER_20_DEVICE=1002:747E:0000000000019576
+DEEP2_LAYER_20_EXECUTED=0
+DEEP2_LAYER_21_DEVICE=1002:747E:0000000000019576
+DEEP2_LAYER_21_EXECUTED=0
+[Deep2Engine] MULTI contiguous layers ACTIVE devices=2 strict=1
+LIVE_GPU0=AMD Radeon AI PRO R9700
+LIVE_GPU1=AMD Radeon RX 7800 XT
+[Deep2Engine] BATCH2_SSVK_PACKED_DUAL_OPEN=1
+[Deep2Engine] BATCH2_SSVK_PACKED_DUAL_BOUND=1
+[Deep2Engine] BIND16_SSVK_PRODUCT_BOUND=1
+[Deep2Engine] Loading model from: g:\~dev\rawrxd\models\llama3.2-3b-Q2_K.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Multi-shard detected: NO (1 files in g:\~dev\rawrxd\models)
+[Deep2Engine] REVERSE_HOTPATCH=OFF ? raw GGUF load (opt-in via RAWRXD_REVERSE_HOTPATCH=1)
+[GGUF] WARNING: Tensor 'output_norm.weight' offset not 64-byte aligned: 7837664
+[GGUF] WARNING: Tensor 'rope_freqs.weight' offset not 64-byte aligned: 7849952
+[GGUF] WARNING: Tensor 'token_embd.weight' offset not 64-byte aligned: 7850208
+[GGUF] WARNING: Tensor 'blk.0.attn_k.weight' offset not 64-byte aligned: 331055328
+[GGUF] WARNING: Tensor 'blk.0.attn_norm.weight' offset not 64-byte aligned: 332087520
+[GGUF] WARNING: Tensor 'blk.0.attn_output.weight' offset not 64-byte aligned: 332099808
+[GGUF] WARNING: Tensor 'blk.0.attn_q.weight' offset not 64-byte aligned: 336154848
+[GGUF] WARNING: Tensor 'blk.0.attn_v.weight' offset not 64-byte aligned: 339251424
+[GGUF] WARNING: Tensor 'blk.0.ffn_down.weight' offset not 64-byte aligned: 340603104
+[GGUF] WARNING: Tensor 'blk.0.ffn_gate.weight' offset not 64-byte aligned: 351416544
+[GGUF] WARNING: Tensor 'blk.0.ffn_norm.weight' offset not 64-byte aligned: 359674080
+[GGUF] WARNING: Tensor 'blk.0.ffn_up.weight' offset not 64-byte aligned: 359686368
+[GGUF] WARNING: Tensor 'blk.1.attn_k.weight' offset not 64-byte aligned: 367943904
+[GGUF] WARNING: Tensor 'blk.1.attn_norm.weight' offset not 64-byte aligned: 368976096
+[GGUF] WARNING: Tensor 'blk.1.attn_output.weight' offset not 64-byte aligned: 368988384
+[GGUF] WARNING: Tensor 'blk.1.attn_q.weight' offset not 64-byte aligned: 373043424
+[GGUF] WARNING: Tensor 'blk.1.attn_v.weight' offset not 64-byte aligned: 376140000
+[GGUF] WARNING: Tensor 'blk.1.ffn_down.weight' offset not 64-byte aligned: 377491680
+[GGUF] WARNING: Tensor 'blk.1.ffn_gate.weight' offset not 64-byte aligned: 388305120
+[GGUF] WARNING: Tensor 'blk.1.ffn_norm.weight' offset not 64-byte aligned: 396562656
+[GGUF] WARNING: Tensor 'blk.1.ffn_up.weight' offset not 64-byte aligned: 396574944
+[GGUF] WARNING: Tensor 'blk.2.attn_k.weight' offset not 64-byte aligned: 404832480
+[GGUF] WARNING: Tensor 'blk.2.attn_norm.weight' offset not 64-byte aligned: 405864672
+[GGUF] WARNING: Tensor 'blk.2.attn_output.weight' offset not 64-byte aligned: 405876960
+[GGUF] WARNING: Tensor 'blk.2.attn_q.weight' offset not 64-byte aligned: 409932000
+[GGUF] WARNING: Tensor 'blk.2.attn_v.weight' offset not 64-byte aligned: 413028576
+[GGUF] WARNING: Tensor 'blk.2.ffn_down.weight' offset not 64-byte aligned: 414380256
+[GGUF] WARNING: Tensor 'blk.2.ffn_gate.weight' offset not 64-byte aligned: 425193696
+[GGUF] WARNING: Tensor 'blk.2.ffn_norm.weight' offset not 64-byte aligned: 433451232
+[GGUF] WARNING: Tensor 'blk.2.ffn_up.weight' offset not 64-byte aligned: 433463520
+[GGUF] WARNING: Tensor 'blk.3.attn_k.weight' offset not 64-byte aligned: 441721056
+[GGUF] WARNING: Tensor 'blk.3.attn_norm.weight' offset not 64-byte aligned: 442753248
+[GGUF] WARNING: Tensor 'blk.3.attn_output.weight' offset not 64-byte aligned: 442765536
+[GGUF] WARNING: Tensor 'blk.3.attn_q.weight' offset not 64-byte aligned: 446820576
+[GGUF] WARNING: Tensor 'blk.3.attn_v.weight' offset not 64-byte aligned: 449917152
+[GGUF] WARNING: Tensor 'blk.3.ffn_down.weight' offset not 64-byte aligned: 451268832
+[GGUF] WARNING: Tensor 'blk.3.ffn_gate.weight' offset not 64-byte aligned: 462082272
+[GGUF] WARNING: Tensor 'blk.3.ffn_norm.weight' offset not 64-byte aligned: 470339808
+[GGUF] WARNING: Tensor 'blk.3.ffn_up.weight' offset not 64-byte aligned: 470352096
+[GGUF] WARNING: Tensor 'blk.4.attn_k.weight' offset not 64-byte aligned: 478609632
+[GGUF] WARNING: Tensor 'blk.4.attn_norm.weight' offset not 64-byte aligned: 479641824
+[GGUF] WARNING: Tensor 'blk.4.attn_output.weight' offset not 64-byte aligned: 479654112
+[GGUF] WARNING: Tensor 'blk.4.attn_q.weight' offset not 64-byte aligned: 483709152
+[GGUF] WARNING: Tensor 'blk.4.attn_v.weight' offset not 64-byte aligned: 486805728
+[GGUF] WARNING: Tensor 'blk.4.ffn_down.weight' offset not 64-byte aligned: 488157408
+[GGUF] WARNING: Tensor 'blk.4.ffn_gate.weight' offset not 64-byte aligned: 498970848
+[GGUF] WARNING: Tensor 'blk.4.ffn_norm.weight' offset not 64-byte aligned: 507228384
+[GGUF] WARNING: Tensor 'blk.4.ffn_up.weight' offset not 64-byte aligned: 507240672
+[GGUF] WARNING: Tensor 'blk.5.attn_k.weight' offset not 64-byte aligned: 515498208
+[GGUF] WARNING: Tensor 'blk.5.attn_norm.weight' offset not 64-byte aligned: 516530400
+[GGUF] WARNING: Tensor 'blk.5.attn_output.weight' offset not 64-byte aligned: 516542688
+[GGUF] WARNING: Tensor 'blk.5.attn_q.weight' offset not 64-byte aligned: 520597728
+[GGUF] WARNING: Tensor 'blk.5.attn_v.weight' offset not 64-byte aligned: 523694304
+[GGUF] WARNING: Tensor 'blk.5.ffn_down.weight' offset not 64-byte aligned: 525045984
+[GGUF] WARNING: Tensor 'blk.5.ffn_gate.weight' offset not 64-byte aligned: 535859424
+[GGUF] WARNING: Tensor 'blk.5.ffn_norm.weight' offset not 64-byte aligned: 544116960
+[GGUF] WARNING: Tensor 'blk.5.ffn_up.weight' offset not 64-byte aligned: 544129248
+[GGUF] WARNING: Tensor 'blk.6.attn_k.weight' offset not 64-byte aligned: 552386784
+[GGUF] WARNING: Tensor 'blk.6.attn_norm.weight' offset not 64-byte aligned: 553418976
+[GGUF] WARNING: Tensor 'blk.6.attn_output.weight' offset not 64-byte aligned: 553431264
+[GGUF] WARNING: Tensor 'blk.6.attn_q.weight' offset not 64-byte aligned: 557486304
+[GGUF] WARNING: Tensor 'blk.6.attn_v.weight' offset not 64-byte aligned: 560582880
+[GGUF] WARNING: Tensor 'blk.6.ffn_down.weight' offset not 64-byte aligned: 561934560
+[GGUF] WARNING: Tensor 'blk.6.ffn_gate.weight' offset not 64-byte aligned: 572748000
+[GGUF] WARNING: Tensor 'blk.6.ffn_norm.weight' offset not 64-byte aligned: 581005536
+[GGUF] WARNING: Tensor 'blk.6.ffn_up.weight' offset not 64-byte aligned: 581017824
+[GGUF] WARNING: Tensor 'blk.7.attn_k.weight' offset not 64-byte aligned: 589275360
+[GGUF] WARNING: Tensor 'blk.7.attn_norm.weight' offset not 64-byte aligned: 590307552
+[GGUF] WARNING: Tensor 'blk.7.attn_output.weight' offset not 64-byte aligned: 590319840
+[GGUF] WARNING: Tensor 'blk.7.attn_q.weight' offset not 64-byte aligned: 594374880
+[GGUF] WARNING: Tensor 'blk.7.attn_v.weight' offset not 64-byte aligned: 597471456
+[GGUF] WARNING: Tensor 'blk.7.ffn_down.weight' offset not 64-byte aligned: 598823136
+[GGUF] WARNING: Tensor 'blk.7.ffn_gate.weight' offset not 64-byte aligned: 609636576
+[GGUF] WARNING: Tensor 'blk.7.ffn_norm.weight' offset not 64-byte aligned: 617894112
+[GGUF] WARNING: Tensor 'blk.7.ffn_up.weight' offset not 64-byte aligned: 617906400
+[GGUF] WARNING: Tensor 'blk.8.attn_k.weight' offset not 64-byte aligned: 626163936
+[GGUF] WARNING: Tensor 'blk.8.attn_norm.weight' offset not 64-byte aligned: 627196128
+[GGUF] WARNING: Tensor 'blk.8.attn_output.weight' offset not 64-byte aligned: 627208416
+[GGUF] WARNING: Tensor 'blk.8.attn_q.weight' offset not 64-byte aligned: 631263456
+[GGUF] WARNING: Tensor 'blk.8.attn_v.weight' offset not 64-byte aligned: 634360032
+[GGUF] WARNING: Tensor 'blk.8.ffn_down.weight' offset not 64-byte aligned: 635711712
+[GGUF] WARNING: Tensor 'blk.8.ffn_gate.weight' offset not 64-byte aligned: 646525152
+[GGUF] WARNING: Tensor 'blk.8.ffn_norm.weight' offset not 64-byte aligned: 654782688
+[GGUF] WARNING: Tensor 'blk.8.ffn_up.weight' offset not 64-byte aligned: 654794976
+[GGUF] WARNING: Tensor 'blk.9.attn_k.weight' offset not 64-byte aligned: 663052512
+[GGUF] WARNING: Tensor 'blk.9.attn_norm.weight' offset not 64-byte aligned: 664084704
+[GGUF] WARNING: Tensor 'blk.9.attn_output.weight' offset not 64-byte aligned: 664096992
+[GGUF] WARNING: Tensor 'blk.9.attn_q.weight' offset not 64-byte aligned: 668152032
+[GGUF] WARNING: Tensor 'blk.9.attn_v.weight' offset not 64-byte aligned: 671248608
+[GGUF] WARNING: Tensor 'blk.9.ffn_down.weight' offset not 64-byte aligned: 672600288
+[GGUF] WARNING: Tensor 'blk.9.ffn_gate.weight' offset not 64-byte aligned: 683413728
+[GGUF] WARNING: Tensor 'blk.9.ffn_norm.weight' offset not 64-byte aligned: 691671264
+[GGUF] WARNING: Tensor 'blk.9.ffn_up.weight' offset not 64-byte aligned: 691683552
+[GGUF] WARNING: Tensor 'blk.10.attn_k.weight' offset not 64-byte aligned: 699941088
+[GGUF] WARNING: Tensor 'blk.10.attn_norm.weight' offset not 64-byte aligned: 700973280
+[GGUF] WARNING: Tensor 'blk.10.attn_output.weight' offset not 64-byte aligned: 700985568
+[GGUF] WARNING: Tensor 'blk.10.attn_q.weight' offset not 64-byte aligned: 705040608
+[GGUF] WARNING: Tensor 'blk.10.attn_v.weight' offset not 64-byte aligned: 708137184
+[GGUF] WARNING: Tensor 'blk.10.ffn_down.weight' offset not 64-byte aligned: 709488864
+[GGUF] WARNING: Tensor 'blk.10.ffn_gate.weight' offset not 64-byte aligned: 720302304
+[GGUF] WARNING: Tensor 'blk.10.ffn_norm.weight' offset not 64-byte aligned: 728559840
+[GGUF] WARNING: Tensor 'blk.10.ffn_up.weight' offset not 64-byte aligned: 728572128
+[GGUF] WARNING: Tensor 'blk.11.attn_k.weight' offset not 64-byte aligned: 736829664
+[GGUF] WARNING: Tensor 'blk.11.attn_norm.weight' offset not 64-byte aligned: 737861856
+[GGUF] WARNING: Tensor 'blk.11.attn_output.weight' offset not 64-byte aligned: 737874144
+[GGUF] WARNING: Tensor 'blk.11.attn_q.weight' offset not 64-byte aligned: 741929184
+[GGUF] WARNING: Tensor 'blk.11.attn_v.weight' offset not 64-byte aligned: 745025760
+[GGUF] WARNING: Tensor 'blk.11.ffn_down.weight' offset not 64-byte aligned: 746377440
+[GGUF] WARNING: Tensor 'blk.11.ffn_gate.weight' offset not 64-byte aligned: 757190880
+[GGUF] WARNING: Tensor 'blk.11.ffn_norm.weight' offset not 64-byte aligned: 765448416
+[GGUF] WARNING: Tensor 'blk.11.ffn_up.weight' offset not 64-byte aligned: 765460704
+[GGUF] WARNING: Tensor 'blk.12.attn_k.weight' offset not 64-byte aligned: 773718240
+[GGUF] WARNING: Tensor 'blk.12.attn_norm.weight' offset not 64-byte aligned: 774750432
+[GGUF] WARNING: Tensor 'blk.12.attn_output.weight' offset not 64-byte aligned: 774762720
+[GGUF] WARNING: Tensor 'blk.12.attn_q.weight' offset not 64-byte aligned: 778817760
+[GGUF] WARNING: Tensor 'blk.12.attn_v.weight' offset not 64-byte aligned: 781914336
+[GGUF] WARNING: Tensor 'blk.12.ffn_down.weight' offset not 64-byte aligned: 783266016
+[GGUF] WARNING: Tensor 'blk.12.ffn_gate.weight' offset not 64-byte aligned: 794079456
+[GGUF] WARNING: Tensor 'blk.12.ffn_norm.weight' offset not 64-byte aligned: 802336992
+[GGUF] WARNING: Tensor 'blk.12.ffn_up.weight' offset not 64-byte aligned: 802349280
+[GGUF] WARNING: Tensor 'blk.13.attn_k.weight' offset not 64-byte aligned: 810606816
+[GGUF] WARNING: Tensor 'blk.13.attn_norm.weight' offset not 64-byte aligned: 811639008
+[GGUF] WARNING: Tensor 'blk.13.attn_output.weight' offset not 64-byte aligned: 811651296
+[GGUF] WARNING: Tensor 'blk.13.attn_q.weight' offset not 64-byte aligned: 815706336
+[GGUF] WARNING: Tensor 'blk.13.attn_v.weight' offset not 64-byte aligned: 818802912
+[GGUF] WARNING: Tensor 'blk.13.ffn_down.weight' offset not 64-byte aligned: 820154592
+[GGUF] WARNING: Tensor 'blk.13.ffn_gate.weight' offset not 64-byte aligned: 830968032
+[GGUF] WARNING: Tensor 'blk.13.ffn_norm.weight' offset not 64-byte aligned: 839225568
+[GGUF] WARNING: Tensor 'blk.13.ffn_up.weight' offset not 64-byte aligned: 839237856
+[GGUF] WARNING: Tensor 'blk.14.attn_k.weight' offset not 64-byte aligned: 847495392
+[GGUF] WARNING: Tensor 'blk.14.attn_norm.weight' offset not 64-byte aligned: 848527584
+[GGUF] WARNING: Tensor 'blk.14.attn_output.weight' offset not 64-byte aligned: 848539872
+[GGUF] WARNING: Tensor 'blk.14.attn_q.weight' offset not 64-byte aligned: 852594912
+[GGUF] WARNING: Tensor 'blk.14.attn_v.weight' offset not 64-byte aligned: 855691488
+[GGUF] WARNING: Tensor 'blk.14.ffn_down.weight' offset not 64-byte aligned: 857043168
+[GGUF] WARNING: Tensor 'blk.14.ffn_gate.weight' offset not 64-byte aligned: 867856608
+[GGUF] WARNING: Tensor 'blk.14.ffn_norm.weight' offset not 64-byte aligned: 876114144
+[GGUF] WARNING: Tensor 'blk.14.ffn_up.weight' offset not 64-byte aligned: 876126432
+[GGUF] WARNING: Tensor 'blk.15.attn_k.weight' offset not 64-byte aligned: 884383968
+[GGUF] WARNING: Tensor 'blk.15.attn_norm.weight' offset not 64-byte aligned: 885416160
+[GGUF] WARNING: Tensor 'blk.15.attn_output.weight' offset not 64-byte aligned: 885428448
+[GGUF] WARNING: Tensor 'blk.15.attn_q.weight' offset not 64-byte aligned: 889483488
+[GGUF] WARNING: Tensor 'blk.15.attn_v.weight' offset not 64-byte aligned: 892580064
+[GGUF] WARNING: Tensor 'blk.15.ffn_down.weight' offset not 64-byte aligned: 893931744
+[GGUF] WARNING: Tensor 'blk.15.ffn_gate.weight' offset not 64-byte aligned: 904745184
+[GGUF] WARNING: Tensor 'blk.15.ffn_norm.weight' offset not 64-byte aligned: 913002720
+[GGUF] WARNING: Tensor 'blk.15.ffn_up.weight' offset not 64-byte aligned: 913015008
+[GGUF] WARNING: Tensor 'blk.16.attn_k.weight' offset not 64-byte aligned: 921272544
+[GGUF] WARNING: Tensor 'blk.16.attn_norm.weight' offset not 64-byte aligned: 922304736
+[GGUF] WARNING: Tensor 'blk.16.attn_output.weight' offset not 64-byte aligned: 922317024
+[GGUF] WARNING: Tensor 'blk.16.attn_q.weight' offset not 64-byte aligned: 926372064
+[GGUF] WARNING: Tensor 'blk.16.attn_v.weight' offset not 64-byte aligned: 929468640
+[GGUF] WARNING: Tensor 'blk.16.ffn_down.weight' offset not 64-byte aligned: 930820320
+[GGUF] WARNING: Tensor 'blk.16.ffn_gate.weight' offset not 64-byte aligned: 941633760
+[GGUF] WARNING: Tensor 'blk.16.ffn_norm.weight' offset not 64-byte aligned: 949891296
+[GGUF] WARNING: Tensor 'blk.16.ffn_up.weight' offset not 64-byte aligned: 949903584
+[GGUF] WARNING: Tensor 'blk.17.attn_k.weight' offset not 64-byte aligned: 958161120
+[GGUF] WARNING: Tensor 'blk.17.attn_norm.weight' offset not 64-byte aligned: 959193312
+[GGUF] WARNING: Tensor 'blk.17.attn_output.weight' offset not 64-byte aligned: 959205600
+[GGUF] WARNING: Tensor 'blk.17.attn_q.weight' offset not 64-byte aligned: 963260640
+[GGUF] WARNING: Tensor 'blk.17.attn_v.weight' offset not 64-byte aligned: 966357216
+[GGUF] WARNING: Tensor 'blk.17.ffn_down.weight' offset not 64-byte aligned: 967708896
+[GGUF] WARNING: Tensor 'blk.17.ffn_gate.weight' offset not 64-byte aligned: 978522336
+[GGUF] WARNING: Tensor 'blk.17.ffn_norm.weight' offset not 64-byte aligned: 986779872
+[GGUF] WARNING: Tensor 'blk.17.ffn_up.weight' offset not 64-byte aligned: 986792160
+[GGUF] WARNING: Tensor 'blk.18.attn_k.weight' offset not 64-byte aligned: 995049696
+[GGUF] WARNING: Tensor 'blk.18.attn_norm.weight' offset not 64-byte aligned: 996081888
+[GGUF] WARNING: Tensor 'blk.18.attn_output.weight' offset not 64-byte aligned: 996094176
+[GGUF] WARNING: Tensor 'blk.18.attn_q.weight' offset not 64-byte aligned: 1000149216
+[GGUF] WARNING: Tensor 'blk.18.attn_v.weight' offset not 64-byte aligned: 1003245792
+[GGUF] WARNING: Tensor 'blk.18.ffn_down.weight' offset not 64-byte aligned: 1004597472
+[GGUF] WARNING: Tensor 'blk.18.ffn_gate.weight' offset not 64-byte aligned: 1015410912
+[GGUF] WARNING: Tensor 'blk.18.ffn_norm.weight' offset not 64-byte aligned: 1023668448
+[GGUF] WARNING: Tensor 'blk.18.ffn_up.weight' offset not 64-byte aligned: 1023680736
+[GGUF] WARNING: Tensor 'blk.19.attn_k.weight' offset not 64-byte aligned: 1031938272
+[GGUF] WARNING: Tensor 'blk.19.attn_norm.weight' offset not 64-byte aligned: 1032970464
+[GGUF] WARNING: Tensor 'blk.19.attn_output.weight' offset not 64-byte aligned: 1032982752
+[GGUF] WARNING: Tensor 'blk.19.attn_q.weight' offset not 64-byte aligned: 1037037792
+[GGUF] WARNING: Tensor 'blk.19.attn_v.weight' offset not 64-byte aligned: 1040134368
+[GGUF] WARNING: Tensor 'blk.19.ffn_down.weight' offset not 64-byte aligned: 1041486048
+[GGUF] WARNING: Tensor 'blk.19.ffn_gate.weight' offset not 64-byte aligned: 1052299488
+[GGUF] WARNING: Tensor 'blk.19.ffn_norm.weight' offset not 64-byte aligned: 1060557024
+[GGUF] WARNING: Tensor 'blk.19.ffn_up.weight' offset not 64-byte aligned: 1060569312
+[GGUF] WARNING: Tensor 'blk.20.attn_k.weight' offset not 64-byte aligned: 1068826848
+[GGUF] WARNING: Tensor 'blk.20.attn_norm.weight' offset not 64-byte aligned: 1069859040
+[GGUF] WARNING: Tensor 'blk.20.attn_output.weight' offset not 64-byte aligned: 1069871328
+[GGUF] WARNING: Tensor 'blk.20.attn_q.weight' offset not 64-byte aligned: 1073926368
+[GGUF] WARNING: Tensor 'blk.20.attn_v.weight' offset not 64-byte aligned: 1077022944
+[GGUF] WARNING: Tensor 'blk.20.ffn_down.weight' offset not 64-byte aligned: 1078374624
+[GGUF] WARNING: Tensor 'blk.20.ffn_gate.weight' offset not 64-byte aligned: 1089188064
+[GGUF] WARNING: Tensor 'blk.20.ffn_norm.weight' offset not 64-byte aligned: 1097445600
+[GGUF] WARNING: Tensor 'blk.20.ffn_up.weight' offset not 64-byte aligned: 1097457888
+[GGUF] WARNING: Tensor 'blk.21.attn_k.weight' offset not 64-byte aligned: 1105715424
+[GGUF] WARNING: Tensor 'blk.21.attn_norm.weight' offset not 64-byte aligned: 1106747616
+[GGUF] WARNING: Tensor 'blk.21.attn_output.weight' offset not 64-byte aligned: 1106759904
+[GGUF] WARNING: Tensor 'blk.21.attn_q.weight' offset not 64-byte aligned: 1110814944
+[GGUF] WARNING: Tensor 'blk.21.attn_v.weight' offset not 64-byte aligned: 1113911520
+[GGUF] WARNING: Tensor 'blk.21.ffn_down.weight' offset not 64-byte aligned: 1115263200
+[GGUF] WARNING: Tensor 'blk.21.ffn_gate.weight' offset not 64-byte aligned: 1126076640
+[GGUF] WARNING: Tensor 'blk.21.ffn_norm.weight' offset not 64-byte aligned: 1134334176
+[GGUF] WARNING: Tensor 'blk.21.ffn_up.weight' offset not 64-byte aligned: 1134346464
+[GGUF] WARNING: Tensor 'blk.22.attn_k.weight' offset not 64-byte aligned: 1142604000
+[GGUF] WARNING: Tensor 'blk.22.attn_norm.weight' offset not 64-byte aligned: 1143636192
+[GGUF] WARNING: Tensor 'blk.22.attn_output.weight' offset not 64-byte aligned: 1143648480
+[GGUF] WARNING: Tensor 'blk.22.attn_q.weight' offset not 64-byte aligned: 1147703520
+[GGUF] WARNING: Tensor 'blk.22.attn_v.weight' offset not 64-byte aligned: 1150800096
+[GGUF] WARNING: Tensor 'blk.22.ffn_down.weight' offset not 64-byte aligned: 1152151776
+[GGUF] WARNING: Tensor 'blk.22.ffn_gate.weight' offset not 64-byte aligned: 1162965216
+[GGUF] WARNING: Tensor 'blk.22.ffn_norm.weight' offset not 64-byte aligned: 1171222752
+[GGUF] WARNING: Tensor 'blk.22.ffn_up.weight' offset not 64-byte aligned: 1171235040
+[GGUF] WARNING: Tensor 'blk.23.attn_k.weight' offset not 64-byte aligned: 1179492576
+[GGUF] WARNING: Tensor 'blk.23.attn_norm.weight' offset not 64-byte aligned: 1180524768
+[GGUF] WARNING: Tensor 'blk.23.attn_output.weight' offset not 64-byte aligned: 1180537056
+[GGUF] WARNING: Tensor 'blk.23.attn_q.weight' offset not 64-byte aligned: 1184592096
+[GGUF] WARNING: Tensor 'blk.23.attn_v.weight' offset not 64-byte aligned: 1187688672
+[GGUF] WARNING: Tensor 'blk.23.ffn_down.weight' offset not 64-byte aligned: 1189040352
+[GGUF] WARNING: Tensor 'blk.23.ffn_gate.weight' offset not 64-byte aligned: 1199853792
+[GGUF] WARNING: Tensor 'blk.23.ffn_norm.weight' offset not 64-byte aligned: 1208111328
+[GGUF] WARNING: TeLOADMODEL_STAGE=gguf_loader_ok tensors=255
+LOADMODEL_STAGE=geometry_ok
+LOADMODEL_STAGE=digest_skip
+[ModelOpenCompat] repaired metadata: arch=0 vocab=0 hidden=0 layers=0 inter=1 heads=0 kvHeads=0
+GEMMA4_SCHEMA_BIND root=output_norm.weight rows=3072 cols=1 type=0
+WEIGHT_BUDGET_ENV_PRESENT=1
+WEIGHT_BUDGET_ENV_RAW="8192"
+WEIGHT_BUDGET_PARSE_OK=1
+WEIGHT_BUDGET_INPUT_MIB=8192
+WEIGHT_BUDGET_EFFECTIVE_MIB=8192
+RESIDENCY_BUDGET_MIB=8192
+BUDGET_RELATION_VALID=1
+nsor 'blk.23.ffn_up.weight' offset not 64-byte aligned: 1208123616
+[GGUF] WARNING: Tensor 'blk.24.attn_k.weight' offset not 64-byte aligned: 1216381152
+[GGUF] WARNING: Tensor 'blk.24.attn_norm.weight' offset not 64-byte aligned: 1217413344
+[GGUF] WARNING: Tensor 'blk.24.attn_output.weight' offset not 64-byte aligned: 1217425632
+[GGUF] WARNING: Tensor 'blk.24.attn_q.weight' offset not 64-byte aligned: 1221480672
+[GGUF] WARNING: Tensor 'blk.24.attn_v.weight' offset not 64-byte aligned: 1224577248
+[GGUF] WARNING: Tensor 'blk.24.ffn_down.weight' offset not 64-byte aligned: 1225928928
+[GGUF] WARNING: Tensor 'blk.24.ffn_gate.weight' offset not 64-byte aligned: 1236742368
+[GGUF] WARNING: Tensor 'blk.24.ffn_norm.weight' offset not 64-byte aligned: 1244999904
+[GGUF] WARNING: Tensor 'blk.24.ffn_up.weight' offset not 64-byte aligned: 1245012192
+[GGUF] WARNING: Tensor 'blk.25.attn_k.weight' offset not 64-byte aligned: 1253269728
+[GGUF] WARNING: Tensor 'blk.25.attn_norm.weight' offset not 64-byte aligned: 1254301920
+[GGUF] WARNING: Tensor 'blk.25.attn_output.weight' offset not 64-byte aligned: 1254314208
+[GGUF] WARNING: Tensor 'blk.25.attn_q.weight' offset not 64-byte aligned: 1258369248
+[GGUF] WARNING: Tensor 'blk.25.attn_v.weight' offset not 64-byte aligned: 1261465824
+[GGUF] WARNING: Tensor 'blk.25.ffn_down.weight' offset not 64-byte aligned: 1262817504
+[GGUF] WARNING: Tensor 'blk.25.ffn_gate.weight' offset not 64-byte aligned: 1273630944
+[GGUF] WARNING: Tensor 'blk.25.ffn_norm.weight' offset not 64-byte aligned: 1281888480
+[GGUF] WARNING: Tensor 'blk.25.ffn_up.weight' offset not 64-byte aligned: 1281900768
+[GGUF] WARNING: Tensor 'blk.26.attn_k.weight' offset not 64-byte aligned: 1290158304
+[GGUF] WARNING: Tensor 'blk.26.attn_norm.weight' offset not 64-byte aligned: 1291190496
+[GGUF] WARNING: Tensor 'blk.26.attn_output.weight' offset not 64-byte aligned: 1291202784
+[GGUF] WARNING: Tensor 'blk.26.attn_q.weight' offset not 64-byte aligned: 1295257824
+[GGUF] WARNING: Tensor 'blk.26.attn_v.weight' offset not 64-byte aligned: 1298354400
+[GGUF] WARNING: Tensor 'blk.26.ffn_down.weight' offset not 64-byte aligned: 1299706080
+[GGUF] WARNING: Tensor 'blk.26.ffn_gate.weight' offset not 64-byte aligned: 1310519520
+[GGUF] WARNING: Tensor 'blk.26.ffn_norm.weight' offset not 64-byte aligned: 1318777056
+[GGUF] WARNING: Tensor 'blk.26.ffn_up.weight' offset not 64-byte aligned: 1318789344
+[GGUF] WARNING: Tensor 'blk.27.attn_k.weight' offset not 64-byte aligned: 1327046880
+[GGUF] WARNING: Tensor 'blk.27.attn_norm.weight' offset not 64-byte aligned: 1328079072
+[GGUF] WARNING: Tensor 'blk.27.attn_output.weight' offset not 64-byte aligned: 1328091360
+[GGUF] WARNING: Tensor 'blk.27.attn_q.weight' offset not 64-byte aligned: 1332146400
+[GGUF] WARNING: Tensor 'blk.27.attn_v.weight' offset not 64-byte aligned: 1335242976
+[GGUF] WARNING: Tensor 'blk.27.ffn_down.weight' offset not 64-byte aligned: 1336594656
+[GGUF] WARNING: Tensor 'blk.27.ffn_gate.weight' offset not 64-byte aligned: 1347408096
+[GGUF] WARNING: Tensor 'blk.27.ffn_norm.weight' offset not 64-byte aligned: 1355665632
+[GGUF] WARNING: Tensor 'blk.27.ffn_up.weight' offset not 64-byte aligned: 1355677920
+[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=PASS arch=llama L=28 H=3072 FFN=8192 heads=24 kv=8 hd=128 ctx=131072 ropeBase=500000 ropeDim=128
+[Deep2Engine] AUTHORITY_LADDER=DEFER_UNTIL_RUNTIME_RECEIPT
+[Deep2Engine] GGUF architecture: 'llama'  hidden=3072 layers=28 heads=24 kvHeads=8 inter=8192 vocab=128256
+[Deep2Engine] Tokenizer loaded: vocab=128256 bos=128000 eos=128009 (Spm::encode)
+[Deep2Engine] Using tied embeddings
+[ResidencyManager] Initialized: maxResidentBytes=8589934592, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=8192 MB
+[ResidencyManager] this=000002D554137D10  Registered 'output_norm.weight': shard=0 offset=7837664 bytes=12288  |  registry_size=1  registeredBytes=12288  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=000002D554137D10  Registered 'blk.10.ffn_gate.weight': shard=0 offset=720302304 bytes=8257536  |  registry_siFFN_INTER_INFERRED ok=1 why=SPLIT_GATE_MATCHES_DOWN inter=8192 old_meta=8192 old_model=8192 old_config=8192
+PHI3_FUSED_FFN_RUNTIME layers=28 repaired=0 authority=UNOBSERVED
+GEMMA4_SCHEMA_BINDER ok=1 why=GEOM_READY hidden=3072 layers=28 vocab=128256 tokenEmbed=1
+GEMMA4_LAYER_TOPOLOGY_BIND ok=1 why=GEOM_READY_UNIFORM layers=28 split=28 fused_qkv=0 projector=0 ssm=0 ffn_only=0 ffn=28 unknown=0
+GEMMA4_BIND_LLAMA_FALLBACK ok=1 why=ALIAS_BOUND_GEOM_READY tokenEmbed=1 hidden=3072 vocab=128256 layers=28
+MODEL_PROVENANCE_BEGIN=1
+MODEL_LOCATION=
+MODEL_CANONICAL=
+MODEL_EXISTS=0 MODEL_IS_DIRECTORY=0 MODEL_BYTES=0 MODEL_WRITE_STAMP=0
+MODEL_LOCATOR_HASH=0 TENSOR_NAME_SHAPE_HASH=0 MODEL_EXPECTED_FP=11753875096244137027
+DIGEST_FP=0 MANIFEST_FP=0 BIND_FP=11753875096244137027 AUTHORITY_FP=11753875096244137027 RUNTIME_FP=11753875096244137027
+MANIFEST_LOADED=0 MANIFEST_THIS_RUN=0 MANIFEST_ID=none
+SCHEMA_ALIAS_FALLBACK_USED=1 INHERITED_SCHEMA_AUTHORITY=0 RUNTIME_OVERLAY_SEPARATE=1
+MODEL_PROVENANCE_MATCH=0 BLOCKED_AT=PROVENANCE_MISMATCH WHY=MODEL_LOCATION_NOT_FOUND
+AUTHORITY_CLASS=DISCOVERY_PROVENANCE PROMOTE=0
+MODEL_PROVENANCE_END=1
+MODEL_OPEN=PASS
+MODEL_PROVENANCE_MATCH=0
+AUTHORITY_LADDER=BLOCKED
+BLOCKED_AT=PROVENANCE_MISMATCH
+PROMOTE=0
+[BUF] hidden=3072 heads=24 headDim=128 qOut=3072 headScratch=3072 kvDim=1024 ffn=8192 ffnGateScratch=8192
+SSM_BUF stPer=32 cvPer=12288 inner=0 state=0 NOTE=STATE_NE_HEADS
+SSM_MAMBA2_ARM=0 reason=GEO_OR_BUF
+[BUF] hidden=3072 heads=24 headDim=128 qOut=3072 headScratch=3072 kvDim=1024 ffn=12288 ffnGateScratch=12288
+SSM_BUF stPer=32 cvPer=12288 inner=0 state=0 NOTE=STATE_NE_HEADS
+SSM_MAMBA2_ARM=0 reason=GEO_OR_BUF
+ze=100  registeredBytes=720722176  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=000002D554137D10  Registered 'blk.21.ffn_norm.weight': shard=0 offset=1134334176 bytes=12288  |  registry_size=200  registeredBytes=1126508800  zeroOffset=0  maxResidentBytes=8589934592
+RMV_MOUNT_001
+TENSORS_DISCOVERED=255
+TENSORS_ADDRESSED=255
+TENSORS_REGISTERED=255
+INVALID_SHARD=0
+INVALID_RANGE=0
+OVERFLOW_RANGE=0
+ZERO_SIZE=0
+UNADDRESSED=0
+RMV_MOUNT_001=PASS
+[Deep2Engine] ResidencyManager: this=000002D554137D10  registered=255 tensors  bytes=1356097792  max=8589934592
+[RMV_MOUNT_001]=PASS
+[Deep2Engine] AUTHORITY_LADDER=BLOCKED
+BLOCKED_AT=PROVENANCE_MISMATCH
+BLOCKED_OWNER=MODEL_PROVENANCE
+MODEL_OPEN=PASS
+PROMOTE=0
+[Deep2Engine] AUTHORITY_LADDER=SESSION_SEAL_ONLY provenance_blocks_promote=1 schema=254
+[ThreadPool] Initializing with 32 threads...
+[ThreadPool] Initialized 32 worker threads
+[ThreadPool] Reinitializing with 32 threads...
+[ThreadPool] Reinitialized 32 worker threads
+[Deep2Engine] ThreadPool (loadModel): 32 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF7BCD8DA10 dequant=00007FF7BCD8B0A0 GetGEMV(12)=00007FF7BCD8DA10 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 22 GEMV kernels, 22 dequant kernels
+[KVCache] Lazy pages: layers=28 page=8 virtualMax=131072 heads=8 dim=128
+[KVCache] HOT_BYTES=1835008 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] Model loaded successfully (255 tensors)
+[Deep2Engine] Initializing production inference engine...
+  Hidden Dim: 3072
+  Num Layers: 28
+  Num Heads: 24
+  Num KV Heads: 8
+  Head Dim: 128
+  Max Seq Len: 4096
+  Use ThreadPool: YES
+  Use KV Cache: YES
+  Use RoPE: YES
+[ThreadPool] Shutdown complete
+[ThreadPool] Initializing with 32 threads...
+[ThreadPool] Initialized 32 worker threads
+[ThreadPool] Reinitializing with 32 threads...
+[ThreadPool] Reinitialized 32 worker threads
+  ThreadPool: 32 threads (auto-detected)
+[KVCache] Addressable: layers=28 virtualSeq=4096 kv_heads=8 headDim=128 (hot pages only)
+[KVCache] Lazy pages: layers=28 page=8 virtualMax=4096 heads=8 dim=128
+[KVCache] HOT_BYTES=1835008 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[HotPatcher] CrashRecovery UEF skipped (product default)
+[HotPatcher] Initialized - The Bottle is ready (with safety systems)
+[Deep2Engine] HotPatcher initialized - The Bottle is ready
+[QuantKernelRegistry] Q4_K GEMV=00007FF7BCD8DA10 dequant=00007FF7BCD8B0A0 GetGEMV(12)=00007FF7BCD8DA10 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 22 GEMV kernels, 22 dequant kernels
+[Deep2Engine] Telemetry controller initialized (PCIe stall + bandwidth + residency)
+[Deep2Engine] ENHANCEMENT STACK: ON
+ELASTIC_DYNAMIC warm=2304MB staged=288MB hot=4608MB la=1 ramAvail=5505MB vram=32479MB L=28 pressure=0
+FREETOKEN_MICROZONE live=1 zones=8 zone_mb=64 sticks=4 active=0 overwrites=0 hits=0 misses=0 hit_pct=0.00 stick0_rpm=0 stick1_rpm=0 allocs_after_init=0 key=address_id waw_ready_gate=1 helpframe_nway=4 eat_gt2=1 metric=fetch_not_fit models=20/35/70/120/300/671+ unbounded=1 public_gap=amd_xfer_waw+prescope_dual_only
+ADDRESSABILITY_OWNER=FUTURE_CONSUMER_SPACE
+RESIDENCY_OWNER=FIXED_FREETOKEN_POOL
+EVICTION_POLICY=NONE
+REASSIGNMENT_POLICY=ADVANCE_OWNERSHIP
+CACHE_POLICY=TIME_UNTIL_CONSUMER
+PHYSICAL_POOL_BYTES=536870912
+PHYSICAL_POOL_GROWS=0
+FUTURE_CONSUMER_SPACE_GROWS=1
+LOGICAL_ADDRESS_SPACE_GROWS=1
+PHYSICAL_PAGE_POOL_GROWS=0
+HOTPATH_ALLOCATIONS=0
+FREE_REQUIRED=0
+REUSE_REQUIRED=1
+LOGICAL_CONSUMERS=0
+LOGICAL_ADDRESS_BYTES=0
+PHYSICAL_PAGE_POOL_BYTES=536870912
+PHYSICAL_PAGES=8
+OWNERSHIP_ADVANCES=0
+PAST_OWNER_TO_FUTURE_OWNER=1
+CACHE_METRIC=TIME_UNTIL_CONSUMER
+PIN_BUDGET_SET site=ENGINE_MAX_HOT old=4294967296 new=4831838208 owner=ENGINE_MAX_HOT moe_reserved=4294967296
+KV_WORKING_SEQ_BOUND=4096 ckv_torus (gguf_ctx=4096)
+[ElasticResidencyManager] PASSIVE vulkan/DualStick (no scheduler, no GhostCache)
+[ElasticResidencyManager] Initialized: warmCompressed=2304 MB, warmStaged=288 MB, hot=4608 MB, lookahead=1
+[Deep2Engine] ElasticResidencyManager DYNAMIC warm=2304 staged=288 hot=4608 la=1
+[Deep2Engine] ElasticResidencyManager: late-registered model tensors
+[Deep2Engine] CycloneScheduler armed for live generate
+[Deep2Engine] Residency telemetry: ENABLED
+[Deep2Engine] Medusa speculative decoding: ENABLED
+[Deep2Engine] NU fused packing: ENABLED
+[Deep2Engine] Warmup scheduler: ENABLED
+[Deep2Engine] Compressed KV cache: ENABLED (Q8_0)
+[Deep2Engine] NVMe streaming: ENABLED
+[Deep2Engine] Sliding window: ENABLED (size=4096)
+[Deep2Engine] Chamber (SM0-DSP) initialized
+[Deep2Engine] Chamber: ENABLED
+[Deep2Engine] PlasmaGovernor initialized
+[Deep2Engine] PlasmaGovernor: ENABLED
+[Deep2Engine] SovereignOutOfCoreRuntime initialized (8GB RAM / 32GB VRAM)
+[Deep2Engine] SovereignOutOfCoreRuntime: ENABLED
+[Deep2Engine] ToroidalKVCache initialized: 4096 tokens, 28 layers, 24 heads, 128 dim
+[Deep2Engine] ToroidalKVCache: ENABLED
+[Deep2Engine] RESIDENCY_BRAID stamped=252 slots=2 (Router?Expert?Residency?Transfer?GPU cache)
+[MARS] Initializing controller...
+[VRAMManager] Initialized: GPU0=31.86 GB, GPU1=15.98 GB
+[DualGPUBackend] Initializing dual-GPU queues...
+[DualGPUBackend] Queues ready
+[MARS] Controller ready: GPU0=31.86 GB, GPU1=15.98 GB
+[Deep2Engine] MARS enabled: GPU0=31.86 GB, GPU1=15.98 GB
+KEN_MARS_ACTIVE=1 budget_env=8192
+[VRAMManager] Allocated 'token_embd.weight' (323205120 bytes) on GPU 0
+[DualGPUBackend] Worker 0 started
+[DualGPUBackend] Worker 1 started
+[Deep2Engine] MARS keep-GPU pin 'token_embd.weight' (skip Host/Stream Evict under GPU product)
+[VRAMManager] Allocated 'output_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.attn_q.weight' (3096576 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.attn_k.weight' (1032192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.attn_v.weight' (1351680 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.attn_output.weight' (4055040 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.ffn_gate.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.ffn_up.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.ffn_down.weight' (10813440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.attn_q.weight' (3096576 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.attn_k.weight' (1032192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.attn_v.weight' (1351680 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.attn_output.weight' (4055040 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.ffn_gate.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.ffn_up.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.ffn_down.weight' (10813440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.attn_q.weight' (3096576 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.attn_k.weight' (1032192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.attn_v.weight' (1351680 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.attn_output.weight' (4055040 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.ffn_gate.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.ffn_up.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.ffn_down.weight' (10813440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.attn_q.weight' (3096576 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.attn_k.weight' (1032192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.attn_v.weight' (1351680 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.attn_output.weight' (4055040 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.ffn_gate.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.ffn_up.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.ffn_down.weight' (10813440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.attn_q.weight' (3096576 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.attn_k.weight' (1032192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.attn_v.weight' (1351680 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.attn_output.weight' (4055040 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.ffn_gate.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.ffn_up.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.ffn_down.weight' (10813440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.attn_q.weight' (3096576 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.attn_k.weight' (1032192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.attn_v.weight' (1351680 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.attn_output.weight' (4055040 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.ffn_gate.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.ffn_up.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.ffn_down.weight' (10813440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.attn_q.weight' (3096576 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.attn_k.weight' (1032192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.attn_v.weight' (1351680 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.attn_output.weight' (4055040 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.ffn_gate.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.ffn_up.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.ffn_down.weight' (10813440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.attn_q.weight' (3096576 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.attn_k.weight' (1032192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.attn_v.weight' (1351680 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.attn_output.weight' (4055040 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.ffn_gate.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.ffn_up.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.ffn_down.weight' (10813440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.attn_q.weight' (3096576 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.attn_k.weight' (1032192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.attn_v.weight' (1351680 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.attn_output.weight' (4055040 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.ffn_gate.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.ffn_up.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.ffn_down.weight' (10813440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.attn_q.weight' (3096576 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.attn_k.weight' (1032192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.attn_v.weight' (1351680 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.attn_output.weight' (4055040 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.ffn_gate.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.ffn_up.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.ffn_down.weight' (10813440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.attn_q.weight' (3096576 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.attn_k.weight' (1032192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.attn_v.weight' (1351680 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.attn_output.weight' (4055040 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.ffn_gate.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.ffn_up.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.ffn_down.weight' (10813440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.attn_q.weight' (3096576 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.attn_k.weight' (1032192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.attn_v.weight' (1351680 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.attn_output.weight' (4055040 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.ffn_gate.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.ffn_up.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.ffn_down.weight' (10813440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.attn_q.weight' (3096576 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.attn_k.weight' (1032192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.attn_v.weight' (1351680 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.attn_output.weight' (4055040 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.ffn_gate.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.ffn_up.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.ffn_down.weight' (10813440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.attn_q.weight' (3096576 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.attn_k.weight' (1032192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.attn_v.weight' (1351680 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.attn_output.weight' (4055040 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.ffn_gate.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.ffn_up.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.ffn_down.weight' (10813440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.attn_q.weight' (3096576 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.attn_k.weight' (1032192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.attn_v.weight' (1351680 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.attn_output.weight' (4055040 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.ffn_gate.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.ffn_up.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.ffn_down.weight' (10813440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.attn_q.weight' (3096576 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.attn_k.weight' (1032192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.attn_v.weight' (1351680 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.attn_output.weight' (4055040 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.ffn_gate.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.ffn_up.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.ffn_down.weight' (10813440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.attn_q.weight' (3096576 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.attn_k.weight' (1032192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.attn_v.weight' (1351680 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.attn_output.weight' (4055040 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.ffn_gate.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.ffn_up.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.ffn_down.weight' (10813440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.attn_q.weight' (3096576 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.attn_k.weight' (1032192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.attn_v.weight' (1351680 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.attn_output.weight' (4055040 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.ffn_gate.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.ffn_up.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.ffn_down.weight' (10813440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.attn_q.weight' (3096576 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.attn_k.weight' (1032192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.attn_v.weight' (1351680 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.attn_output.weight' (4055040 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.ffn_gate.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.ffn_up.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.ffn_down.weight' (10813440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.attn_q.weight' (3096576 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.attn_k.weight' (1032192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.attn_v.weight' (1351680 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.attn_output.weight' (4055040 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.ffn_gate.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.ffn_up.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.ffn_down.weight' (10813440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.attn_q.weight' (3096576 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.attn_k.weight' (1032192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.attn_v.weight' (1351680 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.attn_output.weight' (4055040 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.ffn_gate.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.ffn_up.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.ffn_down.weight' (10813440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.attn_q.weight' (3096576 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.attn_k.weight' (1032192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.attn_v.weight' (1351680 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.attn_output.weight' (4055040 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.ffn_gate.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.ffn_up.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.ffn_down.weight' (10813440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.attn_q.weight' (3096576 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.attn_k.weight' (1032192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.attn_v.weight' (1351680 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.attn_output.weight' (4055040 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.ffn_gate.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.ffn_up.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.ffn_down.weight' (10813440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.attn_q.weight' (3096576 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.attn_k.weight' (1032192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.attn_v.weight' (1351680 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.attn_output.weight' (4055040 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.ffn_gate.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.ffn_up.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.ffn_down.weight' (10813440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.attn_q.weight' (3096576 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.attn_k.weight' (1032192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.attn_v.weight' (1351680 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.attn_output.weight' (4055040 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.ffn_gate.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.ffn_up.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.ffn_down.weight' (10813440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.attn_q.weight' (3096576 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.attn_k.weight' (1032192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.attn_v.weight' (1351680 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.attn_output.weight' (4055040 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.ffn_gate.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.ffn_up.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.ffn_down.weight' (10813440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.26.attn_q.weight' (3096576 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.26.attn_k.weight' (1032192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.26.attn_v.weight' (1351680 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.26.attn_output.weight' (4055040 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.26.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.26.ffn_gate.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.26.ffn_up.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.26.ffn_down.weight' (10813440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.26.ffn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.27.attn_q.weight' (3096576 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.27.attn_k.weight' (1032192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.27.attn_v.weight' (1351680 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.27.attn_output.weight' (4055040 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.27.attn_norm.weight' (12288 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.27.ffn_gate.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.27.ffn_up.weight' (8257536 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.27.ffn_down.weight' (10813440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.27.ffn_norm.weight' (12288 bytes) on GPU 0
+[Deep2Engine] MARS placed 254 tensors (oom=0 skip=701) GPU0=1293.28 MB GPU1=0.00 MB
+[Deep2Engine] Initializing VAL-000 advanced features...
+[MedusaDecoder] Initialized: 4 heads, topK=10, maxTree=40
+[Deep2Engine] Medusa decoder initialized (4 heads)
+[Deep2Engine] NU Fused Packer initialized
+[CompressePIN_BUDGET_SET site=DUALSTICK_BIND old=4831838208 new=4294967296 owner=DUALSTICK_BIND moe_reserved=4294967296
+PIN_BUDGET_FINAL stick=0 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+PIN_BUDGET_SET site=DUALSTICK_BIND old=4294967296 new=4294967296 owner=DUALSTICK_BIND moe_reserved=4294967296
+PIN_BUDGET_FINAL stick=1 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+GEN=0 BIND16_LINKED=1 PACKED_Q2K_READY=1 SSVK_READY=1 DUALSTICK_ARMED=0 GPU_RESIDENT=1 MODEL_LOADED=1 DEVICE_COUNT=2 FWD_G0=0 FWD_G1=0 RESIDENCY_EPOCH=1 MODEL_EPOCH=1
+CONTINUITY_POINT=AFTER_FN_RESET
+GENERATE_STREAM_PRE_CONFIG=1
+CFG_GEN_BEFORE_STICK=1
+CFG_GEN_AFTER_STICK=1
+CFG_GEN_GREEDY_SKIP_SAMPLER=1
+CFG_GEN_GREEDY_RETURN=1
+GENERATE_STREAM_POST_CONFIG=1
+GENERATE_STREAM_POST_BATCH007=1
+TOKEN_EMBD_STREAM_RESTORE_SKIP=1
+GENERATE_STREAM_POST_MARS_PIN=1
+GENERATE_STREAM_POST_CHOREO=1
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+STREAM_STATUS=READY
+NEXT_ACTION=CALL_GENERATE_STREAM
+GENERATE_STREAM_ENTER=1 ARCH=llama LAYERS=28 KV_HEADS=8 HEAD_DIM=128
+[GEN_DEBUG] opts.maxTokens=4 remCtx=4084 maxTokens=4 promptN=12 maxSeqLen=4096 contextLimited=0
+dKVCache] Initialized: 251 MB compressed (vs 896 MB F32, 3.6x ratio)
+[Deep2Engine] Compressed KV cache initialized (Q8_0)
+[NVMeStream] RAWRXD_NVME_REVERSE_BUNNYHOP=1 → force reverse bunnyhop
+[NVMeBunnyHop] UNLAIDOUT_REVERSE_CHUNK_HOTPATCH_BUNNYHOP g:\~dev\rawrxd\models\llama3.2-3b-Q2_K.gguf 1.36GB c=4194304 u=1 hp=1
+[NVMeStream] REVERSE_BUNNYHOP UNLAIDOUT_REVERSE_CHUNK_HOTPATCH_BUNNYHOP
+[Deep2Engine] NVMe REVERSE_BUNNYHOP (unlaidout hotpatch)
+[SlidingWindow] Initialized: window=4096, overlap=512, chunk=2048
+[Deep2Engine] Sliding window initialized (size=4096)
+[Deep2Engine] Advanced features initialization complete
+[Deep2Engine] STACK vk=1 mars=1 elastic=1 cyclone=1 medusa=1 nu=1 warmup=1 ckv=1 nvme=1 slide=1 chamber=1 torus=1 plasma=1 sov=1 prefetch=1 devices=2
+[Deep2Engine] Initialization complete
+[Deep2Engine] Medusa speculative decoding: DISABLED
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[ChatTemplate] Detected 'llama3' from template string
+[AGENT] PREFILL_BEGIN prompt_tokens=12
+HOTPATH_GEMV=VULKAN
+HOTPATH_RMSNORM=GPU
+HOTPATH_ATTN=GPU
+HOTPATH_FFN=GPU_RESIDENT
+HOTPATH_MEDUSA=0
+HOTPATH_ELASTIC=0
+HOTPATH_CYCLONE=1
+HOTPATH_CKV=0
+HOTPATH_GPU_FWD_ENABLED=1
+GEN=0 BIND16_LINKED=1 PACKED_Q2K_READY=1 SSVK_READY=1 DUALSTICK_ARMED=0 GPU_RESIDENT=1 MODEL_LOADED=1 DEVICE_COUNT=2 FWD_G0=0 FWD_G1=0 RESIDENCY_EPOCH=1 MODEL_EPOCH=1
+CONTINUITY_POINT=AFTER_FN_RESET
+AUTO_POLICY_ACTIVE=0
+MANUAL_ARM_FORCING=1
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=manual_preserve_mech
+K2_LIVE_POLICY_REUSE_STEPS=112
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=28 TOKENS=4
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=1548400000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=1 MECH_ENV=trampoline,cyclone,elastic,stream WANTED=1
+[HotPatcher] GENERATE_DECODER_ALG=0 HEAT=lukewarm SKIP_HOTPATCH=1
+[Deep2Engine] NVMe streaming: ENABLED
+[Deep2Engine] Initializing VAL-000 advanced features...
+[Deep2Engine] Advanced features initialization complete
+[LivePath] GENERATE_ALG_MASK=0x0000010E random=0
+WEIGHT_BUDGET_INPUT=8192
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=8192
+WEIGHT_BUDGET_BYTES=8589934592
+WEIGHT_BUDGET_SOURCE=ENV
+GPU_ARENA_WINDOW_FAIL slot=1 maxB=323205120 budget=8589934592 arena=939728896 ov=0
+GPU_MULTIMAP_FAIL why=arena slot=1
+TRY_GPU_TOKEN_FORWARD=FAIL multi=1 slots=2 layers=28
+TRY_GPU_FALLBACK_HOST=1
+[LAYER_ENTER] ly=0
+B03_QKV_MAXABS layer=0 post_qk_norm q=1.703901e+00 k=3.985095e+00 v=1.464827e-01 qL2=1.242437e+01 kL2=2.226017e+01 ropeDim=128 headDim=128 qnorm_data=0000000000000000
+[POST_ATTN] ly=0 output[0..7]= 0.00187626 0.00444045 0.0064773 0.00269214 -0.00884797 0.00312949 -0.00408093 0.00190168 
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+[FFN_WEIGHT_DIAG] ly=0 intermediateDim=8192 gateBufNorm=1.209449e+01 gateBufNonFinite=0 wDownRows=3072 wDownCols=8192 wDownType=11
+[FFN_EXIT] ly=0 (normal path)
+[LAYER_EXIT] ly=0
+[FINAL_OUT] ly=0 norm=1.863105e+01 finite=3072/3072 output[0..7]= 0.000538062 0.0109413 -0.000275559 -0.00131696 -0.00208717 0.00398803 -0.00747182 0.00774981 
+[LAYER_ENTER] ly=1
+[POST_ATTN] ly=1 output[0..7]= 0.00029442 0.0052774 0.0117579 0.00346976 -0.00305679 -0.00474882 -0.00311734 0.00350464 
+[FFN_WEIGHT_DIAG] ly=1 intermediateDim=8192 gateBufNorm=6.053225e+02 gateBufNonFinite=0 wDownRows=3072 wDownCols=8192 wDownType=11
+[FFN_EXIT] ly=1 (normal path)
+[LAYER_EXIT] ly=1
+[FINAL_OUT] ly=1 norm=7.271116e+02 finite=3072/3072 output[0..7]= 0.0112604 -0.0232687 0.364641 0.0577167 0.039906 -0.00648285 0.0007316 -0.058298 
+[LAYER_ENTER] ly=2
+[POST_ATTN] ly=2 output[0..7]= 0.000606883 -0.00196379 0.00940072 -0.00653868 0.0064986 0.00152473 -0.00287482 -0.00697487 
+[FFN_WEIGHT_DIAG] ly=2 intermediateDim=8192 gateBufNorm=1.111193e+00 gateBufNonFinite=0 wDownRows=3072 wDownCols=8192 wDownType=11
+[FFN_EXIT] ly=2 (normal path)
+[LAYER_EXIT] ly=2
+[FINAL_OUT] ly=2 norm=7.274456e+02 finite=3072/3072 output[0..7]= 0.0108711 -0.00955212 0.384524 0.0886734 0.035141 1.28616e-06 -0.0462065 -0.0543821 
+[LAYER_ENTER] ly=3
+[POST_ATTN] ly=3 output[0..7]= -0.00339686 0.0222519 0.0141513 0.00405057 0.00618649 -0.0157466 -0.0124571 -0.00627403 
+[FFN_WEIGHT_DIAG] ly=3 intermediateDim=8192 gateBufNorm=1.196537e+00 gateBufNonFinite=0 wDownRows=3072 wDownCols=8192 wDownType=11
+[FFN_EXIT] ly=3 (normal path)
+[LAYER_EXIT] ly=3
+[FINAL_OUT] ly=3 norm=7.277647e+02 finite=3072/3072 output[0..7]= 0.0259703 0.0583429 0.382122 0.090105 0.0298828 -0.00501961 -0.0492073 -0.0446832 
+[LAYER_ENTER] ly=4
+[POST_ATTN] ly=4 output[0..7]= -0.0139179 0.036449 0.0311989 -0.00628526 -0.00070781 -0.014725 -0.0138959 -0.0213649 
+[FFN_WEIGHT_DIAG] ly=4 intermediateDim=8192 gateBufNorm=1.239634e+00 gateBufNonFinite=0 wDownRows=3072 wDownCols=8192 wDownType=11
+[FFN_EXIT] ly=4 (normal path)
+[LAYER_EXIT] ly=4
+[FINAL_OUT] ly=4 norm=7.280916e+02 finite=3072/3072 output[0..7]= -0.0204972 0.122421 0.432859 0.0722154 0.0572693 -0.0488038 -0.0906077 -0.0393549 
+[LAYER_ENTER] ly=5
+[POST_ATTN] ly=5 output[0..7]= -0.0320765 0.0126528 0.0435048 -0.00723112 0.0155063 -0.00966343 -0.00177541 -0.00380727 
+[FFN_WEIGHT_DIAG] ly=5 intermediateDim=8192 gateBufNorm=1.335382e+00 gateBufNonFinite=0 wDownRows=3072 wDownCols=8192 wDownType=11
+[FFN_EXIT] ly=5 (normal path)
+[LAYER_EXIT] ly=5
+[FINAL_OUT] ly=5 norm=7.283896e+02 finite=3072/3072 output[0..7]= -0.0605985 0.210233 0.461654 0.0388164 0.0876277 -0.0376346 -0.133382 -0.042444 
+[LAYER_ENTER] ly=6
+[POST_ATTN] ly=6 output[0..7]= 0.0110419 0.0227237 0.0338263 -0.0192899 0.0231665 0.0183391 -0.0195825 0.000712455 
+[FFN_WEIGHT_DIAG] ly=6 intermediateDim=8192 gateBufNorm=2.339743e+00 gateBufNonFinite=0 wDownRows=3072 wDownCols=8192 wDownType=11
+[FFN_EXIT] ly=6 (normal path)
+[LAYER_EXIT] ly=6
+[FINAL_OUT] ly=6 norm=7.290008e+02 finite=3072/3072 output[0..7]= -0.0757052 0.22372 0.461409 0.00914871 0.111559 0.0746972 -0.216549 -0.0487705 
+[LAYER_ENTER] ly=7
+[POST_ATTN] ly=7 output[0..7]= 0.0125137 0.0603132 0.0589884 0.0512802 0.0430665 0.00998556 -0.0308809 -0.00476798 
+[FFN_WEIGHT_DIAG] ly=7 intermediateDim=8192 gateBufNorm=1.527551e+00 gateBufNonFinite=0 wDownRows=3072 wDownCols=8192 wDownType=11
+[FFN_EXIT] ly=7 (normal path)
+[LAYER_EXIT] ly=7
+[FINAL_OUT] ly=7 norm=7.293463e+02 finite=3072/3072 output[0..7]= -0.102177 0.310895 0.46306 0.0873111 0.12398 0.0847967 -0.270772 -0.016134 
+[LAYER_ENTER] ly=8
+[POST_ATTN] ly=8 output[0..7]= -0.0181434 0.0266309 0.0335906 0.00780021 -0.0034359 -0.00177215 -0.0162786 0.0203673 
+[FFN_WEIGHT_DIAG] ly=8 intermediateDim=8192 gateBufNorm=1.270909e+00 gateBufNonFinite=0 wDownRows=3072 wDownCols=8192 wDownType=11
+[FFN_EXIT] ly=8 (normal path)
+[LAYER_EXIT] ly=8
+[FINAL_OUT] ly=8 norm=7.296797e+02 finite=3072/3072 output[0..7]= -0.134859 0.336127 0.462345 0.120391 0.127276 0.0924872 -0.313963 0.00302498 
+[LAYER_ENTER] ly=9
+[POST_ATTN] ly=9 output[0..7]= -0.0266268 0.00168461 0.0287232 0.0435882 -0.0218298 -0.0249218 0.0239354 0.00870855 
+[FFN_WEIGHT_DIAG] ly=9 intermediateDim=8192 gateBufNorm=1.100902e+00 gateBufNonFinite=0 wDownRows=3072 wDownCols=8192 wDownType=11
+[FFN_EXIT] ly=9 (normal path)
+[LAYER_EXIT] ly=9
+[FINAL_OUT] ly=9 norm=7.299877e+02 finite=3072/3072 output[0..7]= -0.165969 0.334712 0.452852 0.156031 0.111196 0.023637 -0.324065 0.0152583 
+[LAYER_ENTER] ly=10
+[POST_ATTN] ly=10 output[0..7]= 0.0818771 -0.00295897 0.0167611 -0.00586113 -0.0143153 0.0198019 0.0152156 0.0123846 
+[FFN_WEIGHT_DIAG] ly=10 intermediateDim=8192 gateBufNorm=1.624342e+00 gateBufNonFinite=0 wDownRows=3072 wDownCols=8192 wDownType=11
+[FFN_EXIT] ly=10 (normal path)
+[LAYER_EXIT] ly=10
+[FINAL_OUT] ly=10 norm=7.304605e+02 finite=3072/3072 output[0..7]= -0.07349 0.334928 0.440432 0.131116 0.0973184 0.0539343 -0.295193 0.0249394 
+[LAYER_ENTER] ly=11
+[POST_ATTN] ly=11 output[0..7]= -0.0319831 -0.00336118 0.0142278 0.0187194 0.0224451 0.0431575 0.0370499 0.0134563 
+[FFN_WEIGHT_DIAG] ly=11 intermediateDim=8192 gateBufNorm=2.827463e+00 gateBufNonFinite=0 wDownRows=3072 wDownCols=8192 wDownType=11
+[FFN_EXIT] ly=11 (normal path)
+[LAYER_EXIT] ly=11
+[FINAL_OUT] ly=11 norm=7.312543e+02 finite=3072/3072 output[0..7]= -0.177609 0.352283 0.385598 0.223329 0.166647 0.115371 -0.197766 0.0177351 
+[LAYER_ENTER] ly=12
+[VulkanCompute] QUANT_GEMV_MISS type=10 'blk.12.attn_q.weight' ? GPU_F32_DEQUANT
+HOST_LAYER_FAIL L=12 bad allocation
+[B3_ABORT] prefill gpu/cpu forward fail pos=0
+[StreamEngine] Initialized: 28 layers, even compression, ON reuse, ON reconstruct, ON dense
+[StreamEngine] VRAM budget: 16.00 GB
+[StreamEngine] Chunk size: 1.09 GB compressed, 8.72 GB original, 1.45 GB reconstructed
+[unreverseHot] streamDead(0) → Reverse0 (layers=28)
+[Deep2Engine] embedToken: type=14 vocabSize=128256 hiddenDim=3072 data=000002D554B70000 sizeBytes=323205120
+[ResolveReverse0] layer 0: neutral resolved → direction chosen
+[ReconstructCompression] layer 0: 4/24 slices active, 8.72 GB → 1.45 GB
+[Deep2Engine] Layer 0 weights: wq.data=000002D5685A0000 type=10 wk.data=000002D5680B0000 wv.data=000002D5688A0000 wo.data=000002D5681C0000 wqkv.data=0000000000000000 attnO.data=000002D5681C0000
+[Deep2Engine] Layer 0 weights: attnNorm.data=000002D5681B0000 ffnNorm.data=000002D569C20000
+[ResolveReverse0] layer 1: neutral resolved → direction chosen
+[ReconstructCompression] layer 1: 4/24 slices active, 8.72 GB → 1.45 GB
+[ResolveReverse0] layer 2: neutral resolved → direction chosen
+[ReconstructCompression] layer 2: 4/24 slices active, 8.72 GB → 1.45 GB
+[ResolveReverse0] layer 3: neutral resolved → direction chosen
+[ReconstructCompression] layer 3: 4/24 slices active, 8.72 GB → 1.45 GB
+[ResolveReverse0] layer 4: neutral resolved → direction chosen
+[ReconstructCompression] layer 4: 4/24 slices active, 8.72 GB → 1.45 GB
+[ResolveReverse0] layer 5: neutral resolved → direction chosen
+[ReconstructCompression] layer 5: 4/24 slices active, 8.72 GB → 1.45 GB
+[ResolveReverse0] layer 6: neutral resolved → direction chosen
+[ReconstructCompression] layer 6: 4/24 slices active, 8.72 GB → 1.45 GB
+[ResolveReverse0] layer 7: neutral resolved → direction chosen
+[ReconstructCompression] layer 7: 4/24 slices active, 8.72 GB → 1.45 GB
+[ResolveReverse0] layer 8: neutral resolved → direction chosen
+[ReconstructCompression] layer 8: 4/24 slices active, 8.72 GB → 1.45 GB
+[ResolveReverse0] layer 9: neutral resolved → direction chosen
+[ReconstructCompression] layer 9: 4/24 slices active, 8.72 GB → 1.45 GB
+[ResolveReverse0] layer 10: neutral resolved → direction chosen
+[ReconstructCompression] layer 10: 4/24 slices active, 8.72 GB → 1.45 GB
+[ResolveReverse0] layer 11: neutral resolved → direction chosen
+[ReconstructCompression] layer 11: 4/24 slices active, 8.72 GB → 1.45 GB
+[ResolveReverse0] layer 12: neutral resolved → direction chosen
+[ReconstructCompression] layer 12: 4/24 slices active, 8.72 GB → 1.45 GB
+SHARD_OPEN_US=0
+SHARD_READ_US=0
+CACHE_LOOKUP_US=0
+CACHE_HIT_US=0
+LAYER_ACQUIRE_WAIT_US=0
+RECONSTRUCT_US=0
+OUTPUT_WEIGHT_US=0
+MLA_COMPUTE_US=0
+LOGITS_US=0
+SAMPLE_US=0
+STREAM_US=0
+DETOK_US=0
+HOST_CACHE_COPY_US=0
+SHARD_ATTN_US=0 SHARD_MOE_US=0 SHARD_OTHER_US=0
+NEXT_BEST_MOVE=MLA_ATTN_KV_EXPAND
+NEXT_BEST_MOVE_US=0
+RE_MANIFEST=MLA=0,LOGITS=0,OUT_W=0,SHARD=0,COPY=0
+GREEDY_DET TRACE_HASH=cbf29ce484222325 EXPERT_SEQUENCE_HASH=cbf29ce484222325 ARGMAX_STEPS=0 STICK_HASH_MODE=1
+D2_MOE_LIVE moe_ffn_enter=0 moe_place_enter=0 MOE_PLACE_CALLS=0 moe_router_calls=0 ffn_dispatch_moe=0 ffn_dispatch_dense=12 ffn_dispatch_ssm=0
+D2_MOE_LIVE experts_selected=0 experts_executed=0 parity=1 thrash_tokens=0
+D2_MOE_LIVE hits=N/A misses=N/A miss_bytes=N/A EXPERT_LOGICAL_MISS_BYTES=N/A_NOT_REACHED acquire_ok=0 acquire_fail=0 markhot=0
+D2_MOE_LIVE SHARED_EXPERT_CALLS=0 slice_layout_mismatch=0 stick_retains=0 stick_assigns=0
+D2_MOE_LIVE EXPERT_GPU_ACQUIRE=0 EXPERT_GPU_EXEC=0 HOST_GEMV_EXPERT=0
+D2_MOE_DECODE K2_MOE_LAYER_CALLS=0 MOE_PLACE_CALLS=0 EXPERTS_SELECTED=0 EXPERTS_EXECUTED=0 parity=1
+DUALSTICK_REQUESTED=0
+DUALSTICK_PLANNED=0
+DUALSTICK_ARMED=0
+DUALSTICK_ARM_COUNT=0
+DUALSTICK_ARM_ACQUIRES=0
+DUALSTICK_ARM_BYTES_WORKED=0
+DUALSTICK_ARM_EXEC=0
+DUALSTICK_RUNTIME_USED=0
+DUALSTICK_RUNTIME_DEVICE_COUNT=0
+DUALSTICK_FORWARD_CALLS_GPU0=0
+DUALSTICK_FORWARD_CALLS_GPU1=0
+DUALSTICK_RUNTIME_BYTES_WORKED=0
+DUALSTICK_TRUE_RUNTIME=0
+DUALSTICK_ARM_ONLY=0
+DUAL_STICK_ARMED=0
+DUAL_STICK_EXEC=0
+DUAL_STICK_ACQUIRES=0
+DUAL_STICK_CONSUMERS=0
+DUAL_STICK_OWNERSHIP_ADVANCES=0
+DUAL_STICK_BYTES_WORKED=0
+DUAL_STICK_EXEC_NOTE=alias_of_DUALSTICK_RUNTIME_USED
+LIVE_PATH_VACUUM=0
+LIVE_PATH_TRAMPOLINE_INSTALLED=1
+LIVE_PATH_TRAMPOLINE_HITS=14
+LIVE_PATH_CYCLONE=1
+LIVE_PATH_CYCLONE_LAYER_STARTS=13
+LIVE_PATH_CYCLONE_LAYER_ENDS=12
+LIVE_PATH_CYCLONE_DEMANDS=91
+LIVE_PATH_PINBALL_SAMPLES=0
+LIVE_PATH_ELASTIC=1
+LIVE_PATH_STREAM=1
+LIVE_PATH_STREAM_ALIVE=13
+LIVE_PATH_NVME_HOPS=1
+LIVE_PATH_PLASMA_SAMPLES=0
+LIVE_PATH_REVERSAL_US=0.000
+LIVE_PATH_ENHANCEMENTS=1
+LIVE_PATH_BRAKE=0
+LIVE_PATH_ACTIVE=0
+STREAM_BYTES_READ_TOTAL=0
+STREAM_BYTES_TO_GPU_TOTAL=442368000
+STREAM_BYTES_RECONSTRUCTED_TOTAL=0
+STREAM_READ_OPS=0
+STREAM_GPU_UPLOAD_OPS=84
+VRAM_PEAK=0
+RESIDENT_WEIGHT_PEAK=0
+CACHE_HITS=0
+CACHE_MISSES=0
+CYCLONE_PREFETCH_REQUESTS=91
+CYCLONE_PREFETCH_PROMOTIONS=0
+CYCLONE_STALL_CYCLES=0
+PINBALL_BOOST_TRIGGERS=0
+REVERSAL_PREFETCH_BOOSTS=0
+QUEUE_PEAK=7
+PER_TOKEN_ALLOCS=0
+FALLBACK_COUNT=0
+TRAILBRAKE_CHECKS=0
+TRAILBRAKE_TRIGGERED=0
+TRAILBRAKE_TOKENS_AVOIDED=0
+ABSENCE_NVME=0
+ABSENCE_PLASMA=1
+FUSED_ENABLED=0
+FUSED_DECISIONS=0
+FUSED_PREFETCH_DEPTH=0
+FUSED_REVERSE_DEPTH=0
+FUSED_PREFETCH_DEPTH_MAX=0
+FUSED_REVERSE_DEPTH_MAX=0
+FUSED_URGENT_ACQUIRES=0
+FUSED_SPECULATIVE_SUPPRESSED=0
+FUSED_EVICTIONS=0
+FUSED_WARMUP_ENABLES=0
+FUSED_BRAKES=0
+FUSED_CONFLICTS_AVOIDED=0
+FUSED_PREFETCH_REQUESTS_DROPPED=0
+FUSED_DUPLICATE_PREFETCHES=0
+FUSED_QUEUE_PEAK=0
+FUSED_FAST_BYPASS=0
+FUSED_SIGNAL_CHANGES=0
+FUSED_POLICY_CHANGES=0
+FUSED_DECISIONS_SKIPPED=0
+FUSED_DECISION_US=0
+FUSED_BRAKE_US=0
+FUSED_SUPPRESSION_US=0
+FUSED_TOTAL_CONTROL_US=0
+LIVE_NU_WANTED=0
+LIVE_NU_AUTHORIZED=1
+LIVE_NU_ACTIVE=0
+LIVE_NU_CONSUME_OPS=0
+LIVE_NU_CONSUME_BYTES=0
+LIVE_NU_REJECT_OFF=0
+LIVE_NU_REJECT_NO_AUTH=0
+LIVE_NU_FAIL=0
+TPS_RAW=0.000000
+TPS_DISPLAY=0.0
+TPS_SCALE=1000
+TPB_RAW=2.000000000e-08
+TPB_REVERSE_BPT=50000000.0
+TPS_WORK=0.000
+PRODUCT_ENTRY_PATH=1
+STREAM_RUNTIME_PATH=1
+MODEL_GRAPH_COMPLETE=1
+NEMOTRON_SSM_REAL=0
+SSM_REAL_LAYERS=0 SSM_IDENTITY_LAYERS=0 SSM_HYBRID_LAYERS=0 SSM_MAMBA_ARMED=0
+NUMERIC_PARITY=UNPROVEN
+FUNCTIONAL_MODEL_PASS=0
+GATE=NEMOTRON_H_REAL_SSM_001
+PRODUCTION_DECODE_PATH=0
+PROMOTE=0
+SSM_CERT=NOT_CERTIFIED
+RAWRXD_PRODUCT_PATH_001=1
+PRODUCT_PATH=CLI|IDE|Bridge→Deep2Engine::generateStream→token_commit→stream→receipt
+SYNTHETIC_TOKEN_PATH=0
+PATH=generateStream
+MODEL=llama
+RAWRXD_FUNCTIONAL_CHAMPION_001
+RAWRXD_TPS_KILLER_SEAL_001
+MODEL=llama
+PATH=generateStream
+TOKENS_REQUESTED=4
+TOKENS_COMMITTED=0
+GENERATION_WALL_NS=163471086200
+DECODE_TPS_REAL=0.000000
+PRODUCT_FLOOR_TPS=5.000
+PRODUCT_WALL_MAX_NS=12800000000
+PARITY_PASS=0
+FUNCTIONAL_PASS=0
+CANDIDATE_BEATS_CHAMPION=0
+CANDIDATE_KILLED=1
+FUNCTIONAL_CHAMPION=0
+TPS_PRODUCT_SEAL=0
+SPIN_CLOSE_BLOCKER=NONE
+SPIN_CLOSE_BLOCKER_OWNER=NONE
+SPIN_CLOSE_BLOCKER_US=0
+BLOCKED_AT=PRODUCTION_DECODE_PATH
+DO_NOT_REOPEN=KvaInversion
+DO_NOT_REOPEN=KVA_CLIMB
+DO_NOT_REOPEN=BATCH_007
+RAWRXD_PERFORMANCE_001=OPEN
+RAWRXD_PRODUCT_TPS_001=OPEN
+PROMOTE=0
+NOTE=TPS_PRODUCT_SEAL_NE_PRODUCT_PASS;FINAL_READY=PRODUCT_OPEN_PASS&&SESSION_ENTER_PASS&&GENERATED_TOKENS>0&&TOKEN_COMMIT_PASS
+RECEIPT_END=RAWRXD_TPS_KILLER_SEAL_001
+DECODE_LOOP_ATTRIBUTION_BEGIN=1
+TOKENS_REQUESTED=4
+TOKENS_COMMITTED=0
+TOKENS_DECODED=0
+TOKENIZER_SINGLE_CALLS=0
+TOKENIZER_SEQUENCE_CALLS=0
+DETOK_WALL_NS=0
+CALLBACK_WALL_NS=0
+DETOK_RAW_BYTES=0
+DETOK_EMITTED_BYTES=0
+DETOK_UTF8_PENDING_BYTES=0
+DETOK_UTF8_ERRORS=0
+DECODE_REPLAY_FACTOR=0.000000
+DECODE_LOOP_ATTRIBUTION_END=1
+MODEL_RUNTIME_OVERLAY_BEGIN=1
+MODEL_LOCATION=
+MODEL_FINGERPRINT=11753875096244137027 RUN_ID=generateStream
+PREFILL=OBSERVED DECODE=UNOBSERVED TOKENS_COMMITTED=0
+STREAMER_TPS=0.000000 FORWARD_MS=0.000 LOGITS_MS=0.000 SAMPLE_MS=0.000 DETOK_MS=0.000 CALLBACK_MS=0.000 RECEIPT_MS=0.000
+CLEAN_EXIT=0 CRASH_OBSERVED=0 BLOCKED_AT=PROVENANCE_MISMATCH DISPOSITION=INCOMPLETE
+DISCOVERY_MUTATION=0 AUTHORITY_CLASS=RUNTIME_OVERLAY PROMOTE=0
+MODEL_RUNTIME_OVERLAY_END=1
+ONE_BY_ONE_IGNORE_LADDER_001
+ISOLATION_RUN=A0
+IGNORED_OWNER=NONE
+DIAGNOSTIC_ONLY=1
+PROMOTE=0
+TOKENS_REQUESTED=4
+TOKENS_COMMITTED=0
+TOKENS_DECODED=0
+TOTAL_WALL_MS=163449.021
+PREFILL_MS=0.000
+DECODE_MS=0.000
+FORWARD_MS=163376.715
+LOGITS_MS=0.000
+SAMPLE_MS=0.000
+DETOK_MS=0.000
+CALLBACK_MS=0.000
+RECEIPT_MS=0.652
+KV_MS=0.000
+TPS=0.000
+DELTA_VS_BASELINE_PCT=0.000
+ONE_BY_ONE_IGNORE_LADDER_END=1
+DECODE_BLOCKER_ATTRIBUTION_BEGIN=1
+IGNORED_OWNER=NONE DIAGNOSTIC_ONLY=1 PROMOTE=0
+TOKENS_REQUESTED=4 TOKENS_COMMITTED=0 TOKENS_DECODED=0
+TOKENIZER_SINGLE_CALLS=0 TOKENIZER_SEQUENCE_CALLS=0 DECODE_REPLAY_FACTOR=0.000000
+TOTAL_WALL_MS=163471.086 PREFILL_MS=0.000 DECODE_MS=0.000 ACCOUNTED_MS=163377.538
+FORWARD_MS=163376.886 LOGITS_MS=0.000 SAMPLE_MS=0.000 DETOK_MS=0.000 CALLBACK_MS=0.000 RECEIPT_MS=0.653 KV_MS=0.000 OTHER_MS=0.000
+DECODE_OWNER=FORWARD
+DECODE_BLOCKER_ATTRIBUTION_END=1
+RXEV_SURFACE ARMED=0 DISPOSITION=NO_RUN_STATE
+RXOW stage=NONE br=BR_NO_RUN_STATE layers=0 tensors=0 graph=0 decode0=0 note=norun_unclassified
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel release multi-shard VirtualAlloc layers=28 ggufTensors=255 bp16Owned=0
+[LIFE] unloadModel FreeTensorData ggufResult (255 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+RXEV_SURFACE ARMED=0 DISPOSITION=NO_RUN_STATE
+RXOW stage=NONE br=BR_NO_RUN_STATE layers=0 tensors=0 graph=0 decode0=0 note=norun_unclassified
+rawr: generate failed
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] CrashRecovery disarmed
+[LIFE] alreadyClosed=1
+[LIFE] alreadyClosed fast-exit
+[LIFE] ~Deep2Engine END
+TD=11 CLEAN_EXIT
+RECEIPT_BEGIN=RAWRXD_E2E_BLOCKERS_105
+RAWRXD_E2E_BLOCKERS_105
+BATCH_007_BEGIN=91
+BATCH_007_END=105
+VOCAB_EXT_PRESENT=1 VOCAB_EXT_RUNTIME_BACKED=0 TOKEN_ID_TO_TEXT_VALID=0
+BYTE_FALLBACK_ENABLED=1 UNKNOWN_TOKEN_COUNT=0 DROPPED_TEXT_BYTES=0
+BOS_ID=128000 EOS_ID=128009 PAD_ID=-1 UNK_ID=0 SPECIAL_TOKEN_SOURCE=gguf SPECIAL_TOKEN_VALID=1
+CHAT_TEMPLATE_PRESENT=1 CHAT_TEMPLATE_SOURCE=gguf CHAT_TEMPLATE_RUNTIME_BACKED=1
+PROMPT_FORMATTED_BY_RUNTIME=1 CHAT_TEMPLATE_HASH=3603159173273972986 CHAT_TEMPLATE_POLICY=APPLY_TEMPLATE
+PROMPT_TOKENS=12 GENERATED_TOKENS=0 BOUNDARY_TOKEN_INDEX=12 BOUNDARY_VALID=0
+UTF8_PENDING_BYTES=0 UTF8_VALID_FINAL=1 STREAM_UTF8_ERRORS=0
+DETOK_STATE_CARRY_VALID=0 PARTIAL_TOKEN_FLUSH_VALID=0
+CHUNK_SEQ_ID=0 TOKEN_SEQ_ID=0 CHUNK_ORDER_VALID=1
+TOKEN_COMMIT_COUNT_PER_INDEX=1 DUPLICATE_TOKEN_COMMITS=0
+RETRY_COUNT=0 RETRY_STAGE=NONE RETRY_ROLLBACK_VALID=1
+CANCEL_OBSERVED_AT=NONE CANCEL_SAFE_POINT=1 PARTIAL_OUTPUT_VALID=0
+MAX_TOKENS_REQUESTED=4 TOKENS_COMMITTED=0 STOPPED_BY_MAXTOK_VALID=1
+CTX_SIZE=4096 POSITION_INDEX=12 CTX_LIMIT_REACHED=0 CTX_OVERFLOW=0
+TOKEN_INDEX=0 ROPE_POSITION=0 KV_POSITION=0 POSITION_MATCH=0
+STREAM_HASH=2166136261 STREAM_HASH_MATCH=1 RECEIPT_ATOMIC=1
+BLOCKER_91_STREAMER_VOCAB_EXT_RUNTIME=BLOCKED
+BLOCKER_92_BYTE_FALLBACK_TOKENIZATION=PASS
+BLOCKER_93_SPECIAL_TOKEN_AUTHORITY=PASS
+BLOCKER_94_CHAT_TEMPLATE_RUNTIME=PASS
+BLOCKER_95_PROMPT_BOUNDARY_GUARD=BLOCKED
+BLOCKER_96_UTF8_STREAM_INTEGRITY=PASS
+BLOCKER_97_DETOKENIZER_STATE_CARRY=BLOCKED
+BLOCKER_98_STREAM_CHUNK_ORDERING=PASS
+BLOCKER_99_TOKEN_COMMIT_IDEMPOTENCE=PASS
+BLOCKER_100_TOKEN_RETRY_SAFETY=PASS
+BLOCKER_101_CANCEL_BOUNDARY_RUNTIME=PASS
+BLOCKER_102_MAX_TOKEN_LIMIT_AUTHORITY=PASS
+BLOCKER_103_CONTEXT_LIMIT_GUARD=PASS
+BLOCKER_104_POSITION_COUNTER_AUTHORITY=OPEN
+BLOCKER_105_GENERATION_RECEIPT_ATOMICITY=BLOCKED
+BATCH_007_PASS_COUNT=10
+BATCH_007_UNFINISHED_COUNT=5
+RECEIPT_END=RAWRXD_E2E_BLOCKERS_105
+RAWRXD_PRODUCT_E2E_001
+INPUT_ACCEPTED=1
+MODEL_AUTHORITY=1
+RUNTIME_BACKED=0
+PRODUCTION_DECODE_PATH=0
+HOST_FORWARD_LAYER_CALLS=0
+CPU_F32_EXPANDS=0
+TOKENS_REQUESTED=4
+GENERATED_TOKENS=0
+TOKENS_COMMITTED=0
+STREAM_OUTPUT_PRESENT=0
+COMPLETION_RECEIPT_PRESENT=1
+PRODUCT_OPEN_PASS=1
+SESSION_ENTER_PASS=1
+TOKEN_COMMIT_PASS=0
+MEAN_TOKEN_WALL_NS=0
+TOKEN_WALL_TARGET_NS=6666667
+DEADLINE_OK=0
+DECODE_TPS_REAL=0.000
+NOTE=TPS_DISPLAY_ONLY
+FUNCTIONAL_PASS=0
+PRODUCT_PASS=0
+PROMOTE=0
+RAWRXD_PRODUCT_E2E_001=OPEN
+FINAL_READY_GATE=PRODUCT_OPEN_PASS&&SESSION_ENTER_PASS&&GENERATED_TOKENS>0&&TOKEN_COMMIT_PASS
+NEXT_INDEPENDENT_GATE=MULTI_FAMILY
+NOTE=TINYLLAMA_R25_PRODUCTOPEN_NE_MULTI_FAMILY
+SPIN_CLOSE_BLOCKER=GENERATED_TOKENS
+SPIN_CLOSE_BLOCKER_OWNER=generateStream/token_emit
+BLOCKED_AT=GENERATED_TOKENS
+BLOCKED_OWNER=generateStream/token_emit
+NEXT_RUNTIME_ACTION=Emit GENERATED_TOKENS>0
+RAWRXD_NO_MORE_BASELINE_STUBS_001=1
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[StreamEngine] Shutdown
+

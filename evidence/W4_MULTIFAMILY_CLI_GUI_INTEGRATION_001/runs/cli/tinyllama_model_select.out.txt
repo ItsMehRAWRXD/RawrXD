@@ -1,0 +1,10 @@
+﻿name	g:\~dev\rawrxd\models\tinyllama.gguf
+tag	latest
+id	d15ddaa42aa77247
+path	g:\~dev\rawrxd\models\tinyllama.gguf
+size	668788096
+arch	
+quant	
+shards	1
+valid	1
+

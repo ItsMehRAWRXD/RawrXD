@@ -1,0 +1,6 @@
+﻿[MODEL_RESOLUTION] g:\~dev\rawrxd\models\DOES_NOT_EXIST_W4.gguf
+[ERROR] MODEL_NOT_FOUND
+FAIL_CLOSED=1 REASON=missing_or_unloadable_path
+path=g:\~dev\rawrxd\models\DOES_NOT_EXIST_W4.gguf
+[StreamEngine] Shutdown
+
