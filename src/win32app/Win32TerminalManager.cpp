@@ -243,6 +243,7 @@ void Win32TerminalManager::stop()
     if (!m_running && !m_hProcess && !m_hPC)
         return;
 
+    // Fail-closed stop order (G05-05/G06-05): pipes then kill then join then ClosePseudoConsole.
     m_running = false;
     onOutput = nullptr;
     onError = nullptr;
@@ -253,26 +254,26 @@ void Win32TerminalManager::stop()
         CloseHandle(m_hStdInWrite);
         m_hStdInWrite = nullptr;
     }
+    if (m_hStdOutRead) {
+        CloseHandle(m_hStdOutRead);
+        m_hStdOutRead = nullptr;
+    }
     if (m_hJob) {
         CloseHandle(m_hJob);
         m_hJob = nullptr;
     }
     if (m_hProcess) {
         TerminateProcess(m_hProcess, 0);
-        WaitForSingleObject(m_hProcess, 5000);
-    }
-    if (m_hPC && g_ClosePseudoConsole) {
-        g_ClosePseudoConsole(m_hPC);
-        m_hPC = nullptr;
+        WaitForSingleObject(m_hProcess, 3000);
     }
     if (m_outputThread.joinable())
         m_outputThread.join();
     if (m_monitorThread.joinable())
         m_monitorThread.join();
 
-    if (m_hStdOutRead) {
-        CloseHandle(m_hStdOutRead);
-        m_hStdOutRead = nullptr;
+    if (m_hPC && g_ClosePseudoConsole) {
+        g_ClosePseudoConsole(m_hPC);
+        m_hPC = nullptr;
     }
     if (m_hProcess) {
         CloseHandle(m_hProcess);
