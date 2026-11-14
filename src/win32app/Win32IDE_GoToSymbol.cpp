@@ -337,7 +337,7 @@ void filterSymbols()
             int len = WideCharToMultiByte(CP_UTF8, 0, query.c_str(), -1, nullptr, 0, nullptr, nullptr);
             if (len > 0) {
                 queryUtf8.resize(static_cast<size_t>(len - 1));
-                WideCharToMultiByte(CP_UTF8, 0, query.c_str(), -1, &queryUtf8[0], len, nullptr, nullptr);
+                WideCharToMultiByte(CP_UTF8, 0, query.c_str(), -1, &queryUtf8[0], static_cast<int>(queryUtf8.size() + 1), nullptr, nullptr);
             }
         }
         s_gts.pIDE->refreshWorkspaceSymbolPickerResults(queryUtf8);
