@@ -37,13 +37,16 @@ AgentOllamaClient::~AgentOllamaClient() {
 std::string AgentOllamaClient::BuildPromptFromMessages(const std::vector<ChatMessage>& messages,
                                                        const nlohmann::json& tools) const {
     std::string prompt;
-
-    for (const auto& msg : messages) {
-        if (msg.role == "system") {
-            prompt += "System: " + msg.content + "\n\n";
-            break;
-        }
-    }
+    // Compact system: TinyLlama ctx=2048 — full schema dump overflowed (promptN=3767).
+    // First assistant line MUST be a TOOL_CALL (TinyLlama otherwise rambles to C0000409).
+    static const char kCompactSys[] =
+        "You are a tool router. Reply with ONE line only.\n"
+        "Format: TOOL_CALL: name {\"arg\":\"value\"}\n"
+        "Allowed: read_file write_file execute_command\n"
+        "Start now with TOOL_CALL: read_file {\"path\":\"note.txt\"}\n";
+    prompt += "System: ";
+    prompt += kCompactSys;
+    prompt += "\n";
 
     for (const auto& msg : messages) {
         if (msg.role == "user") {
@@ -54,38 +57,56 @@ std::string AgentOllamaClient::BuildPromptFromMessages(const std::vector<ChatMes
             prompt += "Tool result: " + msg.content + "\n";
         }
     }
-
-    if (!tools.empty() && tools.is_array()) {
-        prompt += "\nAvailable tools:\n";
-        for (const auto& tool : tools) {
-            if (tool.contains("function")) {
-                const auto& func = tool["function"];
-                prompt += "- " + func.value("name", "") + ": " +
-                          func.value("description", "") + "\n";
-            }
-        }
-        prompt += "\nTo call a tool, respond with JSON: {\"tool_call\": {\"name\": \"tool_name\", \"arguments\": {...}}}\n";
-    }
-
+    (void)tools; // names already in compact system; avoid schema bloat
     prompt += "Assistant: ";
     return prompt;
 }
 
 void AgentOllamaClient::ParseToolCallsFromResponse(const std::string& response,
                                                    InferenceResult& result) const {
-    size_t json_start = response.find("{");
-    if (json_start == std::string::npos) {
-        return;
+    // Style A: TOOL_CALL: name {json} (matches GetSystemPrompt / OrchestratorBridge)
+    {
+        size_t pos = 0;
+        while (true) {
+            size_t toolPos = response.find("TOOL_CALL:", pos);
+            if (toolPos == std::string::npos) break;
+            size_t nameStart = toolPos + 10;
+            while (nameStart < response.size() &&
+                   (response[nameStart] == ' ' || response[nameStart] == '\t'))
+                ++nameStart;
+            size_t nameEnd = nameStart;
+            while (nameEnd < response.size() && response[nameEnd] > ' ') ++nameEnd;
+            std::string name = response.substr(nameStart, nameEnd - nameStart);
+            size_t brace = response.find('{', nameEnd);
+            if (brace == std::string::npos || name.empty()) break;
+            int depth = 0;
+            size_t end = brace;
+            for (; end < response.size(); ++end) {
+                if (response[end] == '{') ++depth;
+                else if (response[end] == '}') {
+                    if (--depth == 0) { ++end; break; }
+                }
+            }
+            try {
+                auto args = nlohmann::json::parse(response.substr(brace, end - brace));
+                result.has_tool_calls = true;
+                result.tool_calls.emplace_back(name, args);
+                if (result.response.empty())
+                    result.response = response.substr(0, toolPos);
+            } catch (...) {
+            }
+            pos = end;
+            if (result.has_tool_calls) return; // first tool only (BoundedAgentLoop)
+        }
     }
-
-    size_t json_end = response.rfind("}");
-    if (json_end == std::string::npos || json_end < json_start) {
-        return;
-    }
-
-    std::string json_str = response.substr(json_start, json_end - json_start + 1);
+    // Style B: {"tool_call":{"name":"...","arguments":{...}}}
+    size_t json_start = response.find('{');
+    if (json_start == std::string::npos) return;
+    size_t json_end = response.rfind('}');
+    if (json_end == std::string::npos || json_end < json_start) return;
     try {
-        nlohmann::json j = nlohmann::json::parse(json_str);
+        nlohmann::json j = nlohmann::json::parse(
+            response.substr(json_start, json_end - json_start + 1));
         if (j.contains("tool_call") && j["tool_call"].is_object()) {
             const auto& tc = j["tool_call"];
             std::string name = tc.value("name", "");

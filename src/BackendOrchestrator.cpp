@@ -2,6 +2,7 @@
 #include "BackendOrchestrator.h"
 #include "InferenceProfiler.h"
 #include "gguf_loader.h"
+#include "product/gateway/product_deep2_infer.hpp"
 
 #include <sstream>
 #include <iostream>
@@ -133,7 +134,41 @@ bool RunNativeInferenceSync(const std::string& prompt,
                             uint32_t timeoutMs,
                             std::string& completion,
                             std::string& metadata,
-                            std::string& error) {
+                            std::string& error,
+                            uint32_t maxTokens = 2048) {
+    auto start = std::chrono::steady_clock::now();
+    // A8 post-resident: ProductOpenSession already armed Deep2 — prefer it over
+    // missing RawrXD_InferenceEngine.dll SubmitInference (LLM_ERROR_AFTER_DIALOG).
+    if (rawr::ProductSessionOpen()) {
+        std::vector<char> buffer(1024 * 1024, 0);
+        // TinyLlama maxSeqLen=2048: keep ~1536 prompt chars*4≈6k chars (tail) + gen.
+        std::string fit = prompt;
+        constexpr size_t kMaxPromptChars = 6000;
+        if (fit.size() > kMaxPromptChars) {
+            fit = std::string("[...truncated...]\n") +
+                  fit.substr(fit.size() - kMaxPromptChars);
+            std::cerr << "[BO] ProductDeep2Infer prompt truncated to " << fit.size()
+                      << " chars\n" << std::flush;
+        }
+        // Short cap: TinyLlama tool-call lines; long decode hit 0xC0000409 @ ~112 tok.
+        const uint32_t tok = (maxTokens && maxTokens <= 64u) ? maxTokens : 48u;
+        if (!rawr::ProductDeep2Infer(fit.c_str(), buffer.data(), buffer.size(), tok)) {
+            error = "ProductDeep2Infer failed (MODEL_RESIDENT session open)";
+            return false;
+        }
+        completion = std::string(buffer.data());
+        const auto elapsedNs = std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::steady_clock::now() - start).count();
+        const uint32_t eval = rawr::ProductDeep2LastEvalCount();
+        std::ostringstream oss;
+        oss << "{\"prompt_eval_count\":0,\"eval_count\":" << eval
+            << ",\"eval_duration\":" << elapsedNs
+            << ",\"total_duration\":" << elapsedNs
+            << ",\"path\":\"ProductDeep2Infer\"}";
+        metadata = oss.str();
+        return true;
+    }
+
     NativeInferenceApi& api = GetNativeInferenceApi();
     if (!api.module || !api.submit || !api.getResult) {
         error = "Native inference API unavailable (SubmitInference/GetResult missing)";
@@ -146,7 +181,6 @@ bool RunNativeInferenceSync(const std::string& prompt,
         return false;
     }
 
-    auto start = std::chrono::steady_clock::now();
     std::vector<char> buffer(1024 * 1024, 0);
 
     while (true) {
@@ -869,7 +903,9 @@ bool BackendOrchestrator::RunInference(const InferRequest& req) {
     std::string error;
     const uint32_t timeoutMs = 120000;
 
-    const bool ok = RunNativeInferenceSync(req.prompt, timeoutMs, completion, metadata, error);
+    const uint32_t maxTok = req.max_tokens ? static_cast<uint32_t>(req.max_tokens) : 2048u;
+    const bool ok = RunNativeInferenceSync(req.prompt, timeoutMs, completion, metadata, error,
+                                           maxTok);
     if (!ok) {
         if (req.complete_cb) {
             req.complete_cb("[BackendError] " + error,

@@ -740,6 +740,10 @@ void Win32IDE::onBoundedAgentModelLoadDone(int modelResident, const std::string&
                        "Agent", OutputSeverity::Warning);
         return;
     }
+    // ChatSync → BackendOrchestrator → ProductDeep2Infer while ProductSessionOpen
+    // (see RunNativeInferenceSync). No BO LoadModel/ShardModel re-entry after ProductOpen.
+    fprintf(stderr, "[BoundedAgent] ExecuteAsync after MODEL_RESIDENT=1 (ProductDeep2Infer lane)\n");
+    fflush(stderr);
     appendToOutput("[Agent] Starting session: " + prompt.substr(0, 200),
                    "Agent", OutputSeverity::Info);
     s_agentLoop->ExecuteAsync(prompt);
