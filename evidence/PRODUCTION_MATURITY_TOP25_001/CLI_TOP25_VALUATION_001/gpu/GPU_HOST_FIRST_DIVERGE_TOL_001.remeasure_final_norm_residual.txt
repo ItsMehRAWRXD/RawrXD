@@ -1,0 +1,48 @@
+GPU_HOST_FIRST_DIVERGE_TOL_001.remeasure_final_norm_residual — APPEND-ONLY
+DATE=2026-11-13
+ASOF_LOCAL=2026-11-13T22:35:00-05:00
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD INVENT_PASS=0 NOT_RUN!=PASS
+PRIOR=GPU_HOST_FIRST_DIVERGE_TOL_001.remeasure_final_norm.txt
+GIT_PIN=3d8fd935d56306bff3bab599bf01f2a2e3a262bd
+BOARD_PCT_NOTE=CLI/GUI/OVERALL held 67/48/48 — no LIVE PCT write
+DENSE_MATCH=HOLD (no BOARD_SINGLE_WRITER absorb)
+
+## Question
+Close FINAL_NORM HARD (maxAbs≈5.380497e-01) to FUNCTIONAL_FAIL=0?
+
+## Offline residual isolation (this turn)
+DUMP_GPU=FIRST_DIVERGE_001/stage_dump_layer2_plus_C7402085
+REF_FINAL=stage_dump_ref_matched llama_FINAL_NORM_pos0 (fnv=59e51b2d30a02ab9)
+     = stage_dump_gpu_ref llama_REF_FINAL_HIDDEN_pos0 seq2956 (corrected; not pos1)
+STAGE=_cmp_finalnorm_stage (copied tensors)
+
+1) FinalNorm Apply math CLOSED
+   RMSNormW_double(GGUF output_norm, deep2_PROMPT_POST_LAYERS_pos0)
+     vs deep2_FINAL_NORM_pos0: FUNCTIONAL_FAIL=0 maxAbs≈5.50e-07
+   Same on stage_dump_l2plus_fp32kv / layer1_chain: FAIL=0 maxAbs≤9.07e-07
+   ⇒ FinalNormAcquire::Apply / RMSNormW inv path is NOT the remaining HARD.
+
+2) FINAL vs corrected REF still HARD
+   deep2_FINAL vs REF_FINAL_HIDDEN_pos0: FUNCTIONAL_FAIL=1 maxAbs=5.380497e-01 first_bad=0
+   Apply(POST) vs REF: same maxAbs≈5.38050e-01
+   ⇒ diverge is in FinalNorm INPUT residual (POST_LAYERS), not Apply.
+
+3) True earlier site (cascade)
+   ATTN_OUT_14@pos0 deep2 vs llama_ATTN_OUT_14 seq1957:
+     FUNCTIONAL_FAIL=1 maxAbs=3.617927e-04 first_bad=1
+   Matches PRIOR seal note TRUE_EARLIER_SITE=ATTN_OUT_14 (ATTN_PRE_O_14 PASS).
+   Cascade: ATTN_OUT_14 → … → LAYER21/POST Δ → FINAL Δ≈5.38e-01
+
+## Seal fields
+FIRST_DIVERGE_SITE=FINAL_NORM@pos0
+MAX_ABS_ERR=5.380497e-01
+FUNCTIONAL_FAIL=1
+ROOT_CAUSE=FINAL_NORM_INPUT_RESIDUAL_CASCADE_FROM_ATTN_OUT_14
+FINALNORM_APPLY_CLOSED=1
+TRUE_EARLIER_SITE=ATTN_OUT_14@pos0
+TRUE_EARLIER_MAX_ABS=3.617927e-04
+NEXT_ENGINEERING=ATTN_OUT_14 residual/add path (not FinalNorm Apply)
+ENTERPRISE_G02=OPEN EVIDENCE_RELATED≠PASS VERIFIED_GATES=0/128
+CROSS_SHA_CREDIT=0
+PROMOTE=0 TIP_CLIMB=HOLD
+END
