@@ -1,0 +1,13 @@
+CLI_AGENT_CONCURRENCY_001 — LAW
+PROMOTE=0 CERTIFIED=0 GATE_STOP=1 TIP_CLIMB=HOLD
+CROSS_SHA_CREDIT=0 INVENT_PASS=0 NOT_RUN!=PASS
+
+1. SCOPE: multi-agent concurrency, cancel, and workspace/lane isolation on CLI agent path.
+2. Method C (7C9680CB) and FORCE_TOOL Move50 (9797521C) seals are RETAINED by exact SHA only.
+3. Tip CEBA0DE4 dual-ws FORCE_TOOL isolation PASS ≠ Method C model-selected PASS.
+4. CANCEL remains OPEN until product CmdAgent binds acceptSteer and a reachable steer pipe
+   (or equivalent cancel token) and a cancelled run does not complete the full tool seq.
+5. SessionLock / SharedAgentWorkRegistry must be exercised on CmdAgent for cross-session
+   write isolation CERT; unused headers ≠ PASS.
+6. Parallel lane roots (RAWR_PARALLEL_LANES=1) are scaffolding MEASURED only until
+   AGENT_VERIFIED=1 on a real multi-lane E2E without FORCE_TOOL skip_model_load claim abuse.

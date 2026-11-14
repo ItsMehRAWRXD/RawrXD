@@ -1,0 +1,13 @@
+K2_L5_P1_TIP_LOAD_001 — LAW
+PROMOTE=0 TIP_CLIMB=HOLD CERTIFIED=0 GATE_STOP=1
+INVENT_PASS=0 NOT_RUN!=PASS CROSS_SHA_CREDIT=0
+
+1. SCOPE: Lane L5 P1 under RAWRXD_ALL_BACKENDS_COMPLETE_001 —
+   Kimi K2 multi-shard tip remasure + large-model 70/80/120B disk/load seal.
+2. INDEX_OPEN ≠ PRODUCT_OPEN_PASS ≠ GENERATED_TOKENS>0 ≠ PROMOTE.
+3. Historical K2_FULL_PRODUCT_GEN_* BLOCKED_OOM seals retained; this pack is
+   tip remasure on EXE_SHA in RECEIPT — no CROSS_SHA credit either way.
+4. W13 70/80/120B: PATH_ABSENT on searched roots → NOT_RUN with path inventory;
+   do not invent a load.
+5. Fail-closed: PRODUCT_OPEN_FAIL_NOT_STREAMABLE with GENERATED_TOKENS=0 is
+   not PASS.

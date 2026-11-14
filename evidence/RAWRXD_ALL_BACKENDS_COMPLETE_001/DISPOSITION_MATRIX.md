@@ -11,15 +11,15 @@ Status legend: **OPEN** | **RELATED** | **PARTIAL** | **CERTIFIED** | **EXPLICIT
 | Workstream | Status | Notes / SSOT pointer |
 |------------|--------|----------------------|
 | Deep2 CPU | OPEN | quantized parity + perf TBD |
-| Deep2 Vulkan | PARTIAL | Q6K SPV RELATED/R105 VERIFY; host fallback ≠ GPU cert |
-| Q4_K / Q6_K / Q8 | PARTIAL | Q6K attn_v path advanced; full family OPEN |
-| Packed GEMV / GEMM | PARTIAL | Ornith L3 ULP_CLOSED vs f32 (R104); shapes/batches OPEN |
+| Deep2 Vulkan | PARTIAL | Q6K CEBA0DE4 RELATED retained; Q2 MEASURED_ABORT; full family CERT OPEN (L4_P1) |
+| Q4_K / Q6_K / Q8 | PARTIAL | Q6K+Q4 RELATED; Q8/Q5/Q3 NOT_RUN; Q2 MEASURED_ABORT ≠ PASS (L4_P1) |
+| Packed GEMV / GEMM | PARTIAL | Ornith L3 ULP_CLOSED; specialized sx/batch NOT_RUN; Q2 abort sealed (L4_P1) |
 | Attention / KV cache | OPEN | long-context stability TBD |
 | Ornith | RELATED | L3 ULP closed; hybrid load/semantic OPEN |
 | Laguna / Qwen3.5 | PARTIAL | WS1 REAP_LAGUNA=PARTIAL; stop@ATTN_GATE_PARITY=NOT_RUN; TOK RELATED≠parity; PROMOTE=0 |
-| MiniMax MoE | PARTIAL | W2 seal: router MATCH; expert map AL12 OK; AL13 STATIC PASS; FFN_DOWN_1 BOUNDED_OPEN; AL14 OPEN; Ollama create FAIL; PROMOTE=0 |
+| MiniMax MoE | PARTIAL | W2 AL12/13 + tip CEBA0DE4 LOAD/MoE OK; FAIL_MID_PREFILL ly=15 TOK=0 SEMANTIC=NOT_RUN; PROMOTE=0 |
 | Kimi K2 | PARTIAL | tip INDEX 13/13; PRODUCT_OPEN_FAIL_NOT_STREAMABLE; gen=0; `K2_L5_P1_TIP_LOAD_001` EXE `6754616E…` |
-| REAP | PARTIAL | H2H OBSERVED_ONLY; on-disk exports present rewrite_authorized=0; MiniMax REAP24 split KV OK / Ollama sibling FAIL; quality OPEN |
+| REAP | PARTIAL | H2H OBSERVED_ONLY; MiniMax tip TOK=0; exports rewrite_authorized=0; Ollama sibling FAIL; quality OPEN |
 | Strata | NOT_RUN | HIP native E2E NOT_RUN; product amdhip64.dll FAIL; versioned runtime AVAILABLE (n=2); Feature NOT_IMPL; L6L7_STRATA_HIP_OLLAMA_001 |
 | Ollama | PARTIAL | local HTTP gen remasure PASS + tools API smoke PASS; REAP H2H PARTIAL 3/6; product AgentOllama E2E OPEN; L6L7_STRATA_HIP_OLLAMA_001 |
 | Large models 70B/80B/120B | NOT_RUN | PATH_ABSENT on disk; seal `K2_L5_P1_TIP_LOAD_001` |
