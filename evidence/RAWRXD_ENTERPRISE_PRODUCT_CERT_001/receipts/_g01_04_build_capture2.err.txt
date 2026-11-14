@@ -1,0 +1,2 @@
+no such file or directory
+CMake Error: Generator: build tool execution failed, command was: C:\Users\HiH8e\AppData\Local\Microsoft\WinGet\Links\ninja.exe RawrXD-Win32IDE

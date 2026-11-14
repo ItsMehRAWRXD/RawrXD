@@ -1,0 +1,45 @@
+CMake Warning at CMakeLists.txt:6819 (message):
+  [Win32IDE] Optional fallback unit missing, skipping:
+  src/modules/quickjs_node_shims.cpp
+
+
+CMake Warning at CMakeLists.txt:6881 (message):
+  [Win32IDE] RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK=OFF strips fallback/shim TUs
+  (strict lane).  The IDE usually will not link unless every ASM symbol is
+  provided elsewhere.  For a normal dev link:
+  -DRAWRXD_ALLOW_AGENTIC_STUB_FALLBACK=ON or remove that cache entry.
+
+
+CMake Warning at src/validation/CMakeLists.txt:343 (message):
+  RawrXD libraries not found at
+  G:/~dev/rawrxd/src/validation/../../build-fresh-aug22
+
+
+CMake Warning at src/validation/CMakeLists.txt:344 (message):
+  Building only minimal validation (simulation mode)
+
+
+CMake Warning at CMakeLists.txt:15138 (message):
+  [SoloIDE] Qt6 not found
+  ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¶
+  SoloIDE target skipped.  Install Qt6 or set CMAKE_PREFIX_PATH.
+
+
+CMake Error at CMakeLists.txt:7544 (add_executable):
+  Cannot find source file:
+
+    src/win32app/Win32NativeDebugBackend.cpp
+
+
+CMake Error:
+  Running
+
+   'C:/Users/Garrett/AppData/Local/Microsoft/WinGet/Packages/Ninja-build.Ninja_Microsoft.Winget.Source_8wekyb3d8bbwe/ninja.exe' '-C' 'G:/~dev/rawrxd/build_ninja' '-t' 'restat' 'build.ninja' 'G:/~dev/rawrxd/build_ninja/cmake_install.cmake' 'D:/rawrxd/build_ninja/_deps/nlohmann_json-build/cmake_install.cmake' 'G:/~dev/rawrxd/build_ninja/src/reverse_engineering/cmake_install.cmake' 'G:/~dev/rawrxd/build_ninja/src/ceo/cmake_install.cmake' 'G:/~dev/rawrxd/build_ninja/src/repository/cmake_install.cmake' 'G:/~dev/rawrxd/build_ninja/src/generation/cmake_install.cmake' 'G:/~dev/rawrxd/build_ninja/rguf_source/cmake_install.cmake' 'G:/~dev/rawrxd/build_ninja/src/runtime/cmake_install.cmake' 'G:/~dev/rawrxd/build_ninja/tests/cmake_install.cmake' 'G:/~dev/rawrxd/build_ninja/src/tools/cmake_install.cmake' 'G:/~dev/rawrxd/build_ninja/src/validation/cmake_install.cmake' 'G:/~dev/rawrxd/build_ninja/src/validation/kernels/cmake_install.cmake' 'G:/~dev/rawrxd/build_ninja/CTestTestfile.cmake' 'G:/~dev/rawrxd/build_ninja/src/runtime/CTestTestfile.cmake' 'G:/~dev/rawrxd/build_ninja/tests/CTestTestfile.cmake' 'G:/~dev/rawrxd/build_ninja/src/tools/CTestTestfile.cmake' 'G:/~dev/rawrxd/build_ninja/src/validation/CTestTestfile.cmake' 'G:/~dev/rawrxd/build_ninja/src/validation/kernels/CTestTestfile.cmake'
+
+  failed with:
+
+   ninja: error: failed recompaction: Permission denied
+
+
+
+CMake Generate step failed.  Build files cannot be regenerated correctly.
