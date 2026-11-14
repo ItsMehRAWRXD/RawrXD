@@ -1,0 +1,79 @@
+DEEP2_SSM_AUTH_ORNITH_R99
+ASOF_LOCAL=2026-11-14T08:04:30-05:00
+PROMOTE=0 CERTIFIED=0 COMPETITIVE_PASS=0 INVENT_PASS=0
+TIP_CLIMB=HOLD CROSS_SHA_CREDIT=0 NOT_RUN!=PASS
+NO_INVENT_9_7X=1
+PRIOR=R97 Qwen SSM-auth TOK=32 TPS=0.207 PARTIAL; NEXT_OWNER open
+
+## Lane pick (highest leverage after R97/R98)
+Prefer Deep2 REAP TPS / PROD_DECODE under experimental SSM auth.
+Stratum switch: ornith-1_5-35b-REAP194 (GGUF expert_used_count=8)
+vs Qwen3_6 REAP199 (GGUF expert_used_count=199 literal).
+Tip MF absorb + LOGITS residual = HOLD (unchanged).
+
+## EXE (fail-closed)
+PIN=evidence/REAP_STRATA_UNSLOTH_OLLAMA_BENCH_001/bin_pin/probe_rawr.exe.bak_r92.exe
+EXE_SHA256=E7A7EE9FDCB61757A65FE8ACCDC624FAE6F42EA84F33C57C887B0B34F91A48CF
+SOURCE=build_ninja/bin/rawr.exe.bak_r92
+NOTE=live build_ninja/bin/rawr.exe CE10BEAF… and A6EF801B… SEH 0xC0000005
+  mid MoE layer crawl (ornith+Qwen) → NOT used for TOK seal.
+R97_CONTROLLING_EXE=D855FA3E… (not present on disk this turn; R97 artifacts held)
+TIP_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431 RO
+TIP_ABSORB=HOLD CROSS_SHA_CREDIT=0
+
+## Command (reproducible)
+ENV=RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM=1
+GGUF=F:\OllamaModels\_REAP16\ornith-1_5-35b-REAP194\sha256-aaeb640f98a892980ef54876024293cc8d6987a86523aa1b947ffa9274ef800a
+ARGS=run <GGUF> -p "Say hi in one short sentence." --max-tokens 8
+CMD=runs/deep2_ornith_ssmauth_r99_ornith8_bakr92.cmd.txt
+
+## Measured ornith (fail-closed)
+EXPERIMENTAL_SSM_AUTH_RESUME=1
+GENERATED_TOKENS=8
+TOKENS_COMMITTED=8
+TOKEN_COMMIT_PASS=1
+STREAMER_TPS=0.221086
+DECODE_TPS_REAL=0.253
+MEAN_TOKEN_WALL_NS=3957738425
+TOTAL_WALL_MS≈31641 PREFILL_MS≈25666 DECODE_MS≈5916 FORWARD_MS≈29832
+DECODE_OWNER=FORWARD
+CLEAN_EXIT_LOG=1 CMD_RUN_CLEAN_EXIT=1
+PROCESS_EXIT=NULL (bat EXIT blank; do not invent PROCESS_EXIT=0)
+SEH=0 CRASH_OBSERVED=0
+B03_MOE_ROUTE topk=8 (matches GGUF expert_used_count=8)
+BLOCKED_AT=PROVENANCE_MISMATCH (MODEL_LOCATION_NOT_FOUND)
+PROD_DECODE=0 (geometry!=scaffold / experimental ≠ SSM_CERT)
+GPU_RESIDENT=1 (witnessed load path; MULTIMAP/QUANT miss residual)
+
+## Same-EXE Qwen 8-tok compare (bak_r92; not R97 32-tok reopen)
+LOG=deep2/Qwen_ssmauth_r99_qwen8_bakr92.err.log
+GENERATED_TOKENS=8 STREAMER_TPS=0.174906 DECODE_TPS_REAL=0.200
+B03_MOE_ROUTE topk=199 (GGUF expert_used_count=199)
+TOTAL_WALL_MS≈39995 PREFILL_MS≈30226 DECODE_MS≈9716 FORWARD_MS≈34348
+DELTA_vs_ORNITH_STREAMER≈+26% ornith (0.221/0.175) — modest; ≠ competitive
+
+## Ratios (measured only; ≠ COMPETITIVE_PASS)
+Deep2_ornith_vs_OllamaREAP: 0.221086 / 127.400707 = 0.001735× (8tok vs 32tok caveat)
+Deep2_ornith_vs_OllamaFULL: 0.221086 / 132.657884 = 0.001667×
+Deep2_Qwen8_vs_OllamaREAP:  0.174906 / 25.545170 = 0.006847× (8tok; R97 32tok=0.008113× held)
+NO_INVENT_9_7X=1
+
+## ROOT (TPS / PROD_DECODE)
+1. GGUF MoE topk: Qwen REAP199 expert_used_count=199 (activate-all);
+   ornith REAP194 expert_used_count=8. Ornith wins modestly on same EXE.
+2. DECODE_OWNER=FORWARD still; QUANT_GEMV_MISS→GPU_F32_DEQUANT / strict-zero
+   residual on packed Q4_K/Q6_K; B011 MoE hit_rate≈0% on Qwen path.
+3. PROD_DECODE blocked at PROVENANCE_MISMATCH (MODEL_LOCATION_NOT_FOUND)
+   + experimental SSM scaffold (≠ REAL=21 cert).
+4. Tip 6754616E MF OPEN_SEH absorb = BOARD_PROPOSAL_ONLY / HOLD.
+5. LOGITS residual-budget Dense = HOLD (R91 FUNCTIONAL_FAIL ownership).
+6. Fresh tip-of-tree rawr CE10BEAF… SEH=0xC0000005 before TOK → rebuild gate OPEN.
+
+## Verdict
+CLOSED=PARTIAL
+DEEP2_ORNITH_H2H=PARTIAL (first TOK>0 on REAP ornith under experimental SSM auth)
+TPS_RAISED_VS_QWEN_SAME_EXE=MODEST COMPETITIVE_PASS=0
+PROD_DECODE=0
+NEXT_OPEN=DEEP2_REAP_PACKED_GEMV_OR_MOE_RESIDENCY_OR_PROD_PROVENANCE_OR_SEH_REGRESSION_OR_MF_TIP_ABSORB
+PROMOTE=0
+END
