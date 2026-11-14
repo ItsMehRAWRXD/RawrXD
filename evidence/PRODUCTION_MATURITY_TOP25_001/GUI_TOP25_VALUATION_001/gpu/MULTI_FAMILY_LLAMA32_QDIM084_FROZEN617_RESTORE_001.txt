@@ -1,5 +1,5 @@
 MULTI_FAMILY_LLAMA32_QDIM084_FROZEN617_RESTORE_001
-ASOF_LOCAL=2026-11-13T23:43:00-05:00
+ASOF_LOCAL=2026-11-13T23:48:00-05:00
 PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 NOT_RUN!=PASS
 FORCE=0 HOST_DECODE=0 REJECT_FORCE_ABSORB=1 TIP_ABSORB=N
 CROSS_SHA_CREDIT=0
@@ -16,44 +16,56 @@ TIP_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431
 TIP_STILL_6754=1 TIP_RO=1 TIP_UNTOUCHED=1
 
 ## Corpus note (path a)
-Exact archived obj set that bit-produced 617F784E was NOT found on disk.
-Nearest frozen link corpus used instead:
-  base_rsp=obj084_m1m2_hotseh/link084.rsp (22:30 era; HotPatcher+elastic+probe stubs)
-  Deep2Engine=Restore-only /Zi AVX512 on 617Fbase+Restore (obj084_frozen617; 16973655B)
-  product_deep2_infer_seh=obj078 bak_pre_seh078 (pre-617F)
-  Elastic=obj083_elastic_idemp
-  cmake companions mostly mtime<=22:28 (940/947)
+Exact archived obj set that bit-produced 617F784E was NOT found on disk
+(link084c.log only; no rsp archive). Prefer obj084_mars_dedup (Deep2+Elastic @22:24)
+with m1m2 link084.rsp as rsp-shape reference only (not HotPatcher absolute).
+
+R70 cand used m1m2 Elastic+AVX512 Restore obj.
+R71 cand (this turn): mars_dedup Elastic + Restore-only Engine /Zi AVX2 on 617Fbase
+  (obj084_frozen617; 16975211B; STRINGS RESTORE=1 KEEP_GPU=0)
+  rsp=link084_frozen617_restore.rsp (m1m2 shape; cmake HotPatcher; mars_dedup Elastic)
 Avoided drifted link084_qdim.rsp mars_keep absolute companions.
 
-## Private cand
-EXE=clean_link/LOCKED/RawrXD-Win32IDE_gemma_qdim084_frozen617_restore.exe
-EXE_SHA256=4635C4E69422D80C66397F00AC54FAC7679EE45BA38CEA6D3FDE63651D8AE5AD
-SHA16=4635C4E69422D80C
-STRINGS=RESTORE=1 KEEP_GPU=0
-DELTA=TOKEN_EMBD_STREAM_RESTORE only on 617Fbase Engine; linked on frozen m1m2-class corpus
+## Private cands
+| Lane | SHA16 | LEN | Notes |
+|------|-------|----:|-------|
+| R70 | 4635C4E69422D80C | ~332MB | m1m2 Elastic; OPEN_SEH=0 POST_LOAD gguf=0 |
+| R71 | 2776275653B43D92 | 332344320 | mars_dedup Elastic; same POST_LOAD class |
+| CTRL | A4EB2D6AB2CF944F | 332342784 | mars_dedup Engine no Restore; OPEN=0 |
 
-## Measured 2× llama32 Q2_K headless
+CONTROLLING_EXE=clean_link/LOCKED/RawrXD-Win32IDE_gemma_qdim084_frozen617_restore.exe
+EXE_SHA256=2776275653B43D922356DFBE8FF844CFBEE45CA5F7F17FC5358D4209534D3CAF
+SHA16=2776275653B43D92
+DELTA=TOKEN_EMBD_STREAM_RESTORE only on 617Fbase Engine; mars_dedup Elastic
+
+## Measured 2× llama32 Q2_K headless (R71)
 | Run | OPEN | OPEN_SEH | EVICT | STREAM_ENTER | STREAM_SEH | TOK | Notes |
 |-----|-----:|---------:|------:|-------------:|-----------:|----:|-------|
-| #1 234148 | 0 | 0 | 0 | 0 | 0 | 0 | POST_LOAD gguf=0; ALLOC=1; EXIT=NULL |
-| #2 234202 | 0 | 0 | 0 | 0 | 0 | 0 | same |
+| #1 234250 | 0 | 0 | 0 | 0 | 0 | 0 | POST_LOAD gguf=0; EXIT=NULL |
+| #2 234307 | 0 | 0 | 0 | 0 | 0 | 0 | same |
+
+CTRL quick: OPEN=0 (same rsp without Restore → not Restore-delta alone)
+617F snap remasure: OPEN=1 ENTER=1 TOK=0 (baseline; RESTORE=0)
 
 TOK_X2=0×2
 DURABLE_TOKEN_SURVIVED=0
 DURABLE=0
 
 ## ROOT one-liner
-Frozen m1m2-class corpus + Restore-only Engine clears prior OPEN_SEH (VA=-8), but
-RAW_RUN_OPEN fails stage=POST_LOAD gguf=0 (no Body POST_LOAD_ROOTS on this rsp) →
-OPEN_PASS=0; Restore never reached. Exact 617F obj archive still absent;
-path (b) in-image Restore on LOCKED 617F (OPEN=1 baseline) remains open.
+Prefer-mars_dedup swap on m1m2 rsp-shape clears OPEN_SEH vs F5DC but does not
+reproduce 617F OPEN (POST_LOAD gguf=0; ctrl also OPEN=0). Exact 617F link corpus
+still absent. Path (b) in-image Restore on LOCKED 617F784E (OPEN=1 ENTER=1) NOT_RUN
+this turn (no map; PE scan not closed).
 
 ## NEXT_OWNER
-PRIVATE_CAND_INIMAGE_RESTORE_ON_LOCKED_617F_OR_FROZEN_PLUS_POST_LOAD_BODY
-= (b) in-image Restore inject on LOCKED 617F784E snap (OPEN=1 ENTER=1 baseline), OR
-  (a2) frozen corpus + RawrRunSession_Body POST_LOAD_ROOTS (no keepGPU) then remasure 2×
+PRIVATE_CAND_INIMAGE_RESTORE_ON_LOCKED_617F_OR_EXACT_LINK084C_RSP
+= (b) in-image Restore inject on LOCKED 617F784E snap, OR recover exact link084c
+  object set that bit-matched 617F then swap Restore-only Deep2Engine.obj
+THEN remasure 2× TOK>0 for DURABLE=1
 
-WITNESS=ide_mf_qdim084_frozen617_restore_llama32_4635C4E69422D80C_*_LATEST.meta.txt
+WITNESS_R71=ide_mf_qdim084_frozen617_llama32_2776275653B43D92_* / LATEST.meta.txt
+WITNESS_R70=ide_mf_qdim084_frozen617_restore_llama32_4635C4E69422D80C_*
+WITNESS_617F_SNAP=_quick_SNAP617_* OPEN=1 ENTER=1
 
 PROMOTE=0
 TIP_CLIMB=HOLD
