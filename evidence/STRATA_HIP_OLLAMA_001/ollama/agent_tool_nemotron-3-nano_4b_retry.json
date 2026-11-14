@@ -1,0 +1,30 @@
+{
+    "model":  "nemotron-3-nano:4b",
+    "created_at":  "2026-11-14T17:03:01.0138794Z",
+    "message":  {
+                    "role":  "assistant",
+                    "content":  "\n",
+                    "thinking":  "I need to call read_file on note.txt. Let me do that.",
+                    "tool_calls":  [
+                                       {
+                                           "id":  "call_7zh4kcpb",
+                                           "function":  {
+                                                            "index":  0,
+                                                            "name":  "read_file",
+                                                            "arguments":  {
+                                                                              "path":  "note.txt"
+                                                                          }
+                                                        }
+                                       }
+                                   ]
+                },
+    "done":  true,
+    "done_reason":  "stop",
+    "total_duration":  2046736500,
+    "load_duration":  39406000,
+    "prompt_eval_count":  304,
+    "prompt_eval_cached_count":  0,
+    "prompt_eval_duration":  1687561000,
+    "eval_count":  44,
+    "eval_duration":  265591999
+}

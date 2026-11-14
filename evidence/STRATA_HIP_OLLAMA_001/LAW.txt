@@ -1,0 +1,34 @@
+STRATA_HIP_OLLAMA_001 — LAW
+FAIL_CLOSED=1
+PROMOTE=0
+CERTIFIED=0
+COMPETITIVE_PASS=0
+INVENT_PASS=0
+NOT_RUN!=PASS
+CROSS_SHA_CREDIT=0
+TIP_CLIMB=HOLD
+RELATED_ONLY_ON_CERT=1
+WS7_OF=RAWRXD_ALL_BACKENDS_COMPLETE_001
+
+PURPOSE
+  Seal Strata HIP readiness + model compatibility + fair Ollama reliability/agent
+  tool-use for WS7. Prior: REAP_STRATA_UNSLOTH_OLLAMA_BENCH_001 PARTIAL.
+  Sibling runtime/memcpy authority: W7_STRATA_HIP_OLLAMA_001.
+
+BENCH CONTRACT (fair H2H)
+  Prompt: Say hi in one short sentence.
+  num_predict=32 temperature=0
+  EQUAL_EVAL required for competitive claims.
+  COMPETITIVE_PASS only from measured fair pairs without load-order invent.
+
+HIP LAW
+  Unversioned amdhip64.dll may FAIL while amdhip64_6.dll PASSes — report both.
+  Runtime/memcpy PASS ≠ native Strata HIP model E2E PASS.
+  Without hipcc/compiled kernels → EXPLICIT_UNSUPPORTED model path (host ≠ HIP PASS).
+
+OLLAMA / AGENT LAW
+  /api/generate reliability ≠ /api/chat tool emission ≠ product AgentOllamaClient CERT.
+  LOCAL_ONLY_001 (port=0) remains fail-closed for IDE Ollama HTTP.
+
+FORBIDDEN
+  Invent COMPETITIVE_PASS; tip-climb; CROSS_SHA credit; credit host fallback as HIP model PASS.

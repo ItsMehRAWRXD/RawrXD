@@ -1,0 +1,9 @@
+﻿amdhip64.dll=MISSING
+amdhip64_6.dll=RESOLVABLE
+amdhip64_7.dll=RESOLVABLE
+hiprtc64.dll=MISSING
+rocblas.dll=MISSING
+hipblas.dll=MISSING
+SIBLING_W7_PROBE=../RAWRXD_ALL_BACKENDS_COMPLETE_001/W7_STRATA_HIP_OLLAMA_001/probe/hip_probe2.out.txt
+SIBLING_W7_MEMCOPY=../RAWRXD_ALL_BACKENDS_COMPLETE_001/W7_STRATA_HIP_OLLAMA_001/probe/hip_memcpy.out.txt
+NOTE=unversioned amdhip64.dll FAIL; versioned amdhip64_6/7 LOAD OK; model E2E still EXPLICIT_UNSUPPORTED without hipcc kernels
