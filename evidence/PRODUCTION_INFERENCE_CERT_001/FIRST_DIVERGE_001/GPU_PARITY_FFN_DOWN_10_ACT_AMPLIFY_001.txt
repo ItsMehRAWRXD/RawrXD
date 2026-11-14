@@ -1,0 +1,41 @@
+GPU_PARITY_FFN_DOWN_10_ACT_AMPLIFY_001
+ASOF_LOCAL=2026-11-14T05:20:00-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 MATCH_PASS=0 DENSE_MATCH=HOLD
+PRIOR_TRUE_FIRST=4715001aa7 GPU_PARITY_FFN_DOWN_10_TRUE_FIRST_001
+BOARD_PACK_PUSH=9d05e7c687 (MF QDIM099 R84 RELATED)
+SPV_PIN=40E76D2ACBFC2380C0221CE55EA2345336264A3CF470341478E351406F42B403 LEN=17272 HELD=1
+DUMP=stage_dump_ffn_down_2_xdonediv_cascade
+REF=stage_dump_gpu_ref (best-match)
+
+## Attempt: close ACT amplify (not SPV)
+SPV_CLOSABLE=0 (prior probe host(ACT_d)==deep DOWN; host(ACT_l)==llama DOWN)
+GATE/UP/DOWN SPV≈HOST on NORM_d / ACT_d (offline _probe_ffn_gate_host_l10 + _probe_ffn_down_10_q4)
+
+## Q8 ownership (blk.10 ACT tile9)
+ACT deep vs llama maxAbs=8.195639e-08 (UNDER FFN 1e-5)
+q8 qs differ @idx32: deep=6 llama=7 (iscale*x ≈6.50000 boundary)
+Counterfactual silu(G)*U:
+  silu(Gd)*Ud → qs FAIL (dump path)
+  silu(Gd)*Ul → qs CLEAR  ← UP residual owns amplify
+  silu(Gl)*Ud → qs FAIL
+  peak ACT fix alone → qs CLEAR → DOWN host would match
+
+UP maxAbs=2.980232e-07 GATE=4.768372e-07 NORM=1.907349e-06
+host(NORM_d) vs deep UP=9.69e-08 (SPV≈HOST); vs llama UP=2.68e-07
+ROOT=UP_RESIDUAL_Q8_AMPLIFY_INTO_FFN_DOWN (ACT_YD; not SPV gap)
+FFN_DOWN_10_CLOSED=0
+FFN_DOWN_10_ACT_AMPLIFY_CLOSABLE=0 (needs upstream NORM/INP bitexact; not DOWN SPV)
+
+## Remeasure cascade (same dump; SPV40E76D2A loaded)
+| Site | maxAbs | Class tol | FUNCTIONAL_FAIL |
+|------|--------|-----------|-----------------|
+| FFN_DOWN_10 | 1.524854e-05 | 1e-5 | 1 |
+| ATTN_PRE_O_11 | 1.983643e-04 | 1e-4 | 1 |
+| ATTN_OUT_14 | 6.035976e-04 | 1e-4 | 1 |
+| FINAL_NORM | 2.236689e+00 | 1e-4 | 1 |
+
+TRUE_NEXT=ATTN_PRE_O_11 (first ATTN-class FAIL after L10 DOWN)
+ATTN_OUT_14 / FINAL_NORM remain OPEN (not first)
+DENSE_MATCH=HOLD TIP_6754616E=HOLD PCT_HELD=67/48/48
+PROMOTE=0 TIP_CLIMB=HOLD
+END
