@@ -1,31 +1,63 @@
 CLI_AGENT_MODEL_SELECTED_001
-ASOF_LOCAL=2026-11-14T09:36:17-05:00
+ASOF_LOCAL=2026-11-14T09:41:30-05:00
 PROMOTE=0
 CERTIFIED=0
 INVENT_PASS=0
 CROSS_SHA_CREDIT=0
+NOT_RUN!=PASS
 TIP_CLIMB=HOLD
 GATE_STOP=1
+ENTERPRISE=0/128_HELD
 
+PARENT=CLI_NUMERICAL_MOVES_36_50_001
+SISTER_FORCE=CLI_AGENT_SMOKE_001
+SCOPE=unforced local-model agent smoke (RAWR_AGENT_FORCE_TOOL unset)
+
+## EXE pin (exact)
+EXE=build_ninja/bin/rawr.exe
+PIN_ALT=build_ninja/bin/rawr_FIX_Q6K_HOST_9797521C.exe
 EXE_SHA256=9797521CEB517B92AC52C518FB2BDB783628ABEA59366DFBE6E784C1A72951A3
+EXE_SHA_POST=9797521CEB517B92AC52C518FB2BDB783628ABEA59366DFBE6E784C1A72951A3
 SHA_MATCH=1
-RAWR_AGENT_FORCE_TOOL=ABSENT
-MODEL=tinyllama.gguf
-CMD=agent … --auto=full --max-tokens 8 -p "Read README.md then report"
+CROSS_SHA=0
 
-## Measured
-MODEL_LOADED=1
-GENERATED_TOKENS=96 (then cancel) x rounds
-MODEL_SELECTED_TOOL=0
-PARSE=FAIL (no JSON "tool" key; later Unknown tool: README.md)
-DETERMINISTIC_TOOL_READ=1 (harness fallback — ≠ model-selected)
-EXIT=-1
-WALL_MS≈148485–240021 (smoke killed/timeout class)
-COHERENT_PROSE=PARTIAL (model emits natural language, not tool JSON)
+## Acceptance measured
+1 MODEL_LOADED=1 (AGENT_MODEL loaded + GEN banners MODEL_LOADED=1)
+2 RAWR_AGENT_FORCE_TOOL=ABSENT (env witness; FORCE_TOOL/skip_model_load strings=0 in stderr)
+3 MODEL_SELECTED_TOOL=0 (chose tool=0; no modelSelectedTool seal; final CmdAgent Diag absent — killed mid-loop)
+4 TOOL path: DETERMINISTIC_TOOL_READ=1 only (fallback after parse fail) ≠ model-selected execute
+5 Workspace READ observation returned 3× via deterministic fallback (README.md 68 bytes) — not model-selected EBT
+6 EXIT=-1 KILLED=1 WALL_MS=240021 — no clean product EXIT / no final AGENT_LOOP Diag lines
+
+## Blocker (exact)
+BLOCKER=PARSE_FAIL
+DETAIL=
+  decide#1: prose/Python ("Here's the Python code...") — No "tool" key found in JSON; EARLY_VALID=0; GENERATED_TOKENS=96
+  decide#2/#3: parse yields Unknown tool: README.md (non-permitted tool name); EARLY_VALID=0; GENERATED_TOKENS=96
+UNK_STREAK=0
+TIMEOUT_KILL=1 (harness 240s; still in decide/replan loop)
+NOT_CLAIMED=gemv_q6k.spv fixed; model-selected EBT; PERF climb; enterprise promote
 
 ## Disposition
-MODEL_SELECTED_AGENT=FAIL
-FORCED_AGENT_LOOP=PASS (prior Move 50; separate)
-COMPLETE_GATE=0 (MODEL_SELECTED required for COMPLETE=1)
-NEXT_OWNER=MODEL_SELECTED_JSON_TOOL_SCHEMA (TinyLlama tool-JSON compliance) OR stronger instruct model on same SHA
+DISPOSITION=FAIL
+MODEL_SELECTED_TOOL=0
+MODEL_LOADED=1
+FILES_READ_VIA_FALLBACK=1
+FILES_PATCH=0
+BUILD_COMPLETED=0
+AGENT_VERIFIED=0
+TOOL_EXECUTIONS=ABSENT_FINAL_DIAG (killed before CmdAgent seal)
+AGENT_LOOP=INCOMPLETE
 PROMOTE=0
+GATE_STOP=1
+TIP_CLIMB=HOLD
+
+## Artifacts
+runs/run.meta.txt
+runs/run.env.txt
+runs/run.out.txt
+runs/run.err.txt
+runs/run.err.witness.txt
+runs/run.exit.txt
+runs/exe.sha256.txt
+runs/ws/

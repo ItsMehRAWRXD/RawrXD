@@ -1,0 +1,42 @@
+AGENT_WAL_APPEND=1
+SESSION_CREATED=1
+agent session=sess_1794667004 workspace=g:\~dev\rawrxd\evidence\CLI_AGENT_MODEL_SELECTED_001\runs\ws auto=full model=G:\~dev\rawrxd\models\tinyllama.gguf
+[AGENT_MODEL] loaded alias=G:\~dev\rawrxd\models\tinyllama.gguf path=G:\~dev\rawrxd\models\tinyllama.gguf
+[AGENT_MODEL] prompt='<|system|>
+GEN=0 BIND16_LINKED=1 PACKED_Q2K_READY=1 SSVK_READY=1 DUALSTICK_ARMED=0 GPU_RESIDENT=1 MODEL_LOADED=1 DEVICE_COUNT=2 FWD_G0=0 FWD_G1=0 RESIDENCY_EPOCH=1 MODEL_EPOCH=1
+GEN=1 BIND16_LINKED=1 PACKED_Q2K_READY=1 SSVK_READY=1 DUALSTICK_ARMED=0 GPU_RESIDENT=1 MODEL_LOADED=1 DEVICE_COUNT=2 FWD_G0=720 FWD_G1=600 RESIDENCY_EPOCH=1 MODEL_EPOCH=1
+CLEAN_EXIT=0 CRASH_OBSERVED=0 BLOCKED_AT=PROVENANCE_MISMATCH DISPOSITION=INCOMPLETE
+GENERATED_TOKENS=96
+EARLY_VALID=0
+[AGENT_MODEL] gr.callbackCancelled=1 gr.completed=0 gr.generatedTokens=96 gr.promptTokens=60 gr.stopReason=cancel gr.eosObserved=0 gr.callbackCancelled=1 gr.engineError=0
+[AGENT_MODEL] gen tokens=96 stop_reason=cancel output='Here's the Python code to read README.md and return a JSON object with the tool and path specified:
+[AGENT_MODEL] parse FAILED: No "tool" key found in JSON output output='Here's the Python code to read README.md and return a JSON object with the tool and path specified:
+[AGENT_LOOP] model decision invalid: No "tool" key found in JSON output, DETERMINISTIC_TOOL_READ=1
+[AGENT_MODEL] prompt='<|system|>
+Observation: READ g:\~dev\rawrxd\evidence\CLI_AGENT_MODEL_SELECTED_001\runs\ws\README.md (68 bytes):
+CLI_AGENT_MODEL_SELECTED_001 workspace
+GEN=0 BIND16_LINKED=1 PACKED_Q2K_READY=1 SSVK_READY=1 DUALSTICK_ARMED=0 GPU_RESIDENT=1 MODEL_LOADED=1 DEVICE_COUNT=2 FWD_G0=0 FWD_G1=0 RESIDENCY_EPOCH=1 MODEL_EPOCH=1
+GEN=1 BIND16_LINKED=1 PACKED_Q2K_READY=1 SSVK_READY=1 DUALSTICK_ARMED=0 GPU_RESIDENT=1 MODEL_LOADED=1 DEVICE_COUNT=2 FWD_G0=1608 FWD_G1=1340 RESIDENCY_EPOCH=1 MODEL_EPOCH=1
+CLEAN_EXIT=0 CRASH_OBSERVED=0 BLOCKED_AT=PROVENANCE_MISMATCH DISPOSITION=INCOMPLETE
+GENERATED_TOKENS=96
+EARLY_VALID=0
+[AGENT_MODEL] gr.callbackCancelled=1 gr.completed=0 gr.generatedTokens=96 gr.promptTokens=134 gr.stopReason=cancel gr.eosObserved=0 gr.callbackCancelled=1 gr.engineError=0
+[AGENT_MODEL] gen tokens=96 stop_reason=cancel output='To return exactly the JSON object with the "tool" and "path" properties, we can use the `select()` method of the `json` library.
+[AGENT_MODEL] parse FAILED: Unknown tool: README.md output='To return exactly the JSON object with the "tool" and "path" properties, we can use the `select()` method of the `json` library.
+[AGENT_LOOP] model decision invalid: Unknown tool: README.md, DETERMINISTIC_TOOL_READ=1
+[AGENT_MODEL] prompt='<|system|>
+Observation: READ g:\~dev\rawrxd\evidence\CLI_AGENT_MODEL_SELECTED_001\runs\ws\README.md (68 bytes):
+CLI_AGENT_MODEL_SELECTED_001 workspace
+GEN=0 BIND16_LINKED=1 PACKED_Q2K_READY=1 SSVK_READY=1 DUALSTICK_ARMED=0 GPU_RESIDENT=1 MODEL_LOADED=1 DEVICE_COUNT=2 FWD_G0=0 FWD_G1=0 RESIDENCY_EPOCH=1 MODEL_EPOCH=1
+GEN=1 BIND16_LINKED=1 PACKED_Q2K_READY=1 SSVK_READY=1 DUALSTICK_ARMED=0 GPU_RESIDENT=1 MODEL_LOADED=1 DEVICE_COUNT=2 FWD_G0=1608 FWD_G1=1340 RESIDENCY_EPOCH=1 MODEL_EPOCH=1
+CLEAN_EXIT=0 CRASH_OBSERVED=0 BLOCKED_AT=PROVENANCE_MISMATCH DISPOSITION=INCOMPLETE
+GENERATED_TOKENS=96
+EARLY_VALID=0
+[AGENT_MODEL] gr.callbackCancelled=1 gr.completed=0 gr.generatedTokens=96 gr.promptTokens=134 gr.stopReason=cancel gr.eosObserved=0 gr.callbackCancelled=1 gr.engineError=0
+[AGENT_MODEL] gen tokens=96 stop_reason=cancel output='To return exactly the JSON object with the "tool" and "path" properties, we can use the `select()` method of the `json` library.
+[AGENT_MODEL] parse FAILED: Unknown tool: README.md output='To return exactly the JSON object with the "tool" and "path" properties, we can use the `select()` method of the `json` library.
+[AGENT_LOOP] model decision invalid: Unknown tool: README.md, DETERMINISTIC_TOOL_READ=1
+[AGENT_MODEL] prompt='<|system|>
+Observation: READ g:\~dev\rawrxd\evidence\CLI_AGENT_MODEL_SELECTED_001\runs\ws\README.md (68 bytes):
+CLI_AGENT_MODEL_SELECTED_001 workspace
+GEN=0 BIND16_LINKED=1 PACKED_Q2K_READY=1 SSVK_READY=1 DUALSTICK_ARMED=0 GPU_RESIDENT=1 MODEL_LOADED=1 DEVICE_COUNT=2 FWD_G0=0 FWD_G1=0 RESIDENCY_EPOCH=1 MODEL_EPOCH=1
