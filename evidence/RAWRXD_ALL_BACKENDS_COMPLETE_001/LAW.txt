@@ -1,0 +1,15 @@
+RAWRXD_ALL_BACKENDS_COMPLETE_001 — LAW
+PROMOTE=0 CERTIFIED=0 ENTERPRISE=0/128 GATE_STOP=1 TIP_CLIMB=HOLD
+
+1. SCOPE: every experimental inference backend — Deep2 CPU/Vulkan, Q4/Q6/Q8,
+   packed GEMV/GEMM, Attention/KV, Ornith, Laguna/Qwen3.5, MiniMax MoE,
+   Kimi K2, REAP, Strata HIP, Ollama, large models, multi-agent.
+2. CERTIFIED only when Build+Load+Numerics+Generation+Performance+Reliability
+   +Integration+Packaging clear on a traceable EXE SHA for that backend.
+3. Unsupported architectures must be explicit BLOCKED/UNSUPPORTED — never
+   silently routed through another backend.
+4. CROSS_SHA_CREDIT=0. Method C / Q6K SPV seals do not certify other streams.
+5. NOT_RUN != PASS. Throughput alone ≠ promote. No false completion %.
+6. Parallel workstreams OK; each seals its own pack; board absorbs RELATED≠CERT.
+7. Critical path: Laguna numerics → MiniMax/REAP semantic → large native →
+   multifamily CLI/GUI → independent certification.
