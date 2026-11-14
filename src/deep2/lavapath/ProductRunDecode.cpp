@@ -38,7 +38,11 @@ void RunDecodeStream(ProductRuntime& rt, const char* prompt, uint32_t maxTokens,
     userCancel = 0;
     rxow::OnGenerateEntered();
     rxow::OnDecodeStep0();
-    (void)Deep2::scoreboard::PumpProductDecode();
+    if (const char* p = std::getenv("RAWRXD_SCOREBOARD_PUMP");
+        p && p[0] == '1')
+        (void)Deep2::scoreboard::PumpProductDecode();
+    else
+        std::fprintf(stderr, "SCOREBOARD_PUMP_SKIP=1\n");
     const auto t0 = std::chrono::steady_clock::now();
     uint64_t lastCommitNs = 0;
     engPinned->generateStream(

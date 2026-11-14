@@ -34,7 +34,6 @@ bool InitFromPath(Deep2Engine& e, const std::string& path, size_t maxSeq) {
     /* Prefer loadModel geo.context over default maxSeq=512 — 512 left
      * CKV/stream working-set too small and ProductRun AV VA=0/-1 before ENTER. */
     cfg.maxSeqLen = e.getConfig().maxSeqLen > 0 ? e.getConfig().maxSeqLen : maxSeq;
-    if (cfg.maxSeqLen < 2048) cfg.maxSeqLen = 2048;
     cfg.useMLA = mw.useMLA || e.getConfig().useMLA;
     cfg.qLoraRank = e.getConfig().qLoraRank;
     cfg.kvLoraRank = e.getConfig().kvLoraRank;

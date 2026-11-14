@@ -1,0 +1,47 @@
+BR_STREAM_AFTER_AUTHPASS_R73
+ASOF_LOCAL=2026-11-13T23:45-05:00
+AUTH=PARENT_BOARD_AUTHORITY / BOARD_SINGLE_WRITER
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 CROSS_SHA_CREDIT=0
+PCT_HELD=CLI67/GUI48/OVERALL48
+GATE_MATRIX_PASS=0
+RESULT=RELATED_NOT_PASS
+
+## Prior (R72 absorbed)
+authPASS/OPEN_PASS CLOSED on private 084 (9181073D / CC621549)
+Residual STREAM: llama 0xE06D7363 TOK=0; gemma EXIT=NULL
+
+## Root (fail-closed)
+SITE=ProductRun / stream prep after keepGPU pin (MARS token_embd resident)
+CLASS_A=std::bad_alloc 0xE06D7363 under host commit exhaustion
+  (CKV/torus at gguf_ctx=131072 → multi-GB; concurrent tip_land remasures
+   pushed commit≈75–110GB; ProductRun string/decode throws → SEH filter)
+CLASS_B=after KV bound+ckv skip: OPEN+auth+KEEP closed then
+  STREAM AV 0xC0000005 READ VA=-1 after RXOW DECODE_STEP0 before
+  GENERATE_STREAM_ENTER (PumpProductDecode / eng pin class; 330ECC)
+
+## Source lands (private; tip 6754616E RO)
+- Deep2Engine: KV_WORKING_SEQ_BOUND (default 4096 / env DEEP2_KV_WORKING_SEQ)
+- Deep2Engine: keepTokenEmbd name-exact keep-GPU pin
+- Deep2Engine: ToroidalKV bad_alloc fail-closed
+- ProductRun.hpp: catch bad_alloc/CXX on assign+decode (PRODUCT_RUN_BAD_ALLOC)
+- ProductRunDecode: SCOREBOARD_PUMP_SKIP default (opt-in RAWRXD_SCOREBOARD_PUMP=1)
+- Eng out-of-line isModelLoaded/sessionAuthority* (FORCE COMDAT vs SEH)
+- RawrRunSession_Body: prefer loadModel geo.context over InitFromPath maxSeq=512
+- Remasure: ENHANCE_SKIP+=ckv,nvme; DEEP2_KV_WORKING_SEQ=2048
+
+## Controlling measure (bad_alloc class closed; ENTER residual)
+EXE_SHA256=330ECC0A4194D29C385EF55EFAA1FA1397EC4D92A5DC3560AD15C18096CDA405
+WITNESS=gpu/ide_mf_qdim084_llama32_330ECC0A4194D29C_20261113_232309.meta.txt
+OPEN_PASS=1 authPASS=1 MARS_KEEP_GPU_PIN=1
+GENERATE_STREAM_ENTER=0 TOK=0
+INFER_STREAM_SEH=1 CODE=0xC0000005 VA=FFFFFFFFFFFFFFFF
+TIP_STILL_6754=1
+
+## Later private FORCE links
+OPEN_SEH regress under concurrent engpin/ODR churn (40A8324B etc.) —
+NOT used as controlling; INVENT_PASS=0
+
+Receipt: receipts/G02-08_20261113_STREAM_AFTER_AUTHPASS_R73_RELATED.md
+NEXT=LAND_PUMP_SKIP+ODR without OPEN_SEH → ENTER=1 TOK>0 SEH=0
+PROMOTE=0
+END

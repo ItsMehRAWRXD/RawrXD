@@ -6085,7 +6085,6 @@ void Deep2Engine::emitContinuitySnap(FILE* f, uint32_t gen) const {
     std::fflush(f);
 }
 
-#if defined(RAWR_PRODUCT_RUNTIME_OPEN_MIN)
 bool Deep2Engine::isModelLoaded() const { return modelWeights.loaded; }
 
 const ModelWeights& Deep2Engine::getModelWeights() const {
@@ -6099,7 +6098,6 @@ const rawr::olma::AuthorityBundle& Deep2Engine::sessionAuthority() const {
 bool Deep2Engine::sessionAuthorityPass() const {
     return sessionAuth_.PASS != 0;
 }
-#endif
 
 bool Deep2Engine::repairModelLoadedFromRoots() {
     if (modelWeights.loaded) return true;
@@ -6756,9 +6754,8 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
     // reset() must not drop greedy mode once configured above.
     if (SemanticSafeWanted() ||
         (std::getenv("RAWRXD_GREEDY") && std::getenv("RAWRXD_GREEDY")[0] == '1')) {
+        /* Flag only — do not touch sampler unique_ptr (ProductRun AV). */
         deterministicGreedy_ = true;
-        if (!sampler)
-            sampler = std::make_unique<rawrxd::sampling::GreedySampler>();
     }
 
     const size_t remainingContext = config.maxSeqLen > promptLen ? config.maxSeqLen - promptLen : 0;
@@ -7596,13 +7593,20 @@ void Deep2Engine::configureGeneration(const GenerationOptions& options)
         std::fprintf(stderr, "CFG_GEN_BEFORE_STICK=1\n"); std::fflush(stderr);
         ds_imb::SetGreedyStick(1);
         std::fprintf(stderr, "CFG_GEN_AFTER_STICK=1\n"); std::fflush(stderr);
-        sampler = std::make_unique<rawrxd::sampling::GreedySampler>();
-        std::fprintf(stderr, "CFG_GEN_AFTER_SAMPLER=1\n"); std::fflush(stderr);
+        /* Never touch sampler unique_ptr on greedy (assign or operator bool).
+         * 491967B3 AV VA=-1 on make_unique; 7B8B877B SKIP assign then AV on
+         * trailing `if (sampler)`. sampleToken argmaxes when greedy=1. */
+        std::fprintf(stderr, "CFG_GEN_GREEDY_SKIP_SAMPLER=1\n");
+        std::fflush(stderr);
         printf("[GREEDY] enabled=1 temperature=%.4f topK=%u\n",
                options.temperature, options.topK);
-    } else {
-        deterministicGreedy_ = false;
-        ds_imb::SetGreedyStick(0);
+        std::fprintf(stderr, "CFG_GEN_GREEDY_RETURN=1\n");
+        std::fflush(stderr);
+        return;
+    }
+    deterministicGreedy_ = false;
+    ds_imb::SetGreedyStick(0);
+    try {
         if (options.topP < 1.0f && options.topP > 0.0f) {
             sampler = std::make_unique<rawrxd::sampling::TopPSampler>(
                 options.temperature, options.topP);
@@ -7610,9 +7614,15 @@ void Deep2Engine::configureGeneration(const GenerationOptions& options)
             sampler = std::make_unique<rawrxd::sampling::TopKSampler>(
                 static_cast<int>(options.topK), options.temperature);
         }
-        printf("[GREEDY] enabled=0 temperature=%.4f topK=%u\n",
-               options.temperature, options.topK);
+    } catch (const std::bad_alloc&) {
+        std::fprintf(stderr, "CFG_GEN_SAMPLER_BAD_ALLOC=1 FAIL_CLOSED\n");
+        std::fflush(stderr);
+        deterministicGreedy_ = true;
+        ds_imb::SetGreedyStick(1);
+        return;
     }
+    printf("[GREEDY] enabled=0 temperature=%.4f topK=%u\n",
+           options.temperature, options.topK);
     if (sampler) {
         sampler->setRepetitionPenalty(options.repeatPenalty);
         sampler->setMinP(options.minP);

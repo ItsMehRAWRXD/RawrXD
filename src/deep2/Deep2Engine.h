@@ -464,12 +464,7 @@ public:
     
     // Get engine info
     bool isInitialized() const { return initialized; }
-#if defined(RAWR_PRODUCT_RUNTIME_OPEN_MIN)
-    /* Min OpenSession TU: decls only → UNDEF (no FORCE COMDAT override). */
     bool isModelLoaded() const;
-#else
-    bool isModelLoaded() const { return modelWeights.loaded; }
-#endif
     /* POST_LOAD roots repair — Deep2Engine.cpp (RawrRunSession). */
     bool repairModelLoadedFromRoots();
     ModelState modelState() const { return modelState_; }
@@ -485,11 +480,7 @@ public:
         std::fflush(f);
     }
     const EngineConfig& getConfig() const { return config; }
-#if defined(RAWR_PRODUCT_RUNTIME_OPEN_MIN)
     const ModelWeights& getModelWeights() const;
-#else
-    const ModelWeights& getModelWeights() const { return modelWeights; }
-#endif
     
     // Backend identity for certification
     static constexpr const char* backendName() noexcept { return "Deep2Engine/Sovereign"; }
@@ -783,13 +774,8 @@ public:
     bool handleGPUFailure(int gpu);
 
     // ONE_LOCAL_MODEL_AUTHORITY — sealed on loadModel (SSOT for ProductRuntime).
-#if defined(RAWR_PRODUCT_RUNTIME_OPEN_MIN)
     const rawr::olma::AuthorityBundle& sessionAuthority() const;
     bool sessionAuthorityPass() const;
-#else
-    const rawr::olma::AuthorityBundle& sessionAuthority() const { return sessionAuth_; }
-    bool sessionAuthorityPass() const { return sessionAuth_.PASS != 0; }
-#endif
     /* Re-seal from live ggufResult + sessionGeometry_ (gemma ProductOpen). */
     bool resealSessionAuthority();
 
