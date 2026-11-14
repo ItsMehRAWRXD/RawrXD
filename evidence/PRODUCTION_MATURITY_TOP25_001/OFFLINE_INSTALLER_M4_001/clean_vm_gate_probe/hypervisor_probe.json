@@ -1,16 +1,12 @@
 {
-  "ASOF": "2026-11-13T21:56:27-05:00",
-  "WindowsSandboxExe": false,
-  "WindowsSandboxExePath": "C:\\WINDOWS\\System32\\WindowsSandbox.exe",
-  "HyperVGetVmCmdlet": false,
-  "HyperVModule": false,
-  "IsElevated": false,
-  "VBoxManage": false,
-  "VMwareVmrun": false,
-  "QemuSystemX86_64": false,
-  "HyperVFeatureProbeError": "The requested operation requires elevation.",
-  "WindowsSandboxFeatureProbeError": "The requested operation requires elevation.",
-  "CLEAN_VM_EXECUTABLE_NOW": 0,
-  "INVENT_CLEAN_VM": 0,
-  "PROMOTE": 0
+    "Elevated":  0,
+    "CLEAN_VM":  0,
+    "HyperV_GetVM":  0,
+    "HyperV_Module":  0,
+    "VMware":  0,
+    "WindowsSandbox":  0,
+    "CLEAN_VM_EXECUTABLE_NOW":  0,
+    "QEMU":  0,
+    "asof":  "2026-11-14T07:12:19-05:00",
+    "VBoxManage":  0
 }

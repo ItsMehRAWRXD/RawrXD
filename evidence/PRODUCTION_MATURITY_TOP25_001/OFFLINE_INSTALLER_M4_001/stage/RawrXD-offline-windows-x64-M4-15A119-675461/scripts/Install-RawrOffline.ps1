@@ -1,4 +1,4 @@
-# Install-RawrOffline.ps1 — extract-local install; OFFLINE=1; no network; no models.
+﻿# Install-RawrOffline.ps1 — extract-local install; OFFLINE=1; no network; no models.
 # PROMOTE=0 · CLEAN_VM not claimed.
 
 [CmdletBinding()]
@@ -18,17 +18,34 @@ if (-not $TargetDir) {
 $pins = Join-Path $pkg "PINS.txt"
 if (-not (Test-Path -LiteralPath $pins)) { throw "MISSING_PINS=$pins" }
 
-$srcBin = Join-Path $pkg "bin"
-if (-not (Test-Path -LiteralPath $srcBin)) { throw "MISSING_BIN=$srcBin" }
-New-Item -ItemType Directory -Path (Join-Path $TargetDir "bin") -Force | Out-Null
-Get-ChildItem -LiteralPath $srcBin -File | ForEach-Object {
-    Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $TargetDir "bin\$($_.Name)") -Force
+$sw = Join-Path $pkg "SetupWizard.exe"
+$fileCopy = 0
+if (Test-Path -LiteralPath $sw) {
+    $swArgs = @("/install", "/silent", "/target=$TargetDir", "/payload=$pkg")
+    $p = Start-Process -FilePath $sw -ArgumentList $swArgs -Wait -PassThru -NoNewWindow
+    if ($p.ExitCode -ne 0) { throw "SETUPWIZARD_INSTALL_FAIL exit=$($p.ExitCode)" }
+    $fileCopy = 1
+} else {
+    $srcBin = Join-Path $pkg "bin"
+    if (-not (Test-Path -LiteralPath $srcBin)) { throw "MISSING_BIN=$srcBin" }
+    New-Item -ItemType Directory -Path (Join-Path $TargetDir "bin") -Force | Out-Null
+    Get-ChildItem -LiteralPath $srcBin -File | ForEach-Object {
+        Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $TargetDir "bin\$($_.Name)") -Force
+    }
+    $srcExt = Join-Path $pkg "extensions"
+    if (Test-Path -LiteralPath $srcExt) {
+        New-Item -ItemType Directory -Path (Join-Path $TargetDir "extensions") -Force | Out-Null
+        Copy-Item -LiteralPath (Join-Path $srcExt "*") -Destination (Join-Path $TargetDir "extensions") -Force
+    }
+    $fileCopy = 1
 }
 Copy-Item -LiteralPath $pins -Destination (Join-Path $TargetDir "PINS.txt") -Force
 $manSrc = Join-Path $pkg "OFFLINE_MANIFEST.txt"
 if (Test-Path -LiteralPath $manSrc) {
     Copy-Item -LiteralPath $manSrc -Destination (Join-Path $TargetDir "OFFLINE_MANIFEST.txt") -Force
 }
+Write-Host "FILE_COPY=$fileCopy"
+Write-Host "SIMULATED=0"
 
 $rawr = Join-Path $TargetDir "bin\rawr.exe"
 $gui  = Join-Path $TargetDir "bin\RawrXD-Win32IDE.exe"
@@ -69,6 +86,7 @@ Write-Host "HELP_SMOKE=$helpOk"
 Write-Host "OFFLINE=1"
 Write-Host "CLOUD_MODELS=0"
 Write-Host "CLEAN_VM=0"
+Write-Host "CLEAN_MACHINE_SANDBOX=0"
 Write-Host "PROMOTE=0"
 if ($helpOk -eq "FAIL") { exit 1 }
 exit 0

@@ -1,0 +1,1 @@
+trial=10 name=tipr96_10 start_exit=0 start_ok=1 out_exit=8 out_ok=0 marker=0 stop_exit=0 stop_ok=1 cleanup_ok=0 idem_stop_exit=0 idem_stop_ok=1
