@@ -7,7 +7,7 @@ Authority: pasted RAWRXD_ENTERPRISE_PRODUCT_CERT_001 checklist · 0/128 · HELD 
 | P0 | Gemma AA4F / tip_land AV | G02-06 G06-06 | B8E5 R75 TOK=8 RELATED (314771e525); tip 6754 RO; ≠ CERT PASS |
 | P0 | GPU/ref V_1 / ATTN_NORM_1@dim1072 | G02-04 G02-05 G03-08 | CLOSED=1 maxULP=0 F0A8018F RELATED (R78); ≠ matrix PASS |
 | P0 | ATTN_PRE_O_1@pos1 FA head11 | G02-04 G03-08 | OPEN 2.754107e-05; FFN_DOWN_2 CLOSED SPV40E76D2A; CLOSE_004 in flight; ≠ PASS |
-| P0 | Multi-family STREAM / M1M2 TOK | G02-08 G04-01 G06-06 | 3792BAA7 DURABLE=1 ENTER=1 TOK=2 SEH=0 RELATED (R81); tip RO; 085f TOK=0 |
+| P0 | Multi-family STREAM / M1M2 TOK | G02-08 G04-01 G06-06 | F44D053D tip-absorb R82 OPEN=1 ENTER=1 TOK=2 SEH=0 RELATED; tip RO; 085f TOK=0 |
 | P1 | C36 LSP startup hangs | G07-01 G07-04 | tip6754 HANG/TIMEOUT RELATED (R70); cand INIT_OK RELATED only |
 | P1 | ConPTY terminal-stop reliability | G05-05 G06-05 | tip-era PASS RELATED (R70); cand PASS RELATED; ≠ CERT PASS |
 | P1 | M3 MODEL_SELECTED_TOOL / tipbound | G05-06 G08-01 | FORCE PASS; model-select=0 unk; wire SOURCE_WIRED RUNTIME=0 |
@@ -30,8 +30,9 @@ Authority: pasted RAWRXD_ENTERPRISE_PRODUCT_CERT_001 checklist · 0/128 · HELD 
 | CC621549 keepGPU | PASS auth=1 | 0 | 0 | gemma OPEN closed; stream not durable |
 | 330ECC0A keepGPU | PASS auth=1 | 0 | 0 | R73 bad_alloc cleared; STREAM AV VA=-1 ENTER=0 |
 | 3792BAA7 keepGPU | PASS | 1 | 2 | R81 durable remasure; SEH=0 EXIT=0 DURABLE=1 RELATED ≠ tip |
+| F44D053D tip-absorb | PASS | 1 | 2 | R82 PUMP_SKIP ODR private; SEH=0 AUTH_HOLD RELATED ≠ tip |
 | B8E5F6E5 PrivateCand | 1 | 1 | 8 | R75 EXIT=NULL closed; SEH=0 AV_CLOSED=1 RELATED ≠ tip |
 
-`NEXT_OWNER` (split): llama32 `PRIVATE_CAND_INIMAGE_STREAM_REBIND_AFTER_ONEVICT_OR_GENERATESTREAM_RESTORE_PLUS_PTR` (R74 68CC) · keepGPU durable `TIP_ABSORB_AUTH_HOLD` (R81 3792) · `TIP_CLIMB=HOLD`
+`NEXT_OWNER=ATTN_PRE_O_1_POS1` · BR_TIP_ABSORB_AUTH_HOLD_R82 (F44D053D RELATED AUTH_HOLD) · llama32 inimage residual R74 68CC held separate · `TIP_CLIMB=HOLD`
 
 PROMOTE=0 until all 128 gates PASS with independent sign-off.
