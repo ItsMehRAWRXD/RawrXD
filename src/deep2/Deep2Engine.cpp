@@ -7874,7 +7874,8 @@ Deep2::GenerationResult Deep2Engine::generateStream(
         const bool usable =
             !forceRaw &&
             (ty != ChatTemplateType::UNKNOWN && ty != ChatTemplateType::RAW_BOS);
-        genQualityChatValid_ = usable ? 1 : (forceRaw ? 1 : 0);
+        if (auto* qp = static_cast<D2GenQualityProbe*>(genQualityProbe_))
+            qp->chatValid = usable ? 1 : (forceRaw ? 1 : 0);
         if (usable) {
             // The native HTTP adapter may already serialize the complete
             // multi-message conversation.  Formatting that string a second
@@ -7979,7 +7980,11 @@ Deep2::GenerationResult Deep2Engine::generateStream(
                             "piece_bytes=%zu chat_template_valid=%d "
                             "path=K2_STREAM\n",
                             s->count, (int)id, piece.size(),
-                            s->eng ? s->eng->genQualityChatValid_ : 0);
+                            (s->eng && s->eng->genQualityProbe_)
+                                ? static_cast<D2GenQualityProbe*>(
+                                      s->eng->genQualityProbe_)
+                                      ->chatValid
+                                : 0);
                         std::fclose(qf);
                     }
                 }
