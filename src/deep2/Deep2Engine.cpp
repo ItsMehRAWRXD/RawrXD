@@ -8948,18 +8948,13 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         fprintf(stderr, "[FFN_ONLY] layer=%zu norm_ok\n", layer);
         fflush(stderr);
         if (profilingEnabled_ && profiler_) profiler_->endAttnNorm();
-        /* W6: IDENTITY dead-branch held under auth (&& false).
-         * EXPERIMENTAL_NEQ_SSM_CERTIFIED_IMPL; real SSM = computeSSM only. */
-        if (envFlagEnabled("RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM") && false) {
-            fprintf(stderr, "[FFN_ONLY] layer=%zu IDENTITY=1 PRODUCTION_DECODE_PATH=0 "
-                    "EXPERIMENTAL_NEQ_SSM_CERTIFIED_IMPL=1\n", layer);
-            fflush(stderr);
-            memcpy(output, xin, hiddenDim * sizeof(float));
-        } else {
-            computeFFN(layer, layerTemp, ffnOutput);
-            for (size_t i = 0; i < hiddenDim; ++i)
-                output[i] = xin[i] + ffnOutput[i];
-        }
+        /* FFN-only: always real compute. Dead IDENTITY under
+         * ALLOW_EXPERIMENTAL_SSM&&false removed (REAP_STRATA_FAIR_H2H_001 /
+         * BR_EXPERIMENTAL_SSM_FINISH_001). Experimental SSM = computeSSM()
+         * under auth only — EXPERIMENTAL_NEQ_SSM_CERTIFIED_IMPL; PROMOTE=0. */
+        computeFFN(layer, layerTemp, ffnOutput);
+        for (size_t i = 0; i < hiddenDim; ++i)
+            output[i] = xin[i] + ffnOutput[i];
         if (layerChainBuf_ && output && hiddenDim)
             std::memcpy(layerChainBuf_, output, hiddenDim * sizeof(float));
         layerChainValid_ = (layerChainBuf_ != nullptr);

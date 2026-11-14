@@ -1,5 +1,5 @@
 REAP_LAGUNA_ATTN_GATE_001 — STATUS
-ASOF_LOCAL=2026-11-14T11:50:00-05:00
+ASOF_LOCAL=2026-11-14T12:16:00-05:00
 PROMOTE=0
 CERTIFIED=0
 ENTERPRISE=0/128
@@ -11,30 +11,36 @@ NOT_RUN!=PASS
 PROGRAM_COMPLETE=0
 
 BASELINE_SHA=CEBA0DE4734A3897B96A825C5CE16685161DB8A3C570C22F6B06B3DE4368A3C5
-NEW_EXE_SHA=4743825156D9B012EDBB4F28F8249F2730A6B816BD6538B1FA82BCEA8754633D
+NEW_EXE_SHA=57D6EB215AE527134895EBD15920DA2D4EA7BFB24D313A81AFF25CC08C0B4220
 EXE=g:\~dev\rawrxd\build_ninja\bin\rawr.exe
 MODEL=F:\OllamaModels\_REAP16\laguna-s-2_1-Q4_K_M-REAP35\sha256-948255a146c07678678183af4cb1234a124e945e48c85c2006598ef4696552c8
 
 ## Deliverables
 TENSOR_MAPPING=CLOSED (TENSOR_MAP.txt L0/L1/L40)
 OPERATOR_ORDER=CLOSED MATCH vs HF/sglang Laguna (softplus before O)
-INSTRUMENT=SOURCE_WIRED ATTN_PRE_GATE/POST_GATE/PRE_O/POST_O via B3_StageDigest
+INSTRUMENT=RUNTIME_REACHED ATTN_PRE_GATE/POST_GATE/PRE_O/POST_O L0+L40
 SOURCE_FIX=0 (tensor map proves order correct; no post-O move)
+ACT=softplus (Laguna HF); discarded transient sigmoid tip 47438251
 
 ## FIRST_DIVERGENT_OP
 GATE_PATH_ORDER_ACT=NOT_DIVERGENT (matches Laguna HF/sglang softplus-before-O)
 NUMERIC_PARITY=OPEN
 FIRST_DIVERGENT_OP=OPEN_NUMERIC
 BLOCKER=NO_BITEXACT_REF_DIGEST_COMPARE
-  Exact: HF/sglang/transformers Laguna reference confirms order+softplus, but no
-  side-by-side float digest dump of PRE_GATE/POST_GATE/PRE_O/POST_O vs Deep2
-  on identical prompt/weights has been sealed this pack. Cannot invent PASS.
-  Adjacent llama.cpp Step35 uses sigmoid — not Laguna authority.
+  Deep2 digests sealed for L0/L40; no HF/transformers float digest oracle
+  on identical prompt/weights sealed this pack. Cannot invent PASS.
+  Adjacent llama.cpp Step35 sigmoid is NOT Laguna authority.
 
-## Digests
+## Digests (RUNTIME)
 DIGEST_KEYS=ATTN_PRE_GATE_{L} ATTN_POST_GATE_{L} ATTN_PRE_O_{L} ATTN_POST_O_{L}
-DIGEST_LAYERS=0 (+40 via RAWRXD_STAGE_DUMP_LAYERS=0,40)
-RUNTIME_DIGEST_CAPTURE=see runs/ (may be PARTIAL if smoke incomplete)
+L0_PRE_GATE_fnv=46231e2d0ff594e5
+L0_POST_GATE_fnv=5046ea4527ff50ef
+L0_POST_O_fnv=78379eb8d91283e0
+L40_PRE_GATE_fnv=8b3d99468a17a1e5
+L40_POST_GATE_fnv=f675b0e2d3a050ee
+APPLY=softplus g0=-0.754942 s0=0.385288
+GENERATED_TOKENS=1 PRODUCT_PASS=1 CLEAN_EXIT=1
+ARTIFACT=runs/DIGEST_SNIPPET.txt runs/digest_softplus.{out,err}.txt
 
 ## Law
 Do NOT invent PASS. Do NOT claim PROGRAM_COMPLETE.
