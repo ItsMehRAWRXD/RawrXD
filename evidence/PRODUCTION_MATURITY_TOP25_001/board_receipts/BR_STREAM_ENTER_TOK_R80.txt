@@ -6,17 +6,22 @@ PCT_HELD=CLI67/GUI48/OVERALL48
 GATE_MATRIX_PASS=0
 RESULT=RELATED_NOT_PASS
 
-## Absorbed (shell 15005 / STREAM ENTER pump lineage)
-COMMIT=3b49cb5775
+## Absorbed (worker 3dcf0577-cafc-4926-8aef-84d89200aae1)
+COMMIT=3b49cb5775 · PARENT_BOARD=0fc0bd3548
 EXE_SHA256=3792BAA70AA59F459706BE19391C8A0B493E9683E0B82947215D5AF1BA1F00C0
-OPEN implied KEEP=1 ENTER=1 TOK=2 SEH=0 EXIT=0
-ROOT=greedy skip + embd restore skip (ProductRun stream AV after keep-GPU)
-WITNESS=gpu/ide_mf_qdim084_llama32_3792BAA70AA59F45_20261114_000057.*
+ENTER=1 TOK=2 SEH=0 EXIT=0 KEEP_GPU_PIN=1 OPEN_CRITICAL=PASS
+WITNESS=ide_mf_qdim084_llama32_3792BAA70AA59F45_20261114_000057
 TIP_STILL_6754=1 RO
-PRIOR_R79=330ECC ENTER=0 VA=-1 → this close ENTER residual on private cand
+RELATED_SEAL=BR_QDIM084_PRODUCTRUN_BADALLOC_RELATED_001
+
+## Sites closed
+1) oversized CKV → 0xE06D7363 (KV_WORKING_SEQ_BOUND)
+2) greedy sampler unique_ptr touch → AV (configureGeneration early-return)
+3) SnapshotLeases restore after keep-GPU → VA=0x66858F (default-skip restore)
 
 ## Disposition
-RELATED ≠ CERT G02-08 PASS · ≠ tip bind
-NEXT=durable remasure + tip-climb HOLD; multi-family gemma parity check
+RELATED ≠ CERT G02-08 PASS · ≠ tip bind (TIP_CLIMB=HOLD)
+NEXT=durable remasure; gemma MF parity; tip absorb only with auth
 PROMOTE=0
 END
+
