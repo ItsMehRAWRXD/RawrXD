@@ -7757,16 +7757,24 @@ Deep2::GenerationResult Deep2Engine::generateStream(
     rawr::batch007::A().maxTokensReq = options.maxTokens;
     rawr::batch007::A().ctxSize = config.maxSeqLen;
     rawr::batch007::A().vocabExt = 1;
+    std::fprintf(stderr, "GENERATE_STREAM_POST_BATCH007=1\n");
+    std::fflush(stderr);
     /* After open Host-Evict of token_embd: Restore before stream so GPU
-     * product decode does not SEH on VA=-1. Does not change POST_LOAD. */
+     * product decode does not SEH on VA=-1. Does not change POST_LOAD.
+     * Default SKIP SnapshotLeases: D723 keep-GPU + GREEDY_RETURN then AV
+     * READ VA=0x66858F inside lease walk before ENTER. OPEN pin suffices.
+     * Opt-in: DEEP2_STREAM_EMBD_SNAPSHOT=1. */
     {
         const char* hd = std::getenv("RAWRXD_HOST_DECODE");
         const bool hostDecode = (hd && hd[0] == '1');
-        if (!hostDecode && marsEnabled_ && marsController_) {
+        const char* snap = std::getenv("DEEP2_STREAM_EMBD_SNAPSHOT");
+        const bool doSnap = snap && snap[0] == '1';
+        if (!hostDecode && marsEnabled_ && marsController_ && doSnap) {
             auto* vm = marsController_->GetVRAMManager();
             if (vm) {
                 for (auto* lease : vm->SnapshotLeases()) {
-                    if (!lease) continue;
+                    if (!lease || (uintptr_t)lease + 1u <= 0x1000u) continue;
+                    if ((uintptr_t)lease < 0x10000u) continue;
                     if (lease->name != "token_embd.weight" &&
                         lease->name != "token_embeddings.weight")
                         continue;
@@ -7792,9 +7800,16 @@ Deep2::GenerationResult Deep2Engine::generateStream(
                     break;
                 }
             }
+        } else {
+            std::fprintf(stderr, "TOKEN_EMBD_STREAM_RESTORE_SKIP=1\n");
+            std::fflush(stderr);
         }
     }
+    std::fprintf(stderr, "GENERATE_STREAM_POST_MARS_PIN=1\n");
+    std::fflush(stderr);
     choreo::ApplyLawEnv();
+    std::fprintf(stderr, "GENERATE_STREAM_POST_CHOREO=1\n");
+    std::fflush(stderr);
     const auto productWallT0 = std::chrono::high_resolution_clock::now();
     /* EV512 observational only ? product stream does not require DEEP2_EV512. */
     Deep2::Ev512::HostTryArm(0x50524F44554354ull); /* PRODUCT */

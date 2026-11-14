@@ -1,11 +1,11 @@
-# Private qdim084 MARS-dedup+keepGPU llama32 remasure. PROMOTE=0 TIP_ABSORB=0.
+﻿# Private qdim084 MARS-dedup+keepGPU llama32 remasure. PROMOTE=0 TIP_ABSORB=0.
 param([int]$MaxTok = 8)
 $ErrorActionPreference = "Continue"
 $ev = "G:\~dev\rawrxd\evidence\PRODUCTION_MATURITY_TOP25_001\GUI_TOP25_VALUATION_001\gpu"
 $exe = "G:\~dev\rawrxd\evidence\PRODUCTION_MATURITY_TOP25_001\GUI_TOP25_VALUATION_001\clean_link\LOCKED\RawrXD-Win32IDE_gemma_qdim084.exe"
 $model = "G:\~dev\rawrxd\models\llama3.2-3b-Q2_K.gguf"
 $tip = "G:\~dev\rawrxd\bin\RawrXD-Win32IDE.exe"
-$expect = "D723B9B3BCFFF3504D2C13AE84296B5C48FDED970FE4F927B6A230CF6FF3854F"
+$expect = "A01AC1C1E958A5D0500E2B457008DB0A87CC6D598EEFD7CFB352811B3901AF3C"
 $tipExpect = "6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431"
 if (-not (Test-Path $exe)) { throw "EXE_MISSING" }
 if (-not (Test-Path $model)) { throw "MODEL_MISSING" }

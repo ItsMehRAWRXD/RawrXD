@@ -1,5 +1,5 @@
 BR_QDIM084_PRODUCTRUN_BADALLOC_RELATED_001
-ASOF_LOCAL=2026-11-13T23:28:00-05:00
+ASOF_LOCAL=2026-11-14T00:02:00-05:00
 PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 CROSS_SHA_CREDIT=0
 RELATED=1 CERT_RESULT=NOT_PASS (do not invent PASS)
 TIP_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431
@@ -9,39 +9,47 @@ TIP_STILL_6754=1 TIP_OVERWRITE=0
 P0 after keep-GPU: private cand OPEN+pin then C++ EH 0xE06D7363 @ ProductRun
 before GENERATE_STREAM_ENTER (TOK=0). Find site; minimal bounded alloc / fail-closed.
 
-## Site (fail-closed)
-1) Host CKV/torus allocated at full GGUF ctx (131072) → multi-GB CompressedKV
-   (~8GB on 23B5115F) → ProductRun C++ EH 0xE06D7363 before ENTER when commit high.
-2) Controlling breadcrumb remasure 491967B3: GENERATE_STREAM_PRE_CONFIG=1 and no
-   POST_CONFIG → AV inside configureGeneration (READ VA=-1) after bad_alloc closed.
-3) InitFromPath default maxSeq=512 can clamp working-set (KV_WORKING_SEQ_BOUND=512).
+## Sites closed (fail-closed)
+1) Host CKV/torus at full GGUF ctx (131072) → multi-GB CompressedKV → 0xE06D7363
+   before ENTER after keep-GPU (23B5115F). Fix: KV_WORKING_SEQ_BOUND (≤4096).
+2) configureGeneration GreedySampler make_unique / unique_ptr load → STREAM_SEH
+   VA=-1 / 0x66858F after PRE_CONFIG (491967B3 / 7B8B877B). Fix: greedy early
+   return — never touch sampler; sampleToken argmaxes when deterministicGreedy_=1.
+3) generateStream SnapshotLeases token_embd restore after POST_CONFIG → STREAM_SEH
+   READ VA=0x66858F (D723B9B3). Fix: default SKIP restore (OPEN keep-GPU pin
+   suffices); opt-in DEEP2_STREAM_EMBD_SNAPSHOT=1.
 
 ## Fixes landed (private; tip RO)
 SRC_A=Deep2Engine.cpp placeAll keepTokenEmbd (MARS keep-GPU pin name-exact)
-SRC_B=Deep2Engine.cpp KV_WORKING_SEQ_BOUND (default 4096; DEEP2_KV_WORKING_SEQ)
+SRC_B=Deep2Engine.cpp KV_WORKING_SEQ_BOUND
 SRC_C=Deep2Engine.cpp ToroidalKV bad_alloc FAIL_CLOSED
-SRC_D=ProductRun.hpp catch bad_alloc / std::exception (PRODUCT_RUN_* receipts)
+SRC_D=ProductRun.hpp catch bad_alloc / std::exception
 SRC_E=RawrRunSession_Body/hpp preserve loadModel maxSeqLen (min 2048)
+SRC_F=Deep2Engine.cpp configureGeneration greedy RETURN (no sampler touch)
+SRC_G=Deep2Engine.cpp TOKEN_EMBD_STREAM_RESTORE_SKIP default
 
-## Return block (measured private cand)
-EXE_SHA256=491967B3B37A6D3C9C2CE36EF7399E28D949B1E643B9E15A906265F2F16EA708
-EXE_SHA16=491967B3B37A6D3C
-WITNESS=gpu/ide_mf_qdim084_llama32_491967B3B37A6D3C_20261113_232717.meta.txt
+## Controlling remasure (private cand)
+EXE_SHA256=3792BAA70AA59F459706BE19391C8A0B493E9683E0B82947215D5AF1BA1F00C0
+EXE_SHA16=3792BAA70AA59F45
+WITNESS=gpu/ide_mf_qdim084_llama32_3792BAA70AA59F45_20261114_000057.meta.txt
 PRIOR_BADALLOC=23B5115FC108D8F7 (SEH=0xE06D7363 ENTER=0)
-ENTER=0
-TOK=0
-SEH=1 CODE=0xC0000005 READ VA=FFFFFFFFFFFFFFFF (configureGeneration; ≠ bad_alloc)
-OPEN_SEH=0
+ENTER=1
+TOK=2
+SEH=0 (OPEN_SEH=0 INFER_STREAM_SEH=0)
 KEEP_GPU_PIN=1
-KV_WORKING_SEQ_BOUND=512 (gguf_ctx=131072; InitFromPath clamp residual)
+OPEN_CRITICAL=PASS
 EXIT=0
+TOKEN_SURVIVED=1
 TIP_CLIMB=HOLD
 
 ## Disposition
-BAD_ALLOC_CLASS_CLOSED=1 (0xE06D7363 no longer controlling)
-RUNTIME_REACHED=PARTIAL (OPEN+keep-GPU+PRE_CONFIG)
-GENERATE_STREAM_ENTER=0
-GENERATED_TOKENS=0
-NEXT_GATE=CONFIGURE_GENERATION_AV_VA_MINUS1_THEN_ENTER_TOK_GT0
-PROMOTE=0
+BAD_ALLOC_CLASS_CLOSED=1
+CONFIGURE_GENERATION_AV_CLOSED=1
+SNAPSHOT_LEASES_AV_CLOSED=1
+RUNTIME_REACHED=1 (OPEN+keep-GPU+ENTER)
+GENERATE_STREAM_ENTER=1
+GENERATED_TOKENS=2
+TOKEN_COMMIT_PASS=1
+PROMOTE=0 (RELATED only; not product promote)
+NEXT_GATE=POST_SCHEDULER_PROMOTION_REQUIREMENTS (unchanged authority)
 END
