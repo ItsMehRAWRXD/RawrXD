@@ -1,0 +1,168 @@
+RAWRXD_ENTERPRISE_PRODUCT_CERT_001 — CHECKLIST_INDEX
+VERSION=1.0
+VERIFIED=0 TOTAL=128 PCT=0
+PROMOTE=0 CERTIFIED=0 INVENT_PASS=0
+ALL_RESULT=NOT_RUN
+
+## C01 · Source integrity and reproducible builds · 0/8
+[ ] C01_G01  RESULT=NOT_RUN  Freeze exact release Git commit and submodule revisions
+[ ] C01_G02  RESULT=NOT_RUN  Produce complete source, dependency, license and artifact inventories
+[ ] C01_G03  RESULT=NOT_RUN  Build CLI from clean checkout without undocumented prerequisites
+[ ] C01_G04  RESULT=NOT_RUN  Build Win32 GUI from the same frozen source baseline
+[ ] C01_G05  RESULT=NOT_RUN  Verify deterministic or explainably reproducible build outputs
+[ ] C01_G06  RESULT=NOT_RUN  Record compiler, SDK, linker, flags and executable SHA-256
+[ ] C01_G07  RESULT=NOT_RUN  Run CI on Windows and supported secondary platforms
+[ ] C01_G08  RESULT=NOT_RUN  Reject missing symbols, unresolved dependencies and development stubs
+
+## C02 · Native inference engine · 0/8
+[ ] C02_G01  RESULT=NOT_RUN  Parse and validate GGUF headers, metadata, tensors and shard indices
+[ ] C02_G02  RESULT=NOT_RUN  Verify tokenizer, BOS/EOS and chat-template parity
+[ ] C02_G03  RESULT=NOT_RUN  Certify Q4_K, Q5_K, Q6_K, F16 and F32 supported operations
+[ ] C02_G04  RESULT=NOT_RUN  Verify embedding, norm, Q/K/V, RoPE, attention, FFN and logits against reference
+[ ] C02_G05  RESULT=NOT_RUN  Prove numerical parity across multi-token decode and KV reuse
+[ ] C02_G06  RESULT=NOT_RUN  Generate coherent deterministic text across the supported model matrix
+[ ] C02_G07  RESULT=NOT_RUN  Reject invalid shapes, nonfinite tensors and unsupported architectures safely
+[ ] C02_G08  RESULT=NOT_RUN  Prove CPU and GPU execution with no silent backend fallback
+
+## C03 · GPU, VRAM and performance · 0/8
+[ ] C03_G01  RESULT=NOT_RUN  Validate Radeon AI PRO R9700 runtime and device selection
+[ ] C03_G02  RESULT=NOT_RUN  Validate RX 7800 XT runtime and device selection
+[ ] C03_G03  RESULT=NOT_RUN  Verify dual-GPU allocation, synchronization and ownership
+[ ] C03_G04  RESULT=NOT_RUN  Verify GPU-resident decode with transfer and fallback counters
+[ ] C03_G05  RESULT=NOT_RUN  Prove cancellation, unload, reload and VRAM reclamation
+[ ] C03_G06  RESULT=NOT_RUN  Benchmark TTFT, decode TPS, throughput and peak memory
+[ ] C03_G07  RESULT=NOT_RUN  Run sustained concurrency, thermal and resource-pressure tests
+[ ] C03_G08  RESULT=NOT_RUN  Verify numerical correctness under all promoted performance optimizations
+
+## C04 · Large models, MoE and REAP · 0/8
+[ ] C04_G01  RESULT=NOT_RUN  Validate Qwen, DeepSeek, Kimi, MiniMax and Nemotron supported variants
+[ ] C04_G02  RESULT=NOT_RUN  Verify architecture-specific attention, routing, GDN and KV semantics
+[ ] C04_G03  RESULT=NOT_RUN  Verify MoE expert ID, mapping, top-k and tensor acquisition correctness
+[ ] C04_G04  RESULT=NOT_RUN  Export physically reduced models without modifying originals
+[ ] C04_G05  RESULT=NOT_RUN  Measure reduced-model disk, RAM and VRAM footprints separately
+[ ] C04_G06  RESULT=NOT_RUN  Compare reduced and full model quality on fixed evaluations
+[ ] C04_G07  RESULT=NOT_RUN  Verify streaming and multi-shard integrity under memory pressure
+[ ] C04_G08  RESULT=NOT_RUN  Certify unsupported-model rejection and corruption recovery
+
+## C05 · CLI product completeness · 0/8
+[ ] C05_G01  RESULT=NOT_RUN  Complete all documented CLI commands and help contracts
+[ ] C05_G02  RESULT=NOT_RUN  Implement stable local model selection, loading and unloading
+[ ] C05_G03  RESULT=NOT_RUN  Verify interactive chat, session resume and streaming
+[ ] C05_G04  RESULT=NOT_RUN  Verify tool invocation, permission checks and result reinjection
+[ ] C05_G05  RESULT=NOT_RUN  Verify terminal/ConPTY start, output, stop and cleanup
+[ ] C05_G06  RESULT=NOT_RUN  Verify real read/edit/build/test agent workflows
+[ ] C05_G07  RESULT=NOT_RUN  Verify deterministic errors, exit codes and cancellation
+[ ] C05_G08  RESULT=NOT_RUN  Pass clean-machine CLI end-to-end acceptance
+
+## C06 · Win32 GUI product completeness · 0/8
+[ ] C06_G01  RESULT=NOT_RUN  Launch and close without crashes or leaked resources
+[ ] C06_G02  RESULT=NOT_RUN  Verify editor open, save, reopen, encoding and undo/redo
+[ ] C06_G03  RESULT=NOT_RUN  Verify dock layout, resizing, themes and persistence
+[ ] C06_G04  RESULT=NOT_RUN  Verify local chat, generation, stop and session lifecycle
+[ ] C06_G05  RESULT=NOT_RUN  Verify Output, Problems and terminal HWND interactions
+[ ] C06_G06  RESULT=NOT_RUN  Verify real model generation for every advertised model family
+[ ] C06_G07  RESULT=NOT_RUN  Verify editor-to-agent file edits and reviewable diffs
+[ ] C06_G08  RESULT=NOT_RUN  Pass clean-machine GUI end-to-end acceptance
+
+## C07 · Language services and debugging · 0/8
+[ ] C07_G01  RESULT=NOT_RUN  Complete LSP process launch and JSON-RPC initialization
+[ ] C07_G02  RESULT=NOT_RUN  Verify diagnostics, completion, hover and go-to-definition
+[ ] C07_G03  RESULT=NOT_RUN  Verify rename, references, formatting and workspace edits
+[ ] C07_G04  RESULT=NOT_RUN  Verify language-server restart, timeout and crash recovery
+[ ] C07_G05  RESULT=NOT_RUN  Verify debugger attach, launch, breakpoints and stepping
+[ ] C07_G06  RESULT=NOT_RUN  Verify call stacks, watches, locals and variable inspection
+[ ] C07_G07  RESULT=NOT_RUN  Verify click-to-line and Problems navigation
+[ ] C07_G08  RESULT=NOT_RUN  Prove LSP and debugger behavior inside the actual GUI
+
+## C08 · Autonomous agents and tools · 0/8
+[ ] C08_G01  RESULT=NOT_RUN  Verify planner/executor/reviewer roles with local models
+[ ] C08_G02  RESULT=NOT_RUN  Enforce explicit filesystem, shell and Git tool authority
+[ ] C08_G03  RESULT=NOT_RUN  Run real multi-file edits with patch validation
+[ ] C08_G04  RESULT=NOT_RUN  Recover automatically from a deliberately failing build
+[ ] C08_G05  RESULT=NOT_RUN  Run tests and inspect their actual outputs
+[ ] C08_G06  RESULT=NOT_RUN  Verify rollback, checkpoints and transaction recovery
+[ ] C08_G07  RESULT=NOT_RUN  Verify bounded retries, cancellation and loop termination
+[ ] C08_G08  RESULT=NOT_RUN  Prove multi-agent concurrency without state corruption
+
+## C09 · Sunshine game-development workflow · 0/8
+[ ] C09_G01  RESULT=NOT_RUN  Open a real Sunshine engine project
+[ ] C09_G02  RESULT=NOT_RUN  Index and navigate the game source and assets
+[ ] C09_G03  RESULT=NOT_RUN  Implement a real gameplay or engine source change
+[ ] C09_G04  RESULT=NOT_RUN  Build the engine and a representative game target
+[ ] C09_G05  RESULT=NOT_RUN  Run automated game and engine regression tests
+[ ] C09_G06  RESULT=NOT_RUN  Debug a real runtime issue through the IDE
+[ ] C09_G07  RESULT=NOT_RUN  Verify asset pipeline, packaging and executable launch
+[ ] C09_G08  RESULT=NOT_RUN  Complete a fully offline agent-driven game-development task
+
+## C10 · Security and privacy · 0/8
+[ ] C10_G01  RESULT=NOT_RUN  Complete threat model and privileged-operation review
+[ ] C10_G02  RESULT=NOT_RUN  Enforce local-only model and tool execution by default
+[ ] C10_G03  RESULT=NOT_RUN  Prove no mandatory cloud calls, telemetry or account sign-in
+[ ] C10_G04  RESULT=NOT_RUN  Test prompt-injection and untrusted-repository defenses
+[ ] C10_G05  RESULT=NOT_RUN  Validate sandbox boundaries and command authorization
+[ ] C10_G06  RESULT=NOT_RUN  Run dependency, secret and vulnerability scans
+[ ] C10_G07  RESULT=NOT_RUN  Verify update integrity, signature validation and rollback
+[ ] C10_G08  RESULT=NOT_RUN  Complete security incident handling and vulnerability disclosure procedures
+
+## C11 · Reliability and recovery · 0/8
+[ ] C11_G01  RESULT=NOT_RUN  Run crash, restart and process-lifecycle tests
+[ ] C11_G02  RESULT=NOT_RUN  Run memory leak and handle leak detection
+[ ] C11_G03  RESULT=NOT_RUN  Run out-of-memory, disk-full and device-loss tests
+[ ] C11_G04  RESULT=NOT_RUN  Verify corrupt-model and partial-shard rejection
+[ ] C11_G05  RESULT=NOT_RUN  Verify power-loss and interrupted-write recovery
+[ ] C11_G06  RESULT=NOT_RUN  Verify concurrent sessions and workspace isolation
+[ ] C11_G07  RESULT=NOT_RUN  Run extended soak tests with defined failure thresholds
+[ ] C11_G08  RESULT=NOT_RUN  Demonstrate backup, restore and data-integrity preservation
+
+## C12 · Packaging and deployment · 0/8
+[ ] C12_G01  RESULT=NOT_RUN  Create versioned CLI and GUI release artifacts
+[ ] C12_G02  RESULT=NOT_RUN  Produce a signed Windows installer and uninstaller
+[ ] C12_G03  RESULT=NOT_RUN  Install on a clean supported Windows machine
+[ ] C12_G04  RESULT=NOT_RUN  Verify required runtimes and GPU dependencies
+[ ] C12_G05  RESULT=NOT_RUN  Verify upgrades preserve settings and project data
+[ ] C12_G06  RESULT=NOT_RUN  Verify uninstall removes owned components safely
+[ ] C12_G07  RESULT=NOT_RUN  Produce offline installation and recovery instructions
+[ ] C12_G08  RESULT=NOT_RUN  Validate release checksums, provenance and distribution
+
+## C13 · Enterprise operations · 0/8
+[ ] C13_G01  RESULT=NOT_RUN  Publish supported hardware, OS and model compatibility matrix
+[ ] C13_G02  RESULT=NOT_RUN  Document configuration, policies and deployment controls
+[ ] C13_G03  RESULT=NOT_RUN  Provide local logs, metrics and diagnostic export
+[ ] C13_G04  RESULT=NOT_RUN  Implement least-privilege and access-control policies
+[ ] C13_G05  RESULT=NOT_RUN  Define support lifecycle, patching and maintenance windows
+[ ] C13_G06  RESULT=NOT_RUN  Define service-level objectives and incident response
+[ ] C13_G07  RESULT=NOT_RUN  Validate organizational deployment and rollback procedures
+[ ] C13_G08  RESULT=NOT_RUN  Complete enterprise administration and troubleshooting documentation
+
+## C14 · Quality assurance and competitive parity · 0/8
+[ ] C14_G01  RESULT=NOT_RUN  Freeze a dated list of 25 comparable AI IDE products
+[ ] C14_G02  RESULT=NOT_RUN  Define common feature, usability and reliability benchmarks
+[ ] C14_G03  RESULT=NOT_RUN  Run identical coding tasks for RawrXD CLI and GUI
+[ ] C14_G04  RESULT=NOT_RUN  Measure task success, latency, resource use and failure recovery
+[ ] C14_G05  RESULT=NOT_RUN  Compare offline autonomy and local inference capabilities
+[ ] C14_G06  RESULT=NOT_RUN  Publish evidence and uncertainty for each benchmark result
+[ ] C14_G07  RESULT=NOT_RUN  Run independent user acceptance and accessibility testing
+[ ] C14_G08  RESULT=NOT_RUN  Resolve all release-blocking defects and regressions
+
+## C15 · Legal, licensing and commercial readiness · 0/8
+[ ] C15_G01  RESULT=NOT_RUN  Verify ownership and contribution provenance of source assets
+[ ] C15_G02  RESULT=NOT_RUN  Audit third-party and model licenses and redistribution rights
+[ ] C15_G03  RESULT=NOT_RUN  Generate and review software bill of materials
+[ ] C15_G04  RESULT=NOT_RUN  Publish EULA, privacy and support terms where applicable
+[ ] C15_G05  RESULT=NOT_RUN  Document warranty, liability and security obligations
+[ ] C15_G06  RESULT=NOT_RUN  Establish versioning, release notes and customer documentation
+[ ] C15_G07  RESULT=NOT_RUN  Validate licensing and offline activation requirements
+[ ] C15_G08  RESULT=NOT_RUN  Prepare a defensible commercial valuation and due-diligence package
+
+## C16 · Final certification and release · 0/8
+[ ] C16_G01  RESULT=NOT_RUN  Bind every acceptance receipt to the exact tested source and executable SHAs
+[ ] C16_G02  RESULT=NOT_RUN  Obtain independent review of CLI evidence
+[ ] C16_G03  RESULT=NOT_RUN  Obtain independent review of GUI evidence
+[ ] C16_G04  RESULT=NOT_RUN  Prove the full local inference-to-tool-to-test workflow
+[ ] C16_G05  RESULT=NOT_RUN  Run final offline clean-machine acceptance on release binaries
+[ ] C16_G06  RESULT=NOT_RUN  Obtain security, QA and release-owner sign-offs
+[ ] C16_G07  RESULT=NOT_RUN  Publish immutable certification evidence and release manifest
+[ ] C16_G08  RESULT=NOT_RUN  Set PROMOTE=1 only after every mandatory gate passes
+
+GATE_COUNT=128
+END

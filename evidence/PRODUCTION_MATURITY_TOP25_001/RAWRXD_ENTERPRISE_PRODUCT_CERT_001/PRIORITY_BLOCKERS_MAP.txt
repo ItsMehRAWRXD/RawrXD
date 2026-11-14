@@ -1,0 +1,23 @@
+PRIORITY_BLOCKERS_MAP — engineering → cert gates
+ASOF_LOCAL=2026-11-13T22:16:00-05:00
+PROMOTE=0 CERTIFIED=0 CROSS_SHA_CREDIT=0
+
+## Blocker → cert gate IDs (all still NOT_RUN for cert)
+1. Gemma INFER_STREAM_SEH tip-lineage
+   CERT=02.06,02.08,06.06,03.04
+   ENG=GEMMA_AV_FIXED_SEAL_001 (peer 132AB700 TOK=8); TIP_LAND_AVFIX079 AE13F2F5 SEH=1
+2. C36 LSP startup
+   CERT=07.01,07.02,07.08
+   ENG=A3_TIP_LAND_C36_PEER RUNTIME_REACHED=1; tip 6754616E C36=0
+3. GPU/reference numerical divergence
+   CERT=02.04,02.05,03.08
+   ENG=GPU_HARD_L2_Q_PRE_ROPE_CLOSED_001 HARD_L2_PASS=1; ATTN_PRE_O residual
+4. ConPTY terminal-stop reliability
+   CERT=05.05,06.05
+   ENG=Cat5 residual / flaky; cert bind NOT_RUN
+5. Multi-family through actual Win32 GUI
+   CERT=06.06,02.06,03.04
+   ENG=tip GPU_RESIDENT=0 plan-reject; absorb/avfix peer columns only
+
+LAW=Historical ENG seals ≠ CERT PASS until rebound to frozen release EXE+independent REVIEWER
+END

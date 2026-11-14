@@ -1,0 +1,54 @@
+RAWRXD_ENTERPRISE_PRODUCT_CERT_001 — LAW
+VERSION=1.0
+ASOF_LOCAL=2026-11-13T22:16:00-05:00
+PROMOTE=0
+CERTIFIED=0
+INVENT_PASS=0
+CLAIM_OVERALL_100=0
+RELEASE_STATUS=HELD
+CROSS_SHA_CREDIT=0
+NOT_RUN!=PASS
+CHECKLIST_VERIFIED=0
+CHECKLIST_TOTAL=128
+CHECKLIST_PCT=0
+
+## Authority
+This checklist is the enterprise release certification contract.
+Top-25 maturity % (CLI/GUI/OVERALL) is a separate engineering scoreboard metric.
+Maturity % MUST NOT be used as checklist completion or PROMOTE authorization.
+
+CONTROLLING_SCOREBOARD (engineering; not cert %):
+  CLI_SCORE_PCT=67 GUI_SCORE_PCT=48 OVERALL_PCT=48
+  (user-supplied narrative may cite 66/48/48 — board controlling remains sealed R-run figures)
+
+## Fail-closed rules
+1. Tracker starts 0/128 verified regardless of prior partial engineering seals.
+2. RESULT=PASS only with full evidence row: GATE_ID, GIT_SHA, EXE_SHA256,
+   MODEL_SHA256 (if applicable), HARDWARE, COMMAND, EXIT_CODE, RESULT,
+   ARTIFACTS, REVIEWER, TIMESTAMP, CROSS_SHA_CREDIT=0.
+3. Historical PASS on another EXE_SHA is not automatic PASS for current RC.
+4. Independent REVIEWER required for every PASS.
+5. PROMOTE=1 only after all 128 mandatory gates PASS + CLI 100% + GUI 100%
+   + native inference PASS + offline agentic PASS + security/clean-install PASS
+   + independent sign-offs (category 16).
+6. Competitive Top-25 parity is measured separately; not inferred from checklist %.
+
+## Categories (16 × 8 = 128)
+C01 Source integrity and reproducible builds
+C02 Native inference engine
+C03 GPU, VRAM and performance
+C04 Large models, MoE and REAP
+C05 CLI product completeness
+C06 Win32 GUI product completeness
+C07 Language services and debugging
+C08 Autonomous agents and tools
+C09 Sunshine game-development workflow
+C10 Security and privacy
+C11 Reliability and recovery
+C12 Packaging and deployment
+C13 Enterprise operations
+C14 Quality assurance and competitive parity
+C15 Legal, licensing and commercial readiness
+C16 Final certification and release
+
+END

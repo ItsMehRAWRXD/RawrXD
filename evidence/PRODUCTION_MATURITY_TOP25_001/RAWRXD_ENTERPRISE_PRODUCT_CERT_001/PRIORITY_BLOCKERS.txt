@@ -1,0 +1,33 @@
+RAWRXD_ENTERPRISE_PRODUCT_CERT_001 — PRIORITY_BLOCKERS
+ASOF_LOCAL=2026-11-13T22:16:00-05:00
+PROMOTE=0
+LAW=Before secondary polish, close these release-blocking defects.
+NOT_RUN!=PASS
+
+## Ordered blockers (from certification brief + live engineering)
+1. Gemma INFER_STREAM_SEH / tip lineage GPU-resident
+   MAP→ C02 multi-family coherent gen · C06 model-family GUI · C03 GPU-resident decode
+   STATE=tip-land EXE col 7FD1F270 TOK=8 SEH=0 HD=0 PARTIAL; tip 6754616E RO / OPEN_SEH on MF bind attempts
+2. C36 LSP startup hangs
+   MAP→ C07 LSP init/JSON-RPC · C06 GUI · C08 agent edit cycles
+   STATE=peer tip_land_c36 RUNTIME_REACHED=1; controlling tip C36_LSP_STAGE=0; source instrument ABSENT
+3. GPU/reference numerical divergence
+   MAP→ C02 stage parity · C03 numeric under perf opts · C16 inference-to-tool workflow
+   STATE=Q_PRE_ROPE CLOSED; ATTN_PRE_O@pos0 BITEXACT; @pos1 OPEN (llama T=2 kqv_out ≠ host SDPA)
+4. ConPTY terminal-stop reliability
+   MAP→ C05 ConPTY · C06 terminal HWND · C08 shell tools
+   STATE=engineering residual; not checklist PASS
+5. Full multi-family inference via actual Win32 GUI tip bind
+   MAP→ C02/C04/C06
+   STATE=MF 4/4 on private qdim pin ≠ tip absorb; TIP_ABSORB=N
+6. Tipbound CLI FORCE_TOOL / agentic EBT
+   MAP→ C05/C08
+   STATE=M3 PARTIAL off-pin PASS; 15A119 FORCE_TOOL=0 TIMEOUT negctrl
+7. Clean-machine install + signed packaging
+   MAP→ C12/C10/C16
+   STATE=M4 host offline zip SEALED; CLEAN_VM=0 NOT_RUN; NSIS/MSI/public channel OPEN
+
+## Gate closure rule
+Closing a blocker produces candidate evidence artifacts only.
+Checklist gate RESULT stays NOT_RUN until independent REVIEWER fills evidence row on RC EXE_SHA.
+END

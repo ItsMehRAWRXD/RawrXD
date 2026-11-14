@@ -1,0 +1,137 @@
+RAWRXD_ENTERPRISE_PRODUCT_CERT_001 — GATE_INDEX
+ASOF_LOCAL=2026-11-13T22:16:00-05:00
+PROMOTE=0 CERTIFIED=0 GATES_VERIFIED_PASS=0/128
+RESULT_DEFAULT=NOT_RUN
+EVIDENCE_SCHEMA=GATE_ID,GIT_SHA,EXE_SHA256,MODEL_SHA256?,HARDWARE,COMMAND,EXIT_CODE,RESULT,ARTIFACTS,REVIEWER,TIMESTAMP,CROSS_SHA_CREDIT=0
+
+# Format: GATE_ID | CAT | TITLE | RESULT | HISTORICAL_POINTER (≠ PASS)
+01.01 | Source | Freeze Git commit+submodules | NOT_RUN | GIT_SHA=51e89df019 pin only
+01.02 | Source | Source/dep/license/artifact inventories | NOT_RUN |
+01.03 | Source | Clean-checkout CLI build | NOT_RUN |
+01.04 | Source | Same-baseline Win32 GUI build | NOT_RUN |
+01.05 | Source | Deterministic/explainable outputs | NOT_RUN |
+01.06 | Source | Compiler/SDK/linker/flags+EXE SHA | NOT_RUN |
+01.07 | Source | CI Windows+secondary | NOT_RUN |
+01.08 | Source | Reject missing symbols/stubs | NOT_RUN |
+02.01 | Infer | GGUF parse/validate | NOT_RUN |
+02.02 | Infer | Tokenizer/BOS/EOS/chat-template | NOT_RUN |
+02.03 | Infer | Q4_K/Q5_K/Q6_K/F16/F32 ops | NOT_RUN | hist: gemv_q4k Q4KxQ8K HARD_L2≠cert
+02.04 | Infer | Embed/norm/QKV/RoPE/attn/FFN/logits vs ref | NOT_RUN | hist: Q_PRE_ROPE HARD_L2 closed
+02.05 | Infer | Multi-token decode+KV reuse parity | NOT_RUN |
+02.06 | Infer | Coherent deterministic text matrix | NOT_RUN | hist: peer gemma TOK=8
+02.07 | Infer | Reject invalid/nonfinite/unsupported | NOT_RUN |
+02.08 | Infer | CPU+GPU no silent fallback | NOT_RUN | tip GPU plan-reject OPEN
+03.01 | GPU | Radeon AI PRO R9700 | NOT_RUN |
+03.02 | GPU | RX 7800 XT | NOT_RUN |
+03.03 | GPU | Dual-GPU alloc/sync/ownership | NOT_RUN |
+03.04 | GPU | GPU-resident decode+fallback counters | NOT_RUN | tip GPU_RESIDENT=0
+03.05 | GPU | Cancel/unload/reload/VRAM reclaim | NOT_RUN |
+03.06 | GPU | TTFT/TPS/throughput/peak mem | NOT_RUN |
+03.07 | GPU | Concurrency/thermal/pressure | NOT_RUN |
+03.08 | GPU | Numeric under promoted opts | NOT_RUN |
+04.01 | MoE | Qwen/DeepSeek/Kimi/MiniMax/Nemotron | NOT_RUN |
+04.02 | MoE | Arch attention/routing/GDN/KV | NOT_RUN |
+04.03 | MoE | Expert ID/map/top-k/acquire | NOT_RUN |
+04.04 | MoE | Physical reduce export | NOT_RUN |
+04.05 | MoE | Reduced footprints measured | NOT_RUN |
+04.06 | MoE | Reduced vs full quality | NOT_RUN |
+04.07 | MoE | Stream+multi-shard under pressure | NOT_RUN |
+04.08 | MoE | Unsupported/corruption recovery | NOT_RUN |
+05.01 | CLI | Commands+help contracts | NOT_RUN |
+05.02 | CLI | Model select/load/unload | NOT_RUN |
+05.03 | CLI | Chat/resume/stream | NOT_RUN |
+05.04 | CLI | Tools/permissions/reinject | NOT_RUN |
+05.05 | CLI | ConPTY start/out/stop/cleanup | NOT_RUN |
+05.06 | CLI | Read/edit/build/test agent | NOT_RUN | FORCE_TOOL tip ABSENT
+05.07 | CLI | Errors/exit/cancel | NOT_RUN |
+05.08 | CLI | Clean-machine E2E | NOT_RUN | CLEAN_VM=NOT_RUN
+06.01 | GUI | Launch/close no leak | NOT_RUN |
+06.02 | GUI | Editor open/save/undo | NOT_RUN |
+06.03 | GUI | Dock/theme/persist | NOT_RUN |
+06.04 | GUI | Chat/gen/stop/session | NOT_RUN |
+06.05 | GUI | Output/Problems/terminal HWND | NOT_RUN |
+06.06 | GUI | MF generation advertised families | NOT_RUN |
+06.07 | GUI | Editor-to-agent diffs | NOT_RUN | Cat11 EBT PASS=0
+06.08 | GUI | Clean-machine E2E | NOT_RUN |
+07.01 | LSP/DAP | LSP launch+JSON-RPC init | NOT_RUN | peer C36 INIT_OK≠tip
+07.02 | LSP/DAP | Diagnostics/completion/hover/def | NOT_RUN | peer hover/completion
+07.03 | LSP/DAP | Rename/refs/format/workspace | NOT_RUN |
+07.04 | LSP/DAP | Restart/timeout/crash recovery | NOT_RUN |
+07.05 | LSP/DAP | Attach/launch/BP/step | NOT_RUN | CLI Cat6 tip ABSENT; peer R50
+07.06 | LSP/DAP | Stacks/watches/locals | NOT_RUN |
+07.07 | LSP/DAP | Click-to-line/Problems nav | NOT_RUN |
+07.08 | LSP/DAP | Inside actual GUI | NOT_RUN |
+08.01 | Agent | Planner/executor/reviewer local | NOT_RUN |
+08.02 | Agent | FS/shell/Git authority | NOT_RUN |
+08.03 | Agent | Multi-file patch validation | NOT_RUN |
+08.04 | Agent | Failing-build recovery | NOT_RUN |
+08.05 | Agent | Tests+outputs | NOT_RUN |
+08.06 | Agent | Rollback/checkpoints | NOT_RUN |
+08.07 | Agent | Bounded retries/cancel | NOT_RUN |
+08.08 | Agent | Multi-agent concurrency | NOT_RUN |
+09.01 | Sunshine | Open real project | NOT_RUN |
+09.02 | Sunshine | Index/navigate | NOT_RUN |
+09.03 | Sunshine | Gameplay/engine change | NOT_RUN |
+09.04 | Sunshine | Build engine+game | NOT_RUN |
+09.05 | Sunshine | Regression tests | NOT_RUN |
+09.06 | Sunshine | Debug runtime issue | NOT_RUN |
+09.07 | Sunshine | Asset/packaging/launch | NOT_RUN |
+09.08 | Sunshine | Offline agent game task | NOT_RUN |
+10.01 | Sec | Threat model | NOT_RUN |
+10.02 | Sec | Local-only default | NOT_RUN |
+10.03 | Sec | No mandatory cloud/telemetry | NOT_RUN |
+10.04 | Sec | Prompt-injection defenses | NOT_RUN |
+10.05 | Sec | Sandbox/command auth | NOT_RUN |
+10.06 | Sec | Dep/secret/vuln scans | NOT_RUN |
+10.07 | Sec | Update integrity/rollback | NOT_RUN |
+10.08 | Sec | Incident/disclosure | NOT_RUN |
+11.01 | Rel | Crash/restart lifecycle | NOT_RUN |
+11.02 | Rel | Leak detection | NOT_RUN |
+11.03 | Rel | OOM/disk/device-loss | NOT_RUN |
+11.04 | Rel | Corrupt-model rejection | NOT_RUN |
+11.05 | Rel | Power-loss/interrupted write | NOT_RUN |
+11.06 | Rel | Concurrent sessions | NOT_RUN |
+11.07 | Rel | Soak tests | NOT_RUN |
+11.08 | Rel | Backup/restore integrity | NOT_RUN |
+12.01 | Pkg | Versioned CLI/GUI artifacts | NOT_RUN |
+12.02 | Pkg | Signed installer/uninstaller | NOT_RUN |
+12.03 | Pkg | Clean Windows install | NOT_RUN | M4 host≠CLEAN_VM
+12.04 | Pkg | Runtimes/GPU deps | NOT_RUN |
+12.05 | Pkg | Upgrade preserves data | NOT_RUN |
+12.06 | Pkg | Uninstall safety | NOT_RUN |
+12.07 | Pkg | Offline install/recovery docs | NOT_RUN |
+12.08 | Pkg | Checksums/provenance | NOT_RUN |
+13.01 | EntOps | Compat matrix | NOT_RUN |
+13.02 | EntOps | Config/policies | NOT_RUN |
+13.03 | EntOps | Logs/metrics/diagnostics | NOT_RUN |
+13.04 | EntOps | Least-privilege | NOT_RUN |
+13.05 | EntOps | Support lifecycle | NOT_RUN |
+13.06 | EntOps | SLO/incident response | NOT_RUN |
+13.07 | EntOps | Org deploy/rollback | NOT_RUN |
+13.08 | EntOps | Admin/troubleshooting docs | NOT_RUN |
+14.01 | QA | Freeze Top25 product list | NOT_RUN | hist matrix scaffold
+14.02 | QA | Common benchmarks defined | NOT_RUN |
+14.03 | QA | Identical coding tasks CLI+GUI | NOT_RUN |
+14.04 | QA | Success/latency/resource/recovery | NOT_RUN |
+14.05 | QA | Offline autonomy compare | NOT_RUN |
+14.06 | QA | Publish evidence+uncertainty | NOT_RUN |
+14.07 | QA | Independent UAT/a11y | NOT_RUN |
+14.08 | QA | Resolve release-blocking defects | NOT_RUN |
+15.01 | Legal | Ownership/provenance | NOT_RUN |
+15.02 | Legal | 3P/model license audit | NOT_RUN |
+15.03 | Legal | SBOM | NOT_RUN |
+15.04 | Legal | EULA/privacy/support | NOT_RUN |
+15.05 | Legal | Warranty/liability/security | NOT_RUN |
+15.06 | Legal | Versioning/release notes | NOT_RUN |
+15.07 | Legal | Licensing/offline activation | NOT_RUN |
+15.08 | Legal | Valuation/due-diligence package | NOT_RUN |
+16.01 | Final | Bind receipts to source+EXE SHA | NOT_RUN |
+16.02 | Final | Independent CLI review | NOT_RUN |
+16.03 | Final | Independent GUI review | NOT_RUN |
+16.04 | Final | Infer→tool→test workflow | NOT_RUN |
+16.05 | Final | Offline clean-machine release bins | NOT_RUN |
+16.06 | Final | Security/QA/release sign-offs | NOT_RUN |
+16.07 | Final | Immutable cert evidence+manifest | NOT_RUN |
+16.08 | Final | PROMOTE=1 only after all mandatory | NOT_RUN | PROMOTE=0 HELD
+
+END
