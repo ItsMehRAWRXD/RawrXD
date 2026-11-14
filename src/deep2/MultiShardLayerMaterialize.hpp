@@ -59,6 +59,7 @@ inline int MaterializeLayerAttn(LayerWeights& lw, const GlobalTensorIndex& idx,
     n += MaterializeOne(lw.attnKNorm, idx, layer, "attn_k_norm", fail);
     n += MaterializeOne(lw.ffnNorm, idx, layer, "ffn_norm", fail);
     n += MaterializeOne(lw.moeRouter, idx, layer, "moe_router", fail);
+    n += MaterializeOne(lw.moeExpertBias, idx, layer, "moe_bias", fail);
     n += MaterializeOne(lw.wGate, idx, layer, "wGate", fail);
     n += MaterializeOne(lw.moeSharedGate, idx, layer, "shared_gate", fail);
     n += MaterializeOne(lw.moeSharedUp, idx, layer, "shared_up", fail);

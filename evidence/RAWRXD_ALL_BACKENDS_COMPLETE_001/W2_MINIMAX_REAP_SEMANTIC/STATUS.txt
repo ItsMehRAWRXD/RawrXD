@@ -1,5 +1,5 @@
-W2_MINIMAX_REAP_SEMANTIC — STATUS
-ASOF_LOCAL=2026-11-14T11:43:00-05:00
+﻿W2_MINIMAX_REAP_SEMANTIC — STATUS
+ASOF_LOCAL=2026-11-14T12:35:04-05:00
 PROGRAM=RAWRXD_ALL_BACKENDS_COMPLETE_001
 PROMOTE=0
 CERTIFIED=0
@@ -63,11 +63,13 @@ EXPERT_GATE_INP_STATIC=PASS (AL13 axis fix)
 RUNTIME_FFN_DOWN_1@pos3=BOUNDED_OPEN
 CHAT_SEMANTIC=OPEN / NOT_PASS
 OLLAMA_SPLIT_CREATE=FAIL (KV OK; create sibling discovery finds 1/3)
-DEEP2_TOK_GT0=NOT_RUN / historical FAIL
-WS2_COMPLETE=0
+DEEP2_TOK_GT0=PASS_REAP16 (SSOT evidence/MINIMAX_REAP_BACKEND_001/ EXE=D029E0FF TOK=8 router_inject=62; SEMANTIC=FAIL)
+BAD_USED_COUNT_PACKS=BLOCKED_UNSUPPORTED (REAP24/27/32)
+WS2_COMPLETE=0 (PARTIAL; semantic still FAIL)
 NEXT_OWNER=
-  1) Exclusive-host MiniMax PHYS CLEAN_EXIT max-tok>=4 same EXE
-  2) GPU A/B reseal FFN_DOWN_1@pos3 under equal weights+gate_inp
-  3) AL14 chat semantic only after dual-arm CLEAN_EXIT
-  4) Ollama create EXIT witness + equal-eval generate if create PASS
+  1) exp_probs_b bias inject on host MiniMax path
+  2) AL14 chat semantic after coherent TOK
+  3) Re-export BAD packs with expert_used_count=8
+  4) Ollama create EXIT residual (REAP24)
 PROMOTE=0 CERTIFIED=0
+SSOT_RUNTIME=evidence/MINIMAX_REAP_BACKEND_001/

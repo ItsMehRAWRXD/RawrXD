@@ -1,0 +1,67 @@
+﻿MINIMAX_REAP_BACKEND_001
+ASOF_LOCAL=2026-11-14T12:32:11-05:00
+PROMOTE=0
+CERTIFIED=0
+ENTERPRISE=0/128
+GATE_STOP=1
+TIP_CLIMB=HOLD
+INVENT_PASS=0
+CROSS_SHA_CREDIT=0
+NOT_RUN!=PASS
+COMPETITIVE_PASS=0
+
+## Disposition
+MINIMAX_REAP=PARTIAL
+SCOPE=MiniMax-M2 MoE + physical REAP16 on measured tip EXE
+≠ PROMOTE ≠ CERTIFIED ≠ COMPETITIVE_PASS ≠ MULTI_FAMILY
+
+## Cert ladder (measured EXE SHA only)
+EXE=G:\~dev\rawrxd\build_ninja\bin\rawr.exe
+EXE_SHA256=D029E0FF60F5708B19B53B2A4409AD23BFDF87EFF02E75A4359952E1FF63B42E
+MODEL=F:\ollamamodels\MiniMax-M2.7-REAP16\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf
+  expert_count=27 expert_used_count=8 (CORRECT pack)
+
+| Level | Status | Evidence |
+|-------|--------|----------|
+| Build | PASS | ninja rawr linked; MoERouter Initialize clear + inject path |
+| Load | PASS | MULTISHARD 3/3; MANIFEST_READY; arch=minimax-m2 L=62 |
+| Numerics | PARTIAL | finite=3072/3072 layer outs; ROUTER_INJECT=62/62 non-uniform topk=8; exp_probs_b BIAS_INJECT=0 OPEN |
+| Generation | PASS | GENERATED_TOKENS=8 PRODUCT_OPEN=1 SESSION_ENTER=1 TOKEN_COMMIT=1 PRODUCT_PASS=1 |
+| Performance | MEASURED | DECODE_TPS_REAL=0.144 ≪ competitive; ≠ COMPETITIVE_PASS |
+| Reliability | PASS | CLEAN_EXIT=1 CRASH_OBSERVED=0 EXIT=0 |
+| Integration | PARTIAL | product CLI path; BLOCKED_AT=PROVENANCE_MISMATCH residual |
+| Packaging | N/A | not touched this seal |
+
+## Semantic quality
+SEMANTIC_COHERENCE=FAIL
+STDOUT_SAMPLE="...)))开aked" (greedy max-tokens=8)
+≠ COMPETITIVE_PASS
+
+## Router / expert mapping
+CLOSED_THIS_SHA:
+  - MoERouter::Initialize no longer zero-fills (HasRouterWeights was true → skipped inject)
+  - Multishard InjectRouterF32 EH_to_HE fires (62 layers)
+  - topk=expertsPerToken=8 (not retained bank size)
+  - Non-uniform route scores observed (L0/L1/L30/L61)
+OPEN:
+  - exp_probs_b bias bind/inject still 0 on this host path
+  - AL14 chat semantic still FAIL (prior AL06/AL14 authority retained)
+
+## Physical export
+PASS_PACK=MiniMax-M2.7-REAP16 (used_count=8 preserved)
+BLOCKED_UNSUPPORTED packs (explicit; no silent route):
+  MiniMax-M2.7-REAP27-16GB used_count=27==count → B03_MOE_USED_COUNT_UNSUPPORTED
+  MiniMax-M2_7-Q4_K_M-REAP24 used_count=24==count
+  MiniMax-M2.7-REAP32 used_count=32==count
+RAWR_REAP_EXPORT_EXPERIMENTAL gate unchanged (sidecar still experimental)
+
+## Pins held (no CROSS_SHA credit)
+METHOD_C_TIP=7C9680CB… KEPT
+Q6K_SPV / CEBA0DE4 Laguna KEPT (≠ this MiniMax SHA)
+NUMERICAL_PIN_9797521C KEPT
+
+## Artifacts
+STATUS.txt RECEIPT.txt DISPOSITION.md RELATED.md runs/
+
+NEXT=exp_probs_b bias inject + semantic vs llama-direct first-token; re-export BAD packs with used_count=8
+NO_LIFT=PROMOTE|COMPETITIVE_PASS|ENTERPRISE

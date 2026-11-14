@@ -37,6 +37,7 @@ inline void BindLayerTensor(LayerWeights& lw, const GlobalTensorRef& ref) {
     else if (n.find("attn_k_norm") != std::string::npos) lw.attnKNorm = wt;
     else if (n.find("attn_norm") != std::string::npos) lw.attnNorm = wt;
     else if (n.find("ffn_gate_inp") != std::string::npos) lw.moeRouter = wt;
+    else if (n.find("exp_probs_b") != std::string::npos) lw.moeExpertBias = wt;
     else if (n.find("ffn_up_exps") != std::string::npos) lw.wUp = wt;
     else if (n.find("ffn_down_exps") != std::string::npos) lw.wDown = wt;
     else if (n.find("ffn_gate_shexp") != std::string::npos) lw.moeSharedGate = wt;

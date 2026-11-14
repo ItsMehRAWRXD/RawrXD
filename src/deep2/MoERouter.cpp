@@ -21,8 +21,9 @@ MoERouter::~MoERouter() = default;
 void MoERouter::Initialize(const MoEConfig& config) {
     config_ = config;
     
-    // Initialize router weights
-    routerWeights_.resize(config_.hiddenDim * config_.numExperts, 0.0f);
+    /* Leave empty until SetRouterWeights — zero-fill made HasRouterWeights()
+     * true and skipped MiniMax gate_inp inject (uniform 1/topk). */
+    routerWeights_.clear();
     
     // Initialize expert loads
     expertLoads_.resize(config_.numExperts, 0);
