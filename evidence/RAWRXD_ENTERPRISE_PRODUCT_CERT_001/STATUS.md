@@ -33,10 +33,10 @@ See `LAW.txt`. `NOT_RUN != PASS`. `EVIDENCE_PARTIAL != PASS`. Scoreboard ≠ che
 | Offline signed install | G12 | Authenticode ABSENT; CLEAN_VM NOT_RUN |
 | Model-selected agent EBT | G05 / G08 | FORCE PASS; MODEL_SELECTED=0; wire SOURCE_WIRED RUNTIME=0 |
 | CLI clean rebuild | G01-03 | BUILD_OK=1 EXIT=0 A95A1254… (R75); CLEAN_MACHINE=0 ≠ PASS |
-| Win32 GUI same freeze | G01-04 | EVIDENCE_PARTIAL BUILD_OK=0 EXIT=1 EXE=NONE (R76); tip 6754616E RO ≠ PASS |
+| Win32 GUI same freeze | G01-04 | EVIDENCE_PARTIAL BUILD_OK=1 EXIT=0 EXE E4B6A937… (R77 private); tip 6754616E RO ≠ PASS |
 
 ## Authority scoreboard
 `../PRODUCTION_MATURITY_TOP25_001/VALUATION_SCOREBOARD_CANON.txt` — PCT invent forbidden here.
 
 ## Next
-Independent review of G01 EVIDENCE_PARTIAL cells; close rebuild blockers; dispatch CI for G01-07; keep PASS_COUNT=0 until full schema+REVIEWER.
+G01-05 dual-build vs freeze pair; tip-absorb AUTH_HOLD (pump-skip private); independent review of G01 EVIDENCE_PARTIAL; PASS_COUNT=0 · PROMOTE=0.

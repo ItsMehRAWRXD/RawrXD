@@ -25,6 +25,7 @@ Historical / private-cand / partial RUNTIME — cite only. `CROSS_SHA_CREDIT=0`.
 | receipts/G02-04_G03-08_20261114_FFN_DOWN_2_XDONEDIV_CLOSE_RELATED.md | G02-04 G03-08 | next ATTN_PRE_O_1_POS1; tip RO |
 | receipts/G02-04_G03-08_20261114_FFN_DOWN_2_CLOSED_RELATED.md | G02-04 G03-08 | origin 306d1c2297; SPV40E76D2A; RELATED≠PASS; CLOSE_004 in flight |
 | G01-01/02/03 SELF_MEASURE EVIDENCE_PARTIAL @ 3d0928e74888 | G01 | Freeze + license stub + failed CLI rebuild; ≠ PASS |
+| BR_G01_04_GUI_BACKEND_R77 / EXE E4B6A937… @ 36a18e912b | G01-04 | BUILD_OK=1 EXIT=0 NativeDebugBackend restore; EVIDENCE_PARTIAL ≠ PASS |
 | build_ninja/bin/rawr.exe E5F2D304… preexisting | G01-03 G01-06 | Stale binary after rebuild EXIT=2; forensics only |
 | BR_MARS_DEDUP_LLAMA32_001 @ b61f03972e | G02 G04 | SOURCE_WIRED; remasure TOK |
 | G08_M3_ISSUE49_SOURCE_WIRE_001 | G05 G08 | useCliAgent wire; EXE remasure OPEN |
