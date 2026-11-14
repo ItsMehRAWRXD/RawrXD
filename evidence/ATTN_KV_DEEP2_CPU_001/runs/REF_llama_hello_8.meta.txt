@@ -1,0 +1,11 @@
+﻿ID=REF_llama_hello_8
+LLAMA_CLI=G:\~dev\llama-direct\vulkan\llama-cli.exe
+LLAMA_SHA=F7CDB198DA9DFC8EE9490653A91EF0AA4E7F5C502FB0294C1398ACDDF408D772
+NGL=0 TEMP=0 N=8
+ELAPSED_MS=180579
+EXIT=
+OUT_BYTES=920
+ERR_BYTES=639
+DEEP2_D_OUT=Sure, here's an example
+REF_OUT_HEAD=Loading model...  /  /  /  /  /  / ▄▄ ▄▄ /  / ██ ██ /  / ██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄ /  / ██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██ /  / ██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀ /  /                 
+STRING_MATCH_EXACT=False

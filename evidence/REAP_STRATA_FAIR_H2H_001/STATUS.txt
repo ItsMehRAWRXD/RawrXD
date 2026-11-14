@@ -44,9 +44,9 @@ ROOT: LIVE_SETUP ok + STREAM_HEARTBEAT STEP=0/32 then stall (sealed pack); not r
 NEXT: trace generateStream STEP0 hang / MLA host path teardown
 
 ## P0-C SSM (qwen/ornith/nemotron)
-STATUS=OPEN refuse-without-auth correct
-NOTE: Deep2Engine.cpp ~8901 dead branch ALLOW_EXPERIMENTAL_SSM && false — blocks experimental SSM compute even with auth
-NEXT: remove && false under EXPERIMENTAL_SSM_SCAFFOLD only; label EXPERIMENTAL_NEQ_SSM_CERTIFIED_IMPL; PROMOTE=0
+STATUS=PARTIAL — Nemotron experimental SEALED (G3_E_SSM_EXPERIMENTAL_FINISH_001 tip 47438251 TOK=8 REAL_FORWARD); Ornith tip OPEN FORWARD_FAIL
+NOTE: Deep2Engine dead IDENTITY branch ALLOW&&false REMOVED; FFN-only always compute; SSM via computeSSM under auth; EXPERIMENTAL_NEQ_SSM_CERTIFIED_IMPL=1
+NEXT: Ornith GEO_OR_BUF arm + Fair H2H equal budget; PROMOTE=0
 
 ## P0-D MiniMax
 STATUS=FAIL_MID_PREFILL (≠ NOT_RUN; ≠ TOK_PASS; ≠ SEMANTIC_PASS; ≠ CERT)

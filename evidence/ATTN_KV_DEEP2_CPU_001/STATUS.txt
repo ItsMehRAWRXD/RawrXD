@@ -1,0 +1,68 @@
+ATTN_KV_DEEP2_CPU_001 — STATUS
+ASOF_LOCAL=2026-11-14T12:10:00-05:00
+PROGRAM=RAWRXD_ALL_BACKENDS_COMPLETE_001
+WS=WS5 / W05 Attention-KV + Deep2 CPU quant
+PROMOTE=0
+CERTIFIED=0
+CROSS_SHA_CREDIT=0
+TIP_CLIMB=HOLD
+INVENT_PASS=0
+NOT_RUN!=PASS
+WS5_ATTN_KV_DEEP2_CPU=PARTIAL
+OVERALL=RELATED_PARTIAL
+
+## EXE pins (measured)
+EXE_SHA_AB=CEBA0DE4734A3897B96A825C5CE16685161DB8A3C570C22F6B06B3DE4368A3C5
+  PATH_AT_MEASURE=g:\~dev\rawrxd\build_ninja\bin\rawr.exe (later moved by peer WS)
+EXE_SHA_DC2=30896EA4ACFD2D740D996B5F5E86E9DB4C66B6F89E58444BB1FE47582D3F37D5
+  PIN=evidence/ATTN_KV_DEEP2_CPU_001/bin_pin/rawr_ws5_pin.exe
+  SOURCE=rawr_w1_laguna.exe (tip sibling after CEBA0DE4 absented)
+MODEL=g:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+MODEL_BYTES=668788096
+BACKEND=HOST_DECODE (RAWRXD_HOST_DECODE=1 R1_HOST_FLOOR=1 ALLOW_GPU=0)
+
+## Measured arms (this seal)
+| ID | EXE | PT | GT | CE | EXIT | TPS | PREFILL_MS | KV_GROW | NF_BAD | Notes |
+|----|-----|----|----|----|------|-----|------------|---------|--------|-------|
+| A_short_hello_8 | CEBA0DE4 | 17 | 8 | 1 | 0 | 1.285 | 3961 | 2 | 0 | OUT=Sure, here's an example |
+| B_ue_pong_8 | CEBA0DE4 | ? | 8 | 1 | 0 | 1.877 | 3226 | 2 | 0 | OUT=Yes, the United States… (≠ historical UE golden; chat template) |
+| C_longctx_decode32 | CEBA0DE4 | 1784 | NOT_FOUND | 0 | TRUNC | — | — | 0 | 0 | TRUNCATED_MID_PREFILL; NOT_PASS |
+| D_short_hello_8_pin3089 | 30896EA4 | 17 | 8 | 1 | 0 | 2.083 | 2791 | 2 | 0 | Same stdout as A |
+| C2_medctx_decode32 | 30896EA4 | 285 | 26 | 1 | 0 | 0.149 | 152798 | 38 | 0 | EOS@26; finite mismatch=0 |
+
+## Attention / KV
+SHORT_CTX_KV=PASS_RUNTIME (lazy pages virtualMax=4096; page grow observed)
+MED_CTX_KV_STABILITY=PASS_RUNTIME (PT=285 GT=26 CE=1; 38 page-grow events; NonFinite bad=0)
+LONG_CTX_1784=NOT_PASS (truncated mid-prefill; harness/process gone before PREFILL_DONE)
+LAGUNA_ROPE_SWA=OPEN (owned by WS1 / REAP_LAGUNA; not closed here)
+
+## Numerical / reference parity
+FIRST_DIVERGE_ATTN_RELATED=YES
+  GPU_PARITY_ATTN_PRE_O_1_POS1_CLOSE_010 CLOSED maxAbs=4.955e-7 (RELATED; GPU path)
+  GPU_PARITY_ATTN_PRE_O_0 / ATTN_OUT_14 / etc. retained under PRODUCTION_INFERENCE_CERT_001
+  ≠ Deep2 CPU host CERT on this EXE
+ATTN_CERT_001=CANDIDATE_PASS MHA_GQA multi_token KV monotonic (RELATED historical)
+LLAMA_CLI_STRING_MATCH=BLOCKED_INTERACTIVE_CLI (b8352 chat UI; NOT_RUN)
+DEEP2_PARITY_UE_GOLDEN=NOT_MATCH_ON_CHAT_PATH (B arm chat-template; golden was no-BOS probe)
+
+## Performance (measured; ≠ PRODUCT TPS seal)
+A_TPS=1.285 D_TPS=2.083 C2_TPS=0.149
+C2_PREFILL_MS=152797.971 for 285 prompt tokens (~1.86 ms/tok prefill host Q4_K)
+TPS_PRODUCT_SEAL=0 (receipt note retained)
+
+## Honest disposition
+Build=PASS Load=PASS Generation_short=PASS Generation_medctx=PASS
+Numerics_vs_llama_cli=NOT_RUN/BLOCKED
+Numerics_vs_FIRST_DIVERGE=RELATED (GPU attn closes; host stage-dump rematch NOT_RUN this pack)
+Performance=MEASURED_OPEN (recorded; not promote)
+Reliability_long_1784=FAIL/TRUNC
+Laguna_rope_SWA=OPEN
+CERTIFIED=0 PROMOTE=0
+
+## NEXT
+1) Non-interactive llama-cli/completion golden Hello+UE no-BOS on same EXE SHA
+2) Host stage-dump ATTN_PRE_O / KV vs FIRST_DIVERGE ref_matched (CPU path)
+3) Survive PT>=1024 CLEAN_EXIT decode on pin EXE (retry C arm with exclusive host)
+4) Laguna rope/SWA parity remains WS1 critical path
+NEXT_OWNER=WS5_HOST_REF_DUMP|WS1_LAGUNA_ULP
+PROMOTE=0

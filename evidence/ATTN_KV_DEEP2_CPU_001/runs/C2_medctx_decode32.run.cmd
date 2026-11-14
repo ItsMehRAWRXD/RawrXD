@@ -1,0 +1,9 @@
+@echo off
+cd /d "g:\~dev\rawrxd\build_ninja\bin"
+set RAWRXD_HOST_DECODE=1
+set R1_HOST_FLOOR=1
+set RAWRXD_ALLOW_GPU=0
+set DEEP2_WEIGHT_BUDGET_MIB=8192
+"g:\~dev\rawrxd\evidence\ATTN_KV_DEEP2_CPU_001\bin_pin\rawr_ws5_pin.exe" run "g:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf" -p "Summarize carefully: The quick brown fox jumps over the lazy dog near the river bank while counting stars under moonlight. The quick brown fox jumps over the lazy dog near the river bank while counting stars under moonlight. The quick brown fox jumps over the lazy dog near the river bank while counting stars under moonlight. The quick brown fox jumps over the lazy dog near the river bank while counting stars under moonlight. The quick brown fox jumps over the lazy dog near the river bank while counting stars under moonlight. The quick brown fox jumps over the lazy dog near the river bank while counting stars under moonlight. The quick brown fox jumps over the lazy dog near the river bank while counting stars under moonlight. The quick brown fox jumps over the lazy dog near the river bank while counting stars under moonlight. The quick brown fox jumps over the lazy dog near the river bank while counting stars under moonlight. The quick brown fox jumps over the lazy dog near the river bank while counting stars under moonlight. The quick brown fox jumps over the lazy dog near the river bank while counting stars under moonlight. The quick brown fox jumps over the lazy dog near the river bank while counting stars under moonlight." --max-tokens 32 --receipt "g:\~dev\rawrxd\evidence\ATTN_KV_DEEP2_CPU_001\runs\C2_medctx_decode32.receipt.json" > "g:\~dev\rawrxd\evidence\ATTN_KV_DEEP2_CPU_001\runs\C2_medctx_decode32.out.txt" 2> "g:\~dev\rawrxd\evidence\ATTN_KV_DEEP2_CPU_001\runs\C2_medctx_decode32.err.txt"
+set EC=%ERRORLEVEL%
+> "g:\~dev\rawrxd\evidence\ATTN_KV_DEEP2_CPU_001\runs\C2_medctx_decode32.exit.txt" echo EXIT=%EC%

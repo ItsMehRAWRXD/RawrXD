@@ -1,0 +1,12 @@
+ATTN_KV_DEEP2_CPU_001 — LAW
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD GATE_STOP=1
+CROSS_SHA_CREDIT=0 INVENT_PASS=0 NOT_RUN!=PASS
+
+1. SCOPE: Attention/KV cache host-path stability + Deep2 CPU quantized
+   inference numerical/runtime parity evidence for TinyLlama Q4_K_M.
+2. CERTIFIED requires Build+Load+Numerics+Generation+Performance+Reliability
+   +Integration+Packaging on ONE traceable EXE SHA with ref match.
+3. FIRST_DIVERGE GPU_PARITY_ATTN_* CLOSED seals are RELATED ≠ CPU host CERT.
+4. llama-cli interactive UI capture ≠ PASS. Truncated prefill ≠ PASS.
+5. Throughput alone ≠ promote. Laguna rope/SWA parity remains separate gate.
+6. CROSS_SHA between CEBA0DE4 (A/B) and 30896EA4 (D/C2) = 0 credit transfer.

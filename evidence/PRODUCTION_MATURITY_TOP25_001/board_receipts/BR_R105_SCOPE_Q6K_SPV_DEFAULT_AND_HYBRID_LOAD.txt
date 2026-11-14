@@ -17,23 +17,23 @@ NO_REABSORB=R103|R104
 Q6K_PRODUCT_DEFAULT=PASS_MEASURED   # BR_CLI_Q6K_R105_PRODUCT_DEFAULT / R105_Q6K_SPV_DEFAULT_VERIFY_001
 Q6K_SPV_NUMERIC=RELATED_PARITY_OK   # BR_CLI_Q6K_R105_SPV_NUMERIC / R105_Q6K_SPV_NUMERIC_001
 Q6K_SPV_EXECUTION=PASS_MEASURED     # unforced SPV HOST_HITS=0; FORCE_HOST ctrl distinct
-HYBRID_MODEL_LOAD=OPEN              # blk.40.ssm_conv1d.weight ? Ornith lane; no fabricate
-HYBRID_SEMANTIC=OPEN
+HYBRID_MODEL_LOAD=PASS              # BR_ORNITH_HYBRID_LOAD_R105; no fabricate ssm_conv1d
+HYBRID_SEMANTIC=OPEN                # Deep2 tip FORWARD_FAIL residual (EXE 47438251)
 MULTIFAMILY=HOLD                    # no second Q6_K V GGUF on disk
 
 ## User note (absorb)
-Cited commits/builds re-verified locally this turn on EXE CEBA0DE4.
+Cited commits/builds re-verified locally; tip remasure EXE 47438251 + CEBA0DE4 held.
 COMPLETE=1 ? GUI/enterprise certification.
 
 ## Ordered spend (remaining)
 1 [DONE Q6K] POST_Q6K / R105 default verify unforced
-2 [DONE Q6K] independent SPV?host numeric
-3 LLAMA_QWEN35MOE_HYBRID_LOAD_FIX then reference gen
-4 Ornith semantic (extend R104; multi-token coherent)
+2 [DONE Q6K] independent SPV host numeric
+3 [DONE] LLAMA_QWEN35MOE_HYBRID_LOAD_FIX (REF_LOAD PASS)
+4 Ornith Deep2 semantic / tip FORWARD_FAIL close
 5 CLI/GUI product parity (same scenarios; independent EXE hashes)
 6 Enterprise 128 gates individually
 
-NEXT_MILESTONE=HYBRID_MODEL_LOAD_OR_MULTIFAMILY_WHEN_Q6K_GGUF
-  (Q6K lane RELATED partial; ? GUI/enterprise alone)
+NEXT_MILESTONE=ORNITH_DEEP2_PROD_DECODE_OR_MULTIFAMILY
+  (Q6K+hybrid-load RELATED; ? GUI/enterprise alone)
 PROMOTE=0
 END

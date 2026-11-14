@@ -1,0 +1,20 @@
+ID=A_short_hello_8
+BACKEND=HOST_DECODE
+MODEL=g:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+EXE=g:\~dev\rawrxd\build_ninja\bin\rawr.exe
+EXE_SHA=CEBA0DE4734A3897B96A825C5CE16685161DB8A3C570C22F6B06B3DE4368A3C5
+PROMPT_LEN=5
+MAX_TOKENS=8
+STARTED=2026-11-14T11:47:04.7069954-05:00
+ENDED=2026-11-14T11:47:14.3628281-05:00
+ELAPSED_MS=9597
+EXIT=0
+GENERATED_TOKENS=8
+CLEAN_EXIT=1
+HOST_DECODE=1
+DECODE_TPS_REAL=1.284901
+PREFILL_MS=3961.298
+KV_PAGE_GROW_EVENTS=2
+NONFINITE_SIGNAL=0
+NONFINITE_NOTE=prior_hit_was_false_positive_on_NonFinite=0_diag
+STDOUT_HEAD=Sure, here's an example | [MODEL_RESOLUTION] g:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf | GGUF_LOAD_STAGE=enter path="g:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf" loadT
