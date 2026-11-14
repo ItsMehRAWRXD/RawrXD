@@ -5,7 +5,7 @@ Authority: pasted RAWRXD_ENTERPRISE_PRODUCT_CERT_001 checklist · 0/128 · HELD 
 | Priority | Defect | Near GATE | Disposition |
 |----------|--------|-----------|-------------|
 | P0 | Gemma AA4F / tip_land AV | G02-06 G06-06 | B8E5 R75 TOK=8 RELATED (314771e525); tip 6754 RO; ≠ CERT PASS |
-| P0 | GPU/ref V_1 / ATTN_NORM_1@dim1072 | G02-04 G02-05 G03-08 | CLOSED=0 maxULP=1@59; next ACT/FFN_DOWN bitexact |
+| P0 | GPU/ref V_1 / ATTN_NORM_1@dim1072 | G02-04 G02-05 G03-08 | CLOSED=1 maxULP=0 F0A8018F RELATED (R78); ≠ matrix PASS |
 | P0 | Multi-family STREAM / M1M2 TOK | G02-08 G04-01 G06-06 | auth OPEN=1; STREAM TOK residual; 085f AV_CLOSED=1 TOK=0 |
 | P1 | C36 LSP startup hangs | G07-01 G07-04 | tip6754 HANG/TIMEOUT RELATED (R70); cand INIT_OK RELATED only |
 | P1 | ConPTY terminal-stop reliability | G05-05 G06-05 | tip-era PASS RELATED (R70); cand PASS RELATED; ≠ CERT PASS |
