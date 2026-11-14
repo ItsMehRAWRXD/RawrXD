@@ -533,6 +533,73 @@ static float vec_dot_q4_K_q8_K(const block_q4_K* x, const block_q8_K* y, size_t 
     return sumf;
 }
 
+/* CLOSE_008: hybridB = generic int lanes + AVX mins hadd/madd + AVX hsum.
+ * Bitexact REF_Q on REF_NORM; square WQ/WO dual-pipe only. PROMOTE=0 */
+static float vec_dot_q4_K_q8_K_hybridB(const block_q4_K* x, const block_q8_K* y,
+                                       size_t cols) {
+    const size_t nb = cols / 256;
+    static const uint32_t kmask1 = 0x3f3f3f3f;
+    static const uint32_t kmask2 = 0x0f0f0f0f;
+    static const uint32_t kmask3 = 0x03030303;
+    uint32_t utmp[4];
+    const uint8_t* scales = reinterpret_cast<const uint8_t*>(&utmp[0]);
+    const uint8_t* mins = reinterpret_cast<const uint8_t*>(&utmp[2]);
+    int8_t aux8[256];
+    float acc[8] = {};
+    float acc_m[4] = {};
+    for (size_t i = 0; i < nb; ++i) {
+        const uint8_t* q4 = x[i].qs;
+        const int8_t* q8 = y[i].qs;
+        int8_t* a = aux8;
+        for (int j = 0; j < 4; ++j) {
+            for (int l = 0; l < 32; ++l) a[l] = static_cast<int8_t>(q4[l] & 0xF);
+            a += 32;
+            for (int l = 0; l < 32; ++l) a[l] = static_cast<int8_t>(q4[l] >> 4);
+            a += 32;
+            q4 += 32;
+        }
+        std::memcpy(utmp, x[i].scales, 12);
+        utmp[3] = ((utmp[2] >> 4) & kmask2) | (((utmp[1] >> 6) & kmask3) << 4);
+        const uint32_t uaux = utmp[1] & kmask1;
+        utmp[1] = (utmp[2] & kmask2) | (((utmp[0] >> 6) & kmask3) << 4);
+        utmp[2] = uaux;
+        utmp[0] &= kmask1;
+        int16_t paired[8];
+        for (int p = 0; p < 4; ++p)
+            paired[p] = static_cast<int16_t>(y[i].bsums[2 * p] + y[i].bsums[2 * p + 1]);
+        for (int p = 0; p < 4; ++p)
+            paired[4 + p] = static_cast<int16_t>(y[i].bsums[8 + 2 * p] +
+                                                 y[i].bsums[8 + 2 * p + 1]);
+        const float d = f16_to_f32(x[i].d) * y[i].d;
+        const float dmin = -f16_to_f32(x[i].dmin) * y[i].d;
+        for (int p = 0; p < 4; ++p) {
+            const int32_t prod = static_cast<int32_t>(mins[2 * p]) * paired[2 * p] +
+                                 static_cast<int32_t>(mins[2 * p + 1]) * paired[2 * p + 1];
+            acc_m[p] = std::fmaf(dmin, static_cast<float>(prod), acc_m[p]);
+        }
+        int32_t aux32[8] = {};
+        a = aux8;
+        q8 = y[i].qs;
+        int is = 0;
+        for (int j = 0; j < 8; ++j) {
+            const int32_t scale = scales[is++];
+            for (int r = 0; r < 4; ++r) {
+                for (int l = 0; l < 8; ++l)
+                    aux32[l] += scale * static_cast<int32_t>(q8[l]) *
+                                static_cast<int32_t>(a[l]);
+                q8 += 8;
+                a += 8;
+            }
+        }
+        for (int l = 0; l < 8; ++l)
+            acc[l] = std::fmaf(d, static_cast<float>(aux32[l]), acc[l]);
+    }
+    const float s0 = (acc[0] + acc[4]) + (acc[2] + acc[6]);
+    const float s1 = (acc[1] + acc[5]) + (acc[3] + acc[7]);
+    const float m = (acc_m[0] + acc_m[2]) + (acc_m[1] + acc_m[3]);
+    return (s0 + s1) + m;
+}
+
 static void gemv_q4_k_scalar(
     const uint8_t* RESTRICT w,
     const float*  RESTRICT x,
@@ -579,13 +646,16 @@ static void gemv_q4_k_scalar(
         return;
     }
 
-    // Hot path: match llama.cpp CPU mul_mat(Q4_K, Q8_K)
+    // Hot path: Q4_K×Q8_K. Square (WQ/WO) → hybridB; else ggml generic.
     const size_t blocksPerRow = cols / 256;
     std::vector<block_q8_K> xQ8(blocksPerRow);
     quantize_row_q8_K(x, xQ8.data(), cols);
     const block_q4_K* blocks = reinterpret_cast<const block_q4_K*>(w);
+    const bool square = (rows == cols);
     for (size_t r = 0; r < rows; ++r) {
-        y[r] += vec_dot_q4_K_q8_K(blocks + r * blocksPerRow, xQ8.data(), cols);
+        y[r] += square
+            ? vec_dot_q4_K_q8_K_hybridB(blocks + r * blocksPerRow, xQ8.data(), cols)
+            : vec_dot_q4_K_q8_K(blocks + r * blocksPerRow, xQ8.data(), cols);
     }
 }
 

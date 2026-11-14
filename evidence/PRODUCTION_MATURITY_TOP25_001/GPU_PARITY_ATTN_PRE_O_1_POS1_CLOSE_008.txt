@@ -1,0 +1,95 @@
+GPU_PARITY_ATTN_PRE_O_1_POS1_CLOSE_008
+DATE=2026-11-14
+ASOF_LOCAL=2026-11-14T06:06:33-05:00
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+CROSS_SHA_CREDIT=0
+INVENT_PASS=0
+NOT_RUN!=PASS
+SCOREBOARD_CLI_GUI_PCT_UNCHANGED=1
+ATTN_PRE_O_1_POS1_CLOSED=0
+CLOSED=0
+
+## Authority
+PRIOR_OPEN=GPU_PARITY_ATTN_PRE_O_1_POS1_CLOSE_007.txt
+  PRE_O_1@pos1 OPEN 2.754107e-05 @idx704; knife idx747 F16
+  PRE_O_0@pos1 CLOSED 3.488640e-08 FA006
+BRANCH=work/v0-first-divergence
+TOL_ABS=1e-6 TOL_REL=1e-5
+TIP_EXE_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431 RO
+PRIOR_SPV_40E76D2A bytes=17272 HELD_AS_BAK=gemv_q4k.spv.xdonediv.bak_pre_r88
+VALUATION_SCOREBOARD_LIVE / JOINT CONTROLLING_% NOT rewritten
+
+## Fix@source (dual-pipe; no host FORCE square; no square xd-onediv)
+src/backend/gemv_q4k.comp
+  square (rows==cols WQ/WO): hybridB =
+    generic aux32 int lanes + AVX mins hadd/madd + AVX hsum_float_8 assoc
+  GATE/UP (rows>cols): generic + 1/iscale HELD
+  FFN_DOWN/WK/WV (rows<cols): generic + xd one-div HELD
+src/deep2/QuantKernelRegistry.cpp
+  host GetGEMV square → vec_dot_q4_K_q8_K_hybridB (parity with SPV square)
+Offline: hybridB(REF_NORM)@747 BITEXACT REF_Q; pure AVX/generic each 1 ULP miss
+ARTIFACT=src/backend/gemv_q4k.spv.hybridB_close008
+SPV_SHA256=3A4F9B874C2293E6DAD9195A85754779046EC007DE2CD5A516D4EECCCDAE3CA3 LEN=24784
+
+## Remeasure (fa006 pin; product env; no Q4_HOST)
+CAND=pin/rawr_attn_pre_o_1_pos1_fa006.exe
+SHA256=5CD5E3A3DCFE793588F6A96C1A49F7B8640D15272892E004088349F7D371BA60
+DUMP=FIRST_DIVERGE_001/stage_dump_attn_pre_o_1_pos1_close008_hybridb
+REF=FIRST_DIVERGE_001/stage_dump_ref_matched (first-pick seq136 PRE_O)
+COMPARE=FIRST_DIVERGE_001/GPU_PARITY_ATTN_PRE_O_1_POS1_CLOSE_008.compare.log
+CMD=remeasure_attn_pre_o_1_pos1_close008_hybridb.cmd
+ENV=RAWRXD_FORCE_VULKAN_QUANT_GEMV=1 RAWRXD_Q4_HOST_ATTN=0 RAWRXD_Q4_HOST_FFN_DOWN=0
+    RAWRXD_KV_FP16_ROUNDTRIP=1 RAWRXD_GPU_FWD=0 HOTPATH_ATTN=CPU FA_F16=1
+PROMPT_IDS=1,15043
+RUNTIME_Q4K_SPV bytes=24784 SHA=3A4F9B87…
+
+## Measured
+BEFORE (CLOSE_007 authority)=2.754107e-05
+AFTER  ATTN_PRE_O_1@pos1 maxAbs=9.397045e-06 @idx1076 n_gt=4/2048 UNDER_TOL=0 CLOSED=0
+ATTN_PRE_O_0@pos1 CLOSED maxAbs=3.488640e-08 HELD
+MAXDIFF_BEFORE=2.754107e-05
+MAXDIFF_AFTER=9.397045e-06
+KNIFE_Q_POST_idx747_F16_ne=0 (CLOSED vs REF seq102)
+  gpu POST≈-1.5200194120 → F16 -1.51953125
+  ref POST=-1.5200195312 → F16 -1.51953125
+Q_PRE idx747 bits gpu=0xbfc29acf ref=0xbfc29ad0 ulp=1 (REF F16 side after rope)
+
+## Cascade / regression — HELD
+FFN_DOWN_0@pos0 UNDER_TOL maxAbs=2.235174e-08
+FFN_DOWN_2@pos1 UNDER_TOL maxAbs=2.887100e-08
+V_1@pos0 UNDER_TOL maxAbs=2.235174e-08
+ATTN_PRE_O_0@pos0 BITEXACT; ATTN_PRE_O_1@pos0 UNDER_TOL 1.192093e-07
+Q_PRE_ROPE_1@pos1 UNDER_TOL maxAbs=9.536743e-07
+
+## Trials this seal (no invent PASS)
+1) Offline isolate: pure AVX2 / generic on REF_NORM each miss REF_Q by 1 ULP opposite sides
+2) hybridB (generic lanes + AVX mins/hsum) BITEXACT REF_Q on REF_NORM
+3) Land hybridB square-only SPV dual-pipe; remasure FORCE + no Q4_HOST
+4) idx747 F16 knife CLOSED; PRE_O improves 2.75e-05→9.40e-06 but still OPEN
+5) Host FORCE square / xd-onediv / FA Q F32/RTZ NOT retried (REFUTED CLOSE_007)
+
+## Root (numeric-first)
+CLASS=ATTN_PRE_O_1_POS1_POST_KNIFE_HEAD16_CLUSTER
+  idx747 F16 knife CLOSED by square hybridB dual-pipe
+  residual owner moved to head16 @idx1076 maxAbs=9.397045e-06 (>TOL 1e-6)
+SPV_SQUARE_HYBRIDB=1 GATE_UP_DOWN_UNCHANGED=1
+REFUTED_HOST_FORCE_SQUARE=1 (not used)
+REFUTED_SQUARE_XD_ONEDIV=1 (not used)
+
+## Next engineering
+  Close head16 PRE_O cluster @idx1076 without reopening FFN_DOWN/PRE_O_0
+  or further square/WQ bitexact that lands full PRE_O under TOL
+  PROMOTE=0
+
+## Verdict
+ATTN_PRE_O_1_POS1_CLOSED=0
+UNDER_TOL=0
+CLOSED=0
+NEXT_OPEN=ATTN_PRE_O_1@pos1 maxAbs=9.397045e-06 @idx1076 head16
+  prior_knife_idx747_F16=CLOSED
+≠ PERFORMANCE_PASS ≠ PROMOTE
+PROMOTE=0
+TIP_CLIMB=HOLD
+END
