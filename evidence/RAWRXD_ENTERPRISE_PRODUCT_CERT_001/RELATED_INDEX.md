@@ -11,6 +11,8 @@ Historical / private-cand / partial RUNTIME — cite only. `CROSS_SHA_CREDIT=0`.
 | tip_land_qdim 7FD1F270 | G02 | STREAM_SEH closed cand; tip bind OPEN |
 | M1M2 combine AA4F8530 | G02 G03 | SOURCE_WIRED; gemma AV |
 | GPU_PARITY Q_PRE_ROPE + ATTN_PRE_O_0 C72A48E9 | G02 G03 | LIVE_CLOSED cand |
+| ATTN_PRE_O_1 C740 remasure R83 / afda8aae1c | G02-04 G03-08 | CLOSE_005 OPEN 2.66e-03; first PRE_O_0@pos1; RELATED≠PASS |
+| receipts/G02-04_G03-08_20261114_ATTN_PRE_O_1_POS1_C740_RELATED.md | G02-04 G03-08 | next ATTN_PRE_O_0_POS1; pin C740+40E |
 | ATTN_PRE_O_1 | G02-04 G02-05 G03-08 | V_1 FP16 bucket CLOSED maxULP_f16=0 on F0A8018F… (RELATED≠matrix PASS) |
 | BR_M3 FORCE_TOOL | G05 G08 | force-path only; MODEL_SELECTED=0 |
 | M3 FORCE remasure 30DCB4 20261113_222135 | G05-06 | FORCE_TOOL EBT PASS force-path; MODEL_SELECTED=0 |
