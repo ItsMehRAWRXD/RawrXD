@@ -1,0 +1,19 @@
+BR_MARS_DEDUP_LLAMA32_001
+ASOF_LOCAL=2026-11-13T22:30-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0
+SOURCE_WIRED=1 RUNTIME_REACHED=0
+
+## Change
+Deep2Engine::placeAllModelTensorsMARS dedup by name+data pointer.
+Skips re-place of tied token_embd/lmHead and Gemma4 wo==attnO alias.
+Elastic register already skipped tied lmHead (prior land).
+
+## Intent
+Close llama32 OPEN/heap thrash class (duplicate 300MB+ Allocate/Evict).
+
+## CERT map
+RELATED G02-06 G04-01 — not PASS until remasure TOK>0 on controlling EXE.
+
+## Remeasure required
+ide_mf_qdim / tip_land gemma+llama32 scripts; CROSS_SHA_CREDIT=0
+END

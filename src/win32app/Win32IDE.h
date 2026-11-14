@@ -398,6 +398,7 @@ class Win32IDE
         nullptr, &RawrxdProductAgentSessionDeleterNoop};
     uint64_t m_productAgentSessionId = 0;
     void initializeAgenticLoopBridge();
+    bool launchCliAgentIssue49Task(const std::string& taskIn);
     void onAgenticLoopRunTask();
     void onAgenticLoopCancel();
     void onAgenticLoopStatus();

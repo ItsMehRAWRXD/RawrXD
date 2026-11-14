@@ -5742,6 +5742,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/full_agentic_ide/AgenticPlanningOrchestrator.cpp
         src/full_agentic_ide/AgenticIOCPBridge.cpp
         src/win32app/Win32IDE_AgentCommands.cpp
+        src/win32app/Win32IDE_Issue49CliWire.cpp
         # Agentic loop + Deep2 IDE bridges (process launch, SNAP recovery, ESP)
         src/win32app/Win32IDE_Deep2Bridge.cpp
         src/win32app/Win32IDE_AgenticLoopBridge.cpp

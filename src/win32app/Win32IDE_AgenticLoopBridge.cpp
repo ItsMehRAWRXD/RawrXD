@@ -330,6 +330,17 @@ void AgenticLoopBridge::WorkerThread()
         // Issue #49: Ollama GUI path may fall back to deep2_agentic_loop.exe
         // when rawr.exe is absent — never emit `rawr run` argv to that binary.
         if (m_currentConfig.useCliAgent && !exeIsDeep2Loop) {
+            // Issue #49: RAWR_AGENT_FORCE_TOOL lives on `rawr agent` (CmdAgent).
+            const char* forceTool = std::getenv("RAWR_AGENT_FORCE_TOOL");
+            if (forceTool && forceTool[0] && m_currentConfig.approveMutations) {
+                cmd << quoteWindowsArg(exePath) << " agent "
+                    << quoteWindowsArg(m_currentConfig.modelPath)
+                    << " --workspace " << quoteWindowsArg(m_currentConfig.workDir)
+                    << " --auto=full"
+                    << " --max-tokens " << m_currentConfig.maxSteps;
+                if (!m_currentConfig.task.empty())
+                    cmd << " --prompt " << quoteWindowsArg(m_currentConfig.task);
+            } else {
             cmd << quoteWindowsArg(exePath) << " run "
                 << quoteWindowsArg(m_currentConfig.modelPath)
                 << " --backend ollama"
@@ -363,6 +374,7 @@ void AgenticLoopBridge::WorkerThread()
                  m_currentConfig.task.find("edit") != std::string::npos)) {
                 cmd << " --tool-scope source-edit";
             }
+            } // end non-FORCE useCliAgent
         } else {
             cmd << quoteWindowsArg(exePath) << " ";
             if (m_currentConfig.provider == "ollama" ||

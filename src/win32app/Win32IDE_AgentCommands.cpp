@@ -848,6 +848,16 @@ void Win32IDE::initializeAgenticBridge()
 void Win32IDE::onAgentStartLoop()
 {
     LOG_INFO("onAgentStartLoop called");
+    // Issue#49 landable: FORCE_TOOL / CLI env → AgenticLoopBridge useCliAgent.
+    if (std::getenv("RAWR_AGENT_FORCE_TOOL") || std::getenv("RAWRXD_USE_CLI_AGENT") ||
+        std::getenv("RAWRXD_CLI_PATH") || std::getenv("RAWRXD_AGENT_TASK")) {
+        std::string t;
+        if (const char* e = std::getenv("RAWRXD_AGENT_TASK")) t = e;
+        if (!launchCliAgentIssue49Task(t))
+            MessageBoxA(m_hwndMain, "useCliAgent StartTask failed", "Agent Error",
+                        MB_OK | MB_ICONERROR);
+        return;
+    }
     // Start Agent Loop fallback when invoked from command palette: show dialog if chat input unavailable (gotPrompt).
 
     if (!m_agenticBridge)

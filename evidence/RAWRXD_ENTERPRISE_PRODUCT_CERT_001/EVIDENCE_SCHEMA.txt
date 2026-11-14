@@ -1,0 +1,22 @@
+﻿RAWRXD_ENTERPRISE_PRODUCT_CERT_001 — EVIDENCE_SCHEMA
+VERSION=1.0
+Mandatory fields for any RESULT=PASS (fail-closed if any blank):
+
+GATE_ID=
+GIT_SHA=
+EXE_SHA256=
+MODEL_SHA256=
+HARDWARE=
+COMMAND=
+EXIT_CODE=
+RESULT=
+ARTIFACTS=
+REVIEWER=
+TIMESTAMP=
+CROSS_SHA_CREDIT=0
+
+RESULT vocabulary: PASS | FAIL | BLOCKED | NOT_RUN | EVIDENCE_RELATED | EVIDENCE_PARTIAL
+CROSS_SHA_CREDIT must be 0 for PASS on controlling release SHAs.
+Scoreboard maturity ≠ checklist completion.
+PROMOTE=0 until all 128 PASS with independent sign-off.
+END

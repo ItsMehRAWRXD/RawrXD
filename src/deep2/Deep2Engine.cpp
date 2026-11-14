@@ -139,6 +139,7 @@ rawr::model_provenance::Provenance g_modelProv{};
 } // namespace
 #include <future>
 #include <atomic>
+#include <unordered_set>
 #include <vector>
 #include <immintrin.h>
 #include <filesystem>
@@ -13647,9 +13648,19 @@ Deep2Engine::MARSPlacementReport Deep2Engine::placeAllModelTensorsMARS() {
         return report;
     }
 
+    /* Dedup by name+data: tied embed (token_embd==lmHead) and Gemma4 llama
+     * fallback (wo==attnO on attn_output) otherwise double-Allocate then
+     * policy-Evict the same 300MB+ tensor — llama32 OPEN/heap thrash class. */
+    std::unordered_set<std::string> placedNames;
+    std::unordered_set<const void*> placedData;
     auto placeOne = [&](const WeightTensor& wt, float priority, bool pin,
                         int layer) {
         if (!wt.data || wt.sizeBytes == 0) {
+            report.skipped++;
+            return;
+        }
+        if ((!wt.name.empty() && placedNames.count(wt.name)) ||
+            placedData.count(wt.data)) {
             report.skipped++;
             return;
         }
@@ -13680,13 +13691,16 @@ Deep2Engine::MARSPlacementReport Deep2Engine::placeAllModelTensorsMARS() {
             if (pin || IsPinnedPattern(ActivePolicy(), name))
                 lease->pinned = true;
         }
+        if (!wt.name.empty())
+            placedNames.insert(wt.name);
+        placedData.insert(wt.data);
         report.placed++;
         report.bytesTotal += wt.sizeBytes;
         if (lease->currentGPU == 0) report.bytesGpu0 += wt.sizeBytes;
         else if (lease->currentGPU == 1) report.bytesGpu1 += wt.sizeBytes;
     };
 
-    // Embeddings / head / norm � high priority, pinned
+    // Embeddings / head / norm — high priority, pinned (lmHead skipped if tied)
     placeOne(modelWeights.tokenEmbed, 10.0f, true, -1);
     placeOne(modelWeights.lmHead, 9.5f, true, -1);
     placeOne(modelWeights.finalNorm, 9.0f, true, -1);

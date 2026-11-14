@@ -31,11 +31,14 @@
 #include "../agentic/DiffEngine.h"
 #include "../agentic/AgentTranscript.h"
 #include "../agentic/BoundedAgentLoop.h"
+#include "../BackendOrchestrator.h"
 
 #include <fstream>
 #include <sstream>
 #include <algorithm>
 #include <filesystem>
+#include <cstdlib>
+#include <windows.h>
 #include "gguf_loader.h"
 
 namespace fs = std::filesystem;
@@ -530,13 +533,56 @@ void Win32IDE::startAgentSession(const std::string& prompt) {
     }
     s_agentSession->SetUserPrompt(prompt);
 
+    // LOCAL_ONLY: register GGUF on BackendOrchestrator before BoundedAgent tools.
+    // settings LastModelPath alone leaves GetLoadedModelTags empty → NO_MODEL_RESIDENT.
+    auto resolveBoundedModelPath = [this]() -> std::string {
+        std::string p = getLoadedModelPath();
+        if (p.empty()) {
+            if (const char* e = std::getenv("RAWRXD_DEFAULT_MODEL")) p = e;
+            else if (const char* e = std::getenv("RAWRXD_PRODUCT_MODEL")) p = e;
+        }
+        if (p.empty()) {
+            if (const char* appdata = std::getenv("APPDATA")) {
+                const std::string ini = std::string(appdata) + "\\RawrXD\\settings.ini";
+                char buf[1024]{};
+                GetPrivateProfileStringA("Model", "LastModelPath", "", buf, sizeof(buf),
+                                         ini.c_str());
+                p = buf;
+            }
+        }
+        return p;
+    };
+    const std::string modelPath = resolveBoundedModelPath();
+    int modelResident = 0;
+    if (!modelPath.empty() && fs::exists(modelPath)) {
+        auto& bo = RawrXD::BackendOrchestrator::Instance();
+        if (!bo.IsInitialized()) bo.Initialize();
+        const std::string tag = fs::path(modelPath).stem().string();
+        const std::string useTag = tag.empty() ? "default" : tag;
+        if (bo.LoadModel(modelPath, useTag)) {
+            bo.SwapToModel(useTag);
+            modelResident = bo.GetLoadedModelTags().empty() ? 0 : 1;
+        }
+        if (!ensureAgenticBridgeHasModel(modelPath)) {
+            appendToOutput("[BoundedAgent] AgenticBridge LoadModel soft-fail; BO tags kept\n",
+                           "Agent", OutputSeverity::Warning);
+        }
+        _putenv_s("RAWRXD_PRODUCT_MODEL", modelPath.c_str());
+    } else {
+        appendToOutput("[BoundedAgent] NO_MODEL_RESIDENT path empty/missing\n",
+                       "Agent", OutputSeverity::Warning);
+    }
+    appendToOutput(std::string("[BoundedAgent] MODEL_RESIDENT=") +
+                       (modelResident ? "1" : "0") + " path=" + modelPath.substr(0, 180),
+                   "Agent", OutputSeverity::Info);
+
     // Configure the bounded agent loop
     if (!s_agentLoop) {
         s_agentLoop = std::make_unique<BoundedAgentLoop>();
 
         AgentLoopConfig config;
         config.maxSteps = std::clamp(IDEConfig::getInstance().getInt("agent.cycleCount", 10), 1, 99);
-        // model left empty — auto-detected from Ollama /api/tags at runtime
+        config.model = modelPath.empty() ? std::string() : fs::path(modelPath).stem().string();
         config.ollamaBaseUrl = m_ollamaBaseUrl.empty() ? "" : m_ollamaBaseUrl;
         config.workingDirectory = m_settings.workingDirectory;
 
@@ -828,6 +874,16 @@ void Win32IDE::onBoundedAgentLoop() {
     SetForegroundWindow(m_hwndMain);
 
     if (accepted) {
+        const bool useCli = std::getenv("RAWR_AGENT_FORCE_TOOL") ||
+            std::getenv("RAWRXD_USE_CLI_AGENT") || std::getenv("RAWRXD_CLI_PATH");
+        if (useCli) {
+            appendToOutput("[BoundedAgent->useCliAgent] " + promptText.substr(0, 200),
+                           "Agent", OutputSeverity::Info);
+            if (!launchCliAgentIssue49Task(promptText))
+                MessageBoxA(m_hwndMain, "useCliAgent StartTask failed", "Agent Error",
+                            MB_OK | MB_ICONERROR);
+            return;
+        }
         appendToOutput("[BoundedAgent] Starting: " + promptText.substr(0, 200),
                        "Agent", OutputSeverity::Info);
         startAgentSession(promptText);
