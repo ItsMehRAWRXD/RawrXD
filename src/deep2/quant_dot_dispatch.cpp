@@ -188,20 +188,60 @@ bool EndBatchImpl()
     std::lock_guard<std::mutex> lk(g_gpu_mutex);
     bool ok = true;
     size_t total_rows = 0;
-    for (const QueuedDot& e : qs) {
-        ok = ok && Gpu().QueueQuantDot(e.packed, e.packed_bytes, e.q8, e.q8_bytes,
-                                       e.out, e.out_bytes, e.n_out, e.n_in, e.kind);
-        QDTRACE_DISPATCH("  EndBatch queue entry ok=" << (int)ok);
+    size_t fail_index = 0;
+    const char* fail_stage = nullptr;
+    for (size_t i = 0; i < qs.size(); ++i) {
+        const QueuedDot& e = qs[i];
+        const bool queued_ok = Gpu().QueueQuantDot(e.packed, e.packed_bytes, e.q8,
+                                                  e.q8_bytes, e.out, e.out_bytes,
+                                                  e.n_out, e.n_in, e.kind);
+        if (!queued_ok && ok) {
+            ok = false;
+            fail_index = i;
+            fail_stage = "queue";
+        }
+        QDTRACE_DISPATCH("  EndBatch queue entry ok=" << (int)queued_ok);
         total_rows += e.n_out;
     }
     QDTRACE_DISPATCH("EndBatch calling EndQuantDotBatch");
-    ok = ok && Gpu().EndQuantDotBatch();
+    const bool end_ok = Gpu().EndQuantDotBatch();
+    if (!end_ok && ok) {
+        ok = false;
+        fail_stage = "end";
+        fail_index = qs.size();
+    }
     QDTRACE_DISPATCH("EndBatch done ok=" << (int)ok);
     g_receipt = Receipt{};
     if (ok) {
         g_receipt.used_gpu = true;
         g_receipt.gpu_rows = total_rows;
         return true;
+    }
+    // Record which stage and which entry failed BEFORE the replay overwrites the
+    // receipt, and name the failing geometry. A rejected queue configuration and a
+    // failed submission need different repairs, and this is the only place that
+    // can tell them apart.
+    {
+        const QueuedDot* bad = nullptr;
+        if (fail_stage && fail_index < qs.size()) bad = &qs[fail_index];
+        g_receipt.fail_stage = fail_stage;
+        g_receipt.fail_index = fail_index;
+        g_receipt.batch_entries = qs.size();
+        if (bad) {
+            g_receipt.fail_kind = bad->kind;
+            g_receipt.fail_n_in = bad->n_in;
+            g_receipt.fail_n_out = bad->n_out;
+            g_receipt.fail_packed_bytes = bad->packed_bytes;
+            g_receipt.fail_q8_bytes = bad->q8_bytes;
+            g_receipt.fail_out_bytes = bad->out_bytes;
+        }
+        std::printf("MOE_UP_BATCH_FAIL stage=%s index=%zu/%zu kind=%d n_in=%zu n_out=%zu "
+                    "packed_bytes=%zu q8_bytes=%zu out_bytes=%zu\n",
+                    fail_stage ? fail_stage : "unknown", fail_index, qs.size(),
+                    bad ? bad->kind : -1, bad ? bad->n_in : 0, bad ? bad->n_out : 0,
+                    bad ? bad->packed_bytes : 0, bad ? bad->q8_bytes : 0,
+                    bad ? bad->out_bytes : 0);
+        std::fflush(stdout);
     }
     ReplayQueuedOnCpu(qs);
     return false;

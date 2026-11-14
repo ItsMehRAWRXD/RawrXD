@@ -134,6 +134,19 @@ struct Receipt {
     size_t   cpu_rows = 0;          // rows dispatched to the CPU
     const char* fallback_reason = nullptr;   // non-null when !used_gpu
     bool     queued = false;        // this dot was queued into a batch, not yet run
+    // RAWRXD_DEEP2_MOE_UP_BATCH_DIAG_001. "quant-dot batch failed" alone does not
+    // distinguish a rejected queue configuration from a failed submission, nor say
+    // which entry in the batch was responsible. These fields make the first
+    // failing condition reportable without guessing.
+    const char* fail_stage = nullptr;  // "queue", "end", or null when the GPU ran
+    size_t   fail_index = 0;           // entry index inside the failed batch
+    size_t   batch_entries = 0;        // entries the batch contained
+    int      fail_kind = -1;           // dot kind of the failing entry
+    size_t   fail_n_in = 0;            // input elements of the failing entry
+    size_t   fail_n_out = 0;           // output elements of the failing entry
+    size_t   fail_packed_bytes = 0;    // packed weight bytes of the failing entry
+    size_t   fail_q8_bytes = 0;        // activation bytes of the failing entry
+    size_t   fail_out_bytes = 0;       // output bytes of the failing entry
 };
 
 const Receipt& LastReceipt();
