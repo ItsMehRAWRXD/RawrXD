@@ -66,6 +66,7 @@ bool Deep2Engine::tryGpuTokenForward(float* hidden) {
 bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
     (void)seqLen;
     if (!hidden || config.hiddenDim == 0) return false;
+    layerChainValid_ = false; /* new token — no prior residual yet */
     ++gpuFwd_.liveDecodeTokens;
     auto f0 = rawr::iso_ladder::Clock::now();
     RAWR_DECODE_SCOPE_FORWARD();
@@ -108,68 +109,55 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
             std::fprintf(stderr, "TRY_GPU_COMMITTED_FALLBACK_HOST=1\n");
             /* Drop poisoned SEEN from GpuForward Batch2 overlap misses. */
             ssVkProductBind_.beginToken(ssVkProductBind_.tokenProof().tokenOrdinal);
-            float* layerInput = hidden;
-            float* layerOutput = attentionOutput;
+            /* Accumulate into hidden after each layer — never re-read stale embed. */
             const uint32_t nLayers = (uint32_t)layerCap;
+            const size_t H = config.hiddenDim;
             for (uint32_t ly = 0; ly < nLayers; ++ly) {
                 try {
-                    forwardLayer(ly, layerInput, layerOutput, seqLen);
+                    forwardLayer(ly, hidden, attentionOutput, seqLen);
                 } catch (const std::exception& ex) {
                     std::fprintf(stderr, "HOST_LAYER_FAIL L=%u %s\n", ly, ex.what());
                     rawr::iso_ladder::A().forwardNs += rawr::iso_ladder::Ns(f0);
                     return false;
                 }
                 ++gpuFwd_.hostForwardLayerCalls;
-                std::swap(layerInput, layerOutput);
+                std::memcpy(hidden, attentionOutput, H * sizeof(float));
             }
-            if (layerInput != hidden)
-                std::memcpy(hidden, layerInput, config.hiddenDim * sizeof(float));
             gpuFwdCommitted_ = false;
         }
     } else if (tryGpuTokenForward(hidden)) {
         gpuFwdCommitted_ = true;
     } else {
         std::fprintf(stderr, "TRY_GPU_FALLBACK_HOST=1\n");
-        float* layerInput = hidden;
-        float* layerOutput = attentionOutput;
         const uint32_t nLayers = (uint32_t)layerCap;
-        /* Batch2 live: direct layer walk — scoreboard pump is not decode authority. */
+        const size_t H = config.hiddenDim;
+        /* Batch2 live: direct layer walk — scoreboard pump is not decode authority.
+           memcpy chain: L0 writes attentionOutput then copies into hidden so L1+
+           never sees stale PROMPT_EMBED (FIRST_DIVERGE ATTN_NORM_1). */
         for (uint32_t ly = 0; ly < nLayers; ++ly) {
             try {
-                forwardLayer(ly, layerInput, layerOutput, seqLen);
+                forwardLayer(ly, hidden, attentionOutput, seqLen);
             } catch (const std::exception& ex) {
                 std::fprintf(stderr, "HOST_LAYER_FAIL L=%u %s\n", ly, ex.what());
                 rawr::iso_ladder::A().forwardNs += rawr::iso_ladder::Ns(f0);
                 return false;
             }
             ++gpuFwd_.hostForwardLayerCalls;
-            // Per-layer finiteness check: stop at first NaN-producing layer.
-            float* postLayerBuf = (layerInput == hidden) ? layerOutput : layerInput;
-            // After forwardLayer writes into layerOutput, layerOutput holds the result.
-            // But we swapped on previous iteration, so layerInput now holds prev output.
-            // forwardLayer(ly, layerInput, layerOutput, seqLen) writes result into layerOutput.
             double postN2 = 0.0;
             size_t postNonFinite = 0;
-            for (size_t pi = 0; pi < config.hiddenDim; ++pi) {
-                const float pv = layerOutput[pi];
-                if (!std::isfinite(pv)) {
-                    postNonFinite++;
-                } else {
-                    postN2 += (double)pv * (double)pv;
-                }
+            for (size_t pi = 0; pi < H; ++pi) {
+                const float pv = attentionOutput[pi];
+                if (!std::isfinite(pv)) postNonFinite++;
+                else postN2 += (double)pv * (double)pv;
             }
             if (postNonFinite > 0 || !(postN2 > 1.0e-24)) {
-                // Non-finite or zero post-layer output — warn but do not abort.
-                // Residual connections preserve input signal across layers.
                 fprintf(stderr,
                     "[LAYER_WARN] ly=%u nonFinite=%zu norm=%.6e continuing anyway\n",
                     ly, postNonFinite, postN2);
                 fflush(stderr);
             }
-            std::swap(layerInput, layerOutput);
+            std::memcpy(hidden, attentionOutput, H * sizeof(float));
         }
-        if (layerInput != hidden)
-            std::memcpy(hidden, layerInput, config.hiddenDim * sizeof(float));
     }
     rawr::iso_ladder::A().forwardNs += rawr::iso_ladder::Ns(f0);
     // Non-finite / exploded hidden: sanitize so logits/sample can run.

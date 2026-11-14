@@ -1,0 +1,37 @@
+GPU_HOST_FIRST_DIVERGE_TOL_001.remeasure_layer1_chain.compare
+ASOF=2026-11-13T22:07:11
+METHOD=Deep2TensorCompare AND (abs>0.0001 && rel>0.001)
+GPU=stage_dump_layer1_chain
+REF=stage_dump_ref_matched (same-fixture llama; NOT stale BATCH2 cascade)
+PRIOR_BROKEN=stage_dump_q4kq8k_spv ATTN_NORM_1 maxAbs=2.747281e+00
+CAND_EXE=pin/rawr_layer1_chain.exe
+CAND_SHA256=FA8E2613E3E7012BE428E59EA4EC602A4291912EEDF4DB53CC80120524F1B28D
+FIX=src/deep2/Deep2Engine_GpuToken.cpp memcpy residual chain + layerChainValid_=0
+
+PROMPT_EMBED: FUNCTIONAL_FAIL=0 maxAbs=0.000000e+00 rel=0.000000e+00 first_bad=-1 gfnv=13123758da8b244a rfnv=13123758da8b244a
+ATTN_NORM_0: FUNCTIONAL_FAIL=0 maxAbs=0.000000e+00 rel=0.000000e+00 first_bad=-1 gfnv=b4ca919612be6c51 rfnv=b4ca919612be6c51
+V_0: FUNCTIONAL_FAIL=0 maxAbs=4.656613e-09 rel=3.506704e-07 first_bad=-1 gfnv=d896c26cc6c0e465 rfnv=d4e2dce085d5d6e4
+Q_PRE_ROPE_0: FUNCTIONAL_FAIL=0 maxAbs=1.043081e-07 rel=4.602885e-07 first_bad=-1 gfnv=a343b918d7653153 rfnv=8d53927ede5ddb3f
+ATTN_PRE_O_0: FUNCTIONAL_FAIL=0 maxAbs=0.000000e+00 rel=0.000000e+00 first_bad=-1 gfnv=4adca0fa1f8e7095 rfnv=4adca0fa1f8e7095
+ATTN_OUT_0: FUNCTIONAL_FAIL=0 maxAbs=5.587935e-09 rel=2.407711e-07 first_bad=-1 gfnv=15c4ede4dbc7f345 rfnv=5fe8f56aa443709d
+FFN_INP_0: FUNCTIONAL_FAIL=0 maxAbs=5.587935e-09 rel=2.656282e-07 first_bad=-1 gfnv=eb6ce146bd98d15f rfnv=2386a5737e9b94b7
+FFN_NORM_0: FUNCTIONAL_FAIL=0 maxAbs=2.682209e-07 rel=9.617381e-07 first_bad=-1 gfnv=96774d602ac585da rfnv=f519cbfd6d1f2cbb
+LAYER0_OUT: FUNCTIONAL_FAIL=0 maxAbs=4.470348e-08 rel=3.102744e-07 first_bad=-1 gfnv=c1d036efab2b280d rfnv=d1a7d1749916f1b8
+ATTN_NORM_1: FUNCTIONAL_FAIL=0 maxAbs=7.152557e-07 rel=2.650196e-07 first_bad=-1 gfnv=753b9194f2064071 rfnv=177b9a4b69e72bed
+V_1: FUNCTIONAL_FAIL=0 maxAbs=2.607703e-08 rel=7.319549e-07 first_bad=-1 gfnv=8ebe592c478a1442 rfnv=7e34a8c9eb9280eb
+Q_PRE_ROPE_1: FUNCTIONAL_FAIL=0 maxAbs=4.768372e-07 rel=1.723747e-07 first_bad=-1 gfnv=7bf1deba15920942 rfnv=1af7b03974f6929a
+K_PRE_ROPE_1: FUNCTIONAL_FAIL=0 maxAbs=9.536743e-07 rel=3.847988e-07 first_bad=-1 gfnv=ed866a02e3e405f7 rfnv=8d110d152ed649ce
+ATTN_PRE_O_1: FUNCTIONAL_FAIL=0 maxAbs=1.192093e-07 rel=8.904720e-04 first_bad=-1 gfnv=a8348a99f2ef3f15 rfnv=952f5a1248cee815
+ATTN_OUT_1: FUNCTIONAL_FAIL=0 maxAbs=4.470348e-08 rel=9.639637e-07 first_bad=-1 gfnv=e7b0cd055158c38a rfnv=a19941e878c0a95c
+FFN_NORM_1: FUNCTIONAL_FAIL=0 maxAbs=4.768372e-07 rel=3.270607e-07 first_bad=-1 gfnv=23214d20d0800abd rfnv=cc5d3e441ca5f9ac
+LAYER1_OUT: FUNCTIONAL_FAIL=0 maxAbs=3.874302e-07 rel=1.106757e-06 first_bad=-1 gfnv=b013b6ad7f67ffa9 rfnv=da5ea21dd14c7765
+FINAL_NORM: FUNCTIONAL_FAIL=1 maxAbs=1.511019e+01 rel=7.837394e-01 first_bad=0 gfnv=cfe377d71cef42c4 rfnv=2ecc4cf679eb828f << FIRST
+
+ATTN_NORM_1_CLOSED=1 maxAbs=7.152557e-07 (was 2.747281e+00 HARD)
+
+FIRST_DIVERGE_SITE=FINAL_NORM@pos0
+MAX_ABS_ERR=1.511019e+01
+MAX_REL_ERR=7.837394e-01
+FUNCTIONAL_FAIL=1
+BOARD_PCT_HOLD=67/48/48
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0
