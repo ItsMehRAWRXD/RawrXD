@@ -19,12 +19,14 @@ REAP_LAGUNA_PASS_IF =
   && LAYER_NAN=0 on prefill+decode path
   && GENERATED_TOKENS>0 on measured tip EXE
   && strata Laguna GGUF runnable (Deep2 product path)
-≠ COMPETITIVE_H2H ≠ TPS_CLIMB ≠ PROMOTE ≠ enterprise CERT
+≠ COMPETITIVE_H2H ≠ TPS_CLIMB ≠ ATTN_GATE_PARITY_ORACLE ≠ PROMOTE ≠ enterprise CERT
 Authority lineage:
   BR_REAP_LAGUNA_HEADS_GEOMETRY_CLOSED_R99
   BR_REAP_LAGUNA_TOK_R100 (peer CDA4804C TOK_GT0; tip then UNTOUCHED)
   REAP_STRATA_FAIR_H2H_001 P0-A (prior LAYER_NAN@40 OPEN — superseded by tip remasure)
   REAP_STRATA_UNSLOTH_OLLAMA_BENCH_001 (Ollama laguna PASS held; Deep2 residual TPS)
+NOTE=parallel ALL_BACKENDS WS1 PARTIAL rewrite (ATTN_GATE_PARITY ladder) REJECTED as new cert invent;
+  parity residual tracked separately under REAP_LAGUNA_ATTN_GATE_001 / NEXT residual — ≠ reopen this PASS
 
 ## Disposition
 REAP_LAGUNA=PASS
@@ -46,7 +48,8 @@ ENV=RAWRXD_GPU_LAYER_FINITE=1 RAWRXD_GPU_POLICY=SOLO HOST_DECODE=0 ALLOW_GPU=1
 MODEL=F:\OllamaModels\_REAP16\laguna-s-2_1-Q4_K_M-REAP35\sha256-948255a146c07678678183af4cb1234a124e945e48c85c2006598ef4696552c8
 PROMPT=Say hi in one short sentence.
 MAX_TOKENS=8
-ARTIFACTS=runs/EXE_SHA.txt runs/cmd.txt runs/laguna_tip.{out,err,exit}.log runs/result_summary.txt
+ARTIFACTS=runs/EXE_SHA.txt runs/cmd.txt runs/laguna_tip.out.txt runs/laguna_tip.err.excerpt.txt runs/laguna_tip.err.meta.txt runs/laguna_tip.exit.txt runs/result_summary.txt
+NOTE=full *.log gitignored; excerpt+meta sealed; on-disk laguna_tip.err.log untracked
 WITNESS=
   STDOUT=" hi hi hi hi hi hi hi hi"
   GGUF_DYNAMIC_GEOMETRY_001=PASS arch=laguna L=48 H=3072 FFN=12288 heads=72 kv=8 hd=128 ctx=262144
@@ -58,9 +61,10 @@ WITNESS=
   GENERATED_TOKENS=8 PRODUCT_PASS=1 CLEAN_EXIT=1
   DECODE_TPS_REAL=0.069660 (<< Ollama REAP ~30.6; NOT competitive)
 
-## Residuals (OPEN — do not invent PASS)
+## Residuals (OPEN — do not invent PASS; ≠ reopen REAP_LAGUNA)
 PROVENANCE_MISMATCH=RELATED (MODEL_LOCATION_NOT_FOUND; held since R100)
 DEEP2_REAP_LAGUNA_TPS_OR_COMPETITIVE_H2H=OPEN (post-TOK residual; PROMOTE=0)
+ATTN_GATE_PARITY_ORACLE=NOT_RUN (optional numerical residual; SSOT sibling REAP_LAGUNA_ATTN_GATE_001)
 FAIR_H2H_MATRIX=HOLD (needs N>=3 median fair eval; COMPETITIVE_PASS=0)
 Partial RoPE / sliding_window fidelity=NOT_GATE for REAP_LAGUNA TOK path (TOK>0 measured)
 

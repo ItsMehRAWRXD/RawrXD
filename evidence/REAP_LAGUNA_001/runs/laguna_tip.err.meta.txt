@@ -1,0 +1,4 @@
+ERR_LOG_BYTES=689928
+OUT_LOG_BYTES=24
+LAYER_NAN_MATCH_COUNT=0
+NOTE=*.log gitignored; excerpt+out.txt sealed; full err retained on disk untracked

@@ -328,7 +328,8 @@ MoEWeightHandle MoEWeightProxy::AcquireInternal(int layer, int expert) {
         }
     }
 
-    h.gateWeights = packed;
+    /* gateBytes==0 → ReLU² (up+down only). Do not alias gate→up. */
+    h.gateWeights = gateBytes ? packed : nullptr;
     h.upWeights   = static_cast<const uint8_t*>(packed) + gateBytes;
     h.downWeights = static_cast<const uint8_t*>(packed) + gateBytes + upBytes;
     h.expertBytes = gateBytes + upBytes + downBytes;

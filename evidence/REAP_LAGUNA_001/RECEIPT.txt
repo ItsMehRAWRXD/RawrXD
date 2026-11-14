@@ -24,7 +24,10 @@ Q6K_VULKAN_SPV_REPAIR=PASS HELD (not reopened)
 NUMERICAL_PIN_9797521C=KEPT
 METHOD_C_TIP_7C9680CB=KEPT
 
-OPEN_RESIDUAL=PROVENANCE_MISMATCH · TPS≪Ollama · COMPETITIVE_H2H
+NOTE=ALL_BACKENDS WS1 PARTIAL/ATTN_GATE_PARITY ladder ≠ this pack PASS criterion
+  (mission gate = HEADS+LAYER_NAN=0+TOK>0); parity residual → REAP_LAGUNA_ATTN_GATE_001
+
+OPEN_RESIDUAL=PROVENANCE_MISMATCH · TPS≪Ollama · COMPETITIVE_H2H · ATTN_GATE_PARITY_ORACLE
 NEXT_OWNER=ORNITH_PACKED_GEMV_L3_ULP|Move51+|MULTIFAMILY_EXPAND
 NO_LIFT=8TPS_CLIMB|PROMOTE
 
@@ -32,9 +35,12 @@ ARTIFACTS=
   STATUS.txt
   RECEIPT.txt
   DISPOSITION.md
+  GATE_RECORD.txt (WS1 residual ledger; ≠ overturn PASS)
   runs/EXE_SHA.txt
   runs/cmd.txt
-  runs/laguna_tip.out.log
-  runs/laguna_tip.err.log
+  runs/laguna_tip.out.txt
+  runs/laguna_tip.err.excerpt.txt
+  runs/laguna_tip.err.meta.txt
   runs/laguna_tip.exit.txt
   runs/result_summary.txt
+  (full laguna_tip.err.log on disk; *.log gitignored)

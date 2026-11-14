@@ -2,49 +2,35 @@
 
 ## Verdict
 
-`REAP_LAGUNA=PASS` on measured tip EXE `CEBA0DE4…` (live `rawr.exe`).
+`REAP_LAGUNA=PARTIAL` on tip EXE `CEBA0DE4…`.
 
-## What PASS means (this pack only)
+Mission = Laguna/Qwen3.5 **numerical parity before performance credit**.  
+Closure stopped at step **3 NUMERICAL** (`ATTN_GATE_PARITY=NOT_RUN`).
 
-Using existing REAP strata / board definitions — **not** a new enterprise cert ladder:
+Prior TOK-path `PASS` overclaim is **corrected** — finite+TOK ≠ numerical parity.
 
-| Check | Result |
-|-------|--------|
-| HEADS geometry (`GGUF_DYNAMIC_GEOMETRY_001`) | PASS |
-| `HEADS_LAYER` (per-layer from `wq.rows`) | PASS |
-| `ATTN_GATE` BIND + APPLY | PASS |
-| `LAYER_NAN` | 0 |
-| `GENERATED_TOKENS` | 8 (>0) |
-| Product tetrad (OPEN/ENTER/COMMIT) | all 1; `PRODUCT_PASS=1` |
-| Strata Laguna GGUF runnable on tip | yes |
+## Closure sequence
 
-**Explicitly not claimed:** `COMPETITIVE_PASS`, TPS climb, `PROMOTE`, enterprise CERT / 0/128 lift.
+| Step | Result | Notes |
+|------|--------|-------|
+| 1 Provenance | PARTIAL | `MODEL_SHA` blob-CA filled; `MANIFEST_SHA=NOT_LOADED`; `PROVENANCE_MISMATCH` RELATED |
+| 2 Architecture | PARTIAL | attn_gate order SOURCE_WIRED+APPLY; layer map `ssm=0` MATCH FAIR_H2H KV |
+| 3 Numerical | **NOT_RUN ★** | no first-diverge digests; `ATTN_GATE_PARITY=NOT_RUN`; `SSM_PARITY=N/A` |
+| 4 REAP route | NOT_REACHED | |
+| 5 Semantic | NOT_REACHED | TOK=8 RELATED only |
+| 6 Fair perf | NOT_CREDITED | TPS/VRAM OBSERVED_ONLY |
 
-## Root causes already closed (held)
+## Held RELATED (≠ this mission PASS)
 
-1. **HEADS array geometry** — R99 / `BR_REAP_LAGUNA_HEADS_GEOMETRY_CLOSED_R99`
-2. **BF16 MoE `bytesPerExpert` 2×** → historical `LAYER_NAN` L42 — R100 / peer `CDA4804C` (`MoEWeightsLoader` QuantTypeTable)
-3. **attn_gate apply** — `LagunaAttnGateApply.hpp` softplus on tip (FAIR_H2H smoke6 already showed APPLY; tip remasure confirms)
+- HEADS + `ATTN_GATE` BIND/APPLY + `LAYER_NAN=0` + `GENERATED_TOKENS=8` on CEBA0DE4
+- R99/R100 lineage; FAIR_H2H LAYER_NAN@L40 SKIP superseded for TOK only
 
-## Tip remasure (this seal)
-
-- EXE SHA256: `CEBA0DE4734A3897B96A825C5CE16685161DB8A3C570C22F6B06B3DE4368A3C5`
-- Artifacts: `runs/laguna_tip.*`, `runs/result_summary.txt`
-- STDOUT: eight `hi` tokens; `DECODE_TPS_REAL≈0.070`
-- `CROSS_SHA_CREDIT=0` vs peer R100 (independent measure)
-
-## Residuals → not REAP_LAGUNA reopen
-
-- `PROVENANCE_MISMATCH` (discovery LOCATION) — RELATED
-- `DEEP2_REAP_LAGUNA_TPS_OR_COMPETITIVE_H2H` — OPEN residual only
-- Fair H2H N≥3 median — HOLD / `COMPETITIVE_PASS=0`
-
-## Authority flags
+## Authority
 
 ```text
 PROMOTE=0 CERTIFIED=0 GATE_STOP=1 TIP_CLIMB=HOLD
 ENTERPRISE=0/128 INVENT_PASS=0 CROSS_SHA_CREDIT=0
-Q6K_VULKAN_SPV_REPAIR=PASS HELD
-NEXT_OWNER=ORNITH_PACKED_GEMV_L3_ULP|Move51+|MULTIFAMILY_EXPAND
-NO_LIFT=8TPS_CLIMB|PROMOTE
+PERF_CREDIT=0 COMPETITIVE_PASS=0
+NEXT_OWNER=REAP_LAGUNA_ATTN_GATE_PARITY|WS1_NUMERICAL_FIRST_DIVERGE
+NO_LIFT=PERF_CREDIT|PROMOTE|ENTERPRISE
 ```

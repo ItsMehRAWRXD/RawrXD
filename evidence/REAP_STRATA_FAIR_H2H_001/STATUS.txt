@@ -1,5 +1,5 @@
 ﻿REAP_STRATA_FAIR_H2H_001 — STATUS
-ASOF_LOCAL=2026-11-14T07:55:00-05:00
+ASOF_LOCAL=2026-11-14T11:47:14-05:00
 PROMOTE=0
 CERTIFIED=0
 COMPETITIVE_PASS=0
@@ -44,10 +44,26 @@ NOTE: Deep2Engine.cpp ~8901 dead branch ALLOW_EXPERIMENTAL_SSM && false — bloc
 NEXT: remove && false under EXPERIMENTAL_SSM_SCAFFOLD only; label EXPERIMENTAL_NEQ_SSM_CERTIFIED_IMPL; PROMOTE=0
 
 ## P0-D MiniMax
-STATUS=OPEN NOT_RUN→need FAIL-or-TOK evidence (Ollama create split 1/3; Deep2 multi-shard timeout)
+STATUS=FAIL_MID_PREFILL (≠ NOT_RUN; ≠ TOK_PASS; ≠ SEMANTIC_PASS; ≠ CERT)
+EXE_SHA=CEBA0DE4734A3897B96A825C5CE16685161DB8A3C570C22F6B06B3DE4368A3C5
+GGUF=F:\OllamaModels\_REAP16\MiniMax-M2_7-Q4_K_M-REAP24\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf
+MODEL_PRESENT=1 SHARDS_OPEN=3/3
+CLOSED_THIS_TIP:
+  LOAD + GGUF_DYNAMIC_GEOMETRY_001=PASS arch=minimax-m2 L=62 H=3072 experts=24 topk=24
+  B03_MOE_SHARD_OPEN 3/3; GENERATE_STREAM_ENTER=1; MoE route OK through ly=15
+OBSERVED_FAIL:
+  GPU_MULTIMAP_FAIL why=arena slot=0 → TRY_GPU_FALLBACK_HOST=1
+  Process ended mid-prefill MAX_LAYER_ENTER=15/62; EXIT_CODE=NULL_OR_EMPTY; CLEAN_EXIT=0
+  GENERATED_TOKENS=0 STDOUT_EMPTY=1 SEMANTIC=NOT_RUN (no tokens to judge)
+OLLAMA_CREATE_RESIDUAL: split GGUF 1/3 expected 3 (create_minimax FAIL; unrelated to tip Deep2)
+NEXT_OWNER=W08_MINIMAX_PREFILL_SURVIVE_TO_TOK
+  → full 62-layer prefill+decode CLEAN_EXIT + GENERATED_TOKENS>0 on CEBA0DE4…
+  → then SEMANTIC vs prompt (do not CROSS_SHA credit prior garbage "par…" log)
+ARTIFACTS=deep2/minimax_p0d_tip/
 
 ## P1 Fair H2H
 HOLD until any Deep2 TOK>0 with identical prompt/num_predict=32/temp=0/N>=3 median
+REAP_QUALITY_NEXT_OWNER=P1_FAIR_H2H_AFTER_ANY_FAMILY_TOK32 (W10 still PARTIAL; MiniMax TOK gate first)
 
-EXE=g:\~dev\rawrxd\build_ninja\bin\rawr.exe tip rebuild (no tip-climb pin invent)
+EXE=g:\~dev\rawrxd\build_ninja\bin\rawr.exe tip CEBA0DE4… (no tip-climb pin invent)
 PROMOTE=0 TIP_CLIMB=HOLD CROSS_SHA_CREDIT=0

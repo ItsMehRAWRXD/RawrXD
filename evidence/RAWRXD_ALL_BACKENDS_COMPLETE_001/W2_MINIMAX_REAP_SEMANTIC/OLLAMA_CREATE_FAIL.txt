@@ -1,0 +1,8 @@
+OLLAMA_CREATE_REAP24
+ASOF_LOCAL=2026-11-14T11:46:26-05:00
+EXIT=1
+ERROR=invalid split GGUF: split GGUF MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf has 1 shards, expected 3
+ON_DISK_SHARDS=3
+DISPOSITION=FAIL
+NOTE=Filename claims 00001-of-00003 and 3 files exist; Ollama reports internal split count=1. Physical export split KV mismatch — not invent PASS.
+PROMOTE=0

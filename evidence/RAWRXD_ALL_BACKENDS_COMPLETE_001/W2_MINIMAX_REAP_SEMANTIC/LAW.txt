@@ -1,0 +1,14 @@
+W2_MINIMAX_REAP_SEMANTIC — LAW
+PROGRAM=RAWRXD_ALL_BACKENDS_COMPLETE_001
+CRITICAL_PATH=#2 (after Laguna numerics)
+PROMOTE=0 CERTIFIED=0 CROSS_SHA_CREDIT=0 TIP_CLIMB=HOLD
+INVENT_PASS=0 NOT_RUN!=PASS
+
+1. SCOPE: MiniMax-M2 MoE router + physical REAP expert mapping + stream
+   semantic quality on Deep2 product path; Ollama split create as peer.
+2. Router correctness ≠ expert-body parity ≠ chat semantic PASS.
+3. Physical REAP export (writer_invoked / rewrite_authorized) is gated —
+   STREAM_PHYSICAL_UNCERTIFIED ≠ CERTIFIED rewrite.
+4. Prior first-divergent / AL09–AL14 seals remain authority; do not invent
+   PASS over BOUNDED_OPEN or NOT_RUN rows.
+5. CROSS_SHA_CREDIT=0 — Method C / Q6K / Laguna TOK do not certify MiniMax.

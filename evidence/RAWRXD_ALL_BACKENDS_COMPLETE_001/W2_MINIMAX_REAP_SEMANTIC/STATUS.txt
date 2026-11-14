@@ -1,0 +1,73 @@
+W2_MINIMAX_REAP_SEMANTIC — STATUS
+ASOF_LOCAL=2026-11-14T11:43:00-05:00
+PROGRAM=RAWRXD_ALL_BACKENDS_COMPLETE_001
+PROMOTE=0
+CERTIFIED=0
+CROSS_SHA_CREDIT=0
+TIP_CLIMB=HOLD
+INVENT_PASS=0
+NOT_RUN!=PASS
+WS2_MINIMAX_REAP=PARTIAL
+
+## Absorbed prior authority (RELATED≠this-program CERT)
+FIRST_DIVERGENT_BATCH01=Q_LINEAR_0 (Q4_K GEMV maxdiff≈1.25e-3)
+  → RE_MINIMAX_BATCH01_PRENORM_QLINEAR_001
+AL09/AL11_FIRST_DIVERGENT=FFN_DOWN_1@pos3 (tok4)
+  FULL_FNV≠PHYS_FNV; last_exact=FFN_NORM_1@pos3
+  ROOT_CLASS=MOE_EXPERT_BODY_OR_ACCUM_UNDER_EQUAL_NORM
+  NOT_ROUTER_ID_FLIP=1; L17_ROUTER=SYMPTOM
+AL12_PHYSICAL_EXPERT_MAPPING=OK at break (route scores FULL vs PHYS slots)
+AL13_GATE_INP_STATIC=PASS (EXPORT_PATCH=Y copyGateInpExpertColumns;
+  false-FAIL from ndarray axis; ggml columns match sorted M_l)
+AL14_SEMANTIC=OPEN NOT_RUN (no clean dual-arm CLEAN_EXIT same EXE)
+RE_MINIMAX_SIGMOID_GATE / SOFTMAX_SCALE / SWIGLU_ORDER=MATCH (formula)
+STREAM_SEMANTIC=NOT_PASS (retain-256 backticks; AL06 FAIL_SEMANTIC prior)
+LM_HEAD_FNV=REFERENCE_BLOCKED (llama-direct Hello TIMEOUT @load)
+
+## Ollama peer (this turn)
+PRIOR_CREATE=FAIL split 1/3 expected 3 (REAP_STRATA create_minimax-m2_7.FAIL)
+REAP24_ON_DISK_NOW=3/3 shards present (see REAP24_SHARD_INVENTORY.txt)
+  00001=5911450496 00002=5183218240 00003=4069600576
+REAP24_KV_PEEK=split.count=3 split.no=0 split.tensors.count=809
+  expert_count=24 expert_used_count=24 expert_gating_func=2 (prefix-24 map)
+OLLAMA_CREATE_RETRY=FAIL EXIT=1
+  Error: invalid split GGUF … has 1 shards, expected 3
+  ROOT=sibling discovery during create (KV split.count OK; 3 files on disk)
+  ≠ invent PASS; see OLLAMA_CREATE_FAIL.txt
+
+## Deep2 product path
+MiniMax multi-shard: MoERouter gating_func=2 (sigmoid) + exp_probs_b
+  B03_MOE_PROXY_ATTACH + MULTISHARD_RESIDENCY pin floor wired
+REAP_STRATA Deep2 MiniMax: NOT_RUN timeout/kill mid layer crawl
+  (GPU_MULTIMAP_FAIL historical) — no TOK>0 seal this program
+PRODUCTION_INFERENCE_CERT MiniMax REAP27/16: CLEAN_EXIT NOT sealed
+  (PREFILL_PARTIAL / PROCESS_GONE under host contention)
+
+## Code delta absorbed this seal (≠ CERT)
+MoEWeightProxy::AcquireInternal: gateBytes==0 → gateWeights=nullptr
+  (do not alias gate→up; ReLU² up+down-only). Semantic-correctness
+  hardening; runtime MiniMax remasure NOT_RUN this turn.
+
+## Physical REAP export gate
+ON_DISK_EXPORTS=YES (REAP16/24/27/29/32 families under F:\ollamamodels
+  and _REAP16; sidecar SHA BD139B6887…)
+rewrite_authorized=false reference_parity_pass=false
+STREAM_PHYSICAL_UNCERTIFIED=1
+WRITER_REEXPORT_THIS_TURN=HELD (gate not opened; inventory only)
+PROMOTE=0
+
+## Honest disposition
+ROUTER_FORMULA=MATCH (sigmoid/top-k/renorm sealed prior)
+EXPERT_BODY_STATIC=PASS (gate/up/down+bias sorted calib)
+EXPERT_GATE_INP_STATIC=PASS (AL13 axis fix)
+RUNTIME_FFN_DOWN_1@pos3=BOUNDED_OPEN
+CHAT_SEMANTIC=OPEN / NOT_PASS
+OLLAMA_SPLIT_CREATE=FAIL (KV OK; create sibling discovery finds 1/3)
+DEEP2_TOK_GT0=NOT_RUN / historical FAIL
+WS2_COMPLETE=0
+NEXT_OWNER=
+  1) Exclusive-host MiniMax PHYS CLEAN_EXIT max-tok>=4 same EXE
+  2) GPU A/B reseal FFN_DOWN_1@pos3 under equal weights+gate_inp
+  3) AL14 chat semantic only after dual-arm CLEAN_EXIT
+  4) Ollama create EXIT witness + equal-eval generate if create PASS
+PROMOTE=0 CERTIFIED=0
