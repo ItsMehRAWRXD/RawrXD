@@ -26,7 +26,8 @@ CMD_C740=remeasure_attn_pre_o_0_pos1_c740.cmd EXIT=0
 CMD_FA006=remeasure_attn_pre_o_1_pos1_close006_fa.cmd EXIT=0
 COMPARE=GPU_PARITY_ATTN_FA006_VERIFY_R86.compare.log
 WALKER=GPU_PARITY_ATTN_PRE_O_0_POS1_FIRST_DIVERGE_R86.compare.log
-  (absorbed prior worker 8b8162e9 walker; not duplicated as second board)
+ABSORB=BR_ATTN_PRE_O_0_POS1_R86 (prior worker 8b8162e9; same measured numbers;
+  size-matched POST_ROPE UNDER_TOL; do not duplicate owner board)
 
 ## Measured (TOL_ABS=1e-6)
 PRE_O_0_maxAbs_FA006=3.488640e-08 UNDER_TOL=1 CLOSED=1 (claim reproduced)
