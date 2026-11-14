@@ -17,15 +17,18 @@ bool VulkanCompute::DispatchGEMVQ6kPacked(const void* packed, size_t bytes,
                                           uint32_t rows, uint32_t cols) {
     /* BATCH2_V_PROJ_001: TinyLlama attn_v/ffn_down are Q6_K.
      * ATTN_PRE_O_1 / V_1: OWNER=ATTN_NORM_1 cascade @dim1072 via FFN_DOWN.
-     * Host Q6 on attn_v under FORCE moves idx59 off RNE. Opt-in host Q6 for
-     * FFN_DOWN only: RAWRXD_Q6_HOST_FFN_DOWN=1 (rows>=1024 && cols>rows), so
-     * Q4 gate/up can stay SPV under FORCE (fp16kv close fixture). */
+     * Host Q6 on attn_v under FORCE moves idx59 off RNE. FFN_DOWN host under
+     * FORCE by default (SPV ~1 ULP high @dim1072); RAWRXD_Q6_HOST_FFN_DOWN=0
+     * disables. memset before += GEMV. */
     const char* hostPar = std::getenv("RAWRXD_QUANT_HOST_Q8K_PARITY");
     const char* forceVk = std::getenv("RAWRXD_FORCE_VULKAN_QUANT_GEMV");
     const char* ffnDownHost = std::getenv("RAWRXD_Q6_HOST_FFN_DOWN");
     const bool force = forceVk && forceVk[0] == '1';
-    const bool hostFfnDown = ffnDownHost && ffnDownHost[0] == '1' &&
-                             rows >= 1024u && cols > rows;
+    const bool ffnDownShape = rows >= 1024u && cols > rows;
+    const bool hostFfnDown =
+        ffnDownShape && !(ffnDownHost && ffnDownHost[0] == '0') &&
+        (force || (ffnDownHost && ffnDownHost[0] == '1') ||
+         (hostPar && hostPar[0] == '1'));
     const bool wantHost =
         (hostPar && hostPar[0] == '1' && !force) || hostFfnDown;
     if (wantHost && packed && input && output && bytes && rows && cols &&
@@ -33,6 +36,7 @@ bool VulkanCompute::DispatchGEMVQ6kPacked(const void* packed, size_t bytes,
         auto gemv = Deep2::QuantKernelRegistry::Instance().GetGEMV(14);
         if (gemv) {
             ++gemv_attempts_;
+            std::memset(output, 0, (size_t)rows * sizeof(float));
             gemv(static_cast<const uint8_t*>(packed), input, output, rows, cols);
             std::fprintf(stderr,
                          "Q6K_HOST_Q8K_PARITY rows=%u cols=%u "

@@ -17,15 +17,20 @@ bool VulkanCompute::DispatchGEMVQuant(int ggmlType, const void* packed, size_t b
                                       uint64_t pinKey) {
     /* FIRST_DIVERGE_001 / BATCH2_Q4K_GEMV_001:
      * Q4 attn (12): FORCE_VULKAN still wins (ATTN_PRE_O_0 SPV close).
-     * Q4 FFN gate/up (rows>cols): PARITY=1 host (FORCE still SPV). R65 measured
-     *   HOST-under-FORCE REJECT (ACT_2 9e-1 >> SPV 4.6e-5); next=SPV bitexact.
-     * Q6 attn_v: FORCE → SPV. Q6 FFN_DOWN: RAWRXD_Q6_HOST_FFN_DOWN=1 opt-in. */
+     * Q4 FFN gate/up (rows>cols): PARITY=1 host (FORCE still SPV). R65 REJECT
+     *   host-under-FORCE for ACT_2; keep SPV for ACT unless PARITY=1.
+     * Q6 attn_v: FORCE → SPV. Q6 FFN_DOWN: host under FORCE by default;
+     *   RAWRXD_Q6_HOST_FFN_DOWN=0 disables. */
     const char* hostPar = std::getenv("RAWRXD_QUANT_HOST_Q8K_PARITY");
     const char* forceVk = std::getenv("RAWRXD_FORCE_VULKAN_QUANT_GEMV");
     const char* ffnDownHost = std::getenv("RAWRXD_Q6_HOST_FFN_DOWN");
     const bool force = forceVk && forceVk[0] == '1';
-    const bool hostQ6FfnDown = ffnDownHost && ffnDownHost[0] == '1' &&
-                               ggmlType == 14 && rows >= 1024u && cols > rows;
+    const bool ffnDownShape =
+        ggmlType == 14 && rows >= 1024u && cols > rows;
+    const bool hostQ6FfnDown =
+        ffnDownShape && !(ffnDownHost && ffnDownHost[0] == '0') &&
+        (force || (ffnDownHost && ffnDownHost[0] == '1') ||
+         (hostPar && hostPar[0] == '1'));
     const bool hostQ6 =
         (hostPar && hostPar[0] == '1' && ggmlType == 14 && !force) ||
         hostQ6FfnDown;
@@ -39,6 +44,7 @@ bool VulkanCompute::DispatchGEMVQuant(int ggmlType, const void* packed, size_t b
         auto gemv = Deep2::QuantKernelRegistry::Instance().GetGEMV(ggmlType);
         if (gemv) {
             ++gemv_attempts_;
+            std::memset(output, 0, (size_t)rows * sizeof(float));
             gemv(static_cast<const uint8_t*>(packed), input, output, rows, cols);
             std::fprintf(stderr,
                          "QUANT_GEMV_HOST_Q8K_PARITY type=%d rows=%u cols=%u "
