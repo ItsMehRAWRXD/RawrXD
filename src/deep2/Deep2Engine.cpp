@@ -45,6 +45,7 @@
 #include "ReverseHotpatchEngine.hpp"
 #include "SlidingWindowEngine.h"
 #include "SsmCertProbe.hpp"
+#include "QwenGdnHost.hpp"
 #include "Tokenizer.hpp"
 #include "WarmupScheduler.hpp"
 #include "execution_policy/ExecutionPolicyApply.hpp"
@@ -80,6 +81,13 @@
 
 #ifdef RAWRXD_DEEP2_CERT
 #include "Deep2CertBridge.hpp"
+#endif
+
+// Prevent any macro named 'emit' from expanding the ModelFitPlan::emit() method.
+// Some transitive header (e.g. a Qt/Windows shim) may define 'emit' as an empty
+// macro, which silently breaks plan.emit(stderr) calls with C2059 syntax errors.
+#ifdef emit
+#undef emit
 #endif
 
 // ============================================================================
@@ -566,13 +574,17 @@ static bool deriveAttentionGeometry(const ModelWeights &mw, AttentionGeometry &g
                        " has incomplete attention tensors";
             return false;
         }
-        if ((qRows % mw.numHeads) != 0)
+        const bool qwenGatedQ =
+            mw.keyLength > 0 &&
+            qRows == 2 * mw.numHeads * mw.keyLength;
+        if (!qwenGatedQ && (qRows % mw.numHeads) != 0)
         {
             g.detail = "layer " + std::to_string(i) +
                        " Q rows are not divisible by numHeads";
             return false;
         }
-        const size_t layerHeadDim = qRows / mw.numHeads;
+        const size_t layerHeadDim =
+            qwenGatedQ ? mw.keyLength : (qRows / mw.numHeads);
         if (layerHeadDim == 0)
         {
             g.detail = "layer " + std::to_string(i) + " derived headDim=0";
@@ -713,6 +725,8 @@ static bool configureKVCacheFor(ModelWeights &mw, EngineConfig &cfg,
     size_t attnLayers = 0;
     for (const auto &lw : mw.layers)
     {
+        if (IsQwenGdnLayerBound(lw) || IsQwenGdnLayer(lw))
+            continue; // Qwen GDN recurrence — no KV slots
         if (lw.hasSSM && !lw.wq.data)
             continue; // gated SSM hybrid is not a KV-cache attention layer
         if (lw.wq.data || lw.wk.data || lw.wv.data || lw.wqkv.data)
@@ -787,6 +801,8 @@ static bool validateKVCacheGeometryFor(const ModelWeights &mw,
     size_t attnLayers = 0;
     for (const auto &lw : mw.layers)
     {
+        if (IsQwenGdnLayerBound(lw) || IsQwenGdnLayer(lw))
+            continue; // Qwen GDN recurrence — no KV slots
         if (lw.hasSSM && !lw.wq.data)
             continue; // gated SSM hybrid is not a KV-cache attention layer
         if (lw.wq.data || lw.wk.data || lw.wv.data || lw.wqkv.data)
@@ -2283,10 +2299,17 @@ bool Deep2Engine::allocateBuffers()
     size_t ffnDim = config.intermediateDim > 0 ? config.intermediateDim : hiddenSize * 4;
 
     // qProj must hold: (a) numHeads*headDim for MLA, (b) hiddenSize for standard Q,
-    // (c) hiddenSize + 2*kvDim for fused QKV, or (d) 2*hiddenSize for Qwen3.5 gated attention.
+    // (c) hiddenSize + 2*kvDim for fused QKV, or (d) 2*H*D for Qwen gated attn_q
+    // (query|gate interleaved; e.g. 2*16*256=8192 > 2*hidden+2*kv).
     // Allocate for worst case.
     size_t kvDim = config.numKVHeads > 0 ? config.numKVHeads * headDim : config.numHeads * headDim;
     size_t qProjSize = config.useMLA ? (config.numHeads * headDim) : (2 * hiddenSize + 2 * kvDim);
+    if (!config.useMLA && config.numHeads > 0 && headDim > 0)
+    {
+        const size_t gatedQ = 2 * config.numHeads * headDim;
+        if (qProjSize < gatedQ)
+            qProjSize = gatedQ;
+    }
 
     hiddenStates = alignedAlloc(hiddenSize * residentSeq);
     hiddenStatesCapacity = hiddenStates ? residentSeq : 0;
@@ -2818,6 +2841,44 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
             residencyConfig.max_resident_bytes =
                 static_cast<uint64_t>(reapRuntimeInjection_.workingSetBytes);
         }
+        // MiniMax standard multi-shard pins non-expert attn/norm/router for the
+        // whole generation. REAP expert working-set must not starve those pins.
+        {
+            std::string archLower = k2config.architecture;
+            std::transform(archLower.begin(), archLower.end(), archLower.begin(),
+                           [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+            if (archLower.find("minimax") != std::string::npos)
+            {
+                uint64_t nonExpertBytes = 0;
+                globalIndex_->ForEach([&](const GlobalTensorRef& ref) {
+                    if (!ref.isExpertTensor)
+                        nonExpertBytes += ref.byteSize;
+                });
+                constexpr uint64_t kGranule = 65536ull;
+                const uint64_t pinFloor =
+                    nonExpertBytes +
+                    kGranule * static_cast<uint64_t>(residencyConfig.max_active);
+                const uint64_t expertBudget = residencyConfig.max_resident_bytes;
+                const uint64_t need =
+                    (expertBudget > 0 &&
+                     pinFloor <= (std::numeric_limits<uint64_t>::max)() - expertBudget)
+                        ? (pinFloor + expertBudget)
+                        : pinFloor;
+                if (expertBudget > 0 && need > expertBudget)
+                {
+                    std::fprintf(stderr,
+                                 "[MULTISHARD_RESIDENCY] minimax pin floor "
+                                 "from=%llu to=%llu non_expert=%llu expert_budget=%llu\n",
+                                 static_cast<unsigned long long>(
+                                     residencyConfig.max_resident_bytes),
+                                 static_cast<unsigned long long>(need),
+                                 static_cast<unsigned long long>(nonExpertBytes),
+                                 static_cast<unsigned long long>(expertBudget));
+                    std::fflush(stderr);
+                    residencyConfig.max_resident_bytes = need;
+                }
+            }
+        }
         residencyCache_ = std::make_unique<gguf_shard_cache::TensorResidencyCache>(residencyConfig);
         for (uint32_t s = 0; s < static_cast<uint32_t>(globalIndex_->TotalShards()); ++s)
         {
@@ -2864,6 +2925,19 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
     modelWeights.ropeTheta = meta.ropeTheta > 0 ? meta.ropeTheta : 10000.0f;
     modelWeights.ropeScaling = meta.ropeScaling;
     modelWeights.tieEmbeddings = false;
+    // Partial RoPE (n_rot): required for non-MLA MiniMax-M2
+    // (key_length=128, rope.dimension_count=64). Must not stay MLA-only —
+    // otherwise applyRoPE rotates the full head and quality collapses.
+    modelWeights.ropeDimensionCount = meta.ropeDimensionCount;
+    modelWeights.keyLength = meta.keyLength;
+    modelWeights.valueLength = meta.valueLength;
+    if (meta.ropeDimensionCount > 0 && meta.keyLength > 0 &&
+        meta.ropeDimensionCount < meta.keyLength)
+    {
+        printf("[Deep2Engine] PARTIAL_ROPE_META n_rot=%u key_length=%u "
+               "(apply first n_rot dims only)\n",
+               meta.ropeDimensionCount, meta.keyLength);
+    }
 
     // ── MLA / DeepSeek2 metadata translation ───────────────────────────
     bool isDeepSeek2 = (meta.architecture == "deepseek2");
@@ -2871,11 +2945,9 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
     {
         modelWeights.qLoraRank = meta.qLoraRank;
         modelWeights.kvLoraRank = meta.kvLoraRank;
-        modelWeights.keyLength = meta.keyLength;
-        modelWeights.valueLength = meta.valueLength;
         modelWeights.keyLengthMla = meta.keyLengthMla;
         modelWeights.valueLengthMla = meta.valueLengthMla;
-        modelWeights.ropeDimensionCount = meta.ropeDimensionCount;
+        // ropeDimensionCount / keyLength / valueLength already set above
 
         // Compute MLA head dimensions
         // Prefer loader-derived qkNope, else attention.key_length - rope.
@@ -2964,31 +3036,20 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
         modelWeights.headDim = modelWeights.hiddenDim / modelWeights.numHeads;
         modelWeights.useMLA = false;
 
-        // ── Qwen3.5 hybrid architecture: infer numHeads from Q tensor ──
-        // The qwen35 metadata may report numHeads=16, but the actual Q tensor
-        // has output=8192 = 32 heads × 256 headDim. Infer from tensor shape.
-        if (meta.architecture == "qwen35")
+        // Qwen3.5/3.6 hybrid: attention.key_length is the real head dim.
+        // Gated attn_q is 2*H*key_length; never infer headDim as qRows/H.
+        if (meta.architecture == "qwen35" || meta.architecture == "qwen35moe")
         {
-            for (const auto& t : ggufResult.tensors)
+            if (meta.keyLength > 0)
             {
-                // Look for attn_q.weight on a non-SSM layer (e.g. blk.3)
-                if (t.name.find("attn_q.weight") != std::string::npos && t.name.find("blk.3.") != std::string::npos)
-                {
-                    // GGUF dims are [cols, rows] = [in, out]; dimensions[0]=in, dimensions[1]=out
-                    size_t qOut = t.dimensions.size() >= 2 ? t.dimensions[1] : 0;
-                    if (qOut > modelWeights.hiddenDim && modelWeights.headDim > 0)
-                    {
-                        size_t inferredHeads = qOut / modelWeights.headDim;
-                        if (inferredHeads != modelWeights.numHeads)
-                        {
-                            printf("[Deep2Engine] Qwen3.5: inferring numHeads=%zu from Q tensor (out=%zu, headDim=%zu, "
-                                   "metadata said %zu)\n",
-                                   inferredHeads, qOut, modelWeights.headDim, modelWeights.numHeads);
-                            modelWeights.numHeads = inferredHeads;
-                        }
-                    }
-                    break;
-                }
+                modelWeights.keyLength = meta.keyLength;
+                modelWeights.valueLength =
+                    meta.valueLength > 0 ? meta.valueLength : meta.keyLength;
+                modelWeights.headDim = meta.keyLength;
+                printf("[Deep2Engine] Qwen hybrid: headDim=%zu from attention.key_length "
+                       "(heads=%zu kv=%zu)\n",
+                       modelWeights.headDim, modelWeights.numHeads,
+                       modelWeights.numKVHeads);
             }
         }
     }
@@ -3658,36 +3719,28 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                        hasTensor(lw.attnO) || hasTensor(lw.wqkv) || hasMla;
         bool hasSsm = lw.hasSSM;
         const bool hasMoE = hasTensor(lw.moeRouter);
-        if (hasAttn && !hasSsm)
-        {
-            topo.mixer = LayerMixer::Attention;
-            topo.hasMoE = hasMoE;
-            kvLayerMap_[i] = kvLayer++;
-            ++attnLayers;
-        }
-        else if (hasSsm && !hasAttn)
+        // Use bound descriptors: data may still be null at topology time.
+        const bool isQwenGdn = IsQwenGdnLayerBound(lw) || IsQwenGdnLayer(lw);
+        // Qwen GDN: product recurrence path (computeGDN). Never allocate KV —
+        // attn_qkv/attn_gate are GDN projections, not MHA K/V cache layers.
+        if (isQwenGdn)
         {
             topo.mixer = LayerMixer::SSM;
             topo.hasSSM = true;
-            topo.ssmInnerSize = lw.ssmIn.cols > 0 ? lw.ssmIn.cols : 0;
+            topo.hasMoE = hasMoE;
+            topo.ssmInnerSize = lw.ssmOut.rows > 0 ? lw.ssmOut.rows :
+                                (lw.wqkv.rows > 0 ? lw.wqkv.rows : 0);
             topo.ssmStateSize = lw.ssmA.rows > 0 ? lw.ssmA.rows :
                                 (lw.ssmA.cols > 0 ? lw.ssmA.cols : 0);
             topo.ssmConvDim = lw.ssmConv1d.cols > 0 ? lw.ssmConv1d.cols : 0;
             ++topologySsmLayers;
         }
-        else if (hasAttn && hasSsm)
+        else if (hasAttn && !hasSsm)
         {
-            // Hybrid layer: both attention and SSM (e.g. some Nemotron variants)
             topo.mixer = LayerMixer::Attention;
-            topo.hasSSM = true;
             topo.hasMoE = hasMoE;
-            topo.ssmInnerSize = lw.ssmIn.cols > 0 ? lw.ssmIn.cols : 0;
-            topo.ssmStateSize = lw.ssmA.rows > 0 ? lw.ssmA.rows :
-                                (lw.ssmA.cols > 0 ? lw.ssmA.cols : 0);
-            topo.ssmConvDim = lw.ssmConv1d.cols > 0 ? lw.ssmConv1d.cols : 0;
             kvLayerMap_[i] = kvLayer++;
             ++attnLayers;
-            ++topologySsmLayers;
         }
         else if (hasSsm && !hasAttn)
         {
@@ -4038,13 +4091,49 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
         printf("[Deep2Engine] ElasticResidencyManager: registered all tensors\n");
     }
 
-    // ── Mamba-2 SSM layer acceptance (production-ready selective scan) ──
+    // ── Bind Qwen GDN metadata (fail-closed at compute if incomplete) ──
     {
-        size_t ssmLayers = 0;
+        const auto rawU32Meta = [&](std::initializer_list<const char*> keys) -> uint32_t {
+            for (const char* key : keys) {
+                const auto it = ggufResult.rawKv.find(key);
+                if (it == ggufResult.rawKv.end()) continue;
+                char* end = nullptr;
+                const unsigned long long value =
+                    std::strtoull(it->second.c_str(), &end, 10);
+                if (end != it->second.c_str() && *end == '\0' && value <= UINT32_MAX)
+                    return static_cast<uint32_t>(value);
+            }
+            return 0;
+        };
+        gdnStateSize_ = rawU32Meta({"qwen35moe.ssm.state_size", "qwen35.ssm.state_size",
+                                    "ssm.state_size"});
+        gdnGroupCount_ = rawU32Meta({"qwen35moe.ssm.group_count", "qwen35.ssm.group_count",
+                                     "ssm.group_count"});
+        gdnInnerSize_ = rawU32Meta({"qwen35moe.ssm.inner_size", "qwen35.ssm.inner_size",
+                                    "ssm.inner_size"});
+        gdnConvKernel_ = rawU32Meta({"qwen35moe.ssm.conv_kernel", "qwen35.ssm.conv_kernel",
+                                     "ssm.conv_kernel"});
+        if (gdnConvKernel_ == 0) gdnConvKernel_ = 4;
+        gdnMetaBound_ = (gdnStateSize_ > 0 && gdnGroupCount_ > 0);
+    }
+
+    // ── Mamba-2 / GDN layer acceptance ──
+    {
+        size_t ssmLayers = 0, gdnLayers = 0;
         for (const auto& lw : modelWeights.layers)
         {
-            if (lw.hasSSM)
-                ++ssmLayers;
+            if (IsQwenGdnLayer(lw)) ++gdnLayers;
+            else if (lw.hasSSM) ++ssmLayers;
+        }
+        if (gdnLayers > 0)
+        {
+            fprintf(stderr,
+                    "[Deep2Engine] Qwen GDN: %zu hybrid GDN layers detected "
+                    "(meta_bound=%d state=%u groups=%u) — product GDN path\n",
+                    gdnLayers, gdnMetaBound_ ? 1 : 0, gdnStateSize_, gdnGroupCount_);
+            gdnState_.assign(modelWeights.numLayers, {});
+            gdnConvState_.assign(modelWeights.numLayers, {});
+            gdnGpuActive_.assign(modelWeights.numLayers, 0);
         }
         if (ssmLayers > 0)
         {
@@ -4059,7 +4148,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
     size_t ssmLayers = 0;
     for (const auto& lw : modelWeights.layers)
     {
-        if (lw.hasSSM) ++ssmLayers;
+        if (IsNemotronSsmLayer(lw)) ++ssmLayers;
     }
     if (ssmLayers > 0)
     {
@@ -4067,7 +4156,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
         size_t maxDInner = 0, maxDConvDim = 0, maxDState = 0, maxDConv = 0;
         for (const auto& lw : modelWeights.layers)
         {
-            if (!lw.hasSSM) continue;
+            if (!IsNemotronSsmLayer(lw)) continue;
             size_t rows = lw.ssmIn.rows;
             size_t outCols = lw.ssmOut.cols;
             size_t convRows = lw.ssmConv1d.cols;   // d_conv (kernel size)
@@ -4549,9 +4638,11 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                 // enforces the requested resident-byte budget.
                 reapRuntimeReceipt_.routeConfigured = true;
                 reapRuntimeReceipt_.streamerConfigured = residencyCache_ != nullptr;
+                // Budget may be raised for MiniMax non-expert pin floor; still
+                // configured if at least the requested expert working-set holds.
                 reapRuntimeReceipt_.workingSetConfigured =
                     residencyCache_ != nullptr &&
-                    residencyCache_->resident_budget_bytes() ==
+                    residencyCache_->resident_budget_bytes() >=
                         reapRuntimeInjection_.workingSetBytes;
                 reapRuntimeReceipt_.active = reapRuntimeReceipt_.streamerConfigured;
                 reapRuntimeReceipt_.status = reapRuntimeReceipt_.streamerConfigured
@@ -6114,7 +6205,7 @@ void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads,
     const float* sinTable = &g_ropeSinTable[pos * headDim];
 
     // ── Layer 12 RoPE diagnostic: pre-scan ALL K heads for NaN ──
-    if (Deep2DebugEnabled() && layerIdx == 12)
+    if (Deep2DebugEnabled() && layerIdx == 12 && k != nullptr)
     {
         fprintf(stderr,
                 "[L12_ROPE_DIAG] pos=%zu headDim=%zu numHeads=%zu numKVHeads=%zu theta=%.6e scaling=%.6e\n",
@@ -6149,9 +6240,62 @@ void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads,
     // ── RoPE energy invariant: rotation must preserve pair norm ──
     auto pair_energy = [](float a, float b) -> double { return double(a) * a + double(b) * b; };
 
+    // MiniMax-M2 (and Qwen/Gemma-class): llama.cpp rope_type = NEOX —
+    // pair i is elements (i, i+n_rot/2). Adjacent NORM pairing destroys quality
+    // even after partial n_rot is armed (ferrox/llama.cpp minimax-m2 graphs).
+    std::string archLower = k2ShardConfig_.architecture;
+    for (char& c : archLower)
+        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    const bool ropeNeox = archLower.find("minimax") != std::string::npos ||
+                          archLower.find("qwen") != std::string::npos ||
+                          archLower.find("gemma") != std::string::npos;
+    if (ropeNeox)
+    {
+        static bool s_neoxLogged = false;
+        if (!s_neoxLogged)
+        {
+            s_neoxLogged = true;
+            std::fprintf(stderr,
+                         "[Deep2Engine] ROPE_TYPE=NEOX arch=%s n_rot=%zu "
+                         "(pair i with i+n_rot/2)\n",
+                         k2ShardConfig_.architecture.c_str(), headDim);
+            std::fflush(stderr);
+        }
+    }
+
+    // Partial-RoPE / MLA call sites pass nullptr for the unused side with
+    // numHeads=0 or numKVHeads=0. Guard both pointers before any scan/rotate.
+    if (q != nullptr)
     for (size_t h = 0; h < numHeads; ++h)
     {
         float* qh = q + h * headDim;
+        if (ropeNeox)
+        {
+            const size_t nOff = headDim / 2;
+            for (size_t i = 0; i < nOff; ++i)
+            {
+                // initRoPETables stores pair-i angle at [2i] (and [2i+1]).
+                const float cosA = cosTable[2 * i];
+                const float sinA = sinTable[2 * i];
+                const float q0 = qh[i];
+                const float q1 = qh[i + nOff];
+                const double before = pair_energy(q0, q1);
+                qh[i] = q0 * cosA - q1 * sinA;
+                qh[i + nOff] = q0 * sinA + q1 * cosA;
+                const double after = pair_energy(qh[i], qh[i + nOff]);
+                const double err =
+                    std::fabs(after - before) / std::max(1.0e-20, std::fabs(before));
+                if (err > 1.0e-5)
+                {
+                    fprintf(stderr,
+                            "[D2_ROPE_FAIL] NEOX Q pos=%zu head=%zu pair=%zu "
+                            "before=%.17g after=%.17g rel=%.9g\n",
+                            pos, h, i, before, after, err);
+                    std::abort();
+                }
+            }
+        }
+        else
         for (size_t i = 0; i < headDim; i += 2)
         {
             float cosA = cosTable[i];
@@ -6171,6 +6315,8 @@ void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads,
             }
         }
     }
+    if (k == nullptr)
+        return;
     for (size_t h = 0; h < numKVHeads; ++h)
     {
         float* kh = k + h * headDim;
@@ -6183,6 +6329,32 @@ void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads,
             fflush(stderr);
         }
 
+        if (ropeNeox)
+        {
+            const size_t nOff = headDim / 2;
+            for (size_t i = 0; i < nOff; ++i)
+            {
+                const float cosA = cosTable[2 * i];
+                const float sinA = sinTable[2 * i];
+                const float k0 = kh[i];
+                const float k1 = kh[i + nOff];
+                const double before = pair_energy(k0, k1);
+                kh[i] = k0 * cosA - k1 * sinA;
+                kh[i + nOff] = k0 * sinA + k1 * cosA;
+                const double after = pair_energy(kh[i], kh[i + nOff]);
+                const double err =
+                    std::fabs(after - before) / std::max(1.0e-20, std::fabs(before));
+                if (err > 1.0e-5)
+                {
+                    fprintf(stderr,
+                            "[D2_ROPE_FAIL] NEOX K pos=%zu head=%zu pair=%zu "
+                            "before=%.17g after=%.17g rel=%.9g\n",
+                            pos, h, i, before, after, err);
+                    std::abort();
+                }
+            }
+        }
+        else
         for (size_t i = 0; i < headDim; i += 2)
         {
             float cosA = cosTable[i];
@@ -8811,6 +8983,11 @@ Deep2::GenerationResult Deep2Engine::generateStream(const std::string& prompt, c
 {
     configureGeneration(options);
 
+    // Fresh GDN recurrent/conv state per generation (matches Executor::ResetState).
+    for (auto& s : gdnState_) s.clear();
+    for (auto& s : gdnConvState_) s.clear();
+    std::fill(gdnGpuActive_.begin(), gdnGpuActive_.end(), static_cast<uint8_t>(0));
+
     // The native K2 stream gate is architecture-specific.  A multi-shard
     // model being indexable (or carrying q/kv-rank metadata) is not enough to
     // admit it to the Kimi/DeepSeek MLA implementation.  In particular,
@@ -9227,14 +9404,18 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     // selective-scan mixer, and some a dense MLP.  Do not force every block
     // through the Llama attention-residual + FFN-residual schedule.  The
     // tensor topology is the source of truth for the block contract.
+    // Qwen3.5/3.6 GDN layers bind ssm_* without ssm_in — they replace attention,
+    // not the MoE FFN, and must not enter Nemotron computeSSM.
+    const bool isGdn = IsQwenGdnLayer(lw);
+    const bool isNemotronSsm = IsNemotronSsmLayer(lw);
     const bool hasAttention =
-        !lw.hasSSM &&
+        (isGdn || !lw.hasSSM) &&
         (lw.wq.data || lw.wqkv.data ||
          (modelWeights.useMLA && lw.attnQ_a.data && lw.attnQ_b.data) ||
          (modelWeights.useMLA && lw.wq.data && lw.attnKV_a_mqa.data && lw.attnK_b.data));
     const bool hasMoEFFN = lw.moeRouter.data && lw.moeRouter.sizeBytes > 0;
     const bool hasDenseFFN = lw.wGate.data || lw.wUp.data || lw.wDown.data;
-    const bool hasMixer = lw.hasSSM || hasMoEFFN || hasDenseFFN;
+    const bool hasMixer = isNemotronSsm || hasMoEFFN || hasDenseFFN;
     const bool hasDedicatedMixerNorm = lw.ffnNorm.data != nullptr;
     if (Deep2DebugEnabled()) {
         fprintf(stderr, "[DBG-FWD] enter layer=%zu seqLen=%zu liveSeq=%zu\n", layer, seqLen, liveSeq);
@@ -9330,7 +9511,10 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         profiler_->beginQKVProj();
     if (hasAttention)
     {
-        computeAttention(layer, layerTemp, output, seqLen);
+        if (isGdn)
+            computeGDN(layer, layerTemp, output);
+        else
+            computeAttention(layer, layerTemp, output, seqLen);
         if (std::getenv("DEEP2_MINIMAX_Q_DIAG") && layer == 0)
         {
             std::fprintf(stderr, "[MINIMAX_Q_DIAG] stage=COMPUTE_ATTENTION_RETURN\n");
@@ -9381,7 +9565,11 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     }
 
     // Gemma sandwich: post_attention_norm on attn out BEFORE residual add.
-    if (hasAttention && lw.attnPostNorm.data && lw.attnPostNorm.sizeBytes > 0)
+    // Requires a dedicated ffnNorm for the mixer. Qwen3.5/3.6 hybrid uses
+    // post_attention_norm as the MoE input norm AFTER residual (no ffn_norm) —
+    // do not apply pre-residual sandwich there (GDN or full-attn).
+    if (hasAttention && !isGdn && hasDedicatedMixerNorm &&
+        lw.attnPostNorm.data && lw.attnPostNorm.sizeBytes > 0)
     {
         static bool s_sandwichAttnLogged = false;
         if (!s_sandwichAttnLogged)
@@ -9480,15 +9668,23 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     // 4. Mixer input.  Standard attention+FFN blocks have a second norm
     // after the attention residual.  Nemotron-H SSM/MLP-only blocks use the
     // already computed attnNorm result unless a dedicated mixer norm exists.
+    // Qwen hybrid (GDN + full-attn): post_attention_norm is the MoE input norm.
     if (hasAttention && hasMixer)
     {
-        if (!hasDedicatedMixerNorm)
+        if (profilingEnabled_ && profiler_)
+            profiler_->beginFFNNorm();
+        if (hasDedicatedMixerNorm)
+        {
+            RMSNormW(lw.ffnNorm, output, layerTemp, hiddenDim, modelWeights.normEps);
+        }
+        else if (lw.attnPostNorm.data && lw.attnPostNorm.sizeBytes > 0)
+        {
+            RMSNormW(lw.attnPostNorm, output, layerTemp, hiddenDim, modelWeights.normEps);
+        }
+        else
         {
             throw std::runtime_error("attention block has mixer weights but no ffnNorm");
         }
-        if (profilingEnabled_ && profiler_)
-            profiler_->beginFFNNorm();
-        RMSNormW(lw.ffnNorm, output, layerTemp, hiddenDim, modelWeights.normEps);
         if (profilingEnabled_ && profiler_)
             profiler_->endFFNNorm();
     }
@@ -9519,13 +9715,22 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         // block result.  Do not run a synthetic zero-weight FFN stage.
         std::fill(ffnOutput, ffnOutput + hiddenDim, 0.0f);
     }
-    else if (lw.hasSSM)
+    else if (isNemotronSsm)
     {
-        // Hybrid layer: use SSM instead of FFN
+        // Nemotron-H Mamba-2 mixer (NOT Qwen GDN — GDN already ran as attention)
         if (layer == 86)
             traceActivation("L86.input", layerTemp, hiddenDim);
         computeSSM(layer, layerTemp, ffnOutput);
         B3_TraceState("SSM_OUT", layer, ffnOutput, hiddenDim);
+    }
+    else if (lw.hasSSM && !isGdn)
+    {
+        // Incomplete SSM bind (neither Nemotron-complete nor Qwen GDN) — fail closed.
+        fprintf(stderr,
+                "[SSM_FATAL] layer=%zu — Nemotron computeSSM vs Qwen GDN tensors "
+                "(hasSSM=1 ssmIn=%p ssmAlpha=%p) — refusing identity\n",
+                layer, lw.ssmIn.data, lw.ssmAlpha.data);
+        throw std::runtime_error("SSM/GDN tensor layout unsupported");
     }
     else if (hasMoEFFN)
     {
@@ -9711,8 +9916,19 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     // hiddenDim (for example Nemotron-H uses 40*128 Q values with a 3136
     // element residual stream).
     size_t projectedQDim = (numHeads > 0 && headDim > 0) ? numHeads * headDim : hiddenDim;
+    bool qwenGatedAttn = false;
+    std::vector<float> qwenGate;
 
-    const bool miniMaxQDiag = layer == 0 && std::getenv("DEEP2_MINIMAX_Q_DIAG") != nullptr;
+    // Always-on for MiniMax L0 (env still forces on any arch). QUALITY gate needs
+    // POST_LINEARW→norm→RoPE→O_PROJ stages without relying on operator env.
+    bool miniMaxQDiag = layer == 0 && std::getenv("DEEP2_MINIMAX_Q_DIAG") != nullptr;
+    if (!miniMaxQDiag && layer == 0)
+    {
+        std::string arch = k2ShardConfig_.architecture;
+        for (char& c : arch)
+            c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+        miniMaxQDiag = arch.find("minimax") != std::string::npos;
+    }
     const auto emitMiniMaxQDiag = [&](const char* stage, const float* values, size_t count)
     {
         if (!miniMaxQDiag || !values || count == 0)
@@ -10101,12 +10317,14 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             throw std::runtime_error("incomplete standard attention geometry");
         }
 
-        // Do not trust stale architecture metadata for RoPE geometry.  The
-        // projection tensor rows are authoritative: applying a metadata KV
-        // head count to a smaller K projection writes past kProj and corrupts
-        // the residual stream.  Nemotron-H is the concrete case: metadata can
-        // report 40 KV heads while the loaded K tensor is 8*128 = 1024 rows.
-        if ((lw.wq.rows % numHeads) != 0)
+        // Qwen3.5/3.6 full-attn: attn_q is 2*H*key_length with per-head
+        // [query|gate] interleaved. Head dim comes from key_length metadata.
+        const size_t keyLen =
+            modelWeights.keyLength > 0 ? modelWeights.keyLength : headDim;
+        qwenGatedAttn =
+            keyLen > 0 && lw.wq.rows == 2 * numHeads * keyLen &&
+            lw.attnQNorm.data != nullptr;
+        if (!qwenGatedAttn && (lw.wq.rows % numHeads) != 0)
         {
             fprintf(stderr,
                     "[FORWARD_LAYER_FATAL] layer=%zu Q rows=%zu not divisible by heads=%zu\n",
@@ -10114,13 +10332,17 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             fflush(stderr);
             throw std::runtime_error("Q projection geometry mismatch");
         }
-        const size_t weightHeadDim = lw.wq.rows / numHeads;
+        const size_t weightHeadDim =
+            qwenGatedAttn ? keyLen : (lw.wq.rows / numHeads);
+        if (qwenGatedAttn)
+            qwenGate.assign(numHeads * weightHeadDim, 0.0f);
         if (weightHeadDim == 0 || (lw.wk.rows % weightHeadDim) != 0 || (lw.wv.rows % weightHeadDim) != 0)
         {
             fprintf(stderr,
                     "[FORWARD_LAYER_FATAL] layer=%zu incompatible Q/K/V rows q=%zu k=%zu v=%zu "
-                    "heads=%zu headDim=%zu\n",
-                    layer, lw.wq.rows, lw.wk.rows, lw.wv.rows, numHeads, weightHeadDim);
+                    "heads=%zu headDim=%zu gated=%d\n",
+                    layer, lw.wq.rows, lw.wk.rows, lw.wv.rows, numHeads, weightHeadDim,
+                    qwenGatedAttn ? 1 : 0);
             fflush(stderr);
             throw std::runtime_error("Q/K/V projection geometry mismatch");
         }
@@ -10185,12 +10407,30 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             }
         }
         // Q projection: input -> the actual tensor row count.  This may be
-        // wider than the residual stream for GQA models.
+        // wider than the residual stream for GQA models. Qwen gated attn_q is
+        // 2*H*D (query+gate interleaved per head) then compacted to H*D.
+        const size_t qLinearOut =
+            qwenGatedAttn ? (2 * numHeads * headDim) : projectedQDim;
         LinearW(lw.wq, input,
                 (lw.bq.data && lw.bq.type == (int)GGMLType::GGML_TYPE_F32)
                     ? static_cast<const float*>(lw.bq.data)
                     : nullptr,
-                qProj, projectedQDim);
+                qProj, qLinearOut);
+        if (qwenGatedAttn)
+        {
+            std::vector<float> qOnly(numHeads * headDim, 0.0f);
+            for (size_t h = 0; h < numHeads; ++h)
+            {
+                const size_t rawBase = h * headDim * 2;
+                const size_t headBase = h * headDim;
+                std::memcpy(qOnly.data() + headBase, qProj + rawBase,
+                            headDim * sizeof(float));
+                std::memcpy(qwenGate.data() + headBase, qProj + rawBase + headDim,
+                            headDim * sizeof(float));
+            }
+            std::memcpy(qProj, qOnly.data(), qOnly.size() * sizeof(float));
+            projectedQDim = numHeads * headDim;
+        }
         // S07 diagnostic: dump qProj immediately after Q LinearW.
         {
             static bool s_qAfterDump = false;
@@ -10203,22 +10443,8 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             }
         }
         emitMiniMaxQDiag("Q_PRE_NORM", qProj, projectedQDim);
-        // S08 diagnostic: dump attention output and attention scores for all layers (first token only)
-        {
-            static bool s_attnDump = false;
-            if (!s_attnDump)
-            {
-                s_attnDump = true;
-                // Dump first 6 attention scores and output for this layer
-                std::fprintf(stderr, "[S08_ATTN_DUMP] layer=%zu q0..5=%.6e %.6e %.6e %.6e %.6e %.6e\n",
-                             layer, qProj[0], qProj[1], qProj[2], qProj[3], qProj[4], qProj[5]);
-                std::fprintf(stderr, "[S08_ATTN_DUMP] layer=%zu k0..5=%.6e %.6e %.6e %.6e %.6e %.6e\n",
-                             layer, kProj[0], kProj[1], kProj[2], kProj[3], kProj[4], kProj[5]);
-                std::fprintf(stderr, "[S08_ATTN_DUMP] layer=%zu v0..5=%.6e %.6e %.6e %.6e %.6e %.6e\n",
-                             layer, vProj[0], vProj[1], vProj[2], vProj[3], vProj[4], vProj[5]);
-                std::fflush(stderr);
-            }
-        }
+        // NOTE: do NOT dump kProj/vProj here — LinearW fills them below.
+        // Pre-proj dumps falsely reported K~1e24 / V~1e12 (uninit).
 
         // ── Layer 12 diagnostic: Q norm (opt-in) ──
         if (layer == 12 && Deep2DebugEnabled())
@@ -10445,8 +10671,44 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                 }
             }
         }
-        applyRoPE(qProj, kProj, headDim, numHeads, numKVHeads, pos, ropeThetaUse,
-                  ropeScaleUse, layer);
+        // Partial RoPE: when rope.dimension_count (n_rot) < headDim, only the
+        // first n_rot dims of each head are rotary (llama.cpp contract). MiniMax
+        // M2 advertises key_length=128 with rope.dimension_count=64 — applying
+        // full-head RoPE was the first real post-LinearW divergence.
+        const size_t ropeMeta = modelWeights.ropeDimensionCount;
+        const size_t ropeN =
+            (ropeMeta > 0 && ropeMeta < headDim && (ropeMeta % 2u) == 0u)
+                ? ropeMeta
+                : headDim;
+        if (ropeN == headDim)
+        {
+            applyRoPE(qProj, kProj, headDim, numHeads, numKVHeads, pos, ropeThetaUse,
+                      ropeScaleUse, layer);
+        }
+        else
+        {
+            static bool s_partialRopeLogged = false;
+            if (!s_partialRopeLogged && layer == 0)
+            {
+                s_partialRopeLogged = true;
+                std::fprintf(stderr,
+                             "[FIRST_DIVERGENT_OP] op=PARTIAL_ROPE_APPLY "
+                             "headDim=%zu n_rot=%zu "
+                             "prior=FULL_HEAD_ROPE_MISAPPLY PROMOTE=0\n",
+                             headDim, ropeN);
+                std::printf("[Deep2Engine] PARTIAL_ROPE headDim=%zu n_rot=%zu "
+                            "(rotate first dims only)\n",
+                            headDim, ropeN);
+                std::fflush(stderr);
+                std::fflush(stdout);
+            }
+            for (size_t h = 0; h < numHeads; ++h)
+                applyRoPE(qProj + h * headDim, nullptr, ropeN, 1, 0, pos,
+                          ropeThetaUse, ropeScaleUse, layer);
+            for (size_t h = 0; h < numKVHeads; ++h)
+                applyRoPE(nullptr, kProj + h * headDim, ropeN, 0, 1, pos,
+                          ropeThetaUse, ropeScaleUse, layer);
+        }
         if (profilingEnabled_ && profiler_)
             profiler_->endRoPE();
     }
@@ -10996,6 +11258,18 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         preOCount = (attnConcat > 0 && attnConcat <= preOWorkspace)
                         ? attnConcat
                         : hiddenDim;
+    if (qwenGatedAttn)
+    {
+        if (qwenGate.size() != preOCount)
+        {
+            fprintf(stderr,
+                    "[FORWARD_LAYER_FATAL] layer=%zu gated attn gate width=%zu != preO=%zu\n",
+                    layer, qwenGate.size(), preOCount);
+            throw std::runtime_error("qwen gated attention gate width mismatch");
+        }
+        for (size_t i = 0; i < preOCount; ++i)
+            output[i] *= 1.0f / (1.0f + expf(-qwenGate[i]));
+    }
     Deep2ValidateVector("ATTN_PRE_WO", layer, output, preOCount);
 
     // Output projection: attn concat -> residual (wo: [hiddenDim, attnConcat]).
@@ -11648,6 +11922,90 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output)
 
     if (layer == 86)
         traceActivation("L86.residual_out", output, hiddenDim);
+}
+
+// ============================================================================
+// Compute GDN — Qwen3.5/3.6 gated delta-net (product path)
+// attn_qkv / attn_gate + ssm_alpha/beta/a/conv/dt/norm/out. NO ssm_in/ssm_d.
+// ============================================================================
+void Deep2Engine::computeGDN(size_t layer, const float* input, float* output)
+{
+    if (layer >= modelWeights.layers.size())
+    {
+        fprintf(stderr, "[GDN_FATAL] layer=%zu out of range\n", layer);
+        throw std::runtime_error("GDN layer out of range");
+    }
+    const auto& lw = modelWeights.layers[layer];
+    if (!IsQwenGdnLayer(lw))
+    {
+        fprintf(stderr,
+                "[GDN_FATAL] layer=%zu incomplete GDN tensors "
+                "(qkv=%p gate=%p A=%p alpha=%p beta=%p conv=%p dt=%p norm=%p out=%p in=%p)\n",
+                layer, lw.wqkv.data, lw.attnO.data, lw.ssmA.data, lw.ssmAlpha.data,
+                lw.ssmBeta.data, lw.ssmConv1d.data, lw.ssmDtBias.data, lw.ssmNorm.data,
+                lw.ssmOut.data, lw.ssmIn.data);
+        throw std::runtime_error("GDN unsupported or incomplete");
+    }
+    if (!gdnMetaBound_)
+    {
+        fprintf(stderr,
+                "[GDN_FATAL] layer=%zu GDN metadata unbound "
+                "(need ssm.state_size + ssm.group_count)\n", layer);
+        throw std::runtime_error("GDN metadata unbound");
+    }
+
+    const size_t hiddenDim = config.hiddenDim;
+    const size_t qkvWidth = lw.wqkv.rows;
+    const size_t gateWidth = lw.attnO.rows;
+    const size_t valueHeads = lw.ssmAlpha.rows > 0 ? lw.ssmAlpha.rows : lw.ssmAlpha.cols;
+    if (qkvWidth == 0 || gateWidth == 0 || valueHeads == 0)
+    {
+        fprintf(stderr, "[GDN_FATAL] layer=%zu zero projection geometry\n", layer);
+        throw std::runtime_error("GDN projection geometry zero");
+    }
+
+    std::vector<float> qkv(qkvWidth), gate(gateWidth), alpha(valueHeads), beta(valueHeads);
+    LinearW(lw.wqkv, input, nullptr, qkv.data(), qkvWidth);
+    LinearW(lw.attnO, input, nullptr, gate.data(), gateWidth);
+    LinearW(lw.ssmAlpha, input, nullptr, alpha.data(), valueHeads);
+    LinearW(lw.ssmBeta, input, nullptr, beta.data(), valueHeads);
+
+    if (gdnState_.size() <= layer) gdnState_.resize(layer + 1);
+    if (gdnConvState_.size() <= layer) gdnConvState_.resize(layer + 1);
+    if (gdnGpuActive_.size() <= layer) gdnGpuActive_.resize(layer + 1, 0);
+
+    QwenGdnMeta meta{};
+    meta.stateSize = gdnStateSize_;
+    meta.groupCount = gdnGroupCount_;
+    meta.innerSize = gdnInnerSize_;
+    meta.convKernel = gdnConvKernel_;
+    meta.bound = gdnMetaBound_;
+
+    // Distinct from Executor GdnStateKey — host engine owns this map.
+    const uint64_t stateKey =
+        (static_cast<uint64_t>(reinterpret_cast<uintptr_t>(this)) << 16) ^
+        static_cast<uint64_t>(layer);
+
+    std::vector<float> recurrent;
+    std::string err;
+    if (!RunQwenGdnRecurrence(lw, meta, qkv, gate, alpha, beta,
+                              gdnState_[layer], gdnConvState_[layer],
+                              gdnGpuActive_[layer], stateKey, recurrent, err))
+    {
+        fprintf(stderr, "[GDN_FATAL] layer=%zu %s\n", layer, err.c_str());
+        throw std::runtime_error(err.empty() ? "GDN recurrence failed" : err);
+    }
+
+    memset(output, 0, hiddenDim * sizeof(float));
+    LinearW(lw.ssmOut, recurrent.data(), nullptr, output, hiddenDim);
+    for (size_t i = 0; i < hiddenDim; ++i)
+    {
+        if (!std::isfinite(output[i]))
+        {
+            fprintf(stderr, "[GDN_FATAL] layer=%zu nonfinite out index=%zu\n", layer, i);
+            throw std::runtime_error("GDN output nonfinite");
+        }
+    }
 }
 
 // ============================================================================

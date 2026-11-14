@@ -1,0 +1,32 @@
+[
+    {
+        "manifest":  "F:\\OllamaModels\\manifests\\registry.ollama.ai\\library\\qwen3-next\\80b",
+        "digest":  "sha256:8476acca2ca7dc4dd86ad2e069cb270fdbd44287d9ff3006d86e9a54cc19acd1",
+        "present":  true,
+        "bytes":  50351320736
+    },
+    {
+        "manifest":  "F:\\OllamaModels\\manifests\\registry.ollama.ai\\library\\qwen3-next\\80b",
+        "digest":  "sha256:2d54db2b9bb29ce7db54fea63a891f5859603813c555b1f88b5e0994652897f9",
+        "present":  true,
+        "bytes":  1506
+    },
+    {
+        "manifest":  "F:\\OllamaModels\\manifests\\registry.ollama.ai\\library\\qwen3-next\\80b",
+        "digest":  "sha256:b87250e4478f8f0673bc61cd397e402ac33ca3a6f23a7ad9512618ab33f18fbe",
+        "present":  true,
+        "bytes":  11339
+    },
+    {
+        "manifest":  "F:\\OllamaModels\\manifests\\registry.ollama.ai\\library\\qwen3-next\\80b",
+        "digest":  "sha256:cff3f395ef3756ab63e58b0ad1b32bb6f802905cae1472e6a12034e4246fbbdb",
+        "present":  true,
+        "bytes":  120
+    },
+    {
+        "manifest":  "F:\\OllamaModels\\manifests\\registry.ollama.ai\\library\\qwen3-next\\80b",
+        "digest":  "sha256:51570703a61b6d0db051d30dc7385396c191af6d28a11207dc8318a4abbb42b3",
+        "present":  true,
+        "bytes":  496
+    }
+]

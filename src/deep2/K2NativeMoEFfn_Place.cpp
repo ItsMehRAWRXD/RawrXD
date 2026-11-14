@@ -14,6 +14,7 @@
 #include "lavapath/DualStickImbalance_Xfer.hpp"
 #include "lavapath/GreedyDetTrace.hpp"
 #include "ReapRouteTracker.hpp"
+#include "ReapPhysicalBank.hpp"
 #include "MoELiveAdd.hpp"
 #include "StickGpuLocal.hpp"
 #include "TensorView.hpp"
@@ -320,6 +321,15 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
         for (uint32_t si = 0; si < plan.count; ++si) {
             MoEPlaceSlot& slot = plan.slots[si];
             if (slot.expertId < 0) continue;
+            /* Host GEMV bypasses MoEWeightProxy::Acquire — note bank here. */
+            const uint32_t eid = (uint32_t)slot.expertId;
+            const bool allowed = ReapPhysicalExpertAllowed(eid);
+            ReapPhysicalNoteAcquire(eid, allowed);
+            if (!allowed) {
+                MoELiveAdd(MoEPlaceLive().expert_acquire_fail, 1);
+                error = "PHYSICAL_REAP_ACQUIRE_PRUNED_EXPERT";
+                return false;
+            }
             std::fill(expertOut.begin(), expertOut.end(), 0.f);
             if (!K2MoEExecExpert(index, cfg, layer, slot.expertId, 0u,
                                  normed, expertOut.data(), error)) {

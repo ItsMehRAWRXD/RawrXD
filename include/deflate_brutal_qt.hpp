@@ -58,6 +58,7 @@ inline Bytes compress(const Bytes& in)
 /**
  * @brief Compress a raw pointer/size pair using brutal MASM stored-block gzip.
  */
+#if !defined(QT_CORE_LIB)
 inline Bytes compress(const void* data, std::size_t size)
 {
     if (!data || size == 0) return {};
@@ -72,6 +73,7 @@ inline Bytes compress(const void* data, std::size_t size)
     std::free(p);
     return out;
 }
+#endif
 
 /**
  * @brief Calculate worst-case compressed size for planning/allocation
@@ -211,6 +213,7 @@ inline QByteArray compress(const QByteArray& in)
 /**
  * @brief Compress raw buffer using brutal MASM stored-block gzip
  */
+#if defined(QT_CORE_LIB) || defined(Q_QDOC)
 inline QByteArray compress(const void* data, std::size_t size)
 {
     if (!data || size == 0) return {};
@@ -224,6 +227,7 @@ inline QByteArray compress(const void* data, std::size_t size)
     std::free(p);
     return out;
 }
+#endif
 
 /**
  * @brief Decompress gzip stream using MASM inflate kernel

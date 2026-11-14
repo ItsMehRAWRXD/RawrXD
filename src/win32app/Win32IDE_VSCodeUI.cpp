@@ -1663,20 +1663,26 @@ void Win32IDE::onESPEvent(const rawrxd::esp::Event& event)
     auto ms = (ns % 1000000000ULL) / 1000000ULL;
     std::tm tm_buf;
     localtime_s(&tm_buf, &sec);
-    char timeBuf[32];
-    std::strftime(timeBuf, sizeof(timeBuf), "%H:%M:%S", &tm_buf);
-    char fullTimeBuf[48];
-    std::snprintf(fullTimeBuf, sizeof(fullTimeBuf), "%s.%03llu", timeBuf, (unsigned long long)ms);
+    wchar_t timeBuf[32];
+    std::wcsftime(timeBuf, sizeof(timeBuf)/sizeof(wchar_t), L"%H:%M:%S", &tm_buf);
+    wchar_t fullTimeBuf[48];
+    std::swprintf(fullTimeBuf, sizeof(fullTimeBuf)/sizeof(wchar_t), L"%ls.%03llu", timeBuf, (unsigned long long)ms);
     ListView_SetItemText(m_hwndESPList, lvi.iItem, 1, fullTimeBuf);
 
     // Kind
     std::string kindStr = rawrxd::esp::kind_name(event.kind);
-    ListView_SetItemText(m_hwndESPList, lvi.iItem, 2, const_cast<LPSTR>(kindStr.c_str()));
+    int kindLen = MultiByteToWideChar(CP_UTF8, 0, kindStr.c_str(), -1, nullptr, 0);
+    std::wstring kindWStr(kindLen, L'\0');
+    MultiByteToWideChar(CP_UTF8, 0, kindStr.c_str(), -1, &kindWStr[0], kindLen);
+    ListView_SetItemText(m_hwndESPList, lvi.iItem, 2, const_cast<LPWSTR>(kindWStr.c_str()));
 
     // Message (truncated)
     std::string msg = event.message;
     if (msg.size() > 120) msg = msg.substr(0, 117) + "...";
-    ListView_SetItemText(m_hwndESPList, lvi.iItem, 3, const_cast<LPSTR>(msg.c_str()));
+    int msgLen = MultiByteToWideChar(CP_UTF8, 0, msg.c_str(), -1, nullptr, 0);
+    std::wstring msgWStr(msgLen, L'\0');
+    MultiByteToWideChar(CP_UTF8, 0, msg.c_str(), -1, &msgWStr[0], msgLen);
+    ListView_SetItemText(m_hwndESPList, lvi.iItem, 3, const_cast<LPWSTR>(msgWStr.c_str()));
 
     // Auto-scroll to bottom
     ListView_EnsureVisible(m_hwndESPList, lvi.iItem, FALSE);

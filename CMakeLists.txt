@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.20)
 project(RawrXD-ModelLoader VERSION 1.0.13)
 
 # DEEP2_GPU_CODE31_RESET_001 — inject VK lost / Win32 code 31; assert reset seq.
@@ -3357,6 +3357,9 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND EXISTS ${CMAKE_SO
             ${CMAKE_SOURCE_DIR}/src/deep2/QuantKernelRegistry.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/MoEWeightsLoader.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/MoERouter.cpp
+            # Qwen3.5/3.6 GDN host recurrence (distinct from Nemotron computeSSM)
+            ${CMAKE_SOURCE_DIR}/src/deep2/QwenGdnHost.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/op_gdn.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/MoEWeightProxy.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/NUFusedPacker.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/RouterPrefetchTelemetry.cpp
@@ -3573,6 +3576,10 @@ endforeach()
             ${CMAKE_SOURCE_DIR}/src/deep2/Deep2Engine.cpp
             ${CMAKE_SOURCE_DIR}/src/reap/ReapRuntimePlan.cpp
             ${CMAKE_SOURCE_DIR}/src/reap/ReapRuntime.cpp
+            ${CMAKE_SOURCE_DIR}/src/reap/ReapPhysicalReduce.cpp
+            ${CMAKE_SOURCE_DIR}/src/reap/ReapPhysicalReduceCalib.cpp
+            ${CMAKE_SOURCE_DIR}/src/reap/ReapPhysicalReduceExport.cpp
+            ${CMAKE_SOURCE_DIR}/src/deep2/ReapPhysicalBank.cpp
             ${CMAKE_SOURCE_DIR}/src/deep2/Deep2CLIBridge.cpp
             # Shared lifecycle-managed Deep2 service used by AgentOrchestrator
             # and IDE/agent bridges.  Keep the implementation in the same
@@ -4109,6 +4116,7 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/cpu_inference_engine_impl.cpp
         src/utils/ErrorReporter.cpp
         src/utils/Diagnostics.cpp
+        src/cloud_api_client.cpp
     )
     set(RAWRXD_NATIVE_IDE_COMPLETE TRUE)
     foreach(_src ${RAWRXD_NATIVE_IDE_SOURCES})
@@ -6190,6 +6198,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/rawr_cli.cpp")
     # with LNK1181 even after deep2_engine_lib has built successfully.
     if(TARGET deep2_engine_lib)
         target_link_libraries(RawrXD-CLI-V2 PRIVATE deep2_engine_lib)
+        target_compile_definitions(RawrXD-CLI-V2 PRIVATE RAWRXD_HAS_DEEP2_ENGINE=1)
         target_link_directories(RawrXD-CLI-V2 PRIVATE
             "${CMAKE_BINARY_DIR}/Release"
             "${CMAKE_BINARY_DIR}/Debug"

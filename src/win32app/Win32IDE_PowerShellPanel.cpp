@@ -284,7 +284,7 @@ void Win32IDE::createPowerShellToolbar() {
     int btnSpacing = 5;
     
     m_hwndPSBtnClear = CreateWindowEx(
-        0, "BUTTON", "Clear",
+        0, L"BUTTON", L"Clear",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         btnX, btnY, btnWidth, btnHeight,
         m_hwndPowerShellPanel,
@@ -294,7 +294,7 @@ void Win32IDE::createPowerShellToolbar() {
     btnX += btnWidth + btnSpacing;
     
     m_hwndPSBtnStop = CreateWindowEx(
-        0, "BUTTON", "Stop",
+        0, L"BUTTON", L"Stop",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         btnX, btnY, btnWidth, btnHeight,
         m_hwndPowerShellPanel,
@@ -304,7 +304,7 @@ void Win32IDE::createPowerShellToolbar() {
     btnX += btnWidth + btnSpacing;
     
     m_hwndPSBtnHistory = CreateWindowEx(
-        0, "BUTTON", "History",
+        0, L"BUTTON", L"History",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         btnX, btnY, btnWidth, btnHeight,
         m_hwndPowerShellPanel,
@@ -314,7 +314,7 @@ void Win32IDE::createPowerShellToolbar() {
     btnX += btnWidth + btnSpacing;
     
     m_hwndPSBtnRestart = CreateWindowEx(
-        0, "BUTTON", "Restart",
+        0, L"BUTTON", L"Restart",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         btnX, btnY, btnWidth, btnHeight,
         m_hwndPowerShellPanel,
@@ -324,7 +324,7 @@ void Win32IDE::createPowerShellToolbar() {
     btnX += btnWidth + btnSpacing;
     
     m_hwndPSBtnLoadRawrXD = CreateWindowEx(
-        0, "BUTTON", "Load RawrXD",
+        0, L"BUTTON", L"Load RawrXD",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         btnX, btnY, 120, btnHeight,
         m_hwndPowerShellPanel,
@@ -927,7 +927,7 @@ void Win32IDE::quickInference() {
         
         // Focus the input
         SetFocus(m_hwndPowerShellInput);
-        SetWindowText(m_hwndPowerShellInput, "Invoke-PoshLLMInference -Prompt '' -MaxTokens 100");
+        SetWindowText(m_hwndPowerShellInput, L"Invoke-PoshLLMInference -Prompt '' -MaxTokens 100");
         
         // Position cursor before second quote
         SendMessage(m_hwndPowerShellInput, EM_SETSEL, 36, 36);

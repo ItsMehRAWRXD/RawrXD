@@ -1,0 +1,26 @@
+[
+    {
+        "manifest":  "F:\\OllamaModels\\manifests\\registry.ollama.ai\\library\\laguna-s-2.1\\Q4_K_M",
+        "digest":  "sha256:948255a146c07678678183af4cb1234a124e945e48c85c2006598ef4696552c8",
+        "present":  true,
+        "bytes":  96031829760
+    },
+    {
+        "manifest":  "F:\\OllamaModels\\manifests\\registry.ollama.ai\\library\\laguna-s-2.1\\Q4_K_M",
+        "digest":  "sha256:b507b9c2f6ca642bffcd06665ea7c91f235fd32daeefdf875a0f938db05fb315",
+        "present":  true,
+        "bytes":  13
+    },
+    {
+        "manifest":  "F:\\OllamaModels\\manifests\\registry.ollama.ai\\library\\laguna-s-2.1\\Q4_K_M",
+        "digest":  "sha256:8a0c5e232551abcb102d1bd39a34866ef4520361b613bd6405d55b36562e4d88",
+        "present":  true,
+        "bytes":  2618
+    },
+    {
+        "manifest":  "F:\\OllamaModels\\manifests\\registry.ollama.ai\\library\\laguna-s-2.1\\Q4_K_M",
+        "digest":  "sha256:5bdc3aaf1e3505f44b1634d778c8d6bc97fef119578b2edcf85892e37182657a",
+        "present":  true,
+        "bytes":  463
+    }
+]

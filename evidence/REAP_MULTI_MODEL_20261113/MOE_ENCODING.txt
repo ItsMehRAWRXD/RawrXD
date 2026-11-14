@@ -1,0 +1,16 @@
+﻿MOE_ENCODING.txt
+PROMOTE=0 CERTIFIED=0 CROSS_SHA_CREDIT=0
+ISSUE=https://github.com/ItsMehRAWRXD/RawrXD/issues/83
+TIP=5c8f29a9c8
+
+## Close note
+STATUS=ENCODING_AUDIT_CLOSED
+MoERouter.cpp BEFORE=UTF-16LE (2F 00 2F 00) len=26086
+MoERouter.cpp AFTER=UTF-8 no BOM first8=2F 2F 20 3D 3D 3D 3D 3D
+BACKUP=MoERouter.cpp.utf16bak
+MASS_CONVERT=406 UTF-16LE deep2 sources -> UTF-8; REMAINING_BOM=0
+BACKUP_DIR=evidence/REAP_MULTI_MODEL_20261113/_utf16_bak
+MSVC_BUILD=rawr-reap linked post-normalize (vcvars64)
+ROUTE_SMOKE=Hello/8 generated_tokens=8 after UTF-8 + partial RoPE rebuild
+ORIGINAL_GGUF_INTACT=1
+NOTE=Encoding defect closed; QUALITY remains OPEN (semantic). PROMOTE=0

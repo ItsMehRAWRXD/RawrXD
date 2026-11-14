@@ -1,0 +1,39 @@
+﻿MINIMAX_FIRST_DIVERGENT_OP
+PROMOTE=0 CERTIFIED=0 CROSS_SHA_CREDIT=0 ORIGINAL_GGUF_INTACT=1
+TIP=5c8f29a9c8
+EXE_SHA256=D7661CFC53CC1A14BA8FEBA1332B7D36FF3CC01A203D69D769CD15F539391B36
+ISSUE=https://github.com/ItsMehRAWRXD/RawrXD/issues/83
+
+## Claimed K~1e24 / V~1e12
+DISPOSITION=FALSE_POSITIVE_UNINIT_KV
+EVIDENCE=S08_ATTN_DUMP ran AFTER Q LinearW but BEFORE K/V LinearW
+POST_LINEARW_QKV_PROJ (same run) = sane ~1e-2
+  q=-5.04e-4 .. 4.51e-2
+  k=1.12e-3 .. 4.31e-2
+  v=-1.41e-3 .. -2.41e-2
+NOT a numerical explode at GEMV.
+
+## Post-QKV stage chain (MiniMax L0)
+Q_PRE_NORM     nonfinite=0 l2~2.08
+Q_POST_NORM    nonfinite=0 l2~88.5 (RMSNorm scale OK)
+Q_POST_ROPE    nonfinite=0 l2~88.5
+KV_WRITE_OK / ATTENTION_END / O_PROJ / VALIDATION_OK = PASSED
+HIDDEN_DUMP finite; LOGIT_DIAG top5 finite (41563=12.027 ...)
+sampled tokens finite; GREEDY argmax
+
+## Real QUALITY gate (fail-closed)
+GATE=STREAM_SEMANTIC_QUALITY
+STATUS=OPEN_NOT_PASS
+output=姬被被被\\被6,
+tokens=41563,2110,2110,2110,8486,2110,54,44
+piece0=U+59EC (姬)
+COHERENCE=FAIL (repetition / wrong language for prompt Hello)
+PHYSICAL_T4_SEALED=PRESERVE (B03_E tokens>=4 PASS_REPORTED; quality never claimed)
+NEXT=isolate MoE/expert numeric + chat-template + retain-29 REAP effect
+NOT_RUN!=PASS for reference-parity / coding
+
+
+## Update
+FIRST_REAL_DIVERGENT_OP=PARTIAL_ROPE_APPLY (full-head RoPE misapply; n_rot=64 < headDim=128)
+POST_FIX_RUN=FAIL_CLOSED (exit=-1, tokens=0) — quality not yet recovered
+EXE_SHA256=A446062B59CA4657B72AC2784F5E52C5D29E87EA2D9FA0016B4F26DC40AC98D3
