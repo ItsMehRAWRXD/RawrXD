@@ -1,0 +1,24 @@
+BR_G01_04_ABSORB_R76
+ASOF_LOCAL=2026-11-13T23:33-05:00
+AUTH=PARENT_BOARD_AUTHORITY / BOARD_SINGLE_WRITER
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 CROSS_SHA_CREDIT=0
+PCT_HELD=CLI67/GUI48/OVERALL48
+GATE_MATRIX_PASS=0
+RESULT=EVIDENCE_PARTIAL
+
+## Absorbed (worker a5f614a1-7d2d-42be-8cd6-dae3fab22dca)
+COMMIT=92e48692cd · BOARD=BR_G01_04_GUI_REBUILD_R76.txt
+EXIT=1 BUILD_OK=0 EXE_SHA256=NONE tip 6754616E RO untouched
+BLOCKERS=
+  1) build_ninja WIN32IDE=OFF → unknown RawrXD-Win32IDE
+  2) build_win32ide HiH8e ninja path missing
+  3) reconfig WIN32IDE=ON → Win32NativeDebugBackend.cpp ABSENT (+ ninja Permission denied)
+
+## Matrix
+G01-04 already EVIDENCE_PARTIAL in GATE_MATRIX (worker land) — PASS_COUNT=0
+G01-05 still NOT_RUN
+
+## Next
+NEXT=restore/stub Win32NativeDebugBackend.cpp + private WIN32IDE=ON tree with host ninja → remasure BUILD_OK
+PROMOTE=0
+END
