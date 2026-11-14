@@ -1,0 +1,37 @@
+BOARD_PROPOSAL_ATTN_PRE_O_POS1_001
+TO=PARENT_COORDINATOR / JOINT (proposal only; NO direct LIVE/CANON/JOINT/PARENT PCT write)
+FROM=M1_ATTN_PRE_O_POS1
+DATE=2026-11-13
+PROMOTE=0
+TIP_CLIMB=HOLD
+INVENT_PASS=0
+PCT_RAISE=0
+PEERS_MAY_WRITE_SCOREBOARD=0
+TIP_BIND=6754616E
+CLI_BOARD_TIP_PIN=15A119D1
+
+## Proposal (parent decides)
+M1 ATTN_PRE_O_0@pos0 remains CLOSED BITEXACT on product-wire SHA C7402085.
+M1 ATTN_PRE_O_0@pos1 remains OPEN maxAbs=2.292544e-05 (before=after; no invented close).
+Owner = host AttentionWithCache T=2 softmax/AV vs llama kqv_out; FP16 KV+PRE_O RT
+already product-wired. ROOT_CAUSE_CLEAR=0 → no minimal source fix this turn.
+Do NOT raise CLI/GUI/OVERALL PCT. Do NOT thrash HOLD 15A119 / tip6754 6754616E.
+Do NOT rewrite JOINT_STATUS_LIVE / BOARD_SINGLE_WRITER controlling PCT.
+
+## Exact pins
+EXE=build_ninja/bin/rawr_gpufwd_C7402085.exe
+SHA256=C74020852AC324FC6827A896060E5508F74569C7F53EB7198B9CDB92DEAEB750
+MAXABS_ATTN_PRE_O_0_POS1=2.292544e-05
+NEXT_GATE=ATTN_PRE_O_POS1_LLAMA_KQV_OUT_T2_KERNEL_PARITY
+
+## Witness
+SEAL=GUI_TOP25_VALUATION_001/gpu/GPU_PARITY_ATTN_PRE_O_POS1_001.txt
+COMPARE=GUI_TOP25_VALUATION_001/gpu/GPU_PARITY_ATTN_PRE_O_POS1_001.compare.txt
+
+## Suggested parent action (not applied here)
+KEEP M1_NEXT=ATTN_PRE_O_0@pos1 OPEN until T2 kernel parity closes or parent
+explicitly accepts class-tol disposition. PCT raise = 0 until JOINT absorbs.
+
+PROMOTE=0
+TIP_CLIMB=HOLD
+END

@@ -1,0 +1,80 @@
+GPU_PARITY_ATTN_PRE_O_POS1_001
+IMMUTABLE_RECEIPT=1
+DATE=2026-11-13
+ASOF_LOCAL=2026-11-13T22:02:00-05:00
+OWNER=M1_ATTN_PRE_O_POS1
+PACK=PRODUCTION_MATURITY_TOP25_001 / GUI_TOP25_VALUATION_001/gpu
+PROMOTE=0
+TIP_CLIMB=HOLD
+INVENT_PASS=0
+NOT_RUN!=PASS
+CERTIFIED=0
+ATTN_PRE_O_0_POS1_CLOSED=0
+JOINT_PCT_WRITE=0
+PARENT_PCT_WRITE=0
+SCOREBOARD_REWRITE=0
+TIP_BIND=6754616E
+CLI_BOARD_TIP_PIN=15A119D1
+
+## Parent authority (immutable; not rewritten)
+GPU_PARITY_ATTN_PRE_O_CLOSE_001.txt ATTN_PRE_O_0@pos0 BITEXACT CLOSED
+GPU_PARITY_ATTN_PRE_O_FP16_PRODUCT_WIRE_001.txt PRODUCT_WIRE C7402085 (FORCE=0)
+BOARD_SINGLE_WRITER / JOINT_STATUS_LIVE controlling PCT untouched
+
+## Scope
+FIRST_SIGNIFICANT_AFTER_POS0_CLOSE = ATTN_PRE_O_0@pos1 (T=2 path)
+PRIOR_BOARD_MAXABS=2.292544e-05 (OPEN)
+
+## Product EXE (remeasure)
+PRODUCT_EXE=build_ninja/bin/rawr_gpufwd_C7402085.exe
+PRODUCT_PIN=FIRST_DIVERGE_001/pin/rawr_attn_pre_o_fp16_product_wire.exe
+SHA256=C74020852AC324FC6827A896060E5508F74569C7F53EB7198B9CDB92DEAEB750
+(= tip rebuild rawr.exe; HOLD 15A119 / GUI 6754616E untouched)
+SPV_SHA256=AB7212EC2A30839EF51B9847F90C62CB2EEBCF4A010E122D0CBE0F228C8AC5D5 LEN=16292
+HOTPATH_GEMV=VULKAN HOST_ATTN=CPU AttentionWithCache RAWRXD_GPU_FWD=0
+FORCE=0
+
+## INPUT_IDENTICAL @pos1 (matched REF)
+PROMPT_EMBED MATCH maxAbs=0
+ATTN_NORM_0 FNV_ONLY maxAbs=1.192093e-07
+V_0 / Q_PRE_ROPE_0 / K_PRE_ROPE_0 / Q_POST_ROPE_0 / K_POST_ROPE_0 FNV_ONLY under 1e-6
+→ divergence owner is attention aggregate, not upstream rope/linear
+
+## Before / after (ATTN_PRE_O_0@pos1 n=2048)
+BEFORE (board OPEN cite): maxAbs=2.292544e-05
+AFTER (C7402085 product-wire remasure): maxAbs=2.292544e-05
+DELTA=0 (no close; FP16 KV + headScratch RT already absorbed)
+fnvA=d3815a046f86e2d8 fnvB=1fc70805b5a7d70e @idx524 n_gt=476/2048
+GPU=…/stage_dump_attn_pre_o_product_wire/deep2_ATTN_PRE_O_0_pos1_…seq072.bin
+REF=…/stage_dump_ref_matched/llama_ATTN_PRE_O_0_pos1_…seq060.bin
+
+## Owner / diagnosis
+OWNER=Deep2::AttentionWithCache (KVCache.cpp) T=2 softmax + AV
+  + Deep2Engine.cpp kvCacheFp16RoundTrip on KV write + headScratch (already live)
+OFFLINE_WITNESS:
+  f16(softmax(Q@K_f16)@V_f16) bitexact == product ATTN_PRE_O dump
+  same SDPA on REF Q/K/V still maxAbs=2.292544e-05 vs REF kqv_out
+ROOT_CAUSE_CLEAR=0
+  llama kqv_out T=2 numerics ≠ reconstructed host SDPA under tried variants
+  (fp32/f16 KV, f16 Q, softcap, f32 accum, prescale-Q)
+MINIMAL_FIX_APPLIED=0 (fail-closed; do not invent PASS)
+
+## Cascade note
+ATTN_OUT_0@pos1 NUM_FAIL maxAbs=7.319450e-05 (downstream of PRE_O; not claimed closed)
+
+## Compare / remasure
+COMPARE=GUI_TOP25_VALUATION_001/gpu/GPU_PARITY_ATTN_PRE_O_POS1_001.compare.txt
+REMEASURE_LOG=FIRST_DIVERGE_001/remeasure_attn_pre_o_product_wire.err.txt
+DUMP=FIRST_DIVERGE_001/stage_dump_attn_pre_o_product_wire
+
+## Verdict
+ATTN_PRE_O_0_POS1_CLOSED=0
+MAXDIFF_BEFORE=2.292544e-05
+MAXDIFF_AFTER=2.292544e-05
+UNDER_TOL=0
+NEXT_GATE=ATTN_PRE_O_POS1_LLAMA_KQV_OUT_T2_KERNEL_PARITY
+  (isolate llama FA/mul_mat kqv_out path vs host SDPA; or absorb-only if parent accepts UNDER_ATTN_CLASS_TOL 1e-4)
+≠ PERFORMANCE_PASS ≠ tip-land ≠ CANON/LIVE/JOINT PCT write
+PROMOTE=0
+TIP_CLIMB=HOLD
+END

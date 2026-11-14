@@ -1,0 +1,23 @@
+GPU_PARITY_ATTN_PRE_O_POS1_001.compare
+PAIR=stage_dump_attn_pre_o_product_wire vs stage_dump_ref_matched
+EXE=pin/rawr_attn_pre_o_fp16_product_wire.exe (=rawr_gpufwd_C7402085.exe)
+SHA256=C74020852AC324FC6827A896060E5508F74569C7F53EB7198B9CDB92DEAEB750
+TOL_ABS=1e-06 TOL_REL=1e-05 PROMPT_IDS=1,15043
+HOTPATH_GEMV=VULKAN HOST_ATTN=CPU(=AttentionWithCache) RAWRXD_GPU_FWD=0
+ASOF=2026-11-13T22:01:57-05:00
+PROMPT_EMBED_pos1: MATCH maxAbs=0.000000e+00 rel=0.000000e+00 rms_rel=0.000000e+00 @idx-1 n_gt=0/2048 fnvA=960a71672e6a3a0f fnvB=960a71672e6a3a0f
+ATTN_NORM_0_pos1: FNV_ONLY maxAbs=1.192093e-07 rel=8.957517e-08 rms_rel=2.162210e-09 @idx802 n_gt=0/2048 fnvA=53c8222fc2de363f fnvB=c9eefa727533e73a
+V_0_pos1: FNV_ONLY maxAbs=9.313226e-09 rel=5.845269e-07 rms_rel=1.102091e-08 @idx185 n_gt=0/256 fnvA=a386447bd535a09e fnvB=01009c889e06c592
+Q_PRE_ROPE_0_pos1: FNV_ONLY maxAbs=9.536743e-07 rel=2.055715e-07 rms_rel=3.262663e-09 @idx1327 n_gt=0/2048 fnvA=5f100ceadbd119f2 fnvB=2a1eab35d34652bd
+K_PRE_ROPE_0_pos1: FNV_ONLY maxAbs=9.536743e-07 rel=1.932303e-07 rms_rel=8.576579e-09 @idx177 n_gt=0/256 fnvA=2096f322e09344d7 fnvB=ec36f145d5881823
+Q_POST_ROPE_0_pos1: FNV_ONLY maxAbs=9.536743e-07 rel=3.683662e-07 rms_rel=3.383174e-09 @idx1264 n_gt=0/2048 fnvA=8a411c52e2c4abcd fnvB=871431f8fa6bacda
+K_POST_ROPE_0_pos1: FNV_ONLY maxAbs=9.536743e-07 rel=1.932299e-07 rms_rel=8.873846e-09 @idx177 n_gt=0/256 fnvA=15272ed2b62feda8 fnvB=efb9df39768a3d9a
+ATTN_PRE_O_0_pos1: NUM_FAIL maxAbs=2.292544e-05 rel=5.158601e-04 rms_rel=6.044763e-06 @idx524 n_gt=476/2048 fnvA=d3815a046f86e2d8 fnvB=1fc70805b5a7d70e
+ATTN_OUT_0_pos1: NUM_FAIL maxAbs=7.319450e-05 rel=7.384500e-04 rms_rel=2.480614e-05 @idx411 n_gt=1782/2048 fnvA=cc3c2515fc11a4a4 fnvB=692158bcbf341510
+---
+FIRST_SIGNIFICANT=ATTN_PRE_O_0_pos1 maxAbs=2.292544e-05 rel=5.158601e-04 @idx524 n_gt=476
+ATTN_PRE_O_0_POS1_CLOSED=0
+OWNER=AttentionWithCache T=2 softmax/AV (Deep2Engine host path; KV+headScratch FP16 RT already live)
+OFFLINE=f16(softmax(Q@K_f16)@V_f16) bitexact==product dump; same formula on REF Q/K/V still maxAbs=2.292544e-05 vs REF kqv_out
+ROOT_CAUSE_CLEAR=0 (llama kqv_out T=2 numerics ≠ reconstructed SDPA; no minimal fix applied)
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0
