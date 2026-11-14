@@ -1,16 +1,16 @@
 GPU_PARITY_FFN_ACT_2_REMEDIATE_001.remeasure_after.compare
-PAIR=stage_dump_ffn_act2_c740_after vs stage_dump_ffn_act2_c740_after_ref (seq283/285/287 snapshot of gpu_ref)
+PAIR=stage_dump_ffn_act2_c740_after vs stage_dump_gpu_ref
 EXE=build_ninja/bin/rawr_gpufwd_C7402085.exe SHA256=C7402085… FORCE_VULKAN PARITY=0 NO_REBUILD
-ASOF=2026-11-13T22:38:52
+ASOF=2026-11-13T23:01:58
 ABS_TOL=1e-05 REL_TOL=0.0001
 BEFORE_maxAbs_FFN_ACT_2=4.577637e-05
-FFN_GATE_2: kind=BITWISE_DIFF maxAbs=3.814697e-06 rel_rms=3.359988e-09 n_gt_abs=0/5632 UNDER_TOL=Y peak_i=5475 gpu[5475]=1.685240173e+01 ref[5475]=1.685239792e+01 gpu_fnv=ffaf294cb422c55d ref_fnv=28e9a2b018e21424 gpu=deep2_FFN_GATE_2_pos0_layer0_full_n5632_seq052.bin ref=llama_FFN_GATE_2_pos0_layer0_full_n5632_seq283.bin
-FFN_UP_2: kind=BITWISE_DIFF maxAbs=9.536743e-07 rel_rms=4.200904e-09 n_gt_abs=0/5632 UNDER_TOL=Y peak_i=5475 gpu[5475]=9.560573578e+00 ref[5475]=9.560572624e+00 gpu_fnv=14634d2b945dd1ce ref_fnv=fa859bd8efee7547 gpu=deep2_FFN_UP_2_pos0_layer0_full_n5632_seq053.bin ref=llama_FFN_UP_2_pos0_layer0_full_n5632_seq285.bin
-FFN_ACT_2: kind=MATERIAL_DIVERGENCE maxAbs=4.577637e-05 rel_rms=3.790384e-09 n_gt_abs=1/5632 UNDER_TOL=N peak_i=5475 gpu[5475]=1.611186218e+02 ref[5475]=1.611185760e+02 gpu_fnv=dcb9f29c2b650aeb ref_fnv=43d3cace5db68044 gpu=deep2_FFN_ACT_2_pos0_layer0_full_n5632_seq054.bin ref=llama_FFN_ACT_2_pos0_layer0_full_n5632_seq287.bin
-AFTER_maxAbs_FFN_ACT_2=4.577637e-05
-UNDER_TOL=N
+FFN_GATE_2: kind=BITWISE_DIFF maxAbs=1.907349e-06 rel_rms=2.251159e-09 n_gt_abs=0/5632 UNDER_TOL=Y peak_i=5475 gpu[5475]=1.685239983e+01 ref[5475]=1.685239792e+01 gpu_fnv=f214a5e448f47e7e ref_fnv=28e9a2b018e21424 gpu=deep2_FFN_GATE_2_pos0_layer0_full_n5632_seq052.bin ref=llama_FFN_GATE_2_pos0_layer0_full_n5632_seq283.bin
+FFN_UP_2: kind=BITWISE_DIFF maxAbs=9.536743e-07 rel_rms=3.665719e-09 n_gt_abs=0/5632 UNDER_TOL=Y peak_i=5475 gpu[5475]=9.560571671e+00 ref[5475]=9.560572624e+00 gpu_fnv=baa8bc7836a1dd2d ref_fnv=fa859bd8efee7547 gpu=deep2_FFN_UP_2_pos0_layer0_full_n5632_seq053.bin ref=llama_FFN_UP_2_pos0_layer0_full_n5632_seq285.bin
+FFN_ACT_2: kind=BITWISE_DIFF maxAbs=2.384186e-07 rel_rms=8.043278e-11 n_gt_abs=0/5632 UNDER_TOL=Y peak_i=1905 gpu[1905]=2.036346436e+00 ref[1905]=2.036346197e+00 gpu_fnv=3921984acc400da8 ref_fnv=43d3cace5db68044 gpu=deep2_FFN_ACT_2_pos0_layer0_full_n5632_seq054.bin ref=llama_FFN_ACT_2_pos0_layer0_full_n5632_seq287.bin
+AFTER_maxAbs_FFN_ACT_2=2.384186e-07
+UNDER_TOL=Y
 RUNTIME_REACHED=1
-DELTA_vs_BEFORE=-2.812500e-12 (same_pin_expect≈0)
+DELTA_vs_BEFORE=-4.553795e-05 (same_pin_expect≈0)
 MATCH_PASS=0
 INVENT_PASS=0
 PROMOTE=0

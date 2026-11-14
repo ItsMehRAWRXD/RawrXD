@@ -32,8 +32,9 @@ void main() {
   const uint kmask3 = 0x03030303u;
 
   uint rowOff = row * nblk * 144u;
-  float sumf = 0.0;
-  float sums[8];
+  // precise: disable FMA/reassoc (match gemv_q6k; GATE/UP 0-ULP vs llama)
+  precise float sumf = 0.0;
+  precise float sums[8];
   for (uint i = 0u; i < 8u; ++i) sums[i] = 0.0;
 
   for (uint b = 0u; b < nblk; ++b) {
@@ -121,10 +122,12 @@ void main() {
       }
     }
 
-    float dw = d * xd;
-    for (uint l = 0u; l < 8u; ++l) sums[l] += dw * float(aux32[l]);
-    sumf -= (dmin * xd) * float(sumi);
+    precise float dw = d * xd;
+    for (uint l = 0u; l < 8u; ++l)
+      sums[l] = sums[l] + dw * float(aux32[l]);
+    precise float dm = dmin * xd;
+    sumf = sumf - dm * float(sumi);
   }
-  for (uint l = 0u; l < 8u; ++l) sumf += sums[l];
+  for (uint l = 0u; l < 8u; ++l) sumf = sumf + sums[l];
   y[row] = sumf;
 }
