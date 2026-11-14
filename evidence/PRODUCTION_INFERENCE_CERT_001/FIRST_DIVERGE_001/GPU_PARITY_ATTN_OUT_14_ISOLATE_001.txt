@@ -1,0 +1,54 @@
+GPU_PARITY_ATTN_OUT_14_ISOLATE_001
+ASOF_LOCAL=2026-11-13T22:45:00-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 MATCH_PASS=0
+PRIOR_SEAL=GPU_PARITY_FINAL_NORM_OPEN_RESIDUAL_001 (push_sha ancestor 6819de8ed5)
+ORIGIN_HAS_6819de8ed5=1
+CANONICAL_DUMP=stage_dump_layer2_plus_C7402085 vs stage_dump_gpu_ref (BATCH2 llama)
+STABLE_COPY=_cmp_attn_out14_stage + _cmp_finalnorm_stage
+EXE_PIN=rawr_attn_pre_o_fp16_product_wire.exe SHA256=C7402085… FORCE_VULKAN
+
+## Question
+Root-cause ATTN_OUT_14@pos0 (vs BATCH2): ATTN_PRE_O / V / softmax / O-proj / residual add vs LAYER13_OUT?
+
+## Offline isolate (pos0, class tol law)
+| Site            | maxAbs      | Class | MATERIAL |
+|-----------------|-------------|-------|----------|
+| LAYER13_OUT     | 7.629395e-05| LAYER | Y (upstream cascade) |
+| ATTN_NORM_14    | 8.165836e-06| NORM  | N |
+| ATTN_PRE_O_14   | 6.103516e-05| ATTN  | N (PASS) |
+| ATTN_OUT_14     | 3.617927e-04| ATTN  | Y ← TRUE_FIRST under ATTN @L14 |
+| FFN_INP_14      | 3.908873e-04| FFN   | Y |
+| FINAL_NORM@pos0 | 5.380497e-01| HARD  | Y |
+
+## Subsystem tests
+1) Softmax / V / PRE_O: ATTN_PRE_O_14 PASS (maxAbs=6.103516e-05 < ATTN abs_tol 1e-4)
+2) Residual add: deep2 FFN_INP ≈ ATTN_OUT+LAYER13_OUT maxAbs=5.617738e-06 → CLOSED
+   d(FFN_INP) ≈ d(ATTN_OUT)+d(LAYER13) maxAbs residual 8.57e-06 → add path not owner
+3) O-proj: ATTN_OUT is first ATTN-class MATERIAL at L14 with PRE_O PASS
+   L2 ATTN_OUT vs llama maxAbs≈1.19e-07 (O-proj kernel OK on earlier layer)
+   ⇒ L14 OUT gap is O_PROJ amplification of PRE_O residual + upstream LAYER13 cascade
+   NOT a standalone broken wo kernel (L2 O-proj matches BATCH2)
+4) FinalNorm Apply: still CLOSED (prior seal POST→FINAL maxAbs≈5.5e-07)
+
+## Cascade context (do not invent CLOSE)
+Earlier FFN-class first MATERIAL remains FFN_ACT_2 maxAbs=4.577637e-05
+  (R61 ROOT_CAUSE_CLEAR: 3 F32 ULPs at |act|≈161 from under-tol GATE/UP;
+   SiLU kernel REFUTED; HOST_Q4_ROWS_GT_COLS SOURCE_WIRED unlinked)
+LAYER13_OUT residual (7.63e-5) is that cascade arriving at L14 xin.
+ATTN_OUT_14 = O_PROJ(PRE_O) error floor under ATTN tol after that feed.
+
+## Seal fields
+TRUE_FIRST_SITE=ATTN_OUT_14@pos0
+MAX_ABS=3.617927e-04
+FUNCTIONAL_FAIL=1
+FINAL_NORM_MAX_ABS=5.380497e-01
+FINAL_NORM_FUNCTIONAL_FAIL=1
+ROOT_CAUSE=ATTN_OUT_14_O_PROJ_AMPLIFY_OF_PRE_O_PLUS_LAYER13_CASCADE
+REFUTED=ATTN_PRE_O_14_FAIL · RESIDUAL_ADD_BUG · FINALNORM_APPLY · SOFTMAX_OWNER
+NEXT_ENGINEERING=GATE_UP_ULP_TIGHTEN (FFN_ACT_2 cascade) OR O_PROJ_INPUT_PARITY — prefer functional close; no tol widen; no invent Dense MATCH
+DENSE_MATCH=HOLD
+ENTERPRISE_CHECKLIST_PASS=0
+PROMOTE=0 TIP_CLIMB=HOLD
+TIP_BIND=6754616E
+PCT_HELD=67/48/48
+END
