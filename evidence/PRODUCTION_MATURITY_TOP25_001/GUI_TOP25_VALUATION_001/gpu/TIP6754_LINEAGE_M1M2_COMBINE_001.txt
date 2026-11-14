@@ -1,0 +1,74 @@
+TIP6754_LINEAGE_M1M2_COMBINE_001
+ASOF_LOCAL=2026-11-13T22:07:00-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 NOT_RUN!=PASS
+REJECT_23A0=1 REJECT_TIP_PROMOTE=1 REJECT_INVENT_PCT=1
+CANON_HELD=CLI67/GUI48/OVERALL48
+
+## Goal
+ONE private tip-lineage cand combining:
+  (M2) qDim=wq.rows GpuForward
+  (M1) kvCacheFp16RoundTrip(headScratch) Deep2Engine
+  (SPV) gemv_q4k.spv AB7212EC runtime load
+
+## Private cand built (tip_land path; tip RO untouched)
+CAND=clean_link/LOCKED/RawrXD-Win32IDE_tip_land_m1m2_081b.exe
+CAND_PUB=clean_link/RawrXD-Win32IDE_tip_land_m1m2_081b.exe
+EXE_SHA256=AA4F853099E1F022DC6F9461B833B993953E043DEC98B7838B5A7E8F30856BBA
+SHA16=AA4F853099E1F022
+SHA8=AA4F8530
+PRIOR_FAIL_STRIP_LIB=0E99F3269D32CDB69FDCB1969DD0600D2291ADCD414A9C26BCBD0BB2E851657D
+  (081 stripped Deep2Engine from IE lib; also AV; superseded by 081b)
+LINK=obj075_gemma_seal/link081b_m1m2.rsp
+OBJ_GPUFWD=obj075_gemma_seal/Deep2Engine_GpuForward.cpp.obj (qDim=wq.rows)
+OBJ_DEEP2=obj075_gemma_seal/Deep2Engine.cpp.obj (kvCacheFp16RoundTrip present; dumpbin)
+IE_LIB=InferenceEngine_m1m2_081b.lib (GpuForward member removed only; match qdim077)
+SPV_SHA256=AB7212EC2A30839EF51B9847F90C62CB2EEBCF4A010E122D0CBE0F228C8AC5D5 LEN=16292
+SOURCE_WIRED=1
+
+## Tip bind (RO; not overwritten)
+TIP_EXE=bin/RawrXD-Win32IDE.exe
+TIP_LAND=bin/RawrXD-Win32IDE_tip_land_6754616E.exe
+TIP_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431
+TIP_STILL_6754=1 TIP_RO=1 TIP_ABSORB=0
+
+## gemma3 measure ON cand AA4F8530 (fail-closed)
+WITNESS=ide_tipland_m1m2_081b_gemma3_AA4F853099E1F022_20261113_220449.meta.txt
+PROBE_EXIT=-1073741819 (0xC0000005 ACCESS_VIOLATION)
+WER=Application Error Id=1000 FaultOffset≈0x18cef48 module=self
+GENERATED_TOKENS=0 TOKEN_SURVIVED=0
+PRODUCT_OPEN_CRITICAL_TENSORS=PASS SESSION_EXIT_OK=1 (open survived)
+CRASH_SITE=mid VRAM upload ~blk.25.ffn_* (stdout truncates at "[VRAMMana")
+SEH_OPEN=0 STREAM_SEH=0 HD=0
+GEMMA_RUNTIME_REACHED=0 GEMMA_TOKEN_SURVIVED=0
+CONTROL_GEMMA_CAND=7FD1F270 (tip_land_qdim_m2; TOK=8 SEH=0 HD=0 prior seal; qDim-only)
+
+## TinyLlama ATTN_PRE_O on tip_land cand
+ATTN_PRE_O_ON_TIPLAND_CAND=NOT_RUN
+MISSING_1=Win32IDE tip_land lacks FIRST_DIVERGE stage-dump harness (CLI rawr_attn_pre_o_* only)
+≠ SOURCE_WIRED_FP16_IN_OBJ (present) ≠ RUNTIME_ATTN_PRE_O_COMPARE
+
+## ATTN_PRE_O peer remasure (CLI sealed cand; NOT tip_land SHA credit)
+PEER_EXE=FIRST_DIVERGE_001/pin/rawr_attn_pre_o_fp16kv.exe
+PEER_SHA256=C72A48E960D4DCAEC5DDC6ACF9BBD18258E1449860EE39D35D13575F0267441C
+PEER_EXIT=0
+COMPARE=FIRST_DIVERGE_001/remeasure_attn_pre_o_m1m2_peer.compare.txt
+ATTN_PRE_O_0 maxAbs=0.000000e+00 UNDER_TOL=1 BITEXACT=1
+  fnvA=fnvB=4adca0fa1f8e7095
+CROSS_SHA_CREDIT_TO_AA4F8530=0
+CITE_GUI=GPU_PARITY_ATTN_PRE_O_M1M2_PEER_001.txt
+
+## Exact missing pieces (combine not closed)
+MISSING_A=ABI-stable Win32IDE Deep2Engine.cpp.obj that adds headScratch FP16 RT
+  without 0xC0000005 during gemma residency (current seal obj AV on tip_land link)
+MISSING_B=ATTN_PRE_O stage-dump+compare harness on Win32IDE tip_land EXE
+  (or single surface that can host both gemma GPU_RESIDENT TOK and TinyLlama parity)
+MISSING_C=gemma TOK>0 SEH=0 HD=0 measured on the SAME SHA that also closes ATTN_PRE_O under TOL
+
+## Disposition
+TIP6754_LINEAGE_M1M2_COMBINE_SOURCE_WIRED=1
+TIP6754_LINEAGE_M1M2_COMBINE_RUNTIME_PASS=0
+TIP6754_TIP_BIND_UNCHANGED=1
+REJECT_TIP_PROMOTE=1 REJECT_BLEND_AA4F_INTO_CANON_PCT=1
+NEXT_GATE=STABLE_DEEP2_OBJ_FP16_ON_TIPLAND_OR_SURGICAL_ABSORB_AFTER_GEMMA_SURVIVES
+PROMOTE=0 TIP_CLIMB=HOLD
+END
