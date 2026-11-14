@@ -1,0 +1,55 @@
+GPU_PARITY_ATTN_PRE_O_POS1_GGML_FA_PORT_001
+IMMUTABLE_RECEIPT=1
+DATE=2026-11-13
+ASOF_LOCAL=2026-11-13T22:45:00-05:00
+OWNER=M1_ATTN_PRE_O_POS1_GGML_FA_PORT
+PACK=PRODUCTION_MATURITY_TOP25_001 / GUI_TOP25_VALUATION_001/gpu
+PROMOTE=0
+TIP_CLIMB=HOLD
+INVENT_PASS=0
+NOT_RUN!=PASS
+CERTIFIED=0
+ATTN_PRE_O_0_POS1_CLOSED=1
+MATCH_PASS=0
+JOINT_PCT_WRITE=0
+PARENT_PCT_WRITE=0
+SCOREBOARD_REWRITE=0
+TIP_BIND=6754616E
+CLI_BOARD_TIP_PIN=15A119D1
+
+## Parent authority (immutable; not rewritten)
+GPU_PARITY_ATTN_PRE_O_CLOSE_001.txt ATTN_PRE_O_0@pos0 BITEXACT CLOSED
+GPU_PARITY_ATTN_PRE_O_POS1_T2_KERNEL_001.txt ROOT_CAUSE_CLEAR (host SDPA irreducible)
+BOARD_SINGLE_WRITER / JOINT_STATUS_LIVE controlling PCT untouched
+HOLD tip6754 / 15A119 untouched
+
+## Port (OPTION_A)
+llama ggml build_attn_mha → flash_attn_ext F16 VKQ online mad
+ported into Deep2::AttentionWithCache for attend>=2:
+  Q/K f16 RT for dots; V f16; VKQ16 mad/scale; /S in f32
+T=1 retains prior host SDPA + headScratch f16rt (pos0 BITEXACT)
+attendLen = writePos+1 (KV write authority)
+EXE private cand: pin/rawr_attn_pre_o_pos1_fa.exe
+SHA256=B3250A80E4E6D38AAF2C5CF5D14AF5F4224DA6183F9284705DDA9F3574C6CAA4
+(C7402085 lineage private cand; FA fingerprint + attendLen fix remasured)
+HOTPATH_GEMV=VULKAN HOST_ATTN=CPU AttentionWithCache RAWRXD_GPU_FWD=0
+RAWRXD_KV_FP16_ROUNDTRIP=1
+RUNTIME_FINGERPRINT=ATTN_GGML_FA_F16=1 attend=2 headDim=64
+
+## Before / after (ATTN_PRE_O_0@pos1 n=2048 vs REF)
+BEFORE (T2_KERNEL / POS1_001 OPEN): maxAbs=2.292544e-05 @idx524 n_gt=476
+AFTER  (FA port remasure stage_dump_attn_pre_o_pos1_fa): maxAbs=3.864989e-08 @idx140 n_gt=0
+DELTA=close under TOL_ABS=1e-6
+POS0 REGRESSION: maxAbs=0 BITEXACT retained
+
+## Verdict
+ATTN_PRE_O_0_POS1_CLOSED=1
+UNDER_TOL=1
+ROOT=LLAMA_GGML_FLASH_ATTN_EXT_F16_VKQ_ONLINE_MAD
+MINIMAL_FIX_APPLIED=1 (KVCache.cpp AttentionWithCache T>=2 + Deep2Engine attendLen/headScratch gate)
+UNDER_ATTN_CLASS_TOL_PCT_RAISE=0 (not needed; numeric close)
+≠ PERFORMANCE_PASS ≠ tip-land ≠ CANON/LIVE/JOINT PCT write
+PROMOTE=0
+TIP_CLIMB=HOLD
+MATCH_PASS=0
+END

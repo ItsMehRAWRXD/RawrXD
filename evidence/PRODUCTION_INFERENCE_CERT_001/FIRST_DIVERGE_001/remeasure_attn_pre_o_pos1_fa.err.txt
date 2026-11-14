@@ -1,0 +1,1789 @@
+[MODEL_RESOLUTION] G:\~dev\rawrxd\models\tinyllama.gguf
+GGUF_LOAD_STAGE=enter path="G:\~dev\rawrxd\models\tinyllama.gguf" loadTensors=0 mmap=0
+GGUF_LOAD_STAGE=validated size=668788096 dataOff=1709440
+GGUF_LOAD_STAGE=fopen_ok
+GGUF_LOAD_STAGE=header_ok ver=3 tensors=201 kv=23
+[AUTO_BACKEND] model=G:\~dev\rawrxd\models\tinyllama.gguf weights=636MB kv=176MB scratch=0MB moe=0 experts=0 ctx=2048
+[AUTO_BACKEND] host RAM=29521MB commit=90708MB
+[AUTO_BACKEND] GPU Virtual Display Driver status=25174027 problem=0 healthy=1
+[AUTO_BACKEND] GPU AMD Radeon(TM) Graphics status=25174026 problem=0 healthy=1
+[AUTO_BACKEND] GPU AMD Radeon AI PRO R9700 status=25174026 problem=0 healthy=1
+[AUTO_BACKEND] GPU AMD Radeon RX 7800 XT status=25174026 problem=0 healthy=1
+[AUTO_BACKEND] Vulkan ICD ready
+[AUTO_BACKEND] primaryReady=1 primaryValidated=1 secondaryReady=1 secondaryValidated=1 vramPriMB=32768
+[AUTO_BACKEND] decision=VulkanPrimary reason=Primary GPU fits weights+KV+scratch
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+KEN_MARS_ACTIVE=1 DEEP2_MARS=1 HOST_DECODE=0 GPU_POLICY=SINGLE GPU_DEVICE_CLASS=DISCRETE NO_TRUNCATE_NEEDLE=1 PRODUCT_STREAMER_ARM=1
+PRODUCT_STREAMER_TIP_MINIMAL_PREP=1
+PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1
+RAWRXD_GPU_PREFLIGHT_BEGIN
+GPU_0=R9700
+GPU_0_WINDOWS_HEALTH=PASS
+GPU_0_PROBLEM_CODE=0
+GPU_0_CODE31=0
+GPU_1=RX_7800_XT
+GPU_1_WINDOWS_HEALTH=PASS
+GPU_1_PROBLEM_CODE=0
+GPU_1_CODE31=0
+GPU_PREFLIGHT=PASS
+PIN_BUDGET_FINAL stick=0 mib=0 owner=NONE resident=0
+LOADMODEL_STAGE=pre_reverse reverse_opt_in=0
+LOADMODEL_STAGE=gguf_loader_enter path="G:\~dev\rawrxd\models\tinyllama.gguf"
+GGUF_LOAD_STAGE=enter path="G:\~dev\rawrxd\models\tinyllama.gguf" loadTensors=0 mmap=0
+GGUF_LOAD_STAGE=validated size=668788096 dataOff=1709440
+GGUF_LOAD_STAGE=fopen_ok
+GGUF_LOAD_STAGE=header_ok ver=3 tensors=201 kv=23
+LOADMODEL_STAGE=gguf_meta_ok tensors=201
+LOADMODEL_STAGE=gguf_tensors_enter mmap=0
+GGUF_LOAD_STAGE=enter path="G:\~dev\rawrxd\models\tinyllama.gguf" loadTensors=1 mmap=0
+GGUF_LOAD_STAGE=validated size=668788096 dataOff=1709440
+GGUF_LOAD_STAGE=fopen_ok
+GGUF_LOAD_STAGE=header_ok ver=3 tensors=201 kv=23
+LOADMODEL_STAGE=gguf_loader_ok tensors=201
+LOADMODEL_STAGE=geometry_ok
+LOADMODEL_STAGE=digest_skip
+[ModelOpenCompat] repaired metadata: arch=0 vocab=0 hidden=0 layers=0 inter=1 heads=0 kvHeads=0
+GEMMA4_SCHEMA_BIND root=output.weight rows=32000 cols=2048 type=14
+GEMMA4_SCHEMA_BIND root=output_norm.weight rows=2048 cols=1 type=0
+WEIGHT_BUDGET_ENV_PRESENT=1
+WEIGHT_BUDGET_ENV_RAW="59568"
+WEIGHT_BUDGET_PARSE_OK=1
+WEIGHT_BUDGET_INPUT_MIB=59568
+WEIGHT_BUDGET_EFFECTIVE_MIB=59568
+RESIDENCY_BUDGET_MIB=59568
+BUDGET_RELATION_VALID=1
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+DEEP2_DEVICE_COUNT_DETECTED=3
+DEEP2_DEVICE_COUNT_OPENED=1
+DEEP2_COMPUTE_BACKEND=GPU
+DEEP2_EXEC_PATH=SINGLE_GPU
+DEEP2_EXEC_MODE=1
+DEEP2_GPU_POLICY=2
+DEEP2_PLAN_REASON=auto_best_compute
+DEEP2_PRIMARY_INDEX=0
+DEEP2_PRIMARY_STABLE_ID=1002:7551:0000000000016A19
+DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_VENDOR=AMD
+DEEP2_DEVICE_0_STABLE_ID=1002:7551:0000000000016A19
+DEEP2_DEVICE_0_VRAM_BYTES=34057322496
+DEEP2_DEVICE_0_SCORE=133
+DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
+DEEP2_DEVICE_1_NAME=AMD Radeon(TM) Graphics
+DEEP2_DEVICE_1_VENDOR=AMD
+DEEP2_DEVICE_1_STABLE_ID=1002:13C0:000000000001C2AC
+DEEP2_DEVICE_1_VRAM_BYTES=2119970816
+DEEP2_DEVICE_1_SCORE=101
+DEEP2_DEVICE_1_DUTY=DETECTED/UNUSED
+DEEP2_DEVICE_2_NAME=AMD Radeon RX 7800 XT
+DEEP2_DEVICE_2_VENDOR=AMD
+DEEP2_DEVICE_2_STABLE_ID=1002:747E:000000000001969F
+DEEP2_DEVICE_2_VRAM_BYTES=16962633728
+DEEP2_DEVICE_2_SCORE=116
+DEEP2_DEVICE_2_DUTY=DETECTED/UNUSED
+[VulkanCompute] DETECTED phys[0] type=2 AMD Radeon AI PRO R9700
+[VulkanCompute] DETECTED phys[1] type=2 Microsoft Direct3D12 (AMD Radeon AI PRO R9700)
+[VulkanCompute] SKIP_WARP_ICD phys[1] Microsoft Direct3D12 (AMD Radeon AI PRO R9700)
+[VulkanCompute] DETECTED phys[2] type=1 AMD Radeon(TM) Graphics
+[VulkanCompute] DETECTED phys[3] type=1 Microsoft Direct3D12 (AMD Radeon(TM) Graphics)
+[VulkanCompute] SKIP_WARP_ICD phys[3] Microsoft Direct3D12 (AMD Radeon(TM) Graphics)
+[VulkanCompute] DETECTED phys[4] type=2 AMD Radeon RX 7800 XT
+[VulkanCompute] DETECTED phys[5] type=2 Microsoft Direct3D12 (AMD Radeon RX 7800 XT)
+[VulkanCompute] SKIP_WARP_ICD phys[5] Microsoft Direct3D12 (AMD Radeon RX 7800 XT)
+[VulkanCompute] DETECTED phys[6] type=4 Microsoft Direct3D12 (Microsoft Basic Render Driver)
+[VulkanCompute] SKIP_WARP_ICD phys[6] Microsoft Direct3D12 (Microsoft Basic Render Driver)
+[VulkanCompute] OPEN_ONE AMD Radeon AI PRO R9700 (others unused)
+[VulkanCompute] QUEUES compute=0 transfer=1 dual=1
+[VulkanCompute] FREETOKEN_STICK_RUB transfer_q=1 waw_ready_gate=1 helpframe_nway=4
+[Deep2Engine] Vulkan single-GPU open: AMD Radeon AI PRO R9700 (needle=AMD Radeon AI PRO R9700)
+LIVE_GPU0=AMD Radeon AI PRO R9700
+LIVE_GPU1=AMD Radeon RX 7800 XT
+[Deep2Engine] BATCH2_SSVK_PACKED_DUAL_OPEN=1
+[Deep2Engine] BATCH2_SSVK_PACKED_DUAL_BOUND=1
+[Deep2Engine] BIND16_SSVK_PRODUCT_BOUND=1
+[Deep2Engine] Loading model from: G:\~dev\rawrxd\models\tinyllama.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Multi-shard detected: NO (1 files in G:\~dev\rawrxd\models)
+[Deep2Engine] REVERSE_HOTPATCH=OFF ? raw GGUF load (opt-in via RAWRXD_REVERSE_HOTPATCH=1)
+[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=PASS arch=llama L=22 H=2048 FFN=5632 heads=32 kv=4 hd=64 ctx=2048 ropeBase=10000 ropeDim=64
+[Deep2Engine] AUTHORITY_LADDER=DEFER_UNTIL_RUNTIME_RECEIPT
+[Deep2Engine] GGUF architecture: 'llama'  hidden=2048 layers=22 heads=32 kvHeads=4 inter=5632 vocab=32000
+[Deep2Engine] Tokenizer loaded: vocab=32000 bos=1 eos=2 (Spm::encode)
+[ResidencyManager] Initialized: maxResidentBytes=62461575168, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=59568 MB
+[ResidencyManager] this=000002691FDC6B40  Registered 'output.weight': shard=0 offset=1709440 bytes=53760000  |  registry_size=1  registeredBytes=53760000  zeroOffset=0  maxResidentBytes=62461575168
+[ResidencyManager] this=000002691FDC6B40  Registered 'blk.18.attn_q.weight': shard=0 offset=377767296 bytes=2359296  |  registry_size=100  registeredBytes=378417152  zeroOffset=0  maxResidentBytes=62461575168
+[ResidencyManager] this=000002691FDC6B40  Registered 'blk.9.attn_v.weight': shard=0 offset=668349824 bytes=430080  |  registry_size=200  registeredBytes=667070464  zeroOffset=0  maxResidentBytes=62461575168
+RMV_MOUNT_001
+TENSORS_DISCOVERED=201
+TENSORS_ADDRESSED=201
+TENSORS_REGISTERED=201
+INVALID_SHARD=0
+INVALID_RANGFFN_INTER_INFERRED ok=1 why=SPLIT_GATE_MATCHES_DOWN inter=5632 old_meta=5632 old_model=5632 old_config=5632
+PHI3_FUSED_FFN_RUNTIME layers=22 repaired=0 authority=UNOBSERVED
+GEMMA4_SCHEMA_BINDER ok=1 why=GEOM_READY hidden=2048 layers=22 vocab=32000 tokenEmbed=1
+GEMMA4_LAYER_TOPOLOGY_BIND ok=1 why=GEOM_READY_UNIFORM layers=22 split=22 fused_qkv=0 projector=0 ssm=0 ffn_only=0 ffn=22 unknown=0
+GEMMA4_BIND_LLAMA_FALLBACK ok=1 why=ALIAS_BOUND_GEOM_READY tokenEmbed=1 hidden=2048 vocab=32000 layers=22
+MODEL_PROVENANCE_BEGIN=1
+MODEL_LOCATION=
+MODEL_CANONICAL=
+MODEL_EXISTS=0 MODEL_IS_DIRECTORY=0 MODEL_BYTES=0 MODEL_WRITE_STAMP=0
+MODEL_LOCATOR_HASH=0 TENSOR_NAME_SHAPE_HASH=0 MODEL_EXPECTED_FP=11753875096244137027
+DIGEST_FP=0 MANIFEST_FP=0 BIND_FP=11753875096244137027 AUTHORITY_FP=11753875096244137027 RUNTIME_FP=11753875096244137027
+MANIFEST_LOADED=0 MANIFEST_THIS_RUN=0 MANIFEST_ID=none
+SCHEMA_ALIAS_FALLBACK_USED=1 INHERITED_SCHEMA_AUTHORITY=0 RUNTIME_OVERLAY_SEPARATE=1
+MODEL_PROVENANCE_MATCH=0 BLOCKED_AT=PROVENANCE_MISMATCH WHY=MODEL_LOCATION_NOT_FOUND
+AUTHORITY_CLASS=DISCOVERY_PROVENANCE PROMOTE=0
+MODEL_PROVENANCE_END=1
+MODEL_OPEN=PASS
+MODEL_PROVENANCE_MATCH=0
+AUTHORITY_LADDER=BLOCKED
+BLOCKED_AT=PROVENANCE_MISMATCH
+PROMOTE=0
+[BUF] hidden=2048 heads=32 headDim=64 qOut=2048 headScratch=2048 kvDim=256 ffn=5632 ffnGateScratch=5632
+SSM_BUF stPer=32 cvPer=8192 inner=0 state=0 NOTE=STATE_NE_HEADS
+SSM_MAMBA2_ARM=0 reason=GEO_OR_BUF
+[BUF] hidden=2048 heads=32 headDim=64 qOut=2048 headScratch=2048 kvDim=256 ffn=8192 ffnGateScratch=8192
+SSM_BUF stPer=32 cvPer=8192 inner=0 state=0 NOTE=STATE_NE_HEADS
+SSM_MAMBA2_ARM=0 reason=GEO_OR_BUF
+E=0
+OVERFLOW_RANGE=0
+ZERO_SIZE=0
+UNADDRESSED=0
+RMV_MOUNT_001=PASS
+[Deep2Engine] ResidencyManager: this=000002691FDC6B40  registered=201 tensors  bytes=667078656  max=62461575168
+[RMV_MOUNT_001]=PASS
+[Deep2Engine] AUTHORITY_LADDER=BLOCKED
+BLOCKED_AT=PROVENANCE_MISMATCH
+BLOCKED_OWNER=MODEL_PROVENANCE
+MODEL_OPEN=PASS
+PROMOTE=0
+[Deep2Engine] AUTHORITY_LADDER=SESSION_SEAL_ONLY provenance_blocks_promote=1 schema=201
+[ThreadPool] Initializing with 32 threads...
+[ThreadPool] Initialized 32 worker threads
+[ThreadPool] Reinitializing with 32 threads...
+[ThreadPool] Reinitialized 32 worker threads
+[Deep2Engine] ThreadPool (loadModel): 32 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF636AB3880 dequant=00007FF636AB0C20 GetGEMV(12)=00007FF636AB3880 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 22 GEMV kernels, 22 dequant kernels
+[KVCache] Lazy pages: layers=22 page=8 virtualMax=2048 heads=4 dim=64
+[KVCache] HOT_BYTES=360448 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] Model loaded successfully (201 tensors)
+[Deep2Engine] Initializing production inference engine...
+  Hidden Dim: 2048
+  Num Layers: 22
+  Num Heads: 32
+  Num KV Heads: 4
+  Head Dim: 64
+  Max Seq Len: 4096
+  Use ThreadPool: YES
+  Use KV Cache: YES
+  Use RoPE: YES
+[ThreadPool] Shutdown complete
+[ThreadPool] Initializing with 32 threads...
+[ThreadPool] Initialized 32 worker threads
+[ThreadPool] Reinitializing with 32 threads...
+[ThreadPool] Reinitialized 32 worker threads
+  ThreadPool: 32 threads (auto-detected)
+[KVCache] Addressable: layers=22 virtualSeq=4096 kv_heads=4 headDim=64 (hot pages only)
+[KVCache] Lazy pages: layers=22 page=8 virtualMax=4096 heads=4 dim=64
+[KVCache] HOT_BYTES=360448 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[SAFETY] Crash recovery initialized
+[HotPatcher] Initialized - The Bottle is ready (with safety systems)
+[Deep2Engine] HotPatcher initialized - The Bottle is ready
+[QuantKernelRegistry] Q4_K GEMV=00007FF636AB3880 dequant=00007FF636AB0C20 GetGEMV(12)=00007FF636AB3880 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 22 GEMV kernels, 22 dequant kernels
+[Deep2Engine] Telemetry controller initialized (PCIe stall + bandwidth + residency)
+[Deep2Engine] ENHANCEMENT STACK: ON
+ELASTIC_DYNAMIC warm=2304MB staged=288MB hot=4608MB la=1 ramAvail=25630MB vram=32479MB L=22 pressure=0
+FREETOKEN_MICROZONE live=1 zones=8 zone_mb=64 sticks=4 active=0 overwrites=0 hits=0 misses=0 hit_pct=0.00 stick0_rpm=0 stick1_rpm=0 allocs_after_init=0 key=address_id waw_ready_gate=1 helpframe_nway=4 eat_gt2=1 metric=fetch_not_fit models=20/35/70/120/300/671+ unbounded=1 public_gap=amd_xfer_waw+prescope_dual_only
+ADDRESSABILITY_OWNER=FUTURE_CONSUMER_SPACE
+RESIDENCY_OWNER=FIXED_FREETOKEN_POOL
+EVICTION_POLICY=NONE
+REASSIGNMENT_POLICY=ADVANCE_OWNERSHIP
+CACHE_POLICY=TIME_UNTIL_CONSUMER
+PHYSICAL_POOL_BYTES=536870912
+PHYSICAL_POOL_GROWS=0
+FUTURE_CONSUMER_SPACE_GROWS=1
+LOGICAL_ADDRESS_SPACE_GROWS=1
+PHYSICAL_PAGE_POOL_GROWS=0
+HOTPATH_ALLOCATIONS=0
+FREE_REQUIRED=0
+REUSE_REQUIRED=1
+LOGICAL_CONSUMERS=0
+LOGICAL_ADDRESS_BYTES=0
+PHYSICAL_PAGE_POOL_BYTES=536870912
+PHYSICAL_PAGES=8
+OWNERSHIP_ADVANCES=0
+PAST_OWNER_TO_FUTURE_OWNER=1
+CACHE_METRIC=TIME_UNTIL_CONSUMER
+PIN_BUDGET_SET site=ENGINE_MAX_HOT old=0 new=4831838208 owner=ENGINE_MAX_HOT moe_reserved=0
+[ElasticResidencyManager] PASSIVE vulkan/DualStick (no scheduler, no GhostCache)
+[ElasticResidencyManager] Initialized: warmCompressed=2304 MB, warmStaged=288 MB, hot=4608 MB, lookahead=1
+[Deep2Engine] ElasticResidencyManager DYNAMIC warm=2304 staged=288 hot=4608 la=1
+[Deep2Engine] ElasticResidencyManager: late-registered model tensors
+[Deep2Engine] CycloneScheduler armed for live generate
+[Deep2Engine] Residency telemetry: ENABLED
+[Deep2Engine] Medusa speculative decoding: ENABLED
+[Deep2Engine] NU fused packing: ENABLED
+[Deep2Engine] Warmup scheduler: ENABLED
+[Deep2Engine] Compressed KV cache: ENABLED (Q8_0)
+[Deep2Engine] NVMe streaming: ENABLED
+[Deep2Engine] Sliding window: ENABLED (size=4096)
+[Deep2Engine] Chamber (SM0-DSP) initialized
+[Deep2Engine] Chamber: ENABLED
+[Deep2Engine] PlasmaGovernor initialized
+[Deep2Engine] PlasmaGovernor: ENABLED
+[Deep2Engine] SovereignOutOfCoreRuntime initialized (8GB RAM / 32GB VRAM)
+[Deep2Engine] SovereignOutOfCoreRuntime: ENABLED
+[Deep2Engine] ToroidalKVCache initialized: 4096 tokens, 22 layers, 32 heads, 64 dim
+[Deep2Engine] ToroidalKVCache: ENABLED
+[MARS] Initializing controller...
+[VRAMManager] Initialized: GPU0=31.86 GB, GPU1=16.00 GB
+[DualGPUBackend] Initializing dual-GPU queues...
+[DualGPUBackend] Queues ready
+[MARS] Controller ready: GPU0=31.86 GB, GPU1=16.00 GB
+[Deep2Engine] MARS enabled: GPU0=31.86 GB, GPU1=16.00 GB
+KEN_MARS_ACTIVE=1 budget_env=E8B0M
+[VRAMManager] Allocated 'token_embd.weight' (36864000 bytes) on GPU 0
+[DualGPUBackend] Worker 0 started
+[DualGPUBackend] Worker 1 started
+[Deep2Engine] MARS keep-GPU pin 'token_embd.weight' (skip Host/Stream Evict under GPU product)
+[VRAMManager] Allocated 'output.weight' (53760000 bytes) on GPU 0
+[Deep2Engine] MARS keep-GPU pin 'output.weight' (skip Host/Stream Evict under GPU product)
+[VRAMManager] Allocated 'output_norm.weight' (8192 bytes) on GPU 0
+[Deep2Engine] MARS keep-GPU pin 'output_norm.weight' (skip Host/Stream Evict under GPU product)
+[VRAMManager] Allocated 'blk.0.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.attn_v.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.ffn_down.weight' (9461760 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.attn_v.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.ffn_down.weight' (9461760 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.attn_v.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.ffn_down.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.attn_v.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.ffn_down.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.attn_v.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.ffn_down.weight' (9461760 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.attn_v.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.ffn_down.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.attn_v.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.ffn_down.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.attn_v.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.ffn_down.weight' (9461760 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.attn_v.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.ffn_down.weight' (9461760 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.attn_v.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.ffn_down.weight' (9461760 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.attn_v.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.ffn_down.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.attn_v.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.ffn_down.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.attn_v.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.ffn_down.weight' (9461760 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.attn_v.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.ffn_down.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.attn_v.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.ffn_down.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.attn_v.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.ffn_down.weight' (9461760 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.attn_v.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.ffn_down.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.attn_v.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.ffn_down.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.attn_v.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.ffn_down.weight' (9461760 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.attn_v.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.ffn_down.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.attn_v.weight' (430080 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.ffn_down.weight' (9461760 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.ffn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.attn_q.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.attn_k.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.attn_v.weight' (294912 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.attn_output.weight' (2359296 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.attn_norm.weight' (8192 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.ffn_gate.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.ffn_up.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.ffn_down.weight' (6488064 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.ffn_norm.weight' (8192 bytes) on GPU 0
+[Deep2Engine] MARS placed 201 tensors (oom=0 skip=550) GPU0=636.18 MB GPU1=0.00 MB
+[Deep2Engine] Initializing VALPIN_BUDGET_FINAL stick=0 mib=0 owner=ENGINE_MAX_HOT resident=4831838208
+GEN=0 BIND16_LINKED=1 PACKED_Q2K_READY=1 SSVK_READY=1 DUALSTICK_ARMED=0 GPU_RESIDENT=0 MODEL_LOADED=1 DEVICE_COUNT=1 FWD_G0=0 FWD_G1=0 RESIDENCY_EPOCH=1 MODEL_EPOCH=1
+CONTINUITY_POINT=AFTER_FN_RESET
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+STREAM_STATUS=READY
+NEXT_ACTION=CALL_GENERATE_STREAM
+GENERATE_STREAM_ENTER=1 ARCH=llama LAYERS=22 KV_HEADS=4 HEAD_DIM=64
+[GEN_DEBUG] opts.maxTokens=1 remCtx=4094 maxTokens=1 promptN=2 maxSeqLen=4096 contextLimited=0
+-000 advanced features...
+[MedusaDecoder] Initialized: 4 heads, topK=10, maxTree=40
+[Deep2Engine] Medusa decoder initialized (4 heads)
+[Deep2Engine] NU Fused Packer initialized
+[CompressedKVCache] Initialized: 49 MB compressed (vs 176 MB F32, 3.6x ratio)
+[Deep2Engine] Compressed KV cache initialized (Q8_0)
+[NVMeStream] RAWRXD_NVME_REVERSE_BUNNYHOP=1 → force reverse bunnyhop
+[NVMeBunnyHop] UNLAIDOUT_REVERSE_CHUNK_HOTPATCH_BUNNYHOP G:\~dev\rawrxd\models\tinyllama.gguf 0.67GB c=4194304 u=1 hp=1
+[NVMeStream] REVERSE_BUNNYHOP UNLAIDOUT_REVERSE_CHUNK_HOTPATCH_BUNNYHOP
+[Deep2Engine] NVMe REVERSE_BUNNYHOP (unlaidout hotpatch)
+[SlidingWindow] Initialized: window=4096, overlap=512, chunk=2048
+[Deep2Engine] Sliding window initialized (size=4096)
+[Deep2Engine] Advanced features initialization complete
+[Deep2Engine] STACK vk=1 mars=1 elastic=1 cyclone=1 medusa=1 nu=1 warmup=1 ckv=1 nvme=1 slide=1 chamber=1 torus=1 plasma=1 sov=1 prefetch=1 devices=1
+[Deep2Engine] Initialization complete
+[Deep2Engine] Medusa speculative decoding: DISABLED
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[ChatTemplate] Forced 'tinyllama' from model name (arch=llama)
+[AGENT] PREFILL_BEGIN prompt_tokens=2
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+HOTPATH_GEMV=VULKAN
+HOTPATH_RMSNORM=CPU
+HOTPATH_ATTN=CPU
+HOTPATH_FFN=CPU
+HOTPATH_MEDUSA=0
+HOTPATH_ELASTIC=0
+HOTPATH_CYCLONE=1
+HOTPATH_CKV=0
+HOTPATH_GPU_FWD_ENABLED=0
+GEN=0 BIND16_LINKED=1 PACKED_Q2K_READY=1 SSVK_READY=1 DUALSTICK_ARMED=0 GPU_RESIDENT=0 MODEL_LOADED=1 DEVICE_COUNT=1 FWD_G0=0 FWD_G1=0 RESIDENCY_EPOCH=1 MODEL_EPOCH=1
+CONTINUITY_POINT=AFTER_FN_RESET
+AUTO_POLICY_ACTIVE=0
+MANUAL_ARM_FORCING=1
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=manual_preserve_mech
+K2_LIVE_POLICY_REUSE_STEPS=22
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=22 TOKENS=1
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=1216600000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=1 MECH_ENV=trampoline,cyclone,elastic,stream WANTED=1
+[HotPatcher] GENERATE_DECODER_ALG=0 HEAT=lukewarm SKIP_HOTPATCH=1
+[Deep2Engine] NVMe streaming: ENABLED
+[Deep2Engine] Initializing VAL-000 advanced features...
+[Deep2Engine] Advanced features initialization complete
+[LivePath] GENERATE_ALG_MASK=0x0000010E random=0
+[StreamEngine] Initialized: 22 layers, even compression, ON reuse, ON reconstruct, ON dense
+[StreamEngine] VRAM budget: 16.00 GB
+[StreamEngine] Chunk size: 1.09 GB compressed, 8.72 GB original, 1.09 GB reconstructed
+[unreverseHot] streamDead(0) → Reverse0 (layers=22)
+[Deep2Engine] embedToken: type=12 vocabSize=32000 hiddenDim=2048 data=0000026934310000 sizeBytes=36864000
+[STAGE_DIGEST] side=deep2 key=PROMPT_EMBED pos=0 n=2048 l2=1.008737855e-01 max_abs=7.818102837e-03 min=-7.818102837e-03 max=5.915760994e-03 sum=5.792212486e-02 fnv=13123758da8b244a nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_PROMPT_EMBED_pos0_layer0_full_n2048_seq001.bin nelem=2048 head=-1 seq=001 fnv=13123758da8b244a
+TRY_GPU_FALLBACK_HOST=1
+[LAYER_ENTER] ly=0
+[ResolveReverse0] layer 0: neutral resolved → direction chosen
+[ReconstructCompression] layer 0: 4/32 slices active, 8.72 GB → 1.09 GB
+[Deep2Engine] Layer 0 weights: wq.data=0000026937E40000 type=12 wk.data=0000026937BB0000 wv.data=0000026938080000 wo.data=0000026937C00000 wqkv.data=0000000000000000 attnO.data=0000026937C00000
+[Deep2Engine] Layer 0 weights: attnNorm.data=00000269298F0000 ffnNorm.data=0000026929900000
+[STAGE_DIGEST] side=deep2 key=ATTN_NORM_0 pos=0 n=2048 l2=8.105916869e-01 max_abs=3.308501542e-01 min=-3.308501542e-01 max=2.076931000e-01 sum=-1.899721562e+00 fnv=8fa738626cd6b956 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_ATTN_NORM_0_pos0_layer0_full_n2048_seq002.bin nelem=2048 head=-1 seq=002 fnv=8fa738626cd6b956
+[STAGE_DIGEST] rms_norm_epsilon_source=llama.attention.layer_norm_rms_epsilon
+[STAGE_DIGEST] rms_norm_epsilon=9.999999747e-06
+[STAGE_DIGEST] NORM_EPS=9.999999747e-06 attnNorm.type=0
+[VulkanCompute] Q4K_SPV=G:/~dev/rawrxd/src/backend/gemv_q4k.spv bytes=16292
+[STAGE_DIGEST] side=deep2 key=V_0 pos=0 n=256 l2=7.974116108e-02 max_abs=3.484935313e-02 min=-3.484935313e-02 max=1.588387042e-02 sum=-3.986512295e-02 fnv=e7c29770369b8134 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_V_0_pos0_layer0_full_n256_seq003.bin nelem=256 head=-1 seq=003 fnv=e7c29770369b8134
+[STAGE_DIGEST] side=deep2 key=Q_LINEAR_0 pos=0 n=2048 l2=1.938516560e+00 max_abs=3.353509307e-01 min=-3.353509307e-01 max=3.044906855e-01 sum=-3.521634190e+00 fnv=4edaa878a392003b nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_Q_LINEAR_0_pos0_layer0_full_n2048_seq004.bin nelem=2048 head=-1 seq=004 fnv=4edaa878a392003b
+[STAGE_DIGEST] side=deep2 key=K_LINEAR_0 pos=0 n=256 l2=1.317964356e+00 max_abs=3.645840287e-01 min=-2.980358601e-01 max=3.645840287e-01 sum=1.105420269e+00 fnv=01f6dd9fccd4a236 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_K_LINEAR_0_pos0_layer0_full_n256_seq005.bin nelem=256 head=-1 seq=005 fnv=01f6dd9fccd4a236
+[STAGE_DIGEST] side=deep2 key=Q_NORM_0 pos=0 n=2048 l2=1.938516560e+00 max_abs=3.353509307e-01 min=-3.353509307e-01 max=3.044906855e-01 sum=-3.521634190e+00 fnv=4edaa878a392003b nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_Q_NORM_0_pos0_layer0_full_n2048_seq006.bin nelem=2048 head=-1 seq=006 fnv=4edaa878a392003b
+[STAGE_DIGEST] side=deep2 key=K_NORM_0 pos=0 n=256 l2=1.317964356e+00 max_abs=3.645840287e-01 min=-2.980358601e-01 max=3.645840287e-01 sum=1.105420269e+00 fnv=01f6dd9fccd4a236 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_K_NORM_0_pos0_layer0_full_n256_seq007.bin nelem=256 head=-1 seq=007 fnv=01f6dd9fccd4a236
+[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_0 pos=0 n=2048 l2=1.938516560e+00 max_abs=3.353509307e-01 min=-3.353509307e-01 max=3.044906855e-01 sum=-3.521634190e+00 fnv=4edaa878a392003b nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_Q_PRE_ROPE_0_pos0_layer0_full_n2048_seq008.bin nelem=2048 head=-1 seq=008 fnv=4edaa878a392003b
+[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_0 pos=0 n=256 l2=1.317964356e+00 max_abs=3.645840287e-01 min=-2.980358601e-01 max=3.645840287e-01 sum=1.105420269e+00 fnv=01f6dd9fccd4a236 nf=0
+B03_QKV_MAXABS layer=0 post_qk_norm q=3.353509e-01 k=3.645840e-01 v=3.484935e-02 qL2=1.938517e+00 kL2=1.317964e+00 ropeDim=64 headDim=64 qnorm_data=0000000000000000
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_K_PRE_ROPE_0_pos0_layer0_full_n256_seq009.bin nelem=256 head=-1 seq=009 fnv=01f6dd9fccd4a236
+[STAGE_DIGEST] side=deep2 key=Q_POST_ROPE_0 pos=0 n=2048 l2=1.938516560e+00 max_abs=3.353509307e-01 min=-3.353509307e-01 max=3.044906855e-01 sum=-3.521634190e+00 fnv=4edaa878a392003b nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_Q_POST_ROPE_0_pos0_layer0_full_n2048_seq010.bin nelem=2048 head=-1 seq=010 fnv=4edaa878a392003b
+[STAGE_DIGEST] side=deep2 key=K_POST_ROPE_0 pos=0 n=256 l2=1.317964356e+00 max_abs=3.645840287e-01 min=-2.980358601e-01 max=3.645840287e-01 sum=1.105420269e+00 fnv=01f6dd9fccd4a236 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_K_POST_ROPE_0_pos0_layer0_full_n256_seq011.bin nelem=256 head=-1 seq=011 fnv=01f6dd9fccd4a236
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_0 pos=0 n=2048 l2=2.255584700e-01 max_abs=3.485107422e-02 min=-3.485107422e-02 max=1.588439941e-02 sum=-3.189682961e-01 fnv=4adca0fa1f8e7095 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_ATTN_PRE_O_0_pos0_layer0_full_n2048_seq012.bin nelem=2048 head=-1 seq=012 fnv=4adca0fa1f8e7095
+[POST_ATTN] ly=0 output[0..7]= -0.00375676 0.000458236 0.00408802 0.00349649 0.00122867 -0.00218583 0.00307479 -0.00178634 
+[STAGE_DIGEST] side=deep2 key=ATTN_OUT_0 pos=0 n=2048 l2=1.208299111e-01 max_abs=2.320849150e-02 min=-1.997100562e-02 max=2.320849150e-02 sum=-2.518811029e-02 fnv=15c4ede4dbc7f345 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_ATTN_OUT_0_pos0_layer0_full_n2048_seq013.bin nelem=2048 head=-1 seq=013 fnv=15c4ede4dbc7f345
+[STAGE_DIGEST] side=deep2 key=FFN_INP_0 pos=0 n=2048 l2=1.568282563e-01 max_abs=2.138306946e-02 min=-1.674162596e-02 max=2.138306946e-02 sum=3.273401390e-02 fnv=eb6ce146bd98d15f nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_INP_0_pos0_layer0_full_n2048_seq014.bin nelem=2048 head=-1 seq=014 fnv=eb6ce146bd98d15f
+[STAGE_DIGEST] side=deep2 key=FFN_NORM_0 pos=0 n=2048 l2=4.642569149e+00 max_abs=2.198841095e+00 min=-1.621559739e+00 max=2.198841095e+00 sum=5.575969930e+00 fnv=318e4ffe70703ba6 nf=0
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=5632 physical=5632 schema=SEPARATE_GATE
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_NORM_0_pos0_layer0_full_n2048_seq015.bin nelem=2048 head=-1 seq=015 fnv=318e4ffe70703ba6
+[STAGE_DIGEST] side=deep2 key=FFN_GATE_0 pos=0 n=5632 l2=1.346621250e+01 max_abs=1.393695474e+00 min=-1.123836398e+00 max=1.393695474e+00 sum=1.162031567e+02 fnv=6ec632b558d837ec nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_GATE_0_pos0_layer0_full_n5632_seq016.bin nelem=5632 head=-1 seq=016 fnv=6ec632b558d837ec
+[STAGE_DIGEST] side=deep2 key=FFN_UP_0 pos=0 n=5632 l2=7.607105830e+00 max_abs=6.975076795e-01 min=-6.975076795e-01 max=5.731047988e-01 sum=3.379644510e+00 fnv=e912b98a59b57c61 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_UP_0_pos0_layer0_full_n5632_seq017.bin nelem=5632 head=-1 seq=017 fnv=e912b98a59b57c61
+[STAGE_DIGEST] side=deep2 key=FFN_ACT_0 pos=0 n=5632 l2=1.045696373e+00 max_abs=5.101068616e-01 min=-5.101068616e-01 max=3.459407687e-01 sum=-3.111591938e-01 fnv=a03396b77ad7c93d nf=0
+[FFN_WEIGHT_DIAG] ly=0 intermediateDim=5632 gateBufNorm=1.045696e+00 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=14
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_ACT_0_pos0_layer0_full_n5632_seq018.bin nelem=5632 head=-1 seq=018 fnv=a03396b77ad7c93d
+[FFN_EXIT] ly=0 (normal path)
+[STAGE_DIGEST] side=deep2 key=FFN_DOWN_0 pos=0 n=2048 l2=9.361177994e-01 max_abs=1.429936588e-01 min=-1.429936588e-01 max=9.430344403e-02 sum=-1.194198046e+00 fnv=b36f74f121e57832 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_DOWN_0_pos0_layer0_full_n2048_seq019.bin nelem=2048 head=-1 seq=019 fnv=b36f74f121e57832
+[STAGE_DIGEST] side=deep2 key=POST_FFN_0 pos=0 n=2048 l2=9.900476832e-01 max_abs=1.441344768e-01 min=-1.441344768e-01 max=1.156865135e-01 sum=-1.161464013e+00 fnv=93f62e297e42a4aa nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_POST_FFN_0_pos0_layer0_full_n2048_seq020.bin nelem=2048 head=-1 seq=020 fnv=93f62e297e42a4aa
+[STAGE_DIGEST] side=deep2 key=LAYER0_OUT pos=0 n=2048 l2=9.900476832e-01 max_abs=1.441344768e-01 min=-1.441344768e-01 max=1.156865135e-01 sum=-1.161464013e+00 fnv=93f62e297e42a4aa nf=0
+[LAYER_EXIT] ly=0
+[FINAL_OUT] ly=0 norm=9.900477e-01 finite=2048/2048 output[0..7]= -0.00350487 -0.0098072 0.0216463 0.0524321 -0.0380994 0.0471192 0.027133 -0.00908656 
+[LAYER_ENTER] ly=1
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_LAYER0_OUT_pos0_layer0_full_n2048_seq021.bin nelem=2048 head=-1 seq=021 fnv=93f62e297e42a4aa
+[ResolveReverse0] layer 1: neutral resolved → direction chosen
+[ReconstructCompression] layer 1: 4/32 slices active, 8.72 GB → 1.09 GB
+[STAGE_DIGEST] side=deep2 key=ATTN_NORM_1 pos=0 n=2048 l2=5.656484524e+00 max_abs=2.800799370e+00 min=-2.699929714e+00 max=2.800799370e+00 sum=-4.015748191e+00 fnv=a0772061bddf17b2 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_ATTN_NORM_1_pos0_layer0_full_n2048_seq022.bin nelem=2048 head=-1 seq=022 fnv=a0772061bddf17b2
+[STAGE_DIGEST] side=deep2 key=V_1 pos=0 n=256 l2=3.433650963e-01 max_abs=7.228469104e-02 min=-7.040087879e-02 max=7.228469104e-02 sum=4.325980355e-02 fnv=dd6d2015dbe10388 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_V_1_pos0_layer0_full_n256_seq023.bin nelem=256 head=-1 seq=023 fnv=dd6d2015dbe10388
+[STAGE_DIGEST] side=deep2 key=Q_LINEAR_1 pos=0 n=2048 l2=2.907888256e+01 max_abs=4.583308697e+00 min=-3.900140047e+00 max=4.583308697e+00 sum=8.370486838e+01 fnv=dc05b7b2027cfcf0 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_Q_LINEAR_1_pos0_layer0_full_n2048_seq024.bin nelem=2048 head=-1 seq=024 fnv=dc05b7b2027cfcf0
+[STAGE_DIGEST] side=deep2 key=K_LINEAR_1 pos=0 n=256 l2=1.721931789e+01 max_abs=4.045411587e+00 min=-2.622906923e+00 max=4.045411587e+00 sum=1.885591157e+00 fnv=9cc8598edafb7101 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_K_LINEAR_1_pos0_layer0_full_n256_seq025.bin nelem=256 head=-1 seq=025 fnv=9cc8598edafb7101
+[STAGE_DIGEST] side=deep2 key=Q_NORM_1 pos=0 n=2048 l2=2.907888256e+01 max_abs=4.583308697e+00 min=-3.900140047e+00 max=4.583308697e+00 sum=8.370486838e+01 fnv=dc05b7b2027cfcf0 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_Q_NORM_1_pos0_layer0_full_n2048_seq026.bin nelem=2048 head=-1 seq=026 fnv=dc05b7b2027cfcf0
+[STAGE_DIGEST] side=deep2 key=K_NORM_1 pos=0 n=256 l2=1.721931789e+01 max_abs=4.045411587e+00 min=-2.622906923e+00 max=4.045411587e+00 sum=1.885591157e+00 fnv=9cc8598edafb7101 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_K_NORM_1_pos0_layer0_full_n256_seq027.bin nelem=256 head=-1 seq=027 fnv=9cc8598edafb7101
+[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_1 pos=0 n=2048 l2=2.907888256e+01 max_abs=4.583308697e+00 min=-3.900140047e+00 max=4.583308697e+00 sum=8.370486838e+01 fnv=dc05b7b2027cfcf0 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_Q_PRE_ROPE_1_pos0_layer0_full_n2048_seq028.bin nelem=2048 head=-1 seq=028 fnv=dc05b7b2027cfcf0
+[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_1 pos=0 n=256 l2=1.721931789e+01 max_abs=4.045411587e+00 min=-2.622906923e+00 max=4.045411587e+00 sum=1.885591157e+00 fnv=9cc8598edafb7101 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_K_PRE_ROPE_1_pos0_layer0_full_n256_seq029.bin nelem=256 head=-1 seq=029 fnv=9cc8598edafb7101
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_1 pos=0 n=2048 l2=9.711729777e-01 max_abs=7.226562500e-02 min=-7.037353516e-02 max=7.226562500e-02 sum=3.469414711e-01 fnv=70f993b6d58c1375 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_ATTN_PRE_O_1_pos0_layer0_full_n2048_seq030.bin nelem=2048 head=-1 seq=030 fnv=70f993b6d58c1375
+[POST_ATTN] ly=1 output[0..7]= 0.000495927 0.00690817 0.00498945 -0.0446298 0.00902112 0.00367323 -0.000189472 -0.0013667 
+[STAGE_DIGEST] side=deep2 key=ATTN_OUT_1 pos=0 n=2048 l2=3.389273105e-01 max_abs=1.023453027e-01 min=-1.023453027e-01 max=4.628742486e-02 sum=-5.309871160e-01 fnv=21e2ae36ba2917e6 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_ATTN_OUT_1_pos0_layer0_full_n2048_seq031.bin nelem=2048 head=-1 seq=031 fnv=21e2ae36ba2917e6
+[STAGE_DIGEST] side=deep2 key=FFN_INP_1 pos=0 n=2048 l2=1.072065735e+00 max_abs=1.297387928e-01 min=-1.297387928e-01 max=1.033641025e-01 sum=-1.692451105e+00 fnv=fe568afc50de53a6 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_INP_1_pos0_layer0_full_n2048_seq032.bin nelem=2048 head=-1 seq=032 fnv=fe568afc50de53a6
+[STAGE_DIGEST] side=deep2 key=FFN_NORM_1 pos=0 n=2048 l2=5.982501504e+00 max_abs=1.456245184e+00 min=-1.456245184e+00 max=9.477006793e-01 sum=-8.792751404e+00 fnv=9811e0d7e87c839f nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_NORM_1_pos0_layer0_full_n2048_seq033.bin nelem=2048 head=-1 seq=033 fnv=9811e0d7e87c839f
+[STAGE_DIGEST] side=deep2 key=FFN_GATE_1 pos=0 n=5632 l2=8.658828803e+00 max_abs=1.303919554e+00 min=-4.468402863e-01 max=1.303919554e+00 sum=5.656570383e+01 fnv=6fd8c16256e2fc69 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_GATE_1_pos0_layer0_full_n5632_seq034.bin nelem=5632 head=-1 seq=034 fnv=6fd8c16256e2fc69
+[STAGE_DIGEST] side=deep2 key=FFN_UP_1 pos=0 n=5632 l2=7.573169093e+00 max_abs=9.594175816e-01 min=-7.937213182e-01 max=9.594175816e-01 sum=1.123706940e+01 fnv=3d511502f3513d7c nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_UP_1_pos0_layer0_full_n5632_seq035.bin nelem=5632 head=-1 seq=035 fnv=3d511502f3513d7c
+[STAGE_DIGEST] side=deep2 key=FFN_ACT_1 pos=0 n=5632 l2=1.148729464e+00 max_abs=9.839064479e-01 min=-1.656206846e-01 max=9.839064479e-01 sum=1.641256121e+00 fnv=d1d8eca586558997 nf=0
+[FFN_WEIGHT_DIAG] ly=1 intermediateDim=5632 gateBufNorm=1.148729e+00 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=14
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_ACT_1_pos0_layer0_full_n5632_seq036.bin nelem=5632 head=-1 seq=036 fnv=d1d8eca586558997
+[FFN_EXIT] ly=1 (normal path)
+[STAGE_DIGEST] side=deep2 key=FFN_DOWN_1 pos=0 n=2048 l2=1.096866999e+00 max_abs=3.304084539e-01 min=-3.304084539e-01 max=3.194070458e-01 sum=-3.371721831e-01 fnv=f47ada72dfbf3aaf nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_DOWN_1_pos0_layer0_full_n2048_seq037.bin nelem=2048 head=-1 seq=037 fnv=f47ada72dfbf3aaf
+[STAGE_DIGEST] side=deep2 key=POST_FFN_1 pos=0 n=2048 l2=1.656331993e+00 max_abs=4.097647667e-01 min=-3.511730433e-01 max=4.097647667e-01 sum=-2.029623334e+00 fnv=370b67af0bae982f nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_POST_FFN_1_pos0_layer0_full_n2048_seq038.bin nelem=2048 head=-1 seq=038 fnv=370b67af0bae982f
+[STAGE_DIGEST] side=deep2 key=LAYER1_OUT pos=0 n=2048 l2=1.656331993e+00 max_abs=4.097647667e-01 min=-3.511730433e-01 max=4.097647667e-01 sum=-2.029623334e+00 fnv=370b67af0bae982f nf=0
+[LAYER_EXIT] ly=1
+[FINAL_OUT] ly=1 norm=1.656332e+00 finite=2048/2048 output[0..7]= 0.00811748 -0.0051445 0.0447495 0.242761 -0.252893 0.3702 0.0121167 -0.00321282 
+[LAYER_ENTER] ly=2
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_LAYER1_OUT_pos0_layer0_full_n2048_seq039.bin nelem=2048 head=-1 seq=039 fnv=370b67af0bae982f
+[ResolveReverse0] layer 2: neutral resolved → direction chosen
+[ReconstructCompression] layer 2: 4/32 slices active, 8.72 GB → 1.09 GB
+[STAGE_DIGEST] side=deep2 key=ATTN_NORM_2 pos=0 n=2048 l2=5.902821455e+00 max_abs=1.838069558e+00 min=-1.838069558e+00 max=1.662719607e+00 sum=-7.756303222e+00 fnv=2452527ef6ec1d17 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_ATTN_NORM_2_pos0_layer0_full_n2048_seq040.bin nelem=2048 head=-1 seq=040 fnv=2452527ef6ec1d17
+[STAGE_DIGEST] side=deep2 key=V_2 pos=0 n=256 l2=5.063560725e-01 max_abs=2.417144477e-01 min=-2.417144477e-01 max=1.514543295e-01 sum=-4.007454962e-02 fnv=d29efa44664cde58 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_V_2_pos0_layer0_full_n256_seq041.bin nelem=256 head=-1 seq=041 fnv=d29efa44664cde58
+[STAGE_DIGEST] side=deep2 key=Q_LINEAR_2 pos=0 n=2048 l2=2.863854372e+01 max_abs=2.951260090e+00 min=-2.951260090e+00 max=2.665928364e+00 sum=-1.504591062e+01 fnv=34da8a794c0f041d nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_Q_LINEAR_2_pos0_layer0_full_n2048_seq042.bin nelem=2048 head=-1 seq=042 fnv=34da8a794c0f041d
+[STAGE_DIGEST] side=deep2 key=K_LINEAR_2 pos=0 n=256 l2=2.439100173e+01 max_abs=5.927221775e+00 min=-5.927221775e+00 max=4.123762608e+00 sum=-2.230389734e+01 fnv=67690aa979bb9328 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_K_LINEAR_2_pos0_layer0_full_n256_seq043.bin nelem=256 head=-1 seq=043 fnv=67690aa979bb9328
+[STAGE_DIGEST] side=deep2 key=Q_NORM_2 pos=0 n=2048 l2=2.863854372e+01 max_abs=2.951260090e+00 min=-2.951260090e+00 max=2.665928364e+00 sum=-1.504591062e+01 fnv=34da8a794c0f041d nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_Q_NORM_2_pos0_layer0_full_n2048_seq044.bin nelem=2048 head=-1 seq=044 fnv=34da8a794c0f041d
+[STAGE_DIGEST] side=deep2 key=K_NORM_2 pos=0 n=256 l2=2.439100173e+01 max_abs=5.927221775e+00 min=-5.927221775e+00 max=4.123762608e+00 sum=-2.230389734e+01 fnv=67690aa979bb9328 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_K_NORM_2_pos0_layer0_full_n256_seq045.bin nelem=256 head=-1 seq=045 fnv=67690aa979bb9328
+[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_2 pos=0 n=2048 l2=2.863854372e+01 max_abs=2.951260090e+00 min=-2.951260090e+00 max=2.665928364e+00 sum=-1.504591062e+01 fnv=34da8a794c0f041d nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_Q_PRE_ROPE_2_pos0_layer0_full_n2048_seq046.bin nelem=2048 head=-1 seq=046 fnv=34da8a794c0f041d
+[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_2 pos=0 n=256 l2=2.439100173e+01 max_abs=5.927221775e+00 min=-5.927221775e+00 max=4.123762608e+00 sum=-2.230389734e+01 fnv=67690aa979bb9328 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_K_PRE_ROPE_2_pos0_layer0_full_n256_seq047.bin nelem=256 head=-1 seq=047 fnv=67690aa979bb9328
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_2 pos=0 n=2048 l2=1.432146277e+00 max_abs=2.416992188e-01 min=-2.416992188e-01 max=1.514892578e-01 sum=-3.198242188e-01 fnv=b5826dc945b158f5 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_ATTN_PRE_O_2_pos0_layer0_full_n2048_seq048.bin nelem=2048 head=-1 seq=048 fnv=b5826dc945b158f5
+[POST_ATTN] ly=2 output[0..7]= -0.00462688 -0.00223635 -0.0190227 0.0684625 -0.0343928 0.0583723 0.0147827 0.00185178 
+[STAGE_DIGEST] side=deep2 key=ATTN_OUT_2 pos=0 n=2048 l2=8.810365814e-01 max_abs=3.413272798e-01 min=-3.413272798e-01 max=3.319468796e-01 sum=-1.213553885e+00 fnv=9b977c6f3530938c nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_ATTN_OUT_2_pos0_layer0_full_n2048_seq049.bin nelem=2048 head=-1 seq=049 fnv=9b977c6f3530938c
+[STAGE_DIGEST] side=deep2 key=FFN_INP_2 pos=0 n=2048 l2=1.921816187e+00 max_abs=4.285718501e-01 min=-4.184195399e-01 max=4.285718501e-01 sum=-3.243177175e+00 fnv=c717106d67495816 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_INP_2_pos0_layer0_full_n2048_seq050.bin nelem=2048 head=-1 seq=050 fnv=c717106d67495816
+[STAGE_DIGEST] side=deep2 key=FFN_NORM_2 pos=0 n=2048 l2=7.398574709e+00 max_abs=1.749427319e+00 min=-1.602435946e+00 max=1.749427319e+00 sum=-1.303138018e+01 fnv=0f455e3de18c0df9 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_NORM_2_pos0_layer0_full_n2048_seq051.bin nelem=2048 head=-1 seq=051 fnv=0f455e3de18c0df9
+[STAGE_DIGEST] side=deep2 key=FFN_GATE_2 pos=0 n=5632 l2=2.743850424e+01 max_abs=1.687872124e+01 min=-7.587550282e-01 max=1.687872124e+01 sum=-2.400725511e+02 fnv=c4a99b406ebb91fd nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_GATE_2_pos0_layer0_full_n5632_seq052.bin nelem=5632 head=-1 seq=052 fnv=c4a99b406ebb91fd
+[STAGE_DIGEST] side=deep2 key=FFN_UP_2 pos=0 n=5632 l2=1.363763009e+01 max_abs=9.574847221e+00 min=-3.072432995e+00 max=9.574847221e+00 sum=2.386252326e+00 fnv=0f11cf77034096a6 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_UP_2_pos0_layer0_full_n5632_seq053.bin nelem=5632 head=-1 seq=053 fnv=0f11cf77034096a6
+[STAGE_DIGEST] side=deep2 key=FFN_ACT_2 pos=0 n=5632 l2=1.617601338e+02 max_abs=1.616111755e+02 min=-2.620074987e+00 max=1.616111755e+02 sum=1.694414593e+02 fnv=52c5b357ee0bbe27 nf=0
+[FFN_WEIGHT_DIAG] ly=2 intermediateDim=5632 gateBufNorm=1.617601e+02 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=12
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_ACT_2_pos0_layer0_full_n5632_seq054.bin nelem=5632 head=-1 seq=054 fnv=52c5b357ee0bbe27
+[FFN_EXIT] ly=2 (normal path)
+[STAGE_DIGEST] side=deep2 key=FFN_DOWN_2 pos=0 n=2048 l2=1.705657301e+02 max_abs=1.358383026e+02 min=-1.358383026e+02 max=2.111689758e+01 sum=-2.059793109e+02 fnv=2442bba3fbc09728 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_DOWN_2_pos0_layer0_full_n2048_seq055.bin nelem=2048 head=-1 seq=055 fnv=2442bba3fbc09728
+[STAGE_DIGEST] side=deep2 key=POST_FFN_2 pos=0 n=2048 l2=1.709958726e+02 max_abs=1.362113647e+02 min=-1.362113647e+02 max=2.113363838e+01 sum=-2.092224817e+02 fnv=e3e4ff1534565f43 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_POST_FFN_2_pos0_layer0_full_n2048_seq056.bin nelem=2048 head=-1 seq=056 fnv=e3e4ff1534565f43
+[STAGE_DIGEST] side=deep2 key=LAYER2_OUT pos=0 n=2048 l2=1.709958726e+02 max_abs=1.362113647e+02 min=-1.362113647e+02 max=2.113363838e+01 sum=-2.092224817e+02 fnv=e3e4ff1534565f43 nf=0
+[LAYER_EXIT] ly=2
+[FINAL_OUT] ly=2 norm=1.709959e+02 finite=2048/2048 output[0..7]= -0.0246307 -0.0894092 0.0438634 -0.102015 0.0878637 -0.282454 0.317662 0.120894 
+[LAYER_ENTER] ly=3
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_LAYER2_OUT_pos0_layer0_full_n2048_seq057.bin nelem=2048 head=-1 seq=057 fnv=e3e4ff1534565f43
+[ResolveReverse0] layer 3: neutral resolved → direction chosen
+[ReconstructCompression] layer 3: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=3 output[0..7]= 0.000701538 -0.00311933 -0.00116315 0.00284889 0.00333052 0.00212837 0.00271549 -0.00276125 
+[FFN_WEIGHT_DIAG] ly=3 intermediateDim=5632 gateBufNorm=2.488007e-01 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=12
+[FFN_EXIT] ly=3 (normal path)
+[LAYER_EXIT] ly=3
+[FINAL_OUT] ly=3 norm=1.710386e+02 finite=2048/2048 output[0..7]= -0.0267199 -0.0919829 0.0394507 -0.0957157 0.0934912 -0.280175 0.319727 0.113175 
+[LAYER_ENTER] ly=4
+[ResolveReverse0] layer 4: neutral resolved → direction chosen
+[ReconstructCompression] layer 4: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=4 output[0..7]= -0.0020691 0.000558701 0.00161129 -0.00198242 0.000438472 -0.00194506 0.00112454 0.00391299 
+[FFN_WEIGHT_DIAG] ly=4 intermediateDim=5632 gateBufNorm=1.801582e-01 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=14
+[FFN_EXIT] ly=4 (normal path)
+[LAYER_EXIT] ly=4
+[FINAL_OUT] ly=4 norm=1.710702e+02 finite=2048/2048 output[0..7]= -0.0326276 -0.0885354 0.0401547 -0.0961661 0.0989362 -0.284388 0.319498 0.107018 
+[LAYER_ENTER] ly=5
+[ResolveReverse0] layer 5: neutral resolved → direction chosen
+[ReconstructCompression] layer 5: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=5 output[0..7]= -0.000685932 0.00714075 -0.00108685 0.00436025 0.00395942 -0.00496306 -0.0043505 -0.00489203 
+[FFN_WEIGHT_DIAG] ly=5 intermediateDim=5632 gateBufNorm=2.286395e-01 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=12
+[FFN_EXIT] ly=5 (normal path)
+[LAYER_EXIT] ly=5
+[FINAL_OUT] ly=5 norm=1.711144e+02 finite=2048/2048 output[0..7]= -0.0406305 -0.0899921 0.0396041 -0.0915172 0.118765 -0.284916 0.320693 0.100603 
+[LAYER_ENTER] ly=6
+[ResolveReverse0] layer 6: neutral resolved → direction chosen
+[ReconstructCompression] layer 6: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=6 output[0..7]= -0.00608397 0.00779992 0.0026012 -0.00865858 0.00820215 -0.00388234 0.00976313 -0.00819991 
+[FFN_WEIGHT_DIAG] ly=6 intermediateDim=5632 gateBufNorm=3.620437e-01 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=12
+[FFN_EXIT] ly=6 (normal path)
+[LAYER_EXIT] ly=6
+[FINAL_OUT] ly=6 norm=1.711762e+02 finite=2048/2048 output[0..7]= -0.0477909 -0.0668475 0.0259279 -0.0910033 0.141115 -0.282744 0.321689 0.0858826 
+[LAYER_ENTER] ly=7
+[ResolveReverse0] layer 7: neutral resolved → direction chosen
+[ReconstructCompression] layer 7: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=7 output[0..7]= -0.00853062 0.0104356 -0.0106818 -0.0116028 0.00918382 -0.00646171 -0.00176651 0.00178568 
+[FFN_WEIGHT_DIAG] ly=7 intermediateDim=5632 gateBufNorm=3.167567e+00 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=14
+[FFN_EXIT] ly=7 (normal path)
+[LAYER_EXIT] ly=7
+[FINAL_OUT] ly=7 norm=1.697198e+02 finite=2048/2048 output[0..7]= -0.138276 -0.0140496 0.00121223 -0.0754746 0.216324 -0.27637 0.305616 0.0625549 
+[LAYER_ENTER] ly=8
+[ResolveReverse0] layer 8: neutral resolved → direction chosen
+[ReconstructCompression] layer 8: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=8 output[0..7]= 0.00461411 0.00812269 -0.0082588 -0.00981731 0.00398072 -0.00380415 -0.000905809 0.000891549 
+[FFN_WEIGHT_DIAG] ly=8 intermediateDim=5632 gateBufNorm=3.790351e-01 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=14
+[FFN_EXIT] ly=8 (normal path)
+[LAYER_EXIT] ly=8
+[FINAL_OUT] ly=8 norm=1.697197e+02 finite=2048/2048 output[0..7]= -0.140208 0.00404096 -0.0141368 -0.0909652 0.231303 -0.28593 0.304287 0.0604002 
+[LAYER_ENTER] ly=9
+[ResolveReverse0] layer 9: neutral resolved → direction chosen
+[ReconstructCompression] layer 9: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=9 output[0..7]= -0.0115724 -0.000827609 -0.00123299 -0.0174497 -0.00364334 0.0140648 -0.0123741 0.0022392 
+[FFN_WEIGHT_DIAG] ly=9 intermediateDim=5632 gateBufNorm=4.091991e-01 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=14
+[FFN_EXIT] ly=9 (normal path)
+[LAYER_EXIT] ly=9
+[FINAL_OUT] ly=9 norm=1.696700e+02 finite=2048/2048 output[0..7]= -0.150996 0.00693852 -0.026004 -0.104138 0.226166 -0.282603 0.286341 0.045408 
+[LAYER_ENTER] ly=10
+[ResolveReverse0] layer 10: neutral resolved → direction chosen
+[ReconstructCompression] layer 10: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=10 output[0..7]= 0.0136 0.0306996 -0.00239729 -0.00578597 -0.00479947 -0.00879607 -0.00781577 0.0167268 
+[FFN_WEIGHT_DIAG] ly=10 intermediateDim=5632 gateBufNorm=3.957511e-01 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=12
+[Q4K_WEIGHT_DIAG] ly=10 wDown blocksChecked=8 wCount=2048 wMin=-5.839920e-02 wMax=5.718249e-02 wRms=1.810968e-02
+[FFN_EXIT] ly=10 (normal path)
+[LAYER_EXIT] ly=10
+[FINAL_OUT] ly=10 norm=1.696296e+02 finite=2048/2048 output[0..7]= -0.147201 0.0327872 -0.0254997 -0.0979826 0.228647 -0.284205 0.277145 0.0578815 
+[LAYER_ENTER] ly=11
+[ResolveReverse0] layer 11: neutral resolved → direction chosen
+[ReconstructCompression] layer 11: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=11 output[0..7]= 0.0140024 0.0112811 -0.034029 0.00648518 -0.0257437 0.0163354 6.33001e-05 0.0352386 
+[FFN_WEIGHT_DIAG] ly=11 intermediateDim=5632 gateBufNorm=4.878872e-01 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=12
+[FFN_EXIT] ly=11 (normal path)
+[LAYER_EXIT] ly=11
+[FINAL_OUT] ly=11 norm=1.695368e+02 finite=2048/2048 output[0..7]= -0.14372 0.0555112 -0.0452826 -0.0819636 0.221414 -0.28963 0.293714 0.0923142 
+[LAYER_ENTER] ly=12
+[ResolveReverse0] layer 12: neutral resolved → direction chosen
+[ReconstructCompression] layer 12: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=12 output[0..7]= -0.00140714 0.0176934 -0.00586651 -0.00840987 0.00852134 0.0166582 0.00417666 -0.0180758 
+[FFN_WEIGHT_DIAG] ly=12 intermediateDim=5632 gateBufNorm=4.773831e-01 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=14
+[FFN_EXIT] ly=12 (normal path)
+[LAYER_EXIT] ly=12
+[FINAL_OUT] ly=12 norm=1.694186e+02 finite=2048/2048 output[0..7]= -0.154221 0.0767706 -0.0538952 -0.0855371 0.22787 -0.276926 0.304582 0.0696695 
+[LAYER_ENTER] ly=13
+[ResolveReverse0] layer 13: neutral resolved → direction chosen
+[ReconstructCompression] layer 13: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=13 output[0..7]= -0.0114161 -0.0178958 -0.00338448 0.016058 0.0346732 0.0210767 0.00142885 -0.00181193 
+[FFN_WEIGHT_DIAG] ly=13 intermediateDim=5632 gateBufNorm=6.247688e-01 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=12
+[FFN_EXIT] ly=13 (normal path)
+[LAYER_EXIT] ly=13
+[FINAL_OUT] ly=13 norm=1.692938e+02 finite=2048/2048 output[0..7]= -0.146875 0.056855 -0.0411238 -0.0590999 0.267841 -0.271057 0.296512 0.0614048 
+[LAYER_ENTER] ly=14
+[ResolveReverse0] layer 14: neutral resolved → direction chosen
+[ReconstructCompression] layer 14: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=14 output[0..7]= -0.0288926 0.00947206 -0.0163608 -0.0208522 0.0184358 -0.0130334 0.00867697 -0.00951834 
+[FFN_WEIGHT_DIAG] ly=14 intermediateDim=5632 gateBufNorm=5.566972e-01 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=12
+[FFN_EXIT] ly=14 (normal path)
+[LAYER_EXIT] ly=14
+[FINAL_OUT] ly=14 norm=1.691148e+02 finite=2048/2048 output[0..7]= -0.186248 0.0470149 -0.0497154 -0.0699655 0.297776 -0.281694 0.300197 0.0431582 
+[LAYER_ENTER] ly=15
+[ResolveReverse0] layer 15: neutral resolved → direction chosen
+[ReconstructCompression] layer 15: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=15 output[0..7]= -0.0248797 -0.0548853 -0.0336019 0.0350178 0.0157219 -0.0195362 0.00166834 -0.00997161 
+[FFN_WEIGHT_DIAG] ly=15 intermediateDim=5632 gateBufNorm=6.865208e-01 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=14
+[FFN_EXIT] ly=15 (normal path)
+[LAYER_EXIT] ly=15
+[FINAL_OUT] ly=15 norm=1.689308e+02 finite=2048/2048 output[0..7]= -0.214538 0.00291405 -0.0722892 -0.0160545 0.320226 -0.280279 0.285746 0.0363933 
+[LAYER_ENTER] ly=16
+[ResolveReverse0] layer 16: neutral resolved → direction chosen
+[ReconstructCompression] layer 16: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=16 output[0..7]= -0.00567889 -0.00924717 -0.0168494 -0.0213777 0.00208056 0.0195075 0.0113248 0.012813 
+[FFN_WEIGHT_DIAG] ly=16 intermediateDim=5632 gateBufNorm=7.954901e-01 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=12
+[FFN_EXIT] ly=16 (normal path)
+[LAYER_EXIT] ly=16
+[FINAL_OUT] ly=16 norm=1.686941e+02 finite=2048/2048 output[0..7]= -0.225303 -0.00512794 -0.0980051 -0.0123348 0.326399 -0.261793 0.280972 0.0624624 
+[LAYER_ENTER] ly=17
+[ResolveReverse0] layer 17: neutral resolved → direction chosen
+[ReconstructCompression] layer 17: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=17 output[0..7]= 0.00428192 -0.0129194 -0.00891127 -0.0386835 0.029902 -0.00128459 -0.0228931 -0.00636616 
+[FFN_WEIGHT_DIAG] ly=17 intermediateDim=5632 gateBufNorm=9.818686e-01 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=12
+[FFN_EXIT] ly=17 (normal path)
+[LAYER_EXIT] ly=17
+[FINAL_OUT] ly=17 norm=1.682712e+02 finite=2048/2048 output[0..7]= -0.219013 -0.00162111 -0.0920201 -0.0048084 0.362001 -0.247115 0.219006 0.0368201 
+[LAYER_ENTER] ly=18
+[ResolveReverse0] layer 18: neutral resolved → direction chosen
+[ReconstructCompression] layer 18: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=18 output[0..7]= -0.00279053 -0.0203508 -0.0104733 -0.00476738 0.0106132 -0.00814875 -0.0421802 -0.0199395 
+[FFN_WEIGHT_DIAG] ly=18 intermediateDim=5632 gateBufNorm=1.292803e+00 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=14
+[FFN_EXIT] ly=18 (normal path)
+[LAYER_EXIT] ly=18
+[FINAL_OUT] ly=18 norm=1.676434e+02 finite=2048/2048 output[0..7]= -0.259573 0.0486241 -0.119378 0.0407366 0.415322 -0.256092 0.137935 0.0622436 
+[LAYER_ENTER] ly=19
+[ResolveReverse0] layer 19: neutral resolved → direction chosen
+[ReconstructCompression] layer 19: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=19 output[0..7]= -0.0137389 0.0205256 0.00234633 -0.0342893 0.0377359 -0.0561441 -0.0403016 -0.0658742 
+[FFN_WEIGHT_DIAG] ly=19 intermediateDim=5632 gateBufNorm=2.377505e+00 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=12
+[FFN_EXIT] ly=19 (normal path)
+[LAYER_EXIT] ly=19
+[FINAL_OUT] ly=19 norm=1.662029e+02 finite=2048/2048 output[0..7]= -0.32632 0.063663 -0.134783 0.0136279 0.482141 -0.275714 0.0739959 0.0314524 
+[LAYER_ENTER] ly=20
+[ResolveReverse0] layer 20: neutral resolved → direction chosen
+[ReconstructCompression] layer 20: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=20 output[0..7]= 0.0457569 -0.0437395 -0.0172689 -0.00519165 -0.00576487 -0.0273703 -0.00426689 -0.0214842 
+[FFN_WEIGHT_DIAG] ly=20 intermediateDim=5632 gateBufNorm=3.549911e+00 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=14
+[FFN_EXIT] ly=20 (normal path)
+[LAYER_EXIT] ly=20
+[FINAL_OUT] ly=20 norm=1.642871e+02 finite=2048/2048 output[0..7]= -0.260324 0.0915587 -0.181354 0.0313612 0.429344 -0.272161 0.0489281 0.0904765 
+[LAYER_ENTER] ly=21
+[ResolveReverse0] layer 21: neutral resolved → direction chosen
+[ReconstructCompression] layer 21: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=21 output[0..7]= 0.100026 0.0125369 0.065089 -0.111082 0.0223544 -0.0523721 0.0991464 -0.0421106 
+[FFN_WEIGHT_DIAG] ly=21 intermediateDim=5632 gateBufNorm=8.765641e+01 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=12
+[FFN_EXIT] ly=21 (normal path)
+[LAYER_EXIT] ly=21
+[FINAL_OUT] ly=21 norm=1.621747e+01 finite=2048/2048 output[0..7]= 0.105334 0.075369 -0.213146 0.0603299 0.087207 0.118693 0.232067 0.23083 
+HEAP_OK_AFTER_FORWARD_LAYERS=1
+[STAGE_DIGEST] side=deep2 key=PROMPT_POST_LAYERS pos=0 n=2048 l2=1.621746606e+01 max_abs=2.474891663e+00 min=-2.474891663e+00 max=1.264326692e+00 sum=1.224174891e-01 fnv=e5dc8b77d94618fe nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_PROMPT_POST_LAYERS_pos0_layer0_full_n2048_seq058.bin nelem=2048 head=-1 seq=058 fnv=e5dc8b77d94618fe
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=000002695B0DF060
+FINAL_NORM_DST_PTR=000002695B0DF060
+FINAL_NORM_WEIGHT_PTR=0000026958FE0000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=8192
+FINAL_NORM_WEIGHT_0=1.921875
+FINAL_NORM_WEIGHT_1=1.8203125
+FINAL_NORM_WEIGHT_2=1.9453125
+FINAL_NORM_WEIGHT_3=1.984375
+FINAL_NORM_WEIGHT_L2=86.877581
+FINAL_NORM_SUMSQ=263.006205
+FINAL_NORM_MEAN_SQ=0.128420999
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=2.79039097
+FINAL_NORM_SRC_0=0.105333835
+FINAL_NORM_DST_0=0.564882457
+FINAL_NORM_AFTER_L2=85.9798599
+HEAP_OK_FINAL_NORM_AFTER=1
+[STAGE_DIGEST] side=deep2 key=PROMPT_FINAL_NORM pos=0 n=2048 l2=8.597985987e+01 max_abs=9.225871086e+00 min=-9.225871086e+00 max=7.055931568e+00 sum=4.061157194e+00 fnv=add0c9164bd7f233 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_PROMPT_FINAL_NORM_pos0_layer0_full_n2048_seq059.bin nelem=2048 head=-1 seq=059 fnv=add0c9164bd7f233
+[STAGE_DIGEST] side=deep2 key=FINAL_NORM pos=0 n=2048 l2=8.597985987e+01 max_abs=9.225871086e+00 min=-9.225871086e+00 max=7.055931568e+00 sum=4.061157194e+00 fnv=add0c9164bd7f233 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FINAL_NORM_pos0_layer0_full_n2048_seq060.bin nelem=2048 head=-1 seq=060 fnv=add0c9164bd7f233
+[STAGE_DIGEST] side=deep2 key=PROMPT_EMBED pos=1 n=2048 l2=6.331816873e-01 max_abs=4.503107071e-02 min=-4.503107071e-02 max=4.320478439e-02 sum=4.607865214e-01 fnv=960a71672e6a3a0f nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_PROMPT_EMBED_pos1_layer0_full_n2048_seq061.bin nelem=2048 head=-1 seq=061 fnv=960a71672e6a3a0f
+TRY_GPU_FALLBACK_HOST=1
+[LAYER_ENTER] ly=0
+[ResolveReverse0] layer 0: neutral resolved → direction chosen
+[ReconstructCompression] layer 0: 4/32 slices active, 8.72 GB → 1.09 GB
+[STAGE_DIGEST] side=deep2 key=ATTN_NORM_0 pos=1 n=2048 l2=2.618813496e+00 max_abs=1.330829382e+00 min=-1.330829382e+00 max=8.999035358e-01 sum=-1.353825124e+00 fnv=159577e1a21a4c09 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_ATTN_NORM_0_pos1_layer0_full_n2048_seq062.bin nelem=2048 head=-1 seq=062 fnv=159577e1a21a4c09
+[STAGE_DIGEST] side=deep2 key=V_0 pos=1 n=256 l2=1.605519955e-01 max_abs=7.600051165e-02 min=-5.751305073e-02 max=7.600051165e-02 sum=2.797220521e-01 fnv=5949b7699e2e28e2 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_V_0_pos1_layer0_full_n256_seq063.bin nelem=256 head=-1 seq=063 fnv=5949b7699e2e28e2
+[STAGE_DIGEST] side=deep2 key=Q_LINEAR_0 pos=1 n=2048 l2=2.094820410e+01 max_abs=5.180006981e+00 min=-5.180006981e+00 max=4.211386204e+00 sum=-1.765323975e+01 fnv=b5d590f5382381ec nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_Q_LINEAR_0_pos1_layer0_full_n2048_seq064.bin nelem=2048 head=-1 seq=064 fnv=b5d590f5382381ec
+[STAGE_DIGEST] side=deep2 key=K_LINEAR_0 pos=1 n=256 l2=1.379693277e+01 max_abs=7.491927147e+00 min=-7.491927147e+00 max=2.654054165e+00 sum=-2.811318246e+01 fnv=0b495d3ba7471e67 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_K_LINEAR_0_pos1_layer0_full_n256_seq065.bin nelem=256 head=-1 seq=065 fnv=0b495d3ba7471e67
+[STAGE_DIGEST] side=deep2 key=Q_NORM_0 pos=1 n=2048 l2=2.094820410e+01 max_abs=5.180006981e+00 min=-5.180006981e+00 max=4.211386204e+00 sum=-1.765323975e+01 fnv=b5d590f5382381ec nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_Q_NORM_0_pos1_layer0_full_n2048_seq066.bin nelem=2048 head=-1 seq=066 fnv=b5d590f5382381ec
+[STAGE_DIGEST] side=deep2 key=K_NORM_0 pos=1 n=256 l2=1.379693277e+01 max_abs=7.491927147e+00 min=-7.491927147e+00 max=2.654054165e+00 sum=-2.811318246e+01 fnv=0b495d3ba7471e67 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_K_NORM_0_pos1_layer0_full_n256_seq067.bin nelem=256 head=-1 seq=067 fnv=0b495d3ba7471e67
+[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_0 pos=1 n=2048 l2=2.094820410e+01 max_abs=5.180006981e+00 min=-5.180006981e+00 max=4.211386204e+00 sum=-1.765323975e+01 fnv=b5d590f5382381ec nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_Q_PRE_ROPE_0_pos1_layer0_full_n2048_seq068.bin nelem=2048 head=-1 seq=068 fnv=b5d590f5382381ec
+[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_0 pos=1 n=256 l2=1.379693277e+01 max_abs=7.491927147e+00 min=-7.491927147e+00 max=2.654054165e+00 sum=-2.811318246e+01 fnv=0b495d3ba7471e67 nf=0
+B03_QKV_MAXABS layer=0 post_qk_norm q=5.180007e+00 k=7.491927e+00 v=7.600051e-02 qL2=2.094820e+01 kL2=1.379693e+01 ropeDim=64 headDim=64 qnorm_data=0000000000000000
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_K_PRE_ROPE_0_pos1_layer0_full_n256_seq069.bin nelem=256 head=-1 seq=069 fnv=0b495d3ba7471e67
+[STAGE_DIGEST] side=deep2 key=Q_POST_ROPE_0 pos=1 n=2048 l2=2.094820402e+01 max_abs=5.179404259e+00 min=-5.179404259e+00 max=4.210782051e+00 sum=-1.753076023e+01 fnv=8fb28837072a1ef7 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_Q_POST_ROPE_0_pos1_layer0_full_n2048_seq070.bin nelem=2048 head=-1 seq=070 fnv=8fb28837072a1ef7
+[STAGE_DIGEST] side=deep2 key=K_POST_ROPE_0 pos=1 n=256 l2=1.379693282e+01 max_abs=7.491768837e+00 min=-7.491768837e+00 max=2.653005362e+00 sum=-2.888965363e+01 fnv=1284df01607a75be nf=0
+ATTN_GGML_FA_F16=1 attend=2 headDim=64
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_K_POST_ROPE_0_pos1_layer0_full_n256_seq071.bin nelem=256 head=-1 seq=071 fnv=1284df01607a75be
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_0 pos=1 n=2048 l2=3.364156283e-01 max_abs=5.195837468e-02 min=-5.195837468e-02 max=4.734383151e-02 sum=1.200706498e+00 fnv=2efdd7b1602c093f nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_ATTN_PRE_O_0_pos1_layer0_full_n2048_seq072.bin nelem=2048 head=-1 seq=072 fnv=2efdd7b1602c093f
+[POST_ATTN] ly=0 output[0..7]= -0.000805041 0.000844697 0.0071137 0.0278097 -0.00217694 -0.00242053 -0.000398841 -0.00410058 
+[STAGE_DIGEST] side=deep2 key=ATTN_OUT_0 pos=1 n=2048 l2=2.766470449e-01 max_abs=1.142331958e-01 min=-1.142331958e-01 max=9.911911190e-02 sum=1.392070018e-01 fnv=faf1ce3b45192b54 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_ATTN_OUT_0_pos1_layer0_full_n2048_seq073.bin nelem=2048 head=-1 seq=073 fnv=faf1ce3b45192b54
+[STAGE_DIGEST] side=deep2 key=FFN_INP_0 pos=1 n=2048 l2=6.848153201e-01 max_abs=1.417340636e-01 min=-1.417340636e-01 max=1.223775595e-01 sum=5.999935293e-01 fnv=0ceb28b7d18d4bac nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_INP_0_pos1_layer0_full_n2048_seq074.bin nelem=2048 head=-1 seq=074 fnv=0ceb28b7d18d4bac
+[STAGE_DIGEST] side=deep2 key=FFN_NORM_0 pos=1 n=2048 l2=4.097512210e+00 max_abs=1.428831339e+00 min=-7.956055999e-01 max=1.428831339e+00 sum=5.961798481e+00 fnv=85a611d36063550b nf=0
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=5632 physical=5632 schema=SEPARATE_GATE
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_NORM_0_pos1_layer0_full_n2048_seq075.bin nelem=2048 head=-1 seq=075 fnv=85a611d36063550b
+[STAGE_DIGEST] side=deep2 key=FFN_GATE_0 pos=1 n=5632 l2=8.961314231e+00 max_abs=1.384506464e+00 min=-1.384506464e+00 max=1.004334450e+00 sum=-4.489318972e+01 fnv=1bc3454518fe3c34 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_GATE_0_pos1_layer0_full_n5632_seq076.bin nelem=5632 head=-1 seq=076 fnv=1bc3454518fe3c34
+[STAGE_DIGEST] side=deep2 key=FFN_UP_0 pos=1 n=5632 l2=6.025797856e+00 max_abs=8.397815228e-01 min=-8.397815228e-01 max=3.533516526e-01 sum=-4.328385765e+00 fnv=e0fb88a5622171a6 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_UP_0_pos1_layer0_full_n5632_seq077.bin nelem=5632 head=-1 seq=077 fnv=e0fb88a5622171a6
+[STAGE_DIGEST] side=deep2 key=FFN_ACT_0 pos=1 n=5632 l2=7.213144398e-01 max_abs=6.173085570e-01 min=-6.173085570e-01 max=1.114484817e-01 sum=-7.961087092e-01 fnv=944a93f3c7c268f2 nf=0
+[FFN_WEIGHT_DIAG] ly=0 intermediateDim=5632 gateBufNorm=7.213144e-01 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=14
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_ACT_0_pos1_layer0_full_n5632_seq078.bin nelem=5632 head=-1 seq=078 fnv=944a93f3c7c268f2
+[FFN_EXIT] ly=0 (normal path)
+[STAGE_DIGEST] side=deep2 key=FFN_DOWN_0 pos=1 n=2048 l2=6.867013865e-01 max_abs=2.211427987e-01 min=-2.211427987e-01 max=1.036260799e-01 sum=-3.012845286e-01 fnv=5057b7ed3c047f02 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_DOWN_0_pos1_layer0_full_n2048_seq079.bin nelem=2048 head=-1 seq=079 fnv=5057b7ed3c047f02
+[STAGE_DIGEST] side=deep2 key=POST_FFN_0 pos=1 n=2048 l2=1.117126168e+00 max_abs=3.628768623e-01 min=-3.628768623e-01 max=1.320039332e-01 sum=2.987089778e-01 fnv=2275a6b949866247 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_POST_FFN_0_pos1_layer0_full_n2048_seq080.bin nelem=2048 head=-1 seq=080 fnv=2275a6b949866247
+[STAGE_DIGEST] side=deep2 key=LAYER0_OUT pos=1 n=2048 l2=1.117126168e+00 max_abs=3.628768623e-01 min=-3.628768623e-01 max=1.320039332e-01 sum=2.987089778e-01 fnv=2275a6b949866247 nf=0
+[LAYER_EXIT] ly=0
+[FINAL_OUT] ly=0 norm=1.117126e+00 finite=2048/2048 output[0..7]= -0.0168827 0.0107364 -0.00942532 0.0350299 0.00917447 0.0270322 -0.0165255 -0.00588628 
+[LAYER_ENTER] ly=1
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_LAYER0_OUT_pos1_layer0_full_n2048_seq081.bin nelem=2048 head=-1 seq=081 fnv=2275a6b949866247
+[ResolveReverse0] layer 1: neutral resolved → direction chosen
+[ReconstructCompression] layer 1: 4/32 slices active, 8.72 GB → 1.09 GB
+[STAGE_DIGEST] side=deep2 key=ATTN_NORM_1 pos=1 n=2048 l2=8.308578107e+00 max_abs=6.037445545e+00 min=-6.037445545e+00 max=2.838543177e+00 sum=-5.686589233e+00 fnv=b02478aa68091f57 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_ATTN_NORM_1_pos1_layer0_full_n2048_seq082.bin nelem=2048 head=-1 seq=082 fnv=b02478aa68091f57
+[STAGE_DIGEST] side=deep2 key=V_1 pos=1 n=256 l2=5.173166898e-01 max_abs=1.017194316e-01 min=-9.953248501e-02 max=1.017194316e-01 sum=-3.096853183e-01 fnv=2ee9f99f3dc9c244 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_V_1_pos1_layer0_full_n256_seq083.bin nelem=256 head=-1 seq=083 fnv=2ee9f99f3dc9c244
+[STAGE_DIGEST] side=deep2 key=Q_LINEAR_1 pos=1 n=2048 l2=4.089063455e+01 max_abs=5.378857613e+00 min=-3.585608482e+00 max=5.378857613e+00 sum=1.965295639e+02 fnv=4ebbe4305f61fa1e nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_Q_LINEAR_1_pos1_layer0_full_n2048_seq084.bin nelem=2048 head=-1 seq=084 fnv=4ebbe4305f61fa1e
+[STAGE_DIGEST] side=deep2 key=K_LINEAR_1 pos=1 n=256 l2=3.821636206e+01 max_abs=7.814864635e+00 min=-6.697694302e+00 max=7.814864635e+00 sum=1.306310212e+01 fnv=a31979ccd9254647 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_K_LINEAR_1_pos1_layer0_full_n256_seq085.bin nelem=256 head=-1 seq=085 fnv=a31979ccd9254647
+[STAGE_DIGEST] side=deep2 key=Q_NORM_1 pos=1 n=2048 l2=4.089063455e+01 max_abs=5.378857613e+00 min=-3.585608482e+00 max=5.378857613e+00 sum=1.965295639e+02 fnv=4ebbe4305f61fa1e nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_Q_NORM_1_pos1_layer0_full_n2048_seq086.bin nelem=2048 head=-1 seq=086 fnv=4ebbe4305f61fa1e
+[STAGE_DIGEST] side=deep2 key=K_NORM_1 pos=1 n=256 l2=3.821636206e+01 max_abs=7.814864635e+00 min=-6.697694302e+00 max=7.814864635e+00 sum=1.306310212e+01 fnv=a31979ccd9254647 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_K_NORM_1_pos1_layer0_full_n256_seq087.bin nelem=256 head=-1 seq=087 fnv=a31979ccd9254647
+[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_1 pos=1 n=2048 l2=4.089063455e+01 max_abs=5.378857613e+00 min=-3.585608482e+00 max=5.378857613e+00 sum=1.965295639e+02 fnv=4ebbe4305f61fa1e nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_Q_PRE_ROPE_1_pos1_layer0_full_n2048_seq088.bin nelem=2048 head=-1 seq=088 fnv=4ebbe4305f61fa1e
+[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_1 pos=1 n=256 l2=3.821636206e+01 max_abs=7.814864635e+00 min=-6.697694302e+00 max=7.814864635e+00 sum=1.306310212e+01 fnv=a31979ccd9254647 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_K_PRE_ROPE_1_pos1_layer0_full_n256_seq089.bin nelem=256 head=-1 seq=089 fnv=a31979ccd9254647
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_1 pos=1 n=2048 l2=8.958847029e-01 max_abs=9.074698389e-02 min=-9.074698389e-02 max=7.581160963e-02 sum=-1.139824563e+00 fnv=e75cca6c59b09c1b nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_ATTN_PRE_O_1_pos1_layer0_full_n2048_seq090.bin nelem=2048 head=-1 seq=090 fnv=e75cca6c59b09c1b
+[POST_ATTN] ly=1 output[0..7]= 8.76011e-05 0.00162275 0.0050498 -0.0642808 0.0223099 -0.0161529 -0.00428023 -0.0041513 
+[STAGE_DIGEST] side=deep2 key=ATTN_OUT_1 pos=1 n=2048 l2=3.731552858e-01 max_abs=1.045347452e-01 min=-6.428075582e-02 max=1.045347452e-01 sum=-7.585504963e-01 fnv=adea15076ba86030 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_ATTN_OUT_1_pos1_layer0_full_n2048_seq091.bin nelem=2048 head=-1 seq=091 fnv=adea15076ba86030
+[STAGE_DIGEST] side=deep2 key=FFN_INP_1 pos=1 n=2048 l2=1.172589539e+00 max_abs=3.462273479e-01 min=-3.462273479e-01 max=2.333177179e-01 sum=-4.598415310e-01 fnv=5c6a71dd64355731 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_INP_1_pos1_layer0_full_n2048_seq092.bin nelem=2048 head=-1 seq=092 fnv=5c6a71dd64355731
+[STAGE_DIGEST] side=deep2 key=FFN_NORM_1 pos=1 n=2048 l2=5.292283411e+00 max_abs=7.723904848e-01 min=-5.651759505e-01 max=7.723904848e-01 sum=-2.628756081e+00 fnv=1229c4bed740b676 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_NORM_1_pos1_layer0_full_n2048_seq093.bin nelem=2048 head=-1 seq=093 fnv=1229c4bed740b676
+[STAGE_DIGEST] side=deep2 key=FFN_GATE_1 pos=1 n=5632 l2=7.135699074e+00 max_abs=6.419732571e-01 min=-4.225078821e-01 max=6.419732571e-01 sum=-5.150642401e+01 fnv=89d3001f47a1aa60 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_GATE_1_pos1_layer0_full_n5632_seq094.bin nelem=5632 head=-1 seq=094 fnv=89d3001f47a1aa60
+[STAGE_DIGEST] side=deep2 key=FFN_UP_1 pos=1 n=5632 l2=6.866690905e+00 max_abs=8.119466901e-01 min=-8.119466901e-01 max=4.797440469e-01 sum=3.000389309e+00 fnv=1420f2a8ce399e81 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_UP_1_pos1_layer0_full_n5632_seq095.bin nelem=5632 head=-1 seq=095 fnv=1420f2a8ce399e81
+[STAGE_DIGEST] side=deep2 key=FFN_ACT_1 pos=1 n=5632 l2=3.827336455e-01 max_abs=1.215921789e-01 min=-3.448951244e-02 max=1.215921789e-01 sum=1.059753501e-01 fnv=a52c377ebb0ddb3c nf=0
+[FFN_WEIGHT_DIAG] ly=1 intermediateDim=5632 gateBufNorm=3.827336e-01 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=14
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_ACT_1_pos1_layer0_full_n5632_seq096.bin nelem=5632 head=-1 seq=096 fnv=a52c377ebb0ddb3c
+[FFN_EXIT] ly=1 (normal path)
+[STAGE_DIGEST] side=deep2 key=FFN_DOWN_1 pos=1 n=2048 l2=3.525565402e-01 max_abs=6.502707303e-02 min=-5.198876187e-02 max=6.502707303e-02 sum=1.205702333e-02 fnv=e13b7f2cb76c10e0 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_DOWN_1_pos1_layer0_full_n2048_seq097.bin nelem=2048 head=-1 seq=097 fnv=e13b7f2cb76c10e0
+[STAGE_DIGEST] side=deep2 key=POST_FFN_1 pos=1 n=2048 l2=1.277901098e+00 max_abs=3.858323097e-01 min=-3.858323097e-01 max=2.983447909e-01 sum=-4.477845609e-01 fnv=1d7d6a63127c18f5 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_POST_FFN_1_pos1_layer0_full_n2048_seq098.bin nelem=2048 head=-1 seq=098 fnv=1d7d6a63127c18f5
+[STAGE_DIGEST] side=deep2 key=LAYER1_OUT pos=1 n=2048 l2=1.277901098e+00 max_abs=3.858323097e-01 min=-3.858323097e-01 max=2.983447909e-01 sum=-4.477845609e-01 fnv=1d7d6a63127c18f5 nf=0
+[LAYER_EXIT] ly=1
+[FINAL_OUT] ly=1 norm=1.277901e+00 finite=2048/2048 output[0..7]= -0.00913049 0.0237454 -0.000756226 -0.0483883 0.0383106 0.00986384 -0.0254583 -0.0132718 
+[LAYER_ENTER] ly=2
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_LAYER1_OUT_pos1_layer0_full_n2048_seq099.bin nelem=2048 head=-1 seq=099 fnv=1d7d6a63127c18f5
+[ResolveReverse0] layer 2: neutral resolved → direction chosen
+[ReconstructCompression] layer 2: 4/32 slices active, 8.72 GB → 1.09 GB
+[STAGE_DIGEST] side=deep2 key=ATTN_NORM_2 pos=1 n=2048 l2=9.662725953e+00 max_abs=5.118554115e+00 min=-5.118554115e+00 max=3.010952711e+00 sum=-7.992607957e+00 fnv=a7b5262d6cdefea1 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_ATTN_NORM_2_pos1_layer0_full_n2048_seq100.bin nelem=2048 head=-1 seq=100 fnv=a7b5262d6cdefea1
+[STAGE_DIGEST] side=deep2 key=V_2 pos=1 n=256 l2=9.853046470e-01 max_abs=2.865634263e-01 min=-2.865634263e-01 max=2.519937158e-01 sum=1.233855323e+00 fnv=2ce4dce9d699658a nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_V_2_pos1_layer0_full_n256_seq101.bin nelem=256 head=-1 seq=101 fnv=2ce4dce9d699658a
+[STAGE_DIGEST] side=deep2 key=Q_LINEAR_2 pos=1 n=2048 l2=3.395370524e+01 max_abs=4.628729343e+00 min=-4.628729343e+00 max=3.784272432e+00 sum=2.778529191e+00 fnv=8b7ac43b45bcec8c nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_Q_LINEAR_2_pos1_layer0_full_n2048_seq102.bin nelem=2048 head=-1 seq=102 fnv=8b7ac43b45bcec8c
+[STAGE_DIGEST] side=deep2 key=K_LINEAR_2 pos=1 n=256 l2=3.585502408e+01 max_abs=7.331744671e+00 min=-7.331744671e+00 max=6.801326752e+00 sum=-7.558620172e-01 fnv=f87ad7d9ed891805 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_K_LINEAR_2_pos1_layer0_full_n256_seq103.bin nelem=256 head=-1 seq=103 fnv=f87ad7d9ed891805
+[STAGE_DIGEST] side=deep2 key=Q_NORM_2 pos=1 n=2048 l2=3.395370524e+01 max_abs=4.628729343e+00 min=-4.628729343e+00 max=3.784272432e+00 sum=2.778529191e+00 fnv=8b7ac43b45bcec8c nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_Q_NORM_2_pos1_layer0_full_n2048_seq104.bin nelem=2048 head=-1 seq=104 fnv=8b7ac43b45bcec8c
+[STAGE_DIGEST] side=deep2 key=K_NORM_2 pos=1 n=256 l2=3.585502408e+01 max_abs=7.331744671e+00 min=-7.331744671e+00 max=6.801326752e+00 sum=-7.558620172e-01 fnv=f87ad7d9ed891805 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_K_NORM_2_pos1_layer0_full_n256_seq105.bin nelem=256 head=-1 seq=105 fnv=f87ad7d9ed891805
+[STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_2 pos=1 n=2048 l2=3.395370524e+01 max_abs=4.628729343e+00 min=-4.628729343e+00 max=3.784272432e+00 sum=2.778529191e+00 fnv=8b7ac43b45bcec8c nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_Q_PRE_ROPE_2_pos1_layer0_full_n2048_seq106.bin nelem=2048 head=-1 seq=106 fnv=8b7ac43b45bcec8c
+[STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_2 pos=1 n=256 l2=3.585502408e+01 max_abs=7.331744671e+00 min=-7.331744671e+00 max=6.801326752e+00 sum=-7.558620172e-01 fnv=f87ad7d9ed891805 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_K_PRE_ROPE_2_pos1_layer0_full_n256_seq107.bin nelem=256 head=-1 seq=107 fnv=f87ad7d9ed891805
+[STAGE_DIGEST] side=deep2 key=ATTN_PRE_O_2 pos=1 n=2048 l2=1.332883354e+00 max_abs=2.191977799e-01 min=-2.191977799e-01 max=1.412784904e-01 sum=3.250400341e+00 fnv=5e5e2b21aab26056 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_ATTN_PRE_O_2_pos1_layer0_full_n2048_seq108.bin nelem=2048 head=-1 seq=108 fnv=5e5e2b21aab26056
+[POST_ATTN] ly=2 output[0..7]= -0.000530548 0.00682691 -0.00415058 0.0297003 0.012877 -0.023369 -0.00173181 -0.00947454 
+[STAGE_DIGEST] side=deep2 key=ATTN_OUT_2 pos=1 n=2048 l2=6.217783223e-01 max_abs=2.012259960e-01 min=-2.012259960e-01 max=1.550076157e-01 sum=4.414353147e-02 fnv=e382f9a396b3ed0e nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_ATTN_OUT_2_pos1_layer0_full_n2048_seq109.bin nelem=2048 head=-1 seq=109 fnv=e382f9a396b3ed0e
+[STAGE_DIGEST] side=deep2 key=FFN_INP_2 pos=1 n=2048 l2=1.247933070e+00 max_abs=2.308246940e-01 min=-2.308246940e-01 max=1.936109513e-01 sum=-4.036410640e-01 fnv=d4e66286495a3688 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_INP_2_pos1_layer0_full_n2048_seq110.bin nelem=2048 head=-1 seq=110 fnv=d4e66286495a3688
+[STAGE_DIGEST] side=deep2 key=FFN_NORM_2 pos=1 n=2048 l2=6.835828238e+00 max_abs=5.367949605e-01 min=-5.367949605e-01 max=4.818632007e-01 sum=-1.919993690e+00 fnv=4c081e60afba2c4f nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_NORM_2_pos1_layer0_full_n2048_seq111.bin nelem=2048 head=-1 seq=111 fnv=4c081e60afba2c4f
+[STAGE_DIGEST] side=deep2 key=FFN_GATE_2 pos=1 n=5632 l2=1.257691337e+01 max_abs=8.532669067e+00 min=-8.532669067e+00 max=8.538739085e-01 sum=-4.504705804e+01 fnv=623f47f50ca5026e nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_GATE_2_pos1_layer0_full_n5632_seq112.bin nelem=5632 head=-1 seq=112 fnv=623f47f50ca5026e
+[STAGE_DIGEST] side=deep2 key=FFN_UP_2 pos=1 n=5632 l2=8.958613016e+00 max_abs=6.718009710e-01 min=-6.718009710e-01 max=5.946892500e-01 sum=-1.699015025e+00 fnv=cccafb57edf1addd nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_UP_2_pos1_layer0_full_n5632_seq113.bin nelem=5632 head=-1 seq=113 fnv=cccafb57edf1addd
+[STAGE_DIGEST] side=deep2 key=FFN_ACT_2 pos=1 n=5632 l2=6.346346549e-01 max_abs=2.964247167e-01 min=-5.118893087e-02 max=2.964247167e-01 sum=2.644028535e-01 fnv=c4777279debbb272 nf=0
+[FFN_WEIGHT_DIAG] ly=2 intermediateDim=5632 gateBufNorm=6.346347e-01 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=12
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_ACT_2_pos1_layer0_full_n5632_seq114.bin nelem=5632 head=-1 seq=114 fnv=c4777279debbb272
+[FFN_EXIT] ly=2 (normal path)
+[STAGE_DIGEST] side=deep2 key=FFN_DOWN_2 pos=1 n=2048 l2=5.142752759e-01 max_abs=5.393322930e-02 min=-3.840168938e-02 max=5.393322930e-02 sum=-5.887272481e-01 fnv=872de121a8ad6f09 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FFN_DOWN_2_pos1_layer0_full_n2048_seq115.bin nelem=2048 head=-1 seq=115 fnv=872de121a8ad6f09
+[STAGE_DIGEST] side=deep2 key=POST_FFN_2 pos=1 n=2048 l2=1.401337927e+00 max_abs=2.389820814e-01 min=-2.389820814e-01 max=2.272785008e-01 sum=-9.923682903e-01 fnv=04deaca941b6fda6 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_POST_FFN_2_pos1_layer0_full_n2048_seq116.bin nelem=2048 head=-1 seq=116 fnv=04deaca941b6fda6
+[STAGE_DIGEST] side=deep2 key=LAYER2_OUT pos=1 n=2048 l2=1.401337927e+00 max_abs=2.389820814e-01 min=-2.389820814e-01 max=2.272785008e-01 sum=-9.923682903e-01 fnv=04deaca941b6fda6 nf=0
+[LAYER_EXIT] ly=2
+[FINAL_OUT] ly=2 norm=1.401338e+00 finite=2048/2048 output[0..7]= -0.0259399 0.023575 -0.00855471 -0.00478946 0.0450231 -0.00730997 -0.0311846 -0.0140903 
+[LAYER_ENTER] ly=3
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_LAYER2_OUT_pos1_layer0_full_n2048_seq117.bin nelem=2048 head=-1 seq=117 fnv=04deaca941b6fda6
+[ResolveReverse0] layer 3: neutral resolved → direction chosen
+[ReconstructCompression] layer 3: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=3 output[0..7]= 0.00422171 -0.00719043 -0.0127148 0.00531023 0.0151249 -0.00962721 -0.00279698 0.0126663 
+[FFN_WEIGHT_DIAG] ly=3 intermediateDim=5632 gateBufNorm=1.233543e+00 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=12
+[FFN_EXIT] ly=3 (normal path)
+[LAYER_EXIT] ly=3
+[FINAL_OUT] ly=3 norm=1.983877e+00 finite=2048/2048 output[0..7]= -0.043266 0.04561 0.00442035 -0.020595 0.067043 -0.00553691 -0.047126 -0.0142965 
+[LAYER_ENTER] ly=4
+[ResolveReverse0] layer 4: neutral resolved → direction chosen
+[ReconstructCompression] layer 4: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=4 output[0..7]= 0.00113962 -0.00563056 -0.00789488 0.00485347 -0.0031201 -0.00992048 0.00283233 0.000426952 
+[FFN_WEIGHT_DIAG] ly=4 intermediateDim=5632 gateBufNorm=1.077019e+00 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=14
+[FFN_EXIT] ly=4 (normal path)
+[LAYER_EXIT] ly=4
+[FINAL_OUT] ly=4 norm=2.474812e+00 finite=2048/2048 output[0..7]= -0.0357875 0.0759301 0.00528794 0.0203196 0.0769003 -0.0226801 -0.0483984 -0.013485 
+[LAYER_ENTER] ly=5
+[ResolveReverse0] layer 5: neutral resolved → direction chosen
+[ReconstructCompression] layer 5: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=5 output[0..7]= -0.00316901 0.00974552 -0.00466906 0.0185794 0.000929772 0.0106129 0.00406817 -0.0132517 
+[FFN_WEIGHT_DIAG] ly=5 intermediateDim=5632 gateBufNorm=1.130082e+00 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=12
+[FFN_EXIT] ly=5 (normal path)
+[LAYER_EXIT] ly=5
+[FINAL_OUT] ly=5 norm=2.782817e+00 finite=2048/2048 output[0..7]= -0.0302263 0.104369 0.00129811 0.0400347 0.0667012 0.0287487 -0.0274332 -0.0419303 
+[LAYER_ENTER] ly=6
+[ResolveReverse0] layer 6: neutral resolved → direction chosen
+[ReconstructCompression] layer 6: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=6 output[0..7]= 0.0102698 0.00177453 -0.0069026 -0.0109502 0.00639632 0.00347739 0.000287317 -0.00772878 
+[FFN_WEIGHT_DIAG] ly=6 intermediateDim=5632 gateBufNorm=1.465854e+00 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=12
+[FFN_EXIT] ly=6 (normal path)
+[LAYER_EXIT] ly=6
+[FINAL_OUT] ly=6 norm=3.159648e+00 finite=2048/2048 output[0..7]= -0.0550648 0.112669 0.0428776 0.0355145 0.0762567 0.042573 0.0109004 -0.0651153 
+[LAYER_ENTER] ly=7
+[ResolveReverse0] layer 7: neutral resolved → direction chosen
+[ReconstructCompression] layer 7: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=7 output[0..7]= -0.00299562 -0.000258295 -0.0414111 -0.000543324 0.00146197 0.00917841 -0.0110741 0.00587691 
+[FFN_WEIGHT_DIAG] ly=7 intermediateDim=5632 gateBufNorm=1.634595e+00 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=14
+[FFN_EXIT] ly=7 (normal path)
+[LAYER_EXIT] ly=7
+[FINAL_OUT] ly=7 norm=3.802214e+00 finite=2048/2048 output[0..7]= -0.0948932 0.110369 0.0533311 0.0403599 0.0977222 0.0721297 -0.0286035 -0.0871555 
+[LAYER_ENTER] ly=8
+[ResolveReverse0] layer 8: neutral resolved → direction chosen
+[ReconstructCompression] layer 8: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=8 output[0..7]= 0.00366129 -0.00648245 -0.010153 -0.00737195 0.00151498 0.0057156 -0.00471839 0.00785904 
+[FFN_WEIGHT_DIAG] ly=8 intermediateDim=5632 gateBufNorm=2.204622e+00 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=14
+[FFN_EXIT] ly=8 (normal path)
+[LAYER_EXIT] ly=8
+[FINAL_OUT] ly=8 norm=4.445506e+00 finite=2048/2048 output[0..7]= -0.0781576 0.110291 0.0108787 0.0665449 0.0925454 0.0840283 -0.0351892 -0.15786 
+[LAYER_ENTER] ly=9
+[ResolveReverse0] layer 9: neutral resolved → direction chosen
+[ReconstructCompression] layer 9: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=9 output[0..7]= 0.0101231 0.00923283 -0.0112793 -0.0195261 -0.026066 0.0278067 -0.0328599 -0.0133522 
+[FFN_WEIGHT_DIAG] ly=9 intermediateDim=5632 gateBufNorm=2.067210e+00 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=14
+[FFN_EXIT] ly=9 (normal path)
+[LAYER_EXIT] ly=9
+[FINAL_OUT] ly=9 norm=4.797168e+00 finite=2048/2048 output[0..7]= -0.0929677 0.131442 0.0119376 -0.00785263 0.0754439 0.106914 -0.0884225 -0.137405 
+[LAYER_ENTER] ly=10
+[ResolveReverse0] layer 10: neutral resolved → direction chosen
+[ReconstructCompression] layer 10: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=10 output[0..7]= 0.00527246 0.0239733 -0.00829924 0.0130205 -0.00931505 0.00736549 -0.0188707 0.0260814 
+[FFN_WEIGHT_DIAG] ly=10 intermediateDim=5632 gateBufNorm=2.228470e+00 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=12
+[Q4K_WEIGHT_DIAG] ly=10 wDown blocksChecked=8 wCount=2048 wMin=-5.839920e-02 wMax=5.718249e-02 wRms=1.810968e-02
+[FFN_EXIT] ly=10 (normal path)
+[LAYER_EXIT] ly=10
+[FINAL_OUT] ly=10 norm=5.368839e+00 finite=2048/2048 output[0..7]= -0.138403 0.145565 0.0879547 0.00701488 0.15885 0.08243 -0.0388706 -0.0871324 
+[LAYER_ENTER] ly=11
+[ResolveReverse0] layer 11: neutral resolved → direction chosen
+[ReconstructCompression] layer 11: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=11 output[0..7]= 0.0115106 0.0146611 -0.0185827 0.0169997 -0.0174758 0.0181773 -0.00552695 0.0112533 
+[FFN_WEIGHT_DIAG] ly=11 intermediateDim=5632 gateBufNorm=2.153508e+00 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=12
+[FFN_EXIT] ly=11 (normal path)
+[LAYER_EXIT] ly=11
+[FINAL_OUT] ly=11 norm=5.806283e+00 finite=2048/2048 output[0..7]= -0.200097 0.17794 0.147845 0.0354989 0.199538 0.0757247 -0.0651158 -0.110552 
+[LAYER_ENTER] ly=12
+[ResolveReverse0] layer 12: neutral resolved → direction chosen
+[ReconstructCompression] layer 12: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=12 output[0..7]= 0.0183272 0.0472196 0.0155426 0.0065003 -0.0186499 0.0258673 -0.00188121 0.0154108 
+[FFN_WEIGHT_DIAG] ly=12 intermediateDim=5632 gateBufNorm=2.650232e+00 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=14
+[FFN_EXIT] ly=12 (normal path)
+[LAYER_EXIT] ly=12
+[FINAL_OUT] ly=12 norm=6.268571e+00 finite=2048/2048 output[0..7]= -0.15948 0.155184 0.138071 0.0180916 0.111669 0.0458898 -0.0665721 -0.0787381 
+[LAYER_ENTER] ly=13
+[ResolveReverse0] layer 13: neutral resolved → direction chosen
+[ReconstructCompression] layer 13: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=13 output[0..7]= -0.00721905 -0.00236671 -0.00604089 0.0223533 0.0191009 0.0255675 0.00986306 -0.0273932 
+[FFN_WEIGHT_DIAG] ly=13 intermediateDim=5632 gateBufNorm=3.073099e+00 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=12
+[FFN_EXIT] ly=13 (normal path)
+[LAYER_EXIT] ly=13
+[FINAL_OUT] ly=13 norm=7.121477e+00 finite=2048/2048 output[0..7]= -0.0980522 0.222262 0.106736 0.0516199 0.163276 0.05776 -0.0379343 -0.154837 
+[LAYER_ENTER] ly=14
+[ResolveReverse0] layer 14: neutral resolved → direction chosen
+[ReconstructCompression] layer 14: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=14 output[0..7]= -0.0263825 -0.0156782 -0.0396798 0.0047081 0.001663 0.00283848 -0.00967953 -0.0112826 
+[FFN_WEIGHT_DIAG] ly=14 intermediateDim=5632 gateBufNorm=3.248349e+00 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=12
+[FFN_EXIT] ly=14 (normal path)
+[LAYER_EXIT] ly=14
+[FINAL_OUT] ly=14 norm=7.772886e+00 finite=2048/2048 output[0..7]= -0.0833895 0.281879 0.123557 0.0738716 0.203246 0.0490716 -0.0601999 -0.148246 
+[LAYER_ENTER] ly=15
+[ResolveReverse0] layer 15: neutral resolved → direction chosen
+[ReconstructCompression] layer 15: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=15 output[0..7]= -0.0289263 -0.0182865 -0.0675041 0.0560595 -0.00501516 -0.000324748 -0.0133789 0.0102804 
+[FFN_WEIGHT_DIAG] ly=15 intermediateDim=5632 gateBufNorm=3.849602e+00 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=14
+[FFN_EXIT] ly=15 (normal path)
+[LAYER_EXIT] ly=15
+[FINAL_OUT] ly=15 norm=8.921478e+00 finite=2048/2048 output[0..7]= -0.28548 0.198665 0.132728 -0.0381241 0.157885 0.0869117 -0.0653222 -0.0150865 
+[LAYER_ENTER] ly=16
+[ResolveReverse0] layer 16: neutral resolved → direction chosen
+[ReconstructCompression] layer 16: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=16 output[0..7]= 0.0353589 0.0396736 -3.49432e-05 -0.0301291 -0.0137933 -0.0217522 0.0214328 -0.00876335 
+[FFN_WEIGHT_DIAG] ly=16 intermediateDim=5632 gateBufNorm=9.200382e+00 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=12
+[FFN_EXIT] ly=16 (normal path)
+[LAYER_EXIT] ly=16
+[FINAL_OUT] ly=16 norm=1.331358e+01 finite=2048/2048 output[0..7]= -0.661833 0.236729 0.0311662 0.082741 0.360714 0.217382 -0.0171629 -0.000714332 
+[LAYER_ENTER] ly=17
+[ResolveReverse0] layer 17: neutral resolved → direction chosen
+[ReconstructCompression] layer 17: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=17 output[0..7]= 0.0178464 0.109857 0.0105952 0.0351675 0.00276729 -0.0500771 0.00628635 0.128147 
+[FFN_WEIGHT_DIAG] ly=17 intermediateDim=5632 gateBufNorm=6.242089e+00 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=12
+[FFN_EXIT] ly=17 (normal path)
+[LAYER_EXIT] ly=17
+[FINAL_OUT] ly=17 norm=1.568235e+01 finite=2048/2048 output[0..7]= -0.802589 0.209572 -0.023033 0.167361 0.332163 0.0692313 -0.0671715 0.00251163 
+[LAYER_ENTER] ly=18
+[ResolveReverse0] layer 18: neutral resolved → direction chosen
+[ReconstructCompression] layer 18: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=18 output[0..7]= 0.016188 0.0268363 0.0674688 -0.0351976 -0.101005 -0.0160712 -0.028456 0.0280014 
+[FFN_WEIGHT_DIAG] ly=18 intermediateDim=5632 gateBufNorm=7.449117e+00 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=14
+[FFN_EXIT] ly=18 (normal path)
+[LAYER_EXIT] ly=18
+[FINAL_OUT] ly=18 norm=1.836452e+01 finite=2048/2048 output[0..7]= -0.737862 0.178551 0.235115 0.305676 0.103564 0.368816 -0.075861 0.029383 
+[LAYER_ENTER] ly=19
+[ResolveReverse0] layer 19: neutral resolved → direction chosen
+[ReconstructCompression] layer 19: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=19 output[0..7]= -0.0614178 -0.0188388 0.0139702 -0.0639347 -0.0326962 -0.0813604 -0.074764 -0.0707707 
+[FFN_WEIGHT_DIAG] ly=19 intermediateDim=5632 gateBufNorm=9.442609e+00 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=12
+[FFN_EXIT] ly=19 (normal path)
+[LAYER_EXIT] ly=19
+[FINAL_OUT] ly=19 norm=2.202801e+01 finite=2048/2048 output[0..7]= -0.59523 0.474837 0.223258 0.223371 0.167881 0.564884 -0.405206 0.120478 
+[LAYER_ENTER] ly=20
+[ResolveReverse0] layer 20: neutral resolved → direction chosen
+[ReconstructCompression] layer 20: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=20 output[0..7]= -0.0467128 0.017785 -0.0834008 0.0557521 -0.0269871 0.00917525 7.04005e-05 -0.0738983 
+[FFN_WEIGHT_DIAG] ly=20 intermediateDim=5632 gateBufNorm=1.041369e+01 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=14
+[FFN_EXIT] ly=20 (normal path)
+[LAYER_EXIT] ly=20
+[FINAL_OUT] ly=20 norm=2.605823e+01 finite=2048/2048 output[0..7]= -0.4617 0.385605 0.0328572 0.200025 0.300862 0.224178 -0.582915 -0.0275527 
+[LAYER_ENTER] ly=21
+[ResolveReverse0] layer 21: neutral resolved → direction chosen
+[ReconstructCompression] layer 21: 4/32 slices active, 8.72 GB → 1.09 GB
+[POST_ATTN] ly=21 output[0..7]= 0.0588671 0.108935 0.0320404 -0.14254 -0.00949472 0.0656621 0.117754 0.0779765 
+[FFN_WEIGHT_DIAG] ly=21 intermediateDim=5632 gateBufNorm=1.929909e+01 gateBufNonFinite=0 wDownRows=2048 wDownCols=5632 wDownType=12
+[FFN_EXIT] ly=21 (normal path)
+[LAYER_EXIT] ly=21
+[FINAL_OUT] ly=21 norm=3.545043e+01 finite=2048/2048 output[0..7]= -0.691369 0.610461 0.0182653 -0.225147 0.33566 0.313511 -0.35199 -0.04601 
+HEAP_OK_AFTER_FORWARD_LAYERS=1
+[STAGE_DIGEST] side=deep2 key=PROMPT_POST_LAYERS pos=1 n=2048 l2=3.545043144e+01 max_abs=1.513200378e+01 min=-5.711184502e+00 max=1.513200378e+01 sum=-4.930049993e+00 fnv=af3d42e9a38039f4 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_PROMPT_POST_LAYERS_pos1_layer0_full_n2048_seq118.bin nelem=2048 head=-1 seq=118 fnv=af3d42e9a38039f4
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=000002695B0E1060
+FINAL_NORM_DST_PTR=000002695B0E1060
+FINAL_NORM_WEIGHT_PTR=0000026958FE0000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=8192
+FINAL_NORM_WEIGHT_0=1.921875
+FINAL_NORM_WEIGHT_1=1.8203125
+FINAL_NORM_WEIGHT_2=1.9453125
+FINAL_NORM_WEIGHT_3=1.984375
+FINAL_NORM_WEIGHT_L2=86.877581
+FINAL_NORM_SUMSQ=1256.73309
+FINAL_NORM_MEAN_SQ=0.613639204
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=1.27655613
+FINAL_NORM_SRC_0=-0.691369057
+FINAL_NORM_DST_0=-1.69619191
+FINAL_NORM_AFTER_L2=78.4013275
+HEAP_OK_FINAL_NORM_AFTER=1
+[STAGE_DIGEST] side=deep2 key=PROMPT_FINAL_NORM pos=1 n=2048 l2=7.840132751e+01 max_abs=1.936578178e+01 min=-1.936578178e+01 max=1.628709984e+01 sum=-6.615915953e+01 fnv=f517fb9119654bc4 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_PROMPT_FINAL_NORM_pos1_layer0_full_n2048_seq119.bin nelem=2048 head=-1 seq=119 fnv=f517fb9119654bc4
+[STAGE_DIGEST] side=deep2 key=FINAL_NORM pos=1 n=2048 l2=7.840132751e+01 max_abs=1.936578178e+01 min=-1.936578178e+01 max=1.628709984e+01 sum=-6.615915953e+01 fnv=f517fb9119654bc4 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FINAL_NORM_pos1_layer0_full_n2048_seq120.bin nelem=2048 head=-1 seq=120 fnv=f517fb9119654bc4
+[STAGE_DIGEST] side=deep2 key=TIP_FINAL_NORM pos=1 n=2048 l2=7.840132751e+01 max_abs=1.936578178e+01 min=-1.936578178e+01 max=1.628709984e+01 sum=-6.615915953e+01 fnv=f517fb9119654bc4 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_TIP_FINAL_NORM_pos1_layer0_full_n2048_seq121.bin nelem=2048 head=-1 seq=121 fnv=f517fb9119654bc4
+[AGENT] PREFILL_DONE prompt_tokens=2 prefill_ms=1602.119
+HEAP_OK_AFTER_PREFILL=1
+HEAP_OK_DECODE_ENTER=1
+[AGENT] DECODE_BEGIN max_out=1
+HEAP_OK_DECODE_FEEDBACK_INIT=1
+HEAP_OK_DECODE_STEP0_ENTER=1
+DECODE_STEP0_PTRS h=000002695B0E1060 logits=000002692FFF00A0 lmHead=0000026930FC0000 vocab=32000 hiddenDim=2048 promptLen=2
+HEAP_OK_DECODE_STEP0_H_READY=1
+HEAP_OK_LOGITS_BEFORE=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+B03_LOGITS_TOPK hNorm=7.840134e+01 lm_type=14 rows=32000 cols=2048 nonFinite=0 top=29892:10.7171,2787:10.0019,3186:8.7941,29991:8.5972,727:8.5040,13:8.3279,14058:7.5685,322:7.4345
+HEAP_OK_LOGITS_AFTER=1
+[STAGE_DIGEST] LOGIT_13=8.327919006
+[STAGE_DIGEST] LOGIT_29892=10.717092514
+[STAGE_DIGEST] DELTA_13_minus_29892=-2.389173508
+[STAGE_DIGEST] side=deep2 key=FINAL_HIDDEN_FOR_LOGITS pos=2 n=2048 l2=7.840132751e+01 max_abs=1.936578178e+01 min=-1.936578178e+01 max=1.628709984e+01 sum=-6.615915953e+01 fnv=f517fb9119654bc4 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_FINAL_HIDDEN_FOR_LOGITS_pos2_layer0_full_n2048_seq122.bin nelem=2048 head=-1 seq=122 fnv=f517fb9119654bc4
+[STAGE_DIGEST] side=deep2 key=LOGITS pos=2 n=32000 l2=9.294895562e+02 max_abs=1.628416252e+01 min=-1.628416252e+01 max=1.071709251e+01 sum=-1.342778185e+05 fnv=98bb77b71069f37b nf=0
+[LOGIT_TOP10] side=deep2 key=LOGITS pos=2 29892:1.071709251e+01 2787:1.000186062e+01 3186:8.794149399e+00 29991:8.597233772e+00 727:8.504048347e+00 13:8.327919006e+00 14058:7.568465233e+00 322:7.434474468e+00 515:7.424862862e+00 29889:7.304083824e+00
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_LOGITS_pos2_layer0_full_n32000_seq123.bin nelem=32000 head=-1 seq=123 fnv=98bb77b71069f37b
+[STAGE_DIGEST] side=deep2 key=TIP_LOGITS pos=2 n=32000 l2=9.294895562e+02 max_abs=1.628416252e+01 min=-1.628416252e+01 max=1.071709251e+01 sum=-1.342778185e+05 fnv=98bb77b71069f37b nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_TIP_LOGITS_pos2_layer0_full_n32000_seq124.bin nelem=32000 head=-1 seq=124 fnv=98bb77b71069f37b
+[STAGE_DIGEST] side=deep2 key=TIP_FINAL_HIDDEN pos=2 n=2048 l2=7.840132751e+01 max_abs=1.936578178e+01 min=-1.936578178e+01 max=1.628709984e+01 sum=-6.615915953e+01 fnv=f517fb9119654bc4 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_TIP_FINAL_HIDDEN_pos2_layer0_full_n2048_seq125.bin nelem=2048 head=-1 seq=125 fnv=f517fb9119654bc4
+[STAGE_DIGEST] side=deep2 key=ARGMAX pos=2 id=29892 logit=10.717092514
+B3_NORM_BAND_ARCH=llama SQRT_H=45.255 WARN_GT=100.0 EXPL_GT=1000.0 OBS_NORM=78.401 B3_NORM_EXPLOSION=0
+HEAP_OK_SAMPLE_BEFORE=1
+HEAP_OK_SAMPLE_AFTER=1
+[AGENT] TOKEN id=29892 piece=,
+POS_DUMP TOKEN_INDEX=1 ROPE_POSITION=3 KV_POSITION=3 POSITION_MATCH=1
+GPU_FORWARD_CHILD_ONE_IGNORE
+GPU_ISO_RUN=G0
+IGNORED_GPU_OWNER=NONE
+DIAGNOSTIC_ONLY=1
+PROMOTE=0
+GPU_FORWARD_CHILD_ONE_IGNORE_END=1
+GPU_FORWARD_CHILD_IGNORE_DROP=1
+GPU_FORWARD_IGNORE_ARMED=0
+GPU_FORWARD_IGNORE_VALID=1
+GPU_FORWARD_IGNORE_CHILD=NONE
+GPU_FORWARD_ONE_IGNORE_ONLY=1
+GPU_FORWARD_LAYERS=0
+SELECTED_CHILD_EVIDENCE_FIRED=0
+CLAIM_AUTHORITY=OWN_RUNTIME_EMISSION_ONLY
+PROMOTE=0
+GATE=G0_REFERENCE
+DEEP2_GPU_ISO_RUN=1
+GPU_FORWARD_CHILD_IGNORE=NONE
+GPU_FORWARD_CALLS=0
+GPU_FORWARD_MS=1404.514
+QKV_CALLS=0
+QKV_MS=0.000
+QKV_IGNORE_REQUESTED=0
+QKV_IGNORE_APPLIED=0
+DEVICE_ATTENTION_CALLS=0
+DEVICE_ATTENTION_MS=0.000
+DEVICE_ATTENTION_IGNORE_REQUESTED=0
+DEVICE_ATTENTION_IGNORE_APPLIED=0
+FFN_CALLS=0
+FFN_MS=0.000
+FFN_IGNORE_REQUESTED=0
+FFN_IGNORE_APPLIED=0
+GEMV_CALLS=0
+GEMV_MS=0.000
+GEMV_IGNORE_REQUESTED=0
+GEMV_IGNORE_APPLIED=0
+OUTPUT_PROJECTION_CALLS=0
+OUTPUT_PROJECTION_MS=0.000
+OUTPUT_PROJECTION_IGNORE_REQUESTED=0
+OUTPUT_PROJECTION_IGNORE_APPLIED=0
+KV_CALLS=0
+KV_MS=0.000
+KV_IGNORE_REQUESTED=0
+KV_IGNORE_APPLIED=0
+SYNC_CALLS=0
+SYNC_MS=0.000
+SYNC_IGNORE_REQUESTED=0
+SYNC_IGNORE_APPLIED=0
+READBACK_CALLS=0
+READBACK_MS=0.000
+READBACK_IGNORE_REQUESTED=0
+READBACK_IGNORE_APPLIED=0
+IGNORE_REQUESTED=0
+IGNORE_APPLIED=0
+BLOCKED_AT=NONE
+GATE_BLOCKED_AT=NONE
+CLAIM_AUTHORITY=OWN_RUNTIME_EMISSION_ONLY
+RUNTIME_AUTHORITY=1
+OLLAMA_HTTP=0
+PROMOTE=0
+TOKENS_COMMITTED=1
+[Deep2Engine] Generation complete: 1 tokens in 1660.07 ms (E2E 0.60 TPS)
+[Deep2Engine] PREFILL: 2 tok in 1602.12 ms (1.25 tok/s) | DECODE: 1 tok in 56.16 ms (17.81 tok/s)
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=2
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+HOST_FORWARD_LAYER_CALLS=44
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_FORWARD_FALLBACKS=44
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=577
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=268
+DEEP2_GPU_Q6K_PACKED_OPS=41
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+GATE=G0_REFERENCE
+DEEP2_GPU_ISO_RUN=1
+GPU_FORWARD_CHILD_IGNORE=NONE
+GPU_FORWARD_CALLS=0
+GPU_FORWARD_MS=1404.514
+QKV_CALLS=0
+QKV_MS=0.000
+QKV_IGNORE_REQUESTED=0
+QKV_IGNORE_APPLIED=0
+DEVICE_ATTENTION_CALLS=0
+DEVICE_ATTENTION_MS=0.000
+DEVICE_ATTENTION_IGNORE_REQUESTED=0
+DEVICE_ATTENTION_IGNORE_APPLIED=0
+FFN_CALLS=0
+FFN_MS=0.000
+FFN_IGNORE_REQUESTED=0
+FFN_IGNORE_APPLIED=0
+GEMV_CALLS=0
+GEMV_MS=0.000
+GEMV_IGNORE_REQUESTED=0
+GEMV_IGNORE_APPLIED=0
+OUTPUT_PROJECTION_CALLS=0
+OUTPUT_PROJECTION_MS=0.000
+OUTPUT_PROJECTION_IGNORE_REQUESTED=0
+OUTPUT_PROJECTION_IGNORE_APPLIED=0
+KV_CALLS=0
+KV_MS=0.000
+KV_IGNORE_REQUESTED=0
+KV_IGNORE_APPLIED=0
+SYNC_CALLS=0
+SYNC_MS=0.000
+SYNC_IGNORE_REQUESTED=0
+SYNC_IGNORE_APPLIED=0
+READBACK_CALLS=0
+READBACK_MS=0.000
+READBACK_IGNORE_REQUESTED=0
+READBACK_IGNORE_APPLIED=0
+IGNORE_REQUESTED=0
+IGNORE_APPLIED=0
+BLOCKED_AT=NONE
+GATE_BLOCKED_AT=NONE
+CLAIM_AUTHORITY=OWN_RUNTIME_EMISSION_ONLY
+RUNTIME_AUTHORITY=1
+OLLAMA_HTTP=0
+PROMOTE=0
+TOKENS_COMMITTED=1
+LIVE_DECODE_COMMITTED=0
+DEEP2_CPU_FALLBACK_USED=0
+DEEP2_UNPLANNED_DEVICE_FALLBACKS=0
+DEEP2_GPU_OP_SUBMITS=577
+WEIGHT_MODE=BOUNDED_STREAM
+GPU_WEIGHT_WINDOW_BYTES=51904512
+DEEP2_WEIGHT_STREAM_BYTES_TOTAL=949321728
+WEIGHT_SLOT_COUNT=8
+WEIGHT_WINDOW_POLICY=AUTO
+WEIGHT_USABLE_BUDGET_BYTES=0
+WEIGHT_ARENA_RESERVE_BYTES=0
+WEIGHT_DEVICE_HEAP_BYTES=0
+WEIGHT_SLOT_BYTES=6488064
+WEIGHT_SLOT_REUSES=264
+RESIDENT_WEIGHT_GROWTH_AFTER_INIT=0
+PERMANENT_F32_WEIGHT_CACHE=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 0
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 0.000
+============================================================
+
+=== ElasticResidencyManager Telemetry ===
+NVMe read time:        0 us
+RAM stage time:        0 us
+RAM→VRAM upload time:  0 us
+GPU wait time:         0 us
+GPU compute time:      0 us
+Prefetch hits:         0
+Prefetch misses:       0
+Prefetch hit rate:     0.00%  (B011 ref ~79.96%)
+VRAM eviction time:    0 us
+CPU fallback time:     0 us
+State race blocks:     0
+Compute efficiency:    0.0000
+B011_FETCH_COST_FRAME  hit=0.00%  io_ref~77.6%  map_ref~99.7%  metric=fetch_not_fit
+FREETOKEN_MICROZONE live=1 zones=8 zone_mb=64 sticks=4 active=0 overwrites=0 hits=0 misses=0 hit_pct=0.00 stick0_rpm=0 stick1_rpm=0 allocs_after_init=0 key=address_id waw_ready_gate=1 helpframe_nway=4 eat_gt2=1 metric=fetch_not_fit models=20/35/70/120/300/671+ unbounded=1 public_gap=amd_xfer_waw+prescope_dual_only
+Memory: warmCompressed=0/2304 MB, warmStaged=0/288 MB, hot=0/4608 MB
+==========================================
+
+[Deep2Engine] Telemetry health: VRAM_BW_SATURATED
+SHARD_OPEN_US=0
+SHARD_READ_US=0
+CACHE_LOOKUP_US=0
+CACHE_HIT_US=0
+LAYER_ACQUIRE_WAIT_US=0
+RECONSTRUCT_US=0
+OUTPUT_WEIGHT_US=0
+MLA_COMPUTE_US=0
+LOGITS_US=0
+SAMPLE_US=0
+STREAM_US=0
+DETOK_US=0
+HOST_CACHE_COPY_US=0
+SHARD_ATTN_US=0 SHARD_MOE_US=0 SHARD_OTHER_US=0
+NEXT_BEST_MOVE=MLA_ATTN_KV_EXPAND
+NEXT_BEST_MOVE_US=0
+RE_MANIFEST=MLA=0,LOGITS=0,OUT_W=0,SHARD=0,COPY=0
+GREEDY_DET TRACE_HASH=af98794c865b5353 EXPERT_SEQUENCE_HASH=cbf29ce484222325 ARGMAX_STEPS=1 STICK_HASH_MODE=1
+D2_MOE_LIVE moe_ffn_enter=0 moe_place_enter=0 MOE_PLACE_CALLS=0 moe_router_calls=0 ffn_dispatch_moe=0 ffn_dispatch_dense=44 ffn_dispatch_ssm=0
+D2_MOE_LIVE experts_selected=0 experts_executed=0 parity=1 thrash_tokens=0
+D2_MOE_LIVE hits=N/A misses=N/A miss_bytes=N/A EXPERT_LOGICAL_MISS_BYTES=N/A_NOT_REACHED acquire_ok=0 acquire_fail=0 markhot=0
+D2_MOE_LIVE SHARED_EXPERT_CALLS=0 slice_layout_mismatch=0 stick_retains=0 stick_assigns=0
+D2_MOE_LIVE EXPERT_GPU_ACQUIRE=0 EXPERT_GPU_EXEC=0 HOST_GEMV_EXPERT=0
+D2_MOE_DECODE K2_MOE_LAYER_CALLS=0 MOE_PLACE_CALLS=0 EXPERTS_SELECTED=0 EXPERTS_EXECUTED=0 parity=1
+DUALSTICK_REQUESTED=0
+DUALSTICK_PLANNED=0
+DUALSTICK_ARMED=0
+DUALSTICK_ARM_COUNT=0
+DUALSTICK_ARM_ACQUIRES=0
+DUALSTICK_ARM_BYTES_WORKED=0
+DUALSTICK_ARM_EXEC=0
+DUALSTICK_RUNTIME_USED=0
+DUALSTICK_RUNTIME_DEVICE_COUNT=0
+DUALSTICK_FORWARD_CALLS_GPU0=0
+DUALSTICK_FORWARD_CALLS_GPU1=0
+DUALSTICK_RUNTIME_BYTES_WORKED=0
+DUALSTICK_TRUE_RUNTIME=0
+DUALSTICK_ARM_ONLY=0
+DUAL_STICK_ARMED=0
+DUAL_STICK_EXEC=0
+DUAL_STICK_ACQUIRES=0
+DUAL_STICK_CONSUMERS=0
+DUAL_STICK_OWNERSHIP_ADVANCES=0
+DUAL_STICK_BYTES_WORKED=0
+DUAL_STICK_EXEC_NOTE=alias_of_DUALSTICK_RUNTIME_USED
+LIVE_PATH_VACUUM=0
+LIVE_PATH_TRAMPOLINE_INSTALLED=1
+LIVE_PATH_TRAMPOLINE_HITS=46
+LIVE_PATH_CYCLONE=1
+LIVE_PATH_CYCLONE_LAYER_STARTS=44
+LIVE_PATH_CYCLONE_LAYER_ENDS=44
+LIVE_PATH_CYCLONE_DEMANDS=308
+LIVE_PATH_PINBALL_SAMPLES=0
+LIVE_PATH_ELASTIC=1
+LIVE_PATH_STREAM=1
+LIVE_PATH_STREAM_ALIVE=44
+LIVE_PATH_NVME_HOPS=2
+LIVE_PATH_PLASMA_SAMPLES=0
+LIVE_PATH_REVERSAL_US=0.000
+LIVE_PATH_ENHANCEMENTS=1
+LIVE_PATH_BRAKE=0
+LIVE_PATH_ACTIVE=0
+STREAM_BYTES_READ_TOTAL=0
+STREAM_BYTES_TO_GPU_TOTAL=1205932032
+STREAM_BYTES_RECONSTRUCTED_TOTAL=0
+STREAM_READ_OPS=0
+STREAM_GPU_UPLOAD_OPS=309
+VRAM_PEAK=0
+RESIDENT_WEIGHT_PEAK=0
+CACHE_HITS=0
+CACHE_MISSES=0
+CYCLONE_PREFETCH_REQUESTS=308
+CYCLONE_PREFETCH_PROMOTIONS=0
+CYCLONE_STALL_CYCLES=0
+PINBALL_BOOST_TRIGGERS=0
+REVERSAL_PREFETCH_BOOSTS=0
+QUEUE_PEAK=7
+PER_TOKEN_ALLOCS=0
+FALLBACK_COUNT=0
+TRAILBRAKE_CHECKS=0
+TRAILBRAKE_TRIGGERED=0
+TRAILBRAKE_TOKENS_AVOIDED=0
+ABSENCE_NVME=0
+ABSENCE_PLASMA=1
+FUSED_ENABLED=0
+FUSED_DECISIONS=0
+FUSED_PREFETCH_DEPTH=0
+FUSED_REVERSE_DEPTH=0
+FUSED_PREFETCH_DEPTH_MAX=0
+FUSED_REVERSE_DEPTH_MAX=0
+FUSED_URGENT_ACQUIRES=0
+FUSED_SPECULATIVE_SUPPRESSED=0
+FUSED_EVICTIONS=0
+FUSED_WARMUP_ENABLES=0
+FUSED_BRAKES=0
+FUSED_CONFLICTS_AVOIDED=0
+FUSED_PREFETCH_REQUESTS_DROPPED=0
+FUSED_DUPLICATE_PREFETCHES=0
+FUSED_QUEUE_PEAK=0
+FUSED_FAST_BYPASS=0
+FUSED_SIGNAL_CHANGES=0
+FUSED_POLICY_CHANGES=0
+FUSED_DECISIONS_SKIPPED=0
+FUSED_DECISION_US=0
+FUSED_BRAKE_US=0
+FUSED_SUPPRESSION_US=0
+FUSED_TOTAL_CONTROL_US=0
+LIVE_NU_WANTED=0
+LIVE_NU_AUTHORIZED=1
+LIVE_NU_ACTIVE=0
+LIVE_NU_CONSUME_OPS=0
+LIVE_NU_CONSUME_BYTES=0
+LIVE_NU_REJECT_OFF=0
+LIVE_NU_REJECT_NO_AUTH=0
+LIVE_NU_FAIL=0
+TPS_RAW=0.000000
+TPS_DISPLAY=0.0
+TPS_SCALE=1000
+TPB_RAW=2.000000000e-08
+TPB_REVERSE_BPT=50000000.0
+TPS_WORK=0.000
+PRODUCT_ENTRY_PATH=1
+STREAM_RUNTIME_PATH=1
+MODEL_GRAPH_COMPLETE=1
+NEMOTRON_SSM_REAL=0
+SSM_REAL_LAYERS=0 SSM_IDENTITY_LAYERS=0 SSM_HYBRID_LAYERS=0 SSM_MAMBA_ARMED=0
+NUMERIC_PARITY=UNPROVEN
+FUNCTIONAL_MODEL_PASS=0
+GATE=NEMOTRON_H_REAL_SSM_001
+PRODUCTION_DECODE_PATH=0
+PROMOTE=0
+SSM_CERT=NOT_CERTIFIED
+RAWRXD_PRODUCT_PATH_001=1
+PRODUCT_PATH=CLI|IDE|Bridge→Deep2Engine::generateStream→token_commit→stream→receipt
+SYNTHETIC_TOKEN_PATH=0
+PATH=generateStream
+MODEL=llama
+RAWRXD_FUNCTIONAL_CHAMPION_001
+RAWRXD_TPS_KILLER_SEAL_001
+MODEL=llama
+PATH=generateStream
+TOKENS_REQUESTED=1
+TOKENS_COMMITTED=1
+GENERATION_WALL_NS=1717443400
+DECODE_TPS_REAL=0.582261
+PRODUCT_FLOOR_TPS=5.000
+PRODUCT_WALL_MAX_NS=12800000000
+PARITY_PASS=1
+FUNCTIONAL_PASS=1
+CANDIDATE_BEATS_CHAMPION=0
+CANDIDATE_KILLED=1
+FUNCTIONAL_CHAMPION=0
+TPS_PRODUCT_SEAL=0
+SPIN_CLOSE_BLOCKER=NONE
+SPIN_CLOSE_BLOCKER_OWNER=NONE
+SPIN_CLOSE_BLOCKER_US=0
+BLOCKED_AT=64_TOKEN_PRODUCT_RUN
+DO_NOT_REOPEN=KvaInversion
+DO_NOT_REOPEN=KVA_CLIMB
+DO_NOT_REOPEN=BATCH_007
+RAWRXD_PERFORMANCE_001=OPEN
+RAWRXD_PRODUCT_TPS_001=OPEN
+PROMOTE=0
+NOTE=TPS_PRODUCT_SEAL_NE_PRODUCT_PASS;FINAL_READY=PRODUCT_OPEN_PASS&&SESSION_ENTER_PASS&&GENERATED_TOKENS>0&&TOKEN_COMMIT_PASS
+RECEIPT_END=RAWRXD_TPS_KILLER_SEAL_001
+DECODE_LOOP_ATTRIBUTION_BEGIN=1
+TOKENS_REQUESTED=1
+TOKENS_COMMITTED=1
+TOKENS_DECODED=1
+TOKENIZER_SINGLE_CALLS=1
+TOKENIZER_SEQUENCE_CALLS=0
+DETOK_WALL_NS=1800
+CALLBACK_WALL_NS=114000
+DETOK_RAW_BYTES=1
+DETOK_EMITTED_BYTES=1
+DETOK_UTF8_PENDING_BYTES=0
+DETOK_UTF8_ERRORS=0
+DECODE_REPLAY_FACTOR=1.000000
+DECODE_LOOP_ATTRIBUTION_END=1
+MODEL_RUNTIME_OVERLAY_BEGIN=1
+MODEL_LOCATION=
+MODEL_FINGERPRINT=11753875096244137027 RUN_ID=generateStream
+PREFILL=OBSERVED DECODE=OBSERVED TOKENS_COMMITTED=1
+STREAMER_TPS=0.000000 FORWARD_MS=0.000 LOGITS_MS=0.000 SAMPLE_MS=0.000 DETOK_MS=0.000 CALLBACK_MS=0.000 RECEIPT_MS=0.000
+CLEAN_EXIT=1 CRASH_OBSERVED=0 BLOCKED_AT=PROVENANCE_MISMATCH DISPOSITION=CLEAN_EXIT
+DISCOVERY_MUTATION=0 AUTHORITY_CLASS=RUNTIME_OVERLAY PROMOTE=0
+MODEL_RUNTIME_OVERLAY_END=1
+ONE_BY_ONE_IGNORE_LADDER_001
+ISOLATION_RUN=A0
+IGNORED_OWNER=NONE
+DIAGNOSTIC_ONLY=1
+PROMOTE=0
+TOKENS_REQUESTED=1
+TOKENS_COMMITTED=1
+TOKENS_DECODED=1
+TOTAL_WALL_MS=1711.181
+PREFILL_MS=1602.119
+DECODE_MS=56.157
+FORWARD_MS=1404.514
+LOGITS_MS=31.699
+SAMPLE_MS=0.157
+DETOK_MS=0.003
+CALLBACK_MS=0.114
+RECEIPT_MS=0.200
+KV_MS=0.000
+TPS=0.584
+DELTA_VS_BASELINE_PCT=0.000
+ONE_BY_ONE_IGNORE_LADDER_END=1
+DECODE_BLOCKER_ATTRIBUTION_BEGIN=1
+IGNORED_OWNER=NONE DIAGNOSTIC_ONLY=1 PROMOTE=0
+TOKENS_REQUESTED=1 TOKENS_COMMITTED=1 TOKENS_DECODED=1
+TOKENIZER_SINGLE_CALLS=1 TOKENIZER_SEQUENCE_CALLS=0 DECODE_REPLAY_FACTOR=1.000000
+TOTAL_WALL_MS=1717.443 PREFILL_MS=1602.119 DECODE_MS=56.157 ACCOUNTED_MS=1438.286
+FORWARD_MS=1406.107 LOGITS_MS=31.699 SAMPLE_MS=0.157 DETOK_MS=0.008 CALLBACK_MS=0.114 RECEIPT_MS=0.200 KV_MS=0.000 OTHER_MS=0.000
+DECODE_OWNER=FORWARD
+DECODE_BLOCKER_ATTRIBUTION_END=1
+RXEV_SURFACE ARMED=0 DISPOSITION=NO_RUN_STATE
+RXOW stage=NONE br=BR_NO_RUN_STATE layers=0 tensors=0 graph=0 decode0=0 note=norun_unclassified
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel release multi-shard VirtualAlloc layers=22 ggufTensors=201 bp16Owned=0
+[LIFE] unloadModel FreeTensorData ggufResult (201 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+RXEV_SURFACE ARMED=0 DISPOSITION=NO_RUN_STATE
+RXOW stage=NONE br=BR_NO_RUN_STATE layers=0 tensors=0 graph=0 decode0=0 note=norun_unclassified
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] disableMARS
+[LIFE] shutdown cyclone before elastic
+[LIFE] elastic Shutdown early
+TD=03 KV_RELEASE_BEGIN
+TD=04 KV_RELEASE_END
+[LIFE] unloadModel
+GREEDY_DET TRACE_HASH=af98794c865b5353 EXPERT_SEQUENCE_HASH=cbf29ce484222325 ARGMAX_STEPS=1 STICK_HASH_MODE=1
+D2_MOE_LIVE moe_ffn_enter=0 moe_place_enter=0 MOE_PLACE_CALLS=0 moe_router_calls=0 ffn_dispatch_moe=0 ffn_dispatch_dense=44 ffn_dispatch_ssm=0
+D2_MOE_LIVE experts_selected=0 experts_executed=0 parity=1 thrash_tokens=0
+D2_MOE_LIVE hits=N/A misses=N/A miss_bytes=N/A EXPERT_LOGICAL_MISS_BYTES=N/A_NOT_REACHED acquire_ok=0 acquire_fail=0 markhot=0
+D2_MOE_LIVE SHARED_EXPERT_CALLS=0 slice_layout_mismatch=0 stick_retains=0 stick_assigns=0
+D2_MOE_LIVE EXPERT_GPU_ACQUIRE=0 EXPERT_GPU_EXEC=0 HOST_GEMV_EXPERT=0
+D2_MOE_DECODE K2_MOE_LAYER_CALLS=0 MOE_PLACE_CALLS=0 EXPERTS_SELECTED=0 EXPERTS_EXECUTED=0 parity=1
+DUALSTICK_REQUESTED=0
+DUALSTICK_PLANNED=0
+DUALSTICK_ARMED=0
+DUALSTICK_ARM_COUNT=0
+DUALSTICK_ARM_ACQUIRES=0
+DUALSTICK_ARM_BYTES_WORKED=0
+DUALSTICK_ARM_EXEC=0
+DUALSTICK_RUNTIME_USED=0
+DUALSTICK_RUNTIME_DEVICE_COUNT=0
+DUALSTICK_FORWARD_CALLS_GPU0=0
+DUALSTICK_FORWARD_CALLS_GPU1=0
+DUALSTICK_RUNTIME_BYTES_WORKED=0
+DUALSTICK_TRUE_RUNTIME=0
+DUALSTICK_ARM_ONLY=0
+DUAL_STICK_ARMED=0
+DUAL_STICK_EXEC=0
+DUAL_STICK_ACQUIRES=0
+DUAL_STICK_CONSUMERS=0
+DUAL_STICK_OWNERSHIP_ADVANCES=0
+DUAL_STICK_BYTES_WORKED=0
+DUAL_STICK_EXEC_NOTE=alias_of_DUALSTICK_RUNTIME_USED
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel release multi-shard VirtualAlloc layers=0 ggufTensors=0 bp16Owned=0
+[LIFE] unloadModel FreeTensorData ggufResult (0 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+RXEV_SURFACE ARMED=0 DISPOSITION=NO_RUN_STATE
+RXOW stage=NONE br=BR_NO_RUN_STATE layers=0 tensors=0 graph=0 decode0=0 note=norun_unclassified
+[LIFE] release MoE
+TD=05 WINDOW_RELEASE_BEGIN
+TD=06 WINDOW_RELEASE_END
+TD=07 GPU_DESTROY_BEGIN
+[LIFE] release vulkan devices
+TD=08 GPU_DESTROY_END
+[LIFE] stop telemetryController
+TD=09 MODEL_DESTROY_BEGIN
+TD=10 MODEL_DESTROY_END
+[LIFE] ~Deep2Engine END
+TD=11 CLEAN_EXIT
+CMD_RUN_CLEAN_EXIT=1
+RECEIPT_BEGIN=RAWRXD_E2E_BLOCKERS_105
+RAWRXD_E2E_BLOCKERS_105
+BATCH_007_BEGIN=91
+BATCH_007_END=105
+VOCAB_EXT_PRESENT=1 VOCAB_EXT_RUNTIME_BACKED=1 TOKEN_ID_TO_TEXT_VALID=1
+BYTE_FALLBACK_ENABLED=1 UNKNOWN_TOKEN_COUNT=0 DROPPED_TEXT_BYTES=0
+BOS_ID=1 EOS_ID=2 PAD_ID=2 UNK_ID=0 SPECIAL_TOKEN_SOURCE=gguf SPECIAL_TOKEN_VALID=1
+CHAT_TEMPLATE_PRESENT=0 CHAT_TEMPLATE_SOURCE=raw-env CHAT_TEMPLATE_RUNTIME_BACKED=1
+PROMPT_FORMATTED_BY_RUNTIME=1 CHAT_TEMPLATE_HASH=3164402745239275091 CHAT_TEMPLATE_POLICY=RAW_PROMPT_ALLOWED
+PROMPT_TOKENS=2 GENERATED_TOKENS=1 BOUNDARY_TOKEN_INDEX=2 BOUNDARY_VALID=1
+UTF8_PENDING_BYTES=0 UTF8_VALID_FINAL=1 STREAM_UTF8_ERRORS=0
+DETOK_STATE_CARRY_VALID=1 PARTIAL_TOKEN_FLUSH_VALID=1
+CHUNK_SEQ_ID=1 TOKEN_SEQ_ID=1 CHUNK_ORDER_VALID=1
+TOKEN_COMMIT_COUNT_PER_INDEX=1 DUPLICATE_TOKEN_COMMITS=0
+RETRY_COUNT=0 RETRY_STAGE=NONE RETRY_ROLLBACK_VALID=1
+CANCEL_OBSERVED_AT=NONE CANCEL_SAFE_POINT=1 PARTIAL_OUTPUT_VALID=1
+MAX_TOKENS_REQUESTED=1 TOKENS_COMMITTED=1 STOPPED_BY_MAXTOK_VALID=1
+CTX_SIZE=4096 POSITION_INDEX=3 CTX_LIMIT_REACHED=0 CTX_OVERFLOW=0
+TOKEN_INDEX=1 ROPE_POSITION=2 KV_POSITION=2 POSITION_MATCH=1
+STREAM_HASH=36342609493136843 STREAM_HASH_MATCH=1 RECEIPT_ATOMIC=1
+BLOCKER_91_STREAMER_VOCAB_EXT_RUNTIME=PASS
+BLOCKER_92_BYTE_FALLBACK_TOKENIZATION=PASS
+BLOCKER_93_SPECIAL_TOKEN_AUTHORITY=PASS
+BLOCKER_94_CHAT_TEMPLATE_RUNTIME=BLOCKED
+BLOCKER_95_PROMPT_BOUNDARY_GUARD=PASS
+BLOCKER_96_UTF8_STREAM_INTEGRITY=PASS
+BLOCKER_97_DETOKENIZER_STATE_CARRY=PASS
+BLOCKER_98_STREAM_CHUNK_ORDERING=PASS
+BLOCKER_99_TOKEN_COMMIT_IDEMPOTENCE=PASS
+BLOCKER_100_TOKEN_RETRY_SAFETY=PASS
+BLOCKER_101_CANCEL_BOUNDARY_RUNTIME=PASS
+BLOCKER_102_MAX_TOKEN_LIMIT_AUTHORITY=PASS
+BLOCKER_103_CONTEXT_LIMIT_GUARD=PASS
+BLOCKER_104_POSITION_COUNTER_AUTHORITY=PASS
+BLOCKER_105_GENERATION_RECEIPT_ATOMICITY=PASS
+BATCH_007_PASS_COUNT=14
+BATCH_007_UNFINISHED_COUNT=1
+RECEIPT_END=RAWRXD_E2E_BLOCKERS_105
+RAWRXD_PRODUCT_E2E_001
+INPUT_ACCEPTED=1
+MODEL_AUTHORITY=1
+RUNTIME_BACKED=1
+PRODUCTION_DECODE_PATH=1
+HOST_FORWARD_LAYER_CALLS=0
+CPU_F32_EXPANDS=0
+TOKENS_REQUESTED=1
+GENERATED_TOKENS=1
+TOKENS_COMMITTED=1
+STREAM_OUTPUT_PRESENT=1
+COMPLETION_RECEIPT_PRESENT=1
+PRODUCT_OPEN_PASS=1
+SESSION_ENTER_PASS=1
+TOKEN_COMMIT_PASS=1
+MEAN_TOKEN_WALL_NS=1717443400
+TOKEN_WALL_TARGET_NS=6666667
+DEADLINE_OK=0
+DECODE_TPS_REAL=0.582
+NOTE=TPS_DISPLAY_ONLY
+FUNCTIONAL_PASS=1
+PRODUCT_PASS=1
+PROMOTE=0
+RAWRXD_PRODUCT_E2E_001=PASS
+FINAL_READY_GATE=PRODUCT_OPEN_PASS&&SESSION_ENTER_PASS&&GENERATED_TOKENS>0&&TOKEN_COMMIT_PASS
+NEXT_INDEPENDENT_GATE=MULTI_FAMILY
+NOTE=TINYLLAMA_R25_PRODUCTOPEN_NE_MULTI_FAMILY
+RAWRXD_NO_MORE_BASELINE_STUBS_001=1
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[MARS] Shutting down...
+[DualGPUBackend] Shutting down...
+[DualGPUBackend] Worker 0 stopped
+[DualGPUBackend] Worker 1 stopped
+[DualGPUBackend] Shutdown complete
+[VRAMManager] Shutdown complete
+[MARS] Shutdown complete
+[Deep2Engine] MARS disabled
+[ElasticResidencyManager] Shutdown complete
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[ResidencyManager] Shutdown complete
+[ThreadPool] Shutdown complete

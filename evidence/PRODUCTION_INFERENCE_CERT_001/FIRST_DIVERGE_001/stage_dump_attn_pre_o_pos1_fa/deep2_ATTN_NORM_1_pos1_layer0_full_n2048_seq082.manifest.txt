@@ -1,0 +1,13 @@
+side=deep2
+stage=ATTN_NORM_1
+pos=1
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=b02478aa68091f57
+l2=8.3085781073184979
+seq=82
+path=G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_ATTN_NORM_1_pos1_layer0_full_n2048_seq082.bin

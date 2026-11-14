@@ -9554,6 +9554,8 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     if (config.useKVCache) {
         if (profilingEnabled_ && profiler_) profiler_->beginKVStore();
         
+        // Visible KV length after this token's write (authority for attend).
+        size_t attendLen = seqLen;
         // Use CompressedKVCache if enabled
         if (compressedKVEnabled_ && compressedKV_ && !vulkanEnabled_) {
             for (size_t h = 0; h < numKVHeads; ++h) {
@@ -9563,6 +9565,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             const size_t ckvBefore = compressedKV_->currentLength();
             compressedKV_->advance();
             const size_t ckvAfter = compressedKV_->currentLength();
+            attendLen = ckvAfter > 0 ? ckvAfter : seqLen;
             // Compressed path advances inside forwardLayer (per-layer). Probe it.
             Deep2::kv_probe::EmitAdvance("compressedKV", ckvBefore, ckvAfter,
                                          "forwardLayer_inline");
@@ -9582,6 +9585,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             const size_t lenBefore = kvCache->currentLength();
             const std::uint32_t writePos =
                 static_cast<std::uint32_t>(lenBefore);
+            attendLen = (size_t)writePos + 1u;
             float* kBase = nullptr;
             float* vBase = nullptr;
             /* Digest slot0 BEFORE write when writePos>0 ? detects overwrite. */
@@ -9615,9 +9619,9 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         // GQA: KV heads are shared across Q heads
         if (profilingEnabled_ && profiler_) profiler_->beginAttnCompute();
         
-        // Apply sliding window if enabled
+        // Attend through just-written KV slot (attendLen), not a stale seqLen.
         size_t attentionStart = 0;
-        size_t attentionEnd = seqLen;
+        size_t attentionEnd = attendLen > 0 ? attendLen : seqLen;
         applySlidingWindow(attentionStart, attentionEnd);
         size_t attend = attentionEnd - attentionStart;
         if (kvCache && Deep2::kv_probe::Enabled() && layer == 0) {
@@ -9914,9 +9918,14 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     }
     layerProbeCheckpoint("L12_HEAD_SCRATCH", layer, headScratch, headConcat, (const void*)headScratch);
 
-    /* Opt-in f16 cast of kqv_out (same gate). Default off — BATCH2 REF is
-       FP32 expand(V); f16 here amplified into FFN_NORM_0 HARD. */
-    kvCacheFp16RoundTrip(headScratch, headConcat);
+    /* FA F16 online AttentionWithCache matches llama kqv_out for T>=2.
+       headScratch f16rt only for T=1 (pos0 BITEXACT vs f16(V)).
+       T>1 REF is not f16-aligned — do not cast. */
+    {
+        const size_t attnT = kvCache ? (kvCache->currentLength() + 1u) : seqLen;
+        if (attnT <= 1)
+            kvCacheFp16RoundTrip(headScratch, headConcat);
+    }
 
     // -- D2-CERT-002: Stage 8 � ATTN_OUT (pre-O projection) ------------
     // DISABLED: cert code causes STATUS_STACK_BUFFER_OVERRUN crash in trace()

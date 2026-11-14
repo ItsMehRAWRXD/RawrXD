@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <cmath>
 #include <cstdlib>
+#include <cstdint>
 #ifdef _WIN32
     #include <malloc.h>
 #else
@@ -268,20 +269,50 @@ static inline void avx2_weighted_accumulate(float* output, const float* values, 
 }
 #endif
 
-// Fast approximate expf for softmax (available regardless of AVX2)
 static inline float fast_expf(float x) {
-    // Clamp to avoid overflow
     if (x > 88.0f) return 1e38f;
     if (x < -88.0f) return 0.0f;
     return expf(x);
 }
 
-// Forward declaration for fast_expf used in AttentionWithCache
-static inline float fast_expf(float x);
+/* IEEE754 RNE f16 — match ggml / Deep2Engine cache-type f16. */
+static inline float attnFp16ToF32(uint16_t h) {
+    uint32_t sign = (h >> 15) & 1u, exp = (h >> 10) & 0x1Fu, mant = h & 0x3FFu, f;
+    if (exp == 0) {
+        if (!mant) f = sign << 31;
+        else {
+            int e = 0; while (!(mant & 0x400u)) { mant <<= 1; ++e; }
+            mant &= 0x3FFu;
+            f = (sign << 31) | ((uint32_t)(113 - e) << 23) | (mant << 13);
+        }
+    } else if (exp == 31) f = (sign << 31) | (0xFFu << 23) | (mant << 13);
+    else f = (sign << 31) | ((exp + 127u - 15u) << 23) | (mant << 13);
+    float r; memcpy(&r, &f, 4); return r;
+}
+static inline uint16_t attnF32ToFp16(float val) {
+    uint32_t x; memcpy(&x, &val, 4);
+    const uint32_t sign = (x >> 16) & 0x8000u, exp = (x >> 23) & 0xFFu, mant = x & 0x7FFFFFu;
+    if (exp == 0xFFu) return (uint16_t)(sign | 0x7C00u | (mant ? 0x200u : 0u));
+    const int e = (int)exp - 127 + 15;
+    if (e >= 31) return (uint16_t)(sign | 0x7C00u);
+    if (e <= 0) {
+        if (e < -10) return (uint16_t)sign;
+        uint32_t m = mant | 0x800000u; const int rs = 14 - e;
+        uint32_t q = m >> rs, rem = m & ((1u << rs) - 1u), half = 1u << (rs - 1);
+        if (rem > half || (rem == half && (q & 1u))) ++q;
+        return (uint16_t)(sign | q);
+    }
+    uint32_t he = (uint32_t)e << 10, hm = mant >> 13, rem = mant & 0x1FFFu;
+    if (rem > 0x1000u || (rem == 0x1000u && (hm & 1u))) {
+        ++hm;
+        if (hm == 0x400u) { hm = 0; he += 0x400u; if (he >= 0x7C00u) return (uint16_t)(sign | 0x7C00u); }
+    }
+    return (uint16_t)(sign | he | hm);
+}
+static inline float attnF16RT(float x) { return attnFp16ToF32(attnF32ToFp16(x)); }
 
 // ============================================================================
-// Attention with KV Cache
-// Production AVX2-optimized scaled dot-product attention with softmax
+// AttentionWithCache — T=1 host SDPA; T>=2 ggml flash_attn_ext F16 VKQ (OPTION_A)
 // ============================================================================
 void AttentionWithCache(const float* query,
                         const KVCache& cache,
@@ -289,85 +320,116 @@ void AttentionWithCache(const float* query,
                         size_t head,
                         float* output,
                         size_t seqLen) {
-
-    const size_t headDim  = cache.headDimSize();
-    const float  scale    = 1.0f / sqrtf((float)headDim);
-    // Use seqLen (the number of positions to attend to, including current)
-    // rather than seqUsed (cache.currentLength) which may lag by one.
-    const size_t attend   = seqLen;
-
+    const size_t headDim = cache.headDimSize();
+    const float scale = 1.0f / sqrtf((float)headDim);
+    const size_t attend = seqLen;
     if (headDim == 0 || attend == 0) {
         memset(output, 0, headDim * sizeof(float));
         return;
     }
 
-    // Allocate scores buffer (aligned for potential SIMD)
+    /* OPTION_A: ggml flash_attn_ext F16 VKQ online mad (llama kqv_out T>=2). */
+    if (attend >= 2) {
+        static int s_faOnce = 0;
+        if (s_faOnce == 0) {
+            s_faOnce = 1;
+            std::fprintf(stderr, "ATTN_GGML_FA_F16=1 attend=%zu headDim=%zu\n",
+                         attend, headDim);
+            std::fflush(stderr);
+        }
+        float* q16 = (float*)_aligned_malloc(headDim * sizeof(float), 32);
+        uint16_t* vkq16 = (uint16_t*)_aligned_malloc(headDim * sizeof(uint16_t), 32);
+        if (!q16 || !vkq16) {
+            if (q16) _aligned_free(q16);
+            if (vkq16) _aligned_free(vkq16);
+            memset(output, 0, headDim * sizeof(float));
+            return;
+        }
+        for (size_t i = 0; i < headDim; ++i) q16[i] = attnF16RT(query[i]);
+        memset(vkq16, 0, headDim * sizeof(uint16_t));
+        float M = -INFINITY, S = 0.0f;
+        for (size_t pos = 0; pos < attend; ++pos) {
+            const float* k = cache.getK(layer, head, pos);
+            const float* v = cache.getV(layer, head, pos);
+            if (!k || !v) continue;
+            float dot = 0.0f;
+            for (size_t i = 0; i < headDim; ++i) dot += q16[i] * attnF16RT(k[i]);
+            const float s = dot * scale;
+            const float Mold = M;
+            float ms = 1.0f, vs = 1.0f;
+            if (s > M) {
+                M = s;
+                ms = (Mold == -INFINITY) ? 0.0f : expf(Mold - M);
+                vs = 1.0f;
+                if (Mold != -INFINITY) {
+                    for (size_t i = 0; i < headDim; ++i)
+                        vkq16[i] = attnF32ToFp16(attnFp16ToF32(vkq16[i]) * ms);
+                }
+            } else {
+                vs = expf(s - M);
+            }
+            for (size_t i = 0; i < headDim; ++i) {
+                const float vv = attnF16RT(v[i]);
+                vkq16[i] = attnF32ToFp16(attnFp16ToF32(vkq16[i]) + vv * vs);
+            }
+            S = S * ms + vs;
+        }
+        const float invS = (S == 0.0f) ? 0.0f : 1.0f / S;
+        for (size_t i = 0; i < headDim; ++i)
+            output[i] = attnFp16ToF32(vkq16[i]) * invS;
+        _aligned_free(q16);
+        _aligned_free(vkq16);
+        return;
+    }
+
+    /* T=1: prior host SDPA (retain ATTN_PRE_O@pos0 BITEXACT). */
     float* scores = (float*)_aligned_malloc(attend * sizeof(float), 32);
     if (!scores) {
         memset(output, 0, headDim * sizeof(float));
         return;
     }
-
-    // --- Pass 1: Compute Q*K^T scores with AVX2 dot products ---
     float maxScore = -1e38f;
-    
 #ifdef __AVX2__
     for (size_t pos = 0; pos < attend; ++pos) {
         const float* k = cache.getK(layer, head, pos);
-        if (!k) { 
-            scores[pos] = -1e38f; 
-            continue; 
-        }
+        if (!k) { scores[pos] = -1e38f; continue; }
         float dot = avx2_dot_product(query, k, headDim);
         scores[pos] = dot * scale;
         if (scores[pos] > maxScore) maxScore = scores[pos];
     }
 #else
-    // Scalar fallback
     for (size_t pos = 0; pos < attend; ++pos) {
         const float* k = cache.getK(layer, head, pos);
         if (!k) { scores[pos] = -1e38f; continue; }
-
         float dot = 0.0f;
-        for (size_t i = 0; i < headDim; ++i)
-            dot += query[i] * k[i];
+        for (size_t i = 0; i < headDim; ++i) dot += query[i] * k[i];
         scores[pos] = dot * scale;
         if (scores[pos] > maxScore) maxScore = scores[pos];
     }
 #endif
-
-    // --- Pass 2: Online softmax with numerical stability ---
-    // ATTN-CERT-001: pre-softmax scores (head 0 / layer 0 only)
     if (layer == 0 && head == 0) {
         AttnCert::record(AttnCert::Stage::PreSoftmax, 0,
                          static_cast<std::uint32_t>(cache.currentLength()),
                          scores, attend, static_cast<double>(maxScore));
     }
-    // Use online softmax algorithm for better numerical stability
     float sumExp = 0.0f;
     for (size_t pos = 0; pos < attend; ++pos) {
         scores[pos] = fast_expf(scores[pos] - maxScore);
         sumExp += scores[pos];
     }
     if (sumExp < 1e-12f) sumExp = 1e-12f;
-    
-    // Normalize to get softmax probabilities
     float invSum = 1.0f / sumExp;
     double sumCheck = 0.0;
     for (size_t pos = 0; pos < attend; ++pos) {
         scores[pos] *= invSum;
         sumCheck += scores[pos];
     }
-    // ATTN-CERT-001: capture head-0 softmax for layer 0 only (no math change)
     if (layer == 0 && head == 0) {
         AttnCert::record(AttnCert::Stage::Softmax, 0,
                          static_cast<std::uint32_t>(cache.currentLength()),
                          scores, attend, sumCheck);
     }
-
-    // --- Pass 3: Weighted sum of values with AVX2 ---
     memset(output, 0, headDim * sizeof(float));
-    
 #ifdef __AVX2__
     for (size_t pos = 0; pos < attend; ++pos) {
         const float* v = cache.getV(layer, head, pos);
@@ -379,11 +441,9 @@ void AttentionWithCache(const float* query,
         const float* v = cache.getV(layer, head, pos);
         if (!v) continue;
         const float w = scores[pos];
-        for (size_t i = 0; i < headDim; ++i)
-            output[i] += w * v[i];
+        for (size_t i = 0; i < headDim; ++i) output[i] += w * v[i];
     }
 #endif
-
     _aligned_free(scores);
 }
 

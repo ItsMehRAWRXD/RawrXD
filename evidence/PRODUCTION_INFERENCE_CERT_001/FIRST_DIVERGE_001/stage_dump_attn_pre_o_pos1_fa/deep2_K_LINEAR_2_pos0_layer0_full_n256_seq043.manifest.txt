@@ -1,0 +1,13 @@
+side=deep2
+stage=K_LINEAR_2
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=256
+nbytes=1024
+fnv=67690aa979bb9328
+l2=24.391001732047346
+seq=43
+path=G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_K_LINEAR_2_pos0_layer0_full_n256_seq043.bin

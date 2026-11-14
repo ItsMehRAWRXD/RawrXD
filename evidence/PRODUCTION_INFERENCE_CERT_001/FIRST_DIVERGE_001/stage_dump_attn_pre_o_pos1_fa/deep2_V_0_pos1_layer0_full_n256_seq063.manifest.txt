@@ -1,0 +1,13 @@
+side=deep2
+stage=V_0
+pos=1
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=256
+nbytes=1024
+fnv=5949b7699e2e28e2
+l2=0.16055199553294927
+seq=63
+path=G:\~dev\rawrxd\evidence\PRODUCTION_INFERENCE_CERT_001\FIRST_DIVERGE_001\stage_dump_attn_pre_o_pos1_fa\deep2_V_0_pos1_layer0_full_n256_seq063.bin
