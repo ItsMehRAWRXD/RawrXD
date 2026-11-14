@@ -584,9 +584,15 @@ static inline uint16_t floatToFp16(float val) {
     return (uint16_t)(sign | he | hm);
 }
 
-/* Match llama default --cache-type-k/v f16 while storage stays float[]. */
+/* Optional f16 KV/attn cast. BATCH2 TinyLlama REF ATTN_PRE_O == FP32 expand(V);
+ * default-on RT caused FFN_NORM_0 HARD (~1.118e-2) via RMSNorm amp of ATTN_OUT.
+ * Opt-in: RAWRXD_KV_FP16_ROUNDTRIP=1. */
+static inline bool kvCacheFp16RoundTripWanted() {
+    const char* e = std::getenv("RAWRXD_KV_FP16_ROUNDTRIP");
+    return e && e[0] == '1';
+}
 static inline void kvCacheFp16RoundTrip(float* p, size_t n) {
-    if (!p || n == 0) return;
+    if (!p || n == 0 || !kvCacheFp16RoundTripWanted()) return;
     for (size_t i = 0; i < n; ++i)
         p[i] = fp16ToFloat(floatToFp16(p[i]));
 }
@@ -9585,8 +9591,8 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             kvCache->getKVPointers(layer, 0, &kBase, &vBase);
             if (kBase) memcpy(kBase, kProj, kvBytes);
             if (vBase) memcpy(vBase, vProj, kvBytes);
-            /* llama.cpp default cache-type f16: round-trip K/V so ATTN
-               (incl. T=1 → V broadcast) matches REF ATTN_PRE_O, not FP32 V. */
+            /* Opt-in f16 RT (RAWRXD_KV_FP16_ROUNDTRIP=1). Default FP32 matches
+               BATCH2 TinyLlama ATTN_PRE_O == expand(V). */
             const size_t kvElems = numKVHeads * headDim;
             kvCacheFp16RoundTrip(kBase, kvElems);
             kvCacheFp16RoundTrip(vBase, kvElems);
@@ -9907,9 +9913,8 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     }
     layerProbeCheckpoint("L12_HEAD_SCRATCH", layer, headScratch, headConcat, (const void*)headScratch);
 
-    // llama kqv_out is F16-stored (REF == f16(expand(V)) bitexact @ pos0). Deep2
-    // PRE_O was pure FP32 expand(V) via vProj memcpy → NUM_FAIL maxAbs=6.139278e-6.
-    // KV write already round-trips; headScratch still used live vProj — cast here.
+    /* Opt-in f16 cast of kqv_out (same gate). Default off — BATCH2 REF is
+       FP32 expand(V); f16 here amplified into FFN_NORM_0 HARD. */
     kvCacheFp16RoundTrip(headScratch, headConcat);
 
     // -- D2-CERT-002: Stage 8 � ATTN_OUT (pre-O projection) ------------
