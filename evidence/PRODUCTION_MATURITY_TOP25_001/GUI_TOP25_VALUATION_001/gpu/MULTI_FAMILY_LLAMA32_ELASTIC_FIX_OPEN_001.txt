@@ -1,0 +1,56 @@
+MULTI_FAMILY_LLAMA32_ELASTIC_FIX_OPEN_001
+ASOF_LOCAL=2026-11-13T22:34:00-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 NOT_RUN!=PASS
+FORCE=0 HOST_DECODE=0 REJECT_FORCE_ABSORB=1 TIP_ABSORB=N
+BOARD_WRITES=SEALS_ONLY (no JOINT/PARENT PCT rewrite)
+DURABLE=0
+GATE_CLOSED=0
+
+## ROOT_CAUSE_CLEAR=Y
+SITE=elastic open after PIN_BUDGET_SET ENGINE_MAX_HOT
+TRIGGER=duplicate ElasticResidencyManager register + MARS PlaceTensor of tied
+        token_embd.weight (lmHead alias) / Gemma4 wo==attnO same name
+PRIOR_PIN=7FD1F270 (qdim077) last stderr=
+  [ElasticResidencyManager] WARNING: tensor 'token_embd.weight' already registered
+PRIOR_CLASS=HEAP_OR_HARD_ABORT_AT_ELASTIC_OPEN STREAM=NOT_REACHED TOK=0
+PRIOR_WER_CLASS=0xC0000374 STATUS_HEAP_CORRUPTION (earlier windows)
+
+## Fix path (SOURCE_WIRED)
+1) src/deep2/ElasticResidencyManager.cpp::RegisterTensor — idempotent silent
+   refresh sourceData; no WARNING spam (landed 31a0dc36 / BR_LLAMA32_HEAP_ELASTIC_IDEMPOTENT_001)
+2) src/deep2/Deep2Engine.cpp Batch-15 + late-register — skip tied lmHead re-register
+3) src/deep2/Deep2Engine.cpp::placeAllModelTensorsMARS — dedup by name+data
+   (tied embed + Gemma4 wo/attnO) — BR_MARS_DEDUP_LLAMA32_001 / b61f03972e
+
+## Private rebuild cands (tip 6754616E untouched)
+| Cand | SHA16 | Notes |
+|------|-------|-------|
+| qdim083 | E649DF99039669C8 | elastic idempotent obj link |
+| qdim084 | 617F784ED72938E0 | MARS dedup + elastic (exe later deleted/overwritten by concurrent lanes) |
+TIP_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431
+TIP_STILL_6754=1
+
+## Remasure evidence (fail-closed; DURABLE requires 2× consecutive TOK>0)
+| Run ID | EXE | TOK | DUP_WARN | STREAM_ENTER | STREAM_SEH | Disposition |
+|--------|-----|----:|---------:|-------------:|-----------:|-------------|
+| ide_mf_qdim077…_220949 | 7FD1F270 | 0 | 1 | 0 | 0 | OPEN abort pre-fix pin |
+| ide_mf_qdim077…_221127 | 7FD1F270 | 0 | 1 | 0 | 0 | OPEN abort pre-fix pin |
+| ide_mf_qdim083…_221754 | E649DF99 | 0 | 0 | 1 | 0xC0000005 | OPEN cleared; residual STREAM SEH |
+| ide_mf_qdim084…_223012 | 617F784E | 0 | 0 | 1 | 0xC0000005 | OPEN cleared; DBL_ATTN_OUTPUT_ALLOC0=0; residual STREAM SEH |
+| ide_mf_qdim083…_223306 | E649DF99 | 0 | 0 | 0 | 0 | EXIT=NULL env kill before elastic (NOT durable close) |
+| ide_mf_qdim083…_223317 | E649DF99 | 0 | 0 | 0 | 0 | EXIT=NULL env kill before elastic (NOT durable close) |
+
+DURABLE_2_CONSECUTIVE_TOK_GT0=0
+TOKEN_SURVIVED_DURABLE=0
+OPEN_ABORT_MARK_CLEARED_ON_PRIVATE_CAND=1 (DUP_WARN=0 + GENERATE_STREAM_ENTER=1)
+RESIDUAL=PRODUCT_DEEP2_INFER_STREAM_SEH 0xC0000005 READ VA=FFFFFFFFFFFFFFFF after DECODE_STEP0
+PRIOR_IMMUTABLE=MULTI_FAMILY_LLAMA32_QDIM077_001.txt (pre-fix pin window; do not rewrite as PASS)
+REJECT_INVENT_DURABLE_FROM_OPEN_CLEAR_ONLY=1
+
+## Disposition
+CLASS=ELASTIC_OPEN_ROOT_CLEAR_STREAM_SEH_RESIDUAL
+DURABLE=0
+MF_LLAMA32_GAP=OPEN
+NEXT_GATE=PRIVATE_CAND_STREAM_SEH_FIX_THEN_2x_TOK_GT0
+PROMOTE=0
+END
