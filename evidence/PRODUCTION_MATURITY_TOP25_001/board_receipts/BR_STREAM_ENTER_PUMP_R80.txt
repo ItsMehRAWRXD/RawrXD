@@ -1,0 +1,35 @@
+BR_STREAM_ENTER_PUMP_R80
+ASOF_LOCAL=2026-11-14T00:04-05:00
+AUTH=PARENT_BOARD_AUTHORITY / BOARD_SINGLE_WRITER
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 CROSS_SHA_CREDIT=0
+PCT_HELD=CLI67/GUI48/OVERALL48
+GATE_MATRIX_PASS=0
+RESULT=RELATED_NOT_PASS
+
+## Prior (R73 / R79)
+330ECC OPEN=1 auth=1 KEEP=1 ENTER=0 TOK=0 SEH=1 CODE=0xC0000005 VA=-1
+after RXOW DECODE_STEP0 / eng-pin class (PumpProductDecode won via stale
+Deep2IDEIntegration RunDecodeStream COMDAT; SCOREBOARD_PUMP_SKIP never linked).
+
+## Root (fail-closed)
+SITE=ProductRunDecode / Deep2IDEIntegration ODR
+CLASS=stale IDEIntegration.obj defined RunDecodeStream → LNK4006 ignored
+  late ProductRunDecode pump-skip; SCOREBOARD_PUMP poisoned stream prep →
+  READ VA=-1 before GENERATE_STREAM_ENTER (or POST_CONFIG mars lease≈-1).
+FIX=recompile Deep2IDEIntegration (RunDecodeStream=UNDEF) + sole
+  ProductRunDecode with SCOREBOARD_PUMP_SKIP default (opt-in RAWRXD_SCOREBOARD_PUMP=1);
+  lease wild-ptr guard + POST_* crumbs; tip 6754616E RO.
+
+## Controlling measure (private; CROSS_SHA=0 vs gemma B8E5)
+EXE_SHA256=CC18976E80B568E70222F9A181608872F2A36A3829F3DCCF886779D8D1BB0944
+WITNESS=gpu/ide_mf_qdim084_llama32_CC18976E80B568E7_20261114_000351.meta.txt
+OPEN=1 authPASS=1 OPEN_SEH=0 KEEP=1
+GENERATE_STREAM_ENTER=1 TOK=2 INFER_STREAM_SEH=0 EXIT=0
+SCOREBOARD_PUMP_SKIP=1 DECODE_ENG_PIN=1 TIP_STILL_6754=1
+NOTE=peer TOK board BR_STREAM_ENTER_TOK_R80 (3792BAA7) is separate lineage;
+  this board is PUMP_SKIP+ODR remasure only. CROSS_SHA_CREDIT=0.
+
+Receipt: receipts/G02-08_20261114_STREAM_ENTER_PUMP_R80_RELATED.md
+NEXT=durable 2× remasure; tip bind HOLD; PROMOTE=0
+PROMOTE=0
+END

@@ -8,6 +8,7 @@
 #include "RxRunStateHooks.hpp"
 #include "TokenWallNs.hpp"
 #include <chrono>
+#include <cstdlib>
 #include <cstdio>
 #include <string>
 
@@ -78,6 +79,13 @@ void RunDecodeStream(ProductRuntime& rt, const char* prompt, uint32_t maxTokens,
             return !(IsCancelled(rt.control) ||
                      engPinned->isCancelRequested());
         });
+    /* Mid-stream may poison ext; clear before ProductRun Eng() (old seh). */
+    if (rt.ext && !ProductRuntime::ExtPlausible(rt.ext)) {
+        std::fprintf(stderr, "PRODUCT_RUNTIME_EXT_WILD=%p CLEAR=1 post\n",
+                     (void*)rt.ext);
+        std::fflush(stderr);
+        rt.ext = nullptr;
+    }
     r.wallNs = (uint64_t)std::chrono::duration_cast<std::chrono::nanoseconds>(
                    std::chrono::steady_clock::now() - t0)
                    .count();
