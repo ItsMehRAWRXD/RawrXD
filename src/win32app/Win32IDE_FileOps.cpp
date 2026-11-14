@@ -676,6 +676,10 @@ bool Win32IDE::promptSaveAllChanges() {
 
     // Item10 harness: modal YES/NO/CANCEL blocked WM_CLOSE → FORCE_KILL EXIT=-1.
     // RAWRXD_SMOKE_DISCARD_UNSAVED=1 discards without UI (not a promote path).
+    {
+        std::ofstream t("F:\\rawrxd\\startup_trace.log", std::ios::app);
+        if (t) { t << "onCreate:PROMPT_MODIFIED=" << modifiedIndices.size() << '\n'; t.flush(); }
+    }
     char smokeDiscard[8] = {};
     if (GetEnvironmentVariableA("RAWRXD_SMOKE_DISCARD_UNSAVED", smokeDiscard,
                                 static_cast<DWORD>(sizeof(smokeDiscard))) > 0 &&
@@ -700,10 +704,22 @@ bool Win32IDE::promptSaveAllChanges() {
                "NO = Discard all\n"
                "CANCEL = Abort close";
 
+    {
+        std::ofstream t("F:\\rawrxd\\startup_trace.log", std::ios::app);
+        if (t) { t << "onCreate:PROMPT_BEFORE_MSGBOX owner=0x"
+                  << std::hex << reinterpret_cast<uintptr_t>(m_hwndMain) << std::dec
+                  << '\n'; t.flush(); }
+    }
+
     int result = MessageBoxA(m_hwndMain,
                              message.c_str(),
                              "Unsaved Changes",
                              MB_YESNOCANCEL | MB_ICONWARNING);
+
+    {
+        std::ofstream t("F:\\rawrxd\\startup_trace.log", std::ios::app);
+        if (t) { t << "onCreate:PROMPT_RESULT=" << result << '\n'; t.flush(); }
+    }
 
     if (result == IDCANCEL) {
         return false;
@@ -1330,6 +1346,17 @@ void Win32IDE::loadIdeSession() {
                     path.clear();
                     buffer.path.clear();
                     buffer.label = "Untitled  x";
+                }
+            }
+            // D2 fix: if session says modified but file exists on disk, verify content.
+            // If disk content matches session text, the buffer is not actually modified.
+            if (buffer.modified && !buffer.path.empty()) {
+                std::string diskText;
+                std::string diskError;
+                if (readBinaryFile(buffer.path, diskText, diskError)) {
+                    if (diskText == buffer.text) {
+                        buffer.modified = false;
+                    }
                 }
             }
             // Keep unsaved text when a bad path was demoted to Untitled.

@@ -104,6 +104,7 @@ constexpr int kPanelProblemsListId = 1312;
 constexpr UINT kMsgReclaimDocTabs = WM_APP + 0x44;
 constexpr UINT kMsgFinishDocTabs = WM_APP + 0x45;
 constexpr UINT kMsgFinishSession = WM_APP + 0x46;
+constexpr UINT kMsgDeferredClosePrompt = WM_APP + 0x50;
 // W3: createPowerShellPanel TabCtrl_SetCurSel fires TCN_SELCHANGE â†’
 // hidePowerShellPanel â†’ sync onSize during WM_CREATE (0xC000041D / AV).
 thread_local int g_onSizeDepth = 0;
@@ -271,8 +272,11 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
             if (ide && ide->m_agenticLoopBridge) {
                 ide->m_agenticLoopBridge->Cancel();
             }
-            if (ide && (!ide->hasUnsavedBuffers() || ide->promptSaveAllChanges())) {
-                ide->saveIdeSession();
+            // Defer the save prompt to a posted message to avoid modal dialog deadlock in WM_CLOSE.
+            if (ide) {
+                PostMessageA(hwnd, kMsgDeferredClosePrompt, 0, 0);
+            } else {
+                // No IDE instance, just close
                 DestroyWindow(hwnd);
             }
             return 0;
@@ -285,8 +289,10 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
                 if (ide && ide->m_agenticLoopBridge) {
                     ide->m_agenticLoopBridge->Cancel();
                 }
-                if (ide && (!ide->hasUnsavedBuffers() || ide->promptSaveAllChanges())) {
-                    ide->saveIdeSession();
+                // Defer to the same close prompt logic.
+                if (ide) {
+                    PostMessageA(hwnd, kMsgDeferredClosePrompt, 0, 0);
+                } else {
                     DestroyWindow(hwnd);
                 }
                 return 0;
@@ -920,6 +926,23 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
                 }
             }
             delete update;
+            return 0;
+        }
+        case kMsgDeferredClosePrompt: {
+            // Deferred close prompt - runs outside WM_CLOSE to avoid modal deadlock.
+            if (ide) {
+                if (ide->hasUnsavedBuffers()) {
+                    // Show the save prompt. If user cancels, abort close.
+                    if (!ide->promptSaveAllChanges()) {
+                        return 0;
+                    }
+                }
+                // Proceed with close
+                ide->saveIdeSession();
+                DestroyWindow(hwnd);
+            } else {
+                DestroyWindow(hwnd);
+            }
             return 0;
         }
         default:
