@@ -5104,13 +5104,17 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight, const float* input,
             nW = normWeight.rows;
     }
 
-    /* Default: ggml_float=double sumSq. TinyLlama REF ATTN_NORM dumps from
-       llama.cpp match float32 sumSq bitexact; double leaves AN@dim1072 on the
-       wrong FP16 RNE side for V_1[59]. Opt-in RAWRXD_RMSNORM_F32_SUM=1 for
-       ATTN_NORM_1 bitexact isolate (PROMOTE=0). Float-only default previously
-       regressed FFN_DOWN_0 (~7.5e-5) — keep double unless env set. */
+    /* Default: AVX8 float32 sumSq (8-lane + seq hadd). Matches C740
+       FFN_NORM_2 invRms under SPV40E. Pairwise (RAWRXD_RMSNORM_PAIR_SUM=1)
+       matches C740 FFN_NORM_1 but reopens ACT[5475] maxv @L2. Left-to-right
+       F32 (RAWRXD_RMSNORM_F32_SUM=1) REFUTED — FFN_DOWN_0 ~7.5e-5. Double
+       (RAWRXD_RMSNORM_DOUBLE_SUM=1) = FA R85b PRE_O close / DOWN2 1.52e-5. */
     const char* f32Sum = std::getenv("RAWRXD_RMSNORM_F32_SUM");
+    const char* dblSum = std::getenv("RAWRXD_RMSNORM_DOUBLE_SUM");
+    const char* pairSum = std::getenv("RAWRXD_RMSNORM_PAIR_SUM");
     const bool useF32Sum = f32Sum && f32Sum[0] == '1';
+    const bool useDblSum = dblSum && dblSum[0] == '1';
+    const bool usePairSum = pairSum && pairSum[0] == '1';
     float meanSq;
     if (useF32Sum) {
         float sumSqF = 0.f;
@@ -5119,13 +5123,46 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight, const float* input,
             sumSqF += xi * xi;
         }
         meanSq = sumSqF / static_cast<float>(dim);
-    } else {
+    } else if (useDblSum) {
         double sumSq = 0.0;
         for (size_t j = 0; j < dim; ++j) {
             const float xi = input[j];
             sumSq += static_cast<double>(xi * xi);
         }
         meanSq = static_cast<float>(sumSq / static_cast<double>(dim));
+    } else if (usePairSum) {
+        std::vector<float> sq(dim);
+        for (size_t j = 0; j < dim; ++j)
+            sq[j] = input[j] * input[j];
+        size_t m = dim;
+        while (m > 1) {
+            size_t out = 0;
+            for (size_t i = 0; i + 1 < m; i += 2) {
+                volatile float s = sq[i] + sq[i + 1];
+                sq[out++] = s;
+            }
+            if (m & 1)
+                sq[out++] = sq[m - 1];
+            m = out;
+        }
+        meanSq = (dim ? sq[0] : 0.f) / static_cast<float>(dim);
+    } else {
+        /* AVX8 f32 sum-of-squares + seq hadd. Best FA JOINT-adjacent under
+           SPV40E (FFN_DOWN_2 ~7.63e-6); ACT[5475] still ±1ULP vs REF maxv. */
+        size_t j = 0;
+        float sumSqF = 0.f;
+        __m256 vacc = _mm256_setzero_ps();
+        for (; j + 8 <= dim; j += 8) {
+            __m256 vx = _mm256_loadu_ps(input + j);
+            vacc = _mm256_add_ps(vacc, _mm256_mul_ps(vx, vx));
+        }
+        alignas(32) float lane[8];
+        _mm256_store_ps(lane, vacc);
+        for (int k = 0; k < 8; ++k)
+            sumSqF += lane[k];
+        for (; j < dim; ++j)
+            sumSqF += input[j] * input[j];
+        meanSq = sumSqF / static_cast<float>(dim);
     }
     const float invRms = 1.0f / sqrtf(meanSq + eps);
     size_t i = 0;
@@ -7826,7 +7863,31 @@ Deep2::GenerationResult Deep2Engine::generateStream(
     {
         RuntimeReceipts rc{};
         rc.modelIndexed = modelWeights.loaded && initialized;
-        const auto map = AssessNemotronSsmMap(modelWeights);
+        /* RVA 0x6B0FA: Assess hasSSM walk AVs when layers storage is wild. */
+        NemotronMapStatus map{};
+        {
+            const size_t ln = modelWeights.layers.size();
+            const LayerWeights* lp = modelWeights.layers.data();
+            bool layersOk = (ln == 0);
+#ifdef _WIN32
+            if (!layersOk && lp && ln <= 512u) {
+                MEMORY_BASIC_INFORMATION mbi{};
+                layersOk = VirtualQuery(lp, &mbi, sizeof(mbi)) != 0 &&
+                           mbi.State == MEM_COMMIT;
+            }
+#else
+            layersOk = (lp != nullptr) || (ln == 0);
+#endif
+            if (!layersOk) {
+                std::fprintf(stderr,
+                    "ASSESS_NEMOTRON_LAYERS_IMPLAUSIBLE=1 n=%zu data=%p\n",
+                    ln, (const void*)lp);
+                std::fflush(stderr);
+                map.complete = 1; /* non-SSM receipt path; decode still needs pin */
+            } else {
+                map = AssessNemotronSsmMap(modelWeights);
+            }
+        }
         rc.tensorMapComplete = map.complete != 0;
         rc.hybridLayerRoute = map.hybridRoute > 0 || map.ssmLayers == 0;
         rc.choreographyReady =
@@ -12741,6 +12802,10 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input,
          wt.type == (int)GGMLType::GGML_TYPE_Q4_K ||
          wt.type == (int)GGMLType::GGML_TYPE_Q5_K ||
          wt.type == (int)GGMLType::GGML_TYPE_Q6_K)) {
+        /* R88: llama-AVX Q4 square pipe for attn_q.weight only (not wo). */
+        if (wt.type == (int)GGMLType::GGML_TYPE_Q4_K &&
+            wt.name.find("attn_q.weight") != std::string::npos)
+            vc->GemvAvxWqNext();
         const bool ok = vc->DispatchGEMVQuant(
             wt.type, wt.data, wt.sizeBytes, input, output,
             static_cast<uint32_t>(wt.rows), static_cast<uint32_t>(wt.cols));
