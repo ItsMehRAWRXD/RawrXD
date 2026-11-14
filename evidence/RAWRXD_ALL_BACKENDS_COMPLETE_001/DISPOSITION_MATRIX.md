@@ -18,11 +18,11 @@ Status legend: **OPEN** | **RELATED** | **PARTIAL** | **CERTIFIED** | **EXPLICIT
 | Ornith | RELATED_PARTIAL | L3 ULP held; tip prefill L0–L40 FINITE; Deep2 SEMANTIC=FAIL HEAP/TOK=0; llama HYBRID_LOAD=PASS; ORNITH_BEYOND_L3_001 |
 | Laguna / Qwen3.5 | PARTIAL | W1: gate pre-O+TOK>0 tip CEBA0DE4; FIRST_DIVERGENCE_ULP OPEN; PROMOTE=0 |
 | MiniMax MoE | PARTIAL | W2 AL12/13 + tip CEBA0DE4 LOAD/MoE OK; FAIL_MID_PREFILL ly=15 TOK=0 SEMANTIC=NOT_RUN; PROMOTE=0 |
-| Kimi K2 | PARTIAL / EXPLICIT_UNSUPPORTED gen | W8+L5 tip INDEX 13/13; ProductOpen FAIL DualStick=OFF CAPACITY_PROOF_REOPEN=0; gen=0 EXE `6754616E…` |
+| Kimi K2 | RELATED | `KIMI_K2_LARGE_MODELS_001`: tip INDEX 13/13; GEN BLOCKED_OOM NOT_STREAMABLE TOK=0 EXE `6754616E…`; TIP005 RELATED BACKEND_SELECT OOM CROSS_SHA=0 |
 | REAP | PARTIAL | H2H OBSERVED_ONLY; MiniMax tip TOK=0; exports rewrite_authorized=0; Ollama sibling FAIL; quality OPEN |
 | Strata | PARTIAL | W7: HIP runtime+memcpy PASS (`amdhip64_6`); loaders wired; model E2E EXPLICIT_UNSUPPORTED |
 | Ollama | PASS | W7: local :11434 + agent tool emission PASS; PROMOTE=0 |
-| Large models 70B/80B/120B | PARTIAL | 3 GGUFs on disk; host load FAIL OOM (TOK=0); DualStick/ICD HOLD; `W3_LARGE_MODEL_NATIVE_001` PROMOTE=0 |
+| Large models 70B/80B/120B | RELATED | `KIMI_K2_LARGE_MODELS_001`: 70B FAIL_SEH; 80/120 BLOCKED_OOM/FAIL_SEH; TOK=0; peer `W3_LARGE_MODEL_NATIVE_001`; PROMOTE=0 |
 | Multi-agent | RELATED_PARTIAL | `MULTIAGENT_CLI_GUI_PACKAGING_001`: concurrent PASS; cancel PARTIAL; packaging RELATED; GUI E2E NOT_RUN; ≠CERT |
 
 Critical path owner order: Laguna → MiniMax/REAP → large-model → multifamily CLI/GUI → independent CERT.

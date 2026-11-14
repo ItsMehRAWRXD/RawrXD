@@ -26,11 +26,11 @@ Certification levels: Build � Load � Numerics � Generation � Performance
 | W06 | Ornith | PARTIAL | L3 ULP held; tip prefill L0–L40 FINITE; Deep2 SEMANTIC=FAIL (HEAP/TOK=0); llama HYBRID_LOAD=PASS peer | POST_L40 heap/logits + PROD_DECODE + coherent TOK | ORNITH_BEYOND_L3_001 + W6_ORNITH_HYBRID_COMPLETE + R101–R105 |
 | W07 | Laguna / Qwen3.5 | OPEN | Tensor map L0/1/40 CLOSED; order MATCH softplus-before-O; digests L0+L40 RUNTIME; NUMERIC_PARITY OPEN | `REAP_LAGUNA_ATTN_GATE_001` FIRST_DIVERGENT=OPEN_NUMERIC (NO_BITEXACT_REF_DIGEST_COMPARE) EXE=57D6EB21 | FAIR_H2H + R100 + ATTN_GATE_001 |
 | W08 | MiniMax MoE | PARTIAL | Router MATCH+AL12/13; tip CEBA0DE4 LOAD/MoE OK; FAIL_MID_PREFILL ly=15 TOK=0 SEMANTIC=NOT_RUN; Ollama create FAIL | Survive 62L->TOK>0 + FFN_DOWN_1 GPU A/B + AL14 | W2_MINIMAX_REAP_SEMANTIC + FAIR_H2H P0-D |
-| W09 | Kimi K2 | PARTIAL / EXPLICIT_UNSUPPORTED gen | Tip INDEX 13/13; ProductOpen FAIL DualStick=OFF; GENERATED_TOKENS=0 | Streamable working-set + native gen | W8_KIMI_K2_MULTI_AGENT_001 + K2_L5_P1_TIP_LOAD_001 |
+| W09 | Kimi K2 | RELATED | Tip INDEX 13/13; GEN BLOCKED_OOM NOT_STREAMABLE TOK=0; TIP005 RELATED BACKEND_SELECT OOM (CROSS_SHA=0) | Tip OPEN_WORKING_SET→BACKEND_SELECT or TOK>0 | KIMI_K2_LARGE_MODELS_001 + W8/L5 peers |
 | W10 | REAP | PARTIAL | Physical exports rewrite_authorized=0; Laguna TOK peer; MiniMax tip TOK=0; Ollama create FAIL; quality!=competitive | Fair H2H after TOK32; MiniMax SEMANTIC | W2_MINIMAX_REAP_SEMANTIC / REAP_STRATA_* |
 | W11 | Strata (HIP) | PARTIAL | Runtime+memcpy PASS (`amdhip64_6` n=2); product loaders wired; model E2E EXPLICIT_UNSUPPORTED (no hipcc kernels) | HIP kernel/model forward path | W7_STRATA_HIP_OLLAMA_001 |
 | W12 | Ollama | PASS | Local version/tags/generate PASS; agent tool emission PASS (calculator); roundtrip final TIMEOUT not credited | Concurrency/cancel TBD | W7_STRATA_HIP_OLLAMA_001 |
-| W13 | Large models 70/80/120B | PARTIAL | 3 GGUFs tried host-floor; LOAD_FAIL OOM; TOK=0; DualStick/ICD HOLD | Host residency or authorized DualStick | W3_LARGE_MODEL_NATIVE_001 |
+| W13 | Large models 70/80/120B | RELATED | 70B FAIL_SEH; 80/120 BLOCKED_OOM alloc (R1) / FAIL_SEH (R3); TOK=0 all | Fix large GGUF SEH + residency budget | KIMI_K2_LARGE_MODELS_001 + W3_LARGE_MODEL_NATIVE_001 |
 | W14 | Multi-agent | PARTIAL | MODEL_LOADED concurrent PASS (CEBA0DE4); cancel PARTIAL; lanes PASS; packaging RELATED; GUI select NOT_RUN | in-proc CancelGeneration + GUI multifamily E2E + gemma3 | MULTIAGENT_CLI_GUI_PACKAGING_001 |
 
 ---
