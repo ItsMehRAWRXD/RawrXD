@@ -5027,33 +5027,14 @@ void Deep2Engine::RMSNormW(const WeightTensor& normWeight, const float* input,
             nW = normWeight.rows;
     }
 
-    // Compute sum of squares with AVX2 (accumulate in double)
-    __m256 sum_sq_vec = _mm256_setzero_ps();
+    // ATTN_PRE_O_1: match ggml_rms_norm float sum-of-squares (not double).
+    // Double sum left ATTN_NORM_1 residual that flipped V_1 FP16 RNE @dim59.
+    float sumSq = 0.0f;
     size_t i = 0;
-
-    for (; i + 8 <= dim; i += 8) {
-        __m256 vx = _mm256_loadu_ps(&input[i]);
-        sum_sq_vec = _mm256_fmadd_ps(vx, vx, sum_sq_vec);
-    }
-
-    // Horizontal sum ? float, then promote to double
-    __m128 hi = _mm256_extractf128_ps(sum_sq_vec, 1);
-    __m128 lo = _mm256_castps256_ps128(sum_sq_vec);
-    __m128 sum128 = _mm_add_ps(lo, hi);
-    sum128 = _mm_hadd_ps(sum128, sum128);
-    sum128 = _mm_hadd_ps(sum128, sum128);
-    double sumSq = static_cast<double>(_mm_cvtss_f32(sum128));
-
-    // Scalar remainder in double
-    for (; i < dim; ++i) {
-        double v = static_cast<double>(input[i]);
-        sumSq += v * v;
-    }
-
-    // Compute RMS in double
-    double meanSq = sumSq / static_cast<double>(dim);
-    double rms = std::sqrt(meanSq + static_cast<double>(eps));
-    float invRms = static_cast<float>(1.0 / rms);
+    for (; i < dim; ++i)
+        sumSq += input[i] * input[i];
+    float meanSq = sumSq / static_cast<float>(dim);
+    float invRms = 1.0f / std::sqrt(meanSq + eps);
     __m256 vinvRms = _mm256_set1_ps(invRms);
 
     // Apply normalization + weight with AVX2

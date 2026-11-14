@@ -1,0 +1,75 @@
+GPU_PARITY_ATTN_PRE_O_POS1_CLOSE_001
+DATE=2026-11-13
+ASOF_LOCAL=2026-11-13T22:14:00-05:00
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+CROSS_SHA_CREDIT=0
+INVENT_PASS=0
+NOT_RUN!=PASS
+SCOREBOARD_CLI_GUI_PCT_UNCHANGED=1
+ATTN_PRE_O_0_POS1_CLOSED=0
+
+## Authority
+PRIOR_SEAL=GPU_PARITY_ATTN_PRE_O_CLOSE_001.txt (pos0 BITEXACT CLOSED)
+PRIOR_OPEN=ATTN_PRE_O_0@pos1 maxAbs=2.292544e-05 (T=2)
+BRANCH=work/v0-first-divergence
+TOL_ABS=1e-6 TOL_REL=1e-5
+Q4K_SPV active: bytes=16292 SHA256=AB7212EC2A30839EF51B9847F90C62CB2EEBCF4A010E122D0CBE0F228C8AC5D5
+attn_decode.spv SHA256=305FC47879864BE045F4E9E26698E8EC0EEEC3C7D3885C49E7A73DDED3B0F8AA
+TIP_EXE_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431 RO (untouched)
+
+## INPUT_IDENTICAL @pos1? YES
+PROMPT_IDS=1,15043
+PROMPT_EMBED MATCH; ATTN_NORM_0 / V_0 / Q_PRE / K_PRE / Q_POST / K_POST FNV_ONLY under TOL
+→ owner is attention aggregate (T=2), not upstream rope/linear
+
+## Root cause (numeric-first)
+CLASS=SOFTMAX_AV_T2_VS_LLAMA_KQV_OUT (not scale/layout/KV-missing)
+1) Offline SDPA f16(softmax(Q·K_f16)·V_f16) bitexact == Deep2 ATTN_PRE_O dump (BEFORE pin).
+2) Same SDPA on REF Q/K/V still ≠ REF kqv_out (floor ≈2.01e-5 fp32-out / 2.29e-5 with headScratch f16rt).
+3) REF ATTN_PRE_O@pos1 is NOT f16-aligned (max |x-f16(x)|=1.306e-05; 2048/2048 elems);
+   GPU BEFORE was fully f16-aligned via unconditional headScratch kvCacheFp16RoundTrip.
+4) ATTN_PRE_O_SRC1@pos1 == REF kqv_out bitexact (same tensor).
+≠ QK operand / RoPE / GQA map / attend-count bug on this fixture.
+PARTIAL_FIX: gate headScratch f16rt to seqLen<=1 only (keep KV f16rt + Q4K×Q8K).
+
+## Before / after (ATTN_PRE_O_0@pos1 n=2048)
+BEFORE (pin rawr_attn_pre_o_fp16kv.exe SHA256=C72A48E9…; stage_dump_attn_pre_o_fp16kv):
+  maxAbs=2.292544e-05  rel=5.155942e-04  @idx524  n_gt=476  NUM_FAIL
+  fnvA=d3815a046f86e2d8 fnvB=1fc70805b5a7d70e
+AFTER (pin rawr_attn_pre_o_pos1_nof16out.exe SHA256=80F24C36313ECB99B769A8EA4E04080C3F97993E127C0E5E3488F515877947D8;
+       stage_dump_attn_pre_o_pos1_nof16out; seqLen<=1 headScratch RT gate):
+  maxAbs=2.013892e-05  rel=3.874470e-04  @idx1682  n_gt=372  NUM_FAIL
+  fnvA=e4f06b5f4069328a fnvB=1fc70805b5a7d70e
+POS0 REGRESSION CHECK: maxAbs=0 BITEXACT retained
+UNDER_TOL=0 (still >1e-6)
+
+## Fix@source (landed; does not close)
+src/deep2/Deep2Engine.cpp — kvCacheFp16RoundTrip(headScratch) only when seqLen<=1
+KV write f16rt + gemv_q4k Q4K×Q8K SPV unchanged (no tip thrash)
+
+## Compare / remasure
+COMPARE_BEFORE=FIRST_DIVERGE_001/GPU_PARITY_ATTN_PRE_O_POS1_CLOSE_001_compare.log
+COMPARE_AFTER=FIRST_DIVERGE_001/GPU_PARITY_ATTN_PRE_O_POS1_CLOSE_001_after.compare.log
+REMEASURE=FIRST_DIVERGE_001/remeasure_attn_pre_o_pos1_nof16out.err.txt EXIT=0
+DUMP_AFTER=FIRST_DIVERGE_001/stage_dump_attn_pre_o_pos1_nof16out
+HOTPATH_GEMV=VULKAN Q4K_SPV=16292 RAWRXD_GPU_FWD=0
+
+## Verdict
+ATTN_PRE_O_0_POS1_CLOSED=0
+MAXDIFF_BEFORE=2.292544e-05
+MAXDIFF_AFTER=2.013892e-05
+UNDER_TOL=0
+NEXT_OPEN=ATTN_PRE_O_0@pos1 (still; residual = llama kqv_out T=2 ≠ host SDPA;
+  NEXT_GATE=ATTN_PRE_O_POS1_LLAMA_KQV_OUT_T2_KERNEL_PARITY)
+CASCADE_STILL_OPEN=ATTN_OUT_0@pos1 maxAbs≈2.89e-05 after partial fix
+≠ PERFORMANCE_PASS ≠ PROMOTE
+Tip 6754616E / absorb074 controlling bind NOT clobbered; CLI/GUI % NOT raised.
+VALUATION_SCOREBOARD_LIVE / JOINT_STATUS_LIVE / BOARD_SINGLE_WRITER CONTROLLING_% NOT rewritten.
+
+## Non-credits
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD INVENT_PASS=0
+PRODUCT_OPEN / SESSION_ENTER / TOKEN_COMMIT not claimed
+PROMOTE=0
+TIP_CLIMB=HOLD
