@@ -1,0 +1,19 @@
+W3_LARGE_MODEL_NATIVE_001 INVENTORY
+ASOF_LOCAL=2026-11-14T11:50:00-05:00
+HOST_RAM_GB=61.6
+QUALIFY=70B|80B|120B GGUF MAGIC=GGUF
+
+## Tried (native candidates)
+1. F:\models\gguf\library__deepseek-r1__70b.gguf  SIZE_GB=39.60  MAGIC=GGUF
+2. F:\models\gguf\library__qwen3-next__80b.gguf   SIZE_GB=46.89  MAGIC=GGUF
+3. F:\models\gguf\library__gpt-oss__120b.gguf     SIZE_GB=60.88  MAGIC=GGUF
+
+## Explicit non-candidates (recorded, not tried as native W3)
+- F:\rawrxd\70b_simulation.gguf  SIZE_B=1048580  STUB=1
+- G:\~dev\rawrxd\models\*  max observed ~40B quarantined / 30B; no 70/80/120
+- DeepSeek-R1 multi-shard COMPLETE (~376GB) = MoE/R1 family, not W3 dense 70/80/120 lane
+
+## DualStick / ICD
+DUALSTICK_PRODUCT_AUTHORIZED_THIS_LANE=0
+DUALSTICK_SEALS=DO_NOT_REOPEN
+VK_ICD_REOPEN=0

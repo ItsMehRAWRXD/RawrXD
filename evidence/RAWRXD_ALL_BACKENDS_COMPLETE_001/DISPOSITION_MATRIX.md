@@ -20,8 +20,8 @@ Status legend: **OPEN** | **RELATED** | **PARTIAL** | **CERTIFIED** | **EXPLICIT
 | MiniMax MoE | PARTIAL | W2 AL12/13 + tip CEBA0DE4 LOAD/MoE OK; FAIL_MID_PREFILL ly=15 TOK=0 SEMANTIC=NOT_RUN; PROMOTE=0 |
 | Kimi K2 | PARTIAL / EXPLICIT_UNSUPPORTED gen | W8+L5 tip INDEX 13/13; ProductOpen FAIL DualStick=OFF CAPACITY_PROOF_REOPEN=0; gen=0 EXE `6754616E…` |
 | REAP | PARTIAL | H2H OBSERVED_ONLY; MiniMax tip TOK=0; exports rewrite_authorized=0; Ollama sibling FAIL; quality OPEN |
-| Strata | NOT_RUN | HIP native E2E NOT_RUN; product amdhip64.dll FAIL; versioned runtime AVAILABLE (n=2); Feature NOT_IMPL; L6L7_STRATA_HIP_OLLAMA_001 |
-| Ollama | PARTIAL | local HTTP gen remasure PASS + tools API smoke PASS; REAP H2H PARTIAL 3/6; product AgentOllama E2E OPEN; L6L7_STRATA_HIP_OLLAMA_001 |
+| Strata | PARTIAL | W7: HIP runtime+memcpy PASS (`amdhip64_6`); loaders wired; model E2E EXPLICIT_UNSUPPORTED |
+| Ollama | PASS | W7: local :11434 + agent tool emission PASS; PROMOTE=0 |
 | Large models 70B/80B/120B | PARTIAL | 3 GGUFs on disk; host load FAIL OOM (TOK=0); DualStick/ICD HOLD; `W3_LARGE_MODEL_NATIVE_001` PROMOTE=0 |
 | Multi-agent | PARTIAL | W8 absorb + `CLI_AGENT_CONCURRENCY_001`: dual-ws ISO PASS; cancel OPEN; concurrent infer EXPLICIT_UNSUPPORTED (MODEL_LOADED=0) |
 

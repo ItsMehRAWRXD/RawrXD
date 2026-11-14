@@ -1,0 +1,50 @@
+W3_LARGE_MODEL_NATIVE_001
+ASOF_LOCAL=2026-11-14T11:52:00-05:00
+KIND=LARGE_MODEL_NATIVE_70_80_120
+PROMOTE=0
+TIP_CLIMB=HOLD
+GATE_STOP=1
+CERTIFIED=0
+EXPLICIT_UNSUPPORTED=0
+MODELS_ON_DISK=1
+LOAD_PASS=0
+DECODE_PASS=0
+GENERATED_TOKENS=0
+TOKEN_SURVIVED=0
+DUALSTICK=HOLD
+DUALSTICK_ARMED=0
+VK_ICD=BLOCKED
+VK_ICD_WHY=R1_HOST_FLOOR
+HOST_DECODE=1
+HOST_RAM_GB=61.6
+
+EXE=g:\~dev\rawrxd\build-fd\bin\rawr.exe
+EXE_SHA256=3477751CCFAE69D1CC5FBCA36432D86CA3442905BA42B76D86918FAEA7E30561
+MODE=rawr run <path> -p hi --max-tokens 4
+
+## Trials
+MODEL_1=F:\models\gguf\library__deepseek-r1__70b.gguf
+SIZE_GB_1=39.60
+LOAD_1=FAIL
+FAIL_1=Failed to allocate 132120576 bytes for tensor blk.53.ffn_gate.weight
+TOK_1=0
+
+MODEL_2=F:\models\gguf\library__qwen3-next__80b.gguf
+SIZE_GB_2=46.89
+LOAD_2=FAIL
+FAIL_2=Failed to allocate 440401920 bytes for tensor blk.34.ffn_down_exps.weight
+TOK_2=0
+
+MODEL_3=F:\models\gguf\library__gpt-oss__120b.gguf
+SIZE_GB_3=60.88
+LOAD_3=FAIL
+FAIL_3=Failed to allocate 564019200 bytes for tensor blk.6.ffn_down_exps.weight
+TOK_3=0
+
+## Disposition
+W3_STATUS=LOAD_FAIL_HOST_FLOOR
+NOTE=Models present (MAGIC=GGUF). Host-floor residency OOM before PRODUCT_OPEN/decode. DualStick/ICD not reopened.
+NOT_EXPLICIT_UNSUPPORTED=1
+NOT_PASS=1
+NEXT=requires product-authorized DualStick/ICD or larger host residency — out of scope without auth evidence
+ARTIFACTS=LAW.txt INVENTORY.txt STATUS.txt RECEIPT.txt try70b_* try80b_r2_* try120b_r2_*

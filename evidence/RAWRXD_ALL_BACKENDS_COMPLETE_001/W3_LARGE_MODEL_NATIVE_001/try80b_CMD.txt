@@ -1,0 +1,6 @@
+﻿EXE=g:\~dev\rawrxd\build-fd\bin\rawr.exe
+MODEL=F:\models\gguf\library__qwen3-next__80b.gguf
+ENV=RAWRXD_HOST_DECODE=1 DEEP2_MINIMAL_ENHANCE=1 ELASTIC=0 RAWRXD_DUALSTICK=0 DUALSTICK_ARM=0 RAWRXD_WEIGHT_BUDGET_MIB=49152
+ARGS=run "F:\models\gguf\library__qwen3-next__80b.gguf" -p hi --max-tokens 4
+DUALSTICK=HOLD VK_ICD=NOT_REOPENED PROMOTE=0
+TIMEOUT_MS=480000

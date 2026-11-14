@@ -1,0 +1,10 @@
+W3_LARGE_MODEL_NATIVE_001 — LAW
+PROMOTE=0 TIP_CLIMB=HOLD GATE_STOP=1
+DUALSTICK=HOLD DUALSTICK_SEALS=DO_NOT_REOPEN
+VK_ICD=BLOCKED WHY=R1_HOST_FLOOR
+
+1. Scope: inventory + host-floor load/decode for native 70B/80B/120B GGUFs.
+2. DualStick / GPU ICD off-floor not reopened without product-authorized evidence.
+3. EXPLICIT_UNSUPPORTED only when zero qualifying GGUFs exist on machine.
+4. Models present + load fail => measured LOAD_FAIL (not invented PASS, not silent UNSUPPORTED).
+5. NOT_RUN != PASS. TOK/load must be observed. PROMOTE=0.

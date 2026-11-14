@@ -28,9 +28,9 @@ Certification levels: Build � Load � Numerics � Generation � Performance
 | W08 | MiniMax MoE | PARTIAL | Router MATCH+AL12/13; tip CEBA0DE4 LOAD/MoE OK; FAIL_MID_PREFILL ly=15 TOK=0 SEMANTIC=NOT_RUN; Ollama create FAIL | Survive 62L->TOK>0 + FFN_DOWN_1 GPU A/B + AL14 | W2_MINIMAX_REAP_SEMANTIC + FAIR_H2H P0-D |
 | W09 | Kimi K2 | PARTIAL / EXPLICIT_UNSUPPORTED gen | Tip INDEX 13/13; ProductOpen FAIL DualStick=OFF; GENERATED_TOKENS=0 | Streamable working-set + native gen | W8_KIMI_K2_MULTI_AGENT_001 + K2_L5_P1_TIP_LOAD_001 |
 | W10 | REAP | PARTIAL | Physical exports rewrite_authorized=0; Laguna TOK peer; MiniMax tip TOK=0; Ollama create FAIL; quality!=competitive | Fair H2H after TOK32; MiniMax SEMANTIC | W2_MINIMAX_REAP_SEMANTIC / REAP_STRATA_* |
-| W11 | Strata (HIP) | NOT_RUN | Product `amdhip64.dll` probe FAIL; versioned HIP DLL+2 devices available; Feature HIP NOT_IMPL; no native HIP E2E | Product versioned-DLL loader + native HIP forward E2E | L6L7_STRATA_HIP_OLLAMA_001 |
-| W12 | Ollama | PARTIAL | Local gen remasure PASS (ornith 116.1 tps); HTTP tools smoke PASS; REAP H2H 3/6 held; product AgentOllama E2E OPEN | Tip AgentOllama tool path + REAP create close | L6L7_STRATA_HIP_OLLAMA_001 + REAP_STRATA_* |
-| W13 | Large models 70/80/120B | NOT_RUN | PATH_ABSENT � no 70/80/120B GGUF under searched roots | Acquire GGUF then load/decode | K2_L5_P1_TIP_LOAD_001 |
+| W11 | Strata (HIP) | PARTIAL | Runtime+memcpy PASS (`amdhip64_6` n=2); product loaders wired; model E2E EXPLICIT_UNSUPPORTED (no hipcc kernels) | HIP kernel/model forward path | W7_STRATA_HIP_OLLAMA_001 |
+| W12 | Ollama | PASS | Local version/tags/generate PASS; agent tool emission PASS (calculator); roundtrip final TIMEOUT not credited | Concurrency/cancel TBD | W7_STRATA_HIP_OLLAMA_001 |
+| W13 | Large models 70/80/120B | PARTIAL | 3 GGUFs tried host-floor; LOAD_FAIL OOM; TOK=0; DualStick/ICD HOLD | Host residency or authorized DualStick | W3_LARGE_MODEL_NATIVE_001 |
 | W14 | Multi-agent | PARTIAL | FORCE_TOOL PASS; Method C tip PASS (retained); dual-ws isolation PASS on CEBA0DE4; cancel OPEN | Product cancel (acceptSteer + steer pipe) | CLI_AGENT_CONCURRENCY_001 |
 
 ---
@@ -43,10 +43,10 @@ Certification levels: Build � Load � Numerics � Generation � Performance
 | L2 | MiniMax MoE router/experts + REAP semantic | P0 |
 | L3 | Ornith SEMANTIC beyond L3 ULP | P1 |
 | L4 | Vulkan Q-family + packed GEMV shape matrix | P1 |
-| L5 | K2 multi-shard + large-model load | P1 � W8 sealed EXPLICIT_UNSUPPORTED (index OBSERVED) |
+| L5 | K2 multi-shard + large-model load | P1 — W8+L5: index OBSERVED; gen EXPLICIT_UNSUPPORTED on host |
 | L6 | Strata HIP native + benchmark | P2 |
 | L7 | Ollama integration + agent tool | P2 |
-| L8 | Multi-agent concurrency / cancel / isolation | P2 � W14 PARTIAL (isolation PASS; cancel OPEN) |
+| L8 | Multi-agent concurrency / cancel / isolation | P2 — W8 absorb: ISO RELATED PASS; cancel OPEN; infer EXPLICIT_UNSUPPORTED |
 
 ---
 
