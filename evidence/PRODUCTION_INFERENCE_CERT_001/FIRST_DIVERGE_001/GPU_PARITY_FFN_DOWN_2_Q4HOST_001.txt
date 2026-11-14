@@ -1,0 +1,72 @@
+GPU_PARITY_FFN_DOWN_2_Q4HOST_001
+ASOF_LOCAL=2026-11-13T23:40:00-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 MATCH_PASS=0
+PRIOR_PUSH=8386c50d0b (ATTN_OUT_14 O-proj REFUTED; NEXT=FFN_DOWN_2)
+ORIGIN_HAS_8386c50d0b=1
+3b6a63de81_ANCESTOR=1
+PRIOR_NOT_CLOSABLE=GPU_PARITY_FFN_DOWN_2_NOT_CLOSABLE_001 (SPV annotate-only UNCHANGED)
+
+## Question
+Close FFN_DOWN_2@pos0 vs BATCH2 (Q4_K down-proj path / accumulate / layout)?
+
+## Weight (authoritative)
+blk.2.ffn_down.weight type=12(Q4_K) nbytes=6488064
+  ≠ Q6_K (blk.0.ffn_down is Q6_K; layer2+ down is Q4_K)
+
+## Offline isolate (QuantKernelRegistry Q4_K×Q8_K)
+PROBE=_probe_ffn_down_2_q4.exe / _probe_ffn_down_2_q4.cpp
+DUMP=stage_dump_ffn_down_2_q6spv (C740 + SPV4548)
+| Check | maxAbs | Verdict |
+|-------|--------|---------|
+| ACT deep vs llama | 2.980232e-07 | UNDER_TOL |
+| DOWN deep vs llama | 1.525879e-05 | OR-law MATERIAL (1 ULP) |
+| host(ACT_d) vs deep2_DOWN | 1.525879e-05 | SPV ≠ host |
+| host(ACT_d) vs llama_DOWN | 2.145767e-06 | UNDER_TOL |
+| host(ACT_l) vs llama_DOWN | 2.145767e-06 | UNDER_TOL |
+| Q8 qs(ACT_d)==qs(ACT_l) | 0 diffs | BITEXACT qs; yd ULP in 13/22 blks |
+
+VERDICT=RUNTIME_FFN_DOWN_NE_HOST_Q4K
+ROOT=Q4K_SPV_ACCUMULATE_1ULP_ON_LARGE_ABS_ROWS
+REFUTED=O_PROJ · Q6_DOWN · ACT_INT8_MISMATCH
+
+## Attempted functional closes
+1) Precise gemv_q6k.spv install — N/A (down is Q4_K); remasure unchanged.
+2) C740 binary trampoline host rows!=cols + PARITY=1 —
+   C740 host path = "Vulkan FP32 dequant·x bypass" ≠ Q8_K registry.
+   FFN_DOWN_2 maxAbs REGRESSED to ~2.74e-01. REJECT.
+3) Rebuild tip rawr.exe (SHA256=A10D6C04…) with SOURCE hostQ4FfnDown under FORCE
+   (vulkan_fwd_quant_host.cpp RAWRXD_Q4_HOST_FFN_DOWN default host).
+   Control Q4_HOST_FFN_DOWN=0 still ACT maxAbs~9.01e-01 vs llama —
+   tip rebuild ≠ C740 lineage; cannot certify close on tip this turn.
+4) SPV annotate-only precise amax — prior NOT_CLOSABLE; hash UNCHANGED 4548BCF1…
+
+## Controlling remasure (C740 pin, FORCE_VULKAN, SPV4548)
+EXE=rawr_gpufwd_C7402085.exe SHA256=C7402085… C740_PIN_UNTOUCHED=1
+DUMP=stage_dump_ffn_down_2_q6spv / stage_dump_attn_out14_oproj (bitexact DOWN)
+| Site | maxAbs | Class tol | FUNCTIONAL_FAIL |
+|------|--------|-----------|-----------------|
+| FFN_ACT_2 | 2.980232e-07 | FFN 1e-5 | 0 |
+| FFN_DOWN_2 | 1.525879e-05 | FFN 1e-5 | 0 AND-law; OR-law MATERIAL (1 ULP) |
+| ATTN_PRE_O_14 | 4.272461e-04 | ATTN 1e-4 | 1 |
+| ATTN_OUT_14 | 9.564720e-04 | ATTN 1e-4 | 1 |
+| FINAL_NORM | 6.930475e-01 | HARD 1e-4 | 1 |
+
+## Seal fields
+FFN_DOWN_2_MAX_ABS=1.525879e-05
+FFN_DOWN_2_FUNCTIONAL_FAIL=0
+FFN_DOWN_2_OR_LAW_MATERIAL=1
+ATTN_OUT_14_MAX_ABS=9.564720e-04
+ATTN_OUT_14_FUNCTIONAL_FAIL=1
+FINAL_NORM_MAX_ABS=6.930475e-01
+FINAL_NORM_FUNCTIONAL_FAIL=1
+FFN_DOWN_2_CLOSED=0
+SEAL_KIND=OPEN
+NEXT_TRUE_SITE=FFN_DOWN_2
+NEXT_ENGINEERING=SPV_Q4KxQ8K_BITEXACT_OR_C740_LINEAGE_Q8K_HOST_FFN_DOWN
+SOURCE_WIRED=1 (hostQ4FfnDown in vulkan_fwd_quant_host.cpp)
+RUNTIME_REACHED=0 on C740 (FP32 host ≠ Q8_K); tip rebuild not C740-parity
+DENSE_MATCH=HOLD
+ENTERPRISE_CHECKLIST_PASS=0
+TIP_BIND=6754616E HOLD
+PROMOTE=0 TIP_CLIMB=HOLD
+END

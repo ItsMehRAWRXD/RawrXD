@@ -21,6 +21,9 @@ bool VulkanCompute::DispatchGEMVQuant(int ggmlType, const void* packed, size_t b
      *   RAWRXD_Q4_HOST_ATTN=1 for private PRE_O_1@pos1 A-B only.
      * Q4 FFN gate/up (rows>cols): PARITY=1 host (FORCE still SPV). R65 REJECT
      *   host-under-FORCE for ACT_2; keep SPV for ACT unless PARITY=1.
+     * Q4 FFN_DOWN (rows<cols, type12): host under FORCE by default —
+     *   SPV Q4K×Q8K +1 ULP on FFN_DOWN_2 (NOT_CLOSABLE SPV-only). Offline
+     *   host==REF @material. RAWRXD_Q4_HOST_FFN_DOWN=0 keeps SPV.
      * Q6 attn_v: FORCE → SPV. Q6 FFN_DOWN: FORCE → SPV (precise Q4 ACT +
      *   SPV DOWN → maxULP_f16=0 @V59). Host FFN_DOWN under FORCE REJECT
      *   (V59 1 ULP lo). Opt-in: RAWRXD_Q6_HOST_FFN_DOWN=1 or PARITY=1. */
@@ -28,6 +31,7 @@ bool VulkanCompute::DispatchGEMVQuant(int ggmlType, const void* packed, size_t b
     const char* forceVk = std::getenv("RAWRXD_FORCE_VULKAN_QUANT_GEMV");
     const char* ffnDownHost = std::getenv("RAWRXD_Q6_HOST_FFN_DOWN");
     const char* q4AttnHost = std::getenv("RAWRXD_Q4_HOST_ATTN");
+    const char* q4DownHost = std::getenv("RAWRXD_Q4_HOST_FFN_DOWN");
     const bool force = forceVk && forceVk[0] == '1';
     const bool ffnDownShape =
         ggmlType == 14 && rows >= 1024u && cols > rows;
@@ -46,20 +50,32 @@ bool VulkanCompute::DispatchGEMVQuant(int ggmlType, const void* packed, size_t b
         (hostPar && hostPar[0] == '1' && ggmlType == 12 && !force) ||
         hostQ4AttnSquare;
     const bool hostQ4Ffn = hostPar && hostPar[0] == '1' && ggmlType == 12 &&
-                           rows > cols; /* gate/up; not down (rows<=cols) */
-    const bool wantHost = hostQ6 || hostQ4Attn || hostQ4Ffn;
+                           rows > cols; /* gate/up */
+    const bool q4FfnDownShape =
+        ggmlType == 12 && rows >= 1024u && cols > rows;
+    const bool hostQ4FfnDown =
+        q4FfnDownShape && force &&
+        !(q4DownHost && q4DownHost[0] == '0');
+    const bool wantHost =
+        hostQ6 || hostQ4Attn || hostQ4Ffn || hostQ4FfnDown;
     if (wantHost && (ggmlType == 12 || ggmlType == 14) && packed && input &&
         output && bytes && rows && cols && (cols % 256u) == 0u) {
         auto gemv = Deep2::QuantKernelRegistry::Instance().GetGEMV(ggmlType);
         if (gemv) {
             ++gemv_attempts_;
+            /* Host bypass must not leave SPV input-reuse armed — mixed
+             * host(wq/wo)+SPV(FFN) otherwise reuses stale gemv_in. */
+            gemv_reuse_in_next_ = false;
+            gemv_in_live_cols_ = 0;
             std::memset(output, 0, (size_t)rows * sizeof(float));
             gemv(static_cast<const uint8_t*>(packed), input, output, rows, cols);
             std::fprintf(stderr,
                          "QUANT_GEMV_HOST_Q8K_PARITY type=%d rows=%u cols=%u "
-                         "q6_ffn_down=%d q4_attn_sq=%d force=%d PROMOTE=0\n",
+                         "q6_ffn_down=%d q4_attn_sq=%d q4_ffn_down=%d "
+                         "force=%d PROMOTE=0\n",
                          ggmlType, rows, cols, hostQ6FfnDown ? 1 : 0,
-                         hostQ4AttnSquare ? 1 : 0, force ? 1 : 0);
+                         hostQ4AttnSquare ? 1 : 0, hostQ4FfnDown ? 1 : 0,
+                         force ? 1 : 0);
             std::fflush(stderr);
             if (ggmlType == 12) ++q4k_packed_ops_;
             if (ggmlType == 14) ++q6k_packed_ops_;
