@@ -25,15 +25,10 @@ static size_t RunGen(Deep2Engine& e, const char* p, int n) {
     return k;
 }
 
-static bool PackedParity(Deep2Engine& e, double& maxAbs, double& rms) {
-    auto* vc = e.getVulkanComputeSlot(0);
-    const auto& mw = e.getModelWeights();
-    if (!vc || mw.layers.empty()) return false;
-    const WeightTensor& wt = mw.layers[0].wq;
-    if (wt.type != (int)GGMLType::GGML_TYPE_Q4_K || !wt.data || !wt.sizeBytes)
-        return false;
+static bool OneQ4Parity(CPUInference::VulkanCompute* vc, const WeightTensor& wt,
+                        double& maxAbs, double& rms) {
     auto deq = QuantKernelRegistry::Instance().GetDequant(wt.type);
-    if (!deq) return false;
+    if (!deq || !wt.data || !wt.sizeBytes) return false;
     const size_t rows = wt.rows, cols = wt.cols;
     std::vector<float> W(rows * cols), x(cols), yCpu(rows), yGpu(rows);
     deq(reinterpret_cast<const uint8_t*>(wt.data), W.data(), W.size());
@@ -53,7 +48,28 @@ static bool PackedParity(Deep2Engine& e, double& maxAbs, double& rms) {
         ss += d * d;
     }
     rms = std::sqrt(ss / (double)rows);
+    printf("Q4K_SHAPE rows=%zu cols=%zu maxAbs=%.6g rms=%.6g\n", rows, cols, maxAbs, rms);
     return maxAbs < 1e-2 && rms < 1e-3;
+}
+
+static bool PackedParity(Deep2Engine& e, double& maxAbs, double& rms) {
+    auto* vc = e.getVulkanComputeSlot(0);
+    const auto& mw = e.getModelWeights();
+    if (!vc || mw.layers.empty()) return false;
+    maxAbs = 0; rms = 0; int nOk = 0;
+    auto tryWt = [&](const WeightTensor& wt) {
+        if (wt.type != (int)GGMLType::GGML_TYPE_Q4_K) return;
+        double a = 0, r = 0;
+        if (!OneQ4Parity(vc, wt, a, r)) return;
+        if (a > maxAbs) maxAbs = a;
+        if (r > rms) rms = r;
+        ++nOk;
+    };
+    /* Expand shapes: L0 q/k/v/o + gate/up/down (attn/KV + FFN). */
+    const auto& L = mw.layers[0];
+    tryWt(L.wq); tryWt(L.wk); tryWt(L.wv); tryWt(L.wo); tryWt(L.attnO);
+    tryWt(L.wGate); tryWt(L.wUp); tryWt(L.wDown);
+    return nOk >= 3;
 }
 
 int main(int argc, char** argv) {

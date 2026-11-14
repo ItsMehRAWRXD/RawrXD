@@ -159,21 +159,30 @@ int main(int argc, char** argv) {
     engine.enableVulkan(true); engine.enableMedusa(false);
     auto* vc = engine.getVulkanComputeSlot(0);
     if (!vc) { printf("FAIL vulkan\n"); return 2; }
-    const uint32_t rows = 64, cols = 256;
     auto fill = [](std::vector<uint8_t>& b) {
         for (size_t i = 0; i < b.size(); ++i) b[i] = (uint8_t)((i * 17 + 3) & 255);
     };
     auto setD = [](std::vector<uint8_t>& b, size_t off) { b[off] = 0x00; b[off + 1] = 0x3C; };
-    std::vector<uint8_t> q8((size_t)rows * 8 * 34), q5((size_t)rows * 176);
-    std::vector<uint8_t> q3((size_t)rows * 110), q2((size_t)rows * 84);
-    fill(q8); fill(q5); fill(q3); fill(q2);
+    /* Expand Q8 GEMV shapes (block=32); keep Q5/Q3/Q2 at 64x256 baseline. */
+    const uint32_t q8Shapes[][2] = {{64, 256}, {256, 256}, {256, 2048}, {2048, 256}};
+    bool p8 = true;
+    for (auto sh : q8Shapes) {
+        const uint32_t rows = sh[0], cols = sh[1], nblk = (cols + 31) / 32;
+        std::vector<uint8_t> q8((size_t)rows * nblk * 34);
+        fill(q8);
+        for (uint32_t r = 0; r < rows; ++r)
+            for (uint32_t b = 0; b < nblk; ++b) setD(q8, ((size_t)r * nblk + b) * 34);
+        printf("Q8_SHAPE rows=%u cols=%u\n", rows, cols);
+        if (!Parity(vc, 8, q8.data(), q8.size(), rows, cols, 34, DeqQ8)) p8 = false;
+    }
+    const uint32_t rows = 64, cols = 256;
+    std::vector<uint8_t> q5((size_t)rows * 176), q3((size_t)rows * 110), q2((size_t)rows * 84);
+    fill(q5); fill(q3); fill(q2);
     for (uint32_t r = 0; r < rows; ++r) {
-        for (int b = 0; b < 8; ++b) setD(q8, ((size_t)r * 8 + b) * 34);
         setD(q5, (size_t)r * 176); setD(q5, (size_t)r * 176 + 2);
         setD(q3, (size_t)r * 110 + 108);
         setD(q2, (size_t)r * 84 + 80); setD(q2, (size_t)r * 84 + 82);
     }
-    const bool p8 = Parity(vc, 8, q8.data(), q8.size(), rows, cols, 34, DeqQ8);
     const bool p5 = Parity(vc, 13, q5.data(), q5.size(), rows, cols, 176, DeqQ5);
     const bool p3 = Parity(vc, 11, q3.data(), q3.size(), rows, cols, 110, DeqQ3);
     const bool p2 = Parity(vc, 10, q2.data(), q2.size(), rows, cols, 84, DeqQ2);

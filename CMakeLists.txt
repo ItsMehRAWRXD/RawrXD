@@ -8795,8 +8795,11 @@ option(BUILD_DEEP2_GPU_Q4K_GEMV_CERT "Build STREAMER_GPU_Q4K_GEMV_001 cert" ON)
 if(BUILD_DEEP2_GPU_Q4K_GEMV_CERT)
     add_executable(deep2_gpu_q4k_gemv_cert
         src/deep2/deep2_gpu_q4k_gemv_cert.cpp
+        src/deep2/GpuPreflight.cpp
+        src/deep2/GpuPreflightReset.cpp
+        src/deep2/GpuPreflightElevatedPnp.cpp
     )
-    target_link_libraries(deep2_gpu_q4k_gemv_cert PRIVATE InferenceEngine dxgi)
+    target_link_libraries(deep2_gpu_q4k_gemv_cert PRIVATE InferenceEngine dxgi setupapi cfgmgr32)
     if(MSVC)
         target_compile_options(deep2_gpu_q4k_gemv_cert PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
     endif()
@@ -8841,8 +8844,11 @@ option(BUILD_DEEP2_GPU_QUANT_FAMILY_CERT "Build STREAMER_GPU Q5/Q3/Q2/Q8 GEMV ce
 if(BUILD_DEEP2_GPU_QUANT_FAMILY_CERT)
     add_executable(deep2_gpu_quant_family_cert
         src/deep2/deep2_gpu_quant_family_cert.cpp
+        src/deep2/GpuPreflight.cpp
+        src/deep2/GpuPreflightReset.cpp
+        src/deep2/GpuPreflightElevatedPnp.cpp
     )
-    target_link_libraries(deep2_gpu_quant_family_cert PRIVATE InferenceEngine dxgi)
+    target_link_libraries(deep2_gpu_quant_family_cert PRIVATE InferenceEngine dxgi setupapi cfgmgr32)
     if(MSVC)
         target_compile_options(deep2_gpu_quant_family_cert PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
     endif()
