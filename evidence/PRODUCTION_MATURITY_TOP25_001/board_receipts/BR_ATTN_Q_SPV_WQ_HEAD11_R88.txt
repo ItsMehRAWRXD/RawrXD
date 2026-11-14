@@ -1,0 +1,59 @@
+BR_ATTN_Q_SPV_WQ_HEAD11_R88
+ASOF_LOCAL=2026-11-14T06:12:30-05:00
+AUTH=ATTN_Q_SPV_WQ_HEAD11_OWNER / BOARD_SINGLE_WRITER
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 CROSS_SHA_CREDIT=0
+PCT_HELD=CLI67/GUI48/OVERALL48
+GATE_MATRIX_PASS=0
+CERTIFIED=0
+RESULT=RELATED_NOT_PASS
+CLOSED=0
+
+## Mission
+Close Q_POST F16 knife → PRE_O_1 via llama-AVX square WQ dual-pipe
+(or bitexact WQ head11). Dump+compare before broad edits. No tip-climb.
+Do NOT reopen FFN_DOWN_2. Do NOT invent PASS.
+
+## Pins (hash-verified; controlling retained)
+EXE=pin/rawr_attn_pre_o_1_pos1_fa006.exe
+EXE_SHA256=5CD5E3A3DCFE793588F6A96C1A49F7B8640D15272892E004088349F7D371BA60
+SPV_SHA256=40E76D2ACBFC2380C0221CE55EA2345336264A3CF470341478E351406F42B403 LEN=17272
+TIP_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431 RO
+FIXTURE=PROMPT_IDS=1,15043 tinyllama.gguf --max-tokens 1
+CMD=remeasure_attn_pre_o_1_pos1_close006_fa.cmd EXIT=0
+DUMP=stage_dump_attn_pre_o_1_pos1_close006_fa
+COMPARE=GPU_PARITY_ATTN_Q_SPV_WQ_HEAD11_R88.compare.log
+ERR_BANNER=ATTN_GGML_FA_F16=1 attend=2 headDim=64
+RUNTIME_Q4K_SPV bytes=17272 (controlling; dual-pipe trial NOT promoted)
+
+## Host dual-pipe proof (offline; PROMOTE=0)
+PROBE=_probe_avx_scalar_idx747.py
+  generic(REF_NORM)@747 ulp_ref=1 (matches SPV-generic gap)
+  avx_scalar(REF_NORM)@747 ulp_ref=0 BITEXACT llama REF Q_PRE
+  generic_vs_avx ulp=1
+TRIAL_SPV=gemv_q4k_r88_dualpipe.spv SHA=BE08572A… LEN=25480
+TRIAL_COMP=src/backend/gemv_q4k_avx_wq.comp (flags&1 + square)
+HOST_WIRE=GemvAvxWqNext + pc[2] (SOURCE_WIRED; not on controlling EXE)
+
+## Trials (no invent PASS)
+1) All-square AVX (rows==cols, incl WO): REFUTED
+   PRE_O_1 → 4.256899e-04 (same signature as host FORCE square);
+   FFN_DOWN_2 reopens via WO cascade. Q_PRE@747 bitexact under that trial.
+2) WQ-only PC flag + dirty Deep2Engine pin rebuild: REFUTED/BLOCKED
+   Pin rebuild absorbed unrelated Deep2Engine dirt → NORM/Q blow;
+   restored controlling EXE 5CD5 + SPV 40E.
+3) Remeasure FA006 controlling: PRE_O_1 OPEN 2.754107e-05 @704 HELD R87
+   Q_POST idx747 knife unchanged (gpu -1.5200197697); FFN_DOWN_2 HELD 2.98e-08
+
+## Disposition
+CLOSED=0 maxAbs=2.754107e-05 @idx704 head11
+FIRST_DIVERGE_OP=ATTN_PRE_O_1@pos1
+ROOT=ATTN_Q_SPV_ULP_FA_F16_KNIFE_IDX747
+  HOST_AVX_SCALAR_CLOSES_747=1; PRODUCT_SPV_STILL_GENERIC=1
+REFUTED_ALL_SQUARE_AVX_INCL_WO=1
+NEXT_OWNER=ATTN_Q_WQ_ONLY_PC_FLAG_CLEAN_PIN
+NEXT_GATE=ATTN_Q_SPV_WQ_ONLY_AVX_PIPE_CLEAN_RELINK
+  (GemvAvxWqNext on clean InferenceEngine base + trial SPV BE085;
+   do NOT fold dirty Deep2Engine; keep WO on generic)
+RELATED ≠ CERT G02-04/G03-08 PASS
+FFN_DOWN_2 HELD · PROMOTE=0 TIP_CLIMB=HOLD CROSS_SHA_CREDIT=0
+END

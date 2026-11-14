@@ -92,7 +92,9 @@ bool VulkanCompute::BindGemvStorage(VkBuffer wbuf, size_t wbytes, VkBuffer inb, 
     }
     w[0].pBufferInfo = &dbiW; w[1].pBufferInfo = &dbiI; w[2].pBufferInfo = &dbiO;
     vkUpdateDescriptorSets(device_, 3, w, 0, nullptr);
-    uint32_t pc[4] = {rows, cols, 0u, 0u};
+    const uint32_t avx = gemv_avx_wq_next_ ? 1u : 0u;
+    gemv_avx_wq_next_ = false;
+    uint32_t pc[4] = {rows, cols, avx, 0u};
     return RecordCompute(pipe, gemv_pipeline_layout_, ds, pc, sizeof(pc), groups);
 }
 

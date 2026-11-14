@@ -1,0 +1,184 @@
+#version 450
+// gemv_q4k.comp — Q4_K×Q8_K dual-pipe. PROMOTE=0
+// downShape: ggml generic + xd one-div (FFN_DOWN hold).
+// flags&1 + square: llama-AVX lane/reduction (attn_q via GemvAvxWqNext).
+// else: ggml generic + 1/iscale (GATE/UP/WO/WK).
+layout(local_size_x = 64) in;
+layout(binding = 0) readonly buffer W { uint packed[]; };
+layout(binding = 1) readonly buffer In { float x[]; };
+layout(binding = 2) writeonly buffer Out { float y[]; };
+layout(push_constant) uniform PC { uint rows; uint cols; uint flags; uint _pad; } pc;
+
+uint u8(uint off) {
+  uint w = packed[off >> 2];
+  return (w >> ((off & 3u) * 8u)) & 0xFFu;
+}
+float f16(uint h) { return unpackHalf2x16(h).x; }
+int nearest_int_q8k(float fval) {
+  float val = fval + 12582912.0;
+  uint bits = floatBitsToUint(val);
+  return int(bits & 0x007fffffu) - 0x00400000;
+}
+
+void main() {
+  uint row = gl_GlobalInvocationID.x;
+  if (row >= pc.rows) return;
+  uint nblk = pc.cols / 256u;
+  if (nblk == 0u || (pc.cols % 256u) != 0u) { y[row] = 0.0; return; }
+
+  const uint kmask1 = 0x3f3f3f3fu;
+  const uint kmask2 = 0x0f0f0f0fu;
+  const uint kmask3 = 0x03030303u;
+  uint rowOff = row * nblk * 144u;
+  const bool downShape = pc.rows < pc.cols;
+  const bool squareAvx = ((pc.flags & 1u) != 0u) && (pc.rows == pc.cols);
+
+  precise float sumf = 0.0;
+  precise float sums[8];
+  precise float acc_m[4];
+  for (uint i = 0u; i < 8u; ++i) sums[i] = 0.0;
+  for (uint i = 0u; i < 4u; ++i) acc_m[i] = 0.0;
+
+  for (uint b = 0u; b < nblk; ++b) {
+    uint base = b * 256u;
+    float amax = 0.0, maxv = 0.0;
+    for (uint j = 0u; j < 256u; ++j) {
+      float ax = abs(x[base + j]);
+      if (ax > amax) { amax = ax; maxv = x[base + j]; }
+    }
+    float xd = 0.0;
+    float iscale = 0.0;
+    int q8[256];
+    int bsums[16];
+    for (uint j = 0u; j < 256u; ++j) q8[j] = 0;
+    for (uint j = 0u; j < 16u; ++j) bsums[j] = 0;
+    if (amax != 0.0) {
+      iscale = -127.0 / maxv;
+      xd = downShape ? (-maxv / 127.0) : (1.0 / iscale);
+      for (uint j = 0u; j < 256u; ++j) {
+        int v = nearest_int_q8k(iscale * x[base + j]);
+        q8[j] = (v > 127) ? 127 : v;
+      }
+      for (uint j = 0u; j < 16u; ++j) {
+        int s = 0;
+        for (uint ii = 0u; ii < 16u; ++ii) s += q8[j * 16u + ii];
+        bsums[j] = s;
+      }
+    }
+
+    uint blk = rowOff + b * 144u;
+    float d = f16(u8(blk) | (u8(blk + 1u) << 8));
+    float dmin = f16(u8(blk + 2u) | (u8(blk + 3u) << 8));
+    uint qbase = blk + 16u;
+
+    uint utmp0 = u8(blk + 4u) | (u8(blk + 5u) << 8) | (u8(blk + 6u) << 16) | (u8(blk + 7u) << 24);
+    uint utmp1 = u8(blk + 8u) | (u8(blk + 9u) << 8) | (u8(blk + 10u) << 16) | (u8(blk + 11u) << 24);
+    uint utmp2 = u8(blk + 12u) | (u8(blk + 13u) << 8) | (u8(blk + 14u) << 16) | (u8(blk + 15u) << 24);
+    uint utmp3 = ((utmp2 >> 4) & kmask2) | (((utmp1 >> 6) & kmask3) << 4);
+    uint uaux = utmp1 & kmask1;
+    utmp1 = (utmp2 & kmask2) | (((utmp0 >> 6) & kmask3) << 4);
+    utmp2 = uaux;
+    utmp0 &= kmask1;
+
+    uint scales[8];
+    uint mins[8];
+    scales[0] = utmp0 & 0xFFu; scales[1] = (utmp0 >> 8) & 0xFFu;
+    scales[2] = (utmp0 >> 16) & 0xFFu; scales[3] = (utmp0 >> 24) & 0xFFu;
+    scales[4] = utmp1 & 0xFFu; scales[5] = (utmp1 >> 8) & 0xFFu;
+    scales[6] = (utmp1 >> 16) & 0xFFu; scales[7] = (utmp1 >> 24) & 0xFFu;
+    mins[0] = utmp2 & 0xFFu; mins[1] = (utmp2 >> 8) & 0xFFu;
+    mins[2] = (utmp2 >> 16) & 0xFFu; mins[3] = (utmp2 >> 24) & 0xFFu;
+    mins[4] = utmp3 & 0xFFu; mins[5] = (utmp3 >> 8) & 0xFFu;
+    mins[6] = (utmp3 >> 16) & 0xFFu; mins[7] = (utmp3 >> 24) & 0xFFu;
+
+    if (!squareAvx) {
+      int aux8[256];
+      uint a = 0u;
+      for (uint j = 0u; j < 4u; ++j) {
+        uint qo = qbase + j * 32u;
+        for (uint l = 0u; l < 32u; ++l)
+          aux8[a + l] = int(u8(qo + l) & 15u);
+        a += 32u;
+        for (uint l = 0u; l < 32u; ++l)
+          aux8[a + l] = int(u8(qo + l) >> 4);
+        a += 32u;
+      }
+      int sumi = 0;
+      for (uint j = 0u; j < 16u; ++j)
+        sumi += bsums[j] * int(mins[j / 2u]);
+      int aux32[8];
+      for (uint i = 0u; i < 8u; ++i) aux32[i] = 0;
+      uint qi = 0u;
+      uint ai = 0u;
+      for (uint j = 0u; j < 8u; ++j) {
+        int scale = int(scales[j]);
+        for (uint r = 0u; r < 4u; ++r) {
+          for (uint l = 0u; l < 8u; ++l)
+            aux32[l] += scale * (q8[qi + l] * aux8[ai + l]);
+          qi += 8u;
+          ai += 8u;
+        }
+      }
+      precise float dw = d * xd;
+      for (uint l = 0u; l < 8u; ++l)
+        sums[l] = sums[l] + dw * float(aux32[l]);
+      precise float dm = dmin * xd;
+      sumf = sumf - dm * float(sumi);
+    } else {
+      int paired[8];
+      for (uint p = 0u; p < 4u; ++p) {
+        paired[p] = bsums[2u * p] + bsums[2u * p + 1u];
+        paired[4u + p] = bsums[8u + 2u * p] + bsums[8u + 2u * p + 1u];
+      }
+      int prod[4];
+      for (uint p = 0u; p < 4u; ++p)
+        prod[p] = int(mins[2u * p]) * paired[2u * p] +
+                  int(mins[2u * p + 1u]) * paired[2u * p + 1u];
+      precise float dmin_n = -dmin * xd;
+      for (uint p = 0u; p < 4u; ++p)
+        acc_m[p] = acc_m[p] + dmin_n * float(prod[p]);
+
+      int sumi[8];
+      for (uint i = 0u; i < 8u; ++i) sumi[i] = 0;
+      uint q8i = 0u;
+      for (uint j = 0u; j < 4u; ++j) {
+        int sl = int(scales[2u * j]);
+        int sh = int(scales[2u * j + 1u]);
+        uint qo = qbase + j * 32u;
+        for (uint lane = 0u; lane < 8u; ++lane) {
+          int s = 0;
+          for (uint t = 0u; t < 4u; ++t) {
+            uint ix = lane * 4u + t;
+            s += int(u8(qo + ix) & 15u) * q8[q8i + ix];
+          }
+          sumi[lane] += sl * s;
+        }
+        q8i += 32u;
+        for (uint lane = 0u; lane < 8u; ++lane) {
+          int s = 0;
+          for (uint t = 0u; t < 4u; ++t) {
+            uint ix = lane * 4u + t;
+            s += int(u8(qo + ix) >> 4) * q8[q8i + ix];
+          }
+          sumi[lane] += sh * s;
+        }
+        q8i += 32u;
+      }
+      precise float dw = d * xd;
+      for (uint l = 0u; l < 8u; ++l)
+        sums[l] = sums[l] + dw * float(sumi[l]);
+    }
+  }
+  if (!squareAvx) {
+    for (uint l = 0u; l < 8u; ++l) sumf = sumf + sums[l];
+  } else {
+    precise float a0 = sums[0] + sums[4];
+    precise float a1 = sums[1] + sums[5];
+    precise float a2 = sums[2] + sums[6];
+    precise float a3 = sums[3] + sums[7];
+    precise float s = (a0 + a1) + (a2 + a3);
+    precise float m = (acc_m[0] + acc_m[2]) + (acc_m[1] + acc_m[3]);
+    sumf = s + m;
+  }
+  y[row] = sumf;
+}

@@ -36,6 +36,7 @@ uint32_t SxIdx(uint32_t rows) {
 } // namespace
 
 void VulkanCompute::GemvReuseInputNext() { gemv_reuse_in_next_ = true; }
+void VulkanCompute::GemvAvxWqNext() { gemv_avx_wq_next_ = true; }
 void VulkanCompute::GemvFuseResidualNext(const float* residual) {
     gemv_residual_add_ = residual;
 }
