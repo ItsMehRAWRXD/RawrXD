@@ -5,11 +5,9 @@
 #include "vulkan_compute.h"
 #if RAWR_VULKAN_AVAILABLE
 #include "GpuTransferCounters.hpp"
-#include "vulkan_q8k_act.hpp"
 #include <chrono>
 #include <cstdlib>
 #include <cstring>
-#include <vector>
 
 namespace CPUInference {
 
@@ -179,29 +177,11 @@ bool VulkanCompute::SubmitGemvPrefetch(uint32_t slot, DeviceBuf& in, DeviceBuf& 
     WeightSlot& s = ww_slots_[slot];
     VkDescriptorSet ds = gemv_ds_;
     if (gemv_ds_n_ > 0) ds = NextGemvDs();
-    VkBuffer actBuf = in.buffer;
-    VkDeviceSize actBytes = (VkDeviceSize)cols * 4;
-    /* Q6_K SPV In = block_q8_K[]; quantize device float act on host. */
-    if (packedBytes && packedKind == 14) {
-        if ((cols % 256u) != 0u) return false;
-        const size_t nblk = (size_t)cols / 256u;
-        const size_t inB = nblk * sizeof(Deep2::block_q8_K);
-        std::vector<float> xin(cols);
-        if (!DownloadBuf(in, xin.data(), cols)) return false;
-        std::vector<::Deep2::block_q8_K> xQ8(nblk);
-        ::q8k_act::quantize_row_q8_K(xin.data(), xQ8.data(), cols);
-        if (!EnsureHostIo(inB, (size_t)rows * 4)) return false;
-        void* mapped = nullptr;
-        if (vkMapMemory(device_, gemv_in_mem_, 0, inB, 0, &mapped) != VK_SUCCESS)
-            return false;
-        std::memcpy(mapped, xQ8.data(), inB);
-        vkUnmapMemory(device_, gemv_in_mem_);
-        gemv_in_live_cols_ = 0;
-        actBuf = gemv_in_buf_;
-        actBytes = (VkDeviceSize)inB;
-    }
+    /* gemv_q6k.comp In = float x[] (on-shader Q8_K prequant). Do NOT bind
+     * block_q8_K[] here — that ABI mismatch made TinyLlama L0 v_proj NaN
+     * under DEEP2_Q6K_FORCE_VULKAN_SPV + weight prefetch (R102/R103). */
     VkDescriptorBufferInfo dbiW{s.device.buffer, 0, weightBytes};
-    VkDescriptorBufferInfo dbiI{actBuf, 0, actBytes};
+    VkDescriptorBufferInfo dbiI{in.buffer, 0, (VkDeviceSize)cols * 4};
     VkDescriptorBufferInfo dbiO{out.buffer, 0, (VkDeviceSize)rows * 4};
     VkWriteDescriptorSet writes[3]{};
     for (int i = 0; i < 3; ++i) {

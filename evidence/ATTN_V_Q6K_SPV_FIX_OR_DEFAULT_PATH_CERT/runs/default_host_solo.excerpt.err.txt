@@ -1,0 +1,120 @@
+.\rawr.exe : [MODEL_RESOLUTION] G:\~dev\rawrxd\models\tinyllama.gguf
+At line:1 char:501
++ ... o.err.txt"; .\rawr.exe run "G:\~dev\rawrxd\models\tinyllama.gguf" -p  ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([MODEL_RESOLUTI...\tinyllama.gguf:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+GGUF_LOAD_STAGE=enter path="G:\~dev\rawrxd\models\tinyllama.gguf" loadTensors=0 mmap=0
+GGUF_LOAD_STAGE=validated size=668788096 dataOff=1709440
+GGUF_LOAD_STAGE=fopen_ok
+GGUF_LOAD_STAGE=header_ok ver=3 tensors=201 kv=23
+[AUTO_BACKEND] model=G:\~dev\rawrxd\models\tinyllama.gguf weights=636MB kv=176MB scratch=0MB moe=0 experts=0 ctx=2048
+[AUTO_BACKEND] host RAM=40692MB commit=132333MB
+[AUTO_BACKEND] GPU Virtual Display Driver status=25174027 problem=0 healthy=1
+[AUTO_BACKEND] GPU AMD Radeon(TM) Graphics status=25175040 problem=43 healthy=0
+[AUTO_BACKEND] GPU AMD Radeon AI PRO R9700 status=25174026 problem=0 healthy=1
+[AUTO_BACKEND] GPU AMD Radeon RX 7800 XT status=25174026 problem=0 healthy=1
+[AUTO_BACKEND] Vulkan ICD ready
+[AUTO_BACKEND] primaryReady=1 primaryValidated=1 secondaryReady=1 secondaryValidated=1 vramPriMB=32768
+[AUTO_BACKEND] decision=VulkanPrimary reason=Primary GPU fits weights+KV+scratch
+WEIGHT_BUDGET_INPUT=8192
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=8192
+WEIGHT_BUDGET_BYTES=8589934592
+WEIGHT_BUDGET_SOURCE=ENV
+KEN_MARS_ACTIVE=1 DEEP2_MARS=1 HOST_DECODE=0 GPU_POLICY=MULTI GPU_DEVICE_CLASS=DISCRETE NO_TRUNCATE_NEEDLE=1 
+PRODUCT_STREAMER_ARM=1
+PRODUCT_STREAMER_TIP_MINIMAL_PREP=1
+PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1
+RAWRXD_GPU_PREFLIGHT_BEGIN
+GPU_0=R9700
+GPU_0_WINDOWS_HEALTH=PASS
+GPU_0_PROBLEM_CODE=0
+GPU_0_CODE31=0
+GPU_1=RX_7800_XT
+GPU_1_WINDOWS_HEALTH=PASS
+GPU_1_PROBLEM_CODE=0
+GPU_1_CODE31=0
+GPU_PREFLIGHT=PASS
+MODEL_LOAD=ADMITTED
+WEIGHT_BUDGET_INPUT=8192
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=8192
+WEIGHT_BUDGET_BYTES=8589934592
+WEIGHT_BUDGET_SOURCE=ENV
+DEEP2_DEVICE_COUNT_DETECTED=2
+DEEP2_DEVICE_COUNT_OPENED=2
+DEEP2_COMPUTE_BACKEND=MULTIGPU
+DEEP2_EXEC_PATH=MULTIGPU
+DEEP2_EXEC_MODE=2
+DEEP2_GPU_POLICY=4
+DEEP2_PLAN_REASON=user_device_list
+DEEP2_PRIMARY_INDEX=0
+DEEP2_PRIMARY_STABLE_ID=1002:7551:000000000001681D
+DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_VENDOR=AMD
+DEEP2_DEVICE_0_STABLE_ID=1002:7551:000000000001681D
+DEEP2_DEVICE_0_VRAM_BYTES=34057322496
+DEEP2_DEVICE_0_SCORE=133
+DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
+DEEP2_DEVICE_1_NAME=AMD Radeon RX 7800 XT
+DEEP2_DEVICE_1_VENDOR=AMD
+DEEP2_DEVICE_1_STABLE_ID=1002:747E:0000000000019576
+DEEP2_DEVICE_1_VRAM_BYTES=16962633728
+DEEP2_DEVICE_1_SCORE=116
+DEEP2_DEVICE_1_DUTY=COMPUTE_SECONDARY
+DEEP2_COST_T_BEST=0.107467
+DEEP2_COST_CUT=12
+DEEP2_COST_KEEP=0
+DEEP2_COST_WINNER=SPLIT
+DEEP2_COST_MODEL=PIPELINE_V2
+DEEP2_COST_DUAL_DEVICES_KEPT=2
+DEEP2_COST_SLOT0_LAYERS=0-11
+DEEP2_COST_SLOT1_LAYERS=12-21
+DEEP2_COST_VRAM_GATE=0
+[VulkanCompute] DETECTED phys[0] type=2 AMD Radeon AI PRO R9700
+[VulkanCompute] DETECTED phys[1] type=2 Microsoft Direct3D12 (AMD Radeon AI PRO R9700)
+[VulkanCompute] SKIP_WARP_ICD phys[1] Microsoft Direct3D12 (AMD Radeon AI PRO R9700)
+[VulkanCompute] DETECTED phys[2] type=2 AMD Radeon RX 7800 XT
+---KEY---
+DEEP2_EXEC_PATH=MULTIGPU
+  Use ThreadPool: YES
+  Use KV Cache: YES
+  Use RoPE: YES
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=7.925269e-02
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.284650e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.090192e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=1.475304e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.090192e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.667975e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=4.013037e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=1.805094e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.238814e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=1.805094e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.418216e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=1.805094e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=4.013037e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.198008e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.090192e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=1.344429e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=1.397128e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.090192e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.667975e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=4.013037e-01
+[AGENT] TOKEN id=8241 piece=Yes
+[Q6K_HOST_GEMV] name=blk.0.attn_v.weight type=14 bytes=430080 rows=256 cols=2048 finite=256/256 norm=1.485934e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=1.485934e-01
+[Q6K_HOST_GEMV] name=blk.0.attn_v.weight type=14 bytes=430080 rows=256 cols=2048 finite=256/256 norm=2.863162e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.863162e-01
+[Q6K_HOST_GEMV] name=blk.0.attn_v.weight type=14 bytes=430080 rows=256 cols=2048 finite=256/256 norm=2.187536e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.187536e-01
+[Q6K_HOST_GEMV] name=blk.0.attn_v.weight type=14 bytes=430080 rows=256 cols=2048 finite=256/256 norm=1.807782e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=1.807782e-01
+[Q6K_HOST_GEMV] name=blk.0.attn_v.weight type=14 bytes=430080 rows=256 cols=2048 finite=256/256 norm=2.146161e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.146161e-01
+[Q6K_HOST_GEMV] name=blk.0.attn_v.weight type=14 bytes=430080 rows=256 cols=2048 finite=256/256 norm=2.187536e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=2.187536e-01
+[Q6K_HOST_GEMV] name=blk.0.attn_v.weight type=14 bytes=430080 rows=256 cols=2048 finite=256/256 norm=1.807782e-01
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=1.807782e-01

@@ -61,7 +61,9 @@ ENTERPRISE=0/128 unchanged
 
 ## Next
 NEXT_GATE=ATTN_V_Q6K_SPV_FIX_OR_DEFAULT_PATH_CERT
-  (fix gemv_q6k.spv NaN on TinyLlama attn_v; then new-SHA smoke — do not invent PASS)
+  CLOSED_BY=BR_CLI_Q6K_SPV_R103 / ATTN_V_Q6K_SPV_FIX_OR_DEFAULT_PATH_CERT
+  (prefetch act ABI fix; SPV↔host PARITY_OK; host default retained; PROMOTE=0)
+FOLLOWON=POST_Q6K_SPV_PRODUCT_MULTIFAMILY_OR_HOLD
 PROMOTE=0
 
 ## Bulk-run note
