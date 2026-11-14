@@ -1,0 +1,79 @@
+GPU_PARITY_ATTN_PRE_O_1_POS1_CLOSE_001
+DATE=2026-11-13
+ASOF_LOCAL=2026-11-13T23:03:00-05:00
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+CROSS_SHA_CREDIT=0
+INVENT_PASS=0
+NOT_RUN!=PASS
+SCOREBOARD_CLI_GUI_PCT_UNCHANGED=1
+ATTN_PRE_O_1_POS1_CLOSED=0
+CLOSED=0
+
+## Authority
+PRIOR_OUT=GPU_PARITY_ATTN_OUT_POS1_CLOSE_001.txt
+  ATTN_OUT_0@pos1 CLOSED 1.490116e-08; NEXT_OPEN=ATTN_PRE_O_1@pos1 ≈4.26e-04
+PRIOR_KQV=GPU_PARITY_ATTN_PRE_O_POS1_KQV_001.txt
+  ATTN_PRE_O_0@pos1 CLOSED 3.864989e-08 (FA F16 VKQ T>=2)
+BRANCH=work/v0-first-divergence
+TOL_ABS=1e-6 TOL_REL=1e-5
+Q4K_SPV active: bytes=16292 SHA256=AB7212EC2A30839EF51B9847F90C62CB2EEBCF4A010E122D0CBE0F228C8AC5D5
+TIP_EXE_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431 RO (untouched)
+absorb074 untouched; CLI/GUI % NOT raised
+VALUATION_SCOREBOARD_LIVE / JOINT_STATUS_LIVE / BOARD_SINGLE_WRITER CONTROLLING_% NOT rewritten
+
+## Remeasure (product env)
+CAND=pin/rawr_attn_pre_o_pos1_kqv.exe
+SHA256=CD84354D1C254C9C3832429B860C1C29F14E29E3078B75991934338E1C36D109
+DUMP=FIRST_DIVERGE_001/stage_dump_attn_pre_o_1_pos1_close
+REF=FIRST_DIVERGE_001/stage_dump_ref_matched
+COMPARE=FIRST_DIVERGE_001/GPU_PARITY_ATTN_PRE_O_1_POS1_CLOSE_001.compare.log
+ENV=RAWRXD_FORCE_VULKAN_QUANT_GEMV=1 RAWRXD_QUANT_HOST_Q8K_PARITY=0
+    RAWRXD_KV_FP16_ROUNDTRIP=1 RAWRXD_GPU_FWD=0 HOTPATH_ATTN=CPU FA_F16=1
+PROMPT_IDS=1,15043
+
+## Layer0 regression (must hold)
+ATTN_PRE_O_0@pos0 BITEXACT maxAbs=0
+ATTN_PRE_O_0@pos1 UNDER_TOL maxAbs=3.488640e-08 (was 3.864989e-08)
+ATTN_OUT_0@pos0 UNDER_TOL maxAbs=5.587935e-09
+ATTN_OUT_0@pos1 UNDER_TOL maxAbs=2.980232e-08
+ATTN_NORM_1@pos1 UNDER_TOL maxAbs=9.536743e-07
+
+## Target
+ATTN_PRE_O_1@pos1 maxAbs=4.256936e-04 rel=3.333351e-02 @idx1438
+  n_gt=1979/2048 UNDER_TOL=0  (BEFORE=AFTER; no close)
+
+## Root (numeric-first)
+CLASS=CASCADE_FFN_DOWN_0_POS0_VULKAN_Q4K_SPV
+NOT missing FA F16 at layer1 — AttentionWithCache T>=2 FA F16 already live;
+offline FA(gpu roped QKV) matches product PRE_O (maxAbs≈4e-7).
+Chain @pos0 (product PARITY=0):
+  FFN_ACT_0 UNDER_TOL → FFN_DOWN_0 OPEN 7.500872e-05
+  → LAYER0_OUT/ATTN_NORM_1@pos0 → V_1@pos0 OPEN 5.199946e-04
+  → FA T=2 mixes bad V0 with good V1/Q@pos1 → PRE_O_1@pos1 4.256936e-04
+Q/K/V@pos1 and ATTN_NORM_1@pos1 remain UNDER_TOL / near-TOL.
+
+## Fix attempts
+1) RMSNormW → ggml_float(double) sum-of-squares (match ggml_rms_norm_f32).
+   Restored ATTN_NORM_0@pos0 BITEXACT; did NOT close FFN_DOWN_0@pos0.
+2) PRIVATE RAWRXD_QUANT_HOST_Q8K_PARITY=1 (gate/up host; FORCE still SPV attn):
+   FFN_DOWN_0@pos0 → 2.980232e-08 UNDER_TOL; V_1@pos0 UNDER_TOL;
+   PRE_O_1@pos1 → 2.754107e-05 still OPEN (attn Q SPV residual under FORCE).
+   Not adopted as product default (FORCE+PARITY policy; ACT_2 host-under-FORCE
+   prior REJECT). No SPV bitexact fix this turn.
+
+## Fix@source (landed; not sufficient for close)
+src/deep2/Deep2Engine.cpp RMSNormW: double sumSq accum + float mean/inv
+  matching ggml_compute_forward_rms_norm_f32 (replaces incorrect float-only sum).
+
+## Verdict
+ATTN_PRE_O_1_POS1_CLOSED=0
+MAXDIFF_BEFORE=4.256936e-04
+MAXDIFF_AFTER=4.256936e-04
+UNDER_TOL=0
+NEXT_OPEN=FFN_DOWN_0@pos0 (Vulkan Q4K×Q8K SPV; ACT under / DOWN 7.5e-05)
+  OR FFN_ACT_2 (prior material ≈4.58e-05; REF not in stage_dump_ref_matched)
+≠ PERFORMANCE_PASS ≠ PROMOTE
+PROMOTE=0
+TIP_CLIMB=HOLD
