@@ -347,37 +347,91 @@ bool loadSelection(const std::string& path, uint32_t activeExperts,
     }
 }
 
+// Patch the expert-bank SIZE metadata only.
+//
+// Two different fields live side by side in MoE GGUF headers and they mean
+// different things:
+//
+//   *.expert_count       how many experts exist in the physical bank
+//   *.expert_used_count  how many experts each token activates (top-k)
+//
+// An earlier version matched either substring and wrote the retained count into
+// both. That silently turned a top-4 router into a top-59 router on GLM-4.7,
+// top-6 into top-81 on Nemotron, and top-8 into top-199 on Qwen3.6. The
+// resulting exports routed every token through every surviving expert: the graph
+// and its allocation grew accordingly, and llama.cpp aborted with
+// GGML_ASSERT(obj_new) on GLM and Nemotron.
+//
+// The correct behaviour is to rewrite ONLY the bank size, then clamp the top-k
+// if pruning removed so many experts that the original top-k no longer fits.
 void patchMetadata(std::vector<MetaEntry>& metadata, uint32_t activeExperts) {
+    auto lower = [](std::string s) {
+        std::transform(s.begin(), s.end(), s.begin(),
+                       [](unsigned char c) { return (char)std::tolower(c); });
+        return s;
+    };
+    auto endsWith = [](const std::string& s, const std::string& suffix) {
+        return s.size() >= suffix.size() &&
+               s.compare(s.size() - suffix.size(), suffix.size(), suffix) == 0;
+    };
+
     bool foundExpertCount = false;
+    uint32_t usedCount = 0;
+    bool foundUsedCount = false;
+    MetaEntry* usedEntry = nullptr;
+
     for (auto& entry : metadata) {
-        const std::string key = [&] { std::string s = entry.key; std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c){ return (char)std::tolower(c); }); return s; }();
-        if (key.find("expert_count") == std::string::npos && key.find("expert_used_count") == std::string::npos) continue;
-        foundExpertCount = true;
-        if (entry.type == static_cast<uint32_t>(GGUFMetaType::UINT32) && entry.value.size() == 4) {
-            std::memcpy(entry.value.data(), &activeExperts, 4);
-        } else if (entry.type == static_cast<uint32_t>(GGUFMetaType::INT32) && entry.value.size() == 4) {
-            const int32_t value = static_cast<int32_t>(activeExperts);
-            std::memcpy(entry.value.data(), &value, 4);
-        } else if (entry.type == static_cast<uint32_t>(GGUFMetaType::UINT64) && entry.value.size() == 8) {
-            const uint64_t value = activeExperts;
-            std::memcpy(entry.value.data(), &value, 8);
-        } else if (entry.type == static_cast<uint32_t>(GGUFMetaType::INT64) && entry.value.size() == 8) {
-            const int64_t value = activeExperts;
-            std::memcpy(entry.value.data(), &value, 8);
-        } else if (entry.type == static_cast<uint32_t>(GGUFMetaType::ARRAY) && entry.value.size() >= 12) {
-            uint32_t element = 0; uint64_t count = 0;
-            std::memcpy(&element, entry.value.data(), 4); std::memcpy(&count, entry.value.data() + 4, 8);
-            size_t width = 0;
-            if (element == static_cast<uint32_t>(GGUFMetaType::UINT32) || element == static_cast<uint32_t>(GGUFMetaType::INT32)) width = 4;
-            else if (element == static_cast<uint32_t>(GGUFMetaType::UINT64) || element == static_cast<uint32_t>(GGUFMetaType::INT64)) width = 8;
-            if (width && count <= (entry.value.size() - 12) / width) {
-                for (uint64_t i = 0; i < count; ++i) {
-                    if (width == 4) { const uint32_t v = activeExperts; std::memcpy(entry.value.data() + 12 + i * width, &v, width); }
-                    else { const uint64_t v = activeExperts; std::memcpy(entry.value.data() + 12 + i * width, &v, width); }
-                }
+        const std::string key = lower(entry.key);
+        // Bank size only. "expert_used_count" does NOT end with "expert_count",
+        // so it is naturally excluded by the suffix test.
+        if (endsWith(key, "expert_count")) {
+            foundExpertCount = true;
+            if (entry.type == static_cast<uint32_t>(GGUFMetaType::UINT32) && entry.value.size() == 4) {
+                std::memcpy(entry.value.data(), &activeExperts, 4);
+            } else if (entry.type == static_cast<uint32_t>(GGUFMetaType::INT32) && entry.value.size() == 4) {
+                const int32_t value = static_cast<int32_t>(activeExperts);
+                std::memcpy(entry.value.data(), &value, 4);
+            } else if (entry.type == static_cast<uint32_t>(GGUFMetaType::UINT64) && entry.value.size() == 8) {
+                const uint64_t value = activeExperts;
+                std::memcpy(entry.value.data(), &value, 8);
+            } else if (entry.type == static_cast<uint32_t>(GGUFMetaType::INT64) && entry.value.size() == 8) {
+                const int64_t value = static_cast<int64_t>(activeExperts);
+                std::memcpy(entry.value.data(), &value, 8);
+            }
+            continue;
+        }
+        // Top-k is read, never written here.
+        if (endsWith(key, "expert_used_count")) {
+            foundUsedCount = true;
+            usedEntry = &entry;
+            if (entry.type == static_cast<uint32_t>(GGUFMetaType::UINT32) && entry.value.size() == 4) {
+                std::memcpy(&usedCount, entry.value.data(), 4);
+            } else if (entry.type == static_cast<uint32_t>(GGUFMetaType::INT32) && entry.value.size() == 4) {
+                int32_t v = 0;
+                std::memcpy(&v, entry.value.data(), 4);
+                usedCount = static_cast<uint32_t>(v);
+            } else if (entry.type == static_cast<uint32_t>(GGUFMetaType::UINT64) && entry.value.size() == 8) {
+                uint64_t v = 0;
+                std::memcpy(&v, entry.value.data(), 8);
+                usedCount = static_cast<uint32_t>(v);
             }
         }
     }
+
+    // A top-k larger than the surviving bank is unsatisfiable; clamp it rather
+    // than shipping a model that routes to experts it does not have.
+    if (foundUsedCount && usedEntry && usedCount > activeExperts) {
+        if (usedEntry->type == static_cast<uint32_t>(GGUFMetaType::UINT32) && usedEntry->value.size() == 4) {
+            std::memcpy(usedEntry->value.data(), &activeExperts, 4);
+        } else if (usedEntry->type == static_cast<uint32_t>(GGUFMetaType::INT32) && usedEntry->value.size() == 4) {
+            const int32_t v = static_cast<int32_t>(activeExperts);
+            std::memcpy(usedEntry->value.data(), &v, 4);
+        } else if (usedEntry->type == static_cast<uint32_t>(GGUFMetaType::UINT64) && usedEntry->value.size() == 8) {
+            const uint64_t v = activeExperts;
+            std::memcpy(usedEntry->value.data(), &v, 8);
+        }
+    }
+
     if (!foundExpertCount) {
         MetaEntry entry;
         entry.key = "rawrxd.reap.active_experts";
