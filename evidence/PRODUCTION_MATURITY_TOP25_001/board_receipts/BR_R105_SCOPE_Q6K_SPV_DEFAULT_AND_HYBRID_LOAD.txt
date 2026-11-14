@@ -1,0 +1,38 @@
+BR_R105_SCOPE_Q6K_SPV_DEFAULT_AND_HYBRID_LOAD
+ASOF_LOCAL=2026-11-14T11:29-05:00
+AUTH=PARENT_BOARD_AUTHORITY / BOARD_SINGLE_WRITER
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD INVENT_PASS=0 CROSS_SHA_CREDIT=0
+PCT_HELD=CLI67/GUI48/OVERALL48
+ENTERPRISE=0/128
+RESULT=SCOPE_OPEN_NOT_PASS
+
+## Controlling
+R105_SCOPE=Q6K_SPV_DEFAULT_AND_HYBRID_LOAD
+METHOD_C_COMPLETE=1          # Moves 1–Complete ladder ONLY ≠ enterprise/product CERT
+ORNITH_L3_ULP=RELATED_CLOSED # R104 f32 oracle BITEXACT; ≠ CERT PASS
+NO_REOPEN=R101|R102
+NO_REABSORB=R103|R104
+
+## R105 gates (new evidence only)
+Q6K_PRODUCT_DEFAULT=VERIFY   # unforced default: backend, EXE SHA, TOK, semantic, SPV w/o host fallback
+Q6K_SPV_NUMERIC=OPEN         # independent SPV vs host oracle; host fallback ≠ SPV cert
+Q6K_SPV_EXECUTION=OPEN
+HYBRID_MODEL_LOAD=OPEN       # blk.40.ssm_conv1d.weight — no fabricate
+HYBRID_SEMANTIC=OPEN
+
+## User note (absorb)
+Cited commits/builds not re-verified in user message — workers must VERIFY locally.
+COMPLETE=1 ≠ GUI/enterprise certification.
+
+## Ordered spend
+1 POST_Q6K_SPV_PRODUCT_DEFAULT_001 verify unforced product default
+2 Q6K_VULKAN_SPV_REPAIR_001 independent SPV↔host numeric
+3 LLAMA_QWEN35MOE_HYBRID_LOAD_FIX then reference gen
+4 Ornith semantic (extend R104; multi-token coherent)
+5 CLI/GUI product parity (same scenarios; independent EXE hashes)
+6 Enterprise 128 gates individually
+
+NEXT_MILESTONE=NATIVE_VULKAN_INFERENCE_UNFORCED_DEFAULT_NUMERIC_SEMANTIC
+  (advances CLI readiness; ≠ GUI/enterprise alone)
+PROMOTE=0
+END
