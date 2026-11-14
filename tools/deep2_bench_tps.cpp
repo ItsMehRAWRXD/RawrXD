@@ -234,14 +234,57 @@ int main(int argc, char* argv[]) {
             }
             std::printf("  prefill PrefillBatch n=%zu\n", tokens.size());
         } else {
+            // RAWRXD_DEEP2_ALLOC_TRACE_001: sample the allocation state after every
+            // prefill position, and again at the failing position. TPS alone cannot
+            // separate a leak from churn from budget exhaustion; the per-position
+            // delta of buffer_allocations against device_bytes_live can.
+            QuantDot::BackendStats memPrev = QuantDot::BackendCounters();
+            SIZE_T rp = 0, rc = 0;
             for (size_t i = 0; i < tokens.size(); ++i) {
                 const auto tt = std::chrono::steady_clock::now();
                 if (!ex.ExecuteToken(tokens[i], i)) {
+                    const QuantDot::BackendStats mf = QuantDot::BackendCounters();
+                    RamCounters(rp, rc);
+                    std::printf("MEM_FAIL pos=%zu err=%s\n", i, ex.LastError().c_str());
+                    std::printf("MEM_FAIL pos=%zu device_live=%.1f MB device_peak=%.1f MB "
+                                "buffer_allocs_delta=%llu alloc_failures=%llu "
+                                "cache_hits=%llu cache_misses=%llu upload=%.1f MB "
+                                "ram_cur=%.1f MB submits_delta=%llu\n",
+                                i,
+                                (double)mf.device_bytes_live / 1048576.0,
+                                (double)mf.device_bytes_peak / 1048576.0,
+                                (unsigned long long)(mf.buffer_allocations -
+                                                     memPrev.buffer_allocations),
+                                (unsigned long long)mf.descriptor_alloc_failures,
+                                (unsigned long long)mf.weight_cache_hits,
+                                (unsigned long long)mf.weight_cache_misses,
+                                (double)mf.upload_bytes / 1048576.0,
+                                (double)rc / 1048576.0,
+                                (unsigned long long)(mf.submits - memPrev.submits));
                     std::printf("PREFILL_FAIL pos=%zu err=%s\n", i, ex.LastError().c_str());
                     return 1;
                 }
                 DumpLogits(dumpLogitsDir, i, ex.Logits());
-                std::printf("  prefill pos=%zu token=%u (%.1f ms)\n", i, tokens[i], MsSince(tt));
+                std::printf("  prefill pos=%zu token=%u (%.1f ms)\n", i, tokens[i],
+                            MsSince(tt));
+                const QuantDot::BackendStats mn = QuantDot::BackendCounters();
+                RamCounters(rp, rc);
+                std::printf("MEM pos=%zu device_live=%.1f MB device_peak=%.1f MB "
+                            "buffer_allocs_delta=%llu alloc_failures=%llu "
+                            "cache_hits=%llu cache_misses=%llu upload=%.1f MB "
+                            "ram_cur=%.1f MB submits_delta=%llu\n",
+                            i,
+                            (double)mn.device_bytes_live / 1048576.0,
+                            (double)mn.device_bytes_peak / 1048576.0,
+                            (unsigned long long)(mn.buffer_allocations -
+                                                 memPrev.buffer_allocations),
+                            (unsigned long long)mn.descriptor_alloc_failures,
+                            (unsigned long long)mn.weight_cache_hits,
+                            (unsigned long long)mn.weight_cache_misses,
+                            (double)mn.upload_bytes / 1048576.0,
+                            (double)rc / 1048576.0,
+                            (unsigned long long)(mn.submits - memPrev.submits));
+                memPrev = mn;
             }
         }
         const double prefill_ms = MsSince(t_pf0);
@@ -372,6 +415,37 @@ int main(int argc, char* argv[]) {
                     bs.upload_bytes / 1048576.0);
         std::printf("RUN%zu: ram_peak=%.1f MB ram_cur=%.1f MB\n", run,
                     peak_ws / 1048576.0, cur_ws / 1048576.0);
+        // ---- TPS-driven allocation diagnostic -------------------------------
+        // These rules NAME a suspect so the next run is targeted. They do not prove
+        // a cause: a zero-submission run is a dispatch fact, not a memory fact, and
+        // churn versus leak needs the per-position MEM lines above to separate.
+        {
+            const uint64_t run_allocs = bs.buffer_allocations - bs0.buffer_allocations;
+            const uint64_t run_alloc_fail =
+                bs.descriptor_alloc_failures - bs0.descriptor_alloc_failures;
+            const uint64_t run_cache_hits = bs.weight_cache_hits - bs0.weight_cache_hits;
+            const uint64_t run_cache_miss = bs.weight_cache_misses - bs0.weight_cache_misses;
+            const double live_mb = (double)bs.device_bytes_live / 1048576.0;
+            const double peak_mb = (double)bs.device_bytes_peak / 1048576.0;
+            std::printf("RUN%zu: ALLOC buffer_allocs=%llu device_live=%.1f MB "
+                        "device_peak=%.1f MB alloc_failures=%llu cache_hits=%llu "
+                        "cache_misses=%llu\n",
+                        run, (unsigned long long)run_allocs, live_mb, peak_mb,
+                        (unsigned long long)run_alloc_fail,
+                        (unsigned long long)run_cache_hits,
+                        (unsigned long long)run_cache_miss);
+            if (run_submits == 0)
+                std::printf("RUN%zu: SUSPECT=NO_GPU_SUBMISSION GPU_TPS_VALID=0\n", run);
+            if (run_alloc_fail != 0)
+                std::printf("RUN%zu: SUSPECT=ALLOCATION_FAILURE count=%llu\n", run,
+                            (unsigned long long)run_alloc_fail);
+            if (exec_positions > 0 && run_allocs > exec_positions)
+                std::printf("RUN%zu: SUSPECT=ALLOCATION_CHURN allocs_per_position=%.1f\n",
+                            run, (double)run_allocs / exec_positions);
+            if (run_cache_miss > 0 && run_submits == 0)
+                std::printf("RUN%zu: NOTE=UPLOAD_WITHOUT_SUBMISSION misses=%llu\n", run,
+                            (unsigned long long)run_cache_miss);
+        }
         std::printf("RUN%zu GENSTREAM:", run);
         for (uint32_t t : gen) std::printf(" %u", t);
         std::printf("\n");
