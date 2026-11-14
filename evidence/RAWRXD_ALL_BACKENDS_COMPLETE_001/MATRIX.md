@@ -1,4 +1,4 @@
-# RAWRXD_ALL_BACKENDS_COMPLETE_001 � Backend completion matrix
+﻿# RAWRXD_ALL_BACKENDS_COMPLETE_001 � Backend completion matrix
 
 ```text
 PROMOTE=0 CERTIFIED=0 ENTERPRISE=0/128
@@ -60,3 +60,4 @@ SAME_DAY_FULL_CERT=NOT_GUARANTEED
 NEXT_LEGAL=Laguna FIRST_DIVERGENCE_ULP → MiniMax/REAP semantic → large-model native → multifamily CLI/GUI → independent cert
 WS1_ABSORB=W1_LAGUNA_NUMERICAL_PARITY_001 PARTIAL EXE=CEBA0DE4 tip + 30896EA4 trial PERF_CREDIT=0
 ```
+
