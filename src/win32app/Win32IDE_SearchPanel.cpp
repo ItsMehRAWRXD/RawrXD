@@ -175,15 +175,16 @@ void Win32IDE::createSearchPanel() {
 
     col.pszText = (LPSTR)"File";
     col.cx = 160;
-    ListView_InsertColumn(m_hwndSearchResults, 0, &col);
+    // ANSI column insert: control is WC_LISTVIEWA and col is LVCOLUMNA.
+    SendMessageA(m_hwndSearchResults, LVM_INSERTCOLUMNA, 0, reinterpret_cast<LPARAM>(&col));
 
     col.pszText = (LPSTR)"Ln";
     col.cx = 40;
-    ListView_InsertColumn(m_hwndSearchResults, 1, &col);
+    SendMessageA(m_hwndSearchResults, LVM_INSERTCOLUMNA, 1, reinterpret_cast<LPARAM>(&col));
 
     col.pszText = (LPSTR)"Match";
     col.cx = 220;
-    ListView_InsertColumn(m_hwndSearchResults, 2, &col);
+    SendMessageA(m_hwndSearchResults, LVM_INSERTCOLUMNA, 2, reinterpret_cast<LPARAM>(&col));
 }
 
 // ============================================================================

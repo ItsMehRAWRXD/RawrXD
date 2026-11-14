@@ -130,15 +130,16 @@ void Win32IDE::showRenamePreview(const std::string& oldName, const std::string& 
     col.pszText = (char*)"File";
     col.cx = dpiScale(180);
     col.fmt = LVCFMT_LEFT;
-    ListView_InsertColumn(m_renamePreview.hwndList, 0, &col);
+    // ANSI column insert: control is WC_LISTVIEWA and col is LVCOLUMNA.
+    SendMessageA(m_renamePreview.hwndList, LVM_INSERTCOLUMNA, 0, reinterpret_cast<LPARAM>(&col));
 
     col.pszText = (char*)"Line";
     col.cx = dpiScale(50);
-    ListView_InsertColumn(m_renamePreview.hwndList, 1, &col);
+    SendMessageA(m_renamePreview.hwndList, LVM_INSERTCOLUMNA, 1, reinterpret_cast<LPARAM>(&col));
 
     col.pszText = (char*)"Context";
     col.cx = dpiScale(340);
-    ListView_InsertColumn(m_renamePreview.hwndList, 2, &col);
+    SendMessageA(m_renamePreview.hwndList, LVM_INSERTCOLUMNA, 2, reinterpret_cast<LPARAM>(&col));
 
     // Populate changes
     for (int i = 0; i < (int)m_renamePreview.changes.size(); i++) {
@@ -149,34 +150,35 @@ void Win32IDE::showRenamePreview(const std::string& oldName, const std::string& 
         size_t lastSlash = fileName.find_last_of("\\/");
         if (lastSlash != std::string::npos) fileName = fileName.substr(lastSlash + 1);
 
-        LV_ITEMW lvi = {};
+        LVITEMA lvi = {};
         lvi.mask = LVIF_TEXT | LVIF_PARAM;
         lvi.iItem = i;
-        // Convert fileName (std::string) to wide string for LV_ITEMW
-        int fileNameWLen = MultiByteToWideChar(CP_UTF8, 0, fileName.c_str(), -1, nullptr, 0);
-        std::wstring fileNameW(fileNameWLen, L'\0');
-        MultiByteToWideChar(CP_UTF8, 0, fileName.c_str(), -1, &fileNameW[0], fileNameWLen);
         lvi.iSubItem = 0;
-        lvi.pszText = const_cast<LPWSTR>(fileNameW.c_str());
+        // ANSI: control is WC_LISTVIEWA, so pass narrow text directly.
+        lvi.pszText = const_cast<char*>(fileName.c_str());
         lvi.lParam = (LPARAM)i;
-        ListView_InsertItem(m_renamePreview.hwndList, &lvi);
+        SendMessageA(m_renamePreview.hwndList, LVM_INSERTITEMA, 0, reinterpret_cast<LPARAM>(&lvi));
 
-        // Line number - use wide string for Unicode build
-        wchar_t lineStr[16];
-        swprintf_s(lineStr, L"%d", change.line + 1);
-        ListView_SetItemText(m_renamePreview.hwndList, i, 1, lineStr);
+        // Line number
+        char lineStr[16];
+        _snprintf_s(lineStr, sizeof(lineStr), _TRUNCATE, "%d", change.line + 1);
+        LVITEMA lineItem = {};
+        lineItem.iSubItem = 1;
+        lineItem.pszText = lineStr;
+        SendMessageA(m_renamePreview.hwndList, LVM_SETITEMTEXTA, i, reinterpret_cast<LPARAM>(&lineItem));
 
         // Context with highlighted old → new
-        std::wstring context(change.contextLine.begin(), change.contextLine.end());
-        std::wstring oldTextW(change.oldText.begin(), change.oldText.end());
-        std::wstring newTextW(change.newText.begin(), change.newText.end());
-        size_t pos = context.find(oldTextW);
-        if (pos != std::wstring::npos) {
-            context = context.substr(0, pos) + L"[" + oldTextW + L" → " +
-                      newTextW + L"]" + context.substr(pos + oldTextW.size());
+        std::string context = change.contextLine;
+        size_t pos = context.find(change.oldText);
+        if (pos != std::string::npos) {
+            context = context.substr(0, pos) + "[" + change.oldText + " -> " +
+                      change.newText + "]" + context.substr(pos + change.oldText.size());
         }
         {
-            ListView_SetItemText(m_renamePreview.hwndList, i, 2, const_cast<LPWSTR>(context.c_str()));
+            LVITEMA ctxItem = {};
+            ctxItem.iSubItem = 2;
+            ctxItem.pszText = const_cast<char*>(context.c_str());
+            SendMessageA(m_renamePreview.hwndList, LVM_SETITEMTEXTA, i, reinterpret_cast<LPARAM>(&ctxItem));
         }
 
         // Check by default

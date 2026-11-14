@@ -1492,19 +1492,20 @@ void Win32IDE::onDiagnosticsReceived(const std::string& uri, const std::vector<L
             LVITEMA lvi = {LVIF_TEXT};
             lvi.iItem = static_cast<int>(i);
             lvi.pszText = const_cast<char*>((p.severity == 0) ? "Error" : (p.severity == 1) ? "Warning" : "Info");
-            ListView_InsertItem(m_hwndProblemsListView, &lvi);
+            // ANSI insert: control is WC_LISTVIEWA, lvi is LVITEMA.
+            SendMessageA(m_hwndProblemsListView, LVM_INSERTITEMA, 0, reinterpret_cast<LPARAM>(&lvi));
             LVITEMA lviSet = {0};
             lviSet.iSubItem = 1;
             lviSet.pszText = const_cast<char*>(p.message.c_str());
-            SendMessage(m_hwndProblemsListView, LVM_SETITEMTEXTA, lvi.iItem, (LPARAM)&lviSet);
+            SendMessageA(m_hwndProblemsListView, LVM_SETITEMTEXTA, lvi.iItem, (LPARAM)&lviSet);
             lviSet.iSubItem = 2;
             lviSet.pszText = const_cast<char*>(p.file.c_str());
-            SendMessage(m_hwndProblemsListView, LVM_SETITEMTEXTA, lvi.iItem, (LPARAM)&lviSet);
+            SendMessageA(m_hwndProblemsListView, LVM_SETITEMTEXTA, lvi.iItem, (LPARAM)&lviSet);
             char ln[32];
             _snprintf_s(ln, 32, _TRUNCATE, "%d", p.line);
             lviSet.iSubItem = 3;
             lviSet.pszText = ln;
-            SendMessage(m_hwndProblemsListView, LVM_SETITEMTEXTA, lvi.iItem, (LPARAM)&lviSet);
+            SendMessageA(m_hwndProblemsListView, LVM_SETITEMTEXTA, lvi.iItem, (LPARAM)&lviSet);
         }
         // Add new diagnostics (LSP: 1=Error, 2=Warning, 3=Info, 4=Hint → our 0=Error, 1=Warning, 2=Info)
         for (const auto& d : diagnostics)

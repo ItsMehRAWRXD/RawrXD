@@ -942,16 +942,18 @@ void Win32IDE::ensurePanelTabBodies()
             lvc.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
             lvc.pszText = const_cast<char*>("Severity");
             lvc.cx = 70; lvc.iSubItem = 0;
-            ListView_InsertColumn(m_hwndProblemsListView, 0, &lvc);
+            // ANSI column insert: control is WC_LISTVIEWA and lvc is LVCOLUMNA.
+            // ListView_InsertColumn maps to the W variant under UNICODE.
+            SendMessageA(m_hwndProblemsListView, LVM_INSERTCOLUMNA, 0, reinterpret_cast<LPARAM>(&lvc));
             lvc.pszText = const_cast<char*>("Message");
             lvc.cx = 400; lvc.iSubItem = 1;
-            ListView_InsertColumn(m_hwndProblemsListView, 1, &lvc);
+            SendMessageA(m_hwndProblemsListView, LVM_INSERTCOLUMNA, 1, reinterpret_cast<LPARAM>(&lvc));
             lvc.pszText = const_cast<char*>("File");
             lvc.cx = 200; lvc.iSubItem = 2;
-            ListView_InsertColumn(m_hwndProblemsListView, 2, &lvc);
+            SendMessageA(m_hwndProblemsListView, LVM_INSERTCOLUMNA, 2, reinterpret_cast<LPARAM>(&lvc));
             lvc.pszText = const_cast<char*>("Line");
             lvc.cx = 60; lvc.iSubItem = 3;
-            ListView_InsertColumn(m_hwndProblemsListView, 3, &lvc);
+            SendMessageA(m_hwndProblemsListView, LVM_INSERTCOLUMNA, 3, reinterpret_cast<LPARAM>(&lvc));
             ShowWindow(m_hwndProblemsListView, SW_HIDE);
         }
     }
@@ -1098,19 +1100,20 @@ void Win32IDE::addProblem(const std::string& file, int line, int col, const std:
     problemHeap->msg = new char[msg.length() + 1];
     strcpy_s(problemHeap->msg, msg.length() + 1, msg.c_str());
     g_problemHeapObjects.push_back(problemHeap);
-    ListView_InsertItem(m_hwndProblemsListView, &lvi);
+    // ANSI insert: control is WC_LISTVIEWA, lvi is LVITEMA. See createPanel().
+    SendMessageA(m_hwndProblemsListView, LVM_INSERTITEMA, 0, reinterpret_cast<LPARAM>(&lvi));
     
     // Set item text using direct SendMessage calls with ANSI structures
     LVITEMA lviSet = { 0 };
     lviSet.iSubItem = 1;
     lviSet.pszText = problemHeap->msg;
     lviSet.lParam = reinterpret_cast<LPARAM>(problemHeap);
-    SendMessage(m_hwndProblemsListView, LVM_SETITEMTEXTA, lvi.iItem, (LPARAM)&lviSet);
+    SendMessageA(m_hwndProblemsListView, LVM_SETITEMTEXTA, lvi.iItem, (LPARAM)&lviSet);
     
     lviSet.iSubItem = 2;
     lviSet.pszText = problemHeap->file;
     lviSet.lParam = reinterpret_cast<LPARAM>(problemHeap);
-    SendMessage(m_hwndProblemsListView, LVM_SETITEMTEXTA, lvi.iItem, (LPARAM)&lviSet);
+    SendMessageA(m_hwndProblemsListView, LVM_SETITEMTEXTA, lvi.iItem, (LPARAM)&lviSet);
     
     char lineStrBuf[32];
     _snprintf_s(lineStrBuf, sizeof(lineStrBuf), _TRUNCATE, "%d", line);
@@ -1120,7 +1123,7 @@ void Win32IDE::addProblem(const std::string& file, int line, int col, const std:
     lviSet.iSubItem = 3;
     lviSet.pszText = lineHeap;
     lviSet.lParam = reinterpret_cast<LPARAM>(lineHeap);
-    SendMessage(m_hwndProblemsListView, LVM_SETITEMTEXTA, lvi.iItem, (LPARAM)&lviSet);
+    SendMessageA(m_hwndProblemsListView, LVM_SETITEMTEXTA, lvi.iItem, (LPARAM)&lviSet);
     
     // Surface Problems tab when real diagnostics arrive.
     switchPanelTab(PanelTab::Problems);
@@ -1534,22 +1537,23 @@ void Win32IDE::createESPPanel(HWND hwndParent)
     lvc.pszText = const_cast<char*>("#");
     lvc.cx = 40;
     lvc.iSubItem = 0;
-    ListView_InsertColumn(m_hwndESPList, 0, &lvc);
+    // ANSI column insert: control is WC_LISTVIEWA, lvc is LVCOLUMNA.
+    SendMessageA(m_hwndESPList, LVM_INSERTCOLUMNA, 0, reinterpret_cast<LPARAM>(&lvc));
 
     lvc.pszText = const_cast<char*>("Time");
     lvc.cx = 80;
     lvc.iSubItem = 1;
-    ListView_InsertColumn(m_hwndESPList, 1, &lvc);
+    SendMessageA(m_hwndESPList, LVM_INSERTCOLUMNA, 1, reinterpret_cast<LPARAM>(&lvc));
 
     lvc.pszText = const_cast<char*>("Kind");
     lvc.cx = 100;
     lvc.iSubItem = 2;
-    ListView_InsertColumn(m_hwndESPList, 2, &lvc);
+    SendMessageA(m_hwndESPList, LVM_INSERTCOLUMNA, 2, reinterpret_cast<LPARAM>(&lvc));
 
     lvc.pszText = const_cast<char*>("Message");
     lvc.cx = 180;
     lvc.iSubItem = 3;
-    ListView_InsertColumn(m_hwndESPList, 3, &lvc);
+    SendMessageA(m_hwndESPList, LVM_INSERTCOLUMNA, 3, reinterpret_cast<LPARAM>(&lvc));
 
     // Initialize ESP recorder
     std::string espLogPath = m_currentDirectory + "\\agentic_live.jsonl";
@@ -1659,7 +1663,8 @@ void Win32IDE::onESPEvent(const rawrxd::esp::Event& event)
     strcpy_s(seqHeap, strlen(seqBuf) + 1, seqBuf);
     g_panelStringHeap.push_back(seqHeap);
     lvi.pszText = seqHeap;
-    ListView_InsertItem(m_hwndESPList, &lvi);
+    // ANSI insert: control is WC_LISTVIEWA, lvi is LVITEMA.
+    SendMessageA(m_hwndESPList, LVM_INSERTITEMA, 0, reinterpret_cast<LPARAM>(&lvi));
 
     // Timestamp (relative to start or just HH:MM:SS.mmm)
     auto ns = event.timestamp_ns;
@@ -1667,26 +1672,32 @@ void Win32IDE::onESPEvent(const rawrxd::esp::Event& event)
     auto ms = (ns % 1000000000ULL) / 1000000ULL;
     std::tm tm_buf;
     localtime_s(&tm_buf, &sec);
-    wchar_t timeBuf[32];
-    std::wcsftime(timeBuf, sizeof(timeBuf)/sizeof(wchar_t), L"%H:%M:%S", &tm_buf);
-    wchar_t fullTimeBuf[48];
-    std::swprintf(fullTimeBuf, sizeof(fullTimeBuf)/sizeof(wchar_t), L"%ls.%03llu", timeBuf, (unsigned long long)ms);
-    ListView_SetItemText(m_hwndESPList, lvi.iItem, 1, fullTimeBuf);
+    char timeBuf[32];
+    std::strftime(timeBuf, sizeof(timeBuf), "%H:%M:%S", &tm_buf);
+    char fullTimeBuf[48];
+    std::snprintf(fullTimeBuf, sizeof(fullTimeBuf), "%s.%03llu", timeBuf, (unsigned long long)ms);
+    LVITEMA timeItem = {};
+    timeItem.mask = LVIF_TEXT;
+    timeItem.iSubItem = 1;
+    timeItem.pszText = fullTimeBuf;
+    SendMessageA(m_hwndESPList, LVM_SETITEMTEXTA, lvi.iItem, reinterpret_cast<LPARAM>(&timeItem));
 
     // Kind
     std::string kindStr = rawrxd::esp::kind_name(event.kind);
-    int kindLen = MultiByteToWideChar(CP_UTF8, 0, kindStr.c_str(), -1, nullptr, 0);
-    std::wstring kindWStr(kindLen, L'\0');
-    MultiByteToWideChar(CP_UTF8, 0, kindStr.c_str(), -1, &kindWStr[0], kindLen);
-    ListView_SetItemText(m_hwndESPList, lvi.iItem, 2, const_cast<LPWSTR>(kindWStr.c_str()));
+    LVITEMA kindItem = {};
+    kindItem.mask = LVIF_TEXT;
+    kindItem.iSubItem = 2;
+    kindItem.pszText = const_cast<char*>(kindStr.c_str());
+    SendMessageA(m_hwndESPList, LVM_SETITEMTEXTA, lvi.iItem, reinterpret_cast<LPARAM>(&kindItem));
 
     // Message (truncated)
     std::string msg = event.message;
     if (msg.size() > 120) msg = msg.substr(0, 117) + "...";
-    int msgLen = MultiByteToWideChar(CP_UTF8, 0, msg.c_str(), -1, nullptr, 0);
-    std::wstring msgWStr(msgLen, L'\0');
-    MultiByteToWideChar(CP_UTF8, 0, msg.c_str(), -1, &msgWStr[0], msgLen);
-    ListView_SetItemText(m_hwndESPList, lvi.iItem, 3, const_cast<LPWSTR>(msgWStr.c_str()));
+    LVITEMA msgItem = {};
+    msgItem.mask = LVIF_TEXT;
+    msgItem.iSubItem = 3;
+    msgItem.pszText = const_cast<char*>(msg.c_str());
+    SendMessageA(m_hwndESPList, LVM_SETITEMTEXTA, lvi.iItem, reinterpret_cast<LPARAM>(&msgItem));
 
     // Auto-scroll to bottom
     ListView_EnsureVisible(m_hwndESPList, lvi.iItem, FALSE);
