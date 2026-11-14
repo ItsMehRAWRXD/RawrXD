@@ -11348,9 +11348,36 @@ void Deep2Engine::computeExpertFFN(const MoEWeightHandle& handle,
         std::memset(gateOut, 0, expertDim * sizeof(float));
         kGate((const uint8_t*)handle.gateWeights, input, gateOut, expertDim,
               hiddenDim);
+        /* PACKED_GEMV dump: L0 first experts only (STAGE_DIGEST). SOURCE_WIRED≠PASS. */
+        if (B3_StageDigestEnabled() && handle.layer == 0 &&
+            B3_StageDumpLayer(0)) {
+            static int moeGemvDumps = 0;
+            if (moeGemvDumps < 2) {
+                char key[72];
+                const size_t pos = 0;
+                std::snprintf(key, sizeof(key), "MOE_GATE_L0_E%d",
+                              handle.expertId);
+                B3_StageDigest(key, pos, gateOut, expertDim);
+                std::snprintf(key, sizeof(key), "MOE_UP_L0_E%d",
+                              handle.expertId);
+                B3_StageDigest(key, pos, upOut, expertDim);
+                ++moeGemvDumps;
+            }
+        }
         SwiGLU(gateOut, upOut, gateOut, expertDim);
         kDown((const uint8_t*)handle.downWeights, gateOut, output, hiddenDim,
               expertDim);
+        if (B3_StageDigestEnabled() && handle.layer == 0 &&
+            B3_StageDumpLayer(0)) {
+            static int moeDownDumps = 0;
+            if (moeDownDumps < 2) {
+                char key[72];
+                std::snprintf(key, sizeof(key), "MOE_DOWN_L0_E%d",
+                              handle.expertId);
+                B3_StageDigest(key, 0, output, hiddenDim);
+                ++moeDownDumps;
+            }
+        }
     } else {
         /* ReLU²: act = relu(up)^2 (moe_test / Nemotron-H law). */
         for (size_t e = 0; e < expertDim; ++e) {

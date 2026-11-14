@@ -1,0 +1,71 @@
+BR_ORNITH_FFN_NORM_GEMV_R101
+ASOF_LOCAL=2026-11-14T09:10-05:00
+AUTH=PARENT_BOARD_AUTHORITY / BOARD_SINGLE_WRITER
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD INVENT_PASS=0 CROSS_SHA_CREDIT=0
+PCT_HELD=CLI67/GUI48/OVERALL48
+RESULT=RELATED_NOT_PASS
+
+## Binding (unchanged / not weakened)
+ORNITH_FFN_GEOMETRY=PASS
+ORNITH_INFERENCE=PARTIAL
+OVERALL=RELATED
+SEMANTIC_ACCEPTANCE=OPEN
+
+## EXE / model (re-verified this seal)
+EXE=evidence/REAP_STRATA_UNSLOTH_OLLAMA_BENCH_001/bin_pin/probe_rawr.exe.bak_r92.exe
+EXE_SHA256=E7A7EE9FDCB61757A65FE8ACCDC624FAE6F42EA84F33C57C887B0B34F91A48CF
+EXE_SHA_VERIFIED=1
+COMMIT_CLAIM_R100=3745eff8ec (PERF seal; ≠ EXE build credit; CROSS_SHA=0)
+MODEL_GGUF=F:\OllamaModels\_REAP16\ornith-1_5-35b-REAP194\sha256-aaeb640f98a892980ef54876024293cc8d6987a86523aa1b947ffa9274ef800a
+MODEL_SHA256=aaeb640f98a892980ef54876024293cc8d6987a86523aa1b947ffa9274ef800a
+REMEASURE=evidence/REAP_STRATA_UNSLOTH_OLLAMA_BENCH_001/deep2_ornith_ffn_norm_gemv_r101
+TOK=2 OPEN=1 ENTER=1 CLEAN_EXIT=1 SEH=0 GEOMETRY FFN=512 arch=qwen35moe L=41 H=2048
+
+## 1) FFN_NORM
+NORM_TENSOR=blk.0.post_attention_norm.weight (no ffn_norm.*; mapped→lw.ffnNorm)
+EPS=9.999999975e-07 (qwen35moe.attention.layer_norm_rms_epsilon)
+DEEP2_DUMP L0/pos0:
+  FFN_INP_0  fnv=fd9ad94d158e1b35 l2=7.887646538e+01
+  FFN_NORM_0 fnv=82408554c48ce80a l2=4.112492765e+01
+LOCAL_ORACLE (RMSNorm FFN_INP×weight×eps vs dump):
+  maxAbs=2.998844968e-07 maxULP=2 firstDiffIdx=0
+  FFN_NORM_VS_ORACLE=ULP_OK
+LLAMA_CPP_REF: LOAD_FAIL missing tensor 'blk.40.ssm_conv1d.weight'
+  FFN_NORM_VS_LLAMA=NOT_CLOSABLE
+FFN_NORM_STATUS=PARTIAL_CLOSED_VS_LOCAL_ORACLE / OPEN_VS_LLAMA
+NOTE=SOURCE_WIRED dump path RUNTIME_REACHED; ULP_OK≠CERT PASS; ≠semantic
+
+## 2) PACKED_GEMV
+LAYER0_2=SSM (FFN_DOWN after SSM_ENTER; not expert GEMV)
+FIRST_MOE_LAYER=3 topk=8 route_ids=32,33,37,98,94,105,173,55
+D2_MOE_LIVE acquire_ok=1408 acquire_fail=0 experts_executed=1408 parity=1
+  ffn_dispatch_moe=176 ffn_dispatch_ssm=480 HOST_GEMV_EXPERT path
+INTERMEDIATE gate/up/down tensor dumps on bak_r92=ABSENT
+  SOURCE_WIRED=1 in src/deep2/Deep2Engine.cpp computeExpertFFN (MOE_GATE/UP/DOWN_L0_E*)
+  RUNTIME_ON_PIN=0 (pin predates wire; L0 is SSM anyway → dump L3+)
+PACKED_GEMV_VS_LLAMA=NOT_CLOSABLE (same REF_LOAD)
+PACKED_GEMV_STATUS=OPEN (route+acquire RUNTIME; numeric GEMV parity NOT_RUN vs ref)
+
+## 3) FIRST_DIVERGENCE
+EARLIEST_VS_REF=LLAMA_MODEL_LOAD
+OP=missing tensor 'blk.40.ssm_conv1d.weight'
+NOTE=blocked before any FFN_NORM/GEMV compare; Deep2 maps blk.0.ssm_conv1d OK
+WITHIN_DEEP2_NEXT=PACKED_GEMV numeric @ first MoE layer (L3) after rebuild+STAGE_DUMP_LAYERS=3
+
+## 4) PROD_PROVENANCE (started; still RELATED)
+BIND=exe_model_bind.txt + cmd.txt + digests + oracle_ffn_norm_l0.txt + llama_ref_load_FAIL.txt
+PROD_DECODE=0 BLOCKED_AT=PROVENANCE_MISMATCH residual held
+PROD_PROVENANCE=PARTIAL_BIND / OPEN
+
+## 5) SEMANTIC
+SEMANTIC_ACCEPTANCE=OPEN (TOK≠correct; first-div not numerically closed vs ref)
+
+## Source wire (this turn)
+Deep2Engine.cpp computeExpertFFN: STAGE_DIGEST MOE_GATE/UP/DOWN L0 first-2 experts
+NOTE=not exercised on bak_r92 remasure; rebuild required for MoE dump RUNTIME
+
+NEXT_GATE=PACKED_GEMV_L3_NUMERIC_AFTER_REF_OR_ORACLE / LLAMA_QWEN35MOE_LOAD_OR_ALT_REF
+NEXT_OWNER=DEEP2_REAP_PACKED_GEMV_L3_DUMP_OR_ALT_ORACLE / PROD_PROVENANCE_BIND
+SEPARATE_LANE=CLI_COHERENCE_UNK TinyLlama held
+PROMOTE=0
+END

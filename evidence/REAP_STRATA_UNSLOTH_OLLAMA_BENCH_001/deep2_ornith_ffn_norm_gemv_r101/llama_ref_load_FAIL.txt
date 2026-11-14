@@ -1,0 +1,9 @@
+LLAMA_REF_LOAD=FAIL
+ASOF_LOCAL=2026-11-14
+EXE=G:\~dev\llama-direct\vulkan\llama-cli.exe
+GGUF=F:\OllamaModels\_REAP16\ornith-1_5-35b-REAP194\sha256-aaeb640f98a892980ef54876024293cc8d6987a86523aa1b947ffa9274ef800a
+ERROR=missing tensor 'blk.40.ssm_conv1d.weight'
+NOTE=llama.cpp measuring stick cannot open Ornith REAP194 with this llama-direct pin.
+FFN_NORM_VS_LLAMA=NOT_CLOSABLE (blocked at model load; no STAGE_DIGEST from ref)
+PACKED_GEMV_VS_LLAMA=NOT_CLOSABLE (same)
+PROMOTE=0 INVENT_PASS=0

@@ -56,6 +56,55 @@ size_t StreamBytes(const WeightTensor& wt) {
     return PackedQuant(wt) ? wt.sizeBytes : wt.rows * wt.cols * sizeof(float);
 }
 
+/* Moves 37–45 probe: RAWRXD_GPU_LAYER_FINITE=1 → D2H after each GPU op.
+ * Latches FIRST_NONFINITE_LAYER/OP once. Probe EXE only — not product PASS. */
+bool GpuLayerFiniteOn() {
+    static int c = -1;
+    if (c < 0) {
+        const char* e = std::getenv("RAWRXD_GPU_LAYER_FINITE");
+        c = (e && e[0] == '1') ? 1 : 0;
+    }
+    return c == 1;
+}
+bool& GpuFiniteLatched() {
+    static bool latched = false;
+    return latched;
+}
+void GpuFiniteCheck(CPUInference::VulkanCompute* vc, const char* op,
+                    uint32_t layer, CPUInference::VulkanCompute::DeviceBuf& buf,
+                    uint32_t n) {
+    if (!GpuLayerFiniteOn() || !vc || !op || n == 0) return;
+    if (GpuFiniteLatched()) return;
+    (void)vc->FlushWeightComputes();
+    std::vector<float> tmp(n);
+    if (!vc->DownloadBuf(buf, tmp.data(), n)) {
+        std::fprintf(stderr,
+            "[GPU_FINITE] DOWNLOAD_FAIL op=%s ly=%u n=%u\n", op, layer, n);
+        std::fflush(stderr);
+        return;
+    }
+    size_t nf = 0;
+    double n2 = 0.0;
+    for (uint32_t i = 0; i < n; ++i) {
+        const float v = tmp[i];
+        if (!std::isfinite(v)) ++nf;
+        else n2 += (double)v * (double)v;
+    }
+    const double norm = n2 > 0.0 ? std::sqrt(n2) : 0.0;
+    std::fprintf(stderr,
+        "[GPU_FINITE] op=%s ly=%u finite=%zu/%u nonFinite=%zu norm=%.6e\n",
+        op, layer, (size_t)(n - nf), n, nf, norm);
+    std::fflush(stderr);
+    if (nf > 0) {
+        GpuFiniteLatched() = true;
+        std::fprintf(stderr,
+            "FIRST_NONFINITE_LAYER=%u FIRST_NONFINITE_OP=%s "
+            "nonFinite=%zu/%u PROMOTE=0\n",
+            layer, op, nf, n);
+        std::fflush(stderr);
+    }
+}
+
 const float* EnsureF32(Deep2Engine& e, const WeightTensor& wt,
                        std::unordered_map<std::string, std::vector<float>>& cache) {
     (void)e;
@@ -253,7 +302,8 @@ bool Deep2Engine::forwardLayerGpuResident(
     const bool prefetch = vc->WeightPrefetchActive() ||
         (std::getenv("DEEP2_WEIGHT_PREFETCH") &&
          std::getenv("DEEP2_WEIGHT_PREFETCH")[0] != '0');
-    const bool fuse = !prefetch;
+    /* Finite probe needs mid-layer D2H; disable fuse when armed. */
+    const bool fuse = !prefetch && !GpuLayerFiniteOn();
     const bool traceFfn = std::getenv("DEEP2_GPU_FFN_TRACE") &&
                           std::getenv("DEEP2_GPU_FFN_TRACE")[0] == '1';
     if (traceFfn && layer == 0) {
@@ -297,6 +347,13 @@ bool Deep2Engine::forwardLayerGpuResident(
         const char* e = std::getenv("DEEP2_Q4K_FORCE_F32_VULKAN");
         return e && e[0] == '1';
     }();
+    /* CLI_NUMERICAL M37: FIRST_NONFINITE_OP=v_proj on TinyLlama Q6_K
+     * (gemv_q6k.spv → 256/256 NaN). Host Q6 GEMV matches BATCH2_V_PROJ_001.
+     * Opt-in SPV: DEEP2_Q6K_FORCE_VULKAN_SPV=1. */
+    const bool forceQ6kSpv = [&]() -> bool {
+        const char* e = std::getenv("DEEP2_Q6K_FORCE_VULKAN_SPV");
+        return e && e[0] == '1';
+    }();
 
     auto gemv = [&](const WeightTensor& wt, CPUInference::VulkanCompute::DeviceBuf& in,
                     CPUInference::VulkanCompute::DeviceBuf& out,
@@ -304,6 +361,45 @@ bool Deep2Engine::forwardLayerGpuResident(
         bool usePacked = PackedQuant(wt);
         if (usePacked && wt.type == (int)GGMLType::GGML_TYPE_Q4_K && forceQ4kF32)
             usePacked = false;
+        /* Size-authoritative Q6 detect: TinyLlama attn_v is 430080 (Q6_K) even
+         * when type tags drift; Q4_K same geom is 294912. */
+        const size_t elems = (size_t)rows * (size_t)cols;
+        const size_t q6Bytes =
+            (cols % 256u) == 0u && elems >= 256u ? (elems / 256u) * 210u : 0u;
+        const bool looksQ6 =
+            wt.type == (int)GGMLType::GGML_TYPE_Q6_K ||
+            (q6Bytes != 0u && wt.sizeBytes == q6Bytes);
+        if (usePacked && looksQ6 && !forceQ6kSpv && wt.data && wt.sizeBytes &&
+            (cols % 256u) == 0u) {
+            auto hostGemv = QuantKernelRegistry::Instance().GetGEMV(
+                (int)GGMLType::GGML_TYPE_Q6_K);
+            if (hostGemv) {
+                std::vector<float> xin(cols), yout(rows);
+                if (!vc->DownloadBuf(in, xin.data(), cols)) return false;
+                std::memset(yout.data(), 0, (size_t)rows * sizeof(float));
+                hostGemv(static_cast<const uint8_t*>(wt.data), xin.data(),
+                         yout.data(), rows, cols);
+                size_t nf = 0;
+                double n2 = 0.0;
+                for (uint32_t i = 0; i < rows; ++i) {
+                    const float v = yout[i];
+                    if (!std::isfinite(v)) ++nf;
+                    else n2 += (double)v * (double)v;
+                }
+                std::fprintf(stderr,
+                    "[Q6K_HOST_GEMV] name=%s type=%d bytes=%zu rows=%u cols=%u "
+                    "finite=%zu/%u norm=%.6e\n",
+                    wt.name.c_str(), wt.type, wt.sizeBytes, rows, cols,
+                    (size_t)(rows - nf), rows, n2 > 0 ? std::sqrt(n2) : 0.0);
+                std::fflush(stderr);
+                if (nf == 0) {
+                    ++c.q6kPackedOps;
+                    return vc->UploadBuf(out, yout.data(), rows);
+                }
+                /* Host also nonfinite — fall through EnsureF32 / SPV. */
+            }
+            usePacked = false; /* prefer F32 expand over gemv_q6k.spv */
+        }
         if (usePacked) {
             if (wt.type == (int)GGMLType::GGML_TYPE_Q4_K) ++c.q4kPackedOps;
             else if (wt.type == (int)GGMLType::GGML_TYPE_Q6_K) ++c.q6kPackedOps;
@@ -443,6 +539,16 @@ bool Deep2Engine::forwardLayerGpuResident(
                           (wc.type == (int)GGMLType::GGML_TYPE_Q4_K);
             if (anyQ4k) allPacked = false;
         }
+        if (allPacked && !forceQ6kSpv) {
+            auto q6ish = [](const WeightTensor& w, uint32_t r, uint32_t c) {
+                if (w.type == (int)GGMLType::GGML_TYPE_Q6_K) return true;
+                if ((c % 256u) != 0u || !w.sizeBytes) return false;
+                const size_t e = (size_t)r * (size_t)c;
+                return e >= 256u && w.sizeBytes == (e / 256u) * 210u;
+            };
+            if (q6ish(wa, rA, cols) || q6ish(wb, rB, cols) || q6ish(wc, rC, cols))
+                allPacked = false; /* host/F32 Q6 via gemv() */
+        }
         if (allPacked) {
             auto bumpQ = [&](const WeightTensor& wt) {
                 if (wt.type == (int)GGMLType::GGML_TYPE_Q4_K) ++c.q4kPackedOps;
@@ -493,6 +599,7 @@ bool Deep2Engine::forwardLayerGpuResident(
                              H, modelWeights.normEps))
         return fail("rms_attn");
     ++c.rmsNormOps;
+    GpuFiniteCheck(vc, "rms_attn", layer, vc->ArenaNormed(), H);
 
     const uint32_t pos = kvCache ? (uint32_t)kvCache->currentLength() : 0;
     /* Host authority (~9155): Q out = wq.rows (heads*headDim), not H.
@@ -505,11 +612,16 @@ bool Deep2Engine::forwardLayerGpuResident(
                           vc->ArenaQ(), vc->ArenaK(), vc->ArenaV(), qDim, kvDim, kvDim, H))
             return fail("qkv");
         c.qkvOps += 3;
+        GpuFiniteCheck(vc, "q_proj", layer, vc->ArenaQ(), qDim);
+        GpuFiniteCheck(vc, "k_proj", layer, vc->ArenaK(), kvDim);
+        GpuFiniteCheck(vc, "v_proj", layer, vc->ArenaV(), kvDim);
     }
     if (!vc->DispatchRope(vc->ArenaQ(), vc->ArenaK(), headDim, nHeads, nKv, pos,
                           modelWeights.ropeTheta))
         return fail("rope");
     ++c.ropeOps;
+    GpuFiniteCheck(vc, "rope_q", layer, vc->ArenaQ(), qDim);
+    GpuFiniteCheck(vc, "rope_k", layer, vc->ArenaK(), kvDim);
     {
         DEEP2_GPU_CHILD_SCOPE(kvScope, KVUpdate);
         if (!vc->AppendKV(vc->ArenaK(), vc->ArenaV(), kvDim, pos, layer))
@@ -525,6 +637,7 @@ bool Deep2Engine::forwardLayerGpuResident(
         ++c.attnScoreOps;
         ++c.softmaxOps;
         ++c.attnValueOps;
+        GpuFiniteCheck(vc, "attn_out", layer, vc->ArenaAttn(), qDim);
     }
     {
         DEEP2_GPU_CHILD_SCOPE(oProjScope, AttentionOutputProj);
@@ -534,16 +647,19 @@ bool Deep2Engine::forwardLayerGpuResident(
         if (!gemv(*woWt, vc->ArenaAttn(), vc->ArenaDown(), H, oIn))
             return fail("o_proj");
         ++c.oProjOps;
+        GpuFiniteCheck(vc, "o_proj", layer, vc->ArenaDown(), H);
         if (!vc->DispatchResidualAdd(vc->ArenaHidden(), vc->ArenaDown(),
                                      vc->ArenaResidual(), H))
             return fail("attn_res");
         ++c.residualOps;
+        GpuFiniteCheck(vc, "attn_res", layer, vc->ArenaResidual(), H);
     }
 
     if (!vc->DispatchRmsNorm(vc->ArenaResidual(), vc->ArenaFfnW(), vc->ArenaNormed(),
                              H, modelWeights.normEps))
         return fail("rms_ffn");
     ++c.ffnNormOps;
+    GpuFiniteCheck(vc, "rms_ffn", layer, vc->ArenaNormed(), H);
 
     {
         DEEP2_GPU_CHILD_SCOPE(ffnScope, FFN);
@@ -568,15 +684,20 @@ bool Deep2Engine::forwardLayerGpuResident(
                    !gemv(lw.wUp, vc->ArenaNormed(), vc->ArenaUp(), inter, H))
             return fail("ffn_gate_up");
         c.qkvOps += 2;
+        GpuFiniteCheck(vc, "ffn_gate", layer, vc->ArenaGate(), inter);
+        GpuFiniteCheck(vc, "ffn_up", layer, vc->ArenaUp(), inter);
         if (!vc->DispatchSwiGLU(vc->ArenaGate(), vc->ArenaUp(), vc->ArenaFFNAct(), inter))
             return fail("swiglu");
         ++c.ffnActOps;
+        GpuFiniteCheck(vc, "swiglu", layer, vc->ArenaFFNAct(), inter);
         if (!gemv(lw.wDown, vc->ArenaFFNAct(), vc->ArenaDown(), H, inter))
             return fail("ffn_down");
+        GpuFiniteCheck(vc, "ffn_down", layer, vc->ArenaDown(), H);
         if (!vc->DispatchResidualAdd(vc->ArenaResidual(), vc->ArenaDown(),
                                      vc->ArenaHidden(), H))
             return fail("ffn_res");
         ++c.ffnResidualOps;
+        GpuFiniteCheck(vc, "ffn_res", layer, vc->ArenaHidden(), H);
     }
 
     if (fuse && !vc->EndFusedLayer()) return false;

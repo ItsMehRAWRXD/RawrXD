@@ -1,5 +1,5 @@
 CLI_NUMERICAL_MOVES_36_50_001
-ASOF_LOCAL=2026-11-14T09:02:00-05:00
+ASOF_LOCAL=2026-11-14T09:10:00-05:00
 PROMOTE=0
 CERTIFIED=0
 INVENT_PASS=0
@@ -8,14 +8,18 @@ NOT_RUN!=PASS
 TIP_CLIMB=HOLD
 GATE_STOP=1
 SEARCH_BASELINE_RETAINED=4.329
+NO_REOPEN=QB|KVA|LOGITS|SX|5.904
+ENTERPRISE=0/128_HELD
 
 ## MOVE_36 FREEZE (CLOSED)
-FROZEN_PRODUCT_EXE_SHA256=0E53D810712979A8ECB0853DA50BD1CABEC84015F183BC43B00B101EBEAEF5D0
+FROZEN_BASELINE_EXE_SHA256=0E53D810712979A8ECB0853DA50BD1CABEC84015F183BC43B00B101EBEAEF5D0
 MODEL_SHA256=9FECC3B3CD76BBA89D504F29B616EEDF7DA85B96540E490CA5824D3F7D2776A0
-NOTE=build_ninja/bin/rawr.exe later rebuilt → live tip ≠ frozen; probes used separate PROBE exe
+NOTE=Moves 36–45 diagnosis; frozen SHA never claimed PASS after rebuild drift
 
-## MOVE_37 FIRST_NONFINITE (CLOSED — measured)
-ARTIFACTS=runs/m37_gpu_finite.err.txt runs/m46_q6k_host_finite.err.txt
+## MOVE_37 FIRST_NONFINITE (CLOSED)
+ARTIFACTS=runs/m37_gpu_finite.err.txt
+PROBE_EXE_SHA256=DDAD8079BC55F061F2B09CA72453E75911B65A5563A74DBE9D182CFAC8B9580C
+PROBE_EXE≠FROZEN_PRODUCT=1
 FIRST_NONFINITE_LAYER=0
 FIRST_NONFINITE_OP=v_proj
 WITNESS=
@@ -23,17 +27,63 @@ WITNESS=
   q_proj ly0 finite=2048/2048
   k_proj ly0 finite=256/256
   v_proj ly0 finite=0/256 nonFinite=256/256
-IMPLICATION=attn_norm+Q/K OK at L0; V projection / attn_v path is first invalid op
-MULTI_GPU_HANDOFF_AT_L0=NOT_INDICATED
+IMPLICATION=attn_norm+Q/K OK; V projection first invalid; MULTI handoff not L0 cause
+
+## MOVES_38_45 V-PATH SUBCLASS (CLOSED)
+ROOT_SUBCLASS=VULKAN_PACKED_Q6K_GEMV_SPV_NONFINITE
+EVIDENCE=
+  blk.0.attn_v.weight type=14 (Q6_K) bytes=430080 (≠ Q4_K 294912 for same geom)
+  k_proj same geom Q4_K finite via gemv_q4k.spv
+  gemv_q6k.spv on attn_v → 256/256 NaN (m37/m46 pre-fix)
+  Host Q6×Q8_K GEMV (QuantKernelRegistry / BATCH2_V_PROJ_001) → finite=256/256
+NOT_ROOT=
+  tokenizer/BOS/vocab
+  multi-GPU L0 handoff
+  attn_norm / q_proj / k_proj
+  Q4_K unpack (K path OK)
+ARTIFACTS=runs/m46_q6k_sizedetect.err.txt (Q6K_HOST_GEMV attn_v finite)
+
+## MOVE_46 FIX (CLOSED — source)
+SITE=src/deep2/Deep2Engine_GpuForward.cpp
+CHANGE=GPU-resident gemv: detect Q6_K by type OR sizeBytes; route host GetGEMV(14)
+  instead of gemv_q6k.spv (opt-in SPV: DEEP2_Q6K_FORCE_VULKAN_SPV=1)
+ALSO=GGUFLoader.cpp comment fix (expert_*/ premature end — build unblocker)
+
+## MOVE_47 REBUILD (CLOSED)
+NEW_PRODUCT_EXE_SHA256=9797521CEB517B92AC52C518FB2BDB783628ABEA59366DFBE6E784C1A72951A3
+PIN=build_ninja/bin/rawr_FIX_Q6K_HOST_9797521C.exe
+PRIOR_TIP_377319D4=probe/partial only; CROSS_SHA_CREDIT=0 vs 0E53D810
+SEALED_BASELINE_COPY=build_ninja/bin/rawr_SEALED_0E53D810.exe (unchanged)
+
+## MOVES_48_49 COHERENCE (CLOSED — measured on NEW SHA only)
+CMD=rawr run tinyllama.gguf -p 2+2= --max-tokens 8 --vulkan HOST_DECODE=0 ALLOW_GPU=1
+SOLO: runs/m49_solo.out.txt → "Yes, 2 + 2 =" GENERATED_TOKENS=8 FORWARD_FAIL=0
+MULTI: runs/m49_multi.out.txt → "Yes, 2 + 2 =" GENERATED_TOKENS=8 FORWARD_FAIL=0
+SEMANTIC_COHERENCE=PASS (non-unk; coherent arithmetic string)
+NO_UNK_COLLAPSE=1
+
+## MOVE_50 CLI AGENT SMOKE
+STATUS=OPEN (capacity/next; 49 passed — eligible)
+NOT_RUN_THIS_PACK=1
 
 ## MOVE_TABLE
 36=CLOSED
-37=CLOSED
-38-45=OPEN (narrow to V/attn_v)
-46=OPEN (smallest V-path fix)
-47=OPEN (rebuild new SHA)
-48-49=OPEN
-50=GATED_ON_49
+37=CLOSED FIRST_NONFINITE=v_proj@L0
+38=CLOSED (pre/post: rms_attn finite; transition at v_proj)
+39=CLOSED (first invalid proj=v_proj; q/k OK)
+40=CLOSED N/A (attn scores not reached before V NaN on baseline)
+41=CLOSED N/A (attn_gate/residual lead ≠ proof; V precedes)
+42=CLOSED (Q4_K K OK; defect is Q6_K V packed SPV)
+43=CLOSED (offsets/strides: size 430080 matches Q6_K geom; not stride mis-slice)
+44=CLOSED (host Q6×Q8_K finite; SPV path nonfinite — Vulkan Q6 arith)
+45=CLOSED (fixture=TinyLlama blk.0.attn_v Q6_K 256×2048 repro)
+46=CLOSED
+47=CLOSED SHA=9797521C…
+48=CLOSED
+49=CLOSED
+50=OPEN_ELIGIBLE
 
-FORWARD_FAIL_CLOSED_SOURCE=436c15f81a (≠ numerical repair)
+FORWARD_FAIL_CLOSED_SOURCE=436c15f81a (gate ≠ numerical repair)
+NUMERICAL_REPAIR_SHA=9797521CEB517B92AC52C518FB2BDB783628ABEA59366DFBE6E784C1A72951A3
+REAP_LAGUNA=LEFT_OPEN (unk closed; capacity)
 PROMOTE=0

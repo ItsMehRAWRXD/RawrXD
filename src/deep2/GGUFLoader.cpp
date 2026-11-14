@@ -374,7 +374,7 @@ if (subkey == "vocab_size") {
                 if (key.find("attention.head_count_kv") != std::string::npos || key.find("n_head_kv") != std::string::npos) {
                     metadata.numKeyValueHeads = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
                 }
-                /* Dense FFN only — expert_*/moe_* fill moeIntermediateSize below. */
+                /* Dense FFN only; expert_/moe_ keys fill moeIntermediateSize below. */
                 if ((key.find("feed_forward_length") != std::string::npos ||
                      key.find("intermediate_size") != std::string::npos) &&
                     key.find("expert_") == std::string::npos &&
