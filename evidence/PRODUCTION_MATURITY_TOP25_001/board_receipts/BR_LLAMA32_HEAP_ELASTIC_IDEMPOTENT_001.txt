@@ -1,29 +1,35 @@
 BR_LLAMA32_HEAP_ELASTIC_IDEMPOTENT_001
-ASOF_LOCAL=2026-11-13T22:10:00-05:00
+ASOF_LOCAL=2026-11-13T22:33:30-05:00
 PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 NOT_RUN!=PASS
-ACTION=SOURCE_WIRED durable elastic idempotent register (llama32 0xC0000374 path)
+ACTION=SOURCE_WIRED + PRIVATE_REBUILD + exclusive remasure (DURABLE still OPEN)
 PRIOR_ROOT=GUI_TOP25_VALUATION_001/gpu/LLAMA32_HEAP_OPEN_ROOTCAUSE_001.txt
+CONTROLLING_SEAL=GUI_TOP25_VALUATION_001/gpu/MULTI_FAMILY_LLAMA32_QDIM077_001.txt
 PRIOR_WER=0xC0000374 HEAP_CORRUPTION @ ntdll; token_embd.weight already registered
-PRIOR_MF_ENV_4OF4=GUI_TOP25_VALUATION_001/gpu/MULTI_FAMILY_QDIM077_M2_002.txt (environmental close)
-LATEST_FLAKE=ide_mf_qdim077_llama32_7FD1F27095388585_20261113_215605 GEN=0 TOK=0
-  (still warned token_embd already registered on pre-fix binary 7FD1F270)
+PIN_7FD1F270_DURABLE=0 TOK=0×2 STREAM=NOT_REACHED (pre-fix binary)
+ROOT_CAUSE_CLEAR=1
 
-## Source landed (this seal)
-SRC=src/deep2/ElasticResidencyManager.cpp
+## ROOT_CAUSE_CLEAR
+Duplicate ElasticResidencyManager register of tied token_embd.weight (+ MARS double-place)
+→ host↔VRAM thrash → OPEN hard abort / HEAP class on llama32 qdim077.
+
+## Source landed
+SRC1=src/deep2/ElasticResidencyManager.cpp
 - RegisterTensor idempotent: silent; refresh sourceData if prior was nullptr
-- Removes WARNING spam that co-travels host↔VRAM thrash on tied embeds
-PRIOR_ALREADY_ON_TIP=skip late-register + tieEmbeddings lmHead guard + suppressHostVramMoves
+SRC2=src/deep2/Deep2Engine.cpp
+- skip late-register when already>0; tieEmbeddings lmHead guard; suppressHostVramMoves on GPU env
+- placeAllModelTensorsMARS dedup by name+data (skip tied embed re-Allocate/Evict)
+
+## Private rebuild + remasure (tip 6754616E untouched)
+QDIM083=RawrXD-Win32IDE_gemma_qdim083.exe SHA=E649DF99… DUP_WARN=0 STREAM_ENTER=1 STREAM_SEH=1 TOK=0
+QDIM084=LOCKED/RawrXD-Win32IDE_gemma_qdim084.exe SHA=617F784E… DUP_WARN=0 THRASH=0
+  OPEN_PASS=1 STREAM_SEH intermittent TOK=0×2
+TIP_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431 TIP_STILL_6754=1
 
 ## Disposition
 SOURCE_WIRED=1
-RUNTIME_REACHED=0
-DURABLE_HEAP_FIX_REBUILD=REQUIRED (private qdim cand; tip 6754616E untouched)
-MF_4OF4_DURABLE=OPEN (env 4/4 witnessed; durable remeasure NOT_RUN on new source)
-REJECT_FORCE_ABSORB=1
-TIP_OVERWRITE_WITH_QDIM=0
-TIP_BIND_6754616E_INTACT=1
-BOARD_PCT_UNCHANGED=67/48/48
-
-NEXT_GATE=REBUILD_PRIVATE_QDIM_CAND + EXCLUSIVE_MF_LLAMA32_REMEASURE
+RUNTIME_REACHED=1 (private; OPEN path)
+DURABLE_2_CONSECUTIVE_TOK_GT0=0 → DURABLE=0 LEAVE_OPEN
+ENTERPRISE_GATE_02=OPEN ENTERPRISE_GATE_06=OPEN
+REJECT_FORCE_ABSORB=1 TIP_OVERWRITE_WITH_QDIM=0
 PROMOTE=0
 END

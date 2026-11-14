@@ -1,13 +1,15 @@
 MULTI_FAMILY_LLAMA32_QDIM077_001
-ASOF_LOCAL=2026-11-13T22:12:30-05:00
+ASOF_LOCAL=2026-11-13T22:33:30-05:00
 PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 NOT_RUN!=PASS
 FORCE=0 HOST_DECODE=0 REJECT_FORCE_ABSORB=1 TIP_ABSORB=N
 GATE_CLOSED=0
 LANE=ABSORB_CANDIDATE_PRIVATE_QDIM077
 BOARD_WRITES=SEALS_AND_PROPOSAL_ONLY (no JOINT/PARENT PCT rewrite)
 DURABLE=0
+ENTERPRISE_GATE_02=OPEN ENTERPRISE_GATE_06=OPEN (no enterprise PASS without receipt)
+ROOT_CAUSE_CLEAR=1
 
-## Controlling pin (hash-verified this session)
+## Controlling pin (immutable prior FAIL window)
 EXE=GUI_TOP25_VALUATION_001/clean_link/RawrXD-Win32IDE_gemma_qdim077.exe
 EXE_SHA256=7FD1F27095388585D03DFB68C70E033B126D6406E8DE23C4F21F10D1EF8323C6
 SHA16=7FD1F27095388585
@@ -17,48 +19,64 @@ TIP_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431
 TIP_STILL_6754=1
 MODEL=models/llama3.2-3b-Q2_K.gguf
 
-## This-session exclusive remasure (FAIL_CLOSED; solo GPU; 2 consecutive)
+## ROOT_CAUSE_CLEAR
+SITE=ElasticResidencyManager + MARS placeAllModelTensorsMARS at elastic open
+CLASS=duplicate register / double-place of tied token_embd.weight (== lmHead)
+TRIGGER_MARK_7FD1F270=[ElasticResidencyManager] WARNING: tensor 'token_embd.weight' already registered
+AMPLIFIER=host↔VRAM Alloc/Evict thrash on ~308MB embed (prior WER 0xC0000374 compatible)
+FIX_SOURCE_WIRED=
+  1) src/deep2/ElasticResidencyManager.cpp RegisterTensor idempotent (silent; refresh sourceData)
+  2) src/deep2/Deep2Engine.cpp skip late-register when already>0; tieEmbeddings lmHead guard
+  3) src/deep2/Deep2Engine.cpp placeAllModelTensorsMARS dedup by name+data (skip tied re-place)
+RUNTIME_REACHED_PRIVATE=1 (qdim083/qdim084) RUNTIME_REACHED_PIN_7FD1F270=0 (pre-fix binary)
+
+## Prior exclusive remasure on pin 7FD1F270 (FAIL_CLOSED; immutable)
 | Run ID | GEN/TOK | SEH | EXIT | WALL_MS | Disposition |
 |--------|--------:|----:|------|--------:|-------------|
-| ide_mf_qdim077_llama32_7FD1F27095388585_20261113_220949 | 0 | 0 | NULL | 65767 | FAIL elastic open; last=token_embd.weight already registered; concurrent tip_land_avfix081 killed mid-window |
+| ide_mf_qdim077_llama32_7FD1F27095388585_20261113_220949 | 0 | 0 | NULL | 65767 | FAIL elastic open; last=token_embd.weight already registered |
 | ide_mf_qdim077_llama32_7FD1F27095388585_20261113_221127 | 0 | 0 | NULL | 9899 | FAIL elastic open; last=token_embd.weight already registered; PRE_SOLO_CLEAR=1 |
 
+## Private cand remasure (tip untouched; not tip credit)
+### qdim083 E649DF99 (elastic idempotent RegisterTensor only)
+EXE=clean_link/RawrXD-Win32IDE_gemma_qdim083.exe
+EXE_SHA256=E649DF99039669C810A87DBB92867D2E7ED71B5A63E83F4CE8BCB4AA39698B4E
+| Run ID | TOK | DUP_WARN | STREAM_ENTER | STREAM_SEH | Disposition |
+|--------|----:|---------:|-------------:|-----------:|-------------|
+| ide_mf_qdim083_llama32_E649DF99039669C8_20261113_221754 | 0 | 0 | 1 | 1 (0xC0000005) | OPEN cleared; stream AV; thrash still |
+| ide_mf_qdim083_llama32_E649DF99039669C8_20261113_222221 | 0 | 0 | 0 | 0 | OPEN ok; hard stop pre-stream |
+
+### qdim084 617F784E (elastic idempotent + MARS name/data dedup)
+EXE=clean_link/LOCKED/RawrXD-Win32IDE_gemma_qdim084.exe
+EXE_SHA256=617F784ED72938E029BA57FF0B63D8EAF1C16994860468A3BA62E08ECCE7DD1E
+| Run ID | TOK | DUP_WARN | STREAM_ENTER | STREAM_SEH | ALLOC/EVICT | THRASH | Disposition |
+|--------|----:|---------:|-------------:|-----------:|------------:|-------:|-------------|
+| ide_mf_qdim084_llama32_617F784ED72938E0_20261113_222854 | 0 | 0 | 0 | 0 | 1/1 | 0 | OPEN_PASS; thrash gone; STREAM=NOT_REACHED |
+| ide_mf_qdim084_llama32_617F784ED72938E0_20261113_223012 | 0 | 0 | 1 | 1 (0xC0000005) | - | 0 | OPEN cleared; stream AV; TOK=0 |
+
+MARS_LINE_084=MARS placed 254 tensors (oom=0 skip=701) — tied embed skipped
+PRODUCT_OPEN_PASS_084=1
+
+## Durable gate (fail-closed)
 TOKEN_SURVIVED_THIS_SESSION=0
 DURABLE_TOKEN_SURVIVED=0
 DURABLE_2_CONSECUTIVE_TOK_GT0=0
-AV_SEEN_THIS_SESSION=0
-PRODUCT_DEEP2_OPEN_SEH=0 (stderr; hard abort before stream)
-STREAM=NOT_REACHED
+TOK_X2=0×2 (required TOK>0×2 not met → leave OPEN)
+STREAM durable close=NOT met
 HOST_DECODE=0
-WER_THIS_SESSION_FOR_QDIM077_PIDS=0 (no Application Error for PID 41600/36684)
-PRIOR_WER_CLASS=0xC0000374 STATUS_HEAP_CORRUPTION (earlier window; see LLAMA32_HEAP_OPEN_ROOTCAUSE_001)
+TIP_ABSORB=N TIP_OVERWRITE_WITH_QDIM=0
 
-## Abort site (OPEN path)
-LAST_STDERR_LINE=[ElasticResidencyManager] WARNING: tensor 'token_embd.weight' already registered
-AFTER=PIN_BUDGET_SET site=ENGINE_MAX_HOT
-OUT_LAST=ELASTIC_DYNAMIC ... L=28 (no GENERATE_STREAM_ENTER)
-CLASS=HEAP_OR_HARD_ABORT_AT_ELASTIC_OPEN (EXIT=NULL; product SEH markers not emitted)
-OPEN_PATH=STREAM_NOT_REACHED
-
-## Pin sanity (same EXE SHA; not llama32) — prior this evening still stands
+## Pin sanity (same EXE SHA 7FD1F270; not llama32) — prior still stands
 TINYLLAMA_WITNESS=ide_mf_qdim077_tinyllama_7FD1F27095388585_20261113_220421.meta.txt
 TINYLLAMA_TOK=8 TOKEN_SURVIVED=1 SEH=0 GPU_RESIDENT=1
-NOTE=pin EXE still TOKEN_SURVIVED for tinyllama; llama32-specific open/heap gap
-
-## Prior immutable witnesses (do not invent durable close from these alone)
-PRIOR_PASS_214122=ide_mf_qdim077_llama32_7FD1F27095388585_20261113_214122.meta.txt (GEN=8 TOK_SURV=1 SEH=0)
-PRIOR_CONFIRM_214623=ide_mf_qdim077_llama32_7FD1F27095388585_20261113_214623.meta.txt (GEN=2 TOK_SURV=1 EXIT=-1)
-PRIOR_SEAL_CLAIM=MULTI_FAMILY_QDIM077_M2_002.txt (claimed 4/4; kept immutable)
-PRIOR_ROOTCAUSE=LLAMA32_HEAP_OPEN_ROOTCAUSE_001.txt
-REJECT_TRANSFER_INTERMITTENT_PASS_AS_THIS_SESSION_CLOSE=1
-REJECT_REWRITE_M2_002=1
-REJECT_CROSS_SHA_ABSORB074_LLAMA32=1
 
 ## Disposition
-CLASS=ELASTIC_OPEN_ABORT_AFTER_DUP_TOKEN_EMBD_REGISTER
-DURABLE_TOKEN_SURVIVED=0 on 7FD1F270 this window
-MF_LLAMA32_GAP=OPEN
-TIP_ABSORB=N
-NEXT_GATE=DURABLE_LLAMA32_HEAP_OPEN_FIX_PRIVATE_CAND_THEN_REMEASURE_TOK_GT0
+CLASS=ELASTIC_OPEN_ROOT_CLEARED_SOURCE_AND_PRIVATE_CAND; DURABLE_TOK_GT0_STILL_OPEN
+ROOT_CAUSE_CLEAR=1
+SOURCE_WIRED=1
+PRIVATE_REBUILD=qdim083+qdim084
+RUNTIME_OPEN_DUP_WARN=0 on private cands
+DURABLE=0 MF_LLAMA32_GAP=OPEN
+ENTERPRISE_PASS=0 (GATE_02/GATE_06 family matrix — receipt required)
+NEXT_GATE=PRIVATE_CAND_STREAM_SEH_THEN_TOK_GT0_X2
 PROMOTE=0
 END
