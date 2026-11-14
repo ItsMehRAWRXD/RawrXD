@@ -1,0 +1,47 @@
+REAP_STRATA_FAIR_H2H_001 / P0-D MiniMax tip remasure
+ASOF_LOCAL=2026-11-14T11:47:14-05:00
+PROMOTE=0 CERTIFIED=0 COMPETITIVE_PASS=0 INVENT_PASS=0
+NOT_RUN!=PASS CROSS_SHA_CREDIT=0 TIP_CLIMB=HOLD GATE_STOP=1
+
+EXE=G:\~dev\rawrxd\build_ninja\bin\rawr.exe
+EXE_SHA256=CEBA0DE4734A3897B96A825C5CE16685161DB8A3C570C22F6B06B3DE4368A3C5
+MODEL=F:\OllamaModels\_REAP16\MiniMax-M2_7-Q4_K_M-REAP24\MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf
+MODEL_PRESENT=1
+SHARDS=3 (00001/00002/00003 all B03_MOE_SHARD_OPEN ok)
+PROMPT=Say hi in one short sentence.
+MAX_TOKENS=8
+
+## Honest seals (this tip)
+LOAD=PASS
+  GGUF_DYNAMIC_GEOMETRY_001=PASS arch=minimax-m2 L=62 H=3072 FFN=1536 heads=48 kv=8 hd=128 ctx=196608
+  B03_MOE_CFG experts=24 topk=24 gating=sigmoid
+  B03_MOE_SHARD_OPEN 3/3 ok (22+24+18 layers)
+RUNTIME_REACHED=1
+  GENERATE_STREAM_ENTER=1
+  GPU_MULTIMAP_FAIL why=arena slot=0 → TRY_GPU_FALLBACK_HOST=1
+  MoE route OK through MAX_LAYER_ENTER=15 (LAYER_ENTER_COUNT=16) then process ended
+GENERATED_TOKENS=0
+TOKEN_COMMIT_PASS=0
+CLEAN_EXIT=0
+EXIT_CODE=NULL_OR_EMPTY
+STDOUT_EMPTY=1
+SEMANTIC=NOT_RUN (no tokens this tip — cannot invent PASS or FAIL quality)
+PRODUCT_PASS=0
+LAYER_NAN=UNOBSERVED (no final seal markers)
+
+## Disposition
+STATUS=FAIL_MID_PREFILL
+  ≠ NOT_RUN (model present; tip exercised; FAIL-or-TOK evidence now exists)
+  ≠ TOK_PASS ≠ SEMANTIC_PASS ≠ CERT
+BLOCKING_NEXT=
+  1) Survive full 62-layer prefill+decode to CLEAN_EXIT with GENERATED_TOKENS>0 on CEBA0DE4…
+  2) GPU_MULTIMAP arena slot=0 (host fallback path is slow; hit_rate=0% expert thrash)
+  3) Only after TOK>0: SEMANTIC judge vs prompt (prior other-SHA garbage "par…" is CROSS_SHA=0)
+
+ARTIFACTS=
+  cmd.txt EXE_SHA.txt minimax_tip.out.log minimax_tip.err.log
+  minimax_tip.exit.txt result_summary.txt
+
+RELATED_HISTORICAL_NO_CREDIT=
+  REAP_STRATA_UNSLOTH_OLLAMA_BENCH_001/deep2/MiniMax-M2_7-Q4_K_M-REAP24.*
+  (older tip; timeout@ly~55; stdout garbage par…; CROSS_SHA_CREDIT=0)

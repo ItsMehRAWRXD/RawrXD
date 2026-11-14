@@ -18,11 +18,11 @@ Status legend: **OPEN** | **RELATED** | **PARTIAL** | **CERTIFIED** | **EXPLICIT
 | Ornith | RELATED | L3 ULP closed; hybrid load/semantic OPEN |
 | Laguna / Qwen3.5 | PARTIAL | WS1 REAP_LAGUNA=PARTIAL; stop@ATTN_GATE_PARITY=NOT_RUN; TOK RELATED≠parity; PROMOTE=0 |
 | MiniMax MoE | PARTIAL | W2 AL12/13 + tip CEBA0DE4 LOAD/MoE OK; FAIL_MID_PREFILL ly=15 TOK=0 SEMANTIC=NOT_RUN; PROMOTE=0 |
-| Kimi K2 | PARTIAL | tip INDEX 13/13; PRODUCT_OPEN_FAIL_NOT_STREAMABLE; gen=0; `K2_L5_P1_TIP_LOAD_001` EXE `6754616E…` |
+| Kimi K2 | PARTIAL / EXPLICIT_UNSUPPORTED gen | W8+L5 tip INDEX 13/13; ProductOpen FAIL DualStick=OFF CAPACITY_PROOF_REOPEN=0; gen=0 EXE `6754616E…` |
 | REAP | PARTIAL | H2H OBSERVED_ONLY; MiniMax tip TOK=0; exports rewrite_authorized=0; Ollama sibling FAIL; quality OPEN |
 | Strata | NOT_RUN | HIP native E2E NOT_RUN; product amdhip64.dll FAIL; versioned runtime AVAILABLE (n=2); Feature NOT_IMPL; L6L7_STRATA_HIP_OLLAMA_001 |
 | Ollama | PARTIAL | local HTTP gen remasure PASS + tools API smoke PASS; REAP H2H PARTIAL 3/6; product AgentOllama E2E OPEN; L6L7_STRATA_HIP_OLLAMA_001 |
-| Large models 70B/80B/120B | NOT_RUN | PATH_ABSENT on disk; seal `K2_L5_P1_TIP_LOAD_001` |
-| Multi-agent | PARTIAL | dual-ws isolation PASS (`CLI_AGENT_CONCURRENCY_001`); cancel OPEN (acceptSteer=false); Method C + FORCE_TOOL retained exact-SHA |
+| Large models 70B/80B/120B | PARTIAL | 3 GGUFs on disk; host load FAIL OOM (TOK=0); DualStick/ICD HOLD; `W3_LARGE_MODEL_NATIVE_001` PROMOTE=0 |
+| Multi-agent | PARTIAL | W8 absorb + `CLI_AGENT_CONCURRENCY_001`: dual-ws ISO PASS; cancel OPEN; concurrent infer EXPLICIT_UNSUPPORTED (MODEL_LOADED=0) |
 
 Critical path owner order: Laguna → MiniMax/REAP → large-model → multifamily CLI/GUI → independent CERT.

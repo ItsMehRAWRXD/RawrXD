@@ -22,16 +22,21 @@ CLOSED:
   HEADS_LAYER: computeAttention infers per-layer heads from wq.rows (SWA 48 vs full 72)
   ATTN_GATE_BIND: skip mapping Laguna [heads,hidden] gate onto attnO (was false O-proj)
 
-CLOSED (tip remasure — SSOT evidence/REAP_LAGUNA_001/):
+CLOSED TOK-path (tip remasure — SSOT evidence/REAP_LAGUNA_001/):
   GENERATED_TOKENS=8 PRODUCT_PASS=1 LAYER_NAN=0 ATTN_GATE=BIND+APPLY
   EXE_SHA=CEBA0DE4734A3897B96A825C5CE16685161DB8A3C570C22F6B06B3DE4368A3C5
-  PRIOR_OPEN smoke5 LAYER_NAN@40 / SKIP gate — superseded (smoke6+REAP_LAGUNA_001)
+  PRIOR_OPEN smoke5 LAYER_NAN@40 / SKIP gate — superseded for TOK (smoke6+REAP_LAGUNA_001)
   PROMOTE=0 CERTIFIED=0 COMPETITIVE_PASS=0
 
-OPEN residual (≠ REAP_LAGUNA reopen):
-  1) DEEP2_REAP_LAGUNA_TPS_OR_COMPETITIVE_H2H (TPS≪Ollama)
-  2) partial RoPE fidelity / sliding_window=512 (not TOK-blocking)
-  ARTIFACTS: deep2/laguna_p0a_smoke5.err.log (historical); REAP_LAGUNA_001/runs/
+WS1 NUMERICAL_PARITY seal (ALL_BACKENDS):
+  REAP_LAGUNA=PARTIAL STOP_AT=3 ATTN_GATE_PARITY=NOT_RUN PERF_CREDIT=0
+  TOK PASS ≠ numerical PASS (RELATED≠CERT)
+
+OPEN residual:
+  1) ATTN_GATE_PARITY / first-diverge digests (WS1 stop)
+  2) DEEP2_REAP_LAGUNA_TPS_OR_COMPETITIVE_H2H (TPS≪Ollama; no credit until 1–5)
+  3) partial RoPE fidelity / sliding_window=512 (not TOK-blocking)
+  ARTIFACTS: deep2/laguna_p0a_smoke5.err.log (historical); REAP_LAGUNA_001/GATE_RECORD.txt
 
 ## P0-B GLM
 STATUS=OPEN FAIL TOK=0
