@@ -1,0 +1,1 @@
+{"model":"laguna-s-2.1:Q4_K_M","prompt":"Say hi in one short sentence.","stream":false,"options":{"num_predict":32,"temperature":0}}

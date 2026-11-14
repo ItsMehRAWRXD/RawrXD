@@ -1,0 +1,29 @@
+REAP_STRATA_UNSLOTH_OLLAMA_BENCH_001 — LAW
+FAIL_CLOSED=1
+PROMOTE=0
+CERTIFIED=0
+COMPETITIVE_PASS=0
+INVENT_PASS=0
+NOT_RUN!=PASS
+CROSS_SHA_CREDIT=0
+TIP_CLIMB=HOLD
+RELATED_ONLY_ON_CERT=1
+
+PURPOSE
+  Head-to-head throughput evidence for EXPORTED REAP16 le_16GiB strata
+  vs Ollama /api/generate (and optional RawrXD/Deep2 paired runs).
+  Unsloth source label only when GGUF KV or path proves it.
+
+SCOPE
+  EXPORTED strata under F:\OllamaModels\_REAP16\ (RESULTS_REAP16.json).
+  SKIP FAIL exports (gpt-oss, flint, qwen3-next, deepseek-v4-flash) unless NOT_RUN row.
+  Optional FULL_OLLAMA peers when clear paired tags exist.
+
+BENCH CONTRACT
+  Prompt: Say hi in one short sentence.
+  num_predict=32 temperature=0
+  TokPerSec = eval_count / eval_duration (ns) from real JSON only.
+  Disposition PASS only when HttpOk/done and eval_count>0 from real response.
+
+FORBIDDEN
+  Invent competitive PASS; rewrite sealed CERT matrix; tip-climb; CROSS_SHA credit.

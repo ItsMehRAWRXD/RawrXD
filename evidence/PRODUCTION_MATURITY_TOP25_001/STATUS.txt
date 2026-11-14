@@ -40,7 +40,7 @@ Do not invent; do not promote.
 | MiniMax REAP16 indep | GENERATED_TOKENS=48 CLEAN_EXIT; SEMANTIC_COHERENCE=FAIL | REAP_ALL_16GB_001/INDEP_SMOKE_SEAL.txt | Load≠coherent |
 | 671B 35–50 TPS target | TARGET_35_50_TPS=UNMINTED; DECODE_TPS=NOT_RUN | RAWRXD_PERFORMANCE_001/DEEP2_671_STREAM_TPS_35_50_001/STATUS.txt | NOT_RUN≠PASS |
 | Product floor constant | PRODUCT_FLOOR_TPS=5.000 | many Deep2 stderr lines | Target floor string; ≠ achieved TPS |
-| Ollama / vLLM head-to-head | — | COMPETITIVE_BENCH_001 (HEAD_TO_HEAD=NOT_SEALED) | NOT_RUN |
+| Ollama / vLLM head-to-head | REAP16 Ollama PARTIAL: 3 PASS / 3 FAIL; peers 4 PASS; Deep2 PASS=0 | REAP_STRATA_UNSLOTH_OLLAMA_BENCH_001 (RELATED ≠ COMPETITIVE_PASS) | RELATED |
 | SWE-bench null-agent self-test | OVERALL=0.0% (0/4 tasks) | COMPETITIVE_BENCH_001/smoke_runs/swebench_help.* EXIT=0 | Measured null agent; NOT competitive PASS |
 | isa_dispatch / smoke_test_minimal | EXIT=-1073741515 | COMPETITIVE_BENCH_001/smoke_runs/*.meta | DLL_NOT_FOUND; SCORE=NONE |
 | Local install verify | PASS_LOCAL_VERIFY; SHA 8E4CEC2F… (prior CB412035…) | TOP25_RECOGNITION_OPS_001/VERIFY_LOCAL.txt | Help smoke only |

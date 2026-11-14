@@ -1,0 +1,3 @@
+MiniMax-M2_7 CREATE FAIL
+Error: invalid split GGUF: split GGUF MiniMax-M2.7-Q4_K_M-00001-of-00003.gguf has 1 shards, expected 3
+Tried first-shard path only per constraint. Disposition=FAIL (not invent PASS).
