@@ -1,0 +1,45 @@
+
+G:\~dev\rawrxd>call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=amd64  1>nul 
+[1/38] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\Deep2SovereignInferenceGateway.cpp.obj
+[2/38] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2Engine_GpuToken.cpp.obj
+[3/38] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\Deep2InferenceWrapper.cpp.obj
+[4/38] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2ModelRuntime.cpp.obj
+[5/38] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2Bridge.cpp.obj
+[6/38] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2Engine_GpuLostReset.cpp.obj
+[7/38] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ChatTemplate.cpp.obj
+[8/38] Building CXX object CMakeFiles\InferenceEngine.dir\src\rkc\RKCDeep2Authority.cpp.obj
+[9/38] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2Engine_GpuForward.cpp.obj
+[10/38] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2ExecutionGraph.cpp.obj
+[11/38] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\DeepSeekMoELoader.cpp.obj
+[12/38] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\execution_policy\ExecutionPolicyApply.cpp.obj
+[13/38] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2NativeStreamGate.cpp.obj
+[14/38] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\lavapath\k3c_token.cpp.obj
+[15/38] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\win32ide\Win32IDE_Omega1Integration.cpp.obj
+[16/38] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2IDEIntegration.cpp.obj
+[17/38] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2Engine.cpp.obj
+[18/38] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\deep2\Deep2InferenceGateway.cpp.obj
+[19/38] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\product\gateway\product_deep2_infer.cpp.obj
+[20/38] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\deep2\Deep2Bridge.cpp.obj
+[21/38] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\rkc\RKCDeep2Authority.cpp.obj
+[22/38] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\deep2\Deep2ModelRuntime.cpp.obj
+[23/38] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\deep2\Deep2LocalServer.cpp.obj
+[24/38] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\deep2\Deep2ExecutionGraph.cpp.obj
+[25/38] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Deep2Bridge.cpp.obj
+[26/38] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\product\gateway\product_deep2_infer_seh.cpp.obj
+[27/38] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\SovereignRuntime.cpp.obj
+[28/38] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\deep2\Deep2Benchmark.cpp.obj
+[29/38] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\deep2\K2NativeStreamGate.cpp.obj
+[30/38] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\deep2\DeepSeekMoELoader.cpp.obj
+[31/38] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AgentPanel.cpp.obj
+[32/38] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\deep2\Deep2APIServer.cpp.obj
+[33/38] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\deep2\Deep2InferenceEndpoint.cpp.obj
+[34/38] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\deep2\Deep2Integration.cpp.obj
+[35/38] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\deep2\Deep2IDEIntegration.cpp.obj
+[36/38] Linking CXX static library InferenceEngine.lib
+[37/38] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\deep2\Deep2Engine.cpp.obj
+[38/38] RawrXD-Win32IDE: PRE_LINK optional del exe/pdb if unlocked; Linking CXX executable bin\RawrXD-Win32IDE.exe
+FAILED: [code=4294967295] bin/RawrXD-Win32IDE.exe 
+C:\WINDOWS\system32\cmd.exe /C "C:\WINDOWS\system32\cmd.exe /C "cd /D G:\~dev\rawrxd\build_win32ide_link001 && "C:\Program Files\CMake\bin\cmake.exe" -E rm -f G:/~dev/rawrxd/build_win32ide_link001/bin/RawrXD-Win32IDE.exe G:/~dev/rawrxd/build_win32ide_link001/bin/RawrXD-Win32IDE.pdb && cd G:\~dev\rawrxd\build_win32ide_link001" && "C:\Program Files\CMake\bin\cmake.exe" -E vs_link_exe --msvc-ver=1944 --intdir=CMakeFiles\RawrXD-Win32IDE.dir --rc="C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\rc.exe" --mt="C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\mt.exe" --manifests  -- "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe" /nologo @CMakeFiles\RawrXD-Win32IDE.rsp  /out:bin\RawrXD-Win32IDE.exe /implib:RawrXD-Win32IDE.lib /pdb:bin\RawrXD-Win32IDE.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /subsystem:windows /LTCG /LARGEADDRESSAWARE /DEBUG:FULL /MAP:G:/~dev/rawrxd/build_win32ide_link001/bin/RawrXD-Win32IDE.map /MAPINFO:EXPORTS /MANIFEST:NO /FORCE:MULTIPLE /STACK:4194304 && C:\WINDOWS\system32\cmd.exe /C "cd /D G:\~dev\rawrxd\build_win32ide_link001 && "C:\Program Files\CMake\bin\cmake.exe" -E copy_if_different G:/~dev/rawrxd/build_win32ide_link001/bin/RawrXD-Win32IDE.map G:/~dev/rawrxd/build_win32ide_link001/RawrXD-Win32IDE.map""
+LINK: command "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe /nologo @CMakeFiles\RawrXD-Win32IDE.rsp /out:bin\RawrXD-Win32IDE.exe /implib:RawrXD-Win32IDE.lib /pdb:bin\RawrXD-Win32IDE.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /subsystem:windows /LTCG /LARGEADDRESSAWARE /DEBUG:FULL /MAP:G:/~dev/rawrxd/build_win32ide_link001/bin/RawrXD-Win32IDE.map /MAPINFO:EXPORTS /MANIFEST:NO /FORCE:MULTIPLE /STACK:4194304" failed (exit code -1) with the following output:
+ninja: build stopped: subcommand failed.
+BUILD_EXIT=-1
