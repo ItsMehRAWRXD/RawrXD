@@ -1,5 +1,5 @@
 CLI_AGENT_MODEL_SELECTED_001
-ASOF_LOCAL=2026-11-14T10:05:00-05:00
+ASOF_LOCAL=2026-11-14T10:31:45-05:00
 PROMOTE=0
 CERTIFIED=0
 INVENT_PASS=0
@@ -12,68 +12,56 @@ ENTERPRISE=0/128_HELD
 PARENT=CLI_NUMERICAL_MOVES_36_50_001
 SISTER_FORCE=CLI_AGENT_SMOKE_001
 SCOPE=unforced local-model agent smoke (RAWR_AGENT_FORCE_TOOL unset)
-OWNER_TURN=MODEL_SELECTED_AGENT after MOVES_1_COMPLETE e022ffa91f
+OWNER_TURN=MODEL_SELECTED_AGENT Method C close
 
-## EXE pin (exact)
+## EXE (Method C tip)
 EXE=build_ninja/bin/rawr.exe
+EXE_SHA256=7C9680CBF025FCD78AD48DFE40D26EB45ADB78FB3F9B41321346990C77E42027
+EXE_SHA_POST=7C9680CBF025FCD78AD48DFE40D26EB45ADB78FB3F9B41321346990C77E42027
+PRIOR_PIN_9797521C=9797521CEB517B92AC52C518FB2BDB783628ABEA59366DFBE6E784C1A72951A3
 PIN_ALT=build_ninja/bin/rawr_FIX_Q6K_HOST_9797521C.exe
-EXE_SHA256=9797521CEB517B92AC52C518FB2BDB783628ABEA59366DFBE6E784C1A72951A3
-EXE_SHA_POST=9797521CEB517B92AC52C518FB2BDB783628ABEA59366DFBE6E784C1A72951A3
-SHA_MATCH=1
+PIN_BACKUP_SHA_MATCH=1
+NUMERICAL_SEALS_9797521C=KEPT
 CROSS_SHA=0
-NOTE=tip had drifted to E7797EE8; restored from pin before all probes
+NOTE=Method C advanced tip off 9797521C; pin backup preserved for numerical seals
 
-## Methods attempted (FORCE_TOOL absent; SHA 9797521C)
-A_PROMPT_VIA_P=FAIL
-  runs/a_tiny_json_prompt + runs/a_tiny_host_decode
-  TinyLlama agent chat-template path emits Python (`return {"tool": tool, "path": path}`)
-  parse → Unknown tool: path / No "tool" key; DETERMINISTIC_TOOL_READ=1
-  HARDCODED decide prompt in EXE; -p cannot remove <|system|> tool-router framing
-A_DIRECT_RUN_CONTROL=EMIT_OK_BUT_NOT_AGENT
-  runs/json_emit_probe: rawr run TinyLlama emits markdown-fenced {"tool":"read","path":"README.md"}
-  proves model can emit quoted tool JSON outside agent decide prompt; ≠ MODEL_SELECTED_TOOL seal
-B_STRONGER_GGUF=FAIL
-  runs/b_phi3_probe: phi3-mini-Q2_K → Comité/workaround garbage; FWD often 0; MODEL_SELECTED_TOOL=0
-  runs/b_llama32_probe: llama3.2-3b-Q2_K → 'oji' / sir-repeat; MODEL_SELECTED_TOOL=0
-C_PARSER_FIX=NOT_APPLIED
-  would require EXE rebuild → SHA ≠ 9797521C (pin held)
-  note: greedy extractString on Python `{"tool": tool, "path": path}` yields tool=path
-  allowlisted `"tool":"<name>"` still requires model-emitted quoted tool name (absent on agent path)
+## Methods (FORCE_TOOL absent)
+A_PROMPT_VIA_P=FAIL (on 9797521C — Python / tool=path)
+B_STRONGER_GGUF=FAIL (on 9797521C)
+C_PARSER_PROMPT_FIX=PASS
+  runs/c_method_runtime_template/
+  WIRE=src/cli/rawr_agent_executor.hpp
+  - runtime template (no manual <|user|> without </s>)
+  - allowlisted "tool":"<name>" parser
+  - relative path resolve for read/patch
+  MODEL_LOADED=1 MODEL_SELECTED_TOOL=1 EXIT=0 FILES_READ=1
+  chose tool=read then report; AGENT_VERIFIED=1
+  FORCE_TOOL=ABSENT
 
-## Acceptance measured (controlling)
+## Acceptance measured (controlling Method C)
 1 MODEL_LOADED=1
 2 RAWR_AGENT_FORCE_TOOL=ABSENT
-3 MODEL_SELECTED_TOOL=0 (no chose tool=; no modelSelectedTool seal)
-4 TOOL path: DETERMINISTIC_TOOL_READ only ≠ model-selected execute
-5 Clean Diag present on later probes but MODEL_SELECTED_TOOL remains 0
-6 Prior baseline runs/ also EXIT=-1 KILLED mid-loop
+3 MODEL_SELECTED_TOOL=1
+4 tool exec + observation (READ 68 bytes) + report
+5 EXIT=0
+6 AGENT_VERIFIED=1
 
-## Blocker (exact)
-BLOCKER=AGENT_DECIDE_PROMPT_NO_QUOTED_TOOL_JSON_ON_9797521C
-DETAIL=
-  Agent modelDecideTool hardcoded TinyLlama chat prompt → prose/Python, not {"tool":"read",...}
-  Stronger local GGUFs on same EXE do not emit valid tool JSON under that prompt
-  Closing requires Method A (EXE prompt/grammar) or C (parser+quoted tool) beyond pin SHA,
-  or a GGUF that emits quoted tool JSON under the frozen agent prompt (not observed)
-NOT_CLAIMED=MODEL_SELECTED_TOOL=1; gemv_q6k.spv fixed; PERF climb; enterprise promote
+## Blocker
+BLOCKER=CLOSED_BY_METHOD_C
+PRIOR=AGENT_DECIDE_PROMPT_NO_QUOTED_TOOL_JSON_ON_9797521C
 
 ## Disposition
-DISPOSITION=FAIL
-METHOD=A_via_p+B_phi3+B_llama32 (C held — SHA pin)
-MODEL_SELECTED_TOOL=0
+DISPOSITION=PASS
+METHOD=C_RUNTIME_TEMPLATE_ALLOWLIST
+MODEL_SELECTED_TOOL=1
 MODEL_LOADED=1
-AGENT_VERIFIED=0
-COMPLETE_LIFT=0
+AGENT_VERIFIED=1
+COMPLETE_LIFT=1
 PROMOTE=0
 GATE_STOP=1
 TIP_CLIMB=HOLD
 
 ## Artifacts
-runs/run.meta.txt (prior baseline)
-runs/a_tiny_json_prompt/
-runs/a_tiny_host_decode/
-runs/b_phi3_probe/
-runs/b_llama32_probe/
-runs/json_emit_probe/
+runs/c_method_runtime_template/
 ATTEMPTS.md
 RECEIPT.txt

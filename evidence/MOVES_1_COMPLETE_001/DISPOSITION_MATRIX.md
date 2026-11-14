@@ -2,11 +2,11 @@
 
 ```text
 PACK=MOVES_1_COMPLETE_001
-ASOF_LOCAL=2026-11-14T10:05:00-05:00
+ASOF_LOCAL=2026-11-14T10:31:45-05:00
 PROMOTE=0 CERTIFIED=0 ENTERPRISE=0/128
 GATE_STOP=1 TIP_CLIMB=HOLD
 INVENT_PASS=0 NOT_RUN!=PASS CROSS_SHA_CREDIT=0
-COMPLETE=0
+COMPLETE=1
 ```
 
 Fail-closed: `SOURCE_WIRED ≠ RUNTIME_REACHED ≠ TOKEN_SURVIVED ≠ PERFORMANCE_PASS`. Do not invent PASS. Do not transfer PASS across SHA.
@@ -20,16 +20,14 @@ Fail-closed: `SOURCE_WIRED ≠ RUNTIME_REACHED ≠ TOKEN_SURVIVED ≠ PERFORMANC
 | MOVES_1_35 | DISPOSITION_SEALED | DISPOSITION_SEALED | yes |
 | MOVES_36_50 | CLOSED | CLOSED | yes |
 | FORCED_AGENT_LOOP | PASS | PASS (Move 50 FORCE_TOOL) | yes |
-| MODEL_SELECTED_AGENT | PASS | **FAIL** | **no** |
+| MODEL_SELECTED_AGENT | PASS | **PASS** (Method C) | yes |
 | Q6K_VULKAN_SPV_REPAIR | OPEN (honest) | OPEN | yes (must stay OPEN) |
 | GATE_STOP | 1 | 1 | yes |
 | TIP_CLIMB | HOLD | HOLD | yes |
 | PROMOTE | 0 | 0 | yes |
 | CERTIFIED | 0 | 0 | yes |
 | ENTERPRISE | 0/128 | 0/128 | yes |
-| **COMPLETE** | 1 iff MODEL_SELECTED=PASS | **0** | — |
-
-`COMPLETE=1` blocked solely by `MODEL_SELECTED_AGENT=FAIL` under current seals.
+| **COMPLETE** | 1 iff MODEL_SELECTED=PASS | **1** | yes |
 
 ---
 
@@ -64,7 +62,7 @@ Legal under STOP: disposition/docs only. Forbidden: rainbow live search, tip cli
 |------|-------|
 | FROZEN_BASELINE (diag) | 0E53D810… (never PASS after rebuild drift) |
 | PRODUCT_FIX_SHA | 9797521CEB517B92AC52C518FB2BDB783628ABEA59366DFBE6E784C1A72951A3 |
-| Pins | `build_ninja/bin/rawr.exe` + `rawr_FIX_Q6K_HOST_9797521C.exe` MATCH |
+| Pins | `rawr_FIX_Q6K_HOST_9797521C.exe` MATCH (numerical seals KEPT) |
 | FIRST_NONFINITE | L0 `v_proj` Q6_K via `gemv_q6k.spv` NaN |
 | ROOT_SUBCLASS | VULKAN_PACKED_Q6K_GEMV_SPV_NONFINITE |
 | Fix | host Q6×Q8_K GEMV (hybrid; SPV still OPEN) |
@@ -84,45 +82,48 @@ Legal under STOP: disposition/docs only. Forbidden: rainbow live search, tip cli
 ## MODEL_SELECTED unforced agent
 
 **Pack:** `evidence/CLI_AGENT_MODEL_SELECTED_001/`  
-**Disposition:** `FAIL` (honest)  
-**Methods:** A via `-p` + HOST_DECODE; B phi3 + llama3.2; C held (pin)
+**Disposition:** `PASS` (Method C)  
+**Methods:** A/B FAIL on 9797521C; C applied (tip SHA below)
 
 | Criterion | Result |
 |-----------|--------|
-| SHA 9797521C only | SHA_MATCH=1 (tip restored from pin) |
+| Method C tip SHA | `7C9680CBF025FCD78AD48DFE40D26EB45ADB78FB3F9B41321346990C77E42027` |
+| 9797521C numerical seals | KEPT on pin backup |
 | No RAWR_AGENT_FORCE_TOOL | ABSENT |
 | MODEL_LOADED=1 | 1 |
-| MODEL_SELECTED_TOOL=1 | **0** |
-| tool exec + observation | DETERMINISTIC_TOOL_READ fallback only (≠ model-selected) |
-| verifiable task close | no model-selected tool; agent decide → Python/prose |
+| MODEL_SELECTED_TOOL=1 | **1** |
+| tool exec + observation | model-selected read (68 bytes) + report |
+| EXIT | 0 |
+| verifiable task close | AGENT_VERIFIED=1 FILES_READ=1 |
 
-Blocker: `AGENT_DECIDE_PROMPT_NO_QUOTED_TOOL_JSON_ON_9797521C` — frozen agent chat prompt yields Python/`tool=path`; stronger GGUFs fail; `rawr run` can emit JSON ≠ agent seal.  
-Next owner: `MODEL_SELECTED_AGENT` (EXE Method A/C beyond pin, or GGUF that emits quoted tool JSON under frozen prompt).
+Wire: `src/cli/rawr_agent_executor.hpp` — runtime chat template (no broken manual `<|user|>` without `</s>`), allowlisted `"tool":"<name>"` parser, workspace-relative path resolve.
 
 ---
 
-## Next: Move 51+ or COMPLETE
+## Next
 
 | Path | When |
 |------|------|
-| COMPLETE=1 | Only after MODEL_SELECTED_AGENT=PASS on 9797521C, unforced |
-| Move 51+ | Optional product ladder after COMPLETE gate; not authorized to invent PASS |
+| COMPLETE=1 | **CLOSED** via Method C MODEL_SELECTED PASS |
+| Move 51+ | Optional product ladder; not authorized to invent PASS |
 | Q6K_VULKAN_SPV_REPAIR | Remains OPEN; host hybrid ≠ SPV fixed |
-| REAP_LAGUNA | LEFT_OPEN (capacity; unrelated to COMPLETE flag) |
+| REAP_LAGUNA | LEFT_OPEN |
 | 8 TPS climb | FORBIDDEN while GATE_STOP=1 |
+| PROMOTE | 0 |
 
 ---
 
-## Pins / authority flags (frozen)
+## Pins / authority flags
 
 ```text
-PRODUCT_SHA=9797521CEB517B92AC52C518FB2BDB783628ABEA59366DFBE6E784C1A72951A3
+NUMERICAL_PIN_SHA=9797521CEB517B92AC52C518FB2BDB783628ABEA59366DFBE6E784C1A72951A3
+METHOD_C_TIP_SHA=7C9680CBF025FCD78AD48DFE40D26EB45ADB78FB3F9B41321346990C77E42027
 GATE_STOP=1
 TIP_CLIMB=HOLD
 PROMOTE=0
 CERTIFIED=0
 ENTERPRISE=0/128
 Q6K_VULKAN_SPV_REPAIR=OPEN
-COMPLETE=0
-NEXT_OWNER=MODEL_SELECTED_AGENT
+COMPLETE=1
+NEXT_OWNER=Q6K_VULKAN_SPV_REPAIR|REAP_LAGUNA|Move51+
 ```

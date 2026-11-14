@@ -154,30 +154,49 @@ struct AgentExecutor {
         while ((pos = out.find("\r\n", pos)) != std::string::npos)
             out.replace(pos, 2, "\n");
 
-        auto extractString = [&](const std::string& key, std::string& target) -> bool {
-            std::string search = "\"" + key + "\"";
-            size_t k = out.find(search);
-            if (k == std::string::npos) return false;
-            size_t colon = out.find(':', k + search.size());
-            if (colon == std::string::npos) return false;
-            size_t q1 = out.find('"', colon + 1);
-            if (q1 == std::string::npos) return false;
-            size_t q2 = out.find('"', q1 + 1);
-            if (q2 == std::string::npos) return false;
-            target = out.substr(q1 + 1, q2 - q1 - 1);
-            return true;
+        /* Method C allowlist: require "tool":"<name>" with quoted value.
+           Rejects Python {"tool": tool, "path": path} → greedy tool=path. */
+        static const char* kAllow[] = {
+            "read", "search", "patch", "build", "test", "report", "done"
         };
-
-        if (!extractString("tool", td.tool)) {
+        bool found = false;
+        size_t best = std::string::npos;
+        for (const char* name : kAllow) {
+            const std::string a = std::string("\"tool\":\"") + name + "\"";
+            const std::string b = std::string("\"tool\": \"") + name + "\"";
+            size_t pa = out.rfind(a), pb = out.rfind(b), p = std::string::npos;
+            if (pa != std::string::npos) p = pa;
+            if (pb != std::string::npos && (p == std::string::npos || pb > p))
+                p = pb;
+            if (p != std::string::npos &&
+                (best == std::string::npos || p > best)) {
+                best = p;
+                td.tool = name;
+                found = true;
+            }
+        }
+        if (!found) {
             td.valid = false;
-            td.reasoning = "No \"tool\" key found in JSON output";
+            td.reasoning = "No allowlisted \"tool\":\"<name>\" in output";
             return td;
         }
 
-        while (!td.tool.empty() && (td.tool[0] == ' ' || td.tool[0] == '\t'))
-            td.tool = td.tool.substr(1);
-        while (!td.tool.empty() && (td.tool.back() == ' ' || td.tool.back() == '\t'))
-            td.tool.pop_back();
+        auto extractString = [&](const std::string& key, std::string& target) -> bool {
+            std::string search = "\"" + key + "\"";
+            size_t k = out.rfind(search);
+            if (k == std::string::npos) return false;
+            size_t colon = out.find(':', k + search.size());
+            if (colon == std::string::npos) return false;
+            size_t i = colon + 1;
+            while (i < out.size() &&
+                   (out[i] == ' ' || out[i] == '\t' || out[i] == '\n'))
+                ++i;
+            if (i >= out.size() || out[i] != '"') return false;
+            size_t q2 = out.find('"', i + 1);
+            if (q2 == std::string::npos) return false;
+            target = out.substr(i + 1, q2 - i - 1);
+            return true;
+        };
 
         if (td.tool == "read") {
             if (!extractString("path", td.path)) {
@@ -207,10 +226,6 @@ struct AgentExecutor {
         } else if (td.tool == "test") {
             extractString("cmd", td.cmd);
         } else if (td.tool == "report" || td.tool == "done") {
-        } else {
-            td.valid = false;
-            td.reasoning = "Unknown tool: " + td.tool;
-            return td;
         }
 
         td.valid = true;
@@ -240,6 +255,8 @@ wit.modelInferenceCalls++;
             ToolDecision early = this->parseToolDecision(modelOutput);
             if (!early.valid) {
                 size_t brace = modelOutput.rfind("{\"tool\"");
+                if (brace == std::string::npos)
+                    brace = modelOutput.rfind("{\"tool\":");
                 if (brace != std::string::npos && brace > 0)
                     early = this->parseToolDecision(modelOutput.substr(brace));
             }
@@ -255,19 +272,23 @@ wit.modelInferenceCalls++;
         std::string plan = a.session.lastPlan;
         if (plan.size() >= 2 && plan.front() == '"' && plan.back() == '"')
             plan = plan.substr(1, plan.size() - 2);
-        /* M3: do NOT partial-prefill {"tool": — TinyLlama then emits <unk>×N
-           (G08-01). Ask for a full JSON object; cancel on unk streak. */
+        /* Method C: do NOT embed <|user|>/system markers. Missing </s> made
+           alreadyFormatted bypass TinyLlama template → Python prose (G08-01).
+           Raw user text lets generateStream formatSingle (same as rawr run).
+           No {"tool": prefill (unk streak). Example adapts after Observation. */
+        std::string example = observation.empty()
+            ? "{\"tool\":\"read\",\"path\":\"README.md\"}"
+            : "{\"tool\":\"report\"}";
         std::string prompt =
-            "<|system|>\n"
-            "You are a tool router. Output one JSON object only.\n"
-            "<|user|>\n"
-            "Return exactly: {\"tool\":\"read\",\"path\":\"README.md\"}\n"
+            "Reply with one JSON object only. No Python. No markdown. No prose.\n"
+            "Example: " + example + "\n"
             "Task: " + plan + "\n";
         if (!observation.empty())
             prompt += "Observation: " + observation.substr(0, 400) + "\n";
-        prompt += "<|assistant|>\n";
-        fprintf(stderr, "[AGENT_MODEL] prompt='%s' EARLY_VALID_ARM=1 NO_JSON_PREFILL=1\n",
-                prompt.c_str());
+        fprintf(stderr,
+            "[AGENT_MODEL] prompt='%s' EARLY_VALID_ARM=1 NO_JSON_PREFILL=1 "
+            "METHOD_C_RUNTIME_TEMPLATE=1\n",
+            prompt.c_str());
         fflush(stderr);
         modelOutput.clear();
         uint32_t unkStreak = 0;
@@ -313,6 +334,8 @@ wit.modelInferenceCalls++;
         td = parseToolDecision(modelOutput);
         if (!td.valid) {
             size_t brace = modelOutput.rfind("{\"tool\"");
+            if (brace == std::string::npos)
+                brace = modelOutput.rfind("{\"tool\":");
             if (brace != std::string::npos)
                 td = parseToolDecision(modelOutput.substr(brace));
         }
@@ -334,17 +357,26 @@ wit.modelInferenceCalls++;
     std::string executeTool(const ToolDecision& td, AgentState& a) {
         std::string observation;
         wit.toolExecutions++;
+        auto resolvePath = [&](const std::string& p) -> std::string {
+            if (p.empty() || a.session.workspace.empty()) return p;
+            if (PathInsideWorkspace(a.session.workspace, p)) return p;
+            std::string abs = a.session.workspace;
+            if (abs.back() != '\\' && abs.back() != '/') abs.push_back('\\');
+            abs += p;
+            return abs;
+        };
 
         if (td.tool == "read") {
             std::string content;
-            bool ok = broker.workspaceRead(a.session.workspace, td.path, content);
+            const std::string rp = resolvePath(td.path);
+            bool ok = broker.workspaceRead(a.session.workspace, rp, content);
             if (ok && !content.empty()) {
-                observation = "READ " + td.path + " (" +
+                observation = "READ " + rp + " (" +
                     std::to_string(content.size()) + " bytes):\n" +
                     content.substr(0, 2000);
                 wit.filesRead = 1;
             } else {
-                observation = "READ " + td.path + " failed or empty";
+                observation = "READ " + rp + " failed or empty";
             }
         } else if (td.tool == "search") {
             std::string report;
@@ -358,17 +390,18 @@ wit.modelInferenceCalls++;
                 return observation;
             }
             PatchRecord rec{};
+            const std::string rp = resolvePath(td.path);
             bool ok = broker.workspacePatch(patches, a.session.workspace,
-                td.path, td.content, rec);
+                rp, td.content, rec);
             if (ok) {
-                observation = "PATCH " + td.path + " applied (" +
+                observation = "PATCH " + rp + " applied (" +
                     std::to_string(td.content.size()) + " bytes)";
                 wit.patchCreated = 1;
                 wit.patchApplied = 1;
                 wit.sourcePatched = 1;
                 a.session.lastPatchId = rec.id;
             } else {
-                observation = "PATCH " + td.path + " failed";
+                observation = "PATCH " + rp + " failed";
             }
         } else if (td.tool == "build") {
             if (!broker.policy.mayBuild()) {
