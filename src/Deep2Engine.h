@@ -1097,6 +1097,16 @@ namespace Deep2
         size_t ssmMambaDConvKernel = 0;   // d_conv kernel size
         size_t ssmMambaDConvDim = 0;      // d_conv_dim channel count
 
+        // Qwen GDN host state (hybrid Qwen path; unused by MiniMax)
+        std::vector<std::vector<float>> gdnState_;
+        std::vector<std::vector<float>> gdnConvState_;
+        std::vector<uint8_t> gdnGpuActive_;
+        uint32_t gdnStateSize_ = 0;
+        uint32_t gdnGroupCount_ = 0;
+        uint32_t gdnInnerSize_ = 0;
+        uint32_t gdnConvKernel_ = 0;
+        bool gdnMetaBound_ = false;
+
         // ── SSM / Mamba member set ──────────────────────────────────────────
         // SSM/Mamba geometry (loaded from GGUF tensors)
         float *ssmMambaD = nullptr;        // [d_state] — diagonal D parameter
@@ -1184,6 +1194,9 @@ namespace Deep2
 
         // SSM / Mamba forward pass (selective scan + causal conv1d)
         void computeSSM(size_t layer, const float *input, float *output);
+
+        // Qwen3.5/3.6 gated delta-net (product path; MiniMax does not use)
+        void computeGDN(size_t layer, const float *input, float *output);
 
         // Sampling
         int sampleToken(const float *logits);
