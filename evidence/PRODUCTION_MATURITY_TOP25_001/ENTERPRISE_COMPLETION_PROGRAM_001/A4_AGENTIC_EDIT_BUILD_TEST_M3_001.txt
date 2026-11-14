@@ -1,0 +1,90 @@
+A4_AGENTIC_EDIT_BUILD_TEST_M3_001 — Mission A4 / Milestone M3 seal
+ASOF_LOCAL=2026-11-13T22:01:00-05:00
+BRANCH=work/v0-first-divergence
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0
+CLOUD_MANDATORY=0
+INVENT_PASS=0
+LIVE_BOARD_REWRITE=0
+NOT_RUN!=PASS
+CONTROLLING_PCT_HELD=CLI67 GUI48 OVERALL48 (no invent raise)
+
+## Scope
+Reliable autonomous code-edit/build/test cycles on BOTH CLI and GUI surfaces (local only).
+Evidence root: ENTERPRISE_COMPLETION_PROGRAM_001/AGENTIC_M3_001/
+
+## CLI cycle
+DISPOSITION=PARTIAL
+REASON=FORCE_TOOL edit→build→test→report measured on off-pin / absorb binaries; board-named tip pin 15A119 currently FORCE_TOOL=ABSENT (fail-closed negctrl).
+
+### PASS (product path, CROSS_SHA / absorb — not tipbound 15A119 name)
+RUN=AGENTIC_M3_001/runs/cli_forcetool_m3cand_20261113/
+EXE=build_ninja/bin/rawr_forcetool_m3_candidate.exe
+EXE_SHA256=3943D78ECBE0A63ACDC08EF4DEF46127EC46159F98D72D119E8D605B08709DF4
+TIPBOUND=0 CROSS_SHA=1
+RAWR_AGENT_FORCE_TOOL=read,patch,build,test,report skip_model_load=1
+FORCE_TOOL_SELECT_COUNT=5
+MEASURED=FILES_READ=1 PATCH_APPLIED=1 PATCH_ON_DISK=1 BUILD_COMPLETED=1 AGENT_VERIFIED=1 TOOL_EXECUTIONS=5
+SCRATCH=ws/scratch/m3_scratch.txt → M3_SCRATCH_V1 + patched_by_AGENTIC_M3_001
+ASSERT=runs/cli_verify_assert_20261113/assert.txt PASS=1
+ERR=run.err.txt (AGENT_LOOP_E2E=PASS)
+
+RUN_ABSORB=AGENTIC_M3_001/runs/cli_absorb30_forcetool_20261113/
+EXE=build_ninja/bin/rawr_gpufwd_30DCB4B1.exe
+EXE_SHA256=30DCB4B12DCA0F13542C14CCC6C4038E70DBFE2555DE65AB005093A1FF60F24D
+EXIT=0 FORCE_TOOL_SELECT_COUNT=3
+MEASURED=PATCH_APPLIED=1 PATCH_ON_DISK=1 BUILD_COMPLETED=1 TOOL_EXECUTIONS=3
+NOTE=absorb lineage previously proposed as tip successor; filename ≠ rawr_gpufwd_15A119D1.exe
+
+### FAIL_CLOSED (board pin name / current SHA)
+RUN_NEG=AGENTIC_M3_001/runs/cli_tiphold15A119_negctrl_20261113/
+EXE=build_ninja/bin/rawr_gpufwd_15A119D1.exe
+EXE_SHA256=15A119D148572A4B3011AA9A8AFFE605F8FF40D64B7BF83673ECC10A9393C967
+RAWR_AGENT_FORCE_TOOL_STRING=0
+TIMEOUT=1 @45s FORCE_TOOL_SELECT_COUNT=0 PATCH_ON_DISK=0
+NOTE=env FORCE_TOOL set but binary lacks wire; hang ≠ PASS
+
+### Other CLI notes
+DEEP2_AGENTIC_LOOP_EXE=ABSENT (AGENTIC_M3_001/DEEP2_AGENTIC_LOOP_ABSENT.txt)
+forcetool_live.exe (SHA 4F78DBD5…) parses FORCE_TOOL as single token (no comma-seq) → TOOL_EXECUTIONS=1 PATCH=0 (runs/cli_forcetool_live_20261113/) — fail-closed vs m3_candidate
+MODEL_REQUIRED_FOR_TRUE_AGENTIC=1 (FORCE_TOOL is harness skip_model_load; model-selected tool path not claimed PASS this seal)
+
+## GUI cycle
+DISPOSITION=PARTIAL
+REASON=C36 LSP peer RUNTIME_REACHED=1 HANDSHAKE_OK; controlling tip_land_6754616E C36_LSP_STAGE=0 and no tipbound agentic edit→build→test this run.
+
+### PASS (peer private EXE — CROSS_SHA; ≠ controlling tip overwrite)
+RUN=AGENTIC_M3_001/runs/gui_c36_peer_20261113/
+EXE=GUI_TOP25_VALUATION_001/clean_link/RawrXD-Win32IDE_tip_land_c36_6754.exe
+EXE_SHA256=C66B66B48DC07A728A7852DC87D269C459EDBF6E87EFC3B8EBF1D38316E1B070
+CMD=--test-c36-lsp RAWRXD_C36_PROBE=1
+C36_LSP_STAGE=PIPE→PROCESS→INIT_SEND→INIT_WAIT OK class=INIT_OK
+DEADLOCK=0 HANDSHAKE_UNFULFILLED=0
+TOP25=lsp_running=1 hover_valid=1 completion_n=82 hybrid_n=4 RUNTIME_REACHED=1
+STAGE=gui_c36_peer_20261113/c36_stage.txt (fresh ts=24683303…)
+PRIOR_A3=../GUI_ACCEPTANCE_C36_001/TIP6754_C36_LAND_001/SEAL.txt
+BOARD_PROPOSAL=../BOARD_PROPOSAL_CAT10_A3_TIP_C36_6754_PEER.txt (unchanged controlling %)
+
+### FAIL / ABSENT (controlling tip)
+RUN_TIP=AGENTIC_M3_001/runs/gui_tip6754_c36_negctrl_20261113/DISPOSITION.txt
+TIP_EXE=bin/RawrXD-Win32IDE_tip_land_6754616E.exe
+TIP_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431
+TIP_C36_LSP_STAGE_STRING=0 TIP_TEST_C36_LSP_STRING=0 TIP_RUNTIME_REACHED=0
+SOURCE=src/win32ide/Win32IDE_LSPClient.cpp C36_LSP_STAGE instrumentation ABSENT (git restored; needs re-land for tip bind)
+HWND_AGENTIC_EBT_THIS_RUN=NOT_RUN (prior A8 HWND PARTIAL: dialog crumbs without PATCH/BUILD/TEST — see GUI_TOP25_VALUATION_001/A8_GUI_EDIT_BUILD_TEST_20261113_214044/)
+
+## Gaps (honest)
+1. Board CLI pin filename rawr_gpufwd_15A119D1.exe currently SHA=15A119… FORCE_TOOL=ABSENT (repin thrash risk)
+2. deep2_agentic_loop.exe ABSENT
+3. True model-selected tool loop (no FORCE_TOOL) NOT claimed PASS
+4. Controlling GUI tip6754 C36/agentic EBT not on tip SHA (peer only)
+5. Win32IDE_LSPClient.cpp C36 instrumentation needs re-land for tip bind
+6. CLEAN_VM / offline installer gates = M4 (separate); CLOUD_MANDATORY=0 held
+7. forcetool_live comma-seq regression vs m3_candidate
+8. M3_COMPLETE=0 M3_PCT_RAISE=0 (do not invent CONTROLLING_% raise)
+
+## Law
+SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+PROMOTE=0 TIP_CLIMB=HOLD
+END

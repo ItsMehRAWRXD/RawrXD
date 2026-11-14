@@ -1,0 +1,4 @@
+ASSERT=scratch_contains_M3_patch_marker
+PATH=evidence\PRODUCTION_MATURITY_TOP25_001\ENTERPRISE_COMPLETION_PROGRAM_001\AGENTIC_M3_001\runs\cli_forcetool_m3cand_20261113\ws\scratch\m3_scratch.txt
+PASS=1
+PROMOTE=0
