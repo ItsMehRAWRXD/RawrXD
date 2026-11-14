@@ -7,7 +7,7 @@ Authority: pasted RAWRXD_ENTERPRISE_PRODUCT_CERT_001 checklist · 0/128 · HELD 
 | P0 | Gemma AA4F/tip_land AV (Deep2 bisect) | G02-06 G06-06 | CURRENT=mid-VRAM; bak→STREAM_SEH leaf fclose VA=-1 |
 | P0 | GPU/ref ATTN_PRE_O_1 / FFN_DOWN cascade | G02-04 G02-05 G03-08 | FFN_ACT_2 CLOSED (SPV 4548BCF1); next LAYER2+/FFN_DOWN_0; PRE_O_1@pos1 OPEN |
 | P0 | Multi-family STREAM after OPEN (qdim084) | G02-08 G04-01 G06-06 | keepGPU→bad_alloc 23B5115F; 617F Evict path |
-| P1 | C36 LSP startup hangs | G07-01 G07-04 | cand INIT_OK RELATED; tip OPEN |
+| P1 | C36 LSP startup hangs | G07-01 G07-04 | tip 6754616E INIT_OK RELATED (R70); kill-after-mark; ≠ PASS |
 | P1 | ConPTY terminal-stop reliability | G05-05 G06-05 | cand PASS RELATED; tip remasure OPEN |
 | P1 | M3 MODEL_SELECTED_TOOL / tipbound | G05-06 G08-01 | FORCE_TOOL PASS; model-select=0 |
 | P2 | M4 Authenticode + CLEAN_VM | G12-02 G12-03 | ABSENT / NOT_RUN (no hypervisor) |
