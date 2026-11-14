@@ -1,0 +1,106 @@
+GPU_PARITY_ATTN_PRE_O_1_POS1_CLOSE_007
+DATE=2026-11-14
+ASOF_LOCAL=2026-11-14T05:27:20-05:00
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+CROSS_SHA_CREDIT=0
+INVENT_PASS=0
+NOT_RUN!=PASS
+SCOREBOARD_CLI_GUI_PCT_UNCHANGED=1
+ATTN_PRE_O_1_POS1_CLOSED=0
+CLOSED=0
+
+## Authority
+PRIOR_OPEN=GPU_PARITY_ATTN_PRE_O_1_POS1_CLOSE_006.txt
+  FA pin fa006 restores PRE_O_0@pos1 CLOSED 3.488640e-08
+  PRE_O_1@pos1 OPEN 2.754107e-05 @idx704 head11
+PRIOR_HOLD=GPU_PARITY_FFN_DOWN_2_CLOSE_001.txt SPV40E76D2A…/17272
+BRANCH=work/v0-first-divergence
+TOL_ABS=1e-6 TOL_REL=1e-5
+TIP_EXE_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431 RO
+CONTROLLING_Q4K_SPV: bytes=17272
+  SHA256=40E76D2ACBFC2380C0221CE55EA2345336264A3CF470341478E351406F42B403
+VALUATION_SCOREBOARD_LIVE / JOINT CONTROLLING_% NOT rewritten
+
+## Remeasure (fa006 pin; product env)
+CAND=pin/rawr_attn_pre_o_1_pos1_fa006.exe
+SHA256=5CD5E3A3DCFE793588F6A96C1A49F7B8640D15272892E004088349F7D371BA60
+DUMP=FIRST_DIVERGE_001/stage_dump_attn_pre_o_1_pos1_close006_fa
+REF=FIRST_DIVERGE_001/stage_dump_ref_matched
+COMPARE=FIRST_DIVERGE_001/GPU_PARITY_ATTN_PRE_O_1_POS1_CLOSE_007.compare.log
+ENV=RAWRXD_FORCE_VULKAN_QUANT_GEMV=1 RAWRXD_Q4_HOST_ATTN=0 RAWRXD_Q4_HOST_FFN_DOWN=0
+    RAWRXD_KV_FP16_ROUNDTRIP=1 RAWRXD_GPU_FWD=0 HOTPATH_ATTN=CPU FA_F16=1
+PROMPT_IDS=1,15043
+RUNTIME_Q4K_SPV bytes=17272 SHA=40E76D2A…
+ERR_BANNER=ATTN_GGML_FA_F16=1 attend=2 headDim=64
+
+## Measured
+BEFORE (CLOSE_006)=2.754107e-05
+AFTER  ATTN_PRE_O_1@pos1 maxAbs=2.754107e-05 @idx704 n_gt=30/2048 UNDER_TOL=0 CLOSED=0
+ATTN_PRE_O_0@pos1 CLOSED maxAbs=3.488640e-08 HELD
+MAXDIFF_BEFORE=2.754107e-05
+MAXDIFF_AFTER=2.754107e-05
+
+## Offline FA (POST_ROPE_1 matched REF seq102)
+FA(gpu POST_ROPE) vs PROD maxAbs=4.143803e-07 MATCH_1e6=1
+FA(gpu POST_ROPE) vs REF  maxAbs=2.754107e-05 @idx704 (=product residual)
+FA(refQ+gpuKV) vs REF head11 maxAbs=3.725290e-09 CLOSES head11
+Q_POST head11 F16RT: n_ne=1 @idx747 (lane43)
+  gpu POST=-1.5200197697e+00 → F16 -1.5205078125
+  ref POST=-1.5200195312e+00 → F16 -1.5195312500
+  Q_PRE idx747: 2 ULP (gpu vs REF); same F16 pre-rope
+Single-lane splice REF Q@747 → PRE_O@704 residual 0
+
+## Cascade / regression (must hold) — HELD
+FFN_DOWN_0@pos0 UNDER_TOL maxAbs=2.235174e-08
+FFN_DOWN_2@pos1 UNDER_TOL maxAbs=2.980232e-08
+V_1@pos0 UNDER_TOL maxAbs=1.490116e-08
+ATTN_PRE_O_0@pos0 BITEXACT; ATTN_PRE_O_1@pos0 BITEXACT
+Q_PRE_ROPE_1@pos1 UNDER_TOL maxAbs=9.536743e-07
+Q_PRE_ROPE_0@pos1 UNDER_TOL maxAbs=9.536743e-07
+
+## Trials this seal (no invent PASS)
+1) Confirm fa006 remasure: PRE_O_1 unchanged 2.754107e-05; PRE_O_0 held
+2) Offline FA product match ~4e-7; isolate idx747 F16 knife-edge
+3) Offline host-generic Q4K×Q8K on GPU ATTN_NORM: BITEXACT SPV @747 (ulp_h_s=0)
+   generic(REF_NORM)@747 still 1 ULP ≠ llama REF Q → llama AVX ≠ generic
+4) Host FORCE square (prior dump q4host1): REJECT again
+   PRE_O_1 worsens 4.256899e-04; FFN_DOWN_0 reopens 7.500127e-05
+5) FA Q F32 promote (offline on fa006 dumps): REJECT
+   L1 h11 vsREF 2.93e-05 (no close); L0 vsREF reopens 2.65e-05
+6) FA Q F16 round-toward-zero packing (offline): REJECT
+   L1 h11 2.33e-05 (still OPEN); L0 vsREF reopens 4.12e-05
+7) Square xd-onediv / FP64 / kvfix: REFUTED prior CLOSE_004 (not re-tried)
+
+## Root (numeric-first)
+CLASS=ATTN_Q_SPV_ULP_FA_F16_KNIFE_IDX747
+  owner lane = Q_POST_ROPE_1 head11 lane43 @idx747
+  2 ULP PRE → rope preserves 2 ULP → crosses F16 boundary → FA amplifies → PRE_O@704
+SPV_SQUARE_ALREADY_MATCHES_HOST_GENERIC_AT_747=1
+GAP_REMAINING=llama_AVX_mul_mat_Q4K_vs_generic (1–2 ULP); not GPU 1/iscale vs host
+REFUTED_SQUARE_XD_ONEDIV=1
+REFUTED_HOST_FORCE_SQUARE=1
+REFUTED_FA_Q_F32_CLEAN=1
+REFUTED_FA_Q_F16_RTZ=1
+SPV_UNCHANGED=40E76D2A…/17272 (no square xd-onediv; no host FORCE default)
+
+## Next engineering
+  Port/match llama AVX Q4_K×Q8_K for square WQ only (dual-pipe) without moving
+  GATE/UP/DOWN holds — OR other bitexact path that lands idx747 on REF F16 side
+  without inventing PASS / without square xd-onediv / without host FORCE default
+
+## Fix@source
+None landed (controlling SPV+FA pin retained). Tip 6754616E untouched.
+No CONTROLLING_% rewrite.
+
+## Verdict
+ATTN_PRE_O_1_POS1_CLOSED=0
+UNDER_TOL=0
+CLOSED=0
+NEXT_OPEN=ATTN_PRE_O_1@pos1 maxAbs=2.754107e-05
+  owner=ATTN_Q_SPV_ULP_FA_F16_KNIFE_IDX747 (head11 lane43)
+≠ PERFORMANCE_PASS ≠ PROMOTE
+PROMOTE=0
+TIP_CLIMB=HOLD
+END
