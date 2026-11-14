@@ -1,0 +1,26 @@
+BR_AUTHPASS_084_CLOSED_R72
+ASOF_LOCAL=2026-11-13T23:13-05:00
+AUTH=PARENT_BOARD_AUTHORITY / BOARD_SINGLE_WRITER
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 CROSS_SHA_CREDIT=0
+PCT_HELD=CLI67/GUI48/OVERALL48
+GATE_MATRIX_PASS=0
+RESULT=RELATED_NOT_PASS
+
+## Absorbed (worker 0f8cb244-23b5-4725-b980-0df0467543a9)
+COMMIT=5ff1e249fd (in ancestry; tip also 385a47eecb layer2 remasure)
+FIX=Eng out-of-line sessionAuthority*/isModelLoaded + repairModelLoadedFromRoots; Eng.obj before SEH (LNK4006)
+ROOT=POST_LOAD gguf=0 blocked ProductRuntime auth copy; stale SEH COMDATs
+
+| Lane | EXE_SHA256 | OPEN_PASS | authPASS | TOK | SEH |
+|------|------------|-----------|----------|-----|-----|
+| llama32 qdim084 | 9181073D… | 1 | 1 | 0 | STREAM 0xE06D7363 |
+| gemma avfix084 | CC621549… | 1 | 1 | 0 | EXIT=NULL |
+
+Receipt: receipts/G02-08_20261113_MARS_DEDUP_084_AUTHPASS_REMEASURE_RELATED.md
+tip 6754616E RO
+
+## Next
+NEXT_OWNER=PRODUCTRUN_STREAM_AFTER_AUTHPASS (bad_alloc/0xE06D7363 → ENTER=1 TOK>0)
+Worker 3dcf0577 still in flight on ProductRun path
+PROMOTE=0
+END
