@@ -22,9 +22,9 @@ Certification levels: Build � Load � Numerics � Generation � Performance
 | W02 | Deep2 Vulkan | PARTIAL | Q6K CEBA0DE4 RELATED retained; Q2 gemma MEASURED_ABORT EXIT=-1; full shader CERT OPEN | Q2 abort root + Q5/Q3/Q8 + long-ctx | L4_P1_KERNEL_SHAPES_001 + POST_Q6K_SPV_PRODUCT_DEFAULT_001 |
 | W03 | Q4_K / Q6_K / Q8 kernels | PARTIAL | Q6K+Q4 TinyLlama RELATED; Q8/Q5/Q3 NOT_RUN (no model); Q2 MEASURED_ABORT | Kernel-family validation pack | L4_P1_KERNEL_SHAPES_001 + BR_CLI_Q6K_SPV_R103 |
 | W04 | Packed GEMV / GEMM | PARTIAL | Ornith L3 ULP CLOSED; sx/kva/oproj/fused/batch NOT_RUN; Q2 abort sealed | Broader shape/batch + Q2 rootcause | L4_P1_KERNEL_SHAPES_001 + BR_ORNITH_PACKED_GEMV_L3_R104 |
-| W05 | Attention / KV cache | OPEN | TinyLlama short-ctx OK; Laguna rope/SWA OPEN | Long-context + Laguna rope/SWA + ATTN_GATE_PARITY | REAP_LAGUNA_001 PARTIAL / FIRST_DIVERGE |
+| W05 | Attention / KV cache | PARTIAL | Laguna RoPE/SWA WIRED; first-diverg ULP OPEN | Long-context + ULP digests | W1_LAGUNA_NUMERICAL_PARITY_001 |
 | W06 | Ornith | PARTIAL | L3 ULP closed; SEMANTIC=FAIL (8tok HEAP/TOK=0; R101 incoherence); PROD_DECODE=0 | PROD_DECODE REAL=21 / heap / PROD_PROVENANCE / hybrid load | ORNITH_SEMANTIC_BEYOND_L3_001 + R101-R104 |
-| W07 | Laguna / Qwen3.5 | PARTIAL | Gate BIND+pre-O APPLY; TOK tip CEBA0DE4; ULP OPEN | Stage digests + gate_act settle | W1_LAGUNA_NUMERICAL_PARITY_001 |
+| W07 | Laguna / Qwen3.5 | PARTIAL | WS1 PARTIAL stop@ATTN_GATE_PARITY; order MATCH; live EXE 47438251; TOK CEBA0DE4 RELATED | Bitexact ref digest compare | REAP_LAGUNA_001 GATE_RECORD |
 | W08 | MiniMax MoE | PARTIAL | Router MATCH+AL12/13; tip CEBA0DE4 LOAD/MoE OK; FAIL_MID_PREFILL ly=15 TOK=0 SEMANTIC=NOT_RUN; Ollama create FAIL | Survive 62L->TOK>0 + FFN_DOWN_1 GPU A/B + AL14 | W2_MINIMAX_REAP_SEMANTIC + FAIR_H2H P0-D |
 | W09 | Kimi K2 | PARTIAL / EXPLICIT_UNSUPPORTED gen | Tip INDEX 13/13; ProductOpen FAIL DualStick=OFF; GENERATED_TOKENS=0 | Streamable working-set + native gen | W8_KIMI_K2_MULTI_AGENT_001 + K2_L5_P1_TIP_LOAD_001 |
 | W10 | REAP | PARTIAL | Physical exports rewrite_authorized=0; Laguna TOK peer; MiniMax tip TOK=0; Ollama create FAIL; quality!=competitive | Fair H2H after TOK32; MiniMax SEMANTIC | W2_MINIMAX_REAP_SEMANTIC / REAP_STRATA_* |

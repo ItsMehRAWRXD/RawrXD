@@ -16,7 +16,7 @@ Status legend: **OPEN** | **RELATED** | **PARTIAL** | **CERTIFIED** | **EXPLICIT
 | Packed GEMV / GEMM | PARTIAL | Ornith L3 ULP_CLOSED; specialized sx/batch NOT_RUN; Q2 abort sealed (L4_P1) |
 | Attention / KV cache | OPEN | long-context stability TBD |
 | Ornith | RELATED | L3 ULP closed; hybrid load/semantic OPEN |
-| Laguna / Qwen3.5 | PARTIAL | WS1 REAP_LAGUNA=PARTIAL; stop@ATTN_GATE_PARITY=NOT_RUN; TOK RELATED≠parity; PROMOTE=0 |
+| Laguna / Qwen3.5 | PARTIAL | W1: gate pre-O+TOK>0 tip CEBA0DE4; FIRST_DIVERGENCE_ULP OPEN; PROMOTE=0 |
 | MiniMax MoE | PARTIAL | W2 AL12/13 + tip CEBA0DE4 LOAD/MoE OK; FAIL_MID_PREFILL ly=15 TOK=0 SEMANTIC=NOT_RUN; PROMOTE=0 |
 | Kimi K2 | PARTIAL / EXPLICIT_UNSUPPORTED gen | W8+L5 tip INDEX 13/13; ProductOpen FAIL DualStick=OFF CAPACITY_PROOF_REOPEN=0; gen=0 EXE `6754616E…` |
 | REAP | PARTIAL | H2H OBSERVED_ONLY; MiniMax tip TOK=0; exports rewrite_authorized=0; Ollama sibling FAIL; quality OPEN |

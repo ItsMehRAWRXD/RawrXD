@@ -1,0 +1,10 @@
+W1_LAGUNA_NUMERICAL_PARITY_001 — LAW
+PROMOTE=0 CERTIFIED=0 ENTERPRISE=0/128 GATE_STOP=1 TIP_CLIMB=HOLD
+
+1. Scope: Laguna/Qwen3.5-family numerical path on Deep2 product EXE.
+2. Gate order authority: post-SDPA / pre-O (llama.cpp step35-iswa). 
+   "After O-proj" in prior STATUS meant after fixing false attn_gate→attnO bind.
+3. TOK>0 ≠ numerical parity ≠ CERTIFIED. ULP/first-divergence required for parity PASS.
+4. CROSS_SHA_CREDIT=0. Tip softplus TOK and sigmoid trial are independent measures.
+5. Do not rewrite Method C / Q6K / R101–R104 seals.
+6. NOT_RUN != PASS. Softplus tip remains product act until ULP settles act vs step35.

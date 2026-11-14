@@ -1,0 +1,59 @@
+W1_LAGUNA_NUMERICAL_PARITY_001
+ASOF_LOCAL=2026-11-14T11:55:00-05:00
+PROGRAM=RAWRXD_ALL_BACKENDS_COMPLETE_001
+CRITICAL_PATH=1
+PROMOTE=0
+CERTIFIED=0
+ENTERPRISE=0/128
+GATE_STOP=1
+TIP_CLIMB=HOLD
+INVENT_PASS=0
+CROSS_SHA_CREDIT=0
+NOT_RUN!=PASS
+
+## Model
+GGUF=F:\OllamaModels\_REAP16\laguna-s-2_1-Q4_K_M-REAP35\sha256-948255a146c07678678183af4cb1234a124e945e48c85c2006598ef4696552c8
+ARCH=laguna L=48 H=3072 FFN=12288 heads_meta=72 kv=8 hd=128 ctx=262144
+ROPE=ropeDim=64 ropeDimSwa=128 theta=500000 thetaSwa=10000
+SWA=sliding_window=512 (applied only on SWA layers: numHeads < meta heads)
+
+## Closed this pack
+ATTN_GATE_BIND=PASS (Laguna [heads,hidden] → attnGate; not false-mapped to attnO)
+ATTN_GATE_ORDER=PASS post-SDPA / pre-O (llama.cpp step35-iswa order; brief "after O-proj" = after correcting false O bind)
+ATTN_GATE_APPLY=PASS per-head scale on headScratch then O-proj
+HEADS_LAYER=PASS (SWA inferred=48 from wq.rows=6144; full=72)
+ROPE_DIMS=SOURCE_WIRED (partial 64 on full; 128 on SWA layers)
+SWA=SOURCE_WIRED window=512 on SWA layers only
+LAYER_NAN=0 on tip softplus + W1 sigmoid trial
+TOK_GT0_TIP=PASS EXE=CEBA0DE4… GENERATED_TOKENS=8 STDOUT="hi"x8 PRODUCT_PASS=1
+  SSOT=evidence/REAP_LAGUNA_001/ + BR_REAP_LAGUNA_TIP_PASS_R105
+
+## W1 remasure (sigmoid trial — RELATED, not tip promote)
+EXE=build_ninja/bin/rawr_w1_laguna.exe
+EXE_SHA256=30896EA4ACFD2D740D996B5F5E86E9DB4C66B6F89E58444BB1FE47582D3F37D5
+GATE_ACT_TRIAL=sigmoid (step35-iswa)
+WITNESS=runs/laguna_w1.{out,err,exit}.log runs/cmd.txt runs/EXE_SHA.txt
+  APPLY=sigmoid per-head ly=0 heads=48 hd=128 g0=-0.754942 s0=0.319745 (pre-O)
+  LAYER_NAN=0 GENERATED_TOKENS=8 PRODUCT_PASS=1
+  STDOUT=thinking-tag loop (weaker coherence than tip softplus "hi")
+  DECODE_TPS_REAL=0.027 COMPETITIVE_PASS=0
+
+## First-divergence (honest)
+FIRST_DIVERGENCE_VS_LLAMA_CPP=OPEN
+  CANDIDATE_1=gate_act softplus(Laguna tip) vs sigmoid(step35-iswa)
+  CANDIDATE_2=stage ULP digests vs llama.cpp (NOT_RUN this pack)
+  COHERENT_ENGLISH=PARTIAL (tip softplus prompt-aligned "hi"; not full sentence)
+NUMERICAL_PARITY=PARTIAL (TOK path + gate order + RoPE/SWA wired; ULP seal OPEN)
+
+## Retained (do not rewrite)
+METHOD_C_TIP=7C9680CB…
+Q6K_VULKAN_SPV=CEBA0DE4… / 37d8dc32cb
+NUMERICAL_PIN=9797521C…
+R101–R104 Ornith seals=KEPT
+PROMOTE=0
+
+## Disposition
+W1_LAGUNA=PARTIAL
+≠ CERTIFIED ≠ PROMOTE ≠ COMPETITIVE_PASS ≠ CROSS_SHA
+NEXT=FIRST_DIVERGENCE_STAGE_ULP (gate_act settle) | WS2_MINIMAX_REAP
+ARTIFACTS=STATUS.txt RECEIPT.txt LAW.txt runs/

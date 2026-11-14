@@ -1,0 +1,2377 @@
+[MODEL_RESOLUTION] g:\~dev\rawrxd\models\gemma3-1b-Q2_K.gguf
+GGUF_LOAD_STAGE=enter path="g:\~dev\rawrxd\models\gemma3-1b-Q2_K.gguf" loadTensors=0 mmap=0
+GGUF_LOAD_STAGE=validated size=699066720 dataOff=15785312
+GGUF_LOAD_STAGE=fopen_ok
+GGUF_LOAD_STAGE=header_ok ver=3 tensors=340 kv=31
+[AUTO_BACKEND] model=g:\~dev\rawrxd\models\gemma3-1b-Q2_K.gguf weights=651MB kv=52MB scratch=0MB moe=0 experts=0 ctx=2048
+[AUTO_BACKEND] host RAM=476MB commit=56287MB
+[AUTO_BACKEND] GPU Virtual Display Driver status=25174027 problem=0 healthy=1
+[AUTO_BACKEND] GPU AMD Radeon(TM) Graphics status=25175040 problem=43 healthy=0
+[AUTO_BACKEND] GPU AMD Radeon AI PRO R9700 status=25174026 problem=0 healthy=1
+[AUTO_BACKEND] GPU AMD Radeon RX 7800 XT status=25174026 problem=0 healthy=1
+[AUTO_BACKEND] Vulkan ICD ready
+[AUTO_BACKEND] primaryReady=1 primaryValidated=1 secondaryReady=1 secondaryValidated=1 vramPriMB=32768
+[AUTO_BACKEND] decision=VulkanPrimary reason=Primary GPU fits weights+KV+scratch
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+KEN_MARS_ACTIVE=1 DEEP2_MARS=1 HOST_DECODE=0 GPU_POLICY=MULTI GPU_DEVICE_CLASS=DISCRETE NO_TRUNCATE_NEEDLE=1 PRODUCT_STREAMER_ARM=1
+PRODUCT_STREAMER_TIP_MINIMAL_PREP=1
+PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1
+RAWRXD_GPU_PREFLIGHT_BEGIN
+GPU_0=R9700
+GPU_0_WINDOWS_HEALTH=PASS
+GPU_0_PROBLEM_CODE=0
+GPU_0_CODE31=0
+GPU_1=RX_7800_XT
+GPU_1_WINDOWS_HEALTH=PASS
+GPU_1_PROBLEM_CODE=0
+GPU_1_CODE31=0
+GPU_PREFLIGHT=PASS
+MODEL_LOAD=ADMITTED
+PIN_BUDGET_SET site=DUALSTICK_BIND old=0 new=4294967296 owner=DUALSTICK_BIND moe_reserved=4294967296
+PIN_BUDGET_FINAL stick=0 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+PIN_BUDGET_SET site=DUALSTICK_BIND old=4294967296 new=4294967296 owner=DUALSTICK_BIND moe_reserved=4294967296
+PIN_BUDGET_FINAL stick=0 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+LOADMODEL_STAGE=pre_reverse reverse_opt_in=0
+LOADMODEL_STAGE=gguf_loader_enter path="g:\~dev\rawrxd\models\gemma3-1b-Q2_K.gguf"
+GGUF_LOAD_STAGE=enter path="g:\~dev\rawrxd\models\gemma3-1b-Q2_K.gguf" loadTensors=0 mmap=0
+GGUF_LOAD_STAGE=validated size=699066720 dataOff=15785312
+GGUF_LOAD_STAGE=fopen_ok
+GGUF_LOAD_STAGE=header_ok ver=3 tensors=340 kv=31
+LOADMODEL_STAGE=gguf_meta_ok tensors=340
+LOADMODEL_STAGE=gguf_tensors_enter mmap=0
+GGUF_LOAD_STAGE=enter path="g:\~dev\rawrxd\models\gemma3-1b-Q2_K.gguf" loadTensors=1 mmap=0
+GGUF_LOAD_STAGE=validated size=699066720 dataOff=15785312
+GGUF_LOAD_STAGE=fopen_ok
+GGUF_LOAD_STAGE=header_ok ver=3 tensors=340 kv=31
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+DEEP2_DEVICE_COUNT_DETECTED=2
+DEEP2_DEVICE_COUNT_OPENED=1
+DEEP2_COMPUTE_BACKEND=GPU
+DEEP2_EXEC_PATH=SINGLE_GPU
+DEEP2_EXEC_MODE=1
+DEEP2_GPU_POLICY=2
+DEEP2_PLAN_REASON=auto_best_compute
+DEEP2_PRIMARY_INDEX=0
+DEEP2_PRIMARY_STABLE_ID=1002:7551:000000000001681D
+DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_VENDOR=AMD
+DEEP2_DEVICE_0_STABLE_ID=1002:7551:000000000001681D
+DEEP2_DEVICE_0_VRAM_BYTES=34057322496
+DEEP2_DEVICE_0_SCORE=133
+DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
+DEEP2_DEVICE_1_NAME=AMD Radeon RX 7800 XT
+DEEP2_DEVICE_1_VENDOR=AMD
+DEEP2_DEVICE_1_STABLE_ID=1002:747E:0000000000019576
+DEEP2_DEVICE_1_VRAM_BYTES=16962633728
+DEEP2_DEVICE_1_SCORE=116
+DEEP2_DEVICE_1_DUTY=DETECTED/UNUSED
+[VulkanCompute] DETECTED phys[0] type=2 AMD Radeon AI PRO R9700
+[VulkanCompute] DETECTED phys[1] type=2 Microsoft Direct3D12 (AMD Radeon AI PRO R9700)
+[VulkanCompute] SKIP_WARP_ICD phys[1] Microsoft Direct3D12 (AMD Radeon AI PRO R9700)
+[VulkanCompute] DETECTED phys[2] type=2 AMD Radeon RX 7800 XT
+[VulkanCompute] DETECTED phys[3] type=2 Microsoft Direct3D12 (AMD Radeon RX 7800 XT)
+[VulkanCompute] SKIP_WARP_ICD phys[3] Microsoft Direct3D12 (AMD Radeon RX 7800 XT)
+[VulkanCompute] DETECTED phys[4] type=4 Microsoft Direct3D12 (Microsoft Basic Render Driver)
+[VulkanCompute] SKIP_WARP_ICD phys[4] Microsoft Direct3D12 (Microsoft Basic Render Driver)
+[VulkanCompute] OPEN_ONE AMD Radeon AI PRO R9700 (others unused)
+[VulkanCompute] QUEUES compute=0 transfer=1 dual=1
+[VulkanCompute] FREETOKEN_STICK_RUB transfer_q=1 waw_ready_gate=1 helpframe_nway=4
+[Deep2Engine] Vulkan single-GPU open: AMD Radeon AI PRO R9700 (needle=AMD Radeon AI PRO R9700)
+LIVE_GPU0=AMD Radeon AI PRO R9700
+LIVE_GPU1=AMD Radeon RX 7800 XT
+[Deep2Engine] BATCH2_SSVK_PACKED_DUAL_OPEN=1
+[Deep2Engine] BATCH2_SSVK_PACKED_DUAL_BOUND=1
+[Deep2Engine] BIND16_SSVK_PRODUCT_BOUND=1
+[Deep2Engine] Loading model from: g:\~dev\rawrxd\models\gemma3-1b-Q2_K.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Multi-shard detected: NO (1 files in g:\~dev\rawrxd\models)
+[Deep2Engine] REVERSE_HOTPATCH=OFF ? raw GGUF load (opt-in via RAWRXD_REVERSE_HOTPATCH=1)
+[GGUF] WARNING: Tensor 'output_norm.weight' offset not 64-byte aligned: 15785312
+[GGUF] WARNING: Tensor 'token_embd.weight' offset not 64-byte aligned: 15789920
+[GGUF] WARNING: Tensor 'blk.0.attn_k.weight' offset not 64-byte aligned: 336654176
+[GGUF] WARNING: Tensor 'blk.0.attn_k_norm.weight' offset not 64-byte aligned: 336820064
+[GGUF] WARNING: Tensor 'blk.0.attn_norm.weight' offset not 64-byte aligned: 336821088
+[GGUF] WARNING: Tensor 'blk.0.attn_output.weight' offset not 64-byte aligned: 336825696
+[GGUF] WARNING: Tensor 'blk.0.attn_q.weight' offset not 64-byte aligned: 337332576
+[GGUF] WARNING: Tensor 'blk.0.attn_q_norm.weight' offset not 64-byte aligned: 337996128
+[GGUF] WARNING: Tensor 'blk.0.attn_v.weight' offset not 64-byte aligned: 337997152
+[GGUF] WARNING: Tensor 'blk.0.ffn_down.weight' offset not 64-byte aligned: 338199904
+[GGUF] WARNING: Tensor 'blk.0.ffn_gate.weight' offset not 64-byte aligned: 341621344
+[GGUF] WARNING: Tensor 'blk.0.ffn_norm.weight' offset not 64-byte aligned: 346100320
+[GGUF] WARNING: Tensor 'blk.0.ffn_up.weight' offset not 64-byte aligned: 346104928
+[GGUF] WARNING: Tensor 'blk.0.post_attention_norm.weight' offset not 64-byte aligned: 350583904
+[GGUF] WARNING: Tensor 'blk.0.post_ffw_norm.weight' offset not 64-byte aligned: 350588512
+[GGUF] WARNING: Tensor 'blk.1.attn_k.weight' offset not 64-byte aligned: 350593120
+[GGUF] WARNING: Tensor 'blk.1.attn_k_norm.weight' offset not 64-byte aligned: 350759008
+[GGUF] WARNING: Tensor 'blk.1.attn_norm.weight' offset not 64-byte aligned: 350760032
+[GGUF] WARNING: Tensor 'blk.1.attn_output.weight' offset not 64-byte aligned: 350764640
+[GGUF] WARNING: Tensor 'blk.1.attn_q.weight' offset not 64-byte aligned: 351271520
+[GGUF] WARNING: Tensor 'blk.1.attn_q_norm.weight' offset not 64-byte aligned: 351935072
+[GGUF] WARNING: Tensor 'blk.1.attn_v.weight' offset not 64-byte aligned: 351936096
+[GGUF] WARNING: Tensor 'blk.1.ffn_down.weight' offset not 64-byte aligned: 352138848
+[GGUF] WARNING: Tensor 'blk.1.ffn_gate.weight' offset not 64-byte aligned: 355560288
+[GGUF] WARNING: Tensor 'blk.1.ffn_norm.weight' offset not 64-byte aligned: 360039264
+[GGUF] WARNING: Tensor 'blk.1.ffn_up.weight' offset not 64-byte aligned: 360043872
+[GGUF] WARNING: Tensor 'blk.1.post_attention_norm.weight' offset not 64-byte aligned: 364522848
+[GGUF] WARNING: Tensor 'blk.1.post_ffw_norm.weight' offset not 64-byte aligned: 364527456
+[GGUF] WARNING: Tensor 'blk.2.attn_k.weight' offset not 64-byte aligned: 364532064
+[GGUF] WARNING: Tensor 'blk.2.attn_k_norm.weight' offset not 64-byte aligned: 364697952
+[GGUF] WARNING: Tensor 'blk.2.attn_norm.weight' offset not 64-byte aligned: 364698976
+[GGUF] WARNING: Tensor 'blk.2.attn_output.weight' offset not 64-byte aligned: 364703584
+[GGUF] WARNING: Tensor 'blk.2.attn_q.weight' offset not 64-byte aligned: 365210464
+[GGUF] WARNING: Tensor 'blk.2.attn_q_norm.weight' offset not 64-byte aligned: 365874016
+[GGUF] WARNING: Tensor 'blk.2.attn_v.weight' offset not 64-byte aligned: 365875040
+[GGUF] WARNING: Tensor 'blk.2.ffn_down.weight' offset not 64-byte aligned: 366077792
+[GGUF] WARNING: Tensor 'blk.2.ffn_gate.weight' offset not 64-byte aligned: 369499232
+[GGUF] WARNING: Tensor 'blk.2.ffn_norm.weight' offset not 64-byte aligned: 373978208
+[GGUF] WARNING: Tensor 'blk.2.ffn_up.weight' offset not 64-byte aligned: 373982816
+[GGUF] WARNING: Tensor 'blk.2.post_attention_norm.weight' offset not 64-byte aligned: 378461792
+[GGUF] WARNING: Tensor 'blk.2.post_ffw_norm.weight' offset not 64-byte aligned: 378466400
+[GGUF] WARNING: Tensor 'blk.3.attn_k.weight' offset not 64-byte aligned: 378471008
+[GGUF] WARNING: Tensor 'blk.3.attn_k_norm.weight' offset not 64-byte aligned: 378636896
+[GGUF] WARNING: Tensor 'blk.3.attn_norm.weight' offset not 64-byte aligned: 378637920
+[GGUF] WARNING: Tensor 'blk.3.attn_output.weight' offset not 64-byte aligned: 378642528
+[GGUF] WARNING: Tensor 'blk.3.attn_q.weight' offset not 64-byte aligned: 379149408
+[GGUF] WARNING: Tensor 'blk.3.attn_q_norm.weight' offset not 64-byte aligned: 379812960
+[GGUF] WARNING: Tensor 'blk.3.attn_v.weight' offset not 64-byte aligned: 379813984
+[GGUF] WARNING: Tensor 'blk.3.ffn_down.weight' offset not 64-byte aligned: 380016736
+[GGUF] WARNING: Tensor 'blk.3.ffn_gate.weight' offset not 64-byte aligned: 383438176
+[GGUF] WARNING: Tensor 'blk.3.ffn_norm.weight' offset not 64-byte aligned: 387917152
+[GGUF] WARNING: Tensor 'blk.3.ffn_up.weight' offset not 64-byte aligned: 387921760
+[GGUF] WARNING: Tensor 'blk.3.post_attention_norm.weight' offset not 64-byte aligned: 392400736
+[GGUF] WARNING: Tensor 'blk.3.post_ffw_norm.weight' offset not 64-byte aligned: 392405344
+[GGUF] WARNING: Tensor 'blk.4.attn_k.weight' offset not 64-byte aligned: 392409952
+[GGUF] WARNING: Tensor 'blk.4.attn_k_norm.weight' offset not 64-byte aligned: 392575840
+[GGUF] WARNING: Tensor 'blk.4.attn_norm.weight' offset not 64-byte aligned: 392576864
+[GGUF] WARNING: Tensor 'blk.4.attn_output.weight' offset not 64-byte aligned: 392581472
+[GGUF] WARNING: Tensor 'blk.4.attn_q.weight' offset not 64-byte aligned: 393088352
+[GGUF] WARNING: Tensor 'blk.4.attn_q_norm.weight' offset not 64-byte aligned: 393751904
+[GGUF] WARNING: Tensor 'blk.4.attn_v.weight' offset not 64-byte aligned: 393752928
+[GGUF] WARNING: Tensor 'blk.4.ffn_down.weight' offset not 64-byte aligned: 393955680
+[GGUF] WARNING: Tensor 'blk.4.ffn_gate.weight' offset not 64-byte aligned: 397377120
+[GGUF] WARNING: Tensor 'blk.4.ffn_norm.weight' offset not 64-byte aligned: 401856096
+[GGUF] WARNING: Tensor 'blk.4.ffn_up.weight' offset not 64-byte aligned: 401860704
+[GGUF] WARNING: Tensor 'blk.4.post_attention_norm.weight' offset not 64-byte aligned: 406339680
+[GGUF] WARNING: Tensor 'blk.4.post_ffw_norm.weight' offset not 64-byte aligned: 406344288
+[GGUF] WARNING: Tensor 'blk.5.attn_k.weight' offset not 64-byte aligned: 406348896
+[GGUF] WARNING: Tensor 'blk.5.attn_k_norm.weight' offset not 64-byte aligned: 406514784
+[GGUF] WARNING: Tensor 'blk.5.attn_norm.weight' offset not 64-byte aligned: 406515808
+[GGUF] WARNING: Tensor 'blk.5.attn_output.weight' offset not 64-byte aligned: 406520416
+[GGUF] WARNING: Tensor 'blk.5.attn_q.weight' offset not 64-byte aligned: 407027296
+[GGUF] WARNING: Tensor 'blk.5.attn_q_norm.weight' offset not 64-byte aligned: 407690848
+[GGUF] WARNING: Tensor 'blk.5.attn_v.weight' offset not 64-byte aligned: 407691872
+[GGUF] WARNING: Tensor 'blk.5.ffn_down.weight' offset not 64-byte aligned: 407894624
+[GGUF] WARNING: Tensor 'blk.5.ffn_gate.weight' offset not 64-byte aligned: 411316064
+[GGUF] WARNING: Tensor 'blk.5.ffn_norm.weight' offset not 64-byte aligned: 415795040
+[GGUF] WARNING: Tensor 'blk.5.ffn_up.weight' offset not 64-byte aligned: 415799648
+[GGUF] WARNING: Tensor 'blk.5.post_attention_norm.weight' offset not 64-byte aligned: 420278624
+[GGUF] WARNING: Tensor 'blk.5.post_ffw_norm.weight' offset not 64-byte aligned: 420283232
+[GGUF] WARNING: Tensor 'blk.6.attn_k.weight' offset not 64-byte aligned: 420287840
+[GGUF] WARNING: Tensor 'blk.6.attn_k_norm.weight' offset not 64-byte aligned: 420453728
+[GGUF] WARNING: Tensor 'blk.6.attn_norm.weight' offset not 64-byte aligned: 420454752
+[GGUF] WARNING: Tensor 'blk.6.attn_output.weight' offset not 64-byte aligned: 420459360
+[GGUF] WARNING: Tensor 'blk.6.attn_q.weight' offset not 64-byte aligned: 420966240
+[GGUF] WARNING: Tensor 'blk.6.attn_q_norm.weight' offset not 64-byte aligned: 421629792
+[GGUF] WARNING: Tensor 'blk.6.attn_v.weight' offset not 64-byte aligned: 421630816
+[GGUF] WARNING: Tensor 'blk.6.ffn_down.weight' offset not 64-byte aligned: 421833568
+[GGUF] WARNING: Tensor 'blk.6.ffn_gate.weight' offset not 64-byte aligned: 425255008
+[GGUF] WARNING: Tensor 'blk.6.ffn_norm.weight' offset not 64-byte aligned: 429733984
+[GGUF] WARNING: Tensor 'blk.6.ffn_up.weight' offset not 64-byte aligned: 429738592
+[GGUF] WARNING: Tensor 'blk.6.post_attention_norm.weight' offset not 64-byte aligned: 434217568
+[GGUF] WARNING: Tensor 'blk.6.post_ffw_norm.weight' offset not 64-byte aligned: 434222176
+[GGUF] WARNING: Tensor 'blk.7.attn_k.weight' offset not 64-byte aligned: 434226784
+[GGUF] WARNING: Tensor 'blk.7.attn_k_norm.weight' offset not 64-byte aligned: 434392672
+[GGUF] WARNING: Tensor 'blk.7.attn_norm.weight' offset not 64-byte aligned: 434393696
+[GGUF] WARNING: Tensor 'blk.7.attn_output.weight' offset not 64-byte aligned: 434398304
+[GGUF] WARNING: Tensor 'blk.7.attn_q.weight' offset not 64-byte aligned: 434905184
+[GGUF] WARNING: Tensor 'blk.7.attn_q_norm.weight' offset not 64-byte aligned: 435568736
+[GGUF] WARNING: Tensor 'blk.7.attn_v.weight' offset not 64-byte aligned: 435569760
+[GGUF] WARNING: Tensor 'blk.7.ffn_down.weight' offset not 64-byte aligned: 435772512
+[GGUF] WARNING: Tensor 'blk.7.ffn_gate.weight' offset not 64-byte aligned: 439193952
+[GGUF] WARNING: Tensor 'blk.7.ffn_norm.weight' offset not 64-byte aligned: 443672928
+[GGUF] WARNING: Tensor 'blk.7.ffn_up.weight' offset not 64-byte aligned: 443677536
+[GGUF] WARNING: Tensor 'blk.7.post_attention_norm.weight' offset not 64-byte aligned: 448156512
+[GGUF] WARNING: Tensor 'blk.7.post_ffw_norm.weight' offset not 64-byte aligned: 448161120
+[GGUF] WARNING: Tensor 'blk.8.attn_k.weight' offset not 64-byte aligned: 448165728
+[GGUF] WARNING: Tensor 'blk.8.attn_k_norm.weight' offset not 64-byte aligned: 448331616
+[GGUF] WARNING: Tensor 'blk.8.attn_norm.weight' offset not 64-byte aligned: 448332640
+[GGUF] WARNING: Tensor 'blk.8.attn_output.weight' offset not 64-byte aligned: 448337248
+[GGUF] WARNING: Tensor 'blk.8.attn_q.weight' offset not 64-byte aligned: 448844128
+[GGUF] WARNING: Tensor 'blk.8.attn_q_norm.weight' offset not 64-byte aligned: 449507680
+[GGUF] WARNING: Tensor 'blk.8.attn_v.weight' offset not 64-byte aligned: 449508704
+[GGUF] WARNING: Tensor 'blk.8.ffn_down.weight' offset not 64-byte aligned: 449711456
+[GGUF] WARNING: Tensor 'blk.8.ffn_gate.weight' offset not 64-byte aligned: 453132896
+[GGUF] WARNING: Tensor 'blk.8.ffn_norm.weight' offset not 64-byte aligned: 457611872
+[GGUF] WARNING: Tensor 'blk.8.ffn_up.weight' offset not 64-byte aligned: 457616480
+[GGUF] WARNING: Tensor 'blk.8.post_attention_norm.weight' offset not 64-byte aligned: 462095456
+[GGUF] WARNING: Tensor 'blk.8.post_ffw_norm.weight' offset not 64-byte aligned: 462100064
+[GGUF] WARNING: Tensor 'blk.9.attn_k.weight' offset not 64-byte aligned: 462104672
+[GGUF] WARNING: Tensor 'blk.9.attn_k_norm.weight' offset not 64-byte aligned: 462270560
+[GGUF] WARNING: Tensor 'blk.9.attn_norm.weight' offset not 64-byte aligned: 462271584
+[GGUF] WARNING: Tensor 'blk.9.attn_output.weight' offset not 64-byte aligned: 462276192
+[GGUF] WARNING: Tensor 'blk.9.attn_q.weight' offset not 64-byte aligned: 462783072
+[GGUF] WARNING: Tensor 'blk.9.attn_q_norm.weight' offset not 64-byte aligned: 463446624
+[GGUF] WARNING: Tensor 'blk.9.attn_v.weight' offset not 64-byte aligned: 463447648
+[GGUF] WARNING: Tensor 'blk.9.ffn_down.weight' offset not 64-byte aligned: 463650400
+[GGUF] WARNING: Tensor 'blk.9.ffn_gate.weight' offset not 64-byte aligned: 467071840
+[GGUF] WARNING: Tensor 'blk.9.ffn_norm.weight' offset not 64-byte aligned: 471550816
+[GGUF] WARNING: Tensor 'blk.9.ffn_up.weight' offset not 64-byte aligned: 471555424
+[GGUF] WARNING: Tensor 'blk.9.post_attention_norm.weight' offset not 64-byte aligned: 476034400
+[GGUF] WARNING: Tensor 'blk.9.post_ffw_norm.weight' offset not 64-byte aligned: 476039008
+[GGUF] WARNING: Tensor 'blk.10.attn_k.weight' offset not 64-byte aligned: 476043616
+[GGUF] WARNING: Tensor 'blk.10.attn_k_norm.weight' offset not 64-byte aligned: 476209504
+[GGUF] WARNING: Tensor 'blk.10.attn_norm.weight' offset not 64-byte aligned: 476210528
+[GGUF] WARNING: Tensor 'blk.10.attn_output.weight' offset not 64-byte aligned: 476215136
+[GGUF] WARNING: Tensor 'blk.10.attn_q.weight' offset not 64-byte aligned: 476722016
+[GGUF] WARNING: Tensor 'blk.10.attn_q_norm.weight' offset not 64-byte aligned: 477385568
+[GGUF] WARNING: Tensor 'blk.10.attn_v.weight' offset not 64-byte aligned: 477386592
+[GGUF] WARNING: Tensor 'blk.10.ffn_down.weight' offset not 64-byte aligned: 477589344
+[GGUF] WARNING: Tensor 'blk.10.ffn_gate.weight' offset not 64-byte aligned: 481010784
+[GGUF] WARNING: Tensor 'blk.10.ffn_norm.weight' offset not 64-byte aligned: 485489760
+[GGUF] WARNING: Tensor 'blk.10.ffn_up.weight' offset not 64-byte aligned: 485494368
+[GGUF] WARNING: Tensor 'blk.10.post_attention_norm.weight' offset not 64-byte aligned: 489973344
+[GGUF] WARNING: Tensor 'blk.10.post_ffw_norm.weight' offset not 64-byte aligned: 489977952
+[GGUF] WARNING: Tensor 'blk.11.attn_k.weight' offset not 64-byte aligned: 489982560
+[GGUF] WARNING: Tensor 'blk.11.attn_k_norm.weight' offset not 64-byte aligned: 490148448
+[GGUF] WARNING: Tensor 'blk.11.attn_norm.weight' offset not 64-byte aligned: 490149472
+[GGUF] WARNING: Tensor 'blk.11.attn_output.weight' offset not 64-byte aligned: 490154080
+[GGUF] WARNING: Tensor 'blk.11.attn_q.weight' offset not 64-byte aligned: 490660960
+[GGUF] WARNING: Tensor 'blk.11.attn_q_norm.weight' offset not 64-byte aligned: 491324512
+[GGUF] WARNING: Tensor 'blk.11.attn_v.weight' offset not 64-byte aligned: 491325536
+[GGUF] WARNING: Tensor 'blk.11.ffn_down.weight' offset not 64-byte aligned: 491528288
+[GGUF] WARNING: Tensor 'blk.11.ffn_gate.weight' offset not 64-byte aligned: 494949728
+[GGUF] WARNING: Tensor 'blk.11.ffn_norm.weight' offset not 64-byte aligned: 499428704
+[GGUF] WARNING: Tensor 'blk.11.ffn_up.weight' offset not 64-byte aligned: 499433312
+[GGUF] WARNING: Tensor 'blk.11.post_attention_norm.weight' offset not 64-byte aligned: 503912288
+[GGUF] WARNING: Tensor 'blk.11.post_ffw_norm.weight' offset not 64-byte aligned: 503916896
+[GGUF] WARNING: Tensor 'blk.12.attn_k.weight' offset not 64-byte aligned: 503921504
+[GGUF] WARNING: Tensor 'blk.12.attn_k_norm.weight' offset not 64-byte aligned: 504087392
+[GGUF] WARNING: Tensor 'blk.12.attn_norm.weight' offset not 64-byte aligned: 504088416
+[GGUF] WARNING: Tensor 'blk.12.attn_output.weight' offset not 64-byte aligned: 504093024
+[GGUF] WARNING: Tensor 'blk.12.attn_q.weight' offset not 64-byte aligned: 504599904
+[GGUF] WARNING: Tensor 'blk.12.attn_q_norm.weight' offset not 64-byte aligned: 505263456
+[GGUF] WARNING: Tensor 'blk.12.attn_v.weight' offset not 64-byte aligned: 505264480
+[GGUF] WARNING: Tensor 'blk.12.ffn_down.weight' offset not 64-byte aligned: 505467232
+[GGUF] WARNING: Tensor 'blk.12.ffn_gate.weight' offset not 64-byte aligned: 508888672
+[GGUF] WARNING: Tensor 'blk.12.ffn_norm.weight' offset not 64-byte aligned: 513367648
+[GGUF] WARNING: Tensor 'blk.12.ffn_up.weight' offset not 64-byte aligned: 513372256
+[GGUF] WARNING: Tensor 'blk.12.post_attention_norm.weight' offset not 64-byte aligned: 517851232
+[GGUF] WARNING: Tensor 'blk.12.post_ffw_norm.weight' offset not 64-byte aligned: 517855840
+[GGUF] WARNING: Tensor 'blk.13.attn_k.weight' offset not 64-byte aligned: 517860448
+[GGUF] WARNING: Tensor 'blk.13.attn_k_norm.weight' offset not 64-byte aligned: 518026336
+[GGUF] WARNING: Tensor 'blk.13.attn_norm.weight' offset not 64-byte aligned: 518027360
+[GGUF] WARNING: Tensor 'blk.13.attn_output.weight' offset not 64-byte aligned: 518031968
+[GGUF] WARNING: Tensor 'blk.13.attn_q.weight' offset not 64-byte aligned: 518538848
+[GGUF] WARNING: Tensor 'blk.13.attn_q_norm.weight' offset not 64-byte aligned: 519202400
+[GGUF] WARNING: Tensor 'blk.13.attn_v.weight' offset not 64-byte aligned: 519203424
+[GGUF] WARNING: Tensor 'blk.13.ffn_down.weight' offset not 64-byte aligned: 519406176
+[GGUF] WARNING: Tensor 'blk.13.ffn_gate.weight' offset not 64-byte aligned: 522827616
+[GGUF] WARNING: Tensor 'blk.13.ffn_norm.weight' offset not 64-byte aligned: 527306592
+[GGUF] WARNING: Tensor 'blk.13.ffn_up.weight' offset not 64-byte aligned: 527311200
+[GGUF] WARNING: Tensor 'blk.13.post_attention_norm.weight' offset not 64-byte aligned: 531790176
+[GGUF] WARNING: Tensor 'blk.13.post_ffw_norm.weight' offset not 64-byte aligned: 531794784
+[GGUF] WARNING: Tensor 'blk.14.attn_k.weight' offset not 64-byte aligned: 531799392
+[GGUF] WARNING: Tensor 'blk.14.attn_k_norm.weight' offset not 64-byte aligned: 531965280
+[GGUF] WARNING: Tensor 'blk.14.attn_norm.weight' offset not 64-byte aligned: 531966304
+[GGUF] WARNING: Tensor 'blk.14.attn_output.weight' offset not 64-byte aligned: 531970912
+[GGUF] WARNING: Tensor 'blk.14.attn_q.weight' offset not 64-byte aligned: 532477792
+[GGUF] WARNING: Tensor 'blk.14.attn_q_norm.weight' offset not 64-byte aligned: 533141344
+[GGUF] WARNING: Tensor 'blk.14.attn_v.weight' offset not 64-byte aligned: 533142368
+[GGUF] WARNING: Tensor 'blk.14.ffn_down.weight' offset not 64-byte aligned: 533345120
+[GGUF] WARNING: Tensor 'blk.14.ffn_gate.weight' offset not 64-byte aligned: 536766560
+[GGUF] WARNING: Tensor 'blk.14.ffn_norm.weight' offset not 64-byte aligned: 541245536
+[GGUF] WARNING: Tensor 'blk.14.ffn_up.weight' offset not 64-byte aligned: 541250144
+[GGUF] WARNING: Tensor 'blk.14.post_attention_norm.weight' offset not 64-byte aligned: 545729120
+[GGUF] WARNING: Tensor 'blk.14.post_ffw_norm.weight' offset not 64-byte aligned: 545733728
+[GGUF] WARNING: Tensor 'blk.15.attn_k.weight' offset not 64-byte aligned: 545738336
+[GGUF] WARNING: Tensor 'blk.15.attn_k_norm.weight' offset not 64-byte aligned: 545904224
+[GGUF] WARNING: Tensor 'blk.15.attn_norm.weight' offset not 64-byte aligned: 545905248
+[GGUF] WARNING: Tensor 'blk.15.attn_output.weight' offset not 64-byte aligned: 545909856
+[GGUF] WARNING: Tensor 'blk.15.attn_q.weight' offset not 64-byte aligned: 546416736
+[GGUF] WARNING: Tensor 'blk.15.attn_q_norm.weight' offset not 64-byte aligned: 547080288
+[GGUF] WARNING: Tensor 'blk.15.attn_v.weight' offset not 64-byte aligned: 547081312
+[GGUF] WARNING: Tensor 'blk.15.ffn_down.weight' offset not 64-byte aligned: 547284064
+[GGUF] WARNING: Tensor 'blk.15.ffn_gate.weight' offset not 64-byte aligned: 550705504
+[GGUF] WARNING: Tensor 'blk.15.ffn_norm.weight' offset not 64-byte aligned: 555184480
+[GGUF] WARNING: Tensor 'blk.15.ffn_up.weight' offset not 64-byte aligned: 555189088
+[GGUF] WARNING: Tensor 'blk.15.post_attention_norm.weight' offset not 64-byte aligned: 559668064
+[GGUF] WARNING: Tensor 'blk.15.post_ffw_norm.weight' offset not 64-byte aligned: 559672672
+[GGUF] WARNING: Tensor 'blk.16.attn_k.weight' offset not 64-byte aligned: 559677280
+[GGUF] WARNING: Tensor 'blk.16.attn_k_norm.weight' offset not 64-byte aligned: 559843168
+[GGUF] WARNING: Tensor 'blk.16.attn_norm.weight' offset not 64-byte aligned: 559844192
+[GGUF] WARNING: Tensor 'blk.16.attn_output.weight' offset not 64-byte aligned: 559848800
+[GGUF] WARNING: Tensor 'blk.16.attn_q.weight' offset not 64-byte aligned: 560355680
+[GGUF] WARNING: Tensor 'blk.16.attn_q_norm.weight' offset not 64-byte aligned: 561019232
+[GGUF] WARNING: Tensor 'blk.16.attn_v.weight' offset not 64-byte aligned: 561020256
+[GGUF] WARNING: Tensor 'blk.16.ffn_down.weight' offset not 64-byte aligned: 561223008
+[GGUF] WARNING: Tensor 'blk.16.ffn_gate.weight' offset not 64-byte aligned: 564644448
+[GGUF] WARNING: Tensor 'blk.16.ffn_norm.weight' offset not 64-byte aligned: 569123424
+[GGUF] WARNING: Tensor 'blk.16.ffn_up.weight' offset not 64-byte aligned: 569128032
+[GGUF] WARNING: Tensor 'blk.16.post_attention_norm.weight' offset not 64-byte aligned: 573607008
+[GGUF] WARNING: Tensor 'blk.16.post_ffw_norm.weight' offset not 64-byte aligned: 573611616
+[GGUF] WARNING: Tensor 'blk.17.attn_k.weight' offset not 64-byte aligned: 573616224
+[GGUF] WARNING: Tensor 'blk.17.attn_k_norm.weight' offset not 64-byte aligned: 573782112
+[GGUF] WARNING: Tensor 'blk.17.attn_norm.weight' offset not 64-byte aligned: 573783136
+[GGUF] WARNING: Tensor 'blk.17.attn_output.weight' offset not 64-byte aligned: 573787744
+[GGUF] WARNING: Tensor 'blk.17.attn_q.weight' offset not 64-byte aligned: 574294624
+[GGUF] WARNING: Tensor 'blk.17.attn_q_norm.weight' offset not 64-byte aligned: 574958176
+[GGUF] WARNING: Tensor 'blk.17.attn_v.weight' offset not 64-byte aligned: 574959200
+[GGUF] WARNING: Tensor 'blk.17.ffn_down.weight' offset not 64-byte aligned: 575161952
+[GGUF] WARNING: Tensor 'blk.17.ffn_gate.weight' offset not 64-byte aligned: 578583392
+[GGUF] WARNING: Tensor 'blk.17.ffn_norm.weight' offset not 64-byte aligned: 583062368
+[GGUF] WARNING: Tensor 'blk.17.ffn_up.weight' offset not 64-byte aligned: 583066976
+[GGUF] WARNING: Tensor 'blk.17.post_attention_norm.weight' offset not 64-byte aligned: 587545952
+[GGUF] WARNING: Tensor 'blk.17.post_ffw_norm.weight' offset not 64-byte aligned: 587550560
+[GGUF] WARNING: Tensor 'blk.18.attn_k.weight' offset not 64-byte aligned: 587555168
+[GGUF] WARNING: Tensor 'blk.18.attn_k_norm.weight' offset not 64-byte aligned: 587721056
+[GGUF] WARNING: Tensor 'blk.18.attn_norm.weight' offset not 64-byte aligned: 587722080
+[GGUF] WARNING: Tensor 'blk.18.attn_output.weight' offset not 64-byte aligned: 587726688
+[GGUF] WARNING: Tensor 'blk.18.attn_q.weight' offset not 64-byte aligned: 588233568
+[GGUF] WARNING: Tensor 'blk.18.attn_q_norm.weight' offset not 64-byte aligned: 588897120
+[GGUF] WARNING: Tensor 'blk.18.attn_v.weight' offset not 64-byte aligned: 588898144
+[GGUF] WARNING: Tensor 'blk.18.ffn_down.weight' offset not 64-byte aligned: 589100896
+[GGUF] WARNING: Tensor 'blk.18.ffn_gate.weight' offset not 64-byte aligned: 592522336
+[GGUF] WARNING: Tensor 'blk.18.ffn_norm.weight' offset not 64-byte aligned: 597001312
+[GGUF] WARNING: Tensor 'blk.18.ffn_up.weight' offset not 64-byte aligned: 597005920
+[GGUF] WARNING: Tensor 'blk.18.post_attention_norm.weight' offset not 64-byte aligned: 601484896
+[GGUF] WARNING: Tensor 'blk.18.post_ffw_norm.weight' offset not 64-byte aligned: 601489504
+[GGUF] WARNING: Tensor 'blk.19.attn_k.weight' offset not 64-byte aligned: 601494112
+[GGUF] WARNING: Tensor 'blk.19.attn_k_norm.weight' offset not 64-byte aligned: 601660000
+[GGUF] WARNING: Tensor 'blk.19.attn_norm.weight' offset not 64-byte aligned: 601661024
+[GGUF] WARNING: Tensor 'blk.19.attn_output.weight' offset not 64-byte aligned: 601665632
+[GGUF] WARNING: Tensor 'blk.19.attn_q.weight' offset not 64-byte aligned: 602172512
+[GGUF] WARNING: Tensor 'blk.19.attn_q_norm.weight' offset not 64-byte aligned: 602836064
+[GGUF] WARNING: Tensor 'blk.19.attn_v.weight' offset not 64-byte aligned: 602837088
+[GGUF] WARNING: Tensor 'blk.19.ffn_down.weight' offset not 64-byte aligned: 603039840
+[GGUF] WARNING: Tensor 'blk.19.ffn_gate.weight' offset not 64-byte aligned: 606461280
+[GGUF] WARNING: Tensor 'blk.19.ffn_norm.weight' offset not 64-byte aligned: 610940256
+[GGUF] WARNING: Tensor 'blk.19.ffn_up.weight' offset not 64-byte aligned: 610944864
+[GGUF] WARNING: Tensor 'blk.19.post_attention_norm.weight' offset not 64-byte aligned: 615423840
+[GGUF] WARNING: Tensor 'blk.19.post_ffw_norm.weight' offset not 64-byte aligned: 615428448
+[GGUF] WARNING: Tensor 'blk.20.attn_k.weight' offset not 64-byte aligned: 615433056
+[GGUF] WARNING: Tensor 'blk.20.attn_k_norm.weight' offset not 64-byte aligned: 615598944
+[GGUF] WARNING: Tensor 'blk.20.attn_norm.weight' offset not 64-byte aligned: 615599968
+[GGUF] WARNING: Tensor 'blk.20.attn_output.weight' offset not 64-byte aligned: 615604576
+[GGUF] WARNING: Tensor 'blk.20.attn_q.weight' offset not 64-byte aligned: 616111456
+[GGUF] WARNING: Tensor 'blk.20.attn_q_norm.weight' offset not 64-byte aligned: 616775008
+[GGUF] WARNING: Tensor 'blk.20.attn_v.weight' offset not 64-byte aligned: 616776032
+[GGUF] WARNING: Tensor 'blk.20.ffn_down.weight' offset not 64-byte aligned: 616978784
+[GGUF] WARNING: Tensor 'blk.20.ffn_gate.weight' offset not 64-byte aligned: 620400224
+[GGUF] WARNING: Tensor 'blk.20.ffn_norm.weight' offset not 64-byte aligned: 624879200
+[GGUF] WARNING: Tensor 'blk.20.ffn_up.weight' offset not 64-byte aligned: 624883808
+[GGUF] WARNING: Tensor 'blk.20.post_attention_norm.weight' offset not 64-byte aligned: 629362784
+[GGUF] WARNING: Tensor 'blk.20.post_ffw_norm.weight' offset not 64-byte aligned: 629367392
+[GGUF] WARNING: Tensor 'blk.21.attn_k.weight' offset not 64-byte aligned: 629372000
+[GGUF] WARNING: Tensor 'blk.21.attn_k_norm.weight' offset not 64-byte aligned: 629537888
+[GGUF] WARNING: Tensor 'blk.21.attn_norm.weight' offset not 64-byte aligned: 629538912
+[GGUF] WARNING: Tensor 'blk.21.attn_output.weight' offset not 64-byte aligned: 629543520
+[GGUF] WARNING: Tensor 'blk.21.attn_q.weight' offset not 64-byte aligned: 630050400
+[GGUF] WARNING: Tensor 'blk.21.attn_q_norm.weight' offset not 64-byte aligned: 630713952
+[GGUF] WARNING: Tensor 'blk.21.attn_v.weight' offset not 64-byte aligned: 630714976
+[GGUF] WARNING: Tensor 'blk.21.ffn_down.weight' offset not 64-byte aligned: 630917728
+[GGUF] WARNING: Tensor 'blk.21.ffn_gate.weight' offset not 64-byte aligned: 634339168
+[GGUF] WARNING: Tensor 'blk.21.ffn_norm.weight' offset not 64-byte aligned: 638818144
+[GGUF] WARNING: Tensor 'blk.21.ffn_up.weight' offset not 64-byte aligned: 638822752
+[GGUF] WARNING: Tensor 'blk.21.post_attention_norm.weight' offset not 64-byte aligned: 643301728
+[GGUF] WARNING: Tensor 'blk.21.post_ffw_norm.weight' offset not 64-byte aligned: 643306336
+[GGUF] WARNING: Tensor 'blk.22.attn_k.weight' offset not 64-byte aligned: 643310944
+[GGUF] WARNING: Tensor 'blk.22.attn_k_norm.weight' offset not 64-byte aligned: 643476832
+[GGUF] WARNING: Tensor 'blk.22.attn_norm.weight' offset not 64-byte aligned: 643477856
+[GGUF] WARNING: Tensor 'blk.22.attn_output.weight' offset not 64-byte aligned: 643482464
+[GGUF] WARNING: Tensor 'blk.22.attn_q.weight' offset not 64-byte aligned: 643989344
+[GGUF] WARNING: Tensor 'blk.22.attn_q_norm.weight' offset not 64-byte aligned: 644652896
+[GGUF] WARNING: Tensor 'blk.22.attn_v.weight' offset not 64-byte aligned: 644653920
+[GGUF] WARNING: Tensor 'blk.22.ffn_down.weight' offset not 64-byte aligned: 644856672
+[GGUF] WARNING: Tensor 'blk.22.ffn_gate.weight' offset not 64-byte aligned: 648278112
+[GGUF] WARNING: Tensor 'blk.22.ffn_norm.weight' offset not 64-byte aligned: 652757088
+[GGUF] WARNING: Tensor 'blk.22.ffn_up.weight' offset not 64-byte aligned: 652761696
+[GGUF] WARNING: Tensor 'blk.22.post_attention_norm.weight' offset not 64-byte aligned: 657240672
+[GGUF] WARNING: Tensor 'blk.22.post_ffw_norm.weight' offset not 64-byte aligned: 657245280
+[GGUF] WARNING: Tensor 'blk.23.attn_k.weight' offset not 64-byte aligned: 657249888
+[GGUF] WARNING: Tensor 'blk.23.attn_k_norLOADMODEL_STAGE=gguf_loader_ok tensors=340
+LOADMODEL_STAGE=geometry_ok
+LOADMODEL_STAGE=digest_skip
+[ModelOpenCompat] repaired metadata: arch=0 vocab=0 hidden=0 layers=0 inter=1 heads=1 kvHeads=0
+GEMMA4_SCHEMA_BIND root=output_norm.weight rows=1152 cols=1 type=0
+WEIGHT_BUDGET_ENV_PRESENT=1
+WEIGHT_BUDGET_ENV_RAW="8192"
+WEIGHT_BUDGET_PARSE_OK=1
+WEIGHT_BUDGET_INPUT_MIB=8192
+WEIGHT_BUDGET_EFFECTIVE_MIB=8192
+RESIDENCY_BUDGET_MIB=8192
+BUDGET_RELATION_VALID=1
+m.weight' offset not 64-byte aligned: 657415776
+[GGUF] WARNING: Tensor 'blk.23.attn_norm.weight' offset not 64-byte aligned: 657416800
+[GGUF] WARNING: Tensor 'blk.23.attn_output.weight' offset not 64-byte aligned: 657421408
+[GGUF] WARNING: Tensor 'blk.23.attn_q.weight' offset not 64-byte aligned: 657928288
+[GGUF] WARNING: Tensor 'blk.23.attn_q_norm.weight' offset not 64-byte aligned: 658591840
+[GGUF] WARNING: Tensor 'blk.23.attn_v.weight' offset not 64-byte aligned: 658592864
+[GGUF] WARNING: Tensor 'blk.23.ffn_down.weight' offset not 64-byte aligned: 658795616
+[GGUF] WARNING: Tensor 'blk.23.ffn_gate.weight' offset not 64-byte aligned: 662217056
+[GGUF] WARNING: Tensor 'blk.23.ffn_norm.weight' offset not 64-byte aligned: 666696032
+[GGUF] WARNING: Tensor 'blk.23.ffn_up.weight' offset not 64-byte aligned: 666700640
+[GGUF] WARNING: Tensor 'blk.23.post_attention_norm.weight' offset not 64-byte aligned: 671179616
+[GGUF] WARNING: Tensor 'blk.23.post_ffw_norm.weight' offset not 64-byte aligned: 671184224
+[GGUF] WARNING: Tensor 'blk.24.attn_k.weight' offset not 64-byte aligned: 671188832
+[GGUF] WARNING: Tensor 'blk.24.attn_k_norm.weight' offset not 64-byte aligned: 671354720
+[GGUF] WARNING: Tensor 'blk.24.attn_norm.weight' offset not 64-byte aligned: 671355744
+[GGUF] WARNING: Tensor 'blk.24.attn_output.weight' offset not 64-byte aligned: 671360352
+[GGUF] WARNING: Tensor 'blk.24.attn_q.weight' offset not 64-byte aligned: 671867232
+[GGUF] WARNING: Tensor 'blk.24.attn_q_norm.weight' offset not 64-byte aligned: 672530784
+[GGUF] WARNING: Tensor 'blk.24.attn_v.weight' offset not 64-byte aligned: 672531808
+[GGUF] WARNING: Tensor 'blk.24.ffn_down.weight' offset not 64-byte aligned: 672734560
+[GGUF] WARNING: Tensor 'blk.24.ffn_gate.weight' offset not 64-byte aligned: 676156000
+[GGUF] WARNING: Tensor 'blk.24.ffn_norm.weight' offset not 64-byte aligned: 680634976
+[GGUF] WARNING: Tensor 'blk.24.ffn_up.weight' offset not 64-byte aligned: 680639584
+[GGUF] WARNING: Tensor 'blk.24.post_attention_norm.weight' offset not 64-byte aligned: 685118560
+[GGUF] WARNING: Tensor 'blk.24.post_ffw_norm.weight' offset not 64-byte aligned: 685123168
+[GGUF] WARNING: Tensor 'blk.25.attn_k.weight' offset not 64-byte aligned: 685127776
+[GGUF] WARNING: Tensor 'blk.25.attn_k_norm.weight' offset not 64-byte aligned: 685293664
+[GGUF] WARNING: Tensor 'blk.25.attn_norm.weight' offset not 64-byte aligned: 685294688
+[GGUF] WARNING: Tensor 'blk.25.attn_output.weight' offset not 64-byte aligned: 685299296
+[GGUF] WARNING: Tensor 'blk.25.attn_q.weight' offset not 64-byte aligned: 685806176
+[GGUF] WARNING: Tensor 'blk.25.attn_q_norm.weight' offset not 64-byte aligned: 686469728
+[GGUF] WARNING: Tensor 'blk.25.attn_v.weight' offset not 64-byte aligned: 686470752
+[GGUF] WARNING: Tensor 'blk.25.ffn_down.weight' offset not 64-byte aligned: 686673504
+[GGUF] WARNING: Tensor 'blk.25.ffn_gate.weight' offset not 64-byte aligned: 690094944
+[GGUF] WARNING: Tensor 'blk.25.ffn_norm.weight' offset not 64-byte aligned: 694573920
+[GGUF] WARNING: Tensor 'blk.25.ffn_up.weight' offset not 64-byte aligned: 694578528
+[GGUF] WARNING: Tensor 'blk.25.post_attention_norm.weight' offset not 64-byte aligned: 699057504
+[GGUF] WARNING: Tensor 'blk.25.post_ffw_norm.weight' offset not 64-byte aligned: 699062112
+[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=PASS arch=gemma3 L=26 H=1152 FFN=6912 heads=4 kv=1 hd=256 ctx=32768 ropeBase=1000000 ropeDim=256
+[Deep2Engine] AUTHORITY_LADDER=DEFER_UNTIL_RUNTIME_RECEIPT
+[Deep2Engine] GGUF architecture: 'gemma3'  hidden=1152 layers=26 heads=4 kvHeads=1 inter=6912 vocab=262144
+[Deep2Engine] Tokenizer loaded: vocab=262144 bos=2 eos=1 (Spm::encode)
+[Deep2Engine] Using tied embeddings
+[ResidencyManager] Initialized: maxResidentBytes=8589934592, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=8192 MB
+[ResidencyManager] this=0000018CAA4D2180  Registered 'output_norm.weight': shard=0 offset=15785312 bytes=4608  |  registry_size=1  registeredBytes=4608  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=0000018CAA4D2180  ReFFN_INTER_INFERRED ok=1 why=SPLIT_GATE_MATCHES_DOWN inter=6912 old_meta=6912 old_model=6912 old_config=6912
+PHI3_FUSED_FFN_RUNTIME layers=26 repaired=0 authority=UNOBSERVED
+GEMMA4_SCHEMA_BINDER ok=1 why=GEOM_READY hidden=1152 layers=26 vocab=262144 tokenEmbed=1
+GEMMA4_LAYER_TOPOLOGY_BIND ok=1 why=GEOM_READY_UNIFORM layers=26 split=26 fused_qkv=0 projector=0 ssm=0 ffn_only=0 ffn=26 unknown=0
+GEMMA4_BIND_LLAMA_FALLBACK ok=1 why=ALIAS_BOUND_GEOM_READY tokenEmbed=1 hidden=1152 vocab=262144 layers=26
+MODEL_PROVENANCE_BEGIN=1
+MODEL_LOCATION=
+MODEL_CANONICAL=
+MODEL_EXISTS=0 MODEL_IS_DIRECTORY=0 MODEL_BYTES=0 MODEL_WRITE_STAMP=0
+MODEL_LOCATOR_HASH=0 TENSOR_NAME_SHAPE_HASH=0 MODEL_EXPECTED_FP=11753875096244137027
+DIGEST_FP=0 MANIFEST_FP=0 BIND_FP=11753875096244137027 AUTHORITY_FP=11753875096244137027 RUNTIME_FP=11753875096244137027
+MANIFEST_LOADED=0 MANIFEST_THIS_RUN=0 MANIFEST_ID=none
+SCHEMA_ALIAS_FALLBACK_USED=1 INHERITED_SCHEMA_AUTHORITY=0 RUNTIME_OVERLAY_SEPARATE=1
+MODEL_PROVENANCE_MATCH=0 BLOCKED_AT=PROVENANCE_MISMATCH WHY=MODEL_LOCATION_NOT_FOUND
+AUTHORITY_CLASS=DISCOVERY_PROVENANCE PROMOTE=0
+MODEL_PROVENANCE_END=1
+MODEL_OPEN=PASS
+MODEL_PROVENANCE_MATCH=0
+AUTHORITY_LADDER=BLOCKED
+BLOCKED_AT=PROVENANCE_MISMATCH
+PROMOTE=0
+GEMMA4_SCHEMA_BINDER ok=1 why=GEOM_READY layers=26 bound=236
+[BUF] hidden=1152 heads=4 headDim=256 qOut=1024 headScratch=1024 kvDim=256 ffn=6912 ffnGateScratch=6912
+SSM_BUF stPer=32 cvPer=4608 inner=0 state=0 NOTE=STATE_NE_HEADS
+SSM_MAMBA2_ARM=0 reason=GEO_OR_BUF
+[BUF] hidden=1152 heads=4 headDim=256 qOut=1024 headScratch=1024 kvDim=256 ffn=4608 ffnGateScratch=6912
+SSM_BUF stPer=32 cvPer=4608 inner=0 state=0 NOTE=STATE_NE_HEADS
+SSM_MAMBA2_ARM=0 reason=GEO_OR_BUF
+gistered 'blk.7.attn_v.weight': shard=0 offset=435569760 bytes=202752  |  registry_size=100  registeredBytes=419987200  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=0000018CAA4D2180  Registered 'blk.15.attn_norm.weight': shard=0 offset=545905248 bytes=4608  |  registry_size=200  registeredBytes=530124544  zeroOffset=0  maxResidentBytes=8589934592
+[ResidencyManager] this=0000018CAA4D2180  Registered 'blk.22.post_attention_norm.weight': shard=0 offset=657240672 bytes=4608  |  registry_size=300  registeredBytes=641459968  zeroOffset=0  maxResidentBytes=8589934592
+RMV_MOUNT_001
+TENSORS_DISCOVERED=340
+TENSORS_ADDRESSED=340
+TENSORS_REGISTERED=340
+INVALID_SHARD=0
+INVALID_RANGE=0
+OVERFLOW_RANGE=0
+ZERO_SIZE=0
+UNADDRESSED=0
+RMV_MOUNT_001=PASS
+[Deep2Engine] ResidencyManager: this=0000018CAA4D2180  registered=340 tensors  bytes=683281408  max=8589934592
+[RMV_MOUNT_001]=PASS
+[Deep2Engine] AUTHORITY_LADDER=BLOCKED
+BLOCKED_AT=PROVENANCE_MISMATCH
+BLOCKED_OWNER=MODEL_PROVENANCE
+MODEL_OPEN=PASS
+PROMOTE=0
+[Deep2Engine] AUTHORITY_LADDER=SESSION_SEAL_ONLY provenance_blocks_promote=1 schema=236
+[ThreadPool] Initializing with 32 threads...
+[ThreadPool] Initialized 32 worker threads
+[ThreadPool] Reinitializing with 32 threads...
+[ThreadPool] Reinitialized 32 worker threads
+[Deep2Engine] ThreadPool (loadModel): 32 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF6D99DD840 dequant=00007FF6D99DAED0 GetGEMV(12)=00007FF6D99DD840 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 22 GEMV kernels, 22 dequant kernels
+[KVCache] Lazy pages: layers=26 page=8 virtualMax=32768 heads=1 dim=256
+[KVCache] HOT_BYTES=425984 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] Model loaded successfully (340 tensors)
+[Deep2Engine] Initializing production inference engine...
+  Hidden Dim: 1152
+  Num Layers: 26
+  Num Heads: 4
+  Num KV Heads: 1
+  Head Dim: 256
+  Max Seq Len: 4096
+  Use ThreadPool: YES
+  Use KV Cache: YES
+  Use RoPE: YES
+[ThreadPool] Shutdown complete
+[ThreadPool] Initializing with 32 threads...
+[ThreadPool] Initialized 32 worker threads
+[ThreadPool] Reinitializing with 32 threads...
+[ThreadPool] Reinitialized 32 worker threads
+  ThreadPool: 32 threads (auto-detected)
+[KVCache] Addressable: layers=26 virtualSeq=4096 kv_heads=1 headDim=256 (hot pages only)
+[KVCache] Lazy pages: layers=26 page=8 virtualMax=4096 heads=1 dim=256
+[KVCache] HOT_BYTES=425984 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[HotPatcher] CrashRecovery UEF skipped (product default)
+[HotPatcher] Initialized - The Bottle is ready (with safety systems)
+[Deep2Engine] HotPatcher initialized - The Bottle is ready
+[QuantKernelRegistry] Q4_K GEMV=00007FF6D99DD840 dequant=00007FF6D99DAED0 GetGEMV(12)=00007FF6D99DD840 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 22 GEMV kernels, 22 dequant kernels
+[Deep2Engine] Telemetry controller initialized (PCIe stall + bandwidth + residency)
+[Deep2Engine] ENHANCEMENT STACK: ON
+ELASTIC_DYNAMIC warm=15MB staged=2MB hot=4608MB la=1 ramAvail=28MB vram=32479MB L=26 pressure=0
+FREETOKEN_MICROZONE live=1 zones=8 zone_mb=64 sticks=4 active=0 overwrites=0 hits=0 misses=0 hit_pct=0.00 stick0_rpm=0 stick1_rpm=0 allocs_after_init=0 key=address_id waw_ready_gate=1 helpframe_nway=4 eat_gt2=1 metric=fetch_not_fit models=20/35/70/120/300/671+ unbounded=1 public_gap=amd_xfer_waw+prescope_dual_only
+ADDRESSABILITY_OWNER=FUTURE_CONSUMER_SPACE
+RESIDENCY_OWNER=FIXED_FREETOKEN_POOL
+EVICTION_POLICY=NONE
+REASSIGNMENT_POLICY=ADVANCE_OWNERSHIP
+CACHE_POLICY=TIME_UNTIL_CONSUMER
+PHYSICAL_POOL_BYTES=536870912
+PHYSICAL_POOL_GROWS=0
+FUTURE_CONSUMER_SPACE_GROWS=1
+LOGICAL_ADDRESS_SPACE_GROWS=1
+PHYSICAL_PAGE_POOL_GROWS=0
+HOTPATH_ALLOCATIONS=0
+FREE_REQUIRED=0
+REUSE_REQUIRED=1
+LOGICAL_CONSUMERS=0
+LOGICAL_ADDRESS_BYTES=0
+PHYSICAL_PAGE_POOL_BYTES=536870912
+PHYSICAL_PAGES=8
+OWNERSHIP_ADVANCES=0
+PAST_OWNER_TO_FUTURE_OWNER=1
+CACHE_METRIC=TIME_UNTIL_CONSUMER
+PIN_BUDGET_SET site=ENGINE_MAX_HOT old=4294967296 new=4831838208 owner=ENGINE_MAX_HOT moe_reserved=4294967296
+KV_WORKING_SEQ_BOUND=4096 ckv_torus (gguf_ctx=4096)
+[ElasticResidencyManager] PASSIVE vulkan/DualStick (no scheduler, no GhostCache)
+[ElasticResidencyManager] Initialized: warmCompressed=15 MB, warmStaged=2 MB, hot=4608 MB, lookahead=1
+[Deep2Engine] ElasticResidencyManager DYNAMIC warm=15 staged=2 hot=4608 la=1
+[Deep2Engine] ElasticResidencyManager: late-registered model tensors
+[Deep2Engine] CycloneScheduler armed for live generate
+[Deep2Engine] Residency telemetry: ENABLED
+[Deep2Engine] Medusa speculative decoding: ENABLED
+[Deep2Engine] NU fused packing: ENABLED
+[Deep2Engine] Warmup scheduler: ENABLED
+[Deep2Engine] Compressed KV cache: ENABLED (Q8_0)
+[Deep2Engine] NVMe streaming: ENABLED
+[Deep2Engine] Sliding window: ENABLED (size=4096)
+[Deep2Engine] Chamber (SM0-DSP) initialized
+[Deep2Engine] Chamber: ENABLED
+[Deep2Engine] PlasmaGovernor initialized
+[Deep2Engine] PlasmaGovernor: ENABLED
+[Deep2Engine] SovereignOutOfCoreRuntime initialized (8GB RAM / 32GB VRAM)
+[Deep2Engine] SovereignOutOfCoreRuntime: ENABLED
+[Deep2Engine] ToroidalKVCache initialized: 4096 tokens, 26 layers, 4 heads, 256 dim
+[Deep2Engine] ToroidalKVCache: ENABLED
+[MARS] Initializing controller...
+[VRAMManager] Initialized: GPU0=31.86 GB, GPU1=16.00 GB
+[DualGPUBackend] Initializing dual-GPU queues...
+[DualGPUBackend] Queues ready
+[MARS] Controller ready: GPU0=31.86 GB, GPU1=16.00 GB
+[Deep2Engine] MARS enabled: GPU0=31.86 GB, GPU1=16.00 GB
+KEN_MARS_ACTIVE=1 budget_env=8192
+[DualGPUBackend] Worker 1 started
+[DualGPUBackend] Worker 0 started
+[VRAMManager] Allocated 'token_embd.weight' (320864256 bytes) on GPU 0
+[Deep2Engine] MARS keep-GPU pin 'token_embd.weight' (skip Host/Stream Evict under GPU product)
+[VRAMManager] Allocated 'output_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.attn_q.weight' (663552 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.attn_k.weight' (165888 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.attn_v.weight' (202752 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.attn_output.weight' (506880 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.attn_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.attn_q_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.attn_k_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.ffn_gate.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.ffn_up.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.ffn_down.weight' (3421440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.0.post_attention_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.attn_q.weight' (663552 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.attn_k.weight' (165888 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.attn_v.weight' (202752 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.attn_output.weight' (506880 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.attn_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.attn_q_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.attn_k_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.ffn_gate.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.ffn_up.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.ffn_down.weight' (3421440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.1.post_attention_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.attn_q.weight' (663552 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.attn_k.weight' (165888 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.attn_v.weight' (202752 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.attn_output.weight' (506880 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.attn_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.attn_q_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.attn_k_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.ffn_gate.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.ffn_up.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.ffn_down.weight' (3421440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.2.post_attention_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.attn_q.weight' (663552 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.attn_k.weight' (165888 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.attn_v.weight' (202752 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.attn_output.weight' (506880 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.attn_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.attn_q_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.attn_k_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.ffn_gate.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.ffn_up.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.ffn_down.weight' (3421440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.3.post_attention_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.attn_q.weight' (663552 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.attn_k.weight' (165888 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.attn_v.weight' (202752 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.attn_output.weight' (506880 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.attn_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.attn_q_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.attn_k_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.ffn_gate.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.ffn_up.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.ffn_down.weight' (3421440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.4.post_attention_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.attn_q.weight' (663552 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.attn_k.weight' (165888 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.attn_v.weight' (202752 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.attn_output.weight' (506880 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.attn_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.attn_q_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.attn_k_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.ffn_gate.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.ffn_up.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.ffn_down.weight' (3421440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.5.post_attention_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.attn_q.weight' (663552 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.attn_k.weight' (165888 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.attn_v.weight' (202752 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.attn_output.weight' (506880 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.attn_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.attn_q_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.attn_k_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.ffn_gate.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.ffn_up.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.ffn_down.weight' (3421440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.6.post_attention_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.attn_q.weight' (663552 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.attn_k.weight' (165888 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.attn_v.weight' (202752 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.attn_output.weight' (506880 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.attn_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.attn_q_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.attn_k_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.ffn_gate.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.ffn_up.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.ffn_down.weight' (3421440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.7.post_attention_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.attn_q.weight' (663552 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.attn_k.weight' (165888 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.attn_v.weight' (202752 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.attn_output.weight' (506880 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.attn_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.attn_q_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.attn_k_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.ffn_gate.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.ffn_up.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.ffn_down.weight' (3421440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.8.post_attention_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.attn_q.weight' (663552 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.attn_k.weight' (165888 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.attn_v.weight' (202752 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.attn_output.weight' (506880 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.attn_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.attn_q_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.attn_k_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.ffn_gate.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.ffn_up.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.ffn_down.weight' (3421440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.9.post_attention_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.attn_q.weight' (663552 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.attn_k.weight' (165888 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.attn_v.weight' (202752 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.attn_output.weight' (506880 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.attn_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.attn_q_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.attn_k_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.ffn_gate.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.ffn_up.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.ffn_down.weight' (3421440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.10.post_attention_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.attn_q.weight' (663552 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.attn_k.weight' (165888 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.attn_v.weight' (202752 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.attn_output.weight' (506880 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.attn_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.attn_q_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.attn_k_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.ffn_gate.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.ffn_up.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.ffn_down.weight' (3421440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.11.post_attention_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.attn_q.weight' (663552 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.attn_k.weight' (165888 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.attn_v.weight' (202752 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.attn_output.weight' (506880 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.attn_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.attn_q_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.attn_k_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.ffn_gate.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.ffn_up.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.ffn_down.weight' (3421440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.12.post_attention_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.attn_q.weight' (663552 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.attn_k.weight' (165888 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.attn_v.weight' (202752 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.attn_output.weight' (506880 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.attn_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.attn_q_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.attn_k_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.ffn_gate.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.ffn_up.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.ffn_down.weight' (3421440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.13.post_attention_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.attn_q.weight' (663552 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.attn_k.weight' (165888 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.attn_v.weight' (202752 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.attn_output.weight' (506880 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.attn_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.attn_q_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.attn_k_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.ffn_gate.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.ffn_up.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.ffn_down.weight' (3421440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.14.post_attention_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.attn_q.weight' (663552 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.attn_k.weight' (165888 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.attn_v.weight' (202752 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.attn_output.weight' (506880 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.attn_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.attn_q_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.attn_k_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.ffn_gate.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.ffn_up.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.ffn_down.weight' (3421440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.15.post_attention_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.attn_q.weight' (663552 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.attn_k.weight' (165888 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.attn_v.weight' (202752 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.attn_output.weight' (506880 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.attn_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.attn_q_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.attn_k_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.ffn_gate.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.ffn_up.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.ffn_down.weight' (3421440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.16.post_attention_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.attn_q.weight' (663552 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.attn_k.weight' (165888 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.attn_v.weight' (202752 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.attn_output.weight' (506880 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.attn_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.attn_q_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.attn_k_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.ffn_gate.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.ffn_up.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.ffn_down.weight' (3421440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.17.post_attention_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.attn_q.weight' (663552 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.attn_k.weight' (165888 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.attn_v.weight' (202752 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.attn_output.weight' (506880 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.attn_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.attn_q_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.attn_k_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.ffn_gate.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.ffn_up.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.ffn_down.weight' (3421440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.18.post_attention_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.attn_q.weight' (663552 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.attn_k.weight' (165888 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.attn_v.weight' (202752 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.attn_output.weight' (506880 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.attn_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.attn_q_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.attn_k_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.ffn_gate.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.ffn_up.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.ffn_down.weight' (3421440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.19.post_attention_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.attn_q.weight' (663552 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.attn_k.weight' (165888 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.attn_v.weight' (202752 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.attn_output.weight' (506880 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.attn_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.attn_q_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.attn_k_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.ffn_gate.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.ffn_up.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.ffn_down.weight' (3421440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.20.post_attention_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.attn_q.weight' (663552 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.attn_k.weight' (165888 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.attn_v.weight' (202752 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.attn_output.weight' (506880 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.attn_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.attn_q_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.attn_k_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.ffn_gate.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.ffn_up.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.ffn_down.weight' (3421440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.21.post_attention_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.attn_q.weight' (663552 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.attn_k.weight' (165888 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.attn_v.weight' (202752 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.attn_output.weight' (506880 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.attn_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.attn_q_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.attn_k_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.ffn_gate.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.ffn_up.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.ffn_down.weight' (3421440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.22.post_attention_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.attn_q.weight' (663552 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.attn_k.weight' (165888 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.attn_v.weight' (202752 bytes) on GPU 0
+[VRAMManagerPIN_BUDGET_SET site=DUALSTICK_BIND old=4831838208 new=4294967296 owner=DUALSTICK_BIND moe_reserved=4294967296
+PIN_BUDGET_FINAL stick=0 mib=4096 owner=DUALSTICK_BIND resident=4294967296
+GEN=0 BIND16_LINKED=1 PACKED_Q2K_READY=1 SSVK_READY=1 DUALSTICK_ARMED=0 GPU_RESIDENT=1 MODEL_LOADED=1 DEVICE_COUNT=1 FWD_G0=0 FWD_G1=0 RESIDENCY_EPOCH=1 MODEL_EPOCH=1
+CONTINUITY_POINT=AFTER_FN_RESET
+GENERATE_STREAM_PRE_CONFIG=1
+CFG_GEN_BEFORE_STICK=1
+CFG_GEN_AFTER_STICK=1
+CFG_GEN_GREEDY_SKIP_SAMPLER=1
+CFG_GEN_GREEDY_RETURN=1
+GENERATE_STREAM_POST_CONFIG=1
+GENERATE_STREAM_POST_BATCH007=1
+TOKEN_EMBD_STREAM_RESTORE_SKIP=1
+GENERATE_STREAM_POST_MARS_PIN=1
+GENERATE_STREAM_POST_CHOREO=1
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+STREAM_STATUS=READY
+NEXT_ACTION=CALL_GENERATE_STREAM
+GENERATE_STREAM_ENTER=1 ARCH=gemma3 LAYERS=26 KV_HEADS=1 HEAD_DIM=256
+[GEN_DEBUG] opts.maxTokens=4 remCtx=4066 maxTokens=4 promptN=30 maxSeqLen=4096 contextLimited=0
+] Allocated 'blk.23.attn_output.weight' (506880 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.attn_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.attn_q_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.attn_k_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.ffn_gate.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.ffn_up.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.ffn_down.weight' (3421440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.23.post_attention_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.attn_q.weight' (663552 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.attn_k.weight' (165888 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.attn_v.weight' (202752 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.attn_output.weight' (506880 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.attn_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.attn_q_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.attn_k_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.ffn_gate.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.ffn_up.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.ffn_down.weight' (3421440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.24.post_attention_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.attn_q.weight' (663552 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.attn_k.weight' (165888 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.attn_v.weight' (202752 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.attn_output.weight' (506880 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.attn_norm.weight' (4608 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.attn_q_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.attn_k_norm.weight' (1024 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.ffn_gate.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.ffn_up.weight' (4478976 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.ffn_down.weight' (3421440 bytes) on GPU 0
+[VRAMManager] Allocated 'blk.25.post_attention_norm.weight' (4608 bytes) on GPU 0
+[Deep2Engine] MARS placed 288 tensors (oom=0 skip=599) GPU0=651.40 MB GPU1=0.00 MB
+[Deep2Engine] Initializing VAL-000 advanced features...
+[MedusaDecoder] Initialized: 4 heads, topK=10, maxTree=40
+[Deep2Engine] Medusa decoder initialized (4 heads)
+[Deep2Engine] NU Fused Packer initialized
+[CompressedKVCache] Initialized: 58 MB compressed (vs 208 MB F32, 3.6x ratio)
+[Deep2Engine] Compressed KV cache initialized (Q8_0)
+[NVMeStream] RAWRXD_NVME_REVERSE_BUNNYHOP=1 → force reverse bunnyhop
+[NVMeBunnyHop] UNLAIDOUT_REVERSE_CHUNK_HOTPATCH_BUNNYHOP g:\~dev\rawrxd\models\gemma3-1b-Q2_K.gguf 0.70GB c=4194304 u=1 hp=1
+[NVMeStream] REVERSE_BUNNYHOP UNLAIDOUT_REVERSE_CHUNK_HOTPATCH_BUNNYHOP
+[Deep2Engine] NVMe REVERSE_BUNNYHOP (unlaidout hotpatch)
+[SlidingWindow] Initialized: window=4096, overlap=512, chunk=2048
+[Deep2Engine] Sliding window initialized (size=4096)
+[Deep2Engine] Advanced features initialization complete
+[Deep2Engine] STACK vk=1 mars=1 elastic=1 cyclone=1 medusa=1 nu=1 warmup=1 ckv=1 nvme=1 slide=1 chamber=1 torus=1 plasma=1 sov=1 prefetch=1 devices=1
+[Deep2Engine] Initialization complete
+[Deep2Engine] Medusa speculative decoding: DISABLED
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[ChatTemplate] Detected 'gemma2' from template string
+[AGENT] PREFILL_BEGIN prompt_tokens=30
+HOTPATH_GEMV=VULKAN
+HOTPATH_RMSNORM=GPU
+HOTPATH_ATTN=GPU
+HOTPATH_FFN=GPU_RESIDENT
+HOTPATH_MEDUSA=0
+HOTPATH_ELASTIC=0
+HOTPATH_CYCLONE=1
+HOTPATH_CKV=0
+HOTPATH_GPU_FWD_ENABLED=1
+GEN=0 BIND16_LINKED=1 PACKED_Q2K_READY=1 SSVK_READY=1 DUALSTICK_ARMED=0 GPU_RESIDENT=1 MODEL_LOADED=1 DEVICE_COUNT=1 FWD_G0=0 FWD_G1=0 RESIDENCY_EPOCH=1 MODEL_EPOCH=1
+CONTINUITY_POINT=AFTER_FN_RESET
+AUTO_POLICY_ACTIVE=0
+MANUAL_ARM_FORCING=1
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=manual_preserve_mech
+K2_LIVE_POLICY_REUSE_STEPS=104
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=26 TOKENS=4
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=1437800000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=1 MECH_ENV=trampoline,cyclone,elastic,stream WANTED=1
+[HotPatcher] GENERATE_DECODER_ALG=0 HEAT=lukewarm SKIP_HOTPATCH=1
+[Deep2Engine] NVMe streaming: ENABLED
+[Deep2Engine] Initializing VAL-000 advanced features...
+[Deep2Engine] Advanced features initialization complete
+[LivePath] GENERATE_ALG_MASK=0x0000010E random=0
+WEIGHT_BUDGET_INPUT=8192
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=8192
+WEIGHT_BUDGET_BYTES=8589934592
+WEIGHT_BUDGET_SOURCE=ENV
+[GPU_FINITE] op=rms_attn ly=0 finite=1152/1152 nonFinite=0 norm=1.887359e+02
+[GPU_FINITE] op=q_proj ly=0 finite=1024/1024 nonFinite=0 norm=3.977719e+02
+[GPU_FINITE] op=k_proj ly=0 finite=256/256 nonFinite=0 norm=3.349600e+02
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=3.889161e+02
+[GPU_FINITE] op=rope_q ly=0 finite=1024/1024 nonFinite=0 norm=3.977719e+02
+[GPU_FINITE] op=rope_k ly=0 finite=256/256 nonFinite=0 norm=3.349600e+02
+[GPU_FINITE] op=attn_out ly=0 finite=1024/1024 nonFinite=0 norm=7.775691e+02
+[GPU_FINITE] op=o_proj ly=0 finite=1152/1152 nonFinite=0 norm=7.132637e+02
+[GPU_FINITE] op=attn_res ly=0 finite=1152/1152 nonFinite=0 norm=7.132572e+02
+[GPU_FINITE] op=rms_ffn ly=0 finite=1152/1152 nonFinite=0 norm=8.868448e+01
+[GPU_FINITE] op=ffn_gate ly=0 finite=6912/6912 nonFinite=0 norm=7.029325e+02
+[GPU_FINITE] op=ffn_up ly=0 finite=6912/6912 nonFinite=0 norm=6.777834e+02
+[GPU_FINITE] op=swiglu ly=0 finite=6912/6912 nonFinite=0 norm=4.464087e+03
+[GPU_FINITE] op=ffn_down ly=0 finite=1152/1152 nonFinite=0 norm=1.976184e+03
+[GPU_FINITE] op=ffn_res ly=0 finite=1152/1152 nonFinite=0 norm=2.109416e+03
+[GPU_FINITE] op=rms_attn ly=1 finite=1152/1152 nonFinite=0 norm=5.000398e+02
+[GPU_FINITE] op=q_proj ly=1 finite=1024/1024 nonFinite=0 norm=9.253898e+02
+[GPU_FINITE] op=k_proj ly=1 finite=256/256 nonFinite=0 norm=9.857853e+02
+[GPU_FINITE] op=v_proj ly=1 finite=256/256 nonFinite=0 norm=1.089255e+03
+[GPU_FINITE] op=rope_q ly=1 finite=1024/1024 nonFinite=0 norm=9.253898e+02
+[GPU_FINITE] op=rope_k ly=1 finite=256/256 nonFinite=0 norm=9.857853e+02
+[GPU_FINITE] op=attn_out ly=1 finite=1024/1024 nonFinite=0 norm=2.177671e+03
+[GPU_FINITE] op=o_proj ly=1 finite=1152/1152 nonFinite=0 norm=1.713099e+03
+[GPU_FINITE] op=attn_res ly=1 finite=1152/1152 nonFinite=0 norm=2.709245e+03
+[GPU_FINITE] op=rms_ffn ly=1 finite=1152/1152 nonFinite=0 norm=4.055639e+01
+[GPU_FINITE] op=ffn_gate ly=1 finite=6912/6912 nonFinite=0 norm=2.348430e+02
+[GPU_FINITE] op=ffn_up ly=1 finite=6912/6912 nonFinite=0 norm=2.364123e+02
+[GPU_FINITE] op=swiglu ly=1 finite=6912/6912 nonFinite=0 norm=4.251544e+02
+[GPU_FINITE] op=ffn_down ly=1 finite=1152/1152 nonFinite=0 norm=1.769466e+02
+[GPU_FINITE] op=ffn_res ly=1 finite=1152/1152 nonFinite=0 norm=2.713346e+03
+[GPU_FINITE] op=rms_attn ly=2 finite=1152/1152 nonFinite=0 norm=5.057050e+02
+[GPU_FINITE] op=q_proj ly=2 finite=1024/1024 nonFinite=0 norm=8.749780e+02
+[GPU_FINITE] op=k_proj ly=2 finite=256/256 nonFinite=0 norm=1.248993e+03
+[GPU_FINITE] op=v_proj ly=2 finite=256/256 nonFinite=0 norm=1.361679e+03
+[GPU_FINITE] op=rope_q ly=2 finite=1024/1024 nonFinite=0 norm=8.749780e+02
+[GPU_FINITE] op=rope_k ly=2 finite=256/256 nonFinite=0 norm=1.248993e+03
+[GPU_FINITE] op=attn_out ly=2 finite=1024/1024 nonFinite=0 norm=2.722338e+03
+[GPU_FINITE] op=o_proj ly=2 finite=1152/1152 nonFinite=0 norm=2.112295e+03
+[GPU_FINITE] op=attn_res ly=2 finite=1152/1152 nonFinite=0 norm=3.386851e+03
+[GPU_FINITE] op=rms_ffn ly=2 finite=1152/1152 nonFinite=0 norm=4.074362e+01
+[GPU_FINITE] op=ffn_gate ly=2 finite=6912/6912 nonFinite=0 norm=2.558610e+02
+[GPU_FINITE] op=ffn_up ly=2 finite=6912/6912 nonFinite=0 norm=2.612942e+02
+[GPU_FINITE] op=swiglu ly=2 finite=6912/6912 nonFinite=0 norm=5.090142e+02
+[GPU_FINITE] op=ffn_down ly=2 finite=1152/1152 nonFinite=0 norm=2.073171e+02
+[GPU_FINITE] op=ffn_res ly=2 finite=1152/1152 nonFinite=0 norm=3.393116e+03
+[GPU_FINITE] op=rms_attn ly=3 finite=1152/1152 nonFinite=0 norm=4.182306e+02
+[GPU_FINITE] op=q_proj ly=3 finite=1024/1024 nonFinite=0 norm=8.358128e+02
+[GPU_FINITE] op=k_proj ly=3 finite=256/256 nonFinite=0 norm=6.534683e+02
+[GPU_FINITE] op=v_proj ly=3 finite=256/256 nonFinite=0 norm=7.190660e+02
+[GPU_FINITE] op=rope_q ly=3 finite=1024/1024 nonFinite=0 norm=8.358128e+02
+[GPU_FINITE] op=rope_k ly=3 finite=256/256 nonFinite=0 norm=6.534683e+02
+[GPU_FINITE] op=attn_out ly=3 finite=1024/1024 nonFinite=0 norm=1.437592e+03
+[GPU_FINITE] op=o_proj ly=3 finite=1152/1152 nonFinite=0 norm=9.242919e+02
+[GPU_FINITE] op=attn_res ly=3 finite=1152/1152 nonFinite=0 norm=3.527971e+03
+[GPU_FINITE] op=rms_ffn ly=3 finite=1152/1152 nonFinite=0 norm=8.410452e+01
+[GPU_FINITE] op=ffn_gate ly=3 finite=6912/6912 nonFinite=0 norm=4.746295e+02
+[GPU_FINITE] op=ffn_up ly=3 finite=6912/6912 nonFinite=0 norm=4.817752e+02
+[GPU_FINITE] op=swiglu ly=3 finite=6912/6912 nonFinite=0 norm=1.699717e+03
+[GPU_FINITE] op=ffn_down ly=3 finite=1152/1152 nonFinite=0 norm=5.674163e+02
+[GPU_FINITE] op=ffn_res ly=3 finite=1152/1152 nonFinite=0 norm=3.549790e+03
+[GPU_FINITE] op=rms_attn ly=4 finite=1152/1152 nonFinite=0 norm=3.993592e+02
+[GPU_FINITE] op=q_proj ly=4 finite=1024/1024 nonFinite=0 norm=7.375570e+02
+[GPU_FINITE] op=k_proj ly=4 finite=256/256 nonFinite=0 norm=4.816660e+02
+[GPU_FINITE] op=v_proj ly=4 finite=256/256 nonFinite=0 norm=4.847927e+02
+[GPU_FINITE] op=rope_q ly=4 finite=1024/1024 nonFinite=0 norm=7.375570e+02
+[GPU_FINITE] op=rope_k ly=4 finite=256/256 nonFinite=0 norm=4.816660e+02
+[GPU_FINITE] op=attn_out ly=4 finite=1024/1024 nonFinite=0 norm=9.692429e+02
+[GPU_FINITE] op=o_proj ly=4 finite=1152/1152 nonFinite=0 norm=5.856712e+02
+[GPU_FINITE] op=attn_res ly=4 finite=1152/1152 nonFinite=0 norm=3.621185e+03
+[GPU_FINITE] op=rms_ffn ly=4 finite=1152/1152 nonFinite=0 norm=9.211669e+01
+[GPU_FINITE] op=ffn_gate ly=4 finite=6912/6912 nonFinite=0 norm=4.278609e+02
+[GPU_FINITE] op=ffn_up ly=4 finite=6912/6912 nonFinite=0 norm=4.233370e+02
+[GPU_FINITE] op=swiglu ly=4 finite=6912/6912 nonFinite=0 norm=1.508214e+03
+[GPU_FINITE] op=ffn_down ly=4 finite=1152/1152 nonFinite=0 norm=3.623219e+02
+[GPU_FINITE] op=ffn_res ly=4 finite=1152/1152 nonFinite=0 norm=3.657247e+03
+[GPU_FINITE] op=rms_attn ly=5 finite=1152/1152 nonFinite=0 norm=1.154970e+02
+[GPU_FINITE] op=q_proj ly=5 finite=1024/1024 nonFinite=0 norm=1.567645e+02
+[GPU_FINITE] op=k_proj ly=5 finite=256/256 nonFinite=0 norm=2.154202e+02
+[GPU_FINITE] op=v_proj ly=5 finite=256/256 nonFinite=0 norm=1.810691e+02
+[GPU_FINITE] op=rope_q ly=5 finite=1024/1024 nonFinite=0 norm=1.567645e+02
+[GPU_FINITE] op=rope_k ly=5 finite=256/256 nonFinite=0 norm=2.154202e+02
+[GPU_FINITE] op=attn_out ly=5 finite=1024/1024 nonFinite=0 norm=3.620084e+02
+[GPU_FINITE] op=o_proj ly=5 finite=1152/1152 nonFinite=0 norm=3.655611e+02
+[GPU_FINITE] op=attn_res ly=5 finite=1152/1152 nonFinite=0 norm=3.684856e+03
+[GPU_FINITE] op=rms_ffn ly=5 finite=1152/1152 nonFinite=0 norm=2.182147e+02
+[GPU_FINITE] op=ffn_gate ly=5 finite=6912/6912 nonFinite=0 norm=1.064556e+03
+[GPU_FINITE] op=ffn_up ly=5 finite=6912/6912 nonFinite=0 norm=1.075273e+03
+[GPU_FINITE] op=swiglu ly=5 finite=6912/6912 nonFinite=0 norm=9.766806e+03
+[GPU_FINITE] op=ffn_down ly=5 finite=1152/1152 nonFinite=0 norm=4.357950e+03
+[GPU_FINITE] op=ffn_res ly=5 finite=1152/1152 nonFinite=0 norm=5.648099e+03
+[GPU_FINITE] op=rms_attn ly=6 finite=1152/1152 nonFinite=0 norm=3.807507e+02
+[GPU_FINITE] op=q_proj ly=6 finite=1024/1024 nonFinite=0 norm=5.698723e+02
+[GPU_FINITE] op=k_proj ly=6 finite=256/256 nonFinite=0 norm=8.080641e+02
+[GPU_FINITE] op=v_proj ly=6 finite=256/256 nonFinite=0 norm=8.083199e+02
+[GPU_FINITE] op=rope_q ly=6 finite=1024/1024 nonFinite=0 norm=5.698723e+02
+[GPU_FINITE] op=rope_k ly=6 finite=256/256 nonFinite=0 norm=8.080641e+02
+[GPU_FINITE] op=attn_out ly=6 finite=1024/1024 nonFinite=0 norm=1.616071e+03
+[GPU_FINITE] op=o_proj ly=6 finite=1152/1152 nonFinite=0 norm=1.171482e+03
+[GPU_FINITE] op=attn_res ly=6 finite=1152/1152 nonFinite=0 norm=5.805740e+03
+[GPU_FINITE] op=rms_ffn ly=6 finite=1152/1152 nonFinite=0 norm=2.493358e+02
+[GPU_FINITE] op=ffn_gate ly=6 finite=6912/6912 nonFinite=0 norm=1.519050e+03
+[GPU_FINITE] op=ffn_up ly=6 finite=6912/6912 nonFinite=0 norm=1.504760e+03
+[GPU_FINITE] op=swiglu ly=6 finite=6912/6912 nonFinite=0 norm=1.964315e+04
+[GPU_FINITE] op=ffn_down ly=6 finite=1152/1152 nonFinite=0 norm=8.438234e+03
+[GPU_FINITE] op=ffn_res ly=6 finite=1152/1152 nonFinite=0 norm=1.027010e+04
+[GPU_FINITE] op=rms_attn ly=7 finite=1152/1152 nonFinite=0 norm=2.923406e+02
+[GPU_FINITE] op=q_proj ly=7 finite=1024/1024 nonFinite=0 norm=6.264296e+02
+[GPU_FINITE] op=k_proj ly=7 finite=256/256 nonFinite=0 norm=6.507054e+02
+[GPU_FINITE] op=v_proj ly=7 finite=256/256 nonFinite=0 norm=6.291888e+02
+[GPU_FINITE] op=rope_q ly=7 finite=1024/1024 nonFinite=0 norm=6.264296e+02
+[GPU_FINITE] op=rope_k ly=7 finite=256/256 nonFinite=0 norm=6.507054e+02
+[GPU_FINITE] op=attn_out ly=7 finite=1024/1024 nonFinite=0 norm=1.257940e+03
+[GPU_FINITE] op=o_proj ly=7 finite=1152/1152 nonFinite=0 norm=1.201266e+03
+[GPU_FINITE] op=attn_res ly=7 finite=1152/1152 nonFinite=0 norm=1.043725e+04
+[GPU_FINITE] op=rms_ffn ly=7 finite=1152/1152 nonFinite=0 norm=1.811397e+02
+[GPU_FINITE] op=ffn_gate ly=7 finite=6912/6912 nonFinite=0 norm=1.073281e+03
+[GPU_FINITE] op=ffn_up ly=7 finite=6912/6912 nonFinite=0 norm=1.042130e+03
+[GPU_FINITE] op=swiglu ly=7 finite=6912/6912 nonFinite=0 norm=1.008845e+04
+[GPU_FINITE] op=ffn_down ly=7 finite=1152/1152 nonFinite=0 norm=3.442565e+03
+[GPU_FINITE] op=ffn_res ly=7 finite=1152/1152 nonFinite=0 norm=1.108765e+04
+[GPU_FINITE] op=rms_attn ly=8 finite=1152/1152 nonFinite=0 norm=2.750962e+02
+[GPU_FINITE] op=q_proj ly=8 finite=1024/1024 nonFinite=0 norm=6.021457e+02
+[GPU_FINITE] op=k_proj ly=8 finite=256/256 nonFinite=0 norm=6.417005e+02
+[GPU_FINITE] op=v_proj ly=8 finite=256/256 nonFinite=0 norm=6.045444e+02
+[GPU_FINITE] op=rope_q ly=8 finite=1024/1024 nonFinite=0 norm=6.021457e+02
+[GPU_FINITE] op=rope_k ly=8 finite=256/256 nonFinite=0 norm=6.417005e+02
+[GPU_FINITE] op=attn_out ly=8 finite=1024/1024 nonFinite=0 norm=1.208659e+03
+[GPU_FINITE] op=o_proj ly=8 finite=1152/1152 nonFinite=0 norm=1.197355e+03
+[GPU_FINITE] op=attn_res ly=8 finite=1152/1152 nonFinite=0 norm=1.123215e+04
+[GPU_FINITE] op=rms_ffn ly=8 finite=1152/1152 nonFinite=0 norm=2.130877e+02
+[GPU_FINITE] op=ffn_gate ly=8 finite=6912/6912 nonFinite=0 norm=1.317866e+03
+[GPU_FINITE] op=ffn_up ly=8 finite=6912/6912 nonFinite=0 norm=1.328655e+03
+[GPU_FINITE] op=swiglu ly=8 finite=6912/6912 nonFinite=0 norm=1.557997e+04
+[GPU_FINITE] op=ffn_down ly=8 finite=1152/1152 nonFinite=0 norm=3.613199e+03
+[GPU_FINITE] op=ffn_res ly=8 finite=1152/1152 nonFinite=0 norm=1.173353e+04
+[GPU_FINITE] op=rms_attn ly=9 finite=1152/1152 nonFinite=0 norm=2.624815e+02
+[GPU_FINITE] op=q_proj ly=9 finite=1024/1024 nonFinite=0 norm=4.236500e+02
+[GPU_FINITE] op=k_proj ly=9 finite=256/256 nonFinite=0 norm=6.414377e+02
+[GPU_FINITE] op=v_proj ly=9 finite=256/256 nonFinite=0 norm=6.022913e+02
+[GPU_FINITE] op=rope_q ly=9 finite=1024/1024 nonFinite=0 norm=4.236500e+02
+[GPU_FINITE] op=rope_k ly=9 finite=256/256 nonFinite=0 norm=6.414377e+02
+[GPU_FINITE] op=attn_out ly=9 finite=1024/1024 nonFinite=0 norm=1.204126e+03
+[GPU_FINITE] op=o_proj ly=9 finite=1152/1152 nonFinite=0 norm=5.598980e+02
+[GPU_FINITE] op=attn_res ly=9 finite=1152/1152 nonFinite=0 norm=1.173401e+04
+[GPU_FINITE] op=rms_ffn ly=9 finite=1152/1152 nonFinite=0 norm=2.551923e+02
+[GPU_FINITE] op=ffn_gate ly=9 finite=6912/6912 nonFinite=0 norm=1.277823e+03
+[GPU_FINITE] op=ffn_up ly=9 finite=6912/6912 nonFinite=0 norm=1.279494e+03
+[GPU_FINITE] op=swiglu ly=9 finite=6912/6912 nonFinite=0 norm=1.499033e+04
+[GPU_FINITE] op=ffn_down ly=9 finite=1152/1152 nonFinite=0 norm=6.995786e+03
+[GPU_FINITE] op=ffn_res ly=9 finite=1152/1152 nonFinite=0 norm=1.380788e+04
+[GPU_FINITE] op=rms_attn ly=10 finite=1152/1152 nonFinite=0 norm=2.205905e+02
+[GPU_FINITE] op=q_proj ly=10 finite=1024/1024 nonFinite=0 norm=5.194899e+02
+[GPU_FINITE] op=k_proj ly=10 finite=256/256 nonFinite=0 norm=3.299147e+02
+[GPU_FINITE] op=v_proj ly=10 finite=256/256 nonFinite=0 norm=3.370488e+02
+[GPU_FINITE] op=rope_q ly=10 finite=1024/1024 nonFinite=0 norm=5.194899e+02
+[GPU_FINITE] op=rope_k ly=10 finite=256/256 nonFinite=0 norm=3.299147e+02
+[GPU_FINITE] op=attn_out ly=10 finite=1024/1024 nonFinite=0 norm=6.738285e+02
+[GPU_FINITE] op=o_proj ly=10 finite=1152/1152 nonFinite=0 norm=4.599815e+02
+[GPU_FINITE] op=attn_res ly=10 finite=1152/1152 nonFinite=0 norm=1.381997e+04
+[GPU_FINITE] op=rms_ffn ly=10 finite=1152/1152 nonFinite=0 norm=4.161894e+02
+[GPU_FINITE] op=ffn_gate ly=10 finite=6912/6912 nonFinite=0 norm=2.642914e+03
+[GPU_FINITE] op=ffn_up ly=10 finite=6912/6912 nonFinite=0 norm=2.573812e+03
+[GPU_FINITE] op=swiglu ly=10 finite=6912/6912 nonFinite=0 norm=6.051534e+04
+[GPU_FINITE] op=ffn_down ly=10 finite=1152/1152 nonFinite=0 norm=2.424955e+04
+[GPU_FINITE] op=ffn_res ly=10 finite=1152/1152 nonFinite=0 norm=2.858917e+04
+[GPU_FINITE] op=rms_attn ly=11 finite=1152/1152 nonFinite=0 norm=1.308535e+02
+[GPU_FINITE] op=q_proj ly=11 finite=1024/1024 nonFinite=0 norm=2.789789e+02
+[GPU_FINITE] op=k_proj ly=11 finite=256/256 nonFinite=0 norm=1.862021e+02
+[GPU_FINITE] op=v_proj ly=11 finite=256/256 nonFinite=0 norm=1.833213e+02
+[GPU_FINITE] op=rope_q ly=11 finite=1024/1024 nonFinite=0 norm=2.789789e+02
+[GPU_FINITE] op=rope_k ly=11 finite=256/256 nonFinite=0 norm=1.862021e+02
+[GPU_FINITE] op=attn_out ly=11 finite=1024/1024 nonFinite=0 norm=3.665296e+02
+[GPU_FINITE] op=o_proj ly=11 finite=1152/1152 nonFinite=0 norm=2.943140e+02
+[GPU_FINITE] op=attn_res ly=11 finite=1152/1152 nonFinite=0 norm=2.860240e+04
+[GPU_FINITE] op=rms_ffn ly=11 finite=1152/1152 nonFinite=0 norm=6.853914e+02
+[GPU_FINITE] op=ffn_gate ly=11 finite=6912/6912 nonFinite=0 norm=3.878846e+03
+[GPU_FINITE] op=ffn_up ly=11 finite=6912/6912 nonFinite=0 norm=3.844247e+03
+[GPU_FINITE] op=swiglu ly=11 finite=6912/6912 nonFinite=0 norm=1.355561e+05
+[GPU_FINITE] op=ffn_down ly=11 finite=1152/1152 nonFinite=0 norm=5.099253e+04
+[GPU_FINITE] op=ffn_res ly=11 finite=1152/1152 nonFinite=0 norm=5.774345e+04
+[GPU_FINITE] op=rms_attn ly=12 finite=1152/1152 nonFinite=0 norm=2.373984e+02
+[GPU_FINITE] op=q_proj ly=12 finite=1024/1024 nonFinite=0 norm=2.766497e+02
+[GPU_FINITE] op=k_proj ly=12 finite=256/256 nonFinite=0 norm=4.521915e+02
+[GPU_FINITE] op=v_proj ly=12 finite=256/256 nonFinite=0 norm=4.808796e+02
+[GPU_FINITE] op=rope_q ly=12 finite=1024/1024 nonFinite=0 norm=2.766497e+02
+[GPU_FINITE] op=rope_k ly=12 finite=256/256 nonFinite=0 norm=4.521915e+02
+[GPU_FINITE] op=attn_out ly=12 finite=1024/1024 nonFinite=0 norm=9.613969e+02
+[GPU_FINITE] op=o_proj ly=12 finite=1152/1152 nonFinite=0 norm=5.118737e+02
+[GPU_FINITE] op=attn_res ly=12 finite=1152/1152 nonFinite=0 norm=5.776873e+04
+[GPU_FINITE] op=rms_ffn ly=12 finite=1152/1152 nonFinite=0 norm=5.186263e+02
+[GPU_FINITE] op=ffn_gate ly=12 finite=6912/6912 nonFinite=0 norm=3.339971e+03
+[GPU_FINITE] op=ffn_up ly=12 finite=6912/6912 nonFinite=0 norm=3.258645e+03
+[GPU_FINITE] op=swiglu ly=12 finite=6912/6912 nonFinite=0 norm=9.626968e+04
+[GPU_FINITE] op=ffn_down ly=12 finite=1152/1152 nonFinite=0 norm=2.585974e+04
+[GPU_FINITE] op=ffn_res ly=12 finite=1152/1152 nonFinite=0 norm=6.417959e+04
+[GPU_FINITE] op=rms_attn ly=13 finite=1152/1152 nonFinite=0 norm=2.198777e+02
+[GPU_FINITE] op=q_proj ly=13 finite=1024/1024 nonFinite=0 norm=2.894895e+02
+[GPU_FINITE] op=k_proj ly=13 finite=256/256 nonFinite=0 norm=3.659579e+02
+[GPU_FINITE] op=v_proj ly=13 finite=256/256 nonFinite=0 norm=4.015500e+02
+[GPU_FINITE] op=rope_q ly=13 finite=1024/1024 nonFinite=0 norm=2.894895e+02
+[GPU_FINITE] op=rope_k ly=13 finite=256/256 nonFinite=0 norm=3.659579e+02
+[GPU_FINITE] op=attn_out ly=13 finite=1024/1024 nonFinite=0 norm=8.027991e+02
+[GPU_FINITE] op=o_proj ly=13 finite=1152/1152 nonFinite=0 norm=5.895059e+02
+[GPU_FINITE] op=attn_res ly=13 finite=1152/1152 nonFinite=0 norm=6.427199e+04
+[GPU_FINITE] op=rms_ffn ly=13 finite=1152/1152 nonFinite=0 norm=6.729584e+02
+[GPU_FINITE] op=ffn_gate ly=13 finite=6912/6912 nonFinite=0 norm=3.862823e+03
+[GPU_FINITE] op=ffn_up ly=13 finite=6912/6912 nonFinite=0 norm=3.825687e+03
+[GPU_FINITE] op=swiglu ly=13 finite=6912/6912 nonFinite=0 norm=1.363115e+05
+[GPU_FINITE] op=ffn_down ly=13 finite=1152/1152 nonFinite=0 norm=3.370129e+04
+[GPU_FINITE] op=ffn_res ly=13 finite=1152/1152 nonFinite=0 norm=7.306174e+04
+[GPU_FINITE] op=rms_attn ly=14 finite=1152/1152 nonFinite=0 norm=2.160992e+02
+[GPU_FINITE] op=q_proj ly=14 finite=1024/1024 nonFinite=0 norm=3.665419e+02
+[GPU_FINITE] op=k_proj ly=14 finite=256/256 nonFinite=0 norm=3.490981e+02
+[GPU_FINITE] op=v_proj ly=14 finite=256/256 nonFinite=0 norm=3.664960e+02
+[GPU_FINITE] op=rope_q ly=14 finite=1024/1024 nonFinite=0 norm=3.665419e+02
+[GPU_FINITE] op=rope_k ly=14 finite=256/256 nonFinite=0 norm=3.490981e+02
+[GPU_FINITE] op=attn_out ly=14 finite=1024/1024 nonFinite=0 norm=7.327225e+02
+[GPU_FINITE] op=o_proj ly=14 finite=1152/1152 nonFinite=0 norm=4.666473e+02
+[GPU_FINITE] op=attn_res ly=14 finite=1152/1152 nonFinite=0 norm=7.306677e+04
+[GPU_FINITE] op=rms_ffn ly=14 finite=1152/1152 nonFinite=0 norm=6.770044e+02
+[GPU_FINITE] op=ffn_gate ly=14 finite=6912/6912 nonFinite=0 norm=4.445420e+03
+[GPU_FINITE] op=ffn_up ly=14 finite=6912/6912 nonFinite=0 norm=4.385771e+03
+[GPU_FINITE] op=swiglu ly=14 finite=6912/6912 nonFinite=0 norm=1.821607e+05
+[GPU_FINITE] op=ffn_down ly=14 finite=1152/1152 nonFinite=0 norm=5.110461e+04
+[GPU_FINITE] op=ffn_res ly=14 finite=1152/1152 nonFinite=0 norm=9.042656e+04
+[GPU_FINITE] op=rms_attn ly=15 finite=1152/1152 nonFinite=0 norm=1.895106e+02
+[GPU_FINITE] op=q_proj ly=15 finite=1024/1024 nonFinite=0 norm=2.413569e+02
+[GPU_FINITE] op=k_proj ly=15 finite=256/256 nonFinite=0 norm=3.317263e+02
+[GPU_FINITE] op=v_proj ly=15 finite=256/256 nonFinite=0 norm=3.722125e+02
+[GPU_FINITE] op=rope_q ly=15 finite=1024/1024 nonFinite=0 norm=2.413569e+02
+[GPU_FINITE] op=rope_k ly=15 finite=256/256 nonFinite=0 norm=3.317263e+02
+[GPU_FINITE] op=attn_out ly=15 finite=1024/1024 nonFinite=0 norm=7.441391e+02
+[GPU_FINITE] op=o_proj ly=15 finite=1152/1152 nonFinite=0 norm=3.815617e+02
+[GPU_FINITE] op=attn_res ly=15 finite=1152/1152 nonFinite=0 norm=9.044439e+04
+[GPU_FINITE] op=rms_ffn ly=15 finite=1152/1152 nonFinite=0 norm=9.126220e+02
+[GPU_FINITE] op=ffn_gate ly=15 finite=6912/6912 nonFinite=0 norm=4.869697e+03
+[GPU_FINITE] op=ffn_up ly=15 finite=6912/6912 nonFinite=0 norm=4.774484e+03
+[GPU_FINITE] op=swiglu ly=15 finite=6912/6912 nonFinite=0 norm=2.160277e+05
+[GPU_FINITE] op=ffn_down ly=15 finite=1152/1152 nonFinite=0 norm=8.978975e+04
+[GPU_FINITE] op=ffn_res ly=15 finite=1152/1152 nonFinite=0 norm=1.296100e+05
+[GPU_FINITE] op=rms_attn ly=16 finite=1152/1152 nonFinite=0 norm=2.105158e+02
+[GPU_FINITE] op=q_proj ly=16 finite=1024/1024 nonFinite=0 norm=3.137622e+02
+[GPU_FINITE] op=k_proj ly=16 finite=256/256 nonFinite=0 norm=2.648137e+02
+[GPU_FINITE] op=v_proj ly=16 finite=256/256 nonFinite=0 norm=3.170104e+02
+[GPU_FINITE] op=rope_q ly=16 finite=1024/1024 nonFinite=0 norm=3.137622e+02
+[GPU_FINITE] op=rope_k ly=16 finite=256/256 nonFinite=0 norm=2.648137e+02
+[GPU_FINITE] op=attn_out ly=16 finite=1024/1024 nonFinite=0 norm=6.337882e+02
+[GPU_FINITE] op=o_proj ly=16 finite=1152/1152 nonFinite=0 norm=2.372067e+02
+[GPU_FINITE] op=attn_res ly=16 finite=1152/1152 nonFinite=0 norm=1.296009e+05
+[GPU_FINITE] op=rms_ffn ly=16 finite=1152/1152 nonFinite=0 norm=1.293333e+03
+[GPU_FINITE] op=ffn_gate ly=16 finite=6912/6912 nonFinite=0 norm=7.375957e+03
+[GPU_FINITE] op=ffn_up ly=16 finite=6912/6912 nonFinite=0 norm=7.310681e+03
+[GPU_FINITE] op=swiglu ly=16 finite=6912/6912 nonFinite=0 norm=4.492986e+05
+[GPU_FINITE] op=ffn_down ly=16 finite=1152/1152 nonFinite=0 norm=1.860758e+05
+[GPU_FINITE] op=ffn_res ly=16 finite=1152/1152 nonFinite=0 norm=2.267367e+05
+[GPU_FINITE] op=rms_attn ly=17 finite=1152/1152 nonFinite=0 norm=1.212897e+02
+[GPU_FINITE] op=q_proj ly=17 finite=1024/1024 nonFinite=0 norm=2.461291e+02
+[GPU_FINITE] op=k_proj ly=17 finite=256/256 nonFinite=0 norm=1.502557e+02
+[GPU_FINITE] op=v_proj ly=17 finite=256/256 nonFinite=0 norm=2.072070e+02
+[GPU_FINITE] op=rope_q ly=17 finite=1024/1024 nonFinite=0 norm=2.461291e+02
+[GPU_FINITE] op=rope_k ly=17 finite=256/256 nonFinite=0 norm=1.502557e+02
+[GPU_FINITE] op=attn_out ly=17 finite=1024/1024 nonFinite=0 norm=4.142790e+02
+[GPU_FINITE] op=o_proj ly=17 finite=1152/1152 nonFinite=0 norm=2.599546e+02
+[GPU_FINITE] op=attn_res ly=17 finite=1152/1152 nonFinite=0 norm=2.267283e+05
+[GPU_FINITE] op=rms_ffn ly=17 finite=1152/1152 nonFinite=0 norm=2.046309e+03
+[GPU_FINITE] op=ffn_gate ly=17 finite=6912/6912 nonFinite=0 norm=1.193954e+04
+[GPU_FINITE] op=ffn_up ly=17 finite=6912/6912 nonFinite=0 norm=1.210454e+04
+[GPU_FINITE] op=swiglu ly=17 finite=6912/6912 nonFinite=0 norm=1.181001e+06
+[GPU_FINITE] op=ffn_down ly=17 finite=1152/1152 nonFinite=0 norm=3.767492e+05
+[GPU_FINITE] op=ffn_res ly=17 finite=1152/1152 nonFinite=0 norm=4.351029e+05
+[GPU_FINITE] op=rms_attn ly=18 finite=1152/1152 nonFinite=0 norm=2.102945e+02
+[GPU_FINITE] op=q_proj ly=18 finite=1024/1024 nonFinite=0 norm=2.800117e+02
+[GPU_FINITE] op=k_proj ly=18 finite=256/256 nonFinite=0 norm=4.300574e+02
+[GPU_FINITE] op=v_proj ly=18 finite=256/256 nonFinite=0 norm=4.758768e+02
+[GPU_FINITE] op=rope_q ly=18 finite=1024/1024 nonFinite=0 norm=2.800117e+02
+[GPU_FINITE] op=rope_k ly=18 finite=256/256 nonFinite=0 norm=4.300574e+02
+[GPU_FINITE] op=attn_out ly=18 finite=1024/1024 nonFinite=0 norm=9.513869e+02
+[GPU_FINITE] op=o_proj ly=18 finite=1152/1152 nonFinite=0 norm=1.890686e+02
+[GPU_FINITE] op=attn_res ly=18 finite=1152/1152 nonFinite=0 norm=4.351060e+05
+[GPU_FINITE] op=rms_ffn ly=18 finite=1152/1152 nonFinite=0 norm=1.586576e+03
+[GPU_FINITE] op=ffn_gate ly=18 finite=6912/6912 nonFinite=0 norm=1.078792e+04
+[GPU_FINITE] op=ffn_up ly=18 finite=6912/6912 nonFinite=0 norm=1.060975e+04
+[GPU_FINITE] op=swiglu ly=18 finite=6912/6912 nonFinite=0 norm=8.855891e+05
+[GPU_FINITE] op=ffn_down ly=18 finite=1152/1152 nonFinite=0 norm=1.990681e+05
+[GPU_FINITE] op=ffn_res ly=18 finite=1152/1152 nonFinite=0 norm=4.704835e+05
+[GPU_FINITE] op=rms_attn ly=19 finite=1152/1152 nonFinite=0 norm=2.419057e+02
+[GPU_FINITE] op=q_proj ly=19 finite=1024/1024 nonFinite=0 norm=5.797570e+02
+[GPU_FINITE] op=k_proj ly=19 finite=256/256 nonFinite=0 norm=3.438008e+02
+[GPU_FINITE] op=v_proj ly=19 finite=256/256 nonFinite=0 norm=3.885729e+02
+[GPU_FINITE] op=rope_q ly=19 finite=1024/1024 nonFinite=0 norm=5.797570e+02
+[GPU_FINITE] op=rope_k ly=19 finite=256/256 nonFinite=0 norm=3.438008e+02
+[GPU_FINITE] op=attn_out ly=19 finite=1024/1024 nonFinite=0 norm=7.768996e+02
+[GPU_FINITE] op=o_proj ly=19 finite=1152/1152 nonFinite=0 norm=4.887729e+02
+[GPU_FINITE] op=attn_res ly=19 finite=1152/1152 nonFinite=0 norm=4.704971e+05
+[GPU_FINITE] op=rms_ffn ly=19 finite=1152/1152 nonFinite=0 norm=1.403005e+03
+[GPU_FINITE] op=ffn_gate ly=19 finite=6912/6912 nonFinite=0 norm=9.319083e+03
+[GPU_FINITE] op=ffn_up ly=19 finite=6912/6912 nonFinite=0 norm=9.351605e+03
+[GPU_FINITE] op=swiglu ly=19 finite=6912/6912 nonFinite=0 norm=6.911278e+05
+[GPU_FINITE] op=ffn_down ly=19 finite=1152/1152 nonFinite=0 norm=1.890604e+05
+[GPU_FINITE] op=ffn_res ly=19 finite=1152/1152 nonFinite=0 norm=5.020316e+05
+[GPU_FINITE] op=rms_attn ly=20 finite=1152/1152 nonFinite=0 norm=2.364576e+02
+[GPU_FINITE] op=q_proj ly=20 finite=1024/1024 nonFinite=0 norm=4.499148e+02
+[GPU_FINITE] op=k_proj ly=20 finite=256/256 nonFinite=0 norm=4.573128e+02
+[GPU_FINITE] op=v_proj ly=20 finite=256/256 nonFinite=0 norm=4.714215e+02
+[GPU_FINITE] op=rope_q ly=20 finite=1024/1024 nonFinite=0 norm=4.499148e+02
+[GPU_FINITE] op=rope_k ly=20 finite=256/256 nonFinite=0 norm=4.573128e+02
+[GPU_FINITE] op=attn_out ly=20 finite=1024/1024 nonFinite=0 norm=9.424926e+02
+[GPU_FINITE] op=o_proj ly=20 finite=1152/1152 nonFinite=0 norm=4.672592e+02
+[GPU_FINITE] op=attn_res ly=20 finite=1152/1152 nonFinite=0 norm=5.020600e+05
+[GPU_FINITE] op=rms_ffn ly=20 finite=1152/1152 nonFinite=0 norm=1.741574e+03
+[GPU_FINITE] op=ffn_gate ly=20 finite=6912/6912 nonFinite=0 norm=1.032541e+04
+[GPU_FINITE] op=ffn_up ly=20 finite=6912/6912 nonFinite=0 norm=1.028531e+04
+[GPU_FINITE] op=swiglu ly=20 finite=6912/6912 nonFinite=0 norm=7.672993e+05
+[GPU_FINITE] op=ffn_down ly=20 finite=1152/1152 nonFinite=0 norm=2.942923e+05
+[GPU_FINITE] op=ffn_res ly=20 finite=1152/1152 nonFinite=0 norm=5.982333e+05
+[GPU_FINITE] op=rms_attn ly=21 finite=1152/1152 nonFinite=0 norm=2.876185e+02
+[GPU_FINITE] op=q_proj ly=21 finite=1024/1024 nonFinite=0 norm=4.494194e+02
+[GPU_FINITE] op=k_proj ly=21 finite=256/256 nonFinite=0 norm=7.008837e+02
+[GPU_FINITE] op=v_proj ly=21 finite=256/256 nonFinite=0 norm=7.903980e+02
+[GPU_FINITE] op=rope_q ly=21 finite=1024/1024 nonFinite=0 norm=4.494194e+02
+[GPU_FINITE] op=rope_k ly=21 finite=256/256 nonFinite=0 norm=7.008837e+02
+[GPU_FINITE] op=attn_out ly=21 finite=1024/1024 nonFinite=0 norm=1.580255e+03
+[GPU_FINITE] op=o_proj ly=21 finite=1152/1152 nonFinite=0 norm=1.163969e+03
+[GPU_FINITE] op=attn_res ly=21 finite=1152/1152 nonFinite=0 norm=5.982223e+05
+[GPU_FINITE] op=rms_ffn ly=21 finite=1152/1152 nonFinite=0 norm=1.467047e+03
+[GPU_FINITE] op=ffn_gate ly=21 finite=6912/6912 nonFinite=0 norm=8.792326e+03
+[GPU_FINITE] op=ffn_up ly=21 finite=6912/6912 nonFinite=0 norm=8.800767e+03
+[GPU_FINITE] op=swiglu ly=21 finite=6912/6912 nonFinite=0 norm=5.775918e+05
+[GPU_FINITE] op=ffn_down ly=21 finite=1152/1152 nonFinite=0 norm=1.480825e+05
+[GPU_FINITE] op=ffn_res ly=21 finite=1152/1152 nonFinite=0 norm=6.130989e+05
+[GPU_FINITE] op=rms_attn ly=22 finite=1152/1152 nonFinite=0 norm=3.057799e+02
+[GPU_FINITE] op=q_proj ly=22 finite=1024/1024 nonFinite=0 norm=4.981235e+02
+[GPU_FINITE] op=k_proj ly=22 finite=256/256 nonFinite=0 norm=6.724109e+02
+[GPU_FINITE] op=v_proj ly=22 finite=256/256 nonFinite=0 norm=6.857085e+02
+[GPU_FINITE] op=rope_q ly=22 finite=1024/1024 nonFinite=0 norm=4.981235e+02
+[GPU_FINITE] op=rope_k ly=22 finite=256/256 nonFinite=0 norm=6.724109e+02
+[GPU_FINITE] op=attn_out ly=22 finite=1024/1024 nonFinite=0 norm=1.370943e+03
+[GPU_FINITE] op=o_proj ly=22 finite=1152/1152 nonFinite=0 norm=8.981513e+02
+[GPU_FINITE] op=attn_res ly=22 finite=1152/1152 nonFinite=0 norm=6.131405e+05
+[GPU_FINITE] op=rms_ffn ly=22 finite=1152/1152 nonFinite=0 norm=1.797288e+03
+[GPU_FINITE] op=ffn_gate ly=22 finite=6912/6912 nonFinite=0 norm=9.573001e+03
+[GPU_FINITE] op=ffn_up ly=22 finite=6912/6912 nonFinite=0 norm=9.630619e+03
+[GPU_FINITE] op=swiglu ly=22 finite=6912/6912 nonFinite=0 norm=7.034067e+05
+[GPU_FINITE] op=ffn_down ly=22 finite=1152/1152 nonFinite=0 norm=2.534954e+05
+[GPU_FINITE] op=ffn_res ly=22 finite=1152/1152 nonFinite=0 norm=6.675177e+05
+[GPU_FINITE] op=rms_attn ly=23 finite=1152/1152 nonFinite=0 norm=1.942067e+02
+[GPU_FINITE] op=q_proj ly=23 finite=1024/1024 nonFinite=0 norm=2.869591e+02
+[GPU_FINITE] op=k_proj ly=23 finite=256/256 nonFinite=0 norm=5.359780e+02
+[GPU_FINITE] op=v_proj ly=23 finite=256/256 nonFinite=0 norm=5.220007e+02
+[GPU_FINITE] op=rope_q ly=23 finite=1024/1024 nonFinite=0 norm=2.869591e+02
+[GPU_FINITE] op=rope_k ly=23 finite=256/256 nonFinite=0 norm=5.359780e+02
+[GPU_FINITE] op=attn_out ly=23 finite=1024/1024 nonFinite=0 norm=1.043598e+03
+[GPU_FINITE] op=o_proj ly=23 finite=1152/1152 nonFinite=0 norm=3.872817e+02
+[GPU_FINITE] op=attn_res ly=23 finite=1152/1152 nonFinite=0 norm=6.675324e+05
+[GPU_FINITE] op=rms_ffn ly=23 finite=1152/1152 nonFinite=0 norm=1.421642e+03
+[GPU_FINITE] op=ffn_gate ly=23 finite=6912/6912 nonFinite=0 norm=8.464828e+03
+[GPU_FINITE] op=ffn_up ly=23 finite=6912/6912 nonFinite=0 norm=8.445525e+03
+[GPU_FINITE] op=swiglu ly=23 finite=6912/6912 nonFinite=0 norm=5.576299e+05
+[GPU_FINITE] op=ffn_down ly=23 finite=1152/1152 nonFinite=0 norm=2.361678e+05
+[GPU_FINITE] op=ffn_res ly=23 finite=1152/1152 nonFinite=0 norm=7.107757e+05
+[GPU_FINITE] op=rms_attn ly=24 finite=1152/1152 nonFinite=0 norm=2.022398e+02
+[GPU_FINITE] op=q_proj ly=24 finite=1024/1024 nonFinite=0 norm=3.855791e+02
+[GPU_FINITE] op=k_proj ly=24 finite=256/256 nonFinite=0 norm=3.968530e+02
+[GPU_FINITE] op=v_proj ly=24 finite=256/256 nonFinite=0 norm=4.151397e+02
+[GPU_FINITE] op=rope_q ly=24 finite=1024/1024 nonFinite=0 norm=3.855791e+02
+[GPU_FINITE] op=rope_k ly=24 finite=256/256 nonFinite=0 norm=3.968530e+02
+[GPU_FINITE] op=attn_out ly=24 finite=1024/1024 nonFinite=0 norm=8.299911e+02
+[GPU_FINITE] op=o_proj ly=24 finite=1152/1152 nonFinite=0 norm=2.611508e+02
+[GPU_FINITE] op=attn_res ly=24 finite=1152/1152 nonFinite=0 norm=7.107673e+05
+[GPU_FINITE] op=rms_ffn ly=24 finite=1152/1152 nonFinite=0 norm=1.713812e+03
+[GPU_FINITE] op=ffn_gate ly=24 finite=6912/6912 nonFinite=0 norm=1.153059e+04
+[GPU_FINITE] op=ffn_up ly=24 finite=6912/6912 nonFinite=0 norm=1.151452e+04
+[GPU_FINITE] op=swiglu ly=24 finite=6912/6912 nonFinite=0 norm=1.097782e+06
+[GPU_FINITE] op=ffn_down ly=24 finite=1152/1152 nonFinite=0 norm=3.571276e+05
+[GPU_FINITE] op=ffn_res ly=24 finite=1152/1152 nonFinite=0 norm=8.042134e+05
+[GPU_FINITE] op=rms_attn ly=25 finite=1152/1152 nonFinite=0 norm=1.733126e+02
+[GPU_FINITE] op=q_proj ly=25 finite=1024/1024 nonFinite=0 norm=4.056487e+02
+[GPU_FINITE] op=k_proj ly=25 finite=256/256 nonFinite=0 norm=2.184674e+02
+[GPU_FINITE] op=v_proj ly=25 finite=256/256 nonFinite=0 norm=2.450716e+02
+[GPU_FINITE] op=rope_q ly=25 finite=1024/1024 nonFinite=0 norm=4.056487e+02
+[GPU_FINITE] op=rope_k ly=25 finite=256/256 nonFinite=0 norm=2.184674e+02
+[GPU_FINITE] op=attn_out ly=25 finite=1024/1024 nonFinite=0 norm=4.899501e+02
+[GPU_FINITE] op=o_proj ly=25 finite=1152/1152 nonFinite=0 norm=3.240936e+02
+[GPU_FINITE] op=attn_res ly=25 finite=1152/1152 nonFinite=0 norm=8.042332e+05
+[GPU_FINITE] op=rms_ffn ly=25 finite=1152/1152 nonFinite=0 norm=1.313042e+03
+[GPU_FINITE] op=ffn_gate ly=25 finite=6912/6912 nonFinite=0 norm=9.100371e+03
+[GPU_FINITE] op=ffn_up ly=25 finite=6912/6912 nonFinite=0 norm=9.224354e+03
+[GPU_FINITE] op=swiglu ly=25 finite=6912/6912 nonFinite=0 norm=6.935710e+05
+[GPU_FINITE] op=ffn_down ly=25 finite=1152/1152 nonFinite=0 norm=1.609299e+05
+[GPU_FINITE] op=ffn_res ly=25 finite=1152/1152 nonFinite=0 norm=8.233197e+05
+HEAP_OK_AFTER_FORWARD_LAYERS=1
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=0000018CDAE20060
+FINAL_NORM_DST_PTR=0000018CDAE20060
+FINAL_NORM_WEIGHT_PTR=0000018CB10B0000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=4608
+FINAL_NORM_WEIGHT_0=6.15625
+FINAL_NORM_WEIGHT_1=21
+FINAL_NORM_WEIGHT_2=3.78125
+FINAL_NORM_WEIGHT_3=21
+FINAL_NORM_WEIGHT_L2=326.073723
+FINAL_NORM_SUMSQ=6.77855258e+11
+FINAL_NORM_MEAN_SQ=588416023
+FINAL_NORM_EPS=9.99999997e-07
+FINAL_NORM_INV_RMS=4.12247246e-05
+FINAL_NORM_SRC_0=-13090.1592
+FINAL_NORM_DST_0=-3.32214785
+FINAL_NORM_AFTER_L2=306.884436
+HEAP_OK_FINAL_NORM_AFTER=1
+[StreamEngine] Initialized: 26 layers, even compression, ON reuse, ON reconstruct, ON dense
+[StreamEngine] VRAM budget: 16.00 GB
+[StreamEngine] Chunk size: 1.09 GB compressed, 8.72 GB original, 8.72 GB reconstructed
+[unreverseHot] streamDead(0) → Reverse0 (layers=26)
+[Deep2Engine] embedToken: type=8 vocabSize=262144 hiddenDim=1152 data=0000018CB10C0000 sizeBytes=320864256
+[ResolveReverse0] layer 0: neutral resolved → direction chosen
+[ReconstructCompression] layer 0: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 1: neutral resolved → direction chosen
+[ReconstructCompression] layer 1: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 2: neutral resolved → direction chosen
+[ReconstructCompression] layer 2: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 3: neutral resolved → direction chosen
+[ReconstructCompression] layer 3: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 4: neutral resolved → direction chosen
+[ReconstructCompression] layer 4: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 5: neutral resolved → direction chosen
+[ReconstructCompression] layer 5: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 6: neutral resolved → direction chosen
+[ReconstructCompression] layer 6: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 7: neutral resolved → direction chosen
+[ReconstructCompression] layer 7: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 8: neutral resolved → direction chosen
+[ReconstructCompression] layer 8: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 9: neutral resolved → direction chosen
+[ReconstructCompression] layer 9: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 10: neutral resolved → direction chosen
+[ReconstructCompression] layer 10: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 11: neutral resolved → direction chosen
+[ReconstructCompression] layer 11: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 12: neutral resolved → direction chosen
+[ReconstructCompression] layer 12: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 13: neutral resolved → direction chosen
+[ReconstructCompression] layer 13: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 14: neutral resolved → direction chosen
+[ReconstructCompression] layer 14: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 15: neutral resolved → direction chosen
+[ReconstructCompression] layer 15: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 16: neutral resolved → direction chosen
+[ReconstructCompression] layer 16: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 17: neutral resolved → direction chosen
+[ReconstructCompression] layer 17: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 18: neutral resolved → direction chosen
+[ReconstructCompression] layer 18: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 19: neutral resolved → direction chosen
+[ReconstructCompression] layer 19: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 20: neutral resolved → direction chosen
+[ReconstructCompression] layer 20: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 21: neutral resolved → direction chosen
+[ReconstructCompression] layer 21: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 22: neutral resolved → direction chosen
+[ReconstructCompression] layer 22: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 23: neutral resolved → direction chosen
+[ReconstructCompression] layer 23: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 24: neutral resolved → direction chosen
+[ReconstructCompression] layer 24: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 25: neutral resolved → direction chosen
+[ReconstructCompression] layer 25: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 0: neutral resolved → direction chosen
+[ReconstructCompression] layer 0: [GPU_FINITE] op=rms_attn ly=0 finite=1152/1152 nonFinite=0 norm=2.030630e+02
+[GPU_FINITE] op=q_proj ly=0 finite=1024/1024 nonFinite=0 norm=3.918535e+02
+[GPU_FINITE] op=k_proj ly=0 finite=256/256 nonFinite=0 norm=3.549008e+02
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=3.775684e+02
+[GPU_FINITE] op=rope_q ly=0 finite=1024/1024 nonFinite=0 norm=3.918535e+02
+[GPU_FINITE] op=rope_k ly=0 finite=256/256 nonFinite=0 norm=3.549008e+02
+[GPU_FINITE] op=attn_out ly=0 finite=1024/1024 nonFinite=0 norm=7.605921e+02
+[GPU_FINITE] op=o_proj ly=0 finite=1152/1152 nonFinite=0 norm=6.798703e+02
+[GPU_FINITE] op=attn_res ly=0 finite=1152/1152 nonFinite=0 norm=6.798350e+02
+[GPU_FINITE] op=rms_ffn ly=0 finite=1152/1152 nonFinite=0 norm=1.440233e+02
+[GPU_FINITE] op=ffn_gate ly=0 finite=6912/6912 nonFinite=0 norm=1.073350e+03
+[GPU_FINITE] op=ffn_up ly=0 finite=6912/6912 nonFinite=0 norm=1.013147e+03
+[GPU_FINITE] op=swiglu ly=0 finite=6912/6912 nonFinite=0 norm=8.079164e+03
+[GPU_FINITE] op=ffn_down ly=0 finite=1152/1152 nonFinite=0 norm=3.652552e+03
+[GPU_FINITE] op=ffn_res ly=0 finite=1152/1152 nonFinite=0 norm=3.697929e+03
+[GPU_FINITE] op=rms_attn ly=1 finite=1152/1152 nonFinite=0 norm=4.967326e+02
+[GPU_FINITE] op=q_proj ly=1 finite=1024/1024 nonFinite=0 norm=8.922915e+02
+[GPU_FINITE] op=k_proj ly=1 finite=256/256 nonFinite=0 norm=1.027497e+03
+[GPU_FINITE] op=v_proj ly=1 finite=256/256 nonFinite=0 norm=1.085233e+03
+[GPU_FINITE] op=rope_q ly=1 finite=1024/1024 nonFinite=0 norm=8.922915e+02
+[GPU_FINITE] op=rope_k ly=1 finite=256/256 nonFinite=0 norm=1.027497e+03
+[GPU_FINITE] op=attn_out ly=1 finite=1024/1024 nonFinite=0 norm=2.175679e+03
+[GPU_FINITE] op=o_proj ly=1 finite=1152/1152 nonFinite=0 norm=1.782196e+03
+[GPU_FINITE] op=attn_res ly=1 finite=1152/1152 nonFinite=0 norm=4.018938e+03
+[GPU_FINITE] op=rms_ffn ly=1 finite=1152/1152 nonFinite=0 norm=5.540320e+01
+[GPU_FINITE] op=ffn_gate ly=1 finite=6912/6912 nonFinite=0 norm=3.828231e+02
+[GPU_FINITE] op=ffn_up ly=1 finite=6912/6912 nonFinite=0 norm=3.937892e+02
+[GPU_FINITE] op=swiglu ly=1 finite=6912/6912 nonFinite=0 norm=1.325457e+03
+[GPU_FINITE] op=ffn_down ly=1 finite=1152/1152 nonFinite=0 norm=5.834147e+02
+[GPU_FINITE] op=ffn_res ly=1 finite=1152/1152 nonFinite=0 norm=4.054737e+03
+[GPU_FINITE] op=rms_attn ly=2 finite=1152/1152 nonFinite=0 norm=4.965443e+02
+[GPU_FINITE] op=q_proj ly=2 finite=1024/1024 nonFinite=0 norm=7.499473e+02
+[GPU_FINITE] op=k_proj ly=2 finite=256/256 nonFinite=0 norm=1.034704e+03
+[GPU_FINITE] op=v_proj ly=2 finite=256/256 nonFinite=0 norm=1.063910e+03
+[GPU_FINITE] op=rope_q ly=2 finite=1024/1024 nonFinite=0 norm=7.499473e+02
+[GPU_FINITE] op=rope_k ly=2 finite=256/256 nonFinite=0 norm=1.034704e+03
+[GPU_FINITE] op=attn_out ly=2 finite=1024/1024 nonFinite=0 norm=2.442920e+03
+[GPU_FINITE] op=o_proj ly=2 finite=1152/1152 nonFinite=0 norm=1.968097e+03
+[GPU_FINITE] op=attn_res ly=2 finite=1152/1152 nonFinite=0 norm=4.436964e+03
+[GPU_FINITE] op=rms_ffn ly=2 finite=1152/1152 nonFinite=0 norm=5.413737e+01
+[GPU_FINITE] op=ffn_gate ly=2 finite=6912/6912 nonFinite=0 norm=3.496820e+02
+[GPU_FINITE] op=ffn_up ly=2 finite=6912/6912 nonFinite=0 norm=3.596286e+02
+[GPU_FINITE] op=swiglu ly=2 finite=6912/6912 nonFinite=0 norm=1.045172e+03
+[GPU_FINITE] op=ffn_down ly=2 finite=1152/1152 nonFinite=0 norm=4.186125e+02
+[GPU_FINITE] op=ffn_res ly=2 finite=1152/1152 nonFinite=0 norm=4.470345e+03
+[GPU_FINITE] op=rms_attn ly=3 finite=1152/1152 nonFinite=0 norm=4.169198e+02
+[GPU_FINITE] op=q_proj ly=3 finite=1024/1024 nonFinite=0 norm=7.313326e+02
+[GPU_FINITE] op=k_proj ly=3 finite=256/256 nonFinite=0 norm=6.011340e+02
+[GPU_FINITE] op=v_proj ly=3 finite=256/256 nonFinite=0 norm=6.092109e+02
+[GPU_FINITE] op=rope_q ly=3 finite=1024/1024 nonFinite=0 norm=7.313326e+02
+[GPU_FINITE] op=rope_k ly=3 finite=256/256 nonFinite=0 norm=6.011340e+02
+[GPU_FINITE] op=attn_out ly=3 finite=1024/1024 nonFinite=0 norm=1.332313e+03
+[GPU_FINITE] op=o_proj ly=3 finite=1152/1152 nonFinite=0 norm=8.527085e+02
+[GPU_FINITE] op=attn_res ly=3 finite=1152/1152 nonFinite=0 norm=4.564025e+03
+[GPU_FINITE] op=rms_ffn ly=3 finite=1152/1152 nonFinite=0 norm=8.955599e+01
+[GPU_FINITE] op=ffn_gate ly=3 finite=6912/6912 nonFinite=0 norm=5.289061e+02
+[GPU_FINITE] op=ffn_up ly=3 finite=6912/6912 nonFinite=0 norm=5.421019e+02
+[GPU_FINITE] op=swiglu ly=3 finite=6912/6912 nonFinite=0 norm=2.523750e+03
+[GPU_FINITE] op=ffn_down ly=3 finite=1152/1152 nonFinite=0 norm=9.317130e+02
+[GPU_FINITE] op=ffn_res ly=3 finite=1152/1152 nonFinite=0 norm=4.636422e+03
+[GPU_FINITE] op=rms_attn ly=4 finite=1152/1152 nonFinite=0 norm=3.995545e+02
+[GPU_FINITE] op=q_proj ly=4 finite=1024/1024 nonFinite=0 norm=7.005623e+02
+[GPU_FINITE] op=k_proj ly=4 finite=256/256 nonFinite=0 norm=4.633634e+02
+[GPU_FINITE] op=v_proj ly=4 finite=256/256 nonFinite=0 norm=4.961856e+02
+[GPU_FINITE] op=rope_q ly=4 finite=1024/1024 nonFinite=0 norm=7.005623e+02
+[GPU_FINITE] op=rope_k ly=4 finite=256/256 nonFinite=0 norm=4.633634e+02
+[GPU_FINITE] op=attn_out ly=4 finite=1024/1024 nonFinite=0 norm=9.807117e+02
+[GPU_FINITE] op=o_proj ly=4 finite=1152/1152 nonFinite=0 norm=5.725083e+02
+[GPU_FINITE] op=attn_res ly=4 finite=1152/1152 nonFinite=0 norm=4.666795e+03
+[GPU_FINITE] op=rms_ffn ly=4 finite=1152/1152 nonFinite=0 norm=8.846359e+01
+[GPU_FINITE] op=ffn_gate ly=4 finite=6912/6912 nonFinite=0 norm=5.296122e+02
+[GPU_FINITE] op=ffn_up ly=4 finite=6912/6912 nonFinite=0 norm=5.202033e+02
+[GPU_FINITE] op=swiglu ly=4 finite=6912/6912 nonFinite=0 norm=2.559740e+03
+[GPU_FINITE] op=ffn_down ly=4 finite=1152/1152 nonFinite=0 norm=5.974173e+02
+[GPU_FINITE] op=ffn_res ly=4 finite=1152/1152 nonFinite=0 norm=4.709640e+03
+[GPU_FINITE] op=rms_attn ly=5 finite=1152/1152 nonFinite=0 norm=1.146205e+02
+[GPU_FINITE] op=q_proj ly=5 finite=1024/1024 nonFinite=0 norm=1.501219e+02
+[GPU_FINITE] op=k_proj ly=5 finite=256/256 nonFinite=0 norm=2.057799e+02
+[GPU_FINITE] op=v_proj ly=5 finite=256/256 nonFinite=0 norm=1.761998e+02
+[GPU_FINITE] op=rope_q ly=5 finite=1024/1024 nonFinite=0 norm=1.501219e+02
+[GPU_FINITE] op=rope_k ly=5 finite=256/256 nonFinite=0 norm=2.057799e+02
+[GPU_FINITE] op=attn_out ly=5 finite=1024/1024 nonFinite=0 norm=3.462909e+02
+[GPU_FINITE] op=o_proj ly=5 finite=1152/1152 nonFinite=0 norm=3.441724e+02
+[GPU_FINITE] op=attn_res ly=5 finite=1152/1152 nonFinite=0 norm=4.728503e+03
+[GPU_FINITE] op=rms_ffn ly=5 finite=1152/1152 nonFinite=0 norm=1.921823e+02
+[GPU_FINITE] op=ffn_gate ly=5 finite=6912/6912 nonFinite=0 norm=1.135812e+03
+[GPU_FINITE] op=ffn_up ly=5 finite=6912/6912 nonFinite=0 norm=1.148609e+03
+[GPU_FINITE] op=swiglu ly=5 finite=6912/6912 nonFinite=0 norm=1.172699e+04
+[GPU_FINITE] op=ffn_down ly=5 finite=1152/1152 nonFinite=0 norm=4.972836e+03
+[GPU_FINITE] op=ffn_res ly=5 finite=1152/1152 nonFinite=0 norm=7.089112e+03
+[GPU_FINITE] op=rms_attn ly=6 finite=1152/1152 nonFinite=0 norm=3.955387e+02
+[GPU_FINITE] op=q_proj ly=6 finite=1024/1024 nonFinite=0 norm=5.753400e+02
+[GPU_FINITE] op=k_proj ly=6 finite=256/256 nonFinite=0 norm=8.447280e+02
+[GPU_FINITE] op=v_proj ly=6 finite=256/256 nonFinite=0 norm=7.993735e+02
+[GPU_FINITE] op=rope_q ly=6 finite=1024/1024 nonFinite=0 norm=5.753400e+02
+[GPU_FINITE] op=rope_k ly=6 finite=256/256 nonFinite=0 norm=8.447279e+02
+[GPU_FINITE] op=attn_out ly=6 finite=1024/1024 nonFinite=0 norm=1.607152e+03
+[GPU_FINITE] op=o_proj ly=6 finite=1152/1152 nonFinite=0 norm=1.438097e+03
+[GPU_FINITE] op=attn_res ly=6 finite=1152/1152 nonFinite=0 norm=7.218287e+03
+[GPU_FINITE] op=rms_ffn ly=6 finite=1152/1152 nonFinite=0 norm=1.157706e+02
+[GPU_FINITE] op=ffn_gate ly=6 finite=6912/6912 nonFinite=0 norm=6.726309e+02
+[GPU_FINITE] op=ffn_up ly=6 finite=6912/6912 nonFinite=0 norm=6.687436e+02
+[GPU_FINITE] op=swiglu ly=6 finite=6912/6912 nonFinite=0 norm=4.165997e+03
+[GPU_FINITE] op=ffn_down ly=6 finite=1152/1152 nonFinite=0 norm=1.741795e+03
+[GPU_FINITE] op=ffn_res ly=6 finite=1152/1152 nonFinite=0 norm=7.422728e+03
+[GPU_FINITE] op=rms_attn ly=7 finite=1152/1152 nonFinite=0 norm=2.977902e+02
+[GPU_FINITE] op=q_proj ly=7 finite=1024/1024 nonFinite=0 norm=4.574860e+02
+[GPU_FINITE] op=k_proj ly=7 finite=256/256 nonFinite=0 norm=5.020531e+02
+[GPU_FINITE] op=v_proj ly=7 finite=256/256 nonFinite=0 norm=5.024324e+02
+[GPU_FINITE] op=rope_q ly=7 finite=1024/1024 nonFinite=0 norm=4.574860e+02
+[GPU_FINITE] op=rope_k ly=7 finite=256/256 nonFinite=0 norm=5.020531e+02
+[GPU_FINITE] op=attn_out ly=7 finite=1024/1024 nonFinite=0 norm=1.073491e+03
+[GPU_FINITE] op=o_proj ly=7 finite=1152/1152 nonFinite=0 norm=1.245872e+03
+[GPU_FINITE] op=attn_res ly=7 finite=1152/1152 nonFinite=0 norm=7.537772e+03
+[GPU_FINITE] op=rms_ffn ly=7 finite=1152/1152 nonFinite=0 norm=1.673689e+02
+[GPU_FINITE] op=ffn_gate ly=7 finite=6912/6912 nonFinite=0 norm=9.501504e+02
+[GPU_FINITE] op=ffn_up ly=7 finite=6912/6912 nonFinite=0 norm=9.448210e+02
+[GPU_FINITE] op=swiglu ly=7 finite=6912/6912 nonFinite=0 norm=7.982909e+03
+[GPU_FINITE] op=ffn_down ly=7 finite=1152/1152 nonFinite=0 norm=3.044800e+03
+[GPU_FINITE] op=ffn_res ly=7 finite=1152/1152 nonFinite=0 norm=8.153291e+03
+[GPU_FINITE] op=rms_attn ly=8 finite=1152/1152 nonFinite=0 norm=2.760084e+02
+[GPU_FINITE] op=q_proj ly=8 finite=1024/1024 nonFinite=0 norm=4.507453e+02
+[GPU_FINITE] op=k_proj ly=8 finite=256/256 nonFinite=0 norm=4.953289e+02
+[GPU_FINITE] op=v_proj ly=8 finite=256/256 nonFinite=0 norm=4.521823e+02
+[GPU_FINITE] op=rope_q ly=8 finite=1024/1024 nonFinite=0 norm=4.507453e+02
+[GPU_FINITE] op=rope_k ly=8 finite=256/256 nonFinite=0 norm=4.953289e+02
+[GPU_FINITE] op=attn_out ly=8 finite=1024/1024 nonFinite=0 norm=9.890265e+02
+[GPU_FINITE] op=o_proj ly=8 finite=1152/1152 nonFinite=0 norm=1.016461e+03
+[GPU_FINITE] op=attn_res ly=8 finite=1152/1152 nonFinite=0 norm=8.266174e+03
+[GPU_FINITE] op=rms_ffn ly=8 finite=1152/1152 nonFinite=0 norm=2.164959e+02
+[GPU_FINITE] op=ffn_gate ly=8 finite=6912/6912 nonFinite=0 norm=1.206240e+03
+[GPU_FINITE] op=ffn_up ly=8 finite=6912/6912 nonFinite=0 norm=1.204871e+03
+[GPU_FINITE] op=swiglu ly=8 finite=6912/6912 nonFinite=0 norm=1.362017e+04
+[GPU_FINITE] op=ffn_down ly=8 finite=1152/1152 nonFinite=0 norm=3.260744e+03
+[GPU_FINITE] op=ffn_res ly=8 finite=1152/1152 nonFinite=0 norm=9.055138e+03
+[GPU_FINITE] op=rms_attn ly=9 finite=1152/1152 nonFinite=0 norm=2.647682e+02
+[GPU_FINITE] op=q_proj ly=9 finite=1024/1024 nonFinite=0 norm=3.225822e+02
+[GPU_FINITE] op=k_proj ly=9 finite=256/256 nonFinite=0 norm=4.909889e+02
+[GPU_FINITE] op=v_proj ly=9 finite=256/256 nonFinite=0 norm=5.469534e+02
+[GPU_FINITE] op=rope_q ly=9 finite=1024/1024 nonFinite=0 norm=3.225822e+02
+[GPU_FINITE] op=rope_k ly=9 finite=256/256 nonFinite=0 norm=4.909889e+02
+[GPU_FINITE] op=attn_out ly=9 finite=1024/1024 nonFinite=0 norm=1.177446e+03
+[GPU_FINITE] op=o_proj ly=9 finite=1152/1152 nonFinite=0 norm=6.146705e+02
+[GPU_FINITE] op=attn_res ly=9 finite=1152/1152 nonFinite=0 norm=9.105731e+03
+[GPU_FINITE] op=rms_ffn ly=9 finite=1152/1152 nonFinite=0 norm=2.551896e+02
+[GPU_FINITE] op=ffn_gate ly=9 finite=6912/6912 nonFinite=0 norm=1.351155e+03
+[GPU_FINITE] op=ffn_up ly=9 finite=6912/6912 nonFinite=0 norm=1.303029e+03
+[GPU_FINITE] op=swiglu ly=9 finite=6912/6912 nonFinite=0 norm=1.844883e+04
+[GPU_FINITE] op=ffn_down ly=9 finite=1152/1152 nonFinite=0 norm=9.356894e+03
+[GPU_FINITE] op=ffn_res ly=9 finite=1152/1152 nonFinite=0 norm=1.317897e+04
+[GPU_FINITE] op=rms_attn ly=10 finite=1152/1152 nonFinite=0 norm=2.116898e+02
+[GPU_FINITE] op=q_proj ly=10 finite=1024/1024 nonFinite=0 norm=3.946181e+02
+[GPU_FINITE] op=k_proj ly=10 finite=256/256 nonFinite=0 norm=2.702666e+02
+[GPU_FINITE] op=v_proj ly=10 finite=256/256 nonFinite=0 norm=2.659026e+02
+[GPU_FINITE] op=rope_q ly=10 finite=1024/1024 nonFinite=0 norm=3.946181e+02
+[GPU_FINITE] op=rope_k ly=10 finite=256/256 nonFinite=0 norm=2.702665e+02
+[GPU_FINITE] op=attn_out ly=10 finite=1024/1024 nonFinite=0 norm=6.411983e+02
+[GPU_FINITE] op=o_proj ly=10 finite=1152/1152 nonFinite=0 norm=4.052800e+02
+[GPU_FINITE] op=attn_res ly=10 finite=1152/1152 nonFinite=0 norm=1.317347e+04
+[GPU_FINITE] op=rms_ffn ly=10 finite=1152/1152 nonFinite=0 norm=3.644635e+02
+[GPU_FINITE] op=ffn_gate ly=10 finite=6912/6912 nonFinite=0 norm=1.840802e+03
+[GPU_FINITE] op=ffn_up ly=10 finite=6912/6912 nonFinite=0 norm=1.851194e+03
+[GPU_FINITE] op=swiglu ly=10 finite=6912/6912 nonFinite=0 norm=3.065253e+04
+[GPU_FINITE] op=ffn_down ly=10 finite=1152/1152 nonFinite=0 norm=1.282626e+04
+[GPU_FINITE] op=ffn_res ly=10 finite=1152/1152 nonFinite=0 norm=1.855845e+04
+[GPU_FINITE] op=rms_attn ly=11 finite=1152/1152 nonFinite=0 norm=1.319470e+02
+[GPU_FINITE] op=q_proj ly=11 finite=1024/1024 nonFinite=0 norm=3.339126e+02
+[GPU_FINITE] op=k_proj ly=11 finite=256/256 nonFinite=0 norm=2.001751e+02
+[GPU_FINITE] op=v_proj ly=11 finite=256/256 nonFinite=0 norm=2.098684e+02
+[GPU_FINITE] op=rope_q ly=11 finite=1024/1024 nonFinite=0 norm=3.339125e+02
+[GPU_FINITE] op=rope_k ly=11 finite=256/256 nonFinite=0 norm=2.001751e+02
+[GPU_FINITE] op=attn_out ly=11 finite=1024/1024 nonFinite=0 norm=4.069666e+02
+[GPU_FINITE] op=o_proj ly=11 finite=1152/1152 nonFinite=0 norm=2.789165e+02
+[GPU_FINITE] op=attn_res ly=11 finite=1152/1152 nonFinite=0 norm=1.853854e+04
+[GPU_FINITE] op=rms_ffn ly=11 finite=1152/1152 nonFinite=0 norm=5.868713e+02
+[GPU_FINITE] op=ffn_gate ly=11 finite=6912/6912 nonFinite=0 norm=2.864536e+03
+[GPU_FINITE] op=ffn_up ly=11 finite=6912/6912 nonFinite=0 norm=2.794231e+03
+[GPU_FINITE] op=swiglu ly=11 finite=6912/6912 nonFinite=0 norm=7.283692e+04
+[GPU_FINITE] op=ffn_down ly=11 finite=1152/1152 nonFinite=0 norm=2.702214e+04
+[GPU_FINITE] op=ffn_res ly=11 finite=1152/1152 nonFinite=0 norm=3.369040e+04
+[GPU_FINITE] op=rms_attn ly=12 finite=1152/1152 nonFinite=0 norm=2.315539e+02
+[GPU_FINITE] op=q_proj ly=12 finite=1024/1024 nonFinite=0 norm=3.363936e+02
+[GPU_FINITE] op=k_proj ly=12 finite=256/256 nonFinite=0 norm=4.920321e+02
+[GPU_FINITE] op=v_proj ly=12 finite=256/256 nonFinite=0 norm=5.131971e+02
+[GPU_FINITE] op=rope_q ly=12 finite=1024/1024 nonFinite=0 norm=3.363936e+02
+[GPU_FINITE] op=rope_k ly=12 finite=256/256 nonFinite=0 norm=4.920321e+02
+[GPU_FINITE] op=attn_out ly=12 finite=1024/1024 nonFinite=0 norm=9.779529e+02
+[GPU_FINITE] op=o_proj ly=12 finite=1152/1152 nonFinite=0 norm=6.562046e+02
+[GPU_FINITE] op=attn_res ly=12 finite=1152/1152 nonFinite=0 norm=3.370305e+04
+[GPU_FINITE] op=rms_ffn ly=12 finite=1152/1152 nonFinite=0 norm=5.804788e+02
+[GPU_FINITE] op=ffn_gate ly=12 finite=6912/6912 nonFinite=0 norm=3.104033e+03
+[GPU_FINITE] op=ffn_up ly=12 finite=6912/6912 nonFinite=0 norm=3.062337e+03
+[GPU_FINITE] op=swiglu ly=12 finite=6912/6912 nonFinite=0 norm=8.040193e+04
+[GPU_FINITE] op=ffn_down ly=12 finite=1152/1152 nonFinite=0 norm=2.263420e+04
+[GPU_FINITE] op=ffn_res ly=12 finite=1152/1152 nonFinite=0 norm=4.131682e+04
+[GPU_FINITE] op=rms_attn ly=13 finite=1152/1152 nonFinite=0 norm=2.205846e+02
+[GPU_FINITE] op=q_proj ly=13 finite=1024/1024 nonFinite=0 norm=3.692920e+02
+[GPU_FINITE] op=k_proj ly=13 finite=256/256 nonFinite=0 norm=4.465675e+02
+[GPU_FINITE] op=v_proj ly=13 finite=256/256 nonFinite=0 norm=4.630861e+02
+[GPU_FINITE] op=rope_q ly=13 finite=1024/1024 nonFinite=0 norm=3.692920e+02
+[GPU_FINITE] op=rope_k ly=13 finite=256/256 nonFinite=0 norm=4.465675e+02
+[GPU_FINITE] op=attn_out ly=13 finite=1024/1024 nonFinite=0 norm=8.352599e+02
+[GPU_FINITE] op=o_proj ly=13 finite=1152/1152 nonFinite=0 norm=5.843955e+02
+[GPU_FINITE] op=attn_res ly=13 finite=1152/1152 nonFinite=0 norm=4.134551e+04
+[GPU_FINITE] op=rms_ffn ly=13 finite=1152/1152 nonFinite=0 norm=7.790954e+02
+[GPU_FINITE] op=ffn_gate ly=13 finite=6912/6912 nonFinite=0 norm=3.249672e+03
+[GPU_FINITE] op=ffn_up ly=13 finite=6912/6912 nonFinite=0 norm=3.168852e+03
+[GPU_FINITE] op=swiglu ly=13 finite=6912/6912 nonFinite=0 norm=9.536421e+04
+[GPU_FINITE] op=ffn_down ly=13 finite=1152/1152 nonFinite=0 norm=2.274564e+04
+[GPU_FINITE] op=ffn_res ly=13 finite=1152/1152 nonFinite=0 norm=4.702702e+04
+[GPU_FINITE] op=rms_attn ly=14 finite=1152/1152 nonFinite=0 norm=2.274724e+02
+[GPU_FINITE] op=q_proj ly=14 finite=1024/1024 nonFinite=0 norm=4.450835e+02
+[GPU_FINITE] op=k_proj ly=14 finite=256/256 nonFinite=0 norm=3.671125e+02
+[GPU_FINITE] op=v_proj ly=14 finite=256/256 nonFinite=0 norm=4.590619e+02
+[GPU_FINITE] op=rope_q ly=14 finite=1024/1024 nonFinite=0 norm=4.450834e+02
+[GPU_FINITE] op=rope_k ly=14 finite=256/256 nonFinite=0 norm=3.671125e+02
+[GPU_FINITE] op=attn_out ly=14 finite=1024/1024 nonFinite=0 norm=7.831113e+02
+[GPU_FINITE] op=o_proj ly=14 finite=1152/1152 nonFinite=0 norm=6.195251e+02
+[GPU_FINITE] op=attn_res ly=14 finite=1152/1152 nonFinite=0 norm=4.703211e+04
+[GPU_FINITE] op=rms_ffn ly=14 finite=1152/1152 nonFinite=0 norm=7.252260e+02
+[GPU_FINITE] op=ffn_gate ly=14 finite=6912/6912 nonFinite=0 norm=2.933616e+03
+[GPU_FINITE] op=ffn_up ly=14 finite=6912/6912 nonFinite=0 norm=2.932399e+03
+[GPU_FINITE] op=swiglu ly=14 finite=6912/6912 nonFinite=0 norm=8.166546e+04
+[GPU_FINITE] op=ffn_down ly=14 finite=1152/1152 nonFinite=0 norm=2.238741e+04
+[GPU_FINITE] op=ffn_res ly=14 finite=1152/1152 nonFinite=0 norm=5.241078e+04
+[GPU_FINITE] op=rms_attn ly=15 finite=1152/1152 nonFinite=0 norm=1.933538e+02
+[GPU_FINITE] op=q_proj ly=15 finite=1024/1024 nonFinite=0 norm=2.687359e+02
+[GPU_FINITE] op=k_proj ly=15 finite=256/256 nonFinite=0 norm=4.311420e+02
+[GPU_FINITE] op=v_proj ly=15 finite=256/256 nonFinite=0 norm=4.283565e+02
+[GPU_FINITE] op=rope_q ly=15 finite=1024/1024 nonFinite=0 norm=2.687359e+02
+[GPU_FINITE] op=rope_k ly=15 finite=256/256 nonFinite=0 norm=4.311419e+02
+[GPU_FINITE] op=attn_out ly=15 finite=1024/1024 nonFinite=0 norm=8.564338e+02
+[GPU_FINITE] op=o_proj ly=15 finite=1152/1152 nonFinite=0 norm=4.339196e+02
+[GPU_FINITE] op=attn_res ly=15 finite=1152/1152 nonFinite=0 norm=5.243401e+04
+[GPU_FINITE] op=rms_ffn ly=15 finite=1152/1152 nonFinite=0 norm=9.268316e+02
+[GPU_FINITE] op=ffn_gate ly=15 finite=6912/6912 nonFinite=0 norm=3.483411e+03
+[GPU_FINITE] op=ffn_up ly=15 finite=6912/6912 nonFinite=0 norm=3.468290e+03
+[GPU_FINITE] op=swiglu ly=15 finite=6912/6912 nonFinite=0 norm=1.064769e+05
+[GPU_FINITE] op=ffn_down ly=15 finite=1152/1152 nonFinite=0 norm=4.380608e+04
+[GPU_FINITE] op=ffn_res ly=15 finite=1152/1152 nonFinite=0 norm=6.900516e+04
+[GPU_FINITE] op=rms_attn ly=16 finite=1152/1152 nonFinite=0 norm=2.219826e+02
+[GPU_FINITE] op=q_proj ly=16 finite=1024/1024 nonFinite=0 norm=4.276324e+02
+[GPU_FINITE] op=k_proj ly=16 finite=256/256 nonFinite=0 norm=3.574385e+02
+[GPU_FINITE] op=v_proj ly=16 finite=256/256 nonFinite=0 norm=4.005216e+02
+[GPU_FINITE] op=rope_q ly=16 finite=1024/1024 nonFinite=0 norm=4.276324e+02
+[GPU_FINITE] op=rope_k ly=16 finite=256/256 nonFinite=0 norm=3.574385e+02
+[GPU_FINITE] op=attn_out ly=16 finite=1024/1024 nonFinite=0 norm=7.624633e+02
+[GPU_FINITE] op=o_proj ly=16 finite=1152/1152 nonFinite=0 norm=3.038764e+02
+[GPU_FINITE] op=attn_res ly=16 finite=1152/1152 nonFinite=0 norm=6.900498e+04
+[GPU_FINITE] op=rms_ffn ly=16 finite=1152/1152 nonFinite=0 norm=1.226253e+03
+[GPU_FINITE] op=ffn_gate ly=16 finite=6912/6912 nonFinite=0 norm=7.269488e+03
+[GPU_FINITE] op=ffn_up ly=16 finite=6912/6912 nonFinite=0 norm=7.208482e+03
+[GPU_FINITE] op=swiglu ly=16 finite=6912/6912 nonFinite=0 norm=4.846152e+05
+[GPU_FINITE] op=ffn_down ly=16 finite=1152/1152 nonFinite=0 norm=1.940359e+05
+[GPU_FINITE] op=ffn_res ly=16 finite=1152/1152 nonFinite=0 norm=2.076874e+05
+[GPU_FINITE] op=rms_attn ly=17 finite=1152/1152 nonFinite=0 norm=1.302553e+02
+[GPU_FINITE] op=q_proj ly=17 finite=1024/1024 nonFinite=0 norm=2.894070e+02
+[GPU_FINITE] op=k_proj ly=17 finite=256/256 nonFinite=0 norm=2.033609e+02
+[GPU_FINITE] op=v_proj ly=17 finite=256/256 nonFinite=0 norm=2.449256e+02
+[GPU_FINITE] op=rope_q ly=17 finite=1024/1024 nonFinite=0 norm=2.894070e+02
+[GPU_FINITE] op=rope_k ly=17 finite=256/256 nonFinite=0 norm=2.033609e+02
+[GPU_FINITE] op=attn_out ly=17 finite=1024/1024 nonFinite=0 norm=4.896781e+02
+[GPU_FINITE] op=o_proj ly=17 finite=1152/1152 nonFinite=0 norm=2.920243e+02
+[GPU_FINITE] op=attn_res ly=17 finite=1152/1152 nonFinite=0 norm=2.077085e+05
+[GPU_FINITE] op=rms_ffn ly=17 finite=1152/1152 nonFinite=0 norm=2.092246e+03
+[GPU_FINITE] op=ffn_gate ly=17 finite=6912/6912 nonFinite=0 norm=1.478676e+04
+[GPU_FINITE] op=ffn_up ly=17 finite=6912/6912 nonFinite=0 norm=1.472781e+04
+[GPU_FINITE] op=swiglu ly=17 finite=6912/6912 nonFinite=0 norm=1.974637e+06
+[GPU_FINITE] op=ffn_down ly=17 finite=1152/1152 nonFinite=0 norm=6.489017e+05
+[GPU_FINITE] op=ffn_res ly=17 finite=1152/1152 nonFinite=0 norm=6.833439e+05
+[GPU_FINITE] op=rms_attn ly=18 finite=1152/1152 nonFinite=0 norm=2.112648e+02
+[GPU_FINITE] op=q_proj ly=18 finite=1024/1024 nonFinite=0 norm=3.215541e+02
+[GPU_FINITE] op=k_proj ly=18 finite=256/256 nonFinite=0 norm=4.479139e+02
+[GPU_FINITE] op=v_proj ly=18 finite=256/256 nonFinite=0 norm=4.972822e+02
+[GPU_FINITE] op=rope_q ly=18 finite=1024/1024 nonFinite=0 norm=3.215541e+02
+[GPU_FINITE] op=rope_k ly=18 finite=256/256 nonFinite=0 norm=4.479138e+02
+[GPU_FINITE] op=attn_out ly=18 finite=1024/1024 nonFinite=0 norm=9.513869e+02
+[GPU_FINITE] op=o_proj ly=18 finite=1152/1152 nonFinite=0 norm=1.890686e+02
+[GPU_FINITE] op=attn_res ly=18 finite=1152/1152 nonFinite=0 norm=6.833444e+05
+[GPU_FINITE] op=rms_ffn ly=18 finite=1152/1152 nonFinite=0 norm=1.594118e+03
+[GPU_FINITE] op=ffn_gate ly=18 finite=6912/6912 nonFinite=0 norm=9.534342e+03
+[GPU_FINITE] op=ffn_up ly=18 finite=6912/6912 nonFinite=0 norm=9.713051e+03
+[GPU_FINITE] op=swiglu ly=18 finite=6912/6912 nonFinite=0 norm=8.199488e+05
+[GPU_FINITE] op=ffn_down ly=18 finite=1152/1152 nonFinite=0 norm=1.787959e+05
+[GPU_FINITE] op=ffn_res ly=18 finite=1152/1152 nonFinite=0 norm=7.056974e+05
+[GPU_FINITE] op=rms_attn ly=19 finite=1152/1152 nonFinite=0 norm=2.505487e+02
+[GPU_FINITE] op=q_proj ly=19 finite=1024/1024 nonFinite=0 norm=5.081181e+02
+[GPU_FINITE] op=k_proj ly=19 finite=256/256 nonFinite=0 norm=3.260835e+02
+[GPU_FINITE] op=v_proj ly=19 finite=256/256 nonFinite=0 norm=3.629199e+02
+[GPU_FINITE] op=rope_q ly=19 finite=1024/1024 nonFinite=0 norm=5.081181e+02
+[GPU_FINITE] op=rope_k ly=19 finite=256/256 nonFinite=0 norm=3.260835e+02
+[GPU_FINITE] op=attn_out ly=19 finite=1024/1024 nonFinite=0 norm=7.516923e+02
+[GPU_FINITE] op=o_proj ly=19 finite=1152/1152 nonFinite=0 norm=5.284638e+02
+[GPU_FINITE] op=attn_res ly=19 finite=1152/1152 nonFinite=0 norm=7.056950e+05
+[GPU_FINITE] op=rms_ffn ly=19 finite=1152/1152 nonFinite=0 norm=1.366880e+03
+[GPU_FINITE] op=ffn_gate ly=19 finite=6912/6912 nonFinite=0 norm=7.704951e+03
+[GPU_FINITE] op=ffn_up ly=19 finite=6912/6912 nonFinite=0 norm=7.675229e+03
+[GPU_FINITE] op=swiglu ly=19 finite=6912/6912 nonFinite=0 norm=5.411640e+05
+[GPU_FINITE] op=ffn_down ly=19 finite=1152/1152 nonFinite=0 norm=1.411906e+05
+[GPU_FINITE] op=ffn_res ly=19 finite=1152/1152 nonFinite=0 norm=7.199442e+05
+[GPU_FINITE] op=rms_attn ly=20 finite=1152/1152 nonFinite=0 norm=2.381022e+02
+[GPU_FINITE] op=q_proj ly=20 finite=1024/1024 nonFinite=0 norm=3.532430e+02
+[GPU_FINITE] op=k_proj ly=20 finite=256/256 nonFinite=0 norm=3.482682e+02
+[GPU_FINITE] op=v_proj ly=20 finite=256/256 nonFinite=0 norm=4.206096e+02
+[GPU_FINITE] op=rope_q ly=20 finite=1024/1024 nonFinite=0 norm=3.532430e+02
+[GPU_FINITE] op=rope_k ly=20 finite=256/256 nonFinite=0 norm=3.482681e+02
+[GPU_FINITE] op=attn_out ly=20 finite=1024/1024 nonFinite=0 norm=8.674349e+02
+[GPU_FINITE] op=o_proj ly=20 finite=1152/1152 nonFinite=0 norm=5.765431e+02
+[GPU_FINITE] op=attn_res ly=20 finite=1152/1152 nonFinite=0 norm=7.199623e+05
+[GPU_FINITE] op=rms_ffn ly=20 finite=1152/1152 nonFinite=0 norm=1.779440e+03
+[GPU_FINITE] op=ffn_gate ly=20 finite=6912/6912 nonFinite=0 norm=9.244210e+03
+[GPU_FINITE] op=ffn_up ly=20 finite=6912/6912 nonFinite=0 norm=9.257175e+03
+[GPU_FINITE] op=swiglu ly=20 finite=6912/6912 nonFinite=0 norm=7.518684e+05
+[GPU_FINITE] op=ffn_down ly=20 finite=1152/1152 nonFinite=0 norm=2.947244e+05
+[GPU_FINITE] op=ffn_res ly=20 finite=1152/1152 nonFinite=0 norm=7.714127e+05
+[GPU_FINITE] op=rms_attn ly=21 finite=1152/1152 nonFinite=0 norm=2.717444e+02
+[GPU_FINITE] op=q_proj ly=21 finite=1024/1024 nonFinite=0 norm=3.126923e+02
+[GPU_FINITE] op=k_proj ly=21 finite=256/256 nonFinite=0 norm=5.344612e+02
+[GPU_FINITE] op=v_proj ly=21 finite=256/256 nonFinite=0 norm=5.788078e+02
+[GPU_FINITE] op=rope_q ly=21 finite=1024/1024 nonFinite=0 norm=3.126923e+02
+[GPU_FINITE] op=rope_k ly=21 finite=256/256 nonFinite=0 norm=5.344611e+02
+[GPU_FINITE] op=attn_out ly=21 finite=1024/1024 nonFinite=0 norm=1.485827e+03
+[GPU_FINITE] op=o_proj ly=21 finite=1152/1152 nonFinite=0 norm=1.503205e+03
+[GPU_FINITE] op=attn_res ly=21 finite=1152/1152 nonFinite=0 norm=7.714091e+05
+[GPU_FINITE] op=rms_ffn ly=21 finite=1152/1152 nonFinite=0 norm=1.397959e+03
+[GPU_FINITE] op=ffn_gate ly=21 finite=6912/6912 nonFinite=0 norm=7.155438e+03
+[GPU_FINITE] op=ffn_up ly=21 finite=6912/6912 nonFinite=0 norm=7.234244e+03
+[GPU_FINITE] op=swiglu ly=21 finite=6912/6912 nonFinite=0 norm=4.615876e+05
+[GPU_FINITE] op=ffn_down ly=21 finite=1152/1152 nonFinite=0 norm=1.206429e+05
+[GPU_FINITE] op=ffn_res ly=21 finite=1152/1152 nonFinite=0 norm=7.868075e+05
+[GPU_FINITE] op=rms_attn ly=22 finite=1152/1152 nonFinite=0 norm=2.984840e+02
+[GPU_FINITE] op=q_proj ly=22 finite=1024/1024 nonFinite=0 norm=3.798999e+02
+[GPU_FINITE] op=k_proj ly=22 finite=256/256 nonFinite=0 norm=5.025492e+02
+[GPU_FINITE] op=v_proj ly=22 finite=256/256 nonFinite=0 norm=5.877715e+02
+[GPU_FINITE] op=rope_q ly=22 finite=1024/1024 nonFinite=0 norm=3.798999e+02
+[GPU_FINITE] op=rope_k ly=22 finite=256/256 nonFinite=0 norm=5.025492e+02
+[GPU_FINITE] op=attn_out ly=22 finite=1024/1024 nonFinite=0 norm=1.276809e+03
+[GPU_FINITE] op=o_proj ly=22 finite=1152/1152 nonFinite=0 norm=9.802315e+02
+[GPU_FINITE] op=attn_res ly=22 finite=1152/1152 nonFinite=0 norm=7.868584e+05
+[GPU_FINITE] op=rms_ffn ly=22 finite=1152/1152 nonFinite=0 norm=1.780368e+03
+[GPU_FINITE] op=ffn_gate ly=22 finite=6912/6912 nonFinite=0 norm=9.530968e+03
+[GPU_FINITE] op=ffn_up ly=22 finite=6912/6912 nonFinite=0 norm=9.500636e+03
+[GPU_FINITE] op=swiglu ly=22 finite=6912/6912 nonFinite=0 norm=7.555303e+05
+[GPU_FINITE] op=ffn_down ly=22 finite=1152/1152 nonFinite=0 norm=2.639356e+05
+[GPU_FINITE] op=ffn_res ly=22 finite=1152/1152 nonFinite=0 norm=8.283246e+05
+[GPU_FINITE] op=rms_attn ly=23 finite=1152/1152 nonFinite=0 norm=1.878643e+02
+[GPU_FINITE] op=q_proj ly=23 finite=1024/1024 nonFinite=0 norm=2.145942e+02
+[GPU_FINITE] op=k_proj ly=23 finite=256/256 nonFinite=0 norm=4.208948e+02
+[GPU_FINITE] op=v_proj ly=23 finite=256/256 nonFinite=0 norm=4.035774e+02
+[GPU_FINITE] op=rope_q ly=23 finite=1024/1024 nonFinite=0 norm=2.145942e+02
+[GPU_FINITE] op=rope_k ly=23 finite=256/256 nonFinite=0 norm=4.208948e+02
+[GPU_FINITE] op=attn_out ly=23 finite=1024/1024 nonFinite=0 norm=1.043598e+03
+[GPU_FINITE] op=o_proj ly=23 finite=1152/1152 nonFinite=0 norm=3.872817e+02
+[GPU_FINITE] op=attn_res ly=23 finite=1152/1152 nonFinite=0 norm=8.283271e+05
+[GPU_FINITE] op=rms_ffn ly=23 finite=1152/1152 nonFinite=0 norm=1.381618e+03
+[GPU_FINITE] op=ffn_gate ly=23 finite=6912/6912 nonFinite=0 norm=7.525691e+03
+[GPU_FINITE] op=ffn_up ly=23 finite=6912/6912 nonFinite=0 norm=7.391287e+03
+[GPU_FINITE] op=swiglu ly=23 finite=6912/6912 nonFinite=0 norm=4.749977e+05
+[GPU_FINITE] op=ffn_down ly=23 finite=1152/1152 nonFinite=0 norm=1.989939e+05
+[GPU_FINITE] op=ffn_res ly=23 finite=1152/1152 nonFinite=0 norm=8.418559e+05
+[GPU_FINITE] op=rms_attn ly=24 finite=1152/1152 nonFinite=0 norm=2.158017e+02
+[GPU_FINITE] op=q_proj ly=24 finite=1024/1024 nonFinite=0 norm=3.106992e+02
+[GPU_FINITE] op=k_proj ly=24 finite=256/256 nonFinite=0 norm=2.692178e+02
+[GPU_FINITE] op=v_proj ly=24 finite=256/256 nonFinite=0 norm=3.294560e+02
+[GPU_FINITE] op=rope_q ly=24 finite=1024/1024 nonFinite=0 norm=3.106992e+02
+[GPU_FINITE] op=rope_k ly=24 finite=256/256 nonFinite=0 norm=2.692178e+02
+[GPU_FINITE] op=attn_out ly=24 finite=1024/1024 nonFinite=0 norm=7.906520e+02
+[GPU_FINITE] op=o_proj ly=24 finite=1152/1152 nonFinite=0 norm=3.753990e+02
+[GPU_FINITE] op=attn_res ly=24 finite=1152/1152 nonFinite=0 norm=8.418762e+05
+[GPU_FINITE] op=rms_ffn ly=24 finite=1152/1152 nonFinite=0 norm=1.707053e+03
+[GPU_FINITE] op=ffn_gate ly=24 finite=6912/6912 nonFinite=0 norm=9.353834e+03
+[GPU_FINITE] op=ffn_up ly=24 finite=6912/6912 nonFinite=0 norm=9.327110e+03
+[GPU_FINITE] op=swiglu ly=24 finite=6912/6912 nonFinite=0 norm=7.220293e+05
+[GPU_FINITE] op=ffn_down ly=24 finite=1152/1152 nonFinite=0 norm=2.421877e+05
+[GPU_FINITE] op=ffn_res ly=24 finite=1152/1152 nonFinite=0 norm=8.797467e+05
+[GPU_FINITE] op=rms_attn ly=25 finite=1152/1152 nonFinite=0 norm=1.728886e+02
+[GPU_FINITE] op=q_proj ly=25 finite=1024/1024 nonFinite=0 norm=3.602787e+02
+[GPU_FINITE] op=k_proj ly=25 finite=256/256 nonFinite=0 norm=1.888998e+02
+[GPU_FINITE] op=v_proj ly=25 finite=256/256 nonFinite=0 norm=2.034986e+02
+[GPU_FINITE] op=rope_q ly=25 finite=1024/1024 nonFinite=0 norm=3.602787e+02
+[GPU_FINITE] op=rope_k ly=25 finite=256/256 nonFinite=0 norm=1.888998e+02
+[GPU_FINITE] op=attn_out ly=25 finite=1024/1024 nonFinite=0 norm=4.068563e+02
+[GPU_FINITE] op=o_proj ly=25 finite=1152/1152 nonFinite=0 norm=2.547573e+02
+[GPU_FINITE] op=attn_res ly=25 finite=1152/1152 nonFinite=0 norm=8.797561e+05
+[GPU_FINITE] op=rms_ffn ly=25 finite=1152/1152 nonFinite=0 norm=1.226692e+03
+[GPU_FINITE] op=ffn_gate ly=25 finite=6912/6912 nonFinite=0 norm=7.463216e+03
+[GPU_FINITE] op=ffn_up ly=25 finite=6912/6912 nonFinite=0 norm=7.605964e+03
+[GPU_FINITE] op=swiglu ly=25 finite=6912/6912 nonFinite=0 norm=5.091583e+05
+[GPU_FINITE] op=ffn_down ly=25 finite=1152/1152 nonFinite=0 norm=1.240168e+05
+[GPU_FINITE] op=ffn_res ly=25 finite=1152/1152 nonFinite=0 norm=8.899011e+05
+HEAP_OK_AFTER_FORWARD_LAYERS=1
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=0000018CDAE21260
+FINAL_NORM_DST_PTR=0000018CDAE21260
+FINAL_NORM_WEIGHT_PTR=0000018CB10B0000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=4608
+FINAL_NORM_WEIGHT_0=6.15625
+FINAL_NORM_WEIGHT_1=21
+FINAL_NORM_WEIGHT_2=3.78125
+FINAL_NORM_WEIGHT_3=21
+FINAL_NORM_WEIGHT_L2=326.073723
+FINAL_NORM_SUMSQ=7.91924026e+11
+FINAL_NORM_MEAN_SQ=687434050
+FINAL_NORM_EPS=9.99999997e-07
+FINAL_NORM_INV_RMS=3.81403333e-05
+FINAL_NORM_SRC_0=7459.26904
+FINAL_NORM_DST_0=1.75144708
+FINAL_NORM_AFTER_L2=313.641157
+HEAP_OK_FINAL_NORM_AFTER=1
+[GPU_FINITE] op=rms_attn ly=0 finite=1152/1152 nonFinite=0 norm=2.088081e+02
+[GPU_FINITE] op=q_proj ly=0 finite=1024/1024 nonFinite=0 norm=3.416091e+02
+[GPU_FINITE] op=k_proj ly=0 finite=256/256 nonFinite=0 norm=3.064849e+02
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=3.319452e+02
+[GPU_FINITE] op=rope_q ly=0 finite=1024/1024 nonFinite=0 norm=3.416091e+02
+[GPU_FINITE] op=rope_k ly=0 finite=256/256 nonFinite=0 norm=3.064849e+02
+[GPU_FINITE] op=attn_out ly=0 finite=1024/1024 nonFinite=0 norm=7.448894e+02
+[GPU_FINITE] op=o_proj ly=0 finite=1152/1152 nonFinite=0 norm=5.950444e+02
+[GPU_FINITE] op=attn_res ly=0 finite=1152/1152 nonFinite=0 norm=5.950443e+02
+[GPU_FINITE] op=rms_ffn ly=0 finite=1152/1152 nonFinite=0 norm=1.047832e+02
+[GPU_FINITE] op=ffn_gate ly=0 finite=6912/6912 nonFinite=0 norm=6.978014e+02
+[GPU_FINITE] op=ffn_up ly=0 finite=6912/6912 nonFinite=0 norm=6.692181e+02
+[GPU_FINITE] op=swiglu ly=0 finite=6912/6912 nonFinite=0 norm=3.948963e+03
+[GPU_FINITE] op=ffn_down ly=0 finite=1152/1152 nonFinite=0 norm=1.815284e+03
+[GPU_FINITE] op=ffn_res ly=0 finite=1152/1152 nonFinite=0 norm=1.909409e+03
+[GPU_FINITE] op=rms_attn ly=1 finite=1152/1152 nonFinite=0 norm=5.199053e+02
+[GPU_FINITE] op=q_proj ly=1 finite=1024/1024 nonFinite=0 norm=7.073240e+02
+[GPU_FINITE] op=k_proj ly=1 finite=256/256 nonFinite=0 norm=7.183916e+02
+[GPU_FINITE] op=v_proj ly=1 finite=256/256 nonFinite=0 norm=8.067955e+02
+[GPU_FINITE] op=rope_q ly=1 finite=1024/1024 nonFinite=0 norm=7.073240e+02
+[GPU_FINITE] op=rope_k ly=1 finite=256/256 nonFinite=0 norm=7.183916e+02
+[GPU_FINITE] op=attn_out ly=1 finite=1024/1024 nonFinite=0 norm=2.046888e+03
+[GPU_FINITE] op=o_proj ly=1 finite=1152/1152 nonFinite=0 norm=1.693935e+03
+[GPU_FINITE] op=attn_res ly=1 finite=1152/1152 nonFinite=0 norm=2.539756e+03
+[GPU_FINITE] op=rms_ffn ly=1 finite=1152/1152 nonFinite=0 norm=3.787204e+01
+[GPU_FINITE] op=ffn_gate ly=1 finite=6912/6912 nonFinite=0 norm=2.526386e+02
+[GPU_FINITE] op=ffn_up ly=1 finite=6912/6912 nonFinite=0 norm=2.608431e+02
+[GPU_FINITE] op=swiglu ly=1 finite=6912/6912 nonFinite=0 norm=5.308308e+02
+[GPU_FINITE] op=ffn_down ly=1 finite=1152/1152 nonFinite=0 norm=2.211335e+02
+[GPU_FINITE] op=ffn_res ly=1 finite=1152/1152 nonFinite=0 norm=2.538129e+03
+[GPU_FINITE] op=rms_attn ly=2 finite=1152/1152 nonFinite=0 norm=4.918319e+02
+[GPU_FINITE] op=q_proj ly=2 finite=1024/1024 nonFinite=0 norm=6.593932e+02
+[GPU_FINITE] op=k_proj ly=2 finite=256/256 nonFinite=0 norm=1.029160e+03
+[GPU_FINITE] op=v_proj ly=2 finite=256/256 nonFinite=0 norm=1.039105e+03
+[GPU_FINITE] op=rope_q ly=2 finite=1024/1024 nonFinite=0 norm=6.593932e+02
+[GPU_FINITE] op=rope_k ly=2 finite=256/256 nonFinite=0 norm=1.029160e+03
+[GPU_FINITE] op=attn_out ly=2 finite=1024/1024 nonFinite=0 norm=2.432201e+03
+[GPU_FINITE] op=o_proj ly=2 finite=1152/1152 nonFinite=0 norm=1.948730e+03
+[GPU_FINITE] op=attn_res ly=2 finite=1152/1152 nonFinite=0 norm=3.149412e+03
+[GPU_FINITE] op=rms_ffn ly=2 finite=1152/1152 nonFinite=0 norm=6.163220e+01
+[GPU_FINITE] op=ffn_gate ly=2 finite=6912/6912 nonFinite=0 norm=4.093148e+02
+[GPU_FINITE] op=ffn_up ly=2 finite=6912/6912 nonFinite=0 norm=4.166925e+02
+[GPU_FINITE] op=swiglu ly=2 finite=6912/6912 nonFinite=0 norm=1.411496e+03
+[GPU_FINITE] op=ffn_down ly=2 finite=1152/1152 nonFinite=0 norm=5.952874e+02
+[GPU_FINITE] op=ffn_res ly=2 finite=1152/1152 nonFinite=0 norm=3.207331e+03
+[GPU_FINITE] op=rms_attn ly=3 finite=1152/1152 nonFinite=0 norm=4.080029e+02
+[GPU_FINITE] op=q_proj ly=3 finite=1024/1024 nonFinite=0 norm=7.506745e+02
+[GPU_FINITE] op=k_proj ly=3 finite=256/256 nonFinite=0 norm=5.941857e+02
+[GPU_FINITE] op=v_proj ly=3 finite=256/256 nonFinite=0 norm=6.458614e+02
+[GPU_FINITE] op=rope_q ly=3 finite=1024/1024 nonFinite=0 norm=7.506745e+02
+[GPU_FINITE] op=rope_k ly=3 finite=256/256 nonFinite=0 norm=5.941857e+02
+[GPU_FINITE] op=attn_out ly=3 finite=1024/1024 nonFinite=0 norm=1.311961e+03
+[GPU_FINITE] op=o_proj ly=3 finite=1152/1152 nonFinite=0 norm=9.225681e+02
+[GPU_FINITE] op=attn_res ly=3 finite=1152/1152 nonFinite=0 norm=3.357684e+03
+[GPU_FINITE] op=rms_ffn ly=3 finite=1152/1152 nonFinite=0 norm=1.314979e+02
+[GPU_FINITE] op=ffn_gate ly=3 finite=6912/6912 nonFinite=0 norm=7.559744e+02
+[GPU_FINITE] op=ffn_up ly=3 finite=6912/6912 nonFinite=0 norm=7.654570e+02
+[GPU_FINITE] op=swiglu ly=3 finite=6912/6912 nonFinite=0 norm=4.926102e+03
+[GPU_FINITE] op=ffn_down ly=3 finite=1152/1152 nonFinite=0 norm=1.747668e+03
+[GPU_FINITE] op=ffn_res ly=3 finite=1152/1152 nonFinite=0 norm=3.874159e+03
+4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 1: neutral resolved → direction chosen
+[ReconstructCompression] layer 1: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 2: neutral resolved → direction chosen
+[ReconstructCompression] layer 2: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 3: neutral resolved → direction chosen
+[ReconstructCompression] layer 3: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 4: neutral resolved → direction chosen
+[ReconstructCompression] layer 4: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 5: neutral resolved → direction chosen
+[ReconstructCompression] layer 5: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 6: neutral resolved → direction chosen
+[ReconstructCompression] layer 6: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 7: neutral resolved → direction chosen
+[ReconstructCompression] layer 7: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 8: neutral resolved → direction chosen
+[ReconstructCompression] layer 8: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 9: neutral resolved → direction chosen
+[ReconstructCompression] layer 9: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 10: neutral resolved → direction chosen
+[ReconstructCompression] layer 10: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 11: neutral resolved → direction chosen
+[ReconstructCompression] layer 11: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 12: neutral resolved → direction chosen
+[ReconstructCompression] layer 12: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 13: neutral resolved → direction chosen
+[ReconstructCompression] layer 13: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 14: neutral resolved → direction chosen
+[ReconstructCompression] layer 14: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 15: neutral resolved → direction chosen
+[ReconstructCompression] layer 15: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 16: neutral resolved → direction chosen
+[ReconstructCompression] layer 16: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 17: neutral resolved → direction chosen
+[ReconstructCompression] layer 17: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 18: neutral resolved → direction chosen
+[ReconstructCompression] layer 18: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 19: neutral resolved → direction chosen
+[ReconstructCompression] layer 19: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 20: neutral resolved → direction chosen
+[ReconstructCompression] layer 20: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 21: neutral resolved → direction chosen
+[ReconstructCompression] layer 21: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 22: neutral resolved → direction chosen
+[ReconstructCompression] layer 22: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 23: neutral resolved → direction chosen
+[ReconstructCompression] layer 23: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 24: neutral resolved → direction chosen
+[ReconstructCompression] layer 24: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 25: neutral resolved → direction chosen
+[ReconstructCompression] layer 25: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 0: neutral resolved → direction chosen
+[ReconstructCompression] layer 0: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 1: neutral resolved → direction chosen
+[ReconstructCompression] layer 1: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 2: neutral resolved → direction chosen
+[ReconstructCompression] layer 2: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer 3: neutral resolved → direction chosen
+[ReconstructCompression] layer 3: 4/4 slices active, 8.72 GB → 8.72 GB
+[ResolveReverse0] layer[GPU_FINITE] op=rms_attn ly=4 finite=1152/1152 nonFinite=0 norm=3.878730e+02
+[GPU_FINITE] op=q_proj ly=4 finite=1024/1024 nonFinite=0 norm=7.746017e+02
+[GPU_FINITE] op=k_proj ly=4 finite=256/256 nonFinite=0 norm=4.536264e+02
+[GPU_FINITE] op=v_proj ly=4 finite=256/256 nonFinite=0 norm=5.357052e+02
+[GPU_FINITE] op=rope_q ly=4 finite=1024/1024 nonFinite=0 norm=7.746017e+02
+[GPU_FINITE] op=rope_k ly=4 finite=256/256 nonFinite=0 norm=4.536264e+02
+[GPU_FINITE] op=attn_out ly=4 finite=1024/1024 nonFinite=0 norm=1.006831e+03
+[GPU_FINITE] op=o_proj ly=4 finite=1152/1152 nonFinite=0 norm=5.397313e+02
+[GPU_FINITE] op=attn_res ly=4 finite=1152/1152 nonFinite=0 norm=3.915860e+03
+[GPU_FINITE] op=rms_ffn ly=4 finite=1152/1152 nonFinite=0 norm=9.883407e+01
+[GPU_FINITE] op=ffn_gate ly=4 finite=6912/6912 nonFinite=0 norm=5.435698e+02
+[GPU_FINITE] op=ffn_up ly=4 finite=6912/6912 nonFinite=0 norm=5.309675e+02
+[GPU_FINITE] op=swiglu ly=4 finite=6912/6912 nonFinite=0 norm=2.453931e+03
+[GPU_FINITE] op=ffn_down ly=4 finite=1152/1152 nonFinite=0 norm=6.140719e+02
+[GPU_FINITE] op=ffn_res ly=4 finite=1152/1152 nonFinite=0 norm=3.979775e+03
+[GPU_FINITE] op=rms_attn ly=5 finite=1152/1152 nonFinite=0 norm=1.139324e+02
+[GPU_FINITE] op=q_proj ly=5 finite=1024/1024 nonFinite=0 norm=1.753303e+02
+[GPU_FINITE] op=k_proj ly=5 finite=256/256 nonFinite=0 norm=2.252785e+02
+[GPU_FINITE] op=v_proj ly=5 finite=256/256 nonFinite=0 norm=2.031573e+02
+[GPU_FINITE] op=rope_q ly=5 finite=1024/1024 nonFinite=0 norm=1.753303e+02
+[GPU_FINITE] op=rope_k ly=5 finite=256/256 nonFinite=0 norm=2.252785e+02
+[GPU_FINITE] op=attn_out ly=5 finite=1024/1024 nonFinite=0 norm=3.665966e+02
+[GPU_FINITE] op=o_proj ly=5 finite=1152/1152 nonFinite=0 norm=3.619988e+02
+[GPU_FINITE] op=attn_res ly=5 finite=1152/1152 nonFinite=0 norm=4.007075e+03
+[GPU_FINITE] op=rms_ffn ly=5 finite=1152/1152 nonFinite=0 norm=2.321673e+02
+[GPU_FINITE] op=ffn_gate ly=5 finite=6912/6912 nonFinite=0 norm=1.266801e+03
+[GPU_FINITE] op=ffn_up ly=5 finite=6912/6912 nonFinite=0 norm=1.272750e+03
+[GPU_FINITE] op=swiglu ly=5 finite=6912/6912 nonFinite=0 norm=1.390919e+04
+[GPU_FINITE] op=ffn_down ly=5 finite=1152/1152 nonFinite=0 norm=6.373263e+03
+[GPU_FINITE] op=ffn_res ly=5 finite=1152/1152 nonFinite=0 norm=7.593832e+03
+[GPU_FINITE] op=rms_attn ly=6 finite=1152/1152 nonFinite=0 norm=3.815001e+02
+[GPU_FINITE] op=q_proj ly=6 finite=1024/1024 nonFinite=0 norm=5.924112e+02
+[GPU_FINITE] op=k_proj ly=6 finite=256/256 nonFinite=0 norm=8.720494e+02
+[GPU_FINITE] op=v_proj ly=6 finite=256/256 nonFinite=0 norm=8.391337e+02
+[GPU_FINITE] op=rope_q ly=6 finite=1024/1024 nonFinite=0 norm=5.924112e+02
+[GPU_FINITE] op=rope_k ly=6 finite=256/256 nonFinite=0 norm=8.720494e+02
+[GPU_FINITE] op=attn_out ly=6 finite=1024/1024 nonFinite=0 norm=1.627269e+03
+[GPU_FINITE] op=o_proj ly=6 finite=1152/1152 nonFinite=0 norm=1.230422e+03
+[GPU_FINITE] op=attn_res ly=6 finite=1152/1152 nonFinite=0 norm=7.695009e+03
+[GPU_FINITE] op=rms_ffn ly=6 finite=1152/1152 nonFinite=0 norm=2.549618e+02
+[GPU_FINITE] op=ffn_gate ly=6 finite=6912/6912 nonFinite=0 norm=1.763996e+03
+[GPU_FINITE] op=ffn_up ly=6 finite=6912/6912 nonFinite=0 norm=1.765064e+03
+[GPU_FINITE] op=swiglu ly=6 finite=6912/6912 nonFinite=0 norm=2.668538e+04
+[GPU_FINITE] op=ffn_down ly=6 finite=1152/1152 nonFinite=0 norm=1.126837e+04
+[GPU_FINITE] op=ffn_res ly=6 finite=1152/1152 nonFinite=0 norm=1.357376e+04
+[GPU_FINITE] op=rms_attn ly=7 finite=1152/1152 nonFinite=0 norm=2.928715e+02
+[GPU_FINITE] op=q_proj ly=7 finite=1024/1024 nonFinite=0 norm=5.255093e+02
+[GPU_FINITE] op=k_proj ly=7 finite=256/256 nonFinite=0 norm=5.562239e+02
+[GPU_FINITE] op=v_proj ly=7 finite=256/256 nonFinite=0 norm=5.494211e+02
+[GPU_FINITE] op=rope_q ly=7 finite=1024/1024 nonFinite=0 norm=5.255093e+02
+[GPU_FINITE] op=rope_k ly=7 finite=256/256 nonFinite=0 norm=5.562238e+02
+[GPU_FINITE] op=attn_out ly=7 finite=1024/1024 nonFinite=0 norm=1.118569e+03
+[GPU_FINITE] op=o_proj ly=7 finite=1152/1152 nonFinite=0 norm=1.189867e+03
+[GPU_FINITE] op=attn_res ly=7 finite=1152/1152 nonFinite=0 norm=1.366449e+04
+[GPU_FINITE] op=rms_ffn ly=7 finite=1152/1152 nonFinite=0 norm=1.874257e+02
+[GPU_FINITE] op=ffn_gate ly=7 finite=6912/6912 nonFinite=0 norm=9.806910e+02
+[GPU_FINITE] op=ffn_up ly=7 finite=6912/6912 nonFinite=0 norm=9.740345e+02
+[GPU_FINITE] op=swiglu ly=7 finite=6912/6912 nonFinite=0 norm=8.238872e+03
+[GPU_FINITE] op=ffn_down ly=7 finite=1152/1152 nonFinite=0 norm=2.962721e+03
+[GPU_FINITE] op=ffn_res ly=7 finite=1152/1152 nonFinite=0 norm=1.406228e+04
+[GPU_FINITE] op=rms_attn ly=8 finite=1152/1152 nonFinite=0 norm=2.755861e+02
+[GPU_FINITE] op=q_proj ly=8 finite=1024/1024 nonFinite=0 norm=5.255278e+02
+[GPU_FINITE] op=k_proj ly=8 finite=256/256 nonFinite=0 norm=5.380607e+02
+[GPU_FINITE] op=v_proj ly=8 finite=256/256 nonFinite=0 norm=5.256344e+02
+[GPU_FINITE] op=rope_q ly=8 finite=1024/1024 nonFinite=0 norm=5.255278e+02
+[GPU_FINITE] op=rope_k ly=8 finite=256/256 nonFinite=0 norm=5.380607e+02
+[GPU_FINITE] op=attn_out ly=8 finite=1024/1024 nonFinite=0 norm=1.059122e+03
+[GPU_FINITE] op=o_proj ly=8 finite=1152/1152 nonFinite=0 norm=1.095491e+03
+[GPU_FINITE] op=attn_res ly=8 finite=1152/1152 nonFinite=0 norm=1.416374e+04
+[GPU_FINITE] op=rms_ffn ly=8 finite=1152/1152 nonFinite=0 norm=2.191579e+02
+[GPU_FINITE] op=ffn_gate ly=8 finite=6912/6912 nonFinite=0 norm=1.091066e+03
+[GPU_FINITE] op=ffn_up ly=8 finite=6912/6912 nonFinite=0 norm=1.101542e+03
+[GPU_FINITE] op=swiglu ly=8 finite=6912/6912 nonFinite=0 norm=1.083005e+04
+[GPU_FINITE] op=ffn_down ly=8 finite=1152/1152 nonFinite=0 norm=2.471557e+03
+[GPU_FINITE] op=ffn_res ly=8 finite=1152/1152 nonFinite=0 norm=1.433718e+04
+[GPU_FINITE] op=rms_attn ly=9 finite=1152/1152 nonFinite=0 norm=2.616712e+02
+[GPU_FINITE] op=q_proj ly=9 finite=1024/1024 nonFinite=0 norm=4.058792e+02
+[GPU_FINITE] op=k_proj ly=9 finite=256/256 nonFinite=0 norm=6.150894e+02
+[GPU_FINITE] op=v_proj ly=9 finite=256/256 nonFinite=0 norm=5.748799e+02
+[GPU_FINITE] op=rope_q ly=9 finite=1024/1024 nonFinite=0 norm=4.058792e+02
+[GPU_FINITE] op=rope_k ly=9 finite=256/256 nonFinite=0 norm=6.150893e+02
+[GPU_FINITE] op=attn_out ly=9 finite=1024/1024 nonFinite=0 norm=1.163684e+03
+[GPU_FINITE] op=o_proj ly=9 finite=1152/1152 nonFinite=0 norm=5.434883e+02
+[GPU_FINITE] op=attn_res ly=9 finite=1152/1152 nonFinite=0 norm=1.435618e+04
+[GPU_FINITE] op=rms_ffn ly=9 finite=1152/1152 nonFinite=0 norm=2.626060e+02
+[GPU_FINITE] op=ffn_gate ly=9 finite=6912/6912 nonFinite=0 norm=1.108044e+03
+[GPU_FINITE] op=ffn_up ly=9 finite=6912/6912 nonFinite=0 norm=1.116002e+03
+[GPU_FINITE] op=swiglu ly=9 finite=6912/6912 nonFinite=0 norm=1.096586e+04
+[GPU_FINITE] op=ffn_down ly=9 finite=1152/1152 nonFinite=0 norm=4.548079e+03
+[GPU_FINITE] op=ffn_res ly=9 finite=1152/1152 nonFinite=0 norm=1.519572e+04
+[GPU_FINITE] op=rms_attn ly=10 finite=1152/1152 nonFinite=0 norm=2.292037e+02
+[GPU_FINITE] op=q_proj ly=10 finite=1024/1024 nonFinite=0 norm=5.084663e+02
+[GPU_FINITE] op=k_proj ly=10 finite=256/256 nonFinite=0 norm=3.030559e+02
+[GPU_FINITE] op=v_proj ly=10 finite=256/256 nonFinite=0 norm=3.204177e+02
+[GPU_FINITE] op=rope_q ly=10 finite=1024/1024 nonFinite=0 norm=5.084663e+02
+[GPU_FINITE] op=rope_k ly=10 finite=256/256 nonFinite=0 norm=3.030559e+02
+[GPU_FINITE] op=attn_out ly=10 finite=1024/1024 nonFinite=0 norm=6.222935e+02
+[GPU_FINITE] op=o_proj ly=10 finite=1152/1152 nonFinite=0 norm=3.877498e+02
+[GPU_FINITE] op=attn_res ly=10 finite=1152/1152 nonFinite=0 norm=1.521495e+04
+[GPU_FINITE] op=rms_ffn ly=10 finite=1152/1152 nonFinite=0 norm=4.631703e+02
+[GPU_FINITE] op=ffn_gate ly=10 finite=6912/6912 nonFinite=0 norm=2.328007e+03
+[GPU_FINITE] op=ffn_up ly=10 finite=6912/6912 nonFinite=0 norm=2.312372e+03
+[GPU_FINITE] op=swiglu ly=10 finite=6912/6912 nonFinite=0 norm=4.570923e+04
+[GPU_FINITE] op=ffn_down ly=10 finite=1152/1152 nonFinite=0 norm=1.957333e+04
+[GPU_FINITE] op=ffn_res ly=10 finite=1152/1152 nonFinite=0 norm=2.561770e+04
+[GPU_FINITE] op=rms_attn ly=11 finite=1152/1152 nonFinite=0 norm=1.238787e+02
+[GPU_FINITE] op=q_proj ly=11 finite=1024/1024 nonFinite=0 norm=2.435027e+02
+[GPU_FINITE] op=k_proj ly=11 finite=256/256 nonFinite=0 norm=1.579637e+02
+[GPU_FINITE] op=v_proj ly=11 finite=256/256 nonFinite=0 norm=1.553579e+02
+[GPU_FINITE] op=rope_q ly=11 finite=1024/1024 nonFinite=0 norm=2.435027e+02
+[GPU_FINITE] op=rope_k ly=11 finite=256/256 nonFinite=0 norm=1.579637e+02
+[GPU_FINITE] op=attn_out ly=11 finite=1024/1024 nonFinite=0 norm=3.678334e+02
+[GPU_FINITE] op=o_proj ly=11 finite=1152/1152 nonFinite=0 norm=2.782188e+02
+[GPU_FINITE] op=attn_res ly=11 finite=1152/1152 nonFinite=0 norm=2.562788e+04
+[GPU_FINITE] op=rms_ffn ly=11 finite=1152/1152 nonFinite=0 norm=6.338235e+02
+[GPU_FINITE] op=ffn_gate ly=11 finite=6912/6912 nonFinite=0 norm=3.184204e+03
+[GPU_FINITE] op=ffn_up ly=11 finite=6912/6912 nonFinite=0 norm=3.151929e+03
+[GPU_FINITE] op=swiglu ly=11 finite=6912/6912 nonFinite=0 norm=8.509030e+04
+[GPU_FINITE] op=ffn_down ly=11 finite=1152/1152 nonFinite=0 norm=3.237280e+04
+[GPU_FINITE] op=ffn_res ly=11 finite=1152/1152 nonFinite=0 norm=4.056153e+04
+[GPU_FINITE] op=rms_attn ly=12 finite=1152/1152 nonFinite=0 norm=2.245854e+02
+[GPU_FINITE] op=q_proj ly=12 finite=1024/1024 nonFinite=0 norm=2.957593e+02
+[GPU_FINITE] op=k_proj ly=12 finite=256/256 nonFinite=0 norm=4.445546e+02
+[GPU_FINITE] op=v_proj ly=12 finite=256/256 nonFinite=0 norm=4.670813e+02
+[GPU_FINITE] op=rope_q ly=12 finite=1024/1024 nonFinite=0 norm=2.957593e+02
+[GPU_FINITE] op=rope_k ly=12 finite=256/256 nonFinite=0 norm=4.445546e+02
+[GPU_FINITE] op=attn_out ly=12 finite=1024/1024 nonFinite=0 norm=9.712535e+02
+[GPU_FINITE] op=o_proj ly=12 finite=1152/1152 nonFinite=0 norm=7.212279e+02
+[GPU_FINITE] op=attn_res ly=12 finite=1152/1152 nonFinite=0 norm=4.055541e+04
+[GPU_FINITE] op=rms_ffn ly=12 finite=1152/1152 nonFinite=0 norm=5.909267e+02
+[GPU_FINITE] op=ffn_gate ly=12 finite=6912/6912 nonFinite=0 norm=2.899634e+03
+[GPU_FINITE] op=ffn_up ly=12 finite=6912/6912 nonFinite=0 norm=2.921579e+03
+[GPU_FINITE] op=swiglu ly=12 finite=6912/6912 nonFinite=0 norm=7.635794e+04
+[GPU_FINITE] op=ffn_down ly=12 finite=1152/1152 nonFinite=0 norm=2.211897e+04
+[GPU_FINITE] op=ffn_res ly=12 finite=1152/1152 nonFinite=0 norm=4.689415e+04
+[GPU_FINITE] op=rms_attn ly=13 finite=1152/1152 nonFinite=0 norm=2.120450e+02
+[GPU_FINITE] op=q_proj ly=13 finite=1024/1024 nonFinite=0 norm=3.063259e+02
+[GPU_FINITE] op=k_proj ly=13 finite=256/256 nonFinite=0 norm=3.741982e+02
+[GPU_FINITE] op=v_proj ly=13 finite=256/256 nonFinite=0 norm=4.212751e+02
+[GPU_FINITE] op=rope_q ly=13 finite=1024/1024 nonFinite=0 norm=3.063259e+02
+[GPU_FINITE] op=rope_k ly=13 finite=256/256 nonFinite=0 norm=3.741982e+02
+[GPU_FINITE] op=attn_out ly=13 finite=1024/1024 nonFinite=0 norm=8.966613e+02
+[GPU_FINITE] op=o_proj ly=13 finite=1152/1152 nonFinite=0 norm=6.678025e+02
+[GPU_FINITE] op=attn_res ly=13 finite=1152/1152 nonFinite=0 norm=4.691481e+04
+[GPU_FINITE] op=rms_ffn ly=13 finite=1152/1152 nonFinite=0 norm=7.876468e+02
+[GPU_FINITE] op=ffn_gate ly=13 finite=6912/6912 nonFinite=0 norm=3.316425e+03
+[GPU_FINITE] op=ffn_up ly=13 finite=6912/6912 nonFinite=0 norm=3.275598e+03
+[GPU_FINITE] op=swiglu ly=13 finite=6912/6912 nonFinite=0 norm=1.057253e+05
+[GPU_FINITE] op=ffn_down ly=13 finite=1152/1152 nonFinite=0 norm=2.636697e+04
+[GPU_FINITE] op=ffn_res ly=13 finite=1152/1152 nonFinite=0 norm=5.464184e+04
+[GPU_FINITE] op=rms_attn ly=14 finite=1152/1152 nonFinite=0 norm=2.181306e+02
+[GPU_FINITE] op=q_proj ly=14 finite=1024/1024 nonFinite=0 norm=3.196462e+02
+[GPU_FINITE] op=k_proj ly=14 finite=256/256 nonFinite=0 norm=2.636888e+02
+[GPU_FINITE] op=v_proj ly=14 finite=256/256 nonFinite=0 norm=2.817602e+02
+[GPU_FINITE] op=rope_q ly=14 finite=1024/1024 nonFinite=0 norm=3.196462e+02
+[GPU_FINITE] op=rope_k ly=14 finite=256/256 nonFinite=0 norm=2.636888e+02
+[GPU_FINITE] op=attn_out ly=14 finite=1024/1024 nonFinite=0 norm=7.472452e+02
+[GPU_FINITE] op=o_proj ly=14 finite=1152/1152 nonFinite=0 norm=6.198537e+02
+[GPU_FINITE] op=attn_res ly=14 finite=1152/1152 nonFinite=0 norm=5.463912e+04
+[GPU_FINITE] op=rms_ffn ly=14 finite=1152/1152 nonFinite=0 norm=7.342604e+02
+[GPU_FINITE] op=ffn_gate ly=14 finite=6912/6912 nonFinite=0 norm=3.088984e+03
+[GPU_FINITE] op=ffn_up ly=14 finite=6912/6912 nonFinite=0 norm=3.087681e+03
+[GPU_FINITE] op=swiglu ly=14 finite=6912/6912 nonFinite=0 norm=8.453514e+04
+[GPU_FINITE] op=ffn_down ly=14 finite=1152/1152 nonFinite=0 norm=2.334922e+04
+[GPU_FINITE] op=ffn_res ly=14 finite=1152/1152 nonFinite=0 norm=6.037492e+04
+[GPU_FINITE] op=rms_attn ly=15 finite=1152/1152 nonFinite=0 norm=1.834159e+02
+[GPU_FINITE] op=q_proj ly=15 finite=1024/1024 nonFinite=0 norm=1.950283e+02
+[GPU_FINITE] op=k_proj ly=15 finite=256/256 nonFinite=0 norm=3.075101e+02
+[GPU_FINITE] op=v_proj ly=15 finite=256/256 nonFinite=0 norm=3.283789e+02
+[GPU_FINITE] op=rope_q ly=15 finite=1024/1024 nonFinite=0 norm=1.950283e+02
+[GPU_FINITE] op=rope_k ly=15 finite=256/256 nonFinite=0 norm=3.075101e+02
+[GPU_FINITE] op=attn_out ly=15 finite=1024/1024 nonFinite=0 norm=7.330083e+02
+[GPU_FINITE] op=o_proj ly=15 finite=1152/1152 nonFinite=0 norm=5.755649e+02
+[GPU_FINITE] op=attn_res ly=15 finite=1152/1152 nonFinite=0 norm=6.043172e+04
+[GPU_FINITE] op=rms_ffn ly=15 finite=1152/1152 nonFinite=0 norm=1.037447e+03
+[GPU_FINITE] op=ffn_gate ly=15 finite=6912/6912 nonFinite=0 norm=3.877995e+03
+[GPU_FINITE] op=ffn_up ly=15 finite=6912/6912 nonFinite=0 norm=3.844419e+03
+[GPU_FINITE] op=swiglu ly=15 finite=6912/6912 nonFinite=0 norm=1.407740e+05
+[GPU_FINITE] op=ffn_down ly=15 finite=1152/1152 nonFinite=0 norm=5.659032e+04
+[GPU_FINITE] op=ffn_res ly=15 finite=1152/1152 nonFinite=0 norm=8.490630e+04
+[GPU_FINITE] op=rms_attn ly=16 finite=1152/1152 nonFinite=0 norm=2.061990e+02
+[GPU_FINITE] op=q_proj ly=16 finite=1024/1024 nonFinite=0 norm=2.779862e+02
+[GPU_FINITE] op=k_proj ly=16 finite=256/256 nonFinite=0 norm=2.589785e+02
+[GPU_FINITE] op=v_proj ly=16 finite=256/256 nonFinite=0 norm=2.650084e+02
+[GPU_FINITE] op=rope_q ly=16 finite=1024/1024 nonFinite=0 norm=2.779862e+02
+[GPU_FINITE] op=rope_k ly=16 finite=256/256 nonFinite=0 norm=2.589785e+02
+[GPU_FINITE] op=attn_out ly=16 finite=1024/1024 nonFinite=0 norm=6.787455e+02
+[GPU_FINITE] op=o_proj ly=16 finite=1152/1152 nonFinite=0 norm=3.481461e+02
+[GPU_FINITE] op=attn_res ly=16 finite=1152/1152 nonFinite=0 norm=8.489650e+04
+[GPU_FINITE] op=rms_ffn ly=16 finite=1152/1152 nonFinite=0 norm=1.345350e+03
+[GPU_FINITE] op=ffn_gate ly=16 finite=6912/6912 nonFinite=0 norm=6.889059e+03
+[GPU_FINITE] op=ffn_up ly=16 finite=6912/6912 nonFinite=0 norm=6.791102e+03
+[GPU_FINITE] op=swiglu ly=16 finite=6912/6912 nonFinite=0 norm=4.136983e+05
+[GPU_FINITE] op=ffn_down ly=16 finite=1152/1152 nonFinite=0 norm=1.681803e+05
+[GPU_FINITE] op=ffn_res ly=16 finite=1152/1152 nonFinite=0 norm=1.919448e+05
+[GPU_FINITE] op=rms_attn ly=17 finite=1152/1152 nonFinite=0 norm=1.181360e+02
+[GPU_FINITE] op=q_proj ly=17 finite=1024/1024 nonFinite=0 norm=2.710849e+02
+[GPU_FINITE] op=k_proj ly=17 finite=256/256 nonFinite=0 norm=1.875518e+02
+[GPU_FINITE] op=v_proj ly=17 finite=256/256 nonFinite=0 norm=2.231000e+02
+[GPU_FINITE] op=rope_q ly=17 finite=1024/1024 nonFinite=0 norm=2.710849e+02
+[GPU_FINITE] op=rope_k ly=17 finite=256/256 nonFinite=0 norm=1.875518e+02
+[GPU_FINITE] op=attn_out ly=17 finite=1024/1024 nonFinite=0 norm=4.498208e+02
+[GPU_FINITE] op=o_proj ly=17 finite=1152/1152 nonFinite=0 norm=2.906289e+02
+[GPU_FINITE] op=attn_res ly=17 finite=1152/1152 nonFinite=0 norm=1.919578e+05
+[GPU_FINITE] op=rms_ffn ly=17 finite=1152/1152 nonFinite=0 norm=2.147140e+03
+[GPU_FINITE] op=ffn_gate ly=17 finite=6912/6912 nonFinite=0 norm=1.385950e+04
+[GPU_FINITE] op=ffn_up ly=17 finite=6912/6912 nonFinite=0 norm=1.379232e+04
+[GPU_FINITE] op=swiglu ly=17 finite=6912/6912 nonFinite=0 norm=1.719324e+06
+[GPU_FINITE] op=ffn_down ly=17 finite=1152/1152 nonFinite=0 norm=5.403683e+05
+[GPU_FINITE] op=ffn_res ly=17 finite=1152/1152 nonFinite=0 norm=5.700123e+05
+[GPU_FINITE] op=rms_attn ly=18 finite=1152/1152 nonFinite=0 norm=2.192065e+02
+[GPU_FINITE] op=q_proj ly=18 finite=1024/1024 nonFinite=0 norm=3.604832e+02
+[GPU_FINITE] op=k_proj ly=18 finite=256/256 nonFinite=0 norm=4.195261e+02
+[GPU_FINITE] op=v_proj ly=18 finite=256/256 nonFinite=0 norm=5.839674e+02
+[GPU_FINITE] op=rope_q ly=18 finite=1024/1024 nonFinite=0 norm=3.604832e+02
+[GPU_FINITE] op=rope_k ly=18 finite=256/256 nonFinite=0 norm=4.195261e+02
+[GPU_FINITE] op=attn_out ly=18 finite=1024/1024 nonFinite=0 norm=1.020033e+03
+[GPU_FINITE] op=o_proj ly=18 finite=1152/1152 nonFinite=0 norm=4.716102e+02
+[GPU_FINITE] op=attn_res ly=18 finite=1152/1152 nonFinite=0 norm=5.700337e+05
+[GPU_FINITE] op=rms_ffn ly=18 finite=1152/1152 nonFinite=0 norm=1.579929e+03
+[GPU_FINITE] op=ffn_gate ly=18 finite=6912/6912 nonFinite=0 norm=1.002213e+04
+[GPU_FINITE] op=ffn_up ly=18 finite=6912/6912 nonFinite=0 norm=9.927232e+03
+[GPU_FINITE] op=swiglu ly=18 finite=6912/6912 nonFinite=0 norm=8.820195e+05
+[GPU_FINITE] op=ffn_down ly=18 finite=1152/1152 nonFinite=0 norm=2.005000e+05
+[GPU_FINITE] op=ffn_res ly=18 finite=1152/1152 nonFinite=0 norm=5.989796e+05
+[GPU_FINITE] op=rms_attn ly=19 finite=1152/1152 nonFinite=0 norm=2.445888e+02
+[GPU_FINITE] op=q_proj ly=19 finite=1024/1024 nonFinite=0 norm=6.298484e+02
+[GPU_FINITE] op=k_proj ly=19 finite=256/256 nonFinite=0 norm=3.624512e+02
+[GPU_FINITE] op=v_proj ly=19 finite=256/256 nonFinite=0 norm=3.811390e+02
+[GPU_FINITE] op=rope_q ly=19 finite=1024/1024 nonFinite=0 norm=6.298484e+02
+[GPU_FINITE] op=rope_k ly=19 finite=256/256 nonFinite=0 norm=3.624512e+02
+[GPU_FINITE] op=attn_out ly=19 finite=1024/1024 nonFinite=0 norm=7.539540e+02
+[GPU_FINITE] op=o_proj ly=19 finite=1152/1152 nonFinite=0 norm=5.902601e+02
+[GPU_FINITE] op=attn_res ly=19 finite=1152/1152 nonFinite=0 norm=5.989643e+05
+[GPU_FINITE] op=rms_ffn ly=19 finite=1152/1152 nonFinite=0 norm=1.379870e+03
+[GPU_FINITE] op=ffn_gate ly=19 finite=6912/6912 nonFinite=0 norm=8.247758e+03
+[GPU_FINITE] op=ffn_up ly=19 finite=6912/6912 nonFinite=0 norm=8.311218e+03
+[GPU_FINITE] op=swiglu ly=19 finite=6912/6912 nonFinite=0 norm=6.308459e+05
+[GPU_FINITE] op=ffn_down ly=19 finite=1152/1152 nonFinite=0 norm=1.699768e+05
+[GPU_FINITE] op=ffn_res ly=19 finite=1152/1152 nonFinite=0 norm=6.148712e+05
+[GPU_FINITE] op=rms_attn ly=20 finite=1152/1152 nonFinite=0 norm=2.315157e+02
+[GPU_FINITE] op=q_proj ly=20 finite=1024/1024 nonFinite=0 norm=4.292625e+02
+[GPU_FINITE] op=k_proj ly=20 finite=256/256 nonFinite=0 norm=4.104048e+02
+[GPU_FINITE] op=v_proj ly=20 finite=256/256 nonFinite=0 norm=5.016013e+02
+[GPU_FINITE] op=rope_q ly=20 finite=1024/1024 nonFinite=0 norm=4.292625e+02
+[GPU_FINITE] op=rope_k ly=20 finite=256/256 nonFinite=0 norm=4.104048e+02
+[GPU_FINITE] op=attn_out ly=20 finite=1024/1024 nonFinite=0 norm=9.579448e+02
+[GPU_FINITE] op=o_proj ly=20 finite=1152/1152 nonFinite=0 norm=6.058665e+02
+[GPU_FINITE] op=attn_res ly=20 finite=1152/1152 nonFinite=0 norm=6.149154e+05
+[GPU_FINITE] op=rms_ffn ly=20 finite=1152/1152 nonFinite=0 norm=1.738904e+03
+[GPU_FINITE] op=ffn_gate ly=20 finite=6912/6912 nonFinite=0 norm=9.267286e+03
+[GPU_FINITE] op=ffn_up ly=20 finite=6912/6912 nonFinite=0 norm=9.323698e+03
+[GPU_FINITE] op=swiglu ly=20 finite=6912/6912 nonFinite=0 norm=7.622754e+05
+[GPU_FINITE] op=ffn_down ly=20 finite=1152/1152 nonFinite=0 norm=3.100689e+05
+[GPU_FINITE] op=ffn_res ly=20 finite=1152/1152 nonFinite=0 norm=6.760906e+05
+[GPU_FINITE] op=rms_attn ly=21 finite=1152/1152 nonFinite=0 norm=2.703319e+02
+[GPU_FINITE] op=q_proj ly=21 finite=1024/1024 nonFinite=0 norm=4.279307e+02
+[GPU_FINITE] op=k_proj ly=21 finite=256/256 nonFinite=0 norm=7.638058e+02
+[GPU_FINITE] op=v_proj ly=21 finite=256/256 nonFinite=0 norm=7.310208e+02
+[GPU_FINITE] op=rope_q ly=21 finite=1024/1024 nonFinite=0 norm=4.279306e+02
+[GPU_FINITE] op=rope_k ly=21 finite=256/256 nonFinite=0 norm=7.638058e+02
+[GPU_FINITE] op=attn_out ly=21 finite=1024/1024 nonFinite=0 norm=1.461537e+03
+[GPU_FINITE] op=o_proj ly=21 finite=1152/1152 nonFinite=0 norm=1.060225e+03
+[GPU_FINITE] op=attn_res ly=21 finite=1152/1152 nonFinite=0 norm=6.760748e+05
+[GPU_FINITE] op=rms_ffn ly=21 finite=1152/1152 nonFinite=0 norm=1.406411e+03
+[GPU_FINITE] op=ffn_gate ly=21 finite=6912/6912 nonFinite=0 norm=8.592613e+03
+[GPU_FINITE] op=ffn_up ly=21 finite=6912/6912 nonFinite=0 norm=8.358463e+03
+[GPU_FINITE] op=swiglu ly=21 finite=6912/6912 nonFinite=0 norm=6.531720e+05
+[GPU_FINITE] op=ffn_down ly=21 finite=1152/1152 nonFinite=0 norm=1.718413e+05
+[GPU_FINITE] op=ffn_res ly=21 finite=1152/1152 nonFinite=0 norm=6.996748e+05
+[GPU_FINITE] op=rms_attn ly=22 finite=1152/1152 nonFinite=0 norm=2.842859e+02
+[GPU_FINITE] op=q_proj ly=22 finite=1024/1024 nonFinite=0 norm=5.435809e+02
+[GPU_FINITE] op=k_proj ly=22 finite=256/256 nonFinite=0 norm=6.879020e+02
+[GPU_FINITE] op=v_proj ly=22 finite=256/256 nonFinite=0 norm=7.676376e+02
+[GPU_FINITE] op=rope_q ly=22 finite=1024/1024 nonFinite=0 norm=5.435809e+02
+[GPU_FINITE] op=rope_k ly=22 finite=256/256 nonFinite=0 norm=6.879020e+02
+[GPU_FINITE] op=attn_out ly=22 finite=1024/1024 nonFinite=0 norm=1.322591e+03
+[GPU_FINITE] op=o_proj ly=22 finite=1152/1152 nonFinite=0 norm=9.109007e+02
+[GPU_FINITE] op=attn_res ly=22 finite=1152/1152 nonFinite=0 norm=6.996706e+05
+[GPU_FINITE] op=rms_ffn ly=22 finite=1152/1152 nonFinite=0 norm=1.756221e+03
+[GPU_FINITE] op=ffn_gate ly=22 finite=6912/6912 nonFinite=0 norm=1.019465e+04
+[GPU_FINITE] op=ffn_up ly=22 finite=6912/6912 nonFinite=0 norm=9.930914e+03
+[GPU_FINITE] op=swiglu ly=22 finite=6912/6912 nonFinite=0 norm=8.751506e+05
+[GPU_FINITE] op=ffn_down ly=22 finite=1152/1152 nonFinite=0 norm=3.052993e+05
+[GPU_FINITE] op=ffn_res ly=22 finite=1152/1152 nonFinite=0 norm=7.582285e+05
+[GPU_FINITE] op=rms_attn ly=23 finite=1152/1152 nonFinite=0 norm=1.827502e+02
+[GPU_FINITE] op=q_proj ly=23 finite=1024/1024 nonFinite=0 norm=2.631253e+02
+[GPU_FINITE] op=k_proj ly=23 finite=256/256 nonFinite=0 norm=4.906065e+02
+[GPU_FINITE] op=v_proj ly=23 finite=256/256 nonFinite=0 norm=4.969106e+02
+[GPU_FINITE] op=rope_q ly=23 finite=1024/1024 nonFinite=0 norm=2.631253e+02
+[GPU_FINITE] op=rope_k ly=23 finite=256/256 nonFinite=0 norm=4.906065e+02
+[GPU_FINITE] op=attn_out ly=23 finite=1024/1024 nonFinite=0 norm=9.767630e+02
+[GPU_FINITE] op=o_proj ly=23 finite=1152/1152 nonFinite=0 norm=8.333836e+02
+[GPU_FINITE] op=attn_res ly=23 finite=1152/1152 nonFinite=0 norm=7.582721e+05
+[GPU_FINITE] op=rms_ffn ly=23 finite=1152/1152 nonFinite=0 norm=1.415773e+03
+[GPU_FINITE] op=ffn_gate ly=23 finite=6912/6912 nonFinite=0 norm=8.400639e+03
+[GPU_FINITE] op=ffn_up ly=23 finite=6912/6912 nonFinite=0 norm=8.445581e+03
+[GPU_FINITE] op=swiglu ly=23 finite=6912/6912 nonFinite=0 norm=6.197253e+05
+[GPU_FINITE] op=ffn_down ly=23 finite=1152/1152 nonFinite=0 norm=2.550743e+05
+[GPU_FINITE] op=ffn_res ly=23 finite=1152/1152 nonFinite=0 norm=7.951403e+05
+[GPU_FINITE] op=rms_attn ly=24 finite=1152/1152 nonFinite=0 norm=2.053004e+02
+[GPU_FINITE] op=q_proj ly=24 finite=1024/1024 nonFinite=0 norm=4.605600e+02
+[GPU_FINITE] op=k_proj ly=24 finite=256/256 nonFinite=0 norm=4.107123e+02
+[GPU_FINITE] op=v_proj ly=24 finite=256/256 nonFinite=0 norm=4.452059e+02
+[GPU_FINITE] op=rope_q ly=24 finite=1024/1024 nonFinite=0 norm=4.605600e+02
+[GPU_FINITE] op=rope_k ly=24 finite=256/256 nonFinite=0 norm=4.107123e+02
+[GPU_FINITE] op=attn_out ly=24 finite=1024/1024 nonFinite=0 norm=8.605743e+02
+[GPU_FINITE] op=o_proj ly=24 finite=1152/1152 nonFinite=0 norm=3.942311e+02
+[GPU_FINITE] op=attn_res ly=24 finite=1152/1152 nonFinite=0 norm=7.951218e+05
+[GPU_FINITE] op=rms_ffn ly=24 finite=1152/1152 nonFinite=0 norm=1.714868e+03
+[GPU_FINITE] op=ffn_gate ly=24 finite=6912/6912 nonFinite=0 norm=1.162800e+04
+[GPU_FINITE] op=ffn_up ly=24 finite=6912/6912 nonFinite=0 norm=1.165094e+04
+[GPU_FINITE] op=swiglu ly=24 finite=6912/6912 nonFinite=0 norm=1.063156e+06
+[GPU_FINITE] op=ffn_down ly=24 finite=1152/1152 nonFinite=0 norm=3.493144e+05
+[GPU_FINITE] op=ffn_res ly=24 finite=1152/1152 nonFinite=0 norm=8.803604e+05
+[GPU_FINITE] op=rms_attn ly=25 finite=1152/1152 nonFinite=0 norm=1.734278e+02
+[GPU_FINITE] op=q_proj ly=25 finite=1024/1024 nonFinite=0 norm=4.653326e+02
+[GPU_FINITE] op=k_proj ly=25 finite=256/256 nonFinite=0 norm=2.715824e+02
+[GPU_FINITE] op=v_proj ly=25 finite=256/256 nonFinite=0 norm=2.799055e+02
+[GPU_FINITE] op=rope_q ly=25 finite=1024/1024 nonFinite=0 norm=4.653326e+02
+[GPU_FINITE] op=rope_k ly=25 finite=256/256 nonFinite=0 norm=2.715824e+02
+[GPU_FINITE] op=attn_out ly=25 finite=1024/1024 nonFinite=0 norm=4.499301e+02
+[GPU_FINITE] op=o_proj ly=25 finite=1152/1152 nonFinite=0 norm=3.071168e+02
+[GPU_FINITE] op=attn_res ly=25 finite=1152/1152 nonFinite=0 norm=8.803586e+05
+[GPU_FINITE] op=rms_ffn ly=25 finite=1152/1152 nonFinite=0 norm=1.250904e+03
+[GPU_FINITE] op=ffn_gate ly=25 finite=6912/6912 nonFinite=0 norm=9.179430e+03
+[GPU_FINITE] op=ffn_up ly=25 finite=6912/6912 nonFinite=0 norm=9.320022e+03
+[GPU_FINITE] op=swiglu ly=25 finite=6912/6912 nonFinite=0 norm=7.115300e+05
+[GPU_FINITE] op=ffn_down ly=25 finite=1152/1152 nonFinite=0 norm=1.670946e+05
+[GPU_FINITE] op=ffn_res ly=25 finite=1152/1152 nonFinite=0 norm=8.885343e+05
+HEAP_OK_AFTER_FORWARD_LAYERS=1
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=0000018CDAE22460
+FINAL_NORM_DST_PTR=0000018CDAE22460
+FINAL_NORM_WEIGHT_PTR=0000018CB10B0000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=4608
+FINAL_NORM_WEIGHT_0=6.15625
+FINAL_NORM_WEIGHT_1=21
+FINAL_NORM_WEIGHT_2=3.78125
+FINAL_NORM_WEIGHT_3=21
+FINAL_NORM_WEIGHT_L2=326.073723
+FINAL_NORM_SUMSQ=7.89493118e+11
+FINAL_NORM_MEAN_SQ=685323887
+FINAL_NORM_EPS=9.99999997e-07
+FINAL_NORM_INV_RMS=3.81990067e-05
+FINAL_NORM_SRC_0=10052.9336
+FINAL_NORM_DST_0=2.36407423
+FINAL_NORM_AFTER_L2=311.92714
+HEAP_OK_FINAL_NORM_AFTER=1
+[GPU_FINITE] op=rms_attn ly=0 finite=1152/1152 nonFinite=0 norm=2.334108e+02
+[GPU_FINITE] op=q_proj ly=0 finite=1024/1024 nonFinite=0 norm=4.571032e+02
+[GPU_FINITE] op=k_proj ly=0 finite=256/256 nonFinite=0 norm=4.229221e+02
+[GPU_FINITE] op=v_proj ly=0 finite=256/256 nonFinite=0 norm=4.252413e+02
+[GPU_FINITE] op=rope_q ly=0 finite=1024/1024 nonFinite=0 norm=4.571032e+02
+[GPU_FINITE] op=rope_k ly=0 finite=256/256 nonFinite=0 norm=4.229220e+02
+[GPU_FINITE] op=attn_out ly=0 finite=1024/1024 nonFinite=0 norm=7.371345e+02
+[GPU_FINITE] op=o_proj ly=0 finite=1152/1152 nonFinite=0 norm=6.336031e+02
+[GPU_FINITE] op=attn_res ly=0 finite=1152/1152 nonFinite=0 norm=6.336454e+02
+[GPU_FINITE] op=rms_ffn ly=0 finite=1152/1152 nonFinite=0 norm=1.546679e+02
+[GPU_FINITE] op=ffn_gate ly=0 finite=6912/6912 nonFinite=0 norm=1.020790e+03
+[GPU_FINITE] op=ffn_up ly=0 finite=6912/6912 nonFinite=0 norm=9.739142e+02
+[GPU_FINITE] op=swiglu ly=0 finite=6912/6912 nonFinite=0 norm=7.946901e+03
+[GPU_FINITE] op=ffn_down ly=0 finite=1152/1152 nonFinite=0 norm=3.744941e+03
+[GPU_FINITE] op=ffn_res ly=0 finite=1152/1152 nonFinite=0 norm=3.795573e+03
+[GPU_FINITE] op=rms_attn ly=1 finite=1152/1152 nonFinite=0 norm=4.960481e+02
+[GPU_FINITE] op=q_proj ly=1 finite=1024/1024 nonFinite=0 norm=9.054856e+02
+[GPU_FINITE] op=k_proj ly=1 finite=256/256 nonFinite=0 norm=9.804888e+02
+[GPU_FINITE] op=v_proj ly=1 finite=256/256 nonFinite=0 norm=1.001253e+03
+[GPU_FINITE] op=rope_q ly=1 finite=1024/1024 nonFinite=0 norm=9.054856e+02
+[GPU_FINITE] op=rope_k ly=1 finite=256/256 nonFinite=0 norm=9.804888e+02
+[GPU_FINITE] op=attn_out ly=1 finite=1024/1024 nonFinite=0 norm=1.867667e+03
+[GPU_FINITE] op=o_proj ly=1 finite=1152/1152 nonFinite=0 norm=1.412664e+03
+[GPU_FINITE] op=attn_res ly=1 finite=1152/1152 nonFinite=0 norm=4.041680e+03
+[GPU_FINITE] op=rms_ffn ly=1 finite=1152/1152 nonFinite=0 norm=7.191276e+01
+[GPU_FINITE] op=ffn_gate ly=1 finite=6912/6912 nonFinite=0 norm=4.894661e+02
+[GPU_FINITE] op=ffn_up ly=1 finite=6912/6912 nonFinite=0 norm=4.966662e+02
+[GPU_FINITE] op=swiglu ly=1 finite=6912/6912 nonFinite=0 norm=2.033423e+03
+[GPU_FINITE] op=ffn_down ly=1 finite=1152/1152 nonFinite=0 norm=8.374075e+02
+[GPU_FINITE] op=ffn_res ly=1 finite=1152/1152 nonFinite=0 norm=4.076659e+03
+[GPU_FINITE] op=rms_attn ly=2 finite=1152/1152 nonFinite=0 norm=4.998032e+02
+[GPU_FINITE] op=q_proj ly=2 finite=1024/1024 nonFinite=0 norm=7.179512e+02
+[GPU_FINITE] op=k_proj ly=2 finite=256/256 nonFinite=0 norm=1.017359e+03
+[GPU_FINITE] op=v_proj ly=2 finite=256/256 nonFinite=0 norm=1.094645e+03
+[GPU_FINITE] op=rope_q ly=2 finite=1024/1024 nonFinite=0 norm=7.179512e+02
+[GPU_FINITE] op=rope_k ly=2 finite=256/256 nonFinite=0 norm=1.017359e+03
+[GPU_FINITE] op=attn_out ly=2 finite=1024/1024 nonFinite=0 norm=2.456432e+03
+[GPU_FINITE] op=o_proj ly=2 finite=1152/1152 nonFinite=0 norm=1.726715e+03
+[GPU_FINITE] op=attn_res ly=2 finite=1152/1152 nonFinite=0 norm=4.329527e+03
+[GPU_FINITE] op=rms_ffn ly=2 finite=1152/1152 nonFinite=0 norm=1.089057e+02
+[GPU_FINITE] op=ffn_gate ly=2 finite=6912/6912 nonFinite=0 norm=7.094551e+02
+[GPU_FINITE] op=ffn_up ly=2 finite=6912/6912 nonFinite=0 norm=7.218281e+02
+[GPU_FINITE] op=swiglu ly=2 finite=6912/6912 nonFinite=0 norm=4.377062e+03
+[GPU_FINITE] op=ffn_down ly=2 finite=1152/1152 nonFinite=0 norm=1.848637e+03
+[GPU_FINITE] op=ffn_res ly=2 finite=1152/1152 nonFinite=0 norm=4.746314e+03
