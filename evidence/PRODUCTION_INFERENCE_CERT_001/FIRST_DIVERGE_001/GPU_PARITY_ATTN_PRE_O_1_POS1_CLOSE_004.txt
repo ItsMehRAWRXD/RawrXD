@@ -1,0 +1,99 @@
+GPU_PARITY_ATTN_PRE_O_1_POS1_CLOSE_004
+DATE=2026-11-14
+ASOF_LOCAL=2026-11-14T00:22:30-05:00
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+CROSS_SHA_CREDIT=0
+INVENT_PASS=0
+NOT_RUN!=PASS
+SCOREBOARD_CLI_GUI_PCT_UNCHANGED=1
+ATTN_PRE_O_1_POS1_CLOSED=0
+CLOSED=0
+
+## Authority
+PRIOR_OPEN=GPU_PARITY_ATTN_PRE_O_1_POS1_CLOSE_003.txt
+  ATTN_PRE_O_1@pos1 OPEN maxAbs=2.754107e-05
+  owner=ATTN_Q_SPV_ULP_FA_F16_AMPLIFY; FP64_SPV REFUTED; host square REJECT
+PRIOR_HOLD=GPU_PARITY_FFN_DOWN_2_CLOSE_001.txt
+  FFN_DOWN_2 CLOSED; SPV 40E76D2A…/17272; FFN_DOWN_0/PRE_O_0/Q_PRE_ROPE held
+BRANCH=work/v0-first-divergence
+TOL_ABS=1e-6 TOL_REL=1e-5
+CONTROLLING_Q4K_SPV: bytes=17272
+  SHA256=40E76D2ACBFC2380C0221CE55EA2345336264A3CF470341478E351406F42B403
+TIP_EXE_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431 RO (untouched)
+absorb074 untouched; CLI/GUI % NOT raised
+VALUATION_SCOREBOARD_LIVE / JOINT_STATUS_LIVE / BOARD_SINGLE_WRITER CONTROLLING_% NOT rewritten
+
+## Isolate (head11 FA F16 vs REF @ PRE_O_1@pos1)
+idx704 = head11 lane0 (headDim=64; 11*64=704)
+Q_PRE_ROPE_1@pos1 vs REF: maxAbs=9.536743e-07 UNDER_TOL; head11 2–4 ULP (CLOSE_003)
+Ablation prior: REF_Q+gpuKV closes head11 (~3.7e-09); gpuQ keeps full PRE_O residual
+V_1@pos0/pos1 UNDER_TOL after FFN_DOWN closes — not V leftover
+FA F16 T>=2 live (ATTN_GGML_FA_F16=1); product path HOTPATH_ATTN=CPU
+Chain: Q under TOL → FA F16 amplifies head11 → PRE_O 2.754107e-05 @idx704
+
+## Trials this seal (product env; Q4_HOST_ATTN=0)
+1) SQUARE_XD_ONEDIV (rows<=cols → xd=-maxv/127; GATE/UP keep 1/iscale)
+   SPV trial DD1928D6…/17272
+   REJECT: wq/wo move residual stream → FFN_DOWN_0@pos0 reopens 7.500499e-05
+   PRE_O_1@pos1 worsens to 4.256899e-04 (cascade); controlling SPV restored
+2) FA_Q_F32_PROMOTE (KQ dot uses F32 Q; K/V/VKQ remain F16)
+   pin rawr_attn_pre_o_1_pos1_qpromote.exe; source reverted after trial
+   REJECT: PRE_O_0@pos1 reopened ~2.65e-05 on frankenstein link; not product pin
+3) KVFIX_DOWN (downShape excludes GQA K/V: cols<rows*4) SPV 1A647FFA…/17460
+   NOP on target: PRE_O@704 BIT-IDENTICAL 2.754107e-05; holds intact
+4) Host square Q4 under FORCE: REJECT (prior; poisons FFN_DOWN_0)
+5) FP64 lane accum SPV 0EECA02F: REFUTED prior CLOSE_003 (PRE_O@704 unchanged)
+
+## Remeasure (controlling restored; product env)
+CAND=pin/rawr_attn_pre_o_1_pos1_q4host.exe
+SHA256=D855FA3E4C045182C97936469BB63EF7B1069A64A38F71C3D5E6FCABC2B601EA
+DUMP=FIRST_DIVERGE_001/stage_dump_attn_pre_o_1_pos1_close004
+REF=FIRST_DIVERGE_001/stage_dump_ref_matched
+COMPARE=FIRST_DIVERGE_001/GPU_PARITY_ATTN_PRE_O_1_POS1_CLOSE_004.compare.log
+ENV=RAWRXD_FORCE_VULKAN_QUANT_GEMV=1 RAWRXD_QUANT_HOST_Q8K_PARITY=0
+    RAWRXD_Q6_HOST_FFN_DOWN=0 RAWRXD_Q4_HOST_ATTN=0 RAWRXD_Q4_HOST_FFN_DOWN=0
+    RAWRXD_KV_FP16_ROUNDTRIP=1 RAWRXD_GPU_FWD=0
+    HOTPATH_ATTN=CPU FA_F16=1
+PROMPT_IDS=1,15043
+RUNTIME_Q4K_SPV_BYTES=17272 SHA=40E76D2A…
+
+## Target
+ATTN_PRE_O_1@pos1 maxAbs=2.754107e-05 rel=7.653156e-04 @idx704
+  n_gt=30/2048 UNDER_TOL=0
+MAXDIFF_BEFORE=2.754107e-05
+MAXDIFF_AFTER=2.754107e-05
+
+## Cascade / regression (must hold) — held on controlling remasure
+FFN_DOWN_0@pos0 UNDER_TOL maxAbs=2.235174e-08
+FFN_DOWN_2@pos1 UNDER_TOL maxAbs=2.980232e-08
+Q_PRE_ROPE_1@pos1 UNDER_TOL maxAbs=9.536743e-07
+ATTN_PRE_O_0@pos0 BITEXACT; @pos1 UNDER_TOL 3.488640e-08
+
+## Root (numeric-first)
+CLASS=ATTN_Q_SPV_ULP_FA_F16_AMPLIFY
+REFUTED_SQUARE_XD_ONEDIV=1
+REFUTED_FA_Q_F32_PROMOTE_CLEAN=0 (trial contaminated / PRE_O_0 risk; source reverted)
+REFUTED_KVFIX_DOWN_MOVES_PRE_O_704=1 (NOP)
+REFUTED_FP64_LANE_ACCUM=1 (prior)
+REFUTED_HOST_SQUARE_Q4_UNDER_FORCE=1 (prior)
+NEXT engineering beyond this seal:
+  square-wq SPV bitexact vs REF for head11 lanes without moving GATE/UP/DOWN
+  OR FA path that matches llama on gpuQ without reopening PRE_O_0@pos1
+  (dual-pipe square-only SPV; clean pin rebuild required)
+
+## Fix@source (trials reverted; controlling retained)
+src/backend/gemv_q4k.spv: CONTROLLING 40E76D2A…/17272 retained
+src/backend/gemv_q4k.comp: sealed downShape=rows<cols (HEAD)
+src/deep2/KVCache.cpp: FA F16 Q RT retained (F32 Q-promote reverted)
+No tip rewrite. No CONTROLLING_% rewrite. No host square Q4 under FORCE.
+
+## Verdict
+ATTN_PRE_O_1_POS1_CLOSED=0
+UNDER_TOL=0
+NEXT_OPEN=ATTN_PRE_O_1@pos1 maxAbs=2.754107e-05
+  owner=ATTN_Q_SPV_ULP_FA_F16_AMPLIFY head11 @idx704
+≠ PERFORMANCE_PASS ≠ PROMOTE
+PROMOTE=0
+TIP_CLIMB=HOLD
