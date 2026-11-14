@@ -2910,12 +2910,20 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                     }
                     moeConfig_.numExperts = static_cast<size_t>(
                         physicalExperts > 0 ? physicalExperts : 1);
-                    moeConfig_.numActiveExperts =
-                        static_cast<size_t>(requestedExperts);
+                    size_t topk = modelWeights.numExpertsPerToken
+                        ? modelWeights.numExpertsPerToken
+                        : (k2ShardConfig_.expertsPerToken
+                               ? k2ShardConfig_.expertsPerToken
+                               : 8);
+                    if (requestedExperts > 0 &&
+                        requestedExperts < (physicalExperts ? physicalExperts : requestedExperts))
+                        topk = static_cast<size_t>(
+                            (std::min)(topk, static_cast<size_t>(requestedExperts)));
+                    moeConfig_.numActiveExperts = topk;
                     modelWeights.numExperts =
                         static_cast<uint32_t>(moeConfig_.numExperts);
                     modelWeights.numExpertsPerToken =
-                        static_cast<uint32_t>(requestedExperts);
+                        static_cast<uint32_t>(topk);
                     reapRuntimeReceipt_.effectiveExperts = requestedExperts;
                     reapRuntimeReceipt_.routeConfigured = true;
                     reapRuntimeReceipt_.streamerConfigured =
@@ -4113,9 +4121,16 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                 printf("[Deep2Engine] MoE streaming loader ready\n");
 
                 moeConfig_.numExperts       = meta.numExperts;
-                moeConfig_.numActiveExperts = reapRuntimeInjection_.enabled
-                    ? static_cast<size_t>(reapRuntimeInjection_.expertCount)
-                    : modelWeights.numExpertsPerToken;
+                {
+                    size_t topk = modelWeights.numExpertsPerToken
+                        ? modelWeights.numExpertsPerToken
+                        : (meta.numExpertsPerToken ? meta.numExpertsPerToken : 8);
+                    if (reapRuntimeInjection_.enabled &&
+                        reapRuntimeInjection_.expertCount > 0 &&
+                        reapRuntimeInjection_.expertCount < moeConfig_.numExperts)
+                        topk = static_cast<size_t>(reapRuntimeInjection_.expertCount);
+                    moeConfig_.numActiveExperts = topk;
+                }
                 moeConfig_.useSharedExpert  = moeConfig_.useSharedExpert || (meta.numSharedExperts > 0);
                 if (moeConfig_.expertDim == 0) moeConfig_.expertDim = meta.moeIntermediateSize > 0 ?
                                                 meta.moeIntermediateSize : meta.intermediateSize;
@@ -4246,9 +4261,18 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         } else {
             printf("[Deep2Engine] MoE multi-shard: using GlobalTensorIndex + residency cache\n");
             moeConfig_.numExperts       = meta.numExperts;
-            moeConfig_.numActiveExperts = reapRuntimeInjection_.enabled
-                ? static_cast<size_t>(reapRuntimeInjection_.expertCount)
-                : modelWeights.numExpertsPerToken;
+            /* top-k = expertsPerToken; --reap X/Y may override Y only if Y < E.
+             * Retained bank size must NOT become top-k (REAP27 used_count bug). */
+            {
+                size_t topk = modelWeights.numExpertsPerToken
+                    ? modelWeights.numExpertsPerToken
+                    : (meta.numExpertsPerToken ? meta.numExpertsPerToken : 8);
+                if (reapRuntimeInjection_.enabled &&
+                    reapRuntimeInjection_.expertCount > 0 &&
+                    reapRuntimeInjection_.expertCount < moeConfig_.numExperts)
+                    topk = static_cast<size_t>(reapRuntimeInjection_.expertCount);
+                moeConfig_.numActiveExperts = topk;
+            }
                 moeConfig_.useSharedExpert  = moeConfig_.useSharedExpert || (meta.numSharedExperts > 0);
                 if (moeConfig_.expertDim == 0) moeConfig_.expertDim = meta.moeIntermediateSize > 0 ?
                                                 meta.moeIntermediateSize : meta.intermediateSize;
@@ -4267,6 +4291,20 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                                  "B03_MOE_GATE_FORCE func=sigmoid arch=%s\n",
                                  meta.architecture.c_str());
                 }
+                if (a.find("minimax") != std::string::npos &&
+                    meta.numExperts > 8 &&
+                    meta.numExpertsPerToken == meta.numExperts) {
+                    std::fprintf(stderr,
+                                 "B03_MOE_USED_COUNT_UNSUPPORTED arch=%s "
+                                 "expert_count=%u expert_used_count=%u "
+                                 "EXPECT_TOPK=8 pack=BLOCKED\n",
+                                 meta.architecture.c_str(), meta.numExperts,
+                                 meta.numExpertsPerToken);
+                    throw std::runtime_error(
+                        "UNSUPPORTED: MiniMax REAP export clobbered expert_used_count; "
+                        "use pack with expert_used_count=8 (e.g. MiniMax-M2.7-REAP16)");
+                }
+
             }
             if (meta.expertWeightsScale > 0.f)
                 moeConfig_.routedScalingFactor = meta.expertWeightsScale;
@@ -8910,12 +8948,11 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         fprintf(stderr, "[FFN_ONLY] layer=%zu norm_ok\n", layer);
         fflush(stderr);
         if (profilingEnabled_ && profiler_) profiler_->endAttnNorm();
-        // Host Q8 GEMV is certified (HOST_Q8_GEMV_SAFE): run real FFN.
-        // FFN uses LinearW (all quantization types), not Q8_0-specific GEMV,
-        // so hostQ8GemvSafe_ is not a gate for FFN computation.
+        /* W6: IDENTITY dead-branch held under auth (&& false).
+         * EXPERIMENTAL_NEQ_SSM_CERTIFIED_IMPL; real SSM = computeSSM only. */
         if (envFlagEnabled("RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM") && false) {
-            fprintf(stderr, "[FFN_ONLY] layer=%zu IDENTITY=1 PRODUCTION_DECODE_PATH=0\n",
-                    layer);
+            fprintf(stderr, "[FFN_ONLY] layer=%zu IDENTITY=1 PRODUCTION_DECODE_PATH=0 "
+                    "EXPERIMENTAL_NEQ_SSM_CERTIFIED_IMPL=1\n", layer);
             fflush(stderr);
             memcpy(output, xin, hiddenDim * sizeof(float));
         } else {
@@ -9405,11 +9442,23 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                 throw std::runtime_error("B03 layer attn materialize failed");
             }
         }
+        /* Router/bias may still be file-backed null when attn already resident. */
+        if (layer < moeRouters_.size() && moeRouters_[layer] &&
+            lwMat.moeRouter.hasFileBacking && !lwMat.moeRouter.data) {
+            int rf = 0;
+            Deep2::multishard_bind::MaterializeOne(
+                lwMat.moeRouter, *globalIndex_, layer, "moe_router", rf);
+            if (lwMat.moeExpertBias.hasFileBacking && !lwMat.moeExpertBias.data)
+                Deep2::multishard_bind::MaterializeOne(
+                    lwMat.moeExpertBias, *globalIndex_, layer, "moe_bias", rf);
+            if (rf)
+                std::fprintf(stderr,
+                             "B03_MOE_ROUTER_MATERIALIZE_FAIL layer=%zu\n",
+                             layer);
+        }
         if (layer < moeRouters_.size() && moeRouters_[layer] &&
             lwMat.moeRouter.data) {
-            /* Inject once per layer lifetime. Re-transpose+memcpy every
-             * forward allocated E*H floats (MiniMax: ~3MiB) �62�tokens and
-             * correlated with mid-run EXIT=-1 under residency pressure. */
+            /* Inject once per layer lifetime (avoid E*H realloc every token). */
             auto& router = *moeRouters_[layer];
             if (!router.HasRouterWeights()) {
                 const size_t nE = moeConfig_.numExperts ? moeConfig_.numExperts
@@ -10273,7 +10322,15 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     // Output projection: [hiddenDim] -> [hiddenDim]
     // Qwen models with fused QKV may not have a separate attention output projection.
     // When absent, the concatenated head outputs (numHeads * headDim) already equal hiddenDim.
-    /* Laguna: softplus(g_proj(x)) per-head on SDPA out, then O-proj. */
+    /* Laguna: softplus(g_proj(x)) per-head on SDPA out, then O-proj.
+       Order matches HF/sglang modeling_laguna (NOT post-O). */
+    const size_t tokPosGate = kvCache ? kvCache->currentLength()
+                                      : (seqLen > 0 ? seqLen - 1 : 0);
+    if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer)) {
+        char key[64];
+        std::snprintf(key, sizeof(key), "ATTN_PRE_GATE_%zu", layer);
+        B3_StageDigest(key, tokPosGate, headScratch, headConcat);
+    }
     if (lw.attnGate.data && gateBuf && numHeads > 0 && headDim > 0) {
         LinearW(lw.attnGate, input, nullptr, gateBuf, numHeads);
         static int s_gateLog = 0;
@@ -10282,12 +10339,12 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         s_gateLog = 1;
     }
     if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer)) {
-        // Concatenated head outputs BEFORE wo ? isolates O_PROJ from QK/softmax/AV.
-        const size_t tokPos = kvCache ? kvCache->currentLength()
-                                      : (seqLen > 0 ? seqLen - 1 : 0);
         char key[64];
+        std::snprintf(key, sizeof(key), "ATTN_POST_GATE_%zu", layer);
+        B3_StageDigest(key, tokPosGate, headScratch, headConcat);
+        // PRE_O == POST_GATE when gate applied (isolates O_PROJ).
         std::snprintf(key, sizeof(key), "ATTN_PRE_O_%zu", layer);
-        B3_StageDigest(key, tokPos, headScratch, headConcat);
+        B3_StageDigest(key, tokPosGate, headScratch, headConcat);
     }
     const auto* attnOutWeight = (lw.wo.data != nullptr) ? &lw.wo :
                                  (lw.attnO.data != nullptr) ? &lw.attnO : nullptr;
@@ -10305,6 +10362,11 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         if (profilingEnabled_ && profiler_) profiler_->beginAttnOutProj();
         LinearW(*attnOutWeight, headScratch, nullptr, output, hiddenDim);
         if (profilingEnabled_ && profiler_) profiler_->endAttnOutProj();
+    }
+    if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer)) {
+        char key[64];
+        std::snprintf(key, sizeof(key), "ATTN_POST_O_%zu", layer);
+        B3_StageDigest(key, tokPosGate, output, hiddenDim);
     }
     B3_TraceState("ATTN_O", layer, output, hiddenDim);
 

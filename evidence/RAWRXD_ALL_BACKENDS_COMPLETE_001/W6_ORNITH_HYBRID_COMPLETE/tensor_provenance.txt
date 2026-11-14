@@ -1,0 +1,11 @@
+﻿FINDING=ABSENT_NOT_RENAME
+blk.40.ssm_conv1d.weight=ABSENT
+blk.40.attn_q.weight=PRESENT
+blk.40.nextn.*=PRESENT (4 tensors SKIP-loaded)
+HYBRID_FIX=recurrent_layer_arr[40]=false when ssm ABSENT + attn_q PRESENT
+NEXTN_FIX=load qwen35moe.nextn_predict_layers + TENSOR_SKIP create for last nextn layers
+DO_NOT_FABRICATE_ssm_conv1d=1
+BEFORE_ERROR=missing tensor 'blk.40.ssm_conv1d.weight'
+AFTER_LOAD=PASS n_layer=41 n_embd=2048
+AFTER_FIRST_OP=DECODE_OK
+AFTER_GEN=PASS gen_tokens=8

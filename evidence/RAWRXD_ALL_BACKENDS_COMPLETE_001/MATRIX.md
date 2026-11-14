@@ -19,8 +19,8 @@ Certification levels: Build � Load � Numerics � Generation � Performance
 | ID | Workstream | Status | Levels cleared (honest) | Blocking next | Evidence pointer |
 |----|------------|--------|-------------------------|---------------|------------------|
 | W01 | Deep2 CPU | PARTIAL | TinyLlama Q4_K host short+med CE=1 (WS5); full quant parity OPEN | Host Q-family parity + ref dump | ATTN_KV_DEEP2_CPU_001 + CLI_NUMERICAL |
-| W02 | Deep2 Vulkan | RELATED | WS3 family; Q6 CEBA verified; Q8 PASS; ≠ CERT | Tip FORCE_SPV + long-ctx | DEEP2_VULKAN_QK_GEMV_FAMILY_001 | Multifamily SPV + long-context | W5_DEEP2_VULKAN_KERNEL_FAMILIES_001 |
-| W03 | Q4_K / Q6_K / Q8 kernels | RELATED | Q8/Q5/Q3/Q2 PASS; Q4 numeric OK/GATE_FAIL; Q6 PARITY_OK | Q4K tps / tip remasure | DEEP2_VULKAN_QK_GEMV_FAMILY_001 | Packed GEMM batch + multifamily | W5_DEEP2_VULKAN_KERNEL_FAMILIES_001 |
+| W02 | Deep2 Vulkan | RELATED | WS3 family; Q6 CEBA verified; Q8 PASS; ≠ CERT | Tip FORCE_SPV + long-ctx | DEEP2_VULKAN_QK_GEMV_FAMILY_001 |
+| W03 | Q4_K / Q6_K / Q8 kernels | RELATED | Q8/Q5/Q3/Q2 PASS; Q4 numeric OK/GATE_FAIL; Q6 PARITY_OK | Q4K tps / tip remasure | DEEP2_VULKAN_QK_GEMV_FAMILY_001 |
 | W04 | Packed GEMV / GEMM | PARTIAL | Ornith L3 ULP CLOSED; W5 Q4 packed shapes PASS; GEMM batch OPEN | Broader batch/shape matrix | W5 + BR_ORNITH_PACKED_GEMV_L3_R104 |
 | W05 | Attention / KV cache | PARTIAL | TinyLlama short+medctx KV CE=1 (38 grows); PT1784 trunc; FIRST_DIVERGE attn RELATED; Laguna ULP OPEN | PT>=1024 CLEAN_EXIT + host ref dump + Laguna ULP | ATTN_KV_DEEP2_CPU_001 + FIRST_DIVERGE + W1_LAGUNA |
 | W06 | Ornith | PARTIAL | L3 ULP CLOSED; HYBRID_LOAD=PASS (no fabricate); SEMANTIC=PARTIAL (llama GEN=8); Deep2 prod semantic OPEN; layer parity OPEN | Deep2 PROD_DECODE / HYBRID_SEMANTIC_CLOSE | W6_ORNITH_HYBRID_COMPLETE + R101-R104 + BR_ORNITH_HYBRID_LOAD_R105 |

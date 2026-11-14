@@ -1,0 +1,9 @@
+W6_ORNITH_HYBRID_COMPLETE — LAW
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD CROSS_SHA_CREDIT=0
+
+1. Do not fabricate blk.N.ssm_conv1d.weight. ABSENT_NOT_RENAME only.
+2. HYBRID_LOAD PASS ≠ SEMANTIC CERT ≠ enterprise CERT.
+3. R104 L3 ULP_CLOSED held; NO_REABSORB R103/R104; NO_REOPEN R101/R102.
+4. Experimental SSM auth scaffolding ≠ SSM-CERT; IDENTITY dead-branch && false.
+5. NOT_RUN != PASS. Llama GEN=8 is ref-path RELATED only.
+6. Board absorbs RELATED≠CERT.
