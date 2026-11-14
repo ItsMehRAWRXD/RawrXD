@@ -1,0 +1,18 @@
+TIP_PDH_STACK_001
+ASOF_LOCAL=2026-11-13T22:59:30-05:00
+PROMOTE=0 TIP_CLIMB=HOLD
+DUMP=CrashDumps\RawrXD-Win32IDE_tip_land_6754616E.exe.52064.dmp
+TIP_SHA=6754616E…
+EXCEPTION_CLASS=0xC0000374 heap (RtlFreeHeap via LocalFree)
+STACK_LEAF=ntdll!RtlReportFatalFailure ← RtlFreeHeap ← KERNELBASE!LocalFree
+  ← advapi32!PerflibciBuildCounterSet ← PerfEnumerateCounterSet
+  ← pdh!PERF_MACHINE::EnumerateCounterSet / ConnectMachine / PdhiAddCounter
+  ← pdh!PdhAddCounterA+0x8b
+  ← tip+0xC629A7 ← tip+0x87998E ← tip+0x38135D ← tip+0x391E5A ← tip+0x3817C4
+  ← kernel32!BaseThreadInitThunk (worker thread 0:008)
+LN_PRODUCT=FAILED (PDB checksum mismatch warning on tip image)
+NOTE=Heap corrupt during PDH counter enumeration on background thread — likely GPU power / perf probe path
+GATE=RAWRXD_SKIP_GPU_POWER_PROBE already used in some smokes; tip dump still hit PDH
+NEXT=Map tip+0xC629A7 to PdhAddCounter caller; gate/skip PDH on peer+tip startup; remasure A8 386EA5E9
+PROMOTE=0
+END
