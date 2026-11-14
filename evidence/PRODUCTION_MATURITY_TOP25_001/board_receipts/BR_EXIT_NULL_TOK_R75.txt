@@ -1,0 +1,32 @@
+BR_EXIT_NULL_TOK_R75
+ASOF_LOCAL=2026-11-13T23:32:26-05:00
+AUTH=PARENT_BOARD_AUTHORITY / BOARD_SINGLE_WRITER
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 CROSS_SHA_CREDIT=0
+PCT_HELD=CLI67/GUI48/OVERALL48
+GATE_MATRIX_PASS=0
+
+## AA4F R69→R75 EXIT=NULL residual closed on private cand
+PRIOR=7469626203 / B8E5F6E5 OPEN=1 ENTER=1 MID_VRAM=0 SEH=0 TOK=0 EXIT=NULL
+EXE_SHA256=B8E5F6E57F73759361FAF283CE227BCEF5AF37488785E83F005D4C9D094DCB49
+EXE=clean_link/PrivateCand_aa4f_r69_exitnull.exe
+WITNESS=ide_mf_aa4f_r69_priv_gemma3_B8E5F6E57F737593_20261113_233037
+OPEN=1 STREAM_ENTER=1 PREFILL_DONE=1 TOK=8 SEH=0 EXIT=0 AV_CLOSED=1 E8B0M_SPAM=0
+TIP_RO=6754616E UNTOUCHED=1
+
+## ROOT_FIX
+1. D2GenQualitySlotFor ABI (R69) — mid-VRAM+fclose cleared
+2. ArmSpeed E8B0M neutralize — ProductStreamerPrep + remasure DEEP2_WEIGHT_BUDGET_MIB=8192
+3. EXIT=NULL owner — RawrXD* cross-kill mid-prefill; PrivateCand rename + foreign-only guardian
+
+## SOURCE_WIRED
+- src/deep2/lavapath/ProductStreamerPrep.hpp (E8B0M clamp)
+- src/deep2/Deep2Engine_GpuForward.cpp (prefer WEIGHT + once emit + clamp)
+- gpu/run_ide_aa4f_r69_gemma3.ps1 / run_ide_aa4f_r75_gemma3.ps1 DEEP2=8192
+
+## NOTE
+GpuForward-only relink over obj075_gemma_seal → STREAM_SEH regress (r75b B17EC16B); controlling cand remains B8E5 bytes.
+M1M2 085f 2696F3B2 AV_CLOSED=1 TOK=0 FAIL until TOK>0 (CROSS_SHA=0).
+
+RECEIPT=receipts/G02-06_20261113_B8E5F6E5_EXIT_NULL_TOK_R75_RELATED.md
+PROMOTE=0
+END

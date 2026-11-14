@@ -18,4 +18,5 @@
 
 NOTE: FFN_DOWN_0@pos0 separately CLOSED (a2bdf78bf9). FFN_DOWN_2 dispositioned NOT_CLOSABLE
 (see G02-04_G03-08_20261113_FFN_DOWN_2_NOT_CLOSABLE_RELATED.md) — NEXT_OWNER=
-SPV_Q4KxQ8K_BITEXACT (blk.2 down=Q4_K; host(GPU_ACT)==REF @material). CERTIFIED=0 · 0/128.
+SPV_Q4KxQ8K_BITEXACT (blk.2 down=Q4_K; ACT-peak REFUTED; aux16 trial runtime-noop).
+CERTIFIED=0 · 0/128.
