@@ -3288,18 +3288,16 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                 else if (name.find("attn_o") != std::string::npos)
                     lw.attnO = wt;
                 else if (name.find("attn_gate") != std::string::npos) {
-                    /* Laguna SWA gate is [heads, hidden] (mn<<256). Qwen O-as-gate is full. */
+                    /* Laguna SWA gate [heads,hidden]; skip unless full O-proj. */
                     const size_t mn = (wt.rows < wt.cols) ? wt.rows : wt.cols;
                     const size_t mx = (wt.rows > wt.cols) ? wt.rows : wt.cols;
                     const bool looksLikeO = !lw.wo.data && mn >= 256 && mx >= 256;
                     if (looksLikeO) {
                         lw.attnO = wt;
-                        printf("[ATTN_GATE] Mapped %s to attnO (rows=%zu cols=%zu type=%d)
-",
+                        printf("[ATTN_GATE] Mapped %s to attnO (rows=%zu cols=%zu type=%d)\n",
                                name.c_str(), wt.rows, wt.cols, wt.type);
                     } else {
-                        printf("[ATTN_GATE] SKIP %s (wo=%d mn=%zu mx=%zu) not O-proj
-",
+                        printf("[ATTN_GATE] SKIP %s (wo=%d mn=%zu mx=%zu) not O-proj\n",
                                name.c_str(), lw.wo.data ? 1 : 0, mn, mx);
                     }
                 }
@@ -11259,38 +11257,57 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
 void Deep2Engine::computeExpertFFN(const MoEWeightHandle& handle,
                                     const float* input, float* output,
                                     size_t hiddenDim, size_t expertDim) {
-    if (!handle.valid || !handle.gateWeights) {
+    /* SwiGLU needs gate; ReLU² (Laguna/Nemotron late MoE) is up+down only. */
+    if (!handle.valid || !handle.upWeights || !handle.downWeights) {
         memset(output, 0, hiddenDim * sizeof(float));
         return;
     }
 
     auto& reg = Deep2::QuantKernelRegistry::Instance();
-    const int gT = handle.gateQuantType ? handle.gateQuantType : handle.quantType;
     const int uT = handle.upQuantType ? handle.upQuantType : handle.quantType;
     const int dT = handle.downQuantType ? handle.downQuantType : handle.quantType;
-    auto kGate = reg.GetGEMV(gT);
     auto kUp = reg.GetGEMV(uT);
     auto kDown = reg.GetGEMV(dT);
-    if (!kGate || !kUp || !kDown) {
+    const bool hasGate = handle.gateWeights != nullptr &&
+                         handle.gateWeights != handle.upWeights;
+    auto kGate = hasGate
+                     ? reg.GetGEMV(handle.gateQuantType ? handle.gateQuantType
+                                                        : handle.quantType)
+                     : nullptr;
+    if (!kUp || !kDown || (hasGate && !kGate)) {
         memset(output, 0, hiddenDim * sizeof(float));
         reg.GetBatch21Counters().registryMisses.fetch_add(1, std::memory_order_relaxed);
-        printf("[computeExpertFFN] ERROR: No registry kernel g=%d u=%d d=%d\n",
-               gT, uT, dT);
+        printf("[computeExpertFFN] ERROR: No registry kernel g=%d u=%d d=%d hasGate=%d\n",
+               hasGate ? (handle.gateQuantType ? handle.gateQuantType
+                                               : handle.quantType)
+                       : -1,
+               uT, dT, hasGate ? 1 : 0);
         return;
     }
     reg.GetBatch21Counters().registryHits.fetch_add(1, std::memory_order_relaxed);
-    reg.GetBatch21Counters().kernelInvocations.fetch_add(3, std::memory_order_relaxed);
-    /* Registry GEMVs accumulate (y[r] += ?). Must zero like LinearW. */
+    reg.GetBatch21Counters().kernelInvocations.fetch_add(
+        hasGate ? 3 : 2, std::memory_order_relaxed);
     float* gateOut = gateBuf;
     float* upOut = upBuf;
-    std::memset(gateOut, 0, expertDim * sizeof(float));
     std::memset(upOut, 0, expertDim * sizeof(float));
     std::memset(output, 0, hiddenDim * sizeof(float));
-    /* MiniMax mixed Q4_K/Q6_K: one GEMV kernel per expert projection. */
-    kGate((const uint8_t*)handle.gateWeights, input, gateOut, expertDim, hiddenDim);
     kUp((const uint8_t*)handle.upWeights, input, upOut, expertDim, hiddenDim);
-    SwiGLU(gateOut, upOut, gateOut, expertDim);
-    kDown((const uint8_t*)handle.downWeights, gateOut, output, hiddenDim, expertDim);
+    if (hasGate) {
+        std::memset(gateOut, 0, expertDim * sizeof(float));
+        kGate((const uint8_t*)handle.gateWeights, input, gateOut, expertDim,
+              hiddenDim);
+        SwiGLU(gateOut, upOut, gateOut, expertDim);
+        kDown((const uint8_t*)handle.downWeights, gateOut, output, hiddenDim,
+              expertDim);
+    } else {
+        /* ReLU²: act = relu(up)^2 (moe_test / Nemotron-H law). */
+        for (size_t e = 0; e < expertDim; ++e) {
+            const float r = upOut[e];
+            upOut[e] = (r > 0.f) ? (r * r) : 0.f;
+        }
+        kDown((const uint8_t*)handle.downWeights, upOut, output, hiddenDim,
+              expertDim);
+    }
 }
 
 // ============================================================================

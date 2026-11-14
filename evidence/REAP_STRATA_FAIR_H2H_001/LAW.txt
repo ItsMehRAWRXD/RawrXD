@@ -1,0 +1,8 @@
+﻿REAP_STRATA_FAIR_H2H_001 LAW
+PROMOTE=0
+NOT_RUN!=PASS
+INVENT_PASS=0
+CROSS_SHA_CREDIT=0
+TIP_CLIMB=HOLD
+FAIR_H2H requires identical token budget both sides (no 11-vs-32 Laguna claim)
+Laguna 9.7x is NOT a performance win — non-equivalent eval_count
