@@ -1,6 +1,6 @@
 # RAWRXD_ENTERPRISE_PRODUCT_CERT_001
 
-**Version:** 1.0 · **ASOF:** 2026-11-13T22:36-05:00  
+**Version:** 1.0 · **ASOF:** 2026-11-13T23:01-05:00  
 **Objective:** Production-ready fully local AI workstation certification (CLI + Win32 GUI + native inference + autonomous coding + Sunshine).
 
 | Field | Value |
@@ -13,7 +13,8 @@
 | PROMOTE | **0** |
 | CERTIFIED | **0** |
 | INVENT_PASS | **0** |
-| Candidate GIT_SHA | `3d0928e748885a20968d9f3283c7faf720ec8c05` |
+| Candidate GIT_SHA | `de8cc86726` (work/v0-first-divergence; tip EXE 6754616E RO) |
+| Board absorb | R69 AA4F Deep2 bisect (CURRENT mid-VRAM; bak STREAM_SEH fclose) |
 
 ## Law
 See `LAW.txt`. `NOT_RUN != PASS`. `EVIDENCE_PARTIAL != PASS`. Scoreboard ≠ checklist. Cross-SHA credit forbidden for PASS.
@@ -24,13 +25,13 @@ See `LAW.txt`. `NOT_RUN != PASS`. `EVIDENCE_PARTIAL != PASS`. Scoreboard ≠ che
 ## Priority blockers (engineering record → checklist)
 | Blocker | Maps near | Status |
 |---------|-----------|--------|
-| Gemma STREAM_SEH / tip-land combine AV | G02 / G06 | Private TOK>0 on 7FD1; tip bind + M1M2 combine AV OPEN |
-| C36 LSP hang | G07 | tip6754 controlling OPEN |
-| GPU/ref numerical | G02 / G03 | Q_PRE_ROPE + ATTN_PRE_O_0 CLOSED on cand; ATTN_PRE_O_1 OPEN |
-| ConPTY / HELP_TERM | G05 / G06 | partial |
-| Multi-family GUI | G02 / G04 / G06 | absorb074 MF; MoE MATCH HOLD |
-| Offline signed install | G12 | MSI silent RUNTIME_REACHED; Authenticode ABSENT (remeasured); CLEAN_VM NOT_RUN; SetupWizard offline rebuild NotSigned |
-| Model-selected agent EBT | G05 / G08 | FORCE_TOOL remasured PASS on 30DCB4B1 force-path; MODEL_SELECTED_TOOL=0 (tinyllama unk/timeout) |
+| Gemma AA4F / tip_land AV | G02 / G06 | R69: CURRENT=mid-VRAM; bak→fclose VA=-1; AV_CLOSED=0; control 7FD1 TOK=8 |
+| C36 LSP hang | G07 | tip6754 controlling OPEN; cand INIT_OK RELATED |
+| GPU/ref numerical | G02 / G03 | PRE_O@pos1 FA CLOSED; V_1/ATTN_NORM_1@dim1072 OPEN |
+| ConPTY / HELP_TERM | G05 / G06 | cand PASS RELATED; tip remasure OPEN |
+| Multi-family GUI / qdim084 STREAM | G02 / G04 / G06 | keepGPU→bad_alloc ProductRun; authPASS COMDAT race in flight |
+| Offline signed install | G12 | Authenticode ABSENT; CLEAN_VM NOT_RUN |
+| Model-selected agent EBT | G05 / G08 | FORCE_TOOL PASS; MODEL_SELECTED_TOOL=0 |
 
 ## Authority scoreboard
 `../PRODUCTION_MATURITY_TOP25_001/VALUATION_SCOREBOARD_CANON.txt` — PCT invent forbidden here.
