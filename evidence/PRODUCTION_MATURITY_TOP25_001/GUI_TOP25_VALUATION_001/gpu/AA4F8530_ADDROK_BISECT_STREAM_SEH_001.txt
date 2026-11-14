@@ -1,0 +1,51 @@
+AA4F8530_ADDROK_BISECT_STREAM_SEH_001
+ASOF_LOCAL=2026-11-13T22:56:00-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 NOT_RUN!=PASS CROSS_SHA_CREDIT=0
+PRIOR=AA4F8530_ADDROK_REMEASURE_001 + BR_AA4F_ADDROK_REMEASURE_R65
+TIP_RO=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431 UNTOUCHED=1
+WORKER=a37b9726 follow-on P0 bisect
+
+## Object pins (sha16)
+DEEP2_CURRENT=obj084_m1m2_hotseh/Deep2Engine.cpp.obj sha16=721011F6B5CFEB66
+DEEP2_BAK=obj075_gemma_seal/Deep2Engine.cpp.obj.bak_pre_m1m2 sha16=5B9021D76BAB00BE
+DEEP2_EMBD=obj084_embd_res/Deep2Engine.cpp.obj sha16=3EA1DD538FB5830F
+DEEP2_DEDUP=obj084_mars_dedup sha16=605E0FED0945AD60 (FP16 gate; no embd-resident string)
+DEEP2_KEEP=obj084_mars_keep sha16=C20262FEC5920E29 (FP16 gate; no embd-resident string)
+HOTPATCHER_ADDROK=obj084_m1m2_hotseh/HotPatcher.cpp.obj sha16=7C7644249AA4CD65
+HOTPATCHER_OLD=ext_InferenceEngine_* HotPatcher.cpp.obj sha16=20FFE03127B5E3C1
+GPUFWD=obj075_gemma_seal/Deep2Engine_GpuForward.cpp.obj sha16=C54D557544197F5F (same in C9FB+isoA rsp)
+STRING_DELTA=CURRENT/DEDUP/KEEP contain RAWRXD_KV_FP16_ROUNDTRIP+kvCacheFp16RoundTripWanted; BAK none; EMBD adds token_embd GPU-resident
+
+## Runtime matrix (private tip_land; FORCE=0; tip RO)
+| Cand | EXE_SHA8 | Deep2 | HotPatcher | IE | TOK | SEH | ENTER | EXIT | Note |
+|------|----------|-------|------------|----|-----|-----|-------|------|------|
+| primary | C9FB0B48 | CURRENT | addrOk | avfix079 | 0 | 0* | 0 | NULL | mid-VRAM ~blk.23 hard AV (*EmitSeh absent) |
+| isoA | 21234DAF | bak | addrOk | avfix079 | 0 | 1 | 1 | 0 | STREAM_SEH 0xC0000005 |
+| isoB | F0117A8D | embd | addrOk | avfix079 | 0 | 1 | 1 | 0 | EMBD_RES=1 still STREAM_SEH |
+| isoG | 31B96E11 | bak | old 20FFE | avfix079 | 0 | 1 | 1 | NULL | tinyllama; HP≠owner alone |
+| isoH | 195B5CDE | bak | addrOk | qdim077 | 0 | 1 | 1 | NULL | tinyllama; IE lib≠owner alone |
+| ctrl | 7FD1F270 | bak-like | old-like | qdim_m2 | 8 | 0 | 1 | NULL | OPEN_SKIP authority; CROSS_SHA=0 |
+
+## STREAM_SEH owner (after VRAM / GENERATE_STREAM_ENTER=1)
+LEAF_ROOT_OBJ=libucrt:fclose.obj
+LEAF_SYM=_fclose_nolock_internal / fclose
+ACCESS=READ VA=FFFFFFFFFFFFFFFF
+MAP_RESOLVE=
+  isoA RIP_RVA=0x1F3C1CD → libucrt:fclose.obj (_fclose_internal @ 0x141F3C184)
+  isoB RIP_RVA=0x1F3DB2D → libucrt:fclose.obj (_fclose_nolock_internal @ 0x141F3DB60)
+SEH_WRAPPER=product_deep2_infer_seh.cpp.obj + product_deep2_infer.cpp.obj
+GPUFWD_IN_DELTA=0 (same GpuForward obj in CURRENT vs bak rsp)
+NOT_SUFFICIENT_ALONE=token_embd GPU-resident (isoB), HotPatcher addrOk↔old (isoG), IE avfix079↔qdim077 (isoH), NVME bunnyhop off
+
+## Mid-VRAM owner (CURRENT vs bak)
+ROOT_OBJ=Deep2Engine.cpp.obj CURRENT (721011F6)
+EVIDENCE=bak/embd clear mid-VRAM hard truncate into STREAM path; CURRENT dies ~blk.23 before GENERATE_STREAM_ENTER
+CO_FACTOR=HotPatcher::emergencyRollback near-NULL (AA4F8530 forensics) during VRAM cleanup — addrOk remasure alone ≠ AV_CLOSED
+
+## Disposition
+AV_CLOSED=0
+SOURCE_WIRED(addrOk)=1 RUNTIME_AV_CLOSED=0
+TIP_ABSORB=0 REJECT_TIP_PROMOTE=1
+NEXT=isolate tip_land avfix residual vs 7FD1 qdim_m2 (Issue49 stub / non-Deep2 head) OR surgical fclose(FILE*) null-guard on stream path with TOK>0 proof
+PROMOTE=0 TIP_CLIMB=HOLD
+END

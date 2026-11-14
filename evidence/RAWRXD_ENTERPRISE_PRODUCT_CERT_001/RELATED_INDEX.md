@@ -39,6 +39,9 @@ Historical / private-cand / partial RUNTIME — cite only. `CROSS_SHA_CREDIT=0`.
 | BR_AA4F8530_HOTPATCHER_ROLLBACK_R62 | G02 G03 | AV emergencyRollback+0x88; remasure addrOk |
 | AA4F addrOk remasure C9FB0B48 / isoA 21234DAF | G02 G03 | AV_CLOSED=0; bak clears mid-VRAM→STREAM_SEH |
 | receipts/G02-06_20261113_C9FB0B48_AA4F_ADDROK_RELATED.md | G02-06 | RELATED≠PASS; tip RO |
+| AA4F bisect isoB F0117A8D STREAM_SEH | G02 G03 | ROOT_OBJ=libucrt:fclose; CURRENT=mid-VRAM; AV_CLOSED=0 |
+| receipts/G02-06_20261113_F0117A8D_AA4F_BISECT_STREAM_SEH_RELATED.md | G02-06 | RELATED≠PASS; tip RO |
+| BR_AA4F_ADDROK_BISECT_STREAM_SEH_R66 | G02 G03 | board absorb bisect; PROMOTE=0 |
 | BR_ATTN_PRE_O_POS1_FA_CLOSED_R64 1CAEA762 | G02-04 G02-05 | POS1 CLOSED under TOL 1e-6; matrix ≠ PASS |
 
 Update this index when new RELATED receipts land. Never auto-PASS.
