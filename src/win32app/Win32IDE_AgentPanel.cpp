@@ -45,6 +45,9 @@ namespace fs = std::filesystem;
 using namespace RawrXD::Agent;
 using namespace RawrXD::Diff;
 
+// File-static: do NOT add Win32IDE data members (peer tip-land partial relink).
+static std::string s_pendingBoundedAgentPrompt;
+
 // ============================================================================
 // STRUCTURES
 // ============================================================================
@@ -532,7 +535,7 @@ void Win32IDE::startAgentSession(const std::string& prompt) {
         s_agentSession = std::make_unique<AgentEditSession>();
     }
     s_agentSession->SetUserPrompt(prompt);
-    m_pendingBoundedAgentPrompt = prompt;
+    s_pendingBoundedAgentPrompt = prompt;
 
     // LOCAL_ONLY: resolve GGUF path on UI; LoadModel must NOT run in user-callback
     // (0xC000041D FATAL_USER_CALLBACK — peer fault RVA→CRT __std_search_impl leaf).
@@ -673,8 +676,8 @@ void Win32IDE::onBoundedAgentModelLoadDone(int modelResident, const std::string&
         appendToOutput("[BoundedAgent] AgenticBridge/BO LoadModel soft-fail on worker\n",
                        "Agent", OutputSeverity::Warning);
     }
-    const std::string prompt = m_pendingBoundedAgentPrompt;
-    m_pendingBoundedAgentPrompt.clear();
+    const std::string prompt = s_pendingBoundedAgentPrompt;
+    s_pendingBoundedAgentPrompt.clear();
     if (prompt.empty() || !s_agentLoop)
         return;
     appendToOutput("[Agent] Starting session: " + prompt.substr(0, 200),

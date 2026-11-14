@@ -1847,6 +1847,27 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             // wired; loading then surfaces as uncaught 0xE06D7363 and kills startup.
             if (uMsg == WM_APP + 201)
             {
+                // Harness/product opt-out: UI-thread loadGGUFModel in this handler is a
+                // known 0xC000041D FATAL_USER_CALLBACK class (F53D smoke before MENU_READY).
+                // BoundedAgent uses WM_APP+207 worker path instead.
+                if (const char* skipDef = std::getenv("RAWRXD_SKIP_DEFERRED_MODEL_LOAD")) {
+                    if (skipDef[0] && skipDef[0] != '0') {
+                        m_pendingApp201ModelLoad = false;
+                        OutputDebugStringA("[WM_APP+201] skipped (RAWRXD_SKIP_DEFERRED_MODEL_LOAD)\n");
+                        fprintf(stderr, "[STARTUP] WM_APP+201 skipped (RAWRXD_SKIP_DEFERRED_MODEL_LOAD)\n");
+                        fflush(stderr);
+                        return 0;
+                    }
+                }
+                if (const char* skipDef2 = std::getenv("SKIP_DEFERRED_MODEL_LOAD")) {
+                    if (skipDef2[0] && skipDef2[0] != '0') {
+                        m_pendingApp201ModelLoad = false;
+                        OutputDebugStringA("[WM_APP+201] skipped (SKIP_DEFERRED_MODEL_LOAD)\n");
+                        fprintf(stderr, "[STARTUP] WM_APP+201 skipped (SKIP_DEFERRED_MODEL_LOAD)\n");
+                        fflush(stderr);
+                        return 0;
+                    }
+                }
                 // P0: never run GGUF/model load during createWindow post-create pumps.
                 // ide_startup.log last edge: P1_pump_before post_create_2 msg=0x80c9
                 // (= WM_APP+201) → SEH 0xE06D7363. Defer until pumps complete.
@@ -2009,6 +2030,14 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                     P1PRA_ThreadWitness("ui_post_window");
                 }
 #endif
+                return 0;
+            }
+            // WM_APP+207: BoundedAgent LoadModel worker finished (off UI; avoids C000041D)
+            if (uMsg == WM_APP + 207)
+            {
+                std::unique_ptr<std::string> path(reinterpret_cast<std::string*>(lParam));
+                onBoundedAgentModelLoadDone(static_cast<int>(wParam),
+                                            path ? *path : std::string{});
                 return 0;
             }
             // P1PRA E2E: UI-thread Send inject (avoid cross-process WM_COMMAND to cmdHost).
