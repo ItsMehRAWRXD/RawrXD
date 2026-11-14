@@ -23,6 +23,7 @@ Authority: pasted RAWRXD_ENTERPRISE_PRODUCT_CERT_001 checklist · 0/128 · HELD 
 | Pin | OPEN | STREAM_ENTER | TOK | Note |
 |-----|------|--------------|-----|------|
 | 617F784E LOCKED | PASS | 0/1 | 0 | no keep-GPU string; Evict embed → EXIT=NULL or AV VA=-1 |
+| 617F INIMAGE Restore 68CC | RELATED | 0/1 | 0 | RESTORE=1×2 OPEN=1 ENTER=1; soft Restore after onEvict → STREAM_SEH VA=-1 TOK=0 |
 | 1EFF8608 keepGPU | FAIL POST_LOAD | 0 | 0 | keep-GPU regresses session |
 | 23B5115F keepGPU | OPEN+pin | 0 | 0 | bad_alloc 0xE06D7363 @ ProductRun before ENTER |
 | 9181073D keepGPU | PASS auth=1 | 0 | 0 | OPEN closed; STREAM SEH 0xE06D7363 TOK=0 |

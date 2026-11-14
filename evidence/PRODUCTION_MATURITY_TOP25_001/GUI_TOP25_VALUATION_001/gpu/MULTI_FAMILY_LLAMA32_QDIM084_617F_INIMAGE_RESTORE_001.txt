@@ -1,0 +1,59 @@
+MULTI_FAMILY_LLAMA32_QDIM084_617F_INIMAGE_RESTORE_001
+ASOF_LOCAL=2026-11-14T00:15:00-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 NOT_RUN!=PASS
+FORCE=0 HOST_DECODE=0 REJECT_FORCE_ABSORB=1 TIP_ABSORB=N
+CROSS_SHA_CREDIT=0
+DURABLE=0
+ENTERPRISE_CERT=0/128 (RELATED/NOT_RUN only; no PASS invent)
+GATE_CLOSED=0
+INIMAGE=1
+
+## Hash verify
+LOCKED_617F_SNAP=clean_link/LOCKED/RawrXD-Win32IDE_gemma_qdim084_617F784E.exe
+EXE_SHA256=617F784ED72938E029BA57FF0B63D8EAF1C16994860468A3BA62E08ECCE7DD1E
+HASH_VERIFY=PASS
+TIP_BIN=bin/RawrXD-Win32IDE.exe
+TIP_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431
+TIP_STILL_6754=1 TIP_RO=1 TIP_UNTOUCHED=1
+
+## In-image method (path b)
+SRC=LOCKED 617F784E (OPEN=1 ENTER=1 STREAM_SEH baseline; no rebuild)
+INJECT=Evict-tail trampoline → TELEMETR cave (EXEC|READ)
+  after successful Evict printf for name.size==17 "token_embd.weight":
+  VRAMManager::Restore(lease,0) + pinned=1 + TOKEN_EMBD_STREAM_RESTORE=1
+FIXUPS=mov rsi REX.W epilogue; size at lease+0x18 (not capacity +0x20)
+TOOL=clean_link/obj084_inimage/inject_evict_restore_v3.py
+ALT_TRIED=skip-Evict no-op → OPEN_SEH=1 (keepGPU-class); rejected
+
+## Private cand
+EXE=clean_link/LOCKED/RawrXD-Win32IDE_gemma_qdim084_617F_inimage_restore.exe
+EXE_SHA256=68CCBE645E034C7EB6B5D451E663608BA28A3FCCAAFC60A3EAE590C8FD24F810
+SHA16=68CCBE645E034C7E
+STRINGS=RESTORE=1 (runtime) KEEP_GPU=0
+
+## Measured 2× llama32 Q2_K headless
+| Run | OPEN | OPEN_SEH | EVICT | RESTORE | STREAM_ENTER | STREAM_SEH | TOK | Notes |
+|-----|-----:|---------:|------:|--------:|-------------:|-----------:|----:|-------|
+| #1 000939 | 1 | 0 | 1 | 1 | 1 | 1 VA=-1 | 0 | Alloc→Evict→Restore→ENTER; soft Restore |
+| #2 001009 | 1 | 0 | 1 | 1 | 1 | 1 VA=-1 | 0 | same |
+
+TOK_X2=0×2
+DURABLE_TOKEN_SURVIVED=0
+DURABLE=0
+
+## ROOT one-liner
+In-image Evict-tail Restore+pin is RUNTIME_REACHED (RESTORE=1×2, OPEN=1 ENTER=1),
+but soft VRAMManager::Restore after onEvict_ does not rebind decode embed ptr
+→ STREAM_SEH READ VA=-1 persists; TOK=0. Skip-Evict alt regresses OPEN_SEH.
+
+## NEXT_OWNER
+PRIVATE_CAND_INIMAGE_STREAM_REBIND_AFTER_ONEVICT_OR_GENERATESTREAM_RESTORE_PLUS_PTR
+= rebind engine embed/GPU ptr after onEvict (or stream-time Restore that undoes
+  onEvict side effects), then remasure 2× TOK>0 for DURABLE=1
+
+WITNESS=ide_mf_qdim084_617F_inimage_restore_llama32_68CCBE645E034C7E_*_LATEST.meta.txt
+BR=board_receipts/BR_LLAMA32_617F_INIMAGE_RESTORE_R74.txt
+
+PROMOTE=0
+TIP_CLIMB=HOLD
+END
