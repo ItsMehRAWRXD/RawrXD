@@ -28,6 +28,10 @@ Historical / private-cand / partial RUNTIME — cite only. `CROSS_SHA_CREDIT=0`.
 | qdim083 llama32 E649DF99 | G02 G04 | SEH=0 TOK=0 ENTER=0 |
 
 | cand_c36_conpty 0C6A965A | G07-01 G07-04 G05-05 G06-05 | LSP INIT_OK + ConPTY stop PASS on cand; tip6754 RO unchanged |
+| P2 llama32 Elastic+MARS qdim083/084 | G02-08 G06-06 | ROOT_CLEAR; DURABLE TOK=0; RELATED≠PASS |
+| receipts/G02-08_20261113_P2_LLAMA32_RELATED.md | G02-08 | private OPEN; CERT NOT_RUN |
+| receipts/G06-06_20261113_P2_LLAMA32_RELATED.md | G06-06 | tipbound GEN still OPEN |
+| BR_P2_MARS_KEEP_GPU_AMPLIFIER_001 | G02-08 G06-06 | Host-Evict amplifier SOURCE_WIRED |
 
 Update this index when new RELATED receipts land. Never auto-PASS.
 
