@@ -1,0 +1,61 @@
+GPU_HOST_FIRST_DIVERGE_TOL_001.remeasure_attn_norm1_chain — APPEND-ONLY
+DATE=2026-11-13
+ASOF_LOCAL=2026-11-13T22:15:00-05:00
+PROMOTE=0
+CERTIFIED=0
+TIP_CLIMB=HOLD
+NOT_RUN!=PASS
+INVENT_PASS=0
+PRIOR=GPU_HOST_FIRST_DIVERGE_TOL_001.remeasure_layer1.txt
+BOARD_PCT_NOTE=CLI/GUI/OVERALL held 67/48/48 — no LIVE PCT write
+
+## Root cause (CLOSED)
+SITE=ATTN_NORM_1@pos0/layer1
+CLASS=STALE_RESIDUAL_INPUT
+BUG=layer1+ RMSNorm/residual used PROMPT_EMBED instead of LAYER0_OUT
+  (weights were correct blk.1.attn_norm; FFN_INP_1 == embed+ATTN_OUT_1 bit-exact)
+  AN1_pre == RMSNorm(PROMPT_EMBED, blk.1.attn_norm) maxAbs≈3e-8
+AUTHORITY=BATCH2 llama ATTN_NORM_1 seq103 + GGUF blk.1.attn_norm
+NOTE=not wrong-authority pair; not wrong norm tensor bind
+
+## Fix
+FILES=
+  src/deep2/Deep2Engine_GpuToken.cpp  — host walk: forwardLayer(ly,hidden,attnOut); memcpy(hidden,attnOut)
+  src/deep2/Deep2Engine.cpp/.h        — layerChainBuf_ + B03_LAYER_CHAIN_REPAIR if L1+ input stale
+EXE_PIN=pin/rawr_layer1_chain.exe (build_ninja tip)
+REMEASURE_ENV=RAWRXD_GPU_FWD=0 RAWRXD_FORCE_VULKAN_QUANT_GEMV=1
+  RAWRXD_PROMPT_TOKEN_IDS=1,15043 RAWRXD_STAGE_DIGEST=1
+DUMP=PRODUCTION_INFERENCE_CERT_001/FIRST_DIVERGE_001/stage_dump_layer1_chain
+LOG=PRODUCTION_INFERENCE_CERT_001/FIRST_DIVERGE_001/remeasure_layer1_chain.err.txt
+
+## After-fix proof
+AN1 vs GGUF·RMSNorm(LAYER0_OUT): FUNCTIONAL_FAIL=0 MAX_ABS=2.239e-07
+AN1 vs norm(PROMPT_EMBED,w1):     MAX_ABS=2.750e+00 (no longer stale)
+AN1 L2: 1.676 → 5.656 (llama class)
+
+## BATCH2 ordered (tol ABS=1e-4 REL=1e-3)
+PROMPT_EMBED: FUNCTIONAL_FAIL=0
+ATTN_NORM_0:  FUNCTIONAL_FAIL=0
+V_0:          FUNCTIONAL_FAIL=0
+Q_PRE_ROPE_0: FUNCTIONAL_FAIL=0
+FFN_NORM_0:   FUNCTIONAL_FAIL=1 MAX_ABS=1.118302e-02 first_bad=9  << FIRST after chain fix
+LAYER0_OUT:   FUNCTIONAL_FAIL=1 (cascaded amp from tiny ATTN_OUT drift on this pin)
+ATTN_NORM_1:  FUNCTIONAL_FAIL=1 vs llama (cascaded); vs GGUF(L0) FAIL=0
+
+## Seal fields
+INPUT_SHA=3862259EF97EB71077D11EA62624CCF902363ABAABCF3CD2EF88D3B5C4ED6014
+TOL=ABS=1e-4;REL=1e-3
+ROOT_CAUSE=STALE_RESIDUAL_INPUT → LAYER_CHAIN_MEMCPY+REPAIR
+FIRST_DIVERGE_SITE=FFN_NORM_0@pos0/layer0/index=9
+MAX_ABS_ERR=1.118302e-02
+FUNCTIONAL_FAIL=1
+ATTN_NORM_1_ROOT_CLOSED=1
+ATTN_NORM_1_GGUF_FUNCTIONAL_FAIL=0
+
+## Dense MATCH
+BOARD_PROPOSAL=HOLD (BATCH2 still has FUNCTIONAL_FAIL; invent MATCH forbidden)
+NO_LIVE_PCT=1
+
+PROMOTE=0
+TIP_CLIMB=HOLD
+CERTIFIED=0

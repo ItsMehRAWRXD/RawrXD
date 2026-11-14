@@ -1,0 +1,15 @@
+GPU_HOST_FIRST_DIVERGE_TOL_001.remeasure_attn_norm1_chain.compare
+METHOD=Deep2TensorCompare AND (abs>1e-4 && rel>1e-3)
+GPU=stage_dump_layer1_chain (rawr_layer1_chain.exe GPU_FWD=0 FORCE_VULKAN Q8_K)
+REF=BATCH2_L10_GATE_SAME_OPERAND/llama cascade
+GGUF_CHECK=blk.1.attn_norm · RMSNorm(LAYER0_OUT)
+
+ATTN_NORM_1 vs GGUF(L0): FUNCTIONAL_FAIL=0 maxAbs=2.239e-07
+ATTN_NORM_1 vs llama:    FUNCTIONAL_FAIL=1 maxAbs=1.452e-02 (cascaded L0)
+FFN_NORM_0 vs llama:     FUNCTIONAL_FAIL=1 maxAbs=1.118e-02 first_bad=9 << FIRST_DIVERGE
+
+FIRST_DIVERGE_SITE=FFN_NORM_0@pos0/layer0/index=9
+MAX_ABS_ERR=1.118302e-02
+FUNCTIONAL_FAIL=1
+ATTN_NORM_1_ROOT_CLOSED=1
+PROMOTE=0 TIP_CLIMB=HOLD
