@@ -27,9 +27,9 @@ See `LAW.txt`. `NOT_RUN != PASS`. `EVIDENCE_PARTIAL != PASS`. Scoreboard ≠ che
 |---------|-----------|--------|
 | Gemma AA4F / tip_land AV | G02 / G06 | B8E5F6E5 TOK=8 SEH=0 EXIT=0 AV_CLOSED=1 RELATED (R75 EXIT_NULL; tip RO) |
 | C36 LSP hang | G07 | tip HANG/TIMEOUT RELATED (R73); stage INIT_OK crumb ≠ PASS |
-| GPU/ref numerical | G02 / G03 | FFN_DOWN_2 CLOSED SPV40E76D2A RELATED; R83 ATTN_PRE_O_1@pos1 OPEN 2.66e-03 (first=PRE_O_0@pos1 2.29e-05) RELATED; next ATTN_PRE_O_0_POS1 |
+| GPU/ref numerical | G02 / G03 | R84 ATTN_PRE_O_0@pos1 OPEN 2.29e-05 C740 host-SDPA RELATED; next FA rebuild holding FFN_DOWN_2 |
 | ConPTY / HELP_TERM | G05 / G06 | tip-era stop PASS RELATED (R70); cand PASS RELATED; ≠ CERT PASS |
-| Multi-family GUI / qdim084 STREAM | G02 / G04 / G06 | R76: 68CC STREAM_REBIND NOT_CLOSABLE (__std_fs_get_file_id HANDLE=-1) RELATED; R82 F44D tip-absorb AUTH_HOLD RELATED; tip 6754 RO |
+| Multi-family GUI / qdim084 STREAM | G02 / G04 / G06 | R77: non617F 67350F71 EXIT=NULL partial RELATED; R76 68CC FS SEH NOT_CLOSABLE RELATED; tip 6754 RO |
 | Offline signed install | G12 | Authenticode ABSENT; CLEAN_VM NOT_RUN |
 | Model-selected agent EBT | G05 / G08 | FORCE PASS; MODEL_SELECTED=0; wire SOURCE_WIRED RUNTIME=0 |
 | CLI clean rebuild | G01-03 | BUILD_OK=1 EXIT=0 A95A1254… (R75); CLEAN_MACHINE=0 ≠ PASS |
@@ -39,4 +39,4 @@ See `LAW.txt`. `NOT_RUN != PASS`. `EVIDENCE_PARTIAL != PASS`. Scoreboard ≠ che
 `../PRODUCTION_MATURITY_TOP25_001/VALUATION_SCOREBOARD_CANON.txt` — PCT invent forbidden here.
 
 ## Next
-ATTN_PRE_O_0_POS1 next (R83); G01-05 dual-build; tip AUTH_HOLD R82 RELATED (no tip climb); PASS_COUNT=0 · PROMOTE=0.
+ATTN FA rebuild hold FFN_DOWN_2 (R84) + non617F 67350 remasure (R77); tip AUTH_HOLD; PASS_COUNT=0 · PROMOTE=0.

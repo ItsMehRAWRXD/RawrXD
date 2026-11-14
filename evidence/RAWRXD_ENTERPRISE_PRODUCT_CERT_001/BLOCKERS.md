@@ -6,7 +6,7 @@ Authority: pasted RAWRXD_ENTERPRISE_PRODUCT_CERT_001 checklist · 0/128 · HELD 
 |----------|--------|-----------|-------------|
 | P0 | Gemma AA4F / tip_land AV | G02-06 G06-06 | B8E5 R75 TOK=8 RELATED (314771e525); tip 6754 RO; ≠ CERT PASS |
 | P0 | GPU/ref V_1 / ATTN_NORM_1@dim1072 | G02-04 G02-05 G03-08 | CLOSED=1 maxULP=0 F0A8018F RELATED (R78); ≠ matrix PASS |
-| P0 | ATTN_PRE_O_0@pos1 (C740 first material) | G02-04 G03-08 | CLOSE_005 sealed CLOSED=0 ablate 1.622645e-03; first material PRE_O_0 2.29e-05; FA006 R83 claims PRE_O_0 closed 3.49e-08 (verify); ≠ PASS |
+| P0 | ATTN_PRE_O_0@pos1 (C740 first material) | G02-04 G03-08 | R84: C740 2.292544e-05 OPEN host-SDPA; FA KQV closes PRE_O_0 but reopens FFN_DOWN_2 CROSS_SHA=0; ≠ PASS |
 | P0 | FFN_DOWN_10 TRUE_FIRST (post L2 CLOSE) | G02-04 G03-08 | OPEN 1.524854e-05; SPV==host ACT amplify; SPV_CLOSABLE=0; next ATTN_PRE_O_11; ≠ PASS |
 | P0 | Multi-family STREAM / M1M2 TOK | G02-08 G04-01 G06-06 | F44D053D tip-absorb R82 OPEN=1 ENTER=1 TOK=2 SEH=0 RELATED; tip RO; 085f TOK=0 |
 | P1 | C36 LSP startup hangs | G07-01 G07-04 | tip6754 HANG/TIMEOUT RELATED (R70); cand INIT_OK RELATED only |
@@ -34,7 +34,8 @@ Authority: pasted RAWRXD_ENTERPRISE_PRODUCT_CERT_001 checklist · 0/128 · HELD 
 | 3792BAA7 keepGPU | PASS | 1 | 2 | R81 durable remasure; SEH=0 EXIT=0 DURABLE=1 RELATED ≠ tip |
 | F44D053D tip-absorb | PASS | 1 | 2 | R82 PUMP_SKIP ODR private; SEH=0 AUTH_HOLD RELATED ≠ tip |
 | B8E5F6E5 PrivateCand | 1 | 1 | 8 | R75 EXIT=NULL closed; SEH=0 AV_CLOSED=1 RELATED ≠ tip |
+| non617F 67350F71 R77 | 0 | 0 | 0 | EXIT=NULL partial; durable remasure incomplete RELATED |
 
-`NEXT_OWNER` (split): GPU `ATTN_PRE_O_0_POS1` (CLOSE_005 seal R85; verify FA006) · qdim099 tip-absorb HOLD (R84 MF=4/4 private) · llama32 617F R76 · `TIP_CLIMB=HOLD`
+`NEXT_OWNER` (split): GPU `ATTN_PRE_O_0_POS1_FA_REBUILD_HOLD_FFN_DOWN_2` (R84) · llama32 `PRIVATE_CAND_NON617F_67350F71_REMEASURE_TOK_X2_DURABLE` (R77) · tip-absorb AUTH_HOLD · `TIP_CLIMB=HOLD`
 
 PROMOTE=0 until all 128 gates PASS with independent sign-off.
