@@ -1,0 +1,31 @@
+QDIM097_DECODE_WIN_RUNTIME_OPEN_001
+ASOF_LOCAL=2026-11-14T00:10:00-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0
+TIP_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431
+TIP_STILL_6754=1
+PRIOR_PUSH=89491a8e191f36115531b0bb2e2fc1f958b276db ON_ORIGIN=1
+
+## SOURCE_WIRED (confirmed)
+- engPinned by-value + ExtPlausible Eng() + ProductRunDecode in Product100 (89491)
+- ProductRunDecode post-stream wild-ext CLEAR added this turn
+- qdim087 rsp: NO ProductRunDecode (predates wire); RunDecodeStream served by
+  Deep2IDEIntegration inline Eng() path → STREAM_SEH VA=0x1000002AA after TOKEN
+
+## RUNTIME_REACHED attempts (fail-closed OPEN)
+qdim096: link ProductRunDecode early; LNK4006 IDE RunDecodeStream ignored.
+  OPEN CRIT=PASS; STREAM_SEH VA=0x2B ENTER=0 DECODE_ENG_PIN never printed.
+  RIP=libvcruntime MoveWithYMM/memcpy during ProductRun (pre-pin).
+  EXE=1AC8EE7153B46FC5… LINK_HAS_ProductRunDecode=1
+qdim097: ninja ProductRunDecode + IDE (RunDecodeStream UNDEF) + obj078 seh.
+  Same: TOK=0 SEH=1 VA=0x2B ENTER=0 PIN absent. EXE=23C352A30E7820EF…
+qdim098 min-decode: discarded (link bloated 664MB; not remasured).
+
+## Controlling exclusive llama32
+Still qdim087 EXE=7154BF59… TOK=0 SEH=1 (ext-poison residual) MF=0/4
+DURABLE_TOKEN_SURVIVED=0
+NEXT=ABI-matched seh+decode+Deep2Engine same header epoch (or full private
+  ninja Win32IDE OUT≠tip) so RunDecodeStream prologue runs (DECODE_ENG_PIN
+  printed) without ProductRun pre-call memcpy VA=0x2B.
+
+PROMOTE=0 TIP_CLIMB=HOLD REJECT_FORCE_ABSORB=1
+END

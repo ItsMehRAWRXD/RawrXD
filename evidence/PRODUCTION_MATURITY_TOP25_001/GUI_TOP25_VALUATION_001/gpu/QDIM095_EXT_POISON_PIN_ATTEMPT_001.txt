@@ -31,3 +31,9 @@ NEXT=seh recompile matching tip ABI + link ProductRunDecode.obj without
 
 PROMOTE=0 TIP_CLIMB=HOLD REJECT_FORCE_ABSORB=1
 END
+
+## Follow-on (qdim096/097 this turn)
+SOURCE_WIRED push 89491 on origin confirmed. Private decode-win links
+LINK_HAS_ProductRunDecode=1 but RUNTIME still OPEN: STREAM_SEH VA=0x2B
+ENTER=0 before DECODE_ENG_PIN. Controlling remains qdim087. See
+QDIM097_DECODE_WIN_RUNTIME_OPEN_001.txt. PROMOTE=0.
