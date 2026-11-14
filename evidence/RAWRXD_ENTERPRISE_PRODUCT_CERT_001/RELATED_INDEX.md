@@ -11,7 +11,7 @@ Historical / private-cand / partial RUNTIME — cite only. `CROSS_SHA_CREDIT=0`.
 | tip_land_qdim 7FD1F270 | G02 | STREAM_SEH closed cand; tip bind OPEN |
 | M1M2 combine AA4F8530 | G02 G03 | SOURCE_WIRED; gemma AV |
 | GPU_PARITY Q_PRE_ROPE + ATTN_PRE_O_0 C72A48E9 | G02 G03 | LIVE_CLOSED cand |
-| ATTN_PRE_O_1 | G02 G03 | V_1 OPEN / Board R60 root-clear cand |
+| ATTN_PRE_O_1 | G02-04 G02-05 G03-08 | V_1 FP16 bucket OPEN; CLOSE_001 LIVE_CLOSED=0 maxULP_f16=1 |
 | BR_M3 FORCE_TOOL | G05 G08 | force-path only; MODEL_SELECTED=0 |
 | M4 MSI silent | G12 | Authenticode ABSENT; CLEAN_VM NOT_RUN |
 | FIRST_DIVERGE_001 seals | G02 G03 | remasure chain |

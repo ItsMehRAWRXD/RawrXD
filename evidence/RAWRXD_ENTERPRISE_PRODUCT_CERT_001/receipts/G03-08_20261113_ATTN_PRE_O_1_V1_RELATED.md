@@ -1,0 +1,19 @@
+# G03-08 RELATED — ATTN_PRE_O_1 / V_1 under GPU quant path (OPEN)
+
+GATE_ID=G03-08  
+RESULT=EVIDENCE_RELATED  
+GATE_MATRIX_FLIP=0  
+PROMOTE=0  
+TIP_CLIMB=HOLD  
+CROSS_SHA_CREDIT=0  
+
+## Why RELATED
+
+Numerical correctness under Vulkan Q4/Q6 GEMV + KV FP16 RT: ATTN_PRE_O_1 still fails strict TOL_REL due to V_1 FP16 bucket (owner=ATTN_NORM_1 cascade @dim1072). Q6 host FORCE override measured CLOSE=0.
+
+## Evidence
+
+`FIRST_DIVERGE_001/GPU_PARITY_ATTN_PRE_O_1_CLOSE_001.txt`  
+`FIRST_DIVERGE_001/GPU_PARITY_ATTN_PRE_O_1_STATUS_001.txt`
+
+TIP RO 6754616E. NOT PASS. GATE_MATRIX stays NOT_RUN.
