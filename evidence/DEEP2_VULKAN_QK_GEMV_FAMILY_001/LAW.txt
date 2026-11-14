@@ -1,0 +1,10 @@
+DEEP2_VULKAN_QK_GEMV_FAMILY_001 — LAW
+PROMOTE=0 CERTIFIED=0 GATE_STOP=1 TIP_CLIMB=HOLD
+CROSS_SHA_CREDIT=0 INVENT_PASS=0 NOT_RUN!=PASS
+
+1. Q4_K / Q6_K / Q8 Vulkan packed GEMV correctness is family-scoped.
+2. Exact-SHA verify required for REPORTED_PASS credit; no tip invent.
+3. Host GEMV / QUANT_GEMV_HOST / FORCE_HOST paths ≠ Vulkan PASS.
+4. Shape numeric OK under a FAIL overall gate remains RELATED, not CERT.
+5. GEMM multi-batch and live-tip remasure remain open until measured.
+6. Sister seals (Q6K repair, product default, Ornith L3) RELATED≠this CERT.
