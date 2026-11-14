@@ -26,6 +26,9 @@ Historical / private-cand / partial RUNTIME — cite only. `CROSS_SHA_CREDIT=0`.
 | BR_ATTN_PRE_O_POS1_T2_KERNEL_R60 | G02 G03 | ROOT_CLEAR; CLOSED=0 |
 | tip_land avfix082 F5997910 gemma | G02 | INFER_STREAM_SEH=1 TOK=0 |
 | qdim083 llama32 E649DF99 | G02 G04 | SEH=0 TOK=0 ENTER=0 |
+| qdim084 llama32 4F76D501 | G02 G04 | MARS dedup+keep; OPEN_SEH=0 STREAM_SEH=0 TOK=0 OPEN_PASS=0 |
+| tip_land avfix084 gemma 1108BF01 | G02 | MARS dedup+keep; STREAM_SEH=0 TOK=0 OPEN_PASS=0 |
+| receipts/G02-08_20261113_MARS_DEDUP_084_REMEASURE_RELATED.md | G02-08 | private 084 remasure RELATED≠PASS |
 
 | cand_c36_conpty 0C6A965A | G07-01 G07-04 G05-05 G06-05 | LSP INIT_OK + ConPTY stop PASS on cand; tip6754 RO unchanged |
 | P2 llama32 Elastic+MARS qdim083/084 | G02-08 G06-06 | ROOT_CLEAR; DURABLE TOK=0; RELATED≠PASS |

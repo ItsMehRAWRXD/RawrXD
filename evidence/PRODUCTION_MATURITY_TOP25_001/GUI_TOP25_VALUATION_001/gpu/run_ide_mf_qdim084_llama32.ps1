@@ -1,11 +1,11 @@
-# Private qdim084 elastic-idempotent + MARS dedup llama32 remasure. PROMOTE=0 TIP_ABSORB=0.
+# Private qdim084 MARS-dedup+keepGPU llama32 remasure. PROMOTE=0 TIP_ABSORB=0.
 param([int]$MaxTok = 8)
 $ErrorActionPreference = "Continue"
 $ev = "G:\~dev\rawrxd\evidence\PRODUCTION_MATURITY_TOP25_001\GUI_TOP25_VALUATION_001\gpu"
-$exe = "G:\~dev\rawrxd\evidence\PRODUCTION_MATURITY_TOP25_001\GUI_TOP25_VALUATION_001\clean_link\LOCKED\RawrXD-Win32IDE_gemma_qdim084.exe"
+$exe = "G:\~dev\rawrxd\evidence\PRODUCTION_MATURITY_TOP25_001\GUI_TOP25_VALUATION_001\clean_link\RawrXD-Win32IDE_gemma_qdim084.exe"
 $model = "G:\~dev\rawrxd\models\llama3.2-3b-Q2_K.gguf"
 $tip = "G:\~dev\rawrxd\bin\RawrXD-Win32IDE.exe"
-$expect = "617F784ED72938E029BA57FF0B63D8EAF1C16994860468A3BA62E08ECCE7DD1E"
+$expect = "4F76D501D2399315AE1A7936D96159FFD741E5ED8151990F12323440265D5890"
 $tipExpect = "6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431"
 if (-not (Test-Path $exe)) { throw "EXE_MISSING" }
 if (-not (Test-Path $model)) { throw "MODEL_MISSING" }
@@ -16,8 +16,9 @@ if ($tipSha -ne $tipExpect) { throw "TIP_SHA_MISMATCH=$tipSha" }
 @(
   "RAWRXD_ALLOW_GPU","RAWR_FORCE_GPU","RAWR_NO_CPU_FALLBACK","RAWRXD_GPU_POLICY",
   "RAWRXD_HOST_DECODE","RAWR_HOST_DECODE","DEEP2_LIVE_POLICY","DEEP2_LIVE_PATH",
-  "DEEP2_DUALSTICK_ARM","WEIGHT_BUDGET_MIB","DEEP2_WEIGHT_BUDGET_MIB",
-  "RAWRXD_PRODUCT_STREAMER_ARM","RAWRXD_PRODUCT_STREAMER_PREP","RAWRXD_UNREVERSE_HOTPATCH"
+  "DEEP2_DUALSTICK_ARM","WEIGHT_BUDGET_MIB","DEEP2_WEIGHT_BUDGET_MIB","WEIGHT_BUDGET_INPUT",
+  "RAWRXD_PRODUCT_STREAMER_ARM","RAWRXD_PRODUCT_STREAMER_PREP","RAWRXD_UNREVERSE_HOTPATCH",
+  "GPU_POLICY","RAWRXD_GPU_DEVICE"
 ) | ForEach-Object { Remove-Item "Env:$_" -ErrorAction SilentlyContinue }
 $env:RAWRXD_ALLOW_GPU = "1"
 $env:RAWR_FORCE_GPU = "1"
@@ -29,6 +30,7 @@ $env:DEEP2_LIVE_POLICY = "OFF"
 $env:DEEP2_LIVE_PATH = "0"
 $env:DEEP2_DUALSTICK_ARM = "0"
 $env:WEIGHT_BUDGET_MIB = "8192"
+$env:WEIGHT_BUDGET_INPUT = "8192"
 $env:RAWRXD_PRODUCT_STREAMER_ARM = "1"
 $env:RAWRXD_PRODUCT_STREAMER_PREP = "1"
 $sha16 = $sha.Substring(0, 16)
@@ -68,18 +70,16 @@ if ($both -match "GENERATED_TOKENS[=:\s]+(\d+)") { $tok = [int]$Matches[1] }
 $seh = 0; if ($both -match "PRODUCT_DEEP2_OPEN_SEH[=:\s]*1") { $seh = 1 }
 $streamSeh = 0; if ($both -match "PRODUCT_DEEP2_INFER_STREAM_SEH[=:\s]*1") { $streamSeh = 1 }
 $streamSehCode = ""; if ($both -match "PRODUCT_DEEP2_INFER_STREAM_SEH=1 CODE=(\S+)") { $streamSehCode = $Matches[1] }
-$dupWarn = 0; if ($both -match "tensor 'token_embd\.weight' already registered") { $dupWarn = 1 }
+$dupWarn = 0; if ($both -match "already registered") { $dupWarn = 1 }
 $streamEnter = 0; if ($both -match "GENERATE_STREAM_ENTER=1") { $streamEnter = 1 }
-$allocHits = ([regex]::Matches($both, "Allocated 'token_embd\.weight'")).Count
-$evictHits = ([regex]::Matches($both, "Evicted 'token_embd\.weight'")).Count
-$thrash = 0; if ($allocHits -ge 2 -and $evictHits -ge 2) { $thrash = 1 }
 $crit = ""; if ($both -match "PRODUCT_OPEN_CRITICAL_TENSORS=(\S+)") { $crit = $Matches[1] }
+$keepGpu = 0; if ($both -match "MARS keep-GPU pin") { $keepGpu = 1 }
 $tokenSurvived = 0; if ($tok -gt 0 -and $seh -eq 0 -and $streamSeh -eq 0) { $tokenSurvived = 1 }
 $tipPost = (Get-FileHash $tip -Algorithm SHA256).Hash
 @(
 "ASOF_LOCAL=$((Get-Date).ToString('yyyy-MM-ddTHH:mm:sszzz'))",
 "ID=$tag",
-"LANE=MULTI_FAMILY_QDIM084_MARS_DEDUP_PRIVATE",
+"LANE=MULTI_FAMILY_QDIM084_MARS_DEDUP_KEEPGPU_PRIVATE",
 "FAMILY=llama32",
 "MODEL=models\llama3.2-3b-Q2_K.gguf",
 "EXE=$exe",
@@ -93,9 +93,7 @@ $tipPost = (Get-FileHash $tip -Algorithm SHA256).Hash
 "INFER_STREAM_SEH=$streamSeh",
 "STREAM_SEH_CODE=$streamSehCode",
 "DUP_TOKEN_EMBD_WARN=$dupWarn",
-"TOKEN_EMBD_ALLOC=$allocHits",
-"TOKEN_EMBD_EVICT=$evictHits",
-"TOKEN_EMBD_THRASH=$thrash",
+"MARS_KEEP_GPU_PIN=$keepGpu",
 "GENERATE_STREAM_ENTER=$streamEnter",
 "PRODUCT_OPEN_CRITICAL_TENSORS=$crit",
 "GENERATED_TOKENS=$tok",
@@ -111,4 +109,4 @@ $tipPost = (Get-FileHash $tip -Algorithm SHA256).Hash
 "ERR=$gerr"
 ) | Set-Content $gmeta
 Copy-Item $gmeta (Join-Path $ev "ide_mf_qdim084_llama32_LATEST.meta.txt") -Force
-Write-Output "META=$gmeta DUP=$dupWarn THRASH=$thrash STREAM_ENTER=$streamEnter STREAM_SEH=$streamSeh TOK=$tok TOKEN_SURVIVED=$tokenSurvived"
+Write-Output "META=$gmeta DUP=$dupWarn STREAM_ENTER=$streamEnter STREAM_SEH=$streamSeh TOK=$tok KEEP_GPU=$keepGpu TOKEN_SURVIVED=$tokenSurvived"
