@@ -5,7 +5,7 @@ $ev = "G:\~dev\rawrxd\evidence\PRODUCTION_MATURITY_TOP25_001\GUI_TOP25_VALUATION
 $exe = "G:\~dev\rawrxd\evidence\PRODUCTION_MATURITY_TOP25_001\GUI_TOP25_VALUATION_001\clean_link\LOCKED\RawrXD-Win32IDE_gemma_qdim084.exe"
 $model = "G:\~dev\rawrxd\models\llama3.2-3b-Q2_K.gguf"
 $tip = "G:\~dev\rawrxd\bin\RawrXD-Win32IDE.exe"
-$expect = "2F2A3BCBFF41DE651DFFC6F47893FA5799C385275A2707502DA32963A35BE50C"
+$expect = "491967B3B37A6D3C9C2CE36EF7399E28D949B1E643B9E15A906265F2F16EA708"
 $tipExpect = "6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431"
 if (-not (Test-Path $exe)) { throw "EXE_MISSING" }
 if (-not (Test-Path $model)) { throw "MODEL_MISSING" }
@@ -31,7 +31,8 @@ $env:DEEP2_LIVE_PATH = "0"
 $env:DEEP2_DUALSTICK_ARM = "0"
 $env:RAWRXD_DEEP2_ALLOW_ELASTIC = "0"
 $env:DEEP2_MARS = "1"
-$env:RAWRXD_ENHANCE_SKIP = "torus,plasma,chamber,sov,medusa,nu,warmup"
+$env:DEEP2_KV_WORKING_SEQ = "2048"
+$env:RAWRXD_ENHANCE_SKIP = "torus,plasma,chamber,sov,medusa,nu,warmup,ckv,nvme"
 $env:WEIGHT_BUDGET_MIB = "8192"
 $env:WEIGHT_BUDGET_INPUT = "8192"
 $env:RAWRXD_PRODUCT_STREAMER_ARM = "1"

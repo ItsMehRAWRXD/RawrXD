@@ -76,7 +76,8 @@ inline bool RAWR_RUN_INIT_NAME(Deep2Engine& e, const std::string& path,
     cfg.headDim = mw.headDim;
     cfg.vocabSize = mw.vocabSize;
     cfg.intermediateDim = mw.intermediateDim;
-    cfg.maxSeqLen = maxSeq;
+    cfg.maxSeqLen = e.getConfig().maxSeqLen > 0 ? e.getConfig().maxSeqLen : maxSeq;
+    if (cfg.maxSeqLen < 2048) cfg.maxSeqLen = 2048;
     cfg.useMLA = mw.useMLA || e.getConfig().useMLA;
     cfg.qLoraRank = e.getConfig().qLoraRank;
     cfg.kvLoraRank = e.getConfig().kvLoraRank;
@@ -120,12 +121,6 @@ inline bool RAWR_RUN_OPEN_NAME(Deep2Engine& e, const char* alias, RunWitness& w)
         return false;
     }
     w.ggufOpened = e.isModelLoaded() ? 1 : 0;
-    if (!w.ggufOpened && e.repairModelLoadedFromRoots()) {
-        w.ggufOpened = 1;
-        std::fprintf(stderr, "POST_LOAD_ROOTS_REPAIR=1 layers=%zu\n",
-                     e.getModelWeights().numLayers);
-        std::fflush(stderr);
-    }
     w.tokenizerReady = e.tokenize("hi").empty() ? 0 : 1;
     auto ct = ChatTemplate::detectFromModel(e.getModelMetadata().architecture,
                                             ar.alias.c_str());

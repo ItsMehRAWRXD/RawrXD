@@ -16,26 +16,35 @@ bool VulkanCompute::DispatchGEMVQuant(int ggmlType, const void* packed, size_t b
                                       uint32_t rows, uint32_t cols,
                                       uint64_t pinKey) {
     /* FIRST_DIVERGE_001 / BATCH2_Q4K_GEMV_001:
-     * Q4 attn (12): FORCE_VULKAN still wins (ATTN_PRE_O_0 SPV close).
+     * Q4 square (wq/wo): FORCE → SPV. Host square under FORCE REJECT — poisons
+     *   FFN_DOWN (~7.5e-5) while ACT stays tight; V_1[59] blown. Opt-in
+     *   RAWRXD_Q4_HOST_ATTN=1 for private PRE_O_1@pos1 A-B only.
      * Q4 FFN gate/up (rows>cols): PARITY=1 host (FORCE still SPV). R65 REJECT
      *   host-under-FORCE for ACT_2; keep SPV for ACT unless PARITY=1.
-     * Q6 attn_v: FORCE → SPV. Q6 FFN_DOWN: host under FORCE by default;
-     *   RAWRXD_Q6_HOST_FFN_DOWN=0 disables. */
+     * Q6 attn_v: FORCE → SPV. Q6 FFN_DOWN: FORCE → SPV (precise Q4 ACT +
+     *   SPV DOWN → maxULP_f16=0 @V59). Host FFN_DOWN under FORCE REJECT
+     *   (V59 1 ULP lo). Opt-in: RAWRXD_Q6_HOST_FFN_DOWN=1 or PARITY=1. */
     const char* hostPar = std::getenv("RAWRXD_QUANT_HOST_Q8K_PARITY");
     const char* forceVk = std::getenv("RAWRXD_FORCE_VULKAN_QUANT_GEMV");
     const char* ffnDownHost = std::getenv("RAWRXD_Q6_HOST_FFN_DOWN");
+    const char* q4AttnHost = std::getenv("RAWRXD_Q4_HOST_ATTN");
     const bool force = forceVk && forceVk[0] == '1';
     const bool ffnDownShape =
         ggmlType == 14 && rows >= 1024u && cols > rows;
+    /* Explicit =1 wins even under FORCE (debug). FORCE alone → SPV. */
     const bool hostQ6FfnDown =
-        ffnDownShape && !(ffnDownHost && ffnDownHost[0] == '0') &&
-        (force || (ffnDownHost && ffnDownHost[0] == '1') ||
-         (hostPar && hostPar[0] == '1'));
+        ffnDownShape &&
+        ((ffnDownHost && ffnDownHost[0] == '1') ||
+         (!force && hostPar && hostPar[0] == '1'));
     const bool hostQ6 =
         (hostPar && hostPar[0] == '1' && ggmlType == 14 && !force) ||
         hostQ6FfnDown;
-    const bool hostQ4Attn = hostPar && hostPar[0] == '1' && ggmlType == 12 &&
-                            !force;
+    const bool squareQ4 = ggmlType == 12 && rows == cols;
+    const bool hostQ4AttnSquare =
+        squareQ4 && (q4AttnHost && q4AttnHost[0] == '1');
+    const bool hostQ4Attn =
+        (hostPar && hostPar[0] == '1' && ggmlType == 12 && !force) ||
+        hostQ4AttnSquare;
     const bool hostQ4Ffn = hostPar && hostPar[0] == '1' && ggmlType == 12 &&
                            rows > cols; /* gate/up; not down (rows<=cols) */
     const bool wantHost = hostQ6 || hostQ4Attn || hostQ4Ffn;
@@ -48,9 +57,9 @@ bool VulkanCompute::DispatchGEMVQuant(int ggmlType, const void* packed, size_t b
             gemv(static_cast<const uint8_t*>(packed), input, output, rows, cols);
             std::fprintf(stderr,
                          "QUANT_GEMV_HOST_Q8K_PARITY type=%d rows=%u cols=%u "
-                         "q6_ffn_down=%d force=%d PROMOTE=0\n",
+                         "q6_ffn_down=%d q4_attn_sq=%d force=%d PROMOTE=0\n",
                          ggmlType, rows, cols, hostQ6FfnDown ? 1 : 0,
-                         force ? 1 : 0);
+                         hostQ4AttnSquare ? 1 : 0, force ? 1 : 0);
             std::fflush(stderr);
             if (ggmlType == 12) ++q4k_packed_ops_;
             if (ggmlType == 14) ++q6k_packed_ops_;

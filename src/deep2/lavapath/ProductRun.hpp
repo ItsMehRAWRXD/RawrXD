@@ -13,6 +13,8 @@
 #include <memory>
 #include <chrono>
 #include <string>
+#include <new>
+#include <stdexcept>
 
 namespace rawr::product_run {
 
@@ -141,14 +143,43 @@ inline Result ProductRun(const ProductRequest& req) {
     r.modelResolved = 1;
     r.modelOpen = 1;
     r.tokenizerReady = 1;
-    r.modelPath = rt->modelPath;
-    r.modelName = rt->modelAlias;
+    try {
+        r.modelPath = rt->modelPath;
+        r.modelName = rt->modelAlias;
+    } catch (const std::bad_alloc&) {
+        r.failedStage = "PRODUCT_RUN";
+        r.failedOwner = "BAD_ALLOC_ASSIGN";
+        r.exitReason = "FAIL";
+        std::fprintf(stderr, "PRODUCT_RUN_BAD_ALLOC=1 stage=ASSIGN\n");
+        rt->alreadyGenerating.store(0);
+        EmitReceipt(stderr, r);
+        return r;
+    }
     r.runtimeReady = 1;
     r.streamEnter = 1;
     const char* prompt = (req.prompt && req.prompt[0]) ? req.prompt : "hi";
     int userCancel = 0;
     Deep2::StreamCorrupt_Clear();
-    RunDecodeStream(*rt, prompt, tokenBudget.effective, req.onPiece, r, userCancel);
+    try {
+        RunDecodeStream(*rt, prompt, tokenBudget.effective, req.onPiece, r,
+                        userCancel);
+    } catch (const std::bad_alloc&) {
+        r.failedStage = "GENERATE_STREAM";
+        r.failedOwner = "BAD_ALLOC";
+        r.exitReason = "FAIL";
+        r.productPass = 0;
+        r.streamEnter = 0;
+        std::fprintf(stderr, "PRODUCT_RUN_BAD_ALLOC=1 stage=DECODE\n");
+        std::fflush(stderr);
+    } catch (const std::exception& ex) {
+        r.failedStage = "GENERATE_STREAM";
+        r.failedOwner = "CXX_EX";
+        r.exitReason = "FAIL";
+        r.productPass = 0;
+        r.streamEnter = 0;
+        std::fprintf(stderr, "PRODUCT_RUN_CXX_EX=1 what=%s\n", ex.what());
+        std::fflush(stderr);
+    }
     if (Deep2::StreamCorrupt()) {
         r.exitReason = "CORRUPT";
         r.productPass = 0;
@@ -157,7 +188,9 @@ inline Result ProductRun(const ProductRequest& req) {
     } else if (userCancel || rt->Eng().isCancelRequested()) {
         r.exitReason = "CANCELLED";
         r.productPass = 0;
-    } else {
+    } else if (!(r.failedOwner &&
+                 (std::strcmp(r.failedOwner, "BAD_ALLOC") == 0 ||
+                  std::strcmp(r.failedOwner, "CXX_EX") == 0))) {
         r.exitReason = r.firstToken ? "COMPLETE" : "FAIL";
         r.productPass = FunctionalComplete(r);
         if (!r.productPass) {

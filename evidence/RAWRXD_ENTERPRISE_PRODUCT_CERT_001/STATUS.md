@@ -27,7 +27,7 @@ See `LAW.txt`. `NOT_RUN != PASS`. `EVIDENCE_PARTIAL != PASS`. Scoreboard ≠ che
 |---------|-----------|--------|
 | Gemma AA4F / tip_land AV | G02 / G06 | B8E5F6E5 ENTER=1 SEH=0; TOK=0 EXIT=NULL AV_CLOSED=0 RELATED |
 | C36 LSP hang | G07 | tip HANG/TIMEOUT RELATED (R73); stage INIT_OK crumb ≠ PASS |
-| GPU/ref numerical | G02 / G03 | PRE_O@pos1 FA CLOSED; V_1/ATTN_NORM_1@dim1072 OPEN |
+| GPU/ref numerical | G02 / G03 | PRE_O@pos1 FA CLOSED; V_1/ATTN_NORM_1@dim1072 CLOSED maxULP=0 (F0A8018F RELATED) |
 | ConPTY / HELP_TERM | G05 / G06 | tip-era stop PASS RELATED (R70); cand PASS RELATED; ≠ CERT PASS |
 | Multi-family GUI / qdim084 STREAM | G02 / G04 / G06 | authPASS/OPEN=1 (R72); STREAM 0xE06D7363 TOK=0 RELATED |
 | Offline signed install | G12 | Authenticode ABSENT; CLEAN_VM NOT_RUN |

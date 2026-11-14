@@ -1,0 +1,47 @@
+BR_QDIM084_PRODUCTRUN_BADALLOC_RELATED_001
+ASOF_LOCAL=2026-11-13T23:28:00-05:00
+PROMOTE=0 TIP_CLIMB=HOLD INVENT_PASS=0 CROSS_SHA_CREDIT=0
+RELATED=1 CERT_RESULT=NOT_PASS (do not invent PASS)
+TIP_SHA256=6754616EA30A566423727F82513AC66D8241FDB73343F9CD7A440FF9D4E43431
+TIP_STILL_6754=1 TIP_OVERWRITE=0
+
+## Mission
+P0 after keep-GPU: private cand OPEN+pin then C++ EH 0xE06D7363 @ ProductRun
+before GENERATE_STREAM_ENTER (TOK=0). Find site; minimal bounded alloc / fail-closed.
+
+## Site (fail-closed)
+1) Host CKV/torus allocated at full GGUF ctx (131072) → multi-GB CompressedKV
+   (~8GB on 23B5115F) → ProductRun C++ EH 0xE06D7363 before ENTER when commit high.
+2) Controlling breadcrumb remasure 491967B3: GENERATE_STREAM_PRE_CONFIG=1 and no
+   POST_CONFIG → AV inside configureGeneration (READ VA=-1) after bad_alloc closed.
+3) InitFromPath default maxSeq=512 can clamp working-set (KV_WORKING_SEQ_BOUND=512).
+
+## Fixes landed (private; tip RO)
+SRC_A=Deep2Engine.cpp placeAll keepTokenEmbd (MARS keep-GPU pin name-exact)
+SRC_B=Deep2Engine.cpp KV_WORKING_SEQ_BOUND (default 4096; DEEP2_KV_WORKING_SEQ)
+SRC_C=Deep2Engine.cpp ToroidalKV bad_alloc FAIL_CLOSED
+SRC_D=ProductRun.hpp catch bad_alloc / std::exception (PRODUCT_RUN_* receipts)
+SRC_E=RawrRunSession_Body/hpp preserve loadModel maxSeqLen (min 2048)
+
+## Return block (measured private cand)
+EXE_SHA256=491967B3B37A6D3C9C2CE36EF7399E28D949B1E643B9E15A906265F2F16EA708
+EXE_SHA16=491967B3B37A6D3C
+WITNESS=gpu/ide_mf_qdim084_llama32_491967B3B37A6D3C_20261113_232717.meta.txt
+PRIOR_BADALLOC=23B5115FC108D8F7 (SEH=0xE06D7363 ENTER=0)
+ENTER=0
+TOK=0
+SEH=1 CODE=0xC0000005 READ VA=FFFFFFFFFFFFFFFF (configureGeneration; ≠ bad_alloc)
+OPEN_SEH=0
+KEEP_GPU_PIN=1
+KV_WORKING_SEQ_BOUND=512 (gguf_ctx=131072; InitFromPath clamp residual)
+EXIT=0
+TIP_CLIMB=HOLD
+
+## Disposition
+BAD_ALLOC_CLASS_CLOSED=1 (0xE06D7363 no longer controlling)
+RUNTIME_REACHED=PARTIAL (OPEN+keep-GPU+PRE_CONFIG)
+GENERATE_STREAM_ENTER=0
+GENERATED_TOKENS=0
+NEXT_GATE=CONFIGURE_GENERATION_AV_VA_MINUS1_THEN_ENTER_TOK_GT0
+PROMOTE=0
+END

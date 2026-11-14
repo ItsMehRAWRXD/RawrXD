@@ -6104,9 +6104,8 @@ bool Deep2Engine::sessionAuthorityPass() const {
 bool Deep2Engine::repairModelLoadedFromRoots() {
     if (modelWeights.loaded) return true;
     if (modelWeights.numLayers == 0) return false;
-    if (!(modelWeights.tokenEmbed.data || modelWeights.tokenEmbed.hasFileBacking ||
-          modelWeights.tokenEmbed.sizeBytes > 0))
-        return false;
+    /* Residency/stream roots may lack embed.data until first fetch; layers+
+     * path/geom are enough to re-arm loaded after enhance FATAL clear. */
     modelWeights.loaded = true;
     std::fprintf(stderr, "MODEL_LOADED_REPAIR=1 roots layers=%zu\n",
                  modelWeights.numLayers);
@@ -7594,8 +7593,11 @@ void Deep2Engine::configureGeneration(const GenerationOptions& options)
     // One authoritative generation configuration for generate() / generateStream().
     if (options.temperature <= 0.0f || options.topK <= 1) {
         deterministicGreedy_ = true;
+        std::fprintf(stderr, "CFG_GEN_BEFORE_STICK=1\n"); std::fflush(stderr);
         ds_imb::SetGreedyStick(1);
+        std::fprintf(stderr, "CFG_GEN_AFTER_STICK=1\n"); std::fflush(stderr);
         sampler = std::make_unique<rawrxd::sampling::GreedySampler>();
+        std::fprintf(stderr, "CFG_GEN_AFTER_SAMPLER=1\n"); std::fflush(stderr);
         printf("[GREEDY] enabled=1 temperature=%.4f topK=%u\n",
                options.temperature, options.topK);
     } else {
@@ -7735,7 +7737,11 @@ Deep2::GenerationResult Deep2Engine::generateStream(
     const GenerationOptions& options,
     TokenCallback callback)
 {
+    std::fprintf(stderr, "GENERATE_STREAM_PRE_CONFIG=1\n");
+    std::fflush(stderr);
     configureGeneration(options);
+    std::fprintf(stderr, "GENERATE_STREAM_POST_CONFIG=1\n");
+    std::fflush(stderr);
     rawr::batch007::Reset();
     rawr::batch007::A().modelAuth = modelWeights.loaded ? 1 : 0;
     rawr::batch007::A().maxTokensReq = options.maxTokens;
@@ -12136,7 +12142,8 @@ void Deep2Engine::enableAllEnhancements() {
             printf("[Deep2Engine] FATAL: GPU inference required ? Vulkan not armed. "
                    "Set RAWRXD_HOST_DECODE=1 only to opt into CPU decode.\n");
             fflush(stdout);
-            modelWeights.loaded = false;
+            /* AVFIX083: do not clear loaded — that races POST_LOAD isModelLoaded
+             * and poisons ProductOpen after a successful loadModel. */
             initialized = false;
             return;
         }
