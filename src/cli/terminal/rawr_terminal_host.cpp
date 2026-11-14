@@ -75,18 +75,20 @@ int RunTerminalHost(int idleExitMs) {
     HANDLE listen = makeListenPipe();
     if (listen == INVALID_HANDLE_VALUE) return 1;
     for (;;) {
+        // Spare MUST exist before Accept: tip EnsureHostRunning probes with
+        // CreateFile+Close (consumes listen). Post-Accept next left a gap
+        // tip-without-retry hit as tail/list EXIT=8 (BuildFail).
+        HANDLE next = makeListenPipe();
         BOOL ok = ConnectNamedPipe(listen, nullptr)
                       ? TRUE
                       : (GetLastError() == ERROR_PIPE_CONNECTED);
         if (!ok) {
+            if (next != INVALID_HANDLE_VALUE) CloseHandle(next);
             CloseHandle(listen);
             listen = makeListenPipe();
             if (listen == INVALID_HANDLE_VALUE) return 1;
             continue;
         }
-        // Overlap next listener before tear-down so tip client never races
-        // against maxInstances=1 gap (tip tail EXIT=8 flaky root cause).
-        HANDLE next = makeListenPipe();
         char buf[8192]{};
         DWORD rd = 0;
         if (!ReadFile(listen, buf, sizeof(buf) - 1, &rd, nullptr) || !rd) {

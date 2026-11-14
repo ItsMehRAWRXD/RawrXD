@@ -1,0 +1,22 @@
+M4 offline zip recovery path (HOST≠CLEAN_VM; PROMOTE=0)
+ASOF=2026-11-14T07:25:30-05:00
+PACKAGE=RawrXD-offline-windows-x64-M4-15A119-675461.zip
+PACKAGE_SHA=7569F2836CD28854194CA0311DC8F8B93F60F5F977A7AE53E23F1D0EEC4D7BAA
+PACKAGE_BYTES=20333062
+DIR=evidence/PRODUCTION_MATURITY_TOP25_001/OFFLINE_INSTALLER_M4_001/
+
+## Recovery (offline; no cloud)
+1. Copy sealed zip to target machine (air-gap OK).
+2. Expand-Archive -Path <zip> -DestinationPath <stage>
+3. Preferred: <stage>\SetupWizard.exe (SETUPWIZARD_IN_ZIP=1; host smoke PASS R96)
+   OR: pwsh -File <stage>\scripts\Install-RawrOffline.ps1 -TargetDir <install_dir>
+4. Verify: CLI SHA pin 15A119D1… · GUI SHA pin 6754616E… · HELP_SMOKE
+5. Rollback: Uninstall-RawrOffline.ps1 or delete target dir (+ PATH if -AddUserPath)
+
+## Not claimed
+CLEAN_VM=0 BLOCKED (hypervisor ABSENT on this host)
+MSI=ABSENT
+NSIS=ABSENT
+WINGET=NOT_PUBLISHED
+CHOCO=NOT_PUBLISHED
+PROMOTE=0

@@ -1,0 +1,2 @@
++OK stopped=1
+[StreamEngine] Shutdown
