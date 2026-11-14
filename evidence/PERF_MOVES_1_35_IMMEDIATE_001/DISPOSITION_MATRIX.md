@@ -1,87 +1,117 @@
-# PERF Moves 1–35 — Disposition Matrix
+# PERF Moves 1–35 — Immediate Disposition Matrix
 
 ```text
 PACK=PERF_MOVES_1_35_IMMEDIATE_001
-AUTHORITY=RAWRXD_PERFORMANCE_001/PERF_COMPLETION_CONTRACT.md
-ASOF=2026-11-14
-PROMOTE=0
-TIP_CLIMB=HOLD
-GATE_STOP=1
-NEXT_SPEND=NONE
-INVENT_PASS=0
+AUTHORITY=evidence/RAWRXD_PERFORMANCE_001/PERF_COMPLETION_CONTRACT.md §§1–35
+ASOF_LOCAL=2026-11-14T08:55:00-05:00
+PROMOTE=0 CERTIFIED=0 TIP_CLIMB=HOLD
+GATE_STOP=1 NEXT_SPEND=NONE LOCKED=1
+INVENT_PASS=0 NOT_RUN!=PASS CROSS_SHA_CREDIT=0
 ```
 
-Law: `NOT_RUN != PASS`. Status values: **SEALED** | **INSTALLED** | **OPEN** | **BLOCKED_BY_GATE_STOP** | **N/A**.
+Honest statuses: `SEALED` | `INSTALLED` | `OPEN` | `BLOCKED_BY_GATE_STOP` | `N/A`.
 
-Supremacy: `GATE.txt` `GATE_STOP=1` / `NEXT_SPEND=NONE` blocks new rainbow live measure / tip climb / QB|KVA|LOGITS|SX|5.904 reopen even where coverage artifacts still say `LIVE_MEASURE_AUTHORIZED=1`.
+**SSOT supremacy for coverage/epoch:** `PERF_PROGRAM_COMPLETE_002.txt` + `COVERAGE_EPOCH_0/AUTHORITY.txt` + `ENDURANCE_EPOCH_0/RECEIPT.txt` supersede stale `COVERAGE_MATRIX_001/INDEX.txt` (claims OPEN / MEASURED_UNIQUE=0 / LIVE_MEASURE_AUTHORIZED=1). Do not invent fresh MEASURED from INDEX; do not erase sealed exhaustion.
 
-| Move | Section | Status | Evidence pointer |
-|-----:|---------|--------|------------------|
-| 1 | Current Sealed Authority | SEALED | `PERF_PASS_PROFILE_001.txt`, `PERF_WITNESS_PURITY.txt`, `TIP_CLIMB_001_HOLD.txt` — TIP_CLIMB=HOLD; 5.904 historical |
-| 2 | Purity Contract | SEALED | `PERF_WITNESS_PURITY.txt` CHRONO=LUKEWARM; FORCED_OFF/ON profile sealed |
-| 3 | Existing Authorities and Artifacts | SEALED | Contract §3 list present under `RAWRXD_PERFORMANCE_001/` + scripts/ |
-| 4 | Rainbow Search Authority | SEALED | `RAINBOW_TABLE_001/INDEX.txt` ENUMERATOR_AUTHORITY=SEALED; FINITE_PASS_SIZE=18; LIVE_MEASURE_AUTHORIZED=0 |
-| 5 | Coverage Law | INSTALLED | `COVERAGE_MATRIX_001/` UNIQUE=18; MANIFEST MEASURED_UNIQUE=18 (INDEX stale-0 reconciled) |
-| 6 | Epoch Law | INSTALLED | `COVERAGE_MATRIX_001/EPOCH0*` present; epoch accounting artifacts exist; no new epoch spend this pack |
-| 7 | Phase A — Reproduce Historical Champion | SEALED | `CHAMPION_ENV_BYTEWISE_REPRO_001/GATE.txt` PHASE_A_CLOSED=1 BYTEWISE_ENV_MATCH=1 |
-| 8 | Champion Reproduction Exit | SEALED | Exit **B Historical-only**: FAIL_WALL_REPRO; 5.904=HISTORICAL_ONLY / NO_REOPEN |
-| 9 | Establish the Search Baseline | INSTALLED | `SEARCH_BASELINE_001.txt` INSTALLED_SEARCH_BASELINE_TPS=4.329 SEALED |
-| 10 | Phase B — Enumerate 18 Unique | SEALED | `RAINBOW_TABLE_001` + `COVERAGE_MANIFEST.json` UNIQUE=18 |
-| 11 | Phase C — First Measurement Epoch | SEALED_ACCOUNTING | MANIFEST MEASURED_UNIQUE=18 EPOCH0 receipts; new measures BLOCKED_BY_GATE_STOP |
-| 12 | Candidate Classification | BLOCKED_BY_GATE_STOP | Depends on §11 measures; not inventable |
-| 13 | Ranking Law | BLOCKED_BY_GATE_STOP | No measured epoch ranking under STOP |
-| 14 | Phase D — Winner Endurance | BLOCKED_BY_GATE_STOP | No winner; endurance forbidden until post-STOP |
-| 15 | Promotion Law | SEALED | `PERF_PROMOTION_LAW_001.txt` + SEARCH_BASELINE PROMOTE_ONLY_IF; PROMOTE=0 held |
-| 16 | Attribution-Only Law | SEALED | `QKV_READBACK_CUT_001_ACCEPT.txt` STATUS=CUT_MISS WALL_PROMOTE=0 |
-| 17 | QKV Readback Cut Contract | SEALED | Cut miss sealed; NO_REOPEN with KVA family under GATE |
-| 18 | No-Reopen Law | SEALED | `GATE.txt` NO_REOPEN=QB_KERNEL\|KVA\|LOGITS\|SX\|5.904 |
-| 19 | No Directional Climb | SEALED | `TIP_CLIMB_001_HOLD.txt` TIP_CLIMB=HOLD; LIVE_TIP_CLIMB=HOLD |
-| 20 | Tip Bot Law | SEALED | INVOKE_PERF_TIP_BOT=0; MAX_ITERATIONS_256=NOT_AUTHORIZED |
-| 21 | Rainbow Cursor Law | SEALED | `RAINBOW_CURSOR.json` present; live advance blocked (LIVE_MEASURE_AUTHORIZED=0 + GATE_STOP) |
-| 22 | Epoch Completion Receipt | INSTALLED | Epoch0 MEASURED_UNIQUE=18 in MANIFEST; promotion still PROMOTE=0 / RETAIN_BASELINE |
-| 23 | Coverage Matrix | INSTALLED | Matrix OPEN for fill but spend frozen; accounting OK under STOP |
-| 24 | Evidence Preservation | SEALED | Existing seals retained; this pack additive only |
-| 25 | Manifest Truth Law | SEALED | Generators + PASS_MANIFEST paths under purity; no invented manifests this pack |
-| 26 | Product-Path Requirement | OPEN | PERF wall product-path held; parallel CLI lane PARTIAL (`CLI_INFERENCE_SMOKE_001` TOK=8 COHERENCE=FAIL) — ≠ PERF PASS |
-| 27 | Parity Requirement | SEALED | Champion receipt PARITY=1 (env); epoch candidate parity N/A until §11 |
-| 28 | Stable Wall Requirement | OPEN | Installed baseline 4.329; STABLE_FLOOR_ABOVE_4.329 not proven; GATE NEXT_SPEND=NONE supersedes champion NEXT_SPEND note for climb |
-| 29 | Final Completion Conditions | OPEN | Coverage incomplete + GATE_STOP → final completion NOT met; ≠ PASS |
-| 30 | Target TPS | OPEN | Target climb blocked; historical 5.904 NO_REOPEN; baseline compare=4.329 only |
-| 31 | New Search-Space Law | SEALED | Finite 18; RNG_USED=0; no new space invented |
-| 32 | Failure Handling | SEALED | FAIL_WALL_REPRO + CUT_MISS handled as sealed negatives; no reopen |
-| 33 | Agent Behavior | SEALED | This pack: disposition + verify only; no tip climb; PROMOTE=0 |
-| 34 | Required Final Output | OPEN | Final promotable output not produced (GATE_STOP + incomplete epoch) |
-| 35 | Governing Principle | SEALED | Coverage + epoch + measured authority + fail-closed promote — principle held; execution frozen at STOP |
+§36 Scoreboard Scheduler Law = **OUT OF SCOPE** (pointer only).
 
-## Blocked vs actionable
+---
 
-| Class | Moves | Action |
-|-------|-------|--------|
-| SEALED / INSTALLED under STOP | 1–10, 15–21, 23–25, 27, 31–33, 35 | No further PERF spend; preserve |
-| BLOCKED_BY_GATE_STOP | 11–14 | Wait for GATE_STOP lift; do not invent measures |
-| OPEN (honest incomplete) | 22, 26, 28–30, 34 | Not closable by documentation alone |
-| Legal parallel (≠ PERF climb) | — | CLI unk coherence on SHA `0E53D810…` → `CLI_COHERENCE_UNK_001` |
-| Out of scope | #36 | Scoreboard pointer only |
+## Summary table
 
-## Verify (no new climb)
+| Move# | Status | Note |
+|------:|--------|------|
+| 1 | SEALED | Sealed authority + TIP_CLIMB=HOLD; 5.904 historical-only. `GATE.txt` + §1. |
+| 2 | SEALED | Purity profile sealed. `PERF_WITNESS_PURITY.txt` / `PERF_PASS_PROFILE_001.txt`. |
+| 3 | INSTALLED | Authority artifact set present; contract §3 scripts on disk. |
+| 4 | SEALED | Finite rainbow 18 (3×3×2); RNG=0. `RAINBOW_TABLE_001/` + §4. |
+| 5 | INSTALLED | Coverage law in force; new live coverage spend blocked by GATE_STOP. |
+| 6 | INSTALLED | Epoch law (EPOCH_SIZE=18); accounting closed via EPOCH_0. |
+| 7 | SEALED | Phase A closed: env match / wall fail. `CHAMPION_ENV_BYTEWISE_REPRO_001/GATE.txt`. |
+| 8 | SEALED | Exit = FAIL_WALL_REPRO → 5.904=HISTORICAL_ONLY; baseline path taken. |
+| 9 | SEALED | SEARCH_BASELINE_TPS=4.329 installed + repeatable. `SEARCH_BASELINE_001.txt`. |
+| 10 | SEALED | 18 unique configs enumerated. `COVERAGE_MATRIX_001/COVERAGE_MANIFEST.json`. |
+| 11 | SEALED | First measurement epoch complete MEASURED_UNIQUE=18. `COVERAGE_EPOCH_0/AUTHORITY.txt`. |
+| 12 | SEALED | Classification applied in epoch receipts (winner rank-only). |
+| 13 | SEALED | Rank → WINNER_CONFIG_ID=QB64_QA32_QKV64 (coverage rank only). |
+| 14 | SEALED | Endurance 5/5; RETAIN_BASELINE (min 3.238 < 4.329). `ENDURANCE_EPOCH_0/RECEIPT.txt`. |
+| 15 | SEALED | Promotion law applied: PROMOTE=0 / PROMOTION=NONE. |
+| 16 | INSTALLED | Attribution-only law; used historically (e.g. QKV readback path). |
+| 17 | BLOCKED_BY_GATE_STOP | Further QKV_READBACK cut optimization spend forbidden (NO_REOPEN + NEXT_SPEND=NONE). |
+| 18 | SEALED | NO_REOPEN=QB_KERNEL\|KVA\|LOGITS\|SX\|5.904 live in `GATE.txt`. |
+| 19 | INSTALLED | No directional climb; TIP_CLIMB=HOLD. `TIP_CLIMB_001_HOLD.txt`. |
+| 20 | INSTALLED | Tip bot 256-climb disabled. Invoke-PerfTipBot not authorized. |
+| 21 | INSTALLED | Ordinal≠unique coverage law; finite 18 respected in completion seal. |
+| 22 | SEALED | Epoch completion receipt present. `PERF_PROGRAM_COMPLETE_002.txt` + EPOCH_0. |
+| 23 | SEALED | Matrix tree + EPOCH0 receipts; **INDEX.txt stale** — authority = AUTHORITY/COMPLETE_002. |
+| 24 | INSTALLED | Preservation law; EPOCH0 receipts retained (no overwrite this pack). |
+| 25 | INSTALLED | Manifest truth / `_` separator law remains sealed inference constraint. |
+| 26 | INSTALLED | PRODUCT_PATH=1 required for promote; held. |
+| 27 | INSTALLED | PARITY=1 required; endurance PARITY_ALL=1 recorded; no promote. |
+| 28 | OPEN | STABLE_PRODUCT_WALL=0 / no promotable wall above 4.329. Climb to close = BLOCKED_BY_GATE_STOP. |
+| 29 | SEALED | Valid terminal path: SEARCH_COMPLETE=1 BASELINE_RETAINED=1 PROMOTION=NONE. `PERF_PROGRAM_COMPLETE_002.txt`. |
+| 30 | SEALED | TARGET_TPS_8=UNMET; CURRENT_SEARCH_SPACE=EXHAUSTED (honest). |
+| 31 | BLOCKED_BY_GATE_STOP | New search-space requires separate measured-owner justification; GATE_STOP forbids spend. |
+| 32 | INSTALLED | Failure-handling law; no new candidate crash work this pack. |
+| 33 | BLOCKED_BY_GATE_STOP | Autonomous coverage loop would require live measure spend → STOP. Disposition-only legal. |
+| 34 | SEALED | Required final authority block emitted in `PERF_PROGRAM_COMPLETE_002.txt`. |
+| 35 | INSTALLED | Governing principle obeyed under STOP: no wander / no reopen / no invented PASS. |
+
+---
+
+## GATE_STOP ledger
+
+### Remains BLOCKED_BY_GATE_STOP (not legally actionable as PERF spend)
+
+- Any tip climb / rainbow live search / new SX candidate measure
+- Reopen QB_KERNEL | KVA | LOGITS | SX | historical 5.904 chase
+- Further QKV_READBACK cut optimization (§17)
+- New search-space introduction (§31)
+- Agent autonomous coverage loop requiring live witnesses (§33)
+- Closing STABLE_PRODUCT_WALL via new endurance/climb (§28 actionable only after GATE_STOP lifts)
+
+### Legally actionable under STOP (this pack / parallel)
+
+- Disposition documentation (this matrix) — **DONE**
+- Verify SEARCH_BASELINE_001 still installed at 4.329 — **DONE** (file read; no re-run)
+- Epoch coverage accounting without new spend — **DONE** (AUTHORITY/COMPLETE_002 vs stale INDEX)
+- Parallel product lane: CLI coherent decode on sealed SHA `0E53D810…` — `CLI_COHERENCE_UNK_001` (**ROOT_CAUSE sealed; Vulkan COHERENCE FAIL; same-SHA host A/B coherent; PROMOTE=0**)
+- REAP/Laguna LAYER_NAN@L40 / attn_gate — **LEFT OPEN** → `REAP_STRATA_FAIR_H2H_001`
+
+---
+
+## Stale-artifact honesty
+
+| Artifact | Claim | Superseding authority |
+|----------|-------|------------------------|
+| `COVERAGE_MATRIX_001/INDEX.txt` | OPEN / MEASURED_UNIQUE=0 / LIVE_MEASURE_AUTHORIZED=1 | `COVERAGE_EPOCH_0/AUTHORITY.txt` + `PERF_PROGRAM_COMPLETE_002.txt` + `ENDURANCE_EPOCH_0/RECEIPT.txt` |
+| Historical 5.904 | champion wall | HISTORICAL_ONLY; NO_REOPEN |
+| `rawr.exe` TPS | product CLI smoke only | NON_AUTHORITY for PERF wall (`GATE.txt`) |
+
+Do not “fix” INDEX in this pack as a PERF reopen; note only.
+
+---
+
+## Parallel product lane (≠ PERF climb)
 
 ```text
-GATE_STOP=1                                    # GATE.txt
-INSTALLED_SEARCH_BASELINE_TPS=4.329            # SEARCH_BASELINE_001.txt + CHAMPION GATE
-CHAMPION_REPRODUCTION=FAIL_WALL_REPRO          # CHAMPION_ENV_BYTEWISE_REPRO_001
-UNIQUE_CONFIG_COUNT=18 MEASURED_UNIQUE=0       # COVERAGE_MATRIX_001
-RAINBOW LIVE_MEASURE_AUTHORIZED=0              # RAINBOW_TABLE_001
-TIP_CLIMB=HOLD                                 # TIP_CLIMB_001_HOLD.txt
-PROMOTE=0
-```
-
-## Parallel product lane (pointer only)
-
-```text
-CLI_INFERENCE_SMOKE_001=PARTIAL
+CLI_INFERENCE_SMOKE_001 = PARTIAL (TOK=8 COHERENCE=FAIL Vulkan)
+CLI_COHERENCE_UNK_001   = ROOT_CAUSE_SEALED
+  Vulkan: nonfinite GPU hidden → zero logits → id=0 <unk>
+  Same-SHA host A/B (RAWRXD_GPU_FWD=0): STDOUT="Yes, 2 + 2 =" COHERENCE=PASS (diagnostic only)
 EXE_SHA256=0E53D810712979A8ECB0853DA50BD1CABEC84015F183BC43B00B101EBEAEF5D0
-STDOUT=<unk>×8 COHERENCE=FAIL
-NEXT_OWNER=CLI_COHERENCE_UNK_001 (same SHA; CROSS_SHA_CREDIT=0)
+CROSS_SHA_CREDIT=0
+PROMOTE=0
 ```
 
-REAP/Laguna LAYER_NAN@L40 left OPEN — see `REAP_STRATA_*` / enterprise RELATED; not closed by this pack.
+---
+
+## Next legal owner
+
+```text
+NEXT_LEGAL_OWNER=GPU resident forward nonfinite on TinyLlama Vulkan/MULTIGPU
+  (CLI_COHERENCE_UNK_001; SAME_SHA 0E53D810… until rebuild starts NEW smoke)
+ALT_IF_CLI_BLOCKED=REAP_STRATA_FAIR_H2H_001 (Laguna LAYER_NAN@L40 / attn_gate apply)
+PERF_CLIMB_OWNER=NONE (GATE_STOP=1 NEXT_SPEND=NONE)
+PROMOTE=0 TIP_CLIMB=HOLD
+```

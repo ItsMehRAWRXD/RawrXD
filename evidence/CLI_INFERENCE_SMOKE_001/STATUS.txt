@@ -40,6 +40,7 @@ COMPETITIVE_PASS=0
 RELEASE=HELD
 
 ARTIFACTS=runs/tiny_vulkan.out.txt runs/tiny_vulkan.err.txt
-UNK_ROOT_CAUSE=CLI_COHERENCE_UNK_001 (FORWARD all-nonfinite→zero hidden→zero logits→id=0; NOT tokenizer-map)
-NEXT=GPU forward non-finite root on SAME_SHA 0E53D810… OR agent smoke only after COHERENCE≠FAIL
+UNK_ROOT_CAUSE=CLI_COHERENCE_UNK_001 (GPU resident fwd all-nonfinite→zero hidden→zero logits→id=0; NOT tokenizer-map)
+SAME_SHA_HOST_AB=PASS diagnostic only (RAWRXD_GPU_FWD=0 → "Yes, 2 + 2 ="); does NOT pass this Vulkan smoke
+NEXT=GPU resident forward nonfinite fix on SAME_SHA 0E53D810… (rebuild=NEW smoke) OR agent smoke only after Vulkan COHERENCE≠FAIL
 PROMOTE=0
