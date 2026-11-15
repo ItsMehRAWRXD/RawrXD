@@ -13652,12 +13652,17 @@ void Deep2Engine::enableVulkan(bool enable)
         // MULTI/HYBRID: open planned discrete GPUs; HYBRID also attaches planned CPU layers.
         const bool wantHybrid = snap.plan.policy == GpuPolicy::Hybrid || snap.plan.mode == ExecMode::Hybrid ||
                                 (std::getenv("DEEP2_HYBRID") && std::getenv("DEEP2_HYBRID")[0] == '1');
-        const bool wantMulti = snap.plan.openCount >= 1 &&
-                               (snap.plan.mode == ExecMode::MultiGpuShard || snap.plan.mode == ExecMode::Hybrid ||
-                                snap.plan.mode == ExecMode::DualSovereign ||
-                                snap.plan.policy == GpuPolicy::Multi || snap.plan.policy == GpuPolicy::Hybrid ||
-                                snap.plan.policy == GpuPolicy::DualLane ||
-                                snap.plan.policy == GpuPolicy::UserList || wantHybrid);
+        // Force multi-GPU device opening regardless of plan mode (for dual-device
+        // single-process split-model execution). Requires >=2 healthy discrete GPUs.
+        const bool forceMulti = (std::getenv("DEEP2_FORCE_MULTI_GPU") &&
+                                 std::getenv("DEEP2_FORCE_MULTI_GPU")[0] == '1');
+        const bool wantMulti = (snap.plan.openCount >= 1 &&
+                                (snap.plan.mode == ExecMode::MultiGpuShard || snap.plan.mode == ExecMode::Hybrid ||
+                                 snap.plan.mode == ExecMode::DualSovereign ||
+                                 snap.plan.policy == GpuPolicy::Multi || snap.plan.policy == GpuPolicy::Hybrid ||
+                                 snap.plan.policy == GpuPolicy::DualLane ||
+                                 snap.plan.policy == GpuPolicy::UserList || wantHybrid)) ||
+                                forceMulti;
 
         // DualStick stores non-owning VulkanCompute pointers. Clear those
         // bindings before replacing the owning device vector.
@@ -13668,6 +13673,35 @@ void Deep2Engine::enableVulkan(bool enable)
         vulkanUnplannedFallbacks_ = 0;
         plannedCpuGemvOps_ = 0;
         plannedGpuGemvOps_ = 0;
+
+        // When forcing multi-GPU, populate the plan's open indexes from the
+        // enumerated healthy discrete devices so Deep2MultiGpu_BuildContiguousPlan
+        // can build a two-device layer partition even when Auto selected SingleGpu.
+        if (forceMulti && snap.plan.openCount < 2)
+        {
+            int nOpen = 0;
+            for (unsigned i = 0; i < snap.deviceCount && nOpen < 8; ++i)
+            {
+                const DeviceIdentity& d = snap.devices[i];
+                bool eligible = d.healthy && d.problemCode == 0 &&
+                                d.score >= 10 && d.dedicatedVram >= (1ull << 30);
+                if (!eligible) continue;
+                snap.plan.openIndexes[nOpen] = (int)d.index;
+                ++nOpen;
+            }
+            snap.plan.openCount = (unsigned)nOpen;
+            if (nOpen >= 2)
+            {
+                snap.plan.mode = ExecMode::DualSovereign;
+                snap.plan.policy = GpuPolicy::DualLane;
+                snap.plan.reason = "forced_multi_gpu";
+                snap.plan.primaryIndex = snap.devices[snap.plan.openIndexes[0]].index;
+                std::snprintf(snap.plan.primaryName, sizeof(snap.plan.primaryName), "%s",
+                              snap.devices[snap.plan.openIndexes[0]].name);
+                std::snprintf(snap.plan.primaryStableId, sizeof(snap.plan.primaryStableId), "%s",
+                              snap.devices[snap.plan.openIndexes[0]].stableId);
+            }
+        }
 
         auto openOne = [&](const char* needle) -> std::unique_ptr<CPUInference::VulkanCompute>
         {
@@ -13729,7 +13763,13 @@ void Deep2Engine::enableVulkan(bool enable)
 
         if (vulkanDevices_.empty())
         {
-            const char* needle = Deep2Device_VulkanNeedle(snap);
+            // Device selection priority: programmatic needle > env var > policy primary
+            const char* envNeedle = std::getenv("DEEP2_VULKAN_DEVICE_NEEDLE");
+            const char* needle = vulkanDeviceNeedle_.empty()
+                                     ? (envNeedle && *envNeedle ? envNeedle : nullptr)
+                                     : vulkanDeviceNeedle_.c_str();
+            if (!needle || !*needle)
+                needle = Deep2Device_VulkanNeedle(snap);
             if (!needle || !*needle)
                 needle = snap.plan.primaryName;
             auto vc = openOne(needle);
@@ -13788,6 +13828,7 @@ void Deep2Engine::enableVulkan(bool enable)
         DualStickBindVc(0, nullptr);
         DualStickBindVc(1, nullptr);
         vulkanEnabled_ = false;
+        vulkanInitialized_ = false;
         vulkanStrictNoCpuFallback_ = false;
     }
 }
