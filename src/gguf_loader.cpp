@@ -7,33 +7,36 @@
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
-// The deflate/inflate codec bridge uses QByteArray. It is only needed for
-// compressed GGUF tensors, which the dependency-free native path never
-// produces; when Qt is unavailable the bridge is disabled and those paths
-// report an explicit error instead of failing to compile.
-#if defined(__has_include)
-#  if __has_include(<QtCore/QByteArray>)
-#    include <QtCore/QByteArray>
-#    define RAWRXD_HAS_QBYTEARRAY 1
-#  endif
-#else
-#  include <QByteArray>
-#  define RAWRXD_HAS_QBYTEARRAY 1
-#endif
+// Native compression path (Qt-independent).
+//
+// Compressed GGUF tensors are rare (the native path never produces them), but
+// when present they must decode. This now goes through
+// rawrxd::compression (zlib core) instead of the old QByteArray bridge, so the
+// headless CLI, agent harness and Win32 GUI all get identical behaviour without
+// pulling Qt into their link.
+#include "codec/compression_core.h"
 
-#ifdef RAWRXD_HAS_QBYTEARRAY
-// Forward declarations for codec functions
-namespace codec {
-    extern QByteArray deflate(const QByteArray& in, bool* ok);
-    extern QByteArray inflate(const QByteArray& in, bool* ok);
+namespace {
+// Historical adapter used a 4x then 10x guess. The native core takes an explicit
+// ceiling; 16 GiB rejects decompression bombs while covering real model tensors.
+constexpr std::size_t kMaxInflateBytes = rawrxd::compression::MaxOutputBytes;
+
+bool NativeInflate(const std::vector<uint8_t>& in, std::vector<uint8_t>& out) {
+    auto r = rawrxd::compression::decompress(
+        in.empty() ? nullptr : in.data(), in.size(), kMaxInflateBytes);
+    if (!r) return false;
+    out = std::move(r.bytes);
+    return true;
 }
 
-// Forward declaration for brutal compression
-namespace brutal {
-    extern QByteArray compress(const QByteArray& in);
-    extern QByteArray compress(const void* data, std::size_t size);
+bool NativeDeflate(const std::vector<uint8_t>& in, std::vector<uint8_t>& out) {
+    auto r = rawrxd::compression::compress(
+        in.empty() ? nullptr : in.data(), in.size());
+    if (!r) return false;
+    out = std::move(r.bytes);
+    return true;
 }
-#endif
+} // namespace
 
 // Forward declaration for unsupported type name lookup (defined later in file)
 static bool IsRemovedGGMLType(uint32_t type_val);
@@ -706,26 +709,10 @@ bool GGUFLoader::DecompressData(const std::vector<uint8_t>& compressed,
                 decompressed = compressed;
                 return true;
             }
-            
-            case CompressionType::DEFLATE: {
-#ifdef RAWRXD_HAS_QBYTEARRAY
-                // Use codec::inflate from inflate_deflate_cpp.cpp
-                // This handles DEFLATE decompression
-                QByteArray input(reinterpret_cast<const char*>(compressed.data()),
-                                static_cast<int>(compressed.size()));
-                bool ok = false;
-                QByteArray output = codec::inflate(input, &ok);
-                if (!ok) return false;
 
-                decompressed.resize(output.size());
-                std::memcpy(decompressed.data(), output.constData(), output.size());
-                return true;
-#else
-                std::cerr << "Compressed GGUF tensors (DEFLATE) require the Qt codec "
-                             "bridge, which is disabled in the dependency-free native "
-                             "build" << std::endl;
-                return false;
-#endif
+            case CompressionType::DEFLATE: {
+                // Native zlib inflate (Qt-independent).
+                return NativeInflate(compressed, decompressed);
             }
             
             case CompressionType::NONE:
@@ -752,42 +739,14 @@ bool GGUFLoader::CompressData(const std::vector<uint8_t>& raw_data,
         switch (compression_type_) {
             case CompressionType::BRUTAL_GZIP:
             case CompressionType::ZLIB: {
-#ifdef RAWRXD_HAS_QBYTEARRAY
-                // Compress using brutal::compress (MASM-optimized gzip)
-                QByteArray input(reinterpret_cast<const char*>(raw_data.data()),
-                                static_cast<int>(raw_data.size()));
-                QByteArray output = brutal::compress(input);
-                if (output.isEmpty()) return false;
-
-                compressed.resize(output.size());
-                std::memcpy(compressed.data(), output.constData(), output.size());
-                return true;
-#else
-                std::cerr << "Compressed GGUF tensors (BRUTAL_GZIP/ZLIB) require the "
-                             "Qt codec bridge, which is disabled in the "
-                             "dependency-free native build" << std::endl;
-                return false;
-#endif
+                // Native zlib deflate (Qt-independent). Historical adapter used
+                // the same zlib stream at default level, so output stays
+                // compatible.
+                return NativeDeflate(raw_data, compressed);
             }
 
             case CompressionType::DEFLATE: {
-#ifdef RAWRXD_HAS_QBYTEARRAY
-                // Compress using codec::deflate (MASM-optimized deflate)
-                QByteArray input(reinterpret_cast<const char*>(raw_data.data()),
-                                static_cast<int>(raw_data.size()));
-                bool ok = false;
-                QByteArray output = codec::deflate(input, &ok);
-                if (!ok || output.isEmpty()) return false;
-
-                compressed.resize(output.size());
-                std::memcpy(compressed.data(), output.constData(), output.size());
-                return true;
-#else
-                std::cerr << "Compressed GGUF tensors (DEFLATE) require the Qt codec "
-                             "bridge, which is disabled in the dependency-free native "
-                             "build" << std::endl;
-                return false;
-#endif
+                return NativeDeflate(raw_data, compressed);
             }
             
             case CompressionType::NONE:

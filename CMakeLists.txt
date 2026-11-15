@@ -393,7 +393,7 @@ option(USE_ZLIB_FETCHCONTENT "Auto-download and build zlib if not found" OFF)
 find_package(ZLIB QUIET HINTS C:/zlib C:/Program\ Files/zlib "C:/Program Files (x86)/zlib" /usr/local /usr)
 
 if(ZLIB_FOUND)
-    message(STATUS "Î“Â£Ã´ ZLIB found at ${ZLIB_INCLUDE_DIR} - Native compression enabled")
+    message(STATUS "OK ZLIB found at ${ZLIB_INCLUDE_DIR} - Native compression enabled")
     set(HAVE_ZLIB 1)
     set(HAVE_COMPRESSION 1)
 elseif(USE_ZLIB_FETCHCONTENT)
@@ -437,6 +437,45 @@ else()
         set(HAVE_ZLIB 0)
         set(HAVE_COMPRESSION 1)
     endif()
+endif()
+
+# ============================================================================
+# Native compression core (Qt-independent)
+# ============================================================================
+# Provides rawrxd::compression::compress / decompress over zlib. This target is
+# declared unconditionally at top level, OUTSIDE any Qt6 gate, so headless
+# consumers (deep2_agentic_loop, CLI) can link it in a Qt6-absent build.
+#
+# It replaces the old QByteArray-only codec bridge for native callers. The Qt
+# adapter (src/codec/compression_qt.cpp) keeps the historical
+# codec::deflate/inflate signatures for Qt consumers and forwards to this core.
+add_library(rawrxd_compression_core STATIC
+    src/codec/compression_core.cpp
+)
+target_include_directories(rawrxd_compression_core PUBLIC
+    "${CMAKE_SOURCE_DIR}/include"
+)
+target_compile_features(rawrxd_compression_core PUBLIC cxx_std_17)
+
+if(ZLIB_FOUND AND TARGET ZLIB::ZLIB)
+    target_link_libraries(rawrxd_compression_core PUBLIC ZLIB::ZLIB)
+    target_compile_definitions(rawrxd_compression_core PUBLIC RAWRXD_HAVE_ZLIB=1)
+elseif(TARGET zlib)
+    # FetchContent fallback (FETCHCONTENT_ZLIB=ON) defines a plain `zlib` target
+    # that does not export include directories, so add them explicitly. Both the
+    # source tree (zlib.h, zconf.h) and the build dir (zconf.h is generated
+    # there) must be visible.
+    target_link_libraries(rawrxd_compression_core PUBLIC zlib)
+    target_include_directories(rawrxd_compression_core PUBLIC
+        "${CMAKE_BINARY_DIR}/_deps/zlib-src"
+        "${CMAKE_BINARY_DIR}/_deps/zlib-build")
+    target_compile_definitions(rawrxd_compression_core PUBLIC RAWRXD_HAVE_ZLIB=1)
+else()
+    # zlib.h must still be resolvable; the core fails to compile rather than
+    # silently producing a different wire format.
+    message(FATAL_ERROR
+        "rawrxd_compression_core requires zlib. Install zlib or configure "
+        "with -DFETCHCONTENT_ZLIB=ON.")
 endif()
 
 find_package(CURL QUIET)
@@ -2954,6 +2993,12 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_agentic_loop.cpp" AND EXISTS "${CMAKE
     endif()
     if(TARGET deep2_snap)
         target_link_libraries(deep2_agentic_loop PRIVATE deep2_snap)
+    endif()
+    # Native compression core: gguf_loader.cpp calls codec::deflate/inflate for
+    # compressed GGUF tensors. Declared unconditionally above, so it exists here
+    # regardless of Qt6 availability.
+    if(TARGET rawrxd_compression_core)
+        target_link_libraries(deep2_agentic_loop PRIVATE rawrxd_compression_core)
     endif()
     if(TARGET ggml_interface)
         target_link_libraries(deep2_agentic_loop PRIVATE ggml_interface)

@@ -458,6 +458,18 @@ private:
           std::vector<float> A, DtB, Dv, ConvB, NormW, ConvW;
       };
       std::vector<SsmWeightCache> ssm_weights_;
+
+      // Weight tensors are immutable after Bind, but OpRmsNorm re-ran
+      // DequantPrefix on the same slot for every token in a prefill batch,
+      // i.e. P dequantizations per layer for identical bytes. This cache holds
+      // the dequantized FP32 form of a slot for the life of the executor, so
+      // the element-wise path reads it once. Keyed by tensor slot; a cached
+      // entry is only reused when it already covers the requested length.
+      std::unordered_map<int32_t, std::vector<float>> dequant_cache_;
+      // Returns the dequantized FP32 form of `slot`, decoding it at most once.
+      // `need` is the number of elements the caller requires; a cached vector
+      // shorter than that is re-decoded. Returns false on decode failure.
+      bool DequantCached(int32_t slot, size_t need, std::vector<float>& out);
       // Optional SSM profiling counters. They remain dormant unless
       // DEEP2_SSM_PROFILE=1 is set, so production execution has no logging
       // cost while controlled runs can separate cache and recurrent work.

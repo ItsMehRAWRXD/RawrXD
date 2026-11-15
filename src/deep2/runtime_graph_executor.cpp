@@ -1111,15 +1111,32 @@ float* Executor::WeightData(int32_t slot, size_t& floats_out) {
 // ---------------------------------------------------------------------------
 // Kernels
 // ---------------------------------------------------------------------------
+bool Executor::DequantCached(int32_t slot, size_t need, std::vector<float>& out) {
+    out.clear();
+    if (slot < 0 || need == 0) return false;
+    auto it = dequant_cache_.find(slot);
+    if (it != dequant_cache_.end() && it->second.size() >= need) {
+        out = it->second;
+        out.resize(need);
+        return true;
+    }
+    if (static_cast<size_t>(slot) >= tensors_.size()) return false;
+    std::vector<float> fresh;
+    const size_t got = DequantPrefix(tensors_[(size_t)slot], fresh, need);
+    if (got < need) return false;
+    fresh.resize(need);
+    out = fresh;
+    dequant_cache_[slot] = std::move(fresh);
+    return true;
+}
+
 bool Executor::OpRmsNorm(const Instr& in, const std::vector<float>& x,
                          std::vector<float>& y) {
     if (in.b < 0) { last_error_ = "rmsnorm: no weight slot"; return false; }
-    const TensorRec& w = tensors_[(size_t)in.b];
     std::vector<float> wf;
-    if (!DequantPrefix(w, wf, x.size()) || wf.size() < x.size()) {
+    if (!DequantCached(in.b, x.size(), wf) || wf.size() < x.size()) {
         last_error_ = "rmsnorm: weight too small block=" + std::to_string(in.block) +
-                      " tensor=" + w.name +
-                      " decoded=" + std::to_string(wf.size()) +
+                      " tensor=" + tensors_[(size_t)in.b].name +
                       " activation=" + std::to_string(x.size());
         return false;
     }

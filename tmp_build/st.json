@@ -1,0 +1,1 @@
+{"model":"deep2-local","messages":[{"role":"user","content":"Print 1 to 5. Code only."}],"max_tokens":120,"stream":true}

@@ -474,10 +474,11 @@ bool UpstreamRequest(const HttpRequest& req,
 // delivery works. If the client disconnects, the client send fails, the
 // upstream socket is closed, and Ollama aborts the generation.
 //
-// The upstream header block is forwarded with hop-by-hop framing headers
-// stripped and Connection: close forced; the body is then relayed until
-// upstream EOF. SSE data: events and the terminal [DONE] marker pass through
-// verbatim because nothing is parsed or rewritten.
+// The upstream header block is forwarded with hop-by-hop headers stripped and
+// Connection: close forced. Framing headers (Transfer-Encoding / Content-Length)
+// are preserved and the body is relayed byte-for-byte, so the client de-frames
+// exactly what the upstream sent: SSE data: events and the terminal [DONE]
+// marker pass through verbatim because nothing is parsed or rewritten.
 //
 // Returns true when a response (any status) was relayed; false only when the
 // upstream request could not be made at all. On false, nothing has been sent
@@ -562,8 +563,9 @@ bool UpstreamRelay(SOCKET client,
     }
 
     // Forward the status line and headers, dropping hop-by-hop entries. The
-    // body is delimited by connection close (no Content-Length / chunked from
-    // us), so strip any upstream framing headers to avoid a framing mismatch.
+    // upstream framing headers (Transfer-Encoding / Content-Length) are kept
+    // and the body is relayed byte-for-byte, so chunked responses stay chunked
+    // and the client never sees a framing mismatch.
     std::string outHead;
     std::size_t pos = 0;
     bool first = true;
@@ -582,9 +584,8 @@ bool UpstreamRelay(SOCKET client,
         if (colon == std::string::npos) continue;
         const std::string name = ToLower(Trim(line.substr(0, colon)));
         if (name == "connection" || name == "keep-alive" ||
-            name == "proxy-connection" || name == "transfer-encoding" ||
-            name == "content-length") {
-            continue;
+            name == "proxy-connection") {
+            continue;  // hop-by-hop only
         }
         outHead += line + "\r\n";
     }

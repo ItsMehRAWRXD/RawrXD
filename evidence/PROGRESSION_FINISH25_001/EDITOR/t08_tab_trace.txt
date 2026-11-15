@@ -1525,3 +1525,5 @@ addDocumentTab path= vectors=1 tabctrl=1 id=1030 hwnd=3411262
 addDocumentTab path= vectors=1 tabctrl=1 id=1030 hwnd=1183256
 addDocumentTab path= vectors=1 tabctrl=1 id=1030 hwnd=1116388
 addDocumentTab path= vectors=1 tabctrl=1 id=1030 hwnd=5180086
+addDocumentTab path= vectors=1 tabctrl=1 id=1030 hwnd=9112944
+addDocumentTab path= vectors=1 tabctrl=1 id=1030 hwnd=3932930

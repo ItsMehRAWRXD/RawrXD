@@ -1,0 +1,1 @@
+{"model":"reap16-glm-4_7-flash:latest","prompt":"Reply with exactly READY","stream":false,"keep_alive":"30m","options":{"temperature":0,"num_predict":32}}
