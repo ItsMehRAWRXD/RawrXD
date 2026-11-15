@@ -6,8 +6,8 @@
 #version 460
 
 // Descriptor set 0 bindings
-layout(set = 0, binding = 0, std430) readonly buffer SCRATCH { float s[]; };  // Partial inputs
-layout(set = 0, binding = 1, std430) buffer OUT { float out[]; };             // Final output
+layout(set = 0, binding = 0, std430) readonly buffer buf0 { float s[]; };  // Partial inputs
+layout(set = 0, binding = 1, std430) buffer buf1 { float result[]; };         // Final output
 
 // Push constants
 layout(push_constant) uniform PushConstants {
@@ -34,40 +34,40 @@ void main() {
     uint slotStride = heads * (headDim + 2);
 
     // First pass: find global max m
-    double m = -1.7976931348623157e308;
+    float m = -3.402823466e+38f;
     for (uint chunk = 0; chunk < numChunks; ++chunk) {
         uint base = chunk * heads * (headDim + 2) + head * (headDim + 2);
-        double m_i = s[base + 0];
-        double l_i = s[base + 1];
+        float m_i = s[base + 0];
+        float l_i = s[base + 1];
         if (l_i > 0.0 && m_i > m) {
             m = m_i;
         }
     }
 
     // All chunks empty -> output 0
-    if (m == -1.7976931348623157e308) {
-        out[gid] = 0.0;
+    if (m == -3.402823466e+38f) {
+        result[gid] = 0.0;
         return;
     }
 
     // Second pass: accumulate
-    double l = 0.0;
-    double o = 0.0;
+    float l = 0.0f;
+    float o = 0.0f;
 
     for (uint chunk = 0; chunk < numChunks; ++chunk) {
         uint base = chunk * heads * (headDim + 2) + head * (headDim + 2);
-        double m_i = s[base + 0];
-        double l_i = s[base + 1];
+        float m_i = s[base + 0];
+        float l_i = s[base + 1];
         if (l_i <= 0.0) continue;
 
-        double w = exp(m_i - m);
+        float w = exp(m_i - m);
         l += w * l_i;
         o += w * s[base + 2 + dim];
     }
 
     if (l > 0.0) {
-        out[gid] = float(o / l);
+        result[gid] = float(o / l);
     } else {
-        out[gid] = 0.0;
+        result[gid] = 0.0;
     }
 }

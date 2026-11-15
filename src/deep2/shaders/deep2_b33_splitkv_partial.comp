@@ -29,6 +29,9 @@ layout(push_constant) uniform PushConstants {
 // Each workgroup computes (m, l, o[headDim]) partials for its chunk
 layout(local_size_x = 64) in;
 
+shared float s_dot[64];
+shared float s_max_val;
+
 void main() {
     uint headDim = pc.headDim;
     uint heads = pc.heads;
@@ -61,7 +64,7 @@ void main() {
         uint baseIdx = (chunk * heads + head) * (headDim + 2);
         d[baseIdx + 0] = -3.402823466e+38f;
         d[baseIdx + 1] = 0.0f;
-        for (uint j = 0; j < headDim; ++j) {
+        for (uint j = lid; j < headDim; j += 64) {
             d[baseIdx + 2 + j] = 0.0f;
         }
         return;
@@ -69,18 +72,22 @@ void main() {
 
     uint qb = head * headDim;
     uint lid = gl_LocalInvocationID.x;
+    uint dim = lid;
+
+    if (dim >= headDim) return;
 
     float maxScore = -3.402823466e+38f;
 
     for (uint t = chunkBegin; t < chunkEnd; ++t) {
         uint kb = layerBase + t * kvDim + kh * headDim;
 
+        // Each thread computes partial dot product for its dim
         float dot = 0.0f;
         for (uint j = lid; j < headDim; j += 64) {
             dot += a[qb + j] * b[kb + j];
         }
 
-        shared float s_dot[64];
+        // Reduce dot products across workgroup
         s_dot[lid] = dot;
         barrier();
         for (uint stride = 32; stride > 0; stride >>= 1) {
@@ -89,19 +96,23 @@ void main() {
             }
             barrier();
         }
+        if (lid == 0) {
+            s_max_val = s_dot[0];
+        }
+        barrier();
 
-        float chunkMax = s_dot[0];
+        float chunkMax = s_max_val;
         float tScore = chunkMax * scale;
         if (tScore > maxScore) maxScore = tScore;
     }
 
     float l_val = 0.0f;
-    float acc[16];
-    for (uint j = 0; j < headDim; ++j) acc[j] = 0.0f;
+    float o_val = 0.0f;
 
     for (uint t = chunkBegin; t < chunkEnd; ++t) {
         uint kb = layerBase + t * kvDim + kh * headDim;
 
+        // Each thread computes its dot product contribution
         float dot = 0.0f;
         for (uint j = lid; j < headDim; j += 64) {
             dot += a[qb + j] * b[kb + j];
@@ -109,30 +120,32 @@ void main() {
         float s = dot * scale;
         float e = exp(s - maxScore);
 
+        // Reduce e values across workgroup
         s_dot[lid] = e;
         barrier();
         for (uint stride = 32; stride > 0; stride >>= 1) {
             if (lid < stride) s_dot[lid] += s_dot[lid + stride];
             barrier();
         }
-        if (lid == 0) s_dot[0] = s_dot[0];
+        if (lid == 0) {
+            s_dot[0] = s_dot[0];
+        }
         barrier();
 
         l_val += s_dot[0];
 
-        for (uint j = lid; j < headDim; j += 64) {
-            uint cIdx = layerBase + t * kvDim + kh * headDim + j;
-            acc[j] += e * c[cIdx];
-        }
+        // Each thread computes its own o contribution for its dim
+        float cVal = c[kb + dim];
+        o_val += e * cVal;
         barrier();
     }
 
+    // Each thread writes its own results
     if (lid == 0) {
         uint baseIdx = (chunk * heads + head) * (headDim + 2);
         d[baseIdx + 0] = maxScore;
         d[baseIdx + 1] = l_val;
-        for (uint j = 0; j < headDim; ++j) {
-            d[baseIdx + 2 + j] = acc[j];
-        }
     }
+    // Each thread writes its own o value for its dim
+    d[(chunk * heads + head) * (headDim + 2) + 2 + dim] = o_val;
 }
