@@ -556,6 +556,10 @@ namespace Deep2
         bool isVulkanStrictNoCpuFallback() const { return vulkanStrictNoCpuFallback_; }
         bool isVulkanEnabled() const { return vulkanEnabled_; }
         bool isVulkanInitialized() const { return vulkanInitialized_; }
+        /// Select a specific Vulkan device by name needle for enableVulkan().
+        /// Empty (default) uses the policy-selected primary device.
+        void setVulkanDeviceNeedle(const char *needle) { vulkanDeviceNeedle_ = needle ? needle : ""; }
+        const std::string &vulkanDeviceNeedle() const { return vulkanDeviceNeedle_; }
         CPUInference::VulkanCompute *getVulkanCompute() const { return getVulkanComputeSlot(0); }
         CPUInference::VulkanCompute *getVulkanComputeSlot(unsigned slot) const;
         unsigned vulkanDeviceCount() const { return (unsigned)vulkanDevices_.size(); }
@@ -1032,6 +1036,7 @@ namespace Deep2
         bool vulkanInitialized_ = false;
         bool vulkanStrictNoCpuFallback_ = false;
         bool vulkanStrictViolation_ = false;
+        std::string vulkanDeviceNeedle_ = {};
         uint64_t vulkanGemvOk_ = 0;
         uint64_t vulkanGemvFail_ = 0;
         uint64_t vulkanGpuWeightBytes_ = 0;

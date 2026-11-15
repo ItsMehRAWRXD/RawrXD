@@ -68,6 +68,8 @@
 #include <thread>
 #include <vector>
 
+#include <nlohmann/json.hpp>
+
 #pragma comment(lib, "ws2_32.lib")
 
 namespace {
@@ -143,42 +145,8 @@ std::string Trim(const std::string& s) {
     return s.substr(b, e - b);
 }
 
-// Very small JSON string-field extractor. Sufficient for reading "model" and
-// detecting "stream":true without pulling in a full JSON dependency. Returns
-// false when the field is absent.
-bool ExtractJsonStringField(const std::string& body, const std::string& key, std::string& out) {
-    const std::string pat = "\"" + key + "\"";
-    std::size_t pos = body.find(pat);
-    if (pos == std::string::npos) return false;
-    pos = body.find(':', pos + pat.size());
-    if (pos == std::string::npos) return false;
-    ++pos;
-    while (pos < body.size() && (body[pos] == ' ' || body[pos] == '\t')) ++pos;
-    if (pos >= body.size() || body[pos] != '"') return false;
-    ++pos;
 
-    out.clear();
-    while (pos < body.size()) {
-        const char c = body[pos++];
-        if (c == '\\' && pos < body.size()) {
-            const char esc = body[pos++];
-            switch (esc) {
-                case 'n': out.push_back('\n'); break;
-                case 't': out.push_back('\t'); break;
-                case 'r': out.push_back('\r'); break;
-                case '"': out.push_back('"');  break;
-                case '\\': out.push_back('\\'); break;
-                case '/': out.push_back('/');  break;
-                default:  out.push_back(esc);  break;
-            }
-            continue;
-        }
-        if (c == '"') return true;
-        out.push_back(c);
-    }
-    return false;
-}
-
+// Bool field extractor for "stream":true / false detection.
 bool JsonBoolField(const std::string& body, const std::string& key) {
     const std::string pat = "\"" + key + "\"";
     std::size_t pos = body.find(pat);
@@ -775,32 +743,37 @@ void HandleClient(SOCKET s) {
             std::string outBody = req.body;
 
             if (!req.body.empty()) {
-                if (ExtractJsonStringField(req.body, "model", requestedModel)) {
-                    const auto& aliases = Aliases();
-                    const auto it = aliases.find(requestedModel);
-                    if (it != aliases.end()) {
-                        effectiveModel = it->second;
-                        // Rewrite only the model value, preserving everything else.
-                        const std::size_t keyPos = outBody.find("\"model\"");
-                        if (keyPos != std::string::npos) {
-                            const std::size_t colon = outBody.find(':', keyPos);
-                            const std::size_t q1 = outBody.find('"', colon);
-                            const std::size_t q2 = (q1 == std::string::npos)
-                                                   ? std::string::npos
-                                                   : outBody.find('"', q1 + 1);
-if (q1 != std::string::npos && q2 != std::string::npos) {
-                outBody = outBody.substr(0, q1 + 1) + effectiveModel +
-                          outBody.substr(q2 + 1);
+                try {
+                    auto request = nlohmann::json::parse(req.body);
+                    if (request.is_object() && request.contains("model") &&
+                        request["model"].is_string()) {
+                        requestedModel = request["model"].get<std::string>();
+                        const auto& aliases = Aliases();
+                        const auto it = aliases.find(requestedModel);
+                        if (it != aliases.end()) {
+                            effectiveModel = it->second;
+                            // Structured rewrite: parse and re-serialize so the
+                            // emitted body is always valid JSON regardless of
+                            // field position, escaping, or sibling fields
+                            // (tools, tool_choice, stream, ...). The previous
+                            // manual substring surgery dropped the model value's
+                            // closing quote and could match a "model" string
+                            // nested inside another field, both of which
+                            // produced invalid JSON upstream.
+                            request["model"] = effectiveModel;
+                            outBody = request.dump();
+                            if (g_cfg.verbose) {
+                                Log("[" + NowStamp() + "][" + reqId + "] ALIAS " +
+                                    requestedModel + " -> " + effectiveModel);
                             }
                         }
-                        if (g_cfg.verbose) {
-                            Log("[" + NowStamp() + "][" + reqId + "] ALIAS " +
-                                requestedModel + " -> " + effectiveModel);
+                        else {
+                            effectiveModel = requestedModel;
                         }
                     }
-                    else {
-                        effectiveModel = requestedModel;
-                    }
+                }
+                catch (const nlohmann::json::parse_error&) {
+                    // Body is not valid JSON: forward verbatim without rewriting.
                 }
             }
 
