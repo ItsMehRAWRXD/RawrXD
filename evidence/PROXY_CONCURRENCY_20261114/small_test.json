@@ -1,0 +1,1 @@
+{"model": "qwen2.5-coder:1.5b-base", "messages": [{"role": "user", "content": "Reply exactly OK"}], "stream": true, "max_tokens": 8}
