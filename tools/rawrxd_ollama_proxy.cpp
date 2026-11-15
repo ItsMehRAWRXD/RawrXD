@@ -639,7 +639,7 @@ void HandleClient(SOCKET s) {
     const std::string reqId = [&] {
         char buf[16];
         std::snprintf(buf, sizeof(buf), "%08x",
-                      static_cast<unsigned>(::GetTickCount64() ^ static_cast<unsigned long long>(reinterpret_cast<std::uintptr_t>(s))));
+                      static_cast<unsigned>(::GetTickCount64() ^ static_cast<unsigned long long>(s)));
         return std::string(buf);
     }();
 
