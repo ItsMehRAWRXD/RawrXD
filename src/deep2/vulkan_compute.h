@@ -221,6 +221,11 @@ public:
                             uint32_t heads, uint32_t kvHeads,
                             uint32_t seqLen, float scale, uint32_t layer);
 
+    bool DispatchAttnDecodeSplitKV(DeviceBuf& q, DeviceBuf& kCache, DeviceBuf& vCache,
+                                   DeviceBuf& out, uint32_t headDim,
+                                   uint32_t heads, uint32_t kvHeads,
+                                   uint32_t seqLen, float scale, uint32_t layer);
+
     bool DispatchGemvDevice(const float* weights, uint64_t key,
                             DeviceBuf& input, DeviceBuf& output,
                             uint32_t rows, uint32_t cols);
@@ -362,6 +367,45 @@ public:
     static_assert(offsetof(SpecAttnPush, batch)    == 24);
     static_assert(offsetof(SpecAttnPush, scale)    == 28);
     static_assert(sizeof(SpecAttnPush) == 32);
+
+    // ========== CSPD Split-KV Attention (experimental, off by default) ==========
+    bool DispatchAttnDecodeSplitKV(DeviceBuf& q, DeviceBuf& kCache, DeviceBuf& vCache,
+                                   DeviceBuf& out, uint32_t headDim,
+                                   uint32_t heads, uint32_t kvHeads,
+                                   uint32_t seqLen, float scale, uint32_t layer);
+    bool cspdEnabled_ = false;
+    VkPipeline cspdPartialPipeline_ = VK_NULL_HANDLE;
+    VkPipelineLayout cspdPartialPipelineLayout_ = VK_NULL_HANDLE;
+    VkPipeline cspdReducePipeline_ = VK_NULL_HANDLE;
+    VkPipelineLayout cspdReducePipelineLayout_ = VK_NULL_HANDLE;
+    VkDescriptorSetLayout cspdReduceSetLayout_ = VK_NULL_HANDLE;
+    DeviceBuf cspdScratch_;
+    uint64_t cspdDecodeNs_ = 0;
+
+    // CSPD push constant structs
+    struct CspdPartialPush {
+        uint32_t headDim = 0, heads = 0, kvHeads = 0, seqLen = 0;
+        uint32_t kvDim = 0, layerBase = 0, chunkTokens = 0, numChunks = 0;
+        float scale = 0.0f;
+    };
+    static_assert(offsetof(CspdPartialPush, headDim) == 0);
+    static_assert(offsetof(CspdPartialPush, heads) == 4);
+    static_assert(offsetof(CspdPartialPush, kvHeads) == 8);
+    static_assert(offsetof(CspdPartialPush, seqLen) == 12);
+    static_assert(offsetof(CspdPartialPush, kvDim) == 16);
+    static_assert(offsetof(CspdPartialPush, layerBase) == 20);
+    static_assert(offsetof(CspdPartialPush, chunkTokens) == 24);
+    static_assert(offsetof(CspdPartialPush, numChunks) == 28);
+    static_assert(offsetof(CspdPartialPush, scale) == 32);
+    static_assert(sizeof(CspdPartialPush) == 36);
+
+    struct CspdReducePush {
+        uint32_t headDim = 0, heads = 0, numChunks = 0, reserved = 0;
+    };
+    static_assert(offsetof(CspdReducePush, headDim) == 0);
+    static_assert(offsetof(CspdReducePush, heads) == 4);
+    static_assert(offsetof(CspdReducePush, numChunks) == 8);
+    static_assert(sizeof(CspdReducePush) == 16);
 
     // ========== KV mirror ==========
     bool EnsureSpecKvMirror(uint32_t layers, uint32_t kvHeads,

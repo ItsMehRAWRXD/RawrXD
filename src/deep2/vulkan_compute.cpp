@@ -579,6 +579,21 @@ bool VulkanCompute::createDescriptorSystems() {
     return vkCreateDescriptorSetLayout(device_, &gi, nullptr, &gdnSetLayout_) == VK_SUCCESS;
 }
 
+bool VulkanCompute::createCspdReduceSetLayout() {
+    VkDescriptorSetLayoutBinding rb[2] = {};
+    for (uint32_t i = 0; i < 2; ++i) {
+        rb[i].binding = i;
+        rb[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        rb[i].descriptorCount = 1;
+        rb[i].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+    }
+    VkDescriptorSetLayoutCreateInfo ri{};
+    ri.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    ri.bindingCount = 2;
+    ri.pBindings = rb;
+    return vkCreateDescriptorSetLayout(device_, &ri, nullptr, &cspdReduceSetLayout_) == VK_SUCCESS;
+}
+
 std::string VulkanCompute::shaderPath(const char* file) const {
     std::vector<std::filesystem::path> dirs;
     if (const char* env = std::getenv("RAWRXD_DEEP2_SHADER_DIR"))
@@ -668,6 +683,8 @@ bool VulkanCompute::createPipelines() {
     const std::string sa = shaderPath("deep2_spec_attn.spv");
     const std::string ac = shaderPath("deep2_spec_accept.spv");
     const std::string gd = shaderPath("deep2_qwen4exp_gdn.spv");
+    const std::string pp = shaderPath("deep2_b33_splitkv_partial.spv");
+    const std::string rr = shaderPath("deep2_b34_splitkv_reduce.spv");
 
     std::fprintf(stderr,
         "[SHADER_PATH] ops=%s q=%s qb=%s q4r=%s q8r=%s qn=%s am=%s so=%s sa=%s ac=%s gd=%s\n",
@@ -723,13 +740,25 @@ bool VulkanCompute::createPipelines() {
         (void)createPipelineFromFile(
             gd, gdnSetLayout_, sizeof(GdnPush),
             gdnPipelineLayout_, gdnPipeline_);
+    if (!pp.empty())
+        (void)createPipelineFromFile(
+            pp, opsSetLayout_, sizeof(CspdPartialPush),
+            cspdPartialPipelineLayout_, cspdPartialPipeline_);
+    if (!rr.empty()) {
+        if (!createCspdReduceSetLayout())
+            std::fprintf(stderr, "[CSPD] failed to create reduce descriptor set layout\n");
+        (void)createPipelineFromFile(
+            rr, cspdReduceSetLayout_, sizeof(CspdReducePush),
+            cspdReducePipelineLayout_, cspdReducePipeline_);
+    }
 
     std::fprintf(stderr,
-        "[PIPELINE_CREATE] ops=%u q=%u qb=%u q4r=%u q8r=%u qn=%u gdn=%u\n",
+        "[PIPELINE_CREATE] ops=%u q=%u qb=%u q4r=%u q8r=%u qn=%u gdn=%u pp=%u rr=%u\n",
         okOps?1u:0u, okQ?1u:0u, okQb?1u:0u, okQ4r?1u:0u,
         okQ8r?1u:0u, okQn?1u:0u,
-        gdnPipeline_ != VK_NULL_HANDLE ? 1u : 0u);
-    std::fflush(stderr);
+        gdnPipeline_ != VK_NULL_HANDLE ? 1u : 0u,
+        cspdPartialPipeline_ != VK_NULL_HANDLE ? 1u : 0u,
+        cspdReducePipeline_ != VK_NULL_HANDLE ? 1u : 0u);
 
     return opsPipeline_ != VK_NULL_HANDLE;
 }
@@ -2690,6 +2719,98 @@ bool VulkanCompute::DispatchAttnDecode(
     p.p0=headDim; p.p1=heads; p.p2=kvHeads; p.p3=seqLen;
     p.p4=kvDim_; p.p5=static_cast<uint32_t>(base); p.f0=scale;
     return dispatchOps(q,kCache,vCache,out,p,(p.n+63u)/64u);
+}
+
+bool VulkanCompute::DispatchAttnDecodeSplitKV(
+    DeviceBuf& q, DeviceBuf& kCache, DeviceBuf& vCache,
+    DeviceBuf& out, uint32_t headDim,
+    uint32_t heads, uint32_t kvHeads,
+    uint32_t seqLen, float scale, uint32_t layer)
+{
+    // Split-kv dispatch disabled unless explicitly enabled
+    if (!cspdEnabled_) return false;
+
+    if (!cspdPartialPipeline_ || !cspdReducePipeline_) return false;
+    if (!q || !kCache || !vCache || !out) return false;
+    if (!headDim || !heads || !kvHeads || heads % kvHeads ||
+        !seqLen || seqLen > maxSeq_) return false;
+
+    const uint32_t relLayer =
+        layer >= kvLayerBase_ ? layer - kvLayerBase_ : 0u;
+    if (relLayer >= kvArenaLayers_) return false;
+
+    // Chunk configuration
+    const uint32_t chunkTokens = 4096;
+    const uint32_t numChunks = (seqLen + chunkTokens - 1) / chunkTokens;
+    if (numChunks == 0) numChunks = 1;
+
+    // Scratch size: numChunks * heads * (headDim + 2) floats
+    const uint64_t scratchElems = static_cast<uint64_t>(numChunks) * heads * (headDim + 2);
+    DeviceBuf scratch = EnsureScratch(0, static_cast<size_t>(scratchElems));
+    if (!scratch) return false;
+
+    VkCommandBuffer cmd = fusedCmd_;
+    VkQueryPool query = fusedQuery_;
+    const bool own = !fused_;
+    if (own && !beginCommand(cmd, query, true)) return false;
+
+    // ---- Partial kernel dispatch ----
+    {
+        VkDescriptorSet set = getOpsDescriptor(q, kCache, vCache, scratch);
+        if (set == VK_NULL_HANDLE) return false;
+
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, cspdPartialPipeline_);
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE,
+                                cspdPartialPipelineLayout_, 0, 1, &set, 0, nullptr);
+
+        CspdPartialPush p{};
+        p.headDim = headDim;
+        p.heads = heads;
+        p.kvHeads = kvHeads;
+        p.seqLen = seqLen;
+        p.kvDim = kvDim_;
+        p.layerBase = static_cast<uint32_t>(static_cast<uint64_t>(relLayer) * maxSeq_ * kvDim_);
+        p.chunkTokens = chunkTokens;
+        p.numChunks = numChunks;
+        p.scale = scale;
+
+        vkCmdPushConstants(cmd, cspdPartialPipelineLayout_, VK_SHADER_STAGE_COMPUTE_BIT,
+                           0, sizeof(p), &p);
+
+        // One workgroup per (head, chunk)
+        uint32_t groupsX = heads * numChunks;
+        vkCmdDispatch(cmd, groupsX, 1, 1);
+        recordComputeBarrier(cmd);
+    }
+
+    // ---- Reduce kernel dispatch ----
+    {
+        VkDescriptorSet set = getOpsDescriptor(scratch, out, scratch, scratch);
+        if (set == VK_NULL_HANDLE) return false;
+
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, cspdReducePipeline_);
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE,
+                                cspdReducePipelineLayout_, 0, 1, &set, 0, nullptr);
+
+        CspdReducePush p{};
+        p.headDim = headDim;
+        p.heads = heads;
+        p.numChunks = numChunks;
+
+        vkCmdPushConstants(cmd, cspdReducePipelineLayout_, VK_SHADER_STAGE_COMPUTE_BIT,
+                           0, sizeof(p), &p);
+
+        uint32_t groupsX = (heads * headDim + 63u) / 64u;
+        vkCmdDispatch(cmd, groupsX, 1, 1);
+        recordComputeBarrier(cmd);
+    }
+
+    if (!own) return true;
+    GpuWorkInterval wi{};
+    const bool ok = endSubmitWait(cmd, query, GpuWorkKind::ModelCompute,
+                                  static_cast<size_t>(scratchElems * sizeof(float)), workEpoch_, &wi);
+    if (ok) cspdDecodeNs_ += wi.calibratedDurationNs();
+    return ok;
 }
 
 void VulkanCompute::clearRecordedQ4K() {

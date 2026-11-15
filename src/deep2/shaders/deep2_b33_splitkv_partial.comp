@@ -1,0 +1,138 @@
+// ============================================================================
+// deep2_b33_splitkv_partial.comp
+// Context-Scaled Parallel Decode — Partial Attention Kernel
+// Computes per-chunk (m, l, o) partials for split-KV attention.
+// ============================================================================
+#version 460
+
+// Descriptor set 0 bindings
+layout(set = 0, binding = 0, std430) readonly buffer A0 { float a[]; };  // Q [heads * headDim]
+layout(set = 0, binding = 1, std430) readonly buffer B0 { float b[]; };  // K cache
+layout(set = 0, binding = 2, std430) readonly buffer C0 { float c[]; };  // V cache
+layout(set = 0, binding = 3, std430) buffer D0 { float d[]; };          // Scratch partials
+
+// Push constants
+layout(push_constant) uniform PushConstants {
+    uint headDim;       // per-head dimension
+    uint heads;         // number of query heads
+    uint kvHeads;       // number of KV heads (GQA)
+    uint seqLen;        // total sequence length
+    uint kvDim;         // kvHeads * headDim
+    uint layerBase;     // float-element offset into layer's cache
+    uint chunkTokens;   // tokens per chunk
+    uint numChunks;     // number of chunks
+    float scale;        // attention scale (f0)
+    uint chunkIdx;      // chunk index this workgroup processes
+} pc;
+
+// One workgroup per (query head, KV chunk)
+// Each workgroup computes (m, l, o[headDim]) partials for its chunk
+layout(local_size_x = 64) in;
+
+void main() {
+    uint headDim = pc.headDim;
+    uint heads = pc.heads;
+    uint kvHeads = pc.kvHeads;
+    uint seqLen = pc.seqLen;
+    uint kvDim = pc.kvDim;
+    uint layerBase = pc.layerBase;
+    uint chunkTokens = pc.chunkTokens;
+    uint numChunks = pc.numChunks;
+    float scale = pc.scale;
+    uint chunkIdx = pc.chunkIdx;
+
+    uint group = (kvHeads == 0) ? 0 : (pc.heads / kvHeads);
+    if (group == 0) return;
+
+    uint wgId = gl_WorkGroupID.x;
+    if (wgId >= pc.heads * pc.numChunks) return;
+
+    uint head = wgId / pc.numChunks;
+    uint chunk = wgId % pc.numChunks;
+    if (head >= pc.heads || chunk >= pc.numChunks) return;
+
+    uint groupSize = pc.heads / kvHeads;
+    uint kh = head / groupSize;
+    if (kh >= kvHeads) return;
+
+    uint chunkBegin = chunk * chunkTokens;
+    uint chunkEnd = min(chunkBegin + chunkTokens, seqLen);
+    if (chunkBegin >= chunkEnd) {
+        uint baseIdx = (chunk * heads + head) * (headDim + 2);
+        d[baseIdx + 0] = -3.402823466e+38f;
+        d[baseIdx + 1] = 0.0f;
+        for (uint j = 0; j < headDim; ++j) {
+            d[baseIdx + 2 + j] = 0.0f;
+        }
+        return;
+    }
+
+    uint qb = head * headDim;
+    uint lid = gl_LocalInvocationID.x;
+
+    float maxScore = -3.402823466e+38f;
+
+    for (uint t = chunkBegin; t < chunkEnd; ++t) {
+        uint kb = layerBase + t * kvDim + kh * headDim;
+
+        float dot = 0.0f;
+        for (uint j = lid; j < headDim; j += 64) {
+            dot += a[qb + j] * b[kb + j];
+        }
+
+        shared float s_dot[64];
+        s_dot[lid] = dot;
+        barrier();
+        for (uint stride = 32; stride > 0; stride >>= 1) {
+            if (lid < stride) {
+                s_dot[lid] += s_dot[lid + stride];
+            }
+            barrier();
+        }
+
+        float chunkMax = s_dot[0];
+        float tScore = chunkMax * scale;
+        if (tScore > maxScore) maxScore = tScore;
+    }
+
+    float l_val = 0.0f;
+    float acc[16];
+    for (uint j = 0; j < headDim; ++j) acc[j] = 0.0f;
+
+    for (uint t = chunkBegin; t < chunkEnd; ++t) {
+        uint kb = layerBase + t * kvDim + kh * headDim;
+
+        float dot = 0.0f;
+        for (uint j = lid; j < headDim; j += 64) {
+            dot += a[qb + j] * b[kb + j];
+        }
+        float s = dot * scale;
+        float e = exp(s - maxScore);
+
+        s_dot[lid] = e;
+        barrier();
+        for (uint stride = 32; stride > 0; stride >>= 1) {
+            if (lid < stride) s_dot[lid] += s_dot[lid + stride];
+            barrier();
+        }
+        if (lid == 0) s_dot[0] = s_dot[0];
+        barrier();
+
+        l_val += s_dot[0];
+
+        for (uint j = lid; j < headDim; j += 64) {
+            uint cIdx = layerBase + t * kvDim + kh * headDim + j;
+            acc[j] += e * c[cIdx];
+        }
+        barrier();
+    }
+
+    if (lid == 0) {
+        uint baseIdx = (chunk * heads + head) * (headDim + 2);
+        d[baseIdx + 0] = maxScore;
+        d[baseIdx + 1] = l_val;
+        for (uint j = 0; j < headDim; ++j) {
+            d[baseIdx + 2 + j] = acc[j];
+        }
+    }
+}
