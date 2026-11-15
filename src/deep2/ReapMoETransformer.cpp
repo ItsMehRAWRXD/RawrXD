@@ -88,53 +88,94 @@ bool writeString(std::ofstream& out, const std::string& value) {
 }
 
 bool scalarBytes(uint32_t type, size_t& bytes) {
+    // GGUF specification types 0-12 are supported.
+    // Types 8 (STRING) and 9 (ARRAY) are not scalars; callers should handle
+    // them via the dedicated STRING/ARRAY branches in readValue().
     switch (type) {
-    case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7:
-        bytes = (type == 0 || type == 1) ? 1 : 4;
-        if (type == 2 || type == 3) bytes = 2;
-        if (type == 4 || type == 5 || type == 6) bytes = 4;
-        if (type == 7) bytes = 1;
+    case 0: // UINT8   = 1 byte
+        bytes = 1;
         return true;
-    case 10: case 11: case 12: return false;
-    default: break;
+    case 1: // INT8    = 1 byte
+        bytes = 1;
+        return true;
+    case 2: // UINT16  = 2 bytes
+        bytes = 2;
+        return true;
+    case 3: // INT16   = 2 bytes
+        bytes = 2;
+        return true;
+    case 4: // UINT32  = 4 bytes
+        bytes = 4;
+        return true;
+    case 5: // INT32   = 4 bytes
+        bytes = 4;
+        return true;
+    case 6: // FLOAT32 = 4 bytes
+        bytes = 4;
+        return true;
+    case 7: // BOOL    = 1 byte
+        bytes = 1;
+        return true;
+    case 10: // UINT64  = 8 bytes
+        bytes = 8;
+        return true;
+    case 11: // INT64   = 8 bytes
+        bytes = 8;
+        return true;
+    case 12: // FLOAT64 = 8 bytes
+        bytes = 8;
+        return true;
+    default:
+        return false; // types 8 (STRING), 9 (ARRAY), and >12 are not scalars
     }
-    if (type == 8) return false;
-    if (type == 9) return false;
-    if (type == 10 || type == 11 || type == 12) { bytes = 8; return true; }
-    return false;
 }
 
 bool readValue(std::ifstream& in, uint32_t type, std::vector<uint8_t>& raw,
                uint32_t depth = 0) {
     if (depth > 8) return false;
     raw.clear();
+
+    // --- Scalar types (handled by scalarBytes) ---
     size_t scalar = 0;
     if (scalarBytes(type, scalar)) {
-        raw.resize(scalar);
+        if (scalar > (1ull << 30)) return false; // reject absurd lengths
+        raw.resize(static_cast<size_t>(scalar));
         return readBytes(in, raw.data(), raw.size());
     }
+
+    // --- STRING type (GGUFMetaType::STRING = 8) ---
     if (type == static_cast<uint32_t>(GGUFMetaType::STRING)) {
         uint64_t size = 0;
         if (!readU64(in, size) || size > (1ull << 30)) return false;
+        // Bounded: do not allocate tokenizer-size arrays silently.
+        if (size > (1ull << 20)) return false; // >1 MiB string = reject / flag
         raw.resize(sizeof(uint64_t) + static_cast<size_t>(size));
         std::memcpy(raw.data(), &size, sizeof(size));
         return readBytes(in, raw.data() + sizeof(size), static_cast<size_t>(size));
     }
-    if (type != static_cast<uint32_t>(GGUFMetaType::ARRAY)) return false;
 
-    uint32_t elementType = 0;
-    uint64_t count = 0;
-    if (!readU32(in, elementType) || !readU64(in, count) || count > (1ull << 30))
-        return false;
-    raw.resize(sizeof(elementType) + sizeof(count));
-    std::memcpy(raw.data(), &elementType, sizeof(elementType));
-    std::memcpy(raw.data() + sizeof(elementType), &count, sizeof(count));
-    for (uint64_t i = 0; i < count; ++i) {
-        std::vector<uint8_t> child;
-        if (!readValue(in, elementType, child, depth + 1)) return false;
-        raw.insert(raw.end(), child.begin(), child.end());
+    // --- ARRAY type (GGUFMetaType::ARRAY = 9) ---
+    if (type == static_cast<uint32_t>(GGUFMetaType::ARRAY)) {
+        uint32_t elementType = 0;
+        uint64_t count = 0;
+        if (!readU32(in, elementType) || !readU64(in, count)) return false;
+        if (count > (1ull << 20)) return false; // reject absurdly large arrays
+        // Bounded element count; recursive readValue will reject unsupported element types.
+        raw.resize(sizeof(elementType) + sizeof(count));
+        std::memcpy(raw.data(), &elementType, sizeof(elementType));
+        std::memcpy(raw.data() + sizeof(elementType), &count, sizeof(count));
+        for (uint64_t i = 0; i < count; ++i) {
+            std::vector<uint8_t> child;
+            if (!readValue(in, elementType, child, depth + 1)) return false;
+            // Guard against child allocations that would overflow the outer buffer.
+            if (raw.size() + child.size() > (1ull << 30)) return false;
+            raw.insert(raw.end(), child.begin(), child.end());
+        }
+        return true;
     }
-    return true;
+
+    // Unknown or unsupported metadata type -> fail closed.
+    return false;
 }
 
 uint64_t alignUp(uint64_t value, uint64_t alignment) {
