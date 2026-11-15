@@ -1,0 +1,23 @@
+{
+  "warmup": {
+    "attempt": 1,
+    "ttfb_s": 0.036,
+    "outcome": "eof"
+  },
+  "long_stream_bytes_before_rst": 59657,
+  "after_rst": {
+    "first_short": {
+      "ttfb_s": 0.067,
+      "status": 200,
+      "total_s": 0.918,
+      "outcome": "eof"
+    },
+    "second_short": {
+      "ttfb_s": 0.027,
+      "status": 200,
+      "total_s": 1.709,
+      "outcome": "eof"
+    }
+  },
+  "pass": true
+}

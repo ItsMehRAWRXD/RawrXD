@@ -91,6 +91,9 @@ Config g_cfg;
 const std::map<std::string, std::string>& Aliases() {
     static const std::map<std::string, std::string> kAliases = {
         {"deep2-local", "reap16-glm-4_7-flash:latest"},
+        // VS Code Copilot displays/selects the custom BYOK model under its
+        // own canonical name; accept it and resolve it to the same model.
+        {"mai-code-1.1-flash", "reap16-glm-4_7-flash:latest"},
     };
     return kAliases;
 }
@@ -226,22 +229,59 @@ bool SendAll(SOCKET s, const char* data, std::size_t len) {
 }
 
 bool RecvAll(SOCKET s, char* buf, std::size_t len) {
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(1800);
     std::size_t got = 0;
     while (got < len) {
         const int n = ::recv(s, buf + got, static_cast<int>(len - got), 0);
-        if (n <= 0) return false;
+        if (n == 0) return false;
+        if (n < 0) {
+            const int err = WSAGetLastError();
+            if (err == WSAETIMEDOUT) {
+                // A per-call recv timeout is not a peer disconnect: the
+                // upstream may legitimately be slow (model load). Keep
+                // waiting until the overall deadline expires.
+                if (std::chrono::steady_clock::now() >= deadline) {
+                    std::clog << "[proxy] RecvAll: overall deadline expired\n";
+                    return false;
+                }
+                continue;
+            }
+            return false;
+        }
         got += static_cast<std::size_t>(n);
     }
     return true;
 }
 
-// Read one CRLF-terminated line. Returns false on EOF/error.
-bool RecvLine(SOCKET s, std::string& out) {
+// Read one CRLF-terminated line. Returns false on EOF/hard error.
+// A per-call recv timeout (WSAETIMEDOUT) is NOT a peer disconnect: the
+// upstream may legitimately take many seconds to produce its first header
+// (e.g., while Ollama loads a 28 GB model), so keep waiting until the
+// overall deadline expires. Only EOF or a hard socket error aborts.
+bool RecvLine(SOCKET s, std::string& out,
+              std::chrono::steady_clock::time_point deadline =
+                  std::chrono::steady_clock::now() + std::chrono::seconds(1800)) {
     out.clear();
     char c;
     while (true) {
         const int n = ::recv(s, &c, 1, 0);
-        if (n <= 0) return false;
+        if (n == 0) {
+            std::clog << "[proxy] RecvLine: orderly close (EOF)\n";
+            return false;
+        }
+        if (n < 0) {
+            const int err = WSAGetLastError();
+            if (err == WSAETIMEDOUT) {
+                if (std::chrono::steady_clock::now() >= deadline) {
+                    std::clog << "[proxy] RecvLine: overall deadline expired\n";
+                    return false;
+                }
+                std::clog << "[proxy] RecvLine: per-call timeout, still waiting\n";
+                continue;
+            }
+            std::clog << "[proxy] RecvLine: recv error wsa=" << err << "\n";
+            return false;
+        }
         if (c == '\n') {
             if (!out.empty() && out.back() == '\r') out.pop_back();
             return true;
@@ -365,6 +405,14 @@ bool UpstreamRequest(const HttpRequest& req,
     tv.tv_usec = 0;
     ::setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&tv), sizeof(tv));
     ::setsockopt(s, SOL_SOCKET, SO_SNDTIMEO, reinterpret_cast<const char*>(&tv), sizeof(tv));
+    // Diagnostic: read back the effective per-call timeout actually applied.
+    {
+        struct timeval eff;
+        int effLen = sizeof(eff);
+        ::getsockopt(s, SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<char*>(&eff), &effLen);
+        std::clog << "[proxy] upstream SO_RCVTIMEO readback=" << eff.tv_sec << "s "
+                  << eff.tv_usec << "us\n";
+    }
 
     sockaddr_in addr{};
     addr.sin_family      = AF_INET;
@@ -508,6 +556,14 @@ bool UpstreamRelay(SOCKET client,
     tv.tv_usec = 0;
     ::setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&tv), sizeof(tv));
     ::setsockopt(s, SOL_SOCKET, SO_SNDTIMEO, reinterpret_cast<const char*>(&tv), sizeof(tv));
+    // Diagnostic: read back the effective per-call timeout actually applied.
+    {
+        struct timeval eff;
+        int effLen = sizeof(eff);
+        ::getsockopt(s, SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<char*>(&eff), &effLen);
+        std::clog << "[proxy] upstream SO_RCVTIMEO readback=" << eff.tv_sec << "s "
+                  << eff.tv_usec << "us\n";
+    }
 
     sockaddr_in addr{};
     addr.sin_family = AF_INET;
@@ -601,7 +657,16 @@ bool UpstreamRelay(SOCKET client,
     char buf[16384];
     while (g_running.load()) {
         const int n = ::recv(s, buf, sizeof(buf), 0);
-        if (n <= 0) break;  // upstream EOF / error / idle timeout
+        if (n < 0) {
+            const int err = WSAGetLastError();
+            if (err == WSAETIMEDOUT) {
+                // Slow stream, not a dead pipe: keep pulling.
+                std::clog << "[proxy] body recv: per-call timeout, still waiting\n";
+                continue;
+            }
+            break;  // hard error
+        }
+        if (n == 0) break;  // upstream EOF / idle timeout
         if (!SendAll(client, buf, static_cast<std::size_t>(n))) {
             // Client is gone: stop pulling from upstream and close the socket
             // so Ollama cancels the generation instead of filling a dead pipe.

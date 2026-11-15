@@ -1,0 +1,18 @@
+warmup: 24 attempts, Nones to first byte (status None)
+A1 control short TTFB : 1.806s (status 502, queued behind active generation)
+A2 cancel  short TTFB : 1.802s (status 502, after client RST of long stream)
+A2 second short TTFB  : 1.809s (status 502, runner stayed free)
+A  differential PASS  : False
+
+B   4000-token prompt: decode 80.96 tok/s (eval_count=64, eval 790548000 ns, prompt_eval=4006, prefill 1334.34 tok/s)
+B  16000-token prompt: decode 38.47 tok/s (eval_count=64, eval 1663510000 ns, prompt_eval=16006, prefill 471.27 tok/s)
+B  32000-token prompt: decode 22.3 tok/s (eval_count=64, eval 2869546000 ns, prompt_eval=32006, prefill 278.05 tok/s)
+B  64000-token prompt: decode 11.93 tok/s (eval_count=64, eval 5366113000 ns, prompt_eval=64006, prefill 136.58 tok/s)
+
+exe_sha256: 3f26366fa2f9db70c8e155685ebdcdf545362f645c1b22dbb3f226193a2b8616
+git_sha: 4e57fc4bde2732ca384c3749a7902453d04b64d4
+
+ollama ps:
+NAME                           ID              SIZE     PROCESSOR    CONTEXT    RUNNER      UNTIL              
+reap16-glm-4_7-flash:latest    72b287f6eab5    21 GB    100% GPU     65536      llamacpp    4 minutes from now    
+
