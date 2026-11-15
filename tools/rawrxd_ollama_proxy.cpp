@@ -788,9 +788,9 @@ void HandleClient(SOCKET s) {
                             const std::size_t q2 = (q1 == std::string::npos)
                                                    ? std::string::npos
                                                    : outBody.find('"', q1 + 1);
-                            if (q1 != std::string::npos && q2 != std::string::npos) {
-                                outBody = outBody.substr(0, q1 + 1) + effectiveModel +
-                                          outBody.substr(q2);
+if (q1 != std::string::npos && q2 != std::string::npos) {
+                outBody = outBody.substr(0, q1 + 1) + effectiveModel +
+                          outBody.substr(q2 + 1);
                             }
                         }
                         if (g_cfg.verbose) {
