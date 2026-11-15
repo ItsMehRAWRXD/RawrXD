@@ -369,10 +369,7 @@ public:
     static_assert(sizeof(SpecAttnPush) == 32);
 
     // ========== CSPD Split-KV Attention (experimental, off by default) ==========
-    bool DispatchAttnDecodeSplitKV(DeviceBuf& q, DeviceBuf& kCache, DeviceBuf& vCache,
-                                   DeviceBuf& out, uint32_t headDim,
-                                   uint32_t heads, uint32_t kvHeads,
-                                   uint32_t seqLen, float scale, uint32_t layer);
+    bool createCspdReduceSetLayout();
     bool cspdEnabled_ = false;
     VkPipeline cspdPartialPipeline_ = VK_NULL_HANDLE;
     VkPipelineLayout cspdPartialPipelineLayout_ = VK_NULL_HANDLE;

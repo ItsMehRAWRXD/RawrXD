@@ -2,7 +2,9 @@
 
 #extension GL_EXT_shader_16bit_storage : require
 
+#ifdef RTE16
 #include "rte.glsl"
+#endif
 #include "rope_params.glsl"
 
 layout(local_size_x = 1, local_size_y = 256, local_size_z = 1) in;

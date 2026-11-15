@@ -1,7 +1,9 @@
 #if !defined(GGML_ROPE_PARAMS)
 #define GGML_ROPE_PARAMS
 
+#ifdef RTE16
 #include "rte.glsl"
+#endif
 
 struct rope_params {
     uint rope_mode;

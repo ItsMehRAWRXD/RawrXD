@@ -2741,12 +2741,13 @@ bool VulkanCompute::DispatchAttnDecodeSplitKV(
 
     // Chunk configuration
     const uint32_t chunkTokens = 4096;
-    const uint32_t numChunks = (seqLen + chunkTokens - 1) / chunkTokens;
+    uint32_t numChunks = (seqLen + chunkTokens - 1) / chunkTokens;
     if (numChunks == 0) numChunks = 1;
 
     // Scratch size: numChunks * heads * (headDim + 2) floats
     const uint64_t scratchElems = static_cast<uint64_t>(numChunks) * heads * (headDim + 2);
-    DeviceBuf scratch = EnsureScratch(0, static_cast<size_t>(scratchElems));
+    if (!EnsureScratch(0, static_cast<size_t>(scratchElems))) return false;
+    DeviceBuf& scratch = Scratch(0);
     if (!scratch) return false;
 
     VkCommandBuffer cmd = fusedCmd_;
