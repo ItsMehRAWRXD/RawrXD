@@ -773,6 +773,30 @@ bool VulkanCompute::DispatchAttnDecode(DeviceBuf& q, DeviceBuf& kCache, DeviceBu
     return true;
 }
 
+// CSPD experimental path: forwards to the backend's split-KV dispatch.
+// Off by default; enabled with DEEP2_CSPD=1.
+bool VulkanCompute::IsCspdEnabled() const {
+    return backend_ != nullptr && backend_->IsCspdEnabled();
+}
+
+bool VulkanCompute::DispatchAttnDecodeSplitKV(DeviceBuf& q, DeviceBuf& kCache,
+                                              DeviceBuf& vCache, DeviceBuf& out,
+                                              uint32_t headDim, uint32_t nHeads,
+                                              uint32_t kvHeads, uint32_t seqLen,
+                                              float scale, uint32_t layer) {
+    if (backend_ == nullptr) return false;
+    Deep2::VulkanCompute::DeviceBuf bq = ToBackend(q);
+    Deep2::VulkanCompute::DeviceBuf bk = ToBackend(kCache);
+    Deep2::VulkanCompute::DeviceBuf bv = ToBackend(vCache);
+    Deep2::VulkanCompute::DeviceBuf bo = ToBackend(out);
+    if (!backend_->DispatchAttnDecodeSplitKV(bq, bk, bv, bo, headDim, nHeads, kvHeads, seqLen, scale, layer)) return false;
+    q = FromBackend(bq);
+    kCache = FromBackend(bk);
+    vCache = FromBackend(bv);
+    out = FromBackend(bo);
+    return true;
+}
+
 bool VulkanCompute::AppendKV(DeviceBuf& kTok, DeviceBuf& vTok, uint32_t kvDim,
                              uint32_t pos, uint32_t nHeads) {
     if (backend_ == nullptr) return false;

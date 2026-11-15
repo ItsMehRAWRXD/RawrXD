@@ -414,11 +414,25 @@ bool Deep2Engine::forwardLayerGpuResident(
     // The adapter retains the historical parameter name `kvDim`, but its
     // implementation forwards this value as the backend's KV-head count.
     // Pass kvHeads here; the flattened width was already used by AppendKV.
-    if (!gpu->DispatchAttnDecode(gpu->ArenaQ(), gpu->ArenaKCache(),
-                                 gpu->ArenaVCache(), gpu->ArenaAttn(), pos + 1,
-                                 headDim, heads, kvHeads,
-                                 1.0f / std::sqrt(static_cast<float>(headDim)),
-                                 layer)) {
+    // CSPD experimental path: try split-KV attention first when enabled via
+    // DEEP2_CSPD=1, falling back to the canonical OP_ATTN kernel on failure.
+    bool attnOk = false;
+    if (gpu->IsCspdEnabled()) {
+        attnOk = gpu->DispatchAttnDecodeSplitKV(
+            gpu->ArenaQ(), gpu->ArenaKCache(), gpu->ArenaVCache(),
+            gpu->ArenaAttn(), headDim, heads, kvHeads, pos + 1,
+            1.0f / std::sqrt(static_cast<float>(headDim)), layer);
+        if (!attnOk) {
+            gpuForwardTrace("CSPD fallback: DispatchAttnDecodeSplitKV");
+        }
+    }
+    if (!attnOk) {
+        attnOk = gpu->DispatchAttnDecode(
+            gpu->ArenaQ(), gpu->ArenaKCache(), gpu->ArenaVCache(),
+            gpu->ArenaAttn(), pos + 1, headDim, heads, kvHeads,
+            1.0f / std::sqrt(static_cast<float>(headDim)), layer);
+    }
+    if (!attnOk) {
         gpuForwardTrace("layer fail: DispatchAttnDecode");
         return fail();
     }

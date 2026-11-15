@@ -60,6 +60,8 @@ void main() {
 
     uint chunkBegin = chunk * chunkTokens;
     uint chunkEnd = min(chunkBegin + chunkTokens, seqLen);
+    uint lid = gl_LocalInvocationID.x;
+
     if (chunkBegin >= chunkEnd) {
         uint baseIdx = (chunk * heads + head) * (headDim + 2);
         d[baseIdx + 0] = -3.402823466e+38f;
@@ -71,7 +73,6 @@ void main() {
     }
 
     uint qb = head * headDim;
-    uint lid = gl_LocalInvocationID.x;
     uint dim = lid;
 
     if (dim >= headDim) return;

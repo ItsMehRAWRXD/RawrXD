@@ -164,6 +164,12 @@ public:
                             DeviceBuf& out, uint32_t seqLen, uint32_t headDim,
                             uint32_t nHeads, uint32_t kvHeads, float scale,
                             uint32_t layer);
+    // CSPD experimental path (off by default; enable with DEEP2_CSPD=1).
+    bool IsCspdEnabled() const;
+    bool DispatchAttnDecodeSplitKV(DeviceBuf& q, DeviceBuf& kCache, DeviceBuf& vCache,
+                                   DeviceBuf& out, uint32_t headDim,
+                                   uint32_t nHeads, uint32_t kvHeads,
+                                   uint32_t seqLen, float scale, uint32_t layer);
     bool AppendKV(DeviceBuf& kTok, DeviceBuf& vTok, uint32_t kvDim,
                   uint32_t pos, uint32_t nHeads);
 

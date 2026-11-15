@@ -370,6 +370,7 @@ public:
 
     // ========== CSPD Split-KV Attention (experimental, off by default) ==========
     bool createCspdReduceSetLayout();
+    bool IsCspdEnabled() const { return cspdEnabled_; }
     bool cspdEnabled_ = false;
     VkPipeline cspdPartialPipeline_ = VK_NULL_HANDLE;
     VkPipelineLayout cspdPartialPipelineLayout_ = VK_NULL_HANDLE;

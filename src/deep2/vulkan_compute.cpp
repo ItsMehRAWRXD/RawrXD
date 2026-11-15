@@ -1089,6 +1089,16 @@ bool VulkanCompute::initialize() {
     }
 
     (void)createPipelines(); // Device runtime is valid even before shader build.
+    // CSPD experimental path: enabled via DEEP2_CSPD=1 env var
+    {
+        const char* cspdEnv = std::getenv("DEEP2_CSPD");
+        if (cspdEnv && (cspdEnv[0] == '1' || cspdEnv[0] == 't' || cspdEnv[0] == 'T')) {
+            cspdEnabled_ = true;
+            std::fprintf(stderr, "[CSPD] Split-KV attention enabled (experimental)\n");
+        } else {
+            cspdEnabled_ = false;
+        }
+    }
     initialized_ = true;
     (void)ReserveDecodeScratch();
     ++deviceGeneration_; // any pre-init promotion is now stale
