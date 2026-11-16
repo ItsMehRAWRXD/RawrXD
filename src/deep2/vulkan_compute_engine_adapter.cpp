@@ -301,5 +301,62 @@ void VulkanCompute::ClearPinnedGemvWeights() {
     resident_bytes_ = 0;
 }
 
+bool VulkanCompute::DispatchRouter(const GpuWeightView& routerWeights,
+                                   const float* hiddenState,
+                                   std::vector<int>& expertIds,
+                                   std::vector<float>& weights,
+                                   int topK)
+{
+    if (!initialized_ || backend_ == nullptr || !routerWeights.valid()) {
+        return false;
+    }
+    return backend_->DispatchRouter(routerWeights, hiddenState, expertIds, weights, topK);
+}
+
+bool VulkanCompute::RunExpertFFN(const GpuWeightView& gate,
+                                 const GpuWeightView& up,
+                                 const GpuWeightView& down,
+                                 const float* input, float* output,
+                                 uint32_t hidden, uint32_t intermediate,
+                                 uint64_t epoch)
+{
+    if (!initialized_ || backend_ == nullptr ||
+        !gate.valid() || !up.valid() || !down.valid()) {
+        return false;
+    }
+    return backend_->RunExpertFFN(gate, up, down, input, output, hidden, intermediate, epoch);
+}
+
+bool VulkanCompute::DispatchAttnDecodeMLA(DeviceBuf& q, DeviceBuf& kb, DeviceBuf& vb,
+                                         DeviceBuf& kpe, DeviceBuf& out,
+                                         uint32_t qkDim, uint32_t vDim, uint32_t nope, uint32_t rope,
+                                         uint32_t nHeads, uint32_t pos, float theta,
+                                         float scale, float ropeScale, uint32_t layer)
+{
+    if (!initialized_ || backend_ == nullptr) {
+        return false;
+    }
+    // Convert adapter DeviceBuf to backend DeviceBuf
+    Deep2::VulkanCompute::DeviceBuf b_q{q.buffer, q.memory, q.bytes, 0, 0};
+    Deep2::VulkanCompute::DeviceBuf b_kb{kb.buffer, kb.memory, kb.bytes, 0, 0};
+    Deep2::VulkanCompute::DeviceBuf b_vb{vb.buffer, vb.memory, vb.bytes, 0, 0};
+    Deep2::VulkanCompute::DeviceBuf b_kpe{kpe.buffer, kpe.memory, kpe.bytes, 0, 0};
+    Deep2::VulkanCompute::DeviceBuf b_out{out.buffer, out.memory, out.bytes, 0, 0};
+    
+    return backend_->DispatchAttnDecodeMLA(b_q, b_kb, b_vb, b_kpe, b_out,
+                                           qkDim, vDim, nope, rope,
+                                           nHeads, pos, theta,
+                                           scale, ropeScale, layer);
+}
+
+bool VulkanCompute::EnsureMlaAttn(uint32_t nHeads, uint32_t qkDim, uint32_t vDim,
+                                 uint32_t nope, uint32_t rope, uint32_t maxSeq,
+                                 uint32_t nLayers)
+{
+    if (!initialized_ || backend_ == nullptr) {
+        return false;
+    }
+    return backend_->EnsureMlaAttn(nHeads, qkDim, vDim, nope, rope, maxSeq, nLayers);
+}
 
 } // namespace CPUInference

@@ -832,6 +832,10 @@ bool VulkanCompute::DownloadDeviceLocal(VkBuffer, void*, size_t) { return false;
 // Pipeline creation (fail closed - not in implementation)
 // ----------------------------------------------------------------------------
 bool VulkanCompute::CreateGemvPipe(const char*, VkPipeline&) { return false; }
+// No per-type pipeline selection here: the linked backend binds a single
+// qPipeline_ (deep2_qgemv.spv) for every quant type and branches on
+// QPush.type inside the shader. Q4_0 (2) is decoded there, so this stays
+// fail-closed and no adapter-side q40 pipeline exists or is needed.
 bool VulkanCompute::SelectPackedPipe(int, VkPipeline&, uint64_t*&) { return false; }
 bool VulkanCompute::EnsureQ2kPipeline() { return false; }
 bool VulkanCompute::EnsureQ3kPipeline() { return false; }
@@ -905,8 +909,6 @@ bool VulkanCompute::DispatchGemvQ6kPacked(const void* packed, size_t bytes,
 // ----------------------------------------------------------------------------
 // MLA Q / KV buffers
 // ----------------------------------------------------------------------------
-bool VulkanCompute::EnsureMlaAttn(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t,
-                                  uint32_t, uint32_t) { return false; }
 bool VulkanCompute::EnsureMlaQBytes(size_t) { return false; }
 
 VulkanCompute::DeviceBuf& VulkanCompute::MlaQ() {

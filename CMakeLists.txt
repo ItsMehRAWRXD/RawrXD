@@ -7073,4 +7073,33 @@ target_include_directories(test_sovereign_compose_lab PRIVATE
 target_compile_features(test_sovereign_compose_lab PRIVATE cxx_std_20)
 target_link_libraries(test_sovereign_compose_lab PRIVATE sovereign_emit_formats)
 
+  # Q4_0 GPU Parity Test - standalone validation of GGML type 2 (Q4_0) format
+  # through the active Deep2 Vulkan backend. Tests dequantization reference
+  # accuracy and GPU GEMV dispatch across column counts 32, 64, 96, 2048.
+  if(EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/q4_0_gpu_parity_test.cpp")
+      add_executable(q4_0_gpu_parity_test
+          src/deep2/q4_0_gpu_parity_test.cpp
+      )
+      target_include_directories(q4_0_gpu_parity_test PRIVATE
+          ${CMAKE_SOURCE_DIR}/src
+          ${CMAKE_SOURCE_DIR}
+      )
+      target_link_libraries(q4_0_gpu_parity_test PRIVATE
+            rawrxd_gpu_compute
+            deep2_engine_lib
+          Vulkan::Vulkan
+      )
+      target_compile_features(q4_0_gpu_parity_test PRIVATE cxx_std_20)
+      if(MSVC)
+          target_compile_options(q4_0_gpu_parity_test PRIVATE /EHsc $<$<CONFIG:Release>:/O2>)
+      else()
+          target_compile_options(q4_0_gpu_parity_test PRIVATE -fexceptions $<$<CONFIG:Release>:-O2>)
+      endif()
+      set_target_properties(q4_0_gpu_parity_test PROPERTIES
+          RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+      add_test(NAME q4_0_gpu_parity_test
+          COMMAND q4_0_gpu_parity_test)
+      message(STATUS "q4_0_gpu_parity_test enabled (Q4_0 GPU parity validation)")
+  endif()
+
 # ============================================================================

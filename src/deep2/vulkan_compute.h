@@ -259,6 +259,16 @@ public:
                       uint32_t hidden, uint32_t intermediate,
                       uint64_t epoch);
 
+    // GPU MoE Router: computes logits = W * x, returns top-k expert indices and weights
+    // routerWeights: [numExperts, hiddenDim] in row-major (GGUF ffn_gate_inp layout)
+    // hiddenState: [hiddenDim]
+    // Returns true on success, fills expertIds and weights with top-k results
+    bool DispatchRouter(const GpuWeightView& routerWeights,
+                        const float* hiddenState,
+                        std::vector<int>& expertIds,
+                        std::vector<float>& weights,
+                        int topK);
+
     bool RunMLAAttentionHost(const float* q,
                              const float* k,
                              const float* v,
@@ -273,6 +283,43 @@ public:
                              float scale,
                              uint64_t epoch);
     void ResetMLACache();
+
+    // MLA Attention Decode
+    // Dispatches the MLA (Multi-head Latent Attention) decode kernel
+    // q: query buffer (ArenaQ)
+    // kb: key buffer (MlaKb)
+    // vb: value buffer (MlaVb)
+    // kpe: key positional encoding buffer (MlaKpe)
+    // out: output buffer (ArenaAttn)
+    // qkDim: Q/K dimension (qkNope + qkRope)
+    // vDim: value dimension (vHeadDim)
+    // nope: Q/K no-RoPE dimension
+    // rope: RoPE dimension
+    // nHeads: number of attention heads
+    // pos: token position
+    // theta: RoPE theta
+    // scale: attention scale
+    // ropeScale: RoPE scale factor
+    // layer: layer index
+    // Returns true on success
+    bool DispatchAttnDecodeMLA(DeviceBuf& q, DeviceBuf& kb, DeviceBuf& vb,
+                               DeviceBuf& kpe, DeviceBuf& out,
+                               uint32_t qkDim, uint32_t vDim, uint32_t nope, uint32_t rope,
+                               uint32_t nHeads, uint32_t pos, float theta,
+                               float scale, float ropeScale, uint32_t layer);
+
+    // Initialize MLA attention with model dimensions
+    // nHeads: number of attention heads
+    // qkDim: Q/K dimension (qkNope + qkRope)
+    // vDim: value dimension (vHeadDim)
+    // nope: Q/K no-RoPE dimension
+    // rope: RoPE dimension
+    // maxSeq: maximum sequence length
+    // nLayers: number of layers
+    // Returns true on success
+    bool EnsureMlaAttn(uint32_t nHeads, uint32_t qkDim, uint32_t vDim,
+                       uint32_t nope, uint32_t rope, uint32_t maxSeq,
+                       uint32_t nLayers);
 
     DeviceBuf& ArenaHidden()   { return arenaHidden_; }
     DeviceBuf& ArenaAttnW()    { return arenaAttnW_; }
@@ -1554,7 +1601,14 @@ private:
     VkPipeline opsPipeline_ = VK_NULL_HANDLE;
     VkPipeline qPipeline_ = VK_NULL_HANDLE;
     VkPipeline qNvfp4Pipeline_ = VK_NULL_HANDLE;
+    VkPipeline q40Pipeline_ = VK_NULL_HANDLE;
     VkPipeline gdnPipeline_ = VK_NULL_HANDLE;
+
+        // MLA attention pipeline
+        VkPipeline mlaPipeline_ = VK_NULL_HANDLE;
+        VkPipelineLayout mlaPipelineLayout_ = VK_NULL_HANDLE;
+        VkDescriptorSetLayout mlaSetLayout_ = VK_NULL_HANDLE;
+        VkDescriptorSet mlaDescriptorSet_ = VK_NULL_HANDLE;
 
     bool calibratedAvailable_ = false;
     VkTimeDomainEXT hostTimeDomain_ = VK_TIME_DOMAIN_DEVICE_EXT;

@@ -66,6 +66,7 @@ public:
 
     // Route a single token
     TokenRoute Route(const float* hiddenState);
+    TokenRoute Route(const float* hiddenState) const;
 
     // Route a batch of tokens
     std::vector<TokenRoute> RouteBatch(
@@ -102,16 +103,22 @@ public:
     void Save(const std::string& path) const;
     void Load(const std::string& path);
 
+    // GPU integration: read-only access to router weights for GpuWeightView construction
+    // Returns pointer to weights data with layout [numExperts, hiddenDim] (row-major)
+    const float* GetRouterWeightsPtr() const noexcept { return routerWeights_.data(); }
+    size_t GetRouterWeightRows() const noexcept { return config_.numExperts; }
+    size_t GetRouterWeightCols() const noexcept { return config_.hiddenDim; }
+
 private:
     MoEConfig config_;
-    ExpertStats stats_;
+    mutable ExpertStats stats_;
     
     // Router weights: [hiddenDim, numExperts]
     std::vector<float> routerWeights_;
     
     // Expert load tracking
-    std::vector<uint64_t> expertLoads_;
-    std::vector<uint64_t> expertCapacities_;
+    mutable std::vector<uint64_t> expertLoads_;
+    mutable std::vector<uint64_t> expertCapacities_;
     
     // Random generator for noise
     std::mt19937 rng_;
@@ -119,7 +126,7 @@ private:
     bool reapObservation_ = false;
 
     // Last route result (stored for prefetch prediction exposure)
-    std::vector<int> lastRouteExpertIds_;
+    mutable std::vector<int> lastRouteExpertIds_;
 
     // Softmax over router logits
     std::vector<float> Softmax(const std::vector<float>& logits) const;
@@ -140,7 +147,7 @@ private:
     float ComputeLoadBalanceLoss(
         const std::vector<std::vector<float>>& expertProbs
     ) const;
-};
+};  // <-- Close MoERouter class
 
 // Individual expert FFN
 class MoEExpert {

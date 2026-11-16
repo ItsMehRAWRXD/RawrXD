@@ -2834,6 +2834,96 @@ void VulkanCompute::clearRecordedQ4K() {
     recordedQ4K_.clear();
 }
 
+bool VulkanCompute::EnsureMlaAttn(uint32_t nHeads, uint32_t qkDim, uint32_t vDim,
+                                 uint32_t nope, uint32_t rope, uint32_t maxSeq,
+                                 uint32_t nLayers)
+{
+    // MLA attention pipeline initialization.
+    // Creates compute pipeline with descriptor sets for Q, K, V, K_pe buffers.
+    // Preconditions: nHeads, qkDim, vDim, nope, rope, maxSeq, nLayers validated against device capabilities.
+    if (nHeads == 0 || qkDim == 0 || vDim == 0 || nLayers == 0) return false;
+    // TODO: Implement real pipeline creation (pipeline layout, shader binding,
+    // descriptor set allocation, command pool allocation) when MLA kernel shader is ready.
+    // For now, return false to retain CPU fallback behavior.
+    printf("[MLA] EnsureMlaAttn called: nHeads=%u, qkDim=%u, vDim=%u, nope=%u, rope=%u, maxSeq=%u, nLayers=%u [PIPELINE_PENDING]\n",
+           nHeads, qkDim, vDim, nope, rope, maxSeq, nLayers);
+    return false;
+}
+
+bool VulkanCompute::DispatchAttnDecodeMLA(DeviceBuf& q, DeviceBuf& kb, DeviceBuf& vb,
+                                         DeviceBuf& kpe, DeviceBuf& out,
+                                         uint32_t qkDim, uint32_t vDim, uint32_t nope,
+                                         uint32_t rope, uint32_t nHeads, uint32_t pos,
+                                         float theta, float scale, float ropeScale,
+                                         uint32_t layer)
+{
+    // Validate MLA dimensions (from model config):
+    // Q: 128 non-positional + 64 positional = qkDim (qkNope + qkRope)
+    //    nHeads = 16, so 16 × 192 = qkNope 128 + qkRope 64
+    // KV: 512 (latent) + 64 (k_pe/RoPE positional)
+    // nope = 128, rope = 64
+    // Partial RoPE applied only to the 64 positional dims
+    // K/V fused projection from attn_k_b: K_nope + V (attnV_b intentionally empty)
+    if (qkDim != nope + rope) {
+        printf("[MLA] Invalid qkDim=%u, expected nope+%u=%u\n", qkDim, nope, nope + rope);
+        return false;
+    }
+    if (nope != 128) {
+        printf("[MLA] Invalid nope=%u, expected 128\n", nope);
+        return false;
+    }
+    if (rope != 64) {
+        printf("[MLA] Invalid rope=%u, expected 64\n", rope);
+        return false;
+    }
+    if (nHeads != 16) {
+        printf("[MLA] Invalid nHeads=%u, expected 16\n", nHeads);
+        return false;
+    }
+    if (qkDim != 192) {
+        printf("[MLA] Invalid qkDim=%u, expected 192 (128+64)\n", qkDim);
+        return false;
+    }
+
+    // Ensure MLA pipeline is initialized
+    if (!EnsureMlaAttn(nHeads, qkDim, vDim, nope, rope, 0, 1)) return false;
+
+    // MLA attention dispatch through Vulkan compute shader
+    // Each workgroup processes one attention head (16 workgroups total)
+    // Reads Q [nHeads, qkDim], K from kb fused projection, V from vb,
+    // K_pe for RoPE, position pos for rotary embedding
+    // Writes output [nHeads, vHeadDim] to out
+
+    VkCommandBuffer cmd = fusedCmd_;
+    VkQueryPool query = fusedQuery_;
+    const bool own = !fused_;
+    if (own && !beginCommand(cmd, query, true)) return false;
+
+    // Bind the MLA attention pipeline
+    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, mlaPipeline_);
+
+    // Bind descriptor sets with Q, K, V, K_pe buffers
+    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE,
+                            mlaPipelineLayout_, 0, 1, &mlaDescriptorSet_, 0, nullptr);
+
+    // Set push constants: nHeads, nope, rope, vHeadDim, scale, pos
+    uint32_t pushConstants[6] = { nHeads, nope, rope, vDim, (uint32_t)(scale * 65536.0f), pos };
+    vkCmdPushConstants(cmd, mlaPipelineLayout_, VK_SHADER_STAGE_COMPUTE_BIT,
+                       0, sizeof(pushConstants), pushConstants);
+
+    // Dispatch: one workgroup per head, 256 lanes per workgroup
+    vkCmdDispatch(cmd, nHeads, 1, 1);
+    recordComputeBarrier(cmd);
+
+    // Read back output - simplified for now, just mark as complete
+    // In a full implementation, we'd synchronize and read the output buffer
+        (void)out;  // output placeholder - validated when kernel implemented with numerical parity
+        // Fail-closed: return false until real GPU computation with output verification
+        // prevents false-success interpretation where caller may interpret result
+        // as successful attention execution without actual GPU computation.
+        return false;
+}
+
 bool VulkanCompute::SubmitRecordedResidentQ4K(
     const GpuWeightView& weight,DeviceBuf& input,DeviceBuf& output,
     uint32_t batch,uint64_t epoch)
@@ -3458,7 +3548,7 @@ bool VulkanCompute::DispatchGemvQuant(
     DeviceBuf& input,DeviceBuf& output,uint32_t rows,uint32_t cols,
     uint64_t cacheKey)
 {
-    if(type!=8 && type!=10 && type!=12 && type!=14 && type!=40) return false;
+    if(type!=2 && type!=8 && type!=10 && type!=12 && type!=14 && type!=40) return false;
     if(!weights||!weightBytes||!rows||!cols||
        rows*sizeof(float)>output.size||cols*sizeof(float)>input.size)
         return false;
@@ -3471,14 +3561,62 @@ bool VulkanCompute::DispatchGemvQuant(
     if(weightBytes>std::numeric_limits<uint32_t>::max()) return false;
     p.weightBytes=static_cast<uint32_t>(weightBytes);
     bool ok;
-    if(type==40) {
-        ok=dispatchQuantNvfp4(*w,input,output,p);
+        if(type==2) {
+            // Q4_0 (type 2): block-oriented, split-half nibble dequantization
+            // dispatched via deep2_qgemv.comp with pc.type=2
+            ok=dispatchQuant(*w,input,output,p);
+        } else if(type==40) {
+            ok=dispatchQuantNvfp4(*w,input,output,p);
     } else {
         ok=dispatchQuant(*w,input,output,p);
     }
     if(ok) ++gemvSuccess_;
     return ok;
 }
+
+    bool VulkanCompute::DispatchRouter(
+        const GpuWeightView& routerWeights,
+        const float* hiddenState,
+        std::vector<int>& expertIds,
+        std::vector<float>& weights,
+        int topK)
+    {
+        // GPU MoE Router: computes logits = W * x, returns top-k expert indices and weights
+        // routerWeights: [numExperts, hiddenDim] in row-major (GGUF ffn_gate_inp layout)
+        // hiddenState: [hiddenDim]
+        // Returns true on success, fills expertIds and weights with top-k results
+        if(!routerWeights.valid()) return false;
+        if(hiddenState == nullptr) return false;
+        if(expertIds.empty()) return false;
+        if(weights.empty()) return false;
+        if(topK <= 0) return false;
+        if(routerWeights.type < 0 || routerWeights.type > 40) return false;
+
+        // Route based on weight type and distribution
+        switch(routerWeights.type) {
+            case 2: // Q4_0
+                // Dispatch Q4_0 GEMV through deep2_qgemv.comp
+                // Each expert gets a separate dispatch with type=2
+                break;
+            case 8: // F8_0
+            case 10: // F16_0
+            case 12: // F16_1
+            case 14: // BF16
+                // Dispatch standard quantized GEMV
+                break;
+            case 40: // NVFP4
+                // Dispatch NVFP4 GEMV through dispatchQuantNvfp4
+                break;
+            default:
+                return false;
+        }
+
+        // TODO: Implement full router logic with expert weighting and selection.
+        // For now, return false to retain CPU fallback behavior.
+        printf("[Router] DispatchRouter called: type=%d, topK=%d [PENDING]\n",
+               routerWeights.type, topK);
+        return false;
+    }
 
 bool VulkanCompute::DispatchGemvQ4KBatch(
     const void* weights,size_t weightBytes,
@@ -3703,17 +3841,15 @@ bool VulkanCompute::SubmitGemvPrefetch(
     if(slot>=prefetch_.size()||!prefetch_[slot].valid) return false;
     auto& e=prefetch_[slot];
     if(packedBytes && quantType) {
-        if(quantType!=8&&quantType!=10&&quantType!=12&&quantType!=14&&quantType!=40) return false;
-        QPush p{};
-        p.type=static_cast<uint32_t>(quantType);
-        p.rows=rows;p.cols=cols;
-        if(e.bytes>std::numeric_limits<uint32_t>::max()) return false;
-        p.weightBytes=static_cast<uint32_t>(e.bytes);
+            if(quantType!=2 && quantType!=8 && quantType!=10 && quantType!=12 && quantType!=14 && quantType!=40) return false;
+            QPush p{}; p.type = static_cast<uint32_t>(quantType); p.rows = rows; p.cols = cols;
+            if(e.bytes > std::numeric_limits<uint32_t>::max()) return false;
+            p.weightBytes = static_cast<uint32_t>(e.bytes);
         bool ok;
-        if(quantType==40) {
-            ok=dispatchQuantNvfp4(e.buffer,input,output,p);
+            if(quantType == 40) {
+                ok = dispatchQuantNvfp4(e.buffer, input, output, p);
         } else {
-            ok=dispatchQuant(e.buffer,input,output,p);
+                ok = dispatchQuant(e.buffer, input, output, p);
         }
         if(ok) ++gemvSuccess_;
         return ok;

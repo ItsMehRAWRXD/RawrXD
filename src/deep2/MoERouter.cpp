@@ -112,6 +112,12 @@ TokenRoute MoERouter::Route(const float* hiddenState) {
     return route;
 }
 
+TokenRoute MoERouter::Route(const float* hiddenState) const {
+    // Delegate to non-const version for actual computation
+    // This is safe because the mutable members allow state updates
+    return const_cast<MoERouter*>(this)->Route(hiddenState);
+}
+
 std::vector<TokenRoute> MoERouter::RouteBatch(
     const float* hiddenStates, size_t numTokens) {
     std::vector<TokenRoute> routes(numTokens);

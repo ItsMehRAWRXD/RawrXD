@@ -67,15 +67,18 @@ bool gpuPackedType(int type) noexcept {
     // onto the host reference path (measured 0.16 tok/s on an R9700 for a
     // 1B model, with every DEEP2_GPU_FORWARD_* counter left at zero).
     //
-    // Do NOT add Q4_0 (2) or Q5_0 (6) here. SelectPackedPipe has no kernel
-    // for either, so accepting them would admit weights the device path
-    // cannot execute.
+    // Q4_0 (2) is supported. The linked quant path is NOT SelectPackedPipe
+    // (src/vulkan_fwd_quant_pipe.cpp produces no object file in any build);
+    // type 2 is decoded by src/deep2/shaders/deep2_qgemv.comp via
+    // Deep2::VulkanCompute::dispatchQuant, reached through
+    // DispatchGemvQuant's type gate in src/deep2/vulkan_compute.cpp.
     return type == static_cast<int>(GGMLType::GGML_TYPE_Q8_0) ||
            type == static_cast<int>(GGMLType::GGML_TYPE_Q2_K) ||
            type == static_cast<int>(GGMLType::GGML_TYPE_Q3_K) ||
            type == static_cast<int>(GGMLType::GGML_TYPE_Q4_K) ||
            type == static_cast<int>(GGMLType::GGML_TYPE_Q5_K) ||
-           type == static_cast<int>(GGMLType::GGML_TYPE_Q6_K);
+           type == static_cast<int>(GGMLType::GGML_TYPE_Q6_K) ||
+           type == static_cast<int>(GGMLType::GGML_TYPE_Q4_0);
 }
 
 bool usableWeight(const WeightTensor& wt) noexcept {
@@ -115,6 +118,27 @@ bool denseLayerReady(const LayerWeights& lw) noexcept {
     const WeightTensor& wo = lw.wo.data ? lw.wo : lw.attnO;
     return usableWeight(lw.attnNorm) && usableWeight(lw.wq) &&
            usableWeight(lw.wk) && usableWeight(lw.wv) && usableWeight(wo) &&
+           usableWeight(lw.ffnNorm) && usableWeight(lw.wGate) &&
+           usableWeight(lw.wUp) && usableWeight(lw.wDown);
+}
+
+// MLA layers are identified from the loaded tensors, not from a propagated
+// flag: the raw GGUF load path does not set LayerWeights::useMLA, so relying on
+// it rejects every MLA layer as "missing weights". MLA has no separate wk/wv
+// projections; K and V are produced from attnKV_a_mqa (kv_lora_rank + k_pe)
+// followed by the fused attnK_b (K_nope for every head, then V for every head).
+bool layerIsMla(const LayerWeights& lw) noexcept {
+    return usableWeight(lw.attnKV_a_mqa) &&
+           usableWeight(lw.attnK_b) &&
+           !usableWeight(lw.wk) && !usableWeight(lw.wv);
+}
+
+bool mlaLayerReady(const LayerWeights& lw) noexcept {
+    // The output projection may be stored in lw.wo (raw load) or lw.attnO
+    // (mapped load); denseLayerReady resolves the same alias.
+    const WeightTensor& wo = lw.wo.data ? lw.wo : lw.attnO;
+    return usableWeight(lw.attnNorm) && usableWeight(lw.wq) &&
+           usableWeight(wo) &&
            usableWeight(lw.ffnNorm) && usableWeight(lw.wGate) &&
            usableWeight(lw.wUp) && usableWeight(lw.wDown);
 }
@@ -224,11 +248,29 @@ bool Deep2Engine::forwardLayerGpuResident(
     if (!ensureGpuForwardArena(slot)) return reject("reject: ensureGpuForwardArena failed");
     const LayerWeights& lw = modelWeights.layers[layer];
     const WeightTensor& wo = lw.wo.data ? lw.wo : lw.attnO;
-    if (!denseLayerReady(lw)) return reject("reject: denseLayerReady false");
-    if (!supportedDenseWeight(lw.wq)) return reject("reject: unsupported wq type");
-    if (!supportedDenseWeight(lw.wk)) return reject("reject: unsupported wk type");
-    if (!supportedDenseWeight(lw.wv)) return reject("reject: unsupported wv type");
-    if (!supportedDenseWeight(wo)) return reject("reject: unsupported wo type");
+    
+    // Check if layer is ready for GPU execution
+    // MLA layers need different weights than dense layers
+    bool layerReady = false;
+    
+    if (modelWeights.useMLA && lw.useMLA) {
+        // MLA layer: check for MLA-specific weights
+        layerReady = usableWeight(lw.attnNorm) && 
+                     usableWeight(lw.attnQ_a) && 
+                     usableWeight(lw.attnQ_b) && 
+                     usableWeight(lw.attnKV_a_mqa) && 
+                     usableWeight(lw.attnK_b) && 
+                     usableWeight(lw.attnO) &&
+                     usableWeight(lw.ffnNorm) && 
+                     usableWeight(lw.wGate) &&
+                     usableWeight(lw.wUp) && 
+                     usableWeight(lw.wDown);
+    } else {
+        // Dense layer: check for standard weights
+        layerReady = denseLayerReady(lw);
+    }
+    
+    if (!layerReady) return reject("reject: layer not ready");
     if (!supportedDenseWeight(lw.wGate)) return reject("reject: unsupported wGate type");
     if (!supportedDenseWeight(lw.wUp)) return reject("reject: unsupported wUp type");
     if (!supportedDenseWeight(lw.wDown)) return reject("reject: unsupported wDown type");
@@ -242,14 +284,28 @@ bool Deep2Engine::forwardLayerGpuResident(
     const uint32_t intermediate = static_cast<uint32_t>(lw.wGate.rows);
     if (!hidden || !heads || !kvHeads || !headDim || !kvDim || !intermediate)
         return reject("reject: zero geometry");
-    if (lw.wq.rows != static_cast<size_t>(heads * headDim))
-        return reject("reject: wq.rows mismatch");
-    if (lw.wk.rows != static_cast<size_t>(kvDim))
-        return reject("reject: wk.rows mismatch");
-    if (lw.wv.rows != static_cast<size_t>(kvDim))
-        return reject("reject: wv.rows mismatch");
-    if (wo.rows != hidden || wo.cols != hidden)
-        return reject("reject: wo shape mismatch");
+    
+    // Geometry checks - MLA layers have different weight shapes
+    if (modelWeights.useMLA && lw.useMLA) {
+        // MLA layer geometry checks
+        if (lw.attnQ_b.rows != static_cast<size_t>(heads * headDim))
+            return reject("reject: attnQ_b.rows mismatch");
+        if (lw.attnKV_a_mqa.rows != 512) // kvLoraRank
+            return reject("reject: attnKV_a_mqa.rows mismatch");
+        if (lw.attnO.rows != hidden || lw.attnO.cols != hidden)
+            return reject("reject: attnO shape mismatch");
+    } else {
+        // Dense layer geometry checks
+        if (lw.wq.rows != static_cast<size_t>(heads * headDim))
+            return reject("reject: wq.rows mismatch");
+        if (lw.wk.rows != static_cast<size_t>(kvDim))
+            return reject("reject: wk.rows mismatch");
+        if (lw.wv.rows != static_cast<size_t>(kvDim))
+            return reject("reject: wv.rows mismatch");
+        const WeightTensor& wo_check = lw.wo.data ? lw.wo : lw.attnO;
+        if (wo_check.rows != hidden || wo_check.cols != hidden)
+            return reject("reject: wo shape mismatch");
+    }
     if (lw.wDown.rows != hidden || lw.wDown.cols != intermediate)
         return reject("reject: wDown shape mismatch");
 
@@ -395,7 +451,7 @@ bool Deep2Engine::forwardLayerGpuResident(
             return fail();
     }
 
-    // The active adapter preserves the historical parameter names
+// The active adapter preserves the historical parameter names
     // (nHeads,nope,rope), but forwards them to the backend as
     // (heads,kvHeads,pos).  Standard MHA/GQA therefore supplies kvHeads and
     // the actual token position here.  MLA remains outside this dense lane.
@@ -411,26 +467,78 @@ bool Deep2Engine::forwardLayerGpuResident(
         gpuForwardTrace("layer fail: AppendKV");
         return fail();
     }
-    // The adapter retains the historical parameter name `kvDim`, but its
-    // implementation forwards this value as the backend's KV-head count.
-    // Pass kvHeads here; the flattened width was already used by AppendKV.
-    // CSPD experimental path: try split-KV attention first when enabled via
-    // DEEP2_CSPD=1, falling back to the canonical OP_ATTN kernel on failure.
+
+    // Attention: MLA or standard MHA/GQA
     bool attnOk = false;
-    if (gpu->IsCspdEnabled()) {
-        attnOk = gpu->DispatchAttnDecodeSplitKV(
-            gpu->ArenaQ(), gpu->ArenaKCache(), gpu->ArenaVCache(),
-            gpu->ArenaAttn(), headDim, heads, kvHeads, pos + 1,
-            1.0f / std::sqrt(static_cast<float>(headDim)), layer);
-        if (!attnOk) {
-            gpuForwardTrace("CSPD fallback: DispatchAttnDecodeSplitKV");
+    if (modelWeights.useMLA && lw.useMLA) {
+        // MLA attention path
+        // MLA uses different Q/K/V projections and a different attention kernel
+        // MLA Q path: q_a -> norm -> q_b
+        // MLA KV path: kv_a_mqa -> norm -> k_b / v_b
+        
+        // Ensure MLA attention is set up with correct dimensions
+        // From logs: qLoraRank=0 kvLoraRank=512 qkNope=128 qkRope=64 vHeadDim=128 headDim=192
+        const uint32_t qkNope = 128;
+        const uint32_t qkRope = 64;
+        const uint32_t qkDim = qkNope + qkRope; // 192
+        const uint32_t vDim = 128; // vHeadDim
+        const uint32_t nope = qkNope;
+        const uint32_t rope = qkRope;
+        const uint32_t nHeads = heads;
+        
+        if (!gpu->EnsureMlaAttn(nHeads, qkDim, vDim, nope, rope, 
+                                 config.maxSeqLen, modelWeights.numLayers)) {
+            gpuForwardTrace("layer fail: EnsureMlaAttn");
+            return fail();
+        }
+        
+        // Upload K_b and V_b weights and K_pe to GPU
+        // K_pe is embedded in attnKV_a_mqa tensor (last 64 elements)
+        if (lw.attnK_b.data && lw.attnV_b.data) {
+            if (!gpu->UploadBuf(gpu->MlaKb(), 
+                               static_cast<const float*>(lw.attnK_b.data), nHeads * nope) ||
+                !gpu->UploadBuf(gpu->MlaVb(), 
+                               static_cast<const float*>(lw.attnV_b.data), nHeads * 128)) {
+                gpuForwardTrace("layer fail: MLA KV upload");
+            } else {
+                const float scale = 1.0f / std::sqrt(static_cast<float>(192));
+                const float ropeScale = 1.0f;
+                
+                attnOk = gpu->DispatchAttnDecodeMLA(
+                    gpu->ArenaQ(), gpu->MlaKb(), gpu->MlaVb(), gpu->MlaKpe(),
+                    gpu->ArenaAttn(), 192, 128, 128, 64, nHeads, pos + 1,
+                    modelWeights.ropeTheta, scale, 1.0f, layer);
+                if (attnOk) {
+                    ++counters.attnScoreOps;
+                    ++counters.softmaxOps;
+                    ++counters.attnValueOps;
+                }
+            }
         }
     }
+    
     if (!attnOk) {
-        attnOk = gpu->DispatchAttnDecode(
-            gpu->ArenaQ(), gpu->ArenaKCache(), gpu->ArenaVCache(),
-            gpu->ArenaAttn(), pos + 1, headDim, heads, kvHeads,
-            1.0f / std::sqrt(static_cast<float>(headDim)), layer);
+        // Standard MHA/GQA attention path
+        // The adapter retains the historical parameter name `kvDim`, but its
+        // implementation forwards this value as the backend's KV-head count.
+        // Pass kvHeads here; the flattened width was already used by AppendKV.
+        // CSPD experimental path: try split-KV attention first when enabled via
+        // DEEP2_CSPD=1, falling back to the canonical OP_ATTN kernel on failure.
+        if (gpu->IsCspdEnabled()) {
+            attnOk = gpu->DispatchAttnDecodeSplitKV(
+                gpu->ArenaQ(), gpu->ArenaKCache(), gpu->ArenaVCache(),
+                gpu->ArenaAttn(), headDim, heads, kvHeads, pos + 1,
+                1.0f / std::sqrt(static_cast<float>(headDim)), layer);
+            if (!attnOk) {
+                gpuForwardTrace("CSPD fallback: DispatchAttnDecodeSplitKV");
+            }
+        }
+        if (!attnOk) {
+            attnOk = gpu->DispatchAttnDecode(
+                gpu->ArenaQ(), gpu->ArenaKCache(), gpu->ArenaVCache(),
+                gpu->ArenaAttn(), pos + 1, headDim, heads, kvHeads,
+                1.0f / std::sqrt(static_cast<float>(headDim)), layer);
+        }
     }
     if (!attnOk) {
         gpuForwardTrace("layer fail: DispatchAttnDecode");
@@ -447,19 +555,155 @@ bool Deep2Engine::forwardLayerGpuResident(
     ++counters.oProjOps;
     ++counters.residualOps;
 
-    if (!gpu->DispatchRmsNorm(gpu->ArenaResidual(), ffnNormDevice,
-                              gpu->ArenaNormed(), hidden, modelWeights.normEps) ||
-        !gemv(lw.wGate, gpu->ArenaNormed(), gpu->ArenaGate(), intermediate, hidden) ||
-        !gemv(lw.wUp, gpu->ArenaNormed(), gpu->ArenaUp(), intermediate, hidden) ||
-        !gpu->DispatchSwiGLU(gpu->ArenaGate(), gpu->ArenaUp(),
-                             gpu->ArenaFFNAct(), intermediate) ||
-        !gemv(lw.wDown, gpu->ArenaFFNAct(), gpu->ArenaDown(), hidden, intermediate) ||
-        !gpu->DispatchResidualAdd(gpu->ArenaResidual(), gpu->ArenaDown(),
-                                  gpu->ArenaHidden(), hidden))
-        return fail();
-    ++counters.ffnNormOps;
-    ++counters.ffnActOps;
-    ++counters.ffnResidualOps;
+    // FFN: Dense or MoE
+    bool ffnOk = false;
+    if (modelWeights.isMoE && !lw.moeGate.empty()) {
+        // MoE FFN path - download normed hidden, run MoE on CPU, upload result
+        std::vector<float> normedHiddenHost(hidden);
+        if (!gpu->DownloadBuf(gpu->ArenaNormed(), normedHiddenHost.data(), hidden)) {
+            return fail();
+        }
+        
+        // Build router weight view
+        Gpu::GpuWeightView routerView;
+        routerView.data = lw.moeRouter.data;
+        routerView.rows = static_cast<uint32_t>(lw.moeRouter.rows);
+        routerView.cols = hidden;
+        routerView.type = lw.moeRouter.type;
+        routerView.bytes = lw.moeRouter.sizeBytes;
+        routerView.key = weightKey(lw.moeRouter);
+        
+        // Dispatch GPU router: logits = routerWeights * normedHidden
+        std::vector<int> expertIds;
+        std::vector<float> expertWeights;
+        const uint32_t topK = static_cast<uint32_t>(modelWeights.numExpertsPerToken);
+        if (!gpu->DispatchRouter(routerView, normedHiddenHost.data(), expertIds, expertWeights, static_cast<int>(topK))) {
+            return fail();
+        }
+        ++counters.routerOps;
+        
+        // Allocate host buffer for FFN output
+        std::vector<float> ffnOutputHost(hidden, 0.0f);
+        
+        // Shared expert (if present)
+        if (lw.moeSharedDown.data && lw.moeSharedDown.sizeBytes > 0) {
+            Gpu::GpuWeightView gateView, upView, downView;
+            gateView.data = lw.moeSharedGate.data;
+            gateView.rows = static_cast<uint32_t>(lw.moeSharedGate.rows);
+            gateView.cols = hidden;
+            gateView.type = lw.moeSharedGate.type;
+            gateView.bytes = lw.moeSharedGate.sizeBytes;
+            gateView.key = weightKey(lw.moeSharedGate);
+            
+            upView.data = lw.moeSharedUp.data;
+            upView.rows = static_cast<uint32_t>(lw.moeSharedUp.rows);
+            upView.cols = hidden;
+            upView.type = lw.moeSharedUp.type;
+            upView.bytes = lw.moeSharedUp.sizeBytes;
+            upView.key = weightKey(lw.moeSharedUp);
+            
+            downView.data = lw.moeSharedDown.data;
+            downView.rows = hidden;
+            downView.cols = static_cast<uint32_t>(lw.moeSharedDown.cols);
+            downView.type = lw.moeSharedDown.type;
+            downView.bytes = lw.moeSharedDown.sizeBytes;
+            downView.key = weightKey(lw.moeSharedDown);
+            
+            std::vector<float> sharedOutput(static_cast<uint32_t>(lw.moeSharedDown.cols));
+            if (!gpu->RunExpertFFN(gateView, upView, downView,
+                                   normedHiddenHost.data(), sharedOutput.data(),
+                                   hidden, static_cast<uint32_t>(lw.moeSharedDown.cols),
+                                   workEpoch_)) {
+                return fail();
+            }
+            ++counters.expertOps;
+            
+            // Accumulate shared expert output
+            for (uint32_t i = 0; i < static_cast<uint32_t>(lw.moeSharedDown.cols); ++i) {
+                if (i < hidden) ffnOutputHost[i] += sharedOutput[i];
+            }
+            ++counters.ffnActOps;
+        }
+        
+        // Routed experts
+        for (uint32_t i = 0; i < static_cast<uint32_t>(expertIds.size()); ++i) {
+            int expertId = expertIds[i];
+            float weight = expertWeights[i];
+            if (expertId < 0 || static_cast<size_t>(expertId) >= lw.moeGate.size()) continue;
+            
+            const WeightTensor& gateWt = lw.moeGate[expertId];
+            const WeightTensor& upWt = lw.moeUp[expertId];
+            const WeightTensor& downWt = lw.moeDown[expertId];
+            
+            if (!gateWt.data || !upWt.data || !downWt.data) continue;
+            
+            Gpu::GpuWeightView gateView, upView, downView;
+            gateView.data = gateWt.data;
+            gateView.rows = static_cast<uint32_t>(gateWt.rows);
+            gateView.cols = hidden;
+            gateView.type = gateWt.type;
+            gateView.bytes = gateWt.sizeBytes;
+            gateView.key = weightKey(gateWt);
+            
+            upView.data = upWt.data;
+            upView.rows = static_cast<uint32_t>(upWt.rows);
+            upView.cols = hidden;
+            upView.type = upWt.type;
+            upView.bytes = upWt.sizeBytes;
+            upView.key = weightKey(upWt);
+            
+            downView.data = downWt.data;
+            downView.rows = hidden;
+            downView.cols = static_cast<uint32_t>(gateWt.rows);
+            downView.type = downWt.type;
+            downView.bytes = downWt.sizeBytes;
+            downView.key = weightKey(downWt);
+            
+            std::vector<float> expertOutput(static_cast<uint32_t>(gateWt.rows));
+            if (!gpu->RunExpertFFN(gateView, upView, downView,
+                                   normedHiddenHost.data(), expertOutput.data(),
+                                   hidden, static_cast<uint32_t>(gateWt.rows),
+                                   workEpoch_)) {
+                return fail();
+            }
+            ++counters.expertOps;
+            
+            // Scale and accumulate expert output
+            for (uint32_t j = 0; j < static_cast<uint32_t>(gateWt.rows); ++j) {
+                if (j < hidden) ffnOutputHost[j] += expertOutput[j] * weight;
+            }
+            ++counters.ffnActOps;
+        }
+        
+        // Upload FFN output to GPU
+        if (!gpu->UploadBuf(gpu->ArenaDown(), ffnOutputHost.data(), hidden)) {
+            return fail();
+        }
+        
+        // Add FFN output to residual
+        if (!gpu->DispatchResidualAdd(gpu->ArenaResidual(), gpu->ArenaDown(),
+                                      gpu->ArenaHidden(), hidden)) {
+            return fail();
+        }
+        ffnOk = true;
+        ++counters.ffnResidualOps;
+    } else {
+        // Dense FFN path (original)
+        ffnOk = gpu->DispatchRmsNorm(gpu->ArenaResidual(), ffnNormDevice,
+                                     gpu->ArenaNormed(), hidden, modelWeights.normEps) &&
+                gemv(lw.wGate, gpu->ArenaNormed(), gpu->ArenaGate(), intermediate, hidden) &&
+                gemv(lw.wUp, gpu->ArenaNormed(), gpu->ArenaUp(), intermediate, hidden) &&
+                gpu->DispatchSwiGLU(gpu->ArenaGate(), gpu->ArenaUp(),
+                                    gpu->ArenaFFNAct(), intermediate) &&
+                gemv(lw.wDown, gpu->ArenaFFNAct(), gpu->ArenaDown(), hidden, intermediate) &&
+                gpu->DispatchResidualAdd(gpu->ArenaResidual(), gpu->ArenaDown(),
+                                         gpu->ArenaHidden(), hidden);
+        ++counters.ffnNormOps;
+        ++counters.ffnActOps;
+        ++counters.ffnResidualOps;
+    }
+    
+    if (!ffnOk) return fail();
 
     if (ownRecording && !gpu->EndFusedLayer()) return false;
     ++counters.forwardLayers;
@@ -586,44 +830,54 @@ bool Deep2Engine::tryGpuTokenForward(float* hidden) {
     if (!vulkanInitialized_) { gpuForwardTrace("reject: Vulkan not initialized"); return false; }
     if (vulkanDevices_.empty()) { gpuForwardTrace("reject: no Vulkan slots"); return false; }
     if (modelWeights.numLayers == 0) { gpuForwardTrace("reject: no layers"); return false; }
-    if (modelWeights.isMoE) { gpuForwardTrace("reject: MoE topology"); return false; }
-    if (modelWeights.useMLA) { gpuForwardTrace("reject: MLA topology"); return false; }
+    if (modelWeights.useMLA) { gpuForwardTrace("info: MLA topology - GPU path will attempt"); }
     if (modelWeights.layers.size() < modelWeights.numLayers)
     {
         gpuForwardTrace("reject: incomplete layer vector");
         return false;
     }
     for (size_t i = 0; i < modelWeights.numLayers; ++i) {
-        if (!denseLayerReady(modelWeights.layers[i])) {
+        // Readiness is derived from the loaded tensors. MLA layers carry no
+        // wk/wv projections, so a dense-only check rejects them as incomplete.
+        const LayerWeights& lw = modelWeights.layers[i];
+        const bool isMla = layerIsMla(lw);
+        if (!(isMla ? mlaLayerReady(lw) : denseLayerReady(lw))) {
             if (gpuForwardTraceEnabled()) {
-                const auto& lw = modelWeights.layers[i];
                 std::fprintf(stderr,
-                    "[GPU_FORWARD_TRACE] reject: layer=%zu missing dense weights "
-                    "attnNorm=%d q=%d k=%d v=%d wo=%d ffnNorm=%d gate=%d up=%d down=%d\n",
-                    i, usableWeight(lw.attnNorm), usableWeight(lw.wq),
+                    "[GPU_FORWARD_TRACE] reject: layer=%zu missing weights "
+                    "mla=%d attnNorm=%d wq=%d wk=%d wv=%d wo=%d ffnNorm=%d gate=%d up=%d down=%d "
+                    "attnKV_a_mqa=%d attnK_b=%d\n",
+                    i, isMla ? 1 : 0,
+                    usableWeight(lw.attnNorm), usableWeight(lw.wq),
                     usableWeight(lw.wk), usableWeight(lw.wv),
                     usableWeight(lw.wo.data ? lw.wo : lw.attnO),
                     usableWeight(lw.ffnNorm), usableWeight(lw.wGate),
-                    usableWeight(lw.wUp), usableWeight(lw.wDown));
+                    usableWeight(lw.wUp), usableWeight(lw.wDown),
+                    usableWeight(lw.attnKV_a_mqa), usableWeight(lw.attnK_b));
                 std::fflush(stderr);
             }
             return false;
         }
-        const LayerWeights& lw = modelWeights.layers[i];
         const WeightTensor& wo = lw.wo.data ? lw.wo : lw.attnO;
-        if (!supportedDenseWeight(lw.wq) || !supportedDenseWeight(lw.wk) ||
-            !supportedDenseWeight(lw.wv) || !supportedDenseWeight(wo) ||
+        if (!supportedDenseWeight(lw.wq) ||
+            !supportedDenseWeight(wo) ||
             !supportedDenseWeight(lw.wGate) || !supportedDenseWeight(lw.wUp) ||
             !supportedDenseWeight(lw.wDown))
         {
             if (gpuForwardTraceEnabled()) {
                 std::fprintf(stderr,
                     "[GPU_FORWARD_TRACE] reject: layer=%zu unsupported type "
-                    "q=%d k=%d v=%d wo=%d gate=%d up=%d down=%d\n",
-                    i, lw.wq.type, lw.wk.type, lw.wv.type,
-                    wo.type, lw.wGate.type, lw.wUp.type, lw.wDown.type);
+                    "q=%d wo=%d gate=%d up=%d down=%d\n",
+                    i, lw.wq.type, wo.type,
+                    lw.wGate.type, lw.wUp.type, lw.wDown.type);
                 std::fflush(stderr);
             }
+            return false;
+        }
+        if (isMla) {
+            // MLA needs a real decode kernel; its absence must be reported as
+            // the reason, not silently converted into a dense attempt.
+            gpuForwardTrace("reject: MLA attention kernel not implemented");
             return false;
         }
     }

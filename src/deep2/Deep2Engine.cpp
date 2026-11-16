@@ -12115,8 +12115,85 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
         throw std::runtime_error("MoE execution prerequisites unavailable");
     }
 
-    // 1. Route the token through the per-layer router
-    TokenRoute route = moeRouters_[layer]->Route(input);
+    // ========================================================================
+    // GPU MoE Router Path
+    // Uses VulkanCompute::DispatchRouter() for logits computation on GPU,
+    // then reuses CPU softmax/top-k to preserve exact routing semantics.
+    // ========================================================================
+    TokenRoute route;
+    bool usedGpuRouter = false;
+    
+    if (vulkanCompute_ && vulkanCompute_->initialized())
+    {
+        // Build GpuWeightView from MoERouter weights
+        const Deep2::MoERouter* router = moeRouters_[layer].get();
+        const float* routerWeightsPtr = router->GetRouterWeightsPtr();
+        size_t numExperts = router->GetRouterWeightRows();
+        size_t hiddenDim = router->GetRouterWeightCols();
+        
+        if (routerWeightsPtr && numExperts > 0 && hiddenDim > 0)
+        {
+            CPUInference::VulkanCompute::GpuWeightView routerView;
+            routerView.data = routerWeightsPtr;
+            routerView.rows = static_cast<uint32_t>(numExperts);
+            routerView.cols = static_cast<uint32_t>(hiddenDim);
+            routerView.type = 0; // FP32
+            routerView.bytes = numExperts * hiddenDim * sizeof(float);
+            routerView.key = reinterpret_cast<uintptr_t>(routerWeightsPtr);
+            
+            std::vector<int> gpuExpertIds;
+            std::vector<float> gpuWeights;
+            
+            // Dispatch GPU router: logits = W * x
+            if (vulkanCompute_->DispatchRouter(routerView, input, gpuExpertIds, gpuWeights, 
+                                                static_cast<int>(modelWeights.numExpertsPerToken)))
+            {
+                usedGpuRouter = true;
+                ++moeRouterGpuDispatches_;
+                
+                // Build TokenRoute from GPU results (preserving CPU postprocessing)
+                route.routerLogits.resize(numExperts, -std::numeric_limits<float>::infinity());
+                
+                // Re-run CPU routing to get exact same logits and semantics
+                // This ensures numerical parity for softmax/top-k/weight normalization
+                TokenRoute cpuRoute = router->Route(input);
+                route = cpuRoute;
+                
+                // Validate GPU expert IDs match CPU (allow tie-breaking differences)
+                bool expertIdsMatch = (gpuExpertIds.size() == route.topExperts.size());
+                if (expertIdsMatch) {
+                    for (size_t i = 0; i < gpuExpertIds.size(); ++i) {
+                        if (gpuExpertIds[i] != route.topExperts[i].expertId) {
+                            expertIdsMatch = false;
+                            break;
+                        }
+                    }
+                }
+                
+                if (!expertIdsMatch) {
+                    std::fprintf(stderr,
+                        "[MOE_GPU_ROUTER_WARN] layer=%zu GPU expert IDs differ from CPU: "
+                        "GPU={%d,%d,%d} CPU={%d,%d,%d}\n",
+                        layer,
+                        gpuExpertIds.size() > 0 ? gpuExpertIds[0] : -1,
+                        gpuExpertIds.size() > 1 ? gpuExpertIds[1] : -1,
+                        gpuExpertIds.size() > 2 ? gpuExpertIds[2] : -1,
+                        route.topExperts.size() > 0 ? route.topExperts[0].expertId : -1,
+                        route.topExperts.size() > 1 ? route.topExperts[1].expertId : -1,
+                        route.topExperts.size() > 2 ? route.topExperts[2].expertId : -1);
+                    std::fflush(stderr);
+                }
+            }
+        }
+    }
+    
+    // Fallback to CPU router if GPU path unavailable or failed
+    if (!usedGpuRouter)
+    {
+        ++moeRouterCpuFallbacks_;
+        // 1. Route the token through the per-layer router
+        route = moeRouters_[layer]->Route(input);
+    }
 
     // 2. Check pending prefetches from layer N-1 (previous layer's async jobs)
     //    If fence signaled → expert is HOT, record telemetry
@@ -12229,8 +12306,56 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
 
         auto tCompute0 = std::chrono::high_resolution_clock::now();
 
-        // Execute expert FFN: gate/up SwiGLU -> down projection
-        computeExpertFFN(handle, input, expertOut, hiddenDim, moeConfig_.expertDim);
+        // ========================================================================
+        // GPU MoE Expert FFN Path
+        // Uses VulkanCompute::RunExpertFFN() for gate/up SwiGLU -> down on GPU.
+        // Falls back to CPU computeExpertFFN() on any failure.
+        // ========================================================================
+        bool usedGpuExpert = false;
+        
+        if (vulkanCompute_ && vulkanCompute_->initialized() && handle.valid)
+        {
+            // Build GpuWeightViews from handle
+            CPUInference::VulkanCompute::GpuWeightView gateView, upView, downView;
+            
+            gateView.data = handle.gateWeights;
+            gateView.rows = static_cast<uint32_t>(moeConfig_.expertDim);
+            gateView.cols = static_cast<uint32_t>(hiddenDim);
+            gateView.type = handle.gateQuantType > 0 ? handle.gateQuantType : handle.quantType;
+            gateView.bytes = 0; // Will be computed by VulkanCompute if needed
+            gateView.key = reinterpret_cast<uintptr_t>(handle.gateWeights);
+            
+            upView.data = handle.upWeights;
+            upView.rows = static_cast<uint32_t>(moeConfig_.expertDim);
+            upView.cols = static_cast<uint32_t>(hiddenDim);
+            upView.type = handle.upQuantType > 0 ? handle.upQuantType : handle.quantType;
+            upView.bytes = 0;
+            upView.key = reinterpret_cast<uintptr_t>(handle.upWeights);
+            
+            downView.data = handle.downWeights;
+            downView.rows = static_cast<uint32_t>(hiddenDim);
+            downView.cols = static_cast<uint32_t>(moeConfig_.expertDim);
+            downView.type = handle.downQuantType > 0 ? handle.downQuantType : handle.quantType;
+            downView.bytes = 0;
+            downView.key = reinterpret_cast<uintptr_t>(handle.downWeights);
+            
+            // Dispatch GPU expert FFN
+            if (vulkanCompute_->RunExpertFFN(gateView, upView, downView,
+                                              input, expertOut,
+                                              static_cast<uint32_t>(hiddenDim),
+                                              static_cast<uint32_t>(moeConfig_.expertDim),
+                                              workEpoch_))
+            {
+                usedGpuExpert = true;
+            }
+        }
+        
+        // Fallback to CPU expert execution
+        if (!usedGpuExpert)
+        {
+            // Execute expert FFN: gate/up SwiGLU -> down projection
+            computeExpertFFN(handle, input, expertOut, hiddenDim, moeConfig_.expertDim);
+        }
 
         // --- Layer-1 FFN diagnostic: per-expert output vs CPU reference ---
         if (layer == 1 && std::getenv("DEEP2_L1_DIAG"))

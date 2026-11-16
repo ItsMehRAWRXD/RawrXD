@@ -6,6 +6,8 @@
 #ifndef DEEP2_ENGINE_H
 #define DEEP2_ENGINE_H
 
+// All project and standard library includes MUST be BEFORE namespace Deep2
+// to avoid polluting std:: into Deep2::std::
 #include "ReverseIntegration.hpp"
 #include "mars/MARSController.hpp"
 #include "ThreadPool.h"
@@ -64,6 +66,7 @@
 #include "Deep2MultiGpuLayerPlan.hpp"
 #include "Deep2GpuForward.hpp"
 #include "reap/ReapRuntimePlan.hpp"
+// Standard library includes - must be BEFORE namespace Deep2
 #include <memory>
 #include <string>
 #include <vector>
@@ -1037,7 +1040,7 @@ namespace Deep2
         bool vulkanStrictNoCpuFallback_ = false;
         bool vulkanStrictViolation_ = false;
         std::string vulkanDeviceNeedle_ = {};
-        uint64_t vulkanGemvOk_ = 0;
+uint64_t vulkanGemvOk_ = 0;
         uint64_t vulkanGemvFail_ = 0;
         uint64_t vulkanGpuWeightBytes_ = 0;
         uint64_t vulkanGpuTensorBytes_ = 0;
@@ -1045,6 +1048,14 @@ namespace Deep2
         uint64_t vulkanUnplannedFallbacks_ = 0;
         uint64_t plannedCpuGemvOps_ = 0;
         uint64_t plannedGpuGemvOps_ = 0;
+        uint64_t workEpoch_ = 1;  // Incremented per forward pass for GPU dispatch tracking
+        
+        // GPU MoE metrics
+        uint64_t moeRouterGpuDispatches_ = 0;
+        uint64_t moeExpertGpuDispatches_ = 0;
+        uint64_t moeRouterCpuFallbacks_ = 0;
+        uint64_t moeExpertCpuFallbacks_ = 0;
+        
         GpuForwardCounters gpuFwd_{};
         bool gpuFwdCommitted_ = false;
         std::unordered_map<std::string, std::vector<float>> vulkanWeightF32_;

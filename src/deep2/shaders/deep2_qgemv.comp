@@ -2,7 +2,7 @@
 #extension GL_KHR_shader_subgroup_basic : require
 #extension GL_KHR_shader_subgroup_arithmetic : require
 // Batch 9 packed GGUF GEMV.
-// Supported: Q5_0(6), Q8_0(8), Q2_K(10), Q4_K(12), Q6_K(14).
+// Supported: Q4_0(2), Q5_0(6), Q8_0(8), Q2_K(10), Q4_K(12), Q6_K(14).
 //
 // 40TPS_BATCH2:
 //   one workgroup = one output row
@@ -66,6 +66,21 @@ float q8_0_weight(uint rowBase, uint col) {
     uint i = col % 32u;
     uint b = rowBase + block * 34u;
     return geth(b) * float(gets8(b + 2u + i));
+}
+
+// Q4_0 (type 2): block_q4_0 = fp16 d + 16 packed bytes, 32 values per block,
+// 18 bytes per block. The nibble layout is SPLIT-HALF, matching ggml's
+// dequantize_row_q4_0 (src/ggml-quants.c): the low nibble of byte j is element
+// j and the high nibble of byte j is element 16 + j. It is NOT the interleaved
+// pair layout used by Q4_K/Q6_K, so decoding it that way silently permutes half
+// the weights.
+float q4_0_weight(uint rowBase, uint col) {
+    uint block = col / 32u;
+    uint i = col % 32u;
+    uint b = rowBase + block * 18u;
+    uint q = getb(b + 2u + (i % 16u));
+    uint nibble = (i < 16u) ? (q & 15u) : (q >> 4);
+    return geth(b) * (float(int(nibble)) - 8.0);
 }
 
 float q2k_weight(uint rowBase, uint col) {
@@ -205,7 +220,11 @@ void main() {
 
     uint blocksPerRow = 0u;
     uint rowBytes = 0u;
-    if (pc.type == 6u) {
+    if (pc.type == 2u) {
+        blocksPerRow = (pc.cols + 31u) / 32u;
+        if (blocksPerRow > 0xffffffffu / 18u) { if (lane == 0u) y[row] = uintBitsToFloat(0x7fc00000u); return; }
+        rowBytes = blocksPerRow * 18u;
+    } else if (pc.type == 6u) {
         blocksPerRow = pc.cols / 32u + uint(pc.cols % 32u != 0u);
         if (blocksPerRow > 0xffffffffu / 22u) { if (lane == 0u) y[row] = uintBitsToFloat(0x7fc00000u); return; }
         rowBytes = blocksPerRow * 22u;
@@ -326,7 +345,8 @@ void main() {
     } else {
         for (uint j = lane; j < pc.cols; j += 256u) {
             float ww = 0.0;
-            if (pc.type == 6u) ww = q5_0_weight(rb, j);
+            if (pc.type == 2u) ww = q4_0_weight(rb, j);
+            else if (pc.type == 6u) ww = q5_0_weight(rb, j);
             else if (pc.type == 8u) ww = q8_0_weight(rb, j);
             else if (pc.type == 10u) ww = q2k_weight(rb, j);
             acc += ww * x[j];

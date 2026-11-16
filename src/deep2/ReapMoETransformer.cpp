@@ -441,6 +441,17 @@ void patchMetadata(std::vector<MetaEntry>& metadata, uint32_t activeExperts) {
             }
             continue;
         }
+                // Recalculate expert feed-forward length for reduced expert bank
+                if (endsWith(key, "expert_feed_forward_length") ||
+                    endsWith(key, "expert_shared_feed_forward_length")) {
+                    uint32_t& ffLength = *reinterpret_cast<uint32_t*>(entry.value.data());
+                    ffLength = ffLength * activeExperts / 512U;
+                }
+                // Recalculate total parameter count for reduced expert bank
+                if (key == "general.parameter_count") {
+                    uint64_t& paramCount = *reinterpret_cast<uint64_t*>(entry.value.data());
+                    paramCount = paramCount * activeExperts / 512ULL;
+                }
         // Top-k is read, never written here.
         if (endsWith(key, "expert_used_count")) {
             foundUsedCount = true;
