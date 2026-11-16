@@ -470,6 +470,16 @@ elseif(TARGET zlib)
         "${CMAKE_BINARY_DIR}/_deps/zlib-src"
         "${CMAKE_BINARY_DIR}/_deps/zlib-build")
     target_compile_definitions(rawrxd_compression_core PUBLIC RAWRXD_HAVE_ZLIB=1)
+    elseif(EXISTS "${CMAKE_BINARY_DIR}/_deps/zlib-src" OR EXISTS "${CMAKE_SOURCE_DIR}/_deps/zlib-src")
+        # Local zlib-src fallback: use source files from the local directory.
+        target_include_directories(rawrxd_compression_core PUBLIC
+            "${CMAKE_BINARY_DIR}/_deps/zlib-src")
+        # Collect and add zlib source files.
+        file(GLOB ZLIB_SOURCES "${CMAKE_BINARY_DIR}/_deps/zlib-src/*.c")
+        target_sources(rawrxd_compression_core PUBLIC ${ZLIB_SOURCES})
+        file(GLOB ZLIB_HDRS "${CMAKE_BINARY_DIR}/_deps/zlib-src/*.h")
+        target_sources(rawrxd_compression_core PUBLIC ${ZLIB_HDRS})
+        target_compile_definitions(rawrxd_compression_core PUBLIC RAWRXD_HAVE_ZLIB=1)
 else()
     # zlib.h must still be resolvable; the core fails to compile rather than
     # silently producing a different wire format.
@@ -6422,6 +6432,7 @@ endif()
 # authorization; source shards are never overwritten.
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/reap_cli.cpp")
     add_executable(rawr-reap src/reap_cli.cpp src/reap_cli_contract.cpp
+        src/reap/ReapRuntime.cpp
         src/deep2/ReapMoETransformer.cpp)
     target_link_libraries(rawr-reap PRIVATE deep2_engine_lib)
     target_include_directories(rawr-reap PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src/deep2)
