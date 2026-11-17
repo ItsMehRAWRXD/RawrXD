@@ -7148,7 +7148,6 @@ target_link_libraries(test_sovereign_compose_lab PRIVATE sovereign_emit_formats)
           ${CMAKE_SOURCE_DIR}/3rdparty/ggml/src)
       target_link_libraries(deep2_q5k_gpu_stress PRIVATE
           rawrxd_gpu_compute
-          deep2_engine_lib
           Vulkan::Vulkan)
       target_compile_features(deep2_q5k_gpu_stress PRIVATE cxx_std_20)
       if(MSVC)
