@@ -3718,6 +3718,12 @@ bool Deep2Engine::loadModel(const std::string& ggufPath)
                        hasTensor(lw.wv) || hasTensor(lw.wo) ||
                        hasTensor(lw.attnO) || hasTensor(lw.wqkv) || hasMla;
         bool hasSsm = lw.hasSSM;
+        // DeepSeek2/Kimi MLA layers may keep their Q/K/V descriptors
+        // residency-backed with null data pointers.  The architecture itself
+        // is authoritative for topology: a non-SSM DeepSeek2 layer is an
+        // attention layer even before its tensor payloads are acquired.
+        if (modelWeights.useMLA && meta.architecture == "deepseek2" && !hasSsm)
+            hasAttn = true;
         const bool hasMoE = hasTensor(lw.moeRouter);
         // Use bound descriptors: data may still be null at topology time.
         const bool isQwenGdn = IsQwenGdnLayerBound(lw) || IsQwenGdnLayer(lw);
