@@ -8,6 +8,7 @@
 // - Bounds/overflow checks every read and tensor range
 // ============================================================================
 #include <algorithm>
+#include <chrono>
 #include <cctype>
 #include <cerrno>
 #include <cstdint>
@@ -1209,6 +1210,26 @@ inline GGUFLoadResult GGUFLoader::LoadMetadata(const char* filepath) {
     }
 
     auto loader = std::make_shared<GGUFLoader>();
+    const auto residencyTrace = [&](const char* phase, size_t index,
+                                    size_t total, const char* tensorName,
+                                    uint64_t bytesMapped, uint64_t bytesUploaded,
+                                    uint64_t gpuBytesResident) {
+        const auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count();
+        std::fprintf(stderr,
+                     "[RESIDENCY_PROGRESS] RESIDENCY_PHASE=%s CURRENT_TENSOR_INDEX=%zu "
+                     "TOTAL_TENSORS=%zu CURRENT_TENSOR_NAME=%s TENSORS_COMPLETED=%zu "
+                     "BYTES_MAPPED=%llu BYTES_UPLOADED=%llu GPU_BYTES_RESIDENT=%llu "
+                     "CPU_BYTES_RESIDENT=%llu LAST_PROGRESS_TIMESTAMP=%lld\n",
+                     phase, index, total, tensorName ? tensorName : "-", index,
+                     static_cast<unsigned long long>(bytesMapped),
+                     static_cast<unsigned long long>(bytesUploaded),
+                     static_cast<unsigned long long>(gpuBytesResident),
+                     static_cast<unsigned long long>(bytesMapped),
+                     static_cast<long long>(now));
+        std::fflush(stderr);
+    };
+    residencyTrace("OPEN_BEGIN", 0, 0, filepath, 0, 0, 0);
     if (!loader->load(std::string(filepath))) {
         result.success = false;
         result.ok = false;
@@ -1225,6 +1246,8 @@ inline GGUFLoadResult GGUFLoader::LoadMetadata(const char* filepath) {
     result.metadataCountHeader = loader->metadataCountHeader();
     result.totalSize = loader->mappedBytes();
     result.loader = std::move(loader);
+    residencyTrace("MAPPED", 0, 0, "-",
+                    result.totalSize, 0, 0);
 
     // Populate rawKv from all metadata key-value pairs
     auto rawStrings = result.loader->getMetaAllStrings();
@@ -1247,6 +1270,9 @@ inline GGUFLoadResult GGUFLoader::LoadMetadata(const char* filepath) {
     // Populate tensor descriptors
     auto tensorNames = result.loader->listTensors();
     result.tensors.reserve(tensorNames.size());
+    residencyTrace("ENUMERATING_TENSORS", 0, tensorNames.size(), "-",
+                    result.totalSize, 0, 0);
+    size_t tensorIndex = 0;
     for (const auto& name : tensorNames) {
         const auto* gt = result.loader->getTensor(name);
         if (gt) {
@@ -1262,7 +1288,15 @@ inline GGUFLoadResult GGUFLoader::LoadMetadata(const char* filepath) {
             ti.dataOffset = gt->fileOffset;
             result.tensors.push_back(std::move(ti));
         }
+        ++tensorIndex;
+        if (tensorIndex == tensorNames.size() || (tensorIndex % 10) == 0) {
+            residencyTrace("ENUMERATING_TENSORS", tensorIndex, tensorNames.size(),
+                            name.c_str(), result.totalSize, 0, 0);
+        }
     }
+
+    residencyTrace("METADATA_READY", result.tensors.size(), tensorNames.size(), "-",
+                    result.totalSize, 0, 0);
 
     return result;
 }
