@@ -83,6 +83,22 @@ static inline uint32_t sigma1(uint32_t x) {
 static string computeFileSha256(const string& path) {
     FILE* f = fopen(path.c_str(), "rb");
     if (!f) return "";
+
+    uint64_t expectedBytes = 0;
+    std::error_code sizeEc;
+    const auto fileSize = fs::file_size(path, sizeEc);
+    if (!sizeEc) expectedBytes = static_cast<uint64_t>(fileSize);
+    uint64_t nextProgress = 1ull << 30;
+    auto reportProgress = [&](uint64_t done) {
+        if (expectedBytes == 0 || done < nextProgress) return;
+        cerr << "[SOURCE_SHA256_PROGRESS] bytes=" << done
+             << " total_bytes=" << expectedBytes
+             << " percent=" << fixed << setprecision(2)
+             << (100.0 * static_cast<double>(done) /
+                 static_cast<double>(expectedBytes)) << endl;
+        while (nextProgress <= done && nextProgress <= UINT64_MAX - (1ull << 30))
+            nextProgress += 1ull << 30;
+    };
     
     // Initial hash values
     uint32_t h[8] = {
@@ -96,6 +112,7 @@ static string computeFileSha256(const string& path) {
     
     while ((bytes = fread(block.data(), 1, block.size(), f)) > 0) {
         totalBytes += bytes;
+        reportProgress(totalBytes);
         
         if (bytes == 64) {
             // Full block - process directly
@@ -345,8 +362,18 @@ out.close();
 class CalibrationEngine {
 public:
     CalibrationEngine(const CalibrationConfig& config) : config_(config) {}
+
+    void phase(const char* name, const char* event) {
+        const auto now = chrono::steady_clock::now();
+        const auto elapsed = chrono::duration_cast<chrono::milliseconds>(now - phaseStart_).count();
+        cerr << "[CALIBRATION_PHASE] phase=" << name
+             << " event=" << event
+             << " elapsed_ms=" << elapsed << endl;
+        phaseStart_ = now;
+    }
     
     bool initialize() {
+        phase("OUTPUT_DIRECTORY", "BEGIN");
         // Checkpoints and rank files are part of the calibration contract. Create
         // the destination before the first atomic temp-file write so a missing
         // parent cannot turn successful inference into a calibration failure.
@@ -357,8 +384,10 @@ public:
                  << config_.outputDir << ": " << outputEc.message() << endl;
             return false;
         }
+        phase("OUTPUT_DIRECTORY", "END");
 
         // Create and initialize Deep2Engine
+        phase("ENGINE_INITIALIZE", "BEGIN");
         engine_ = make_unique<Deep2Engine>();
         
         EngineConfig engineConfig;
@@ -386,6 +415,7 @@ public:
             cerr << "Failed to initialize Deep2Engine" << endl;
             return false;
         }
+        phase("ENGINE_INITIALIZE", "END");
         
         // Enable REAP calibration observation via environment
         // Deep2Engine checks this when creating MoE routers
@@ -396,10 +426,12 @@ public:
             cout << "Loading model from: " << config_.modelPath << endl;
         }
         
+        phase("MODEL_LOAD_TOKENIZER_INIT", "BEGIN");
         if (!engine_->loadModel(config_.modelPath)) {
             cerr << "Failed to load model" << endl;
             return false;
         }
+        phase("MODEL_LOAD_TOKENIZER_INIT", "END");
         
         // Get model info
         const auto& modelWeights = engine_->getModelWeights();
@@ -425,27 +457,35 @@ public:
         }
         
         // Install REAP observer to capture routing statistics
+        phase("CALIBRATION_TRACKER_INIT", "BEGIN");
+        phase("REAP_OBSERVER_INSTALL", "BEGIN");
         installReapObserver();
+        phase("REAP_OBSERVER_INSTALL", "END");
         
         // Compute model SHA-256 for checkpoint validation
+        phase("SOURCE_SHA256", "BEGIN");
         modelSha256_ = computeFileSha256(config_.modelPath);
+        phase("SOURCE_SHA256", "END");
         if (config_.verbose) {
             cout << "  Model SHA-256: " << modelSha256_ << endl;
         }
         
         // Prepare checkpoint manifest
         checkpointPath_ = fs::path(config_.outputDir) / "calibration_checkpoint.json";
+        phase("CALIBRATION_TRACKER_INIT", "END");
         
         return true;
     }
     
     bool runCalibration() {
         // Prepare calibration prompts
+        phase("PROMPT_PREPARATION", "BEGIN");
         vector<string> calibrationPrompts = preparePrompts();
         if (calibrationPrompts.empty()) {
             cerr << "No calibration prompts available" << endl;
             return false;
         }
+        phase("PROMPT_PREPARATION", "END");
         
         // Compute config hash for checkpoint validation
         configHash_ = computeConfigHash(calibrationPrompts);
@@ -495,11 +535,12 @@ public:
             }
             
             uint64_t tokensBefore = accumulator_.tokenCount();
-            
+            phase("INFERENCE_CONTEXT_READY", "BEGIN");
             if (!runInferenceOnPrompt(prompt, genOptions)) {
                 cerr << "Failed to run inference on prompt " << i << endl;
                 return false;
             }
+            phase("GENERATION_PROMPT", "END");
             
             uint64_t tokensAfter = accumulator_.tokenCount();
             completedTokensPerPrompt[i] = tokensAfter - tokensBefore;
@@ -522,6 +563,7 @@ public:
 private:
     CalibrationConfig config_;
     unique_ptr<Deep2Engine> engine_;
+    chrono::steady_clock::time_point phaseStart_ = chrono::steady_clock::now();
     
     // Model metadata
     struct ModelInfo {
@@ -780,6 +822,8 @@ private:
     }
     
     bool runInferenceOnPrompt(const string& prompt, const GenerationOptions& genOptions) {
+        phase("INFERENCE_CONTEXT_READY", "END");
+        phase("GENERATION_LOOP", "BEGIN");
         if (config_.verbose) {
             cout << "    Running generateStream..." << endl;
         }
