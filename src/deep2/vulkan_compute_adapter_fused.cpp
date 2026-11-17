@@ -345,22 +345,29 @@ bool VulkanCompute::DispatchGEMVPacked(const void* packed, size_t bytes,
     // projection through the host dequantizer even when GPU MLA was enabled.
     // Keep the public legacy signature, but bind it to the explicit Q4_K
     // backend dispatch so the type is no longer guessed.
+    auto fail = [&](const char* stage) {
+        std::fprintf(stderr,
+                     "[MLA_Q_DISPATCH_FAIL] stage=%s rows=%u cols=%u bytes=%zu backend=%d\n",
+                     stage, rows, cols, bytes, backend_ ? 1 : 0);
+        std::fflush(stderr);
+        return false;
+    };
     if (backend_ == nullptr || packed == nullptr || input == nullptr ||
         output == nullptr || bytes == 0 || rows == 0 || cols == 0)
-        return false;
+        return fail("invalid_args");
 
     Deep2::VulkanCompute::DeviceBuf& in = backend_->ArenaNormed();
     Deep2::VulkanCompute::DeviceBuf& out = backend_->ArenaResidual();
     if (in.size < static_cast<size_t>(cols) * sizeof(float) ||
         out.size < static_cast<size_t>(rows) * sizeof(float)) {
         if (!backend_->EnsureForwardArena(cols, cols, 1, 1, 1, 1, 1))
-            return false;
+            return fail("arena");
     }
-    if (!backend_->UploadVector(in, input, cols)) return false;
+    if (!backend_->UploadVector(in, input, cols)) return fail("upload");
     if (!backend_->DispatchGemvQuant(GGML_TYPE_Q4_K, packed, bytes, in, out,
                                       rows, cols, cacheKey))
-        return false;
-    if (!backend_->DownloadVector(out, output, rows)) return false;
+        return fail("dispatch");
+    if (!backend_->DownloadVector(out, output, rows)) return fail("download");
 
     gemv_success_ = static_cast<uint64_t>(backend_->GemvSuccessCount());
     gemv_weight_uploads_ = static_cast<uint64_t>(backend_->WeightUploadCount());
