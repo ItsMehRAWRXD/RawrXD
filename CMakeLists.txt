@@ -6454,7 +6454,7 @@ endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/tools/reap_calibrate_cli.cpp" AND
    TARGET deep2_engine_lib)
     add_executable(reap-calibrate tools/reap_calibrate_cli.cpp)
-    target_link_libraries(reap-calibrate PRIVATE deep2_engine_lib)
+    target_link_libraries(reap-calibrate PRIVATE deep2_engine_lib bcrypt)
     target_include_directories(reap-calibrate PRIVATE
         ${CMAKE_SOURCE_DIR}/src
         ${CMAKE_SOURCE_DIR}/include

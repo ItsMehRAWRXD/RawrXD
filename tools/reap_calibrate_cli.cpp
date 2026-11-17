@@ -28,6 +28,12 @@
 #include <sstream>
 #include <array>
 
+#ifdef _WIN32
+#include <windows.h>
+#include <bcrypt.h>
+#pragma comment(lib, "bcrypt.lib")
+#endif
+
 // Deep2 inference engine headers
 #include "deep2/GGUFLoader.hpp"
 #include "deep2/MoERouter.hpp"
@@ -81,8 +87,57 @@ static inline uint32_t sigma1(uint32_t x) {
 }
 
 static string computeFileSha256(const string& path) {
+#ifdef _WIN32
+    ifstream in(path, ios::binary);
+    if (!in) return "";
+    BCRYPT_ALG_HANDLE alg = nullptr;
+    BCRYPT_HASH_HANDLE hash = nullptr;
+    DWORD hashLen = 0, result = 0;
+    if (BCryptOpenAlgorithmProvider(&alg, BCRYPT_SHA256_ALGORITHM, nullptr, 0) != 0)
+        return "";
+    if (BCryptGetProperty(alg, BCRYPT_HASH_LENGTH,
+                          reinterpret_cast<PUCHAR>(&hashLen), sizeof(hashLen),
+                          &result, 0) != 0 || hashLen == 0) {
+        BCryptCloseAlgorithmProvider(alg, 0);
+        return "";
+    }
+    if (BCryptCreateHash(alg, &hash, nullptr, 0, nullptr, 0, 0) != 0) {
+        BCryptCloseAlgorithmProvider(alg, 0);
+        return "";
+    }
+    vector<unsigned char> buffer(1u << 20);
+    while (in) {
+        in.read(reinterpret_cast<char*>(buffer.data()),
+                static_cast<streamsize>(buffer.size()));
+        const streamsize n = in.gcount();
+        if (n <= 0) break;
+        if (BCryptHashData(hash, buffer.data(), static_cast<ULONG>(n), 0) != 0) {
+            BCryptDestroyHash(hash);
+            BCryptCloseAlgorithmProvider(alg, 0);
+            return "";
+        }
+    }
+    vector<unsigned char> digest(hashLen);
+    const bool ok = BCryptFinishHash(hash, digest.data(), hashLen, 0) == 0;
+    BCryptDestroyHash(hash);
+    BCryptCloseAlgorithmProvider(alg, 0);
+    if (!ok) return "";
+    stringstream native;
+    native << hex << setfill('0');
+    for (unsigned char byte : digest) native << setw(2) << static_cast<unsigned>(byte);
+    return native.str();
+#else
     FILE* f = fopen(path.c_str(), "rb");
     if (!f) return "";
+    // The SHA-256 compression function still consumes 64-byte blocks, but
+    // reading each block with a separate stdio call makes multi-gigabyte GGUF
+    // provenance scans syscall-bound. Keep the hash algorithm unchanged while
+    // letting stdio fill a large read buffer underneath it.
+    static constexpr size_t kHashReadBufferBytes = 1u << 20;
+    if (setvbuf(f, nullptr, _IOFBF, kHashReadBufferBytes) != 0) {
+        fclose(f);
+        return "";
+    }
 
     uint64_t expectedBytes = 0;
     std::error_code sizeEc;
@@ -226,6 +281,7 @@ static string computeFileSha256(const string& path) {
         ss << hex << setw(8) << setfill('0') << h[i];
     }
     return ss.str();
+#endif
 }
 
 struct CalibrationConfig {
