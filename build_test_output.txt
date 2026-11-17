@@ -1,0 +1,40 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  Checking File Globs
+  q4_0_gpu_parity_test.cpp
+F:\rawrxd\src\deep2\q4_0_gpu_parity_test.cpp(169,17): error C2065: 'DeviceBuf': undeclared identifier [F:\rawrxd\build_msvc\q4_0_gpu_parity_test.vcxproj]
+F:\rawrxd\src\deep2\q4_0_gpu_parity_test.cpp(169,27): error C2146: syntax error: missing ';' before identifier 'weightBuf' [F:\rawrxd\build_msvc\q4_0_gpu_parity_test.vcxproj]
+F:\rawrxd\src\deep2\q4_0_gpu_parity_test.cpp(169,27): error C3861: 'weightBuf': identifier not found [F:\rawrxd\build_msvc\q4_0_gpu_parity_test.vcxproj]
+F:\rawrxd\src\deep2\q4_0_gpu_parity_test.cpp(170,24): error C2065: 'weightBuf': undeclared identifier [F:\rawrxd\build_msvc\q4_0_gpu_parity_test.vcxproj]
+F:\rawrxd\src\deep2\q4_0_gpu_parity_test.cpp(173,17): error C2065: 'DeviceBuf': undeclared identifier [F:\rawrxd\build_msvc\q4_0_gpu_parity_test.vcxproj]
+F:\rawrxd\src\deep2\q4_0_gpu_parity_test.cpp(173,27): error C2146: syntax error: missing ';' before identifier 'inputBuf' [F:\rawrxd\build_msvc\q4_0_gpu_parity_test.vcxproj]
+F:\rawrxd\src\deep2\q4_0_gpu_parity_test.cpp(173,27): error C3861: 'inputBuf': identifier not found [F:\rawrxd\build_msvc\q4_0_gpu_parity_test.vcxproj]
+F:\rawrxd\src\deep2\q4_0_gpu_parity_test.cpp(174,56): error C2065: 'inputBuf': undeclared identifier [F:\rawrxd\build_msvc\q4_0_gpu_parity_test.vcxproj]
+F:\rawrxd\src\deep2\q4_0_gpu_parity_test.cpp(180,17): error C2065: 'DeviceBuf': undeclared identifier [F:\rawrxd\build_msvc\q4_0_gpu_parity_test.vcxproj]
+F:\rawrxd\src\deep2\q4_0_gpu_parity_test.cpp(180,27): error C2146: syntax error: missing ';' before identifier 'outputBuf' [F:\rawrxd\build_msvc\q4_0_gpu_parity_test.vcxproj]
+F:\rawrxd\src\deep2\q4_0_gpu_parity_test.cpp(180,27): error C3861: 'outputBuf': identifier not found [F:\rawrxd\build_msvc\q4_0_gpu_parity_test.vcxproj]
+F:\rawrxd\src\deep2\q4_0_gpu_parity_test.cpp(181,57): error C2065: 'outputBuf': undeclared identifier [F:\rawrxd\build_msvc\q4_0_gpu_parity_test.vcxproj]
+F:\rawrxd\src\deep2\q4_0_gpu_parity_test.cpp(182,39): error C2065: 'outputBuf': undeclared identifier [F:\rawrxd\build_msvc\q4_0_gpu_parity_test.vcxproj]
+F:\rawrxd\src\deep2\q4_0_gpu_parity_test.cpp(182,17): error C2660: 'memset': function does not take 2 arguments [F:\rawrxd\build_msvc\q4_0_gpu_parity_test.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vcruntime_string.h(63,15):
+      see declaration of 'memset'
+      F:\rawrxd\src\deep2\q4_0_gpu_parity_test.cpp(182,17):
+      while trying to match the argument list '(float *, int)'
+  
+F:\rawrxd\src\deep2\q4_0_gpu_parity_test.cpp(187,21): error C2065: 'weightBuf': undeclared identifier [F:\rawrxd\build_msvc\q4_0_gpu_parity_test.vcxproj]
+F:\rawrxd\src\deep2\q4_0_gpu_parity_test.cpp(189,21): error C2065: 'inputBuf': undeclared identifier [F:\rawrxd\build_msvc\q4_0_gpu_parity_test.vcxproj]
+F:\rawrxd\src\deep2\q4_0_gpu_parity_test.cpp(190,21): error C2065: 'outputBuf': undeclared identifier [F:\rawrxd\build_msvc\q4_0_gpu_parity_test.vcxproj]
+F:\rawrxd\src\deep2\q4_0_gpu_parity_test.cpp(200,60): error C2065: 'outputBuf': undeclared identifier [F:\rawrxd\build_msvc\q4_0_gpu_parity_test.vcxproj]
+F:\rawrxd\src\deep2\q4_0_gpu_parity_test.cpp(259,83): error C2065: 'outputBuf': undeclared identifier [F:\rawrxd\build_msvc\q4_0_gpu_parity_test.vcxproj]
+F:\rawrxd\src\deep2\q4_0_gpu_parity_test.cpp(259,28): warning C4477: 'printf' : format string '%zu' requires an argument of type 'unsigned __int64', but variadic argument 1 has type 'uint32_t' [F:\rawrxd\build_msvc\q4_0_gpu_parity_test.vcxproj]
+      F:\rawrxd\src\deep2\q4_0_gpu_parity_test.cpp(259,28):
+      consider using '%u' in the format string
+      F:\rawrxd\src\deep2\q4_0_gpu_parity_test.cpp(259,28):
+      consider using '%I32u' in the format string
+  
+F:\rawrxd\src\deep2\q4_0_gpu_parity_test.cpp(259,28): warning C4473: 'printf' : not enough arguments passed for format string [F:\rawrxd\build_msvc\q4_0_gpu_parity_test.vcxproj]
+      F:\rawrxd\src\deep2\q4_0_gpu_parity_test.cpp(259,28):
+      placeholders and their parameters expect 2 variadic arguments, but 1 were provided
+      F:\rawrxd\src\deep2\q4_0_gpu_parity_test.cpp(259,28):
+      the missing variadic argument 2 is required by format string '%u'
+  

@@ -1463,6 +1463,12 @@ public:
         weightBudgetBytes_ = budgetBytes;
     }
 
+    public:
+        // Public wrapper for test access - delegates to private createBuffer
+        bool createBufferPublic(VkDeviceSize bytes, VkBufferUsageFlags usage,
+                                VkMemoryPropertyFlags required,
+                                DeviceBuf& out);
+
 private:
     struct WeightCacheEntry {
         DeviceBuf buffer{};
@@ -1514,10 +1520,13 @@ private:
     bool createBuffer(VkDeviceSize bytes, VkBufferUsageFlags usage,
                       VkMemoryPropertyFlags required,
                       DeviceBuf& out);
-    // Return a reusable DEVICE_LOCAL buffer of at least `bytes`, creating it on
-    // first use. Never destroys; entries live until the device is torn down.
+    // Reuse exact-size device-local scratch allocations between dispatches.
+    // This is part of the private buffer ownership contract; keep the
+    // declaration adjacent to createBuffer so the implementation cannot
+    // drift into a free helper with inaccessible DeviceBuf state.
     bool getScratchBuffer(VkDeviceSize bytes, VkBufferUsageFlags usage,
-                          VkMemoryPropertyFlags required, DeviceBuf& out);
+                          VkMemoryPropertyFlags required,
+                          DeviceBuf& out);
     void destroyBuffer(DeviceBuf& b);
     bool uploadToBuffer(DeviceBuf& dst, const void* src, size_t bytes);
     bool downloadFromBuffer(const DeviceBuf& src, void* dst, size_t bytes);

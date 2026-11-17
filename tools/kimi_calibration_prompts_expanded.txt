@@ -1,0 +1,66 @@
+Implement a bounded producer consumer queue in C++ with cancellation.
+Write a Python function that validates and normalizes an email address.
+Explain how database transactions provide atomicity and isolation.
+Calculate 144 divided by 12 and verify the result.
+Write a PowerShell command that finds duplicate files by SHA256.
+Design an idempotent webhook handler with replay protection.
+Explain stack versus heap allocation and give one failure mode for each.
+Write a Go function that retries an operation with a deadline.
+Return a JSON schema for a paginated API response.
+Describe how to bisect a regression with Git.
+Write a Rust function that parses a configuration file with errors.
+Explain big O complexity for merge sort and hash lookup.
+Generate a SQL migration adding a nullable indexed column safely.
+Write a Python function that groups log records by severity.
+Explain what a memory barrier does in a multithreaded program.
+Calculate the area of a circle with radius 5 using pi as 3.14159.
+Create a CMake test target that runs a command and checks its exit code.
+Write a JavaScript function that debounces an event handler.
+Explain how public key signatures establish authenticity.
+Design a file format with a magic number version and checksum.
+Write a C++ parser that rejects malformed length-prefixed input.
+List the steps for diagnosing a high CPU process on Windows.
+Return the prime numbers below 30 as a JSON array.
+Write a Python function that safely executes a subprocess with a timeout.
+Explain optimistic concurrency control with a practical example.
+Create a REST API error response for an invalid request.
+Write a SQL query using a window function to rank products by revenue.
+Explain why UTF-8 byte length differs from character count.
+Implement a bounded LRU cache in Python.
+Describe a safe blue-green deployment rollback plan.
+Write a C++ function that formats a Windows error code.
+Explain the difference between compile-time and runtime linking.
+Generate a YAML configuration for a service with health checks.
+Calculate 19 squared and show the multiplication.
+Write a Python function that merges overlapping intervals.
+Explain how garbage collection differs from deterministic destruction.
+Design a retry policy that avoids retry storms.
+Write a unit test for a timeout and cancellation path.
+Describe how to validate a JWT without trusting its claims blindly.
+Write a PowerShell script that checks free disk space and returns an exit code.
+Explain how a B-tree index supports range queries.
+Return a concise incident report template in JSON.
+Implement breadth-first search for an adjacency list in Python.
+Explain false sharing and one way to reduce it.
+Write a C++ function that serializes a struct in little-endian form.
+Design a metrics dashboard for request latency and error rate.
+Calculate the greatest common divisor of 84 and 30.
+Write a Python context manager for a temporary directory.
+Explain how DNS resolution and caching work.
+Create a SQL query that detects duplicate user emails.
+Write a shell-safe PowerShell command for copying a large file with verification.
+Explain the difference between authentication and authorization.
+Implement a priority queue use case and state its complexity.
+Write a CMake option that conditionally enables a backend.
+Describe how to investigate a corrupted binary file.
+Return the first twelve powers of two as JSON.
+Write a Python function that redacts secrets from log lines.
+Explain why checksums do not provide authenticity.
+Design a worker shutdown protocol that drains accepted work.
+Write a C++ function that validates a UTF-16 surrogate pair.
+Calculate 17 times 19 and verify using decomposition.
+Explain how a content-addressed store deduplicates files.
+Write a test plan for a model loader handling split files.
+Describe how to compare two deterministic token sequences.
+Implement a Python function that computes a confusion matrix.
+Explain why quantizing already quantized weights can reduce quality.

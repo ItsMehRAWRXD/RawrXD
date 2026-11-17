@@ -4,6 +4,7 @@
 
 #include "K2TokenEmbedding.hpp"
 #include "K2GlobalTensorIndex.hpp"
+#include "QuantKernelRegistry.hpp"
 #include <cstdio>
 #include <cstring>
 #include <algorithm>
@@ -193,7 +194,9 @@ K2TokenEmbedding::Result K2TokenEmbedding::lookup(std::uint32_t tokenId, float* 
     std::size_t kBlockElems = 256;
     std::size_t kBlockBytes = 0;
 
-    if (ref.ggmlType == 12) {
+    if (ref.ggmlType == 11) {
+        kBlockBytes = 110; // Q3_K
+    } else if (ref.ggmlType == 12) {
         kBlockBytes = 144; // Q4_K
     } else if (ref.ggmlType == 14) {
         kBlockBytes = 210; // Q6_K
@@ -274,12 +277,22 @@ bool K2TokenEmbedding::decodeRow(const std::uint8_t* data, std::size_t bytes,
     constexpr std::size_t kBlockElems = 256;
     std::size_t kBlockBytes = 0;
 
-    if (ggmlType == 12) kBlockBytes = 144;
+    if (ggmlType == 11) kBlockBytes = 110;
+    else if (ggmlType == 12) kBlockBytes = 144;
     else if (ggmlType == 14) kBlockBytes = 210;
     else return false;
 
     std::size_t blocksPerRow = (elements + kBlockElems - 1) / kBlockElems;
     if (bytes < blocksPerRow * kBlockBytes) return false;
+
+    if (ggmlType == 11) {
+        auto& registry = QuantKernelRegistry::Instance();
+        if (registry.GetRegisteredCount() == 0) registry.Initialize();
+        auto dequant = registry.GetDequant(11);
+        if (!dequant) return false;
+        dequant(data, output, elements);
+        return true;
+    }
 
     float blockDequant[256];
     std::size_t col = 0;

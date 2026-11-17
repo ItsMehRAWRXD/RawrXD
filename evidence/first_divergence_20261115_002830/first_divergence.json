@@ -1,0 +1,95 @@
+{
+  "task": "M9-M15 first divergence",
+  "model": "DeepSeek-V2-Lite-Chat.Q4_K_M.gguf",
+  "n_embd": 2048,
+  "n_layer": 27,
+  "token": 1,
+  "position": 0,
+  "reference": {
+    "impl": "llama.cpp llama_dump_intermediate",
+    "dir": "_sprint_diag/ref_tok1_pos0/pos0",
+    "tensors": 377
+  },
+  "native": {
+    "impl": "Deep2 ModelGenieExecutor differential",
+    "dir": "evidence/RAWRXD_CORE_DLL_NATIVE_E2E_001/diff_pos0d",
+    "records": 489
+  },
+  "alignment_logits_cos": 0.999965,
+  "conclusion": "No discrete operator bug. Gradual floating-point / activation-quantization accumulation, amplified at sensitive elements, compounding through 27 layers. Layer 0 exact; earliest meaningful divergence in Layer 1 attention Q projection.",
+  "first_divergence_strict_threshold_1e-3": {
+    "layer": 0,
+    "operator": "resid2",
+    "raw_name": "l_out",
+    "max_abs": 0.001807809,
+    "mean_abs": 0.0001904039,
+    "cos": 0.99999546,
+    "rel_l2": 0.003121429,
+    "worst_index": 231,
+    "native": -1.943271,
+    "ref": -1.945079,
+    "note": "fp noise (0.09% relative); layer 0 otherwise exact (attn_norm 8.6e-6, q 1.05e-5)"
+  },
+  "first_meaningful_operator_divergence": {
+    "layer": 1,
+    "operator": "q",
+    "raw_name": "Qcur / Linear_Output[3072]",
+    "max_abs": 0.1204,
+    "cos": 0.99994,
+    "rel_l2": 0.012,
+    "worst_index": 1849,
+    "worst_head": 9,
+    "worst_dim": 121,
+    "native": -0.207222,
+    "ref": -0.086833,
+    "elements_gt_0.05": 88,
+    "elements_gt_0.1": 1,
+    "of": 3072,
+    "preceded_by": {
+      "layer": 1,
+      "operator": "attn_norm",
+      "max_abs": 0.0152,
+      "index": 38,
+      "note": "inherited from resid2_L0 small-element error, amplified by RMSNorm"
+    }
+  },
+  "first_significant_resid2_divergence": {
+    "layer": 2,
+    "operator": "resid2",
+    "max_abs": 0.0751,
+    "cos": 0.9999668,
+    "note": "residual magnitude reaches ~1.1e3 by layer 3; the 3.0 max_abs there is 0.27% relative error"
+  },
+  "residual_relative_error_by_layer": {
+    "L0": {
+      "abs_res_max": 1.95,
+      "max_abs": 0.0018,
+      "rel_gt_1pct": 671
+    },
+    "L1": {
+      "abs_res_max": 2.42,
+      "max_abs": 0.0061,
+      "rel_gt_1pct": 1139
+    },
+    "L2": {
+      "abs_res_max": 12.15,
+      "max_abs": 0.0751,
+      "rel_gt_1pct": 1336
+    },
+    "L3": {
+      "abs_res_max": 1101.18,
+      "max_abs": 3.0082,
+      "rel_gt_1pct": 584
+    },
+    "L4": {
+      "abs_res_max": 1117.62,
+      "max_abs": 3.0123,
+      "rel_gt_1pct": 580
+    }
+  },
+  "final_logits": {
+    "cos": 0.999965,
+    "argmax_native": 185,
+    "argmax_ref": 185
+  }
+}

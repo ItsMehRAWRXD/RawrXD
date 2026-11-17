@@ -1,0 +1,80 @@
+#version 450
+// gemv_q4_0.comp — GGML block_q4_0 GEMV (y[row] = dot(dequant(W_row), x))
+//
+// Block layout is the authoritative ggml one (src/ggml-quants.c
+// dequantize_row_q4_0, QK4_0 = 32, 18 bytes per block):
+//
+//   block_q4_0 { ggml_half d; uint8_t qs[16]; }
+//   y[i*qk + j      ] = ((qs[j] & 0x0F) - 8) * d
+//   y[i*qk + j + 16 ] = ((qs[j] >>   4) - 8) * d
+//
+// The nibble layout is SPLIT-HALF, not interleaved: the low nibbles of all 16
+// bytes are elements 0..15 of the block and the high nibbles are elements
+// 16..31. Treating it as alternating pairs (the Q4_K convention) silently
+// permutes half the weights, so the two halves are accumulated separately
+// here to keep the summation order close to the scalar reference.
+//
+// Binding / push-constant contract is shared with gemv_q8.comp and is set up by
+// VulkanCompute::BindGemvStorage: binding 0 = packed weights (uint view),
+// 1 = input vector (float), 2 = output vector (float), PC = { rows, cols }.
+// One invocation per row, 64 invocations per workgroup.
+layout(local_size_x = 64) in;
+
+layout(binding = 0) readonly buffer W { uint packed[]; };
+layout(binding = 1) readonly buffer In { float x[]; };
+layout(binding = 2) writeonly buffer Out { float y[]; };
+
+layout(push_constant) uniform PC {
+    uint rows;
+    uint cols;
+} pc;
+
+// GGML Q4_0 constants.
+const uint QK4_0 = 32u;         // elements per block
+const uint QS4_0 = 16u;         // packed nibble bytes per block
+const uint BK4_0 = 18u;         // 2 byte fp16 scale + 16 packed bytes
+
+// Byte-granular load out of the uint32 SSBO view (blocks are unaligned).
+uint u8(uint off) {
+    uint w = packed[off >> 2];
+    return (w >> ((off & 3u) * 8u)) & 0xFFu;
+}
+
+float f16(uint h) {
+    return unpackHalf2x16(h).x;
+}
+
+void main() {
+    uint row = gl_GlobalInvocationID.x;
+    if (row >= pc.rows) return;
+
+    uint nblk = (pc.cols + QK4_0 - 1u) / QK4_0;
+    uint rowOff = row * nblk * BK4_0;
+
+    float sum = 0.0;
+    for (uint b = 0u; b < nblk; ++b) {
+        uint blk = rowOff + b * BK4_0;
+        float d = f16(u8(blk) | (u8(blk + 1u) << 8));
+        uint elem = b * QK4_0;
+        uint qs = blk + 2u;
+
+        // Elements 0..15 (low nibbles) and 16..31 (high nibbles) accumulate
+        // independently so each half keeps ascending index order.
+        float sLo = 0.0;
+        float sHi = 0.0;
+        for (uint j = 0u; j < QS4_0; ++j) {
+            uint q = u8(qs + j);
+            uint aLo = elem + j;
+            if (aLo < pc.cols) {
+                sLo += d * (float(int(q & 0xFu)) - 8.0) * x[aLo];
+            }
+            uint aHi = elem + QS4_0 + j;
+            if (aHi < pc.cols) {
+                sHi += d * (float(int(q >> 4)) - 8.0) * x[aHi];
+            }
+        }
+        sum += sLo;
+        sum += sHi;
+    }
+    y[row] = sum;
+}

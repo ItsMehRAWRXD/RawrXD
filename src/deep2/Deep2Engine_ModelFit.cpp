@@ -599,6 +599,22 @@ bool Deep2Engine::forwardLayerBatched(size_t layer, ActivationBatch& batch,
     if (!batch.valid()) return false;
     if (config.hiddenDim == 0 || batch.hidden != config.hiddenDim) return false;
 
+    // The generic layer-major batch implementation below operates on the
+    // conventional wq/wk/wv attention tensors.  DeepSeek2/Kimi uses MLA
+    // (q_a/q_b plus kv_a/kv_b) and must not enter this path: doing so used to
+    // return false only after the parity harness had already labelled the
+    // result as a numerical mismatch.  Keep the gate fail-closed and make the
+    // unsupported capability explicit until a real MLA batch implementation
+    // exists.
+    if (modelWeights.qLoraRank > 0 || modelWeights.kvLoraRank > 0 ||
+        config.qLoraRank > 0 || config.kvLoraRank > 0) {
+        std::fprintf(stderr,
+                     "[H11_PARITY] BATCH_MLA_UNSUPPORTED layer=%zu qLoraRank=%zu kvLoraRank=%zu config_qLoraRank=%zu config_kvLoraRank=%zu\n",
+                     layer, modelWeights.qLoraRank, modelWeights.kvLoraRank,
+                     config.qLoraRank, config.kvLoraRank);
+        return false;
+    }
+
     const LayerWeights& lw = modelWeights.layers[layer];
     const size_t H = config.hiddenDim;
     const size_t B = batch.batch;

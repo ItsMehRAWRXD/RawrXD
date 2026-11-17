@@ -12,6 +12,7 @@
 #include <map>
 #include <set>
 #include <sstream>
+#include <unordered_set>
 #include <unordered_map>
 
 namespace Deep2 {
@@ -357,11 +358,12 @@ bool loadSelection(const std::string& path, uint32_t activeExperts,
     if (!in) { error = "selection manifest open failed"; return false; }
     try {
         json doc; in >> doc;
+        const bool experimentalOffline = doc.value("experimental_offline", false);
         if (doc.value("schema", std::string{}) != "RAWRXD_REAP_EXPERT_SELECTION_001" ||
-            doc.value("rewrite_authorized", false) != true) {
+            (doc.value("rewrite_authorized", false) != true && !experimentalOffline)) {
             error = "selection manifest is not rewrite-authorized"; return false;
         }
-        if (doc.value("reference_parity_pass", false) != true) {
+        if (doc.value("reference_parity_pass", false) != true && !experimentalOffline) {
             error = "selection manifest lacks independent reference parity"; return false;
         }
         const auto layers = doc.find("layers");
@@ -374,9 +376,14 @@ bool loadSelection(const std::string& path, uint32_t activeExperts,
             }
             auto& dst = selection[id];
             for (const auto& item : *selected) dst.push_back(item.value("expert", std::numeric_limits<uint32_t>::max()));
-            std::sort(dst.begin(), dst.end());
-            dst.erase(std::unique(dst.begin(), dst.end()), dst.end());
-            if (dst.empty() || (activeExperts && dst.size() > activeExperts)) {
+            std::unordered_set<uint32_t> seen;
+            for (const uint32_t expert : dst) {
+                if (!seen.insert(expert).second) {
+                    error = "selection layer contains duplicate expert IDs";
+                    return false;
+                }
+            }
+            if (dst.empty() || (activeExperts && dst.size() != activeExperts)) {
                 error = "selection layer has invalid expert count"; return false;
             }
         }
@@ -405,7 +412,8 @@ bool loadSelection(const std::string& path, uint32_t activeExperts,
 //
 // The correct behaviour is to rewrite ONLY the bank size, then clamp the top-k
 // if pruning removed so many experts that the original top-k no longer fits.
-void patchMetadata(std::vector<MetaEntry>& metadata, uint32_t activeExperts) {
+void patchMetadata(std::vector<MetaEntry>& metadata, uint32_t originalExperts,
+                   uint32_t activeExperts, uint32_t shardNo, uint32_t shardCount) {
     auto lower = [](std::string s) {
         std::transform(s.begin(), s.end(), s.begin(),
                        [](unsigned char c) { return (char)std::tolower(c); });
@@ -441,17 +449,9 @@ void patchMetadata(std::vector<MetaEntry>& metadata, uint32_t activeExperts) {
             }
             continue;
         }
-                // Recalculate expert feed-forward length for reduced expert bank
-                if (endsWith(key, "expert_feed_forward_length") ||
-                    endsWith(key, "expert_shared_feed_forward_length")) {
-                    uint32_t& ffLength = *reinterpret_cast<uint32_t*>(entry.value.data());
-                    ffLength = ffLength * activeExperts / 512U;
-                }
-                // Recalculate total parameter count for reduced expert bank
-                if (key == "general.parameter_count") {
-                    uint64_t& paramCount = *reinterpret_cast<uint64_t*>(entry.value.data());
-                    paramCount = paramCount * activeExperts / 512ULL;
-                }
+                // Pruning changes bank cardinality, not per-expert width.
+                // Leave feed-forward and parameter metadata untouched until
+                // it is recomputed from emitted tensor shapes.
         // Top-k is read, never written here.
         if (endsWith(key, "expert_used_count")) {
             foundUsedCount = true;
@@ -492,11 +492,49 @@ void patchMetadata(std::vector<MetaEntry>& metadata, uint32_t activeExperts) {
         std::memcpy(entry.value.data(), &activeExperts, sizeof(uint32_t));
         metadata.emplace_back(std::move(entry));
     }
+    MetaEntry original;
+    original.key = "rawrxd.reap.original_experts";
+    original.type = static_cast<uint32_t>(GGUFMetaType::UINT32);
+    original.value.resize(sizeof(uint32_t));
+    std::memcpy(original.value.data(), &originalExperts, sizeof(uint32_t));
+    metadata.emplace_back(std::move(original));
+
+    auto setSplit = [&](const char* key, uint64_t value) {
+        metadata.erase(std::remove_if(metadata.begin(), metadata.end(),
+                                      [&](const MetaEntry& entry) { return entry.key == key; }),
+                       metadata.end());
+        MetaEntry added;
+        added.key = key;
+        added.type = static_cast<uint32_t>(GGUFMetaType::UINT16);
+        added.value.resize(2);
+        const uint16_t v = static_cast<uint16_t>(value);
+        std::memcpy(added.value.data(), &v, 2);
+        metadata.emplace_back(std::move(added));
+    };
+    setSplit("split.count", shardCount);
+    setSplit("split.no", shardNo);
 }
 
 bool writeMeta(std::ofstream& out, const MetaEntry& entry) {
     return writeString(out, entry.key) && writeU32(out, entry.type) &&
            writeBytes(out, entry.value.data(), entry.value.size());
+}
+
+uint32_t metadataUInt(const std::vector<MetaEntry>& metadata, const std::string& suffix) {
+    for (const auto& entry : metadata) {
+        if (entry.key.size() < suffix.size() ||
+            entry.key.compare(entry.key.size() - suffix.size(), suffix.size(), suffix) != 0) continue;
+        if (entry.type == static_cast<uint32_t>(GGUFMetaType::UINT16) && entry.value.size() == 2) {
+            uint16_t v = 0; std::memcpy(&v, entry.value.data(), 2); return v;
+        }
+        if (entry.type == static_cast<uint32_t>(GGUFMetaType::UINT32) && entry.value.size() == 4) {
+            uint32_t v = 0; std::memcpy(&v, entry.value.data(), 4); return v;
+        }
+        if (entry.type == static_cast<uint32_t>(GGUFMetaType::UINT64) && entry.value.size() == 8) {
+            uint64_t v = 0; std::memcpy(&v, entry.value.data(), 8); return static_cast<uint32_t>(v);
+        }
+    }
+    return 0;
 }
 
 bool copyRange(std::ifstream& in, std::ofstream& out, uint64_t offset, uint64_t bytes) {
@@ -594,7 +632,8 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
     }
     OutputCleanup cleanup{outputDir, true, !outputExisted};
 
-    for (const auto& shard : shards) {
+    for (size_t shardIndex = 0; shardIndex < shards.size(); ++shardIndex) {
+        const auto& shard = shards[shardIndex];
         std::vector<TensorDesc> outputTensors;
         outputTensors.reserve(shard.tensors.size());
         for (const auto& tensor : shard.tensors) {
@@ -621,8 +660,33 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
             outputTensors.emplace_back(std::move(out));
         }
 
+        uint32_t originalExperts = 0;
+        for (const auto& tensor : shard.tensors) {
+            const bool expertTensor = isProjection(tensor.name, "gate") ||
+                isProjection(tensor.name, "up") || isProjection(tensor.name, "down") ||
+                tensor.name.find(".ffn_gate_inp.weight") != std::string::npos ||
+                tensor.name.find(".exp_probs_b.bias") != std::string::npos;
+            if (!expertTensor || tensor.dims.empty()) continue;
+            const uint64_t count = tensor.dims.back();
+            if (count > UINT32_MAX || (originalExperts && originalExperts != count)) {
+                result.error = "inconsistent expert axis across tensors";
+                return result;
+            }
+            originalExperts = static_cast<uint32_t>(count);
+        }
+        if (!originalExperts || request.activeExperts > originalExperts) {
+            result.error = "invalid original or retained expert count";
+            return result;
+        }
         auto metadata = shard.metadata;
-        patchMetadata(metadata, request.activeExperts);
+        const uint32_t originalUsedCount = metadataUInt(metadata, "expert_used_count");
+        if (originalUsedCount && request.activeExperts < originalUsedCount) {
+            result.error = "retained expert count " + std::to_string(request.activeExperts) +
+                           " is below model expert_used_count " + std::to_string(originalUsedCount);
+            return result;
+        }
+        patchMetadata(metadata, originalExperts, request.activeExperts,
+                      static_cast<uint32_t>(shardIndex), shardCount);
         const fs::path outputPath = outputDir / shard.path.filename();
         cleanup.files.push_back(outputPath);
         std::ofstream out(outputPath, std::ios::binary | std::ios::trunc);

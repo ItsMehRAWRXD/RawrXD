@@ -594,7 +594,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/3rdparty/ggml/CMakeLists.txt")
     if(ENABLE_VULKAN)
         set(GGML_VULKAN ON CACHE BOOL "" FORCE)  # Vulkan for AMD/NVIDIA/Intel
     else()
-        set(GGML_VULKAN ON CACHE BOOL "" FORCE)  # Vulkan for AMD/NVIDIA/Intel - forced ON since SDK is present
+        set(GGML_VULKAN OFF CACHE BOOL "" FORCE) # Keep CPU-only configurations free of Vulkan
     endif()
     set(GGML_CUDA OFF CACHE BOOL "" FORCE)   # CUDA for NVIDIA only
     set(GGML_METAL OFF CACHE BOOL "" FORCE)  # Metal for macOS only
@@ -3292,7 +3292,7 @@ endif()
 # The headers now ship beside the engine in src/deep2/, so a quoted include
 # from src/deep2/ finds them before the include/ path.
 # ============================================================================
-if(EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.h)
+if(ENABLE_VULKAN AND EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.h)
     add_library(rawrxd_gpu_compute STATIC
         src/deep2/vulkan_compute.cpp
         src/deep2/QuantKernelRegistry.cpp
@@ -6432,11 +6432,35 @@ endif()
 # authorization; source shards are never overwritten.
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/reap_cli.cpp")
     add_executable(rawr-reap src/reap_cli.cpp src/reap_cli_contract.cpp
-        src/reap/ReapRuntime.cpp
         src/deep2/ReapMoETransformer.cpp)
-    target_link_libraries(rawr-reap PRIVATE deep2_engine_lib)
+    if(TARGET deep2_engine_lib)
+        target_sources(rawr-reap PRIVATE src/reap/ReapRuntime.cpp)
+        target_link_libraries(rawr-reap PRIVATE deep2_engine_lib)
+        target_compile_definitions(rawr-reap PRIVATE RAWR_REAP_RUNTIME_AVAILABLE=1)
+    else()
+        # CPU-only REAP remains a real structural planner/transform executable.
+        # CPU-only REAP remains a real structural planner/transform executable.
+        # Runtime inference is intentionally absent unless the Vulkan-backed
+        # Deep2 engine is built; the CLI reports that capability explicitly.
+        target_compile_definitions(rawr-reap PRIVATE RAWR_REAP_RUNTIME_AVAILABLE=0)
+    endif()
     target_include_directories(rawr-reap PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src/deep2)
     set_target_properties(rawr-reap PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+endif()
+
+# REAP calibration is a source-backed prerequisite for any physical export.
+# Keep it separate from the writer so calibration can be resumed and audited
+# without granting the calibration process write access to source shards.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/reap_calibrate_cli.cpp" AND
+   TARGET deep2_engine_lib)
+    add_executable(reap-calibrate tools/reap_calibrate_cli.cpp)
+    target_link_libraries(reap-calibrate PRIVATE deep2_engine_lib)
+    target_include_directories(reap-calibrate PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src/deep2)
+    set_target_properties(reap-calibrate PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
 endif()
 
 # HEXMag live bridge: browser-style HTTPS retrieval is admitted through the
@@ -7111,6 +7135,29 @@ target_link_libraries(test_sovereign_compose_lab PRIVATE sovereign_emit_formats)
       add_test(NAME q4_0_gpu_parity_test
           COMMAND q4_0_gpu_parity_test)
       message(STATUS "q4_0_gpu_parity_test enabled (Q4_0 GPU parity validation)")
+  endif()
+
+  # Production-path Q5_K stress harness. It calls the same Deep2 Vulkan
+  # DispatchGemvQuant(type=13) entry used by Kimi, and compares each result
+  # against ggml's independent Q5_K dequantizer before repeating dispatches.
+  if(EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/q5k_gpu_stress.cpp")
+      add_executable(deep2_q5k_gpu_stress src/deep2/q5k_gpu_stress.cpp)
+      target_include_directories(deep2_q5k_gpu_stress PRIVATE
+          ${CMAKE_SOURCE_DIR}/src
+          ${CMAKE_SOURCE_DIR}
+          ${CMAKE_SOURCE_DIR}/3rdparty/ggml/src)
+      target_link_libraries(deep2_q5k_gpu_stress PRIVATE
+          rawrxd_gpu_compute
+          deep2_engine_lib
+          Vulkan::Vulkan)
+      target_compile_features(deep2_q5k_gpu_stress PRIVATE cxx_std_20)
+      if(MSVC)
+          target_compile_options(deep2_q5k_gpu_stress PRIVATE /EHsc $<$<CONFIG:Release>:/O2>)
+      endif()
+      set_target_properties(deep2_q5k_gpu_stress PROPERTIES
+          RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+      add_test(NAME deep2_q5k_gpu_stress COMMAND deep2_q5k_gpu_stress 1)
+      message(STATUS "deep2_q5k_gpu_stress enabled (production Q5_K DispatchGemvQuant)")
   endif()
 
 # ============================================================================

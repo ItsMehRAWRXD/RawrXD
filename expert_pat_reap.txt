@@ -1,0 +1,330 @@
+FILE F:/OllamaModels/blobs/sha256-b8371deb0dfd3efaee090eb886d7d435f94fb28a3a54692f4326c65b67b1da24 TOTAL 814 EXPERT 329
+blk.1.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.1.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.1.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.1.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.1.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.1.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.1.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.2.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.2.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.2.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.2.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.2.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.2.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.2.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.3.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.3.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.3.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.3.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.3.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.3.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.3.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.4.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.4.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.4.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.4.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.4.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.4.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.4.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.5.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.5.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.5.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.5.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.5.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.5.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.5.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.6.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.6.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.6.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.6.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.6.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.6.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.6.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.7.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.7.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.7.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.7.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.7.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.7.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.7.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.8.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.8.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.8.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.8.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.8.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.8.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.8.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.9.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.9.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.9.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.9.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.9.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.9.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.9.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.10.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.10.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.10.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.10.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.10.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.10.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.10.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.11.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.11.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.11.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.11.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.11.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.11.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.11.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.12.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.12.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.12.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.12.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.12.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.12.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.12.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.13.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.13.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.13.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.13.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.13.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.13.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.13.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.14.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.14.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.14.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.14.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.14.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.14.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.14.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.15.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.15.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.15.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.15.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.15.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.15.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.15.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.16.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.16.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.16.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.16.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.16.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.16.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.16.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.17.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.17.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.17.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.17.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.17.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.17.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.17.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.18.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.18.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.18.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.18.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.18.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.18.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.18.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.19.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.19.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.19.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.19.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.19.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.19.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.19.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.20.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.20.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.20.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.20.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.20.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.20.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.20.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.21.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.21.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.21.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.21.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.21.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.21.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.21.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.22.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.22.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.22.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.22.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.22.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.22.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.22.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.23.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.23.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.23.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.23.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.23.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.23.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.23.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.24.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.24.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.24.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.24.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.24.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.24.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.24.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.25.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.25.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.25.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.25.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.25.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.25.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.25.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.26.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.26.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.26.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.26.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.26.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.26.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.26.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.27.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.27.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.27.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.27.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.27.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.27.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.27.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.28.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.28.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.28.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.28.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.28.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.28.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.28.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.29.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.29.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.29.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.29.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.29.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.29.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.29.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.30.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.30.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.30.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.30.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.30.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.30.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.30.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.31.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.31.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.31.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.31.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.31.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.31.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.31.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.32.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.32.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.32.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.32.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.32.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.32.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.32.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.33.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.33.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.33.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.33.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.33.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.33.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.33.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.34.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.34.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.34.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.34.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.34.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.34.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.34.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.35.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.35.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.35.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.35.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.35.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.35.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.35.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.36.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.36.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.36.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.36.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.36.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.36.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.36.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.37.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.37.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.37.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.37.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.37.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.37.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.37.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.38.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.38.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.38.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.38.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.38.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.38.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.38.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.39.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.39.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.39.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.39.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.39.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.39.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 12 | 110100480 | 61931520
+blk.39.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.40.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.40.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 30 | 110100480 | 220200960
+blk.40.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.40.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 30 | 110100480 | 220200960
+blk.40.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.40.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 30 | 110100480 | 220200960
+blk.40.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.41.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.41.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 30 | 110100480 | 220200960
+blk.41.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.41.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 30 | 110100480 | 220200960
+blk.41.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.41.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 30 | 110100480 | 220200960
+blk.41.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.42.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.42.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 30 | 110100480 | 220200960
+blk.42.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.42.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 30 | 110100480 | 220200960
+blk.42.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.42.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 30 | 110100480 | 220200960
+blk.42.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.43.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.43.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 30 | 110100480 | 220200960
+blk.43.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.43.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 30 | 110100480 | 220200960
+blk.43.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.43.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 30 | 110100480 | 220200960
+blk.43.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.44.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.44.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 30 | 110100480 | 220200960
+blk.44.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.44.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 30 | 110100480 | 220200960
+blk.44.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.44.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 30 | 110100480 | 220200960
+blk.44.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.45.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.45.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 30 | 110100480 | 220200960
+blk.45.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.45.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 30 | 110100480 | 220200960
+blk.45.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.45.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 30 | 110100480 | 220200960
+blk.45.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.46.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.46.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 30 | 110100480 | 220200960
+blk.46.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.46.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 30 | 110100480 | 220200960
+blk.46.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.46.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 30 | 110100480 | 220200960
+blk.46.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.47.exp_probs_b.bias | [np.uint64(35)] | 0 | 35 | 140
+blk.47.ffn_down_exps.weight | [np.uint64(1024), np.uint64(3072), np.uint64(35)] | 30 | 110100480 | 220200960
+blk.47.ffn_down_shexp.weight | [np.uint64(1024), np.uint64(3072)] | 8 | 3145728 | 3342336
+blk.47.ffn_gate_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 30 | 110100480 | 220200960
+blk.47.ffn_gate_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336
+blk.47.ffn_up_exps.weight | [np.uint64(3072), np.uint64(1024), np.uint64(35)] | 30 | 110100480 | 220200960
+blk.47.ffn_up_shexp.weight | [np.uint64(3072), np.uint64(1024)] | 8 | 3145728 | 3342336

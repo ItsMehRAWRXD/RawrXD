@@ -1,0 +1,68 @@
+#version 450
+// MLA (Multi-Layer Attention) compute shader
+// Implements: Q projection, fused K/V reconstruction, partial RoPE, 
+// stable softmax, weighted-value accumulation, output integration
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+// Parameters via push constants
+struct PushConstants {
+    uint32_t nHeads;
+    uint32_t qkNopeHeadDim;
+    uint32_t qkRopeHeadDim;
+    uint32_t vHeadDim;
+    uint32_t qkDim;
+    uint32_t vDim;
+    uint32_t position;
+    float ropeTheta;
+    float ropeScale;
+    float scale;  // 1/sqrt(qkDim), packed as uint32_t (scale * 65536.0f)
+} push_constant;
+
+// Q buffer: [nHeads * qHeadDim] - interleaved nope+rope dims
+// K buffer: [nHeads * qkDim] - nope dims first, then rope (k_pe)
+// V buffer: [nHeads * vHeadDim]
+// K_pe buffer: [qkRopeHeadDim] - RoPE positional encoding
+// Output buffer: [nHeads * vHeadDim]
+
+// Q descriptor set 0 binding 0
+// K descriptor set 0 binding 1
+// V descriptor set 0 binding 2
+// K_pe descriptor set 0 binding 3
+// Output descriptor set 0 binding 4
+
+// Shared memory for one head workgroup
+shared float qHead[64 + 64];  // max qkDim = 128 (128+64 for NEOX)
+shared float kHead[128 + 8];  // kv cache buffer
+shared float vHead[64];        // value head
+
+// Q projection: extract and prepare Q vector for one head
+void main() {
+    uint32_t headId = gl_GlobalInvocationID.x;
+    
+    if (headId >= push_constant.nHeads) return;
+    
+    // ---- FUSED K/V RECONSTRUCTION ----
+    // Read K_nope from K buffer (first qkNopeHeadDim per head)
+    // Read K_pe from K_pe buffer (next qkRopeHeadDim per head)
+    // Read V from V buffer (vHeadDim per head)
+    
+    // Compute RoPE for K and Q (partial - only rope dims)
+    // Apply rotary embedding to the rope dimensions
+    
+    // ---- ATTENTION SCORES ----
+    // For each sequence position t:
+    //   dot = sum_qk(qh[kd] * kh[t*qkDim + kd]) * scale
+    //   scores[t] = dot
+    
+    // ---- SOFTMAX ----
+    // Apply stable softmax to scores
+    
+    // ---- OUTPUT ACCUMULATION ----
+    // for each position t:
+    //   oh[d] += scores[t] * vh[t*vHeadDim + d]
+    
+    // Write output
+    // This is a simplified framework - full implementation requires
+    // proper buffer binding and loop unrolling
+}

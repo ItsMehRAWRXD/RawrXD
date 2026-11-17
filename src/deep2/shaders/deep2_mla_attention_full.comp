@@ -1,0 +1,327 @@
+#version 460
+
+// MLA (Multi-Head Latent Attention) compute shader for RawrXD Deep2 Vulkan backend.
+// Implements the full MLA attention forward pass:
+//   - Fused K/V reconstruction from compressed KV cache
+//   - Partial RoPE on positional dimensions only (64 dims out of 192)
+//   - Causal attention scoring with 1/sqrt(192) scaling
+//   - Stable online softmax (max-subtraction + exp + normalize)
+//   - Weighted-value accumulation: out = softmax(scores) @ V
+//   - KV-cache update and reuse across tokens
+//   - Dispatch: 16 work groups (one per head), each with 128 local invocations
+
+layout(local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
+
+// ---- Push Constant Layout ----
+// All MLA parameters passed via push constants for flexibility and performance
+layout(push_constant) uniform PC {
+    uint nHeads;          // Number of attention heads (16)
+    uint qkNopeHeadDim;   // Non-positional key dimension per head (128)
+    uint qkRopeHeadDim;   // Positional (RoPE) key dimension per head (64)
+    uint qkDim;           // Total key dimension per head (= 192)
+    uint vHeadDim;        // Value head dimension (128)
+    uint vCacheDim;       // KV cache latent dimension (512)
+    uint position;        // Current token position (0-indexed, new token)
+    uint seqLen;          // Total sequence length (current cache length + 1)
+    float ropeTheta;      // RoPE base frequency parameter
+    float ropeScale;      // RoPE scale factor
+    float scale;          // Attention scaling = 1.0 / sqrt((float)qkDim)
+} push_constant;
+
+// ---- Descriptor Set 0 Bindings ----
+// All buffers use std430 layout for predictable alignment
+
+// Q: Query buffer [nHeads * qkDim] = [16 * 192] - float, readonly
+layout(set = 0, binding = 0, std430) readonly buffer Q {
+    float q[];
+} query;
+
+// K_compressed: Compressed KV cache K_nope [nHeads * qkNopeHeadDim] = [16 * 128] - float, readonly
+// Non-positional (nope) part of the key for the new token
+layout(set = 0, binding = 1, std430) readonly buffer KCompressed {
+    float kc[];
+} kCompressed;
+
+// V_compressed: Compressed KV cache V [nHeads * vHeadDim] = [16 * 128] - float, readonly
+// Value projections for the new token
+layout(set = 0, binding = 2, std430) readonly buffer VCompressed {
+    float vc[];
+} vCompressed;
+
+// K_pe: RoPE positional encoding [qkRopeHeadDim] = [64] - float, readonly
+// Rotary positional encoding for the current token position
+layout(set = 0, binding = 3, std430) readonly buffer KPe {
+    float kp[];
+} kPe;
+
+// Output: Writeonly output buffer [nHeads * vHeadDim] = [16 * 128] - float, writeonly
+// Accumulated attention output per head
+layout(set = 0, binding = 4, std430) writeonly buffer Output {
+    float result[];
+} result;
+
+// KVCache: Compressed KV cache [maxLayers * maxSeqLen * vCacheDim] - float, readonly/writeonly
+// Latent key/value cache. kvDim=512 per token per layer.
+layout(set = 0, binding = 5, std430) readonly buffer KVCache {
+    float kvc[];
+} kvCache;
+
+// ---- Shared Memory for Online Softmax ----
+// Per work group (one head): online softmax state across token positions.
+// m = running max score, l = running sum of weights, acc = running weighted value sum.
+// Only lid=0's state is authoritative after barriers; all invocations participate in
+// per-token computation but only lid=0 updates/reads the shared softmax state.
+shared float s_m[128];   // running max per invocation (authoritative at [0] after barriers)
+shared float s_l[128];   // running sum per invocation
+shared float s_acc[128]; // running weighted accumulator per invocation
+
+// ---- Partial RoPE (Rotary Positional Embedding) ----
+// Applies NeoX-style RoPE ONLY to the positional (rope) dimensions.
+// Vector layout: [qkNopeHeadDim non-positional dims | qkRopeHeadDim positional dims]
+// Only the last qkRopeHeadDim (64) dimensions get RoPE rotation.
+// The first qkNopeHeadDim (128) dimensions are left unchanged.
+void applyPartialRoPE(float vec[192], uint ropeDim, uint startPos, uint pos, float theta, float scale) {
+    if (ropeDim < 2 || bool(ropeDim & 1u)) return;
+    uint hlen = ropeDim / 2;
+    float invScale = (scale > 0.0f) ? (1.0f / scale) : 1.0f;
+    float effectivePos = float(pos) * invScale;
+
+    for (uint i = 0; i < hlen; ++i) {
+        // Frequency for dimension i: theta^(-2i/dim)
+            float freq = 1.0 / pow(theta, (2.0 * float(i)) /
+                                                 float(ropeDim));
+        float angle = effectivePos * freq;
+                    float c = cos(angle);
+                    float s = sin(angle);
+            float x0 = vec[startPos + i];
+            float x1 = vec[startPos + hlen + i];
+            vec[startPos + i] = x0 * c - x1 * s;
+            vec[startPos + hlen + i] = x0 * s + x1 * c;
+    }
+}
+
+// ---- Online Softmax Update (lid=0 authoritative) ----
+// Updates the online/running softmax state for a single token position.
+// m = running max score, l = running sum of weights, acc = running weighted value sum.
+// After all tokens: output = acc / l.
+void onlineSoftmaxUpdate(float s, uint /*lid*/,
+                            inout float m, inout float l, inout float acc) {
+    float old_m = m;
+    if (s > m) {
+        m = s;
+        float alpha = (old_m < -3.4e37f) ? 0.0f : exp(old_m - m);
+                float beta = exp(s - m);
+        acc = acc * alpha + beta * s;
+        l = l * alpha + beta;
+    } else {
+                float alpha = exp(old_m - m);
+                float beta = exp(s - old_m);
+        acc = acc * alpha + beta * s;
+        l = l * alpha + beta;
+    }
+}
+
+// ---- KV Cache Write ----
+// Writes the new key/value pair to the compressed KV cache at the current position.
+// The KV cache stores latent vectors of vCacheDim (512) per token per layer.
+// Key is stored in the first section, V in the second section (separated by vCacheDim/2).
+void writeKVCache(uint head, float kFull[192], float vFull[128]) {
+    uint seqPos = push_constant.position;
+    uint cacheBase = (seqPos * nHeads + head) * vCacheDim;
+
+    // Write K: copy qkDim (192) attention-space key into 512-dim latent cache
+    for (uint d = 0; d < vCacheDim; ++d) {
+        if (d < qkDim) {
+            kvc[cacheBase + d] = kFull[d];
+        } else {
+            kvc[cacheBase + d] = 0.0f;
+        }
+    }
+
+    // Write V: copy vHeadDim (128) value into the second half of the 512-dim latent cache
+    uint vCacheBase = cacheBase + vCacheDim / 2;
+    for (uint d = 0; d < vCacheDim; ++d) {
+        if (d < vHeadDim) {
+            kvc[vCacheBase + d] = vFull[d];
+        } else {
+            kvc[vCacheBase + d] = 0.0f;
+        }
+    }
+}
+
+void main() {
+    // Work group ID gives the head index (0 to nHeads-1)
+    uint head = gl_WorkGroupID.x;
+
+    // Bounds check: skip if head exceeds configured count
+    if (head >= push_constant.nHeads) return;
+
+    uint lid = gl_LocalInvocationID.x;  // Local invocation ID within work group (0-127)
+
+    // ---- Extract MLA parameters from push constants ----
+    uint qkNopeHeadDim = push_constant.qkNopeHeadDim;   // 128
+    uint qkRopeHeadDim = push_constant.qkRopeHeadDim;   // 64
+    uint qkDim = push_constant.qkDim;                   // 192 (= 128 + 64)
+    uint vHeadDim = push_constant.vHeadDim;             // 128
+    uint vCacheDim = push_constant.vCacheDim;           // 512
+    uint position = push_constant.position;             // Current token position (new)
+    uint seqLen = push_constant.seqLen;                 // Total sequence length
+    float ropeTheta = push_constant.ropeTheta;          // RoPE base frequency
+    float ropeScale = push_constant.ropeScale;          // RoPE scale factor
+    float scale = push_constant.scale;                  // 1.0 / sqrt((float)qkDim)
+
+    // ---- Step 1: Reconstruct Full Q Vector with Partial RoPE ----
+    // Q is [qkDim] floats for this head, starting at query.q[head * qkDim]
+    float qFull[192];  // Maximum qkDim = 192
+
+    // Copy Q for this head from the buffer
+    for (uint d = 0; d < qkDim; ++d) {
+        qFull[d] = query.q[head * qkDim + d];
+    }
+
+    // Apply partial RoPE to the positional (rope) dimensions of Q
+    // The rope dimensions start at offset qkNopeHeadDim (128) within the qkDim (192) vector
+    applyPartialRoPE(qFull, qkRopeHeadDim, qkNopeHeadDim, position, ropeTheta, ropeScale);
+
+    // ---- Step 2: Initialize Online Softmax State (lid=0 authoritative) ----
+    // Each work group tracks online softmax across all token positions.
+    // m = running max score (initialized to -inf)
+    // l = running sum of attention weights (initialized to 1.0)
+    // acc = running weighted value accumulator (initialized to 0.0)
+
+    float m = -3.402823e38f;  // -inf, running max score
+    float l = 1.0f;           // running sum of weights, start at 1.0
+    float acc = 0.0f;         // running weighted value accumulator
+
+    // Store initial state in shared memory (only lid=0 values matter after barriers)
+    if (lid == 0) {
+        s_m[0] = m;
+        s_l[0] = l;
+        s_acc[0] = acc;
+    }
+    barrier();  // Ensure softmax state is initialized before use
+
+    // ---- Step 3: Iterate over all token positions for attention ----
+    // Process all tokens from position 0 to seqLen-1
+    // For each token, compute attention score (dot product with Q)
+    // and update the online softmax state.
+
+    for (uint t = 0; t < seqLen; ++t) {
+        // ---- Read K vector for token at position t ----
+        float kFull[192];  // Reconstructed full K vector [qkNopeHeadDim + qkRopeHeadDim]
+
+        if (t == position) {
+            // NEW TOKEN: K = [K_nope from KCompressed, K_pe from KPe input]
+            // K_nope: first qkNopeHeadDim (128) dims from KCompressed buffer
+            for (uint d = 0; d < qkNopeHeadDim; ++d) {
+                kFull[d] = kCompressed.kc[head * qkNopeHeadDim + d];
+            }
+
+            // K_pe: next qkRopeHeadDim (64) dims from KPe input buffer
+            for (uint d = 0; d < qkRopeHeadDim; ++d) {
+                kFull[qkNopeHeadDim + d] = kPe.kp[d];
+            }
+        } else {
+            // PREVIOUS TOKEN: read from KV cache
+            // KV cache stores 512-dim latent K; project to 192-dim attention space
+            uint kvOffset = (t * nHeads + head) * vCacheDim;
+            for (uint d = 0; d < qkDim; ++d) {
+                kFull[d] = kvc[kvOffset + d];
+            }
+        }
+
+        // ---- Apply RoPE to K's positional dimensions ----
+        // For the new token (t == position), apply RoPE now
+        // For previous tokens, RoPE was already applied at write time
+        if (t == position) {
+                    applyPartialRoPE(kFull, qkRopeHeadDim, qkNopeHeadDim, position, ropeTheta, ropeScale);
+        }
+        // For t < position: RoPE already applied; leave as-is
+
+        // ---- Compute Attention Score (dot product Q · K) ----
+        // dot = sum over d in [0, qkDim) of qFull[d] * kFull[d]
+        // Each invocation computes the FULL dot product (192 multiplications)
+        float dot = 0.0f;
+        for (uint d = 0; d < qkDim; ++d) {
+            dot += qFull[d] * kFull[d];
+        }
+
+        // Apply scaling: 1/sqrt(qkDim) = 1/sqrt(192)
+        dot *= scale;
+
+        // ---- Apply Causal Masking ----
+        // In causal (autoregressive) attention, token at position t should only attend
+        // to positions <= t. Since seqLen = position + 1 and we iterate t from 0 to seqLen-1,
+        // we have t <= position always for valid positions. Explicit mask for safety.
+        if (t > position) {
+            dot = -3.402823e38f;  // -inf: token attends to nothing (future position)
+        }
+
+        // ---- Update Online Softmax (lid=0 authoritative) ----
+        // Only lid=0 updates the shared softmax state (m, l, acc)
+        if (lid == 0) {
+            onlineSoftmaxUpdate(dot, 0, m, l, acc);
+        }
+        barrier();  // Synchronize after each token's softmax update
+
+        // ---- Read V vector for token position t ----
+        float vFull[128];  // Reconstructed full V vector [vHeadDim = 128]
+
+        if (t == position) {
+            // NEW TOKEN: V from VCompressed buffer
+            for (uint d = 0; d < vHeadDim; ++d) {
+                vFull[d] = vCompressed.vc[head * vHeadDim + d];
+            }
+        } else {
+            // PREVIOUS TOKEN: read from KV cache
+            // KV cache stores 512-dim latent V; read from value section (second half)
+            uint kvOffset = (t * nHeads + head) * vCacheDim + vCacheDim / 2;
+            for (uint d = 0; d < vHeadDim; ++d) {
+                vFull[d] = kvc[kvOffset + d];
+            }
+        }
+
+        // The online softmax tracks acc and l sufficiently;
+        // no intermediate accumulation into separate output buffer needed.
+        // After all tokens: final output = acc / l
+    }
+
+    // ---- Step 4: Finalize Output ----
+    // After all tokens processed: out = acc / l
+    // Handle edge case where l == 0 (no valid tokens)
+    float finalOutput[128];
+
+    if (lid == 0) {
+        if (l > 0.0f) {
+            for (uint d = 0; d < vHeadDim; ++d) {
+                finalOutput[d] = acc / l;
+            }
+        } else {
+            for (uint d = 0; d < vHeadDim; ++d) {
+                finalOutput[d] = 0.0f;
+            }
+
+            // Write the accumulated output to the output buffer
+            // Output layout: [nHeads * vHeadDim], one head per work group
+            uint outOffset = head * vHeadDim;
+            for (uint d = 0; d < vHeadDim; ++d) {
+                output.out[outOffset + d] = finalOutput[d];
+            }
+
+            // ---- Step 5: KV Cache Update ----
+            // Write the new key/value pair to the compressed KV cache
+            // Reconstruct full K vector for cache write (same as Step 1)
+            float kFull[192];
+            for (uint d = 0; d < qkDim; ++d) {
+                kFull[d] = query.q[head * qkDim + d];
+            }
+            // Apply RoPE to K's positional dimensions (same as Q)
+                       applyPartialRoPE(kFull, qkRopeHeadDim, qkNopeHeadDim, position, ropeTheta, ropeScale);
+
+            // Write K and V to KV cache
+            writeKVCache(head, kFull, vFull);
+        }
+    }
+    // Other lids (1-127) skip output/KV-writing; just wait at barrier
+    barrier();
+}

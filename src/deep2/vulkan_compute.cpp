@@ -1256,6 +1256,13 @@ bool VulkanCompute::createBuffer(
     return true;
 }
 
+    // Public wrapper for test access - delegates to private createBuffer
+    bool VulkanCompute::createBufferPublic(VkDeviceSize bytes, VkBufferUsageFlags usage,
+                                           VkMemoryPropertyFlags required,
+                                           DeviceBuf& out) {
+        return createBuffer(bytes, usage, required, out);
+    }
+
 void VulkanCompute::destroyBuffer(DeviceBuf& b) {
     if (!device_) { b = {}; return; }
     if (b.buffer) vkDestroyBuffer(device_, b.buffer, nullptr);
@@ -1535,6 +1542,21 @@ bool VulkanCompute::recordCopy(
     c.srcOffset = srcOffset;
     c.dstOffset = dstOffset;
     c.size = bytes;
+    // Copies commonly consume results produced by a prior compute submission
+    // (notably the MoE FFN arena).  Queue ordering alone is not a memory
+    // dependency; make shader/transfer writes visible to the transfer read
+    // before recording the copy.  Keep the existing post-copy barrier below
+    // for consumers of the destination buffer.
+    VkMemoryBarrier before{};
+    before.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
+    before.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT |
+                           VK_ACCESS_TRANSFER_WRITE_BIT;
+    before.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+    vkCmdPipelineBarrier(
+        cmd,
+        VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT,
+        VK_PIPELINE_STAGE_TRANSFER_BIT,
+        0, 1, &before, 0, nullptr, 0, nullptr);
     vkCmdCopyBuffer(cmd, src.buffer, dst.buffer, 1, &c);
     recordComputeBarrier(cmd);
     return true;
@@ -1815,8 +1837,34 @@ bool VulkanCompute::downloadFromBuffer(
     VkCommandBuffer cmd{};
     VkQueryPool query{};
     const char* failedStage = nullptr;
+    const bool traceD2h = [] {
+        const char* v = std::getenv("DEEP2_D2H_TRACE");
+        return v && v[0] == '1' && v[1] == '\0';
+    }();
+    if (traceD2h) {
+        std::fprintf(stderr,
+                     "D2H_BEGIN src=%p src_id=%llu src_bytes=%llu bytes=%zu staging=%p staging_id=%llu staging_bytes=%llu epoch=%llu\n",
+                     reinterpret_cast<void*>(src.buffer),
+                     static_cast<unsigned long long>(src.id),
+                     static_cast<unsigned long long>(src.size), bytes,
+                     staging ? reinterpret_cast<void*>(staging->buffer) : nullptr,
+                     staging ? static_cast<unsigned long long>(staging->id) : 0ULL,
+                     staging ? static_cast<unsigned long long>(staging->size) : 0ULL,
+                     static_cast<unsigned long long>(workEpoch_));
+        std::fflush(stderr);
+    }
     bool ok = beginCommand(cmd, query, true);
-    if (!ok) {
+    if (ok && traceD2h && std::getenv("DEEP2_D2H_QUEUE_IDLE") &&
+        std::getenv("DEEP2_D2H_QUEUE_IDLE")[0] == '1') {
+        const VkResult idle = vkQueueWaitIdle(queue_);
+        std::fprintf(stderr, "D2H_QUEUE_IDLE vk=%d\n", static_cast<int>(idle));
+        std::fflush(stderr);
+        if (idle != VK_SUCCESS) {
+            ok = false;
+            failedStage = "queue_idle";
+        }
+    }
+    if (!ok && !failedStage) {
         failedStage = "begin_command";
     } else if (!recordCopy(cmd, src, *staging, bytes)) {
         ok = false;
@@ -1827,6 +1875,12 @@ bool VulkanCompute::downloadFromBuffer(
         ok = endSubmitWait(cmd, query, GpuWorkKind::ModelTransfer,
                            bytes, workEpoch_, nullptr, 30000000000ULL);
         if (!ok) failedStage = "transfer_wait";
+    }
+    if (traceD2h) {
+        std::fprintf(stderr, "D2H_END ok=%d stage=%s last_vk=%d phase=%s\n",
+                     ok ? 1 : 0, failedStage ? failedStage : "ok",
+                     lastLostVk_, lastLostPhase_ ? lastLostPhase_ : "none");
+        std::fflush(stderr);
     }
     if (!ok && failedStage) {
         std::fprintf(stderr,
@@ -2842,12 +2896,117 @@ bool VulkanCompute::EnsureMlaAttn(uint32_t nHeads, uint32_t qkDim, uint32_t vDim
     // Creates compute pipeline with descriptor sets for Q, K, V, K_pe buffers.
     // Preconditions: nHeads, qkDim, vDim, nope, rope, maxSeq, nLayers validated against device capabilities.
     if (nHeads == 0 || qkDim == 0 || vDim == 0 || nLayers == 0) return false;
-    // TODO: Implement real pipeline creation (pipeline layout, shader binding,
-    // descriptor set allocation, command pool allocation) when MLA kernel shader is ready.
-    // For now, return false to retain CPU fallback behavior.
-    printf("[MLA] EnsureMlaAttn called: nHeads=%u, qkDim=%u, vDim=%u, nope=%u, rope=%u, maxSeq=%u, nLayers=%u [PIPELINE_PENDING]\n",
-           nHeads, qkDim, vDim, nope, rope, maxSeq, nLayers);
-    return false;
+
+    // Return early if pipeline already created
+    if (mlaPipeline_ != VK_NULL_HANDLE) return true;
+
+    // Create MLA descriptor set layout with bindings for Q, K, V, K_pe, output
+    VkDescriptorSetLayoutBinding bindings[5]{};
+    for (uint32_t i = 0; i < 5; ++i) {
+        bindings[i].binding = i;
+        bindings[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        bindings[i].descriptorCount = 1;
+        bindings[i].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+    }
+    VkDescriptorSetLayoutCreateInfo dli{};
+    dli.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    dli.bindingCount = 5;
+    dli.pBindings = bindings;
+    VkResult r = vkCreateDescriptorSetLayout(device_, &dli, nullptr, &mlaSetLayout_);
+    if (r != VK_SUCCESS) {
+        printf("[MLA] Failed to create descriptor set layout: %d\n", (int)r);
+        return false;
+    }
+
+    // Create MLA pipeline layout with descriptor set and push constants
+    VkPushConstantRange pcr{};
+    pcr.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+    pcr.offset = 0;
+    pcr.size = 6 * sizeof(uint32_t) + 4 * sizeof(float); // 6 uint32 + 4 float push constants
+
+    VkPipelineLayoutCreateInfo pli{};
+    pli.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pli.setLayoutCount = 1;
+    pli.pSetLayouts = &mlaSetLayout_;
+    pli.pushConstantRangeCount = 1;
+    pli.pPushConstantRanges = &pcr;
+    r = vkCreatePipelineLayout(device_, &pli, nullptr, &mlaPipelineLayout_);
+    if (r != VK_SUCCESS) {
+        printf("[MLA] Failed to create pipeline layout: %d\n", (int)r);
+        vkDestroyDescriptorSetLayout(device_, mlaSetLayout_, nullptr);
+        mlaSetLayout_ = VK_NULL_HANDLE;
+        return false;
+    }
+
+    // Create MLA compute pipeline from shader
+    std::string shader = shaderPath("attn_decode_mla.spv");
+    if (shader.empty()) {
+        printf("[MLA] Shader attn_decode_mla.spv not found\n");
+        return false;
+    }
+
+    std::ifstream f(shader, std::ios::binary | std::ios::ate);
+    if (!f) {
+        printf("[MLA] Failed to open shader file: %s\n", shader.c_str());
+        return false;
+    }
+    std::streamsize sz = f.tellg();
+    f.seekg(0, std::ios::beg);
+    std::vector<uint32_t> code(static_cast<size_t>(sz) / 4);
+    if (!f.read(reinterpret_cast<char*>(code.data()), sz)) {
+        printf("[MLA] Failed to read shader file: %s\n", shader.c_str());
+        return false;
+    }
+
+    VkShaderModuleCreateInfo sm{};
+    sm.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    sm.codeSize = static_cast<size_t>(sz);
+    sm.pCode = code.data();
+    VkShaderModule module = VK_NULL_HANDLE;
+    r = vkCreateShaderModule(device_, &sm, nullptr, &module);
+    if (r != VK_SUCCESS) {
+        printf("[MLA] Failed to create shader module: %d\n", (int)r);
+        return false;
+    }
+
+    VkPipelineShaderStageCreateInfo psc{};
+    psc.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    psc.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+    psc.module = module;
+    psc.pName = "main";
+
+    VkComputePipelineCreateInfo cpi{};
+    cpi.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+    cpi.stage = psc;
+    cpi.layout = mlaPipelineLayout_;
+    r = vkCreateComputePipelines(device_, VK_NULL_HANDLE, 1, &cpi, nullptr, &mlaPipeline_);
+    if (r != VK_SUCCESS) {
+        printf("[MLA] Failed to create compute pipeline: %d\n", (int)r);
+        vkDestroyShaderModule(device_, module, nullptr);
+        return false;
+    }
+
+    vkDestroyShaderModule(device_, module, nullptr);
+
+    // Create descriptor set for MLA
+    VkDescriptorSetAllocateInfo dei{};
+    dei.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    dei.descriptorPool = descriptorPool_;
+    dei.descriptorSetCount = 1;
+    dei.pSetLayouts = &mlaSetLayout_;
+    r = vkAllocateDescriptorSets(device_, &dei, &mlaDescriptorSet_);
+    if (r != VK_SUCCESS) {
+        printf("[MLA] Failed to allocate descriptor set: %d\n", (int)r);
+        vkDestroyPipelineLayout(device_, mlaPipelineLayout_, nullptr);
+        mlaPipelineLayout_ = VK_NULL_HANDLE;
+        vkDestroyPipeline(device_, mlaPipeline_, nullptr);
+        mlaPipeline_ = VK_NULL_HANDLE;
+        return false;
+    }
+
+    printf("[MLA] EnsureMlaAttn: pipeline created successfully nHeads=%u qkDim=%u vDim=%u\n",
+           nHeads, qkDim, vDim);
+    return true;
 }
 
 bool VulkanCompute::DispatchAttnDecodeMLA(DeviceBuf& q, DeviceBuf& kb, DeviceBuf& vb,
@@ -3547,7 +3706,8 @@ bool VulkanCompute::DispatchGemvQuant(
     DeviceBuf& input,DeviceBuf& output,uint32_t rows,uint32_t cols,
     uint64_t cacheKey)
 {
-    if(type!=2 && type!=8 && type!=10 && type!=12 && type!=14 && type!=40) return false;
+    if(type!=2 && type!=8 && type!=10 && type!=11 && type!=12 &&
+       type!=13 && type!=14 && type!=20 && type!=40) return false;
     if(!weights||!weightBytes||!rows||!cols||
        rows*sizeof(float)>output.size||cols*sizeof(float)>input.size)
         return false;

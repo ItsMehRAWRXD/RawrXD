@@ -51,6 +51,21 @@ void MlaDiag(const char* format, Args... args) {
     std::fprintf(stderr, format, args...);
     std::fflush(stderr);
 }
+
+bool MlaFirstNonFinite(const char* stage, const float* values, size_t count,
+                       uint32_t layer, uint32_t position) {
+    if (!values) return true;
+    for (size_t i = 0; i < count; ++i) {
+        if (!std::isfinite(values[i])) {
+            std::fprintf(stderr,
+                         "[MLA_Q_NONFINITE] stage=%s layer=%u position=%u index=%zu value=%g count=%zu\n",
+                         stage, layer, position, i, static_cast<double>(values[i]), count);
+            std::fflush(stderr);
+            return false;
+        }
+    }
+    return true;
+}
 } // namespace
 
 // ============================================================================
@@ -541,17 +556,20 @@ static bool gemvDispatchT(const RawrXD::TensorView& weightView,
         gemvF32Transposed(w, input, output, rows, cols);
         return true;
     }
-    if (qt == RawrXD::QuantType::Q4_K) {
-        MlaDiag("[MLA_GEMV] calling MLA_Gemv(12, rows=%zu cols=%zu byteSize=%zu)\n",
-                rows, cols, weightView.byteSize());
-        if (MLA_Gemv(12, weightView.data(), weightView.byteSize(), input, output,
+    if (qt == RawrXD::QuantType::Q3_K || qt == RawrXD::QuantType::Q4_K ||
+        qt == RawrXD::QuantType::Q5_K || qt == RawrXD::QuantType::IQ4_NL) {
+        const int ggmlType = qt == RawrXD::QuantType::Q3_K ? 11 :
+                             (qt == RawrXD::QuantType::Q5_K ? 13 :
+                              (qt == RawrXD::QuantType::IQ4_NL ? 20 : 12));
+        MlaDiag("[MLA_GEMV] calling MLA_Gemv(%d, rows=%zu cols=%zu byteSize=%zu)\n",
+                ggmlType, rows, cols, weightView.byteSize());
+        if (MLA_Gemv(ggmlType, weightView.data(), weightView.byteSize(), input, output,
                            (uint32_t)rows, (uint32_t)cols)) {
-            MlaDiag("[MLA_GEMV] MLA_Gemv(12) succeeded\n");
+            MlaDiag("[MLA_GEMV] MLA_Gemv(%d) succeeded\n", ggmlType);
             return true;
         }
-        MlaDiag("[MLA_GEMV] MLA_Gemv(12) failed, falling back to host\n");
-        gemvQ4KTransposed(weightView.data(), input, output, rows, cols);
-        return true;
+        MlaDiag("[MLA_GEMV] MLA_Gemv(%d) failed\n", ggmlType);
+        return false;
     }
     if (qt == RawrXD::QuantType::Q8_0) {
         if (MLA_Gemv(8, weightView.data(), weightView.byteSize(), input, output,
@@ -986,6 +1004,10 @@ bool MLAForward::Execute(const float* hidden, float* output,
     // attnQ_a: [hiddenDim, qLoraRank]
     const size_t hiddenDim = weights.attnQ_a.dims()[0];
     const size_t qLoraRank = weights.attnQ_a.dims()[1];
+    if (!MlaFirstNonFinite("hidden", hidden, hiddenDim, layerIdx, position)) {
+        error = "MLAForward: non-finite hidden input";
+        return false;
+    }
 
     // attnQ_b: [qLoraRank, numHeads * headDim]
     const size_t qBCols = weights.attnQ_b.dims()[1];
@@ -1178,11 +1200,18 @@ bool MLAForward::Execute(const float* hidden, float* output,
     const char* ser = std::getenv("DEEP2_MLA_SERIAL");
     const BraidQkvMode mode = K2Braid_GetQkvMode();
     const bool hostQ = (mode == BraidQkvMode::SplitQ);
+    // Dual-stick uses a process-wide pin key and shared staging/input buffers.
+    // Split Q/KV launches can race those resources across devices, producing
+    // NaNs in Q_B before MLA attention. Keep the numerically safe serialized
+    // path for dual-device execution; single-device split remains available.
+    const char* dualStickEnv = std::getenv("DEEP2_DUALSTICK_ARM");
+    const bool dualStickArmed = dualStickEnv && dualStickEnv[0] == '1' && dualStickEnv[1] == '\0';
     const bool qkvSplit =
         MLA_GpuGemvWanted() &&
+        !dualStickArmed &&
         (mode == BraidQkvMode::SplitKv || mode == BraidQkvMode::SplitQ);
     const bool serial =
-        !qkvSplit && (MLA_GpuGemvWanted() || (ser && ser[0] == '1'));
+        !qkvSplit && (MLA_GpuGemvWanted() || dualStickArmed || (ser && ser[0] == '1'));
     const uint64_t qa0 = MlaStage_QaUs().load();
     const uint64_t qb0 = MlaStage_QbUs().load();
     const uint64_t kva0 = MlaStage_KvaUs().load();
@@ -1238,7 +1267,7 @@ bool MLAForward::Execute(const float* hidden, float* output,
         // Q_A uploads hidden; KV_A reuses gemv_in before Q_B overwrites it.
         // DEEP2_MLA_HIDDEN_REUSE=0 → legacy runQ+runKv baseline.
         const char* hr = std::getenv("DEEP2_MLA_HIDDEN_REUSE");
-        const bool doReuse = !hr || hr[0] != '0';
+        const bool doReuse = !dualStickArmed && (!hr || hr[0] != '0');
         if (!doReuse) {
             runQ();
             runKv();
@@ -1276,6 +1305,18 @@ bool MLAForward::Execute(const float* hidden, float* output,
     }
     if (!qOk) { error = qErr.empty() ? "MLAForward: Q path failed" : qErr; goto cleanup; }
     if (!kvOk) { error = kvErr.empty() ? "MLAForward: KV path failed" : kvErr; goto cleanup; }
+    std::fprintf(stderr, "[MLA_QKV_FINITE_CHECK_BEGIN] layer=%u position=%u\n",
+                 layerIdx, position);
+    std::fflush(stderr);
+    if (!MlaFirstNonFinite("q_a", q_a, qLoraRank, layerIdx, position) ||
+        !MlaFirstNonFinite("q_b", q_b, qBCols, layerIdx, position) ||
+        !MlaFirstNonFinite("kv_a", kv_a, kvACols, layerIdx, position)) {
+        error = "MLAForward: non-finite Q/KV projection";
+        goto cleanup;
+    }
+    std::fprintf(stderr, "[MLA_QKV_FINITE_CHECK_OK] layer=%u position=%u\n",
+                 layerIdx, position);
+    std::fflush(stderr);
 
     // Step 6/7: expand compressed_kv → K_nope / V
     tExp = StreamPathTiming_NowUs();
@@ -1347,12 +1388,18 @@ bool MLAForward::Execute(const float* hidden, float* output,
             // Legacy: separate K and V expand threads (original behavior)
             const size_t kElems = qkNopeHeadDim * kvLoraRank;
             const size_t vElems = vHeadDim * kvLoraRank;
-            const size_t kBlkE = (kQt == RawrXD::QuantType::Q8_0) ? 32u : 256u;
-            const size_t vBlkE = (vQt == RawrXD::QuantType::Q8_0) ? 32u : 256u;
-            const size_t kBlkB = (kQt == RawrXD::QuantType::Q8_0)
-                ? sizeof(Q8_0_Block) : sizeof(Q4_K_Block);
-            const size_t vBlkB = (vQt == RawrXD::QuantType::Q8_0)
-                ? sizeof(Q8_0_Block) : sizeof(Q4_K_Block);
+            const size_t kBlkE = (kQt == RawrXD::QuantType::Q8_0 ||
+                                  kQt == RawrXD::QuantType::IQ4_NL) ? 32u : 256u;
+            const size_t vBlkE = (vQt == RawrXD::QuantType::Q8_0 ||
+                                  vQt == RawrXD::QuantType::IQ4_NL) ? 32u : 256u;
+            const size_t kBlkB = kQt == RawrXD::QuantType::IQ4_NL ? 18u :
+                (kQt == RawrXD::QuantType::Q3_K ? 110u :
+                 (kQt == RawrXD::QuantType::Q5_K ? 176u :
+                  (kQt == RawrXD::QuantType::Q8_0 ? sizeof(Q8_0_Block) : sizeof(Q4_K_Block))));
+            const size_t vBlkB = vQt == RawrXD::QuantType::IQ4_NL ? 18u :
+                (vQt == RawrXD::QuantType::Q3_K ? 110u :
+                 (vQt == RawrXD::QuantType::Q5_K ? 176u :
+                  (vQt == RawrXD::QuantType::Q8_0 ? sizeof(Q8_0_Block) : sizeof(Q4_K_Block))));
             const size_t kBytes = numHeads *
                 (((kElems + kBlkE - 1) / kBlkE) * kBlkB);
             const size_t vBytes = numHeads *
@@ -1372,12 +1419,23 @@ bool MLAForward::Execute(const float* hidden, float* output,
                 } else if (kQt == RawrXD::QuantType::Q8_0) {
                     if (!(MLA_Gemv(8, kBase, kBytes, compressedKV, k_b, kRows, kCols)))
                         gemvQ80Oriented(kT, kBase, compressedKV, k_b, kRows, kCols);
-                } else {
-                    for (size_t h = 0; h < numHeads; ++h) {
-                        const size_t hb = ((kElems + kBlkE - 1) / kBlkE) * kBlkB;
-                        gemvQ80Oriented(kT, (const uint8_t*)kBase + h * hb, compressedKV,
-                                        k_b + h * qkNopeHeadDim, qkNopeHeadDim, kvLoraRank);
+                } else if (kQt == RawrXD::QuantType::IQ4_NL) {
+                    if (!MLA_Gemv(20, kBase, kBytes, compressedKV, k_b,
+                                  kRows, kCols)) {
+                        error = "MLAForward: GPU IQ4_NL K expansion failed";
+                        return;
                     }
+                } else if (kQt == RawrXD::QuantType::Q3_K ||
+                           kQt == RawrXD::QuantType::Q5_K) {
+                    const int ty = kQt == RawrXD::QuantType::Q3_K ? 11 : 13;
+                    if (!MLA_Gemv(ty, kBase, kBytes, compressedKV, k_b,
+                                  kRows, kCols)) {
+                        error = "MLAForward: GPU K expansion failed";
+                        return;
+                    }
+                } else {
+                    error = "MLAForward: unsupported K expansion quant type";
+                    return;
                 }
             });
             std::thread vTh([&]() {
@@ -1388,12 +1446,23 @@ bool MLAForward::Execute(const float* hidden, float* output,
                 } else if (vQt == RawrXD::QuantType::Q8_0) {
                     if (!(MLA_Gemv(8, vBase, vBytes, compressedKV, v_b, vRows, kCols)))
                         gemvQ80Oriented(vT, vBase, compressedKV, v_b, vRows, kCols);
-                } else {
-                    for (size_t h = 0; h < numHeads; ++h) {
-                        const size_t hb = ((vElems + vBlkE - 1) / vBlkE) * vBlkB;
-                        gemvQ80Oriented(vT, (const uint8_t*)vBase + h * hb, compressedKV,
-                                        v_b + h * vHeadDim, vHeadDim, kvLoraRank);
+                } else if (vQt == RawrXD::QuantType::IQ4_NL) {
+                    if (!MLA_Gemv(20, vBase, vBytes, compressedKV, v_b,
+                                  vRows, kCols)) {
+                        error = "MLAForward: GPU IQ4_NL V expansion failed";
+                        return;
                     }
+                } else if (vQt == RawrXD::QuantType::Q3_K ||
+                           vQt == RawrXD::QuantType::Q5_K) {
+                    const int ty = vQt == RawrXD::QuantType::Q3_K ? 11 : 13;
+                    if (!MLA_Gemv(ty, vBase, vBytes, compressedKV, v_b,
+                                  vRows, kCols)) {
+                        error = "MLAForward: GPU V expansion failed";
+                        return;
+                    }
+                } else {
+                    error = "MLAForward: unsupported V expansion quant type";
+                    return;
                 }
             });
             kTh.join();

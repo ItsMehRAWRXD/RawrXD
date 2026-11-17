@@ -340,11 +340,32 @@ bool VulkanCompute::DispatchGEMVPacked(const void* packed, size_t bytes,
                                        const float* input, float* output,
                                        uint32_t rows, uint32_t cols,
                                        uint64_t cacheKey) {
-    (void)packed; (void)bytes; (void)input; (void)output;
-    (void)rows; (void)cols; (void)cacheKey;
-    // Same reason as DispatchGemvPacked: no GGML type reaches this entry point,
-    // so the kernel cannot be selected honestly.
-    return false;
+    // This adapter is called only by the K2 Q4_K MLA path.  The old
+    // implementation returned false unconditionally, forcing every Q4_K
+    // projection through the host dequantizer even when GPU MLA was enabled.
+    // Keep the public legacy signature, but bind it to the explicit Q4_K
+    // backend dispatch so the type is no longer guessed.
+    if (backend_ == nullptr || packed == nullptr || input == nullptr ||
+        output == nullptr || bytes == 0 || rows == 0 || cols == 0)
+        return false;
+
+    Deep2::VulkanCompute::DeviceBuf& in = backend_->ArenaNormed();
+    Deep2::VulkanCompute::DeviceBuf& out = backend_->ArenaResidual();
+    if (in.size < static_cast<size_t>(cols) * sizeof(float) ||
+        out.size < static_cast<size_t>(rows) * sizeof(float)) {
+        if (!backend_->EnsureForwardArena(cols, cols, 1, 1, 1, 1, 1))
+            return false;
+    }
+    if (!backend_->UploadVector(in, input, cols)) return false;
+    if (!backend_->DispatchGemvQuant(GGML_TYPE_Q4_K, packed, bytes, in, out,
+                                      rows, cols, cacheKey))
+        return false;
+    if (!backend_->DownloadVector(out, output, rows)) return false;
+
+    gemv_success_ = static_cast<uint64_t>(backend_->GemvSuccessCount());
+    gemv_weight_uploads_ = static_cast<uint64_t>(backend_->WeightUploadCount());
+    gemv_weight_hits_ = static_cast<uint64_t>(backend_->WeightHitCount());
+    return true;
 }
 
 bool VulkanCompute::DispatchGEMVFusedQ8Kva(const void* packed, size_t bytes,
