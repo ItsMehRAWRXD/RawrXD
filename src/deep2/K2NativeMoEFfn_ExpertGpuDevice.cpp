@@ -80,36 +80,51 @@ bool RecordExpert(CPUInference::VulkanCompute* vc, unsigned stick, int gt,
     MoeGpuTrace("LIVE_K2_MOE_OP gate_begin layer=%u stick=%u expert=%d",
                 layer, stick, expertId);
     if (!vc->DispatchGemvQuant(gt, g, gb, vc->ArenaNormed(), vc->ArenaGate(),
-                               rI, cH, p1))
+                               rI, cH, p1)) {
+        MoeGpuTrace("LIVE_K2_MOE_OP_FAIL stage=gate layer=%u stick=%u expert=%d rows=%u cols=%u",
+                    layer, stick, expertId, rI, cH);
         return false;
+    }
     MoeGpuTrace("LIVE_K2_MOE_OP gate_end layer=%u stick=%u expert=%d", layer,
                 stick, expertId);
     MoeGpuTrace("LIVE_K2_MOE_OP up_begin layer=%u stick=%u expert=%d", layer,
                 stick, expertId);
     if (!vc->DispatchGemvQuant(ut, u, ub, vc->ArenaNormed(), vc->ArenaUp(), rI,
-                               cH, p2))
+                               cH, p2)) {
+        MoeGpuTrace("LIVE_K2_MOE_OP_FAIL stage=up layer=%u stick=%u expert=%d rows=%u cols=%u",
+                    layer, stick, expertId, rI, cH);
         return false;
+    }
     MoeGpuTrace("LIVE_K2_MOE_OP up_end layer=%u stick=%u expert=%d", layer,
                 stick, expertId);
     MoeGpuTrace("LIVE_K2_MOE_OP swiglu_begin layer=%u stick=%u expert=%d",
                 layer, stick, expertId);
     if (!vc->DispatchSwiGLU(vc->ArenaGate(), vc->ArenaUp(), vc->ArenaFFNAct(),
-                            rI))
+                            rI)) {
+        MoeGpuTrace("LIVE_K2_MOE_OP_FAIL stage=swiglu layer=%u stick=%u expert=%d n=%u",
+                    layer, stick, expertId, rI);
         return false;
+    }
     MoeGpuTrace("LIVE_K2_MOE_OP swiglu_end layer=%u stick=%u expert=%d", layer,
                 stick, expertId);
     MoeGpuTrace("LIVE_K2_MOE_OP down_begin layer=%u stick=%u expert=%d", layer,
                 stick, expertId);
     if (!vc->DispatchGemvQuant(dt, d, db, vc->ArenaFFNAct(), vc->ArenaDown(),
-                               rH, cI, p3))
+                               rH, cI, p3)) {
+        MoeGpuTrace("LIVE_K2_MOE_OP_FAIL stage=down layer=%u stick=%u expert=%d rows=%u cols=%u",
+                    layer, stick, expertId, rH, cI);
         return false;
+    }
     MoeGpuTrace("LIVE_K2_MOE_OP down_end layer=%u stick=%u expert=%d", layer,
                 stick, expertId);
     MoeGpuTrace("LIVE_K2_MOE_OP add_begin layer=%u stick=%u expert=%d", layer,
                 stick, expertId);
     if (!vc->DispatchScaledAdd(vc->ArenaFfnW(), vc->ArenaDown(), weight,
-                               (uint32_t)H))
+                               (uint32_t)H)) {
+        MoeGpuTrace("LIVE_K2_MOE_OP_FAIL stage=scaled_add layer=%u stick=%u expert=%d n=%u",
+                    layer, stick, expertId, (uint32_t)H);
         return false;
+    }
     MoeGpuTrace("LIVE_K2_MOE_OP add_end layer=%u stick=%u expert=%d", layer,
                 stick, expertId);
     DualStickNoteExpertGpu(stick, (size_t)(gb + ub + db));
@@ -222,6 +237,16 @@ bool K2MoEStickEndDevice(unsigned stick, float* hostPartial, size_t H,
             (unsigned long long)vc->LastD2hVk(),
             vc->LastD2hPhase());
         std::fflush(stderr);
+    } else {
+        for (size_t i = 0; i < H; ++i) {
+            if (!std::isfinite(hostPartial[i])) {
+                std::fprintf(stderr,
+                    "[MOE_NONFINITE] stage=d2h_partial stick=%u index=%zu value=%g\n",
+                    stick, i, static_cast<double>(hostPartial[i]));
+                std::fflush(stderr);
+                return false;
+            }
+        }
     }
     ed3::NoteD2h(ok, vc->LastD2hVk(), vc->LastD2hPhase(), hostPartial, H);
     ed3::EmitBoundary(ok ? "END_OK" : "END_FAIL");
