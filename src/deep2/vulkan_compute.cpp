@@ -3094,7 +3094,7 @@ bool VulkanCompute::EnsureMlaAttn(uint32_t nHeads, uint32_t qkDim, uint32_t vDim
     VkPushConstantRange pcr{};
     pcr.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
     pcr.offset = 0;
-    pcr.size = 6 * sizeof(uint32_t) + 4 * sizeof(float); // 6 uint32 + 4 float push constants
+    pcr.size = 7 * sizeof(uint32_t) + 3 * sizeof(float);
 
     VkPipelineLayoutCreateInfo pli{};
     pli.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -3188,42 +3188,51 @@ bool VulkanCompute::DispatchAttnDecodeMLA(DeviceBuf& q, DeviceBuf& kb, DeviceBuf
                                          float theta, float scale, float ropeScale,
                                          uint32_t layer)
 {
-    // Validate MLA dimensions (from model config):
-    // Q: 128 non-positional + 64 positional = qkDim (qkNope + qkRope)
-    //    nHeads = 16, so 16 × 192 = qkNope 128 + qkRope 64
-    // KV: 512 (latent) + 64 (k_pe/RoPE positional)
-    // nope = 128, rope = 64
-    // Partial RoPE applied only to the 64 positional dims
-    // K/V fused projection from attn_k_b: K_nope + V (attnV_b intentionally empty)
+    // This entry point consumes explicit sequence-major K/V buffers:
+    //   Q  [head][qkDim]
+    //   K  [position][head][nope]
+    //   V  [position][head][vDim]
+    //   K-pe [position][rope]
+    // It intentionally does not pretend to reconstruct a latent KV cache.
+    // Callers using latent MLA storage must use the latent/decompression path.
+    if (!q || !kb || !vb || !kpe || !out || pos == UINT32_MAX || theta <= 0.0f ||
+        scale <= 0.0f || ropeScale <= 0.0f)
+        return false;
     if (qkDim != nope + rope) {
         printf("[MLA] Invalid qkDim=%u, expected nope+%u=%u\n", qkDim, nope, nope + rope);
         return false;
     }
-    if (nope != 128) {
-        printf("[MLA] Invalid nope=%u, expected 128\n", nope);
-        return false;
-    }
-    if (rope != 64) {
-        printf("[MLA] Invalid rope=%u, expected 64\n", rope);
-        return false;
-    }
-    if (nHeads != 16) {
-        printf("[MLA] Invalid nHeads=%u, expected 16\n", nHeads);
-        return false;
-    }
-    if (qkDim != 192) {
-        printf("[MLA] Invalid qkDim=%u, expected 192 (128+64)\n", qkDim);
+    if (qkDim > 256 || nope == 0 || rope == 0 || vDim == 0 || nHeads == 0 ||
+        nHeads > 256 || rope > qkDim || nope > qkDim ||
+        (static_cast<uint64_t>(nHeads) * qkDim * sizeof(float)) > q.size ||
+        (static_cast<uint64_t>(pos + 1) * nHeads * nope * sizeof(float)) > kb.size ||
+        (static_cast<uint64_t>(pos + 1) * nHeads * vDim * sizeof(float)) > vb.size ||
+        (static_cast<uint64_t>(pos + 1) * rope * sizeof(float)) > kpe.size ||
+        (static_cast<uint64_t>(nHeads) * vDim * sizeof(float)) > out.size) {
+        printf("[MLA] Buffer/layout validation failed heads=%u qk=%u nope=%u rope=%u v=%u pos=%u\n",
+               nHeads, qkDim, nope, rope, vDim, pos);
         return false;
     }
 
     // Ensure MLA pipeline is initialized
     if (!EnsureMlaAttn(nHeads, qkDim, vDim, nope, rope, 0, 1)) return false;
 
-    // MLA attention dispatch through Vulkan compute shader
-    // Each workgroup processes one attention head (16 workgroups total)
-    // Reads Q [nHeads, qkDim], K from kb fused projection, V from vb,
-    // K_pe for RoPE, position pos for rotary embedding
-    // Writes output [nHeads, vHeadDim] to out
+    VkDescriptorBufferInfo infos[5]{};
+    infos[0] = {q.buffer, 0, q.size};
+    infos[1] = {kb.buffer, 0, kb.size};
+    infos[2] = {vb.buffer, 0, vb.size};
+    infos[3] = {kpe.buffer, 0, kpe.size};
+    infos[4] = {out.buffer, 0, out.size};
+    VkWriteDescriptorSet writes[5]{};
+    for (uint32_t i = 0; i < 5; ++i) {
+        writes[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        writes[i].dstSet = mlaDescriptorSet_;
+        writes[i].dstBinding = i;
+        writes[i].descriptorCount = 1;
+        writes[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        writes[i].pBufferInfo = &infos[i];
+    }
+    vkUpdateDescriptorSets(device_, 5, writes, 0, nullptr);
 
     VkCommandBuffer cmd = fusedCmd_;
     VkQueryPool query = fusedQuery_;
@@ -3237,21 +3246,24 @@ bool VulkanCompute::DispatchAttnDecodeMLA(DeviceBuf& q, DeviceBuf& kb, DeviceBuf
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE,
                             mlaPipelineLayout_, 0, 1, &mlaDescriptorSet_, 0, nullptr);
 
-    // Set push constants: nHeads, nope, rope, vHeadDim, scale, pos
-    uint32_t pushConstants[6] = { nHeads, nope, rope, vDim, (uint32_t)(scale * 65536.0f), pos };
+    struct MlaPush {
+        uint32_t nHeads, nope, rope, vHeadDim, qkDim, vDim, position;
+        float theta, ropeScale, scale;
+    } push{nHeads, nope, rope, vDim, qkDim, vDim, pos, theta, ropeScale, scale};
     vkCmdPushConstants(cmd, mlaPipelineLayout_, VK_SHADER_STAGE_COMPUTE_BIT,
-                       0, sizeof(pushConstants), pushConstants);
+                       0, sizeof(push), &push);
 
     // Dispatch: one workgroup per head, 256 lanes per workgroup
     vkCmdDispatch(cmd, nHeads, 1, 1);
     recordComputeBarrier(cmd);
 
-    // Read back output - simplified for now, just mark as complete
-    // In a full implementation, we'd synchronize and read the output buffer
-        (void)out;  // output placeholder - validated when kernel implemented with numerical parity
-            // GPU attention dispatch submitted via Vulkan compute shader.
-            // Output verification (readback comparison) is a separate certification gate.
-            return true;
+    if (own) {
+        if (!endSubmitWait(cmd, query, GpuWorkKind::ModelCompute,
+                           static_cast<size_t>(nHeads) * vDim * sizeof(float),
+                           workEpoch_, nullptr))
+            return false;
+    }
+    return true;
 }
 
 bool VulkanCompute::SubmitRecordedResidentQ4K(

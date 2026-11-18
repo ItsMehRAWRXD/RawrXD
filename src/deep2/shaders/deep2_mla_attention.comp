@@ -1,68 +1,28 @@
 #version 450
-// MLA (Multi-Layer Attention) compute shader
-// Implements: Q projection, fused K/V reconstruction, partial RoPE, 
-// stable softmax, weighted-value accumulation, output integration
-
-layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
-
-// Parameters via push constants
-struct PushConstants {
-    uint32_t nHeads;
-    uint32_t qkNopeHeadDim;
-    uint32_t qkRopeHeadDim;
-    uint32_t vHeadDim;
-    uint32_t qkDim;
-    uint32_t vDim;
-    uint32_t position;
-    float ropeTheta;
-    float ropeScale;
-    float scale;  // 1/sqrt(qkDim), packed as uint32_t (scale * 65536.0f)
-} push_constant;
-
-// Q buffer: [nHeads * qHeadDim] - interleaved nope+rope dims
-// K buffer: [nHeads * qkDim] - nope dims first, then rope (k_pe)
-// V buffer: [nHeads * vHeadDim]
-// K_pe buffer: [qkRopeHeadDim] - RoPE positional encoding
-// Output buffer: [nHeads * vHeadDim]
-
-// Q descriptor set 0 binding 0
-// K descriptor set 0 binding 1
-// V descriptor set 0 binding 2
-// K_pe descriptor set 0 binding 3
-// Output descriptor set 0 binding 4
-
-// Shared memory for one head workgroup
-shared float qHead[64 + 64];  // max qkDim = 128 (128+64 for NEOX)
-shared float kHead[128 + 8];  // kv cache buffer
-shared float vHead[64];        // value head
-
-// Q projection: extract and prepare Q vector for one head
-void main() {
-    uint32_t headId = gl_GlobalInvocationID.x;
-    
-    if (headId >= push_constant.nHeads) return;
-    
-    // ---- FUSED K/V RECONSTRUCTION ----
-    // Read K_nope from K buffer (first qkNopeHeadDim per head)
-    // Read K_pe from K_pe buffer (next qkRopeHeadDim per head)
-    // Read V from V buffer (vHeadDim per head)
-    
-    // Compute RoPE for K and Q (partial - only rope dims)
-    // Apply rotary embedding to the rope dimensions
-    
-    // ---- ATTENTION SCORES ----
-    // For each sequence position t:
-    //   dot = sum_qk(qh[kd] * kh[t*qkDim + kd]) * scale
-    //   scores[t] = dot
-    
-    // ---- SOFTMAX ----
-    // Apply stable softmax to scores
-    
-    // ---- OUTPUT ACCUMULATION ----
-    // for each position t:
-    //   oh[d] += scores[t] * vh[t*vHeadDim + d]
-    
-    // Write output
-    // This is a simplified framework - full implementation requires
-    // proper buffer binding and loop unrolling
+// REAP-ZERO explicit sequence-major MLA decode kernel.
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+layout(push_constant) uniform PC {
+    uint nHeads; uint qkNopeHeadDim; uint qkRopeHeadDim; uint vHeadDim;
+    uint qkDim; uint vDim; uint position; float ropeTheta;
+    float ropeScale; float scale;
+} pc;
+layout(set=0,binding=0,std430) readonly buffer QBuf { float q[]; } Q;
+layout(set=0,binding=1,std430) readonly buffer KBuf { float k[]; } K;
+layout(set=0,binding=2,std430) readonly buffer VBuf { float v[]; } V;
+layout(set=0,binding=3,std430) readonly buffer KPeBuf { float kp[]; } KP;
+layout(set=0,binding=4,std430) writeonly buffer OutBuf { float outv[]; } OUT;
+const uint MAX_D=256u;
+void rope(inout float x[MAX_D],uint base,uint dim,uint p){
+    uint h=dim/2u; if(h==0u||(dim&1u)!=0u||pc.ropeTheta<=0.0)return;
+    float pos=float(p)/pc.ropeScale;
+    for(uint i=0u;i<h;++i){float f=1.0/pow(pc.ropeTheta,(2.0*float(i))/float(dim));float a=pos*f;float c=cos(a),s=sin(a);float x0=x[base+i],x1=x[base+h+i];x[base+i]=x0*c-x1*s;x[base+h+i]=x0*s+x1*c;}
+}
+void main(){
+    uint head=gl_WorkGroupID.x;
+    if(head>=pc.nHeads||pc.qkDim>MAX_D||pc.qkNopeHeadDim+pc.qkRopeHeadDim!=pc.qkDim)return;
+    float q[MAX_D]; for(uint d=0u;d<pc.qkDim;++d)q[d]=Q.q[head*pc.qkDim+d]; rope(q,pc.qkNopeHeadDim,pc.qkRopeHeadDim,pc.position);
+    uint count=pc.position+1u; if(count>1024u)return; float scores[1024]; float mx=-3.402823e38;
+    for(uint t=0u;t<count;++t){float k[MAX_D];for(uint d=0u;d<pc.qkNopeHeadDim;++d)k[d]=K.k[(t*pc.nHeads+head)*pc.qkNopeHeadDim+d];for(uint d=0u;d<pc.qkRopeHeadDim;++d)k[pc.qkNopeHeadDim+d]=KP.kp[t*pc.qkRopeHeadDim+d];rope(k,pc.qkNopeHeadDim,pc.qkRopeHeadDim,t);float dot=0.0;for(uint d=0u;d<pc.qkDim;++d)dot+=q[d]*k[d];scores[t]=dot*pc.scale;mx=max(mx,scores[t]);}
+    float den=0.0;for(uint t=0u;t<count;++t)den+=exp(scores[t]-mx);
+    for(uint d=0u;d<pc.vDim;++d){float acc=0.0;for(uint t=0u;t<count;++t)acc+=exp(scores[t]-mx)*V.v[(t*pc.nHeads+head)*pc.vDim+d];OUT.outv[head*pc.vDim+d]=den>0.0?acc/den:0.0;}
 }

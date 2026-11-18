@@ -2408,6 +2408,20 @@ if(ENABLE_VULKAN AND EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND
     )
     message(STATUS "rawrxd_gpu_compute enabled: Deep2::VulkanCompute buildable from the main tree")
 
+    if(EXISTS "${CMAKE_SOURCE_DIR}/tools/reap_zero_mla_test.cpp")
+        add_executable(reap_zero_mla_test tools/reap_zero_mla_test.cpp)
+        target_link_libraries(reap_zero_mla_test PRIVATE rawrxd_gpu_compute)
+        target_include_directories(reap_zero_mla_test PRIVATE
+            ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2)
+        if(MSVC)
+            target_compile_options(reap_zero_mla_test PRIVATE /EHsc /std:c++20)
+        else()
+            target_compile_options(reap_zero_mla_test PRIVATE -std=c++20 -fexceptions)
+        endif()
+        set_target_properties(reap_zero_mla_test PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+    endif()
+
     # Real class-level GDN dispatch probe. The independent shader probe proves
     # the SPIR-V contract; this target exercises the production
     # VulkanCompute::DispatchGdn state map, uploads, submission, download, and
