@@ -22,6 +22,19 @@ try {
     if ($bytes[0] -ne 0x4d -or $bytes[1] -ne 0x5a) { throw "$name missing MZ" }
     $pe = [BitConverter]::ToInt32($bytes, 0x3c)
     if ([Text.Encoding]::ASCII.GetString($bytes, $pe, 4) -ne 'PE`0`0') { throw "$name missing PE" }
+    $sections = [BitConverter]::ToUInt16($bytes, $pe + 6)
+    $opt = $pe + 24
+    if ([BitConverter]::ToUInt16($bytes, $opt) -ne 0x20b) { throw "$name is not PE32+" }
+    $headerSize = [BitConverter]::ToUInt32($bytes, $opt + 60)
+    if (($headerSize % 0x200) -ne 0) { throw "$name header alignment" }
+    for ($i = 0; $i -lt $sections; $i++) {
+      $sh = $pe + 4 + 20 + 240 + ($i * 40)
+      $rva = [BitConverter]::ToUInt32($bytes, $sh + 12)
+      $raw = [BitConverter]::ToUInt32($bytes, $sh + 20)
+      $rawSize = [BitConverter]::ToUInt32($bytes, $sh + 16)
+      if (($rva % 0x1000) -ne 0 -or ($raw % 0x200) -ne 0 -or ($rawSize % 0x200) -ne 0) { throw "$name section alignment" }
+      if ($raw + $rawSize -gt $bytes.Length) { throw "$name section exceeds file" }
+    }
   }
   & .\pe_writer_minimal.exe
   $minimalExit = $LASTEXITCODE

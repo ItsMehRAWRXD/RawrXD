@@ -24,9 +24,30 @@ static int write_case(const char *path, size_t text_size, int imports) {
   return rc == 0 ? 0 : 12;
 }
 
+static int negative_cases(void) {
+  pe_builder_t *b = pe_builder_new(0x8664);
+  if (!b) return 20;
+  static const uint8_t byte = 0xC3;
+  pe_builder_add_section(b, ".text", &byte, 1, 0x60000020);
+  if (pe_builder_write(b, "Z:\\path-that-does-not-exist\\out.exe") == 0) {
+    pe_builder_free(b); return 21;
+  }
+  pe_builder_free(b);
+
+  b = pe_builder_new(0x8664);
+  if (!b) return 22;
+  pe_builder_add_section(b, ".bad", NULL, 16, 0x40000040);
+  if (pe_builder_write(b, "pe_writer_invalid_section.exe") == 0) {
+    pe_builder_free(b); return 23;
+  }
+  pe_builder_free(b);
+  return 0;
+}
+
 int main(void) {
   if (write_case("pe_writer_minimal.exe", 0x100, 0) != 0) return 1;
   if (write_case("pe_writer_large_import.exe", 0x5000, 1) != 0) return 2;
+  if (negative_cases() != 0) return 3;
   puts("PE_WRITER_E2E_GENERATED=PASS");
   return 0;
 }

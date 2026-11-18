@@ -185,10 +185,10 @@ void pe_builder_add_section(pe_builder_t *pb, const char *name,
   if (nlen > 8) nlen = 8;
   memcpy(s->name, name, nlen);
   s->name[nlen] = '\0';
+  s->data_len = len;
   if (data && len > 0) {
     s->data = (uint8_t *)malloc(len);
     if (s->data) memcpy(s->data, data, len);
-    s->data_len = len;
     s->owns_data = 1;
   }
   s->virtual_size = (uint32_t)len;
