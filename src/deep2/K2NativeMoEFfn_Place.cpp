@@ -524,6 +524,10 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
     };
 
     const bool dual = sticks >= 2u;
+    const bool serialized = [] {
+        const char* v = std::getenv("DEEP2_MOE_SERIAL");
+        return v && v[0] == '1' && v[1] == '\0';
+    }();
     auto run0 = [&] {
         bumpActive();
         s0b = NowNs();
@@ -559,11 +563,18 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
 
     std::thread w0, w1;
     try {
-        /* HARD_GATE: always 2 stick submits + 2 partial D2H when DualStick. */
-        if (dual || n0) w0 = std::thread(run0);
-        if (dual || n1) w1 = std::thread(run1);
-        else if (!dual && n0) {
-            /* single-stick: already launched w0 */
+        if (serialized && !dual) {
+            std::fprintf(stderr,
+                         "LIVE_K2_MOE_SERIAL layer=%u mode=inline\n", layer);
+            std::fflush(stderr);
+            run0();
+        } else {
+            /* HARD_GATE: always 2 stick submits + 2 partial D2H when DualStick. */
+            if (dual || n0) w0 = std::thread(run0);
+            if (dual || n1) w1 = std::thread(run1);
+            else if (!dual && n0) {
+                /* single-stick: already launched w0 */
+            }
         }
     } catch (...) {
         if (w0.joinable()) w0.join();
@@ -650,8 +661,28 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
         MoEPlaceLive().expert_markhot++;
     }
 
-    for (uint32_t i = 0; i < cfg.hiddenDim; ++i)
+    for (uint32_t i = 0; i < cfg.hiddenDim; ++i) {
+        if (!std::isfinite(p0[i]) || !std::isfinite(p1[i]) ||
+            !std::isfinite(accum[i])) {
+            std::fprintf(stderr,
+                         "[MOE_NONFINITE] stage=partial layer=%u index=%u "
+                         "p0=%g p1=%g accum=%g\n",
+                         layer, i, p0[i], p1[i], accum[i]);
+            std::fflush(stderr);
+            error = "K2MoE: non-finite GPU partial or accumulator";
+            return false;
+        }
         accum[i] += p0[i] + p1[i];
+        if (!std::isfinite(accum[i])) {
+            std::fprintf(stderr,
+                         "[MOE_NONFINITE] stage=merged layer=%u index=%u "
+                         "p0=%g p1=%g accum=%g\n",
+                         layer, i, p0[i], p1[i], accum[i]);
+            std::fflush(stderr);
+            error = "K2MoE: non-finite merged GPU partial";
+            return false;
+        }
+    }
     if (dual || n0 || n1) MoEPlaceLive().moe_layers_gpu++;
     const uint32_t executed = ex0 + ex1;
     if (merged.host_expert_down_vectors != 0)
@@ -679,6 +710,17 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
         moe_ltrace::BC(layer, "SHARED_ACCUM_DONE");
         MoEPlaceLive().shared_expert_calls++;
         for (uint32_t i = 0; i < cfg.hiddenDim; ++i) accum[i] += shared[i];
+        for (uint32_t i = 0; i < cfg.hiddenDim; ++i) {
+            if (!std::isfinite(shared[i]) || !std::isfinite(accum[i])) {
+                std::fprintf(stderr,
+                             "[MOE_NONFINITE] stage=shared_merge layer=%u "
+                             "index=%u shared=%g accum=%g\n",
+                             layer, i, shared[i], accum[i]);
+                std::fflush(stderr);
+                error = "K2MoE: non-finite shared expert output";
+                return false;
+            }
+        }
     }
 
     // Layer-1 FFN diagnostic: CPU reference vs native output

@@ -360,6 +360,10 @@ bool VulkanCompute::DispatchGEMVPacked(const void* packed, size_t bytes,
     Deep2::VulkanCompute::DeviceBuf& out = backend_->ArenaResidual();
     if (in.size < static_cast<size_t>(cols) * sizeof(float) ||
         out.size < static_cast<size_t>(rows) * sizeof(float)) {
+        // The backend reserves the stable GEMV residual capacity during model
+        // initialization. Do not resize the shared forward arena here: this
+        // adapter is called while fused command buffers are in flight, and a
+        // per-call resize can destroy buffers referenced by queued work.
         if (!backend_->EnsureForwardArena(cols, cols, 1, 1, 1, 1, 1))
             return fail("arena");
     }
