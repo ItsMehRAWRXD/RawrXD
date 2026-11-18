@@ -9081,6 +9081,10 @@ Deep2::GenerationResult Deep2Engine::generateStream(const std::string& prompt, c
             }
             if (!r.ok)
             {
+                // A failed native K2 stream must remain a process-visible
+                // inference failure; do not let generateText's string-only
+                // facade turn STREAM_ABORT into exit success.
+                m_generationStop = GenerationStopReason::FORWARD_FAULT;
                 fprintf(stderr, "[Deep2Engine] K2 generateStream: %s\n", r.error.c_str());
             }
             return out;

@@ -77,6 +77,15 @@ int main(int argc, char** argv) {
             std::printf("[deep2-engine] prompt: %s\n", prompt.c_str());
             const std::string out = engine.generateText(prompt, maxTokens);
             std::printf("%s\n", out.c_str());
+            const auto stop = engine.generationStopReason();
+            if (stop == Deep2::Deep2Engine::GenerationStopReason::FORWARD_FAULT ||
+                stop == Deep2::Deep2Engine::GenerationStopReason::EXCEPTION ||
+                stop == Deep2::Deep2Engine::GenerationStopReason::KV_INIT_FAILED ||
+                stop == Deep2::Deep2Engine::GenerationStopReason::CONFIG_MISMATCH) {
+                std::fprintf(stderr, "[deep2-engine] inference failed: %s\n",
+                             Deep2::Deep2Engine::GenerationStopReasonName(stop));
+                return 5;
+            }
         }
         return 0;
     } catch (const std::exception& e) {
