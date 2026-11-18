@@ -886,7 +886,7 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
         float* in  = (layer % 2 == 0) ? tempHidden.data() : hidden;
         float* out = (layer % 2 == 0) ? hidden : tempHidden.data();
         const size_t stageDims[1] = { hiddenDim };
-        (void)k2_parity_capture::CaptureStage(
+        (void)Deep2::k2_parity_capture::CaptureStage(
             layer, position, "resid_in", "inpL", in, hiddenDim,
             stageDims, 1);
         Deep2::MlaCompleteStats layerStats;
@@ -927,7 +927,7 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
             releaseKvTrack();
             return false;
         }
-        (void)k2_parity_capture::CaptureStage(
+        (void)Deep2::k2_parity_capture::CaptureStage(
             layer, position, "attn_resid", "ffn_inp", out, hiddenDim,
             stageDims, 1);
         MlaTrace("[MLA_TRACE] Layer %u/%u MLA_RETURNED\n", layer, testLayers);
@@ -944,7 +944,7 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
                 releaseKvTrack();
                 return false;
             }
-            (void)k2_parity_capture::CaptureStage(
+            (void)Deep2::k2_parity_capture::CaptureStage(
                 layer, position, "ffn_out", "l_out", out, hiddenDim,
                 stageDims, 1);
             MlaTrace("[MOE_TRACE] layer=%u after_after_mla\n", layer);

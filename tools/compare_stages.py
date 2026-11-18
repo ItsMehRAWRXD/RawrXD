@@ -90,6 +90,11 @@ def k2_stage_compare(native_dir, ref_dir):
     # Native stage -> reference boundary. ffn_out is the post-FFN residual.
     boundary = {"attn_resid": "attn_resid", "ffn_out": "resid2"}
     rows = []
+    # These are diagnostic tolerances for float32 cross-engine comparison,
+    # deliberately strict enough that a materially different activation
+    # cannot be reported as a successful parity run.
+    abs_tol = 1.0e-3
+    rmse_tol = 1.0e-4
     for binp in sorted(pathlib.Path(native_dir).glob("deep2_*.bin")):
         m = re.match(r"deep2_(.+)_L(\d+)_P(\d+)\.bin$", binp.name)
         if not m:
@@ -107,11 +112,12 @@ def k2_stage_compare(native_dir, ref_dir):
             rows.append((stage, layer, "SHAPE_MISMATCH", len(vals), len(refs), 0, 0))
             continue
         mm = met(vals, refs)
-        rows.append((stage, layer, "OK", mm["n"], mm["max"], mm["rmse"], mm["ratio"]))
+        status = "PASS" if mm["max"] <= abs_tol and mm["rmse"] <= rmse_tol else "DIVERGENT"
+        rows.append((stage, layer, status, mm["n"], mm["max"], mm["rmse"], mm["ratio"]))
     print("stage layer status count max_abs rmse norm_ratio")
     for row in rows:
         print("%s %d %s %d %.9g %.9g %.9g" % row)
-    return 0 if rows and all(r[2] == "OK" for r in rows) else 2
+    return 0 if rows and all(r[2] == "PASS" for r in rows) else 2
 
 
 def ref_layer_name(layer):

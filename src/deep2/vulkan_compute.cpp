@@ -2628,9 +2628,22 @@ void VulkanCompute::accumulateQ4kParitySamples() noexcept {
 }
 
 bool VulkanCompute::BeginFusedLayer() {
-
-    if (fused_ || !initialized_ || !opsPipeline_) return false;
-    if(!ensureReusableFusedSubmitObjects()) return false;
+    const bool moeTrace = [] {
+        const char* v = std::getenv("DEEP2_MOE_PLACE_TRACE");
+        return v && v[0] == '1' && v[1] == '\0';
+    }();
+    if (fused_ || !initialized_ || !opsPipeline_) {
+        if (moeTrace) std::fprintf(stderr,
+            "LIVE_K2_GPU_BEGIN_FAIL stage=state fused=%u initialized=%u opsPipeline=%u\n",
+            fused_ ? 1u : 0u, initialized_ ? 1u : 0u,
+            opsPipeline_ ? 1u : 0u);
+        return false;
+    }
+    if(!ensureReusableFusedSubmitObjects()) {
+        if (moeTrace) std::fprintf(stderr,
+            "LIVE_K2_GPU_BEGIN_FAIL stage=ensure_submit_objects\n");
+        return false;
+    }
 
     // DEEP2_DENSE_ROW_GPU_TIMING_AUTHORITY_001: invalidate the stale
     // interval so a failed/aborted fused sequence can never leak an
@@ -2650,13 +2663,23 @@ bool VulkanCompute::BeginFusedLayer() {
     q4kParityNext_ = 0;
     q4kParityMeta_.clear();
 
-    if(vkResetCommandBuffer(reusableFusedCmd_,0)!=VK_SUCCESS)
+    const VkResult resetResult = vkResetCommandBuffer(reusableFusedCmd_,0);
+    if(resetResult!=VK_SUCCESS) {
+        if (moeTrace) std::fprintf(stderr,
+            "LIVE_K2_GPU_BEGIN_FAIL stage=reset_command_buffer result=%d\n",
+            static_cast<int>(resetResult));
         return false;
+    }
     VkCommandBufferBeginInfo bi{};
     bi.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     bi.flags=VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    if(vkBeginCommandBuffer(reusableFusedCmd_,&bi)!=VK_SUCCESS)
+    const VkResult beginResult = vkBeginCommandBuffer(reusableFusedCmd_,&bi);
+    if(beginResult!=VK_SUCCESS) {
+        if (moeTrace) std::fprintf(stderr,
+            "LIVE_K2_GPU_BEGIN_FAIL stage=begin_command_buffer result=%d\n",
+            static_cast<int>(beginResult));
         return false;
+    }
 
     prevPipelineType_ = kPipelineNone;
 

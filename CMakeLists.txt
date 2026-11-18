@@ -2139,6 +2139,24 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_qwen4exp_gdn.comp" AND GL
 endif()
 
 if(GLSLC_EXECUTABLE)
+    # The fused MoE path requires the general Deep2 ops pipeline at runtime.
+    # Keep its SPIR-V artifact tied to the checked-in GLSL source so a clean
+    # build cannot produce an executable with a missing opsPipeline_.
+    set(_deep2_ops_source
+        "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_ops.comp")
+    set(_deep2_ops_output
+        "${CMAKE_SOURCE_DIR}/src/deep2/shaders/deep2_ops.spv")
+    add_custom_command(
+        OUTPUT "${_deep2_ops_output}"
+        COMMAND ${GLSLC_EXECUTABLE} -O --target-env=vulkan1.2
+            "${_deep2_ops_source}"
+            -o "${_deep2_ops_output}"
+        DEPENDS "${_deep2_ops_source}"
+        VERBATIM
+        COMMENT "Compiling Deep2 ops shader")
+    add_custom_target(deep2_ops_shader
+        DEPENDS "${_deep2_ops_output}")
+
     # The resident Deep2 GEMV pipeline loads this checked-in SPIR-V at runtime.
     # Keep the artifact tied to its source so a correctness fix cannot silently
     # rebuild the host executable while continuing to run stale shader code.
@@ -3682,6 +3700,7 @@ endforeach()
             NOMINMAX _CRT_SECURE_NO_WARNINGS
             DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders"
         )
+        add_dependencies(deep2_engine_lib deep2_ops_shader)
         add_dependencies(deep2_engine_lib deep2_resident_qgemv_shader)
         add_dependencies(deep2_engine_lib deep2_spec_ops_shader)
         set_target_properties(deep2_engine_lib PROPERTIES
