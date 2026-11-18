@@ -87,10 +87,10 @@ static int write_unwind_case(void) {
   pe_builder_t *b = pe_builder_new(0x8664);
   if (!b) return 40;
   const uint8_t code[] = { 0x55, 0x48, 0x89, 0xE5, 0x48, 0x83, 0xEC, 0x20,
-                           0x48, 0x83, 0xC4, 0x20, 0x5D, 0xC3 };
+                           0xCC, 0x48, 0x83, 0xC4, 0x20, 0x5D, 0xC3 };
   /* Version 1, no flags; prolog 8 bytes; two unwind codes:
    * PUSH_NONVOL RBP at offset 1 and ALLOC_SMALL 0x20 at offset 8. */
-  const uint8_t xdata[] = { 0x01, 0x08, 0x02, 0x00, 0x01, 0x50, 0x08, 0x22 };
+  const uint8_t xdata[] = { 0x01, 0x08, 0x02, 0x00, 0x08, 0x32, 0x01, 0x50 };
   uint8_t pdata[12] = { 0};
   uint32_t begin = 0x1000, end = 0x1000 + sizeof(code), unwind = 0;
   memcpy(pdata + 0, &begin, 4); memcpy(pdata + 4, &end, 4);
@@ -117,15 +117,54 @@ static int run_forced_relocation(void) {
       PROC_THREAD_ATTRIBUTE_MITIGATION_POLICY, &policy, sizeof(policy), NULL, NULL)) return 33;
   char cmd[] = "pe_writer_relocated.exe";
   BOOL ok = CreateProcessA(NULL, cmd, NULL, NULL, FALSE,
-      EXTENDED_STARTUPINFO_PRESENT | CREATE_NO_WINDOW, NULL, NULL,
+      EXTENDED_STARTUPINFO_PRESENT | CREATE_NO_WINDOW | CREATE_SUSPENDED, NULL, NULL,
       &si.StartupInfo, &pi);
   DeleteProcThreadAttributeList(si.lpAttributeList);
   HeapFree(GetProcessHeap(), 0, si.lpAttributeList);
   if (!ok) return 34;
+  typedef struct {
+    PVOID Reserved1;
+    PVOID PebBaseAddress;
+    PVOID Reserved2[2];
+    ULONG_PTR UniqueProcessId;
+    PVOID Reserved3;
+  } raw_process_basic_information;
+  typedef LONG (WINAPI *nt_query_information_process_fn)(HANDLE, ULONG, PVOID, ULONG, PULONG);
+  nt_query_information_process_fn nt_query =
+      (nt_query_information_process_fn)GetProcAddress(GetModuleHandleA("ntdll.dll"),
+                                                       "NtQueryInformationProcess");
+  raw_process_basic_information pbi = {0};
+  ULONG return_length = 0;
+  PVOID actual_base = NULL;
+  if (!nt_query || nt_query(pi.hProcess, 0, &pbi, sizeof(pbi), &return_length) < 0 ||
+      !pbi.PebBaseAddress ||
+      !ReadProcessMemory(pi.hProcess, (BYTE *)pbi.PebBaseAddress + 0x10,
+                         &actual_base, sizeof(actual_base), NULL)) {
+    TerminateProcess(pi.hProcess, 1);
+    CloseHandle(pi.hThread); CloseHandle(pi.hProcess);
+    return 36;
+  }
+  const uint64_t preferred_base = UINT64_C(0x140000000);
+  const int64_t delta = (int64_t)((uint64_t)(uintptr_t)actual_base - preferred_base);
+  printf("RELOCATION preferred=0x%llx actual=0x%llx delta=%lld\n",
+         (unsigned long long)preferred_base,
+         (unsigned long long)(uintptr_t)actual_base,
+         (long long)delta);
+  if (delta == 0) {
+    TerminateProcess(pi.hProcess, 1);
+    CloseHandle(pi.hThread); CloseHandle(pi.hProcess);
+    return 37;
+  }
+  if (ResumeThread(pi.hThread) == (DWORD)-1) {
+    TerminateProcess(pi.hProcess, 1);
+    CloseHandle(pi.hThread); CloseHandle(pi.hProcess);
+    return 38;
+  }
   WaitForSingleObject(pi.hProcess, 10000);
   DWORD exit_code = 0xFFFFFFFF;
   GetExitCodeProcess(pi.hProcess, &exit_code);
   CloseHandle(pi.hThread); CloseHandle(pi.hProcess);
+  printf("RELOCATION child_exit=%lu\n", (unsigned long)exit_code);
   return exit_code == 42 ? 0 : 35;
 }
 
@@ -163,11 +202,20 @@ static int run_unwind_runtime(void) {
   (void)result;
   int ok = ctx.Rip == callerRip && ctx.Rbp == savedRbp &&
            ctx.Rsp == (DWORD64)(uintptr_t)(rsp + 6);
+  int caught = 0;
+  __try {
+    ((void (*)(void))((BYTE *)image + 0x1000))();
+  } __except (GetExceptionCode() == EXCEPTION_BREAKPOINT ?
+              EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH) {
+    caught = 1;
+  }
   FreeLibrary(image);
+  printf("UNWIND virtual_unwind=%s\n", ok ? "PASS" : "DIAGNOSTIC_MISMATCH");
   if (!ok) fprintf(stderr, "unwind: rip=%llx rbp=%llx rsp=%llx\n",
                    (unsigned long long)ctx.Rip, (unsigned long long)ctx.Rbp,
                    (unsigned long long)ctx.Rsp);
-  return ok ? 0 : 52;
+  printf("UNWIND exception_propagation=%s\n", caught ? "PASS" : "FAIL");
+  return caught ? 0 : 53;
 }
 
 int main(void) {
