@@ -2257,6 +2257,17 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
             y[i] *= 1.0f / (1.0f + std::exp(-gate[i]));
     }
 
+    if (const char* compareDir = std::getenv("DEEP2_COMPARE_DUMP_DIR");
+        compareDir && *compareDir && in.block >= 0 && in.block < 64) {
+        char path[1024];
+        std::snprintf(path, sizeof(path), "%s/attn_ctx_blk%d.%s.f32",
+                      compareDir, (int)in.block, force_cpu_ ? "cpu" : "gpu");
+        if (std::FILE* f = std::fopen(path, "wb")) {
+            std::fwrite(y.data(), sizeof(float), y.size(), f);
+            std::fclose(f);
+        }
+    }
+
     // Env-gated dump of the GQA-expanded attention buffer (the pre-O_proj
     // concat, 1 x H*vPerHead). Comparing this against the reference's
     // ATTN_VALUE checkpoint isolates head expansion/concatenation defects
@@ -4484,8 +4495,12 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
             }
             case OpKind::Linear: {
                 if (std::getenv("LINEAR_TRACE")) {
-                    std::fprintf(stderr, "[exec] Linear block=%d bName='%s' bSlot=%d aName='%s' outName='%s' xi=%zu\n",
+                    const TensorRec& traceWeight = tensors_[(size_t)in.b];
+                    std::fprintf(stderr, "[exec] Linear block=%d bName='%s' bSlot=%d type=%d dims=[%zu,%zu] aName='%s' outName='%s' xi=%zu\n",
                                  (int)in.block, in.bName.c_str(), (int)in.b,
+                                 (int)traceWeight.ggml_type,
+                                 traceWeight.dims.size() > 0 ? (size_t)traceWeight.dims[0] : 0,
+                                 traceWeight.dims.size() > 1 ? (size_t)traceWeight.dims[1] : 0,
                                  in.aName.c_str(), in.outName.c_str(), xi.size());
                 }
                 // RAWRXD_GATE7_TPS_001: bind the output straight to its arena
@@ -4545,6 +4560,17 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                         return false;
                     }
                     // no sibling and no declaration -> bias-free, unchanged
+                }
+                if (const char* compareDir = std::getenv("DEEP2_COMPARE_DUMP_DIR");
+                    compareDir && *compareDir && in.block >= 0 && in.block < 64 &&
+                    in.bName.find(".attn_output.weight") != std::string::npos) {
+                    char path[1024];
+                    std::snprintf(path, sizeof(path), "%s/attn_proj_blk%d.%s.f32",
+                                  compareDir, (int)in.block, force_cpu_ ? "cpu" : "gpu");
+                    if (std::FILE* f = std::fopen(path, "wb")) {
+                        std::fwrite(y.data(), sizeof(float), y.size(), f);
+                        std::fclose(f);
+                    }
                 }
                 // Env-gated FFN-chain dumps. The Linear op's INPUT for
                 // ffn_gate IS the FFN_NORM output (the norm feeds only the two
@@ -4793,7 +4819,7 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                          + (i < add->size() ? (*add)[i] : 0.0f);
                 hidden_ = y;
                 if (const char* dumpDir = std::getenv("DEEP2_COMPARE_DUMP_DIR");
-                    dumpDir && *dumpDir && in.block >= 0 && in.block <= 2) {
+                    dumpDir && *dumpDir && in.block >= 0 && in.block < 64) {
                     char path[1024];
                     std::snprintf(path, sizeof(path), "%s/blk%d.%s.%s.f32",
                                   dumpDir, (int)in.block,
@@ -5379,6 +5405,16 @@ bool Executor::OpGdn(const Instr& in, const std::vector<float>& x,
     }
     std::vector<float> projected;
     if (!OpLinear(outSlot, y, projected, err)) return false;
+    if (const char* compareDir = std::getenv("DEEP2_COMPARE_DUMP_DIR");
+        compareDir && *compareDir && in.block >= 0 && in.block < 64) {
+        char path[1024];
+        std::snprintf(path, sizeof(path), "%s/gdn_proj_blk%d.%s.f32",
+                      compareDir, (int)in.block, force_cpu_ ? "cpu" : "gpu");
+        if (std::FILE* f = std::fopen(path, "wb")) {
+            std::fwrite(projected.data(), sizeof(float), projected.size(), f);
+            std::fclose(f);
+        }
+    }
     y.swap(projected);
     return true;
 }
