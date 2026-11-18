@@ -414,6 +414,19 @@ else()
 endif()
 
 # ============================================================================
+
+if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/src/agent/native_action_executor.hpp")
+    add_executable(rawrxd_native_action_executor_test
+        tests/native_action_executor_test.cpp)
+    target_include_directories(rawrxd_native_action_executor_test PRIVATE
+        ${CMAKE_SOURCE_DIR}/src)
+    target_compile_features(rawrxd_native_action_executor_test PRIVATE cxx_std_17)
+    if(MSVC)
+        target_compile_options(rawrxd_native_action_executor_test PRIVATE /EHsc)
+    endif()
+    add_test(NAME rawrxd_native_action_executor_test
+        COMMAND rawrxd_native_action_executor_test)
+endif()
 # Native compression core (Qt-independent)
 # ============================================================================
 # Provides rawrxd::compression::compress / decompress over zlib. This target is
@@ -939,6 +952,9 @@ src/deep2/quant_dot_dispatch.cpp
     endif()
     if(TARGET ggml-vulkan)
         target_link_libraries(deep2_parity_trace PRIVATE ggml-vulkan)
+    endif()
+    if(TARGET rawrxd_compression_core)
+        target_link_libraries(deep2_parity_trace PRIVATE rawrxd_compression_core)
     endif()
     if(MSVC)
         target_compile_options(deep2_parity_trace PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
@@ -4770,6 +4786,17 @@ endif()
 # REAP calibration is a source-backed prerequisite for any physical export.
 # Keep it separate from the writer so calibration can be resumed and audited
 # without granting the calibration process write access to source shards.
+# Isolated operator replay: independent dequantize+dot reference vs captured
+# GPU/CPU tensors, to separate kernel error from inherited input error.
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_kernel_replay.cpp" AND TARGET deep2_engine_lib)
+    add_executable(deep2_kernel_replay tools/deep2_kernel_replay.cpp)
+    target_link_libraries(deep2_kernel_replay PRIVATE deep2_engine_lib)
+    target_include_directories(deep2_kernel_replay PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include ${CMAKE_SOURCE_DIR}/3rdparty/ggml/src)
+    set_target_properties(deep2_kernel_replay PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/tools/reap_calibrate_cli.cpp" AND
    TARGET deep2_engine_lib)
     add_executable(reap-calibrate tools/reap_calibrate_cli.cpp)

@@ -61,7 +61,9 @@ public:
         action.executed = true;
         action.success = result.success;
         action.output = result.stdoutOutput + result.stderrOutput;
-        action.error = result.error;
+        action.error = result.error.empty() && !result.success
+            ? "NONZERO_EXIT_CODE:" + std::to_string(result.exitCode)
+            : result.error;
         return action.success;
     }
 
