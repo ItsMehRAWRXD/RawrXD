@@ -9321,7 +9321,21 @@ void Win32IDE::HandleCopilotSend() {
     // Do not touch the model ComboBox on the Send stack (comctl32 crash
     // boundary). Trust the already-selected route from the harness/UI.
     if (m_selectedChatModel.identifier.empty()) {
-        onModelSelectionChanged();
+        const LRESULT row = m_hwndModelSelector
+            ? SendMessageA(m_hwndModelSelector, CB_GETCURSEL, 0, 0) : CB_ERR;
+        if (row >= 0 && m_hwndModelSelector) {
+            const LRESULT itemData = SendMessageA(m_hwndModelSelector,
+                CB_GETITEMDATA, static_cast<WPARAM>(row), 0);
+            if (itemData >= 0 && static_cast<size_t>(itemData) < m_availableModels.size()) {
+                // Resolve the already-published selection without invoking
+                // invalidateNativeGhostText(), control rebuilds, or nested
+                // notification handlers from the Send callback stack.
+                m_selectedChatModel = m_availableModels[static_cast<size_t>(itemData)];
+                if (auto* session = activeChatSession()) session->model = m_selectedChatModel;
+                if (m_selectedChatModel.source == ChatModelEntry::Source::Ollama)
+                    m_ollamaModelOverride = m_selectedChatModel.identifier;
+            }
+        }
     }
     if (m_selectedChatModel.identifier.empty()) {
         m_inferenceRunning.store(false, std::memory_order_release);
