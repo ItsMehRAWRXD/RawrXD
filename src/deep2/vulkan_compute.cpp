@@ -4463,16 +4463,19 @@ bool VulkanCompute::DispatchGdn(const float* mixed, size_t mixedSize,
         VK_BUFFER_USAGE_TRANSFER_DST_BIT;
     const VkMemoryPropertyFlags memory = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-    // Scratch-backed upload: reuses a persistent DEVICE_LOCAL buffer instead of
-    // allocating and freeing one per call. This is what removes the
-    // vkAllocateMemory churn that exhausted VRAM (rc=-2) during prefill.
+    // GDN operands must have distinct buffers even when their byte sizes
+    // match. The generic scratch cache is keyed by size, so using it for
+    // beta/alpha/a_log/dt_bias aliases same-sized inputs and later uploads
+    // overwrite earlier operands before dispatch. Keep these bindings owned
+    // by this dispatch and release them after the GPU has completed.
     auto upload = [&](const void* src, size_t count, DeviceBuf& dst) -> bool {
         if (!src || count == 0 || count > std::numeric_limits<size_t>::max() / floatBytes)
             return false;
-        if (!getScratchBuffer(static_cast<VkDeviceSize>(count * floatBytes),
-                              usage, memory, dst))
+        if (!createBuffer(static_cast<VkDeviceSize>(count * floatBytes),
+                          usage, memory, dst))
             return false;
         if (!uploadToBuffer(dst, src, count * floatBytes)) {
+            destroyBuffer(dst);
             dst = {};
             return false;
         }
@@ -4481,10 +4484,10 @@ bool VulkanCompute::DispatchGdn(const float* mixed, size_t mixedSize,
 
     DeviceBuf qkvBuf{}, betaBuf{}, alphaBuf{}, aLogBuf{}, dtBiasBuf{},
               normBuf{}, gateBuf{}, outputBuf{};
-    // Scratch buffers are owned by scratchBuffers_ and must NOT be destroyed
-    // here; they are reused by the next dispatch. Only the local handles are
-    // dropped.
     auto releaseInputs = [&]() {
+        destroyBuffer(qkvBuf); destroyBuffer(betaBuf); destroyBuffer(alphaBuf);
+        destroyBuffer(aLogBuf); destroyBuffer(dtBiasBuf); destroyBuffer(normBuf);
+        destroyBuffer(gateBuf); destroyBuffer(outputBuf);
         qkvBuf = {}; betaBuf = {}; alphaBuf = {}; aLogBuf = {};
         dtBiasBuf = {}; normBuf = {}; gateBuf = {}; outputBuf = {};
     };
@@ -4496,8 +4499,8 @@ bool VulkanCompute::DispatchGdn(const float* mixed, size_t mixedSize,
         !upload(dtBias, dtBiasSize, dtBiasBuf) ||
         !upload(norm, normSize, normBuf) ||
         !upload(z, zSize, gateBuf) ||
-        !getScratchBuffer(static_cast<VkDeviceSize>(valueWidth * floatBytes),
-                          usage, memory, outputBuf)) {
+        !createBuffer(static_cast<VkDeviceSize>(valueWidth * floatBytes),
+                      usage, memory, outputBuf)) {
         releaseInputs();
         return false;
     }
