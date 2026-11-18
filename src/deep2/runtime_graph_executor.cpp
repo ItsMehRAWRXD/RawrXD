@@ -5231,6 +5231,9 @@ bool Executor::OpGdn(const Instr& in, const std::vector<float>& x,
     // Vulkan shader consumes this field directly, so do not leave the
     // generic descriptor default (1.0) on the production path.
     descriptor.scale = 1.0f / std::sqrt(static_cast<float>(headDim));
+    // The GDN q/k L2-norm and output RMSNorm must use the model's RMS epsilon
+    // (llama.cpp: hparams.f_norm_rms_eps), not the generic descriptor default.
+    descriptor.epsilon = static_cast<float>(spec_.rms_eps);
     descriptor.stride = descriptor.channels;
     descriptor.qkv_stride = static_cast<uint32_t>(qkv.size());
     descriptor.gate_stride = static_cast<uint32_t>(z.size());
