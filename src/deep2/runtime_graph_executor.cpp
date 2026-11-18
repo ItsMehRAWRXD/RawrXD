@@ -3772,7 +3772,12 @@ bool Executor::PrefillBatch(const std::vector<uint32_t>& tokens, size_t startPos
                         return false;
                     }
                     ts[t].act["attn"] = y;
-                    if (!in.outName.empty()) ts[t].act[in.outName] = y;
+                    // ResidualAdd consumes the stable attention projection
+                    // name when the graph leaves Attention::outName empty.
+                    // Publish that alias on the normal path just as the
+                    // gated-attention path does; otherwise the producer has
+                    // completed but the consumer cannot resolve its tensor.
+                    ts[t].act[in.outName.empty() ? std::string("attn_proj") : in.outName] = y;
                     ts[t].hidden = y;
                 }
                 break;
@@ -4669,7 +4674,10 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 }
                 if (!OpAttention(in, qv, kv, vv, y, position, e)) { last_error_ = e; return false; }
                 arena("attn") = y;
-                if (!in.outName.empty()) arena(in.outName) = y;
+                // Keep the graph's canonical attention-projection name alive
+                // for the following residual add. This is publication of the
+                // real result, not a fallback tensor or a bypass.
+                arena(in.outName.empty() ? std::string("attn_proj") : in.outName) = y;
                 hidden_ = y;
                 break;
             }
