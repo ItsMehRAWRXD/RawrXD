@@ -4744,6 +4744,18 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                     y[i] = (i < resid->size() ? (*resid)[i] : 0.0f)
                          + (i < add->size() ? (*add)[i] : 0.0f);
                 hidden_ = y;
+                if (const char* dumpDir = std::getenv("DEEP2_COMPARE_DUMP_DIR");
+                    dumpDir && *dumpDir && in.block >= 0 && in.block <= 2) {
+                    char path[1024];
+                    std::snprintf(path, sizeof(path), "%s/blk%d.%s.%s.f32",
+                                  dumpDir, (int)in.block,
+                                  force_cpu_ ? "cpu" : "gpu",
+                                  in.outName.empty() ? "resid" : in.outName.c_str());
+                    if (std::FILE* f = std::fopen(path, "wb")) {
+                        std::fwrite(hidden_.data(), sizeof(float), hidden_.size(), f);
+                        std::fclose(f);
+                    }
+                }
                 arena(in.outName.empty() ? std::string("resid") : in.outName) = y;
                 // Per-block hidden-state witness. The engine's own receipts
                 // only compare Deep2 against Deep2, so a divergence against an
