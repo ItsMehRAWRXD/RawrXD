@@ -103,6 +103,26 @@ struct pe_builder {
   uint32_t timestamp;
 };
 
+/* Test-only deterministic fault injection. Production behavior is unchanged
+ * unless RAWRXD_PEWRITER_FAIL_ALLOC_AFTER is explicitly set. */
+static int pw_alloc_count;
+static int pw_alloc_should_fail(void) {
+  const char *e = getenv("RAWRXD_PEWRITER_FAIL_ALLOC_AFTER");
+  if (!e || !*e) return 0;
+  char *end = NULL;
+  long limit = strtol(e, &end, 10);
+  if (end == e || limit < 0 || limit > INT_MAX) return 0;
+  return pw_alloc_count++ >= (int)limit;
+}
+static void * pw_malloc(size_t n) {
+  if (pw_alloc_should_fail()) return NULL;
+  return malloc(n);
+}
+static void * pw_calloc(size_t n, size_t s) {
+  if (pw_alloc_should_fail()) return NULL;
+  return calloc(n, s);
+}
+
 /* ---- Alignment helpers ---- */
 static int align_checked(uint32_t v, uint32_t a, uint32_t *out) {
   if (!out || a == 0 || v > UINT32_MAX - (a - 1)) return -1;
@@ -121,7 +141,8 @@ static void w64(uint8_t *p, uint64_t v) { w32(p,(uint32_t)v); w32(p+4,(uint32_t)
  * Create a new PE builder.
  *------------------------------------------------------------------------*/
 pe_builder_t *pe_builder_new(uint16_t machine) {
-  pe_builder_t *pb = (pe_builder_t *)calloc(1, sizeof(pe_builder_t));
+  pw_alloc_count = 0;
+  pe_builder_t *pb = (pe_builder_t *)pw_calloc(1, sizeof(pe_builder_t));
   if (!pb) return NULL;
   pb->machine       = machine;
   pb->subsystem     = PE_SUBSYS_CONSOLE;
@@ -187,7 +208,7 @@ void pe_builder_add_section(pe_builder_t *pb, const char *name,
   s->name[nlen] = '\0';
   s->data_len = len;
   if (data && len > 0) {
-    s->data = (uint8_t *)malloc(len);
+    s->data = (uint8_t *)pw_malloc(len);
     if (s->data) memcpy(s->data, data, len);
     s->owns_data = 1;
   }
@@ -305,7 +326,7 @@ static uint8_t *build_import_data(pe_builder_t *pb,
       dirTableSize + dllNamesSize + iltSize + iatSize > UINT32_MAX - hintNameSize)
     return NULL;
   uint32_t totalSize = dirTableSize + dllNamesSize + iltSize + iatSize + hintNameSize;
-  uint8_t *buf = (uint8_t *)calloc(1, totalSize);
+  uint8_t *buf = (uint8_t *)pw_calloc(1, totalSize);
   if (!buf) return NULL;
 
   /* Offsets within buffer */
@@ -537,7 +558,7 @@ int pe_builder_write(pe_builder_t *pb, const char *out_path) {
 
   /*==== Step 3: Build the file in memory ====*/
   uint32_t total_file_size = file_offset;
-  uint8_t *image = (uint8_t *)calloc(1, total_file_size);
+  uint8_t *image = (uint8_t *)pw_calloc(1, total_file_size);
   if (!image) return -1;
 
   /*---- DOS Header (64 bytes) ----

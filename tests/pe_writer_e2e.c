@@ -41,6 +41,19 @@ static int negative_cases(void) {
     pe_builder_free(b); return 23;
   }
   pe_builder_free(b);
+
+  for (int fail = 0; fail < 8; ++fail) {
+    char value[16];
+    sprintf(value, "%d", fail);
+    _putenv_s("RAWRXD_PEWRITER_FAIL_ALLOC_AFTER", value);
+    b = pe_builder_new(0x8664);
+    if (b) {
+      pe_builder_add_section(b, ".text", &byte, 1, 0x60000020);
+      (void)pe_builder_write(b, "pe_writer_alloc_fault.exe");
+      pe_builder_free(b);
+    }
+  }
+  _putenv_s("RAWRXD_PEWRITER_FAIL_ALLOC_AFTER", "");
   return 0;
 }
 
