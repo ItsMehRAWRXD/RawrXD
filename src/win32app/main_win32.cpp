@@ -30,6 +30,47 @@ LONG WINAPI rawrxdUnhandledException(EXCEPTION_POINTERS* ep)
                           ep ? &info : nullptr, nullptr, nullptr);
         CloseHandle(file);
     }
+    HANDLE log = CreateFileA(
+        "F:\\rawrxd\\evidence\\production_win32_crash_20261118\\exception_stack.txt",
+        GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS,
+        FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (log != INVALID_HANDLE_VALUE) {
+        SymSetOptions(SYMOPT_DEFERRED_LOADS | SYMOPT_UNDNAME);
+        if (SymInitialize(GetCurrentProcess(), "F:\\rawrxd\\build\\bin\\Release", TRUE)) {
+            void* frames[64]{};
+            const USHORT count = CaptureStackBackTrace(0, 64, frames, nullptr);
+            char line[512];
+            DWORD written = 0;
+            auto writeLine = [&](const char* text) {
+                WriteFile(log, text, static_cast<DWORD>(std::strlen(text)), &written, nullptr);
+            };
+            std::snprintf(line, sizeof(line), "exception=0x%08lX thread=%lu frames=%u\n",
+                          ep && ep->ExceptionRecord ? ep->ExceptionRecord->ExceptionCode : 0,
+                          GetCurrentThreadId(), static_cast<unsigned>(count));
+            writeLine(line);
+            for (USHORT i = 0; i < count; ++i) {
+                const DWORD64 address = reinterpret_cast<DWORD64>(frames[i]);
+                alignas(SYMBOL_INFO) char storage[sizeof(SYMBOL_INFO) + MAX_SYM_NAME];
+                auto* symbol = reinterpret_cast<PSYMBOL_INFO>(storage);
+                symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+                symbol->MaxNameLen = MAX_SYM_NAME;
+                DWORD64 displacement = 0;
+                if (SymFromAddr(GetCurrentProcess(), address, &displacement, symbol)) {
+                    std::snprintf(line, sizeof(line), "#%u %s+0x%llX @0x%llX\n",
+                                  static_cast<unsigned>(i), symbol->Name,
+                                  static_cast<unsigned long long>(displacement),
+                                  static_cast<unsigned long long>(address));
+                } else {
+                    std::snprintf(line, sizeof(line), "#%u <unknown> @0x%llX\n",
+                                  static_cast<unsigned>(i),
+                                  static_cast<unsigned long long>(address));
+                }
+                writeLine(line);
+            }
+            SymCleanup(GetCurrentProcess());
+        }
+        CloseHandle(log);
+    }
     return EXCEPTION_EXECUTE_HANDLER;
 }
 
