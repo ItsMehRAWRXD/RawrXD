@@ -2297,6 +2297,16 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
                 // output is narrower than the projection's declared input.
                 y.resize(projIn, 0.0f);
             } else {
+                if (std::getenv("ATTN_TRACE")) {
+                    std::fprintf(stderr,
+                                 "[attn-geom-fail] arch=%s block=%d H=%zu hk=%zu "
+                                 "qWidth=%zu kWidth=%zu vWidth=%zu qPerHead=%zu "
+                                 "kPerHead=%zu vPerHead=%zu proj_dims=[%zu,%zu]\n",
+                                 spec_.architecture.c_str(), (int)in.block, H, hk,
+                                 qWidth, kWidth, vWidth, qPerHead, kPerHead, vPerHead,
+                                 proj.dims.size() > 0 ? (size_t)proj.dims[0] : 0,
+                                 proj.dims.size() > 1 ? (size_t)proj.dims[1] : 0);
+                }
                 err = "attention geometry mismatch: attention output width " +
                       std::to_string(y.size()) + " (heads=" + std::to_string(H) +
                       " x value_width=" + std::to_string(vPerHead) +
@@ -3197,6 +3207,10 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
             hAll[e * ffn + j] = g[j] * s * u[j];
         }
     }
+    // Diagnostic snapshot: capture hidden immediately after SwiGLU,
+    // owning its memory so the snapshot survives any later buffer reuse.
+    std::vector<float> hidden_snapshot(hAll.begin(), hAll.end());
+    dumpMoe("hidden_snapshot", hidden_snapshot.data(), hidden_snapshot.size());
     dumpMoe("hidden", hAll.data(), hAll.size());
 
     // ---- phase 2: every selected expert's down-projection --------------------
