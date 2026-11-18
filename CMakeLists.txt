@@ -3328,10 +3328,10 @@ if(ENABLE_VULKAN AND EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND
     if(TARGET Vulkan::Vulkan)
         target_link_libraries(rawrxd_gpu_compute PUBLIC Vulkan::Vulkan)
     endif()
-    if(MSVC)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         target_compile_options(rawrxd_gpu_compute PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
     else()
-        target_compile_options(rawrxd_gpu_compute PRIVATE -std:c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
+        target_compile_options(rawrxd_gpu_compute PRIVATE -std=c++20 -fexceptions -mavx2 -mfma -mavx512f -mavx512bw -mavx512vl $<$<CONFIG:Release>:-O2>)
     endif()
     target_compile_definitions(rawrxd_gpu_compute PRIVATE
         NOMINMAX _CRT_SECURE_NO_WARNINGS DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders"
@@ -3356,7 +3356,7 @@ if(ENABLE_VULKAN AND EXISTS ${CMAKE_SOURCE_DIR}/src/deep2/vulkan_compute.cpp AND
         if(TARGET Vulkan::Vulkan)
             target_link_libraries(deep2_vulkan_gdn_dispatch_probe PRIVATE Vulkan::Vulkan)
         endif()
-        if(MSVC)
+        if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
             target_compile_options(deep2_vulkan_gdn_dispatch_probe PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
         else()
             target_compile_options(deep2_vulkan_gdn_dispatch_probe PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
@@ -3673,7 +3673,11 @@ endforeach()
             ggml
             Vulkan::Vulkan
         )
-        target_compile_options(deep2_engine_lib PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+        if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+            target_compile_options(deep2_engine_lib PRIVATE /EHsc /std:c++20 $<$<CONFIG:Release>:/O2>)
+        else()
+            target_compile_options(deep2_engine_lib PRIVATE -std=c++20 -fexceptions $<$<CONFIG:Release>:-O2>)
+        endif()
         target_compile_definitions(deep2_engine_lib PRIVATE
             NOMINMAX _CRT_SECURE_NO_WARNINGS
             DEEP2_SHADER_DIR="${CMAKE_SOURCE_DIR}/src/deep2/shaders"
