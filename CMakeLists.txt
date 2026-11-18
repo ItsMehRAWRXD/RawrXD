@@ -2775,6 +2775,20 @@ endforeach()
         )
 
 message(STATUS "deep2_engine_lib enabled (static library; rawrxd_deep2_engine executable enabled)")
+
+if(EXISTS "${CMAKE_SOURCE_DIR}/tools/mars_vulkan_coexistence_test.cpp")
+    add_executable(mars_vulkan_coexistence_test tools/mars_vulkan_coexistence_test.cpp)
+    target_link_libraries(mars_vulkan_coexistence_test PRIVATE deep2_engine_lib)
+    target_include_directories(mars_vulkan_coexistence_test PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src/deep2)
+    if(MSVC)
+        target_compile_options(mars_vulkan_coexistence_test PRIVATE /EHsc /std:c++20)
+    else()
+        target_compile_options(mars_vulkan_coexistence_test PRIVATE -std=c++20 -fexceptions)
+    endif()
+    set_target_properties(mars_vulkan_coexistence_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+endif()
     endif()
 endif()
 

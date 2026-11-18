@@ -13756,20 +13756,20 @@ void Deep2Engine::enableAllEnhancements()
         if (EnhanceWanted("torus") && !vulkanEnabled_)
             enableToroidalKV(true, torus ? torus : 4096);
     }
-    if (!marsEnabled_ && !vulkanEnabled_ && EnhanceWanted("mars"))
+    if (!marsEnabled_ && EnhanceWanted("mars"))
     {
         const uint64_t g0 = Deep2LocalHeapBytes(getVulkanComputeSlot(0), 32ull << 30);
         const uint64_t g1 = Deep2LocalHeapBytes(getVulkanComputeSlot(1), 16ull << 30);
-        (void)enableMARS(g0, g1);
-    }
-    else if (vulkanEnabled_)
-    {
-        printf("[Deep2Engine] MARS skipped (Vulkan owns compute devices=%u)\n", vulkanDeviceCount());
+        const bool enabled = enableMARS(g0, g1);
+        printf("[Deep2Engine] MARS startup active=%d vulkan=%d ownership=%s placement=%s\n",
+               enabled ? 1 : 0, vulkanEnabled_ ? 1 : 0,
+               vulkanEnabled_ ? "external-vulkan" : "mars",
+               vulkanEnabled_ ? "disabled" : "enabled");
     }
     if (marsEnabled_ && modelWeights.loaded && !marsWeightsPlaced_ && !vulkanEnabled_ && !multiGpuLayerPlan_.active)
         (void)placeAllModelTensorsMARS();
     if (vulkanEnabled_ && marsEnabled_)
-        marsWeightsPlaced_ = true;
+        printf("[Deep2Engine] MARS controller active; Vulkan retains tensor ownership; placement disabled\n");
     initializeAdvancedFeatures();
     printf("[Deep2Engine] STACK vk=%d mars=%d elastic=%d cyclone=%d medusa=%d nu=%d "
            "warmup=%d ckv=%d nvme=%d slide=%d chamber=%d torus=%d plasma=%d "
@@ -15427,10 +15427,13 @@ bool Deep2Engine::enableMARS(size_t gpu0VRAMBytes, size_t gpu1VRAMBytes)
     }
 
     marsEnabled_ = true;
+    marsExternalVulkanOwnership_ = vulkanEnabled_;
     marsWeightsPlaced_ = false;
     marsNextTensorId_ = 1;
-    printf("[Deep2Engine] MARS enabled: GPU0=%.2f GB, GPU1=%.2f GB\n", gpu0VRAMBytes / (1024.0 * 1024.0 * 1024.0),
-           gpu1VRAMBytes / (1024.0 * 1024.0 * 1024.0));
+    printf("[Deep2Engine] MARS enabled: GPU0=%.2f GB, GPU1=%.2f GB ownership=%s\n",
+           gpu0VRAMBytes / (1024.0 * 1024.0 * 1024.0),
+           gpu1VRAMBytes / (1024.0 * 1024.0 * 1024.0),
+           marsExternalVulkanOwnership_ ? "external-vulkan" : "mars");
     return true;
 }
 
@@ -15444,9 +15447,10 @@ void Deep2Engine::disableMARS()
         marsController_.reset();
     }
     marsEnabled_ = false;
+    marsExternalVulkanOwnership_ = false;
     marsWeightsPlaced_ = false;
     marsLayerLeases_.clear();
-    printf("[Deep2Engine] MARS disabled\n");
+    printf("[Deep2Engine] MARS shutdown complete\n");
 }
 
 MARS::VRAMLease* Deep2Engine::placeTensorMARS(uint64_t tensorId, const std::string& name, size_t bytes, float priority)
@@ -15455,6 +15459,11 @@ MARS::VRAMLease* Deep2Engine::placeTensorMARS(uint64_t tensorId, const std::stri
     if (!marsEnabled_ || !marsController_)
     {
         printf("[Deep2Engine] MARS not enabled, cannot place tensor\n");
+        return nullptr;
+    }
+    if (marsExternalVulkanOwnership_)
+    {
+        printf("[Deep2Engine] MARS placement rejected: Vulkan owns compute buffers\n");
         return nullptr;
     }
     return marsController_->PlaceTensor(tensorId, name, bytes, priority, true);
@@ -15466,6 +15475,11 @@ Deep2Engine::MARSPlacementReport Deep2Engine::placeAllModelTensorsMARS()
     if (!marsEnabled_ || !marsController_)
     {
         printf("[Deep2Engine] MARS not enabled, cannot place model tensors\n");
+        return report;
+    }
+    if (marsExternalVulkanOwnership_)
+    {
+        printf("[Deep2Engine] MARS model placement skipped: Vulkan owns compute buffers\n");
         return report;
     }
 

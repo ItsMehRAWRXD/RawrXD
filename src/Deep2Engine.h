@@ -995,6 +995,9 @@ namespace Deep2
         // MARS: Dynamic dual-GPU VRAM orchestration
         std::unique_ptr<MARS::MARSController> marsController_;
         bool marsEnabled_ = false;
+        // When Vulkan owns model buffers, MARS may provide controller/telemetry
+        // services but must not create a second set of tensor leases.
+        bool marsExternalVulkanOwnership_ = false;
         bool marsWeightsPlaced_ = false;
         std::unordered_map<size_t, MARS::VRAMLease *> marsLayerLeases_; // layer -> lease
         uint64_t marsNextTensorId_ = 1;
