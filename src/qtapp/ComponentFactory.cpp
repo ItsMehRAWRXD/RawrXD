@@ -3,6 +3,7 @@
 // Safe includes - these will only be loaded when factory methods are called
 // This prevents static initialization issues
 #include <QDebug>
+#include "../agent/action_executor.hpp"
 
 // Agent system headers - included only here for factory implementation
 // Forward declarations are used in the header to prevent static initialization
@@ -125,9 +126,7 @@ QObject* ComponentFactory::asQObject(MetaPlanner* planner) {
 }
 
 QObject* ComponentFactory::asQObject(ActionExecutor* executor) {
-    // For now, return the object directly cast as QObject using reinterpret_cast
-    // This is safe since we're creating mock QObjects in createActionExecutor
-    return reinterpret_cast<QObject*>(executor);
+    return executor;
 }
 
 QObject* ComponentFactory::asQObject(ExecutionContext* context) {
@@ -157,12 +156,9 @@ ActionExecutor* ComponentFactory::createActionExecutor(QObject* parent)
 {
     try {
         qDebug() << "ComponentFactory: Creating ActionExecutor...";
-        // For now, create a simple mock object instead of real ActionExecutor to avoid static initialization
-        // TODO: Replace with real ActionExecutor when headers are properly implemented
-        auto executor = new QObject(parent);
-        executor->setObjectName("MockActionExecutor");
-        qDebug() << "ComponentFactory: MockActionExecutor created successfully";
-        return reinterpret_cast<ActionExecutor*>(executor);
+        auto executor = new ActionExecutor(parent);
+        qDebug() << "ComponentFactory: ActionExecutor created successfully";
+        return executor;
     } catch (const std::exception& e) {
         qCritical() << "ComponentFactory: Failed to create ActionExecutor:" << e.what();
         return nullptr;
