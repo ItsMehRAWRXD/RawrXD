@@ -145,7 +145,7 @@ const char* MatchBoundary(const std::string& n) {
 bool GraphNodeCallback(ggml_tensor* t, bool ask, void* /*user_data*/) {
     // (1) ASK SEMANTICS. Only the post-compute callback has valid data.
     if (ask) return true;
-    if (!t || !t->data || !t->name) return true;
+    if (!t || !t->data) return true;
 
     // Activations we want are F32; quantised weights are not boundaries.
     if (t->type != GGML_TYPE_F32) return true;
@@ -251,7 +251,11 @@ int main(int argc, char* argv[]) {
     llama_backend_init();
 
     llama_model_params mp = llama_model_default_params();
-    mp.n_gpu_layers = 0;                      // CPU: node data is host-valid
+    mp.n_gpu_layers = 4;
+    mp.main_gpu = 0;
+    mp.split_mode = LLAMA_SPLIT_MODE_NONE;
+    mp.use_mmap = true;
+    mp.use_extra_bufts = false;               // preserve --no-repack behavior
 
     llama_model* model = llama_model_load_from_file(model_path, mp);
     if (!model) {
