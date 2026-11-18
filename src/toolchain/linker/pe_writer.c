@@ -33,6 +33,7 @@
 #define PE_OPTIONAL_HDR_SIZE 0xF0   /* PE32+ optional header = 240 bytes */
 #define PE_NUM_DATA_DIRS     16
 #define PE_MAX_IMPORTS       32
+#define PE_MAX_BASE_RELOCS   4096
 
 /* Data directory indices (PE32+ optional header) */
 #define PE_DATA_DIR_EXPORT       0
@@ -89,6 +90,8 @@ struct pe_builder {
 
   pe_import_t imports[PE_MAX_IMPORTS];
   int num_imports;
+  uint32_t base_reloc_rvas[PE_MAX_BASE_RELOCS];
+  int num_base_relocs;
 
   /* Entry stub injection */
   uint8_t entry_stub_code[256];
@@ -175,6 +178,56 @@ void pe_builder_add_import(pe_builder_t *pb, const char *dllName,
   strncpy(imp->funcName, funcName, sizeof(imp->funcName) - 1);
   imp->iatRva = 0;
   imp->hintNameRva = 0;
+}
+
+int pe_builder_add_base_relocation(pe_builder_t *pb, uint32_t image_rva) {
+  if (!pb || pb->num_base_relocs >= PE_MAX_BASE_RELOCS) return -1;
+  if ((image_rva & 7u) != 0) return -1;
+  for (int i = 0; i < pb->num_base_relocs; ++i)
+    if (pb->base_reloc_rvas[i] == image_rva) return 0;
+  pb->base_reloc_rvas[pb->num_base_relocs++] = image_rva;
+  return 0;
+}
+
+static int reloc_compare(const void *a, const void *b) {
+  uint32_t x = *(const uint32_t *)a, y = *(const uint32_t *)b;
+  return x < y ? -1 : x > y ? 1 : 0;
+}
+
+static uint8_t *build_base_reloc_data(pe_builder_t *pb, uint32_t *out_size) {
+  if (!pb || !out_size || pb->num_base_relocs == 0) return NULL;
+  uint32_t sorted[PE_MAX_BASE_RELOCS];
+  memcpy(sorted, pb->base_reloc_rvas, (size_t)pb->num_base_relocs * sizeof(uint32_t));
+  qsort(sorted, (size_t)pb->num_base_relocs, sizeof(uint32_t), reloc_compare);
+  size_t total = 0;
+  for (int i = 0; i < pb->num_base_relocs;) {
+    uint32_t page = sorted[i] & ~0xFFFu;
+    int n = 0;
+    while (i + n < pb->num_base_relocs && (sorted[i + n] & ~0xFFFu) == page) ++n;
+    size_t block = 8u + (size_t)n * 2u;
+    block = (block + 3u) & ~3u;
+    if (total > UINT32_MAX - block) return NULL;
+    total += block;
+    i += n;
+  }
+  if (total == 0 || total > UINT32_MAX) return NULL;
+  uint8_t *buf = (uint8_t *)pw_calloc(1, total);
+  if (!buf) return NULL;
+  size_t off = 0;
+  for (int i = 0; i < pb->num_base_relocs;) {
+    uint32_t page = sorted[i] & ~0xFFFu;
+    int n = 0;
+    while (i + n < pb->num_base_relocs && (sorted[i + n] & ~0xFFFu) == page) ++n;
+    uint32_t block = (uint32_t)((8u + (size_t)n * 2u + 3u) & ~3u);
+    w32(buf + off, page); w32(buf + off + 4, block);
+    for (int j = 0; j < n; ++j)
+      w16(buf + off + 8u + (size_t)j * 2u,
+          (uint16_t)((10u << 12) | (sorted[i + j] & 0xFFFu)));
+    off += block;
+    i += n;
+  }
+  *out_size = (uint32_t)total;
+  return buf;
 }
 
 void pe_builder_set_entry_stub(pe_builder_t *pb, const uint8_t *code,
@@ -416,6 +469,7 @@ int pe_builder_write(pe_builder_t *pb, const char *out_path) {
   uint32_t importDataSize = 0;
   uint32_t importDirRvaInSection = 0;
   uint32_t firstIatEntryRva = 0;
+  uint32_t relocDataSize = 0;
   if (pb->num_imports > 0) {
     importData = build_import_data(pb, &importDataSize, &importDirRvaInSection,
                                    &firstIatEntryRva);
@@ -426,6 +480,14 @@ int pe_builder_write(pe_builder_t *pb, const char *out_path) {
     free(importData);
     importData = NULL;
   } /* close num_imports — required before stub section */
+
+  if (pb->num_base_relocs > 0) {
+    uint8_t *relocData = build_base_reloc_data(pb, &relocDataSize);
+    if (!relocData) return -1;
+    pe_builder_add_section(pb, ".reloc", relocData, relocDataSize,
+                           0x42000040); /* initialized, discardable, read */
+    free(relocData);
+  }
 
   /*==== Step 1b: Add entry stub section if needed ====*/
   if (pb->has_entry_stub) {
@@ -694,8 +756,11 @@ int pe_builder_write(pe_builder_t *pb, const char *out_path) {
   w32(opt + 60, pb->size_of_headers);
   w32(opt + 64, 0);   /* CheckSum */
   w16(opt + 68, pb->subsystem);
-  /* No relocation directory is emitted, so do not advertise ASLR support. */
-  w16(opt + 70, PE_DLL_NX_COMPAT | PE_DLL_TERMINAL_SERVER);
+  /* Advertise ASLR only when a base-relocation directory is present. */
+  uint16_t dll_chars = PE_DLL_NX_COMPAT | PE_DLL_TERMINAL_SERVER;
+  if (pb->num_base_relocs > 0)
+    dll_chars |= PE_DLL_DYNAMIC_BASE | PE_DLL_HIGH_ENTROPY_VA;
+  w16(opt + 70, dll_chars);
   w64(opt + 72, pb->stack_reserve);
   w64(opt + 80, pb->stack_commit);
   w64(opt + 88, pb->heap_reserve);
@@ -739,6 +804,16 @@ int pe_builder_write(pe_builder_t *pb, const char *out_path) {
         w32(opt + 112 + PE_DATA_DIR_IAT * 8 + 4,
             (uint32_t)(idataSec->data_len >= 8 ? idataSec->data_len : 0));
         (void)importDataSize;
+        break;
+      }
+    }
+  }
+
+  if (pb->num_base_relocs > 0) {
+    for (int i = 0; i < pb->num_sections; ++i) {
+      if (strcmp(pb->sections[i].name, ".reloc") == 0) {
+        w32(opt + 112 + PE_DATA_DIR_BASERELOC * 8, pb->sections[i].rva);
+        w32(opt + 112 + PE_DATA_DIR_BASERELOC * 8 + 4, relocDataSize);
         break;
       }
     }

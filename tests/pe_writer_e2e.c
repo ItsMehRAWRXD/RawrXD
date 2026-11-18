@@ -17,6 +17,7 @@ static int write_case(const char *path, size_t text_size, int imports) {
     pe_builder_add_import(b, "kernel32.dll", "GetStdHandle");
     pe_builder_add_import(b, "user32.dll", "MessageBoxA");
     pe_builder_add_import(b, "kernel32.dll", "ExitProcess");
+    if (pe_builder_add_base_relocation(b, 0x1008) != 0) { pe_builder_free(b); return 13; }
   }
   pe_builder_set_entry(b, 0x1000);
   int rc = pe_builder_write(b, path);

@@ -82,6 +82,9 @@ void pe_builder_add_section(pe_builder_t *pb, const char *name,
 void pe_builder_add_import(pe_builder_t *pb, const char *dllName,
                            const char *funcName);
 
+/* Register an image RVA containing an IMAGE_REL_BASED_DIR64 fixup. */
+int pe_builder_add_base_relocation(pe_builder_t *pb, uint32_t image_rva);
+
 /* ---- Entry stub injection ---- */
 void pe_builder_set_entry_stub(pe_builder_t *pb, const uint8_t *code,
                                size_t codeSize, uint32_t mainRva,
