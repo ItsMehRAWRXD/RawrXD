@@ -627,6 +627,10 @@ bool RunMlaOnPayloads(uint32_t layerIdx, const Deep2::GlobalTensorIndex& index,
     const float* normW = mla.attnNorm.asF32();
     if (normW) rmsNorm(hiddenIn, normW, scratch, hiddenDim, 1e-5f);
     else memcpy(scratch, hiddenIn, hiddenDim * sizeof(float));
+    const size_t normDims[1] = { hiddenDim };
+    (void)Deep2::k2_parity_capture::CaptureStage(
+        layerIdx, position, "attn_norm", "attn_norm_output", scratch,
+        hiddenDim, normDims, 1);
     memset(mlaOut, 0, hiddenDim * sizeof(float));
     Deep2::MLAForward mlaFwd;
     const uint64_t tMla = Deep2::StreamPathTiming_NowUs();
@@ -636,6 +640,10 @@ bool RunMlaOnPayloads(uint32_t layerIdx, const Deep2::GlobalTensorIndex& index,
                              kvCache, layerIdx, position, stats);
     Deep2::OProj_SetResidualBase(nullptr);
     Deep2::StreamPathTiming_Add(Deep2::SPT_mla(), tMla);
+    const size_t oProjDims[1] = { hiddenDim };
+    (void)Deep2::k2_parity_capture::CaptureStage(
+        layerIdx, position, "o_proj", "attn_output_projection", hiddenOut,
+        hiddenDim, oProjDims, 1);
     if (Deep2::OProj_ResidualFused().load() == rf0) {
         // No GPU residual fuse — hiddenOut holds O_PROJ only; add residual.
         size_t i = 0;
@@ -653,6 +661,9 @@ bool RunMlaOnPayloads(uint32_t layerIdx, const Deep2::GlobalTensorIndex& index,
         }
         for (; i < hiddenDim; ++i) hiddenOut[i] = hiddenIn[i] + hiddenOut[i];
     }
+    (void)Deep2::k2_parity_capture::CaptureStage(
+        layerIdx, position, "residual_add", "attn_residual_add", hiddenOut,
+        hiddenDim, oProjDims, 1);
     for (size_t p = 0; p < 9; ++p) { TrackFree(payloads[p].size()); payloads[p].clear(); }
     return ok;
 }

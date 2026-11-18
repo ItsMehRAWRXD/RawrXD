@@ -88,7 +88,11 @@ def k2_stage_compare(native_dir, ref_dir):
         f, raw, layer, n0, n1, n2, n3, elems, bytes_ = line.split()
         ref_shapes[f] = (int(n0), int(n1), int(n2), int(n3), int(elems), int(bytes_))
     # Native stage -> reference boundary. ffn_out is the post-FFN residual.
-    boundary = {"attn_resid": "attn_resid", "ffn_out": "resid2"}
+    boundary = {
+        "attn_norm": "attn_norm",
+        "attn_resid": "attn_resid",
+        "ffn_out": "resid2",
+    }
     rows = []
     # These are diagnostic tolerances for float32 cross-engine comparison,
     # deliberately strict enough that a materially different activation

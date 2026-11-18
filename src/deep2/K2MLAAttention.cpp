@@ -1,6 +1,7 @@
 // K2MLAAttention.cpp — Gate 12 RoPE + softmax + KV attention
 #include "K2MLAAttention.hpp"
 #include "K2KVCache.hpp"
+#include "K2MoEParityCapture.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -134,6 +135,10 @@ bool MlaAttentionComplete(
             layerIdx, position, numHeads, qkDim, kvDim, kvCache->currentLength() + 1);
 
     ropeNeoXInplace(k_pe, qkRopeHeadDim, position, ropeTheta, ropeScale);
+    const size_t ropeDims[1] = { qkRopeHeadDim };
+    (void)Deep2::k2_parity_capture::CaptureStage(
+        layerIdx, position, "k_pe_rope", "attn_k_pe_rope", k_pe,
+        qkRopeHeadDim, ropeDims, 1);
     if (!reportNonFinite("k_pe_rope", k_pe, qkRopeHeadDim, layerIdx, position)) {
         error = "MlaAttentionComplete: non-finite rotary key";
         return false;
@@ -163,6 +168,18 @@ bool MlaAttentionComplete(
         memcpy(vCur.data() + h * vHeadDim, v_b + h * vHeadDim, vHeadDim * sizeof(float));
     }
 
+    const size_t qFullDims[1] = { numHeads * qkDim };
+    const size_t kCurDims[1] = { kPack };
+    const size_t vCurDims[1] = { vPack };
+    (void)Deep2::k2_parity_capture::CaptureStage(
+        layerIdx, position, "q_rope", "attn_q_rope", qFull.data(),
+        numHeads * qkDim, qFullDims, 1);
+    (void)Deep2::k2_parity_capture::CaptureStage(
+        layerIdx, position, "k_cache", "attn_k_cache_input", kCur.data(),
+        kPack, kCurDims, 1);
+    (void)Deep2::k2_parity_capture::CaptureStage(
+        layerIdx, position, "v_cache", "attn_v_cache_input", vCur.data(),
+        vPack, vCurDims, 1);
     try {
         kvCache->Write(layerIdx, kCur.data(), vCur.data());
     } catch (const std::exception& ex) {
@@ -202,6 +219,12 @@ bool MlaAttentionComplete(
             error = "MlaAttentionComplete: softmax non-finite";
             return false;
         }
+        if (h == 0) {
+            const size_t scoreDims[1] = { seqLen };
+            (void)Deep2::k2_parity_capture::CaptureStage(
+                layerIdx, position, "softmax", "attn_softmax_head0",
+                scores.data(), seqLen, scoreDims, 1);
+        }
         float* oh = attnOut + h * vHeadDim;
         for (size_t t = 0; t < seqLen; ++t) {
             const float* vh = kvCache->Value(layerIdx, t) + h * vHeadDim;
@@ -212,6 +235,10 @@ bool MlaAttentionComplete(
 
     MlaDiag("[MLA_ATTENTION] layer=%u all %zu heads done\n",
             layerIdx, numHeads);
+    const size_t attnDims[1] = { vPack };
+    (void)Deep2::k2_parity_capture::CaptureStage(
+        layerIdx, position, "attention_out", "attn_value_aggregation", attnOut,
+        vPack, attnDims, 1);
 
     if (stats) {
         stats->ropeApplied = true;

@@ -14,6 +14,8 @@
 #include "K2GlobalTensorIndex.hpp"
 #include "K2KVCache.hpp"
 #include "K2MLAAttention.hpp"
+#include "K2MoEParityCapture.hpp"
+#include "K2MoEParityCapture.hpp"
 #include "K2MlaStageTiming.hpp"
 #include "K2MlaOProjTiming.hpp"
 #include "QuantKernelRegistry.hpp"
@@ -1111,6 +1113,8 @@ bool MLAForward::Execute(const float* hidden, float* output,
     float* compressedKV = kv_a;
     float* k_pe = kv_a + kvLoraRank;
     float* k_b = tls.k_b; float* v_b = tls.v_b; float* attnOut = tls.attnOut;
+    size_t qADims[1] = {}, qBDims[1] = {}, kvADims[1] = {};
+    size_t kDimsCapture[1] = {}, vDimsCapture[1] = {};
 
     if (!q_a || !q_b || !kv_a || !k_b || !v_b || !attnOut) {
         error = "MLAForward: buffer allocation failed";
@@ -1144,6 +1148,10 @@ bool MLAForward::Execute(const float* hidden, float* output,
         const uint64_t tGap = StreamPathTiming_NowUs();
         if (weights.attnQ_a_norm.data())
             rmsNormTensorView(q_a, weights.attnQ_a_norm, q_a, qLoraRank, config.normRmsEps);
+        const size_t qANormDims[1] = { qLoraRank };
+        (void)Deep2::k2_parity_capture::CaptureStage(
+            layerIdx, position, "q_a_norm", "attn_q_a_norm", q_a,
+            qLoraRank, qANormDims, 1);
         pin(2);
         QBr_NoteGap(StreamPathTiming_NowUs() - tGap);
         uint64_t t = StreamPathTiming_NowUs();
@@ -1190,6 +1198,10 @@ bool MLAForward::Execute(const float* hidden, float* output,
         if (weights.attnKV_a_norm.data())
             rmsNormTensorView(compressedKV, weights.attnKV_a_norm, compressedKV,
                               kvLoraRank, config.normRmsEps);
+        const size_t kvNormDims[1] = { kvLoraRank };
+        (void)Deep2::k2_parity_capture::CaptureStage(
+            layerIdx, position, "kv_a_norm", "attn_kv_a_norm", compressedKV,
+            kvLoraRank, kvNormDims, 1);
         kvOk = true;
     };
     auto runKvHost = [&]() {
@@ -1320,6 +1332,18 @@ bool MLAForward::Execute(const float* hidden, float* output,
         error = "MLAForward: non-finite Q/KV projection";
         goto cleanup;
     }
+    qADims[0] = qLoraRank;
+    qBDims[0] = qBCols;
+    kvADims[0] = kvACols;
+    (void)Deep2::k2_parity_capture::CaptureStage(
+        layerIdx, position, "q_a", "attn_q_a_projection", q_a,
+        qLoraRank, qADims, 1);
+    (void)Deep2::k2_parity_capture::CaptureStage(
+        layerIdx, position, "q_b", "attn_q_b_projection", q_b,
+        qBCols, qBDims, 1);
+    (void)Deep2::k2_parity_capture::CaptureStage(
+        layerIdx, position, "kv_a", "attn_kv_a_projection", kv_a,
+        kvACols, kvADims, 1);
     std::fprintf(stderr, "[MLA_QKV_FINITE_CHECK_OK] layer=%u position=%u\n",
                  layerIdx, position);
     std::fflush(stderr);
@@ -1542,6 +1566,14 @@ bool MLAForward::Execute(const float* hidden, float* output,
         }
     }
     StreamPathTiming_Add(MlaStage_KvExpandUs(), tExp);
+    kDimsCapture[0] = numHeads * qkNopeHeadDim;
+    vDimsCapture[0] = numHeads * vHeadDim;
+    (void)Deep2::k2_parity_capture::CaptureStage(
+        layerIdx, position, "k_nope", "attn_k_nope_expanded", k_b,
+        numHeads * qkNopeHeadDim, kDimsCapture, 1);
+    (void)Deep2::k2_parity_capture::CaptureStage(
+        layerIdx, position, "v_expanded", "attn_v_expanded", v_b,
+        numHeads * vHeadDim, vDimsCapture, 1);
 
     // =========================================================================
     // Attention: G10/G11 simplified path OR Gate 12 complete MLA (kvCache set)
