@@ -3329,7 +3329,7 @@ static int cmdDap(const std::vector<std::string>& args) {
         return EXIT_FAIL;
     }
     std::string exe = g_workspace_root +
-        "\\build_win32ide\\bin\\Release\\debuggee_fixture.exe";
+        "\\build\\bin\\Release\\debuggee_fixture.exe";
     for (size_t i = 0; i + 1 < args.size(); ++i) {
         if (args[i] == "--exe") exe = args[i + 1];
     }
