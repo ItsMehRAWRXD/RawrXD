@@ -628,7 +628,13 @@ bool DotBlocked(int kind,
             n_out);
         std::fflush(stderr);
     }
-    if (g_batch_active && !differential_check && g_active_device < 0 &&
+    // Q4_K batch descriptors currently share a packed activation arena with
+    // per-entry offsets. Keep Q4_K on the synchronous path until that arena
+    // contract is proven against real model projections; the synchronous path
+    // has independent upload/barrier/readback ownership and is numerically
+    // verified. Do not return a queued result for Q4_K while its output is not
+    // yet trustworthy.
+    if (g_batch_active && kind != 0 && !differential_check && g_active_device < 0 &&
         !force_cpu && !g_force_cpu) {
         if (!q8_interleaved) {
             g_receipt.fallback_reason = "batch queue without a Q8 activation buffer";
