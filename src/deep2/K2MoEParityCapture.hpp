@@ -57,6 +57,49 @@ inline bool WriteVector(const std::filesystem::path& path, const float* data,
     return ok;
 }
 
+// Bounded full-vector stage capture for native-vs-reference comparisons.
+// The caller must invoke this only after the producer's completion boundary.
+inline bool CaptureStage(unsigned layer, unsigned position, const char* stage,
+                         const char* rawName, const float* data, size_t count,
+                         const size_t* dims, size_t ndim) {
+    const char* raw = std::getenv("DEEP2_K2_STAGE_CAPTURE_DIR");
+    if (!raw || !*raw || !stage || !rawName || !data || !count ||
+        layer > 1u || position != 0u || ndim == 0u || ndim > 4u ||
+        count > 1048576u)
+        return false;
+    for (size_t i = 0; i < count; ++i)
+        if (!std::isfinite(data[i])) return false;
+    std::filesystem::path dir(raw);
+    std::error_code ec;
+    if (!std::filesystem::is_directory(dir, ec) || ec) return false;
+    const std::string stem = "deep2_" + std::string(stage) + "_L" +
+        std::to_string(layer) + "_P" + std::to_string(position);
+    const auto bin = dir / (stem + ".bin");
+    const auto manifest = dir / (stem + ".manifest.txt");
+    if (std::filesystem::exists(bin, ec) || ec) return false;
+    ec.clear();
+    if (std::filesystem::exists(manifest, ec) || ec) return false;
+    if (!WriteNew(bin, data, count * sizeof(float))) return false;
+    std::string receipt = "schema=DEEP2_K2_STAGE_CAPTURE_001\n";
+    receipt += "stage=" + std::string(stage) + "\nraw_name=" +
+               std::string(rawName) + "\nlayer=" + std::to_string(layer) +
+               "\nposition=" + std::to_string(position) +
+               "\ndtype=float32\ncount=" + std::to_string(count) +
+               "\nbytes=" + std::to_string(count * sizeof(float)) +
+               "\ncompletion_boundary=HOST_VISIBLE_POST_PRODUCER\n";
+    receipt += "dims=";
+    for (size_t i = 0; i < ndim; ++i) {
+        if (i) receipt += ",";
+        receipt += std::to_string(dims[i]);
+    }
+    receipt += "\nfinite=1\ncertified=0\n";
+    if (!WriteNew(manifest, receipt.data(), receipt.size())) {
+        std::filesystem::remove(bin, ec);
+        return false;
+    }
+    return true;
+}
+
 inline bool Capture(unsigned stick, unsigned layer, int expert,
                     int ggmlType, const uint8_t* downBytes, size_t downLen,
                     const float* postSwiGlu, size_t intermediate,

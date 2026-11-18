@@ -64,11 +64,63 @@ def met(a, b):
             "ratio": (na / nb if nb > 0 else 0.0)}
 
 
+def rd_raw_f32(p):
+    d = open(p, "rb").read()
+    if len(d) % 4:
+        raise ValueError("non-f32 byte length: %s" % p)
+    return struct.unpack("<%df" % (len(d) // 4), d)
+
+
+def k2_stage_compare(native_dir, ref_dir):
+    """Compare the bounded DEEP2_K2_STAGE_CAPTURE_001 format.
+
+    Native files are raw float32 with adjacent *.manifest.txt receipts;
+    reference files are the pinned b8352 raw float32 dump.  Manifests are
+    required for shape checks before any numerical metric is computed.
+    """
+    import pathlib
+    import re
+    ref_manifest = pathlib.Path(ref_dir) / "manifest.txt"
+    ref_shapes = {}
+    for line in ref_manifest.read_text(encoding="utf-8").splitlines():
+        if not line or line.startswith("#"):
+            continue
+        f, raw, layer, n0, n1, n2, n3, elems, bytes_ = line.split()
+        ref_shapes[f] = (int(n0), int(n1), int(n2), int(n3), int(elems), int(bytes_))
+    # Native stage -> reference boundary. ffn_out is the post-FFN residual.
+    boundary = {"attn_resid": "attn_resid", "ffn_out": "resid2"}
+    rows = []
+    for binp in sorted(pathlib.Path(native_dir).glob("deep2_*.bin")):
+        m = re.match(r"deep2_(.+)_L(\d+)_P(\d+)\.bin$", binp.name)
+        if not m:
+            continue
+        stage, layer, pos = m.group(1), int(m.group(2)), int(m.group(3))
+        if pos != 0 or stage not in boundary:
+            continue
+        refp = pathlib.Path(ref_dir) / (boundary[stage] + "_L%d.bin" % layer)
+        if not refp.exists():
+            rows.append((stage, layer, "MISSING_REFERENCE", 0, 0, 0, 0))
+            continue
+        vals = rd_raw_f32(binp)
+        refs = rd_raw_f32(refp)
+        if len(vals) != len(refs):
+            rows.append((stage, layer, "SHAPE_MISMATCH", len(vals), len(refs), 0, 0))
+            continue
+        mm = met(vals, refs)
+        rows.append((stage, layer, "OK", mm["n"], mm["max"], mm["rmse"], mm["ratio"]))
+    print("stage layer status count max_abs rmse norm_ratio")
+    for row in rows:
+        print("%s %d %s %d %.9g %.9g %.9g" % row)
+    return 0 if rows and all(r[2] == "OK" for r in rows) else 2
+
+
 def ref_layer_name(layer):
     return "l-1" if layer == 26 or layer == (1 << 32) - 1 or layer == 4294967295 else "l%02d" % layer
 
 
 def main():
+    if len(sys.argv) >= 4 and sys.argv[1] == "--k2-stage":
+        raise SystemExit(k2_stage_compare(sys.argv[2], sys.argv[3]))
     nat_dir = sys.argv[1]
     pos = int(sys.argv[2])
     layers = int(sys.argv[3]) if len(sys.argv) > 3 else 27

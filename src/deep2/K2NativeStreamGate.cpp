@@ -2,6 +2,7 @@
 // Extracted from certified K2-008 Gate 13 logic; K2-008 source remains frozen.
 
 #include "K2NativeStreamGate.hpp"
+#include "K2MoEParityCapture.hpp"
 #include "RawrScoreboard.hpp"
 #include "K2MLAWeights.hpp"
 #include "K2MLAAttention.hpp"
@@ -884,6 +885,10 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
                  layer, testLayers);
         float* in  = (layer % 2 == 0) ? tempHidden.data() : hidden;
         float* out = (layer % 2 == 0) ? hidden : tempHidden.data();
+        const size_t stageDims[1] = { hiddenDim };
+        (void)k2_parity_capture::CaptureStage(
+            layer, position, "resid_in", "inpL", in, hiddenDim,
+            stageDims, 1);
         Deep2::MlaCompleteStats layerStats;
         if (Deep2::LivePath_Active())
             Deep2::LivePath_OnLayerStart(Deep2::LivePath_ActiveCyclone(), layer, 0);
@@ -922,6 +927,9 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
             releaseKvTrack();
             return false;
         }
+        (void)k2_parity_capture::CaptureStage(
+            layer, position, "attn_resid", "ffn_inp", out, hiddenDim,
+            stageDims, 1);
         MlaTrace("[MLA_TRACE] Layer %u/%u MLA_RETURNED\n", layer, testLayers);
         /* Host MoE after MLA: router â†’ shared placer â†’ execute ALL selected. */
         if (k2cfg.numExperts > 0) {
@@ -936,6 +944,9 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
                 releaseKvTrack();
                 return false;
             }
+            (void)k2_parity_capture::CaptureStage(
+                layer, position, "ffn_out", "l_out", out, hiddenDim,
+                stageDims, 1);
             MlaTrace("[MOE_TRACE] layer=%u after_after_mla\n", layer);
         }
         MlaTrace("[MLA_TRACE] Layer %u/%u post_moe\n", layer, testLayers);
