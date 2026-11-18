@@ -44,8 +44,25 @@ LONG WINAPI rawrxdUnhandledException(EXCEPTION_POINTERS* ep)
             auto writeLine = [&](const char* text) {
                 WriteFile(log, text, static_cast<DWORD>(std::strlen(text)), &written, nullptr);
             };
+            const auto* record = ep ? ep->ExceptionRecord : nullptr;
+            const auto* context = ep ? ep->ContextRecord : nullptr;
+            std::snprintf(line, sizeof(line),
+                          "fault=0x%08lX access=%llu address=0x%llX rip=0x%llX rsp=0x%llX rbp=0x%llX rcx=0x%llX rdx=0x%llX r8=0x%llX r9=0x%llX\n",
+                          record ? record->ExceptionCode : 0,
+                          record && record->NumberParameters > 0
+                              ? static_cast<unsigned long long>(record->ExceptionInformation[0]) : 0ull,
+                          record && record->NumberParameters > 1
+                              ? static_cast<unsigned long long>(record->ExceptionInformation[1]) : 0ull,
+                          context ? static_cast<unsigned long long>(context->Rip) : 0ull,
+                          context ? static_cast<unsigned long long>(context->Rsp) : 0ull,
+                          context ? static_cast<unsigned long long>(context->Rbp) : 0ull,
+                          context ? static_cast<unsigned long long>(context->Rcx) : 0ull,
+                          context ? static_cast<unsigned long long>(context->Rdx) : 0ull,
+                          context ? static_cast<unsigned long long>(context->R8) : 0ull,
+                          context ? static_cast<unsigned long long>(context->R9) : 0ull);
+            writeLine(line);
             std::snprintf(line, sizeof(line), "exception=0x%08lX thread=%lu frames=%u\n",
-                          ep && ep->ExceptionRecord ? ep->ExceptionRecord->ExceptionCode : 0,
+                          record ? record->ExceptionCode : 0,
                           GetCurrentThreadId(), static_cast<unsigned>(count));
             writeLine(line);
             for (USHORT i = 0; i < count; ++i) {

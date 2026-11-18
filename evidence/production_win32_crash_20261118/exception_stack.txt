@@ -1,5 +1,6 @@
-exception=0xC0000005 thread=17764 frames=21
-#0 <unknown> @0x7FF63016ADD7
+fault=0xC0000005 access=1 address=0xD93158E3E0 rip=0x7FFEE729BD02 rsp=0x7D4131C018 rbp=0xF000 rcx=0xD93158E3E0 rdx=0xFFFF r8=0x0 r9=0x7FFEFFFF
+exception=0xC0000005 thread=13956 frames=21
+#0 <unknown> @0x7FF6ED3BADDC
 #1 UnhandledExceptionFilter+0x1F3 @0x7FFF0D27FAA3
 #2 RtlEncodeRemotePointer+0x948 @0x7FFF0FFD4908
 #3 KiUserApcDispatcher+0xB0 @0x7FFF0FFDA390
@@ -15,8 +16,8 @@ exception=0xC0000005 thread=17764 frames=21
 #13 KiUserCallbackDispatcher+0x24 @0x7FFF0FFDA424
 #14 NtUserGetMessage+0x14 @0x7FFF0D851364
 #15 GetMessageA+0x48 @0x7FFF0E7526D8
-#16 RawrXDChatWindow_GetHwnd+0x30172 @0x7FF6302E29A2
-#17 <unknown> @0x7FF63016D049
-#18 RawrXDChatWindow_GetHwnd+0x1D3C52 @0x7FF630486482
+#16 RawrXDChatWindow_GetHwnd+0x30172 @0x7FF6ED532AA2
+#17 <unknown> @0x7FF6ED3BD149
+#18 RawrXDChatWindow_GetHwnd+0x1D3C52 @0x7FF6ED6D6582
 #19 BaseThreadInitThunk+0x17 @0x7FFF0E5FDDA7
 #20 RtlUserThreadStart+0x2C @0x7FFF0FF39C5C
