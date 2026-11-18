@@ -3358,7 +3358,7 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         target_link_libraries(RawrXD-Win32IDE-Native PRIVATE
             comctl32 comdlg32 winhttp ws2_32
             ${RAWRXD_RICHEDIT_LIBS}
-            shell32 user32 gdi32
+              shell32 user32 gdi32 dbghelp
             ole32 oleaut32 uuid advapi32 d3d11 dxgi d3dcompiler
             # TransparentRenderer (src/win32app/TransparentRenderer.cpp) uses
             # Direct2D, DirectWrite and DirectComposition for the glass /

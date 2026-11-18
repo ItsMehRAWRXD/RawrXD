@@ -6,11 +6,33 @@
 #include <fstream>
 #include <mutex>
 #include <atomic>
+#include <dbghelp.h>
 #if defined(RAWRXD_NATIVE_IDE_EXT) && RAWRXD_NATIVE_IDE_EXT
 #include "Win32IDE_ExtHostWire.h"
 #endif
 
 namespace {
+LONG WINAPI rawrxdUnhandledException(EXCEPTION_POINTERS* ep)
+{
+    CreateDirectoryA("F:\\rawrxd\\evidence\\production_win32_crash_20261118", nullptr);
+    const char* path = "F:\\rawrxd\\evidence\\production_win32_crash_20261118\\RawrXD-Win32IDE-Native.dmp";
+    HANDLE file = CreateFileA(path, GENERIC_WRITE, FILE_SHARE_READ, nullptr,
+                              CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (file != INVALID_HANDLE_VALUE) {
+        MINIDUMP_EXCEPTION_INFORMATION info{};
+        info.ThreadId = GetCurrentThreadId();
+        info.ExceptionPointers = ep;
+        info.ClientPointers = FALSE;
+        MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), file,
+                          static_cast<MINIDUMP_TYPE>(
+                              MiniDumpWithDataSegs | MiniDumpWithHandleData |
+                              MiniDumpWithThreadInfo | MiniDumpWithUnloadedModules),
+                          ep ? &info : nullptr, nullptr, nullptr);
+        CloseHandle(file);
+    }
+    return EXCEPTION_EXECUTE_HANDLER;
+}
+
 void startupTrace(const char* message)
 {
     std::ofstream trace("F:\\rawrxd\\startup_trace.log", std::ios::app);
@@ -181,6 +203,7 @@ void applyUserDataDirFromCmdLine(const char* lpCmdLine)
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
+    SetUnhandledExceptionFilter(rawrxdUnhandledException);
     startupTrace("WinMain entered");
     startupTrace(lpCmdLine && *lpCmdLine ? lpCmdLine : "WinMain command line empty");
     applyUserDataDirFromCmdLine(lpCmdLine);
