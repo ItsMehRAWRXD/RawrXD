@@ -2613,6 +2613,23 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
                             const std::vector<uint32_t>& ids, const std::vector<float>& w,
                             std::vector<float>& y, std::string& err) {
     y.assign(spec_.embd, 0.0f);
+    const char* moeDumpDir = std::getenv("DEEP2_MOE_COMPARE_DUMP_DIR");
+    int moeDumpBlock = -1;
+    if (const char* e = std::getenv("DEEP2_MOE_COMPARE_DUMP_BLOCK"))
+        moeDumpBlock = std::atoi(e);
+    const bool moeDump = moeDumpDir && *moeDumpDir &&
+                         (moeDumpBlock < 0 || moeDumpBlock == moe.block);
+    const char* moeSide = force_cpu_ ? "cpu" : "gpu";
+    auto dumpMoe = [&](const char* tag, const float* data, size_t count) {
+        if (!moeDump || !data || count == 0) return;
+        char path[1024];
+        std::snprintf(path, sizeof(path), "%s/blk%d.%s.%s.f32",
+                      moeDumpDir, (int)moe.block, moeSide, tag);
+        if (std::FILE* f = std::fopen(path, "wb")) {
+            std::fwrite(data, sizeof(float), count, f);
+            std::fclose(f);
+        }
+    };
     // RAWRXD_MULTI_GPU: route ALL of this MoE block's expert dots (up/gate/down,
     // routed + shared) to the device that owns the block.
     const DevScope dev_scope(BlockVkByIndex((uint32_t)moe.block));
@@ -2754,6 +2771,7 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
 
     std::vector<float> g(ffn), u(ffn);
     size_t expertsProcessed = 0;
+    dumpMoe("input", x.data(), x.size());
 
     // RAWRXD_DEEP2_LEGACY_QUANT_GPU_001: expert matmuls dispatch through the
     // SAME quant-dot fast path as every linear projection. The expert bank is
@@ -3118,6 +3136,19 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
         std::fflush(stderr);
         (void)ds;
     }
+    if (moeDump) {
+        char path[1024];
+        std::snprintf(path, sizeof(path), "%s/blk%d.%s.routing.txt",
+                      moeDumpDir, (int)moe.block, moeSide);
+        if (std::FILE* f = std::fopen(path, "wb")) {
+            std::fprintf(f, "count=%zu\n", nSel);
+            for (size_t e = 0; e < nSel; ++e)
+                std::fprintf(f, "%zu %u %.9g\n", e, ids[e], (double)w[e]);
+            std::fclose(f);
+        }
+    }
+    dumpMoe("up", uAll.data(), uAll.size());
+    dumpMoe("gate", gAll.data(), gAll.size());
     for (size_t e = 0; e < nSel; ++e)
     {
         const size_t ex = (size_t)ids[e];
@@ -3166,6 +3197,7 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
             hAll[e * ffn + j] = g[j] * s * u[j];
         }
     }
+    dumpMoe("hidden", hAll.data(), hAll.size());
 
     // ---- phase 2: every selected expert's down-projection --------------------
     const bool dShapeAll = (dKind >= 0) && (dIn % (dKind >= 2 ? 32u : 256u) == 0) &&
@@ -3281,6 +3313,7 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
             }
         }
     }
+    dumpMoe("down", dyAll.data(), dyAll.size());
 
     // ---- routing-weighted accumulation ---------------------------------------
     for (size_t e = 0; e < nSel; ++e)
@@ -3289,6 +3322,7 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
         for (size_t i = 0; i < olen; ++i)
             y[i] += w[e] * dyAll[e * embd + i];
     }
+    dumpMoe("output", y.data(), y.size());
     if (std::getenv("MOE_TRACE")) {
         double ys = 0.0;
         for (size_t i = 0; i < olen && i < 4096; ++i) ys += y[i];
