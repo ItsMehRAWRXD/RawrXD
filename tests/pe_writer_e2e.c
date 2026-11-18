@@ -129,12 +129,54 @@ static int run_forced_relocation(void) {
   return exit_code == 42 ? 0 : 35;
 }
 
+static int run_unwind_runtime(void) {
+  HMODULE image = LoadLibraryExA("pe_writer_unwind.exe", NULL,
+                                DONT_RESOLVE_DLL_REFERENCES);
+  if (!image) { fprintf(stderr, "unwind: LoadLibraryEx failed=%lu\n", GetLastError()); return 50; }
+  DWORD64 base = (DWORD64)(uintptr_t)image;
+  PRUNTIME_FUNCTION fn = RtlLookupFunctionEntry(base + 0x1008, &base, NULL);
+  if (!fn || fn->BeginAddress != 0x1000 || fn->UnwindData == 0) {
+    fprintf(stderr, "unwind: lookup failed fn=%p begin=%lx data=%lx\n", (void*)fn,
+            fn ? (unsigned long)fn->BeginAddress : 0,
+            fn ? (unsigned long)fn->UnwindData : 0);
+    FreeLibrary(image); return 51;
+  }
+  DWORD64 fakeStack[64] = {0};
+  const DWORD64 savedRbp = UINT64_C(0x1122334455667788);
+  const DWORD64 callerRip = UINT64_C(0x8877665544332211);
+  DWORD64 *rsp = &fakeStack[16];
+  rsp[4] = savedRbp;  /* saved RBP after sub rsp, 0x20 */
+  rsp[5] = callerRip; /* caller return address */
+  CONTEXT ctx = {0};
+  ctx.ContextFlags = CONTEXT_CONTROL | CONTEXT_INTEGER;
+  ctx.Rip = base + 0x1008;
+  ctx.Rsp = (DWORD64)(uintptr_t)rsp;
+  ctx.Rbp = 0;
+  PVOID handlerData = NULL;
+  DWORD64 establisher = 0;
+  KNONVOLATILE_CONTEXT_POINTERS nv = {0};
+  ULONG64 imageBase = base;
+  DWORD64 controlPc = ctx.Rip;
+  PVOID result = RtlVirtualUnwind(UNW_FLAG_NHANDLER, imageBase,
+                                    controlPc, fn, &ctx, &handlerData,
+                                    &establisher, &nv);
+  (void)result;
+  int ok = ctx.Rip == callerRip && ctx.Rbp == savedRbp &&
+           ctx.Rsp == (DWORD64)(uintptr_t)(rsp + 6);
+  FreeLibrary(image);
+  if (!ok) fprintf(stderr, "unwind: rip=%llx rbp=%llx rsp=%llx\n",
+                   (unsigned long long)ctx.Rip, (unsigned long long)ctx.Rbp,
+                   (unsigned long long)ctx.Rsp);
+  return ok ? 0 : 52;
+}
+
 int main(void) {
   if (write_case("pe_writer_minimal.exe", 0x100, 0) != 0) return 1;
   if (write_case("pe_writer_large_import.exe", 0x5000, 1) != 0) return 2;
   if (negative_cases() != 0) return 3;
   if (write_relocation_case() != 0 || run_forced_relocation() != 0) return 4;
   if (write_unwind_case() != 0) return 5;
+  if (run_unwind_runtime() != 0) return 6;
   puts("PE_WRITER_E2E_GENERATED=PASS");
   return 0;
 }
