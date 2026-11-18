@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/qt_elimination.h"
+#include "native_process.hpp"
 #include <atomic>
 #include <chrono>
 #include <functional>
