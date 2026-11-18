@@ -1726,7 +1726,8 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     // if it differs here the defect is in the projection or its input.
     if (const char* dumpPrefix = std::getenv("DEEP2_DUMP_QKV")) {
         char dp[600];
-        std::snprintf(dp, sizeof(dp), "%s.blk%d.qkv.f32", dumpPrefix, (int)in.block);
+        std::snprintf(dp, sizeof(dp), "%s.blk%d.%s.qkv.f32", dumpPrefix,
+                      (int)in.block, force_cpu_ ? "cpu" : "gpu");
         if (std::FILE* df = std::fopen(dp, "wb")) {
             std::fwrite(q.data(), sizeof(float), q.size(), df);
             std::fwrite(k.data(), sizeof(float), k.size(), df);
