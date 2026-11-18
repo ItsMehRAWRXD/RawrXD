@@ -70,6 +70,23 @@ bool RecordExpert(CPUInference::VulkanCompute* vc, unsigned stick, int gt,
                   size_t ub, int dt, const uint8_t* d, size_t db, float weight,
                   size_t H, size_t I, uint32_t layer, int expertId,
                   StickGpuLocal& c) {
+    const bool perDispatchSync = [] {
+        const char* v = std::getenv("DEEP2_MOE_PER_DISPATCH_SYNC");
+        return v && v[0] == '1' && v[1] == '\0';
+    }() && layer == 3u;
+    auto retireDispatch = [&](const char* stage) {
+        if (!perDispatchSync) return true;
+        if (!vc->EndFusedLayer()) {
+            MoeGpuTrace("LIVE_K2_MOE_OP_FAIL stage=%s_sync layer=%u stick=%u expert=%d", stage, layer, stick, expertId);
+            return false;
+        }
+        MoeGpuTrace("LIVE_K2_MOE_OP_SYNC stage=%s layer=%u stick=%u expert=%d result=PASS", stage, layer, stick, expertId);
+        if (!vc->BeginFusedLayer()) {
+            MoeGpuTrace("LIVE_K2_MOE_OP_FAIL stage=%s_rebegin layer=%u stick=%u expert=%d", stage, layer, stick, expertId);
+            return false;
+        }
+        return true;
+    };
     MoeGpuTrace("LIVE_K2_MOE_OP_BEGIN layer=%u stick=%u expert=%d", layer,
                 stick, expertId);
     const uint64_t p1 = DualStickExpertPin(layer, expertId, 1);
@@ -87,6 +104,7 @@ bool RecordExpert(CPUInference::VulkanCompute* vc, unsigned stick, int gt,
     }
     MoeGpuTrace("LIVE_K2_MOE_OP gate_end layer=%u stick=%u expert=%d", layer,
                 stick, expertId);
+    if (!retireDispatch("gate")) return false;
     MoeGpuTrace("LIVE_K2_MOE_OP up_begin layer=%u stick=%u expert=%d", layer,
                 stick, expertId);
     if (!vc->DispatchGemvQuant(ut, u, ub, vc->ArenaNormed(), vc->ArenaUp(), rI,
@@ -97,6 +115,7 @@ bool RecordExpert(CPUInference::VulkanCompute* vc, unsigned stick, int gt,
     }
     MoeGpuTrace("LIVE_K2_MOE_OP up_end layer=%u stick=%u expert=%d", layer,
                 stick, expertId);
+    if (!retireDispatch("up")) return false;
     MoeGpuTrace("LIVE_K2_MOE_OP swiglu_begin layer=%u stick=%u expert=%d",
                 layer, stick, expertId);
     if (!vc->DispatchSwiGLU(vc->ArenaGate(), vc->ArenaUp(), vc->ArenaFFNAct(),
@@ -107,6 +126,7 @@ bool RecordExpert(CPUInference::VulkanCompute* vc, unsigned stick, int gt,
     }
     MoeGpuTrace("LIVE_K2_MOE_OP swiglu_end layer=%u stick=%u expert=%d", layer,
                 stick, expertId);
+    if (!retireDispatch("swiglu")) return false;
     MoeGpuTrace("LIVE_K2_MOE_OP down_begin layer=%u stick=%u expert=%d", layer,
                 stick, expertId);
     if (!vc->DispatchGemvQuant(dt, d, db, vc->ArenaFFNAct(), vc->ArenaDown(),
@@ -117,6 +137,7 @@ bool RecordExpert(CPUInference::VulkanCompute* vc, unsigned stick, int gt,
     }
     MoeGpuTrace("LIVE_K2_MOE_OP down_end layer=%u stick=%u expert=%d", layer,
                 stick, expertId);
+    if (!retireDispatch("down")) return false;
     MoeGpuTrace("LIVE_K2_MOE_OP add_begin layer=%u stick=%u expert=%d", layer,
                 stick, expertId);
     if (!vc->DispatchScaledAdd(vc->ArenaFfnW(), vc->ArenaDown(), weight,
@@ -127,6 +148,7 @@ bool RecordExpert(CPUInference::VulkanCompute* vc, unsigned stick, int gt,
     }
     MoeGpuTrace("LIVE_K2_MOE_OP add_end layer=%u stick=%u expert=%d", layer,
                 stick, expertId);
+    if (!retireDispatch("scaled_add")) return false;
     DualStickNoteExpertGpu(stick, (size_t)(gb + ub + db));
     DualStickNoteExpertBundle((int)layer, expertId, stick, gb, ub, db, gt, ut,
                               dt);
