@@ -7357,7 +7357,10 @@ bool Win32IDE::executeGitCommand(const std::string& command, std::string& output
     if (cmdMutable) free(cmdMutable);
     if (ok) {
         
-        WaitForSingleObject(pi.hProcess, 5000);  // 5 second timeout
+        const DWORD waitResult = WaitForSingleObject(pi.hProcess, 5000);  // 5 second timeout
+        DWORD exitCode = STILL_ACTIVE;
+        if (waitResult == WAIT_OBJECT_0)
+            GetExitCodeProcess(pi.hProcess, &exitCode);
         CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);
         
@@ -7371,7 +7374,7 @@ bool Win32IDE::executeGitCommand(const std::string& command, std::string& output
             file.close();
             DeleteFileA(tempFile.c_str());
         }
-        return true;
+        return waitResult == WAIT_OBJECT_0 && exitCode == 0;
     }
     return false;
 }
