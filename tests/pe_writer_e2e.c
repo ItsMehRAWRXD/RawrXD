@@ -83,6 +83,27 @@ static int write_relocation_case(void) {
   return 0;
 }
 
+static int write_unwind_case(void) {
+  pe_builder_t *b = pe_builder_new(0x8664);
+  if (!b) return 40;
+  const uint8_t code[] = { 0x55, 0x48, 0x89, 0xE5, 0x48, 0x83, 0xEC, 0x20,
+                           0x48, 0x83, 0xC4, 0x20, 0x5D, 0xC3 };
+  /* Version 1, no flags; prolog 8 bytes; two unwind codes:
+   * PUSH_NONVOL RBP at offset 1 and ALLOC_SMALL 0x20 at offset 8. */
+  const uint8_t xdata[] = { 0x01, 0x08, 0x02, 0x00, 0x01, 0x50, 0x08, 0x22 };
+  uint8_t pdata[12] = { 0};
+  uint32_t begin = 0x1000, end = 0x1000 + sizeof(code), unwind = 0;
+  memcpy(pdata + 0, &begin, 4); memcpy(pdata + 4, &end, 4);
+  memcpy(pdata + 8, &unwind, 4);
+  pe_builder_add_section(b, ".text", code, sizeof(code), 0x60000020);
+  pe_builder_add_section(b, ".pdata", pdata, sizeof(pdata), 0x40000040);
+  pe_builder_add_section(b, ".xdata", xdata, sizeof(xdata), 0x40000040);
+  pe_builder_set_entry(b, 0x1000);
+  int rc = pe_builder_write(b, "pe_writer_unwind.exe");
+  pe_builder_free(b);
+  return rc == 0 ? 0 : 41;
+}
+
 static int run_forced_relocation(void) {
   SIZE_T bytes = 0;
   STARTUPINFOEXA si = {0};
@@ -113,6 +134,7 @@ int main(void) {
   if (write_case("pe_writer_large_import.exe", 0x5000, 1) != 0) return 2;
   if (negative_cases() != 0) return 3;
   if (write_relocation_case() != 0 || run_forced_relocation() != 0) return 4;
+  if (write_unwind_case() != 0) return 5;
   puts("PE_WRITER_E2E_GENERATED=PASS");
   return 0;
 }

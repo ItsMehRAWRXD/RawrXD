@@ -494,6 +494,26 @@ int pe_builder_write(pe_builder_t *pb, const char *out_path) {
                            0x60000020); /* CODE | EXECUTE | READ */
   }
 
+  /* A zero UnwindData field is a supported shorthand for the first .xdata
+   * record. Resolve it after section RVAs are known. */
+  int pdataSectionIdx = -1, xdataSectionIdx = -1;
+  for (int i = 0; i < pb->num_sections; ++i) {
+    if (strcmp(pb->sections[i].name, ".pdata") == 0) pdataSectionIdx = i;
+    if (strcmp(pb->sections[i].name, ".xdata") == 0) xdataSectionIdx = i;
+  }
+  if (pdataSectionIdx >= 0 && xdataSectionIdx >= 0) {
+    pe_section_t *pdata = &pb->sections[pdataSectionIdx];
+    pe_section_t *xdata = &pb->sections[xdataSectionIdx];
+    for (size_t off = 0; off + 12 <= pdata->data_len; off += 12) {
+      uint32_t unwind = 0;
+      memcpy(&unwind, pdata->data + off + 8, 4);
+      if (unwind == 0) {
+        unwind = xdata->rva;
+        memcpy(pdata->data + off + 8, &unwind, 4);
+      }
+    }
+  }
+
   /*==== Step 1c: Header sizes AFTER all sections are known ====*/
   uint32_t dos_hdr_size    = 64;
   uint32_t dos_stub_size   = PE_LFANEW_OFFSET - dos_hdr_size;
