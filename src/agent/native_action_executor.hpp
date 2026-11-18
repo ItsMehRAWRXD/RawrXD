@@ -46,8 +46,8 @@ public:
     void cancel() { cancelled_.store(true); }
     void join() { if (worker_.joinable()) worker_.join(); }
 
-    bool execute(NativeAction action) {
-        if (cancelled_.load()) { action.error = "CANCELLED"; return false; }
+    bool execute(NativeAction& action) {
+        if (cancelled_.load()) { action.error = "CANCELLED"; action.success = false; return false; }
         if (action.type == NativeAction::Type::QueryUser) {
             if (!onQuery_) { action.error = "QUERY_PENDING"; return false; }
             action.success = onQuery_(action);
