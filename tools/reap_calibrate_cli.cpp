@@ -25,6 +25,7 @@
 #include <filesystem>
 #include <iomanip>
 #include <cmath>
+#include <io.h>
 #include <sstream>
 #include <array>
 
@@ -298,7 +299,170 @@ struct CalibrationConfig {
     float topP = 1.0f;
     int maxNewTokens = 128;
     bool resume = false;
+    // Reference-observability outputs (optional; P1 CPU reference).
+    // Empty paths disable the corresponding capture and leave calibration
+    // behaviour byte-identical to the uninstrumented run.
+    string dumpTokensPath;
+    string dumpLogitsPath;
+    // P1-G: weighted accumulated MoE output for one layer (first step).
+    string dumpMoePath;
+    int dumpMoeLayer = -1;
+    // P2-C: routing decision (ids + applied weights) and expert input for one layer.
+    string dumpRoutingPath;
+    int dumpRoutingLayer = -1;
+    // P2-C parity: engine-produced expert outputs (shared + routed) for one layer.
+    string dumpExpertOutPath;
+    int dumpExpertOutLayer = -1;
 };
+
+// ---------------------------------------------------------------------------
+// Reference logits observer (P1). Copies each pre-sampling logits buffer
+// verbatim as [u64 step][u32 vocab][float x vocab]. Never recomputes logits and
+// never mutates the buffer the sampler receives. Empty path => no capture.
+// ---------------------------------------------------------------------------
+struct RefLogitsSink {
+    FILE* fp = nullptr;
+    uint64_t steps = 0;
+    uint32_t vocab = 0;
+    string path;
+};
+
+static RefLogitsSink g_refLogits;
+
+static bool RefLogitsObserver(const Deep2Engine::ReferenceObservation& obs, void* user) {
+    auto* sink = static_cast<RefLogitsSink*>(user);
+    if (!sink || sink->path.empty()) return true;
+    if (!sink->fp) {
+        sink->fp = std::fopen(sink->path.c_str(), "wb");
+        if (!sink->fp) return false;
+        sink->vocab = obs.vocabulary_size;
+    }
+    if (obs.logits_count != obs.vocabulary_size) return false;
+    if (fwrite(&obs.generation_step, sizeof(obs.generation_step), 1, sink->fp) != 1) return false;
+    if (fwrite(&obs.vocabulary_size, sizeof(obs.vocabulary_size), 1, sink->fp) != 1) return false;
+    if (fwrite(obs.logits, sizeof(float), obs.vocabulary_size, sink->fp) != obs.vocabulary_size)
+        return false;
+    ++sink->steps;
+    return true;
+}
+
+// ---------------------------------------------------------------------------
+// P1-G observer: weighted accumulated MoE output for one layer/step.
+// Payload: [u32 layer][u64 step][u32 count][f32 x count].
+// ---------------------------------------------------------------------------
+struct RefMoeSink {
+    FILE* fp = nullptr;
+    string path;
+    uint32_t layer = 0;
+    uint64_t step = 0;
+    uint32_t count = 0;
+    uint64_t captures = 0;
+};
+
+static RefMoeSink g_refMoe;
+
+static bool RefMoeObserver(const Deep2Engine::MoEReferenceObservation& obs, void* user) {
+    auto* sink = static_cast<RefMoeSink*>(user);
+    if (!sink || sink->path.empty()) return true;
+    if (!sink->fp) {
+        sink->fp = std::fopen(sink->path.c_str(), "wb");
+        if (!sink->fp) return false;
+        sink->layer = obs.layer_index;
+        sink->step = obs.generation_step;
+        sink->count = obs.element_count;
+    }
+    if (fwrite(&obs.layer_index, sizeof(uint32_t), 1, sink->fp) != 1) return false;
+    if (fwrite(&obs.generation_step, sizeof(uint64_t), 1, sink->fp) != 1) return false;
+    if (fwrite(&obs.element_count, sizeof(uint32_t), 1, sink->fp) != 1) return false;
+    if (fwrite(obs.weighted_moe_output, sizeof(float), obs.element_count, sink->fp)
+        != obs.element_count) return false;
+    ++sink->captures;
+    return true;
+}
+
+// ---------------------------------------------------------------------------
+// P2-C observer: routing decision actually applied + the expert input.
+// Payload: [u32 layer][u64 step][u32 hidden][u32 count]
+//          [u32 ids x count][f32 weights x count][f32 input x hidden]
+// ---------------------------------------------------------------------------
+struct RefRoutingSink {
+    FILE* fp = nullptr;
+    string path;
+    uint32_t layer = 0;
+    uint64_t step = 0;
+    uint32_t hidden = 0;
+    uint32_t count = 0;
+    uint64_t captures = 0;
+};
+
+static RefRoutingSink g_refRouting;
+
+static bool RefRoutingObserver(const Deep2Engine::MoERoutingObservation& obs, void* user) {
+    auto* sink = static_cast<RefRoutingSink*>(user);
+    if (!sink || sink->path.empty()) return true;
+    if (!sink->fp) {
+        sink->fp = std::fopen(sink->path.c_str(), "wb");
+        if (!sink->fp) return false;
+        sink->layer = obs.layer;
+        sink->step = obs.generation_step;
+        sink->hidden = obs.hidden_size;
+        sink->count = obs.selected_count;
+    }
+    if (fwrite(&obs.layer, sizeof(uint32_t), 1, sink->fp) != 1) return false;
+    if (fwrite(&obs.generation_step, sizeof(uint64_t), 1, sink->fp) != 1) return false;
+    if (fwrite(&obs.hidden_size, sizeof(uint32_t), 1, sink->fp) != 1) return false;
+    if (fwrite(&obs.selected_count, sizeof(uint32_t), 1, sink->fp) != 1) return false;
+    if (obs.selected_count) {
+        if (fwrite(obs.expert_ids, sizeof(uint32_t), obs.selected_count, sink->fp)
+            != obs.selected_count) return false;
+        if (fwrite(obs.applied_weights, sizeof(float), obs.selected_count, sink->fp)
+            != obs.selected_count) return false;
+    }
+    if (fwrite(obs.expert_input, sizeof(float), obs.hidden_size, sink->fp)
+        != obs.hidden_size) return false;
+    ++sink->captures;
+    return true;
+}
+
+// ---------------------------------------------------------------------------
+// P2-C parity observer: engine-produced expert outputs (shared then routed).
+// Records: [u32 layer][u64 step][u32 kind][u32 expert][f32 weight][u32 count]
+//          [f32 x count]   kind 0 = shared contribution in the layer output,
+//                          kind 1 = routed expert output before weighting.
+// ---------------------------------------------------------------------------
+struct RefExpertOutSink {
+    FILE* fp = nullptr;
+    string path;
+    uint32_t layer = 0;
+    uint64_t step = 0;
+    uint64_t records = 0;
+    uint64_t shared = 0;
+    uint64_t routed = 0;
+};
+
+static RefExpertOutSink g_refExpertOut;
+
+static bool RefExpertOutObserver(const Deep2Engine::MoEExpertOutputObservation& obs, void* user) {
+    auto* sink = static_cast<RefExpertOutSink*>(user);
+    if (!sink || sink->path.empty()) return true;
+    if (!sink->fp) {
+        sink->fp = std::fopen(sink->path.c_str(), "wb");
+        if (!sink->fp) return false;
+        sink->layer = obs.layer;
+        sink->step = obs.generation_step;
+    }
+    if (fwrite(&obs.layer, sizeof(uint32_t), 1, sink->fp) != 1) return false;
+    if (fwrite(&obs.generation_step, sizeof(uint64_t), 1, sink->fp) != 1) return false;
+    if (fwrite(&obs.kind, sizeof(uint32_t), 1, sink->fp) != 1) return false;
+    if (fwrite(&obs.expert_id, sizeof(uint32_t), 1, sink->fp) != 1) return false;
+    if (fwrite(&obs.applied_weight, sizeof(float), 1, sink->fp) != 1) return false;
+    if (fwrite(&obs.element_count, sizeof(uint32_t), 1, sink->fp) != 1) return false;
+    if (fwrite(obs.output, sizeof(float), obs.element_count, sink->fp)
+        != obs.element_count) return false;
+    ++sink->records;
+    if (obs.kind == 0) ++sink->shared; else ++sink->routed;
+    return true;
+}
 
 struct ExpertScore {
     int layer;
@@ -583,6 +747,29 @@ public:
         // Run inference on each prompt and collect routing statistics
         vector<uint64_t> completedTokensPerPrompt(calibrationPrompts.size(), 0);
         
+        if (!config_.dumpLogitsPath.empty()) {
+            g_refLogits.path = config_.dumpLogitsPath;
+            engine_->SetReferenceObserver(&RefLogitsObserver, &g_refLogits);
+        }
+        if (!config_.dumpMoePath.empty() && config_.dumpMoeLayer >= 0) {
+            g_refMoe.path = config_.dumpMoePath;
+            engine_->SetMoEReferenceObserver(&RefMoeObserver, &g_refMoe,
+                                             static_cast<uint32_t>(config_.dumpMoeLayer),
+                                             0xFFFFFFFFFFFFFFFFull);
+        }
+        if (!config_.dumpRoutingPath.empty() && config_.dumpRoutingLayer >= 0) {
+            g_refRouting.path = config_.dumpRoutingPath;
+            engine_->SetMoERoutingObserver(&RefRoutingObserver, &g_refRouting,
+                                           static_cast<uint32_t>(config_.dumpRoutingLayer),
+                                           0xFFFFFFFFFFFFFFFFull);
+        }
+        if (!config_.dumpExpertOutPath.empty() && config_.dumpExpertOutLayer >= 0) {
+            g_refExpertOut.path = config_.dumpExpertOutPath;
+            engine_->SetMoEExpertOutputObserver(&RefExpertOutObserver, &g_refExpertOut,
+                                                static_cast<uint32_t>(config_.dumpExpertOutLayer),
+                                                0ull);   // strict step 0 (wildcard would capture every forward)
+        }
+
         for (size_t i = startPrompt; i < calibrationPrompts.size(); ++i) {
             const string& prompt = calibrationPrompts[i];
             if (config_.verbose) {
@@ -612,6 +799,141 @@ public:
             }
         }
         
+        if (g_refLogits.fp) {
+            std::fclose(g_refLogits.fp);
+            g_refLogits.fp = nullptr;
+            std::string metaPath = config_.dumpLogitsPath + ".meta.json";
+            FILE* mf = std::fopen(metaPath.c_str(), "wb");
+            if (mf) {
+                std::fprintf(mf,
+                    "{\"dtype\":\"f32\",\"layout\":\"contiguous\",\"step_prefix\":\"u64\","
+                    "\"vocab\":%u,\"steps\":%llu,\"model_sha256\":\"%s\","
+                    "\"boundary\":\"pre_sampling_logits\"}\n",
+                    g_refLogits.vocab, (unsigned long long)g_refLogits.steps,
+                    modelSha256_.c_str());
+                std::fclose(mf);
+            }
+            engine_->SetReferenceObserver(nullptr, nullptr);
+            if (config_.verbose) {
+                cout << "  Logits dump: " << g_refLogits.steps << " steps, vocab "
+                     << g_refLogits.vocab << endl;
+            }
+        }
+
+        if (g_refMoe.fp) {
+            std::fclose(g_refMoe.fp);
+            g_refMoe.fp = nullptr;
+            std::string mpath = config_.dumpMoePath + ".meta.json";
+            FILE* mp = std::fopen(mpath.c_str(), "wb");
+            if (mp) {
+                std::fprintf(mp,
+                    "{\"dtype\":\"f32\",\"layout\":\"contiguous\","
+                    "\"prefix\":\"u32_layer,u64_step,u32_count\","
+                    "\"boundary\":\"weighted_moe_output_pre_residual\","
+                    "\"includes_shared_expert\":true,"
+                    "\"layer\":%u,\"generation_step\":%llu,\"element_count\":%u,"
+                    "\"captures\":%llu,\"model_sha256\":\"%s\"}\n",
+                    g_refMoe.layer, (unsigned long long)g_refMoe.step,
+                    g_refMoe.count, (unsigned long long)g_refMoe.captures,
+                    modelSha256_.c_str());
+                std::fclose(mp);
+            }
+            engine_->SetMoEReferenceObserver(nullptr, nullptr, 0xFFFFFFFFu,
+                                             0xFFFFFFFFFFFFFFFFull);
+            if (config_.verbose) {
+                cout << "  MoE boundary dump: layer " << g_refMoe.layer
+                     << ", step " << g_refMoe.step << ", " << g_refMoe.count
+                     << " floats" << endl;
+            }
+        }
+
+        if (g_refRouting.fp) {
+            std::fclose(g_refRouting.fp);
+            g_refRouting.fp = nullptr;
+            std::string rpath = config_.dumpRoutingPath + ".meta.json";
+            FILE* rp = std::fopen(rpath.c_str(), "wb");
+            if (rp) {
+                std::fprintf(rp,
+                    "{\"dtype\":\"mixed\",\"prefix\":\"u32_layer,u64_step,u32_hidden,u32_count,"
+                    "u32_ids[],f32_weights[],f32_input[]\","
+                    "\"boundary\":\"applied_routing_and_expert_input\","
+                    "\"layer\":%u,\"generation_step\":%llu,\"hidden\":%u,"
+                    "\"selected_count\":%u,\"captures\":%llu,\"model_sha256\":\"%s\"}\n",
+                    g_refRouting.layer, (unsigned long long)g_refRouting.step,
+                    g_refRouting.hidden, g_refRouting.count,
+                    (unsigned long long)g_refRouting.captures, modelSha256_.c_str());
+                std::fclose(rp);
+            }
+            engine_->SetMoERoutingObserver(nullptr, nullptr, 0xFFFFFFFFu,
+                                           0xFFFFFFFFFFFFFFFFull);
+            if (config_.verbose) {
+                cout << "  Routing dump: layer " << g_refRouting.layer << ", step "
+                     << g_refRouting.step << ", " << g_refRouting.count
+                     << " experts, hidden " << g_refRouting.hidden << endl;
+            }
+        }
+
+        if (g_refExpertOut.fp) {
+            std::fclose(g_refExpertOut.fp);
+            g_refExpertOut.fp = nullptr;
+
+            // Keep only the first forward's records so this aligns with the
+            // one-shot routing and boundary captures. Records are emitted in
+            // order: one shared contribution followed by the routed experts.
+            {
+                FILE* rf = std::fopen(config_.dumpExpertOutPath.c_str(), "rb+");
+                if (rf) {
+                    uint32_t keptShared = 0, keptRouted = 0;
+                    for (;;) {
+                        uint32_t layer = 0, kind = 0, expert = 0, count = 0;
+                        uint64_t step = 0;
+                        float w = 0.0f;
+                        if (std::fread(&layer, 4, 1, rf) != 1) break;
+                        if (std::fread(&step, 8, 1, rf) != 1) break;
+                        if (std::fread(&kind, 4, 1, rf) != 1) break;
+                        if (std::fread(&expert, 4, 1, rf) != 1) break;
+                        if (std::fread(&w, 4, 1, rf) != 1) break;
+                        if (std::fread(&count, 4, 1, rf) != 1) break;
+                        if (_fseeki64(rf, static_cast<__int64>(count) * 4, SEEK_CUR) != 0) break;
+                        if (kind == 0) ++keptShared; else ++keptRouted;
+                        if (keptShared == 1 && keptRouted == 6) {
+                            _chsize_s(_fileno(rf), _ftelli64(rf));
+                            break;
+                        }
+                    }
+                    std::fclose(rf);
+                    g_refExpertOut.shared = keptShared;
+                    g_refExpertOut.routed = keptRouted;
+                    g_refExpertOut.records = keptShared + keptRouted;
+                }
+            }
+
+            std::string epath = config_.dumpExpertOutPath + ".meta.json";
+            FILE* ep = std::fopen(epath.c_str(), "wb");
+            if (ep) {
+                std::fprintf(ep,
+                    "{\"dtype\":\"f32\",\"prefix\":\"u32_layer,u64_step,u32_kind,u32_expert,"
+                    "f32_weight,u32_count,f32_output[]\","
+                    "\"kinds\":{\"0\":\"shared_contribution\",\"1\":\"routed_pre_weight\"},"
+                    "\"layer\":%u,\"generation_step\":%llu,\"records\":%llu,"
+                    "\"shared_records\":%llu,\"routed_records\":%llu,"
+                    "\"model_sha256\":\"%s\"}\n",
+                    g_refExpertOut.layer, (unsigned long long)g_refExpertOut.step,
+                    (unsigned long long)g_refExpertOut.records,
+                    (unsigned long long)g_refExpertOut.shared,
+                    (unsigned long long)g_refExpertOut.routed,
+                    modelSha256_.c_str());
+                std::fclose(ep);
+            }
+            engine_->SetMoEExpertOutputObserver(nullptr, nullptr, 0xFFFFFFFFu,
+                                                0xFFFFFFFFFFFFFFFFull);
+            if (config_.verbose) {
+                cout << "  Expert-output dump: layer " << g_refExpertOut.layer
+                     << ", shared=" << g_refExpertOut.shared
+                     << ", routed=" << g_refExpertOut.routed << endl;
+            }
+        }
+
         // Final output
         return writeFinalOutput();
     }
@@ -886,11 +1208,28 @@ private:
         
         // Use generateStream to run inference and capture routing
         // We don't need the tokens, just the side-effect of routing observation
+        std::vector<int32_t> emittedTokens;
         GenerationResult result = engine_->generateStream(prompt, genOptions, 
-            [](int32_t tokenId, const string& token) -> bool {
-                // Just consume tokens, we don't need them for calibration
+            [&emittedTokens](int32_t tokenId, const string& token) -> bool {
+                // Keep ids for the P1 reference. Activation observation is
+                // unchanged: ReapRouteTracker still sees the real routing.
+                emittedTokens.push_back(tokenId);
                 return true; // continue generation
             });
+        if (!config_.dumpTokensPath.empty()) {
+            FILE* tf = std::fopen(config_.dumpTokensPath.c_str(), "ab");
+            if (tf) {
+                std::string line;
+                line.reserve(emittedTokens.size() * 8 + 16);
+                for (size_t k = 0; k < emittedTokens.size(); ++k) {
+                    if (k) line.push_back(' ');
+                    line += std::to_string(emittedTokens[k]);
+                }
+                line.push_back('\n');
+                std::fwrite(line.data(), 1, line.size(), tf);
+                std::fclose(tf);
+            }
+        }
         
         if (config_.verbose) {
             cout << "    Generated " << result.generatedTokens << " tokens" << endl;
@@ -1095,6 +1434,22 @@ int main(int argc, char** argv) {
             config.maxNewTokens = stoi(argv[++i]);
         } else if (arg == "--verbose") {
             config.verbose = true;
+        } else if (arg == "--dump-tokens" && i + 1 < argc) {
+            config.dumpTokensPath = argv[++i];
+        } else if (arg == "--dump-logits" && i + 1 < argc) {
+            config.dumpLogitsPath = argv[++i];
+        } else if (arg == "--dump-moe" && i + 1 < argc) {
+            config.dumpMoePath = argv[++i];
+        } else if (arg == "--dump-moe-layer" && i + 1 < argc) {
+            config.dumpMoeLayer = stoi(argv[++i]);
+        } else if (arg == "--dump-routing" && i + 1 < argc) {
+            config.dumpRoutingPath = argv[++i];
+        } else if (arg == "--dump-routing-layer" && i + 1 < argc) {
+            config.dumpRoutingLayer = stoi(argv[++i]);
+        } else if (arg == "--dump-expert-outs" && i + 1 < argc) {
+            config.dumpExpertOutPath = argv[++i];
+        } else if (arg == "--dump-expert-layer" && i + 1 < argc) {
+            config.dumpExpertOutLayer = stoi(argv[++i]);
         } else if (arg == "--resume") {
             config.resume = true;
         } else if (arg == "--help" || arg == "-h") {

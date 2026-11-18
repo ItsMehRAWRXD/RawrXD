@@ -750,28 +750,54 @@ static bool writeSelectionManifest(const std::string& path,
 
     json layers = json::array();
     uint64_t selected = 0;
-    for (auto& layer : byLayer) {
-        std::vector<std::pair<uint32_t, double>> ranked(layer.second.begin(), layer.second.end());
+    std::set<uint32_t> topologyLayers(inventory.moeLayers.begin(), inventory.moeLayers.end());
+    for (const auto& layer : byLayer) {
+        if (topologyLayers.find(layer.first) == topologyLayers.end()) {
+            error = "route metrics contain non-MoE layer " + std::to_string(layer.first);
+            return false;
+        }
+    }
+    for (const uint32_t layerId : inventory.moeLayers) {
+        const auto metricsIt = byLayer.find(layerId);
+        if (metricsIt == byLayer.end()) {
+            error = "route metrics missing MoE layer " + std::to_string(layerId);
+            return false;
+        }
+        std::vector<std::pair<uint32_t, double>> ranked(metricsIt->second.begin(), metricsIt->second.end());
         std::sort(ranked.begin(), ranked.end(), [](const auto& a, const auto& b) {
             if (a.second != b.second) return a.second > b.second;
             return a.first < b.first;
         });
-        if (ranked.size() > activeExperts) ranked.resize(static_cast<size_t>(activeExperts));
+        if (activeExperts == 0 || ranked.size() < activeExperts) {
+            error = "route metrics contain fewer than active experts for MoE layer " +
+                    std::to_string(layerId);
+            return false;
+        }
+        const uint64_t packedExpertCount = inventory.maxExpertsPerLayer;
+        std::set<uint32_t> seen;
+        for (const auto& item : ranked) {
+            if (item.first >= packedExpertCount || !seen.insert(item.first).second) {
+                error = "invalid or duplicate expert id for MoE layer " + std::to_string(layerId);
+                return false;
+            }
+        }
+        ranked.resize(static_cast<size_t>(activeExperts));
         selected += ranked.size();
         json experts = json::array();
         for (const auto& item : ranked)
             experts.push_back({{"expert", item.first}, {"score", item.second}});
-        layers.push_back({{"layer", layer.first}, {"selected", experts}});
+        layers.push_back({{"layer", layerId}, {"selected", experts}});
     }
     if (inventory.moeLayers.empty()) {
         error = "model contains no complete MoE expert projection layers";
         return false;
     }
-    for (const uint32_t layer : inventory.moeLayers) {
-        if (byLayer.find(layer) == byLayer.end()) {
-            error = "route metrics missing MoE layer " + std::to_string(layer);
-            return false;
-        }
+    const uint64_t expectedSelected =
+        static_cast<uint64_t>(inventory.moeLayers.size()) * activeExperts;
+    if (selected != expectedSelected) {
+        error = "selection topology mismatch: expected " + std::to_string(expectedSelected) +
+                " expert slices, got " + std::to_string(selected);
+        return false;
     }
     const uint64_t logical = inventory.logicalExperts ? inventory.logicalExperts : 1;
     if (inventory.expertBytes != 0 && selected > std::numeric_limits<uint64_t>::max() / inventory.expertBytes) {

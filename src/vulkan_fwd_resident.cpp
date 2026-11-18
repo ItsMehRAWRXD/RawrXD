@@ -283,7 +283,10 @@ bool VulkanCompute::EnsureForwardArena(uint32_t hidden, uint32_t inter, uint32_t
     };
     const size_t hb = (size_t)hidden * 4;
     const size_t ib = (size_t)inter * 4;
-    const size_t qb = (size_t)nHeads * headDim * 4;
+    // MLA direct-Q projections can exceed the legacy heads*headDim arena.
+    // Allocate the validated minimum Q capacity before descriptor binding.
+    const size_t qElements = std::max<size_t>((size_t)nHeads * headDim, 3072);
+    const size_t qb = qElements * 4;
     const size_t kb = (size_t)kvDim * 4;
     const size_t cb = (size_t)nLayers * maxSeq * kvDim * 4;
     if (!mk(fwd_hidden_, hb) || !mk(fwd_residual_, hb) || !mk(fwd_normed_, hb) ||

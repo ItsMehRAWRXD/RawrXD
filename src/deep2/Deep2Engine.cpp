@@ -7031,7 +7031,20 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
     }
 
     // --- Vulkan GPU dispatch (SOLO / MULTI / HYBRID GPU slots) ---
-    if (!plannedCpu && vulkanEnabled_ && vulkanInitialized_ && !vulkanDevices_.empty())
+    // P2 diagnostic: DEEP2_P2_FORCE_CPU_EXPERTS=1 suppresses the GPU attempt so
+    // a CPU-only reference can be captured. Normal behaviour is unchanged when
+    // the variable is unset. Scope note: LinearW is shared by every projection,
+    // so the diagnostic run forces all of them onto the CPU.
+    const char* p2lwEnv = std::getenv("DEEP2_P2_FORCE_CPU_EXPERTS");
+    const bool p2lwForceCpu = (p2lwEnv && p2lwEnv[0] == '1');
+    if (p2lwForceCpu && std::getenv("DEEP2_P2_TRACE") &&
+        wt.name.find("_shexp") != std::string::npos)
+    {
+        std::fprintf(stderr, "[P2_LW] %s outDim=%zu backend=CPU(forced)\n",
+                     wt.name.c_str(), outDim);
+        std::fflush(stderr);
+    }
+    if (!plannedCpu && !p2lwForceCpu && vulkanEnabled_ && vulkanInitialized_ && !vulkanDevices_.empty())
     {
         auto tGpuDispatch0 = std::chrono::high_resolution_clock::now();
         if (tryVulkanGEMV(wtEffective, input, output, outDim))
@@ -8668,6 +8681,18 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen, int* out
         {
             printf("[B3_LOGITS] BEFORE sampleToken\n");
             fflush(stdout);
+        }
+        // Reference observation: hand the exact pre-sampling buffer to an
+        // optional observer. Read-only; sampleToken still receives the same
+        // pointer and nothing here mutates it.
+        if (referenceObserver_)
+        {
+            ReferenceObservation obs{};
+            obs.generation_step = referenceStep_++;
+            obs.vocabulary_size = static_cast<uint32_t>(config.vocabSize);
+            obs.logits = logits;
+            obs.logits_count = static_cast<uint64_t>(config.vocabSize);
+            referenceObserver_(obs, referenceObserverUser_);
         }
         int nextToken = sampleToken(logits);
         std::printf("[DBG] sampled token=%d eosId=%d\n", nextToken, tokenizer ? tokenizer->GetSpecialTokens().eosId : -1);
@@ -12073,6 +12098,25 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
     // sharedOut — forwardLayer uses attentionOutput as its output buffer and
     // it holds the attention+input residual that must be preserved.
     computeSharedExpertFFN(layer, input, output);
+
+    // Parity reference: the shared expert's contribution, already accumulated
+    // into the layer output. Captured here so an independent implementation can
+    // be compared against the engine rather than against a re-run of itself.
+    const bool expertOutCapture = moeExpertOutObserver_ &&
+        moeExpertOutLayer_ == static_cast<uint32_t>(layer) &&
+        (moeExpertOutStep_ == 0xFFFFFFFFFFFFFFFFull || moeExpertOutStep_ == referenceStep_);
+    if (expertOutCapture)
+    {
+        MoEExpertOutputObservation eo{};
+        eo.layer = static_cast<uint32_t>(layer);
+        eo.generation_step = referenceStep_;
+        eo.kind = 0;
+        eo.expert_id = 0xFFFFFFFFu;
+        eo.applied_weight = 1.0f;
+        eo.element_count = static_cast<uint32_t>(hiddenDim);
+        eo.output = output;
+        moeExpertOutObserver_(eo, moeExpertOutObserverUser_);
+    }
     // output now contains shared expert output; routed experts add below.
 
     // --- Layer-1 FFN diagnostic: shared expert vs CPU reference ---
@@ -12272,6 +12316,34 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
     // writes to expertOut. If they are the same buffer, the first expert
     // corrupts input for all subsequent experts (read-write aliasing).
     std::vector<float> expertBuf(hiddenDim);
+    // P2-C reference: publish the routing decision actually applied (ids in
+    // execution order + the weights used to scale expert outputs) together with
+    // the activation entering the experts. Read-only, fires once.
+    if (moeRoutingObserver_ && !moeRoutingDone_ &&
+        moeRoutingLayer_ == static_cast<uint32_t>(layer) &&
+        (moeRoutingStep_ == 0xFFFFFFFFFFFFFFFFull || moeRoutingStep_ == referenceStep_))
+    {
+        std::vector<uint32_t> selIds;
+        std::vector<float> selWeights;
+        selIds.reserve(route.topExperts.size());
+        selWeights.reserve(route.topExperts.size());
+        for (const auto& er : route.topExperts)
+        {
+            if (er.expertId < 0) continue;
+            selIds.push_back(static_cast<uint32_t>(er.expertId));
+            selWeights.push_back(er.weight);
+        }
+        MoERoutingObservation robs{};
+        robs.layer = static_cast<uint32_t>(layer);
+        robs.generation_step = referenceStep_;
+        robs.hidden_size = static_cast<uint32_t>(hiddenDim);
+        robs.expert_input = input;
+        robs.selected_count = static_cast<uint32_t>(selIds.size());
+        robs.expert_ids = selIds.data();
+        robs.applied_weights = selWeights.data();
+        moeRoutingObserver_(robs, moeRoutingObserverUser_);
+        moeRoutingDone_ = true;
+    }
     float* expertOut = expertBuf.data();
     size_t validExpertCount = 0;
     // --- Layer-1 FFN diagnostic: CPU reference accumulator for all experts ---
@@ -12318,8 +12390,13 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
         // Falls back to CPU computeExpertFFN() on any failure.
         // ========================================================================
         bool usedGpuExpert = false;
-        
-        if (vulkanCompute_ && vulkanCompute_->initialized() && handle.valid)
+        // P2 diagnostic hook: force the CPU expert path so a CPU-only reference
+        // can be compared with a CPU-only probe. Diagnostic only; the Vulkan
+        // path is unchanged when the variable is unset.
+        const char* p2ForceCpu = std::getenv("DEEP2_P2_FORCE_CPU_EXPERTS");
+        const bool p2CpuOnly = (p2ForceCpu && p2ForceCpu[0] == '1');
+
+        if (!p2CpuOnly && vulkanCompute_ && vulkanCompute_->initialized() && handle.valid)
         {
             // Build GpuWeightViews from handle
             CPUInference::VulkanCompute::GpuWeightView gateView, upView, downView;
@@ -12410,7 +12487,119 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
             residencyTelemetry_->RecordComputeTime((int)layer, expertId, computeUs);
         }
 
-// Weighted accumulation into output — AVX2 vectorized
+        // Parity reference: this routed expert's output BEFORE its routing
+        // weight is applied, exactly as computeExpertFFN / the GPU path left it.
+        if (std::getenv("DEEP2_P2_TRACE"))
+        {
+            const int gateQt = handle.gateQuantType > 0 ? handle.gateQuantType : handle.quantType;
+            const int upQt   = handle.upQuantType   > 0 ? handle.upQuantType   : gateQt;
+            const int downQt = handle.downQuantType > 0 ? handle.downQuantType : gateQt;
+            uint64_t inHash = 1469598103934665603ull;
+            for (size_t i = 0; i < hiddenDim; ++i) {
+                const unsigned char* pb = reinterpret_cast<const unsigned char*>(&input[i]);
+                for (int b = 0; b < 4; ++b) { inHash ^= pb[b]; inHash *= 1099511628211ull; }
+            }
+            std::fprintf(stderr,
+                "[P2_TRACE] layer=%zu expert=%d backend=%s gateQt=%d upQt=%d downQt=%d "
+                "gate=%p up=%p down=%p hidden=%zu expertDim=%zu input_fnv=0x%016llX\n",
+                layer, expertId, usedGpuExpert ? "VULKAN" : "CPU",
+                gateQt, upQt, downQt,
+                (const void*)handle.gateWeights, (const void*)handle.upWeights,
+                (const void*)handle.downWeights,
+                hiddenDim, moeConfig_.expertDim,
+                (unsigned long long)inHash);
+
+            // Weight identity: pointer equality against the mapped expert
+            // tensors proves the engine is reading the GGUF slices; hashing is
+            // then bounded by the tensor's own declared sizeBytes, never by an
+            // assumed projection length.
+            const size_t ei = static_cast<size_t>(expertId);
+            const auto& tlw = modelWeights.layers[layer];
+            if (expertId >= 0 && ei < tlw.moeGate.size() &&
+                ei < tlw.moeUp.size() && ei < tlw.moeDown.size())
+            {
+                const WeightTensor& mg = tlw.moeGate[ei];
+                const WeightTensor& mu = tlw.moeUp[ei];
+                const WeightTensor& md = tlw.moeDown[ei];
+                const int pg = (handle.gateWeights == mg.data) ? 1 : 0;
+                const int pu = (handle.upWeights == mu.data) ? 1 : 0;
+                const int pd = (handle.downWeights == md.data) ? 1 : 0;
+                auto fnv64 = [](const void* p, size_t n) -> uint64_t {
+                    const unsigned char* b = static_cast<const unsigned char*>(p);
+                    uint64_t h = 1469598103934665603ull;
+                    for (size_t i = 0; i < n; ++i) { h ^= b[i]; h *= 1099511628211ull; }
+                    return h;
+                };
+                unsigned long long hg = 0, hu = 0, hd = 0;
+                if (pg && mg.data && mg.sizeBytes) hg = fnv64(mg.data, mg.sizeBytes);
+                if (pu && mu.data && mu.sizeBytes) hu = fnv64(mu.data, mu.sizeBytes);
+                if (pd && md.data && md.sizeBytes) hd = fnv64(md.data, md.sizeBytes);
+                std::fprintf(stderr,
+                    "[P2_WEIGHT] layer=%zu expert=%d ptrEq(g/u/d)=%d%d%d "
+                    "bytes=%zu/%zu/%zu fnv=%016llX/%016llX/%016llX\n",
+                    layer, expertId, pg, pu, pd,
+                    mg.sizeBytes, mu.sizeBytes, md.sizeBytes, hg, hu, hd);
+            }
+            else
+            {
+                std::fprintf(stderr,
+                    "[P2_WEIGHT] layer=%zu expert=%d mapped_tensors=ABSENT\n",
+                    layer, expertId);
+            }
+
+            // Span-verified fingerprint for the staged/proxy weight path: hash a
+            // projection only when the three pointers are contiguous and equally
+            // spaced by exactly one projection's Q4_0 byte size. That equality
+            // is the readability proof — no assumed length is used.
+            {
+                const uintptr_t g = reinterpret_cast<uintptr_t>(handle.gateWeights);
+                const uintptr_t u = reinterpret_cast<uintptr_t>(handle.upWeights);
+                const uintptr_t d = reinterpret_cast<uintptr_t>(handle.downWeights);
+                const size_t expBytes = static_cast<size_t>(
+                    (moeConfig_.expertDim * hiddenDim) / 32u * 18u);
+                const bool contiguous = g && u && d && u > g && d > u &&
+                                        (u - g) == expBytes && (d - u) == expBytes &&
+                                        expBytes > 0 && handle.expertBytes >= 3 * expBytes;
+                if (contiguous)
+                {
+                    auto fnv64s = [](const void* p, size_t n) -> uint64_t {
+                        const unsigned char* b = static_cast<const unsigned char*>(p);
+                        uint64_t h = 1469598103934665603ull;
+                        for (size_t i = 0; i < n; ++i) { h ^= b[i]; h *= 1099511628211ull; }
+                        return h;
+                    };
+                    std::fprintf(stderr,
+                        "[P2_SPAN] layer=%zu expert=%d contiguous=1 projBytes=%zu "
+                        "expertBytes=%zu fnv_gate=%016llX fnv_up=%016llX fnv_down=%016llX\n",
+                        layer, expertId, expBytes, handle.expertBytes,
+                        (unsigned long long)fnv64s(handle.gateWeights, expBytes),
+                        (unsigned long long)fnv64s(handle.upWeights, expBytes),
+                        (unsigned long long)fnv64s(handle.downWeights, expBytes));
+                }
+                else
+                {
+                    std::fprintf(stderr,
+                        "[P2_SPAN] layer=%zu expert=%d contiguous=0 span=UNVERIFIED "
+                        "(g=%p u=%p d=%p expertBytes=%zu projBytes=%zu)\n",
+                        layer, expertId, (const void*)g, (const void*)u, (const void*)d,
+                        handle.expertBytes, expBytes);
+                }
+            }
+            std::fflush(stderr);
+        }
+        if (expertOutCapture)
+        {
+            MoEExpertOutputObservation eo{};
+            eo.layer = static_cast<uint32_t>(layer);
+            eo.generation_step = referenceStep_;
+            eo.kind = 1;
+            eo.expert_id = static_cast<uint32_t>(expertId);
+            eo.applied_weight = weight;
+            eo.element_count = static_cast<uint32_t>(hiddenDim);
+            eo.output = expertOut;
+            moeExpertOutObserver_(eo, moeExpertOutObserverUser_);
+        }
+        // Weighted accumulation into output — AVX2 vectorized
 #if defined(__AVX2__) || defined(_MSC_VER)
         if (hiddenDim >= 8)
         {
@@ -12457,6 +12646,21 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
                      layer);
         std::fflush(stderr);
         throw std::runtime_error("MoE router produced no executable experts");
+    }
+    // P1-G reference boundary: weighted accumulated MoE output (shared expert
+    // included), captured before forwardLayer adds the residual. Fires once for
+    // the configured layer/step while the buffer is still valid.
+    if (moeReferenceObserver_ && !moeReferenceDone_ &&
+        moeReferenceLayer_ == static_cast<uint32_t>(layer) &&
+        (moeReferenceStep_ == 0xFFFFFFFFFFFFFFFFull || moeReferenceStep_ == referenceStep_))
+    {
+        MoEReferenceObservation mobs{};
+        mobs.layer_index = static_cast<uint32_t>(layer);
+        mobs.generation_step = referenceStep_;
+        mobs.element_count = static_cast<uint32_t>(hiddenDim);
+        mobs.weighted_moe_output = output;
+        moeReferenceObserver_(mobs, moeReferenceObserverUser_);
+        moeReferenceDone_ = true;
     }
     prefetchNextExperts((int)layer);
 }

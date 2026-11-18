@@ -366,3 +366,2230 @@ PROCESS_EXIT pid=15440 exit=0 disposition=success transport=1 stdout_bytes=0 std
 BUILD_RESULT=success
 PROCESS_EXIT pid=20152 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
 BUILD_RESULT=success
+PROCESS_EXIT pid=33292 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=3652 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=10192 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=34308 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=33236 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=29084 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=36412 exit=3221225786 disposition=success transport=2 stdout_bytes=295 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=36860 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+STDOUT_LINE PS F:\rawrxd>
+STDOUT_LINE PS C:\Program Files\WindowsApps\OpenAI.Codex_26.1111.2228.0_x64__2p2nqsd0c76g0\app>> Write-Output 'RAWRXD_TERMINAL_E>
+PROCESS_EXIT pid=36120 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+STDOUT_LINE PS F:\rawrxd>> 'RAWRXD_TRACE2_PASS' | Set-Content -Encoding Ascii 'F:\rawrxd\e2e_trace2.txt'
+STDOUT_LINE PS F:\rawrxd>> 'FIRST_OK' | Set-Content -Encoding Ascii 'F:\rawrxd\e2e_a.txt'
+STDOUT_LINE PS F:\rawrxd> > 'SECOND_OK' | Set-Content -Encoding Ascii 'F:\rawrxd\e2e_b.txt'
+PROCESS_EXIT pid=20236 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+STDOUT_LINE PS F:\rawrxd>> Write-Output 'RAWRXD_STDOUT_PASS'; [Console]::Error.WriteLine('RAWRXD_STDERR_PASS'); cmd /c exit 7; $LASTEXITCODE | Set-Content -Encoding Ascii 'F:\rawrxd\e2e_exit.txt'
+STDOUT_LINE RAWRXD_STDOUT_PASS
+STDOUT_LINE RAWRXD_STDERR_PASS
+STDOUT_LINE PS F:\rawrxd> exit 7
+PROCESS_EXIT pid=8936 exit=7 disposition=success transport=2 stdout_bytes=509 stderr_bytes=0
+BUILD_RESULT=success
+STDOUT_LINE PS F:\rawrxd>> 'NOTRACE_OK' | Set-Content -Encoding Ascii 'F:\rawrxd\e2e_notrace.txt'
+STDOUT_LINE PS F:\rawrxd> ls
+STDOUT_LINE     Directory: F:\rawrxdMode                 LastWriteTime         Length Name
+STDOUT_LINE ----                 -------------         ------ ----
+STDOUT_LINE d-----         8/14/2026   9:50 PM                .archive
+STDOUT_LINE d-----         11/2/2026  10:06 PM                .codex
+STDOUT_LINE d-----         11/8/2026  10:58 PM                .cursor
+STDOUT_LINE d-----        11/16/2026   6:00 PM                .github
+STDOUT_LINE d-----        11/17/2026   9:36 PM                .kilo
+STDOUT_LINE d-----        11/17/2026  10:09 PM                .qt
+STDOUT_LINE d-----         11/8/2026  10:58 PM                256
+STDOUT_LINE d-----         11/8/2026  12:48 AM                3rdparty
+STDOUT_LINE d-----         11/8/2026  12:45 AM                Advanced_Reverse_Engineered
+STDOUT_LINE d-----        11/17/2026   2:04 PM                agentic_loop_bridge_recovery_smoke.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                agentic_loop_bridge_recovery_smoke_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                agentic_loop_bridge_recovery_smoke_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/17/2026   2:04 PM                agentic_loop_timeout_helper.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                agentic_loop_timeout_helper_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                agentic_loop_timeout_helper_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   6:15 PM                agentic_repair_ws
+STDOUT_LINE d-----        11/16/2026   6:15 PM                agentic_ws
+STDOUT_LINE d-----        11/16/2026   6:15 PM                agent_e2e_fixture
+STDOUT_LINE d-----        11/16/2026   6:15 PM                agent_e2e_fixture_repeat1
+STDOUT_LINE d-----        11/16/2026   6:15 PM                agent_e2e_fixture_repeat2
+STDOUT_LINE d-----        11/16/2026   6:15 PM                agent_e2e_fixture_small
+STDOUT_LINE d-----        11/17/2026   2:04 PM                agent_ledger_undo_smoke.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                agent_ledger_undo_smoke_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                agent_ledger_undo_smoke_autogen_timestamp_deps.dir
+STDOUT_LINE d-----         11/8/2026  12:49 AM                ai-ml
+STDOUT_LINE d-----        11/17/2026   2:04 PM                ALL_BUILD.dir
+STDOUT_LINE d-----         11/8/2026  12:49 AM                analytics
+STDOUT_LINE d-----        11/16/2026   6:15 PM                archive
+STDOUT_LINE d-----        11/16/2026   6:15 PM                ARCHIVE_Status3_FINAL
+STDOUT_LINE d-----        11/12/2026   8:21 PM                artifacts
+STDOUT_LINE d-----        11/16/2026   6:15 PM                asm
+STDOUT_LINE d-----         11/8/2026  12:49 AM                asm_obj_sweep
+STDOUT_LINE d-----         11/8/2026  12:49 AM                assets
+STDOUT_LINE d-----        11/16/2026   6:15 PM                audit
+STDOUT_LINE d-----         11/8/2026  12:45 AM                AUDITS
+STDOUT_LINE d-----         11/8/2026  10:59 PM                audit_manifest
+STDOUT_LINE d-----         11/8/2026  12:49 AM                audit_results
+STDOUT_LINE d-----         11/8/2026  12:49 AM                autonomous
+STDOUT_LINE d-----        11/16/2026   6:15 PM                auto_generated_methods
+STDOUT_LINE d-----        11/16/2026   6:15 PM                B008
+STDOUT_LINE d-----        11/16/2026   6:15 PM                B009
+STDOUT_LINE d-----        11/16/2026   6:15 PM                B010
+STDOUT_LINE d-----        11/16/2026   6:15 PM                B011
+STDOUT_LINE d-----        11/16/2026   6:15 PM                B012
+STDOUT_LINE d-----        11/16/2026   6:15 PM                B013
+STDOUT_LINE d-----        11/16/2026   6:15 PM                B014
+STDOUT_LINE d-----         11/8/2026  12:49 AM                backup
+STDOUT_LINE d-----        11/16/2026   6:15 PM                bench
+STDOUT_LINE d-----        11/16/2026   6:15 PM                benchmark
+STDOUT_LINE d-----        11/16/2026   6:15 PM                benchmarks
+STDOUT_LINE d-----         11/8/2026  10:59 PM                benchmark_results
+STDOUT_LINE d-----         11/8/2026  12:49 AM                benchmark_t_results
+STDOUT_LINE d-----        11/16/2026   6:15 PM                bigdaddyg-ide
+STDOUT_LINE d-----        11/17/2026   9:23 PM                bin
+STDOUT_LINE d-----        11/12/2026   8:21 PM                bindings
+STDOUT_LINE d-----        11/17/2026  11:15 PM                build
+STDOUT_LINE d-----        11/17/2026  10:28 PM                build_ide
+STDOUT_LINE d-----        11/17/2026   1:49 PM                build_ninja
+STDOUT_LINE d-----        11/17/2026   2:01 PM                build_qt_free
+STDOUT_LINE d-----        11/17/2026   6:07 PM                build_release_candidate
+STDOUT_LINE d-----        11/17/2026   8:26 PM                build_vs
+STDOUT_LINE d-----         11/8/2026  10:59 PM                cameleon
+STDOUT_LINE d-----         11/3/2026  11:32 AM                candidate_3236824F
+STDOUT_LINE d-----         11/3/2026   1:30 PM                candidate_all_fixes
+STDOUT_LINE d-----         11/3/2026   2:22 PM                candidate_all_fixes_v2
+STDOUT_LINE d-----         11/3/2026   6:37 PM                candidate_all_fixes_v3
+STDOUT_LINE d-----         11/3/2026  10:03 PM                candidate_final
+STDOUT_LINE d-----        11/12/2026   8:21 PM                certification
+STDOUT_LINE d-----        10/24/2026   6:22 AM                certification_pilot
+STDOUT_LINE d-----        10/20/2026   7:33 PM                certification_pilot2
+STDOUT_LINE d-----        10/24/2026   6:22 AM                certification_pilot_cpu2
+STDOUT_LINE d-----         11/8/2026  10:59 PM                certification_results
+STDOUT_LINE d-----         11/8/2026  10:59 PM                certs
+STDOUT_LINE d-----         11/8/2026  10:59 PM                chaos
+STDOUT_LINE d-----         11/8/2026  10:59 PM                chaos-tests
+STDOUT_LINE d-----         11/8/2026  10:59 PM                ci
+STDOUT_LINE d-----         11/8/2026  10:59 PM                ci-dashboard
+STDOUT_LINE d-----         10/7/2026   1:46 PM                cli_test
+STDOUT_LINE d-----        10/10/2026   3:58 PM                cmake
+STDOUT_LINE d-----        11/17/2026  11:11 PM                CMakeFiles
+STDOUT_LINE d-----         11/8/2026  10:59 PM                community
+STDOUT_LINE d-----        11/12/2026   8:21 PM                compilers
+STDOUT_LINE d-----         11/8/2026  10:59 PM                config
+STDOUT_LINE d-----         11/8/2026  10:59 PM                configs
+STDOUT_LINE d-----        11/12/2026   8:21 PM                Consolidated_Modules_20260124_064313
+STDOUT_LINE d-----        11/12/2026   8:21 PM                Consolidated_Modules_20260124_064319
+STDOUT_LINE d-----        11/16/2026   6:15 PM                Consolidated_Modules_20260124_064807
+STDOUT_LINE d-----        11/16/2026   1:35 PM                cpu_engine_e2e.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                cpu_inference_engine.dir
+STDOUT_LINE d-----        11/17/2026   9:23 PM                cpu_inference_engine_autogen
+STDOUT_LINE d-----        11/17/2026   8:17 PM                cpu_inference_engine_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                cpu_inference_engine_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                cursor_parity_registry_smoke.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                cursor_parity_registry_smoke_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                cursor_parity_registry_smoke_autogen_timestamp_deps.dir
+STDOUT_LINE d-----         11/8/2026  12:45 AM                Cursor_Source_Extracted
+STDOUT_LINE d-----         11/8/2026  10:59 PM                dashboard
+STDOUT_LINE d-----        11/16/2026   1:35 PM                debuggee_fixture.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                debuggee_fixture_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                debuggee_fixture_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                debug_backend_verify.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                debug_backend_verify_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                debug_backend_verify_autogen_timestamp_deps.dir
+STDOUT_LINE d-----         11/8/2026  12:54 AM                Deep2SteeringAgentDrop
+STDOUT_LINE d-----        11/16/2026   1:35 PM                deep2_agentic_loop.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_agentic_loop_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_agentic_loop_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                deep2_agentic_repair.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_agentic_repair_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_agentic_repair_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   5:49 PM                deep2_attention_geometry_nan_regression.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                deep2_bench_tps.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_bench_tps_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_bench_tps_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                deep2_context_scaling.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_context_scaling_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_context_scaling_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                deep2_d1_prefill_parity.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_d1_prefill_parity_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_d1_prefill_parity_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                deep2_dualgpu_forward.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_dualgpu_forward_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_dualgpu_forward_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                deep2_dynamic_interceptor.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_dynamic_interceptor_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_dynamic_interceptor_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/17/2026   2:04 PM                deep2_engine_lib.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                deep2_enterprise_manifest.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_enterprise_manifest_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_enterprise_manifest_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                deep2_fused_lmhead_verify.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_fused_lmhead_verify_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_fused_lmhead_verify_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                deep2_gdn_parity_harness.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_gdn_parity_harness_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_gdn_parity_harness_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                deep2_gguf_lifecycle.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_gguf_lifecycle_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_gguf_lifecycle_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                deep2_gpu_certify.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_gpu_certify_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_gpu_certify_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                deep2_gpu_code31_pnp_probe.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                deep2_gpu_code31_reset_smoke.dir
+STDOUT_LINE d-----        11/16/2026   5:49 PM                deep2_gpu_decode_roofline.dir
+STDOUT_LINE d-----         11/8/2026  12:54 AM                Deep2_GPU_Production_Hardening
+STDOUT_LINE d-----        11/16/2026   5:49 PM                deep2_h11_prefill_parity.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                deep2_mla_lifecycle_test.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_mla_lifecycle_test_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_mla_lifecycle_test_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   5:49 PM                deep2_multitoken_decode_parity.dir
+STDOUT_LINE d-----        11/16/2026   5:49 PM                deep2_n02_numerical_correctness.dir
+STDOUT_LINE d-----        11/16/2026   5:49 PM                deep2_n03_session_isolation.dir
+STDOUT_LINE d-----        11/16/2026   5:49 PM                deep2_openai_server.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                deep2_parity_trace.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_parity_trace_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_parity_trace_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   5:49 PM                deep2_persistent_kv_smoke.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                deep2_prefill_parity.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_prefill_parity_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_prefill_parity_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/17/2026   2:04 PM                deep2_q5k_gpu_stress.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_q5k_gpu_stress_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_q5k_gpu_stress_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                deep2_quant_specialized_shaders.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                deep2_qwen4exp_gdn_probe.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_qwen4exp_gdn_probe_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_qwen4exp_gdn_probe_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                deep2_qwen4exp_gdn_shader.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                deep2_qwen4exp_operator_harness.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_qwen4exp_operator_harness_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_qwen4exp_operator_harness_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                deep2_qwen4exp_operator_shaders.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                deep2_qwen4exp_pipeline_probe.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_qwen4exp_pipeline_probe_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_qwen4exp_pipeline_probe_autogen_timestamp_deps.dir
+STDOUT_LINE d-----         11/8/2026  12:54 AM                Deep2_Remaining_Blockers_NoDeps
+STDOUT_LINE d-----        11/16/2026   1:35 PM                deep2_resident_qgemv_shader.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                deep2_reverse_engineer.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_reverse_engineer_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_reverse_engineer_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   6:15 PM                Deep2_RuntimeIRBridge
+STDOUT_LINE d-----        11/16/2026   1:35 PM                deep2_spec_bench.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_spec_bench_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_spec_bench_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                deep2_spec_ops_shader.dir
+STDOUT_LINE d-----        10/14/2026   8:05 PM                deep2_tiered_moe_drop
+STDOUT_LINE d-----        11/16/2026   1:35 PM                deep2_token_profiler.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_token_profiler_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                deep2_token_profiler_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   5:49 PM                deep2_uneven_tp_gemv.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                deep2_vulkan_gdn_dispatch_probe.dir
+STDOUT_LINE d-----         11/8/2026  10:59 PM                demo
+STDOUT_LINE d-----         11/8/2026  10:59 PM                demo_output
+STDOUT_LINE d-----        10/13/2026   5:24 PM                demo_zero_deps
+STDOUT_LINE d-----         10/7/2026   1:46 PM                deobf
+STDOUT_LINE d-----         11/8/2026  10:59 PM                deploy
+STDOUT_LINE d-----         11/8/2026  10:59 PM                deployment
+STDOUT_LINE d-----        11/16/2026   6:15 PM                DEPLOYMENT_PACKAGE
+STDOUT_LINE d-----        11/10/2026   4:43 PM                deploy_test
+STDOUT_LINE d-----         11/8/2026  10:59 PM                developer-experience
+STDOUT_LINE d-----        11/12/2026   8:21 PM                direct_link_batch1
+STDOUT_LINE d-----         11/8/2026  10:59 PM                disaster-recovery
+STDOUT_LINE d-----        11/12/2026   8:21 PM                dist
+STDOUT_LINE d-----         11/8/2026  10:59 PM                distribution
+STDOUT_LINE d-----         11/8/2026  10:59 PM                doc
+STDOUT_LINE d-----         11/8/2026  10:59 PM                docker
+STDOUT_LINE d-----         11/8/2026  10:59 PM                docs
+STDOUT_LINE d-----         11/8/2026  10:59 PM                docs-portal
+STDOUT_LINE d-----         11/8/2026  10:59 PM                e2e_001_ws
+STDOUT_LINE d-----         11/8/2026  10:59 PM                enterprise
+STDOUT_LINE d-----        11/12/2026   8:21 PM                enterprise_kernel
+STDOUT_LINE d-----        11/15/2026   5:17 PM                evidence
+STDOUT_LINE d-----        10/10/2026   3:58 PM                examples
+STDOUT_LINE d-----         10/6/2026   4:37 PM                extension-host
+STDOUT_LINE d-----        10/21/2026   6:58 AM                extensions
+STDOUT_LINE d-----        11/10/2026   8:03 AM                external
+STDOUT_LINE d-----        11/16/2026   6:15 PM                Extracted_Chat_Agent_Features
+STDOUT_LINE d-----         8/11/2026  12:01 AM                final-production-package
+STDOUT_LINE d-----        11/16/2026   6:15 PM                Full Source
+STDOUT_LINE d-----        11/16/2026   6:15 PM                Full_Source
+STDOUT_LINE d-----        11/16/2026   3:38 PM                generated
+STDOUT_LINE d-----         10/6/2026   4:37 PM                generator
+STDOUT_LINE d-----        10/13/2026   5:25 PM                genesis
+STDOUT_LINE d-----        11/17/2026   8:17 PM                gguf_hotpatch_tester.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                gguf_hotpatch_tester_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                gguf_hotpatch_tester_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                gguf_universal_probe.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                gguf_universal_probe_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                gguf_universal_probe_autogen_timestamp_deps.dir
+STDOUT_LINE d-----         11/8/2026  11:04 PM                gpu_certify
+STDOUT_LINE d-----        11/17/2026   8:17 PM                gpu_inference_benchmark.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                gpu_inference_benchmark_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                gpu_inference_benchmark_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                gpu_quant_dot_realweights.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                gpu_quant_dot_realweights_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                gpu_quant_dot_realweights_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                gpu_quant_dot_verify.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                gpu_quant_dot_verify_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                gpu_quant_dot_verify_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        10/13/2026   5:30 PM                gui
+STDOUT_LINE d-----        10/14/2026   9:09 PM                h01_ws
+STDOUT_LINE d-----        11/16/2026   5:49 PM                hexmag-reap-live-test.dir
+STDOUT_LINE d-----        11/16/2026   5:49 PM                hexmag-reap-live.dir
+STDOUT_LINE d-----        11/16/2026   6:15 PM                HEXMAG_SWARM_SCRATCH
+STDOUT_LINE d-----         10/6/2026   4:37 PM                history
+STDOUT_LINE d-----        10/13/2026   5:25 PM                ide
+STDOUT_LINE d-----        11/14/2026   2:05 PM                include
+STDOUT_LINE d-----         10/6/2026   4:37 PM                infinite
+STDOUT_LINE d-----        11/17/2026   2:04 PM                INSTALL.dir
+STDOUT_LINE d-----         10/6/2026   4:37 PM                installer
+STDOUT_LINE d-----         11/8/2026  12:48 AM                IR_Source_Drop
+STDOUT_LINE d-----        11/12/2026   8:21 PM                itsmehrawrxd-master
+STDOUT_LINE d-----        11/12/2026   8:21 PM                kartgib
+STDOUT_LINE d-----        11/12/2026   8:21 PM                kartgib_work
+STDOUT_LINE d-----        10/10/2026   3:58 PM                kernels
+STDOUT_LINE d-----        11/16/2026   1:35 PM                kquant_dot_parity.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                kquant_dot_parity_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                kquant_dot_parity_autogen_timestamp_deps.dir
+STDOUT_LINE d-----         8/11/2026  12:05 AM                lib
+STDOUT_LINE d-----        11/17/2026  11:18 PM                logs
+STDOUT_LINE d-----        11/16/2026   1:35 PM                mamba2_ref_probe.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                mamba2_ref_probe_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                mamba2_ref_probe_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        10/13/2026   5:25 PM                masm_node
+STDOUT_LINE d-----        11/17/2026   8:17 PM                minimal_qt_test.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                minimal_qt_test_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                minimal_qt_test_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        10/10/2026   3:58 PM                mobile
+STDOUT_LINE d-----         10/6/2026   4:37 PM                Modelfiles
+STDOUT_LINE d-----         11/9/2026   5:55 PM                models
+STDOUT_LINE d-----         11/8/2026  11:05 PM                model_solo
+STDOUT_LINE da----        10/13/2026   5:25 PM                native_inference
+STDOUT_LINE d-----        10/13/2026   5:25 PM                native_toolchain
+STDOUT_LINE d-----        11/16/2026   1:35 PM                native_tool_protocol_smoke.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                native_tool_protocol_smoke_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                native_tool_protocol_smoke_autogen_timestamp_deps.dir
+STDOUT_LINE d-----         10/6/2026   4:37 PM                node_modules
+STDOUT_LINE d-----        11/16/2026   6:15 PM                OrganizedPiProject
+STDOUT_LINE d-----        10/27/2026  12:45 AM                out
+STDOUT_LINE d-----         11/9/2026   3:10 PM                package
+STDOUT_LINE d-----         11/3/2026  12:24 PM                package_t24
+STDOUT_LINE d-----         11/8/2026  11:05 PM                package_t24_v2
+STDOUT_LINE d-----         11/8/2026  11:05 PM                package_t24_v3
+STDOUT_LINE d-----         11/8/2026  11:05 PM                package_t24_v4
+STDOUT_LINE d-----         11/8/2026  11:05 PM                package_t24_v5
+STDOUT_LINE d-----         11/8/2026  11:05 PM                package_t24_v6
+STDOUT_LINE d-----         11/8/2026  11:05 PM                package_t24_v7
+STDOUT_LINE d-----         11/8/2026  11:05 PM                parity_out
+STDOUT_LINE d-----         10/6/2026   4:37 PM                pe_generator
+STDOUT_LINE d-----        11/10/2026   4:17 PM                plugins
+STDOUT_LINE d-----        11/12/2026   8:21 PM                portable-package
+STDOUT_LINE d-----        11/16/2026   6:15 PM                Production
+STDOUT_LINE d-----        11/17/2026   2:04 PM                q4_0_gpu_parity_test.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                q4_0_gpu_parity_test_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                q4_0_gpu_parity_test_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                q6k_row_differential_test.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                q6k_row_differential_test_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                q6k_row_differential_test_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                q8k_edge_tests.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                q8k_edge_tests_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                q8k_edge_tests_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                q8k_parity_tool.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                q8k_parity_tool_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                q8k_parity_tool_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                quant_parity_cert.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                quant_parity_cert_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                quant_parity_cert_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                quant_scalar_smoke.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                quant_utils.dir
+STDOUT_LINE d-----        11/17/2026   9:23 PM                quant_utils_autogen
+STDOUT_LINE d-----        11/17/2026   8:17 PM                quant_utils_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                quant_utils_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        10/13/2026   5:25 PM                quarantine
+STDOUT_LINE d-----         11/8/2026  12:48 AM                Randomly Failed To Save
+STDOUT_LINE d-----        11/16/2026   1:35 PM                rawr-reap-cli-contract-test.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                rawr-reap-cli-contract-test_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                rawr-reap-cli-contract-test_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                rawr-reap-corpus.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                rawr-reap-corpus_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                rawr-reap-corpus_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                rawr-reap-expert-layout-test.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                rawr-reap-expert-layout-test_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                rawr-reap-expert-layout-test_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                rawr-reap-mask.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                rawr-reap-mask_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                rawr-reap-mask_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   5:49 PM                rawr-reap-replay.dir
+STDOUT_LINE d-----        11/16/2026   5:49 PM                rawr-reap-runtime-plan-test.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                rawr-reap-writer.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                rawr-reap-writer_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                rawr-reap-writer_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                rawr-reap.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                rawr-reap_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                rawr-reap_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                rawr-tensor-residency-budget-test.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                rawr-tensor-residency-budget-test_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                rawr-tensor-residency-budget-test_autogen_timestamp_deps.dir
+STDOUT_LINE d-----         10/6/2026   4:37 PM                rawramxd_v2
+STDOUT_LINE d-----        11/17/2026   8:17 PM                RawrXD-Agent.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                RawrXD-Agent_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                RawrXD-Agent_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/17/2026   2:04 PM                RawrXD-Chromatic.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                RawrXD-Chromatic_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                RawrXD-Chromatic_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/17/2026   2:04 PM                RawrXD-CLI-V2.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                RawrXD-CLI-V2_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                RawrXD-CLI-V2_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/17/2026   2:04 PM                RawrXD-ExtensionHost.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                RawrXD-ExtensionHost_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                RawrXD-ExtensionHost_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   6:15 PM                RawrXD-ModelLoader
+STDOUT_LINE d-----        11/17/2026   8:17 PM                RawrXD-QtShell.dir
+STDOUT_LINE d-----        11/17/2026   9:23 PM                RawrXD-QtShell_autogen
+STDOUT_LINE d-----        11/17/2026   8:17 PM                RawrXD-QtShell_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                RawrXD-QtShell_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/12/2026   8:21 PM                RawrXD-RC0.2
+STDOUT_LINE d-----        11/17/2026   2:04 PM                RawrXD-Win32IDE-Native.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                RawrXD-Win32IDE-Native_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                RawrXD-Win32IDE-Native_autogen_timestamp_deps.dir
+STDOUT_LINE d-----         2/17/2026   5:33 AM                RawrXD.exe.WebView2
+STDOUT_LINE d-----        11/16/2026   1:35 PM                rawrxd_agentic_backend.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                rawrxd_agentic_backend_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                rawrxd_agentic_backend_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                rawrxd_certification_harnesses.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                rawrxd_chat_route_menu.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                rawrxd_check.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                rawrxd_check_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                rawrxd_check_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                rawrxd_compression_core.dir
+STDOUT_LINE d-----        11/16/2026   5:49 PM                rawrxd_deep2_engine.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                rawrxd_gpu_compute.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                rawrxd_link.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                rawrxd_link_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                rawrxd_link_autogen_timestamp_deps.dir
+STDOUT_LINE d-----         11/8/2026  12:48 AM                RawrXD_ParityDrop
+STDOUT_LINE d-----        11/16/2026   1:35 PM                rawrxd_security.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                rawrxd_security_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                rawrxd_security_autogen_timestamp_deps.dir
+STDOUT_LINE d-----         2/17/2026   5:33 AM                RawrXD_v3.0.11.0.exe.WebView2
+STDOUT_LINE d-----         2/17/2026   5:33 AM                RawrXD_v3.0.9.0.exe.WebView2
+STDOUT_LINE d-----         11/8/2026  12:48 AM                RawrZ-Security
+STDOUT_LINE d-----        11/17/2026   2:04 PM                reap-calibrate.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                reap-cert-parity.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                reap-cert-parity_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                reap-cert-parity_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                reap-floor-audit.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                reap-floor-audit_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                reap-floor-audit_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                reap-moe-transform-test.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                reap-moe-transform-test_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                reap-moe-transform-test_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                reap-publish-admission.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                reap-publish-admission_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                reap-publish-admission_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                reap-ref-extract.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                reap-ref-extract_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                reap-ref-extract_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                reap-reference-receipt.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                reap-reference-receipt_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                reap-reference-receipt_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                reap-tensor-enum.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                reap-tensor-enum_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                reap-tensor-enum_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                reap-tok-inspect.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                reap-tok-inspect_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                reap-tok-inspect_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/12/2026   8:21 PM                reap_corpus
+STDOUT_LINE d-----        11/16/2026   5:56 PM                reap_masm
+STDOUT_LINE d-----        11/12/2026   8:21 PM                reconstructed
+STDOUT_LINE d-----         11/8/2026  11:05 PM                recovery
+STDOUT_LINE d-----        11/17/2026   9:23 PM                release
+STDOUT_LINE d-----         10/6/2026   4:37 PM                release-package
+STDOUT_LINE d-----        10/13/2026   5:25 PM                releases
+STDOUT_LINE d-----         8/11/2026  12:08 AM                release_out
+STDOUT_LINE d-----         11/8/2026  12:48 AM                RELEASE_PACKAGE
+STDOUT_LINE d-----         8/11/2026  12:08 AM                runtime_libs
+STDOUT_LINE d-----        11/17/2026   2:04 PM                RUN_TESTS.dir
+STDOUT_LINE d-----         10/6/2026   4:37 PM                sandbox
+STDOUT_LINE d-----        11/14/2026   5:29 PM                scripts
+STDOUT_LINE d-----         10/6/2026   4:37 PM                seg
+STDOUT_LINE d-----        11/17/2026   8:17 PM                self_test_gate.dir
+STDOUT_LINE d-----        11/17/2026   9:23 PM                self_test_gate_autogen
+STDOUT_LINE d-----        11/17/2026   8:17 PM                self_test_gate_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                self_test_gate_autogen_timestamp_deps.dir
+STDOUT_LINE d-----         11/8/2026  11:05 PM                services
+STDOUT_LINE d-----         11/8/2026  11:05 PM                shaders_phase1
+STDOUT_LINE d-----         11/8/2026  11:05 PM                shaders_phase2
+STDOUT_LINE da----        11/16/2026   6:15 PM                Ship
+STDOUT_LINE d-----         10/6/2026   4:37 PM                signoff
+STDOUT_LINE d-----        11/17/2026   8:17 PM                simple_gpu_test.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                simple_gpu_test_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                simple_gpu_test_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        10/13/2026   5:25 PM                sovereign
+STDOUT_LINE d-----         11/8/2026  12:48 AM                Sovereign Singularity Flip_files
+STDOUT_LINE d-----         8/11/2026  12:08 AM                sovereign-engine-final
+STDOUT_LINE d-----         11/8/2026  12:48 AM                SOVEREIGN_BOOTSTRAP_CERTIFICATION
+STDOUT_LINE d-----        11/16/2026   1:35 PM                sovereign_emit_formats.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                sovereign_emit_formats_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                sovereign_emit_formats_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   6:15 PM                SOVEREIGN_ENGINE_FINAL
+STDOUT_LINE d-----        11/16/2026   1:35 PM                sovereign_lab_blob_io.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                sovereign_lab_blob_io_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                sovereign_lab_blob_io_autogen_timestamp_deps.dir
+STDOUT_LINE d-----         11/8/2026  12:48 AM                SOVEREIGN_UNIVERSAL_TRANSPILER
+STDOUT_LINE d-----        11/17/2026  10:08 PM                src
+STDOUT_LINE d-----        10/13/2026   5:25 PM                staging
+STDOUT_LINE d-----         10/6/2026   4:37 PM                standalone
+STDOUT_LINE d-----        11/12/2026   8:21 PM                standalone_build
+STDOUT_LINE d-----         11/8/2026  11:05 PM                strata_bench
+STDOUT_LINE d-----        11/16/2026   1:35 PM                stub_test.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                stub_test_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                stub_test_autogen_timestamp_deps.dir
+STDOUT_LINE d-----         11/8/2026  11:05 PM                sweep
+STDOUT_LINE d-----        10/13/2026   5:25 PM                telemetry
+STDOUT_LINE d-----        10/15/2026   5:16 AM                Testing
+STDOUT_LINE d-----        11/16/2026   3:39 PM                tests
+STDOUT_LINE d-----        11/16/2026   1:35 PM                test_api_server.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                test_api_server_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                test_api_server_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                test_chat_streaming.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                test_chat_streaming_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                test_chat_streaming_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        11/16/2026   5:49 PM                test_deep2_inference.dir
+STDOUT_LINE d-----        11/16/2026   1:35 PM                test_kv_cache.dir
+STDOUT_LINE d-----         10/7/2026   1:46 PM                test_output_20260117_113118
+STDOUT_LINE d-----         10/7/2026   1:46 PM                test_output_20260117_114817
+STDOUT_LINE d-----        10/13/2026   5:25 PM                test_output_20260117_120008
+STDOUT_LINE d-----        11/16/2026   1:35 PM                test_sovereign_compose_lab.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                test_sovereign_compose_lab_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                test_sovereign_compose_lab_autogen_timestamp_deps.dir
+STDOUT_LINE d-----         11/8/2026  11:05 PM                themes
+STDOUT_LINE d-----        11/10/2026  12:13 AM                third_party
+STDOUT_LINE d-----        10/10/2026   3:58 PM                Tiny-Home
+STDOUT_LINE d-----         11/9/2026   3:12 AM                tip_stages
+STDOUT_LINE d-----         10/6/2026   4:37 PM                titan
+STDOUT_LINE d-----        11/16/2026   7:26 PM                tmp_build
+STDOUT_LINE d-----        11/16/2026   7:26 PM                tmp_build_cap
+STDOUT_LINE d-----        11/16/2026   7:26 PM                tmp_build_mg
+STDOUT_LINE d-----        11/16/2026   7:26 PM                tmp_build_owns
+STDOUT_LINE d-----        11/16/2026   7:26 PM                tmp_build_owns2
+STDOUT_LINE d-----        11/16/2026   7:26 PM                tmp_llama-clone
+STDOUT_LINE d-----        11/16/2026   7:26 PM                tmp_remeasure_002
+STDOUT_LINE d-----        11/16/2026   7:26 PM                tmp_remeasure_003
+STDOUT_LINE d-----        11/16/2026   7:26 PM                tmp_remeasure_004
+STDOUT_LINE d-----        11/16/2026   7:26 PM                tmp_remeasure_005
+STDOUT_LINE d-----        11/16/2026   7:26 PM                tmp_remeasure_006
+STDOUT_LINE d-----        11/16/2026   7:26 PM                tmp_remeasure_007
+STDOUT_LINE d-----        11/16/2026   7:26 PM                tmp_remeasure_008
+STDOUT_LINE d-----        11/16/2026   7:26 PM                tmp_remeasure_009
+STDOUT_LINE d-----        11/16/2026   7:26 PM                tmp_remeasure_010
+STDOUT_LINE d-----        11/16/2026   7:26 PM                tmp_remeasure_011
+STDOUT_LINE d-----        11/16/2026   7:26 PM                tmp_remeasure_011_012_ab
+STDOUT_LINE d-----        11/16/2026   7:26 PM                tmp_remeasure_012
+STDOUT_LINE d-----        11/16/2026   7:26 PM                tmp_remeasure_013
+STDOUT_LINE d-----        11/16/2026   7:26 PM                tmp_remeasure_014
+STDOUT_LINE d-----        11/16/2026   7:26 PM                tmp_remeasure_015
+STDOUT_LINE d-----        11/16/2026   7:26 PM                tmp_remeasure_016
+STDOUT_LINE d-----        11/16/2026   7:26 PM                tmp_remeasure_016_div
+STDOUT_LINE d-----        11/16/2026   7:26 PM                tmp_remeasure_017
+STDOUT_LINE d-----        11/16/2026   7:26 PM                tmp_trusted_ref
+STDOUT_LINE d-----        11/16/2026   7:26 PM                tmp_verify_build
+STDOUT_LINE d-----        11/16/2026   7:26 PM                tmp_wv2_probe.exe.WebView2
+STDOUT_LINE d-----         10/6/2026   4:37 PM                toolchain
+STDOUT_LINE d-----        11/16/2026  11:35 PM                tools
+STDOUT_LINE d-----         11/8/2026  11:05 PM                tools_test
+STDOUT_LINE d-----        11/16/2026   6:15 PM                UEC-X
+STDOUT_LINE d-----        11/12/2026   8:21 PM                validation
+STDOUT_LINE d-----         11/4/2026   6:31 AM                verify_temp
+STDOUT_LINE d-----         10/6/2026   4:37 PM                vscode-extension
+STDOUT_LINE d-----        10/10/2026   3:58 PM                vs_validation
+STDOUT_LINE d-----         11/8/2026  11:05 PM                web-test
+STDOUT_LINE d-----         11/8/2026  11:05 PM                work
+STDOUT_LINE d-----        11/16/2026   1:35 PM                workspace_path_policy_smoke.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                workspace_path_policy_smoke_autogen.dir
+STDOUT_LINE d-----        11/17/2026   8:17 PM                workspace_path_policy_smoke_autogen_timestamp_deps.dir
+STDOUT_LINE d-----        10/25/2026  10:36 AM                WorldForge_Drop3
+STDOUT_LINE d-----         11/8/2026  12:48 AM                WorldForge_Drop4
+STDOUT_LINE d-----         11/8/2026  12:48 AM                WorldForge_Drop5
+STDOUT_LINE d-----        11/16/2026   2:26 PM                x64
+STDOUT_LINE d-----        11/17/2026   2:04 PM                ZERO_CHECK.dir
+STDOUT_LINE d-----        11/16/2026   6:15 PM                _bridge_fix
+STDOUT_LINE d-----         11/8/2026  12:48 AM                _cert_baseline
+STDOUT_LINE d-----        11/17/2026   2:03 PM                _deps
+STDOUT_LINE d-----         11/8/2026  12:48 AM                _drop_5_block_parity
+STDOUT_LINE d-----        11/16/2026   6:15 PM                _e2e
+STDOUT_LINE d-----        11/16/2026   6:15 PM                _final_build
+STDOUT_LINE d-----         11/8/2026   8:03 AM                _hotpatch_incoming
+STDOUT_LINE d-----        11/16/2026   6:15 PM                _pre_merge_backup
+STDOUT_LINE d-----         11/8/2026  12:49 AM                _vwa_stage
+STDOUT_LINE d-----         11/8/2026  12:46 AM                ~dev
+STDOUT_LINE -a----        10/10/2026   3:58 PM           1261 .clang-format
+STDOUT_LINE -a----         11/8/2026  12:54 AM           1569 .clang-tidy
+STDOUT_LINE -a----         11/3/2026   3:33 AM             56 .codex_batch2_smoke.txt
+STDOUT_LINE -a----         11/8/2026  12:54 AM           1270 .codex_batch_commit.ps1
+STDOUT_LINE -a----         11/3/2026   3:38 AM            321 .codex_final_ghosttext_smoke.cpp
+STDOUT_LINE -a----         11/3/2026   3:35 AM             54 .codex_final_unicode_smoke.txt
+STDOUT_LINE -a----        11/10/2026   3:15 AM          13616 .cursorrules
+STDOUT_LINE -a----        10/10/2026   3:58 PM            397 .editorconfig
+STDOUT_LINE -a----        11/11/2026   3:23 AM            765 .gitattributes
+STDOUT_LINE -a----        11/10/2026  12:48 PM           6656 .gitignore
+STDOUT_LINE -a----         11/8/2026  12:46 AM            176 .gitmodules
+STDOUT_LINE -a----         11/8/2026  12:54 AM           1166 .m7.txt
+STDOUT_LINE -a----         11/8/2026  12:45 AM             36 .rawrxd_agent_config.json
+STDOUT_LINE -a----         11/8/2026  10:58 PM          15010 .tmp_pr14_checks.json
+STDOUT_LINE -a----         11/8/2026  12:45 AM             76 .wiringdigestignore
+STDOUT_LINE -a----         11/8/2026  12:45 AM           2473 .wiringdigestrules.json
+STDOUT_LINE -a----         11/8/2026  12:54 AM           3951 00-FINAL-DELIVERABLE-COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          17023 00-FINAL_DELIVERY_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM              0 1
+STDOUT_LINE -a----         11/8/2026  12:46 AM           4611 2-LINE-OFFSET-FIX.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM           9707 47_CRITICAL_ISSUES_INTEGRATION_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5544 90_DAY_DELIVERABLE_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5654 ABI_COMPLIANCE_NOTES.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          11116 ACHIEVEMENTS_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5765 ACTION_HEAP_DIAGNOSTICS.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           8058 ACTION_ITEMS_START_HERE.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM           2846 ACTION_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           1650 ACTION_REPORT_2.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           8697 ACTUAL_IMPLEMENTATION_STATUS.md
+STDOUT_LINE -a----         11/8/2026  12:49 AM           2477 add_debug_prints.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5896 ADOBE_RGBA_VSU_IMPLEMENTATION.md
+STDOUT_LINE -a----         10/6/2026   4:56 PM          42339 Advanced-Feature-Testing.ps1
+STDOUT_LINE -a----         11/8/2026  12:46 AM          36509 ADVANCED_FEATURES_ARCHITECTURE.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          15175 ADVANCED_FEATURES_EXECUTIVE_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          21496 ADVANCED_FEATURES_INDEX.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          10963 ADVANCED_MODEL_OPERATIONS_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM           9748 ADVANCED_OPERATIONS_FINAL_STATUS.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          10366 ADVANCED_REFACTORING_ENGINE_FINAL_STATUS.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          14016 ADVANCED_REFACTORING_ENHANCEMENTS.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           8674 AGENT-1-source-recovery.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM          31384 AGENT-3-BuildConsolidation.ps1
+STDOUT_LINE -a----         11/8/2026  12:46 AM           6508 AGENTIC-FIXES-SUCCESS-REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           5660 AGENTIC-TEST-RESULTS.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5790 AGENTIC_AUDIT_AND_FEATURES.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7693 AGENTIC_CAPABILITIES_README.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          14539 AGENTIC_FRAMEWORK_IMPLEMENTATION_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM           1032 AGENTIC_IDE_BUILD_SUCCESS.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          16080 AGENTIC_IMPLEMENTATION_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           3681 AGENTIC_IMPLEMENTATION_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          19013 AGENTIC_INTEGRATION_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          10316 AGENTIC_LAZY_INIT_COMPLETION_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM           7765 AGENTIC_LAZY_INIT_QUICK_REFERENCE.md
+STDOUT_LINE -a----        11/14/2026   5:28 PM          34807 agentic_live.jsonl
+STDOUT_LINE -a----         11/8/2026  12:46 AM          16476 AGENTIC_LOOPS_FULL_IMPLEMENTATION.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          13356 AGENTIC_LOOPS_INTEGRATION_GUIDE.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           9584 AGENTIC_LOOPS_QUICK_REFERENCE.md
+STDOUT_LINE -a----        11/17/2026  11:11 PM          48231 agentic_loop_bridge_recovery_smoke.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM            838 agentic_loop_bridge_recovery_smoke.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         123026 agentic_loop_bridge_recovery_smoke_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            858 agentic_loop_bridge_recovery_smoke_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110266 agentic_loop_bridge_recovery_smoke_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 agentic_loop_bridge_recovery_smoke_autogen_timestamp_deps.vcxproj.fil
+STDOUT_LINE                                                   ters
+STDOUT_LINE -a----        11/17/2026  11:11 PM          43043 agentic_loop_timeout_helper.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM            560 agentic_loop_timeout_helper.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122795 agentic_loop_timeout_helper_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            844 agentic_loop_timeout_helper_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110041 agentic_loop_timeout_helper_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 agentic_loop_timeout_helper_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5972 AGENTIC_MASM_ARCHITECTURE.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM           9332 AGENTIC_MENU_IMPLEMENTATION_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM           4671 AGENTIC_MENU_QUICK_REFERENCE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          11543 AGENTIC_MODEL_STREAMER_INTEGRATION.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          13259 AGENTIC_PLANNING_ORCHESTRATOR_DELIVERY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          11294 AGENTIC_PLANNING_ORCHESTRATOR_GUIDE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           3905 AGENTIC_QUICKREF.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6639 AGENTIC_STREAMER_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          11026 AGENTIC_STREAMER_INTEGRATION_VERIFIED.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          12780 AGENTIC_SWARM_UNIFIED.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          12580 AGENTIC_SYSTEM_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           8351 AGENTIC_SYSTEM_README.md
+STDOUT_LINE -a----         11/8/2026  12:49 AM           7005 agentic_test_suite.ps1
+STDOUT_LINE -a----         11/8/2026  12:46 AM           8242 AGENTIC_WEB_PROJECTS.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4570 AGENTPANEL_CRASH_INSTRUMENTATION.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           1122 AGENTPANEL_INSTRUMENTATION_SUMMARY.md
+STDOUT_LINE -a----        11/13/2026   3:42 AM           5751 AGENTS.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM            283 Agent_Coordinator_Enhancements.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           6897 AGENT_COORDINATOR_TESTS_BUILD_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           1490 AGENT_IMPLEMENTATION_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM           1835 AGENT_INFERENCE_AUDIT.md
+STDOUT_LINE -a----        11/17/2026  11:11 PM          44849 agent_ledger_undo_smoke.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM            564 agent_ledger_undo_smoke.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122663 agent_ledger_undo_smoke_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            836 agent_ledger_undo_smoke_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110245 agent_ledger_undo_smoke_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 agent_ledger_undo_smoke_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----         11/8/2026  12:45 AM           1918 AGENT_LOGIC_AUDIT_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          13057 AGENT_PLATFORM_AUDIT_COMPLETE.md
+STDOUT_LINE -a----         11/9/2026   4:52 PM              0 agent_session_mark.txt.rawrxd_tmp
+STDOUT_LINE -a----         11/9/2026   7:04 PM             28 agent_session_mark2.txt
+STDOUT_LINE -a----         11/8/2026  12:54 AM          10519 AGENT_STRESS_TEST_ARENA_ANALYSIS.md
+STDOUT_LINE -a----         11/8/2026  12:49 AM           6983 agent_tool_bridge.ps1
+STDOUT_LINE -a----         11/8/2026  12:45 AM          13887 AGENT_TOOL_REGISTRY_IMPLEMENTATION_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:49 AM              0 agent_transcript.json
+STDOUT_LINE -a----         11/8/2026  12:45 AM           3718 AI_COMPLETION_MEMORY_CONVERSION_PLAN.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          11668 AI_CONFIG_DIALOG_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           9920 AI_FEATURES_IMPLEMENTATION_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6456 AI_FEATURES_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7921 AI_MODULE_TODO_UPDATES.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          15732 AI_TokenStream_Test.cpp
+STDOUT_LINE -a----        11/17/2026  11:11 PM          45161 ALL_BUILD.vcxproj
+STDOUT_LINE -a----        11/17/2026   2:04 PM            264 ALL_BUILD.vcxproj.filters
+STDOUT_LINE -a----         11/8/2026  12:54 AM          10338 AMPHIBIOUS_FULL_ML_ASSEMBLY_WIRING.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          16067 AMPHIBIOUS_ML64_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          10361 ANALYSIS_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          11402 ANALYSIS_INDEX.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM           7104 ANALYSIS_NEXT_STEPS.md
+STDOUT_LINE -a----         10/6/2026   4:56 PM           8889 Analyze-Custom-Model-Performance.ps1
+STDOUT_LINE -a----         11/8/2026  12:45 AM          36415 Analyze-Extracted-Source.ps1
+STDOUT_LINE -a----         10/6/2026   4:56 PM          13692 Analyze-Model-Limits.ps1
+STDOUT_LINE -a----         10/6/2026   4:56 PM          11303 Analyze-Model-Types.ps1
+STDOUT_LINE -a----         11/8/2026  12:45 AM           8010 Analyze-Modules.ps1
+STDOUT_LINE -a----         10/6/2026   4:56 PM          13026 Analyze-RawrXD-Popups.ps1
+STDOUT_LINE -a----         11/8/2026  12:49 AM            413 analyze_duplicates.ps1
+STDOUT_LINE -a----         11/8/2026  12:49 AM           5956 analyze_link_symbols.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5696 APERTURE_AVX512_IMPLEMENTATION_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5307 APERTURE_HONEST_README.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           8095 APERTURE_README.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4789 API_FREEZE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6981 API_REFERENCE.md
+STDOUT_LINE -a----         11/8/2026  12:49 AM           3437 apply-patch-firewall-phase1.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM          11139 Apply-PowerShellPatches.ps1
+STDOUT_LINE -a----         11/8/2026  12:49 AM          15310 apply_all_fixes.ps1
+STDOUT_LINE -a----         11/8/2026  12:49 AM          11268 apply_fixes.ps1
+STDOUT_LINE -a----         11/8/2026  12:49 AM           2259 apply_link_fix_cmake.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7221 ARCH-CERT-001_coverage_matrix.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          17177 ArchitecturalEnhancementGenerator.ps1
+STDOUT_LINE -a----         11/8/2026  12:46 AM          10034 ARCHITECTURE-EDITOR.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          25382 ARCHITECTURE.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM         124954 ArchitectureEnhancementEngine.psm1
+STDOUT_LINE -a----         11/8/2026  12:54 AM          29465 ARCHITECTURE_COHERENCE_PLAN.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          15689 ARCHITECTURE_COHERENCE_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          21809 ARCHITECTURE_DIAGRAMS.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          14832 ARCHITECTURE_MIGRATION_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5820 ARCHITECTURE_MIGRATION_COMPLETE_FINAL.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           8056 ARCHITECTURE_MIGRATION_FINAL_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7805 ARCHITECTURE_MIGRATION_STATUS.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           9852 ARTIFACT_VERIFICATION.md
+STDOUT_LINE -a----         11/8/2026  12:49 AM           1880 asm_sweep.ps1
+STDOUT_LINE -a----         11/8/2026  12:49 AM           1292 assemble_all.cmd
+STDOUT_LINE -a----         11/8/2026  12:49 AM          10493 assemble_and_link.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM          10026 ASSEMBLY_COMPILER_FRAMEWORK_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          15684 ASSEMBLY_COMPLETION_STATUS.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7058 ASSEMBLY_COMPLETION_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7638 ASYNC_BATCHING_PERFORMANCE_ANALYSIS.md
+STDOUT_LINE -a----         11/8/2026  12:49 AM           7665 attention_fwd_dbg.txt
+STDOUT_LINE -a----         11/8/2026  12:45 AM           6370 AUDIT_47_ISSUES_RESOLUTION_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:49 AM          27086 audit_all_features.ps1
+STDOUT_LINE -a----         11/8/2026  12:49 AM           6073 audit_chatbot.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM          19117 AUDIT_CLOSURE_AZ_2026-10-12.md
+STDOUT_LINE -a----         11/8/2026  12:49 AM           5046 audit_codebase.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM          14078 AUDIT_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5725 AUDIT_COMPLETION_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          20560 AUDIT_DETAILED_FILE_LINE_REFERENCES.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          13405 AUDIT_DETAILED_LINE_REFERENCES.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          19540 AUDIT_DETAILED_TECHNICAL_BREAKDOWN.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          11746 AUDIT_DOCUMENTATION_INDEX.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           9647 AUDIT_EXECUTIVE_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM           3075 AUDIT_FINAL_CONCLUSIONS.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          17028 AUDIT_FINDINGS_COMPLETE_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          10539 AUDIT_FINDINGS_PRODUCTION_READINESS.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           7345 AUDIT_FINDINGS_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          13902 AUDIT_FULL_IDE_FEATURES.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           2565 AUDIT_FULL_UNAMBIGUOUS_BEHAVIOR.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           9777 AUDIT_IDE_COMPLETION.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          13057 AUDIT_IDE_INTEGRATION_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          12085 AUDIT_INDEX.md
+STDOUT_LINE -a----         11/8/2026  12:49 AM           4396 audit_log_chat_debug.jsonl
+STDOUT_LINE -a----         11/8/2026  12:49 AM           2612 audit_log_current.jsonl
+STDOUT_LINE -a----         11/8/2026  12:49 AM           6208 audit_log_current2.jsonl
+STDOUT_LINE -a----         11/8/2026  12:49 AM          10664 audit_log_ps_test.jsonl
+STDOUT_LINE -a----         11/8/2026  12:49 AM          12452 audit_log_ps_test2.jsonl
+STDOUT_LINE -a----         11/8/2026  12:49 AM          12452 audit_log_ps_test3.jsonl
+STDOUT_LINE -a----         11/8/2026  12:49 AM          13356 audit_log_ps_test4.jsonl
+STDOUT_LINE -a----         11/8/2026  12:49 AM          14260 audit_log_ps_test5.jsonl
+STDOUT_LINE -a----         11/8/2026  12:49 AM          15164 audit_log_ps_test7.jsonl
+STDOUT_LINE -a----         11/8/2026  12:54 AM          11398 AUDIT_MATRIX_B427.md
+STDOUT_LINE -a----         11/8/2026  12:49 AM           9424 audit_orphans.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM          23894 AUDIT_PARITY_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM           8454 AUDIT_QUICK_REFERENCE_ONE_PAGE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          12204 AUDIT_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           8607 AUDIT_REPORT_FULL.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          25864 AUDIT_REPORT_IDE_COMPLETENESS.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6000 AUDIT_REPORT_IDE_COMPONENTS.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          10495 AUDIT_REPORT_INDEX.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          10173 AUDIT_REPORT_INDEX_MASTER.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5331 AUDIT_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5911 AUDIT_SUMMARY_FOR_TRACKER.md
+STDOUT_LINE -a----         11/8/2026  10:58 PM          62116 AUDIT_TRACKER.json
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5305 AUDIT_TRACKER.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          17233 AUDIT_v14.2.0_FACT_VS_FICTION.md
+STDOUT_LINE -a----        10/10/2026   3:58 PM          14694 AUTHORS
+STDOUT_LINE -a----         11/8/2026  12:46 AM          12144 AUTONOMOUS-AGENT-GUIDE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          13791 AUTONOMOUS_AGENTIC_SYSTEM_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          11667 AUTONOMOUS_AGENT_IMPLEMENTATION_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          15113 AUTONOMOUS_AGENT_IMPLEMENTATION_ROADMAP.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          11831 AUTONOMOUS_AGENT_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          12739 AUTONOMOUS_ARCHITECTURE_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          17415 AUTONOMOUS_IDE_HEALER_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          15598 AUTONOMOUS_IDE_HEALER_FINAL_DELIVERY.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM           7041 AUTONOMOUS_IDE_HEALER_QUICK_START.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM           7806 AUTONOMOUS_IDE_HEALER_REFERENCE_CARD.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           3703 AUTONOMOUS_STATE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          17553 AUTONOMY_STACK_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM           2384 autopilot_config_extended.json
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4976 AVX2_OPTIMIZATION_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:49 AM             38 b.txt
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7402 B009_P1_Performance_Characterization.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5031 B009_P2_Performance_Characterization.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5408 B009_P3_Time_Attribution.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           1198 BACKEND_CONSOLIDATION.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          18381 BACKEND_DESIGNER_PE_EMITTER_REFERENCE.md
+STDOUT_LINE -a----         11/8/2026  12:49 AM         162352 baseline5.txt
+STDOUT_LINE -a----         11/8/2026  12:49 AM           4334 baseline_compare.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           3540 BATCH_15_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5806 BATCH_5_PHASES_AW4_TO_AZ_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM         173808 bbcov_old.json
+STDOUT_LINE -a----         11/8/2026  10:59 PM         173559 bbcov_report.json
+STDOUT_LINE -a----         11/8/2026  12:46 AM          14020 BEFORE_AFTER_COMPARISON.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          10043 BEFORE_AFTER_TRANSFORMATION.md
+STDOUT_LINE -a----         11/8/2026  12:49 AM          17123 benchmark-comparative.ps1
+STDOUT_LINE -a----        10/10/2026   3:58 PM          23238 benchmark-quick-start.sh
+STDOUT_LINE -a----         11/8/2026  10:59 PM           1078 benchmark-results.json
+STDOUT_LINE -a----         11/8/2026  12:46 AM          25666 BENCHMARKING_FRAMEWORK.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           3518 BENCHMARKS.md
+STDOUT_LINE -a----         11/8/2026  12:49 AM           4827 benchmark_context_scaling.ps1
+STDOUT_LINE -a----         11/8/2026  12:49 AM          17630 benchmark_deepseek671b.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM           1967 benchmark_deepseek671b_20260719_164243.json
+STDOUT_LINE -a----         11/8/2026  10:59 PM           1555 benchmark_deepseek671b_20260719_164316.json
+STDOUT_LINE -a----         11/8/2026  10:59 PM            340 benchmark_deepseek671b_20260719_164339.csv
+STDOUT_LINE -a----         11/8/2026  10:59 PM           1592 benchmark_deepseek671b_20260719_164339.json
+STDOUT_LINE -a----         11/8/2026  12:49 AM           2046 benchmark_fix_avx512_check.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          11707 BENCHMARK_HARNESS_README.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          12339 BENCHMARK_IDE_INTEGRATION.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          13158 BENCHMARK_IMPLEMENTATION_SUMMARY.md
+STDOUT_LINE -a----        10/10/2026   3:58 PM             11 benchmark_init_fail.diag
+STDOUT_LINE -a----         11/8/2026  12:49 AM           4280 benchmark_models.ps1
+STDOUT_LINE -a----         11/8/2026  12:46 AM          14964 BENCHMARK_README.md
+STDOUT_LINE -a----         11/8/2026  12:49 AM           7073 benchmark_real_inference.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM           4736 benchmark_report_20260425_105459.json
+STDOUT_LINE -a----         11/8/2026  10:59 PM            686 benchmark_results.json
+STDOUT_LINE -a----        10/10/2026   3:58 PM              5 benchmark_start.diag
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4126 BENCHMARK_STATUS.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          10807 BENCHMARK_SUITE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           3340 BENCHMARK_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:49 AM           3488 benchmark_tps.ps1
+STDOUT_LINE -a----         11/8/2026  12:46 AM          16790 BENCHMARK_UI_REFERENCE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          11301 BENCHMARK_VALIDATION.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM       18387703 bench_2T_allQ_allMethods_selfcorrecting.json
+STDOUT_LINE -a----         11/8/2026  10:59 PM        4855893 bench_2t_all_q_all_methods_all_compressions.json
+STDOUT_LINE -a----         11/8/2026  10:59 PM          53192 bench_all_methods_activation_70b.json
+STDOUT_LINE -a----         11/8/2026  10:59 PM         654269 bench_all_methods_all_compressions_70b_q4.json
+STDOUT_LINE -a----         11/8/2026  10:59 PM          11496 bench_sweep_fingerprinted_results.json
+STDOUT_LINE -a----         11/8/2026  10:59 PM           9300 bench_sweep_full_120b.json
+STDOUT_LINE -a----         11/8/2026  12:49 AM              0 bench_sweep_phase4.csv
+STDOUT_LINE -a----         11/8/2026  10:59 PM           1102 bench_sweep_phase4_20260403_054757.csv
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6758 BINDINGS_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM           1407 bis_tu.txt
+STDOUT_LINE -a----         11/8/2026  12:54 AM          11668 BLOAT_AUDIT_FINAL_REPORT.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM            769 bolt_loader_diagnostic.txt
+STDOUT_LINE -a----         11/8/2026  12:54 AM           8988 BOTH_TRES_FINAL_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7195 BOTH_TRES_IMPLEMENTATION_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM          19476 both_tres_systematic_integration.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM           3187 both_tres_systematic_report.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           8226 BOTTLENECK_10_TEST_FIXTURE_FIX.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           8739 BOTTLENECK_9_STATUS_CACHE_FIX.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          31169 BOTTLENECK_AUDIT_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           5991 BOTTLENECK_QUICK_REFERENCE.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          16041 BPE_ALGORITHM_REVERSE_ENGINEERED.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7330 BREAKTHROUGH_TOKEN_42.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           9370 BRIDGE_MODE_DOCUMENTATION.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          11180 BRUTAL_COMPRESSION_COMPLETE_INDEX.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          12338 BRUTAL_COMPRESSION_DELIVERY_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          13709 BRUTAL_COMPRESSION_ENHANCEMENT_ANALYSIS.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM           9471 BRUTAL_COMPRESSION_EXECUTIVE_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          13571 BRUTAL_COMPRESSION_IMPLEMENTATION_CHECKLIST.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          11510 BRUTAL_COMPRESSION_PACKAGE_CONTENTS.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM           9667 BRUTAL_COMPRESSION_QUICK_REFERENCE.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          22589 BRUTAL_COMPRESSION_VISUAL_COMPARISON.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          20950 BRUTAL_FULL_DRIVE_AUDIT.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4702 BRUTAL_HONEST_ASSESSMENT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          12721 BRUTAL_HONEST_AUDIT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          10584 BRUTAL_TRUTH_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           9304 BRUTAL_TRUTH_SUMMARY.md
+STDOUT_LINE -a----        10/10/2026   3:58 PM           6129 Build-And-Deploy-Production.ps1
+STDOUT_LINE -a----         11/8/2026  12:45 AM           8044 Build-Clean.ps1
+STDOUT_LINE -a----         11/8/2026  12:45 AM          11194 Build-CodexReverse.ps1
+STDOUT_LINE -a----         11/8/2026  12:45 AM          27506 Build-Cursor-Complete.ps1
+STDOUT_LINE -a----         11/8/2026  12:45 AM          13848 Build-CursorFeatures-CLI.ps1
+STDOUT_LINE -a----         11/8/2026  12:45 AM          13850 Build-CursorFeatures.ps1
+STDOUT_LINE -a----         10/6/2026   4:56 PM           2637 Build-EXE.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           1482 Build-IDE-Custom.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM            431 Build-IDE-GMake.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5456 Build-MASM-Inference.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM          10901 Build-PE-Writer-Phase3.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           9753 Build-PE-Writer-Tests.ps1
+STDOUT_LINE -a----         11/8/2026  12:45 AM          10161 Build-Protected-Reverser.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7548 Build-RawRamXD.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6320 Build-Sovereign-Amphibious.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM           2934 build-standalone.sh
+STDOUT_LINE -a----         11/8/2026  10:59 PM           3409 build-telemetry-simple.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7337 Build-TextEditor-Complete-ml64.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM          11854 Build-TextEditor-EditorWindow-Complete-ml64.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM          15424 Build-TextEditor-Enhanced-ml64.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM          13174 Build-TextEditor-Full-Integrated-ml64.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM            860 build.cmd
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7878 BUILD.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM          10154 build.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM           2014 build.sh
+STDOUT_LINE -a----         11/8/2026  10:59 PM           8881 build_120b_loader.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM            155 build_aac_check.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM           1781 build_agent_subsystem.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           2662 BUILD_ALL_72_COMPILERS.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4769 BUILD_ALL_72_COMPILERS_FINAL.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM          11451 build_all_masm_reverse.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4265 Build_Amphibious.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           3072 Build_Amphibious_Hybrid.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6448 Build_Amphibious_ML64_Complete.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4228 Build_Amphibious_RealInference.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6804 BUILD_AND_DEPLOY.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM           4297 build_and_link_gcc.sh
+STDOUT_LINE -a----         11/8/2026  10:59 PM           1726 build_and_run_test.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM           8802 build_and_test_marketplace.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM          22799 build_attempt1.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          37843 build_attempt2.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          45710 build_attempt3.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM           7497 build_attempt4.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          12236 build_attempt6.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          12205 build_bindings.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM           6764 build_bridge_hexmag.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          21981 build_bridge_nobridge.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM           6764 build_bridge_orig.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM           3763 build_bridge_orig2.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM           4228 build_cli.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM           6592 build_cli_complete.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM           3926 build_cli_integrated.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM           4582 build_cli_simple.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5079 BUILD_COMPILERS_WITH_RUNTIME.ps1
+STDOUT_LINE -a----         11/8/2026  12:46 AM           7281 BUILD_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM          10605 build_complete.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           9729 BUILD_COMPLETE_FINAL.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          13954 BUILD_COMPLETE_GUIDE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          17769 BUILD_COMPLETE_LATEST.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM           9997 build_complete_pe_writer.ps1
+STDOUT_LINE -a----         11/8/2026  12:46 AM          12536 BUILD_COMPLETION_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM          17135 build_cpu_check.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          17135 build_cpu_orig.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM            242 build_ct.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          11331 build_d2.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM            858 build_daily_verify.cmd
+STDOUT_LINE -a----         11/8/2026  10:59 PM            939 build_deep2_check.txt
+STDOUT_LINE -a----         11/8/2026  12:54 AM          12319 BUILD_DEPLOYMENT_GUIDE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           1840 BUILD_DEPRECATED.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM           6414 build_dll.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM            339 build_engine_2.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM            281 build_engine_3.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM           2560 build_engine_only.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM           3713 build_fabric.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM          37257 build_final.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM           9023 build_final2.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          41688 build_final3.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          13114 build_full_check.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM         132120 build_full_check2.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM         100075 build_full_check3.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM         104524 build_full_check4.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          48117 build_full_check5.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          24927 build_full_final.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          32581 build_full_final2.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM           4172 build_full_integration.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM          62163 build_full_output.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          36384 build_full_output2.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          33847 build_full_output3.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM           1077 build_generation_bouncer.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM            250 build_gl.txt
+STDOUT_LINE -a----         11/8/2026  12:45 AM          10625 BUILD_GUIDE_NO_SCAFFOLDING.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM            802 build_h.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM            802 build_hexmag_check.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM            802 build_hexmag_obj.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM            802 build_hm.txt
+STDOUT_LINE -a----         11/8/2026  12:45 AM          13475 BUILD_IDE_EXECUTOR.ps1
+STDOUT_LINE -a----         11/8/2026  12:45 AM           5916 BUILD_IDE_FAST.ps1
+STDOUT_LINE -a----         11/8/2026  12:45 AM          20087 BUILD_IDE_PRODUCTION.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5559 BUILD_INSTRUCTIONS.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM           4419 build_jukebox.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM           8982 build_launcher_exe.ps1
+STDOUT_LINE -a----        11/16/2026   6:00 PM            281 build_lib.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM        1049754 build_log.txt
+STDOUT_LINE -a----        11/16/2026   6:00 PM        1157684 build_log2.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM           5802 build_masm64_fixed.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM           3802 build_masm_backend.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM           5437 build_masm_batches.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM           5182 build_missing.ps1
+STDOUT_LINE -a----        10/18/2026   4:23 PM           1440 build_msvc_fixed.bat
+STDOUT_LINE -a----         7/12/2026  12:43 PM           4941 build_msvc_integration.bat
+STDOUT_LINE -a----          7/7/2026   5:20 AM           1269 build_multi_arch_test.bat
+STDOUT_LINE -a----        11/15/2026   7:55 AM            457 build_n02_test.bat
+STDOUT_LINE -a----        10/25/2026   6:37 AM            632 build_native.bat
+STDOUT_LINE -a----         11/8/2026  10:59 PM           7634 build_native.cmd
+STDOUT_LINE -a----         3/20/2026   8:30 AM           4536 build_native_bridge.bat
+STDOUT_LINE -a----         3/20/2026   8:30 AM            864 build_native_http.bat
+STDOUT_LINE -a----         3/20/2026   8:30 AM           1528 build_neural_core.bat
+STDOUT_LINE -a----         7/28/2026  11:19 PM          12266 build_nevm.bat
+STDOUT_LINE -a----         7/19/2026   9:09 PM           6173 build_nhwc_layout.bat
+STDOUT_LINE -a----        10/26/2026  12:43 AM            193 build_ninja.bat
+STDOUT_LINE -a----        10/26/2026  12:46 AM            217 build_ninja_vcvars.bat
+STDOUT_LINE -a----         7/14/2026   8:52 AM           3319 build_no_deps.bat
+STDOUT_LINE -a----        10/25/2026  10:26 AM            393 build_ollama_test.bat
+STDOUT_LINE -a----         3/20/2026   8:30 AM            373 build_omega.bat
+STDOUT_LINE -a----         3/20/2026   8:30 AM           1360 build_omega_pro.bat
+STDOUT_LINE -a----         3/20/2026   8:30 AM           1308 build_omega_pro_final.bat
+STDOUT_LINE -a----         7/15/2026   5:04 PM           2045 build_orchestrator.bat
+STDOUT_LINE -a----         11/8/2026  12:45 AM           7585 BUILD_ORCHESTRATOR.ps1
+STDOUT_LINE -a----         3/20/2026   8:30 AM           3157 build_os_interceptor.bat
+STDOUT_LINE -a----         3/20/2026   8:30 AM           3383 build_os_interceptor_simple.bat
+STDOUT_LINE -a----         3/20/2026   8:30 AM           3399 build_os_interceptor_vs.bat
+STDOUT_LINE -a----         3/20/2026   8:30 AM           3112 build_os_interceptor_vsenv.bat
+STDOUT_LINE -a----        11/17/2026   9:00 PM         357356 build_output.txt
+STDOUT_LINE -a----        11/17/2026   9:51 PM         332762 build_output2.txt
+STDOUT_LINE -a----         7/28/2026  11:19 PM           4125 build_pattern_suite.bat
+STDOUT_LINE -a----         7/28/2026  11:19 PM           4343 build_pattern_suite_full.bat
+STDOUT_LINE -a----         7/28/2026  11:19 PM           4112 build_pattern_suite_gcc.bat
+STDOUT_LINE -a----         11/8/2026  10:59 PM           4683 build_pe_writer.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM           8672 build_pe_writer_asm.ps1
+STDOUT_LINE -a----         7/12/2026  12:43 PM           1787 build_phase10_gui.bat
+STDOUT_LINE -a----         6/30/2026   8:23 PM           1466 build_phase11_c.bat
+STDOUT_LINE -a----         7/12/2026  12:43 PM           1682 build_phase11_seg.bat
+STDOUT_LINE -a----         6/30/2026   8:18 PM           1530 build_phase11_test.bat
+STDOUT_LINE -a----         11/8/2026  10:59 PM           4393 build_phase11_test.ps1
+STDOUT_LINE -a----         7/12/2026  12:43 PM           1970 build_phase12_autoloop.bat
+STDOUT_LINE -a----         11/8/2026  10:59 PM           6172 build_phase13_5.ps1
+STDOUT_LINE -a----         7/12/2026  12:43 PM           1830 build_phase13_agent.bat
+STDOUT_LINE -a----         3/20/2026   8:30 AM           2112 build_phase3.bat
+STDOUT_LINE -a----         3/20/2026   8:30 AM           1700 build_phase36.bat
+STDOUT_LINE -a----         11/8/2026  10:59 PM           5300 build_phase3_cpp.ps1
+STDOUT_LINE -a----         3/24/2026  10:00 PM           2198 build_phase3_kernel.bat
+STDOUT_LINE -a----         7/14/2026  12:56 PM           2682 build_phase7c.bat
+STDOUT_LINE -a----         7/14/2026  12:58 PM           2693 build_phase7c_gcc.bat
+STDOUT_LINE -a----         5/24/2026  10:25 PM           6553 build_production.bat
+STDOUT_LINE -a----         11/8/2026  10:59 PM           6845 build_production.ps1
+STDOUT_LINE -a----         3/24/2026  10:00 PM           2234 build_production_150symbols.bat
+STDOUT_LINE -a----         11/8/2026  10:59 PM           4445 build_production_150symbols.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM           3405 build_prod_all.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM            142 build_prod_build.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM           8056 build_prod_cfg.txt
+STDOUT_LINE -a----          8/6/2026   1:56 AM           8064 build_pure.bat
+STDOUT_LINE -a----         11/8/2026  10:59 PM           8755 build_pure_masm64.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM           9023 build_pure_masm64_fixed.ps1
+STDOUT_LINE -a----        10/25/2026   9:29 AM            363 build_q6k_diff_cmake.bat
+STDOUT_LINE -a----        10/25/2026   9:28 AM            448 build_q6k_diff_test.bat
+STDOUT_LINE -a----         3/20/2026   8:30 AM          10061 build_quadbuffer.bat
+STDOUT_LINE -a----         7/15/2026   5:04 PM            606 build_quantized.bat
+STDOUT_LINE -a----         7/19/2026   9:30 PM           4678 build_quantized_kernels.bat
+STDOUT_LINE -a----         11/8/2026  12:45 AM           4177 BUILD_QUICK_REFERENCE.txt
+STDOUT_LINE -a----         7/15/2026   6:53 AM           1037 build_quick_test.bat
+STDOUT_LINE -a----          8/6/2026   1:56 AM           5285 build_quick_wins.bat
+STDOUT_LINE -a----        10/25/2026  11:55 PM            422 build_qwen3_tokenizer_test.bat
+STDOUT_LINE -a----         3/20/2026   8:30 AM           1894 build_rawrxd.bat
+STDOUT_LINE -a----        10/15/2026   4:55 PM           1337 build_rawrxd_fixed.bat
+STDOUT_LINE -a----          7/3/2026   6:18 PM            680 build_rawrxd_script.bat
+STDOUT_LINE -a----         11/4/2026   4:44 AM            337 build_rawr_agent.bat
+STDOUT_LINE -a----         11/4/2026   4:45 AM            343 build_rawr_cli.bat
+STDOUT_LINE -a----         3/24/2026  10:00 PM           1981 build_rawr_infra.bat
+STDOUT_LINE -a----         6/11/2026   2:52 PM            665 build_rbtree.bat
+STDOUT_LINE -a----         7/14/2026   4:18 PM           6819 build_realmodel.bat
+STDOUT_LINE -a----         11/8/2026  12:54 AM          17843 BUILD_REAL_COMPILERS.ps1
+STDOUT_LINE -a----         7/14/2026  12:26 PM           1031 build_real_model_test.bat
+STDOUT_LINE -a----         10/8/2026  10:40 PM            595 build_reference_runner.bat
+STDOUT_LINE -a----         10/8/2026  11:32 PM            596 build_ref_capture.bat
+STDOUT_LINE -a----        10/14/2026   1:33 PM           1952 build_ref_dumper.bat
+STDOUT_LINE -a----        10/14/2026   1:55 PM           1931 build_ref_intermediate.bat
+STDOUT_LINE -a----         6/11/2026   2:52 PM            442 build_regression.bat
+STDOUT_LINE -a----         7/14/2026  12:35 PM           4424 build_release.bat
+STDOUT_LINE -a----         11/8/2026  12:45 AM          30594 Build_Release.ps1
+STDOUT_LINE -a----         11/8/2026  12:45 AM          30520 Build_Release_Fixed.ps1
+STDOUT_LINE -a----         7/14/2026  12:26 PM           6375 build_release_package.bat
+STDOUT_LINE -a----          8/6/2026   1:56 AM          13068 build_release_v15.bat
+STDOUT_LINE -a----         7/14/2026  11:14 AM            961 build_residency.bat
+STDOUT_LINE -a----         3/24/2026  10:00 PM            879 build_robust_cli.bat
+STDOUT_LINE -a----         7/19/2026   6:31 PM           3654 build_runtime.bat
+STDOUT_LINE -a----         7/19/2026   6:53 PM           3677 build_runtime2.bat
+STDOUT_LINE -a----          7/3/2026   9:35 PM           1771 build_rxd_script_dap.bat
+STDOUT_LINE -a----         11/8/2026  10:59 PM             19 build_s.txt
+STDOUT_LINE -a----          7/4/2026  11:08 AM           1078 build_scheduler.bat
+STDOUT_LINE -a----         6/30/2026   9:07 PM           9119 build_sdk.bat
+STDOUT_LINE -a----         7/12/2026  12:43 PM           5096 build_seg_integration.bat
+STDOUT_LINE -a----         7/12/2026  12:43 PM           1276 build_seg_test.bat
+STDOUT_LINE -a----         7/15/2026   5:04 PM            448 build_server.bat
+STDOUT_LINE -a----         10/8/2026  10:08 PM            571 build_serve_inference.bat
+STDOUT_LINE -a----         10/8/2026  10:35 PM            533 build_serve_rebuilt.bat
+STDOUT_LINE -a----         3/20/2026   8:30 AM            412 build_ship_with_chat.bat
+STDOUT_LINE -a----         7/15/2026   5:04 PM            566 build_shmem_test.bat
+STDOUT_LINE -a----         3/20/2026   8:30 AM           4089 build_simple.bat
+STDOUT_LINE -a----         3/20/2026   8:30 AM           1797 build_simple_dumpbin.bat
+STDOUT_LINE -a----        10/26/2026  11:53 PM            669 build_smoke_run_parity.bat
+STDOUT_LINE -a----         6/11/2026   2:52 PM           3143 build_smoke_test.bat
+STDOUT_LINE -a----         7/28/2026  11:19 PM           4229 build_sovereign.bat
+STDOUT_LINE -a----         11/8/2026  10:59 PM           8224 build_sovereign.ps1
+STDOUT_LINE -a----         3/24/2026  10:00 PM           3480 build_sovereign_amphibious.bat
+STDOUT_LINE -a----         7/12/2026  12:43 PM           3599 build_sovereign_cli.bat
+STDOUT_LINE -a----         6/30/2026   8:29 PM           9090 build_sovereign_engine.bat
+STDOUT_LINE -a----         11/8/2026  10:59 PM           3312 build_sovereign_engine.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM           2707 build_sovereign_engine_gcc.sh
+STDOUT_LINE -a----         6/30/2026   8:33 PM           8881 build_sovereign_engine_integrated.bat
+STDOUT_LINE -a----         11/8/2026  10:59 PM           7219 build_sovereign_engine_integrated.ps1
+STDOUT_LINE -a----         7/15/2026   1:37 AM           3661 build_sovereign_final.bat
+STDOUT_LINE -a----          7/8/2026   6:12 AM           4599 build_sovereign_inference.bat
+STDOUT_LINE -a----          7/8/2026   2:05 AM           3694 build_sovereign_native.bat
+STDOUT_LINE -a----         7/15/2026   5:04 PM           4231 build_sovereign_orchestrator.bat
+STDOUT_LINE -a----         6/11/2026   2:52 PM            624 build_sovereign_pe_writer.bat
+STDOUT_LINE -a----         6/30/2026   9:02 PM           5294 build_sovereign_production.bat
+STDOUT_LINE -a----         7/28/2026  11:19 PM           2283 build_sovereign_puppeteer.bat
+STDOUT_LINE -a----         7/28/2026  11:19 PM            815 build_sovereign_test_suite.bat
+STDOUT_LINE -a----        10/14/2026   6:33 PM            261 build_spec_bench.bat
+STDOUT_LINE -a----        10/14/2026   6:33 PM            257 build_spec_bench2.bat
+STDOUT_LINE -a----        10/14/2026   6:34 PM            251 build_spec_bench3.bat
+STDOUT_LINE -a----         3/20/2026   8:30 AM           3844 build_standalone.bat
+STDOUT_LINE -a----         11/8/2026  12:54 AM           1428 BUILD_STATUS.md
+STDOUT_LINE -a----         7/15/2026   5:04 PM            544 build_status_check.bat
+STDOUT_LINE -a----         11/8/2026  12:45 AM           5744 BUILD_STATUS_REPORT.md
+STDOUT_LINE -a----         7/15/2026   5:04 PM           2372 build_stress_test.bat
+STDOUT_LINE -a----         11/8/2026  10:59 PM             19 build_subagent_check.txt
+STDOUT_LINE -a----         11/8/2026  12:54 AM          15357 BUILD_SUCCESS_REPORT.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM           4148 build_swarm_benchmark.ps1
+STDOUT_LINE -a----         6/21/2026   2:56 AM           3729 build_syntax_pipeline.bat
+STDOUT_LINE -a----         11/8/2026  12:45 AM          10240 BUILD_SYSTEM_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6289 BUILD_SYSTEM_GUIDE.md
+STDOUT_LINE -a----         7/12/2026  12:43 PM           1042 build_telemetry_test.bat
+STDOUT_LINE -a----        10/18/2026   4:21 PM           2744 build_test.bat
+STDOUT_LINE -a----        10/10/2026   3:58 PM            670 build_tests.bat
+STDOUT_LINE -a----        10/10/2026   3:58 PM            599 build_tests.sh
+STDOUT_LINE -a----        10/15/2026   4:54 PM            605 build_test_bolt.bat
+STDOUT_LINE -a----        10/15/2026   6:17 PM           1146 build_test_bolt_e2e.bat
+STDOUT_LINE -a----        10/15/2026   6:25 PM           1088 build_test_bolt_forward.bat
+STDOUT_LINE -a----        10/15/2026   6:35 PM           1270 build_test_bolt_forward_direct.bat
+STDOUT_LINE -a----        10/15/2026   6:44 PM           1257 build_test_bolt_full.bat
+STDOUT_LINE -a----        10/15/2026   6:39 PM           1263 build_test_bolt_simple.bat
+STDOUT_LINE -a----         7/15/2026   5:04 PM           3390 build_test_direct.bat
+STDOUT_LINE -a----        10/15/2026   5:17 PM           1005 build_test_gguf_bolt.bat
+STDOUT_LINE -a----         10/9/2026  12:24 AM            239 build_test_gguf_header.bat
+STDOUT_LINE -a----         7/19/2026  11:38 PM            363 build_test_harness.bat
+STDOUT_LINE -a----         7/28/2026  11:19 PM            643 build_test_hybrid.bat
+STDOUT_LINE -a----        10/15/2026   5:53 PM           1038 build_test_list.bat
+STDOUT_LINE -a----         10/8/2026  11:41 PM            556 build_test_llama.bat
+STDOUT_LINE -a----         10/8/2026  11:42 PM            558 build_test_llama2.bat
+STDOUT_LINE -a----         10/8/2026  11:43 PM            558 build_test_llama3.bat
+STDOUT_LINE -a----         10/8/2026  11:46 PM            558 build_test_llama4.bat
+STDOUT_LINE -a----         7/12/2026  12:43 PM           1540 build_test_manual.bat
+STDOUT_LINE -a----         3/24/2026  10:00 PM            433 build_test_minimal.bat
+STDOUT_LINE -a----         7/15/2026   5:04 PM           3478 build_test_mock.bat
+STDOUT_LINE -a----        11/16/2026   2:04 PM           4353 build_test_output.txt
+STDOUT_LINE -a----         7/12/2026  12:43 PM            541 build_test_runner.bat
+STDOUT_LINE -a----          7/7/2026   4:56 AM            699 build_test_simple.bat
+STDOUT_LINE -a----         11/8/2026  10:59 PM           1369 build_test_simple.ps1
+STDOUT_LINE -a----        10/15/2026   5:52 PM           1035 build_test_ssm_in.bat
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6653 Build_TextEditor.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7936 Build_TextEditor_Hardened.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           8632 Build_TextEditor_Production.ps1
+STDOUT_LINE -a----         3/20/2026   8:30 AM           6836 build_titan.bat
+STDOUT_LINE -a----         3/24/2026  10:00 PM           1842 build_titan_4a.bat
+STDOUT_LINE -a----         11/8/2026  10:59 PM           1085 build_titan_clean.ps1
+STDOUT_LINE -a----         3/20/2026   8:30 AM           7453 build_titan_complete.bat
+STDOUT_LINE -a----         7/12/2026  12:43 PM           3840 build_titan_integration.bat
+STDOUT_LINE -a----         11/8/2026  10:59 PM           5477 build_titan_integration.ps1
+STDOUT_LINE -a----         3/20/2026   8:30 AM           1293 build_titan_kernel.bat
+STDOUT_LINE -a----         7/15/2026   5:04 PM           1384 build_titan_lightning.bat
+STDOUT_LINE -a----         3/20/2026   8:30 AM           2105 build_titan_metareverse.bat
+STDOUT_LINE -a----         3/20/2026   8:30 AM           3013 build_titan_unified.bat
+STDOUT_LINE -a----         7/14/2026   4:17 PM           2210 build_tokenizer.bat
+STDOUT_LINE -a----         6/11/2026   2:52 PM            624 build_tokenstream_test.bat
+STDOUT_LINE -a----         6/11/2026   2:52 PM            194 build_tokenstream_test2.bat
+STDOUT_LINE -a----         7/19/2026  10:00 PM           4082 build_tree_attention_asm.bat
+STDOUT_LINE -a----         7/14/2026  12:26 PM            730 build_truth_test.bat
+STDOUT_LINE -a----          8/6/2026   1:56 AM           3900 build_unified.bat
+STDOUT_LINE -a----         11/8/2026  10:59 PM           4065 build_unified.ps1
+STDOUT_LINE -a----         7/12/2026  12:43 PM           1984 build_unified_cli.bat
+STDOUT_LINE -a----         11/8/2026  10:59 PM           5361 build_unified_cli.ps1
+STDOUT_LINE -a----         6/28/2026   7:34 PM           3019 build_unified_final.bat
+STDOUT_LINE -a----         6/28/2026   7:49 PM           4094 build_unified_orchestrator.bat
+STDOUT_LINE -a----         3/20/2026   8:30 AM           1863 build_universal_analyzer.bat
+STDOUT_LINE -a----         3/20/2026   8:30 AM           3850 build_universal_simple.bat
+STDOUT_LINE -a----         3/20/2026   8:30 AM            256 build_v2.bat
+STDOUT_LINE -a----         7/12/2026  12:43 PM            768 build_v4.bat
+STDOUT_LINE -a----         7/28/2026  11:19 PM           4747 build_val000_complete.bat
+STDOUT_LINE -a----         11/8/2026  10:59 PM           3403 build_val038.ps1
+STDOUT_LINE -a----         7/28/2026  11:19 PM           1057 build_val038_e2e.bat
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6516 BUILD_VALIDATION_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          11467 BUILD_VERIFICATION_GUIDE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           2571 BUILD_VERIFIED.md
+STDOUT_LINE -a----          7/7/2026   7:59 PM           5897 build_verify_vulkan_hip.bat
+STDOUT_LINE -a----         6/21/2026   7:01 PM           1389 build_victim_auto.bat
+STDOUT_LINE -a----         11/8/2026  12:46 AM          11358 BUILD_VICTORY_SUMMARY.md
+STDOUT_LINE -a----        10/25/2026   6:45 AM            677 build_vulkan.bat
+STDOUT_LINE -a----        10/25/2026   6:51 AM            305 build_vulkan_target.bat
+STDOUT_LINE -a----         11/8/2026  12:45 AM           9684 BUILD_WEEK1.ps1
+STDOUT_LINE -a----         11/8/2026  12:45 AM           8901 BUILD_WEEK4.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5115 BUILD_WIN32IDE.md
+STDOUT_LINE -a----         11/3/2026   1:29 PM            354 build_win32ide_all_fixes.bat
+STDOUT_LINE -a----         11/3/2026   2:20 PM            377 build_win32ide_all_fixes_v2.bat
+STDOUT_LINE -a----         11/3/2026  11:28 AM            354 build_win32ide_candidate.bat
+STDOUT_LINE -a----         11/3/2026  11:33 AM            358 build_win32ide_candidate2.bat
+STDOUT_LINE -a----         11/3/2026  10:40 AM            346 build_win32ide_link.bat
+STDOUT_LINE -a----         11/3/2026   6:35 PM            377 build_win32ide_t05_fixes.bat
+STDOUT_LINE -a----         11/3/2026  10:38 AM            759 build_win32ide_target.bat
+STDOUT_LINE -a----         7/19/2026   9:34 PM            442 build_with_libs.bat
+STDOUT_LINE -a----         11/8/2026  10:59 PM            572 build_with_ninja.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM           1074 build_with_ninja2.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM            892 build_with_ninja3.ps1
+STDOUT_LINE -a----         8/11/2026  11:09 PM           1798 build_with_profiler.bat
+STDOUT_LINE -a----         7/15/2026   5:04 PM            771 build_with_stubs.bat
+STDOUT_LINE -a----         7/15/2026   5:04 PM           1176 build_with_validation.bat
+STDOUT_LINE -a----         7/28/2026  11:19 PM            989 build_witness_manual.bat
+STDOUT_LINE -a----         7/28/2026  11:19 PM            242 build_witness_test.bat
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5947 BUILD_WORKING_COMPILERS.ps1
+STDOUT_LINE -a----         7/12/2026  12:43 PM           1083 build_working_diagnostic.bat
+STDOUT_LINE -a----         11/8/2026  10:59 PM          10105 c1_output.json
+STDOUT_LINE -a----         11/9/2026   4:13 PM             23 calc.cpp
+STDOUT_LINE -a----        11/28/2025   3:36 AM          49152 calc.exe
+STDOUT_LINE -a----        11/16/2026   7:53 AM             47 calib_smoke_prompt.txt
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4670 CALL_TO_ACTION.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           2978 CANARY_DEPLOYMENT_GUIDE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          10176 CAPABILITY_MATRIX.md
+STDOUT_LINE -a----         3/24/2026  10:00 PM            144 cbuild.bat
+STDOUT_LINE -a----         11/8/2026  12:54 AM           8768 CEO_AGENT_IMPLEMENTATION.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4974 CEO_AGENT_QUICKSTART.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          11471 CEO_IMPLEMENTATION_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           9944 CERTIFICATION_ARCHITECTURE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           1459 CERTIFICATION_BADGE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          23310 CERTIFICATION_BUILD.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM          12690 CERTIFICATION_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          12062 CERTIFICATION_LADDER_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           1875 CERTIFICATION_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7249 CERTIFICATION_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM           7350 certify_hotpatch.ps1
+STDOUT_LINE -a----        11/16/2026   7:26 PM          56088 cert_10win.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM         155676 cert_5win.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM         155660 cert_5win_b.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM         155734 cert_5win_c.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM         159916 cert_6win.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM         159906 cert_7win.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM          14724 cert_8win.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM          14724 cert_9win.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM          20694 cert_diag10.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM         188300 cert_diag6.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM          58388 cert_diag6b.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM          31676 cert_diag8.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM          58392 cert_diag8b.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM         266224 cert_diag9.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM          14152 cert_final10.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM          29879 cert_final11.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM         245155 cert_final12.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM         245187 cert_final13.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM            271 cert_final14.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM              0 cert_final14e.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM          13119 cert_final2.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM          13119 cert_final3.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM          14146 cert_final4.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM          14146 cert_final5.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM           2997 cert_final6.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM           2997 cert_final7.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM          14152 cert_final8.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM          14146 cert_final9.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM          14125 cert_gpuonly.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM          15636 cert_gpu_final.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM          30076 cert_run1.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM          30076 cert_run2.txt
+STDOUT_LINE -a----         11/8/2026  12:54 AM          13458 CHANGELOG.md
+STDOUT_LINE -a----        10/10/2026   3:58 PM           5316 changes_summary.txt
+STDOUT_LINE -a----         11/8/2026  12:46 AM          17388 CHAT-APP-DELIVERY.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          14701 CHAT-APP-IMPLEMENTATION.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          14347 CHAT-APP-MANIFEST.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           8468 CHAT-APP-QUICKSTART.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           6298 CHAT-APP-README.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           5766 CHAT-INPUT-POSITIONING-FIXES.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           3055 CHAT_PANEL_DISABLED.md
+STDOUT_LINE -a----        11/17/2026  11:18 PM           6663 chat_runtime.log
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4553 CHECKPOINT_INTEGRATION_APPLIED.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5506 CHECKPOINT_VERIFICATION_REPORT.md
+STDOUT_LINE -a----         10/8/2026   9:24 PM            457 check_agentrunsync.bat
+STDOUT_LINE -a----          7/9/2026  12:03 PM         152125 check_arch.exe
+STDOUT_LINE -a----         7/19/2026  11:59 PM          53747 check_avx512.exe
+STDOUT_LINE -a----         10/8/2026   9:28 PM            680 check_deep2_exports.bat
+STDOUT_LINE -a----         10/8/2026   9:22 PM            356 check_deploy_exports.bat
+STDOUT_LINE -a----         3/20/2026   8:30 AM            182 check_env.bat
+STDOUT_LINE -a----         10/8/2026  11:50 PM            190 check_exports.bat
+STDOUT_LINE -a----         10/8/2026   9:21 PM            537 check_exports2.bat
+STDOUT_LINE -a----         10/6/2026  10:40 PM         169472 check_f32.exe
+STDOUT_LINE -a----         11/8/2026  10:59 PM            252 check_gguf_includes.py
+STDOUT_LINE -a----         11/8/2026  10:59 PM            703 check_includes.py
+STDOUT_LINE -a----         10/8/2026  10:10 PM            160 check_llama_exports.bat
+STDOUT_LINE -a----         10/7/2026  10:19 PM            193 check_magic.bat
+STDOUT_LINE -a----         10/7/2026  10:19 PM         141312 check_magic.exe
+STDOUT_LINE -a----          7/9/2026  12:04 PM         152089 check_merges.exe
+STDOUT_LINE -a----          7/7/2026   8:56 PM           2548 check_missing.bat
+STDOUT_LINE -a----         10/8/2026   9:22 PM            209 check_rawrxd_exports.bat
+STDOUT_LINE -a----         10/8/2026   9:23 PM            176 check_serveinference_exports.bat
+STDOUT_LINE -a----         11/8/2026  10:59 PM            358 check_symbols.ps1
+STDOUT_LINE -a----        11/10/2026   4:57 PM            252 check_vsix.ps1
+STDOUT_LINE -a----        11/10/2026   4:57 PM            252 check_vsix2.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM           6947 ci-sovereign-smoketest.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4934 CI_CD_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          12595 CI_CD_PIPELINE.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM           8968 ci_gate.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM           4133 ci_regression_report.json
+STDOUT_LINE -a----         11/8/2026  10:59 PM            625 ci_report.json
+STDOUT_LINE -a----         11/8/2026  12:46 AM           7737 CLANG-BUILD-GUIDE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6499 CLI_AND_API_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          11449 CLI_AUDIT_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           3845 CLI_COMMANDS_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          10357 CLI_CONTRACT_v1.0.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          10126 CLI_CONTRACT_v1.1.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           9736 CLI_FINAL_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6923 CLI_GUI_INTEGRATION_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           3632 CLI_INTEGRATION_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5633 CLI_INTEGRATION_STATUS.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           9299 CLI_QUICK_REFERENCE.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM           7778 CLI_Reverse_Engineering_Integration.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7615 CLOSED_LOOP_COMPLETE.md
+STDOUT_LINE -a----        11/17/2026  11:11 PM          84851 CMakeCache.txt
+STDOUT_LINE -a----        11/17/2026  11:10 PM         268759 CMakeLists.txt
+STDOUT_LINE -a----        10/10/2026   3:58 PM          25282 CMakeLists.txt.backup
+STDOUT_LINE -a----         11/8/2026  12:45 AM         109989 CMakeLists.txt.backup_20260127_050034
+STDOUT_LINE -a----        11/17/2026  11:02 PM         344293 CMakeLists.txt.bak
+STDOUT_LINE -a----        10/10/2026   3:58 PM          22982 CMakeLists.txt.old
+STDOUT_LINE -a----         11/8/2026  12:45 AM           3479 CMakeLists_noqt.txt
+STDOUT_LINE -a----         11/8/2026  12:45 AM           2646 CMakeLists_old.txt
+STDOUT_LINE -a----         11/8/2026  12:45 AM           5726 CMakeLists_Phase1.txt
+STDOUT_LINE -a----        10/10/2026   3:58 PM           1496 CMakeLists_tests.txt
+STDOUT_LINE -a----        10/10/2026   3:58 PM            736 CMakeLists_test_chat.txt
+STDOUT_LINE -a----         11/8/2026  10:58 PM           2773 CMakePresets.json
+STDOUT_LINE -a----        11/16/2026   7:26 PM          21552 cmake_config_log.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM           1869 CMAKE_CUSTOM_BUILD_SYSTEM.md
+STDOUT_LINE -a----        11/17/2026  11:11 PM           3153 cmake_install.cmake
+STDOUT_LINE -a----        11/16/2026   7:26 PM            414 cmake_nasm_test.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM           6813 cmake_reconfig.txt
+STDOUT_LINE -a----        11/16/2026   7:26 PM           6813 cmake_reconfig2.txt
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6772 CODEBASE_FINALIZATION_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          17489 CODEX-MASTER-GUIDE.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          41194 CodexAIReverseEngine.asm
+STDOUT_LINE -a----         11/8/2026  12:45 AM          39283 CodexPro.asm
+STDOUT_LINE -a----         11/8/2026  12:45 AM          29883 CodexProfessional.asm
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7197 CODEXPRO_FINAL_STATUS.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           2457 CODEXPRO_MENU10_QUICKSTART.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7076 CODEXPRO_MENU10_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5339 CODEXPRO_VERIFICATION.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          42793 CodexReverse.asm
+STDOUT_LINE -a----         11/8/2026  12:45 AM          70056 CodexUltimate.asm
+STDOUT_LINE -a----         11/8/2026  12:45 AM          30403 CodexUltra.asm
+STDOUT_LINE -a----         11/8/2026  12:45 AM           4569 CODEX_ULTIMATE_BUILD_GUIDE.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          16104 CODEX_ULTIMATE_EDITION_v7_CODE_STRUCTURE.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          18079 CODEX_ULTIMATE_EDITION_v7_COMPLETION_CHECKLIST.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          15953 CODEX_ULTIMATE_EDITION_v7_DELIVERY_MANIFEST.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          22965 CODEX_ULTIMATE_EDITION_v7_FUNCTION_REFERENCE.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          12987 CODEX_ULTIMATE_EDITION_v7_IMPLEMENTATION_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          16547 CODEX_ULTIMATE_EDITION_v7_MASTER_INDEX.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          11958 CODEX_ULTIMATE_EDITION_v7_QUICK_START_GUIDE.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM           5323 code_fix_comparison.json
+STDOUT_LINE -a----         11/8/2026  12:54 AM           2109 CODE_OF_CONDUCT.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          10863 CODE_REVIEW_FIXES_APPLIED.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM          14311 combined.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          12979 combined_raw.txt
+STDOUT_LINE -a----         11/8/2026  12:54 AM          15536 COMMAND_MAPPING_REFERENCE.md
+STDOUT_LINE -a----         10/9/2026   1:13 PM            683 commit.bat
+STDOUT_LINE -a----        10/10/2026   3:58 PM            402 commits_pending.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM           3253 commit_and_push.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           8381 COMMIT_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM           1499 comparison_fix_2000.json
+STDOUT_LINE -a----         11/8/2026  12:54 AM          10269 COMPATIBILITY_MATRIX.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           9733 COMPETITIVE_ANALYSIS.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           5882 COMPETITIVE_SYSTEMS_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           2949 COMPILER_DUMPBIN_LIVE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           3353 COMPILER_FLAGS_GUIDE.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          11618 COMPILER_INTEGRATION_COMPLETE.md
+STDOUT_LINE -a----        10/14/2026   2:17 PM            359 compile_agent_dispatch.bat
+STDOUT_LINE -a----        10/14/2026   2:20 PM            387 compile_agent_protocol.bat
+STDOUT_LINE -a----         11/8/2026  10:59 PM           2870 compile_and_test.ps1
+STDOUT_LINE -a----        10/14/2026   2:19 PM            389 compile_audit_resume.bat
+STDOUT_LINE -a----        10/14/2026   2:19 PM            427 compile_audit_resume2.bat
+STDOUT_LINE -a----         6/11/2026   2:52 PM        3561705 compile_commands.json
+STDOUT_LINE -a----        10/14/2026   5:27 PM            925 compile_decode_perf.bat
+STDOUT_LINE -a----         10/8/2026   2:59 PM            653 compile_dump_ref.bat
+STDOUT_LINE -a----        10/14/2026   2:51 PM            402 compile_fused_lmhead_test.bat
+STDOUT_LINE -a----        10/18/2026   4:33 PM            373 compile_gguf.bat
+STDOUT_LINE -a----         10/7/2026   6:16 PM            444 compile_gguf_inspector.bat
+STDOUT_LINE -a----         10/7/2026   5:40 PM            619 compile_gguf_parser.bat
+STDOUT_LINE -a----         10/7/2026   4:35 PM            481 compile_header_export.bat
+STDOUT_LINE -a----         11/8/2026  10:59 PM           1279 compile_ir_executor.bat
+STDOUT_LINE -a----        10/14/2026   2:16 PM            337 compile_k2_parity.bat
+STDOUT_LINE -a----        10/14/2026   2:10 PM            465 compile_k2_test.bat
+STDOUT_LINE -a----        10/14/2026   2:05 PM            338 compile_link_test.bat
+STDOUT_LINE -a----        10/14/2026   2:06 PM            791 compile_link_test2.bat
+STDOUT_LINE -a----        10/13/2026   6:19 PM           2182 compile_modelgenie_lib.bat
+STDOUT_LINE -a----        10/14/2026   2:52 PM            358 compile_quant_parity.bat
+STDOUT_LINE -a----         10/8/2026   2:53 PM            706 compile_reference.bat
+STDOUT_LINE -a----         10/8/2026   4:03 PM            651 compile_ref_fresh_ctx.bat
+STDOUT_LINE -a----         10/8/2026   4:38 PM            650 compile_ref_multipos.bat
+STDOUT_LINE -a----         10/8/2026   4:46 PM            651 compile_ref_multipos2.bat
+STDOUT_LINE -a----         10/8/2026   3:53 PM            652 compile_ref_multitoken.bat
+STDOUT_LINE -a----         10/8/2026   3:59 PM            648 compile_ref_simple.bat
+STDOUT_LINE -a----         10/8/2026   4:05 PM            648 compile_ref_single.bat
+STDOUT_LINE -a----         10/7/2026   5:05 PM            639 compile_roundtrip.bat
+STDOUT_LINE -a----         7/15/2026   5:04 PM            328 compile_streamer_v2.bat
+STDOUT_LINE -a----         10/8/2026   6:00 PM           5922 compile_teacher_forced.bat
+STDOUT_LINE -a----        11/16/2026  10:11 AM           1109 compile_test.bat
+STDOUT_LINE -a----        10/14/2026   2:05 PM            341 compile_test2.bat
+STDOUT_LINE -a----         10/8/2026   6:14 PM            209 compile_test_args.bat
+STDOUT_LINE -a----        11/16/2026  10:49 AM           1053 compile_test_k2.bat
+STDOUT_LINE -a----         10/8/2026   6:10 PM            480 compile_tf_simple.bat
+STDOUT_LINE -a----         10/7/2026   5:07 PM            650 compile_token0.bat
+STDOUT_LINE -a----        10/14/2026   2:30 PM            360 compile_toroidal_test.bat
+STDOUT_LINE -a----          7/4/2026   2:30 AM           1530 compile_with_env.bat
+STDOUT_LINE -a----         7/15/2026   5:04 PM            376 compile_worker.bat
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7974 Complete-AllImplementations.ps1
+STDOUT_LINE -a----         10/6/2026   4:56 PM          22427 Complete-IDE-Agentic-Comparison.ps1
+STDOUT_LINE -a----         10/6/2026   4:56 PM           8467 Complete-Popup-Elimination.ps1
+STDOUT_LINE -a----         11/8/2026  12:45 AM           9387 COMPLETE-SYSTEM-INTEGRATION.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          14033 COMPLETE_AGENTIC_SYSTEM_ARCHITECTURE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          17504 COMPLETE_DEVELOPER_REFERENCE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          10428 COMPLETE_FEATURE_SET.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          14160 COMPLETE_IDE_INTEGRATION_AUDIT.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          39832 COMPLETE_IMPLICIT_LOGIC_IMPLEMENTATION.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           2114 COMPLETE_INDEX.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          15286 COMPLETE_INTEGRATION_GUIDE.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM           5347 complete_integration_test.ps1
+STDOUT_LINE -a----         11/8/2026  12:45 AM          40744 COMPLETE_PRODUCTION_IMPLEMENTATION.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           9391 COMPLETE_PROJECT_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM           7338 COMPLETE_QT_REMOVAL_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          35838 COMPLETE_REVERSE_ENGINEERED_IMPLEMENTATION.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          61420 COMPLETE_REVERSE_ENGINEERING_RAWRXD.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5365 COMPLETE_SESSION_INDEX.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           8989 COMPLETE_STATUS.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          22929 COMPLETE_SYSTEM_DELIVERY_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6692 COMPLETE_UNIFICATION_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          14740 COMPLETE_VALIDATION_FRAMEWORK.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          11601 COMPLETION-REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5169 COMPLETION_CHECKLIST.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4512 COMPLETION_CONTRACT_SYSTEM_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4020 COMPLETION_PLAN.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4720 COMPLETION_RANKING_KERNEL_GUIDE.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          13695 COMPLETION_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM           2659 COMPLETION_REPORT_FINAL.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6665 COMPLETION_ROADMAP.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           6104 COMPLETION_STATUS.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           3652 COMPLETION_STATUS_2K_TPS.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           2534 COMPLETION_STATUS_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5976 COMPLETION_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           8011 COMPLETION_SUMMARY_2026-07-15.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          18191 COMPONENT_ARCHITECTURE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6719 COMPREHENSIVE_AUDIT_FINAL.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          42784 COMPREHENSIVE_AUDIT_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          21582 COMPREHENSIVE_CODEBASE_AUDIT_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM           9233 COMPREHENSIVE_DEPENDENCY_AUDIT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           9221 COMPREHENSIVE_FINAL_REPORT_v14.7.3.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          62102 COMPREHENSIVE_FULL_BLOWN_AUDIT_2026-02-14.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5941 COMPREHENSIVE_INTEGRATION_VALIDATION.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5157 COMPRESSION_ENGINE_RESULTS.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           3855 COMPRESSION_IMPLEMENTATION_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7368 COMPRESSION_SYSTEM_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          24949 Compute_Kernel_DMA_Complete.asm
+STDOUT_LINE -a----         11/8/2026  12:45 AM          35721 COMPUTE_KERNEL_DMA_IMPLEMENTATION.md
+STDOUT_LINE -a----        10/10/2026   3:58 PM           1321 config.example.json
+STDOUT_LINE -a----         11/8/2026  10:59 PM            242 config.json
+STDOUT_LINE -a----         3/20/2026   8:53 PM            796 configure.bat
+STDOUT_LINE -a----        11/14/2026   1:14 PM            806 configure_build.bat
+STDOUT_LINE -a----         3/20/2026   8:53 PM           2363 configure_msvc.bat
+STDOUT_LINE -a----         11/8/2026  12:45 AM          11884 Consolidate-RequiredModules.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5988 CONSOLIDATED_SESSION_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          34798 CONTEXT_DRAWING_ENGINE_ARCHITECTURE.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          12990 CONTEXT_DRAWING_ENGINE_DELIVERY_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          17407 CONTEXT_DRAWING_ENGINE_DELIVERY_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          12752 CONTEXT_DRAWING_ENGINE_GUIDE.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          15891 CONTEXT_DRAWING_ENGINE_INTEGRATION_GUIDE.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          14728 CONTEXT_DRAWING_INDEX.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM           9020 CONTEXT_DRAWING_QUICK_REFERENCE.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          25488 CONTEXT_DRAWING_VISUAL_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM            369 continue.json
+STDOUT_LINE -a----        10/10/2026   3:58 PM          11169 CONTRIBUTING.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           8268 CONTROL_PLANE_UI_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           8768 Convert-CppToPureMASM.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           9291 Convert-ToPureMASM.ps1
+STDOUT_LINE -a----         11/8/2026  12:46 AM           8829 COPILOT_AUTOMATION_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           9103 COPILOT_INSTRUCTIONS_AUTOMATION.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           4696 COPILOT_INSTRUCTIONS_GENERATED.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM         785504 corpus.jsonl
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6958 CORRECTED_AUDIT_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4960 COST_OPTIMIZATION.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7043 COT_IMPLEMENTATION_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          11083 COT_MULTI_MODE_GUIDE.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           6193 COUNT-PROPERTY-FIXES-v3.0.7.0.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          10737 Count-RemainingWork.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM            260 covfusion_report.json
+STDOUT_LINE -a----        11/16/2026   6:07 PM          51024 cpu_engine_e2e.vcxproj
+STDOUT_LINE -a----        11/16/2026   1:35 PM            677 cpu_engine_e2e.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:25 PM         143219 cpu_inference_engine.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM           1523 cpu_inference_engine.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122564 cpu_inference_engine_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            830 cpu_inference_engine_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110034 cpu_inference_engine_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 cpu_inference_engine_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----         11/8/2026  10:59 PM             38 crash_out.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM           6626 create_deployment_package.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM           4813 create_test_model.cpp
+STDOUT_LINE -a----        10/24/2026   8:01 PM         260608 create_test_model.exe
+STDOUT_LINE -a----         11/8/2026  10:59 PM           2340 create_test_model2.cpp
+STDOUT_LINE -a----        10/16/2026   9:47 PM         254976 create_test_model2.exe
+STDOUT_LINE -a----         11/8/2026  12:54 AM          10989 CRITICAL_ABI_BUG_FIX_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          10406 CRITICAL_ABI_VIOLATION_WARNING.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           9760 CRITICAL_FEATURES_IMPLEMENTATION_FINAL.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           5346 CRITICAL_FIXES_APPLIED.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           8037 CRITICAL_FIXES_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          10704 CRITICAL_MISSING_FEATURES_FIX_GUIDE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           1016 CTestCustom.cmake
+STDOUT_LINE -a----        11/17/2026  11:11 PM          29908 CTestTestfile.cmake
+STDOUT_LINE -a----         11/8/2026  12:54 AM           1624 CURRENT_STATE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           2841 CURRENT_STATUS_2026-07-15.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          16446 CURSOR-STYLE-IDE-GUIDE.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM           2864 Cursor_Features_Accurate.json
+STDOUT_LINE -a----        11/17/2026  11:11 PM          44128 cursor_parity_registry_smoke.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM            687 cursor_parity_registry_smoke.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122828 cursor_parity_registry_smoke_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            846 cursor_parity_registry_smoke_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110042 cursor_parity_registry_smoke_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 cursor_parity_registry_smoke_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----         11/8/2026  12:45 AM           1927 CustomVSToolchain.cmake
+STDOUT_LINE -a----         11/8/2026  12:54 AM           2317 CUSTOM_TOOLCHAIN_STATUS.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM          13118 d1.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          14145 d10.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM            688 d10e.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          14145 d11.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM              0 d11e.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          14151 d12.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM           1175 d12e.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          22002 d13.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM           5519 d13e.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          25361 d14.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM           1772 d14e.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          22002 d15.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM           4039 d15e.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          30339 d16.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          12836 d16e.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          25004 d17.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM         144737 d17e.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          20482 d18.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM           2816 d18e.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          13483 d19.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM              0 d19e.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM            350 d1e.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          13118 d2.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM              0 d2e.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM           8192 d2_attnproj_in.bin
+STDOUT_LINE -a----         11/8/2026  10:59 PM           8192 d2_attnproj_out.bin
+STDOUT_LINE -a----         11/8/2026  10:59 PM          13118 d3.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM              0 d3e.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          13118 d4.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM              0 d4e.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          13118 d5.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM              0 d5e.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          13118 d6.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM            142 d6e.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          14145 d7.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM            511 d7e.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM           2996 d8.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM              0 d8e.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          14151 d9.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM            597 d9e.txt
+STDOUT_LINE -a----         11/8/2026  12:54 AM           1660 DAILY_STATUS_2026-07-14.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5064 DAP_INTEGRATION_MILESTONE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           3796 DAP_TROUBLESHOOTING.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           8840 DAY1_COMPLETION_REPORT.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM          14124 dbg0.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM       25805259 deadcode-suspects.csv
+STDOUT_LINE -a----         10/6/2026   4:56 PM           6021 Debug-File-Opening.ps1
+STDOUT_LINE -a----        11/12/2026   3:18 PM         668160 debuggee_fixture.exe
+STDOUT_LINE -a----        11/17/2026  11:11 PM          42959 debuggee_fixture.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM            564 debuggee_fixture.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122432 debuggee_fixture_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            822 debuggee_fixture_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110030 debuggee_fixture_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 debuggee_fixture_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----         11/8/2026  12:54 AM          12772 DebugIntegrationTest.ps1
+STDOUT_LINE -a----         6/23/2026  10:00 PM          85499 debug_accumulators.exe
+STDOUT_LINE -a----        11/17/2026  11:11 PM          44042 debug_backend_verify.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM            707 debug_backend_verify.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122564 debug_backend_verify_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            830 debug_backend_verify_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110230 debug_backend_verify_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 debug_backend_verify_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----         11/8/2026  10:59 PM          29110 debug_callback.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM            717 debug_cmake.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM           1839 debug_cmake2.ps1
+STDOUT_LINE -a----         10/7/2026  10:21 PM            190 debug_gguf.bat
+STDOUT_LINE -a----         10/7/2026  10:21 PM         141312 debug_gguf.exe
+STDOUT_LINE -a----         10/7/2026  10:21 PM            193 debug_gguf2.bat
+STDOUT_LINE -a----         10/7/2026  10:22 PM         144384 debug_gguf2.exe
+STDOUT_LINE -a----         10/7/2026  10:23 PM            193 debug_gguf3.bat
+STDOUT_LINE -a----         10/7/2026  10:23 PM         148992 debug_gguf3.exe
+STDOUT_LINE -a----         10/7/2026  10:26 PM            193 debug_gguf4.bat
+STDOUT_LINE -a----         10/7/2026  10:26 PM         142336 debug_gguf4.exe
+STDOUT_LINE -a----         6/23/2026   9:58 PM          84627 debug_hang.exe
+STDOUT_LINE -a----         6/23/2026   9:59 PM          85498 debug_microkernel.exe
+STDOUT_LINE -a----         6/23/2026  10:02 PM          84964 debug_rax.exe
+STDOUT_LINE -a----         6/23/2026  11:01 PM          84332 debug_rmsnorm.exe
+STDOUT_LINE -a----        11/16/2026  10:45 AM            991 decode.py
+STDOUT_LINE -a----        11/16/2026  10:45 AM           1202 decode2.py
+STDOUT_LINE -a----         11/8/2026  10:59 PM           1697 decode_history.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM           2080 decrypt_payload.ps1
+STDOUT_LINE -a----        11/17/2026  11:11 PM          55421 deep2_agentic_loop.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM           3364 deep2_agentic_loop.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122498 deep2_agentic_loop_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            826 deep2_agentic_loop_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110467 deep2_agentic_loop_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 deep2_agentic_loop_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026  11:11 PM          51139 deep2_agentic_repair.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM           2647 deep2_agentic_repair.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122564 deep2_agentic_repair_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            830 deep2_agentic_repair_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110034 deep2_agentic_repair_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 deep2_agentic_repair_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----        11/16/2026   6:07 PM          51186 deep2_attention_geometry_nan_regression.vcxproj
+STDOUT_LINE -a----        11/16/2026   5:49 PM            572 deep2_attention_geometry_nan_regression.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026  11:11 PM          50913 deep2_bench_tps.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM           2400 deep2_bench_tps.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122399 deep2_bench_tps_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            820 deep2_bench_tps_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110029 deep2_bench_tps_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 deep2_bench_tps_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----          8/5/2026   7:36 AM         133770 deep2_config_validation_test.exe
+STDOUT_LINE -a----        11/17/2026  11:11 PM          51500 deep2_context_scaling.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM           2760 deep2_context_scaling.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122597 deep2_context_scaling_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            832 deep2_context_scaling_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110035 deep2_context_scaling_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 deep2_context_scaling_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026  11:11 PM          51188 deep2_d1_prefill_parity.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM           2762 deep2_d1_prefill_parity.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122663 deep2_d1_prefill_parity_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            836 deep2_d1_prefill_parity_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110037 deep2_d1_prefill_parity_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 deep2_d1_prefill_parity_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026  11:11 PM          51152 deep2_dualgpu_forward.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM           2760 deep2_dualgpu_forward.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122597 deep2_dualgpu_forward_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            832 deep2_dualgpu_forward_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110035 deep2_dualgpu_forward_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 deep2_dualgpu_forward_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026  11:11 PM          44614 deep2_dynamic_interceptor.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM            558 deep2_dynamic_interceptor.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122729 deep2_dynamic_interceptor_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            840 deep2_dynamic_interceptor_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110039 deep2_dynamic_interceptor_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 deep2_dynamic_interceptor_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----        11/16/2026   6:07 PM          90943 deep2_engine_lib.vcxproj
+STDOUT_LINE -a----        11/16/2026   5:49 PM          22061 deep2_engine_lib.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026  11:11 PM          43050 deep2_enterprise_manifest.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM            558 deep2_enterprise_manifest.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122729 deep2_enterprise_manifest_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            840 deep2_enterprise_manifest_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110039 deep2_enterprise_manifest_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 deep2_enterprise_manifest_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----        11/11/2026   2:20 AM         317750 deep2_err.txt
+STDOUT_LINE -a----        11/14/2026   5:28 PM        1311175 deep2_flight.jsonl
+STDOUT_LINE -a----        11/17/2026  11:11 PM          49963 deep2_fused_lmhead_verify.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM           1628 deep2_fused_lmhead_verify.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122729 deep2_fused_lmhead_verify_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            840 deep2_fused_lmhead_verify_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110039 deep2_fused_lmhead_verify_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 deep2_fused_lmhead_verify_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026  11:11 PM          43832 deep2_gdn_parity_harness.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM            670 deep2_gdn_parity_harness.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122696 deep2_gdn_parity_harness_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            838 deep2_gdn_parity_harness_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110038 deep2_gdn_parity_harness_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 deep2_gdn_parity_harness_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----        11/11/2026   6:31 AM          28888 deep2_gemma2.txt
+STDOUT_LINE -a----        11/17/2026  11:11 PM          51134 deep2_gguf_lifecycle.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM           2759 deep2_gguf_lifecycle.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122564 deep2_gguf_lifecycle_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            830 deep2_gguf_lifecycle_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110034 deep2_gguf_lifecycle_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 deep2_gguf_lifecycle_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026  11:11 PM          51080 deep2_gpu_certify.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM           2756 deep2_gpu_certify.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122465 deep2_gpu_certify_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            824 deep2_gpu_certify_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110031 deep2_gpu_certify_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 deep2_gpu_certify_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026  11:11 PM          42256 deep2_gpu_code31_pnp_probe.vcxproj
+STDOUT_LINE -a----        11/16/2026   1:35 PM            680 deep2_gpu_code31_pnp_probe.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026  11:11 PM          42113 deep2_gpu_code31_reset_smoke.vcxproj
+STDOUT_LINE -a----        11/16/2026   1:35 PM            695 deep2_gpu_code31_reset_smoke.vcxproj.filters
+STDOUT_LINE -a----        11/16/2026   6:07 PM          52856 deep2_gpu_decode_roofline.vcxproj
+STDOUT_LINE -a----        11/16/2026   5:49 PM            564 deep2_gpu_decode_roofline.vcxproj.filters
+STDOUT_LINE -a----         11/8/2026  10:58 PM          17806 Deep2_GPU_Production_Hardening.zip
+STDOUT_LINE -a----        11/16/2026   6:07 PM          51432 deep2_h11_prefill_parity.vcxproj
+STDOUT_LINE -a----        11/16/2026   5:49 PM            557 deep2_h11_prefill_parity.vcxproj.filters
+STDOUT_LINE -a----        11/11/2026   2:31 AM             28 deep2_input.txt
+STDOUT_LINE -a----        11/11/2026   6:03 AM          42706 deep2_llama.txt
+STDOUT_LINE -a----        11/17/2026  11:11 PM          44016 deep2_mla_lifecycle_test.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM            686 deep2_mla_lifecycle_test.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122696 deep2_mla_lifecycle_test_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            838 deep2_mla_lifecycle_test_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110038 deep2_mla_lifecycle_test_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 deep2_mla_lifecycle_test_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----        11/16/2026   6:07 PM          51024 deep2_multitoken_decode_parity.vcxproj
+STDOUT_LINE -a----        11/16/2026   5:49 PM            563 deep2_multitoken_decode_parity.vcxproj.filters
+STDOUT_LINE -a----        11/16/2026   6:07 PM          51042 deep2_n02_numerical_correctness.vcxproj
+STDOUT_LINE -a----        11/16/2026   5:49 PM            564 deep2_n02_numerical_correctness.vcxproj.filters
+STDOUT_LINE -a----        11/16/2026   6:07 PM          50970 deep2_n03_session_isolation.vcxproj
+STDOUT_LINE -a----        11/16/2026   5:49 PM            560 deep2_n03_session_isolation.vcxproj.filters
+STDOUT_LINE -a----        11/16/2026   6:07 PM          50812 deep2_openai_server.vcxproj
+STDOUT_LINE -a----        11/16/2026   5:49 PM            687 deep2_openai_server.vcxproj.filters
+STDOUT_LINE -a----        11/11/2026   2:33 AM         213609 deep2_output.txt
+STDOUT_LINE -a----        11/17/2026  11:11 PM          50580 deep2_parity_trace.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM           2757 deep2_parity_trace.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122498 deep2_parity_trace_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            826 deep2_parity_trace_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110374 deep2_parity_trace_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 deep2_parity_trace_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5391 DEEP2_PERFORMANCE_VALIDATION.md
+STDOUT_LINE -a----        11/16/2026   6:07 PM          50934 deep2_persistent_kv_smoke.vcxproj
+STDOUT_LINE -a----        11/16/2026   5:49 PM            558 deep2_persistent_kv_smoke.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026  11:11 PM          51198 deep2_prefill_parity.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM           2759 deep2_prefill_parity.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122564 deep2_prefill_parity_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            830 deep2_prefill_parity_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110034 deep2_prefill_parity_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 deep2_prefill_parity_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----        11/16/2026   9:42 AM        5481989 deep2_preprocessed.i
+STDOUT_LINE -a----         11/8/2026  10:59 PM            215 deep2_production_results.csv
+STDOUT_LINE -a----        11/17/2026  11:11 PM          44950 deep2_q5k_gpu_stress.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM            551 deep2_q5k_gpu_stress.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122564 deep2_q5k_gpu_stress_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            830 deep2_q5k_gpu_stress_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110034 deep2_q5k_gpu_stress_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 deep2_q5k_gpu_stress_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026  11:11 PM          72749 deep2_quant_specialized_shaders.vcxproj
+STDOUT_LINE -a----        11/16/2026   1:35 PM           2472 deep2_quant_specialized_shaders.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026  11:11 PM          45378 deep2_qwen4exp_gdn_probe.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM            670 deep2_qwen4exp_gdn_probe.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122696 deep2_qwen4exp_gdn_probe_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            838 deep2_qwen4exp_gdn_probe_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110376 deep2_qwen4exp_gdn_probe_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 deep2_qwen4exp_gdn_probe_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026  11:11 PM          32209 deep2_qwen4exp_gdn_shader.vcxproj
+STDOUT_LINE -a----        11/16/2026   1:35 PM            837 deep2_qwen4exp_gdn_shader.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026  11:11 PM          44157 deep2_qwen4exp_operator_harness.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM           1035 deep2_qwen4exp_operator_harness.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122927 deep2_qwen4exp_operator_harness_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            852 deep2_qwen4exp_operator_harness_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110045 deep2_qwen4exp_operator_harness_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 deep2_qwen4exp_operator_harness_autogen_timestamp_deps.vcxproj.filter
+STDOUT_LINE                                                   s
+STDOUT_LINE -a----        11/17/2026  11:11 PM          45477 deep2_qwen4exp_operator_shaders.vcxproj
+STDOUT_LINE -a----        11/16/2026   1:35 PM           1370 deep2_qwen4exp_operator_shaders.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026  11:11 PM          44686 deep2_qwen4exp_pipeline_probe.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM            562 deep2_qwen4exp_pipeline_probe.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122861 deep2_qwen4exp_pipeline_probe_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            848 deep2_qwen4exp_pipeline_probe_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110043 deep2_qwen4exp_pipeline_probe_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 deep2_qwen4exp_pipeline_probe_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----         11/8/2026  12:54 AM          15627 DEEP2_README.md
+STDOUT_LINE -a----        11/17/2026  11:11 PM          32232 deep2_resident_qgemv_shader.vcxproj
+STDOUT_LINE -a----        11/16/2026   1:35 PM            834 deep2_resident_qgemv_shader.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026  11:11 PM          42952 deep2_reverse_engineer.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM            555 deep2_reverse_engineer.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122630 deep2_reverse_engineer_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            834 deep2_reverse_engineer_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110036 deep2_reverse_engineer_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 deep2_reverse_engineer_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026  11:11 PM          51481 deep2_spec_bench.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM           2879 deep2_spec_bench.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122432 deep2_spec_bench_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            822 deep2_spec_bench_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110030 deep2_spec_bench_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 deep2_spec_bench_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026  11:11 PM          32233 deep2_spec_ops_shader.vcxproj
+STDOUT_LINE -a----        11/16/2026   1:35 PM            825 deep2_spec_ops_shader.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026  11:11 PM          47022 deep2_token_profiler.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM            793 deep2_token_profiler.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122564 deep2_token_profiler_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            830 deep2_token_profiler_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110034 deep2_token_profiler_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 deep2_token_profiler_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----        11/16/2026   6:07 PM          51181 deep2_uneven_tp_gemv.vcxproj
+STDOUT_LINE -a----        11/16/2026   5:49 PM            566 deep2_uneven_tp_gemv.vcxproj.filters
+STDOUT_LINE -a----        11/11/2026   6:34 AM           9753 DEEP2_VALIDATED_METRICS.md
+STDOUT_LINE -a----        11/16/2026   6:07 PM          51546 deep2_vulkan_gdn_dispatch_probe.vcxproj
+STDOUT_LINE -a----        11/16/2026   1:35 PM            677 deep2_vulkan_gdn_dispatch_probe.vcxproj.filters
+STDOUT_LINE -a----         11/8/2026  10:59 PM          40670 deepseek_test.txt
+STDOUT_LINE -a----         11/8/2026  12:54 AM          17030 DELIVERABLES.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           9076 DELIVERABLES_INDEX.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          11929 DELIVERABLES_LIST.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          10546 DELIVERY_CHECKLIST.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           8655 DELIVERY_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          14420 DELIVERY_COMPLETE_LLM.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          10852 DELIVERY_INDEX_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           9558 DELIVERY_MANIFEST.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          11192 DELIVERY_MANIFEST_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          13163 DELIVERY_PACKAGE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          13230 DELIVERY_PACKAGE_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM           4594 DELIVERY_QUICK_VIEW.txt
+STDOUT_LINE -a----         11/8/2026  12:54 AM          11810 DELIVERY_STATUS.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          13200 DELIVERY_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          11862 DELIVERY_SUMMARY_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           3945 DEMO-README.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM          15413 demo-sovereign-blueprint.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7155 DEMO-ZeroDependency-IDE.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM          13671 DEMONSTRATION_ROADMAP.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM           5878 demo_hotpatch_live.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6037 DEMO_INTEGRATION_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           2458 DEMO_LOGGING_BATCH11_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           2759 DEMO_LOGGING_BATCH12_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           3238 DEMO_LOGGING_BATCH13_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4600 DEMO_LOGGING_FINAL_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4690 DEMO_LOGGING_FINAL_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6868 DEMO_LOGGING_REMOVAL_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           3667 DEMO_LOGGING_REMOVAL_SUMMARY.md
+STDOUT_LINE -a----          7/8/2026   7:37 AM           7807 demo_native_toolchain.bat
+STDOUT_LINE -a----          7/3/2026   2:10 AM           3042 demo_simple.bat
+STDOUT_LINE -a----         11/8/2026  10:59 PM            720 demo_summary.json
+STDOUT_LINE -a----         11/8/2026  12:54 AM          15124 DEPENDENCY_CHAINS_AUDIT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          11658 DEPENDENCY_FIX_IMPLEMENTATION.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM           7077 DEPENDENCY_REMOVAL_PHASE1_PLAN.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM           4260 deploy-hpa-tuning.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM           5673 deploy.ps1
+STDOUT_LINE -a----         11/8/2026  12:45 AM          79265 DeploymentAuditEngine.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM          14278 DEPLOYMENT_CHECKLIST.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           3634 DEPLOYMENT_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM            245 deployment_config.json
+STDOUT_LINE -a----         11/8/2026  12:45 AM          11891 DEPLOYMENT_GUIDE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          16417 DEPLOYMENT_GUIDE_RealInference.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          13354 DEPLOYMENT_INSTRUCTIONS.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4688 DEPLOYMENT_OPTIONS.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5311 DEPLOYMENT_READINESS.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5812 DEPLOYMENT_READINESS_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          12212 DEPLOYMENT_READY.md
+STDOUT_LINE -a----        10/10/2026   3:58 PM          15782 DEPLOYMENT_READY.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM            457 deployment_report_20260715_140030.json
+STDOUT_LINE -a----         11/8/2026  12:45 AM          13892 DEPLOYMENT_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM          13366 deploy_canary.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM           9438 deploy_physical_cluster.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM           8274 deploy_staging.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM          10100 deploy_staging_cluster.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM          10365 deploy_staging_cluster_fixed.ps1
+STDOUT_LINE -a----         2/19/2026   2:10 AM           6144 dequant_simd.exe
+STDOUT_LINE -a----         11/8/2026  12:45 AM           8851 Detect-Scaffolding.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6116 Determinism_Stress_Test.cpp
+STDOUT_LINE -a----         11/8/2026  12:45 AM           2746 DE_SIMULATION_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5554 Diagnose-Sovereign.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM           3911 diagnose_kernels.ps1
+STDOUT_LINE -a----         7/10/2026   8:29 AM          55299 diagnose_simple.exe
+STDOUT_LINE -a----         11/8/2026  10:59 PM           6008 diagnostic-patch-firewall.ps1
+STDOUT_LINE -a----         11/8/2026  12:46 AM           7426 DIAGNOSTIC_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM           8213 DIGESTION_DEBUG_STATUS.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM           8232 DIGESTION_TESTING_GUIDE.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          11140 DIRECT_MEMORY_VERIFICATION.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM           1388 direct_test.cpp
+STDOUT_LINE -a----         6/23/2026  10:07 PM          84964 direct_test.exe
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5318 DISASTER_RECOVERY_CERTIFICATION.md
+STDOUT_LINE -a----         10/6/2026   4:56 PM          19965 Discover-All-Features.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4915 DISKRECOVERYAGENT_BUILD_STATUS.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           8652 DISKRECOVERYAGENT_INTEGRATION_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  10:59 PM          28624 dispatch_full_trace.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          27800 dispatch_out.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          27800 dispatch_trace.txt
+STDOUT_LINE -a----         11/8/2026  12:45 AM            408 Dockerfile
+STDOUT_LINE -a----         11/8/2026  12:46 AM           2463 DOCS_INDEX.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7542 DOCUMENTATION_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           9968 DOCUMENTATION_INDEX.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          11622 DOCUMENTATION_INDEX_MASTER.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          10780 DOCUMENT_INDEX_READING_GUIDE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           1828 DONE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           3637 Download-Model.ps1
+STDOUT_LINE -a----         3/20/2026   8:53 PM            180 do_build.bat
+STDOUT_LINE -a----         11/8/2026  10:59 PM            985 do_build.ps1
+STDOUT_LINE -a----         3/24/2026  10:00 PM            310 do_configure.bat
+STDOUT_LINE -a----         3/24/2026  10:00 PM            853 do_test.bat
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4300 DUAL_GPU_COMPLETION_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           9205 DUAL_PANE_TERMINAL_IMPLEMENTATION.md
+STDOUT_LINE -a----          3/1/2026   7:50 PM             24 dummy.gguf
+STDOUT_LINE -a----         3/26/2026   3:53 PM              0 dummy_gguf_loader.exe
+STDOUT_LINE -a----         11/8/2026  12:45 AM          43904 Dump-Complete-Source.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           2025 DUMPBIN_WALK.md
+STDOUT_LINE -a----         10/6/2026  10:14 PM         276992 dump_gguf.exe
+STDOUT_LINE -a----         10/8/2026   2:59 PM         274432 dump_reference_logits.exe
+STDOUT_LINE -a----         10/9/2026   5:02 PM          90624 dump_weight.exe
+STDOUT_LINE -a----        11/17/2026  11:14 PM             10 e2e_a.txt
+STDOUT_LINE -a----        11/17/2026  11:14 PM             11 e2e_b.txt
+STDOUT_LINE -a----        11/17/2026  11:18 PM              3 e2e_exit.txt
+STDOUT_LINE -a----         7/15/2026   5:04 PM            937 e2e_final_test.bat
+STDOUT_LINE -a----        11/17/2026  11:18 PM             12 e2e_notrace.txt
+STDOUT_LINE -a----         7/15/2026   5:04 PM            925 e2e_test.bat
+STDOUT_LINE -a----        11/17/2026  11:14 PM             20 e2e_trace2.txt
+STDOUT_LINE -a----         11/8/2026  10:59 PM          28482 endpoint_validation_20260720_191303.json
+STDOUT_LINE -a----         11/8/2026  10:59 PM          64960 endpoint_validation_20260720_194530.json
+STDOUT_LINE -a----         11/8/2026  10:59 PM           8167 endpoint_validation_20260720_194755.json
+STDOUT_LINE -a----         11/8/2026  12:54 AM          12872 ENDPOINT_VALIDATION_REPORT.md
+STDOUT_LINE -a----         7/28/2026  11:19 PM           1277 endpoint_validator.bat
+STDOUT_LINE -a----         11/8/2026  10:59 PM          24998 endpoint_validator.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM          10903 endpoint_validator_clean.ps1
+STDOUT_LINE -a----         11/8/2026  10:59 PM          21270 endpoint_validator_simple.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5458 END_TO_END_VALIDATION_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5520 ENHANCED_LOADER_INTEGRATION.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          14078 ENHANCED_STREAMING_GGUF_LOADER_DELIVERABLES.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          15282 ENHANCED_STREAMING_GGUF_LOADER_GUIDE.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          10423 ENHANCED_STREAMING_LOADER_IMPLEMENTATION_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          13673 ENHANCEMENT-COMPLETION-REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM           8837 ENHANCEMENTS_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          11609 ENTERPRISE_AND_PHASES_AUDIT.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          13584 ENTERPRISE_COMPLETION_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           3107 ENTERPRISE_FEATURES_MANIFEST.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7130 ENTERPRISE_FEATURES_NO_IMPLEMENTATION.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6289 ENTERPRISE_FULL_AUDIT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7479 ENTERPRISE_LICENSE_AND_PHASES_FULL_AUDIT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6475 ENTERPRISE_LICENSE_AUDIT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          10351 ENTERPRISE_LICENSE_AUDIT_2026-02-14.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          13395 ENTERPRISE_LICENSE_AUDIT_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          22914 ENTERPRISE_LICENSE_COMPLETE_AUDIT_2026-02-14.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           9205 ENTERPRISE_LICENSE_CREATOR_AUDIT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          14832 ENTERPRISE_LICENSE_IMPLEMENTATION_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          21794 ENTERPRISE_LICENSE_QUICK_REFERENCE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          14149 ENTERPRISE_LICENSE_STATUS.md
+STDOUT_LINE -a----        10/10/2026   3:58 PM           2320 enterprise_tokenizer_patch.txt
+STDOUT_LINE -a----         11/8/2026  10:58 PM          73298 ENVIRONMENT_LOCK.json
+STDOUT_LINE -a----        11/11/2026   9:21 AM         478142 errors_summary.txt
+STDOUT_LINE -a----         11/8/2026  12:54 AM           3959 Error_Recovery_Test_Results.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           9364 Error_Recovery_Usage_Guide.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6805 ESCALATE_TO_SWARM_IMPLEMENTATION.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5441 ESCALATE_TO_SWARM_VERIFICATION_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM           2029 ETHICAL_IMPLEMENTATION_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5246 EVIDENCE_BASELINE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7331 EVIDENCE_CERTIFICATE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7663 EVIDENCE_CERTIFICATE_AUTONOMOUS_AGENT_001.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          11253 EVIDENCE_DASHBOARD.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           2472 EVIDENCE_SNAPSHOT.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          15183 Execute-AutonomousAgent-Direct.ps1
+STDOUT_LINE -a----         11/8/2026  12:45 AM          17317 Execute-AutonomousAgent-Final.ps1
+STDOUT_LINE -a----         11/8/2026  12:45 AM          31315 Execute-AutonomousAgent.ps1
+STDOUT_LINE -a----         11/8/2026  12:45 AM          10225 Execute-Complete-System.ps1
+STDOUT_LINE -a----         11/8/2026  12:45 AM          24205 Execute-ProductionOrchestration.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           8472 EXECUTE_SHIPPING_NOW.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          14849 EXECUTION_ARCHITECTURE_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5382 EXECUTION_COMPLETE.md
+STDOUT_LINE -a----        11/14/2026   5:26 PM           1530 execution_ledger.jsonl
+STDOUT_LINE -a----         11/8/2026  12:46 AM           8748 EXECUTIVE_PACKAGE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          11135 EXECUTIVE_STATUS_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          10716 EXECUTIVE_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          11653 EXECUTIVE_SUMMARY_COMPLETE_DELIVERY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6277 EXECUTIVE_SUMMARY_PHASE_4.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          14867 EXECUTIVE_SUMMARY_RealInference.md
+STDOUT_LINE -a----        11/15/2026   6:50 PM          31243 expert_pat_orig.txt
+STDOUT_LINE -a----        11/15/2026   6:50 PM          30820 expert_pat_reap.txt
+STDOUT_LINE -a----        11/15/2026   6:49 PM          71953 expert_tensors_reap.txt
+STDOUT_LINE -a----        11/15/2026   6:49 PM          30699 expert_tensors_reap_names.txt
+STDOUT_LINE -a----         10/6/2026   4:56 PM          10054 Explain-Cloud-Models.ps1
+STDOUT_LINE -a----         11/8/2026  12:45 AM           8782 Export-ModuleAnalysis.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM          32371 Export-RawrXD-FullDataset.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7762 ExtensionExterminator.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           2731 ExtensionGraveyard_Purge.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           3049 ExtensionHarvester.ps1
+STDOUT_LINE -a----         11/8/2026  12:45 AM           7245 ExtensionManager.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           2527 EXTENSION_INFRASTRUCTURE_VERIFICATION.sh
+STDOUT_LINE -a----         11/8/2026  12:54 AM           9488 EXTENSION_MARKETPLACE_GUIDE.md
+STDOUT_LINE -a----         11/8/2026  11:04 PM           7324 extension_smoketest_report_20260214_225039.json
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6885 EXTENSION_SMOKE_TEST_GUIDE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          10339 EXTENSION_SMOKE_TEST_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           9933 EXTERNAL_USER_GUIDE.md
+STDOUT_LINE -a----         11/8/2026  12:45 AM          20664 Extract-Chat-Agent-Features.ps1
+STDOUT_LINE -a----         11/8/2026  12:45 AM          22884 Extract-Cursor-Complete.ps1
+STDOUT_LINE -a----         11/8/2026  12:45 AM          49538 Extract-Protected-Files.ps1
+STDOUT_LINE -a----         11/8/2026  12:45 AM          11873 EXTRACTED_FEATURES_GUIDE.md
+STDOUT_LINE -a----         11/8/2026  11:04 PM              0 failed_files.json
+STDOUT_LINE -a----         11/8/2026  12:54 AM          15350 FAILURE_INTELLIGENCE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          17339 FAILURE_INTELLIGENCE_IMPLEMENTATION_STATUS.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           9689 FAILURE_INTELLIGENCE_VERIFICATION_MEMO.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           1707 FALLBACK_SHIM_ENHANCEMENT_PLAN.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          10350 FEATURES_INTEGRATION_GUIDE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          11287 FEATURES_PANEL_DOCUMENTATION.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           8941 FEATURES_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          15530 FEATURE_COMPLETE_QUICK_REF.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          13585 FEATURE_COMPLETION_TRACKER.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          16590 FEATURE_ENHANCEMENTS_COMPLETE.md
+STDOUT_LINE -a----        11/11/2026   5:20 AM          23927 FEATURE_GAP_REGISTER.md
+STDOUT_LINE -a----         11/8/2026  11:04 PM          74028 feature_manifest.json
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6250 FEATURE_MANIFEST.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          12368 FEATURE_PARITY_CLI_WIN32.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          14122 FEATURE_PARITY_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           8705 FEATURE_PARITY_INDEX.md
+STDOUT_LINE -a----         11/8/2026  11:04 PM           6588 feature_verification_matrix.json
+STDOUT_LINE -a----         11/8/2026  12:54 AM           9339 FICTIONALITY_AUDIT_REPORT_20260511.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           7256 FILE-OPENING-FIX-REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           9924 FILE_INVENTORY.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          18952 FILE_MANIFEST_AND_ARCHITECTURE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          10330 FILE_MANIFEST_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           8320 FINAL-AGENTIC-SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           6511 FINAL-COUNT-PROPERTY-FIXES-v3.0.8.0.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4687 Final-Monolithic-Link.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4401 FINAL_ACCOMPLISHMENTS.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          10611 FINAL_ACHIEVEMENT_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           2198 FINAL_ARCHITECTURAL_REPORT.md
+STDOUT_LINE -a----         11/8/2026  11:04 PM           1411 final_asm_fix.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4431 FINAL_BLOCKER_ANALYSIS.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4753 FINAL_BUILD_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  11:04 PM           9785 final_clean_monolithic.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           8584 FINAL_CODE_REVIEW.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           2863 FINAL_COMPLETION_AUDIT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          10833 FINAL_COMPLETION_CONFIRMED.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          13002 FINAL_COMPLETION_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5330 FINAL_COMPLETION_STATUS.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM          12693 FINAL_COMPLETION_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          11532 FINAL_DELIVERY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7109 FINAL_DELIVERY_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          14137 FINAL_DELIVERY_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          13360 FINAL_DELIVERY_SUMMARY_2026_07_29.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6110 FINAL_DELIVERY_v15.0.1.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4525 FINAL_DEPLOYMENT_CHECKLIST.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6615 FINAL_DEPLOYMENT_READINESS.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          16570 FINAL_DEPLOYMENT_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5882 FINAL_GAP_CLOSURE_VERIFICATION.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM          10974 FINAL_IDE_COMPLETION_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          14797 FINAL_IMPLEMENTATION_GUIDE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          11172 FINAL_IMPLEMENTATION_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          11692 FINAL_INTEGRATION_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           8022 FINAL_INTEGRATION_COMPLETE.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           8454 FINAL_INTEGRATION_PLAN.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           9079 FINAL_INTEGRATION_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           8534 FINAL_INTEGRATION_STATUS.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6941 FINAL_INTEGRATION_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7803 FINAL_INTEGRATION_VERIFICATION.md
+STDOUT_LINE -a----         11/8/2026  11:04 PM           9215 final_monolithic_link.ps1
+STDOUT_LINE -a----         11/8/2026  12:46 AM          13692 FINAL_PRODUCTION_READINESS_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4998 FINAL_PROJECT_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5637 FINAL_RELEASE.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4959 FINAL_RELEASE_CHECKLIST.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           3358 FINAL_RELEASE_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4606 FINAL_RELEASE_VERIFICATION.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           8775 FINAL_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           9236 FINAL_SHIPPING_STATUS.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           8963 FINAL_STATUS.md
+STDOUT_LINE -a----        10/10/2026   3:58 PM          18982 FINAL_STATUS.txt
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6762 FINAL_STATUS_2026-07-15.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4773 FINAL_STATUS_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          10796 FINAL_STATUS_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          14267 FINAL_STUB_COMPLETION_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           8817 FINAL_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5347 FINAL_SYSTEM_STATUS.md
+STDOUT_LINE -a----         7/15/2026   5:04 PM           1058 final_test.bat
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4244 FINAL_UNIFICATION_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           3803 FINAL_VALIDATION_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           3444 FINAL_VERIFICATION.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM          10783 FINAL_VERIFICATION_CHECKLIST.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM          11955 FINAL_VERIFICATION_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6472 FINAL_VERIFICATION_REPORT.ps1
+STDOUT_LINE -a----         10/6/2026   4:56 PM          18821 Find-Hidden-Features.ps1
+STDOUT_LINE -a----         10/6/2026   4:56 PM          19618 Find-Missing-And-Broken-Features.ps1
+STDOUT_LINE -a----        11/16/2026   9:45 AM            472 find_filesystem_lines.bat
+STDOUT_LINE -a----        11/16/2026   9:45 AM            292 find_lines.bat
+STDOUT_LINE -a----        11/16/2026   9:45 AM            207 find_lines.ps1
+STDOUT_LINE -a----         11/8/2026  11:04 PM          12051 find_unlinked_stubs.ps1
+STDOUT_LINE -a----         11/8/2026  11:04 PM           3878 find_unlinked_stubs_fast.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           6557 FINGERPRINTED_BENCHMARK_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           1189 Finish-The-Vision.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM          11648 FINISH_THE_PLATFORM.ps1
+STDOUT_LINE -a----         10/6/2026   4:56 PM           9967 Fix-Agent-Summary-Command.ps1
+STDOUT_LINE -a----         10/6/2026   4:56 PM           6624 Fix-Agentic-Test-Errors.ps1
+STDOUT_LINE -a----         10/6/2026   4:56 PM          13708 Fix-All-Agent-Commands.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           2502 Fix-AllPowerShellIssues.ps1
+STDOUT_LINE -a----         10/6/2026   4:56 PM           7510 Fix-File-Opening.ps1
+STDOUT_LINE -a----         10/6/2026   4:56 PM          24434 Fix-Multi-Component-Integration.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7637 FIX3_NHWC_VALIDATION_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           8953 FIX4_FLASH_ATTENTION_VALIDATION_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           1751 FixBigDaddyGTypo.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           9391 FIXES_COMPLETED_SESSION.md
+STDOUT_LINE -a----         11/8/2026  11:04 PM           2032 fix_all_md_conflicts.ps1
+STDOUT_LINE -a----         11/8/2026  11:04 PM           3824 fix_cmake.ps1
+STDOUT_LINE -a----         11/8/2026  11:04 PM           3820 fix_cmake.py
+STDOUT_LINE -a----         11/8/2026  11:04 PM           1385 fix_cmake10.ps1
+STDOUT_LINE -a----         11/8/2026  11:04 PM           1717 fix_cmake11.ps1
+STDOUT_LINE -a----         11/8/2026  11:04 PM          15061 fix_cmake12.ps1
+STDOUT_LINE -a----         11/8/2026  11:04 PM           5207 fix_cmake2.ps1
+STDOUT_LINE -a----         11/8/2026  11:04 PM           3265 fix_cmake3.ps1
+STDOUT_LINE -a----         11/8/2026  11:04 PM            932 fix_cmake4.ps1
+STDOUT_LINE -a----         11/8/2026  11:04 PM           2796 fix_cmake5.ps1
+STDOUT_LINE -a----         11/8/2026  11:04 PM           3812 fix_cmake6.ps1
+STDOUT_LINE -a----         11/8/2026  11:04 PM           1506 fix_cmake7.ps1
+STDOUT_LINE -a----         11/8/2026  11:04 PM           2358 fix_cmake8.ps1
+STDOUT_LINE -a----         11/8/2026  11:04 PM           4334 fix_cmake9.ps1
+STDOUT_LINE -a----         11/8/2026  11:04 PM           3811 fix_comparison.json
+STDOUT_LINE -a----         11/8/2026  11:04 PM            198 fix_double_prefix.ps1
+STDOUT_LINE -a----         11/8/2026  11:04 PM           7460 fix_duplicate_handlers.ps1
+STDOUT_LINE -a----        11/16/2026  10:28 AM           1069 fix_file.py
+STDOUT_LINE -a----        11/16/2026  10:30 AM           3869 fix_include.py
+STDOUT_LINE -a----        11/16/2026  10:34 AM           2527 fix_include2.py
+STDOUT_LINE -a----        11/16/2026  10:24 AM           2087 fix_includes.py
+STDOUT_LINE -a----         11/8/2026  11:04 PM           2413 fix_merge_conflicts.ps1
+STDOUT_LINE -a----         11/8/2026  11:04 PM           1960 fix_missing_sources.ps1
+STDOUT_LINE -a----         11/8/2026  11:04 PM           4358 fix_mla_final.ps1
+STDOUT_LINE -a----         11/8/2026  11:04 PM            877 fix_mla_packing.ps1
+STDOUT_LINE -a----         11/8/2026  11:04 PM           2184 fix_qt_remnants.ps1
+STDOUT_LINE -a----        11/15/2026   7:15 PM            949 fix_reap_template.py
+STDOUT_LINE -a----         10/7/2026   8:50 PM          10849 fix_script.bat
+STDOUT_LINE -a----         11/8/2026  12:54 AM          10473 FIX_SUMMARY_20260302.md
+STDOUT_LINE -a----         11/8/2026  11:04 PM            944 fix_tests.ps1
+STDOUT_LINE -a----         11/8/2026  11:04 PM            368 fix_tests_runtime.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           8290 FLASH_ATTENTION_CERTIFICATION_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          19025 FLOATING-PANEL-ARCHITECTURE.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           7179 FLOATING-PANEL-IMPLEMENTATION.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          10084 FLOATING-PANEL-README.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           7576 FMF_IMPLEMENTATION_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:54 AM           4607 FMF_VALIDATION_MATRIX_REPORT.md
+STDOUT_LINE -a----         11/8/2026  11:04 PM           5753 freeze_environment.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           5760 FROZEN_BASELINE.md
+STDOUT_LINE -a----         10/6/2026   4:56 PM          20321 Full-Agentic-Test-backup.ps1
+STDOUT_LINE -a----         10/6/2026   4:56 PM          20971 Full-Agentic-Test.ps1
+STDOUT_LINE -a----         11/8/2026  11:04 PM           5804 full_pipeline.ps1
+STDOUT_LINE -a----         11/8/2026  12:54 AM           3129 FUZZ_TEST_REPORT.md
+STDOUT_LINE -a----        11/11/2026   5:16 AM          29786 gap_analysis.csv
+STDOUT_LINE -a----        11/15/2026   1:26 PM           2673 gate077_stress.ps1
+STDOUT_LINE -a----         11/8/2026  12:48 AM           5588 GATE4_OMEGA1_INTEGRATION.md
+STDOUT_LINE -a----         11/8/2026  12:48 AM           5682 GATES_16-20_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:48 AM           5134 GATEWAY_README.md
+STDOUT_LINE -a----         11/8/2026  12:48 AM           4259 GATE_A_INVENTORY_RESULTS.md
+STDOUT_LINE -a----         11/8/2026  12:48 AM           6388 GATE_A_INVENTORY_STATUS.md
+STDOUT_LINE -a----         3/15/2026  11:31 PM      699066720 gemma3-1b-Q2_K.gguf
+STDOUT_LINE -a----         11/8/2026  12:48 AM           2228 Generate-MasmCompileCommands.ps1
+STDOUT_LINE -a----         2/28/2026   7:02 AM           1536 generated.exe
+STDOUT_LINE -a----         11/8/2026  11:04 PM           7806 generate_additional_stubs.ps1
+STDOUT_LINE -a----         10/8/2026   4:01 PM            741 generate_ref_tokens.bat
+STDOUT_LINE -a----         11/8/2026  11:04 PM           8221 generate_symbol_stubs.ps1
+STDOUT_LINE -a----         11/8/2026  11:04 PM           4705 genesis-build.ps1
+STDOUT_LINE -a----         11/8/2026  11:04 PM           7735 genesis_bruteforce_link.ps1
+STDOUT_LINE -a----         11/8/2026  12:48 AM           5613 GENESIS_BUILD.md
+STDOUT_LINE -a----         11/8/2026  11:04 PM          14234 genesis_build.ps1
+STDOUT_LINE -a----         11/8/2026  12:48 AM           4718 GENESIS_COMPILER.ps1
+STDOUT_LINE -a----         11/8/2026  11:04 PM          11662 genesis_link_clean.ps1
+STDOUT_LINE -a----         11/8/2026  12:48 AM           1188 GENESIS_ONE_LINER.ps1
+STDOUT_LINE -a----        11/16/2026   9:16 AM            210 get_includes.bat
+STDOUT_LINE -a----         10/8/2026   2:44 PM         676864 ggml-base.dll
+STDOUT_LINE -a----         10/8/2026   2:44 PM        1201664 ggml-cpu.dll
+STDOUT_LINE -a----         10/8/2026   2:44 PM          61952 ggml.dll
+STDOUT_LINE -a----        10/10/2026   3:58 PM            293 ggml.pc.in
+STDOUT_LINE -a----         11/8/2026  12:48 AM           5051 GGML_INTEGRATION_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:48 AM          10108 GGML_INTEGRATION_FINAL_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:48 AM           3559 GGML_INTEGRATION_PUSHED.md
+STDOUT_LINE -a----         11/8/2026  12:48 AM          11893 GGML_UNIFIED_INTEGRATION_GUIDE.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           5027 GGML_VULKAN_WARNINGS_IMPLEMENTATION.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           7312 GGML_WARNINGS_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           7437 GGML_WARNINGS_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           6832 GGML_WARNINGS_SUPPRESSION.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           6609 GGUFLOADER_LINKING_FIX_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          11107 GGUF_DOCUMENTATION_INDEX.md
+STDOUT_LINE -a----        11/15/2026   6:48 PM          10322 gguf_dump_reap_laguna.json
+STDOUT_LINE -a----        11/17/2026   8:25 PM         151876 gguf_hotpatch_tester.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM           2738 gguf_hotpatch_tester.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122564 gguf_hotpatch_tester_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            830 gguf_hotpatch_tester_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110224 gguf_hotpatch_tester_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 gguf_hotpatch_tester_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----         11/8/2026  12:46 AM          15940 GGUF_INTEGRATION_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           8555 GGUF_INTEGRATION_TESTING.md
+STDOUT_LINE -a----         11/8/2026  12:48 AM           2603 GGUF_LOADER_QWEN_FIX_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          11845 GGUF_PROJECT_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           7186 GGUF_QUICK_REFERENCE.md
+STDOUT_LINE -a----        11/16/2026   8:57 PM        4585403 gguf_reap_compare.obj
+STDOUT_LINE -a----         11/8/2026  12:46 AM           9001 GGUF_SERVER_README.md
+STDOUT_LINE -a----        11/16/2026   8:47 PM         469298 gguf_split_metadata_patch.obj
+STDOUT_LINE -a----        11/17/2026  11:11 PM          46888 gguf_universal_probe.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM            553 gguf_universal_probe.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122564 gguf_universal_probe_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            830 gguf_universal_probe_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110034 gguf_universal_probe_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 gguf_universal_probe_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----         11/8/2026  12:48 AM          13956 GHOST_TEXT_AGENT.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM            102 GITHUB_PUSH_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:48 AM           4692 GIT_PUSH_GUIDE.md
+STDOUT_LINE -a----         11/8/2026  12:48 AM          10691 GOLDEN_BASELINE.md
+STDOUT_LINE -a----         11/8/2026  12:48 AM           4765 GOLDEN_MASTER_BASELINE.md
+STDOUT_LINE -a----         11/8/2026  12:48 AM          18208 GOLD_MASTER_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  11:04 PM          26197 gold_sign.ps1
+STDOUT_LINE -a----         11/8/2026  12:48 AM           6519 GOLD_STABILIZATION_CHECKLIST.md
+STDOUT_LINE -a----          7/7/2026   8:14 PM           3584 gpu_backend.exe
+STDOUT_LINE -a----         11/8/2026  11:04 PM            308 gpu_config.json
+STDOUT_LINE -a----         11/8/2026  11:04 PM            286 gpu_demo.json
+STDOUT_LINE -a----         11/8/2026  11:04 PM            287 gpu_demo_noparity.json
+STDOUT_LINE -a----         11/8/2026  12:46 AM          10492 GPU_EXECUTION_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  11:04 PM            290 gpu_fused_demo.json
+STDOUT_LINE -a----        11/17/2026   8:25 PM         152005 gpu_inference_benchmark.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM           2756 gpu_inference_benchmark.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122663 gpu_inference_benchmark_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            836 gpu_inference_benchmark_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110227 gpu_inference_benchmark_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 gpu_inference_benchmark_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----         11/8/2026  12:48 AM           5083 GPU_INTEGRATION_COMPLETE.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          11233 GPU_INTEGRATION_GUIDE.md
+STDOUT_LINE -a----         11/8/2026  11:04 PM            303 gpu_kv_cache_benchmark.json
+STDOUT_LINE -a----        11/17/2026  11:11 PM          47688 gpu_quant_dot_realweights.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM            673 gpu_quant_dot_realweights.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122729 gpu_quant_dot_realweights_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            840 gpu_quant_dot_realweights_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110039 gpu_quant_dot_realweights_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 gpu_quant_dot_realweights_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026  11:11 PM          44790 gpu_quant_dot_verify.vcxproj
+STDOUT_LINE -a----        11/17/2026  11:11 PM            668 gpu_quant_dot_verify.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         122564 gpu_quant_dot_verify_autogen.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            830 gpu_quant_dot_verify_autogen.vcxproj.filters
+STDOUT_LINE -a----        11/17/2026   8:17 PM         110034 gpu_quant_dot_verify_autogen_timestamp_deps.vcxproj
+STDOUT_LINE -a----        11/17/2026   8:17 PM            264 gpu_quant_dot_verify_autogen_timestamp_deps.vcxproj.filters
+STDOUT_LINE -a----         7/31/2026   2:27 AM         102947 gpu_verifier.exe
+STDOUT_LINE -a----         11/8/2026  11:04 PM           6995 grafana-dashboard.json
+STDOUT_LINE -a----         11/8/2026  12:48 AM           9024 GUI_COMPLETE_SESSION_SUMMARY.md
+STDOUT_LINE -a----         11/8/2026  12:48 AM           5926 GUI_DELIVERABLES.md
+STDOUT_LINE -a----         11/8/2026  12:48 AM           5745 GUI_IDE_FEATURE_GAP_ANALYSIS.md
+STDOUT_LINE -a----         11/8/2026  12:48 AM          13795 HANDLER-MATRIX-v1.0.0.md
+STDOUT_LINE -a----         11/8/2026  12:48 AM          41023 HANDLER_AUDIT_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:48 AM          27554 HANDLER_AUDIT_REPORT_v2.md
+STDOUT_LINE -a----         11/8/2026  12:48 AM           4893 HARDENING_IMPLEMENTATION_NOTES.md
+STDOUT_LINE -a----         11/8/2026  12:48 AM          15244 HARDWARE_REALITY_AND_ARCHITECTURAL_RESPONSE.md
+STDOUT_LINE -a----         11/8/2026  12:48 AM           9938 HARDWARE_REALITY_CORRECTED_MEMORY_MATH.md
+STDOUT_LINE -a----         10/6/2026   4:56 PM          29142 Headless-Agentic-Test-CustomModels.ps1
+STDOUT_LINE -a----         11/8/2026  12:46 AM           6513 HEADLESS-AGENTIC-TEST-RESULTS.md
+STDOUT_LINE -a----         11/8/2026  12:48 AM           3219 HEAD_VERSION_RESOLVED.md
+STDOUT_LINE -a----         11/8/2026  11:04 PM            309 healing_telemetry.json
+STDOUT_LINE -a----         11/8/2026  11:04 PM            240 healing_telemetry_cli_smoke.json
+STDOUT_LINE -a----         11/8/2026  12:48 AM           8250 HEAP_DIAGNOSTICS_SUMMARY.md
+STDOUT_LINE -a----        11/16/2026   6:07 PM          50780 hexmag-reap-live-test.vcxproj
+STDOUT_LINE -a----        11/16/2026   5:49 PM            678 hexmag-reap-live-test.vcxproj.filters
+STDOUT_LINE -a----        11/16/2026   6:07 PM          50771 hexmag-reap-live.vcxproj
+STDOUT_LINE -a----        11/16/2026   5:49 PM            682 hexmag-reap-live.vcxproj.filters
+STDOUT_LINE -a----        10/10/2026   3:58 PM           8192 hexmag.sqlite
+STDOUT_LINE -a----         11/8/2026  10:59 PM          11814 HEXMAG_SWARM_CERT_EVIDENCE.json
+STDOUT_LINE -a----         11/8/2026  12:48 AM          10212 HIGH_PRIORITY_FIXES_COMPLETION_REPORT.md
+STDOUT_LINE -a----          7/7/2026   8:06 PM           3584 hip_test.exe
+STDOUT_LINE -a----         11/8/2026  12:48 AM           3867 HONEST_AGENT_MODEL_STATUS.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM           9758 HONEST_ASSESSMENT.md
+STDOUT_LINE -a----         11/8/2026  12:48 AM           4625 HONEST_COMPLETION_STATUS.md
+STDOUT_LINE -a----         11/8/2026  12:48 AM           6482 HONEST_INVENTORY.md
+STDOUT_LINE -a----         11/8/2026  12:48 AM           5458 HONEST_MILESTONE_REPORT.md
+STDOUT_LINE -a----         11/8/2026  12:48 AM           4926 HONEST_STATUS_2026-07-15.md
+STDOUT_LINE -a----         11/8/2026  12:48 AM           4808 HONEST_STATUS_ASSESSMENT.md
+STDOUT_LINE -a----         11/8/2026  12:46 AM          18985 HONEST_STATUS_REPORT.md
+PROCESS_EXIT pid=33288 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=31924 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=3568 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=33996 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=19388 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success
+PROCESS_EXIT pid=23184 exit=0 disposition=success transport=1 stdout_bytes=0 stderr_bytes=0
+BUILD_RESULT=success

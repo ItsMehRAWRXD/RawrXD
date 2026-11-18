@@ -796,6 +796,89 @@ namespace Deep2
         // LM head projection: hiddenDim -> vocabSize (public for tree speculative decoding)
         void computeLogits(const float *hiddenState, float *logits);
 
+        // Optional, synchronous observation of the exact logits buffer the
+        // sampler is about to consume (CPU-side, unchanged, not recomputed).
+        // Disabled by default; installing an observer must not alter sampling,
+        // ordering or allocation.
+        struct ReferenceObservation {
+            uint64_t generation_step;
+            uint32_t vocabulary_size;
+            const float* logits;
+            uint64_t logits_count;
+        };
+        using ReferenceObserver = bool (*)(const ReferenceObservation&, void*);
+        void SetReferenceObserver(ReferenceObserver observer, void* userData) {
+            referenceObserver_ = observer;
+            referenceObserverUser_ = userData;
+            referenceStep_ = 0;
+        }
+
+        // Weighted accumulated MoE output, captured AFTER every selected expert
+        // contribution (and the shared expert, when present) has been weighted
+        // and summed into the layer output, and BEFORE the residual add that
+        // forwardLayer performs. Includes the shared expert.
+        struct MoEReferenceObservation {
+            uint32_t layer_index;
+            uint64_t generation_step;
+            uint32_t element_count;
+            const float* weighted_moe_output;
+        };
+        using MoEReferenceObserver = bool (*)(const MoEReferenceObservation&, void*);
+        // layerIndex selects one layer; generationStep == UINT64_MAX captures
+        // the first observed step for that layer only.
+        void SetMoEReferenceObserver(MoEReferenceObserver observer, void* userData,
+                                     uint32_t layerIndex, uint64_t generationStep) {
+            moeReferenceObserver_ = observer;
+            moeReferenceObserverUser_ = userData;
+            moeReferenceLayer_ = layerIndex;
+            moeReferenceStep_ = generationStep;
+        }
+
+        // Routing decision actually applied at this layer: the selected expert
+        // ids in execution order and the post-normalisation weights used to
+        // scale their outputs, plus the activation entering the experts.
+        // Router probabilities are NOT the same thing as these applied weights.
+        struct MoERoutingObservation {
+            uint32_t layer;
+            uint64_t generation_step;
+            uint32_t hidden_size;
+            const float* expert_input;
+            uint32_t selected_count;
+            const uint32_t* expert_ids;
+            const float* applied_weights;
+        };
+        using MoERoutingObserver = bool (*)(const MoERoutingObservation&, void*);
+        void SetMoERoutingObserver(MoERoutingObserver observer, void* userData,
+                                   uint32_t layerIndex, uint64_t generationStep) {
+            moeRoutingObserver_ = observer;
+            moeRoutingObserverUser_ = userData;
+            moeRoutingLayer_ = layerIndex;
+            moeRoutingStep_ = generationStep;
+        }
+
+        // Engine-produced expert outputs, captured where the engine produces
+        // them. This is the reference a reimplementation must match — not a
+        // second copy of the same arithmetic.
+        //   kind 0 = shared expert (already accumulated into the layer output)
+        //   kind 1 = routed expert output BEFORE its routing weight is applied
+        struct MoEExpertOutputObservation {
+            uint32_t layer;
+            uint64_t generation_step;
+            uint32_t kind;
+            uint32_t expert_id;
+            float applied_weight;
+            uint32_t element_count;
+            const float* output;
+        };
+        using MoEExpertOutputObserver = bool (*)(const MoEExpertOutputObservation&, void*);
+        void SetMoEExpertOutputObserver(MoEExpertOutputObserver observer, void* userData,
+                                        uint32_t layerIndex, uint64_t generationStep) {
+            moeExpertOutObserver_ = observer;
+            moeExpertOutObserverUser_ = userData;
+            moeExpertOutLayer_ = layerIndex;
+            moeExpertOutStep_ = generationStep;
+        }
+
         // ------------------------------------------------------------------------
         // MARS: Dynamic Dual-GPU VRAM Hotpatch
         // ------------------------------------------------------------------------
@@ -1080,6 +1163,32 @@ uint64_t vulkanGemvOk_ = 0;
         float *ffnOutput = nullptr;
         size_t ffnOutputCapacity = 0; // element capacity for shared projection scratch
         float *logits = nullptr;
+
+        // Reference-observation hook state (see SetReferenceObserver).
+        ReferenceObserver referenceObserver_ = nullptr;
+        void* referenceObserverUser_ = nullptr;
+        uint64_t referenceStep_ = 0;
+
+        // Weighted-MoE boundary observer (see SetMoEReferenceObserver).
+        MoEReferenceObserver moeReferenceObserver_ = nullptr;
+        void* moeReferenceObserverUser_ = nullptr;
+        uint32_t moeReferenceLayer_ = 0xFFFFFFFFu;
+        uint64_t moeReferenceStep_ = 0xFFFFFFFFFFFFFFFFull;
+        bool moeReferenceDone_ = false;
+
+        // Routing-decision observer (see SetMoERoutingObserver).
+        MoERoutingObserver moeRoutingObserver_ = nullptr;
+        void* moeRoutingObserverUser_ = nullptr;
+        uint32_t moeRoutingLayer_ = 0xFFFFFFFFu;
+        uint64_t moeRoutingStep_ = 0xFFFFFFFFFFFFFFFFull;
+        bool moeRoutingDone_ = false;
+
+        // Engine expert-output observer (see SetMoEExpertOutputObserver).
+        MoEExpertOutputObserver moeExpertOutObserver_ = nullptr;
+        void* moeExpertOutObserverUser_ = nullptr;
+        uint32_t moeExpertOutLayer_ = 0xFFFFFFFFu;
+        uint64_t moeExpertOutStep_ = 0xFFFFFFFFFFFFFFFFull;
+        bool moeExpertOutActive_ = false;
         float *qProj = nullptr;
         float *kProj = nullptr;
         float *vProj = nullptr;

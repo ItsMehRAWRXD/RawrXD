@@ -114,6 +114,9 @@ public:
         // stale async ticket can never publish into a newer residency
         // generation.
         uint64_t generation = 0;
+        // Set to true after a gated submit succeeds; cleared (with
+        // g_gpuInFlight decrement) in the corresponding wait/cancel path.
+        bool inFlight_ = false;
     };
 
     explicit VulkanCompute(uint32_t physicalOrdinal = 0);
@@ -653,6 +656,9 @@ public:
         VkQueryPool query = VK_NULL_HANDLE;
         size_t bytes = 0;
         bool active = false;
+        // Set to true after a gated submit succeeds; cleared (with
+        // g_gpuInFlight decrement) in WaitDownloadAsync.
+        bool inFlight_ = false;
     };
     bool SubmitDownloadAsync(
         DeviceBuf& src, size_t bytes, DownloadTicket& ticket);
@@ -806,6 +812,9 @@ public:
         VkFence fence = VK_NULL_HANDLE;
         VkQueryPool query = VK_NULL_HANDLE;
         bool active = false;
+        // Set to true after a gated submit succeeds; cleared (with
+        // g_gpuInFlight decrement) in WaitQ4KResidentAsync / CancelQ4KAsync.
+        bool inFlight_ = false;
     };
     bool BeginQ4KResidentAsync(
         const GpuWeightView& weight, DeviceBuf& input, DeviceBuf& output,
@@ -882,6 +891,9 @@ public:
         uint32_t ringSlot = UINT32_MAX;
         size_t bytes = 0;
         bool active = false;
+        // Count of gated submits still in flight (compute + transfer).
+        // Cleared (with g_gpuInFlight decrements) in WaitTimelineDownload.
+        uint32_t inFlight_ = 0;
     };
     bool SubmitQ4KThenDownloadTimeline(
         const GpuWeightView& weight, DeviceBuf& input, DeviceBuf& output,
@@ -1128,6 +1140,9 @@ public:
         VkCommandBuffer cmd = VK_NULL_HANDLE;
         VkFence fence = VK_NULL_HANDLE;
         bool active = false;
+        // Set to true after a gated submit succeeds; cleared (with
+        // g_gpuInFlight decrement) in WaitHiddenCopy.
+        bool inFlight_ = false;
     };
     bool CaptureVerifiedHiddenTimeline(
         DeviceBuf& hiddenBatch, uint32_t tokenIndex,
@@ -1536,6 +1551,11 @@ private:
                        GpuWorkKind kind, uint64_t bytes, uint64_t epoch,
                        GpuWorkInterval* interval = nullptr,
                        uint64_t timeoutNs = UINT64_MAX);
+    // Gate-protected submit helper: increments g_gpuInFlight before
+    // vkQueueSubmit and decrements it on submit failure. Caller manages
+    // the gate lock; on success the caller must decrement in_flight via
+    // the ticket's inFlight_ flag in the corresponding wait/cancel path.
+    VkResult gatedSubmit(VkQueue queue, const VkSubmitInfo* si, VkFence fence);
     bool recordCopy(VkCommandBuffer cmd, const DeviceBuf& src, DeviceBuf& dst,
                     VkDeviceSize bytes, VkDeviceSize srcOffset = 0,
                     VkDeviceSize dstOffset = 0);

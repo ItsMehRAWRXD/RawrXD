@@ -420,8 +420,29 @@ void Win32TerminalManager::writeInput(const std::string& data)
 {
     if (!m_running || !m_hStdInWrite) return;
 
+    // Line-terminator contract depends on the transport, so normalise here
+    // rather than at every call site:
+    //   TransportPipe  — PowerShell runs `[Console]::In.ReadLine()`, which
+    //                    accepts LF directly. Pass bytes through unchanged.
+    //   TransportConPTY— an interactive host needs CR to submit a line; an LF
+    //                    alone leaves the text sitting at the prompt unsent
+    //                    (observed: command echoed, never executed).
+    std::string payload;
+    const std::string* out = &data;
+    if (m_transport == TransportConPTY) {
+        payload.reserve(data.size() + 8);
+        for (size_t i = 0; i < data.size(); ++i) {
+            if (data[i] == '\n' && (i == 0 || data[i - 1] != '\r')) {
+                payload.push_back('\r');
+            } else {
+                payload.push_back(data[i]);
+            }
+        }
+        out = &payload;
+    }
+
     DWORD written = 0;
-    if (!WriteFile(m_hStdInWrite, data.c_str(), static_cast<DWORD>(data.size()),
+    if (!WriteFile(m_hStdInWrite, out->c_str(), static_cast<DWORD>(out->size()),
                    &written, nullptr)) {
         const DWORD error = GetLastError();
         if (error == ERROR_BROKEN_PIPE || error == ERROR_NO_DATA) {

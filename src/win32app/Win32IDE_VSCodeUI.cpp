@@ -60,6 +60,8 @@ static std::vector<ProblemStringHeap*> g_problemHeapObjects;
 #define IDC_PANEL_CONTAINER 1300
 #define IDC_PANEL_TABS 1301
 #define IDC_PANEL_TERMINAL 1302
+// IDC_PANEL_TERMINAL_INPUT / _EXECUTE are centralised in Win32IDE.h so the
+// WM_COMMAND handler and the control creation share one declaration.
 #define IDC_PANEL_OUTPUT 1303
 #define IDC_PANEL_PROBLEMS 1304
 #define IDC_PANEL_DEBUG_CONSOLE 1305
@@ -925,6 +927,20 @@ void Win32IDE::ensurePanelTabBodies()
 
     makeEdit(m_hwndPanelTerminal, IDC_PANEL_TERMINAL,
              "Terminal ready. Select this tab or use Terminal menu to run a shell.\r\n");
+    if (!m_hwndPanelTerminalInput || !IsWindow(m_hwndPanelTerminalInput)) {
+        m_hwndPanelTerminalInput = CreateWindowExA(
+            WS_EX_CLIENTEDGE, "EDIT", "",
+            WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+            0, 0, 500, 24, m_hwndPanelContainer,
+            reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_PANEL_TERMINAL_INPUT)),
+            m_hInstance, nullptr);
+        m_hwndPanelTerminalExecute = CreateWindowExA(
+            0, "BUTTON", "Execute",
+            WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+            0, 0, 80, 24, m_hwndPanelContainer,
+            reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_PANEL_TERMINAL_EXECUTE)),
+            m_hInstance, nullptr);
+    }
     makeEdit(m_hwndPanelOutput, IDC_PANEL_OUTPUT,
              "Output ready. Build and tool messages appear here.\r\n");
 
@@ -974,6 +990,12 @@ void Win32IDE::switchPanelTab(PanelTab tab)
     ++s_switchDepth;
 
     m_activePanelTab = tab;
+    if (m_hwndPanelTabs && IsWindow(m_hwndPanelTabs)) {
+        const int requested = static_cast<int>(tab);
+        if (TabCtrl_GetCurSel(m_hwndPanelTabs) != requested) {
+            TabCtrl_SetCurSel(m_hwndPanelTabs, requested);
+        }
+    }
     if (!reentered) {
         ensurePanelVisible();
         if (m_hwndMain && IsWindow(m_hwndMain) &&
@@ -1001,6 +1023,20 @@ void Win32IDE::switchPanelTab(PanelTab tab)
     };
 
     showBody(m_hwndPanelTerminal, showTerminal);
+    if (m_hwndPanelTerminalInput) ShowWindow(m_hwndPanelTerminalInput, showTerminal ? SW_SHOW : SW_HIDE);
+    if (m_hwndPanelTerminalExecute) ShowWindow(m_hwndPanelTerminalExecute, showTerminal ? SW_SHOW : SW_HIDE);
+    if (showTerminal) {
+        if (m_hwndPanelTerminal) SetWindowPos(m_hwndPanelTerminal, HWND_TOP, 0, 0, 0, 0,
+                                               SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+        if (m_hwndPanelTerminalInput) SetWindowPos(m_hwndPanelTerminalInput, HWND_TOP, 0, 0, 0, 0,
+                                                    SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+        if (m_hwndPanelTerminalExecute) SetWindowPos(m_hwndPanelTerminalExecute, HWND_TOP, 0, 0, 0, 0,
+                                                      SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+        if (m_hwndPanelTerminalInput && IsWindowVisible(m_hwndPanelTerminalInput) &&
+            IsWindowEnabled(m_hwndPanelTerminalInput)) {
+            SetFocus(m_hwndPanelTerminalInput);
+        }
+    }
     showBody(m_hwndPanelOutput, showOutput);
     showBody(m_hwndProblemsListView, showProblems);
     showBody(m_hwndDebugConsole, showDebugConsole);

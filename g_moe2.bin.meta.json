@@ -1,0 +1,1 @@
+{"dtype":"f32","layout":"contiguous","prefix":"u32_layer,u64_step,u32_count","boundary":"weighted_moe_output_pre_residual","includes_shared_expert":true,"layer":13,"generation_step":0,"element_count":2048,"captures":1,"model_sha256":"5ff0abeeac1d2dbdd5455c0b49ba3b29a9ce3c1fb181b2eef2e948689d55d046"}

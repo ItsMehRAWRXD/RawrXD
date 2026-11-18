@@ -4157,6 +4157,12 @@ bool Win32IDE::saveFileAs()
 
 void Win32IDE::startPowerShell()
 {
+    // The persisted layout may leave the four-panel dock hidden. Starting a
+    // shell from the Terminal menu must make the actual docked Terminal
+    // surface visible before the child process is launched, otherwise the
+    // live input/Execute HWNDs remain valid but unreachable.
+    ensurePanelVisible();
+    switchPanelTab(PanelTab::Terminal);
     TerminalPane* pane = getActiveTerminalPane();
     if (!pane || !pane->manager) return;
     stopTerminal();
@@ -4172,6 +4178,42 @@ void Win32IDE::startPowerShell()
         updateMenuEnableStates();
         appendToOutput("PowerShell started...\n", "Output", OutputSeverity::Info);
     }
+}
+
+bool Win32IDE::ensureTerminalRunningForCommand()
+{
+    // Used by the docked Terminal's Execute button. startPowerShell() cannot be
+    // reused here: it returns without doing anything when no pane exists yet
+    // (a fresh launch has none) and it calls stopTerminal() unconditionally,
+    // which would kill a live session on every Execute press.
+    ensurePanelVisible();
+    switchPanelTab(PanelTab::Terminal);
+
+    TerminalPane* pane = getActiveTerminalPane();
+    if (!pane) {
+        // createTerminalPane() pushes into m_terminalPanes and then calls
+        // setActiveTerminalPane(), so the active id is valid afterwards. No
+        // pointer is held across the call because the vector may reallocate.
+        if (createTerminalPane(Win32TerminalManager::PowerShell, "Terminal") < 0)
+            return false;
+        pane = getActiveTerminalPane();
+    }
+    if (!pane || !pane->manager)
+        return false;
+
+    if (!pane->manager->isRunning()) {
+        if (!pane->manager->start(Win32TerminalManager::PowerShell))
+            return false;
+        // start() reports running once CreateProcess succeeds, but the child's
+        // stdin pump still needs a moment before the first write is honoured
+        // (the same race startPowerShell() mitigates with a 100 ms pause).
+        Sleep(100);
+        appendText(pane->hwnd, "PowerShell started...\r\n");
+        SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 1, (LPARAM)"PowerShell");
+        updateMenuEnableStates();
+    }
+
+    return pane->manager->isRunning();
 }
 
 void Win32IDE::startCommandPrompt()
@@ -4304,6 +4346,9 @@ void Win32IDE::onTerminalOutput(int paneId, const std::string& output)
     if (pane && pane->hwnd) {
         appendText(pane->hwnd, cleaned);
     }
+    if (m_hwndPanelTerminal && IsWindowVisible(m_hwndPanelTerminal)) {
+        appendText(m_hwndPanelTerminal, cleaned);
+    }
     appendToOutput(cleaned, "Terminal", OutputSeverity::Info);
     appendToOutput(cleaned, "Build", OutputSeverity::Info);
     // Carry incomplete ConPTY lines + strip VT before MSVC/gcc match.
@@ -4318,6 +4363,9 @@ void Win32IDE::onTerminalError(int paneId, const std::string& error)
     const std::string cleaned = stripAnsiForDiag(error);
     if (pane && pane->hwnd) {
         appendText(pane->hwnd, cleaned);
+    }
+    if (m_hwndPanelTerminal && IsWindowVisible(m_hwndPanelTerminal)) {
+        appendText(m_hwndPanelTerminal, cleaned);
     }
     appendToOutput(cleaned, "Errors", OutputSeverity::Error);
     appendToOutput(cleaned, "Build", OutputSeverity::Error);
@@ -4827,7 +4875,7 @@ void Win32IDE::createOutputTabs()
                     return DefSubclassProc(splitter, message, wParam, lParam);
                 }
                 if (message == WM_SETCURSOR) {
-                    SetCursor(LoadCursorW(nullptr, IDC_SIZENS));
+                    SetCursor(LoadCursorW(nullptr, MAKEINTRESOURCEW(IDC_SIZENS)));
                     return TRUE;
                 }
                 if (message == WM_LBUTTONDOWN) {

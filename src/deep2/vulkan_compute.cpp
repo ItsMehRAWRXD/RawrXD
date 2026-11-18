@@ -15,6 +15,7 @@
 #include <fstream>
 #include <iostream>
 #include <limits>
+#include <mutex>
 #include <thread>
 
 #ifdef _WIN32
@@ -26,6 +27,15 @@
 
 namespace Deep2 {
 namespace {
+
+std::recursive_mutex g_gpuSubmitGate;
+std::atomic<uint64_t> g_gpuSubmitSequence{0};
+std::atomic<uint32_t> g_gpuInFlight{0};
+
+bool GlobalGpuSerialEnabled() {
+    const char* v = std::getenv("GLOBAL_GPU_SERIAL");
+    return v && v[0] == '1' && v[1] == '\0';
+}
 
 constexpr uint32_t OP_PROBE    = 0;
 constexpr uint32_t OP_GEMV_F32 = 1;
@@ -1439,6 +1449,11 @@ bool VulkanCompute::endSubmitWait(
     GpuWorkInterval* interval, uint64_t timeoutNs)
 {
     if (!cmd) return false;
+    std::unique_lock<std::recursive_mutex> globalLock;
+    const bool globalSerial = GlobalGpuSerialEnabled();
+    uint64_t globalSeq = 0;
+    if (globalSerial)
+        globalLock = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
     if (query)
         vkCmdWriteTimestamp(cmd, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, query, 1);
     const VkResult endResult = vkEndCommandBuffer(cmd);
@@ -1475,6 +1490,15 @@ bool VulkanCompute::endSubmitWait(
             fused_ ? 1 : 0);
         std::fflush(stderr);
     }
+    if (globalSerial) {
+        globalSeq = ++g_gpuSubmitSequence;
+        const uint32_t prior = g_gpuInFlight.fetch_add(1);
+        std::fprintf(stderr,
+                     "GLOBAL_GPU_SERIAL SUBMIT_BEGIN seq=%llu cmd=%p "
+                     "in_flight_before=%u\n",
+                     (unsigned long long)globalSeq, (void*)cmd, prior);
+        std::fflush(stderr);
+    }
     VkResult submit = vkQueueSubmit(queue_, 1, &si, fence);
     if (submit != VK_SUCCESS) {
         std::fprintf(stderr, "[GPU] endSubmitWait stage=queue_submit vk=%d\n",
@@ -1482,14 +1506,28 @@ bool VulkanCompute::endSubmitWait(
         std::fflush(stderr);
         (void)NoteVkResult(static_cast<int>(submit), "submit");
         vkDestroyFence(device_, fence, nullptr);
+        if (globalSerial) g_gpuInFlight.fetch_sub(1);
         return false;
     }
     const uint64_t submitReturnedNs = nowNs();
     ++queueSubmitCount_;
+    if (globalSerial) {
+        std::fprintf(stderr,
+                     "GLOBAL_GPU_SERIAL SUBMIT_END seq=%llu result=%d fence=%p\n",
+                     (unsigned long long)globalSeq, (int)submit,
+                     (void*)fence);
+        std::fflush(stderr);
+    }
 
     const uint64_t waitStartedNs = nowNs();
     VkResult wait = vkWaitForFences(device_, 1, &fence, VK_TRUE, timeoutNs);
     const uint64_t completeNs = nowNs();
+    if (globalSerial) {
+        std::fprintf(stderr,
+                     "GLOBAL_GPU_SERIAL WAIT_END seq=%llu result=%d\n",
+                     (unsigned long long)globalSeq, (int)wait);
+        std::fflush(stderr);
+    }
 
     GpuWorkInterval wi{};
     if (wait == VK_SUCCESS) {
@@ -1515,7 +1553,52 @@ bool VulkanCompute::endSubmitWait(
     vkDestroyFence(device_, fence, nullptr);
     if (query) vkDestroyQueryPool(device_, query, nullptr);
     vkFreeCommandBuffers(device_, commandPool_, 1, &cmd);
+    if (globalSerial) {
+        g_gpuInFlight.fetch_sub(1);
+        std::fprintf(stderr, "GLOBAL_GPU_SERIAL RELEASE seq=%llu\n",
+                     (unsigned long long)globalSeq);
+        std::fflush(stderr);
+    }
     return wait == VK_SUCCESS;
+}
+
+// Gate-protected submit helper. The caller MUST hold g_gpuSubmitGate when
+// GlobalGpuSerialEnabled() is true. It increments g_gpuInFlight before
+// vkQueueSubmit and decrements it on submit failure. On success the caller
+// owns the in_flight reference and must decrement it via the ticket's
+// inFlight_ flag in the corresponding wait/cancel path (or at function end
+// for synchronous submit+wait sites).
+VkResult VulkanCompute::gatedSubmit(
+    VkQueue queue, const VkSubmitInfo* si, VkFence fence)
+{
+    const bool globalSerial = GlobalGpuSerialEnabled();
+    uint64_t globalSeq = 0;
+    if (globalSerial) {
+        globalSeq = ++g_gpuSubmitSequence;
+        const uint32_t prior = g_gpuInFlight.fetch_add(1);
+        std::fprintf(stderr,
+                     "GLOBAL_GPU_SERIAL SUBMIT_BEGIN seq=%llu in_flight_before=%u\n",
+                     (unsigned long long)globalSeq, prior);
+        std::fflush(stderr);
+    }
+    VkResult result = vkQueueSubmit(queue, 1, si, fence);
+    if (result != VK_SUCCESS) {
+        std::fprintf(stderr, "[GPU] gatedSubmit stage=queue_submit vk=%d\n",
+                     static_cast<int>(result));
+        std::fflush(stderr);
+        (void)NoteVkResult(static_cast<int>(result), "submit");
+        if (globalSerial) g_gpuInFlight.fetch_sub(1);
+        return result;
+    }
+    ++queueSubmitCount_;
+    if (globalSerial) {
+        std::fprintf(stderr,
+                     "GLOBAL_GPU_SERIAL SUBMIT_END seq=%llu result=%d fence=%p\n",
+                     (unsigned long long)globalSeq, (int)result,
+                     (void*)fence);
+        std::fflush(stderr);
+    }
+    return VK_SUCCESS;
 }
 
 void VulkanCompute::recordComputeBarrier(VkCommandBuffer cmd) {
@@ -1961,7 +2044,23 @@ bool VulkanCompute::dispatchQuant(
     DeviceBuf& weights, DeviceBuf& input, DeviceBuf& output,
     const QPush& push)
 {
-    if (!qPipeline_ || !weights || !input || !output) return false;
+    const bool traceLargeQ = push.type == 12 && push.rows >= 24576u;
+    const auto fail = [&](const char* stage) {
+        if (traceLargeQ) {
+            std::fprintf(stderr,
+                         "[MLA_Q_BACKEND_FAIL] stage=%s rows=%u cols=%u "
+                         "weightBytes=%u qPipeline=%d w=%d in=%d out=%d fused=%d\n",
+                         stage, push.rows, push.cols, push.weightBytes,
+                         qPipeline_ ? 1 : 0, weights ? 1 : 0,
+                         input ? 1 : 0, output ? 1 : 0, fused_ ? 1 : 0);
+            std::fflush(stderr);
+        }
+        return false;
+    };
+    if (!qPipeline_) return fail("Q_PIPELINE");
+    if (!weights) return fail("WEIGHT_BUFFER");
+    if (!input) return fail("INPUT_BUFFER");
+    if (!output) return fail("OUTPUT_BUFFER");
 
     QPush dispatchPush = push;
     const char* strictEnv = std::getenv("RAWRXD_DEEP2_GEMV_STRICT_ORDER");
@@ -2005,7 +2104,14 @@ bool VulkanCompute::dispatchQuant(
     ++q4kParitySeq_;
 
     VkDescriptorSet set=getQuantDescriptor(weights,input,output);
-    if(set==VK_NULL_HANDLE) return false;
+    if(set==VK_NULL_HANDLE) return fail("QUANT_DESCRIPTOR");
+    if (traceLargeQ) {
+        std::fprintf(stderr,
+                     "[MLA_Q_BACKEND] stage=READY rows=%u cols=%u "
+                     "weightBytes=%u descriptor=1 fused=%d\n",
+                     push.rows, push.cols, push.weightBytes, fused_ ? 1 : 0);
+        std::fflush(stderr);
+    }
 
     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, qPipeline_);
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE,
@@ -2167,9 +2273,15 @@ bool VulkanCompute::SubmitMaterialUploadAsync(
     si.pCommandBuffers = &t.cmd;
 
     t.hostSubmitNs = nowNs();
-    if (vkQueueSubmit(queue_, 1, &si, t.fence) != VK_SUCCESS)
-        return false;
-
+    {
+        std::unique_lock<std::recursive_mutex> globalLock;
+        const bool globalSerial = GlobalGpuSerialEnabled();
+        if (globalSerial)
+            globalLock = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
+        if (gatedSubmit(queue_, &si, t.fence) != VK_SUCCESS)
+            return false;
+    }
+    t.inFlight_ = true;
     t.epoch = epoch;
     t.bytes = bytes;
     t.submitted = true;
@@ -2196,6 +2308,10 @@ bool VulkanCompute::WaitMaterialUpload(
     if (t.cmd) vkFreeCommandBuffers(device_, commandPool_, 1, &t.cmd);
     destroyBuffer(t.staging);
     destroyBuffer(t.target);
+    if (t.inFlight_) {
+        if (GlobalGpuSerialEnabled()) g_gpuInFlight.fetch_sub(1);
+        t.inFlight_ = false;
+    }
     t = {};
     return wait == VK_SUCCESS;
 }
@@ -2324,15 +2440,25 @@ bool VulkanCompute::EnsureForwardArena(
     uint64_t cacheFloats =
         static_cast<uint64_t>(kvLayerCount) * maxSeq_ * kvDim_;
 
+    // Q projection rows are not necessarily the model hidden width.  MLA
+    // direct-Q projections can require 3,072 float elements even when the
+    // legacy arena was sized to 2,048.  Keep the arena large enough for the
+    // supported topology before descriptors/commands are recorded.
+    const uint32_t qElements = std::max({hidden_, heads * headDim, 3072u});
+
     return allocF(arenaHidden_, hidden_) &&
            allocF(arenaAttnW_, hidden_) &&
            allocF(arenaFfnW_, hidden_) &&
            allocF(arenaNormed_, hidden_) &&
-           allocF(arenaQ_, hidden_) &&
+           allocF(arenaQ_, qElements) &&
            allocF(arenaK_, kvDim_) &&
            allocF(arenaV_, kvDim_) &&
            allocF(arenaAttn_, hidden_) &&
-           allocF(arenaResidual_, hidden_) &&
+           // Generic quant GEMV output is not always hidden-sized. MLA
+           // attn_q_b uses rows=24576 with hidden/input cols=1536. Reserve
+           // that stable capacity at initialization so later GEMV calls do
+           // not resize shared buffers while fused work is in flight.
+           allocF(arenaResidual_, std::max({hidden_, intermediate_, 24576u})) &&
            allocF(arenaGate_, intermediate_) &&
            allocF(arenaUp_, intermediate_) &&
            allocF(arenaFFNAct_, intermediate_) &&
@@ -2559,6 +2685,11 @@ bool VulkanCompute::BeginFusedLayer() {
 }
 
 bool VulkanCompute::EndFusedLayer() {
+    std::unique_lock<std::recursive_mutex> globalLock;
+    const bool globalSerial = GlobalGpuSerialEnabled();
+    uint64_t globalSeq = 0;
+    if (globalSerial)
+        globalLock = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
     const bool moeTrace = [] {
         const char* v = std::getenv("DEEP2_MOE_PLACE_TRACE");
         return v && v[0] == '1' && v[1] == '\0';
@@ -2603,20 +2734,44 @@ bool VulkanCompute::EndFusedLayer() {
 
     const uint64_t submitNs=nowNs();
     if (moeTrace) {
-        std::fprintf(stderr, "LIVE_K2_GPU_END queue_submit_begin\n");
+        std::fprintf(stderr,
+                     "LIVE_K2_GPU_END queue_submit_begin cmd=%p fence=%p "
+                     "submit_seq=%llu\n",
+                     (void*)cmd, (void*)reusableFusedFence_,
+                     (unsigned long long)(queueSubmitCount_ + 1));
+        std::fflush(stderr);
+    }
+    if (globalSerial) {
+        globalSeq = ++g_gpuSubmitSequence;
+        const uint32_t prior = g_gpuInFlight.fetch_add(1);
+        std::fprintf(stderr,
+                     "GLOBAL_GPU_SERIAL SUBMIT_BEGIN seq=%llu cmd=%p "
+                     "in_flight_before=%u fused=1\n",
+                     (unsigned long long)globalSeq, (void*)cmd, prior);
         std::fflush(stderr);
     }
     const VkResult submitRes = vkQueueSubmit(queue_,1,&si,reusableFusedFence_);
     if (moeTrace) {
-        std::fprintf(stderr, "LIVE_K2_GPU_END queue_submit_done vk=%d\n",
-                     (int)submitRes);
+        std::fprintf(stderr,
+                     "LIVE_K2_GPU_END queue_submit_done vk=%d cmd=%p "
+                     "fence=%p submit_seq=%llu\n",
+                     (int)submitRes, (void*)cmd, (void*)reusableFusedFence_,
+                     (unsigned long long)(queueSubmitCount_ + 1));
         std::fflush(stderr);
     }
     if(submitRes!=VK_SUCCESS) {
         (void)NoteVkResult(static_cast<int>(submitRes), "submit");
+        if (globalSerial) g_gpuInFlight.fetch_sub(1);
         return false;
     }
     ++queueSubmitCount_;
+    if (globalSerial) {
+        std::fprintf(stderr,
+                     "GLOBAL_GPU_SERIAL SUBMIT_END seq=%llu result=%d fence=%p\n",
+                     (unsigned long long)globalSeq, (int)submitRes,
+                     (void*)reusableFusedFence_);
+        std::fflush(stderr);
+    }
     const uint64_t fusedWaitTimeoutNs = 30000000000ULL; // 30 seconds
     if (moeTrace) {
         std::fprintf(stderr, "LIVE_K2_GPU_END fence_wait_begin timeout_s=30\n");
@@ -2625,20 +2780,25 @@ bool VulkanCompute::EndFusedLayer() {
     VkResult waitRes = vkWaitForFences(
             device_,1,&reusableFusedFence_,VK_TRUE,fusedWaitTimeoutNs);
     if (moeTrace) {
-        std::fprintf(stderr, "LIVE_K2_GPU_END fence_wait_done vk=%d\n",
-                     (int)waitRes);
+        std::fprintf(stderr,
+                     "LIVE_K2_GPU_END fence_wait_done vk=%d cmd=%p "
+                     "fence=%p submit_seq=%llu\n",
+                     (int)waitRes, (void*)cmd, (void*)reusableFusedFence_,
+                     (unsigned long long)(queueSubmitCount_ + 1));
         std::fflush(stderr);
     }
     if(waitRes==VK_TIMEOUT){
         std::fprintf(stderr,"[GPU] EndFusedLayer vkWaitForFences TIMEOUT after 30s\n");
         std::fflush(stderr);
         (void)NoteVkResult(static_cast<int>(waitRes), "fence");
+        if (globalSerial) g_gpuInFlight.fetch_sub(1);
         return false;
     }
     if(waitRes!=VK_SUCCESS) {
         (void)NoteVkResult(static_cast<int>(waitRes),
                            (waitRes == VK_ERROR_DEVICE_LOST) ? "device_lost"
                                                             : "fence");
+        if (globalSerial) g_gpuInFlight.fetch_sub(1);
         return false;
     }
     const uint64_t completeNs=nowNs();
@@ -2648,6 +2808,12 @@ bool VulkanCompute::EndFusedLayer() {
     // (recordQuantRowsResident queued them; never cached, never reused).
     if (moeTrace) {
         std::fprintf(stderr, "LIVE_K2_GPU_END drain_descriptors_begin\n");
+        std::fflush(stderr);
+    }
+    if (globalSerial) {
+        std::fprintf(stderr,
+                     "GLOBAL_GPU_SERIAL WAIT_END seq=%llu result=%d\n",
+                     (unsigned long long)globalSeq, (int)waitRes);
         std::fflush(stderr);
     }
     drainPendingDescriptorFrees();
@@ -2682,6 +2848,12 @@ bool VulkanCompute::EndFusedLayer() {
     accumulateQ4kParitySamples();
     if (moeTrace) {
         std::fprintf(stderr, "LIVE_K2_GPU_END q4k_collect_done\n");
+        std::fflush(stderr);
+    }
+    if (globalSerial) {
+        g_gpuInFlight.fetch_sub(1);
+        std::fprintf(stderr, "GLOBAL_GPU_SERIAL RELEASE seq=%llu\n",
+                     (unsigned long long)globalSeq);
         std::fflush(stderr);
     }
     return true;
@@ -3151,11 +3323,18 @@ bool VulkanCompute::SubmitRecordedResidentQ4K(
     si.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
     si.commandBufferCount=1;
     si.pCommandBuffers=&r.cmd;
-    if(vkQueueSubmit(queue_,1,&si,r.fence)!=VK_SUCCESS) return false;
+    {
+        std::unique_lock<std::recursive_mutex> globalLock;
+        const bool globalSerial = GlobalGpuSerialEnabled();
+        if (globalSerial)
+            globalLock = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
+        if (gatedSubmit(queue_, &si, r.fence) != VK_SUCCESS)
+            return false;
+    }
     if(vkWaitForFences(device_,1,&r.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
         return false;
+    if (GlobalGpuSerialEnabled()) g_gpuInFlight.fetch_sub(1);
     ++recordedQ4KSubmits_;
-    ++queueSubmitCount_;
     SetWorkEpoch(epoch);
     return true;
 }
@@ -3279,11 +3458,18 @@ bool VulkanCompute::SubmitRecordedResidentGroupQ4K(
     VkSubmitInfo si{};
     si.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
     si.commandBufferCount=1;si.pCommandBuffers=&r.cmd;
-    if(vkQueueSubmit(queue_,1,&si,r.fence)!=VK_SUCCESS) return false;
+    {
+        std::unique_lock<std::recursive_mutex> globalLock;
+        const bool globalSerial = GlobalGpuSerialEnabled();
+        if (globalSerial)
+            globalLock = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
+        if (gatedSubmit(queue_, &si, r.fence) != VK_SUCCESS)
+            return false;
+    }
     if(vkWaitForFences(device_,1,&r.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
         return false;
+    if (GlobalGpuSerialEnabled()) g_gpuInFlight.fetch_sub(1);
     ++recordedGroupSubmits_;
-    ++queueSubmitCount_;
     SetWorkEpoch(epoch);
     return true;
 }
@@ -3706,18 +3892,68 @@ bool VulkanCompute::DispatchGemvQuant(
     DeviceBuf& input,DeviceBuf& output,uint32_t rows,uint32_t cols,
     uint64_t cacheKey)
 {
-    if(type!=2 && type!=8 && type!=10 && type!=11 && type!=12 &&
-       type!=13 && type!=14 && type!=20 && type!=40) return false;
-    if(!weights||!weightBytes||!rows||!cols||
-       rows*sizeof(float)>output.size||cols*sizeof(float)>input.size)
+    // The original gate only covered very large Q4_K projections, which hid the
+    // failure stage for every other shape. Honour the forward-trace switch too
+    // so a failed GEMV reports the exact stage that rejected it.
+    const bool traceLargeQ = (type == 12 && rows >= 24576u) ||
+                             (std::getenv("DEEP2_GPU_FORWARD_TRACE") != nullptr);
+    const auto fail = [&](const char* stage) {
+        if (traceLargeQ) {
+            std::fprintf(stderr,
+                         "[MLA_Q_DISPATCH_BACKEND_FAIL] stage=%s type=%d "
+                         "rows=%u cols=%u bytes=%zu input=%d output=%d "
+                         "inCap=%llu outCap=%llu inReq=%llu outReq=%llu\n",
+                         stage, type, rows, cols, weightBytes,
+                         input ? 1 : 0, output ? 1 : 0,
+                         static_cast<unsigned long long>(input.size),
+                         static_cast<unsigned long long>(output.size),
+                         static_cast<unsigned long long>(cols) * 4ull,
+                         static_cast<unsigned long long>(rows) * 4ull);
+            std::fflush(stderr);
+        }
         return false;
+    };
+    if(type!=2 && type!=8 && type!=10 && type!=11 && type!=12 &&
+       type!=13 && type!=14 && type!=20 && type!=40) return fail("TYPE");
+    const auto checkedBytes = [](uint32_t count, size_t elem, size_t& out) {
+        if (!count || elem > std::numeric_limits<size_t>::max() / count) return false;
+        out = static_cast<size_t>(count) * elem;
+        return true;
+    };
+    size_t inputBytes = 0, outputBytes = 0;
+    if (!checkedBytes(cols, sizeof(float), inputBytes) ||
+        !checkedBytes(rows, sizeof(float), outputBytes) ||
+        !weights || !weightBytes || !rows || !cols ||
+        inputBytes > input.size || outputBytes > output.size)
+        return fail("ARGS_OR_ARENA");
+
+    if (std::getenv("DEEP2_MOE_PLACE_TRACE")) {
+        std::fprintf(stderr,
+                     "[MOE_GEMV_GEOMETRY] type=%d rows=%u cols=%u "
+                     "weight_bytes=%zu input_required=%zu input_alloc=%llu "
+                     "output_required=%zu output_alloc=%llu fused=%d\n",
+                     type, rows, cols, weightBytes, inputBytes,
+                     static_cast<unsigned long long>(input.size), outputBytes,
+                     static_cast<unsigned long long>(output.size), fused_ ? 1 : 0);
+        std::fflush(stderr);
+    }
 
     DeviceBuf* w=nullptr;
-    if(!ensureWeightQuant(type,weights,weightBytes,w,cacheKey)) return false;
+    if(!ensureWeightQuant(type,weights,weightBytes,w,cacheKey))
+        return fail("WEIGHT_RESIDENCY");
+    if (!w || w->size < weightBytes)
+        return fail("WEIGHT_BUFFER_RANGE");
+    if (traceLargeQ) {
+        std::fprintf(stderr,
+                     "[MLA_Q_DISPATCH_BACKEND] stage=WEIGHT_READY type=%d "
+                     "rows=%u cols=%u bytes=%zu weight_buffer=%d\n",
+                     type, rows, cols, weightBytes, (w && *w) ? 1 : 0);
+        std::fflush(stderr);
+    }
     QPush p{};
     p.type=static_cast<uint32_t>(type);
     p.rows=rows; p.cols=cols;
-    if(weightBytes>std::numeric_limits<uint32_t>::max()) return false;
+    if(weightBytes>std::numeric_limits<uint32_t>::max()) return fail("WEIGHT_SIZE_U32");
     p.weightBytes=static_cast<uint32_t>(weightBytes);
     bool ok;
         if(type==2) {
@@ -5193,13 +5429,18 @@ bool VulkanCompute::SubmitMaterialRangeAsync(
     si.pCommandBuffers = &t.cmd;
 
     t.hostSubmitNs = nowNs();
-    if (vkQueueSubmit(queue_, 1, &si, t.fence) != VK_SUCCESS) {
-        vkDestroyFence(device_, t.fence, nullptr);
-        t.fence = VK_NULL_HANDLE;
-        return false;
+    {
+        std::unique_lock<std::recursive_mutex> globalLock;
+        const bool globalSerial = GlobalGpuSerialEnabled();
+        if (globalSerial)
+            globalLock = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
+        if (gatedSubmit(queue_, &si, t.fence) != VK_SUCCESS) {
+            vkDestroyFence(device_, t.fence, nullptr);
+            t.fence = VK_NULL_HANDLE;
+            return false;
+        }
     }
-    ++queueSubmitCount_;
-
+    t.inFlight_ = true;
     t.epoch = epoch;
     t.bytes = bytes;
     t.generation = deviceGeneration_;
@@ -5228,6 +5469,10 @@ bool VulkanCompute::PublishCompletedPrime(
             vkWaitForFences(device_, 1, &t.fence, VK_TRUE, UINT64_MAX);
         if (wait != VK_SUCCESS)
             return false;
+    }
+    if (t.inFlight_) {
+        if (GlobalGpuSerialEnabled()) g_gpuInFlight.fetch_sub(1);
+        t.inFlight_ = false;
     }
     const uint64_t done = nowNs();
 
@@ -6147,12 +6392,19 @@ bool VulkanCompute::RunWeightResidentHotDirect(
     si.commandBufferCount = 1;
     si.pCommandBuffers = &lane.cmd;
     const uint64_t submitNs = nowNs();
-    if (vkQueueSubmit(queue_, 1, &si, lane.fence) != VK_SUCCESS)
-        return false;
+    {
+        std::unique_lock<std::recursive_mutex> globalLock;
+        const bool globalSerial = GlobalGpuSerialEnabled();
+        if (globalSerial)
+            globalLock = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
+        if (gatedSubmit(queue_, &si, lane.fence) != VK_SUCCESS)
+            return false;
+    }
     ++lane.submits;
     if (vkWaitForFences(
             device_, 1, &lane.fence, VK_TRUE, UINT64_MAX) != VK_SUCCESS)
         return false;
+    if (GlobalGpuSerialEnabled()) g_gpuInFlight.fetch_sub(1);
     const uint64_t completeNs = nowNs();
 
     // Endurance fix: the fence is signaled — the GPU is done with every
@@ -6361,12 +6613,19 @@ bool VulkanCompute::RunWeightGroupResidentHotDirect(
     si.commandBufferCount = 1;
     si.pCommandBuffers = &lane.cmd;
     const uint64_t groupSubmitNs = nowNs();
-    if (vkQueueSubmit(queue_, 1, &si, lane.fence) != VK_SUCCESS)
-        return false;
+    {
+        std::unique_lock<std::recursive_mutex> globalLock;
+        const bool globalSerial = GlobalGpuSerialEnabled();
+        if (globalSerial)
+            globalLock = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
+        if (gatedSubmit(queue_, &si, lane.fence) != VK_SUCCESS)
+            return false;
+    }
     ++lane.submits;
     if (vkWaitForFences(
             device_, 1, &lane.fence, VK_TRUE, UINT64_MAX) != VK_SUCCESS)
         return false;
+    if (GlobalGpuSerialEnabled()) g_gpuInFlight.fetch_sub(1);
     const uint64_t groupCompleteNs = nowNs();
 
     // Free every ranged set this submit bound.
@@ -6757,12 +7016,17 @@ bool VulkanCompute::SubmitDownloadRing(
     si.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
     si.commandBufferCount=1;si.pCommandBuffers=&s.cmd;
     VkQueue tq=transferQueue_?transferQueue_:queue_;
-    if(vkQueueSubmit(tq,1,&si,s.fence)!=VK_SUCCESS) return false;
+    {
+        std::unique_lock<std::recursive_mutex> globalLock;
+        const bool globalSerial = GlobalGpuSerialEnabled();
+        if (globalSerial)
+            globalLock = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
+        if (gatedSubmit(tq, &si, s.fence) != VK_SUCCESS) return false;
+    }
     s.bytes=bytes;s.inFlight=true;
     slotOut=idx;
     ++downloadRingSubmits_;
     ++transferQueueSubmits_;
-    ++queueSubmitCount_;
     return true;
 }
 
@@ -6779,7 +7043,10 @@ bool VulkanCompute::WaitDownloadRing(
     downloadRingWaitNs_+=(uint64_t)std::chrono::duration_cast<
         std::chrono::nanoseconds>(b-a).count();
     std::memcpy(dst,s.mapped,bytes);
-    s.inFlight=false;
+    if (s.inFlight) {
+        if (GlobalGpuSerialEnabled()) g_gpuInFlight.fetch_sub(1);
+        s.inFlight=false;
+    }
     return true;
 }
 bool VulkanCompute::CaptureVerifiedHidden(
@@ -7092,9 +7359,13 @@ bool VulkanCompute::SubmitDownloadAsync(
     VkSubmitInfo si{};
     si.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
     si.commandBufferCount=1;si.pCommandBuffers=&t.cmd;
-    if(vkQueueSubmit(queue_,1,&si,t.fence)!=VK_SUCCESS) {
+    std::unique_lock<std::recursive_mutex> globalLock;
+    const bool globalSerial = GlobalGpuSerialEnabled();
+    if (globalSerial) globalLock = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
+    if (gatedSubmit(queue_, &si, t.fence) != VK_SUCCESS) {
         CancelDownloadTicket(t);return false;
     }
+    t.inFlight_ = true;
     t.bytes=bytes;t.active=true;
     return true;
 }
@@ -7106,11 +7377,20 @@ bool VulkanCompute::WaitDownloadAsync(
     if(vkWaitForFences(device_,1,&t.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
         return false;
     std::memcpy(dst,t.mapped,bytes);
+    if (t.inFlight_) {
+        if (GlobalGpuSerialEnabled()) g_gpuInFlight.fetch_sub(1);
+        t.inFlight_=false;
+    }
     CancelDownloadTicket(t);
     return true;
 }
 
 void VulkanCompute::CancelDownloadTicket(DownloadTicket& t) {
+    // Do NOT decrement g_gpuInFlight here: the submission succeeded and the
+    // GPU work is still executing. The in_flight reference is released only
+    // in the corresponding wait path after a successful fence/timeline wait.
+    // Cancel merely abandons the ticket; the counter remains conservatively
+    // incremented (safe overcount) until the GPU completes the submission.
     if(t.mapped&&t.staging.memory) vkUnmapMemory(device_,t.staging.memory);
     if(t.fence) vkDestroyFence(device_,t.fence,nullptr);
     if(t.cmd&&commandPool_) vkFreeCommandBuffers(device_,commandPool_,1,&t.cmd);
@@ -7375,9 +7655,13 @@ bool VulkanCompute::BeginQ4KResidentAsync(
     si.commandBufferCount=1;
     si.pCommandBuffers=&t.cmd;
     const auto now=std::chrono::steady_clock::now();
-    if(vkQueueSubmit(queue_,1,&si,t.fence)!=VK_SUCCESS) {
+    std::unique_lock<std::recursive_mutex> globalLock;
+    const bool globalSerial = GlobalGpuSerialEnabled();
+    if (globalSerial) globalLock = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
+    if (gatedSubmit(queue_, &si, t.fence) != VK_SUCCESS) {
         CancelQ4KAsync(t); return false;
     }
+    t.inFlight_ = true;
     t.submitNs=(uint64_t)std::chrono::duration_cast<
         std::chrono::nanoseconds>(now.time_since_epoch()).count();
     t.weightBytes=weight.bytes;
@@ -7402,11 +7686,20 @@ bool VulkanCompute::WaitQ4KResidentAsync(
         std::chrono::nanoseconds>(w1.time_since_epoch()).count();
     if(gpuNs) *gpuNs=t.completeNs>t.submitNs
         ? t.completeNs-t.submitNs:0;
+    if (t.inFlight_) {
+        if (GlobalGpuSerialEnabled()) g_gpuInFlight.fetch_sub(1);
+        t.inFlight_=false;
+    }
     CancelQ4KAsync(t);
     return true;
 }
 
 void VulkanCompute::CancelQ4KAsync(Q4KAsyncTicket& t) {
+    // Do NOT decrement g_gpuInFlight here: the submission succeeded and the
+    // GPU work is still executing. The in_flight reference is released only
+    // in the corresponding wait path after a successful fence/timeline wait.
+    // Cancel merely abandons the ticket; the counter remains conservatively
+    // incremented (safe overcount) until the GPU completes the submission.
     // Ring owns cmd/fence. Locate and release logical in-flight state only.
     for(auto& s:asyncCmdRing_) {
         if(s.cmd==t.cmd&&s.fence==t.fence) {
@@ -7488,7 +7781,11 @@ bool VulkanCompute::SubmitQ4KThenDownloadTimeline(
     csi.pNext=&ctsi;
     csi.commandBufferCount=1;csi.pCommandBuffers=&ccmd;
     csi.signalSemaphoreCount=1;csi.pSignalSemaphores=&timelineSemaphore_;
-    if(vkQueueSubmit(queue_,1,&csi,VK_NULL_HANDLE)!=VK_SUCCESS) return false;
+    std::unique_lock<std::recursive_mutex> globalLock;
+    const bool globalSerial = GlobalGpuSerialEnabled();
+    if (globalSerial) globalLock = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
+    if (gatedSubmit(queue_, &csi, VK_NULL_HANDLE) != VK_SUCCESS) return false;
+    ticket.inFlight_++;
     ++timelineSignals_;++queueSubmitCount_;
 
     VkPipelineStageFlags waitStage=VK_PIPELINE_STAGE_TRANSFER_BIT;
@@ -7506,7 +7803,11 @@ bool VulkanCompute::SubmitQ4KThenDownloadTimeline(
     tsi.commandBufferCount=1;tsi.pCommandBuffers=&rs.cmd;
     tsi.signalSemaphoreCount=1;tsi.pSignalSemaphores=&timelineSemaphore_;
     VkQueue tq=transferQueue_?transferQueue_:queue_;
-    if(vkQueueSubmit(tq,1,&tsi,rs.fence)!=VK_SUCCESS) return false;
+    std::unique_lock<std::recursive_mutex> globalLock2;
+    const bool globalSerial2 = GlobalGpuSerialEnabled();
+    if (globalSerial2) globalLock2 = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
+    if (gatedSubmit(tq, &tsi, rs.fence) != VK_SUCCESS) return false;
+    ticket.inFlight_++;
     ++timelineSignals_;++transferQueueSubmits_;++queueSubmitCount_;
 
     rs.bytes=bytes;rs.inFlight=true;
@@ -7527,6 +7828,10 @@ bool VulkanCompute::WaitTimelineDownload(
     if(!WaitTimelineValue(t.transferDone)) return false;
     auto& rs=downloadRing_[t.ringSlot];
     std::memcpy(dst,rs.mapped,bytes);
+    if (t.inFlight_) {
+        if (GlobalGpuSerialEnabled()) g_gpuInFlight.fetch_sub(t.inFlight_);
+        t.inFlight_=0;
+    }
     rs.inFlight=false;
     t={};
     return true;
@@ -7666,7 +7971,10 @@ bool VulkanCompute::SubmitTimelineCommand(
     si.pCommandBuffers=&cmd;
     si.signalSemaphoreCount=1;
     si.pSignalSemaphores=&timelineSemaphore_;
-    if(vkQueueSubmit(q,1,&si,VK_NULL_HANDLE)!=VK_SUCCESS)
+    std::unique_lock<std::recursive_mutex> globalLock;
+    const bool globalSerial = GlobalGpuSerialEnabled();
+    if (globalSerial) globalLock = std::unique_lock<std::recursive_mutex>(g_gpuSubmitGate);
+    if (gatedSubmit(q, &si, VK_NULL_HANDLE) != VK_SUCCESS)
         return false;
     ++timelineSignals_;
     ++queueSubmitCount_;
@@ -7718,6 +8026,7 @@ bool VulkanCompute::CaptureVerifiedHiddenTimeline(
             ticket.cmd,queue_,waitValue,ticket.signalValue,
             VK_PIPELINE_STAGE_TRANSFER_BIT))
         return false;
+    ticket.inFlight_ = true;
     ticket.active=true;
     ++hiddenTimelineSubmits_;
     ++verifiedHiddenHandoffs_;
@@ -7743,6 +8052,7 @@ bool VulkanCompute::RestoreVerifiedHiddenTimeline(
             ticket.cmd,queue_,waitValue,ticket.signalValue,
             VK_PIPELINE_STAGE_TRANSFER_BIT))
         return false;
+    ticket.inFlight_ = true;
     ticket.active=true;
     ++hiddenTimelineSubmits_;
     return true;
@@ -7751,6 +8061,10 @@ bool VulkanCompute::RestoreVerifiedHiddenTimeline(
 bool VulkanCompute::WaitHiddenCopy(HiddenCopyTicket& ticket) {
     if(!ticket.active) return true;
     const bool ok=WaitTimelineValue(ticket.signalValue);
+    if (ok && ticket.inFlight_) {
+        if (GlobalGpuSerialEnabled()) g_gpuInFlight.fetch_sub(1);
+        ticket.inFlight_=false;
+    }
     if(ticket.cmd&&commandPool_)
         vkFreeCommandBuffers(device_,commandPool_,1,&ticket.cmd);
     ticket={};

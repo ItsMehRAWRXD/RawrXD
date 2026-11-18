@@ -618,6 +618,45 @@ ReapMoETransformResult transformMoEGGUF(const ReapMoETransformRequest& request) 
         shards.emplace_back(std::move(shard));
     }
 
+    // The selection manifest is a topology contract, not merely a list of
+    // optional slices.  Reject stale selectors that contain transformer
+    // blocks which are not routed MoE layers (for example, an erroneous
+    // layer 0 entry), or omit a routed layer.  Silently ignoring an extra
+    // entry would make the manifest appear valid while exporting a different
+    // model than the calibration evidence describes.
+    std::set<uint32_t> sourceMoeLayers;
+    for (const auto& shard : shards) {
+        for (const auto& tensor : shard.tensors) {
+            if (!isProjection(tensor.name, "gate") &&
+                !isProjection(tensor.name, "up") &&
+                !isProjection(tensor.name, "down")) continue;
+            uint32_t layer = 0;
+            if (!layerFromName(tensor.name, layer)) {
+                result.error = "expert tensor has invalid layer name: " + tensor.name;
+                return result;
+            }
+            sourceMoeLayers.insert(layer);
+        }
+    }
+    if (sourceMoeLayers.size() != selection.size()) {
+        result.error = "selection topology mismatch: source MoE layers=" +
+                       std::to_string(sourceMoeLayers.size()) +
+                       " manifest layers=" + std::to_string(selection.size());
+        return result;
+    }
+    for (const uint32_t layer : sourceMoeLayers) {
+        if (selection.find(layer) == selection.end()) {
+            result.error = "selection missing source MoE layer " + std::to_string(layer);
+            return result;
+        }
+    }
+    for (const auto& entry : selection) {
+        if (sourceMoeLayers.find(entry.first) == sourceMoeLayers.end()) {
+            result.error = "selection contains non-MoE layer " + std::to_string(entry.first);
+            return result;
+        }
+    }
+
     std::error_code ec;
     const fs::path outputDir(request.outputDirectory);
     const bool outputExisted = fs::exists(outputDir, ec);

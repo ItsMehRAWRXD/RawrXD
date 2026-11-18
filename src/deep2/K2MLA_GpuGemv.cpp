@@ -161,24 +161,33 @@ static bool TryGpu(int ty, const void* packed, size_t bytes,
                    uint32_t rows, uint32_t cols,
                    const BraidExecutionPlan* braidPlan,
                    const MlaPackedExec* exec) {
-    if (!MLA_GpuGemvWanted() || !packed || !input) return false;
+    const auto fail = [&](const char* stage) {
+        std::fprintf(stderr,
+                     "[MLA_GEMV_FAIL] stage=%s type=%d rows=%u cols=%u bytes=%zu\n",
+                     stage, ty, rows, cols, bytes);
+        std::fflush(stderr);
+        return false;
+    };
+    if (!MLA_GpuGemvWanted()) return fail("GPU_POLICY");
+    if (!packed) return fail("WEIGHT_POINTER");
+    if (!input) return fail("INPUT_POINTER");
     const bool rangeArgmax =
         exec && exec->mode == MlaPackedExecMode::RangeArgmax;
-    if (!output && !rangeArgmax) return false;
-    if (ty != 11 && ty != 12 && ty != 13 && ty != 20 && ty != 8 && ty != 14) { ++g_skip; return false; }
+    if (!output && !rangeArgmax) return fail("OUTPUT_POINTER");
+    if (ty != 11 && ty != 12 && ty != 13 && ty != 20 && ty != 8 && ty != 14) { ++g_skip; return fail("UNSUPPORTED_TYPE"); }
     if (ty == 8) {
         const char* q4 = std::getenv("DEEP2_MLA_GPU_Q4_ONLY");
-        if (q4 && q4[0] == '1') { ++g_skip; return false; }
+        if (q4 && q4[0] == '1') { ++g_skip; return fail("Q4_ONLY_POLICY"); }
     }
     uint32_t useRows = rows;
     if (exec && exec->rowCount) useRows = exec->rowCount;
     ++g_attempts;
     const size_t need = PackedNeed(ty, useRows, cols);
-    if (!need) { ++g_skip; return false; }
+    if (!need) { ++g_skip; return fail("INVALID_GEOMETRY"); }
     if (!bytes) bytes = need;
-    if (bytes < need) { ++g_skip; return false; }
+    if (bytes < need) { ++g_skip; return fail("WEIGHT_BYTES"); }
     auto* vc = K2GpuStreamCopy_Vc();
-    if (!vc) { ++g_skip; return false; }
+    if (!vc) { ++g_skip; return fail("VULKAN_CONTEXT"); }
 
     float* outBuf = output;
     if (rangeArgmax) {
@@ -221,6 +230,14 @@ static bool TryGpu(int ty, const void* packed, size_t bytes,
     const bool wantFused =
         (isOproj || isKva) ? true
                            : (isQa ? MLA_QaWantFused() : MLA_FusedQ4KT_Wanted());
+
+    std::fprintf(stderr,
+                 "[MLA_GEMV_STAGE] stage=PREPARED type=%d rows=%u cols=%u "
+                 "need=%zu bytes=%zu pin=%llu tag=%u fused=%d\n",
+                 ty, useRows, cols, need, bytes,
+                 (unsigned long long)pk, (unsigned)tag,
+                 (allowFused && wantFused) ? 1 : 0);
+    std::fflush(stderr);
 
     if (isKva) {
         static std::atomic<uint32_t> kvaTryDiag{0};
@@ -268,6 +285,13 @@ static bool TryGpu(int ty, const void* packed, size_t bytes,
         const uint64_t t0 = MLA_FusedQ4KT_NowUs();
         ok = vc->DispatchGEMVPacked(packed, bytes, input, outBuf, useRows, cols,
                                     pk);
+        std::fprintf(stderr,
+                     "[MLA_GEMV_STAGE] stage=DISPATCH_PACKED result=%s "
+                     "rows=%u cols=%u uploads_delta=%llu pin_reject_delta=%llu\n",
+                     ok ? "PASS" : "FAIL", useRows, cols,
+                     (unsigned long long)(vc->GemvWeightUploads() - up0),
+                     (unsigned long long)(vc->WeightPinRejects() - rej0));
+        std::fflush(stderr);
         if (ok) MLA_NoteGemvCompatUs(t0);
         if (isQa) MLA_QaCrit_NoteCompat(MLA_FusedQ4KT_NowUs() - t0, ok);
         if (isOproj && ok) {
@@ -289,6 +313,13 @@ static bool TryGpu(int ty, const void* packed, size_t bytes,
     }
     const uint64_t bodyUs = MLA_FusedQ4KT_NowUs() - tBody0;
     if (!ok) {
+        std::fprintf(stderr,
+                     "[MLA_GEMV_STAGE] stage=DISPATCH_COMPLETE result=FAIL "
+                     "rows=%u cols=%u uploads_delta=%llu pin_reject_delta=%llu\n",
+                     useRows, cols,
+                     (unsigned long long)(vc->GemvWeightUploads() - up0),
+                     (unsigned long long)(vc->WeightPinRejects() - rej0));
+        std::fflush(stderr);
         if (isQa) {
             MLA_QaCrit_NoteFallback();
             MLA_QaCrit_End(MLA_FusedQ4KT_NowUs() - tCall0);

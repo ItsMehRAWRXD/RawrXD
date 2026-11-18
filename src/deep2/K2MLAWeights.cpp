@@ -800,7 +800,7 @@ bool MLAWeights::ResolveFromTensorIndex(const GlobalTensorIndex& index, uint32_t
             desc.shape[i] = ref.shape[i];
         }
         desc.quantType = RawrXD::QuantType::UNKNOWN; // Will be set from ggmlType
-        desc.layout = RawrXD::TensorLayout::DENSE;
+                desc.layout = RawrXD::TensorLayout::DENSE; // Will be overridden for block-quantized types below
         desc.role = RawrXD::TensorRole::WEIGHT;
         desc.memorySpace = RawrXD::UniversalTensorDescriptor::MemorySpace::NVME;
         desc.data = nullptr;
@@ -838,6 +838,12 @@ bool MLAWeights::ResolveFromTensorIndex(const GlobalTensorIndex& index, uint32_t
             case 30: desc.quantType = RawrXD::QuantType::BF16;    desc.blockSize = 1;   desc.blockSizeBytes = 2; break;
             default: desc.quantType = RawrXD::QuantType::UNKNOWN; desc.blockSize = 1;   desc.blockSizeBytes = 4; break;
         }
+
+                    // Block-quantized types (blockSize > 1) must use BLOCKED layout for correct byteSize()
+                    if (desc.blockSize > 1) {
+                        desc.layout = RawrXD::TensorLayout::BLOCKED;
+                    }
+                    // Dense types (blockSize == 1) keep the default DENSE layout
 
         view = RawrXD::TensorView::FromBuffer(desc, nullptr, false);
         return true;

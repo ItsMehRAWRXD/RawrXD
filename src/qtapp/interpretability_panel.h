@@ -2,6 +2,7 @@
 
 #include <QWidget>
 #include <QJsonObject>
+#include <QStringList>
 #include <vector>
 // QtCharts includes - commented out for now to avoid build issues
 //#include <QtCharts/QChartView>

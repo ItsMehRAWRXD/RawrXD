@@ -1,0 +1,18 @@
+{
+  "schema": "RAWRXD_REAP_CALIBRATION_CHECKPOINT_001",
+  "model_path": "F:\\rawrxd\\models\\deepseek-coder-v2_16b.gguf",
+  "model_sha256": "5ff0abeeac1d2dbdd5455c0b49ba3b29a9ce3c1fb181b2eef2e948689d55d046",
+  "config_hash": "db7ffcbbe24b9b1f",
+  "num_layers": 27,
+  "num_experts": 64,
+  "top_k": 6,
+  "prompts": [
+    {
+      "prompt": "Write a Python function to calculate Fibonacci.",
+      "hash": "ce03401723e28b0",
+      "completed_tokens": 234
+    }
+  ],
+  "total_tokens": 234,
+  "timestamp": 1795014800
+}

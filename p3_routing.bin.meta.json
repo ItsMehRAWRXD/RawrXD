@@ -1,0 +1,1 @@
+{"dtype":"mixed","prefix":"u32_layer,u64_step,u32_hidden,u32_count,u32_ids[],f32_weights[],f32_input[]","boundary":"applied_routing_and_expert_input","layer":13,"generation_step":0,"hidden":2048,"selected_count":6,"captures":1,"model_sha256":"5ff0abeeac1d2dbdd5455c0b49ba3b29a9ce3c1fb181b2eef2e948689d55d046"}

@@ -30,8 +30,10 @@
 #include <QUrl>
 #include <QHash>
 #include <QString>
+#include <QStringList>
 #include <QPointer>
 #include <QListWidgetItem>
+#include <utility>
 #include "Subsystems.h" // Include the stubs/definitions
 
 #include "masm/MASMCompilerWidget.h"
@@ -44,16 +46,12 @@ QT_BEGIN_NAMESPACE
 class QLineEdit;
 class QPushButton;
 class QProgressBar;
-class QListWidget;
-class QListWidgetItem;
 class QTabWidget;
 class QTextEdit;
 class QLabel;
 class QComboBox;
 class QTreeWidgetItem;
 class QDockWidget;
-class QPlainTextEdit;
-class QProcess;
 class QSplitter;
 class QToolBar;
 class QMenu;
@@ -75,7 +73,8 @@ class QGraphicsView;
 class QUndoGroup;
 class QUndoView;
 class QSyntaxHighlighter;
-class QProgressBar;
+class QPlainTextEdit;
+class QProcess;
 class QSystemTrayIcon;
 QT_END_NAMESPACE
 
@@ -521,7 +520,10 @@ private: /* ---------------  original members  --------------- */
     QProcess* cmdProcess_{};
 
 private: /* ---------------  new IDE members  --------------- */
-    /* Core */
+    /* Terminal */
+    TerminalWidget* m_terminalWidget{};
+    QPlainTextEdit* m_outputView{};
+    QWidget* m_problemsView{};
     QPointer<WelcomeScreenWidget> welcomeScreen_{};
     QPointer<CommandPalette> commandPalette_{};
     QPointer<ProgressManager> progressManager_{};
@@ -685,6 +687,7 @@ private: /* ---------------  new IDE members  --------------- */
     
     void createVSCodeLayout();
     void applyDarkTheme();
+    void refreshProblemsList();
     void onAIBackendChanged(const QString& id, const QString& apiKey);
     void onQuantModeChanged(const QString& mode);
     void joinSwarmSession();

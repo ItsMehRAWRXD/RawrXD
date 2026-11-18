@@ -15,17 +15,37 @@
 
 // ============================================================================
 // Type aliases — map Qt type names to native implementations
+// Only define when Qt types are NOT already available (prevents redefinition
+// errors when Qt headers are included transitively)
 // ============================================================================
 
+#ifndef QString
 using QString = std::string;
+#endif
+#ifndef QStringList
 using QStringList = std::vector<std::string>;
+#endif
+#ifndef QJsonObject
 using QJsonObject = nlohmann::json;
+#endif
+#ifndef QJsonArray
 using QJsonArray = nlohmann::json;
+#endif
+#ifndef QJsonValue
 using QJsonValue = nlohmann::json;
+#endif
+#ifndef QJsonDocument
 using QJsonDocument = NativeJson;
+#endif
+#ifndef QVariant
 using QVariant = nlohmann::json;
+#endif
+#ifndef QMap
 using QMap = std::map;
+#endif
+#ifndef QVector
 using QVector = std::vector;
+#endif
 
 // ============================================================================
 // NativeObject — Base class replacing QObject with working connect/emit
@@ -40,17 +60,19 @@ public:
     // Connect a signal to a slot (std::function callback)
     // Returns a connection ID that can be used to disconnect
     size_t connect(const std::string& signalName, std::function<void()> slot) {
-        return m_signalSlot.connect(signalName, std::move(slot));
+            m_signalSlot.connect(signalName, std::move(slot));
+            return 0; // NativeSignalSlot doesn't track connection IDs
     }
 
     template<typename... Args>
     size_t connect(const std::string& signalName, std::function<void(Args...)> slot) {
         // Wrap typed slot into void() for storage
-        return m_signalSlot.connect(signalName, [slot = std::move(slot)]() mutable {
+            m_signalSlot.connect(signalName, [slot = std::move(slot)]() mutable {
             // This is a simplified version; typed args would need a more
             // sophisticated slot storage system. For now, void() slots work.
             slot();
         });
+            return 0; // NativeSignalSlot doesn't track connection IDs
     }
 
     // Emit a signal, invoking all connected slots

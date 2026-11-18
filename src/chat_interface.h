@@ -4,7 +4,6 @@
 #include <QString>
 
 class QTextEdit;
-class QLineEdit;
 class QComboBox;
 class QCheckBox;
 class QLabel;
@@ -48,6 +47,9 @@ public slots:
     void onModel2Changed(int index);
     void onMaxModeToggled(bool enabled);
     void setCanSendMessage(bool enabled);
+
+protected:
+    void keyPressEvent(QKeyEvent* event) override;
     
     // Phase 2: Streaming token progress
     void onTokenGenerated(int delta);
@@ -66,7 +68,7 @@ private:
     QString resolveGgufPath(const QString& modelName);  // Resolve Ollama model name to GGUF file
     
     QTextEdit* message_history_;
-    QLineEdit* message_input_;
+        QTextEdit* message_input_;
     QComboBox* modelSelector_;
     QComboBox* modelSelector2_;
     QCheckBox* maxModeToggle_;

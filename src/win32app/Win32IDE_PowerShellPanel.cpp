@@ -283,7 +283,7 @@ void Win32IDE::createPowerShellToolbar() {
     int btnHeight = 25;
     int btnSpacing = 5;
     
-    m_hwndPSBtnClear = CreateWindowEx(
+    m_hwndPSBtnClear = CreateWindowExW(
         0, L"BUTTON", L"Clear",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         btnX, btnY, btnWidth, btnHeight,
@@ -293,7 +293,7 @@ void Win32IDE::createPowerShellToolbar() {
     );
     btnX += btnWidth + btnSpacing;
     
-    m_hwndPSBtnStop = CreateWindowEx(
+    m_hwndPSBtnStop = CreateWindowExW(
         0, L"BUTTON", L"Stop",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         btnX, btnY, btnWidth, btnHeight,
@@ -303,7 +303,7 @@ void Win32IDE::createPowerShellToolbar() {
     );
     btnX += btnWidth + btnSpacing;
     
-    m_hwndPSBtnHistory = CreateWindowEx(
+    m_hwndPSBtnHistory = CreateWindowExW(
         0, L"BUTTON", L"History",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         btnX, btnY, btnWidth, btnHeight,
@@ -313,7 +313,7 @@ void Win32IDE::createPowerShellToolbar() {
     );
     btnX += btnWidth + btnSpacing;
     
-    m_hwndPSBtnRestart = CreateWindowEx(
+    m_hwndPSBtnRestart = CreateWindowExW(
         0, L"BUTTON", L"Restart",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         btnX, btnY, btnWidth, btnHeight,
@@ -323,7 +323,7 @@ void Win32IDE::createPowerShellToolbar() {
     );
     btnX += btnWidth + btnSpacing;
     
-    m_hwndPSBtnLoadRawrXD = CreateWindowEx(
+    m_hwndPSBtnLoadRawrXD = CreateWindowExW(
         0, L"BUTTON", L"Load RawrXD",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         btnX, btnY, 120, btnHeight,
@@ -927,7 +927,7 @@ void Win32IDE::quickInference() {
         
         // Focus the input
         SetFocus(m_hwndPowerShellInput);
-        SetWindowText(m_hwndPowerShellInput, L"Invoke-PoshLLMInference -Prompt '' -MaxTokens 100");
+        SetWindowTextW(m_hwndPowerShellInput, L"Invoke-PoshLLMInference -Prompt '' -MaxTokens 100");
         
         // Position cursor before second quote
         SendMessage(m_hwndPowerShellInput, EM_SETSEL, 36, 36);

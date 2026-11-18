@@ -95,9 +95,9 @@ private slots:
 private:
     // Audio capture
     QAudioSource* m_audioSource;  // Qt 6: QAudioInput renamed to QAudioSource
-    QAudioDevice m_audioDevice;
+        AudioDevice m_audioDevice;
     QBuffer* m_audioBuffer;
-    QAudioFormat m_audioFormat;
+        AudioFormat m_audioFormat;
     QTimer* m_recordingTimer;
     
     // Configuration

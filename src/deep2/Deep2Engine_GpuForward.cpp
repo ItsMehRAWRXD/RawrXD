@@ -133,14 +133,16 @@ bool layerIsMla(const LayerWeights& lw) noexcept {
            !usableWeight(lw.wk) && !usableWeight(lw.wv);
 }
 
-bool mlaLayerReady(const LayerWeights& lw) noexcept {
+bool mlaLayerReady(const LayerWeights& lw, bool isMoe) noexcept {
     // The output projection may be stored in lw.wo (raw load) or lw.attnO
     // (mapped load); denseLayerReady resolves the same alias.
     const WeightTensor& wo = lw.wo.data ? lw.wo : lw.attnO;
+    // MoE layers carry no dense FFN tensors; their experts live in the proxy.
+    const bool ffnReady = isMoe ? true
+        : (usableWeight(lw.wGate) && usableWeight(lw.wUp) && usableWeight(lw.wDown));
     return usableWeight(lw.attnNorm) && usableWeight(lw.wq) &&
            usableWeight(wo) &&
-           usableWeight(lw.ffnNorm) && usableWeight(lw.wGate) &&
-           usableWeight(lw.wUp) && usableWeight(lw.wDown);
+           usableWeight(lw.ffnNorm) && ffnReady;
 }
 
 bool supportedDenseWeight(const WeightTensor& wt) noexcept {
@@ -253,27 +255,34 @@ bool Deep2Engine::forwardLayerGpuResident(
     // MLA layers need different weights than dense layers
     bool layerReady = false;
     
-    if (modelWeights.useMLA && lw.useMLA) {
-        // MLA layer: check for MLA-specific weights
-        layerReady = usableWeight(lw.attnNorm) && 
-                     usableWeight(lw.attnQ_a) && 
-                     usableWeight(lw.attnQ_b) && 
-                     usableWeight(lw.attnKV_a_mqa) && 
-                     usableWeight(lw.attnK_b) && 
-                     usableWeight(lw.attnO) &&
-                     usableWeight(lw.ffnNorm) && 
-                     usableWeight(lw.wGate) &&
-                     usableWeight(lw.wUp) && 
-                     usableWeight(lw.wDown);
+    if (layerIsMla(lw)) {
+        // MLA layer detected from the loaded tensors (attnKV_a_mqa + attnK_b,
+        // no wk/wv). LayerWeights::useMLA is not set by the raw load path, so
+        // relying on it here silently took the dense branch and rejected.
+        const bool ffnReady = modelWeights.isMoE
+            ? true
+            : (usableWeight(lw.wGate) && usableWeight(lw.wUp) && usableWeight(lw.wDown));
+        // Output projection aliases lw.wo on the raw load path and lw.attnO on
+        // the mapped path; resolve the alias before testing readiness.
+        const WeightTensor& woReady = lw.wo.data ? lw.wo : lw.attnO;
+        layerReady = usableWeight(lw.attnNorm) &&
+                     usableWeight(lw.wq) &&
+                     usableWeight(woReady) &&
+                     usableWeight(lw.attnKV_a_mqa) &&
+                     usableWeight(lw.attnK_b) &&
+                     usableWeight(lw.ffnNorm) &&
+                     ffnReady;
     } else {
         // Dense layer: check for standard weights
         layerReady = denseLayerReady(lw);
     }
     
     if (!layerReady) return reject("reject: layer not ready");
-    if (!supportedDenseWeight(lw.wGate)) return reject("reject: unsupported wGate type");
-    if (!supportedDenseWeight(lw.wUp)) return reject("reject: unsupported wUp type");
-    if (!supportedDenseWeight(lw.wDown)) return reject("reject: unsupported wDown type");
+    if (!modelWeights.isMoE) {
+        if (!supportedDenseWeight(lw.wGate)) return reject("reject: unsupported wGate type");
+        if (!supportedDenseWeight(lw.wUp)) return reject("reject: unsupported wUp type");
+        if (!supportedDenseWeight(lw.wDown)) return reject("reject: unsupported wDown type");
+    }
 
     const uint32_t hidden = static_cast<uint32_t>(modelWeights.hiddenDim);
     const uint32_t heads = static_cast<uint32_t>(modelWeights.numHeads);
@@ -281,18 +290,39 @@ bool Deep2Engine::forwardLayerGpuResident(
         modelWeights.numKVHeads ? modelWeights.numKVHeads : modelWeights.numHeads);
     const uint32_t headDim = static_cast<uint32_t>(modelWeights.headDim);
     const uint32_t kvDim = kvHeads * headDim;
-    const uint32_t intermediate = static_cast<uint32_t>(lw.wGate.rows);
+    // MoE layers have no dense wGate, so derive the FFN width from the MoE
+    // configuration rather than from a missing dense tensor.
+    const uint32_t intermediate =
+        (modelWeights.isMoE && (lw.wGate.rows == 0))
+            ? static_cast<uint32_t>(moeConfig_.expertDim)
+            : static_cast<uint32_t>(lw.wGate.rows);
     if (!hidden || !heads || !kvHeads || !headDim || !kvDim || !intermediate)
         return reject("reject: zero geometry");
     
-    // Geometry checks - MLA layers have different weight shapes
-    if (modelWeights.useMLA && lw.useMLA) {
-        // MLA layer geometry checks
-        if (lw.attnQ_b.rows != static_cast<size_t>(heads * headDim))
-            return reject("reject: attnQ_b.rows mismatch");
-        if (lw.attnKV_a_mqa.rows != 512) // kvLoraRank
-            return reject("reject: attnKV_a_mqa.rows mismatch");
-        if (lw.attnO.rows != hidden || lw.attnO.cols != hidden)
+    // Geometry checks — layout-aware. This model uses the UNCOMPRESSED-Q MLA
+    // layout (qLoraRank == 0): Q is projected directly by wq, there is no
+    // attnQ_a/attnQ_b, and K/V come from attnKV_a_mqa (kv_lora + k_pe) plus the
+    // fused attnK_b. Requiring wk/wv/attnQ_b here rejected a valid layout.
+    if (layerIsMla(lw)) {
+        const bool hasQLora = usableWeight(lw.attnQ_b);
+        if (!hasQLora) {
+            // Direct-Q: the full Q projection lives in wq.
+            if (lw.wq.rows != static_cast<size_t>(heads * headDim))
+                return reject("reject: wq.rows mismatch (direct-Q MLA)");
+        } else {
+            // Compressed-Q (Q LoRA): q_a -> norm -> q_b.
+            if (!usableWeight(lw.attnQ_a) ||
+                lw.attnQ_b.rows != static_cast<size_t>(heads * headDim))
+                return reject("reject: attnQ_b.rows mismatch");
+        }
+        // KV latent + positional key originate from attnKV_a_mqa; its exact
+        // width is model-specific, so require presence rather than 512.
+        if (lw.attnKV_a_mqa.rows == 0 || lw.attnKV_a_mqa.cols != hidden)
+            return reject("reject: attnKV_a_mqa shape mismatch");
+        if (!usableWeight(lw.attnK_b))
+            return reject("reject: attnK_b absent");
+        const WeightTensor& woMla = lw.wo.data ? lw.wo : lw.attnO;
+        if (woMla.rows != hidden || woMla.cols != hidden)
             return reject("reject: attnO shape mismatch");
     } else {
         // Dense layer geometry checks
@@ -841,7 +871,7 @@ bool Deep2Engine::tryGpuTokenForward(float* hidden) {
         // wk/wv projections, so a dense-only check rejects them as incomplete.
         const LayerWeights& lw = modelWeights.layers[i];
         const bool isMla = layerIsMla(lw);
-        if (!(isMla ? mlaLayerReady(lw) : denseLayerReady(lw))) {
+        if (!(isMla ? mlaLayerReady(lw, modelWeights.isMoE) : denseLayerReady(lw))) {
             if (gpuForwardTraceEnabled()) {
                 std::fprintf(stderr,
                     "[GPU_FORWARD_TRACE] reject: layer=%zu missing weights "
@@ -859,10 +889,15 @@ bool Deep2Engine::tryGpuTokenForward(float* hidden) {
             return false;
         }
         const WeightTensor& wo = lw.wo.data ? lw.wo : lw.attnO;
+        // MoE layers have no dense FFN tensors, so the dense FFN type checks
+        // only apply to non-MoE models.
+        const bool ffnTypesOk = modelWeights.isMoE
+            ? true
+            : (supportedDenseWeight(lw.wGate) && supportedDenseWeight(lw.wUp) &&
+               supportedDenseWeight(lw.wDown));
         if (!supportedDenseWeight(lw.wq) ||
             !supportedDenseWeight(wo) ||
-            !supportedDenseWeight(lw.wGate) || !supportedDenseWeight(lw.wUp) ||
-            !supportedDenseWeight(lw.wDown))
+            !ffnTypesOk)
         {
             if (gpuForwardTraceEnabled()) {
                 std::fprintf(stderr,
@@ -874,12 +909,10 @@ bool Deep2Engine::tryGpuTokenForward(float* hidden) {
             }
             return false;
         }
-        if (isMla) {
-            // MLA needs a real decode kernel; its absence must be reported as
-            // the reason, not silently converted into a dense attempt.
-            gpuForwardTrace("reject: MLA attention kernel not implemented");
-            return false;
-        }
+        // MLA layers are no longer rejected here: the backend now provides a
+        // real DispatchAttnDecodeMLA (pipeline bind + vkCmdDispatch) and
+        // EnsureMlaAttn. forwardLayerGpuResident handles MLA per layer. If the
+        // MLA kernel fails at runtime the per-layer trace reports it.
     }
 
     // Treat one complete token forward as a transaction.  Dispatch helpers
