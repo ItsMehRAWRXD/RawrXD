@@ -66,6 +66,28 @@ void StartupTrace(const char* message)
     if (trace) trace << message << '\n';
 }
 
+static WNDPROC g_statusBarPreviousProc = nullptr;
+
+LRESULT CALLBACK RawrxdStatusBarProbe(HWND hwnd, UINT message,
+                                       WPARAM wParam, LPARAM lParam)
+{
+    char line[256]{};
+    sprintf_s(line, "STATUSBAR hwnd=0x%p thread=%lu msg=0x%04X w=0x%llX l=0x%llX",
+              static_cast<void*>(hwnd), GetCurrentThreadId(), message,
+              static_cast<unsigned long long>(wParam),
+              static_cast<unsigned long long>(lParam));
+    StartupTrace(line);
+    if (message == WM_NCDESTROY) {
+        const WNDPROC previous = g_statusBarPreviousProc;
+        g_statusBarPreviousProc = nullptr;
+        return previous ? CallWindowProcW(previous, hwnd, message, wParam, lParam)
+                        : DefWindowProcW(hwnd, message, wParam, lParam);
+    }
+    return g_statusBarPreviousProc
+        ? CallWindowProcW(g_statusBarPreviousProc, hwnd, message, wParam, lParam)
+        : DefWindowProcW(hwnd, message, wParam, lParam);
+}
+
 // Process-lifetime chat session id (env RAWRXD_CHAT_SESSION_ID or pid+tick).
 static std::string g_chatSessionId;
 static std::string g_chatRunId;
@@ -3755,6 +3777,18 @@ void Win32IDE::createStatusBar(HWND hwnd)
 
         return;
     }
+
+    char creation[256]{};
+    sprintf_s(creation,
+              "STATUSBAR_CREATE hwnd=0x%p thread=%lu owner_thread=%lu style=0x%08lX exstyle=0x%08lX",
+              static_cast<void*>(m_hwndStatusBar), GetCurrentThreadId(),
+              GetWindowThreadProcessId(hwnd, nullptr),
+              static_cast<unsigned long>(GetWindowLongPtrW(m_hwndStatusBar, GWL_STYLE)),
+              static_cast<unsigned long>(GetWindowLongPtrW(m_hwndStatusBar, GWL_EXSTYLE)));
+    StartupTrace(creation);
+    g_statusBarPreviousProc = reinterpret_cast<WNDPROC>(SetWindowLongPtrW(
+        m_hwndStatusBar, GWLP_WNDPROC,
+        reinterpret_cast<LONG_PTR>(&RawrxdStatusBarProbe)));
 
     int parts[] = {200, 400, -1};
     SendMessage(m_hwndStatusBar, SB_SETPARTS, 3, (LPARAM)parts);

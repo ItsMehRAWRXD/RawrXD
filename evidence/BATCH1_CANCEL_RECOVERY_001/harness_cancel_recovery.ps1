@@ -93,16 +93,11 @@ public class CancelRecov010 {
       return true;
     }, IntPtr.Zero);
     if (found == IntPtr.Zero) return "";
-    const uint SB_GETTEXTLENGTHW = 0x040C;
-    const uint SB_GETTEXTW = 0x040D;
-    int meta = SendMessageW(found, SB_GETTEXTLENGTHW, IntPtr.Zero, IntPtr.Zero).ToInt32();
-    int len = meta & 0xFFFF;
-    if (len <= 0) return Text(found);
-    var buf = new StringBuilder(len + 2);
-    SendMessageW(found, SB_GETTEXTW, IntPtr.Zero, buf);
-    string s = buf.ToString();
-    if (string.IsNullOrEmpty(s)) s = Text(found);
-    return s;
+    // SB_GETTEXTW returns into an lParam buffer owned by the caller.  This
+    // harness runs out-of-process, so passing a StringBuilder pointer would
+    // make the target status-bar window dereference foreign-process memory.
+    // GetWindowTextW is marshalled by USER32 and is safe across processes.
+    return Text(found);
   }
   public static List<string> ComboItems(IntPtr combo) {
     var rows = new List<string>();
