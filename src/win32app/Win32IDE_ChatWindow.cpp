@@ -191,6 +191,7 @@ bool ChatWindow::Create(HWND hParent, HINSTANCE hInstance) {
 void ChatWindow::Destroy() {
     if (m_generationThread.joinable()) {
         m_isGenerating = false;
+        if (m_ollamaClient) m_ollamaClient->cancelActiveRequest();
         m_generationThread.join();
     }
 
@@ -489,6 +490,7 @@ void ChatWindow::GenerateResponse(const std::string& userMessage) {
         model = "llama3.2:3b";
     }
 
+    if (m_generationThread.joinable()) m_generationThread.join();
     m_generationThread = std::thread([this, model, userMessage]() {
         AddMessage("assistant", "");
 
@@ -538,27 +540,32 @@ void ChatWindow::GenerateResponse(const std::string& userMessage) {
         m_ollamaClient->chat(req, onChunk, onError, onComplete);
     });
 
-    m_generationThread.detach();
 }
 
 void ChatWindow::AddMessage(const std::string& role, const std::string& content) {
-    std::lock_guard<std::mutex> lock(m_messagesMutex);
-
     ChatMessage msg;
     msg.role = role;
     msg.content = content;
     msg.timestamp = GetTimestamp();
 
-    m_messages.push_back(msg);
+    {
+        std::lock_guard<std::mutex> lock(m_messagesMutex);
+        m_messages.push_back(msg);
+    }
 
     AppendMessageToDisplay(msg);
 }
 
 void ChatWindow::AppendToLastMessage(const std::string& content) {
-    std::lock_guard<std::mutex> lock(m_messagesMutex);
-
-    if (!m_messages.empty()) {
-        m_messages.back().content += content;
+    bool changed = false;
+    {
+        std::lock_guard<std::mutex> lock(m_messagesMutex);
+        if (!m_messages.empty()) {
+            m_messages.back().content += content;
+            changed = true;
+        }
+    }
+    if (changed) {
         FormatAndDisplayMessages();
     }
 }
