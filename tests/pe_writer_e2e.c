@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <windows.h>
 
 static int write_case(const char *path, size_t text_size, int imports) {
   pe_builder_t *b = pe_builder_new(0x8664);
@@ -58,10 +59,60 @@ static int negative_cases(void) {
   return 0;
 }
 
+static int write_relocation_case(void) {
+  pe_builder_t *b = pe_builder_new(0x8664);
+  if (!b) return 30;
+  uint8_t code[0x30] = {
+    0x48, 0xB8, 0,0,0,0,0,0,0,0,       /* mov rax, image+0x2000 */
+    0x80, 0x38, 0x2A,                   /* cmp byte ptr [rax], 42 */
+    0x75, 0x0B,                         /* jne fail */
+    0xB8, 0x2A, 0,0,0, 0xC3,           /* return 42 */
+    0xB8, 0x01,0,0,0, 0xC3              /* fail: return 1 */
+  };
+  uint64_t target = UINT64_C(0x140000000) + 0x2000;
+  memcpy(code + 2, &target, sizeof(target));
+  const uint8_t data = 42;
+  pe_builder_add_section(b, ".text", code, 0x30, 0x60000020);
+  pe_builder_add_section(b, ".data", &data, 1, 0xC0000040);
+  pe_builder_set_entry(b, 0x1000);
+  if (pe_builder_add_base_relocation(b, 0x1002) != 0 ||
+      pe_builder_write(b, "pe_writer_relocated.exe") != 0) {
+    pe_builder_free(b); return 31;
+  }
+  pe_builder_free(b);
+  return 0;
+}
+
+static int run_forced_relocation(void) {
+  SIZE_T bytes = 0;
+  STARTUPINFOEXA si = {0};
+  PROCESS_INFORMATION pi = {0};
+  si.StartupInfo.cb = sizeof(si);
+  InitializeProcThreadAttributeList(NULL, 1, 0, &bytes);
+  si.lpAttributeList = (LPPROC_THREAD_ATTRIBUTE_LIST)HeapAlloc(GetProcessHeap(), 0, bytes);
+  if (!si.lpAttributeList || !InitializeProcThreadAttributeList(si.lpAttributeList, 1, 0, &bytes)) return 32;
+  DWORD64 policy = PROCESS_CREATION_MITIGATION_POLICY_FORCE_RELOCATE_IMAGES_ALWAYS_ON;
+  if (!UpdateProcThreadAttribute(si.lpAttributeList, 0,
+      PROC_THREAD_ATTRIBUTE_MITIGATION_POLICY, &policy, sizeof(policy), NULL, NULL)) return 33;
+  char cmd[] = "pe_writer_relocated.exe";
+  BOOL ok = CreateProcessA(NULL, cmd, NULL, NULL, FALSE,
+      EXTENDED_STARTUPINFO_PRESENT | CREATE_NO_WINDOW, NULL, NULL,
+      &si.StartupInfo, &pi);
+  DeleteProcThreadAttributeList(si.lpAttributeList);
+  HeapFree(GetProcessHeap(), 0, si.lpAttributeList);
+  if (!ok) return 34;
+  WaitForSingleObject(pi.hProcess, 10000);
+  DWORD exit_code = 0xFFFFFFFF;
+  GetExitCodeProcess(pi.hProcess, &exit_code);
+  CloseHandle(pi.hThread); CloseHandle(pi.hProcess);
+  return exit_code == 42 ? 0 : 35;
+}
+
 int main(void) {
   if (write_case("pe_writer_minimal.exe", 0x100, 0) != 0) return 1;
   if (write_case("pe_writer_large_import.exe", 0x5000, 1) != 0) return 2;
   if (negative_cases() != 0) return 3;
+  if (write_relocation_case() != 0 || run_forced_relocation() != 0) return 4;
   puts("PE_WRITER_E2E_GENERATED=PASS");
   return 0;
 }

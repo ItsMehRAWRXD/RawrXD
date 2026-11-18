@@ -182,7 +182,6 @@ void pe_builder_add_import(pe_builder_t *pb, const char *dllName,
 
 int pe_builder_add_base_relocation(pe_builder_t *pb, uint32_t image_rva) {
   if (!pb || pb->num_base_relocs >= PE_MAX_BASE_RELOCS) return -1;
-  if ((image_rva & 7u) != 0) return -1;
   for (int i = 0; i < pb->num_base_relocs; ++i)
     if (pb->base_reloc_rvas[i] == image_rva) return 0;
   pb->base_reloc_rvas[pb->num_base_relocs++] = image_rva;
