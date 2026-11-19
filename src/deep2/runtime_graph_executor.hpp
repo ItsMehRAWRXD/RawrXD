@@ -146,6 +146,13 @@ public:
 
     // Run one token at `position`. Returns false on any kernel failure.
     bool ExecuteToken(uint32_t token, size_t position);
+    bool ExecuteToken(uint32_t token, size_t position,
+                      std::shared_ptr<const ExecutionContext> context) {
+        SetExecutionContext(std::move(context));
+        const bool ok = ExecuteToken(token, position);
+        ClearExecutionContext();
+        return ok;
+    }
 
     void SetExecutionContext(std::shared_ptr<const ExecutionContext> context) {
         execution_context_ = std::move(context);
