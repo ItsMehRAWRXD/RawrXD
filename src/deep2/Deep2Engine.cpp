@@ -7069,6 +7069,22 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input, const floa
     // so the diagnostic run forces all of them onto the CPU.
     const char* p2lwEnv = std::getenv("DEEP2_P2_FORCE_CPU_EXPERTS");
     const bool p2lwForceCpu = (p2lwEnv && p2lwEnv[0] == '1');
+    {
+        // One-shot gate witness: distinguishes "GPU branch never reached" from
+        // "GPU branch reached but dispatch failed". Diagnostic only.
+        static bool s_lwGateOnce = false;
+        if (!s_lwGateOnce)
+        {
+            s_lwGateOnce = true;
+            std::fprintf(stderr,
+                         "[LW_GATE] name=%s plannedCpu=%d p2=%d vkEnabled=%d vkInit=%d "
+                         "devices=%zu outDim=%zu\n",
+                         wt.name.c_str(), plannedCpu ? 1 : 0, p2lwForceCpu ? 1 : 0,
+                         vulkanEnabled_ ? 1 : 0, vulkanInitialized_ ? 1 : 0,
+                         vulkanDevices_.size(), outDim);
+            std::fflush(stderr);
+        }
+    }
     if (p2lwForceCpu && std::getenv("DEEP2_P2_TRACE") &&
         wt.name.find("_shexp") != std::string::npos)
     {
