@@ -7985,10 +7985,6 @@ void Win32IDE::generateResponseAsync(
                     finishIfCurrent("The generated local model route is missing its native-agent runtime mapping.", false);
                     return;
                 }
-                if (!m_agenticBridge || !m_agenticBridge->IsInitialized()) {
-                    finishIfCurrent("The native agent bridge is not initialized.", false);
-                    return;
-                }
                 if (!hasGgufModelTensors(selectedModel.identifier)) {
                     finishIfCurrent("The selected GGUF is not an inference model (it may contain vocabulary metadata only): " +
                         selectedModel.identifier, false);
@@ -8021,6 +8017,14 @@ void Win32IDE::generateResponseAsync(
                     finishIfCurrent(response.empty()
                         ? "Deep2 returned an empty response."
                         : response, success);
+                    return;
+                }
+
+                // The native-agent bridge is only required by the fallback
+                // route below. Deep2 owns its own bridge and must remain
+                // usable when agentic tools have not been initialized.
+                if (!m_agenticBridge || !m_agenticBridge->IsInitialized()) {
+                    finishIfCurrent("The native agent bridge is not initialized.", false);
                     return;
                 }
 

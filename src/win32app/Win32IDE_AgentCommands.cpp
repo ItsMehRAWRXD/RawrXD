@@ -862,6 +862,11 @@ void Win32IDE::initializeDeep2Bridge() {
         if (const char* configuredModel = std::getenv("RAWRXD_DEFAULT_DEEP2_MODEL")) {
             if (*configuredModel) defaultModel = configuredModel;
         }
+        if (defaultModel.empty()) {
+            if (const char* forcedModel = std::getenv("RAWRXD_MODEL_PATH")) {
+                if (*forcedModel) defaultModel = forcedModel;
+            }
+        }
         if (defaultModel.empty() && !m_loadedModelPath.empty()) {
             defaultModel = m_loadedModelPath;
         }
