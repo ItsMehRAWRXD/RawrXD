@@ -4399,6 +4399,11 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
         reservation.counter = execution_context_->reserved_memory_bytes;
         reservation.bytes = execution_context_->reservation_bytes;
         reservation.completion_wait = execution_context_->gpu_completion_wait;
+        if (!reservation.completion_wait) {
+            reservation.completion_wait = []() {
+                (void)QuantDot::ForceHostSync();
+            };
+        }
         const size_t budget = execution_context_->memory_budget_bytes;
         size_t current = reservation.counter->load(std::memory_order_acquire);
         for (;;) {
