@@ -1,27 +1,31 @@
 # S003 trace CSV validation
 
-Source SHA: `01ed69b794f3ebc434e001abe1f6bc9cc67b4ca6`
+Validation command: PowerShell `Import-Csv` over `trace_p0.csv`, `trace_p1.csv`,
+`trace_p2.csv`, `trace_pos0.csv`, `trace_pos1.csv`, and `trace_pos2.csv`.
 
-Validation parsed each CSV with `csv.reader`, discarded repeated header rows, and checked numeric fields `position`, `block`, `pc`, `op`, `size`, `checksum`, and `first0`, plus nonempty operation names.
+Expected schema has 12 columns and each position should contain 395 operation
+records. Required fields checked: `position`, `block`, `op`, and `checksum`.
 
-| File | Valid rows | Bad rows | Position distribution |
+| File | Parsed rows | Valid operation rows | Issue |
 |---|---:|---:|---|
-| `trace_p0.csv` | 395 | 0 | 0:395 |
-| `trace_p1.csv` | 1,185 | 0 | 0:395, 1:790 |
-| `trace_p2.csv` | 2,370 | 0 | 0:395, 1:790, 2:1,185 |
-| `deep2_op_trace.csv` | 395 | 0 | 0:395 |
-| `trace_pos0.csv` | 395 | 0 | 0:395 |
-| `trace_pos1.csv` | 1,185 | 0 | 0:395, 1:790 |
-| `trace_pos2.csv` | 2,370 | 0 | 0:395, 1:790, 2:1,185 |
+| `trace_p0.csv` | 395 | 395 | none |
+| `trace_p1.csv` | 1185 | 1185 | none |
+| `trace_p2.csv` | 2370 | 2370 | none |
+| `trace_pos0.csv` | 395 | 395 | none |
+| `trace_pos1.csv` | 1186 | 1185 | repeated header at line 397 |
+| `trace_pos2.csv` | 2372 | 2370 | repeated headers included as data |
 
-Repeated header rows were present in the `trace_pos1.csv` and `trace_pos2.csv` serialization artifacts and were excluded as headers, not treated as operation records. No malformed operation rows remain after normalization.
+All actual operation rows have the required fields. The `trace_pos1.csv` and
+`trace_pos2.csv` artifacts are not clean CSV payloads because a header was
+appended between position runs. This is a serialization/artifact defect, not a
+numerical result. No kernel change was made.
 
 ```ini
-TRACE_CSV_VALIDATION=PASS
-EXPECTED_OPERATION_RECORDS_PER_POSITION=395
+S003=FAIL_CLOSED_ARTIFACT_SERIALIZATION
+EXPECTED_ROWS_PER_POSITION=395
 MALFORMED_OPERATION_ROWS=0
-REFERENCE_INTERMEDIATE_TENSORS=NOT_PRESENT_IN_TRACE
-FIRST_DIVERGENCE=NOT_ESTABLISHED
+REPEATED_HEADER_ROWS=3
+NUMERICAL_PARITY=OPEN
 PROMOTE=0
 CERTIFIED=0
 RELEASE=HELD
