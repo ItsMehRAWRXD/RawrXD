@@ -14218,13 +14218,29 @@ void Deep2Engine::enableVulkan(bool enable)
 
 bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input, float* output, size_t outDim)
 {
+    // Diagnostic-only: one line per distinct early-return reason so a zero
+    // dispatch count can be attributed to a specific branch.
+    static unsigned s_gemvTraceMask = 0;
+    auto gemvTrace = [&](unsigned bit, const char* reason) {
+        if ((s_gemvTraceMask & (1u << bit)) == 0)
+        {
+            s_gemvTraceMask |= (1u << bit);
+            std::fprintf(stderr,
+                         "[GEMV_TRACE] reason=%s name=%s rows=%llu cols=%llu type=%d\n",
+                         reason, wt.name.empty() ? "-" : wt.name.c_str(),
+                         (unsigned long long)wt.rows, (unsigned long long)wt.cols, wt.type);
+            std::fflush(stderr);
+        }
+    };
     if (!vulkanInitialized_ || !vulkanEnabled_ || vulkanDevices_.empty())
     {
+        gemvTrace(0, "not_initialized_or_disabled");
         ++vulkanGemvFail_;
         return false;
     }
     if (!wt.data || !input || !output || wt.rows == 0 || wt.cols == 0)
     {
+        gemvTrace(1, "bad_arguments");
         ++vulkanGemvFail_;
         return false;
     }
@@ -14239,11 +14255,13 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input, floa
             slot = 0;
         if (Deep2MultiGpu_SlotIsCpu(multiGpuLayerPlan_, slot))
         {
+            gemvTrace(2, "planned_cpu_slot");
             // Planned CPU — not a GPU failure; LinearW owns CPU path.
             return false;
         }
         if (slot < 0 || slot >= (int)vulkanDevices_.size())
         {
+            gemvTrace(3, "slot_out_of_range");
             ++vulkanUnplannedFallbacks_;
             slot = 0;
         }
@@ -14251,6 +14269,7 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input, floa
     CPUInference::VulkanCompute* vc = vulkanDevices_[(size_t)slot].get();
     if (!vc)
     {
+        gemvTrace(4, "null_device");
         ++vulkanGemvFail_;
         return false;
     }
@@ -14289,6 +14308,7 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input, floa
     const char* disableGpuGemvEnv = std::getenv("RAWRXD_DEEP2_DISABLE_GPU_GEMV");
     if (disableGpuGemvEnv && disableGpuGemvEnv[0] == '1')
     {
+        gemvTrace(5, "env_disable_gpu_gemv");
         ++vulkanGemvFail_;
         return false;
     }
@@ -14312,6 +14332,7 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input, floa
                                               static_cast<uint32_t>(wt.rows), static_cast<uint32_t>(wt.cols), cacheKey);
         if (ok)
         {
+            gemvTrace(6, "packed_quant_ok");
             ++vulkanGemvOk_;
             if (wt.type == (int)GGMLType::GGML_TYPE_Q4_K)
                 ++gpuFwd_.q4kPackedOps;
@@ -14325,6 +14346,7 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input, floa
                 1, std::memory_order_relaxed);
             return true;
         }
+        gemvTrace(7, "packed_quant_dispatch_failed");
         ++vulkanGemvFail_;
         QuantKernelRegistry::Instance().GetBatch21Counters().vulkanComputeFailures.fetch_add(1,
                                                                                              std::memory_order_relaxed);

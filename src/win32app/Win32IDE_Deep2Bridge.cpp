@@ -451,7 +451,23 @@ std::string Deep2Bridge::GenerateSync(const std::string& prompt, int maxTokens)
         options.seed = 0;
         
         m_engine->configureGeneration(options);
-        return m_engine->generateText(prompt, maxTokens);
+        const std::string generated = m_engine->generateText(prompt, maxTokens);
+        // Attribute counters at the call site that generated, so a zero read in
+        // GetModelInfo() can be told apart from a reset or a second instance.
+        std::fprintf(stderr,
+                     "[BRIDGE_GEN] gpu_dispatches=%llu gpu_fallbacks=%llu submissions=%llu "
+                     "quant_kernels=%llu chars=%zu\n",
+                     (unsigned long long)m_engine->vulkanGemvSuccessCount(),
+                     (unsigned long long)m_engine->vulkanGemvFallbackCount(),
+                     (unsigned long long)Deep2::QuantKernelRegistry::Instance()
+                         .GetBatch21Counters()
+                         .vulkanComputeSubmissions.load(),
+                     (unsigned long long)Deep2::QuantKernelRegistry::Instance()
+                         .GetBatch21Counters()
+                         .kernelInvocations.load(),
+                     generated.size());
+        std::fflush(stderr);
+        return generated;
 #else
         if (!m_cpuEngine) {
             return "Error: CPU engine not available";
