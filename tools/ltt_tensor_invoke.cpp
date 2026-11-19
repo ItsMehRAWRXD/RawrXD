@@ -74,7 +74,10 @@ int main(int argc, char** argv) {
     auto cancel = std::make_shared<std::atomic_bool>(false);
     auto reserved = std::make_shared<std::atomic_size_t>(0);
     auto context = std::make_shared<ExecutionContext>();
-    if (!trace_out.empty()) executor.SetOpTrace(true, true);
+    // Keep trace capture observational: first values/checksums are enough for
+    // operation ordering and avoid retaining every full activation buffer for
+    // all positions in a long request.
+    if (!trace_out.empty()) executor.SetOpTrace(true, false);
     context->request_id = "ltt-direct";
     context->model_id = report.spec.model_name;
     context->device_index = static_cast<uint32_t>(device);
@@ -114,7 +117,7 @@ int main(int argc, char** argv) {
                       << ',' << t.first_vals[0] << '\n';
             }
         }
-        if (logits_file && !logits.empty()) {
+        if (!logits_out.empty() && !logits.empty()) {
             const uint64_t count = static_cast<uint64_t>(logits.size());
             logits_file.write(reinterpret_cast<const char*>(&count), sizeof(count));
             logits_file.write(reinterpret_cast<const char*>(logits.data()),
