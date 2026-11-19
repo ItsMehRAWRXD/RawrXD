@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <cmath>
 #include <iostream>
+#include <fstream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -26,6 +27,7 @@ int main(int argc, char** argv) {
     uint32_t device = 0;
     size_t repeat = 1;
     bool cancel_before = false;
+    std::string logits_out;
     std::vector<uint32_t> tokens;
     for (int i = 2; i < argc; ++i) {
         const std::string arg(argv[i]);
@@ -41,6 +43,9 @@ int main(int argc, char** argv) {
             if (!end || *end != '\0' || repeat == 0 || repeat > 1000) return 2;
         } else if (arg == "--cancel-before") {
             cancel_before = true;
+        } else if (arg.rfind("--logits-out=", 0) == 0) {
+            logits_out = arg.substr(13);
+            if (logits_out.empty()) return 2;
         } else {
             const auto v = std::strtoul(arg.c_str(), &end, 10);
             if (!end || *end != '\0' || v > UINT32_MAX) return 2;
@@ -73,6 +78,14 @@ int main(int argc, char** argv) {
     context->synchronization_ready = [] { return true; };
     context->memory_admission = [](size_t) { return true; };
     if (cancel_before) cancel->store(true, std::memory_order_release);
+    std::ofstream logits_file;
+    if (!logits_out.empty()) {
+        logits_file.open(logits_out, std::ios::binary | std::ios::trunc);
+        if (!logits_file) {
+            std::cerr << "LTT_LOGITS_OPEN_FAIL " << logits_out << '\n';
+            return 2;
+        }
+    }
 
     for (size_t r = 0; r < repeat; ++r) {
       for (size_t i = 0; i < tokens.size(); ++i) {
@@ -84,6 +97,13 @@ int main(int argc, char** argv) {
             return cancel_before ? 6 : 5;
         }
         const auto& logits = executor.Logits();
+        if (logits_file && !logits.empty()) {
+            const uint64_t count = static_cast<uint64_t>(logits.size());
+            logits_file.write(reinterpret_cast<const char*>(&count), sizeof(count));
+            logits_file.write(reinterpret_cast<const char*>(logits.data()),
+                              static_cast<std::streamsize>(logits.size() * sizeof(float)));
+            if (!logits_file) return 5;
+        }
         size_t top = 0;
         for (size_t j = 1; j < logits.size(); ++j)
             if (logits[j] > logits[top]) top = j;
