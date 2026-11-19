@@ -4321,6 +4321,29 @@ case OpKind::LmHead: {
 bool Executor::ExecuteToken(uint32_t token, size_t position) {
     if (!bound_) { last_error_ = "not bound"; return false; }
     last_error_.clear();
+    struct MemoryReservationGuard {
+        std::shared_ptr<std::atomic_size_t> counter;
+        size_t bytes = 0;
+        ~MemoryReservationGuard() {
+            if (counter && bytes) counter->fetch_sub(bytes, std::memory_order_acq_rel);
+        }
+    } reservation;
+    if (execution_context_ && execution_context_->reserved_memory_bytes &&
+        execution_context_->reservation_bytes) {
+        reservation.counter = execution_context_->reserved_memory_bytes;
+        reservation.bytes = execution_context_->reservation_bytes;
+        const size_t budget = execution_context_->memory_budget_bytes;
+        size_t current = reservation.counter->load(std::memory_order_acquire);
+        for (;;) {
+            if (budget && (current > budget || reservation.bytes > budget - current)) {
+                last_error_ = "request memory reservation denied";
+                return false;
+            }
+            if (reservation.counter->compare_exchange_weak(
+                    current, current + reservation.bytes,
+                    std::memory_order_acq_rel, std::memory_order_acquire)) break;
+        }
+    }
     const auto cancelled = [this]() -> bool {
         if (!execution_context_) return false;
         if (execution_context_->cancel &&
