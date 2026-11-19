@@ -207,15 +207,15 @@ void main() {
     // First reduction: subgroup-level (entire 256-lane workgroup)
     float wave = subgroupAdd(acc);
     if (subgroupElect())
-        subgroupSums[gl_SubgroupID] = wave;
+        subgroupSums[cohort * gl_NumSubgroups + gl_SubgroupID] = wave;
     barrier();
 
     // Cross-subgroup reduction: one elected invocation per cohort reads
     // subgroupSums for its 4 rows and combines them
-    if (lane == 0u && cohort < 4u && r + cohort < pc.rows) {
+    if (lane == 0u && cohort < 4u && r < pc.rows) {
         float total = 0.0f;
         for (uint i = 0u; i < gl_NumSubgroups; ++i)
-            total += subgroupSums[i];
-        y[r + cohort] = total;
+            total += subgroupSums[cohort * gl_NumSubgroups + i];
+        y[r] = total;
     }
 }

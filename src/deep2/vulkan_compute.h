@@ -733,6 +733,10 @@ public:
         uint32_t rows, uint32_t cols, uint32_t batch);
     VkPipeline qBatch4RowPipeline_ = VK_NULL_HANDLE;
     VkPipelineLayout qBatch4RowPipelineLayout_ = VK_NULL_HANDLE;
+    // Optional Q4_K tiled path. It is selected only by dispatchQuant for
+    // four-or-more-row Q4_K work and falls back to qPipeline_ otherwise.
+    VkPipeline qTiled4xPipeline_ = VK_NULL_HANDLE;
+    VkPipelineLayout qTiled4xPipelineLayout_ = VK_NULL_HANDLE;
     uint64_t Q4KBatchWeightBytes() const noexcept {
         return q4kBatchWeightBytes_;
     }

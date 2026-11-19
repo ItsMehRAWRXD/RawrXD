@@ -686,6 +686,7 @@ bool VulkanCompute::createPipelines() {
     const std::string q = shaderPath("deep2_qgemv.spv");
     const std::string qb = shaderPath("deep2_qgemv_batch.spv");
     const std::string q4r = shaderPath("deep2_qgemv_batch4row.spv");
+    const std::string qt4 = shaderPath("deep2_qgemv_tiled4x.spv");
     const std::string q8r = shaderPath("deep2_qgemv_batch8row.spv");
     const std::string qn = shaderPath("deep2_qgemv_nvfp4.spv");
     const std::string am = shaderPath("deep2_argmax.spv");
@@ -697,11 +698,12 @@ bool VulkanCompute::createPipelines() {
     const std::string rr = shaderPath("deep2_b34_splitkv_reduce.spv");
 
     std::fprintf(stderr,
-        "[SHADER_PATH] ops=%s q=%s qb=%s q4r=%s q8r=%s qn=%s am=%s so=%s sa=%s ac=%s gd=%s\n",
+        "[SHADER_PATH] ops=%s q=%s qb=%s q4r=%s qt4=%s q8r=%s qn=%s am=%s so=%s sa=%s ac=%s gd=%s\n",
         ops.empty()?"NOTFOUND":ops.c_str(),
         q.empty()?"NOTFOUND":q.c_str(),
         qb.empty()?"NOTFOUND":qb.c_str(),
         q4r.empty()?"NOTFOUND":q4r.c_str(),
+        qt4.empty()?"NOTFOUND":qt4.c_str(),
         q8r.empty()?"NOTFOUND":q8r.c_str(),
         qn.empty()?"NOTFOUND":qn.c_str(),
         am.empty()?"NOTFOUND":am.c_str(),
@@ -726,6 +728,10 @@ bool VulkanCompute::createPipelines() {
         okQ4r=createPipelineFromFile(
             q4r,qSetLayout_,sizeof(QBatchPush),
             qBatch4RowPipelineLayout_,qBatch4RowPipeline_);
+    if(!qt4.empty())
+        (void)createPipelineFromFile(
+            qt4,qSetLayout_,sizeof(QPush),
+            qTiled4xPipelineLayout_,qTiled4xPipeline_);
     if(!q8r.empty())
         okQ8r=createPipelineFromFile(
             q8r,qSetLayout_,sizeof(QBatchPush),
@@ -2066,7 +2072,9 @@ bool VulkanCompute::dispatchQuant(
         }
         return false;
     };
-    if (!qPipeline_) return fail("Q_PIPELINE");
+    const bool useTiled4x = push.type == 12u && push.rows >= 4u &&
+        qTiled4xPipeline_ != VK_NULL_HANDLE;
+    if (!qPipeline_ && !useTiled4x) return fail("Q_PIPELINE");
     if (!weights) return fail("WEIGHT_BUFFER");
     if (!input) return fail("INPUT_BUFFER");
     if (!output) return fail("OUTPUT_BUFFER");
@@ -2122,13 +2130,22 @@ bool VulkanCompute::dispatchQuant(
         std::fflush(stderr);
     }
 
-    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, qPipeline_);
+    const VkPipeline selectedPipeline = useTiled4x ? qTiled4xPipeline_ : qPipeline_;
+    const VkPipelineLayout selectedLayout = useTiled4x
+        ? qTiled4xPipelineLayout_ : qPipelineLayout_;
+    if (useTiled4x) {
+        std::fprintf(stderr, "[Q4K_TILED4X_DISPATCH] rows=%u cols=%u weightBytes=%u\n",
+                     dispatchPush.rows, dispatchPush.cols, dispatchPush.weightBytes);
+        std::fflush(stderr);
+    }
+    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, selectedPipeline);
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE,
-                            qPipelineLayout_, 0, 1, &set, 0, nullptr);
-    vkCmdPushConstants(cmd, qPipelineLayout_, VK_SHADER_STAGE_COMPUTE_BIT,
+                            selectedLayout, 0, 1, &set, 0, nullptr);
+    vkCmdPushConstants(cmd, selectedLayout, VK_SHADER_STAGE_COMPUTE_BIT,
                        0, sizeof(dispatchPush), &dispatchPush);
     // deep2_qgemv.comp maps exactly one 256-lane workgroup to each row.
-    vkCmdDispatch(cmd, dispatchPush.rows, 1, 1);
+    vkCmdDispatch(cmd, useTiled4x ? (dispatchPush.rows + 3u) / 4u
+                                  : dispatchPush.rows, 1, 1);
     recordComputeBarrier(cmd);
 
     if (sample) {
@@ -7325,6 +7342,8 @@ void VulkanCompute::cleanup() {
         vkDestroyPipeline(device_,qBatchPipeline_,nullptr);
     if(device_ && qBatch4RowPipeline_)
         vkDestroyPipeline(device_,qBatch4RowPipeline_,nullptr);
+    if(device_ && qTiled4xPipeline_)
+        vkDestroyPipeline(device_, qTiled4xPipeline_, nullptr);
     if(device_ && qBatch8RowPipeline_)
         vkDestroyPipeline(device_,qBatch8RowPipeline_,nullptr);
     if(device_ && argmaxPipeline_)
@@ -7344,6 +7363,8 @@ void VulkanCompute::cleanup() {
     if(device_ && qBatch4RowPipelineLayout_)
         vkDestroyPipelineLayout(
             device_,qBatch4RowPipelineLayout_,nullptr);
+    if(device_ && qTiled4xPipelineLayout_)
+        vkDestroyPipelineLayout(device_, qTiled4xPipelineLayout_, nullptr);
     if(device_ && qBatch8RowPipelineLayout_)
         vkDestroyPipelineLayout(
             device_,qBatch8RowPipelineLayout_,nullptr);
