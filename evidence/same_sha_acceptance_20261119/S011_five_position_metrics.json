@@ -1,0 +1,15 @@
+{
+  "positions_compared": 5,
+  "vocab": 151936,
+  "all_finite": true,
+  "argmax_exact_positions": 5,
+  "min_cosine": 0.9980973923169006,
+  "max_abs_worst": 0.93182373046875,
+  "positions": [
+    {"position": 0, "cosine": 0.9999982335376357, "rms": 0.006863673189698828, "max_abs": 0.03497123718261719, "gpu_top1": 15, "reference_top1": 15, "top10_overlap": 10},
+    {"position": 1, "cosine": 0.9992339625483421, "rms": 0.13317354952640778, "max_abs": 0.6386623382568359, "gpu_top1": 315, "reference_top1": 315, "top10_overlap": 9},
+    {"position": 2, "cosine": 0.9994733061117984, "rms": 0.1441759184828148, "max_abs": 0.6710376739501953, "gpu_top1": 279, "reference_top1": 279, "top10_overlap": 10},
+    {"position": 3, "cosine": 0.9982453981892444, "rms": 0.15653774951184993, "max_abs": 0.7396129369735718, "gpu_top1": 374, "reference_top1": 374, "top10_overlap": 9},
+    {"position": 4, "cosine": 0.9980973923169006, "rms": 0.20862476883223058, "max_abs": 0.93182373046875, "gpu_top1": 12095, "reference_top1": 12095, "top10_overlap": 10}
+  ]
+}
