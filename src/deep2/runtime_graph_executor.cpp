@@ -4378,6 +4378,13 @@ case OpKind::LmHead: {
 bool Executor::ExecuteToken(uint32_t token, size_t position) {
     if (!bound_) { last_error_ = "not bound"; return false; }
     last_error_.clear();
+    if (execution_context_ && execution_context_->device_admission &&
+        !execution_context_->device_admission(execution_context_->device_index)) {
+        last_error_ = "request device admission denied";
+        if (!execution_context_->request_id.empty())
+            last_error_ += " (" + execution_context_->request_id + ")";
+        return false;
+    }
     struct MemoryReservationGuard {
         std::shared_ptr<std::atomic_size_t> counter;
         size_t bytes = 0;

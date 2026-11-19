@@ -123,6 +123,7 @@ struct ExecutionContext {
     std::string request_id;
     std::string model_id;
     uint32_t device_index = 0;
+    std::function<bool(uint32_t)> device_admission;
     size_t memory_budget_bytes = 0;
     std::shared_ptr<std::atomic_size_t> reserved_memory_bytes;
     size_t reservation_bytes = 0;
