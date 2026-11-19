@@ -4816,6 +4816,34 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tools/deep2_kernel_replay.cpp" AND TARGET deep2_e
     set_target_properties(deep2_kernel_replay PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
 endif()
+
+# LTT direct tensor invocation: production Universal ingest + RuntimeGraph,
+# deliberately serverless and dependency-free.  Keep this next to the other
+# Deep2 acceptance probes so request admission/cancellation/resource cleanup
+# exercise the same executor used by the product.
+if(TARGET deep2_engine_lib)
+    add_executable(ltt_tensor_invoke tools/ltt_tensor_invoke.cpp)
+    # The direct LTT adapter owns the runtime-graph invocation boundary.  These
+    # translation units are intentionally private to this probe because the
+    # legacy engine library predates the request-scoped graph executor.
+    target_sources(ltt_tensor_invoke PRIVATE
+        src/deep2/runtime_graph_executor.cpp
+        src/deep2/modelgenie/universal_gguf.cpp
+        src/deep2/generic_vulkan_matmul.cpp
+        src/deep2/op_linear.cpp
+        src/deep2/quant_dot_dispatch.cpp
+        src/vulkan_compute.cpp
+        src/vulkan_compute_attn.cpp)
+    target_link_libraries(ltt_tensor_invoke PRIVATE deep2_engine_lib)
+    target_include_directories(ltt_tensor_invoke PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
+        ${CMAKE_SOURCE_DIR}/3rdparty/ggml/src)
+    set_target_properties(ltt_tensor_invoke PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
+endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/tools/reap_calibrate_cli.cpp" AND
    TARGET deep2_engine_lib)
     add_executable(reap-calibrate tools/reap_calibrate_cli.cpp)
