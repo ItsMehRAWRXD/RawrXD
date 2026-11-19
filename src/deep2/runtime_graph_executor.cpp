@@ -2,6 +2,7 @@
 // runtime_graph_executor.cpp  --  RAWRXD_DEEP2_RUNTIME_DISPATCH
 // ============================================================================
 #include "runtime_graph_executor.hpp"
+#include <limits>
 
 #include <algorithm>
 #include <cmath>
@@ -1952,7 +1953,11 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
                 // pairs are (0,32), (1,33), ... for a 64-element rotary slice.
                 const size_t nOff = nDims / 2;
                 for (size_t i = 0; i < nOff && 2 * i < lim; ++i) {
-                    const double theta = RopeAngle(position, i, nDims, yarn);
+                    const double theta = qwen35Imrope
+                        ? ((i % (kQwen35MropeSections[0] + kQwen35MropeSections[1] +
+                                 kQwen35MropeSections[2] + kQwen35MropeSections[3])) % 3 == 0
+                            ? RopeAngle(position, i, nDims, yarn) : 0.0)
+                        : RopeAngle(position, i, nDims, yarn);
                     const float c = (float)std::cos(theta), s = (float)std::sin(theta);
                     const float a = p[i], b = p[i + nOff];
                     p[i]        = a * c - b * s;
@@ -2319,6 +2324,13 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
             }
             scores[t] = (float)(acc * scoreScale);
         }
+        // Focused internals dump for the divergent (block 3, head 16) at pos1:
+        // pre-softmax scores, post-softmax weights, the mapped V vectors, and the
+        // AV output. Gated by DEEP2_ATTN_INTERNALS=<dir>; one file per (pos,head).
+        const bool dumpInternals =
+            std::getenv("DEEP2_ATTN_INTERNALS") && in.block == 3 && h == 16;
+        std::vector<float> preScores;
+        if (dumpInternals) preScores = scores;
         SoftmaxVec(scores);
         // Score witness (head 0 only, block 0, once per position). This is the
         // quantity an independent reference computes from the file's own bytes;
@@ -2343,6 +2355,51 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
             const float* vp = V.data() + t * vW + g * vPerHead;
             const float s = scores[t];
             for (size_t d = 0; d < outW; ++d) op[d] += s * vp[d];
+        }
+        if (dumpInternals) {
+            const char* dir = std::getenv("DEEP2_ATTN_INTERNALS");
+            char base[1200];
+            std::snprintf(base, sizeof(base), "%s/blk3_h16_p%zu",
+                          dir ? dir : ".", position);
+            std::string stem(base);
+            auto wr = [&](const char* suffix, const std::vector<float>& v) {
+                std::FILE* f = std::fopen((stem + suffix).c_str(), "wb");
+                if (f) { std::fwrite(v.data(), sizeof(float), v.size(), f); std::fclose(f); }
+            };
+            wr("_preScores.f32", preScores);
+            wr("_postScores.f32", std::vector<float>(scores.begin(), scores.end()));
+            std::vector<float> vv(vPerHead * T);
+            for (size_t t = 0; t < T; ++t) {
+                const float* vp = V.data() + t * vW + g * vPerHead;
+                std::copy_n(vp, vPerHead, vv.data() + t * vPerHead);
+            }
+            wr("_V.f32", vv);
+            // Post-RoPE Q (head h) and K (head g) exactly as consumed by the score.
+            wr("_qr.f32", std::vector<float>(qr.begin() + h * qPerHead,
+                                             qr.begin() + (h + 1) * qPerHead));
+            std::vector<float> kk(T * kPerHead);
+            for (size_t t = 0; t < T; ++t) {
+                const float* kp = K.data() + t * kvW + g * kPerHead;
+                std::copy_n(kp, kPerHead, kk.data() + t * kPerHead);
+            }
+            wr("_kr.f32", kk);
+            wr("_AV.f32", std::vector<float>(op, op + outW));
+            std::fprintf(stderr, "[attn-internals] block=3 head=16 pos=%zu group=%zu T=%zu written\n",
+                         position, g, T);
+        }
+    }
+
+    // Diagnostic: capture the PRE-gate context so gated-context assembly can be
+    // validated independently of the sigmoid gate. Additive; gated by the same
+    // compare-dump switch and it does not alter y.
+    if (const char* compareDir = std::getenv("DEEP2_COMPARE_DUMP_DIR");
+        compareDir && *compareDir && in.block >= 0 && in.block < 64) {
+        char path[1024];
+        std::snprintf(path, sizeof(path), "%s/attn_preGate_blk%d_p%zu.%s.f32",
+                      compareDir, (int)in.block, position, force_cpu_ ? "cpu" : "gpu");
+        if (std::FILE* f = std::fopen(path, "wb")) {
+            std::fwrite(y.data(), sizeof(float), y.size(), f);
+            std::fclose(f);
         }
     }
 
@@ -3313,7 +3370,7 @@ bool Executor::OpMoEExecute(const Instr& moe, const std::vector<float>& x,
         for (size_t j = 0; j < ffn; ++j)
         {
             const float s = 1.0f / (1.0f + std::exp(-g[j]));
-            hAll[e * ffn + j] = g[j] * s * u[j];
+                    hAll[e * ffn + j] = s * u[j];
         }
     }
     // Diagnostic snapshot: capture hidden immediately after SwiGLU,
@@ -4324,7 +4381,9 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
     struct MemoryReservationGuard {
         std::shared_ptr<std::atomic_size_t> counter;
         size_t bytes = 0;
+        std::function<void()> completion_wait;
         ~MemoryReservationGuard() {
+            if (completion_wait) completion_wait();
             if (counter && bytes) counter->fetch_sub(bytes, std::memory_order_acq_rel);
         }
     } reservation;
@@ -4332,10 +4391,12 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
         execution_context_->reservation_bytes) {
         reservation.counter = execution_context_->reserved_memory_bytes;
         reservation.bytes = execution_context_->reservation_bytes;
+        reservation.completion_wait = execution_context_->gpu_completion_wait;
         const size_t budget = execution_context_->memory_budget_bytes;
         size_t current = reservation.counter->load(std::memory_order_acquire);
         for (;;) {
-            if (budget && (current > budget || reservation.bytes > budget - current)) {
+            if (current > (std::numeric_limits<size_t>::max)() - reservation.bytes ||
+                (budget && (current > budget || reservation.bytes > budget - current))) {
                 last_error_ = "request memory reservation denied";
                 return false;
             }
@@ -4517,6 +4578,7 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
     std::unordered_map<int, double> op_timing_ms;
     std::unordered_map<int, size_t> op_timing_count;
     double dot_batch_flush_ms = 0.0;
+    int residency_block = -1;
     auto flush_group = [&]() {
         const auto flush_started = std::chrono::steady_clock::now();
         const bool ok = FlushDotBatch();
@@ -4540,7 +4602,25 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
     };
 
     for (size_t pc = 0; pc < program_.size(); ++pc) {
+        if (cancelled()) return false;
         const auto& in = program_[pc];
+        // Quantized weight pins are scoped to one transformer block.  Keeping
+        // every previously visited block pinned turns the streaming cache into
+        // a full-model allocation and eventually makes even small allocations
+        // fail with VK_ERROR_OUT_OF_DEVICE_MEMORY.  Release the completed
+        // block before admitting the next block's weights; the current
+        // operation pins whatever it needs again through the normal path.
+        if (!force_cpu_ && in.block != residency_block) {
+            // Trim the Deep2 weight cache (the cache TrimUnpinnedWeightCache
+            // lives on). QuantDot::DispatchDevice() returns the canonical
+            // VulkanCompute, a different class that has no such method, so the
+            // residency trim must target the Deep2 singleton directly.
+            ::Deep2::GetDeep2VulkanCompute().TrimUnpinnedWeightCache(
+                residency_block < 0 ? UINT32_MAX :
+                    static_cast<uint32_t>(residency_block));
+            (void)QuantDot::TrimUnpinnedQuantWeights();
+            residency_block = in.block;
+        }
         // FLIGHT RECORDER: publish progress for this op BEFORE executing it, so
         // a watchdog observing a long-running op still sees the engine is
         // advancing. The event records the op kind and its program counter,
@@ -4666,6 +4746,37 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 // join_batch_ is the loop-scope group decision above: the batch
                 // is already open when it is true.
                 if (!OpLinear(in.b, xi, y, e, join_batch_)) { last_error_ = e; return false; }
+                if (std::getenv("DEEP2_Q4K_EXACT_CHECK") &&
+                    in.b >= 0 && static_cast<size_t>(in.b) < tensors_.size() &&
+                    in.bName.find(".attn_output.weight") != std::string::npos &&
+                    tensors_[(size_t)in.b].ggml_type == GGML_TYPE_Q4_K) {
+                    const TensorRec& wt = tensors_[(size_t)in.b];
+                    const size_t nIn = static_cast<size_t>(wt.dims[0]);
+                    const size_t nOut = static_cast<size_t>(wt.dims[1]);
+                    const size_t rowBytes = (nIn / 256u) * 144u;
+                    const ggml_type_traits* tr = ggml_get_type_traits(wt.ggml_type);
+                    std::vector<float> row(nIn, 0.0f);
+                    double worst = 0.0, exactNorm = 0.0;
+                    size_t worstRow = 0;
+                    if (tr && tr->to_float && nIn == xi.size() && nOut == y.size()) {
+                        for (size_t r = 0; r < nOut; ++r) {
+                            tr->to_float(reinterpret_cast<const uint8_t*>(wt.data) + r * rowBytes,
+                                         row.data(), static_cast<int64_t>(nIn));
+                            double exact = 0.0;
+                            for (size_t c = 0; c < nIn; ++c)
+                                exact += static_cast<double>(row[c]) * xi[c];
+                            const double d = std::fabs(exact - static_cast<double>(y[r]));
+                            exactNorm += exact * exact;
+                            if (d > worst) { worst = d; worstRow = r; }
+                        }
+                        std::fprintf(stderr,
+                                     "[q4k-exact] block=%d path=%s rows=%zu cols=%zu "
+                                     "max_abs=%.9g worst_row=%zu exact_l2=%.9g\n",
+                                     (int)in.block, force_cpu_ ? "cpu" : "gpu",
+                                     nOut, nIn, worst, worstRow, std::sqrt(exactNorm));
+                        std::fflush(stderr);
+                    }
+                }
                 // ---- attention projection bias: y = W x + b ---------------
                 // Qwen2.5 and friends ship attn_q/k/v.bias tensors (in
                 // qwen2.5-coder-1.5b, blk.0.attn_k.bias alone has L2 ~1237 --
@@ -4732,8 +4843,8 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 if (const char* ffnPrefix = std::getenv("DEEP2_DUMP_FFN")) {
                     auto dumpVec = [&](const std::vector<float>& v, const char* tag) {
                         char dp[600];
-                        std::snprintf(dp, sizeof(dp), "%s.blk%d.%s.f32", ffnPrefix,
-                                      (int)in.block, tag);
+                        std::snprintf(dp, sizeof(dp), "%s.%s.blk%d.%s.f32", ffnPrefix,
+                                      force_cpu_ ? "cpu" : "gpu", (int)in.block, tag);
                         if (std::FILE* df = std::fopen(dp, "wb")) {
                             std::fwrite(v.data(), sizeof(float), v.size(), df);
                             std::fclose(df);
@@ -5228,6 +5339,44 @@ bool Executor::ExecuteToken(uint32_t token, size_t position) {
                 if (trace_capture_values_) tr.values = *out;
                 op_traces_.push_back(tr);
             }
+        }
+        // ISOLATED REPLAY: if DEEP2_REPLAY_DIR is set, overwrite this op's
+        // output activation with the llama.cpp reference so the NEXT op runs on
+        // reference input (CPU-out-of-op-N-1 -> op-N). The computed output was
+        // already recorded in the trace above, so the comparison still sees
+// Deep2's real arithmetic; only the forward input is sanitized.
+        if (const char* replayDir = std::getenv("DEEP2_REPLAY_DIR");
+            replayDir && *replayDir && !in.outName.empty() && in.outName[0] != '<' &&
+            in.block >= 0) {
+            std::vector<std::string> cands;
+            const std::string L = std::to_string(in.block);
+            const std::string& nm = in.outName;
+            if (nm == "attn_norm")      cands = {"attn_norm_L" + L + ".bin"};
+            else if (nm == "attn_proj") cands = {"attn_proj_L" + L + "__dup1.bin", "attn_proj_L" + L + ".bin"};
+            else if (nm == "gate")      cands = {"ffn_gate_L" + L + ".bin"};
+            else if (nm == "up")        cands = {"ffn_up_L" + L + ".bin"};
+    else if (nm == "swiglu")    cands = {"ffn_swiglu_L" + L + ".bin"};
+    else if (nm == "ffn_out")   cands = {"ffn_down_L" + L + ".bin"};
+    else if (nm == "resid2")    cands = {"resid2_L" + L + "__dup1.bin", "resid2_L" + L + ".bin"};
+    else if (nm == "resid_in")  cands = {"resid_in_L" + L + ".bin"};
+    auto it = act.find(in.outName);
+    if (it != act.end() && !it->second.empty()) {
+        for (const auto& c : cands) {
+            std::string path = std::string(replayDir) + "/pos" +
+                               std::to_string(position_) + "/" + c;
+            FILE* f = std::fopen(path.c_str(), "rb");
+            if (!f) continue;
+            std::vector<float> ref(it->second.size());
+            size_t n = std::fread(ref.data(), sizeof(float), ref.size(), f);
+            std::fclose(f);
+            if (n == it->second.size()) {
+                std::copy(ref.begin(), ref.end(), it->second.begin());
+                std::fprintf(stderr, "[REPLAY] blk%d %s <- %s (pos%zu)\n",
+                             in.block, in.outName.c_str(), c.c_str(), position_);
+            }
+            break;
+        }
+    }
         }
     }
 

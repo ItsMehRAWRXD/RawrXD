@@ -128,6 +128,7 @@ struct ExecutionContext {
     size_t reservation_bytes = 0;
     std::shared_ptr<std::atomic_bool> cancel;
     std::function<bool(size_t)> memory_admission;
+    std::function<void()> gpu_completion_wait;
     std::function<bool()> synchronization_ready;
 };
 
