@@ -5289,6 +5289,8 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2_persistent_kv_smoke.cpp" AND TARGET d
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests/$<CONFIG>")
     add_test(NAME deep2_persistent_kv_smoke
         COMMAND deep2_persistent_kv_smoke)
+    set_tests_properties(deep2_persistent_kv_smoke PROPERTIES
+        TIMEOUT 60)
 endif()
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/deep2_multitoken_decode_parity.cpp" AND TARGET deep2_engine_lib)
