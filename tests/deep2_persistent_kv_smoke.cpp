@@ -89,11 +89,15 @@ int main(int argc, char **argv)
     cfg.maxSeqLen = 512;
 
     Deep2Engine engine;
+    std::printf("S02_STAGE initialize\n");
+    std::fflush(stdout);
     if (!engine.initialize(cfg))
     {
         std::printf("FAIL: engine initialize\n");
         return 20;
     }
+    std::printf("S02_STAGE load_model\n");
+    std::fflush(stdout);
     if (!engine.loadModel(modelPath))
     {
         std::printf("FAIL: engine loadModel %s\n", modelPath);
@@ -108,6 +112,8 @@ int main(int argc, char **argv)
     }
 
     const std::string promptText = "The capital of France is";
+    std::printf("S02_STAGE tokenize\n");
+    std::fflush(stdout);
     const std::vector<int> prompt = engine.tokenize(promptText);
     if (prompt.empty())
     {
@@ -139,6 +145,8 @@ int main(int argc, char **argv)
     };
 
     InferenceStats stats{};
+    std::printf("S02_STAGE generate_1\n");
+    std::fflush(stdout);
     const size_t generated =
         engine.generate(prompt.data(), prompt.size(), out.data(), opts.maxTokens, &stats, callback);
 
