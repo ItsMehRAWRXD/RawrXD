@@ -1853,6 +1853,16 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
     // rope.scaling.type "yarn"; an empty type (llama, qwen, gemma, nemotron)
     // keeps plain, unscaled RoPE so their angles are untouched.
     const bool yarn = (spec_.rope_scaling_type == "yarn");
+    const std::string archLower = [&] {
+        std::string s = spec_.architecture;
+        for (char& c : s) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+        return s;
+    }();
+    // llama.cpp selects IMROPE for Qwen3.5.  Its text path still uses the
+    // four-section interleaved schedule [11,11,10,0]; language positions feed
+    // the temporal lane and the unused spatial/extra lanes remain zero.
+    const bool qwen35Imrope = archLower == "qwen35" || archLower == "qwen35moe";
+    constexpr size_t kQwen35MropeSections[4] = {11, 11, 10, 0};
 
     // RoPE: the ROTARY slice only. In MLA that is the last qk_rope dims of q
     // and of k; in a GQA model it is the whole head. Rotating the entire head
@@ -1922,7 +1932,11 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
             if (rope_adjacent) {
                 // NORM: pair i is elements (2i, 2i+1), rotated by angle i.
                 for (size_t i = 0; 2 * i + 1 < lim; ++i) {
-                    const double theta = RopeAngle(position, i, nDims, yarn);
+                    const double theta = qwen35Imrope
+                        ? ((i % (kQwen35MropeSections[0] + kQwen35MropeSections[1] +
+                                 kQwen35MropeSections[2] + kQwen35MropeSections[3])) % 3 == 0
+                            ? RopeAngle(position, i, nDims, yarn) : 0.0)
+                        : RopeAngle(position, i, nDims, yarn);
                     const float c = (float)std::cos(theta), s = (float)std::sin(theta);
                     const float a = p[2 * i], b = p[2 * i + 1];
                     p[2 * i]     = a * c - b * s;

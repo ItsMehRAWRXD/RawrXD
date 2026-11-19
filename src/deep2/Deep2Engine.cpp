@@ -6255,6 +6255,7 @@ void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads,
     const bool ropeNeox = archLower.find("minimax") != std::string::npos ||
                           archLower.find("qwen") != std::string::npos ||
                           archLower.find("gemma") != std::string::npos;
+    const bool ropeImrope = archLower == "qwen35" || archLower == "qwen35moe";
     if (ropeNeox)
     {
         static bool s_neoxLogged = false;
@@ -6275,7 +6276,24 @@ void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads,
     for (size_t h = 0; h < numHeads; ++h)
     {
         float* qh = q + h * headDim;
-        if (ropeNeox)
+        if (ropeImrope)
+        {
+            // llama.cpp Qwen3.5 uses IMROPE with text sections [11,11,10,0].
+            // Only the temporal section rotates for ordinary language tokens;
+            // spatial/extra sections use zero position and are identity.
+            const size_t nOff = headDim / 2;
+            for (size_t i = 0; i < nOff; ++i)
+            {
+                const size_t sector = i % 32u;
+                if ((sector % 3u) != 0u) continue;
+                const float cosA = cosTable[2 * i];
+                const float sinA = sinTable[2 * i];
+                const float q0 = qh[i], q1 = qh[i + nOff];
+                qh[i] = q0 * cosA - q1 * sinA;
+                qh[i + nOff] = q0 * sinA + q1 * cosA;
+            }
+        }
+        else if (ropeNeox)
         {
             const size_t nOff = headDim / 2;
             for (size_t i = 0; i < nOff; ++i)
@@ -6335,7 +6353,21 @@ void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads,
             fflush(stderr);
         }
 
-        if (ropeNeox)
+        if (ropeImrope)
+        {
+            const size_t nOff = headDim / 2;
+            for (size_t i = 0; i < nOff; ++i)
+            {
+                const size_t sector = i % 32u;
+                if ((sector % 3u) != 0u) continue;
+                const float cosA = cosTable[2 * i];
+                const float sinA = sinTable[2 * i];
+                const float k0 = kh[i], k1 = kh[i + nOff];
+                kh[i] = k0 * cosA - k1 * sinA;
+                kh[i + nOff] = k0 * sinA + k1 * cosA;
+            }
+        }
+        else if (ropeNeox)
         {
             const size_t nOff = headDim / 2;
             for (size_t i = 0; i < nOff; ++i)
