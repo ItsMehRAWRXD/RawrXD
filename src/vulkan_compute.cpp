@@ -604,6 +604,16 @@ bool VulkanCompute::AllocateBuffer(size_t size, VkBuffer& buffer, VkDeviceMemory
     alloc_info.allocationSize = mem_requirements.size;
     alloc_info.memoryTypeIndex = FindMemoryType(mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
+    if (std::getenv("RR_VULKAN_ALLOC_TRACE")) {
+        std::fprintf(stderr,
+            "[VK_ALLOC_TRACE] kind=device-local requested=%zu actual=%llu "
+            "alignment=%llu type=%u\n",
+            size,
+            static_cast<unsigned long long>(mem_requirements.size),
+            static_cast<unsigned long long>(mem_requirements.alignment),
+            alloc_info.memoryTypeIndex);
+    }
+
     if (vkAllocateMemory(device_, &alloc_info, nullptr, &memory) != VK_SUCCESS) {
         std::cerr << "Failed to allocate memory" << std::endl;
         vkDestroyBuffer(device_, buffer, nullptr);
