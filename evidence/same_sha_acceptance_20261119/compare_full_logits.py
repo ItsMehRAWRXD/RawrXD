@@ -44,6 +44,13 @@ def load_ref(ref_dir: Path):
         if not f.exists():
             continue
         rows.append(np.fromfile(f, dtype="<f4").astype(np.float64))
+    # The pinned teacher-forced harness also emits the flat form
+    # ref_logits_pos<N>.bin. Accept both layouts so the comparator cannot
+    # silently report missing reference rows for valid retained artifacts.
+    if not rows:
+        flat = sorted(ref_dir.glob("ref_logits_pos*.bin"),
+                      key=lambda p: int(p.stem[len("ref_logits_pos"):]))
+        rows = [np.fromfile(f, dtype="<f4").astype(np.float64) for f in flat]
     return rows
 
 
@@ -90,7 +97,8 @@ def main():
     if not ref:
         print("no reference rows", file=sys.stderr)
         return 2
-    if len(d2) != len(ref):
+    row_mismatch = len(d2) != len(ref)
+    if row_mismatch:
         print(f"row count mismatch deep2={len(d2)} ref={len(ref)}", file=sys.stderr)
 
     positions = []
@@ -116,7 +124,10 @@ def main():
     if args.out:
         Path(args.out).write_text(text, encoding="utf-8")
     print(text)
-    return 0
+    # Exit 5 is reserved for incomplete structural comparisons. Numerical
+    # differences remain in the JSON report so callers cannot confuse a
+    # completed comparison with a missing position.
+    return 5 if row_mismatch else 0
 
 
 if __name__ == "__main__":
