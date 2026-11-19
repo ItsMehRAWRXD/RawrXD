@@ -316,6 +316,9 @@ public:
 
     // ---- Diagnostics telemetry ---------------------------------------------
     uint64_t GemvSuccess() const;
+    // Actual vkQueueSubmit count from the backend. Distinct from GemvSuccess()
+    // (successful GEMV dispatches) and from the H11 dispatch account.
+    uint64_t QueueSubmitCount() const;
     uint64_t GemvWeightHits() const;
     uint64_t GemvWeightUploads() const;
     uint64_t WeightContentHits() const;

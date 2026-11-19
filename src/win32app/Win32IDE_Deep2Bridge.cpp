@@ -570,6 +570,11 @@ std::string Deep2Bridge::GetModelInfo() const
         const auto& b21 = Deep2::QuantKernelRegistry::Instance().GetBatch21Counters();
         oss << "GPU Vulkan Submissions: " << b21.vulkanComputeSubmissions.load() << "\n";
         oss << "GPU Vulkan Failures: " << b21.vulkanComputeFailures.load() << "\n";
+        // Actual vkQueueSubmit calls from the Vulkan backend (independent of the
+        // GEMV success count: batching and non-GEMV work change the ratio).
+        if (const auto* vc = m_engine->getVulkanCompute()) {
+            oss << "GPU Queue Submits (actual): " << vc->QueueSubmitCount() << "\n";
+        }
         oss << "Quant Kernel Invocations: " << b21.kernelInvocations.load() << "\n";
         oss << "Quant Scalar Fallbacks: " << b21.scalarFallbacks.load() << "\n";
         // Real backend counters. `getVulkanCompute()` returns the CPUInference

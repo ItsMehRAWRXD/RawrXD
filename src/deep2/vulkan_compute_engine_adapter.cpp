@@ -266,6 +266,10 @@ uint64_t VulkanCompute::GemvWeightUploads() const {
     return backend_ != nullptr ? static_cast<uint64_t>(backend_->WeightUploadCount()) : 0;
 }
 
+uint64_t VulkanCompute::QueueSubmitCount() const {
+    return backend_ != nullptr ? static_cast<uint64_t>(backend_->QueueSubmitCount()) : 0;
+}
+
 uint64_t VulkanCompute::GemvWeightHits() const {
     if (gemv_weight_hits_ != 0) return gemv_weight_hits_;
     return backend_ != nullptr ? static_cast<uint64_t>(backend_->WeightHitCount()) : 0;
