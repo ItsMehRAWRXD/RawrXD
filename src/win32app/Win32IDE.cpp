@@ -8026,6 +8026,24 @@ void Win32IDE::generateResponseAsync(
                                  m_deep2Bridge->IsModelLoaded() ? 1 : 0,
                                  (void*)m_deep2Bridge, routedPrompt.c_str());
                     std::fflush(stderr);
+                    // Diagnostic A/B: run the same chat route through the
+                    // synchronous API to separate "streaming defect" from
+                    // "worker-thread defect".
+                    if (environmentValue("RAWRXD_CHAT_DEEP2_SYNC") == "1") {
+                        std::fprintf(stderr,
+                                     "[CHAT_DEEP2_SYNC] prompt_len=%zu max_tokens=%d model=%s\n",
+                                     routedPrompt.size(), requestMaxTokens,
+                                     m_deep2Bridge->GetCurrentModel().c_str());
+                        std::fflush(stderr);
+                        const std::string syncResponse =
+                            m_deep2Bridge->GenerateSync(routedPrompt, requestMaxTokens);
+                        const bool syncOk = !syncResponse.empty() &&
+                            syncResponse.rfind("Error:", 0) != 0;
+                        finishIfCurrent(syncResponse.empty()
+                            ? "Deep2 sync path returned an empty response."
+                            : syncResponse, syncOk);
+                        return;
+                    }
                     m_deep2Bridge->GenerateStream(
                         routedPrompt,
                         [this, &response, callback](const std::string& token, bool) {
