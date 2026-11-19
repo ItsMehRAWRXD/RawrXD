@@ -1,0 +1,21 @@
+# Full-vocabulary Deep2 ↔ llama.cpp parity
+
+```ini
+SOURCE_SHA=5a8e7569598a6dc3bbc1ea2a8ce7e0a811061924
+DEEP2_EXE_SHA256=948F9B3168E36B5D7652236CF3097AF9AFEF93DC6438897A727A59CB8F435599
+MODEL_SHA256=6A77366395772462C84F0C4D226AC404674327CBE78C01E4391CC7E0C698851E
+REFERENCE_EXE_SHA256=6AB8E23F8C6011E902D9A09FB276336FD7CF99AE11E210BE46785D6BE734C804
+TOKENS=1,185,42
+VOCAB=151936
+REFERENCE_EXIT=0
+```
+
+| Position | Cosine | Max abs | RMS | Deep2 top-1 | Reference top-1 |
+|---:|---:|---:|---:|---:|---:|
+| 0 | 0.9999166801 | 0.1848352 | 0.03596486 | 15 | 15 |
+| 1 | 0.9978531337 | 1.5699477 | 0.32123251 | 123818 | 123818 |
+| 2 | 0.9981635086 | 1.4900618 | 0.30972172 | 84 | 84 |
+
+The comparison covers all 151,936 logits at each position. This is a
+measured parity result for Qwen2.5-Coder 1.5B, not a certification of other
+architectures or the 30B Nemotron workload.
