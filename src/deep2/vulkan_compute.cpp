@@ -3789,6 +3789,39 @@ void VulkanCompute::UnpinAllWeights() {
     pinnedWeightEntries_ = 0;
 }
 
+bool VulkanCompute::TrimUnpinnedWeightCache(uint32_t completedBlock) {
+    if (!device_) return false;
+    // All Deep2 quant-dot submissions are fence-waited before their outputs
+    // are consumed.  Waiting here makes destruction safe even when a caller
+    // used the recorded-group path immediately before the block boundary.
+    if (vkDeviceWaitIdle(device_) != VK_SUCCESS) return false;
+    UnpinAllWeights();
+    const size_t beforeBytes = weightCacheBytes_;
+    const size_t beforeEntries = weightCache_.size();
+    const size_t beforeResidentBytes = residentObjectBytes_;
+    clearWeightCache();
+    // The direct-resident/RCU path is a second owner of streamed weights and
+    // is not represented by weightCache_.  In a block-serial graph no command
+    // from the completed block remains in flight after the wait above, so its
+    // published views can be invalidated and reclaimed here as well.
+    ReclaimAllResidents();
+    const size_t evictedBytes = beforeBytes - weightCacheBytes_;
+    std::fprintf(stderr,
+                 "[GPU_RESIDENCY] block=%u pinned_weight_bytes=%zu "
+                 "cached_weight_bytes=%zu live_allocation_count=%zu "
+                 "live_device_bytes=%zu live_device_allocations=%llu "
+                 "evicted_weight_bytes=%zu resident_reclaimed_bytes=%zu "
+                 "heap_headroom_bytes=%zu\n",
+                 completedBlock, pinnedWeightBytes_, weightCacheBytes_,
+                 static_cast<size_t>(liveDeviceAllocations_),
+                 liveDeviceBytes_,
+                 static_cast<unsigned long long>(liveDeviceAllocations_),
+                 evictedBytes, beforeResidentBytes,
+                 deviceLocalHeapHeadroom());
+    (void)beforeEntries;
+    return true;
+}
+
 bool VulkanCompute::evictWeightCacheUntil(size_t incomingBytes) {
     if (weightBudgetBytes_ && incomingBytes > weightBudgetBytes_) return false;
 
