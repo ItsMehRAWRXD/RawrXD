@@ -1623,6 +1623,15 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
                     // ... and after, so dispatch/fallback counters reflect the run.
                     modelInfo = m_deep2Bridge->GetModelInfo();
                     if (modelInfo == infoBefore) modelInfo += "(counters unchanged)\n";
+                    // Persist both snapshots: a counter delta (before -> after) is
+                    // what proves the work happened during this request rather than
+                    // during model load or device initialisation.
+                    FILE* sf = nullptr;
+                    if (fopen_s(&sf, "F:\\rawrxd\\evidence\\TOP25_C08_C09_DEEP2_SNAPSHOTS.txt", "wb") == 0 && sf) {
+                        fprintf(sf, "=== BEFORE GENERATION ===\n%s\n=== AFTER GENERATION ===\n%s\n",
+                                infoBefore.c_str(), modelInfo.c_str());
+                        fclose(sf);
+                    }
                     genLen = out.size();
                     genOk = genLen > 0 ? 1 : 0;
                     if (genOk) {
