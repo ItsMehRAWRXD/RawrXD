@@ -325,6 +325,21 @@ void Deep2Bridge::GenerationWorker(const std::string& prompt, int maxTokens)
          );
         
         LOG_INFO("Deep2Bridge generation: engine stream returned");
+        {
+            // Request-scoped witness for the GUI chat path (streaming, not
+            // GenerateSync), so a chat run can be tied to real GPU work.
+            const auto& b21 = Deep2::QuantKernelRegistry::Instance().GetBatch21Counters();
+            const auto* vc = m_engine->getVulkanCompute();
+            std::fprintf(stderr,
+                         "[BRIDGE_STREAM] gemv_ok=%llu fallbacks=%llu submissions=%llu "
+                         "queue_submits=%llu chars=%zu\n",
+                         (unsigned long long)m_engine->vulkanGemvSuccessCount(),
+                         (unsigned long long)m_engine->vulkanGemvFallbackCount(),
+                         (unsigned long long)b21.vulkanComputeSubmissions.load(),
+                         (unsigned long long)(vc ? vc->QueueSubmitCount() : 0),
+                         fullResponse.size());
+            std::fflush(stderr);
+        }
         OnGenerationComplete(m_cancelRequested.load());
 #else
         if (!m_cpuEngine) {
