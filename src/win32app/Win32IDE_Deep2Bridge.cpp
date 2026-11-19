@@ -502,6 +502,7 @@ std::string Deep2Bridge::GetModelInfo() const
         << (gpuForward ? "GPU forward active" :
             (vulkanReady ? "Vulkan initialized; CPU forward" : "CPU forward"))
         << ")\n";
+    oss << "Vulkan Enabled: " << (m_engine->isVulkanEnabled() ? 1 : 0) << "\n";
     oss << "Context: " << m_engine->getConfig().maxSeqLen << "\n";
     oss << "Vocab Size: " << m_engine->getConfig().vocabSize << "\n";
     oss << "Layers: " << m_engine->getConfig().numLayers << "\n";
