@@ -347,13 +347,49 @@ void main() {
     }
 
     float acc = 0.0;
-    // Q4_K (12): FP32 dequant×act matching Deep2Engine::q4kGEMV /
-    // ggml dequantize_row_q4_K (paired scales over 32-byte qs chunks).
-    // The prior Q8_K activation path diverged from the CPU authority enough
-    // to flip first-token argmax (576 ' The' vs 64787 ' madrid').
+    // Q4_K (12): quantize the activation as Q8_K before the dot.  The CPU
+    // authority dispatches KQuantRowDotQ8(), i.e. ggml's q4_K x q8_K
+    // contract.  The old path used raw FP32 activations and therefore did
+    // not compute the same operator even when the packed weights matched.
     if (pc.type == 12u) {
-        for (uint j = lane * 4u; j < pc.cols; j += 1024u)
-            acc += q4k_dot4(rb, j);
+        const uint blocks = (pc.cols + 255u) / 256u;
+        for (uint block = 0u; block < blocks; ++block) {
+            const uint col = block * 256u + lane;
+            q8Raw[lane] = col < pc.cols ? x[col] : 0.0;
+            barrier();
+
+            if (lane == 0u) {
+                float amax = 0.0;
+                float maxValue = 0.0;
+                for (uint i = 0u; i < 256u; ++i) {
+                    const float value = q8Raw[i];
+                    const float av = abs(value);
+                    if (av > amax) {
+                        amax = av;
+                        maxValue = value;
+                    }
+                }
+                if (amax == 0.0) {
+                    q8InvScale = 0.0;
+                    q8D = 0.0;
+                } else {
+                    q8InvScale = -127.0 / maxValue;
+                    q8D = 1.0 / q8InvScale;
+                }
+            }
+            barrier();
+
+            int q8 = 0;
+            if (q8InvScale != 0.0)
+                q8 = int(floatBitsToInt(q8InvScale * q8Raw[lane] + 12582912.0) & 0x007fffff) - 0x00400000;
+            q8 = clamp(q8, -127, 127);
+            q8Quant[lane] = q8;
+            barrier();
+
+            if (col < pc.cols)
+                acc += q8D * float(q8) * q4k_weight(rb, col);
+            barrier();
+        }
     } else if (pc.type == 14u) {
         // Match vec_dot_q6_K_q8_K: quantize each activation super-block
         // with the selected signed maximum, then integer-dot with q6.
