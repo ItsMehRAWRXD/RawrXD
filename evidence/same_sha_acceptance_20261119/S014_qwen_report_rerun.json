@@ -1,0 +1,59 @@
+{
+  "positions": [
+    {
+      "position": 0,
+      "elements": 151936,
+      "cosine": 0.9999982335376357,
+      "rms": 0.006863673189698828,
+      "max_abs": 0.03497123718261719,
+      "argmax_match": true,
+      "top10_overlap": 10,
+      "finite": true
+    },
+    {
+      "position": 1,
+      "elements": 151936,
+      "cosine": 0.9992339625483421,
+      "rms": 0.13317354952640778,
+      "max_abs": 0.6386623382568359,
+      "argmax_match": true,
+      "top10_overlap": 9,
+      "finite": true
+    },
+    {
+      "position": 2,
+      "elements": 151936,
+      "cosine": 0.9994733061117984,
+      "rms": 0.1441759184828148,
+      "max_abs": 0.6710376739501953,
+      "argmax_match": true,
+      "top10_overlap": 10,
+      "finite": true
+    },
+    {
+      "position": 3,
+      "elements": 151936,
+      "cosine": 0.9982453981892444,
+      "rms": 0.15653774951184993,
+      "max_abs": 0.7396129369735718,
+      "argmax_match": true,
+      "top10_overlap": 9,
+      "finite": true
+    },
+    {
+      "position": 4,
+      "elements": 151936,
+      "cosine": 0.9980973923169006,
+      "rms": 0.20862476883223058,
+      "max_abs": 0.93182373046875,
+      "argmax_match": true,
+      "top10_overlap": 10,
+      "finite": true
+    }
+  ],
+  "positions_compared": 5,
+  "all_finite": true,
+  "top1_exact": 5,
+  "min_cosine": 0.9980973923169006,
+  "max_abs_worst": 0.93182373046875
+}
