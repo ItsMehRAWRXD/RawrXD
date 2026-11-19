@@ -108,9 +108,9 @@ int main(int argc, char** argv) {
             trace << "position,block,pc,op,name,weight,input,size,checksum,backend,fallback,first0\n";
             for (const auto& t : executor.OpTraces()) {
                 trace << logical_position << ',' << t.block << ',' << t.pc << ',' << t.op
-                      << ',"' << t.name << '","' << t.weight << '","' << t.input << '\",'
-                      << t.size << ',' << t.checksum << ',"' << t.dispatch_backend << '","'
-                      << t.dispatch_fallback << '",' << (t.dispatch_forced ? 1 : 0)
+                      << ",\"" << t.name << "\",\"" << t.weight << "\",\"" << t.input << "\","
+                      << t.size << ',' << t.checksum << ",\"" << t.dispatch_backend << "\",\""
+                      << t.dispatch_fallback << "\"," << (t.dispatch_forced ? 1 : 0)
                       << ',' << t.first_vals[0] << '\n';
             }
         }
