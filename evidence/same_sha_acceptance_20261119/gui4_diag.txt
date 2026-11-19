@@ -1,0 +1,15 @@
+PID=25312 LAUNCH_OK=True
+WINDOW_HWND=101714244 ALIVE=True
+CTRL input=77990164 send=9832378
+TYPED=[
+SEND_AT=12:19:20.911
+TRANSCRIPT_LEN=70 at=2s TEXT=[Terminal ready. Select this tab or use Terminal menu to run a shell.
+]
+EXITED code=0 after=81.5s
+ALIVE_FINAL=False
+EXIT_CODE=0 (0x{0:X8})
+---- TRANSCRIPT TAIL ----
+<no-reply>
+---- STDERR ----
+---- WER ----
+WER_NONE_FOR_PID
