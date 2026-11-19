@@ -11,6 +11,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <climits>
+#include <cmath>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -101,7 +102,29 @@ int main(int argc, char** argv) {
             fprintf(stderr, "FAIL: forwardTokenAllLayers at step %zu\n", step);
             return 8;
         }
+        bool hiddenFinite = true;
+        for (size_t i = 0; i < H; ++i) {
+            if (!std::isfinite(hidden[i])) {
+                hiddenFinite = false;
+                break;
+            }
+        }
+        if (!hiddenFinite) {
+            fprintf(stderr, "FAIL: nonfinite hidden state at step %zu\n", step);
+            return 9;
+        }
         engine.computeLogits(hidden.data(), localLogits.data());
+        bool logitsFinite = true;
+        for (size_t i = 0; i < V; ++i) {
+            if (!std::isfinite(localLogits[i])) {
+                logitsFinite = false;
+                break;
+            }
+        }
+        if (!logitsFinite) {
+            fprintf(stderr, "FAIL: nonfinite logits at step %zu\n", step);
+            return 10;
+        }
         int stepArgmax = 0;
         for (size_t i = 1; i < V; ++i)
             if (localLogits[i] > localLogits[stepArgmax]) stepArgmax = static_cast<int>(i);
