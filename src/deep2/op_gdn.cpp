@@ -155,7 +155,10 @@ bool GDNQwenReferenceStep(const GDNDescriptor& descriptor,
     const float kNormEpsilon = descriptor.epsilon;
     const size_t HkPerHv = Hv / Hk;
     for (size_t hv = 0; hv < Hv; ++hv) {
-        const size_t hk = hv / HkPerHv;
+        // Match ggml_gated_delta_net head mapping: ik1 = iq1 = iv1 % nek1
+        // (interleaved), the SAME key head for Q and K. The previous
+        // hv / (Hv/Hk) block mapping was wrong and diverged from the reference.
+        const size_t hk = hv % Hk;
         const size_t q_base = hk * D;
         const size_t k_base = (Hk + hk) * D;
         const size_t v_base = (2 * Hk + hv) * D;
