@@ -6,9 +6,11 @@
 #include <atomic>
 #include <cstdint>
 #include <cstdlib>
+#include <cmath>
 #include <iostream>
 #include <memory>
 #include <string>
+#include <vector>
 
 using RawrXD::Deep2::Universal::Ingest;
 using RawrXD::Deep2::RuntimeGraph::ExecutionContext;
@@ -16,16 +18,29 @@ using RawrXD::Deep2::RuntimeGraph::Executor;
 
 int main(int argc, char** argv) {
     if (argc < 3) {
-        std::cerr << "usage: ltt_tensor_invoke <model.gguf> <token> [position] [device]\n";
+        std::cerr << "usage: ltt_tensor_invoke <model.gguf> <token> [token...] [--position=N] [--device=N]\n";
         return 2;
     }
     char* end = nullptr;
-    const auto token = std::strtoul(argv[2], &end, 10);
-    if (!end || *end != '\0' || token > UINT32_MAX) return 2;
-    const auto position = argc > 3 ? std::strtoull(argv[3], &end, 10) : 0;
-    if (!end || *end != '\0') return 2;
-    const auto device = argc > 4 ? std::strtoul(argv[4], &end, 10) : 0;
-    if (!end || *end != '\0' || device > UINT32_MAX) return 2;
+    size_t position = 0;
+    uint32_t device = 0;
+    std::vector<uint32_t> tokens;
+    for (int i = 2; i < argc; ++i) {
+        const std::string arg(argv[i]);
+        if (arg.rfind("--position=", 0) == 0) {
+            position = std::strtoull(arg.c_str() + 11, &end, 10);
+            if (!end || *end != '\0') return 2;
+        } else if (arg.rfind("--device=", 0) == 0) {
+            const auto v = std::strtoul(arg.c_str() + 9, &end, 10);
+            if (!end || *end != '\0' || v > UINT32_MAX) return 2;
+            device = static_cast<uint32_t>(v);
+        } else {
+            const auto v = std::strtoul(arg.c_str(), &end, 10);
+            if (!end || *end != '\0' || v > UINT32_MAX) return 2;
+            tokens.push_back(static_cast<uint32_t>(v));
+        }
+    }
+    if (tokens.empty()) return 2;
 
     const auto& report = Ingest(argv[1], false);
     if (!report.ok) {
@@ -51,15 +66,30 @@ int main(int argc, char** argv) {
     context->synchronization_ready = [] { return true; };
     context->memory_admission = [](size_t) { return true; };
 
-    if (!executor.ExecuteToken(static_cast<uint32_t>(token),
-                               static_cast<size_t>(position), context)) {
-        std::cerr << "LTT_EXECUTE_FAIL " << executor.LastError() << '\n';
-        return 5;
+    for (size_t i = 0; i < tokens.size(); ++i) {
+        if (!executor.ExecuteToken(tokens[i], position + i, context)) {
+            std::cerr << "LTT_EXECUTE_FAIL token=" << tokens[i]
+                      << " position=" << (position + i) << ' '
+                      << executor.LastError() << '\n';
+            return 5;
+        }
+        const auto& logits = executor.Logits();
+        size_t top = 0;
+        for (size_t j = 1; j < logits.size(); ++j)
+            if (logits[j] > logits[top]) top = j;
+        bool finite = true;
+        for (float v : logits) finite = finite && std::isfinite(v);
+        std::cout << "LTT_TOKEN_PASS index=" << i
+                  << " position=" << (position + i)
+                  << " finite_logits=" << (finite ? 1 : 0)
+                  << " top1=" << top
+                  << " gpu_calls=" << executor.Stats().gpu_calls
+                  << " cpu_calls=" << executor.Stats().cpu_calls << '\n';
     }
     std::cout << "LTT_EXECUTE_PASS model=" << report.spec.model_name
               << " arch=" << report.spec.architecture
               << " device=" << device
-              << " position=" << position
+              << " tokens=" << tokens.size()
               << " gpu_calls=" << executor.Stats().gpu_calls
               << " cpu_calls=" << executor.Stats().cpu_calls << '\n';
     return 0;
