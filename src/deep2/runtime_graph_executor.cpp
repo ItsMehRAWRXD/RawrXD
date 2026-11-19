@@ -2217,8 +2217,20 @@ bool Executor::OpAttention(const Instr& in, const std::vector<float>& q,
             const float* kp = K.data() + t * kvW + g * kPerHead;
             const float* krope = kp + kRopeOff;
             double acc = 0.0;
-            for (size_t d = 0; d < nopeD; ++d) acc += double(qp[d]) * double(kp[d]);
-            for (size_t i = 0; i < ropeLen; ++i) acc += double(qrope[i]) * double(krope[i]);
+            if (qwen35Gated) {
+                // qwen35: partial RoPE on [0, ropeLen), the rest of the head is
+                // unrotated. The score must cover the FULL head (qPerHead dims),
+                // not just the RoPE slice. Dotting only ropeLen drops the
+                // (headDim - ropeDim) no-rope channels; at pos0 the 1-element
+                // softmax hides it, at pos1 it corrupts every full-attn block.
+                for (size_t i = 0; i < ropeLen && i < qPerHead; ++i)
+                    acc += double(qrope[i]) * double(krope[i]);
+                for (size_t d = ropeLen; d < qPerHead; ++d)
+                    acc += double(qp[d]) * double(kp[d]);
+            } else {
+                for (size_t d = 0; d < nopeD; ++d) acc += double(qp[d]) * double(kp[d]);
+                for (size_t i = 0; i < ropeLen; ++i) acc += double(qrope[i]) * double(krope[i]);
+            }
             scores[t] = (float)(acc * scoreScale);
         }
         SoftmaxVec(scores);
