@@ -397,6 +397,11 @@ void SetCachePolicy(int policy) {
     Gpu().SetWeightCachePolicy(policy == 1 ? 1 : 0);
 }
 
+size_t TrimUnpinnedQuantWeights() {
+    return (g_active_device >= 0 ? GpuFor(g_active_device) : Gpu())
+        .TrimUnpinnedQuantWeights();
+}
+
 // RAWRXD_G04: the budget is a device-lifetime setting resolved on first use, so
 // it is recorded here and applied by Gpu()/GpuFor() at initialisation, exactly
 // like SetPreferredDevice's device pin.

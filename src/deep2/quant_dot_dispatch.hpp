@@ -203,6 +203,7 @@ const BackendStats& BackendCounters();
 bool IsWeightResident(const void* packed, size_t bytes, int kind);
 bool PrefetchWeight(const void* packed, size_t bytes, int kind);
 void SetCachePolicy(int policy);   // 0 = LRU, 1 = hotness
+size_t TrimUnpinnedQuantWeights();
 
 struct CacheStats {
     uint64_t hits = 0;            // dispatches served from VRAM

@@ -3098,6 +3098,26 @@ void VulkanCompute::RetireQuantWeight(const QuantWeight& w) {
         gpu_counters_.device_bytes_live = 0;
 }
 
+size_t VulkanCompute::TrimUnpinnedQuantWeights() {
+    std::lock_guard<std::recursive_mutex> lk(quant_mu_);
+    if (!device_ || !quant_fence_) return 0;
+    if (vkDeviceWaitIdle(device_) != VK_SUCCESS) return 0;
+    std::vector<const void*> victims;
+    victims.reserve(quant_weight_cache_.size());
+    for (const auto& kv : quant_weight_cache_) {
+        if (kv.second.pin_count == 0) victims.push_back(kv.first);
+    }
+    for (const void* key : victims) {
+        auto it = quant_weight_cache_.find(key);
+        if (it == quant_weight_cache_.end() || it->second.pin_count != 0) continue;
+        RetireQuantWeight(it->second);
+        quant_weight_cache_.erase(it);
+        ++gpu_counters_.weight_cache_evictions;
+    }
+    ReapRetiredWeights();
+    return victims.size();
+}
+
 // Fence-safe eviction, step 2: destroy every retired entry whose dispatch
 // epoch has completed. Every submission in this class uses the single shared
 // quant_fence_ and waits on it before returning, so once epoch E has been
