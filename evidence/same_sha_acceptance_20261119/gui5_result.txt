@@ -1,0 +1,14 @@
+PID=28864
+HWND=91949506 ALIVE=True
+IDS=
+CB_COUNT=1 CB_CURSEL=1
+AFTER_SELCHANGE alive=True
+CTRL input1202=8259748 send1204=73270496 output1203=76089716
+CHIN_STAGE=True PROMPT=[What is 2+2?] ALIVE=True
+OUT_LEN=10 at=38s TEXT=[<no-reply>]
+PROMPT_DONE delta=-65 alive=True
+CHIN_STAGE=False PROMPT=[Name one color.] ALIVE=True
+EXITED code=0 after=16.9s
+PROMPT_DONE delta=0 alive=False
+---- STDERR ----
+NO_GPU_WITNESS
