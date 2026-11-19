@@ -33,6 +33,7 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <limits>
 #include <map>
 #include <optional>
 #include <string>
@@ -129,6 +130,8 @@ struct ExecutionContext {
     std::shared_ptr<std::atomic_bool> cancel;
     std::function<bool(size_t)> memory_admission;
     std::function<bool()> synchronization_ready;
+    // Must wait for all submissions using request-owned buffers; false on timeout/device loss.
+    std::function<bool()> wait_gpu_completion;
 };
 
 class Executor {
@@ -153,8 +156,45 @@ public:
     bool ExecuteToken(uint32_t token, size_t position,
                       std::shared_ptr<const ExecutionContext> context) {
         std::lock_guard<std::mutex> guard(invocation_mutex_);
+        if (!context) { last_error_ = "null request context"; return false; }
+        // The reservation belongs to the scoped invocation, not the CPU
+        // ExecuteToken stack: GPU commands may outlive CPU dispatch.
+        const size_t bytes = context->reservation_bytes;
+        const size_t budget = context->memory_budget_bytes;
+        auto counter = context->reserved_memory_bytes;
+        if (bytes && (!counter || !budget || !context->wait_gpu_completion)) {
+            last_error_ = "request reservation requires budget, shared counter and GPU completion wait";
+            return false;
+        }
+        if (bytes) {
+            size_t current = counter->load(std::memory_order_acquire);
+            for (;;) {
+                if (current > budget || bytes > budget - current ||
+                    bytes > std::numeric_limits<size_t>::max() - current) {
+                    last_error_ = "request memory reservation denied";
+                    return false;
+                }
+                if (counter->compare_exchange_weak(current, current + bytes,
+                        std::memory_order_acq_rel, std::memory_order_acquire)) break;
+            }
+        }
         SetExecutionContext(std::move(context));
-        const bool ok = ExecuteToken(token, position);
+        bool ok = ExecuteToken(token, position);
+        // Wait even on cancellation or dispatch failure: previously submitted
+        // Vulkan commands may still reference request-owned resources.
+        bool completed = true;
+        if (execution_context_->wait_gpu_completion) {
+            try { completed = execution_context_->wait_gpu_completion(); }
+            catch (...) { completed = false; }
+        }
+        if (!completed) {
+            last_error_ = "request GPU completion not confirmed; reservation retained";
+            // Deliberately retain accounting: releasing would allow an
+            // overlapping allocation while in-flight commands still exist.
+            ok = false;
+        } else if (bytes) {
+            counter->fetch_sub(bytes, std::memory_order_acq_rel);
+        }
         ClearExecutionContext();
         return ok;
     }
