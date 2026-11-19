@@ -620,7 +620,27 @@ bool VulkanCompute::AllocateBuffer(size_t size, VkBuffer& buffer, VkDeviceMemory
         return false;
     }
 
-    vkBindBufferMemory(device_, buffer, memory, 0);
+    const VkResult bind_result = vkBindBufferMemory(device_, buffer, memory, 0);
+    if (bind_result != VK_SUCCESS) {
+        if (std::getenv("RR_VULKAN_ALLOC_TRACE")) {
+            std::fprintf(stderr, "[VK_ALLOC_TRACE] event=bind_failed owner=canonical result=%d memory=%p buffer=%p\n",
+                         static_cast<int>(bind_result),
+                         reinterpret_cast<void*>(memory), reinterpret_cast<void*>(buffer));
+        }
+        vkFreeMemory(device_, memory, nullptr);
+        vkDestroyBuffer(device_, buffer, nullptr);
+        memory = VK_NULL_HANDLE;
+        buffer = VK_NULL_HANDLE;
+        return false;
+    }
+    if (std::getenv("RR_VULKAN_ALLOC_TRACE")) {
+        std::fprintf(stderr,
+            "[VK_ALLOC_TRACE] event=bound owner=canonical memory=%p buffer=%p requested=%zu actual=%llu alignment=%llu type=%u\n",
+            reinterpret_cast<void*>(memory), reinterpret_cast<void*>(buffer), size,
+            static_cast<unsigned long long>(mem_requirements.size),
+            static_cast<unsigned long long>(mem_requirements.alignment),
+            alloc_info.memoryTypeIndex);
+    }
     return true;
 }
 
