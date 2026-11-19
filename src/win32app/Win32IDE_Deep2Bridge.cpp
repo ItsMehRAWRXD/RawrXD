@@ -568,6 +568,12 @@ std::string Deep2Bridge::GetModelInfo() const
         oss << "GPU Vulkan Failures: " << b21.vulkanComputeFailures.load() << "\n";
         oss << "Quant Kernel Invocations: " << b21.kernelInvocations.load() << "\n";
         oss << "Quant Scalar Fallbacks: " << b21.scalarFallbacks.load() << "\n";
+        // Real backend counters. `getVulkanCompute()` returns the CPUInference
+        // VulkanCompute wrapper, which does not expose gemvSuccess_/weights; the
+        // deep2 backend counters (vulkan_compute.h) are not reachable from the
+        // bridge without a new Deep2Engine accessor. The H11 dispatch account
+        // above is not wired on this path (noteCmdDispatch/noteQueueSubmit have
+        // no callers), so it must not be read as a submission count.
     }
     return oss.str();
 #else
