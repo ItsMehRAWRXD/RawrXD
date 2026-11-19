@@ -1,6 +1,7 @@
 /* DEEP2_QWEN25_MULTITOKEN_KV_PARITY_001 — multi-token KV parity oracle
  *
  * Usage: deep2_parity_oracle.exe <model.gguf> [prompt] [traceFile] [nTokens]
+ *        deep2_parity_oracle.exe <model.gguf> --tokens=1,2,3 [traceFile]
  *
  * Runs greedy decode for nTokens positions through the production generate()
  * path with per-position parity probes enabled, then dumps per-position
@@ -8,6 +9,8 @@
  */
 #include <cstdio>
 #include <cstring>
+#include <cstdlib>
+#include <climits>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -41,12 +44,35 @@ int main(int argc, char** argv) {
         return 4;
     }
 
-    auto toks = engine.tokenize(prompt);
+    std::vector<int> explicitTokens;
+    if (argc > 2 && std::strncmp(argv[2], "--tokens=", 9) == 0) {
+        const char* p = argv[2] + 9;
+        while (*p) {
+            char* end = nullptr;
+            const long value = std::strtol(p, &end, 10);
+            if (end == p || value < 0 || value > INT_MAX) {
+                fprintf(stderr, "FAIL: invalid token list: %s\n", argv[2]);
+                return 5;
+            }
+            explicitTokens.push_back(static_cast<int>(value));
+            p = (*end == ',') ? end + 1 : end;
+            if (*end && *end != ',') {
+                fprintf(stderr, "FAIL: invalid token separator: %s\n", argv[2]);
+                return 5;
+            }
+        }
+        if (explicitTokens.empty()) {
+            fprintf(stderr, "FAIL: empty token list\n");
+            return 5;
+        }
+    }
+
+    auto toks = explicitTokens.empty() ? engine.tokenize(prompt) : explicitTokens;
     fprintf(stderr, "TOKENS=%zu", toks.size());
     for (size_t i = 0; i < toks.size(); ++i)
         fprintf(stderr, " %d", toks[i]);
     fprintf(stderr, "\n");
-    if (toks.size() != 1) {
+    if (explicitTokens.empty() && toks.size() != 1) {
         fprintf(stderr, "FAIL: prompt must tokenize to exactly 1 token "
                         "(got %zu) for a deterministic reference\n", toks.size());
         return 5;
@@ -55,8 +81,10 @@ int main(int argc, char** argv) {
     // Teacher-forced step-6 divergence oracle.
     // Feed exact tokens [750, 220, 1887, 3932, 262, 1173, 445]
     // and emit per-layer checkpoints only at step 6.
-    const int TEACHER_TOKENS[] = {750, 220, 1887, 3932, 262, 1173, 445};
-    const size_t TEACHER_COUNT = sizeof(TEACHER_TOKENS) / sizeof(TEACHER_TOKENS[0]);
+    const std::vector<int> teacherTokens = explicitTokens.empty()
+        ? std::vector<int>{750, 220, 1887, 3932, 262, 1173, 445}
+        : toks;
+    const size_t TEACHER_COUNT = teacherTokens.size();
 
     fprintf(stderr, "MODE=TEACHER_FORCED\n");
 
@@ -68,7 +96,7 @@ int main(int argc, char** argv) {
     // Steps 0..5: build KV cache without parity probe
     for (size_t step = 0; step < TEACHER_COUNT - 1; ++step) {
         engine.parityBeginStep(static_cast<int>(step));
-        if (!engine.embedToken(TEACHER_TOKENS[step], hidden.data())) {
+        if (!engine.embedToken(teacherTokens[step], hidden.data())) {
             fprintf(stderr, "FAIL: embedToken at step %zu\n", step);
             return 7;
         }
@@ -85,7 +113,7 @@ int main(int argc, char** argv) {
     engine.enableParityProbe(tracePath, 1);
     engine.parityBeginStep(6);
 
-    if (!engine.embedToken(TEACHER_TOKENS[6], hidden.data())) {
+    if (!engine.embedToken(teacherTokens[TEACHER_COUNT - 1], hidden.data())) {
         fprintf(stderr, "FAIL: embedToken at step 6\n");
         return 9;
     }
@@ -112,7 +140,7 @@ int main(int argc, char** argv) {
     engine.disableParityProbe();
 
     printf("TEACHER_TOKENS");
-    for (size_t i = 0; i < TEACHER_COUNT; ++i) printf(" %d", TEACHER_TOKENS[i]);
+    for (size_t i = 0; i < TEACHER_COUNT; ++i) printf(" %d", teacherTokens[i]);
     printf("\n");
     printf("ARGMAX %d\n", argmaxTok);
     fprintf(stderr, "=== PASS ===\n");
