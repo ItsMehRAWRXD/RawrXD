@@ -8953,6 +8953,11 @@ void Win32IDE::populateModelSelector() {
     // Silent cloud default breaks daily-driver parity with CLI (local Ollama/Deep2).
     const bool allowCloud =
         environmentValue("RAWRXD_ALLOW_CLOUD") == "1";
+    const std::string forcedLocalPath = environmentValue("RAWRXD_MODEL_PATH");
+    const bool forcedLocalFile = !forcedLocalPath.empty() &&
+        std::filesystem::is_regular_file(std::filesystem::u8path(forcedLocalPath)) &&
+        forcedLocalPath.size() >= 5 &&
+        _stricmp(forcedLocalPath.c_str() + forcedLocalPath.size() - 5, ".gguf") == 0;
     const auto* kiloRoute = allowCloud
         ? RawrXD::ChatRouteMenu::find(RawrXD::ChatRouteMenu::RouteKind::KiloFree)
         : nullptr;
@@ -8962,6 +8967,12 @@ void Win32IDE::populateModelSelector() {
         display += kiloRoute->displayName;
         m_availableModels.push_back({ChatModelEntry::Source::KiloFree,
             std::move(display), kiloRoute->modelId});
+    }
+
+    if (forcedLocalFile) {
+        m_availableModels.push_back({ChatModelEntry::Source::LocalFile,
+            std::string("Deep2 local / ") + forcedLocalPath, forcedLocalPath});
+        logInfo("[ModelSelector] FORCE_LOCAL seed=" + forcedLocalPath);
     }
 
     // Fail-closed harness seed: publish the forced Ollama tag into IDC 1206
@@ -8999,6 +9010,11 @@ void Win32IDE::populateModelSelector() {
             // Prefer any seeded local Ollama over cloud while discovery runs.
             if (m_availableModels[i].source == ChatModelEntry::Source::Ollama &&
                 defaultRouteRow < 0) {
+                defaultRouteRow = static_cast<int>(item);
+            }
+            if (forcedLocalFile &&
+                m_availableModels[i].source == ChatModelEntry::Source::LocalFile &&
+                m_availableModels[i].identifier == forcedLocalPath) {
                 defaultRouteRow = static_cast<int>(item);
             }
         }
@@ -9193,6 +9209,7 @@ void Win32IDE::onModelDiscoveryComplete(ModelDiscoveryPayload* discovered) {
     int forceRow = -1;
     int ollamaRow = -1;
     int localFileRow = -1;
+    int forcedLocalRow = -1;
     int kiloRow = -1;
     const std::string forceOllamaTag =
         environmentValue("RAWRXD_P11_FORCE_OLLAMA_MODEL");
@@ -9230,6 +9247,11 @@ void Win32IDE::onModelDiscoveryComplete(ModelDiscoveryPayload* discovered) {
         if (entry.source == ChatModelEntry::Source::LocalFile && localFileRow < 0) {
             localFileRow = static_cast<int>(row);
         }
+        const std::string forcedLocalPath = environmentValue("RAWRXD_MODEL_PATH");
+        if (entry.source == ChatModelEntry::Source::LocalFile &&
+            !forcedLocalPath.empty() && entry.identifier == forcedLocalPath) {
+            forcedLocalRow = static_cast<int>(row);
+        }
         if (entry.source == ChatModelEntry::Source::KiloFree) {
             kiloRow = static_cast<int>(row);
         }
@@ -9238,11 +9260,12 @@ void Win32IDE::onModelDiscoveryComplete(ModelDiscoveryPayload* discovered) {
     // optional Kilo placeholder once Ollama or a local GGUF route is ready.
     // FORCE env wins over alphabetical first-Ollama (often bigdaddyg 69B).
     const bool previousIsKilo = previous.source == ChatModelEntry::Source::KiloFree;
-    selectedRow = forceRow >= 0 ? forceRow
+    selectedRow = forcedLocalRow >= 0 ? forcedLocalRow
+        : (forceRow >= 0 ? forceRow
         : ((preferredRow >= 0 && !previousIsKilo) ? preferredRow
             : (ollamaRow >= 0 ? ollamaRow
                 : (localFileRow >= 0 ? localFileRow
-                    : (preferredRow >= 0 ? preferredRow : kiloRow))));
+                    : (preferredRow >= 0 ? preferredRow : kiloRow)))));
     if (selectedRow >= 0) {
         SendMessage(m_hwndModelSelector, CB_SETCURSEL,
             static_cast<WPARAM>(selectedRow), 0);
