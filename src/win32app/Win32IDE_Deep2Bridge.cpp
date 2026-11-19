@@ -502,6 +502,15 @@ std::string Deep2Bridge::GetModelInfo() const
         oss << "GPU Dispatches: " << m_engine->vulkanGemvSuccessCount() << "\n";
         oss << "CPU Fallbacks: " << m_engine->vulkanGemvFallbackCount() << "\n";
         oss << "GPU Weight Bytes: " << m_engine->vulkanGpuWeightBytes() << "\n";
+        // GEMV counters only cover the tryVulkanGEMV path. Generation driven by
+        // the runtime graph executor records its dispatches in the H11 dispatch
+        // account instead, so report both; otherwise the IDE shows a false
+        // "GPU Dispatches: 0" for a GPU-active model.
+        const auto& da = m_engine->dispatchAccount();
+        oss << "GPU Cmd Dispatches: " << da.cmdDispatchCount << "\n";
+        oss << "GPU Queue Submits: " << da.queueSubmitCount << "\n";
+        oss << "GPU Fence Waits: " << da.fenceWaitCount << "\n";
+        oss << "GPU Matrix Rows: " << da.matrixRowsDelta << "\n";
         const auto& fwd = m_engine->gpuForwardCounters();
         oss << "GPU Forward Real: " << (m_engine->isRealGpuForward() ? 1 : 0) << "\n";
         oss << "GPU Forward Q4K Ops: " << fwd.q4kPackedOps << "\n";
