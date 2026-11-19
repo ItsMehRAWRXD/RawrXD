@@ -9,6 +9,7 @@
 #include <cmath>
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <vector>
@@ -106,9 +107,12 @@ int main(int argc, char** argv) {
         }
         const auto& logits = executor.Logits();
         if (!trace_out.empty()) {
+            const bool needs_header = !std::filesystem::exists(trace_out) ||
+                                      std::filesystem::file_size(trace_out) == 0;
             std::ofstream trace(trace_out, std::ios::app);
             if (!trace) return 2;
-            trace << "position,block,pc,op,name,weight,input,size,checksum,backend,fallback,first0\n";
+            if (needs_header)
+                trace << "position,block,pc,op,name,weight,input,size,checksum,backend,fallback,first0\n";
             for (const auto& t : executor.OpTraces()) {
                 trace << logical_position << ',' << t.block << ',' << t.pc << ',' << t.op
                       << ",\"" << t.name << "\",\"" << t.weight << "\",\"" << t.input << "\","

@@ -1589,13 +1589,25 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
     }
     if (id == 9614 || id == IDM_DEEP2_GGUF_PROBE) {
         // C08/C09: local GGUF load + short generate (no cloud, no file dialog).
-        const char* modelPath = "F:\\rawrxd\\bench_min.gguf";
+        // Model path is configurable via RAWRXD_DEEP2_PROBE_MODEL so the probe
+        // can run against any local GGUF; the legacy fixed path remains the
+        // fallback. This is the embedded Deep2 path: Deep2Engine in-process,
+        // no HTTP server, no Ollama.
+        char modelBuf[1024];
+        modelBuf[0] = '\0';
+        const DWORD modelEnvLen = GetEnvironmentVariableA(
+            "RAWRXD_DEEP2_PROBE_MODEL", modelBuf, sizeof(modelBuf));
+        const bool modelConfigured = modelEnvLen > 0 && modelEnvLen < sizeof(modelBuf);
+        const char* modelPath =
+            modelConfigured ? modelBuf : "F:\\rawrxd\\bench_min.gguf";
         int initOk = 0, loadOk = 0, genOk = 0;
         size_t genLen = 0;
+        std::string modelInfo;
         {
             FILE* f = nullptr;
             if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C08_C09_DEEP2.log", "w") == 0 && f) {
-                fprintf(f, "init=0 load=0 gen=0 gen_len=0 model=%s status=BEGIN\n", modelPath);
+                fprintf(f, "init=0 load=0 gen=0 gen_len=0 model=%s model_env=%s status=BEGIN\n",
+                        modelPath, modelConfigured ? "SET" : "DEFAULT");
                 fclose(f);
             }
         }
@@ -1605,9 +1617,17 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
                 initOk = 1;
                 loadOk = m_deep2Bridge->LoadModel(modelPath) ? 1 : 0;
                 if (loadOk) {
+                    modelInfo = m_deep2Bridge->GetModelInfo();
                     const std::string out = m_deep2Bridge->GenerateSync("ping", 8);
                     genLen = out.size();
                     genOk = genLen > 0 ? 1 : 0;
+                    if (genOk) {
+                        FILE* rf = nullptr;
+                        if (fopen_s(&rf, "F:\\rawrxd\\evidence\\TOP25_C08_C09_DEEP2_RESPONSE.txt", "wb") == 0 && rf) {
+                            fwrite(out.data(), 1, out.size(), rf);
+                            fclose(rf);
+                        }
+                    }
                 }
             }
         } catch (...) {
@@ -1616,8 +1636,9 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         {
             FILE* f = nullptr;
             if (fopen_s(&f, "F:\\rawrxd\\evidence\\TOP25_C08_C09_DEEP2.log", "w") == 0 && f) {
-                fprintf(f, "init=%d load=%d gen=%d gen_len=%zu model=%s\n",
-                        initOk, loadOk, genOk, genLen, modelPath);
+                fprintf(f, "init=%d load=%d gen=%d gen_len=%zu model=%s model_info=%s\n",
+                        initOk, loadOk, genOk, genLen, modelPath,
+                        modelInfo.empty() ? "-" : modelInfo.c_str());
                 fclose(f);
             }
         }
