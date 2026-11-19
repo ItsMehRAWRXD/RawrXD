@@ -18,13 +18,14 @@ using RawrXD::Deep2::RuntimeGraph::Executor;
 
 int main(int argc, char** argv) {
     if (argc < 3) {
-        std::cerr << "usage: ltt_tensor_invoke <model.gguf> <token> [token...] [--position=N] [--device=N] [--repeat=N]\n";
+        std::cerr << "usage: ltt_tensor_invoke <model.gguf> <token> [token...] [--position=N] [--device=N] [--repeat=N] [--cancel-before]\n";
         return 2;
     }
     char* end = nullptr;
     size_t position = 0;
     uint32_t device = 0;
     size_t repeat = 1;
+    bool cancel_before = false;
     std::vector<uint32_t> tokens;
     for (int i = 2; i < argc; ++i) {
         const std::string arg(argv[i]);
@@ -38,6 +39,8 @@ int main(int argc, char** argv) {
         } else if (arg.rfind("--repeat=", 0) == 0) {
             repeat = std::strtoull(arg.c_str() + 9, &end, 10);
             if (!end || *end != '\0' || repeat == 0 || repeat > 1000) return 2;
+        } else if (arg == "--cancel-before") {
+            cancel_before = true;
         } else {
             const auto v = std::strtoul(arg.c_str(), &end, 10);
             if (!end || *end != '\0' || v > UINT32_MAX) return 2;
@@ -69,6 +72,7 @@ int main(int argc, char** argv) {
     context->reserved_memory_bytes = reserved;
     context->synchronization_ready = [] { return true; };
     context->memory_admission = [](size_t) { return true; };
+    if (cancel_before) cancel->store(true, std::memory_order_release);
 
     for (size_t r = 0; r < repeat; ++r) {
       for (size_t i = 0; i < tokens.size(); ++i) {
@@ -77,7 +81,7 @@ int main(int argc, char** argv) {
             std::cerr << "LTT_EXECUTE_FAIL token=" << tokens[i]
                       << " position=" << logical_position << ' '
                       << executor.LastError() << '\n';
-            return 5;
+            return cancel_before ? 6 : 5;
         }
         const auto& logits = executor.Logits();
         size_t top = 0;
