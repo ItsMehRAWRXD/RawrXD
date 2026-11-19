@@ -18,12 +18,13 @@ using RawrXD::Deep2::RuntimeGraph::Executor;
 
 int main(int argc, char** argv) {
     if (argc < 3) {
-        std::cerr << "usage: ltt_tensor_invoke <model.gguf> <token> [token...] [--position=N] [--device=N]\n";
+        std::cerr << "usage: ltt_tensor_invoke <model.gguf> <token> [token...] [--position=N] [--device=N] [--repeat=N]\n";
         return 2;
     }
     char* end = nullptr;
     size_t position = 0;
     uint32_t device = 0;
+    size_t repeat = 1;
     std::vector<uint32_t> tokens;
     for (int i = 2; i < argc; ++i) {
         const std::string arg(argv[i]);
@@ -34,6 +35,9 @@ int main(int argc, char** argv) {
             const auto v = std::strtoul(arg.c_str() + 9, &end, 10);
             if (!end || *end != '\0' || v > UINT32_MAX) return 2;
             device = static_cast<uint32_t>(v);
+        } else if (arg.rfind("--repeat=", 0) == 0) {
+            repeat = std::strtoull(arg.c_str() + 9, &end, 10);
+            if (!end || *end != '\0' || repeat == 0 || repeat > 1000) return 2;
         } else {
             const auto v = std::strtoul(arg.c_str(), &end, 10);
             if (!end || *end != '\0' || v > UINT32_MAX) return 2;
@@ -66,10 +70,12 @@ int main(int argc, char** argv) {
     context->synchronization_ready = [] { return true; };
     context->memory_admission = [](size_t) { return true; };
 
-    for (size_t i = 0; i < tokens.size(); ++i) {
-        if (!executor.ExecuteToken(tokens[i], position + i, context)) {
+    for (size_t r = 0; r < repeat; ++r) {
+      for (size_t i = 0; i < tokens.size(); ++i) {
+        const size_t logical_position = position + r * tokens.size() + i;
+        if (!executor.ExecuteToken(tokens[i], logical_position, context)) {
             std::cerr << "LTT_EXECUTE_FAIL token=" << tokens[i]
-                      << " position=" << (position + i) << ' '
+                      << " position=" << logical_position << ' '
                       << executor.LastError() << '\n';
             return 5;
         }
@@ -80,16 +86,18 @@ int main(int argc, char** argv) {
         bool finite = true;
         for (float v : logits) finite = finite && std::isfinite(v);
         std::cout << "LTT_TOKEN_PASS index=" << i
-                  << " position=" << (position + i)
+                  << " repeat=" << r
+                  << " position=" << logical_position
                   << " finite_logits=" << (finite ? 1 : 0)
                   << " top1=" << top
                   << " gpu_calls=" << executor.Stats().gpu_calls
                   << " cpu_calls=" << executor.Stats().cpu_calls << '\n';
+      }
     }
     std::cout << "LTT_EXECUTE_PASS model=" << report.spec.model_name
               << " arch=" << report.spec.architecture
               << " device=" << device
-              << " tokens=" << tokens.size()
+              << " tokens=" << tokens.size() * repeat
               << " gpu_calls=" << executor.Stats().gpu_calls
               << " cpu_calls=" << executor.Stats().cpu_calls << '\n';
     return 0;
