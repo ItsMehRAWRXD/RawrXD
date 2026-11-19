@@ -529,6 +529,15 @@ std::string Deep2Bridge::GetModelInfo() const
         // LinearW skip the GPU branch entirely; report it next to the counters
         // so a zero-dispatch generation is diagnosable.
         oss << "GPU Enabled: " << (m_engine->isVulkanEnabled() ? 1 : 0) << "\n";
+        // A planned CPU slot makes LinearW skip the GPU branch without counting a
+        // fallback, which is the remaining explanation for zero dispatches.
+        const auto& plan = m_engine->multiGpuLayerPlan();
+        oss << "GPU Plan Active: " << (plan.active ? 1 : 0) << "\n";
+        oss << "GPU Plan Hybrid: " << (plan.hybrid ? 1 : 0) << "\n";
+        oss << "GPU Plan Slots: " << plan.gpuSlotCount << "/" << plan.openedCount << "\n";
+        oss << "GPU Plan Layer0 Slot: " << (int)plan.layerDevice[0]
+            << " Cpu=" << (int)plan.isCpuSlot[0] << "\n";
+        oss << "GPU Plan Layers Executed: " << plan.layersExecuted << "\n";
     }
     return oss.str();
 #else
