@@ -32,6 +32,7 @@
 #include <atomic>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <map>
 #include <optional>
 #include <string>
@@ -149,6 +150,7 @@ public:
     bool ExecuteToken(uint32_t token, size_t position);
     bool ExecuteToken(uint32_t token, size_t position,
                       std::shared_ptr<const ExecutionContext> context) {
+        std::lock_guard<std::mutex> guard(invocation_mutex_);
         SetExecutionContext(std::move(context));
         const bool ok = ExecuteToken(token, position);
         ClearExecutionContext();
@@ -536,6 +538,7 @@ private:
     bool trace_ops_ = false;
     bool trace_capture_values_ = false;
     std::shared_ptr<const ExecutionContext> execution_context_;
+    mutable std::mutex invocation_mutex_;
 
     // RAWRXD_DEEP2_STRATA_S01..S08: expert residency ledger + policy switches.
     Strata::ExpertResidencyLedger strata_ledger_;
