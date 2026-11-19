@@ -8009,8 +8009,20 @@ void Win32IDE::generateResponseAsync(
                         finishIfCurrent("Deep2 could not load the selected GGUF: " + selectedModel.identifier, false);
                         return;
                     }
-                    const std::string response = m_deep2Bridge->GenerateSync(
-                        routedPrompt, requestMaxTokens);
+                    // Stream the response instead of GenerateSync: a blocking
+                    // call keeps the transcript empty for the whole generation
+                    // (thousands of tokens at decode speed), which presents as a
+                    // hung request. Forwarding each token also keeps the stop
+                    // button meaningful.
+                    std::string response;
+                    m_deep2Bridge->GenerateStream(
+                        routedPrompt,
+                        [this, &response, callback](const std::string& token, bool) {
+                            if (!m_inferenceStopRequested && callback) callback(token, false, true);
+                            response += token;
+                            return !m_inferenceStopRequested;
+                        },
+                        requestMaxTokens);
                     const bool success = !response.empty() &&
                         response.rfind("Error:", 0) != 0 &&
                         response.rfind("[Deep2", 0) != 0;

@@ -4,7 +4,8 @@
 
 - Source checkpoint before commit: `fd3ab5d84191de822f82b19525953e017c12d3f3`
 - Executable: `build_e2e_recovery_20261119/bin/Release/RawrXD-Win32IDE-Native.exe`
-- Executable SHA-256: `911BBCFB1340571EC7BD389B7EF60647335D14E4F9E86BE86E18635483B17F0F`
+- Earlier executable SHA-256: `911BBCFB1340571EC7BD389B7EF60647335D14E4F9E86BE86E18635483B17F0F`
+- Rebuilt streaming executable SHA-256: `2F66FDC1F855278DE8025B6B8CF4D711C18D60168C9E546A22503C51AF0B86BE`
 - Model: `models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf`
 - Model SHA-256: `9FECC3B3CD76BBA89D504F29B616EEDF7DA85B96540E490CA5824D3F7D2776A0`
 - Environment: `RAWRXD_CHAT_BACKEND=deep2`, `RAWRXD_MODEL_PATH=F:\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf`
@@ -34,3 +35,7 @@ RELEASE=HELD
 ```
 
 The source fixes in this checkpoint remove the premature native-agent admission dependency and allow `RAWRXD_MODEL_PATH` to initialize Deep2. They do not establish successful token generation; the synchronous `GenerateSync` path remains the next blocker.
+
+## Follow-up build
+
+The production Deep2 chat branch was changed to call `GenerateStream` and forward each token to the transcript. The rebuilt executable reached the Deep2 route, consumed the prompt, and returned the explicit UI error `Deep2 returned an empty response.` The transcript still contained no generated token, so the remaining defect is inside the Deep2 generation/stream result path. The request did not produce a captured `[BRIDGE_STREAM]` witness before termination.
