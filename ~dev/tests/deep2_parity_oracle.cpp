@@ -78,9 +78,8 @@ int main(int argc, char** argv) {
         return 5;
     }
 
-    // Teacher-forced step-6 divergence oracle.
-    // Feed exact tokens [750, 220, 1887, 3932, 262, 1173, 445]
-    // and emit per-layer checkpoints only at step 6.
+    // Teacher-forced deterministic oracle using the current public engine API.
+    // Explicit --tokens input is compared directly with the LTT token stream.
     const std::vector<int> teacherTokens = explicitTokens.empty()
         ? std::vector<int>{750, 220, 1887, 3932, 262, 1173, 445}
         : toks;
@@ -93,9 +92,7 @@ int main(int argc, char** argv) {
     std::vector<float> hidden(H, 0.0f);
     std::vector<float> localLogits(V, 0.0f);
 
-    // Steps 0..5: build KV cache without parity probe
-    for (size_t step = 0; step < TEACHER_COUNT - 1; ++step) {
-        engine.parityBeginStep(static_cast<int>(step));
+    for (size_t step = 0; step < TEACHER_COUNT; ++step) {
         if (!engine.embedToken(teacherTokens[step], hidden.data())) {
             fprintf(stderr, "FAIL: embedToken at step %zu\n", step);
             return 7;
@@ -104,29 +101,12 @@ int main(int argc, char** argv) {
             fprintf(stderr, "FAIL: forwardTokenAllLayers at step %zu\n", step);
             return 8;
         }
-        if (engine.getConfig().useKVCache) {
-            engine.advancePersistentKv();
-        }
+        engine.computeLogits(hidden.data(), localLogits.data());
+        int stepArgmax = 0;
+        for (size_t i = 1; i < V; ++i)
+            if (localLogits[i] > localLogits[stepArgmax]) stepArgmax = static_cast<int>(i);
+        printf("ORACLE_STEP index=%zu token=%d top1=%d\n", step, teacherTokens[step], stepArgmax);
     }
-
-    // Step 6: enable parity probe and run with teacher token 445
-    engine.enableParityProbe(tracePath, 1);
-    engine.parityBeginStep(6);
-
-    if (!engine.embedToken(teacherTokens[TEACHER_COUNT - 1], hidden.data())) {
-        fprintf(stderr, "FAIL: embedToken at step 6\n");
-        return 9;
-    }
-    if (!engine.forwardTokenAllLayers(hidden.data(), 7)) {
-        fprintf(stderr, "FAIL: forwardTokenAllLayers at step 6\n");
-        return 10;
-    }
-    if (engine.getConfig().useKVCache) {
-        engine.advancePersistentKv();
-    }
-
-    engine.computeLogits(hidden.data(), localLogits.data());
-    engine.parityEmitLogitsTop10(localLogits.data(), V);
 
     int argmaxTok = 0;
     float argmaxVal = localLogits[0];
@@ -136,8 +116,6 @@ int main(int argc, char** argv) {
             argmaxTok = static_cast<int>(i);
         }
     }
-
-    engine.disableParityProbe();
 
     printf("TEACHER_TOKENS");
     for (size_t i = 0; i < TEACHER_COUNT; ++i) printf(" %d", teacherTokens[i]);
