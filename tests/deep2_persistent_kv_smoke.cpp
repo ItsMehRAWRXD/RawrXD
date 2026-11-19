@@ -117,6 +117,10 @@ int main(int argc, char **argv)
 
     GenerationOptions opts;
     opts.maxTokens = 8;
+    if (const char *limit = std::getenv("RAWRXD_PERSISTENT_KV_MAX_TOKENS")) {
+        const long parsed = std::strtol(limit, nullptr, 10);
+        if (parsed > 0 && parsed <= 64) opts.maxTokens = static_cast<size_t>(parsed);
+    }
     opts.temperature = 0.0f;
     opts.topK = 1;
     opts.topP = 1.0f;
