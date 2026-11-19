@@ -41,8 +41,7 @@ static void ggml_ref_head(const std::vector<float>& qkv, size_t Hk, size_t Hv,
                           const std::vector<float>& dtBias, const std::vector<float>& norm,
                           const std::vector<float>& gate, float eps,
                           std::vector<float>& state, std::vector<float>& out) {
-    const size_t heads_per = Hv / Hk;
-    const size_t hk = hv / heads_per;
+        const size_t hk = hv % Hk;
     const size_t q_base = hk * D;
     const size_t k_base = (Hk + hk) * D;
     const size_t v_base = (2 * Hk + hv) * D;

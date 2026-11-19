@@ -48,8 +48,9 @@ void main() {
     const uint q_width = pc.key_heads * d;
     const uint qkv_width = (2u * pc.key_heads + pc.value_heads) * d;
     const uint output_width = pc.value_heads * d;
-    const uint heads_per_key = pc.value_heads / pc.key_heads;
-    const uint hk = hv / heads_per_key;
+    // ggml maps value heads to key heads by interleaving, not contiguous
+    // blocks: iq1 = ik1 = iv1 % nek1.
+    const uint hk = hv % pc.key_heads;
     const uint state_head = hv * d * d;
 
     float q[256];
